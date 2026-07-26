@@ -91,4 +91,9 @@ coder's word (the standing "verify git + exit code myself" rule):
   show ZERO diff lines. No `room_runner.py` / `room_prompts.py` / `agent_runner.py` /
   `mobile/` touched. Both hand-off signals present on the branch.
 
-Awaiting independent VERDICT (track-U) before integration to main.
+## Integration (AT:R65, 2026-07-27)
+
+Track-U returned `VERDICT: COMPLETE (round 1)` (`orchestration/audit/cr/CR090-BE.auditor.md`,
+`c6dba79`) — zero findings, 1260/1260 suite, 3/3 mutation tests caught. `lane/CR090-BE.coder.api`
+@ `cd292d3` merged to `main`; re-verified independently post-merge (see commit message for the
+suite count). `DISPATCH: ACCEPTED` in `CR090-BE.assign.md`.

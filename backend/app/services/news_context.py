@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import time
 from datetime import datetime, timezone
+from enum import Enum
 from threading import RLock
 from typing import NamedTuple, Protocol
 
@@ -45,6 +46,51 @@ from app.services.market_data import get_market_data_provider
 DEFAULT_HEADLINE_LIMIT = 3
 _ALPHA_VANTAGE_URL = "https://www.alphavantage.co/query"
 _ALPHA_VANTAGE_CACHE_TTL = 1800.0  # 30 min — billed API, news doesn't stale that fast
+
+
+class LiveDataState(Enum):
+    """CR090 — the 3-state liveness marker for a live-data analyst feed (News,
+    Social). Structural, NOT a prompt string (CR038: prompt instructions are
+    not controls). `room_runner`/`agent_runner` (CR090-ROOM) branch on this to
+    charge the surcharge, disclose the paywall, or fall back honestly.
+
+    Shared type: this enum is the SINGLE marker for both news_context and
+    social_context — `social_context` imports it from here so the ROOM lane
+    branches on one type, not two.
+
+    Three states, deliberately distinct so a gated feed can never masquerade as
+    "no data" (the DEF059 inversion trap):
+
+      LIVE          — the real feed fired with real data. THIS is what the
+                      surcharge (`credit_service.live_data_surcharge`) charges
+                      for. Only LIVE carries a payload.
+      WITHHELD_PAID — live data IS available but the user isn't entitled
+                      (short on credits / no entitlement). The loud "this
+                      agent's live feed is a paid feature" signal. NEVER a
+                      silent synthetic substitution — the payload is withheld
+                      structurally, not quietly swapped.
+      UNAVAILABLE   — genuinely no live data exists (uncached ticker, provider
+                      down, quota exhausted, no key). The existing honest
+                      illustrative-synthetic fallback path (CR023/CR024).
+    """
+
+    LIVE = "live"
+    WITHHELD_PAID = "withheld_paid"
+    UNAVAILABLE = "unavailable"
+
+
+def live_data_state(*, available: bool, entitled: bool) -> LiveDataState:
+    """Classify a live-data feed into the 3-state marker from two facts the
+    caller establishes: did live data actually come back (`available`), and is
+    this turn's user entitled to it (`entitled`).
+
+    Pure and total — the only place the state is decided, so the DEF059
+    inversion is structurally impossible: available-but-not-entitled can ONLY
+    map to WITHHELD_PAID, never to UNAVAILABLE and never to a silent LIVE.
+    """
+    if not available:
+        return LiveDataState.UNAVAILABLE
+    return LiveDataState.LIVE if entitled else LiveDataState.WITHHELD_PAID
 
 
 class LiveHeadline(NamedTuple):
@@ -200,6 +246,48 @@ def fetch_live_news(ticker: str, limit: int = DEFAULT_HEADLINE_LIMIT) -> list[Li
 
     merged = _merge_headlines(av_items, yahoo_items, limit=limit)
     return merged or None
+
+
+class NewsFeed(NamedTuple):
+    """CR090 — the News Analyst's live feed for one Room/1-on-1 turn, tagged
+    with the 3-state liveness marker. `headlines` is populated ONLY when
+    `state is LiveDataState.LIVE`; for WITHHELD_PAID and UNAVAILABLE it is
+    empty — the paid payload is never handed to a non-entitled turn, and the
+    caller (CR090-ROOM) renders the loud paywall marker or the honest synthetic
+    fallback off `state` instead."""
+
+    state: LiveDataState
+    headlines: tuple[LiveHeadline, ...]
+
+
+def resolve_news_feed(
+    ticker: str,
+    *,
+    entitled: bool,
+    limit: int = DEFAULT_HEADLINE_LIMIT,
+) -> NewsFeed:
+    """Resolve the News Analyst's live feed + its 3-state marker for a turn.
+
+    Additive to the existing binary path — `fetch_live_news` (and every current
+    caller of it) is untouched. This is the entitlement-aware entry point the
+    ROOM lane consumes: it probes the (cache-first) live feed to learn whether
+    live data is *available*, classifies with `live_data_state`, and returns the
+    payload ONLY for a LIVE (available + entitled) turn. A WITHHELD_PAID turn
+    gets the marker with an empty payload — the surcharge charges nothing and
+    the room must disclose the paywall, never silently render synthetic (DEF059).
+
+    Note for CR090-ROOM: probing availability for a non-entitled user still hits
+    the (cached) feed. If protecting the Alpha Vantage / Adanos quota against
+    non-entitled probes matters, gate this call to entitled turns and treat the
+    non-entitled case as WITHHELD_PAID directly — the classifier is exposed
+    (`live_data_state`) so you can compose that flow without a live fetch.
+    """
+    items = tuple(fetch_live_news(ticker, limit) or ())
+    state = live_data_state(available=bool(items), entitled=entitled)
+    return NewsFeed(
+        state=state,
+        headlines=items if state is LiveDataState.LIVE else (),
+    )
 
 
 def _merge_headlines(*groups: list[LiveHeadline], limit: int) -> list[LiveHeadline]:

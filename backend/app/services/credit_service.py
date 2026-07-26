@@ -75,6 +75,32 @@ def room_cost_for_plan(plan: Plan) -> int:
     return _ROOM_COST_BY_PLAN.get(plan, ROOM_COST_BASIC)
 
 
+# CR090 — live-data feed surcharge. The News/Social Analyst live feeds (Alpha
+# Vantage NEWS_SENTIMENT, Adanos Reddit) cost real money per call, so a turn
+# that actually fires one is metered on TOP of the flat Room/1-on-1 price —
+# additive, only when live data really fired (see `LiveDataState.LIVE` in
+# news_context/social_context). This is deliberately a separate constant from
+# ROOM_COST_*: it does not touch the base Room price (a CR090 acceptance item),
+# it stacks on it. Saiful-approved illustration: Basic Room 8 + News 2 + Social
+# 2 = 12. Tunable — confirm the figure against credits.md before Beta.
+#
+# The actual spend() of this happens where the Room/1-on-1 turn is priced
+# (room_runner.py — CR090-ROOM), NOT here. This module only exposes the figure
+# and the accessor so the pricing figure lives in exactly one place.
+LIVE_DATA_SURCHARGE = 2
+
+
+def live_data_surcharge(n_live_analysts: int) -> int:
+    """Credits to add for `n_live_analysts` analysts whose live feed actually
+    fired with real data this turn (each `LiveDataState.LIVE`). Both News and
+    Social live → 2 x LIVE_DATA_SURCHARGE = 4. Zero live analysts → 0, so the
+    surcharge never touches a turn that fell back to the honest synthetic block
+    (`UNAVAILABLE`) or was gated (`WITHHELD_PAID`)."""
+    if n_live_analysts <= 0:
+        return 0
+    return n_live_analysts * LIVE_DATA_SURCHARGE
+
+
 class InsufficientCredits(Exception):
     """Raised by `spend` when the balance won't cover the operation.
 
