@@ -82,15 +82,23 @@ Reputation measures *the quality of your reasoning*, not *the outcome of your lu
 
 ### Reputation tiers (informational, no functional gate)
 
-| Reputation | Tier name |
-|---|---|
-| 0–100 | Apprentice |
-| 100–500 | Analyst |
-| 500–2,000 | Trader (yes, same word as plan — that's intentional, the plan tier and reputation tier reinforce each other) |
-| 2,000–10,000 | Senior |
-| 10,000+ | Floor Veteran |
+**Renamed 2026-07-27 (CR093):** the weekly reputation league shipped in CR004
+(`league_service.py`) reuses the `apprentice/analyst/trader/senior/floor_veteran`
+ladder below for a **different** mechanic (weekly promote/relegate, not lifetime
+total) — CR065 flagged the collision (same names, two meanings). Saiful's call:
+both mechanics stay, the shipped weekly league keeps its names, and this
+**lifetime**-total tier gets a distinct ladder instead. Names below are a
+placeholder pending CR093's build-time naming pass.
 
-These are visible on the user's profile and on the reasoning-quality leaderboard (~~Phase 2~~ pulled forward to the pre-Beta Engagement phase as weekly reputation leagues — D-059/D-060, CR004; scoring formula in CR004 Plan C §C1 resolves OQ-007).
+| Lifetime reputation | Tier name (placeholder — see CR093) |
+|---|---|
+| 0–100 | Observer |
+| 100–500 | Contributor |
+| 500–2,000 | Specialist |
+| 2,000–10,000 | Veteran Trader |
+| 10,000+ | Master |
+
+These are visible on the user's profile and on the reasoning-quality leaderboard (~~Phase 2~~ pulled forward to the pre-Beta Engagement phase as weekly reputation leagues — D-059/D-060, CR004; scoring formula in CR004 Plan C §C1 resolves OQ-007). **This lifetime-total tier is not yet built** — see CR093.
 
 ## Badges
 

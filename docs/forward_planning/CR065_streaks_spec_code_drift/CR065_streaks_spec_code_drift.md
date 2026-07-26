@@ -1,7 +1,8 @@
 # CR065 — Streaks/reputation: spec ⇄ code drift register
 
-**Status:** proposed · **Raised:** 2026-07-23 (AT:R65) · **Owner:** Saiful decides per item
-**Related:** CR063 (in-app rules) · CR064 (competition terms) · CR004 / D-060
+**Status:** done — verdicts recorded 2026-07-27 (AT:R65) · **Raised:** 2026-07-23
+**Owner:** Saiful decided per item · **Related:** CR063 (in-app rules) · CR064
+(competition terms) · CR004 / D-060
 
 ---
 
@@ -57,3 +58,20 @@ CR064's code-truth boundary is auditable.
 1. Every divergence above is confirmed against source (done at filing).
 2. Saiful records a per-item verdict (build / amend spec).
 3. If any item is built, CR064's published terms are re-versioned to cover it.
+
+## Verdicts (Saiful, 2026-07-27, AT:R65)
+
+| # | Item | Verdict | Follow-up |
+|---|---|---|---|
+| 1 | 365-day Marathoner badge + flair + 500 credits | **Build** | [CR092](../CR092_marathoner_365day_milestone/) (DEPENDS-ON CR091) |
+| 2 | Lifetime reputation tier naming collision | **Both stay, rename one** — keep the shipped weekly league's names, give the lifetime tier a distinct ladder | [CR093](../CR093_lifetime_reputation_tier/); `daily_and_streaks.md` amended same session |
+| 3 | Named badge system | **Build** | [CR091](../CR091_streak_badge_system/) |
+| 4 | Paid-tier streak freezes | **Build** | [CR094](../CR094_paid_streak_freezes/) |
+| 5 | Daily reminder push/email | **Build** | [CR095](../CR095_daily_reminder_push_email/) — push half DEPENDS-ON CR027 (Saiful-external), email half not blocked |
+| 6 | Challenge partial credit | **Build** | [CR096](../CR096_challenge_partial_credit/) |
+
+**Note on item 5 vs the acceptance criterion above:** CR064's published competition
+terms cover challenge scoring/streaks generally, not push/email delivery mechanics —
+re-versioning CR064 is only triggered by items that change the competition's
+observable rules (1, 3, 4, 6 potentially; 2 and 5 are presentation/delivery, not
+competition mechanics). Confirm at CR064-review time, not here.
