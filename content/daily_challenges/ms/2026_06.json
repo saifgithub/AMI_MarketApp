@@ -14,7 +14,7 @@
     ],
     "answer": 0,
     "explanation": "P/E 29.9 berbanding purata SPX 21.5 ialah premium 39%. Premium biasanya dibayar untuk pertumbuhan, tetapi pertumbuhan pendapatan Apple telah jatuh daripada 11% kepada 2.8%. Gabungan itu — pelayan premium + garis atas yang perlahan — adalah setup 'mahal berdasarkan pendapatan' yang dicatatkan oleh Fundamentals Analyst. Jawapan salah yang memikat ('Adil, nama berkualiti') adalah apa yang dikatakan pelabur kasual; tugas ejen ialah membaca nombor, dan 29.9 berbanding 21.5 dengan pertumbuhan perlahan bukan adil.",
-    "related_lesson": "039",
+    "related_lesson": "039_the_pe_ratio",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "valuation",
@@ -37,7 +37,7 @@
     ],
     "answer": 3,
     "explanation": "Tiga kotak telah dicentang: harga ditutup di atas siling $124 pada $126.80, isipadu adalah ~1.9x purata julat (612M berbanding 320M), dan MA 50-hari yang naik pada $115 mengesahkan trend naik teras. Itu adalah breakout yang disahkan isipadu secara teks buku. Jawapan salah yang memikat 'bull flag masih di dalam julat' gagal kerana harga telah ditutup di luar julat dengan isipadu berat — flag telah diselesaikan, ia tidak berterusan.",
-    "related_lesson": "024",
+    "related_lesson": "024_breakouts",
     "related_agent": "market_analyst",
     "tags": [
       "breakout",
@@ -60,7 +60,7 @@
     ],
     "answer": 3,
     "explanation": "Had kedudukan tunggal ialah 5% daripada NAV ($2,500 pada akaun $50k). Tiket itu sendiri ialah $24,500, atau 49% — hampir 10x melebihi had. Portfolio Manager menyekat ini pada saiz sahaja sebelum sebarang semakan lain. Jawapan salah yang memikat 'konsentrasi sektor' gagal kerana mandat yang disenaraikan tidak pun menyebut sektor — dan TSLA adalah satu ticker tunggal, bukan sektor. Baca peraturan sebelum meneka mana satu yang dilanggar.",
-    "related_lesson": "014",
+    "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -84,7 +84,7 @@
     ],
     "answer": 1,
     "explanation": "Petikan ini dibina sepenuhnya di sekitar peristiwa berita makro (pengubahsuaian plot titik Feds) dan kesan kadar yang dipacu oleh makro terhadap sektor. Itu adalah bidang News Analyst — membaca tajuk utama dan menterjemahkan peralihan makro kepada kesan peringkat sektor. Jawapan salah yang menggoda 'Fundamentals Analyst' gagal kerana tiada kewangan spesifik syarikat (pendapatan, margin, ROE) yang dipetik — margin bersih hanya disebut sebagai kesan sektor terhadap pergerakan kadar, bukan analisis syarikat tunggal.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": [
       "agents",
@@ -107,7 +107,7 @@
     ],
     "answer": 1,
     "explanation": "Portfolio Manager adalah gerbang lantai keselamatan — setiap verdict mesti lulus pemeriksaan pematuhan mandat sebelum dihantar kepada pengguna. Verdict di atas mencadangkan BELI 8% NAV tanpa sebarang tanda bahawa saiz, kepekatan, atau penempatan henti rugi telah disahkan terhadap mandat pengguna. Jawapan salah yang menggoda 'Social Media Analyst' gagal kerana masukan itu membantu tetapi tidak menanggung beban; PM diperlukan secara struktur, bukan pilihan.",
-    "related_lesson": "013",
+    "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": [
       "room",
@@ -130,7 +130,7 @@
     ],
     "answer": 3,
     "explanation": "Empat metrik bebas — pertumbuhan pendapatan, pertumbuhan Azure melebihi panduan, margin operasi, dan pertumbuhan FCF — semuanya bergerak naik. Itu adalah definisi 'menguat' dari perspektif asas. Jawapan salah yang menggoda 'melemah kerana capex naik' adalah pandangan separa baca yang klasik: capex yang meningkat untuk membiayai AI adalah pelaburan untuk pertumbuhan masa depan, bukan mampatan margin hari ini (margin operasi masih 45.3%). Tindakan harga ('stock tidak bergerak') bukan isyarat asas.",
-    "related_lesson": "032",
+    "related_lesson": "032_revenue_the_top_line",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "fundamentals",
@@ -153,7 +153,7 @@
     ],
     "answer": 1,
     "explanation": "Dua sebab bebas menandakan 5,200 sebagai sokongan: ia merupakan zon pecahan April (rintangan sebelumnya menjadi sokongan) dan purata bergerak 50-hari yang menaik berada tepat di atasnya pada 5,198. Harga menahan tahap tersebut selama tiga sesi kemudian meningkat — ujian berjaya yang klasik. Jawapan salah yang menggoda 'pecahan gagal' gagal kerana pecahan tersebut disahkan dengan bertahan di atas 5,200, bukan gagal; pecahan yang gagal akan menutup kembali di bawah tahap tersebut selama beberapa sesi.",
-    "related_lesson": "023",
+    "related_lesson": "023_support_and_resistance",
     "related_agent": "market_analyst",
     "tags": [
       "support_resistance",
@@ -175,7 +175,7 @@
     ],
     "answer": 1,
     "explanation": "Dua pelanggaran jelas: $14,940 / $80,000 = 18.7%, yang merupakan 3x had saiz 6%; dan stop pada $440 dari harga masuk $498 ialah -11.6%, lebih lebar daripada lantai -8%. Jawapan salah yang menggoda 'hanya had bilangan kedudukan' gagal kerana ini adalah kedudukan ke-5, yang DIKELENGKAPI (had ialah 5, bukan 4). Status saham besar tidak membebaskan satu ticker daripada had saiz.",
-    "related_lesson": "015",
+    "related_lesson": "015_stop_loss_basics",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -199,7 +199,7 @@
     ],
     "answer": 3,
     "explanation": "Seluruh petikan dibina daripada isyarat platform sosial: isipadu Stocktwits, bilangan sebutan Reddit, nisbah sentimen, corak emoji. Itu adalah jalur tepat Social Media Analyst. Jawapan salah yang menggoda 'News Analyst' gagal kerana tiada tajuk berita, pendapatan, atau peristiwa makro dirujuk — hanya pergaduhan kumpulan runcit, yang merupakan sentimen, bukan berita.",
-    "related_lesson": "048",
+    "related_lesson": "048_fomo",
     "related_agent": "social_media_analyst",
     "tags": [
       "agents",
@@ -223,7 +223,7 @@
     ],
     "answer": 0,
     "explanation": "XOM merupakan syarikat tenaga utama; mana-mana verdict mengenainya tanpa bacaan daripada Penganalisis Berita mengenai bekalan OPEC, harga minyak, atau tajuk berita geopolitik adalah kehilangan pemacu eksogen terbesar. Verdict ini mempunyai penyertaan penuh daripada setiap ejen lain yang disenaraikan. Jawapan salah yang menggoda 'Aggressive Debator' gagal kerana pembahas tidak selalu dipanggil pada verdict HOLD — tetapi Penganalisis Berita pada nama yang sensitif terhadap komoditi adalah penting secara struktur.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": [
       "room",
@@ -247,7 +247,7 @@
     ],
     "answer": 0,
     "explanation": "Penyelidik Bear memulakan dengan naratif bear *berkuantifikasi* yang paling kuat: penurunan ~70bp dalam kadar jangka panjang bermaksud mampatan NII sebanyak $2B+ menurut panduan pengurusan sendiri, DAN kos kredit sedang meningkat (kadar lewat naik 30bp). Dua tuas negatif yang bergerak serentak adalah tesis bear buku teks. Jawapan salah yang menggoda 'JPM akan muflis' gagal kerana ia tidak disokong oleh angka — kadar lewat 3.4% adalah tinggi, bukan bencana. Bear mesti tajam, bukan histerikal.",
-    "related_lesson": "060",
+    "related_lesson": "060_bear_markets",
     "related_agent": "bear_researcher",
     "tags": [
       "bear_case",
@@ -271,7 +271,7 @@
     ],
     "answer": 1,
     "explanation": "Tiga isyarat regangan bebas bertindih: RSI pada 81 (jauh di atas garis overbought 70), isipadu yang menipis semasa kenaikan (tingkah laku gaya pengedaran), dan jurang 6.5% di atas purata bergerak 20-hari. Penganalisis Pasaran memanggil ini sebagai regangan dan menandakan risiko reverensi purata. Jawapan salah yang menggoda 'terusan bullish kerana RSI > 70' gagal kerana walaupun RSI boleh kekal tinggi dalam trend kuat, *kombinasi* dengan isipadu yang pudar membalikkan bacaan itu — RSI sahaja bukan isyarat beli.",
-    "related_lesson": "027",
+    "related_lesson": "027_rsi_momentum_oscillator",
     "related_agent": "market_analyst",
     "tags": [
       "rsi",
@@ -294,7 +294,7 @@
     ],
     "answer": 0,
     "explanation": "Had kedudukan tunggal adalah baik pada setiap pegangan, tetapi had *sektor* adalah peraturan utama di sini. 18% + 7% = 25%, yang mencapai had tersebut. Sebarang pendedahan bank selanjutnya akan melanggar had ini — dan tugas PM adalah untuk menonjolkan risiko agregasi ini walaupun setiap kedudukan individu kelihatan mematuhi peraturan. Jawapan salah yang memikat 'tiada pelanggaran' adalah apa yang dirasai pengguna kerana mereka memeriksa peraturan kedudukan tunggal dan berhenti di situ. PM tidak pernah berhenti di situ.",
-    "related_lesson": "017",
+    "related_lesson": "017_portfolio_exposure_and_correlation",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -319,7 +319,7 @@
     ],
     "answer": 1,
     "explanation": "Ejen ini mendesak pasukan untuk bertindak berdasarkan keyakinan dan *menaikkan* saiz dalam jalur yang dibenarkan, membayangkan ketidakaktifan sebagai kesilapan yang lebih besar. Itu adalah suara Aggressive Debator. Jawapan salah yang memikat 'Portfolio Manager' gagal kerana PM tidak pernah mengesyorkan kenaikan saiz — PM melaksanakan had mandat. Mengesyorkan 7% dalam jalur adalah advokasi, yang dilakukan oleh pembela.",
-    "related_lesson": "052",
+    "related_lesson": "052_trend_following",
     "related_agent": "aggressive_debator",
     "tags": [
       "agents",
@@ -342,7 +342,7 @@
     ],
     "answer": 2,
     "explanation": "Setiap suara dalam verdict adalah konstruktif. Panggilan saiz 9% tanpa tesis kontra Bear Researcher adalah satu sisi secara struktur — Ruang sepatutnya berdebat, bukan memuji-muji. Jawapan salah yang memikat 'Portfolio Manager' gagal kerana PM WADA hadir ('dalam mandat'). Penyelidikan Bear adalah suara yang hilang; tesis kontra yang ketara adalah bendera merah kualiti verdict.",
-    "related_lesson": "060",
+    "related_lesson": "060_bear_markets",
     "related_agent": "bear_researcher",
     "tags": [
       "room",
@@ -365,7 +365,7 @@
     ],
     "answer": 1,
     "explanation": "Tugas Bull Researcher adalah membina kes kenaikan harga yang *berkuantiti*. Gambar pertumbuhan tiga enjin + penilaian berbilang pasaran + FCF yang kuat adalah tesis bull yang terstruktur di sini. Jawapan salah yang memikat ('risiko antitrust kecil') gagal kerana menolak risiko adalah apa yang dilakukan oleh Aggressive Debator — Bull Researcher mengakui risiko tersebut dengan memberi ruang kepada ruang bear dan sebaliknya menekankan ekonomi positif.",
-    "related_lesson": "036",
+    "related_lesson": "036_competitive_advantage_moat",
     "related_agent": "bull_researcher",
     "tags": [
       "bull_case",
@@ -387,7 +387,7 @@
     ],
     "answer": 3,
     "explanation": "Kepingannya menambah dengan bersih: trend naik kuat sebelumnya, penurunan terkawal pada isipadu lebih ringan, harga tiba tepat pada purata bergerak 20 hari yang menaik, RSI dinormalisasi dari jenu beli ke neutral, dan lilin tukul dengan isipadu melebihi purata yang menandakan permintaan pada tahap tersebut. Itu adalah setup kesinambungan penurunan yang diletakkan oleh Market Analyst. Jawapan salah yang memikat 'pembalikan trend' gagal kerana penurunan pada isipadu *menurun* adalah ciri trend naik yang sihat — pembalikan biasanya mencetak pada isipadu menaik dan pecahan purata 20 hari, tiada satu pun yang berlaku.",
-    "related_lesson": "025",
+    "related_lesson": "025_pullbacks",
     "related_agent": "market_analyst",
     "tags": [
       "pullback",
@@ -410,7 +410,7 @@
     ],
     "answer": 0,
     "explanation": "Dua kerugian berturut-turut (TSLA kemudian NVDA) mencetuskan peraturan penyejukan pada 11:40 pagi; tiket SPY pada 1:50 petang adalah jauh dalam tingkap 24 jam dan tajuk ('mengembalikannya hari ini') adalah penanda dagangan balas dendam yang klasik. Jawapan salah yang memikat 'max-trades-per-day' gagal kerana ini akan menjadi dagangan ke-3, yang masih berada dalam had 3. Pelanggaran adalah peraturan penyejukan, bukan kiraan harian.",
-    "related_lesson": "047",
+    "related_lesson": "047_revenge_trading",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -434,7 +434,7 @@
     ],
     "answer": 3,
     "explanation": "Ejen ini tidak mengambil sisi — mereka menimbang kedua-dua sisi, memberi skor keyakinan, dan menukarkannya kepada cadangan saiz. Peranan sintesis itu adalah tugas Pengurus Penyelidikan. Jawapan salah yang memikat 'Neutral Debator' gagal kerana debator neutral membela kedudukan tanah tengah, manakala Pengurus Penyelidikan *mengadili* perdebatan bull-vs-bear dan menghasilkan skor keyakinan yang dikalibrasi (di sini, 0.58).",
-    "related_lesson": "057",
+    "related_lesson": "057_backtesting_a_strategy",
     "related_agent": "research_manager",
     "tags": [
       "agents",
@@ -457,7 +457,7 @@
     ],
     "answer": 2,
     "explanation": "Verdict ini mempunyai asas, berita, sentimen, dan sintesis yang diliputi — tetapi tiada bacaan teknikal mengenai harga, trend, atau penempatan henti. Itulah sebabnya verdict menyatakan 'pada pasaran, tiada henti ditentukan' — masukan Analis Pasaran biasanya akan memberikan tahap henti dan sasaran. Jawapan salah yang memikat 'PM' gagal kerana PM HADIR dan menandatangani saiz. Suara yang hilang adalah yang teknikal.",
-    "related_lesson": "022",
+    "related_lesson": "022_trend_direction",
     "related_agent": "market_analyst",
     "tags": [
       "room",
@@ -480,7 +480,7 @@
     ],
     "answer": 2,
     "explanation": "Tugas Neutral Debator ialah mempertahankan tengah apabila tiada bull atau bear mempunyai kelebihan yang boleh kuantifikasikan. Harga-nilai buku berada pada median 5-tahun, pertumbuhan adalah stabil, dan tumpukan tunai gergasi belum dilaburkan — jadi tiada asimetri untuk diandalkan. 'Kekalkan garis neutral' ialah bacaan yang dikalibrasi. Jawapan salah yang memikat ('STRONG BUY' / 'STRONG SELL') adalah binari emosi; Neutral Debator secara khusus menentang tarikan itu dan meminta bukti yang lebih kukuh dahulu.",
-    "related_lesson": "061",
+    "related_lesson": "061_sideways_range_markets",
     "related_agent": "neutral_debator",
     "tags": [
       "neutral",
@@ -503,7 +503,7 @@
     ],
     "answer": 0,
     "explanation": "MACD bersilang naik dengan histogram berubah positif dan lonjakan isipadu 1.8x adalah isyarat pembalikan awal. Namun, penapis trend yang lebih luas — MA 50-hari masih condong ke bawah — bermakna pembalikan belum disahkan. Penganalisis Pasaran memanggil ini sebagai 'pemerhatian perubahan' (turn-watch) dan bukannya pembalikan yang disahkan. Jawapan salah yang menggoda 'pembalikan trend yang disahkan' gagal kerana satu persilangan MACD tanpa pengesahan penapis trend adalah tepat perangkap isyarat palsu; penganalisis berpengalaman menunggu MA 50-hari untuk rata atau berubah arah.",
-    "related_lesson": "028",
+    "related_lesson": "028_macd_trend_and_momentum",
     "related_agent": "market_analyst",
     "tags": [
       "macd",
@@ -526,7 +526,7 @@
     ],
     "answer": 2,
     "explanation": "Tiket pada 4:18pm adalah 18 minit selepas pelepasan pada 4:00pm, jauh di dalam tetingkap penyejukan earnings 30-minit yang ditetapkan oleh mandat. Niat peraturan ini adalah tepat untuk menghentikan kejaran terhadap lonjakan pasca-earnings sebelum keadaan stabil. Jawapan salah yang menggoda 'pelanggaran saiz posisi' gagal kerana 4% adalah *di bawah* had 5%. Membaca peraturan yang betul adalah penting.",
-    "related_lesson": "013",
+    "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -550,7 +550,7 @@
     ],
     "answer": 3,
     "explanation": "Perbualan mengenai onboarding, pendidikan, dan perlindungan daripada scam berada di bawah tanggungjawab Concierge. Pengguna tidak meminta panggilan pasaran — mereka meminta bimbingan mengenai situasi penanda aras merah, yang merupakan bidang Concierge. Jawapan salah yang menggoda 'Pengurus Portfolio' gagal kerana PM melaksanakan peraturan *mandat* pada perdagangan sedia ada di dalam AMI; mereka tidak mengendalikan soalan scam luaran. Concierge yang melakukannya.",
-    "related_lesson": "065",
+    "related_lesson": "065_guaranteed_return_scams",
     "related_agent": "concierge",
     "tags": [
       "agents",
@@ -574,7 +574,7 @@
     ],
     "answer": 3,
     "explanation": "Satu-satunya perkara yang *memindahkan* saham ini — memandangkan tiada perubahan asas dan tiada pemangkin berita — adalah aliran khalayak. Penganalisis Media Sosial adalah ejen yang mengkuantifikasikan itu (sebutkan isipadu, nisbah sentimen, penyebaran platform). Tanpa input itu, Bilik membincangkan perdagangan aliran tanpa data aliran. Jawapan salah yang menggoda 'Pedagang' gagal kerana Pedagang SUDAH hadir ('tidak akan menyentuh'). Jurang struktur ialah bacaan sentimen.",
-    "related_lesson": "048",
+    "related_lesson": "048_fomo",
     "related_agent": "social_media_analyst",
     "tags": [
       "room",
@@ -598,7 +598,7 @@
     ],
     "answer": 0,
     "explanation": "Pedagang saiz henti rugi mengikut *struktur teknikal*, bukan kepada kerugian maksimum yang dibenarkan. Sokongan pada $188, jadi henti rugi sedikit di bawahnya ($187.50) meletakkan ~$4.90 risiko di atas meja terhadap ~$12.60 ganjaran ke sasaran $205 — nisbah risiko/ganjaran bersih ~5.2x. Jawapan salah yang menggoda 'henti rugi pada -8%' menggunakan had mandat sebagai henti rugi, yang membuang struktur ketat. Mandat adalah yang *terburuk* dibenarkan, bukan yang disyorkan.",
-    "related_lesson": "016",
+    "related_lesson": "016_risk_reward_ratio",
     "related_agent": "trader",
     "tags": [
       "trader",
@@ -622,7 +622,7 @@
     ],
     "answer": 3,
     "explanation": "Empat bahan klimak bertindan: isipadu 3.4x purata 20-hari (penjualan dipaksa kehabisan), julat terluas dalam 11 bulan (kepanikan), pembalikan intraday dari -3.4% ke +0.8% (pembeli melangkah masuk), VIX turun dari 28 ke 24 (ketakutan reda). Bersama-sama ini ialah cetakan kapitulasi teks buku yang ditandakan Penganalisis Pasaran. Jawapan salah yang menggoda 'hanya hingus' gagal kerana isipadu + julat + pembalikan magnitud itu jarang secara statistik — mengabaikannya terlepas perubahan rejim.",
-    "related_lesson": "029",
+    "related_lesson": "029_volume_confirmation",
     "related_agent": "market_analyst",
     "tags": [
       "capitulation",
@@ -646,7 +646,7 @@
     ],
     "answer": 2,
     "explanation": "Lantai keselamatan AMI adalah satu-satunya bahagian sistem yang tidak boleh diabaikan oleh pengguna. Penguatkuasaan mandat PM (had saiz, leverage, henti rugi) sengaja di luar jangkauan Brief Your Agent — itulah asas produk. Suntingan brief akan ditolak dengan penjelasan, bukan dilaksanakan secara senyap. Jawapan salah yang menggoda 'pengguna boleh menyesuaikan mana-mana agen' gagal kerana kebolehdilatih berhenti di lantai keselamatan; itulah reka bentuk eksplisit.",
-    "related_lesson": "074",
+    "related_lesson": "074_ai_hallucinations_and_amis_safety_floor",
     "related_agent": "portfolio_manager",
     "tags": [
       "safety_floor",
@@ -670,7 +670,7 @@
     ],
     "answer": 3,
     "explanation": "Walaupun dengan keyakinan tinggi, agen ini menolak saiz yang lebih kecil kerana risiko rejim — dan berakhir dengan frasa minda kelangsungan ('hidup untuk berdagang esok'). Itu adalah suara Conservative Debator. Jawapan salah yang menggoda 'Aggressive Debator' gagal kerana debator agresif menolak ke hujung atas jalur saiz; agen ini menarik ke hujung bawah untuk sebab-sebab kelangsungan. Jalur yang sama, arah bertentangan.",
-    "related_lesson": "019",
+    "related_lesson": "019_survival_mindset",
     "related_agent": "conservative_debator",
     "tags": [
       "agents",
@@ -694,7 +694,7 @@
     ],
     "answer": 3,
     "explanation": "Walaupun pada ETF sektor, Fundamentals Analyst harus memberi pertimbangan pada pertumbuhan earnings agregat, trend margin, atau hasil dividen bakul — terutamanya apabila 'tiada pertumbuhan' disuarakan oleh kes bear tanpa nombor sokongan. Jawapan salah yang menggoda 'Bull Researcher' gagal kerana mereka ADA dalam verdict ('aliran defensif'). Jurang struktur adalah bacaan asas.",
-    "related_lesson": "032",
+    "related_lesson": "032_revenue_the_top_line",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "room",

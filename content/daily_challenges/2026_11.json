@@ -14,7 +14,7 @@
     ],
     "answer": 1,
     "explanation": "Trend-following demands three things: a defined trend (50-day above 200-day, both rising), price structure confirming it (nine weeks of higher highs and higher lows), and a trigger (fresh 52-week high on above-average volume). NVDA prints all three. The Aggressive Debator's job is to push for the entry when the conditions align. The tempting wrong answer ('it's up 38% so the move is over') is the classic mean-reversion bias applied to a trending stock — trend-following explicitly buys strength, it doesn't fade it.",
-    "related_lesson": "052",
+    "related_lesson": "052_trend_following",
     "related_agent": "aggressive_debator",
     "tags": ["trend_following", "strategy", "module_9"]
   },
@@ -33,7 +33,7 @@
     ],
     "answer": 3,
     "explanation": "Five signals all say range-bound: a flat 50-day MA, 11 weeks inside a defined band (1,540–1,605), realised vol near two-year lows, sub-average volume, and breadth at the 50% neutral line with no sector leadership. That is the textbook sideways regime. The tempting wrong answer 'bull market' fails because a bull regime requires a rising MA and breadth above 60% — flat and 51% is the opposite signal. Low vol is not high vol; 'indecision' is the definition of sideways, not volatility.",
-    "related_lesson": "061",
+    "related_lesson": "061_sideways_range_markets",
     "related_agent": "market_analyst",
     "tags": ["regime", "sideways", "module_10"]
   },
@@ -52,7 +52,7 @@
     ],
     "answer": 1,
     "explanation": "Mean reversion assumes price oscillates around a stable mean. In a confirmed downtrend (200-day sloping down, death cross, six lower lows) the 'mean' is itself falling — every oversold bounce is a sell, not a buy. The user's own mandate codifies this: mean reversion only when the 200-day is flat or rising. XOM fails that test. The tempting wrong answer 'no stop attached' fails because nothing in the scenario claims the order is unprotected — the violation is upstream: the strategy doesn't belong in this regime at all.",
-    "related_lesson": "055",
+    "related_lesson": "055_mean_reversion",
     "related_agent": "portfolio_manager",
     "tags": ["strategy_regime_mismatch", "mean_reversion", "module_9"]
   },
@@ -71,7 +71,7 @@
     ],
     "answer": 0,
     "explanation": "Sector rotation calls live with the News Analyst — the role reads macro flows (yields, geopolitics, commodity supply) and translates them into sector leadership changes. The quote chains macro inputs (yield move, supply premium) to ETF performance (XLE vs XLK) to a forward prediction (XLF next). The tempting wrong answer 'Market Analyst' fails because the reasoning is not technical; the Market Analyst would describe relative-strength patterns on a chart, not yield-and-geopolitics causality. Sector rotation is N&M 5 — the News Analyst's lane.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": ["sector_rotation", "agents", "module_10"]
   },
@@ -90,7 +90,7 @@
     ],
     "answer": 2,
     "explanation": "VIX at 31 is the 80th-percentile vol regime; SPX 9% off ATH with breadth at 34% is a deteriorating tape. The Market Analyst owns the volatility-regime and breadth read (N&M 4 + N&M 6). Adding a new 4% long without a regime gate is the textbook missing input. The tempting wrong answer 'Social Media Analyst' fails because retail sentiment is colour, not a structural gate; the Market Analyst's regime call is load-bearing — if the regime is hostile, sizing should shrink or the trade should wait.",
-    "related_lesson": "062",
+    "related_lesson": "062_volatility_regimes",
     "related_agent": "market_analyst",
     "tags": ["regime", "volatility", "breadth", "module_10"]
   },
@@ -109,7 +109,7 @@
     ],
     "answer": 3,
     "explanation": "Breakout entries (EDGE 9) require three boxes: a defined range ($218–$226 for 19 sessions), a close outside the range ($229.10), and volume confirmation (1.5x average). All three print. The Trader sets entry at the breakout level, stop under the prior range, and target at the next resistance. The tempting wrong answer 'buy half on a pullback to $215' fails because $215 is below the range floor — if price returns there the breakout is invalidated, you don't add to a failed trade.",
-    "related_lesson": "053",
+    "related_lesson": "053_breakout_strategy",
     "related_agent": "trader",
     "tags": ["breakout", "strategy", "module_9"]
   },
@@ -128,7 +128,7 @@
     ],
     "answer": 2,
     "explanation": "Four signals align: VIX above 30 (N&M 4 vol-regime threshold), realised vol doubled, daily ranges 2.3x normal, and put/call at an extreme. That is the textbook high-vol regime — position sizes should shrink, stops widen, and momentum strategies often outperform mean-reversion. The tempting wrong answer 'bull market — VIX is contrarian' is dangerous half-knowledge: VIX spikes can mark bottoms, but only after they peak and roll over. Calling the regime bullish while it is still climbing is front-running mean reversion in the wrong tape.",
-    "related_lesson": "062",
+    "related_lesson": "062_volatility_regimes",
     "related_agent": "market_analyst",
     "tags": ["regime", "volatility", "vix", "module_10"]
   },
@@ -147,7 +147,7 @@
     ],
     "answer": 1,
     "explanation": "Momentum (EDGE 12) works because winning stocks keep winning when participation is wide and vol is alive. In a low-vol, narrow-breadth tape, momentum entries decay — mean reversion is the regime-appropriate edge. The user's mandate explicitly codifies that. MRDIY's 92 RS rank is real but irrelevant when the regime gate fails. The tempting wrong answer 'single-position cap' fails because the scenario gives no size; the violation is the strategy itself, not its dosage.",
-    "related_lesson": "056",
+    "related_lesson": "056_momentum_trading",
     "related_agent": "portfolio_manager",
     "tags": ["strategy_regime_mismatch", "momentum", "module_9"]
   },
@@ -166,7 +166,7 @@
     ],
     "answer": 0,
     "explanation": "Breadth analysis (N&M 6) — % above 50-day MA, advance-decline divergence, equal-weight vs cap-weight — is the Market Analyst's domain. The quote is a textbook breadth-divergence read translated into a tactical view. The tempting wrong answer 'News Analyst' fails because no news event, sector flow, or macro catalyst is referenced — every input is a market-internals statistic, not a headline. Sector rotation belongs to the News Analyst; breadth belongs to the Market Analyst.",
-    "related_lesson": "064",
+    "related_lesson": "064_market_breadth",
     "related_agent": "market_analyst",
     "tags": ["breadth", "agents", "module_10"]
   },
@@ -185,7 +185,7 @@
     ],
     "answer": 2,
     "explanation": "Pullback strategy (EDGE 10) trades the dip inside an established uptrend. Three confirmation signals: the 50-day MA held as support, RSI reset from overbought to neutral (78 to 52), and volume declined into the pullback (no distribution). That is a textbook pullback entry. The tempting wrong answer 'trend reversal' fails because every reversal signal is missing — no MA cross, no lower low below the prior swing low at $390, no volume expansion on the way down. Distinguishing pullback from reversal is the whole skill.",
-    "related_lesson": "054",
+    "related_lesson": "054_pullback_strategy",
     "related_agent": "market_analyst",
     "tags": ["pullback", "strategy", "module_9"]
   },
@@ -204,7 +204,7 @@
     ],
     "answer": 3,
     "explanation": "Bull regime (N&M 1) requires confirming structure (rising MAs with 50>200), confirming breadth (>55% above 50-day, A/D at new highs), and broad sector participation. KLCI prints all three. The tempting wrong answer 'volatility regime' confuses return magnitude with realised vol — 18% YTD with 9.3% realised vol is the textbook orderly bull, not a vol regime. High return ≠ high volatility.",
-    "related_lesson": "059",
+    "related_lesson": "059_bull_markets",
     "related_agent": "bull_researcher",
     "tags": ["regime", "bull_market", "module_10"]
   },
@@ -223,7 +223,7 @@
     ],
     "answer": 3,
     "explanation": "A 20-day breakout inside a primary downtrend is a counter-trend signal at best, not a trend entry. The user is applying a trend-following strategy in a bear regime — exactly the strategy-failure mode EDGE 14 warns about. The mandate gates trend entries to a rising primary MA, which doesn't hold here. The tempting wrong answer 'position-size cap' fails because no size is given. The structural violation is upstream: wrong strategy for the regime.",
-    "related_lesson": "058",
+    "related_lesson": "058_strategy_failure_modes",
     "related_agent": "portfolio_manager",
     "tags": ["strategy_regime_mismatch", "trend_following", "module_9"]
   },
@@ -242,7 +242,7 @@
     ],
     "answer": 3,
     "explanation": "Research Manager synthesises Bull/Bear/Fundamentals/Technicals/News/Social into a conviction number and adjusts for regime context. The quote names every analyst, scores them, integrates them, and outputs a moderated conviction with a size implication. That is the Research Manager job description. The tempting wrong answer 'Portfolio Manager' fails because the PM applies the mandate floor (sizing limits, stop checks) — it does not score Bull vs Bear conviction. Synthesis is the Research Manager; compliance is the PM.",
-    "related_lesson": "057",
+    "related_lesson": "057_backtesting_a_strategy",
     "related_agent": "research_manager",
     "tags": ["agents", "synthesis", "module_9"]
   },
@@ -261,7 +261,7 @@
     ],
     "answer": 2,
     "explanation": "An energy-sector trade hinges on oil prices, OPEC posture, geopolitical premium, and rotation flows — all News Analyst territory (sector rotation, N&M 5). A verdict on XLE without a News Analyst input is missing the regime catalyst that would either confirm or kill the technical breakout. The tempting wrong answer 'Social Media Analyst' fails because retail sentiment doesn't drive energy fundamentals; macro and geopolitics do.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": ["sector_rotation", "energy", "module_10"]
   },
@@ -280,7 +280,7 @@
     ],
     "answer": 0,
     "explanation": "Mean reversion (EDGE 11) needs a stable up-mean (rising 200-day), an oversold trigger (RSI(2) of 6), and an absence of structural bad news (sector noise, not a JPM-specific scandal). All three are present. The Conservative Debator favours small size + close stop under the 50-day MA. The tempting wrong answer 'buy a 10% position — banks always bounce' is right idea, wrong dose — conservative means small and well-stopped, not a bet-the-farm size on a 3-day move.",
-    "related_lesson": "055",
+    "related_lesson": "055_mean_reversion",
     "related_agent": "conservative_debator",
     "tags": ["mean_reversion", "strategy", "module_9"]
   },
@@ -299,7 +299,7 @@
     ],
     "answer": 2,
     "explanation": "Bear regime (N&M 2) requires falling primary trend (50<200, both down), confirmed weak breadth (22% above 50-day, A/D at lows), and defensive leadership rotation (XLP/XLU outperforming). All four print. The tempting wrong answer 'bull-market correction' is the denial trap — by the textbook definition a 20% drawdown is the threshold, but the structural signals (breadth collapse, defensive leadership, MA inversion) confirm regime change before the 20% line is crossed. Waiting for -20.01% to admit it is hindsight, not analysis.",
-    "related_lesson": "060",
+    "related_lesson": "060_bear_markets",
     "related_agent": "bear_researcher",
     "tags": ["regime", "bear_market", "module_10"]
   },
@@ -318,7 +318,7 @@
     ],
     "answer": 2,
     "explanation": "EDGE 9 and EDGE 14 are explicit: a breakout requires both price AND volume confirmation. The verdict labels itself a 'breakout entry' but the Market Analyst only confirmed the price half. Without volume, the user has no way to evaluate the breakout's conviction, which is exactly the false-break setup. The tempting wrong answer 'Aggressive Debator vote' fails because directional cheerleading is colour; the structural miss is the missing volume datum the strategy label itself requires.",
-    "related_lesson": "053",
+    "related_lesson": "053_breakout_strategy",
     "related_agent": "market_analyst",
     "tags": ["breakout", "volume", "module_9"]
   },
@@ -337,7 +337,7 @@
     ],
     "answer": 2,
     "explanation": "The quote synthesises chart fragility, breadth narrowness, business deceleration, and macro caution into a sell thesis — that is the Bear Researcher's role in the Room: build the case against. The tempting wrong answer 'Aggressive Debator' fails because the Aggressive Debator argues for action regardless of direction and tends to lean long — here the agent is methodically tearing apart a long thesis with multi-layer evidence, the Bear Researcher signature.",
-    "related_lesson": "060",
+    "related_lesson": "060_bear_markets",
     "related_agent": "bear_researcher",
     "tags": ["agents", "bear", "module_10"]
   },
@@ -356,7 +356,7 @@
     ],
     "answer": 0,
     "explanation": "EDGE 8–058 all turn on the same discipline: a trade must declare which strategy it is, because each strategy has different exit rules. A breakout is exited differently than a pullback or a mean-reversion. Without a label, the decision journal can't grade whether the trade was managed per its own playbook. The tempting wrong answer 'Aggressive Debator's vote' is colour, not structural. Strategy identity is the load-bearing missing element.",
-    "related_lesson": "057",
+    "related_lesson": "057_backtesting_a_strategy",
     "related_agent": "research_manager",
     "tags": ["strategy_discipline", "journaling", "module_9"]
   },
@@ -375,7 +375,7 @@
     ],
     "answer": 1,
     "explanation": "Sideways regime (N&M 3) is the Neutral Debator's natural home — the strategy is fade-the-edges until proof emerges. Selling into $211 (range top) with cover near $200 (range bottom) is range trading. The tempting wrong answer 'buy aggressively — IWM is breaking out' fails because volume hasn't expanded and price hasn't closed outside the range; tagging the top is not breaking out. Until the breakout rules of EDGE 9 are satisfied, this is still a range.",
-    "related_lesson": "061",
+    "related_lesson": "061_sideways_range_markets",
     "related_agent": "neutral_debator",
     "tags": ["sideways", "regime", "module_10"]
   },
@@ -394,7 +394,7 @@
     ],
     "answer": 0,
     "explanation": "EDGE 9's classic setup: a defined accumulation pattern (cup-and-handle), a clean range break ($504 above $498), volume confirmation (1.78x), and a confirming primary trend (rising 50-day). The compressed VIX during the handle is bonus — energy was stored, then released. The tempting wrong answer 'pullback that hasn't completed' fails because price has already broken the range high on volume — a pullback would mean trading back to the 50-day MA, not extending above resistance.",
-    "related_lesson": "053",
+    "related_lesson": "053_breakout_strategy",
     "related_agent": "market_analyst",
     "tags": ["breakout", "cup_and_handle", "module_9"]
   },
@@ -413,7 +413,7 @@
     ],
     "answer": 2,
     "explanation": "EDGE 10's iron rule: pullbacks are a bull-regime tactic. Without an uptrend, there is no 'pull' back to anything — price is simply going down. Mislabelling a downtrend continuation as a 'pullback to support' is one of the most common strategy failure modes (EDGE 14). RSI of 38 confirms the move isn't even oversold yet. The tempting wrong answer 'stop-loss rule' fails because the structural error is choosing the strategy at all in this regime, not how the stop is placed.",
-    "related_lesson": "054",
+    "related_lesson": "054_pullback_strategy",
     "related_agent": "portfolio_manager",
     "tags": ["strategy_regime_mismatch", "pullback", "module_9"]
   },
@@ -432,7 +432,7 @@
     ],
     "answer": 3,
     "explanation": "EDGE 8 (trend-following) and 056 (momentum) both call out the Aggressive Debator — the quote is pure aggressive-debator language: dismisses valuation, prioritises trend and momentum, rejects waiting for pullbacks, advocates entry now with trailing-stop management. The tempting wrong answer 'Fundamentals Analyst' fails because the agent explicitly dismisses the multiple — the Fundamentals Analyst would never say 'I don't care about the multiple'.",
-    "related_lesson": "056",
+    "related_lesson": "056_momentum_trading",
     "related_agent": "aggressive_debator",
     "tags": ["momentum", "agents", "module_9"]
   },
@@ -451,7 +451,7 @@
     ],
     "answer": 0,
     "explanation": "N&M 6 makes breadth the bull-regime stress test. New highs led by 4 names is the textbook narrowing-rally warning. The verdict ignored it. Without the breadth read, the verdict is overconfident — 0.71 conviction on a narrow-led tape is high. The tempting wrong answer 'Aggressive Debator's input' fails because the verdict already leans aggressive; what's missing is the dissenting structural data, which lives in breadth analysis.",
-    "related_lesson": "064",
+    "related_lesson": "064_market_breadth",
     "related_agent": "market_analyst",
     "tags": ["breadth", "narrow_rally", "module_10"]
   },
@@ -470,7 +470,7 @@
     ],
     "answer": 2,
     "explanation": "N&M 1's bull-regime checklist — rising index + wide breadth + cyclical leadership + supportive macro — is the Bull Researcher's structural argument. The quote chains all four confirmations into a 'scale longs' conclusion, and explicitly pushes back on the recency-bias temptation to trim. That is the Bull Researcher signature. The tempting wrong answer 'Portfolio Manager' fails because the PM doesn't argue directional theses; the PM checks the trade against the mandate. Bull-thesis construction is the Bull Researcher's lane.",
-    "related_lesson": "059",
+    "related_lesson": "059_bull_markets",
     "related_agent": "bull_researcher",
     "tags": ["bull_market", "agents", "module_10"]
   },
@@ -489,7 +489,7 @@
     ],
     "answer": 2,
     "explanation": "N&M 5 puts sector rotation squarely in the News Analyst's lane. The context line is a textbook value-rotation tape — growth sectors lagging, cyclicals/defensives leading, equal-weight beating cap-weight, yields rising — and the verdict is taking a long in the lagging sector (XLK) without a News Analyst flagging the macro headwind. The tempting wrong answer 'Aggressive Debator' fails because directional cheerleading isn't load-bearing; the structural miss is the rotation diagnostic itself.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": ["sector_rotation", "module_10"]
   },
@@ -508,7 +508,7 @@
     ],
     "answer": 0,
     "explanation": "N&M 4 codifies why size compresses in vol regimes: realised swings are 2–3x normal, so a 5% position behaves like a 10–15% position in a calm tape. The user's mandate explicitly halves the cap, and the user ignored the conditional. The tempting wrong answer 'still within the 5% cap' is exactly the half-read mistake — caps in a mandate can be regime-conditional, and ignoring the conditional is a violation, not a loophole.",
-    "related_lesson": "062",
+    "related_lesson": "062_volatility_regimes",
     "related_agent": "portfolio_manager",
     "tags": ["volatility", "sizing", "module_10"]
   },
@@ -527,7 +527,7 @@
     ],
     "answer": 2,
     "explanation": "N&M 3 (sideways markets) calls out the Neutral Debator — its role is to refuse conviction when the evidence is split, not to synthesise. The quote acknowledges both sides and explicitly declines to take a side until more data arrives. The tempting wrong answer 'Research Manager' fails because the Research Manager produces a conviction number even when input is mixed; the Neutral Debator's value is the principled refusal to fake conviction.",
-    "related_lesson": "061",
+    "related_lesson": "061_sideways_range_markets",
     "related_agent": "neutral_debator",
     "tags": ["neutral", "agents", "module_10"]
   },
@@ -546,7 +546,7 @@
     ],
     "answer": 2,
     "explanation": "EDGE 13 is explicit: every strategy rule needs a backtest before live deployment. The mandate floor only checks that the rule won't blow up the account on a single trade — it cannot tell you whether the rule has positive expectancy or whether it works in bear regimes. The tempting wrong answer 'a second agent's approval' fails because the Research Manager already does Room synthesis; the missing artefact is the historical-data validation, not another vote.",
-    "related_lesson": "057",
+    "related_lesson": "057_backtesting_a_strategy",
     "related_agent": "research_manager",
     "tags": ["backtest", "strategy_discipline", "module_9"]
   },
@@ -565,7 +565,7 @@
     ],
     "answer": 0,
     "explanation": "EDGE 14 names this exactly: every strategy has a regime where it underperforms, and trend-following's failure regime is sideways/low-vol. The 9-for-11 stop-out pattern, all inside a defined SPX range, is the diagnostic fingerprint. The Conservative Debator's call is to recognise the regime, pause the system, and switch to a regime-appropriate tactic — not to abandon the edge. The tempting wrong answer 'abandon trend-following forever' is the emotional response to drawdown; the analyst response is to identify the regime mismatch and adapt.",
-    "related_lesson": "058",
+    "related_lesson": "058_strategy_failure_modes",
     "related_agent": "conservative_debator",
     "tags": ["strategy_failure", "regime", "module_9"]
   }

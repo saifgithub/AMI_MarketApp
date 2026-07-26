@@ -14,7 +14,7 @@
     ],
     "answer": 0,
     "explanation": "A P/E of 29.9 vs an SPX average of 21.5 is a 39% premium. Premiums are normally paid for growth, but Apple's revenue growth has dropped from 11% to 2.8%. That combination — premium multiple + decelerating top line — is the textbook 'expensive on earnings' setup the Fundamentals Analyst flags. The tempting wrong answer ('Fair, quality name') is what a casual investor says; the agent's job is to read the numbers, and 29.9 vs 21.5 with slowing growth is not fair.",
-    "related_lesson": "039",
+    "related_lesson": "039_the_pe_ratio",
     "related_agent": "fundamentals_analyst",
     "tags": ["valuation", "pe_ratio", "module_7"]
   },
@@ -33,7 +33,7 @@
     ],
     "answer": 3,
     "explanation": "Three boxes are ticked: price closed above the $124 ceiling at $126.80, volume was ~1.9x the range average (612M vs 320M), and the rising 50-day MA at $115 confirms the underlying uptrend. That is a textbook volume-confirmed breakout. The tempting wrong answer 'bull flag still inside the range' fails because price has closed outside the range on heavy volume — the flag has resolved, it hasn't continued.",
-    "related_lesson": "024",
+    "related_lesson": "024_breakouts",
     "related_agent": "market_analyst",
     "tags": ["breakout", "volume", "module_4"]
   },
@@ -52,7 +52,7 @@
     ],
     "answer": 3,
     "explanation": "The single-position cap is 5% of NAV ($2,500 on a $50k account). The ticket alone is $24,500, or 49% — almost 10x over the cap. The Portfolio Manager blocks this on sizing alone before any other check. The tempting wrong answer 'sector concentration' fails because the mandate listed didn't even mention sectors — and TSLA is a single ticker, not a sector. Read the rules before guessing which one is breached.",
-    "related_lesson": "014",
+    "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "position_sizing", "safety_floor", "module_3"]
   },
@@ -71,7 +71,7 @@
     ],
     "answer": 1,
     "explanation": "The quote is built entirely around a macro news event (Fed dot plot revision) and its second-order rate-driven impact on the sector. That is the News Analyst's lane — reading headlines and translating macro shifts into sector-level consequences. The tempting wrong answer 'Fundamentals Analyst' fails because no company-specific financials (revenue, margins, ROE) are cited — net interest margin is mentioned as a sector consequence of the rate move, not as a single-company analysis.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": ["agents", "news", "module_10"]
   },
@@ -90,7 +90,7 @@
     ],
     "answer": 1,
     "explanation": "The Portfolio Manager is the safety-floor gate — every verdict must pass a mandate-compliance check before it ships to the user. The verdict above proposes BUY 8% of NAV without any sign that sizing, concentration, or stop placement were validated against the user's mandate. The tempting wrong answer 'Social Media Analyst' fails because that input is helpful but not load-bearing; the PM is structurally required, not optional.",
-    "related_lesson": "013",
+    "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": ["room", "safety_floor", "module_3"]
   },
@@ -109,7 +109,7 @@
     ],
     "answer": 3,
     "explanation": "Four independent metrics — revenue growth, Azure growth above guide, op margin, and FCF growth — all moved up. That is the definition of 'strengthening' from a fundamentals lens. The tempting wrong answer 'weakening because capex up' is the classic half-read take: capex stepping up to fund AI is an investment in future growth, not margin compression today (op margin is still 45.3%). Price action ('the stock didn't move') is not a fundamentals signal.",
-    "related_lesson": "032",
+    "related_lesson": "032_revenue_the_top_line",
     "related_agent": "fundamentals_analyst",
     "tags": ["fundamentals", "revenue", "module_6"]
   },
@@ -128,7 +128,7 @@
     ],
     "answer": 1,
     "explanation": "Two independent reasons mark 5,200 as support: it was the April breakout zone (prior resistance becomes support) and the rising 50-day MA is right on top of it at 5,198. Price held the level for three sessions then rallied — a textbook successful test. The tempting wrong answer 'failed breakout' fails because the breakout was confirmed by holding above 5,200, not failing; a failed breakout would have closed back below the level for multiple sessions.",
-    "related_lesson": "023",
+    "related_lesson": "023_support_and_resistance",
     "related_agent": "market_analyst",
     "tags": ["support_resistance", "module_4"]
   },
@@ -147,7 +147,7 @@
     ],
     "answer": 1,
     "explanation": "Two clean breaches: $14,940 / $80,000 = 18.7%, which is 3x the 6% size cap; and a stop at $440 from a $498 entry is -11.6%, wider than the -8% floor. The tempting wrong answer 'max-position-count only' fails because this is the 5th position, which IS allowed (cap is 5, not 4). Large-cap status doesn't exempt a ticker from the size cap.",
-    "related_lesson": "015",
+    "related_lesson": "015_stop_loss_basics",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "stop_loss", "safety_floor", "module_3"]
   },
@@ -166,7 +166,7 @@
     ],
     "answer": 3,
     "explanation": "The entire quote is built from social-platform signals: Stocktwits volume, Reddit mention counts, sentiment ratio, emoji patterns. That is the Social Media Analyst's exact lane. The tempting wrong answer 'News Analyst' fails because no news headlines, earnings, or macro events are referenced — only retail crowd chatter, which is sentiment, not news.",
-    "related_lesson": "048",
+    "related_lesson": "048_fomo",
     "related_agent": "social_media_analyst",
     "tags": ["agents", "sentiment", "fomo", "module_8"]
   },
@@ -185,7 +185,7 @@
     ],
     "answer": 0,
     "explanation": "XOM is an energy major; any verdict on it without a News Analyst read on OPEC supply, oil price, or geopolitical headlines is missing the single biggest exogenous driver. The verdict has full participation from every other listed agent. The tempting wrong answer 'Aggressive Debator' fails because debators are not always invoked on a HOLD verdict — but the News Analyst on a commodity-sensitive name is structurally important.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": ["room", "news", "energy", "module_10"]
   },
@@ -204,7 +204,7 @@
     ],
     "answer": 0,
     "explanation": "The Bear Researcher leads with the strongest *quantified* bear narrative: a ~70bp drop in long rates implies $2B+ NII compression by management's own guidance, AND credit costs are rising (delinquencies up 30bp). Two negative levers moving together is the textbook bear thesis. The tempting wrong answer 'JPM is going bankrupt' fails because it is unsupported by the numbers — a 3.4% delinquency rate is elevated, not catastrophic. Bears must be sharp, not hysterical.",
-    "related_lesson": "060",
+    "related_lesson": "060_bear_markets",
     "related_agent": "bear_researcher",
     "tags": ["bear_case", "banks", "rates", "module_10"]
   },
@@ -223,7 +223,7 @@
     ],
     "answer": 1,
     "explanation": "Three independent stretch signals stack: RSI at 81 (well above the 70 overbought line), thinning volume on rallies (distribution-style behaviour), and a 6.5% gap above the 20-day MA. The Market Analyst calls this stretched and flags mean-reversion risk. The tempting wrong answer 'bullish continuation because RSI > 70' fails because while RSI can stay high in a strong trend, the *combination* with fading volume reverses that read — RSI alone is not a buy signal.",
-    "related_lesson": "027",
+    "related_lesson": "027_rsi_momentum_oscillator",
     "related_agent": "market_analyst",
     "tags": ["rsi", "overbought", "module_5"]
   },
@@ -242,7 +242,7 @@
     ],
     "answer": 0,
     "explanation": "The single-position cap is fine on each holding, but the *sector* cap is the load-bearing rule here. 18% + 7% = 25%, which hits the cap. Any further bank exposure breaches it — and the PM's job is to surface that aggregation risk even when each individual position looks compliant. The tempting wrong answer 'no violation' is what the user feels because they checked the single-position rule and stopped. The PM never stops there.",
-    "related_lesson": "017",
+    "related_lesson": "017_portfolio_exposure_and_correlation",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "sector_concentration", "safety_floor", "bursa", "module_3"]
   },
@@ -261,7 +261,7 @@
     ],
     "answer": 1,
     "explanation": "The agent is pushing the team to act on conviction and size *up* within the allowed band, framing inaction as the bigger error. That is the Aggressive Debator's voice. The tempting wrong answer 'Portfolio Manager' fails because the PM never recommends sizing up — the PM enforces the mandate ceiling. Recommending 7% within the band is advocacy, which is what debators do.",
-    "related_lesson": "052",
+    "related_lesson": "052_trend_following",
     "related_agent": "aggressive_debator",
     "tags": ["agents", "debators", "module_9"]
   },
@@ -280,7 +280,7 @@
     ],
     "answer": 2,
     "explanation": "Every voice in the verdict is constructive. A 9% sizing call without a Bear Researcher counter-thesis is structurally one-sided — the Room is supposed to debate, not cheerlead. The tempting wrong answer 'Portfolio Manager' fails because the PM IS present ('within mandate'). Bear research is the missing voice; an absent counter-thesis is a verdict-quality red flag.",
-    "related_lesson": "060",
+    "related_lesson": "060_bear_markets",
     "related_agent": "bear_researcher",
     "tags": ["room", "bear_case", "module_10"]
   },
@@ -299,7 +299,7 @@
     ],
     "answer": 1,
     "explanation": "The Bull Researcher's job is to build a *quantified* upside case. The three-engine growth picture + market-multiple valuation + strong FCF is the structured bull thesis here. The tempting wrong answer ('antitrust risk is small') fails because dismissing risks is what the Aggressive Debator does — the Bull Researcher acknowledges them by leaving the bear room space and instead emphasises the positive economics.",
-    "related_lesson": "036",
+    "related_lesson": "036_competitive_advantage_moat",
     "related_agent": "bull_researcher",
     "tags": ["bull_case", "module_6"]
   },
@@ -318,7 +318,7 @@
     ],
     "answer": 3,
     "explanation": "The pieces add up cleanly: prior strong uptrend, controlled pullback on lighter volume, price arriving exactly at a rising 20-day MA, RSI normalised from overbought to neutral, and a hammer with above-average volume signalling demand at the level. That is the pullback-continuation setup the Market Analyst flags. The tempting wrong answer 'trend reversal' fails because pullbacks on *declining* volume are a feature of healthy uptrends — reversals usually print on rising volume and a break of the 20-day MA, neither of which happened.",
-    "related_lesson": "025",
+    "related_lesson": "025_pullbacks",
     "related_agent": "market_analyst",
     "tags": ["pullback", "bursa", "module_4"]
   },
@@ -337,7 +337,7 @@
     ],
     "answer": 0,
     "explanation": "Two consecutive losses (TSLA then NVDA) triggered the cooling-off rule at 11:40am; the SPY ticket at 1:50pm is well within the 24-hour window and the caption ('making it back today') is the classic revenge-trade tell. The tempting wrong answer 'max-trades-per-day' fails because this would only be the 3rd trade, which is still within the cap of 3. The breach is the cooling-off rule, not the daily count.",
-    "related_lesson": "047",
+    "related_lesson": "047_revenge_trading",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "revenge_trading", "safety_floor", "module_8"]
   },
@@ -356,7 +356,7 @@
     ],
     "answer": 3,
     "explanation": "The agent isn't taking a side — they are weighing both sides, scoring a conviction number, and translating that into a sizing recommendation. That synthesis role is the Research Manager's job. The tempting wrong answer 'Neutral Debator' fails because the neutral debator argues a middle-ground position, while the Research Manager *adjudicates* the bull-vs-bear debate and produces a calibrated conviction score (here, 0.58).",
-    "related_lesson": "057",
+    "related_lesson": "057_backtesting_a_strategy",
     "related_agent": "research_manager",
     "tags": ["agents", "synthesis", "module_9"]
   },
@@ -375,7 +375,7 @@
     ],
     "answer": 2,
     "explanation": "The verdict has fundamentals, news, sentiment, and synthesis covered — but no technical read on price, trend, or stop placement. That's why the verdict says 'at market, no stop specified' — the Market Analyst's input would normally provide a stop level and target. The tempting wrong answer 'PM' fails because the PM IS present and signed off on sizing. The missing voice is the technical one.",
-    "related_lesson": "022",
+    "related_lesson": "022_trend_direction",
     "related_agent": "market_analyst",
     "tags": ["room", "technicals", "module_4"]
   },
@@ -394,7 +394,7 @@
     ],
     "answer": 2,
     "explanation": "The Neutral Debator's job is to defend the middle when neither bull nor bear has a quantifiable edge. Price-to-book is at the 5-year median, growth is steady, and the giant cash pile hasn't been deployed yet — so there's no asymmetry to lean on. 'Hold the line at neutral' is the calibrated read. The tempting wrong answers ('STRONG BUY' / 'STRONG SELL') are emotional binaries; the Neutral Debator specifically resists that pull and asks for stronger evidence first.",
-    "related_lesson": "061",
+    "related_lesson": "061_sideways_range_markets",
     "related_agent": "neutral_debator",
     "tags": ["neutral", "debators", "module_10"]
   },
@@ -413,7 +413,7 @@
     ],
     "answer": 0,
     "explanation": "MACD crossing up with histogram flipping positive and a 1.8x volume spike is the early-reversal signal. But the broader trend filter — 50-day MA still sloping down — means the reversal is not yet confirmed. The Market Analyst calls this a 'turn-watch' rather than a confirmed reversal. The tempting wrong answer 'confirmed trend reversal' fails because one MACD cross without trend-filter confirmation is exactly the false-signal trap; experienced analysts wait for the 50-day to flatten or turn.",
-    "related_lesson": "028",
+    "related_lesson": "028_macd_trend_and_momentum",
     "related_agent": "market_analyst",
     "tags": ["macd", "reversal", "module_5"]
   },
@@ -432,7 +432,7 @@
     ],
     "answer": 2,
     "explanation": "The 4:18pm ticket is 18 minutes after the 4:00pm release, well inside the mandate's 30-minute earnings cooling-off window. The intent of the rule is precisely to stop chasing post-earnings gaps before the dust settles. The tempting wrong answer 'position-size violation' fails because 4% is *under* the 5% cap. Reading the right rule matters.",
-    "related_lesson": "013",
+    "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "earnings", "safety_floor", "module_3"]
   },
@@ -451,7 +451,7 @@
     ],
     "answer": 3,
     "explanation": "Onboarding, education, and scam-protection conversations live with the Concierge. The user isn't asking for a market call — they're asking for guidance on a red-flag situation, which is the Concierge's lane. The tempting wrong answer 'Portfolio Manager' fails because the PM enforces *mandate* rules on existing trades inside AMI; they don't field external scam questions. The Concierge does.",
-    "related_lesson": "065",
+    "related_lesson": "065_guaranteed_return_scams",
     "related_agent": "concierge",
     "tags": ["agents", "scams", "concierge", "module_11"]
   },
@@ -470,7 +470,7 @@
     ],
     "answer": 3,
     "explanation": "The only thing that *is* moving the stock — given no fundamentals change and no news catalyst — is crowd flow. Social Media Analyst is the agent who quantifies that (mention volume, sentiment ratio, platform spread). Without that input the Room is debating a flow trade with no flow data. The tempting wrong answer 'Trader' fails because the Trader IS present ('would not touch'). The structural gap is the sentiment read.",
-    "related_lesson": "048",
+    "related_lesson": "048_fomo",
     "related_agent": "social_media_analyst",
     "tags": ["room", "sentiment", "meme", "module_8"]
   },
@@ -489,7 +489,7 @@
     ],
     "answer": 0,
     "explanation": "The Trader sizes the stop to *technical structure*, not to the maximum-allowed loss. Support is at $188, so a stop just below it ($187.50) puts ~$4.90 of risk on the table against ~$12.60 of reward to the $205 target — a clean ~5.2x risk/reward. The tempting wrong answer 'stop at -8%' uses the mandate ceiling as the stop, which throws away tight structure. The mandate is the *worst* allowed, not the recommended.",
-    "related_lesson": "016",
+    "related_lesson": "016_risk_reward_ratio",
     "related_agent": "trader",
     "tags": ["trader", "execution", "risk_reward", "module_3"]
   },
@@ -508,7 +508,7 @@
     ],
     "answer": 3,
     "explanation": "Four climax ingredients stack: volume 3.4x the 20-day average (forced selling exhausting), widest range in 11 months (panic), intraday reversal from -3.4% to +0.8% (buyers stepping in), VIX dropping from 28 to 24 (fear easing). Together these are the textbook capitulation print the Market Analyst flags. The tempting wrong answer 'just noise' fails because volume + range + reversal of that magnitude is statistically rare — ignoring it misses the regime shift.",
-    "related_lesson": "029",
+    "related_lesson": "029_volume_confirmation",
     "related_agent": "market_analyst",
     "tags": ["capitulation", "volume", "vix", "module_5"]
   },
@@ -527,7 +527,7 @@
     ],
     "answer": 2,
     "explanation": "AMI's safety floor is the one part of the system the user cannot brief away. The PM's mandate enforcement (sizing caps, leverage, stops) is deliberately out of reach of Brief Your Agent — that's the product's bedrock. The briefing edit will be rejected with an explanation, not silently applied. The tempting wrong answer 'the user can customise any agent' fails because coachability stops at the safety floor; that's the explicit design.",
-    "related_lesson": "074",
+    "related_lesson": "074_ai_hallucinations_and_amis_safety_floor",
     "related_agent": "portfolio_manager",
     "tags": ["safety_floor", "coaching", "uncoachable", "module_12"]
   },
@@ -546,7 +546,7 @@
     ],
     "answer": 3,
     "explanation": "Even with high conviction, the agent is pushing for *smaller* sizing because of regime risk — and ends with a survival-mindset phrase ('live to trade tomorrow'). That's the Conservative Debator's voice. The tempting wrong answer 'Aggressive Debator' fails because the aggressive debator pushes for the *top* of the sizing band; this agent is pulling toward the bottom for survival reasons. Same band, opposite directions.",
-    "related_lesson": "019",
+    "related_lesson": "019_survival_mindset",
     "related_agent": "conservative_debator",
     "tags": ["agents", "debators", "survival", "module_3"]
   },
@@ -565,7 +565,7 @@
     ],
     "answer": 3,
     "explanation": "Even on a sector ETF, the Fundamentals Analyst should weigh in on aggregate earnings growth, margin trends, or the basket's dividend yield — especially when 'no growth' is being asserted by the bear case without supporting numbers. The tempting wrong answer 'Bull Researcher' fails because they ARE in the verdict ('defensive flows'). The structural gap is the fundamentals read.",
-    "related_lesson": "032",
+    "related_lesson": "032_revenue_the_top_line",
     "related_agent": "fundamentals_analyst",
     "tags": ["room", "fundamentals", "etf", "module_6"]
   }

@@ -23,6 +23,7 @@ check, so the same content defect fails the build instead of the user.
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -297,6 +298,37 @@ def test_lesson_codes_are_contiguous_within_each_track(lessons):
         if sorted(ns) != list(range(1, len(ns) + 1))
     }
     assert not broken, f"track code sequences not contiguous 1..N: {broken}"
+
+
+# ── DEF111: daily-challenge related_lesson must resolve to a real lesson ──
+#
+# LessonsService.get() is an exact dict-key lookup keyed on the full lesson
+# id (e.g. "045_greed"), not the bare CR018 display/reference number ("045").
+# Every content/daily_challenges/**/*.json `related_lesson` field was
+# authored as the bare number — 573/573 occurrences, corpus-wide, 0 correct —
+# so GET /v1/lessons/045 404s every time a user taps the "related lesson"
+# link after a daily challenge (100% failure rate, not an edge case). Every
+# other lesson-linking call site (lesson_reader_screen.dart,
+# track_lessons_screen.dart) passes the real `meta.id`; the daily-challenge
+# corpus was the one outlier. Fixed by rewriting all 573 values to the real
+# id; this guard makes the bare-numeric form fail the build if it recurs.
+
+
+def test_every_daily_challenge_related_lesson_resolves(lessons):
+    from app.services.daily_challenge_service import CONTENT_DAILY_CHALLENGES_DIR
+
+    known_ids = {l.meta.id for l in lessons}
+    offenders = []
+    for path in sorted(CONTENT_DAILY_CHALLENGES_DIR.glob("**/*.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        for item in data:
+            related = item.get("related_lesson")
+            if related and related not in known_ids:
+                offenders.append((path.name, item.get("id"), related))
+    assert not offenders, (
+        "related_lesson values with no matching content/lessons/<ID>_*.en.mdx "
+        f"(file, challenge_id, related_lesson): {offenders}"
+    )
 
 
 # ── DEF068: curated agent gateways ──────────────────────────────────────

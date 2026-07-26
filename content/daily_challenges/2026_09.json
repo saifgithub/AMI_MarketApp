@@ -14,7 +14,7 @@
     ],
     "answer": 3,
     "explanation": "The Fundamentals Analyst reads the gap between price paid and growth delivered. A 36.8x P/E vs a 28.5x peer median is a 29% premium; that premium is normally paid for superior growth, but guided FY27 earnings growth is only 10-12%. That mismatch is the textbook 'expensive on the multiple' read. The tempting wrong answer 'Fair — quality compounder' is what a retail investor says; the agent's job is to read the numbers, and 36.8x against 10-12% growth is not fair.",
-    "related_lesson": "037",
+    "related_lesson": "037_valuation_what_is_a_stock_worth",
     "related_agent": "fundamentals_analyst",
     "tags": ["valuation", "pe_ratio", "module_6", "module_7"]
   },
@@ -33,7 +33,7 @@
     ],
     "answer": 1,
     "explanation": "Payout ratios on accounting earnings mask the real question: can the company actually pay the dividend out of cash after reinvestment? Here, FCF-after-capex is negative because the RM12B capex programme exceeds RM3.2B in operating FCF. The RM0.50 dividend is being funded by debt or balance-sheet drawdown — that is the classic at-risk setup. The tempting wrong answer 'regulated utility, dividends are guaranteed' is a heuristic from textbooks; in reality, IPP/utility dividends are cut whenever capex cycles overwhelm cash generation.",
-    "related_lesson": "043",
+    "related_lesson": "043_dividend_yield_and_payout_ratio",
     "related_agent": "fundamentals_analyst",
     "tags": ["dividend", "payout_ratio", "fcf", "module_7", "bursa"]
   },
@@ -52,7 +52,7 @@
     ],
     "answer": 2,
     "explanation": "Four ingredients line up: close above the $192 ceiling at $196.40, volume ~1.93x the range average (540M vs 280M), 50-day MA rising at $174, RSI 64 (room to run, not overbought), and a clean tape to $215. That is the canonical volume-confirmed breakout. The tempting wrong answer 'failed breakout — single session' ignores the volume confirmation: a session this loud isn't 'just one day' — the buyers committed real size.",
-    "related_lesson": "024",
+    "related_lesson": "024_breakouts",
     "related_agent": "market_analyst",
     "tags": ["breakout", "volume", "module_4"]
   },
@@ -71,7 +71,7 @@
     ],
     "answer": 3,
     "explanation": "Single-position size is fine (5% < 8%) and a stop is attached, so those checks pass. The trip-wire is sector concentration: AAPL+MSFT+GOOGL+NVDA+META already total 36.5% of NAV, breaching the 30% sector cap. AMZN is another mega-cap tech name, pushing the sector to 41.5%. The PM blocks on concentration. The tempting wrong answer 'single-position cap' is what someone half-reading the mandate picks because the line is the most familiar — but the math says 5% is within 8%, so that rule isn't breached.",
-    "related_lesson": "014",
+    "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "concentration", "safety_floor", "module_3"]
   },
@@ -90,7 +90,7 @@
     ],
     "answer": 3,
     "explanation": "The quote is a long-thesis construction: network effects, switching costs, ten-year margin stability, and an explicit 'moat is widening' verdict. That is the Bull Researcher's job — assemble the strongest case for owning the name based on durable advantage. The tempting wrong answer 'Fundamentals Analyst' (not offered here) or 'News Analyst' fails because the speaker isn't reporting facts neutrally; they are arguing for a position. Bull/Bear researchers advocate; analysts observe.",
-    "related_lesson": "036",
+    "related_lesson": "036_competitive_advantage_moat",
     "related_agent": "bull_researcher",
     "tags": ["moat", "bull_thesis", "module_6"]
   },
@@ -109,7 +109,7 @@
     ],
     "answer": 0,
     "explanation": "P/B compares a name against its own history, not against the SPX. BRK-B's 1.61x is 13% above its 5-year average of 1.42x — a real premium, not a discount. Add that operating ROE is 11.5% (not the 15-20% that justifies a meaningful book premium), and the read is 'modestly expensive on book'. The tempting wrong answer 'Cheap vs SPX P/B 4.5x' is the classic apples-to-oranges error: the SPX is asset-light tech-heavy; Berkshire is asset-heavy insurance and rails. You compare a name to itself and to true peers, not to a different index.",
-    "related_lesson": "040",
+    "related_lesson": "040_price_to_book",
     "related_agent": "fundamentals_analyst",
     "tags": ["valuation", "pb_ratio", "module_7"]
   },
@@ -128,7 +128,7 @@
     ],
     "answer": 1,
     "explanation": "Every BUY verdict needs a Fundamentals read — the business behind the ticker. The verdict cites dividend cover (a fundamentals-flavoured number) but no revenue trajectory, no operating margin, no ROE, no debt picture. That is conspicuously absent for an oil major where commodity-cycle leverage and balance-sheet strength make or break the thesis. The tempting wrong answer 'Aggressive Debator' fails because debators stress-test an existing thesis; the missing thing here is the thesis foundation itself.",
-    "related_lesson": "032",
+    "related_lesson": "032_revenue_the_top_line",
     "related_agent": "fundamentals_analyst",
     "tags": ["room", "fundamentals", "module_6"]
   },
@@ -147,7 +147,7 @@
     ],
     "answer": 0,
     "explanation": "Three independent profitability metrics moved up: total operating margin (+3.5pp), EPS (+34%), and FCF (still healthy at $14.1B despite the capex step-up). The advertising engine is absorbing Reality Labs losses and still expanding margin — that is strengthening, period. The tempting wrong answer 'Weakening — Reality Labs hemorrhaging' fixates on one line and ignores that the consolidated number is up 3.5pp. Fundamentals reads the whole P&L, not the worst segment.",
-    "related_lesson": "033",
+    "related_lesson": "033_profit_and_margins",
     "related_agent": "fundamentals_analyst",
     "tags": ["margins", "profitability", "module_6"]
   },
@@ -166,7 +166,7 @@
     ],
     "answer": 2,
     "explanation": "Single-position size is at the cap but not over (6.0% = 6.0%). The clean violation is the stop-loss rule: the mandate says 'every entry within 8% of fill' and the user is explicitly waiving it. This is exactly what the safety floor is designed to block — the user's mandate is uncoachable; the PM cannot let 'conviction trade' override a rule the user set for themselves. The tempting wrong answer 'single-position cap' fails on arithmetic: 6.0% is within 6.0%, not over it.",
-    "related_lesson": "015",
+    "related_lesson": "015_stop_loss_basics",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "stop_loss", "safety_floor", "module_3"]
   },
@@ -185,7 +185,7 @@
     ],
     "answer": 2,
     "explanation": "The quote ends with 'risk-reward is unfavourable' — an explicit directional verdict. That is advocacy, not observation, and it stitches together three negatives (unit growth, services decel, China) plus a 'buybacks masking EPS' framing that is classic short-thesis construction. That is the Bear Researcher's lane. The tempting wrong answer 'Fundamentals Analyst' fails because the analyst reports; they do not conclude with 'risk-reward unfavourable'. Bull and Bear Researchers advocate; analysts feed them facts.",
-    "related_lesson": "044",
+    "related_lesson": "044_earnings_growth",
     "related_agent": "bear_researcher",
     "tags": ["bear_thesis", "earnings_growth", "module_7"]
   },
@@ -204,7 +204,7 @@
     ],
     "answer": 0,
     "explanation": "ROE is read against peers AND against the name's own history. Maybank's 10.6% is up vs its own 9.8% average (mild positive) but still trails the regional peer median of 12.2% by 1.6pp. The Fundamentals Analyst gives both reads; the more important one is peer-relative, because that is what determines whether the bank deserves a premium or discount multiple. The tempting wrong answer 'CET1 means ROE rises next year' confuses regulatory capital ratios with returns — higher CET1 actually tends to *lower* ROE, not raise it, by inflating the denominator.",
-    "related_lesson": "041",
+    "related_lesson": "041_return_on_equity",
     "related_agent": "fundamentals_analyst",
     "tags": ["roe", "banks", "module_7", "bursa"]
   },
@@ -223,7 +223,7 @@
     ],
     "answer": 3,
     "explanation": "For a bank, the balance sheet IS the business. The Fundamentals read above gives revenue, NIM, ROE — but no capital ratio (CET1) or leverage. A bank's solvency-and-buffer profile is the single most important number after revenue; without it, the BUY verdict is incomplete. The tempting wrong answer 'EBITDA margin' fails because EBITDA is not a banking metric — banks live by NIM and capital ratios, not EBITDA. Knowing which numbers matter for which industry is the lesson here.",
-    "related_lesson": "042",
+    "related_lesson": "042_debt_to_equity",
     "related_agent": "fundamentals_analyst",
     "tags": ["banks", "debt_to_equity", "capital_ratio", "module_7"]
   },
@@ -242,7 +242,7 @@
     ],
     "answer": 1,
     "explanation": "Operating cash flow ($108B) does exceed net income ($51B), which is normal because of non-cash D&A. But the right metric for an investor is FCF — what is left after capex. FCF is $24B, less than half of reported net income. That gap is the entire story for Amazon: heavy reinvestment is driving the AWS franchise but compressing cash returns to shareholders today. Valuation off EPS at 47x is far less stretched than valuation off FCF at ~100x. The tempting wrong answer 'OCF dwarfs net income — confirms earnings' is the half-read take that misses the capex line entirely.",
-    "related_lesson": "035",
+    "related_lesson": "035_cash_flow_vs_earnings",
     "related_agent": "fundamentals_analyst",
     "tags": ["fcf", "earnings_quality", "module_6"]
   },
@@ -261,7 +261,7 @@
     ],
     "answer": 0,
     "explanation": "The speaker cites three numbers (net cash, D/E, current ratio) and one stress-scenario observation, without recommending a position. That is the Fundamentals Analyst's neutral-reporting register — facts plus a 'so-what' framing, no buy/sell verdict. The tempting wrong answer 'Bull Researcher' fails because a Bull would explicitly connect the balance sheet to upside ('justifies a premium multiple', 'asymmetric long'); the speaker here only describes resilience.",
-    "related_lesson": "034",
+    "related_lesson": "034_debt_and_the_balance_sheet",
     "related_agent": "fundamentals_analyst",
     "tags": ["balance_sheet", "debt", "module_6", "bursa"]
   },
@@ -280,7 +280,7 @@
     ],
     "answer": 3,
     "explanation": "The user's mandate explicitly bans options and derivatives. A covered call is still an option position; 'covered' describes the risk profile, not the instrument category. When the user has set a no-derivatives floor — uncoachable in the AMI safety floor design — the PM must block, full stop. The tempting wrong answer 'margin rule' confuses a covered call (no margin required) with a naked one. The right read is: the rule says no options, this is an option, blocked.",
-    "related_lesson": "016",
+    "related_lesson": "016_risk_reward_ratio",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "options", "safety_floor", "module_3"]
   },
@@ -299,7 +299,7 @@
     ],
     "answer": 3,
     "explanation": "Three things distinguish a healthy pullback from a reversal: volume should DROP on the pullback (it did — 9M vs 18M), price should hold at a moving average that is itself rising (it did at the 20-day MA RM3.95), and the longer-term trend should remain intact (50-day MA still sloping up). The tempting wrong answer 'bearish reversal' over-reads the RSI move; falling from 78 to 54 is consolidation from overbought, not a bearish signal — bearish reversals show RSI breaking 30, not normalising to 54.",
-    "related_lesson": "025",
+    "related_lesson": "025_pullbacks",
     "related_agent": "market_analyst",
     "tags": ["pullback", "support", "module_4", "bursa"]
   },
@@ -318,7 +318,7 @@
     ],
     "answer": 2,
     "explanation": "Nothing in this tape gives an edge: price is mid-range, volume is below average (1.6M vs 1.8M), MAs are not signalling, and there is no catalyst. The Market Analyst's honest call is 'no setup' — that is a legitimate output, not a failure. The tempting wrong answer 'bullish breakout setup' over-interprets a flat MA; flat MAs precede *either* direction, not specifically breakouts. Saying 'no setup' is a skill, not a weakness.",
-    "related_lesson": "026",
+    "related_lesson": "026_moving_averages",
     "related_agent": "market_analyst",
     "tags": ["consolidation", "no_setup", "module_4", "bursa"]
   },
@@ -337,7 +337,7 @@
     ],
     "answer": 3,
     "explanation": "The Bull thesis is literally 'discount to global peers' — but the Fundamentals read only gives PCHEM's own numbers (EV/EBITDA 6.2x, ROE 8.4%). Without the peer-set median to compare against, the user cannot judge whether 6.2x is a real discount or already fair given lower ROE. That comparable set is the load-bearing missing data. The tempting wrong answer 'tax rate / dividend yield / inventory days' picks plausible-sounding metrics but none of them are required for evaluating the named thesis. Missing-data analysis means asking 'what would I need to verify the actual claim?'",
-    "related_lesson": "038",
+    "related_lesson": "038_comparable_companies",
     "related_agent": "fundamentals_analyst",
     "tags": ["comparable", "ev_ebitda", "room", "module_6", "bursa"]
   },
@@ -356,7 +356,7 @@
     ],
     "answer": 3,
     "explanation": "The quote weighs the Bull and Bear theses against each other, judges which is more concretely grounded, and outputs a sized recommendation with a conditional risk overlay. That is exactly the Research Manager's mandate — synthesis with conviction. The tempting wrong answer 'Portfolio Manager' fails because the PM applies the user's mandate to a verdict; they don't generate the verdict. The Research Manager produces the call; the PM checks it against the user's rules.",
-    "related_lesson": "030",
+    "related_lesson": "030_trend_confirmation_across_indicators",
     "related_agent": "research_manager",
     "tags": ["room", "synthesis", "module_5"]
   },
@@ -375,7 +375,7 @@
     ],
     "answer": 3,
     "explanation": "Every Room verdict must include both Bull AND Bear Researcher inputs, then synthesise. The verdict above has the Bull case (install base = moat) but no Bear case at all. Without a Bear, the Research Manager's 0.71 conviction is unearned — they have only weighed one side. That is structurally wrong. The tempting wrong answer 'Social Media Analyst' is plausible but not load-bearing; Bull/Bear pairing is structural, social-media input is supplemental.",
-    "related_lesson": "029",
+    "related_lesson": "029_volume_confirmation",
     "related_agent": "bear_researcher",
     "tags": ["room", "bear_thesis", "module_5"]
   },
@@ -394,7 +394,7 @@
     ],
     "answer": 3,
     "explanation": "The dividend alone (26% of net income) is conservative; the issue is the combined return ratio of 85%, which only works as long as earnings stay stable and CET1 doesn't get pressured by a credit cycle. The CET1 cushion (15.4% vs 13.5% minimum) is real but not infinite. The honest read is 'sustainable but near the practical ceiling'. The tempting wrong answer 'CET1 above the minimum, any payout is fine' ignores that a stress scenario can compress CET1 by 200-300bps in a year — at which point a 85% return ratio becomes the line that gets cut first.",
-    "related_lesson": "043",
+    "related_lesson": "043_dividend_yield_and_payout_ratio",
     "related_agent": "fundamentals_analyst",
     "tags": ["dividend", "buyback", "payout_ratio", "module_7"]
   },
@@ -413,7 +413,7 @@
     ],
     "answer": 1,
     "explanation": "The single-position cap is 5%. The current BRK-B position is 4.8% (within cap), but adding $3,696 pushes the combined position to $10,896, or 7.3% — over the cap by 2.3pp. The PM blocks the add. The tempting wrong answer 'sector concentration' fails because BRK-B alone (10,896 / 150,000 = 7.3%) doesn't get the financials sector to 25%, and there are no other holdings in the sector. Read the actual numbers; don't jump to the most familiar rule.",
-    "related_lesson": "014",
+    "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "position_sizing", "safety_floor", "module_3"]
   },
@@ -432,7 +432,7 @@
     ],
     "answer": 0,
     "explanation": "Three confirmations align: two peaks within 0.7% of each other (price symmetry), declining volume on the second test (demand fading), RSI lower-high (momentum divergence), AND a 50/100 MA bearish cross. That is the textbook double-top setup with multi-indicator confirmation. The tempting wrong answer 'cup-and-handle breakout' fails because cup-and-handles need volume to EXPAND on the breakout attempt — here volume was 40% lower at the second peak, the opposite signal. Same price level, two opposite stories — volume is the tiebreaker.",
-    "related_lesson": "027",
+    "related_lesson": "027_rsi_momentum_oscillator",
     "related_agent": "market_analyst",
     "tags": ["double_top", "divergence", "module_4"]
   },
@@ -470,7 +470,7 @@
     ],
     "answer": 3,
     "explanation": "The Bear Researcher explicitly cites 'peak hyperscaler capex risk' — but to evaluate that risk you need to know how concentrated NVDA's revenue is in those few customers. If 60-70% of revenue comes from MSFT/META/GOOGL/AMZN, the risk is acute; if it's 25%, much less so. That number is missing from the verdict, which makes the BUY 6% sizing decision underspecified. The tempting wrong answer 'Forward P/E' is real, but valuation isn't the named risk — customer concentration is the specific gap created by the Bear thesis being stated without supporting data.",
-    "related_lesson": "036",
+    "related_lesson": "036_competitive_advantage_moat",
     "related_agent": "fundamentals_analyst",
     "tags": ["customer_concentration", "moat", "module_6"]
   },
@@ -489,7 +489,7 @@
     ],
     "answer": 1,
     "explanation": "P/B always tracks ROE — higher ROE deserves higher P/B. CIMB's ROE has improved from 9.1% to 11.2% (+210bps), which justifies the rerating from 0.92x to 1.14x. But peers at 1.25x with ROE 12.2% suggest the rerating isn't fully complete — there's a small remaining gap. The honest call is 'roughly fair, partial rerating'. The tempting wrong answer 'Cheap vs peers' ignores that peer ROE is 100bps higher, so part of that P/B gap is earned by peers. P/B comparisons without ROE comparisons are meaningless.",
-    "related_lesson": "040",
+    "related_lesson": "040_price_to_book",
     "related_agent": "fundamentals_analyst",
     "tags": ["pb_ratio", "roe", "banks", "module_7", "bursa"]
   },
@@ -508,7 +508,7 @@
     ],
     "answer": 2,
     "explanation": "Oil-major analysis lives or dies on the breakeven — the Brent price at which the company funds opex, capex, and the dividend without drawing on the balance sheet. Without breakeven, the Bear's 'commodity-price tail risk' is undefined: tail risk to what level? A name with a $45/bbl breakeven at $74 Brent has a $30 cushion; at $35 breakeven the cushion is $40. That number is missing from the verdict. The tempting wrong answer 'Forward P/E' is real but not the specific gap created by the named Bear thesis — the missing-data check is 'what would I need to evaluate the stated risk?'",
-    "related_lesson": "034",
+    "related_lesson": "034_debt_and_the_balance_sheet",
     "related_agent": "fundamentals_analyst",
     "tags": ["balance_sheet", "breakeven", "room", "module_6"]
   },
@@ -527,7 +527,7 @@
     ],
     "answer": 0,
     "explanation": "This is the subtle one: the individual position passes (4.76% < 5%, stop attached). But the portfolio-level VaR check fails because adding more correlated mega-cap tech to an already-tech-heavy book pushes aggregate risk past the user's 1.5% cap. The safety floor blocks even though no single-position rule is breached. The tempting wrong answer 'single-position cap — 4.76% too close to 5%' confuses 'close to a limit' with 'over a limit' — 4.76% < 5%, that test passes cleanly. Portfolio-level checks catch what position-level checks miss.",
-    "related_lesson": "017",
+    "related_lesson": "017_portfolio_exposure_and_correlation",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "var", "correlation", "safety_floor", "module_3"]
   },
@@ -546,7 +546,7 @@
     ],
     "answer": 3,
     "explanation": "The speaker explicitly argues for a larger position than the Research Manager's recommendation and frames conservative sizing as 'the most expensive mistake'. That is the Aggressive Debator's lane — push the position bigger when conviction and fundamentals align. The tempting wrong answer 'Portfolio Manager' fails because the PM applies the user's mandate caps; they do not advocate for sizing up. The Aggressive Debator wants more; the PM decides whether the user's rules even allow it.",
-    "related_lesson": "028",
+    "related_lesson": "028_macd_trend_and_momentum",
     "related_agent": "aggressive_debator",
     "tags": ["debate", "position_sizing", "module_5"]
   },
@@ -565,7 +565,7 @@
     ],
     "answer": 0,
     "explanation": "Mirror image of the AAPL gap two challenges back: every Room verdict needs BOTH Bull and Bear inputs before the Research Manager synthesises. This verdict has the Bear (search-share erosion to AI) but no Bull at all. Without a Bull thesis, the 0.65 BUY conviction is structurally unsupported — the Research Manager is taking a position without weighing the positive case. The tempting wrong answer 'Aggressive/Conservative Debator' fails because debators stress-test an existing thesis; here the missing piece is one of the two thesis builders themselves.",
-    "related_lesson": "029",
+    "related_lesson": "029_volume_confirmation",
     "related_agent": "bull_researcher",
     "tags": ["room", "bull_thesis", "module_5"]
   }

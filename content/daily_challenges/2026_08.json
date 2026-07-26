@@ -14,7 +14,7 @@
     ],
     "answer": 3,
     "explanation": "Three independent confirmations stack: SPX closed at 5478 — above the 5460 ceiling, not just at it. Volume ran 1.4x the 20-day average, the textbook breakout volume threshold. The 20-day MA crossed above 5440 the session prior — momentum was already turning before the break. The 'bull trap' answer ignores volume; six failed tests on low volume don't disqualify a seventh attempt that arrives with conviction.",
-    "related_lesson": "024",
+    "related_lesson": "024_breakouts",
     "related_agent": "market_analyst",
     "tags": ["breakout", "volume", "module_4"]
   },
@@ -33,7 +33,7 @@
     ],
     "answer": 1,
     "explanation": "Anatomy: open $122.40, close $122.90 — body is tiny and near the low of the day. High $128.10 means the upper wick is $5.20 — roughly 5x the body. Lower wick is negligible. After a 4-week uptrend, that pattern on 1.6x volume is the textbook shooting star — buyers pushed price up $5.70 from the open then surrendered all of it. The 'hammer' answer fails because a hammer has a long LOWER wick at the bottom of a downtrend; the wicks and trend context here are inverted.",
-    "related_lesson": "020",
+    "related_lesson": "020_candlesticks_anatomy_of_a_bar",
     "related_agent": "market_analyst",
     "tags": ["candlesticks", "reversal", "module_4"]
   },
@@ -52,7 +52,7 @@
     ],
     "answer": 2,
     "explanation": "Position size is checked before concentration. The single-position cap is 6% ($4,800 on an $80k account); the ticket alone is $12,900 — 16.1% of NAV, ~2.7x the cap. The Portfolio Manager blocks on sizing before any other rule. The 'concentration' answer is tempting because the same number breaches both — but position-size is the structurally earlier gate, and there's no other AAPL to aggregate against. The missing stop is also a violation, but it's the second flag, not the first.",
-    "related_lesson": "014",
+    "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "position_sizing", "safety_floor", "module_3"]
   },
@@ -71,7 +71,7 @@
     ],
     "answer": 0,
     "explanation": "The quote is built entirely on technical indicators: RSI level and persistence above 70, MACD histogram behaviour, and distance from the 20-day MA. Those are the Market Analyst's tools. The 'Fundamentals Analyst on P/E' answer is the trap — both agents can say 'stretched', but P/E and balance-sheet language is absent here; the entire vocabulary is oscillator and moving-average. Match the vocabulary to the lane.",
-    "related_lesson": "027",
+    "related_lesson": "027_rsi_momentum_oscillator",
     "related_agent": "market_analyst",
     "tags": ["agents", "rsi", "module_5"]
   },
@@ -90,7 +90,7 @@
     ],
     "answer": 0,
     "explanation": "Textbook bull-flag pullback: 11.4% rally in four weeks, three-session pullback on shrinking red candles (sellers losing conviction), price tagged the rising 20-day MA at $429 without breaking it, then August 5 closed up $5 on volume 1.2x average. The 'distribution' answer fails because distribution shows on rising volume during the down move and falling volume on the up move — here the volume signature is the opposite. Pullbacks that hold a rising MA on declining volume resolve in the trend's direction.",
-    "related_lesson": "025",
+    "related_lesson": "025_pullbacks",
     "related_agent": "market_analyst",
     "tags": ["pullback", "bull_flag", "module_4"]
   },
@@ -109,7 +109,7 @@
     ],
     "answer": 2,
     "explanation": "Four confirmations align: 50-day and 200-day MAs both rising (trend intact at two timeframes), $182.40 close clears the $181 consolidation ceiling on 1.8x volume (breakout), MACD cross fires with the move (momentum), RSI at 64 leaves room before 70 (not stretched). The 'RSI 64 = sell' answer misreads the indicator — 70 is the conventional overbought threshold, and 64 with rising MAs is a healthy momentum reading, not a sell signal.",
-    "related_lesson": "030",
+    "related_lesson": "030_trend_confirmation_across_indicators",
     "related_agent": "market_analyst",
     "tags": ["trend_confirmation", "breakout", "module_5"]
   },
@@ -147,7 +147,7 @@
     ],
     "answer": 1,
     "explanation": "The definition of an uptrend is higher highs and higher lows. Highs: $122 → $128 → $134. Lows: $108 → $116 → $124. Both sequences are monotonically rising, and the 50-day MA has confirmed underneath the whole way. The 'sideways' answer averages the prices in your head instead of reading the structure — the range moved from 108-122 in spring to 124-134 in summer. That's not reverting, that's stair-stepping up.",
-    "related_lesson": "022",
+    "related_lesson": "022_trend_direction",
     "related_agent": "market_analyst",
     "tags": ["trend", "structure", "module_4"]
   },
@@ -166,7 +166,7 @@
     ],
     "answer": 3,
     "explanation": "The mandate requires technical stops, not percentage-of-entry stops. $574 sits in chart no-man's-land — there's no support there. The real technical level is $562 (50-day MA + swing low). A stop at $574 will get tagged on noise and exit a thesis that hasn't broken; a stop at $562 exits only when the structure actually fails. The 'loss cap' answer is wrong: $6 loss on 40 shares is $240, which is 0.2% of NAV, well under 2%. Read the math, not the vibe.",
-    "related_lesson": "023",
+    "related_lesson": "023_support_and_resistance",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "stops", "support_resistance", "safety_floor"]
   },
@@ -185,7 +185,7 @@
     ],
     "answer": 2,
     "explanation": "The entire quote is technical indicators — MACD line vs signal line, histogram sign, moving-average level, structural break level. Those are the Market Analyst's tools. The 'Trader proposing a short' answer is tempting because the framing 'watch $208' sounds executional, but no entry price, stop, or size is given — that's an analyst flagging a setup, not a trader executing it.",
-    "related_lesson": "028",
+    "related_lesson": "028_macd_trend_and_momentum",
     "related_agent": "market_analyst",
     "tags": ["agents", "macd", "module_5"]
   },
@@ -204,7 +204,7 @@
     ],
     "answer": 2,
     "explanation": "The News Analyst's job is to translate macro events into ticker-level consequences. The dot-plot shift + 14bps move on the 2-year + curve flattening to 32bps is a concrete, second-order setup against bank NIM. The 'fewer cuts means banks earn more' answer is the half-read take — it confuses absolute rate level with curve shape. Banks earn the spread between short funding and long lending; a flatter curve compresses that spread regardless of the absolute level.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": ["news", "macro", "rates", "module_10"]
   },
@@ -223,7 +223,7 @@
     ],
     "answer": 3,
     "explanation": "XOM's near-term P&L is overwhelmingly driven by macro forces: oil price (OPEC+) and rates/USD (FOMC). Sizing 5% of NAV into XOM with the FOMC 48 hours away and an OPEC+ cut still rippling, without a News Analyst read, is structurally incomplete. The Aggressive/Neutral Debators and Social Media Analyst can be silent on commodity names without breaking a verdict — the News Analyst cannot when two macro catalysts bracket the entry.",
-    "related_lesson": "064",
+    "related_lesson": "064_market_breadth",
     "related_agent": "news_analyst",
     "tags": ["room", "completeness", "macro", "module_10"]
   },
@@ -242,7 +242,7 @@
     ],
     "answer": 2,
     "explanation": "Breakouts without volume confirmation are the #1 false-signal source in technical analysis. The note covers price, MAs, RSI, MACD, MA crossover — but never names whether the $130 break happened on heavy volume or quiet volume. P/E, insider data, and short interest are valid analysis inputs, but they're not the Market Analyst's lane — volume is. A chart-read missing volume on a breakout call is structurally incomplete.",
-    "related_lesson": "029",
+    "related_lesson": "029_volume_confirmation",
     "related_agent": "market_analyst",
     "tags": ["volume", "completeness", "module_5"]
   },
@@ -261,7 +261,7 @@
     ],
     "answer": 2,
     "explanation": "Three things resolve in unison: the $428 ceiling broke with a close at $432, volume confirmed at 2.1x average, and the moving-average stack is in textbook bullish order (short above intermediate above long, all rising). RSI 62 leaves headroom before 70. Every layer of technical analysis points the same direction. The 'failed breakout' answer demands a pullback that hasn't happened and contradicts the volume signature.",
-    "related_lesson": "030",
+    "related_lesson": "030_trend_confirmation_across_indicators",
     "related_agent": "market_analyst",
     "tags": ["trend_confirmation", "breakout", "module_5"]
   },
@@ -280,7 +280,7 @@
     ],
     "answer": 2,
     "explanation": "The quote is pure volume-pattern reading anchored to moving-average context. Specific volume numbers vs 20-day average, the distinction between dry-up and distribution, and the 20-day MA reference are all Market Analyst tools. The 'Trader executing a buy' answer is the trap — the quote talks about a setup forming, not an entry being placed. No size, no stop, no execution language. Analyst, not Trader.",
-    "related_lesson": "029",
+    "related_lesson": "029_volume_confirmation",
     "related_agent": "market_analyst",
     "tags": ["agents", "volume", "module_5"]
   },
@@ -299,7 +299,7 @@
     ],
     "answer": 3,
     "explanation": "Two independent rules break at once: META alone at 14.5% NAV is 2x the 7% single-position cap, AND adding it pushes tech sector exposure from 25.25% to 39.75% — 9.75 percentage points over the 30% sector limit. The Portfolio Manager doesn't pick one; the verdict surfaces both. The 'no violation, 12% concentration is the binding rule' answer is the trap — that rule applies to a single stock against itself, not the new position vs cap.",
-    "related_lesson": "015",
+    "related_lesson": "015_stop_loss_basics",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "concentration", "sector", "module_3"]
   },
@@ -318,7 +318,7 @@
     ],
     "answer": 1,
     "explanation": "This is exactly what multi-timeframe analysis is for. The weekly says 'a long-running level is being defended' (RM3.90, three holds in 18 months). The 4-hour says 'something is starting to turn here' (six higher lows, rising volume). The daily says 'the broader trend hasn't flipped yet' (still lower highs). The Market Analyst's job is to name all three and explicitly mark which timeframe is dominant for sizing. The 'bullish, buy now' answer ignores the daily; the 'bearish, ignore lower' answer wastes the weekly signal.",
-    "related_lesson": "021",
+    "related_lesson": "021_timeframes_and_what_they_tell_you",
     "related_agent": "market_analyst",
     "tags": ["timeframes", "bursa", "multi_timeframe", "module_4"]
   },
@@ -337,7 +337,7 @@
     ],
     "answer": 2,
     "explanation": "Four metrics align as 'fair-to-cheap': P/B 1.26 is below the 15-year average of ~1.4, operating earnings growing 27%, GEICO combined ratio of 81.7 (under 100 = underwriting profit, 81.7 is exceptional), and $189B in cash is optionality, not waste — Berkshire deploys it when prices crack. The 'cash means can't deploy capital' answer inverts what cash means at BRK. The 'P/B above average' answer is just factually wrong (1.26 < 1.4).",
-    "related_lesson": "037",
+    "related_lesson": "037_valuation_what_is_a_stock_worth",
     "related_agent": "fundamentals_analyst",
     "tags": ["valuation", "module_7"]
   },
@@ -356,7 +356,7 @@
     ],
     "answer": 0,
     "explanation": "The quote is meta-technical — it's the Market Analyst naming the limits of their own toolkit. RSI and MACD are price-derived; when an event rewrites the price distribution overnight, the indicator readings reflect old context. Naming that limitation explicitly is exactly the discipline of EDGE 3. The 'News Analyst' answer is the trap — yes, a news event is the trigger, but the agent isn't summarising the news, they're explaining why technicals will misread the post-news tape.",
-    "related_lesson": "031",
+    "related_lesson": "031_indicator_limitations",
     "related_agent": "market_analyst",
     "tags": ["agents", "indicator_limits", "module_5"]
   },
@@ -375,7 +375,7 @@
     ],
     "answer": 3,
     "explanation": "The Market Analyst named the break level and RSI but skipped volume entirely. A break of $272 on 0.7x average volume is a failed breakout; on 1.6x it's confirmed. The Trader is being asked to enter at $279 with a $268 stop on a setup whose validity hinges on volume that wasn't reported. Insider data and dividend yield aren't the Market Analyst's lane — volume is, and it's the load-bearing absence here.",
-    "related_lesson": "029",
+    "related_lesson": "029_volume_confirmation",
     "related_agent": "market_analyst",
     "tags": ["completeness", "volume", "breakout", "module_5"]
   },
@@ -394,7 +394,7 @@
     ],
     "answer": 1,
     "explanation": "Definition check: horizontal range = clear, repeatedly defended floor and ceiling with no directional bias in between. RM7.60 (4 holds) and RM7.90 (4 rejections) over nine weeks plus a flat 50-day MA is the textbook signature. The 'ascending triangle' answer would require rising lows tagging a flat ceiling — but the lows here are flat too. Match the structure, not the vibe.",
-    "related_lesson": "023",
+    "related_lesson": "023_support_and_resistance",
     "related_agent": "market_analyst",
     "tags": ["range", "support_resistance", "bursa", "module_4"]
   },
@@ -413,7 +413,7 @@
     ],
     "answer": 0,
     "explanation": "The Portfolio Manager's mandate enforcement is uncoachable by design — it's the hard safety floor of the entire system. No conviction score, no user instruction, no Room verdict can override the position-size cap the user signed up to. This is a documented architectural decision (Brief Your Agent doc). The 'compromise at 8%' answer is the trap because compromise sounds reasonable — but the floor isn't negotiable. 5% is 5%.",
-    "related_lesson": "014",
+    "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": ["safety_floor", "uncoachable", "mandate", "module_3"]
   },
@@ -432,7 +432,7 @@
     ],
     "answer": 0,
     "explanation": "Three signals stack: a level that held five times broke on a 1% close-down (not a wick), volume confirmed at 1.9x the 20-day average, and the 20-day MA flipped from rising to flat in unison. The textbook read is 'support is gone, next visible level is the 200-day at 5180'. The 'oversold bounce' answer skips the volume signature — bounces from heavy-volume breakdowns are typically retests of broken support from below, not V-reversals.",
-    "related_lesson": "026",
+    "related_lesson": "026_moving_averages",
     "related_agent": "market_analyst",
     "tags": ["moving_averages", "breakdown", "module_5"]
   },
@@ -451,7 +451,7 @@
     ],
     "answer": 3,
     "explanation": "The vocabulary is execution: entry price, stop price, target price, risk-reward ratio, position size as % NAV computed against the mandate's loss cap. That is exactly the Trader's lane — they take what the analyst flagged and turn it into a tradeable ticket with all parameters specified. The 'Market Analyst' answer is the trap because the setup is referenced — but the analyst doesn't name entries, stops, and size; they describe the chart. The Trader operationalises it.",
-    "related_lesson": "066",
+    "related_lesson": "066_telegram_whatsapp_pump_groups",
     "related_agent": "trader",
     "tags": ["agents", "execution", "module_10"]
   },
@@ -470,7 +470,7 @@
     ],
     "answer": 2,
     "explanation": "Five momentum indicators agreeing is impressive — until you realise they're all the same family. Momentum says 'price is moving up'; it doesn't say where price is. Is RM6.95 just under a major resistance? At a 52-week high? Inside a flat range? Indicator stacking from one family creates a confirmation illusion. A complete read pairs momentum with structure: trend, MAs, support/resistance. That's the limitation EDGE 3 names.",
-    "related_lesson": "031",
+    "related_lesson": "031_indicator_limitations",
     "related_agent": "market_analyst",
     "tags": ["indicator_limits", "completeness", "bursa", "module_5"]
   },
@@ -489,7 +489,7 @@
     ],
     "answer": 0,
     "explanation": "Two diagnostic moments: (1) the $200.40 push closed back inside the range on 0.6x volume — that's a failed breakout, classic fakeout signature (no volume to support the move, immediate rejection). (2) The next session broke the OTHER side on 1.7x volume — failed breakouts that resolve into the opposite-side breakdown are textbook bull traps. Both pieces together name the pattern. The 'successful breakout, needs time' answer ignores that price already closed back inside the range on the same day — that's not consolidation, that's rejection.",
-    "related_lesson": "024",
+    "related_lesson": "024_breakouts",
     "related_agent": "market_analyst",
     "tags": ["breakout", "fakeout", "volume", "module_4"]
   },
@@ -508,7 +508,7 @@
     ],
     "answer": 2,
     "explanation": "The News Analyst's job is to translate the macro shock into a ticker-specific read with mechanism and risk. The mechanism: XOM's upstream segment realises higher prices on the same production, expanding cash flow. The caveat: sustained prices above $85 historically trigger demand destruction in Q4, capping the upside. Naming both mechanism and risk is the News Analyst's discipline. The 'bearish, higher oil bad for consumers' answer is consumer-economics, not XOM-specific.",
-    "related_lesson": "064",
+    "related_lesson": "064_market_breadth",
     "related_agent": "news_analyst",
     "tags": ["news", "macro", "commodities", "module_10"]
   },
@@ -527,7 +527,7 @@
     ],
     "answer": 0,
     "explanation": "The vocabulary is retail-sentiment proxies: Reddit mention velocity, StockTwits bull/bear ratio, TikTok video counts. The synthesis ('four times in three years, each within 10 sessions of a 12-15% pullback') is base-rate-against-history, which is what makes social signal actionable. The 'News Analyst' answer is the trap because both deal with attention — but the News Analyst tracks press releases, filings, and macro events, not retail sentiment indices.",
-    "related_lesson": "069",
+    "related_lesson": "069_ai_trading_bot_scams",
     "related_agent": "social_media_analyst",
     "tags": ["agents", "sentiment", "retail", "module_10"]
   },
@@ -546,7 +546,7 @@
     ],
     "answer": 3,
     "explanation": "The mandate is explicit: stop attached at submission, no exceptions. 'Will set after the open' is a stop-not-attached condition that violates the rule by definition. The intention is irrelevant — the mandate enforces structure, not promises. The 'no violation, user has a plan' answer is the friendly-sounding trap; mandates exist precisely because plans formed at the open under live P&L pressure are the ones that get broken. The PM blocks at submission.",
-    "related_lesson": "016",
+    "related_lesson": "016_risk_reward_ratio",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "stops", "safety_floor", "module_3"]
   },
@@ -565,7 +565,7 @@
     ],
     "answer": 2,
     "explanation": "The pullback did exactly what a healthy pullback does: trimmed an overheated RSI from 74 to 52 (room to run before 70 again), tested the rising 20-day MA at RM13.50 without breaking it, and resolved up on rising volume. That sequence — overheated rally → orderly pullback → indicator reset → volume-confirmed resumption — is the textbook continuation signal. The 'RSI 74 = top' answer treats one reading as final, but RSI cycling 70+ → 50s → 70+ during a trend is normal, not terminal.",
-    "related_lesson": "025",
+    "related_lesson": "025_pullbacks",
     "related_agent": "market_analyst",
     "tags": ["pullback", "rsi", "bursa", "module_4"]
   },
@@ -584,7 +584,7 @@
     ],
     "answer": 3,
     "explanation": "The Portfolio Manager is the safety-floor gate. Every Room verdict must surface an explicit compliance check before it ships. The proposed BUY at 9% of NAV is large enough that the typical mandate would either cap it (if the user's single-position max is 5-8%) or pass it after explicit validation — but the verdict shows neither. The Aggressive/Neutral Debators and Social Media Analyst can be silent without breaking a verdict; the PM cannot. That's a structural absence, not a stylistic one.",
-    "related_lesson": "013",
+    "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": ["room", "safety_floor", "completeness", "module_3"]
   }

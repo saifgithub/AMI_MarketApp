@@ -14,7 +14,7 @@
     ],
     "answer": 3,
     "explanation": "Fundamentals Analyst membaca jurang antara harga yang dibayar dan pertumbuhan yang dicapai. P/E 36.8x berbanding median rakan sekerja 28.5x ialah premium 29%; premium itu biasanya dibayar untuk pertumbuhan unggul, tetapi pertumbuhan earnings FY27 yang dipandu hanya 10-12%. Ketidaksepadanan ini ialah bacaan 'mahal pada pendarab' dalam buku teks. Jawapan salah yang menggoda 'Adil — penggabung kualiti' ialah apa yang dikatakan pelabur runcit; tugas agen ialah membaca nombor, dan 36.8x terhadap pertumbuhan 10-12% bukanlah adil.",
-    "related_lesson": "037",
+    "related_lesson": "037_valuation_what_is_a_stock_worth",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "valuation",
@@ -38,7 +38,7 @@
     ],
     "answer": 1,
     "explanation": "Nisbah payout pada earnings akaun menyembunyikan soalan sebenar: adakah syarikat sebenarnya boleh membayar dividen daripada tunai selepas pelaburan semula? Di sini, FCF-selepas-capex adalah negatif kerana program capex RM12B melebihi FCF operasi RM3.2B. Dividen RM0.50 dibiayai oleh hutang atau penurunan carta keseimbangan — itulah susunan berisiko klasik. Jawapan salah yang menggoda 'utiliti berregulated, dividen dijamin' ialah heuristik dari buku teks; pada hakikatnya, dividen IPP/utiliti dipotong apabila kitaran capex mengatasi penjanaan tunai.",
-    "related_lesson": "043",
+    "related_lesson": "043_dividend_yield_and_payout_ratio",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "dividend",
@@ -63,7 +63,7 @@
     ],
     "answer": 2,
     "explanation": "Empang bahan berbaris: penutupan di atas siling $192 pada $196.40, volume ~1.93x purata julat (540M berbanding 280M), 50-day MA naik pada $174, RSI 64 (ruang untuk berlari, tidak lebih beli), dan pita bersih ke $215. Itu ialah breakout disahkan volume kanonik. Jawapan salah yang menggoda 'breakout gagal — sesi tunggal' mengabaikan pengesahan volume: sesi sekuat ini bukan 'hanya satu hari' — pembeli telah komited saiz sebenar.",
-    "related_lesson": "024",
+    "related_lesson": "024_breakouts",
     "related_agent": "market_analyst",
     "tags": [
       "breakout",
@@ -86,7 +86,7 @@
     ],
     "answer": 3,
     "explanation": "Saiz kedudukan tunggal adalah baik (5% < 8%) dan had kerugian dilampirkan, jadi pemeriksaan tersebut lulus. Penggera adalah kepekatan sektor: AAPL+MSFT+GOOGL+NVDA+META sudah berjumlah 36.5% daripada NAV, melanggar had sektor 30%. AMZN ialah nama teknologi mega-cap lain, yang mendorong sektor kepada 41.5%. Pengurus Portofolio menyekat berdasarkan kepekatan. Jawapan salah yang menggoda 'had kedudukan tunggal' ialah apa yang dipilih oleh seseorang yang separuh membaca mandat kerana baris itu paling biasa — tetapi matematik menunjukkan 5% adalah dalam lingkungan 8%, jadi peraturan itu tidak dilanggar.",
-    "related_lesson": "014",
+    "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -110,7 +110,7 @@
     ],
     "answer": 3,
     "explanation": "Petikan ini adalah pembinaan tesis jangka panjang: kesan rangkaian, kos pertukaran, kestabilan margin selama sepuluh tahun, dan penghakiman eksplisit 'parit ekonomi sedang melebar'. Itulah tugas Ejen Penyelidik Bull — menyusun kes terkuat untuk memiliki nama tersebut berdasarkan kelebihan tahan lama. Jawapan salah yang menggoda 'Penganalisis Asas' (tidak ditawarkan di sini) atau 'Penganalisis Berita' gagal kerana pembicara tidak melaporkan fakta secara neutral; mereka berhujah untuk kedudukan. Penyelidik Bull/Bear membela; penganalisis memerhati.",
-    "related_lesson": "036",
+    "related_lesson": "036_competitive_advantage_moat",
     "related_agent": "bull_researcher",
     "tags": [
       "moat",
@@ -133,7 +133,7 @@
     ],
     "answer": 0,
     "explanation": "P/B membandingkan nama terhadap sejarahnya sendiri, bukan terhadap SPX. P/B BRK-B 1.61x adalah 13% di atas purata 5-tahunnya 1.42x — premium sebenar, bukan diskaun. Tambah pula bahawa ROE operasi ialah 11.5% (bukan 15-20% yang membenarkan premium buku yang bermakna), dan bacaannya ialah 'agak mahal pada buku'. Jawapan salah yang menggoda 'Murah berbanding P/B SPX 4.5x' ialah kesilapan klasik membandingkan epal dengan oren: SPX adalah teknologi ringan aset; Berkshire adalah aset berat insurans dan rel. Anda membandingkan nama terhadap dirinya sendiri dan rakan sejawat sebenar, bukan terhadap indeks yang berbeza.",
-    "related_lesson": "040",
+    "related_lesson": "040_price_to_book",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "valuation",
@@ -156,7 +156,7 @@
     ],
     "answer": 1,
     "explanation": "Setiap verdict BELI memerlukan bacaan Asas — perniagaan di sebalik ticker. Verdict tersebut menyebut penutupan dividen (nombor berasaskan asas) tetapi tiada trajektori pendapatan, tiada margin operasi, tiada ROE, tiada gambaran hutang. Itu ketara ketiadaannya untuk syarikat minyak di mana leverage kitaran komoditi dan kekuatan neraca menentukan atau mematahkan tesis. Jawapan salah yang menggoda 'Aggressive Debator' gagal kerana pembantah menguji tesis sedia ada; yang hilang di sini ialah asas tesis itu sendiri.",
-    "related_lesson": "032",
+    "related_lesson": "032_revenue_the_top_line",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "room",
@@ -179,7 +179,7 @@
     ],
     "answer": 0,
     "explanation": "Tiga metrik keuntungan bebas bergerak naik: margin operasi keseluruhan (+3.5pp), EPS (+34%), dan FCF (masih sihat pada $14.1B walaupun kenaikan capex). Enjin iklan menyerap kerugian Reality Labs dan masih mengembangkan margin — itu kukuh, titik. Jawapan salah yang menggoda 'Melemah — Reality Labs berdarah' memfokuskan pada satu baris dan mengabaikan bahawa nombor konsolidasi naik 3.5pp. The Fundamentals Analyst membaca keseluruhan P&L, bukan segmen terburuk.",
-    "related_lesson": "033",
+    "related_lesson": "033_profit_and_margins",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "margins",
@@ -202,7 +202,7 @@
     ],
     "answer": 2,
     "explanation": "Saiz kedudukan tunggal berada pada had tetapi tidak melebihi (6.0% = 6.0%). Pelanggaran bersih ialah peraturan henti-kerugian: mandat menyatakan 'setiap kemasukan dalam 8% daripada harga isi' dan pengguna secara eksplisit menafikannya. Ini tepat apa yang lantai keselamatan direka untuk halang — mandat pengguna tidak boleh diajar; PM tidak boleh membiarkan 'trade keyakinan' mengatasi peraturan yang ditetapkan pengguna untuk dirinya sendiri. Jawapan salah yang menggoda 'had kedudukan tunggal' gagal pada aritmetik: 6.0% berada dalam 6.0%, bukan melebihi ia.",
-    "related_lesson": "015",
+    "related_lesson": "015_stop_loss_basics",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -226,7 +226,7 @@
     ],
     "answer": 2,
     "explanation": "Petikan berakhir dengan 'risiko-imbal hasil adalah tidak menguntungkan' — satu penghakiman arah yang jelas. Itu adalah advokasi, bukan pemerhatian, dan ia menyatukan tiga perkara negatif (pertumbuhan unit, perlahan perkhidmatan, China) plus bingkai 'pembelian balik menutupi EPS' yang merupakan pembinaan tesis pendek yang klasik. Itu adalah bidang Bear Researcher. Jawapan salah yang menggoda 'Fundamentals Analyst' gagal kerana analis melaporkan; mereka tidak menyimpulkan dengan 'risiko-imbal hasil tidak menguntungkan'. Bull dan Bear Researchers mengadvokasi; analis memberi mereka fakta.",
-    "related_lesson": "044",
+    "related_lesson": "044_earnings_growth",
     "related_agent": "bear_researcher",
     "tags": [
       "bear_thesis",
@@ -249,7 +249,7 @@
     ],
     "answer": 0,
     "explanation": "ROE dibaca terhadap rakan kongsi DAN terhadap sejarah nama itu sendiri. ROE 10.6% Maybank naik berbanding purata 9.8% sendiri (positif ringan) tetapi masih ketinggalan di belakang median rakan kongsi rantau 12.2% sebanyak 1.6pp. The Fundamentals Analyst memberi kedua-dua bacaan; yang lebih penting adalah relatif terhadap rakan kongsi, kerana itulah yang menentukan sama ada bank layak mendapat gandaan premium atau diskaun. Jawapan salah yang menggoda 'CET1 bermakna ROE naik tahun depan' keliru antara nisbah modal peraturan dengan pulangan — CET1 yang lebih tinggi sebenarnya cenderung *menurunkan* ROE, bukan meningkatkannya, dengan membengkakkan penyebut.",
-    "related_lesson": "041",
+    "related_lesson": "041_return_on_equity",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "roe",
@@ -273,7 +273,7 @@
     ],
     "answer": 3,
     "explanation": "Untuk bank, neraca adalah perniagaan. Bacaan Asas di atas memberi pendapatan, NIM, ROE — tetapi tiada nisbah modal (CET1) atau leverage. Profil keupayaan pembayaran dan penampon bank adalah nombor paling penting selepas pendapatan; tanpanya, verdisikt BELI adalah tidak lengkap. Jawapan salah yang menggoda 'margin EBITDA' gagal kerana EBITDA bukan metrik perbankan — bank hidup dengan NIM dan nisbah modal, bukan EBITDA. Mengetahui nombor yang penting untuk industri yang mana adalah pelajaran di sini.",
-    "related_lesson": "042",
+    "related_lesson": "042_debt_to_equity",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "banks",
@@ -297,7 +297,7 @@
     ],
     "answer": 1,
     "explanation": "Aliran tunai operasi ($108B) melebihi pendapatan bersih ($51B), yang merupakan perkara biasa kerana penyusutan dan amortisasi bukan tunai. Namun, metrik yang paling penting bagi pelabur ialah FCF — baki selepas belanja modal. FCF ialah $24B, kurang daripada separuh daripada pendapatan bersih yang dilaporkan. Jurang ini adalah keseluruhan kisah Amazon: pelaburan semula yang berat sedang memacu fransise AWS tetapi menekan pulangan tunai kepada pemegang saham pada masa ini. Penilaian berdasarkan EPS pada 47x jauh lebih rendah ketegangan berbanding penilaian berdasarkan FCF pada ~100x. Jawapan salah yang menarik 'OCF mendominasi pendapatan bersih — mengesahkan pendapatan' ialah tafsiran separuh baca yang mengabaikan bar belanja modal sepenuhnya.",
-    "related_lesson": "035",
+    "related_lesson": "035_cash_flow_vs_earnings",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "fcf",
@@ -320,7 +320,7 @@
     ],
     "answer": 0,
     "explanation": "Penceramah menyebut tiga angka (kas bersih, D/E, nisbah semasa) dan satu pemerhatian senario tekanan, tanpa mengesyorkan kedudukan. Itu adalah laras pelaporan neutral Analyst Asas — fakta plus kerangka 'so-what', tiada verdict beli/jual. Jawapan salah yang menarik 'Bull Researcher' gagal kerana Bull akan menghubungkan neraca secara eksplisit kepada potensi naik ('menjustifikasikan gandaan premium', 'panjang asimetri'); penceramah di sini hanya menerangkan ketahanan.",
-    "related_lesson": "034",
+    "related_lesson": "034_debt_and_the_balance_sheet",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "balance_sheet",
@@ -344,7 +344,7 @@
     ],
     "answer": 3,
     "explanation": "Mandat pengguna secara eksplisit melarang pilihan dan derivatif. Call tertutup masih merupakan posisi pilihan; 'tertutup' menerangkan profil risiko, bukan kategori instrumen. Apabila pengguna menetapkan lantai tanpa derivatif — yang tidak boleh diajar dalam reka bentuk lantai keselamatan AMI — PM mesti menyekat, sepenuhnya. Jawapan salah yang menarik 'peraturan margin' mengelirukan call tertutup (tiada margin diperlukan) dengan call telanjang. Bacaan yang betul ialah: peraturan mengatakan tiada pilihan, ini adalah pilihan, disekat.",
-    "related_lesson": "016",
+    "related_lesson": "016_risk_reward_ratio",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -368,7 +368,7 @@
     ],
     "answer": 3,
     "explanation": "Tiga perkara membezakan penurunan sihat daripada pembalikan: isipadu harus TURUN semasa penurunan (ia telah turun — 9M berbanding 18M), harga harus bertahan pada purata bergerak yang sedang naik (ia telah bertahan pada PM 20-hari RM3.95), dan trend jangka panjang harus kekal utuh (PM 50-hari masih condong naik). Jawapan salah yang menarik 'pembalikan bearish' terlalu membaca pergerakan RSI; penurunan dari 78 ke 54 adalah konsolidasi dari keadaan jenuh beli, bukan isyarat bearish — pembalikan bearish menunjukkan RSI menembusi 30, bukan normalisasi ke 54.",
-    "related_lesson": "025",
+    "related_lesson": "025_pullbacks",
     "related_agent": "market_analyst",
     "tags": [
       "pullback",
@@ -392,7 +392,7 @@
     ],
     "answer": 2,
     "explanation": "Tiada apa-apa dalam pita ini memberikan kelebihan: harga berada di tengah julat, isipadu di bawah purata (1.6M berbanding 1.8M), PM tidak memberi isyarat, dan tiada pemangkin. Panggilan jujur Penganalisis Pasaran adalah 'tiada setup' — itu adalah output yang sah, bukan kegagalan. Jawapan salah yang menarik 'setup pecahan bullish' terlalu mentafsir PM mendatar; PM mendatar mendahului *sama ada* arah, bukan khusus pecahan. Mengatakan 'tiada setup' adalah kemahiran, bukan kelemahan.",
-    "related_lesson": "026",
+    "related_lesson": "026_moving_averages",
     "related_agent": "market_analyst",
     "tags": [
       "consolidation",
@@ -416,7 +416,7 @@
     ],
     "answer": 3,
     "explanation": "Tesis Bull secara literal adalah 'diskaun kepada rakan sejawat global' — tetapi bacaan Asas hanya memberikan nombor PCHEM sendiri (EV/EBITDA 6.2x, ROE 8.4%). Tanpa median set rakan sejawat untuk dibandingkan, pengguna tidak dapat menilai sama ada 6.2x adalah diskaun sebenar atau sudah adil memandangkan ROE yang lebih rendah. Set boleh banding itu adalah data yang hilang menanggung beban. Jawapan salah yang menarik 'kadar cukai / hasil dividen / hari inventori' memilih metrik yang terdengar masuk akal tetapi tiada satu pun diperlukan untuk menilai tesis yang dinamakan. Analisis data hilang bermaksud bertanya 'apa yang saya perlukan untuk mengesahkan tuntutan sebenar?'",
-    "related_lesson": "038",
+    "related_lesson": "038_comparable_companies",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "comparable",
@@ -441,7 +441,7 @@
     ],
     "answer": 3,
     "explanation": "Petikan tersebut menimbang teori Bull dan Bear antara satu sama lain, menilai mana yang lebih kukuh secara konkret, dan mengeluarkan cadangan bersaiz dengan lapisan risiko kondisional. Itu adalah tepat mandat Pengurus Penyelidikan — sintesis dengan keyakinan. Jawapan salah yang memikat 'Pengurus Portfolio' gagal kerana PM menerapkan mandat pengguna ke atas verdict; mereka tidak menghasilkan verdict. Pengurus Penyelidikan menghasilkan panggilan; PM menyemaknya terhadap peraturan pengguna.",
-    "related_lesson": "030",
+    "related_lesson": "030_trend_confirmation_across_indicators",
     "related_agent": "research_manager",
     "tags": [
       "room",
@@ -464,7 +464,7 @@
     ],
     "answer": 3,
     "explanation": "Setiap verdict Bilik mesti termasuk masukan Peneliti Bull DAN Bear Researcher, kemudian sintesis. Verdict di atas mempunyai kes Bull (asas pemasangan = parit) tetapi tiada kes Bear langsung. Tanpa Bear, keyakinan 0.71 Pengurus Penyelidikan tidak diperoleh — mereka hanya menimbang satu sisi. Itu secara struktur salah. Jawapan salah yang memikat 'Penganalisis Media Sosial' adalah masuk akal tetapi tidak menanggung beban; pasangan Bull/Bear adalah struktur, masukan media sosial adalah tambahan.",
-    "related_lesson": "029",
+    "related_lesson": "029_volume_confirmation",
     "related_agent": "bear_researcher",
     "tags": [
       "room",
@@ -487,7 +487,7 @@
     ],
     "answer": 3,
     "explanation": "Dividen sahaja (26% daripada pendapatan bersih) adalah konservatif; isu ialah nisbah pulangan gabungan 85%, yang hanya berfungsi selagi pendapatan kekal stabil dan CET1 tidak ditekan oleh kitaran kredit. Bantal CET1 (15.4% berbanding 13.5% minimum) adalah nyata tetapi tidak terhingga. Bacaan jujur ialah 'lestari tetapi hampir dengan had praktikal'. Jawapan salah yang memikat 'CET1 di atas minimum, mana-mana pembayaran adalah baik' mengabaikan bahawa senario tekanan boleh memampatkan CET1 sebanyak 200-300bps dalam setahun — pada titik itu nisbah pulangan 85% menjadi garis yang akan dipotong dahulu.",
-    "related_lesson": "043",
+    "related_lesson": "043_dividend_yield_and_payout_ratio",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "dividend",
@@ -511,7 +511,7 @@
     ],
     "answer": 1,
     "explanation": "Had posisi tunggal ialah 5%. Posisi BRK-B semasa ialah 4.8% (dalam had), tetapi penambahan $3,696 mendorong posisi gabungan kepada $10,896, atau 7.3% — melebihi had sebanyak 2.3pp. Pengurus Portfolio menyekat pesanan tambahan tersebut. Jawapan salah yang memikat 'kepekatan sektor' gagal kerana BRK-B sahaja (10,896 / 150,000 = 7.3%) tidak menjadikan sektor kewangan mencapai 25%, dan tiada pegangan lain dalam sektor tersebut. Baca nombor sebenar; jangan terburu-buru kepada peraturan yang paling biasa.",
-    "related_lesson": "014",
+    "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -535,7 +535,7 @@
     ],
     "answer": 0,
     "explanation": "Tiga pengesahan selari: dua puncak dalam lingkungan 0.7% antara satu sama lain (simetri harga), isipadu menurun pada ujian kedua (permintaan pudar), RSI puncak lebih rendah (penyimpangan momentum), DAN persilangan bearish 50/100 MA. Ini adalah persediaan double-top buku teks dengan pengesahan pelbagai penunjuk. Jawapan salah yang memikat 'penembusan cup-and-handle' gagal kerana cup-and-handle memerlukan isipadu untuk MELUASKAN pada percubaan penembusan — di sini isipadu adalah 40% lebih rendah pada puncak kedua, isyarat bertentangan. Tahap harga sama, dua cerita bertentangan — isipadu adalah pemecah seri.",
-    "related_lesson": "027",
+    "related_lesson": "027_rsi_momentum_oscillator",
     "related_agent": "market_analyst",
     "tags": [
       "double_top",
@@ -581,7 +581,7 @@
     ],
     "answer": 3,
     "explanation": "Peneliti Bear secara eksplisit menyebut 'risiko puncak kapex hyperscaler' — tetapi untuk menilai risiko itu, anda perlu mengetahui sejauh mana pendapatan NVDA tertumpu kepada beberapa pelanggan tersebut. Jika 60-70% pendapatan datang daripada MSFT/META/GOOGL/AMZN, risikonya akut; jika 25%, jauh lebih rendah. Nombor itu tiada dalam verdict, yang menjadikan keputusan saiz BELI 6% tidak spesifik. Jawapan salah yang menarik 'P/E Ke Hadapan' adalah nyata, tetapi valuasi bukan risiko yang dinamakan — kepekatan pelanggan adalah jurang khusus yang dicipta oleh tesis Bear yang dinyatakan tanpa data sokongan.",
-    "related_lesson": "036",
+    "related_lesson": "036_competitive_advantage_moat",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "customer_concentration",
@@ -604,7 +604,7 @@
     ],
     "answer": 1,
     "explanation": "P/B sentiasa mengikut ROE — ROE yang lebih tinggi layak mendapat P/B yang lebih tinggi. ROE CIMB telah meningkat daripada 9.1% kepada 11.2% (+210bps), yang menjustifikasikan penarafan semula dari 0.92x ke 1.14x. Tetapi rakan sejawat pada 1.25x dengan ROE 12.2% mencadangkan penarafan semula belum sepenuhnya selesai — terdapat jurang kecil yang tinggal. Panggilan jujur ialah 'anggaran adil, penarafan semula separa'. Jawapan salah yang menarik 'Murah berbanding rakan' mengabaikan bahawa ROE rakan 100bps lebih tinggi, jadi sebahagian jurang P/B itu dimenangi oleh rakan. Perbandingan P/B tanpa perbandingan ROE adalah tidak bermakna.",
-    "related_lesson": "040",
+    "related_lesson": "040_price_to_book",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "pb_ratio",
@@ -629,7 +629,7 @@
     ],
     "answer": 2,
     "explanation": "Analisis majoriti minyak hidup atau mati pada breakeven — harga Brent di mana syarikat membiayai opex, capex, dan dividen tanpa menarik daripada neraca. Tanpa breakeven, 'risiko ekor harga komoditi' Bear tidak ditakrifkan: risiko ekor ke tahap apa? Nama dengan breakeven $45/bbl pada Brent $74 mempunyai bantal $30; pada breakeven $35, bantalnya $40. Nombor itu tiada dalam verdict. Jawapan salah yang menarik 'P/E Ke Hadapan' adalah nyata tetapi bukan jurang khusus yang dicipta oleh tesis Bear yang dinamakan — semak data yang hilang ialah 'apa yang saya perlukan untuk menilai risiko yang dinyatakan?'",
-    "related_lesson": "034",
+    "related_lesson": "034_debt_and_the_balance_sheet",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "balance_sheet",
@@ -653,7 +653,7 @@
     ],
     "answer": 0,
     "explanation": "Ini adalah kes yang halus: kedudukan individu lulus (4.76% < 5%, henti rugi dilampirkan). Namun, semakan VaR tahap portfoliio gagal kerana menambah lebih banyak teknologi mega-cap yang berkorelasi tinggi ke dalam buku yang sudah berat di sektor teknologi mendorong risiko agregat melebihi had 1.5% pengguna. Lantai keselamatan menghalang walaupun tiada peraturan kedudukan tunggal dilanggar. Jawapan salah yang menarik 'had kedudukan tunggal — 4.76% terlalu hampir dengan 5%' membingungkan 'hampir dengan had' dengan 'melebihi had' — 4.76% < 5%, ujian itu lulus dengan jelas. Semakan tahap portfoliio menangkap apa yang semakan tahap kedudukan terlepas.",
-    "related_lesson": "017",
+    "related_lesson": "017_portfolio_exposure_and_correlation",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -678,7 +678,7 @@
     ],
     "answer": 3,
     "explanation": "Pembicara secara eksplisit berhujah untuk kedudukan yang lebih besar daripada cadangan Pengurus Penyelidikan dan membingkakan saiz konservatif sebagai 'kesilapan paling mahal'. Itu adalah domain Aggressive Debator — tolak kedudukan lebih besar apabila keyakinan dan asas fundamental selari. Jawapan salah yang menarik 'Pengurus Portfoliio' gagal kerana PM mengenakan had mandat pengguna; mereka tidak menggalakkan penambahan saiz. Aggressive Debator mahukan lebih banyak; PM memutuskan sama ada peraturan pengguna membolehkannya.",
-    "related_lesson": "028",
+    "related_lesson": "028_macd_trend_and_momentum",
     "related_agent": "aggressive_debator",
     "tags": [
       "debate",
@@ -701,7 +701,7 @@
     ],
     "answer": 0,
     "explanation": "Imej cermin jurang AAPL dua cabaran lalu: setiap verifikasi Bilik memerlukan input BULL dan BEAR sebelum Research Manager mensintesis. Verifikasi ini mempunyai Bear (hakisan bahagian pasaran carian kepada AI) tetapi tiada Bull langsung. Tanpa tesis Bull, keyakinan BELI 0.65 tidak disokong secara struktur — Research Manager mengambil kedudukan tanpa menimbang kes positif. Jawapan salah yang menarik 'Aggressive/Conservative Debator' gagal kerana debator menguji kes sedia ada; di sini bahagian yang hilang adalah salah satu daripada dua pembina tesis itu sendiri.",
-    "related_lesson": "029",
+    "related_lesson": "029_volume_confirmation",
     "related_agent": "bull_researcher",
     "tags": [
       "room",

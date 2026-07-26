@@ -14,7 +14,7 @@
     ],
     "answer": 3,
     "explanation": "Concierge ialah ejen yang diprogramkan untuk pengiktirafan corak penipuan dan membimbing pengguna melalui carian pendaftar SC Malaysia, BNM, SEC, dan FCA. Penyelidik bull membentangkan tesis mengenai sekuriti sebenar; di sini tiada sekuriti, hanya tawaran jaminan. Concierge menguasai wilayah Modul 11.",
-    "related_lesson": "065",
+    "related_lesson": "065_guaranteed_return_scams",
     "related_agent": "concierge",
     "tags": [
       "scams",
@@ -37,7 +37,7 @@
     ],
     "answer": 3,
     "explanation": "Kumpulan pam menjalankan banyak panggilan; hanya pemenang yang dipaparkan. 14 kemenangan yang kelihatan tidak memberitahu apa-apa tentang 30 atau 50 kerugian yang dibuang secara senyap. 'Saiz kedudukan pengasas' menarik tetapi bukan elemen struktur yang hilang — kerugian yang hilang itulah.",
-    "related_lesson": "066",
+    "related_lesson": "066_telegram_whatsapp_pump_groups",
     "related_agent": "concierge",
     "tags": [
       "scams",
@@ -60,7 +60,7 @@
     ],
     "answer": 0,
     "explanation": "Carian pendaftar lulus (peniaga meniru nombor syarikat sebenar). Kegagalan muktamad ialah akaun bank: broker Malaysia berlesen mesti memisahkan wang klien dalam akaun amanah atas nama syarikat. Mana-mana destinasi nama individu adalah penentu tanpa mengira berapa banyak pengesahan lain yang lulus.",
-    "related_lesson": "071",
+    "related_lesson": "071_how_to_verify_before_you_wire_money",
     "related_agent": "concierge",
     "tags": [
       "scams",
@@ -83,7 +83,7 @@
     ],
     "answer": 1,
     "explanation": "Sebelas sesi julat yang menipis, pecahan dengan isipadu 2.4x, kemudian sesi seterusnya kekal di atas rintangan sebelumnya — itulah corak pecahan julat + ujian semula buku teks. Bull flag memerlukan pergerakan kuat sebelumnya ke dalam konsolidasi; tidak diterangkan di sini. Pecahan yang gagal akan menutup kembali ke dalam julat; ia tidak berlaku.",
-    "related_lesson": "024",
+    "related_lesson": "024_breakouts",
     "related_agent": "market_analyst",
     "tags": [
       "technical_analysis",
@@ -106,7 +106,7 @@
     ],
     "answer": 1,
     "explanation": "Setiap strategi algoritma sebenar melaksanakan dagangan di venue penyelesaian sebenar. Bahagian yang hilang adalah pengesahan bebas — satu-satunya bukti yang sukar dipalsukan berbanding papan pemuka. Testimoni dan bilangan pengikut sendiri mudah dicipta dan tidak menangani ketepatan papan pemuka.",
-    "related_lesson": "069",
+    "related_lesson": "069_ai_trading_bot_scams",
     "related_agent": "concierge",
     "tags": [
       "scams",
@@ -129,7 +129,7 @@
     ],
     "answer": 1,
     "explanation": "Keadaan genting + kelangkaan + penolakan untuk meletakkan terma dalam tulisan adalah cap jari EDGE 20. Concierge adalah agent yang dilatih untuk memasang peraturan rehat 72 jam untuk taktik tekanan. Debator agresif akan membahaskan merit alokasi sebenar; tiada alokasi sebenar untuk dibahaskan di sini.",
-    "related_lesson": "070",
+    "related_lesson": "070_pressure_tactics_urgency_and_scarcity",
     "related_agent": "concierge",
     "tags": [
       "scams",
@@ -152,7 +152,7 @@
     ],
     "answer": 1,
     "explanation": "Had kedudukan tunggal adalah gerbang deterministik pertama dan gagal pada 40%/10%. Pendedahan sektor juga boleh gagal, tetapi peraturan kedudukan tunggal aktif lebih awal dan pada satu ticker. Tiada leverage dan gerbang kecairan tidak terlibat oleh penerangan saiz perdagangan.",
-    "related_lesson": "014",
+    "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -175,7 +175,7 @@
     ],
     "answer": 2,
     "explanation": "Verdict Bilik yang sihat mempunyai dissen. BUY sebulat suara pada nama penny yang tidak cair dengan teori media sosial adalah bentuk pump-and-dump yang tepat — Bear Researcher dan Conservative Debator direka untuk berselisih di sini. Trader telah menyumbang (mereka bersetuju), jadi 'Trader hilang' adalah jawapan salah yang menipu yang salah faham senario.",
-    "related_lesson": "066",
+    "related_lesson": "066_telegram_whatsapp_pump_groups",
     "related_agent": "bear_researcher",
     "tags": [
       "room",
@@ -198,7 +198,7 @@
     ],
     "answer": 1,
     "explanation": "Fundamentals analyst menimbang komponen, bukan tajuk utama. Kelebihan pada pendapatan/eps serta pengembangan margin adalah positif; perkakasan rata dan bimbingan lemah adalah negatif. Bacaan jujur adalah 'campuran', bukan panggilan binari. Pembingkai 'kelebihan jelas' mengabaikan bimbingan, yang pasaran biasanya memberi berat lebih daripada cetakan itu sendiri.",
-    "related_lesson": "044",
+    "related_lesson": "044_earnings_growth",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "earnings",
@@ -221,7 +221,7 @@
     ],
     "answer": 3,
     "explanation": "Keempat-empat adalah bendera merah, tetapi hanya satu yang merupakan langkah keluar peringkat akhir yang direkodkan oleh BNM, CFTC, dan FCA: membayar untuk mengeluarkan. Tiada broker yang sah — yang berlesen di mana-mana pun — memerlukan deposit tambahan untuk melepaskan dana yang telah anda depositkan. Empat pengeluaran kecil itu adalah umpan.",
-    "related_lesson": "068",
+    "related_lesson": "068_forex_fx_trading_scams",
     "related_agent": "concierge",
     "tags": [
       "scams",
@@ -244,7 +244,7 @@
     ],
     "answer": 2,
     "explanation": "Empat sentuhan, yang terakhir pada isipadu ringan, kemudian pantulan yang disahkan pada isipadu meningkat — itulah skrip buku kerja sokongan-ujian semula. Pecahan sokongan memerlukan penutupan di bawah $580 dengan keyakinan; itu tidak berlaku. Bendera lembu memerlukan kenaikan tajam sebelumnya ke dalam konsolidasi ketat; tidak diterangkan.",
-    "related_lesson": "023",
+    "related_lesson": "023_support_and_resistance",
     "related_agent": "market_analyst",
     "tags": [
       "technical_analysis",
@@ -267,7 +267,7 @@
     ],
     "answer": 2,
     "explanation": "Peristiwa makro dwi-hari pada hari berikutnya adalah tepat apa yang news_analyst dan research_manager dipasangkan untuk menandakan. Conservative Debator boleh berbantah tetapi bukan domain unik mereka. Trader telah menyumbang. Jawapan salah yang paling menipu (Conservative Debator) salah faham di mana jurang struktur berada.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": [
       "room",
@@ -290,7 +290,7 @@
     ],
     "answer": 2,
     "explanation": "P/E utama menggunakan pendapatan GAAP yang diturunkan oleh beban bukan berulang. Panggilan fundamentals sebenar menormalkan beban sekali itu dan melihat arus tunai, yang meningkat 12%. Jawapan 'peluang nilai jelas' adalah perangkap — ia memperlakukan P/E optikal sebagai kebenaran.",
-    "related_lesson": "039",
+    "related_lesson": "039_the_pe_ratio",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "fundamentals",
@@ -313,7 +313,7 @@
     ],
     "answer": 1,
     "explanation": "Concierge bertanggungjawab atas Pengiktirafan Scam Modul 11. Pulangan dijamin + panggilan VIP berbayar adalah koktel pump-group + pulangan dijamin yang kanonik. market_analyst hanya akan bercakap tentang carta TSLA dalam vakum — itu terlepas pola scam sepenuhnya.",
-    "related_lesson": "066",
+    "related_lesson": "066_telegram_whatsapp_pump_groups",
     "related_agent": "concierge",
     "tags": [
       "scams",
@@ -336,7 +336,7 @@
     ],
     "answer": 0,
     "explanation": "Penguatmandatan mandat — dan khususnya gerbang drawdown deterministik — adalah tanggungjawab lantai keselamatan portfolio_manager yang tidak boleh diajar. Trader melaksanakan di dalam lantai; bear_researcher dan conservative_debator membantah tesis. Hanya PM yang memiliki 'henti keras, tiada pengecualian'.",
-    "related_lesson": "018",
+    "related_lesson": "018_drawdown_management",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -359,7 +359,7 @@
     ],
     "answer": 3,
     "explanation": "Langkah 1 sahaja adalah apa yang dieksploitasi oleh peniru — mereka merujuk kepada pendaftaran sebenar. Pengesahan yang menentukan adalah memadankan butiran hubungan terhadap senarai rasmi yang diterbitkan oleh pengawal selia untuk entiti tersebut. Domain .org peniru akan gagal dalam pemeriksaan silang register FCA/SEC serta-merta. Sijil SSL dan usia perniagaan bukan diagnostik yang boleh dipalsukan.",
-    "related_lesson": "067",
+    "related_lesson": "067_fake_brokers_and_clone_entities",
     "related_agent": "concierge",
     "tags": [
       "scams",
@@ -382,7 +382,7 @@
     ],
     "answer": 2,
     "explanation": "Penguatkuasaan mandat oleh PM adalah lantai keselamatan — ia tidak boleh diajar dan berjalan secara deterministik. Alokasi 18% terhadap had 10% mesti menyekat secara keras. Perbezaan pendapat Bear/Conservative adalah berguna tetapi pemeriksaan kepatuhan PM adalah sandaran struktur. Ketidakhadiran PM adalah kegagalan lantai keselamatan yang kritikal.",
-    "related_lesson": "013",
+    "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": [
       "room",
@@ -405,7 +405,7 @@
     ],
     "answer": 3,
     "explanation": "Modul 11, EDGE 20 — jeda 72 jam adalah refleks yang dipasang oleh Concierge. research_manager mensintesis perdebatan Bilik; neutral_debator menimbang sisi pada tesis sebenar. Tiada satu pun yang memiliki pengiktirafan taktik tekanan scam. Concierge yang memilikinya.",
-    "related_lesson": "070",
+    "related_lesson": "070_pressure_tactics_urgency_and_scarcity",
     "related_agent": "concierge",
     "tags": [
       "scams",
@@ -428,7 +428,7 @@
     ],
     "answer": 2,
     "explanation": "RSI di atas 70 dengan isipadu yang menurun semasa mencapai tahap tertinggi baru dan kehadiran sumbu atas adalah konfigurasi keletihan yang klasik. Ia tidak menjamin pembalikan — jawapan 'short it' terlalu agresif. Namun, ia bermakna entri baru berkualiti rendah. Jawapan 'buy more' mengabaikan tiga tanda amaran bebas.",
-    "related_lesson": "027",
+    "related_lesson": "027_rsi_momentum_oscillator",
     "related_agent": "market_analyst",
     "tags": [
       "technical_analysis",
@@ -451,7 +451,7 @@
     ],
     "answer": 3,
     "explanation": "Strategi sebenar yang cemerlang pun mempunyai bulan rugi. Sifar dalam tempoh 60 bulan dengan penurunan maksimum 0.4% adalah cap jari diagnostik untuk overfitting atau direkakan sepenuhnya. Pulangan tinggi semata-mata tidak menafikan — pulangan gaya venture wujud. Bentuk lengkung adalah bukti yang menentukan.",
-    "related_lesson": "069",
+    "related_lesson": "069_ai_trading_bot_scams",
     "related_agent": "concierge",
     "tags": [
       "scams",
@@ -474,7 +474,7 @@
     ],
     "answer": 3,
     "explanation": "Penghakiman bulat pada saham kecil adalah bau struktur. The Room direka untuk menonjolkan ketidaksetujuan; Bear yang mendapati 'tiada risiko material' pada nama yang kurang diperdagangkan tidak menjalankan tugasnya. Item yang hilang bukan laporan spesifik — ia adalah ketidaksetujuan itu sendiri.",
-    "related_lesson": "058",
+    "related_lesson": "058_strategy_failure_modes",
     "related_agent": "bear_researcher",
     "tags": [
       "room",
@@ -497,7 +497,7 @@
     ],
     "answer": 1,
     "explanation": "Tiga diagnostik aktif serentak: saiz tiga kali ganda, tiada tepi baharu, nota emosi yang jelas. Pendawaian lesson-047 conservative_debator adalah untuk menandakan corak ini tepat. 'Tukar ticker' adalah jawapan salah yang membolehkan tingkah laku berterusan pada nama lain.",
-    "related_lesson": "047",
+    "related_lesson": "047_revenge_trading",
     "related_agent": "conservative_debator",
     "tags": [
       "psychology",
@@ -520,7 +520,7 @@
     ],
     "answer": 3,
     "explanation": "Setiap regulator yang relevan (SEC, FCA, FINRA, SC Malaysia, MAS) memerlukan wang pelanggan dalam akaun amanah nama syarikat. Bingkai 4-of-5 adalah perangkap — pengesahan adalah gerbang keras, bukan skor. Deposit ujian membuktikan hanya bahawa akaun wujud, bukan bahawa wang akan kembali.",
-    "related_lesson": "071",
+    "related_lesson": "071_how_to_verify_before_you_wire_money",
     "related_agent": "concierge",
     "tags": [
       "scams",
@@ -543,7 +543,7 @@
     ],
     "answer": 2,
     "explanation": "news_analyst menimbang sama ada pemangkin menjustifikasi pergerakan. Beban anti-monopoli yang diangkat adalah peristiwa penyenaraian semula nilai adil yang tulen, bukan kilasan sentimen. Laluan 'jual berita' adalah perangkap yang memikat — ia berfungsi untuk acara hiped tanpa kesan aliran tunai sebenar; ini bukan kes itu.",
-    "related_lesson": "005",
+    "related_lesson": "005_what_moves_stock_prices",
     "related_agent": "news_analyst",
     "tags": [
       "news",
@@ -566,7 +566,7 @@
     ],
     "answer": 3,
     "explanation": "The Trader menukar tesis kepada pelan boleh laksanakan: harga masuk, henti rugi, sasaran, dan saiz. Tanpa itu, veredik tidak boleh ditindak. Portfolio Manager akan menetapkan had yang selaras dengan mandat tetapi bukan pelangan dagangan itu sendiri. Jawapan salah yang paling menipu (PM) mengelirukan dua peranan yang berbeza.",
-    "related_lesson": "015",
+    "related_lesson": "015_stop_loss_basics",
     "related_agent": "trader",
     "tags": [
       "room",
@@ -589,7 +589,7 @@
     ],
     "answer": 1,
     "explanation": "P/B adalah isyarat yang berguna tetapi separa untuk REIT; 0.92 berbanding 1.05 bukan diskaun yang ketara. Bacaan fundamentals yang jujur menimbang liputan pembayaran dan isyarat operasi (penempatan). Jawapan 'beli jelas pada P/B murah' adalah perangkap — ia memperlakukan nisbah tunggal sebagai veredik.",
-    "related_lesson": "040",
+    "related_lesson": "040_price_to_book",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "fundamentals",
@@ -612,7 +612,7 @@
     ],
     "answer": 2,
     "explanation": "Tiga isyarat bertepatan: isipadu 3.8x, ekor bawah panjang, penutupan berhampiran harga tertinggi — itu adalah isipadu-klimaks / kapitulasi teks buku. Pembingkai 'dasar dijamin' akan terlalu berkomitmen; ia adalah titik belok, bukan kepastian. Penelanan bearish memerlukan bentuk lilin yang salah; tidak wujud di sini.",
-    "related_lesson": "029",
+    "related_lesson": "029_volume_confirmation",
     "related_agent": "market_analyst",
     "tags": [
       "technical_analysis",
@@ -635,7 +635,7 @@
     ],
     "answer": 0,
     "explanation": "Isipadu 52x pada nama bernilai kurang daripada sejuta, kenaikan hampir menegak, kemudian susut semula 70% dengan isipadu yang sama — itu adalah kurva pam kurva-066. Pengecutan pendek memerlukan setup minat pendek yang tinggi dan tidak semestinya meruntuhkan sesi berikutnya. 'Pecahan dan susut semula' adalah jawapan salah yang menggoda yang salah tafsir magnitud runtuhan.",
-    "related_lesson": "066",
+    "related_lesson": "066_telegram_whatsapp_pump_groups",
     "related_agent": "market_analyst",
     "tags": [
       "technical_analysis",
@@ -658,7 +658,7 @@
     ],
     "answer": 2,
     "explanation": "Bilik menjalankan gerakan analitik pada sesuatu yang tidak sepatutnya sampai ke Bilik. Cap jari Modul 11 Concierge menyala sebelum perdebatan bermakna — 'pulangan minggu dijamin' adalah menentukan. Verdict 'Tahan menunggu lebih banyak data' melegitimasikan tawaran scam dengan memperlakukannya sebagai sekuriti.",
-    "related_lesson": "069",
+    "related_lesson": "069_ai_trading_bot_scams",
     "related_agent": "concierge",
     "tags": [
       "room",
@@ -681,7 +681,7 @@
     ],
     "answer": 1,
     "explanation": "Berita makro ditimbang terhadap data asas bekalan/permintaan adalah suara news_analyst — mereka mengintegrasikan aliran berita dengan data asas. market_analyst akan bercakap tentang struktur carta pada XOM; fundamentals_analyst akan bercakap tentang aliran tunai khusus XOM, bukan Brent dan kiraan rig.",
-    "related_lesson": "008",
+    "related_lesson": "008_time_horizon_and_goals",
     "related_agent": "news_analyst",
     "tags": [
       "news",
@@ -704,7 +704,7 @@
     ],
     "answer": 0,
     "explanation": "Prosedur pengesahan lima-pemeriksaan adalah capstone Modul 11 piawai (EDGE 21), dimiliki oleh Concierge. Portfolio Manager menguatkan mandat; Research Manager mensintesis perdebatan Bilik. Tiada yang memiliki prosedur carian pengawal selia yang melindungi pengguna sebelum wang dipindahkan.",
-    "related_lesson": "071",
+    "related_lesson": "071_how_to_verify_before_you_wire_money",
     "related_agent": "concierge",
     "tags": [
       "scams",

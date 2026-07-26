@@ -14,7 +14,7 @@
     ],
     "answer": 0,
     "explanation": "Perolehan dari permainan dan kasino adalah kategori perniagaan teras yang dikecualikan di bawah saringan aktiviti perniagaan — peringkat satu dalam aliran kerja dua peringkat — jadi saringan berhenti di situ tanpa mengira apa yang ditunjukkan oleh nisbah kewangan. Tiada hasil nisbah boleh menyelamatkan syarikat yang perniagaan terasnya berada dalam sektor yang dikecualikan; nisbah yang bersih tidak relevan apabila gerbang aktiviti perniagaan telah gagal ticker tersebut.",
-    "related_lesson": "348",
+    "related_lesson": "348_the_business_activity_screen",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "islamic_finance",
@@ -37,7 +37,7 @@
     ],
     "answer": 1,
     "explanation": "Lulus saringan aktiviti perniagaan hanya membersihkan peringkat satu. Nisbah hutang di sini — hutang berfaedah $138,000M berbanding nilai pasaran $128,000M — mengira kepada 107.8%, lebih tiga kali ganda had 33%, yang gagal saringan itu secara langsung pada peringkat nisbah kewangan tanpa mengira hasil aktiviti perniagaan yang bersih. Pembersihan hanya terpakai kepada dividen saham yang lulus saringan, yang tidak dicapai oleh ticker ini; bursa senarai tidak mempunyai kaitan dengan kedua-dua peringkat.",
-    "related_lesson": "349",
+    "related_lesson": "349_the_three_financial_ratio_screens",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "islamic_finance",
@@ -61,7 +61,7 @@
     ],
     "answer": 2,
     "explanation": "Ini adalah kritikan sebenar yang dikemukakan oleh ahli syariah terhadap struktur sukuk tertentu: pembelian balik pada harga tetap yang dijamin pada maturity boleh berfungsi mencipta semula tuntutan pinjaman pulangan terjamin, merosakkan alasan perkongsian risiko yang menjustifikasikan struktur ini sebagai bukan riba. Piawaian AAOIFI sendiri telah menjadi lebih ketat dari semasa ke semasa khusus sebagai tindak balas terhadap corak ini. Menggunakan SPV dan sewa adalah ciri struktur yang diperlukan, tidak mencukupi secara sendiri; tiada apa-apa tentang jenis aset (gudang vs mana-mana aset nyata lain) adalah isu — kebimbangan adalah terma pembelian balik harga tetap yang dijamin, bukan jaminan.",
-    "related_lesson": "352",
+    "related_lesson": "352_sukuk_vs_conventional_bonds",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "islamic_finance",
@@ -85,7 +85,7 @@
     ],
     "answer": 3,
     "explanation": "Oleh kerana piawaian benar-benar tidak bersetuju mengenai ambang dan penyebut, status 'mematuhi' tanpa syarat adalah tidak lengkap — disiplinnya ialah menyatakan piawaian mana yang menghasilkan keputusan tersebut (contohnya 'mematuhi di bawah skrin gaya AAOIFI 33%/33%/5%'), kerana penyebut atau konvensyen tangkapan piawaian lain boleh mengubah nisbah sempadan melepasi hadnya. Penulenan hanya terpakai sekali skrin piawaian khusus telah dinamakan dan diluluskan; simbol ticker dan ujian semula harga tidak menjawab soalan ketidaksetujuan piawaian yang sebenarnya ditanya oleh pengguna.",
-    "related_lesson": "350",
+    "related_lesson": "350_standards_differ_why_the_same_stock_flips",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "islamic_finance",
@@ -108,7 +108,7 @@
     ],
     "answer": 0,
     "explanation": "Lulus skrin nisbah bermakna bahagian pendapatan tidak sah adalah kecil enough untuk ditoleransi bagi memegang saham tersebut — ia tidak bermakna bahagian kecil itu hilang daripada sebarang dividen yang dibayar. Pengiraan penulenan menggunakan pecahan pendapatan tidak mematuhi syarikat (700/100,000 = 0.7%) pada dividen khusus yang diterima: 0.7% daripada $960.00 ialah $6.72, yang biasanya disumbangkan, meninggalkan $953.28 sebagai pendapatan yang dis retain secara sah. Menyemak semula aktiviti perniagaan per dividen bukan cara penulenan berfungsi, dan menukar dividen kepada sukuk bukanlah langkah sebenar dalam proses ini.",
-    "related_lesson": "351",
+    "related_lesson": "351_purification_tazkiyah",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "islamic_finance",
@@ -132,7 +132,7 @@
     ],
     "answer": 2,
     "explanation": "Model perniagaan teras bank konvensional — meminjam wang pada faedah dan memperoleh spread — adalah riba secara pembinaan, yang merupakan penyingkiran aktiviti perniagaan, bukan masalah nisbah. Inilah sebabnya skrin gagal bank konvensional secara kategorik pada peringkat satu, sebelum mana-mana nisbah kewangan dikira; ia juga sebabnya bank Islam dibina sebagai entiti undang-undang berasingan yang dibina pada produk gaya murabahah/ijarah berbanding subset yang disaring daripada buku bank konvensional. Hanya menjalankan peringkat nisbah melangkau gerbang yang sebenarnya menyingkirkan ticker ini; tiada pengecualian khusus bank untuk had 33% piawai.",
-    "related_lesson": "348",
+    "related_lesson": "348_the_business_activity_screen",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "islamic_finance",
@@ -156,7 +156,7 @@
     ],
     "answer": 1,
     "explanation": "Bendera Mandat halal bukan topik yang diselesaikan oleh debat analis melalui konsensus — ia adalah semakan deterministik yang tidak boleh dilawan oleh PM (arkitektur yang sama dengan lantai pematuhan lain PM), yang menjalankan skrin dua peringkat sebenar selepas debat menghasilkan Verdict dan boleh menyekat perdagangan tanpa mengira seberapa bullish atau meyakinkan debat tersebut. Tiada undian 12-analis dan tiada langkah manual diperlukan untuk mengaktifkan sekatan; fakta bahawa debat tidak membangkitkan bantahan tidak memberitahu anda apa-apa tentang hasil deterministik yang berasingan.",
-    "related_lesson": "355",
+    "related_lesson": "355_how_amis_halal_flag_maps_to_real_screening",
     "related_agent": "portfolio_manager",
     "tags": [
       "islamic_finance",
@@ -180,7 +180,7 @@
     ],
     "answer": 3,
     "explanation": "Walaupun untuk lulus yang bersih dengan mudah, disiplinnya ialah menamakan piawai di sebalik verdict berbanding menegaskan 'patuh' tanpa syarat — kerana piawai yang berbeza (buku peraturan indeks yang berbeza, penyebut yang berbeza) boleh mencapai keputusan yang berbeza pada syarikat yang sama, dan tujuan utama pelajaran perbezaan piawai ialah mempersembahkan kemungkinan itu berbanding menyelesaikannya. Nisbah yang sangat rendah tidak membebaskan laporan daripada menamakan metodologinya, nisbah hutang yang luar biasa rendah bukanlah penggera merah, dan aset total berbanding kap pasaran ialah pilihan metodologi sebenar — tetapi kepingan yang hilang di sini ialah menamakan mana-mana satu yang sebenarnya digunakan, bukan beralih ke yang lain secara lalai.",
-    "related_lesson": "356",
+    "related_lesson": "356_capstone_screen_a_company_end_to_end",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "islamic_finance",
@@ -204,7 +204,7 @@
     ],
     "answer": 2,
     "explanation": "Harga sukuk bergerak seperti harga bon — mekanik dari ASST 2 (harga bertentangan dengan hasil) masih terpakai — tetapi persamaan mekanik itu tidak memberitahu apa-apa tentang pematuhan. Apa yang menjadikan sukuk bukan riba ialah tuntutan undang-undang di bawahnya: pemilikan aset sebenar yang menjana pendapatan sewa atau untung, bukan hutang yang dibayar tanpa mengira prestasi aset. Tingkah laku penentuan harga yang serupa tidak menjadikan instrumen tersebut boleh dipertukarkan untuk tujuan Syaria; hasil sukuk tidak diwajibkan secara struktur untuk lebih rendah, dan konsep penentuan harga gaya YTM memang terpakai kepada sukuk — itulah sebabnya mekaniknya kelihatan serupa pada mulanya.",
-    "related_lesson": "352",
+    "related_lesson": "352_sukuk_vs_conventional_bonds",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "islamic_finance",
@@ -228,7 +228,7 @@
     ],
     "answer": 0,
     "explanation": "Kedua-dua dana ini memang menggunakan skrin Shariah sebenar — itu bukan isu — tetapi metodologi S&P dan FTSE tidak selalu bersetuju pada nama-nama sempadan, jadi dua 'ETF Islam' yang merangkumi alam semasa yang sama boleh sahaja memegang senarai saham yang berbeza. Kesilapan pengguna ialah menganggap label bersama sebagai bukti pegangan yang identikal, bukannya menyemak metodologi indeks bernama setiap dana. Nisba perbelanjaan tetap faktor perbandingan yang sah dan biasa setelah isu pegangan diselesaikan — ia hanya tidak mencukupi sendirian, dan tiada perkara di sini menyentuh sama ada dana tersebut memegang nama bukan AS.",
-    "related_lesson": "354",
+    "related_lesson": "354_islamic_indices_etfs_and_funds",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "islamic_finance",

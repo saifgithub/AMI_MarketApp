@@ -14,7 +14,7 @@
     ],
     "answer": 1,
     "explanation": "Penjejakan trend memerlukan tiga perkara: trend yang ditakrifkan (50-hari di atas 200-hari, kedua-duanya naik), struktur harga yang mengesahkannya (sembilan minggu titik tertinggi dan terendah yang lebih tinggi), dan pencetus (titik tertinggi 52-minggu baharu dengan isipadu di atas purata). NVDA memenuhi ketiga-tiga syarat ini. Tugas Aggressive Debator adalah untuk memacu masuk apabila keadaan sepadan. Jawapan salah yang menggoda ('ia naik 38% jadi pergerakan telah tamat') adalah bias reverensi purata klasik yang diaplikasikan kepada saham yang sedang menjejak naik — penjejakan trend secara eksplisit membeli kekuatan, bukan menentangnya.",
-    "related_lesson": "052",
+    "related_lesson": "052_trend_following",
     "related_agent": "aggressive_debator",
     "tags": [
       "trend_following",
@@ -37,7 +37,7 @@
     ],
     "answer": 3,
     "explanation": "Lima isyarat semuanya menunjukkan rejim terikat julat: purata bergerak 50-hari mendatar, 11 minggu di dalam julat yang ditakrifkan (1,540–1,605), volatiliti realisasi hampir paras terendah dua tahun, isipadu di bawah purata, dan lebar pada garis neutral 50% tanpa kepimpinan sektor. Itu adalah rejim mendatar buku teks. Jawapan salah yang menggoda 'pasar bull' gagal kerana rejim bull memerlukan MA yang naik dan lebar di atas 60% — mendatar dan 51% adalah isyarat bertentangan. Vol rendah bukan vol tinggi; 'keraguan' adalah definisi mendatar, bukan volatiliti.",
-    "related_lesson": "061",
+    "related_lesson": "061_sideways_range_markets",
     "related_agent": "market_analyst",
     "tags": [
       "regime",
@@ -60,7 +60,7 @@
     ],
     "answer": 1,
     "explanation": "Reverensi purata mengandaikan harga berayun di sekitar purata yang stabil. Dalam trend turun yang disahkan (200-hari condong ke bawah, kematian silang, enam titik terendah yang lebih rendah) 'purata' itu sendiri sedang jatuh — setiap bantahan jenuh beli adalah jualan, bukan pembelian. Mandat pengguna sendiri mengkodkan ini: reverensi purata hanya apabila 200-hari mendatar atau naik. XOM gagal ujian itu. Jawapan salah yang menggoda 'tiada henti dilekatkan' gagal kerana tiada dalam senario yang mendakwa pesanan tidak dilindungi — pelanggaran itu berlaku lebih awal: strategi tidak sesuai dalam rejim ini sama sekali.",
-    "related_lesson": "055",
+    "related_lesson": "055_mean_reversion",
     "related_agent": "portfolio_manager",
     "tags": [
       "strategy_regime_mismatch",
@@ -83,7 +83,7 @@
     ],
     "answer": 0,
     "explanation": "Panggilan putaran sektor berlaku bersama News Analyst — peranan ini membaca aliran makro (hasil, geopolitik, bekalan komoditi) dan menterjemahkannya kepada perubahan kepimpinan sektor. Kutipan tersebut menghubungkan input makro (perubahan hasil, premium bekalan) kepada prestasi ETF (XLE berbanding XLK) dan ramalan ke hadapan (XLF seterusnya). Jawapan salah yang menipu 'Market Analyst' gagal kerana logik tersebut bukan teknikal; Market Analyst akan menerangkan corak kekuatan relatif pada carta, bukan kausaliti hasil dan geopolitik. Putaran sektor adalah N&M 5 — laluan News Analyst.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": [
       "sector_rotation",
@@ -106,7 +106,7 @@
     ],
     "answer": 2,
     "explanation": "VIX pada 31 adalah rejim volatiliti peratusil ke-80; SPX 9% jauh dari ATH dengan lebar 34% adalah pita pasaran yang semakin merosot. Market Analyst memiliki bacaan rejim volatiliti dan lebar (N&M 4 + N&M 6). Menambah panjang baru 4% tanpa gerbang rejim adalah input yang hilang secara klasik. Jawapan salah yang menipu 'Social Media Analyst' gagal kerana sentimen runcit adalah warna, bukan gerbang struktur; panggilan rejim Market Analyst adalah penyangga beban — jika rejim bermusuhan, saiz harus mengecil atau perdagangan harus menunggu.",
-    "related_lesson": "062",
+    "related_lesson": "062_volatility_regimes",
     "related_agent": "market_analyst",
     "tags": [
       "regime",
@@ -130,7 +130,7 @@
     ],
     "answer": 3,
     "explanation": "Masukan pecahan harga (EDGE 9) memerlukan tiga kotak: julat yang ditentukan ($218–$226 selama 19 sesi), penutupan di luar julat ($229.10), dan pengesahan isipadu (1.5x purata). Ketiganya terpapar. Trader menetapkan masuk pada tahap pecahan, stop di bawah julat sebelumnya, dan sasaran pada rintangan seterusnya. Jawapan salah yang menipu 'beli separuh pada penurunan ke $215' gagal kerana $215 berada di bawah lantai julat — jika harga kembali ke sana, pecahan harga terbatal, anda tidak menambah posisi pada perdagangan yang gagal.",
-    "related_lesson": "053",
+    "related_lesson": "053_breakout_strategy",
     "related_agent": "trader",
     "tags": [
       "breakout",
@@ -153,7 +153,7 @@
     ],
     "answer": 2,
     "explanation": "Empat isyarat selaras: VIX melebihi 30 (ambang rejim vol N&M 4), volatiliti realisasi berganda, julat harian 2.3x normal, dan put/call pada ekstrem. Ini ialah rejim vol tinggi yang klasik — saiz posisi harus mengecil, henti rugi (stops) dilebarkan, dan strategi momentum sering mengatasi strategi reverensi purata. Jawapan salah yang menggoda 'pasar lembu — VIX adalah bertentangan' adalah separa pengetahuan yang berbahaya: lonjakan VIX boleh menandakan dasar, tetapi hanya selepas ia mencapai puncak dan berbalik. Memanggil rejim sebagai lembu semasa ia masih meningkat adalah menjalankan reverensi purata pada pita yang salah.",
-    "related_lesson": "062",
+    "related_lesson": "062_volatility_regimes",
     "related_agent": "market_analyst",
     "tags": [
       "regime",
@@ -177,7 +177,7 @@
     ],
     "answer": 1,
     "explanation": "Momentum (EDGE 12) berfungsi kerana saham yang menang terus menang apabila penyertaan luas dan volatiliti aktif. Dalam pita vol rendah dan kebolehan sempit, entri momentum akan merosot — reverensi purata ialah kelebihan yang sesuai dengan rejim. Mandat pengguna mentakrifkan hal ini secara eksplisit. Kedudukan RS 92 MRDIY adalah nyata tetapi tidak relevan apabila gerbang rejim gagal. Jawapan salah yang menggoda 'had posisi tunggal' gagal kerana senario tidak memberikan saiz; pelanggaran ialah strategi itu sendiri, bukan dosnya.",
-    "related_lesson": "056",
+    "related_lesson": "056_momentum_trading",
     "related_agent": "portfolio_manager",
     "tags": [
       "strategy_regime_mismatch",
@@ -200,7 +200,7 @@
     ],
     "answer": 0,
     "explanation": "Analisis kebolehan (N&M 6) — % di atas purata bergerak 50-hari, penyimpangan kenaikan-kegagalan, berat sama berbanding berat indeks — merupakan domain Market Analyst. Petikan ialah bacaan penyimpangan kebolehan yang klasik yang diterjemahkan kepada pandangan taktikal. Jawapan salah yang menggoda 'News Analyst' gagal kerana tiada peristiwa berita, aliran sektor, atau pemangkin makro dirujuk — setiap input ialah statistik dalaman pasaran, bukan tajuk utama. Putaran sektor merupakan tugas News Analyst; kebolehan merupakan tugas Market Analyst.",
-    "related_lesson": "064",
+    "related_lesson": "064_market_breadth",
     "related_agent": "market_analyst",
     "tags": [
       "breadth",
@@ -223,7 +223,7 @@
     ],
     "answer": 2,
     "explanation": "Strategi penurunan semula (EDGE 10) memperdagangkan penurunan di dalam trend naik yang telah mapan. Tiga isyarat pengesahan: MA 50 hari disokong, RSI kembali dari keadaan berlebihan beli ke neutral (78 ke 52), dan isipadu menurun semasa penurunan semula (tiada pengagihan). Ini adalah entri penurunan semula yang klasik. Jawapan salah yang menggoda 'pembalikan trend' gagal kerana setiap isyarat pelintasan tiada — tiada silang MA, tiada minimum lebih rendah di bawah minimum ayunan sebelumnya pada $390, dan tiada pengembangan isipadu semasa penurunan. Membezakan penurunan semula daripada pelintasan adalah kemahiran utama.",
-    "related_lesson": "054",
+    "related_lesson": "054_pullback_strategy",
     "related_agent": "market_analyst",
     "tags": [
       "pullback",
@@ -246,7 +246,7 @@
     ],
     "answer": 3,
     "explanation": "Regim bull (N&M 1) memerlukan struktur pengesahan (MA naik dengan 50>200), lebar pengesahan (>55% di atas 50 hari, A/D pada tinggi baru), dan penyertaan sektor yang luas. KLCI mencetak ketiga-tiganya. Jawapan salah yang menggoda 'regim volatiliti' mengelirukan magnitud pulangan dengan volatiliti yang direalisasikan — 18% YTD dengan volatiliti yang direalisasikan 9.3% adalah bull yang tertib secara klasik, bukan regim volatiliti. Pulangan tinggi ≠ volatiliti tinggi.",
-    "related_lesson": "059",
+    "related_lesson": "059_bull_markets",
     "related_agent": "bull_researcher",
     "tags": [
       "regime",
@@ -269,7 +269,7 @@
     ],
     "answer": 3,
     "explanation": "Pecahan 20 hari di dalam trend utama yang menurun adalah isyarat lawan-trend pada terbaik, bukan entri trend. Pengguna menggunakan strategi mengikuti trend dalam rejim bear — tepat mod kegagalan strategi yang diperingatkan EDGE 14. Mandat menyekat entri trend kepada MA primer yang naik, yang tidak berlaku di sini. Jawapan salah yang menggoda 'had saiz posisi' gagal kerana tiada saiz diberikan. Pelanggaran struktur adalah di hulu: strategi yang salah untuk rejim.",
-    "related_lesson": "058",
+    "related_lesson": "058_strategy_failure_modes",
     "related_agent": "portfolio_manager",
     "tags": [
       "strategy_regime_mismatch",
@@ -292,7 +292,7 @@
     ],
     "answer": 3,
     "explanation": "Pengurus Penyelidikan mensintesis Bull/Bear/Asas/Teknikal/Berita/Social kepada satu nombor keyakinan dan melaraskannya mengikut konteks rejim. Petikan tersebut menamakan setiap penganalisis, menilainya, mengintegrasikannya, dan menghasilkan keyakinan bermoderasi dengan implikasi saiz. Itu adalah deskripsi kerja Pengurus Penyelidikan. Jawapan salah yang menggoda 'Pengurus Portfolio' gagal kerana PM menerapkan lantai mandat (had saiz, pemeriksaan henti) — ia tidak menilai keyakinan Bull berbanding Bear. Sintesis adalah tugas Pengurus Penyelidikan; pematuhan adalah tugas PM.",
-    "related_lesson": "057",
+    "related_lesson": "057_backtesting_a_strategy",
     "related_agent": "research_manager",
     "tags": [
       "agents",
@@ -315,7 +315,7 @@
     ],
     "answer": 2,
     "explanation": "Dagangan sektor tenaga bergantung pada harga minyak, postur OPEC, premium geopolitik, dan aliran putaran — semua ini adalah wilayah Penganalisis Berita (putaran sektor, N&M 5). Verdik pada XLE tanpa masukan Penganalisis Berita kehilangan katalis rejim yang akan sama ada mengesahkan atau membunuh penembusan teknikal. Jawapan salah yang menggoda 'Penganalisis Media Sosial' gagal kerana sentimen runcit tidak memandu asas tenaga; makro dan geopolitik yang memandu.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": [
       "sector_rotation",
@@ -338,7 +338,7 @@
     ],
     "answer": 0,
     "explanation": "Pulangan ke purata (EDGE 11) memerlukan purata naik yang stabil (200-hari naik), pencetus terjual berlebihan (RSI(2) sebanyak 6), dan ketiadaan berita buruk struktur (bising sektor, bukan skandal khusus JPM). Ketiga-tiganya hadir. Debator Konservatif mengesyorkan saiz kecil + henti dekat di bawah purata bergerak 50 hari. Jawapan salah yang menggoda 'beli kedudukan 10% — bank sentiasa melonjak' adalah idea betul, dos salah — konservatif bermaksud kecil dan dihentikan dengan baik, bukan pertaruhan seluruh farm pada pergerakan 3 hari.",
-    "related_lesson": "055",
+    "related_lesson": "055_mean_reversion",
     "related_agent": "conservative_debator",
     "tags": [
       "mean_reversion",
@@ -361,7 +361,7 @@
     ],
     "answer": 2,
     "explanation": "Mod Bear (N&M 2) memerlukan trend utama yang jatuh (50<200, kedua-duanya turun), lebar lemah yang disahkan (22% di atas 50-hari, A/D pada paras rendah), dan putaran kepimpinan defensif (XLP/XLU melampaui). Keempat-empat isyarat hadir. Jawapan salah yang menggoda 'pembetulan pasaran bull' adalah perangkap penafian — menurut definisi buku teks, penurunan 20% adalah ambang, tetapi isyarat struktur (keruntuhan lebar, kepimpinan defensif, songsangan MA) mengesahkan perubahan mod sebelum garisan 20% dilintasi. Menunggu -20.01% untuk mengakuinya adalah pandangan belakang, bukan analisis.",
-    "related_lesson": "060",
+    "related_lesson": "060_bear_markets",
     "related_agent": "bear_researcher",
     "tags": [
       "regime",
@@ -384,7 +384,7 @@
     ],
     "answer": 2,
     "explanation": "EDGE 9 dan EDGE 14 secara eksplisit: pecah memerlukan pengesahan harga DAN isipadu. Veredik melabelkan dirinya sebagai 'masuk pecah' tetapi Market Analyst hanya mengesahkan separuh harga. Tanpa isipadu, pengguna tiada cara untuk menilai keyakinan pecah, yang tepat merupakan setup pecah palsu. Jawapan salah yang menggoda 'undi Aggressive Debator' gagal kerana sokongan arah hanyalah warna; kecacatan struktur adalah data isipadu yang hilang yang diperlukan oleh label strategi itu sendiri.",
-    "related_lesson": "053",
+    "related_lesson": "053_breakout_strategy",
     "related_agent": "market_analyst",
     "tags": [
       "breakout",
@@ -407,7 +407,7 @@
     ],
     "answer": 2,
     "explanation": "Petikan mensintesiskan kerapuhan carta, kesempitan lebar, pelambatan perniagaan, dan kehati-hatian makro menjadi tesis jual — itulah peranan Bear Researcher di Bilik: membina kes menentang. Jawapan salah yang menggoda 'Aggressive Debator' gagal kerana Aggressive Debator berhujah untuk tindakan tanpa mengira arah dan cenderung condong ke panjang — di sini ejen secara sistematik meruntuhkan tesis panjang dengan bukti berlapis, tanda tangan Bear Researcher.",
-    "related_lesson": "060",
+    "related_lesson": "060_bear_markets",
     "related_agent": "bear_researcher",
     "tags": [
       "agents",
@@ -430,7 +430,7 @@
     ],
     "answer": 0,
     "explanation": "SEMUA EDGE 8–058 bergantung pada disiplin yang sama: perdagangan mesti menyatakan strategi mana yang digunakan, kerana setiap strategi mempunyai peraturan keluar yang berbeza. Penembusan keluar (breakout) dikeluarkan dengan cara yang berbeza daripada pullback atau mean-reversion. Tanpa label, jurnal keputusan tidak dapat menilai sama ada perdagangan diurus mengikut buku panduan sendiri. Jawapan salah yang menarik 'undi Aggressive Debator' hanyalah warna, bukan struktur. Identiti strategi adalah elemen hilang yang menanggung beban.",
-    "related_lesson": "057",
+    "related_lesson": "057_backtesting_a_strategy",
     "related_agent": "research_manager",
     "tags": [
       "strategy_discipline",
@@ -453,7 +453,7 @@
     ],
     "answer": 1,
     "explanation": "Rejim mendatar (N&M 3) adalah rumah semula jadi Neutral Debator — strateginya ialah menolak tepi sehingga bukti muncul. Menjual pada $211 (puncak julat) dengan penutup berhampiran $200 (dasar julat) ialah perdagangan julat. Jawapan salah yang menarik 'beli agresif — IWM sedang menembusi' gagal kerana isipadu belum berkembang dan harga belum menutup di luar julat; menandakan puncak bukan penembusan. Sehingga peraturan penembusan EDGE 9 dipenuhi, ini masih merupakan julat.",
-    "related_lesson": "061",
+    "related_lesson": "061_sideways_range_markets",
     "related_agent": "neutral_debator",
     "tags": [
       "sideways",
@@ -476,7 +476,7 @@
     ],
     "answer": 0,
     "explanation": "Persediaan klasik EDGE 9: corak pengumpulan yang ditakrifkan (cup-and-handle), pecahan julat yang bersih ($504 di atas $498), pengesahan isipadu (1.78x), dan trend primer yang mengesahkan (MA 50 hari naik). VIX yang mampat semasa handle adalah bonus — tenaga disimpan, kemudian dilepaskan. Jawapan salah yang menarik 'pullback yang belum selesai' gagal kerana harga telah menembusi paras tinggi julat pada isipadu — pullback bermaksud diperdagangkan kembali ke MA 50 hari, bukan melanjutkan di atas rintangan.",
-    "related_lesson": "053",
+    "related_lesson": "053_breakout_strategy",
     "related_agent": "market_analyst",
     "tags": [
       "breakout",
@@ -499,7 +499,7 @@
     ],
     "answer": 2,
     "explanation": "Peraturan besi EDGE 10: rataan balik adalah taktik rejim bull. Tanpa trend naik, tiada 'rataan' balik ke mana-mana — harga sekadar menurun. Menamakan semula kesinambungan trend turun sebagai 'rataan balik ke sokongan' adalah salah satu mod kegagalan strategi yang paling biasa (EDGE 14). RSI 38 mengesahkan pergerakan ini belum lagi jenuh jual. Jawapan salah yang memikat 'peraturan henti kerugian' gagal kerana kesilapan struktur adalah memilih strategi itu sendiri dalam rejim ini, bukan bagaimana henti kerugian diletakkan.",
-    "related_lesson": "054",
+    "related_lesson": "054_pullback_strategy",
     "related_agent": "portfolio_manager",
     "tags": [
       "strategy_regime_mismatch",
@@ -522,7 +522,7 @@
     ],
     "answer": 3,
     "explanation": "EDGE 8 (mengikuti trend) dan 056 (momentum) keduanya menyebut Ejen Pembela Agresif — petikan ini adalah bahasa pembela agresif tulen: mengabaikan penilaian, mengutamakan trend dan momentum, menolak menunggu rataan balik, mengesyorkan entri sekarang dengan pengurusan henti kerugian bergerak. Jawapan salah yang memikat 'Penganalisis Asas' gagal kerana ejen secara eksplisit mengabaikan pendaraban — Penganalisis Asas tidak akan pernah berkata 'Saya tidak peduli tentang pendaraban'.",
-    "related_lesson": "056",
+    "related_lesson": "056_momentum_trading",
     "related_agent": "aggressive_debator",
     "tags": [
       "momentum",
@@ -545,7 +545,7 @@
     ],
     "answer": 0,
     "explanation": "N&M 6 menjadikan kepelbagaian sebagai ujian tekanan rejim bull. Rekod baharu dipimpin oleh 4 nama adalah amaran klasik rally sempit. Verdict mengabaikannya. Tanpa bacaan kepelbagaian, verdict itu terlalu yakin — keyakinan 0.71 pada pita yang dipimpin sempit adalah tinggi. Jawapan salah yang memikat 'masukan Ejen Pembela Agresif' gagal kerana verdict sudah condong agresif; yang hilang adalah data struktur perbezaan, yang terletak dalam analisis kepelbagaian.",
-    "related_lesson": "064",
+    "related_lesson": "064_market_breadth",
     "related_agent": "market_analyst",
     "tags": [
       "breadth",
@@ -568,7 +568,7 @@
     ],
     "answer": 2,
     "explanation": "Senarai semak rejim bull N&M 1 — indeks naik + lebar pasaran + kepimpinan cyclicals + makro sokongan — adalah hujah struktur Bull Researcher. Petikan merangka keempat-empat pengesahan ini ke dalam kesimpulan 'skala longs', dan secara eksplisit menolak godaan bias kebaruan untuk mengurangkan posisi. Itu adalah tanda tangan Bull Researcher. Jawapan salah yang menggoda 'Portfolio Manager' gagal kerana PM tidak membina tesis arah; PM menyemak perdagangan terhadap mandat. Pembinaan tesis bull adalah bidang Bull Researcher.",
-    "related_lesson": "059",
+    "related_lesson": "059_bull_markets",
     "related_agent": "bull_researcher",
     "tags": [
       "bull_market",
@@ -591,7 +591,7 @@
     ],
     "answer": 2,
     "explanation": "N&M 5 meletakkan putaran sektor secara jelas dalam bidang News Analyst. Talian konteks adalah pita putaran nilai buku teks — sektor pertumbuhan tertinggal, cyclicals/defensive memimpin, equal-weight mengatasi cap-weight, yield naik — dan verdict mengambil posisi long dalam sektor yang tertinggal (XLK) tanpa News Analyst memberi amaran tentang halangan makro. Jawapan salah yang menggoda 'Aggressive Debator' gagal kerana sokongan arah bukan beban struktur; kecacatan struktur adalah diagnostik putaran itu sendiri.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": [
       "sector_rotation",
@@ -613,7 +613,7 @@
     ],
     "answer": 0,
     "explanation": "N&M 4 mentakrifkan mengapa saip mampat dalam rejim vol: ayunan realisasi adalah 2–3x normal, jadi posisi 5% berkelakuan seperti posisi 10–15% dalam pita tenang. Mandat pengguna secara eksplisit mengurangkan separuh had tersebut, dan pengguna mengabaikan syarat kondisional. Jawapan salah yang menggoda 'masih dalam had 5%' adalah tepat kesalahan baca separuh — had dalam mandat boleh bersyarat rejim, dan mengabaikan syarat kondisional adalah pelanggaran, bukan lubang keselamatan.",
-    "related_lesson": "062",
+    "related_lesson": "062_volatility_regimes",
     "related_agent": "portfolio_manager",
     "tags": [
       "volatility",
@@ -636,7 +636,7 @@
     ],
     "answer": 2,
     "explanation": "N&M 3 (pasaran mendatar) mengenal pasti Neutral Debator — perannya adalah menolak keyakinan apabila bukti terbahagi, bukan untuk mensintesis. Petikan itu mengakui kedua-dua belah pihak dan secara eksplisit menolak untuk mengambil sisi sehingga data tambahan tiba. Jawapan salah yang memikat 'Research Manager' gagal kerana Research Manager menghasilkan nombor keyakinan walaupun input bercampur; nilai Neutral Debator ialah penolakan prinsip untuk tidak memalsukan keyakinan.",
-    "related_lesson": "061",
+    "related_lesson": "061_sideways_range_markets",
     "related_agent": "neutral_debator",
     "tags": [
       "neutral",
@@ -659,7 +659,7 @@
     ],
     "answer": 2,
     "explanation": "EDGE 13 menyatakan dengan jelas: setiap peraturan strategi memerlukan backtest sebelum penyebaran langsung. Lantai mandat hanya memeriksa bahawa peraturan itu tidak akan meletuskan akaun pada satu dagangan — ia tidak dapat memberitahu anda sama ada peraturan mempunyai jangkaan positif atau sama ada ia berfungsi dalam rejim bear. Jawapan salah yang memikat 'kelulusan ejen kedua' gagal kerana Research Manager sudah melakukan sintesis Bilik; artifak yang hilang ialah pengesahan data sejarah, bukan undi lain.",
-    "related_lesson": "057",
+    "related_lesson": "057_backtesting_a_strategy",
     "related_agent": "research_manager",
     "tags": [
       "backtest",
@@ -682,7 +682,7 @@
     ],
     "answer": 0,
     "explanation": "EDGE 14 menamakan ini dengan tepat: setiap strategi mempunyai rejim di mana ia kurang berprestasi, dan rejim kegagalan mengikuti trend adalah mendatar/vol rendah. Corak 9 daripada 11 dihentikan rugi, kesemua dalam julat SPX yang ditakrifkan, adalah cap jari diagnostik. Panggilan Conservative Debator ialah mengenal pasti rejim, menghentikan sistem, dan beralih ke taktik yang sesuai dengan rejim — bukan meninggalkan tepi (edge). Jawapan salah yang memikat 'tinggalkan mengikuti trend selamanya' ialah respons emosi terhadap penurunan; respons penganalisis ialah mengenal ketidakpadanan rejim dan beradaptasi.",
-    "related_lesson": "058",
+    "related_lesson": "058_strategy_failure_modes",
     "related_agent": "conservative_debator",
     "tags": [
       "strategy_failure",

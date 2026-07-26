@@ -9,7 +9,7 @@
     "options": ["The Trader would execute a real trade plan", "The Fundamentals Analyst would review company metrics", "The Bull Researcher would argue the merits of a real allocation", "The Concierge — scam-pattern recognition and SC Malaysia, BNM, SEC, FCA register lookups"],
     "answer": 3,
     "explanation": "The Concierge is the agent wired to scam-pattern recognition and to walking users through SC Malaysia, BNM, SEC, and FCA register lookups. The bull researcher argues a thesis on a real security; there is no security here, only a guarantee pitch. The Concierge owns Module 11 territory.",
-    "related_lesson": "065",
+    "related_lesson": "065_guaranteed_return_scams",
     "related_agent": "concierge",
     "tags": ["scams", "guaranteed_returns", "concierge"]
   },
@@ -23,7 +23,7 @@
     "options": ["The platform's terms of service", "The size of the founder's own position", "The exact entry timing", "The losing trades that almost certainly exist and are deleted, censored, or run in a parallel channel members never see — survivorship bias is the diagnostic"],
     "answer": 3,
     "explanation": "Pump groups run many calls; only the winners are kept visible. 14 visible wins say nothing about the 30 or 50 losers quietly removed. The 'founder's position size' is interesting but not the structural missing piece — the missing losses are.",
-    "related_lesson": "066",
+    "related_lesson": "066_telegram_whatsapp_pump_groups",
     "related_agent": "concierge",
     "tags": ["scams", "pump_and_dump", "survivorship_bias"]
   },
@@ -37,7 +37,7 @@
     "options": ["Bank account must be in the regulated firm's name, not an individual's", "Independent callback to the firm", "Entity-level register lookup", "Written terms on letterhead"],
     "answer": 0,
     "explanation": "The register lookup passes (the dealer cloned a real firm's number). The decisive failure is the bank account: licensed Malaysian brokers must segregate client money in a trust account in the firm's name. Any individual-name destination is dispositive regardless of how many other checks pass.",
-    "related_lesson": "071",
+    "related_lesson": "071_how_to_verify_before_you_wire_money",
     "related_agent": "concierge",
     "tags": ["scams", "clone_broker", "verification"]
   },
@@ -51,7 +51,7 @@
     "options": ["A failed breakout (bull trap)", "A range breakout with volume confirmation and a successful retest of prior resistance as support", "A head-and-shoulders top", "A bull flag continuation"],
     "answer": 1,
     "explanation": "Eleven sessions of tightening range, breakout on 2.4x volume, then the next session holding above the prior resistance — that is the textbook range breakout + retest pattern. A bull flag requires a prior strong move into the consolidation; not described here. A failed breakout would close back inside the range; it didn't.",
-    "related_lesson": "024",
+    "related_lesson": "024_breakouts",
     "related_agent": "market_analyst",
     "tags": ["technical_analysis", "breakout", "nvda"]
   },
@@ -65,7 +65,7 @@
     "options": ["A larger Telegram following", "Externally verifiable trade records — exchange fills, broker statements, or on-chain settlement hashes that an outside party can audit", "Glossier dashboard design", "More user testimonials"],
     "answer": 1,
     "explanation": "Every real algorithmic strategy lands its trades at a real settlement venue. The missing piece is independent corroboration — the only evidence that fabricates is harder to forge than a dashboard. Testimonials and follower counts are themselves easy to manufacture and do not address the dashboard's veracity.",
-    "related_lesson": "069",
+    "related_lesson": "069_ai_trading_bot_scams",
     "related_agent": "concierge",
     "tags": ["scams", "ai_bot", "audit_trail"]
   },
@@ -79,7 +79,7 @@
     "options": ["The Research Manager would synthesise the Room debate", "The Concierge — trains users in the 72-hour pause rule for pressure tactics", "The Aggressive Debator would argue the merits of a real allocation", "The Social Media Analyst would track sentiment on the name"],
     "answer": 1,
     "explanation": "Urgency + scarcity + refusal to put terms in writing is the EDGE 20 fingerprint. The Concierge is the agent trained to install the 72-hour pause rule. The aggressive debator would argue the merits of a real allocation; there is no real allocation to argue about here.",
-    "related_lesson": "070",
+    "related_lesson": "070_pressure_tactics_urgency_and_scarcity",
     "related_agent": "concierge",
     "tags": ["scams", "urgency", "concierge"]
   },
@@ -93,7 +93,7 @@
     "options": ["No leverage", "Max single position 10% — the 40% allocation exceeds the cap by 4x", "Max sector exposure 25%", "Liquidity threshold"],
     "answer": 1,
     "explanation": "The single-position cap is the first deterministic gate and fails at 40%/10%. Sector exposure could also fail, but the single-position rule fires earlier and on a single ticker. No leverage and liquidity gates are not implicated by the trade-size description.",
-    "related_lesson": "014",
+    "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "position_sizing", "safety_floor"]
   },
@@ -107,7 +107,7 @@
     "options": ["The Trader", "The Fundamentals Analyst", "The Bear Researcher and the Conservative Debator — a unanimous Room on a low-float penny stock with social-media-only thesis is a structural failure", "The News Analyst"],
     "answer": 2,
     "explanation": "Healthy Room verdicts have dissent. A unanimous BUY on an illiquid penny name with a social-media thesis is the exact pump-and-dump shape — the Bear Researcher and Conservative Debator are designed to dissent here. The Trader did contribute (they aligned), so 'the Trader missing' is the tempting wrong answer that misreads the scenario.",
-    "related_lesson": "066",
+    "related_lesson": "066_telegram_whatsapp_pump_groups",
     "related_agent": "bear_researcher",
     "tags": ["room", "dissent", "pump_and_dump"]
   },
@@ -121,7 +121,7 @@
     "options": ["'Cannot call without the cash-flow statement.'", "'Mixed: top and bottom line beat with margin expansion, but flat iPhone units and soft guide cap upside near term.'", "'Unambiguous beat — strong buy on the print.'", "'Sell — the soft guide outweighs everything.'"],
     "answer": 1,
     "explanation": "The fundamentals analyst weighs the components, not the headline. Beats on rev/EPS plus margin expansion are positives; flat hardware and soft guide are negatives. The honest read is 'mixed', not a binary call. The 'unambiguous beat' framing ignores the guide, which the market typically weights more than the print itself.",
-    "related_lesson": "044",
+    "related_lesson": "044_earnings_growth",
     "related_agent": "fundamentals_analyst",
     "tags": ["earnings", "aapl", "fundamentals"]
   },
@@ -135,7 +135,7 @@
     "options": ["The platform uses USDT instead of fiat", "The high monthly return is too good to be true", "The Saint Vincent licence is weak", "Withdrawal-blocking via an additional deposit — the documented exit-stage move of the FX Ponzi structure"],
     "answer": 3,
     "explanation": "All four are red flags but only one is the diagnostic exit-stage move documented by BNM, CFTC, and FCA: paying-to-withdraw. No legitimate broker — regulated anywhere — requires additional deposits to release funds you have already deposited. The four small withdrawals were the bait.",
-    "related_lesson": "068",
+    "related_lesson": "068_forex_fx_trading_scams",
     "related_agent": "concierge",
     "tags": ["scams", "forex", "ponzi"]
   },
@@ -149,7 +149,7 @@
     "options": ["A breakdown of support followed by a dead-cat bounce", "A head-and-shoulders bottom", "A successful support retest — the fourth touch held on light volume and the rally was confirmed by rising volume", "A bull flag pattern"],
     "answer": 2,
     "explanation": "Four touches, the last on light volume, then a confirmed bounce on rising volume — that is the support-retest playbook. A breakdown would require a close below $580 with conviction; that didn't happen. A bull flag requires a prior sharp rally into a tight consolidation; not described.",
-    "related_lesson": "023",
+    "related_lesson": "023_support_and_resistance",
     "related_agent": "market_analyst",
     "tags": ["technical_analysis", "support", "meta"]
   },
@@ -163,7 +163,7 @@
     "options": ["The Trader", "The Conservative Debator", "The News Analyst and the macro-overlay from the Research Manager — an OPEC+ meeting tomorrow is a binary macro event that should sit at the centre of the thesis", "The Aggressive Debator"],
     "answer": 2,
     "explanation": "A binary macro event the next day is exactly what the news_analyst and research_manager are wired to flag. The Conservative Debator can dissent but it's not their unique domain. The Trader did contribute. The most tempting wrong answer (Conservative Debator) misreads where the structural gap is.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": ["room", "news", "macro"]
   },
@@ -177,7 +177,7 @@
     "options": ["'Sell — the impairment signals structural decline.'", "'A 7.2 P/E vs sector 14 is a clear value setup — buy.'", "'The trailing P/E is distorted by a one-off impairment; the right test is forward P/E on normalised earnings and the cash-flow trend, which is positive.'", "'P/E is irrelevant for GENTING; only EV/EBITDA matters.'"],
     "answer": 2,
     "explanation": "The headline P/E uses GAAP earnings dragged down by a non-recurring impairment. A real fundamentals call normalises out the one-off and looks at cash flow, which is up 12%. The 'clear value setup' answer is the trap — it treats the optical P/E as the truth.",
-    "related_lesson": "039",
+    "related_lesson": "039_the_pe_ratio",
     "related_agent": "fundamentals_analyst",
     "tags": ["fundamentals", "p_e", "genting"]
   },
@@ -191,7 +191,7 @@
     "options": ["The Trader would execute the plan with stops and targets", "The Concierge — Module 11 scam recognition of guaranteed returns + paid VIP calls", "The Market Analyst would read the TSLA chart", "The Aggressive Debator would argue conviction on TSLA"],
     "answer": 1,
     "explanation": "The Concierge owns Module 11 scam recognition. Guaranteed return + paid 'VIP earlier calls' is the canonical pump-group + guaranteed-return cocktail. The market_analyst would just talk about the TSLA chart in a vacuum — that misses the scam pattern entirely.",
-    "related_lesson": "066",
+    "related_lesson": "066_telegram_whatsapp_pump_groups",
     "related_agent": "concierge",
     "tags": ["scams", "guaranteed_returns", "vip_group"]
   },
@@ -205,7 +205,7 @@
     "options": ["portfolio_manager", "trader", "bear_researcher", "conservative_debator"],
     "answer": 0,
     "explanation": "Mandate enforcement — and specifically the deterministic drawdown gate — is the portfolio_manager's uncoachable safety-floor responsibility. The trader executes inside the floor; the bear_researcher and conservative_debator dissent on theses. Only the PM owns 'hard stop, no override'.",
-    "related_lesson": "018",
+    "related_lesson": "018_drawdown_management",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "drawdown", "safety_floor"]
   },
@@ -219,7 +219,7 @@
     "options": ["Look for SSL certificate on the website", "Verify the firm has been in business for 10+ years", "Check the registration number on FINRA BrokerCheck", "Match the contact details (domain, phone, email) against the regulator's listing for the named firm — the clone's domain will not match the real firm's published domain"],
     "answer": 3,
     "explanation": "Step 1 alone is what clones exploit — they cite a real registration. The decisive check is matching contact details against the regulator's own published listing for that entity. The clone's .org domain will fail an FCA/SEC register cross-check instantly. SSL certs and business age are not falsifiable diagnostics.",
-    "related_lesson": "067",
+    "related_lesson": "067_fake_brokers_and_clone_entities",
     "related_agent": "concierge",
     "tags": ["scams", "clone_broker", "domain"]
   },
@@ -233,7 +233,7 @@
     "options": ["The Conservative Debator", "The Bear Researcher", "The Portfolio Manager and the deterministic compliance check — an 18% allocation breaches the 10% mandate cap and should have been hard-blocked before the verdict reached the user", "The Fundamentals Analyst"],
     "answer": 2,
     "explanation": "The PM's mandate enforcement is the safety floor — it is uncoachable and runs deterministically. An 18% allocation against a 10% cap must hard-block. Bear/Conservative dissent is useful but the PM compliance check is the structural backstop. Missing PM is a critical safety-floor failure.",
-    "related_lesson": "013",
+    "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": ["room", "mandate", "safety_floor"]
   },
@@ -247,7 +247,7 @@
     "options": ["The Research Manager synthesises Room debate", "The Fundamentals Analyst reviews company metrics", "The Neutral Debator weighs sides on a real thesis", "The Concierge — installs the 72-hour pause rule for pressure tactics and requires written terms"],
     "answer": 3,
     "explanation": "Module 11, EDGE 20 — the 72-hour pause is the Concierge's installed reflex. The research_manager synthesises Room debate; the neutral_debator weighs sides on a real thesis. Neither owns scam pressure-tactic recognition. The Concierge does.",
-    "related_lesson": "070",
+    "related_lesson": "070_pressure_tactics_urgency_and_scarcity",
     "related_agent": "concierge",
     "tags": ["scams", "urgency", "verification"]
   },
@@ -261,7 +261,7 @@
     "options": ["A strong continuation signal — buy more on the close", "A confirmed reversal — short the stock", "Overbought conditions plus volume divergence plus a wick — momentum exhaustion warning, not necessarily an exit signal but a clear reduction in fresh entry quality", "Range-bound consolidation"],
     "answer": 2,
     "explanation": "RSI above 70 with declining volume into a new high and an upper wick is the classic exhaustion configuration. It does not guarantee a reversal — the 'short it' answer overcommits. But it does mean new entries are low-quality. The 'buy more' answer ignores three independent warning signs.",
-    "related_lesson": "027",
+    "related_lesson": "027_rsi_momentum_oscillator",
     "related_agent": "market_analyst",
     "tags": ["technical_analysis", "rsi", "tenaga"]
   },
@@ -275,7 +275,7 @@
     "options": ["The 187% annualised return is too high", "The platform uses AI", "The backtest is only 5 years long", "Zero losing months across 60 months for any market-exposed strategy — combined with the 0.4% max drawdown — is statistically near-impossible and almost always indicates either fabrication or extreme curve-fitting on in-sample data"],
     "answer": 3,
     "explanation": "Even excellent real strategies have losing months. Zero across 60 months with a 0.4% drawdown is the diagnostic fingerprint of overfitting or outright fabrication. High returns alone aren't disqualifying — venture-style returns exist. The shape of the curve is the dispositive evidence.",
-    "related_lesson": "069",
+    "related_lesson": "069_ai_trading_bot_scams",
     "related_agent": "concierge",
     "tags": ["scams", "ai_bot", "backtest"]
   },
@@ -289,7 +289,7 @@
     "options": ["The fundamentals analyst's DCF", "The Trader's execution plan", "The news analyst's macro overlay", "Genuine dissent — a unanimous Room with a token Bear paragraph signals that adversarial reasoning was not actually performed"],
     "answer": 3,
     "explanation": "Unanimous verdicts on small-caps are a structural smell. The Room is designed to surface dissent; a Bear who finds 'no material risks' on a thinly-traded name is not doing the job. The missing item isn't a specific report — it's the dissent itself.",
-    "related_lesson": "058",
+    "related_lesson": "058_strategy_failure_modes",
     "related_agent": "bear_researcher",
     "tags": ["room", "dissent", "bursa"]
   },
@@ -303,7 +303,7 @@
     "options": ["'Switch to a different ticker to reset.'", "'This is revenge trading: 3x normal size, no new thesis, emotional justification. The mandate's behavioural-guard should block; the right action is a 24-hour cooldown.'", "'Higher conviction trades deserve larger size — proceed.'", "'Add a tight stop to manage the larger size.'"],
     "answer": 1,
     "explanation": "Three diagnostics fire together: tripled size, no new edge, explicit emotional note. The conservative_debator's lesson-047 wiring is to flag exactly this pattern. 'Switch tickers' is the tempting wrong answer that lets the behaviour continue on a different name.",
-    "related_lesson": "047",
+    "related_lesson": "047_revenge_trading",
     "related_agent": "conservative_debator",
     "tags": ["psychology", "revenge_trading", "jpm"]
   },
@@ -317,7 +317,7 @@
     "options": ["Proceed — 4 of 5 checks is strong enough", "Negotiate a discount and proceed", "Wire a small test amount first, then commit", "Do not wire — the procedure is a complete set, not a majority vote; any single failure is decisive, and the personal-name destination is itself non-negotiable"],
     "answer": 3,
     "explanation": "Every relevant regulator (SEC, FCA, FINRA, SC Malaysia, MAS) requires client money in a firm-name trust account. The 4-of-5 framing is the trap — verification is a hard gate, not a score. Test deposits prove only that the account exists, not that money comes back.",
-    "related_lesson": "071",
+    "related_lesson": "071_how_to_verify_before_you_wire_money",
     "related_agent": "concierge",
     "tags": ["scams", "verification", "capstone"]
   },
@@ -331,7 +331,7 @@
     "options": ["'Sell the news — the gap is the entire move; mean reversion will dominate.'", "'The 6.8% gap guarantees a pullback by end of day.'", "'A genuine catalyst removed a known overhang; the move is supported by volume and the pre-existing consolidation. Reassess fair value, do not assume the gap is the full move.'", "'Ignore the news — only the chart pattern matters; this is noise.'"],
     "answer": 2,
     "explanation": "The news_analyst weighs whether the catalyst justifies the move. An antitrust overhang being lifted is a genuine fair-value repricing event, not a sentiment blip. The 'sell the news' default is the tempting trap — it works for hyped events with no real cash-flow impact; this is not that.",
-    "related_lesson": "005",
+    "related_lesson": "005_what_moves_stock_prices",
     "related_agent": "news_analyst",
     "tags": ["news", "catalyst", "googl"]
   },
@@ -345,7 +345,7 @@
     "options": ["The Conservative Debator", "The News Analyst", "The Portfolio Manager", "The Trader — the analytical thesis is complete but there is no executable plan (entry, stop, size, target), which is the Trader's job"],
     "answer": 3,
     "explanation": "The Trader converts thesis to executable plan: entry, stop, target, size. Without that, the verdict is unactionable. The Portfolio Manager would set mandate-fit caps but not the trade plan itself. The most tempting wrong answer (PM) confuses two distinct roles.",
-    "related_lesson": "015",
+    "related_lesson": "015_stop_loss_basics",
     "related_agent": "trader",
     "tags": ["room", "trader", "execution"]
   },
@@ -359,7 +359,7 @@
     "options": ["'Overvalued — sell.'", "'A small discount to book is plausible given the high payout ratio and rate-sensitivity of REITs; the analysis hinges on occupancy stability and the dividend's coverage, both of which support the current pricing.'", "'Cannot value REITs with P/B.'", "'Cheap on P/B — clear buy.'"],
     "answer": 1,
     "explanation": "P/B is a useful but partial signal for REITs; 0.92 vs 1.05 isn't a screaming discount. The honest fundamentals read weighs payout coverage and the operating signal (occupancy). The 'clear buy on cheap P/B' answer is the trap — it treats a single ratio as the verdict.",
-    "related_lesson": "040",
+    "related_lesson": "040_price_to_book",
     "related_agent": "fundamentals_analyst",
     "tags": ["fundamentals", "reit", "klcc"]
   },
@@ -373,7 +373,7 @@
     "options": ["A confirmed downtrend continuation", "A bull flag setup", "A capitulation / volume-climax candle: panic selling absorbed by buyers in size, signalled by extreme volume + long lower wick + close near the high — not a guaranteed bottom but a meaningful short-term inflection", "A bearish engulfing pattern"],
     "answer": 2,
     "explanation": "Three signals coincide: 3.8x volume, long lower wick, close near high — that is textbook volume-climax / capitulation. The 'guaranteed bottom' framing would overcommit; it's an inflection, not a certainty. A bearish engulfing requires the wrong candle shape; not present here.",
-    "related_lesson": "029",
+    "related_lesson": "029_volume_confirmation",
     "related_agent": "market_analyst",
     "tags": ["technical_analysis", "volume", "spy"]
   },
@@ -387,7 +387,7 @@
     "options": ["A pump-and-dump curve — coordinated buying spikes volume and price, organisers exit into retail demand, price collapses the next session", "A bullish reversal off oversold conditions", "A short-squeeze pattern", "A breakout-and-pullback continuation setup"],
     "answer": 0,
     "explanation": "52x volume on a sub-million-share name, near-vertical run, then a 70% retrace on similar volume — that is the lesson-066 pump curve. A short squeeze would require a high short-interest setup and would not necessarily collapse the next session. 'Breakout and pullback' is the tempting wrong answer that misreads the collapse magnitude.",
-    "related_lesson": "066",
+    "related_lesson": "066_telegram_whatsapp_pump_groups",
     "related_agent": "market_analyst",
     "tags": ["technical_analysis", "pump_dump", "small_cap"]
   },
@@ -401,7 +401,7 @@
     "options": ["The Trader's execution plan", "The Fundamentals Analyst", "The Concierge — this is not an investable security at all; it is a scam pattern (guaranteed return + Telegram + opaque AI claim) and the Room should have been short-circuited by the Concierge before any technical or fundamental analysis was performed", "The Aggressive Debator"],
     "answer": 2,
     "explanation": "The Room ran analytical motions on something that should never have made it to the Room. The Concierge's Module 11 fingerprint check fires before debate is meaningful — 'guaranteed weekly returns' is dispositive. A 'HOLD pending more data' verdict legitimises a scam pitch by treating it as a security.",
-    "related_lesson": "069",
+    "related_lesson": "069_ai_trading_bot_scams",
     "related_agent": "concierge",
     "tags": ["room", "concierge", "scam_short_circuit"]
   },
@@ -415,7 +415,7 @@
     "options": ["market_analyst", "news_analyst", "fundamentals_analyst", "bull_researcher"],
     "answer": 1,
     "explanation": "Macro headlines weighed against supply/demand fundamentals data is the news_analyst's voice — they integrate the news flow with the underlying data. The market_analyst would talk about chart structure on XOM; the fundamentals_analyst would talk about XOM's specific cash flow, not Brent and rig counts.",
-    "related_lesson": "008",
+    "related_lesson": "008_time_horizon_and_goals",
     "related_agent": "news_analyst",
     "tags": ["news", "macro", "oil"]
   },
@@ -429,7 +429,7 @@
     "options": ["The Concierge — owns the Module 11 five-check verification procedure before money moves", "The Research Manager synthesises Room debate and scores conviction", "The Trader executes entry, stop, target, and size", "The Portfolio Manager enforces trade mandates and sizing rules"],
     "answer": 0,
     "explanation": "The five-check verification procedure is the canonical Module 11 capstone (EDGE 21), owned by the Concierge. The Portfolio Manager enforces the mandate; the Research Manager synthesises Room debate. Neither owns the regulator-lookup procedure that protects users before money moves.",
-    "related_lesson": "071",
+    "related_lesson": "071_how_to_verify_before_you_wire_money",
     "related_agent": "concierge",
     "tags": ["scams", "verification", "concierge"]
   }

@@ -14,7 +14,7 @@
     ],
     "answer": 3,
     "explanation": "RSI 84, call/put 3.4 (more than 2x normal), and a 41% open gain on the same name together mark a sentiment-extension zone. The Conservative Debator's job is to slow the user down when emotion is doing the deciding — not to call a top, but to flag that adding here is an emotional add, not an edge-driven add. The tempting wrong answer 'add now — the trend is your friend' is the greed rationalisation: a winning trade is not a license to size up beyond the plan.",
-    "related_lesson": "045",
+    "related_lesson": "045_greed",
     "related_agent": "conservative_debator",
     "tags": ["greed", "psychology", "module_8"]
   },
@@ -33,7 +33,7 @@
     ],
     "answer": 0,
     "explanation": "The mandate explicitly requires a 60-minute pause after any loss greater than 1% of NAV. The user took a 1.4% loss and re-entered the same ticker in 9 minutes — 51 minutes inside the cooling-off window. The notes field ('gonna get it back') is textbook revenge framing. The tempting wrong answer 'day-trade count' fails because we don't have the week's count in the scenario; the cooling-off violation is unambiguous and trips first. The PM blocks the ticket; the right move is to log the loss in the journal and walk away from the screen.",
-    "related_lesson": "047",
+    "related_lesson": "047_revenge_trading",
     "related_agent": "portfolio_manager",
     "tags": ["revenge_trading", "cooling_off", "mandate", "module_8"]
   },
@@ -52,7 +52,7 @@
     ],
     "answer": 3,
     "explanation": "Reddit mentions, TikTok hashtag views, and the distinction between crowd-sentiment hype vs short-squeeze mechanics are the Social Media Analyst's lane. The Market Analyst would frame this in price/volume/levels; the News Analyst handles macro and corporate headlines, not retail forum chatter. The tempting wrong answer 'News Analyst — meme posts count as news' conflates two different signal types: forum mentions are sentiment data, not event-driven news.",
-    "related_lesson": "048",
+    "related_lesson": "048_fomo",
     "related_agent": "social_media_analyst",
     "tags": ["fomo", "social_sentiment", "module_8"]
   },
@@ -71,7 +71,7 @@
     ],
     "answer": 1,
     "explanation": "A 14% three-day drop is a fear event. Whether retail is panicking, neutral, or already capitulated is load-bearing for entry timing — buying into accelerating panic is different from buying after capitulation has cleared. The Social Media Analyst's sentiment read is the missing layer. The tempting wrong answer 'Aggressive Debator' fails because the Bull Researcher already represents the buy side; what is structurally absent is the sentiment temperature, not another bull voice.",
-    "related_lesson": "046",
+    "related_lesson": "046_fear_and_capitulation",
     "related_agent": "social_media_analyst",
     "tags": ["fear", "capitulation", "module_8"]
   },
@@ -90,7 +90,7 @@
     ],
     "answer": 0,
     "explanation": "The cap is 5% of NAV ($2,560 on a $51,200 account). The ticket is $26,640 — 10.4x over the cap. The note ('in the zone, doubling up') is the overconfidence tell: the mandate explicitly says sizing must not change after wins because the streak does not increase the user's edge, only the user's confidence. The tempting wrong answer 'cooling-off after wins' fails because the mandate as written doesn't require it — the size cap is what is breached, and that is the floor the PM enforces.",
-    "related_lesson": "049",
+    "related_lesson": "049_overconfidence",
     "related_agent": "portfolio_manager",
     "tags": ["overconfidence", "winning_streak", "sizing", "module_8"]
   },
@@ -109,7 +109,7 @@
     ],
     "answer": 2,
     "explanation": "Naming the absence of a thesis ('no level, no catalyst, no edge'), calling out 'variance dressed up as activity', and prescribing 'close the platform or open a lesson' is the Conservative Debator's beat. The tempting wrong answer 'Aggressive Debator' fails because the Aggressive Debator pushes harder on real edges, not on the absence of one. Boredom is a process-and-psychology problem — the Conservative Debator owns it.",
-    "related_lesson": "050",
+    "related_lesson": "050_boredom_trading",
     "related_agent": "conservative_debator",
     "tags": ["boredom", "discipline", "module_8"]
   },
@@ -128,7 +128,7 @@
     ],
     "answer": 0,
     "explanation": "Three independent boxes are ticked: close above the $615 ceiling at $618.40, volume nearly 2x the range average (27.3M vs 14M), and the rising 50-day MA at $589 underneath. RSI 64 is hot but not extreme (>80). That is a textbook volume-confirmed breakout. The tempting wrong answer 'consolidation continuation' fails because price has already closed above the range on heavy volume — the consolidation has resolved.",
-    "related_lesson": "024",
+    "related_lesson": "024_breakouts",
     "related_agent": "market_analyst",
     "tags": ["breakout", "volume", "module_4"]
   },
@@ -147,7 +147,7 @@
     ],
     "answer": 1,
     "explanation": "The quote names the emotional driver (cost of missing > cost of being wrong) and references the user's journal of near-entries — that is process and psychology, the Conservative Debator's beat. The tempting wrong answer 'News Analyst' fails because no news/catalyst is cited; the agent is reading the user, not the ticker. FOMO at the top of a 20% extended move is exactly when the Conservative Debator's job is to slow the entry, suggest a smaller pilot size, or wait for a pullback.",
-    "related_lesson": "048",
+    "related_lesson": "048_fomo",
     "related_agent": "conservative_debator",
     "tags": ["fomo", "chasing", "module_8"]
   },
@@ -166,7 +166,7 @@
     ],
     "answer": 1,
     "explanation": "Two breaches at once: the cooling-off window from the MAYBANK loss does not clear until 10:48 (the ticket is at 10:09), and the CIMB trade has no journal entry as required by the mandate for off-watchlist names. The PM's job is to enforce the floor — both rules trip, both must be cleared before the next ticket. The tempting wrong answer 'approved — under the trade cap' fails because the trade-count rule is satisfied but it is not the only rule; cooling-off and journal-entry are independent floors.",
-    "related_lesson": "051",
+    "related_lesson": "051_discipline_vs_excitement",
     "related_agent": "portfolio_manager",
     "tags": ["discipline", "mandate", "cooling_off", "module_8"]
   },
@@ -185,7 +185,7 @@
     ],
     "answer": 2,
     "explanation": "A 32% move in 13 sessions, RSI peaking at 88, a gap-up that gets sold all day on more than double average volume, and two confirming distribution days are the textbook signature of an exhaustion reversal. Sentiment was at maximum greed at the open and turned. The tempting wrong answer 'breakaway gap — bullish' fails because a breakaway gap holds and extends; this gap was filled and rejected by close. The Market Analyst will treat $251 as the swing high and downgrade the trend.",
-    "related_lesson": "045",
+    "related_lesson": "045_greed",
     "related_agent": "market_analyst",
     "tags": ["greed", "exhaustion", "chart", "module_8"]
   },
@@ -204,7 +204,7 @@
     ],
     "answer": 0,
     "explanation": "The verdict reads like a one-sided rally — the Aggressive Debator argues to size up, the Conservative Debator is structurally missing. After a 9-trade streak, the highest-probability error is overconfident sizing into the strongest-conviction name. The Conservative Debator's job is to flag that 13% concentration plus a hot streak is when discipline normally breaks. The tempting wrong answer 'Neutral Debator' is plausible but they don't carry the psychology/process beat — the Conservative Debator does, and they're absent.",
-    "related_lesson": "049",
+    "related_lesson": "049_overconfidence",
     "related_agent": "conservative_debator",
     "tags": ["overconfidence", "missing_agent", "module_8"]
   },
@@ -223,7 +223,7 @@
     ],
     "answer": 1,
     "explanation": "FCF -22%, downstream margin -21% (14 → 11), capex +8% — three independent cash-generation signals all moved in the wrong direction. Upstream volume growth (+4%) and the strong balance sheet are positives but they do not offset the cash burn from compressed refining margins. The tempting wrong answer 'strengthening — production is up' is the half-read take: volume without margin is just bigger losses per barrel. The agent reads the cash, not the volume headline.",
-    "related_lesson": "032",
+    "related_lesson": "032_revenue_the_top_line",
     "related_agent": "fundamentals_analyst",
     "tags": ["fundamentals", "fcf", "module_6"]
   },
@@ -242,7 +242,7 @@
     ],
     "answer": 0,
     "explanation": "Two stop-outs in one session, a same-level third re-entry at 2x size, and the user's own \"this time it'll work\" notes are a textbook revenge sequence. Naming the pattern and prescribing 'close the platform' — i.e., enforce a cooling-off — is the Conservative Debator's role. The tempting wrong answer 'Trader' fails because the Trader executes; they don't editorialise on the user's emotional state. The Conservative Debator is the one who tells the CEO to stop.",
-    "related_lesson": "047",
+    "related_lesson": "047_revenge_trading",
     "related_agent": "conservative_debator",
     "tags": ["revenge_trading", "module_8"]
   },
@@ -261,7 +261,7 @@
     ],
     "answer": 1,
     "explanation": "The PM is the safety-floor gate — every verdict ships through them. 9% of NAV is well above a typical 5% single-position cap; the verdict cites no check. The tempting wrong answer 'News Analyst already covered' is a misread: news is represented; what is structurally missing is the rules-check, and that is always the PM. Without that gate, a momentum chase becomes a mandate breach.",
-    "related_lesson": "013",
+    "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "safety_floor", "module_3"]
   },
@@ -280,7 +280,7 @@
     ],
     "answer": 3,
     "explanation": "The mandate caps entries at 3% from a defined level. The closest level is the $158.50 breakout, and $171.10 is 7.96% above it — more than 2.5x the tolerance. The notes ('don't want to miss it') name the emotion: FOMO. The PM blocks; the right move is to set an alert at the next pullback level (e.g., $158–$162) and wait. The tempting wrong answer 'stop-loss rule' is plausible but the entry-discipline rule trips first and is the primary breach.",
-    "related_lesson": "048",
+    "related_lesson": "048_fomo",
     "related_agent": "portfolio_manager",
     "tags": ["fomo", "chasing", "entry_discipline", "module_8"]
   },
@@ -299,7 +299,7 @@
     ],
     "answer": 3,
     "explanation": "The verdict's own language — 'pending sentiment confirmation' — names exactly what is missing. After an 18% six-session decline, whether retail is at peak fear (capitulation likely) or still bargaining (more downside likely) is load-bearing for the BUY upgrade decision. That sentiment read is the Social Media Analyst's job (mention volume, put/call, framing) and they are absent. The tempting wrong answer 'Aggressive Debator' fails because the Bull Researcher already covers upside; what is structurally absent is the sentiment data layer the verdict itself called for.",
-    "related_lesson": "046",
+    "related_lesson": "046_fear_and_capitulation",
     "related_agent": "social_media_analyst",
     "tags": ["fear", "capitulation", "sentiment", "module_8"]
   },
@@ -318,7 +318,7 @@
     ],
     "answer": 2,
     "explanation": "Four trades in an hour, sub-8-word theses, off-watchlist names, empty journal — every signal points to action-for-action's-sake. Naming it as screen-time rather than strategy is the Conservative Debator's role. The tempting wrong answer 'Aggressive Debator' is the inversion trap: the Aggressive Debator pushes harder on real edges, not on the absence of one. Boredom is what the Conservative Debator's mandate covers.",
-    "related_lesson": "050",
+    "related_lesson": "050_boredom_trading",
     "related_agent": "conservative_debator",
     "tags": ["boredom", "process", "module_8"]
   },
@@ -337,7 +337,7 @@
     ],
     "answer": 1,
     "explanation": "An 18% decline in 6 sessions, RSI 18 at the low, the heaviest single-session volume in 18 months printing the day's low, and a same-day reversal to close green with follow-through that holds the low is the textbook capitulation footprint — sellers exhausted on max volume. The tempting wrong answer 'dead-cat bounce' is the doubter's read: dead-cat bounces typically print on declining or average volume; this print had 5x volume and held next session, which raises the probability that the marginal seller is done.",
-    "related_lesson": "046",
+    "related_lesson": "046_fear_and_capitulation",
     "related_agent": "market_analyst",
     "tags": ["capitulation", "fear", "chart", "module_8"]
   },
@@ -356,7 +356,7 @@
     ],
     "answer": 0,
     "explanation": "The verdict doubles typical sizing on the back of a streak and the only voice editorialising on the size is the Aggressive Debator ('you're in flow'). That framing is exactly the overconfidence/discipline-vs-excitement risk Module 8 names. The Conservative Debator's role is to ask whether the size reflects edge or emotion — and they are absent. The tempting wrong answer 'Neutral Debator' is plausible but the Neutral Debator weighs evidence; the Conservative Debator owns the process/discipline lane that is structurally missing here.",
-    "related_lesson": "051",
+    "related_lesson": "051_discipline_vs_excitement",
     "related_agent": "conservative_debator",
     "tags": ["discipline", "overconfidence", "module_8"]
   },
@@ -375,7 +375,7 @@
     ],
     "answer": 1,
     "explanation": "P/B 1.13 vs 10-year average 1.32 is a 14% discount to its own history, paired with 9% operating-earnings growth. That is the textbook 'cheap on book' read. The tempting wrong answer 'expensive — near all-time highs' confuses nominal price with valuation — the multiple is what matters, and the multiple has compressed. The cash pile is a positive but not the reason this is cheap on book.",
-    "related_lesson": "040",
+    "related_lesson": "040_price_to_book",
     "related_agent": "fundamentals_analyst",
     "tags": ["valuation", "price_to_book", "module_7"]
   },
@@ -394,7 +394,7 @@
     ],
     "answer": 0,
     "explanation": "Three independent rules trip at once: the new size 6.5% exceeds the 6% cap; pyramiding requires a level break with volume which has not occurred; and the no-add-above-RSI-75 rule is breached at RSI 81. The notes ('can't let it run without me') name the driver — greed/FOMO on an existing winner. The PM blocks the add. The tempting wrong answer 'no violation — pyramiding into a winner is fine' is the rationalisation: pyramiding without conditions is just sizing up on emotion.",
-    "related_lesson": "045",
+    "related_lesson": "045_greed",
     "related_agent": "portfolio_manager",
     "tags": ["greed", "pyramiding", "mandate", "module_8"]
   },
@@ -413,7 +413,7 @@
     ],
     "answer": 1,
     "explanation": "OPEC+, Brent settle prints, FX moves, and ratings actions are macro headlines and event-driven flows — the News Analyst's lane. The tempting wrong answer 'Fundamentals Analyst' fails because no company-level numbers (revenue, margin, EPS, ROE) are cited — it is sector-level macro-impact framing, which the News Analyst owns.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": ["news", "macro", "module_10"]
   },
@@ -432,7 +432,7 @@
     ],
     "answer": 3,
     "explanation": "The user's own journal is the evidence — three entry attempts at higher prices with progressively more urgent language is the textbook FOMO ladder. Conviction would read as 'I missed the entry, here is the next setup'; emotion reads as 'now or never'. The Conservative Debator's prescription is to shrink size (lower the cost of being wrong) and wait for a defined level rather than chase mid-move. The tempting wrong answer 'enter now — strong trends extend' is the rationalisation: it is true sometimes, but it is not a process — it is hope.",
-    "related_lesson": "048",
+    "related_lesson": "048_fomo",
     "related_agent": "conservative_debator",
     "tags": ["fomo", "discipline", "module_8"]
   },
@@ -451,7 +451,7 @@
     ],
     "answer": 1,
     "explanation": "Naming size-creep on a winning streak and quantifying how variance scales with size is precisely the Conservative Debator's process-and-psychology beat. The tempting wrong answer 'Trader' fails because the Trader executes; they don't editorialise about how the user is changing behaviour after wins. The Aggressive Debator would amplify the win rate, not flag it as a risk vector.",
-    "related_lesson": "049",
+    "related_lesson": "049_overconfidence",
     "related_agent": "conservative_debator",
     "tags": ["overconfidence", "sizing", "module_8"]
   },
@@ -470,7 +470,7 @@
     ],
     "answer": 1,
     "explanation": "An 11% two-day move is a sentiment event. Whether retail is at peak fear (capitulation-likely) or still merely concerned (more downside likely) is load-bearing for timing — HOLD is right, but when to upgrade to BUY depends on the sentiment temperature. The Social Media Analyst's read is structurally missing. The tempting wrong answer 'Aggressive Debator' fails because the Bull Researcher already covers the upside case; what's missing is the sentiment data layer.",
-    "related_lesson": "046",
+    "related_lesson": "046_fear_and_capitulation",
     "related_agent": "social_media_analyst",
     "tags": ["fear", "sentiment", "module_8"]
   },
@@ -489,7 +489,7 @@
     ],
     "answer": 2,
     "explanation": "Base-rate analysis, margin-compression accounting, and competitive-dynamics framing in service of a downside case is the Bear Researcher's brief. The tempting wrong answer 'Aggressive Debator' confuses tone with role — the Aggressive Debator can be bullish or bearish but argues with force; the Bear Researcher specifically builds the downside thesis, which is what this quote does.",
-    "related_lesson": "058",
+    "related_lesson": "058_strategy_failure_modes",
     "related_agent": "bear_researcher",
     "tags": ["bear_case", "base_rates", "module_9"]
   },
@@ -508,7 +508,7 @@
     ],
     "answer": 2,
     "explanation": "Three breaches stack: (1) the user already exceeded the 2.5% daily-loss cap at 2.7%, which mandates trading halted — trade 4 should not even reach the queue; (2) trade 2's PUBLIC re-entry at 10:21 was 7 minutes after a 1.3% loss, breaching the 60-min cooling-off; (3) trade 4's 2x sizing combined with the 'claw it back' note is the revenge tell. The PM hard-halts. The tempting wrong answer 'still under the cap' fails because 2.7% > 2.5% — and the cap is a hard floor, not a soft target.",
-    "related_lesson": "047",
+    "related_lesson": "047_revenge_trading",
     "related_agent": "portfolio_manager",
     "tags": ["revenge_trading", "daily_loss_cap", "module_8"]
   },
@@ -527,7 +527,7 @@
     ],
     "answer": 2,
     "explanation": "23 sessions in a 3% range, declining volume, flat 50-day MA, neutral RSI — every signal points to a market with no participation and no direction. The Market Analyst's call is to wait: there is no edge until volume returns and price clears the range. The tempting wrong answer 'bull flag' requires a prior up-leg and a tightening continuation pattern, neither of which the scenario describes. Range-bound, low-volume tape is itself useful information for the user — it justifies not trading.",
-    "related_lesson": "025",
+    "related_lesson": "025_pullbacks",
     "related_agent": "market_analyst",
     "tags": ["range", "low_volume", "module_4"]
   },
@@ -546,7 +546,7 @@
     ],
     "answer": 1,
     "explanation": "The Conservative Debator raised the size concern, but the Portfolio Manager is the structural gate that validates against the actual mandate — and that check is missing. 9% of NAV against a typical 5–6% cap should not ship without an explicit PM sign-off. The tempting wrong answer 'Social Media Analyst already covered' fails because that input is present; what is missing is the rules-check, which is always PM-owned.",
-    "related_lesson": "013",
+    "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "safety_floor", "module_3"]
   },
@@ -565,7 +565,7 @@
     ],
     "answer": 3,
     "explanation": "The mandate explicitly requires off-watchlist trades to carry a one-sentence thesis and a defined level. 'Felt like it' is the textbook boredom-trade tell — the rule exists precisely to force the user to confront the absence of a reason before executing. The PM blocks; the right path is to journal honestly ('I was bored and this was screen-time'), then either define a real setup or close the platform. The tempting wrong answer 'position-size 3% too large' fails because 3% is within a typical 5–6% cap.",
-    "related_lesson": "050",
+    "related_lesson": "050_boredom_trading",
     "related_agent": "portfolio_manager",
     "tags": ["boredom", "watchlist", "journal", "module_8"]
   },
@@ -584,7 +584,7 @@
     ],
     "answer": 1,
     "explanation": "The numbers tell a discipline story, not a strategy story: trade count up 58%, average loser nearly doubled, and five mandate breaches across cooling-off and journal rules. The user's edge probably did not vanish — the user stopped following the rules that contained variance. The PM's prescription is to fix the process (lower frequency, tighter mandate enforcement) before touching the strategy. The tempting wrong answer 'strategy was wrong — switch approach' is the panic move that compounds the damage: changing strategies on a discipline-driven losing month locks in the wrong lesson.",
-    "related_lesson": "051",
+    "related_lesson": "051_discipline_vs_excitement",
     "related_agent": "portfolio_manager",
     "tags": ["discipline", "process_review", "module_8"]
   }

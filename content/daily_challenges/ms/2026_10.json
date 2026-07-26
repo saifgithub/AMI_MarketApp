@@ -14,7 +14,7 @@
     ],
     "answer": 3,
     "explanation": "RSI 84, nisbah panggilan/put 3.4 (lebih daripada 2x normal), dan keuntungan terbuka 41% pada nama yang sama bersama-sama menandakan zon lanjutan sentimen. Tugas Pembahas Konservatif adalah untuk memperlahankan pengguna apabila emosi sedang membuat keputusan — bukan untuk memanggil puncak, tetapi untuk menandakan bahawa menambah di sini adalah penambahan berasaskan emosi, bukan penambahan berasaskan kelebihan. Jawapan salah yang memikat 'tambah sekarang — trend adalah kawan anda' adalah rasionalisasi keserakahan: perdagangan yang menguntungkan bukan lesen untuk saizkan melebihi pelan.",
-    "related_lesson": "045",
+    "related_lesson": "045_greed",
     "related_agent": "conservative_debator",
     "tags": [
       "greed",
@@ -37,7 +37,7 @@
     ],
     "answer": 0,
     "explanation": "Mandat secara eksplisit memerlukan jeda 60 minit selepas sebarang kerugian melebihi 1% daripada NAV. Pengguna mengambil kerugian 1.4% dan memasuki semula ticker yang sama dalam 9 minit — 51 minit di dalam tetingkap penyingkiran emosi. Medan nota ('akan dapatkan semula') adalah bingkai balas dendam yang klasik. Jawapan salah yang memikat 'kaunt dagangan harian' gagal kerana kita tidak mempunyai kaunt minggu dalam senario; pelanggaran penyingkiran emosi adalah jelas dan berlaku dahulu. Pengurus Portfolio menyekat tiket; langkah betul adalah merekodkan kerugian dalam jurnal dan menjauhkan diri dari skrin.",
-    "related_lesson": "047",
+    "related_lesson": "047_revenge_trading",
     "related_agent": "portfolio_manager",
     "tags": [
       "revenge_trading",
@@ -61,7 +61,7 @@
     ],
     "answer": 3,
     "explanation": "Perbincangan Reddit, tontonan tagar TikTok, dan perbezaan antara hype sentimen khalayak vs mekanik squeeze pendek adalah bidang Penganalisis Media Sosial. Penganalisis Pasaran akan membentangkan ini dalam harga/volume/paras; Penganalisis Berita mengendalikan makro dan tajuk korporat, bukan gosip forum runcit. Jawapan salah yang memikat 'Penganalisis Berita — pos meme kira sebagai berita' mencampuradukkan dua jenis isyarat yang berbeza: sebutan forum adalah data sentimen, bukan berita berdaya acara.",
-    "related_lesson": "048",
+    "related_lesson": "048_fomo",
     "related_agent": "social_media_analyst",
     "tags": [
       "fomo",
@@ -84,7 +84,7 @@
     ],
     "answer": 1,
     "explanation": "Penurunan 14% dalam tiga hari ialah peristiwa ketakutan. Sama ada runcit sedang panik, neutral, atau sudah menyerah adalah beban utama untuk masa masuk — membeli apabila kepanikan semakin teruk berbeza daripada membeli selepas penyerahan telah selesai. Bacaan sentimen Penganalisis Media Sosial ialah lapisan yang hilang. Jawapan salah yang menggoda 'Pembela Agresif' gagal kerana Penganalisis Bull sudah mewakili pihak beli; yang ketara secara struktur tidak hadir ialah suhu sentimen, bukan suara bull lain.",
-    "related_lesson": "046",
+    "related_lesson": "046_fear_and_capitulation",
     "related_agent": "social_media_analyst",
     "tags": [
       "fear",
@@ -107,7 +107,7 @@
     ],
     "answer": 0,
     "explanation": "Had ialah 5% NAV ($2,560 pada akaun $51,200). Tiket ialah $26,640 — 10.4x melebihi had. Nota ('dalam zon, menggandakan') ialah petunjuk overconfidence: mandat secara eksplisit menyatakan saiz tidak boleh berubah selepas menang kerana rentetan tidak meningkatkan tepi pengguna, hanya keyakinan pengguna. Jawapan salah yang menggoda 'penyejukan selepas menang' gagal kerana mandat seperti yang ditulis tidak memerlukan ia — had saiz ialah apa yang dilanggar, dan itulah lantai yang ditegakkan oleh PM.",
-    "related_lesson": "049",
+    "related_lesson": "049_overconfidence",
     "related_agent": "portfolio_manager",
     "tags": [
       "overconfidence",
@@ -131,7 +131,7 @@
     ],
     "answer": 2,
     "explanation": "Menamakan ketiadaan tesis ('tiada tahap, tiada pemangkin, tiada tepi'), memanggil keluar 'varians yang dibalut sebagai aktiviti', dan menetapkan 'tutup platform atau buka pelajaran' ialah tugas Pembela Konservatif. Jawapan salah yang menggoda 'Pembela Agresif' gagal kerana Pembela Agresif menolak lebih kuat pada tepi sebenar, bukan pada ketiadaan satu. Kebosanan ialah masalah proses dan psikologi — Pembela Konservatif memilikinya.",
-    "related_lesson": "050",
+    "related_lesson": "050_boredom_trading",
     "related_agent": "conservative_debator",
     "tags": [
       "boredom",
@@ -154,7 +154,7 @@
     ],
     "answer": 0,
     "explanation": "Tiga kotak bebas telah dicentang: penutupan di atas had atas $615 pada $618.40, isipadu hampir 2x purata julat (27.3M berbanding 14M), dan garis purata bergerak 50-hari yang menaik pada $589 di bawahnya. RSI 64 adalah panas tetapi tidak melampau (>80). Itu adalah pecahan yang disahkan isipadu secara klasik. Jawapan salah yang memikat 'terusan konsolidasi' gagal kerana harga telah menutup di atas julat dengan isipadu berat — konsolidasi telah diselesaikan.",
-    "related_lesson": "024",
+    "related_lesson": "024_breakouts",
     "related_agent": "market_analyst",
     "tags": [
       "breakout",
@@ -177,7 +177,7 @@
     ],
     "answer": 1,
     "explanation": "Petikan tersebut menamakan pemacu emosi (kos terlepas > kos menjadi salah) dan merujuk kepada jurnal hampir-masuk pengguna — itu adalah proses dan psikologi, bidang tugas Penceramah Konservatif. Jawapan salah yang memikat 'Penganalisis Berita' gagal kerana tiada berita/pencetus dirujuk; ejen membaca pengguna, bukan ticker. FOMO di puncak pergerakan 20% yang melampau adalah tepat apabila tugas Penceramah Konservatif ialah memperlahankan masuk, mencadangkan saiz percubaan yang lebih kecil, atau menunggu penurunan.",
-    "related_lesson": "048",
+    "related_lesson": "048_fomo",
     "related_agent": "conservative_debator",
     "tags": [
       "fomo",
@@ -200,7 +200,7 @@
     ],
     "answer": 1,
     "explanation": "Dua pelanggaran serentak: tetingkap penyejukan dari kerugian MAYBANK tidak jelas sehingga 10:48 (tiket adalah pada 10:09), dan dagangan CIMB tiada kemasukan jurnal seperti yang dikehendaki oleh mandat untuk nama di luar senarai tontonan. Tugas PM ialah menguatkuasakan lantai — kedua-dua peraturan berlaku, kedua-duanya mesti diselesaikan sebelum tiket seterusnya. Jawapan salah yang memikat 'diluluskan — di bawah had dagangan' gagal kerana peraturan kiraan dagangan dipenuhi tetapi ia bukan satu-satunya peraturan; penyejukan dan kemasukan jurnal adalah lantai bebas.",
-    "related_lesson": "051",
+    "related_lesson": "051_discipline_vs_excitement",
     "related_agent": "portfolio_manager",
     "tags": [
       "discipline",
@@ -224,7 +224,7 @@
     ],
     "answer": 2,
     "explanation": "Pergerakan 32% dalam 13 sesi, RSI mencapai puncak 88, lonjakan harga yang dijual sepanjang hari dengan isipadu lebih dua kali ganda daripada purata, dan dua hari pengagihan yang mengesahkan adalah tanda tangan klasik pembalikan keletihan. Sentimen berada pada tahap keserakahan maksimum pada pembukaan dan kemudian berubah. Jawapan salah yang menggoda 'celah terobosan — bullish' gagal kerana celah terobosan akan bertahan dan meluas; celah ini diisi dan ditolak oleh penutupan. Market Analyst akan menganggap $251 sebagai paras tinggi ayunan dan menurunkan trend.",
-    "related_lesson": "045",
+    "related_lesson": "045_greed",
     "related_agent": "market_analyst",
     "tags": [
       "greed",
@@ -248,7 +248,7 @@
     ],
     "answer": 0,
     "explanation": "Verdict ini berbunyi seperti perhimpunan satu hala — Aggressive Debator berhujah untuk meningkatkan saiz, Conservative Debator secara struktur tiada. Selepas rentetan 9 perdagangan, kesilapan berkemungkinan tertinggi ialah saiz berlebihan ke nama dengan keyakinan tertinggi. Tugas Conservative Debator ialah menandakan bahawa kepekatan 13% ditambah rentetan panas adalah masa apabila disiplin biasanya runtuh. Jawapan salah yang menggoda 'Neutral Debator' adalah munasabah tetapi mereka tidak memegang beat psikologi/proses — Conservative Debator melakukannya, dan mereka tiada.",
-    "related_lesson": "049",
+    "related_lesson": "049_overconfidence",
     "related_agent": "conservative_debator",
     "tags": [
       "overconfidence",
@@ -271,7 +271,7 @@
     ],
     "answer": 1,
     "explanation": "FCF -22%, margin hiliran -21% (14 → 11), capex +8% — tiga isyarat penjanaan tunai bebas bergerak ke arah yang salah. Pertumbuhan isipadu hulu (+4%) dan neraca yang kuat adalah positif tetapi tidak menampung pembakaran tunai daripada margin penapisan yang mampat. Jawapan salah yang menggoda 'menguat — pengeluaran naik' adalah baca separuh: isipadu tanpa margin hanyalah kerugian lebih besar per barel. Ejen membaca tunai, bukan tajuk isipadu.",
-    "related_lesson": "032",
+    "related_lesson": "032_revenue_the_top_line",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "fundamentals",
@@ -294,7 +294,7 @@
     ],
     "answer": 0,
     "explanation": "Dua kali keluar (stop-out) dalam satu sesi, kemasukan ketiga pada paras yang sama dengan saiz 2x, dan nota pengguna sendiri \"kali ini ia akan berjaya\" adalah urutan balas dendam yang klasik. Menamakan corak dan menetapkan 'tutup platform' — iaitu, memaksakan penyejukan — adalah peranan Pembahas Konservatif. Jawapan salah yang menggoda 'Pembeli' gagal kerana Pembeli melaksanakan; mereka tidak mengulas keadaan emosi pengguna. Pembahas Konservatif adalah orang yang memberitahu CEO untuk berhenti.",
-    "related_lesson": "047",
+    "related_lesson": "047_revenge_trading",
     "related_agent": "conservative_debator",
     "tags": [
       "revenge_trading",
@@ -316,7 +316,7 @@
     ],
     "answer": 1,
     "explanation": "PM adalah gerbang lantai keselamatan — setiap verdict diluluskan melalui mereka. 9% NAV jauh melebihi had kedudukan tunggal biasa 5%; verdict tidak menyebut sebarang semakan. Jawapan salah yang menggoda 'Penganalisis Berita sudah meliputi' adalah salah tafsir: berita diwakili; yang hilang secara struktur adalah semakan peraturan, dan itu sentiasa menjadi PM. Tanpa gerbang itu, pengejaran momentum menjadi pelanggaran mandat.",
-    "related_lesson": "013",
+    "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -339,7 +339,7 @@
     ],
     "answer": 3,
     "explanation": "Mandat mengawal kemasukan pada 3% dari paras yang ditakrifkan. Paras terdekat ialah pecahan $158.50, dan $171.10 adalah 7.96% di atasnya — lebih daripada 2.5x toleransi. Nota ('tak mahu terlepas peluang') menamakan emosi: FOMO. PM menyekat; langkah betul ialah menetapkan amaran pada paras susut semula seterusnya (contohnya, $158–$162) dan menunggu. Jawapan salah yang menggoda 'peraturan henti rugi' adalah munasabah tetapi peraturan disiplin kemasukan berlaku dahulu dan merupakan pelanggaran utama.",
-    "related_lesson": "048",
+    "related_lesson": "048_fomo",
     "related_agent": "portfolio_manager",
     "tags": [
       "fomo",
@@ -363,7 +363,7 @@
     ],
     "answer": 3,
     "explanation": "Bahasa verdict itu sendiri — 'pending sentiment confirmation' — menamakan tepat apa yang hilang. Selepas penurunan 18% dalam enam sesi, sama ada runcit berada pada ketakutan puncak (kapitulasi mungkin) atau masih berunding (kemungkinan lebih penurunan) adalah beban utama untuk keputusan naik taraf BUY. Bacaan sentimen itu adalah tugas Social Media Analyst (isipadu sebutan, nisbah put/call, bingkai) dan mereka tiada. Jawapan salah yang menggoda 'Aggressive Debator' gagal kerana Bull Researcher sudah meliputi potensi naik; yang secara struktur tiada ialah lapisan data sentimen yang dipanggil oleh verdict itu sendiri.",
-    "related_lesson": "046",
+    "related_lesson": "046_fear_and_capitulation",
     "related_agent": "social_media_analyst",
     "tags": [
       "fear",
@@ -387,7 +387,7 @@
     ],
     "answer": 2,
     "explanation": "Empat dagangan dalam sejam, tesis sub-8 patah perkataan, nama di luar senarai tonton, jurnal kosong — setiap isyarat menunjuk kepada tindakan demi tindakan. Menamakannya sebagai masa skrin berbanding strategi adalah peranan Conservative Debator. Jawapan salah yang menggoda 'Aggressive Debator' adalah perangkap songsangan: Aggressive Debator menolak lebih kuat pada tepi yang nyata, bukan pada ketiadaan satu. Kebosanan adalah apa yang mandat Conservative Debator liputi.",
-    "related_lesson": "050",
+    "related_lesson": "050_boredom_trading",
     "related_agent": "conservative_debator",
     "tags": [
       "boredom",
@@ -410,7 +410,7 @@
     ],
     "answer": 1,
     "explanation": "Penurunan 18% dalam 6 sesi, RSI 18 pada paras rendah, isipadu tunggal sesi terberat dalam 18 bulan mencetak paras rendah hari itu, dan pembalikan sama hari untuk menutup hijau dengan tindak lanjut yang mengekalkan paras rendah adalah capak kaki buku capitulation — penjual kehabisan tenaga pada isipadu maksimum. Jawapan salah yang menggoda 'dead-cat bounce' adalah bacaan pendua: dead-cat bounce biasanya mencetak pada isipadu menurun atau purata; cetakan ini mempunyai isipadu 5x dan mengekalkan sesi seterusnya, yang meningkatkan kebarangkalian bahawa penjual marginal sudah selesai.",
-    "related_lesson": "046",
+    "related_lesson": "046_fear_and_capitulation",
     "related_agent": "market_analyst",
     "tags": [
       "capitulation",
@@ -434,7 +434,7 @@
     ],
     "answer": 0,
     "explanation": "Verifikasi ini menggandakan saiz tipikal berdasarkan rentetan kemenangan, dan satu-satunya suara yang mengulas saiz ialah Penceramah Agresif ('anda dalam aliran'). Bingkai ini tepat merupakan risiko overconfidence/disiplin-vs-keseronokan yang dinamakan dalam Modul 8. Peranan Penceramah Konservatif ialah bertanya sama ada saiz mencerminkan kelebihan atau emosi — dan mereka tiada. Jawapan salah yang menggoda 'Penceramah Neutral' adalah munasabah tetapi Penceramah Neutral menimbang bukti; Penceramah Konservatif memegang laluan proses/disiplin yang secara struktur tiada di sini.",
-    "related_lesson": "051",
+    "related_lesson": "051_discipline_vs_excitement",
     "related_agent": "conservative_debator",
     "tags": [
       "discipline",
@@ -457,7 +457,7 @@
     ],
     "answer": 1,
     "explanation": "P/B 1.13 berbanding purata 10 tahun 1.32 ialah diskaun 14% terhadap sejarahnya sendiri, disusuli dengan pertumbuhan pendapatan operasi 9%. Itu ialah bacaan 'murah pada buku' yang klasik. Jawapan salah yang menggoda 'mahal — hampir rekod tertinggi' mengelirukan harga nominal dengan penilaian — berapakah gandaan yang penting, dan gandaan telah mampat. Tumpukan tunai ialah faktor positif tetapi bukan sebab ini murah pada buku.",
-    "related_lesson": "040",
+    "related_lesson": "040_price_to_book",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "valuation",
@@ -480,7 +480,7 @@
     ],
     "answer": 0,
     "explanation": "Tiga peraturan bebas berlaku serentak: saiz baharu 6.5% melebihi had 6%; piramid memerlukan pecahan paras dengan isipadu yang belum berlaku; dan peraturan tiada-tambah-di-atas-RSI-75 dilanggar pada RSI 81. Nota ('tak boleh biarkan ia bergerak tanpa saya') menamakan pemacu — keserakahan/FOMO pada pemenang sedia ada. Pengurus Portfolio menyekat tambahan itu. Jawapan salah yang menggoda 'tiada pelanggaran — piramid ke dalam pemenang adalah baik' ialah rasionalisasi: piramid tanpa syarat hanyalah menambah saiz berdasarkan emosi.",
-    "related_lesson": "045",
+    "related_lesson": "045_greed",
     "related_agent": "portfolio_manager",
     "tags": [
       "greed",
@@ -504,7 +504,7 @@
     ],
     "answer": 1,
     "explanation": "OPEC+, cetakan penutupan Brent, pergerakan FX, dan tindakan penarafan adalah tajuk utama makro dan aliran yang dipacu oleh peristiwa — ini adalah domain News Analyst. Jawapan salah yang menipu 'Fundamentals Analyst' gagal kerana tiada nombor tahap syarikat (pendapatan, margin, EPS, ROE) yang dirujuk — ia adalah kerangka impak makro tahap sektor, yang menjadi tanggungjawab News Analyst.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": [
       "news",
@@ -527,7 +527,7 @@
     ],
     "answer": 3,
     "explanation": "Jurnal pengguna sendiri adalah bukti — tiga percubaan masuk pada harga yang semakin meningkat dengan bahasa yang semakin mendesak adalah tangga FOMO yang klasik. Keyakinan akan dibaca sebagai 'Saya terlepas entri, ini persediaan seterusnya'; emosi dibaca sebagai 'sekarang atau tidak langsung'. Resipi Conservative Debator ialah mengecilkan saiz (menurunkan kos kesilapan) dan menunggu tahap yang ditentukan berbanding mengejar pergerakan di tengah jalan. Jawapan salah yang menipu 'masuk sekarang — trend kuat akan melonjak lebih jauh daripada jangkaan' adalah rasionalisasi: ia benar pada sesetengah masa, tetapi ia bukan proses — ia harapan.",
-    "related_lesson": "048",
+    "related_lesson": "048_fomo",
     "related_agent": "conservative_debator",
     "tags": [
       "fomo",
@@ -550,7 +550,7 @@
     ],
     "answer": 1,
     "explanation": "Menamakan peningkatan saiz semasa siri kemenangan dan mengkuantifikasikan bagaimana varians berskala dengan saiz adalah tepat pada proses dan psikologi Conservative Debator. Jawapan salah yang menipu 'Trader' gagal kerana Trader melaksanakan; mereka tidak mengulas tentang bagaimana pengguna mengubah tingkah laku selepas kemenangan. Aggressive Debator akan menggalakkan kadar kemenangan, bukan menandakan ia sebagai vektor risiko.",
-    "related_lesson": "049",
+    "related_lesson": "049_overconfidence",
     "related_agent": "conservative_debator",
     "tags": [
       "overconfidence",
@@ -573,7 +573,7 @@
     ],
     "answer": 1,
     "explanation": "Pergerakan 11% dalam dua hari ialah peristiwa sentimen. Sama ada runcit berada pada ketakutan puncak (kemungkinan menyerah) atau masih sekadar bimbang (kemungkinan lebih penurunan) adalah beban utama untuk penentuan masa — HOLD adalah betul, tetapi bila untuk naik taraf kepada BUY bergantung pada suhu sentimen. Bacaan Penganalisis Media Sosial secara struktur tiada. Jawapan salah yang menggoda 'Pembahas Agresif' gagal kerana Penganalisis Bull sudah merangkumi kes kenaikan; yang tiada ialah lapisan data sentimen.",
-    "related_lesson": "046",
+    "related_lesson": "046_fear_and_capitulation",
     "related_agent": "social_media_analyst",
     "tags": [
       "fear",
@@ -596,7 +596,7 @@
     ],
     "answer": 2,
     "explanation": "Analisis kadar asas, pengiraan mampatan margin, dan kerangka dinamik kompetitif demi kes penurunan ialah tanggungjawab Penganalisis Bear. Jawapan salah yang menggoda 'Pembahas Agresif' keliru antara nada dengan peranan — Pembahas Agresif boleh bull atau bear tetapi berhujah dengan kuat; Penganalisis Bear secara khusus membina tesis penurunan, yang dilakukan oleh petikan ini.",
-    "related_lesson": "058",
+    "related_lesson": "058_strategy_failure_modes",
     "related_agent": "bear_researcher",
     "tags": [
       "bear_case",
@@ -619,7 +619,7 @@
     ],
     "answer": 2,
     "explanation": "Tiga pelanggaran bertindan: (1) pengguna sudah melebihi had kerugian harian 2.5% pada 2.7%, yang mewajibkan perdagangan dihentikan — trade 4 sepatutnya tidak sampai ke giliran; (2) kemasukan semula PUBLIC pada trade 2 pada 10:21 ialah 7 minit selepas kerugian 1.3%, melanggar penyejukan 60-min; (3) saiz 2x pada trade 4 digabungkan dengan nota 'pulihkan' ialah petunjuk balas dendam. PM menghentikan keras. Jawapan salah yang menggoda 'masih di bawah had' gagal kerana 2.7% > 2.5% — dan had adalah lantai keras, bukan sasaran lembut.",
-    "related_lesson": "047",
+    "related_lesson": "047_revenge_trading",
     "related_agent": "portfolio_manager",
     "tags": [
       "revenge_trading",
@@ -642,7 +642,7 @@
     ],
     "answer": 2,
     "explanation": "23 sesi dalam julat 3%, isipadu menurun, 50-day MA mendatar, RSI neutral — setiap isyarat menunjukkan pasaran tanpa penyertaan dan tanpa arah. Panggilan Market Analyst adalah untuk menunggu: tiada kelebihan (edge) sehingga isipadu kembali dan harga menembusi julat. Jawapan salah yang menarik 'bull flag' memerlukan kaki naik sebelumnya dan corak sambungan yang mengetat, yang mana kedua-duanya tidak diterangkan dalam senario. Pita yang terikat dalam julat dengan isipadu rendah sendiri adalah maklumat berguna untuk pengguna — ia membenarkan tidak berdagang.",
-    "related_lesson": "025",
+    "related_lesson": "025_pullbacks",
     "related_agent": "market_analyst",
     "tags": [
       "range",
@@ -665,7 +665,7 @@
     ],
     "answer": 1,
     "explanation": "Conservative Debator telah membangkitkan kebimbangan saiz, tetapi Portfolio Manager adalah gerbang struktur yang mengesahkan terhadap mandat sebenar — dan semakan itu tiada. 9% NAV terhadap had tipikal 5–6% tidak boleh diluluskan tanpa kelulusan eksplisit PM. Jawapan salah yang menarik 'Social Media Analyst sudah diliputi' gagal kerana masukan itu wujud; yang tiada adalah semakan peraturan, yang sentiasa menjadi tanggungjawab PM.",
-    "related_lesson": "013",
+    "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -688,7 +688,7 @@
     ],
     "answer": 3,
     "explanation": "Mandat secara eksplisit memerlukan perdagangan luar senarai tontonan untuk membawa tesis satu ayat dan paras yang ditakrifkan. 'Rasa macam nak' adalah penanda dagangan bosan yang klasik — peraturan ini wujud tepat untuk memaksa pengguna menghadapi ketiadaan alasan sebelum melaksanakan. PM menyekat; laluan yang betul adalah menulis jurnal dengan jujur ('Saya bosan dan ini sekadar masa di skrin'), kemudian sama ada mentakrifkan setup sebenar atau tutup platform. Jawapan salah yang menarik 'saiz posisi 3% terlalu besar' gagal kerana 3% berada dalam had tipikal 5–6%.",
-    "related_lesson": "050",
+    "related_lesson": "050_boredom_trading",
     "related_agent": "portfolio_manager",
     "tags": [
       "boredom",
@@ -712,7 +712,7 @@
     ],
     "answer": 1,
     "explanation": "Nombor-nombor itu menceritakan kisah disiplin, bukan kisah strategi: bilangan dagangan naik 58%, purata kerugian hampir berganda, dan lima pelanggaran mandat merentasi peraturan rehat dan jurnal. Tepi pengguna mungkin tidak hilang — pengguna berhenti mengikuti peraturan yang mengawal varians. Resipi Portfolio Manager adalah membaiki proses (frekuensi lebih rendah, penguatkuasaan mandat lebih ketat) sebelum menyentuh strategi. Jawapan salah yang menggoda 'strategi salah — tukar pendekatan' adalah langkah panik yang memperburuk kerosakan: menukar strategi pada bulan kerugian yang didorong oleh disiplin mengunci pelajaran yang salah.",
-    "related_lesson": "051",
+    "related_lesson": "051_discipline_vs_excitement",
     "related_agent": "portfolio_manager",
     "tags": [
       "discipline",

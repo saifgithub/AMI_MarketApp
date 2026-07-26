@@ -14,7 +14,7 @@
     ],
     "answer": 3,
     "explanation": "Tiga pengesahan bebas bertindan: SPX ditutup pada 5478 — di atas had atas 5460, bukan sekadar menyentuhnya. Isipadu mencapai 1.4x purata 20 hari, ambang isipadu pecahan teks buku. Garis MA 20 hari bersilang di atas 5440 pada sesi sebelumnya — momentum sudah mula berubah sebelum pecahan berlaku. Jawapan 'perangkap bull' mengabaikan isipadu; enam ujian gagal pada isipadu rendah tidak menafikan percubaan ketujuh yang tiba dengan keyakinan.",
-    "related_lesson": "024",
+    "related_lesson": "024_breakouts",
     "related_agent": "market_analyst",
     "tags": [
       "breakout",
@@ -37,7 +37,7 @@
     ],
     "answer": 1,
     "explanation": "Anatomi: buka $122.40, tutup $122.90 — badan lilin kecil dan berhampiran harga rendah hari. Tinggi $128.10 bermakna sumbu atas ialah $5.20 — kira-kira 5x badan. Sumbu bawah boleh diabaikan. Selepas trend naik 4 minggu, corak ini pada isipadu 1.6x ialah 'shooting star' teks buku — pembeli menolak harga naik $5.70 dari harga buka kemudian menyerahkan semua kenaikan tersebut. Jawapan 'hammer' gagal kerana hammer mempunyai sumbu BAWAH yang panjang di dasar trend turun; sumbu dan konteks trend di sini adalah songsangan.",
-    "related_lesson": "020",
+    "related_lesson": "020_candlesticks_anatomy_of_a_bar",
     "related_agent": "market_analyst",
     "tags": [
       "candlesticks",
@@ -60,7 +60,7 @@
     ],
     "answer": 2,
     "explanation": "Saiz posisi disemak sebelum kepekatan. Had posisi tunggal ialah 6% ($4,800 pada akaun $80k); tiket ini sahaja bernilai $12,900 — 16.1% NAV, ~2.7x had. Portfolio Manager menyekat pada saiz posisi sebelum peraturan lain. Jawapan 'kepekatan' memikat kerana nombor yang sama melanggar kedua-duanya — tetapi saiz posisi adalah gerbang struktur yang lebih awal, dan tiada AAPL lain untuk diagregasikan. Ketidakhadiran had berhenti juga merupakan pelanggaran, tetapi ia adalah pengesahan kedua, bukan pertama.",
-    "related_lesson": "014",
+    "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -84,7 +84,7 @@
     ],
     "answer": 0,
     "explanation": "Petikan ini dibina sepenuhnya berdasarkan penunjuk teknikal: tahap RSI dan ketahanan di atas 70, tingkah laku histogram MACD, dan jarak dari Purata Bergerak 20-hari. Itu adalah alat Market Analyst. Jawapan 'Fundamentals Analyst on P/E' adalah perangkap — kedua-dua ejen boleh berkata 'regang', tetapi bahasa P/E dan penyata kewangan tiada di sini; seluruh kosa kata adalah osilator dan purata bergerak. Padankan kosa kata dengan lorong.",
-    "related_lesson": "027",
+    "related_lesson": "027_rsi_momentum_oscillator",
     "related_agent": "market_analyst",
     "tags": [
       "agents",
@@ -107,7 +107,7 @@
     ],
     "answer": 0,
     "explanation": "Penarikan bendera lembu teks buku: kenaikan 11.4% dalam empat minggu, penarikan tiga sesi dengan lilin merah mengecut (penjual kehilangan keyakinan), harga menyentuh Purata Bergerak 20-hari yang naik pada $429 tanpa merobohkannya, kemudian 5 Ogos ditutup naik $5 dengan isipadu 1.2x purata. Jawapan 'pengedaran' gagal kerana pengedaran ditunjukkan pada isipadu naik semasa pergerakan turun dan isipadu turun semasa pergerakan naik — di sini tanda isipadu adalah bertentangan. Penarikan yang memegang Purata Bergerak naik dengan isipadu menurun diselesaikan dalam arah trend.",
-    "related_lesson": "025",
+    "related_lesson": "025_pullbacks",
     "related_agent": "market_analyst",
     "tags": [
       "pullback",
@@ -130,7 +130,7 @@
     ],
     "answer": 2,
     "explanation": "Empat pengesahan selaras: Purata Bergerak 50-hari dan 200-hari kedua-duanya naik (trend utuh pada dua kerangka masa), penutupan $182.40 membersihkan siling konsolidasi $181 pada isipadu 1.8x (pecahan), penyilangan MACD menyokong pergerakan (momentum), RSI pada 64 meninggalkan ruang sebelum 70 (tidak regang). Jawapan 'RSI 64 = jual' salah tafsir penunjuk — 70 adalah ambang lebih beli konvensional, dan 64 dengan Purata Bergerak naik adalah bacaan momentum sihat, bukan isyarat jual.",
-    "related_lesson": "030",
+    "related_lesson": "030_trend_confirmation_across_indicators",
     "related_agent": "market_analyst",
     "tags": [
       "trend_confirmation",
@@ -176,7 +176,7 @@
     ],
     "answer": 1,
     "explanation": "Takrifan trend naik adalah paras tinggi yang lebih tinggi dan paras rendah yang lebih tinggi. Paras tinggi: $122 → $128 → $134. Paras rendah: $108 → $116 → $124. Kedua-dua urutan adalah meningkat secara monoton, dan purata bergerak 50-hai telah mengesahkan di bawah sepanjang keseluruhan. Jawapan 'mendatar' memurabahkan harga dalam kepala anda bukannya membaca struktur — julat bergerak dari 108-122 pada musim bunga ke 124-134 pada musim panas. Itu bukan reverting, itu naik berperingkat.",
-    "related_lesson": "022",
+    "related_lesson": "022_trend_direction",
     "related_agent": "market_analyst",
     "tags": [
       "trend",
@@ -199,7 +199,7 @@
     ],
     "answer": 3,
     "explanation": "Mandat memerlukan henti teknikal, bukan henti peratusan-kemasukan. $574 berada di tanah no-man carta — tiada sokongan di sana. Paras teknikal sebenar ialah $562 (purata bergerak 50-hai + paras rendah ayunan). Henti pada $574 akan ditanda pada hingar dan mengeluarkan tesis yang belum pecah; henti pada $562 mengeluarkan hanya apabila struktur benar-benar gagal. Jawapan 'kap kerugian' adalah salah: kerugian $6 pada 40 bahagian ialah $240, yang merupakan 0.2% daripada NAV, jauh di bawah 2%. Baca matematik, bukan vibe.",
-    "related_lesson": "023",
+    "related_lesson": "023_support_and_resistance",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -223,7 +223,7 @@
     ],
     "answer": 2,
     "explanation": "Seluruh petikan adalah penunjuk teknikal — garisan MACD berbanding garisan isyarat, tanda histogram, tahap purata bergerak, tahap pecahan struktur. Itu adalah alat Analis Pasaran. Jawapan 'Pembeli Cadangan Pendek' adalah memikat kerana bingkai 'pantau $208' terdengar seperti pelaksanaan, tetapi tiada harga masuk, henti rugi, atau saiz diberikan — itu adalah pengesanan setup oleh analis, bukan pelaksanaan oleh pedagang.",
-    "related_lesson": "028",
+    "related_lesson": "028_macd_trend_and_momentum",
     "related_agent": "market_analyst",
     "tags": [
       "agents",
@@ -246,7 +246,7 @@
     ],
     "answer": 2,
     "explanation": "Tugas Penganalisis Berita adalah menterjemah peristiwa makro kepada akibat pada nama ticker. Peralihan peta titik + pergerakan 14bps pada 2-tahun + perataan lengkung kepada 32bps adalah setup kedua yang konkrit menentang margin faedah bersih (NIM) bank. Jawapan 'kurang pemotongan bermaksud bank mendapat lebih' adalah pandangan separa baca — ia keliru antara tahap kadar mutlak dengan bentuk lengkung. Bank mendapat spread antara pembiayaan jangka pendek dan peminjaman jangka panjang; lengkung yang lebih rata mampatkan spread itu tanpa mengira tahap mutlak.",
-    "related_lesson": "063",
+    "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": [
       "news",
@@ -270,7 +270,7 @@
     ],
     "answer": 3,
     "explanation": "P&L jangka pendek XOM didorong secara berlebihan oleh daya makro: harga minyak (OPEC+) dan kadar/USD (FOMC). Mensaizkan 5% NAV ke dalam XOM dengan FOMC 48 jam lagi dan pemotongan OPEC+ masih berombak, tanpa bacaan Penganalisis Berita, adalah tidak lengkap secara struktur. Pembahas Agresif/Neutral dan Penganalisis Media Sosial boleh senyap pada nama komoditi tanpa memecahkan putusan — Penganalisis Berita tidak boleh apabila dua pencetus makro mengapit masuk.",
-    "related_lesson": "064",
+    "related_lesson": "064_market_breadth",
     "related_agent": "news_analyst",
     "tags": [
       "room",
@@ -294,7 +294,7 @@
     ],
     "answer": 2,
     "explanation": "Pecahan harga tanpa pengesahan isipadu adalah sumber isyarat palsu #1 dalam analisis teknikal. Nota tersebut merangkumi harga, purata bergerak (MAs), RSI, MACD, dan persilangan MA — tetapi tidak pernah menyebut sama ada pecahan $130 berlaku pada isipadu tinggi atau rendah. Nisbah P/E, data insider, dan kepentingan short adalah input analisis yang sah, tetapi ia bukan bidang Penganalisis Pasaran — isipadu adalah. Bacaan carta yang terlepas isipadu pada panggilan pecahan adalah tidak lengkap secara struktur.",
-    "related_lesson": "029",
+    "related_lesson": "029_volume_confirmation",
     "related_agent": "market_analyst",
     "tags": [
       "volume",
@@ -317,7 +317,7 @@
     ],
     "answer": 2,
     "explanation": "Tiga perkara ini diselesaikan secara serentak: had $428 pecah dengan penutupan pada $432, isipadu disahkan pada 2.1x purata, dan susunan purata bergerak adalah dalam susunan bull yang standard (pendek di atas sederhana di atas panjang, semua menaik). RSI 62 memberikan ruang sebelum mencapai 70. Setiap lapisan analisis teknikal menunjukkan arah yang sama. Jawapan 'pecahan gagal' memerlukan pembetulan yang belum berlaku dan bercanggah dengan tanda isipadu.",
-    "related_lesson": "030",
+    "related_lesson": "030_trend_confirmation_across_indicators",
     "related_agent": "market_analyst",
     "tags": [
       "trend_confirmation",
@@ -340,7 +340,7 @@
     ],
     "answer": 2,
     "explanation": "Petikan tersebut adalah bacaan corak isipadu tulen yang berlandaskan konteks purata bergerak. Angka isipadu spesifik berbanding purata 20-hari, perbezaan antara pengeringan dan pengagihan, serta rujukan kepada garis MA 20-hari adalah semua alat Penganalisis Pasaran. Jawapan 'Trader melaksanakan pembelian' adalah perangkap — petikan tersebut bercakap tentang persediaan yang sedang terbentuk, bukan entri yang sedang diletakkan. Tiada saiz, tiada stop loss, tiada bahasa pelaksanaan. Penganalisis, bukan Trader.",
-    "related_lesson": "029",
+    "related_lesson": "029_volume_confirmation",
     "related_agent": "market_analyst",
     "tags": [
       "agents",
@@ -363,7 +363,7 @@
     ],
     "answer": 3,
     "explanation": "Dua peraturan bebas melanggar serentak: META sahaja pada 14.5% NAV adalah 2x had posisi tunggal 7%, DAN menambahkannya menolak pendedahan sektor teknologi dari 25.25% kepada 39.75% — 9.75 mata peratusan melebihi had sektor 30%. Pengurus Portofolio tidak memilih satu; penghakiman memaparkan kedua-duanya. Jawapan 'tiada pelanggaran, kepekatan 12% adalah peraturan mengikat' adalah perangkap — peraturan itu terpakai kepada satu saham terhadap dirinya sendiri, bukan posisi baru terhadap had.",
-    "related_lesson": "015",
+    "related_lesson": "015_stop_loss_basics",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -387,7 +387,7 @@
     ],
     "answer": 1,
     "explanation": "Ini adalah tepat untuk apa analisis berbilang kerangka masa. Mingguan berkata 'tahap jangka panjang sedang dipertahankan' (RM3.90, tiga pegangan dalam 18 bulan). 4-jam berkata 'sesuatu mula berubah di sini' (enam rendah lebih tinggi, isipadu meningkat). Harian berkata 'trend lebih luas belum berubah' (masih tinggi lebih rendah). Tugas Analis Pasaran adalah untuk menamakan ketiga-tiganya dan menandakan secara eksplisit kerangka masa mana yang dominan untuk saiz. Jawapan 'bullish, beli sekarang' mengabaikan harian; jawapan 'bearish, abaikan yang lebih rendah' membuang isyarat mingguan.",
-    "related_lesson": "021",
+    "related_lesson": "021_timeframes_and_what_they_tell_you",
     "related_agent": "market_analyst",
     "tags": [
       "timeframes",
@@ -411,7 +411,7 @@
     ],
     "answer": 2,
     "explanation": "Empat metrik selaras sebagai 'adil-ke-murah': P/B 1.26 adalah di bawah purata 15-tahun ~1.4, pendapatan operasi berkembang 27%, nisbah gabungan GEICO 81.7 (di bawah 100 = untung penulisan, 81.7 adalah luar biasa), dan $189B dalam tunai adalah pilihan, bukan pembaziran — Berkshire menggunakannya apabila harga retak. Jawapan 'tunai bermaksud tidak boleh melabur modal' songsangkan apa yang bermaksud tunai pada BRK. Jawapan 'P/B di atas purata' hanya salah fakta (1.26 < 1.4).",
-    "related_lesson": "037",
+    "related_lesson": "037_valuation_what_is_a_stock_worth",
     "related_agent": "fundamentals_analyst",
     "tags": [
       "valuation",
@@ -433,7 +433,7 @@
     ],
     "answer": 0,
     "explanation": "Petikan ini bersifat meta-teknikal — ia adalah Market Analyst yang menamakan had kepada alat kerja mereka sendiri. RSI dan MACD terbitan daripada harga; apabila peristiwa menulis semula taburan harga semalaman, bacaan penunjuk mencerminkan konteks lama. Menamakan had ini secara eksplisit adalah tepat disiplin EDGE 3. Jawapan 'News Analyst' adalah perangkap — ya, peristiwa berita adalah pencetus, tetapi ejen tidak merumuskan berita, mereka menerangkan mengapa teknikal akan salah baca pita selepas berita.",
-    "related_lesson": "031",
+    "related_lesson": "031_indicator_limitations",
     "related_agent": "market_analyst",
     "tags": [
       "agents",
@@ -456,7 +456,7 @@
     ],
     "answer": 3,
     "explanation": "Market Analyst menamakan tahap pecahan dan RSI tetapi melangkau isipadu sepenuhnya. Pecahan $272 pada 0.7x purata isipadu adalah pecahan gagal; pada 1.6x ia disahkan. Trader diminta masuk pada $279 dengan henti rugi $268 pada persediaan yang kesahihannya bergantung pada isipadu yang tidak dilaporkan. Data dalaman dan hasil dividen bukan laluan Market Analyst — isipadu adalah, dan ia ketiadaan yang menanggung beban di sini.",
-    "related_lesson": "029",
+    "related_lesson": "029_volume_confirmation",
     "related_agent": "market_analyst",
     "tags": [
       "completeness",
@@ -480,7 +480,7 @@
     ],
     "answer": 1,
     "explanation": "Semakan definisi: julat mendatar = lantai dan siling yang dipertahankan berulang kali dengan jelas tanpa bias arah di antaranya. RM7.60 (4 pegangan) dan RM7.90 (4 penolakan) selama sembilan minggu plus 50-day MA rata adalah tanda tangan teks buku. Jawapan 'segitiga menaik' memerlukan rendah yang meningkat menyentuh siling rata — tetapi rendah di sini juga rata. Padankan struktur, bukan suasana.",
-    "related_lesson": "023",
+    "related_lesson": "023_support_and_resistance",
     "related_agent": "market_analyst",
     "tags": [
       "range",
@@ -504,7 +504,7 @@
     ],
     "answer": 0,
     "explanation": "Pematuhan mandat Portfolio Manager adalah tidak boleh diajar secara reka bentuk — ia adalah lantai keselamatan keras keseluruhan sistem. Tiada skor keyakinan, tiada arahan pengguna, tiada verdict Room boleh mengatasi had saiz posisi yang didaftarkan pengguna. Ini adalah keputusan arkitektur yang didokumenkan (dokumen Brief Your Agent). Jawapan 'kompromi pada 8%' adalah perangkap kerana kompromi terdengar munasabah — tetapi lantai tidak boleh dirunding. 5% adalah 5%.",
-    "related_lesson": "014",
+    "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": [
       "safety_floor",
@@ -528,7 +528,7 @@
     ],
     "answer": 0,
     "explanation": "Tiga isyarat bertindih: tahap yang bertahan lima kali pecah pada penutupan 1% (bukan sumbu), disahkan isipadu pada 1.9x purata 20 hari, dan MA 20 hari bertukar dari menaik kepada rata serentak. Bacaan buku teks ialah 'sokongan telah hilang, tahap ketara seterusnya ialah MA 200 hari pada 5180'. Jawapan 'pantulan jenuh jual' melompati tanda isipadu — pantulan daripada pecahan isipadu berat biasanya adalah ujian semula sokongan yang pecah dari bawah, bukan V-reversal.",
-    "related_lesson": "026",
+    "related_lesson": "026_moving_averages",
     "related_agent": "market_analyst",
     "tags": [
       "moving_averages",
@@ -551,7 +551,7 @@
     ],
     "answer": 3,
     "explanation": "Kosa kata adalah pelaksanaan: harga entry, harga stop, harga target, nisbah risiko- ganjaran, saiz posisi sebagai % NAV dikira terhadap had kerugian mandat. Itu tepat lorong Trader — mereka mengambil apa yang ditandakan analyst dan menukarkannya kepada tiket yang boleh didagangkan dengan semua parameter dinyatakan. Jawapan 'Market Analyst' adalah perangkap kerana setup dirujuk — tetapi analyst tidak menamakan entry, stop, dan saiz; mereka menerangkan carta. Trader mengoperasikannya.",
-    "related_lesson": "066",
+    "related_lesson": "066_telegram_whatsapp_pump_groups",
     "related_agent": "trader",
     "tags": [
       "agents",
@@ -574,7 +574,7 @@
     ],
     "answer": 2,
     "explanation": "Lima penunjuk momentum yang bersetuju adalah mengagumkan — sehingga anda sedar bahawa ia semua berasal dari keluarga yang sama. Momentum memberitahu 'harga sedang bergerak naik'; ia tidak memberitahu ke mana harga berada. Adakah RM6.95 hanya berada di bawah rintangan utama? Pada rekod tinggi 52 minggu? Dalam julat mendatar? Penumpukan penunjuk dari satu keluarga mewujudkan ilusi pengesahan. Bacaan yang lengkap memadankan momentum dengan struktur: trend, Purata Pergerakan (MAs), sokongan/rintangan. Itu adalah had EDGE 3.",
-    "related_lesson": "031",
+    "related_lesson": "031_indicator_limitations",
     "related_agent": "market_analyst",
     "tags": [
       "indicator_limits",
@@ -598,7 +598,7 @@
     ],
     "answer": 0,
     "explanation": "Dua momen diagnostik: (1) dorongan ke $200.40 menutup kembali ke dalam julat pada isipadu 0.6x — itu adalah pecah yang gagal, tanda tipikal fakeout (tiada isipadu untuk menyokong pergerakan, penolakan serta-merta). (2) Sesi seterusnya memecahkan sisi LAIN pada isipadu 1.7x — pecah yang gagal yang diselesaikan dengan pecahan ke sisi bertentangan adalah perangkap bull yang klasik. Gabungan kedua-dua elemen ini menamakan corak tersebut. Jawapan 'pecah yang berjaya, perlukan masa' mengabaikan fakta bahawa harga sudah menutup kembali ke dalam julat pada hari yang sama — itu bukan konsolidasi, itu penolakan.",
-    "related_lesson": "024",
+    "related_lesson": "024_breakouts",
     "related_agent": "market_analyst",
     "tags": [
       "breakout",
@@ -622,7 +622,7 @@
     ],
     "answer": 2,
     "explanation": "Tugas Penganalisis Berita ialah menterjemahkan kejutan makro kepada bacaan khusus ticker dengan mekanisme dan risiko. Mekanisme: segmen hulu XOM merealisasikan harga yang lebih tinggi pada pengeluaran yang sama, mengembangkan aliran tunai. Cadangan: harga yang berterusan di atas $85 secara sejarah mencetuskan kerosakan permintaan pada Q4, membatasi potensi kenaikan. Menamakan kedua-dua mekanisme dan risiko adalah disiplin Penganalisis Berita. Jawapan 'bearish, minyak lebih tinggi buruk untuk pengguna' adalah ekonomi pengguna, bukan khusus untuk XOM.",
-    "related_lesson": "064",
+    "related_lesson": "064_market_breadth",
     "related_agent": "news_analyst",
     "tags": [
       "news",
@@ -646,7 +646,7 @@
     ],
     "answer": 0,
     "explanation": "Kosa kata yang digunakan adalah proksi sentimen runcit: kelajuan sebutan Reddit, nisbah bull/bear StockTwits, dan bilangan video TikTok. Sintesis ('empat kali dalam tiga tahun, setiap kali dalam 10 sesi sebelum penurunan 12-15%') adalah analisis kadar asas terhadap sejarah, yang menjadikan isyarat sosial boleh bertindak. Jawapan 'News Analyst' adalah perangkap kerana kedua-duanya mengendalikan perhatian — tetapi News Analyst mengesan siaran akhbar, failan, dan peristiwa makroekonomi, bukan indeks sentimen runcit.",
-    "related_lesson": "069",
+    "related_lesson": "069_ai_trading_bot_scams",
     "related_agent": "social_media_analyst",
     "tags": [
       "agents",
@@ -670,7 +670,7 @@
     ],
     "answer": 3,
     "explanation": "Mandat tersebut adalah jelas: had kerugian dilampirkan semasa pengesahan, tiada pengecualian. 'Akan ditetapkan selepas pasaran buka' adalah keadaan had kerugian tidak dilampirkan yang melanggar peraturan secara definisi. Niat adalah tidak relevan — mandat menguatkan struktur, bukan janji. Jawapan 'tiada pelanggaran, pengguna mempunyai pelan' adalah perangkap yang kedengaran mesra; mandat wujud tepat kerana pelan yang dibentuk pada masa pasaran buka di bawah tekanan P&L langsung adalah yang paling mudah dilanggar. PM menyekat pada peringkat pengesahan.",
-    "related_lesson": "016",
+    "related_lesson": "016_risk_reward_ratio",
     "related_agent": "portfolio_manager",
     "tags": [
       "mandate",
@@ -694,7 +694,7 @@
     ],
     "answer": 2,
     "explanation": "Penurunan semula itu melakukan tepat apa yang dilakukan oleh penurunan semula yang sihat: memangkas RSI yang terlalu panas dari 74 kepada 52 (ruang untuk bergerak sebelum 70 lagi), menguji MA 20 hari yang meningkat pada RM13.50 tanpa merusaknya, dan menyelesaikan kenaikan pada isipudu yang meningkat. Urutan itu — kenaikan yang terlalu panas → penurunan semula tertib → penyetelan semula penunjuk → penamatan yang disahkan isipadu — adalah isyarat kesinambungan buku teks. Jawapan 'RSI 74 = puncak' memperlakukan satu bacaan sebagai akhir, tetapi kitaran RSI 70+ → 50an → 70+ semasa trend adalah normal, bukan terminal.",
-    "related_lesson": "025",
+    "related_lesson": "025_pullbacks",
     "related_agent": "market_analyst",
     "tags": [
       "pullback",
@@ -718,7 +718,7 @@
     ],
     "answer": 3,
     "explanation": "Pengurus Portofolio adalah gerbang lantai keselamatan. Setiap verdict bilik mesti memaparkan semakan kepatuhan eksplisit sebelum ia dihantar. Cadangan BELI pada 9% daripada NAV adalah cukup besar sehingga mandat biasa akan sama ada membatasinya (jika had kedudukan tunggal pengguna adalah 5-8%) atau meluluskannya selepas pengesahan eksplisit — tetapi verdict tersebut tidak menunjukkan kedua-duanya. Penganalisis Debat Agresif/Sederhana dan Penganalisis Media Sosial boleh senyap tanpa merosakkan verdict; Pengurus Portofolio tidak boleh. Itu adalah ketiadaan struktur, bukan gaya.",
-    "related_lesson": "013",
+    "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": [
       "room",
