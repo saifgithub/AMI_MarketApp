@@ -23,10 +23,11 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
+from app.schemas.sharia import ShariaVerdict
 from app.schemas.trade import OrderType, Side
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import resolve_mandate
@@ -86,6 +87,29 @@ class PortfolioSnapshot(BaseModel):
 
 class TradeListResponse(BaseModel):
     trades: list[dict]
+
+
+class ComplianceBlock(BaseModel):
+    """The wire shape of `ComplianceResult` (DEF094): declared here as a
+    response-model field, not a hand-built dict, so `sharia_verdict` is a typed
+    member of the schema instead of silently dropped on serialization — and so
+    `ShariaVerdict` is registered in the generated OpenAPI, the artefact
+    coder.mobile mirrors by hand."""
+
+    passed: bool
+    violations: list[str] = Field(default_factory=list)
+    blocked_by: str | None = None
+    sharia_verdict: ShariaVerdict | None = None
+
+
+class PreviewTradeResponse(BaseModel):
+    accepted: bool
+    compliance: ComplianceBlock
+    fill_price: float
+    notional: float
+    cash_available: float
+    held_quantity: float
+    price_source: str
 
 
 @router.get("/portfolio/{user_id}", response_model=PortfolioSnapshot)
@@ -153,12 +177,12 @@ async def reset_portfolio(
     return await get_portfolio(user_id, current_user=current_user, sim=sim)
 
 
-@router.post("/preview")
+@router.post("/preview", response_model=PreviewTradeResponse)
 async def preview_trade(
     req: SubmitTradeRequest,
     current_user: User = Depends(get_current_user),
     sim: SimEngine = Depends(get_sim_engine),
-) -> dict:
+) -> PreviewTradeResponse:
     """Dry-run a trade: runs the same mandate + cash/holdings pre-flight
     as /submit but never persists. Lets the mobile trade ticket render
     a 'would this trade be allowed?' + sizing preview before commit.
@@ -185,19 +209,20 @@ async def preview_trade(
         halal_universe=await default_halal_universe_async(),
         classification_universe=await default_classification_universe_async(),
     )
-    return {
-        "accepted": pv.accepted,
-        "compliance": {
-            "passed": pv.compliance.passed,
-            "violations": pv.compliance.violations,
-            "blocked_by": pv.compliance.blocked_by,
-        },
-        "fill_price": pv.fill_price,
-        "notional": pv.notional,
-        "cash_available": pv.cash_available,
-        "held_quantity": pv.held_quantity,
-        "price_source": pv.price_source,
-    }
+    return PreviewTradeResponse(
+        accepted=pv.accepted,
+        compliance=ComplianceBlock(
+            passed=pv.compliance.passed,
+            violations=pv.compliance.violations,
+            blocked_by=pv.compliance.blocked_by,
+            sharia_verdict=pv.compliance.sharia_verdict,
+        ),
+        fill_price=pv.fill_price,
+        notional=pv.notional,
+        cash_available=pv.cash_available,
+        held_quantity=pv.held_quantity,
+        price_source=pv.price_source,
+    )
 
 
 @router.post("/submit")
@@ -238,6 +263,10 @@ async def submit_trade(
                 "passed": result.compliance.passed,
                 "violations": result.compliance.violations,
                 "blocked_by": result.compliance.blocked_by,
+                "sharia_verdict": (
+                    result.compliance.sharia_verdict.model_dump(mode="json")
+                    if result.compliance.sharia_verdict is not None else None
+                ),
             },
         }
 
@@ -289,7 +318,19 @@ async def submit_trade(
         except Exception:  # pragma: no cover
             pass
 
-    return {"ok": True, "trade": trade.to_json()}
+    return {
+        "ok": True,
+        "trade": trade.to_json(),
+        "compliance": {
+            "passed": result.compliance.passed,
+            "violations": result.compliance.violations,
+            "blocked_by": result.compliance.blocked_by,
+            "sharia_verdict": (
+                result.compliance.sharia_verdict.model_dump(mode="json")
+                if result.compliance.sharia_verdict is not None else None
+            ),
+        },
+    }
 
 
 @router.get("/trades/{user_id}", response_model=TradeListResponse)
