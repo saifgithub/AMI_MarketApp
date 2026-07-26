@@ -160,3 +160,41 @@ failure-evidence capture (screenshot + page_source dump) for every failure, not 
 crashes. This violates the "git is truth, never hand-edit melehost's copy" convention this
 harness (and CR079's APK pipeline) both run on. The redelivery below overwrites it — correct,
 since git stays authoritative — but flagged to Saiful rather than silently clobbered.
+
+## Phase 3 fix #2 — 2026-07-26, second remote hand-edit produced a misleading test report
+
+A `response/appium_test_report.md` came back claiming **27 FAIL / 2 PASS / 7 SKIP**, root-caused
+by the "Automated Test Agent" to two harness bugs: an `exists_text()` signature mismatch and a
+Flutter `content-desc`-resolution gap, with a recommended fix to rewrite `by_text()`/`by_text_contains()`
+around the premise "Flutter apps do NOT populate `text=`, only `content-desc`."
+
+That premise is false for this app — already disproven by Phase 1's real-device runs and by two
+of this very run's own tests passing on plain text locators — and the report itself was
+diagnosing damage from a **second direct hand-edit of melehost's copy**, not this harness.
+`rsync --dry-run` showed 3 files diverged from git: `helpers/locators.py`, `helpers/onboarding.py`,
+`pages/base_page.py`. Someone added a new `_dismiss_overlays()` to `base_page.py` that calls
+`exists_text(driver, ..., timeout_s=1)` — but never added a matching `timeout_s` parameter to
+the hand-edited `exists_text()` in `locators.py`, so every `open_tab()` call raised a bare
+`TypeError`. That single bug, not two independent root causes, explains all 27 failures: every
+failure screenshot (smoke test, Settings, and all three `en`/`ar`/`ms` locale-matrix variants)
+shows the identical stuck state — a "NEW TRADE" ticket sheet left open over Portfolio, in
+English, that `_dismiss_overlays()` could never reach far enough to dismiss. Most likely trigger:
+the hand-edited `onboarding.py`'s blind "tap the first clickable element" fallback, whose
+Floor-detection switched to a content-desc-only check that doesn't match this app's bottom nav,
+so it kept treating Floor as unreached and tapping into the "+ New Trade" launcher.
+
+Zero of the 27 failures are app bugs or gaps in what shipped from git. Fixed by redelivering the
+clean `qa/appium/` tree via rsync (no `--delete`, so `start-appium.sh` and other UAT-team-added
+operational files were left alone) — confirmed via a post-delivery grep that
+`_dismiss_overlays`/`timeout_s=1`/the false content-desc premise are gone from all three files.
+This is the **second occurrence** of the same violation (first: the `_AutoRecoverDriver`
+hand-edit, previous section) — per CLAUDE.md's failure-patterns convention, a second occurrence
+of anything should get a guard, not just a re-flag. No guard designed yet; surfaced to Saiful as
+an open decision (e.g. making melehost's copy read-only, or a pre-run diff-against-git check)
+rather than built unilaterally.
+
+**Heads-up for the next run, not yet verified:** the physical device may still be sitting on the
+stuck New Trade sheet from this corrupted run, since `noReset=True` doesn't restart the app
+between driver sessions — the UAT team may need to back out of it (or `pm clear` for a fully
+cold state) before re-running, or the fixed harness will hit the same stuck screen for an
+unrelated reason.
