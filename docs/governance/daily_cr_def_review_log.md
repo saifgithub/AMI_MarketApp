@@ -66,3 +66,37 @@ still exists for days nobody's chatting; whether to keep it, or switch future ru
 an inline session-start check instead, is open — see the CR085 doc.
 
 ---
+
+---
+
+## 2026-07-26
+
+Follow-up run (previous full run 2026-07-24; 07-25 had no session). Items Saiful
+marked done/closed on 07-24 whose rows are still `proposed` are flagged here for a
+row status-flip by their domain owners (this routine never flips status), not re-asked:
+CR007, CR008, CR019, CR020, CR021, CR037 (done/closed/superseded), CR036 (started, commit 855f86b).
+
+- **CR002** (proposed since 2026-07-06, reconcile bug_reports status vocabulary) — asked: "same call?" → Saiful: "Need more info on what this was." (context provided inline: canonical bug status vocabulary cleanup; re-decide next run)
+- **CR006** (proposed since 2026-07-09, Beta infra cost research) — follow-up: still proposed, no commit → re-asked → Saiful: "Start now"
+- **CR017** (proposed since 2026-07-10, multi-provider LLM routing + caching) — follow-up: still proposed, no commit → re-asked → Saiful: "Keep deferring"
+- **CR022** (proposed since 2026-07-12, app-manual corpus for Concierge) — follow-up: still proposed, no commit → re-asked → Saiful: "Keep deferring"
+- **CR030** (proposed since 2026-07-12, dividend fields for earnings chip) — follow-up: still proposed → asked → Saiful: "Have we not done this already?" (clarified inline: earnings pill shipped AT:R42, dividend half never did — that's CR030's remaining scope; re-asked with clarification)
+- **CR031** (proposed since 2026-07-12, on-device STT/TTS voice benchmark) — follow-up: re-asked → Saiful: "The onboarding ask 'if you want to get the reminder as an audio' — lets evaluate that" (reframes CR031 toward: TTS audio-reminder option surfaced in onboarding; evaluate)
+- **CR063** (proposed since 2026-07-23, in-app competition rules + league info) — follow-up: re-asked → Saiful: "Start now"
+- **CR026** (proposed since 2026-07-12, sector-concentration enforcement + allocation chart) — follow-up: gave context (DEF061 snapshot now holds sector data) → Saiful: "Start now"
+- **CR027** (proposed since 2026-07-12, price alerts / push notifications) — follow-up: 'start now' 07-24 but hard-gated on APNs/FCM certs (Saiful-provision), nothing moved → re-asked → Saiful: "Keep deferring"
+- **CR028** (proposed since 2026-07-12, trailing stop) — follow-up: 'start now' 07-24, nothing moved → re-asked → Saiful: "Start now"
+- **CR029** (proposed since 2026-07-12, cost-basis lots / FIFO realised P&L) — follow-up: 'start now' 07-24, nothing moved → re-asked → Saiful: "Start now"
+- **CR065** (proposed since 2026-07-23, streaks/reputation spec-vs-code drift) — follow-up: gave context → Saiful: "Start now"
+- **CR089** (proposed since 2026-07-25, richer mandate fields) — asked (new; filed NOT-MVP) → Saiful: "Keep deferring (post-MVP)"
+- **CR090** (proposed since 2026-07-25, live news/social data-feed paywall) — asked (new) → Saiful: "Start now"
+- **CR030** (proposed since 2026-07-12) — re-asked with clarification (dividend half only) → Saiful: "Start the dividend half"
+- **DEF099** (open since 2026-07-24, account merge drops RC entitlement/credit) — asked → Saiful: "Lane it now"
+- **DEF100** (open since 2026-07-24, RevenueCat keys — Saiful-liaison, blocks anon purchase) — not re-asked; Saiful directed this session: "keep nagging me" → stays open, Architect nags each session
+- **DEF104** (open since 2026-07-24, plaintext IMAP/SMTP credential + dead KB path) — asked with correction (Saiful had conflated it with the android-test activity; row is the security defect) → Saiful: "Keep open, defer fix" (Architect flagged: the credential is live/valid — rotating it on melehost is independent of the deferred code fix)
+- **DEF105** (open since 2026-07-24, AR/MS staleness of the 165 changed EN lessons) — asked → Saiful: "I will instruct LM to work on this"
+
+**Standing activity (not a Defect):** external AI-driven Android testing, ongoing per APK
+build — Saiful classified this as a standing activity, distinct from DEF104. No formal
+activities register exists yet; recorded here. (Open question: want a lightweight
+activities register, or track informally?)
