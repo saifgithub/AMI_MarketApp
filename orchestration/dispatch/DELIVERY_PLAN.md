@@ -59,7 +59,7 @@ NOT spawn — Saiful's self-respawning track-U). Global audit cap ≤3.
 
 ## Status ledger (update as waves execute)
 - [x] Wave 1 laned — DEF099 (coder.api) + CR029-MATH (coder.math) dispatched, ASSIGNED round 1
-- [ ] Wave 1 integrated
+- [~] Wave 1 integrating — **CR029-MATH DONE** (integrated, 78 green verified on main, ACCEPTED). **DEF099 still building** (coder.api/opus). Next queued behind a coder.api slot: CR030, CR029-BE (needs INDEPENDENT gate — sim wiring), then mobile halves + CR006.
 - [ ] Wave 2 laned
 - [ ] Wave 2 integrated
 - [ ] Wave 3 laned

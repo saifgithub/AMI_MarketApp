@@ -42,6 +42,6 @@ Push source to `lane/CR029-MATH.coder.math`, never `main`. Hand-off (both to the
 `orchestration/dispatch/lanes/CR029-MATH.coder.math.md` (`STATUS: READY_FOR_AUDIT (round 1)`) +
 `orchestration/audit/cr/CR029-MATH.architect.md` (`SUBMITTED: round 1`). Commit tag `(AT:coder.math CR029)`.
 
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 1)    <!-- coder.math built in isolated worktree; Architect verified inline on main (78 green: FIFO subset + all trading_math; worked example hand-checked = 350.0) + integrated. Pure unwired calc → verify-inline per the reversibility rule; the INDEPENDENT gate is reserved for CR029-BE (sim wiring, where realised P&L reaches users). -->
 
 ASSIGNED: coder.math round 1
