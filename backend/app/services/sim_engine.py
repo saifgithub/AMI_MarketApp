@@ -48,6 +48,7 @@ from app.agents.safety_floor import check_mandate_compliance
 from app.core.logging import logger
 from app.db import get_session, init_schema
 from app.db.models import SimHoldingRow, SimPortfolioRow, SimTradeRow
+from app.services.cost_basis_lots import Lot, compute_lots_fifo
 from app.schemas import Mandate
 from app.schemas.trade import (
     ComplianceResult,
@@ -397,6 +398,26 @@ class SimEngine:
             stmt = stmt.order_by(SimTradeRow.opened_at.desc())
             rows = s.execute(stmt).scalars().all()
             return [SimTrade.from_row(r) for r in rows]
+
+    def holding_lots(
+        self, user_id: UUID, ticker: str, *, current_price: float | None = None,
+    ) -> list[Lot]:
+        """Reconstruct FIFO cost-basis lots for one of the user's tickers (CR029).
+
+        Read-only: pulls this user+ticker's `sim_trades` history and delegates
+        the reconstruction to the pure `compute_lots_fifo`. No schema, no sell
+        path — a read-time view over the existing order ledger.
+        """
+        ticker = ticker.upper().strip()
+        with get_session() as s:
+            rows = s.execute(
+                select(SimTradeRow)
+                .where(SimTradeRow.user_id == user_id)
+                .where(SimTradeRow.ticker == ticker)
+                .order_by(SimTradeRow.opened_at.asc())
+            ).scalars().all()
+            trades = [SimTrade.from_row(r) for r in rows]
+        return compute_lots_fifo(trades, current_price=current_price)
 
     # ── Trading ────────────────────────────────────────────────────────
 

@@ -7,6 +7,7 @@ POST /v1/sim/submit                          Submit a trade (PM safety floor run
 GET  /v1/sim/trades/{user_id}                List trades (filterable by status)
 POST /v1/sim/trades/{user_id}/evaluate       Sweep open trades for stop/target hits
 POST /v1/sim/trades/{user_id}/close          Manually close an open trade
+GET  /v1/sim/lots/{user_id}/{ticker}         Per-lot cost-basis + FIFO realised/unrealised P&L (CR029)
 GET  /v1/sim/quote/{ticker}                  Current quote (price + change_pct + market_state)
 GET  /v1/sim/quotes?symbols=AAPL,MSFT,...    Batch quotes for ticker tape
 GET  /v1/sim/history/{ticker}?period=1m      OHLCV candles for the ticker-detail chart (Bundle 2)
@@ -383,6 +384,41 @@ async def close_trade(
     except Exception:  # pragma: no cover
         pass
     return {"ok": True, "trade": closed.to_json()}
+
+
+@router.get("/lots/{user_id}/{ticker}")
+async def get_holding_lots(
+    user_id: UUID,
+    ticker: str,
+    current_user: User = Depends(get_current_user),
+    sim: SimEngine = Depends(get_sim_engine),
+) -> dict:
+    """CR029 — per-lot cost-basis / FIFO realised-P&L for one ticker.
+
+    Read-only reconstruction from the user's own `sim_trades` history: buys
+    open lots, `sell` orders draw them down FIFO, self-closed buys (stop /
+    target / manual) become fully-closed lots carrying their recorded P&L.
+    `unrealised_pnl` on each open lot is marked against the current quote.
+    """
+    _own(current_user, user_id)
+    q = sim.current_quote(ticker)
+    lots = sim.holding_lots(user_id, ticker, current_price=q.price)
+    realised_total = round(sum(lot.realised_pnl for lot in lots), 2)
+    unrealised_total = round(
+        sum(lot.unrealised_pnl or 0.0 for lot in lots), 2
+    )
+    open_total = round(sum(lot.quantity_open for lot in lots), 6)
+    return {
+        "ticker": ticker.upper().strip(),
+        "current_price": q.price,
+        "price_source": q.source,
+        "lots": [lot._asdict() for lot in lots],
+        "totals": {
+            "realised_pnl": realised_total,
+            "unrealised_pnl": unrealised_total,
+            "quantity_open": open_total,
+        },
+    }
 
 
 @router.get("/quote/{ticker}")
