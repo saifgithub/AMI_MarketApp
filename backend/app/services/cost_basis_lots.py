@@ -33,12 +33,13 @@ CR029 design doc's clean "buys open, sells close" picture):
 Because self-closed buys and `sell` orders are disjoint records (a self-close
 never produces a sell row), the two mechanisms compose without double-counting.
 
-Known drift (out of CR029 scope, flagged not fixed): `evaluate_outcomes`
-stamps realised P&L on a stop/target-hit buy row but does NOT reduce the
-`sim_holdings` row, so a holding's aggregate `quantity` can disagree with the
-sum of open lots reconstructed here. This module reflects the *trade ledger*
-faithfully; the holdings-vs-ledger reconciliation is a separate sim-engine
-concern (candidate DEF).
+Known drift (DEF110, out of CR029 scope): `evaluate_outcomes` stamps realised
+P&L on a stop/target-hit buy row but does NOT reduce the `sim_holdings` row, so
+a holding's aggregate `quantity` can disagree with the sum of open lots
+reconstructed here. Saiful ruled a stop/target hit SHOULD close the position
+(DEF110) — which confirms treating won/lost buys as *fully closed* here is
+correct; the fix belongs in the sim engine, not this module. This module
+reflects the *trade ledger* faithfully.
 
 Pure — no DB, no I/O beyond a degrade-loud log on malformed input. The DB read
 + current-price fetch live in `SimEngine.holding_lots`, which delegates here.
