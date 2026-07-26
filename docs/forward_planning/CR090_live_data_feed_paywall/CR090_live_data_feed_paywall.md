@@ -48,7 +48,16 @@ Two changes, decided live by Saiful (2026-07-25):
    News/Social Analyst turn costs credits; insufficient balance triggers the loud
    message from (1) — same shape Room already uses for its own 402.
 
-## Open design question (flagging, not deciding — needs Saiful before implementation)
+## Design decision — RESOLVED 2026-07-26 (Saiful)
+
+**Chosen: (a) Surcharge model.** Saiful, daily-review restore session: picked
+"surcharge on top" over the per-agent rework. Room/1-on-1 keep their existing flat
+price; live-data News/Social Analyst turns add a small additive surcharge **only when
+they actually fire with real data**. **Surcharge amount:** documented default
+**+2 credits per live-data analyst turn** (News +2, Social +2 → a Basic Room with both
+live = 8 + 2 + 2 = 12), set as a named constant beside `ROOM_COST_BASIC` so it's
+trivially tunable; confirm the exact figure against `credits.md` before Beta. This
+resolves the question below; options kept for the record.
 
 The exact metering shape:
 
