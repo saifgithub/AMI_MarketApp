@@ -33,6 +33,7 @@ import httpx
 
 from app.core.config import settings
 from app.core.logging import logger
+from app.services.news_context import LiveDataState, live_data_state
 
 _ADANOS_BASE_URL = "https://api.adanos.org/reddit/stocks/v1/stock"
 # L1 in-process TTL. The durable cache is Postgres (CR041) — this only spares
@@ -248,6 +249,43 @@ def fetch_live_sentiment(ticker: str) -> SocialSentiment | None:
     except Exception as exc:
         logger.warn("social_context_fetch_error", ticker=ticker, error=str(exc)[:200])
         return None
+
+
+class SocialFeed(NamedTuple):
+    """CR090 — the Social Media Analyst's live feed for one Room/1-on-1 turn,
+    tagged with the shared 3-state `LiveDataState` marker. `sentiment` is set
+    ONLY when `state is LiveDataState.LIVE`; for WITHHELD_PAID and UNAVAILABLE
+    it is None — the paid Reddit payload is never handed to a non-entitled turn,
+    and the caller (CR090-ROOM) branches on `state` to disclose the paywall or
+    fall back to the honest synthetic block."""
+
+    state: LiveDataState
+    sentiment: SocialSentiment | None
+
+
+def resolve_social_feed(ticker: str, *, entitled: bool) -> SocialFeed:
+    """Resolve the Social Analyst's live feed + its 3-state marker for a turn.
+
+    Additive to the existing binary path — `fetch_live_sentiment` and its
+    callers are untouched. Mirrors `news_context.resolve_news_feed`: probes the
+    (cache-first, quota-metered) Adanos feed to learn whether live sentiment is
+    *available*, classifies with the shared `live_data_state`, and returns the
+    payload ONLY for a LIVE (available + entitled) turn. A WITHHELD_PAID turn
+    gets the marker with `sentiment=None` — never a silent synthetic swap
+    (DEF059), and the surcharge charges nothing for it.
+
+    Same quota note as the news resolver: probing availability for a
+    non-entitled user still consults the (24h-cached) feed; if protecting
+    Adanos's 250-call/month budget against non-entitled probes matters, the ROOM
+    lane can gate this to entitled turns and compose WITHHELD_PAID directly via
+    the exposed `live_data_state` classifier.
+    """
+    s = fetch_live_sentiment(ticker)
+    state = live_data_state(available=s is not None, entitled=entitled)
+    return SocialFeed(
+        state=state,
+        sentiment=s if state is LiveDataState.LIVE else None,
+    )
 
 
 def format_sentiment_tone(s: SocialSentiment) -> str:
