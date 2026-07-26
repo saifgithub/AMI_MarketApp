@@ -272,6 +272,17 @@ class Settings(BaseSettings):
     # Generate to match the value pasted into the RC dashboard webhook config.
     revenuecat_webhook_secret: str = ""
 
+    # RevenueCat server-side REST secret key (DEF099). Used ONLY server→RC, to
+    # transfer a customer alias orphan→adopter on account claim so post-merge
+    # webhooks target the surviving account (app/services/revenuecat_client.py).
+    # This is the RC *secret* API key (starts `sk_...`) from Project Settings →
+    # API keys — NOT the public SDK key and NOT the webhook shared secret above.
+    # Empty = the alias transfer degrades LOUDLY (logs an error, returns
+    # not_configured, makes no network call, CR040); the webhook's merge-trail
+    # safety net still re-targets deliveries. Set it in infra/alpha.env; it is
+    # forwarded in docker-compose.yml's api-alpha block (compose-parity gate).
+    revenuecat_secret_api_key: str = ""
+
     # Apple Sign-In — accepted audiences for the identity token's `aud`
     # claim. iOS native flow uses the bundle ID; a Web Services ID would
     # be added here if we ever ship Apple sign-in via web/Android. Comma-

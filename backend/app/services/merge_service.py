@@ -24,6 +24,15 @@ Conflict rules (kept deliberately simple for the alpha MVP):
     already has an active overlay for that agent. Counted separately.
   - **overlay_edit_counts**: UNIQUE on (user_id, agent_id). On conflict,
     sum the counts into the adopting row and delete the orphan row.
+  - **billing (DEF099)**: `subscription_events` + `revenuecat_events` are
+    re-keyed orphan→adopter (the audit/dedup trail must not dangle after the
+    orphan row is deleted). The user-row billing fields (`plan`,
+    `credit_balance`, `credits_period_start`, `credits_plan_at_grant`) are
+    carried by `credit_service.carry_billing_on_merge` with a deliberate
+    conflict rule — **higher-entitlement plan wins, credits sum** — so a
+    pre-claim anonymous purchase survives the claim (anonymous-first is
+    LOCKED). The RC customer alias is transferred orphan→adopter after commit
+    so post-merge webhooks target the surviving account.
 
 Defers the user-row delete to the very end after every other relation
 is re-keyed.
@@ -56,6 +65,7 @@ from app.db.models import (
     OneOnOneMessageRow,
     OverlayEditCounter,
     ReputationEventRow,
+    RevenueCatEventRow,
     RoomRunRow,
     SimHoldingRow,
     SimPortfolioRow,
@@ -65,6 +75,7 @@ from app.db.models import (
     User,
     UserOverlayRow,
 )
+from app.services import credit_service, revenuecat_client
 from app.services.league_service import week_end
 from app.services.reputation_service import iso_week
 
@@ -303,6 +314,29 @@ class MergeService:
                 s, BugReportRow, from_user_id, to_user_id,
             )
 
+            # ── DEF099: billing state (was silently dropped) ─────────
+            # (1) Re-key the audit/dedup trail. subscription_events is keyed by
+            #     user_id (UUID); revenuecat_events is keyed by app_user_id
+            #     (the RC id == our users.id in *string* form, NOT a FK). Both
+            #     would dangle after the orphan row is deleted.
+            counts["subscription_events"] = _rekey_all(
+                s, SubscriptionEventRow, from_user_id, to_user_id,
+            )
+            rc_moved = s.execute(
+                update(RevenueCatEventRow)
+                .where(RevenueCatEventRow.app_user_id == str(from_user_id))
+                .values(app_user_id=str(to_user_id))
+            )
+            counts["revenuecat_events"] = int(rc_moved.rowcount or 0)
+
+            # (2) Carry plan + credits with a deliberate conflict rule
+            #     (higher-entitlement plan wins, credits sum) — see
+            #     credit_service.carry_billing_on_merge. source_user was fetched
+            #     for the reputation carry above.
+            if source_user is not None:
+                billing = credit_service.carry_billing_on_merge(s, source_user, target)
+                counts["billing_plan_carried"] = 1 if billing.plan_changed else 0
+
             # ── Subscription event ──────────────────────────────────
             s.add(SubscriptionEventRow(
                 user_id=to_user_id,
@@ -333,7 +367,21 @@ class MergeService:
                 mandate_kept=mandate_kept,
                 overlays_deactivated=overlays_deactivated,
             )
-            return counts, mandate_kept, overlays_deactivated
+
+        # DEF099 gap 3 — transfer the RC customer alias orphan→adopter, AFTER
+        # the merge transaction has committed. This is best-effort external I/O:
+        # keeping it out of the DB transaction means a slow/failed RC call never
+        # rolls back the authoritative local entitlement carry, and the webhook's
+        # merge-trail safety net re-targets any delivery that still arrives under
+        # the old id. Degrades loudly on its own (CR040) when the RC key is unset.
+        alias = revenuecat_client.transfer_alias(str(from_user_id), str(to_user_id))
+        logger.info(
+            "account_merge_rc_alias",
+            from_user_id=str(from_user_id),
+            to_user_id=str(to_user_id),
+            alias_status=alias.status,
+        )
+        return counts, mandate_kept, overlays_deactivated
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────

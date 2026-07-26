@@ -84,6 +84,12 @@ services:
       # empty — never silent-accept, never silent-reject-all (CR040). Set it in
       # infra/alpha.env to the value pasted into the RC dashboard webhook config.
       REVENUECAT_WEBHOOK_SECRET: ${REVENUECAT_WEBHOOK_SECRET:-}
+      # RevenueCat server-side REST secret key (DEF099). Used server→RC only, to
+      # transfer a customer alias orphan→adopter on account claim so post-merge
+      # webhooks target the surviving account. Empty = alias transfer degrades
+      # loudly (logged, no network call); the webhook merge-trail safety net
+      # still re-targets deliveries. Set in infra/alpha.env once RC exists.
+      REVENUECAT_SECRET_API_KEY: ${REVENUECAT_SECRET_API_KEY:-}
       # Container-to-container connection still uses 5432 (internal port).
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/ami_trade
       REDIS_URL: redis://redis:6379/0

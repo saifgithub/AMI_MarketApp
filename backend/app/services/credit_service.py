@@ -37,7 +37,7 @@ from app.core.config import settings
 from app.db import get_session
 from app.db.models import SubscriptionEventRow, User, _utcnow
 from app.schemas.mandate import Plan
-from app.services.entitlements import effective_plan
+from app.services.entitlements import effective_plan, plan_rank
 
 
 # tiers_and_pricing.md:12 — included credits/month.
@@ -388,6 +388,91 @@ def revoke_to_base(session, user: User) -> tuple[str, Plan]:
     user.plan = Plan.FLOOR_PASS.value
     eff = _ensure_period(session, user)
     return old_plan, eff
+
+
+# ── DEF099: carry billing state across an anon→claimed account merge ──────
+#
+# MergeService re-keys ~16 per-user tables orphan→adopter and then deletes the
+# orphan, but `users.plan` / `credit_balance` / period fields live ON the user
+# row, so they die with the orphan unless carried explicitly. Anonymous-first is
+# a LOCKED decision: a pre-claim anonymous purchase MUST survive the claim.
+
+
+@dataclass
+class BillingMergeResult:
+    """Outcome of carrying billing state orphan→adopter on account claim."""
+
+    old_target_plan: str
+    new_plan: str
+    plan_changed: bool
+    source_balance: int
+    target_balance: int
+    merged_balance: int
+
+
+def carry_billing_on_merge(session, source_user: User, target_user: User) -> BillingMergeResult:
+    """Carry the orphan's plan + credits onto the surviving (adopter) user.
+
+    **Conflict rule (deliberate — DEF099):**
+
+      * **plan → higher entitlement wins.** The surviving account takes the
+        more-entitled of the two plans (by `plan_rank`), never a downgrade. This
+        is what honours the anonymous-first promise: an anon who bought `trader`
+        then claims a `floor_pass` account ends up `trader`; an anon who bought
+        nothing and claims an existing `floor_manager` keeps `floor_manager`.
+      * **credits → sum.** Both balances add together (user-favourable: they
+        paid for both). Credits still reset monthly via the normal period
+        machinery — this is a one-time carry at claim, not cross-month
+        accumulation.
+
+    The period bookkeeping (`credits_period_start` / `credits_plan_at_grant`) is
+    re-stamped to the current month under the *effective* final plan so a later
+    `balance_for()` / `_ensure_period()` read does NOT see drift and wipe the
+    carried sum back down to a single plan's allowance mid-month — and still
+    re-grants correctly at the next month rollover.
+
+    Writes ONE `subscription_events` audit row (source="app") so the carry is
+    reconstructable — a wrong entitlement move here is real money (D-5).
+    """
+    old_target_plan = target_user.plan
+    source_plan = _plan_from_str(source_user.plan)
+    target_plan = _plan_from_str(target_user.plan)
+    final_plan = source_plan if plan_rank(source_plan) > plan_rank(target_plan) else target_plan
+
+    source_balance = source_user.credit_balance or 0
+    target_balance = target_user.credit_balance or 0
+    merged_balance = source_balance + target_balance
+
+    target_user.plan = final_plan.value
+    target_user.credit_balance = merged_balance
+    eff = effective_plan(final_plan, target_user.trial_expires_at)
+    target_user.credits_period_start = _month_start(_utcnow())
+    target_user.credits_plan_at_grant = eff.value
+
+    plan_changed = final_plan.value != old_target_plan
+    session.add(SubscriptionEventRow(
+        id=uuid4(),
+        user_id=target_user.id,
+        event_type="account_merge_billing",
+        from_value=old_target_plan,
+        to_value=final_plan.value,
+        source="app",
+        note=(
+            f"conflict_rule=higher_plan+sum_credits "
+            f"source_plan={source_plan.value} source_credits={source_balance} "
+            f"target_credits={target_balance} merged_credits={merged_balance}"
+        ),
+        created_at=_utcnow(),
+    ))
+
+    return BillingMergeResult(
+        old_target_plan=old_target_plan,
+        new_plan=final_plan.value,
+        plan_changed=plan_changed,
+        source_balance=source_balance,
+        target_balance=target_balance,
+        merged_balance=merged_balance,
+    )
 
 
 def refund(user_id: UUID, amount: int, *, reason: str) -> None:

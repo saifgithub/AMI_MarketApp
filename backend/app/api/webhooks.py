@@ -30,6 +30,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Header, HTTPException, status
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
@@ -147,15 +148,62 @@ def _load_user(session, app_user_id: Any) -> User:
         ) from exc
     user = session.get(User, uid)
     if user is None:
-        # RC references a user we don't have — possibly deleted by an
-        # anon->claimed merge (see the MergeService gap in the CR084 hand-off).
-        # Loud 404 so the delivery shows as failed in the RC dashboard instead
-        # of silently dropping a paid purchase.
+        # DEF099: the id may belong to an anon orphan that an account claim
+        # folded into an adopter and then deleted. Follow the merge audit trail
+        # (subscription_events "account_adoption_merged", from_value=orphan,
+        # to_value=adopter) so the subscription resolves to the surviving
+        # account instead of stranding a paid purchase on a 404. This backs up
+        # the RC-side alias transfer (revenuecat_client) for deliveries that
+        # arrive before RC propagates the alias.
+        redirected = _follow_merge_alias(session, uid)
+        if redirected is not None:
+            logger.info(
+                "revenuecat_webhook_followed_merge_alias",
+                from_app_user_id=str(app_user_id),
+                to_user_id=str(redirected.id),
+            )
+            return redirected
+        # Genuinely unknown — loud 404 so the delivery shows as failed in the RC
+        # dashboard instead of silently dropping a paid purchase.
         logger.error("revenuecat_webhook_unknown_user", app_user_id=str(app_user_id))
         raise HTTPException(
             status.HTTP_404_NOT_FOUND, f"no user for app_user_id {app_user_id}"
         )
     return user
+
+
+def _follow_merge_alias(session, uid: UUID) -> User | None:
+    """Resolve a deleted-orphan id to the surviving adopter via the merge trail.
+
+    Bounded chain-follow (A→B→C) so a re-merged adopter still resolves; the
+    bound guards against any pathological cycle in the audit rows.
+    """
+    seen: set[UUID] = {uid}
+    current = uid
+    for _ in range(5):
+        to_value = session.execute(
+            select(SubscriptionEventRow.to_value)
+            .where(
+                SubscriptionEventRow.event_type == "account_adoption_merged",
+                SubscriptionEventRow.from_value == str(current),
+            )
+            .order_by(SubscriptionEventRow.created_at.desc())
+            .limit(1)
+        ).scalar_one_or_none()
+        if not to_value:
+            return None
+        try:
+            next_id = UUID(to_value)
+        except ValueError:
+            return None
+        adopter = session.get(User, next_id)
+        if adopter is not None:
+            return adopter
+        if next_id in seen:
+            return None
+        seen.add(next_id)
+        current = next_id
+    return None
 
 
 def _record_rc_event(

@@ -30,6 +30,18 @@ _PLAN_RANK: dict[Plan, int] = {
 }
 
 
+def plan_rank(plan: Plan) -> int:
+    """Entitlement ordering — higher = more entitled.
+
+    Exposes the private `_PLAN_RANK` so the account-merge conflict rule
+    (DEF099) can pick the higher of two plans on claim without ever
+    downgrading the surviving account. Unknown plans are treated as the
+    floor (rank 0) rather than raising — a merge must never fail on a stray
+    plan string.
+    """
+    return _PLAN_RANK.get(plan, 0)
+
+
 def is_trial_active(trial_expires_at: datetime | None) -> bool:
     if trial_expires_at is None:
         return False
