@@ -59,7 +59,8 @@ NOT spawn — Saiful's self-respawning track-U). Global audit cap ≤3.
 
 ## Status ledger (update as waves execute)
 - [x] Wave 1 laned — DEF099 (coder.api) + CR029-MATH (coder.math) dispatched, ASSIGNED round 1
-- [~] Wave 1 integrating — **CR029-MATH DONE** (integrated, 78 green, ACCEPTED). **DEF099 built + verified (1212 green on main) → SUBMITTED for independent audit** (`lane/DEF099.coder.api` @ 0433165; D-5 money, gate stays — NOT integrated to main until COMPLETE). Awaiting track-U verdict. Next behind a coder.api slot: CR030, CR029-BE (independent gate — sim wiring), then mobile halves + CR006.
+- [x] **Wave 1 DONE** — **CR029-MATH** integrated (ACCEPTED, `bd2b68e`). **DEF099** audited **COMPLETE r1** (track-U run-50, zero findings) → integrated to main `c445c68` (AT:architect DEF099), full suite **1222 green**, DISPATCH: ACCEPTED, row open→resolved. coder.api WIP slot freed. (DEF099's live RC-alias hop still gated on DEF100 — Saiful's RC secret key.)
+- [ ] **Wave 1b (NEXT)** — activate `CR030.assign.md` (dividend fields, coder.api) + write `CR029-BE.assign.md` (lots table + migration + wire FIFO into sim sell path; DEPENDS-ON CR029-MATH; **GATE independent** — realised P&L reaches users). Then their mobile halves + CR006 research doc.
 - [ ] Wave 2 laned
 - [ ] Wave 2 integrated
 - [ ] Wave 3 laned
