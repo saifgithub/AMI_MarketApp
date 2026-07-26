@@ -9,7 +9,7 @@ plugins {
 
 // Upload keystore lives outside the repo at ~/.android-keys/keystore.properties.
 // Falls back to debug signing when the file is absent (dev / CI without secrets).
-// See docs/initial_specs/11_decisions/decision_log.md#d-057 and HANDOVER_R.md for the keystore setup.
+// See docs/initial_specs/11_decisions/decision_log.md#d-057 for the keystore setup.
 val keystorePropertiesFile = file(
     "${System.getProperty("user.home")}/.android-keys/keystore.properties"
 )

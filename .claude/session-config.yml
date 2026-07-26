@@ -1,9 +1,15 @@
-# session-config.yml — read by /handover-generic + /start-fresh-generic.
-# Re-run /session-setup to amend a field or add a track.
+# session-config.yml — thin per-track reference registry.
+#
+# CR097 (2026-07-27) RETIRED /handover + /start-fresh. This file used to DRIVE those two
+# skills; they are gone, so `handover_path` + `history_dir` were dropped from every track
+# (they existed only to feed them). Nothing reads this file mechanically anymore — it is
+# kept as a human reference for the per-track sanity/bug-poll commands below. Continuity
+# now rides on the sm-checkpoint routine + the committed .deliveryos/checkpoint_history/
+# archives + CR052 orchestration (see CLAUDE.md "Autonomy" + "session start" sections).
 
-project_prefix: "AT"            # Session tags: AT:R29, AT:M1, etc.
+project_prefix: "AT"            # Commit/session tags: AT:R64, AT:G2, etc.
 
-# Shared across all tracks
+# Shared reference
 memory_project_file: project_ami_trade.md
 worktree_pattern: "agent-*"
 worktree_dir: .claude/worktrees
@@ -13,8 +19,6 @@ deploy_command: /promote-to-alpha
 tracks:
   R:
     label: "Development"
-    handover_path: HANDOVER_R.md
-    history_dir: history/
     project_plan_path: docs/initial_specs/10_delivery/project_plan.md
     sanity_checks:
       - name: Alpha health
@@ -34,33 +38,19 @@ tracks:
 
   M:
     label: "Marketing"
-    handover_path: HANDOVER_M.md
-    # history_dir: history/              # add when first marketing session wraps; can share AMI's history/ folder (filenames are prefixed)
-    # project_plan_path:                 # no marketing backlog doc yet
 
   G:
     label: "Governance"
-    handover_path: HANDOVER_G.md
-    history_dir: history/
 
   U:
     label: "Auditor"
-    handover_path: HANDOVER_U.md
-    history_dir: history/
     sanity_checks:
       - name: Alpha health
         cmd: curl -s https://api-alpha.agenticmarketintel.ai/v1/health
 
   Q:
     label: "QA/UAT"
-    handover_path: HANDOVER_Q.md
-    history_dir: history/
     project_plan_path: docs/forward_planning/CR080_appium_uat_harness/CR080_appium_uat_harness.md
-    # sanity_checks / bug_list: none yet — add via /session-setup once the harness has a first run
 
   S:
     label: "Support"
-    handover_path: HANDOVER_S.md
-    history_dir: history/
-    # project_plan_path / sanity_checks / bug_list: none yet — add via /session-setup once
-    # this track has an operating cadence (e.g. a live email-monitoring loop)

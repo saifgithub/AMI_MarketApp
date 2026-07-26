@@ -237,9 +237,28 @@ On the Auditor's COMPLETE (`AUDIT_PASSED`), the Architect: verifies the verdict 
 updates the CR/DEF register status, appends the `trail.md` closure row, writes
 `DISPATCH: ACCEPTED (round N)` on the assign lane, **archives the closed lane pair to
 `../history/lanes/<ITEM>.md`** (the durable per-item record — what/why, every Q/A round-trip, the
-verdict; this keeps active `lanes/` lean and is the collective memory), and frees the instance's WIP
-slot. The stakeholder's own hands-on test after ACCEPTED is their single checkpoint; a defect
-they find reopens the lane at the next round.
+verdict; this keeps active `lanes/` lean and is the collective memory), **reaps the lane's
+worktree** (see below), and frees the instance's WIP slot. The stakeholder's own hands-on test after
+ACCEPTED is their single checkpoint; a defect they find reopens the lane at the next round.
+
+**Worktree reaping (do NOT skip — this used to be `/handover`'s job).** The `/handover` skill was
+the only thing that removed merged lane worktrees; it is retired (CR097), so reaping now lives here.
+When a lane reaches `DISPATCH: ACCEPTED` and its branch is merged, remove the worktree + branch so
+stale worktrees don't pile up (they mislead the merge-state greps and clutter `git worktree list`):
+
+```bash
+# Only after the branch is fully merged — an empty log means nothing unmerged is lost.
+git log <main-branch>..lane/<ITEM>.<instance-id> --oneline   # MUST be empty
+git worktree remove -f -f <WORKTREE_DIR>/<instance-id>-<ITEM>
+git branch -D lane/<ITEM>.<instance-id>
+```
+
+If `git log main..<branch>` is **non-empty**, STOP — that branch carries unmerged commits; do not
+remove it. As a backstop for lanes that closed without reaping, the Architect runs a **sweep at
+session start** alongside the board re-derivation (§8 guardrail 7): for every `git worktree list`
+entry matching `worktree_pattern`/`<instance-id>-*` whose lane is `DISPATCH: ACCEPTED` and whose
+branch is merged, reap it. Never touch a worktree whose branch is unmerged or whose lane is still
+open.
 
 **Collective memory.** The archived lanes + `trail.md` + the audit layer's `audit/audit-trail.md` +
 `audit/runs/` are the operational history any agent can grep for prior decisions. Periodically (at

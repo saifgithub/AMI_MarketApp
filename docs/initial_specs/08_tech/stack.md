@@ -81,10 +81,10 @@ AMI_MarketApp/
 ├── docker-compose.yml            ← The melehost Compose stack (api/postgres/redis/tunnel)
 ├── scripts/                      ← run_dev.sh, build_testflight.sh, translate_arb.py, users.sh, ...
 ├── .claude/
-│   ├── commands/                 ← /promote-to-alpha, /rollback-alpha, /handover, /start-fresh, ...
-│   ├── session-config.yml        ← Multi-track session config
+│   ├── commands/                 ← /promote-to-alpha, /rollback-alpha, /sm-checkpoint, ...
+│   ├── session-config.yml        ← Thin per-track reference registry (post-CR097)
 │   └── projects/                 ← (gitignored — per-session state)
-├── HANDOVER_R.md                 ← Current Development-track handover state
+├── .deliveryos/checkpoint_history/ ← Committed sm-checkpoint memos (cold-start anchor; CR097 retired HANDOVER_*)
 ├── README.md
 ├── CLAUDE.md
 └── .gitignore

@@ -96,8 +96,13 @@ backend/.alembic-placeholder.db
 # TestFlight upload artifacts (Xcode Organizer export) — local-only
 Apple_Store/
 
-# Local Claude tooling memory (sqlite) — host-side, not project state
-.deliveryos/
+# Local Claude tooling memory — host-side. CR097: track ONLY the sm-checkpoint archives
+# (the durable cold-start anchor that replaced the retired HANDOVER docs); memory.sqlite,
+# .DS_Store, and everything else under .deliveryos/ stay host-side and uncommitted.
+.deliveryos/*
+!.deliveryos/checkpoint_history/
+.deliveryos/checkpoint_history/*
+!.deliveryos/checkpoint_history/*.md
 
 # CR082 — exported tester/user contact CSVs. Personal data, local-only, never committed.
 contacts_*.csv

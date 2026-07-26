@@ -77,7 +77,7 @@ the backend is on the Mac or that the LLM is mocked.
 | **Market data** | Yahoo via `yfinance`, with deterministic mock-walk fallback | `USE_REAL_MARKET_DATA=true` in melehost's `.env`. |
 | **Code transport** | rsync via [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) (slash command) | Deploy path to Alpha is **rsync-only** (melehost has no git remote; it doesn't pull from GitHub). Source *is* version-controlled on GitHub: `origin` → `github.com/saifgithub/AMI_MarketApp` (backup + multi-agent sync); push `main` there. GitHub is not a deploy path. |
 
-Detail in [`docs/initial_specs/08_tech/hosting.md`](docs/initial_specs/08_tech/hosting.md) (melehost spec), [`docs/initial_specs/10_delivery/promotion_protocol.md`](docs/initial_specs/10_delivery/promotion_protocol.md) (how code ships), [`docs/initial_specs/08_tech/backend_modes.md`](docs/initial_specs/08_tech/backend_modes.md) (Flutter Alpha/Beta/Prod modes), and the freshest state in [`HANDOVER_R.md`](HANDOVER_R.md).
+Detail in [`docs/initial_specs/08_tech/hosting.md`](docs/initial_specs/08_tech/hosting.md) (melehost spec), [`docs/initial_specs/10_delivery/promotion_protocol.md`](docs/initial_specs/10_delivery/promotion_protocol.md) (how code ships), [`docs/initial_specs/08_tech/backend_modes.md`](docs/initial_specs/08_tech/backend_modes.md) (Flutter Alpha/Beta/Prod modes), and the freshest state in the newest checkpoint memo under [`.deliveryos/checkpoint_history/`](.deliveryos/checkpoint_history/) (the durable cold-start anchor — the `HANDOVER_*` docs were retired in CR097).
 
 If a check fails (curl returns 502 / connect refused), debug from melehost — don't fall back to "let me start a backend on the Mac":
 
@@ -155,7 +155,7 @@ Rules:
 - **Auto-file, proceed.** Saiful's prompt IS the approval. When he asks for a change, assign the next `CR###`, create its folder + doc, then implement. No separate approval gate. (A Defect is filed the same way when you spot or are handed one.)
 - **IDs** are zero-padded, sequential, never reused: `CR001…`, `DEF001…`.
 - **Commit tag:** append `(AT:R<N> CR###)` or `(AT:R<N> DEF###)` to the summary. User-reported bug fixes keep `fix(bug:<short-id>): … (AT:R<N> DEF###)`.
-- **Exempt** (plain `(AT:R<N>)`, no ID needed): handover wraps (`chore(handover)`), version/build bumps, docs-only commits.
+- **Exempt** (plain `(AT:R<N>)`, no ID needed): version/build bumps, docs-only commits (incl. the post-RESTORE sm-checkpoint archive commit and governance-log commits).
 - **Enforcement is convention-only** — self-enforce each session; there is no git hook or promotion gate. Full format in [`docs/initial_specs/08_tech/coding_conventions.md`](docs/initial_specs/08_tech/coding_conventions.md).
 - **Optional independent-verification layer** for a risky CR/Defect: an architect (track R) + auditor (track U) handshake — see [`orchestration/audit/PROTOCOL.md`](orchestration/audit/PROTOCOL.md) + [`orchestration/audit/AMI_TRADE_BINDINGS.md`](orchestration/audit/AMI_TRADE_BINDINGS.md) (CR005). Not required per item — Saiful invokes it.
 
@@ -171,7 +171,7 @@ Rules:
    Defect one by one via `AskUserQuestion`, inline, live. This runs in whichever session
    Saiful opens first that day (not a separate cloud routine — he pushed back on being
    redirected to one, 2026-07-24). Skip silently if today's section already exists.
-3. Read [`HANDOVER_R.md`](HANDOVER_R.md) for the freshest state + immediate next steps.
+3. **For the freshest state**, read the newest checkpoint memo in [`.deliveryos/checkpoint_history/`](.deliveryos/checkpoint_history/) (`ls -t .deliveryos/checkpoint_history/ | head -1`) — the committed cold-start anchor that replaced the retired `HANDOVER_*` docs (CR097). Cross-check it against `git log --oneline`, the registers (`docs/forward_planning/cr_list.md` / `docs/defect/def_list.md`), and the memory files — a stamped memo can still predate commits that landed after it.
 4. Skim [`docs/initial_specs/10_delivery/project_plan.md`](docs/initial_specs/10_delivery/project_plan.md) — the Alpha → Beta → MVP roadmap. Your task is almost always in there.
 5. `git log --oneline` to verify the commit chain.
 6. Find the topic-specific doc(s) in `docs/` for your task.
@@ -188,7 +188,7 @@ Rules:
 - Don't write tests that test the framework; test our logic.
 - Don't proactively run destructive commands (force push, reset hard, etc.).
 - Don't bypass the safety floor design in Brief Your Agent.
-- Don't ship a behaviour change without a CR or Defect ID (see Change governance). Exempt: handover wraps, version bumps, docs-only.
+- Don't ship a behaviour change without a CR or Defect ID (see Change governance). Exempt: version bumps, docs-only commits (incl. the sm-checkpoint archive commit).
 
 ---
 
@@ -200,8 +200,9 @@ He calls Claude "buddy" sometimes. That's fine.
 
 ---
 
-## Autonomy + handover rules
+## Autonomy + continuity rules
 
 - **Inside this project folder, execute autonomously.** Don't ask "ready to commit?" — just do it. (See `memory/feedback_workflow.md`.)
-- **Handover hygiene.** When Saiful asks to wrap a session, run [`/handover`](.claude/commands/handover.md) (multi-track, driven by `.claude/session-config.yml`). That's the canonical protocol — it walks preflight, subagent-worktree cleanup, consistency scan, `HANDOVER_R.md` (or the relevant track's handover doc) + `memory/project_ami_trade.md` updates, final verification, and a structured report. The next session reads files at HEAD, so uncommitted edits are invisible and stale text contradicting today's new rule will mislead the next agent — `/handover` produces a clean working tree and a consistency-scanned doc set in a fixed shape so an audit at the end is uniform. **Don't auto-trigger on context budget or "end of chapter" judgements** — Saiful decides when to wrap.
+- **Continuity = the sm-checkpoint routine (CR097 retired `/handover` + `/start-fresh`).** To carry context across `/compact` and keep one session alive: `/sm-checkpoint` (SAVE) → tell Saiful to `/compact` → first message after compact is `/sm-checkpoint` (RESTORE). Running to compaction is fine — the memo is what carries context across it. **After a RESTORE**, the skill archives the memo to `.deliveryos/checkpoint_history/`; **pathspec-commit that archived `.md` file** — `git commit -m "chore(checkpoint): archive <session> memo (AT:<track><N>)" -- .deliveryos/checkpoint_history/<file>.md` — so the newest committed memo is the durable cold-start anchor a truly fresh session reads (it replaces the old HANDOVER docs). The global `~/.claude/commands/sm-checkpoint.md` skill is deliberately **not** modified (it's user-global, shared across projects); this commit is an AMI-Trade convention. **Keep committing work + CR/DEF governance regardless of the continuity mechanism.** Don't auto-trigger on a context-budget heuristic — Saiful decides when to wrap.
+- **Multi-agent work rides CR052 orchestration**, not session-swaps — see [`orchestration/dispatch/DISPATCH_PROTOCOL.md`](orchestration/dispatch/DISPATCH_PROTOCOL.md). Merged-lane worktrees are reaped there (§9), the job `/handover` used to do.
 - **Never delete files outside the project folder.** Saiful's exact words: *"unless it is something you physically cannot do, just go ahead and do it. just dont go crazy and delete files outside of your project folders!"*

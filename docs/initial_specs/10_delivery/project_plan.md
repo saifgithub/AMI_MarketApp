@@ -36,7 +36,7 @@ Alpha (A1–A29, plus A6b pulled forward from MVP M4):
 
 **Alpha is ~77% complete.** The unblocked engineering surface (every `done` + `partial` Claude-only item) is wrapped. What's left of Alpha is mostly Saiful-external setup (email/TTS/push providers, Google OAuth, legal copy, Play Console identity verification) + downstream code that depends on it. Beta + MVP are mostly unstarted (M5 partial because i18n landed early in Alpha; M4 partial because Android slice pulled forward and code landed AT:R36; M1 partial because CR039 pulled its entitlement half forward AT:R60).
 
-**Status legend** (used in every table below): `✅ done` · `⚡ partial` · `⏳ blocked` · `◯ unstarted` · `✖ superseded`. AT:R\<N\> tags in the status cell point to the session that delivered it — cross-reference with [HANDOVER_R.md](../../../HANDOVER_R.md) / [history/](../../../history/).
+**Status legend** (used in every table below): `✅ done` · `⚡ partial` · `⏳ blocked` · `◯ unstarted` · `✖ superseded`. AT:R\<N\> tags in the status cell point to the session that delivered it — cross-reference with `git log` + the newest [.deliveryos/checkpoint_history/](../../../.deliveryos/checkpoint_history/) memo / [history/](../../../history/) (the `HANDOVER_*` docs were retired in CR097).
 
 ---
 

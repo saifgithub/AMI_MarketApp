@@ -2,7 +2,8 @@
 
 This is the **canonical, version-controlled** source for the email-support knowledge base
 (CR088, 2026-07-24 — ownership moved from an ad hoc melehost directory into git). Track **S**
-(Support) owns it; see `HANDOVER_S.md` at the repo root.
+(Support) owns it; for current state read the newest checkpoint memo under
+`.deliveryos/checkpoint_history/` (the `HANDOVER_*` docs were retired in CR097).
 
 ## Structure
 
