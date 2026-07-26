@@ -33,11 +33,16 @@ scarce founder attention and tester goodwill. CR036 is the missing sequencing do
 | Alpha | A1–A29 | ~77% complete. Remainder is Saiful-external (TTS, OneSignal/APNs, lawyer review, Play Console upload) — not Claude-blocked. |
 | Engagement (pre-Beta) | E0–E5, design home [CR004](../CR004_release_readiness/CR004_release_readiness.md) | E0–E4 done. Only **E5** (device-matrix verification, needs Saiful device time) outstanding — unchanged since filing; Saiful scheduling it soon (2026-07-25). |
 | Beta (cloud infra) | B1–B14 | **0% started.** No GCP project, no Supabase, no cloud LLM cutover. Unchanged since filing. |
-| MVP (public launch) | M1–M12 | **0% started** (exit criterion unmet — no store live, no payments active). But **M1 (RevenueCat, [CR084](../CR084_revenuecat_integration/CR084_revenuecat_integration.md)) is now code-complete and independently audited** — both backend + mobile lanes COMPLETE, paywall ships dark pending Saiful's DEF100 provisioning (RC dashboard keys, webhook secret, 7 store products, Apple/Google paid agreements). First MVP item to reach this state. |
+| MVP (public launch) | M1–M12 | **0% started** (exit criterion unmet — no store live, no payments active). But **M1 (RevenueCat, [CR084](../CR084_revenuecat_integration/CR084_revenuecat_integration.md)) is now code-complete and independently audited** — both backend + mobile lanes COMPLETE, paywall ships dark pending Saiful's DEF100 provisioning (RC dashboard keys, webhook secret, 7 store products, Apple/Google paid agreements). First MVP item to reach this state. **New MVP blocker (2026-07-26, Saiful: "show stopper for MVP"):** the backend is a single event loop that blocks for every concurrent user during any Room convene/1-on-1/quote lookup (synchronous yfinance/httpx calls inline in async handlers, no thread offload) — fine at Stealth Alpha's low tester volume, a hard blocker once concurrent usage is the point. Fix designed, not yet dispatched (Architect occupied) — intake: `orchestration/dispatch/intake/backend-concurrency-blocking-io.md`, pending DEF mint. |
 
 No open defects blocked the Stealth Alpha graduation checklist as of filing; **DEF061 (4 of 8
 mandate compliance toggles prompt-only, not enforced) remains open as of 2026-07-25** —
-relevant to the halal-conscious AR/MS launch positioning §3 leans on. CR004 formally closes
+relevant to the halal-conscious AR/MS launch positioning §3 leans on. **New as of 2026-07-26:**
+a backend concurrency defect (blocking I/O stalls the whole process for every concurrent user —
+see MVP row above) does **not** block the Stealth Alpha graduation checklist in §2 (low tester
+volume, low collision odds) but **does block the MVP exit criterion** — must close before public
+launch. Intake filed, pending Architect triage/DEF mint:
+`orchestration/dispatch/intake/backend-concurrency-blocking-io.md`. CR004 formally closes
 only at the MVP exit criterion (both stores live, payments active, support inbox ready) — so it
 stays open across the whole GTM window and CR036 inherits the same closure condition.
 
