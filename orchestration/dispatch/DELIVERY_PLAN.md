@@ -20,15 +20,19 @@ NOT spawn — Saiful's self-respawning track-U). Global audit cap ≤3.
 
 ## Wave 1 — not-blocked, parallel (LAUNCH NOW)
 
+**Two lanes launch in parallel with zero coder.api/models.py contention:**
+
 | Item | Owner(s) | Dep | Why now |
 |---|---|---|---|
-| **DEF099** | `coder.api` | none | Unblocks anon-purchase M1. Account-merge must carry RC entitlement/credit. Top priority. |
-| **CR029** | `coder.math` (+`coder.mobile` UI, DEPENDS-ON math) | none | FIFO realised P&L in `trading_math`. `coder.math` is idle — free parallelism. |
-| **CR030** | `coder.api` (BE) + `coder.mobile` (pill, DEPENDS-ON BE) | none | Small: `ex_dividend_date`+`dividend_rate` onto the shipped earnings endpoint/pill. |
-| **CR006** | architect / research (no fleet slot) | none | Non-code Beta infra cost-research doc. Runs alongside; consumes no coder WIP. |
+| **DEF099** | `coder.api` | none | Unblocks anon-purchase M1. Account-merge must carry RC entitlement/credit. Service-only, **no schema** → no models.py collision. Top priority. **LANED + spawned.** |
+| **CR029-MATH** | `coder.math` | none | Pure FIFO realised-P&L engine in `trading_math`. `coder.math` idle, zero backend dep. **LANED + spawned.** |
 
-Wave-1 WIP: `coder.api` = 2 (DEF099, CR030-BE) at cap · `coder.math` = 1 · `coder.mobile` = 2 (CR029-UI, CR030-pill) at cap. Fits.
-**→ /sm-checkpoint after Wave 1 is laned + coders spawned (or after first integrations).**
+**Queued behind a coder.api slot (activate as DEF099 frees it — they touch schema/fundamentals so serialize):**
+- **CR030** (`coder.api` BE: `ex_dividend_date`+`dividend_rate` on the earnings endpoint) → **CR030-MOBILE** (pill, DEPENDS-ON BE). Existing stub `CR030.assign.md` (OPEN).
+- **CR029-BE** (`coder.api` schema owner: `lots` table + migration + wire FIFO into sim sell path, DEPENDS-ON CR029-MATH) → **CR029-MOBILE** (DEPENDS-ON CR029-BE).
+- **CR006** (research doc, no fleet slot) — architect-led; can run anytime.
+
+**→ /sm-checkpoint now** (before spawning/driving the rest) — the spawn+monitor+integrate phase is the context-heavy one; checkpoint keeps it inside budget.
 
 ## Wave 2 — dependency-cleared + moderate (after Wave 1 frees api/mobile slots)
 
@@ -54,7 +58,7 @@ Wave-1 WIP: `coder.api` = 2 (DEF099, CR030-BE) at cap · `coder.math` = 1 · `co
 - **Blocked-on-Saiful:** DEF100 (RevenueCat keys — nag), DEF104 (rotate live cred when convenient), CR027 (APNs/FCM certs).
 
 ## Status ledger (update as waves execute)
-- [ ] Wave 1 laned
+- [x] Wave 1 laned — DEF099 (coder.api) + CR029-MATH (coder.math) dispatched, ASSIGNED round 1
 - [ ] Wave 1 integrated
 - [ ] Wave 2 laned
 - [ ] Wave 2 integrated
