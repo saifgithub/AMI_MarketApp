@@ -12,7 +12,15 @@
       "Bash(echo \"R\" > .claude/active-track && cat .claude/active-track)",
       "Bash(/remote-control)",
       "Bash(brew cleanup *)",
-      "Bash(rm -rf ~/Library/Developer/Xcode/DerivedData && echo \"DerivedData deleted\")"
+      "Bash(rm -rf ~/Library/Developer/Xcode/DerivedData && echo \"DerivedData deleted\")",
+      "Bash(claude -p *)",
+      "Bash(sort -t R -k2 -n -u)",
+      "Bash(git commit -m ' *)",
+      "Bash(git log *)",
+      "Bash(git commit *)",
+      "Bash(sort -t R -k2 -n)",
+      "Bash(sort -t F -k2 -n)",
+      "Bash(./backend/.venv/bin/python -m pytest backend/tests/unit/test_def061_compliance_enforcement.py backend/tests/unit/test_safety_floor.py backend/tests/unit/test_config_compose_parity.py -q)"
     ]
   }
 }

@@ -93,7 +93,7 @@ requires-dist = [
     { name = "supabase", specifier = ">=2.10" },
     { name = "tenacity", specifier = ">=9.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
-    { name = "yfinance", specifier = ">=0.2.50" },
+    { name = "yfinance", specifier = ">=1.0" },
 ]
 provides-extras = ["dev"]
 
