@@ -24,6 +24,7 @@ from app.services.market_data import (
     MockWalkProvider,
     Quote,
     YahooQuoteProvider,
+    _dividend_fields_from_info,
 )
 
 
@@ -386,3 +387,42 @@ def test_assembled_stack_yahoo_success_reports_yahoo_source():
     second = stack.quote("AAPL")  # cache hit
     assert first is not None and first.source == "yahoo"
     assert second is not None and second.source == "yahoo"
+
+
+# ── CR030 dividend-field null-handling (pure helper) ──────────────────────
+
+
+def test_dividend_fields_none_when_no_ex_date() -> None:
+    """No exDividendDate → not a payer → both None (mobile chip hides)."""
+    assert _dividend_fields_from_info({"dividendRate": 0.96}) == (None, 0.96)
+    # dividendRate present without an ex-date still yields the rate; the mobile
+    # chip keys its visibility on ex_dividend_date being present.
+
+
+def test_dividend_fields_empty_or_none_info() -> None:
+    assert _dividend_fields_from_info(None) == (None, None)
+    assert _dividend_fields_from_info({}) == (None, None)
+
+
+def test_dividend_fields_unix_ts_to_iso() -> None:
+    # 2026-09-19T00:00:00Z == 1789776000 unix seconds.
+    ex, rate = _dividend_fields_from_info({"exDividendDate": 1789776000, "dividendRate": 0.96})
+    assert ex == "2026-09-19"
+    assert rate == pytest.approx(0.96)
+
+
+def test_dividend_rate_zero_becomes_none_but_ex_date_survives() -> None:
+    """Suspended dividend (rate 0.0 with an ex-date) → date shown, rate None."""
+    ex, rate = _dividend_fields_from_info({"exDividendDate": 1789776000, "dividendRate": 0.0})
+    assert ex == "2026-09-19"
+    assert rate is None
+
+
+def test_dividend_fields_non_finite_and_garbage_treated_as_absent() -> None:
+    assert _dividend_fields_from_info({"exDividendDate": float("nan"), "dividendRate": float("inf")}) == (None, None)
+    assert _dividend_fields_from_info({"exDividendDate": "not-a-ts", "dividendRate": "x"}) == (None, None)
+
+
+def test_dividend_rate_rounds_to_two_dp() -> None:
+    _, rate = _dividend_fields_from_info({"dividendRate": 0.9649})
+    assert rate == pytest.approx(0.96)

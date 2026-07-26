@@ -35,6 +35,8 @@ and the rest of the stack lifts unchanged.
 
 from __future__ import annotations
 
+import datetime
+import math
 import random
 import time
 from dataclasses import dataclass, field
@@ -80,11 +82,59 @@ class NewsItem(NamedTuple):
 
 
 class EarningsInfo(NamedTuple):
-    """Upcoming earnings window for a ticker (within 90 days), or nulls."""
+    """Upcoming earnings window for a ticker (within 90 days), or nulls.
+
+    CR030 added the two dividend fields — they ride on the same object (and the
+    same 6-hour earnings cache) rather than a second endpoint. Defaulted to None
+    so every other provider / test that builds an EarningsInfo without them is
+    unaffected. Both are None for a non-dividend payer; a suspended dividend can
+    surface an ex-date with a None rate (see `_dividend_fields_from_info`).
+    """
 
     earnings_date: str | None   # ISO date "YYYY-MM-DD"
     quarter: str | None         # "Q1"–"Q4" derived from month
     eps_estimate: float | None  # yfinance Earnings Average
+    ex_dividend_date: str | None = None  # CR030 — ISO "YYYY-MM-DD" from yfinance exDividendDate (unix ts)
+    dividend_rate: float | None = None   # CR030 — annual per-share USD; None when 0.0 / absent
+
+
+def _dividend_fields_from_info(info: dict | None) -> tuple[str | None, float | None]:
+    """Extract (ex_dividend_date ISO, dividend_rate) from a yfinance `.info` dict.
+
+    Pure + total (never raises) so the null-handling is unit-testable without
+    yfinance. CR030 rules:
+      - No `exDividendDate` → not a dividend payer → the ex-date is None and the
+        mobile chip hides entirely (no "N/A" row).
+      - `exDividendDate` is a unix timestamp in SECONDS; rendered ISO "YYYY-MM-DD"
+        to match `earnings_date`'s shape. A non-finite / unparseable / out-of-range
+        value is treated as absent (DEF052 NaN-sentinel lesson), never passed through.
+      - `dividendRate` of 0.0 or absent → rate None. A 0.0 rate WITH an ex-date
+        present (rare — a suspended dividend) surfaces the date with a None rate,
+        exactly as the CR specifies.
+    """
+    if not info:
+        return None, None
+    ex_iso: str | None = None
+    ex_ts = info.get("exDividendDate")
+    if ex_ts is not None:
+        try:
+            ts = float(ex_ts)
+            if math.isfinite(ts):
+                ex_iso = datetime.datetime.fromtimestamp(
+                    ts, datetime.timezone.utc
+                ).strftime("%Y-%m-%d")
+        except (TypeError, ValueError, OSError, OverflowError):
+            ex_iso = None
+    rate: float | None = None
+    rate_raw = info.get("dividendRate")
+    if rate_raw is not None:
+        try:
+            r = float(rate_raw)
+            if math.isfinite(r) and r > 0.0:
+                rate = round(r, 2)
+        except (TypeError, ValueError):
+            rate = None
+    return ex_iso, rate
 
 
 # Period → (yfinance period, yfinance interval, mock-walk candle count, mock-walk seconds-per-candle).
@@ -535,13 +585,12 @@ class YfinanceProvider:
         return items or None
 
     def earnings(self, ticker: str) -> EarningsInfo | None:
-        import datetime
-
         t = ticker.upper().strip()
         try:
             import pandas as pd
 
-            cal = self._yf.Ticker(t).calendar
+            yt = self._yf.Ticker(t)
+            cal = yt.calendar
             if not cal:
                 return None
             dates = cal.get("Earnings Date") or []
@@ -571,10 +620,21 @@ class YfinanceProvider:
                 10: "Q4", 11: "Q4", 12: "Q4",
             }
             eps = cal.get("Earnings Average")
+            # CR030: dividend fields ride on the same object + 6h cache. A slow/
+            # failed `.info` fetch degrades loudly to None dividends rather than
+            # losing the earnings data we already resolved.
+            ex_div: str | None = None
+            div_rate: float | None = None
+            try:
+                ex_div, div_rate = _dividend_fields_from_info(yt.info)
+            except Exception as exc:
+                logger.warn("yfinance_dividend_error", ticker=t, error=str(exc))
             return EarningsInfo(
                 earnings_date=target.strftime("%Y-%m-%d"),
                 quarter=q_map.get(target.month),
                 eps_estimate=float(eps) if eps is not None else None,
+                ex_dividend_date=ex_div,
+                dividend_rate=div_rate,
             )
         except Exception as exc:
             logger.warn("yfinance_earnings_error", ticker=t, error=str(exc))

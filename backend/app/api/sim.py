@@ -508,4 +508,7 @@ async def earnings(
         "earnings_date": info.earnings_date if info else None,
         "quarter": info.quarter if info else None,
         "eps_estimate": info.eps_estimate if info else None,
+        # CR030 — dividend fields; None (chip hidden) for non-payers / no-earnings-window.
+        "ex_dividend_date": info.ex_dividend_date if info else None,
+        "dividend_rate": info.dividend_rate if info else None,
     }

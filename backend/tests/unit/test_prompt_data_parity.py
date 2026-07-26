@@ -255,6 +255,27 @@ INTENTIONALLY_OMITTED: dict[tuple[str, str, str], str] = {
     ("journal", "concierge", "created_at"): "routing index, not analysis (DEF098 spec).",
     ("journal", "concierge", "tags"): "routing index, not analysis.",
     ("journal", "concierge", "agents_involved"): "routing index, not analysis.",
+    # ── earnings (CR030 dividend fields — mobile ticker-detail chip only) ──
+    ("earnings", "room", "ex_dividend_date"): (
+        "CR030 mobile ticker-detail dividend chip, not analyst-prompt data; the Room "
+        "already surfaces dividend YIELD via the fundamentals source, and an ex-date is "
+        "calendar noise in the analyst reasoning prompt."
+    ),
+    ("earnings", "one_on_one", "ex_dividend_date"): (
+        "CR030 mobile ticker-detail dividend chip, not analyst-prompt data; the 1-on-1 "
+        "block already surfaces dividend YIELD via fundamentals — an ex-date is calendar "
+        "noise in the analyst prompt."
+    ),
+    ("earnings", "room", "dividend_rate"): (
+        "CR030 mobile ticker-detail dividend chip, not analyst-prompt data; dividend YIELD "
+        "(not the raw per-share rate) is the analyst-relevant figure and is already rendered "
+        "via the fundamentals source."
+    ),
+    ("earnings", "one_on_one", "dividend_rate"): (
+        "CR030 mobile ticker-detail dividend chip, not analyst-prompt data; dividend YIELD "
+        "(not the raw per-share rate) is the analyst-relevant figure and is already rendered "
+        "via the fundamentals source."
+    ),
 }
 
 # Journal storage/plumbing fields are non-content on BOTH journal surfaces.

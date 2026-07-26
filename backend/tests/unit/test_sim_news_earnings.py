@@ -149,10 +149,16 @@ def test_earnings_returns_date_shape(client: TestClient) -> None:
     body = r.json()
     assert body["ticker"] == "AAPL"
     assert "source" in body
-    assert set(body.keys()) == {"ticker", "source", "earnings_date", "quarter", "eps_estimate"}
+    assert set(body.keys()) == {
+        "ticker", "source", "earnings_date", "quarter", "eps_estimate",
+        "ex_dividend_date", "dividend_rate",
+    }
     assert body["earnings_date"] == "2026-07-25"
     assert body["quarter"] == "Q3"
     assert body["eps_estimate"] == pytest.approx(2.04)
+    # _FAKE_EARNINGS carries no dividend → the new fields default null (chip hidden).
+    assert body["ex_dividend_date"] is None
+    assert body["dividend_rate"] is None
 
 
 def test_earnings_returns_null_fields_when_unavailable(
@@ -165,6 +171,32 @@ def test_earnings_returns_null_fields_when_unavailable(
     assert body["earnings_date"] is None
     assert body["quarter"] is None
     assert body["eps_estimate"] is None
+    assert body["ex_dividend_date"] is None
+    assert body["dividend_rate"] is None
+
+
+def test_earnings_surfaces_dividend_fields_when_present(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """CR030 — a dividend payer's ex-date + rate ride on the earnings response."""
+    monkeypatch.setattr(
+        _md,
+        "_provider",
+        FakeProvider(
+            earnings_info=EarningsInfo(
+                earnings_date="2026-08-01",
+                quarter="Q3",
+                eps_estimate=1.55,
+                ex_dividend_date="2026-09-19",
+                dividend_rate=0.96,
+            )
+        ),
+    )
+    r = client.get("/v1/sim/earnings/AAPL")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["ex_dividend_date"] == "2026-09-19"
+    assert body["dividend_rate"] == pytest.approx(0.96)
 
 
 def test_earnings_ticker_normalized(client: TestClient) -> None:
