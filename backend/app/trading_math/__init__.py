@@ -24,12 +24,15 @@ weight, size→shares), and — opened for the CR054 BOK Wave-1 worked examples 
 `portfolio_stats` (variance/correlation/beta/wᵀΣw, M11), `returns`
 (Sharpe/max-drawdown/CAGR, M12, hand-rolled stdlib — the wider family Sortino/
 Calmar/vol stays on the D1 `empyrical-reloaded` backlog, a dep that needs
-sign-off), and — opened for CR058 — `screening` (Sharia debt/liquidity/income
-ratios + purification, M13). The indicator family stays hand-rolled because
-our RSI is Cutler's, not Wilder's (Decision D1, library_survey.md).
+sign-off), `screening` (opened for CR058 — Sharia debt/liquidity/income
+ratios + purification, M13), and `cost_basis` (opened for CR029-MATH — FIFO
+lot matching for the per-lot cost-basis / realised-P&L display). The indicator
+family stays hand-rolled because our RSI is Cutler's, not Wilder's (Decision
+D1, library_survey.md).
 """
 
 from .bond import bond_price, bond_ytm, macaulay_duration, modified_duration
+from .cost_basis import FifoSellResult, LotClose, OpenLot, fifo_sell
 from .indicators import DEFAULT_RSI_PERIOD, rsi, rsi_tone, sma
 from .option import option_break_even, option_intrinsic_value, option_payoff
 from .portfolio import drawdown_pct, position_pct, shares_for_size, total_value
@@ -124,4 +127,9 @@ __all__ = [
     "sharia_impermissible_income_ratio",
     "sharia_liquidity_ratio",
     "sharia_screen",
+    # FIFO cost-basis lot matching (CR029-MATH)
+    "FifoSellResult",
+    "LotClose",
+    "OpenLot",
+    "fifo_sell",
 ]
