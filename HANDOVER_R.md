@@ -1,23 +1,44 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-07-14 (end of AT:R58 — **closed out the full
-12-agent truthfulness/wiring audit** carried over from AT:R57. Fixed
-**DEF051** (Room's fake $100k/0%-drawdown compliance input — safety-floor-
-relevant), **DEF052** (Market Analyst's fabricated technicals → real
-RSI/trend/volume/support-breakout), **DEF053** (Fundamentals Analyst's
-oversold scope → real valuation multiples/sector/dividends/analyst
-consensus), **DEF054+DEF055** (Bull/Bear Researcher's fabricated Decision
-Journal claim → real ticker-scoped history), **DEF056** (the Room's
-structured Verdict ignored the 12-agent debate entirely — now the PM's own
-debate-informed decision, vetoed by a previously-dead-code safety floor),
-and **CR034** (Room's `forward_catalyst` FOMC date was a frozen "in 11
-days" literal → real 2026 Fed calendar). CR033 superseded by DEF052-055.
-One follow-up, **DEF057** (a pre-existing rng-determinism bug the auditor
-caught while checking DEF056), filed and fixed same-session. **All 7
-Defects + CR034 audited COMPLETE round 1** — zero BLOCKER/MAJOR findings
-across the entire 10-lane batch (CR023/024 included). Everything except
-DEF057 promoted through `alpha-2026-07-14-3`; DEF057 is test-hygiene-only,
-no urgency. Full narrative: [`history/AT_R0058.md`](history/AT_R0058.md).
+**Last updated:** 2026-07-26 (end of **AT:R64** — Architect session under the CR052
+dispatch/audit protocol. Drove **Wave 2 of the 2026-07-26 daily-review delivery plan**:
+laned + spawned + root-re-verified + submitted to independent audit **CR026-BE**
+(sector-concentration enforcement in `safety_floor.py`) and **CR090-BE** (live News/Social
+feed credit surcharge; Saiful chose the surcharge-on-top pricing model). Earlier in the
+session, **CR030-BE** (dividend fields) and **CR029-BE** (FIFO cost-basis lots) shipped
+DIRECT to main. Filed **DEF110** (stop/target hit doesn't close the sim position — Saiful
+ruled it should, + close via Alpaca). Full narrative: [`history/AT_R0064.md`](history/AT_R0064.md).
+
+> ## ⚠️ CURRENT STATE — AT:R64 (2026-07-26) — this block supersedes the stale detail tables below
+>
+> **The "What's on disk" / route / migration / mobile tables further down are R58-era
+> (2026-07-14) and were NOT reconciled this wrap — treat them as historical reference, not
+> current truth.** HANDOVER_R.md went 12 days / ~470 commits without a wrap (R59–R64
+> committed to `main` without running `/handover`), so those tables drifted. Accurate
+> current state:
+>
+> - **Git:** `main` @ `57195e9`, **989 commits**, working tree clean, **8 ahead of origin**
+>   (all clean `AT:architect` commits — a backup push to GitHub was offered but not yet
+>   authorized at wrap). Full backend unit suite **1242 green on main** (`018fdf2` baseline).
+> - **CR052 dispatch/audit protocol is LIVE.** Work is laned in `orchestration/dispatch/lanes/`
+>   (`<ID>.assign.md` Architect-owned + `<ID>.<instance>.md` coder-owned) and gated by the
+>   independent auditor handshake in `orchestration/audit/cr/` (`.architect.md` SUBMITTED →
+>   `.auditor.md` VERDICT). The Architect spawns coders only, **NEVER the auditor** (track-U is
+>   Saiful's self-respawning watcher). Active delivery plan:
+>   [`orchestration/dispatch/DELIVERY_PLAN.md`](orchestration/dispatch/DELIVERY_PLAN.md).
+>   ⚠️ **Lane files are stale as state** — ~15 read READY_FOR_AUDIT/OPEN but actually landed;
+>   trust `git log`, not lane files. ~15 uncleaned worktrees under `.claude/worktrees/`.
+> - **At the audit gate (awaiting track-U verdict — integrate on COMPLETE):**
+>   **CR026-BE** (build `bb398bf` on `lane/CR026.coder.api`, 1262 green, migration `d1e2f3a40023`;
+>   flags: touches coder.room files additively; market-order parity gap) and **CR090-BE**
+>   (build `cd292d3` on `lane/CR090-BE.coder.api`, 1260 green, additive). Both D-5. Their lane
+>   worktrees `coder.api-CR026`/`coder.api-CR090-BE` MUST be kept until integrated.
+> - **Registers are GENERATED (CR081)** — never hand-edit `cr_list.md`/`def_list.md`; edit
+>   `_registry/<ID>.row.md`, `./backend/.venv/bin/python scripts/registers/gen_registers.py
+>   gen cr|def` + `verify`, commit both. Next new IDs: **DEF111 / CR091**.
+> - **Blocked-on-Saiful:** DEF100 (RevenueCat keys — gates DEF099's live RC-alias hop), DEF104
+>   (rotate the live plaintext IMAP/SMTP cred in `support_kb/scripts/ami_support.py`), CR027
+>   (APNs/FCM certs).
 
 Read this file **first** in any new session. It captures **current truth** + the carry-overs. Per-session narratives live in [`history/`](history/) — one file per /handover wrap, newest filename = newest session. The PRD-derived backlog (with delivery status) is at [`docs/initial_specs/10_delivery/project_plan.md`](docs/initial_specs/10_delivery/project_plan.md).
 
@@ -131,13 +152,30 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 
 The slash command reads `HANDOVER_R.md` + `docs/initial_specs/10_delivery/project_plan.md`, runs the configured sanity checks (Alpha health curl), queries the live bug list (currently **0 open**), then enters plan mode asking what to work on.
 
-Session name to use: **AT:R59**. (AT:R58 wrapped here — closed the full
-12-agent truthfulness/wiring audit, DEF051-057 + CR034, all 10 lanes
-audited COMPLETE round 1, zero BLOCKER/MAJOR. ⚠️ AT:R48/R50 ran as parallel
-sessions and never wrapped; AT:R58 itself had CR034+DEF056 land from an
-unannounced parallel window under the same tag; governance track G +
-auditor track U also commit to `main` (AT:G1, AT:U1). A later wrap of any
-parallel session must NOT reset this counter below R59.)
+Session name to use: **AT:R65**. (AT:R64 wrapped here — see the CURRENT STATE block at
+the top of this file. ⚠️ The round counter jumped R58→R64 because R59–R63 committed to
+`main` without wrapping; governance track G + auditor track U also commit (AT:G1, AT:U1).
+A later wrap of any un-wrapped parallel session must NOT reset this counter below R65.)
+
+**CURRENT PRIORITIES (AT:R64 → next session):**
+1. **Check the audit gate first.** `CR026-BE` + `CR090-BE` are SUBMITTED to track-U. Read
+   `orchestration/audit/cr/CR026.auditor.md` + `CR090-BE.auditor.md` — on `VERDICT: COMPLETE`,
+   integrate the lane branch to main + re-verify full suite + flip `DISPATCH: ACCEPTED`; on
+   `AWAITING_FIXES`, the coder fixes + bumps round. Do NOT spawn the auditor.
+2. **Wave 3 of the delivery plan:** CR028 (trailing stop — behind DEF094 which holds `sim.py`
+   @ READY_FOR_AUDIT; integrate DEF094 first) + CR065 (streaks reconciliation — needs a recon
+   pass first). See `orchestration/dispatch/DELIVERY_PLAN.md`.
+3. **Deferred mobile (needs a device-test session):** CR029-MOBILE (per-lot cards), CR030-MOBILE
+   (dividend sub-chip), CR026 donut chart, CR090-MOBILE (upgrade copy). Re-verify each `fromJson`
+   vs live JSON before its own audit. Plus **CR090-ROOM** (coder.room: charge the surcharge +
+   disclosure header's 3rd state — consumes CR090-BE's `LiveDataState` contract) and **DEF110**
+   fix (D-5; core liquidate + a new `alpaca_service.close_position`).
+4. **Housekeeping:** the register flips Saiful greenlit 2026-07-24 (CR007/8/19/20/21/37→done,
+   CR036→started) are still owed; the ~15 stale lane files + worktrees want a cleanup pass;
+   offer the origin backup push. **DEF104 rotating the live cred is independent/anytime.**
+
+*(The numbered "Other priorities" list below is R58-era — CR032/CR021/CR020 etc. — kept as
+historical reference; reconcile against the live registers before acting on any of it.)*
 
 If Alpha is down at session start, `/start-fresh` will surface that and tell you the melehost debug commands.
 
@@ -218,6 +256,7 @@ Pre-CR004 backlog (BL7, BL8, credit-consumption emission, Tier 2 translation run
 
 ### Recent sessions (newest first)
 
+- [AT:R64](history/AT_R0064.md) — Architect / CR052 dispatch. Wave 2 of the 07-26 delivery plan: CR026-BE (sector-cap enforcement) + CR090-BE (live-feed surcharge, Saiful chose surcharge-on-top) built + root-verified + SUBMITTED to track-U; CR030-BE + CR029-BE shipped direct; DEF110 filed (stop/target doesn't close the sim position). ⚠️ HANDOVER was 12 days stale (R59–R63 never wrapped); this wrap re-baselined the marquee state only
 - [AT:R58](history/AT_R0058.md) — closed the full 12-agent truthfulness/wiring audit: DEF051 (fake portfolio/drawdown) → DEF052 (Market Analyst technicals) → DEF053 (Fundamentals valuation) → DEF054/055 (Bull/Bear journal history) → DEF056 (Room verdict now reflects the actual debate) → CR034 (real FOMC date) → DEF057 (rng flakiness, minted from DEF056's audit); all 10 lanes audited COMPLETE round 1, zero BLOCKER/MAJOR; all promoted except DEF057 (test-hygiene only)
 - [AT:R57](history/AT_R0057.md) — News + Social Media analysts made truthful (CR023/CR024); real headlines (Yahoo+Alpha Vantage) + real Reddit sentiment (Adanos, after LunarCrush needed a paid-tier upgrade); audited the rest of the roster → filed DEF051 (fake portfolio/drawdown, safety-floor-relevant) + CR033
 - [AT:R56](history/AT_R0056.md) — implemented CR025 (watchlist day-change badge); session shipped but never wrapped, backfilled at the start of AT:R57
