@@ -68,6 +68,7 @@ from app.services.market_data import (
     get_market_data_provider,
 )
 from app.services.classification_universe import default_classification_universe
+from app.services.sector_allocation import default_sector_map
 from app.services.sharia_universe import default_halal_universe
 
 
@@ -489,6 +490,11 @@ class SimEngine:
                 classification_universe or default_classification_universe()
             ),
             locale_allowed_universe=locale_allowed_universe,
+            # CR026: sector-concentration cap bites the same gate. Resolver reads the
+            # stored snapshot — no request-path socket (CR075/DEF089).
+            holdings=portfolio.holdings,
+            quotes=self.current_marks([h.ticker for h in portfolio.holdings]),
+            sector_map=default_sector_map(),
         )
 
         if not compliance.passed:
@@ -654,6 +660,11 @@ class SimEngine:
                 classification_universe or default_classification_universe()
             ),
             locale_allowed_universe=locale_allowed_universe,
+            # CR026: sector-concentration cap bites the preview gate too, so the
+            # trade ticket's "would this be allowed?" reflects it. No request socket.
+            holdings=portfolio.holdings,
+            quotes=self.current_marks([h.ticker for h in portfolio.holdings]),
+            sector_map=default_sector_map(),
         )
 
         notional = fill_price * quantity

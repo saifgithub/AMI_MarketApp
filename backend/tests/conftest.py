@@ -71,6 +71,10 @@ def _isolated_db(tmp_path: _Path) -> None:
     _dc._service = None
     _ac._service = None
     _rep._service = None
+    # CR026: the sector-map provider caches the stored snapshot's ticker→sector map;
+    # clear it so a seeded map from one test doesn't leak into the next.
+    from app.services import sector_allocation as _sec
+    _sec.reset_sector_map_provider(None)
     # Pin tests to the deterministic mock walk regardless of USE_REAL_MARKET_DATA.
     _md.set_market_data_provider(_md.MockWalkProvider())
     _nc.set_alpha_vantage_source(None)

@@ -25,6 +25,7 @@ from app.api.llm import router as llm_router
 from app.api.mandate import router as mandate_router
 from app.api.onboarding import router as onboarding_router
 from app.api.one_on_one import router as one_on_one_router
+from app.api.portfolio import router as portfolio_router  # CR026 sector allocation
 from app.api.room import router as room_router
 from app.api.sim import router as sim_router
 from app.api.watchlist import router as watchlist_router
@@ -187,6 +188,7 @@ app.include_router(league_router)
 app.include_router(lessons_router)
 app.include_router(llm_router)
 app.include_router(mandate_router)
+app.include_router(portfolio_router)
 app.include_router(room_router)
 app.include_router(sim_router)
 app.include_router(feedback_router)

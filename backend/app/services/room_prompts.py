@@ -168,6 +168,7 @@ def build_room_messages(
     plan: Any = None,
     trade_proposal: dict[str, Any] | None = None,
     halal_universe: Any = None,
+    sector_weights: dict[str, float] | None = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [user_message]) for one agent's Room turn.
 
@@ -246,6 +247,13 @@ def build_room_messages(
             f"bigger number is both wrong and misleading.\n"
         )
 
+    # CR026: the PM gatekeeps the trade, so it sees the REAL sector allocation of the
+    # portfolio it approves against — concentration reasoning from data, not a guess.
+    # Gated to the PORTFOLIO_MANAGER (the agent whose verdict the sector cap vetoes).
+    sector_line = ""
+    if agent_id == AgentId.PORTFOLIO_MANAGER:
+        sector_line = _format_sector_allocation(sector_weights) + "\n"
+
     room_addition = (
         f"\n\n─── CONVENE THE ROOM — {phase} PHASE ───\n"
         f"Ticker: {ticker}\n"
@@ -256,6 +264,7 @@ def build_room_messages(
         f"{drawdown_line}\n"
         f"{long_only_line}"
         f"- locale: {mandate.locale}\n"
+        f"{sector_line}"
         f"{researcher_cap_note}"
         f"\n"
         f"Transcript so far:\n{transcript_text}\n"
@@ -276,6 +285,20 @@ def build_room_messages(
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────
+
+
+def _format_sector_allocation(sector_weights: dict[str, float] | None) -> str:
+    """The PM's current sector-allocation line (CR026). Real weights, not silence —
+    an empty portfolio says so explicitly rather than omitting the line."""
+    if not sector_weights:
+        return "- sector allocation: no open positions yet (0% in every sector)."
+    parts = ", ".join(
+        f"{sec} {weight * 100:.0f}%"
+        for sec, weight in sorted(
+            sector_weights.items(), key=lambda kv: kv[1], reverse=True
+        )
+    )
+    return f"- current sector allocation (of invested value): {parts}."
 
 
 def _format_profile(profile: dict[str, Any]) -> str:
