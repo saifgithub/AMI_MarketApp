@@ -69,4 +69,10 @@ tag `(AT:coder.api CR090)`.
 
 ASSIGNED: coder.api round 1
 
-DISPATCH: OPEN
+DISPATCH: ACCEPTED
+
+## Integrated (AT:R65, 2026-07-27)
+
+Track-U VERDICT: COMPLETE (round 1), zero findings. Merged `cd292d3` to `main` @ `847d09c`,
+re-verified independently post-merge (1260/1260, exit 0). CR090-ROOM + CR090-MOBILE remain
+deferred, consuming this contract.
