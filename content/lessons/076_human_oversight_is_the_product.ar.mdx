@@ -11,7 +11,7 @@ topic: "human_oversight"
 prerequisites: ["072_what_ami_can_do_for_you", "073_what_ami_cannot_do", "074_ai_hallucinations_and_amis_safety_floor", "075_the_risk_of_overreliance"]
 tags: ["oversight", "ceo", "advisory_only", "mandate", "decision"]
 agent_callouts: ["concierge"]
-locale_versions: ["en", "ar"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
@@ -26,7 +26,7 @@ You convene the Room on JPM. The <Term id="ami_verdict" /> comes back:
 
 > **BUY JPM · size 4% · entry $218.40 · stop $208 (-4.8%) · target $238 (+9.0%) · horizon 6–8 weeks · confidence 0.66**
 >
-> *PM compliance: PASS. Within max_position_pct 5, within max_drawdown_pct 20, no exclusions triggered.*
+> *PM compliance: PASS. Within risk_score 4's 4.5% single-name cap, within max_drawdown_pct 20, no exclusions triggered.*
 
 Three things happen next, and all three are yours:
 
@@ -45,32 +45,32 @@ The trap is the language of automation seducing you into outsourcing the decisio
 ## Quiz
 
 <Quiz
-  question="أظهرت مراجعة الامتثال من مدير المحفظة (PM) على حكم محاكي نتيجة «موافق» (PASS). ماذا يخبرك مدير المحفظة فعلياً؟"
+  question="يعود فحص الامتثال الخاص بمدير المحفظة على حكم محاكى إلى نتيجة «مقبول». ماذا يخبرك مدير المحفظة فعلياً؟"
   options={[
-    "تم وضع الصفقة في المحاكاة وهي الآن حية",
+    "تم وضع الصفقة في بيئة المحاكاة وهي الآن حية",
     "تضمن AMI ألا تتجاوز الصفقة حد الخسارة الأقصى (max_drawdown_pct)",
     "وافقت AMI على الصفقة ويجب عليك تنفيذها",
-    "داخل سيناريو التدريب، تقع الصفقة المقترحة ضمن الحدود الصارمة لمندوبيك — ولا شيء أكثر. الهدف من المحاكاة هو تقييمك أنت لما يعنيه ذلك"
+    "في سياق التدريب، تقع الصفقة المقترحة ضمن الحدود الصارمة لولاية المهام الخاصة بك — ولا يوجد أكثر من ذلك. جوهر المحاكي هو تقييمك لمعنى ذلك"
   ]}
   answer={3}
-  explanation="«موافق» (PASS) هو إشارة تعني «هذا يتوافق مع إطار المخاطر المحدد لديك داخل سيناريو التدريب»، وليس تعليمات ولا نصيحة استثمارية. كما أنه ليس ضماناً ضد الخسارة — فقد تنزلق نقطة الإيقاف في المحاكاة، ويحمي حد المندوب شكل المحفظة وليس نتيجة الصفقة. الإجابة الخاطئة الأكثر إغراءً هي ضمان الخسارة — اقرأ كلمات مدير المحفظة بعناية: إنها تتحدث عن الامتثال، وليس عن النتيجة."
+  explanation="نتيجة «مقبول» هي إشارة تعني «هذا يتوافق مع إطار المخاطر المحدد لديك داخل سيناريو التدريب»، وليست أمراً ولا نصيحة استثمارية. كما أنها ليست ضماناً ضد الخسارة — فقد تنزلق نقطة التوقف في المحاكاة، ويحمي حد الولاية شكل المحفظة وليس نتيجة الصفقة. الإجابة الخاطئة الأكثر إغراءً هي ضمان الخسارة — اقرأ كلمات مدير المحفظة بعناية: فهي تشير إلى الامتثال، وليس إلى النتيجة."
 />
 
 <Quiz
-  question="يقول مستخدم: «أخبرتني AMI بشراء NVDA عند 142 دولاراً والآن أنا خاسر 6%. من كان هذا القرار؟»"
+  question="يقول مستخدم: «أخبرتني AMI بشراء أسهم NVDA عند 142 دولاراً والآن أنا خاسر بنسبة 6%. من كان هذا القرار؟»"
   options={[
-    "قرار مدير المحفظة (PM)، لأنه أصدر نتيجة «موافق» (PASS)",
-    "قرار المستخدم — AMI هي محاكي تدريب وليس مستشاراً مرخصاً؛ أحكامها المحاكية هي أدوات تدريبية لتقييم المستخدم، وليست أبداً تعليمات باتباعها. لا تنفذ AMI ولا يمكنها التنفيذ",
+    "قرار مدير المحفظة، لأنه أصدر نتيجة «مقبول»",
+    "قرار المستخدم — AMI محاكي تدريبي وليس مستشاراً مرخصاً؛ أحكامها المحاكية هي أدوات تدريبية لتقييم المستخدم، وليست أبداً أوامر باتباعها. لا تنفذ AMI ولا يمكنها ذلك",
     "قرار AMI — لأن الحكم المحاكي قال «شراء»",
-    "مشترك — أنتج نقاش الوكلاء نقطة الدخول، لذا المسؤولية مقسمة"
+    "مشترك — أنتج نقاش الوكالات نقطة الدخول، لذا المسؤولية مقسمة"
   ]}
   answer={1}
-  explanation="AMI هي محاكي تدريب وليس مستشاراً. كل إجراء يتخذه المستخدم خارج التطبيق هو قراره الخاص؛ أحكام AMI المحاكية، ونتائج «موافق» (PASS)، وأرقام الثقة هي أدوات تدريبية. الإجابة الخاطئة الأكثر إغراءً هي «مشترك» لأنها تبدو عادلة — لكن المسؤولية المشتركة تتطلب وكالة مشتركة، وAMI لا تملك وكالة تنفيذية وليست مرخصة لتوجيه واحدة."
+  explanation="AMI محاكي تدريبي وليس مستشاراً. كل إجراء يتخذه المستخدم خارج التطبيق هو قراره الخاص؛ نتائج «مقبول» وأرقام الثقة وأحكام AMI المحاكية هي أدوات تدريبية. الإجابة الخاطئة الأكثر إغراءً هي «مشترك» لأنها تبدو عادلة — لكن المسؤولية المشتركة تتطلب وكالة مشتركة، وAMI لا تملك وكالة تنفيذية وليست مرخصة لتوجيهها."
 />
 
 ## Try it
 
-Open the **Mandate editor** and change one field — say, `max_position_pct` from 5 to 3. Then convene the Room on a ticker you've recently considered. Watch the PM's recommended size move accordingly. Then *reject* the Verdict in the Decision Journal and write one sentence of why. You've just exercised the only authority that actually moves anything in this app — yours.
+Open the **Mandate editor** and change one field — say, `risk_score` from 4 to 2. Then convene the Room on a ticker you've recently considered. Watch the PM's recommended size move accordingly. Then *reject* the Verdict in the Decision Journal and write one sentence of why. You've just exercised the only authority that actually moves anything in this app — yours.
 
 ## Takeaway
 
