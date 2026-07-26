@@ -43,6 +43,12 @@ Concrete retirement (Saiful's directive, 2026-07-27):
    is user-global (shared across every project); baking a `git commit` into it would
    change behaviour in non-git repos and other projects. The commit is an AMI-Trade
    convention in CLAUDE.md instead.
+   - **Per-track selection (refined after Saiful flagged "newest ≠ relevant").** The
+     archive folder interleaves *every* track's sessions, keyed by opaque session-id, so
+     "read the newest file" returns some other track's memo. Instead the RESTORE convention
+     also `cp`s the memo to `.deliveryos/checkpoint_history/LATEST_<track>.md` (a rolling
+     per-track pointer = what `HANDOVER_<track>.md` was, minus the rewrite tax), and a fresh
+     session reads `LATEST_<its-track>.md`. `LATEST_G.md` seeded this session.
 7. **Memory** — record the role change (Architect R → Governance G) + this retirement so a
    future session doesn't resurrect handover.
 
@@ -76,9 +82,10 @@ mechanism is explicitly preserved unedited (the global sm-checkpoint skill).
 - `CLAUDE.md` session-start step no longer tells the session to read a HANDOVER doc; the
   autonomy section names the sm-checkpoint routine as the wrap mechanism.
 - `DISPATCH_PROTOCOL.md` §9 (or a new step) reaps `DISPATCH: ACCEPTED` lane worktrees.
-- `.deliveryos/checkpoint_history/*.md` is trackable (gitignore negation) and this
-  session's checkpoint memo is committed as the first tracked anchor; `memory.sqlite` +
-  `.DS_Store` stay ignored.
+- `.deliveryos/checkpoint_history/*.md` is trackable (gitignore negation); this session's
+  memo is committed and `LATEST_G.md` seeds the per-track cold-start pointer; `memory.sqlite`
+  + `.DS_Store` stay ignored. `CLAUDE.md` step 3 reads `LATEST_<track>.md`, never the newest
+  file.
 - The global sm-checkpoint skill is byte-unchanged.
 - A memory records the R→G role change + the retirement.
 
