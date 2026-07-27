@@ -71,18 +71,24 @@ def build_concierge_messages(
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [chat_history + user_message]) for the Concierge.
 
-    The base prompt already contains the role + DO/DO-NOT rules from
-    `content/agents/concierge.md` plus the mandate overlay. The Floor
-    addition gives the LLM concrete pointers so it stops speaking in
-    abstractions ("I could open a lesson…") and starts naming specifics
-    ("Lesson 003 — Mandate Basics; want me to open it?").
+    CR077 Phase 0 — the prompt is a **static head** followed by a **per-user
+    tail**, in that order, so the head lands as a whole-block prefix-cache
+    hit on the serving vLLM host (block size 2,096 tokens; caching is
+    whole-block only, so anything user-specific this early costs the
+    entire reuse). The head is the 342-lesson catalogue — byte-identical
+    for every user, changing only when a lesson is added. Everything
+    derived from `mandate`, `user_id`, or `recent_journal` (the base
+    prompt's mandate overlay, the mandate one-liner, the journal, the
+    unlocked-agent set, and the per-user unlock paths — DEF068 confirmed
+    `unlock_requirements` is queried per-`user_id`, not global, so it
+    cannot sit in the head) goes in the tail, with the closing
+    instructions last — they only hold ("name ONLY the lessons in that
+    agent's list above") because the catalogue precedes them.
 
     `context_mode` (CR021) selects how the lesson catalogue is presented.
     When None it resolves from `settings.concierge_context_mode`
     (default `full_context`), so the live runner needs no change.
     """
-    base = build_agent_prompt(AgentId.CONCIERGE, mandate, user_id=user_id)
-
     mode_in = context_mode if context_mode is not None else settings.concierge_context_mode
     lesson_block, resolved_mode = _lesson_context_block(available_lessons, mode_in)
     est_tokens = len(lesson_block) // 4
@@ -100,7 +106,15 @@ def build_concierge_messages(
             budget=_CONTEXT_TOKEN_BUDGET,
         )
 
-    floor_addition = (
+    static_head = (
+        "─── FLOOR CONCIERGE — LESSON CATALOGUE (static; identical for every user) ───\n"
+        "Available lessons you can recommend by code, ID + title:\n"
+        f"{lesson_block}\n"
+    )
+
+    base = build_agent_prompt(AgentId.CONCIERGE, mandate, user_id=user_id)
+
+    per_user_tail = (
         "\n\n─── FLOOR CONCIERGE CONTEXT ───\n"
         f"{_mandate_one_liner(mandate)}\n"
         f"\n"
@@ -112,9 +126,6 @@ def build_concierge_messages(
         f"How the user unlocks each agent they don't have yet — these lists are "
         f"exhaustive and authoritative:\n"
         f"{_format_unlock_paths(unlock_requirements)}\n"
-        f"\n"
-        f"Available lessons you can recommend by code, ID + title:\n"
-        f"{lesson_block}\n"
         f"\n"
         "Speak in 1–4 short sentences. Be specific — name the lesson by its "
         "code (\"TECH 12\", \"N&M 22\"), "
@@ -128,7 +139,7 @@ def build_concierge_messages(
         "every lesson that mentions the agent."
     )
 
-    system_prompt = base + floor_addition
+    system_prompt = static_head + "\n\n" + base + per_user_tail
     messages = [ChatMessage(role=h.role, content=h.content) for h in history]
     messages.append(ChatMessage(role="user", content=user_message))
     return system_prompt, messages
