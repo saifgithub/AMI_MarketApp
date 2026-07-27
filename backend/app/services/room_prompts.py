@@ -565,11 +565,21 @@ def _format_profile(profile: dict[str, Any]) -> str:
                   _capital_allocation_line(profile), _analyst_line(profile)):
         if extra:
             lines.append(extra)
-    if profile.get("next_earnings_date") and _is("next_earnings", "live"):
-        # DEF124/D1: render the interval ALONGSIDE the absolute date, never
-        # instead of it — the date is what a user cross-checks, the interval
-        # is what stops the model guessing. Computed in Python
-        # (room_runner.py's `_relative_day_phrase`), never asked of the model.
+    if (
+        profile.get("next_earnings_date")
+        and _is("next_earnings", "live")
+        and profile.get("next_earnings_interval")
+    ):
+        # DEF124/D1/acceptance-6: render the interval ALONGSIDE the absolute
+        # date, never instead of it — the date is what a user cross-checks,
+        # the interval is what stops the model guessing. Computed in Python
+        # (`app.core.time.relative_day_phrase`), never asked of the model.
+        # The interval is required, not optional decoration: an absolute
+        # date with no anchor is exactly the DEF124 bug, so a profile that
+        # somehow carries a live earnings date without its computed interval
+        # (should never happen via `_profile_for_ticker`, but this renderer
+        # makes no assumption about its caller) omits the line entirely
+        # rather than emit an unanchored date.
         lines.append(
             f"Next earnings (LIVE): {profile['next_earnings_date']}"
             + (f" ({profile['next_earnings_quarter']})" if profile.get("next_earnings_quarter") else "")

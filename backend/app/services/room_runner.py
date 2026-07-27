@@ -47,6 +47,7 @@ from sqlalchemy import select
 from app.agents.safety_floor import check_mandate_compliance, enforce_safety_floor
 from app.core.config import settings
 from app.core.logging import logger
+from app.core.time import relative_day_phrase
 from app.db import get_session, init_schema
 from app.db.models import RoomRunRow
 from app.schemas import AgentId, AgentMessage, Mandate
@@ -267,24 +268,6 @@ def _forward_catalyst_text(today: date | None = None) -> str:
         days_out = (upcoming[0] - today).days
         return f"FOMC decision in {days_out} day{'s' if days_out != 1 else ''}"
     return "next FOMC decision date not yet published"
-
-
-def _relative_day_phrase(target: date, today: date) -> str:
-    """Render `target`'s distance from `today` the same way `_forward_catalyst_text`
-    already does for the FOMC date (DEF124) — a bare ISO date gives the model no
-    "today" to subtract from, so it guesses. Both are computed against the same UTC
-    calendar date (D4) — see `_profile_for_ticker`, which threads one `today` through
-    every date-relative field so they can't drift against each other mid-render.
-
-    Past dates are handled explicitly ("N days ago"), not left to go negative —
-    a stale cache returning a lapsed earnings date must not render "in -2 days"."""
-    delta = (target - today).days
-    if delta == 0:
-        return "today"
-    if delta > 0:
-        return f"in {delta} day{'s' if delta != 1 else ''}"
-    days_ago = -delta
-    return f"{days_ago} day{'s' if days_ago != 1 else ''} ago"
 
 
 @dataclass
@@ -513,7 +496,7 @@ def _profile_for_ticker(
             # asked of the model. `date.fromisoformat` matches the
             # `earnings_date=target.strftime("%Y-%m-%d")` shape every
             # MarketDataProvider.earnings() implementation returns.
-            profile["next_earnings_interval"] = _relative_day_phrase(
+            profile["next_earnings_interval"] = relative_day_phrase(
                 date.fromisoformat(earnings.earnings_date), today
             )
             field_state["next_earnings"] = LiveDataState.LIVE.value
