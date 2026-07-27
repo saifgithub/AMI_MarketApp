@@ -5,7 +5,15 @@ PROPOSED-KIND: Defect ×3 (already minted **DEF123 / DEF124 / DEF125** — regis
 re-verify no collision at pickup, IDs move)
 SOURCE: Saiful, 2026-07-27 — *"look at the room that was convened for bigbear.ai. i suspect we had
 hallucinations"*
-TRIAGE: READY-TO-LANE. **DEF123 is a prerequisite for CR098 — sequence it first.**
+TRIAGE: READY-TO-LANE — **DEF124 + DEF125 only.**
+
+> **⚠️ Updated 2026-07-27 — DEF123 is spoken for. Do not lane it separately.**
+> Saiful: *"the architect is working on CR104."* **CR104** (delete the synthetic numeric baseline
+> from the production path) is architect-owned as of today and **DEF123 folds into it** — same
+> function, same renderer, same guard. Laning DEF123 on its own would collide with that work.
+> Treat DEF123's brief as the diagnosis feeding CR104, not as an independent unit of work.
+> The CR098 sequencing note below still holds, with CR104 in DEF123's place:
+> **CR104 (architect) → CR098 rebases on top.**
 
 **Evidence base:** run `1906ccf2-bae9-49c8-a83e-9e82e18ec144` (BBAI, 2026-07-27 14:48:38Z,
 `completed`, 208.8s, tier `mid`, verdict `PASS`), all 12 agents on `vllm` with zero errors, plus
