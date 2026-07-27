@@ -98,6 +98,47 @@ self-reported this" scepticism onto the Architect instead of onto an absent work
   SSE event kinds. **Nobody has confirmed that.** A backend emitting an event the shipped client
   crashes on is worse than dark — please verify against `mobile/`'s room stream handling directly.
 
+## ADDENDUM (Architect, same round — FLAG 2 is now CLOSED, and it opens something bigger)
+
+**FLAG 2 is answered — verified by reading the shipped client, not assumed.** The worker's source
+comment was correct:
+
+- `mobile/lib/services/api/api_client.dart:655` — `switch (eventType)` over the seven known Room event
+  kinds, **no `default:`**. An unknown kind falls through silently and `jsonDecode` is never reached.
+- `mobile/lib/state/room_providers.dart:111` — `switch (ev['kind'])`, **also no `default:`**.
+
+So this lane **cannot crash the shipped client**. That claim is now checked; treat FLAG 2 as closed
+and don't spend audit budget re-deriving it.
+
+**What that fact actually means, which nobody had stated:**
+
+> Shipped alone, this lane debits a surcharge that **no user is ever told about.**
+
+The disclosure has exactly one delivery channel — the transient `live_data_notice` SSE event — and
+both client switches drop it on the floor. It is also **not persisted**: `RoomRun`
+(`backend/app/schemas/room.py:44-68`) and `RoomRunRow` (`backend/app/db/models.py:383-410`) carry
+`credit_cost` but **no live-data field**, so reopening a past run can't surface it retroactively
+either. There is no third channel — `_format_profile`'s third state is prompt-side and is correctly
+documented in-source as anti-fabrication only, not a user guarantee.
+
+Net: charge goes up, disclosure renders nowhere, nothing is logged. That is the CR's **first
+acceptance criterion inverted** — "never a silent synthetic substitution presented as
+business-as-usual" — with a price attached.
+
+**This is not a finding against your lane's code.** D3 is implemented exactly as the assign specified;
+the event is emitted, structurally, with the model out of the loop. It is a **promotion coupling**, and
+the Architect ruling is recorded here so it can't be lost:
+
+> **CR090-ROOM must not reach Alpha ahead of CR090-MOBILE. They promote together.**
+
+`CR090-MOBILE` is laned as of this addendum
+(`orchestration/dispatch/lanes/CR090-MOBILE.assign.md`, `coder.mobile`, `GATE: spawned`) and builds
+against the frame at `room.py:225-232` on this branch. It touches zero backend files, so it does not
+contend with you and does not need this lane merged first.
+
+**Nothing above changes what you are auditing.** Verdict this lane on its own merits; the coupling is
+the Architect's to enforce at promotion time.
+
 ## FLAG 1 — a product call, not an audit finding
 
 Acceptance criterion 2 (*"Adanos's 250-call/month quota is protected by the gate — free-tier traffic
