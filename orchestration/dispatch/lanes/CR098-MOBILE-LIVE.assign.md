@@ -15,6 +15,15 @@ CR098-ROOM died on its budget **twice** as a single 14-criteria lane. The fix is
 it is a seam. This lane is **everything that renders while the run is streaming**; its sibling is
 **the terminal verdict card**. Different files, different failure modes, independently shippable.
 
+## ⚠️ The contract is NOT on the wire yet — CR098-ROOM round 1 audit, MAJOR 1
+
+Track U (2026-07-27) found that `agent_withheld` **is emitted by the runner but has no branch in
+`room.py`'s SSE serialiser**, so it never reaches a client at all. CR098-ROOM round 2 fixes that.
+
+This is why the DEPENDS-ON above is hard, not advisory: until that lands, there is nothing for this
+lane to parse. **Confirm the event is actually on the wire before building against it** — and if it
+is not, stop and say so rather than writing a parser for an event that never arrives.
+
 ## The contract — already on the backend, do not re-derive it
 
 Lifted verbatim from `orchestration/dispatch/lanes/CR098-ROOM.coder.room.md` §"Event/field shapes
