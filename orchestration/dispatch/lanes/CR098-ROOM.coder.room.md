@@ -1,5 +1,86 @@
-<!-- dispatch hand-off — coder.room, CR098-ROOM round 1 -->
-# CR098-ROOM — coder.room hand-off (round 1, PARTIAL)
+<!-- dispatch hand-off — coder.room, CR098-ROOM round 2 -->
+# CR098-ROOM — coder.room hand-off (round 2, PARTIAL — closer, still not audit-ready)
+
+## Round 2 update (this session, budget-capped)
+
+Ran the full suite for the first time this lane (round 1 never ran it): **1338 baseline
+green on `main`, unchanged on round 1's mechanism commit** — no regressions. Then, in D5
+priority order:
+
+1. **Found and fixed a real acceptance #13 violation**: `_format_profile`'s three
+   withheld-domain declared lines said `"...not included in this session (upgrade to
+   include the X Analyst)."` — that parenthetical was spliced directly into every agent's
+   rendered prompt via `profile_block` (room_prompts.py:290). The non-negotiable is
+   explicit: no "upgrade" in any prompt. Stripped the CTA from all three lines
+   (market/news/social); they now read as a bare factual declaration. The CTA belongs in
+   app chrome (coder.mobile), never agent voice. `RoomEvent(reason="upgrade")` is
+   unaffected — that's structural event metadata per the spec's own scope item 3, not
+   agent-authored prose.
+2. **New test file** `backend/tests/unit/test_cr098_room_analyst_pullback.py` — 21 tests,
+   all proven by execution (not by reading):
+   - #3/#4 resolver matrix + `next_step` (clock-injected thresholds)
+   - Fundamentals structurally unwithholdable; negative threshold fails boot (CR040)
+   - #2 no-op proof (practical form — see caveat below)
+   - #10 NO_VERDICT: **proved the PM LLM turn is never even called** when Market is
+     withheld, using a gateway that would answer a well-formed APPROVE block if reached.
+     Strongest available proof the code path decides, not the prompt (CR038).
+   - #6 fact-sheet stripping: exact declared-line string asserted, synthetic RSI/
+     range/volume/catalyst/sentiment proven absent from the rendered block
+   - #13 (+ the fix above): withheld declared lines and the NO_VERDICT fixed copy
+     asserted free of "upgrade"/plan names/pricing
+   - #5 fetch gating: `resolve_social_feed`/`resolve_news_feed`/`compute_technicals`
+     proven never invoked for a withheld analyst (raise-if-called stubs); Fundamentals
+     fetch proven to always run
+   - D2 (assign) money test: aged FLOOR_PASS user with Social withheld debited strictly
+     less than the same-starting-balance present user, amount == `base +
+     live_data_surcharge(feeds actually fetched)`
+   - Safety-floor regression (#7/#12): `enforce_safety_floor`'s signature carries no
+     roster/withheld parameter at all — structurally roster-independent; a NO_VERDICT
+     input passed through it is a verbatim no-op (defensive; the live path never calls it
+     for NO_VERDICT at all — see the design note below)
+   - #8 `opinions_not_included` deterministic from roster, present in `model_dump`
+3. **Scope item 7** — softened "the 4 Analysts" in `bull_researcher.md:16`,
+   `bear_researcher.md:16`, `research_manager.md:18`, and `room_runner.py:6`'s docstring.
+4. **Scope item 9** — `agent_data_blueprint.md` Room section now notes the roster is
+   plan-and-tenure-dependent, Fundamentals is the unwithholdable floor, Market-withheld
+   terminates in NO_VERDICT.
+5. **Register row** — `CR098.row.md` moved `proposed` → `started` (round 1+2 landed real
+   mechanism + tests, but this is explicitly NOT a READY_FOR_AUDIT claim).
+   `gen_registers.py gen cr` run, `verify all` passes (CR 97 rows, DEF 120 rows, both
+   identical to source).
+
+Final suite run this round: **1359 passed** (1338 baseline + 21 new), foreground, from
+this worktree.
+
+### What's still NOT done — this round ran out of budget before these
+
+- **#9 CR040 compose parity** — not walked explicitly against
+  `test_config_compose_parity.py`. The full suite is green, which is *consistent with*
+  the three `.env` ints being correctly forwarded (round 1 claims they are, in
+  `docker-compose.yml`), but I did not open that test file and confirm it exercises all
+  three new keys by name.
+- **#11 contradiction guard** — still N/A by the settled design (see below), not
+  independently re-verified this round.
+- **#14 live smoke** — not run. Requires a live Alpha environment; this lane only ran the
+  unit suite from the Mac worktree.
+- **D6 / DEF116 rebase** — not done. DEF116 was `IN_AUDIT` at assign time; not checked
+  this round whether it landed on `main` yet. If it has, round 3 must rebase and run
+  `test_no_blocking_io_in_async_routes.py` per the assign's D6.
+- Live smoke acceptance #14's specific claim ("Adanos not hit, no OHLCV pull") is proven
+  at the `_resolve_and_charge_feeds`/`_profile_for_ticker` unit level (this round's new
+  #5 tests) but not via an actual live-provider integration run.
+
+### Deliberate design simplification — UNCHANGED, confirmed by round 1 + architect
+
+Per the assign: **KEEP the fixed-copy `_assemble_no_verdict`**, do not build the
+narrow-prompt + post-hoc contradiction-check version. This round's #10 test (PM turn
+proven never called) is the strongest possible evidence this holds structurally. Cost,
+recorded honestly: the PM's NO_VERDICT beat is always the identical words, never a live
+narration of that session's specific fundamentals debate.
+
+---
+
+# Round 1 hand-off (superseded above, kept for history)
 
 ## Session constraint — read this first
 
@@ -161,7 +242,77 @@ architect: keep as-is (cheaper, structurally safer) or build the narrow-prompt
 
 ---
 
-STATUS: NOT READY — round 1 stopped on budget before the suite ran or any
-acceptance criterion was proved by execution. Do not treat this as
-READY_FOR_AUDIT; hand to round 2 (fresh budget) to verify + finish scope items
-7/9 + tests + register row.
+STATUS: NOT READY (round 1 mark, superseded)
+
+---
+
+STATUS: NOT READY — round 2 closed the suite-run gap, fixed a real acceptance
+#13 violation, and landed 21 executed tests plus scope items 7/9/register.
+Remaining before READY_FOR_AUDIT: #9 explicit compose-parity walk, #14 live
+smoke, and the D6/DEF116 rebase check. Budget-capped again — do not treat this
+as READY_FOR_AUDIT; hand to round 3.
+
+---
+
+# Architect verification + submission (AT:R65, 2026-07-27)
+
+Round 2 also died on the $5 cap, with the hand-off above **uncommitted in the worktree**. The
+Architect committed it as found and closed the remaining gaps rather than spending a third worker
+round on work that was Architect verification anyway.
+
+**Every number below was re-measured by the Architect, not relayed from the coder.**
+
+## Re-measured
+
+| Check | Result |
+|---|---|
+| Full suite, worktree, root venv, foreground | **1359 passed**, 178s — exactly `1338 baseline + 21 new`. Matches the coder's claim precisely. |
+| New test file alone | 21 passed |
+
+## Gap list from round 2 — resolved
+
+- **#9 compose parity — CLOSED, and it is proved by the green suite, not by inspection.**
+  `test_config_compose_parity.py` is **generic**: it walks *every* `Settings` field and requires
+  each to be either forwarded in `docker-compose.yml`'s `api-alpha` block or listed in
+  `_NOT_FORWARDED` with a stated reason. Verified the three keys are forwarded
+  (`docker-compose.yml:129-131`, `ROOM_PULLBACK_DAYS_{SOCIAL,NEWS,MARKET}`) and that
+  `room_pullback` appears **zero** times in the waiver dict. So a green suite is a positive proof of
+  parity here, not merely consistent with it. DEF038/DEF063 class closed.
+- **#11 contradiction guard — N/A by settled Architect decision**, not an outstanding gap. The
+  fixed-copy `_assemble_no_verdict` means no LLM narration exists that *could* contradict.
+- **#14 live smoke — untestable from here by design.** Mac is a pure editor. Post-promote check.
+- **D6 / DEF116 rebase — nothing to rebase yet.** DEF116 is still `IN_AUDIT`; it has not landed on
+  `main`. When it does, whoever integrates runs `test_no_blocking_io_in_async_routes.py` per D6.
+
+## Mutation-verified by the Architect
+
+Acceptance #10 is the safety-critical one, so it was proved rather than read. Disabling the
+short-circuit at `room_runner.py:2075` (`if False and AgentId.MARKET_ANALYST in ctx.withheld:`)
+made the run reach the PM LLM turn and emit **`room_completed action=APPROVE`** — precisely the
+DEF059-class inversion the criterion exists to prevent — and **exactly one** test went red:
+`test_no_verdict_never_reaches_llm_pm_turn`. Reverted; 21/21 green again. The guard is
+load-bearing and precisely targeted.
+
+Also confirmed acceptance #13 directly: `room_prompts.py` contains **no** occurrence of
+`upgrade` / plan names / pricing.
+
+## Round 2's own catch, worth recording
+
+Round 2 found a **real acceptance #13 violation that round 1 had shipped into the branch**:
+`_format_profile`'s three withheld-domain declared lines carried
+`"(upgrade to include the X Analyst)"`, spliced into **every agent's rendered prompt** via
+`profile_block`. That is the "no agent voice ever sells" non-negotiable, broken in agent voice
+itself. Fixed to a bare factual declaration; the CTA stays app chrome. `RoomEvent(reason="upgrade")`
+is untouched — structural event metadata, not agent-authored prose.
+
+## Not verified — stated plainly
+
+- **Acceptance #14 live smoke.** Untestable from the Mac; post-promote.
+- **No rebase onto DEF116** has happened (it has not landed).
+- The Architect mutation-tested **#10 only**. The other 20 tests were not individually
+  mutation-probed — that is the audit's job.
+- Round 1's gap items 9 (`NO_VERDICT` opens no journal/simulated position) and 11
+  (`_compute_agent_text`/`_speak_one_agent` signatures) were argued sound by the coder and are
+  consistent with a green suite, but neither was independently proven.
+
+STATUS: READY_FOR_AUDIT (round 1)
