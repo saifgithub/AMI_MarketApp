@@ -776,6 +776,35 @@
         "description": "DEF073: retry button on the friendly server-error card; re-runs the Room convene."
     },
 
+    "roomLiveDataNoticeTitle": "Live data",
+    "@roomLiveDataNoticeTitle": {
+        "description": "CR090: title of the card disclosing this run's News/Social live-data state (live / needs credits / unavailable)."
+    },
+    "roomLiveDataFeedLive": "{feed}: live feed used.",
+    "@roomLiveDataFeedLive": {
+        "description": "CR090: one feed's status line when AMI used the real live feed and the user paid the surcharge for it.",
+        "placeholders": {"feed": {"type": "String"}}
+    },
+    "roomLiveDataFeedWithheld": "{feed}: live data available — needs credits.",
+    "@roomLiveDataFeedWithheld": {
+        "description": "CR090 (D3): one feed's status line when live data exists but the user didn't pay for it. Pairs with the upgrade CTA — never rendered the same as 'unavailable'.",
+        "placeholders": {"feed": {"type": "String"}}
+    },
+    "roomLiveDataFeedUnavailable": "{feed}: live data unavailable right now.",
+    "@roomLiveDataFeedUnavailable": {
+        "description": "CR090 (D3): one feed's status line when nobody has this data right now. Plain statement of fact — no CTA, no upsell.",
+        "placeholders": {"feed": {"type": "String"}}
+    },
+    "roomLiveDataSurchargeCharged": "Live news + social cost {surcharge} extra credits this run.",
+    "@roomLiveDataSurchargeCharged": {
+        "description": "CR090 (D5): the surcharge actually debited, rendered exactly as the backend reported it — never recomputed client-side. Shown only when at least one feed was live.",
+        "placeholders": {"surcharge": {"type": "int"}}
+    },
+    "roomLiveDataUpgradeCta": "UPGRADE FOR LIVE DATA",
+    "@roomLiveDataUpgradeCta": {
+        "description": "CR090 (D3): upgrade CTA shown only when a feed is withheld_paid. Opens the RC paywall sheet. Never shown for unavailable feeds."
+    },
+
     "upgradeSheetTitle": "Upgrade your desk",
     "@upgradeSheetTitle": {
         "description": "CR084 paywall heading. Shown at the hard credit wall and from Settings. 'Desk' = the user's analyst team workspace."
