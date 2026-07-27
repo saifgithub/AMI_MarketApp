@@ -119,6 +119,47 @@ Net cash $51296M
 margin and $51.3 billion of net cash** — none of which exists, all of it declared live. VGK is the
 same case.
 
+## Why the synthetic rate is this high (Saiful: *"why are we getting so many synth data?"*)
+
+Three compounding reasons, all measured:
+
+**1. It was born correct.** `5239353` (2026-05-11, "W6: Convene the Room") shipped the rng baseline
+when the Room had **no market data source at all**. A deterministic fake profile was the only way
+12 agents could debate anything. Nothing wrong with that decision at the time.
+
+**2. The first real-data fix was an *overlay*, not a *replacement*.** `4c59f61` (2026-05-15) —
+`fix(bug:85469d8e): overlay live yfinance fundamentals on Room profile` — was a minimal fix to a
+user bug report: add real numbers on top. It never deleted the scaffolding underneath. **Every
+later data integration copied that shape** — technicals (DEF052), news (CR023), social (CR024),
+valuation multiples (DEF053) — because that was the pattern the first one set. The word *overlay*
+in that commit message is the whole defect.
+
+**3. The pre-fill fires on values that are legitimately undefined, not on failures.** This is the
+part that makes the rate structural rather than incidental. Per-ticker breakdown of the 164 tickers
+convened with a live-declared block:
+
+| | Tickers |
+|---|---:|
+| P/E **always** synthetic — every single convene | **28** |
+| P/E sometimes synthetic (genuine transient gaps) | 8 |
+| P/E always live | 128 |
+
+Those 28 are `AMC BBAI CAG CAR CLSK CZR F FCEL HUT INGN MARA NIO OPEN OSCR PLUG RBLX RIOT SEDG
+SNAP SOUN SPCE SRXH TAP TDOC UAA WBD XPEV XRX` — overwhelmingly loss-making names. **A company
+with negative EPS has no trailing P/E; the ratio is mathematically undefined.** yfinance correctly
+returns nothing, and we fill the hole with a random number between 12 and 55.
+
+So the synthetic rate is **not** driven by provider reliability. Total live-fetch failure — the
+case the docstring cites as the justification (*"Yahoo outages don't break a run"*) — is only
+**53 of 895 = 5.9%**, and those are handled honestly (the header correctly says "alpha simulation
+scaffolding"). The other ~21% is a **category error**: we ask for a number that cannot exist, and
+manufacture one when told it doesn't.
+
+The rate therefore tracks **what users convene on**, not uptime. AMI's users pick exactly the
+loss-making growth/EV/meme/crypto-miner names in that list, so the more the product is used as
+intended, the more fabricated data it serves. That is why this got worse, not better, as real data
+was added.
+
 ## Why it matters
 
 - **CR040, degrade loudly.** The one mechanism built to keep the Room honest about provenance —
