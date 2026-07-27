@@ -78,6 +78,7 @@ real thing. The less the system knows, the more assured it sounds.
 | **DEF058** | PM verdict unparseable (22% of live runs) | silent PASS; the PM's real decision discarded | one log line |
 | **CR037** | social feed unavailable | 23/32 messages assert invented sentiment with no hedge | none |
 | **CR038** | no macro/Fed feed exists | 62/88 macro citations asserted as fact across all 12 agents | none |
+| **DEF123** | yfinance lacks a field (loss-making name, no `trailingPE`) | `_profile_for_ticker` pre-filled an rng-seeded value BEFORE the live fetch; a partial `dict.update` overlay left it in place while `data_source` flipped to `"yfinance_live"` for the whole profile — 178/842 (21.1%, 36 tickers) live-declared Room prompts carried a fabricated P/E, four agents rationalised it as real | the disclosure header itself, which said LIVE |
 
 **The invariant.** *Degrade loudly, never confidently.* A degraded path must be visible to
 whoever depends on it — the user (honest copy), the operator (a distinct signal, not a log line
@@ -103,6 +104,18 @@ in a stream nobody tails), or the caller (an explicit status).
 - DEF063 → P1's parity test + config-check.
 - CR037 / CR038 → **no guard yet; both undecided.** The measurement that would enforce them
   exists: the CR035 harness transcript audit (unhedged-assertion count over a ≥30-run batch).
+- DEF123 → **`test_no_protected_numeric_field_in_the_unconditional_baseline_dict` +
+  `test_no_rng_derived_value_assigned_to_a_protected_numeric_field`**
+  (`backend/tests/unit/test_cr104_no_fabricated_numeric_reaches_room_prompt.py`, CR104). DEF123 is
+  the instance that proves *labelling* the fabrication doesn't work — it was the sixth attempt at
+  this sub-mechanism (DEF052, DEF063, CR037, CR038 all shipped a better disclosure string around
+  the same rng scaffolding; DEF123's own header said "LIVE" over an rng P/E). CR104 is the first
+  fix that removes the data instead of describing it, and the guard above tests that removal
+  structurally (walks `_profile_for_ticker`'s AST) rather than pinning today's field names — a
+  future field added the same fabricated-but-labelled way turns it red on sight. Re-runnable
+  corpus acceptance check: `backend/scripts/def123_corpus_check.py` (reproduces DEF123's 178/842
+  measurement against melehost's `llm_audit` table; goes to 0 only for prompts generated after the
+  fix reaches Alpha via `/promote-to-alpha`).
   Whichever fix lands should wire that count into an acceptance check.
 
 ---

@@ -73,11 +73,11 @@ def test_recent_range_floor_is_technical_support_not_52w_low(base_mandate):
     technicals block already shows, and must not drop it in favour of the 52-week
     low (profile['low']). The 52-week range stays as explicit context."""
     profile = {
-        "data_source": "live",
         "support": 273.75,   # technical 50-day support (compute_technicals)
         "breakout": 334.99,  # technical 50-day breakout
         "low": 201.5,        # 52-week low (fundamentals)
         "high": 334.99,      # 52-week high
+        "field_state": {"technicals": "live", "week52": "live"},
     }
     sp, _ = build_room_messages(
         agent_id=AgentId.MARKET_ANALYST, mandate=base_mandate, user_id=None,
@@ -85,8 +85,8 @@ def test_recent_range_floor_is_technical_support_not_52w_low(base_mandate):
     )
     # Floor is the technical support, not the 52-week low.
     assert "Recent range: $273.75" in sp
-    # The 52-week low survives, but labelled as 52-week context.
-    assert "52-week: $201.5" in sp
+    # The 52-week low survives, but as its own, separately-sourced line (CR104).
+    assert "52-week range: $201.5" in sp
     # Regression guard: the 52-week low must never be the recent-range floor again.
     assert "Recent range: $201.5" not in sp
 

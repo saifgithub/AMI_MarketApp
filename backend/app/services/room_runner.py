@@ -309,6 +309,23 @@ class _RoomContext:
     roster_next_step: tuple[AgentId, int] | None = None
 
 
+# CR104 — the numeric fundamentals fields tracked per-field in
+# `profile["field_state"]`. Each is LIVE only if `fetch_live_fundamentals`
+# actually returned that key; there is no synthetic fallback.
+_FUNDAMENTALS_NUMERIC_FIELDS = (
+    "base_price", "pe", "rev_growth", "profit_margin", "net_cash",
+)
+# Optional live-only fields with no synthetic counterpart at all. CR104/D8:
+# presence-only gating at the render sites was the round-2 MAJOR-2 defect —
+# each field's `field_state` entry below is what every render site now
+# actually consults.
+_FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
+    "price_to_sales", "ev_to_ebitda", "peg_ratio", "fcf_yield",
+    "dividend_yield", "sector", "industry",
+    "analyst_target_price", "analyst_rating",
+)
+
+
 def _profile_for_ticker(
     ticker: str,
     *,
@@ -318,41 +335,46 @@ def _profile_for_ticker(
 ) -> dict[str, Any]:
     """Ticker-flavoured profile for the Room.
 
-    Builds a deterministic synthetic baseline (so tests stay reproducible
-    and Yahoo outages don't break a run), then — when the backend has
-    real market data enabled — overlays live yfinance fundamentals on top.
-    Narrative fields (catalysts, sentiment, debate framing) remain
-    synthetic; numeric fields the LLM would otherwise hallucinate from
-    training memory (P/E, growth, FCF, range) become live when possible.
+    CR104: numeric facts (base_price, pe, rev_growth, profit_margin,
+    net_cash, and the RSI/trend/range/volume technicals block) are LIVE
+    or ABSENT — no rng-seeded fallback. Before CR104 this function built a
+    complete fake company with `random.Random(seed=ticker)` before any live
+    fetch, then `dict.update`d live data on top; any field yfinance didn't
+    supply silently kept its rng value under a "LIVE from Yahoo Finance"
+    header (DEF123: 178 of 842 live-declared prompts carried a fabricated
+    P/E across 36 tickers). `_format_profile` (room_prompts.py) now refuses
+    to render a numeric field with no recorded provenance — see
+    `profile["field_state"]`, the per-field source-of-truth this function
+    populates below.
 
-    The returned profile carries a `data_source` field so the prompt
-    layer can be honest with the LLM about what's live vs scaffolded.
+    Narrative fields (catalysts, sentiment, debate framing) remain
+    synthetic — that's the CR034 illustrative-scaffolding convention, a
+    separate question from numbers that masquerade as measurements
+    (CR104's scope). They are honestly labelled "(illustrative)" or, for
+    catalyst/sentiment, covered by the news/social liveness markers below.
+
+    The deterministic rng baseline this function used to compute is
+    preserved for tests at
+    `backend/tests/unit/fixtures/synthetic_room_baseline.py` — nothing
+    under `app/` imports it.
     """
     # zlib.crc32, not the builtin hash() — str hashing is randomized per
-    # process (PYTHONHASHSEED) unless pinned, so hash() broke the
-    # "deterministic synthetic baseline" this docstring promises: same
-    # ticker, different process, different synthetic profile (DEF057).
+    # process (PYTHONHASHSEED) unless pinned, so hash() would break
+    # determinism: same ticker, different process, different illustrative
+    # narrative (DEF057). Only feeds the narrative/illustrative fields below
+    # (CR034 convention, explicitly out of CR104's scope) — no numeric fact
+    # is derived from this rng anymore.
     rng = random.Random(zlib.crc32(ticker.upper().encode()))
-    base_price = 50 + rng.uniform(0, 400)
-    pe = rng.uniform(12, 55)
-    rev_growth = rng.randint(2, 40)
-    profit_margin = rng.randint(8, 35)
+    # Per-field provenance (CR104/D1/D4): every numeric fact below is either
+    # overlaid from a live source with its state recorded here as LIVE, or
+    # left unset with its state recorded as UNAVAILABLE/WITHHELD_* —
+    # `_format_profile` (room_prompts.py) renders a field ONLY when
+    # `field_state` says so. This dict is the single provenance mechanism;
+    # there is no second, block-level flag living beside it.
+    field_state: dict[str, str] = {}
     profile: dict[str, Any] = {
         "ticker": ticker.upper(),
-        "base_price": round(base_price, 2),
-        "pe": f"{pe:.1f}",
-        "rev_growth": rev_growth,
-        "profit_margin": profit_margin,
-        "net_cash": rng.randint(-5_000, 80_000),
-        "trend": "trading" if rng.random() > 0.5 else "consolidating",
-        "support": round(base_price * 0.9, 2),
-        "rsi": rng.randint(35, 75),
-        "rsi_tone": "neither overbought nor oversold",
-        "low": round(base_price * 0.95, 2),
-        "high": round(base_price * 1.05, 2),
-        "breakout": round(base_price * 1.03, 2),
-        "volume_tone": "above 20-day average — real participation"
-            if rng.random() > 0.5 else "in-line with 20-day average",
+        "field_state": field_state,
         "catalyst": "Q3 earnings (beat by ~4%)",
         "forward_catalyst": _forward_catalyst_text(),
         "sentiment_tone": "moderately bullish" if rng.random() > 0.3 else "mixed",
@@ -379,29 +401,51 @@ def _profile_for_ticker(
         "upside": 28,
         "downside": 18,
         "synth_lean": "constructive bull",
-        "data_source": "synthetic",
     }
 
-    # Overlay real fundamentals when configured + reachable.
-    if settings.use_real_market_data:
-        live = fetch_live_fundamentals(ticker)
-        if live:
-            profile.update(live)
-            profile["data_source"] = "yfinance_live"
+    # Fundamentals: LIVE per-field, or UNAVAILABLE — never a rng fallback
+    # (CR104/DEF123). `fetch_live_fundamentals` already only returns the
+    # keys yfinance actually supplied (fundamentals.py); a key it omitted
+    # (e.g. no trailingPE for a loss-making name) now stays fully absent
+    # from `profile` instead of surfacing the old rng value.
+    live = fetch_live_fundamentals(ticker) if settings.use_real_market_data else None
+    for f in _FUNDAMENTALS_NUMERIC_FIELDS:
+        if live and f in live:
+            profile[f] = live[f]
+            field_state[f] = LiveDataState.LIVE.value
+        else:
+            field_state[f] = LiveDataState.UNAVAILABLE.value
+    # 52-week range is its own field: `fetch_live_fundamentals` sets low/high
+    # to a ±5% *placeholder* off price alone when the real 52-week fields
+    # aren't available — that placeholder is a derived guess, not a
+    # measurement, so it only earns "live" provenance when
+    # `week52_range_live` says the real fiftyTwoWeek* fields were used.
+    if live and live.get("week52_range_live"):
+        profile["low"] = live["low"]
+        profile["high"] = live["high"]
+        field_state["week52"] = LiveDataState.LIVE.value
+    else:
+        field_state["week52"] = LiveDataState.UNAVAILABLE.value
+    if live:
+        for f in _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS:
+            if f in live:
+                profile[f] = live[f]
+                field_state[f] = LiveDataState.LIVE.value
 
-        # Overlay real technicals (DEF052, AT:R58) — RSI/trend/volume/
-        # support-breakout computed from real yfinance OHLCV, replacing the
-        # rng-based synthetic block. MACD/moving-average-crossover/Bollinger
-        # Bands are deliberately not computed (see technicals.py) — the
-        # prompt no longer claims them.
+    if settings.use_real_market_data:
+        # Technicals (DEF052, AT:R58): RSI/trend/volume/support-breakout
+        # computed from real yfinance OHLCV — one coherent block, so one
+        # state covers all of it (unlike fundamentals, yfinance can't
+        # return "RSI but not trend"). MACD/moving-average-crossover/
+        # Bollinger Bands are deliberately not computed (see
+        # technicals.py) — the prompt no longer claims them.
         #
-        # CR098 — Market withheld (roster pull-back): skip the fetch (bank the
-        # yfinance OHLCV pull, scope item 4) and leave the honest synthetic
-        # scaffolding in place; _format_profile (Amendment 1) reads
-        # technicals_state to strip the fact-sheet lines instead of rendering
-        # a fabricated RSI/range/volume.
+        # CR098 — Market withheld (roster pull-back): skip the fetch (bank
+        # the yfinance OHLCV pull, scope item 4). `_format_profile` reads
+        # field_state["technicals"] to strip the fact-sheet lines instead
+        # of rendering a fabricated RSI/range/volume.
         if AgentId.MARKET_ANALYST in withheld:
-            profile["technicals_state"] = LiveDataState.WITHHELD_TENURE.value
+            field_state["technicals"] = LiveDataState.WITHHELD_TENURE.value
         else:
             technicals = compute_technicals(ticker)
             if technicals:
@@ -411,8 +455,13 @@ def _profile_for_ticker(
                 profile["volume_tone"] = technicals.volume_tone
                 profile["support"] = technicals.support
                 profile["breakout"] = technicals.breakout
-                profile["technicals_source"] = "live"
+                field_state["technicals"] = LiveDataState.LIVE.value
+            else:
+                field_state["technicals"] = LiveDataState.UNAVAILABLE.value
+    else:
+        field_state["technicals"] = LiveDataState.UNAVAILABLE.value
 
+    if settings.use_real_market_data:
         # Real earnings date, when within the 90-day window the provider
         # covers — closes the "earnings calendar" claim with real data
         # instead of just disclaiming it (cheap: fetch/cache already exist
@@ -425,6 +474,7 @@ def _profile_for_ticker(
         if earnings and earnings.earnings_date:
             profile["next_earnings_date"] = earnings.earnings_date
             profile["next_earnings_quarter"] = earnings.quarter
+            field_state["next_earnings"] = LiveDataState.LIVE.value
             # Real forward consensus EPS for the upcoming report (DEF053,
             # AT:R58) — was already fetched here, just never surfaced. A
             # genuine "forward guidance" data point, distinct from the
@@ -462,8 +512,7 @@ def _profile_for_ticker(
         news_items = list(nf.headlines)
         profile["catalyst"] = format_headline(news_items[0])
         profile["news_headlines"] = news_items
-        profile["news_source"] = "live"
-    profile["news_state"] = nf.state.value
+    field_state["news"] = nf.state.value
 
     if social_feed is None:
         # Same legacy / direct-call fallback as news above, off the same
@@ -488,36 +537,51 @@ def _profile_for_ticker(
         profile["mention_trend"] = format_mention_trend(sentiment)
         profile["influencer_take"] = format_community_read(sentiment)
         profile["pattern"] = format_pattern(sentiment)
-        profile["social_source"] = "live"
-    profile["social_state"] = sf.state.value
+    field_state["social"] = sf.state.value
 
-    # Derive narrative strings from whatever numbers ended up in the
-    # profile (real or synthetic) so the prose is consistent with the data.
-    pe_val = float(profile["pe"]) if isinstance(profile["pe"], str) else float(profile["pe"])
-    rev_growth_val = profile["rev_growth"]
-    profit_margin_val = profile["profit_margin"]
-    is_growth = pe_val > 30 and rev_growth_val > 15
-    profile["is_growth"] = is_growth
-    profile["valuation_tone"] = (
-        "fairly priced relative to growth" if is_growth
-        else "trading at a discount to its peers"
+    # Derive narrative strings (the `_TEMPLATES` scripted-demo fallback used
+    # when no real LLM provider is reachable — see module docstring) from
+    # the real numbers ONLY when they're actually live. CR104: pe/rev_growth/
+    # profit_margin are no longer guaranteed present, so this must degrade
+    # loudly (CR040) rather than crash or silently reuse a stale/fake value.
+    fundamentals_live = all(
+        field_state.get(f) == LiveDataState.LIVE.value
+        for f in ("pe", "rev_growth", "profit_margin")
     )
-    profile["bull_thesis"] = (
-        f"{ticker.upper()}'s revenue growth ({rev_growth_val}%) and profit margin "
-        f"({profit_margin_val}%) justify a premium multiple"
-    )
-    profile["bear_risk"] = (
-        f"multiple compression if growth decelerates — {pe_val:.0f}x is sensitive"
-    )
-    # DEF077: the inline `int(pe/(pe+10)*100-50)` was simply wrong — it printed
-    # ~16% for a real 50% drop. A delta-point compression of a P/E is a delta/pe
-    # drawdown (price ∝ multiple, earnings held). Computed in trading_math (M07).
-    downside = multiple_compression_downside(pe_val, 10)
-    profile["bear_quant"] = (
-        f"a 10-point multiple compression = ~{downside:.0f}% downside"
-        if downside is not None
-        else "a multiple compression would pressure the price"
-    )
+    if fundamentals_live:
+        pe_val = float(profile["pe"])
+        rev_growth_val = profile["rev_growth"]
+        profit_margin_val = profile["profit_margin"]
+        is_growth = pe_val > 30 and rev_growth_val > 15
+        profile["is_growth"] = is_growth
+        profile["valuation_tone"] = (
+            "fairly priced relative to growth" if is_growth
+            else "trading at a discount to its peers"
+        )
+        profile["bull_thesis"] = (
+            f"{ticker.upper()}'s revenue growth ({rev_growth_val}%) and profit margin "
+            f"({profit_margin_val}%) justify a premium multiple"
+        )
+        profile["bear_risk"] = (
+            f"multiple compression if growth decelerates — {pe_val:.0f}x is sensitive"
+        )
+        # DEF077: the inline `int(pe/(pe+10)*100-50)` was simply wrong — it printed
+        # ~16% for a real 50% drop. A delta-point compression of a P/E is a delta/pe
+        # drawdown (price ∝ multiple, earnings held). Computed in trading_math (M07).
+        downside = multiple_compression_downside(pe_val, 10)
+        profile["bear_quant"] = (
+            f"a 10-point multiple compression = ~{downside:.0f}% downside"
+            if downside is not None
+            else "a multiple compression would pressure the price"
+        )
+    else:
+        profile["is_growth"] = False
+        profile["valuation_tone"] = "not enough live data to assess"
+        profile["bull_thesis"] = (
+            f"live fundamentals for {ticker.upper()} are not available this session"
+        )
+        profile["bear_risk"] = "live fundamentals are not available to size this risk"
+        profile["bear_quant"] = "insufficient live data for a downside estimate"
     return profile
 
 
@@ -1939,8 +2003,15 @@ class RoomRunner:
         )
 
         profile = ctx.profile
-        # Initialise trader prices off the profile
-        base = profile["base_price"]
+        # Initialise trader prices off the profile. CR104: `base_price` is no
+        # longer guaranteed (live-or-absent, no rng fallback) — this is the
+        # scripted-`_TEMPLATES` demo path (no real LLM reachable), not the
+        # LLM-facing prompt, so it falls back to the market-data provider's
+        # own declared-simulation price (MockWalkProvider, out of CR104's
+        # scope per D3) rather than crashing on a missing key.
+        base = profile.get("base_price")
+        if base is None:
+            base = get_market_data_provider().get_price(ticker.upper().strip()) or 100.0
         ctx.trader_entry = round(base, 2)
         ctx.trader_stop = round(base * 0.94, 2)
         ctx.trader_target = round(base * 1.13, 2)
@@ -1959,6 +2030,16 @@ class RoomRunner:
 
         # Run-context sent into f-string formatters; we merge per-template
         formatter = dict(profile)
+        # CR104: the scripted `_TEMPLATES` fallback (used only when no real
+        # LLM is reachable — never the LLM-facing prompt, which is
+        # `_format_profile`) still names these fields positionally in its
+        # canned sentences. They're no longer guaranteed live, so backfill
+        # an honest "not available" for `.format()` rather than a KeyError.
+        for _field in (
+            "pe", "rev_growth", "profit_margin", "rsi", "rsi_tone", "trend",
+            "support", "breakout", "low", "high", "volume_tone", "base_price",
+        ):
+            formatter.setdefault(_field, "not available")
         formatter.update({
             "ticker": ctx.ticker,
             "risk_score": mandate.risk_score,

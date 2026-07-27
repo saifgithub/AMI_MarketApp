@@ -573,21 +573,23 @@ def test_room_transcript_grows_for_subsequent_agents():
 
 
 def test_profile_synthetic_when_real_market_data_disabled(monkeypatch):
-    """Default test config (use_real_market_data=False) → synthetic profile."""
+    """CR104: default test config (use_real_market_data=False) → every
+    fundamentals field is UNAVAILABLE, not a fabricated rng value."""
     from app.core.config import settings
     from app.services.room_runner import _profile_for_ticker
 
     monkeypatch.setattr(settings, "use_real_market_data", False)
     profile = _profile_for_ticker("AAPL")
-    assert profile["data_source"] == "synthetic"
     assert profile["ticker"] == "AAPL"
-    # Same ticker → same profile (deterministic).
-    assert _profile_for_ticker("AAPL")["pe"] == profile["pe"]
+    for f in ("base_price", "pe", "rev_growth", "profit_margin", "net_cash"):
+        assert profile["field_state"][f] == "unavailable"
+        assert f not in profile
 
 
 def test_profile_overlays_live_fundamentals_when_enabled(monkeypatch):
     """When use_real_market_data is on and yfinance returns, numeric fields
-    are overlaid and narrative strings derive from the real numbers."""
+    are overlaid, marked LIVE per-field, and narrative strings derive from
+    the real numbers."""
     from app.core.config import settings
     from app.services import room_runner
 
@@ -603,10 +605,12 @@ def test_profile_overlays_live_fundamentals_when_enabled(monkeypatch):
             "net_cash": 65_000,
             "low": 165.0,
             "high": 260.0,
+            "week52_range_live": True,
         },
     )
     profile = room_runner._profile_for_ticker("AAPL")
-    assert profile["data_source"] == "yfinance_live"
+    for f in ("base_price", "pe", "rev_growth", "profit_margin", "net_cash", "week52"):
+        assert profile["field_state"][f] == "live"
     assert profile["pe"] == "35.2"
     assert profile["base_price"] == 250.50
     assert profile["rev_growth"] == 8
@@ -616,13 +620,19 @@ def test_profile_overlays_live_fundamentals_when_enabled(monkeypatch):
     assert "35x" in profile["bear_risk"]
 
 
-def test_bear_quant_downside_uses_library_not_the_old_broken_formula():
+def test_bear_quant_downside_uses_library_not_the_old_broken_formula(monkeypatch):
     """DEF077 (audit D-a): the Bear Researcher's '10-pt multiple compression'
     downside must be the correct delta/pe figure (trading_math M07), not the old
     inline int(pe/(pe+10)*100-50) that printed ~16% for a real 50% drop."""
+    from app.core.config import settings
     from app.services import room_runner
     from app.trading_math import multiple_compression_downside
 
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(
+        room_runner, "fetch_live_fundamentals",
+        lambda t: {"pe": "35.2", "rev_growth": 8, "profit_margin": 25},
+    )
     profile = room_runner._profile_for_ticker("AAPL")
     pe = float(profile["pe"])
     expected = multiple_compression_downside(pe, 10)
@@ -772,28 +782,32 @@ def test_def095_verify_and_annotate_geometry_unit():
 
 
 def test_profile_falls_back_to_synthetic_when_yfinance_fails(monkeypatch):
-    """A yfinance failure (network error, unknown ticker) must not break
-    the runner — it falls through to the deterministic synthetic profile."""
+    """CR104: a yfinance failure (network error, unknown ticker) must not
+    break the runner — every fundamentals field is UNAVAILABLE (no numeric
+    fallback), and `bull_thesis` degrades to an honest not-available string
+    rather than crashing."""
     from app.core.config import settings
     from app.services import room_runner
 
     monkeypatch.setattr(settings, "use_real_market_data", True)
     monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
     profile = room_runner._profile_for_ticker("AAPL")
-    assert profile["data_source"] == "synthetic"
-    # All required keys still present.
-    assert "pe" in profile and "bull_thesis" in profile
+    assert profile["field_state"]["pe"] == "unavailable"
+    assert "pe" not in profile
+    assert "bull_thesis" in profile
 
 
 def test_format_profile_labels_data_source():
-    """The profile fact-sheet must declare whether numbers are live."""
+    """The profile fact-sheet must declare whether numbers are live, per
+    field (CR104 — no block-level flag)."""
     from app.services.room_prompts import _format_profile
 
-    live_block = _format_profile({"data_source": "yfinance_live", "pe": "35.0"})
+    live_block = _format_profile({"field_state": {"pe": "live"}, "pe": "35.0"})
     assert "LIVE" in live_block
+    assert "P/E: 35.0" in live_block
 
-    synth_block = _format_profile({"data_source": "synthetic", "pe": "22.0"})
-    assert "alpha simulation scaffolding" in synth_block
+    synth_block = _format_profile({"field_state": {"pe": "unavailable"}})
+    assert "P/E: not available" in synth_block
 
 
 # ── DEF096: the Room's Social Media Analyst gets the live Reddit fields its job names ──
@@ -816,8 +830,7 @@ def _live_social_profile():
         top_subreddits=("wallstreetbets", "stocks"), sample_snippets=(),
     )
     return {
-        "data_source": "synthetic",  # social can be live while fundamentals are not
-        "social_source": "live",
+        "field_state": {"social": "live"},  # social can be live while fundamentals are not
         "sentiment_tone": format_sentiment_tone(s),
         "sentiment_score": format_sentiment_score(s),
         "mention_trend": format_mention_trend(s),
@@ -872,6 +885,10 @@ def test_format_profile_includes_valuation_line_when_live():
     block = _format_profile({
         "data_source": "synthetic", "price_to_sales": "10.3",
         "ev_to_ebitda": "29.1", "peg_ratio": "2.55", "fcf_yield": 2.2,
+        "field_state": {
+            "price_to_sales": "live", "ev_to_ebitda": "live",
+            "peg_ratio": "live", "fcf_yield": "live",
+        },
     })
     assert "Valuation (LIVE): P/S 10.3x, EV/EBITDA 29.1x, PEG 2.55, FCF yield 2.2%" in block
 
@@ -883,11 +900,26 @@ def test_format_profile_omits_valuation_line_when_absent():
     assert "Valuation (LIVE)" not in block
 
 
+def test_format_profile_omits_valuation_line_when_present_but_not_live():
+    """CR104-ROOM round 2 MAJOR 2: presence alone must never earn the
+    (LIVE) label — field_state={} (no provenance recorded for anything)
+    must not render a LIVE-labelled valuation line."""
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "price_to_sales": "10.3",
+        "ev_to_ebitda": "29.1", "peg_ratio": "2.55", "fcf_yield": 2.2,
+        "field_state": {},
+    })
+    assert "Valuation (LIVE)" not in block
+
+
 def test_format_profile_includes_sector_line_when_live():
     from app.services.room_prompts import _format_profile
 
     block = _format_profile({
         "data_source": "synthetic", "sector": "Technology", "industry": "Consumer Electronics",
+        "field_state": {"sector": "live"},
     })
     assert "Sector/industry (LIVE): Technology / Consumer Electronics" in block
 
@@ -899,12 +931,34 @@ def test_format_profile_omits_sector_line_when_absent():
     assert "Sector/industry (LIVE)" not in block
 
 
+def test_format_profile_omits_sector_line_when_present_but_not_live():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "sector": "Technology", "industry": "Consumer Electronics",
+        "field_state": {},
+    })
+    assert "Sector/industry (LIVE)" not in block
+
+
 def test_format_profile_includes_dividend_line_and_disclaims_buybacks():
     from app.services.room_prompts import _format_profile
 
-    block = _format_profile({"data_source": "synthetic", "dividend_yield": 0.34})
+    block = _format_profile({
+        "data_source": "synthetic", "dividend_yield": 0.34,
+        "field_state": {"dividend_yield": "live"},
+    })
     assert "Dividend yield (LIVE): 0.34%" in block
     assert "buybacks/M&A: not available" in block
+
+
+def test_format_profile_omits_dividend_line_when_present_but_not_live():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "dividend_yield": 0.34, "field_state": {},
+    })
+    assert "Dividend yield (LIVE)" not in block
 
 
 def test_format_profile_includes_analyst_line_labeled_not_guidance():
@@ -912,10 +966,21 @@ def test_format_profile_includes_analyst_line_labeled_not_guidance():
 
     block = _format_profile({
         "data_source": "synthetic", "analyst_rating": "strong buy", "analyst_target_price": 315.57,
+        "field_state": {"analyst_rating": "live", "analyst_target_price": "live"},
     })
     assert "strong buy" in block
     assert "$315.57" in block
     assert "NOT company guidance" in block
+
+
+def test_format_profile_omits_analyst_line_when_present_but_not_live():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "analyst_rating": "strong buy", "analyst_target_price": 315.57,
+        "field_state": {},
+    })
+    assert "Analyst consensus (LIVE" not in block
 
 
 def test_format_profile_includes_forward_eps_estimate_when_present():
@@ -924,8 +989,19 @@ def test_format_profile_includes_forward_eps_estimate_when_present():
     block = _format_profile({
         "data_source": "synthetic", "next_earnings_date": "2026-08-01",
         "next_earnings_quarter": "Q3", "next_earnings_eps_estimate": 2.04,
+        "field_state": {"next_earnings": "live"},
     })
     assert "consensus EPS est. $2.04" in block
+
+
+def test_format_profile_omits_earnings_line_when_present_but_not_live():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "next_earnings_date": "2026-08-01",
+        "next_earnings_quarter": "Q3", "field_state": {},
+    })
+    assert "Next earnings (LIVE)" not in block
 
 
 # ── DEF054/DEF055: real Decision Journal history for Bull/Bear Researcher ──
@@ -1035,7 +1111,7 @@ def test_profile_overlays_live_technicals_when_enabled(monkeypatch):
     monkeypatch.setattr(room_runner, "compute_technicals", lambda t: real)
 
     profile = room_runner._profile_for_ticker("AAPL")
-    assert profile["technicals_source"] == "live"
+    assert profile["field_state"]["technicals"] == "live"
     assert profile["rsi"] == 67
     assert profile["rsi_tone"] == "neither overbought nor oversold"
     assert profile["trend"] == "trading"
@@ -1045,8 +1121,9 @@ def test_profile_overlays_live_technicals_when_enabled(monkeypatch):
 
 
 def test_profile_technicals_falls_back_to_synthetic_when_unavailable(monkeypatch):
-    """compute_technicals returning None (short history, provider failure)
-    must not break the run — falls through to the synthetic block."""
+    """CR104: compute_technicals returning None (short history, provider
+    failure) must not break the run — the technicals block is marked
+    UNAVAILABLE, with no rng-based numeric fallback."""
     from app.core.config import settings
     from app.services import room_runner
 
@@ -1063,14 +1140,13 @@ def test_profile_technicals_falls_back_to_synthetic_when_unavailable(monkeypatch
     monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _NoEarningsProvider())
 
     profile = room_runner._profile_for_ticker("AAPL")
-    assert "technicals_source" not in profile
-    # Synthetic fields still present so the rest of the prompt build doesn't break.
-    assert "rsi" in profile and "trend" in profile
+    assert profile["field_state"]["technicals"] == "unavailable"
+    assert "rsi" not in profile and "trend" not in profile
 
 
 def test_profile_technicals_independent_of_fundamentals_overlay(monkeypatch):
-    """A profile can have live fundamentals + synthetic technicals, or vice
-    versa, simultaneously — the two flags must not be coupled."""
+    """A profile can have live fundamentals + unavailable technicals, or vice
+    versa, simultaneously — the two states must not be coupled."""
     from app.core.config import settings
     from app.services import room_runner
     from app.services.technicals import Technicals
@@ -1088,8 +1164,8 @@ def test_profile_technicals_independent_of_fundamentals_overlay(monkeypatch):
     monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: {"pe": "35.2"})
     monkeypatch.setattr(room_runner, "compute_technicals", lambda t: None)
     profile = room_runner._profile_for_ticker("AAPL")
-    assert profile["data_source"] == "yfinance_live"
-    assert "technicals_source" not in profile
+    assert profile["field_state"]["pe"] == "live"
+    assert profile["field_state"]["technicals"] == "unavailable"
 
     real = Technicals(
         rsi=50, rsi_tone="neither overbought nor oversold", trend="consolidating",
@@ -1098,22 +1174,22 @@ def test_profile_technicals_independent_of_fundamentals_overlay(monkeypatch):
     monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
     monkeypatch.setattr(room_runner, "compute_technicals", lambda t: real)
     profile2 = room_runner._profile_for_ticker("AAPL")
-    assert profile2["data_source"] == "synthetic"
-    assert profile2["technicals_source"] == "live"
+    assert profile2["field_state"]["pe"] == "unavailable"
+    assert profile2["field_state"]["technicals"] == "live"
 
 
 def test_format_profile_labels_technicals_source_when_live():
     from app.services.room_prompts import _format_profile
 
-    block = _format_profile({"data_source": "synthetic", "technicals_source": "live"})
+    block = _format_profile({"field_state": {"technicals": "live"}})
     assert "RSI, trend, volume, support/breakout: LIVE" in block
 
 
 def test_format_profile_labels_technicals_source_when_synthetic():
     from app.services.room_prompts import _format_profile
 
-    block = _format_profile({"data_source": "synthetic"})
-    assert "RSI, trend, volume, support/breakout: alpha simulation scaffolding" in block
+    block = _format_profile({"field_state": {"technicals": "unavailable"}})
+    assert "RSI, trend, volume, support/breakout: not available" in block
 
 
 # ── Live news + earnings overlay (CR023, AT:R57) ──────────────────────────
@@ -1139,7 +1215,7 @@ def test_profile_overlays_live_news_when_enabled(monkeypatch):
     monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _NoEarningsProvider())
 
     profile = room_runner._profile_for_ticker("AAPL")
-    assert profile["news_source"] == "live"
+    assert profile["field_state"]["news"] == "live"
     assert "Apple beats on EPS" in profile["catalyst"]
     assert profile["news_headlines"] == [headline]
     # forward_catalyst is real-computed since CR034 (FOMC countdown) — see
@@ -1238,15 +1314,15 @@ def test_profile_news_independent_of_fundamentals_overlay(monkeypatch):
     monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _NoEarningsProvider())
 
     profile = room_runner._profile_for_ticker("AAPL")
-    assert profile["data_source"] == "yfinance_live"
-    assert "news_source" not in profile
+    assert profile["field_state"]["pe"] == "live"
+    assert profile["field_state"]["news"] == "unavailable"
 
     headline = LiveHeadline(title="X", link="", publisher="Y", published_at=1_800_000_000, sentiment=None, source="yfinance")
     monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
     monkeypatch.setattr(room_runner, "fetch_live_news", lambda t: [headline])
     profile2 = room_runner._profile_for_ticker("AAPL")
-    assert profile2["data_source"] == "synthetic"
-    assert profile2["news_source"] == "live"
+    assert profile2["field_state"]["pe"] == "unavailable"
+    assert profile2["field_state"]["news"] == "live"
 
 
 def test_profile_overlays_earnings_when_available(monkeypatch):
@@ -1291,7 +1367,7 @@ def test_profile_earnings_absent_when_provider_errors(monkeypatch):
 def test_format_profile_labels_news_source_when_live():
     from app.services.room_prompts import _format_profile
 
-    block = _format_profile({"data_source": "synthetic", "news_source": "live", "catalyst": "real headline"})
+    block = _format_profile({"field_state": {"news": "live"}, "catalyst": "real headline"})
     assert "Recent catalyst/headline: LIVE" in block
 
 
@@ -1310,7 +1386,7 @@ def test_format_profile_always_flags_forward_catalyst_as_real_fomc_only():
     from app.services.room_prompts import _format_profile
 
     block = _format_profile({
-        "data_source": "yfinance_live", "news_source": "live", "social_source": "live",
+        "field_state": {"pe": "live", "news": "live", "social": "live"},
     })
     assert "macro" not in block.lower()
     assert "fed tone" not in block.lower()
@@ -1320,7 +1396,7 @@ def test_format_profile_always_flags_forward_catalyst_as_real_fomc_only():
 def test_format_profile_labels_social_source_when_live():
     from app.services.room_prompts import _format_profile
 
-    block = _format_profile({"data_source": "synthetic", "social_source": "live"})
+    block = _format_profile({"field_state": {"social": "live"}})
     assert "Retail sentiment/mention/community fields: LIVE" in block
 
 
@@ -1334,7 +1410,10 @@ def test_format_profile_labels_social_source_when_synthetic():
 def test_format_profile_includes_earnings_when_present():
     from app.services.room_prompts import _format_profile
 
-    block = _format_profile({"data_source": "synthetic", "next_earnings_date": "2026-08-01", "next_earnings_quarter": "Q3"})
+    block = _format_profile({
+        "data_source": "synthetic", "next_earnings_date": "2026-08-01", "next_earnings_quarter": "Q3",
+        "field_state": {"next_earnings": "live"},
+    })
     assert "Next earnings (LIVE): 2026-08-01 (Q3)" in block
 
 
@@ -1370,7 +1449,7 @@ def test_profile_overlays_live_sentiment_when_enabled(monkeypatch):
     monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _NoEarningsProvider())
 
     profile = room_runner._profile_for_ticker("AAPL")
-    assert profile["social_source"] == "live"
+    assert profile["field_state"]["social"] == "live"
     assert profile["sentiment_tone"] == "bullish"
     assert "Adanos" in profile["sentiment_score"]
     assert "500" in profile["mention_trend"]
@@ -1420,8 +1499,8 @@ def test_profile_sentiment_independent_of_news_and_fundamentals(monkeypatch):
     monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _NoEarningsProvider())
 
     profile = room_runner._profile_for_ticker("AAPL")
-    assert profile["news_source"] == "live"
-    assert "social_source" not in profile
+    assert profile["field_state"]["news"] == "live"
+    assert profile["field_state"]["social"] == "unavailable"
 
 
 # ── Social Media truthfulness (CR024, AT:R57) ─────────────────────────────
@@ -1480,23 +1559,26 @@ def test_social_media_mention_trend_varies_by_ticker():
 
 
 def test_profile_for_ticker_rng_seed_is_hash_seed_independent():
-    """DEF057 regression: _profile_for_ticker's rng used to seed off the
-    builtin hash(), which is randomized per-process (PYTHONHASHSEED)
-    unless pinned — so the "deterministic synthetic baseline" this
-    function's docstring promises wasn't actually deterministic across
+    """DEF057 regression: the rng used to seed off the builtin hash(), which
+    is randomized per-process (PYTHONHASHSEED) unless pinned — so a
+    "deterministic synthetic baseline" wasn't actually deterministic across
     process restarts, only within one. Pin the expected value against
     zlib.crc32's own (process-independent) output for "AAPL" — a
     hash()-seeded implementation would need a suspiciously exact PYTHONHASHSEED
     to reproduce this by chance, so this pins the fix, not just a same-process
-    consistency check that would have passed before the fix too."""
+    consistency check that would have passed before the fix too.
+
+    CR104 deleted this rng baseline from the production profile — it now
+    lives only in the test fixture (`synthetic_room_baseline.py`), which
+    this test exercises directly rather than `_profile_for_ticker`."""
     import zlib
 
-    from app.services import room_runner
+    from tests.unit.fixtures.synthetic_room_baseline import synthetic_numeric_baseline
 
     assert zlib.crc32(b"AAPL") == 3060094812  # pins crc32's own stability
-    profile = room_runner._profile_for_ticker("AAPL")
-    assert profile["base_price"] == 408.14
-    assert profile["pe"] == "53.3"
+    baseline = synthetic_numeric_baseline("AAPL")
+    assert baseline["base_price"] == 408.14
+    assert baseline["pe"] == "53.3"
 
 
 # ── Timeout fallback ──────────────────────────────────────────────────────

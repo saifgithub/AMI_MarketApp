@@ -234,9 +234,10 @@ def test_charged_surcharge_equals_rendered_live_feeds(
     charged = before - balance_for(user_id)[0]
 
     profile = captured["profile"]
+    field_state = profile.get("field_state") or {}
     n_live_rendered = sum(
-        1 for k in ("news_state", "social_state")
-        if profile.get(k) == LiveDataState.LIVE.value
+        1 for k in ("news", "social")
+        if field_state.get(k) == LiveDataState.LIVE.value
     )
     assert n_live_rendered == expected_live
     # charged == base + surcharge(rendered live feeds): the money identity.
@@ -244,10 +245,10 @@ def test_charged_surcharge_equals_rendered_live_feeds(
     # And the notice reports exactly that surcharge (no phantom billing).
     assert _notice(events)["surcharge_charged"] == live_data_surcharge(n_live_rendered)
     # A LIVE feed carries its real payload; a non-LIVE feed never does.
-    if profile.get("news_state") == "live":
-        assert profile.get("news_source") == "live"
+    if field_state.get("news") == "live":
+        assert "news_headlines" in profile
     else:
-        assert profile.get("news_source") != "live"
+        assert "news_headlines" not in profile
 
 
 # ── D3: the disclosure is structural, LLM entirely out of the loop ─────────
@@ -278,8 +279,11 @@ def test_format_profile_renders_withheld_paid_anti_fabrication_header():
     """The prompt header's third state (anti-fabrication measure). A withheld
     feed must be told apart from an unavailable one and must NOT read as LIVE."""
     profile = {
-        "news_state": "withheld_paid",
-        "social_state": "unavailable",
+        "field_state": {
+            "base_price": "live", "pe": "live", "rev_growth": "live",
+            "profit_margin": "live", "net_cash": "live", "technicals": "live",
+            "news": "withheld_paid", "social": "unavailable",
+        },
         "base_price": 100.0, "pe": "20.0", "rev_growth": 10, "profit_margin": 20,
         "net_cash": 1000, "rsi": 50, "rsi_tone": "neutral", "trend": "flat",
         "support": 90.0, "breakout": 110.0, "low": 80.0, "high": 120.0,
