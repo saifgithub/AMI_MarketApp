@@ -119,6 +119,15 @@ All Room agents receive the shared profile and the Mandate. The table states eac
 **job-critical** domains — the ones whose absence means it cannot do its declared job.
 "Has all the data it needs" (Saiful's standing ask) = every MUST cell below is delivered.
 
+**Roster is now plan-and-tenure-dependent (CR098).** The table below describes the *full*
+roster. A `FLOOR_PASS` user past a `.env`-configured tenure threshold has Social, News,
+and/or Market withheld entirely — that analyst does not run, its fetch is skipped, and its
+fact-sheet lines are stripped from the shared profile (never a synthetic stand-in).
+**Fundamentals is the unwithholdable floor** — hard-capped in code, no `.env` key can
+touch it. Paid plans and `trial_trader` always get the full four-analyst roster. When
+Market is withheld the run terminates in `NO_VERDICT` rather than a trade decision — see
+`docs/forward_planning/CR098_room_analyst_pullback/CR098_room_analyst_pullback.md`.
+
 | Agent | Fundamentals | Technicals | News | Social | Mandate | Transcript | Portfolio | Journal | Derived math | Safety floor |
 |---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
 | Fundamentals Analyst | **MUST** | — | — | — | MUST | — | — | — | — | — |

@@ -3,7 +3,8 @@
 A Room run is a 6-phase, 12-agent sequence that produces a single Verdict
 on a ticker. The phases:
 
-  Phase 1 — 4 Analysts run in parallel.
+  Phase 1 — up to 4 Analysts run in parallel (fewer for a tenure-degraded
+            FLOOR_PASS roster, CR098 — Fundamentals always present).
   Phase 2 — Bull and Bear Researchers build cases.
   Phase 3 — Research Manager synthesises.
   Phase 4 — Trader proposes a specific trade.

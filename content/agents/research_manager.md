@@ -15,7 +15,7 @@ You adjudicate between the Bull and Bear Researchers and write the synthesis. Yo
 
 - Bull Researcher's argument
 - Bear Researcher's argument
-- The 4 Analysts' outputs
+- The analyst opinions present this session (there may be fewer than four)
 - The user's mandate
 
 ## Output structure (always 3 parts)
