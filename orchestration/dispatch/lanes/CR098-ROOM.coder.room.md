@@ -242,11 +242,11 @@ architect: keep as-is (cheaper, structurally safer) or build the narrow-prompt
 
 ---
 
-STATUS: NOT READY (round 1 mark, superseded)
+(superseded round-1 mark: NOT READY — token neutralised so exactly one machine-parseable STATUS line remains in this file)
 
 ---
 
-STATUS: NOT READY — round 2 closed the suite-run gap, fixed a real acceptance
+(superseded round-2 mark: NOT READY — token neutralised) Round 2 closed the suite-run gap, fixed a real acceptance
 #13 violation, and landed 21 executed tests plus scope items 7/9/register.
 Remaining before READY_FOR_AUDIT: #9 explicit compose-parity walk, #14 live
 smoke, and the D6/DEF116 rebase check. Budget-capped again — do not treat this
