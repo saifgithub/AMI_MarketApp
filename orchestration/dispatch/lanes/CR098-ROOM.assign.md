@@ -5,7 +5,7 @@ KIND: code
 INSTANCE: coder.room
 GATE: independent    <!-- Touches the safety-adjacent PM verdict path, adds a new VerdictAction, and changes what a user is charged (see D2). The CR's own Governance section already specifies independent audit. -->
 ACCEPTANCE: docs/forward_planning/CR098_room_analyst_pullback/CR098_room_analyst_pullback.md — **277 lines, 14 numbered acceptance criteria, design fully locked. Read it in full. Do not re-derive the design; it is Saiful-approved and amended twice.**
-DEPENDS-ON: **CR090 (all three sub-lanes) — integrated and closed on `main` today, 2026-07-27.** Branch from `main` @ `8f7eac1` or later. This is not a soft dependency: CR090-ROOM rewrote the exact functions you are about to change.
+DEPENDS-ON: **CR090 (all three sub-lanes) — integrated and closed on `main` today, 2026-07-27.** Branch from `main` @ `b7ac8e9` or later. This is not a soft dependency: CR090-ROOM rewrote the exact functions you are about to change. **DEF116 is IN AUDIT and WILL land under you in `room_runner.py` — see D6 below. Branch from `main`, not from the DEF116 lane.**
 HOT-FILES: `backend/app/services/room_runner.py` (**changed today** — CR090-ROOM merged +658/−34 into it), `backend/app/services/room_prompts.py` (**changed today**), `backend/app/services/entitlements.py`, `backend/app/services/config.py`, `backend/app/schemas/room.py`, `docker-compose.yml`. **`coder.api` is concurrently in `reputation_service.py` (CR091-STREAKS) and `coder.web` in `website_api/` (CR049 r2) — neither overlaps you.**
 
 ## Read this before the spec — two things in the spec are now STALE
@@ -93,6 +93,41 @@ Build the mechanism, prove the no-op, commit that, and only then build the FOMO 
 ordering means a budget death still leaves a safely-promotable increment on the branch — and two of
 the three lane deaths in the last 24h were budget caps, one with the entire lane uncommitted.
 
+**D6 — DEF116 lands under you in `_profile_for_ticker`'s call site. Keep the leaf SYNCHRONOUS.**
+
+DEF116 (blocking I/O, MVP show-stopper) is `IN_AUDIT` right now on `lane/DEF116.coder.api` @
+`d68a028`. It touches `room_runner.py` in exactly one place — the call you are about to gate:
+
+```python
+profile = await asyncio.to_thread(
+    _profile_for_ticker, ticker, news_feed=news_feed, social_feed=social_feed
+)
+ctx = _RoomContext(..., profile=profile)
+```
+
+(previously `profile=_profile_for_ticker(...)` inline in the `_RoomContext(...)` kwargs).
+
+Three consequences, all binding:
+
+1. **Branch from `main`, NOT from the DEF116 lane.** DEF116 is unaudited; basing on it means a
+   round-2 fix there invalidates your base. You rebase after it lands — that ordering was chosen
+   deliberately.
+2. **`_profile_for_ticker` must stay plain `def`, never `async def`.** DEF116's whole design (its
+   D2) is that leaves stay synchronous so the ~15 existing `monkeypatch.setattr` tests keep working
+   from inside a `to_thread` worker. You are adding a *third* gate inside those same news/social
+   branches — do it with plain synchronous code. Making the leaf async silently voids DEF116 and
+   ~15 tests at once.
+3. **At rebase, the `await asyncio.to_thread(...)` wrapper must survive.** A keep-both merge that
+   restores a direct `_profile_for_ticker(...)` call re-opens an MVP show-stopper. DEF116 ships an
+   AST guard (`backend/tests/unit/test_no_blocking_io_in_async_routes.py`) that turns **red** if it
+   does — the Architect proved that by mutation, and the failure names the whole call chain
+   `stream_room -> _profile_for_ticker (via run) (via _pump) (via start_run)`. **Run that one test
+   file after your rebase**; it is the cheapest possible check that you did not undo the fix.
+
+Related and NOT yours: **DEF120** (filed today) covers the same blocking-I/O class in
+`SimEngine`'s per-ticker loops, which reaches `stream_room` via `_build_room_sector_context`. Don't
+touch it; don't be surprised to see it named in guard output.
+
 ---
 
 ## Scope for THIS lane
@@ -159,3 +194,8 @@ the three lane deaths in the last 24h were budget caps, one with the entire lane
    (the debate is the product; the wall lands harder after a full session). Build it that way, flag
    the cost, let Saiful cut it in Phase C.
 3. **DEF098 parity-guard interaction** (see Out of scope) — flag, don't touch.
+
+---
+
+ASSIGNED: coder.room round 1
+DISPATCH: OPEN
