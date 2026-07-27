@@ -743,3 +743,82 @@ def test_respawn_path_gates_feed_fallback_by_roster(monkeypatch):
     assert notice[0].live_data["social"] == "withheld_tenure", (
         "respawn path reported live social for a roster-withheld Social analyst"
     )
+
+
+# ── MAJOR (audit round 2) — nothing pinned the roster -> _profile_for_ticker
+# WIRING. Every acceptance-#6 and fetch-gating test above calls
+# `_profile_for_ticker` / `_format_profile` DIRECTLY with an explicit
+# `withheld=`, so all of them stay green while the production call site drops
+# the argument. The auditor measured exactly that: deleting
+# `withheld=frozenset(roster.withheld)` from the hoisted `to_thread` call in
+# `run()` left the FULL suite at 1365 passed.
+#
+# That call site has now been collided on by three lanes in one day
+# (CR090 threaded feed kwargs through it, DEF116 hoisted it into
+# `asyncio.to_thread`, CR098 added `withheld=`), and git resolved the merge
+# silently wrong in this exact direction. DEF116's AST guard pins the OTHER
+# half of the hazard — losing `to_thread` — and turns red naming
+# `stream_room -> _profile_for_ticker`. This test pins the half the guard
+# cannot see.
+#
+# The production regression it catches: `_profile_for_ticker` receives an
+# empty `withheld`, the Market gate never fires, `compute_technicals` runs the
+# yfinance OHLCV pull the roster gate exists to bank, and `_format_profile`
+# renders real RSI/trend/volume/range for a withheld Market analyst — the
+# Amendment 1 / acceptance #6 rule this CR exists to enforce. On a NO_VERDICT
+# run the output contradicts itself: the PM refuses because "this session ran
+# without a market read" while every agent's prompt carries a full one. ──────
+
+
+def test_run_wiring_passes_withheld_into_profile_for_ticker(monkeypatch):
+    """Drives the real `run()` with a Market-withheld roster and asserts the
+    gate fired THROUGH the wiring, not via a direct call with a hand-supplied
+    `withheld=`. Fails if the production call site stops forwarding the
+    roster, which no other test in this file detects."""
+    def _boom(*a, **k):
+        raise AssertionError(
+            "compute_technicals ran for a roster-withheld Market analyst — "
+            "run() is not forwarding `withheld=` into _profile_for_ticker"
+        )
+    monkeypatch.setattr(room_runner_mod, "compute_technicals", _boom)
+    monkeypatch.setattr(room_runner_mod, "fetch_live_fundamentals", lambda *a, **k: None)
+    monkeypatch.setattr(room_runner_mod.settings, "use_real_market_data", True)
+
+    seen: dict = {}
+    real_profile_for_ticker = room_runner_mod._profile_for_ticker
+
+    def _spy(ticker, **kwargs):
+        profile = real_profile_for_ticker(ticker, **kwargs)
+        seen["withheld"] = kwargs.get("withheld")
+        seen["profile"] = profile
+        return profile
+
+    monkeypatch.setattr(room_runner_mod, "_profile_for_ticker", _spy)
+
+    market_withheld = AnalystRoster(
+        present=(
+            AgentId.FUNDAMENTALS_ANALYST,
+            AgentId.NEWS_ANALYST,
+            AgentId.SOCIAL_MEDIA_ANALYST,
+        ),
+        withheld=(AgentId.MARKET_ANALYST,),
+        next_step=None,
+    )
+
+    runner = RoomRunner()
+    mandate = hydrate_coach_mandate({"plan": "floor_pass", "risk_score": 3})
+    _collect(runner.run(
+        user_id=uuid4(), ticker="AAPL", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+        roster=market_withheld,
+    ))
+
+    assert seen, "run() never reached _profile_for_ticker"
+    assert seen["withheld"] == frozenset({AgentId.MARKET_ANALYST}), (
+        "run() did not forward the roster's withheld set into "
+        f"_profile_for_ticker (got {seen['withheld']!r}) — the fact sheet "
+        "would render a withheld analyst's real data"
+    )
+    assert seen["profile"]["technicals_state"] == "withheld_tenure", (
+        "profile built through run() does not mark Market technicals withheld"
+    )
