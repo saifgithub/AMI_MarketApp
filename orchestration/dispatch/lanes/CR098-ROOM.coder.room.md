@@ -315,4 +315,98 @@ is untouched — structural event metadata, not agent-authored prose.
   (`_compute_agent_text`/`_speak_one_agent` signatures) were argued sound by the coder and are
   consistent with a green suite, but neither was independently proven.
 
-STATUS: READY_FOR_AUDIT (round 1)
+(superseded round-2 hand-off mark: READY_FOR_AUDIT — token neutralised so exactly one machine-parseable STATUS line remains in this file)
+
+---
+
+# coder.room round 2 (AT:coder.room, 2026-07-27)
+
+Fixed all 5 findings from the round-1 audit verdict
+([`orchestration/audit/cr/CR098-ROOM.auditor.md`](../../audit/cr/CR098-ROOM.auditor.md)),
+committed incrementally. $15 budget, not the $5 that killed rounds 1/2.
+
+## MAJOR 1 — agent_withheld wired onto the SSE wire
+
+`room.py`'s SSE if/elif had no `agent_withheld` branch and no `else`, so the runner's event was
+silently dropped at the API boundary — the whole per-analyst countdown surface had no wire format.
+Added the branch (modelled on `live_data_notice`, the same pattern one CR earlier), serialising
+`agent_id`/`reason`/`next_step_agent`/`next_step_days`. Added a wire-level test that drives the
+real route via `TestClient` with a fake runner whose `subscribe()` yields the event, and asserts
+the SSE frame is present and byte-parseable — not merely that the runner emitted it.
+
+## MAJOR 2 — the defining behaviour now has a test
+
+Added `test_withheld_analyst_absent_and_present_analysts_correctly_attributed`: runs a full Room
+with News withheld (deliberately NOT the last ANALYSTS-phase slot, where a shifted `zip` would
+coincidentally still line up and hide the bug) and asserts no `agent_token`/`agent_done` carries
+the withheld agent_id, and each present analyst's concatenated text matches its own scripted
+marker (`_scripted_for` monkeypatched to `f"SCRIPT::{agent_id.value}"` so attribution can be
+checked without depending on real template contents).
+
+Mutation-verified against both auditor-identified mutations — reverted each time, full CR098 file
+back to green before proceeding:
+
+| Mutation | Result before this fix | Result now |
+|---|---|---|
+| `phase_agents = phase.agents` (withheld analyst speaks anyway) | 1359 passed (undetected) | **1 test RED** |
+| `zip(phase_agents, results) -> zip(phase.agents, results)` (emit-order misattribution) | 1359 passed (undetected) | **1 test RED** |
+
+One caveat surfaced and worked around: this worktree sits on an external volume, and pyc mtime
+resolution is coarse enough that a sed-mutate-revert cycle without clearing `__pycache__` between
+steps can run stale bytecode and misreport. Every mutation run above cleared `__pycache__` first;
+the numbers are real.
+
+## MINOR 1 — respawn path's feed fallback gated by roster
+
+`_respawn_run_from_row` (production, `main.py:132` via `resume_pending_retries`) calls `run()` with
+`roster=None, news_feed=None, social_feed=None`. The roster resolves fresh so analysts filter
+correctly, but the feed fallback resolved news/social at `entitled=True` **ungated** by that same
+roster — a withheld analyst's real data got fetched and rendered anyway, and `live_data_notice`
+reported "live" for an analyst that never ran. Gated both fallbacks the same way
+`_resolve_and_charge_feeds` already does (`roster.withheld` check, `WITHHELD_TENURE` short-circuit).
+Added a test simulating the exact respawn call shape for a real aged FLOOR_PASS user with
+News+Social withheld; confirmed it reproduces the pre-fix bug (stubbed feeds report LIVE; asserted
+red against the un-gated code, then reverted) and is green against the fix.
+
+## MINOR 2 — acceptance #2's no-op test now exercises the real path
+
+`test_default_roster_is_full_no_op` used `user_id=uuid4()` — a nonexistent user — which took
+`resolve_roster_for_user`'s missing-row full-roster fallback and never exercised the real no-op
+case. Rewrote it with a real aged (100-day) FLOOR_PASS user and all three thresholds explicitly at
+0, resolved through the actual `resolve_roster_for_user` DB-lookup path. Mutation-verified: the
+auditor's exact off-by-one (`threshold >= 1 and account_age_days >= threshold` ->
+`account_age_days >= threshold`, making 0 mean "always" instead of "never") now turns THIS test red
+directly — previously caught only incidentally by the D2 money test.
+
+## MINOR 3 — contradictory scaffolding header stripped for a withheld domain
+
+The fact-sheet header unconditionally claimed a withheld domain's fields were "alpha simulation
+scaffolding — NOT computed from real price history" immediately above the body's "not included in
+this session" line. Moved the three `_withheld_tenure` flags ahead of the header (previously
+computed only after it) and skip the header's scaffolding line for a withheld domain. Added
+contradiction-check assertions to both existing fact-sheet tests; confirmed they fail against the
+pre-fix code (stashed the fix, re-ran, restored) and pass against the fix.
+
+## Verified this round
+
+- Full suite, foreground, absolute venv path, from repo root: **1362 passed**, 188s — exactly
+  1359 baseline + 3 new tests (wire test, attribution test, respawn-gating test; MINOR 2 rewrote
+  an existing test in place, MINOR 3 added assertions to existing tests — neither adds a new test
+  function).
+- `backend/tests/unit/test_cr098_room_analyst_pullback.py` alone: 24 passed (was 21).
+- Both MAJOR 2 mutations and the MINOR 2 off-by-one re-run against the CURRENT branch, each
+  confirmed RED, each reverted and reconfirmed GREEN, `__pycache__` cleared before every run to
+  rule out the stale-bytecode artifact described above.
+
+## Not verified — stated plainly
+
+- **Acceptance #14 live smoke.** Untestable from the Mac; post-promote, unchanged from round 1.
+- **No rebase onto DEF116** has happened this round either — still `IN_AUDIT` per round 1's note.
+  FLAG 1's correct resolution (both `withheld=` kwarg AND the hoisted call) is documented in the
+  auditor's verdict for whoever does that merge.
+- DEF098 parity blind spot (auditor FLAG 2) — real, quantified, left untouched per the auditor's
+  own call that it's correctly out of this lane's scope.
+- The three MINOR fixes were each mutation- or contradiction-tested individually; no new
+  cross-cutting mutation sweep was run over the round-2 diff as a whole beyond what's listed above.
+
+STATUS: READY_FOR_AUDIT (round 3)
