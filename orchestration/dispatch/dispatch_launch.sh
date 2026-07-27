@@ -51,6 +51,21 @@ case "$TIER" in
   *) echo "tier must be economy|standard|premium (got: '$TIER')" >&2; exit 2 ;;
 esac
 
+# BUDGET OVERRIDE — size the cap to the LANE, not just to the tier.
+# Budget used to be derived from tier alone, so the only way to buy more headroom was to buy a
+# bigger model (or `ultra`, which also switches on fan-out tooling nobody asked for). That coupling
+# is what killed CR098-ROOM twice on 2026-07-27: a 277-line spec with 14 acceptance criteria was
+# dispatched at standard's $5 because $5 is what standard means. Capability was never the problem.
+# Rule of thumb from that lane: ~$1 per acceptance criterion, floor $5. If a lane needs much more
+# than $15, that is the decomposition telling you it is really two lanes.
+if [ -n "${DISPATCH_BUDGET_USD:-}" ]; then
+  case "$DISPATCH_BUDGET_USD" in
+    ''|*[!0-9]*) echo "DISPATCH_BUDGET_USD must be a positive integer (got: '$DISPATCH_BUDGET_USD')" >&2; exit 2 ;;
+  esac
+  [ "$DISPATCH_BUDGET_USD" -gt 0 ] || { echo "DISPATCH_BUDGET_USD must be > 0" >&2; exit 2; }
+  BUDGET="$DISPATCH_BUDGET_USD"
+fi
+
 BASE_TOOLS="Bash Edit Write Read Grep Glob TodoWrite"
 case "$FANOUT" in
   solo)  TOOLS="$BASE_TOOLS"; ULTRA_CLAUSE="" ;;
