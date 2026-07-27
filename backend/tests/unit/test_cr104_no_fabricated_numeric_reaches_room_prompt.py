@@ -111,21 +111,26 @@ _TAINT_TRACKING_EXCLUDED_LOCALS = {"profile", "field_state"}
 
 
 def _local_name_assignments(fn: ast.FunctionDef) -> list[tuple[str, ast.expr]]:
-    """Every `<name> = <expr>` / `<name>: T = <expr>` assignment to a plain
-    local variable anywhere in the function, in the order ast.walk yields
-    them. Order doesn't need to match execution order — taint propagation
-    below is a fixed-point over this list, so chains resolve regardless of
-    which order the assignments are discovered in."""
+    """Every `<name> = <expr>` / `<name>: T = <expr>` / `<name> += <expr>`
+    assignment to a plain local variable anywhere in the function, plus each
+    element of a tuple/list-unpacking assignment paired with its source
+    element (or the whole RHS, if it isn't itself a literal tuple/list — e.g.
+    unpacking a function call), in the order ast.walk yields them. Order
+    doesn't need to match execution order — taint propagation below is a
+    fixed-point over this list, so chains resolve regardless of which order
+    the assignments are discovered in."""
     assignments: list[tuple[str, ast.expr]] = []
     for node in ast.walk(fn):
-        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+        if isinstance(node, ast.Assign) and len(node.targets) == 1 and node.value is not None:
             target = node.targets[0]
-            if (
-                isinstance(target, ast.Name)
-                and target.id not in _TAINT_TRACKING_EXCLUDED_LOCALS
-                and node.value is not None
-            ):
+            if isinstance(target, ast.Name) and target.id not in _TAINT_TRACKING_EXCLUDED_LOCALS:
                 assignments.append((target.id, node.value))
+            elif isinstance(target, (ast.Tuple, ast.List)):
+                sources = node.value.elts if isinstance(node.value, (ast.Tuple, ast.List)) else None
+                for i, elt in enumerate(target.elts):
+                    if isinstance(elt, ast.Name) and elt.id not in _TAINT_TRACKING_EXCLUDED_LOCALS:
+                        source = sources[i] if sources is not None and i < len(sources) else node.value
+                        assignments.append((elt.id, source))
         elif isinstance(node, ast.AnnAssign):
             if (
                 isinstance(node.target, ast.Name)
@@ -133,32 +138,65 @@ def _local_name_assignments(fn: ast.FunctionDef) -> list[tuple[str, ast.expr]]:
                 and node.value is not None
             ):
                 assignments.append((node.target.id, node.value))
+        elif isinstance(node, ast.AugAssign):
+            if isinstance(node.target, ast.Name) and node.target.id not in _TAINT_TRACKING_EXCLUDED_LOCALS:
+                assignments.append((node.target.id, node.value))
     return assignments
+
+
+def _nested_function_defs(fn: ast.FunctionDef) -> list[ast.FunctionDef]:
+    return [
+        node
+        for node in ast.walk(fn)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node is not fn
+    ]
 
 
 def _expr_is_tainted(expr: ast.expr, tainted_names: set[str]) -> bool:
     for node in ast.walk(expr):
         if isinstance(node, ast.Name) and (node.id == "rng" or node.id in tainted_names):
             return True
+        # A read of `profile[<narrative field>]` re-exposes a value the
+        # exclusion list legitimately let through as rng-tainted — treat it
+        # as tainted at the read site too, or it launders into a protected
+        # field for free. Any other profile[...] read stays untainted, so
+        # ordinary reads of live fields (`float(profile["pe"])`) don't flood.
+        if (
+            isinstance(node, ast.Subscript)
+            and isinstance(node.value, ast.Name)
+            and node.value.id == "profile"
+            and _string_key(node.slice) in _EXCLUDED_NARRATIVE_FIELDS
+        ):
+            return True
     return False
 
 
 def _rng_tainted_locals(fn: ast.FunctionDef) -> set[str]:
-    """Fixed-point closure of every local variable name that is rng-tainted
-    — assigned directly from `rng`, or assigned from an expression that
-    references another already-tainted local. Iterates to a fixed point so
-    an arbitrary chain (`_v = rng.uniform(...)`; `_w = _v`; `_x = _w`) is
-    fully followed, not just one hop."""
+    """Fixed-point closure of every local variable name (and nested helper
+    function name) that is rng-tainted — assigned directly from `rng`,
+    assigned from an expression that references another already-tainted
+    local, or a nested function whose body references `rng` or a tainted
+    name. Iterates to a fixed point so an arbitrary chain (`_v =
+    rng.uniform(...)`; `_w = _v`; `_x = _w`) is fully followed, not just one
+    hop. A tainted nested-function name then taints any call site through
+    the ordinary Name-walk in `_expr_is_tainted` — no separate Call handling
+    needed."""
     assignments = _local_name_assignments(fn)
+    nested_fns = _nested_function_defs(fn)
     tainted: set[str] = set()
     changed = True
     while changed:
         changed = False
         for name, value in assignments:
-            if name in tainted:
-                continue
-            if _expr_is_tainted(value, tainted):
+            if name not in tainted and _expr_is_tainted(value, tainted):
                 tainted.add(name)
+                changed = True
+        for nested in nested_fns:
+            if nested.name not in tainted and any(
+                isinstance(n, ast.Name) and (n.id == "rng" or n.id in tainted)
+                for n in ast.walk(nested)
+            ):
+                tainted.add(nested.name)
                 changed = True
     return tainted
 
@@ -230,3 +268,101 @@ def test_no_rng_tainted_value_assigned_to_any_profile_field():
         "fabricated-value-under-a-LIVE-header hazard CR104 removed:\n"
         + "\n".join(offenders)
     )
+
+
+# --- DEF128: round-2 auditor reproduced four shapes the traversal above
+# missed. Production code takes none of these shapes today (nothing is
+# fabricated live) — these are synthetic reproductions of the guard's own
+# blind spots, parsed directly rather than read from room_runner.py, since
+# the point is to prove the walker's traversal, not today's source file.
+
+
+def _offenders_for_synthetic_source(source: str) -> list[str]:
+    fn = _find_function(ast.parse(source), "_profile_for_ticker")
+    tainted_locals = _rng_tainted_locals(fn)
+    return _rng_tainted_baseline_entries(fn, tainted_locals) + _rng_tainted_profile_assignments(
+        fn, tainted_locals
+    )
+
+
+def test_tuple_unpacking_launders_an_rng_value_into_a_protected_field():
+    offenders = _offenders_for_synthetic_source(
+        """
+def _profile_for_ticker(ticker, rng):
+    profile = {}
+    a, b = rng.uniform(12.0, 55.0), rng.uniform(0.1, 5.0)
+    profile["pe"] = f"{a:.2f}"
+    return profile
+"""
+    )
+    assert offenders, "tuple-unpacked rng value assigned to profile['pe'] was not caught"
+
+
+def test_augmented_assignment_launders_an_rng_value_into_a_protected_field():
+    offenders = _offenders_for_synthetic_source(
+        """
+def _profile_for_ticker(ticker, rng):
+    profile = {}
+    _v = 0
+    _v += rng.uniform(12.0, 55.0)
+    profile["pe"] = f"{_v:.1f}"
+    return profile
+"""
+    )
+    assert offenders, "rng value accumulated via += into a local was not caught"
+
+
+def test_nested_helper_closure_over_rng_launders_a_fabricated_value():
+    offenders = _offenders_for_synthetic_source(
+        """
+def _profile_for_ticker(ticker, rng):
+    profile = {}
+
+    def _fabricate():
+        return rng.uniform(12.0, 55.0)
+
+    profile["pe"] = f"{_fabricate():.1f}"
+    return profile
+"""
+    )
+    assert offenders, "a nested helper closing over rng was not caught"
+
+
+def test_reading_back_out_of_the_taint_excluded_profile_local_launders_a_value():
+    offenders = _offenders_for_synthetic_source(
+        """
+def _profile_for_ticker(ticker, rng):
+    profile = {"sentiment_score": f"{rng.uniform(0.0, 1.0):.2f}"}
+    _shadow = profile["sentiment_score"]
+    profile["pe"] = _shadow
+    return profile
+"""
+    )
+    assert offenders, (
+        "an rng-tainted value legitimately parked in an excluded narrative "
+        "field was read back out and reassigned to a protected field, and "
+        "the guard missed it"
+    )
+
+
+def test_attribute_read_off_a_tainted_helper_object_launders_a_value():
+    """A fifth shape of our own: the tainted value never sits in a bare
+    local — it's smuggled inside an object's attribute and read back out via
+    `.attr`. Proves the traversal generalises (any Name reference inside the
+    read expression's subtree still resolves through the tainted-locals set)
+    rather than special-casing the four probes above."""
+    offenders = _offenders_for_synthetic_source(
+        """
+def _profile_for_ticker(ticker, rng):
+    profile = {}
+
+    class _Box:
+        def __init__(self, value):
+            self.value = value
+
+    _holder = _Box(rng.uniform(12.0, 55.0))
+    profile["pe"] = f"{_holder.value:.1f}"
+    return profile
+"""
+    )
+    assert offenders, "an rng value smuggled through an object attribute was not caught"
