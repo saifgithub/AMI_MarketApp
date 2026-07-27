@@ -2148,6 +2148,42 @@ abstract class AppLocalizations {
   /// **'TRY AGAIN'**
   String get roomRetry;
 
+  /// CR090: title of the card disclosing this run's News/Social live-data state (live / needs credits / unavailable).
+  ///
+  /// In en, this message translates to:
+  /// **'Live data'**
+  String get roomLiveDataNoticeTitle;
+
+  /// CR090: one feed's status line when AMI used the real live feed and the user paid the surcharge for it.
+  ///
+  /// In en, this message translates to:
+  /// **'{feed}: live feed used.'**
+  String roomLiveDataFeedLive(String feed);
+
+  /// CR090 (D3): one feed's status line when live data exists but the user didn't pay for it. Pairs with the upgrade CTA — never rendered the same as 'unavailable'.
+  ///
+  /// In en, this message translates to:
+  /// **'{feed}: live data available — needs credits.'**
+  String roomLiveDataFeedWithheld(String feed);
+
+  /// CR090 (D3): one feed's status line when nobody has this data right now. Plain statement of fact — no CTA, no upsell.
+  ///
+  /// In en, this message translates to:
+  /// **'{feed}: live data unavailable right now.'**
+  String roomLiveDataFeedUnavailable(String feed);
+
+  /// CR090 (D5): the surcharge actually debited, rendered exactly as the backend reported it — never recomputed client-side. Shown only when at least one feed was live.
+  ///
+  /// In en, this message translates to:
+  /// **'Live news + social cost {surcharge} extra credits this run.'**
+  String roomLiveDataSurchargeCharged(int surcharge);
+
+  /// CR090 (D3): upgrade CTA shown only when a feed is withheld_paid. Opens the RC paywall sheet. Never shown for unavailable feeds.
+  ///
+  /// In en, this message translates to:
+  /// **'UPGRADE FOR LIVE DATA'**
+  String get roomLiveDataUpgradeCta;
+
   /// CR084 paywall heading. Shown at the hard credit wall and from Settings. 'Desk' = the user's analyst team workspace.
   ///
   /// In en, this message translates to:

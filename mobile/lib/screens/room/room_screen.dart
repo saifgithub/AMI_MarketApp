@@ -17,6 +17,7 @@ import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/services/api/api_exceptions.dart';
 import 'package:ami_trade/services/celebration.dart';
 import 'package:ami_trade/services/share/share_service.dart';
+import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/state/room_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -104,6 +105,8 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                       ),
                     if (state.serverError)
                       _ServerErrorCard(ticker: widget.ticker),
+                    if (state.liveDataNotice != null)
+                      _LiveDataNoticeCard(notice: state.liveDataNotice!),
                     if (state.error != null)
                       _ErrorBanner(message: state.error!),
                     if (state.reconnecting) const _ReconnectingBanner(),
@@ -712,6 +715,115 @@ class _ServerErrorCard extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+
+/// CR090: renders the structural live-data disclosure (`live_data_notice`),
+/// one per run. Three states, three distinct renderings (D3) — this is the
+/// entire point of the CR:
+///   - `live`: confirms real data was used and what it cost.
+///   - `withheld_paid`: the data exists but wasn't paid for — explicit
+///     "needs credits" copy + an upgrade CTA.
+///   - `unavailable`: nobody has this data right now — said plainly, with
+///     NO CTA and no upsell (upselling something we can't deliver is the
+///     DEF059 inversion this CR exists to prevent).
+/// Absence of a notice renders nothing (D4) — the caller only mounts this
+/// when `state.liveDataNotice != null`.
+class _LiveDataNoticeCard extends ConsumerWidget {
+  const _LiveDataNoticeCard({required this.notice});
+
+  final RoomLiveDataNotice notice;
+
+  bool get _newsWithheld => notice.news == 'withheld_paid';
+  bool get _socialWithheld => notice.social == 'withheld_paid';
+  bool get _anyWithheld => _newsWithheld || _socialWithheld;
+  bool get _anyLive => notice.news == 'live' || notice.social == 'live';
+
+  String _resetDateStr(WidgetRef ref) {
+    final r = ref.read(mandateNotifierProvider).mandate?.creditsResetAt;
+    if (r == null) return 'the 1st';
+    return '${r.year}-${r.month.toString().padLeft(2, '0')}-'
+        '${r.day.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    // D3: withheld_paid takes priority in framing over unavailable when both
+    // fire, since it's the one that carries an honest upsell; unavailable-only
+    // never gets a CTA.
+    final accent = _anyWithheld ? AmiColors.hexAmber : AmiColors.slate500;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: AmiSpacing.m),
+      padding: const EdgeInsets.all(AmiSpacing.m),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: accent),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.rss_feed, color: accent, size: 18),
+              const SizedBox(width: AmiSpacing.s),
+              Expanded(
+                child: Text(
+                  l.roomLiveDataNoticeTitle,
+                  style: AmiTypography.labelMono.copyWith(color: accent),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AmiSpacing.s),
+          Text(_stateLine(l, 'News', notice.news),
+              style: AmiTypography.body),
+          Text(_stateLine(l, 'Social', notice.social),
+              style: AmiTypography.body),
+          if (_anyLive) ...[
+            const SizedBox(height: AmiSpacing.xs),
+            Text(
+              l.roomLiveDataSurchargeCharged(notice.surchargeCharged),
+              style: AmiTypography.body.copyWith(color: AmiColors.slate600),
+            ),
+          ],
+          if (_anyWithheld) ...[
+            const SizedBox(height: AmiSpacing.m),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AmiColors.hexAmber,
+                  foregroundColor: AmiColors.slate900,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+                ),
+                onPressed: () => showUpgradeSheet(
+                  context,
+                  resetDateLabel: _resetDateStr(ref),
+                ),
+                child: Text(l.roomLiveDataUpgradeCta),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _stateLine(AppLocalizations l, String feedLabel, String state) {
+    switch (state) {
+      case 'live':
+        return l.roomLiveDataFeedLive(feedLabel);
+      case 'withheld_paid':
+        return l.roomLiveDataFeedWithheld(feedLabel);
+      case 'unavailable':
+      default:
+        return l.roomLiveDataFeedUnavailable(feedLabel);
+    }
   }
 }
 

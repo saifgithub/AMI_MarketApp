@@ -21,6 +21,25 @@ import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// CR090: the structural live-data disclosure for one Room run. One-shot,
+/// like [paywall] — set once from the `live_data_notice` SSE event and never
+/// re-derived. `news`/`social` are each one of `live` / `withheld_paid` /
+/// `unavailable` (see `LiveDataState` on the backend); `surchargeCharged` is
+/// the credits actually debited for this run, rendered as sent (D5) — never
+/// recomputed client-side.
+@immutable
+class RoomLiveDataNotice {
+  const RoomLiveDataNotice({
+    required this.news,
+    required this.social,
+    required this.surchargeCharged,
+  });
+
+  final String news;
+  final String social;
+  final int surchargeCharged;
+}
+
 @immutable
 class RoomState {
   const RoomState({
@@ -36,6 +55,7 @@ class RoomState {
     this.error,
     this.paywall,
     this.serverError = false,
+    this.liveDataNotice,
   });
 
   final String? phase;
@@ -59,6 +79,9 @@ class RoomState {
   // DEF073: set when a convene hit a 5xx (502/503/504). Drives a friendly
   // "AMI's briefly offline — try again" card with a Retry, never a raw code.
   final bool serverError;
+  // CR090 (D4): null unless the `live_data_notice` event actually arrived.
+  // Absence renders nothing — never a defaulted "no surcharge" state.
+  final RoomLiveDataNotice? liveDataNotice;
 
   RoomState copyWith({
     String? phase,
@@ -75,6 +98,7 @@ class RoomState {
     InsufficientCreditsException? paywall,
     bool clearPaywall = false,
     bool? serverError,
+    RoomLiveDataNotice? liveDataNotice,
   }) {
     return RoomState(
       phase: phase ?? this.phase,
@@ -89,6 +113,7 @@ class RoomState {
       error: clearError ? null : (error ?? this.error),
       paywall: clearPaywall ? null : (paywall ?? this.paywall),
       serverError: serverError ?? this.serverError,
+      liveDataNotice: liveDataNotice ?? this.liveDataNotice,
     );
   }
 }
@@ -113,6 +138,15 @@ class RoomNotifier extends StateNotifier<RoomState> {
             break;
           case 'phase':
             state = state.copyWith(phase: ev['label'] as String?);
+            break;
+          case 'live_data_notice':
+            state = state.copyWith(
+              liveDataNotice: RoomLiveDataNotice(
+                news: ev['news'] as String,
+                social: ev['social'] as String,
+                surchargeCharged: ev['surcharge_charged'] as int,
+              ),
+            );
             break;
           case 'agent_token':
             final agentId = ev['agent_id'] as String;
@@ -149,6 +183,11 @@ class RoomNotifier extends StateNotifier<RoomState> {
               streaming: false,
               error: (ev['message'] as String?) ?? 'unknown',
             );
+            break;
+          default:
+            // CR090 (D2): same silent-tolerance guarantee as the SSE parser —
+            // log an unrecognised kind, never throw, never surface to the user.
+            debugPrint('room stream: unhandled event kind "${ev['kind']}"');
             break;
         }
       }

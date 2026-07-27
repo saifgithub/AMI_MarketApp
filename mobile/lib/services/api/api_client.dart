@@ -12,6 +12,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show debugPrint;
+
 import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/models/auth.dart';
 import 'package:ami_trade/models/ai_coach.dart';
@@ -661,6 +663,18 @@ class ApiClient {
                 final j = jsonDecode(data) as Map<String, dynamic>;
                 yield {'kind': 'phase', 'label': j['label']};
                 break;
+              case 'live_data_notice':
+                // CR090: structural live-data disclosure, one per run. Yielded
+                // as-is (news/social/surcharge_charged) — the notifier owns
+                // rendering. See room_providers.dart for the D3/D4/D5 rules.
+                final j = jsonDecode(data) as Map<String, dynamic>;
+                yield {
+                  'kind': 'live_data_notice',
+                  'news': j['news'],
+                  'social': j['social'],
+                  'surcharge_charged': j['surcharge_charged'],
+                };
+                break;
               case 'agent_token':
                 final j = jsonDecode(data) as Map<String, dynamic>;
                 final text = (j['text'] as String? ?? '')
@@ -687,6 +701,13 @@ class ApiClient {
               case 'error':
                 yield {'kind': 'error', 'message': data};
                 return;
+              default:
+                // CR090 (D2): forward-compat tolerance is load-bearing — an
+                // unrecognised event kind is dropped, never thrown, so an
+                // un-updated client can't be crashed by a newer backend.
+                // Log only (CR040 degrade loudly), never surface to the user.
+                debugPrint('room stream: unknown event kind "$eventType"');
+                break;
             }
           } catch (e) {
             // skip malformed event

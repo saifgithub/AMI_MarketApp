@@ -1221,6 +1221,32 @@ class AppLocalizationsMs extends AppLocalizations {
   String get roomRetry => 'CUBA LAGI';
 
   @override
+  String get roomLiveDataNoticeTitle => 'Live data';
+
+  @override
+  String roomLiveDataFeedLive(String feed) {
+    return '$feed: live feed used.';
+  }
+
+  @override
+  String roomLiveDataFeedWithheld(String feed) {
+    return '$feed: live data available — needs credits.';
+  }
+
+  @override
+  String roomLiveDataFeedUnavailable(String feed) {
+    return '$feed: live data unavailable right now.';
+  }
+
+  @override
+  String roomLiveDataSurchargeCharged(int surcharge) {
+    return 'Live news + social cost $surcharge extra credits this run.';
+  }
+
+  @override
+  String get roomLiveDataUpgradeCta => 'UPGRADE FOR LIVE DATA';
+
+  @override
   String get upgradeSheetTitle => 'Naik taraf meja dagangan anda';
 
   @override
