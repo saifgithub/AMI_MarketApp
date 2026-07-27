@@ -1,6 +1,6 @@
 ---
 id: "345_data_mining_and_survivorship_bias"
-title: "Penambangan data & biasian kelestarian"
+title: "Pengecapan data & bias kemandirian"
 duration_min: 5
 level: 12
 module: 21
@@ -12,56 +12,56 @@ prerequisites: ["344_monte_carlo_simulation"]
 tags: ["survivorship-bias", "data-mining", "backtesting", "quant"]
 sources: ["Stephen J. Brown, William N. Goetzmann, Roger G. Ibbotson & Stephen A. Ross — Survivorship bias in performance studies, Review of Financial Studies (1992)"]
 agent_callouts: ["research_manager"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-21"
 updated_at: "2026-07-21"
 ---
-# Data-mining & bias kemandirian (survivorship bias)
+# Data-mining & bias kemandirian
 
-Bias kemandirian (survivorship bias) berlaku apabila alam semesta saham, dana, atau indeks dalam ujian balik (backtest) secara senyap mengecualikan instrumen yang gagal, disenaraikan semula, dilikuidasi, atau dibuang sepanjang proses — meninggalkan hanya yang "bertahan" dalam sampel. Oleh kerana kegagalan adalah risiko sebenar yang dihadapi pelabur, menguji hanya pada kumpulan yang bertahan secara sistematik akan melebih-lebihkan prestasi sebenar strategi terhadap pilihan yang benar-benar tersedia pada masa itu. Berkaitan tetapi berbeza: bias data-mining ialah pengujian terlalu banyak variasi strategi terhadap data yang sama sehingga sesetengahnya kelihatan bagus semata-mata kebetulan; ini adalah "cousin" multi-strategi kepada masalah overfitting satu strategi dari dua pelajaran lalu.
+Bias kemandirian berlaku apabila alam semesta saham, dana, atau indeks dalam ujian balik (backtest) secara senyap mengecualikan mereka yang gagal dan telah disenaraikan semula, dilikuidasi, atau dibuang sepanjang proses — meninggalkan hanya yang bertahan dalam sampel. Oleh kerana kegagalan adalah risiko sebenar yang dihadapi pelabur, menguji hanya pada mereka yang bertahan secara sistematik akan melebih-lebihkan prestasi sebenar strategi terhadap pilihan yang benar-benar tersedia pada masa itu. Berkaitan tetapi berbeza: bias data-mining ialah menguji terlalu banyak variasi strategi terhadap data yang sama sehingga sesetengahnya kelihatan baik semata-mata secara kebetulan, iaitu rakan pelbagai strategi bagi masalah overfitting strategi tunggal dari dua pelajaran lalu.
 
 ## Contoh
 
-Katakan sebuah backtest dibina pada alam semesta 100 dana yang wujud pada tahun 2005. Pada tahun 2025, **30 di antaranya ditutup** — dilikuidasi, digabungkan, atau disenaraikan semula — meninggalkan **70 yang bertahan** dengan pulangan purata **+8% setahun**. Backtest yang hanya menyenaraikan senarai dana semasa (70 yang bertahan) melaporkan angka 8% itu sebagai "presto sejarah alam semesta ini." Namun, pelabur pada tahun 2005 tidak boleh tahu sebelumnya mana antara 30 yang akan gagal — alam semesta sejarah sebenar merangkumi kesemua 100. Anggaplah 30 yang ditutup mencatatkan purata -5% setahun sebelum ditutup (anggaran munasabah untuk "gagal cukup teruk hingga ditutup"). Pulangan sebenar yang telah dibetulkan dari bias kemandirian = (70 × 8% + 30 × -5%) ÷ 100 = (560 - 150) ÷ 100 = 410 ÷ 100 = **4.1% setahun** — hanya separuh daripada 8% yang dilaporkan oleh backtest yang hanya menggunakan kumpulan yang bertahan.
+Katakan satu backtest dibina pada alam semesta 100 dana yang wujud pada tahun 2005. Pada tahun 2025, **30 di antaranya ditutup** — dilikuidasi, digabungkan, atau disenaraikan semula — meninggalkan **70 yang bertahan** dengan pulangan purata **+8% setahun**. Backtest yang hanya menyenaraikan senarai dana hari ini (70 yang bertahan) melaporkan angka 8% itu sebagai "presto sejarah alam semesta ini." Namun, pelabur pada tahun 2005 tidak boleh mengetahui terlebih dahulu mana 30 yang akan gagal — alam semesta sejarah sebenar merangkumi kesemua 100. Anggaplah 30 yang ditutup mencatatkan purata -5% setahun sebelum ditutup (sebagai proksi yang munasabah untuk "gagal dengan teruk hingga ditutup"). Pulangan blended yang telah dibetulkan daripada bias kemandirian = (70 × 8% + 30 × -5%) ÷ 100 = (560 - 150) ÷ 100 = 410 ÷ 100 = **4.1% setahun** — hampir separuh daripada 8% yang dilaporkan oleh backtest hanya berdasarkan yang bertahan.
 
-Jurang 8% versus 4.1% itu adalah bias kemandirian tulen, tanpa sebarang kemahiran strategi terlibat di mana-mana pihak — ia sepenuhnya fungsi daripada dana mana yang dimasukkan ke dalam alam semesta yang diuji. Sebarang backtest yang dijalankan hanya pada senarai syarikat, dana, atau indeks "masih wujud" semasa membawa inflasi senyap yang sama, sama ada pembinanya berniat atau tidak.
+Jurang 8% berbanding 4.1% itu adalah bias kemandirian tulen, tanpa melibatkan kemahiran strategi di mana-mana pihak — ia sepenuhnya bergantung pada dana mana yang dimasukkan ke dalam alam semesta yang diuji. Sebarang backtest yang dijalankan hanya pada senarai syarikat, dana, atau indeks "masih wujud" hari ini membawa inflasi senyap yang sama, sama ada pembinanya berniat atau tidak.
 
 ## Perangkap
 
-Perangkapnya ialah membina backtest daripada senarai semasa ticker, dana, atau ahli indeks — kerana itu adalah data yang mudah dan tersedia — tanpa bertanya sama ada senarai itu secara senyap mengecualikan segala sesuatu yang gagal sepanjang proses. Ia terasa seperti jalan pintas yang munasabah kerana "senarai semasa" adalah set data yang paling jelas untuk dicapai. Kebiasaan yang betul: sebelum mempercayai angka prestasi sejarah, tanya sama ada alam semesta yang diuji merangkumi nama yang disenaraikan semula, dilikuidasi, atau digabungkan sepanjang tempoh tersebut — dan jika tidak, anggap pulangan yang dilaporkan sebagai terinflasi berbanding pengalaman sejarah sebenar, kira-kira berkadar dengan berapa banyak alam semesta asal yang gagal.
+Perangkapnya ialah membina backtest daripada senarai semasa ticker, dana, atau ahli indeks — kerana itu adalah data yang mudah dan tersedia — tanpa bertanya sama ada senarai itu secara senyap mengecualikan segala sesuatu yang gagal sepanjang proses. Ia terasa seperti jalan pintas yang munasabah kerana "senarai hari ini" adalah set data yang jelas untuk dicapai. Tabiat yang betul: sebelum mempercayai angka prestasi sejarah, tanya sama ada alam semesta yang diuji merangkumi nama yang telah disenaraikan semula, dilikuidasi, atau digabungkan semasa tempoh tersebut — dan jika tidak, anggap pulangan yang dilaporkan sebagai terkembiri berbanding pengalaman sejarah sebenar, kira-kira berkadar dengan berapa banyak alam semesta asal yang gagal.
 
 <ChatWith agent="research_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Daripada 100 dana yang wujud pada 2005, 30 ditutup pada 2025 (andaikan purata -5%/tahun sebelum ditutup) dan 70 terus hidup (purata +8%/tahun). Berapakah pulangan tahunan gabungan sebenar yang telah dibetulkan daripada bias kemandirian merentasi seluruh populasi asal 100 dana tersebut?"
+  question="Daripada 100 dana yang wujud pada 2005, 30 ditutup pada 2025 (andaikan ia purata -5%/tahun sebelum ditutup) dan 70 terus hidup (purata +8%/tahun). Berapakah pulangan tahunan bersepadu yang sebenar, yang telah dibetulkan daripada bias kelangsungan hidup, merentasi seluruh alam semula asal 100 dana?"
   options={[
-    "8% — pulangan dana yang terus hidup adalah satu-satunya yang perlu dikira, kerana dana lain sudah tiada",
-    "1.5% — memuratakan +8% dan -5% tanpa menimbang mengira bilangan dana",
-    "3% — menolak kadar kegagalan (30%) daripada pulangan kemandirian (8%) secara langsung",
-    "4.1% — (70 × 8% + 30 × -5%) ÷ 100 = (560 - 150) ÷ 100 = 410 ÷ 100 = 4.1%, menimbang setiap kumpulan mengikut bahagian mereka daripada 100 dana asal"
+    "8% — pulangan dana yang terus hidup adalah satu-satunya yang perlu diambil kira, kerana dana lain tidak wujud lagi",
+    "1.5% — memuratakn +8% dan -5% tanpa menimbang mengikut bilangan dana",
+    "3% — menolak kadar kegagalan (30%) daripada pulangan kelangsungan hidup (8%) secara langsung",
+    "4.1% — (70 × 8% + 30 × -5%) ÷ 100 = (560 - 150) ÷ 100 = 410 ÷ 100 = 4.1%, menimbang setiap kumpulan mengikut bahagiannya daripada 100 dana asal"
   ]}
   answer={3}
-  explanation="Gabungan yang betul menimbang setiap kumpulan mengikut bahagian mereka dalam populasi asal sebenar: (70 × 8 + 30 × -5) ÷ 100 = (560 - 150) ÷ 100 = 4.1%. Menggunakan hanya angka kemandirian 8% mengabaikan 30 dana yang boleh dipilih pelabur pada 2005; purata tidak tertimbang (1.5%) dan pintasan tolak langsung (3%) kedua-duanya terlepas penimbangan yang diperlukan mengira bilangan dana sepenuhnya."
+  explanation="Gabungan yang betul menimbang setiap kumpulan mengikut bahagian dalam alam semula asal sebenar: (70 × 8 + 30 × -5) ÷ 100 = (560 - 150) ÷ 100 = 4.1%. Menggunakan hanya angka 8% dari dana yang terus hidup mengabaikan 30 dana yang boleh dipilih oleh pelabur pada 2005; purata tidak tertimbang (1.5%) dan pintasan tolakan langsung (3%) kedua-duanya melompati penimbangan yang diperlukan mengikut bilangan dana."
 />
 
 <Quiz
-  question="Ujian balik melaporkan pulangan tahunan purata 8% untuk populasi dana, dibina menggunakan hanya dana yang masih wujud hari ini. Apakah yang perlu dilakukan pembaca terhadap angka 8% ini sebelum mempercayainya?"
+  question="Uji semula (backtest) melaporkan pulangan tahunan purata 8% untuk satu alam semula dana, dibina menggunakan hanya dana yang masih wujud hari ini. Apakah yang perlu dilakukan pembaca terhadap angka 8% ini sebelum mempercayainya, menurut pelajaran ini?"
   options={[
-    "Tanya sama ada populasi yang diuji mengecualikan dana yang telah disenarai hitam, dilikuidasi, atau digabungkan sepanjang tempoh tersebut — jika ya, anggap 8% yang dilaporkan sebagai terlalu tinggi berbanding pengalaman sejarah sebenar, kerana pengiraan di atas menunjukkan pembetulan boleh mengurangkan angka tersebut lebih daripada separuh",
-    "Terima angka 8% pada nilai muka, kerana hanya dana yang wujud semasa adalah relevan untuk keputusan yang dibuat hari ini",
-    "Anggap angka 8% sudah mengambil kira bias kemandirian, kerana pelaporan prestasi dana adalah industri yang beratur",
-    "Tolak angka 8% sepenuhnya sebagai palsu, kerana tiada populasi dana yang boleh mempunyai kegagalan langsung"
+    "Tanya sama ada alam semula yang diuji mengecualikan dana yang telah disenarai hitam, dilikuidasi, atau digabungkan sepanjang tempoh tersebut — jika ya, anggap 8% yang dilaporkan sebagai terlalu tinggi berbanding pengalaman sejarah sebenar, kerana pengiraan di atas menunjukkan pembetulan boleh menurunkan angka ini hampir separuh",
+    "Terima angka 8% pada nilai wajahnya, kerana hanya dana yang wujud semasa adalah relevan untuk keputusan yang dibuat hari ini",
+    "Anggap angka 8% sudah mengambil kira bias kelangsungan hidup, kerana pelaporan prestasi dana adalah industri yang beratur",
+    "Tolak angka 8% itu sepenuhnya sebagai palsu, kerana tiada alam semula dana yang boleh mempunyai kegagalan langsung"
   ]}
   answer={0}
-  explanation="Titik utama pelajaran ini ialah ujian balik 'populasi semasa' secara senyap membuang dana yang gagal, dan pembetulan (di sini, dari 8% turun ke 4.1%) boleh menjadi drastik. Mengandaikan peraturan sudah mengendalikan ini, atau bahawa angka tersebut hanyalah palsu, kedua-duanya terlepas soalan sebenar yang boleh disemak: apakah populasi asal penuh, dan berapa banyak daripadanya yang terus hidup?"
+  explanation="Titik utama pelajaran ini ialah uji semula 'alam semula semasa' secara senyap membuang dana yang gagal, dan pembetulan (di sini, dari 8% turun ke 4.1%) boleh menjadi dramatik. Mengandaikan peraturan sudah mengendalikan ini, atau menganggap angka itu semata-mata palsu, kedua-duanya melompati soalan sebenar yang boleh disemak: apakah alam semula asal yang penuh, dan berapa banyak daripadanya yang terus hidup?"
 />
 
 ## Cuba sendiri
 
-Pilih indeks, kategori ETF, atau alam semesta dana yang anda ikut, dan tanya Pengurus Penyelidikan sama ada backtest atau angka prestasi sejarahnya merangkumi syarikat atau dana yang kemudiannya disenaraikan semula, dilikuidasi, atau digabungkan. Ingat: output latihan AMI adalah artifak latihan, bukan nasihat pelaburan.
+Pilih indeks, kategori ETF, atau alam semesta dana yang anda ikut dan tanya Pengurus Penyelidikan sama ada angka prestasi sejarah atau backtestnya merangkumi syarikat atau dana yang kemudiannya disenaraikan semula, dilikuidasi, atau digabungkan. Ingat: output latihan AMI adalah artifak latihan, bukan nasihat pelaburan.
 
-## Penutup
+## Intipati
 
-Pulangan sejarah yang dibina hanya dari penganut semasa bukan pulangan sejarah sebenar alam semesta itu — timbangkan apa yang gagal sebelum mempercayai nombor tersebut.
+Pulangan sejarah yang dibina hanya daripada mereka yang bertahan hari ini bukanlah pulangan sejarah sebenar alam semesta tersebut — selalu pertimbangkan apa yang gagal sebelum mempercayai nombor tersebut.

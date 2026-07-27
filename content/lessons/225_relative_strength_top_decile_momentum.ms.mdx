@@ -11,56 +11,56 @@ topic: "momentum"
 prerequisites: ["056_momentum_trading", "022_trend_direction", "029_volume_confirmation", "017_portfolio_exposure_and_correlation"]
 tags: ["strategy", "momentum", "relative_strength", "ranking", "rebalance"]
 agent_callouts: ["aggressive_debator", "trader"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Momentum kekuatan relatif — mekanik dekan teratas
+# Momentum kekuatan relatif — mekanik dekil teratas
 
-Asas momentum (056) memperkenalkan pengelasan alam semesta dan memegang dekan teratas. Pelajaran ini adalah manual operasi: bagaimana kekuatan relatif dikira sebenarnya, mengapa jangka masa kembali secara konvensional ialah 12 bulan tolak 1 bulan, bagaimana kekerapan penyelarasan berinteraksi dengan perolehan dan cukai, dan bagaimana saiz kedudukan dalam bakul. Momentum kekuatan relatif ialah salah satu anomali yang paling banyak ditiru dalam kewangan — Jegadeesh dan Titman mendokumentasikannya pada tahun 1993; ia telah bertahan dalam sampel sehingga 2024 di kebanyakan pasaran ekuiti. Selepas pelajaran ini, anda boleh menentukan peraturan kekuatan relatif yang menentukan alam semesta, jangka masa kembali, kitaran penyelarasan, dan peraturan untuk kemasukan/keluar yang membentuk strategi sebenar berbanding abstraksi akademik.
+Asas momentum (056) memperkenalkan pengelasan alam semesta dan memegang dekil teratas. Pelajaran ini adalah manual operasi: bagaimana kekuatan relatif dikira sebenarnya, mengapa jangkaan kembali secara konvensional ialah 12 bulan tolak 1 bulan, bagaimana kekerapan penyelarasan berinteraksi dengan perolehan dan cukai, dan bagaimana saizkan kedudukan dalam bakul. Momentum kekuatan relatif adalah salah satu anomali yang paling banyak ditiru dalam kewangan — Jegadeesh dan Titman mendokumentasikannya pada tahun 1993; ia telah bertahan dalam sampel sehingga 2024 di kebanyakan pasaran ekuiti. Selepas pelajaran ini, anda boleh menentukan peraturan kekuatan relatif yang menyatakan alam semesta, jangkaan kembali, kadenca penyelarasan, dan peraturan untuk masuk/keluar yang membentuk strategi sebenar bukannya abstraksi akademik.
 
-## Bagaimana ia berlaku dalam pasaran sebenar
+## Bagaimana ia berlaku di pasaran sebenar
 
-Lihat pelaksanaan pada tahun 2024 merentasi nama-nama S&P 100. Peraturan: klasifikasikan setiap nama dalam alam semesta berdasarkan pulangan jumlah dari 12 bulan lalu hingga 1 bulan lalu — jangka masa kembali "12-1" (mengecualikan bulan terkini mengelakkan hingar pembalikan jangka pendek). Pada setiap penyelarasan bulanan, pegang 10 nama teratas dengan berat sama. Pada Januari 2024, dekan teratas termasuk NVDA, META, AMD, AVGO, LLY, CRM, ORCL, GE, UBER, dan PANW. Pada April, bakul berputar untuk membuang UBER dan PANW serta menambah MU dan DELL. Pada Julai, NVDA, META, AVGO, LLY kekal; pendatang baru termasuk TSM (jika berkenaan), GOOGL, dan INTU. Seorang pedagang yang menjalankan peraturan ini secara mekanikal memiliki kira-kira separuh daripada pemenang terbesar tahun itu dan berputar secara sistematik tanpa cuba mengira puncak. Pulangan kasar tahunan bakul melebihi 50% berbanding ~25% untuk S&P 500 — walaupun dengan volatiliti yang lebih tinggi secara ketara dan penurunan ~12% semasa episod putaran Julai-Agustus.
+Lihat pelaksanaan pada tahun 2024 merentasi nama-nama S&P 100. Peraturan: klasifikasikan setiap nama dalam alam semesta berdasarkan pulangan jumlah dari 12 bulan lalu hingga 1 bulan lalu — jangkaan kembali "12-1" (mengekalkan bulan terkini mengelakkan hingar pembalikan jangka pendek). Pada setiap penyelarasan bulanan, pegang 10 nama teratas dengan berat sama. Pada Januari 2024, dekil teratas termasuk NVDA, META, AMD, AVGO, LLY, CRM, ORCL, GE, UBER, dan PANW. Pada April, bakul berputar untuk membuang UBER dan PANW serta menambah MU dan DELL. Pada Julai, NVDA, META, AVGO, LLY kekal; peserta baru termasuk TSM (jika berkenaan), GOOGL, dan INTU. Pedagang yang menjalankan peraturan ini secara mekanikal memiliki kira-kira separuh daripada pemenang terbesar tahun itu dan berputar secara sistematik tanpa cuba mengira puncak. Pulangan kasar tahunan pada bakul melebihi 50% berbanding ~25% untuk S&P 500 — walaupun dengan volatiliti yang lebih tinggi secara ketara dan penurunan ~12% semasa episod putaran Julai-Agustus.
 
-Kriteria kemasukan: pada penyelarasan bulanan, ticker berada dalam dekan teratas oleh pulangan terunggat 12-1 DAN mempunyai kecairan dolar-minimum untuk saiz dalam had <Term id="ami_mandate" />. Pegang: sehingga penyelarasan bulanan seterusnya. Keluar/putaran: ticker keluar dari dekan teratas pada penyelarasan — jual, gantikan dengan pendatang baru. Pembatalan perdagangan individu (the <Term id="ami_pm_safety_floor" />): had kerugian keras 25% pada mana-mana kedudukan tunggal tanpa mengira keadaan strategi, untuk mengekang kerosakan semasa kemerosotan momentum. Saiz: berat sama dalam bakul; pendedahan kasar bakul dihadkan kepada maksimum yang ditakrifkan mandat (biasanya 60-80% daripada modal, baki dalam tunai atau alokasi defensif). Strategi GAGAL dalam dua rejim: (1) kemerosotan momentum — pembalikan ganas jangka pendek (Q1 2009, Q1 2016, minggu putaran vaksin November 2020) di mana nama-nama momentum tinggi jatuh dan nama-nama momentum rendah naik; (2) pembongkaran pasca-buih di mana nama-nama momentum tertinggi ADALAH buih tersebut (Mac 2000 Nasdaq).
+Kriteria masuk: pada penyelarasan bulanan, ticker berada dalam dekil teratas berdasarkan pulangan terunggul 12-1 DAN mempunyai cecairan isipadu dolar minimum untuk saizkan dalam had <Term id="ami_mandate" />. Pegang: sehingga penyelarasan bulanan seterusnya. Keluar/putaran: ticker keluar dari dekil teratas pada penyelarasan — jual, gantikan dengan peserta baru. Pembatalan perdagangan individu (<Term id="ami_pm_safety_floor" />): had henti kerugian keras 25% pada mana-mana kedudukan tunggal tanpa mengira keadaan strategi, untuk mengawal kerosakan semasa kemerosotan momentum. Saizkan: berat sama dalam bakul; pendedahan kasar bakul dihadkan kepada maksimum yang ditakrifkan dalam mandat (biasanya 60-80% daripada modal, selebihnya dalam tunai atau peruntukan defensif). Strategi GAGAL dalam dua rejim: (1) kemerosotan momentum — pembalikan ganas jangka pendek (Q1 2009, Q1 2016, minggu putaran vaksin November 2020) di mana nama-nama berkekuatan tinggi jatuh dan nama-nama berkekuatan rendah naik; (2) pembatalan pasca-buih di mana nama-nama berkekuatan tertinggi ADALAH buih tersebut (Mac 2000 Nasdaq).
 
 ## Perangkap
 
-Kesilapan pemula ialah menggunakan jangka masa kembali yang salah — paling biasa ialah 3 bulan terkini atau 1 bulan, yang sebenarnya menunjukkan PEMBALIKAN JANGKA PENDEK, bukan momentum. Membeli pemenang bulan lalu kehilangan wang pada purata; membeli pemenang 12 bulan terakhir tetapi bukan bulan terakhir menghasilkan wang pada purata. Model mental yang betul: jangka masa kembali 12-1 (atau pulangan jumlah 12 bulan) disahkan secara empirikal; jangka masa kembali yang lebih pendek membalikkan kesan. Perangkap lain: memilih secara pilih kasih nama dekan teratas untuk "dilepaskan". Anda melihat bakul penyelarasan, memutuskan salah satunya "terlihat seperti puncak", dan mengecualikannya. Pada masa hadapan, nama-nama yang kelihatan seperti puncak pada tarikh penyelarasan secara tidak proporsional ialah pemenang ke hadapan terbesar — pertimbangan anda sendiri mengurangkan pulangan strategi.
+Kesilapan pemula ialah menggunakan jangkaan kembali yang salah — paling biasa ialah 3 bulan terkini atau 1 bulan, yang sebenarnya menunjukkan PEMULAHAN JANGKA PENDEK, bukan momentum. Membeli pemenang bulan lalu kehilangan wang pada purata; membeli pemenang 12 bulan terakhir tetapi bukan bulan terakhir menghasilkan wang pada purata. Model mental yang betul: jangkaan kembali 12-1 (atau pulangan jumlah 12 bulan) disahkan secara empirikal; jangkaan kembali yang lebih pendek membalikkan kesan. Perangkap lain: memilih secara pilih kasih nama dekil teratas untuk "dilepaskan". Anda melihat bakul penyelarasan, memutuskan salah satunya "terlihat seperti puncak", dan mengecalkannya. Dari masa ke masa, nama-nama yang terlihat seperti puncak pada tarikh penyelarasan adalah secara tidak proporsional pemenang ke hadapan terbesar — discretion anda mengurangkan pulangan strategi.
 
 <ChatWith agent="aggressive_debator" />
 
 ## Kuiz
 
 <Quiz
-  question="Anda membina peraturan momentum kekuatan relatif. Pulasan balik (lookback) yang manakah paling boleh dipercayai menghasilkan pulangan ke hadapan yang positif?"
+  question="Anda membina peraturan momentum kekuatan relatif. Pusingan lihat balik mana yang paling boleh dipercayai menghasilkan pulangan ke hadapan yang positif?"
   options={[
-    "Pulangan jumlah terikat 1 hari",
-    "Pulangan jumlah terikat 3 bulan",
-    "Pulangan jumlah terikat 1 bulan — susun mengikut kekuatan terkini",
-    "Pulangan jumlah terikat 12 bulan mengecualikan bulan terkini (12-1)"
+    "Pulangan jumlah terlaras 1 hari",
+    "Pulangan jumlah terlaras 3 bulan",
+    "Pulangan jumlah terlaras 1 bulan — susun mengikut kekuatan terkini",
+    "Pulangan jumlah terlaras 12 bulan mengecualikan bulan terkini (12-1)"
   ]}
   answer={3}
-  explanation="Pulasan balik 12-1 adalah spesifikasi yang paling banyak direplikasi dalam literatur momentum akademik; ia mengelakkan kesan pembalikan jangka pendek yang mendominasi pulasan balik 1 bulan dan malah 3 bulan. Susunan pulasan balik 1 bulan terkini adalah jawapan salah yang memikat kerana 'kekuatan terkini' terasa intuitif sebagai momentum — secara empirikal ia adalah sebaliknya (pemenang bulan lalu cenderung membuat prestasi buruk pada bulan berikutnya, anomali pembalikan jangka pendek)."
+  explanation="Pusingan lihat balik 12-1 adalah spesifikasi yang paling kerap direplikasi dalam literatur akademik momentum; ia mengelakkan kesan songsangan jangka pendek yang mendominasi pusingan lihat balik 1 bulan. Susunan terlaras 1 bulan adalah jawapan salah yang menggoda kerana 'kekuatan terkini' terasa secara intuitif seperti momentum — secara empirikal ia adalah sebaliknya (pemenang bulan lalu cenderung underperform bulan seterusnya, anomali songsangan jangka pendek)."
 />
 
 <Quiz
-  question="Pada penimbunan semula bulanan, decile teratas alam semesta anda mengandungi 10 nama. NVDA berada di dalamnya selama 13 bulan berturut-turut dan naik ~250% sepanjang tempoh tersebut. Anda tergoda untuk mengecualikan NVDA kerana 'ia telah melampau' dan menggantikannya dengan nama #11. Mandat anda menetapkan had penurunan (drawdown) pada 25% dan anda berada pada 8%. Aggressive Debator berhujah 'tahan kesemua 10; kelebihan sistem datang daripada tidak membuat pengecualian'. Conservative Debator berhujah 'hadkan mana-mana nama tunggal kepada 8% portfolio'. Sintesis: apakah tindakan yang betul?"
+  question="Pada pelarasan bulanan, decile teratas alam semesta anda mengandungi 10 nama. NVDA berada di dalamnya selama 13 bulan berturut-turut dan naik ~250% sepanjang tempoh tersebut. Anda tergoda untuk mengecualikan NVDA kerana 'ia telah melampau' dan menggantikannya dengan nama #11. Mandat anda menetapkan had penurunan (drawdown) pada 25% dan anda berada pada 8%. Aggressive Debator berhujah 'simpan kesemua 10; tepi sistem datang daripada tidak mengganggu'. Conservative Debator berhujah 'hadkan mana-mana nama tunggal pada 8% portfolio'. Sintesis: apakah tindakan yang betul?"
   options={[
-    "Tahan kesemua 10 tetapi hadkan berat NVDA kepada 8% (rangkaian Conservative Debator) dan taburkan semula lebihan tersebut",
-    "Eksklusi NVDA — ia telah berada terlalu lama; risiko reverensi purata adalah tinggi",
-    "Jual separuh daripada kedudukan NVDA sahaja",
-    "Tahan kesemua 10 dengan berat sama mengikut peraturan"
+    "Simpan kesemua 10 tetapi hadkan berat NVDA pada 8% (bingkai Conservative Debator) dan agihkan semula lebihan tersebut",
+    "Eksklusi NVDA — ia telah berada terlalu lama; risiko reverensi min adalah tinggi",
+    "Jual separuh kedudukan NVDA sahaja",
+    "Simpan kesemua 10 dengan berat sama rata mengikut peraturan"
   ]}
   answer={0}
-  explanation="Sintesis: sistem menyatakan untuk menahan kesemua 10 nama, tetapi nama yang telah berada dalam decile teratas selama 13 bulan boleh menjadi dominan dalam portfolio jika berat sama tidak ditegakkan semula; satu drawdown 25% pada nama yang luar biasa ini boleh mencapai had mandat. Had dari Conservative Debator menghormati mandat tanpa melanggar logik keluar peraturan (NVDA masih keluar apabila ia jatuh KELUAR daripada decile teratas, bukan sebelum itu). Mengecualikan NVDA secara manual adalah jawapan salah yang memikat yang memusnahkan kelebihan strategi melalui diskresi."
+  explanation="Sintesis: sistem menyatakan simpan kesemua 10 nama, tetapi nama yang telah berada di decile teratas selama 13 bulan boleh menguasai portfolio jika berat sama rata tidak ditegakkan semula; satu drawdown 25% pada nama yang luar biasa boleh mencapai had mandat. Had dari Conservative Debator menghormati mandat tanpa melanggar logik keluar peraturan (NVDA masih keluar apabila ia jatuh KELUAR daripada decile teratas, bukan sebelum itu). Mengecualikan NVDA secara manual adalah jawapan salah yang menggoda yang memusnahkan tepi strategi melalui discretion."
 />
 
 ## Cuba sendiri
 
-<Term id="ami_convene_the_room" /> pada <Term id="ami_watchlist" /> anda atau S&P 100 dan tanya Trader: "Klasifikasikan nama-nama ini berdasarkan pulangan jumlah 12 bulan tolak 1 bulan. Senaraikan 10 teratas untuk bulan semasa. Kenal pasti mana yang akan menjadi pendatang baru berbanding penerus dari bakul bulan lalu." Kemudian gunakan <Term id="ami_coach_your_agent" /> pada Aggressive Debator: "Pertahankan mana-mana nama yang telah berada dalam dekan teratas selama 6+ bulan berturut-turut terhadap dorongan untuk mengambil untung — di situlah pemenang terbesar strategi berasal." Log bakul dan mana-mana peraturan bimbingan dalam <Term id="ami_decision_journal" />.
+<Term id="ami_convene_the_room" /> pada <Term id="ami_watchlist" /> atau S&P 100 dan tanya Trader: "Klasifikasikan nama-nama ini berdasarkan pulangan jumlah 12 bulan tolak 1 bulan. Senaraikan 10 teratas untuk bulan semasa. Kenal pasti mana yang akan menjadi peserta baru berbanding pengekalan dari bakul bulan lalu." Kemudian gunakan <Term id="ami_coach_your_agent" /> pada Aggressive Debator: "Pertahankan mana-mana nama yang telah berada dalam dekil teratas 6+ bulan berturut-turut terhadap dorongan untuk mengambil untung — itu adalah sumber pemenang terbesar strategi." Logkan bakul dan mana-mana peraturan yang dikoach dalam <Term id="ami_decision_journal" />.
 
-## Penegasan
+## Penutup
 
-Momentum kekuatan relatif hidup dalam jangka masa kembali 12-1; jangka masa kembali yang lebih pendek membalikkan kesan. Pegang bakul yang diberikan sistem; hadkan berat nama tunggal, bukan kemasukan nama tunggal.
+Momentum kekuatan relatif wujud dalam jangkaan kembali 12-1; jangkaan kembali yang lebih pendek membalikkan kesan. Pegang bakul yang diberikan sistem kepada anda; hadkan berat nama tunggal, bukan penyertaan nama tunggal.

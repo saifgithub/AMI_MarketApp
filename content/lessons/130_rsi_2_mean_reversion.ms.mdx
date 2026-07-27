@@ -1,6 +1,6 @@
 ---
 id: "130_rsi_2_mean_reversion"
-title: "RSI(2) — reverensi min jangka pendek"
+title: "RSI(2) — reversion purata jangka pendek"
 duration_min: 5
 level: 2
 module: 5
@@ -17,61 +17,61 @@ updated_at: "2026-05-12"
 ---
 # RSI(2) — mean reversion jangka pendek
 
-<Lesson id="027_rsi_momentum_oscillator"/> menggunakan RSI(14) lalai. Kurangkan lookback kepada 2 dan penunjuk ini berubah menjadi sesuatu yang berbeza — osilator mean-reversion jangka pendek yang berayun antara ekstrem dalam tempoh beberapa hari. RSI(2) dipopularkan oleh Larry Connors untuk membeli penurunan harga (pullback) dalam saham yang berada di atas purata bergerak 200 hari (SMA200). Mekanik: dalam saham yang disahkan berada dalam trend naik jangka panjang, RSI(2) jatuh di bawah 10 biasanya sekali setiap 6–12 minggu semasa penurunan tajam 2–4 hari. Membeli pada penurunan itu dan menjual apabila RSI(2) mencapai 70 menghasilkan tempoh pegangan purata tiga hingga lima sesi. Ini bukan sistem trend; ia adalah sistem snapback. Dan ia hanya berfungsi dalam trend naik yang telah mapan.
+<Lesson id="027_rsi_momentum_oscillator"/> menggunakan RSI(14) lalai. Kurangkan lookback kepada 2 dan indikator ini berubah menjadi sesuatu yang berbeza — sebuah osilator mean-reversion jangka pendek yang bergerak melintasi ekstrem dalam tempoh beberapa hari. RSI(2) dipopularkan oleh Larry Connors untuk membeli pembetulan harga (pullback) pada saham yang berada di atas purata bergerak 200 hari (SMA200). Mekanisme: pada saham yang disahkan berada dalam trend naik jangka panjang, RSI(2) biasanya jatuh di bawah 10 sekali setiap 6–12 minggu semasa pembetulan tajam selama 2–4 hari. Membeli pada titik rendah tersebut dan menjual apabila RSI(2) mencapai 70 menghasilkan tempoh pegangan purata tiga hingga lima sesi. Ini bukan sistem trend; ia sistem snapback. Ia hanya berfungsi dalam trend naik yang telah mapan.
 
 ## Bagaimana ia berlaku dalam pasaran sebenar
 
-Lihat GOOGL sepanjang 2025. GOOGL ditutup di atas SMA200-nya pada setiap hari dagangan dari Mac hingga Disember — trend naik jangka panjang yang disahkan. Dalam tahun tersebut, RSI(2) harian jatuh di bawah 10 sebanyak sembilan kali. Membuka posisi pada harga buka hari berikutnya bagi setiap isyarat dan keluar apabila RSI(2) melintasi semula di atas 70 menghasilkan:
+Lihat satu saham sepanjang tahun 2025. Saham itu menutup di atas SMA200 pada setiap hari dagangan dari Mac hingga Disember — trend naik jangka panjang yang disahkan. Dalam tahun tersebut, RSI(2) harian jatuh di bawah 10 sebanyak sembilan kali. Membuka posisi pada harga buka hari berikutnya bagi setiap isyarat dan keluar apabila RSI(2) melintas semula di atas 70 menghasilkan:
 
 - 7 perdagangan untung dengan purata +1.8% per perdagangan, tempoh pegangan 3–4 hari
 - 2 perdagangan rugi dengan purata -2.2% per perdagangan
 
-Jumlah: kira-kira +9.2% merentasi sembilan perdagangan dalam 10 bulan pada satu ticker, dengan tempoh pegangan purata kurang seminggu. Kadar kemenangan 78% dan tempoh pegangan yang kecil adalah tanda sistem mean-reversion yang berfungsi dalam trend.
+Jumlah: kira-kira +8.2% merentas sembilan perdagangan selama 10 bulan pada satu ticker, dengan tempoh pegangan purata kurang daripada seminggu. Kadar kemenangan 78% dan tempoh pegangan yang pendek adalah tanda ciri sistem mean-reversion yang berfungsi dalam trend.
 
-Falsifikasi adalah mekanikal dan teruk — mean-reversion RSI(2) di luar trend naik SMA200 secara sejarah memberikan pulangan kira-kira sifar sebelum yuran. Jika harga ditutup di bawah SMA200, sistem ini tidak aktif sehingga SMA200 kembali naik dan harga melintasi semula ke atasnya. Isyarat RSI(2) yang sama dalam trend turun yang disahkan (harga di bawah SMA200 yang menurun) menghasilkan pembelian yang separuh daripada potensi kerugian.
+Pembuktian kesilapan adalah mekanikal dan teruk — mean-reversion RSI(2) di luar trend naik SMA200 secara historikal memberikan pulangan kira-kira sifar sebelum yuran. Jika harga menutup di bawah SMA200, sistem menjadi luar talian sehingga SMA200 kembali naik dan harga melintas semula. Isyarat RSI(2) yang sama dalam trend turun yang disahkan (harga di bawah SMA200 yang menurun) menghasilkan pembelian yang terpotong separuh.
 
-Perbandingan: TSLA pada awal 2025 diperdagangkan di bawah SMA200 dari Januari hingga Mac. RSI(2) jatuh di bawah 10 sebanyak empat kali dalam tingkap tersebut. Setiap "isyarat" menghasilkan kerugian purata -3.4% kerana trend turun berterusan. Penunjuk yang sama, tanpa penapis trend — sistem gagal.
+Perbandingan: saham yang jatuh pada awal 2025 berdagang di bawah SMA200 dari Januari hingga Mac. RSI(2) jatuh di bawah 10 sebanyak empat kali dalam tetingkap tersebut. Setiap "isyarat" menghasilkan kerugian purata -3.4% kerana trend turun berterusan. Indikator yang sama, tanpa penapis trend — sistem gagal.
 
-Di Bursa Malaysia: PUBLIC BANK semasa 2024 (di atas SMA200 sepanjang tahun) mempunyai lapan isyarat RSI(2) < 10, enam untung dengan purata +1.3%; sistem ini berfungsi kerana penapis trend diaktifkan.
+Di Bursa Malaysia: satu saham besar Bursa Malaysia pada tahun 2024 (di atas SMA200 sepanjang tahun) mempunyai lapan isyarat RSI(2) < 10, enam untung dengan purata +1.3%; sistem berfungsi kerana penapis trend diaktifkan.
 
 ## Perangkap
 
-Perangkapnya ialah menggunakan RSI(2) sebagai isyarat berdiri sendiri tanpa penapis trend SMA200. RSI(2) < 10 kelihatan seperti "jenuh jual yang jelas" — dan dalam saham yang jatuh 30% dari paras tertinggi, "jenuh jual" boleh menjadi lebih jenuh jual selama beberapa minggu. Isyarat ini berfungsi kerana ia menangkap penurunan normal dalam trend naik yang mapan; ia gagal apabila trend asas telah berbalik dan penurunan itu berubah menjadi kemerosotan.
+Perangkapnya ialah menggunakan RSI(2) sebagai isyarat tunggal tanpa penapis trend SMA200. RSI(2) < 10 kelihatan seperti "terjual berlebihan yang jelas" — dan pada saham yang jatuh 30% dari paras tertinggi, "terjual berlebihan" boleh menjadi lebih terjual berlebihan selama berminggu-minggu. Isyarat ini berfungsi kerana ia menangkap pembetulan biasa dalam trend naik yang mapan; ia gagal apabila trend asas telah berbalik dan pembetulan bertukar menjadi penurunan.
 
-Model mental yang betul: RSI(2) adalah alat ketepatan untuk rejim tertentu — saham yang disahkan dalam trend naik jangka panjang (harga di atas SMA200 yang menaik). Isyarat ini mengekstrak snapback selepas penurunan 2–4 hari dalam trend naik tersebut. Di luar trend, ia tiada kelebihan. Gabungkan penapis SMA200 dengan pencetus RSI(2) dan anda mempunyai sistem; buang penapis itu dan anda hanya mempunyai penjana hingar.
+Model mental yang betul: RSI(2) adalah alat presisi untuk rejim khusus — saham yang disahkan dalam trend naik jangka panjang (harga di atas SMA200 yang menaik). Isyarat ini mengekstrak snapback selepas pembetulan 2–4 hari dalam trend naik tersebut. Di luar trend, ia tiada kelebihan. Gabungkan penapis SMA200 dengan pencetus RSI(2) dan anda mempunyai sistem; buang penapis dan anda hanya mempunyai penjana hingar.
 
 <ChatWith agent="market_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="GOOGL menutup di atas SMA200 setiap hari dari Mac hingga Disember. RSI(2) harian turun di bawah 10 sebanyak sembilan kali berasingan dalam tetingkap itu. Selepas setiap isyarat, anda membeli pada buka pasaran seterusnya dan keluar apabila RSI(2) > 70. Tujuh kemenangan purata +1.8% (pegangan 3–4 hari); dua kerugian purata -2.2%. Apakah ini memberitahu anda tentang reverensi purata RSI(2)?"
+  question="Sebuah saham penutup di atas SMA200 setiap hari selama sepuluh bulan. RSI(2) harian jatuh di bawah 9 kali dalam tetingkap itu. Mengikuti setiap isyarat, anda beli pada buka pasaran seterusnya dan keluar apabila RSI(2) > 70. Tujuh pemenang purata +1.8% (pegangan 3–4 hari); dua penengah purata -2.2%. Apakah ini memberitahu anda tentang reverensi purata RSI(2)?"
   options={[
-    "Dua kerugian bermakna sistem itu rosak",
-    "Reverensi purata sentiasa berfungsi; RSI(2) secara universal menguntungkan",
-    "Kadar kemenangan 78% dan tempoh pegangan yang pendek berfungsi seperti direka — tetapi sistem memerlukan penapis trend naik SMA200; isyarat yang sama dalam trend turun secara sejarah memulangkan kira-kira sifar atau lebih buruk",
+    "Dua penengah bermaksud sistem itu rosak",
+    "Reverensi purata sentiasa berfungsi; RSI(2) adalah untung universal",
+    "Kadar kemenangan 78% dan tempoh pegangan yang pendek berfungsi seperti yang dirancang — tetapi sistem memerlukan penapis trend menaik SMA200; isyarat yang sama dalam trend menurun secara historikal memulangkan kira-kira sifar atau lebih buruk",
     "RSI(2) adalah penunjuk trend jangka panjang"
   ]}
   answer={2}
-  explanation="Contoh ini menunjukkan sistem berfungsi dalam rejim yang betul. Jawapan salah yang menarik ('sentiasa berfungsi') mengabaikan penapis trend — pelajaran ini membentangkan GOOGL yang menguntungkan berbanding TSLA yang rugi daripada penunjuk yang sama tanpa penapis. Dua kerugian dalam sembilan perdagangan adalah normal; sistem reverensi purata biasanya mempunyai kadar kemenangan 70–80% dengan kerugian yang terkawal. Menamakan sistem itu rosak (pilihan D) salah faham matematik — sistem itu melakukan apa yang direka untuk dilakukannya."
+  explanation="Contoh ini menunjukkan sistem berfungsi dalam rejim yang betul. Jawapan salah yang menarik ('sentiasa berfungsi') mengabaikan penapis trend — pengajaran ini membentangkan kontras antara isyarat untung dalam contoh trend menaik dengan isyarat rugi dalam contoh trend menurun dari penunjuk yang sama tanpa penapis. Dua penengah dalam sembilan perdagangan adalah normal; sistem reverensi purata biasanya mempunyai kadar kemenangan 70–80% dengan penengah yang terkawal. Menamakan sistem itu rosak (pilihan D) salah faham matematik — sistem itu melakukan apa yang direka untuk dilakukannya."
 />
 
 <Quiz
-  question="Sebuah saham telah jatuh selama empat bulan dan menutup 8% di bawah SMA200nya, yang condong ke bawah. RSI(2) harian mencetak 6 — jauh di bawah ambang 10. Saiz akaun $20,000, had mandat 1% risiko. Apa yang kerangka pelajaran ini katakan?"
+  question="Sebuah saham telah jatuh selama empat bulan dan penutup 8% di bawah SMA200, yang condong ke bawah. RSI(2) harian mencetak 6 — jauh di bawah ambang 10. Saiz akaun $20,000, had mandat 1% risiko. Apa kata kerangka kerja pengajaran ini?"
   options={[
-    "Beli dengan saiz penuh — RSI(2) < 10 adalah isyarat jenuh jual yang kuat",
-    "Langkau perdagangan: reverensi purata RSI(2) memerlukan harga di atas SMA200 yang naik. Isyarat dalam trend turun tiada kelebihan, dan pelajaran itu merujuk kepada empat isyarat rugi TSLA dalam keadaan yang sama sebagai bukti.",
-    "Pendek saham itu sebaliknya kerana RSI(2) jenuh beli",
+    "Beli saiz penuh — RSI(2) < 10 adalah isyarat jenuh jual yang kuat",
+    "Langkau perdagangan: reverensi purata RSI(2) memerlukan harga di atas SMA200 yang menaik. Isyarat itu tiada kelebihan di bawah SMA200 yang menurun.",
+    "Pendek saham itu sebaliknya kerana RSI(2) adalah jenuh beli",
     "Beli separuh saiz untuk menguji isyarat"
   ]}
   answer={1}
-  explanation="Kelebihan isyarat itu bersyarat rejim. Tanpa penapis trend naik, jangkaan sejarah adalah kira-kira sifar atau lebih buruk — pelajaran itu merujuk kepada purata -3.4% TSLA merentasi empat isyarat dalam trend turun. Jawapan salah yang menarik ('beli saiz penuh, jenuh jual adalah jenuh jual') adalah tepat kesilapan yang pelajaran ini dibina untuk menghalang. Saiz separuh dalam keadaan tiada kelebihan (pilihan C) masih pertaruhan tiada kelebihan, hanya lebih kecil. Penapis trend bukan penambah baik; ia keseluruhan sistem."
+  explanation="Kelebihan isyarat itu adalah bersyarat rejim. Tanpa penapis trend menaik, jangkaan historikal adalah kira-kira sifar atau lebih buruk — isyarat itu tiada kelebihan di bawah SMA200 yang menurun. Jawapan salah yang menarik ('beli saiz penuh, jenuh jual adalah jenuh jual') adalah tepat kesalahan yang pengajaran ini dibina untuk mengelakkan. Saiz separuh dalam keadaan tiada kelebihan (pilihan C) masih pertaruhan tiada kelebihan, hanya lebih kecil. Penapis trend bukan penambahbaikan; ia adalah keseluruhan sistem."
 />
 
 ## Cuba sendiri
 
-Dalam Market Analyst <Term id="ami_one_on_one" />, tanya: "Pada <Term id="ami_watchlist" /> saya, saham mana yang semasa berada di atas SMA200 yang menaik dan mempunyai bacaan RSI(2) harian di bawah 10? Terangkan tiga isyarat sedemuka terakhir pada setiap satu — kemasukan, pengeluaran, tempoh pegangan." Kemudian sahkan pada carta. Ini adalah jenis perdagangan ketepatan; gunakan hanya apabila penapis trend diaktifkan.
+Dalam Market Analyst <Term id="ami_one_on_one" />, tanya: "Pada <Term id="ami_watchlist" />, saham manakah yang semasa berada di atas SMA200 yang menaik dan mempunyai bacaan RSI(2) harian di bawah 10? Terangkan tiga isyarat sedemikian yang terakhir pada setiap satu — kemasukan, pengeluaran, tempoh pegangan." Kemudian sahkan pada carta. Ini adalah jenis perdagangan presisi; gunakan hanya apabila penapis trend diaktifkan.
 
-## Kesimpulan
+## Pengajaran
 
-RSI(2) adalah alat ketepatan mean-reversion untuk saham di atas SMA200 yang menaik — isyarat tipikal sekali setiap 6–12 minggu, pegangan 3–5 hari, kadar kemenangan 70–80% apabila penapis trend diaktifkan, tiada kelebihan apabila tidak.
+RSI(2) adalah alat presisi mean-reversion untuk saham di atas SMA200 yang menaik — isyarat tipikal sekali setiap 6–12 minggu, pegangan 3–5 hari, kadar kemenangan 70–80% apabila penapis trend diaktifkan, tiada kelebihan apabila tidak diaktifkan.

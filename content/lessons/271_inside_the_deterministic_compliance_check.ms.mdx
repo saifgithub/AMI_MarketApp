@@ -1,6 +1,6 @@
 ---
 id: "271_inside_the_deterministic_compliance_check"
-title: "Di Sebalik Semakan Pematuhan Deterministik"
+title: "Di sebalik pemeriksaan pematuhan deterministik"
 duration_min: 6
 level: 8
 module: 12
@@ -11,80 +11,78 @@ topic: "deterministic_compliance_check"
 prerequisites: ["074_ai_hallucinations_and_amis_safety_floor", "270_why_the_pm_is_structurally_separate"]
 tags: ["compliance", "safety_floor", "deterministic", "architecture", "pm"]
 agent_callouts: ["portfolio_manager"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Di sebalik semakan kepatuhan deterministik
 
-Frasa "semakan kepatuhan deterministik" kedengaran teknikal kerana ia perlu sedemikian. Model bahasa teras yang memacu <Term id="ami" />'s <Term id="twelve_agent_team" /> adalah kebarangkalian — soalan yang sama yang ditanya dua kali boleh menghasilkan tempat yang sedikit berbeza. Varians sebegini boleh diterima untuk analisis dan sintesis; ia tidak boleh diterima untuk soalan "adakah dagangan ini dibenarkan?". Oleh itu, bahagian AMI yang menjawab soalan tersebut bukanlah satu *prompt* dan bukan panggilan model. Ia adalah fungsi biasa, ditulis dalam Python, yang membaca <Term id="ami_mandate" /> dan cadangan dagangan anda, kemudian mengembalikan PASS atau BLOCK. Input yang sama, jawapan yang sama, setiap kali. Pada akhir pelajaran ini, anda akan memahami mengapa ketentuan ini adalah intipati utamanya.
+Frasa "semakan kepatuhan deterministik" kedengaran teknikal kerana ia perlu begitu. Model bahasa teras yang memacu <Term id="ami" />'s <Term id="twelve_agent_team" /> adalah probabilistik — soalan yang sama ditanya dua kali boleh menghasilkan hasil yang sedikit berbeza. Varians sedemikian adalah okay untuk analisis dan sintesis; ia tidak okay untuk soalan "adakah dagangan ini dibenarkan?". Oleh itu, bahagian AMI yang menjawab soalan itu bukanlah satu *prompt* dan bukanlah satu panggilan model. Ia adalah fungsi biasa, ditulis dalam Python, yang membaca <Term id="ami_mandate" /> anda dan cadangan dagangan tersebut, kemudian mengembalikan PASS atau BLOCK. Input yang sama, jawapan yang sama, setiap kali. Pada akhir pelajaran ini, anda akan memahami mengapa ketentuan ini adalah matlamat utamanya.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
-Bayangkan versi paling ringkas semakan tersebut. Cadangan dagangan tiba dengan medan:
+Bayangkan versi paling mudah bagi semakan ini. Cadangan dagangan tiba dengan medan:
 
 ```
-ticker: NVDA
+ticker: XOM
 side: BUY
-proposed_size_pct: 7.0
+proposed_size_pct: 60.0
 estimated_max_loss_pct: 4.5
-sector: technology
-region: us
-is_fossil: false
-is_halal_compliant: true
+sector: energy
 ```
 
 Medan Mandat anda:
 
 ```
-max_position_pct: 5
+risk_score: 3
 max_drawdown_pct: 20
-halal: false
-no_fossil: false
-region_allowlist: [us, bursa_malaysia]
-long_only: false
+compliance:
+  halal: false
+  long_only: true
+  ticker_blocklist: [XOM]
+  ticker_allowlist: null
 ```
 
-Semakan berjalan secara tertib, secara deterministik. *Adakah `proposed_size_pct` > `max_position_pct`?* 7.0 > 5 → BLOCK. *Adakah `region` dalam `region_allowlist`?* us → ok. *Adakah `no_fossil` terpakai?* Tidak. *Adakah `halal` terpakai?* Tidak. *Adakah `long_only` dilanggar?* Tidak. Kegagalan pertama menghentikan rantaian dan mengembalikan BLOCK dengan klausa khusus. Persona PM kemudian mengambil hasil itu dan menjelaskannya dalam bahasa Inggeris yang mudah di kaki tangan <Term id="ami_verdict" />. Jalankan Verdict yang sama sepuluh kali — anda akan mendapat BLOCK yang sama. Ubah Mandat anda kepada `max_position_pct: 8` dan jalankan semula — anda akan mendapat PASS. Model tidak diprompt semula; fungsi itu membaca data yang berbeza.
+Semakan menjalankan setiap peraturan, secara tertib dan deterministik — dan ia tidak berhenti pada kegagalan pertama. Ia menjalankan semua peraturan dan mengumpul setiap pelanggaran, merekodkan yang pertama dilanggar sebagai `blocked_by`. *Adakah `XOM` berada dalam `ticker_blocklist`?* Ya → pelanggaran, `blocked_by = "blocklist"`. *Adakah `proposed_size_pct` melebihi had tunggal nama mutlak?* AMI mengenakan had tetap 50% pada mana-mana satu kedudukan tanpa mengira tahap risiko — 60.0 > 50 → satu pelanggaran kedua dilampirkan. *Adakah `halal` terpakai?* Tidak, dilewatkan. *Adakah `long_only` dilanggar?* Tidak — ini adalah pembelian. Kedua-dua pelanggaran dikembalikan bersama dalam hasil; persona PM kemudian mengambil hasil itu dan menjelaskannya dalam bahasa Inggeris yang mudah di kaki <Term id="ami_verdict" />. Jalankan Verdict yang sama sepuluh kali — anda mendapat dua pelanggaran yang sama. Buang XOM dari `ticker_blocklist` dan kurangkan saiz cadangan kepada 40% dan jalankan semula — anda mendapat PASS. Model tidak diprompt semula; fungsi itu membaca data yang berbeza.
 
-Sekarang buat perbandingan: jika semakan tersebut adalah "meminta agen PM dengan sopan sama ada dagangan ini sesuai", jawapannya akan berubah-ubah. Kes Bull yang persuasif dalam tetingkap konteks yang sama boleh mengubah respons agen. Nota ringkasan yang menyatakan "jadikan lebih fleksibel" boleh mengubah susunan perkataan. Fungsi tersebut tidak melihat kes Bull. Fungsi tersebut tidak melihat ringkasan. Ia hanya melihat dua objek berstruktur dan senarai peraturan.
+Sekarang buat perbandingan: jika semakan ini adalah "memohon kepada agen PM dengan sopan sama ada dagangan ini sesuai", jawapannya akan berubah. Kes Bull yang persuasif dalam tetingkap konteks yang sama boleh mengubah respons agen. Nota ringkasan yang menyatakan "jadilah lebih fleksibel" boleh mengubah perkataannya. Fungsi itu tidak melihat kes Bull. Fungsi itu tidak melihat ringkasan. Ia melihat dua objek terstruktur dan senarai peraturan.
 
 ## Perangkap
 
-Perangkapnya ialah berfikir bahawa semakan kepatuhan adalah penilaian AI yang canggih. Ia bukan begitu. Ia sengaja *tidak canggih* — perbandingan asas, penanda pengecualian, carian — kerana kecerewetan adalah tepat apa yang anda tidak mahu pada <Term id="ami_pm_safety_floor" />. Anda mahu semakan yang tidak boleh diperdebatkan, tidak boleh dipujuk, dan tidak boleh berubah. Pertukaran yang nyata: semakan deterministik tidak dapat menangkap setiap kes sempadan yang akan dilihat oleh pemeriksa manusia yang pintar. Ia akan meluluskan kedudukan 5% dalam saham dengan asas fundamental yang merosot kerana saiznya berada dalam had mandat. Itu bukan pepijat; itu adalah kontrak. Perdebatan pasukan dagangan adalah tempat nuansa berlaku. Semakan PM adalah tempat garis tegas dikekalkan.
+Perangkapnya ialah berfikir bahawa semakan kepatuhan adalah penilaian AI yang canggih. Ia bukan. Ia sengaja *tidak canggih* — perbandingan asas, penanda pengecualian, carian — kerana kecerangan adalah tepat apa yang anda tidak mahu pada <Term id="ami_pm_safety_floor" />. Anda mahu semakan yang tidak boleh diperdebatkan, tidak boleh dipujuk, dan tidak boleh berubah. Pertukaran yang nyata: semakan deterministik tidak dapat menangkap setiap kes tepi yang akan dikesan oleh pemeriksa manusia yang bijak. Ia akan lulus kedudukan 5% dalam saham dengan asas yang merosot kerana saiznya berada dalam mandat. Itu bukan pepijat; itu adalah kontrak. Perdebatan pasukan dagangan adalah tempat nuansa berlaku. Semakan PM adalah tempat garisan tegas dikekalkan.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Mandat anda mempunyai `max_position_pct: 5`. sebelas ejen berhujah untuk 7% pada NVDA dengan keyakinan 0.78 dan kes Bull yang kuat. Anda menjalankan Verdict dua kali. Apakah yang berlaku pada semakan kepatuhan PM pada setiap larian?"
+  question="Mandat anda mempunyai NVDA dalam `ticker_blocklist`. sebelas ejen berhujah untuk kedudukan pada NVDA dengan keyakinan 0.78 dan kes Bull yang kuat. Anda menjalankan Verdict dua kali. Apakah yang berlaku pada semakan kepatuhan PM pada setiap run?"
   options={[
     "Ia lulus sekali apabila keyakinan pasukan dagangan cukup tinggi",
-    "Ia mungkin lulus pada larian kedua kerana mood model berubah-ubah",
-    "Ia mengembalikan PASS pada kali kedua kerana sistem belajar dari cubaan pertama",
-    "Ia mengembalikan BLOCK secara identikal kedua-dua kali — semakan ini adalah fungsi deterministik yang membaca medan Mandat anda 5 terhadap 7 yang dicadangkan, bukan panggilan LLM"
+    "Ia mungkin lulus pada run kedua kerana mood model berubah-ubah",
+    "Ia memulangkan PASS kali kedua kerana sistem belajar dari percubaan pertama",
+    "Ia memulangkan BLOCK sama kedua-dua kali — semakan ini adalah fungsi deterministik yang membandingkan NVDA dengan `ticker_blocklist` anda, bukan panggilan LLM"
   ]}
   answer={3}
-  explanation="Semakan kepatuhan adalah deterministik — input sama, output sama, setiap masa. Keyakinan, persuasi, dan nombor larian tidak masuk ke dalam fungsi. Itulah sebab utama semakan ini wujud di luar lapisan model. Jawapan salah yang menggoda ialah 'belajar dari cubaan pertama' — tiada gelung pembelajaran pada peraturan lantai keselamatan; itu akan menafikan tujuannya."
+  explanation="Semakan kepatuhan adalah deterministik — input sama, output sama, setiap kali. Keyakinan, persuasi, dan nombor run tidak masuk ke dalam fungsi. Itulah sebab utama semakan ini wujud di luar lapisan model. Jawapan salah yang menggoda ialah 'belajar dari percubaan pertama' — tiada gelung pembelajaran pada peraturan lantai keselamatan; itu akan menentang tujuan."
 />
 
 <Quiz
-  question="Mengapa semakan kepatuhan AMI disengajakan tidak canggih (perbandingan mudah dan penafian) berbanding penghakiman AI yang halus?"
+  question="Mengapa semakan kepatuhan AMI disengaja tidak canggih (perbandingan mudah dan penanda pengkecualian) berbanding penghakiman AI yang halus?"
   options={[
-    "Karena penghakiman AI yang halus terlalu mahal dalam kredit",
-    "Karena peraturan adalah domain awam dan tidak memerlukan AI",
-    "Kecanggian adalah tepat apa yang tidak anda mahu di lantai keselamatan — anda mahu semakan yang tidak boleh diperdebatkan, tidak boleh hanyut, dan tidak boleh dielakkan",
-    "Karena Saiful tidak mempunyai masa untuk membina versi pintar"
+    "Kerana penghakiman AI yang halus terlalu mahal dalam kredit",
+    "Kerana peraturan adalah domain awam dan tidak memerlukan AI",
+    "Kecanggihan adalah tepat apa yang anda tidak mahu di lantai keselamatan — anda mahu semakan yang tidak boleh diperdebatkan, tidak boleh hanyut, dan tidak boleh dikelirukan",
+    "Kerana Saiful tidak mempunyai masa untuk membina versi pintar"
   ]}
   answer={2}
-  explanation="Lantai keselamatan memerlukan kebolehramalan, bukan kecerdikan. Fungsi deterministik mudah difikirkan dan mustahil untuk dibujuk mengubah fikiran. Jawapan salah yang menggoda ialah kos — kredit bukan kekangan; kebolehaudit dan ketakterubahan adalah."
+  explanation="Lantai keselamatan memerlukan kebolehramalan, bukan kecerdikan. Fungsi deterministik murah untuk difikirkan dan mustahil untuk dibualkan mengubah fikiran. Jawapan salah yang menggoda ialah kos — kredit bukan kekangan; kebolehaudit dan keteguhan adalah."
 />
 
 ## Cuba sendiri
 
-Buka **Settings → Mandate**. Tetapkan `max_position_pct` kepada 5. <Term id="ami_convene_the_room" /> pada ticker AS sehingga anda melihat cadangan pada 6% atau lebih tinggi disekat. Sekarang ubah `max_position_pct` kepada 10 dan jalankan semula *Verdict yang sama tepat*. Sekatan hilang walaupun perdebatan pasukan dagangan adalah sama. Anda baru sahaja melihat fungsi deterministik membaca data yang berbeza.
+Buka **Settings → Mandate**. Tambahkan ticker AS yang anda mungkin akan berdebatkan ke dalam `ticker_blocklist` anda. <Term id="ami_convene_the_room" /> pada ticker tersebut sehingga anda melihat PM menyekat kerana melanggar senarai sekatan. Sekarang buang ticker dari `ticker_blocklist` dan jalankan semula *Verdict yang sama*. Penghalang itu hilang walaupun perdebatan pasukan dagangan adalah sama. Anda baru saja melihat fungsi deterministik membaca data yang berbeza.
 
 ## Pengajaran
 
-Semakan kepatuhan adalah fungsi, bukan perbualan. Input yang sama, output yang sama — keteguhan itulah sebabnya lantai keselamatan terikat di dalam simulator, dan mengapa AMI boleh mengajar anda membaca seni bina dengan jujur. AMI adalah simulator latihan; Verdict adalah artifak latihan untuk penilaian anda, bukan nasihat pelaburan.
+Semakan kepatuhan adalah fungsi, bukan perbualan. Input yang sama, output yang sama — ketidakbolehan bergerak inilah yang mengikat lantai keselamatan di dalam simulator, dan mengapa AMI boleh mengajar anda membaca seni bina dengan jujur. AMI adalah simulator latihan; Verdict adalah artifak latihan untuk penilaian anda, bukan nasihat pelaburan.

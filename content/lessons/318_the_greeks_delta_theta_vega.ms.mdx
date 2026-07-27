@@ -11,58 +11,58 @@ topic: "options_greeks"
 prerequisites: ["317_payoff_diagrams_intrinsic_time_value"]
 tags: ["options", "greeks", "delta", "theta", "vega", "time-decay"]
 agent_callouts: ["fundamentals_analyst", "market_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-21"
 updated_at: "2026-07-21"
 ---
 # The Greeks — intuisi delta, theta, vega
 
-Harga pilihan (option) bukan satu nombor yang berubah kerana satu sebab — ia adalah tiga daya yang menarik pada satu masa. Delta ialah berapa banyak harga option berubah apabila aset asas (underlying) bergerak. Theta ialah berapa banyak nilai option hilang hanya kerana masa berlalu, tanpa sebarang pergerakan harga. Vega ialah berapa banyak harga option berubah apabila jangkaan pasaran terhadap volatiliti masa depan berubah. Anda tidak memerlukan formula untuk menggunakan pelajaran ini — anda memerlukan intuisi bahawa ketiga-tiganya sentiasa aktif pada mana-mana posisi yang anda pegang, bukan hanya yang anda sedang perhatikan. Selepas pelajaran ini, anda akan dapat menerangkan, dalam bahasa mudah, mengapa option boleh kehilangan nilai walaupun anda betul mengenai arah pergerakan saham.
+Harga pilihan (option) bukan satu nombor yang bergerak atas satu sebab — ia adalah tiga daya yang menarik serentak. Delta ialah seberapa banyak harga option berubah apabila aset asas bergerak. Theta ialah seberapa banyak nilai option terkikis hanya kerana masa berlalu, tanpa sebarang pergerakan harga. Vega ialah seberapa banyak harga option berubah apabila jangkaan pasaran terhadap volatiliti masa hadapan berubah. Anda tidak memerlukan formula untuk menggunakan pelajaran ini — anda memerlukan intuisi bahawa ketiga-tiganya sentiasa aktif pada mana-mana posisi yang anda pegang, bukan hanya yang sedang anda perhatikan. Selepas pelajaran ini, anda akan dapat menerangkan, dalam bahasa mudah, mengapa option boleh kehilangan nilai walaupun anda telah menjangka arah pergerakan saham dengan betul.
 
 ## Contoh
 
-Sebelum laporan pendapatan (earnings report) AAPL, pasaran menaikkan harga calls dan puts sama rata — termasuk yang jauh daripada harga semasa — kerana volatiliti tersirat (target vega) meningkat apabila pergerakan besar kelihatan lebih mungkin. Itu adalah vega bekerja: jangkaan tulen, tiada pergerakan harga diperlukan. Sambil itu, setiap option dalam rantaian itu juga kehilangan sedikit nilai setiap hari hanya kerana kalendar berjalan — itu adalah theta, dan ia tidak pernah berhenti, sama ada ada laporan pendapatan atau tidak. Selepas laporan pendapatan dicetak, walaupun AAPL bergerak ke arah yang dijangka, option boleh kehilangan nilai semalaman jika penyempitan volatiliti (vega kembali menurun sekali ketidakpastian terurai) melebihi pergerakan harga (delta) — terutamanya jika pergerakannya tidak sebesar yang dinikmati dalam harga.
+Sebelum laporan pendapatan AAPL, pasaran menaikkan harga panggilan (calls) dan panggilan jual (puts) sama rata — termasuk yang jauh dari harga semasa — kerana volatiliti tersirat (sasaran vega) meningkat apabila pergerakan besar kelihatan lebih mungkin berlaku. Itu adalah vega berfungsi: murni jangkaan, tiada pergerakan harga diperlukan. Sambil itu, setiap option dalam rantai tersebut juga kehilangan sedikit nilai setiap hari hanya kerana kalendar berjalan ke hadapan — itu adalah theta, dan ia tidak pernah berhenti, sama ada ada laporan pendapatan atau tidak. Selepas laporan pendapatan dikeluarkan, walaupun AAPL bergerak ke arah yang dijangka, option boleh kehilangan nilai semalaman jika hancuran volatiliti (vega kembali turun sekali ketidakpastian teratasi) mengatasi pergerakan harga (delta) — terutamanya jika pergerakan itu tidak sebesar yang telah dinomborkan dalam harga.
 
 ## Perangkap
 
-Pemula memperlakukan The Greeks sebagai tiga statistik tidak berkaitan yang dimiliki oleh option, berbanding tiga daya yang sedang bertempur antara satu sama lain secara masa nyata. Kesilapan biasa: membeli option berjangka pendek sebelum peristiwa yang diketahui, mengharapkan delta memberikan hasil jika ramalan arah betul — dan kemudian kehilangan wang walaupun ramalan arah *betul*, kerana theta merosakkan posisi setiap jam dan vega memberikan balik lebih banyak dalam penyempitan daripada yang delta peroleh daripada pergerakan. Model mental yang betul: setiap posisi option adalah delta, theta, dan vega berlaku serentak, dan bacaan yang "betul" pada salah satu daripada tiga tidak melindungi anda daripada salah atau tertinggal pada dua yang lain.
+Pemula memperlakukan The Greeks sebagai tiga statistik tidak berkaitan yang dimiliki oleh option, berbanding tiga daya yang sedang bertempur antara satu sama lain secara masa nyata. Kesilapan biasa: membeli option berjangka pendek sebelum peristiwa yang diketahui, menjangka delta akan memberi hasil jika panggilan arah adalah betul — dan kemudian kehilangan wang walaupun panggilan arah *betul*, kerana theta telah merosakkan posisi setiap jam dan vega memberikan balik lebih banyak dalam hancuran daripada yang delta peroleh daripada pergerakan tersebut. Model mental yang betul: setiap posisi option adalah delta, theta, dan vega yang berlaku serentak, dan bacaan yang "betul" pada salah satu daripada tiga tidak melindungi anda daripada salah, atau sekadar tertanding, pada dua yang lain.
 
 ## Steelman
 
-Kes terkuat terhadap pembelajaran intuisi Greeks: "Saya tidak memerlukan lengkung reputan — saya hanya perlu betul mengenai arah, dan diagram pembayaran sudah memberitahu saya apa yang berlaku pada tamat tempoh." Penyangkal: perhatikan apa yang berlaku kepada harga option yang sama *sebelum* tamat tempoh, bukan hanya pada tamat tempoh tersebut. Dua option dengan strike yang sama pada saham yang sama, dengan hari baki tamat tempoh yang berbeza, boleh bertindak balas terhadap pergerakan saham yang sama dengan peratusan yang sangat berbeza — semata-mata kerana theta dan vega melakukan kerja yang berbeza pada setiap satu. Jika arah adalah keseluruhan cerita, kedua-duanya akan bergerak dengan cara yang sama dan sebanyak yang sama. Mereka tidak.
+Kes terkuat terhadap pembelajaran intuisi Greeks: "Saya tidak memerlukan lengkung reputan — saya hanya perlu betul tentang arah, dan diagram bayaran sudah memberitahu saya apa yang berlaku pada tamat tempoh." Penyangkal: perhatikan apa yang berlaku kepada harga option tersebut *sebelum* tamat tempoh, bukan hanya pada tamat tempoh tersebut. Dua option dengan strike yang sama pada saham yang sama, dengan baki hari tamat tempoh yang berbeza, option berjangka dekat bergerak peratusan yang jauh lebih besar pada pergerakan saham yang sama, kerana premium yang lebih kecil memancing gain delta yang sama — dan harga mereka menyimpang lebih jauh apabila theta dan vega bertindak. Jika arah adalah keseluruhan cerita, kedua-duanya akan bergerak dengan cara yang sama dan pada jumlah yang sama. Mereka tidak.
 
 <ChatWith agent="market_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="Pilihan panggilan (call) AAPL dengan tiga hari tinggal hingga tamat tempoh dan pilihan panggilan AAPL dengan enam bulan tinggal hingga tamat tempoh mempunyai harga pelaksanaan (strike) yang sama, kini berhampiran dengan harga saham. AAPL tidak bergerak langsung selama seminggu. Yang mana satu kehilangan lebih banyak nilai semata-mata daripada reputan masa?"
+  question="Pilihan call AAPL dengan tiga hari tinggal hingga tamat tempoh dan pilihan call AAPL dengan enam bulan tinggal hingga tamat tempoh mempunyai strike yang sama, kini berhampiran harga saham. AAPL tidak bergerak langsung selama seminggu. Yang mana kehilangan nilai lebih banyak semata-mata daripada pelapukan masa?"
   options={[
-    "Pilihan panggilan enam bulan, kerana ia mempunyai lebih banyak nilai masa total untuk hilang",
-    "Pilihan panggilan tiga hari, kerana theta meningkat apabila tamat tempoh menghampiri, jadi pilihan berjangka pendek reput lebih cepat setiap hari",
-    "Tiada satu pun kehilangan nilai jika harga saham tidak berubah",
-    "Kedua-duanya kehilangan jumlah dolar yang sama, kerana theta adalah malar merentasi tamat tempoh"
+    "Pilihan call enam bulan, kerana ia mempunyai lebih banyak nilai masa untuk hilang",
+    "Pilihan call tiga hari, kerana theta mempercepat apabila tamat tempoh menghampiri, jadi pilihan berjangka pendek melapuk lebih cepat per hari",
+    "Kedua-duanya tidak kehilangan nilai jika harga saham tidak berubah",
+    "Kedua-duanya kehilangan jumlah dolar yang sama, kerana theta adalah malar merentas tamat tempoh"
   ]}
   answer={1}
-  explanation="Theta bukan malar — ia meningkat apabila tamat tempoh menghampiri, kerana semakin kurang masa tinggal untuk pilihan menjadi untung. Pilihan berjangka pendek mencairkan bahagian lebih besar daripada baki nilainya setiap hari berbanding pilihan berjangka panjang, walaupun tiada pergerakan dalam saham."
+  explanation="Theta tidak malar — ia mempercepat apabila tamat tempoh menghampiri, kerana masa yang tinggal untuk pilihan menjadi untung semakin sedikit. Pilihan berjangka pendek kehilangan bahagian nilai baki yang lebih besar per hari berbanding pilihan berjangka panjang, walaupun tiada pergerakan dalam saham."
 />
 
 <Quiz
-  question="Sebelum laporan hasil NVDA, seorang pedagang membeli pilihan panggilan, meramalkan dengan betul bahawa NVDA akan naik, dan NVDA memang naik pada hari berikutnya — namun harga pilihan hampir tidak bergerak, atau malah jatuh. Menggunakan delta, theta, dan vega bersama, apakah penjelasan yang paling mungkin?"
+  question="Sebelum laporan earnings NVDA, seorang pedagang membeli call, meramal dengan betul bahawa NVDA akan naik, dan NVDA benar-benar naik pada hari berikutnya — namun harga call hampir tidak bergerak, atau malah jatuh. Menggunakan delta, theta, dan vega bersama, apakah penjelasan yang paling mungkin?"
   options={[
-    "Sistem penentuan harga pilihan membuat kesilapan, kerana pilihan arah yang betul sepatutnya selalu untung",
-    "Theta sahaja yang menjelaskannya — satu hari reput cukup untuk memadamkan pertaruhan arah yang betul",
-    "Volatiliti tersirat telah dinaikkan harganya sebelum acara (vega) dan runtuh sekali laporan telah diluluskan (runtuh volatiliti), dan penyenaraian semula yang didorong oleh vega itu mengatasi keuntungan delta daripada saham sebenarnya naik",
-    "Delta menjadi negatif secara ringkas pada waktu malam, menyebabkan pilihan bergerak bertentangan dengan saham"
+    "Sistem harga pilihan membuat kesilapan, kerana ramalan arah yang betul sepatutnya selalu menguntungkan",
+    "Theta sahaja yang menjelaskannya — satu hari pelapukan cukup untuk memadamkan pertaruhan arah yang betul",
+    "Volatiliti tersirat telah dihargakan tinggi sebelum acara (vega) dan runtuh sebaik laporan diluluskan (hancuran volatiliti), dan penyenaraian semula yang didorong oleh vega mengatasi keuntungan delta daripada saham benar-benar naik",
+    "Delta menjadi negatif sebentar pada waktu malam, menyebabkan call bergerak bertentangan dengan saham"
   ]}
   answer={2}
-  explanation="Ini adalah runtuh volatiliti pasca-keputusan yang klasik: pilihan telah ditentukan harganya dengan volatiliti tersirat yang tinggi sebelum acara yang diketahui, dan sekali acara itu berlalu, premium itu runtuh tidak kira arah. Keuntungan delta daripada kenaikan NVDA adalah nyata, tetapi ia dikalahkan oleh kehilangan vega daripada normalisasi IV — harga pilihan panggilan tidak pernah hanya delta yang bertindak sendirian."
+  explanation="Ini adalah hancuran volatiliti pasca-earnings yang klasik: pilihan dihargakan dengan volatiliti tersirat yang tinggi sebelum acara yang diketahui, dan sebaik acara itu berlalu, premium itu runtuh tanpa mengira arah. Keuntungan delta daripada kenaikan NVDA adalah nyata, tetapi ia melebihi kerugian vega daripada normalisasi IV — harga pilihan call bukan sekadar delta yang bertindak sendiri."
 />
 
 ## Cuba sendiri
 
-Buka pandangan rantai option (atau tanya Market Analyst) untuk ticker dengan laporan pendapatan akan datang dalam dua minggu akan datang. Bandingkan premium pada option berjangka dekat berbanding option berjangka lebih panjang pada strike yang sama — jurang antara mereka adalah pasaran yang menilai theta dan vega, bukan hanya delta.
+Buka pandangan rantai option (atau minta Market Analyst) untuk ticker dengan laporan pendapatan dalam dua minggu akan datang. Bandingkan premium pada option berjangka dekat berbanding option berjangka lebih panjang pada strike yang sama — jurang antara keduanya adalah pasaran yang dinomborkan theta dan vega, bukan hanya delta.
 
 ## Intipati
 
-Delta memberitahu anda bagaimana option bertindak balas terhadap pergerakan saham, theta memberitahu anda kos anda hanya untuk menunggu, dan vega memberitahu anda berapa banyak ketakutan pasaran terhadap pergerakan besar telah dimasukkan ke dalam harga — ketiga-tiganya bekerja pada posisi anda pada satu masa, bukan hanya yang anda sedang perhatikan.
+Delta memberitahu anda bagaimana option bertindak balas terhadap pergerakan saham, theta memberitahu anda kos yang anda tanggung hanya kerana menunggu, dan vega memberitahu anda seberapa banyak ketakutan pasaran terhadap pergerakan besar telah dimasukkan ke dalam harga — ketiga-tiganya bekerja pada posisi anda serentak, bukan hanya yang sedang anda perhatikan.

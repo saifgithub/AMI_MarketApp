@@ -1,6 +1,6 @@
 ---
 id: "052_trend_following"
-title: "Mengikut Trend"
+title: "Mengikuti Trend"
 duration_min: 5
 level: 5
 module: 9
@@ -11,56 +11,56 @@ topic: "trend_following"
 prerequisites: ["022_trend_direction", "026_moving_averages", "015_stop_loss_basics", "016_risk_reward_ratio"]
 tags: ["strategy", "trend", "moving_averages", "edge"]
 agent_callouts: ["aggressive_debator", "trader"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Mengikut Trend
 
-Mengikut trend adalah idea paling mudah yang menguntungkan di pasaran: apabila harga telah naik buat sementara waktu, pertaruhkannya akan terus naik; apabila ia berhenti, keluarlah. Anda tidak akan menangkap bahagian bawah dan anda tidak akan menjual pada bahagian puncak. Apa yang anda lakukan ialah bertahan melalui perjalanan yang panjang dan membosankan di mana sejumlah kecil pemenang besar membayar banyak kerugian kecil. Selepas pelajaran ini, anda boleh menulis peraturan mengikut trend yang boleh diuji: kemasukan yang tepat, henti rugi yang tepat, dan rejim di mana peraturan itu akan gagal.
+Mengikut trend adalah idea paling mudah untuk untung dalam pasaran: apabila harga telah naik untuk suatu tempoh, pertaruhan adalah ia akan terus naik; apabila ia berhenti, keluar. Anda tidak akan menangkap bahagian bawah dan anda tidak akan menjual pada bahagian puncak. Apa yang anda lakukan ialah bertahan melalui perjalanan yang panjang dan membosankan di mana sejumlah kecil pemenang besar membayar banyak kerugian kecil. Selepas pelajaran ini, anda boleh menulis peraturan mengikut trend yang boleh diuji: entri yang tepat, henti yang tepat, dan rejim di mana peraturan tersebut akan gagal.
 
 ## Contoh
 
-Lihat NVDA dari akhir 2023 hingga 2024. Peraturan purata bergerak (moving-average) 50-hari / 200-hari yang standard melakukan kemasangan panjang apabila purata 50-hari bersilang di atas purata 200-hari pada awal 2023 sekitar $232 (dilaraskan pecahan saham ~$23.20). Peraturan keluar: tutup posisi apabila harga menutup di bawah purata bergerak 50-hari. Isyarat itu dicetuskan berulang kali sepanjang 2024 tetapi purata 50-hari kekal pada setiap penutupan mingguan sehingga akhir 2024. Seorang pengikut trend yang memegang dengan henti rugi mengikut di bawah purata 50-hari menangkap kebanyakan pergerakan dari ~$23 ke ~$140 — kira-kira 6x — tolak beberapa kemasukan berputar-putar yang dihentikan rugi untuk kerugian kecil pada awal.
+Lihat NVDA dari akhir 2023 hingga 2024. Peraturan purata bergerak (moving-average) 50-hari / 200-hari yang standard memasuki posisi panjang apabila 50-hari bersilang di atas 200-hari pada awal 2023 sekitar $232 (dilaraskan pecahan ~$23.20). Peraturan keluar: tutup posisi apabila harga menutup di bawah purata bergerak 50-hari. Isyarat itu dicetuskan berulang kali sepanjang 2024 tetapi 50-hari kekal pada setiap penutupan mingguan sehingga akhir 2024. Seorang pengikut trend yang memegang dengan henti mengikut di bawah 50-hari menangkap kebanyakan pergerakan dari ~$23 ke ~$140 — kira-kira 6x — tolak beberapa entri berputar yang dihentikan untuk kerugian kecil lebih awal.
 
-Kriteria kemasukan: Purata Bergerak 50-hari > Purata Bergerak 200-hari DAN harga menutup di atas purata 50-hari semasa penurunan. Kriteria keluar: penutupan harian di bawah purata bergerak 50-hari, atau henti rugi pada titik rendah ayunan sebelumnya jika lebih ketat. Dagangan tidak sah serta-merta apabila penutupan itu dicetak — anda tidak berunding dengan peraturan. Strategi ini GAGAL dalam pasaran yang bergegar dan sempadan (fikirkan KLCI sepanjang 2023): anda dihentikan rugi berulang kali pada setiap penipuan dan menanggung kos kemasukan.
+Kriteria entri: 50-hari MA > 200-hari MA DAN harga menutup di atas 50-hari semasa penurunan. Kriteria keluar: sebarang penutupan harian di bawah MA 50-hari, atau henti pada paras rendah ayunan sebelumnya jika itu lebih ketat. Dagangan tidak sah serta-merta apabila penutupan itu dicetak — anda tidak berunding dengan peraturan. Strategi GAGAL dalam pasaran yang bergegar dan terikat julat (fikirkan KLCI sepanjang kebanyakan 2023): anda akan dihentikan berulang kali pada setiap tipuan dan menelan kos entri.
 
 ## Perangkap
 
-Kesilapan pemula ialah bertanya "adakah trend masih kuat?" setiap pagi. Mengikut trend adalah strategi berita perlahan — melihatnya setiap hari membuatkan anda terlalu berdagang. Anda melihat satu lilin merah, panik, dan keluar dua hari sebelum trend bermula semula. Atau anda memutuskan "ini kelihatan seperti puncak" dan menjual pendek terhadap kekuatan. Model mental yang betul ialah: peraturan yang memutuskan, bukan anda. Anda menulis peraturan itu apabila anda tenang. Sekarang tugas anda hanya untuk memenuhinya. Jika purata 50-hari masih condong ke atas dan harga belum menutup di bawahnya, anda memegang — tidak kira apa perasaan anda tentang berita, penilaian, atau corak carta yang menakutkan anda.
+Kesilapan pemula ialah bertanya "adakah trend masih kuat?" setiap pagi. Mengikut trend adalah strategi berita perlahan — melihatnya setiap hari membuatkan anda terlalu kerap berdagang. Anda melihat satu lilin merah, panik, dan keluar dua hari sebelum trend bermula semula. Atau anda memutuskan "ini kelihatan seperti puncak" dan menjual pendek terhadap kekuatan. Model mental yang betul ialah: peraturan yang memutuskan, bukan anda. Anda menulis peraturan itu apabila anda tenang. Sekarang tugas anda hanya untuk memenuhinya. Jika 50-hari masih condong ke atas dan harga belum menutup di bawahnya, anda pegang — tidak kira apa perasaan anda terhadap berita, penilaian, atau corak carta yang menakutkan anda.
 
 <ChatWith agent="trader" />
 
 ## Kuiz
 
 <Quiz
-  question="Peraturan mengikuti trend menyatakan: keluar jika penutupan harian berada di bawah Purata Pergerakan 50 hari (50-day MA). NVDA ditutup pada $138.10 hari ini. 50-day MA ialah $139.40. Apa yang perlu anda lakukan?"
+  question="Peraturan mengikut trend menyatakan: keluar pada penutupan harian di bawah Purata Pergerakan 50 hari. NVDA ditutup pada $138.10 hari ini. Purata Pergerakan 50 hari ialah $139.40. Apa yang perlu anda lakukan?"
   options={[
     "Keluar pada pembukaan esok mengikut peraturan",
     "Pegang — trend telah kuat selama setahun dan satu penutupan adalah hingar",
-    "Tambah posisi kerana harga sedang dijual di bawah purata",
-    "Ketatkan stop loss tetapi kekal long sehingga 200-day MA pecah"
+    "Tambah ke posisi kerana harga dijual di bawah purata",
+    "Ketatkan had kerugian tetapi kekal panjang sehingga 200 hari pecah"
   ]}
   answer={0}
-  explanation="Peraturan telah aktif. Tujuan utama menulis peraturan mekanikal adalah untuk menghilangkan pertimbangan anda pada saat tekanan. Merasa untuk memegang adalah betul kerana trend kelihatan kuat, tetapi setiap trend berakhir dengan penutupan di bawah purata pergerakannya — discretion pada keluar adalah bagaimana pengikut trend memberikan balik keuntungan."
+  explanation="Peraturan telah aktif. Seluruh tujuan menulis peraturan mekanikal adalah untuk membuang pertimbangan anda pada saat tekanan. Pegang terasa betul kerana trend kelihatan kuat, tetapi setiap trend berakhir dengan penutupan di bawah purata pergerakannya — pertimbangan pada keluaran adalah bagaimana pengikut trend memberikan balik keuntungan."
 />
 
 <Quiz
-  question="Mandat anda mengekalkan risiko posisi tunggal pada 1% daripada akaun $50,000. Anda ingin memasuki posisi mengikuti trend dalam TSLA pada $230 dengan stop di 50-day MA sebanyak $210. Berapakah saiz posisi maksimum dalam unit saham?"
+  question="Mandat anda mengekalkan risiko posisi tunggal pada 1% daripada akaun $50,000. Anda ingin memasuki posisi mengikut trend dalam TSLA pada $230 dengan had kerugian pada Purata Pergerakan 50 hari iaitu $210. Berapakah saiz posisi maksimum dalam saham?"
   options={[
-    "25 unit saham",
-    "217 unit saham",
-    "108 unit saham",
-    "50 unit saham"
+    "25 saham",
+    "217 saham",
+    "108 saham",
+    "50 saham"
   ]}
   answer={0}
-  explanation="Risiko per unit saham = $230 - $210 = $20. Risiko dolar maksimum = 1% daripada $50,000 = $500. Unit saham = $500 / $20 = 25. Jawapan salah yang menggoda (217) mengabaikan stop dan hanya saiz 1% akaun ke dalam ticker — itulah cara pengikut trend meletup dalam pasaran yang tidak menentu di mana stop lebar."
+  explanation="Risiko per saham = $230 - $210 = $20. Risiko dolar maksimum = 1% daripada $50,000 = $500. Saham = $500 / $20 = 25. Jawapan salah yang menggoda (217) mengabaikan had kerugian dan membeli semua saham yang dibenarkan oleh wang tunai (217×$230 ≈ keseluruhan $50,000) — itulah cara pengikut trend meletup dalam pasaran bising di mana had kerugian luas."
 />
 
 ## Cuba
 
-Dalam <Term id="ami_one_on_one" /> dengan Trader, tampal simbol saham yang anda perhatikan dan tanya: "Tulis peraturan mengikut trend 50/200 MA untuk simbol saham ini dengan kemasukan, henti rugi, dan pembatalan yang tepat. Nyatakan rejim di mana peraturan ini gagal." Kemudian buka <Term id="ami_decision_journal" /> dan logkan peraturan itu sebelum anda memasuki dagangan.
+Dalam <Term id="ami_one_on_one" /> dengan Trader, tampal simbol saham yang anda perhatikan dan tanya: "Tulis peraturan mengikut trend 50/200 MA untuk simbol saham ini dengan entri, henti, dan pembatalan yang tepat. Nyatakan rejim di mana peraturan ini gagal." Kemudian buka <Term id="ami_decision_journal" /> dan logkan peraturan itu sebelum anda memasuki dagangan.
 
-## Penutup
+## Pengambilan
 
-Mengikut trend adalah peraturan yang memutuskan, bukan anda. Tulis kemasukan, henti rugi, dan rejim kegagalan sebelum anda memasuki — kemudian tugas anda hanya di skrin adalah untuk menegakkan apa yang diri yang tenang telah tulis.
+Mengikut trend adalah peraturan yang memutuskan, bukan anda. Tulis entri, henti, dan rejim kegagalan sebelum anda memasuki — kemudian tugas anda hanya di skrin adalah untuk menegakkan apa yang diri tenang anda tulis.

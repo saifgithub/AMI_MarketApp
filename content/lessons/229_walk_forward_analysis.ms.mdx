@@ -1,6 +1,6 @@
 ---
 id: "229_walk_forward_analysis"
-title: "Analisis laluan ke hadapan — backtesting tanpa mengintip"
+title: "Analisis laluan berjalan — backtesting tanpa mengintip"
 duration_min: 7
 level: 5
 module: 9
@@ -11,58 +11,58 @@ topic: "backtesting"
 prerequisites: ["057_backtesting_a_strategy", "228_parameter_sensitivity_sweeps", "058_strategy_failure_modes"]
 tags: ["backtesting", "walk_forward", "out_of_sample", "robustness"]
 agent_callouts: ["research_manager"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Analisis walk-forward — backtesting tanpa mengintip
 
-Asas backtest (057) menyatakan bahawa satu-satunya pertahanan sebenar terhadap overfitting ialah pengujian out-of-sample. Analisis walk-forward (WFA) ialah versi berdisiplin bagi pertahanan tersebut. Anda membahagikan sejarah data anda kepada tingkap gelongsor: optimumkan parameter pada tingkap in-sample, beku kan ia, uji pada tingkap out-of-sample seterusnya, gelongsorkan tingkap ke hadapan, dan ulangi. Prestasi out-of-sample yang terkumpul ialah apa yang anda percayai — jangan pernah mempercayai kesesuaian in-sample. Selepas pelajaran ini, anda boleh mereka bentuk ujian walk-forward untuk peraturan anda sendiri, menetapkan saiz tingkap yang sepadan dengan kekerapan bar strategi anda, dan mentafsir nisbah kecekapan in-sample-vs-out-of-sample yang memberitahu anda sama ada peraturan tersebut adalah nyata.
+Asas backtest (057) menyatakan bahawa satu-satunya pertahanan sebenar terhadap overfitting ialah pengujian out-of-sample. Analisis walk-forward (WFA) ialah versi berdisiplin bagi pertahanan tersebut. Anda membahagikan sejarah data anda ke dalam tingkap gelangsar (rolling windows): optimumkan parameter pada tingkap in-sample, bekuannya, uji pada tingkap out-of-sample seterusnya, gelangsarkan tingkap ke hadapan, dan ulangi. Prestasi out-of-sample yang terkumpul adalah apa yang anda percayai — jangan pernah mempercayai padanan in-sample. Selepas pelajaran ini, anda boleh mereka bentuk ujian walk-forward untuk peraturan anda sendiri, menetapkan saiz tingkap yang sepadan dengan kekerapan bar strategi anda, dan mentafsir nisbah kecekapan in-sample berbanding out-of-sample yang memberitahu anda sama ada peraturan itu benar.
 
-## Bagaimana ini berlaku di pasaran sebenar
+## Bagaimana ia berlaku di pasaran sebenar
 
-Ambil peraturan momentum pada S&P 500: setiap bulan, beli nama saham decile teratas dengan pulangan 12 bulan, bobot sama, rebalance secara bulanan. Backtest secara naif selama 2005-2024 memberikan CAGR 11.8% dengan drawdown maksimum 22%. Nampak baik, tetapi anda telah mengoptimumkan "knob lookback 12 bulan" dengan mencuba 6, 9, 12, 15, dan 18 bulan dan mengekalkan 12. Itu ialah overfitting tersembunyi.
+Ambil peraturan momentum pada S&P 500: setiap bulan, beli nama-nama saham dalam decile teratas pulangan 12 bulan, sama berat (equal-weight), dan rebalance secara bulanan. Backtest secara naif pada pulangan 2005-2024 menghasilkan CAGR 11.8% dengan drawdown maksimum 22%. Nampak baik, tetapi anda telah mengoptimumkan "knob lookback 12 bulan" dengan mencuba 6, 9, 12, 15, dan 18 bulan serta mengekalkan 12. Itu ialah overfitting tersembunyi.
 
-Walk-forward: bahagikan 2005-2024 kepada tingkap in-sample 4 tahun / out-of-sample 1 tahun, gelongsorkan secara tahunan. In-sample 2005-2008 memilih lookback=15 (terbaik pada tingkap itu); uji pada 2009 — memberikan pulangan 28% (pemulihan faktor). Gelongsor: in-sample 2006-2009 memilih lookback=9; uji pada 2010 — memberikan pulangan 14%. Teruskan sehingga 2024. Anda mendapat 16 tahun out-of-sample, setiap satu diuji pada set parameter yang dipilih TANPA melihat data tahun tersebut.
+Walk-forward: bahagikan 2005-2024 kepada tingkap in-sample 4 tahun / out-of-sample 1 tahun, gelangsarkan secara tahunan. In-sample 2005-2008 memilih lookback=15 (terbaik pada tingkap itu); uji pada 2009 — tahun kemerosotan momentum: pemenang sebelum ini tertinggal di belakang rebound yang tajam, menyebabkan kerugian OOS yang besar. Gelangsar: in-sample 2006-2009 memilih lookback=9; uji pada 2010 — menghasilkan pulangan 14%. Teruskan sehingga 2024. Anda mendapat 16 tahun out-of-sample, setiap satu diuji pada set parameter yang dipilih TANPA melihat data tahun tersebut.
 
-CAGR out-of-sample agregat ialah 9.1% dengan drawdown maksimum 26% — lebih rendah daripada in-sample 11.8% tetapi masih positif. Nisbah kecekapan walk-forward (CAGR OOS / CAGR IS) ialah 0.77 — mana-mana nilai di atas 0.5 dianggap kukuh. Pentingnya, peraturan ini bertahan melalui drawdown 2008, 2011, 2020, dan 2022 dalam bahagian OOS, yang merupakan satu-satunya bukti yang penting. Strategi yang tidak bertahan dalam WFA biasanya menunjukkan nisbah kecekapan di bawah 0.3 — puncak in-sample itu kebanyakannya ialah bias pemilihan.
+CAGR out-of-sample agregat ialah 9.1% dengan drawdown maksimum 26% — lebih rendah daripada in-sample 11.8% tetapi masih positif. Nisbah kecekapan walk-forward (CAGR OOS / CAGR IS) ialah 0.77 — apa jua di atas 0.5 dianggap kukuh. Pentingnya, peraturan ini bertahan melalui drawdown pada 2011, 2020, dan 2022 dalam bahagian OOS, yang merupakan satu-satunya bukti yang penting. Strategi yang tidak bertahan WFA biasanya menunjukkan nisbah kecekapan di bawah 0.3 — puncak in-sample itu kebanyakannya ialah bias pemilihan.
 
 ## Perangkap
 
-Kesilapan pemula ialah menjalankan WFA tetapi kemudian "membaiki" peraturan di tengah jalan apabila satu tingkap kurang berprestasi. Setiap pelarasan yang anda buat selepas melihat hasil OOS mencemarkan tingkap OOS seterusnya dengan pengetahuan akhir — anda sedang mengintip, dan disiplin WFA lenyap. Model mental yang betul: WFA ialah ritual satu kali. Anda mereka bentuk grid parameter, saiz tingkap, dan kriteria pengoptimuman SEBELUM menjalankannya. Anda jalankan sekali. Anda terima apa jua kata agregat OOS. Jika hasilnya mengecewakan, anda tidak menala — anda sama ada melaksanakan peraturan pada tahap prestasi OOS yang jujur atau anda membuangnya dan mereka bentuk peraturan lain dari prinsip pertama. Perangkap kedua: memilih saiz tingkap selepas melihat data. Perangkap ketiga: menggunakan tingkap berjangkar (expanding) dalam rejim yang berubah, yang membiarkan data lama mendominasi pemilihan parameter — tingkap tetap panjang gelongsor adalah lebih jujur dalam pasaran tidak stasioner.
+Kesilapan pemula ialah menjalankan WFA tetapi kemudian "membetulkan" peraturan di tengah jalan apabila satu tingkap kurang berprestasi. Setiap pelarasan yang anda buat selepas melihat hasil OOS mencemarkan tingkap OOS seterusnya dengan pengetahuan akhir (hindsight) — anda sedang mengintip, dan disiplin WFA lenyap. Model mental yang betul: WFA ialah ritual satu kali. Anda mereka bentuk grid parameter, saiz tingkap, dan kriteria pengoptimuman SEBELUM menjalankannya. Anda jalankannya sekali. Anda menerima apa jua yang dikatakan oleh agregat OOS. Jika hasilnya mengecewakan, anda tidak menala — anda sama ada menyebarkan peraturan pada tahap prestasi OOS yang jujur atau anda membuangnya dan mereka bentuk peraturan lain dari prinsip pertama. Perangkap kedua: memilih saiz tingkap selepas melihat data. Perangkap ketiga: menggunakan tingkap berjangka (expanding) dalam rejim yang berubah, yang membiarkan data lama mendominasi pemilihan parameter — tingkap tetap gelangsar dengan panjang tetap adalah lebih jujur dalam pasaran yang tidak stasioner.
 
 <ChatWith agent="research_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Anda menjalankan analisis walk-forward pada strategi breakout. CAGR dalam sampel (in-sample) ialah 18%; CAGR agregat luar sampel (out-of-sample) ialah 4%. Apakah maknanya?"
+  question="Anda menjalankan analisis walk-forward pada strategi breakout. CAGR dalam sampel (in-sample) ialah 18%; CAGR keluar sampel (out-of-sample) yang digabungkan ialah 4%. Apakah ini memberitahu anda?"
   options={[
-    "Kecekapan walk-forward ialah 4/18 = 0.22, jauh di bawah ambang ketahanan 0.5. Sebahagian besar prestasi dalam sampel adalah overfit; kelebihan luar sampel adalah marginal dan mungkin tidak berbaloi untuk digunakan selepas kos.",
-    "Jalankan semula WFA dengan tetingkap berbeza sehingga OOS membaik",
-    "Gunakan parameter dalam sampel kerana luar sampel hanyalah 'satu laluan'",
-    "Strategi ini tahan lasak — kedua-dua nombor adalah positif"
+    "Kecekapan walk-forward ialah 4/18 = 0.22, jauh di bawah ambang ketahanan 0.5. Sebahagian besar prestasi dalam sampel adalah overfit; tepi keluar sampel (OOS) adalah marginal dan mungkin tidak berbaloi untuk digunakan selepas kos.",
+    "Jalankan semula WFA dengan tetingkap berbeza sehingga OOS bertambah baik",
+    "Gunakan parameter dalam sampel anyway kerana keluar sampel adalah 'hanya satu laluan'",
+    "Strategi ini robust — kedua-dua nombor adalah positif"
   ]}
   answer={0}
-  explanation="Nisbah kecekapan 0.22 bermaksud kira-kira 80% kelebihan dalam sampel hilang apabila peraturan tersebut digunakan tanpa melihat ke hadapan. Itu adalah tanda overfit yang klasik. Jawapan 'kedua-dua nombor positif bermakna strategi tahan lasak' adalah menipu kerana 4% adalah positif — tetapi peraturan 4% mungkin tidak mampu menampung kos transaksi dan sebarang drawdown. Menjalankan semula WFA dengan tetingkap berbeza adalah perangkap pencemaran: menjalankan semula sehingga OOS kelihatan lebih baik hanyalah overfitting secara perlahan."
+  explanation="Nisbah kecekapan 0.22 bermaksud kira-kira 80% daripada tepi dalam sampel telah hilang apabila peraturan tersebut digunakan tanpa mengintip. Itu adalah tanda overfit teks buku. Jawapan 'kedua-dua nombor adalah positif jadi strateginya robust' adalah memikat kerana 4% adalah positif — tetapi peraturan 4% mungkin tidak dapat bertahan kos transaksi dan sebarang drawdown. Menjalankan semula WFA dengan tetingkap berbeza adalah perangkap pencemaran: menjalankan semula sehingga OOS kelihatan lebih baik hanyalah overfitting secara perlahan."
 />
 
 <Quiz
-  question="Anda mereka bentuk ujian walk-forward untuk peraturan mean-reversion intraday pada QQQ yang berdagang setiap hari. Tetingkap dalam sampel ialah 4 tahun, tetingkap luar sampel ialah 1 tahun. Pengurus Penyelidikan menandakan satu masalah. Apakah ia?"
+  question="Anda mereka bentuk ujian walk-forward untuk peraturan mean-reversion intraday pada QQQ yang berdagang setiap hari. Tetingkap dalam sampel ialah 4 tahun, tetingkap keluar sampel ialah 1 tahun. Pengurus Penyelidikan menandakan satu masalah. Apakah ia?"
   options={[
-    "Untuk strategi frekuensi tinggi, 4 tahun mengandungi beribu-ribu perdagangan — mencukupi untuk penyesuaian parameter — tetapi tetingkap OOS 1 tahun mengandungi ratusan perdagangan, memberikan keyakinan statistik. Struktur ini adalah baik. Ujian sintesis sebenar ialah sama ada anda juga telah mengasingkan mengikut rejim: adakah prestasi OOS peraturan tersebut serupa dalam 2018 (volatiliti rendah), 2020 (krisis), dan 2022 (bear)?",
+    "Untuk strategi frekuensi tinggi, 4 tahun mengandungi beribu-ribu perdagangan — mencukupi untuk fitting parameter — tetapi tetingkap OOS 1 tahun mengandungi beratus-ratus perdagangan, memberikan keyakinan statistik. Struktur ini baik. Ujian sintesis sebenar ialah sama ada anda juga telah mengasingkan mengikut rejim: adakah prestasi OOS peraturan tersebut serupa dalam 2018 (vol rendah), 2020 (krisis), dan 2022 (bear)?",
     "Mean reversion memerlukan tetingkap berjangkar",
     "Tetingkap terlalu pendek",
-    "Tetingkap OOS mestilah sama dengan tetingkap IS"
+    "Tetingkap OOS harus sentiasa sama dengan tetingkap IS"
   ]}
   answer={0}
-  explanation="Sintesis: saiz tetingkap mestilah sesuai dengan frekuensi bar DAN rejim di dalamnya. Peraturan perdagangan yang menunjukkan prestasi kuat dalam tahun volatiliti rendah tetapi rugi dalam tahun volatiliti tinggi boleh menunjukkan OOS agregat yang positif walaupun tidak boleh digunakan dalam kehidupan sebenar. OOS yang diasingkan mengikut rejim adalah ujian yang lebih mendalam. Jawapan 'tetingkap terlalu pendek' adalah menipu kerana 'lebih panjang sentiasa lebih baik' adalah mitos biasa; 'mean reversion memerlukan tetingkap berjangkar' adalah peraturan yang dicipta-cipta; 'tetingkap OOS mestilah sama dengan tetingkap IS' adalah heuristik, bukan keperluan."
+  explanation="Sintesis: saiz tetingkap harus sesuai dengan kekerapan bar DAN rejim di dalamnya. Peraturan perdagangan yang mengagregat dengan kuat dalam tahun vol rendah tetapi berdarah dalam tahun vol tinggi boleh menunjukkan OOS agregat positif walaupun tidak boleh digunakan dalam kehidupan sebenar. OOS berasingan rejim adalah ujian yang lebih mendalam. Jawapan 'tetingkap terlalu pendek' adalah memikat kerana 'lebih panjang sentiasa lebih baik' adalah mitos biasa; 'mean reversion memerlukan tetingkap berjangkar' adalah peraturan yang dicipta; 'tetingkap OOS harus sama dengan tetingkap IS' adalah heuristik, bukan keperluan."
 />
 
 ## Cuba sendiri
 
-Pilih satu strategi yang semasa berada dalam set calon anda. Tentukan grid parameter, panjang tingkap in-sample, panjang tingkap out-of-sample, dan kadenza gelongsor — semua SEBELUM menjalankan ujian. Hantar reka bentuk kepada Research Manager dalam <Term id="ami_one_on_one" /> dengan: "Adakah reka bentuk WFA ini jujur? Tingkap apa yang anda akan ubah?" Kemudian jalankan sekali dan log agregat OOS + nisbah kecekapan dalam <Term id="ami_decision_journal" /> sebagai artefak pra-penerapan.
+Pilih satu strategi yang kini berada dalam set calon anda. Takrifkan grid parameter, panjang tingkap in-sample, panjang tingkap out-of-sample, dan kalendar gelangsar — semua SEBELUM menjalankan ujian. Hantar reka bentuk kepada Research Manager dalam <Term id="ami_one_on_one" /> dengan: "Adakah reka bentuk WFA ini jujur? Tingkap apa yang anda akan ubah?" Kemudian jalankannya sekali dan log agregat OOS + nisbah kecekapan dalam <Term id="ami_decision_journal" /> sebagai artifak pra-penerapan.
 
-## Intipati
+## Penafas
 
-Analisis walk-forward ialah ritual satu kali: reka bentuk sebelum, terima selepas. Nisbah kecekapan ialah skor kejujuran peraturan, dan mana-mana nilai di bawah 0.5 bermaksud nombor in-sample itu kebanyakannya ialah ilusi.
+Analisis walk-forward ialah ritual satu kali: reka bentuk sebelum, terima selepas. Nisbah kecekapan ialah skor kejujuran peraturan, dan apa jua di bawah 0.5 bermaksud nombor in-sample itu kebanyakannya ialah ilusi.

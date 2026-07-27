@@ -1,6 +1,6 @@
 ---
 id: "316_calls_and_puts"
-title: "Pilihan beli & jual — dua blok asas"
+title: "Calls & puts — dua blok binaan asas"
 duration_min: 4
 level: 9
 module: 15
@@ -11,54 +11,54 @@ topic: "options_basics"
 prerequisites: []
 tags: ["options", "calls", "puts", "derivatives", "vocabulary"]
 agent_callouts: ["fundamentals_analyst", "market_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-21"
 updated_at: "2026-07-21"
 ---
-# Opsyen beli & jual — dua blok binaan asas
+# Calls & puts — dua blok binaan asas
 
-Setiap opsyen yang diperdagangkan — sama ada pada AAPL, NVDA, atau kontrak terbitan Bursa Malaysia — merujuk kepada salah satu daripada dua blok binaan: opsyen beli (call), iaitu hak untuk membeli aset asas pada harga pelaksanaan tetap sehingga tarikh luput tertentu, atau opsyen jual (put), iaitu hak untuk menjualnya. Setiap blok mempunyai dua sisi: pembeli, yang membayar premium untuk hak tersebut, dan penjual, yang menerima premium itu sebagai ganti kepada kewajipan jika pembeli memilih untuk melaksanakan opsyen. Setiap strategi opsyen dalam modul ini — carta hasil, opsyen beli dilindungi (covered calls), opsyen jual pelindung (protective puts) — hanyalah gabungan berbeza bagi dua blok ini. Selepas pelajaran ini, anda akan dapat menamakan keempat-empat kedudukan dan menyatakan, tanpa ragu, siapa yang memegang hak dan siapa yang memegang kewajipan dalam setiap situasi.
+Setiap pilihan yang diperdagangkan — sama ada pada AAPL, NVDA, atau kontrak terbitan Bursa Malaysia — merujuk kepada dua blok binaan: **call** (hak untuk membeli aset asas pada harga penentuan tetap sehingga tarikh luput tertentu), atau **put** (hak untuk menjualnya). Setiap blok mempunyai dua sisi: pembeli, yang membayar premi untuk hak tersebut, dan penjual, yang menerima premi tersebut sebagai pertukaran atas kewajipan jika pembeli memilih untuk menggunakan haknya. Setiap strategi pilihan dalam modul ini — termasuk diagram hasil, covered calls, dan protective puts — hanyalah gabungan kedua-dua blok ini dengan cara yang berbeza. Selepas pelajaran ini, anda akan dapat menamakan keempat-empat kedudukan tersebut dan menyatakan, tanpa keraguan, siapa yang memegang hak dan siapa yang memegang kewajipan dalam setiap situasi.
 
 ## Contoh
 
-Ambil AAPL, sebagai contoh, diperdagangkan berhampiran $195. Pedagang yang mahu pendedahan kepada kenaikan harga tanpa berikat untuk membeli 100 saham secara langsung boleh membeli opsyen beli: sebagai contoh, hak untuk membeli 100 saham AAPL pada harga pelaksanaan $200, luput dalam sebulan, dengan premium beberapa dolar setiap saham (angka ilustratif, bukan sebutan langsung — premium sebenar berubah mengikut harga AAPL dan volatiliti tersirat). Pedagang ini kini **memegang posisi beli opsyen beli (long a call)** — mereka memegang hak, bukan kewajipan. Jika AAPL tidak pernah menghampiri $200, mereka hanya membiarkan opsyen luput dan kehilangan apa yang telah dibayar. Di sisi lain kontrak yang sama ialah siapa yang menjualnya — **memegang posisi jual opsyen beli (short the call)** — yang telah menerima premium di awal tetapi kini diwajibkan untuk menghantar 100 saham AAPL pada $200 jika pembeli melaksanakan, tidak kira seberapa tinggi harga AAPL sebenarnya telah melonjak. Opsyen jual berfungsi sebagai imej cermin: pedagang yang mahu perlindungan daripada penurunan harga atau pertaruhan bearish boleh membeli opsyen jual — hak untuk menjual pada harga pelaksanaan tetap — manakala penjual opsyen jual diwajibkan untuk membeli saham pada harga pelaksanaan tersebut jika dilaksanakan. Empat kedudukan, dua hak, dua kewajipan.
+Ambil AAPL, sebagai ilustrasi, yang diperdagangkan berhampiran $195. Seorang pedagang yang mendedahkan diri kepada potensi kenaikan tanpa perlu membeli 100 saham secara terus boleh membeli call: contohnya, hak untuk membeli 100 saham AAPL pada harga penentuan $200, dengan luput dalam satu bulan, dengan membayar premi beberapa dolar setiap saham (angka ilustrasi, bukan sebutan langsung — premi sebenar berubah mengikut harga AAPL dan volatiliti tersirat). Pedagang ini kini **memegang call secara panjang (long a call)** — mereka memegang hak, bukan kewajipan. Jika AAPL tidak pernah menghampiri $200, mereka hanya membiarkan pilihan itu luput dan kehilangan hanya apa yang telah dibayar. Di sisi lain kontrak yang sama, terdapat pihak yang menjualnya — **memegang call secara pendek (short the call)** — yang menerima premi di awal tetapi kini diwajibkan untuk menghantar 100 saham AAPL pada $200 jika pembeli menggunakan haknya, tidak kira berapa tinggi harga AAPL sebenarnya. Put berfungsi sebagai imej cermin: seorang pedagang yang mahu perlindungan daripada penurunan atau membuat ramalan bearish boleh membeli put — hak untuk menjual pada harga penentuan tetap — manakala penjual put diwajibkan untuk membeli saham pada harga penentuan tersebut jika digunakan. Empat kedudukan, dua hak, dua kewajipan.
 
 ## Perangkap
 
-Pemula mendengar "membeli opsyen beli" dan membayangkan membeli saham pada diskaun — seolah-olah premium adalah bayaran pendahuluan yang akan digunakan untuk saham. Ia bukan begitu. Premium adalah kos berasingan yang tidak boleh dipulangkan untuk *hak* untuk bertransaksi kemudian; jika saham tidak pernah mencapai harga pelaksanaan, premium itu hilang tanpa mengira apa yang berlaku kepada saham selepas itu. Kesilapan pemula kedua ialah buta simetri: menganggap pembeli dan penjual menanggung risiko yang setara kerana mereka berada di "sisi berlawanan daripada perdagangan yang sama." Mereka tidak. Kerosakan maksimum pembeli opsyen adalah terhad pada premium yang dibayar, titik. Risiko penjual opsyen adalah berbeza secara struktur — jual opsyen beli terhadap saham tanpa had atas berapa tinggi ia boleh naik membawa kepada kerugian yang berkembang seiring dengan saham, tanpa had. Hak dan kewajipan bukan risiko simetri yang memakai label berbeza.
+Pemula sering mendengar "membeli call" dan membayangkan membeli saham pada diskaun — seolah-olah premi adalah wang muka yang akan digunakan untuk membeli saham. Ini tidak benar. Premi adalah kos berasingan yang tidak boleh dipulangkan untuk *hak* bertransaksi kemudian; jika saham tidak pernah mencapai harga penentuan, premi itu hilang tanpa mengira apa yang berlaku kepada saham selepas itu. Kesilapan pemula kedua ialah buta simetri: menganggap pembeli dan penjual menanggung risiko yang sama kerana mereka berada di "sisi berlawanan perdagangan yang sama." Mereka tidak. Kerugian maksimum pembeli pilihan adalah terhad kepada premi yang dibayar, titik. Risiko penjual pilihan adalah berbeza secara struktur — penjualan call tanpa perlindungan (naked short) pada saham yang tiada had atas kenaikan harganya membawa kerugian yang bertambah seiring dengan kenaikan saham, tanpa had. Hak dan kewajipan bukan risiko simetri yang memakai label berbeza.
 
 <ChatWith agent="fundamentals_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="Seorang pedagang membeli pilihan beli put pada NVDA dengan harga pelaksanaan $400, membayar premium. Pernyataan manakah yang betul menerangkan apa yang dimiliki oleh pedagang tersebut?"
+  question="Seorang pedagang membeli pilihan put pada NVDA dengan harga larian $400, membayar premium. Pernyataan manakah dengan betul menerangkan apa yang dipegang oleh pedagang tersebut sekarang?"
   options={[
     "Hak, tetapi bukan kewajiban, untuk menjual 100 saham NVDA pada $400 sebelum tamat tempoh",
     "Kewajiban untuk menjual 100 saham NVDA pada $400 jika pilihan tersebut dilaksanakan",
     "Kewajiban untuk membeli 100 saham NVDA pada $400 jika pilihan tersebut dilaksanakan",
-    "Kepemilikan 100 saham NVDA dengan kos asas $400"
+    "Kepemilikan 100 saham NVDA dengan asas kos $400"
   ]}
   answer={0}
-  explanation="Membeli put bermaksud membayar untuk hak — pilihan untuk menjual pada $400 — bukan kewajiban. Kewajiban adalah milik pihak yang menjual put tersebut. Selain itu, membeli put tidak mewujudkan kedudukan saham secara langsung; ia adalah kontrak berasingan, bukan pembelian saham teras."
+  explanation="Membeli pilihan put bermaksud membayar untuk hak — pilihan untuk menjual pada $400 — bukan kewajiban. Kewajiban milik siapa sahaja yang menjual pilihan put tersebut. Dan membeli pilihan put tidak mencipta kedudukan saham secara langsung; ia adalah kontrak berasingan, bukan pembelian saham teras."
 />
 
 <Quiz
-  question="Seorang pedagang pilihan berkata kepada anda: 'Saya menjual panggilan terhadap NVDA — pembeli dan saya sama-sama menanggung risiko yang sama, hanya dari sudut yang berbeza.' Berdasarkan pengetahuan anda tentang hak berbanding kewajiban, apakah kesilapan dalam tuntutan itu?"
+  question="Seorang pedagang pilihan memberitahu anda: 'Saya menjual panggilan terbuka (naked) pada NVDA — pembeli dan saya sama-sama menanggung risiko yang sama, hanya dari sisi yang berbeza.' Menggunakan pengetahuan anda sekarang tentang hak berbanding kewajiban, apakah kesilapan dalam tuntutan itu?"
   options={[
     "Tiada kesilapan — pembeli dan penjual sentiasa mempunyai kerugian maksimum yang sama pada mana-mana kontrak pilihan",
-    "Pembeli memegang hak dengan kerugian yang terhad pada premium yang dibayar; penjual memegang kewajiban dengan kerugian yang berkembang tanpa had apabila aset teras meningkat, yang mana tidak simetri",
-    "Tuntutan itu salah kerana hanya put yang mempunyai risiko tidak simetri — panggilan sentiasa simetri antara pembeli dan penjual",
+    "Pembeli memegang hak dengan kerugian yang terhad pada premium yang dibayar; penjual panggilan terbuka memegang kewajiban dengan kerugian yang meningkat tanpa had apabila aset asas meningkat, yang tidak simetri",
+    "Tuntutan itu salah kerana hanya put yang mempunyai risiko asimetri — panggilan sentiasa simetri antara pembeli dan penjual",
     "Tuntutan itu salah kerana penjual pilihan tidak boleh kehilangan wang, hanya pembeli yang boleh"
   ]}
   answer={1}
-  explanation="Kerugian pembeli panggilan adalah tetap sebaik sahaja premium dibayar — mereka sentiasa boleh memilih untuk tidak melaksanakan. Penjual panggilan tidak mempunyai lantai sedemikian: kewajiban untuk menghantar saham pada harga pelaksanaan menjadi lebih mahal apabila harga saham meningkat, tanpa had kontrak yang ditetapkan. Kontrak yang sama, tetapi struktur risiko yang berbeza pada setiap sisi."
+  explanation="Kerugian maksimum pembeli panggilan adalah tetap sebaik sahaja premium dibayar — mereka sentiasa boleh memilih untuk tidak melaksanakan. Penjual panggilan terbuka tidak mempunyai lantai sedemikian: kewajiban untuk menghantar saham pada harga larian menjadi lebih mahal apabila saham meningkat, tanpa had kontrak yang ditetapkan. Kontrak yang sama, struktur risiko yang berbeza pada setiap sisi."
 />
 
 ## Cuba sendiri
 
-Buka Glosari dan cari "opsyen beli" dan "opsyen jual." Kemudian tanya Penganalisis Asas: "Jika saya memegang posisi beli opsyen beli dan saham tidak pernah mencapai harga pelaksanaan saya, apa yang berlaku kepada premium saya?" Sahkan jawapan itu sepadan dengan pelajaran ini sebelum bergerak ke carta hasil seterusnya.
+Buka Kamus Istilah dan cari "call" dan "put." Kemudian tanya Fundamentals Analyst: "Jika saya memegang call secara panjang dan saham tidak pernah mencapai harga penentuan saya, apa yang berlaku kepada premi saya?" Sahkan jawapan itu sepadan dengan pelajaran ini sebelum bergerak ke diagram hasil seterusnya.
 
-## Penutup
+## Ringkasan
 
-Opsyen beli adalah hak untuk membeli, opsyen jual adalah hak untuk menjual — pembeli mana-mana membayar premium untuk hak yang terhad pada kos tersebut, manakala penjual menerima premium untuk kewajipan yang tidak terhad dengan cara yang sama.
+Call adalah hak untuk membeli, put adalah hak untuk menjual — pembeli mana-mana membayar premi untuk hak yang terhad pada kos tersebut, manakala penjual menerima premi untuk kewajipan yang tidak terhad dengan cara yang sama.

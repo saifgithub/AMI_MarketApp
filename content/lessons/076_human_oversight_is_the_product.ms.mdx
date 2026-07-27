@@ -11,66 +11,66 @@ topic: "human_oversight"
 prerequisites: ["072_what_ami_can_do_for_you", "073_what_ami_cannot_do", "074_ai_hallucinations_and_amis_safety_floor", "075_the_risk_of_overreliance"]
 tags: ["oversight", "ceo", "advisory_only", "mandate", "decision"]
 agent_callouts: ["concierge"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Pengawasan manusia adalah produk
 
-Kerangka kerja <Term id="ceo_framing" />-of-<Term id="ami" /> bukanlah metafora. Di dalam <Term id="training_simulator" />, anda membuat setiap panggilan. Anda menetapkan <Term id="ami_mandate" />. Anda memutuskan untuk memanggil Mesyuarat atau tidak. Anda memutuskan untuk menerima Verdict simulasi, memodifikasinya, atau menolaknya. Disiplin yang dilatih ialah *penilaian* — amalan mengendalikan pasukan analis dan menilai kerja mereka, bukan pengumpulan cadangan untuk dibawa ke mana-mana. AMI tidak melaksanakan, tidak akan melaksanakan, dan tidak berlesen untuk memberikan nasihat pelaburan. Pada akhir pelajaran ini, anda akan melihat mengapa manusia dalam gelung (human-in-the-loop) bukan ciri keselamatan yang dipasang secara tergesa-gesa; ia adalah keseluruhan produk.
+Rangka kerja <Term id="ceo_framing" />-of-<Term id="ami" /> bukanlah metafora. Di dalam <Term id="training_simulator" />, anda membuat setiap panggilan. Anda menetapkan <Term id="ami_mandate" />. Anda memutuskan untuk convene Room. Anda memutuskan untuk menerima Verdict simulasi, mengubahnya, atau menolaknya. Disiplin yang dilatih adalah *penilaian* — amalan mengendalikan pasukan penganalisis dan menilai kerja mereka, bukan koleksi cadangan untuk dibawa ke mana-mana. AMI tidak melaksanakan, tidak akan melaksanakan, dan tidak berlesen untuk memberikan nasihat pelaburan. Pada akhir pelajaran ini, anda akan melihat mengapa manusia dalam gelung (human-in-the-loop) bukan ciri keselamatan yang dipasang secara tambahan; ia adalah keseluruhan produk.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
-Anda memanggil Mesyuarat pada JPM. <Term id="ami_verdict" /> kembali dengan:
+Anda convene Room pada JPM. <Term id="ami_verdict" /> kembali:
 
-> **BELI JPM · saiz 4% · entri $218.40 · stop $208 (-4.8%) · sasaran $238 (+9.0%) · jangkaan 6–8 minggu · keyakinan 0.66**
+> **BELI JPM · saiz 4% · kemasukan $218.40 · stop $208 (-4.8%) · sasaran $238 (+9.0%) · jangka masa 6–8 minggu · keyakinan 0.66**
 >
-> *Pematuhan PM: LULUS. Dalam had max_position_pct 5, dalam had max_drawdown_pct 20, tiada pengecualian dipicu.*
+> *Pematuhan PM: LULUS. Dalam had nama tunggal 4.5% risk_score 4, dalam had max_drawdown_pct 20, tiada pengecualian dipicu.*
 
-Tiga perkara berlaku seterusnya, dan ketiganya menjadi tanggungjawab anda:
+Tiga perkara berlaku seterusnya, dan ketiga-tiganya menjadi tanggungjawab anda:
 
-1. **Baca pembangkang.** Kes Bear Researcher mungkin menyatakan bahawa jangkaan pemotongan kadar faedah sudah termaktub dalam harga. Anda menimbang itu berbanding kes Bull. AMI tidak menimbangkannya untuk anda — menimbangnya *ialah* latihan itu sendiri.
-2. **Putuskan apa yang dipelajari oleh senario itu.** "LULUS" daripada PM bermakna perdagangan simulasi itu sesuai dengan Mandat anda — bukan bermakna AMI menasihati anda untuk berbuat apa-apa. Anda boleh menolak Verdict yang lulus. Anda boleh menerimanya pada saiz yang lebih kecil. Anda boleh menunggu. Butang bertanda "Terima Verdict" merekodkan keputusan anda dalam <Term id="ami_decision_journal" /> supaya anda boleh mengkaji pertimbangan anda sendiri kemudian — ia tidak melaksanakan sebarang dagangan di mana-mana, dalam aplikasi ini atau aplikasi lain.
-3. **Bawa pengajaran, bukan kedudukan.** Tiada penurunan nilai (drawdown) yang berlaku dalam AMI — tiada apa yang perlu ditekan, tiada broker, tiada pesanan. Tiada apa-apa keluar dari simulator. Nilai latihan senario itu ialah soalan yang dipaksanya: *adakah penilaian anda bertahan di bawah siasatan?* Itulah konsekuensi yang dibina untuk disampaikan oleh simulator, dan satu-satunya konsekuensi yang boleh ia sampaikan.
+1. **Baca pembangkang.** Hujah Bear Researcher mungkin menyatakan bahawa jangkaan pemotongan kadar faedah sudah termaktub dalam harga. Anda menimbang itu berbanding hujah Bull. AMI tidak menimbanginya untuk anda — menimbanginya *adalah* latihan itu sendiri.
+2. **Putuskan apa yang dipelajari dari senario itu.** "LULUS" dari PM bermakna perdagangan simulasi itu sesuai dengan Mandat anda — bukan bermakna AMI menasihati anda untuk berbuat apa-apa. Anda boleh menolak Verdict yang lulus. Anda boleh menerimanya dengan saiz yang lebih kecil. Anda boleh menunggu. Butang bertanda "Terima Verdict" merekodkan keputusan anda dalam <Term id="ami_decision_journal" /> supaya anda boleh mengkaji pertimbangan anda sendiri nanti — ia tidak melaksanakan perdagangan di mana-mana, dalam aplikasi ini atau aplikasi lain.
+3. **Bawa pelajaran, bukan posisi.** Tiada drawdown yang berlaku dalam AMI — tiada apa-apa untuk ditekan, tiada broker, tiada pesanan. Tiada apa-apa keluar dari simulator. Nilai latihan senario itu ialah soalan yang dipaksanya: *adakah penilaian anda bertahan di bawah siasatan?* Itulah akibat yang dibina simulator untuk hantar, dan satu-satunya yang mampu ia hantar.
 
-Bandingkan dengan sistem yang melaksanakan secara automatik: di sana, "pengawasan manusia" hanyalah dialog pengesahan dan borang penyesalan. Di sini, pengawasan ialah satu-satunya perkara yang wujud. 12 ejen berhujah, semakan pematuhan PM dilakukan, dan kemudian sistem *berhenti* — dan menunggu anda untuk menilai. Jeda itu ialah produk.
+Bandingkan dengan sistem yang melaksanakan secara automatik: di sana, "pengawasan manusia" ialah dialog pengesahan dan borang penyesalan. Di sini, pengawasan ialah satu-satunya perkara yang wujud. 12 ejen berhujah, PM memeriksa pematuhan, dan kemudian sistem *berhenti* — dan menunggu anda menilai. Jeda itu ialah produknya.
 
 ## Perangkap
 
-Perangkap itu ialah bahasa automasi yang menggoda anda untuk mengupahkan keputusan. "Verdict simulasi AMI ialah BELI", "PM mengesahkan LULUS", "keyakinan Mesyuarat ialah 0.7" — semua benar, semua artifak latihan. Tiada satu pun daripada mereka bermaksud AMI mengesyorkan anda berbuat apa-apa di luar aplikasi. AMI tidak berlesen untuk memberikan nasihat pelaburan dan tidak berpura-pura demikian. Model mental yang perlu dikekalkan: AMI ialah meja analis simulasi dan pegawai pematuhan simulasi yang digabungkan, dibina untuk melatih pertimbangan anda; tiada apa-apa dalam aplikasi ini mencapai akaun sebenar anda, sekali pun. CIO dunia sebenar membaca laporan analis dan membuat keputusan. Mereka tidak menyalahkan analis apabila kedudukan berubah. Mereka menilai kerja tersebut dan membuat panggilan. Latihan di sini adalah tepat kemahiran penilaian itu — dan Jurnal Keputusan dibina untuk menangkap *penalaran anda*, bukan AMI, atas sebab yang tepat ini.
+Perangkap itu ialah bahasa automasi yang menggoda anda untuk menyerahkan keputusan. "Verdict simulasi AMI ialah BELI", "PM mengesahkan LULUS", "keyakinan Room ialah 0.7" — semua benar, semua artifak latihan. Tiada satu pun daripadanya bermaksud AMI mencadangkan anda berbuat apa-apa di luar aplikasi. AMI tidak berlesen untuk memberikan nasihat pelaburan dan tidak berpura-pura untuk berbuat demikian. Model mental yang perlu dikekalkan: AMI ialah meja penganalisis simulasi dan pegawai pematuhan simulasi yang digabungkan, dibina untuk melatih pertimbangan anda; tiada apa-apa dalam aplikasi ini mencapai akaun sebenar anda, sentiasa. CIO dunia sebenar membaca laporan penganalisis dan membuat keputusan. Mereka tidak menyalahkan penganalisis apabila posisi berubah. Mereka menilai kerja tersebut dan membuat panggilan. Latihan di sini adalah tepat kemahiran penilaian itu — dan Jurnal Keputusan dibina untuk menangkap *pertimbangan anda*, bukan AMI, untuk sebab yang tepat ini.
 
 <ChatWith agent="concierge" />
 
 ## Kuiz
 
 <Quiz
-  question="Semakan kepatuhan PM terhadap Verdict simulasi kembali LULUS. Apa sebenarnya yang PM sampaikan kepada anda?"
+  question="Semakan kepatuhan PM terhadap Verdict simulasi kembali PASS. Apa sebenarnya PM memberitahu anda?"
   options={[
     "Perdagangan telah diletakkan dalam simulasi dan kini aktif",
     "AMI menjamin perdagangan tidak akan rugi melebihi max_drawdown_pct",
     "AMI telah meluluskan perdagangan dan anda harus mengambilnya",
-    "Dalam senario latihan, perdagangan yang dicadangkan berada dalam had keras Mandat anda — tiada lebih. Tujuan simulator ini ialah penilaian anda terhadap maksudnya"
+    "Dalam senario latihan, cadangan perdagangan berada dalam had keras Mandat anda — tiada lebih. Tujuan simulator ini ialah penilaian anda terhadap maksudnya"
   ]}
   answer={3}
-  explanation="LULUS ialah isyarat 'ini sesuai dengan bingkai risiko yang dinyatakan dalam senario latihan', bukan arahan dan bukan nasihat pelaburan. Ia juga bukan jaminan kerugian — had simulasi boleh tergelincir, dan lantai mandat melindungi bentuk portfolio, bukan hasil perdagangan. Jawapan salah yang paling menggoda ialah jaminan kerugian — baca kata-kata PM dengan teliti: ia menyebut kepatuhan, bukan hasil."
+  explanation="PASS ialah isyarat 'ini sesuai dengan bingkai risiko dinyatakan anda dalam senario latihan', bukan arahan dan bukan nasihat pelaburan. Ia juga bukan jaminan kerugian — had simulasi boleh tergelincir, dan lantai mandat melindungi bentuk portfolio, bukan hasil perdagangan. Jawapan salah yang paling menggoda ialah jaminan kerugian — baca kata-kata PM dengan teliti: ia menyebut kepatuhan, bukan hasil."
 />
 
 <Quiz
-  question="Seorang pengguna berkata: 'AMI suruh saya beli NVDA pada $142 dan kini saya rugi 6%. Panggilan siapa itu?'"
+  question="Seorang pengguna berkata: 'AMI memberitahu saya beli NVDA pada $142 dan kini saya rugi 6%. Panggilan siapa itu?'"
   options={[
-    "Portfolio Manager, kerana ia mengeluarkan LULUS",
-    "Pengguna — AMI ialah simulator latihan, bukan penasihat berlesen; Verdict simulasi AMI ialah artifak latihan untuk pengguna menilai, bukan arahan untuk diikuti. AMI tidak melaksanakan dan tidak mampu melaksanakan",
+    "Portfolio Manager, kerana ia mengeluarkan PASS",
+    "Pengguna — AMI ialah simulator latihan, bukan penasihat berlesen; Verdict simulasi AMI ialah artifak latihan untuk pengguna menilai, bukan arahan untuk diikuti. AMI tidak melaksanakan dan tidak boleh",
     "AMI — Verdict simulasi berkata BELI",
-    "Dikongsi — perdebatan ejen menghasilkan kemasukan, jadi tanggungjawab dikongsi"
+    "Dikongsi — perdebatan ejen menghasilkan kemasukan, jadi tanggungjawab dibahagikan"
   ]}
   answer={1}
-  explanation="AMI ialah simulator latihan, bukan penasihat. Setiap tindakan pengguna di luar aplikasi ialah keputusan sendiri; Verdict simulasi AMI, keputusan LULUS, dan nombor keyakinan ialah artifak latihan. Jawapan salah yang paling memikat ialah 'dikongsi' kerana ia terdengar adil — tetapi tanggungjawab dikongsi memerlukan kuasa tindakan dikongsi, dan AMI tiada kuasa pelaksanaan dan tidak berlesen untuk mengarahkannya."
+  explanation="AMI ialah simulator latihan, bukan penasihat. Setiap tindakan yang diambil pengguna di mana-mana di luar aplikasi adalah keputusan sendiri mereka; Verdict simulasi AMI, keputusan PASS, dan nombor keyakinan ialah artifak latihan. Jawapan salah yang paling memikat ialah 'dikongsi' kerana ia terdengar adil — tetapi tanggungjawab dikongsi memerlukan agensi dikongsi, dan AMI tidak mempunyai agensi pelaksanaan dan tidak berlesen untuk mengarahkannya."
 />
 
 ## Cuba sendiri
 
-Buka **editor Mandat** dan ubah satu medan — katakan, `max_position_pct` daripada 5 kepada 3. Kemudian panggil Mesyuarat pada ticker yang baru-baru ini anda pertimbangkan. Perhatikan saiz yang disyorkan oleh PM bergerak mengikutnya. Kemudian *tolak* Verdict dalam Jurnal Keputusan dan tulis satu ayat mengapa. Anda baru sahaja menggunakan satu-satunya kuasa yang benar-benar mengubah apa-apa dalam aplikasi ini — milik anda.
+Buka **editor Mandat** dan ubah satu medan — katakan, `risk_score` dari 4 kepada 2. Kemudian convene Room pada ticker yang baru-baru ini anda pertimbangkan. Perhatikan saiz yang disyorkan oleh PM bergerak mengikutnya. Kemudian *tolak* Verdict dalam Jurnal Keputusan dan tulis satu ayat mengapa. Anda baru sahaja menggunakan satu-satunya kuasa yang sebenarnya menggerakkan apa-apa dalam aplikasi ini — milik anda.
 
-## Penutup
+## Kesimpulan
 
-Tiada permukaan pelaksanaan dalam AMI — tiada butang, tiada broker, tiada pesanan. Tiada penurunan nilai (drawdown) yang berlaku dalam simulator. Nilai latihan ialah disiplin menilai: adakah bacaan anda terhadap kes Bull, kes Bear, penyebaran Risk Debator, dan semakan PM bertahan di bawah siasatan? AMI sedang mengajar anda untuk menilai output analis, bukan memberikan nasihat untuk diikuti.
+Tiada permukaan pelaksanaan dalam AMI — tiada butang, tiada broker, tiada pesanan. Tiada drawdown yang berlaku dalam simulator. Nilai latihan ialah disiplin menilai: adakah bacaan anda terhadap kes Bull, kes Bear, penyebaran Risk Debator, dan semakan PM bertahan di bawah siasatan? AMI sedang mengajar anda menilai output penganalisis, bukan memberikan nasihat untuk diikuti.

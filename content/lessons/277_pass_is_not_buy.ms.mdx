@@ -1,6 +1,6 @@
 ---
 id: "277_pass_is_not_buy"
-title: "PASS bukan BUY — penghakiman adalah bersyarat"
+title: "PASS bukan BELI — penghakiman adalah bersyarat"
 duration_min: 5
 level: 8
 module: 12
@@ -11,67 +11,67 @@ topic: "verdict_is_conditional"
 prerequisites: ["076_human_oversight_is_the_product", "077_decision_support_vs_prediction", "270_why_the_pm_is_structurally_separate"]
 tags: ["pass", "buy", "conditional", "verdict", "pm", "advisory_only"]
 agent_callouts: ["portfolio_manager"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # PASS bukan BUY — keputusan adalah bersyarat
 
-Apabila Pengurus Portfoli (PM) memberikan PASS pada simulasi <Term id="ami_verdict" />, ia hanya melaporkan satu perkara: dalam senario latihan, perdagangan yang dicadangkan itu mematuhi <Term id="ami_mandate" /> anda. PASS bukan bermaksud "AMI fikir anda harus mengambil perdagangan ini". PASS bukan bermaksud "perdagangan ini akan untung". PASS bukan bermaksud "penurunan (drawdown) terhad pada henti rugi". PASS bermaksud "kepatuhan: jelas, dalam lingkungan simulator". Garis BUY pasukan perdagangan adalah <Term id="training_artifact" /> yang berasingan — bukan nasihat pelaburan, bukan cadangan untuk bertindak di luar aplikasi. <Term id="ami" /> adalah <Term id="training_simulator" />, bukan penasihat berlesen: BUY bukan apa yang ditawarkan AMI kepada anda. AMI menawarkan latihan dalam menilai artifak BUY simulasi. Membaca PASS sebagai kelulusan beli adalah salah tafsir paling biasa terhadap struktur Verdict. Pada akhir pelajaran ini, anda akan mampu menerangkan perbezaan tersebut dengan jelas.
+Apabila Pengurus Portofolio (PM) memberikan PASS pada simulasi <Term id="ami_verdict" />, ia hanya melaporkan satu perkara: dalam senario latihan, cadangan perdagangan itu mematuhi <Term id="ami_mandate" /> anda. PASS bukan bermaksud "AMI fikir anda harus mengambil perdagangan ini". PASS bukan bermaksud "perdagangan ini akan untung". PASS bukan bermaksud "penurunan (drawdown) terhad pada titik henti". PASS bermaksud "kepatuhan: jelas, dalam lingkungan simulator". Garis BUY daripada pasukan perdagangan adalah <Term id="training_artifact" /> yang berasingan — bukan nasihat pelaburan, bukan cadangan untuk bertindak di luar aplikasi. <Term id="ami" /> adalah <Term id="training_simulator" />, bukan penasihat berlesen: BUY bukan apa yang AMI tawarkan kepada anda. AMI menawarkan latihan dalam menilai artifak BUY simulasi. Membaca PASS sebagai kelulusan beli adalah salah tafsir paling biasa terhadap struktur Verdict. Pada akhir pelajaran ini, anda akan dapat menerangkan perbezaan tersebut dengan jelas.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
-Anda mengumpulkan Bilik untuk MSFT. Verdict membaca:
+Anda mengumpulkan Bilik untuk MSFT. Verdict menyatakan:
 
 > **BUY MSFT · saiz 3% · entri $418 · henti $402 · sasaran $445 · jangka masa 5 minggu · keyakinan 0.64**
 >
-> *Pengurus Portfoli (semakan kepatuhan):* PASS — dalam had max_position_pct 5, dalam had max_drawdown_pct 20, tiada pengecualian dipicu.
+> *Pengurus Portofolio (semakan kepatuhan):* PASS — dalam had nama tunggal 3% tier risiko anda, dalam had max_drawdown_pct 20, tiada pengecualian dipicu.
 
-Empat pernyataan berbeza digabungkan di sini, dan setiap satu bersyarat terhadap perkara yang berbeza — *keempat-empatnya adalah struktur senario latihan, bukan nasihat*.
+Empat pernyataan berbeza digabungkan di sini, dan setiap satu bersyarat terhadap perkara yang berbeza — *semua empat adalah konstruk senario latihan, bukan nasihat*.
 
-1. **BUY.** *Output latihan simulasi* pasukan perdagangan. Bersyarat jika analisis itu betul dalam senario tersebut. Hallusinasi, perubahan rejim, dan kejutan boleh membatalkannya. Ia bukan cadangan untuk diambil di mana-mana.
-2. **Saiz 3%.** Cadangan Trader, yang disahkan oleh sintesis Debator Risiko. Bersyarat terhadap `max_position_pct` Mandat anda. Jika mandat anda ialah 2%, perdebatan yang sama akan berakhir pada 2%.
-3. **Entri/henti/sasaran/jangka masa.** *Rancangan perdagangan dalam simulator*. Setiap tahap adalah bersyarat — pemicu entri jika harga mencapai $418; henti aktif jika harga mencecah $402; sasaran mengunci keuntungan jika dicapai dalam 5 minggu. Tiada satu pun daripada ini adalah ramalan dan tiada satu pun adalah nasihat.
-4. **PM: PASS.** Hasil kepatuhan. Bersyarat jika perdagangan *dicadangkan* itu mematuhi Mandat yang dinyatakan — tiada lagi. Perdagangan yang sama dicadangkan semula pada 6% akan BLOCK tanpa apa-apa perubahan lain.
+1. **BUY.** *Output latihan simulasi* daripada pasukan perdagangan. Bersyarat jika analisis itu betul dalam senario tersebut. Hallusinasi, perubahan rejim, dan kejutan boleh membatalkannya. Ia bukan cadangan untuk mengambil mana-mana tindakan.
+2. **Saiz 3%.** Cadangan Trader, disahkan oleh sintesis Debator Risiko. Bersyarat pada had yang ditetapkan oleh `risk_score` anda. Pada risk_score 2, hadnya ialah 1.5% dan perdebatan yang sama akan menghasilkan 1.5%.
+3. **Entri/henti/sasaran/jangka masa.** *Rancangan perdagangan dalam simulator*. Setiap tahap adalah bersyarat — entri dipicu jika harga mencapai $418; henti aktif jika harga menyentuh $402; sasaran mengunci keuntungan jika dicapai dalam 5 minggu. Tiada satu pun daripada ini adalah ramalan dan tiada satu pun adalah nasihat.
+4. **PM: PASS.** Hasil kepatuhan. Bersyarat pada perdagangan *cadangan* itu mematuhi Mandat yang dinyatakan — tiada lebih. Perdagangan yang sama dicadangkan semula pada 6% akan BLOCK tanpa apa-apa perubahan lain.
 
-Sekarang pertimbangkan mod kegagalan. Pengguna membaca "PM: PASS" sebagai "AMI meluluskan" dan memperlakukan BUY sebagai lampu hijau. Mereka menyamakan dua isyarat latihan yang berasingan: BUY simulasi (dari pasukan perdagangan) dan PASS kepatuhan (dari PM) — dan kemudian menukarkan kedua-duanya menjadi sesuatu yang tidak ditawarkan AMI, iaitu arahan untuk bertindak. PM tidak pernah mempunyai pandangan sama ada MSFT adalah perdagangan yang baik. Ia mempunyai pandangan sama ada *perdagangan bersaiz dicadangkan itu mematuhi Mandat anda dalam senario latihan ini*. Malah perdagangan terburuk boleh lulus kepatuhan jika saiznya cukup kecil; malah perdagangan cemerlang boleh disekat jika saiznya terlalu besar.
+Sekarang pertimbangkan mod kegagalan. Pengguna membaca "PM: PASS" sebagai "AMI meluluskan" dan menganggap BUY sebagai lampu hijau. Mereka menyamakan dua isyarat latihan yang berasingan: BUY simulasi (dari pasukan perdagangan) dan PASS kepatuhan (dari PM) — dan kemudian menukarkan kedua-duanya menjadi sesuatu yang tidak ditawarkan AMI, iaitu arahan untuk bertindak. PM tidak mempunyai pandangan sama ada MSFT adalah perdagangan yang baik. Ia mempunyai pandangan sama ada *perdagangan bersaiz cadangan itu mematuhi Mandat anda dalam senario latihan ini*. Walaupun perdagangan yang teruk boleh lulus kepatuhan jika saiznya cukup kecil; walaupun perdagangan yang cemerlang boleh disekat jika saiznya terlalu besar.
 
 ## Perangkap
 
-Perangkapnya ialah membaca "PASS" melalui lensa kelulusan. Dalam bahasa harian, "bos luluskannya" bermaksud "bos bersetuju". PM bukan bos; ia adalah pegawai kepatuhan simulasi. Pegawai kepatuhan tidak menandatangani kelulusan sama ada perdagangan itu *bijak*; mereka menandatangani kelulusan sama ada ia *mematuhi peraturan*. Pegawai kepatuhan yang meluluskan setiap perdagangan yang mematuhi dasar dan menolak yang tidak mematuhi telah melakukan kerja mereka dengan sempurna — dan tidak menyatakan sebarang pendapat mengenai hasil. Sama juga dengan PM. Garis BUY/SELL/HOLD dalam Verdict adalah artifak latihan untuk penilaian; garis PASS/BLOCK PM adalah hasil kepatuhan dalam senario tersebut. Mencampurkan keduanya meruntuhkan dua isyarat latihan menjadi satu kelulusan palsu dan anda kehilangan struktur yang menjadikan simulator ini berharga untuk dijalankan.
+Perangkapnya ialah membaca "PASS" melalui lensa kelulusan. Dalam bahasa harian, "bos luluskannya" bermaksud "bos bersetuju". PM bukan bos; ia adalah pegawai kepatuhan simulasi. Pegawai kepatuhan tidak menandatangani sama ada perdagangan itu *bijak*; mereka menandatangani sama ada ia *mematuhi peraturan*. Pegawai kepatuhan yang meluluskan setiap perdagangan yang mematuhi polisi dan menolak yang tidak mematuhi telah melakukan tugasnya dengan sempurna — dan tidak menyatakan sebarang pendapat tentang hasil. Sama juga dengan PM. Garis BUY/SELL/HOLD dalam Verdict adalah artifak latihan untuk penilaian; garis PASS/BLOCK PM adalah hasil kepatuhan dalam senario tersebut. Mencampurkan keduanya meruntuhkan dua isyarat latihan menjadi satu kelulusan palsu dan anda kehilangan struktur yang menjadikan simulator ini berharga untuk dijalankan.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Verdict simulasi keluar: 'BELI NVDA · 3% · PM: LULUS.' Apa maksud PM dengan LULUS?"
+  question="Verdict simulasi kembali: 'BELI NVDA · 3% · PM: LULUS.' Apakah yang dimaksudkan PM dengan LULUS?"
   options={[
     "Perdagangan telah diletakkan dalam simulasi dan kini aktif",
-    "Dalam senario latihan, kedudukan NVDA 3% ini memenuhi had keras Mandat anda. Tiada lebih. Sama ada senario ini mengajar anda sesuatu yang berguna ialah penilaian berasingan",
-    "AMI menjamin perdagangan ini tidak akan rugi",
+    "Dalam senario latihan, kedudukan NVDA 3% yang dicadangkan memenuhi had keras Mandat anda. Tiada lagi. Sama ada senario itu mengajar anda sesuatu yang berguna ialah penilaian berasingan",
+    "AMI menjamin perdagangan tidak akan rugi",
     "AMI telah meluluskan perdagangan — anda harus mengambilnya"
   ]}
   answer={1}
-  explanation="LULUS = pematuhan: jelas, dalam lingkungan simulator. Ia senyap mengenai kebijaksanaan, hasil, dan apa-apa di luar aplikasi. Tajuk BELI ialah output latihan simulasi pasukan perdagangan; LULUS PM ialah hasil pematuhan; kedua-duanya ialah isyarat latihan bebas yang menjawab soalan berbeza. Jawapan salah yang paling menipu ialah 'AMI telah meluluskan' — terdengar intuitif tetapi menggabungkan dua isyarat latihan berasingan menjadi cadangan palsu yang AMI tidak berlesen untuk berikan."
+  explanation="LULUS = pematuhan: jelas, dalam simulator. Ia senyap mengenai kebijaksanaan, hasil, dan apa-apa di luar aplikasi. Tajuk BELI ialah output latihan simulasi pasukan perdagangan; LULUS PM ialah hasil pematuhan; mereka adalah isyarat latihan bebas mengenai soalan berbeza. Jawapan salah yang paling menggoda ialah 'AMI telah meluluskan' — terdengar intuitif tetapi meruntuhkan dua isyarat latihan berbeza menjadi cadangan palsu yang AMI tidak dilesenkan untuk memberikan."
 />
 
 <Quiz
-  question="PM LULUSkan perdagangan 2% pada saham dengan asas fundamental merosot (kes Bear jelas dalam transkrip, hanya ada lean Bull 0.51). Bagaimana bacaan yang betul?"
+  question="PM LULUSkan perdagangan 2% pada saham dengan asas yang merosot (kes Bear jelas dalam transkrip, condong Bull hanya 0.51). Apakah bacaan yang betul?"
   options={[
-    "PM tidak mempunyai pendapat mengenai tesis ini — ia hanya mengesahkan bahawa 2% berada dalam Mandat anda. Lean Bull yang lemah ialah isyarat pasukan perdagangan, berasingan daripada hasil pematuhan",
-    "PM bersetuju dengan kes Bear",
+    "PM tidak mempunyai pendapat mengenai tesis — ia hanya mengesahkan bahawa 2% berada dalam Mandat anda. Condong Bull yang lemah ialah isyarat pasukan perdagangan, berasingan daripada hasil pematuhan",
+    "PM tidak bersetuju dengan kes Bear",
     "Kes Bear mesti salah kerana PM lulus",
     "LULUS mengatasi kes Bear"
   ]}
   answer={0}
-  explanation="PM dan pasukan perdagangan ialah lapisan bebas. LULUS pada 2% bermaksud saiz sesuai dengan Mandat; ia tidak menyokong tesis. Lean 0.51 yang lemah ialah cara Bilik memberitahu anda keyakinan berada di sempadan — isyarat ini dikekalkan bersama LULUS, tidak dipadamkan olehnya. Jawapan salah yang menipu semua menggabungkan pematuhan dengan sokongan tesis."
+  explanation="PM dan pasukan perdagangan adalah lapisan bebas. LULUS pada 2% bermaksud saiz sesuai dengan Mandat; ia tidak menyokong tesis. Condong 0.51 yang lemah ialah cara Bilik memberitahu anda bahawa keyakinan adalah sempadan — isyarat itu dikekalkan bersama LULUS, bukan dipadamkan olehnya. Jawapan salah yang menggoda semua menggabungkan pematuhan dengan sokongan tesis."
 />
 
 ## Cuba sendiri
 
-<Term id="ami_convene_the_room" /> pada penanda dagang <Term id="ami_watchlist" />. Apabila Verdict muncul, baca garis kepatuhan PM dan *jangan* baca tajuk BUY/SELL dahulu. Tanya diri sendiri: *jika PM menyekat, adakah saya mahu perdagangan ini tetap? Jika PM lulus, adakah saya akan mengambilnya tanpa membaca perdebatan?* Kemudian baca baki kandungan. Perhatikan bagaimana hasil PM dan verdict pasukan perdagangan melakukan tugas yang berbeza.
+<Term id="ami_convene_the_room" /> pada ticker <Term id="ami_watchlist" />. Apabila Verdict muncul, baca garis kepatuhan PM dan *jangan* baca tajuk BUY/SELL dahulu. Tanya diri anda: *jika PM menyekat, adakah saya mahu perdagangan ini tetap? Jika PM lulus, adakah saya akan mengambilnya tanpa membaca perdebatan?* Kemudian baca baki kandungan. Perhatikan bagaimana hasil PM dan verdict pasukan perdagangan melakukan tugas yang berbeza.
 
-## Pengajaran Penting
+## Kesimpulan
 
-PASS = kepatuhan mematuhi dalam simulator. BUY = artifak latihan pasukan perdagangan untuk anda nilai. Dua lapisan bebas, tiada satu pun merupakan cadangan untuk bertindak di luar aplikasi. AMI mengajar anda menilai output penganalisis, bukan memberikan nasihat untuk diikuti.
+PASS = kepatuhan mematuhi dalam simulator. BUY = artifak latihan pasukan perdagangan untuk anda menilai. Dua lapisan bebas, tiada satu pun merupakan cadangan untuk bertindak di luar aplikasi. AMI mengajar anda menilai output penganalisis, bukan memberikan nasihat untuk diikuti.

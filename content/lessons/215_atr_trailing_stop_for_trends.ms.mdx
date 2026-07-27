@@ -1,6 +1,6 @@
 ---
 id: "215_atr_trailing_stop_for_trends"
-title: "Henti berantai ATR untuk perdagangan trend"
+title: "Henti beruntun ATR untuk dagangan trend"
 duration_min: 6
 level: 5
 module: 9
@@ -11,30 +11,30 @@ topic: "trend_following"
 prerequisites: ["052_trend_following", "102_atr_based_stops", "103_trailing_stops", "026_moving_averages"]
 tags: ["strategy", "trend", "atr", "trailing_stop", "volatility"]
 agent_callouts: ["trader", "conservative_debator"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Henti beruntun ATR untuk perdagangan trend
+# Henti beruntun ATR untuk dagangan trend
 
-Asas mengikuti trend (052) menggunakan henti keluar berdasarkan purata bergerak; pertukarannya ialah henti MA mengabaikan volatiliti — henti MA 50 hari pada utiliti yang tenang adalah selebar 3%, pada nama pertumbuhan beta tinggi ia boleh selebar 18%, dan matematik saiz posisi runtuh. Henti beruntun berasaskan ATR membetulkan masalah ini: anda saiz henti anda dalam pendaraban julat benar purata (ATR), jadi setiap perdagangan mempunyai risiko yang boleh dibandingkan tanpa mengira volatiliti instrumen. Selepas pelajaran ini, anda boleh membina peraturan trend yang hentinya menyesuaikan diri dengan ruang pernafasan semula jadi setiap ticker, dan yang beruntun mengikut titik "kandil" tertinggi yang dicapai semasa perdagangan.
+Asas mengikuti trend (052) menggunakan henti purata bergerak; pertukarannya ialah henti MA mengabaikan volatiliti — henti MA 50 hari pada utiliti yang tenang adalah selebar 3%, pada nama pertumbuhan beta tinggi ia boleh menjadi selebar 18%, dan matematik saiz posisi runtuh. Henti beruntun berasaskan ATR membetulkan itu: anda saiz henti anda dalam gandaan julat benar purata, jadi setiap dagangan mempunyai risiko yang boleh dibandingkan tanpa mengira volatiliti instrumen. Selepas pelajaran ini, anda boleh membina peraturan trend yang hentinya menyesuaikan diri dengan ruang bernafas semula jadi setiap ticker, dan yang beruntun mengikut titik "lentera" tertinggi yang dicapai dalam dagangan.
 
 ## Contoh
 
-Lihat NVDA dari April hingga Oktober 2024. Pada 22 April, NVDA ditutup pada $79.20 (selepas pemecahan saham) sejurus selepas penurunan tajam. ATR 22 hari adalah kira-kira $3.10. Henti kandil 3-ATR beruntun dari penutupan tertinggi perdagangan: henti = penutupan_tertinggi - 3 * ATR. Pada kemasukan berhampiran $79, henti awal ialah $79 - $9.30 = $69.70. Pada 18 Jun, NVDA ditutup pada $135.58 dengan ATR sekitar $4.80 — henti kandil dinaikkan ke $135.58 - $14.40 = $121.18. Henti hanya bergerak KE ATAS, tidak pernah ke bawah. Pada akhir Julai, NVDA menurun dari puncak ~$140 ke paras rendah berhampiran $98 pada 5 Ogos — tetapi kandil 3-ATR dari puncak $140 adalah sekitar $125, yang telah mencetuskan pada penutupan harian sekitar $118.50 pada 30 Julai. Keluaran dilancarkan secara mekanikal. Pedagang kemudian memasuki semula pada isyarat trend baharu pada pertengahan Ogos dan menunggang NVDA ke $148 pada November dengan kandil mengikut setiap puncak baharu.
+Lihat NVDA dari April hingga Oktober 2024. Pada 22 April, NVDA menutup pada $79.20 (selepas pecah saham) sejurus selepas penurunan tajam. ATR 22 hari adalah kira-kira $3.10. Henti lentera 3-ATR beruntun dari penutupan tertinggi dagangan: henti = highest_close - 3 * ATR. Pada kemasukan berhampiran $79, henti awal ialah $79 - $9.30 = $69.70. Pada 18 Jun, NVDA menutup pada $135.58 dengan ATR sekitar $4.80 — henti lentera naik ke $135.58 - $14.40 = $121.18. Henti hanya bergerak KE ATAS, tidak pernah ke bawah. Pada akhir Julai, NVDA menurun dari puncak ~$140 ke paras rendah berhampiran $98 pada 5 Ogos — tetapi lentera 3-ATR dari puncak $140 adalah sekitar $125, yang telah mencetuskan pada penutupan harian sekitar $118.50 pada 30 Julai. Keluar berlaku secara mekanikal. Pedagang kemudian masuk semula pada isyarat trend baharu pada pertengahan Ogos dan menunggang NVDA ke $148 pada November dengan lentera mengikut setiap puncak baharu.
 
-Kriteria kemasukan: sebarang kemasukan trend yang ditakrifkan (silang MA, Donchian, pecahan). Henti pada kemasukan: harga_kemasukan - (N * ATR), di mana N ialah 2.5 hingga 3.5 — pilih satu dan patuhi. Beruntun: henti = penutupan_tertinggi_sejak_kemasukan - (N * ATR), dinaikkan sahaja, tidak pernah ke bawah. Keluar/pembatalan: penutupan harian di bawah henti beruntun. Strategi ini GAGAL dalam trend naik perlahan ATR-rendah yang terganggu oleh hari pengembangan volatiliti tunggal: nama yang biasanya tenang mengalami lonjakan ATR sehari yang secara retrospektif menjadikan henti beruntun sebelumnya kelihatan ketat, kemudian penutupan di bawah mencetuskan pada sumbu yang pulih pada sesi seterusnya. Anda menanggung kerugian; trend berterusan tanpa anda.
+Kriteria kemasukan: sebarang kemasukan trend yang ditakrifkan (keratan silang MA, Donchian, pecahan). Henti pada kemasukan: harga kemasukan - (N * ATR), di mana N ialah 2.5 hingga 3.5 — pilih satu dan patuhi. Beruntun: henti = highest_close_since_entry - (N * ATR), naik hanya, tidak pernah ke bawah. Keluar/kegagalan: penutupan harian di bawah henti beruntun. Strategi ini GAGAL dalam trend naik merayap ATR-rendah yang diganggu oleh hari pengembangan volatiliti tunggal: nama yang biasanya tenang mengalami lonjakan ATR sehari yang membuatkan henti beruntun sebelumnya kelihatan ketat, kemudian penutupan di bawah mencetus pada sumbu yang pulih pada sesi seterusnya. Anda mengambil kerugian; trend berterusan tanpa anda.
 
 ## Perangkap
 
-Kesilapan pemula ialah mengira semula ATR setiap hari dan membiarkan henti beruntun bergerak KE BAWAH apabila volatiliti mengecut. ATR menurun dalam pasaran yang tenang, jadi henti anda kelihatan "longgar" — kecuali peraturan ini adalah satu arah sahaja. Model mental yang betul: henti kandil adalah monotonik meningkat semasa perdagangan panjang. ATR boleh mengecut, harga boleh bergegar, tetapi tahap henti beruntun hanya dinaikkan. Perangkap lain ialah bertindak balas berlebihan terhadap hari volatiliti tunggal — jika ATR hari ini melonjak 50%, itu tidak menaikkan tahap beruntun sedia ada anda melainkan penutupan_tertinggi baharu juga meningkat. Matematik henti adalah fungsi puncak, bukan bacaan volatiliti terkini.
+Kesilapan pemula ialah mengira semula ATR setiap hari dan membiarkan henti beruntun bergerak KE BAWAH apabila volatiliti mengecut. ATR turun dalam pasaran yang tenang, jadi henti anda kelihatan "longgar" — kecuali peraturan ini adalah satu hala sahaja. Model mental yang betul: henti lentera adalah meningkat secara monoton semasa dagangan panjang. ATR boleh mengecut, harga boleh bergegar, tetapi tahap henti beruntun hanya akan naik lebih tinggi. Perangkap lain ialah bertindak balas berlebihan terhadap hari volatiliti tunggal — jika ATR hari ini melonjak 50%, itu tidak menaikkan tahap beruntun sedia ada anda kecuali highest_close baharu juga naik. Matematik henti adalah fungsi puncak, bukan bacaan volatiliti terkini.
 
 <ChatWith agent="trader" />
 
 ## Kuiz
 
 <Quiz
-  question="Anda memegang posisi beli MSFT pada $410 dengan henti beruntun chandelier 3-ATR. Tutup tertinggi sejak masuk ialah $465. ATR telah turun dari $7 pada masa masuk kepada $5 sekarang. Di mana henti beruntun semasa anda?"
+  question="Anda memegang posisi beli MSFT pada $410 dengan henti trailing chandelier 3-ATR. Penutupan tertinggi sejak masuk adalah $465. ATR telah turun dari $7 pada masa masuk kepada $5 sekarang. Di manakah henti trailing semasa anda?"
   options={[
     "$465 - $15 = $450",
     "$465 - $21 = $444",
@@ -42,11 +42,11 @@ Kesilapan pemula ialah mengira semula ATR setiap hari dan membiarkan henti berun
     "$410 - $21 = $389"
   ]}
   answer={0}
-  explanation="Chandelier beruntun dari tutup tertinggi ($465) menggunakan ATR SEMASA ($5): $465 - 3 * $5 = $450. Jawapan $465 - $21 = $444 (menggunakan ATR $7 pada masa masuk) adalah jawapan salah yang menipu kerana pialang sering menetapkan ATR pada masa masuk dan tidak mengira semula. Peraturan ialah: tutup puncak (ratchet satu hala) tolak gandaan ATR semasa. Perhatikan henti hanya bergerak naik berbanding tahap beruntun sebelumnya; jika tahap yang baru dikira lebih rendah daripada hari sebelumnya, anda kekalkan tahap hari sebelumnya."
+  explanation="The chandelier trails from the highest close ($465) using the CURRENT ATR ($5): $465 - 3 * $5 = $450. The $465 - $21 = $444 answer (using the $7 entry ATR) is the tempting wrong answer because traders often pin ATR at entry and never recompute. The rule is: peak close (one-way ratchet) minus current ATR multiple. Note the stop only moves up vs the previous trailing level; if a freshly-computed level would be lower than yesterday's, you keep yesterday's."
 />
 
 <Quiz
-  question="Masuk trend GOOGL pada $160, ATR 22-hari $3.20, anda guna 3-ATR. Mandat: risiko per-trade 1% daripada akaun $25,000. Saiz posisi maksimum?"
+  question="Masuk trend GOOGL pada $160, ATR 22-hari $3.20, anda gunakan 3-ATR. Mandat: risiko per-trade 1% daripada akaun $25,000. Saiz posisi maksimum?"
   options={[
     "78 saham",
     "156 saham",
@@ -54,13 +54,13 @@ Kesilapan pemula ialah mengira semula ATR setiap hari dan membiarkan henti berun
     "52 saham"
   ]}
   answer={2}
-  explanation="Risiko per saham = 3 * $3.20 = $9.60. Risiko dolar maksimum = 1% * $25,000 = $250. Saham = $250 / $9.60 = 26.04, bulatkan ke bawah kepada 26. Jawapan 156 saham saiz 1% akaun ke dalam ticker — ralat klasik 'saya saiz ikut rasa' yang mengabaikan jarak henti sepenuhnya. Sintesis: henti ATR ialah saiz risiko bersaiz anda, bukan nombor yang ditambah kemudian — ia ialah input kepada formula saiz."
+  explanation="Risk per share = 3 * $3.20 = $9.60. Max dollar risk = 1% * $25,000 = $250. Shares = $250 / $9.60 = 26.04, round down to 26. The 156-share answer puts essentially the whole $25,000 account into the position (156 x $160 = $24,960) — the classic 'I sized it by feel' error that ignores stop distance entirely. The synthesis: an ATR stop is the size of your sized risk, not a number you add later — it's the input to the sizing formula."
 />
 
-## Cuba sendiri
+## Cuba
 
-Dalam <Term id="ami_one_on_one" /> dengan Trader, tampal setup trend semasa dan tanya: "Kira ATR 22 hari. Nyatakan henti awal pada 3-ATR. Nyatakan saiz posisi dengan risiko 1% per-perdagangan <Term id="ami_mandate" /> pada akaun $50,000." Kemudian buka <Term id="ami_coach_your_agent" /> pada Trader dan tambah: "Sentiasa petikan henti berasaskan ATR sebagai ratchet satu arah dari penutupan tertinggi. Jangan biarkan tahap beruntun bergerak ke bawah." Logkan tingkah laku yang dibimbing dalam <Term id="ami_decision_journal" />.
+Dalam <Term id="ami_one_on_one" /> dengan Trader, tampal setelan trend semasa dan tanya: "Hitung ATR 22 hari. Nyatakan henti awal pada 3-ATR. Nyatakan saiz posisi memandangkan 1% per-dagangan <Term id="ami_mandate" /> pada akaun $50,000." Kemudian buka <Term id="ami_coach_your_agent" /> pada Trader dan tambah: "Sentiasa petikan henti berasaskan ATR sebagai ratchet satu hala dari penutupan tertinggi. Jangan biarkan tahap beruntun bergerak ke bawah." Log tingkah laku yang dipandu dalam <Term id="ami_decision_journal" />.
 
-## Penafian
+## Pengambilan
 
-ATR menjadikan risiko boleh dibandingkan merentasi instrumen. Kandil hanya dinaikkan. Penutupan puncak, bukan volatiliti terkini, menentukan di mana henti anda berada.
+ATR menjadikan risiko boleh dibandingkan merentas instrumen. Lentera hanya naik. Penutupan puncak, bukan volatiliti terkini, menentukan di mana henti anda berada.

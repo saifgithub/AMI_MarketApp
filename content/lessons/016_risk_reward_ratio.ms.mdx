@@ -11,32 +11,32 @@ topic: "risk_reward"
 prerequisites: ["015_stop_loss_basics"]
 tags: ["risk", "reward", "expectancy", "math"]
 agent_callouts: ["trader"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Nisbah risiko/ ganjaran
+# Nisbah risiko/keuntungan
 
-Nisbah risiko/ ganjaran ialah jarak dari titik masuk anda ke sasaran, dibahagikan dengan jarak dari titik masuk anda ke henti rugi (stop). Nisbah 1:2 bermaksud anda berpotensi mendapat $2 untuk setiap $1 yang diletakkan sebagai risiko jika kedua-dua tahap tersebut tercapai. Nisbah risiko/ ganjaran bukan ramalan — ia adalah penapis. Dengan persediaan 1:2, anda boleh salah pada separuh daripada dagangan anda dan masih memperoleh keuntungan secara konsisten; dengan persediaan 1:0.8, anda perlu betul hampir dua pertiga daripada masa untuk sekadar pulih modal. Pelajaran ini mengajar cara mengira nisbah tersebut, tahap minimum yang perlu dituntut, dan bagaimana ia berkait dengan kadar kemenangan.
+Nisbah risiko/keuntungan ialah jarak dari titik masuk anda ke sasaran anda, dibahagikan dengan jarak dari titik masuk anda ke henti rugi (stop). Nisbah 1:2 bermaksud anda berpotensi mendapat $2 untuk setiap $1 yang anda risiko jika kedua-dua tahap tersebut tercapai. Nisbah R:R bukanlah satu ramalan — ia adalah satu penapis. Dengan susun atur 1:2, anda boleh salah pada separuh daripada dagangan anda dan masih mendapat keuntungan secara konsisten; dengan susun atur 1:0.8, anda perlu betul sebanyak 56% daripada masa — lebih daripada separuh — hanya untuk mencapai titik impas. Pelajaran ini mengajar cara mengira nisbah tersebut, tahap minimum yang perlu dituntut, dan bagaimana ia berkait dengan kadar kemenangan.
 
 <Animation name="risk_reward_scale" />
 
 ## Contoh
 
-Lihat pada MSFT dalam persediaan hipotetikal pada $415. Market Analyst menandakan sokongan pada $408 (di mana henti rugi berasaskan carta sepatutnya diletakkan, sedikit di bawah pada $407) dan rintangan pada $440 (zon sasaran bersih seterusnya). Risiko per lot = $415 − $407 = $8. Ganjaran per lot = $440 − $415 = $25. Nisbah R:R = 25 ÷ 8 = 3.1. Ini adalah persediaan yang layak diambil walaupun anda hanya mencapai sasaran 4 kali daripada 10 kali — pengiraan matematik: 4 kemenangan × $25 − 6 kerugian × $8 = $100 − $48 = $52 bersih per lot dalam sepuluh dagangan.
+Lihat pada MSFT dalam susun atur hipotetikal pada $415. Market Analyst menandakan sokongan pada $408 (di mana henti rugi berasaskan carta sepatutnya diletakkan, sedikit di bawah pada $407) dan rintangan pada $440 (zon sasaran bersih seterusnya). Risiko per saham = $415 − $407 = $8. Ganjaran per saham = $440 − $415 = $25. R:R = 25 ÷ 8 = 3.1. Ini adalah susun atur yang layak diambil walaupun anda hanya mencapai sasaran 4 kali daripada 10 kali — pengiraan: 4 kemenangan × $25 − 6 kerugian × $8 = $100 − $48 = $52 bersih per saham selama sepuluh dagangan.
 
-Sekarang, ubah keadaan. Titik masuk sama pada $415, henti rugi sama pada $407, tetapi sasaran hanya $422 kerana itu adalah rintangan minor seterusnya. Ganjaran = $7, risiko = $8, Nisbah R:R = 0.88. Anda kini mempertaruhkan lebih banyak daripada yang berpotensi anda peroleh. Anda perlu menang 54% daripada masa untuk sekadar pulih modal (8 ÷ (7+8)). Di Bursa Malaysia, logik yang sama pada PETRONAS: titik masuk RM6.40, henti rugi RM6.20 (risiko RM0.20), sasaran RM7.00 (ganjaran RM0.60), Nisbah R:R = 3.0. Penafian terbina dalam: jika sasaran semula jadi pada carta lebih dekat daripada 1.5× jarak henti rugi, persediaan itu gagal penapis sebelum anda bahkan mengira harganya.
+Sekarang, ubah sudut pandang. Titik masuk sama pada $415, henti rugi sama pada $407, tetapi sasaran hanya $422 kerana itu adalah rintangan minor seterusnya. Ganjaran = $7, risiko = $8, R:R = 0.88. Anda kini lebih banyak risiko daripada apa yang berpotensi anda peroleh. Anda perlu menang 53% daripada masa hanya untuk mencapai titik impas (8 ÷ (7+8)). Di Bursa Malaysia, logik yang sama digunakan pada Petronas Chemicals (PCHEM, 5183): titik masuk RM6.40, henti rugi RM6.20 (risiko RM0.20), sasaran RM7.00 (ganjaran RM0.60), R:R = 3.0. Penafian terbina dalam: jika sasaran semula jadi carta lebih dekat daripada 1.5× jarak henti rugi, susun atur gagal penapis sebelum anda bahkan menilainya.
 
 ## Perangkap
 
-Perangkap ialah menggerakkan sasaran supaya nisbah R:R kelihatan boleh diterima. Pemula melihat R:R = 0.8 pada persediaan yang ingin mereka ambil, jadi mereka "meluaskan sasaran" kepada $432 untuk memaksa R:R naik kepada 2.1, kemudian mengambil dagangan tersebut. Sasaran kini hanyalah nombor pada tiket, bukan tahap pada carta — tiada sebab MSFT harus berhenti pada $432, jadi dagangan itu sama ada akan dihentikan rugi pada $407 atau bergerak mendatar selama berminggu-minggu sementara pedagang itu menatap keuntungan belum direalisasi yang tidak pernah mereka ambil. Model mental yang betul: carta memilih sasaran dengan cara yang sama ia memilih henti rugi. Jika matematik tidak lulus, dagangan tidak diambil — anda lepaskan dan tunggu persediaan yang sesuai.
+Perangkap ialah menggerakkan sasaran supaya nisbah R:R kelihatan boleh diterima. Pemula melihat R:R = 0.8 pada susun atur yang ingin mereka ambil, jadi mereka "meluaskan sasaran" kepada $432 untuk memaksa R:R naik kepada 2.1, kemudian mengambil dagangan tersebut. Sasaran kini hanyalah nombor pada tiket, bukan tahap pada carta — tiada sebab MSFT sepatutnya berhenti pada $432, jadi dagangan itu sama ada akan dihentikan pada $407 atau bergerak mendatar selama berminggu-minggu sambil pedagang menatap keuntungan belum direalisasikan yang tidak pernah mereka ambil. Model mental yang betul: carta memilih sasaran dengan cara yang sama ia memilih henti rugi. Jika matematik tidak lulus, dagangan tidak diambil — anda lepaskan ia dan tunggu satu yang layak.
 
 <ChatWith agent="trader" />
 
 ## Kuiz
 
 <Quiz
-  question="Anda membeli AMZN pada $185 dengan stop $180 dan target $200. Berapakah nisbah risiko/pendapatan?"
+  question="Anda membeli AMZN pada $185 dengan stop $180 dan target $200. Apakah nisbah risiko/pendapatan?"
   options={[
     "5.0",
     "1.5",
@@ -44,25 +44,25 @@ Perangkap ialah menggerakkan sasaran supaya nisbah R:R kelihatan boleh diterima.
     "3.0"
   ]}
   answer={3}
-  explanation="Risiko = $185 − $180 = $5. Pendapatan = $200 − $185 = $15. R:R = 15 ÷ 5 = 3.0. Membalikkan kepada 5 ÷ 15 = 0.33 adalah kesilapan biasa — semak semula dengan bertanya sama ada nisbah itu menjadikan dagangan itu berbaloi untuk diambil."
+  explanation="Risiko = $185 − $180 = $5. Pendapatan = $200 − $185 = $15. R:R = 15 ÷ 5 = 3.0. Membaliknya kepada 5 ÷ 15 = 0.33 adalah kesilapan biasa — semak semula dengan bertanya sama ada nisbah itu menjadikan perdagangan itu berbaloi."
 />
 
 <Quiz
-  question="Pembeli A hanya mengambil setup 1:3 dan menang 35% dari masa. Pembeli B hanya mengambil setup 1:1 dan menang 55% dari masa. Kedua-duanya berisiko $100 setiap dagangan. Selama 100 dagangan, siapa yang mendapat lebih banyak wang?"
+  question="Pegadai A hanya mengambil setup 1:3 dan menang 35% daripada masa. Pegadai B hanya mengambil setup 1:1 dan menang 55% daripada masa. Kedua-duanya berisiko $100 setiap perdagangan. Dalam 100 perdagangan, siapa yang mendapat lebih banyak wang?"
   options={[
     "Mereka kira-kira sama kerana nilai jangkaan adalah sama.",
-    "Pembeli B — kehilangan 65 kali berturut-turut akan memusnahkan Pembeli A sebelum kemenangan tiba.",
-    "Pembeli B — kadar kemenangan yang lebih tinggi adalah kelebihan terkuat.",
-    "Pembeli A — 35 kemenangan × $300 = $10,500, tolak 65 kerugian × $100 = $6,500, bersih +$4,000. Pembeli B: 55 × $100 − 45 × $100 = +$1,000. Pembeli A bersih empat kali ganda lebih banyak."
+    "Pegadai B — kehilangan 65 kali berturut-turut akan memusnahkan Pegadai A sebelum kemenangan tiba.",
+    "Pegadai B — kadar kemenangan yang lebih tinggi adalah kelebihan terkuat.",
+    "Pegadai A — 35 kemenangan × $300 = $10,500, tolak 65 kerugian × $100 = $6,500, bersih +$4,000. Pegadai B: 55 × $100 − 45 × $100 = +$1,000. Pegadai A menjana empat kali ganda lebih banyak."
   ]}
   answer={3}
-  explanation="Jawapan salah yang menarik ialah Pembeli B — kadar kemenangan 55% terasa jelas lebih baik daripada 35%. Tetapi R:R mengubah matematik sepenuhnya: Pembeli A dibayar 3× setiap kemenangan, jadi walaupun pada kadar kena 35%, jangkaan adalah +$40 setiap dagangan berbanding +$10 Pembeli B. Perangkap 'kebangkrutan' adalah pengalih perhatian — risiko setiap dagangan tetap pada 1%, jadi 65 kerugian tidak boleh memusnahkan akaun yang kehilangan 1% pada satu-satu masa. R:R membolehkan anda lebih sering salah tetapi masih menang."
+  explanation="Jawapan salah yang menggoda ialah Pegadai B — kadar kemenangan 55% terasa lebih baik daripada 35%. Tetapi R:R mengubah matematik sepenuhnya: Pegadai A dibayar 3× setiap kemenangan, jadi walaupun pada kadar kena 35%, jangkaannya adalah +$40 setiap perdagangan berbanding +$10 Pegadai B. Perangkap 'kebangkrapan' adalah pengalih perhatian — risiko setiap perdagangan adalah tetap pada 1%, jadi 65 kerugian tidak dapat memusnahkan akaun yang kehilangan 1% pada satu masa. R:R membolehkan anda salah lebih kerap dan tetap menang."
 />
 
 ## Cuba sendiri
 
-Buka editor <Term id="ami_mandate" /> dan tetapkan `min_risk_reward_ratio` kepada 1.5. Kemudian buka <Term id="ami_one_on_one" /> dengan Trader dan minta ia menyediakan tiket untuk mana-mana ticker pada <Term id="ami_watchlist" /> anda. Jika sasaran Trader lebih dekat daripada 1.5× jarak henti rugi, <Term id="ami_pm_safety_floor" /> akan menolak tiket tersebut — perhatikan bagaimana mesej penolakan itu dibaca.
+Buka editor <Term id="ami_mandate" /> dan tetapkan `min_risk_reward_ratio` kepada 1.5. Kemudian buka <Term id="ami_one_on_one" /> dengan Trader dan minta ia merangkaikan tiket untuk mana-mana ticker pada <Term id="ami_watchlist" /> anda. Jika sasaran Trader lebih dekat daripada 1.5× jarak henti rugi, <Term id="ami_pm_safety_floor" /> akan menolak tiket tersebut — perhatikan bagaimana mesej penolakan itu dibaca.
 
-## Intipati
+## Ringkasan
 
-Kadar kemenangan tanpa nisbah R:R adalah seperti membaling syiling; nisbah R:R tanpa disiplin titik masuk adalah harapan kosong. Anda memerlukan kedua-duanya, dan carta memilih kedua-dua tahap tersebut — bukan perasaan anda.
+Kadar kemenangan tanpa R:R adalah seperti membaling syiling; R:R tanpa disiplin titik masuk adalah satu harapan. Anda memerlukan kedua-duanya, dan carta memilih kedua-dua tahap tersebut — bukan perasaan anda.
