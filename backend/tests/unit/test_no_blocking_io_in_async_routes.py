@@ -65,6 +65,20 @@ _BLOCKING_LEAF_METHOD_NAMES = {
     # loop — `pool.map()` still runs and blocks on the calling thread if
     # that thread is the event loop. These names are the actual observable
     # boundary now; treat them as leaves in their own right.
+    #
+    # DEF120 round 2 (MAJOR, auditor-reproduced): naming these two after the
+    # fact was the bug, not the fix — the SAME by-reference break hides ANY
+    # new SimEngine method that reaches the network through
+    # `_marks_with_quotes`, no matter what it's called. Reproduced with
+    # `audit_probe_snapshot`, a fresh method doing exactly that, called
+    # straight from `sector_allocation` with no `to_thread`: 7 passed, green.
+    # D9 (below, `test_every_network_reaching_simengine_method_is_declared`)
+    # closes the mechanism instead of naming the next method: it walks
+    # `SimEngine`'s own methods against each other using attribute
+    # REFERENCES as edges (not just calls), so a leaf handed to `pool.map`
+    # by reference is exactly as visible as one called directly, and any
+    # method it finds reaching the network must be declared here or in
+    # `_SIM_ENGINE_SYNC_SAFE_METHODS` — undeclared defaults to unsafe (red).
     "portfolio_marks_snapshot",
     "valuation_snapshot",
 }
@@ -386,6 +400,133 @@ def test_sync_httpx_call_site_inventory_is_pinned():
         "pinned sync httpx call(s) no longer present (fixed or deleted) — lower "
         "the count here so the pin keeps catching new ones:\n"
         + "\n".join(sorted(removed))
+    )
+
+
+# ── D9 (DEF120 round 2): deny-by-default over SimEngine itself ────────────
+#
+# Everything above walks INTO the engine starting from a route — which is
+# exactly the walk the by-reference `pool.map(self.current_quote, ...)`
+# shape defeats, because `_called_names` only sees `ast.Call` nodes and a
+# leaf handed over by reference is never one. D9 does not try to fix that
+# walk; it adds a second, independent one that never leaves `sim_engine.py`
+# and never needs to see a call at all — it asks, of `SimEngine`'s methods
+# considered as a graph among themselves, "which of these can reach
+# `self._provider.<quote|history|news|earnings>` by ANY attribute
+# reference, called or merely passed along" — the same question a reviewer
+# would ask reading the class top to bottom. A method that can is
+# "network-reaching" and MUST be declared, in one of two places:
+#   - `_BLOCKING_LEAF_METHOD_NAMES` — an async route may call it directly;
+#     every call site must be `await asyncio.to_thread(...)`-wrapped.
+#   - `_SIM_ENGINE_SYNC_SAFE_METHODS` — no async route calls it directly;
+#     it is only ever reached from inside another already-`to_thread`-
+#     wrapped method (verified by grep over `backend/app/api/*.py`, see the
+#     comment on the set below).
+# A method in neither bucket is undeclared, and undeclared means the
+# assertion fails RED — there is no allowlist to silently extend, the new
+# method simply isn't in either set until a human puts it there.
+
+_SIM_ENGINE_NETWORK_PRIMITIVES = {"quote", "history", "news", "earnings"}
+
+# Justified, not a blanket waiver: none of these is ever called directly
+# from an `async def` route today (checked by grep over
+# `backend/app/api/*.py` for `sim.<name>` / `<obj>.<name>` outside a
+# `to_thread` wrapper) — `current_price` / `current_marks` /
+# `current_marks_with_source` / `_marks_with_quotes` / `aggregate_source` /
+# `total_value` / `current_drawdown_pct` are reached only from inside other
+# `SimEngine` methods; `submit` / `preview` / `evaluate_outcomes` /
+# `manual_close` ARE called from routes, but the ENTIRE call is
+# `to_thread`-wrapped at every site (acceptance item 6a covers reverting
+# that). If any of these is ever called directly from a route body, it must
+# move to `_BLOCKING_LEAF_METHOD_NAMES` and every call site wrapped — this
+# set does not exempt that.
+_SIM_ENGINE_SYNC_SAFE_METHODS = {
+    "current_price",
+    "current_marks",
+    "current_marks_with_source",
+    "_marks_with_quotes",
+    "aggregate_source",
+    "total_value",
+    "current_drawdown_pct",
+    "submit",
+    "preview",
+    "evaluate_outcomes",
+    "manual_close",
+}
+
+
+def _sim_engine_class_node() -> ast.ClassDef:
+    tree = ast.parse((_APP / "services" / "sim_engine.py").read_text())
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef) and node.name == "SimEngine":
+            return node
+    raise AssertionError("class SimEngine not found in sim_engine.py — has it moved?")
+
+
+def _sim_engine_methods(cls: ast.ClassDef) -> dict[str, ast.AST]:
+    return {
+        n.name: n
+        for n in cls.body
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+
+
+def _referenced_attrs(fn: ast.AST) -> set[str]:
+    """Every attribute name touched inside fn — CALLED or merely
+    REFERENCED (e.g. handed to `pool.map`/`map` by name, never invoked at
+    the call site itself). This is the one difference from `_called_names`
+    above, which only sees `ast.Call` nodes — and that difference is
+    exactly the gap D9 closes."""
+    return {n.attr for n in ast.walk(fn) if isinstance(n, ast.Attribute)}
+
+
+def _reaches_network(name: str, methods: dict[str, ast.AST], seen: set[str]) -> bool:
+    if name in seen:
+        return False
+    seen.add(name)
+    fn = methods.get(name)
+    if fn is None:
+        return False
+    attrs = _referenced_attrs(fn)
+    if attrs & _SIM_ENGINE_NETWORK_PRIMITIVES:
+        return True
+    return any(
+        attr in methods and _reaches_network(attr, methods, seen)
+        for attr in attrs
+        if attr != name
+    )
+
+
+def test_every_network_reaching_simengine_method_is_declared():
+    """D9 (DEF120 round 2, deny-by-default) — see the block comment above.
+
+    Round-2 audit finding (MAJOR, reproduced): a new `SimEngine` method
+    reaching the network through `_marks_with_quotes` — a by-reference
+    fan-out — was invisible to `test_no_blocking_leaf_call_reachable_from_
+    async_route` above even when called directly from an async route, no
+    `to_thread`. This test doesn't walk from routes at all; it asks
+    `SimEngine`'s own methods which of them can reach
+    `self._provider.<quote|history|news|earnings>`, by reference or by
+    call, and fails if any such method isn't declared safe or a leaf.
+    """
+    cls = _sim_engine_class_node()
+    methods = _sim_engine_methods(cls)
+    network_reaching = {
+        name for name in methods if _reaches_network(name, methods, seen=set())
+    }
+    declared = _BLOCKING_LEAF_METHOD_NAMES | _SIM_ENGINE_SYNC_SAFE_METHODS
+    undeclared = network_reaching - declared
+
+    assert not undeclared, (
+        "SimEngine method(s) reach the network — directly or via a "
+        "by-reference fan-out such as `pool.map(self.current_quote, ...)` "
+        "— but are declared neither a blocking leaf nor sync-safe. A new "
+        "method defaults to UNSAFE: add it to `_BLOCKING_LEAF_METHOD_NAMES` "
+        "(an async route may call it directly — wrap every call site in "
+        "`await asyncio.to_thread(...)`) or to `_SIM_ENGINE_SYNC_SAFE_"
+        "METHODS` (only ever reached from inside an already-to_thread-"
+        "wrapped method — name which one in a comment):\n"
+        + "\n".join(sorted(undeclared))
     )
 
 
