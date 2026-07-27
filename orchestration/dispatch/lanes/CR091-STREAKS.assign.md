@@ -130,4 +130,5 @@ existing entitlement seam — `entitlements.effective_plan_for_user` — not a h
 
 ---
 
+ASSIGNED: coder.api round 1
 DISPATCH: OPEN
