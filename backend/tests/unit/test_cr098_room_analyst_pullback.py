@@ -443,3 +443,65 @@ def test_opinions_not_included_populated_from_roster_not_llm():
     assert verdict.opinions_not_included == ["social_media_analyst"]
     dumped = verdict.model_dump(mode="json")
     assert dumped["opinions_not_included"] == ["social_media_analyst"]
+
+
+# ── #5 — fetch gating: a withheld analyst's provider is never even probed ──
+
+
+def test_withholding_social_never_probes_adanos(monkeypatch):
+    def _boom(*a, **k):
+        raise AssertionError("resolve_social_feed called for a roster-withheld analyst")
+    monkeypatch.setattr(room_runner_mod, "resolve_social_feed", _boom)
+    monkeypatch.setattr(room_runner_mod.settings, "use_real_market_data", True)
+
+    news_feed, social_feed, _ = room_runner_mod.RoomRunner()._resolve_and_charge_feeds(
+        _new_user(plan="floor_pass"), "AAPL",
+        withheld=frozenset({AgentId.SOCIAL_MEDIA_ANALYST}),
+    )
+    from app.services.social_context import LiveDataState as SocialLiveDataState
+    assert social_feed.state == SocialLiveDataState.WITHHELD_TENURE
+
+
+def test_withholding_news_never_probes_alpha_vantage(monkeypatch):
+    def _boom(*a, **k):
+        raise AssertionError("resolve_news_feed called for a roster-withheld analyst")
+    monkeypatch.setattr(room_runner_mod, "resolve_news_feed", _boom)
+    monkeypatch.setattr(room_runner_mod.settings, "use_real_market_data", True)
+
+    news_feed, social_feed, _ = room_runner_mod.RoomRunner()._resolve_and_charge_feeds(
+        _new_user(plan="floor_pass"), "AAPL",
+        withheld=frozenset({AgentId.NEWS_ANALYST}),
+    )
+    from app.services.news_context import LiveDataState as NewsLiveDataState
+    assert news_feed.state == NewsLiveDataState.WITHHELD_TENURE
+
+
+def test_withholding_market_never_computes_technicals(monkeypatch):
+    def _boom(*a, **k):
+        raise AssertionError("compute_technicals called for a roster-withheld Market analyst")
+    monkeypatch.setattr(room_runner_mod, "compute_technicals", _boom)
+    monkeypatch.setattr(room_runner_mod, "fetch_live_fundamentals", lambda *a, **k: None)
+    monkeypatch.setattr(room_runner_mod.settings, "use_real_market_data", True)
+
+    profile = room_runner_mod._profile_for_ticker(
+        "AAPL", withheld=frozenset({AgentId.MARKET_ANALYST}),
+    )
+    assert profile["technicals_state"] == "withheld_tenure"
+
+
+def test_fundamentals_fetch_always_runs_even_when_others_withheld(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        room_runner_mod, "fetch_live_fundamentals",
+        lambda ticker: calls.append(ticker) or None,
+    )
+    monkeypatch.setattr(room_runner_mod, "compute_technicals", lambda *a, **k: None)
+    monkeypatch.setattr(room_runner_mod.settings, "use_real_market_data", True)
+
+    room_runner_mod._profile_for_ticker(
+        "AAPL",
+        withheld=frozenset({
+            AgentId.MARKET_ANALYST, AgentId.NEWS_ANALYST, AgentId.SOCIAL_MEDIA_ANALYST,
+        }),
+    )
+    assert calls == ["AAPL"]
