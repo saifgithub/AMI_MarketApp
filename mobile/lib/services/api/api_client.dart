@@ -98,6 +98,42 @@ ServerUnavailableException? serverUnavailableFrom(Object error) {
   return null;
 }
 
+/// Inverts the backend's per-chunk SSE escape (`room.py`, `brief.py`,
+/// `one_on_one.py`: `chunk.replace("\\", "\\\\").replace("\n", "\\n")`).
+///
+/// DEF114: the previously-shipped `.replaceAll(r'\n', '\n').replaceAll(r'\\',
+/// r'\')` pair cannot invert that encode in either order — the first pass
+/// matches across an escape boundary (e.g. `C:\next` decodes wrong because
+/// the literal `\n` inside it gets read as a newline escape). A single
+/// left-to-right scan that consumes escape pairs atomically is the only
+/// correct inverse; each backend sender escapes every chunk independently
+/// and completely, so no escape sequence spans a chunk boundary (D3) and
+/// per-chunk decoding is safe.
+@visibleForTesting
+String unescapeSseText(String s) {
+  final buffer = StringBuffer();
+  var i = 0;
+  while (i < s.length) {
+    final ch = s[i];
+    if (ch == r'\' && i + 1 < s.length) {
+      final next = s[i + 1];
+      if (next == r'\') {
+        buffer.write(r'\');
+      } else if (next == 'n') {
+        buffer.write('\n');
+      } else {
+        buffer.write(ch);
+        buffer.write(next);
+      }
+      i += 2;
+      continue;
+    }
+    buffer.write(ch);
+    i += 1;
+  }
+  return buffer.toString();
+}
+
 /// Parse one decoded SSE event block (`event: <type>` + joined `data:` lines)
 /// from the Room stream into the typed map the notifier consumes, or `null`
 /// if the block is malformed or its kind isn't recognised.
@@ -132,9 +168,7 @@ Map<String, dynamic>? parseRoomSseEvent(String eventType, String data) {
         };
       case 'agent_token':
         final j = jsonDecode(data) as Map<String, dynamic>;
-        final text = (j['text'] as String? ?? '')
-            .replaceAll(r'\n', '\n')
-            .replaceAll(r'\\', r'\');
+        final text = unescapeSseText(j['text'] as String? ?? '');
         return {'kind': 'agent_token', 'agent_id': j['agent_id'], 'text': text};
       case 'agent_done':
         final j = jsonDecode(data) as Map<String, dynamic>;
@@ -323,7 +357,7 @@ class ApiClient {
           }
           final data = dataLines.join('\n');
           if (eventType == 'token') {
-            yield data.replaceAll(r'\n', '\n').replaceAll(r'\\', r'\');
+            yield unescapeSseText(data);
           } else if (eventType == 'done') {
             return;
           } else if (eventType == 'error') {
@@ -442,8 +476,7 @@ class ApiClient {
           }
           final data = dataLines.join('\n');
           if (eventType == 'token') {
-            // Backend escapes newlines as "\\n"; un-escape for display.
-            yield data.replaceAll(r'\n', '\n').replaceAll(r'\\', r'\');
+            yield unescapeSseText(data);
           } else if (eventType == 'done') {
             return;
           } else if (eventType == 'error') {
