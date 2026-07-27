@@ -165,7 +165,8 @@ by `DEPENDS-ON` (backend lands the JSON schema first; mobile mirrors it, then ru
 
 Every dispatched work item carries a CR or DEF id (project rule D-058). The Architect files it on
 triage (auto-file, proceed); the register status moves proposed→in_progress at assign, →done at
-ACCEPTED. Commit-tag exemptions (handover/version/docs-only) are unchanged.
+ACCEPTED. Commit-tag exemptions (version bumps / docs-only, incl. the checkpoint-archive commit)
+are unchanged — the retired handover-wrap category is gone; see the project guide's Exempt list.
 
 ### When the Architect builds directly vs lanes it (2026-07-25)
 

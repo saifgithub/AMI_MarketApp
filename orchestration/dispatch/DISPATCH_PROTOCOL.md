@@ -244,10 +244,11 @@ verdict; this keeps active `lanes/` lean and is the collective memory), **reaps 
 worktree** (see below), and frees the instance's WIP slot. The stakeholder's own hands-on test after
 ACCEPTED is their single checkpoint; a defect they find reopens the lane at the next round.
 
-**Worktree reaping (do NOT skip — this used to be `/handover`'s job).** The `/handover` skill was
-the only thing that removed merged lane worktrees; it is retired (CR097), so reaping now lives here.
-When a lane reaches `DISPATCH: ACCEPTED` and its branch is merged, remove the worktree + branch so
-stale worktrees don't pile up (they mislead the merge-state greps and clutter `git worktree list`):
+**Worktree reaping (do NOT skip).** Reaping merged lane worktrees belongs to lane closure and to
+nothing else: a project that parks it in a session-wrap routine loses it the moment that routine is
+retired, which is how a tree accumulates stale worktrees nobody owns. When a lane reaches
+`DISPATCH: ACCEPTED` and its branch is merged, remove the worktree + branch so they don't pile up
+(they mislead the merge-state greps and clutter `git worktree list`):
 
 ```bash
 # Only after the branch is fully merged — an empty log means nothing unmerged is lost.
@@ -265,7 +266,8 @@ open.
 
 **Collective memory.** The archived lanes + `trail.md` + the audit layer's `audit/audit-trail.md` +
 `audit/runs/` are the operational history any agent can grep for prior decisions. Periodically (at
-session wrap, or via `/sm-checkpoint`) the Architect distills durable, cross-agent lessons from them
+session wrap, or whatever continuity routine the project uses) the Architect distills durable,
+cross-agent lessons from them
 into the project's existing memory and its recurring-failure register — feeding the SAME
 collective memory, not a parallel one.
 

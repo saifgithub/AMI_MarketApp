@@ -39,8 +39,8 @@ repo layout, and do not proceed on an unresolved token.
    conflict. Read the BINDINGS file beside it for this repo's term bindings.
 2. `<AUDIT_LANE_DIR>/INDEX.md` — the glanceable state table of every lane, which you maintain
    (`sh <AUDIT_ROOT>/watcher.sh state` prints the derived truth to reconcile against).
-3. The project's agent guide (auto-loaded) + its current handover doc — build state and governance
-   rules.
+3. The project's agent guide (auto-loaded) + whatever record it keeps of current build state
+   (a checkpoint memo, a status doc — BINDINGS names it) — build state and governance rules.
 4. The CR or DEF you are building, in its register and its own folder (BINDINGS → change registers).
 
 ## The lane loop (v2: state is DERIVED, there is no shared flag)

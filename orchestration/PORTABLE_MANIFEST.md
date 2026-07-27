@@ -25,7 +25,7 @@ BINDINGS rather than preserving it.
 | `DEFINITION_OF_DONE.md` | the portable DoD questions (answers live in tier B) |
 | `history/README.md` | what the durable-memory tree is for |
 | `dispatch/DISPATCH_PROTOCOL.md` | Architect ↔ instance contract, tokens, state table, the gate |
-| `dispatch/dispatch.sh` | state deriver + watcher (`state` / `architect` / `inst <id>`) |
+| `dispatch/dispatch.sh` | state deriver + watcher (`state` / `inbox` / `architect` / `inst <id>`) |
 | `dispatch/rotate_trail.py` | ledger retention, ledger-agnostic |
 | `dispatch/loop_prompts/ARCHITECT.md` | Architect role prompt |
 | `dispatch/loop_prompts/AUDITOR.md` | Auditor role prompt (dispatch-layer wrapper) |
@@ -73,12 +73,15 @@ unedited copy as working.
 
 ## Tier C — never copy (runtime state)
 
-`dispatch/lanes/` · `dispatch/intake/` (except the `*.TEMPLATE.md` above) · `audit/cr/` ·
-`audit/runs/` · `audit/regression/` · `audit/audit-trail.md` · `history/lanes/` · `history/trail/`
+`dispatch/lanes/` · `dispatch/intake/` (except the `*.TEMPLATE.md` above) · `dispatch/DELIVERY_PLAN.md` ·
+`audit/cr/` · `audit/runs/` · `audit/regression/` · `audit/audit-trail.md` · `history/lanes/` ·
+`history/trail/`
 
 These are one repo's operational history. Copying them imports another project's lanes, verdicts and
 regression pins as if they were yours — creating exactly the fabricated evidence the audit layer
-exists to prevent. Create the directories empty.
+exists to prevent. Create the directories empty. `DELIVERY_PLAN.md` is the Architect's *current* wave
+plan — dated, greenlit by one stakeholder, scoped to specific work-item ids; a new project writes its
+own when it has a wave to plan, and inheriting someone else's reads as a mandate nobody gave.
 
 ## Standing it up
 
