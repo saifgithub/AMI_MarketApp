@@ -143,4 +143,95 @@ than rewritten. Independent verification, the Architect's own extra mutation, an
 D4 that the Architect deliberately did **not** fix are all recorded in
 `orchestration/audit/cr/CR104-ROOM.architect.md`.
 
-STATUS: READY_FOR_AUDIT (round 1)
+~~`STATUS: READY_FOR_AUDIT (round 1)`~~ — superseded by round 2 below (audited AWAITING_FIXES,
+two MAJOR). Neutralised so exactly one line in this file opens with the token (DEF121).
+
+---
+
+# Round 2 — both MAJORs closed
+
+**Assembled by the Architect (track R) from two coder.room round-2 workers' output.** Read the
+provenance note at the end before auditing: the code is the workers', the verification is the
+Architect's, and **both workers died the same structural way.**
+
+## MAJOR 1 — guard inverted to taint-following, deny-by-default (`cd349c5`)
+
+`_PROTECTED_NUMERIC_FIELDS` (a 13-name allowlist) is gone as the primary mechanism. The guard now
+flags **any** `profile[...]` assignment whose value is rng-tainted, regardless of field name,
+following chained local assignments. The three narrative fields (`sentiment_tone`, `sentiment_score`,
+`mention_trend`) are an explicit, justified **exclusion** list — a new field must now argue its way
+in rather than being silently unprotected.
+
+**Architect-verified against three mutations, each reverted after:**
+
+| Mutation | Result |
+|---|---|
+| Auditor's 1B — single-hop laundering into a protected field: `_v = rng.uniform(12.0, 55.0)` → `profile["pe"] = f"{_v:.1f}"` | **RED** |
+| Auditor's 1A — new field names outside any list: `profile["peg_ratio"]`, `profile["fcf_yield"]` from `rng` | **RED** |
+| **Architect's own two-hop chain** (not asked for by the auditor): `_a = rng.uniform(...)` → `_b = _a` → `_c = f"{_b:.2f}"` → `profile["peg_ratio"] = _c` | **RED** |
+
+The two-hop case matters: single-level taint following would have passed it, and the assign
+explicitly warned *"do not settle for 'follows one level of indirection'."*
+
+## MAJOR 2 — every `(LIVE)` label gated on `field_state` (`a2201ce`)
+
+**Five** render sites labelled `(LIVE)` on a presence check without ever consulting `field_state` —
+the four the auditor named plus analyst consensus:
+
+| Site | Line |
+|---|---|
+| next earnings | `room_prompts.py:556` |
+| valuation (4 independent parts) | `:613` |
+| sector/industry | `:623` |
+| dividend yield | `:632` |
+| analyst consensus | `_analyst_line` |
+
+All five now route through a single `_field_is_live(profile, key)` helper. Valuation gates each of
+its four parts independently, so a part with no recorded provenance is dropped rather than carried
+under the line's shared `(LIVE)` label.
+
+**Architect acceptance render** — a profile with `field_state = {}` and every optional field
+populated (`pe`, `base_price`, `price_to_sales`, `ev_to_ebitda`, `peg_ratio`, `fcf_yield`, `sector`,
+`dividend_yield`, `analyst_target_price`, `analyst_rating`, `next_earnings_date`):
+
+```
+(LIVE)-labelled body lines: NONE
+values leaked into the prompt: NONE
+```
+
+That is the exact probe the auditor used to prove MAJOR 2, now returning the opposite result.
+
+## Suite
+
+`./backend/.venv/bin/python -m pytest backend/tests/unit/ -q` from the repo root, absolute venv path,
+**foreground, run to completion**, `__pycache__` cleared first: **`1373 passed in 193.25s`**.
+Round 1 was **1368**; +5 is round 2's new tests.
+
+## ⚠️ Provenance — read this before auditing
+
+**Neither round-2 worker completed its own lane, and both failed identically.** Each backgrounded its
+verification run and then emitted a final message, which ends the turn — so each died with work
+uncommitted, having never read a test result. This is CR057 / `failure_patterns.md` **P7**. The
+second worker was **explicitly instructed** not to do it, in its own launch prompt, and did it anyway.
+That is CR038's finding reproduced exactly: *prompt instructions are not controls* (~30% compliance).
+**A third relaunch was not attempted** — the failure is structural, not a worker defect, and is
+flagged to Governance rather than papered over.
+
+**What the Architect did:** reviewed the uncommitted work, found it correct, ran the acceptance render
+and the full suite in the foreground, and committed it **unchanged**. The Architect wrote no
+production code in round 2.
+
+**What this means for the audit:** the code is the workers'; the verification claims above are the
+Architect's own measurements, not repeated from a worker hand-off — neither worker produced one.
+Grade the measurements as Architect-supplied, and re-derive them independently as usual.
+
+## Not verified
+
+- **Live behaviour on Alpha** — `main` is under an active promotion hold (`infra/PROMOTION_HOLD.md`);
+  unit-level only.
+- **The DEF123 corpus reading 0** — unchanged from round 1 and still an **open acceptance item**, not
+  a satisfied one. Needs the fix on Alpha plus a re-run filtered to post-promotion prompts. Both the
+  Architect and the round-1 auditor agree it cannot close from a coder lane.
+- **Whether any `(LIVE)` string exists outside `room_prompts.py`** — the sweep covered that file.
+
+STATUS: READY_FOR_AUDIT (round 2)

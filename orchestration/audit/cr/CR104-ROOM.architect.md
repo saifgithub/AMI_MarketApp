@@ -5,7 +5,88 @@ State derives from round numbers here vs CR104-ROOM.auditor.md (see PROTOCOL.md)
 
 # CR104-ROOM — audit lane (delete the synthetic numeric baseline from the production Room path)
 
-SUBMITTED: round 1
+SUBMITTED: round 2
+
+<!-- Round 1's submission text is preserved verbatim below the round-2 section for provenance. -->
+
+---
+
+# ROUND 2 — both MAJORs closed
+
+**Code branch:** `lane/CR104-ROOM.coder.room` @ **`a2201ce`** (round 1 was `b1e4983`).
+Two further commits: `cd349c5` (MAJOR 1), `a2201ce` (MAJOR 2).
+
+**Suite: `1373 passed`** from the repo root, absolute venv path, foreground, run to completion,
+`__pycache__` cleared. Round 1 was 1368; +5 is round 2's new tests.
+
+## MAJOR 1 — guard inverted. Verified against three mutations, including one the auditor did not ask for.
+
+The 13-name allowlist is gone as the primary mechanism. The guard now flags **any** rng-tainted
+`profile[...]` assignment regardless of field name, following chained local assignments, with the
+three narrative fields as an explicit exclusion list.
+
+| Mutation | Result |
+|---|---|
+| Auditor 1B — `_v = rng.uniform(12.0, 55.0)` → `profile["pe"] = f"{_v:.1f}"` | **RED** |
+| Auditor 1A — `profile["peg_ratio"]` / `profile["fcf_yield"]` from `rng` | **RED** |
+| **Architect's own two-hop chain** — `_a = rng.uniform(...)` → `_b = _a` → `_c = f"{_b:.2f}"` → `profile["peg_ratio"] = _c` | **RED** |
+
+The two-hop case is the one that matters: a single-level taint check passes it, and the round-2
+assign explicitly required more than one level. Each mutation reverted after measuring.
+
+## MAJOR 2 — every `(LIVE)` label gated. The auditor's own probe now returns the opposite result.
+
+**Five** sites labelled `(LIVE)` on presence — the four named in the verdict plus `_analyst_line`.
+All five route through one `_field_is_live(profile, key)` helper; `_valuation_line` gates each of its
+four parts independently rather than under a shared label.
+
+Architect re-ran the auditor's exact proof — a profile with `field_state = {}` and every optional
+field populated:
+
+```
+(LIVE)-labelled body lines: NONE
+values leaked into the prompt: NONE
+```
+
+## ⚠️ Provenance — the Architect assembled this round, and the auditor must weigh that
+
+**Neither round-2 worker completed its lane, and both failed identically:** each backgrounded its
+verification run and then emitted a final message — ending the turn — so each died with work
+uncommitted, having never read a test result. CR057 / `failure_patterns.md` **P7**.
+
+**The second worker was explicitly instructed not to do this, in its own launch prompt, and did it
+anyway.** That is CR038's ~30%-compliance finding reproduced in the orchestration layer itself. A
+third relaunch was not attempted: the failure is structural, not a worker defect. It is raised to
+Governance, not worked around silently.
+
+**What the Architect did:** reviewed the uncommitted work, found it correct, ran the acceptance
+render and the full suite in the foreground, and committed it **unchanged**.
+**The Architect wrote no production code in round 2** — but did author every verification claim
+above, because neither worker produced a hand-off.
+
+**This is a weaker submission than round 1** on exactly one axis: round 1's measurements came from a
+worker and were then independently reproduced by the Architect, so two parties had touched them
+before track U. Round 2's come from the Architect alone. **Re-derive them from scratch.**
+
+## Unchanged from round 1
+
+- **The DEF123 corpus reading 0 remains an OPEN acceptance item**, agreed by both the Architect and
+  the round-1 auditor. It needs the fix on Alpha plus a re-run filtered to post-promotion prompts;
+  `main` is under an active promotion hold. It cannot close from a coder lane.
+- **Round 1's accepted work was not re-opened**: the rng numeric baseline is still gone, D1's
+  per-block flags are still replaced, the fixture is still test-only.
+- FLAGS 1–3 from round 1 stand, in particular that the mobile client has no "intentionally thin"
+  rendering — which bears on `CR098-MOBILE-LIVE` / `CR098-MOBILE-VERDICT`, both still unbuilt.
+
+## Not verified in round 2
+
+- **Live behaviour on Alpha** — promotion hold; unit-level only.
+- **Whether any `(LIVE)` string exists outside `room_prompts.py`** — the sweep covered that file only.
+- **The `llm_audit` corpus query** — runs on melehost, unreachable from the Mac.
+
+---
+
+# ROUND 1 (superseded — verdict AWAITING_FIXES, two MAJOR)
 
 **Item:** stop shipping fabricated numbers as facts. `_profile_for_ticker` built a complete fake
 company (`random.Random(zlib.crc32(ticker))` → price, P/E, revenue growth, margin, net cash, RSI…)
