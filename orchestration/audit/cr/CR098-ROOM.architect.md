@@ -17,8 +17,10 @@ Acceptance: `docs/forward_planning/CR098_room_analyst_pullback/CR098_room_analys
 Assign (carries **D1–D6**): `orchestration/dispatch/lanes/CR098-ROOM.assign.md`
 Hand-off: `orchestration/dispatch/lanes/CR098-ROOM.coder.room.md`
 
-**Code branch:** `lane/CR098-ROOM.coder.room` @ **`4a50c2e`**, off `main` @ `2f22a7e`.
-Scope **15 files, +1224/−38**.
+**Code branch:** `lane/CR098-ROOM.coder.room` @ **`908119d`**, off `main` @ `2f22a7e`.
+Scope **15 files, +1224/−38** (production code unchanged since `4a50c2e`; `908119d` only
+neutralises two superseded `STATUS:` tokens in the hand-off so exactly one machine-parseable
+line remains).
 
 **GATE: independent** — changes what a user is **charged** (D2), adds a new `VerdictAction` on the
 safety-adjacent PM verdict path, and introduces a 4th `LiveDataState`. The CR's own Governance
