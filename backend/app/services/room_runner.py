@@ -101,15 +101,31 @@ MAX_AUTO_RETRIES = 1
 class _Phase:
     label: str
     agents: tuple[AgentId, ...]
+    # CR077 Phase 2: True ⇒ this phase's agents do NOT read each other's output,
+    # so their LLM calls run concurrently (asyncio.gather) instead of strictly
+    # sequentially. The single source of truth for the decision — the loop keys
+    # on THIS flag, never on the label string — and the phase-parallelism guard
+    # (test_cr077_phase_parallelism.py) asserts the set of parallel phases is
+    # EXACTLY {ANALYSTS}. Marking a debate phase (RESEARCHERS/RISK/VERDICT)
+    # parallel would silently delete the debate while every other test passes
+    # and the UI still renders every contribution — DEF084's exact shape — which
+    # is what the guard exists to catch.
+    parallel: bool = False
 
 
 PHASES: tuple[_Phase, ...] = (
+    # The four analysts are four independent lenses on ONE shared data block, not
+    # a dependency chain (CR077 §"Evidence added 2026-07-23": news quoted social's
+    # sentiment score while speaking BEFORE social — it read the profile, not the
+    # transcript). So they are blind to each other by construction already; running
+    # them concurrently removes serialization latency without changing what the
+    # phase is. Every OTHER phase is a genuine debate and stays sequential.
     _Phase("ANALYSTS", (
         AgentId.FUNDAMENTALS_ANALYST,
         AgentId.MARKET_ANALYST,
         AgentId.NEWS_ANALYST,
         AgentId.SOCIAL_MEDIA_ANALYST,
-    )),
+    ), parallel=True),
     _Phase("RESEARCHERS", (AgentId.BULL_RESEARCHER, AgentId.BEAR_RESEARCHER)),
     _Phase("SYNTHESIS", (AgentId.RESEARCH_MANAGER,)),
     _Phase("EXECUTION", (AgentId.TRADER,)),
@@ -1676,22 +1692,71 @@ class RoomRunner:
             for phase in PHASES:
                 yield RoomEvent(kind="phase", phase=phase.label, run_id=run_id)
                 if phase.label != "VERDICT":
-                    for agent_id in phase.agents:
-                        async for ev in _speak_one_agent(
-                            agent_id=agent_id,
-                            run_id=run_id,
-                            ctx=ctx,
-                            profile=profile,
-                            formatter=formatter,
-                            run=run,
-                            gateway=gateway,
-                            live=live,
-                            char_delay_min=char_delay_min,
-                            char_delay_max=char_delay_max,
-                            agent_timeout_s=agent_timeout_s,
-                            portfolio_snapshot=ctx.portfolio_snapshot,
-                        ):
-                            yield ev
+                    if phase.parallel:
+                        # CR077 Phase 2 — concurrent phase (ANALYSTS only).
+                        #
+                        # Each agent sees the transcript as of phase START: a
+                        # snapshot taken here, before any of the four run. For
+                        # ANALYSTS (the first phase) that is empty by design —
+                        # the four analysts are blind to EACH OTHER and nothing
+                        # else (§Build 4). The four LLM calls run concurrently
+                        # against the gateway (asyncio.gather); the measured
+                        # 4-stream speedup is the whole point of the lane.
+                        #
+                        # Deterministic stream order (§Build 3, hard req): whichever
+                        # call finishes first, contributions are streamed AND
+                        # committed to the transcript in the fixed PHASES order
+                        # (fundamentals → market → news → social), never completion
+                        # order. Collect-then-emit-in-order below guarantees it; the
+                        # guard test injects a gateway that finishes social first and
+                        # asserts the emitted order is unchanged.
+                        snapshot = list(run.transcript)
+                        results = await asyncio.gather(*[
+                            _compute_agent_text(
+                                agent_id=agent_id,
+                                ctx=ctx,
+                                profile=profile,
+                                formatter=formatter,
+                                transcript=snapshot,
+                                gateway=gateway,
+                                live=live,
+                                agent_timeout_s=agent_timeout_s,
+                                portfolio_snapshot=ctx.portfolio_snapshot,
+                                parallel_phase=True,
+                            )
+                            for agent_id in phase.agents
+                        ])
+                        # Emit in fixed order. After all four are committed to
+                        # run.transcript, RESEARCHERS onward see every analyst —
+                        # only the analysts are blind to each other.
+                        for agent_id, (text, geom_sig) in zip(phase.agents, results):
+                            async for ev in _stream_agent_text(
+                                agent_id=agent_id,
+                                run_id=run_id,
+                                run=run,
+                                text=text,
+                                geom_sig=geom_sig,
+                                char_delay_min=char_delay_min,
+                                char_delay_max=char_delay_max,
+                            ):
+                                yield ev
+                    else:
+                        for agent_id in phase.agents:
+                            async for ev in _speak_one_agent(
+                                agent_id=agent_id,
+                                run_id=run_id,
+                                ctx=ctx,
+                                profile=profile,
+                                formatter=formatter,
+                                run=run,
+                                gateway=gateway,
+                                live=live,
+                                char_delay_min=char_delay_min,
+                                char_delay_max=char_delay_max,
+                                agent_timeout_s=agent_timeout_s,
+                                portfolio_snapshot=ctx.portfolio_snapshot,
+                            ):
+                                yield ev
                 else:
                     # Phase 6 — PM: the LLM decides, informed by the full
                     # 11-agent debate; the deterministic safety floor then
@@ -1924,30 +1989,37 @@ async def _typewriter(
         await asyncio.sleep(random.uniform(delay_min, delay_max))
 
 
-async def _speak_one_agent(
+async def _compute_agent_text(
     *,
     agent_id: AgentId,
-    run_id: UUID,
     ctx: _RoomContext,
     profile: dict[str, Any],
     formatter: dict[str, Any],
-    run: RoomRun,
+    transcript: list[AgentMessage],
     gateway: LLMGateway,
     live: bool,
-    char_delay_min: float,
-    char_delay_max: float,
     agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
     portfolio_snapshot: str | None = None,
-) -> AsyncIterator[RoomEvent]:
-    """Stream one agent's contribution; LLM when live, scripted otherwise.
+    parallel_phase: bool = False,
+) -> tuple[str, dict[str, Any] | None]:
+    """Produce one agent's final contribution text (LLM when live, scripted
+    otherwise) plus its DEF095 geometry-verification signal — WITHOUT streaming
+    it or touching `run.transcript`.
 
-    The live path buffers the full LLM response (with a per-agent timeout)
-    before restreaming via the typewriter, matching the PM-narration pattern.
-    If the upstream model hangs past `agent_timeout_s`, the agent falls back
-    to its scripted template so the run can still finish.
+    This is the awaitable a concurrent phase (CR077 ANALYSTS) gathers; the
+    sequential path (`_speak_one_agent`) awaits it inline. The prompt is built
+    from the `transcript` snapshot the CALLER passes — so four concurrent
+    analysts all read the phase-start transcript, never each other's
+    half-committed turns — and `parallel_phase` rescopes the "build on the
+    transcript" line for an agent that has no transcript to build on
+    (room_prompts.py).
 
-    Appends the final text to `run.transcript` before yielding `agent_done`
-    so the next agent sees this contribution in its prompt.
+    The live path buffers the full LLM response (with a per-agent timeout); if
+    the upstream model hangs past `agent_timeout_s` (or errors, or returns
+    empty) the agent falls back to its scripted template so the run can still
+    finish. Returns `(text, geom_signal)`; `geom_signal` is a DEF095 telemetry
+    payload when the agent narrated a ratio its own levels don't support, else
+    None. The caller logs it (so run_id stays with the streamer).
     """
     # BL11 (AT:R33): effective_plan downgrades expired trials.
     plan = effective_plan_for_user(ctx.user_id)
@@ -1963,7 +2035,7 @@ async def _speak_one_agent(
             user_id=ctx.user_id,
             ticker=ctx.ticker,
             profile=profile,
-            transcript=run.transcript,
+            transcript=transcript,
             portfolio_snapshot=portfolio_snapshot,
             plan=plan,
             trade_proposal={
@@ -1974,6 +2046,10 @@ async def _speak_one_agent(
             # CR069: the same universe enforce_safety_floor decides against, so the
             # narration and the deterministic verdict cannot contradict each other.
             halal_universe=ctx.halal_universe,
+            # CR077 §Build 5: a concurrent analyst has no transcript to build on —
+            # rescope the "do not repeat" line so it sharpens the own-domain lens
+            # instead of pointing at an empty transcript.
+            parallel_phase=parallel_phase,
             # CR026: the PM sees the real sector allocation it gatekeeps against.
             sector_weights=ctx.sector_weights,
         )
@@ -2015,13 +2091,34 @@ async def _speak_one_agent(
     # downstream agent read AMI's figure, not the narration. Only a full level triple
     # triggers it; all other agents pass through untouched. Flag-only — never a veto
     # (DEF059 — the safety floor stays the sole vetoer).
-    text, _geom_sig = _verify_and_annotate_geometry(text)
-    if _geom_sig is not None:
+    text, geom_sig = _verify_and_annotate_geometry(text)
+    return text, geom_sig
+
+
+async def _stream_agent_text(
+    *,
+    agent_id: AgentId,
+    run_id: UUID,
+    run: RoomRun,
+    text: str,
+    geom_sig: dict[str, Any] | None,
+    char_delay_min: float,
+    char_delay_max: float,
+) -> AsyncIterator[RoomEvent]:
+    """Stream an already-computed contribution: typewriter tokens, commit it to
+    `run.transcript`, then emit `agent_done`.
+
+    Splitting this from `_compute_agent_text` is what lets a concurrent phase
+    gather the slow LLM calls and STILL emit every agent's tokens (and commit
+    them to the transcript) in a fixed, deterministic order regardless of which
+    call finished first (CR077 §Build 3).
+    """
+    if geom_sig is not None:
         logger.warning(
             "room_agent_rr_incoherent",
             run_id=str(run_id),
             agent_id=agent_id.value,
-            **_geom_sig,
+            **geom_sig,
         )
 
     async for ev in _typewriter(run_id, agent_id, text, char_delay_min, char_delay_max):
@@ -2035,6 +2132,53 @@ async def _speak_one_agent(
     ))
     _checkpoint_run(run)  # incremental snapshot — narrows data-loss window to ≤1 agent
     yield RoomEvent(kind="agent_done", run_id=run_id, agent_id=agent_id)
+
+
+async def _speak_one_agent(
+    *,
+    agent_id: AgentId,
+    run_id: UUID,
+    ctx: _RoomContext,
+    profile: dict[str, Any],
+    formatter: dict[str, Any],
+    run: RoomRun,
+    gateway: LLMGateway,
+    live: bool,
+    char_delay_min: float,
+    char_delay_max: float,
+    agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
+    portfolio_snapshot: str | None = None,
+) -> AsyncIterator[RoomEvent]:
+    """Sequential-phase path: compute one agent's text (reading the LIVE
+    transcript, so it builds on everyone before it) then stream it.
+
+    Every phase except the concurrent ANALYSTS phase runs through here, one
+    agent fully awaited before the next — a debate where each turn answers the
+    last. The ANALYSTS phase bypasses this and drives `_compute_agent_text` /
+    `_stream_agent_text` directly so its four calls can be gathered.
+    """
+    text, geom_sig = await _compute_agent_text(
+        agent_id=agent_id,
+        ctx=ctx,
+        profile=profile,
+        formatter=formatter,
+        transcript=run.transcript,
+        gateway=gateway,
+        live=live,
+        agent_timeout_s=agent_timeout_s,
+        portfolio_snapshot=portfolio_snapshot,
+        parallel_phase=False,
+    )
+    async for ev in _stream_agent_text(
+        agent_id=agent_id,
+        run_id=run_id,
+        run=run,
+        text=text,
+        geom_sig=geom_sig,
+        char_delay_min=char_delay_min,
+        char_delay_max=char_delay_max,
+    ):
+        yield ev
 
 
 async def _stream_pm_response(
@@ -2197,6 +2341,107 @@ def _scripted_for(agent_id: AgentId, formatter: dict[str, Any]) -> str:
     return tpl.format(**formatter)
 
 
+# ── CR077 second guard: prefix-cache observability ─────────────────────────
+#
+# Prefix caching is the free half of the Room-latency story (CR077 §Guard):
+# concurrency (Phase 2 above) is the lever, but the KV-cache prefix reuse the
+# GPU already does silently underpins the concurrency headroom. It is enabled
+# on the serving host today — but "today" is the trap: nobody would notice if a
+# serve-arg change on the (separately-owned) LLM host switched it off, exactly
+# how it sat at 0% on Room traffic for months without anyone knowing. So at
+# process startup we probe the host's /metrics once and log it LOUDLY — an
+# ERROR if prefix caching is off, an info line with the measured hit rate if on
+# (CR040 "degrade loudly": an invisible regression is the failure mode). The LLM
+# host is not touched; this only reads its metrics.
+
+_PREFIX_CACHE_STATUS_LOGGED = False
+
+
+def parse_prefix_cache_metrics(metrics_text: str) -> dict[str, Any]:
+    """Pull prefix-cache state out of a vLLM Prometheus /metrics dump.
+
+    Pure + host-independent so the guard can unit-test it. Returns
+    `{"enabled": bool | None, "hits": float | None, "queries": float | None,
+      "hit_rate": float | None}` — `enabled` is None when the metrics carry no
+    `cache_config_info` line at all (an unknown/old vLLM), which the caller
+    treats as "cannot confirm", distinct from a confirmed-off False.
+    """
+    enabled: bool | None = None
+    m = re.search(r'cache_config_info\{[^}]*enable_prefix_caching="(\w+)"', metrics_text)
+    if m:
+        enabled = m.group(1).strip().lower() == "true"
+
+    def _sum_metric(name: str) -> float | None:
+        total = 0.0
+        found = False
+        for line in metrics_text.splitlines():
+            s = line.strip()
+            if s.startswith("#") or name not in s:
+                continue
+            # A Prometheus sample line: `<name>{labels} <value>` or `<name> <value>`.
+            mm = re.match(rf'{re.escape(name)}(?:\{{[^}}]*\}})?\s+([-+0-9.eE]+)$', s)
+            if mm:
+                try:
+                    total += float(mm.group(1))
+                    found = True
+                except ValueError:
+                    continue
+        return total if found else None
+
+    # vLLM has renamed these across versions (gpu_prefix_cache_* vs
+    # prefix_cache_*); accept either, hits first non-None wins.
+    hits = _sum_metric("vllm:prefix_cache_hits_total")
+    if hits is None:
+        hits = _sum_metric("vllm:gpu_prefix_cache_hits_total")
+    queries = _sum_metric("vllm:prefix_cache_queries_total")
+    if queries is None:
+        queries = _sum_metric("vllm:gpu_prefix_cache_queries_total")
+
+    hit_rate = (hits / queries) if (hits is not None and queries) else None
+    return {"enabled": enabled, "hits": hits, "queries": queries, "hit_rate": hit_rate}
+
+
+def log_prefix_cache_status() -> None:
+    """Probe the vLLM host's /metrics once and log prefix-cache state loudly.
+
+    Best-effort and guarded: no-ops when no vLLM host is configured (unit tests,
+    mock provider) and swallows any network/parse failure into a single warning —
+    an observability probe must never break a Room run. Fires once per process."""
+    global _PREFIX_CACHE_STATUS_LOGGED
+    if _PREFIX_CACHE_STATUS_LOGGED:
+        return
+    base = settings.vllm_base_url
+    if not base:
+        return  # no real LLM host (mock/anthropic) — nothing to probe
+    _PREFIX_CACHE_STATUS_LOGGED = True
+    try:
+        import httpx
+
+        url = base.rstrip("/").removesuffix("/v1") + "/metrics"
+        resp = httpx.get(url, timeout=5.0)
+        resp.raise_for_status()
+        stats = parse_prefix_cache_metrics(resp.text)
+        if stats["enabled"] is False:
+            logger.error(
+                "room_prefix_cache_DISABLED",
+                url=url,
+                detail="vLLM reports enable_prefix_caching=False — Room prefill "
+                "reuse is OFF; CR077 assumed it on. Ask the LLM-host team.",
+            )
+        elif stats["enabled"] is None:
+            logger.warning("room_prefix_cache_unconfirmed", url=url)
+        else:
+            logger.info(
+                "room_prefix_cache_enabled",
+                url=url,
+                hit_rate=(round(stats["hit_rate"], 4) if stats["hit_rate"] is not None else None),
+                hits=stats["hits"],
+                queries=stats["queries"],
+            )
+    except Exception as exc:  # noqa: BLE001 — probe is best-effort, never fatal
+        logger.warning("room_prefix_cache_probe_failed", error=str(exc)[:200])
+
+
 _runner: RoomRunner | None = None
 
 
@@ -2204,4 +2449,6 @@ def get_room_runner() -> RoomRunner:
     global _runner
     if _runner is None:
         _runner = RoomRunner()
+        # CR077 second guard: emit the prefix-cache state once at first wiring.
+        log_prefix_cache_status()
     return _runner

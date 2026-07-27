@@ -168,6 +168,7 @@ def build_room_messages(
     plan: Any = None,
     trade_proposal: dict[str, Any] | None = None,
     halal_universe: Any = None,
+    parallel_phase: bool = False,
     sector_weights: dict[str, float] | None = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [user_message]) for one agent's Room turn.
@@ -192,6 +193,15 @@ def build_room_messages(
     lets the agents narrate the sourced verdict for `ticker` instead of a bare flag
     (CR069); a Room turn that omits it makes the overlay say the screen could not be
     attached, which is the loud degrade, not a silent one.
+
+    `parallel_phase` (CR077 Phase 2) is True only when this agent runs CONCURRENTLY
+    with its phase-mates (the ANALYSTS phase) — it sees the transcript as of phase
+    start, which for the first phase is empty. The runner's `_Phase.parallel` flag
+    is the single source of truth; it is threaded here, not re-derived from the
+    agent id. When True, the "build on the transcript — do not repeat" instruction
+    (a lie for an agent with no transcript to build on) is rescoped to sharpen the
+    analyst's own-domain lens instead. Sequential phases (the default) keep the
+    original line — it is load-bearing where each turn answers the last.
     """
     base = build_agent_prompt(
         agent_id,
@@ -247,6 +257,26 @@ def build_room_messages(
             f"bigger number is both wrong and misleading.\n"
         )
 
+    # CR077 §Build 5: for a concurrent analyst the transcript is empty (it speaks
+    # at the same time as its phase-mates), so "build on the transcript — do not
+    # repeat" would instruct it to build on nothing. Rescope it to sharpen the
+    # own-domain lens — which is what actually cuts the cross-analyst repetition
+    # that already exists (§Evidence: -7% margin / -1.4% FCF repeated in 3 of 4
+    # analyst turns TODAY, sequentially, despite the original line). The line is
+    # unchanged for every sequential phase, where it is load-bearing.
+    if parallel_phase:
+        collaboration_line = (
+            "You are speaking AT THE SAME TIME as the other analysts and cannot "
+            "see their contributions — the transcript above is empty by design. "
+            "Do not reference, defer to, or assume another analyst's read. Stay "
+            "strictly inside your OWN domain (per your job description above) and "
+            "give only your lens on the data; that discipline is what keeps the "
+            "four analyst contributions from overlapping."
+        )
+    else:
+        collaboration_line = (
+            "Build on the transcript — do not repeat what's already been said."
+        )
     # CR026: the PM gatekeeps the trade, so it sees the REAL sector allocation of the
     # portfolio it approves against — concentration reasoning from data, not a guess.
     # Gated to the PORTFOLIO_MANAGER (the agent whose verdict the sector cap vetoes).
@@ -273,9 +303,8 @@ def build_room_messages(
         f"Write {length}. Use specific numbers wherever possible — but ONLY "
         f"numbers from the data block above. Do NOT cite figures (P/E, growth, "
         f"price targets, market cap) from training memory; if a number isn't "
-        f"in the block above, qualify your claim or omit it. Build on the "
-        f"transcript — do not repeat what's already been said. Do not preface "
-        f"with 'As the X' or 'Speaking as'. Speak directly.\n"
+        f"in the block above, qualify your claim or omit it. {collaboration_line} "
+        f"Do not preface with 'As the X' or 'Speaking as'. Speak directly.\n"
         f"{format_instruction}"
     )
 
