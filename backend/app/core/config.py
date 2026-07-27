@@ -131,6 +131,29 @@ class Settings(BaseSettings):
     room_dedup_running_minutes: int = 30
     room_dedup_completed_hours: int = 24
 
+    # CR098 — tenure-drip analyst pull-back. Account-age day (`users.created_at`)
+    # at which each withholdable Room voice goes dark for a FLOOR_PASS user.
+    # `0` (default) = never withheld — ships as a no-op. Independent, not
+    # ordered steps: any combination is a legal operator choice.
+    # Fundamentals has NO threshold here — it is structurally unwithholdable.
+    room_pullback_days_social: int = 0
+    room_pullback_days_news: int = 0
+    room_pullback_days_market: int = 0
+
+    @field_validator(
+        "room_pullback_days_social", "room_pullback_days_news",
+        "room_pullback_days_market",
+    )
+    @classmethod
+    def _pullback_days_non_negative(cls, v: int) -> int:
+        # CR040 degrade-loudly: a negative threshold is nonsensical (an
+        # account can't be "-5 days old") and a silent clamp to 0 would look
+        # like "never withheld" when the operator meant something else —
+        # fail boot instead of guessing.
+        if v < 0:
+            raise ValueError("room pull-back day threshold must be >= 0")
+        return v
+
     # GTM funnel selector (CR047, under the CR045 tactic library). Chooses which
     # conversion-nudge mechanic sits on top of the CR039 credit wall:
     #   none    — legacy CR039 behaviour: exhausted Floor Pass → hard 402 until

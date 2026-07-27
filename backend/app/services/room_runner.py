@@ -87,7 +87,11 @@ from app.services.credit_service import (
     room_cost_for_plan,
     spend,
 )
-from app.services.entitlements import effective_plan_for_user
+from app.services.entitlements import (
+    AnalystRoster,
+    effective_plan_for_user,
+    resolve_roster_for_user,
+)
 from app.services.tier_policy import pick_tier
 from app.services.alpaca_service import snapshot_text as alpaca_snapshot_text
 from app.services.sim_engine import get_sim_engine
@@ -298,6 +302,10 @@ class _RoomContext:
     conservative_size_pct: float = 1.5
     neutral_size_pct: float = 3.0
     profile: dict[str, Any] = field(default_factory=dict)
+    # CR098 — the analysts withheld this run (tenure pull-back), by AgentId.
+    # Empty for every plan except FLOOR_PASS past a threshold.
+    withheld: tuple[AgentId, ...] = field(default_factory=tuple)
+    roster_next_step: tuple[AgentId, int] | None = None
 
 
 def _profile_for_ticker(
@@ -305,6 +313,7 @@ def _profile_for_ticker(
     *,
     news_feed: NewsFeed | None = None,
     social_feed: SocialFeed | None = None,
+    withheld: frozenset[AgentId] = frozenset(),
 ) -> dict[str, Any]:
     """Ticker-flavoured profile for the Room.
 
@@ -384,15 +393,24 @@ def _profile_for_ticker(
         # rng-based synthetic block. MACD/moving-average-crossover/Bollinger
         # Bands are deliberately not computed (see technicals.py) — the
         # prompt no longer claims them.
-        technicals = compute_technicals(ticker)
-        if technicals:
-            profile["rsi"] = technicals.rsi
-            profile["rsi_tone"] = technicals.rsi_tone
-            profile["trend"] = technicals.trend
-            profile["volume_tone"] = technicals.volume_tone
-            profile["support"] = technicals.support
-            profile["breakout"] = technicals.breakout
-            profile["technicals_source"] = "live"
+        #
+        # CR098 — Market withheld (roster pull-back): skip the fetch (bank the
+        # yfinance OHLCV pull, scope item 4) and leave the honest synthetic
+        # scaffolding in place; _format_profile (Amendment 1) reads
+        # technicals_state to strip the fact-sheet lines instead of rendering
+        # a fabricated RSI/range/volume.
+        if AgentId.MARKET_ANALYST in withheld:
+            profile["technicals_state"] = LiveDataState.WITHHELD_TENURE.value
+        else:
+            technicals = compute_technicals(ticker)
+            if technicals:
+                profile["rsi"] = technicals.rsi
+                profile["rsi_tone"] = technicals.rsi_tone
+                profile["trend"] = technicals.trend
+                profile["volume_tone"] = technicals.volume_tone
+                profile["support"] = technicals.support
+                profile["breakout"] = technicals.breakout
+                profile["technicals_source"] = "live"
 
         # Real earnings date, when within the 90-day window the provider
         # covers — closes the "earnings calendar" claim with real data
@@ -945,6 +963,35 @@ def _verify_and_annotate_geometry(text: str) -> tuple[str, dict[str, Any] | None
     return _annotate_rr_against_levels(text, entry, stop, target, size)
 
 
+# CR098 Amendment 2 — fixed, ticker-slot-only PM copy for a Market-withheld
+# run. Verbatim from the CR doc: credits the fundamentals work done, names the
+# missing input factually, frames the refusal as professional discipline, and
+# contains no plan name / "upgrade" / pricing (acceptance #13 — the CTA is app
+# chrome, never the PM's voice).
+_NO_VERDICT_REASON = (
+    "No verdict — and that is deliberate.\n"
+    "The fundamentals case for {ticker} was argued in full, and it stands on its own.\n"
+    "But entry, stop and target are price decisions, and this session ran without a "
+    "market read. Issuing a position on that basis would be a guess presented as a "
+    "call, and I won't put that on your book.\n"
+    "The analysis holds. The trade doesn't — not until someone reads the tape."
+)
+
+
+def _assemble_no_verdict(ctx: _RoomContext) -> Verdict:
+    """CR098 Amendment 2 — built in code, bypassing `_parse_pm_verdict` entirely,
+    so no LLM output (however well-formed) can ever produce a tradeable verdict
+    when Market is withheld (acceptance #10). `opinions_not_included` is filled
+    here too — this function never routes through the shared post-loop
+    `model_copy` accident of omission, it's just consistent with it."""
+    return Verdict(
+        action=VerdictAction.NO_VERDICT,
+        size_pct=None, entry=None, target=None, stop=None, time_horizon_days=None,
+        reason=_NO_VERDICT_REASON.format(ticker=ctx.ticker),
+        opinions_not_included=[a.value for a in ctx.withheld],
+    )
+
+
 def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
     """Deterministic scripted verdict — NOT the live path's decision-maker.
 
@@ -1022,13 +1069,21 @@ class RoomEvent:
     # shipped Flutter parser tolerates unknown SSE event kinds (both switch
     # layers have no `default`), so emitting it does not break clients that
     # predate CR090-MOBILE — they simply ignore it.
-    kind: str  # 'started' | 'live_data_notice' | 'phase' | 'agent_token' | 'agent_done' | 'verdict' | 'error'
+    kind: str  # 'started' | 'live_data_notice' | 'phase' | 'agent_token' | 'agent_done' | 'agent_withheld' | 'verdict' | 'error'
     phase: str | None = None
     agent_id: AgentId | None = None
     text: str | None = None
     verdict: Verdict | None = None
     run_id: UUID | None = None
     live_data: dict[str, Any] | None = None
+    # CR098 — carried on 'agent_withheld' only. `reason` is always "upgrade"
+    # (tenure pull-back — Fundamentals is unwithholdable so there's no other
+    # reason a Room event carries this kind). `next_step_*` is the roster's
+    # single nearest upcoming pull-back event (not per-agent — see hand-off),
+    # for the client's countdown; None once nothing further is scheduled.
+    reason: str | None = None
+    next_step_agent: AgentId | None = None
+    next_step_days: int | None = None
 
 
 PLAN_TO_TIER: dict[Plan, str] = {
@@ -1454,29 +1509,40 @@ class RoomRunner:
             return row.id if row else None
 
     def _resolve_and_charge_feeds(
-        self, user_id: UUID, ticker: str
+        self, user_id: UUID, ticker: str, *, withheld: frozenset[AgentId] = frozenset()
     ) -> tuple[NewsFeed, SocialFeed, int]:
         """CR090 (D1/D2/D4/D5) — resolve the two live-data feeds ONCE, decide
         entitlement off the credit balance, and make the single atomic charge.
 
         Returns `(news_feed, social_feed, charged_total)` — the feeds carry the
-        final 3-state marker (LIVE / WITHHELD_PAID / UNAVAILABLE) and `LIVE` ones
-        carry their real payload; `charged_total` is exactly what was debited
-        (base, or base + surcharge). Raises `InsufficientCredits` (the 402 path)
-        untouched when the balance won't even cover the base.
+        final 3-state marker (LIVE / WITHHELD_PAID / UNAVAILABLE / WITHHELD_TENURE)
+        and `LIVE` ones carry their real payload; `charged_total` is exactly what
+        was debited (base, or base + surcharge). Raises `InsufficientCredits` (the
+        402 path) untouched when the balance won't even cover the base.
 
         The probe runs at `entitled=True`, so `state is LIVE` means data really
         exists right now; a non-entitled turn then downgrades those to
         WITHHELD_PAID (payload dropped) — never a silent synthetic swap (DEF059).
+
+        CR098 (D1/D2): `withheld` is the roster gate — a THIRD, independent
+        question from credit entitlement (D1: compose, don't overwrite). A
+        roster-withheld analyst's feed is never probed at all (its fetch is
+        skipped outright, banking the API cost per scope item 4) and never
+        counted in `n_available`, so the surcharge naturally reflects only what
+        was actually fetched (D2) without a second debit call site.
         """
         base = room_cost_for_plan(effective_plan_for_user(user_id))
         live = settings.use_real_market_data
         news_probe = (
-            resolve_news_feed(ticker, entitled=True) if live
+            NewsFeed(LiveDataState.WITHHELD_TENURE, ())
+            if AgentId.NEWS_ANALYST in withheld
+            else resolve_news_feed(ticker, entitled=True) if live
             else NewsFeed(LiveDataState.UNAVAILABLE, ())
         )
         social_probe = (
-            resolve_social_feed(ticker, entitled=True) if live
+            SocialFeed(LiveDataState.WITHHELD_TENURE, None)
+            if AgentId.SOCIAL_MEDIA_ANALYST in withheld
+            else resolve_social_feed(ticker, entitled=True) if live
             else SocialFeed(LiveDataState.UNAVAILABLE, None)
         )
         n_available = sum(
@@ -1603,8 +1669,13 @@ class RoomRunner:
         # nothing, D5). All-or-nothing on the bundle: both live feeds or neither
         # (a partial "buy what you can afford" was rejected as unpredictable
         # pricing — a one-branch change here if ever wanted).
+        # CR098 — resolve the analyst roster BEFORE the feeds so a roster-
+        # withheld News/Social analyst's fetch is never probed (D2: money
+        # moves as a deliberate consequence of the roster gate, not a side
+        # effect discovered later).
+        roster = resolve_roster_for_user(user_id)
         news_feed, social_feed, charged_total = self._resolve_and_charge_feeds(
-            user_id, ticker
+            user_id, ticker, withheld=frozenset(roster.withheld)
         )
 
         run_id = uuid4()
@@ -1627,6 +1698,7 @@ class RoomRunner:
                     news_feed=news_feed,
                     social_feed=social_feed,
                     credit_cost=charged_total,
+                    roster=roster,
                 ):
                     await q.put(ev)
             except Exception as exc:
@@ -1690,6 +1762,7 @@ class RoomRunner:
         news_feed: NewsFeed | None = None,
         social_feed: SocialFeed | None = None,
         credit_cost: int | None = None,
+        roster: AnalystRoster | None = None,
     ) -> AsyncIterator[RoomEvent]:
         """Run a Room session, yielding events as agents speak.
 
@@ -1713,6 +1786,17 @@ class RoomRunner:
         """
         run_id = run_id or uuid4()
         now = datetime.now(timezone.utc)
+        # CR098: start_run already resolved the roster (and priced the feeds
+        # against it); the respawn/direct-call path (roster is None) resolves
+        # it fresh here, same fallback shape as news_feed/social_feed above.
+        if roster is None:
+            roster = resolve_roster_for_user(user_id) if user_id is not None else AnalystRoster(
+                present=(
+                    AgentId.FUNDAMENTALS_ANALYST, AgentId.MARKET_ANALYST,
+                    AgentId.NEWS_ANALYST, AgentId.SOCIAL_MEDIA_ANALYST,
+                ),
+                withheld=(), next_step=None,
+            )
         # BL11 (AT:R33): effective_plan downgrades expired trials.
         plan = effective_plan_for_user(user_id)
         tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
@@ -1830,8 +1914,11 @@ class RoomRunner:
             sector_holdings=sector_holdings,
             sector_marks=sector_marks,
             sector_weights=sector_weights,
+            withheld=roster.withheld,
+            roster_next_step=roster.next_step,
             profile=_profile_for_ticker(
-                ticker, news_feed=news_feed, social_feed=social_feed
+                ticker, news_feed=news_feed, social_feed=social_feed,
+                withheld=frozenset(roster.withheld),
             ),
         )
 
@@ -1887,6 +1974,27 @@ class RoomRunner:
         try:
             for phase in PHASES:
                 yield RoomEvent(kind="phase", phase=phase.label, run_id=run_id)
+                # CR098 — analysts on the tenure pull-back roster never run.
+                # Filtering by ctx.withheld is safe for every phase: withheld
+                # only ever names ANALYSTS-phase agents, so this is a no-op
+                # for RESEARCHERS/SYNTHESIS/EXECUTION/RISK/VERDICT.
+                phase_agents = tuple(a for a in phase.agents if a not in ctx.withheld)
+                if phase.label == "ANALYSTS" and ctx.withheld:
+                    for agent_id in phase.agents:
+                        if agent_id not in ctx.withheld:
+                            continue
+                        yield RoomEvent(
+                            kind="agent_withheld",
+                            run_id=run_id,
+                            agent_id=agent_id,
+                            reason="upgrade",
+                            next_step_agent=(
+                                ctx.roster_next_step[0] if ctx.roster_next_step else None
+                            ),
+                            next_step_days=(
+                                ctx.roster_next_step[1] if ctx.roster_next_step else None
+                            ),
+                        )
                 if phase.label != "VERDICT":
                     if phase.parallel:
                         # CR077 Phase 2 — concurrent phase (ANALYSTS only).
@@ -1920,12 +2028,12 @@ class RoomRunner:
                                 portfolio_snapshot=ctx.portfolio_snapshot,
                                 parallel_phase=True,
                             )
-                            for agent_id in phase.agents
+                            for agent_id in phase_agents
                         ])
                         # Emit in fixed order. After all four are committed to
                         # run.transcript, RESEARCHERS onward see every analyst —
                         # only the analysts are blind to each other.
-                        for agent_id, (text, geom_sig) in zip(phase.agents, results):
+                        for agent_id, (text, geom_sig) in zip(phase_agents, results):
                             async for ev in _stream_agent_text(
                                 agent_id=agent_id,
                                 run_id=run_id,
@@ -1937,7 +2045,7 @@ class RoomRunner:
                             ):
                                 yield ev
                     else:
-                        for agent_id in phase.agents:
+                        for agent_id in phase_agents:
                             async for ev in _speak_one_agent(
                                 agent_id=agent_id,
                                 run_id=run_id,
@@ -1954,11 +2062,28 @@ class RoomRunner:
                             ):
                                 yield ev
                 else:
+                    # CR098 Amendment 2 — Market withheld ⇒ NO_VERDICT, built
+                    # in code and NEVER passed through the LLM parser at all
+                    # (stronger than a post-hoc contradiction check: there is
+                    # no LLM narration in this path for a recommendation to
+                    # contradict — see the hand-off for why this deliberately
+                    # narrows the spec's "narrow-prompt + post-check" design).
+                    # This runs AFTER EXECUTION/RISK (FLAG #2 — kept per the
+                    # spec's recommendation; the debate still happens, the
+                    # wall lands at the very end).
+                    if AgentId.MARKET_ANALYST in ctx.withheld:
+                        verdict = _assemble_no_verdict(ctx)
+                        pm_text = verdict.reason
+                        async for ev in _typewriter(
+                            run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
+                            char_delay_min, char_delay_max,
+                        ):
+                            yield ev
                     # Phase 6 — PM: the LLM decides, informed by the full
                     # 11-agent debate; the deterministic safety floor then
                     # vetoes/validates that decision afterward — it never
                     # invents it beforehand. See DEF056.
-                    if live:
+                    elif live:
                         raw_text = await _stream_pm_response(
                             run_id=run_id, ctx=ctx, profile=profile,
                             formatter=formatter, run=run, gateway=gateway,
@@ -2093,6 +2218,12 @@ class RoomRunner:
                     yield RoomEvent(
                         kind="agent_done", run_id=run_id,
                         agent_id=AgentId.PORTFOLIO_MANAGER,
+                    )
+                    # CR098 acceptance #8 — deterministic even when the LLM
+                    # says nothing about it; applies to EVERY path above
+                    # (APPROVE/PASS/NO_VERDICT/fail-safe), one insertion point.
+                    verdict = verdict.model_copy(
+                        update={"opinions_not_included": [a.value for a in ctx.withheld]}
                     )
                     run.verdict = verdict
                     yield RoomEvent(kind="verdict", run_id=run_id, verdict=verdict)

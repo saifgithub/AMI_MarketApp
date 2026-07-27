@@ -72,11 +72,21 @@ class LiveDataState(Enum):
       UNAVAILABLE   — genuinely no live data exists (uncached ticker, provider
                       down, quota exhausted, no key). The existing honest
                       illustrative-synthetic fallback path (CR023/CR024).
+      WITHHELD_TENURE — CR098 D3: this analyst is off the user's roster for
+                      their plan + account age (the tenure-drip pull-back),
+                      a THIRD reason distinct from WITHHELD_PAID. Routing a
+                      roster withhold through WITHHELD_PAID would tell the
+                      client "buy credits" (won't bring the analyst back —
+                      only account age or upgrade does); routing it through
+                      UNAVAILABLE claims nobody has the data, which is false
+                      and shows no CTA. Never charged, never fetched — the
+                      roster gate short-circuits before any probe runs.
     """
 
     LIVE = "live"
     WITHHELD_PAID = "withheld_paid"
     UNAVAILABLE = "unavailable"
+    WITHHELD_TENURE = "withheld_tenure"
 
 
 def live_data_state(*, available: bool, entitled: bool) -> LiveDataState:
