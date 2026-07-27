@@ -26,6 +26,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 
+from app.schemas.classification import ClassificationVerdict
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.sharia import ShariaVerdict
 from app.schemas.trade import OrderType, Side
@@ -90,16 +91,17 @@ class TradeListResponse(BaseModel):
 
 
 class ComplianceBlock(BaseModel):
-    """The wire shape of `ComplianceResult` (DEF094): declared here as a
-    response-model field, not a hand-built dict, so `sharia_verdict` is a typed
-    member of the schema instead of silently dropped on serialization — and so
-    `ShariaVerdict` is registered in the generated OpenAPI, the artefact
-    coder.mobile mirrors by hand."""
+    """The wire shape of `ComplianceResult` (DEF094 + DEF112): declared here as a
+    response-model field, not a hand-built dict, so `sharia_verdict` and
+    `classification_verdicts` are typed members of the schema instead of silently
+    dropped on serialization — and so `ShariaVerdict` / `ClassificationVerdict` are
+    registered in the generated OpenAPI, the artefact coder.mobile mirrors by hand."""
 
     passed: bool
     violations: list[str] = Field(default_factory=list)
     blocked_by: str | None = None
     sharia_verdict: ShariaVerdict | None = None
+    classification_verdicts: list[ClassificationVerdict] = Field(default_factory=list)
 
 
 class PreviewTradeResponse(BaseModel):
@@ -216,6 +218,7 @@ async def preview_trade(
             violations=pv.compliance.violations,
             blocked_by=pv.compliance.blocked_by,
             sharia_verdict=pv.compliance.sharia_verdict,
+            classification_verdicts=pv.compliance.classification_verdicts,
         ),
         fill_price=pv.fill_price,
         notional=pv.notional,
@@ -267,6 +270,10 @@ async def submit_trade(
                     result.compliance.sharia_verdict.model_dump(mode="json")
                     if result.compliance.sharia_verdict is not None else None
                 ),
+                "classification_verdicts": [
+                    v.model_dump(mode="json")
+                    for v in result.compliance.classification_verdicts
+                ],
             },
         }
 
@@ -329,6 +336,10 @@ async def submit_trade(
                 result.compliance.sharia_verdict.model_dump(mode="json")
                 if result.compliance.sharia_verdict is not None else None
             ),
+            "classification_verdicts": [
+                v.model_dump(mode="json")
+                for v in result.compliance.classification_verdicts
+            ],
         },
     }
 
