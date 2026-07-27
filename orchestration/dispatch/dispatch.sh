@@ -24,6 +24,14 @@
 #   GATE: absent              -> UNGATED. An unbound gate fails LOUD, never open.
 # Usage:
 #   dispatch.sh state              print the derived board once and exit
+#   dispatch.sh inbox              one-shot, non-blocking: list lanes where the AUDITOR HAS FINISHED
+#                                    and the Architect owes the next move but has not made it yet
+#                                    (AUDIT_PASSED = verdict COMPLETE, integrate; UNCOMMITTED =
+#                                    verdict written but unpushed, chase delivery). Exit 1 if any,
+#                                    0 if clear. This is the multi-lane Architect's trigger: a
+#                                    BLOCKING watcher would freeze its other lanes, so instead run
+#                                    this at session start AND after finishing each work unit, so a
+#                                    fresh COMPLETE verdict is never left sitting un-integrated.
 #   dispatch.sh architect [-i N]   block until >=1 lane needs the Architect
 #                                    (UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|AUDIT_PASSED)
 #   dispatch.sh inst <id> [-i N]   block until >=1 lane is ASSIGNED to <id> or AUDIT_RETURNED on it
@@ -182,10 +190,43 @@ count_inst() {  # uses $TARGET_INST; counts lanes ASSIGNED to it or AUDIT_RETURN
   echo "$c"
 }
 
+print_inbox() {
+  # One-shot, non-blocking. Surfaces only lanes where the AUDITOR has finished and the ball is now in
+  # the Architect's court but the lane is NOT yet integrated: AUDIT_PASSED (verdict COMPLETE — merge)
+  # and UNCOMMITTED (verdict exists in one working tree, unpushed — chase it, then merge). Exit 1 if
+  # any such lane exists so a caller can gate "take new work" on a clean inbox; exit 0 when clear.
+  # Other Architect-owed states (UNASSIGNED/BLOCKED/NEEDS-INFO/IN_REVIEW/UNGATED) are summarised on
+  # one trailer line and DO NOT affect the exit code — a chronic UNGATED backlog must not desensitise
+  # the per-work-unit check to the one event it exists to catch: a fresh auditor COMPLETE.
+  hot=0; other=0; hot_rows=""
+  for it in $(items); do
+    set -- $(lane_state "$it")
+    case "$1" in
+      AUDIT_PASSED|UNCOMMITTED)
+        hot=$((hot+1))
+        row=$(printf '  %-14s %-13s %-16s verdict=%s' "$it" "$1" "$2" "$5")
+        hot_rows="${hot_rows}${row}
+"
+        ;;
+      UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|UNGATED) other=$((other+1)) ;;
+    esac
+  done
+  if [ "$hot" -gt 0 ]; then
+    echo "AUDITOR DONE — integrate before taking new work ($hot):"
+    printf '%s' "$hot_rows"
+  else
+    echo "inbox clear — no auditor verdict awaiting integration."
+  fi
+  [ "$other" -gt 0 ] && echo "(also owing you: $other lane(s) UNASSIGNED/BLOCKED/NEEDS-INFO/IN_REVIEW/UNGATED — full board: dispatch.sh state)"
+  [ "$hot" -gt 0 ] && return 1
+  return 0
+}
+
 MODE=${1:-state}; shift 2>/dev/null || true
 
 case "$MODE" in
   state) print_state; exit 0 ;;
+  inbox) print_inbox; exit $? ;;
   architect)
     INTERVAL=30; [ "${1:-}" = "-i" ] && INTERVAL=${2:-30}
     echo "watching $LANE_DIR for Architect-actionable lanes (poll ${INTERVAL}s, ctrl-c to stop)..."
@@ -204,5 +245,5 @@ case "$MODE" in
       if [ "$c" -gt 0 ]; then echo "$(date '+%H:%M:%S') $c lane(s) for $TARGET_INST:"; print_state; exit 0; fi
       sleep "$INTERVAL"
     done ;;
-  *) echo "usage: dispatch.sh state | architect [-i N] | inst <instance-id> [-i N]" >&2; exit 2 ;;
+  *) echo "usage: dispatch.sh state | inbox | architect [-i N] | inst <instance-id> [-i N]" >&2; exit 2 ;;
 esac

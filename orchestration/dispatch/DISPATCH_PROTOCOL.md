@@ -136,8 +136,11 @@ away from being fixed. Judge it against the **real diff after the work**, not a 
 before it — a chunk sized as trivial that comes back touching a `HOT-FILES` entry trips the rule on
 its own.
 
-`dispatch.sh` modes: `state` (print the board once); `architect [-i N]` (block until a lane needs
-the Architect — `UNASSIGNED`/`BLOCKED`/`NEEDS-INFO`/`IN_REVIEW`/`AUDIT_PASSED`/`UNGATED`); `inst <id> [-i N]`
+`dispatch.sh` modes: `state` (print the board once); `inbox` (one-shot, **non-blocking**: list only
+lanes where the auditor has FINISHED and the Architect owes integration — `AUDIT_PASSED`/`UNCOMMITTED`
+— exit 1 if any, 0 if clear; the multi-lane Architect's per-work-unit trigger, since a blocking
+watcher would freeze its other lanes); `architect [-i N]` (block until a lane needs the Architect —
+`UNASSIGNED`/`BLOCKED`/`NEEDS-INFO`/`IN_REVIEW`/`AUDIT_PASSED`/`UNGATED`); `inst <id> [-i N]`
 (block until a lane is `ASSIGNED` to `<id>` or `AUDIT_RETURNED` on its lane). HOW a role notices its
 turn is its own choice — the state is always re-derivable from files, so nothing is lost while a
 role is busy elsewhere.

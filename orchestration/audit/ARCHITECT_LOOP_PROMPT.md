@@ -48,6 +48,20 @@ repo layout, and do not proceed on an unresolved token.
 Each item is its own lane, two files under `<AUDIT_LANE_DIR>/`. You own `<ITEM>.architect.md`
 and `INDEX.md`; the auditor owns `<ITEM>.auditor.md`.
 
+**Loop entry gate — run `dispatch.sh inbox` at session start AND after finishing every work unit,
+and integrate whatever it lists before you pick the next item.** This is written in, not left to
+your judgement — it used to be discretionary and the result was COMPLETE verdicts sitting
+un-integrated for whole sessions. The reason nothing pulled you back on its own: the auditor's
+blocking `watcher.sh` wakes it on `AWAITING_FIXES` but **never on a clean `COMPLETE`**, so a passed
+lane emits no signal you can wait on — you have to look. `inbox` is that look: a one-shot,
+**non-blocking** check that lists only lanes where the auditor has FINISHED and the ball is in your
+court — `AUDIT_PASSED` (verdict COMPLETE → merge it) and `UNCOMMITTED` (verdict written but unpushed
+→ chase it) — and exits non-zero while any remain. It does not block *on purpose*: you multiplex many
+lanes, and the single-lane auditor's blocking-watcher pattern would freeze the rest, so the trigger
+is checkpoint-driven (start + per-work-unit) rather than a wait. A "work unit" is any lane you carry
+to a hand-off — a submit, a merge, an answer to a `NEEDS-INFO`, an assignment; after each one, re-run
+`inbox` before starting the next.
+
 1. Pick any item NOT AWAITING_AUDIT (build a new one, or fix a bounced one). An item is yours
    while your `SUBMITTED round` is less than or equal to the auditor's `VERDICT round`.
 2. Build it per the project's normal governance: file the CR/DEF, implement, self-test.
@@ -152,12 +166,15 @@ worktree either way.
 5. SINGLE LEDGER: `<AUDIT_ROOT>/audit-trail.md` is auditor-owned. Do not write it; the auditor
    appends every verdict there.
 6. STALL RULE: at the cap with no verdict movement for longer than the BINDINGS stall window,
-   escalate to the stakeholder instead of throttling indefinitely. **This rule computes nothing and
-   nothing enforces it** — an item has sat `AWAITING_AUDIT` across whole sessions with its audit
-   never launched and nothing surfaced that. Until it has an owner and a real elapsed-time input,
-   treat it as an acknowledged gap, not a control: **re-read `watcher.sh state` / `dispatch.sh
-   state` at the start of every session** and route anything sitting in `AWAITING_AUDIT` or
-   `UNGATED` before taking new work.
+   escalate to the stakeholder instead of throttling indefinitely. Two distinct gaps live here, and
+   only one is now enforced. The **post-verdict** gap — a lane the auditor PASSED sitting
+   un-integrated — is no longer discretionary: the lane loop's entry gate runs `dispatch.sh inbox`
+   at session start and after every work unit and routes every `AUDIT_PASSED`/`UNCOMMITTED` lane
+   before new work (see the mandate at the top of "The lane loop"). The **pre-audit stall** gap — an
+   item sitting `AWAITING_AUDIT` for whole sessions because its audit was never launched — **still
+   computes nothing and nothing enforces it**; until it has an owner and a real elapsed-time input,
+   treat it as an acknowledged gap, not a control. Re-read `watcher.sh state` / `dispatch.sh state`
+   for the fuller board when you suspect a stall.
 
 ## Build rules
 
