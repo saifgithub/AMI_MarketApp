@@ -11,19 +11,20 @@ topic: "financial_ratio_screens"
 prerequisites: ["348_the_business_activity_screen"]
 tags: ["islamic-finance", "financial-ratios", "debt-ratio", "liquidity-ratio", "income-ratio", "aaoifi"]
 sources: ["AAOIFI — Shariah Standard No. 21, financial ratio screening thresholds", "Dow Jones Islamic Market Index Methodology — 33%/33%/5% ratio criteria"]
+verified: {by: "cr060-manual", date: "2026-07-27", method: "aligned halal-flag mechanism claims to the CR069 sourced-index reality (DEF097 class) — the flag defers to a sourced AAOIFI-standard index, not a live ratio computation; three-ratio methodology + 30/30/5 (AAOIFI) vs 33/33/5 (DJIM) attribution left intact and sourced"}
 agent_callouts: ["fundamentals_analyst"]
 locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-22"
-updated_at: "2026-07-22"
+updated_at: "2026-07-27"
 ---
 
 # The three financial-ratio screens
 
-A company that clears the business-activity screen still has to clear three quantitative ratios, each checked against a cap under the Dow Jones Islamic methodology (AAOIFI Shariah Standard No. 21 is stricter — 30% debt, 30% cash-and-interest-securities of market cap, 5% income): interest-bearing debt as a percent of market cap (cap 33%), cash plus interest-bearing securities as a percent of market cap (cap 33%), and non-compliant (interest) income as a percent of total revenue (cap 5%). All three must pass — failing any one fails the whole screen. AMI computes these three ratios exactly, via the same screening logic that runs behind the halal Mandate flag, never by hand. By the end of this lesson you'll be able to read a real balance sheet through all three ratios and know why a company can pass the business screen and still fail here.
+A company that clears the business-activity screen still has to clear three quantitative ratios, each checked against a cap under the Dow Jones Islamic methodology (AAOIFI Shariah Standard No. 21 is stricter — 30% debt, 30% cash-and-interest-securities of market cap, 5% income): interest-bearing debt as a percent of market cap (cap 33%), cash plus interest-bearing securities as a percent of market cap (cap 33%), and non-compliant (interest) income as a percent of total revenue (cap 5%). All three must pass — failing any one fails the whole screen. This is the methodology the standard-setters and index providers apply, and it is the math you need to read any Sharia screen's verdict — though AMI's own halal Mandate flag does not recompute it live: the flag defers to a published, dated AAOIFI-standard index (<Lesson id="355_how_amis_halal_flag_maps_to_real_screening"/>). By the end of this lesson you'll be able to read a real balance sheet through all three ratios and know why a company can pass the business screen and still fail here.
 
 ## Example
 
-Take a hypothetical balance sheet built like a heavily-levered real-economy company — think of the debt load a legacy telecom carrier such as **AT&T (T)** has historically carried: interest-bearing debt of **$138,000M**, market cap of **$128,000M**, cash plus interest-bearing securities of **$4,200M**, non-compliant (interest) income of **$900M**, and total revenue of **$122,000M**. Run these through AMI's screening function (`sharia_screen`) and the exact output is: **debt ratio 107.8%** (cap 33% — **fails**), **liquidity ratio 3.3%** (cap 33% — **passes**), **income ratio 0.7%** (cap 5% — **passes**). Overall: **fails**, on the debt ratio alone, even though the other two ratios are comfortably clean. This is the realistic shape of a real-economy-business failure — not a casino, not a brewery, just ordinary telecom-scale leverage that happens to exceed a third of market cap. Compare that to the capstone lesson later in this module, where a lightly-levered tech balance sheet clears all three comfortably.
+Take a hypothetical balance sheet built like a heavily-levered real-economy company — think of the debt load a legacy telecom carrier such as **AT&T (T)** has historically carried: interest-bearing debt of **$138,000M**, market cap of **$128,000M**, cash plus interest-bearing securities of **$4,200M**, non-compliant (interest) income of **$900M**, and total revenue of **$122,000M**. Run these three ratios and the exact output is: **debt ratio 107.8%** (cap 33% — **fails**), **liquidity ratio 3.3%** (cap 33% — **passes**), **income ratio 0.7%** (cap 5% — **passes**). Overall: **fails**, on the debt ratio alone, even though the other two ratios are comfortably clean. This is the realistic shape of a real-economy-business failure — not a casino, not a brewery, just ordinary telecom-scale leverage that happens to exceed a third of market cap. Compare that to the capstone lesson later in this module, where a lightly-levered tech balance sheet clears all three comfortably.
 
 ## The trap
 
@@ -46,7 +47,7 @@ A skeptic might argue: "A 33% debt-to-market-cap cap is arbitrary — why not 25
     "The screen cannot be run because debt exceeds market cap, which the formula does not support"
   ]}
   answer={1}
-  explanation="138,000/128,000 × 100 = 107.8%, computed exactly via AMI's screening function, far above the 33% cap — and the screen requires ALL three ratios to pass, not a majority, so one failing ratio fails the whole screen regardless of how clean the other two are. Debt exceeding market cap is unusual but the ratio formula handles it without issue; it is not a formula error, it is a genuine screen failure."
+  explanation="138,000/128,000 × 100 = 107.8%, far above the 33% cap — and the screen requires ALL three ratios to pass, not a majority, so one failing ratio fails the whole screen regardless of how clean the other two are. Debt exceeding market cap is unusual but the ratio formula handles it without issue; it is not a formula error, it is a genuine screen failure."
 />
 
 <Quiz
@@ -63,10 +64,10 @@ A skeptic might argue: "A 33% debt-to-market-cap cap is arbitrary — why not 25
 
 ## Try it
 
-Open Settings → Mandate and confirm the halal flag is on, then Convene the Room on a real, heavily-levered ticker of your choosing. Ask the Fundamentals Analyst to walk through which of the three ratios it computed and which one, if any, drove a fail. Keep in mind: this is AMI demonstrating how the screening methodology works in a training context, not advice or a ruling; use it to understand the discipline, and consult a qualified Sharia scholar for any real portfolio decision.
+Open a 1-on-1 with the Fundamentals Analyst and pick a real, heavily-levered ticker. Ask it to walk that company through the three ratios — debt/market-cap, liquidity/market-cap, income/revenue — and show which one, if any, would fail. Keep two things in mind: this is AMI demonstrating how the screening *methodology* works in a training context, not advice or a ruling; and AMI's halal Mandate flag itself doesn't recompute these ratios live — it checks the ticker against a sourced, dated AAOIFI-standard index (<Lesson id="355_how_amis_halal_flag_maps_to_real_screening"/>). Use this to understand the discipline, and consult a qualified Sharia scholar for any real portfolio decision.
 
 ## Takeaway
 
-Three independent ratios — debt/market-cap, liquidity/market-cap, and income/revenue — each capped and each computed exactly; failing any one fails the whole screen, business activity notwithstanding. These are computed exactly as a real compliance analyst would, applying a published methodology that is taught here for training, not issued as a religious determination.
+Three independent ratios — debt/market-cap, liquidity/market-cap, and income/revenue — each capped; failing any one fails the whole screen, business activity notwithstanding. This is the published methodology a compliance analyst applies, taught here for training. It is the math behind the sourced AAOIFI-standard indices AMI's halal flag relies on — not a live computation the flag runs, and not a religious determination.
 
 *Where this comes from: AAOIFI Shariah Standard No. 21's financial-ratio screening thresholds, mirrored in the Dow Jones Islamic Market Index methodology's 33%/33%/5% criteria.*
