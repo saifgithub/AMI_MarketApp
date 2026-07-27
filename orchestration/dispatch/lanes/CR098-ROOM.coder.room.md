@@ -409,4 +409,4 @@ pre-fix code (stashed the fix, re-ran, restored) and pass against the fix.
 - The three MINOR fixes were each mutation- or contradiction-tested individually; no new
   cross-cutting mutation sweep was run over the round-2 diff as a whole beyond what's listed above.
 
-STATUS: READY_FOR_AUDIT (round 3)
+STATUS: READY_FOR_AUDIT (round 2)
