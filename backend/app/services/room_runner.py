@@ -59,20 +59,34 @@ from app.services.market_data import get_market_data_provider
 from app.services.sharia_universe import default_halal_universe_async  # CR069 (import for the :1293 rewire)
 from app.services.classification_universe import default_classification_universe_async  # DEF061
 from app.services.sector_allocation import allocate_by_sector, default_sector_map  # CR026
-from app.services.news_context import fetch_live_news, format_headline
+from app.services.news_context import (
+    LiveDataState,
+    NewsFeed,
+    fetch_live_news,  # re-exported: prompt-parity guard patches it here
+    format_headline,
+    resolve_news_feed,
+)
 from app.services.technicals import compute_technicals
 from app.services.social_context import (
-    fetch_live_sentiment,
+    SocialFeed,
+    fetch_live_sentiment,  # re-exported: prompt-parity guard patches it here
     format_community_read,
     format_mention_trend,
     format_pattern,
     format_sentiment_score,
     format_sentiment_tone,
+    resolve_social_feed,
 )
 from app.services.llm_gateway import ChatMessage, LLMGateway, get_llm_gateway
 from app.services.llm_json import extract_json_object
 from app.services.room_prompts import build_room_messages
-from app.services.credit_service import refund, room_cost_for_plan, spend
+from app.services.credit_service import (
+    balance_for,
+    live_data_surcharge,
+    refund,
+    room_cost_for_plan,
+    spend,
+)
 from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
 from app.services.alpaca_service import snapshot_text as alpaca_snapshot_text
@@ -286,7 +300,12 @@ class _RoomContext:
     profile: dict[str, Any] = field(default_factory=dict)
 
 
-def _profile_for_ticker(ticker: str) -> dict[str, Any]:
+def _profile_for_ticker(
+    ticker: str,
+    *,
+    news_feed: NewsFeed | None = None,
+    social_feed: SocialFeed | None = None,
+) -> dict[str, Any]:
     """Ticker-flavoured profile for the Room.
 
     Builds a deterministic synthetic baseline (so tests stay reproducible
@@ -375,17 +394,6 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
             profile["breakout"] = technicals.breakout
             profile["technicals_source"] = "live"
 
-        # Overlay a real headline onto `catalyst` (CR023, AT:R57). Only the
-        # top headline replaces `catalyst` — `forward_catalyst` (the real
-        # FOMC-date half; CR038 removed the synthetic sector-earnings half
-        # entirely) is left untouched, since no real earnings-calendar feed
-        # exists to overlay onto it.
-        news_items = fetch_live_news(ticker)
-        if news_items:
-            profile["catalyst"] = format_headline(news_items[0])
-            profile["news_headlines"] = news_items
-            profile["news_source"] = "live"
-
         # Real earnings date, when within the 90-day window the provider
         # covers — closes the "earnings calendar" claim with real data
         # instead of just disclaiming it (cheap: fetch/cache already exist
@@ -405,18 +413,64 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
             if earnings.eps_estimate is not None:
                 profile["next_earnings_eps_estimate"] = earnings.eps_estimate
 
-        # Overlay real Reddit sentiment (CR024, AT:R57-continued). Adanos is
-        # Reddit-only — Twitter/X, StockTwits, Google Trends, Discord remain
-        # unconnected. `fetch_live_sentiment` returns None (never raises)
-        # when ADANOS_API_KEY is unset, so this is a no-op until configured.
-        sentiment = fetch_live_sentiment(ticker)
-        if sentiment:
-            profile["sentiment_tone"] = format_sentiment_tone(sentiment)
-            profile["sentiment_score"] = format_sentiment_score(sentiment)
-            profile["mention_trend"] = format_mention_trend(sentiment)
-            profile["influencer_take"] = format_community_read(sentiment)
-            profile["pattern"] = format_pattern(sentiment)
-            profile["social_source"] = "live"
+    # CR090 — News/Social liveness is decided by the pre-resolved feeds priced
+    # in start_run (D4: charge == render), NOT a second fetch here. A second
+    # fetch could disagree with the one we billed, so the surcharge would buy
+    # data the agents never saw. Only a LIVE feed overlays its real payload
+    # (CR023/CR024, byte-for-byte); WITHHELD_PAID and UNAVAILABLE leave the
+    # honest synthetic scaffolding in place (D5) and are told apart ONLY by the
+    # 3-state marker recorded below, which the disclosure header reads. When no
+    # feed was threaded in (respawn / direct call / tests) we resolve here at
+    # entitled=True — the legacy behaviour, where any available live data was
+    # overlaid unconditionally; production always threads a pre-priced feed.
+    if news_feed is None:
+        # Legacy / direct-call fallback: build the feed straight off the
+        # module-level fetcher (entitled=True equivalent — any available live
+        # data is overlaid, the pre-CR090 behaviour). Production threads a
+        # pre-priced feed in and never reaches this branch.
+        items = (
+            tuple(fetch_live_news(ticker) or ())
+            if settings.use_real_market_data else ()
+        )
+        news_feed = NewsFeed(
+            LiveDataState.LIVE if items else LiveDataState.UNAVAILABLE, items
+        )
+    nf = news_feed
+    if nf.state is LiveDataState.LIVE and nf.headlines:
+        # Only the top headline replaces `catalyst` — `forward_catalyst` (the
+        # real FOMC-date half; CR038 removed the synthetic sector-earnings half)
+        # is untouched, since no real earnings-calendar feed exists for it.
+        news_items = list(nf.headlines)
+        profile["catalyst"] = format_headline(news_items[0])
+        profile["news_headlines"] = news_items
+        profile["news_source"] = "live"
+    profile["news_state"] = nf.state.value
+
+    if social_feed is None:
+        # Same legacy / direct-call fallback as news above, off the same
+        # module-level fetcher. Going through `resolve_social_feed` here instead
+        # would be behaviourally identical but would move the seam every existing
+        # caller and test patches (`room_runner.fetch_live_sentiment`) into
+        # `social_context`, silently voiding those patches.
+        sentiment = (
+            fetch_live_sentiment(ticker) if settings.use_real_market_data else None
+        )
+        social_feed = SocialFeed(
+            LiveDataState.LIVE if sentiment is not None else LiveDataState.UNAVAILABLE,
+            sentiment,
+        )
+    sf = social_feed
+    # Adanos is Reddit-only — Twitter/X, StockTwits, Google Trends, Discord
+    # remain unconnected (CR024).
+    if sf.state is LiveDataState.LIVE and sf.sentiment is not None:
+        sentiment = sf.sentiment
+        profile["sentiment_tone"] = format_sentiment_tone(sentiment)
+        profile["sentiment_score"] = format_sentiment_score(sentiment)
+        profile["mention_trend"] = format_mention_trend(sentiment)
+        profile["influencer_take"] = format_community_read(sentiment)
+        profile["pattern"] = format_pattern(sentiment)
+        profile["social_source"] = "live"
+    profile["social_state"] = sf.state.value
 
     # Derive narrative strings from whatever numbers ended up in the
     # profile (real or synthetic) so the prose is consistent with the data.
@@ -963,12 +1017,18 @@ class RoomEvent:
 
     The API layer (room.py) translates this into SSE.
     """
-    kind: str  # 'started' | 'phase' | 'agent_token' | 'agent_done' | 'verdict' | 'error'
+    # 'live_data_notice' (CR090) is the structural live-data disclosure — the
+    # LLM is out of the loop; the client renders `live_data` directly. The
+    # shipped Flutter parser tolerates unknown SSE event kinds (both switch
+    # layers have no `default`), so emitting it does not break clients that
+    # predate CR090-MOBILE — they simply ignore it.
+    kind: str  # 'started' | 'live_data_notice' | 'phase' | 'agent_token' | 'agent_done' | 'verdict' | 'error'
     phase: str | None = None
     agent_id: AgentId | None = None
     text: str | None = None
     verdict: Verdict | None = None
     run_id: UUID | None = None
+    live_data: dict[str, Any] | None = None
 
 
 PLAN_TO_TIER: dict[Plan, str] = {
@@ -1393,6 +1453,75 @@ class RoomRunner:
             ).scalar_one_or_none()
             return row.id if row else None
 
+    def _resolve_and_charge_feeds(
+        self, user_id: UUID, ticker: str
+    ) -> tuple[NewsFeed, SocialFeed, int]:
+        """CR090 (D1/D2/D4/D5) — resolve the two live-data feeds ONCE, decide
+        entitlement off the credit balance, and make the single atomic charge.
+
+        Returns `(news_feed, social_feed, charged_total)` — the feeds carry the
+        final 3-state marker (LIVE / WITHHELD_PAID / UNAVAILABLE) and `LIVE` ones
+        carry their real payload; `charged_total` is exactly what was debited
+        (base, or base + surcharge). Raises `InsufficientCredits` (the 402 path)
+        untouched when the balance won't even cover the base.
+
+        The probe runs at `entitled=True`, so `state is LIVE` means data really
+        exists right now; a non-entitled turn then downgrades those to
+        WITHHELD_PAID (payload dropped) — never a silent synthetic swap (DEF059).
+        """
+        base = room_cost_for_plan(effective_plan_for_user(user_id))
+        live = settings.use_real_market_data
+        news_probe = (
+            resolve_news_feed(ticker, entitled=True) if live
+            else NewsFeed(LiveDataState.UNAVAILABLE, ())
+        )
+        social_probe = (
+            resolve_social_feed(ticker, entitled=True) if live
+            else SocialFeed(LiveDataState.UNAVAILABLE, None)
+        )
+        n_available = sum(
+            1 for p in (news_probe.state, social_probe.state)
+            if p is LiveDataState.LIVE
+        )
+        surcharge = live_data_surcharge(n_available)
+
+        # Entitled ONLY when the balance covers the whole live bundle. The
+        # balance read re-grants first (idempotent — spend's own _ensure_period
+        # is then a no-op), so the two agree on the plan/period. n_available == 0
+        # short-circuits, so a no-live-data run never reads the balance early and
+        # never leaves the byte-for-byte CR039 spend(None) path (winzip intact).
+        entitled = n_available > 0 and balance_for(user_id)[0] >= base + surcharge
+
+        if entitled:
+            # Explicit amount folds the surcharge into the one atomic spend (D1).
+            _, charged_total = spend(
+                user_id, base + surcharge,
+                reason=f"room:{ticker.upper()}:live+{surcharge}",
+            )
+        else:
+            # Base only, via spend(None): preserves the CR047 winzip soft-wall
+            # and the CR039 402 for a genuinely broke user (both live inside
+            # spend, keyed on amount is None). Available feeds become
+            # WITHHELD_PAID and cost nothing (D5).
+            _, charged_total = spend(user_id, None, reason=f"room:{ticker.upper()}")
+
+        def _final_state(probe_state: LiveDataState) -> LiveDataState:
+            if probe_state is LiveDataState.LIVE and not entitled:
+                return LiveDataState.WITHHELD_PAID
+            return probe_state
+
+        news_state = _final_state(news_probe.state)
+        social_state = _final_state(social_probe.state)
+        news_feed = NewsFeed(
+            news_state,
+            news_probe.headlines if news_state is LiveDataState.LIVE else (),
+        )
+        social_feed = SocialFeed(
+            social_state,
+            social_probe.sentiment if social_state is LiveDataState.LIVE else None,
+        )
+        return news_feed, social_feed, charged_total
+
     async def start_run(
         self,
         *,
@@ -1461,7 +1590,22 @@ class RoomRunner:
         # request, defeating the dedup above (whose stated purpose is to prevent
         # double-billing) and turning a flaky LTE handoff into a paywall.
         # InsufficientCredits propagates to the endpoint as a 402.
-        spend(user_id, None, reason=f"room:{ticker.upper()}")
+        #
+        # CR090 (D1/D2/D5): the live-data surcharge folds into THIS one spend —
+        # there is exactly one spend() in the whole run, so a second mid-run
+        # debit can never raise InsufficientCredits after the base is paid and
+        # the Room is half-streamed. Entitlement is the credit BALANCE, not a
+        # plan tier (D2): probe both feeds' availability (cache-first), and only
+        # if the balance covers base + surcharge does the run buy the live
+        # bundle. Otherwise it pays the base alone via spend(None) — which keeps
+        # the CR047 winzip soft-wall and the CR039 402 wall intact — and the
+        # available feeds resolve WITHHELD_PAID (loud disclosure, charged
+        # nothing, D5). All-or-nothing on the bundle: both live feeds or neither
+        # (a partial "buy what you can afford" was rejected as unpredictable
+        # pricing — a one-branch change here if ever wanted).
+        news_feed, social_feed, charged_total = self._resolve_and_charge_feeds(
+            user_id, ticker
+        )
 
         run_id = uuid4()
         q: asyncio.Queue[RoomEvent | None] = asyncio.Queue()
@@ -1480,6 +1624,9 @@ class RoomRunner:
                     char_delay_min=char_delay_min,
                     char_delay_max=char_delay_max,
                     agent_timeout_s=agent_timeout_s,
+                    news_feed=news_feed,
+                    social_feed=social_feed,
+                    credit_cost=charged_total,
                 ):
                     await q.put(ev)
             except Exception as exc:
@@ -1540,6 +1687,9 @@ class RoomRunner:
         char_delay_min: float = _CHAR_DELAY_MIN,
         char_delay_max: float = _CHAR_DELAY_MAX,
         agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
+        news_feed: NewsFeed | None = None,
+        social_feed: SocialFeed | None = None,
+        credit_cost: int | None = None,
     ) -> AsyncIterator[RoomEvent]:
         """Run a Room session, yielding events as agents speak.
 
@@ -1550,15 +1700,26 @@ class RoomRunner:
         `run_id` is optional — if provided (by start_run), the caller
         pre-allocated the ID so it can set up the event queue before the
         generator starts. If omitted, a fresh UUID is generated here.
+
+        CR090 (D1/D4): `news_feed`/`social_feed` are the live-data feeds
+        start_run already resolved AND priced before the atomic charge — they
+        are threaded down so the profile the agents see matches exactly what was
+        billed (never a second, possibly-divergent fetch). `credit_cost` is the
+        total actually charged (base + live-data surcharge) so the persisted row
+        and the failure-path refund cover the real amount, not just the base.
+        All three are optional: the respawn / direct-call path leaves them None
+        and falls back to base pricing + entitled=True feed resolution, which is
+        the pre-CR090 behaviour verbatim.
         """
         run_id = run_id or uuid4()
         now = datetime.now(timezone.utc)
         # BL11 (AT:R33): effective_plan downgrades expired trials.
         plan = effective_plan_for_user(user_id)
         tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
-        # CR039: same source of truth start_run billed from, so the row can't
-        # disagree with what the user was actually charged.
-        credit_cost = room_cost_for_plan(plan)
+        # CR039/CR090: the charge start_run actually made is the source of truth
+        # for the row (so a refund on failure returns the surcharge too). Absent
+        # (respawn/direct) it falls back to the plan's base Room price.
+        credit_cost = credit_cost if credit_cost is not None else room_cost_for_plan(plan)
 
         run = RoomRun(
             id=run_id,
@@ -1582,6 +1743,39 @@ class RoomRunner:
         # recovery path. Without this, the run_id only landed on the final
         # `done` event, useless to a disconnected client.
         yield RoomEvent(kind="started", run_id=run_id)
+
+        # CR090 (D3/D4) — the live-data disclosure, emitted STRUCTURALLY from the
+        # runner with the model completely out of the loop. A prompt instruction
+        # would be dropped ~70% of the time (CR038) and the user would silently
+        # believe the synthetic block is just how the agent behaves — DEF059's
+        # exact shape. Resolve the feeds ONCE here (start_run pre-resolves +
+        # prices them; None only on the respawn/direct path, where entitled=True
+        # reproduces the pre-CR090 behaviour) and thread the SAME objects into
+        # the profile the agents see, so what was charged always matches what was
+        # rendered. The surcharge reported is what was ACTUALLY billed
+        # (credit_cost − base), never merely what the feeds imply.
+        if news_feed is None:
+            news_feed = (
+                resolve_news_feed(ticker, entitled=True)
+                if settings.use_real_market_data
+                else NewsFeed(LiveDataState.UNAVAILABLE, ())
+            )
+        if social_feed is None:
+            social_feed = (
+                resolve_social_feed(ticker, entitled=True)
+                if settings.use_real_market_data
+                else SocialFeed(LiveDataState.UNAVAILABLE, None)
+            )
+        surcharge_charged = max(0, credit_cost - room_cost_for_plan(plan))
+        yield RoomEvent(
+            kind="live_data_notice",
+            run_id=run_id,
+            live_data={
+                "news": news_feed.state.value,
+                "social": social_feed.state.value,
+                "surcharge_charged": surcharge_charged,
+            },
+        )
 
         # Halal universe: sourced AAOIFI allowlist w/ three-state resolver + loud degrade (CR069).
         halal = halal_universe or await default_halal_universe_async()
@@ -1636,7 +1830,9 @@ class RoomRunner:
             sector_holdings=sector_holdings,
             sector_marks=sector_marks,
             sector_weights=sector_weights,
-            profile=_profile_for_ticker(ticker),
+            profile=_profile_for_ticker(
+                ticker, news_feed=news_feed, social_feed=social_feed
+            ),
         )
 
         profile = ctx.profile

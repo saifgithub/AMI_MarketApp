@@ -351,6 +351,17 @@ def _format_profile(profile: dict[str, Any]) -> str:
     technicals_live = profile.get("technicals_source") == "live"
     news_live = profile.get("news_source") == "live"
     social_live = profile.get("social_source") == "live"
+    # CR090: the 3-state live-data marker the runner resolves BEFORE the debate
+    # (news_state / social_state). "withheld_paid" is the paid-feature-gated
+    # state — distinct from "unavailable" (no data exists). This header line is
+    # the ANTI-FABRICATION measure only: it stops the agent inventing news /
+    # sentiment to paper over the gap. The user-facing guarantee is the
+    # structural `live_data_notice` event the runner emits with the model out of
+    # the loop (D3) — NOT this prompt string, which agents drop ~70% of the time.
+    # Absent (non-Room callers / older profiles) it degrades to the binary
+    # live/not-live reading, unchanged.
+    news_withheld = profile.get("news_state") == "withheld_paid"
+    social_withheld = profile.get("social_state") == "withheld_paid"
 
     header_lines = ["Data source disclosure — some fields below are real, some are not:"]
     if fundamentals_live:
@@ -381,6 +392,15 @@ def _format_profile(profile: dict[str, Any]) -> str:
             "(publisher + recency shown below). Some headlines may carry a "
             "sentiment tag; treat it as one input, not a verdict."
         )
+    elif news_withheld:
+        header_lines.append(
+            "- Recent catalyst/headline: a LIVE news feed IS available for this "
+            "ticker but is a PAID feature this user has not purchased for this "
+            "run — it is withheld. The catalyst/headline field below is alpha "
+            "simulation scaffolding, NOT real news. Do NOT invent headlines, a "
+            "sentiment tag, or a catalyst to fill the gap, and do NOT imply the "
+            "live feed was consulted."
+        )
     else:
         header_lines.append(
             "- Recent catalyst/headline: alpha simulation scaffolding — NOT "
@@ -391,6 +411,15 @@ def _format_profile(profile: dict[str, Any]) -> str:
             "- Retail sentiment/mention/community fields: LIVE, real Reddit "
             "aggregate data as of this call (Reddit only — no Twitter/X, "
             "StockTwits, Google Trends, or Discord data exists)."
+        )
+    elif social_withheld:
+        header_lines.append(
+            "- Retail sentiment/mention/community fields: a LIVE Reddit "
+            "sentiment feed IS available for this ticker but is a PAID feature "
+            "this user has not purchased for this run — it is withheld. The "
+            "sentiment/mention fields below are alpha simulation scaffolding, "
+            "NOT real social data. Do NOT invent a sentiment score, mention "
+            "count, or community read to fill the gap."
         )
     else:
         header_lines.append(

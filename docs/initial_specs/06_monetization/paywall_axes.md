@@ -2,7 +2,7 @@
 
 The complete table of what's free, what's paid, and at which tier.
 
-24 axes considered. Verdict and tier per axis.
+25 axes considered. Verdict and tier per axis.
 
 ## The full table
 
@@ -33,6 +33,29 @@ The complete table of what's free, what's paid, and at which tier.
 | 22 | **Per-agent performance review** (Phase 2) | Aggregate only | Per-agent scorecards + mute/promote | Same as Trader + 1-on-1 reviews | Phase 2 |
 | 23 | **Customer support** | Concierge | + standard email | + priority 24h human | Light touch |
 | 24 | **Cosmetic themes** (Phase 2) | Default | Default + 2 alt | All palettes + custom | Phase 2 |
+| 25 | **Live News/Social Analyst data feed** | Credit surcharge per live feed; else loud "paid feature" disclosure + honest synthetic fallback | Same surcharge | Same surcharge | CR090 — metered by **credits, not a tier lock** |
+
+### Axis #25 — Live News/Social Analyst data feed (CR090)
+
+The News Analyst's Alpha Vantage NEWS_SENTIMENT feed (CR023) and the Social Media
+Analyst's Adanos Reddit feed (CR024) cost real money per call. CR090 meters them:
+
+- **Surcharge, not a tier lock (decided live, Saiful 2026-07-25):** a Room turn that
+  actually fires a live feed with real data adds **+2 credits per live feed**
+  (`LIVE_DATA_SURCHARGE`, beside `ROOM_COST_BASIC`). Basic Room with both feeds live =
+  8 + 2 + 2 = 12. The base Room price is untouched — the surcharge stacks.
+- **Entitlement is the credit balance, not the plan.** Any plan can buy live feeds if
+  the balance covers `base + surcharge`; short on credits ⇒ the feeds are withheld and
+  the run proceeds on the honest synthetic fallback. No flat Floor-Pass block.
+- **All-or-nothing on the live bundle** — a run buys both live feeds or neither, so the
+  price never depends on an unpredictable per-feed tie-break.
+- **Degrade loudly (CR040/DEF059).** Withheld ≠ unavailable. A `withheld_paid` feed
+  emits a **structural** `live_data_notice` event (model out of the loop) so the client
+  can say "this agent's live feed is a paid feature," never a silent synthetic
+  substitution. `unavailable` (no data exists) keeps the CR023/CR024 illustrative
+  fallback byte-for-byte. Only `live` costs credits.
+- **Free-tier sanctity untouched:** the surcharge is a power-feature meter (operations
+  volume), not a gate on mandate, halal screening, or education.
 
 ## Free-tier sanctity
 

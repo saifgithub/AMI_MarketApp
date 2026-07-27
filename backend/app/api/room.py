@@ -8,6 +8,9 @@ GET  /v1/room/user/{user_id}  List recent runs for a user.
 The stream wire format mirrors the 1-on-1 SSE pattern but adds richer event
 types so the Flutter console can colour-code by phase + agent.
 
+  event: live_data_notice
+  data: {"news": "withheld_paid", "social": "unavailable", "surcharge_charged": 0}
+
   event: phase
   data: {"label": "ANALYSTS"}
 
@@ -219,6 +222,14 @@ async def stream_room(
                 if ev.kind == "started":
                     payload = json.dumps({"run_id": str(ev.run_id)})
                     yield f"event: started\ndata: {payload}\n\n"
+                elif ev.kind == "live_data_notice":
+                    # CR090 (D3): the structural live-data disclosure — the model
+                    # is out of the loop; the client renders `live_data` (each
+                    # feed's 3-state marker + the surcharge actually charged).
+                    # CR090-MOBILE adds the render; the shipped client tolerates
+                    # this unknown event kind (its SSE switch has no default).
+                    payload = json.dumps(ev.live_data or {})
+                    yield f"event: live_data_notice\ndata: {payload}\n\n"
                 elif ev.kind == "phase":
                     payload = json.dumps({"label": ev.phase})
                     yield f"event: phase\ndata: {payload}\n\n"
