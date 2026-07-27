@@ -51,6 +51,22 @@ _BLOCKING_LEAF_METHOD_NAMES = {
     "current_history",
     "current_news",
     "current_earnings",
+    # DEF120: SimEngine.portfolio_marks_snapshot / valuation_snapshot are
+    # themselves the call-site the route must to_thread — they fan out over
+    # a sync ThreadPoolExecutor internally (`_marks_with_quotes`), which
+    # passes `current_quote` BY REFERENCE to `pool.map`, not as a direct
+    # call. That's correct (D2) but it means `current_quote` itself is no
+    # longer reachable by this walk from inside these two methods — the
+    # chain breaks 1-2 hops before the actual leaf. Without these two names
+    # here, a route that calls `sim.portfolio_marks_snapshot(user_id)` or
+    # `sim.valuation_snapshot(user_id)` directly (mutation-proved: reverting
+    # `get_portfolio`'s `to_thread` wrap left the guard green without this)
+    # is invisible to the guard even though it genuinely blocks the event
+    # loop — `pool.map()` still runs and blocks on the calling thread if
+    # that thread is the event loop. These names are the actual observable
+    # boundary now; treat them as leaves in their own right.
+    "portfolio_marks_snapshot",
+    "valuation_snapshot",
 }
 _BLOCKING_LEAF_FUNC_NAMES = {
     "build_live_data_block",
