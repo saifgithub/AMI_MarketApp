@@ -7,6 +7,7 @@
 library;
 
 import 'package:ami_trade/models/sim.dart';
+import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -42,4 +43,13 @@ final tickerEarningsProvider =
     FutureProvider.autoDispose.family<SimEarnings, String>((ref, ticker) async {
   final api = ref.watch(apiClientProvider);
   return api.simEarnings(ticker);
+});
+
+/// CR029 — per-lot cost-basis feed for one held ticker, entry point from
+/// Ticker Detail's lots section.
+final tickerLotsProvider =
+    FutureProvider.autoDispose.family<HoldingLots, String>((ref, ticker) async {
+  final api = ref.watch(apiClientProvider);
+  final userId = await DeviceUser.getOrCreate();
+  return api.simHoldingLots(userId, ticker);
 });

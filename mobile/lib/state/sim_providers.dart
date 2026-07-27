@@ -139,3 +139,13 @@ final simNotifierProvider = StateNotifierProvider<SimNotifier, SimState>((ref) {
   Future.microtask(n.refresh);
   return n;
 });
+
+/// CR026 — sector-allocation donut + concentration-compliance feed for the
+/// Portfolio screen. Own provider (not folded into SimState) since it's a
+/// distinct read-only endpoint the holdings list doesn't otherwise need.
+final sectorAllocationProvider =
+    FutureProvider.autoDispose<SectorAllocation>((ref) async {
+  final api = ref.watch(apiClientProvider);
+  final userId = await DeviceUser.getOrCreate();
+  return api.sectorAllocation(userId);
+});

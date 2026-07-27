@@ -162,16 +162,26 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
               ),
               const SizedBox(height: AmiSpacing.l),
               earningsAsync.when(
-                data: (e) => e.hasData
-                    ? Padding(
-                        padding:
-                            const EdgeInsets.only(bottom: AmiSpacing.s),
-                        child: _EarningsPill(earnings: e),
-                      )
-                    : const SizedBox.shrink(),
+                data: (e) => (!e.hasData && !e.hasDividendData)
+                    ? const SizedBox.shrink()
+                    : Padding(
+                        padding: const EdgeInsets.only(bottom: AmiSpacing.s),
+                        child: Wrap(
+                          spacing: AmiSpacing.s,
+                          runSpacing: AmiSpacing.s,
+                          children: [
+                            if (e.hasData) _EarningsPill(earnings: e),
+                            // CR100/CR030 — hidden when both dividend
+                            // fields are null (non-payer / no window).
+                            if (e.hasDividendData) _DividendChip(earnings: e),
+                          ],
+                        ),
+                      ),
                 loading: () => const SizedBox.shrink(),
                 error: (_, __) => const SizedBox.shrink(),
               ),
+              if (isHeld)
+                _LotsSection(ticker: ticker),
               newsAsync.when(
                 data: (n) => n.articles.isEmpty
                     ? const SizedBox.shrink()
@@ -641,6 +651,230 @@ class _EarningsPill extends StatelessWidget {
     } catch (_) {
       return iso;
     }
+  }
+}
+
+
+/// CR100/CR030 — dividend sub-chip beside the earnings pill. The caller
+/// already checks `hasDividendData`; this widget renders whichever of the
+/// two fields is present (either alone is enough to show the chip).
+class _DividendChip extends StatelessWidget {
+  const _DividendChip({required this.earnings});
+
+  final SimEarnings earnings;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final dateStr = _fmtDate(earnings.exDividendDate);
+    final rate = earnings.dividendRate;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: AmiSpacing.m, vertical: AmiSpacing.s),
+      decoration: BoxDecoration(
+        color: AmiColors.hexGreen.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.hexGreen.withValues(alpha: 0.45)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.payments_outlined,
+              color: AmiColors.hexGreen, size: 14),
+          const SizedBox(width: AmiSpacing.s),
+          if (dateStr != null)
+            Text(
+              l.tickerDetailDividendExDate(dateStr),
+              style: AmiTypography.labelMono
+                  .copyWith(color: AmiColors.hexGreen, fontSize: 11),
+            ),
+          if (dateStr != null && rate != null) const SizedBox(width: 6),
+          if (rate != null)
+            Text(
+              l.tickerDetailDividendRate('\$${rate.toStringAsFixed(2)}'),
+              style: AmiTypography.labelMono
+                  .copyWith(color: AmiColors.textMed, fontSize: 11),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Format "YYYY-MM-DD" → "Aug 15".
+  static String? _fmtDate(String? iso) {
+    if (iso == null) return null;
+    try {
+      final dt = DateTime.parse(iso);
+      return DateFormat.MMMd().format(dt);
+    } catch (_) {
+      return iso;
+    }
+  }
+}
+
+
+/// CR100/CR029 — per-lot cost-basis cards, shown only for a held ticker.
+/// Entry point into the FIFO reconstruction: each buy lot's entry, how much
+/// is still open vs. closed, and its realised/unrealised P&L.
+class _LotsSection extends ConsumerWidget {
+  const _LotsSection({required this.ticker});
+
+  final String ticker;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lotsAsync = ref.watch(tickerLotsProvider(ticker));
+    return lotsAsync.when(
+      data: (h) => h.lots.isEmpty
+          ? const SizedBox.shrink()
+          : Padding(
+              padding: const EdgeInsets.only(bottom: AmiSpacing.m),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppLocalizations.of(context).tickerDetailLotsHeading,
+                    style: AmiTypography.labelMono,
+                  ),
+                  const SizedBox(height: AmiSpacing.s),
+                  for (final lot in h.lots) _LotCard(lot: lot),
+                ],
+              ),
+            ),
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+
+class _LotCard extends StatelessWidget {
+  const _LotCard({required this.lot});
+
+  final Lot lot;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final fmt = NumberFormat('#,##0.00');
+    final entryFmt = DateFormat.yMMMd();
+    DateTime? entryDate;
+    try {
+      entryDate = DateTime.parse(lot.entryDate);
+    } catch (_) {
+      entryDate = null;
+    }
+    final realised = lot.realisedPnl;
+    final realisedAccent = realised >= 0 ? AmiColors.hexGreen : AmiColors.hexRed;
+    final unrealised = lot.unrealisedPnl;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.all(AmiSpacing.m),
+        decoration: BoxDecoration(
+          color: AmiColors.slate800,
+          borderRadius: BorderRadius.circular(AmiRadii.card),
+          border: Border.all(color: AmiColors.slate700),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l.tickerDetailLotEntry(
+                      entryDate == null
+                          ? lot.entryDate
+                          : entryFmt.format(entryDate),
+                      fmt.format(lot.entryPrice),
+                    ),
+                    style: AmiTypography.caption,
+                  ),
+                ),
+                _LotStatusChip(status: lot.status),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l.tickerDetailLotQuantity(
+                lot.quantityOpen.toStringAsFixed(2),
+                lot.quantityClosed.toStringAsFixed(2),
+              ),
+              style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Text(
+                  l.tickerDetailLotRealised(
+                    '${realised >= 0 ? '+' : ''}\$${fmt.format(realised)}',
+                  ),
+                  style: AmiTypography.labelMono
+                      .copyWith(color: realisedAccent, fontSize: 11),
+                ),
+                const SizedBox(width: AmiSpacing.m),
+                // CR029/CR100 — a closed lot's unrealised P&L is absent,
+                // not zero; never coerce `unrealised` to 0.00 here.
+                Text(
+                  unrealised == null
+                      ? l.tickerDetailLotUnrealisedUnknown
+                      : l.tickerDetailLotUnrealised(
+                          '${unrealised >= 0 ? '+' : ''}\$${fmt.format(unrealised)}',
+                        ),
+                  style: AmiTypography.labelMono.copyWith(
+                    color: unrealised == null
+                        ? AmiColors.textLow
+                        : (unrealised >= 0 ? AmiColors.hexGreen : AmiColors.hexRed),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+class _LotStatusChip extends StatelessWidget {
+  const _LotStatusChip({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final String label;
+    final Color color;
+    switch (status) {
+      case 'open':
+        label = l.tickerDetailLotStatusOpen;
+        color = AmiColors.hexCyan;
+        break;
+      case 'closed':
+        label = l.tickerDetailLotStatusClosed;
+        color = AmiColors.textLow;
+        break;
+      default:
+        label = l.tickerDetailLotStatusPartiallyClosed;
+        color = AmiColors.hexAmber;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        label,
+        style: AmiTypography.labelMono.copyWith(color: color, fontSize: 9),
+      ),
+    );
   }
 }
 

@@ -139,6 +139,8 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
         children: [
           _ValueCard(key: _valueCardKey, portfolio: p),
           const SizedBox(height: AmiSpacing.m),
+          const _SectorAllocationSection(),
+          const SizedBox(height: AmiSpacing.m),
           _WatchlistSection(key: _watchlistKey, state: watchlist),
           const SizedBox(height: AmiSpacing.m),
           if (p.holdings.isEmpty)
@@ -412,6 +414,193 @@ class _QuoteSourcePill extends StatelessWidget {
       fontSize: 10,
     );
   }
+}
+
+
+// ── Sector allocation donut (CR100/CR026) ───────────────────────────────
+
+
+class _SectorAllocationSection extends ConsumerWidget {
+  const _SectorAllocationSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(sectorAllocationProvider);
+    return async.when(
+      data: (a) =>
+          a.allocation.isEmpty ? const SizedBox.shrink() : _SectorAllocationCard(allocation: a),
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+
+class _SectorAllocationCard extends StatelessWidget {
+  const _SectorAllocationCard({required this.allocation});
+
+  final SectorAllocation allocation;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final compliance = allocation.compliance;
+    // Deterministic order: known sectors by descending weight, "Other" last
+    // — keeps the legend stable across refreshes and the disclosed
+    // unclassified bucket visually distinct from the ranked sectors.
+    final entries = allocation.allocation.entries.toList()
+      ..sort((a, b) {
+        if (a.key == 'Other') return 1;
+        if (b.key == 'Other') return -1;
+        return b.value.compareTo(a.value);
+      });
+
+    return Container(
+      padding: const EdgeInsets.all(AmiSpacing.m),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.slate700),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.portfolioSectorAllocationHeading, style: AmiTypography.labelMono),
+          const SizedBox(height: AmiSpacing.s),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 72,
+                height: 72,
+                child: CustomPaint(
+                  painter: _DonutPainter(entries: entries),
+                ),
+              ),
+              const SizedBox(width: AmiSpacing.m),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final e in entries) _SectorLegendRow(sector: e.key, weight: e.value),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // Breach line reads straight off the response — never re-derives
+          // "Other" into a breach (DEF059 inversion guard) and never
+          // hard-codes the 0.40 mandate default.
+          if (!compliance.compliant && compliance.maxSectorName != null) ...[
+            const SizedBox(height: AmiSpacing.s),
+            Text(
+              l.portfolioSectorBreach(
+                compliance.maxSectorName!,
+                (compliance.maxSector * 100).toStringAsFixed(0),
+                (compliance.maxAllowed * 100).toStringAsFixed(0),
+              ),
+              style: AmiTypography.caption.copyWith(color: AmiColors.hexRed),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+
+class _SectorLegendRow extends StatelessWidget {
+  const _SectorLegendRow({required this.sector, required this.weight});
+
+  final String sector;
+  final double weight;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final color = _sectorColor(sector);
+    final label = sector == 'Other' ? l.portfolioSectorOtherLabel : sector;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              label,
+              style: AmiTypography.caption,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Text(
+            '${(weight * 100).toStringAsFixed(1)}%',
+            style: AmiTypography.labelMono.copyWith(fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+/// Deterministic sector -> color mapping. "Other" always renders neutral
+/// gray — never the red/amber palette a breach indicator would use, per the
+/// DEF059 inversion guard (the "Other" bucket is disclosed, never a breach).
+Color _sectorColor(String sector) {
+  if (sector == 'Other') return AmiColors.slate500;
+  const palette = [
+    AmiColors.hexCyan,
+    AmiColors.hexPurple,
+    AmiColors.hexAmber,
+    AmiColors.hexGreen,
+    AmiColors.hexPink,
+    AmiColors.hexBlue,
+    AmiColors.hexOrange500,
+    AmiColors.hexIndigo600,
+  ];
+  return palette[sector.hashCode.abs() % palette.length];
+}
+
+
+class _DonutPainter extends CustomPainter {
+  const _DonutPainter({required this.entries});
+
+  final List<MapEntry<String, double>> entries;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final total = entries.fold<double>(0, (sum, e) => sum + e.value);
+    if (total <= 0) return;
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    const strokeWidth = 12.0;
+    var startAngle = -1.5707963267948966; // -pi/2, start at 12 o'clock
+    for (final e in entries) {
+      final sweep = (e.value / total) * 6.283185307179586; // 2*pi
+      final paint = Paint()
+        ..color = _sectorColor(e.key)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.butt;
+      canvas.drawArc(
+        rect.deflate(strokeWidth / 2),
+        startAngle,
+        sweep,
+        false,
+        paint,
+      );
+      startAngle += sweep;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DonutPainter oldDelegate) =>
+      !identical(oldDelegate.entries, entries);
 }
 
 
