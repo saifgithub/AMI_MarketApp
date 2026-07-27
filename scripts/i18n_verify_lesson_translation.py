@@ -2,11 +2,21 @@
 """Score AR/MS lesson translations for semantic fidelity (CR083 Tier 3).
 
 Placeholder-parity checks in translate_lessons_lan.py catch corruption
-(dropped {placeholders}, mismatched MDX sentinels) — not *meaning*. Two
-independent, always-on models on the LAN provide the cross-check:
+(dropped {placeholders}, mismatched MDX sentinels) — not *meaning*. Three
+independent, always-on models on the LAN provide the cross-check — each on
+its own port, so primary/falcon can be called concurrently (never send
+concurrent requests to the *same* port):
 
   - "primary" (ami-llm, http://192.168.20.74:8000) — the same model that
     did the translation. Whole-lesson-body single-shot; 262k context.
+  - "falcon" (falcon-h1-34b-gptq, http://192.168.20.74:8044, separate port
+    on the same physical host as primary) — the 2nd always-on model added
+    2026-07-27. AR+MS. 32768 context; whole-lesson-body single-shot
+    (worst-case lesson in the corpus measures ~5.8k prompt tokens, ~5.5x
+    headroom — no chunking needed). Adversarially tested as clearly better
+    than allam/JAIS at catching genuine meaning-inverting errors (see CR083
+    history) — this is what brought lessons up to the 2-model verified bar
+    at corpus scale for the first time.
   - "allam" (allam-7b-instruct, http://192.168.20.74:8040, same physical
     host as primary — resolves via ami-host.local) — an Arabic-specialized
     model (SDAIA ALLaM), AR-only (tested weak/unreliable on Malay).
@@ -24,27 +34,29 @@ independent, always-on models on the LAN provide the cross-check:
     just the section (or, if heading counts themselves don't match, the
     whole body) where structural correspondence breaks down. Verify each
     resulting chunk independently, then take the worst-case across chunks
-    (min confidence, AND of meaning_preserved, union of issues).
+    (min confidence, AND of meaning_preserved, union of issues). In
+    practice allam echoes candidate text back as "critique" more often
+    than it critiques (confirmed noise) — treat its results as the weakest
+    signal of the three, useful mainly as a 3rd pass for strict_review.
 
 Run repeatably — results accumulate in content/i18n/lesson_confidence_log.json,
-keyed by (lesson_id, locale, model). A future third model (e.g. manually
-swapped onto the primary host) still works the same way: it just becomes
-a third distinct entry in the log.
+keyed by (lesson_id, locale, model).
 
 "Reasonable confidence" (computed by --summary, not stored per-check):
   - Ordinary lessons: verified once >=2 distinct models agree (each
-    scoring >=4/5) with zero unresolved critical_issues.
+    scoring >=4/5) with zero unresolved critical_issues. primary+falcon
+    alone now satisfies this for every lesson with both translations.
   - `strict_review` lessons (content/i18n/sensitive_keys.json) — the
     Islamic-finance unit: verified once >=3 distinct models agree, with
-    zero issues of ANY severity (critical or minor). With only 2
-    always-on models, this cluster still needs one manually-swapped pass
-    on the primary host to close.
+    zero issues of ANY severity (critical or minor). Needs primary+falcon
+    +allam (AR) together; MS strict_review lessons still cap at 2 models
+    (allam is AR-only) until a 3rd MS-capable model exists.
 
 Usage:
   scripts/i18n_verify_lesson_translation.py --ids 001_what_is_a_stock
   scripts/i18n_verify_lesson_translation.py --limit 5          # smoke test
   scripts/i18n_verify_lesson_translation.py --all
-  scripts/i18n_verify_lesson_translation.py --models allam     # AR-only, skip primary
+  scripts/i18n_verify_lesson_translation.py --models primary falcon  # 2-model pass, skip allam
   scripts/i18n_verify_lesson_translation.py --summary          # no calls; report status from the log
 """
 
@@ -79,6 +91,11 @@ LOCALES = ("ar", "ms")
 ENDPOINTS: dict[str, dict[str, Any]] = {
     "primary": {
         "url": os.environ.get("AMI_VLLM_URL", "http://192.168.20.74:8000"),
+        "locales": ("ar", "ms"),
+        "chunk_chars": None,
+    },
+    "falcon": {
+        "url": os.environ.get("AMI_FALCON_URL", "http://192.168.20.74:8044"),
         "locales": ("ar", "ms"),
         "chunk_chars": None,
     },
@@ -413,9 +430,20 @@ def main() -> int:
 
     with httpx.Client(timeout=DEFAULT_TIMEOUT_S) as client:
         model_by_endpoint: dict[str, str] = {}
+        active_models: list[str] = []
         for name in args.models:
-            model_by_endpoint[name] = _current_model(client, ENDPOINTS[name]["url"])
+            try:
+                model_by_endpoint[name] = _current_model(client, ENDPOINTS[name]["url"])
+            except (httpx.HTTPError, RuntimeError) as exc:
+                print(f"WARNING: {name} ({ENDPOINTS[name]['url']}) unreachable, skipping for this run: "
+                      f"{type(exc).__name__}: {exc}", file=sys.stderr)
+                continue
+            active_models.append(name)
             print(f"{name}: {ENDPOINTS[name]['url']} -> model={model_by_endpoint[name]}")
+
+        if not active_models:
+            print("No endpoints reachable — aborting.", file=sys.stderr)
+            return 1
 
         checked = 0
         for lesson_id in lesson_ids:
@@ -428,7 +456,7 @@ def main() -> int:
                 if not tr_path.exists():
                     continue
                 tr_body = _body_only(tr_path.read_text(encoding="utf-8"))
-                for name in args.models:
+                for name in active_models:
                     endpoint = ENDPOINTS[name]
                     if locale not in endpoint["locales"]:
                         continue
