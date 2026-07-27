@@ -25,6 +25,7 @@ parent set to classify).
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from uuid import UUID, uuid4
@@ -39,9 +40,10 @@ from app.api.portfolio import get_sector_map, router as portfolio_router
 from app.db import get_session
 from app.schemas import Mandate, RiskComponents
 from app.schemas.agents import AgentId
-from app.schemas.trade import ProposedTrade, Side
+from app.schemas.trade import OrderType, ProposedTrade, Side
 from app.services import classification_universe as cu
 from app.services import sector_allocation as salloc
+from app.services.classification_universe import default_classification_universe
 from app.services.coach_engine import hydrate_coach_mandate
 from app.services.sector_allocation import (
     OTHER,
@@ -50,8 +52,18 @@ from app.services.sector_allocation import (
     sector_cap_breach,
     sector_concentration_cap,
 )
+from app.services.sharia_universe import default_halal_universe
 from app.services.sim_engine import SimEngine, get_sim_engine
 from app.services import market_data as _md
+
+
+def _collect(coro_gen) -> list:
+    async def run():
+        events = []
+        async for ev in coro_gen:
+            events.append(ev)
+        return events
+    return asyncio.run(run())
 
 
 # ── Duck-typed holding (only .ticker / .quantity are read) ────────────────────
@@ -449,3 +461,219 @@ def test_non_pm_agent_gets_no_sector_line(base_mandate: Mandate):
         sector_weights={"Technology": 0.62},
     )
     assert "sector allocation" not in system_prompt.lower()
+
+
+# ── 8. Round-2 audit requirement — structural per-call-site wiring tests ──────
+#
+# The round-1 audit (CR026.auditor.md) found that every test above exercises
+# the PURE `check_mandate_compliance`/`sector_cap_breach` functions directly
+# with hand-built holdings/quotes/sector_map arguments — none of them pin
+# that the four REAL call sites actually supply those three arguments. Block
+# 6b is designed to silently no-op when sector context is absent (backward
+# compat for legacy callers), so a regression that drops the wiring at any
+# one of these sites would silently disable the D-5 sector-concentration
+# cap with zero test failure. Round 2 requires one structural test per site
+# (mirrors CR055's "any call site" pattern) — each verified red when its
+# call site's wiring is removed, then restored, before landing this file.
+
+
+def test_sim_engine_submit_rejects_a_sector_breaching_buy_end_to_end():
+    """SimEngine.submit() end-to-end — not check_mandate_compliance() directly.
+
+    Would go red if sim_engine.py's submit() dropped
+    holdings=/quotes=/sector_map= from its check_mandate_compliance() call.
+    """
+    now = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
+    with get_session() as s:
+        cu.write_snapshot(
+            s, classified=set(_SECTORS), fossil=set(), sin=set(), defense=set(),
+            fetched_at=now, sectors=dict(_SECTORS),
+        )
+    salloc.reset_sector_map_provider(None)
+    try:
+        user_id = uuid4()
+        sim = SimEngine(provider=_ConstProvider(100.0))
+        mandate = hydrate_coach_mandate({"plan": "trader"})
+        # Tech 30% / FS 30% / Energy 40% book on $10k invested (mirrors the
+        # pure-function fixture above).
+        for ticker, qty in (("AAPL", 30), ("JPM", 30), ("XOM", 40)):
+            r = sim.submit(
+                user_id=user_id, ticker=ticker, side=Side.BUY,
+                quantity=qty, mandate=mandate,
+            )
+            assert r.accepted, r.compliance.violations
+
+        # Buying $2000 more Tech (MSFT) → 5000/12000 = 41.7% > 40% cap. LIMIT
+        # order (not MARKET) — block 6b prices the proposed BUY off
+        # `proposed.limit_price` (the FLAG 2 market-order gap parity noted in
+        # the round-1 audit), so a MARKET order here would price at $0 and
+        # never reach the sector check at all.
+        result = sim.submit(
+            user_id=user_id, ticker="MSFT", side=Side.BUY,
+            quantity=20, mandate=mandate,
+            order_type=OrderType.LIMIT, limit_price=100.0,
+        )
+        assert not result.accepted
+        assert result.compliance.blocked_by == "compliance"
+        assert any(
+            "sector-concentration limit" in v.lower()
+            for v in result.compliance.violations
+        )
+    finally:
+        salloc.reset_sector_map_provider(None)
+
+
+def test_sim_engine_preview_rejects_a_sector_breaching_buy_end_to_end():
+    """SimEngine.preview() end-to-end — the dry-run gate, same as submit().
+
+    Would go red if sim_engine.py's preview() dropped
+    holdings=/quotes=/sector_map= from its check_mandate_compliance() call.
+    """
+    now = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
+    with get_session() as s:
+        cu.write_snapshot(
+            s, classified=set(_SECTORS), fossil=set(), sin=set(), defense=set(),
+            fetched_at=now, sectors=dict(_SECTORS),
+        )
+    salloc.reset_sector_map_provider(None)
+    try:
+        user_id = uuid4()
+        sim = SimEngine(provider=_ConstProvider(100.0))
+        mandate = hydrate_coach_mandate({"plan": "trader"})
+        for ticker, qty in (("AAPL", 30), ("JPM", 30), ("XOM", 40)):
+            r = sim.submit(
+                user_id=user_id, ticker=ticker, side=Side.BUY,
+                quantity=qty, mandate=mandate,
+            )
+            assert r.accepted, r.compliance.violations
+
+        # LIMIT order — see the submit() test above for why (block 6b prices
+        # off `proposed.limit_price`, the FLAG 2 market-order gap parity).
+        preview = sim.preview(
+            user_id=user_id, ticker="MSFT", side=Side.BUY,
+            quantity=20, mandate=mandate,
+            order_type=OrderType.LIMIT, limit_price=100.0,
+        )
+        assert not preview.accepted
+        assert preview.compliance.blocked_by == "compliance"
+        assert any(
+            "sector-concentration limit" in v.lower()
+            for v in preview.compliance.violations
+        )
+    finally:
+        salloc.reset_sector_map_provider(None)
+
+
+def test_assemble_verdict_scripted_path_rejects_a_sector_breaching_buy(
+    base_mandate: Mandate,
+):
+    """room_runner._assemble_verdict (scripted/non-live path) — sector context
+    (ctx.sector_holdings/ctx.sector_marks/ctx.sector_map) must reach the
+    deterministic safety-floor call.
+
+    Would go red if _assemble_verdict dropped
+    holdings=ctx.sector_holdings/quotes=ctx.sector_marks/sector_map=ctx.sector_map
+    from its check_mandate_compliance() call.
+    """
+    from app.schemas.room import VerdictAction
+    from app.services.room_runner import _RoomContext, _assemble_verdict
+
+    holdings = [_H("AAPL", 30), _H("JPM", 30), _H("XOM", 40)]
+    quotes = {"AAPL": 100.0, "JPM": 100.0, "XOM": 100.0}
+    ctx = _RoomContext(
+        ticker="MSFT",
+        mandate=base_mandate,
+        portfolio_value=10_000.0,
+        current_drawdown_pct=0.0,
+        halal_universe=default_halal_universe(),
+        classification_universe=default_classification_universe(),
+        locale_allowed_universe=None,
+        sector_map=_map(),
+        sector_holdings=holdings,
+        sector_marks=quotes,
+    )
+    # 20% of $10k at $100 entry = 20 shares = $2000 buy — matches the pure-
+    # function breach fixture (Tech 3000+2000 of 12000 = 41.7% > 40% cap).
+    ctx.trader_entry = 100.0
+    ctx.trader_size_pct = 20.0
+
+    verdict = _assemble_verdict(ctx, profile={})
+    assert verdict.action == VerdictAction.REJECT
+    assert any(
+        "sector-concentration limit" in v.lower() for v in verdict.violations
+    )
+
+
+class _SectorPmGateway:
+    """Minimal fake LLMGateway whose PM always APPROVEs a large buy — used to
+    prove the deterministic safety floor, not the LLM, is what blocks the
+    sector-breaching trade on the live-PM path."""
+
+    def has_real_provider(self) -> bool:
+        return True
+
+    async def stream_chat(self, *, system_prompt, messages, model_tier,
+                           locale="en", max_tokens=1024, **_audit):
+        if "speak as the portfolio manager" in system_prompt.lower():
+            text = (
+                '{"action": "APPROVE", "size_pct": 20.0, "entry": 100, '
+                '"stop": 94, "target": 113, "horizon_days": 42, '
+                '"narration": "PM: APPROVE; go big."}'
+            )
+        else:
+            text = "Agent reply."
+        mid = len(text) // 2
+        yield text[:mid]
+        yield text[mid:]
+
+
+def test_room_runner_live_pm_enforce_safety_floor_rejects_sector_breach():
+    """room_runner's live-PM enforce_safety_floor call site — sector context
+    must reach the deterministic veto of a PM APPROVE, same as the scripted
+    path above.
+
+    Would go red if the live-PM `enforce_safety_floor(...)` call dropped
+    holdings=ctx.sector_holdings/quotes=ctx.sector_marks/sector_map=ctx.sector_map.
+    """
+    from app.services.room_runner import RoomRunner
+    from app.schemas.room import VerdictAction as _VA
+
+    now = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
+    with get_session() as s:
+        cu.write_snapshot(
+            s, classified=set(_SECTORS), fossil=set(), sin=set(), defense=set(),
+            fetched_at=now, sectors=dict(_SECTORS),
+        )
+    salloc.reset_sector_map_provider(None)
+    try:
+        sim = get_sim_engine()
+        user_id = uuid4()
+        mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+
+        # Tech 30% / FS 30% / Energy 40% book, sized off the REAL deterministic
+        # mock-walk price (this is the process-wide sim engine room_runner uses).
+        for ticker, target_value in (("AAPL", 3000.0), ("JPM", 3000.0), ("XOM", 4000.0)):
+            price = sim.current_price(ticker)
+            qty = target_value / price
+            r = sim.submit(
+                user_id=user_id, ticker=ticker, side=Side.BUY,
+                quantity=qty, mandate=mandate,
+            )
+            assert r.accepted, r.compliance.violations
+
+        # A liberal PM APPROVEs a 20%-of-portfolio ($20k default portfolio_value)
+        # Tech (MSFT) buy — massively over the sector cap regardless of exact
+        # rounding, so the deterministic floor, not the LLM, must veto it.
+        runner = RoomRunner(llm=_SectorPmGateway())  # type: ignore[arg-type]
+        events = _collect(runner.run(
+            user_id=user_id, ticker="MSFT", mandate=mandate,
+            char_delay_min=0.0, char_delay_max=0.0,
+        ))
+        v = next(e.verdict for e in events if e.kind == "verdict")
+        assert v.action == _VA.REJECT.value
+        assert v.overridden_from_llm is True
+        assert any(
+            "sector-concentration limit" in vio.lower() for vio in v.violations
+        )
+    finally:
+        salloc.reset_sector_map_provider(None)
