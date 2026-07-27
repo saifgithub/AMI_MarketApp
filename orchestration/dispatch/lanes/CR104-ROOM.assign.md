@@ -6,7 +6,7 @@ INSTANCE: coder.room
 GATE: independent    <!-- The CR's own Governance section requires it: this changes what every agent is told is true, upstream of the safety floor's inputs. It also closes DEF123, a live fabrication shipping today. -->
 BUDGET: $15    <!-- Export DISPATCH_BUDGET_USD=15 at launch. Do NOT reach for `ultra` for headroom — it switches on fan-out tooling this lane does not need. -->
 ACCEPTANCE: docs/forward_planning/CR104_delete_the_synthetic_baseline/CR104_delete_the_synthetic_baseline.md — **140 lines. Read it in full; it is short and every section is load-bearing.** Its §"The change" (4 items) and §"The guard" (4 items) are your acceptance criteria.
-DEPENDS-ON: **CR098-ROOM audited COMPLETE and integrated to `main`.** Saiful sequenced this after CR098 (2026-07-27). It is `IN_AUDIT` at round 3 as of this writing. **Do not start before it lands** — you would be rebasing onto a moving `_format_profile`, and that renderer has already been the collision point for three lanes in one day.
+DEPENDS-ON: **CR098-ROOM — SATISFIED.** Audited COMPLETE round 3 and integrated to `main` 2026-07-27; suite 1366 green post-merge. Branch from `main` at or after that merge — you would be rebasing onto a moving `_format_profile`, and that renderer has already been the collision point for three lanes in one day.
 HOT-FILES: `backend/app/services/room_runner.py` (`_profile_for_ticker`, `:325-405`), `backend/app/services/room_prompts.py` (`_format_profile`), plus a new test fixture. **`_format_profile` is the single most contended function in this codebase right now** — CR090, DEF116 and CR098 have all landed in or beside it today. Rebase before you hand off.
 
 ## ⚠️ The CR's own sequencing recommendation was INVERTED — read this first
@@ -142,5 +142,5 @@ on `_format_profile`, which three lanes have already collided on today. One lane
 
 ---
 
-ASSIGNED: -
-DISPATCH: UNASSIGNED
+ASSIGNED: coder.room round 1
+DISPATCH: OPEN
