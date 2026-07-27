@@ -36,6 +36,7 @@ network errors). DB schema does not change either way.
 from __future__ import annotations
 
 import math
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from threading import RLock
@@ -269,7 +270,20 @@ class SimEngine:
         return self._marks_with_quotes(tickers)
 
     def _marks_with_quotes(self, tickers: list[str]) -> dict[str, Quote]:
-        return {t.upper(): self.current_quote(t) for t in tickers}
+        """Fetch one Quote per (deduped) ticker, fanned out over a plain sync
+        thread pool (DEF120 D2). Deliberately `concurrent.futures`, NOT
+        `asyncio.loop.run_in_executor` — this method is called both directly
+        (sync unit tests) and from inside an `asyncio.to_thread` worker (the
+        route handlers below), and `run_in_executor` needs a *running* event
+        loop, which a `to_thread` worker thread does not have. A sync pool
+        needs nothing from the caller's context, so it composes either way.
+        """
+        unique = sorted({t.upper() for t in tickers})
+        if not unique:
+            return {}
+        with ThreadPoolExecutor(max_workers=min(len(unique), 10)) as pool:
+            quotes = list(pool.map(self.current_quote, unique))
+        return dict(zip(unique, quotes))
 
     def aggregate_source(self, tickers: list[str]) -> str:
         """The truthful single-string source for a snapshot.
@@ -280,9 +294,13 @@ class SimEngine:
         defaults to "mock_walk" — there's nothing to honestly mark as
         LIVE until at least one ticker has been served.
         """
-        if not tickers:
+        return self._aggregate_source_from_quotes(self._marks_with_quotes(tickers))
+
+    @staticmethod
+    def _aggregate_source_from_quotes(quotes: dict[str, Quote]) -> str:
+        if not quotes:
             return "mock_walk"
-        sources = {q.source for q in self._marks_with_quotes(tickers).values()}
+        sources = {q.source for q in quotes.values()}
         if len(sources) == 1:
             return next(iter(sources))
         return "mock_walk"
@@ -390,6 +408,40 @@ class SimEngine:
         p = self.ensure_portfolio(user_id)
         marks = self.current_marks([h.ticker for h in p.holdings])
         return p.total_drawdown_pct(marks)
+
+    def portfolio_marks_snapshot(
+        self, user_id: UUID,
+    ) -> tuple[Portfolio, dict[str, float], float, float, str]:
+        """One-fetch snapshot: (portfolio, marks, total_value, drawdown_pct, price_source).
+
+        DEF120 D3 — `get_portfolio` used to call `current_marks` /
+        `total_value` / `current_drawdown_pct` / `aggregate_source`
+        independently, each re-fetching every holding's quote (the
+        60s `CachingProvider` hides the network cost once warm, but the
+        redundancy is unconditional and the cold-cache first pass pays
+        for all four). This does a single `_marks_with_quotes` fan-out and
+        derives every downstream value from it. Also used by
+        `mandate.audit_holdings` and `portfolio.sector_allocation`, which
+        had the same N-then-3N shape.
+        """
+        p = self.ensure_portfolio(user_id)
+        tickers = [h.ticker for h in p.holdings]
+        quotes = self._marks_with_quotes(tickers)
+        marks = {t: q.price for t, q in quotes.items()}
+        return (
+            p,
+            marks,
+            p.total_value(marks),
+            p.total_drawdown_pct(marks),
+            self._aggregate_source_from_quotes(quotes),
+        )
+
+    def valuation_snapshot(self, user_id: UUID) -> tuple[float, float]:
+        """(total_value, drawdown_pct) from a single marks fetch — see
+        `portfolio_marks_snapshot`. Used where only the two numbers are
+        needed (e.g. `room.py`'s pre-trade mandate check)."""
+        _p, _marks, total_value, drawdown_pct, _source = self.portfolio_marks_snapshot(user_id)
+        return total_value, drawdown_pct
 
     def list_trades(self, user_id: UUID, *, status: TradeStatus | None = None) -> list[SimTrade]:
         with get_session() as s:

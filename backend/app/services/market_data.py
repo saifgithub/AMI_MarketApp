@@ -27,10 +27,18 @@ wrapper over `quote()` so callers that don't care about provenance stay
 simple. Returning `None` instead of raising lets the caller decide whether
 to retry, fall back, or surface an error.
 
-Sync, not async — `SimEngine` and the `/v1/sim/*` route are sync. The
-network fetch is fast (~150ms) and behind a 60s cache, so blocking is fine
-for MVP. If this becomes hot, swap `httpx.Client` for `httpx.AsyncClient`
-and the rest of the stack lifts unchanged.
+Sync, deliberately. The `/v1/sim/*` and related routes are `async def` on a
+single-uvicorn-process, no-`--workers` event loop (see
+`test_no_blocking_io_in_async_routes.py`) — a synchronous fetch called
+directly from a route handler DOES block every other user's request for the
+round-trip; that was DEF116 and DEF120. The routes stay correct by wrapping
+`SimEngine`'s sync accessors in `await asyncio.to_thread(...)` at the call
+site, and `SimEngine._marks_with_quotes` fans out multi-ticker fetches over
+a `concurrent.futures.ThreadPoolExecutor`, not by making this provider
+stack `async`. Swapping `httpx.Client` for `httpx.AsyncClient` here would
+need `SimEngine` to become `async def` throughout and would collide with
+that sync fan-out (DEF120 D8) — out of scope unless the provider stack
+itself becomes the bottleneck.
 """
 
 from __future__ import annotations

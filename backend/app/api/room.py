@@ -162,8 +162,14 @@ async def stream_room(
     #      sees a full state instead of "no verdict" on the empty stream.
     # DEF051: resolve the user's real sim-portfolio state server-side — never
     # trust a client-suppliable override for a compliance-check input.
-    portfolio_value = sim.total_value(req.user_id)
-    current_drawdown_pct = sim.current_drawdown_pct(req.user_id)
+    # DEF120 D1: valuation_snapshot() reaches SimEngine.current_quote
+    # synchronously (via a single marks fetch) — off the event loop via
+    # to_thread. (This is a SEPARATE reachability chain from the
+    # `_build_room_sector_context` one inside room_runner.py, D7 — that
+    # one is out of scope for this lane and stays waived.)
+    portfolio_value, current_drawdown_pct = await asyncio.to_thread(
+        sim.valuation_snapshot, req.user_id,
+    )
     # CR039 (AT:R60): start_run debits the plan's Room price, but only once
     # it's past its own dedup tiers — so a reconnect that attaches to an
     # in-flight or recently-completed run is free, as it was before metering.

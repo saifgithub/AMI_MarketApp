@@ -121,9 +121,12 @@ async def get_portfolio(
     sim: SimEngine = Depends(get_sim_engine),
 ) -> PortfolioSnapshot:
     _own(current_user, user_id)
-    p = sim.ensure_portfolio(user_id)
-    tickers = [h.ticker for h in p.holdings]
-    marks = sim.current_marks(tickers)
+    # DEF120 D1/D3: one to_thread hop around a single-fetch snapshot, not
+    # four independent sync calls each parking the event loop for its own
+    # quote pass.
+    p, marks, total_value, drawdown_pct, price_source = await asyncio.to_thread(
+        sim.portfolio_marks_snapshot, user_id,
+    )
     return PortfolioSnapshot(
         user_id=user_id,
         portfolio_id=p.id,
@@ -143,9 +146,9 @@ async def get_portfolio(
             }
             for h in p.holdings
         ],
-        total_value=sim.total_value(user_id),
-        drawdown_pct=sim.current_drawdown_pct(user_id),
-        price_source=sim.aggregate_source(tickers),
+        total_value=total_value,
+        drawdown_pct=drawdown_pct,
+        price_source=price_source,
     )
 
 
@@ -197,7 +200,14 @@ async def preview_trade(
         req.order_type if isinstance(req.order_type, OrderType)
         else OrderType(req.order_type)
     )
-    pv = sim.preview(
+    # Resolved here, not inside the sync engine: the fetch is blocking and
+    # this handler owns the event loop (CR069 F3; DEF061 same seam).
+    halal_universe = await default_halal_universe_async()
+    classification_universe = await default_classification_universe_async()
+    # DEF120 D1: sim.preview() reaches SimEngine.current_quote synchronously
+    # (mark, compliance quotes) — off the event loop via to_thread.
+    pv = await asyncio.to_thread(
+        sim.preview,
         user_id=req.user_id,
         ticker=req.ticker,
         side=side,
@@ -206,10 +216,8 @@ async def preview_trade(
         order_type=order_type,
         limit_price=req.limit_price,
         verdict_ref=req.verdict_ref,
-        # Resolved here, not inside the sync engine: the fetch is blocking and
-        # this handler owns the event loop (CR069 F3; DEF061 same seam).
-        halal_universe=await default_halal_universe_async(),
-        classification_universe=await default_classification_universe_async(),
+        halal_universe=halal_universe,
+        classification_universe=classification_universe,
     )
     return PreviewTradeResponse(
         accepted=pv.accepted,
@@ -242,7 +250,17 @@ async def submit_trade(
         req.order_type if isinstance(req.order_type, OrderType)
         else OrderType(req.order_type)
     )
-    result = sim.submit(
+    # Resolved here, not inside the sync engine: the fetch is blocking and
+    # this handler owns the event loop (CR069 F3; DEF061 same seam).
+    halal_universe = await default_halal_universe_async()
+    classification_universe = await default_classification_universe_async()
+    # DEF120 D1/acceptance-8: sim.submit() reaches SimEngine.current_quote
+    # synchronously AND opens its own `get_session()` — off the event loop
+    # via to_thread. The Session is created, used, and closed entirely
+    # inside submit()'s body, so it never crosses a thread boundary; only
+    # the whole synchronous call is handed to the worker thread.
+    result = await asyncio.to_thread(
+        sim.submit,
         user_id=req.user_id,
         ticker=req.ticker,
         side=side,
@@ -254,10 +272,8 @@ async def submit_trade(
         target=req.target,
         horizon_days=req.horizon_days,
         verdict_ref=req.verdict_ref,
-        # Resolved here, not inside the sync engine: the fetch is blocking and
-        # this handler owns the event loop (CR069 F3; DEF061 same seam).
-        halal_universe=await default_halal_universe_async(),
-        classification_universe=await default_classification_universe_async(),
+        halal_universe=halal_universe,
+        classification_universe=classification_universe,
     )
     if not result.accepted:
         return {
@@ -363,7 +379,8 @@ async def evaluate_trades(
     sim: SimEngine = Depends(get_sim_engine),
 ) -> dict:
     _own(current_user, user_id)
-    updates = sim.evaluate_outcomes(user_id)
+    # DEF120 D1: evaluate_outcomes() calls current_price per open trade.
+    updates = await asyncio.to_thread(sim.evaluate_outcomes, user_id)
     # For each closed trade, write a journal entry so the user sees the outcome
     if updates:
         store = get_journal_store()
@@ -415,7 +432,11 @@ async def close_trade(
     sim: SimEngine = Depends(get_sim_engine),
 ) -> dict:
     _own(current_user, user_id)
-    closed: SimTrade | None = sim.manual_close(user_id, req.trade_id)
+    # DEF120 D1: manual_close() calls current_price and opens its own
+    # get_session() — same thread-hop shape as submit() above.
+    closed: SimTrade | None = await asyncio.to_thread(
+        sim.manual_close, user_id, req.trade_id,
+    )
     if closed is None:
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,

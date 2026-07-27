@@ -77,30 +77,42 @@ _YFINANCE_BLOCKING_ATTRS = {"Ticker", "download"}
 # NOT caught by this guard; it is flagged by name in the DEF116 hand-off
 # instead, not enforced structurally here.
 
-# NOT in DEF116's re-derived call-site table, but found by this guard the
-# first time it was run against the full route surface: SimEngine's own
-# trade-execution / portfolio-valuation methods call `self.current_quote`
-# synchronously *internally* (via `_marks_with_quotes` / `current_marks` /
-# `current_price`), and are themselves called directly (no `to_thread`)
-# from `get_portfolio`, `reset_portfolio`, `preview_trade`, `submit_trade`,
-# `evaluate_trades`, `close_trade`, `audit_holdings`, `sector_allocation`,
-# and `stream_room`'s sector-context build (`_build_room_sector_context`).
-# Same bug class as DEF116, wider blast radius than the table above —
-# but the table is what this lane is scoped to fix (CLAUDE.md: don't
-# silently widen scope). Flagged explicitly in the DEF116 hand-off as a
-# follow-up-defect candidate; waived by name here, narrowly, so it doesn't
-# block DEF116's own acceptance while staying visible (grep this set) —
-# NOT silently suppressed. Removing a name here without fixing its call
-# site should turn this guard red again.
+# DEF120 (closed): the 9 chains below this comment used to be waived here —
+# SimEngine's trade-execution / portfolio-valuation methods called
+# `self.current_quote` synchronously *internally* (via `_marks_with_quotes` /
+# `current_marks` / `current_price`), reached directly (no `to_thread`) from
+# `get_portfolio`, `reset_portfolio`, `preview_trade`, `submit_trade`,
+# `evaluate_trades`, `close_trade`, `audit_holdings`, `sector_allocation`.
+# Fixed two ways: (1) `_marks_with_quotes` now fans out over a
+# `concurrent.futures.ThreadPoolExecutor` instead of calling `current_quote`
+# directly in a loop, so the leaf is passed by reference, not called — same
+# by-reference exemption `asyncio.to_thread` gets (see
+# `_blocking_call_sites`'s docstring); (2) every route above now wraps its
+# whole sync call in `await asyncio.to_thread(...)`, which is the actual
+# fix — (1) alone still blocks the event loop for the `pool.map()` wait if
+# the route calls it inline, unwrapped. All 9 names deleted from this set.
+#
+# `_build_room_sector_context` is the ONE surviving waiver (DEF120 D7):
+# reached from `stream_room` via `room_runner.py:1435`'s
+# `build_journal_entry_for_run(...)` → `_build_room_sector_context(user_id)`
+# (`room_runner.py:1912`), aliased in `room.py:76` as
+# `_build_journal_entry = build_journal_entry_for_run` and called by that
+# alias — which is genuinely still a blocking `current_quote` reach, but
+# `room_runner.py` was explicitly out of scope for this lane (CR104-ROOM
+# owns it concurrently) and must NOT be touched here. Flagged for the
+# Architect to lane against the Room queue.
+#
+# Note for whoever picks that up: the alias means this specific chain is
+# ALSO invisible to `_offending_routes(waived=set())` below — `_called_names`
+# resolves by literal call-site name, and the call site uses `_build_journal_entry`
+# (room.py:76's alias target), not `build_journal_entry_for_run`, so the walk
+# never finds a module function named `_build_journal_entry` to recurse into.
+# `_DEF120_KNOWN_BLOCKING_PAIRS` is therefore genuinely empty (not merely
+# "waived") — the walker can't see this pair even with zero waivers. That is
+# a guard blind spot, not evidence the bug is fixed; don't let an empty pin
+# set read as "nothing left". `_build_room_sector_context` staying in this
+# waiver set is what keeps that fact visible (grep this set).
 _WAIVED_CALL_CHAIN_NAMES = {
-    "current_marks",
-    "current_marks_with_source",
-    "_marks_with_quotes",
-    "current_price",
-    "preview",
-    "submit",
-    "evaluate_outcomes",
-    "manual_close",
     "_build_room_sector_context",
 }
 
@@ -232,29 +244,14 @@ def _offending_routes(waived: set[str]) -> tuple[list[str], set[str]]:
     return offenders, pairs
 
 
-# Every `route -> blocking leaf` pair that survives with the waiver removed.
-# All of them are DEF120: SimEngine calls `self.current_quote` synchronously
-# per-ticker in a loop (`sim_engine.py::_marks_with_quotes`) rather than at the
-# route, so the blocking call never appears at the handler.
-#
-# Pinned at LEAF granularity, not route granularity. The auditor's own
-# recommended fix ("assert the offending-ROUTE set equals the 9 known routes")
-# does not catch the auditor's own MAJOR mutation: a fresh `current_news` call
-# inside `SimEngine.submit` reaches `sim.py:submit_trade`, which is already in
-# the route set, so a route-level pin stays green. `submit_trade -> current_news`
-# is a new PAIR, so this one goes red. Verified by re-running that exact
-# mutation against this test.
-_DEF120_KNOWN_BLOCKING_PAIRS = {
-    "backend/app/api/mandate.py:audit_holdings -> <obj>.current_quote",
-    "backend/app/api/portfolio.py:sector_allocation -> <obj>.current_quote",
-    "backend/app/api/room.py:stream_room -> <obj>.current_quote",
-    "backend/app/api/sim.py:close_trade -> <obj>.current_quote",
-    "backend/app/api/sim.py:evaluate_trades -> <obj>.current_quote",
-    "backend/app/api/sim.py:get_portfolio -> <obj>.current_quote",
-    "backend/app/api/sim.py:preview_trade -> <obj>.current_quote",
-    "backend/app/api/sim.py:reset_portfolio -> <obj>.current_quote",
-    "backend/app/api/sim.py:submit_trade -> <obj>.current_quote",
-}
+# DEF120 (closed): empty. The 9 known blocking pairs (mandate.py:audit_holdings,
+# portfolio.py:sector_allocation, room.py:stream_room, and 6 sim.py handlers,
+# all `-> <obj>.current_quote`) are gone — every route now wraps its call in
+# `await asyncio.to_thread(...)`. Genuinely empty, not "waived down to
+# empty": see the `_build_room_sector_context` note above
+# `_WAIVED_CALL_CHAIN_NAMES` for the one real remaining offender this
+# empty-waiver walk still cannot see (a call-site alias, not a fix).
+_DEF120_KNOWN_BLOCKING_PAIRS: set[str] = set()
 
 
 def test_waived_chains_still_pin_the_known_offender_set():

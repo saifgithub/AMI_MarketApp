@@ -11,6 +11,7 @@ POST  /v1/mandate/{user_id}/rollback/{v}          BL5: create a new version mirr
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
 from typing import Any
 from uuid import UUID
@@ -260,11 +261,11 @@ async def audit_holdings(
     """
     _own(current_user, user_id)
     mandate = store.get_or_default(user_id)
-    portfolio = sim.ensure_portfolio(user_id)
-    tickers = [h.ticker for h in portfolio.holdings]
-    marks = sim.current_marks(tickers)
-    portfolio_value = sim.total_value(user_id)
-    drawdown_pct = sim.current_drawdown_pct(user_id)
+    # DEF120 D1/D3: one to_thread hop around a single-fetch snapshot,
+    # replacing three independent sync quote passes.
+    portfolio, marks, portfolio_value, drawdown_pct, _source = await asyncio.to_thread(
+        sim.portfolio_marks_snapshot, user_id,
+    )
     return check_holdings_against_mandate(
         holdings=portfolio.holdings,
         marks=marks,
