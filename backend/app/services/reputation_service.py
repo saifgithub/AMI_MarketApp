@@ -27,21 +27,37 @@ from sqlalchemy.exc import IntegrityError
 from app.core.config import settings
 from app.core.logging import logger
 from app.db.models import (
+    BadgeRow,
     DailyChallengeAttemptRow,
     JournalEntryRow,
     LeagueMemberRow,
     LessonProgressRow,
     ReputationEventRow,
+    StreakFreezeRow,
     SubscriptionEventRow,
     User,
 )
+from app.schemas.mandate import Plan
+from app.services.entitlements import effective_plan_for_user
 
 # D-060 scoring table (Plan C §C1). Values are deliberately small and
 # process-rewarding — no P&L-linked event exists or ever will (store
 # declaration + D-060).
+#
+# CR096: challenge_attempted/challenge_correct (2/3, fired as two separate
+# awards per attempt) is retired in favour of daily_and_streaks.md's 3-outcome
+# table — right / close / wrong-but-tried — as a SINGLE award per attempt.
+# "close" (challenge_close) has no reachable answer-space yet: every shipped
+# challenge type is strict single-correct multiple-choice with no graded
+# partial-credit option (confirmed at build time, CR096's open question) — so
+# it's wired into POINTS and the API contract now, unreachable by current
+# content until a challenge type defines what "close" means for it. This is a
+# future-awards-only change (D3) — no backfill over historical
+# reputation_events; existing users' totals stand.
 POINTS: dict[str, int] = {
-    "challenge_attempted": 2,
-    "challenge_correct": 3,
+    "challenge_wrong_tried": 1,
+    "challenge_close": 2,
+    "challenge_correct": 5,
     "lesson_passed": 5,
     "agent_unlocked": 10,
     "room_verdict": 3,
@@ -50,6 +66,7 @@ POINTS: dict[str, int] = {
     "streak_7": 10,
     "streak_30": 25,
     "streak_100": 50,
+    "streak_365": 500,
 }
 
 # Repeatable-by-design events get a per-type daily count limit so they
@@ -59,9 +76,24 @@ PER_TYPE_DAILY_LIMIT: dict[str, int] = {
     "trade_reviewed": 3,
 }
 
-# Streak milestone → credit grant (daily_and_streaks.md).
-STREAK_MILESTONES: tuple[int, ...] = (7, 30, 100)
-STREAK_CREDITS: dict[int, int] = {7: 5, 30: 25, 100: 100}
+# Streak milestone → credit grant (daily_and_streaks.md). CR092 adds 365
+# ("Marathoner") — the ladder's biggest reward, 5x the next-largest grant.
+STREAK_MILESTONES: tuple[int, ...] = (7, 30, 100, 365)
+STREAK_CREDITS: dict[int, int] = {7: 5, 30: 25, 100: 100, 365: 500}
+
+# CR091/CR092: streak milestone → badge key (daily_and_streaks.md's named
+# ladder). 365 also carries permanent profile flair.
+BADGE_KEYS: dict[int, str] = {
+    7: "streak_week_one",
+    30: "streak_month_strong",
+    100: "streak_centurion",
+    365: "streak_marathoner",
+}
+PERMANENT_FLAIR_MILESTONES: frozenset[int] = frozenset({365})
+
+# CR094: Floor Manager streak-freeze allowance. See StreakFreezeRow's
+# docstring for the "which year" call (calendar year, flagged for Saiful).
+FREEZES_PER_YEAR = 2
 
 
 class _AwardRaceLost(Exception):
@@ -76,6 +108,12 @@ class StreakInfo(NamedTuple):
     current: int
     longest: int
     next_milestone: int | None
+
+
+class FreezeResult(NamedTuple):
+    ok: bool
+    reason: str | None  # None on success; else "not_entitled" | "limit_reached" | "already_frozen"
+    remaining: int
 
 
 def _utcnow() -> datetime:
@@ -242,11 +280,12 @@ class ReputationService:
             return StreakInfo(0, 0, STREAK_MILESTONES[0])
 
         days = self._activity_days(session, user)
+        frozen = self._frozen_days(session, user)
         today = _utcnow().astimezone(_user_tz(user)).date()
-        current = _run_ending_at(days, today)
+        current = _run_ending_at(days, today, frozen)
         if current == 0:
-            current = _run_ending_at(days, today - timedelta(days=1))
-        longest = _longest_run(days)
+            current = _run_ending_at(days, today - timedelta(days=1), frozen)
+        longest = _longest_run(days, frozen)
 
         for milestone in STREAK_MILESTONES:
             if current >= milestone:
@@ -256,6 +295,63 @@ class ReputationService:
             (m for m in STREAK_MILESTONES if m > current), None,
         )
         return StreakInfo(current=current, longest=longest, next_milestone=next_milestone)
+
+    def freeze(self, session, user_id: UUID, *, on: date | None = None) -> FreezeResult:
+        """Consume one of the user's 2 Floor-Manager streak freezes for
+        `on` (default: the user's local today). D4: persists a countable
+        `StreakFreezeRow`, never a scan-time tolerance. D5: refuses visibly
+        (a typed reason, never a silent no-op) when the caller isn't
+        entitled — checked via `entitlements.effective_plan_for_user`, not a
+        hand-rolled plan comparison.
+        """
+        user = session.execute(
+            select(User).where(User.id == user_id)
+        ).scalar_one_or_none()
+        if user is None:
+            return FreezeResult(False, "not_entitled", 0)
+
+        if effective_plan_for_user(user.id) != Plan.FLOOR_MANAGER:
+            return FreezeResult(False, "not_entitled", 0)
+
+        target_date = on or _utcnow().astimezone(_user_tz(user)).date()
+        period_key = str(target_date.year)
+
+        used = session.execute(
+            select(func.count()).select_from(StreakFreezeRow).where(
+                StreakFreezeRow.user_id == user_id,
+                StreakFreezeRow.period_key == period_key,
+            )
+        ).scalar_one()
+        remaining = FREEZES_PER_YEAR - int(used)
+        if remaining <= 0:
+            return FreezeResult(False, "limit_reached", 0)
+
+        session.add(StreakFreezeRow(
+            id=uuid4(), user_id=user_id, frozen_date=target_date,
+            period_key=period_key, created_at=_utcnow(),
+        ))
+        try:
+            session.flush()
+        except IntegrityError:
+            # Concurrent double-freeze of the same date, or a repeat call —
+            # UNIQUE(user_id, frozen_date) is the backstop (DEF039 pattern).
+            session.rollback()
+            return FreezeResult(False, "already_frozen", remaining)
+
+        logger.info(
+            "streak_freeze_consumed",
+            user_id=str(user_id), frozen_date=target_date.isoformat(),
+            period_key=period_key, remaining=remaining - 1,
+        )
+        return FreezeResult(True, None, remaining - 1)
+
+    def badges(self, session, user_id: UUID) -> list[BadgeRow]:
+        """CR091 read path — every badge this user has ever earned."""
+        return list(session.execute(
+            select(BadgeRow)
+            .where(BadgeRow.user_id == user_id)
+            .order_by(BadgeRow.earned_at)
+        ).scalars().all())
 
     # ── Internals ────────────────────────────────────────────────────────
 
@@ -299,9 +395,38 @@ class ReputationService:
             days.add(stamp.astimezone(tz).date())
         return days
 
+    def _frozen_days(self, session, user: User) -> set[date]:
+        return set(session.execute(
+            select(StreakFreezeRow.frozen_date)
+            .where(StreakFreezeRow.user_id == user.id)
+        ).scalars().all())
+
+    def _award_badge(
+        self, session, *, user: User, badge_key: str, ref_id: str,
+        is_permanent_flair: bool,
+    ) -> None:
+        """CR091/CR092 — co-located with the credit grant in
+        `_grant_milestone`, gated by the SAME reputation_events guard row
+        (D1: not a parallel idempotency path). UNIQUE(user_id, badge_key) on
+        BadgeRow is defense-in-depth, not the primary guard."""
+        already = session.execute(
+            select(BadgeRow.id).where(
+                BadgeRow.user_id == user.id, BadgeRow.badge_key == badge_key,
+            ).limit(1)
+        ).scalar_one_or_none()
+        if already is not None:
+            return
+        session.add(BadgeRow(
+            id=uuid4(), user_id=user.id, badge_key=badge_key,
+            ref_type="streak_milestone", ref_id=ref_id,
+            is_permanent_flair=is_permanent_flair, earned_at=_utcnow(),
+        ))
+        logger.info("badge_awarded", user_id=str(user.id), badge_key=badge_key)
+
     def _grant_milestone(self, session, *, user: User, milestone: int) -> None:
-        """Points + credits for one streak milestone, exactly once ever —
-        the reputation_events ref row doubles as the credit-grant guard."""
+        """Points + credits + badge for one streak milestone, exactly once
+        ever — the reputation_events ref row doubles as the credit-grant AND
+        badge-award guard (D1/D2)."""
         event_type = f"streak_{milestone}"
         ref_id = f"streak-{milestone}"
         if self._already_awarded(
@@ -321,6 +446,11 @@ class ReputationService:
             )
         except _AwardRaceLost:
             return
+
+        self._award_badge(
+            session, user=user, badge_key=BADGE_KEYS[milestone], ref_id=ref_id,
+            is_permanent_flair=milestone in PERMANENT_FLAIR_MILESTONES,
+        )
 
         credits = STREAK_CREDITS[milestone]
         old_balance = user.credit_balance or 0
@@ -343,23 +473,35 @@ class ReputationService:
         )
 
 
-def _run_ending_at(days: set[date], end: date) -> int:
+def _run_ending_at(
+    days: set[date], end: date, frozen: frozenset[date] = frozenset(),
+) -> int:
+    """Consecutive-day run ending at `end`. CR094: a frozen day (no
+    activity, but a consumed StreakFreezeRow) pauses the run instead of
+    breaking it — it doesn't add to the count either, it's just transparent."""
     run = 0
     cursor = end
-    while cursor in days:
-        run += 1
-        cursor -= timedelta(days=1)
+    while True:
+        if cursor in days:
+            run += 1
+            cursor -= timedelta(days=1)
+        elif cursor in frozen:
+            cursor -= timedelta(days=1)
+        else:
+            break
     return run
 
 
-def _longest_run(days: set[date]) -> int:
+def _longest_run(days: set[date], frozen: frozenset[date] = frozenset()) -> int:
     longest = 0
     for d in days:
-        if d - timedelta(days=1) not in days:  # run start
+        prev = d - timedelta(days=1)
+        if prev not in days and prev not in frozen:  # run start
             run = 1
             cursor = d + timedelta(days=1)
-            while cursor in days:
-                run += 1
+            while cursor in days or cursor in frozen:
+                if cursor in days:
+                    run += 1
                 cursor += timedelta(days=1)
             longest = max(longest, run)
     return longest

@@ -181,7 +181,7 @@ def test_attempt_awards_reputation(client: TestClient) -> None:
                 )
             ).scalars().all()
         )
-    assert types == ["challenge_attempted", "challenge_correct"]
+    assert types == ["challenge_correct"]
 
 
 def test_second_attempt_journals_once(client: TestClient) -> None:

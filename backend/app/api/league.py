@@ -1,9 +1,11 @@
 """Weekly league endpoints (CR004, D-060).
 
-GET   /v1/league/standings   my cohort's board this week (404 if unassigned)
-GET   /v1/league/me          handle, tier, reputation, week points, rank, streak
-GET   /v1/league/history     my past weeks (tier, final rank, outcome)
-PATCH /v1/league/handle      regenerate the pseudonymous handle (once, ever)
+GET   /v1/league/standings     my cohort's board this week (404 if unassigned)
+GET   /v1/league/me            handle, tier, reputation, week points, rank, streak
+GET   /v1/league/history       my past weeks (tier, final rank, outcome)
+PATCH /v1/league/handle        regenerate the pseudonymous handle (once, ever)
+GET   /v1/league/badges        CR091/CR092 — every badge earned, incl. permanent flair
+POST  /v1/league/streak/freeze CR094 — consume one of 2 Floor-Manager freezes/year
 
 Reputation-based only — no P&L appears anywhere in this surface (D-060,
 store declaration). Handles keep the leaderboard pseudonymous; real names
@@ -13,6 +15,7 @@ render only for members who opted in via `users.show_display_name`.
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy import select
 
 from app.api.dependencies import get_current_user
@@ -100,3 +103,58 @@ async def regenerate_handle(
         except HandleAlreadyRegenerated:
             raise HTTPException(status.HTTP_409_CONFLICT, "already_regenerated")
     return {"handle": handle}
+
+
+@router.get("/badges")
+async def badges(current_user: User = Depends(get_current_user)) -> list[dict]:
+    """CR091 read endpoint + CR092 flair exposure. Mobile display of these
+    is a separate, unlaned surface (backend contract only)."""
+    rep = get_reputation_service()
+    with get_session() as s:
+        return [
+            {
+                "badge_key": b.badge_key,
+                "earned_at": b.earned_at.isoformat(),
+                "is_permanent_flair": b.is_permanent_flair,
+            }
+            for b in rep.badges(s, current_user.id)
+        ]
+
+
+class StreakFreezeRequest(BaseModel):
+    on: str | None = None  # YYYY-MM-DD, defaults to the user's local today
+
+
+_FREEZE_REASON_STATUS = {
+    "not_entitled": status.HTTP_403_FORBIDDEN,
+    "limit_reached": status.HTTP_409_CONFLICT,
+    "already_frozen": status.HTTP_409_CONFLICT,
+}
+
+
+@router.post("/streak/freeze")
+async def freeze_streak(
+    req: StreakFreezeRequest,
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """CR094 — Floor Manager only, 2/year. Refuses visibly (D5): a
+    non-entitled or exhausted caller gets an explicit HTTP error, never a
+    silent 200 that looks like it worked."""
+    from datetime import date as date_cls
+
+    on = None
+    if req.on is not None:
+        try:
+            on = date_cls.fromisoformat(req.on)
+        except ValueError:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "on must be YYYY-MM-DD")
+
+    rep = get_reputation_service()
+    with get_session() as s:
+        result = rep.freeze(s, current_user.id, on=on)
+    if not result.ok:
+        raise HTTPException(
+            _FREEZE_REASON_STATUS.get(result.reason, status.HTTP_400_BAD_REQUEST),
+            result.reason,
+        )
+    return {"ok": True, "remaining": result.remaining}
