@@ -306,6 +306,10 @@ def test_fact_sheet_strips_market_with_declared_line_no_synthetic():
     assert "Volume:" not in block
     assert "999" not in block
     assert "Market technicals: not included in this session." in block
+    # MINOR 3 (audit round 1) — the header must not describe fields the body
+    # just stripped: "alpha simulation scaffolding" immediately above "not
+    # included in this session" is contradictory prompt copy (CR038).
+    assert "NOT computed from real price history" not in block
 
 
 def test_fact_sheet_strips_news_and_social_with_declared_lines():
@@ -324,6 +328,11 @@ def test_fact_sheet_strips_news_and_social_with_declared_lines():
     assert "SHOULD NOT APPEAR" not in block
     assert "Recent catalyst/headline: not included in this session." in block
     assert "Retail sentiment: not included in this session." in block
+    # MINOR 3 (audit round 1) — same contradiction check for News/Social.
+    assert "NOT real news" not in block
+    assert "NOT a live news feed" not in block
+    assert "NOT real social data" not in block
+    assert "NOT a live social feed" not in block
 
 
 # ── #13 (+ non-negotiable): no agent-voiced prompt string ever sells ───────

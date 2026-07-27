@@ -362,6 +362,17 @@ def _format_profile(profile: dict[str, Any]) -> str:
     # live/not-live reading, unchanged.
     news_withheld = profile.get("news_state") == "withheld_paid"
     social_withheld = profile.get("social_state") == "withheld_paid"
+    # CR098 round-2 fix (MINOR 3) — a roster-withheld domain's header line must
+    # not describe fields the fact-sheet body has already stripped (see
+    # market_withheld/news_withheld_tenure/social_withheld_tenure below). The
+    # header used to unconditionally claim "alpha simulation scaffolding — NOT
+    # computed from real price history" immediately above the body's "not
+    # included in this session" — contradictory prompt copy CR038 found
+    # degrades compliance. Computed here (ahead of their first use further
+    # down) so the header can skip the withheld domain's line entirely.
+    market_withheld = profile.get("technicals_state") == "withheld_tenure"
+    news_withheld_tenure = profile.get("news_state") == "withheld_tenure"
+    social_withheld_tenure = profile.get("social_state") == "withheld_tenure"
 
     header_lines = ["Data source disclosure — some fields below are real, some are not:"]
     if fundamentals_live:
@@ -374,7 +385,9 @@ def _format_profile(profile: dict[str, Any]) -> str:
             "- Numeric fundamentals (price, P/E, growth, FCF, range): alpha "
             "simulation scaffolding — NOT live market data."
         )
-    if technicals_live:
+    if market_withheld:
+        pass  # stripped below; no scaffolding line to contradict it with
+    elif technicals_live:
         header_lines.append(
             "- RSI, trend, volume, support/breakout: LIVE, computed from "
             "real yfinance price history as of this call. No MACD, "
@@ -386,7 +399,9 @@ def _format_profile(profile: dict[str, Any]) -> str:
             "- RSI, trend, volume, support/breakout: alpha simulation "
             "scaffolding — NOT computed from real price history."
         )
-    if news_live:
+    if news_withheld_tenure:
+        pass  # stripped below; no scaffolding line to contradict it with
+    elif news_live:
         header_lines.append(
             "- Recent catalyst/headline: LIVE, real news as of this call "
             "(publisher + recency shown below). Some headlines may carry a "
@@ -406,7 +421,9 @@ def _format_profile(profile: dict[str, Any]) -> str:
             "- Recent catalyst/headline: alpha simulation scaffolding — NOT "
             "a live news feed."
         )
-    if social_live:
+    if social_withheld_tenure:
+        pass  # stripped below; no scaffolding line to contradict it with
+    elif social_live:
         header_lines.append(
             "- Retail sentiment/mention/community fields: LIVE, real Reddit "
             "aggregate data as of this call (Reddit only — no Twitter/X, "
@@ -438,9 +455,9 @@ def _format_profile(profile: dict[str, Any]) -> str:
     # the rng-seeded scaffolding on screen — no FOMO, no decode saving, and a
     # CR040 violation. Each stripped block is replaced by one declared line
     # (never a synthetic stand-in — acceptance #6 asserts on the exact string).
-    market_withheld = profile.get("technicals_state") == "withheld_tenure"
-    news_withheld_tenure = profile.get("news_state") == "withheld_tenure"
-    social_withheld_tenure = profile.get("social_state") == "withheld_tenure"
+    # market_withheld/news_withheld_tenure/social_withheld_tenure are computed
+    # above, ahead of the header, so the header can skip the withheld domain's
+    # scaffolding line too (MINOR 3).
 
     lines = [
         header,
