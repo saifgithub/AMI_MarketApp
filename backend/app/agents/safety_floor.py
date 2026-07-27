@@ -17,6 +17,12 @@ from app.schemas.classification import (
 )
 from app.schemas.sharia import ShariaVerdict
 from app.schemas.trade import ComplianceResult, Holding, ProposedTrade
+from app.services.sector_allocation import (
+    sector_cap_breach as _sector_cap_breach,
+)
+from app.services.sector_allocation import (
+    sector_concentration_cap as _sector_concentration_cap,
+)
 from app.trading_math.portfolio import position_pct as _position_pct
 from app.trading_math.sizing import SINGLE_NAME_ABSOLUTE_CAP_PCT
 
@@ -109,6 +115,9 @@ def check_mandate_compliance(
     halal_universe: set[str] | None = None,
     classification_universe: object | None = None,
     locale_allowed_universe: set[str] | None = None,
+    holdings: object | None = None,
+    quotes: dict[str, float] | None = None,
+    sector_map: object | None = None,
 ) -> ComplianceResult:
     """Deterministic mandate-compliance check. No LLM.
 
@@ -132,6 +141,15 @@ def check_mandate_compliance(
         halal G3); blocking-on-unknown would reject every unclassified name (DEF059).
     locale_allowed_universe: optional set of tickers available in user's locale.
         If None, no locale filter applied.
+    holdings / quotes / sector_map: CR026 sector-concentration inputs. When all three
+        are provided, a proposed BUY that would push its GICS sector over the mandate's
+        sector-concentration cap (`sector_concentration_cap`, default 0.40) is blocked
+        with `blocked_by="compliance"`, alongside the single-name block. `holdings` are
+        the current positions (duck-typed `.ticker`/`.quantity`), `quotes` the ticker→
+        price marks, `sector_map` the snapshot-backed resolver (no request-path socket).
+        Omitting any of the three skips the sector check entirely (unchanged behaviour
+        for callers that don't pass sector context). The "Other" (unclassified) bucket
+        NEVER breaches — an unknown sector is no ruling either way (the DEF059 guard).
     """
     violations: list[str] = []
     blocked_by: str | None = None
@@ -229,6 +247,33 @@ def check_mandate_compliance(
                     f"position size {position_pct:.1f}% exceeds single-name cap {SINGLE_NAME_CAP_PCT}%"
                 )
                 blocked_by = blocked_by or "concentration"
+
+    # 6b) Sector-concentration cap (CR026) — the gap this CR closes. A proposed BUY
+    #   that would push its GICS sector over the mandate's sector cap is blocked, the
+    #   SAME shape as the single-name block above. Only fires when sector context is
+    #   supplied (holdings + quotes + sector_map). The cap is READ from the mandate's
+    #   concentration_tolerance (default 0.40), never hard-coded. The "Other"
+    #   (unclassified) bucket never breaches — an unknown sector is no ruling either
+    #   way (the DEF059 inversion guard, mirroring the classification UNKNOWN=permitted
+    #   rule; blocking-on-unknown would reject every unclassified name).
+    if (
+        proposed.is_buy
+        and sector_map is not None
+        and holdings is not None
+        and quotes is not None
+    ):
+        proposed_value = (proposed.limit_price or 0.0) * proposed.quantity
+        breach = _sector_cap_breach(
+            holdings=holdings,
+            quotes=quotes,
+            proposed_ticker=t,
+            proposed_value=proposed_value,
+            sector_map=sector_map,
+            cap=_sector_concentration_cap(mandate),
+        )
+        if breach is not None:
+            violations.append(breach.message())
+            blocked_by = blocked_by or "compliance"
 
     # 7) Drawdown projection
     # The actual worst-case drawdown after this trade depends on entry/stop;
@@ -345,6 +390,9 @@ def enforce_safety_floor(
     halal_universe: set[str] | None = None,
     classification_universe: object | None = None,
     locale_allowed_universe: set[str] | None = None,
+    holdings: object | None = None,
+    quotes: dict[str, float] | None = None,
+    sector_map: object | None = None,
 ) -> Verdict:
     """Wrap an LLM-produced verdict. If APPROVE, re-check via deterministic function.
 
@@ -361,6 +409,9 @@ def enforce_safety_floor(
         halal_universe=halal_universe,
         classification_universe=classification_universe,
         locale_allowed_universe=locale_allowed_universe,
+        holdings=holdings,
+        quotes=quotes,
+        sector_map=sector_map,
     )
 
     if result.passed:

@@ -850,3 +850,12 @@ class ClassificationUniverseSnapshotRow(Base):
     fossil: Mapped[list] = mapped_column(JsonB(), default=list, nullable=False)
     sin: Mapped[list] = mapped_column(JsonB(), default=list, nullable=False)
     defense: Mapped[list] = mapped_column(JsonB(), default=list, nullable=False)
+    # CR026: the per-ticker raw GICS sector tag (ticker → sector string, e.g.
+    # "Technology"), captured from the SAME `yf.Ticker(t).info["sector"]` read the
+    # fossil/sin classifier already performs. Feeds the sector-concentration
+    # enforcement in `safety_floor.check_mandate_compliance()` and the
+    # `/v1/portfolio/sector-allocation` donut — resolved off the request path from
+    # this stored map, never a live fetch (CR075/DEF089). Nullable so pre-CR026 rows
+    # (and the migration's back-fill) read as an empty map; a ticker absent from it
+    # resolves to "Other" (disclosed, never blocking — the DEF059 inversion guard).
+    sectors: Mapped[dict] = mapped_column(JsonB(), default=dict, nullable=True)

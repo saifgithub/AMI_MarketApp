@@ -210,6 +210,21 @@ def _normalise_industry(raw: str | None) -> str:
     return "-".join(p.strip() for p in s.split("-"))
 
 
+def canonical_sector(raw: str | None) -> str | None:
+    """The raw GICS sector string for the per-ticker sector map (CR026).
+
+    yfinance already returns clean title-cased sector names ("Technology",
+    "Consumer Defensive", "Financial Services", …); we only strip and collapse
+    whitespace so the stored key is stable. Returns None for a missing/blank
+    sector — the caller then leaves the ticker OUT of the sector map, so it
+    resolves to "Other" (disclosed, never blocking — the DEF059 inversion guard).
+    Pure — no network."""
+    if not raw:
+        return None
+    s = " ".join(str(raw).split()).strip()
+    return s or None
+
+
 def classify_info(info: dict) -> tuple[bool, bool, bool]:
     """(is_fossil, is_sin, is_defense) for one yfinance `info` dict. Pure — no network.
 
@@ -257,7 +272,11 @@ def _yf_info(ticker: str) -> dict:
 
 
 def _network_classify(
-    tickers, *, info_fetcher=None, throttle_s: float = _CLASSIFY_THROTTLE_S
+    tickers,
+    *,
+    info_fetcher=None,
+    throttle_s: float = _CLASSIFY_THROTTLE_S,
+    sectors_out: dict[str, str] | None = None,
 ) -> tuple[frozenset, frozenset, frozenset, frozenset]:
     """Classify every ticker via yfinance → (classified, fossil, sin, defense).
 
@@ -265,6 +284,12 @@ def _network_classify(
     task (off the request path), never on a read. A ticker whose info read fails is
     simply left UNclassified (it resolves UNKNOWN=permitted+disclosed, the safe
     direction) — a failed name never becomes a false EXCLUDED or a false PERMITTED.
+
+    `sectors_out` (CR026): when a dict is supplied, it is populated with the raw
+    per-ticker GICS sector (`ticker → sector string`) for every classified name, so
+    the same pass that derives fossil/sin also captures the sector map persisted for
+    the concentration check + allocation donut. A side-channel out-param keeps the
+    4-tuple return contract the DEF061 refresh + tests already depend on.
 
     Raises `ClassificationSourceError` if fewer than `_CLASSIFIED_MIN_ROWS` classify,
     so a throttled run that lost most calls is treated as broken (CR040) rather than
@@ -290,6 +315,10 @@ def _network_classify(
                 time.sleep(throttle_s)
             continue
         classified.add(t)
+        if sectors_out is not None:
+            sec = canonical_sector(info.get("sector"))
+            if sec is not None:
+                sectors_out[t] = sec
         is_fossil, is_sin, is_defense = classify_info(info)
         if is_fossil:
             fossil.add(t)
@@ -330,14 +359,30 @@ def latest_snapshot(session) -> ClassificationUniverseSnapshotRow | None:
     ).scalar_one_or_none()
 
 
+def latest_sector_map(session) -> dict[str, str]:
+    """The per-ticker GICS sector map from the latest snapshot row (CR026).
+
+    A cheap LOCAL DB read — NEVER a yfinance socket (the CR075/DEF089 rule). Empty
+    dict when no row is stored yet (seed) or the row predates CR026; the caller then
+    resolves every ticker to "Other" (disclosed, never blocking)."""
+    row = latest_snapshot(session)
+    if row is None or not row.sectors:
+        return {}
+    return {str(k).upper().strip(): str(v) for k, v in row.sectors.items()}
+
+
 def write_snapshot(
-    session, *, classified, fossil, sin, defense, fetched_at: datetime
+    session, *, classified, fossil, sin, defense, fetched_at: datetime, sectors=None
 ) -> ClassificationUniverseSnapshotRow:
     """Append one snapshot row. Never updates or deletes — the history answers
     "which names did AMI treat as fossil/sin/defense on day X". `as_of` is set to the
     fetch date (yfinance carries no source date; our classify date is the honest
     freshness signal the reader gates on). The esg_lite set is derived (fossil ∪ sin
-    ∪ defense), so only the three buckets are persisted."""
+    ∪ defense), so only the three buckets are persisted.
+
+    `sectors` (CR026): the per-ticker raw GICS sector map (ticker → sector string).
+    Optional so pre-CR026 callers (and DEF061's fixture refresh) store an empty map;
+    the request-path resolver treats an absent ticker as "Other"."""
     row = ClassificationUniverseSnapshotRow(
         source=SOURCE,
         as_of=fetched_at.date(),
@@ -346,6 +391,11 @@ def write_snapshot(
         fossil=sorted(str(t).upper().strip() for t in fossil),
         sin=sorted(str(t).upper().strip() for t in sin),
         defense=sorted(str(t).upper().strip() for t in defense),
+        sectors={
+            str(k).upper().strip(): str(v)
+            for k, v in (sectors or {}).items()
+            if v
+        },
     )
     session.add(row)
     session.flush()
@@ -588,8 +638,12 @@ def run_classification_refresh_tick(
             )
             return "skipped_fresh"
 
+    # CR026: the default classify pass captures the per-ticker sector map via the
+    # `sectors_out` side-channel (same 4-tuple return DEF061 depends on). An injected
+    # fixture classifier stores an empty map — its tests assert only fossil/sin.
+    sectors: dict[str, str] = {}
     classify = classifier or (
-        lambda: _network_classify(_parent_universe_to_classify())
+        lambda: _network_classify(_parent_universe_to_classify(), sectors_out=sectors)
     )
     try:
         classified, fossil, sin, defense = classify()
@@ -605,6 +659,7 @@ def run_classification_refresh_tick(
             sin=sin,
             defense=defense,
             fetched_at=now,
+            sectors=sectors,
         )
     reset_refresh_failures()
     logger.info(
@@ -613,6 +668,7 @@ def run_classification_refresh_tick(
         fossil=len(fossil),
         sin=len(sin),
         defense=len(defense),
+        sectors=len(sectors),
         fetched_at=now.isoformat(),
     )
     return "stored"
