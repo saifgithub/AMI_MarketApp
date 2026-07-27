@@ -193,7 +193,8 @@ own finding is that inconsistent prompt copy degrades compliance.
 
 ### Verdict
 
-**VERDICT: AWAITING_FIXES (round 2)** — two MAJOR, three MINOR.
+**VERDICT: AWAITING_FIXES (round 1)** — two MAJOR, three MINOR. (Round 1 is the round *audited*,
+per `PROTOCOL.md` — the architect bumps to `SUBMITTED: round 2`.)
 
 The mechanism itself is well built. The resolver, the money path, the fourth `LiveDataState`, the
 `NO_VERDICT` short-circuit and the fact-sheet stripping all survive mutation, and D4's symmetry is
