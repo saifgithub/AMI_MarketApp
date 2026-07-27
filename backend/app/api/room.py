@@ -245,6 +245,19 @@ async def stream_room(
                         "agent_id": ev.agent_id.value if ev.agent_id else None,
                     })
                     yield f"event: agent_done\ndata: {payload}\n\n"
+                elif ev.kind == "agent_withheld":
+                    # CR098 — the per-analyst locked-chair + countdown surface.
+                    # Modelled on live_data_notice above: structural event, no
+                    # LLM narration, client renders it directly.
+                    payload = json.dumps({
+                        "agent_id": ev.agent_id.value if ev.agent_id else None,
+                        "reason": ev.reason,
+                        "next_step_agent": (
+                            ev.next_step_agent.value if ev.next_step_agent else None
+                        ),
+                        "next_step_days": ev.next_step_days,
+                    })
+                    yield f"event: agent_withheld\ndata: {payload}\n\n"
                 elif ev.kind == "verdict":
                     if ev.verdict is not None:
                         yield f"event: verdict\ndata: {ev.verdict.model_dump_json()}\n\n"

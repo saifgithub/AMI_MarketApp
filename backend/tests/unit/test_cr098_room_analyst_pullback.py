@@ -505,3 +505,73 @@ def test_fundamentals_fetch_always_runs_even_when_others_withheld(monkeypatch):
         }),
     )
     assert calls == ["AAPL"]
+
+
+# ── MAJOR 1 (audit round 1) — agent_withheld must reach the actual SSE wire,
+# not just be emitted by the runner. Drives the request through the real
+# FastAPI route + StreamingResponse with a fake runner whose subscribe()
+# yields a RoomEvent(kind="agent_withheld", ...), then asserts the frame is
+# present, byte-parseable, and carries the countdown fields — the thing
+# room.py's if/elif dispatcher was silently dropping. ──────────────────────
+
+def test_agent_withheld_reaches_the_sse_wire(monkeypatch):
+    import json as _json
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app.api.room import router as room_router
+    from app.api.room import get_room_runner
+    from app.services.room_runner import RoomEvent
+
+    class _FakeWireRunner:
+        async def start_run(self, **kwargs):
+            return uuid4()
+
+        def is_active(self, run_id) -> bool:
+            return True
+
+        def get_run(self, run_id):
+            return None
+
+        async def subscribe(self, run_id):
+            yield RoomEvent(kind="started", run_id=run_id)
+            yield RoomEvent(
+                kind="agent_withheld",
+                run_id=run_id,
+                agent_id=AgentId.SOCIAL_MEDIA_ANALYST,
+                reason="upgrade",
+                next_step_agent=AgentId.NEWS_ANALYST,
+                next_step_days=5,
+            )
+
+    app = FastAPI()
+    app.include_router(room_router)
+    client = TestClient(app)
+
+    auth = AuthService()
+    user, token, _ = auth.ensure_anonymous(device_user_id=None)
+    user_id = user.id
+
+    app.dependency_overrides[get_room_runner] = lambda: _FakeWireRunner()
+    try:
+        r = client.post(
+            "/v1/room/stream",
+            json={"user_id": str(user_id), "ticker": "AAPL", "locale": "en"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert r.status_code == 200
+    body = r.text
+    assert "event: agent_withheld" in body, "agent_withheld event missing from the SSE wire"
+
+    lines = body.splitlines()
+    idx = lines.index("event: agent_withheld")
+    data_line = lines[idx + 1]
+    assert data_line.startswith("data: ")
+    payload = _json.loads(data_line[len("data: "):])
+    assert payload["agent_id"] == "social_media_analyst"
+    assert payload["reason"] == "upgrade"
+    assert payload["next_step_agent"] == "news_analyst"
+    assert payload["next_step_days"] == 5
