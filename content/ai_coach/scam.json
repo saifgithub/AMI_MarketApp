@@ -354,7 +354,7 @@
     "category": "scam",
     "question": "How do I check an Australian broker or adviser?",
     "short_answer": "Use ASIC Connect at asic.gov.au to look up professional registers and AFS licence holders, and check the ASIC investor-alert list for unauthorised entities.",
-    "long_answer": "ASIC Connect covers Australian Financial Services (AFS) licensees, credit licensees, and authorised representatives. ASIC also runs an imposter-alert list updated near-weekly and the MoneySmart consumer site. To report a suspected scam use asic.gov.au/reportascam. Match the contact details from the regulator's listing against what the operator gave you. The Concierge can walk through the search step by step.",
+    "long_answer": "ASIC Connect covers Australian Financial Services (AFS) licensees, credit licensees, and authorised representatives. ASIC also runs an imposter-alert list updated near-weekly and the MoneySmart consumer site. To report a suspected scam, use Scamwatch at scamwatch.gov.au (ASIC directs scam reports there). Match the contact details from the regulator's listing against what the operator gave you. The Concierge can walk through the search step by step.",
     "related_lessons": ["071"],
     "related_agents": ["concierge"],
     "tags": ["asic", "australia", "afs_licence"]

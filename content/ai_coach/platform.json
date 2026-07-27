@@ -23,8 +23,8 @@
     "id": "qa_plt_halal_flag",
     "category": "platform",
     "question": "Is there a halal filter?",
-    "short_answer": "Yes. Turn on the Halal flag in Settings -> Mandate -> Compliance. The PM will reject any verdict that violates standard AAOIFI screens.",
-    "long_answer": "The halal flag blocks names that fail interest-income, debt-ratio, and prohibited-business screens (alcohol, conventional finance, gambling, adult entertainment, tobacco, pork, weapons). The Portfolio Manager applies the screen as a hard floor, so even if every other agent loves a name, a haram ticker gets filtered out before you see the verdict. Note: screens are based on public filings and refresh quarterly, so always confirm with your own scholar for high-stakes decisions.",
+    "short_answer": "Yes. Turn on the Halal flag in Settings -> Mandate -> Compliance. AMI checks the ticker against a sourced, dated Sharia-screened index and the PM blocks any name that comes back screened-out.",
+    "long_answer": "The halal flag does not run a live ratio screen. AMI looks the ticker up in a published, dated AAOIFI-standard index (the S&P 500 Sharia Industry Exclusions Index, tracked by the SPUS ETF) and returns one of four outcomes: PASS (a current member of the compliant set), SCREENED OUT (in the S&P 500 but not the compliant set, so the PM blocks it; a conventional bank is the classic case), UNKNOWN (not in the S&P 500 at all, so the index never ruled on it; permitted, but flagged that no screen covered it), or PAUSED (the source is stale or unavailable, so the flag blocks loudly rather than guess). The Portfolio Manager applies this as a hard floor, after the debate. Because it is a membership lookup against someone else's dated list, a PASS means 'on the compliant list as of a date,' not that AMI recomputed the ratios. Always confirm with your own scholar for high-stakes decisions.",
     "related_lessons": [],
     "related_agents": ["portfolio_manager"],
     "tags": ["mandate", "halal", "compliance"]
@@ -184,7 +184,7 @@
     "category": "platform",
     "question": "What is Brief Your Agent?",
     "short_answer": "A way to shape each agent's style — more verbose, more skeptical, more focused on certain data — without changing the safety rules.",
-    "long_answer": "Brief Your Agent lets you nudge an agent's personality and emphasis. You can tell the Fundamentals Analyst to weight cash flow heavier, ask the News Analyst to ignore tweet-level chatter, or tell the Technical Analyst you prefer daily over intraday timeframes. Coaching is a diff card that you review and approve. Find it under any agent's profile -> Coach.",
+    "long_answer": "Brief Your Agent lets you nudge an agent's personality and emphasis. You can tell the Fundamentals Analyst to weight cash flow heavier, ask the News Analyst to ignore tweet-level chatter, or tell the Technical Analyst you prefer daily over intraday timeframes. Each change is a diff card that you review and approve. Find it under any agent's profile -> Brief Your Agent.",
     "related_lessons": [],
     "related_agents": ["concierge"],
     "tags": ["coach", "customization"]
@@ -213,8 +213,8 @@
     "id": "qa_plt_coach_reset",
     "category": "platform",
     "question": "How do I reset an agent's coaching?",
-    "short_answer": "Open the agent's profile -> Coach -> History -> Reset to Default. The agent reverts to its base prompt immediately.",
-    "long_answer": "Each agent's Coach History shows every diff card you've approved, with timestamps. You can revert one change at a time or use Reset to Default to wipe all coaching and start fresh. Resetting doesn't delete your 1-on-1 chat history or Decision Journal entries — only the active prompt configuration.",
+    "short_answer": "Open the agent's profile -> Brief Your Agent -> History -> Reset to Default. The agent reverts to its base prompt immediately.",
+    "long_answer": "Each agent's Brief Your Agent history shows every diff card you've approved, with timestamps. You can revert one change at a time or use Reset to Default to wipe all briefings and start fresh. Resetting doesn't delete your 1-on-1 chat history or Decision Journal entries; only the active prompt configuration.",
     "related_lessons": [],
     "related_agents": [],
     "tags": ["coach", "reset"]

@@ -69,7 +69,7 @@
     "category": "beginner",
     "question": "What does market cap mean?",
     "short_answer": "Market cap is share price multiplied by the number of shares outstanding \u2014 the market's price tag on the whole company.",
-    "long_answer": "Market cap groups companies by size: roughly under 2B is small-cap, 2B to 10B is mid-cap, above 10B is large-cap, and the trillion-dollar names are mega-cap. Size affects volatility, liquidity, and how much news moves the stock. A 100 dollar share price tells you nothing about size by itself \u2014 you need the share count too.",
+    "long_answer": "Market cap groups companies by size: very roughly, under 2B is small-cap, 2B to 10B is mid-cap, 10B to 200B is large-cap, and above 200B is mega-cap (the trillion-dollar names are the biggest mega-caps). These cutoffs are conventions, not hard lines. Size affects volatility, liquidity, and how much news moves the stock. A 100 dollar share price tells you nothing about size by itself; you need the share count too.",
     "related_lessons": [
       "013"
     ],
@@ -379,7 +379,7 @@
     "id": "qa_beg_max_loss_per_day",
     "category": "beginner",
     "question": "Should I have a max loss per day?",
-    "short_answer": "Yes.. A daily loss limit stops a bad morning from becoming a worst week ever.",
+    "short_answer": "Yes. A daily loss limit stops a bad morning from becoming a worst week ever.",
     "long_answer": "Once you hit your daily limit you stop placing new trades and review what happened. The number can be small at first \u2014 1 to 3 percent of account \u2014 and it forces a cooling-off period before the next session. The Portfolio Manager treats the daily limit as a hard floor.",
     "related_lessons": [
       "018"
@@ -610,7 +610,7 @@
     "id": "qa_beg_is_ami_real_money",
     "category": "beginner",
     "question": "Am I trading real money in AMI Trade?",
-    "short_answer": "No.. AMI Trade is simulation-only and advisory-only.",
+    "short_answer": "No. AMI Trade is simulation-only and advisory-only.",
     "long_answer": "The app exists to teach process: research, debate, decide, journal, review. You build skill and a track record without losing money along the way. Some users eventually trade real accounts based on what they learn; that is their decision and their broker, not AMI.",
     "related_lessons": [],
     "related_agents": [
@@ -626,7 +626,7 @@
     "id": "qa_beg_can_ami_predict",
     "category": "beginner",
     "question": "Can AMI predict where a stock will go?",
-    "short_answer": "No.. No system can.",
+    "short_answer": "No. No system can.",
     "long_answer": "Anyone selling certainty in markets is selling a story. The agents produce reasoning, not crystal balls. A well-reasoned trade can still lose; a sloppy one can still win. Over many trades, the quality of the process is what shows up in your equity curve.",
     "related_lessons": [
       "024"
@@ -642,7 +642,7 @@
     "id": "qa_beg_who_decides",
     "category": "beginner",
     "question": "If the agents disagree, who decides?",
-    "short_answer": "You do.. The agents argue, surface evidence, and propose a verdict.",
+    "short_answer": "You do. The agents argue, surface evidence, and propose a verdict.",
     "long_answer": "Disagreement among agents is a feature, not a bug. If the Bull and Bear cases are both strong, that itself is information \u2014 usually a sign to size smaller, wait, or pass. The Decision Journal captures your call and the agents' positions so you can review later.",
     "related_lessons": [],
     "related_agents": [
@@ -659,11 +659,11 @@
     "id": "qa_beg_pick_first_stock",
     "category": "beginner",
     "question": "Can you just tell me a good first stock to buy?",
-    "short_answer": "No.. AMI does not give stock picks.",
+    "short_answer": "No. AMI does not give stock picks.",
     "long_answer": "If you got a tip from AMI today, you would still not know what to do tomorrow when the tip stops working. Bring a name you already follow \u2014 a brand you use, a company you find interesting \u2014 and run it through a 1-on-1 with the Fundamentals Analyst. Lesson 001 and 005 are good starting points.",
     "related_lessons": [
-      "013",
-      "017"
+      "001",
+      "005"
     ],
     "related_agents": [
       "fundamentals_analyst",
@@ -706,7 +706,7 @@
     "id": "qa_beg_how_much_money_start",
     "category": "beginner",
     "question": "How much money do I need to start using AMI Trade?",
-    "short_answer": "Zero.. AMI Trade is simulation-only.",
+    "short_answer": "Zero. AMI Trade is simulation-only.",
     "long_answer": "If you eventually go to a real broker, the right starting amount depends on you, not on a universal rule. Most beginners are better off learning the process here for months before risking real money. The simulated portfolio you build in AMI Trade has no minimum.",
     "related_lessons": [],
     "related_agents": [
@@ -722,7 +722,7 @@
     "id": "qa_beg_fees_in_app",
     "category": "beginner",
     "question": "Does AMI Trade charge fees per trade?",
-    "short_answer": "No per-trade fees.. The pricing is subscription tiers plus optional credit packs for heavy agent usage.",
+    "short_answer": "No per-trade fees. The pricing is subscription tiers plus optional credit packs for heavy agent usage.",
     "long_answer": "Floor Pass is free with ads. Trader at 14.99 and Floor Manager at 34.99 unlock more agents, deeper analysis, and faster credits. Credit packs are for users who run lots of full Room debates. Nothing happens in real markets, so nothing is charged in real brokerage fees.",
     "related_lessons": [],
     "related_agents": [],
@@ -783,7 +783,7 @@
     "id": "qa_beg_taxes",
     "category": "beginner",
     "question": "Do I pay taxes on AMI Trade?",
-    "short_answer": "No.. There are no real positions and no real gains, so there is nothing to tax.",
+    "short_answer": "No. There are no real positions and no real gains, so there is nothing to tax.",
     "long_answer": "When you eventually move to real markets, taxes depend on your jurisdiction, holding period, and broker reports \u2014 short-term and long-term capital gains, dividend treatment, foreign withholding for US stocks if you are abroad, and so on. That is a question for a local accountant, not AMI.",
     "related_lessons": [],
     "related_agents": [],
@@ -796,7 +796,7 @@
     "id": "qa_beg_credits",
     "category": "beginner",
     "question": "What are credits and how do I get them?",
-    "short_answer": "Credits power agent runs.. Your subscription includes a monthly allowance; heavy users can buy packs.",
+    "short_answer": "Credits power agent runs. Your subscription includes a monthly allowance; heavy users can buy packs.",
     "long_answer": "A 1-on-1 with one agent costs a small number of credits. Convene the Room costs more because all 12 agents work. The Earn Path attaches credit rewards to learning behaviour \u2014 completing lessons, hitting streaks, journalling decisions \u2014 so the more you grow, the more agent capacity you unlock.",
     "related_lessons": [],
     "related_agents": [],
