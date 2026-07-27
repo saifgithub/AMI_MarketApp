@@ -23,11 +23,25 @@ auto-recover. The user decides whether to abort, fix, or continue.
 Run these from the current worktree root. Any failure aborts.
 
 ```bash
+# HOLD GATE (AT:R65) — runs FIRST. A green suite does not mean promotable.
+if grep -q '^### ' infra/PROMOTION_HOLD.md 2>/dev/null; then
+  echo "PROMOTION HOLD ACTIVE — aborting. Holds:"
+  grep '^### ' infra/PROMOTION_HOLD.md
+  exit 1
+fi
+
 git status --short
 git log --oneline -1
 pytest backend/tests/unit/ -q
 flutter analyze --no-fatal-infos
 ```
+
+**The hold gate is not advisory.** `infra/PROMOTION_HOLD.md` exists for the case where `main` is
+green, audited, and still must not ship — typically a backend change whose *client* half is on `main`
+but not yet on any device. Backend promotion is an rsync; the Flutter half is a store release, and
+those are days apart. If a hold is listed, **stop and surface it to the user** — do not reason your
+way past it, and do not promote "just the other files" (the rsync ships the whole tree). Only the
+user clears a hold, and only against the precondition the hold names.
 
 - `git status --short` must print nothing (no modified, no untracked).
   - Exception: `.claude/worktrees/` is fine. Treat any other output as
