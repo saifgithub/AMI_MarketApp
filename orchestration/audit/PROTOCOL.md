@@ -46,6 +46,14 @@ Per item, two files under `<AUDIT_LANE_DIR>/` (one directory holds CR and DEF la
   that round line is the AWAITING_AUDIT signal.
 - `<ITEM>.auditor.md` (auditor owns): per-finding verdict + a
   `VERDICT: COMPLETE | AWAITING_FIXES (round N)` line, plus the run-report path under `<AUDIT_ROOT>/runs/`.
+  **`N` is the round you AUDITED, never the round you are asking for.** Auditing `SUBMITTED: round 1`
+  yields `VERDICT: … (round 1)` even when the verdict is `AWAITING_FIXES` and more work follows —
+  the architect then bumps to `SUBMITTED: round 2`. Stamping the *requested* round instead makes
+  `SUBMITTED == VERDICT`, and since both `dispatch.sh` and `watcher.sh` gate on strict `>`, the lane
+  **silently deadlocks**: the board reads `AUDIT_RETURNED` forever and the auditor never sees a new
+  turn. Observed live on DEF116 (2026-07-27), where two auditors had used the two conventions on the
+  same day; recovered by bumping the architect side an extra round, which permanently offsets that
+  lane's round numbers from its actual work rounds.
 
 STATE is DERIVED from the two files (no shared flag, no merge conflict on concurrent commits). The
 trigger for either role is purely the round numbers on any `*.architect.md` lane (CR or DEF):
