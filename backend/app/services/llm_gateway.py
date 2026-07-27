@@ -379,6 +379,68 @@ class VLLMProvider(LLMProvider):
     async def aclose(self) -> None:
         await self._client.aclose()
 
+    async def log_prefix_cache_status(self) -> None:
+        """CR077 Phase 0 second guard.
+
+        The whole-lesson-catalogue reorder in `concierge_prompts.py` depends
+        on this host's prefix cache actually being on — CR077 measured it
+        sitting at 0% hit on the Concierge prompt for months with nobody
+        noticing, purely because of where the static block sat. Log the
+        measured hit rate at startup and warn loudly if the server reports
+        `enable_prefix_caching` off, so a second silent regression like that
+        shows up in the logs instead of just costing 2+ seconds a message.
+        Best-effort: an unreachable `/metrics` logs a warning, not a crash —
+        this is instrumentation, not a request-path dependency.
+        """
+        try:
+            resp = await self._client.get("/metrics", timeout=5.0)
+            resp.raise_for_status()
+            text = resp.text
+        except Exception as exc:
+            logger.warn("vllm_prefix_cache_check_failed", error=str(exc))
+            return
+
+        enabled = 'enable_prefix_caching="True"' in text
+        hits = _sum_prometheus_metric(text, "vllm:prefix_cache_hits_total")
+        queries = _sum_prometheus_metric(text, "vllm:prefix_cache_queries_total")
+        hit_rate = (hits / queries) if queries else None
+        logger.info(
+            "vllm_prefix_cache_status",
+            enable_prefix_caching=enabled,
+            hits_total=hits,
+            queries_total=queries,
+            hit_rate=hit_rate,
+        )
+        if not enabled:
+            logger.warn(
+                "vllm_prefix_caching_disabled",
+                detail=(
+                    "enable_prefix_caching not reported True by /metrics — the "
+                    "CR077 Concierge static-head reorder is silently getting "
+                    "zero benefit from this"
+                ),
+            )
+
+
+def _sum_prometheus_metric(text: str, metric_name: str) -> float:
+    """Sum every labelled sample of a Prometheus counter/gauge by name.
+
+    A metric can have multiple label combinations (e.g. per engine); the
+    startup check wants the total across all of them, not any one line.
+    """
+    total = 0.0
+    prefix = metric_name + "{"
+    bare = metric_name + " "
+    for line in text.splitlines():
+        if line.startswith("#"):
+            continue
+        if line.startswith(prefix) or line.startswith(bare):
+            try:
+                total += float(line.rsplit(" ", 1)[1])
+            except (IndexError, ValueError):
+                continue
+    return total
+
 
 # ── Gateway: picks the right provider based on what's available ──────────
 
@@ -424,6 +486,12 @@ class LLMGateway:
 
     def has_real_provider(self) -> bool:
         return any(name != "mock" for name in self._providers)
+
+    async def check_prefix_cache_at_startup(self) -> None:
+        """CR077 Phase 0 second guard — no-op when vLLM isn't registered."""
+        provider = self._providers.get("vllm")
+        if isinstance(provider, VLLMProvider):
+            await provider.log_prefix_cache_status()
 
     def _active_provider_name(self) -> str:
         for name in self._PREFERENCE:

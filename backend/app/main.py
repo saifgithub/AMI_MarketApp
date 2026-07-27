@@ -133,6 +133,16 @@ async def lifespan(app: FastAPI):
     except Exception:
         logger.exception("room_resume_pending_retries_failed")
 
+    # CR077 Phase 0 second guard — log the measured vLLM prefix-cache hit
+    # rate once at boot so a silent regression to 0% (the state this whole
+    # CR started in) shows up in the logs instead of nobody finding out.
+    try:
+        from app.services.llm_gateway import get_llm_gateway
+
+        await get_llm_gateway().check_prefix_cache_at_startup()
+    except Exception:
+        logger.exception("prefix_cache_startup_check_failed")
+
     tasks = [
         asyncio.create_task(_nightly_audit_trim()),
         asyncio.create_task(_league_roll_tick()),

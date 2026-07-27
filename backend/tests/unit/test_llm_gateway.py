@@ -309,3 +309,109 @@ async def test_vllm_provider_omits_bearer_without_api_key():
         assert "Authorization" not in p._client.headers
     finally:
         await p.aclose()
+
+
+# ── CR077 Phase 0 second guard — prefix-cache startup check ──────────────
+
+
+class _FakeMetricsResponse:
+    def __init__(self, text: str, status_code: int = 200) -> None:
+        self.text = text
+        self.status_code = status_code
+
+    def raise_for_status(self) -> None:
+        if self.status_code != 200:
+            raise Exception(f"HTTP {self.status_code}")
+
+
+_SAMPLE_METRICS_ENABLED = """
+vllm:prefix_cache_queries_total{engine="0",model_name="ami-llm"} 2.0e+08
+vllm:prefix_cache_hits_total{engine="0",model_name="ami-llm"} 1.0e+08
+vllm:cache_config_info{engine="0",enable_prefix_caching="True",block_size="2096"} 1.0
+"""
+
+_SAMPLE_METRICS_DISABLED = """
+vllm:prefix_cache_queries_total{engine="0",model_name="ami-llm"} 0.0
+vllm:prefix_cache_hits_total{engine="0",model_name="ami-llm"} 0.0
+vllm:cache_config_info{engine="0",enable_prefix_caching="False",block_size="2096"} 1.0
+"""
+
+
+@pytest.mark.asyncio
+async def test_prefix_cache_status_logs_hit_rate_when_enabled(monkeypatch):
+    p = VLLMProvider(base_url="http://lan:8000", model_name="ami-llm")
+    try:
+        async def fake_get(url, timeout=5.0):
+            assert url == "/metrics"
+            return _FakeMetricsResponse(_SAMPLE_METRICS_ENABLED)
+
+        monkeypatch.setattr(p._client, "get", fake_get)
+
+        from app.services import llm_gateway as gw
+
+        logged: list[dict] = []
+        monkeypatch.setattr(gw.logger, "info", lambda event, **kw: logged.append({"event": event, **kw}))
+        monkeypatch.setattr(
+            gw.logger, "warn",
+            lambda *a, **kw: (_ for _ in ()).throw(AssertionError("should not warn when enabled")),
+        )
+
+        await p.log_prefix_cache_status()
+
+        status = next(l for l in logged if l["event"] == "vllm_prefix_cache_status")
+        assert status["enable_prefix_caching"] is True
+        assert status["hits_total"] == 1.0e08
+        assert status["queries_total"] == 2.0e08
+        assert status["hit_rate"] == pytest.approx(0.5)
+    finally:
+        await p.aclose()
+
+
+@pytest.mark.asyncio
+async def test_prefix_cache_status_warns_loudly_when_disabled(monkeypatch):
+    p = VLLMProvider(base_url="http://lan:8000", model_name="ami-llm")
+    try:
+        async def fake_get(url, timeout=5.0):
+            return _FakeMetricsResponse(_SAMPLE_METRICS_DISABLED)
+
+        monkeypatch.setattr(p._client, "get", fake_get)
+
+        from app.services import llm_gateway as gw
+
+        warned: list[dict] = []
+        monkeypatch.setattr(gw.logger, "info", lambda event, **kw: None)
+        monkeypatch.setattr(gw.logger, "warn", lambda event, **kw: warned.append({"event": event, **kw}))
+
+        await p.log_prefix_cache_status()
+
+        assert any(w["event"] == "vllm_prefix_caching_disabled" for w in warned)
+    finally:
+        await p.aclose()
+
+
+@pytest.mark.asyncio
+async def test_prefix_cache_status_unreachable_warns_not_raises(monkeypatch):
+    p = VLLMProvider(base_url="http://lan:8000", model_name="ami-llm")
+    try:
+        async def fake_get(url, timeout=5.0):
+            raise Exception("connection refused")
+
+        monkeypatch.setattr(p._client, "get", fake_get)
+
+        from app.services import llm_gateway as gw
+
+        warned: list[dict] = []
+        monkeypatch.setattr(gw.logger, "warn", lambda event, **kw: warned.append({"event": event, **kw}))
+
+        await p.log_prefix_cache_status()  # must not raise
+
+        assert any(w["event"] == "vllm_prefix_cache_check_failed" for w in warned)
+    finally:
+        await p.aclose()
+
+
+@pytest.mark.asyncio
+async def test_gateway_check_prefix_cache_at_startup_is_noop_without_vllm():
+    """No vLLM provider registered ⇒ no-op, doesn't raise."""
+    g = LLMGateway()
+    await g.check_prefix_cache_at_startup()  # must not raise

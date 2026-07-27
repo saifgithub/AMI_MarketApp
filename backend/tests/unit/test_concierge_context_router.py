@@ -8,11 +8,20 @@ real content/lessons catalogue), plus the settings wiring through
 
 Companion to `test_concierge_live.py` (which covers the live-gateway
 path + scripted fallback).
+
+CR077 Phase 0 adds the static-head / per-user-tail split (below) — the
+342-lesson catalogue must render byte-identical regardless of mandate,
+user_id, or journal, so it lands as a whole-block prefix-cache hit on the
+serving vLLM host.
 """
 
 from __future__ import annotations
 
+from uuid import uuid4
+
 from app.core.config import settings
+from app.schemas import Compliance, Horizon, Path, PrimaryGoal, RiskComponents
+from app.schemas.journal import EntryType, JournalEntry
 from app.services.concierge_prompts import (
     _CONTEXT_TOKEN_BUDGET,
     _full_context_index,
@@ -163,3 +172,99 @@ def test_build_messages_unknown_mode_falls_back(base_mandate):
         context_mode="garbage",
     )
     assert "282_what_is_a_brokerage" in system_prompt
+
+
+# ── CR077 Phase 0 — static head / per-user tail split ────────────────────
+#
+# The whole point of hoisting the catalogue is that it caches as one or
+# more whole 2,096-token vLLM blocks. 2 blocks' worth of *characters* is
+# the floor for the byte-identical-head assertion (chars/4 is the same
+# estimator the module already uses at concierge_prompts.py:88).
+_TWO_BLOCKS_CHARS = 2 * 2096 * 4
+
+
+def _other_mandate(base_mandate):
+    """A second mandate differing in every field CR077 calls out by name
+    (plan, risk, compliance, goal/horizon/path) — plus a distinct user_id."""
+    m = base_mandate.model_copy(deep=True)
+    m.user_id = uuid4()
+    m.display_name = "Someone Else"
+    m.primary_goal = PrimaryGoal.INCOME_NOW
+    m.horizon = Horizon.SHORT
+    m.path = Path.ACTIVE
+    m.risk_score = 5
+    m.risk_components = RiskComponents(
+        drawdown_response=5, regret_asymmetry=1, concentration_tolerance=5
+    )
+    m.max_drawdown_pct = 10
+    m.compliance = Compliance(halal=True, long_only=False, liquid_only=False)
+    return m
+
+
+def test_catalogue_head_byte_identical_across_wildly_different_users(base_mandate):
+    """The static head — lesson catalogue — must render byte-identical no
+    matter how much the mandate, user_id, or journal differ.
+
+    This is the property CR077's whole speedup depends on: one interpolated
+    per-user field this early costs the entire cached-block reuse, silently.
+    """
+    lessons = _all_lessons()
+    mandate_a = base_mandate
+    mandate_b = _other_mandate(base_mandate)
+
+    journal_a: list[JournalEntry] = []
+    journal_b = [
+        JournalEntry(
+            user_id=mandate_b.user_id,
+            entry_type=EntryType.SIM_TRADE,
+            title="Bought NVDA",
+            ticker="NVDA",
+        ),
+    ]
+
+    prompt_a, _ = build_concierge_messages(
+        mandate=mandate_a,
+        user_id=mandate_a.user_id,
+        user_message="hi",
+        history=[],
+        recent_journal=journal_a,
+        unlocked_agents=set(),
+        available_lessons=lessons,
+    )
+    prompt_b, _ = build_concierge_messages(
+        mandate=mandate_b,
+        user_id=mandate_b.user_id,
+        user_message="something totally different",
+        history=[],
+        recent_journal=journal_b,
+        unlocked_agents={"technical_analyst", "fundamentals_analyst"},
+        available_lessons=lessons,
+    )
+
+    assert len(prompt_a) >= _TWO_BLOCKS_CHARS, (
+        "fixture too small to prove a real 2-block-plus cacheable prefix"
+    )
+    assert prompt_a[:_TWO_BLOCKS_CHARS] == prompt_b[:_TWO_BLOCKS_CHARS], (
+        "static head diverged between two users — the whole-block prefix "
+        "cache hit CR077 depends on is silently zero"
+    )
+    # Sanity: the two prompts must actually differ somewhere (the per-user
+    # tail), or this test would be vacuously true.
+    assert prompt_a != prompt_b
+
+
+def test_closing_instructions_follow_catalogue(base_mandate):
+    """The closing line ('name ONLY the lessons in that agent's list above')
+    is only true if the catalogue precedes it — assert ORDER, not presence."""
+    system_prompt, _ = build_concierge_messages(
+        mandate=base_mandate,
+        user_id=base_mandate.user_id,
+        user_message="how do I unlock the trader?",
+        history=[],
+        recent_journal=[],
+        unlocked_agents=set(),
+        available_lessons=_all_lessons(),
+    )
+    catalogue_pos = system_prompt.index("Available lessons you can recommend")
+    closing_pos = system_prompt.index("name ONLY the lessons")
+    assert catalogue_pos < closing_pos
