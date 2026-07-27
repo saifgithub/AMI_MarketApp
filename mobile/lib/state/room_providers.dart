@@ -40,6 +40,25 @@ class RoomLiveDataNotice {
   final int surchargeCharged;
 }
 
+/// CR098 — one withheld analyst chair. `nextStepAgentId`/`nextStepDays` are
+/// carried here too even though they're roster-level (identical across every
+/// `agent_withheld` event this run) so a single chair's widget doesn't need
+/// to reach back into `RoomState` for them.
+@immutable
+class WithheldAgentInfo {
+  const WithheldAgentInfo({
+    required this.agentId,
+    required this.reason,
+    this.nextStepAgentId,
+    this.nextStepDays,
+  });
+
+  final String agentId;
+  final String reason;
+  final String? nextStepAgentId;
+  final int? nextStepDays;
+}
+
 @immutable
 class RoomState {
   const RoomState({
@@ -56,6 +75,7 @@ class RoomState {
     this.paywall,
     this.serverError = false,
     this.liveDataNotice,
+    this.withheldAgents = const {},
   });
 
   final String? phase;
@@ -82,6 +102,12 @@ class RoomState {
   // CR090 (D4): null unless the `live_data_notice` event actually arrived.
   // Absence renders nothing — never a defaulted "no surcharge" state.
   final RoomLiveDataNotice? liveDataNotice;
+  // CR098: agentId -> its withhold info. Populated from `agent_withheld`
+  // events, all emitted before any ANALYSTS-phase agent speaks. Also mirrored
+  // into `order` (see the `agent_withheld` case below) so the locked chair
+  // renders inline, in seat, at the top of the phase (D4) — not in a
+  // separate list that could drift out of position.
+  final Map<String, WithheldAgentInfo> withheldAgents;
 
   RoomState copyWith({
     String? phase,
@@ -99,6 +125,7 @@ class RoomState {
     bool clearPaywall = false,
     bool? serverError,
     RoomLiveDataNotice? liveDataNotice,
+    Map<String, WithheldAgentInfo>? withheldAgents,
   }) {
     return RoomState(
       phase: phase ?? this.phase,
@@ -114,6 +141,7 @@ class RoomState {
       paywall: clearPaywall ? null : (paywall ?? this.paywall),
       serverError: serverError ?? this.serverError,
       liveDataNotice: liveDataNotice ?? this.liveDataNotice,
+      withheldAgents: withheldAgents ?? this.withheldAgents,
     );
   }
 }
@@ -164,6 +192,30 @@ class RoomNotifier extends StateNotifier<RoomState> {
             break;
           case 'agent_done':
             state = state.copyWith(activeAgent: null);
+            break;
+          case 'agent_withheld':
+            // CR098: one event per withheld analyst, all emitted before any
+            // ANALYSTS-phase agent speaks. Mirror the agentId into `order`
+            // (never into `transcript`) so the console renders a locked
+            // chair in the analyst's real seat, at the top of the phase,
+            // rather than appearing late once other analysts have spoken.
+            final withheldAgentId = ev['agent_id'] as String;
+            final withheldNext = Map<String, WithheldAgentInfo>.from(
+              state.withheldAgents,
+            );
+            withheldNext[withheldAgentId] = WithheldAgentInfo(
+              agentId: withheldAgentId,
+              reason: (ev['reason'] as String?) ?? 'upgrade',
+              nextStepAgentId: ev['next_step_agent'] as String?,
+              nextStepDays: ev['next_step_days'] as int?,
+            );
+            final orderWithChair = state.order.contains(withheldAgentId)
+                ? state.order
+                : [...state.order, withheldAgentId];
+            state = state.copyWith(
+              withheldAgents: withheldNext,
+              order: orderWithChair,
+            );
             break;
           case 'verdict':
             state = state.copyWith(verdict: ev['verdict'] as RoomVerdict);

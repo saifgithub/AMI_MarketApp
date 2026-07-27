@@ -2184,6 +2184,30 @@ abstract class AppLocalizations {
   /// **'UPGRADE FOR LIVE DATA'**
   String get roomLiveDataUpgradeCta;
 
+  /// CR098 (D1): one feed's status line when live data exists but the analyst is off the roster on account tenure, not credits. Must read distinctly from roomLiveDataFeedWithheld (paid) and roomLiveDataFeedUnavailable — buying credits will not fix this one.
+  ///
+  /// In en, this message translates to:
+  /// **'{feed}: live data available — needs a plan upgrade.'**
+  String roomLiveDataFeedTenure(String feed);
+
+  /// CR098 (D1): the tenure-withhold CTA. Deliberately distinct copy from roomLiveDataUpgradeCta (credits) — a tenure gate is fixed by a plan upgrade, not a credit purchase, and DEF059-class-inverting the two tells the user the wrong remedy.
+  ///
+  /// In en, this message translates to:
+  /// **'UPGRADE YOUR PLAN'**
+  String get roomLiveDataTenureUpgradeCta;
+
+  /// CR098 (D3/D4): label on a locked chair for an analyst withheld by the tenure roster pull-back. Names the analyst, not a generic placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} — off your roster on this plan'**
+  String roomAgentWithheldChairLabel(String agent);
+
+  /// CR098: roster-LEVEL countdown, identical on every locked chair this run. Names the roster's single nearest upcoming pull-back step — never a per-agent 'this analyst returns' claim (an analyst never un-withholds without an upgrade; the next drop is some OTHER analyst going dark, not this one coming back).
+  ///
+  /// In en, this message translates to:
+  /// **'Next roster change: {agent} in {days, plural, =1{1 day} other{{days} days}}.'**
+  String roomAgentWithheldRosterNote(String agent, int days);
+
   /// CR084 paywall heading. Shown at the hard credit wall and from Settings. 'Desk' = the user's analyst team workspace.
   ///
   /// In en, this message translates to:

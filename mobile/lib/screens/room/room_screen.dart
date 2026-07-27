@@ -113,11 +113,16 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                     if (state.streaming && state.order.isEmpty)
                       _RoomRoster(state: state),
                     for (final agentId in state.order)
-                      _AgentLine(
-                        agentId: agentId,
-                        text: state.transcript[agentId] ?? '',
-                        active: state.activeAgent == agentId,
-                      ),
+                      if (state.withheldAgents[agentId] != null)
+                        _WithheldAgentChair(
+                          info: state.withheldAgents[agentId]!,
+                        )
+                      else
+                        _AgentLine(
+                          agentId: agentId,
+                          text: state.transcript[agentId] ?? '',
+                          active: state.activeAgent == agentId,
+                        ),
                     if (state.verdict != null) ...[
                       const SizedBox(height: AmiSpacing.l),
                       _VerdictCard(
@@ -265,6 +270,83 @@ class _AgentLine extends StatelessWidget {
                     active ? AmiColors.textHigh : AmiColors.textMed,
                   ),
                 ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+/// CR098 — a locked chair for one tenure-withheld analyst. Renders inline in
+/// `state.order` at the point the `agent_withheld` event arrived (before any
+/// ANALYSTS-phase agent speaks — D4), never in a floating banner that could
+/// drift out of seat position.
+///
+/// The countdown line is deliberately ROSTER-level, not per-agent: it names
+/// the roster's single nearest upcoming pull-back step, which is never "this
+/// analyst returns" (pull-back is monotonic — an analyst never un-withholds
+/// without an upgrade). Omitted entirely when both `nextStepAgentId` and
+/// `nextStepDays` are null (nothing further scheduled to go dark) — never a
+/// "null days" artifact.
+class _WithheldAgentChair extends StatelessWidget {
+  const _WithheldAgentChair({required this.info});
+
+  final WithheldAgentInfo info;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final a = agentById(info.agentId);
+    final nextAgentId = info.nextStepAgentId;
+    final nextDays = info.nextStepDays;
+    final showCountdown = nextAgentId != null && nextDays != null;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AmiSpacing.s),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Opacity(
+            opacity: 0.35,
+            child: HexAvatar(
+              label: a.abbreviation,
+              color: a.color,
+              size: 28,
+              status: HexAvatarStatus.idle,
+            ),
+          ),
+          const SizedBox(width: AmiSpacing.s),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.lock_outline,
+                        size: 14, color: AmiColors.textLow),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        l.roomAgentWithheldChairLabel(a.displayName),
+                        style: AmiTypography.body
+                            .copyWith(color: AmiColors.textMed),
+                      ),
+                    ),
+                  ],
+                ),
+                if (showCountdown) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    l.roomAgentWithheldRosterNote(
+                      agentById(nextAgentId).displayName,
+                      nextDays,
+                    ),
+                    style: AmiTypography.caption
+                        .copyWith(color: AmiColors.textLow),
+                  ),
+                ],
               ],
             ),
           ),
@@ -720,11 +802,16 @@ class _ServerErrorCard extends ConsumerWidget {
 
 
 /// CR090: renders the structural live-data disclosure (`live_data_notice`),
-/// one per run. Three states, three distinct renderings (D3) — this is the
-/// entire point of the CR:
+/// one per run. Now four states, four distinct renderings (D3, extended by
+/// CR098 D1) — this is the entire point of the CR:
 ///   - `live`: confirms real data was used and what it cost.
 ///   - `withheld_paid`: the data exists but wasn't paid for — explicit
-///     "needs credits" copy + an upgrade CTA.
+///     "needs credits" copy + an upgrade-for-credits CTA.
+///   - `withheld_tenure` (CR098 D1): the data exists but the analyst is off
+///     the roster on account age — a DIFFERENT remedy (plan upgrade, not
+///     credits) needs its OWN copy + its own CTA. Routing this to the
+///     credits CTA is the DEF059-class inversion this state exists to catch:
+///     buying credits will not bring the analyst back.
 ///   - `unavailable`: nobody has this data right now — said plainly, with
 ///     NO CTA and no upsell (upselling something we can't deliver is the
 ///     DEF059 inversion this CR exists to prevent).
@@ -738,6 +825,9 @@ class _LiveDataNoticeCard extends ConsumerWidget {
   bool get _newsWithheld => notice.news == 'withheld_paid';
   bool get _socialWithheld => notice.social == 'withheld_paid';
   bool get _anyWithheld => _newsWithheld || _socialWithheld;
+  bool get _newsTenure => notice.news == 'withheld_tenure';
+  bool get _socialTenure => notice.social == 'withheld_tenure';
+  bool get _anyTenure => _newsTenure || _socialTenure;
   bool get _anyLive => notice.news == 'live' || notice.social == 'live';
 
   String _resetDateStr(WidgetRef ref) {
@@ -750,10 +840,16 @@ class _LiveDataNoticeCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
-    // D3: withheld_paid takes priority in framing over unavailable when both
-    // fire, since it's the one that carries an honest upsell; unavailable-only
-    // never gets a CTA.
-    final accent = _anyWithheld ? AmiColors.hexAmber : AmiColors.slate500;
+    // D3/D1: withheld_paid and withheld_tenure each carry an honest upsell
+    // (different remedies, different CTAs below) so they take priority in
+    // framing over unavailable; unavailable-only never gets a CTA.
+    // withheld_tenure gets its own accent (purple, not amber) so the card
+    // never LOOKS like the credits-withheld state even before reading it.
+    final accent = _anyWithheld
+        ? AmiColors.hexAmber
+        : _anyTenure
+            ? AmiColors.hexPurple
+            : AmiColors.slate500;
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: AmiSpacing.m),
@@ -809,6 +905,30 @@ class _LiveDataNoticeCard extends ConsumerWidget {
               ),
             ),
           ],
+          // CR098 (D1): withheld_tenure's OWN CTA — deliberately never the
+          // credits button above. A tenure withhold is fixed by a plan
+          // upgrade; buying credits does nothing for it, so pointing this
+          // state at the credits CTA is the exact DEF059-class inversion
+          // this state exists to catch.
+          if (_anyTenure) ...[
+            const SizedBox(height: AmiSpacing.m),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AmiColors.hexPurple,
+                  foregroundColor: AmiColors.slate900,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+                ),
+                onPressed: () => showUpgradeSheet(
+                  context,
+                  resetDateLabel: _resetDateStr(ref),
+                ),
+                child: Text(l.roomLiveDataTenureUpgradeCta),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -820,6 +940,8 @@ class _LiveDataNoticeCard extends ConsumerWidget {
         return l.roomLiveDataFeedLive(feedLabel);
       case 'withheld_paid':
         return l.roomLiveDataFeedWithheld(feedLabel);
+      case 'withheld_tenure':
+        return l.roomLiveDataFeedTenure(feedLabel);
       case 'unavailable':
       default:
         return l.roomLiveDataFeedUnavailable(feedLabel);
