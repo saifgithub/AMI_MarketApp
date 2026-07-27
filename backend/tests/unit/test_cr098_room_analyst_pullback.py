@@ -46,8 +46,10 @@ from app.services.entitlements import (
     account_age_days,
     resolve_analyst_roster,
 )
+from app.services.news_context import LiveDataState, LiveHeadline, NewsFeed
 from app.services.room_prompts import _format_profile
 from app.services.room_runner import RoomRunner
+from app.services.social_context import SocialFeed, SocialSentiment
 
 
 def _new_user(plan: str = "floor_pass") -> UUID:
@@ -668,3 +670,67 @@ def test_withheld_analyst_absent_and_present_analysts_correctly_attributed(monke
             f"{agent_id.value}'s transcript text does not match its own scripted "
             f"marker (got {text!r}) — misattribution"
         )
+
+
+# ── MINOR 1 (audit round 1) — the respawn path resolves the roster but not
+# the feeds. `_respawn_run_from_row` (production, wired at main.py:132 via
+# resume_pending_retries) calls run() with roster=None, news_feed=None,
+# social_feed=None. The roster resolves fresh so analysts filter correctly,
+# but the feed fallback previously resolved news/social at entitled=True
+# UNGATED by that same roster — a withheld News/Social analyst's real data
+# got fetched and rendered anyway, and live_data_notice reported "live" for
+# an analyst that never ran. Market was gated correctly (reads
+# roster.withheld directly), so the path was internally asymmetric. ──────
+
+_MINOR1_HEADLINE = LiveHeadline(
+    title="Acme beats Q3 by 6%", link="https://x/1", publisher="Reuters",
+    published_at=0, sentiment="Bullish", source="alpha_vantage",
+)
+_MINOR1_SENTIMENT = SocialSentiment(
+    ticker="AAPL", buzz_score=61.0, sentiment_score=0.42, mentions=1234,
+    bullish_pct=58, bearish_pct=30, trend="rising", period_days=7,
+    top_subreddits=("stocks", "wallstreetbets"), sample_snippets=(),
+)
+
+
+def test_respawn_path_gates_feed_fallback_by_roster(monkeypatch):
+    """Simulates the respawn/direct-call path: run() invoked with
+    roster=None, news_feed=None, social_feed=None (exactly `main.py`'s
+    resume_pending_retries -> _respawn_run_from_row call shape), for a real
+    aged FLOOR_PASS user whose roster withholds News and Social. Even though
+    the feed probes would report real LIVE data if fetched, the fact sheet
+    and live_data_notice must show withheld_tenure for both — never live —
+    because the analyst that would read it never runs."""
+    monkeypatch.setattr(room_runner_mod.settings, "use_real_market_data", True)
+    monkeypatch.setattr(
+        room_runner_mod, "resolve_news_feed",
+        lambda ticker, *, entitled, limit=3: NewsFeed(LiveDataState.LIVE, (_MINOR1_HEADLINE,)),
+    )
+    monkeypatch.setattr(
+        room_runner_mod, "resolve_social_feed",
+        lambda ticker, *, entitled: SocialFeed(LiveDataState.LIVE, _MINOR1_SENTIMENT),
+    )
+    from app.core.config import settings as real_settings
+    monkeypatch.setattr(real_settings, "room_pullback_days_social", 1)
+    monkeypatch.setattr(real_settings, "room_pullback_days_news", 1)
+    monkeypatch.setattr(real_settings, "room_pullback_days_market", 0)
+
+    user_id = _new_user(plan="floor_pass")
+    _age_user(user_id, days=100)
+
+    runner = RoomRunner()
+    mandate = hydrate_coach_mandate({"plan": "floor_pass", "risk_score": 3})
+    events = _collect(runner.run(
+        run_id=uuid4(), user_id=user_id, ticker="AAPL", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+        # roster=None, news_feed=None, social_feed=None — the respawn shape.
+    ))
+
+    notice = [ev for ev in events if ev.kind == "live_data_notice"]
+    assert len(notice) == 1
+    assert notice[0].live_data["news"] == "withheld_tenure", (
+        "respawn path reported live news for a roster-withheld News analyst"
+    )
+    assert notice[0].live_data["social"] == "withheld_tenure", (
+        "respawn path reported live social for a roster-withheld Social analyst"
+    )

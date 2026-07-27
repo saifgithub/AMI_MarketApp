@@ -1839,15 +1839,26 @@ class RoomRunner:
         # the profile the agents see, so what was charged always matches what was
         # rendered. The surcharge reported is what was ACTUALLY billed
         # (credit_cost − base), never merely what the feeds imply.
+        # CR098 round-2 fix (MINOR 1) — gate these fallbacks by the SAME
+        # roster the analysts are already filtered against. The respawn/
+        # direct-call path (news_feed/social_feed both None) previously
+        # resolved at entitled=True ungated by roster, so a withheld
+        # analyst's real data was fetched and rendered anyway, and
+        # live_data_notice reported "live" for an analyst that never ran —
+        # asymmetric with Market, which reads `roster.withheld` directly.
         if news_feed is None:
             news_feed = (
-                resolve_news_feed(ticker, entitled=True)
+                NewsFeed(LiveDataState.WITHHELD_TENURE, ())
+                if AgentId.NEWS_ANALYST in roster.withheld
+                else resolve_news_feed(ticker, entitled=True)
                 if settings.use_real_market_data
                 else NewsFeed(LiveDataState.UNAVAILABLE, ())
             )
         if social_feed is None:
             social_feed = (
-                resolve_social_feed(ticker, entitled=True)
+                SocialFeed(LiveDataState.WITHHELD_TENURE, None)
+                if AgentId.SOCIAL_MEDIA_ANALYST in roster.withheld
+                else resolve_social_feed(ticker, entitled=True)
                 if settings.use_real_market_data
                 else SocialFeed(LiveDataState.UNAVAILABLE, None)
             )
