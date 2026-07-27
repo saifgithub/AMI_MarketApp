@@ -142,8 +142,21 @@ _YFINANCE_BLOCKING_ATTRS = {"Ticker", "download"}
 # a guard blind spot, not evidence the bug is fixed; don't let an empty pin
 # set read as "nothing left". `_build_room_sector_context` staying in this
 # waiver set is what keeps that fact visible (grep this set).
+#
+# ROUND 4 adds `_build_sim_holdings_block`. It is NOT a new bug and NOT a
+# regression — it is `room_runner.py:1906`, which has been blocking the loop on
+# every Room convene the whole time. It became VISIBLE only in round 4, when
+# `_route_walk_leaf_method_names()` fed the declared-sync-safe names into the
+# transitive walk and the walk stopped breaking at `_marks_with_quotes`'
+# by-reference `pool.map` fan-out. Same `room_runner.py`-is-out-of-scope
+# reason as its neighbour above (D7); waived here so DEF120's own acceptance
+# is not held hostage to the Room queue's file, and pinned three lines down in
+# `_DEF120_KNOWN_BLOCKING_PAIRS` — which runs with an EMPTY waiver — so the
+# waiver cannot hide it. Removing either name without wrapping its call site
+# turns one of these two tests red.
 _WAIVED_CALL_CHAIN_NAMES = {
     "_build_room_sector_context",
+    "_build_sim_holdings_block",
 }
 
 
@@ -160,6 +173,38 @@ class _ModuleInfo:
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 self.functions[node.name] = node
+
+
+def _route_walk_leaf_method_names() -> set[str]:
+    """Every SimEngine method the route walk treats as a blocking leaf.
+
+    Round-3 audit finding (MAJOR): D10 walks only an `async def` route's OWN
+    body, so one hop of ordinary indirection restored the bug — the identical
+    `sim.current_marks([...])` moved into a module-level sync helper in the
+    same file and called from the route shipped GREEN past all four guards.
+    Each missed it for its own reason: D10 because a module-level `def` is not
+    nested inside an `ast.AsyncFunctionDef`; D9 because `current_marks` IS
+    declared (sync-safe); this route walk because it only recognised
+    `_BLOCKING_LEAF_METHOD_NAMES` and broke at `_marks_with_quotes`'
+    by-reference `pool.map(self.current_quote, …)` fan-out.
+
+    The declared-sync-safe names are network-reaching by construction — that
+    is the entire content of the D9 declaration. Feeding them into the walk
+    that already follows calls transitively across modules closes the hop
+    without a new mechanism, and SUBSUMES D10 (which is kept for its sharper
+    error message, no longer load-bearing).
+
+    Deliberately non-mutating, deviating from the audit's literal
+    `_BLOCKING_LEAF_METHOD_NAMES |= _SIM_ENGINE_SYNC_SAFE_METHODS`: an
+    import-time `|=` would collapse the two declaration buckets D9 exists to
+    keep distinct, so D9's "add it to X or Y" diagnostic would name a set that
+    already contains every sync-safe method. Same walk behaviour, no global
+    mutation, no import-order dependency.
+
+    A correctly-wrapped `await asyncio.to_thread(sim.<name>, …)` stays
+    invisible: the leaf is an `ast.Attribute` ARGUMENT, never an `ast.Call`.
+    """
+    return _BLOCKING_LEAF_METHOD_NAMES | _SIM_ENGINE_SYNC_SAFE_METHODS
 
 
 def _blocking_call_sites(fn: ast.AST) -> list[str]:
@@ -179,13 +224,14 @@ def _blocking_call_sites(fn: ast.AST) -> list[str]:
     invisible to this walk anyway.
     """
     hits: list[str] = []
+    leaf_methods = _route_walk_leaf_method_names()
     for node in ast.walk(fn):
         if not isinstance(node, ast.Call):
             continue
         f = node.func
         if isinstance(f, ast.Name) and f.id in _BLOCKING_LEAF_FUNC_NAMES:
             hits.append(f.id)
-        elif isinstance(f, ast.Attribute) and f.attr in _BLOCKING_LEAF_METHOD_NAMES:
+        elif isinstance(f, ast.Attribute) and f.attr in leaf_methods:
             hits.append(f"<obj>.{f.attr}")
         elif (
             isinstance(f, ast.Attribute)
@@ -274,14 +320,39 @@ def _offending_routes(waived: set[str]) -> tuple[list[str], set[str]]:
     return offenders, pairs
 
 
-# DEF120 (closed): empty. The 9 known blocking pairs (mandate.py:audit_holdings,
-# portfolio.py:sector_allocation, room.py:stream_room, and 6 sim.py handlers,
-# all `-> <obj>.current_quote`) are gone — every route now wraps its call in
-# `await asyncio.to_thread(...)`. Genuinely empty, not "waived down to
-# empty": see the `_build_room_sector_context` note above
-# `_WAIVED_CALL_CHAIN_NAMES` for the one real remaining offender this
-# empty-waiver walk still cannot see (a call-site alias, not a fix).
-_DEF120_KNOWN_BLOCKING_PAIRS: set[str] = set()
+# DEF120's own 9 pairs (mandate.py:audit_holdings, portfolio.py:sector_allocation,
+# room.py:stream_room, and 6 sim.py handlers, all `-> <obj>.current_quote`) ARE
+# gone — every route wraps its call in `await asyncio.to_thread(...)`.
+#
+# This set was empty until round 4. It is no longer, and that is the point:
+# once `_route_walk_leaf_method_names()` fed the declared-sync-safe names into
+# the transitive walk, the walk could finally SEE into the Room's chain instead
+# of breaking at `_marks_with_quotes`' by-reference `pool.map` fan-out. The 3
+# pairs below are real, they block the event loop on every Room convene over
+# every holding, and they are NOT DEF120's to fix — `room_runner.py` is out of
+# scope by D7 (the Room queue owns it).
+#
+# All 3 are one call site: `room_runner.py:1906` calls
+# `_build_sim_holdings_block(user_id, ticker)` directly, un-`to_thread`'d, from
+# inside `async def run()` (`:1748`) — the async generator awaited on the loop
+# by `_pump`'s `async for ev in self.run(...)` (`:1687`). That builder calls
+# `sim.total_value(user_id)` (`:574`) and `sim.current_marks(list(agg))`
+# (`:583`), the full `_marks_with_quotes` yfinance fan-out.
+#
+# `:1906` is a SECOND, distinct blocking call, six lines before the `:1912`
+# `_build_room_sector_context` that earlier rounds called "the one remaining
+# offender" — and unlike `:1912` it is not waived. Anyone closing the Room
+# remainder per that prose alone would leave `:1906` running. Pinning the pairs
+# here is this round's own principle applied one level up: assert it, don't
+# comment it. A paragraph explaining an empty set does not go red; this does.
+#
+# Closing the Room remainder means wrapping `:1906` (and `:1912`) and shrinking
+# this set to empty — the second assertion below fails until it is shrunk.
+_DEF120_KNOWN_BLOCKING_PAIRS: set[str] = {
+    "backend/app/api/room.py:stream_room -> <obj>._marks_with_quotes",
+    "backend/app/api/room.py:stream_room -> <obj>.current_marks",
+    "backend/app/api/room.py:stream_room -> <obj>.total_value",
+}
 
 
 def test_waived_chains_still_pin_the_known_offender_set():
