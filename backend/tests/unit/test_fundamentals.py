@@ -86,6 +86,41 @@ def test_build_block_formats_full_data(monkeypatch):
     assert "training memory" in block.lower()
 
 
+def test_build_block_header_states_the_run_date_anchor(monkeypatch):
+    """DEF124/D2/D3 — the 1-on-1 fundamentals block gets the same run-date
+    anchor as the Room's fact sheet, not a strictly poorer surface."""
+    from datetime import datetime, timezone
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(fundamentals, "fetch_live_fundamentals", lambda t: {"base_price": 100.0})
+    monkeypatch.setattr(fundamentals, "fetch_next_earnings", lambda t: None)
+
+    block = build_live_data_block("AAPL")
+    today = datetime.now(timezone.utc).date().isoformat()
+    assert f"as of {today} (UTC)" in block
+
+
+def test_build_block_earnings_line_renders_interval_alongside_date(monkeypatch):
+    """DEF124/D1/D3 — mirrors the Room's earnings line: the interval rides
+    alongside the absolute date, computed in Python via the same shared
+    `app.core.time.relative_day_phrase` helper."""
+    from datetime import date, datetime, timezone
+    from app.core.time import relative_day_phrase
+    from app.services.market_data import EarningsInfo
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(fundamentals, "fetch_live_fundamentals", lambda t: {"base_price": 100.0})
+    monkeypatch.setattr(
+        fundamentals, "fetch_next_earnings",
+        lambda t: EarningsInfo(earnings_date="2026-08-01", quarter="Q3", eps_estimate=2.1),
+    )
+
+    block = build_live_data_block("AAPL")
+    today = datetime.now(timezone.utc).date()
+    interval = relative_day_phrase(date(2026, 8, 1), today)
+    assert f"Next earnings (LIVE): 2026-08-01 (Q3) — {interval}, consensus EPS est. $2.1" in block
+
+
 def test_build_block_omits_missing_keys(monkeypatch):
     """yfinance often returns partial data — block should skip missing
     fields rather than render 'None'."""

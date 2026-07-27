@@ -32,6 +32,17 @@ from app.trading_math.valuation import net_position_phrase
 # ── Phase framing ────────────────────────────────────────────────────────
 
 
+def _field_is_live(profile: dict[str, Any], key: str) -> bool:
+    """CR104/D8: the single provenance check every `(LIVE)` label must pass
+    through — no exceptions. A field renders as live only when `field_state`
+    (populated in `room_runner._profile_for_ticker`, never by presence alone)
+    actually recorded it as such. Round-1 left five render sites checking
+    presence only (`if profile.get(...)`), which the round-2 audit rendered
+    a `field_state={}` profile against and got four confidently-labelled
+    `(LIVE)` lines under a header promising the opposite."""
+    return (profile.get("field_state") or {}).get(key) == "live"
+
+
 _PHASE_FOR_AGENT: dict[AgentId, str] = {
     AgentId.FUNDAMENTALS_ANALYST: "ANALYSTS",
     AgentId.MARKET_ANALYST: "ANALYSTS",
@@ -333,57 +344,94 @@ def _format_sector_allocation(sector_weights: dict[str, float] | None) -> str:
 def _format_profile(profile: dict[str, Any]) -> str:
     """A compact ticker fact-sheet the agent can quote from.
 
-    The header labels which fields are live data vs alpha-synthetic so
-    the LLM can be honest. Without this the model would quote synthetic
-    P/E numbers as if they were fact, or quote stale training-memory
-    facts when real numbers were available — both of which we've seen
-    in bug reports.
+    CR104 (closes DEF123) — provenance is PER FIELD, not per block, and this
+    is the ONLY provenance mechanism in the renderer: `profile["field_state"]`
+    maps a field/domain name to a `LiveDataState` value ("live" /
+    "withheld_paid" / "withheld_tenure" / "unavailable"). A numeric field
+    renders ONLY when its state says "live" — there is no rng-seeded
+    fallback left to render, and no second, block-level flag (the old
+    `data_source` / `technicals_state` / `news_state` / `social_state` keys)
+    that could disagree with it. Before CR104, `data_source="yfinance_live"`
+    asserted the WHOLE fundamentals block was live even when yfinance
+    supplied only some of the fields — DEF123: 178 of 842 live-declared
+    prompts carried a fabricated P/E. The disclosure header below is true
+    by construction now, not by assertion: it can only describe what
+    `field_state` actually recorded.
 
-    Granular by design (AT:R57, CR023/CR024): a single profile can now have
-    live fundamentals AND live news AND live social sentiment (or any subset
-    thereof) at once, so one binary flag can't describe it honestly anymore.
-    Macro/Fed tone and the sector-earnings half of forward catalyst had no
-    real source at all and were removed at source (CR038) rather than kept
-    around with a disclosure the agents ignored 70% of the time — only the
-    real FOMC-date half of forward catalyst remains.
+    Fields absent from `field_state` entirely (non-Room callers / hand-built
+    profiles in older tests) render as not-available — refusal is the
+    default, not a special case.
+
+    Granular by design (AT:R57, CR023/CR024): a single profile can have live
+    fundamentals AND live news AND live social sentiment (or any subset
+    thereof, down to individual fundamentals fields) at once. Macro/Fed tone
+    and the sector-earnings half of forward catalyst had no real source at
+    all and were removed at source (CR038) — only the real FOMC-date half of
+    forward catalyst remains.
     """
-    fundamentals_live = profile.get("data_source") == "yfinance_live"
-    technicals_live = profile.get("technicals_source") == "live"
-    news_live = profile.get("news_source") == "live"
-    social_live = profile.get("social_source") == "live"
-    # CR090: the 3-state live-data marker the runner resolves BEFORE the debate
-    # (news_state / social_state). "withheld_paid" is the paid-feature-gated
-    # state — distinct from "unavailable" (no data exists). This header line is
-    # the ANTI-FABRICATION measure only: it stops the agent inventing news /
-    # sentiment to paper over the gap. The user-facing guarantee is the
-    # structural `live_data_notice` event the runner emits with the model out of
-    # the loop (D3) — NOT this prompt string, which agents drop ~70% of the time.
-    # Absent (non-Room callers / older profiles) it degrades to the binary
-    # live/not-live reading, unchanged.
-    news_withheld = profile.get("news_state") == "withheld_paid"
-    social_withheld = profile.get("social_state") == "withheld_paid"
-    # CR098 round-2 fix (MINOR 3) — a roster-withheld domain's header line must
-    # not describe fields the fact-sheet body has already stripped (see
-    # market_withheld/news_withheld_tenure/social_withheld_tenure below). The
-    # header used to unconditionally claim "alpha simulation scaffolding — NOT
-    # computed from real price history" immediately above the body's "not
-    # included in this session" — contradictory prompt copy CR038 found
-    # degrades compliance. Computed here (ahead of their first use further
-    # down) so the header can skip the withheld domain's line entirely.
-    market_withheld = profile.get("technicals_state") == "withheld_tenure"
-    news_withheld_tenure = profile.get("news_state") == "withheld_tenure"
-    social_withheld_tenure = profile.get("social_state") == "withheld_tenure"
+    field_state: dict[str, Any] = profile.get("field_state") or {}
 
-    header_lines = ["Data source disclosure — some fields below are real, some are not:"]
-    if fundamentals_live:
+    def _is(key: str, state: str) -> bool:
+        return field_state.get(key) == state
+
+    fundamentals_any_live = any(
+        _is(f, "live") for f in ("base_price", "pe", "rev_growth", "profit_margin", "net_cash")
+    )
+    technicals_live = _is("technicals", "live")
+    news_live = _is("news", "live")
+    social_live = _is("social", "live")
+    # CR090's 3-state live-data marker, now per-field via `field_state`
+    # instead of the old `news_state` / `social_state` block keys (D1 — this
+    # header line is the ANTI-FABRICATION measure only: it stops the agent
+    # inventing news / sentiment to paper over the gap. The user-facing
+    # guarantee is the structural `live_data_notice` event the runner emits
+    # with the model out of the loop (D3) — NOT this prompt string, which
+    # agents drop ~70% of the time).
+    news_withheld = _is("news", "withheld_paid")
+    social_withheld = _is("social", "withheld_paid")
+    # CR098 round-2 fix (MINOR 3), preserved under the per-field model — a
+    # roster-withheld domain's header line must not describe fields the
+    # fact-sheet body has already stripped (see market_withheld /
+    # news_withheld_tenure / social_withheld_tenure below). Computed here
+    # (ahead of their first use further down) so the header can skip the
+    # withheld domain's line entirely.
+    market_withheld = _is("technicals", "withheld_tenure")
+    news_withheld_tenure = _is("news", "withheld_tenure")
+    social_withheld_tenure = _is("social", "withheld_tenure")
+
+    header_lines = []
+    # DEF124/D2: ONE run-date anchor for every other absolute date in the
+    # fact sheet, gated on the same per-field `field_state` scheme as every
+    # other fact (not an ungated string bolted beside it) — the clock is a
+    # real, always-live source, so this is the one field that should never
+    # render "not available" once the profile pipeline sets it. A hand-built
+    # profile with no recorded provenance still renders nothing here,
+    # matching every other field's refuse-by-default behaviour.
+    if profile.get("run_date") and _is("run_date", "live"):
         header_lines.append(
-            "- Numeric fundamentals (price, P/E, growth, FCF, range): LIVE "
-            "from Yahoo Finance as of this call."
+            f"Fact sheet as of {profile['run_date']} (UTC) — every other "
+            "date in this sheet is anchored to this one; do not estimate "
+            "how far away a date is from your own sense of the current date."
+        )
+    header_lines.append(
+        "Data source disclosure — every fact below is tagged with where it "
+        "came from. A field with no live source is marked not available "
+        "below, never silently filled in — do NOT estimate, recall from "
+        "training memory, or invent a number for it:"
+    )
+    if fundamentals_any_live:
+        header_lines.append(
+            "- Numeric fundamentals (price, P/E, growth, margin, net cash, "
+            "52-week range): each field below is tagged individually — a "
+            "provider gap on one field does not make the others fake. Only "
+            "the fields explicitly marked available/LIVE below are real; "
+            "any field marked 'not available' has no data behind it."
         )
     else:
         header_lines.append(
-            "- Numeric fundamentals (price, P/E, growth, FCF, range): alpha "
-            "simulation scaffolding — NOT live market data."
+            "- Numeric fundamentals (price, P/E, growth, margin, net cash): "
+            "none available live this call — every such field below is "
+            "marked not available."
         )
     if market_withheld:
         pass  # stripped below; no scaffolding line to contradict it with
@@ -396,8 +444,8 @@ def _format_profile(profile: dict[str, Any]) -> str:
         )
     else:
         header_lines.append(
-            "- RSI, trend, volume, support/breakout: alpha simulation "
-            "scaffolding — NOT computed from real price history."
+            "- RSI, trend, volume, support/breakout: not available this "
+            "call — do not compute or estimate them yourself."
         )
     if news_withheld_tenure:
         pass  # stripped below; no scaffolding line to contradict it with
@@ -459,32 +507,45 @@ def _format_profile(profile: dict[str, Any]) -> str:
     # above, ahead of the header, so the header can skip the withheld domain's
     # scaffolding line too (MINOR 3).
 
-    lines = [
-        header,
-        "",
-        f"Reference price: ${profile.get('base_price')}",
-        f"P/E: {profile.get('pe')}",
-        f"TTM revenue growth: {profile.get('rev_growth')}%, profit margin: {profile.get('profit_margin')}%",
-        _net_position_line(profile),
-    ]
+    lines = [header, ""]
+    lines.append(
+        f"Reference price: ${profile.get('base_price')}" if _is("base_price", "live")
+        else "Reference price: not available"
+    )
+    lines.append(
+        f"P/E: {profile.get('pe')}" if _is("pe", "live") else "P/E: not available"
+    )
+    lines.append(
+        (f"TTM revenue growth: {profile.get('rev_growth')}%" if _is("rev_growth", "live")
+         else "TTM revenue growth: not available")
+        + ", "
+        + (f"profit margin: {profile.get('profit_margin')}%" if _is("profit_margin", "live")
+           else "profit margin: not available")
+    )
+    lines.append(_net_position_line(profile))
     if market_withheld:
         lines.append(
             "Market technicals: not included in this session."
         )
-    else:
+    elif technicals_live:
         lines.append(
             f"RSI: {profile.get('rsi')} ({profile.get('rsi_tone')}), trend: {profile.get('trend')}"
         )
         # DEF074: the recent-range floor is the computed technical support
         # (profile['support'], the 50-day min that compute_technicals produced and
-        # the 1-on-1 path already shows) — NOT the 52-week low, which was being
-        # rendered here while `support` was computed and silently dropped. The
-        # 52-week range stays as explicit context.
-        lines.append(
-            f"Recent range: ${profile.get('support')}–${profile.get('breakout')} "
-            f"(52-week: ${profile.get('low')}–${profile.get('high')})"
-        )
+        # the 1-on-1 path already shows) — NOT the 52-week low, which is a
+        # separately-sourced fundamentals field (see week52 below).
+        lines.append(f"Recent range: ${profile.get('support')}–${profile.get('breakout')}")
         lines.append(f"Volume: {profile.get('volume_tone')}")
+    else:
+        lines.append("Market technicals: not available this call.")
+    # 52-week range is a fundamentals field, independent of technicals —
+    # `fetch_live_fundamentals` only sets `week52` LIVE when yfinance's real
+    # fiftyTwoWeekLow/High fields were used, never for the ±5%-of-price
+    # placeholder it falls back to internally (that placeholder is a derived
+    # guess, not a measurement, so it earns no "52-week" label here).
+    if _is("week52", "live"):
+        lines.append(f"52-week range: ${profile.get('low')}–${profile.get('high')}")
     if news_withheld_tenure:
         lines.append(
             "Recent catalyst/headline: not included in this session."
@@ -504,10 +565,25 @@ def _format_profile(profile: dict[str, Any]) -> str:
                   _capital_allocation_line(profile), _analyst_line(profile)):
         if extra:
             lines.append(extra)
-    if profile.get("next_earnings_date"):
+    if (
+        profile.get("next_earnings_date")
+        and _is("next_earnings", "live")
+        and profile.get("next_earnings_interval")
+    ):
+        # DEF124/D1/acceptance-6: render the interval ALONGSIDE the absolute
+        # date, never instead of it — the date is what a user cross-checks,
+        # the interval is what stops the model guessing. Computed in Python
+        # (`app.core.time.relative_day_phrase`), never asked of the model.
+        # The interval is required, not optional decoration: an absolute
+        # date with no anchor is exactly the DEF124 bug, so a profile that
+        # somehow carries a live earnings date without its computed interval
+        # (should never happen via `_profile_for_ticker`, but this renderer
+        # makes no assumption about its caller) omits the line entirely
+        # rather than emit an unanchored date.
         lines.append(
             f"Next earnings (LIVE): {profile['next_earnings_date']}"
             + (f" ({profile['next_earnings_quarter']})" if profile.get("next_earnings_quarter") else "")
+            + (f" — {profile['next_earnings_interval']}" if profile.get("next_earnings_interval") else "")
             + (f", consensus EPS est. ${profile['next_earnings_eps_estimate']}"
                if profile.get("next_earnings_eps_estimate") is not None else "")
         )
@@ -526,7 +602,7 @@ def _social_detail_lines(profile: dict[str, Any]) -> list[str]:
     fabricated social numbers leak; CR040). These are pre-formatted upstream by the
     Adanos formatters (format_mention_trend / format_pattern / format_community_read) —
     rendered verbatim as indented detail under 'Retail sentiment:', never recomputed."""
-    if profile.get("social_source") != "live":
+    if (profile.get("field_state") or {}).get("social") != "live":
         return []
     out: list[str] = []
     if profile.get("mention_trend"):
@@ -548,15 +624,18 @@ def _net_position_line(profile: dict[str, Any]) -> str:
 
 def _valuation_line(profile: dict[str, Any]) -> str | None:
     """Real valuation multiples beyond P/E (DEF053). None when nothing live —
-    no fabricated peer/sector multiple is ever shown."""
+    no fabricated peer/sector multiple is ever shown. CR104/D8: each part is
+    gated on its own `field_state` entry, not presence — a part whose
+    provenance wasn't recorded is dropped, never silently included under the
+    line's `(LIVE)` label."""
     parts = []
-    if profile.get("price_to_sales"):
+    if profile.get("price_to_sales") and _field_is_live(profile, "price_to_sales"):
         parts.append(f"P/S {profile['price_to_sales']}x")
-    if profile.get("ev_to_ebitda"):
+    if profile.get("ev_to_ebitda") and _field_is_live(profile, "ev_to_ebitda"):
         parts.append(f"EV/EBITDA {profile['ev_to_ebitda']}x")
-    if profile.get("peg_ratio"):
+    if profile.get("peg_ratio") and _field_is_live(profile, "peg_ratio"):
         parts.append(f"PEG {profile['peg_ratio']}")
-    if profile.get("fcf_yield") is not None:
+    if profile.get("fcf_yield") is not None and _field_is_live(profile, "fcf_yield"):
         parts.append(f"FCF yield {profile['fcf_yield']}%")
     if not parts:
         return None
@@ -566,16 +645,18 @@ def _valuation_line(profile: dict[str, Any]) -> str | None:
 def _sector_line(profile: dict[str, Any]) -> str | None:
     """Real sector/industry classification (DEF053) — replaces the old
     always-fake numeric `sector_pe`; this is a category, not a fabricated
-    peer-average P/E (yfinance has no peer-basket P/E to compute one from)."""
-    if not profile.get("sector"):
+    peer-average P/E (yfinance has no peer-basket P/E to compute one from).
+    CR104/D8: gated on `field_state`, not presence alone."""
+    if not profile.get("sector") or not _field_is_live(profile, "sector"):
         return None
     return f"Sector/industry (LIVE): {profile['sector']} / {profile.get('industry', '—')}"
 
 
 def _capital_allocation_line(profile: dict[str, Any]) -> str | None:
     """Real dividend yield only (DEF053) — buybacks/M&A have no yfinance
-    field and stay undisclosed rather than fabricated."""
-    if profile.get("dividend_yield") is None:
+    field and stay undisclosed rather than fabricated. CR104/D8: gated on
+    `field_state`, not presence alone."""
+    if profile.get("dividend_yield") is None or not _field_is_live(profile, "dividend_yield"):
         return None
     return f"Dividend yield (LIVE): {profile['dividend_yield']}% (buybacks/M&A: not available, not claimed)"
 
@@ -583,8 +664,12 @@ def _capital_allocation_line(profile: dict[str, Any]) -> str | None:
 def _analyst_line(profile: dict[str, Any]) -> str | None:
     """Real analyst consensus (DEF053) — the closest honest proxy for
     'forward guidance' available. Explicitly labeled as the Street's view,
-    not the company's own guidance (which yfinance doesn't expose)."""
-    if not profile.get("analyst_target_price") and not profile.get("analyst_rating"):
+    not the company's own guidance (which yfinance doesn't expose). CR104/D8:
+    gated on `field_state` — target price and rating are fetched together, so
+    either one's provenance recorded live is sufficient to label the line."""
+    has_target = profile.get("analyst_target_price") and _field_is_live(profile, "analyst_target_price")
+    has_rating = profile.get("analyst_rating") and _field_is_live(profile, "analyst_rating")
+    if not has_target and not has_rating:
         return None
     return (
         f"Analyst consensus (LIVE, Street view — NOT company guidance): "

@@ -73,11 +73,11 @@ def test_recent_range_floor_is_technical_support_not_52w_low(base_mandate):
     technicals block already shows, and must not drop it in favour of the 52-week
     low (profile['low']). The 52-week range stays as explicit context."""
     profile = {
-        "data_source": "live",
         "support": 273.75,   # technical 50-day support (compute_technicals)
         "breakout": 334.99,  # technical 50-day breakout
         "low": 201.5,        # 52-week low (fundamentals)
         "high": 334.99,      # 52-week high
+        "field_state": {"technicals": "live", "week52": "live"},
     }
     sp, _ = build_room_messages(
         agent_id=AgentId.MARKET_ANALYST, mandate=base_mandate, user_id=None,
@@ -85,10 +85,117 @@ def test_recent_range_floor_is_technical_support_not_52w_low(base_mandate):
     )
     # Floor is the technical support, not the 52-week low.
     assert "Recent range: $273.75" in sp
-    # The 52-week low survives, but labelled as 52-week context.
-    assert "52-week: $201.5" in sp
+    # The 52-week low survives, but as its own, separately-sourced line (CR104).
+    assert "52-week range: $201.5" in sp
     # Regression guard: the 52-week low must never be the recent-range floor again.
     assert "Recent range: $201.5" not in sp
+
+
+def test_run_date_anchors_the_fact_sheet_header(base_mandate):
+    """DEF124/D2/D5 — the run date is stated ONCE, in the header, and assert
+    on the exact rendered string (not a helper's return value)."""
+    profile = {"run_date": "2026-07-27", "field_state": {"run_date": "live"}}
+    sp, _ = build_room_messages(
+        agent_id=AgentId.FUNDAMENTALS_ANALYST, mandate=base_mandate, user_id=None,
+        ticker="AAPL", profile=profile, transcript=[],
+    )
+    assert "Fact sheet as of 2026-07-27 (UTC)" in sp
+    # Once, not once per line of the disclosure header.
+    assert sp.count("Fact sheet as of") == 1
+
+
+def test_run_date_anchor_absent_without_recorded_provenance(base_mandate):
+    """DEF124/D2 — matches every other field's refuse-by-default: presence of
+    `run_date` alone (no `field_state` entry) does not earn the anchor line."""
+    profile = {"run_date": "2026-07-27", "field_state": {}}
+    sp, _ = build_room_messages(
+        agent_id=AgentId.FUNDAMENTALS_ANALYST, mandate=base_mandate, user_id=None,
+        ticker="AAPL", profile=profile, transcript=[],
+    )
+    assert "Fact sheet as of" not in sp
+
+
+def test_earnings_line_renders_interval_alongside_the_absolute_date(base_mandate):
+    """DEF124/D1/D5 — the interval rides ALONGSIDE the date, not instead of
+    it; assert the exact rendered string."""
+    profile = {
+        "next_earnings_date": "2026-07-30", "next_earnings_quarter": "Q3",
+        "next_earnings_interval": "in 3 days",
+        "field_state": {"next_earnings": "live"},
+    }
+    sp, _ = build_room_messages(
+        agent_id=AgentId.FUNDAMENTALS_ANALYST, mandate=base_mandate, user_id=None,
+        ticker="AAPL", profile=profile, transcript=[],
+    )
+    assert "Next earnings (LIVE): 2026-07-30 (Q3) — in 3 days" in sp
+
+
+def test_earnings_line_omitted_when_interval_not_computed(base_mandate):
+    """DEF124 acceptance 6 — a live earnings date with no computed interval
+    is an unanchored absolute date. The line is refused entirely, matching
+    every other field's incomplete-provenance handling, rather than
+    partially rendering the bare date."""
+    profile = {
+        "next_earnings_date": "2026-07-30", "next_earnings_quarter": "Q3",
+        "field_state": {"next_earnings": "live"},
+    }
+    sp, _ = build_room_messages(
+        agent_id=AgentId.FUNDAMENTALS_ANALYST, mandate=base_mandate, user_id=None,
+        ticker="AAPL", profile=profile, transcript=[],
+    )
+    assert "Next earnings" not in sp
+
+
+# ── DEF124 acceptance 6 — the invariant, not the one line ────────────────
+
+_ISO_DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
+_ANCHOR_RE = re.compile(r"\bas of\b|\btoday\b|\bin \d+ days?\b|\b\d+ days? ago\b")
+
+
+def _assert_every_date_is_anchored(prompt: str) -> None:
+    """Any absolute (ISO) date rendered anywhere in a Room prompt must carry
+    a relative anchor on the same line — either it IS the anchor line itself
+    ("...as of..."), or it sits beside a computed "today" / "in N days" /
+    "N days ago" phrase. A future date rendered without one fails here even
+    if no test hardcodes that specific field/string (DEF124's whole point)."""
+    for line in prompt.splitlines():
+        for date_str in _ISO_DATE_RE.findall(line):
+            assert _ANCHOR_RE.search(line), (
+                f"unanchored absolute date {date_str!r} in line: {line!r}"
+            )
+
+
+@pytest.mark.parametrize("profile", [
+    {  # run date + earnings, both live and fully anchored
+        "run_date": "2026-07-27", "next_earnings_date": "2026-07-30",
+        "next_earnings_quarter": "Q3", "next_earnings_interval": "in 3 days",
+        "field_state": {"run_date": "live", "next_earnings": "live"},
+    },
+    {  # run date live, no earnings data at all
+        "run_date": "2026-07-27", "field_state": {"run_date": "live"},
+    },
+    {  # nothing live — no provenance recorded anywhere
+        "data_source": "synthetic",
+    },
+    {  # earnings date present but its interval never got computed — the
+       # renderer must refuse the whole line, not emit a bare date (guards a
+       # future edit that drops the interval computation upstream)
+        "next_earnings_date": "2026-07-30", "next_earnings_quarter": "Q3",
+        "field_state": {"next_earnings": "live"},
+    },
+    {  # earnings today — the same-day edge of the anchor phrase regex
+        "run_date": "2026-07-27", "next_earnings_date": "2026-07-27",
+        "next_earnings_quarter": "Q3", "next_earnings_interval": "today",
+        "field_state": {"run_date": "live", "next_earnings": "live"},
+    },
+], ids=["anchored", "run-date-only", "nothing-live", "interval-missing", "same-day"])
+def test_no_unanchored_absolute_date_anywhere_in_room_prompt(base_mandate, profile):
+    for agent_id in _PHASE_FOR_AGENT:
+        sp, _ = build_room_messages(
+            agent_id=agent_id, mandate=base_mandate, user_id=None,
+            ticker="AAPL", profile=profile, transcript=[],
+        )
+        _assert_every_date_is_anchored(sp)
 
 
 def test_derived_line_only_for_trade_judging_phases(base_mandate):

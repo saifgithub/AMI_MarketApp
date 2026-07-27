@@ -6,7 +6,34 @@ INSTANCE: coder.mobile
 GATE: independent    <!-- Renders a paywall-adjacent disclosure. CR090-MOBILE's sibling lane took independent audit for the same reason: a disclosure that points at the wrong remedy is the DEF059 inversion class. -->
 BUDGET: $15    <!-- Saiful, 2026-07-27. Export DISPATCH_BUDGET_USD=15 at launch — do NOT reach for `ultra` to get headroom; that switches on fan-out tooling this lane does not need. -->
 ACCEPTANCE: this file (criteria below). Product context: `docs/forward_planning/CR098_room_analyst_pullback/CR098_room_analyst_pullback.md` scope item 8 — **read only §"Amendment 1", §"Amendment 2" and scope item 8; the other 270 lines are backend and cost you budget.**
-DEPENDS-ON: **CR098-ROOM must be audited COMPLETE and integrated first.** It is `IN_AUDIT` as of 2026-07-27. **Do not start before its verdict** — the auditor was explicitly asked to weigh whether `WITHHELD_TENURE` should exist as a 4th `LiveDataState` at all (assign D3 / FLAG 1). If track U rejects it, this lane's entire contract changes.
+DEPENDS-ON: **CR098-ROOM — SATISFIED.** Audited COMPLETE round 3 (zero findings) and integrated 2026-07-27. `WITHHELD_TENURE` **survived** the audit as a 4th `LiveDataState`, so this lane's contract stands as written. **CR104-ROOM has ALSO since landed** (COMPLETE r2, suite 1373) and changed the wire contract under you — see the section below.
+
+## ⚠️ CR104 landed after this assign was written — new REQUIRED scope
+
+CR104 deleted the synthetic numeric baseline from the Room path. Two consequences you must handle:
+
+1. **Fields can now be genuinely ABSENT.** Before CR104, a provider gap was silently backfilled with
+   a fabricated number, so the client always received a complete fact sheet. It no longer does — a
+   Yahoo outage or a loss-making ticker now yields a Room that says what it does not know.
+2. **Both auditors flagged the same gap, independently.** The client has **no "intentionally thin"
+   rendering**, and cannot distinguish *genuinely absent* (nobody has this datum — no lever) from
+   *withheld* (we chose not to fetch it — the user has a lever). CR090-MOBILE built exactly that
+   distinction for news/social with **different CTAs**; fundamentals and technicals have no
+   equivalent. Rendering both identically is the DEF059 inversion class: it either tells a user to
+   upgrade for data nobody has, or tells them nothing is available when a plan change would fetch it.
+
+**Required:** the in-run surface must render *absent* and *withheld* distinctly, and must not offer
+an upgrade CTA for a field that is absent rather than withheld. If you judge the full thin-state
+design to be a separate lane, **say so in the hand-off with a reason and render absent fields in a
+visibly non-alarming way** — but do not ship a screen that shows a thin Room as an error or as a
+paywall.
+
+## Verification split — you run the FAST tests, the Architect runs the full suite
+
+`cd mobile && flutter test test/services/ test/widgets/ -r compact` in the **foreground**. **Do NOT
+run the full suite and do NOT background anything** — Two workers died today by backgrounding a long
+run then emitting a final message (CR057 / `failure_patterns.md` P7), one after being told not to.
+The Architect runs `flutter test` in full.
 HOT-FILES: `mobile/lib/services/api/api_client.dart`, `mobile/lib/state/room_providers.dart`, the Room console screen. **`CR098-MOBILE-VERDICT` touches the same Room screen — the two run SEQUENTIALLY, not concurrently.** Four CRs sharing one file is what forced CR091/092/094/096 into a single lane; do not repeat it by running these two in parallel.
 
 ## Why this lane is split from the verdict lane
@@ -102,5 +129,5 @@ not appear late. A withheld analyst that pops in after three others have spoken 
 
 ---
 
-ASSIGNED: -
-DISPATCH: UNASSIGNED
+ASSIGNED: coder.mobile round 1
+DISPATCH: OPEN

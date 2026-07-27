@@ -98,6 +98,42 @@ ServerUnavailableException? serverUnavailableFrom(Object error) {
   return null;
 }
 
+/// Inverts the backend's per-chunk SSE escape (`room.py`, `brief.py`,
+/// `one_on_one.py`: `chunk.replace("\\", "\\\\").replace("\n", "\\n")`).
+///
+/// DEF114: the previously-shipped `.replaceAll(r'\n', '\n').replaceAll(r'\\',
+/// r'\')` pair cannot invert that encode in either order — the first pass
+/// matches across an escape boundary (e.g. `C:\next` decodes wrong because
+/// the literal `\n` inside it gets read as a newline escape). A single
+/// left-to-right scan that consumes escape pairs atomically is the only
+/// correct inverse; each backend sender escapes every chunk independently
+/// and completely, so no escape sequence spans a chunk boundary (D3) and
+/// per-chunk decoding is safe.
+@visibleForTesting
+String unescapeSseText(String s) {
+  final buffer = StringBuffer();
+  var i = 0;
+  while (i < s.length) {
+    final ch = s[i];
+    if (ch == r'\' && i + 1 < s.length) {
+      final next = s[i + 1];
+      if (next == r'\') {
+        buffer.write(r'\');
+      } else if (next == 'n') {
+        buffer.write('\n');
+      } else {
+        buffer.write(ch);
+        buffer.write(next);
+      }
+      i += 2;
+      continue;
+    }
+    buffer.write(ch);
+    i += 1;
+  }
+  return buffer.toString();
+}
+
 /// Parse one decoded SSE event block (`event: <type>` + joined `data:` lines)
 /// from the Room stream into the typed map the notifier consumes, or `null`
 /// if the block is malformed or its kind isn't recognised.
@@ -132,9 +168,7 @@ Map<String, dynamic>? parseRoomSseEvent(String eventType, String data) {
         };
       case 'agent_token':
         final j = jsonDecode(data) as Map<String, dynamic>;
-        final text = (j['text'] as String? ?? '')
-            .replaceAll(r'\n', '\n')
-            .replaceAll(r'\\', r'\');
+        final text = unescapeSseText(j['text'] as String? ?? '');
         return {'kind': 'agent_token', 'agent_id': j['agent_id'], 'text': text};
       case 'agent_done':
         final j = jsonDecode(data) as Map<String, dynamic>;
@@ -159,17 +193,25 @@ Map<String, dynamic>? parseRoomSseEvent(String eventType, String data) {
 }
 
 class ApiClient {
-  ApiClient({String? baseUrl}) : _dio = Dio(BaseOptions(
-        baseUrl: baseUrl ?? _resolveBaseUrl(),
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 30),
-        headers: {'Content-Type': 'application/json'},
-      )) {
+  /// DEF114 (D4): [httpClient] is the transport the three SSE streams
+  /// (`streamBriefMessage`, `streamOneOnOneMessage`, `streamRoom`) send
+  /// through, in place of each building its own `http.Client()` inline —
+  /// that made "does `done` terminate the stream?" untestable. Defaults to
+  /// a real `http.Client()`; tests inject a fake to control the response.
+  ApiClient({String? baseUrl, http.Client? httpClient})
+      : _dio = Dio(BaseOptions(
+          baseUrl: baseUrl ?? _resolveBaseUrl(),
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 30),
+          headers: {'Content-Type': 'application/json'},
+        )),
+        _httpClient = httpClient ?? http.Client() {
     _dio.interceptors.add(_AuthInterceptor(this));
     _dio.interceptors.add(_ServerErrorInterceptor()); // DEF073
   }
 
   final Dio _dio;
+  final http.Client _httpClient;
   String? _bearerToken;
 
   void setToken(String? token) {
@@ -298,41 +340,36 @@ class ApiClient {
       'user_message': userMessage,
       'history': history.map((m) => m.toJson()).toList(),
     });
-    final client = http.Client();
-    try {
-      final response = await client.send(_sseRequest(uri, body));
-      if (response.statusCode != 200) {
-        throw Exception('HTTP ${response.statusCode} from brief stream');
-      }
-      String buffer = '';
-      await for (final chunk in response.stream.transform(utf8.decoder)) {
-        buffer += chunk;
-        while (buffer.contains('\n\n')) {
-          final idx = buffer.indexOf('\n\n');
-          final event = buffer.substring(0, idx);
-          buffer = buffer.substring(idx + 2);
+    final response = await _httpClient.send(_sseRequest(uri, body));
+    if (response.statusCode != 200) {
+      throw Exception('HTTP ${response.statusCode} from brief stream');
+    }
+    String buffer = '';
+    await for (final chunk in response.stream.transform(utf8.decoder)) {
+      buffer += chunk;
+      while (buffer.contains('\n\n')) {
+        final idx = buffer.indexOf('\n\n');
+        final event = buffer.substring(0, idx);
+        buffer = buffer.substring(idx + 2);
 
-          String? eventType;
-          final dataLines = <String>[];
-          for (final line in event.split('\n')) {
-            if (line.startsWith('event: ')) {
-              eventType = line.substring(7).trim();
-            } else if (line.startsWith('data: ')) {
-              dataLines.add(line.substring(6));
-            }
-          }
-          final data = dataLines.join('\n');
-          if (eventType == 'token') {
-            yield data.replaceAll(r'\n', '\n').replaceAll(r'\\', r'\');
-          } else if (eventType == 'done') {
-            return;
-          } else if (eventType == 'error') {
-            throw Exception('Server error: $data');
+        String? eventType;
+        final dataLines = <String>[];
+        for (final line in event.split('\n')) {
+          if (line.startsWith('event: ')) {
+            eventType = line.substring(7).trim();
+          } else if (line.startsWith('data: ')) {
+            dataLines.add(line.substring(6));
           }
         }
+        final data = dataLines.join('\n');
+        if (eventType == 'token') {
+          yield unescapeSseText(data);
+        } else if (eventType == 'done') {
+          return;
+        } else if (eventType == 'error') {
+          throw Exception('Server error: $data');
+        }
       }
-    } finally {
-      client.close();
     }
   }
 
@@ -415,44 +452,38 @@ class ApiClient {
       'history': history.map((m) => m.toJson()).toList(),
     });
 
-    final client = http.Client();
-    try {
-      final response = await client.send(_sseRequest(uri, body));
-      if (response.statusCode != 200) {
-        throw Exception('HTTP ${response.statusCode} from 1-on-1 stream');
-      }
+    final response = await _httpClient.send(_sseRequest(uri, body));
+    if (response.statusCode != 200) {
+      throw Exception('HTTP ${response.statusCode} from 1-on-1 stream');
+    }
 
-      // SSE parser: each event is "event: <type>\ndata: <payload>\n\n"
-      String buffer = '';
-      await for (final chunk in response.stream.transform(utf8.decoder)) {
-        buffer += chunk;
-        while (buffer.contains('\n\n')) {
-          final idx = buffer.indexOf('\n\n');
-          final event = buffer.substring(0, idx);
-          buffer = buffer.substring(idx + 2);
+    // SSE parser: each event is "event: <type>\ndata: <payload>\n\n"
+    String buffer = '';
+    await for (final chunk in response.stream.transform(utf8.decoder)) {
+      buffer += chunk;
+      while (buffer.contains('\n\n')) {
+        final idx = buffer.indexOf('\n\n');
+        final event = buffer.substring(0, idx);
+        buffer = buffer.substring(idx + 2);
 
-          String? eventType;
-          final dataLines = <String>[];
-          for (final line in event.split('\n')) {
-            if (line.startsWith('event: ')) {
-              eventType = line.substring(7).trim();
-            } else if (line.startsWith('data: ')) {
-              dataLines.add(line.substring(6));
-            }
-          }
-          final data = dataLines.join('\n');
-          if (eventType == 'token') {
-            // Backend escapes newlines as "\\n"; un-escape for display.
-            yield data.replaceAll(r'\n', '\n').replaceAll(r'\\', r'\');
-          } else if (eventType == 'done') {
-            return;
-          } else if (eventType == 'error') {
-            throw Exception('Server error: $data');
+        String? eventType;
+        final dataLines = <String>[];
+        for (final line in event.split('\n')) {
+          if (line.startsWith('event: ')) {
+            eventType = line.substring(7).trim();
+          } else if (line.startsWith('data: ')) {
+            dataLines.add(line.substring(6));
           }
         }
+        final data = dataLines.join('\n');
+        if (eventType == 'token') {
+          yield unescapeSseText(data);
+        } else if (eventType == 'done') {
+          return;
+        } else if (eventType == 'error') {
+          throw Exception('Server error: $data');
+        }
       }
-    } finally {
-      client.close();
     }
   }
 
@@ -665,62 +696,57 @@ class ApiClient {
       'locale': locale,
       if (mandateOverride != null) 'mandate_override': mandateOverride,
     });
-    final client = http.Client();
-    try {
-      final response = await client.send(_sseRequest(uri, body));
-      if (response.statusCode == 402) {
-        // CR047: the credit wall. Read the structured body and surface it as a
-        // typed exception so the Room screen can render a paywall / Winzip
-        // countdown instead of a generic "Stream failed". The 402 lands before
-        // the SSE stream starts (see api/room.py), so the body is the whole
-        // response, not an in-band event.
-        final raw = await response.stream.bytesToString();
-        Map<String, dynamic>? decoded;
-        try {
-          decoded = jsonDecode(raw) as Map<String, dynamic>;
-        } catch (_) {
-          decoded = null;
-        }
-        if (decoded != null) {
-          throw InsufficientCreditsException.fromJson(decoded);
-        }
-        throw Exception('HTTP 402 from room stream');
+    final response = await _httpClient.send(_sseRequest(uri, body));
+    if (response.statusCode == 402) {
+      // CR047: the credit wall. Read the structured body and surface it as a
+      // typed exception so the Room screen can render a paywall / Winzip
+      // countdown instead of a generic "Stream failed". The 402 lands before
+      // the SSE stream starts (see api/room.py), so the body is the whole
+      // response, not an in-band event.
+      final raw = await response.stream.bytesToString();
+      Map<String, dynamic>? decoded;
+      try {
+        decoded = jsonDecode(raw) as Map<String, dynamic>;
+      } catch (_) {
+        decoded = null;
       }
-      if (response.statusCode >= 500) {
-        // DEF073: a 5xx (deploy/restart/tunnel blip) — surface it typed so the
-        // Room screen renders a friendly "try again" card, not a raw status code.
-        throw ServerUnavailableException(response.statusCode);
+      if (decoded != null) {
+        throw InsufficientCreditsException.fromJson(decoded);
       }
-      if (response.statusCode != 200) {
-        throw Exception('HTTP ${response.statusCode} from room stream');
-      }
-      String buffer = '';
-      await for (final chunk in response.stream.transform(utf8.decoder)) {
-        buffer += chunk;
-        while (buffer.contains('\n\n')) {
-          final idx = buffer.indexOf('\n\n');
-          final event = buffer.substring(0, idx);
-          buffer = buffer.substring(idx + 2);
+      throw Exception('HTTP 402 from room stream');
+    }
+    if (response.statusCode >= 500) {
+      // DEF073: a 5xx (deploy/restart/tunnel blip) — surface it typed so the
+      // Room screen renders a friendly "try again" card, not a raw status code.
+      throw ServerUnavailableException(response.statusCode);
+    }
+    if (response.statusCode != 200) {
+      throw Exception('HTTP ${response.statusCode} from room stream');
+    }
+    String buffer = '';
+    await for (final chunk in response.stream.transform(utf8.decoder)) {
+      buffer += chunk;
+      while (buffer.contains('\n\n')) {
+        final idx = buffer.indexOf('\n\n');
+        final event = buffer.substring(0, idx);
+        buffer = buffer.substring(idx + 2);
 
-          String? eventType;
-          final dataLines = <String>[];
-          for (final line in event.split('\n')) {
-            if (line.startsWith('event: ')) {
-              eventType = line.substring(7).trim();
-            } else if (line.startsWith('data: ')) {
-              dataLines.add(line.substring(6));
-            }
+        String? eventType;
+        final dataLines = <String>[];
+        for (final line in event.split('\n')) {
+          if (line.startsWith('event: ')) {
+            eventType = line.substring(7).trim();
+          } else if (line.startsWith('data: ')) {
+            dataLines.add(line.substring(6));
           }
-          final data = dataLines.join('\n');
-          if (eventType == null) continue;
-          final parsed = parseRoomSseEvent(eventType, data);
-          if (parsed == null) continue;
-          yield parsed;
-          if (parsed['kind'] == 'done' || parsed['kind'] == 'error') return;
         }
+        final data = dataLines.join('\n');
+        if (eventType == null) continue;
+        final parsed = parseRoomSseEvent(eventType, data);
+        if (parsed == null) continue;
+        yield parsed;
+        if (parsed['kind'] == 'done' || parsed['kind'] == 'error') return;
       }
-    } finally {
-      client.close();
     }
   }
 

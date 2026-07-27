@@ -297,7 +297,11 @@ def test_fact_sheet_strips_market_with_declared_line_no_synthetic():
         "rsi": 999, "rsi_tone": "SHOULD NOT APPEAR", "trend": "SHOULD NOT APPEAR",
         "support": 111.0, "breakout": 222.0, "low": 90.0, "high": 200.0,
         "volume_tone": "SHOULD NOT APPEAR",
-        "technicals_state": "withheld_tenure",
+        "field_state": {
+            "base_price": "live", "pe": "live", "rev_growth": "live",
+            "profit_margin": "live", "net_cash": "live",
+            "technicals": "withheld_tenure",
+        },
         "catalyst": "Q3 earnings", "sentiment_tone": "mixed", "sentiment_score": "typical",
     }
     block = _format_profile(profile)
@@ -320,9 +324,12 @@ def test_fact_sheet_strips_news_and_social_with_declared_lines():
         "support": 111.0, "breakout": 222.0, "low": 90.0, "high": 200.0,
         "volume_tone": "in-line",
         "catalyst": "SHOULD NOT APPEAR", "forward_catalyst": "",
-        "news_state": "withheld_tenure",
         "sentiment_tone": "SHOULD NOT APPEAR", "sentiment_score": "SHOULD NOT APPEAR",
-        "social_state": "withheld_tenure",
+        "field_state": {
+            "base_price": "live", "pe": "live", "rev_growth": "live",
+            "profit_margin": "live", "net_cash": "live", "technicals": "live",
+            "news": "withheld_tenure", "social": "withheld_tenure",
+        },
     }
     block = _format_profile(profile)
     assert "SHOULD NOT APPEAR" not in block
@@ -339,7 +346,7 @@ def test_fact_sheet_strips_news_and_social_with_declared_lines():
 
 
 @pytest.mark.parametrize("state_key,state_field", [
-    ("technicals_state", "market"), ("news_state", "news"), ("social_state", "social"),
+    ("technicals", "market"), ("news", "news"), ("social", "social"),
 ])
 def test_withheld_declared_line_never_sells(state_key, state_field):
     profile = {
@@ -348,7 +355,11 @@ def test_withheld_declared_line_never_sells(state_key, state_field):
         "rsi": 50, "rsi_tone": "n", "trend": "n", "support": 1, "breakout": 2,
         "low": 1, "high": 2, "volume_tone": "n", "catalyst": "c",
         "sentiment_tone": "n", "sentiment_score": "n",
-        state_key: "withheld_tenure",
+        "field_state": {
+            "base_price": "live", "pe": "live", "rev_growth": "live",
+            "profit_margin": "live", "net_cash": "live",
+            state_key: "withheld_tenure",
+        },
     }
     block = _format_profile(profile)
     # "$" appears legitimately for the reference price line elsewhere in the
@@ -537,7 +548,7 @@ def test_withholding_market_never_computes_technicals(monkeypatch):
     profile = room_runner_mod._profile_for_ticker(
         "AAPL", withheld=frozenset({AgentId.MARKET_ANALYST}),
     )
-    assert profile["technicals_state"] == "withheld_tenure"
+    assert profile["field_state"]["technicals"] == "withheld_tenure"
 
 
 def test_fundamentals_fetch_always_runs_even_when_others_withheld(monkeypatch):
@@ -819,6 +830,6 @@ def test_run_wiring_passes_withheld_into_profile_for_ticker(monkeypatch):
         f"_profile_for_ticker (got {seen['withheld']!r}) — the fact sheet "
         "would render a withheld analyst's real data"
     )
-    assert seen["profile"]["technicals_state"] == "withheld_tenure", (
+    assert seen["profile"]["field_state"]["technicals"] == "withheld_tenure", (
         "profile built through run() does not mark Market technicals withheld"
     )
