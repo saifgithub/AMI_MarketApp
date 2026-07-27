@@ -5,7 +5,7 @@ State derives from round numbers here vs CR098-ROOM.auditor.md (see PROTOCOL.md)
 
 # CR098-ROOM — audit lane (Room analyst pullback: mechanism + FOMO surface, backend)
 
-SUBMITTED: round 1
+SUBMITTED: round 2
 
 **Item:** withhold analysts from a Room convene based on plan **and account tenure**, disclose the
 withholding honestly, strip any synthetic stand-in for the withheld domain from the rendered
@@ -110,3 +110,68 @@ you calibrate how much to trust the rest of round 2's work.
   are consistent with a green suite but **were never independently proven**.
 - **Acceptance #11** is N/A by the settled design (no LLM narration exists that could contradict),
   not satisfied by test.
+
+
+---
+
+# Round 2 — all five findings closed, then rebased onto DEF116 (AT:R65, 2026-07-27)
+
+**Branch:** `lane/CR098-ROOM.coder.room` @ **`73dbcce`**. Scope vs `main`: **16 files, +1288/−44**.
+**Suite: 1365 passed**, re-measured by the Architect in the worktree after the rebase
+(worker measured 1362 pre-rebase; `+3` = DEF116's three guard tests arriving with `main`).
+
+**The worker was clean this round** — six incremental commits, one per finding, clean worktree,
+**$7.64 of a $15 cap**, and it re-ran your two mutations itself rather than asserting they were
+covered. First lane worker in ~28h to finish without the Architect recovering it.
+
+| Your finding | What landed |
+|---|---|
+| **MAJOR 1** — `agent_withheld` never reaches the wire | `elif` branch added to `room.py`'s SSE dispatcher, modelled on `live_data_notice` at `:225`. Test asserts the frame appears **through the real route**, not that the runner emitted it |
+| **MAJOR 2** — nothing tests the defining behaviour | Test asserts no `agent_token`/`agent_done` carries a withheld `agent_id` and that present analysts are correctly attributed. **Both of your mutations re-run and now RED** (previously undetected at 1359) |
+| **MINOR 1** — respawn path's feeds ungated | Feed fallback gated by roster, matching Market's existing treatment; test reproduces the pre-fix bug |
+| **MINOR 2** — acceptance #2's test didn't test acceptance #2 | Rewritten to use a real aged `FLOOR_PASS` user through the actual DB-lookup path instead of `uuid4()`; now catches the off-by-one **directly** rather than incidentally via the money test |
+| **MINOR 3** — contradictory scaffolding header | Stripped for a withheld domain; contradiction assertions confirmed failing pre-fix |
+
+## ⚠️ The D6 rebase hazard fired for real — read this before auditing `room_runner.py`
+
+DEF116 landed on `main` between your verdict and this resubmission, and the rebase **conflicted in
+exactly the seam D6 predicted**. The two sides were:
+
+- **DEF116 (`main`)**: `profile = await asyncio.to_thread(_profile_for_ticker, …)` hoisted out of
+  the `_RoomContext(...)` kwargs.
+- **CR098 (lane)**: still calling `_profile_for_ticker(...)` **inline** in those kwargs, now with a
+  new `withheld=` argument.
+
+A keep-both resolution here restores a direct blocking call and **silently re-opens an MVP
+show-stopper**. Resolved by keeping DEF116's `to_thread` hoist and carrying CR098's `withheld=`
+kwarg into it. **The proof is not my say-so:** DEF116's own AST guard turns red naming
+`stream_room -> _profile_for_ticker (via run) (via _pump) (via start_run)` if the direct call comes
+back, and it is **green** on this branch. Please re-run it as your own check —
+`backend/tests/unit/test_no_blocking_io_in_async_routes.py`.
+
+## DEF122 — a defect in DEF116's guard, found by this rebase and fixed
+
+The same rebase exposed that DEF116's httpx inventory pin was keyed on `file:line`. CR098 added
+~146 lines to `room_runner.py`, an **untouched** `httpx.get` moved `:2618` → `:2764`, and the guard
+reported a **NEW blocking call that did not exist**. Filed and fixed as **DEF122** (on `main`):
+pinned by **file + count** instead. Mutation-verified both ways — a new call in an unlisted file
+(0 → 1) fails, and a **second** call in an already-pinned file (1 → 2) also fails, which is the
+obvious weakness of count-based pinning and is closed. Line numbers are still reported in the
+failure text as diagnostics, not identity.
+
+## Worth knowing — an environment trap, not a code issue
+
+The worker reported that this worktree sits on an **external volume with coarse mtime resolution**,
+which produced one false mutation-test reading until `__pycache__` was cleared between steps. If a
+mutation of yours appears not to take effect, clear `__pycache__` before concluding the test is
+blind.
+
+## Not verified — unchanged from round 1
+
+- **Acceptance #14 live smoke — untestable from here by design.** Mac is a pure editor. Post-promote.
+- **DEF098 parity blind spot** — correctly out of scope; still needs the Architect to decide whether
+  a withheld analyst counts as a declared omission for a degraded `FLOOR_PASS`.
+- The Architect re-measured the suite and re-ran the D6 guard, but did **not** independently re-run
+  the worker's five fixes' mutations — the worker did, and reported them; that is a self-report.
+- **The mobile half is still unbuilt.** `CR098-MOBILE-LIVE` and `CR098-MOBILE-VERDICT` are written
+  and `UNASSIGNED`, deliberately held on this verdict.
