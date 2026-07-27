@@ -25,7 +25,7 @@ DISCLAIMER = (
 )
 
 
-def send_email(
+async def send_email(
     *,
     to: str,
     subject: str,
@@ -49,12 +49,13 @@ def send_email(
         payload["reply_to"] = reply_to
 
     try:
-        resp = httpx.post(
-            _RESEND_URL,
-            headers={"Authorization": f"Bearer {settings.resend_api_key}"},
-            json=payload,
-            timeout=15.0,
-        )
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                _RESEND_URL,
+                headers={"Authorization": f"Bearer {settings.resend_api_key}"},
+                json=payload,
+                timeout=15.0,
+            )
         if resp.status_code >= 300:
             logger.warning(
                 "email_send_failed", to=to, status=resp.status_code, body=resp.text[:200]
@@ -78,7 +79,7 @@ def _wrap(body_html: str) -> str:
     )
 
 
-def send_contact_answer(*, to: str, question: str, answer: str) -> bool:
+async def send_contact_answer(*, to: str, question: str, answer: str) -> bool:
     """AI FAQ auto-answer. Always carries the disclaimer + human-escalation line."""
     html = _wrap(
         f'<p style="font-size:15px">Thanks for reaching out to AMI. Here\'s an answer '
@@ -93,12 +94,12 @@ def send_contact_answer(*, to: str, question: str, answer: str) -> bool:
         f"Not what you needed? Reply to this email and a human will pick it up.\n\n"
         f"{DISCLAIMER}"
     )
-    return send_email(
+    return await send_email(
         to=to, subject="Re: your question for AMI", html=html, text=text
     )
 
 
-def send_contact_ack(*, to: str) -> bool:
+async def send_contact_ack(*, to: str) -> bool:
     """Plain 'we got it, a human will reply' acknowledgement."""
     html = _wrap(
         '<p style="font-size:15px">Thanks for reaching out to AMI — we\'ve received your '
@@ -108,10 +109,10 @@ def send_contact_ack(*, to: str) -> bool:
         "Thanks for reaching out to AMI. We've received your message and a member of "
         f"our team will get back to you shortly.\n\n{DISCLAIMER}"
     )
-    return send_email(to=to, subject="We received your message", html=html, text=text)
+    return await send_email(to=to, subject="We received your message", html=html, text=text)
 
 
-def send_data_request_ack(*, to: str, request_type: str) -> bool:
+async def send_data_request_ack(*, to: str, request_type: str) -> bool:
     html = _wrap(
         f'<p style="font-size:15px">We\'ve received your <strong>{request_type}</strong> '
         "request and logged it. We’ll action it within 30 days, as required by "
@@ -121,18 +122,18 @@ def send_data_request_ack(*, to: str, request_type: str) -> bool:
         f"We've received your {request_type} request and logged it. We'll action it "
         f"within 30 days and email you when it's complete.\n\n{DISCLAIMER}"
     )
-    return send_email(
+    return await send_email(
         to=to, subject="Your data request has been received", html=html, text=text
     )
 
 
-def notify_team(*, subject: str, lines: list[str]) -> bool:
+async def notify_team(*, subject: str, lines: list[str]) -> bool:
     """Internal notification to NOTIFY_EMAIL. No-op if unset."""
     if not settings.notify_email:
         logger.info("notify_skip", reason="no NOTIFY_EMAIL", subject=subject)
         return False
     body = "<br>".join(lines)
-    return send_email(
+    return await send_email(
         to=settings.notify_email,
         subject=subject,
         html=f'<html><body style="font-family:sans-serif">{body}</body></html>',

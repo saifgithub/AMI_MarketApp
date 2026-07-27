@@ -44,7 +44,7 @@ def _sse_escape(chunk: str) -> str:
 async def concierge_message(req: ConciergeRequest, request: Request) -> StreamingResponse:
     # Defense in depth: if a token is present, it must be valid; absence is allowed.
     if req.turnstile_token is not None:
-        if not verify_turnstile(req.turnstile_token, remote_ip=client_ip(request)):
+        if not await verify_turnstile(req.turnstile_token, remote_ip=client_ip(request)):
             async def _rejected():
                 yield "event: error\ndata: verification_failed\n\n"
             return StreamingResponse(_rejected(), media_type="text/event-stream")

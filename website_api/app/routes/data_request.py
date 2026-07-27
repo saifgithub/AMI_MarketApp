@@ -52,7 +52,7 @@ class DataRequestResponse(BaseModel):
     dependencies=[Depends(data_request_rate_limit)],
 )
 async def submit_data_request(req: DataRequestBody, request: Request) -> DataRequestResponse:
-    if not verify_turnstile(req.turnstile_token, remote_ip=client_ip(request)):
+    if not await verify_turnstile(req.turnstile_token, remote_ip=client_ip(request)):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="verification_failed")
 
     email = req.email.strip().lower()
@@ -69,8 +69,8 @@ async def submit_data_request(req: DataRequestBody, request: Request) -> DataReq
         s.flush()
         due = row.due_at
 
-    email_service.send_data_request_ack(to=email, request_type=req.request_type)
-    email_service.notify_team(
+    await email_service.send_data_request_ack(to=email, request_type=req.request_type)
+    await email_service.notify_team(
         subject=f"[AMI data request] {req.request_type} — {email}",
         lines=[
             f"Type: {req.request_type}",
