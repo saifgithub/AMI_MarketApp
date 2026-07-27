@@ -218,10 +218,15 @@ curl -fsS https://api-alpha.agenticmarketintel.ai/v1/health
 curl -fsS https://api-alpha.agenticmarketintel.ai/v1/llm/status
 
 # Real market data — source is the LEAF that actually served the price:
-#   "yahoo"     when Yahoo's keyless endpoint came back
-#   "mock_walk" when Yahoo was 429ing / errored and we fell through
-# (Not the stack name — see commit 83d32a7. The Flutter LIVE/MOCK pill
-# substring-matches "yahoo", so leaf reporting is what keeps it honest.)
+#   "yfinance"  the current provider (market_data.py:490)
+#   "yahoo"     the legacy keyless-endpoint provider
+#   "mock_walk" when the live feed 429'd / errored and we fell through
+# (Not the stack name — see commit 83d32a7.) The Flutter LIVE/MOCK pill
+# substring-matches BOTH "yfinance" and "yahoo"
+# (trade_ticket_sheet.dart:626-627), so either reads as LIVE. Only
+# "mock_walk" should show MOCK. Verified AT:R65 against a live Alpha
+# response — this line previously named "yahoo" alone and read as a
+# defect when the API correctly returned "yfinance".
 curl -fsS https://api-alpha.agenticmarketintel.ai/v1/sim/quote/AAPL
 ```
 
