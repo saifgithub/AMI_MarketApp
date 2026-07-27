@@ -301,20 +301,29 @@ def test_waived_chains_still_pin_the_known_offender_set():
 # `.get`/`.post` collides with `Session.get`, `*_store.get`, `_resolve_url`,
 # etc. So this is a non-graph inventory pin instead: a NEW sync httpx call
 # anywhere under backend/app turns it red, no reachability needed.
-_KNOWN_SYNC_HTTPX_SITES = {
+#
+# Keyed by FILE and COUNT, not file:line (DEF122). The first revision pinned
+# `file:lineno`, which made the guard fire on any unrelated edit *above* a
+# pinned site: CR098-ROOM added ~146 lines to room_runner.py and the same
+# untouched `httpx.get` moved :2618 -> :2764, reporting a "NEW" call that did
+# not exist. A guard that cries wolf on line drift is one people learn to skip,
+# which is worse than no guard. File+count still turns red on a genuinely new
+# call (count rises, or an unlisted file appears) and stays quiet on movement.
+_KNOWN_SYNC_HTTPX_COUNTS = {
     # DEF116 D4: identical class, out of scope, gated on urow.alpaca_access_token
     # so it fires only for linked users. Needs its own decision.
-    "app/services/alpaca_service.py:77",
-    "app/services/alpaca_service.py:113",
-    # RevenueCat: called from a sync `def` route (runs in FastAPI's threadpool),
-    # so it does not park the event loop — the CR049 distinction.
-    "app/services/revenuecat_client.py:74",
-    "app/services/room_runner.py:2618",
+    "app/services/alpaca_service.py": 2,
+    # RevenueCat + the room_runner fetch: both called from a sync `def` context
+    # (FastAPI runs those in a threadpool), so they do not park the event loop —
+    # the CR049 distinction.
+    "app/services/revenuecat_client.py": 1,
+    "app/services/room_runner.py": 1,
 }
 
 
 def test_sync_httpx_call_site_inventory_is_pinned():
-    sites: set[str] = set()
+    counts: dict[str, int] = {}
+    where: dict[str, list[int]] = {}
     for path in _iter_py(_APP):
         tree = ast.parse(path.read_text())
         for node in ast.walk(tree):
@@ -327,22 +336,34 @@ def test_sync_httpx_call_site_inventory_is_pinned():
                 and f.value.id == "httpx"
                 and f.attr in {"get", "post", "put", "patch", "delete", "request", "stream"}
             ):
-                sites.add(f"{path.relative_to(_APP.parent)}:{node.lineno}")
+                key = str(path.relative_to(_APP.parent))
+                counts[key] = counts.get(key, 0) + 1
+                where.setdefault(key, []).append(node.lineno)
 
-    added = sites - _KNOWN_SYNC_HTTPX_SITES
+    added = {
+        f"{k} ({counts[k]} sync httpx calls, expected {_KNOWN_SYNC_HTTPX_COUNTS.get(k, 0)}; "
+        f"lines {sorted(where[k])})"
+        for k in counts
+        if counts[k] > _KNOWN_SYNC_HTTPX_COUNTS.get(k, 0)
+    }
+    removed = {
+        f"{k} ({counts.get(k, 0)} sync httpx calls, expected {v})"
+        for k, v in _KNOWN_SYNC_HTTPX_COUNTS.items()
+        if counts.get(k, 0) < v
+    }
     assert not added, (
-        "NEW synchronous `httpx.<verb>(` call site(s) under backend/app. If any "
-        "async route can reach one, it parks the single event loop for the whole "
+        "NEW synchronous `httpx.<verb>(` call(s) under backend/app. If any async "
+        "route can reach one, it parks the single event loop for the whole "
         "round-trip (DEF116, same class as CR049's MAJOR). Use `httpx.AsyncClient` "
         "with `await`, or wrap the call in `await asyncio.to_thread(...)`. If it is "
-        "genuinely only reachable from a sync `def` route, add it here with that "
-        "reason:\n" + "\n".join(sorted(added))
+        "genuinely only reachable from a sync `def` route, raise the count here "
+        "with that reason:\n" + "\n".join(sorted(added))
     )
 
-    removed = _KNOWN_SYNC_HTTPX_SITES - sites
     assert not removed, (
-        "pinned sync httpx site(s) no longer present (moved or fixed) — update "
-        "this inventory so it keeps catching new ones:\n" + "\n".join(sorted(removed))
+        "pinned sync httpx call(s) no longer present (fixed or deleted) — lower "
+        "the count here so the pin keeps catching new ones:\n"
+        + "\n".join(sorted(removed))
     )
 
 
