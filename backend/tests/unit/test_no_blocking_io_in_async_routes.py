@@ -429,9 +429,12 @@ def test_sync_httpx_call_site_inventory_is_pinned():
 _SIM_ENGINE_NETWORK_PRIMITIVES = {"quote", "history", "news", "earnings"}
 
 # Justified, not a blanket waiver: none of these is ever called directly
-# from an `async def` route today (checked by grep over
-# `backend/app/api/*.py` for `sim.<name>` / `<obj>.<name>` outside a
-# `to_thread` wrapper) — `current_price` / `current_marks` /
+# from an `async def` route today — enforced by
+# `test_sync_safe_simengine_method_never_called_directly_from_async_route`
+# (D10, below) rather than by a comment, since a hand-run grep at authoring
+# time is unasserted and rots silently (DEF120 round 2 MAJOR: a straight
+# revert reinstating `sim.current_marks(...)` in async `sector_allocation`
+# shipped green past D9). `current_price` / `current_marks` /
 # `current_marks_with_source` / `_marks_with_quotes` / `aggregate_source` /
 # `total_value` / `current_drawdown_pct` are reached only from inside other
 # `SimEngine` methods; `submit` / `preview` / `evaluate_outcomes` /
@@ -527,6 +530,67 @@ def test_every_network_reaching_simengine_method_is_declared():
         "METHODS` (only ever reached from inside an already-to_thread-"
         "wrapped method — name which one in a comment):\n"
         + "\n".join(sorted(undeclared))
+    )
+
+
+# ── D10 (DEF120 round 3): assert the sync-safe declaration, don't comment it ─
+#
+# D9 governs WHAT may exist: a `SimEngine` method that reaches the network
+# must be declared in `_BLOCKING_LEAF_METHOD_NAMES` or
+# `_SIM_ENGINE_SYNC_SAFE_METHODS`. Neither D9 nor the route-walking guard
+# above governs HOW a declared-sync-safe method is actually called — that
+# was left to a comment ("checked by grep"), run once by hand at authoring
+# time. Nothing asserted it, so a straight revert of this lane's own fix —
+# `marks = sim.current_marks(["AAPL"])` back in async `sector_allocation`,
+# the verbatim pre-DEF120 bug — shipped green through both guards
+# (round-2 audit MAJOR, probe P4).
+#
+# D10 closes that: for every name in `_SIM_ENGINE_SYNC_SAFE_METHODS`, walk
+# every `async def` under `backend/app/api/` and fail if it contains a
+# direct `<obj>.<name>(...)` call. The correctly-deferred shape —
+# `await asyncio.to_thread(sim.current_marks, tickers)` — passes the method
+# by reference (an `ast.Attribute`, never invoked at the call site), so it
+# is not an `ast.Call` at all and is structurally invisible to this check;
+# no exemption needs to be carved out for it.
+def _direct_sync_safe_calls(fn: ast.AST) -> list[str]:
+    return [
+        f"<obj>.{node.func.attr}"
+        for node in ast.walk(fn)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr in _SIM_ENGINE_SYNC_SAFE_METHODS
+    ]
+
+
+def test_sync_safe_simengine_method_never_called_directly_from_async_route():
+    """D10 (DEF120 round 3) — see the block comment above.
+
+    Round-2 audit finding (MAJOR, reproduced): `_SIM_ENGINE_SYNC_SAFE_METHODS`
+    membership was a comment, not a control — a revert reinstating the
+    pre-DEF120 direct call went green. This test makes the claim structural:
+    it fails if any declared-sync-safe method is called directly (not merely
+    referenced) from inside an `async def` anywhere under `backend/app/api/`.
+    """
+    offenders: list[str] = []
+    for path in _iter_py(_APP / "api"):
+        tree = ast.parse(path.read_text())
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.AsyncFunctionDef):
+                continue
+            offenders += [
+                f"{path.relative_to(_REPO_ROOT)}:{node.name} -> {hit}"
+                for hit in _direct_sync_safe_calls(node)
+            ]
+
+    assert not offenders, (
+        "async def under backend/app/api/ calls a declared-sync-safe "
+        "SimEngine method directly. These names are declared sync-safe on "
+        "the premise that they are ONLY ever reached from inside another "
+        "already-`to_thread`-wrapped method, never called straight from an "
+        "async route body. Either wrap the whole call in "
+        "`await asyncio.to_thread(...)`, or if the method itself does "
+        "network I/O reachable this way, move it to "
+        "`_BLOCKING_LEAF_METHOD_NAMES` instead:\n" + "\n".join(offenders)
     )
 
 
