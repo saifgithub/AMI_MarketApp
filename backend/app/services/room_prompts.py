@@ -452,8 +452,7 @@ def _format_profile(profile: dict[str, Any]) -> str:
     ]
     if market_withheld:
         lines.append(
-            "Market technicals: not included in this session "
-            "(upgrade to include the Market Analyst)."
+            "Market technicals: not included in this session."
         )
     else:
         lines.append(
@@ -471,15 +470,13 @@ def _format_profile(profile: dict[str, Any]) -> str:
         lines.append(f"Volume: {profile.get('volume_tone')}")
     if news_withheld_tenure:
         lines.append(
-            "Recent catalyst/headline: not included in this session "
-            "(upgrade to include the News Analyst)."
+            "Recent catalyst/headline: not included in this session."
         )
     else:
         lines.append(_catalyst_line(profile))
     if social_withheld_tenure:
         lines.append(
-            "Retail sentiment: not included in this session "
-            "(upgrade to include the Social Media Analyst)."
+            "Retail sentiment: not included in this session."
         )
     else:
         lines.append(
