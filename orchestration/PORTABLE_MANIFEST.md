@@ -32,7 +32,7 @@ first — the reasoning survives, the archaeology goes to BINDINGS or the commit
 | `DEFINITION_OF_DONE.md` | the portable DoD questions (answers live in tier B) |
 | `history/README.md` | what the durable-memory tree is for |
 | `dispatch/DISPATCH_PROTOCOL.md` | Architect ↔ instance contract, tokens, state table, the gate |
-| `dispatch/dispatch.sh` | state deriver + watcher (`state` / `inbox` / `architect` / `inst <id>`) |
+| `dispatch/dispatch.sh` | state deriver + watcher (`state` / `inbox` / `verdict <ITEM>` / `architect` / `inst <id>`) |
 | `dispatch/rotate_trail.py` | ledger retention, ledger-agnostic |
 | `dispatch/loop_prompts/ARCHITECT.md` | Architect role prompt |
 | `dispatch/loop_prompts/AUDITOR.md` | Auditor role prompt (dispatch-layer wrapper) |

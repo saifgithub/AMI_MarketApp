@@ -94,7 +94,10 @@ You run as a single-shot `claude -p` session: **the session ENDS the moment you 
   A committed-but-unpushed anything is invisible to your Auditor. Push both.
 - **Never close your own findings.** COMPLETE is the Auditor's call.
 - **Machine tokens byte-exact:** `STATUS: … (round N)`, `SUBMITTED: round N`. A paraphrase breaks
-  the watcher.
+  the watcher. A token counts only when it OPENS a line (`**STATUS: …**` and `## STATUS: …` count),
+  so when you write ABOUT one — a note to the next round, a quote from the protocol — put it in
+  backticks or a blockquote. Otherwise your commentary becomes the lane's state and the watcher
+  gives your last sentence the last word.
 - **The round counter is the LANE's, not yours.** Submissions and verdicts share one sequence, and
   the watcher only sees work when your `SUBMITTED` round is **greater than** the last `VERDICT`
   round. So do not assume your resubmission is "round 2" because it is your second try — read the

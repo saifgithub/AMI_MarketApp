@@ -93,6 +93,12 @@ repo layout, and do not proceed on an unresolved token.
    `OUT-OF-SCOPE` in your lane file; the architect mints the CR/DEF. You never mint an ID.
 7. On EVERY verdict (AWAITING_FIXES and COMPLETE alike):
    - Write `<AUDIT_LANE_DIR>/<ITEM>.auditor.md`: per-finding verdicts + `VERDICT: COMPLETE | AWAITING_FIXES (round N)`.
+     **`N` is the round you AUDITED, never the round you are asking for** — a verdict ahead of the
+     submission it answers renders `BAD_ROUND` and the lane goes nowhere until you fix the number.
+     Your file is prose and machine state in one document: a token only counts when it OPENS a line
+     (`**VERDICT: …**` and `## VERDICT: …` count), so when you write ABOUT a token — recounting a
+     round, quoting the protocol — put it in backticks or a blockquote, or your commentary becomes
+     the lane's state and `tail -1` gives your last sentence the last word.
    - Write the run report under `<AUDIT_ROOT>/runs/<date>_run-NN/`.
    - Append the row to `<AUDIT_ROOT>/audit-trail.md` (you own this single chronological ledger).
    - Commit those `<AUDIT_ROOT>/` paths BY NAME and PUSH; confirm origin advanced

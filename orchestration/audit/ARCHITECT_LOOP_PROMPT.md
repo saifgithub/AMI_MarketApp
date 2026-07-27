@@ -53,10 +53,16 @@ and integrate what it lists before picking the next item.** Not discretionary: t
 `watcher.sh` wakes on `AWAITING_FIXES` but **never on a clean `COMPLETE`**, so a passed lane emits no
 signal you can wait on — you have to look, and a passed lane nobody looks at never merges. `inbox`
 is that look: one-shot, **non-blocking**, listing only lanes where the auditor has FINISHED and the
-ball is yours — `AUDIT_PASSED` (merge it) and `UNCOMMITTED` (verdict unpushed — chase it) — exiting
-non-zero while any remain. Non-blocking on purpose: you multiplex many lanes, so the single-lane
-auditor's blocking-watcher pattern would freeze the rest. A "work unit" is any lane you carry to a
-hand-off — a submit, a merge, an answer to a `NEEDS-INFO`, an assignment.
+ball is yours — `AUDIT_PASSED` (merge it), `UNCOMMITTED` (verdict unpushed — chase it) and
+`BAD_ROUND` (a verdict stamped with a round that has no submission — its writer repairs the number)
+— exiting non-zero while any remain. Non-blocking on purpose: you multiplex many lanes, so the
+single-lane auditor's blocking-watcher pattern would freeze the rest. A "work unit" is any lane you
+carry to a hand-off — a submit, a merge, an answer to a `NEEDS-INFO`, an assignment.
+
+**Quote a verdict through `dispatch.sh verdict <ITEM>`, never by reading `<ITEM>.auditor.md`
+yourself.** An auditor lane in the working tree may be mid-write — the round and the findings can
+both still change — and reading it directly is how an unfinished verdict becomes an instruction you
+dispatch. The accessor refuses an undelivered verdict; the raw file cannot.
 
 1. Pick any item NOT AWAITING_AUDIT (build a new one, or fix a bounced one). An item is yours
    while your `SUBMITTED round` is less than or equal to the auditor's `VERDICT round`.

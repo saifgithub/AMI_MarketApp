@@ -357,6 +357,37 @@ relaunch rule.
 
 ---
 
+## P8 — A derived state trusts an input nobody validated
+
+The orchestration lane files are prose and machine state in one document, and the two watchers
+derive whose turn it is from regex + `tail -1`. Both halves of that have now failed the same way:
+the parser accepted a line that was *describing* state, and the arithmetic accepted a round number
+that could not exist. Neither errors; both render as a state that looks routine.
+
+| | What was read as state | Result |
+|---|---|---|
+| **DEF091** (2026-07-23) | an auditor's self-reopen consumed round 2 | the coder's `SUBMITTED: round 2` read as already-answered; lane quiet with nobody's turn |
+| **DEF116** (2026-07-27) | a verdict stamped `(round 2)` against `SUBMITTED: round 1` | lane deadlocked on `AUDIT_RETURNED` across a full fix-and-resubmit cycle; nothing logged |
+| **DEF116's own lane file** (measured 2026-07-27) | `SUBMITTED: round 2` quoted inside the file's write-up **of this bug** | `watcher.sh` reported the lane at r2 while its live submission line said r3 |
+
+**Why the previous guard failed.** DEF091's fix was *more arithmetic* — add `v_round`, compare
+strictly — with no check that the two numbers were a possible pair, so the next mistyped stamp had a
+new way to freeze a lane silently. And the anchoring rule existed in exactly one tool: `dispatch.sh`
+required `^STATUS:` while `watcher.sh` left `SUBMITTED` unanchored, so the two boards disagreed about
+what a line even meant, and neither disagreement was visible from either board.
+
+**The invariant.** *A document that is both prose and machine state must define which lines EMIT
+state, in one rule shared by every reader of it. And a derived state must reject input combinations
+that cannot exist — loudly, as their own state — instead of rendering them as a normal one.*
+
+**Enforcing check (DEF121).** The shared `TOK` / `emits()` / `last_match()` rule, byte-identical in
+`orchestration/dispatch/dispatch.sh` and `orchestration/audit/watcher.sh`: a token counts only when
+it opens a line, and only its line-opening occurrence supplies the value. Plus `BAD_ROUND` on both
+boards when `VERDICT round > SUBMITTED round`, surfaced as hot by `dispatch.sh inbox` so it reaches
+the Architect at the next work unit rather than waiting to be noticed.
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.
