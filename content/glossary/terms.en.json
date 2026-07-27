@@ -172,7 +172,7 @@
   {
     "id": "share_price",
     "term": "Share price",
-    "definition": "The price at which a single share trades in the market at a given moment. Determined continuously by the highest bid and lowest ask in the order book.",
+    "definition": "The price at which a single share trades in the market at a given moment. It is the price of the most recent executed trade, set when a bid and ask cross, not simply the current best bid or ask.",
     "category": "basics",
     "see_also": ["bid", "ask", "spread"],
     "related_lessons": ["003"],

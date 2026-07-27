@@ -156,7 +156,7 @@
     "type": "predict_the_call",
     "difficulty": 3,
     "locale": "en",
-    "scenario": "User's mandate: max 5 trades per day, cooling-off 60 minutes after losses >1% NAV, journal entry required for any trade outside the watchlist. Today: 9:31 long PUBLIC +0.4%, 9:48 long MAYBANK -1.2% (stop out), 10:04 long CIMB (off-watchlist, no journal). The user submits ticket #4 at 10:09 — short TENAGA, 30 minutes after the MAYBANK loss. The Portfolio Manager intervenes.",
+    "scenario": "User's mandate: max 5 trades per day, cooling-off 60 minutes after losses >1% NAV, journal entry required for any trade outside the watchlist. Today: 9:31 long PUBLIC +0.4%, 9:48 long MAYBANK -1.2% (stop out), 10:04 long CIMB (off-watchlist, no journal). The user submits ticket #4 at 10:09 — short TENAGA, about 20 minutes after the MAYBANK loss. The Portfolio Manager intervenes.",
     "question": "What is the Portfolio Manager most likely to say?",
     "options": [
       "Approved — TENAGA is liquid enough",

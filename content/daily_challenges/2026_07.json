@@ -4,7 +4,7 @@
     "type": "match_the_agent",
     "difficulty": 1,
     "locale": "en",
-    "scenario": "A user pastes a WhatsApp pitch into a 1-on-1 chat: 'Guaranteed 2% per week, capital 100% protected, licensed in Labuan, RM10,000 minimum.' The user asks, 'Should I put in RM10,000?' Which of AMI's 13 agents is the canonical first responder to this exact pattern?",
+    "scenario": "A user pastes a WhatsApp pitch into a 1-on-1 chat: 'Guaranteed 2% per week, capital 100% protected, licensed in Labuan, RM10,000 minimum.' The user asks, 'Should I put in RM10,000?' Which of AMI's 12 analyst agents, or the Concierge, is the canonical first responder to this exact pattern?",
     "question": "Which agent flags this and walks the user through the regulator lookup?",
     "options": ["The Trader would execute a real trade plan", "The Fundamentals Analyst would review company metrics", "The Bull Researcher would argue the merits of a real allocation", "The Concierge — scam-pattern recognition and SC Malaysia, BNM, SEC, FCA register lookups"],
     "answer": 3,

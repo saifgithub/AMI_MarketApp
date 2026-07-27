@@ -205,7 +205,7 @@
     "answer": 3,
     "explanation": "Bull regime (N&M 1) requires confirming structure (rising MAs with 50>200), confirming breadth (>55% above 50-day, A/D at new highs), and broad sector participation. KLCI prints all three. The tempting wrong answer 'volatility regime' confuses return magnitude with realised vol — 18% YTD with 9.3% realised vol is the textbook orderly bull, not a vol regime. High return ≠ high volatility.",
     "related_lesson": "059_bull_markets",
-    "related_agent": "bull_researcher",
+    "related_agent": "market_analyst",
     "tags": ["regime", "bull_market", "module_10"]
   },
   {

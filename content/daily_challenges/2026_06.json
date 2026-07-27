@@ -482,13 +482,13 @@
     "scenario": "Room has agreed BUY on AAPL, sizing 5% of NAV ($5,000 on a $100k account). Current price $192.40. Market Analyst flagged support at $188 (recent base) and resistance at $205 (prior swing high). PM mandate allows max -8% stop. The Trader is asked to specify entry, stop, and target.",
     "question": "What is the Trader most likely to specify?",
     "options": [
-      "Entry $192.40, stop $187.50 (just under $188 support, -2.5% from entry), target $205 (resistance) — risk/reward ~5.2x",
+      "Entry $192.40, stop $187.50 (just under $188 support, -2.5% from entry), target $205 (resistance) — risk/reward ~2.6x",
       "Entry $205 (buy the breakout above resistance), stop $200, target $192",
       "Entry $192.40, stop $177 (-8% from entry), target $250",
       "Entry $192.40, no stop, target 'whenever it feels right'"
     ],
     "answer": 0,
-    "explanation": "The Trader sizes the stop to *technical structure*, not to the maximum-allowed loss. Support is at $188, so a stop just below it ($187.50) puts ~$4.90 of risk on the table against ~$12.60 of reward to the $205 target — a clean ~5.2x risk/reward. The tempting wrong answer 'stop at -8%' uses the mandate ceiling as the stop, which throws away tight structure. The mandate is the *worst* allowed, not the recommended.",
+    "explanation": "The Trader sizes the stop to *technical structure*, not to the maximum-allowed loss. Support is at $188, so a stop just below it ($187.50) puts ~$4.90 of risk on the table against ~$12.60 of reward to the $205 target — a clean ~2.6x risk/reward. The tempting wrong answer 'stop at -8%' uses the mandate ceiling as the stop, which throws away tight structure. The mandate is the *worst* allowed, not the recommended.",
     "related_lesson": "016_risk_reward_ratio",
     "related_agent": "trader",
     "tags": ["trader", "execution", "risk_reward", "module_3"]

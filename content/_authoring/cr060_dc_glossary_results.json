@@ -1,0 +1,2742 @@
+{
+  "totals": {
+    "checked": 401,
+    "dc": 193,
+    "glossary": 208,
+    "defects": 15,
+    "quiz_key": 0,
+    "escalations": 0
+  },
+  "groups": [
+    {
+      "group": "2026_06",
+      "checked": 30,
+      "findings": 30
+    },
+    {
+      "group": "2026_07",
+      "checked": 31,
+      "findings": 31
+    },
+    {
+      "group": "2026_08",
+      "checked": 31,
+      "findings": 31
+    },
+    {
+      "group": "2026_09",
+      "checked": 30,
+      "findings": 30
+    },
+    {
+      "group": "2026_10",
+      "checked": 31,
+      "findings": 31
+    },
+    {
+      "group": "2026_11",
+      "checked": 30,
+      "findings": 30
+    },
+    {
+      "group": "2026_12",
+      "checked": 10,
+      "findings": 10
+    },
+    {
+      "group": "glossary[0:52]",
+      "checked": 52,
+      "findings": 52
+    },
+    {
+      "group": "glossary[52:104]",
+      "checked": 52,
+      "findings": 52
+    },
+    {
+      "group": "glossary[104:156]",
+      "checked": 52,
+      "findings": 52
+    },
+    {
+      "group": "glossary[156:208]",
+      "checked": 52,
+      "findings": 52
+    }
+  ],
+  "defects": [
+    {
+      "id": "dc_2026_06_13_maybank_correlation_violation",
+      "verdict": "DEFECT",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P2",
+      "issue": "Explanation is internally inconsistent: 18%+7%=25% lands exactly AT the stated 25% sector cap, not over it, yet the text claims it 'breaches' the cap ('hitting the 25% sector cap exactly; one more bank position breaches it').",
+      "fix_lead": "Either change the mandate cap to something the ticket would exceed (e.g. 22%) or reword to 'reaches the cap with zero headroom left, so the PM flags it as fully consumed / at-limit' rather than 'breaches'. Answer index 0 stays correct among the four options regardless.",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_26_trader_execution_call",
+      "verdict": "DEFECT",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P1",
+      "issue": "The keyed-correct option and its explanation both state the risk/reward as '~5.2x', but the actual numbers given (entry $192.40, stop $187.50, target $205) compute to risk $4.90 / reward $12.60 = ~2.6x, not 5.2x. This is the lesson's core numeric concept (016_risk_reward_ratio) stated wrong to a learner who will do the arithmetic correctly and then doubt themselves.",
+      "fix_lead": "Change '~5.2x' to '~2.6x' (or ~2.57x) in both the option text and the explanation; entry/stop/target values themselves are fine (the -2.5% figure checks out).",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_07_01_guaranteed_2pct_weekly",
+      "verdict": "DEFECT",
+      "issue": "Scenario says \"AMI's 13 agents\" — AMI is a 12-agent analyst team plus the Concierge, not 13 agents (or the Concierge is the 13th thing depending on how you count, but CLAUDE.md's fixed phrasing is \"12-agent analyst team plus the Concierge\"). Quiz key (answer 3, Concierge) is still correct.",
+      "classes": [
+        "consistency"
+      ],
+      "severity": "P2",
+      "fix_lead": "Reword to \"Which of AMI's 12 analyst agents, or the Concierge, is the canonical first responder\" to match the fixed 12+Concierge framing.",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_22_jpm_revenge_trade",
+      "verdict": "DEFECT",
+      "issue": "Correct answer's explanation invents a '24-hour cooldown' enforced by 'the mandate's behavioural-guard [that] should block' — but the source lesson (content/lessons/047_revenge_trading.ms.mdx) specifies the cooldown is self-imposed by the trader and logged in the AMI Decision Journal, explicitly NOT forced by the app ('bukan dipaksa oleh aplikasi'), with an example duration of ~60 minutes, not 24 hours. The keyed option (index 1) is still the best of the four choices, so quiz-key is unaffected, but its explanation misstates both the enforcement mechanism and the duration versus the canonical lesson.",
+      "classes": [
+        "fact",
+        "consistency"
+      ],
+      "severity": "P2",
+      "fix_lead": "Rewrite option 1 / explanation to match lesson 047: cooldown is self-imposed and journal-logged (not an app-enforced block), duration example ~60 minutes, not 24 hours.",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_08_02_nvda_candle_anatomy",
+      "verdict": "DEFECT",
+      "issue": "Scenario/explanation is internally inconsistent: open $122.40, close $122.90 means close > open, i.e. a bullish (green) body, but the scenario asserts the candle is 'small and red' (bearish body color contradicts the math). Separately, the upper wick is $128.10-$122.90=$5.20 against a $0.50 body = ~10.4x, not the stated 'roughly 5x'. Neither error changes the keyed answer (shooting star is still correct on wick/trend/volume logic regardless of body color), but the numbers as written don't reconcile — a learner who computes the candle anatomy will hit a contradiction.",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P2",
+      "fix_lead": "Set close below open (e.g. close $122.10) so the body is genuinely red, and/or adjust the high so the wick-to-body ratio matches the stated ~5x.",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_16_spot_violation_concentration",
+      "verdict": "DEFECT",
+      "issue": "The keyed answer (both position-size AND sector caps breached) and its explanation explicitly deny that the 12% single-stock concentration cap applies ('that rule applies to a single stock against itself, not the new position vs cap'), but the math shows it IS also breached: META alone would be a brand-new $29,000 position = 14.5% of NAV in a single stock, which exceeds the stated 12% single-stock concentration cap on its own (no prior META holdings to distinguish 'position' from 'concentration' here). So a third violation (concentration cap) is real but the content asserts it isn't, and no answer option captures all three simultaneous breaches. Separately, related_lesson '015_stop_loss_basics' doesn't match the concentration/sector topic tagged.",
+      "classes": [
+        "fact",
+        "consistency"
+      ],
+      "severity": "P2",
+      "fix_lead": "Either add an option/explanation acknowledging all three caps (position-size, concentration, sector) are breached, or restructure the mandate/numbers so single-stock concentration is genuinely not implicated (e.g. make the concentration cap higher than 14.5%, or clarify concentration is measured differently from position size). Also point related_lesson at a position-sizing/concentration lesson instead of stop-loss basics.",
+      "correct_answer": 3,
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_24_match_pullback_entry",
+      "verdict": "DEFECT",
+      "issue": "Internal math in the quoted trader ticket doesn't reconcile: risk per share is $412.40-$405.80=$6.60 (1.6% of entry price). At a stated 1.5% NAV loss cap, sizing to fully use that cap would require committing ~93.75% of NAV to this single position (shares = NAV*1.5%/6.60, position value = NAV*0.9375) — not the stated 3.2% of NAV. As written, sizing to only 3.2% of NAV would risk just ~0.05% of NAV, nowhere near the claimed 1.5% loss cap being used. Doesn't change the keyed answer (still clearly the Trader speaking) but the quoted numbers are not mutually consistent.",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P2",
+      "fix_lead": "Either widen the stop distance or shrink the position-size percentage so 'sizes to X% of NAV' and 'mandate-permitted 1.5% loss cap' actually reconcile (e.g. a $6.60 stop at 1.5% loss cap implies a much smaller position size than 3.2% only if NAV or stop distance is scaled differently).",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_09_02_tnb_dividend_call",
+      "verdict": "DEFECT",
+      "issue": "Explanation conflates RM3.2B 'free cash flow' (as defined in the scenario, i.e. already net of capex) with pre-capex operating cash flow, saying the RM12B capex 'exceeds RM3.2B operating FCF' — FCF by definition is already post-capex, so this double-subtracts capex conceptually. Doesn't change the correct answer (option 1 is still clearly best) but the terminology is sloppy against the FCF lesson's own definition.",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P2",
+      "fix_lead": "Reword explanation to say capex is stepping up from its current (lower) level to RM12B, which is what will turn the currently-positive RM3.2B FCF negative — don't call the RM3.2B 'operating FCF' pre-capex.",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_09_tsla_no_stop_violation",
+      "verdict": "DEFECT",
+      "issue": "Notional is 18 x $268 = $4,824, which is 6.03% of the $80,000 NAV — technically over the stated 6% single-position cap, not 'exactly at the cap' as the scenario claims. Doesn't change the correct answer (the stop-loss waiver is the unambiguous, intended violation) but a precise reader could argue the single-position cap is also breached, muddying a 'spot THE violation' (singular) question.",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P2",
+      "fix_lead": "Adjust share count/price so notional lands at or under exactly 6.00% of NAV (e.g. 17.9 shares worth, or reduce price/shares slightly) so only the stop-loss rule is breached.",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_10_09_discipline_mandate_call",
+      "verdict": "DEFECT",
+      "issue": "Scenario says the ticket at 10:09 is '30 minutes after the MAYBANK loss', but the MAYBANK stop-out is timestamped 9:48 — the actual gap is 21 minutes, not 30. Doesn't change the correct answer (still inside the 60-min cooling-off window either way) but is an internal arithmetic error a sharp learner could flag.",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P2",
+      "fix_lead": "Change '30 minutes' to '21 minutes' in the scenario text (or shift the MAYBANK timestamp to 9:39 if 30 minutes was intended).",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_11_11_klci_bull_regime",
+      "verdict": "DEFECT",
+      "issue": "Question asks 'What regime is the Market Analyst most likely calling?' but the entry's related_agent field is tagged 'bull_researcher', not 'market_analyst'. Every other read_the_chart entry in this file (02, 07, 16, 21) has related_agent matching the agent named in the question — this is the sole outlier. The keyed answer (index 3, bull regime) is itself correct, so no learner is mis-graded, but the metadata is internally inconsistent and would misfile this item under the wrong agent in any agent-tagged analytics/reporting.",
+      "classes": [
+        "consistency",
+        "metadata"
+      ],
+      "severity": "P2",
+      "fix_lead": "Change related_agent from 'bull_researcher' to 'market_analyst' to match the question text and the pattern used by every other read_the_chart entry.",
+      "group": "2026_11"
+    },
+    {
+      "id": "share_price",
+      "verdict": "DEFECT",
+      "issue": "Says share price is 'determined continuously by the highest bid and lowest ask' — actually the traded share price is the last executed trade price (which occurs when a bid and ask cross/match), not simply the current best-bid/best-ask values; conflates quoted spread with traded price.",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P2",
+      "fix_lead": "Reword to: price is set by the most recent trade, which occurs when a buyer's bid and seller's ask match; the current bid/ask bracket where the next trade is likely to occur.",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "musharakah",
+      "verdict": "DEFECT",
+      "issue": "Definition says musharakah partners 'share profit and loss in a pre-agreed ratio' — under the standard Sharia rule (and AAOIFI-consistent majority fiqh position, confirmed via web search), profit follows the pre-agreed ratio but loss must be shared strictly in proportion to each partner's capital contribution, not any separately agreed ratio; conflating the two misstates a defining feature of the contract.",
+      "classes": [
+        "fact-accuracy",
+        "islamic_finance"
+      ],
+      "severity": "P1",
+      "fix_lead": "Rewrite: 'partners share profit in a pre-agreed ratio, while loss is shared strictly in proportion to capital contribution' — mirror the correct asymmetric rule already stated correctly in the mudarabah entry.",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "aaoifi",
+      "verdict": "DEFECT",
+      "issue": "States AAOIFI's debt/liquidity/income ratio caps are '33%/33%/5% by default'; per multiple reputable Islamic-finance screening sources (Amanah Advisors, Tabadulat, Rafiq, halalsignalz), AAOIFI's own Shariah Standard sets the debt ratio and cash/interest-bearing-securities caps at 30%, not 33% — 33%/one-third is the figure associated with S&P/MSCI/Dow-Jones-style screens, not AAOIFI specifically. Directly relevant since the entry says 'AMI's screening logic follows' these numbers.",
+      "classes": [
+        "fact-accuracy",
+        "islamic_finance"
+      ],
+      "severity": "P1",
+      "fix_lead": "Correct to 30%/30%/5% for AAOIFI, or if AMI's backend genuinely uses 33%/33%/5%, re-attribute those defaults to the correct standard (e.g., S&P/MSCI/DJIM-style) rather than labeling them AAOIFI's.",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "financial_ratio_screen",
+      "verdict": "DEFECT",
+      "issue": "Same AAOIFI mis-attribution as the aaoifi entry: labels the 33% debt/market-cap and 33% cash-plus-interest-securities caps as 'an AAOIFI-style methodology,' but published AAOIFI standard uses 30% for these two ratios (5% impure-income cap is correctly stated). This entry documents the actual `sharia_screen` function's thresholds, so the mislabel is user-facing and backend-relevant.",
+      "classes": [
+        "fact-accuracy",
+        "islamic_finance"
+      ],
+      "severity": "P1",
+      "fix_lead": "Align the stated caps and standard-name with whichever is actually implemented in `sharia_screen`: either 30%/30%/5% attributed to AAOIFI, or keep 33%/33%/5% but stop calling it 'AAOIFI-style.'",
+      "group": "glossary[156:208]"
+    }
+  ],
+  "escalations": [],
+  "all": [
+    {
+      "id": "dc_2026_06_01_aapl_pe_call",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_02_nvda_breakout_setup",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_03_sizing_violation_tsla",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_04_match_news_fed",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_05_missing_pm_verdict",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_06_msft_revenue_call",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_07_spx_support_test",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_08_stop_violation_meta",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_09_match_sentiment_fomo",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_10_missing_news_xom",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_11_jpm_rate_call",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_12_klci_rsi_overbought",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_13_maybank_correlation_violation",
+      "verdict": "DEFECT",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P2",
+      "issue": "Explanation is internally inconsistent: 18%+7%=25% lands exactly AT the stated 25% sector cap, not over it, yet the text claims it 'breaches' the cap ('hitting the 25% sector cap exactly; one more bank position breaches it').",
+      "fix_lead": "Either change the mandate cap to something the ticket would exceed (e.g. 22%) or reword to 'reaches the cap with zero headroom left, so the PM flags it as fully consumed / at-limit' rather than 'breaches'. Answer index 0 stays correct among the four options regardless.",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_14_match_aggressive_debator",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_15_missing_bear_amzn",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_16_googl_bull_call",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_17_petronas_pullback",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_18_revenge_violation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_19_match_research_manager",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_20_missing_market_analyst",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_21_brkb_neutral_call",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_22_macd_crossover",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_23_news_chase_violation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_24_match_concierge_scam",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_25_missing_social_media",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_26_trader_execution_call",
+      "verdict": "DEFECT",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P1",
+      "issue": "The keyed-correct option and its explanation both state the risk/reward as '~5.2x', but the actual numbers given (entry $192.40, stop $187.50, target $205) compute to risk $4.90 / reward $12.60 = ~2.6x, not 5.2x. This is the lesson's core numeric concept (016_risk_reward_ratio) stated wrong to a learner who will do the arithmetic correctly and then doubt themselves.",
+      "fix_lead": "Change '~5.2x' to '~2.6x' (or ~2.57x) in both the option text and the explanation; entry/stop/target values themselves are fine (the -2.5% figure checks out).",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_27_volume_climax",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_28_uncoachable_pm_violation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_29_match_conservative_debator",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_06_30_missing_fundamentals_kraft",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_06"
+    },
+    {
+      "id": "dc_2026_07_01_guaranteed_2pct_weekly",
+      "verdict": "DEFECT",
+      "issue": "Scenario says \"AMI's 13 agents\" — AMI is a 12-agent analyst team plus the Concierge, not 13 agents (or the Concierge is the 13th thing depending on how you count, but CLAUDE.md's fixed phrasing is \"12-agent analyst team plus the Concierge\"). Quiz key (answer 3, Concierge) is still correct.",
+      "classes": [
+        "consistency"
+      ],
+      "severity": "P2",
+      "fix_lead": "Reword to \"Which of AMI's 12 analyst agents, or the Concierge, is the canonical first responder\" to match the fixed 12+Concierge framing.",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_02_pump_group_visible_wins",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_03_clone_broker_personal_account",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_04_nvda_breakout",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_05_smooth_weekly_returns",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_06_urgency_4_hour_close",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_07_position_size_violation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_08_room_no_bear_dissent",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_09_aapl_earnings_beat",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_10_fx_withdrawal_block",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_11_meta_support_test",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_12_room_no_news_analyst",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_13_genting_pe_distortion",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_14_test_string_telegram",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_15_drawdown_gate_owner",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_16_clone_domain_typo",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_17_room_no_compliance",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_18_72_hour_pause",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_19_tenaga_rsi_70",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_20_ai_bot_no_drawdown",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_21_room_unanimous_buy_dissent_missing",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_22_jpm_revenge_trade",
+      "verdict": "DEFECT",
+      "issue": "Correct answer's explanation invents a '24-hour cooldown' enforced by 'the mandate's behavioural-guard [that] should block' — but the source lesson (content/lessons/047_revenge_trading.ms.mdx) specifies the cooldown is self-imposed by the trader and logged in the AMI Decision Journal, explicitly NOT forced by the app ('bukan dipaksa oleh aplikasi'), with an example duration of ~60 minutes, not 24 hours. The keyed option (index 1) is still the best of the four choices, so quiz-key is unaffected, but its explanation misstates both the enforcement mechanism and the duration versus the canonical lesson.",
+      "classes": [
+        "fact",
+        "consistency"
+      ],
+      "severity": "P2",
+      "fix_lead": "Rewrite option 1 / explanation to match lesson 047: cooldown is self-imposed and journal-logged (not an app-enforced block), duration example ~60 minutes, not 24 hours.",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_23_verify_five_checks",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_24_googl_news_gap",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_25_room_no_trader",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_26_klcc_pe_book",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_27_spy_volume_climax",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_28_pump_dump_curve",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_29_room_no_concierge_on_scam",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_30_xom_macro_news",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_07_31_concierge_capstone",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_07"
+    },
+    {
+      "id": "dc_2026_08_01_spx_resistance_break",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_02_nvda_candle_anatomy",
+      "verdict": "DEFECT",
+      "issue": "Scenario/explanation is internally inconsistent: open $122.40, close $122.90 means close > open, i.e. a bullish (green) body, but the scenario asserts the candle is 'small and red' (bearish body color contradicts the math). Separately, the upper wick is $128.10-$122.90=$5.20 against a $0.50 body = ~10.4x, not the stated 'roughly 5x'. Neither error changes the keyed answer (shooting star is still correct on wick/trend/volume logic regardless of body color), but the numbers as written don't reconcile — a learner who computes the candle anatomy will hit a contradiction.",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P2",
+      "fix_lead": "Set close below open (e.g. close $122.10) so the body is genuinely red, and/or adjust the high so the wick-to-body ratio matches the stated ~5x.",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_03_aapl_sizing_violation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_04_match_rsi_overbought",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_05_msft_pullback_setup",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_06_predict_call_googl",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_07_whats_missing_chart_only",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_08_xom_trend_direction",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_09_stop_violation_meta",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_10_match_macd_cross",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_11_predict_call_jpm_macro",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_12_missing_macro_room",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_13_whats_missing_volume",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_14_predict_chart_msft",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_15_match_volume_dryup",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_16_spot_violation_concentration",
+      "verdict": "DEFECT",
+      "issue": "The keyed answer (both position-size AND sector caps breached) and its explanation explicitly deny that the 12% single-stock concentration cap applies ('that rule applies to a single stock against itself, not the new position vs cap'), but the math shows it IS also breached: META alone would be a brand-new $29,000 position = 14.5% of NAV in a single stock, which exceeds the stated 12% single-stock concentration cap on its own (no prior META holdings to distinguish 'position' from 'concentration' here). So a third violation (concentration cap) is real but the content asserts it isn't, and no answer option captures all three simultaneous breaches. Separately, related_lesson '015_stop_loss_basics' doesn't match the concentration/sector topic tagged.",
+      "classes": [
+        "fact",
+        "consistency"
+      ],
+      "severity": "P2",
+      "fix_lead": "Either add an option/explanation acknowledging all three caps (position-size, concentration, sector) are breached, or restructure the mandate/numbers so single-stock concentration is genuinely not implicated (e.g. make the concentration cap higher than 14.5%, or clarify concentration is measured differently from position size). Also point related_lesson at a position-sizing/concentration lesson instead of stop-loss basics.",
+      "correct_answer": 3,
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_17_read_chart_genting_timeframe",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_18_predict_brk_value",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_19_match_indicator_limits",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_20_whats_missing_breakout",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_21_read_chart_klcc_range",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_22_spot_violation_uncoachable",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_23_predict_market_breakdown",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_24_match_pullback_entry",
+      "verdict": "DEFECT",
+      "issue": "Internal math in the quoted trader ticket doesn't reconcile: risk per share is $412.40-$405.80=$6.60 (1.6% of entry price). At a stated 1.5% NAV loss cap, sizing to fully use that cap would require committing ~93.75% of NAV to this single position (shares = NAV*1.5%/6.60, position value = NAV*0.9375) — not the stated 3.2% of NAV. As written, sizing to only 3.2% of NAV would risk just ~0.05% of NAV, nowhere near the claimed 1.5% loss cap being used. Doesn't change the keyed answer (still clearly the Trader speaking) but the quoted numbers are not mutually consistent.",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P2",
+      "fix_lead": "Either widen the stop distance or shrink the position-size percentage so 'sizes to X% of NAV' and 'mandate-permitted 1.5% loss cap' actually reconcile (e.g. a $6.60 stop at 1.5% loss cap implies a much smaller position size than 3.2% only if NAV or stop distance is scaled differently).",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_25_whats_missing_indicator",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_26_read_chart_amzn_fakeout",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_27_predict_news_oil",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_28_match_social_sentiment",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_29_spot_violation_no_stop",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_30_read_chart_tenaga_pullback",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_08_31_whats_missing_pm_chart_verdict",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_08"
+    },
+    {
+      "id": "dc_2026_09_01_msft_valuation_call",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_02_tnb_dividend_call",
+      "verdict": "DEFECT",
+      "issue": "Explanation conflates RM3.2B 'free cash flow' (as defined in the scenario, i.e. already net of capex) with pre-capex operating cash flow, saying the RM12B capex 'exceeds RM3.2B operating FCF' — FCF by definition is already post-capex, so this double-subtracts capex conceptually. Doesn't change the correct answer (option 1 is still clearly best) but the terminology is sloppy against the FCF lesson's own definition.",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P2",
+      "fix_lead": "Reword explanation to say capex is stepping up from its current (lower) level to RM12B, which is what will turn the currently-positive RM3.2B FCF negative — don't call the RM3.2B 'operating FCF' pre-capex.",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_03_nvda_breakout_setup",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_04_aapl_mandate_concentration",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_05_match_moat_quote",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_06_brk_book_value_call",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_07_whats_missing_xom",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_08_meta_margin_call",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_09_tsla_no_stop_violation",
+      "verdict": "DEFECT",
+      "issue": "Notional is 18 x $268 = $4,824, which is 6.03% of the $80,000 NAV — technically over the stated 6% single-position cap, not 'exactly at the cap' as the scenario claims. Doesn't change the correct answer (the stop-loss waiver is the unambiguous, intended violation) but a precise reader could argue the single-position cap is also breached, muddying a 'spot THE violation' (singular) question.",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P2",
+      "fix_lead": "Adjust share count/price so notional lands at or under exactly 6.00% of NAV (e.g. 17.9 shares worth, or reduce price/shares slightly) so only the stop-loss rule is breached.",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_10_match_short_thesis_aapl",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_11_maybank_roe_call",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_12_whats_missing_jpm_de",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_13_amzn_fcf_call",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_14_petronas_match_balance_sheet",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_15_googl_buyback_violation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_16_genting_pullback_chart",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_17_klcc_chart_consolidation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_18_whats_missing_pchem_comp",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_19_match_room_synthesis",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_20_whats_missing_aapl_bear",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_21_jpm_payout_call",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_22_brk_position_violation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_23_tsla_double_top_chart",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_24_match_concierge_followup",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_25_whats_missing_nvda_capex",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_26_cimb_pb_call",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_27_whats_missing_xom_breakeven",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_28_violation_var_aapl",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_29_match_aggressive_debator",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_09_30_whats_missing_googl_moat",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_09"
+    },
+    {
+      "id": "dc_2026_10_01_nvda_greed_topping",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_02_revenge_reentry_tsla",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_03_fomo_gme_chase",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_04_missing_fear_capitulation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_05_overconfidence_streak_size",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_06_boredom_match_quiet_day",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_07_meta_chart_breakout",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_08_fomo_agent_match",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_09_discipline_mandate_call",
+      "verdict": "DEFECT",
+      "issue": "Scenario says the ticket at 10:09 is '30 minutes after the MAYBANK loss', but the MAYBANK stop-out is timestamped 9:48 — the actual gap is 21 minutes, not 30. Doesn't change the correct answer (still inside the 60-min cooling-off window either way) but is an internal arithmetic error a sharp learner could flag.",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P2",
+      "fix_lead": "Change '30 minutes' to '21 minutes' in the scenario text (or shift the MAYBANK timestamp to 9:39 if 30 minutes was intended).",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_10_greed_capitulation_chart",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_11_missing_conservative_overconfidence",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_12_xom_fundamentals_call",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_13_revenge_match_agent",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_14_missing_pm_discipline",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_15_fomo_violation_chase",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_16_missing_social_jpm_fear",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_17_boredom_match_agent",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_18_jpm_chart_capitulation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_19_discipline_missing",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_20_brk_b_value_call",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_21_greed_violation_pyramid",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_22_petronas_news_match",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_23_fomo_room_call",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_24_overconfidence_match",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_25_missing_social_fear",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_26_bear_thesis_match",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_27_revenge_violation_sequence",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_28_klcc_chart_range",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_29_discipline_missing_pm",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_30_boredom_violation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_10_31_psychology_synthesis",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_10"
+    },
+    {
+      "id": "dc_2026_11_01_nvda_trend_following",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_02_klci_sideways_chart",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_03_mean_reversion_in_downtrend",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_04_match_sector_rotation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_05_missing_regime_check",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_06_breakout_aapl",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_07_vix_high_vol_chart",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_08_momentum_in_low_vol",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_09_match_breadth_quote",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_10_pullback_msft",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_11_klci_bull_regime",
+      "verdict": "DEFECT",
+      "issue": "Question asks 'What regime is the Market Analyst most likely calling?' but the entry's related_agent field is tagged 'bull_researcher', not 'market_analyst'. Every other read_the_chart entry in this file (02, 07, 16, 21) has related_agent matching the agent named in the question — this is the sole outlier. The keyed answer (index 3, bull regime) is itself correct, so no learner is mis-graded, but the metadata is internally inconsistent and would misfile this item under the wrong agent in any agent-tagged analytics/reporting.",
+      "classes": [
+        "consistency",
+        "metadata"
+      ],
+      "severity": "P2",
+      "fix_lead": "Change related_agent from 'bull_researcher' to 'market_analyst' to match the question text and the pattern used by every other read_the_chart entry.",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_12_violation_trend_in_bear",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_13_match_research_manager_synth",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_14_missing_regime_xle",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_15_conservative_debator_meanrev",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_16_spx_bear_regime",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_17_missing_volume_check",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_18_match_bear_researcher",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_19_missing_strategy_label",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_20_neutral_debator_range",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_21_qqq_breakout_chart",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_22_violation_pullback_no_trend",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_23_match_aggressive_debator",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_24_missing_breadth_in_bull",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_25_match_bull_researcher",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_26_missing_rotation_read",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_27_violation_size_in_vol",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_28_match_neutral_debator",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_29_missing_backtest",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_11_30_predict_strategy_failure",
+      "verdict": "OK",
+      "issue": "",
+      "group": "2026_11"
+    },
+    {
+      "id": "dc_2026_12_01_casino_business_screen",
+      "verdict": "OK",
+      "issue": "Quiz key correct (gaming/casino excluded at business-activity stage regardless of clean ratios). Uses real company Genting Berhad with invented illustrative ratios (12%/9%/1.2%) — low-risk since framed as a hypothetical screening scenario, not asserted as real reported financials.",
+      "severity": "none",
+      "group": "2026_12"
+    },
+    {
+      "id": "dc_2026_12_02_leveraged_telecom_ratio_screen",
+      "verdict": "OK",
+      "issue": "Quiz key correct; math verified ($138,000M/$128,000M = 107.8%, exceeds 33% cap). Telecom carrier is unnamed/hypothetical.",
+      "severity": "none",
+      "group": "2026_12"
+    },
+    {
+      "id": "dc_2026_12_03_sukuk_fixed_buyback",
+      "verdict": "OK",
+      "issue": "Quiz key correct; critique matches well-documented mainstream Islamic finance literature (Sheikh Taqi Usmani's 2007 critique of guaranteed buy-back sukuk, later reflected in tightened AAOIFI standards) rather than a novel/disputed ruling by this content.",
+      "severity": "none",
+      "group": "2026_12"
+    },
+    {
+      "id": "dc_2026_12_04_unnamed_standard",
+      "verdict": "OK",
+      "issue": "Quiz key correct; standards-disagreement framing (AAOIFI vs SAC vs other index methodologies differing on denominators/thresholds) is accurate and doesn't misstate any specific standard's figures.",
+      "severity": "none",
+      "group": "2026_12"
+    },
+    {
+      "id": "dc_2026_12_05_dividend_purification_skipped",
+      "verdict": "OK",
+      "issue": "Quiz key correct; purification math verified (700/100,000 x $960.00 = $6.72; $960.00 - $6.72 = $953.28).",
+      "severity": "none",
+      "group": "2026_12"
+    },
+    {
+      "id": "dc_2026_12_06_conventional_bank_screen",
+      "verdict": "OK",
+      "issue": "Quiz key correct; conventional bank interest income as categorical business-activity exclusion (riba by construction) is standard Islamic-finance screening doctrine, matches why separate Islamic banks exist as distinct entities.",
+      "severity": "none",
+      "group": "2026_12"
+    },
+    {
+      "id": "dc_2026_12_07_halal_flag_not_separate_step",
+      "verdict": "OK",
+      "issue": "Quiz key correct; matches CLAUDE.md's PM-as-uncoachable-deterministic-check architecture (same pattern as other compliance floors). Correctly implies 12-agent debate + separate PM check, no agent-count inconsistency.",
+      "severity": "none",
+      "group": "2026_12"
+    },
+    {
+      "id": "dc_2026_12_08_overstated_compliance_claim",
+      "verdict": "OK",
+      "issue": "Quiz key correct; math verified (8,500/3,200,000=0.27%, 34,000/3,200,000=1.06%, 500/130,000=0.38%, all rounding to stated 0.3%/1.1%/0.4%, all inside 33/33/5 caps). Standard-naming discipline point is consistent with entry 4.",
+      "severity": "none",
+      "group": "2026_12"
+    },
+    {
+      "id": "dc_2026_12_09_sukuk_priced_as_loan",
+      "verdict": "OK",
+      "issue": "Quiz key correct; distinguishing pricing-mechanics similarity from underlying legal-claim substance (asset ownership/rental vs. debt) is accurate Islamic-finance doctrine.",
+      "severity": "none",
+      "group": "2026_12"
+    },
+    {
+      "id": "dc_2026_12_10_islamic_etf_assumed_identical",
+      "verdict": "OK",
+      "issue": "Quiz key correct; verified via web search that SPUS tracks the S&P 500 Shariah Industry Exclusions Index and HLAL tracks the FTSE USA Shariah Index — different methodologies, matching the question's premise that holdings can diverge.",
+      "severity": "none",
+      "group": "2026_12"
+    },
+    {
+      "id": "ami",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "training_simulator",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "training_artifact",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "twelve_agent_team",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "concierge_agent",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "ceo_framing",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "multi_agent_system",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "simulated_trade",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "stock",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "share",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "equity",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "market",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "exchange",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "brokerage",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "ticker",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "market_cap",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "ipo",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "dividend",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "share_price",
+      "verdict": "DEFECT",
+      "issue": "Says share price is 'determined continuously by the highest bid and lowest ask' — actually the traded share price is the last executed trade price (which occurs when a bid and ask cross/match), not simply the current best-bid/best-ask values; conflates quoted spread with traded price.",
+      "classes": [
+        "fact"
+      ],
+      "severity": "P2",
+      "fix_lead": "Reword to: price is set by the most recent trade, which occurs when a buyer's bid and seller's ask match; the current bid/ask bracket where the next trade is likely to occur.",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "bid",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "ask",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "spread",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "share_class",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "common_stock",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "preferred_stock",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "etf",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "mutual_fund",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "index",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "index_fund",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "watchlist",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "portfolio",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "position",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "return",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "market_order",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "limit_order",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "stop_order",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "stop_limit",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "gtc",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "gtt",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "ioc",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "fok",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "day_order",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "all_or_none",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "trailing_stop",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "order_book",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "candlestick",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "doji",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "hammer",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "shooting_star",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "engulfing",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "trend",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "uptrend",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[0:52]"
+    },
+    {
+      "id": "downtrend",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "sideways",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "support",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "resistance",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "breakout",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "pullback",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "retest",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "moving_average",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "sma",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "ema",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "rsi",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "macd",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "bollinger_band",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "atr",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "volume",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "revenue",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "gross_profit",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "operating_income",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "net_income",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "ebitda",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "fcf",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "capex",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "opex",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "balance_sheet",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "income_statement",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "cash_flow_statement",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "eps",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "book_value",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "tangible_book_value",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "moat",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "roe",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "roic",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "debt",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "pe_ratio",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "forward_pe",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "peg",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "pb_ratio",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "ps_ratio",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "ev_ebitda",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "de_ratio",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "current_ratio",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "quick_ratio",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "gross_margin",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "operating_margin",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "dividend_yield",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "fomo",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "fear_of_missing_out",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "revenge_trading",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "overconfidence",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "boredom_trading",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "greed",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "fear",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[52:104]"
+    },
+    {
+      "id": "104_capitulation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "105_anchoring",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "106_recency_bias",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "107_confirmation_bias",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "108_hindsight_bias",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "109_sunk_cost_fallacy",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "110_herd_behaviour",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "111_discipline",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "112_trend_following",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "113_mean_reversion",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "114_breakout_strategy",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "115_pullback_strategy",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "116_momentum",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "117_swing_trading",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "118_day_trading",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "119_position_trading",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "120_scalping",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "121_backtesting",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "122_walk_forward",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "123_overfitting",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "124_paper_trading",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "125_bull_market",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "126_bear_market",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "127_sideways_market",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "128_range_bound",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "129_correction",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "130_crash",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "131_recovery",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "132_volatility_regime",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "133_sector_rotation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "134_market_breadth",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "135_federal_reserve",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "136_fed_funds_rate",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "137_rate_hike",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "138_rate_cut",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "139_inflation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "140_deflation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "141_recession",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "142_yield_curve",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "143_cpi",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "144_gdp",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "145_dxy",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "146_risk_on_risk_off",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "147_call_option",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "148_put_option",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "149_strike_price",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "150_expiry",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "151_in_the_money",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "152_out_of_the_money",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "153_implied_volatility",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "154_vix",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "155_ponzi_scheme",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[104:156]"
+    },
+    {
+      "id": "pyramid_scheme",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "pump_and_dump",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "clone_broker",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "fake_broker",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "guaranteed_return_scam",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "ai_bot_scam",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "pig_butchering",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "affinity_fraud",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "recovery_scam",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "signal_selling_fraud",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "unregistered_broker",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "ami_mandate",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "ami_verdict",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "ami_convene_the_room",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "ami_coach_your_agent",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "ami_decision_journal",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "ami_pm_safety_floor",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "ami_earn_path",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "ami_one_on_one",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "concierge",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "ami_watchlist",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "ami_training_verdict",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "kelly_criterion",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "atr_based_sizing",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "regime_segmented_backtest",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "walk_forward_analysis",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "transaction_cost_modeling",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "strategy_correlation",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "risk_parity",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "drawdown_recovery_math",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "gamblers_ruin",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "asymmetric_rr",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "riba",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "gharar",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "maysir",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "halal",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "haram",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "sukuk",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "ijarah",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "murabahah",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "musharakah",
+      "verdict": "DEFECT",
+      "issue": "Definition says musharakah partners 'share profit and loss in a pre-agreed ratio' — under the standard Sharia rule (and AAOIFI-consistent majority fiqh position, confirmed via web search), profit follows the pre-agreed ratio but loss must be shared strictly in proportion to each partner's capital contribution, not any separately agreed ratio; conflating the two misstates a defining feature of the contract.",
+      "classes": [
+        "fact-accuracy",
+        "islamic_finance"
+      ],
+      "severity": "P1",
+      "fix_lead": "Rewrite: 'partners share profit in a pre-agreed ratio, while loss is shared strictly in proportion to capital contribution' — mirror the correct asymmetric rule already stated correctly in the mudarabah entry.",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "mudarabah",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "takaful",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "tazkiyah",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "aaoifi",
+      "verdict": "DEFECT",
+      "issue": "States AAOIFI's debt/liquidity/income ratio caps are '33%/33%/5% by default'; per multiple reputable Islamic-finance screening sources (Amanah Advisors, Tabadulat, Rafiq, halalsignalz), AAOIFI's own Shariah Standard sets the debt ratio and cash/interest-bearing-securities caps at 30%, not 33% — 33%/one-third is the figure associated with S&P/MSCI/Dow-Jones-style screens, not AAOIFI specifically. Directly relevant since the entry says 'AMI's screening logic follows' these numbers.",
+      "classes": [
+        "fact-accuracy",
+        "islamic_finance"
+      ],
+      "severity": "P1",
+      "fix_lead": "Correct to 30%/30%/5% for AAOIFI, or if AMI's backend genuinely uses 33%/33%/5%, re-attribute those defaults to the correct standard (e.g., S&P/MSCI/DJIM-style) rather than labeling them AAOIFI's.",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "shariah_advisory_council",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "dow_jones_islamic_market_index",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "sharia_screening",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "business_activity_screen",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "financial_ratio_screen",
+      "verdict": "DEFECT",
+      "issue": "Same AAOIFI mis-attribution as the aaoifi entry: labels the 33% debt/market-cap and 33% cash-plus-interest-securities caps as 'an AAOIFI-style methodology,' but published AAOIFI standard uses 30% for these two ratios (5% impure-income cap is correctly stated). This entry documents the actual `sharia_screen` function's thresholds, so the mislabel is user-facing and backend-relevant.",
+      "classes": [
+        "fact-accuracy",
+        "islamic_finance"
+      ],
+      "severity": "P1",
+      "fix_lead": "Align the stated caps and standard-name with whichever is actually implemented in `sharia_screen`: either 30%/30%/5% attributed to AAOIFI, or keep 33%/33%/5% but stop calling it 'AAOIFI-style.'",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "sharia_compliant",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    },
+    {
+      "id": "islamic_etf",
+      "verdict": "OK",
+      "issue": "",
+      "group": "glossary[156:208]"
+    }
+  ]
+}
