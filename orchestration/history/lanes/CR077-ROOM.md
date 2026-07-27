@@ -1,3 +1,8 @@
+<!-- archived lane pair — CR077-ROOM. Closed DISPATCH: ACCEPTED round 1, AT:R65 2026-07-27. -->
+# CR077-ROOM — archived lane (assign + coder.room)
+
+## assign
+
 <!-- dispatch assign lane — Architect-owned. CR052. -->
 # CR077-ROOM — assign (Phase 2: parallelise the ANALYSTS phase only)
 
@@ -109,6 +114,22 @@ the lane branch; the lane files are shared coordination state and every board re
 branch. A hand-off committed only to a lane branch is invisible to both boards and has already
 stranded a finished round; an uncommitted one renders `UNCOMMITTED` (DEF087).
 
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 1)
 
 ASSIGNED: coder.room round 1
+
+## coder.room lane
+
+<!-- coder.room lane file — CR077-ROOM. Shared coordination state (DEF090). -->
+# CR077-ROOM — coder.room lane
+
+STATUS: READY_FOR_AUDIT (round 1)
+
+Phase 2: parallelise the ANALYSTS phase of the Room only.
+
+- **Branch:** `lane/CR077-ROOM.coder.room` · **SHA:** `8af991a`
+- **Audit bridge:** `orchestration/audit/cr/CR077-ROOM.architect.md` (`SUBMITTED: round 1`)
+- **Tests:** 10 new (CR077 guard, proven-red) + 156 room + full unit **1280 passed**.
+- **Live evidence attached in the bridge:** 3.12× / ~17 s saved per convene; concurrent
+  output measurably *less* redundant than today's sequential; prefix caching confirmed ON.
+- Files: `room_runner.py`, `room_prompts.py`, `test_cr077_phase_parallelism.py`.
