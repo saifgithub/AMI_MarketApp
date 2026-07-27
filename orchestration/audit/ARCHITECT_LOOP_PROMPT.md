@@ -49,18 +49,14 @@ Each item is its own lane, two files under `<AUDIT_LANE_DIR>/`. You own `<ITEM>.
 and `INDEX.md`; the auditor owns `<ITEM>.auditor.md`.
 
 **Loop entry gate — run `dispatch.sh inbox` at session start AND after finishing every work unit,
-and integrate whatever it lists before you pick the next item.** This is written in, not left to
-your judgement — it used to be discretionary and the result was COMPLETE verdicts sitting
-un-integrated for whole sessions. The reason nothing pulled you back on its own: the auditor's
-blocking `watcher.sh` wakes it on `AWAITING_FIXES` but **never on a clean `COMPLETE`**, so a passed
-lane emits no signal you can wait on — you have to look. `inbox` is that look: a one-shot,
-**non-blocking** check that lists only lanes where the auditor has FINISHED and the ball is in your
-court — `AUDIT_PASSED` (verdict COMPLETE → merge it) and `UNCOMMITTED` (verdict written but unpushed
-→ chase it) — and exits non-zero while any remain. It does not block *on purpose*: you multiplex many
-lanes, and the single-lane auditor's blocking-watcher pattern would freeze the rest, so the trigger
-is checkpoint-driven (start + per-work-unit) rather than a wait. A "work unit" is any lane you carry
-to a hand-off — a submit, a merge, an answer to a `NEEDS-INFO`, an assignment; after each one, re-run
-`inbox` before starting the next.
+and integrate what it lists before picking the next item.** Not discretionary: the blocking
+`watcher.sh` wakes on `AWAITING_FIXES` but **never on a clean `COMPLETE`**, so a passed lane emits no
+signal you can wait on — you have to look, and a passed lane nobody looks at never merges. `inbox`
+is that look: one-shot, **non-blocking**, listing only lanes where the auditor has FINISHED and the
+ball is yours — `AUDIT_PASSED` (merge it) and `UNCOMMITTED` (verdict unpushed — chase it) — exiting
+non-zero while any remain. Non-blocking on purpose: you multiplex many lanes, so the single-lane
+auditor's blocking-watcher pattern would freeze the rest. A "work unit" is any lane you carry to a
+hand-off — a submit, a merge, an answer to a `NEEDS-INFO`, an assignment.
 
 1. Pick any item NOT AWAITING_AUDIT (build a new one, or fix a bounced one). An item is yours
    while your `SUBMITTED round` is less than or equal to the auditor's `VERDICT round`.
@@ -151,10 +147,8 @@ worktree either way.
 1. CONCURRENCY CAP: the cap is on **concurrent spawned agents of any role** — coders, auditors, and
    the DoD agent all draw the same quota — and it **queues rather than blocks**: over the limit,
    work defers instead of being refused, so you never have to choose between breaking the cap and
-   dropping a lane. The older cap (N `AWAITING_AUDIT`) existed to stop a single stakeholder-started
-   auditor being pressured into batch-and-skim; fresh spawned agents dissolve that rationale. The
-   real constraint is now the provider's rolling usage window — exhausting it strands every
-   in-flight agent at once, and everything uncommitted dies with them.
+   dropping a lane. The binding constraint is the provider's rolling usage window — exhausting it
+   strands every in-flight agent at once, and everything uncommitted dies with them.
    **Stop at lane boundaries.** Do not start a CR-level audit late in a window: an auditor that dies
    mid-verdict leaves a half-written `<ITEM>.auditor.md`, and `tail -1`-wins reads whatever token
    happens to be last — an ambiguous state strictly worse than a clean `AWAITING_AUDIT`.
@@ -167,14 +161,12 @@ worktree either way.
    appends every verdict there.
 6. STALL RULE: at the cap with no verdict movement for longer than the BINDINGS stall window,
    escalate to the stakeholder instead of throttling indefinitely. Two distinct gaps live here, and
-   only one is now enforced. The **post-verdict** gap — a lane the auditor PASSED sitting
-   un-integrated — is no longer discretionary: the lane loop's entry gate runs `dispatch.sh inbox`
-   at session start and after every work unit and routes every `AUDIT_PASSED`/`UNCOMMITTED` lane
-   before new work (see the mandate at the top of "The lane loop"). The **pre-audit stall** gap — an
-   item sitting `AWAITING_AUDIT` for whole sessions because its audit was never launched — **still
-   computes nothing and nothing enforces it**; until it has an owner and a real elapsed-time input,
-   treat it as an acknowledged gap, not a control. Re-read `watcher.sh state` / `dispatch.sh state`
-   for the fuller board when you suspect a stall.
+   only one is enforced. The **post-verdict** gap — a passed lane sitting un-integrated — is covered
+   by the lane loop's entry gate (`dispatch.sh inbox`, session start + every work unit). The
+   **pre-audit stall** — an item sitting `AWAITING_AUDIT` because its audit was never launched —
+   **computes nothing and nothing enforces it**; treat it as an acknowledged gap, not a control,
+   until it has an owner and a real elapsed-time input. Re-read `watcher.sh state` / `dispatch.sh
+   state` for the fuller board when you suspect a stall.
 
 ## Build rules
 

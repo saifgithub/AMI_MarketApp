@@ -79,8 +79,7 @@ repo layout, and do not proceed on an unresolved token.
      respect the project's concurrency model (no operation that should be non-blocking blocks the
      process while it's shared)? Correct on the first call is a different claim from correct on the
      thousandth, or under concurrent access — verify both, not just the one you traced by hand.
-     This check was implicit once and a real item passed a round without it (BINDINGS → Escalation
-     precedents); it is not superstition.
+     Leave this implicit and items pass a round without it (BINDINGS → Escalation precedents).
 4. Verify the Definition-of-Done table in the architect lane — the portable questions in
    [`../DEFINITION_OF_DONE.md`](../DEFINITION_OF_DONE.md) as answered by this project's bindings.
    **CR-level submissions only**: a chunk carries the shorter chunk evidence list instead and must

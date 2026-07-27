@@ -9,11 +9,18 @@ does it copy verbatim, get written once for the new project, or never leave this
 Three tiers. **A** copies byte-for-byte. **B** is written once per project. **C** never leaves the
 repo it was created in.
 
-The split has one invariant, and every file in tier A is checked against it: **a portable file names
-no project, no host, no person, no path outside this tree, and no work-item id.** A rule whose only
-justification is something that happened here states the rule and points at BINDINGS for the
-evidence. If you find a project detail in a tier-A file, that is a bug in the split — move it to
-BINDINGS rather than preserving it.
+The split has two invariants, and every file in tier A is checked against both.
+
+**1 — No project detail.** A portable file names no project, no host, no person, no path outside
+this tree, and no work-item id. If you find one in a tier-A file, that is a bug in the split — move
+it to BINDINGS rather than preserving it.
+
+**2 — No incident history.** State the rule and the mechanism it defends against; do **not** narrate
+the incident that produced it. Another repo did not live through our outages, cannot verify our
+numbers, and pays tokens to read them in every agent context that loads these files. *"10 of 14
+lanes shipped ungated"* is our evidence; *"a board that reads the Architect's own token without a
+verdict cannot express «shipped without a gate»"* is the portable rule. Keep the second, drop the
+first — the reasoning survives, the archaeology goes to BINDINGS or the commit log.
 
 ## Tier A — copy verbatim (16 files)
 

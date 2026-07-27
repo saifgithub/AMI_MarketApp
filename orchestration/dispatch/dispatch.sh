@@ -14,24 +14,18 @@
 #   DONE           : DISPATCH = ACCEPTED *and* the lane's GATE is satisfied
 #   UNGATED        : DISPATCH = ACCEPTED but the gate is NOT satisfied  <-- loud
 #
-# DONE does not derive from DISPATCH: ACCEPTED alone. It once did — returning DONE the moment the
-# Architect wrote its own acceptance token, without ever reading a verdict — and in the deployment
-# that produced this rule 10 of 14 coder lanes shipped ungated and printed identically to the 4 that
-# passed. The state machine could not express "shipped without a gate"; UNGATED is that state.
+# DONE does not derive from DISPATCH: ACCEPTED alone: that is the Architect's own token, so reading
+# it without a verdict cannot express "shipped without a gate" and prints ungated lanes identically
+# to audited ones. UNGATED is that state.
 #   GATE: none                -> no audit required; recorded UPFRONT at decomposition time, never
 #                                at hand-off (the tired-at-hand-off window is where gates get waived)
 #   GATE: spawned|independent -> requires audit VERDICT: COMPLETE, else UNGATED
 #   GATE: absent              -> UNGATED. An unbound gate fails LOUD, never open.
 # Usage:
 #   dispatch.sh state              print the derived board once and exit
-#   dispatch.sh inbox              one-shot, non-blocking: list lanes where the AUDITOR HAS FINISHED
-#                                    and the Architect owes the next move but has not made it yet
-#                                    (AUDIT_PASSED = verdict COMPLETE, integrate; UNCOMMITTED =
-#                                    verdict written but unpushed, chase delivery). Exit 1 if any,
-#                                    0 if clear. This is the multi-lane Architect's trigger: a
-#                                    BLOCKING watcher would freeze its other lanes, so instead run
-#                                    this at session start AND after finishing each work unit, so a
-#                                    fresh COMPLETE verdict is never left sitting un-integrated.
+#   dispatch.sh inbox              one-shot, non-blocking: lanes the auditor FINISHED and the
+#                                    Architect has not integrated (AUDIT_PASSED, UNCOMMITTED).
+#                                    Exit 1 if any. Run at session start + after each work unit.
 #   dispatch.sh architect [-i N]   block until >=1 lane needs the Architect
 #                                    (UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|AUDIT_PASSED)
 #   dispatch.sh inst <id> [-i N]   block until >=1 lane is ASSIGNED to <id> or AUDIT_RETURNED on it
@@ -55,12 +49,10 @@ last_kw() {  # $1=file $2=extended-regex; echoes the 2nd token of the last match
 }
 
 undelivered() {  # $1=file; echoes "1" if the file is untracked or differs from HEAD, else ""
-  # Evidence that lives only in one working tree is not evidence. Both sides of the handshake wrote
-  # their file and committed neither on the first real lane run under this protocol, and the board
-  # reported success both times — the coder's submission read AWAITING_AUDIT, and the auditor's
-  # COMPLETE read AUDIT_PASSED, the state that authorises a merge to the shared branch. The scripts
-  # read the working tree, so an untracked file and a pushed one are indistinguishable. They are not
-  # anymore. Silent when git is unavailable or this is not a repo: the check may degrade, never fail
+  # Evidence that lives only in one working tree is not evidence. These scripts read the working
+  # tree, where an untracked file and a pushed one are otherwise indistinguishable — so an
+  # uncommitted verdict would read as AUDIT_PASSED and authorise a merge to the shared branch.
+  # Silent when git is unavailable or this is not a repo: the check may degrade, never fail
   # the caller.
   command -v git >/dev/null 2>&1 || { echo ""; return; }
   git -C "$(dirname -- "$1")" rev-parse --git-dir >/dev/null 2>&1 || { echo ""; return; }
@@ -76,9 +68,9 @@ lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
   a="$LANE_DIR/$1.assign.md"
   asg_line=$(grep -Eo '^ASSIGNED: *[A-Za-z0-9._-]+ *round *[0-9]+' "$a" 2>/dev/null | tail -1)
   # Read GATE before the UNASSIGNED return. A lane written at decomposition and not yet assigned is
-  # exactly the state the record-upfront rule creates, and it was the one state whose gate the board
-  # could not show: an UNASSIGNED lane printed a bare `-`, identical whether its GATE was recorded or
-  # forgotten. The rule says decide upfront; the board has to be able to show you did.
+  # exactly what the record-upfront rule produces; if the board skipped its gate it would print a
+  # bare `-` whether GATE was recorded or forgotten. The rule says decide upfront, so the board has
+  # to be able to show you did.
   gate_kw=$(last_kw "$a" '^GATE: *(independent|spawned|none)')
 
   if [ -z "$asg_line" ]; then echo "UNASSIGNED - - - - ${gate_kw:-MISSING}"; return; fi
@@ -87,11 +79,10 @@ lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
 
   u="$AUDIT_DIR/$1.auditor.md"
   v_kw=$(last_kw "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES)')
-  # Read the verdict's ROUND, not just its keyword. Submissions and verdicts share one counter, and
-  # a verdict only answers the submission at its own round: once a newer submission lands, the old
-  # keyword is history. Reading the keyword alone made a resubmitted lane keep reporting the verdict
-  # it had already addressed — and left this board disagreeing with the audit watcher, which had
-  # compared rounds all along.
+  # Read the verdict's ROUND, not just its keyword. Submissions and verdicts share one counter and a
+  # verdict only answers the submission at its own round, so once a newer submission lands the old
+  # keyword is history — reading the keyword alone makes a resubmitted lane keep reporting a verdict
+  # it has already addressed.
   v_round=$(last_round "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES) *\(round *[0-9]+'); v_round=${v_round:-0}
   # A verdict nobody committed has not been delivered, so it cannot satisfy a gate. Render it as
   # its own loud state rather than letting it read as a pass — the same reason UNGATED exists.
@@ -191,13 +182,10 @@ count_inst() {  # uses $TARGET_INST; counts lanes ASSIGNED to it or AUDIT_RETURN
 }
 
 print_inbox() {
-  # One-shot, non-blocking. Surfaces only lanes where the AUDITOR has finished and the ball is now in
-  # the Architect's court but the lane is NOT yet integrated: AUDIT_PASSED (verdict COMPLETE — merge)
-  # and UNCOMMITTED (verdict exists in one working tree, unpushed — chase it, then merge). Exit 1 if
-  # any such lane exists so a caller can gate "take new work" on a clean inbox; exit 0 when clear.
-  # Other Architect-owed states (UNASSIGNED/BLOCKED/NEEDS-INFO/IN_REVIEW/UNGATED) are summarised on
-  # one trailer line and DO NOT affect the exit code — a chronic UNGATED backlog must not desensitise
-  # the per-work-unit check to the one event it exists to catch: a fresh auditor COMPLETE.
+  # Exit 1 on AUDIT_PASSED (merge it) or UNCOMMITTED (verdict unpushed — chase, then merge), so a
+  # caller can gate "take new work" on a clean inbox. Other Architect-owed states go on one trailer
+  # line and DO NOT affect the exit code: a chronic backlog would otherwise keep this permanently
+  # red and desensitise it to the one event it exists to catch — a fresh auditor COMPLETE.
   hot=0; other=0; hot_rows=""
   for it in $(items); do
     set -- $(lane_state "$it")

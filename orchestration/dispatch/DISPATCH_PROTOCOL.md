@@ -100,10 +100,9 @@ appending).
 
 ## 4a. The gate
 
-`DONE` used to derive from `DISPATCH: ACCEPTED` alone — the Architect's own token, read without ever
-consulting a verdict. The state machine could not express *"shipped without a gate"*, so it never
-did: in the deployment that produced this rule, **10 of 14 coder lanes shipped ungated and printed
-identically to the 4 that passed.** `UNGATED` is that missing state.
+`DONE` requires a satisfied gate, never `DISPATCH: ACCEPTED` alone — that is the Architect's own
+token, so a board reading it without consulting a verdict cannot express *"shipped without a gate"*
+and prints ungated lanes identically to audited ones. `UNGATED` is that missing state.
 
 | `GATE:` | Meaning | Reaches `DONE` when |
 |---|---|---|
@@ -112,11 +111,10 @@ identically to the 4 that passed.** `UNGATED` is that missing state.
 | `independent` | Audited by a stakeholder-started session the Architect does not control | audit `VERDICT: COMPLETE` |
 | *absent* | — | **never** — renders `UNGATED`. An unbound gate fails **loud**, never open |
 
-**Record `GATE:` when you WRITE the lane, not when the work comes back.** At decomposition time you
-have no stake in the answer. At hand-off the work looks finished, the session is long, and skipping
-is the cheapest move available — which is the exact state in which a gate gets waived on the lane
-that most needed it. Deciding upfront closes that window structurally.
-*Prompt instructions are not controls.*
+**Record `GATE:` when you WRITE the lane, not when the work comes back.** At decomposition you have
+no stake in the answer; at hand-off the work looks finished and skipping is the cheapest move — the
+exact state in which a gate gets waived on the lane that most needed it. *Prompt instructions are
+not controls.*
 
 **A CR ships as chunks + a CR-level audit, or as CR-only. The CR-level audit is mandatory in both
 branches.** That is what makes `GATE: none` safe on a chunk: there is no path to a finished CR that
