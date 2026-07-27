@@ -121,6 +121,25 @@ def _market_withheld_roster() -> AnalystRoster:
     )
 
 
+def _social_withheld_roster() -> AnalystRoster:
+    return AnalystRoster(
+        present=(AgentId.FUNDAMENTALS_ANALYST, AgentId.MARKET_ANALYST, AgentId.NEWS_ANALYST),
+        withheld=(AgentId.SOCIAL_MEDIA_ANALYST,), next_step=None,
+    )
+
+
+def _news_withheld_roster() -> AnalystRoster:
+    # Withholds an analyst that is NOT last in PHASES's fixed ANALYSTS order
+    # (FUND, MARKET, NEWS, SOCIAL). A withhold-the-last-slot roster makes
+    # `zip(phase_agents, results)` and the buggy `zip(phase.agents, results)`
+    # coincidentally agree on every pair before the dropped tail — this
+    # roster is the one that actually distinguishes the two.
+    return AnalystRoster(
+        present=(AgentId.FUNDAMENTALS_ANALYST, AgentId.MARKET_ANALYST, AgentId.SOCIAL_MEDIA_ANALYST),
+        withheld=(AgentId.NEWS_ANALYST,), next_step=None,
+    )
+
+
 # ── #3 / #4 — resolver matrix (pure, clock-injected) ───────────────────────
 
 
@@ -575,3 +594,56 @@ def test_agent_withheld_reaches_the_sse_wire(monkeypatch):
     assert payload["reason"] == "upgrade"
     assert payload["next_step_agent"] == "news_analyst"
     assert payload["next_step_days"] == 5
+
+
+# ── MAJOR 2 (audit round 1) — the defining behaviour: a withheld analyst
+# never speaks, and each present analyst's text lands under its own agent_id.
+# Every existing test asserts AROUND the mechanism (fetch skipped, event
+# emitted, verdict lists it); none asserted the withheld analyst is ABSENT
+# from the transcript, or that phase_agents/results stay correctly paired.
+# The auditor proved both `phase_agents = phase.agents` (withheld analyst
+# speaks anyway) and `zip(phase_agents, results) -> zip(phase.agents, results)`
+# (text attributed to the wrong agent) leave the full 1359-test suite green.
+# monkeypatch `_scripted_for` to a bare agent_id marker so attribution can be
+# checked without depending on the real template/formatter contents. ─────
+
+def test_withheld_analyst_absent_and_present_analysts_correctly_attributed(monkeypatch):
+    monkeypatch.setattr(
+        room_runner_mod, "_scripted_for",
+        lambda agent_id, formatter: f"SCRIPT::{agent_id.value}",
+    )
+    runner = RoomRunner()
+    mandate = hydrate_coach_mandate({"plan": "floor_pass", "risk_score": 3})
+    events = _collect(runner.run(
+        user_id=uuid4(), ticker="AAPL", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+        roster=_news_withheld_roster(),
+    ))
+
+    analyst_ids = {
+        AgentId.FUNDAMENTALS_ANALYST, AgentId.MARKET_ANALYST,
+        AgentId.NEWS_ANALYST, AgentId.SOCIAL_MEDIA_ANALYST,
+    }
+    token_events = [
+        ev for ev in events
+        if ev.kind in ("agent_token", "agent_done") and ev.agent_id in analyst_ids
+    ]
+
+    # The withheld analyst must never speak — no agent_token/agent_done
+    # carries its agent_id, regardless of what agent_withheld reports.
+    assert not [ev for ev in token_events if ev.agent_id == AgentId.NEWS_ANALYST], (
+        "a withheld analyst produced agent_token/agent_done events"
+    )
+
+    # Each present analyst's concatenated text must be its OWN scripted
+    # marker — proves phase_agents and results stayed correctly zipped.
+    present = (AgentId.FUNDAMENTALS_ANALYST, AgentId.MARKET_ANALYST, AgentId.SOCIAL_MEDIA_ANALYST)
+    for agent_id in present:
+        text = "".join(
+            ev.text or "" for ev in token_events
+            if ev.kind == "agent_token" and ev.agent_id == agent_id
+        )
+        assert text == f"SCRIPT::{agent_id.value}", (
+            f"{agent_id.value}'s transcript text does not match its own scripted "
+            f"marker (got {text!r}) — misattribution"
+        )
