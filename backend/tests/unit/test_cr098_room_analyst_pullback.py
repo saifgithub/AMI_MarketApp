@@ -211,18 +211,39 @@ def test_account_age_days_whole_days():
 # ── #2 — no-op proof: default roster produces no withholding ───────────────
 
 
-def test_default_roster_is_full_no_op():
-    """Acceptance #2 (practical form): the default/unaged roster used by
-    `run()` when no roster is threaded resolves to all four analysts present
-    — the mechanism, when every threshold reads 0 (default), never emits an
-    `agent_withheld` event and never forces NO_VERDICT."""
+def test_default_roster_is_full_no_op(monkeypatch):
+    """Acceptance #2, the real no-op case (round-2 fix — the auditor's MINOR
+    2): a REAL, aged FLOOR_PASS user, thresholds explicitly at 0, resolved
+    through the actual DB-lookup path (`resolve_roster_for_user`, the Room
+    runner's single call site) — not `uuid4()`'s missing-row fallback, which
+    took a completely different branch and proved nothing about this
+    guarantee. With every threshold at 0, `run()` must be byte-for-byte the
+    pre-CR098 no-op: all four analysts speak, no agent_withheld, no
+    NO_VERDICT, opinions_not_included empty."""
+    from app.core.config import settings as real_settings
+    monkeypatch.setattr(real_settings, "room_pullback_days_social", 0)
+    monkeypatch.setattr(real_settings, "room_pullback_days_news", 0)
+    monkeypatch.setattr(real_settings, "room_pullback_days_market", 0)
+
+    user_id = _new_user(plan="floor_pass")
+    _age_user(user_id, days=100)  # tenure is real; thresholds are what hold it open
+
     runner = RoomRunner()
-    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    mandate = hydrate_coach_mandate({"plan": "floor_pass", "risk_score": 3})
     events = _collect(runner.run(
-        user_id=uuid4(), ticker="AAPL", mandate=mandate,
+        user_id=user_id, ticker="AAPL", mandate=mandate,
         char_delay_min=0.0, char_delay_max=0.0,
     ))
+
     assert not [ev for ev in events if ev.kind == "agent_withheld"]
+
+    analyst_ids = {
+        AgentId.FUNDAMENTALS_ANALYST, AgentId.MARKET_ANALYST,
+        AgentId.NEWS_ANALYST, AgentId.SOCIAL_MEDIA_ANALYST,
+    }
+    spoke = {ev.agent_id for ev in events if ev.kind == "agent_done" and ev.agent_id in analyst_ids}
+    assert spoke == analyst_ids, f"expected all four analysts to speak, got {spoke}"
+
     verdict_events = [ev for ev in events if ev.kind == "verdict"]
     assert len(verdict_events) == 1
     verdict = verdict_events[0].verdict
