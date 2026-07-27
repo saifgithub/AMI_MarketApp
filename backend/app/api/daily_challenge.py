@@ -203,16 +203,17 @@ async def attempt(
                     selected_option=existing.selected_option,
                 )
             raise
+        # CR096: one award per attempt, spec's 3-outcome table (right +5 /
+        # close +2 / wrong-but-tried +1). Every shipped challenge type is
+        # strict single-correct multiple-choice with no graded partial-credit
+        # answer space, so "close" isn't reachable from today's content —
+        # it's wired into POINTS for a challenge type that defines it later.
         rep = get_reputation_service()
         rep.award(
             s, user_id=current_user.id,
-            event_type="challenge_attempted", ref_id=cid,
+            event_type="challenge_correct" if correct else "challenge_wrong_tried",
+            ref_id=cid,
         )
-        if correct:
-            rep.award(
-                s, user_id=current_user.id,
-                event_type="challenge_correct", ref_id=cid,
-            )
 
     # Journal capture — best-effort, never fail the request on a journal error.
     try:

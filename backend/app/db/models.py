@@ -702,6 +702,67 @@ class LeagueMemberRow(Base):
     )
 
 
+class BadgeRow(Base):
+    """Earned-once badges (CR091/CR092), co-located with the streak-milestone
+    credit grant in reputation_service.py::_grant_milestone — same DEF049
+    idempotency guarantee (the reputation_events guard row gates both).
+
+    UNIQUE(user_id, badge_key) is defense-in-depth, mirroring the
+    reputation_events dedup index (DEF039): the milestone guard row already
+    makes a double-award structurally unreachable, but a DB constraint costs
+    nothing and catches a future caller that doesn't go through it.
+    """
+
+    __tablename__ = "badges"
+    __table_args__ = (
+        UniqueConstraint("user_id", "badge_key", name="uq_badge_user_key"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+
+    badge_key: Mapped[str] = mapped_column(String, nullable=False)
+    ref_type: Mapped[str] = mapped_column(String, nullable=False)
+    ref_id: Mapped[str] = mapped_column(String, nullable=False)
+    # CR092: the 365-day Marathoner badge also renders as permanent profile
+    # flair — a flag on the badge record rather than a parallel flair table.
+    is_permanent_flair: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False,
+    )
+
+    earned_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
+class StreakFreezeRow(Base):
+    """Consumed streak freezes (CR094) — a Floor Manager perk, 2/year.
+
+    A recorded, countable row per frozen local-date, never "tolerate a
+    missing day in the streak scan" (Architect D4): that would be
+    unbounded and unauditable. `period_key` is the calendar-year bucket
+    (str(frozen_date.year), in the user's local timezone) the 2-per-year
+    allowance resets on — the simplest defensible reading of "2/year"
+    absent a subscription-anniversary date to key off (flagged for Saiful
+    in the hand-off, not decided unilaterally).
+    """
+
+    __tablename__ = "streak_freezes"
+    __table_args__ = (
+        UniqueConstraint("user_id", "frozen_date", name="uq_streak_freeze_user_date"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+
+    frozen_date: Mapped[date] = mapped_column(Date, nullable=False)
+    period_key: Mapped[str] = mapped_column(String, nullable=False, index=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
 class RevenueCatEventRow(Base):
     """Idempotency ledger for RevenueCat webhook deliveries (CR084).
 

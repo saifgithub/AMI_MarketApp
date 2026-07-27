@@ -7,7 +7,7 @@ league-points passthrough, and the once-ever milestone credit grant.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from uuid import uuid4
 
 import pytest
@@ -15,11 +15,13 @@ from sqlalchemy import select
 
 from app.db import get_session
 from app.db.models import (
+    BadgeRow,
     DailyChallengeAttemptRow,
     JournalEntryRow,
     LeagueMemberRow,
     LeagueRow,
     ReputationEventRow,
+    StreakFreezeRow,
     SubscriptionEventRow,
     User,
 )
@@ -27,6 +29,7 @@ from app.services.auth_service import AuthService
 from app.services.reputation_service import (
     POINTS,
     ReputationService,
+    _user_tz,
     get_reputation_service,
     iso_week,
 )
@@ -85,7 +88,7 @@ def test_award_dedups_on_ref_id():
         second = svc.award(
             s, user_id=user.id, event_type="challenge_correct", ref_id="dc-1",
         )
-    assert first == 3
+    assert first == 5
     assert second == 0
     assert len(_events(user.id)) == 1
 
@@ -141,15 +144,15 @@ def test_daily_cap_clamps_partial_grant():
     user = _make_user()
     svc = ReputationService()
     with get_session() as s:
-        # 2 lessons + 2 challenge-corrects + 1 room verdict + 2 challenge
-        # attempts = 5+5+3+3+3+2+2 = 23 of the 25 cap.
+        # 2 lessons + 1 challenge-correct + 2 room verdicts + 2 challenge
+        # wrong-but-tried = 5+5+5+3+3+1+1 = 23 of the 25 cap.
         svc.award(s, user_id=user.id, event_type="lesson_passed", ref_id="l1")
         svc.award(s, user_id=user.id, event_type="lesson_passed", ref_id="l2")
         svc.award(s, user_id=user.id, event_type="challenge_correct", ref_id="c1")
-        svc.award(s, user_id=user.id, event_type="challenge_correct", ref_id="c2")
         svc.award(s, user_id=user.id, event_type="room_verdict", ref_id="r1")
-        svc.award(s, user_id=user.id, event_type="challenge_attempted", ref_id="a1")
-        svc.award(s, user_id=user.id, event_type="challenge_attempted", ref_id="a2")
+        svc.award(s, user_id=user.id, event_type="room_verdict", ref_id="r2")
+        svc.award(s, user_id=user.id, event_type="challenge_wrong_tried", ref_id="a1")
+        svc.award(s, user_id=user.id, event_type="challenge_wrong_tried", ref_id="a2")
         # agent_unlocked is worth 10 — only 2 remain under the cap.
         granted = svc.award(
             s, user_id=user.id, event_type="agent_unlocked", ref_id="agent-1",
@@ -157,7 +160,7 @@ def test_daily_cap_clamps_partial_grant():
         assert granted == 2
         # Cap exhausted → zero.
         assert svc.award(
-            s, user_id=user.id, event_type="room_verdict", ref_id="r2",
+            s, user_id=user.id, event_type="room_verdict", ref_id="r3",
         ) == 0
     with get_session() as s:
         row = s.execute(select(User).where(User.id == user.id)).scalar_one()
@@ -300,15 +303,16 @@ def test_streak_milestone_credit_grant_idempotent_under_daily_cap():
                 user_id=user.id, entry_type="trade", title=f"d{days_ago}",
                 created_at=now - timedelta(days=days_ago),
             ))
-    # Exhaust today's 25-point cap with normal activity before the milestone.
+    # Exhaust today's 25-point cap with normal activity before the milestone
+    # (award() auto-clips the last grant to whatever remains under the cap).
     with get_session() as s:
         svc.award(s, user_id=user.id, event_type="lesson_passed", ref_id="l1")
         svc.award(s, user_id=user.id, event_type="lesson_passed", ref_id="l2")
         svc.award(s, user_id=user.id, event_type="challenge_correct", ref_id="c1")
         svc.award(s, user_id=user.id, event_type="challenge_correct", ref_id="c2")
         svc.award(s, user_id=user.id, event_type="room_verdict", ref_id="r1")
-        svc.award(s, user_id=user.id, event_type="challenge_attempted", ref_id="a1")
-        svc.award(s, user_id=user.id, event_type="challenge_attempted", ref_id="a2")
+        svc.award(s, user_id=user.id, event_type="challenge_wrong_tried", ref_id="a1")
+        svc.award(s, user_id=user.id, event_type="challenge_wrong_tried", ref_id="a2")
         svc.award(s, user_id=user.id, event_type="agent_unlocked", ref_id="agent-1")
     # Two league-screen loads under the exhausted cap.
     with get_session() as s:
@@ -378,3 +382,184 @@ def test_streak_milestone_credit_not_double_granted_under_race(monkeypatch):
 
 def test_get_reputation_service_singleton():
     assert get_reputation_service() is get_reputation_service()
+
+
+# ── CR091/CR092 — badges ────────────────────────────────────────────────
+
+
+def _badges(user_id) -> list[BadgeRow]:
+    with get_session() as s:
+        return list(
+            s.execute(
+                select(BadgeRow).where(BadgeRow.user_id == user_id)
+            ).scalars().all()
+        )
+
+
+def test_streak_milestone_awards_badge():
+    user = _make_user()
+    svc = ReputationService()
+    now = datetime.now(timezone.utc)
+    with get_session() as s:
+        for days_ago in range(7):
+            s.add(JournalEntryRow(
+                user_id=user.id, entry_type="trade", title=f"d{days_ago}",
+                created_at=now - timedelta(days=days_ago),
+            ))
+    with get_session() as s:
+        svc.streak(s, user.id)
+    badges = _badges(user.id)
+    assert len(badges) == 1
+    assert badges[0].badge_key == "streak_week_one"
+    assert badges[0].is_permanent_flair is False
+
+
+def test_badge_not_double_awarded_on_replay(monkeypatch):
+    """D2 — a user who hits the milestone, loses the streak (a real gap,
+    simulated by moving "today" forward via `_utcnow`), and climbs back to
+    it must NOT get a second badge or second credit grant. Tested by
+    replaying streak() across an actual loss-then-reclimb, not by asserting
+    internals directly."""
+    import app.services.reputation_service as rep_module
+
+    user = _make_user()
+    svc = ReputationService()
+    t0 = datetime.now(timezone.utc)
+
+    # First climb: 7 consecutive days ending at t0 → streak_7 fires.
+    with get_session() as s:
+        for days_ago in range(7):
+            s.add(JournalEntryRow(
+                user_id=user.id, entry_type="trade", title=f"first-{days_ago}",
+                created_at=t0 - timedelta(days=days_ago),
+            ))
+    monkeypatch.setattr(rep_module, "_utcnow", lambda: t0)
+    with get_session() as s:
+        info = svc.streak(s, user.id)
+    assert info.current == 7
+    assert len(_badges(user.id)) == 1
+    with get_session() as s:
+        credits_after_first = s.execute(
+            select(User.credit_balance).where(User.id == user.id)
+        ).scalar_one()
+    assert credits_after_first == 5
+
+    # Streak lapses — a full gap, no activity, "today" moved 20 days on.
+    t1 = t0 + timedelta(days=20)
+    monkeypatch.setattr(rep_module, "_utcnow", lambda: t1)
+    with get_session() as s:
+        info = svc.streak(s, user.id)
+    assert info.current == 0  # genuinely lost, not just re-derived
+
+    # Climbs back to 7, ending at a later "today" — crosses streak_7 again.
+    with get_session() as s:
+        for days_ago in range(7):
+            s.add(JournalEntryRow(
+                user_id=user.id, entry_type="trade", title=f"second-{days_ago}",
+                created_at=t1 - timedelta(days=days_ago),
+            ))
+    with get_session() as s:
+        info = svc.streak(s, user.id)
+    assert info.current == 7  # replay — must not re-award
+
+    badges = _badges(user.id)
+    assert len(badges) == 1  # still exactly one Week One badge, ever
+    with get_session() as s:
+        credit_balance = s.execute(
+            select(User.credit_balance).where(User.id == user.id)
+        ).scalar_one()
+    assert credit_balance == 5  # not re-granted
+
+
+def test_marathoner_365_day_milestone_grants_badge_flair_and_credits():
+    user = _make_user()
+    svc = ReputationService()
+    now = datetime.now(timezone.utc)
+    with get_session() as s:
+        for days_ago in range(365):
+            s.add(JournalEntryRow(
+                user_id=user.id, entry_type="trade", title=f"d{days_ago}",
+                created_at=now - timedelta(days=days_ago),
+            ))
+    with get_session() as s:
+        info = svc.streak(s, user.id)
+    assert info.current == 365
+    assert info.next_milestone is None
+    badges = _badges(user.id)
+    marathoner = [b for b in badges if b.badge_key == "streak_marathoner"]
+    assert len(marathoner) == 1
+    assert marathoner[0].is_permanent_flair is True
+    # Regression: earlier tiers are unaffected — all four fire once each.
+    assert {b.badge_key for b in badges} == {
+        "streak_week_one", "streak_month_strong", "streak_centurion",
+        "streak_marathoner",
+    }
+    with get_session() as s:
+        row = s.execute(select(User).where(User.id == user.id)).scalar_one()
+        assert row.credit_balance == 5 + 25 + 100 + 500
+
+
+# ── CR094 — paid-tier streak freezes ────────────────────────────────────
+
+
+def _set_plan(user_id, plan: str) -> None:
+    with get_session() as s:
+        u = s.execute(select(User).where(User.id == user_id)).scalar_one()
+        u.plan = plan
+
+
+def test_freeze_refuses_visibly_for_non_floor_manager():
+    user = _make_user()
+    _set_plan(user.id, "floor_pass")
+    svc = ReputationService()
+    with get_session() as s:
+        result = svc.freeze(s, user.id, on=date.today())
+    assert result.ok is False
+    assert result.reason == "not_entitled"
+    with get_session() as s:
+        assert s.execute(
+            select(StreakFreezeRow).where(StreakFreezeRow.user_id == user.id)
+        ).scalars().all() == []
+
+
+def test_freeze_capped_at_two_per_year_for_floor_manager():
+    user = _make_user()
+    _set_plan(user.id, "floor_manager")
+    svc = ReputationService()
+    d1, d2, d3 = date(2026, 3, 1), date(2026, 6, 1), date(2026, 9, 1)
+    with get_session() as s:
+        r1 = svc.freeze(s, user.id, on=d1)
+        r2 = svc.freeze(s, user.id, on=d2)
+        r3 = svc.freeze(s, user.id, on=d3)
+    assert r1.ok and r1.remaining == 1
+    assert r2.ok and r2.remaining == 0
+    assert r3.ok is False
+    assert r3.reason == "limit_reached"
+    with get_session() as s:
+        rows = s.execute(
+            select(StreakFreezeRow).where(StreakFreezeRow.user_id == user.id)
+        ).scalars().all()
+        assert len(rows) == 2
+
+
+def test_frozen_day_pauses_streak_without_breaking_it():
+    user = _make_user()
+    _set_plan(user.id, "floor_manager")
+    svc = ReputationService()
+    today = datetime.now(timezone.utc).astimezone(_user_tz(user)).date()
+    with get_session() as s:
+        # Activity today and 2 days ago; yesterday is frozen, not active —
+        # a missed, unfrozen day would break the run at 1.
+        for days_ago in (0, 2):
+            s.add(JournalEntryRow(
+                user_id=user.id, entry_type="trade", title=f"d{days_ago}",
+                created_at=datetime.now(timezone.utc) - timedelta(days=days_ago),
+            ))
+    with get_session() as s:
+        svc.freeze(s, user.id, on=today - timedelta(days=1))
+    with get_session() as s:
+        info = svc.streak(s, user.id)
+    # 2 actual activity days (today + 2-days-ago) span an unfrozen would-be
+    # gap; the frozen day pauses the run without breaking OR extending it
+    # (it's not activity, just tolerance) — so current is 2, not 3.
+    assert info.current == 2

@@ -444,7 +444,7 @@ def test_execute_recomputes_adopter_current_week_league_points_on_seat_conflict(
         # Orphan earns 5 (lesson) + 3 (room verdict) = 8 this week.
         rep.award(s, user_id=orphan.id, event_type="lesson_passed", ref_id="l1")
         rep.award(s, user_id=orphan.id, event_type="room_verdict", ref_id="r1")
-        # Adopter separately earns 3 (challenge_correct) this week.
+        # Adopter separately earns 5 (challenge_correct) this week.
         rep.award(s, user_id=adopter.id, event_type="challenge_correct", ref_id="c1")
 
     MergeService().execute(from_user_id=orphan.id, to_user_id=adopter.id)
@@ -457,9 +457,9 @@ def test_execute_recomputes_adopter_current_week_league_points_on_seat_conflict(
         ).scalars().all()
         assert len(seats) == 1
         assert seats[0].user_id == adopter.id
-        assert seats[0].points == 11  # 8 (orphan) + 3 (adopter)
+        assert seats[0].points == 13  # 8 (orphan) + 5 (adopter)
 
         events = s.execute(
             select(ReputationEventRow).where(ReputationEventRow.user_id == adopter.id)
         ).scalars().all()
-        assert sum(e.points for e in events) == 11
+        assert sum(e.points for e in events) == 13
