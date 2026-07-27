@@ -989,6 +989,7 @@ def test_format_profile_includes_forward_eps_estimate_when_present():
     block = _format_profile({
         "data_source": "synthetic", "next_earnings_date": "2026-08-01",
         "next_earnings_quarter": "Q3", "next_earnings_eps_estimate": 2.04,
+        "next_earnings_interval": "in 5 days",
         "field_state": {"next_earnings": "live"},
     })
     assert "consensus EPS est. $2.04" in block
@@ -1325,6 +1326,70 @@ def test_profile_news_independent_of_fundamentals_overlay(monkeypatch):
     assert profile2["field_state"]["news"] == "live"
 
 
+# ── DEF124/D4 — relative_day_phrase boundary cases (same-day, next-day, and
+# the day-boundary / month-crossing case) ─────────────────────────────────
+
+
+def test_relative_day_phrase_same_day():
+    from datetime import date
+    from app.core.time import relative_day_phrase
+
+    d = date(2026, 7, 27)
+    assert relative_day_phrase(d, d) == "today"
+
+
+def test_relative_day_phrase_next_day():
+    from datetime import date
+    from app.core.time import relative_day_phrase
+
+    assert relative_day_phrase(date(2026, 7, 28), date(2026, 7, 27)) == "in 1 day"
+
+
+def test_relative_day_phrase_multi_day():
+    from datetime import date
+    from app.core.time import relative_day_phrase
+
+    assert relative_day_phrase(date(2026, 7, 30), date(2026, 7, 27)) == "in 3 days"
+
+
+def test_relative_day_phrase_month_boundary():
+    """D4 day-boundary case — crossing a month/day boundary must not
+    off-by-one the day count the way a naive string or ordinal-day diff
+    (rather than a real `date` subtraction) could."""
+    from datetime import date
+    from app.core.time import relative_day_phrase
+
+    assert relative_day_phrase(date(2026, 8, 1), date(2026, 7, 31)) == "in 1 day"
+
+
+def test_relative_day_phrase_past_date_not_negative():
+    """A past date is stated explicitly, never left to go negative
+    ('in -7 days') — a stale earnings cache is the realistic trigger."""
+    from datetime import date
+    from app.core.time import relative_day_phrase
+
+    assert relative_day_phrase(date(2026, 7, 20), date(2026, 7, 27)) == "7 days ago"
+
+
+def test_relative_day_phrase_one_day_ago_is_singular():
+    from datetime import date
+    from app.core.time import relative_day_phrase
+
+    assert relative_day_phrase(date(2026, 7, 26), date(2026, 7, 27)) == "1 day ago"
+
+
+def test_profile_sets_run_date_from_utc_clock_with_live_provenance():
+    """DEF124/D2 — the run date is recorded through the same per-field
+    `field_state` scheme CR104 built for every other fact, not an ungated
+    string bolted beside it."""
+    from datetime import datetime, timezone
+    from app.services import room_runner
+
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert profile["run_date"] == datetime.now(timezone.utc).date().isoformat()
+    assert profile["field_state"]["run_date"] == "live"
+
+
 def test_profile_overlays_earnings_when_available(monkeypatch):
     from app.core.config import settings
     from app.services import room_runner
@@ -1344,6 +1409,34 @@ def test_profile_overlays_earnings_when_available(monkeypatch):
     assert profile["next_earnings_date"] == "2026-08-01"
     assert profile["next_earnings_quarter"] == "Q3"
     assert profile["next_earnings_eps_estimate"] == 2.1
+
+
+def test_profile_overlays_earnings_interval_from_real_utc_today(monkeypatch):
+    """DEF124/D1/D4 — the interval is computed against the same UTC `today`
+    the run date and FOMC countdown use (recomputed here the same way, so
+    the assertion holds regardless of what day the suite runs on — the risk
+    this test actually covers is the integration wiring: date parsing and
+    which `today` gets threaded through, not the phrase logic itself, which
+    `test_relative_day_phrase_*` above pins with fixed dates)."""
+    from datetime import date, datetime, timezone
+    from app.core.config import settings
+    from app.core.time import relative_day_phrase
+    from app.services import room_runner
+    from app.services.market_data import EarningsInfo
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
+    monkeypatch.setattr(room_runner, "fetch_live_news", lambda t: None)
+
+    class _EarningsProvider:
+        def earnings(self, t):
+            return EarningsInfo(earnings_date="2026-08-01", quarter="Q3", eps_estimate=2.1)
+
+    monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _EarningsProvider())
+
+    profile = room_runner._profile_for_ticker("AAPL")
+    today = datetime.now(timezone.utc).date()
+    assert profile["next_earnings_interval"] == relative_day_phrase(date(2026, 8, 1), today)
 
 
 def test_profile_earnings_absent_when_provider_errors(monkeypatch):
@@ -1412,9 +1505,24 @@ def test_format_profile_includes_earnings_when_present():
 
     block = _format_profile({
         "data_source": "synthetic", "next_earnings_date": "2026-08-01", "next_earnings_quarter": "Q3",
+        "next_earnings_interval": "in 5 days",
         "field_state": {"next_earnings": "live"},
     })
-    assert "Next earnings (LIVE): 2026-08-01 (Q3)" in block
+    assert "Next earnings (LIVE): 2026-08-01 (Q3) — in 5 days" in block
+
+
+def test_format_profile_omits_earnings_line_when_interval_missing():
+    """DEF124 acceptance 6: a live earnings date with no computed interval is
+    an unanchored absolute date — the same refuse-by-default the file already
+    applies to every other field with incomplete provenance, not a partial
+    render of a bare date."""
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "next_earnings_date": "2026-08-01", "next_earnings_quarter": "Q3",
+        "field_state": {"next_earnings": "live"},
+    })
+    assert "Next earnings" not in block
 
 
 def test_format_profile_omits_earnings_when_absent():

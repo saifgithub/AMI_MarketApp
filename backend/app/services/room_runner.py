@@ -47,6 +47,7 @@ from sqlalchemy import select
 from app.agents.safety_floor import check_mandate_compliance, enforce_safety_floor
 from app.core.config import settings
 from app.core.logging import logger
+from app.core.time import relative_day_phrase
 from app.db import get_session, init_schema
 from app.db.models import RoomRunRow
 from app.schemas import AgentId, AgentMessage, Mandate
@@ -365,6 +366,12 @@ def _profile_for_ticker(
     # (CR034 convention, explicitly out of CR104's scope) — no numeric fact
     # is derived from this rng anymore.
     rng = random.Random(zlib.crc32(ticker.upper().encode()))
+    # DEF124: one "today" for the whole profile, so the run-date anchor, the
+    # FOMC countdown and the earnings interval can never disagree with each
+    # other mid-render (D4 — UTC calendar date is the stated basis for all
+    # three; a market date computed in local time would be off-by-one for
+    # part of the trading day).
+    today = datetime.now(timezone.utc).date()
     # Per-field provenance (CR104/D1/D4): every numeric fact below is either
     # overlaid from a live source with its state recorded here as LIVE, or
     # left unset with its state recorded as UNAVAILABLE/WITHHELD_* —
@@ -375,8 +382,13 @@ def _profile_for_ticker(
     profile: dict[str, Any] = {
         "ticker": ticker.upper(),
         "field_state": field_state,
+        # DEF124/D2: the run date is a fact with a real provenance (the
+        # clock) — the ONE anchor every other absolute date in the fact
+        # sheet is relative to. Recorded through the same per-field scheme
+        # as every other numeric fact, not bolted on as an ungated string.
+        "run_date": today.isoformat(),
         "catalyst": "Q3 earnings (beat by ~4%)",
-        "forward_catalyst": _forward_catalyst_text(),
+        "forward_catalyst": _forward_catalyst_text(today),
         "sentiment_tone": "moderately bullish" if rng.random() > 0.3 else "mixed",
         # No live social feed exists (CR024) — these are illustrative, not
         # measured. Dropped the fake-precision "+X.Xσ" decimal (borrowed a
@@ -402,6 +414,11 @@ def _profile_for_ticker(
         "downside": 18,
         "synth_lean": "constructive bull",
     }
+    # The clock is unconditionally live — there is no "unavailable" state for
+    # today's date. Recorded explicitly rather than assumed, so the taint
+    # guard (test_cr104_no_fabricated_numeric_reaches_room_prompt.py) sees a
+    # real provenance write, not an implicit default.
+    field_state["run_date"] = LiveDataState.LIVE.value
 
     # Fundamentals: LIVE per-field, or UNAVAILABLE — never a rng fallback
     # (CR104/DEF123). `fetch_live_fundamentals` already only returns the
@@ -474,6 +491,14 @@ def _profile_for_ticker(
         if earnings and earnings.earnings_date:
             profile["next_earnings_date"] = earnings.earnings_date
             profile["next_earnings_quarter"] = earnings.quarter
+            # DEF124/D1: the interval alongside the absolute date, computed
+            # in Python against the same `today` as the FOMC line — never
+            # asked of the model. `date.fromisoformat` matches the
+            # `earnings_date=target.strftime("%Y-%m-%d")` shape every
+            # MarketDataProvider.earnings() implementation returns.
+            profile["next_earnings_interval"] = relative_day_phrase(
+                date.fromisoformat(earnings.earnings_date), today
+            )
             field_state["next_earnings"] = LiveDataState.LIVE.value
             # Real forward consensus EPS for the upcoming report (DEF053,
             # AT:R58) — was already fetched here, just never surfaced. A

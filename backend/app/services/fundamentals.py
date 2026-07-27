@@ -17,10 +17,12 @@ from __future__ import annotations
 
 import math
 import re
+from datetime import date, datetime, timezone
 from typing import Any
 
 from app.core.config import settings
 from app.core.logging import logger
+from app.core.time import relative_day_phrase
 from app.services.market_data import get_market_data_provider
 from app.trading_math.valuation import (
     dividend_yield_pct,
@@ -293,7 +295,14 @@ def build_live_data_block(ticker: str) -> str | None:
     if not data:
         return None
     sym = ticker.upper()
-    lines = [f"─── LIVE MARKET DATA — {sym} ───"]
+    today = datetime.now(timezone.utc).date()
+    # DEF124/D2/D3: same run-date anchor as the Room's `_format_profile` —
+    # a bare absolute date below (next-earnings) has no "today" for the
+    # model to subtract from otherwise. D4: UTC calendar date, same basis
+    # the Room uses, so the two surfaces can't disagree on "how many days".
+    lines = [
+        f"─── LIVE MARKET DATA — {sym} — as of {today.isoformat()} (UTC) ───"
+    ]
     if "base_price" in data:
         lines.append(f"Price: ${data['base_price']}")
     if "pe" in data:
@@ -339,9 +348,13 @@ def build_live_data_block(ticker: str) -> str | None:
     # which has surfaced this since DEF053. Same wording as the Room line.
     earnings = fetch_next_earnings(ticker)
     if earnings and earnings.earnings_date:
+        # DEF124/D1: interval alongside the date, same pattern (and same
+        # shared helper) as the Room line — never asked of the model.
+        interval = relative_day_phrase(date.fromisoformat(earnings.earnings_date), today)
         line = f"Next earnings (LIVE): {earnings.earnings_date}"
         if earnings.quarter:
             line += f" ({earnings.quarter})"
+        line += f" — {interval}"
         if earnings.eps_estimate is not None:
             line += f", consensus EPS est. ${earnings.eps_estimate}"
         lines.append(line)
