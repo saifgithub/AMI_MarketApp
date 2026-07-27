@@ -203,3 +203,104 @@ edges: the disclosure that never leaves the process, and the one behaviour the t
 the way around without ever asserting. Both fixes are small.
 
 Run report: [`../runs/2026-07-27_run-65/run_report.md`](../runs/2026-07-27_run-65/run_report.md)
+
+---
+
+## Round 2
+
+**Audited SHA:** `73dbcce` (`lane/CR098-ROOM.coder.room`), rebased onto `main` past DEF116 +
+DEF121 + DEF122. Scope vs `main`: **16 files, +1288/−44**; the backend code delta is confined to
+the expected files (`room.py +13`, `room_prompts.py`, `room_runner.py`, `entitlements.py`,
+`config.py`, `news_context.py`, `schemas/room.py`, `docker-compose.yml`) — no strays. Isolated
+worktree `.claude/worktrees/audit-CR098-r2/`, own venv. **Full suite 1365 passed** in 215s on a
+verified-clean tree, matching the Architect's re-measure exactly.
+
+The Architect states plainly that they did **not** re-run the worker's five fixes' mutations — the
+worker did and self-reported. So I ran all five myself, verbatim from round 1, clearing
+`__pycache__` between every step (the hand-off warns this external volume's coarse mtime can mask
+an edit).
+
+### All five findings genuinely closed — my own mutations, not the self-report
+
+| Round-1 finding | My mutation | Result |
+|---|---|---|
+| **MAJOR 1** — `agent_withheld` never reaches the wire | deleted the new `elif ev.kind == "agent_withheld"` branch from `room.py`'s dispatcher | **RED** — `test_agent_withheld_reaches_the_sse_wire` |
+| **MAJOR 2a** — withheld analyst not proven absent | `phase_agents = phase.agents` | **RED** (was undetected at 1359) |
+| **MAJOR 2b** — emit-order misattribution | `zip(phase.agents, results)` | **RED** (was undetected at 1359) |
+| **MINOR 1** — respawn feeds ungated | un-gated the respawn news fallback | **RED** — `test_respawn_path_gates_feed_fallback_by_roster` |
+| **MINOR 2** — #2's test didn't test #2 | dropped `threshold >= 1` (0 stops meaning "never") | **RED in `test_default_roster_is_full_no_op` itself**, no longer only incidentally via the money test |
+| **MINOR 3** — contradictory scaffolding header | restored the unconditional header line | **RED** |
+
+The MAJOR 2 test is better than the one I asked for: it withholds **News** (3rd of 4) rather than
+the last slot, because withholding the tail makes the correct and buggy `zip` coincide on every
+surviving pair. That is the detail that decides whether the test catches the misattribution at all,
+and they found it.
+
+**D6 seam, re-checked as the Architect asked.** The merged call site carries **both**
+`await asyncio.to_thread(...)` **and** `withheld=frozenset(roster.withheld)` — the exact resolution
+I specified when I measured the hazard in round 1. Restoring the inline blocking call turns
+DEF116's guard **RED**, naming `room.py:stream_room -> _profile_for_ticker` and
+`-> yf.Ticker`. The guard genuinely protects that direction.
+
+### MAJOR — the merge hazard's *other* direction is still unguarded, and I measured it
+
+Round 1's FLAG 1 recorded two ways a keep-both merge of this seam goes wrong. DEF116's guard covers
+one (losing `to_thread`). I wrote then that the other — **losing `withheld=` while keeping the
+hoist** — is "caught by nothing." It still is.
+
+Dropped `withheld=frozenset(roster.withheld)` from the hoisted call and ran the **full** suite:
+**1365 passed.** CR098's own file: 24 passed. DEF116's guard: 3 passed. Nothing anywhere.
+
+What that regression does in production: `_profile_for_ticker` receives an empty `withheld`, so the
+Market gate never fires — `compute_technicals(ticker)` runs (the yfinance OHLCV pull the roster gate
+exists to bank) and `technicals_state` is never set to `withheld_tenure`. `_format_profile` then
+renders **real RSI, trend, volume and range for a withheld Market analyst** — the Amendment 1 /
+acceptance #6 rule this CR exists to enforce. On a `NO_VERDICT` run it is self-contradicting output:
+the PM refuses because *"this session ran without a market read"* while the fact sheet in every
+agent's prompt contains a full market read.
+
+Why nothing catches it: **every** #6 and fetch-gating test calls `_profile_for_ticker` or
+`_format_profile` **directly** with an explicit `withheld=` argument. None exercises the
+`run()` → `_profile_for_ticker` wiring. That is precisely round-1 MAJOR 2's shape — tests asserting
+*around* the mechanism instead of *through* it — one layer further out, on a call site that three
+lanes have now collided on (CR090 → DEF116 → CR098) and that I measured git resolving silently
+wrong in this exact direction.
+
+Fix is one assertion: drive `run()` with a Market-withheld roster and assert the rendered profile
+carries `technicals_state == "withheld_tenure"` (or that `compute_technicals` is never called).
+DEF120 lands in `room_runner.py` next, and the two CR098-MOBILE lanes follow — this seam will be
+disturbed again.
+
+### Out of lane — DEF122 closed my DEF116 round-3 MINOR with the wrong reason
+
+`_KNOWN_SYNC_HTTPX_COUNTS` now groups `room_runner.py` with `revenuecat_client.py` under *"both
+called from a sync `def` context (FastAPI runs those in a threadpool), so they do not park the event
+loop."* That is **not** true of `room_runner.py`. `log_prefix_cache_status()`'s
+`httpx.get(timeout=5.0)` (now `:2764`) is reached first from `main.py:132` —
+`await get_room_runner().resume_pending_retries()` inside `async def lifespan` — i.e. **directly on
+the event loop**, not through a threadpooled `Depends`.
+
+It is still safe, for a different reason: it fires once per process during lifespan startup, before
+uvicorn serves traffic, guarded by `_PREFIX_CACHE_STATUS_LOGGED`. My round-3 finding was a pin with
+*no* stated reason; it now has a *wrong* one, which is worse — a reader could add a second httpx
+call to that module on the same false premise. Architect's call (DEF122 is on `main`, not this
+lane); the correct reason is the paragraph above.
+
+### Findings
+
+1. **MAJOR** — nothing pins the `roster → _profile_for_ticker` wiring. Dropping `withheld=` from
+   the hoisted `to_thread` call leaves the **full suite at 1365 passed**, while a withheld Market
+   analyst's real technicals render in every agent's prompt and contradict the `NO_VERDICT` copy.
+   The other half of the same merge hazard is guarded; this half is not.
+
+### Verdict
+
+**VERDICT: AWAITING_FIXES (round 2)** — one MAJOR. (Round 2 is the round *audited*.)
+
+The worker's round was clean and its self-reports check out under my own probes — first lane in
+~28h to come back without Architect recovery, and the MAJOR 2 test is sharper than what I asked
+for. The remaining MAJOR is the second direction of the hazard I flagged in round 1 and is the same
+class as round-1 MAJOR 2: correct code, unpinned wiring, on the one call site three lanes keep
+colliding on. One assertion closes it.
+
+Run report: [`../runs/2026-07-27_run-67/run_report.md`](../runs/2026-07-27_run-67/run_report.md)

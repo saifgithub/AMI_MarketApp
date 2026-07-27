@@ -313,10 +313,19 @@ _KNOWN_SYNC_HTTPX_COUNTS = {
     # DEF116 D4: identical class, out of scope, gated on urow.alpaca_access_token
     # so it fires only for linked users. Needs its own decision.
     "app/services/alpaca_service.py": 2,
-    # RevenueCat + the room_runner fetch: both called from a sync `def` context
-    # (FastAPI runs those in a threadpool), so they do not park the event loop —
-    # the CR049 distinction.
+    # RevenueCat: reached only from a sync `def` route, which FastAPI runs in a
+    # threadpool, so it never parks the event loop — the CR049 distinction.
     "app/services/revenuecat_client.py": 1,
+    # room_runner's `log_prefix_cache_status()` httpx.get IS on the event loop —
+    # `main.py:132` awaits `resume_pending_retries()` inside `async def lifespan`,
+    # not through a threadpooled Depends. It is safe for a DIFFERENT reason:
+    # it fires at most once per process during lifespan startup, before uvicorn
+    # serves any traffic, guarded by `_PREFIX_CACHE_STATUS_LOGGED`
+    # (room_runner.py:2554). A SECOND httpx call in this module would NOT
+    # inherit that reasoning. (The first version of this comment reused the
+    # threadpool justification here and was simply wrong — DEF116 round-3 audit.
+    # A pin with a wrong reason is worse than a pin with none: it invites the
+    # next reader to add a call on a false premise.)
     "app/services/room_runner.py": 1,
 }
 
