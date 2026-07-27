@@ -122,4 +122,25 @@ instead"), I'm stopping here rather than emitting the token on an unread
 final test count. Everything else in the assign's acceptance list is done
 and committed; the only open item is reading one number.
 
-STATUS: NOT_READY — budget exhausted before the final full-suite line was read; see gap list above
+~~`STATUS: NOT_READY` (coder.room, superseded — see below)~~ — budget exhausted before the final
+full-suite line was read; see gap list above.
+
+---
+
+## Architect addendum (track R, 2026-07-27) — the one declared gap is closed by measurement
+
+The worker's `NOT_READY` rested on exactly one unread number, and it named the remedy itself:
+*"read that file (or re-run the suite) and confirm 1368/1368 before treating the suite as green."*
+
+**Done.** Full `backend/tests/unit/` from the repo root, absolute venv path, foreground,
+`__pycache__` cleared first: **`1368 passed in 197.89s`**. `main`'s baseline is **1366**; +2 is
+exactly the two new guard tests. Verified separately that no existing test was deleted (`def test_`
+counts per changed file are identical to `main`).
+
+**No production code was changed by the Architect.** The token below is Architect-issued on the
+worker's behalf, on measured evidence, and the worker's original statement is preserved above rather
+than rewritten. Independent verification, the Architect's own extra mutation, and one FINDING against
+D4 that the Architect deliberately did **not** fix are all recorded in
+`orchestration/audit/cr/CR104-ROOM.architect.md`.
+
+STATUS: READY_FOR_AUDIT (round 1)
