@@ -111,6 +111,17 @@ the lane branch; the lane files are shared coordination state and every board re
 shared branch. A hand-off committed only to a lane branch is invisible to both boards and has
 already stranded a finished round; an uncommitted one renders `UNCOMMITTED` (DEF087).
 
-DISPATCH: OPEN
-
 ASSIGNED: coder.api round 1
+
+DISPATCH: ACCEPTED
+
+## Integrated (AT:R65, 2026-07-27)
+
+Architect-spawned auditor VERDICT: COMPLETE (round 1) — zero BLOCKER/MAJOR, 1 non-blocking
+MINOR (a static divider added to the head, so "only order changed" is imprecise). Merged
+`f297196` to `main` @ `882b1c9`, post-merge suite 1300 passed. The live claim was reproduced
+independently by the auditor (14,672 hit tokens / 318 ms vs 0 / 2,684 ms), not accepted from
+the hand-off. Note for future lanes on this instance: the builder died on its $5 budget cap
+but had committed incrementally so nothing was lost, and its hand-off misread this lane's
+`GATE: spawned` as "no independent auditor required" — PROTOCOL.md 4a means an
+Architect-spawned auditor, which is what ran.
