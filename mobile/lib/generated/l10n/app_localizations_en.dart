@@ -278,6 +278,62 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String tickerDetailDividendExDate(String date) {
+    return 'ex-div $date';
+  }
+
+  @override
+  String tickerDetailDividendRate(String rate) {
+    return '$rate/sh';
+  }
+
+  @override
+  String get tickerDetailLotsHeading => 'COST BASIS LOTS';
+
+  @override
+  String get tickerDetailLotStatusOpen => 'OPEN';
+
+  @override
+  String get tickerDetailLotStatusPartiallyClosed => 'PARTIAL';
+
+  @override
+  String get tickerDetailLotStatusClosed => 'CLOSED';
+
+  @override
+  String tickerDetailLotEntry(String date, String price) {
+    return 'Opened $date @ \$$price';
+  }
+
+  @override
+  String tickerDetailLotQuantity(String open, String closed) {
+    return '$open open / $closed closed';
+  }
+
+  @override
+  String tickerDetailLotRealised(String pnl) {
+    return 'Realised $pnl';
+  }
+
+  @override
+  String tickerDetailLotUnrealised(String pnl) {
+    return 'Unrealised $pnl';
+  }
+
+  @override
+  String get tickerDetailLotUnrealisedUnknown => 'Unrealised —';
+
+  @override
+  String get portfolioSectorAllocationHeading => 'SECTOR ALLOCATION';
+
+  @override
+  String get portfolioSectorOtherLabel => 'Other (unclassified)';
+
+  @override
+  String portfolioSectorBreach(String sector, String pct, String limit) {
+    return '$sector at $pct% exceeds your $limit% mandate limit';
+  }
+
+  @override
   String get roomVerdictSeeChart => 'SEE CHART';
 
   @override

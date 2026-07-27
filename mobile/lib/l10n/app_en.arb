@@ -221,6 +221,73 @@
         "description": "EPS estimate shown on the earnings pill on Ticker Detail. {eps} is already formatted with $ sign and 2 decimal places.",
         "placeholders": {"eps": {"type": "String"}}
     },
+    "tickerDetailDividendExDate": "ex-div {date}",
+    "@tickerDetailDividendExDate": {
+        "description": "CR100/CR030: dividend sub-chip on Ticker Detail, shown beside the earnings pill. {date} is the ex-dividend date already formatted (e.g. \"Aug 15\"). The chip is hidden entirely when both ex_dividend_date and dividend_rate are null (non-payer / no announced window).",
+        "placeholders": {"date": {"type": "String"}}
+    },
+    "tickerDetailDividendRate": "{rate}/sh",
+    "@tickerDetailDividendRate": {
+        "description": "CR100/CR030: dividend rate on the dividend sub-chip. {rate} is already formatted with a $ sign and 2 decimal places, per-share.",
+        "placeholders": {"rate": {"type": "String"}}
+    },
+    "tickerDetailLotsHeading": "COST BASIS LOTS",
+    "@tickerDetailLotsHeading": {
+        "description": "CR100/CR029: section heading above the per-lot cost-basis cards on Ticker Detail, shown only for a held ticker."
+    },
+    "tickerDetailLotStatusOpen": "OPEN",
+    "@tickerDetailLotStatusOpen": {
+        "description": "CR100/CR029: status chip on a fully-open cost-basis lot card."
+    },
+    "tickerDetailLotStatusPartiallyClosed": "PARTIAL",
+    "@tickerDetailLotStatusPartiallyClosed": {
+        "description": "CR100/CR029: status chip on a partially-drawn-down cost-basis lot card (some shares sold/stopped, some still open)."
+    },
+    "tickerDetailLotStatusClosed": "CLOSED",
+    "@tickerDetailLotStatusClosed": {
+        "description": "CR100/CR029: status chip on a fully-closed cost-basis lot card."
+    },
+    "tickerDetailLotEntry": "Opened {date} @ ${price}",
+    "@tickerDetailLotEntry": {
+        "description": "CR100/CR029: entry line on a cost-basis lot card. {date} is the formatted entry date, {price} is the formatted entry price (no $ sign, 2 decimals — the $ is in the string).",
+        "placeholders": {"date": {"type": "String"}, "price": {"type": "String"}}
+    },
+    "tickerDetailLotQuantity": "{open} open / {closed} closed",
+    "@tickerDetailLotQuantity": {
+        "description": "CR100/CR029: quantity line on a cost-basis lot card. {open} and {closed} are formatted share counts.",
+        "placeholders": {"open": {"type": "String"}, "closed": {"type": "String"}}
+    },
+    "tickerDetailLotRealised": "Realised {pnl}",
+    "@tickerDetailLotRealised": {
+        "description": "CR100/CR029: realised P&L on a cost-basis lot card. {pnl} is already formatted with sign and $.",
+        "placeholders": {"pnl": {"type": "String"}}
+    },
+    "tickerDetailLotUnrealised": "Unrealised {pnl}",
+    "@tickerDetailLotUnrealised": {
+        "description": "CR100/CR029: unrealised P&L on a cost-basis lot card, shown only when the price is known (unrealised_pnl is non-null). {pnl} is already formatted with sign and $.",
+        "placeholders": {"pnl": {"type": "String"}}
+    },
+    "tickerDetailLotUnrealisedUnknown": "Unrealised —",
+    "@tickerDetailLotUnrealisedUnknown": {
+        "description": "CR100/CR029: shown in place of tickerDetailLotUnrealised when unrealised_pnl is null (price unknown, or a closed lot — the dash marks the value as absent, never rendered as $0.00)."
+    },
+    "portfolioSectorAllocationHeading": "SECTOR ALLOCATION",
+    "@portfolioSectorAllocationHeading": {
+        "description": "CR100/CR026: heading above the sector-allocation donut on the Portfolio screen."
+    },
+    "portfolioSectorOtherLabel": "Other (unclassified)",
+    "@portfolioSectorOtherLabel": {
+        "description": "CR100/CR026: legend label for the backend's \"Other\" bucket (tickers with no resolved sector). This bucket is disclosed but never counts as a mandate-concentration breach (DEF059 inversion guard) — never render it as a warning/red state."
+    },
+    "portfolioSectorBreach": "{sector} at {pct}% exceeds your {limit}% mandate limit",
+    "@portfolioSectorBreach": {
+        "description": "CR100/CR026: warning line shown under the sector-allocation donut when compliance.compliant is false. {sector} is compliance.max_sector_name (never \"Other\" — the backend excludes it from this judgement), {pct} and {limit} are pre-formatted percentages. {limit} must come from the response's max_allowed, never a hard-coded 0.40 — a user's mandate concentration_tolerance can differ.",
+        "placeholders": {
+            "sector": {"type": "String"},
+            "pct": {"type": "String"},
+            "limit": {"type": "String"}
+        }
+    },
     "roomVerdictSeeChart": "SEE CHART",
     "@roomVerdictSeeChart": {
         "description": "Secondary CTA below the Room verdict card. Pushes the user to TickerDetailScreen for chart/news/earnings research. Shown in all verdict states (approve+no-trade, approve+traded, reject)."

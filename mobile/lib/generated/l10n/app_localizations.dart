@@ -586,6 +586,90 @@ abstract class AppLocalizations {
   /// **'est. EPS {eps}'**
   String tickerDetailNewsEpsEstimate(String eps);
 
+  /// CR100/CR030: dividend sub-chip on Ticker Detail, shown beside the earnings pill. {date} is the ex-dividend date already formatted (e.g. "Aug 15"). The chip is hidden entirely when both ex_dividend_date and dividend_rate are null (non-payer / no announced window).
+  ///
+  /// In en, this message translates to:
+  /// **'ex-div {date}'**
+  String tickerDetailDividendExDate(String date);
+
+  /// CR100/CR030: dividend rate on the dividend sub-chip. {rate} is already formatted with a $ sign and 2 decimal places, per-share.
+  ///
+  /// In en, this message translates to:
+  /// **'{rate}/sh'**
+  String tickerDetailDividendRate(String rate);
+
+  /// CR100/CR029: section heading above the per-lot cost-basis cards on Ticker Detail, shown only for a held ticker.
+  ///
+  /// In en, this message translates to:
+  /// **'COST BASIS LOTS'**
+  String get tickerDetailLotsHeading;
+
+  /// CR100/CR029: status chip on a fully-open cost-basis lot card.
+  ///
+  /// In en, this message translates to:
+  /// **'OPEN'**
+  String get tickerDetailLotStatusOpen;
+
+  /// CR100/CR029: status chip on a partially-drawn-down cost-basis lot card (some shares sold/stopped, some still open).
+  ///
+  /// In en, this message translates to:
+  /// **'PARTIAL'**
+  String get tickerDetailLotStatusPartiallyClosed;
+
+  /// CR100/CR029: status chip on a fully-closed cost-basis lot card.
+  ///
+  /// In en, this message translates to:
+  /// **'CLOSED'**
+  String get tickerDetailLotStatusClosed;
+
+  /// CR100/CR029: entry line on a cost-basis lot card. {date} is the formatted entry date, {price} is the formatted entry price (no $ sign, 2 decimals — the $ is in the string).
+  ///
+  /// In en, this message translates to:
+  /// **'Opened {date} @ \${price}'**
+  String tickerDetailLotEntry(String date, String price);
+
+  /// CR100/CR029: quantity line on a cost-basis lot card. {open} and {closed} are formatted share counts.
+  ///
+  /// In en, this message translates to:
+  /// **'{open} open / {closed} closed'**
+  String tickerDetailLotQuantity(String open, String closed);
+
+  /// CR100/CR029: realised P&L on a cost-basis lot card. {pnl} is already formatted with sign and $.
+  ///
+  /// In en, this message translates to:
+  /// **'Realised {pnl}'**
+  String tickerDetailLotRealised(String pnl);
+
+  /// CR100/CR029: unrealised P&L on a cost-basis lot card, shown only when the price is known (unrealised_pnl is non-null). {pnl} is already formatted with sign and $.
+  ///
+  /// In en, this message translates to:
+  /// **'Unrealised {pnl}'**
+  String tickerDetailLotUnrealised(String pnl);
+
+  /// CR100/CR029: shown in place of tickerDetailLotUnrealised when unrealised_pnl is null (price unknown, or a closed lot — the dash marks the value as absent, never rendered as $0.00).
+  ///
+  /// In en, this message translates to:
+  /// **'Unrealised —'**
+  String get tickerDetailLotUnrealisedUnknown;
+
+  /// CR100/CR026: heading above the sector-allocation donut on the Portfolio screen.
+  ///
+  /// In en, this message translates to:
+  /// **'SECTOR ALLOCATION'**
+  String get portfolioSectorAllocationHeading;
+
+  /// CR100/CR026: legend label for the backend's "Other" bucket (tickers with no resolved sector). This bucket is disclosed but never counts as a mandate-concentration breach (DEF059 inversion guard) — never render it as a warning/red state.
+  ///
+  /// In en, this message translates to:
+  /// **'Other (unclassified)'**
+  String get portfolioSectorOtherLabel;
+
+  /// CR100/CR026: warning line shown under the sector-allocation donut when compliance.compliant is false. {sector} is compliance.max_sector_name (never "Other" — the backend excludes it from this judgement), {pct} and {limit} are pre-formatted percentages. {limit} must come from the response's max_allowed, never a hard-coded 0.40 — a user's mandate concentration_tolerance can differ.
+  ///
+  /// In en, this message translates to:
+  /// **'{sector} at {pct}% exceeds your {limit}% mandate limit'**
+  String portfolioSectorBreach(String sector, String pct, String limit);
+
   /// Secondary CTA below the Room verdict card. Pushes the user to TickerDetailScreen for chart/news/earnings research. Shown in all verdict states (approve+no-trade, approve+traded, reject).
   ///
   /// In en, this message translates to:
