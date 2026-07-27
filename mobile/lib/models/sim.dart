@@ -300,6 +300,8 @@ class SimEarnings {
     this.earningsDate,
     this.quarter,
     this.epsEstimate,
+    this.exDividendDate,
+    this.dividendRate,
   });
 
   final String ticker;
@@ -307,8 +309,15 @@ class SimEarnings {
   final String? earningsDate; // "YYYY-MM-DD"
   final String? quarter;      // "Q1"–"Q4"
   final double? epsEstimate;
+  // CR030 — null on both means non-payer or outside the announced window.
+  final String? exDividendDate; // "YYYY-MM-DD"
+  final double? dividendRate;
 
   bool get hasData => earningsDate != null;
+
+  /// CR030 — the dividend chip renders only when at least one of the two
+  /// fields is present; both null means non-payer / no announced window.
+  bool get hasDividendData => exDividendDate != null || dividendRate != null;
 
   factory SimEarnings.fromJson(Map<String, dynamic> j) => SimEarnings(
         ticker: j['ticker'] as String,
@@ -316,5 +325,149 @@ class SimEarnings {
         earningsDate: j['earnings_date'] as String?,
         quarter: j['quarter'] as String?,
         epsEstimate: (j['eps_estimate'] as num?)?.toDouble(),
+        exDividendDate: j['ex_dividend_date'] as String?,
+        dividendRate: (j['dividend_rate'] as num?)?.toDouble(),
+      );
+}
+
+/// One buy lot's reconstructed FIFO cost-basis picture. Returned inside
+/// GET /v1/sim/lots/{user_id}/{ticker} (CR029).
+class Lot {
+  const Lot({
+    required this.entryTradeId,
+    required this.entryDate,
+    required this.entryPrice,
+    required this.quantity,
+    required this.quantityOpen,
+    required this.quantityClosed,
+    required this.realisedPnl,
+    this.unrealisedPnl,
+    required this.status,
+  });
+
+  final String entryTradeId;
+  final String entryDate; // ISO 8601
+  final double entryPrice;
+  final double quantity; // original buy quantity
+  final double quantityOpen;
+  final double quantityClosed;
+  final double realisedPnl;
+  // Null when the current price is unknown. A closed lot's unrealised P&L
+  // is absent, not zero — never coerce this to 0.0 when rendering.
+  final double? unrealisedPnl;
+  final String status; // "open" | "partially_closed" | "closed"
+
+  factory Lot.fromJson(Map<String, dynamic> j) => Lot(
+        entryTradeId: j['entry_trade_id'] as String,
+        entryDate: j['entry_date'] as String,
+        entryPrice: (j['entry_price'] as num).toDouble(),
+        quantity: (j['quantity'] as num).toDouble(),
+        quantityOpen: (j['quantity_open'] as num).toDouble(),
+        quantityClosed: (j['quantity_closed'] as num).toDouble(),
+        realisedPnl: (j['realised_pnl'] as num).toDouble(),
+        unrealisedPnl: (j['unrealised_pnl'] as num?)?.toDouble(),
+        status: j['status'] as String,
+      );
+}
+
+/// Aggregate totals across all lots for a ticker. Unlike a single lot's
+/// `unrealisedPnl`, this total is always present — the backend sums with a
+/// 0.0 fallback per-lot before returning it.
+class LotTotals {
+  const LotTotals({
+    required this.realisedPnl,
+    required this.unrealisedPnl,
+    required this.quantityOpen,
+  });
+
+  final double realisedPnl;
+  final double unrealisedPnl;
+  final double quantityOpen;
+
+  factory LotTotals.fromJson(Map<String, dynamic> j) => LotTotals(
+        realisedPnl: (j['realised_pnl'] as num).toDouble(),
+        unrealisedPnl: (j['unrealised_pnl'] as num).toDouble(),
+        quantityOpen: (j['quantity_open'] as num).toDouble(),
+      );
+}
+
+/// Per-lot cost-basis feed for one held ticker. Returned by
+/// GET /v1/sim/lots/{user_id}/{ticker} (CR029).
+class HoldingLots {
+  const HoldingLots({
+    required this.ticker,
+    required this.currentPrice,
+    required this.priceSource,
+    required this.lots,
+    required this.totals,
+  });
+
+  final String ticker;
+  final double currentPrice;
+  final String priceSource;
+  final List<Lot> lots;
+  final LotTotals totals;
+
+  factory HoldingLots.fromJson(Map<String, dynamic> j) => HoldingLots(
+        ticker: j['ticker'] as String,
+        currentPrice: (j['current_price'] as num).toDouble(),
+        priceSource: j['price_source'] as String,
+        lots: (j['lots'] as List)
+            .map((l) => Lot.fromJson(l as Map<String, dynamic>))
+            .toList(),
+        totals: LotTotals.fromJson(j['totals'] as Map<String, dynamic>),
+      );
+}
+
+/// Sector-concentration compliance judged over KNOWN sectors only — the
+/// "Other" (unclassified) bucket is disclosed but never counts as a breach
+/// (the DEF059 inversion guard). `maxAllowed` is read from the user's
+/// mandate `concentration_tolerance`; never hard-code it client-side.
+class SectorCompliance {
+  const SectorCompliance({
+    required this.maxSector,
+    this.maxSectorName,
+    required this.maxAllowed,
+    required this.compliant,
+  });
+
+  final double maxSector;
+  // Null when the portfolio holds only unclassified ("Other") tickers.
+  final String? maxSectorName;
+  final double maxAllowed;
+  final bool compliant;
+
+  factory SectorCompliance.fromJson(Map<String, dynamic> j) => SectorCompliance(
+        maxSector: (j['max_sector'] as num).toDouble(),
+        maxSectorName: j['max_sector_name'] as String?,
+        maxAllowed: (j['max_allowed'] as num).toDouble(),
+        compliant: j['compliant'] as bool,
+      );
+}
+
+/// Sector-allocation donut feed + concentration-compliance. Returned by
+/// GET /v1/portfolio/sector-allocation/{user_id} (CR026).
+class SectorAllocation {
+  const SectorAllocation({
+    required this.allocation,
+    required this.totalValue,
+    required this.compliance,
+  });
+
+  // Sector name -> weight (normalised over invested market value, 4 dp).
+  // May contain the "Other" (unclassified) bucket alongside known sectors.
+  final Map<String, double> allocation;
+  final double totalValue;
+  final SectorCompliance compliance;
+
+  factory SectorAllocation.fromJson(Map<String, dynamic> j) => SectorAllocation(
+        allocation: Map<String, double>.fromEntries(
+          (j['allocation'] as Map).entries.map(
+                (e) => MapEntry(e.key as String, (e.value as num).toDouble()),
+              ),
+        ),
+        totalValue: (j['total_value'] as num).toDouble(),
+        compliance:
+            SectorCompliance.fromJson(j['compliance'] as Map<String, dynamic>),
       );
 }

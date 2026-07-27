@@ -817,10 +817,26 @@ class ApiClient {
     return SimNews.fromJson(r.data!);
   }
 
-  /// Upcoming earnings info within 90 days. Server caches 6 hours.
+  /// Upcoming earnings info within 90 days (CR030 adds the dividend fields
+  /// on this same response). Server caches 6 hours.
   Future<SimEarnings> simEarnings(String ticker) async {
     final r = await _dio.get<Map<String, dynamic>>('/v1/sim/earnings/$ticker');
     return SimEarnings.fromJson(r.data!);
+  }
+
+  /// Per-lot cost-basis / FIFO realised-P&L reconstruction for one held
+  /// ticker (CR029).
+  Future<HoldingLots> simHoldingLots(String userId, String ticker) async {
+    final r = await _dio
+        .get<Map<String, dynamic>>('/v1/sim/lots/$userId/$ticker');
+    return HoldingLots.fromJson(r.data!);
+  }
+
+  /// Sector-allocation donut feed + concentration-compliance (CR026).
+  Future<SectorAllocation> sectorAllocation(String userId) async {
+    final r = await _dio
+        .get<Map<String, dynamic>>('/v1/portfolio/sector-allocation/$userId');
+    return SectorAllocation.fromJson(r.data!);
   }
 
   // ── Watchlist (A18) ─────────────────────────────────────────────
