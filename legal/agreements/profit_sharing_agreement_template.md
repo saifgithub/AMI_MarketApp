@@ -30,7 +30,7 @@
 | | |
 |---|---|
 | **Document** | Backer Profit-Participation Agreement |
-| **Version** | 0.2 (template, unsent) |
+| **Version** | 0.3 (template, unsent) |
 | **Drafted** | 25 July 2026 |
 | **Drafted by** | Founder (Claude-assisted), pending counsel review |
 | **Parties per signing** | One agreement, multiple Backers via Schedule A (§ below) |
@@ -244,6 +244,26 @@ non-store-dependent row (Reddit ads / creator placements) and organic content
 amplification of existing lesson content; Apple Search Ads and Google App Campaigns are
 added once the corresponding store listing opens.
 
+### Beta-phase cost contingency
+
+The infrastructure figure above (USD 600/mo) reflects AMI Trade's **current** setup:
+self-hosted servers the Founder already owns, running free, self-hosted AI inference.
+If AMI Trade migrates to Google Cloud Platform during the Contribution Period (internally
+called the "Beta migration"), infrastructure costs are expected to rise to roughly
+**USD 750–2,550/month** — driven mainly by a planned cutover from free self-hosted AI
+inference to a paid cloud LLM provider, plus managed hosting, managed database/auth, and a
+separate staging environment. In-app purchases / monetization are **not** part of this
+migration and stay off during it — so a Beta migration adds real cost with no new revenue
+to offset it in the near term.
+
+That range would exceed the USD 600/month allocated above — at the high end, it would
+exceed the entire USD 2,000/month raise. Per §3, the Founder's response would be to
+**reallocate from advertising, not to exceed Total Contributions or ask Backers for more**.
+As of this schedule's date, Beta migration is not the next planned phase of work (a period
+of feature work is planned first) and is not expected to begin within the Contribution
+Period — but Backers should treat this as a disclosed, live contingency, not a
+hypothetical one.
+
 ---
 
 ## Lawyer-only checklist
@@ -258,7 +278,7 @@ Before this Agreement is used with a real Backer:
 | 4 | Transfer restriction (§11) as an anti-security-classification lever | Confirms this actually helps rather than being cosmetic |
 | 5 | Tax treatment of profit-share payments, for both Founder and Backer | Not addressed anywhere in this draft — needs its own advice, likely jurisdiction-dependent per Backer |
 | 6 | Multiple-Backer aggregation risk | Whether raising from "some people" (plural) changes the securities analysis versus a single backer |
-| 7 | Use-of-funds specificity (Schedule B) | Detailed spend projections read more like a prospectus/PPM than a private contract — confirm the reallocation hedge in §3 is enough to keep this from being read as a binding representation |
+| 7 | Use-of-funds specificity (Schedule B, incl. the Beta-phase contingency figures) | Detailed spend projections — including a named future cost scenario with dollar ranges — read more like a prospectus/PPM than a private contract; confirm the reallocation hedge in §3 is enough to keep this from being read as a binding representation |
 
 ---
 
@@ -273,3 +293,10 @@ Before this Agreement is used with a real Backer:
   App Campaigns / Reddit-creator channels, gated on public store-listing availability).
   §3 updated to reference it with a non-binding/reallocation hedge. New checklist item #7
   on use-of-funds specificity. Still unsent, no signatures.
+- **v0.3** — 25 July 2026. Added a "Beta-phase cost contingency" subsection to Schedule B:
+  if AMI Trade migrates to GCP during the Contribution Period, infra cost is estimated at
+  USD 750–2,550/mo (mainly a planned cutover from free self-hosted AI inference to a paid
+  cloud LLM provider), which would exceed the USD 600/mo allocation and, at the high end,
+  the full raise — disclosed as a live contingency addressed via §3's reallocation
+  mechanism, not a hypothetical. Checklist item #7 updated to cover it. Still unsent, no
+  signatures.
