@@ -31,7 +31,7 @@ paywall.
 ## Verification split — you run the FAST tests, the Architect runs the full suite
 
 `cd mobile && flutter test test/services/ test/widgets/ -r compact` in the **foreground**. **Do NOT
-run the full suite and do NOT background anything** — four workers died today by backgrounding a long
+run the full suite and do NOT background anything** — Two workers died today by backgrounding a long
 run then emitting a final message (CR057 / `failure_patterns.md` P7), one after being told not to.
 The Architect runs `flutter test` in full.
 HOT-FILES: `mobile/lib/services/api/api_client.dart`, `mobile/lib/state/room_providers.dart`, the Room console screen. **`CR098-MOBILE-VERDICT` touches the same Room screen — the two run SEQUENTIALLY, not concurrently.** Four CRs sharing one file is what forced CR091/092/094/096 into a single lane; do not repeat it by running these two in parallel.
