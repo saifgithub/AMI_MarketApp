@@ -453,7 +453,7 @@ async def get_holding_lots(
     `unrealised_pnl` on each open lot is marked against the current quote.
     """
     _own(current_user, user_id)
-    q = sim.current_quote(ticker)
+    q = await asyncio.to_thread(sim.current_quote, ticker)
     lots = sim.holding_lots(user_id, ticker, current_price=q.price)
     realised_total = round(sum(lot.realised_pnl for lot in lots), 2)
     unrealised_total = round(
@@ -478,7 +478,7 @@ async def quote(
     ticker: str,
     sim: SimEngine = Depends(get_sim_engine),
 ) -> dict:
-    q = sim.current_quote(ticker)
+    q = await asyncio.to_thread(sim.current_quote, ticker)
     return {
         "ticker": ticker.upper(),
         "price": q.price,
@@ -538,7 +538,7 @@ async def history(
             status.HTTP_422_UNPROCESSABLE_ENTITY,
             f"invalid period; must be one of {','.join(VALID_PERIODS)}",
         )
-    bars, source = sim.current_history(ticker, period)
+    bars, source = await asyncio.to_thread(sim.current_history, ticker, period)
     return {
         "ticker": ticker.upper(),
         "period": period,
@@ -562,7 +562,7 @@ async def news(
     server-side in CachingProvider. Returns articles: [] when Yahoo
     has no news for the ticker (not an error).
     """
-    items, source = sim.current_news(ticker, limit)
+    items, source = await asyncio.to_thread(sim.current_news, ticker, limit)
     return {
         "ticker": ticker.upper(),
         "source": source,
@@ -589,7 +589,7 @@ async def earnings(
     server-side in CachingProvider. All fields are null when no
     earnings date is announced within 90 days.
     """
-    info, source = sim.current_earnings(ticker)
+    info, source = await asyncio.to_thread(sim.current_earnings, ticker)
     return {
         "ticker": ticker.upper(),
         "source": source,
