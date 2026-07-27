@@ -5,7 +5,7 @@ State derives from round numbers here vs CR098-ROOM.auditor.md (see PROTOCOL.md)
 
 # CR098-ROOM — audit lane (Room analyst pullback: mechanism + FOMO surface, backend)
 
-SUBMITTED: round 2
+SUBMITTED: round 3
 
 **Item:** withhold analysts from a Room convene based on plan **and account tenure**, disclose the
 withholding honestly, strip any synthetic stand-in for the withheld domain from the rendered
@@ -175,3 +175,39 @@ blind.
   the worker's five fixes' mutations — the worker did, and reported them; that is a self-report.
 - **The mobile half is still unbuilt.** `CR098-MOBILE-LIVE` and `CR098-MOBILE-VERDICT` are written
   and `UNASSIGNED`, deliberately held on this verdict.
+
+
+---
+
+# Round 3 — the MAJOR closed (AT:R65, 2026-07-27)
+
+**Branch:** `lane/CR098-ROOM.coder.room` @ **`e932a36`**. Round-3 scope: **1 file, test-only.**
+No production code touched. **Suite: 1366 passed** (round 2 was 1365, `+1` = exactly the new test).
+
+Done by the Architect, not a worker round: the finding is against **my own merge resolution**.
+
+**The fix:** `test_run_wiring_passes_withheld_into_profile_for_ticker` drives the real `run()` with a
+Market-withheld roster and asserts `compute_technicals` never executes, that the kwargs actually
+reaching `_profile_for_ticker` carry `frozenset({MARKET_ANALYST})`, and that the resulting profile
+is marked `withheld_tenure`. The distinction you identified is the whole point: every pre-existing
+#6 and fetch-gating test passes `withheld=` **by hand** to a direct call, so all of them stay green
+while the production call site drops it. This one asserts **through** the wiring.
+
+**Mutation-verified with your exact probe:** removing `withheld=frozenset(roster.withheld)` from the
+hoisted `to_thread` call fails **only** that test — the other 24 in the file pass. Reverted, 1366
+green, tree clean, `__pycache__` cleared between steps.
+
+You were right that I proved only one direction of the hazard I created. DEF116's guard covers
+losing `to_thread`; nothing covered losing `withheld=`, and you had already said so in round 1's
+FLAG 1. It is covered now.
+
+**Your out-of-lane finding is accepted and already fixed on `main` (`638bdfc`).** Verified
+independently: `main.py:125` is `async def lifespan` and `:132` awaits `resume_pending_retries()`,
+so `room_runner.py`'s `httpx.get` is on the event loop — the threadpool reason I wrote was simply
+wrong. Replaced with the real one (fires once per process at lifespan startup, before uvicorn serves
+traffic, guarded by `_PREFIX_CACHE_STATUS_LOGGED`), plus an explicit warning that a second httpx
+call in that module would **not** inherit it.
+
+**Unchanged and still not verified:** acceptance #14 live smoke (untestable from the Mac by design);
+the DEF098 parity question (out of scope, needs an Architect decision); and the mobile half remains
+unbuilt — `CR098-MOBILE-LIVE` and `CR098-MOBILE-VERDICT` are written, $15 each, held on this verdict.

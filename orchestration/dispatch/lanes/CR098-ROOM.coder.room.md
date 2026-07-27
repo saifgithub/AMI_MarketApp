@@ -409,4 +409,65 @@ pre-fix code (stashed the fix, re-ran, restored) and pass against the fix.
 - The three MINOR fixes were each mutation- or contradiction-tested individually; no new
   cross-cutting mutation sweep was run over the round-2 diff as a whole beyond what's listed above.
 
-STATUS: READY_FOR_AUDIT (round 2)
+(superseded round-2 mark — token neutralised; the live one is at the foot of this file)
+
+
+---
+
+# Round 3 — the round-2 MAJOR closed (Architect, AT:R65, 2026-07-27)
+
+STATUS: READY_FOR_AUDIT (round 3)
+
+**Scope: 1 file, test-only.** No production code touched. Done by the Architect rather than a worker
+round because the finding is against **my own merge resolution**, not the worker's work.
+
+**Suite: 1366 passed** (round 2 was 1365, `+1` = exactly the new test).
+
+## The finding, and why it was mine
+
+You measured that dropping `withheld=frozenset(roster.withheld)` from the hoisted `to_thread` call
+left the **full suite at 1365 green** — while a withheld Market analyst's real RSI/trend/volume
+would render in every agent's prompt, contradicting the `NO_VERDICT` copy on the same screen.
+
+I made that merge resolution during the DEF116 rebase, and I proved **one** direction — that
+DEF116's guard turns red if the `to_thread` hoist is lost. I did not pin the other. You had already
+written in round 1's FLAG 1 that this direction is "caught by nothing," and it still wasn't.
+
+## The fix
+
+`test_run_wiring_passes_withheld_into_profile_for_ticker` — drives the **real `run()`** with a
+Market-withheld roster and asserts three things: `compute_technicals` never executes (it raises if
+it does), the kwargs actually reaching `_profile_for_ticker` carry
+`frozenset({MARKET_ANALYST})`, and the resulting profile is marked `withheld_tenure`.
+
+The distinction that matters: every pre-existing #6 and fetch-gating test calls
+`_profile_for_ticker` / `_format_profile` **directly**, passing `withheld=` by hand — so all of them
+stay green while the production call site drops it. This one asserts **through** the wiring.
+
+**Mutation-verified with your exact probe:** removed `withheld=frozenset(roster.withheld)` from the
+hoisted call ⇒ **only** `test_run_wiring_passes_withheld_into_profile_for_ticker` failed (24 others
+in the file passed). Reverted, 1366 green, tree clean. `__pycache__` cleared between every step per
+this worktree's coarse-mtime caveat.
+
+## Your out-of-lane finding — accepted and fixed on `main`
+
+You were right that DEF122's pin grouped `room_runner.py` with `revenuecat_client.py` under a
+threadpool justification that is **false** for `room_runner.py`. Verified independently:
+`main.py:125` is `async def lifespan`, and `:132` awaits `resume_pending_retries()` — so that
+`httpx.get` runs **on the event loop**, not in a threadpool.
+
+Corrected on `main` (`638bdfc`, this lane has merged it) with the real reason: it fires at most once
+per process during lifespan startup, before uvicorn serves traffic, guarded by
+`_PREFIX_CACHE_STATUS_LOGGED` (`room_runner.py:2554`) — and an explicit note that **a second httpx
+call in that module would not inherit the reasoning.** Your framing was right: a pin with a wrong
+reason is worse than a pin with none.
+
+## Not verified — unchanged
+
+- **Acceptance #14 live smoke** — untestable from the Mac by design. Post-promote.
+- **DEF098 parity blind spot** — still out of scope, still needs an Architect decision on whether a
+  withheld analyst counts as a declared omission for a degraded `FLOOR_PASS`.
+- I did not re-run the five round-1 mutations this round; you re-ran all five yourself at round 2
+  and they held.
+- **The mobile half is still unbuilt** — `CR098-MOBILE-LIVE` and `CR098-MOBILE-VERDICT` are written,
+  `$15` each, `UNASSIGNED`, held on this verdict.
