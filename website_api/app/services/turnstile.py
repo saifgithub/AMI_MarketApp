@@ -19,7 +19,7 @@ from app.core.logging import logger
 _SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 
 
-def verify_turnstile(token: str | None, *, remote_ip: str | None = None) -> bool:
+async def verify_turnstile(token: str | None, *, remote_ip: str | None = None) -> bool:
     """Return True if the token is valid (or verification is bypassed in dev)."""
     if not settings.turnstile_secret:
         return True  # local/dev bypass — no secret provisioned
@@ -31,7 +31,8 @@ def verify_turnstile(token: str | None, *, remote_ip: str | None = None) -> bool
     if remote_ip:
         data["remoteip"] = remote_ip
     try:
-        resp = httpx.post(_SITEVERIFY_URL, data=data, timeout=10.0)
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(_SITEVERIFY_URL, data=data, timeout=10.0)
         ok = bool(resp.json().get("success"))
         if not ok:
             logger.warning("turnstile_failed", body=resp.text[:200])

@@ -43,7 +43,7 @@ class ContactResponse(BaseModel):
 
 @router.post("/contact", response_model=ContactResponse, dependencies=[Depends(contact_rate_limit)])
 async def submit_contact(req: ContactRequest, request: Request) -> ContactResponse:
-    if not verify_turnstile(req.turnstile_token, remote_ip=client_ip(request)):
+    if not await verify_turnstile(req.turnstile_token, remote_ip=client_ip(request)):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="verification_failed")
 
     email = req.email.strip().lower()
@@ -64,13 +64,13 @@ async def submit_contact(req: ContactRequest, request: Request) -> ContactRespon
     handled, answer = await answer_for_email(body)
 
     if handled and answer:
-        email_service.send_contact_answer(to=email, question=body, answer=answer)
+        await email_service.send_contact_answer(to=email, question=body, answer=answer)
         _update_status(row_id, "answered", ai_answer=answer)
         return ContactResponse(ok=True, answered=True)
 
     # 3. Escalate to a human.
-    email_service.send_contact_ack(to=email)
-    email_service.notify_team(
+    await email_service.send_contact_ack(to=email)
+    await email_service.notify_team(
         subject=f"[AMI contact] {subject or 'New message'}",
         lines=[f"From: {email}", f"Subject: {subject or '(none)'}", "", body],
     )
