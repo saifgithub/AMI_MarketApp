@@ -198,4 +198,4 @@ touch it; don't be surprised to see it named in guard output.
 ---
 
 ASSIGNED: coder.room round 1
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 3)
