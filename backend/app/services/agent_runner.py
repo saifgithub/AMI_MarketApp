@@ -20,6 +20,7 @@ Concierge.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator
 from typing import Any
 from uuid import UUID, uuid4
@@ -184,7 +185,7 @@ class AgentRunner:
                         if tickers:
                             break
             for t in tickers:
-                block = build_live_data_block(t)
+                block = await asyncio.to_thread(build_live_data_block, t)
                 if block:
                     system_prompt = system_prompt + "\n\n" + block
 
@@ -195,7 +196,7 @@ class AgentRunner:
             # overlay_generator.py — the ticker is already extracted above.
             if agent_id == AgentId.NEWS_ANALYST:
                 for t in tickers:
-                    news_block = build_news_context_block(t)
+                    news_block = await asyncio.to_thread(build_news_context_block, t)
                     if news_block:
                         system_prompt = system_prompt + "\n\n" + news_block
 
@@ -203,7 +204,7 @@ class AgentRunner:
             # AT:R57-continued). Same News-only-style gating as above.
             if agent_id == AgentId.SOCIAL_MEDIA_ANALYST:
                 for t in tickers:
-                    social_block = build_social_context_block(t)
+                    social_block = await asyncio.to_thread(build_social_context_block, t)
                     if social_block:
                         system_prompt = system_prompt + "\n\n" + social_block
 
@@ -211,7 +212,7 @@ class AgentRunner:
             # News/Social-only-style gating as above.
             if agent_id == AgentId.MARKET_ANALYST:
                 for t in tickers:
-                    technicals_block = build_technicals_context_block(t)
+                    technicals_block = await asyncio.to_thread(build_technicals_context_block, t)
                     if technicals_block:
                         system_prompt = system_prompt + "\n\n" + technicals_block
 

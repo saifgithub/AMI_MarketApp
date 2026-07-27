@@ -1816,6 +1816,9 @@ class RoomRunner:
             _build_room_sector_context(user_id)
         )
 
+        profile = await asyncio.to_thread(
+            _profile_for_ticker, ticker, news_feed=news_feed, social_feed=social_feed
+        )
         ctx = _RoomContext(
             ticker=ticker.upper(),
             mandate=mandate,
@@ -1830,9 +1833,7 @@ class RoomRunner:
             sector_holdings=sector_holdings,
             sector_marks=sector_marks,
             sector_weights=sector_weights,
-            profile=_profile_for_ticker(
-                ticker, news_feed=news_feed, social_feed=social_feed
-            ),
+            profile=profile,
         )
 
         profile = ctx.profile
