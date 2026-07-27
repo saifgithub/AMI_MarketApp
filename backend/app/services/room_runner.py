@@ -58,6 +58,7 @@ from app.services.journal_store import get_journal_store
 from app.services.market_data import get_market_data_provider
 from app.services.sharia_universe import default_halal_universe_async  # CR069 (import for the :1293 rewire)
 from app.services.classification_universe import default_classification_universe_async  # DEF061
+from app.services.sector_allocation import allocate_by_sector, default_sector_map  # CR026
 from app.services.news_context import fetch_live_news, format_headline
 from app.services.technicals import compute_technicals
 from app.services.social_context import (
@@ -262,6 +263,14 @@ class _RoomContext:
     # CR055: the always-present portfolio-of-record block (sim holdings + optional
     # Alpaca overlay), built once per run and injected into every agent's prompt.
     portfolio_snapshot: str | None = None
+    # CR026: the sector-concentration inputs, built once per run. `sector_map` is the
+    # snapshot-backed resolver (no request socket); `sector_holdings`/`sector_marks`
+    # feed the deterministic cap check the PM verdict is vetoed against; `sector_weights`
+    # is the computed donut injected into the PM prompt context.
+    sector_map: object | None = None
+    sector_holdings: list = field(default_factory=list)
+    sector_marks: dict[str, float] = field(default_factory=dict)
+    sector_weights: dict[str, float] = field(default_factory=dict)
     # Populated as phases progress
     bull_thesis: str = ""
     bear_risk: str = ""
@@ -549,6 +558,27 @@ def _build_sim_holdings_block(user_id: UUID | None, ticker: str) -> str:
             )
     lines.append("───")
     return "\n".join(lines)
+
+
+def _build_room_sector_context(
+    user_id: UUID | None,
+) -> tuple[list, dict[str, float], object | None, dict[str, float]]:
+    """The user's sim holdings + marks + snapshot-backed sector resolver + computed
+    sector weights (CR026), built once per run. Degrades to empties on any failure —
+    the sector cap simply doesn't fire (never blocks on an outage; an unclassified
+    sector is 'Other', never a block — the DEF059 guard). No request-path socket."""
+    if user_id is None:
+        return [], {}, None, {}
+    try:
+        sim = get_sim_engine()
+        holdings = list(sim.ensure_portfolio(user_id).holdings)
+        marks = sim.current_marks([h.ticker for h in holdings]) if holdings else {}
+        smap = default_sector_map()
+        weights = allocate_by_sector(holdings, marks, sector_of=smap.sector)
+        return holdings, marks, smap, weights
+    except Exception as exc:  # noqa: BLE001 — degrade, never sink the run
+        logger.warning("room_sector_context_failed", user_id=str(user_id), error=str(exc)[:200])
+        return [], {}, None, {}
 
 
 def _compose_portfolio_block(sim_block: str, alpaca_snap: str | None) -> str:
@@ -884,6 +914,10 @@ def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
         halal_universe=ctx.halal_universe,
         classification_universe=ctx.classification_universe,
         locale_allowed_universe=ctx.locale_allowed_universe,
+        # CR026: the scripted-path check bites the sector cap too.
+        holdings=ctx.sector_holdings,
+        quotes=ctx.sector_marks,
+        sector_map=ctx.sector_map,
     )
 
     if not result.passed:
@@ -1582,6 +1616,12 @@ class RoomRunner:
         sim_block = _build_sim_holdings_block(user_id, ticker)
         portfolio_snapshot = _compose_portfolio_block(sim_block, alpaca_snap)
 
+        # CR026: sector-concentration inputs (holdings + marks + resolver + weights),
+        # built once per run off the request path.
+        sector_holdings, sector_marks, sector_map, sector_weights = (
+            _build_room_sector_context(user_id)
+        )
+
         ctx = _RoomContext(
             ticker=ticker.upper(),
             mandate=mandate,
@@ -1592,6 +1632,10 @@ class RoomRunner:
             locale_allowed_universe=locale_allowed,
             user_id=user_id,
             portfolio_snapshot=portfolio_snapshot,
+            sector_map=sector_map,
+            sector_holdings=sector_holdings,
+            sector_marks=sector_marks,
+            sector_weights=sector_weights,
             profile=_profile_for_ticker(ticker),
         )
 
@@ -1816,6 +1860,10 @@ class RoomRunner:
                                     mandate=mandate, halal_universe=ctx.halal_universe,
                                     classification_universe=ctx.classification_universe,
                                     locale_allowed_universe=ctx.locale_allowed_universe,
+                                    # CR026: veto a PM APPROVE that breaches the sector cap.
+                                    holdings=ctx.sector_holdings,
+                                    quotes=ctx.sector_marks,
+                                    sector_map=ctx.sector_map,
                                 )
                             else:
                                 verdict = parsed  # PASS — nothing to check compliance on
@@ -2002,6 +2050,8 @@ async def _compute_agent_text(
             # rescope the "do not repeat" line so it sharpens the own-domain lens
             # instead of pointing at an empty transcript.
             parallel_phase=parallel_phase,
+            # CR026: the PM sees the real sector allocation it gatekeeps against.
+            sector_weights=ctx.sector_weights,
         )
         try:
             chunks = await asyncio.wait_for(
