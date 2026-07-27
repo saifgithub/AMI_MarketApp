@@ -4,6 +4,8 @@
 #   AWAITING_AUDIT : architect SUBMITTED round > auditor VERDICT round, or no auditor file yet
 #   AWAITING_FIXES : auditor's LATEST verdict keyword is AWAITING_FIXES (keyword wins, per protocol note)
 #   COMPLETE       : auditor's latest verdict keyword is COMPLETE and rounds have caught up
+#   BAD_ROUND      : VERDICT round > SUBMITTED round — impossible, so a round was mistyped  <-- loud
+# Only lines that EMIT a token count as state (see TOK below); a line quoting one is prose.
 # Usage:
 #   watcher.sh state                     print the derived state table once and exit
 #   watcher.sh auditor   [-i N] [-t N]   block until >=1 lane is AWAITING_AUDIT  (poll every N s, default 30)
@@ -18,8 +20,30 @@ set -u
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 CR_DIR=${HANDSHAKE_CR_DIR:-"$SCRIPT_DIR/cr"}
 
-last_round() {  # $1=file $2=extended-regex with round number as the only capture-ish digits
-  grep -Eo "$2" "$1" 2>/dev/null | tail -1 | grep -Eo '[0-9]+' | tail -1
+# A token is machine state only on a line that EMITS it. Markdown emphasis and headings are
+# formatting, so `**TOKEN:` and `## TOKEN:` still count; a backtick, a blockquote `>`, indentation,
+# or any preceding word means the line is TALKING ABOUT the token. Without this filter a lane file
+# that quotes the protocol sets its own state, and `tail -1` gives the last sentence the last word.
+TOK='^(#{1,6} )?\*{0,2}'
+
+emits() {  # $1=file $2=extended-regex for the token; echoes only the lines that emit it
+  [ -f "$1" ] || return 0
+  grep -E "${TOK}$2" "$1" 2>/dev/null
+}
+
+last_match() {  # $1=file $2=token-regex; echoes the token as written on the LAST line emitting it
+  # Strip the formatting prefix, then extract with `^` so only the occurrence that OPENS the line is
+  # read. Without that anchor a trailing comment on the same line — `GATE: independent  <!-- ... a
+  # chunk may carry GATE: none ... -->` — hands `tail -1` the value from the explanation.
+  emits "$1" "$2" | tail -1 | sed -e 's/^#\{1,6\} //' -e 's/^\*\{1,2\}//' | grep -Eo "^$2"
+}
+
+last_round() {  # $1=file $2=extended-regex; echoes the last round number or empty
+  last_match "$1" "$2" | grep -Eo '[0-9]+' | tail -1
+}
+
+last_kw() {  # $1=file $2=extended-regex; echoes the 2nd token of the match (the keyword)
+  last_match "$1" "$2" | awk '{print $2}'
 }
 
 undelivered() {  # $1=file; echoes "1" if the file is untracked or differs from HEAD, else ""
@@ -43,8 +67,13 @@ lane_state() {  # $1=item id; echoes "STATE sub vr keyword"
   # Same rule on the verdict side, so this table and the dispatch board cannot disagree about
   # whether a gate has been satisfied.
   if [ -n "$(undelivered "$u")" ]; then echo "UNCOMMITTED $sub - -"; return; fi
-  kw=$(grep -Eo 'VERDICT: *(COMPLETE|AWAITING_FIXES)' "$u" 2>/dev/null | tail -1 | awk '{print $2}')
+  kw=$(last_kw "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES)')
   vr=$(last_round "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES) *\(round *[0-9]+'); vr=${vr:-0}
+  # A verdict can only answer a submission that exists. vr > sub means a round was mistyped, and
+  # the strict test below then reads the lane as already-answered permanently: the builder fixes,
+  # bumps, resubmits, and the board still says AWAITING_FIXES. Nothing errors and nothing logs, so
+  # the lane just stops in a state that looks routine. Name the impossible combination instead.
+  if [ "$vr" -gt "$sub" ]; then echo "BAD_ROUND $sub $vr ${kw:--}"; return; fi
   if [ "$sub" -gt "$vr" ]; then echo "AWAITING_AUDIT $sub $vr ${kw:--}"; return; fi
   case "${kw:-}" in
     AWAITING_FIXES) echo "AWAITING_FIXES $sub $vr $kw" ;;

@@ -1912,6 +1912,13 @@ class RoomRunner:
             _build_room_sector_context(user_id)
         )
 
+        profile = await asyncio.to_thread(
+            _profile_for_ticker,
+            ticker,
+            news_feed=news_feed,
+            social_feed=social_feed,
+            withheld=frozenset(roster.withheld),
+        )
         ctx = _RoomContext(
             ticker=ticker.upper(),
             mandate=mandate,
@@ -1928,10 +1935,7 @@ class RoomRunner:
             sector_weights=sector_weights,
             withheld=roster.withheld,
             roster_next_step=roster.next_step,
-            profile=_profile_for_ticker(
-                ticker, news_feed=news_feed, social_feed=social_feed,
-                withheld=frozenset(roster.withheld),
-            ),
+            profile=profile,
         )
 
         profile = ctx.profile

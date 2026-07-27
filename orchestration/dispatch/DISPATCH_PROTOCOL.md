@@ -78,6 +78,17 @@ are read by `dispatch.sh` regex and by the Architect's trust-critical integratio
 byte-exact — a paraphrase silently breaks the state machine. Narrative prose around them is
 compressed (fragments, no filler); the tokens are not.
 
+**Only a line that EMITS a token carries state.** A lane file is prose and machine state in one
+document, and the watchers read the LAST emitting line — so a sentence about the protocol would
+otherwise BE the protocol. Both `dispatch.sh` and `watcher.sh` implement one rule, byte-identically:
+
+- **Emits** (parsed): the token opens the line. Markdown emphasis and headings are formatting, so
+  `STATUS: IN_PROGRESS (round 2)`, `**STATUS: …**` and `## STATUS: …` all count. Only the occurrence
+  that opens the line is read, so a trailing `<!-- … -->` on the same line cannot supply the value.
+- **Quotes** (ignored): anything else. A backtick, a blockquote `>`, indentation, or any preceding
+  word means the line is talking about the token. Write about tokens that way — it is the difference
+  between documenting a state and setting one.
+
 ## 4. State derivation (the core logic)
 
 STATE is derived per lane from the assign file, the instance file, and (for code) the audit lane's
@@ -95,6 +106,7 @@ appending).
 | `IN_AUDIT` | `READY_FOR_AUDIT` + audit `VERDICT` not COMPLETE/AWAITING_FIXES yet | Auditor |
 | `AUDIT_RETURNED` | audit `VERDICT: AWAITING_FIXES` | Instance — fix, bump round |
 | `AUDIT_PASSED` | audit `VERDICT: COMPLETE` + `DISPATCH` not ACCEPTED | **Architect** — integrate |
+| `BAD_ROUND` | audit `VERDICT round` > audit-lane `SUBMITTED round` | **Architect** — a mistyped stamp; nobody's turn until its writer repairs it |
 | `DONE` | `DISPATCH: ACCEPTED` **and** the lane's `GATE` is satisfied (§4a) | — |
 | `UNGATED` | `DISPATCH: ACCEPTED` but the gate is **not** satisfied | **Architect** — gate it or record why |
 
@@ -135,13 +147,20 @@ before it — a chunk sized as trivial that comes back touching a `HOT-FILES` en
 its own.
 
 `dispatch.sh` modes: `state` (print the board once); `inbox` (one-shot, **non-blocking**: list only
-lanes where the auditor has FINISHED and the Architect owes integration — `AUDIT_PASSED`/`UNCOMMITTED`
-— exit 1 if any, 0 if clear; the multi-lane Architect's per-work-unit trigger, since a blocking
-watcher would freeze its other lanes); `architect [-i N]` (block until a lane needs the Architect —
-`UNASSIGNED`/`BLOCKED`/`NEEDS-INFO`/`IN_REVIEW`/`AUDIT_PASSED`/`UNGATED`); `inst <id> [-i N]`
-(block until a lane is `ASSIGNED` to `<id>` or `AUDIT_RETURNED` on its lane). HOW a role notices its
-turn is its own choice — the state is always re-derivable from files, so nothing is lost while a
-role is busy elsewhere.
+lanes where the auditor has FINISHED and the ball is the Architect's —
+`AUDIT_PASSED`/`UNCOMMITTED`/`BAD_ROUND` — exit 1 if any, 0 if clear; the multi-lane Architect's
+per-work-unit trigger, since a blocking watcher would freeze its other lanes); `verdict <ITEM>`
+(print one lane's verdict, **refusing** if it is not yet delivered); `architect [-i N]` (block until
+a lane needs the Architect — `UNASSIGNED`/`BLOCKED`/`NEEDS-INFO`/`IN_REVIEW`/`AUDIT_PASSED`/`UNGATED`);
+`inst <id> [-i N]` (block until a lane is `ASSIGNED` to `<id>` or `AUDIT_RETURNED` on its lane). HOW
+a role notices its turn is its own choice — the state is always re-derivable from files, so nothing
+is lost while a role is busy elsewhere.
+
+**Quote a verdict through `verdict <ITEM>`, not by reading `<ITEM>.auditor.md`.** An auditor lane in
+the working tree may be mid-write: the round number and the findings can both still change, and the
+board says `UNCOMMITTED` while that is true. Reading the file directly is how an unfinished verdict
+becomes a dispatched instruction. The accessor cannot stop anyone opening the file — it makes the
+checked read the easy one, and it is the only read that can say no.
 
 ## 5. Bidirectional clarification round-trip
 

@@ -11,6 +11,7 @@
 #   IN_AUDIT       : READY_FOR_AUDIT + audit VERDICT not yet returned
 #   AUDIT_RETURNED : audit VERDICT = AWAITING_FIXES
 #   AUDIT_PASSED   : audit VERDICT = COMPLETE, DISPATCH not yet ACCEPTED
+#   BAD_ROUND      : VERDICT round > audit-lane SUBMITTED round — a mistyped stamp  <-- loud
 #   DONE           : DISPATCH = ACCEPTED *and* the lane's GATE is satisfied
 #   UNGATED        : DISPATCH = ACCEPTED but the gate is NOT satisfied  <-- loud
 #
@@ -24,13 +25,15 @@
 # Usage:
 #   dispatch.sh state              print the derived board once and exit
 #   dispatch.sh inbox              one-shot, non-blocking: lanes the auditor FINISHED and the
-#                                    Architect has not integrated (AUDIT_PASSED, UNCOMMITTED).
-#                                    Exit 1 if any. Run at session start + after each work unit.
+#                                    Architect has not resolved (AUDIT_PASSED, UNCOMMITTED,
+#                                    BAD_ROUND). Exit 1 if any. Run at session start + each work unit.
+#   dispatch.sh verdict <ITEM>     print a lane's verdict, refusing if it is not yet delivered
 #   dispatch.sh architect [-i N]   block until >=1 lane needs the Architect
 #                                    (UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|AUDIT_PASSED)
 #   dispatch.sh inst <id> [-i N]   block until >=1 lane is ASSIGNED to <id> or AUDIT_RETURNED on it
 # Env: DISPATCH_LANE_DIR overrides the lane dir (default <script dir>/lanes).
 #      DISPATCH_AUDIT_DIR overrides the audit lane dir (default <script dir>/../audit/cr).
+# Only lines that EMIT a token count as state (see TOK below); a line quoting one is prose.
 # Portable POSIX sh, no dependencies. Sibling of orchestration/audit/watcher.sh.
 
 set -u
@@ -38,14 +41,31 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 LANE_DIR=${DISPATCH_LANE_DIR:-"$SCRIPT_DIR/lanes"}
 AUDIT_DIR=${DISPATCH_AUDIT_DIR:-"$SCRIPT_DIR/../audit/cr"}
 
-last_round() {  # $1=file $2=extended-regex; echoes the last round number or empty
-  [ -f "$1" ] || { echo ""; return; }
-  grep -Eo "$2" "$1" 2>/dev/null | tail -1 | grep -Eo '[0-9]+' | tail -1
+# A token is machine state only on a line that EMITS it. Markdown emphasis and headings are
+# formatting, so `**TOKEN:` and `## TOKEN:` still count; a backtick, a blockquote `>`, indentation,
+# or any preceding word means the line is TALKING ABOUT the token. Without this filter a lane file
+# that quotes the protocol sets its own state, and `tail -1` gives the last sentence the last word.
+# Both watchers share this rule verbatim so the two boards cannot disagree about what a line means.
+TOK='^(#{1,6} )?\*{0,2}'
+
+emits() {  # $1=file $2=extended-regex for the token; echoes only the lines that emit it
+  [ -f "$1" ] || return 0
+  grep -E "${TOK}$2" "$1" 2>/dev/null
 }
 
-last_kw() {  # $1=file $2=extended-regex; echoes the 2nd token of the last match (the keyword)
-  [ -f "$1" ] || { echo ""; return; }
-  grep -Eo "$2" "$1" 2>/dev/null | tail -1 | awk '{print $2}'
+last_match() {  # $1=file $2=token-regex; echoes the token as written on the LAST line emitting it
+  # Strip the formatting prefix, then extract with `^` so only the occurrence that OPENS the line is
+  # read. Without that anchor a trailing comment on the same line — `GATE: independent  <!-- ... a
+  # chunk may carry GATE: none ... -->` — hands `tail -1` the value from the explanation.
+  emits "$1" "$2" | tail -1 | sed -e 's/^#\{1,6\} //' -e 's/^\*\{1,2\}//' | grep -Eo "^$2"
+}
+
+last_round() {  # $1=file $2=extended-regex; echoes the last round number or empty
+  last_match "$1" "$2" | grep -Eo '[0-9]+' | tail -1
+}
+
+last_kw() {  # $1=file $2=extended-regex; echoes the 2nd token of the match (the keyword)
+  last_match "$1" "$2" | awk '{print $2}'
 }
 
 undelivered() {  # $1=file; echoes "1" if the file is untracked or differs from HEAD, else ""
@@ -62,33 +82,34 @@ undelivered() {  # $1=file; echoes "1" if the file is untracked or differs from 
 }
 
 lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
-  # Dispatch tokens (ASSIGNED/DISPATCH/STATUS) MUST be at line start — anchored so a token
-  # mentioned in prose/backticks is never parsed as a live signal. (VERDICT is read unanchored to
-  # mirror orchestration/audit/watcher.sh, whose files carry a `## VERDICT:` heading + a trailer.)
   a="$LANE_DIR/$1.assign.md"
-  asg_line=$(grep -Eo '^ASSIGNED: *[A-Za-z0-9._-]+ *round *[0-9]+' "$a" 2>/dev/null | tail -1)
+  asg_line=$(last_match "$a" 'ASSIGNED: *[A-Za-z0-9._-]+ *round *[0-9]+')
   # Read GATE before the UNASSIGNED return. A lane written at decomposition and not yet assigned is
   # exactly what the record-upfront rule produces; if the board skipped its gate it would print a
   # bare `-` whether GATE was recorded or forgotten. The rule says decide upfront, so the board has
   # to be able to show you did.
-  gate_kw=$(last_kw "$a" '^GATE: *(independent|spawned|none)')
+  gate_kw=$(last_kw "$a" 'GATE: *(independent|spawned|none)')
 
   if [ -z "$asg_line" ]; then echo "UNASSIGNED - - - - ${gate_kw:-MISSING}"; return; fi
   inst=$(echo "$asg_line" | awk '{print $2}')
   asg_round=$(echo "$asg_line" | grep -Eo '[0-9]+' | tail -1); asg_round=${asg_round:-0}
 
   u="$AUDIT_DIR/$1.auditor.md"
+  s="$AUDIT_DIR/$1.architect.md"
+  # The round a verdict answers is the SUBMITTED round in the audit lane beside it, not the instance
+  # lane's STATUS round. They are separate counters kept by separate writers and the corpus shows
+  # them drifting apart; comparing across the pair makes this board and watcher.sh disagree about
+  # whose turn it is, which is the disagreement the round comparison was added to end.
+  sub_round=$(last_round "$s" 'SUBMITTED: *round *[0-9]+')
+  # Read the verdict's ROUND, not just its keyword: a verdict only answers the submission at its own
+  # round, so once a newer submission lands the old keyword is history.
   v_kw=$(last_kw "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES)')
-  # Read the verdict's ROUND, not just its keyword. Submissions and verdicts share one counter and a
-  # verdict only answers the submission at its own round, so once a newer submission lands the old
-  # keyword is history — reading the keyword alone makes a resubmitted lane keep reporting a verdict
-  # it has already addressed.
   v_round=$(last_round "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES) *\(round *[0-9]+'); v_round=${v_round:-0}
   # A verdict nobody committed has not been delivered, so it cannot satisfy a gate. Render it as
   # its own loud state rather than letting it read as a pass — the same reason UNGATED exists.
   if [ -n "$v_kw" ] && [ -n "$(undelivered "$u")" ]; then v_kw="UNCOMMITTED"; fi
 
-  disp_kw=$(last_kw "$a" '^DISPATCH: *(OPEN|ACCEPTED)')
+  disp_kw=$(last_kw "$a" 'DISPATCH: *(OPEN|ACCEPTED)')
   if [ "$disp_kw" = "ACCEPTED" ]; then
     case "${gate_kw:-}" in
       none)                echo "DONE $inst $asg_round - ${v_kw:--} none" ;;
@@ -101,8 +122,8 @@ lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
   fi
 
   i="$LANE_DIR/$1.$inst.md"
-  st_kw=$(last_kw "$i" '^STATUS: *(CLAIMED|IN_PROGRESS|BLOCKED|NEEDS-INFO|READY_FOR_AUDIT|READY_FOR_REVIEW)')
-  st_round=$(last_round "$i" '^STATUS: *(CLAIMED|IN_PROGRESS|BLOCKED|NEEDS-INFO|READY_FOR_AUDIT|READY_FOR_REVIEW) *\(round *[0-9]+'); st_round=${st_round:-0}
+  st_kw=$(last_kw "$i" 'STATUS: *(CLAIMED|IN_PROGRESS|BLOCKED|NEEDS-INFO|READY_FOR_AUDIT|READY_FOR_REVIEW)')
+  st_round=$(last_round "$i" 'STATUS: *(CLAIMED|IN_PROGRESS|BLOCKED|NEEDS-INFO|READY_FOR_AUDIT|READY_FOR_REVIEW) *\(round *[0-9]+'); st_round=${st_round:-0}
 
   g=${gate_kw:-MISSING}
 
@@ -116,8 +137,16 @@ lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
     NEEDS-INFO)          echo "NEEDS-INFO $inst $asg_round $st_kw - $g" ;;
     READY_FOR_REVIEW)    echo "IN_REVIEW $inst $asg_round $st_kw - $g" ;;
     READY_FOR_AUDIT)
+      # No bridge file yet means no submission to compare against; fall back to the instance counter
+      # rather than inventing a round the audit lane never recorded.
+      sr=${sub_round:-$st_round}
+      # A verdict can only answer a submission that exists. A verdict round ahead of the submission
+      # round is a mistyped stamp, and the strict test below then reads the lane as already-answered
+      # permanently: the builder fixes, bumps, resubmits, and the board still says AUDIT_RETURNED.
+      # Nothing errors and nothing logs, so the lane just stops in a state that looks routine.
+      if [ "$v_round" -gt "$sr" ]; then echo "BAD_ROUND $inst $asg_round $st_kw ${v_kw:--} $g"; return; fi
       # A submission newer than the last verdict is unanswered, whatever that verdict said.
-      if [ "$st_round" -gt "$v_round" ]; then echo "IN_AUDIT $inst $asg_round $st_kw - $g"; return; fi
+      if [ "$sr" -gt "$v_round" ]; then echo "IN_AUDIT $inst $asg_round $st_kw - $g"; return; fi
       case "${v_kw:-}" in
         AWAITING_FIXES) echo "AUDIT_RETURNED $inst $asg_round $st_kw $v_kw $g" ;;
         COMPLETE)       echo "AUDIT_PASSED $inst $asg_round $st_kw $v_kw $g" ;;
@@ -155,7 +184,7 @@ print_state() {
 # protocol breach the Architect must resolve — either route it to an auditor or record GATE: none.
 needs_architect() {
   case "$1" in
-    UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|AUDIT_PASSED|UNGATED|UNCOMMITTED) return 0 ;;
+    UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|AUDIT_PASSED|UNGATED|UNCOMMITTED|BAD_ROUND) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -182,15 +211,16 @@ count_inst() {  # uses $TARGET_INST; counts lanes ASSIGNED to it or AUDIT_RETURN
 }
 
 print_inbox() {
-  # Exit 1 on AUDIT_PASSED (merge it) or UNCOMMITTED (verdict unpushed — chase, then merge), so a
-  # caller can gate "take new work" on a clean inbox. Other Architect-owed states go on one trailer
-  # line and DO NOT affect the exit code: a chronic backlog would otherwise keep this permanently
-  # red and desensitise it to the one event it exists to catch — a fresh auditor COMPLETE.
+  # Exit 1 on AUDIT_PASSED (merge it), UNCOMMITTED (verdict unpushed — chase, then merge) or
+  # BAD_ROUND (a stamp nobody can act on — repair it), so a caller can gate "take new work" on a
+  # clean inbox. Other Architect-owed states go on one trailer line and DO NOT affect the exit code:
+  # a chronic backlog would otherwise keep this permanently red and desensitise it to the one event
+  # it exists to catch — a fresh auditor COMPLETE.
   hot=0; other=0; hot_rows=""
   for it in $(items); do
     set -- $(lane_state "$it")
     case "$1" in
-      AUDIT_PASSED|UNCOMMITTED)
+      AUDIT_PASSED|UNCOMMITTED|BAD_ROUND)
         hot=$((hot+1))
         row=$(printf '  %-14s %-13s %-16s verdict=%s' "$it" "$1" "$2" "$5")
         hot_rows="${hot_rows}${row}
@@ -200,7 +230,7 @@ print_inbox() {
     esac
   done
   if [ "$hot" -gt 0 ]; then
-    echo "AUDITOR DONE — integrate before taking new work ($hot):"
+    echo "AUDITOR DONE — resolve before taking new work ($hot):"
     printf '%s' "$hot_rows"
   else
     echo "inbox clear — no auditor verdict awaiting integration."
@@ -210,11 +240,35 @@ print_inbox() {
   return 0
 }
 
+print_verdict() {  # $1=item; print the verdict ONLY once it has been delivered
+  # An .auditor.md in the working tree may be mid-write: the auditor is still reasoning, and the
+  # round number and the findings can both still change. Reading it directly and acting on what it
+  # says is how an undelivered verdict becomes a dispatched instruction. This is the accessor that
+  # can say no. It does not stop anyone opening the file — it makes the checked read the easy one,
+  # and the board state it prints is the same one every other mode derives.
+  u="$AUDIT_DIR/$1.auditor.md"
+  [ -f "$u" ] || { echo "no verdict file for $1 ($u)" >&2; return 1; }
+  if [ -n "$(undelivered "$u")" ]; then
+    echo "UNDELIVERED — $1's verdict exists only in this working tree. Do not quote it, dispatch on" >&2
+    echo "it, or merge on it: it is still being written. Chase the auditor to commit and push." >&2
+    return 1
+  fi
+  kw=$(last_kw "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES)')
+  [ -n "$kw" ] || { echo "no VERDICT line in $u" >&2; return 1; }
+  vr=$(last_round "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES) *\(round *[0-9]+')
+  echo "$1  VERDICT: $kw (round ${vr:-?})  [delivered]"
+  return 0
+}
+
 MODE=${1:-state}; shift 2>/dev/null || true
 
 case "$MODE" in
   state) print_state; exit 0 ;;
   inbox) print_inbox; exit $? ;;
+  verdict)
+    ITEM=${1:-}
+    [ -z "$ITEM" ] && { echo "usage: dispatch.sh verdict <ITEM>" >&2; exit 2; }
+    print_verdict "$ITEM"; exit $? ;;
   architect)
     INTERVAL=30; [ "${1:-}" = "-i" ] && INTERVAL=${2:-30}
     echo "watching $LANE_DIR for Architect-actionable lanes (poll ${INTERVAL}s, ctrl-c to stop)..."
@@ -233,5 +287,5 @@ case "$MODE" in
       if [ "$c" -gt 0 ]; then echo "$(date '+%H:%M:%S') $c lane(s) for $TARGET_INST:"; print_state; exit 0; fi
       sleep "$INTERVAL"
     done ;;
-  *) echo "usage: dispatch.sh state | inbox | architect [-i N] | inst <instance-id> [-i N]" >&2; exit 2 ;;
+  *) echo "usage: dispatch.sh state | inbox | verdict <ITEM> | architect [-i N] | inst <id> [-i N]" >&2; exit 2 ;;
 esac

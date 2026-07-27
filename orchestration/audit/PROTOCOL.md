@@ -46,6 +46,26 @@ Per item, two files under `<AUDIT_LANE_DIR>/` (one directory holds CR and DEF la
   that round line is the AWAITING_AUDIT signal.
 - `<ITEM>.auditor.md` (auditor owns): per-finding verdict + a
   `VERDICT: COMPLETE | AWAITING_FIXES (round N)` line, plus the run-report path under `<AUDIT_ROOT>/runs/`.
+  **`N` is the round you AUDITED, never the round you are asking for.** Auditing `SUBMITTED: round 1`
+  yields `VERDICT: … (round 1)` even when the verdict is `AWAITING_FIXES` and more work follows —
+  the architect then bumps to `SUBMITTED: round 2`. Stamping the *requested* round instead makes
+  `SUBMITTED == VERDICT`, and since both watchers gate on strict `>`, the lane **deadlocks**: the
+  board reads `AUDIT_RETURNED` forever and the auditor never sees a new turn. The instruction alone
+  does not hold that — `BAD_ROUND` below is the check that makes the mistake visible when it is made.
+
+### Only a line that EMITS a token carries state
+
+Both watchers read the LAST line that emits a token, and a lane file is prose and machine state in
+one document — so a sentence about the protocol will otherwise BE the protocol. The rule both tools
+implement, byte-identically:
+
+- **Emits** (parsed): the token opens the line. Markdown emphasis and headings are formatting, so
+  `SUBMITTED: round 2`, `**VERDICT: COMPLETE (round 2)**` and `## VERDICT: COMPLETE (round 2)` all
+  count. Only the occurrence that opens the line is read, so a trailing comment on the same line
+  cannot supply the value.
+- **Quotes** (ignored): anything else. A backtick, a blockquote `>`, indentation, or any preceding
+  word means the line is talking about the token. Quote tokens that way when you write about them —
+  it is the difference between documenting a round and setting one.
 
 STATE is DERIVED from the two files (no shared flag, no merge conflict on concurrent commits). The
 trigger for either role is purely the round numbers on any `*.architect.md` lane (CR or DEF):
@@ -54,6 +74,11 @@ trigger for either role is purely the round numbers on any `*.architect.md` lane
   file yet.
 - AWAITING_FIXES (architect's turn): the auditor's latest verdict is `AWAITING_FIXES`.
 - COMPLETE: the auditor's latest verdict is `COMPLETE`.
+- BAD_ROUND (loud, nobody's turn until repaired): `VERDICT round` > `SUBMITTED round`. A verdict can
+  only answer a submission that exists, so this combination is a mistyped stamp rather than a state.
+  It is caught at the moment the verdict lands — once the builder resubmits and the counters
+  coincide, no tool can still tell a mis-stamp from a legitimate answer, so the file's own writer
+  must fix the number rather than working around it downstream.
 
 The architect works any item NOT AWAITING_AUDIT (building new, fixing bounced), in isolated worktrees or
 serialized when source overlaps; the auditor only ever sees COMMITTED SHAs, never a half-built tree. The
