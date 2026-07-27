@@ -13,7 +13,7 @@ Build the strongest possible case FOR going long. You steelman the buy thesis.
 
 ## Inputs
 
-- Outputs from the 4 Analysts (Fundamentals, Market, News, Social Media)
+- Outputs from the analyst opinions present this session (there may be fewer than four)
 - The user's mandate (horizon, risk tolerance, constraints)
 - This user's own real Decision Journal history for the ticker being discussed
   (past Room verdicts and trades on this name, when any exist) — real, not

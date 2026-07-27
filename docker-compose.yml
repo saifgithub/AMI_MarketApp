@@ -125,6 +125,10 @@ services:
       # Room dedup windows — defaults match config.py; override in .env.
       ROOM_DEDUP_RUNNING_MINUTES: ${ROOM_DEDUP_RUNNING_MINUTES:-30}
       ROOM_DEDUP_COMPLETED_HOURS: ${ROOM_DEDUP_COMPLETED_HOURS:-24}
+      # CR098 tenure-drip pull-back — 0 = never withheld, ships as a no-op.
+      ROOM_PULLBACK_DAYS_SOCIAL: ${ROOM_PULLBACK_DAYS_SOCIAL:-0}
+      ROOM_PULLBACK_DAYS_NEWS: ${ROOM_PULLBACK_DAYS_NEWS:-0}
+      ROOM_PULLBACK_DAYS_MARKET: ${ROOM_PULLBACK_DAYS_MARKET:-0}
       # GTM funnel selector (CR047): none (legacy CR039 hard wall) | winzip
       # ("The Winzip" soft wall + cooldown reset). Set GTM_FUNNEL=winzip in
       # infra/alpha.env to arm it on Alpha. Unknown value fails boot by design.

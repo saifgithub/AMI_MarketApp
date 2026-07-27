@@ -15,6 +15,11 @@ class VerdictAction(str, Enum):
     REJECT = "REJECT"
     MODIFY = "MODIFY"
     PASS = "PASS"  # Research Manager: nothing fits mandate today
+    # CR098 Amendment 2 — Market analyst withheld (tenure pull-back): the PM
+    # declines to issue any position because the run had no market read.
+    # Built in code (room_runner._assemble_no_verdict), never LLM-parsed —
+    # see the NO_VERDICT construction site for why.
+    NO_VERDICT = "NO_VERDICT"
 
 
 class RoomStatus(str, Enum):
@@ -39,6 +44,11 @@ class Verdict(BaseModel):
     reason: str
     violations: list[str] = Field(default_factory=list)
     overridden_from_llm: bool = False
+    # CR098 — analysts withheld this run (tenure pull-back), by AgentId value
+    # e.g. "social_media_analyst". Populated deterministically from
+    # `ctx.withheld` in code (never LLM-derived, per CR038) so the client's
+    # closing disclosure is always accurate even when the model says nothing.
+    opinions_not_included: list[str] = Field(default_factory=list)
 
 
 class RoomRun(BaseModel):

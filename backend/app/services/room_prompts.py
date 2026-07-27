@@ -362,6 +362,17 @@ def _format_profile(profile: dict[str, Any]) -> str:
     # live/not-live reading, unchanged.
     news_withheld = profile.get("news_state") == "withheld_paid"
     social_withheld = profile.get("social_state") == "withheld_paid"
+    # CR098 round-2 fix (MINOR 3) — a roster-withheld domain's header line must
+    # not describe fields the fact-sheet body has already stripped (see
+    # market_withheld/news_withheld_tenure/social_withheld_tenure below). The
+    # header used to unconditionally claim "alpha simulation scaffolding — NOT
+    # computed from real price history" immediately above the body's "not
+    # included in this session" — contradictory prompt copy CR038 found
+    # degrades compliance. Computed here (ahead of their first use further
+    # down) so the header can skip the withheld domain's line entirely.
+    market_withheld = profile.get("technicals_state") == "withheld_tenure"
+    news_withheld_tenure = profile.get("news_state") == "withheld_tenure"
+    social_withheld_tenure = profile.get("social_state") == "withheld_tenure"
 
     header_lines = ["Data source disclosure — some fields below are real, some are not:"]
     if fundamentals_live:
@@ -374,7 +385,9 @@ def _format_profile(profile: dict[str, Any]) -> str:
             "- Numeric fundamentals (price, P/E, growth, FCF, range): alpha "
             "simulation scaffolding — NOT live market data."
         )
-    if technicals_live:
+    if market_withheld:
+        pass  # stripped below; no scaffolding line to contradict it with
+    elif technicals_live:
         header_lines.append(
             "- RSI, trend, volume, support/breakout: LIVE, computed from "
             "real yfinance price history as of this call. No MACD, "
@@ -386,7 +399,9 @@ def _format_profile(profile: dict[str, Any]) -> str:
             "- RSI, trend, volume, support/breakout: alpha simulation "
             "scaffolding — NOT computed from real price history."
         )
-    if news_live:
+    if news_withheld_tenure:
+        pass  # stripped below; no scaffolding line to contradict it with
+    elif news_live:
         header_lines.append(
             "- Recent catalyst/headline: LIVE, real news as of this call "
             "(publisher + recency shown below). Some headlines may carry a "
@@ -406,7 +421,9 @@ def _format_profile(profile: dict[str, Any]) -> str:
             "- Recent catalyst/headline: alpha simulation scaffolding — NOT "
             "a live news feed."
         )
-    if social_live:
+    if social_withheld_tenure:
+        pass  # stripped below; no scaffolding line to contradict it with
+    elif social_live:
         header_lines.append(
             "- Retail sentiment/mention/community fields: LIVE, real Reddit "
             "aggregate data as of this call (Reddit only — no Twitter/X, "
@@ -432,6 +449,16 @@ def _format_profile(profile: dict[str, Any]) -> str:
     )
     header = "\n".join(header_lines)
 
+    # CR098 Amendment 1 — a roster-withheld domain's fact-sheet lines are
+    # OMITTED, not rendered with synthetic numbers under a disclosure header.
+    # Skipping only the fetch (as CR090's WITHHELD_PAID already does) leaves
+    # the rng-seeded scaffolding on screen — no FOMO, no decode saving, and a
+    # CR040 violation. Each stripped block is replaced by one declared line
+    # (never a synthetic stand-in — acceptance #6 asserts on the exact string).
+    # market_withheld/news_withheld_tenure/social_withheld_tenure are computed
+    # above, ahead of the header, so the header can skip the withheld domain's
+    # scaffolding line too (MINOR 3).
+
     lines = [
         header,
         "",
@@ -439,19 +466,40 @@ def _format_profile(profile: dict[str, Any]) -> str:
         f"P/E: {profile.get('pe')}",
         f"TTM revenue growth: {profile.get('rev_growth')}%, profit margin: {profile.get('profit_margin')}%",
         _net_position_line(profile),
-        f"RSI: {profile.get('rsi')} ({profile.get('rsi_tone')}), trend: {profile.get('trend')}",
+    ]
+    if market_withheld:
+        lines.append(
+            "Market technicals: not included in this session."
+        )
+    else:
+        lines.append(
+            f"RSI: {profile.get('rsi')} ({profile.get('rsi_tone')}), trend: {profile.get('trend')}"
+        )
         # DEF074: the recent-range floor is the computed technical support
         # (profile['support'], the 50-day min that compute_technicals produced and
         # the 1-on-1 path already shows) — NOT the 52-week low, which was being
         # rendered here while `support` was computed and silently dropped. The
         # 52-week range stays as explicit context.
-        f"Recent range: ${profile.get('support')}–${profile.get('breakout')} "
-        f"(52-week: ${profile.get('low')}–${profile.get('high')})",
-        f"Volume: {profile.get('volume_tone')}",
-        _catalyst_line(profile),
-        f"Retail sentiment: {profile.get('sentiment_tone')} ({profile.get('sentiment_score')})",
-    ]
-    lines += _social_detail_lines(profile)
+        lines.append(
+            f"Recent range: ${profile.get('support')}–${profile.get('breakout')} "
+            f"(52-week: ${profile.get('low')}–${profile.get('high')})"
+        )
+        lines.append(f"Volume: {profile.get('volume_tone')}")
+    if news_withheld_tenure:
+        lines.append(
+            "Recent catalyst/headline: not included in this session."
+        )
+    else:
+        lines.append(_catalyst_line(profile))
+    if social_withheld_tenure:
+        lines.append(
+            "Retail sentiment: not included in this session."
+        )
+    else:
+        lines.append(
+            f"Retail sentiment: {profile.get('sentiment_tone')} ({profile.get('sentiment_score')})"
+        )
+        lines += _social_detail_lines(profile)
     for extra in (_valuation_line(profile), _sector_line(profile),
                   _capital_allocation_line(profile), _analyst_line(profile)):
         if extra:

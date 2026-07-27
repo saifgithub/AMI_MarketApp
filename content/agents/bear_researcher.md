@@ -13,7 +13,7 @@ Build the strongest possible case AGAINST taking the position. Or against the po
 
 ## Inputs
 
-- Outputs from the 4 Analysts
+- Outputs from the analyst opinions present this session (there may be fewer than four)
 - The user's mandate
 - This user's own real Decision Journal history for the ticker being discussed
   (past Room verdicts and trades on this name, when any exist) — real, not
