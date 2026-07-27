@@ -885,6 +885,10 @@ def test_format_profile_includes_valuation_line_when_live():
     block = _format_profile({
         "data_source": "synthetic", "price_to_sales": "10.3",
         "ev_to_ebitda": "29.1", "peg_ratio": "2.55", "fcf_yield": 2.2,
+        "field_state": {
+            "price_to_sales": "live", "ev_to_ebitda": "live",
+            "peg_ratio": "live", "fcf_yield": "live",
+        },
     })
     assert "Valuation (LIVE): P/S 10.3x, EV/EBITDA 29.1x, PEG 2.55, FCF yield 2.2%" in block
 
@@ -896,11 +900,26 @@ def test_format_profile_omits_valuation_line_when_absent():
     assert "Valuation (LIVE)" not in block
 
 
+def test_format_profile_omits_valuation_line_when_present_but_not_live():
+    """CR104-ROOM round 2 MAJOR 2: presence alone must never earn the
+    (LIVE) label — field_state={} (no provenance recorded for anything)
+    must not render a LIVE-labelled valuation line."""
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "price_to_sales": "10.3",
+        "ev_to_ebitda": "29.1", "peg_ratio": "2.55", "fcf_yield": 2.2,
+        "field_state": {},
+    })
+    assert "Valuation (LIVE)" not in block
+
+
 def test_format_profile_includes_sector_line_when_live():
     from app.services.room_prompts import _format_profile
 
     block = _format_profile({
         "data_source": "synthetic", "sector": "Technology", "industry": "Consumer Electronics",
+        "field_state": {"sector": "live"},
     })
     assert "Sector/industry (LIVE): Technology / Consumer Electronics" in block
 
@@ -912,12 +931,34 @@ def test_format_profile_omits_sector_line_when_absent():
     assert "Sector/industry (LIVE)" not in block
 
 
+def test_format_profile_omits_sector_line_when_present_but_not_live():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "sector": "Technology", "industry": "Consumer Electronics",
+        "field_state": {},
+    })
+    assert "Sector/industry (LIVE)" not in block
+
+
 def test_format_profile_includes_dividend_line_and_disclaims_buybacks():
     from app.services.room_prompts import _format_profile
 
-    block = _format_profile({"data_source": "synthetic", "dividend_yield": 0.34})
+    block = _format_profile({
+        "data_source": "synthetic", "dividend_yield": 0.34,
+        "field_state": {"dividend_yield": "live"},
+    })
     assert "Dividend yield (LIVE): 0.34%" in block
     assert "buybacks/M&A: not available" in block
+
+
+def test_format_profile_omits_dividend_line_when_present_but_not_live():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "dividend_yield": 0.34, "field_state": {},
+    })
+    assert "Dividend yield (LIVE)" not in block
 
 
 def test_format_profile_includes_analyst_line_labeled_not_guidance():
@@ -925,10 +966,21 @@ def test_format_profile_includes_analyst_line_labeled_not_guidance():
 
     block = _format_profile({
         "data_source": "synthetic", "analyst_rating": "strong buy", "analyst_target_price": 315.57,
+        "field_state": {"analyst_rating": "live", "analyst_target_price": "live"},
     })
     assert "strong buy" in block
     assert "$315.57" in block
     assert "NOT company guidance" in block
+
+
+def test_format_profile_omits_analyst_line_when_present_but_not_live():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "analyst_rating": "strong buy", "analyst_target_price": 315.57,
+        "field_state": {},
+    })
+    assert "Analyst consensus (LIVE" not in block
 
 
 def test_format_profile_includes_forward_eps_estimate_when_present():
@@ -937,8 +989,19 @@ def test_format_profile_includes_forward_eps_estimate_when_present():
     block = _format_profile({
         "data_source": "synthetic", "next_earnings_date": "2026-08-01",
         "next_earnings_quarter": "Q3", "next_earnings_eps_estimate": 2.04,
+        "field_state": {"next_earnings": "live"},
     })
     assert "consensus EPS est. $2.04" in block
+
+
+def test_format_profile_omits_earnings_line_when_present_but_not_live():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "next_earnings_date": "2026-08-01",
+        "next_earnings_quarter": "Q3", "field_state": {},
+    })
+    assert "Next earnings (LIVE)" not in block
 
 
 # ── DEF054/DEF055: real Decision Journal history for Bull/Bear Researcher ──
@@ -1347,7 +1410,10 @@ def test_format_profile_labels_social_source_when_synthetic():
 def test_format_profile_includes_earnings_when_present():
     from app.services.room_prompts import _format_profile
 
-    block = _format_profile({"data_source": "synthetic", "next_earnings_date": "2026-08-01", "next_earnings_quarter": "Q3"})
+    block = _format_profile({
+        "data_source": "synthetic", "next_earnings_date": "2026-08-01", "next_earnings_quarter": "Q3",
+        "field_state": {"next_earnings": "live"},
+    })
     assert "Next earnings (LIVE): 2026-08-01 (Q3)" in block
 
 

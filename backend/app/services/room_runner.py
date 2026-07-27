@@ -315,9 +315,10 @@ class _RoomContext:
 _FUNDAMENTALS_NUMERIC_FIELDS = (
     "base_price", "pe", "rev_growth", "profit_margin", "net_cash",
 )
-# Optional live-only fields with no synthetic counterpart at all — already
-# gated on presence-in-`live` at every call site (_valuation_line etc.), so
-# no field_state entry is needed; passed through verbatim when present.
+# Optional live-only fields with no synthetic counterpart at all. CR104/D8:
+# presence-only gating at the render sites was the round-2 MAJOR-2 defect —
+# each field's `field_state` entry below is what every render site now
+# actually consults.
 _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
     "price_to_sales", "ev_to_ebitda", "peg_ratio", "fcf_yield",
     "dividend_yield", "sector", "industry",
@@ -429,6 +430,7 @@ def _profile_for_ticker(
         for f in _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS:
             if f in live:
                 profile[f] = live[f]
+                field_state[f] = LiveDataState.LIVE.value
 
     if settings.use_real_market_data:
         # Technicals (DEF052, AT:R58): RSI/trend/volume/support-breakout
@@ -472,6 +474,7 @@ def _profile_for_ticker(
         if earnings and earnings.earnings_date:
             profile["next_earnings_date"] = earnings.earnings_date
             profile["next_earnings_quarter"] = earnings.quarter
+            field_state["next_earnings"] = LiveDataState.LIVE.value
             # Real forward consensus EPS for the upcoming report (DEF053,
             # AT:R58) — was already fetched here, just never surfaced. A
             # genuine "forward guidance" data point, distinct from the

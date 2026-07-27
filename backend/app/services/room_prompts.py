@@ -32,6 +32,17 @@ from app.trading_math.valuation import net_position_phrase
 # ── Phase framing ────────────────────────────────────────────────────────
 
 
+def _field_is_live(profile: dict[str, Any], key: str) -> bool:
+    """CR104/D8: the single provenance check every `(LIVE)` label must pass
+    through — no exceptions. A field renders as live only when `field_state`
+    (populated in `room_runner._profile_for_ticker`, never by presence alone)
+    actually recorded it as such. Round-1 left five render sites checking
+    presence only (`if profile.get(...)`), which the round-2 audit rendered
+    a `field_state={}` profile against and got four confidently-labelled
+    `(LIVE)` lines under a header promising the opposite."""
+    return (profile.get("field_state") or {}).get(key) == "live"
+
+
 _PHASE_FOR_AGENT: dict[AgentId, str] = {
     AgentId.FUNDAMENTALS_ANALYST: "ANALYSTS",
     AgentId.MARKET_ANALYST: "ANALYSTS",
@@ -540,7 +551,7 @@ def _format_profile(profile: dict[str, Any]) -> str:
                   _capital_allocation_line(profile), _analyst_line(profile)):
         if extra:
             lines.append(extra)
-    if profile.get("next_earnings_date"):
+    if profile.get("next_earnings_date") and _is("next_earnings", "live"):
         lines.append(
             f"Next earnings (LIVE): {profile['next_earnings_date']}"
             + (f" ({profile['next_earnings_quarter']})" if profile.get("next_earnings_quarter") else "")
@@ -584,15 +595,18 @@ def _net_position_line(profile: dict[str, Any]) -> str:
 
 def _valuation_line(profile: dict[str, Any]) -> str | None:
     """Real valuation multiples beyond P/E (DEF053). None when nothing live —
-    no fabricated peer/sector multiple is ever shown."""
+    no fabricated peer/sector multiple is ever shown. CR104/D8: each part is
+    gated on its own `field_state` entry, not presence — a part whose
+    provenance wasn't recorded is dropped, never silently included under the
+    line's `(LIVE)` label."""
     parts = []
-    if profile.get("price_to_sales"):
+    if profile.get("price_to_sales") and _field_is_live(profile, "price_to_sales"):
         parts.append(f"P/S {profile['price_to_sales']}x")
-    if profile.get("ev_to_ebitda"):
+    if profile.get("ev_to_ebitda") and _field_is_live(profile, "ev_to_ebitda"):
         parts.append(f"EV/EBITDA {profile['ev_to_ebitda']}x")
-    if profile.get("peg_ratio"):
+    if profile.get("peg_ratio") and _field_is_live(profile, "peg_ratio"):
         parts.append(f"PEG {profile['peg_ratio']}")
-    if profile.get("fcf_yield") is not None:
+    if profile.get("fcf_yield") is not None and _field_is_live(profile, "fcf_yield"):
         parts.append(f"FCF yield {profile['fcf_yield']}%")
     if not parts:
         return None
@@ -602,16 +616,18 @@ def _valuation_line(profile: dict[str, Any]) -> str | None:
 def _sector_line(profile: dict[str, Any]) -> str | None:
     """Real sector/industry classification (DEF053) — replaces the old
     always-fake numeric `sector_pe`; this is a category, not a fabricated
-    peer-average P/E (yfinance has no peer-basket P/E to compute one from)."""
-    if not profile.get("sector"):
+    peer-average P/E (yfinance has no peer-basket P/E to compute one from).
+    CR104/D8: gated on `field_state`, not presence alone."""
+    if not profile.get("sector") or not _field_is_live(profile, "sector"):
         return None
     return f"Sector/industry (LIVE): {profile['sector']} / {profile.get('industry', '—')}"
 
 
 def _capital_allocation_line(profile: dict[str, Any]) -> str | None:
     """Real dividend yield only (DEF053) — buybacks/M&A have no yfinance
-    field and stay undisclosed rather than fabricated."""
-    if profile.get("dividend_yield") is None:
+    field and stay undisclosed rather than fabricated. CR104/D8: gated on
+    `field_state`, not presence alone."""
+    if profile.get("dividend_yield") is None or not _field_is_live(profile, "dividend_yield"):
         return None
     return f"Dividend yield (LIVE): {profile['dividend_yield']}% (buybacks/M&A: not available, not claimed)"
 
@@ -619,8 +635,12 @@ def _capital_allocation_line(profile: dict[str, Any]) -> str | None:
 def _analyst_line(profile: dict[str, Any]) -> str | None:
     """Real analyst consensus (DEF053) — the closest honest proxy for
     'forward guidance' available. Explicitly labeled as the Street's view,
-    not the company's own guidance (which yfinance doesn't expose)."""
-    if not profile.get("analyst_target_price") and not profile.get("analyst_rating"):
+    not the company's own guidance (which yfinance doesn't expose). CR104/D8:
+    gated on `field_state` — target price and rating are fetched together, so
+    either one's provenance recorded live is sufficient to label the line."""
+    has_target = profile.get("analyst_target_price") and _field_is_live(profile, "analyst_target_price")
+    has_rating = profile.get("analyst_rating") and _field_is_live(profile, "analyst_rating")
+    if not has_target and not has_rating:
         return None
     return (
         f"Analyst consensus (LIVE, Street view — NOT company guidance): "
