@@ -269,6 +269,24 @@ def _forward_catalyst_text(today: date | None = None) -> str:
     return "next FOMC decision date not yet published"
 
 
+def _relative_day_phrase(target: date, today: date) -> str:
+    """Render `target`'s distance from `today` the same way `_forward_catalyst_text`
+    already does for the FOMC date (DEF124) — a bare ISO date gives the model no
+    "today" to subtract from, so it guesses. Both are computed against the same UTC
+    calendar date (D4) — see `_profile_for_ticker`, which threads one `today` through
+    every date-relative field so they can't drift against each other mid-render.
+
+    Past dates are handled explicitly ("N days ago"), not left to go negative —
+    a stale cache returning a lapsed earnings date must not render "in -2 days"."""
+    delta = (target - today).days
+    if delta == 0:
+        return "today"
+    if delta > 0:
+        return f"in {delta} day{'s' if delta != 1 else ''}"
+    days_ago = -delta
+    return f"{days_ago} day{'s' if days_ago != 1 else ''} ago"
+
+
 @dataclass
 class _RoomContext:
     ticker: str
@@ -365,6 +383,12 @@ def _profile_for_ticker(
     # (CR034 convention, explicitly out of CR104's scope) — no numeric fact
     # is derived from this rng anymore.
     rng = random.Random(zlib.crc32(ticker.upper().encode()))
+    # DEF124: one "today" for the whole profile, so the run-date anchor, the
+    # FOMC countdown and the earnings interval can never disagree with each
+    # other mid-render (D4 — UTC calendar date is the stated basis for all
+    # three; a market date computed in local time would be off-by-one for
+    # part of the trading day).
+    today = datetime.now(timezone.utc).date()
     # Per-field provenance (CR104/D1/D4): every numeric fact below is either
     # overlaid from a live source with its state recorded here as LIVE, or
     # left unset with its state recorded as UNAVAILABLE/WITHHELD_* —
@@ -375,8 +399,13 @@ def _profile_for_ticker(
     profile: dict[str, Any] = {
         "ticker": ticker.upper(),
         "field_state": field_state,
+        # DEF124/D2: the run date is a fact with a real provenance (the
+        # clock) — the ONE anchor every other absolute date in the fact
+        # sheet is relative to. Recorded through the same per-field scheme
+        # as every other numeric fact, not bolted on as an ungated string.
+        "run_date": today.isoformat(),
         "catalyst": "Q3 earnings (beat by ~4%)",
-        "forward_catalyst": _forward_catalyst_text(),
+        "forward_catalyst": _forward_catalyst_text(today),
         "sentiment_tone": "moderately bullish" if rng.random() > 0.3 else "mixed",
         # No live social feed exists (CR024) — these are illustrative, not
         # measured. Dropped the fake-precision "+X.Xσ" decimal (borrowed a
@@ -402,6 +431,11 @@ def _profile_for_ticker(
         "downside": 18,
         "synth_lean": "constructive bull",
     }
+    # The clock is unconditionally live — there is no "unavailable" state for
+    # today's date. Recorded explicitly rather than assumed, so the taint
+    # guard (test_cr104_no_fabricated_numeric_reaches_room_prompt.py) sees a
+    # real provenance write, not an implicit default.
+    field_state["run_date"] = LiveDataState.LIVE.value
 
     # Fundamentals: LIVE per-field, or UNAVAILABLE — never a rng fallback
     # (CR104/DEF123). `fetch_live_fundamentals` already only returns the
@@ -474,6 +508,14 @@ def _profile_for_ticker(
         if earnings and earnings.earnings_date:
             profile["next_earnings_date"] = earnings.earnings_date
             profile["next_earnings_quarter"] = earnings.quarter
+            # DEF124/D1: the interval alongside the absolute date, computed
+            # in Python against the same `today` as the FOMC line — never
+            # asked of the model. `date.fromisoformat` matches the
+            # `earnings_date=target.strftime("%Y-%m-%d")` shape every
+            # MarketDataProvider.earnings() implementation returns.
+            profile["next_earnings_interval"] = _relative_day_phrase(
+                date.fromisoformat(earnings.earnings_date), today
+            )
             field_state["next_earnings"] = LiveDataState.LIVE.value
             # Real forward consensus EPS for the upcoming report (DEF053,
             # AT:R58) — was already fetched here, just never surfaced. A

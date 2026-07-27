@@ -399,12 +399,26 @@ def _format_profile(profile: dict[str, Any]) -> str:
     news_withheld_tenure = _is("news", "withheld_tenure")
     social_withheld_tenure = _is("social", "withheld_tenure")
 
-    header_lines = [
+    header_lines = []
+    # DEF124/D2: ONE run-date anchor for every other absolute date in the
+    # fact sheet, gated on the same per-field `field_state` scheme as every
+    # other fact (not an ungated string bolted beside it) — the clock is a
+    # real, always-live source, so this is the one field that should never
+    # render "not available" once the profile pipeline sets it. A hand-built
+    # profile with no recorded provenance still renders nothing here,
+    # matching every other field's refuse-by-default behaviour.
+    if profile.get("run_date") and _is("run_date", "live"):
+        header_lines.append(
+            f"Fact sheet as of {profile['run_date']} (UTC) — every other "
+            "date in this sheet is anchored to this one; do not estimate "
+            "how far away a date is from your own sense of the current date."
+        )
+    header_lines.append(
         "Data source disclosure — every fact below is tagged with where it "
         "came from. A field with no live source is marked not available "
         "below, never silently filled in — do NOT estimate, recall from "
         "training memory, or invent a number for it:"
-    ]
+    )
     if fundamentals_any_live:
         header_lines.append(
             "- Numeric fundamentals (price, P/E, growth, margin, net cash, "
@@ -552,9 +566,14 @@ def _format_profile(profile: dict[str, Any]) -> str:
         if extra:
             lines.append(extra)
     if profile.get("next_earnings_date") and _is("next_earnings", "live"):
+        # DEF124/D1: render the interval ALONGSIDE the absolute date, never
+        # instead of it — the date is what a user cross-checks, the interval
+        # is what stops the model guessing. Computed in Python
+        # (room_runner.py's `_relative_day_phrase`), never asked of the model.
         lines.append(
             f"Next earnings (LIVE): {profile['next_earnings_date']}"
             + (f" ({profile['next_earnings_quarter']})" if profile.get("next_earnings_quarter") else "")
+            + (f" — {profile['next_earnings_interval']}" if profile.get("next_earnings_interval") else "")
             + (f", consensus EPS est. ${profile['next_earnings_eps_estimate']}"
                if profile.get("next_earnings_eps_estimate") is not None else "")
         )
