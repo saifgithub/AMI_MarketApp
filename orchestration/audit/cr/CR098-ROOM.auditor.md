@@ -304,3 +304,79 @@ class as round-1 MAJOR 2: correct code, unpinned wiring, on the one call site th
 colliding on. One assertion closes it.
 
 Run report: [`../runs/2026-07-27_run-67/run_report.md`](../runs/2026-07-27_run-67/run_report.md)
+
+---
+
+## Round 3
+
+**Audited SHA:** `e932a36`. Scope: **test-only** — `git diff 73dbcce e932a36` touches **zero**
+files under `backend/app/`, `docker-compose.yml` or `content/`, confirmed by pathspec. (The
+hand-off says "1 file"; it is two test files, the second being DEF122's rationale correction
+arriving via `main`. Immaterial.) Isolated worktree `.claude/worktrees/audit-CR098-r3/`, own venv.
+**Full suite 1366 passed** in 221s on a verified-clean tree, run to completion before any mutation
+touched the tree (round 2 was 1365; `+1` = exactly the new test).
+
+Done by the Architect rather than a worker round, because the finding was against **their own**
+merge resolution.
+
+### The MAJOR is closed — verified with my own probe plus two shapes they did not use
+
+`test_run_wiring_passes_withheld_into_profile_for_ticker` drives the real `run()` with a
+Market-withheld roster and asserts three independent things: `compute_technicals` never executes,
+the kwargs actually reaching `_profile_for_ticker` carry `frozenset({MARKET_ANALYST})`, and the
+resulting profile is marked `withheld_tenure`. The spy closes over the real `_profile_for_ticker`
+**before** monkeypatching, so it exercises the genuine code path rather than a stub, and
+`assert seen, "run() never reached _profile_for_ticker"` closes the obvious vacuity hole.
+
+| Probe | Shape | Result |
+|---|---|---|
+| **P1** | my exact round-2 regression — drop `withheld=frozenset(roster.withheld)` from the hoisted `to_thread` call | **RED**, and **only** that test (24 others pass) — the Architect's claim reproduces exactly |
+| **P2** | kwarg **present but wrong value** — `withheld=frozenset()` | **RED** — sensitive to the value, not merely to the argument's presence |
+| **P3** | kwarg forwarded correctly, but the gate **inside** `_profile_for_ticker` broken | **RED** in the new test *and* in the pre-existing direct-call test — sensitive to the behaviour, not just the plumbing |
+
+P2 and P3 are the checks that matter for a test written to close a wiring finding: P2 rules out a
+test that only asserts "an argument was passed", P3 rules out one that only asserts "the plumbing
+is connected". It fails for the right reasons in all three directions.
+
+### No regression in round 2's coverage
+
+The round-3 test-file diff has **zero deletion lines** — purely additive — so round 2's coverage is
+untouched by construction. Confirmed by execution anyway, given this lane's history: re-ran round
+2's MAJOR 2a mutation (`phase_agents = phase.agents`) → still **RED**. DEF116's AST guard is still
+**green** on this SHA, so the other half of the merge hazard remains pinned.
+
+### My out-of-lane DEF122 finding — accepted and fixed on `main` (`638bdfc`), verified
+
+Read the correction. `_KNOWN_SYNC_HTTPX_COUNTS` now splits the two entries: RevenueCat keeps the
+threadpool reason, and `room_runner.py` gets the real one — the call **is** on the event loop
+(`main.py:132` awaits `resume_pending_retries()` inside `async def lifespan`), safe only because it
+fires at most once per process at lifespan startup before uvicorn serves traffic, guarded by
+`_PREFIX_CACHE_STATUS_LOGGED`. It also carries the part that actually prevents recurrence: *"A
+SECOND httpx call in this module would NOT inherit that reasoning."* Matches what I measured.
+
+### Not verified — unchanged, and correctly disclosed
+
+- **Acceptance #14 live smoke** — untestable from a pure-editor Mac. Post-promote.
+- **DEF098 parity blind spot** — out of scope; still needs an Architect decision on whether a
+  withheld analyst counts as a declared omission for a degraded `FLOOR_PASS`.
+- **The mobile half is unbuilt** — `CR098-MOBILE-LIVE` / `CR098-MOBILE-VERDICT` written and
+  `UNASSIGNED`, held on this verdict. Until they land, the per-analyst locked chair and countdown
+  reach the wire but nothing renders them. **Promotion-sequencing note, not a code defect:** the
+  same coupling I recorded for CR090-ROOM applies — the backend disclosure has no client surface
+  until the mobile lanes ship.
+
+### Findings
+
+None.
+
+### Verdict
+
+**VERDICT: COMPLETE (round 3)** — zero BLOCKER, zero MAJOR, zero MINOR.
+
+Three rounds, eight findings, all closed and every one re-proved with my own mutations rather than
+the hand-off's. The lane ends stronger than it started: the seam three lanes collided on is now
+pinned from **both** directions — DEF116's AST guard for the `to_thread` hoist, this test for the
+`withheld=` kwarg — and the defining behaviour (a withheld analyst does not speak, and each present
+analyst's text lands under its own id) is guarded by a test sharper than the one I specified.
+
+Run report: [`../runs/2026-07-27_run-68/run_report.md`](../runs/2026-07-27_run-68/run_report.md)
