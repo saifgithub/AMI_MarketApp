@@ -1176,7 +1176,7 @@
     "definition": "An extended period of rising prices in a market or asset, conventionally defined as a gain of 20% or more from a recent low. Typically associated with broad participation and improving fundamentals.",
     "category": "regime",
     "see_also": ["bear_market", "correction", "sector_rotation"],
-    "related_lessons": ["080"],
+    "related_lessons": ["059"],
     "tags": ["regime"]
   },
   {
@@ -1185,7 +1185,7 @@
     "definition": "An extended period of declining prices, conventionally defined as a fall of 20% or more from a recent high. Often coincides with deteriorating fundamentals or recession.",
     "category": "regime",
     "see_also": ["bull_market", "correction", "crash", "capitulation"],
-    "related_lessons": ["080"],
+    "related_lessons": ["060"],
     "tags": ["regime"]
   },
   {
@@ -1194,7 +1194,7 @@
     "definition": "A regime where prices oscillate within a horizontal range with no sustained directional trend. Typically associated with reduced realized volatility and indecisive macro signals.",
     "category": "regime",
     "see_also": ["sideways", "range_bound", "volatility_regime"],
-    "related_lessons": ["080"],
+    "related_lessons": ["061"],
     "tags": ["regime"]
   },
   {
@@ -1203,7 +1203,7 @@
     "definition": "Describes a market or security trading repeatedly between identifiable support and resistance levels without breaking out. Synonymous with sideways behavior.",
     "category": "regime",
     "see_also": ["sideways_market", "support", "resistance"],
-    "related_lessons": ["080"],
+    "related_lessons": ["061"],
     "tags": ["regime"]
   },
   {
@@ -1212,7 +1212,7 @@
     "definition": "A decline of 10% to 20% from a recent high, less severe than a bear market. Treated as a routine feature of bull markets in standard finance taxonomy.",
     "category": "regime",
     "see_also": ["bull_market", "bear_market", "crash"],
-    "related_lessons": ["081"],
+    "related_lessons": ["060"],
     "tags": ["regime"]
   },
   {
@@ -1221,7 +1221,7 @@
     "definition": "A rapid, severe decline in prices over a short period, typically with elevated volume and volatility. Examples include October 1987 and March 2020.",
     "category": "regime",
     "see_also": ["correction", "bear_market", "capitulation"],
-    "related_lessons": ["081"],
+    "related_lessons": ["060"],
     "tags": ["regime", "tail_event"]
   },
   {
@@ -1230,7 +1230,7 @@
     "definition": "The phase following a correction or bear market in which prices and economic activity return toward prior levels. Often defined retrospectively once a new high is established.",
     "category": "regime",
     "see_also": ["bear_market", "recession"],
-    "related_lessons": ["081"],
+    "related_lessons": ["107"],
     "tags": ["regime"]
   },
   {
@@ -1239,7 +1239,7 @@
     "definition": "A characterization of the prevailing level of realized or implied volatility, e.g., low-vol, mid-vol, or high-vol. Regimes tend to cluster, producing serial autocorrelation in volatility.",
     "category": "regime",
     "see_also": ["atr", "vix", "bollinger_band"],
-    "related_lessons": ["082"],
+    "related_lessons": ["062"],
     "tags": ["regime", "volatility"]
   },
   {
@@ -1248,7 +1248,7 @@
     "definition": "The shifting of capital between equity sectors at different points in the economic cycle, e.g., from defensives to cyclicals in early expansion. A pattern documented across decades of US data.",
     "category": "regime",
     "see_also": ["bull_market", "recession", "market_breadth"],
-    "related_lessons": ["083"],
+    "related_lessons": ["063"],
     "tags": ["regime", "macro"]
   },
   {
@@ -1257,7 +1257,7 @@
     "definition": "The proportion of stocks participating in a market move, measured by indicators such as advance-decline lines, new highs minus new lows, or the percentage of stocks above their 200-day moving average.",
     "category": "regime",
     "see_also": ["index", "bull_market", "bear_market"],
-    "related_lessons": ["084"],
+    "related_lessons": ["064"],
     "tags": ["regime", "internals"]
   },
 
@@ -1267,7 +1267,7 @@
     "definition": "The central bank of the United States, established in 1913. Sets the federal funds rate target and conducts monetary policy via the Federal Open Market Committee.",
     "category": "macro",
     "see_also": ["fed_funds_rate", "rate_hike", "rate_cut"],
-    "related_lessons": ["090"],
+    "related_lessons": ["329"],
     "related_agents": ["news_analyst"],
     "tags": ["macro", "central_bank"]
   },
@@ -1277,7 +1277,7 @@
     "definition": "The overnight interest rate at which US depository institutions lend reserves to each other, targeted by the Federal Reserve. The anchor for short-term US interest rates.",
     "category": "macro",
     "see_also": ["federal_reserve", "rate_hike", "rate_cut", "yield_curve"],
-    "related_lessons": ["090"],
+    "related_lessons": ["330"],
     "tags": ["macro", "rates"]
   },
   {
@@ -1286,7 +1286,7 @@
     "definition": "An increase in the central bank's policy interest rate. Tightens financial conditions and typically aims to slow inflation.",
     "category": "macro",
     "see_also": ["fed_funds_rate", "rate_cut", "inflation"],
-    "related_lessons": ["090"],
+    "related_lessons": ["330"],
     "tags": ["macro", "rates"]
   },
   {
@@ -1295,7 +1295,7 @@
     "definition": "A decrease in the central bank's policy interest rate. Eases financial conditions and typically aims to support growth or employment.",
     "category": "macro",
     "see_also": ["fed_funds_rate", "rate_hike", "recession"],
-    "related_lessons": ["090"],
+    "related_lessons": ["330"],
     "tags": ["macro", "rates"]
   },
   {
@@ -1304,7 +1304,7 @@
     "definition": "A sustained rise in the general price level of goods and services, measured by indices such as CPI or PCE. Erodes purchasing power of cash and fixed-income coupons.",
     "category": "macro",
     "see_also": ["cpi", "deflation", "rate_hike"],
-    "related_lessons": ["091"],
+    "related_lessons": ["324"],
     "related_agents": ["news_analyst"],
     "tags": ["macro", "prices"]
   },
@@ -1314,7 +1314,7 @@
     "definition": "A sustained decline in the general price level. Historically associated with weak demand, falling wages, and tightening real debt burdens.",
     "category": "macro",
     "see_also": ["inflation", "recession"],
-    "related_lessons": ["091"],
+    "related_lessons": ["324"],
     "tags": ["macro", "prices"]
   },
   {
@@ -1323,7 +1323,7 @@
     "definition": "A significant decline in economic activity across the economy lasting more than a few months. In the US, dating is determined by the NBER Business Cycle Dating Committee.",
     "category": "macro",
     "see_also": ["gdp", "yield_curve", "bear_market"],
-    "related_lessons": ["092"],
+    "related_lessons": ["327"],
     "related_agents": ["news_analyst"],
     "tags": ["macro", "cycle"]
   },
@@ -1333,7 +1333,7 @@
     "definition": "A plot of yields on government bonds across maturities, typically Treasuries from 1-month to 30-year. An inverted yield curve, where short rates exceed long rates, has historically preceded US recessions.",
     "category": "macro",
     "see_also": ["fed_funds_rate", "recession"],
-    "related_lessons": ["092"],
+    "related_lessons": ["306"],
     "tags": ["macro", "rates"]
   },
   {
@@ -1342,7 +1342,7 @@
     "definition": "A monthly index published by the US Bureau of Labor Statistics measuring the average price change for a basket of consumer goods and services. The headline US inflation gauge.",
     "category": "macro",
     "see_also": ["inflation", "gdp"],
-    "related_lessons": ["091"],
+    "related_lessons": ["324"],
     "tags": ["macro", "data_release"]
   },
   {
@@ -1351,7 +1351,7 @@
     "definition": "The total monetary value of all goods and services produced within a country's borders over a defined period. Published quarterly in the US by the Bureau of Economic Analysis.",
     "category": "macro",
     "see_also": ["recession", "cpi"],
-    "related_lessons": ["092"],
+    "related_lessons": ["323"],
     "tags": ["macro", "data_release"]
   },
   {
@@ -1360,7 +1360,7 @@
     "definition": "A weighted average of the US dollar against a basket of six major currencies dominated by the euro. Used as a broad gauge of dollar strength.",
     "category": "macro",
     "see_also": ["risk_on_risk_off"],
-    "related_lessons": ["093"],
+    "related_lessons": ["308"],
     "tags": ["macro", "fx"]
   },
   {
@@ -1369,7 +1369,7 @@
     "definition": "Shorthand for prevailing investor appetite, where risk-on favors equities and high-yield credit and risk-off favors Treasuries, dollar, and gold. Used in macro commentary to describe cross-asset flows.",
     "category": "macro",
     "see_also": ["volatility_regime", "vix", "sector_rotation"],
-    "related_lessons": ["093"],
+    "related_lessons": ["328"],
     "tags": ["macro", "sentiment"]
   },
 
@@ -1825,7 +1825,7 @@
   {
     "id": "musharakah",
     "term": "Musharakah",
-    "definition": "A partnership contract: two or more parties contribute capital and share profit and loss in a pre-agreed ratio. Conventional analogue: joint-venture equity. Illustrates risk-sharing over risk-transfer — both parties' returns move with the venture's actual outcome.",
+    "definition": "A partnership contract: two or more parties contribute capital and share profit in a pre-agreed ratio, while any loss is borne strictly in proportion to each party's capital contribution. Conventional analogue: joint-venture equity. Illustrates risk-sharing over risk-transfer — both parties' returns move with the venture's actual outcome.",
     "category": "islamic_finance",
     "see_also": ["mudarabah", "murabahah", "ijarah", "takaful", "riba"],
     "related_lessons": ["347", "353"],
@@ -1865,7 +1865,7 @@
   {
     "id": "aaoifi",
     "term": "AAOIFI",
-    "definition": "Accounting and Auditing Organization for Islamic Financial Institutions — a standard-setting body whose Shariah Standards define, among other things, the four prohibitions, the two-stage screening methodology, and the debt/liquidity/income ratio caps (33%/33%/5% by default) AMI's screening logic follows. One of several named standards; AAOIFI, Bursa Malaysia's SAC, and the major index providers can disagree at the margin.",
+    "definition": "Accounting and Auditing Organization for Islamic Financial Institutions — a standard-setting body whose Shariah Standards define, among other things, the four prohibitions, the two-stage screening methodology, and the debt/liquidity/income ratio caps. AAOIFI's own Shariah Standard No. 21 sets these caps at 30% / 30% / 5%; the Dow Jones Islamic, S&P Shariah and MSCI conventions use the looser 33% / 33% / 5%. One of several named standards — AAOIFI, Bursa Malaysia's SAC, and the major index providers can disagree at the margin.",
     "category": "islamic_finance",
     "see_also": ["shariah_advisory_council", "dow_jones_islamic_market_index", "financial_ratio_screen", "sharia_screening"],
     "related_lessons": ["349", "350", "351", "352"],
@@ -1915,7 +1915,7 @@
   {
     "id": "financial_ratio_screen",
     "term": "Financial-ratio screen",
-    "definition": "The second, quantitative stage of the Sharia screen: three ratios, each checked against a cap under an AAOIFI-style methodology — interest-bearing debt / market cap (33%), cash plus interest-bearing securities / market cap (33%), and non-compliant income / total revenue (5%). All three must pass; failing any one fails the whole screen, independent of the business-activity result. Computed via AMI's `sharia_screen` function, never hand-authored.",
+    "definition": "The second, quantitative stage of the Sharia screen: three ratios, each checked against a cap — interest-bearing debt / market cap, cash plus interest-bearing securities / market cap, and non-compliant income / total revenue. The Dow Jones Islamic methodology caps these at 33% / 33% / 5%; AAOIFI Shariah Standard No. 21 is stricter at 30% / 30% / 5%. All three must pass; failing any one fails the whole screen, independent of the business-activity result.",
     "category": "islamic_finance",
     "see_also": ["business_activity_screen", "sharia_screening", "aaoifi", "tazkiyah"],
     "related_lessons": ["349", "355", "356"],

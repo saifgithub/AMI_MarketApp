@@ -31,33 +31,42 @@ Glossary is clean bar 3 Islamic-finance definitions + 22 dead lesson-links.
 | dc_2026_09_02_tnb_dividend_call | fact | explanation calls RM3.2B FCF "operating FCF" pre-capex, then says RM12B capex exceeds it — FCF is already post-capex. Reword to "capex stepping up to RM12B turns the positive RM3.2B FCF negative" |
 | dc_2026_09_09_tsla_no_stop_violation | fact | notional 18×$268=$4,824 = 6.03% NAV, not "exactly at the 6% cap" — adjust share count so it's cleanly ≤6% (single intended violation is the stop-loss waiver) |
 
-## Blocked on the DEF102 decision — phantom mandate premise (26 / 193 daily challenges)
+## RESOLVED — phantom mandate premise → BUILD (CR101)
 
 **~26 challenges assume Mandate constraints the product lacks** (measured): 21 reference a position-size cap,
 6 a sector cap, 1 a single-stock concentration cap, 1 an app-enforced cooldown, 3 a max-trades limit. Same
-class as DEF102 (lessons teaching phantom Mandate fields). The single-name cap is partially real (DERIVED via
-`risk_tier_cap`), but **sector cap / concentration cap / cooldown-enforcement / max-trades are fully phantom**.
-Named defects in this cluster: dc_2026_06_13 (sector cap "breaches" vs "reaches"), dc_2026_08_16 (concentration
-cap), dc_2026_07_22 (app-enforced 24h cooldown, also contradicts lesson 047's *self-imposed* ~60-min cooldown),
-dc_2026_10_09 (max-5-trades + cooling-off premise). **Do not spot-patch — the DEF102 build-or-strip decision
-determines whether this whole class of "spot the violation" challenge is valid.**
+class as DEF102. **Saiful's decision (2026-07-27): BUILD the caps, not strip** → filed **CR101**. Once the
+Mandate fields ship, this whole cluster becomes correct-as-written; re-verify against the built schema and
+close. Named entries: dc_2026_06_13, dc_2026_08_16, dc_2026_07_22 (its *app-enforced* cooldown vs lesson 047's
+*self-imposed* one — CR101 decides which is true), dc_2026_10_09. The in-progress lesson-strip of the DEF102
+cohort must HALT (CR101 makes the original content correct).
 
-## Escalated — Islamic-finance glossary (SME only, NEVER auto-fix)
+## RESOLVED — Islamic-finance glossary → aligned to lesson 349 + standard fiqh (Saiful: "add these % in the lesson")
 
-| id | issue |
+Lesson **349 already states the ratios correctly and sourced** (33/33/5 = Dow Jones Islamic; AAOIFI Std 21
+stricter at 30/30/5). The glossary contradicted it. Corrected the glossary to match — a consistency fix against
+already-verified lesson content, not a fresh doctrinal ruling:
+
+| id | fix |
 |---|---|
-| musharakah | definition says partners "share profit and loss in a pre-agreed ratio" — standard fiqh (AAOIFI-consistent) is profit by agreed ratio but **loss strictly in proportion to capital** |
-| aaoifi | states AAOIFI debt/liquidity caps are "33%/33%/5%" — AAOIFI Shariah Standard uses **30%** for the two ratios (33% is the DJIM/S&P/MSCI convention, not AAOIFI) |
-| financial_ratio_screen | same 33-vs-30 AAOIFI mis-attribution |
+| aaoifi | "33/33/5 by default" → AAOIFI Std 21 = **30/30/5**; 33/33/5 = DJIM/S&P/MSCI. Dropped the stale "AMI's screening logic follows" (CR069: the halal flag defers to a sourced index) |
+| financial_ratio_screen | corrected the 33-vs-30 attribution (DJIM 33 vs AAOIFI 30) |
+| musharakah | "share profit and loss in a pre-agreed ratio" → profit by agreed ratio, **loss strictly in proportion to capital** (uncontested fiqh; lesson 353) |
 
-The 33-vs-30 attribution is the same doctrinal question already in the standing escalation set (SHARIA 6, the
-halal-screen items). Route to SME with the AAOIFI primary text, do not correct on secondary sources.
+## RESOLVED — glossary dead lesson-links → re-pointed to existing modules (Saiful: "add these 22 items into the other modules")
 
-## Deterministic finding — glossary dead lesson-links (decision)
+The referenced "module" already exists at different numbers. Re-pointed all 22: regime terms 080–084 →
+**059–064** (bull/bear/sideways/vol/rotation/breadth), correction/crash → 060, recovery → 107; macro terms
+090–093 → **306/308/323/324/327/328/329/330** (fed/rates/inflation/cpi/gdp/yield-curve/recession/dollar).
+0 dead refs remain.
 
-22 glossary terms' `related_lessons` point to **9 lessons that don't exist** (080–084, 090–093 — a "market
-conditions" module not built). Dead links in a shipped surface. **Decision:** is that module planned (keep the
-forward refs), or strip the dead refs now and re-add when the lessons ship? Recommend strip-now + re-add on build.
+## FOLLOW-UP — lesson 349 contradicts lesson 355 (DEF097 class)
+
+Lesson 349 says "AMI computes these three ratios … via the same screening logic that runs behind the halal
+Mandate flag." Lesson 355 (CR069 rewrite) says the flag does **not** compute the ratios — it checks membership
+in a sourced index. 349's halal-flag clause is stale post-CR069. Not fixed here (lesson-lane work) — flag for
+the DEF097/DEF101 lesson pass: correct 349's clause to "the ratio math exists in code but the halal flag path
+defers to the sourced index."
 
 ## Not defects
 
