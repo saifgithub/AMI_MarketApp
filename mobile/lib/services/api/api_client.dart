@@ -12,7 +12,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint, visibleForTesting;
 
 import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/models/auth.dart';
@@ -96,6 +96,66 @@ ServerUnavailableException? serverUnavailableFrom(Object error) {
     return error.error as ServerUnavailableException;
   }
   return null;
+}
+
+/// Parse one decoded SSE event block (`event: <type>` + joined `data:` lines)
+/// from the Room stream into the typed map the notifier consumes, or `null`
+/// if the block is malformed or its kind isn't recognised.
+///
+/// Extracted to a top-level, side-effect-free (besides the CR090 (D2) log
+/// line) function so the parsing contract is directly unit-testable against
+/// a real backend-transcribed frame — see api_client_room_stream_test.dart.
+///
+/// CR090 (D2): an unrecognised `eventType` returns `null` (dropped, logged),
+/// never throws — a client on this build must not crash when a newer
+/// backend adds an event kind it doesn't know about yet.
+@visibleForTesting
+Map<String, dynamic>? parseRoomSseEvent(String eventType, String data) {
+  try {
+    switch (eventType) {
+      case 'started':
+        final j = jsonDecode(data) as Map<String, dynamic>;
+        return {'kind': 'started', 'run_id': j['run_id']};
+      case 'phase':
+        final j = jsonDecode(data) as Map<String, dynamic>;
+        return {'kind': 'phase', 'label': j['label']};
+      case 'live_data_notice':
+        // CR090: structural live-data disclosure, one per run. Returned
+        // as-is (news/social/surcharge_charged) — the notifier owns
+        // rendering. See room_providers.dart for the D3/D4/D5 rules.
+        final j = jsonDecode(data) as Map<String, dynamic>;
+        return {
+          'kind': 'live_data_notice',
+          'news': j['news'],
+          'social': j['social'],
+          'surcharge_charged': j['surcharge_charged'],
+        };
+      case 'agent_token':
+        final j = jsonDecode(data) as Map<String, dynamic>;
+        final text = (j['text'] as String? ?? '')
+            .replaceAll(r'\n', '\n')
+            .replaceAll(r'\\', r'\');
+        return {'kind': 'agent_token', 'agent_id': j['agent_id'], 'text': text};
+      case 'agent_done':
+        final j = jsonDecode(data) as Map<String, dynamic>;
+        return {'kind': 'agent_done', 'agent_id': j['agent_id']};
+      case 'verdict':
+        final j = jsonDecode(data) as Map<String, dynamic>;
+        return {'kind': 'verdict', 'verdict': RoomVerdict.fromJson(j)};
+      case 'done':
+        final j = jsonDecode(data) as Map<String, dynamic>;
+        return {'kind': 'done', 'run_id': j['run_id']};
+      case 'error':
+        return {'kind': 'error', 'message': data};
+      default:
+        // CR040 degrade loudly: log only, never surface to the user.
+        debugPrint('room stream: unknown event kind "$eventType"');
+        return null;
+    }
+  } catch (e) {
+    // skip malformed event
+    return null;
+  }
 }
 
 class ApiClient {
@@ -653,65 +713,10 @@ class ApiClient {
           }
           final data = dataLines.join('\n');
           if (eventType == null) continue;
-          try {
-            switch (eventType) {
-              case 'started':
-                final j = jsonDecode(data) as Map<String, dynamic>;
-                yield {'kind': 'started', 'run_id': j['run_id']};
-                break;
-              case 'phase':
-                final j = jsonDecode(data) as Map<String, dynamic>;
-                yield {'kind': 'phase', 'label': j['label']};
-                break;
-              case 'live_data_notice':
-                // CR090: structural live-data disclosure, one per run. Yielded
-                // as-is (news/social/surcharge_charged) — the notifier owns
-                // rendering. See room_providers.dart for the D3/D4/D5 rules.
-                final j = jsonDecode(data) as Map<String, dynamic>;
-                yield {
-                  'kind': 'live_data_notice',
-                  'news': j['news'],
-                  'social': j['social'],
-                  'surcharge_charged': j['surcharge_charged'],
-                };
-                break;
-              case 'agent_token':
-                final j = jsonDecode(data) as Map<String, dynamic>;
-                final text = (j['text'] as String? ?? '')
-                    .replaceAll(r'\n', '\n')
-                    .replaceAll(r'\\', r'\');
-                yield {
-                  'kind': 'agent_token',
-                  'agent_id': j['agent_id'],
-                  'text': text,
-                };
-                break;
-              case 'agent_done':
-                final j = jsonDecode(data) as Map<String, dynamic>;
-                yield {'kind': 'agent_done', 'agent_id': j['agent_id']};
-                break;
-              case 'verdict':
-                final j = jsonDecode(data) as Map<String, dynamic>;
-                yield {'kind': 'verdict', 'verdict': RoomVerdict.fromJson(j)};
-                break;
-              case 'done':
-                final j = jsonDecode(data) as Map<String, dynamic>;
-                yield {'kind': 'done', 'run_id': j['run_id']};
-                return;
-              case 'error':
-                yield {'kind': 'error', 'message': data};
-                return;
-              default:
-                // CR090 (D2): forward-compat tolerance is load-bearing — an
-                // unrecognised event kind is dropped, never thrown, so an
-                // un-updated client can't be crashed by a newer backend.
-                // Log only (CR040 degrade loudly), never surface to the user.
-                debugPrint('room stream: unknown event kind "$eventType"');
-                break;
-            }
-          } catch (e) {
-            // skip malformed event
-          }
+          final parsed = parseRoomSseEvent(eventType, data);
+          if (parsed == null) continue;
+          yield parsed;
+          if (parsed['kind'] == 'done' || parsed['kind'] == 'error') return;
         }
       }
     } finally {
