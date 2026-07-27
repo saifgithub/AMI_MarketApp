@@ -120,39 +120,25 @@ class _ModuleInfo:
                 self.functions[node.name] = node
 
 
-def _to_thread_wrapped_call_ids(fn: ast.AST) -> set[int]:
-    """id() of every `ast.Call` node that is itself the first positional
-    argument of an `asyncio.to_thread(...)` call — i.e. correctly deferred,
-    not a violation even though it shares a name with a blocking leaf.
+def _blocking_call_sites(fn: ast.AST) -> list[str]:
+    """Direct (un-deferred) calls to a known blocking leaf inside fn.
 
-    In practice a leaf is passed by *reference* (`asyncio.to_thread(fn, x)`),
-    not called (`asyncio.to_thread(fn(x))`), so this rarely fires — it's a
-    defensive no-op for a shape this guard doesn't expect to see rather than
-    dead code: cheap insurance against a future refactor changing the call
-    shape and silently going green.
+    NOTE — there is deliberately NO exemption for a leaf appearing as
+    `asyncio.to_thread`'s first positional argument. An earlier revision
+    exempted that shape as "correctly deferred"; the round-1 auditor proved
+    the exemption inverted with probe P-E: `asyncio.to_thread(sim.current_quote(t))`
+    passed the guard while genuinely blocking the event loop (the leaf is
+    called inline, *then* its result is handed to `to_thread`) and raising
+    `TypeError` in the worker because a `Quote` is not callable. Passing a
+    *called* leaf to `to_thread` is never correct, so it must be flagged, not
+    waived. The correct shape passes the leaf by reference —
+    `asyncio.to_thread(sim.current_quote, t)` — where the leaf is an
+    `ast.Name`/`ast.Attribute` argument and never an `ast.Call`, so it is
+    invisible to this walk anyway.
     """
-    wrapped: set[int] = set()
+    hits: list[str] = []
     for node in ast.walk(fn):
         if not isinstance(node, ast.Call):
-            continue
-        f = node.func
-        is_to_thread = (
-            isinstance(f, ast.Attribute)
-            and f.attr == "to_thread"
-            and isinstance(f.value, ast.Name)
-            and f.value.id == "asyncio"
-        )
-        if is_to_thread and node.args and isinstance(node.args[0], ast.Call):
-            wrapped.add(id(node.args[0]))
-    return wrapped
-
-
-def _blocking_call_sites(fn: ast.AST) -> list[str]:
-    """Direct (un-deferred) calls to a known blocking leaf inside fn."""
-    hits: list[str] = []
-    wrapped = _to_thread_wrapped_call_ids(fn)
-    for node in ast.walk(fn):
-        if not isinstance(node, ast.Call) or id(node) in wrapped:
             continue
         f = node.func
         if isinstance(f, ast.Name) and f.id in _BLOCKING_LEAF_FUNC_NAMES:
@@ -204,7 +190,7 @@ def _route_handlers(modules: list[_ModuleInfo]) -> list[tuple[_ModuleInfo, ast.A
 
 
 def _find_blocking_reachable(
-    fn: ast.AST, modules: list[_ModuleInfo], seen: set[int]
+    fn: ast.AST, modules: list[_ModuleInfo], seen: set[int], waived: set[str]
 ) -> list[str]:
     if id(fn) in seen:
         return []
@@ -212,29 +198,156 @@ def _find_blocking_reachable(
 
     offenders = _blocking_call_sites(fn)
     for called_name in _called_names(fn):
-        if called_name in _WAIVED_CALL_CHAIN_NAMES:
+        if called_name in waived:
             continue
         for mod in modules:
             target = mod.functions.get(called_name)
             if target is not None and target is not fn:
                 offenders += [
                     f"{o} (via {called_name} in {mod.path.relative_to(_REPO_ROOT)})"
-                    for o in _find_blocking_reachable(target, modules, seen)
+                    for o in _find_blocking_reachable(target, modules, seen, waived)
                 ]
     return offenders
 
 
-def test_no_blocking_leaf_call_reachable_from_async_route():
+def _offending_routes(waived: set[str]) -> tuple[list[str], set[str]]:
+    """(full offender chains, set of `<route> -> <leaf>` pairs) for a waiver.
+
+    The second element deliberately drops the `(via …)` chain suffix: the
+    intermediate hop list is unstable under harmless refactors, while the
+    `route -> leaf` pair is the thing that actually characterises a violation.
+    """
     modules = [_ModuleInfo(p, ast.parse(p.read_text())) for p in _iter_py(_APP)]
     handlers = _route_handlers(modules)
     assert handlers, "no async route handlers found under backend/app/api — guard is not exercising anything"
 
     offenders: list[str] = []
+    pairs: set[str] = set()
     for mod, fn in handlers:
-        hits = _find_blocking_reachable(fn, modules, seen=set())
-        offenders += [
-            f"{mod.path.relative_to(_REPO_ROOT)}:{fn.name} -> {h}" for h in hits
-        ]
+        hits = _find_blocking_reachable(fn, modules, seen=set(), waived=waived)
+        root = f"{mod.path.relative_to(_REPO_ROOT)}:{fn.name}"
+        for h in hits:
+            offenders.append(f"{root} -> {h}")
+            pairs.add(f"{root} -> {h.split(' (via ')[0]}")
+    return offenders, pairs
+
+
+# Every `route -> blocking leaf` pair that survives with the waiver removed.
+# All of them are DEF120: SimEngine calls `self.current_quote` synchronously
+# per-ticker in a loop (`sim_engine.py::_marks_with_quotes`) rather than at the
+# route, so the blocking call never appears at the handler.
+#
+# Pinned at LEAF granularity, not route granularity. The auditor's own
+# recommended fix ("assert the offending-ROUTE set equals the 9 known routes")
+# does not catch the auditor's own MAJOR mutation: a fresh `current_news` call
+# inside `SimEngine.submit` reaches `sim.py:submit_trade`, which is already in
+# the route set, so a route-level pin stays green. `submit_trade -> current_news`
+# is a new PAIR, so this one goes red. Verified by re-running that exact
+# mutation against this test.
+_DEF120_KNOWN_BLOCKING_PAIRS = {
+    "backend/app/api/mandate.py:audit_holdings -> <obj>.current_quote",
+    "backend/app/api/portfolio.py:sector_allocation -> <obj>.current_quote",
+    "backend/app/api/room.py:stream_room -> <obj>.current_quote",
+    "backend/app/api/sim.py:close_trade -> <obj>.current_quote",
+    "backend/app/api/sim.py:evaluate_trades -> <obj>.current_quote",
+    "backend/app/api/sim.py:get_portfolio -> <obj>.current_quote",
+    "backend/app/api/sim.py:preview_trade -> <obj>.current_quote",
+    "backend/app/api/sim.py:reset_portfolio -> <obj>.current_quote",
+    "backend/app/api/sim.py:submit_trade -> <obj>.current_quote",
+}
+
+
+def test_waived_chains_still_pin_the_known_offender_set():
+    """The waiver must hide DEF120 and NOTHING ELSE.
+
+    Round-1 audit finding (MAJOR): `_WAIVED_CALL_CHAIN_NAMES` prunes the whole
+    subtree by bare function name, so a blocking call added *inside* a waived
+    function is invisible to the main guard. Mutation-proved by the auditor — a
+    fresh `self.current_news(...)` in `SimEngine.submit`, reachable from
+    `POST /sim/trade`, left the main guard green. A guard that goes green on a
+    genuinely new regression is worse than no guard (this project's
+    DEF038/DEF063 lesson in a different costume).
+
+    This companion runs the same walk with an EMPTY waiver and pins the result
+    to exactly the known DEF120 pairs. DEF120 stays waived in the main guard,
+    while any new `route -> leaf` pair turns this red. Closing DEF120 means
+    deleting the waiver names AND shrinking this set to empty.
+    """
+    _, pairs = _offending_routes(waived=set())
+
+    unexpected = pairs - _DEF120_KNOWN_BLOCKING_PAIRS
+    assert not unexpected, (
+        "NEW blocking route/leaf pair(s) not covered by DEF120 — a synchronous, "
+        "network-bound leaf is reachable from an async route through one of the "
+        "waived call chains, where the main guard cannot see it. Fix the call "
+        "site with `await asyncio.to_thread(<leaf>, ...)`:\n"
+        + "\n".join(sorted(unexpected))
+    )
+
+    fixed = _DEF120_KNOWN_BLOCKING_PAIRS - pairs
+    assert not fixed, (
+        "pair(s) listed as known-blocking under DEF120 are no longer blocking — "
+        "good news, but this set is now stale and must shrink to match, or it "
+        "will keep masking a future regression on them:\n" + "\n".join(sorted(fixed))
+    )
+
+
+# Every synchronous `httpx.<verb>(` call site under backend/app, pinned by
+# inventory rather than by reachability. Round-1 audit finding (MINOR): the
+# live Alpaca pair is the identical blocking-I/O class but was held only by a
+# docstring comment. The auditor independently confirmed WHY it cannot ride the
+# call-graph walk — adding `httpx.<verb>` detection to the traversal produced
+# 85 offender chains, all bogus, because name-based resolution of bare
+# `.get`/`.post` collides with `Session.get`, `*_store.get`, `_resolve_url`,
+# etc. So this is a non-graph inventory pin instead: a NEW sync httpx call
+# anywhere under backend/app turns it red, no reachability needed.
+_KNOWN_SYNC_HTTPX_SITES = {
+    # DEF116 D4: identical class, out of scope, gated on urow.alpaca_access_token
+    # so it fires only for linked users. Needs its own decision.
+    "app/services/alpaca_service.py:77",
+    "app/services/alpaca_service.py:113",
+    # RevenueCat: called from a sync `def` route (runs in FastAPI's threadpool),
+    # so it does not park the event loop — the CR049 distinction.
+    "app/services/revenuecat_client.py:74",
+    "app/services/room_runner.py:2618",
+}
+
+
+def test_sync_httpx_call_site_inventory_is_pinned():
+    sites: set[str] = set()
+    for path in _iter_py(_APP):
+        tree = ast.parse(path.read_text())
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            f = node.func
+            if (
+                isinstance(f, ast.Attribute)
+                and isinstance(f.value, ast.Name)
+                and f.value.id == "httpx"
+                and f.attr in {"get", "post", "put", "patch", "delete", "request", "stream"}
+            ):
+                sites.add(f"{path.relative_to(_APP.parent)}:{node.lineno}")
+
+    added = sites - _KNOWN_SYNC_HTTPX_SITES
+    assert not added, (
+        "NEW synchronous `httpx.<verb>(` call site(s) under backend/app. If any "
+        "async route can reach one, it parks the single event loop for the whole "
+        "round-trip (DEF116, same class as CR049's MAJOR). Use `httpx.AsyncClient` "
+        "with `await`, or wrap the call in `await asyncio.to_thread(...)`. If it is "
+        "genuinely only reachable from a sync `def` route, add it here with that "
+        "reason:\n" + "\n".join(sorted(added))
+    )
+
+    removed = _KNOWN_SYNC_HTTPX_SITES - sites
+    assert not removed, (
+        "pinned sync httpx site(s) no longer present (moved or fixed) — update "
+        "this inventory so it keeps catching new ones:\n" + "\n".join(sorted(removed))
+    )
+
+
+def test_no_blocking_leaf_call_reachable_from_async_route():
+    offenders, _ = _offending_routes(waived=_WAIVED_CALL_CHAIN_NAMES)
 
     assert not offenders, (
         "async def route handler(s) can reach a synchronous, network-bound "
