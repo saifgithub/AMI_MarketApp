@@ -5,7 +5,10 @@ SUBMITTED: round 1
 
 **Item:** CR077 Phase 2 — parallelise the ANALYSTS phase of the Room only.
 **Lane branch:** `lane/CR077-ROOM.coder.room`
-**SHA:** `8af991a5ca55dea31beabd577d08fe81606af3f2`
+**SHA:** `aec620c` — the **rebased** tip (build `8af991a` merged onto `main` carrying the
+CR026 sector-cap integration). Audit THIS sha, not `8af991a`: the build predated CR026's
+integration and CR026's own FLAG 1 called this contention out in advance ("any later
+coder.room lane touching room_runner/room_prompts must rebase onto these").
 **DEPENDS-ON:** none
 **GATE:** independent (D-5 — ships to two app stores, changes user-facing Room behaviour)
 
@@ -124,3 +127,33 @@ prefix cache, `min_tokens=250` so token counts are identical between arms.
 - `backend/app/services/room_runner.py`
 - `backend/app/services/room_prompts.py`
 - `backend/tests/unit/test_cr077_phase_parallelism.py`
+
+
+## Architect rebase note (AT:R65, 2026-07-27) — verify, do not take on faith
+
+The coder built `8af991a` on a pre-CR026 base. CR026-BE integrated to `main` at `dbfc127`
+while this lane was building, touching the same two files additively. Per the CR075
+precedent the Architect performed the rebase; per that same precedent, **confirm it
+independently** (`git merge-base --is-ancestor dbfc127 aec620c` should be true).
+
+3 conflict hunks, all additive-vs-additive, resolved keep-both:
+
+1. `build_room_messages` signature — `parallel_phase` (CR077) + `sector_weights` (CR026).
+2. `room_prompts` body — CR077's parallel-analyst `collaboration_line` rescope + CR026's
+   PM-gated `sector_line` block. The consuming `room_addition` f-string already referenced
+   both (`:303` sector_line, `:312` collaboration_line), so only the producing blocks
+   conflicted.
+3. `room_runner` PM call site — `parallel_phase=` (CR077) + `sector_weights=ctx.sector_weights`
+   (CR026).
+
+**Both features verified to survive, not assumed:** CR026's 4 structural call-site tests and
+CR077-ROOM's 10 parallelism/guard tests pass together (34 passed); full suite **1304**
+(= 1294 on `main` + 10 new). Worth adversarial attention anyway — a keep-both resolution is
+exactly where one feature can be silently half-dropped, and the sector wiring's failure
+direction is OPEN (block 6b no-ops without context), so re-run CR026's 4 mutation drops on
+this rebased tip rather than trusting the green suite alone.
+
+**Not re-measured after the rebase:** the coder's live 3.12x speedup figure was taken on
+`8af991a`. The rebase touched the PM call site and the prompt builder, not the analyst
+gather path, so it should hold — but it is unverified post-rebase and should not be quoted
+as measured on this SHA.
