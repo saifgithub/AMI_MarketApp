@@ -13,9 +13,15 @@ class RoomVerdict {
     this.target,
     this.stop,
     this.timeHorizonDays,
+    this.opinionsNotIncluded = const [],
   });
 
-  /// 'APPROVE' | 'REJECT' | 'MODIFY' | 'PASS'
+  /// 'APPROVE' | 'REJECT' | 'MODIFY' | 'PASS' | 'NO_VERDICT'.
+  ///
+  /// The enum grows — `NO_VERDICT` (CR098 Amendment 2) is the proof. Treat any
+  /// value you do not recognise as a non-approval and render it neutrally
+  /// rather than switching on an exhaustive list that a backend release can
+  /// invalidate.
   final String action;
   final double? sizePct;
   final double? entry;
@@ -26,9 +32,20 @@ class RoomVerdict {
   final List<String> violations;
   final bool overriddenFromLlm;
 
+  /// `AgentId` values that were NOT in the room for this run (CR098 D3).
+  /// Always present on the wire, empty on an ordinary full-roster run — so
+  /// empty must render nothing at all, never an empty header (D4).
+  final List<String> opinionsNotIncluded;
+
   bool get isApprove => action == 'APPROVE';
   bool get isReject => action == 'REJECT';
   bool get isPass => action == 'PASS';
+
+  /// CR098 Amendment 2 — the PM declined to call a trade because the session
+  /// ran without a market read. Every level field is null in this state, and
+  /// it is a professional refusal, NOT a rejection: rendering it in the
+  /// reject treatment tells the user their thesis was turned down.
+  bool get isNoVerdict => action == 'NO_VERDICT';
 
   factory RoomVerdict.fromJson(Map<String, dynamic> j) {
     return RoomVerdict(
@@ -39,8 +56,15 @@ class RoomVerdict {
       stop: (j['stop'] as num?)?.toDouble(),
       timeHorizonDays: (j['time_horizon_days'] as num?)?.toInt(),
       reason: j['reason'] as String? ?? '',
-      violations: ((j['violations'] as List?) ?? const []).cast<String>(),
+      violations: ((j['violations'] as List?) ?? const [])
+          .whereType<String>()
+          .toList(),
       overriddenFromLlm: (j['overridden_from_llm'] as bool?) ?? false,
+      // `whereType`, not `cast`: `cast` defers the type error to first read, so
+      // one non-String on the wire would throw inside build() rather than here.
+      opinionsNotIncluded: ((j['opinions_not_included'] as List?) ?? const [])
+          .whereType<String>()
+          .toList(),
     );
   }
 }
