@@ -12,6 +12,8 @@ Routes:
 
 from __future__ import annotations
 
+import json
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -49,6 +51,7 @@ from app.services.overlay_store import (
     get_overlay_store,
 )
 from app.api.dependencies import get_current_user
+from app.api.sse import sse_json, sse_text
 from app.db.models import User
 
 
@@ -112,12 +115,14 @@ async def brief_message(
                 user_message=req.user_message,
             ):
                 total += len(chunk)
-                safe = chunk.replace("\\", "\\\\").replace("\n", "\\n")
-                yield f"event: token\ndata: {safe}\n\n"
+                yield sse_text("token", chunk)
         except Exception as e:  # pragma: no cover — surfaced to client
-            yield f"event: error\ndata: {str(e)[:300]}\n\n"
+            # DEF127: framed, not interpolated. A pydantic ValidationError's
+            # message is always multi-line, which used to truncate this event
+            # at its first line — and a blank line in it forged a new event.
+            yield sse_text("error", str(e)[:300])
         finally:
-            yield f"event: done\ndata: {{\"chars\": {total}}}\n\n"
+            yield sse_json("done", json.dumps({"chars": total}))
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 

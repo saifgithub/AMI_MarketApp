@@ -1,5 +1,7 @@
 """1-on-1 chat endpoints. POST to start, POST to send messages (SSE stream back)."""
 
+import json
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -18,6 +20,7 @@ from app.services.journal_store import get_journal_store
 from app.services.lessons_service import get_lessons_service
 from app.services.mandate_store import resolve_mandate
 from app.api.dependencies import get_current_user
+from app.api.sse import sse_json, sse_text
 from app.db.models import User
 
 router = APIRouter(
@@ -110,12 +113,10 @@ async def send_message(
             ):
                 total_chars += len(chunk)
                 buffer.append(chunk)
-                # SSE event format
-                # Escape backslashes + newlines so the line stays valid
-                safe = chunk.replace("\\", "\\\\").replace("\n", "\\n")
-                yield f"event: token\ndata: {safe}\n\n"
+                yield sse_text("token", chunk)
         except Exception as e:
-            yield f"event: error\ndata: {str(e)[:300]}\n\n"
+            # DEF127: framed, not interpolated — see app/api/sse.py.
+            yield sse_text("error", str(e)[:300])
         finally:
             # Capture to Decision Journal — best-effort, never fail the stream
             try:
@@ -141,7 +142,7 @@ async def send_message(
                     ))
             except Exception:  # pragma: no cover
                 pass
-            yield f"event: done\ndata: {{\"chars\": {total_chars}}}\n\n"
+            yield sse_json("done", json.dumps({"chars": total_chars}))
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
