@@ -81,7 +81,7 @@ from app.services.social_context import (
 )
 from app.services.llm_gateway import ChatMessage, LLMGateway, get_llm_gateway
 from app.services.llm_json import extract_json_object
-from app.services.room_prompts import build_room_messages
+from app.services.room_prompts import build_room_messages, max_tokens_for
 from app.services.credit_service import (
     balance_for,
     live_data_surcharge,
@@ -1034,6 +1034,48 @@ def _annotate_rr_against_levels(
         f"{'; '.join(parts)} — {tail}. These are the figures of record.]"
     )
     return annotated, {"stated_rr": stated, "implied_rr": implied}
+
+
+# DEF125 — the transcript mark for a turn the model was cut off mid-writing.
+#
+# Written in the established `[AMI …]` annotation voice (see
+# `_annotate_rr_against_levels`) for three reasons, all load-bearing:
+#   1. It travels INTO the transcript, so the Trader, the three Risk debators
+#      and the PM read "this synthesis is incomplete" rather than inheriting a
+#      fragment as a finished conclusion — DEF095's contagion vector, closed.
+#   2. The user sees it. CR040: a failure this total must not be silent, and
+#      the alternative — a sentence that simply stops — reads as the agent
+#      having nothing more to say.
+#   3. `content.contains('[AMI')` is already the client's amber-mark test
+#      (CR106 §3.3), so a truncated row is flagged in the collapsed transcript
+#      with no client change at all.
+_TRUNCATION_MARK = (
+    "\n\n[AMI: this contribution hit its length limit and stops mid-thought — "
+    "it is incomplete. Treat the final sentence as unfinished, not as a "
+    "conclusion.]"
+)
+
+
+def _mark_if_truncated(
+    text: str,
+    *,
+    agent_id: AgentId,
+    meta: dict[str, Any],
+) -> str:
+    """Append the DEF125 incompleteness mark when the provider reports a length
+    stop. A no-op for every other stop reason, and for a provider that reports
+    none — the mark asserts a fact, so it is never inferred from text shape."""
+    if meta.get("finish_reason") != "length":
+        return text
+    logger.warning(
+        "room_agent_truncated",
+        agent_id=agent_id.value,
+        max_tokens=max_tokens_for(agent_id),
+        chars=len(text),
+    )
+    if _TRUNCATION_MARK.strip() in text:
+        return text
+    return text + _TRUNCATION_MARK
 
 
 def _verify_and_annotate_geometry(text: str) -> tuple[str, dict[str, Any] | None]:
@@ -2508,6 +2550,8 @@ async def _compute_agent_text(
             # CR026: the PM sees the real sector allocation it gatekeeps against.
             sector_weights=ctx.sector_weights,
         )
+        # DEF125: the provider reports its terminal stop reason here.
+        stream_meta: dict[str, Any] = {}
         try:
             chunks = await asyncio.wait_for(
                 _collect_agent_stream(gateway.stream_chat(
@@ -2515,14 +2559,16 @@ async def _compute_agent_text(
                     messages=messages,
                     model_tier=tier,  # type: ignore[arg-type]
                     locale=ctx.mandate.locale,
-                    max_tokens=400,
+                    max_tokens=max_tokens_for(agent_id),
                     audit_user_id=ctx.user_id,
                     audit_agent_id=agent_id.value,
                     audit_flow="room",
+                    meta=stream_meta,
                 )),
                 timeout=agent_timeout_s,
             )
             text = "".join(chunks).strip() or _scripted_for(agent_id, formatter)
+            text = _mark_if_truncated(text, agent_id=agent_id, meta=stream_meta)
         except asyncio.TimeoutError:
             logger.warning(
                 "room_agent_timeout",
@@ -2678,6 +2724,11 @@ async def _stream_pm_response(
         # its own safety floor enforces.
         halal_universe=ctx.halal_universe,
     )
+    # DEF125 item 4: the PM's own budget was a separate hard-coded 600, one
+    # line from the flat 400 — and DEF058 (verdict fails to parse in ~22% of
+    # runs) suspected exactly that cap clipping the JSON's closing brace. Route
+    # it through the same table so there is one place the Room's budgets live.
+    pm_meta: dict[str, Any] = {}
     try:
         chunks = await asyncio.wait_for(
             _collect_agent_stream(gateway.stream_chat(
@@ -2685,13 +2736,23 @@ async def _stream_pm_response(
                 messages=messages,
                 model_tier=tier,  # type: ignore[arg-type]
                 locale=ctx.mandate.locale,
-                max_tokens=600,
+                max_tokens=max_tokens_for(AgentId.PORTFOLIO_MANAGER),
                 audit_user_id=ctx.user_id,
                 audit_agent_id=AgentId.PORTFOLIO_MANAGER.value,
                 audit_flow="room_pm",
+                meta=pm_meta,
             )),
             timeout=agent_timeout_s,
         )
+        # No `[AMI …]` mark here: this text is not a transcript turn, it is the
+        # raw JSON `_parse_pm_verdict` reads. Appending prose to it would break
+        # the parse this budget exists to protect — the warning is the whole
+        # disclosure, and a truncated envelope still fails safe to PASS.
+        if pm_meta.get("finish_reason") == "length":
+            logger.warning(
+                "room_pm_truncated",
+                max_tokens=max_tokens_for(AgentId.PORTFOLIO_MANAGER),
+            )
         return "".join(chunks).strip()
     except asyncio.TimeoutError:
         logger.warning("room_pm_timeout", timeout_s=agent_timeout_s)
@@ -2747,6 +2808,11 @@ async def _reformat_pm_response(
     the caller then falls through to the fail-safe PASS."""
     plan = effective_plan_for_user(ctx.user_id)
     tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
+    # DEF125 item 4: the reformatter re-emits the SAME JSON envelope the PM was
+    # asked for, so a budget below the PM's guarantees the retry is clipped
+    # whenever the original was — the recovery path failing for the very reason
+    # it was invoked. It gets the PM's budget.
+    reformat_meta: dict[str, Any] = {}
     try:
         chunks = await asyncio.wait_for(
             _collect_agent_stream(gateway.stream_chat(
@@ -2754,13 +2820,19 @@ async def _reformat_pm_response(
                 messages=[ChatMessage(role="user", content=raw_text)],
                 model_tier=tier,  # type: ignore[arg-type]
                 locale=ctx.mandate.locale,
-                max_tokens=400,
+                max_tokens=max_tokens_for(AgentId.PORTFOLIO_MANAGER),
                 audit_user_id=ctx.user_id,
                 audit_agent_id=AgentId.PORTFOLIO_MANAGER.value,
                 audit_flow="room_pm_reformat",
+                meta=reformat_meta,
             )),
             timeout=agent_timeout_s,
         )
+        if reformat_meta.get("finish_reason") == "length":
+            logger.warning(
+                "room_pm_reformat_truncated",
+                max_tokens=max_tokens_for(AgentId.PORTFOLIO_MANAGER),
+            )
         return "".join(chunks).strip()
     except asyncio.TimeoutError:
         logger.warning("room_pm_reformat_timeout", timeout_s=agent_timeout_s)

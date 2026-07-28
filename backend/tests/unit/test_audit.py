@@ -171,7 +171,8 @@ async def test_llm_gateway_writes_audit_on_success():
     class _StreamProvider(LLMProvider):
         name = "stream_fake"
 
-        async def stream_chat(self, *, system_prompt, messages, model_tier, max_tokens=1024):
+        async def stream_chat(self, *, system_prompt, messages, model_tier,
+                              max_tokens=1024, meta=None):  # DEF125 meta channel
             yield "Hello "
             yield "world"
 
@@ -215,7 +216,8 @@ async def test_llm_gateway_writes_audit_on_error():
     class _BoomProvider(LLMProvider):
         name = "boom"
 
-        async def stream_chat(self, *, system_prompt, messages, model_tier, max_tokens=1024):
+        async def stream_chat(self, *, system_prompt, messages, model_tier,
+                              max_tokens=1024, meta=None):  # DEF125 meta channel
             yield "partial"
             raise RuntimeError("connection reset")
 

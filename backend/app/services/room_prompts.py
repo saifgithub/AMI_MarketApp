@@ -78,6 +78,75 @@ _LENGTH_GUIDE: dict[AgentId, str] = {
 }
 
 
+# DEF125 — the decode budget that pays for the ask above, per agent.
+#
+# One flat `max_tokens=400` served all 11 streamed agents until 2026-07-29, and
+# it did not fit what three of them were asked for. Measured on melehost's
+# `llm_audit` (flow='room', error IS NULL, 30 days, ~884 calls/agent; "cut off"
+# = the stored text ends on an alphanumeric, i.e. no terminal punctuation):
+#
+#   research_manager  584/884 = 66.1%   (max 1,880 chars, avg 1,573)
+#   bull_researcher   536/885 = 60.6%   (max 1,966 chars, avg 1,550)
+#   bear_researcher   226/884 = 25.6%   (max 1,806 chars, avg 1,383)
+#   neutral_debator    61/883 =  6.9%
+#   trader             19/884 =  2.1%
+#   fundamentals       5/885  =  0.6%
+#   everything else   ≤1/885  = ≤0.1%
+#
+# ~1,900 chars ≈ 400 tokens at this model's ratio, and the three worst agents'
+# AVERAGES sit against their maxima — the signature of a distribution pinned at
+# a ceiling rather than one that happens to be long.
+#
+# Sized here rather than in `room_runner` deliberately: the ask (`_LENGTH_GUIDE`)
+# and the budget that has to pay for it drifted apart precisely because they
+# lived in different files. `test_def125_*` fails the build if an agent gains a
+# length guide without a budget.
+#
+# Kept modest where the measurement says it can be: `max_tokens` costs nothing
+# in decode unless the tokens are actually generated, but vLLM reserves KV-cache
+# blocks against it when scheduling, so an inflated ceiling on eleven concurrent
+# agents buys truncation headroom with concurrency. Raise only where truncation
+# was measured.
+_DEFAULT_AGENT_MAX_TOKENS = 400
+
+_AGENT_MAX_TOKENS: dict[AgentId, int] = {
+    AgentId.FUNDAMENTALS_ANALYST: 500,
+    AgentId.MARKET_ANALYST: 400,
+    AgentId.NEWS_ANALYST: 400,
+    AgentId.SOCIAL_MEDIA_ANALYST: 400,
+    # Thesis + evidence + falsifier, in three-to-five sentences, and both
+    # researchers write to the same shape — budget them symmetrically so the
+    # Bear case is never the shorter one for a reason the reader cannot see.
+    AgentId.BULL_RESEARCHER: 800,
+    AgentId.BEAR_RESEARCHER: 800,
+    # The worst case and the most damaging: the RM's synthesis is the single
+    # input EXECUTION and RISK reason from (DEF095 — the transcript is the
+    # contagion vector), and it was cut off in two convenes out of three.
+    AgentId.RESEARCH_MANAGER: 900,
+    # Only 2.1%, but a truncated Trader loses the level triple that
+    # `_LEVEL_PATTERNS` and the whole downstream geometry depend on — the one
+    # agent where a cut tail is unparseable rather than merely incomplete.
+    AgentId.TRADER: 500,
+    AgentId.AGGRESSIVE_DEBATOR: 400,
+    AgentId.CONSERVATIVE_DEBATOR: 400,
+    AgentId.NEUTRAL_DEBATOR: 500,
+    # The PM emits a JSON envelope, not prose, and DEF058 (verdict fails to
+    # parse in ~22% of runs) suspected its own 600-token cap clipping the JSON
+    # one line from the end. Same family, one line apart in the source.
+    AgentId.PORTFOLIO_MANAGER: 900,
+}
+
+
+def max_tokens_for(agent_id: AgentId) -> int:
+    """DEF125 — the decode budget for one Room agent's turn.
+
+    Falls back to the flat legacy value for an agent id with no entry rather
+    than raising: a new agent should stream at the old budget, not fail to
+    speak. The parity test is what stops that fallback becoming permanent.
+    """
+    return _AGENT_MAX_TOKENS.get(agent_id, _DEFAULT_AGENT_MAX_TOKENS)
+
+
 # ── Public ───────────────────────────────────────────────────────────────
 
 

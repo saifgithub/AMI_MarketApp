@@ -22,7 +22,7 @@ import asyncio
 import random
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 import httpx
 
@@ -114,8 +114,17 @@ class LLMProvider:
         messages: list[ChatMessage],
         model_tier: ModelTier = "cheap",
         max_tokens: int = 1024,
+        meta: dict[str, Any] | None = None,
     ) -> AsyncIterator[str]:
-        """Yield content chunks as they arrive from the provider."""
+        """Yield content chunks as they arrive from the provider.
+
+        DEF125: [meta] is a per-call, caller-owned dict the provider writes the
+        terminal `finish_reason` into (normalised across providers: `"length"`
+        when the model was cut off at `max_tokens`, `"stop"` on a natural end).
+        A dict rather than a return value because the contract is a generator —
+        and per-call rather than provider state because providers are shared
+        singletons serving concurrent runs, so an attribute would race.
+        """
         raise NotImplementedError
 
 
@@ -192,6 +201,7 @@ class MockProvider(LLMProvider):
         messages: list[ChatMessage],
         model_tier: ModelTier = "cheap",
         max_tokens: int = 1024,
+        meta: dict[str, Any] | None = None,
     ) -> AsyncIterator[str]:
         # Pick canned response based on which agent's prompt this is
         text = self._DEFAULT
@@ -233,6 +243,7 @@ class AnthropicProvider(LLMProvider):
         messages: list[ChatMessage],
         model_tier: ModelTier = "cheap",
         max_tokens: int = 1024,
+        meta: dict[str, Any] | None = None,
     ) -> AsyncIterator[str]:
         model = TIER_TO_MODEL[model_tier]
         # Anthropic separates `system` from `messages`; user/assistant only in messages
@@ -274,6 +285,16 @@ class AnthropicProvider(LLMProvider):
                         delta = obj.get("delta") or {}
                         if delta.get("type") == "text_delta":
                             yield delta.get("text", "")
+                    elif obj.get("type") == "message_delta" and meta is not None:
+                        # DEF125: Anthropic reports the terminal stop on
+                        # `message_delta.delta.stop_reason`. Normalise its
+                        # `max_tokens` to the OpenAI/vLLM vocabulary so callers
+                        # test one value regardless of which provider served.
+                        stop = ((obj.get("delta") or {}).get("stop_reason"))
+                        if stop:
+                            meta["finish_reason"] = (
+                                "length" if stop == "max_tokens" else str(stop)
+                            )
                 except Exception as e:
                     logger.warn("anthropic_chunk_parse_failed", error=str(e), line=line[:200])
 
@@ -327,6 +348,7 @@ class VLLMProvider(LLMProvider):
         messages: list[ChatMessage],
         model_tier: ModelTier = "cheap",
         max_tokens: int = 1024,
+        meta: dict[str, Any] | None = None,
     ) -> AsyncIterator[str]:
         # OpenAI / vLLM put the system message as the first entry of `messages`.
         openai_messages: list[dict[str, str]] = [
@@ -369,6 +391,13 @@ class VLLMProvider(LLMProvider):
                     choices = obj.get("choices") or []
                     if not choices:
                         continue
+                    # DEF125: vLLM sends `finish_reason` on the final chunk,
+                    # whose delta is empty — so read it BEFORE the `content`
+                    # guard, which would otherwise `continue` straight past it.
+                    if meta is not None:
+                        finish = choices[0].get("finish_reason")
+                        if finish:
+                            meta["finish_reason"] = str(finish)
                     delta = choices[0].get("delta") or {}
                     content = delta.get("content")
                     if content:
@@ -538,6 +567,7 @@ class LLMGateway:
         audit_user_id: object = None,
         audit_agent_id: str | None = None,
         audit_flow: str | None = None,
+        meta: dict[str, Any] | None = None,
     ) -> AsyncIterator[str]:
         import time
         from app.services.audit import record_llm_call
@@ -559,12 +589,18 @@ class LLMGateway:
         started = time.perf_counter()
         buf: list[str] = []
         error_str: str | None = None
+        # DEF125: always give the provider somewhere to report the stop reason,
+        # even when the caller did not ask for it — the length-stop warning
+        # below is what makes a silent truncation visible on EVERY flow
+        # (room, one-on-one, brief, Concierge), not only the ones that opted in.
+        call_meta: dict[str, Any] = meta if meta is not None else {}
         try:
             async for chunk in provider.stream_chat(
                 system_prompt=effective_system_prompt,
                 messages=messages,
                 model_tier=model_tier,
                 max_tokens=max_tokens,
+                meta=call_meta,
             ):
                 buf.append(chunk)
                 yield chunk
@@ -573,6 +609,20 @@ class LLMGateway:
             raise
         finally:
             latency_ms = int((time.perf_counter() - started) * 1000)
+            if call_meta.get("finish_reason") == "length":
+                # CR040 — degrade loudly. The model ran out of budget mid-
+                # sentence and the caller is about to treat the fragment as a
+                # finished answer. DEF125 measured this at 66% of Research
+                # Manager turns while nothing anywhere said a word about it.
+                logger.warning(
+                    "llm_call_length_stop",
+                    provider=provider.name,
+                    tier=model_tier,
+                    agent_id=audit_agent_id,
+                    flow=audit_flow,
+                    max_tokens=max_tokens,
+                    chars=sum(len(c) for c in buf),
+                )
             record_llm_call(
                 user_id=audit_user_id if audit_user_id else None,
                 agent_id=audit_agent_id,
