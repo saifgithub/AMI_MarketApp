@@ -5,16 +5,26 @@
 # lib/generated/l10n/app_localizations*.dart from the ARB files in
 # `lib/l10n/`.
 #
+# DEF137: the per-key fallback to English below is REAL but is not a
+# licence to skip translations. It renders English mid-paragraph inside an
+# otherwise translated screen — a silent degrade, and the reason 24 keys
+# accumulated unnoticed across five CRs. `test/l10n_key_parity_test.dart`
+# now fails the build on any key-set divergence, so "leave them out" is no
+# longer an option the tooling accepts. (This comment used to say it was.)
+#
 # Adding a new locale:
-#   1. Drop a new lib/l10n/app_<code>.arb file (same keys as app_en.arb;
-#      a key missing from the new file falls back to English).
+#   1. Drop a new lib/l10n/app_<code>.arb file with the SAME key set as
+#      app_en.arb. The parity test discovers it by glob — no list to update.
 #   2. Add the locale to `supportedLocales` in lib/i18n/locales.dart.
 #   3. flutter pub get
 #
 # Adding a new string:
-#   1. Add the key + @key metadata in app_en.arb.
-#   2. Mirror it in app_ar.arb / app_ms.arb (or leave them out — falls
-#      back to English).
+#   1. Add the key + @key metadata in app_en.arb. Declare every placeholder
+#      in the metadata — the parity test reads that declaration, and an
+#      undeclared one makes the check skip the string.
+#   2. Mirror it in app_ar.arb AND app_ms.arb. Not optional; see above.
+#      An ICU plural must keep its plural form in every locale — Arabic has
+#      six categories (zero/one/two/few/many/other), not two.
 #   3. flutter pub get
 #   4. Use it: `AppLocalizations.of(context)!.<key>`.
 
