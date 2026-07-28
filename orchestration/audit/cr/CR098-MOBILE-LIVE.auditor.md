@@ -188,3 +188,82 @@ bounces it is one hop outside what anyone tested: the disclosure this lane exist
 error surfaced. The fix is four lines in `_recoverViaPolling`, prototyped and measured here at 130
 passed with zero regressions, and CR090's disclosure on the same screen already survives the same
 path — so this is a lane defect, not a design limit. Run report `runs/2026-07-28_run-77/`.
+
+---
+
+## Round 2
+
+**Audited SHA:** `44dcc0f` on `lane/CR098-MOBILE-LIVE.coder.mobile`, fresh detached worktree.
+Round-2 scope: **2 files, +287/−4** (`room_providers.dart`, `room_agent_withheld_test.dart`) —
+confirmed by `git diff --stat dca1051 44dcc0f`.
+
+### Round-1 MAJOR — FIXED, measured independently
+
+Full suite **128/128** reproduced (lane claimed 128; round 1 was 122, +6 = 2 recovery + 4
+malformed). `flutter analyze --no-fatal-infos` on both touched files: No issues found (the 5
+full-tree infos are pre-existing, in unrelated test files).
+
+Mutations re-derived, each applied physically and reverted:
+
+| | Mutation | Result |
+|---|---|---|
+| **M-A** | remove the re-seat (`order.insertAll(0, chairs)`) | **RED — exactly the 2 new recovery tests** |
+| **M-B** | restore the hard casts | **RED — exactly the 4 new malformed tests** |
+
+Tree clean after reverts (`git status --porcelain` empty), **128** restored.
+
+### The `insertAll` deviation — validated, and better than my prototype
+
+The Architect replaced my per-key `insert(0)` with `insertAll(0, chairs)` on the argument that
+per-key insertion reverses relative order for two or more withheld chairs. My own probe (P1,
+real notifier, break-then-recover, two withholds): recovery seats
+`[market_analyst, fundamentals_analyst, news_analyst]` — **arrival order preserved**, where
+per-key `insert(0)` would have produced `[fundamentals_analyst, market_analyst, …]`. The
+deviation is correct and the reasoning in the bridge is accurate. Not gold-plating: the
+two-chair case is one roster change away.
+
+### Round-1 MINOR — FIXED, and the Architect's correction of my shorthand is right
+
+I wrote `as String?` + skip; the bridge correctly notes `7 as String?` still throws, so my own
+probes B5/B6 would have stayed live under it. The shipped shape-checks (`is String`, `is num` +
+`.toInt()`, skip on a bad id) cover B1/B2/B3/B5/B6 — verified against the four table-driven
+tests, each asserting the following event still lands **and** `getRoom` was never called (the
+discriminator). My P2 probe adds the shape nobody tabled: a **skipped** malformed withhold
+(bad `agent_id`) followed by a good one, then a break — recovery re-seats only the good chair
+(`order == [market_analyst, news_analyst]`), nothing is resurrected from the skipped event.
+
+### Harness notes — both confirmed, one cost me a probe
+
+The `tester.runAsync()` requirement is real: `testWidgets` fake-async zones never fire the
+timers the polling loop awaits. And my first probe run failed with zero events processed — my
+own harness bug (missing `SharedPreferences.setMockInitialValues`, which `DeviceUser.getOrCreate`
+needs), caught before it became a finding, same class as my round-1 autoDispose note.
+
+### MAJOR 1 (round 2) — no DoD table on a `SCOPE: cr` submission
+
+Same finding as DEF131 round 2, same rule, same severity, applied consistently: the bridge opens
+`SCOPE: cr`, and per AUDITOR_LOOP_PROMPT step 4 + DEFINITION_OF_DONE.md rule 5 a CR-scope
+submission owes the DoD table and a missing table is a MAJOR. Most dispositions are already in
+the bridge prose (tests, manual verification, scope, what-was-not-done); rendering the table is
+minutes. If this lane is in truth a chunk of CR098, the correct move is `SCOPE: chunk` with the
+shorter evidence list — but the submission as it stands says `cr`.
+
+### Recorded, not scored
+
+- **Translation flag, still open:** the 4 round-1 strings still carry English in the generated
+  `ar`/`ms` files; no new strings in round 2. Separate non-blocking lane per convention.
+- **Nothing on a device or against melehost** — promotion hold, unchanged from round 1.
+- **CR104 thin-fundamentals claim** — still unmeasured by all three of us.
+- Round-1 M1–M5 mutation coverage is untouched by this diff; baseline green re-confirms the
+  wiring. Not re-derived.
+
+**BLOCKER 0 · MAJOR 1 · MINOR 0**
+
+**VERDICT: AWAITING_FIXES (round 2)** — both round-1 findings are genuinely closed: the chair
+survives a dropped connection (mutation-proved, M-A red at exactly the 2 recovery tests), a
+malformed payload no longer diverts the run into recovery (M-B red at exactly the 4 malformed
+tests), the `insertAll` deviation is validated against my own two-chair probe, and the Architect's
+correction of my cast shorthand is right. What bounces it is procedural and identical to DEF131
+round 2 an hour ago: `SCOPE: cr` stated, no DoD table rendered, and the rule leaves no
+discretion. Render the table — or state `SCOPE: chunk` if that is what this lane is — and this
+closes. Run report `runs/2026-07-28_run-80/`.
