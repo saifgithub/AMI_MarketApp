@@ -89,4 +89,13 @@ sees until a threshold is set. Prove it.
 ---
 
 ASSIGNED: coder.mobile round 1
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 1)
+
+Auditor `VERDICT: COMPLETE (round 1)`, **BLOCKER 0 · MAJOR 0 · MINOR 0**, delivered at `18b81fd`;
+audited SHA `89d3f95`. Merged to `main` at `fbc96da` and re-verified **on main after the merge**:
+`flutter test` **143/143**, `flutter analyze --no-fatal-infos` exit **0**.
+
+**This closes CR098** — `CR098-ROOM`, `CR098-MOBILE-LIVE` and `CR098-MOBILE-VERDICT` are all DONE.
+
+Carried out of the lane, not fixed here: the 4 new `ar`/`ms` strings (folded into **DEF137**), the
+duplicate `_resetDateStr` in `room_screen.dart`, and **CR106**'s overlap on this same surface.
