@@ -1,6 +1,8 @@
 #!/bin/sh
 # watcher.sh - lane-state watcher for the audit handshake (PROTOCOL.md v2 lanes).
 # Derives per-item state from the two lane files exactly as PROTOCOL.md defines it:
+#   UNPUSHED       : committed, but the newest commit is not on origin's default branch — the      <-- loud
+#                    auditor works from its own checkout and cannot see it (DEF131)
 #   AWAITING_AUDIT : architect SUBMITTED round > auditor VERDICT round, or no auditor file yet
 #   AWAITING_FIXES : auditor's LATEST verdict keyword is AWAITING_FIXES (keyword wins, per protocol note)
 #   COMPLETE       : auditor's latest verdict keyword is COMPLETE and rounds have caught up
@@ -57,16 +59,49 @@ undelivered() {  # $1=file; echoes "1" if the file is untracked or differs from 
   echo ""
 }
 
+unpushed() {  # $1=file; echoes "1" if the file's newest commit is not on the shared remote branch
+  # `undelivered` above closes the working-tree gap. This closes the one after it, and they are NOT
+  # the same gap: a file can be committed (so `undelivered` is silent) and still exist only in this
+  # clone. The auditor works from its OWN checkout and reaches this repo through `origin`, so an
+  # unpushed SUBMITTED marker makes the lane read AWAITING_AUDIT here and not exist at all there.
+  # Both sides then behave correctly and disagree forever — the architect waits for a verdict on
+  # work never delivered, the auditor truthfully reports nothing to audit. DEF131 is that, observed:
+  # two lanes sat AWAITING_AUDIT on this board for hours while 12 commits stayed local.
+  # Silent when git is unavailable, this is not a repo, or no remote branch can be resolved (a fresh
+  # clone, melehost, a detached CI checkout): the check may degrade, never fail the caller.
+  command -v git >/dev/null 2>&1 || { echo ""; return; }
+  d=$(dirname -- "$1")
+  git -C "$d" rev-parse --git-dir >/dev/null 2>&1 || { echo ""; return; }
+  # The handshake medium is the shared default branch, not this checkout's upstream: a lane worktree
+  # tracks `origin/lane/...`, which the auditor never reads. Resolve origin's HEAD, fall back to
+  # origin/main, and stay silent if neither exists rather than inventing a branch name.
+  rem=$(git -C "$d" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
+  [ -n "$rem" ] || rem=$(git -C "$d" rev-parse --verify --quiet origin/main >/dev/null 2>&1 && echo origin/main)
+  [ -n "$rem" ] || { echo ""; return; }
+  sha=$(git -C "$d" log -1 --format=%H -- "$1" 2>/dev/null)
+  [ -n "$sha" ] || { echo ""; return; }
+  # NOTE: read against the LOCAL remote-tracking ref — no fetch. A watcher must not do network I/O
+  # on every poll. The stale direction is the safe one: after your own push the ref is current, so
+  # the normal flow never false-alarms; a ref stale because SOMEONE ELSE pushed can only over-report
+  # UNPUSHED, which costs a `git fetch`, never a silently missed delivery.
+  git -C "$d" merge-base --is-ancestor "$sha" "$rem" 2>/dev/null && { echo ""; return; }
+  echo "1"
+}
+
 lane_state() {  # $1=item id; echoes "STATE sub vr keyword"
   a="$CR_DIR/$1.architect.md"; u="$CR_DIR/$1.auditor.md"
   sub=$(last_round "$a" 'SUBMITTED: *round *[0-9]+'); sub=${sub:-0}
   # Never call an uncommitted submission AWAITING_AUDIT: an auditor told to audit the committed SHA
   # would find no submission at all. UNCOMMITTED is builder-actionable and one `git add` from fixed.
   if [ "$sub" -gt 0 ] && [ -n "$(undelivered "$a")" ]; then echo "UNCOMMITTED $sub - -"; return; fi
+  # Committed is not delivered. Checked immediately after UNCOMMITTED and before any state that
+  # would tell someone to act, because the auditor cannot see this file at all until it is pushed.
+  if [ "$sub" -gt 0 ] && [ -n "$(unpushed "$a")" ]; then echo "UNPUSHED $sub - -"; return; fi
   if [ ! -f "$u" ]; then echo "AWAITING_AUDIT $sub - -"; return; fi
   # Same rule on the verdict side, so this table and the dispatch board cannot disagree about
   # whether a gate has been satisfied.
   if [ -n "$(undelivered "$u")" ]; then echo "UNCOMMITTED $sub - -"; return; fi
+  if [ -n "$(unpushed "$u")" ]; then echo "UNPUSHED $sub - -"; return; fi
   kw=$(last_kw "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES)')
   vr=$(last_round "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES) *\(round *[0-9]+'); vr=${vr:-0}
   # A verdict can only answer a submission that exists. vr > sub means a round was mistyped, and

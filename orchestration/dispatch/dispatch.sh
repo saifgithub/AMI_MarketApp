@@ -11,6 +11,8 @@
 #   IN_AUDIT       : READY_FOR_AUDIT + audit VERDICT not yet returned
 #   AUDIT_RETURNED : audit VERDICT = AWAITING_FIXES
 #   AUDIT_PASSED   : audit VERDICT = COMPLETE, DISPATCH not yet ACCEPTED
+#   UNPUSHED       : verdict committed but not on origin's default branch — the Architect's  <-- loud
+#                    checkout cannot see it; chase the push, never merge (DEF131)
 #   BAD_ROUND      : VERDICT round > audit-lane SUBMITTED round — a mistyped stamp  <-- loud
 #   DONE           : DISPATCH = ACCEPTED *and* the lane's GATE is satisfied
 #   UNGATED        : DISPATCH = ACCEPTED but the gate is NOT satisfied  <-- loud
@@ -28,8 +30,8 @@
 #                                    Architect has not resolved (AUDIT_PASSED, UNCOMMITTED,
 #                                    BAD_ROUND). Exit 1 if any. Run at session start + each work unit.
 #   dispatch.sh verdict <ITEM>     print a lane's verdict, refusing if it is not yet delivered
-#   dispatch.sh architect [-i N]   block until >=1 lane needs the Architect
-#                                    (UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|AUDIT_PASSED)
+#   dispatch.sh architect [-i N]   block until >=1 lane needs the Architect — every state in
+#                                    needs_architect() below; keep that function the only list.
 #   dispatch.sh inst <id> [-i N]   block until >=1 lane is ASSIGNED to <id> or AUDIT_RETURNED on it
 # Env: DISPATCH_LANE_DIR overrides the lane dir (default <script dir>/lanes).
 #      DISPATCH_AUDIT_DIR overrides the audit lane dir (default <script dir>/../audit/cr).
@@ -81,6 +83,29 @@ undelivered() {  # $1=file; echoes "1" if the file is untracked or differs from 
   echo ""
 }
 
+unpushed() {  # $1=file; echoes "1" if the file's newest commit is not on the shared remote branch
+  # The gap AFTER `undelivered`, and not the same gap: a committed file still lives only in this
+  # clone until it is pushed. Both roles reach each other through `origin`, so an unpushed verdict
+  # is exactly as invisible to the Architect as an unpushed submission is to the auditor — and this
+  # board would call it AUDIT_PASSED. The prose above already told you to "chase, then merge" and to
+  # "commit and push"; DEF131 is the observation that nothing checked it. A claim in a comment is
+  # not a control.
+  # Silent when git is unavailable, this is not a repo, or no remote branch resolves: degrade,
+  # never fail the caller.
+  command -v git >/dev/null 2>&1 || { echo ""; return; }
+  d=$(dirname -- "$1")
+  git -C "$d" rev-parse --git-dir >/dev/null 2>&1 || { echo ""; return; }
+  rem=$(git -C "$d" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
+  [ -n "$rem" ] || rem=$(git -C "$d" rev-parse --verify --quiet origin/main >/dev/null 2>&1 && echo origin/main)
+  [ -n "$rem" ] || { echo ""; return; }
+  sha=$(git -C "$d" log -1 --format=%H -- "$1" 2>/dev/null)
+  [ -n "$sha" ] || { echo ""; return; }
+  # Local remote-tracking ref only — no fetch on a board read. Stale can only over-report, and
+  # over-reporting costs a `git fetch`; under-reporting costs a lane that never gets audited.
+  git -C "$d" merge-base --is-ancestor "$sha" "$rem" 2>/dev/null && { echo ""; return; }
+  echo "1"
+}
+
 lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
   a="$LANE_DIR/$1.assign.md"
   asg_line=$(last_match "$a" 'ASSIGNED: *[A-Za-z0-9._-]+ *round *[0-9]+')
@@ -107,7 +132,8 @@ lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
   v_round=$(last_round "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES) *\(round *[0-9]+'); v_round=${v_round:-0}
   # A verdict nobody committed has not been delivered, so it cannot satisfy a gate. Render it as
   # its own loud state rather than letting it read as a pass — the same reason UNGATED exists.
-  if [ -n "$v_kw" ] && [ -n "$(undelivered "$u")" ]; then v_kw="UNCOMMITTED"; fi
+  if [ -n "$v_kw" ] && [ -n "$(undelivered "$u")" ]; then v_kw="UNCOMMITTED"
+  elif [ -n "$v_kw" ] && [ -n "$(unpushed "$u")" ]; then v_kw="UNPUSHED"; fi
 
   disp_kw=$(last_kw "$a" 'DISPATCH: *(OPEN|ACCEPTED)')
   if [ "$disp_kw" = "ACCEPTED" ]; then
@@ -154,6 +180,11 @@ lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
         # finished and the result exists in exactly one working tree; the fix is one `git add`, and
         # nobody can act on it until then. Architect-actionable: chase the delivery, never merge.
         UNCOMMITTED)    echo "UNCOMMITTED $inst $asg_round $st_kw $v_kw $g" ;;
+        # Committed but unpushed: the verdict exists in the auditor's clone and nowhere this
+        # Architect can reach. Same shape as UNCOMMITTED, one step further along, and equally
+        # un-mergeable. Architect-actionable: chase the push (or `git fetch` first — a stale
+        # remote-tracking ref reports this too, and that is the cheap direction to be wrong in).
+        UNPUSHED)       echo "UNPUSHED $inst $asg_round $st_kw $v_kw $g" ;;
         *)              echo "IN_AUDIT $inst $asg_round $st_kw ${v_kw:--} $g" ;;
       esac ;;
     *) echo "ASSIGNED $inst $asg_round ${st_kw:--} - $g" ;;
@@ -184,7 +215,7 @@ print_state() {
 # protocol breach the Architect must resolve — either route it to an auditor or record GATE: none.
 needs_architect() {
   case "$1" in
-    UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|AUDIT_PASSED|UNGATED|UNCOMMITTED|BAD_ROUND) return 0 ;;
+    UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|AUDIT_PASSED|UNGATED|UNCOMMITTED|UNPUSHED|BAD_ROUND) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -211,7 +242,8 @@ count_inst() {  # uses $TARGET_INST; counts lanes ASSIGNED to it or AUDIT_RETURN
 }
 
 print_inbox() {
-  # Exit 1 on AUDIT_PASSED (merge it), UNCOMMITTED (verdict unpushed — chase, then merge) or
+  # Exit 1 on AUDIT_PASSED (merge it), UNCOMMITTED (verdict uncommitted — chase, then merge),
+  # UNPUSHED (committed but not on origin — chase the push; `git fetch` first, the ref may be stale) or
   # BAD_ROUND (a stamp nobody can act on — repair it), so a caller can gate "take new work" on a
   # clean inbox. Other Architect-owed states go on one trailer line and DO NOT affect the exit code:
   # a chronic backlog would otherwise keep this permanently red and desensitise it to the one event
@@ -220,7 +252,7 @@ print_inbox() {
   for it in $(items); do
     set -- $(lane_state "$it")
     case "$1" in
-      AUDIT_PASSED|UNCOMMITTED|BAD_ROUND)
+      AUDIT_PASSED|UNCOMMITTED|UNPUSHED|BAD_ROUND)
         hot=$((hot+1))
         row=$(printf '  %-14s %-13s %-16s verdict=%s' "$it" "$1" "$2" "$5")
         hot_rows="${hot_rows}${row}
