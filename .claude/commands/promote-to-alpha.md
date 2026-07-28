@@ -24,9 +24,18 @@ Run these from the current worktree root. Any failure aborts.
 
 ```bash
 # HOLD GATE (AT:R65) — runs FIRST. A green suite does not mean promotable.
-if grep -q '^### ' infra/PROMOTION_HOLD.md 2>/dev/null; then
+# Scoped to the "## ACTIVE HOLDS" section only: a bare `grep '^### '` also matched
+# the cleared-hold history kept in the same file, which would have wedged the gate
+# shut forever and taught the operator to reason past it. Fails CLOSED if the file
+# is unreadable or the section heading is missing.
+HOLDS=$(awk '/^## ACTIVE HOLDS/{a=1;next} /^## /{a=0} a&&/^### /{print}' infra/PROMOTION_HOLD.md 2>/dev/null)
+if [ -f infra/PROMOTION_HOLD.md ] && ! grep -q '^## ACTIVE HOLDS' infra/PROMOTION_HOLD.md; then
+  echo "PROMOTION HOLD FILE MALFORMED — no '## ACTIVE HOLDS' section. Aborting."
+  exit 1
+fi
+if [ -n "$HOLDS" ]; then
   echo "PROMOTION HOLD ACTIVE — aborting. Holds:"
-  grep '^### ' infra/PROMOTION_HOLD.md
+  echo "$HOLDS"
   exit 1
 fi
 
