@@ -99,7 +99,8 @@ lane_state() {  # $1=item id; echoes "STATE sub vr keyword"
   a="$CR_DIR/$1.architect.md"; u="$CR_DIR/$1.auditor.md"
   sub=$(last_round "$a" 'SUBMITTED: *round *[0-9]+'); sub=${sub:-0}
   # Never call an uncommitted submission AWAITING_AUDIT: an auditor told to audit the committed SHA
-  # would find no submission at all. UNCOMMITTED is builder-actionable and one `git add` from fixed.
+  # would find no submission at all. UNCOMMITTED_SUBMIT is submitter-actionable and one `git add`
+  # from fixed — do not confuse it with the verdict-side UNCOMMITTED emitted further down.
   if [ "$sub" -gt 0 ] && [ -n "$(undelivered "$a")" ]; then echo "UNCOMMITTED_SUBMIT $sub - -"; return; fi
   # Committed is not delivered. Checked immediately after UNCOMMITTED_SUBMIT and before any state
   # that would tell someone to act, because the auditor cannot see this file at all until it is

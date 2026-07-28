@@ -52,10 +52,14 @@ and `INDEX.md`; the auditor owns `<ITEM>.auditor.md`.
 and integrate what it lists before picking the next item.** Not discretionary: the blocking
 `watcher.sh` wakes on `AWAITING_FIXES` but **never on a clean `COMPLETE`**, so a passed lane emits no
 signal you can wait on — you have to look, and a passed lane nobody looks at never merges. `inbox`
-is that look: one-shot, **non-blocking**, listing only lanes where the auditor has FINISHED and the
-ball is yours — `AUDIT_PASSED` (merge it), `UNCOMMITTED` (verdict unpushed — chase it) and
-`BAD_ROUND` (a verdict stamped with a round that has no submission — its writer repairs the number)
-— exiting non-zero while any remain. Non-blocking on purpose: you multiplex many lanes, so the
+is that look: one-shot, **non-blocking**, listing lanes you must resolve before taking new work, in
+two families — the auditor has FINISHED and the ball is yours (`AUDIT_PASSED` merge it;
+`UNCOMMITTED` / `UNPUSHED` the verdict is not delivered — chase the other role; `BAD_ROUND` a
+verdict stamped with a round that has no submission — its writer repairs the number), **or your own
+submission never reached the auditor** (`UNCOMMITTED_SUBMIT` / `UNPUSHED_SUBMIT` — *you* commit or
+push it; nobody is coming, and no verdict will ever arrive for it). Do not answer the second family
+as if it were the first: that is two roles each waiting on the other. It exits non-zero while any
+remain. Non-blocking on purpose: you multiplex many lanes, so the
 single-lane auditor's blocking-watcher pattern would freeze the rest. A "work unit" is any lane you
 carry to a hand-off — a submit, a merge, an answer to a `NEEDS-INFO`, an assignment.
 

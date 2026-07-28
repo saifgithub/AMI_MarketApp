@@ -293,7 +293,8 @@ print_inbox() {
   # never reached the auditor — push it, and do not sit waiting for a verdict on it), so a caller can
   # gate "take new work" on a clean inbox. Other Architect-owed states go on one trailer line and DO
   # NOT affect the exit code: a chronic backlog would otherwise keep this permanently red and
-  # desensitise it to the one event it exists to catch — a fresh auditor COMPLETE.
+  # desensitise it to the two events it exists to catch — a fresh auditor verdict, and a submission
+  # of your own that never reached the auditor.
   hot=0; other=0; hot_rows=""
   for it in $(items); do
     set -- $(lane_state "$it")
@@ -328,7 +329,7 @@ EOF
     echo "RESOLVE BEFORE TAKING NEW WORK ($hot):"
     printf '%s' "$hot_rows"
   else
-    echo "inbox clear — no auditor verdict awaiting integration."
+    echo "inbox clear — no verdict awaiting integration, no submission of yours undelivered."
   fi
   [ "$other" -gt 0 ] && echo "(also owing you: $other lane(s) UNASSIGNED/BLOCKED/NEEDS-INFO/IN_REVIEW/UNGATED — full board: dispatch.sh state)"
   [ "$hot" -gt 0 ] && return 1

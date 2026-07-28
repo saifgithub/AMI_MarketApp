@@ -149,9 +149,16 @@ before it — a chunk sized as trivial that comes back touching a `HOT-FILES` en
 its own.
 
 `dispatch.sh` modes: `state` (print the board once); `inbox` (one-shot, **non-blocking**: list only
-lanes where the auditor has FINISHED and the ball is the Architect's —
-`AUDIT_PASSED`/`UNCOMMITTED`/`BAD_ROUND` — exit 1 if any, 0 if clear; the multi-lane Architect's
-per-work-unit trigger, since a blocking watcher would freeze its other lanes); `verdict <ITEM>`
+lanes the Architect must resolve before taking new work — exit 1 if any, 0 if clear; the multi-lane
+Architect's per-work-unit trigger, since a blocking watcher would freeze its other lanes). Two
+families, and answering one to the other leaves both roles waiting on each other:
+
+| Family | States | What it means |
+|---|---|---|
+| **The auditor has finished** | `AUDIT_PASSED`, `UNCOMMITTED`, `UNPUSHED`, `BAD_ROUND` | The ball is yours — integrate the verdict, or **chase the other role** to deliver it. |
+| **Your own submission is undelivered** | `UNCOMMITTED_SUBMIT`, `UNPUSHED_SUBMIT` | Nobody else can see it. **You** commit/push it; no one is coming. Covers self-executed lanes with no assign file too. |
+
+`verdict <ITEM>`
 (print one lane's verdict, **refusing** if it is not yet delivered); `architect [-i N]` (block until
 a lane needs the Architect — every state whose "whose turn" column above says **Architect**);
 `inst <id> [-i N]` (block until a lane is `ASSIGNED` to `<id>` or `AUDIT_RETURNED` on its lane). HOW
