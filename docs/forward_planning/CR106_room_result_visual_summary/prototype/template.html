@@ -258,25 +258,32 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .band + .band { margin-top: 8px; }
 .band-lbl { display: flex; align-items: baseline; gap: 6px; font-size: var(--t9); height: 14px; }
 .band-lbl .n { color: var(--text-high); }
-.band-row { display: flex; align-items: center; gap: 6px; min-height: 26px; margin-top: 2px; }
-.fam { display: flex; align-items: center; gap: 2px; }
+.band-row { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 6px; min-height: 26px; margin-top: 2px; }
+.fam { display: flex; align-items: flex-start; gap: 2px; }
 
 /* A voice is a hexagon inside a HEXAGONAL conviction ring — never a circle
    around a hex, which at this size reads as a circle wearing a hat. The ring
    is a conic sweep clipped to the same flat-top geometry; no ring at all when
    conviction is unknown, so absence never looks like "low". */
-.voice { position: relative; width: 26px; height: 22.5px; flex: none; display: grid; place-items: center;
-  --vbg: var(--card-alt); }
+.voice { position: relative; width: 26px; flex: none; display: flex; flex-direction: column;
+  align-items: center; gap: 3px; --vbg: var(--card-alt); }
 .voice::after { content: ''; position: absolute; inset: -9px -2px; }
-.voice .ring { position: absolute; inset: 0; clip-path: var(--clip-hex-flat);
-  background: conic-gradient(from 0deg, var(--vc) 0 calc(var(--conv) * 1%),
-              color-mix(in srgb, var(--vc) 14%, transparent) 0); }
-.voice .ring::after { content: ''; position: absolute; inset: 2.5px; clip-path: var(--clip-hex-flat); background: var(--vbg); }
-.voice .cell { position: relative; width: 17px; height: 14.7px; clip-path: var(--clip-hex-flat); background: var(--vc); }
-.voice.wide .cell { width: 24px; height: 20.8px; }
+.voice .cell { position: relative; width: 26px; height: 22.5px; clip-path: var(--clip-hex-flat);
+  background: var(--vc); display: grid; place-items: center; }
+/* Ink is slate-900, never white: white on hexAmber is 1.8:1 and on hexGreen
+   2.1:1 — both illegible. Dark ink clears 7:1 on every family fill, and the
+   fills are identical in light mode, so one ink serves both themes. */
+.voice .cell .mk { position: relative; z-index: 1; color: #0f172a; line-height: 1; }
+.voice .cell .mk.tx { font-family: 'AMI Mono', ui-monospace, monospace; font-weight: 700;
+  font-size: calc(9px * var(--ts)); letter-spacing: 0.02em; }
+.voice .cell .mk.tx.n4 { font-size: calc(7.5px * var(--ts)); letter-spacing: -0.01em; }
+.voice .cell .mk svg { display: block; width: calc(14px * var(--ts)); height: calc(14px * var(--ts)); }
+.voice .bar { width: 22px; height: 3px; background: color-mix(in srgb, var(--vc) 16%, transparent); }
+.voice .bar i { display: block; height: 100%; width: calc(var(--conv) * 1%); background: var(--vc); }
 .voice.absent .cell { background: none; }
 .voice.absent .cell::before { content: ''; position: absolute; inset: 0; clip-path: var(--clip-hex-flat); background: var(--vc); }
 .voice.absent .cell::after { content: ''; position: absolute; inset: 1.5px; clip-path: var(--clip-hex-flat); background: var(--vbg); }
+.voice.absent .cell .mk { color: var(--vc); }
 .comb .foot-note { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-subtle); font-size: var(--t9); color: var(--text-low); }
 .comb .gutter { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border); }
 
@@ -397,6 +404,12 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
           <div class="seg" id="tsSeg"></div>
         </div>
       </div>
+      <div class="ctl">
+        <span class="lbl">Hex identity</span>
+        <div class="ctl-row">
+          <div class="seg" id="labelSeg"></div>
+        </div>
+      </div>
       <div class="notes">
         <p><b>Read the comb, not the colour.</b> Stance is the band a hex sits in. Conviction is the ring
         sweep. Hue stays the agent’s family colour — cyan analysts, purple researchers, amber risk,
@@ -436,6 +449,30 @@ const AGENTS = {
   neutral_debator:      { ab: 'NEU',   name: 'Neutral Debator',      fam: 'risk',       c: 'amber'  },
   portfolio_manager:    { ab: 'PM',    name: 'Portfolio Manager',    fam: 'manager',    c: 'purple' },
 };
+const COMB_LABEL = {
+  fundamentals_analyst: 'FUND', market_analyst: 'MKT',  news_analyst: 'NEWS',
+  social_media_analyst: 'SOC',  bull_researcher: 'BULL', bear_researcher: 'BEAR',
+  research_manager: 'RES',      trader: 'TRD',           aggressive_debator: 'AGG',
+  conservative_debator: 'CON',  neutral_debator: 'NEU',  portfolio_manager: 'PM',
+};
+
+/* Minimal inline SVG, 2px stroke, currentColor — the only line-icon route the
+   design system permits (no icon CDN). 24x24 viewBox, drawn at 14pt. */
+const COMB_ICON = {
+  fundamentals_analyst: '<path d="M4 20V12M10 20V6M16 20V15M22 20H2"/>',
+  market_analyst:       '<path d="M2 17l6-7 4 4 5-8 5 5"/>',
+  news_analyst:         '<path d="M4 4h16v16H4zM7 9h10M7 13h10M7 17h6"/>',
+  social_media_analyst: '<path d="M20 5H4v11h4v4l5-4h7z"/>',
+  bull_researcher:      '<path d="M12 20V5M6 11l6-6 6 6"/>',
+  bear_researcher:      '<path d="M12 4v15M6 13l6 6 6-6"/>',
+  research_manager:     '<path d="M5 4v6a4 4 0 004 4h6a4 4 0 014 4v2M5 4h14"/>',
+  trader:               '<path d="M3 12h15M13 6l6 6-6 6"/>',
+  aggressive_debator:   '<path d="M5 18l7-6 7 6M5 11l7-6 7 6"/>',
+  conservative_debator: '<path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/>',
+  neutral_debator:      '<path d="M4 9h16M4 15h16"/>',
+  portfolio_manager:    '<path d="M4 20V9l8-5 8 5v11"/>',
+};
+
 const COMB_ORDER = [
   'fundamentals_analyst','market_analyst','news_analyst','social_media_analyst',
   'bull_researcher','bear_researcher','research_manager',
@@ -666,7 +703,7 @@ const SCENARIOS = [
 /* ─────────────────────────────────────────────────────────────
    State
    ───────────────────────────────────────────────────────────── */
-const state = { scenario: SCENARIOS[0], mode: 'board', theme: 'dark', dir: 'ltr', ts: 1, open: {} };
+const state = { scenario: SCENARIOS[0], mode: 'board', theme: 'dark', dir: 'ltr', ts: 1, labels: 'letters', open: {} };
 
 const CONV_PCT = { low: 33, medium: 66, high: 100 };
 const HERO = {
@@ -758,9 +795,17 @@ function voiceHtml(v, absent) {
   const a = AGENTS[v.id];
   const c = `var(--${a.c})`;
   const conv = v.conviction ? CONV_PCT[v.conviction] : null;
+  let mark = '';
+  if (state.labels === 'letters') {
+    const t = COMB_LABEL[v.id];
+    mark = `<span class="mk tx${t.length > 3 ? ' n4' : ''}">${t}</span>`;
+  }
+  else if (state.labels === 'icons') mark = `<span class="mk"><svg viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      >${COMB_ICON[v.id]}</svg></span>`;
   return `<span class="voice${absent ? ' absent' : ''}" style="--vc:${c}" title="${esc(a.name)}${v.stance ? ' · ' + v.stance + (v.conviction ? ' · ' + v.conviction + ' conviction' : '') : ' · no view stated'}">
-    ${conv ? `<span class="track"></span><span class="ring" style="--conv:${conv}"></span>` : ''}
-    <span class="cell"></span>
+    <span class="cell">${mark}</span>
+    ${conv ? `<span class="bar" style="--conv:${conv}"><i></i></span>` : ''}
   </span>`;
 }
 
@@ -982,6 +1027,9 @@ function buildControls() {
   seg(document.getElementById('tsSeg'),
     [{ v: '1', l: 'Text 1.0×' }, { v: '1.15', l: 'Text 1.15×' }],
     () => String(state.ts), v => state.ts = parseFloat(v));
+  seg(document.getElementById('labelSeg'),
+    [{ v: 'letters', l: 'Letters' }, { v: 'icons', l: 'Icons' }, { v: 'none', l: 'Colour only' }],
+    () => state.labels, v => state.labels = v);
 }
 
 document.documentElement.setAttribute('data-theme', state.theme);
