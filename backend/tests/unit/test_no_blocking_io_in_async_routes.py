@@ -125,7 +125,7 @@ _YFINANCE_BLOCKING_ATTRS = {"Ticker", "download"}
 # `_build_room_sector_context` is the ONE surviving waiver (DEF120 D7):
 # reached from `stream_room` via `room_runner.py:1435`'s
 # `build_journal_entry_for_run(...)` → `_build_room_sector_context(user_id)`
-# (`room_runner.py:1912`), aliased in `room.py:76` as
+# (`room_runner.py:2001`), aliased in `room.py:76` as
 # `_build_journal_entry = build_journal_entry_for_run` and called by that
 # alias — which is genuinely still a blocking `current_quote` reach, but
 # `room_runner.py` was explicitly out of scope for this lane (CR104-ROOM
@@ -144,7 +144,7 @@ _YFINANCE_BLOCKING_ATTRS = {"Ticker", "download"}
 # waiver set is what keeps that fact visible (grep this set).
 #
 # ROUND 4 adds `_build_sim_holdings_block`. It is NOT a new bug and NOT a
-# regression — it is `room_runner.py:1906`, which has been blocking the loop on
+# regression — it is `room_runner.py:1995`, which has been blocking the loop on
 # every Room convene the whole time. It became VISIBLE only in round 4, when
 # `_route_walk_leaf_method_names()` fed the declared-sync-safe names into the
 # transitive walk and the walk stopped breaking at `_marks_with_quotes`'
@@ -332,22 +332,31 @@ def _offending_routes(waived: set[str]) -> tuple[list[str], set[str]]:
 # every holding, and they are NOT DEF120's to fix — `room_runner.py` is out of
 # scope by D7 (the Room queue owns it).
 #
-# All 3 are one call site: `room_runner.py:1906` calls
+# All 3 are one call site: `room_runner.py:1995` calls
 # `_build_sim_holdings_block(user_id, ticker)` directly, un-`to_thread`'d, from
-# inside `async def run()` (`:1748`) — the async generator awaited on the loop
-# by `_pump`'s `async for ev in self.run(...)` (`:1687`). That builder calls
-# `sim.total_value(user_id)` (`:574`) and `sim.current_marks(list(agg))`
-# (`:583`), the full `_marks_with_quotes` yfinance fan-out.
+# inside `async def run()` (`:1837`) — the async generator awaited on the loop
+# by `_pump`'s `async for ev in self.run(...)` (`:1778`). That builder calls
+# `sim.total_value(user_id)` (`:663`) and `sim.current_marks(list(agg))`
+# (`:672`), the full `_marks_with_quotes` yfinance fan-out.
 #
-# `:1906` is a SECOND, distinct blocking call, six lines before the `:1912`
+# `:1995` is a SECOND, distinct blocking call, six lines before the `:2001`
 # `_build_room_sector_context` that earlier rounds called "the one remaining
-# offender" — and unlike `:1912` it is not waived. Anyone closing the Room
-# remainder per that prose alone would leave `:1906` running. Pinning the pairs
+# offender" — and unlike `:2001` it is not waived. Anyone closing the Room
+# remainder per that prose alone would leave `:1995` running. Pinning the pairs
 # here is this round's own principle applied one level up: assert it, don't
 # comment it. A paragraph explaining an empty set does not go red; this does.
 #
-# Closing the Room remainder means wrapping `:1906` (and `:1912`) and shrinking
+# Closing the Room remainder means wrapping `:1995` (and `:2001`) and shrinking
 # this set to empty — the second assertion below fails until it is shrunk.
+#
+# LINE NUMBERS ABOVE ARE A COURTESY, NOT A CONTRACT — re-derive them by name
+# before quoting them anywhere. Round 4 shipped six of them wrong: they were
+# inherited from the round-3 audit, which measured a tree from BEFORE DEF124
+# landed in `room_runner.py` and shifted every one by ~+89. Nothing asserted
+# broke (the waiver, the pin set and the walk are all name-based, which is why
+# it went unnoticed) but the numbers were headed into the Room lane's assign,
+# where a worker greps `:1906` and finds unrelated logging. Grep the FUNCTION
+# NAMES; they are unambiguous and they do not drift.
 _DEF120_KNOWN_BLOCKING_PAIRS: set[str] = {
     "backend/app/api/room.py:stream_room -> <obj>._marks_with_quotes",
     "backend/app/api/room.py:stream_room -> <obj>.current_marks",
