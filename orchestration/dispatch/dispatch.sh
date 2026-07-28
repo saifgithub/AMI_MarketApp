@@ -13,6 +13,8 @@
 #   AUDIT_PASSED   : audit VERDICT = COMPLETE, DISPATCH not yet ACCEPTED
 #   UNPUSHED       : verdict committed but not on origin's default branch — the Architect's  <-- loud
 #                    checkout cannot see it; chase the push, never merge
+#   UNCOMMITTED_SUBMIT : YOUR OWN submission is not committed — the auditor cannot see it  <-- loud
+#   UNPUSHED_SUBMIT    : YOUR OWN submission is committed but not on origin — same  <-- loud
 #   BAD_ROUND      : VERDICT round > audit-lane SUBMITTED round — a mistyped stamp  <-- loud
 #   DONE           : DISPATCH = ACCEPTED *and* the lane's GATE is satisfied
 #   UNGATED        : DISPATCH = ACCEPTED but the gate is NOT satisfied  <-- loud
@@ -26,9 +28,12 @@
 #   GATE: absent              -> UNGATED. An unbound gate fails LOUD, never open.
 # Usage:
 #   dispatch.sh state              print the derived board once and exit
-#   dispatch.sh inbox              one-shot, non-blocking: lanes the auditor FINISHED and the
-#                                    Architect has not resolved (AUDIT_PASSED, UNCOMMITTED,
-#                                    BAD_ROUND). Exit 1 if any. Run at session start + each work unit.
+#   dispatch.sh inbox              one-shot, non-blocking: lanes the Architect must resolve before
+#                                    taking new work — a finished verdict (AUDIT_PASSED,
+#                                    UNCOMMITTED, UNPUSHED), an unreadable stamp (BAD_ROUND), or
+#                                    THEIR OWN undelivered submission (UNCOMMITTED_SUBMIT,
+#                                    UNPUSHED_SUBMIT). Exit 1 if any. Run at session start + each
+#                                    work unit.
 #   dispatch.sh verdict <ITEM>     print a lane's verdict, refusing if it is not yet delivered
 #   dispatch.sh architect [-i N]   block until >=1 lane needs the Architect — every state in
 #                                    needs_architect() below; keep that function the only list.
@@ -99,8 +104,13 @@ unpushed() {  # $1=file; echoes "1" if the file's newest commit is not on the sh
   [ -n "$rem" ] || { echo ""; return; }
   sha=$(git -C "$d" log -1 --format=%H -- "$1" 2>/dev/null)
   [ -n "$sha" ] || { echo ""; return; }
-  # Local remote-tracking ref only — no fetch on a board read. Stale can only over-report, and
-  # over-reporting costs a `git fetch`; under-reporting costs a lane that never gets audited.
+  # Local remote-tracking ref only — no fetch on a board read. For ordinary staleness the error
+  # direction is the safe one: someone else's push can only over-report, costing a `git fetch`,
+  # where under-reporting costs a lane that never gets audited.
+  # That does NOT generalise to a rewritten remote, which is the one construction that under-reports:
+  # rebase or force-push the commit off the remote and the local ref still holds the old sha, so
+  # `--is-ancestor` passes and this reports delivered for a commit the remote no longer has — until
+  # the next fetch. Narrow, since it requires rewriting shared history, but real.
   git -C "$d" merge-base --is-ancestor "$sha" "$rem" 2>/dev/null && { echo ""; return; }
   echo "1"
 }
@@ -125,6 +135,21 @@ lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
   # them drifting apart; comparing across the pair makes this board and watcher.sh disagree about
   # whose turn it is, which is the disagreement the round comparison was added to end.
   sub_round=$(last_round "$s" 'SUBMITTED: *round *[0-9]+')
+  # The SUBMISSION side of the delivery question, checked before anything else can call this lane
+  # in-flight. Guarding only the verdict below closes the MIRROR of the failure, not the failure:
+  # this board is the ARCHITECT's, and the file the architect writes is `$s`. An unpushed
+  # `SUBMITTED:` marker reads as an ordinary in-flight lane here while the auditor's clone does not
+  # contain the lane at all — both roles behaving correctly, disagreeing, indefinitely.
+  # Named apart from the verdict-side states deliberately: UNPUSHED means chase someone else, these
+  # two mean push it yourself, and answering the first to the second is the mistake being prevented.
+  # Placed ahead of the DISPATCH: ACCEPTED branch so this board and watcher.sh, which checks the same
+  # file first, cannot disagree about whether the record has been delivered.
+  if [ "${sub_round:-0}" -gt 0 ] && [ -n "$(undelivered "$s")" ]; then
+    echo "UNCOMMITTED_SUBMIT $inst $asg_round - - ${gate_kw:-MISSING}"; return
+  fi
+  if [ "${sub_round:-0}" -gt 0 ] && [ -n "$(unpushed "$s")" ]; then
+    echo "UNPUSHED_SUBMIT $inst $asg_round - - ${gate_kw:-MISSING}"; return
+  fi
   # Read the verdict's ROUND, not just its keyword: a verdict only answers the submission at its own
   # round, so once a newer submission lands the old keyword is history.
   v_kw=$(last_kw "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES)')
@@ -215,8 +240,28 @@ print_state() {
 needs_architect() {
   case "$1" in
     UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|AUDIT_PASSED|UNGATED|UNCOMMITTED|UNPUSHED|BAD_ROUND) return 0 ;;
+    UNCOMMITTED_SUBMIT|UNPUSHED_SUBMIT) return 0 ;;
     *) return 1 ;;
   esac
+}
+
+# An audit lane with no assign file is an item its author executed directly, with no coder lane and
+# so no `*.assign.md`. items() cannot see those, which means the whole state machine above never
+# runs for them — yet their submission is exactly the one the author is responsible for delivering,
+# and guarding only the lanes that happen to have an assign file would leave the self-executed case
+# open for the same reason the verdict-only guard left the submission case open.
+# Swept for the DELIVERY question ONLY. Rounds, verdicts and gates for these lanes stay off this
+# board: a long-closed self-executed lane must not reappear here as unfinished business.
+orphan_undelivered() {  # echoes "ITEM STATE" per undelivered orphan; nothing for the rest
+  for f in "$AUDIT_DIR"/*.architect.md; do
+    [ -f "$f" ] || continue
+    it=$(basename "$f" .architect.md)
+    [ -f "$LANE_DIR/$it.assign.md" ] && continue
+    sr=$(last_round "$f" 'SUBMITTED: *round *[0-9]+')
+    { [ -n "$sr" ] && [ "$sr" -gt 0 ]; } || continue
+    if   [ -n "$(undelivered "$f")" ]; then echo "$it UNCOMMITTED_SUBMIT"
+    elif [ -n "$(unpushed "$f")" ];    then echo "$it UNPUSHED_SUBMIT"; fi
+  done
 }
 
 count_architect() {
@@ -225,7 +270,8 @@ count_architect() {
     st=$(lane_state "$it"); s=${st%% *}
     needs_architect "$s" && c=$((c+1))
   done
-  echo "$c"
+  o=$(orphan_undelivered | grep -c . 2>/dev/null || echo 0)
+  echo $((c + o))
 }
 
 count_inst() {  # uses $TARGET_INST; counts lanes ASSIGNED to it or AUDIT_RETURNED on it
@@ -242,16 +288,17 @@ count_inst() {  # uses $TARGET_INST; counts lanes ASSIGNED to it or AUDIT_RETURN
 
 print_inbox() {
   # Exit 1 on AUDIT_PASSED (merge it), UNCOMMITTED (verdict uncommitted — chase, then merge),
-  # UNPUSHED (committed but not on origin — chase the push; `git fetch` first, the ref may be stale) or
-  # BAD_ROUND (a stamp nobody can act on — repair it), so a caller can gate "take new work" on a
-  # clean inbox. Other Architect-owed states go on one trailer line and DO NOT affect the exit code:
-  # a chronic backlog would otherwise keep this permanently red and desensitise it to the one event
-  # it exists to catch — a fresh auditor COMPLETE.
+  # UNPUSHED (committed but not on origin — chase the push; `git fetch` first, the ref may be stale),
+  # BAD_ROUND (a stamp nobody can act on — repair it), or either *_SUBMIT state (your own submission
+  # never reached the auditor — push it, and do not sit waiting for a verdict on it), so a caller can
+  # gate "take new work" on a clean inbox. Other Architect-owed states go on one trailer line and DO
+  # NOT affect the exit code: a chronic backlog would otherwise keep this permanently red and
+  # desensitise it to the one event it exists to catch — a fresh auditor COMPLETE.
   hot=0; other=0; hot_rows=""
   for it in $(items); do
     set -- $(lane_state "$it")
     case "$1" in
-      AUDIT_PASSED|UNCOMMITTED|UNPUSHED|BAD_ROUND)
+      AUDIT_PASSED|UNCOMMITTED|UNPUSHED|BAD_ROUND|UNCOMMITTED_SUBMIT|UNPUSHED_SUBMIT)
         hot=$((hot+1))
         row=$(printf '  %-14s %-13s %-16s verdict=%s' "$it" "$1" "$2" "$5")
         hot_rows="${hot_rows}${row}
@@ -260,8 +307,25 @@ print_inbox() {
       UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|UNGATED) other=$((other+1)) ;;
     esac
   done
+  # Self-executed lanes, which items() above cannot enumerate. Fed through a heredoc rather than a
+  # pipe so the counter survives: a `while` on the right of a pipe runs in a subshell and its
+  # increments are discarded, which would show the rows and still exit 0.
+  orph=$(orphan_undelivered)
+  if [ -n "$orph" ]; then
+    while read -r oit ost; do
+      [ -n "$oit" ] || continue
+      hot=$((hot+1))
+      row=$(printf '  %-14s %-13s %-16s verdict=%s' "$oit" "$ost" "(self-executed)" "-")
+      hot_rows="${hot_rows}${row}
+"
+    done <<EOF
+$orph
+EOF
+  fi
   if [ "$hot" -gt 0 ]; then
-    echo "AUDITOR DONE — resolve before taking new work ($hot):"
+    # Not "AUDITOR DONE": the *_SUBMIT states are the Architect's OWN undelivered work, and a heading
+    # naming the auditor teaches exactly the misattribution these states exist to prevent.
+    echo "RESOLVE BEFORE TAKING NEW WORK ($hot):"
     printf '%s' "$hot_rows"
   else
     echo "inbox clear — no auditor verdict awaiting integration."

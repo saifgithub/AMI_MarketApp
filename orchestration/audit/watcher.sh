@@ -1,8 +1,11 @@
 #!/bin/sh
 # watcher.sh - lane-state watcher for the audit handshake (PROTOCOL.md v2 lanes).
 # Derives per-item state from the two lane files exactly as PROTOCOL.md defines it:
-#   UNPUSHED       : committed, but the newest commit is not on origin's default branch — the      <-- loud
-#                    auditor works from its own checkout and cannot see it
+#   UNPUSHED           : a VERDICT is committed but not on origin's default branch — the other      <-- loud
+#                        role works from its own checkout and cannot see it; chase the push
+#   UNCOMMITTED_SUBMIT : the SUBMISSION is not committed — nobody but its author can see it   <-- loud
+#   UNPUSHED_SUBMIT    : the SUBMISSION is committed but not on origin — same, one step on   <-- loud
+#                        These two are the submitter's OWN job to clear, never anyone else's.
 #   AWAITING_AUDIT : architect SUBMITTED round > auditor VERDICT round, or no auditor file yet
 #   AWAITING_FIXES : auditor's LATEST verdict keyword is AWAITING_FIXES (keyword wins, per protocol note)
 #   COMPLETE       : auditor's latest verdict keyword is COMPLETE and rounds have caught up
@@ -80,9 +83,14 @@ unpushed() {  # $1=file; echoes "1" if the file's newest commit is not on the sh
   sha=$(git -C "$d" log -1 --format=%H -- "$1" 2>/dev/null)
   [ -n "$sha" ] || { echo ""; return; }
   # NOTE: read against the LOCAL remote-tracking ref — no fetch. A watcher must not do network I/O
-  # on every poll. The stale direction is the safe one: after your own push the ref is current, so
-  # the normal flow never false-alarms; a ref stale because SOMEONE ELSE pushed can only over-report
-  # UNPUSHED, which costs a `git fetch`, never a silently missed delivery.
+  # on every poll, and for ordinary staleness the error direction is the safe one: after your own
+  # push the ref is current so the normal flow never false-alarms, and a ref stale because SOMEONE
+  # ELSE pushed can only over-report, costing a `git fetch`.
+  # That claim does NOT generalise to a rewritten remote, which is the one construction that
+  # under-reports: rebase or force-push the commit off the remote and the local ref still holds the
+  # old sha, so `--is-ancestor` passes and this reports delivered for a commit the remote no longer
+  # has — until the next fetch. Narrow, since it requires rewriting shared history, but real: do not
+  # read this as "staleness can only over-report".
   git -C "$d" merge-base --is-ancestor "$sha" "$rem" 2>/dev/null && { echo ""; return; }
   echo "1"
 }
@@ -92,10 +100,13 @@ lane_state() {  # $1=item id; echoes "STATE sub vr keyword"
   sub=$(last_round "$a" 'SUBMITTED: *round *[0-9]+'); sub=${sub:-0}
   # Never call an uncommitted submission AWAITING_AUDIT: an auditor told to audit the committed SHA
   # would find no submission at all. UNCOMMITTED is builder-actionable and one `git add` from fixed.
-  if [ "$sub" -gt 0 ] && [ -n "$(undelivered "$a")" ]; then echo "UNCOMMITTED $sub - -"; return; fi
-  # Committed is not delivered. Checked immediately after UNCOMMITTED and before any state that
-  # would tell someone to act, because the auditor cannot see this file at all until it is pushed.
-  if [ "$sub" -gt 0 ] && [ -n "$(unpushed "$a")" ]; then echo "UNPUSHED $sub - -"; return; fi
+  if [ "$sub" -gt 0 ] && [ -n "$(undelivered "$a")" ]; then echo "UNCOMMITTED_SUBMIT $sub - -"; return; fi
+  # Committed is not delivered. Checked immediately after UNCOMMITTED_SUBMIT and before any state
+  # that would tell someone to act, because the auditor cannot see this file at all until it is
+  # pushed. The `_SUBMIT` suffix is load-bearing: it separates "the submitter must push" from the
+  # verdict-side states below, which mean "chase the other role". Answering the second to the first
+  # leaves both sides waiting on each other, which is the whole failure this check exists to name.
+  if [ "$sub" -gt 0 ] && [ -n "$(unpushed "$a")" ]; then echo "UNPUSHED_SUBMIT $sub - -"; return; fi
   if [ ! -f "$u" ]; then echo "AWAITING_AUDIT $sub - -"; return; fi
   # Same rule on the verdict side, so this table and the dispatch board cannot disagree about
   # whether a gate has been satisfied.
