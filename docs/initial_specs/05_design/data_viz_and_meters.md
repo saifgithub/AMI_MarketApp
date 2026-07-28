@@ -80,6 +80,32 @@ failure class for confident wrongness (DEF059: LLM down → fake APPROVE).
 
 ## 4. Components
 
+### 4.0 Surface shape — where hexagons are allowed
+
+**Hexagons are marks and controls. Content surfaces are rounded rects.**
+
+This is the rule the app actually follows, and it differs from the design-system mount, which specs
+`--clip-angle-panel` (20px cut corners) for "cards, modals, drawers". Nothing in `mobile/lib` does that.
+What ships is:
+
+| | Shape | Evidence |
+|---|---|---|
+| Cards, panels, sheets, inner blocks | **Rounded rect**, `AmiRadii.card` (8) — `AmiRadii.sheet` (12) for the verdict card | `_VerdictCard` `room_screen.dart:906`, `AccentCard` `accent_card.dart:43`, every `journal_detail_screen.dart` block |
+| Agent avatars, chips, toasts, bottom nav, track button | **Hex clip** | `hex_avatar.dart`, `hex_chip.dart`, `hex_toast.dart`, `hex_bottom_nav.dart`, `track_hex_button.dart` |
+| Segmented / period toggles | **Hex clip**, `FlatTopHexagonClipper(cornerCut: 8)` | `ticker_chart.dart:185` |
+| Primary / secondary buttons | **Material 3 default** (stadium) — no `shape:` override anywhere in the Room | `room_screen.dart` |
+
+**The app wins over the mount.** A new surface lives inside these screens, so matching them beats matching
+a spec line that nothing implements. It is also the better rule on its own terms: cutting the corners off
+every card spends the hexagon on chrome and leaves nothing to distinguish the marks that should carry it.
+
+The standard card is `slate800` fill, 1px `slate700` border, 8px radius, optionally with a 2px accent top
+stripe (`AccentCard` — 2px on mobile, 3px desktop). An outcome surface may instead take a 1.5px accent
+border on all four sides at 12px radius, which is what `_VerdictCard` does.
+
+*(Flagged: `ami_hex_in_flutter.md` should carry this rule too, so the divergence is recorded where the port
+is documented rather than only here.)*
+
 ### 4.1 Stat tile (KPI)
 
 The DS's `KPITile` / `MobKPI`, ported. `FlatTopHexagonClipper(cornerCut: 10)` panel, 3px top border in the
