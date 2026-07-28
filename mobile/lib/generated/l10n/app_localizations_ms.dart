@@ -1247,6 +1247,30 @@ class AppLocalizationsMs extends AppLocalizations {
   String get roomLiveDataUpgradeCta => 'UPGRADE FOR LIVE DATA';
 
   @override
+  String roomLiveDataFeedTenure(String feed) {
+    return '$feed: live data available — needs a plan upgrade.';
+  }
+
+  @override
+  String get roomLiveDataTenureUpgradeCta => 'UPGRADE YOUR PLAN';
+
+  @override
+  String roomAgentWithheldChairLabel(String agent) {
+    return '$agent — off your roster on this plan';
+  }
+
+  @override
+  String roomAgentWithheldRosterNote(String agent, int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
+    return 'Next roster change: $agent in $_temp0.';
+  }
+
+  @override
   String get upgradeSheetTitle => 'Naik taraf meja dagangan anda';
 
   @override

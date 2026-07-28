@@ -62,6 +62,32 @@ void main() {
       expect(parseRoomSseEvent('live_data_notice', 'not json at all'), isNull);
     });
 
+    test('parses agent_withheld (CR098) with a roster-level next step', () {
+      // Transcribed from `backend/app/api/room.py:248-260` — the client's
+      // own SSE parser silently dropped this kind before this test was
+      // written (default branch -> null, see the acceptance-#2 note in the
+      // CR098-MOBILE-LIVE hand-off).
+      const data = '{"agent_id": "market_analyst", "reason": "upgrade", '
+          '"next_step_agent": "social_media_analyst", "next_step_days": 4}';
+      final parsed = parseRoomSseEvent('agent_withheld', data);
+
+      expect(parsed, isNotNull);
+      expect(parsed!['kind'], 'agent_withheld');
+      expect(parsed['agent_id'], 'market_analyst');
+      expect(parsed['reason'], 'upgrade');
+      expect(parsed['next_step_agent'], 'social_media_analyst');
+      expect(parsed['next_step_days'], 4);
+    });
+
+    test('parses agent_withheld with next_step both null', () {
+      const data = '{"agent_id": "social_media_analyst", "reason": "upgrade", '
+          '"next_step_agent": null, "next_step_days": null}';
+      final parsed = parseRoomSseEvent('agent_withheld', data);
+
+      expect(parsed!['next_step_agent'], isNull);
+      expect(parsed['next_step_days'], isNull);
+    });
+
     test('existing event kinds are unaffected by the CR090 addition', () {
       final started = parseRoomSseEvent('started', '{"run_id": "abc123"}');
       expect(started!['kind'], 'started');

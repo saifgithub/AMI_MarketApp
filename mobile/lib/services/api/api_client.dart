@@ -173,6 +173,18 @@ Map<String, dynamic>? parseRoomSseEvent(String eventType, String data) {
       case 'agent_done':
         final j = jsonDecode(data) as Map<String, dynamic>;
         return {'kind': 'agent_done', 'agent_id': j['agent_id']};
+      case 'agent_withheld':
+        // CR098 — one per withheld analyst, emitted before any analyst
+        // speaks. `next_step_agent`/`next_step_days` are roster-level (the
+        // SAME value on every event this run) — never a per-agent countdown.
+        final j = jsonDecode(data) as Map<String, dynamic>;
+        return {
+          'kind': 'agent_withheld',
+          'agent_id': j['agent_id'],
+          'reason': j['reason'],
+          'next_step_agent': j['next_step_agent'],
+          'next_step_days': j['next_step_days'],
+        };
       case 'verdict':
         final j = jsonDecode(data) as Map<String, dynamic>;
         return {'kind': 'verdict', 'verdict': RoomVerdict.fromJson(j)};

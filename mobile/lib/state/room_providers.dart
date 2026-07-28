@@ -40,6 +40,25 @@ class RoomLiveDataNotice {
   final int surchargeCharged;
 }
 
+/// CR098 — one withheld analyst chair. `nextStepAgentId`/`nextStepDays` are
+/// carried here too even though they're roster-level (identical across every
+/// `agent_withheld` event this run) so a single chair's widget doesn't need
+/// to reach back into `RoomState` for them.
+@immutable
+class WithheldAgentInfo {
+  const WithheldAgentInfo({
+    required this.agentId,
+    required this.reason,
+    this.nextStepAgentId,
+    this.nextStepDays,
+  });
+
+  final String agentId;
+  final String reason;
+  final String? nextStepAgentId;
+  final int? nextStepDays;
+}
+
 @immutable
 class RoomState {
   const RoomState({
@@ -56,6 +75,7 @@ class RoomState {
     this.paywall,
     this.serverError = false,
     this.liveDataNotice,
+    this.withheldAgents = const {},
   });
 
   final String? phase;
@@ -82,6 +102,12 @@ class RoomState {
   // CR090 (D4): null unless the `live_data_notice` event actually arrived.
   // Absence renders nothing — never a defaulted "no surcharge" state.
   final RoomLiveDataNotice? liveDataNotice;
+  // CR098: agentId -> its withhold info. Populated from `agent_withheld`
+  // events, all emitted before any ANALYSTS-phase agent speaks. Also mirrored
+  // into `order` (see the `agent_withheld` case below) so the locked chair
+  // renders inline, in seat, at the top of the phase (D4) — not in a
+  // separate list that could drift out of position.
+  final Map<String, WithheldAgentInfo> withheldAgents;
 
   RoomState copyWith({
     String? phase,
@@ -99,6 +125,7 @@ class RoomState {
     bool clearPaywall = false,
     bool? serverError,
     RoomLiveDataNotice? liveDataNotice,
+    Map<String, WithheldAgentInfo>? withheldAgents,
   }) {
     return RoomState(
       phase: phase ?? this.phase,
@@ -114,6 +141,7 @@ class RoomState {
       paywall: clearPaywall ? null : (paywall ?? this.paywall),
       serverError: serverError ?? this.serverError,
       liveDataNotice: liveDataNotice ?? this.liveDataNotice,
+      withheldAgents: withheldAgents ?? this.withheldAgents,
     );
   }
 }
@@ -164,6 +192,44 @@ class RoomNotifier extends StateNotifier<RoomState> {
             break;
           case 'agent_done':
             state = state.copyWith(activeAgent: null);
+            break;
+          case 'agent_withheld':
+            // CR098: one event per withheld analyst, all emitted before any
+            // ANALYSTS-phase agent speaks. Mirror the agentId into `order`
+            // (never into `transcript`) so the console renders a locked
+            // chair in the analyst's real seat, at the top of the phase,
+            // rather than appearing late once other analysts have spoken.
+            // Shape-checked, not hard-cast. `parseRoomSseEvent` swallows a
+            // malformed event, but this case performs no casts inside it — it
+            // forwards raw `dynamic`, so a bad field threw here instead, inside
+            // `await for`, where the generic catch reads any throw as a dropped
+            // socket and diverts to polling recovery. The disclosure then
+            // vanished with nothing reported. Drop the event, keep the run.
+            final rawWithheldId = ev['agent_id'];
+            if (rawWithheldId is! String || rawWithheldId.isEmpty) {
+              debugPrint('room stream: agent_withheld without a usable agent_id');
+              break;
+            }
+            final withheldAgentId = rawWithheldId;
+            final rawReason = ev['reason'];
+            final rawNextAgent = ev['next_step_agent'];
+            final rawNextDays = ev['next_step_days'];
+            final withheldNext = Map<String, WithheldAgentInfo>.from(
+              state.withheldAgents,
+            );
+            withheldNext[withheldAgentId] = WithheldAgentInfo(
+              agentId: withheldAgentId,
+              reason: rawReason is String ? rawReason : 'upgrade',
+              nextStepAgentId: rawNextAgent is String ? rawNextAgent : null,
+              nextStepDays: rawNextDays is num ? rawNextDays.toInt() : null,
+            );
+            final orderWithChair = state.order.contains(withheldAgentId)
+                ? state.order
+                : [...state.order, withheldAgentId];
+            state = state.copyWith(
+              withheldAgents: withheldNext,
+              order: orderWithChair,
+            );
             break;
           case 'verdict':
             state = state.copyWith(verdict: ev['verdict'] as RoomVerdict);
@@ -233,6 +299,19 @@ class RoomNotifier extends StateNotifier<RoomState> {
             transcript[line.agentId] = line.content;
             if (!order.contains(line.agentId)) order.add(line.agentId);
           }
+          // Re-seat the locked chairs. `order` is rebuilt from the transcript
+          // alone, and a withheld analyst is deliberately never in the
+          // transcript — so without this the console, which renders by
+          // iterating `order`, silently drops every locked chair on the most
+          // ordinary mobile failure there is. `withheldAgents` still holds
+          // them; nothing would look. Front of the queue, in arrival order,
+          // matching where the stream seats them (all arrive before any
+          // analyst speaks). CR090's notice on this screen survives recovery
+          // because it renders from its own field rather than through `order`.
+          final chairs = state.withheldAgents.keys
+              .where((id) => !order.contains(id))
+              .toList();
+          order.insertAll(0, chairs);
           state = state.copyWith(
             reconnecting: false,
             done: true,

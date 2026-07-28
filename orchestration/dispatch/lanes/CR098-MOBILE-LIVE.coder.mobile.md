@@ -134,3 +134,22 @@ Measured foreground in the lane worktree: full `flutter test` **122 → 128**, `
 on both touched files, and both fixes mutation-proved (removing the re-seat → exactly the 2 new
 recovery tests RED; restoring the hard casts → exactly the 4 new malformed-payload tests RED; tree
 restored, 128 green). Detail in `orchestration/audit/cr/CR098-MOBILE-LIVE.architect.md` round 2.
+
+---
+
+DISPATCH: ACCEPTED
+
+Auditor `VERDICT: COMPLETE (round 2)` delivered at `b8a90e0`, audited SHA `44dcc0f`, reproduced
+independently in a fresh detached worktree (128/128, both fixes mutation-proved RED at exactly the
+expected tests). The round-2 missing-DoD-table MAJOR was downgraded to recorded-not-scored by the
+stakeholder waiver (`AMI_TRADE_BINDINGS.md` gap-fill 7). Merged to `main` by the Architect.
+
+**Still open, and carried OUT of this lane deliberately:**
+
+- **`ar`/`ms` for the 4 new strings** — `roomLiveDataFeedTenure`, `roomLiveDataTenureUpgradeCta`,
+  `roomAgentWithheldChairLabel`, `roomAgentWithheldRosterNote`. The last takes an `int` and needs
+  **plural forms per locale**, not a string swap. Generated files currently carry EN in all three.
+- **No device / melehost verification.** `main` is under an active promotion hold and nobody has seen
+  this render on a phone.
+- **The thin-session wire signal** — a genuinely thin session (analyst present, `field_state=
+  unavailable`) still has no wire signal at all. Needs a **backend** signal before any client work.
