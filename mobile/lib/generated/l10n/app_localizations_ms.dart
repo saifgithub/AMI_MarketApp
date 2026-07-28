@@ -282,58 +282,58 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String tickerDetailDividendExDate(String date) {
-    return 'ex-div $date';
+    return 'ex-dividen $date';
   }
 
   @override
   String tickerDetailDividendRate(String rate) {
-    return '$rate/sh';
+    return '$rate/saham';
   }
 
   @override
-  String get tickerDetailLotsHeading => 'COST BASIS LOTS';
+  String get tickerDetailLotsHeading => 'LOT KOS ASAS';
 
   @override
-  String get tickerDetailLotStatusOpen => 'OPEN';
+  String get tickerDetailLotStatusOpen => 'TERBUKA';
 
   @override
-  String get tickerDetailLotStatusPartiallyClosed => 'PARTIAL';
+  String get tickerDetailLotStatusPartiallyClosed => 'SEBAHAGIAN';
 
   @override
-  String get tickerDetailLotStatusClosed => 'CLOSED';
+  String get tickerDetailLotStatusClosed => 'DITUTUP';
 
   @override
   String tickerDetailLotEntry(String date, String price) {
-    return 'Opened $date @ \$$price';
+    return 'Dibuka $date @ \$$price';
   }
 
   @override
   String tickerDetailLotQuantity(String open, String closed) {
-    return '$open open / $closed closed';
+    return '$open terbuka / $closed ditutup';
   }
 
   @override
   String tickerDetailLotRealised(String pnl) {
-    return 'Realised $pnl';
+    return 'Direalisasi $pnl';
   }
 
   @override
   String tickerDetailLotUnrealised(String pnl) {
-    return 'Unrealised $pnl';
+    return 'Belum direalisasi $pnl';
   }
 
   @override
-  String get tickerDetailLotUnrealisedUnknown => 'Unrealised —';
+  String get tickerDetailLotUnrealisedUnknown => 'Belum direalisasi —';
 
   @override
-  String get portfolioSectorAllocationHeading => 'SECTOR ALLOCATION';
+  String get portfolioSectorAllocationHeading => 'AGIHAN SEKTOR';
 
   @override
-  String get portfolioSectorOtherLabel => 'Other (unclassified)';
+  String get portfolioSectorOtherLabel => 'Lain-lain (tidak dikelaskan)';
 
   @override
   String portfolioSectorBreach(String sector, String pct, String limit) {
-    return '$sector at $pct% exceeds your $limit% mandate limit';
+    return '$sector pada $pct% melebihi had mandat $limit% anda';
   }
 
   @override
@@ -1221,42 +1221,42 @@ class AppLocalizationsMs extends AppLocalizations {
   String get roomRetry => 'CUBA LAGI';
 
   @override
-  String get roomLiveDataNoticeTitle => 'Live data';
+  String get roomLiveDataNoticeTitle => 'Data langsung';
 
   @override
   String roomLiveDataFeedLive(String feed) {
-    return '$feed: live feed used.';
+    return '$feed: data langsung digunakan.';
   }
 
   @override
   String roomLiveDataFeedWithheld(String feed) {
-    return '$feed: live data available — needs credits.';
+    return '$feed: data langsung tersedia — memerlukan kredit.';
   }
 
   @override
   String roomLiveDataFeedUnavailable(String feed) {
-    return '$feed: live data unavailable right now.';
+    return '$feed: data langsung tidak tersedia buat masa ini.';
   }
 
   @override
   String roomLiveDataSurchargeCharged(int surcharge) {
-    return 'Live news + social cost $surcharge extra credits this run.';
+    return 'Berita + media sosial langsung memerlukan $surcharge kredit tambahan untuk larian ini.';
   }
 
   @override
-  String get roomLiveDataUpgradeCta => 'UPGRADE FOR LIVE DATA';
+  String get roomLiveDataUpgradeCta => 'NAIK TARAF UNTUK DATA LANGSUNG';
 
   @override
   String roomLiveDataFeedTenure(String feed) {
-    return '$feed: live data available — needs a plan upgrade.';
+    return '$feed: data langsung tersedia — memerlukan naik taraf pelan.';
   }
 
   @override
-  String get roomLiveDataTenureUpgradeCta => 'UPGRADE YOUR PLAN';
+  String get roomLiveDataTenureUpgradeCta => 'NAIK TARAF PELAN ANDA';
 
   @override
   String roomAgentWithheldChairLabel(String agent) {
-    return '$agent — off your roster on this plan';
+    return '$agent — di luar pasukan anda pada pelan ini';
   }
 
   @override
@@ -1264,25 +1264,24 @@ class AppLocalizationsMs extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       days,
       locale: localeName,
-      other: '$days days',
-      one: '1 day',
+      other: '$days hari',
     );
-    return 'Next roster change: $agent in $_temp0.';
+    return 'Pertukaran pasukan seterusnya: $agent dalam $_temp0.';
   }
 
   @override
-  String get roomVerdictActionNoVerdict => 'NO VERDICT';
+  String get roomVerdictActionNoVerdict => 'TIADA KEPUTUSAN';
 
   @override
-  String get roomVerdictOpinionsHeading => 'Not in the room';
+  String get roomVerdictOpinionsHeading => 'Tiada dalam Bilik';
 
   @override
   String get roomVerdictOpinionsNote =>
-      'This verdict was reached without their input.';
+      'Keputusan ini dicapai tanpa input mereka.';
 
   @override
   String roomVerdictIncludeAnalystCta(String agent) {
-    return 'Include the $agent →';
+    return 'Sertakan $agent →';
   }
 
   @override
