@@ -54,6 +54,7 @@ from app.services.room_runner import (
     get_room_runner,
 )
 from app.api.dependencies import get_current_user
+from app.api.sse import escape_sse_text, sse_json, sse_text
 from app.db import get_session
 from app.db.models import User
 from app.services.credit_service import InsufficientCredits
@@ -214,20 +215,20 @@ async def stream_room(
             # event (the client concatenates into transcript[agent_id]).
             persisted = runner.get_run(run_id)
             if persisted is not None:
-                yield f"event: started\ndata: {json.dumps({'run_id': str(run_id)})}\n\n"
+                yield sse_json("started", json.dumps({'run_id': str(run_id)}))
                 for msg in persisted.transcript:
                     aid = msg.agent_id if isinstance(msg.agent_id, str) else msg.agent_id.value
-                    safe = (msg.content or "").replace("\\", "\\\\").replace("\n", "\\n")
-                    yield f"event: agent_token\ndata: {json.dumps({'agent_id': aid, 'text': safe})}\n\n"
-                    yield f"event: agent_done\ndata: {json.dumps({'agent_id': aid})}\n\n"
+                    safe = escape_sse_text(msg.content or "")
+                    yield sse_json("agent_token", json.dumps({'agent_id': aid, 'text': safe}))
+                    yield sse_json("agent_done", json.dumps({'agent_id': aid}))
                 if persisted.verdict is not None:
-                    yield f"event: phase\ndata: {json.dumps({'label': 'VERDICT'})}\n\n"
-                    yield f"event: verdict\ndata: {persisted.verdict.model_dump_json()}\n\n"
+                    yield sse_json("phase", json.dumps({'label': 'VERDICT'}))
+                    yield sse_json("verdict", persisted.verdict.model_dump_json())
         else:
             async for ev in runner.subscribe(run_id):
                 if ev.kind == "started":
                     payload = json.dumps({"run_id": str(ev.run_id)})
-                    yield f"event: started\ndata: {payload}\n\n"
+                    yield sse_json("started", payload)
                 elif ev.kind == "live_data_notice":
                     # CR090 (D3): the structural live-data disclosure — the model
                     # is out of the loop; the client renders `live_data` (each
@@ -235,22 +236,22 @@ async def stream_room(
                     # CR090-MOBILE adds the render; the shipped client tolerates
                     # this unknown event kind (its SSE switch has no default).
                     payload = json.dumps(ev.live_data or {})
-                    yield f"event: live_data_notice\ndata: {payload}\n\n"
+                    yield sse_json("live_data_notice", payload)
                 elif ev.kind == "phase":
                     payload = json.dumps({"label": ev.phase})
-                    yield f"event: phase\ndata: {payload}\n\n"
+                    yield sse_json("phase", payload)
                 elif ev.kind == "agent_token":
-                    safe = (ev.text or "").replace("\\", "\\\\").replace("\n", "\\n")
+                    safe = escape_sse_text(ev.text or "")
                     payload = json.dumps({
                         "agent_id": ev.agent_id.value if ev.agent_id else None,
                         "text": safe,
                     })
-                    yield f"event: agent_token\ndata: {payload}\n\n"
+                    yield sse_json("agent_token", payload)
                 elif ev.kind == "agent_done":
                     payload = json.dumps({
                         "agent_id": ev.agent_id.value if ev.agent_id else None,
                     })
-                    yield f"event: agent_done\ndata: {payload}\n\n"
+                    yield sse_json("agent_done", payload)
                 elif ev.kind == "agent_withheld":
                     # CR098 — the per-analyst locked-chair + countdown surface.
                     # Modelled on live_data_notice above: structural event, no
@@ -263,17 +264,21 @@ async def stream_room(
                         ),
                         "next_step_days": ev.next_step_days,
                     })
-                    yield f"event: agent_withheld\ndata: {payload}\n\n"
+                    yield sse_json("agent_withheld", payload)
                 elif ev.kind == "verdict":
                     if ev.verdict is not None:
-                        yield f"event: verdict\ndata: {ev.verdict.model_dump_json()}\n\n"
+                        yield sse_json("verdict", ev.verdict.model_dump_json())
                 elif ev.kind == "error":
-                    yield f"event: error\ndata: {ev.text or 'unknown'}\n\n"
+                    # DEF127: `ev.text` is `str(exc)[:300]` from the runner. Framed
+                    # through sse_text, not interpolated — an exception message
+                    # carrying a blank line used to end the event early and let the
+                    # remainder be parsed as further events the server never sent.
+                    yield sse_text("error", ev.text or "unknown")
         # on_complete callback (journal + push stub) fires from the background
         # task's finally block, not here — so it runs even on disconnect.
         # For cached replays there's no _pump task, hence no on_complete; the
         # original journal entry from the first run is the canonical record.
-        yield f"event: done\ndata: {json.dumps({'run_id': str(run_id)})}\n\n"
+        yield sse_json("done", json.dumps({'run_id': str(run_id)}))
 
     headers = {"X-Room-Run-Id": str(run_id)}
     if cached:
