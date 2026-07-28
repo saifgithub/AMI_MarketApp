@@ -329,7 +329,11 @@ enforces it.
 
 ---
 
-## P6 — A guard on deliberately-growing data pinned exact, not floored (blocks the next addition)
+## P6b — A guard on deliberately-growing data pinned exact, not floored (blocks the next addition)
+
+(Numbered P6b, not P7: it was added after P7–P9 were already cited across the
+repo, and renumbering would have orphaned those references. New entries
+continue at P10.)
 
 A count/emptiness guard written as an exact equality against today's size turns red the instant the
 data grows as designed — and when the guard lives in a tree a different role owns, it deadlocks that
