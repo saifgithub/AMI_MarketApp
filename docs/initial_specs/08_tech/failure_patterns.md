@@ -410,6 +410,37 @@ the Architect at the next work unit rather than waiting to be noticed.
 
 ---
 
+## P9 — The verification procedure silently destroyed or hid its own evidence
+
+Mutation testing is how this project proves a guard is real: break the code on purpose, watch the
+test go red, restore. Both halves of that loop have now failed in a way that leaves a **green,
+confident, meaningless result** — the tooling did not error, it just stopped measuring what the
+operator thought it was measuring.
+
+| | What the procedure did | Result |
+|---|---|---|
+| **DEF136** (2026-07-28) | ran the mutation matrix with `pytest -x` | pytest stopped at the first failure, so the operator never saw that only *one* of the two tests was firing. The loop-responsiveness test was **green against a real regression** and was reported as proven |
+| **DEF127** (2026-07-28) | reverted each mutation with `git checkout -- <file>` while the fix was still **uncommitted** | `git checkout` cannot distinguish the mutation from the fix — both are uncommitted changes to the same file. It deleted the fix mid-matrix; every number after the first mutation was measured against partially-reverted code |
+| **DEF130** (2026-07-28, same session) | the identical `git checkout` revert, ~20 minutes after writing "never do this" into DEF127's hand-off | the widened detector was wiped and had to be re-applied. **A written lesson did not survive one hour.** |
+
+**Why the previous guard failed.** There was none, and the third row is the evidence that a prose
+rule is not one — the operator who wrote the warning re-committed the error inside the same session.
+This is the project's own *"prompt instructions are not controls"* rule (CR038) turned on its
+verification tooling: the discipline lived in a hand-off document, which is exactly the place
+CLAUDE.md says a control must not live.
+
+**The invariant.** *A mutation run must not be able to lose the fix or hide a passing test. Concretely:
+the fix is **committed before** any mutation is applied, so `git checkout` restores it rather than
+deleting it; the matrix runs **without `-x`** so every test's result is observed, not just the first
+failure; and the residual diff is **verified empty afterwards by reading `git status`**, not assumed
+from the reverts having "worked".*
+
+**Enforcing check.** `scripts/mutation_guard.sh` — refuses to apply a mutation while the target file
+has uncommitted changes, refuses a pytest invocation containing `-x`, and diffs the tree afterwards
+to prove the revert was total. Structural, so the rule survives the operator forgetting it.
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.
