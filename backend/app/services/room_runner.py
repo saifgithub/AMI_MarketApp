@@ -1992,13 +1992,19 @@ class RoomRunner:
         # CR055 — the real simulated holdings, injected UNCONDITIONALLY into every
         # agent's prompt (never gated on an Alpaca link). Degrades loudly on failure;
         # the sim block is authoritative, Alpaca is a labelled overlay on top.
-        sim_block = _build_sim_holdings_block(user_id, ticker)
+        # DEF136: `to_thread`, not a bare call. Both builders reach
+        # `SimEngine.current_marks` -> `_marks_with_quotes`, which opens a
+        # ThreadPoolExecutor and `pool.map`s a yfinance quote per holding. Called
+        # directly from this coroutine that fan-out ran ON the loop thread, so
+        # every other Room stream, SSE heartbeat and request served by this
+        # worker stalled for its full duration, on every single convene.
+        sim_block = await asyncio.to_thread(_build_sim_holdings_block, user_id, ticker)
         portfolio_snapshot = _compose_portfolio_block(sim_block, alpaca_snap)
 
         # CR026: sector-concentration inputs (holdings + marks + resolver + weights),
         # built once per run off the request path.
         sector_holdings, sector_marks, sector_map, sector_weights = (
-            _build_room_sector_context(user_id)
+            await asyncio.to_thread(_build_room_sector_context, user_id)
         )
 
         profile = await asyncio.to_thread(
