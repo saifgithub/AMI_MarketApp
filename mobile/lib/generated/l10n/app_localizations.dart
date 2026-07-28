@@ -2208,6 +2208,30 @@ abstract class AppLocalizations {
   /// **'Next roster change: {agent} in {days, plural, =1{1 day} other{{days} days}}.'**
   String roomAgentWithheldRosterNote(String agent, int days);
 
+  /// CR098 Amendment 2: display label for the NO_VERDICT action in the verdict card heading. Exists so the raw wire enum ('NO_VERDICT', with the underscore) never reaches a user. The other actions are readable English words and pass through unchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'NO VERDICT'**
+  String get roomVerdictActionNoVerdict;
+
+  /// CR098 (D3): heading of the closing disclosure listing analysts whose opinion was NOT part of this verdict. Renders on EVERY action, not only NO_VERDICT — an APPROVE reached without Social must say so. Neutral statement of the session's shape; never a lack, never a sell.
+  ///
+  /// In en, this message translates to:
+  /// **'Not in the room'**
+  String get roomVerdictOpinionsHeading;
+
+  /// CR098 (D3): the closing-disclosure body, above a bulleted list of analyst names. Deliberately carries NO list placeholder — the names render as their own bullets so no locale has to solve English list grammar ('A, B and C'). States a condition of the analysis the way an analyst caveats a note: no upgrade language, no plan names, no pricing (D2a); the CTA is separate app chrome.
+  ///
+  /// In en, this message translates to:
+  /// **'This verdict was reached without their input.'**
+  String get roomVerdictOpinionsNote;
+
+  /// CR098 (D2/D4): app-chrome CTA beneath a NO_VERDICT card. Deliberately NOT in the PM's voice and visually separated from it — the PM declines on professional grounds and never sells. {agent} is the withheld analyst's display name.
+  ///
+  /// In en, this message translates to:
+  /// **'Include the {agent} →'**
+  String roomVerdictIncludeAnalystCta(String agent);
+
   /// CR084 paywall heading. Shown at the hard credit wall and from Settings. 'Desk' = the user's analyst team workspace.
   ///
   /// In en, this message translates to:
