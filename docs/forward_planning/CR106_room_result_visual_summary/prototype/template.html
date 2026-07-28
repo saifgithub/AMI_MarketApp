@@ -270,6 +270,7 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
    is a conic sweep clipped to the same flat-top geometry; no ring at all when
    conviction is unknown, so absence never looks like "low". */
 .voice { position: relative; width: 26px; flex: none; display: flex; flex-direction: column;
+  padding: 0; border: 0; background: none; cursor: pointer;
   align-items: center; gap: 3px; --vbg: var(--panel); }
 .voice::after { content: ''; position: absolute; inset: -9px -2px; }
 .voice .cell { position: relative; width: 26px; height: 22.5px; clip-path: var(--clip-hex-flat);
@@ -367,6 +368,36 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .trow .full em { font-style: normal; display: block; margin-top: 8px; padding: 8px;
   background: var(--card-alt); font-size: var(--t11); color: var(--amber); }
 .rows-cap { font-size: var(--t9); color: var(--text-low); padding-bottom: 10px; }
+
+/* ── Agent peek sheet ─────────────────────────────────────────────
+   Tapping a comb hex opens THIS, not a mode switch. The board stays behind
+   it, so comparing four agents is four quick peeks rather than four round
+   trips through the toggle. Switching to the full transcript stays available
+   as an explicit action inside the sheet. Shipped idiom: watchlist_sheet /
+   trade_ticket_sheet / agent_action_sheet. */
+.scrim { position: absolute; inset: 0; background: rgba(15,23,42,0.72); z-index: 5; }
+.sheet {
+  position: absolute; inset-inline: 0; bottom: 0; z-index: 6;
+  max-height: 72%; display: flex; flex-direction: column;
+  background: var(--panel); border-top: 1px solid var(--border);
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+}
+.sheet .grab { width: 36px; height: 4px; border-radius: 2px; background: var(--border); margin: 8px auto 4px; }
+.sheet .hd { display: flex; align-items: center; gap: 10px; padding: 8px 16px 12px; border-bottom: 1px solid var(--border-subtle); }
+.sheet .hd .who { min-width: 0; flex: 1; }
+.sheet .hd .nm { font-size: var(--t14); color: var(--text-high); font-weight: 600; }
+.sheet .hd .ph { font-size: var(--t9); color: var(--text-low); margin-top: 2px; }
+.sheet .bd { padding: 12px 16px; overflow-y: auto; font-size: var(--t13); color: var(--text-med); }
+.sheet .bd strong { color: var(--text-high); font-weight: 600;
+  font-family: 'AMI Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+.sheet .bd .ann { margin-top: 10px; padding: 8px; background: var(--card-alt);
+  border-radius: var(--r-card); font-size: var(--t11); color: var(--amber-ink); }
+.sheet .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.sheet .chip { font-size: var(--t9); padding: 4px 8px; border: 1px solid var(--border);
+  border-radius: 20px; color: var(--text-med); }
+.sheet .chip b { color: var(--text-high); font-weight: 600; }
+.sheet .ft { padding: 10px 16px 16px; border-top: 1px solid var(--border-subtle); }
+.trow.flash { background: color-mix(in srgb, var(--blue) 12%, transparent); }
 
 /* Phase separators */
 .phase { font-size: var(--t9); color: var(--text-low); padding: 14px 0 6px; display: flex; align-items: center; gap: 8px; }
@@ -707,7 +738,7 @@ const SCENARIOS = [
 /* ─────────────────────────────────────────────────────────────
    State
    ───────────────────────────────────────────────────────────── */
-const state = { scenario: SCENARIOS[0], mode: 'board', theme: 'dark', dir: 'ltr', ts: 1, labels: 'letters', open: {} };
+const state = { scenario: SCENARIOS[0], mode: 'board', theme: 'dark', dir: 'ltr', ts: 1, labels: 'letters', open: {}, peek: null, flash: null };
 
 const CONV_PCT = { low: 33, medium: 66, high: 100 };
 const HERO = {
@@ -807,10 +838,10 @@ function voiceHtml(v, absent) {
   else if (state.labels === 'icons') mark = `<span class="mk"><svg viewBox="0 0 24 24" fill="none"
       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
       >${COMB_ICON[v.id]}</svg></span>`;
-  return `<span class="voice${absent ? ' absent' : ''}" style="--vc:${c}" title="${esc(a.name)}${v.stance ? ' · ' + v.stance + (v.conviction ? ' · ' + v.conviction + ' conviction' : '') : ' · no view stated'}">
+  return `<button class="voice${absent ? ' absent' : ''}" data-peek="${v.id}" style="--vc:${c}" title="${esc(a.name)}${v.stance ? ' · ' + v.stance + (v.conviction ? ' · ' + v.conviction + ' conviction' : '') : ' · no view stated'}">
     <span class="cell">${mark}</span>
     ${conv ? `<span class="bar" style="--conv:${conv}"><i></i></span>` : ''}
-  </span>`;
+  </button>`;
 }
 
 function ribbonHtml(v) {
@@ -941,7 +972,7 @@ function transcriptHtml(sc) {
       const g = gistFor(id, content, w);
       const ann = ANNOTATION[id] && !w && content;
       const open = !!state.open[id];
-      out += `<div class="trow" data-open="${open}" style="--vc:var(--${a.c});--vi:var(--${a.c}-ink)">
+      out += `<div class="trow${state.flash === id ? ' flash' : ''}" data-open="${open}" style="--vc:var(--${a.c});--vi:var(--${a.c}-ink)">
         <button class="head" data-agent="${id}" aria-expanded="${open}">
           <span class="av"${w ? ' style="opacity:.35"' : ''}></span>
           <span class="ab lbl">${a.ab}</span>
@@ -957,6 +988,43 @@ function transcriptHtml(sc) {
     });
   });
   return out + `</div>`;
+}
+
+function peekHtml(sc) {
+  const id = state.peek;
+  if (!id) return '';
+  const a = AGENTS[id];
+  const v = (sc.voices || []).find(x => x.id === id) || {};
+  const withheld = new Set(sc.withheld || []).has(id)
+    || (sc.verdict?.opinions_not_included || []).includes(id);
+  const content = id === 'portfolio_manager' ? (sc.verdict ? sc.verdict.reason : null) : TRANSCRIPT[id];
+  const phase = PHASES.find(p => p.ids.includes(id))?.k || '';
+  const ann = ANNOTATION[id] && !withheld && content;
+  const chips = [];
+  if (v.stance) chips.push(`<span class="chip lbl">STANCE <b>${v.stance.toUpperCase()}</b></span>`);
+  if (v.conviction) chips.push(`<span class="chip lbl">CONVICTION <b>${v.conviction.toUpperCase()}</b></span>`);
+  if (!v.stance && !withheld) chips.push('<span class="chip lbl">NO STANCE RECORDED</span>');
+  return `<div class="scrim" data-peek-close="1"></div>
+    <div class="sheet" role="dialog" aria-label="${esc(a.name)}">
+      <div class="grab"></div>
+      <div class="hd">
+        <span class="voice" style="--vc:var(--${a.c});--vbg:var(--panel)">
+          <span class="cell"><span class="mk tx${COMB_LABEL[id].length > 3 ? ' n4' : ''}">${COMB_LABEL[id]}</span></span>
+        </span>
+        <span class="who"><div class="nm">${esc(a.name)}</div><div class="ph lbl">${phase}${withheld ? ' · NOT HEARD' : ''}</div></span>
+      </div>
+      <div class="bd">
+        <div class="chips">${chips.join('')}</div>
+        ${withheld
+          ? `<p style="margin:0;color:var(--text-low)">This agent was not heard on this run, so it contributed nothing to the verdict.</p>`
+          : content
+            ? `<p style="margin:0">${mdToHtml(content)}</p>${ann ? `<div class="ann">${esc(ANNOTATION[id])}</div>` : ''}`
+            : `<p style="margin:0;color:var(--text-low)">This agent returned nothing.</p>`}
+      </div>
+      ${(withheld || !content) ? '' : `<div class="ft">
+        <button class="cta quiet lbl" data-jump="${id}" style="margin:0">READ THE FULL DEBATE →</button>
+      </div>`}
+    </div>`;
 }
 
 function render() {
@@ -985,14 +1053,32 @@ function render() {
       </div>
     </div>
     <div class="body">${state.mode === 'board' ? boardHtml(sc) : transcriptHtml(sc)}</div>
+    ${peekHtml(sc)}
     <div class="foot">${isJournal
       ? '<span class="lbl">ADD A NOTE · TAG · OUTCOME</span>'
       : '<span class="lbl" style="color:var(--green)">✓</span> SAVED TO JOURNAL'}</div>`;
 
-  el.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { state.mode = b.dataset.mode; render(); });
+  el.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => {
+    state.mode = b.dataset.mode; state.peek = null; state.flash = null; render();
+  });
   el.querySelectorAll('[data-agent]').forEach(b => b.onclick = () => {
     state.open[b.dataset.agent] = !state.open[b.dataset.agent]; render();
   });
+  el.querySelectorAll('[data-peek]').forEach(b => b.onclick = () => {
+    state.peek = b.dataset.peek; render();
+  });
+  const close = el.querySelector('[data-peek-close]');
+  if (close) close.onclick = () => { state.peek = null; render(); };
+  const jump = el.querySelector('[data-jump]');
+  if (jump) jump.onclick = () => {
+    const id = jump.dataset.jump;
+    // Explicit action, so it switches mode — but it must NOT write the
+    // persisted default. Only the segmented toggle does that.
+    state.peek = null; state.mode = 'transcript'; state.open[id] = true; state.flash = id;
+    render();
+    const row = document.querySelector(`[data-agent="${id}"]`);
+    if (row) row.closest('.trow').scrollIntoView({ block: 'center' });
+  };
   const why = el.querySelector('[data-act="why"]');
   if (why) why.onclick = () => {
     const p = el.querySelector('#reasonP');
@@ -1018,7 +1104,7 @@ function buildControls() {
     + `<p style="margin:10px 0 0;font-size:11px;color:var(--text-low)">${esc(state.scenario.note)}</p>`;
   host.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
     state.scenario = SCENARIOS.find(s => s.key === b.dataset.k);
-    state.open = {};
+    state.open = {}; state.peek = null; state.flash = null;
     buildControls(); render();
   });
 
