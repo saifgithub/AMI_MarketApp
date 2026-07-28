@@ -313,6 +313,7 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .prov .m::after { content: ''; position: absolute; inset: 1.5px; clip-path: var(--clip-hex-flat); background: var(--card-alt); }
 
 /* Fallback list when provenance is unavailable */
+.asof { font-size: var(--t9); color: var(--text-low); margin-bottom: 6px; }
 .levels { background: var(--card-alt); clip-path: var(--clip-angle-panel); padding: 12px; margin-bottom: 12px; }
 .lv { display: flex; align-items: baseline; gap: 12px; padding: 3px 0; }
 .lv .k { width: 82px; flex: none; font-size: var(--t10); color: var(--text-low); }
@@ -615,6 +616,43 @@ const SCENARIOS = [
     withheld: ['market_analyst','trader','aggressive_debator','conservative_debator','neutral_debator'],
   },
   {
+    key: 'journal_recent',
+    surface: 'journal',
+    label: 'JOURNAL · recent entry',
+    note: 'The same board on the Journal replay surface. The payload carries the full verdict, '
+        + 'so everything renders — but duration and credits are not in the snapshot, so the strip '
+        + 'shows model tier and mandate version instead.',
+    ticker: 'NVDA', duration: '41s', credits: 3,
+    entryDate: '26 JUL 2026 · 14:32', modelTier: 'MID', mandateVersion: 3,
+    verdict: {
+      action: 'APPROVE', size_pct: 3.0, entry: 178.40, stop: 168.90, target: 205.00,
+      time_horizon_days: 42, violations: [], overridden_from_llm: false, opinions_not_included: [],
+      level_provenance: { entry: 'pm', stop: 'pm', target: 'pm' },
+      reason: "Data-centre revenue beat consensus by 4.1% and the weekly close held above the 50-week average for a third week. "
+        + "I am sizing at 3.0% rather than the Trader's proposal because the next print lands inside the horizon and the Bear's "
+        + "channel-inventory read has been out-argued, not refuted.",
+    },
+    voices: LEAN_LONG,
+  },
+  {
+    key: 'journal_old',
+    surface: 'journal',
+    label: 'JOURNAL · pre-CR106 entry',
+    note: 'The honest case. This entry was written before level_provenance and the stance envelope '
+        + 'existed, so its snapshot will never have them. No ribbon, no comb — the levels fall back '
+        + 'to a plain list and the comb says so. The collapsed transcript still works perfectly, '
+        + 'because it only needs the prose.',
+    ticker: 'AMD', duration: '—', credits: 0,
+    entryDate: '02 JUN 2026 · 09:14', modelTier: 'CHEAP', mandateVersion: 2,
+    verdict: {
+      action: 'APPROVE', size_pct: 2.0, entry: 118.20, stop: 111.10, target: 133.60,
+      time_horizon_days: 30, violations: [], overridden_from_llm: false, opinions_not_included: [],
+      reason: "The room supported a small long. Sizing at 2.0% against a mandate that was more "
+        + "conservative at the time.",
+    },
+    voices: voices({}),
+  },
+  {
     key: 'no_result',
     label: 'NO RESULT · run ended',
     note: 'Reachable today and rendered as one bare sentence. An outage must never be shaped like an outcome.',
@@ -675,6 +713,13 @@ function mdToHtml(s) {
    ───────────────────────────────────────────────────────────── */
 function combHtml(sc, promoted) {
   const stated = sc.voices.filter(v => v.stance);
+  if (!stated.length) {
+    return `<section class="comb" style="${promoted ? 'margin-top:0' : ''}">
+      <div class="cap lbl"><span>11 VOICES</span><span>NOT RECORDED</span></div>
+      <p style="margin:0;font-size:var(--t12);color:var(--text-low)">
+        Agent stances were not recorded for this run. Open the transcript to read what each one said.</p>
+    </section>`;
+  }
   const bands = [
     { k: 'for',     lbl: 'FOR' },
     { k: 'neutral', lbl: 'NEUTRAL' },
@@ -763,6 +808,7 @@ function ribbonHtml(v) {
 
 function boardHtml(sc) {
   const v = sc.verdict;
+  const isJournal = sc.surface === 'journal';
   const h = HERO[v ? v.action : 'NONE'];
   const acc = accVar(h.acc), ink = inkVar(h.acc);
   let num, unit = '';
@@ -798,7 +844,11 @@ function boardHtml(sc) {
   }
 
   const isApprove = v.action === 'APPROVE';
-  const geometry = isApprove ? ribbonHtml(v) : '';
+  const geometry = isApprove
+    ? (isJournal
+        ? `<div class="asof lbl">LEVELS AS OF ${esc(sc.entryDate.split(' · ')[0])} — A RECORD, NOT A CURRENT SETUP</div>${ribbonHtml(v)}`
+        : ribbonHtml(v))
+    : '';
   const promoted = !isApprove;
   const comb = combHtml(sc, promoted);
 
@@ -816,7 +866,9 @@ function boardHtml(sc) {
     ${isApprove ? '<button class="why lbl" data-act="why">WHY →</button>' : ''}
   </section>`;
 
-  const ctas = isApprove
+  const ctas = isJournal
+    ? `<button class="cta primary lbl">SEE CHART</button><button class="cta quiet lbl">RE-RUN WITH CURRENT MANDATE</button>`
+    : isApprove
     ? `<button class="cta primary lbl">OPEN TRADE TICKET</button><button class="cta ghost lbl">SEE CHART</button>`
     : v.action === 'NO_VERDICT'
       ? `<button class="cta ghost lbl">SEE CHART</button><button class="cta quiet lbl">ADD TO WATCHLIST</button>`
@@ -863,24 +915,30 @@ function render() {
   const el = document.getElementById('screen');
   el.style.setProperty('--ts', state.ts);
   el.setAttribute('dir', state.dir);
+  const isJournal = sc.surface === 'journal';
   const phaseDone = sc.verdict ? 'COMPLETE' : 'ENDED EARLY';
   el.innerHTML = `
     <div class="hdr">
       <div class="back">‹</div>
       <div class="id">
-        <div class="top"><span class="kick lbl">CONVENE</span><span class="tk mono">${esc(sc.ticker)}</span></div>
-        <div class="sub lbl" style="color:${sc.verdict ? 'var(--green)' : 'var(--text-low)'}"><span class="pip"></span>${phaseDone}</div>
+        <div class="top"><span class="kick lbl">${isJournal ? 'JOURNAL' : 'CONVENE'}</span><span class="tk mono">${esc(sc.ticker)}</span></div>
+        <div class="sub lbl" style="color:${isJournal ? 'var(--text-low)' : (sc.verdict ? 'var(--green)' : 'var(--text-low)')}">
+          ${isJournal ? '' : '<span class="pip"></span>'}${isJournal ? esc(sc.entryDate) : phaseDone}</div>
       </div>
     </div>
     <div class="strip">
-      <span class="facts lbl">${sc.duration} · ${sc.credits} CREDITS</span>
+      <span class="facts lbl">${isJournal
+        ? `${esc(sc.modelTier)} TIER · MANDATE v${sc.mandateVersion}`
+        : `${sc.duration} · ${sc.credits} CREDITS`}</span>
       <div class="modes">
         <button data-mode="board" aria-pressed="${state.mode === 'board'}">Board</button>
         <button data-mode="transcript" aria-pressed="${state.mode === 'transcript'}">Transcript</button>
       </div>
     </div>
     <div class="body">${state.mode === 'board' ? boardHtml(sc) : transcriptHtml(sc)}</div>
-    <div class="foot"><span class="lbl" style="color:var(--green)">✓</span> SAVED TO JOURNAL</div>`;
+    <div class="foot">${isJournal
+      ? '<span class="lbl">ADD A NOTE · TAG · OUTCOME</span>'
+      : '<span class="lbl" style="color:var(--green)">✓</span> SAVED TO JOURNAL'}</div>`;
 
   el.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { state.mode = b.dataset.mode; render(); });
   el.querySelectorAll('[data-agent]').forEach(b => b.onclick = () => {
