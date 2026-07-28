@@ -154,10 +154,14 @@ _YFINANCE_BLOCKING_ATTRS = {"Ticker", "download"}
 # `_DEF120_KNOWN_BLOCKING_PAIRS` — which runs with an EMPTY waiver — so the
 # waiver cannot hide it. Removing either name without wrapping its call site
 # turns one of these two tests red.
-_WAIVED_CALL_CHAIN_NAMES = {
-    "_build_room_sector_context",
-    "_build_sim_holdings_block",
-}
+# DEF136 emptied this. Both names are gone because both call sites in
+# `room_runner.run()` are now `await asyncio.to_thread(...)`, so there is
+# nothing left to waive. Re-adding a name here to make a red build green is
+# the move this set exists to make expensive: it hides the whole subtree
+# beneath that name from the main guard (the round-1 MAJOR), so a waiver is
+# only ever correct alongside a matching entry in
+# `_DEF120_KNOWN_BLOCKING_PAIRS` below, which runs with an EMPTY waiver.
+_WAIVED_CALL_CHAIN_NAMES: set[str] = set()
 
 
 def _iter_py(root: Path) -> list[Path]:
@@ -420,11 +424,12 @@ def _offending_routes(waived: set[str]) -> tuple[list[str], set[str]]:
 # it went unnoticed) but the numbers were headed into the Room lane's assign,
 # where a worker greps `:1906` and finds unrelated logging. Grep the FUNCTION
 # NAMES; they are unambiguous and they do not drift.
-_DEF120_KNOWN_BLOCKING_PAIRS: set[str] = {
-    "backend/app/api/room.py:stream_room -> <obj>._marks_with_quotes",
-    "backend/app/api/room.py:stream_room -> <obj>.current_marks",
-    "backend/app/api/room.py:stream_room -> <obj>.total_value",
-}
+# DEF136 shrank this to empty. The three pairs were all `stream_room` reaching
+# `SimEngine` through `room_runner.run()`'s two unwrapped builders; wrapping
+# both call sites removed every one of them. Empty is now the correct state and
+# the second assertion below makes it self-maintaining: the moment a pinned pair
+# stops blocking, the set is stale and the test says so.
+_DEF120_KNOWN_BLOCKING_PAIRS: set[str] = set()
 
 
 def test_waived_chains_still_pin_the_known_offender_set():
