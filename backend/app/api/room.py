@@ -220,7 +220,15 @@ async def stream_room(
                     aid = msg.agent_id if isinstance(msg.agent_id, str) else msg.agent_id.value
                     safe = escape_sse_text(msg.content or "")
                     yield sse_json("agent_token", json.dumps({'agent_id': aid, 'text': safe}))
-                    yield sse_json("agent_done", json.dumps({'agent_id': aid}))
+                    # CR106 B2: the replay carries the stances too, so a client
+                    # that reconnects mid-run gets the same comb as one that
+                    # watched it live rather than an all-gutter board.
+                    yield sse_json("agent_done", json.dumps({
+                        'agent_id': aid,
+                        'stance': msg.stance,
+                        'conviction': msg.conviction,
+                        'headline': msg.headline,
+                    }))
                 if persisted.verdict is not None:
                     yield sse_json("phase", json.dumps({'label': 'VERDICT'}))
                     yield sse_json("verdict", persisted.verdict.model_dump_json())
@@ -248,8 +256,15 @@ async def stream_room(
                     })
                     yield sse_json("agent_token", payload)
                 elif ev.kind == "agent_done":
+                    # CR106 B2: the agent's own stated position, for the
+                    # consensus comb. All three are null whenever the agent did
+                    # not state one — the client must put that hex in the
+                    # gutter, never bucket it to neutral (T-SUM11).
                     payload = json.dumps({
                         "agent_id": ev.agent_id.value if ev.agent_id else None,
+                        "stance": ev.stance,
+                        "conviction": ev.conviction,
+                        "headline": ev.headline,
                     })
                     yield sse_json("agent_done", payload)
                 elif ev.kind == "agent_withheld":

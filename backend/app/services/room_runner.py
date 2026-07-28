@@ -81,7 +81,11 @@ from app.services.social_context import (
 )
 from app.services.llm_gateway import ChatMessage, LLMGateway, get_llm_gateway
 from app.services.llm_json import extract_json_object
-from app.services.room_prompts import build_room_messages, max_tokens_for
+from app.services.room_prompts import (
+    STANCE_HEADLINE_MAX_CHARS,
+    build_room_messages,
+    max_tokens_for,
+)
 from app.services.credit_service import (
     balance_for,
     live_data_surcharge,
@@ -852,7 +856,14 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
         # No size the PM is willing to stand behind — don't invent one.
         return narration or text.strip(), None
 
-    entry = _safe_float(parsed.get("entry")) or ctx.trader_entry
+    # CR106 B1: `entry` needs THREE provenance values, not two — this `or`
+    # silently substitutes the Trader's number for a PM that stated none, and
+    # a ribbon drawn from it would attribute the Trader's entry to the PM.
+    # The `or` (rather than an explicit None-check) is the shipped behaviour and
+    # is kept: a zero entry is not a price either.
+    entry_raw = _safe_float(parsed.get("entry"))
+    entry = entry_raw or ctx.trader_entry
+    entry_src = "pm" if entry_raw else "trader"
     # Explicit None-checks (not `or`): a real level is used as-is; only a genuinely
     # missing stop/target is defaulted, and that default is disclosed (audit F6) so
     # a minted ~6%/13% protective level is never shown as a PM-chosen price.
@@ -885,6 +896,16 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
         target=target,
         time_horizon_days=horizon_days,
         reason=reason,
+        # CR106 B1 — the same three facts the sentence above states in prose,
+        # in a shape a graphic can be gated on. The sentence STAYS: the board
+        # clamps `reason` behind a WHY expander, and demoting the only existing
+        # disclosure while promoting the same numbers into a to-scale ribbon
+        # would be a net loss of honesty (T-PROV).
+        level_provenance={
+            "entry": entry_src,
+            "stop": "pm" if stop_raw is not None else "ami_default",
+            "target": "pm" if target_raw is not None else "ami_default",
+        },
     )
 
 
@@ -1036,6 +1057,74 @@ def _annotate_rr_against_levels(
     return annotated, {"stated_rr": stated, "implied_rr": implied}
 
 
+# CR106 B2 — the trailing stance envelope, and its extraction.
+#
+# Anchored to the END of the turn (`\s*\Z`) so a bracketed aside earlier in the
+# prose cannot be mistaken for the envelope, and parsed BEFORE either `[AMI …]`
+# annotation is appended — a turn that was truncated has no tail at all, which
+# is the honest outcome: no stance, straight to the gutter.
+#
+# Precision-biased throughout. Every unrecognised token yields `None`, and
+# `None` reaches the pixel as "did not state a view". Nothing here guesses:
+# a stance inferred from prose would be exactly the client-side keyword
+# heuristic CR106 §2.2 rejected, moved one layer down.
+_STANCE_TAIL_RE = re.compile(
+    r"\[\s*STANCE\s*:\s*(?P<stance>[A-Za-z]+)\s*\|"
+    r"\s*CONVICTION\s*:\s*(?P<conviction>[A-Za-z]+)\s*\|"
+    r"\s*HEADLINE\s*:\s*(?P<headline>[^\]]*)\]\s*\Z",
+    re.IGNORECASE,
+)
+
+_STANCE_VALUES = {"for", "against", "neutral"}
+_CONVICTION_VALUES = {"low", "medium", "high"}
+
+
+@dataclass(frozen=True)
+class _StanceEnvelope:
+    stance: str | None = None
+    conviction: str | None = None
+    headline: str | None = None
+
+
+def parse_stance_envelope(text: str) -> tuple[str, _StanceEnvelope]:
+    """Split a Room agent's turn into (prose, stance envelope).
+
+    Returns the text with the trailing envelope removed — the envelope is a
+    machine channel, never shown to the user and never fed to the next agent —
+    and whatever of it parsed. An absent or malformed tail returns the text
+    unchanged and an all-`None` envelope; it is not an error and not logged as
+    one, because a null stance is a supported, rendered outcome.
+    """
+    match = _STANCE_TAIL_RE.search(text)
+    if match is None:
+        return text, _StanceEnvelope()
+
+    body = text[: match.start()].rstrip()
+    stance = match.group("stance").strip().lower()
+    conviction = match.group("conviction").strip().lower()
+    headline = match.group("headline").strip()
+
+    # "none" is the prompt's own opt-out and lands here as an unrecognised
+    # value — same destination, no special case needed.
+    if stance not in _STANCE_VALUES:
+        stance = None  # type: ignore[assignment]
+    if conviction not in _CONVICTION_VALUES:
+        conviction = None  # type: ignore[assignment]
+    if not headline or len(headline) > STANCE_HEADLINE_MAX_CHARS:
+        # Nulled, never cut. A truncated headline is an assertion with its
+        # qualifier removed, which is how a summary inverts its own meaning.
+        headline = None  # type: ignore[assignment]
+
+    # A conviction without a stance is meaningless — "strongly, about nothing"
+    # — and would draw a conviction bar under a hex sitting in the gutter.
+    if stance is None:
+        conviction = None  # type: ignore[assignment]
+
+    return body, _StanceEnvelope(
+        stance=stance, conviction=conviction, headline=headline
+    )
+
+
 # DEF125 — the transcript mark for a turn the model was cut off mid-writing.
 #
 # Written in the established `[AMI …]` annotation voice (see
@@ -1172,6 +1261,14 @@ def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
             f"Synthesis defended; sizing consistent with risk_score "
             f"{ctx.mandate.risk_score}; mandate checks pass."
         ),
+        # CR106 B1 — the scripted path takes all three levels from the Trader,
+        # so it says so. There is no PM decision on this route to attribute
+        # them to.
+        level_provenance={
+            "entry": "trader",
+            "stop": "trader",
+            "target": "trader",
+        },
     )
 
 
@@ -1216,6 +1313,12 @@ class RoomEvent:
     reason: str | None = None
     next_step_agent: AgentId | None = None
     next_step_days: int | None = None
+    # CR106 B2 — carried on 'agent_done' only. All three are None whenever the
+    # agent did not state a position; the client puts that hex in the comb's
+    # gutter and never in a band (T-SUM11).
+    stance: str | None = None
+    conviction: str | None = None
+    headline: str | None = None
 
 
 PLAN_TO_TIER: dict[Plan, str] = {
@@ -1368,6 +1471,14 @@ def build_journal_entry_for_run(run: RoomRun, user_id: UUID) -> JournalEntryCrea
                         else m.agent_id.value
                     ),
                     "content": m.content,
+                    # CR106 B2 — frozen with the rest of the snapshot, so the
+                    # Journal replays the comb this run actually produced. An
+                    # entry written before the field existed has all three
+                    # absent, and the replay says "not recorded" rather than
+                    # reconstructing a stance from the prose (T-BACKFILL).
+                    "stance": m.stance,
+                    "conviction": m.conviction,
+                    "headline": m.headline,
                 } for m in run.transcript
             ],
         },
@@ -2203,7 +2314,9 @@ class RoomRunner:
                         # Emit in fixed order. After all four are committed to
                         # run.transcript, RESEARCHERS onward see every analyst —
                         # only the analysts are blind to each other.
-                        for agent_id, (text, geom_sig) in zip(phase_agents, results):
+                        for agent_id, (text, geom_sig, envelope) in zip(
+                            phase_agents, results
+                        ):
                             async for ev in _stream_agent_text(
                                 agent_id=agent_id,
                                 run_id=run_id,
@@ -2212,6 +2325,7 @@ class RoomRunner:
                                 geom_sig=geom_sig,
                                 char_delay_min=char_delay_min,
                                 char_delay_max=char_delay_max,
+                                envelope=envelope,
                             ):
                                 yield ev
                     else:
@@ -2498,7 +2612,7 @@ async def _compute_agent_text(
     agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
     portfolio_snapshot: str | None = None,
     parallel_phase: bool = False,
-) -> tuple[str, dict[str, Any] | None]:
+) -> tuple[str, dict[str, Any] | None, "_StanceEnvelope"]:
     """Produce one agent's final contribution text (LLM when live, scripted
     otherwise) plus its DEF095 geometry-verification signal — WITHOUT streaming
     it or touching `run.transcript`.
@@ -2523,6 +2637,10 @@ async def _compute_agent_text(
     tier = pick_tier(plan, agent_id)
 
     text: str
+    # CR106 B2: every path that is NOT a parsed live turn leaves this empty, so
+    # a scripted fallback, a timeout and an LLM failure all reach the comb's
+    # gutter rather than borrowing a stance from somewhere.
+    envelope = _StanceEnvelope()
     if live:
         # Pass ctx.user_id so build_agent_prompt picks up the user's
         # active Brief overlay (was user_id=None — AT:R27 bugfix).
@@ -2568,6 +2686,12 @@ async def _compute_agent_text(
                 timeout=agent_timeout_s,
             )
             text = "".join(chunks).strip() or _scripted_for(agent_id, formatter)
+            # CR106 B2: strip the stance tail FIRST. It must come off before the
+            # `[AMI …]` marks below, which would otherwise sit between the prose
+            # and the tail and break the end-anchor — and before the transcript
+            # commit, so no downstream agent ever reads a machine channel as if
+            # it were another agent's argument (DEF095).
+            text, envelope = parse_stance_envelope(text)
             text = _mark_if_truncated(text, agent_id=agent_id, meta=stream_meta)
         except asyncio.TimeoutError:
             logger.warning(
@@ -2593,7 +2717,7 @@ async def _compute_agent_text(
     # triggers it; all other agents pass through untouched. Flag-only — never a veto
     # (DEF059 — the safety floor stays the sole vetoer).
     text, geom_sig = _verify_and_annotate_geometry(text)
-    return text, geom_sig
+    return text, geom_sig, envelope
 
 
 async def _stream_agent_text(
@@ -2605,6 +2729,7 @@ async def _stream_agent_text(
     geom_sig: dict[str, Any] | None,
     char_delay_min: float,
     char_delay_max: float,
+    envelope: "_StanceEnvelope | None" = None,
 ) -> AsyncIterator[RoomEvent]:
     """Stream an already-computed contribution: typewriter tokens, commit it to
     `run.transcript`, then emit `agent_done`.
@@ -2625,14 +2750,27 @@ async def _stream_agent_text(
     async for ev in _typewriter(run_id, agent_id, text, char_delay_min, char_delay_max):
         yield ev
 
+    env = envelope or _StanceEnvelope()
     run.transcript.append(AgentMessage(
         agent_id=agent_id,
         role="agent",
         content=text,
         timestamp=datetime.now(timezone.utc),
+        # CR106 B2 — carried on the transcript entry, so the Journal replay
+        # renders the same comb the live Room did, from the frozen snapshot.
+        stance=env.stance,  # type: ignore[arg-type]
+        conviction=env.conviction,  # type: ignore[arg-type]
+        headline=env.headline,
     ))
     _checkpoint_run(run)  # incremental snapshot — narrows data-loss window to ≤1 agent
-    yield RoomEvent(kind="agent_done", run_id=run_id, agent_id=agent_id)
+    yield RoomEvent(
+        kind="agent_done",
+        run_id=run_id,
+        agent_id=agent_id,
+        stance=env.stance,
+        conviction=env.conviction,
+        headline=env.headline,
+    )
 
 
 async def _speak_one_agent(
@@ -2658,7 +2796,7 @@ async def _speak_one_agent(
     last. The ANALYSTS phase bypasses this and drives `_compute_agent_text` /
     `_stream_agent_text` directly so its four calls can be gathered.
     """
-    text, geom_sig = await _compute_agent_text(
+    text, geom_sig, envelope = await _compute_agent_text(
         agent_id=agent_id,
         ctx=ctx,
         profile=profile,
@@ -2678,6 +2816,7 @@ async def _speak_one_agent(
         geom_sig=geom_sig,
         char_delay_min=char_delay_min,
         char_delay_max=char_delay_max,
+        envelope=envelope,
     ):
         yield ev
 

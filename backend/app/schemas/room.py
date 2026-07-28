@@ -50,6 +50,25 @@ class Verdict(BaseModel):
     # closing disclosure is always accurate even when the model says nothing.
     opinions_not_included: list[str] = Field(default_factory=list)
 
+    # CR106 B1 — where each price on this verdict actually came from.
+    #
+    #   "pm"          the Portfolio Manager stated this price
+    #   "trader"      the PM left it out and the Trader's number was substituted
+    #   "ami_default" nobody stated it; AMI minted a protective level from entry
+    #
+    # `room_runner` mints a missing stop at `entry * 0.94` and a missing target
+    # at `entry * 1.13`, and until now disclosed that ONLY by appending a
+    # sentence to `reason`. Prose survives being read; a to-scale risk/reward
+    # ribbon does not — it draws a minted price at the same weight as a stated
+    # one and computes a ratio from it. So the ribbon is gated on this field
+    # (CR106 T-PROV: no provenance → no ribbon, fall back to the metric list),
+    # and a derived level renders hollow-capped rather than solid.
+    #
+    # `None` means "this run predates the field", NOT "everything came from the
+    # PM" — an absent value is never backfilled or inferred (T-BACKFILL). Only
+    # an APPROVE carries prices at all, so only an APPROVE carries this.
+    level_provenance: dict[str, Literal["pm", "trader", "ami_default"]] | None = None
+
 
 class RoomRun(BaseModel):
     """A single Convene the Room session."""

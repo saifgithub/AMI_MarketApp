@@ -83,3 +83,19 @@ class AgentMessage(BaseModel):
     timestamp: datetime
     token_count: int | None = None
     model: str | None = None
+
+    # CR106 B2 — the agent's own stated position on the trade, parsed from the
+    # trailing envelope its prompt asks for (see `room_prompts._STANCE_FORMAT`).
+    #
+    # `None` means the agent did not state one — a malformed tail, a turn cut
+    # short, an agent whose role this turn was not to take a side, or a run that
+    # predates this field. It NEVER means neutral. The Verdict Board puts a null
+    # stance in a separate gutter rather than a band, and its band counts are
+    # taken over non-null stances only, so the caption reads "9 STATED A VIEW"
+    # instead of a total that always sums to 11 (CR106 T-SUM11). `neutral` has
+    # to mean the agent expressed neutrality, never that the parser gave up.
+    stance: Literal["for", "against", "neutral"] | None = None
+    conviction: Literal["low", "medium", "high"] | None = None
+    # Length-capped and nulled server-side when over — never truncated. See
+    # `room_prompts.STANCE_HEADLINE_MAX_CHARS`.
+    headline: str | None = None

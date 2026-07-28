@@ -195,6 +195,52 @@ _PROSE_FORMAT = (
 )
 
 
+# CR106 B2 — the per-agent stance envelope, as a TRAILING LINE rather than a
+# JSON wrapper around the prose.
+#
+# The CR proposed wrapping each turn in `{"stance": …, "body": "<the prose>"}`,
+# following the PM's JSON precedent. Deliberately not built that way, for one
+# reason: **failure mode**. The PM's envelope is never shown to the user raw —
+# `_parse_pm_verdict` extracts a narration and a parse failure fails safe to a
+# PASS. An agent's prose IS the product. Wrap it in JSON and a single unescaped
+# quote, or one length-stop mid-string (DEF125 measured that at 66% of Research
+# Manager turns before it was fixed), makes the whole turn unparseable and the
+# user reads raw JSON in the transcript. DEF058 measured the same contract
+# failing to parse in ~22% of PM runs — that is the precedent's real rate.
+#
+# A trailing line degrades PARTIALLY instead: an unparseable or absent tail
+# costs the stance and nothing else, the prose is untouched, and the agent
+# lands in the comb's "NOT STATED" gutter — which is exactly the degradation
+# CR106 §3.4 already designed for a null stance. The wire contract the client
+# sees is unchanged from the CR: stance · conviction · headline, each nullable.
+#
+# Quantisation is in the ENVELOPE, not the renderer (CR106 B2): the model picks
+# one of three words. No number is ever produced, so no widget can be tempted
+# to render a false precision from one.
+STANCE_HEADLINE_MAX_CHARS = 32
+"""§3.3 measured the collapsed row's gist budget at ~32 Latin characters. The
+server nulls a headline longer than this rather than sending one the client
+must cut: a headline is an ASSERTION, and a truncated assertion can invert its
+own meaning — which is the DEF059 class the CR rejected first-sentence
+truncation over. An over-length headline falls back to the row's other sources
+(the agent's own first **bold** span), which are quotations, and a truncated
+quotation reads as the fragment it is."""
+
+_STANCE_FORMAT = (
+    "\n\nAfter your prose, end with ONE final line in exactly this shape, and "
+    "write nothing after it:\n"
+    "[STANCE: for|against|neutral | CONVICTION: low|medium|high | HEADLINE: <max "
+    f"{STANCE_HEADLINE_MAX_CHARS} characters>]\n"
+    "- STANCE: your view on taking this position now — 'for', 'against', or "
+    "'neutral' if you genuinely land in the middle.\n"
+    "- CONVICTION: how strongly you hold that view.\n"
+    "- HEADLINE: the single number or fact that carries your view, in your own "
+    "words. Not a summary of your whole argument.\n"
+    "- If your role this turn is not to take a side at all, write "
+    "'STANCE: none'. Never guess a side to fill the field."
+)
+
+
 def _drawdown_snapshot_line(mandate: Mandate, trade_proposal: dict[str, Any] | None) -> str:
     """The mandate-snapshot drawdown line (DEF066).
 
@@ -302,7 +348,15 @@ def build_room_messages(
         if journal_block:
             journal_note = f"\n\n{journal_block}\n"
 
-    format_instruction = _PM_VERDICT_FORMAT if agent_id == AgentId.PORTFOLIO_MANAGER else _PROSE_FORMAT
+    # CR106 B2: the eleven prose agents also close with a stance tail. The PM is
+    # deliberately excluded — it is not one of the eleven voices in the comb
+    # (its position IS the hero tile), and its output is a JSON verdict that a
+    # trailing line would corrupt.
+    format_instruction = (
+        _PM_VERDICT_FORMAT
+        if agent_id == AgentId.PORTFOLIO_MANAGER
+        else _PROSE_FORMAT + _STANCE_FORMAT
+    )
 
     # DEF066: only agents that judge the proposed trade (RISK debators, the PM's
     # VERDICT) get the derived contribution figure; earlier phases have no
