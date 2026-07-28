@@ -51,6 +51,36 @@ _BLOCKING_LEAF_METHOD_NAMES = {
     "current_history",
     "current_news",
     "current_earnings",
+    # DEF120: SimEngine.portfolio_marks_snapshot / valuation_snapshot are
+    # themselves the call-site the route must to_thread — they fan out over
+    # a sync ThreadPoolExecutor internally (`_marks_with_quotes`), which
+    # passes `current_quote` BY REFERENCE to `pool.map`, not as a direct
+    # call. That's correct (D2) but it means `current_quote` itself is no
+    # longer reachable by this walk from inside these two methods — the
+    # chain breaks 1-2 hops before the actual leaf. Without these two names
+    # here, a route that calls `sim.portfolio_marks_snapshot(user_id)` or
+    # `sim.valuation_snapshot(user_id)` directly (mutation-proved: reverting
+    # `get_portfolio`'s `to_thread` wrap left the guard green without this)
+    # is invisible to the guard even though it genuinely blocks the event
+    # loop — `pool.map()` still runs and blocks on the calling thread if
+    # that thread is the event loop. These names are the actual observable
+    # boundary now; treat them as leaves in their own right.
+    #
+    # DEF120 round 2 (MAJOR, auditor-reproduced): naming these two after the
+    # fact was the bug, not the fix — the SAME by-reference break hides ANY
+    # new SimEngine method that reaches the network through
+    # `_marks_with_quotes`, no matter what it's called. Reproduced with
+    # `audit_probe_snapshot`, a fresh method doing exactly that, called
+    # straight from `sector_allocation` with no `to_thread`: 7 passed, green.
+    # D9 (below, `test_every_network_reaching_simengine_method_is_declared`)
+    # closes the mechanism instead of naming the next method: it walks
+    # `SimEngine`'s own methods against each other using attribute
+    # REFERENCES as edges (not just calls), so a leaf handed to `pool.map`
+    # by reference is exactly as visible as one called directly, and any
+    # method it finds reaching the network must be declared here or in
+    # `_SIM_ENGINE_SYNC_SAFE_METHODS` — undeclared defaults to unsafe (red).
+    "portfolio_marks_snapshot",
+    "valuation_snapshot",
 }
 _BLOCKING_LEAF_FUNC_NAMES = {
     "build_live_data_block",
@@ -77,31 +107,56 @@ _YFINANCE_BLOCKING_ATTRS = {"Ticker", "download"}
 # NOT caught by this guard; it is flagged by name in the DEF116 hand-off
 # instead, not enforced structurally here.
 
-# NOT in DEF116's re-derived call-site table, but found by this guard the
-# first time it was run against the full route surface: SimEngine's own
-# trade-execution / portfolio-valuation methods call `self.current_quote`
-# synchronously *internally* (via `_marks_with_quotes` / `current_marks` /
-# `current_price`), and are themselves called directly (no `to_thread`)
-# from `get_portfolio`, `reset_portfolio`, `preview_trade`, `submit_trade`,
-# `evaluate_trades`, `close_trade`, `audit_holdings`, `sector_allocation`,
-# and `stream_room`'s sector-context build (`_build_room_sector_context`).
-# Same bug class as DEF116, wider blast radius than the table above —
-# but the table is what this lane is scoped to fix (CLAUDE.md: don't
-# silently widen scope). Flagged explicitly in the DEF116 hand-off as a
-# follow-up-defect candidate; waived by name here, narrowly, so it doesn't
-# block DEF116's own acceptance while staying visible (grep this set) —
-# NOT silently suppressed. Removing a name here without fixing its call
-# site should turn this guard red again.
+# DEF120 (closed): the 9 chains below this comment used to be waived here —
+# SimEngine's trade-execution / portfolio-valuation methods called
+# `self.current_quote` synchronously *internally* (via `_marks_with_quotes` /
+# `current_marks` / `current_price`), reached directly (no `to_thread`) from
+# `get_portfolio`, `reset_portfolio`, `preview_trade`, `submit_trade`,
+# `evaluate_trades`, `close_trade`, `audit_holdings`, `sector_allocation`.
+# Fixed two ways: (1) `_marks_with_quotes` now fans out over a
+# `concurrent.futures.ThreadPoolExecutor` instead of calling `current_quote`
+# directly in a loop, so the leaf is passed by reference, not called — same
+# by-reference exemption `asyncio.to_thread` gets (see
+# `_blocking_call_sites`'s docstring); (2) every route above now wraps its
+# whole sync call in `await asyncio.to_thread(...)`, which is the actual
+# fix — (1) alone still blocks the event loop for the `pool.map()` wait if
+# the route calls it inline, unwrapped. All 9 names deleted from this set.
+#
+# `_build_room_sector_context` is the ONE surviving waiver (DEF120 D7):
+# reached from `stream_room` via `room_runner.py:1435`'s
+# `build_journal_entry_for_run(...)` → `_build_room_sector_context(user_id)`
+# (`room_runner.py:2001`), aliased in `room.py:76` as
+# `_build_journal_entry = build_journal_entry_for_run` and called by that
+# alias — which is genuinely still a blocking `current_quote` reach, but
+# `room_runner.py` was explicitly out of scope for this lane (CR104-ROOM
+# owns it concurrently) and must NOT be touched here. Flagged for the
+# Architect to lane against the Room queue.
+#
+# Note for whoever picks that up: the alias means this specific chain is
+# ALSO invisible to `_offending_routes(waived=set())` below — `_called_names`
+# resolves by literal call-site name, and the call site uses `_build_journal_entry`
+# (room.py:76's alias target), not `build_journal_entry_for_run`, so the walk
+# never finds a module function named `_build_journal_entry` to recurse into.
+# `_DEF120_KNOWN_BLOCKING_PAIRS` is therefore genuinely empty (not merely
+# "waived") — the walker can't see this pair even with zero waivers. That is
+# a guard blind spot, not evidence the bug is fixed; don't let an empty pin
+# set read as "nothing left". `_build_room_sector_context` staying in this
+# waiver set is what keeps that fact visible (grep this set).
+#
+# ROUND 4 adds `_build_sim_holdings_block`. It is NOT a new bug and NOT a
+# regression — it is `room_runner.py:1995`, which has been blocking the loop on
+# every Room convene the whole time. It became VISIBLE only in round 4, when
+# `_route_walk_leaf_method_names()` fed the declared-sync-safe names into the
+# transitive walk and the walk stopped breaking at `_marks_with_quotes`'
+# by-reference `pool.map` fan-out. Same `room_runner.py`-is-out-of-scope
+# reason as its neighbour above (D7); waived here so DEF120's own acceptance
+# is not held hostage to the Room queue's file, and pinned three lines down in
+# `_DEF120_KNOWN_BLOCKING_PAIRS` — which runs with an EMPTY waiver — so the
+# waiver cannot hide it. Removing either name without wrapping its call site
+# turns one of these two tests red.
 _WAIVED_CALL_CHAIN_NAMES = {
-    "current_marks",
-    "current_marks_with_source",
-    "_marks_with_quotes",
-    "current_price",
-    "preview",
-    "submit",
-    "evaluate_outcomes",
-    "manual_close",
     "_build_room_sector_context",
+    "_build_sim_holdings_block",
 }
 
 
@@ -118,6 +173,38 @@ class _ModuleInfo:
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 self.functions[node.name] = node
+
+
+def _route_walk_leaf_method_names() -> set[str]:
+    """Every SimEngine method the route walk treats as a blocking leaf.
+
+    Round-3 audit finding (MAJOR): D10 walks only an `async def` route's OWN
+    body, so one hop of ordinary indirection restored the bug — the identical
+    `sim.current_marks([...])` moved into a module-level sync helper in the
+    same file and called from the route shipped GREEN past all four guards.
+    Each missed it for its own reason: D10 because a module-level `def` is not
+    nested inside an `ast.AsyncFunctionDef`; D9 because `current_marks` IS
+    declared (sync-safe); this route walk because it only recognised
+    `_BLOCKING_LEAF_METHOD_NAMES` and broke at `_marks_with_quotes`'
+    by-reference `pool.map(self.current_quote, …)` fan-out.
+
+    The declared-sync-safe names are network-reaching by construction — that
+    is the entire content of the D9 declaration. Feeding them into the walk
+    that already follows calls transitively across modules closes the hop
+    without a new mechanism, and SUBSUMES D10 (which is kept for its sharper
+    error message, no longer load-bearing).
+
+    Deliberately non-mutating, deviating from the audit's literal
+    `_BLOCKING_LEAF_METHOD_NAMES |= _SIM_ENGINE_SYNC_SAFE_METHODS`: an
+    import-time `|=` would collapse the two declaration buckets D9 exists to
+    keep distinct, so D9's "add it to X or Y" diagnostic would name a set that
+    already contains every sync-safe method. Same walk behaviour, no global
+    mutation, no import-order dependency.
+
+    A correctly-wrapped `await asyncio.to_thread(sim.<name>, …)` stays
+    invisible: the leaf is an `ast.Attribute` ARGUMENT, never an `ast.Call`.
+    """
+    return _BLOCKING_LEAF_METHOD_NAMES | _SIM_ENGINE_SYNC_SAFE_METHODS
 
 
 def _blocking_call_sites(fn: ast.AST) -> list[str]:
@@ -137,13 +224,14 @@ def _blocking_call_sites(fn: ast.AST) -> list[str]:
     invisible to this walk anyway.
     """
     hits: list[str] = []
+    leaf_methods = _route_walk_leaf_method_names()
     for node in ast.walk(fn):
         if not isinstance(node, ast.Call):
             continue
         f = node.func
         if isinstance(f, ast.Name) and f.id in _BLOCKING_LEAF_FUNC_NAMES:
             hits.append(f.id)
-        elif isinstance(f, ast.Attribute) and f.attr in _BLOCKING_LEAF_METHOD_NAMES:
+        elif isinstance(f, ast.Attribute) and f.attr in leaf_methods:
             hits.append(f"<obj>.{f.attr}")
         elif (
             isinstance(f, ast.Attribute)
@@ -232,28 +320,47 @@ def _offending_routes(waived: set[str]) -> tuple[list[str], set[str]]:
     return offenders, pairs
 
 
-# Every `route -> blocking leaf` pair that survives with the waiver removed.
-# All of them are DEF120: SimEngine calls `self.current_quote` synchronously
-# per-ticker in a loop (`sim_engine.py::_marks_with_quotes`) rather than at the
-# route, so the blocking call never appears at the handler.
+# DEF120's own 9 pairs (mandate.py:audit_holdings, portfolio.py:sector_allocation,
+# room.py:stream_room, and 6 sim.py handlers, all `-> <obj>.current_quote`) ARE
+# gone — every route wraps its call in `await asyncio.to_thread(...)`.
 #
-# Pinned at LEAF granularity, not route granularity. The auditor's own
-# recommended fix ("assert the offending-ROUTE set equals the 9 known routes")
-# does not catch the auditor's own MAJOR mutation: a fresh `current_news` call
-# inside `SimEngine.submit` reaches `sim.py:submit_trade`, which is already in
-# the route set, so a route-level pin stays green. `submit_trade -> current_news`
-# is a new PAIR, so this one goes red. Verified by re-running that exact
-# mutation against this test.
-_DEF120_KNOWN_BLOCKING_PAIRS = {
-    "backend/app/api/mandate.py:audit_holdings -> <obj>.current_quote",
-    "backend/app/api/portfolio.py:sector_allocation -> <obj>.current_quote",
-    "backend/app/api/room.py:stream_room -> <obj>.current_quote",
-    "backend/app/api/sim.py:close_trade -> <obj>.current_quote",
-    "backend/app/api/sim.py:evaluate_trades -> <obj>.current_quote",
-    "backend/app/api/sim.py:get_portfolio -> <obj>.current_quote",
-    "backend/app/api/sim.py:preview_trade -> <obj>.current_quote",
-    "backend/app/api/sim.py:reset_portfolio -> <obj>.current_quote",
-    "backend/app/api/sim.py:submit_trade -> <obj>.current_quote",
+# This set was empty until round 4. It is no longer, and that is the point:
+# once `_route_walk_leaf_method_names()` fed the declared-sync-safe names into
+# the transitive walk, the walk could finally SEE into the Room's chain instead
+# of breaking at `_marks_with_quotes`' by-reference `pool.map` fan-out. The 3
+# pairs below are real, they block the event loop on every Room convene over
+# every holding, and they are NOT DEF120's to fix — `room_runner.py` is out of
+# scope by D7 (the Room queue owns it).
+#
+# All 3 are one call site: `room_runner.py:1995` calls
+# `_build_sim_holdings_block(user_id, ticker)` directly, un-`to_thread`'d, from
+# inside `async def run()` (`:1837`) — the async generator awaited on the loop
+# by `_pump`'s `async for ev in self.run(...)` (`:1778`). That builder calls
+# `sim.total_value(user_id)` (`:663`) and `sim.current_marks(list(agg))`
+# (`:672`), the full `_marks_with_quotes` yfinance fan-out.
+#
+# `:1995` is a SECOND, distinct blocking call, six lines before the `:2001`
+# `_build_room_sector_context` that earlier rounds called "the one remaining
+# offender" — and unlike `:2001` it is not waived. Anyone closing the Room
+# remainder per that prose alone would leave `:1995` running. Pinning the pairs
+# here is this round's own principle applied one level up: assert it, don't
+# comment it. A paragraph explaining an empty set does not go red; this does.
+#
+# Closing the Room remainder means wrapping `:1995` (and `:2001`) and shrinking
+# this set to empty — the second assertion below fails until it is shrunk.
+#
+# LINE NUMBERS ABOVE ARE A COURTESY, NOT A CONTRACT — re-derive them by name
+# before quoting them anywhere. Round 4 shipped six of them wrong: they were
+# inherited from the round-3 audit, which measured a tree from BEFORE DEF124
+# landed in `room_runner.py` and shifted every one by ~+89. Nothing asserted
+# broke (the waiver, the pin set and the walk are all name-based, which is why
+# it went unnoticed) but the numbers were headed into the Room lane's assign,
+# where a worker greps `:1906` and finds unrelated logging. Grep the FUNCTION
+# NAMES; they are unambiguous and they do not drift.
+_DEF120_KNOWN_BLOCKING_PAIRS: set[str] = {
+    "backend/app/api/room.py:stream_room -> <obj>._marks_with_quotes",
+    "backend/app/api/room.py:stream_room -> <obj>.current_marks",
+    "backend/app/api/room.py:stream_room -> <obj>.total_value",
 }
 
 
@@ -373,6 +480,197 @@ def test_sync_httpx_call_site_inventory_is_pinned():
         "pinned sync httpx call(s) no longer present (fixed or deleted) — lower "
         "the count here so the pin keeps catching new ones:\n"
         + "\n".join(sorted(removed))
+    )
+
+
+# ── D9 (DEF120 round 2): deny-by-default over SimEngine itself ────────────
+#
+# Everything above walks INTO the engine starting from a route — which is
+# exactly the walk the by-reference `pool.map(self.current_quote, ...)`
+# shape defeats, because `_called_names` only sees `ast.Call` nodes and a
+# leaf handed over by reference is never one. D9 does not try to fix that
+# walk; it adds a second, independent one that never leaves `sim_engine.py`
+# and never needs to see a call at all — it asks, of `SimEngine`'s methods
+# considered as a graph among themselves, "which of these can reach
+# `self._provider.<quote|history|news|earnings>` by ANY attribute
+# reference, called or merely passed along" — the same question a reviewer
+# would ask reading the class top to bottom. A method that can is
+# "network-reaching" and MUST be declared, in one of two places:
+#   - `_BLOCKING_LEAF_METHOD_NAMES` — an async route may call it directly;
+#     every call site must be `await asyncio.to_thread(...)`-wrapped.
+#   - `_SIM_ENGINE_SYNC_SAFE_METHODS` — no async route calls it directly;
+#     it is only ever reached from inside another already-`to_thread`-
+#     wrapped method (verified by grep over `backend/app/api/*.py`, see the
+#     comment on the set below).
+# A method in neither bucket is undeclared, and undeclared means the
+# assertion fails RED — there is no allowlist to silently extend, the new
+# method simply isn't in either set until a human puts it there.
+
+_SIM_ENGINE_NETWORK_PRIMITIVES = {"quote", "history", "news", "earnings"}
+
+# Justified, not a blanket waiver: none of these is ever called directly
+# from an `async def` route today — enforced by
+# `test_sync_safe_simengine_method_never_called_directly_from_async_route`
+# (D10, below) rather than by a comment, since a hand-run grep at authoring
+# time is unasserted and rots silently (DEF120 round 2 MAJOR: a straight
+# revert reinstating `sim.current_marks(...)` in async `sector_allocation`
+# shipped green past D9). `current_price` / `current_marks` /
+# `current_marks_with_source` / `_marks_with_quotes` / `aggregate_source` /
+# `total_value` / `current_drawdown_pct` are reached only from inside other
+# `SimEngine` methods; `submit` / `preview` / `evaluate_outcomes` /
+# `manual_close` ARE called from routes, but the ENTIRE call is
+# `to_thread`-wrapped at every site (acceptance item 6a covers reverting
+# that). If any of these is ever called directly from a route body, it must
+# move to `_BLOCKING_LEAF_METHOD_NAMES` and every call site wrapped — this
+# set does not exempt that.
+_SIM_ENGINE_SYNC_SAFE_METHODS = {
+    "current_price",
+    "current_marks",
+    "current_marks_with_source",
+    "_marks_with_quotes",
+    "aggregate_source",
+    "total_value",
+    "current_drawdown_pct",
+    "submit",
+    "preview",
+    "evaluate_outcomes",
+    "manual_close",
+}
+
+
+def _sim_engine_class_node() -> ast.ClassDef:
+    tree = ast.parse((_APP / "services" / "sim_engine.py").read_text())
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef) and node.name == "SimEngine":
+            return node
+    raise AssertionError("class SimEngine not found in sim_engine.py — has it moved?")
+
+
+def _sim_engine_methods(cls: ast.ClassDef) -> dict[str, ast.AST]:
+    return {
+        n.name: n
+        for n in cls.body
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+
+
+def _referenced_attrs(fn: ast.AST) -> set[str]:
+    """Every attribute name touched inside fn — CALLED or merely
+    REFERENCED (e.g. handed to `pool.map`/`map` by name, never invoked at
+    the call site itself). This is the one difference from `_called_names`
+    above, which only sees `ast.Call` nodes — and that difference is
+    exactly the gap D9 closes."""
+    return {n.attr for n in ast.walk(fn) if isinstance(n, ast.Attribute)}
+
+
+def _reaches_network(name: str, methods: dict[str, ast.AST], seen: set[str]) -> bool:
+    if name in seen:
+        return False
+    seen.add(name)
+    fn = methods.get(name)
+    if fn is None:
+        return False
+    attrs = _referenced_attrs(fn)
+    if attrs & _SIM_ENGINE_NETWORK_PRIMITIVES:
+        return True
+    return any(
+        attr in methods and _reaches_network(attr, methods, seen)
+        for attr in attrs
+        if attr != name
+    )
+
+
+def test_every_network_reaching_simengine_method_is_declared():
+    """D9 (DEF120 round 2, deny-by-default) — see the block comment above.
+
+    Round-2 audit finding (MAJOR, reproduced): a new `SimEngine` method
+    reaching the network through `_marks_with_quotes` — a by-reference
+    fan-out — was invisible to `test_no_blocking_leaf_call_reachable_from_
+    async_route` above even when called directly from an async route, no
+    `to_thread`. This test doesn't walk from routes at all; it asks
+    `SimEngine`'s own methods which of them can reach
+    `self._provider.<quote|history|news|earnings>`, by reference or by
+    call, and fails if any such method isn't declared safe or a leaf.
+    """
+    cls = _sim_engine_class_node()
+    methods = _sim_engine_methods(cls)
+    network_reaching = {
+        name for name in methods if _reaches_network(name, methods, seen=set())
+    }
+    declared = _BLOCKING_LEAF_METHOD_NAMES | _SIM_ENGINE_SYNC_SAFE_METHODS
+    undeclared = network_reaching - declared
+
+    assert not undeclared, (
+        "SimEngine method(s) reach the network — directly or via a "
+        "by-reference fan-out such as `pool.map(self.current_quote, ...)` "
+        "— but are declared neither a blocking leaf nor sync-safe. A new "
+        "method defaults to UNSAFE: add it to `_BLOCKING_LEAF_METHOD_NAMES` "
+        "(an async route may call it directly — wrap every call site in "
+        "`await asyncio.to_thread(...)`) or to `_SIM_ENGINE_SYNC_SAFE_"
+        "METHODS` (only ever reached from inside an already-to_thread-"
+        "wrapped method — name which one in a comment):\n"
+        + "\n".join(sorted(undeclared))
+    )
+
+
+# ── D10 (DEF120 round 3): assert the sync-safe declaration, don't comment it ─
+#
+# D9 governs WHAT may exist: a `SimEngine` method that reaches the network
+# must be declared in `_BLOCKING_LEAF_METHOD_NAMES` or
+# `_SIM_ENGINE_SYNC_SAFE_METHODS`. Neither D9 nor the route-walking guard
+# above governs HOW a declared-sync-safe method is actually called — that
+# was left to a comment ("checked by grep"), run once by hand at authoring
+# time. Nothing asserted it, so a straight revert of this lane's own fix —
+# `marks = sim.current_marks(["AAPL"])` back in async `sector_allocation`,
+# the verbatim pre-DEF120 bug — shipped green through both guards
+# (round-2 audit MAJOR, probe P4).
+#
+# D10 closes that: for every name in `_SIM_ENGINE_SYNC_SAFE_METHODS`, walk
+# every `async def` under `backend/app/api/` and fail if it contains a
+# direct `<obj>.<name>(...)` call. The correctly-deferred shape —
+# `await asyncio.to_thread(sim.current_marks, tickers)` — passes the method
+# by reference (an `ast.Attribute`, never invoked at the call site), so it
+# is not an `ast.Call` at all and is structurally invisible to this check;
+# no exemption needs to be carved out for it.
+def _direct_sync_safe_calls(fn: ast.AST) -> list[str]:
+    return [
+        f"<obj>.{node.func.attr}"
+        for node in ast.walk(fn)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr in _SIM_ENGINE_SYNC_SAFE_METHODS
+    ]
+
+
+def test_sync_safe_simengine_method_never_called_directly_from_async_route():
+    """D10 (DEF120 round 3) — see the block comment above.
+
+    Round-2 audit finding (MAJOR, reproduced): `_SIM_ENGINE_SYNC_SAFE_METHODS`
+    membership was a comment, not a control — a revert reinstating the
+    pre-DEF120 direct call went green. This test makes the claim structural:
+    it fails if any declared-sync-safe method is called directly (not merely
+    referenced) from inside an `async def` anywhere under `backend/app/api/`.
+    """
+    offenders: list[str] = []
+    for path in _iter_py(_APP / "api"):
+        tree = ast.parse(path.read_text())
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.AsyncFunctionDef):
+                continue
+            offenders += [
+                f"{path.relative_to(_REPO_ROOT)}:{node.name} -> {hit}"
+                for hit in _direct_sync_safe_calls(node)
+            ]
+
+    assert not offenders, (
+        "async def under backend/app/api/ calls a declared-sync-safe "
+        "SimEngine method directly. These names are declared sync-safe on "
+        "the premise that they are ONLY ever reached from inside another "
+        "already-`to_thread`-wrapped method, never called straight from an "
+        "async route body. Either wrap the whole call in "
+        "`await asyncio.to_thread(...)`, or if the method itself does "
+        "network I/O reachable this way, move it to "
+        "`_BLOCKING_LEAF_METHOD_NAMES` instead:\n" + "\n".join(offenders)
     )
 
 

@@ -14,6 +14,7 @@ The path carries `{user_id}` (like `sim.py`'s `/v1/sim/portfolio/{user_id}`) so 
 
 from __future__ import annotations
 
+import asyncio
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -61,9 +62,12 @@ async def sector_allocation(
     is disclosed but never counts as a breach (the DEF059 inversion guard)."""
     _own(current_user, user_id)
 
-    p = sim.ensure_portfolio(user_id)
-    tickers = [h.ticker for h in p.holdings]
-    marks = sim.current_marks(tickers)
+    # DEF120 D1: single to_thread hop around a one-fetch snapshot (the
+    # total_value/drawdown_pct fields it also returns go unused here, but
+    # the fetch itself is the same one this route already needed).
+    p, marks, _total_value, _drawdown_pct, _source = await asyncio.to_thread(
+        sim.portfolio_marks_snapshot, user_id,
+    )
     total_value = round(sum(marks.get(h.ticker, 0.0) * h.quantity for h in p.holdings), 2)
 
     allocation = allocate_by_sector(p.holdings, marks, sector_of=sector_map.sector)
