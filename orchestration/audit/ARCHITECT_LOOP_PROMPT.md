@@ -70,12 +70,24 @@ dispatch. The accessor refuses an undelivered verdict; the raw file cannot.
 3. Verify BEFORE you signal: the project's test command is green over the changed code, and the real
    behaviour (API response, on-device check, live-host smoke test — BINDINGS) was reproduced live,
    not assumed. A documented partial beats an overclaim the auditor will bounce.
-4. Submit: write or append to `<ITEM>.architect.md` the commit SHA, `depends-on:` (or none),
-   what changed and why, the tests you ran with results, and your own revert-proof QA. Add a
+4. Submit: write or append to `<ITEM>.architect.md` a `SCOPE:` line (`cr` or `chunk` — see below),
+   the commit SHA, `depends-on:` (or none), what changed and why, the test command **and its
+   observed output** (not "tests pass"), the live/device/real-host measurement from step 3 **as you
+   ran it** — or an explicit "none applies, because …" — and your own revert-proof QA. Add a
    `SUBMITTED: round N` line. CREATING OR BUMPING THAT ROUND LINE IS THE AWAITING_AUDIT SIGNAL.
-   Bump `round` by one on every resubmit. Update `INDEX.md` to match.
+   Update `INDEX.md` to match.
 
-   **What else the submission carries depends on its scope:**
+   **The round is the LANE's, not your attempt count.** Submissions and verdicts share one sequence
+   and the watchers only see work when `SUBMITTED` > the last `VERDICT` round — so read the auditor's
+   latest verdict round and submit at the next number above it, rather than adding one to your own
+   last submission. An auditor that re-opens its own verdict consumes a round; reusing it reads as
+   already-answered and the lane goes quiet with the work finished and nobody's turn.
+
+   **What else the submission carries depends on its scope — so state the scope, don't imply it.**
+   `SCOPE: cr` or `SCOPE: chunk`, on its own line. No script parses it; it exists because the
+   auditor's DoD rule below keys on which one this is, and until now that fact was nowhere in the
+   file the auditor reads. A submission with no `SCOPE:` line is audited as `cr` — the DoD is
+   demanded rather than waived, because a waived-by-accident DoD is the expensive direction.
    - **CR-level submission** — also carries the fully disposed **Definition of Done**: the portable
      questions in [`../DEFINITION_OF_DONE.md`](../DEFINITION_OF_DONE.md), answered per this
      project's bindings (BINDINGS → Definition-of-Done table). Every row disposed; a CR submission
@@ -89,8 +101,11 @@ dispatch. The accessor refuses an undelivered verdict; the raw file cannot.
 5. Commit ONLY your own paths, staged by name, and PUSH to `origin`. Delivery is on origin, not
    local. The auditor only ever sees committed SHAs, never a half-built tree.
 6. Wait — your choice of mechanism; `sh <AUDIT_ROOT>/watcher.sh architect` blocks until a verdict
-   returns, or poll between build steps. **Pass `-t <seconds>` unless a human can interrupt it** —
-   an unbounded block in a headless session never returns, and `... state` is the safe one-shot. On AWAITING_FIXES, fix the findings in priority order and
+   **bounces**, or poll between build steps. It wakes on `AWAITING_FIXES` and **never on a clean
+   `COMPLETE`**, so it is not a way to learn that a lane passed — the `inbox` gate above is.
+   **Pass `-t <seconds>` unless a human can interrupt it** — an unbounded block in a headless
+   session never returns, and `... state` is the safe one-shot. On AWAITING_FIXES, fix the findings
+   in priority order and
    resubmit at the next round (go to step 2). On COMPLETE, update the item's status in its register
    and flag it to the stakeholder for their hands-on acceptance test (their single checkpoint per
    item); a defect they find reopens the lane — fix and resubmit at the next round. Other lanes

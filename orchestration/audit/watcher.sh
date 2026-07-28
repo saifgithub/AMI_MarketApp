@@ -2,7 +2,7 @@
 # watcher.sh - lane-state watcher for the audit handshake (PROTOCOL.md v2 lanes).
 # Derives per-item state from the two lane files exactly as PROTOCOL.md defines it:
 #   UNPUSHED       : committed, but the newest commit is not on origin's default branch — the      <-- loud
-#                    auditor works from its own checkout and cannot see it (DEF131)
+#                    auditor works from its own checkout and cannot see it
 #   AWAITING_AUDIT : architect SUBMITTED round > auditor VERDICT round, or no auditor file yet
 #   AWAITING_FIXES : auditor's LATEST verdict keyword is AWAITING_FIXES (keyword wins, per protocol note)
 #   COMPLETE       : auditor's latest verdict keyword is COMPLETE and rounds have caught up
@@ -65,10 +65,9 @@ unpushed() {  # $1=file; echoes "1" if the file's newest commit is not on the sh
   # clone. The auditor works from its OWN checkout and reaches this repo through `origin`, so an
   # unpushed SUBMITTED marker makes the lane read AWAITING_AUDIT here and not exist at all there.
   # Both sides then behave correctly and disagree forever — the architect waits for a verdict on
-  # work never delivered, the auditor truthfully reports nothing to audit. DEF131 is that, observed:
-  # two lanes sat AWAITING_AUDIT on this board for hours while 12 commits stayed local.
+  # work never delivered, the auditor truthfully reports nothing to audit.
   # Silent when git is unavailable, this is not a repo, or no remote branch can be resolved (a fresh
-  # clone, melehost, a detached CI checkout): the check may degrade, never fail the caller.
+  # clone, a deploy host, a detached CI checkout): the check may degrade, never fail the caller.
   command -v git >/dev/null 2>&1 || { echo ""; return; }
   d=$(dirname -- "$1")
   git -C "$d" rev-parse --git-dir >/dev/null 2>&1 || { echo ""; return; }

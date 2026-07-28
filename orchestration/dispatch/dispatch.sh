@@ -12,7 +12,7 @@
 #   AUDIT_RETURNED : audit VERDICT = AWAITING_FIXES
 #   AUDIT_PASSED   : audit VERDICT = COMPLETE, DISPATCH not yet ACCEPTED
 #   UNPUSHED       : verdict committed but not on origin's default branch — the Architect's  <-- loud
-#                    checkout cannot see it; chase the push, never merge (DEF131)
+#                    checkout cannot see it; chase the push, never merge
 #   BAD_ROUND      : VERDICT round > audit-lane SUBMITTED round — a mistyped stamp  <-- loud
 #   DONE           : DISPATCH = ACCEPTED *and* the lane's GATE is satisfied
 #   UNGATED        : DISPATCH = ACCEPTED but the gate is NOT satisfied  <-- loud
@@ -88,8 +88,7 @@ unpushed() {  # $1=file; echoes "1" if the file's newest commit is not on the sh
   # clone until it is pushed. Both roles reach each other through `origin`, so an unpushed verdict
   # is exactly as invisible to the Architect as an unpushed submission is to the auditor — and this
   # board would call it AUDIT_PASSED. The prose above already told you to "chase, then merge" and to
-  # "commit and push"; DEF131 is the observation that nothing checked it. A claim in a comment is
-  # not a control.
+  # "commit and push" — but nothing checked it, and a claim in a comment is not a control.
   # Silent when git is unavailable, this is not a repo, or no remote branch resolves: degrade,
   # never fail the caller.
   command -v git >/dev/null 2>&1 || { echo ""; return; }

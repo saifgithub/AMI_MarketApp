@@ -11,8 +11,18 @@ output as done. Read `ROLES.md` + `DISPATCH_PROTOCOL.md` + `BINDINGS.md` first; 
 
 ## Your loop
 
-1. **Watch.** `sh <DISPATCH_ROOT>/dispatch.sh architect` blocks until a lane needs you
-   (`UNASSIGNED | BLOCKED | NEEDS-INFO | IN_REVIEW | AUDIT_PASSED`), or `... state` for the board.
+1. **Loop entry gate — `sh <DISPATCH_ROOT>/dispatch.sh inbox` at session start AND after every
+   work unit; resolve what it lists before taking new work.** Not discretionary. The blocking
+   watchers wake on a bounce and **never on a clean `COMPLETE`**, so a passed lane emits no signal
+   to wait on — a lane nobody looks at never merges. `inbox` is that look: one-shot, non-blocking,
+   listing only lanes the auditor has FINISHED and you owe (exit 1 while any remain). Non-blocking
+   on purpose — you multiplex lanes, so a blocking watch would freeze the rest. A "work unit" is
+   any lane you carry to a hand-off: a submit, a merge, an answer to a `NEEDS-INFO`, an assignment.
+   Then `... architect` blocks until a lane needs you (DISPATCH_PROTOCOL.md §4 for which states),
+   or `... state` for the whole board.
+   **Quote a verdict through `... verdict <ITEM>`, never by reading `<ITEM>.auditor.md`** — an
+   auditor lane in the working tree may be mid-write, and reading it directly is how an unfinished
+   verdict becomes an instruction you dispatch. The accessor refuses an undelivered one.
 2. **Triage intake.** Read `intake/*.md` drafts from requesters. If a draft is thin, set
    `TRIAGE: NEEDS-INFO` + a `Q1:` block and ping the requester (§5 round-trip); wait for `A1:`.
    Accept → author the CR/DEF spec (governance: assign the next id, create its folder + doc, update

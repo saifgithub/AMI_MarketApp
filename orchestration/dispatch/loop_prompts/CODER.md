@@ -29,14 +29,19 @@ the dispatch handshake (Architect → you) and the audit handshake (you → Audi
    Where your project's layers talk over a hand-written contract rather than a type-enforced one
    (BINDINGS → contract check), re-verify your side against the **real** counterpart output, not
    just that it compiles. A documented partial beats an overclaim the Auditor will bounce.
-6. **Hand to audit.** Write your audit lane `<AUDIT_LANE_DIR>/<ITEM>.architect.md` (SHA, depends-on,
-   what/why, tests+results, your revert-proof QA, and the **chunk evidence list** below) +
-   `SUBMITTED: round N`. Commit your paths by name, push **your lane branch** (see Delivery). Set
-   `STATUS: READY_FOR_AUDIT (round N)`.
+6. **Hand to audit.** Write your audit lane `<AUDIT_LANE_DIR>/<ITEM>.architect.md` (`SCOPE:` line,
+   SHA, depends-on, what/why, tests+results, your revert-proof QA, and the **chunk evidence list**
+   below) + `SUBMITTED: round N`. Commit your paths by name, push **your lane branch** (see
+   Delivery). Set `STATUS: READY_FOR_AUDIT (round N)`.
+
+   **Open with `SCOPE: chunk`** on its own line. No script parses it; the Auditor's DoD rule keys on
+   it, and a submission with no `SCOPE:` line is audited as `cr` — meaning your chunk gets bounced
+   for a Definition-of-Done table it was never supposed to render.
 
    **Chunk evidence list** — a chunk does NOT render the Definition-of-Done table; that is
    CR-scoped and the Architect fills it once for the whole item. Your chunk carries exactly:
-   the SHA(s), what changed and why, the test command **and its observed output**, the contract
+   the SHA(s), what changed and why, the test command **and its observed output**, the live/real
+   measurement if the item has one (as you ran it, with what you observed), the contract
    re-verification if you crossed a seam, and anything you could not verify — named, not omitted.
    A documented partial beats an overclaim the Auditor will bounce.
 7. **On `AUDIT_RETURNED`** (`VERDICT: AWAITING_FIXES`): fix in priority order, bump the audit round,

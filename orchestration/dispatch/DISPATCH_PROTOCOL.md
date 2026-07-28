@@ -106,6 +106,8 @@ appending).
 | `IN_AUDIT` | `READY_FOR_AUDIT` + audit `VERDICT` not COMPLETE/AWAITING_FIXES yet | Auditor |
 | `AUDIT_RETURNED` | audit `VERDICT: AWAITING_FIXES` | Instance — fix, bump round |
 | `AUDIT_PASSED` | audit `VERDICT: COMPLETE` + `DISPATCH` not ACCEPTED | **Architect** — integrate |
+| `UNCOMMITTED` | a verdict exists but only in a working tree | **Architect** — chase the commit; never merge on it |
+| `UNPUSHED` | the verdict is committed but not on origin's shared branch | **Architect** — chase the push (`git fetch` first; the local ref may be stale) |
 | `BAD_ROUND` | audit `VERDICT round` > audit-lane `SUBMITTED round` | **Architect** — a mistyped stamp; nobody's turn until its writer repairs it |
 | `DONE` | `DISPATCH: ACCEPTED` **and** the lane's `GATE` is satisfied (§4a) | — |
 | `UNGATED` | `DISPATCH: ACCEPTED` but the gate is **not** satisfied | **Architect** — gate it or record why |
@@ -151,7 +153,7 @@ lanes where the auditor has FINISHED and the ball is the Architect's —
 `AUDIT_PASSED`/`UNCOMMITTED`/`BAD_ROUND` — exit 1 if any, 0 if clear; the multi-lane Architect's
 per-work-unit trigger, since a blocking watcher would freeze its other lanes); `verdict <ITEM>`
 (print one lane's verdict, **refusing** if it is not yet delivered); `architect [-i N]` (block until
-a lane needs the Architect — `UNASSIGNED`/`BLOCKED`/`NEEDS-INFO`/`IN_REVIEW`/`AUDIT_PASSED`/`UNGATED`);
+a lane needs the Architect — every state whose "whose turn" column above says **Architect**);
 `inst <id> [-i N]` (block until a lane is `ASSIGNED` to `<id>` or `AUDIT_RETURNED` on its lane). HOW
 a role notices its turn is its own choice — the state is always re-derivable from files, so nothing
 is lost while a role is busy elsewhere.

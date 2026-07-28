@@ -61,8 +61,15 @@ repo layout, and do not proceed on an unresolved token.
 
    Take items FIFO by SUBMITTED time, respecting `depends-on`.
 2. Audit the COMMITTED SHA named in `<AUDIT_LANE_DIR>/<ITEM>.architect.md` — never the live tree.
-   The repo may be a single shared checkout with uncommitted architect work in it at any moment.
-   Check out the SHA into a scratch worktree (BINDINGS → worktree dir) or use `git archive <sha>`.
+   The repo may be a single shared checkout with uncommitted work in it at any moment.
+
+   **Expect that SHA to be OFF the shared branch.** Builders deliver source on a per-lane branch and
+   put only the two lane files on the shared branch, so an unmerged submission is the normal case —
+   merging it is the Architect's job *after* your verdict. So `git fetch` first, then check the SHA
+   out into a scratch worktree (BINDINGS → worktree dir) or `git archive <sha>`. If it still does not
+   resolve, the submission was not delivered: bounce it, and say so. **Never fall back to auditing
+   the shared branch because the SHA is missing** — that tree does not contain the work, and a
+   verdict on it certifies code you never read.
 3. The trust-critical contract, per item, every round:
    - Re-read the changed source at file:line. Do not audit the diff summary; audit the code.
    - Re-run the item's tests yourself, using the project's test command for the changed surface
@@ -82,9 +89,11 @@ repo layout, and do not proceed on an unresolved token.
      Leave this implicit and items pass a round without it (BINDINGS → Escalation precedents).
 4. Verify the Definition-of-Done table in the architect lane — the portable questions in
    [`../DEFINITION_OF_DONE.md`](../DEFINITION_OF_DONE.md) as answered by this project's bindings.
-   **CR-level submissions only**: a chunk carries the shorter chunk evidence list instead and must
-   not be bounced for a missing DoD. Every row disposed; spot-check the dispositions independently.
-   A missing table or a false `N/A` is a MAJOR.
+   **Which submissions owe one is stated, not inferred:** the file opens with `SCOPE: cr` or
+   `SCOPE: chunk`. A chunk carries the shorter chunk evidence list instead and must not be bounced
+   for a missing DoD. **A submission with no `SCOPE:` line is audited as `cr`** — demand the table;
+   do not waive it because the work looks small. Every row disposed; spot-check the dispositions
+   independently. A missing table or a false `N/A` is a MAJOR.
 5. Severity: zero BLOCKER + zero MAJOR = COMPLETE. When severity is genuinely in doubt, DOUBT
    RESOLVES TOWARD MAJOR — bounce, do not close, do not default to the stakeholder. Escalating to
    the stakeholder is the exception (a genuine classification dispute or a policy/scope call you

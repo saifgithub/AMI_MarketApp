@@ -41,9 +41,24 @@ lane mechanics. Below, `<ITEM>` is any item id in this project's id format (BIND
 
 Per item, two files under `<AUDIT_LANE_DIR>/` (one directory holds CR and DEF lanes alike):
 
-- `<ITEM>.architect.md` (architect owns): commit SHA, `depends-on:` (or none), what/why, tests run +
-  results, the architect's own revert-proof QA, and a `SUBMITTED: round N` line. Creating or bumping
-  that round line is the AWAITING_AUDIT signal.
+- `<ITEM>.architect.md` (written by whoever built the item — the architect, or a builder instance
+  bridging from a dispatch layer above; the auditor reads the same file either way):
+  `SCOPE: cr | chunk`, the commit SHA, `depends-on:` (or none), what/why, the test command **and its
+  observed output**, the item's live/real measurement **as it was run** (or an explicit "none
+  applies, because …"), the builder's own revert-proof QA, and a `SUBMITTED: round N` line. Creating
+  or bumping that round line is the AWAITING_AUDIT signal.
+
+  Every element here exists because the auditor's loop asks for it: it re-runs the tests (so pasted
+  *results* without the *command* are not reproducible), it reproduces the real measurement (so an
+  unrecorded one cannot be reproduced), and its Definition-of-Done rule applies to CR-scope
+  submissions only (so scope must be **stated**, not guessed from the item id). `SCOPE:` is read by
+  the auditor, not by any script. **Absent, it is audited as `cr`** — the DoD is demanded rather than
+  waived, because waiving one by accident is the expensive direction.
+
+  **The SHA is normally NOT on the shared branch.** Where a dispatch layer is in use, source is
+  delivered on a per-lane branch and only the lane files go to the shared branch; an unmerged
+  submission is the correct state at audit time, and merging it is the architect's job *after* the
+  verdict.
 - `<ITEM>.auditor.md` (auditor owns): per-finding verdict + a
   `VERDICT: COMPLETE | AWAITING_FIXES (round N)` line, plus the run-report path under `<AUDIT_ROOT>/runs/`.
   **`N` is the round you AUDITED, never the round you are asking for.** Auditing `SUBMITTED: round 1`
@@ -74,6 +89,9 @@ trigger for either role is purely the round numbers on any `*.architect.md` lane
   file yet.
 - AWAITING_FIXES (architect's turn): the auditor's latest verdict is `AWAITING_FIXES`.
 - COMPLETE: the auditor's latest verdict is `COMPLETE`.
+- UNCOMMITTED / UNPUSHED (loud, the writer's turn): the file exists only in one working tree, or is
+  committed but not on origin's shared branch. Both roles reach each other through origin, so
+  neither is delivered — and each would otherwise read as a state someone acts on.
 - BAD_ROUND (loud, nobody's turn until repaired): `VERDICT round` > `SUBMITTED round`. A verdict can
   only answer a submission that exists, so this combination is a mistyped stamp rather than a state.
   It is caught at the moment the verdict lands — once the builder resubmits and the counters
