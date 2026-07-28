@@ -69,3 +69,9 @@ Structural checks:
 - Mac, shared checkout untouched; all git work in `/tmp/def131r2` and the detached worktree.
 - Pre-flight green: pytest 9.0.3 (backend venv), melehost stack healthy, api-alpha health ok,
   origin reachable.
+
+## Addendum — stakeholder ruling (2026-07-28)
+
+Saiful waived DoD-table enforcement until he starts it formally. Round-2 MAJOR 1 (missing DoD
+table) downgraded to recorded-not-scored; verdict amended to `COMPLETE (round 2)`. Waiver on
+record in `AMI_TRADE_BINDINGS.md` gap-fill 7. Substance of this report unchanged.

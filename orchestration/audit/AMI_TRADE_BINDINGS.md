@@ -61,6 +61,15 @@ where both define a term, they agree.
    `orchestration/audit/trail/trail-<YYYY-MM>.md`, then commit. A SINGLE job — the auditor is the
    ledger's sole writer. The ledger is a LOG; authoritative state is the per-lane `VERDICT` +
    `cr/INDEX.md`, and per-audit detail already persists in `runs/`, so archiving old rows is safe.
+7. **DoD-table enforcement WAIVED until further notice (stakeholder ruling, Saiful,
+   2026-07-28):** a `SCOPE: cr` submission without a Definition-of-Done table is **recorded, not
+   bounced** — closure without the table is allowed. Saiful will announce when enforcement
+   starts; until then the auditor notes the absence under "Recorded, not scored" and never grades
+   it MAJOR. History: the rule text predates this waiver but practice was inconsistent (26 of 63
+   early COMPLETE lanes carry no table); the auditor's first strict enforcement (DEF131 r2,
+   CR098-MOBILE-LIVE r2, runs 79/80) was overridden by this ruling and both lanes were amended to
+   COMPLETE. A false `N/A` in a table that IS rendered remains a MAJOR — the waiver covers the
+   missing table only.
 
 ## Relationship to existing governance
 

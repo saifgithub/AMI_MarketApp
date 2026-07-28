@@ -55,3 +55,9 @@ auditor harness bug, caught before it became a finding.
 
 - Mac, worktree-only. `flutter test` full suite run twice (baseline + restore), targeted file
   runs for both mutations and both probes.
+
+## Addendum — stakeholder ruling (2026-07-28)
+
+Saiful waived DoD-table enforcement until he starts it formally. Round-2 MAJOR 1 (missing DoD
+table) downgraded to recorded-not-scored; verdict amended to `COMPLETE (round 2)`. Waiver on
+record in `AMI_TRADE_BINDINGS.md` gap-fill 7. Substance of this report unchanged.

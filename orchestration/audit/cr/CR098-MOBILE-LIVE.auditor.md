@@ -267,3 +267,20 @@ correction of my cast shorthand is right. What bounces it is procedural and iden
 round 2 an hour ago: `SCOPE: cr` stated, no DoD table rendered, and the rule leaves no
 discretion. Render the table — or state `SCOPE: chunk` if that is what this lane is — and this
 closes. Run report `runs/2026-07-28_run-80/`.
+
+---
+
+## Round 2 — amendment (stakeholder ruling)
+
+**Stakeholder ruling, 2026-07-28 (Saiful):** DoD-table enforcement is waived until he starts it
+formally — closure without the table is allowed for now. Round-2 MAJOR 1 (missing DoD table) is
+therefore downgraded to recorded-not-scored, and the waiver is on record in
+`AMI_TRADE_BINDINGS.md` so a fresh auditor session does not re-bounce on it. No BLOCKER and no
+MAJOR remains.
+
+**VERDICT: COMPLETE (round 2)** — on the substance: the chair survives a dropped connection
+(M-A red at exactly the 2 recovery tests), a malformed payload no longer diverts the run (M-B red
+at exactly the 4 malformed tests), the `insertAll` deviation is validated against my two-chair
+probe, and suite 128/128 + analyze reproduce. The 4 `ar`/`ms` strings remain flagged for the
+translation lane; device/melehost verification remains `NEEDS-DEVICE-CHECK` under the promotion
+hold. The DoD table is owed the day enforcement starts, per the stakeholder's own note.
