@@ -988,6 +988,41 @@ class _ReconnectingBanner extends StatelessWidget {
 }
 
 
+/// The wire enum is rendered raw for every action that is already a readable
+/// English word. `NO_VERDICT` is not — and an unrecognised future value is
+/// still rendered rather than crashing the card (acceptance #9): the enum grew
+/// once and will grow again, and a token the user does not recognise beats a
+/// blank screen.
+String _actionLabel(AppLocalizations l, String action) =>
+    action == 'NO_VERDICT' ? l.roomVerdictActionNoVerdict : action;
+
+/// `agentById` falls back to the Concierge for an unknown id, which in a
+/// disclosure would name the WRONG analyst as absent — a confident lie. Here an
+/// id we cannot resolve renders as itself instead.
+String _analystLabel(String id) {
+  for (final a in kAllAgents) {
+    if (a.id == id) return a.displayName;
+  }
+  return id;
+}
+
+/// The analyst whose absence forced the refusal. `NO_VERDICT` is by
+/// construction the Market-withheld state (Amendment 2), so prefer Market when
+/// it is in the list; fall back to whatever was withheld rather than asserting
+/// a name the payload does not support.
+String _blockingAnalystId(RoomVerdict v) {
+  const market = 'market_analyst';
+  if (v.opinionsNotIncluded.contains(market)) return market;
+  return v.opinionsNotIncluded.isEmpty ? market : v.opinionsNotIncluded.first;
+}
+
+String _verdictResetDateStr(WidgetRef ref) {
+  final r = ref.read(mandateNotifierProvider).mandate?.creditsResetAt;
+  if (r == null) return 'the 1st';
+  return '${r.year}-${r.month.toString().padLeft(2, '0')}-'
+      '${r.day.toString().padLeft(2, '0')}';
+}
+
 class _VerdictCard extends ConsumerWidget {
   const _VerdictCard({
     required this.verdict,
@@ -1002,12 +1037,18 @@ class _VerdictCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isApprove = verdict.isApprove;
     final isPass = verdict.isPass;
+    final isNoVerdict = verdict.isNoVerdict;
     // PASS ("no strong opinion, sit out") is neither an APPROVE nor a
     // mandate REJECT — give it its own neutral treatment so it doesn't
     // read as a rejection (DEF056: PASS is now a real, distinct outcome).
+    // NO_VERDICT (CR098 Amendment 2) is the same argument one step further:
+    // the PM refused to price a trade without a market read. That is
+    // professional discipline, not a turn-down, and the amber reject accent
+    // states the opposite.
+    final neutral = isPass || isNoVerdict;
     final accent = isApprove
         ? AmiColors.hexGreen
-        : isPass
+        : neutral
             ? AmiColors.slate500
             : AmiColors.hexAmber;
     final l = AppLocalizations.of(context);
@@ -1036,14 +1077,16 @@ class _VerdictCard extends ConsumerWidget {
               Icon(
                 isApprove
                     ? Icons.check_circle
-                    : isPass
-                        ? Icons.remove_circle_outline
-                        : Icons.cancel,
+                    : isNoVerdict
+                        ? Icons.pause_circle_outline
+                        : isPass
+                            ? Icons.remove_circle_outline
+                            : Icons.cancel,
                 color: accent,
                 size: 28,
               ),
               const SizedBox(width: AmiSpacing.s),
-              Text(l.roomVerdictHeading(verdict.action),
+              Text(l.roomVerdictHeading(_actionLabel(l, verdict.action)),
                   style: AmiTypography.labelMono.copyWith(color: accent)),
               const Spacer(),
               if (verdict.overriddenFromLlm)
@@ -1067,9 +1110,11 @@ class _VerdictCard extends ConsumerWidget {
                 onPressed: () => ShareService.shareVerdict(
                   context,
                   ticker: ticker,
-                  stanceLabel: l.roomVerdictHeading(verdict.action),
+                  stanceLabel:
+                      l.roomVerdictHeading(_actionLabel(l, verdict.action)),
                   isApprove: isApprove,
                   isPass: isPass,
+                  isNeutral: isNoVerdict,
                   reason: verdict.reason,
                 ),
               ),
@@ -1130,6 +1175,56 @@ class _VerdictCard extends ConsumerWidget {
             ),
             child: Text(verdict.reason, style: AmiTypography.body),
           ),
+          // CR098 D3 — the closing disclosure, on EVERY action. An APPROVE
+          // reached without Social must still say Social was not in the room;
+          // gating this on NO_VERDICT would drop it for the common case, which
+          // is the honesty the whole CR exists for. D4: empty list renders
+          // nothing at all — no heading, no divider — so an ordinary
+          // full-roster run is byte-identical to today's card.
+          if (verdict.opinionsNotIncluded.isNotEmpty) ...[
+            const SizedBox(height: AmiSpacing.s),
+            Text(l.roomVerdictOpinionsHeading,
+                style: AmiTypography.labelMono
+                    .copyWith(fontSize: 11, color: AmiColors.textLow)),
+            const SizedBox(height: 4),
+            Text(l.roomVerdictOpinionsNote,
+                style:
+                    AmiTypography.caption.copyWith(color: AmiColors.textMed)),
+            const SizedBox(height: 4),
+            for (final id in verdict.opinionsNotIncluded)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Text('• ${_analystLabel(id)}',
+                    style: AmiTypography.caption),
+              ),
+          ],
+          // CR098 D2 — app chrome, deliberately outside the PM's voice and
+          // visually separated from it by the divider above. The PM declines on
+          // professional grounds and never sells; the remedy lives here.
+          if (isNoVerdict) ...[
+            const SizedBox(height: AmiSpacing.m),
+            const Divider(height: 1, color: AmiColors.slate700),
+            const SizedBox(height: AmiSpacing.s),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AmiColors.hexCyan,
+                  side: const BorderSide(color: AmiColors.hexCyan),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+                ),
+                onPressed: () => showUpgradeSheet(
+                  context,
+                  resetDateLabel: _verdictResetDateStr(ref),
+                ),
+                child: Text(
+                  l.roomVerdictIncludeAnalystCta(
+                      _analystLabel(_blockingAnalystId(verdict))),
+                ),
+              ),
+            ),
+          ],
           if (isApprove) ...[
             const SizedBox(height: AmiSpacing.m),
             if (existingTrade != null)

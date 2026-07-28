@@ -1271,6 +1271,21 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
+  String get roomVerdictActionNoVerdict => 'NO VERDICT';
+
+  @override
+  String get roomVerdictOpinionsHeading => 'Not in the room';
+
+  @override
+  String get roomVerdictOpinionsNote =>
+      'This verdict was reached without their input.';
+
+  @override
+  String roomVerdictIncludeAnalystCta(String agent) {
+    return 'Include the $agent →';
+  }
+
+  @override
   String get upgradeSheetTitle => 'Naik taraf meja dagangan anda';
 
   @override

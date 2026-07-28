@@ -30,6 +30,10 @@ abstract final class ShareService {
     required bool isApprove,
     required String reason,
     bool isPass = false,
+    // CR098: NO_VERDICT is a professional refusal, not a turn-down. Without
+    // this the shared image renders it in the amber reject accent — the card
+    // on screen would say one thing and the image the user posts another.
+    bool isNeutral = false,
   }) async {
     final l = AppLocalizations.of(context);
     await _capture(
@@ -38,7 +42,7 @@ abstract final class ShareService {
         kicker: l.shareCardVerdictKicker,
         accent: isApprove
             ? AmiColors.hexGreen
-            : isPass
+            : (isPass || isNeutral)
                 ? AmiColors.slate500
                 : AmiColors.hexAmber,
         ticker: ticker,
