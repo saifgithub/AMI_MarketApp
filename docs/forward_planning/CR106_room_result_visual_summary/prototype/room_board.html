@@ -239,6 +239,9 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .hero-mark {
   flex: none; width: 56px; height: 48.5px; font-size: calc(var(--t24) * 1.05);
   color: var(--acc-ink); font-weight: 700; line-height: 1;
+  /* The outline variant inherited centring from .hex-o; the filled one never
+     had it, so ✓ and — sat in the top-left corner and overhung the clip. */
+  display: grid; place-items: center;
 }
 .hero-mark.fill { background: color-mix(in srgb, var(--acc) 14%, transparent); clip-path: var(--clip-hex-flat); }
 .hero-mark.outline { --hbg: var(--panel); }
