@@ -115,3 +115,4 @@ orchestration/dispatch/handles/
 qa/appium/test_data/.env
 qa/appium/.venv/
 qa/appium/_report/
+docs/forward_planning/CR106_room_result_visual_summary/prototype/.fonts/
