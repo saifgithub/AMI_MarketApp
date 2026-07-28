@@ -18,7 +18,9 @@ No binding change is needed.
 4. `AGENTS.md` / `CLAUDE.md` — project rules (degrade loudly, AMI naming, pathspec-only commits).
 
 Do not duplicate protocol content into this skill or anywhere else; the files above are the
-single source of truth. This skill is only the entry point.
+single source of truth. This skill is only the entry point. **The loop summary below is a
+navigation aid, not a spec** — where it and the loop prompt differ, the loop prompt is right and
+this file is stale. Fix it there, then here.
 
 ## Pre-flight (quick, read-only — run once at bring-up)
 
@@ -30,8 +32,9 @@ git ls-remote origin HEAD
 sh orchestration/audit/watcher.sh state
 ```
 
-All four capability checks must pass before auditing. The `watcher.sh state` table tells you
-what (if anything) is AWAITING_AUDIT. Report the board state to Saiful.
+All five must succeed before auditing. The `watcher.sh state` table tells you what (if anything)
+is AWAITING_AUDIT — and it now also prints a loud `!! NO <ROLE> WATCHER` line if a watcher died
+without saying so (DEF135). Report the board state to Saiful.
 
 ## Finding work
 
@@ -44,16 +47,22 @@ what (if anything) is AWAITING_AUDIT. Report the board state to Saiful.
 
 ## The loop (summary — the loop prompt is authoritative)
 
-1. Get the committed SHA from `orchestration/audit/cr/<ITEM>.architect.md`; check it out into a
-   scratch worktree (`.claude/worktrees/audit-<ITEM>/`) or `git archive <sha>`. Never audit the
-   live shared tree.
+1. Get the committed SHA from `orchestration/audit/cr/<ITEM>.architect.md`. **Expect it to be OFF
+   `main`** — builders deliver source on `lane/<ITEM>.<instance-id>` and put only the lane files on
+   the shared branch, so an unmerged submission is the normal state at audit time. `git fetch`, then
+   check it out into a scratch worktree (`.claude/worktrees/audit-<ITEM>/`) or `git archive <sha>`.
+   If it still will not resolve, the submission was not delivered: bounce it. **Never audit `main`
+   instead** — that tree does not contain the work. Never audit the live shared tree either.
 2. Re-read changed source at file:line. Re-run tests yourself from the worktree's `backend/`:
    `"/Volumes/Extreme Pro/AMI_MarketApp/backend/.venv/bin/python" -m pytest tests/unit/ -q`
    (absolute interpreter path, never bare `pytest`). Reproduce the real measurement (curl/ssh
    melehost); `NEEDS-DEVICE-CHECK` for physical-device-only findings. Blind adversarial probe on
    the riskiest dimension; pins live under `orchestration/audit/regression/`. Stateful
    constructs: verify full lifecycle and concurrency, not just first call.
-3. Verify the DoD table (CR-level items). Missing table or false `N/A` = MAJOR.
+3. Verify the DoD table. Which submissions owe one is **stated, not inferred**: the architect file
+   opens with `SCOPE: cr` or `SCOPE: chunk`; a chunk carries the shorter evidence list and must not
+   be bounced for a missing DoD, and **no `SCOPE:` line means audit it as `cr`**. Missing table or
+   false `N/A` = MAJOR.
 4. Verdict: zero BLOCKER + zero MAJOR = COMPLETE; doubt resolves toward MAJOR (bounce).
 5. On EVERY verdict write, in `orchestration/audit/**` ONLY:
    - `orchestration/audit/cr/<ITEM>.auditor.md` — `VERDICT: COMPLETE | AWAITING_FIXES (round N)`
