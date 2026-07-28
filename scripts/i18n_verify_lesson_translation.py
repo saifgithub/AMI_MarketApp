@@ -75,6 +75,8 @@ from typing import Any
 
 import httpx
 
+from _i18n_script_guard import foreign_script_leak
+
 DEFAULT_TIMEOUT_S = 300.0
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -355,7 +357,13 @@ def _verify_via_endpoint(
     }
 
 
-def _is_verified(checks: list[dict], strict: bool) -> bool:
+def _is_verified(checks: list[dict], strict: bool, foreign_leak: str | None) -> bool:
+    # DEF144: a deterministic, LLM-free veto. The in-house model code-switches into
+    # CJK/Cyrillic/etc. mid-generation at a measured ~3-4% rate; an LLM verifier
+    # catching that is luck, not design, so this can never be overridden by what any
+    # model says about the same file.
+    if foreign_leak:
+        return False
     by_model: dict[str, list[dict]] = {}
     for c in checks:
         by_model.setdefault(c["model"], []).append(c)
@@ -385,9 +393,14 @@ def _summarize(log: list[dict], strict_ids: set[str]) -> None:
         strict = lesson_id in strict_ids
         models_seen = {c["model"] for c in checks}
         has_critical = any(c["critical_issues"] for c in checks)
-        if _is_verified(checks, strict):
+        tr_path = LESSONS_DIR / f"{lesson_id}.{locale}.mdx"
+        leak = foreign_script_leak(tr_path.read_text(encoding="utf-8"), locale) if tr_path.exists() else None
+        if _is_verified(checks, strict, leak):
             verified += 1
             status = "VERIFIED"
+        elif leak:
+            needs_review += 1
+            status = f"NEEDS REVIEW (foreign-script leak in translated file: {leak!r})"
         elif has_critical:
             needs_review += 1
             status = "NEEDS REVIEW (critical issue flagged)"
