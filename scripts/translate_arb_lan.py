@@ -23,6 +23,8 @@ from typing import Any
 
 import httpx
 
+from _i18n_script_guard import foreign_script_leak
+
 DEFAULT_VLLM_URL = "http://192.168.20.74:8000"
 DEFAULT_MODEL = "ami-llm"
 DEFAULT_BATCH_SIZE = 20
@@ -239,6 +241,13 @@ def translate_one_locale(
             if _placeholders_lost(batch[k], v):
                 print(
                     f"{log_prefix} dropping {k!r} — placeholder mismatch",
+                    file=sys.stderr,
+                )
+                continue
+            leak = foreign_script_leak(v, locale_code)
+            if leak:
+                print(
+                    f"{log_prefix} dropping {k!r} — foreign-script leak ({leak!r})",
                     file=sys.stderr,
                 )
                 continue

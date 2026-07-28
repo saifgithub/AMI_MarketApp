@@ -46,6 +46,8 @@ from typing import Any
 
 import httpx
 
+from _i18n_script_guard import foreign_script_leak
+
 DEFAULT_VLLM_URL = "http://192.168.20.74:8000"
 DEFAULT_MODEL = "ami-llm"
 DEFAULT_TIMEOUT_S = 300.0
@@ -394,7 +396,7 @@ def _sentinels_preserved(original: str, translated: str) -> bool:
 
 def _translate_prose(
     client: httpx.Client, vllm_url: str, model: str,
-    target_label: str, prose: str, log_prefix: str,
+    target_label: str, prose: str, log_prefix: str, locale: str,
 ) -> str | None:
     messages = _prose_prompt(target_label, prose)
     # Output is roughly the same length as input; allow generous headroom.
@@ -419,6 +421,17 @@ def _translate_prose(
                     time.sleep(2)
                     continue
                 return None
+            leak = foreign_script_leak(translated, locale)
+            if leak:
+                print(
+                    f"{log_prefix} prose attempt {attempt}: foreign-script "
+                    f"leak ({leak!r}) — retrying",
+                    file=sys.stderr,
+                )
+                if attempt < max_attempts:
+                    time.sleep(2)
+                    continue
+                return None
             return translated
         except (httpx.HTTPError, ValueError) as exc:
             print(
@@ -433,7 +446,7 @@ def _translate_prose(
 
 def _translate_quizzes(
     client: httpx.Client, vllm_url: str, model: str, target_label: str,
-    quizzes: list[dict], batch_size: int, log_prefix: str,
+    quizzes: list[dict], batch_size: int, log_prefix: str, locale: str,
 ) -> list[dict]:
     """Return list aligned with `quizzes`; each element is the translated
     string-only dict (question/options/explanation). On failure, returns the
@@ -505,6 +518,16 @@ def _translate_quizzes(
                 tr_question = q.get("question", "")
             if not _sentinels_preserved(q.get("explanation", ""), tr_explanation):
                 tr_explanation = q.get("explanation", "")
+            # Foreign-script leak guard (DEF144) — per field, keep EN on a hit.
+            if foreign_script_leak(tr_question, locale):
+                print(f"{log_prefix} quiz q{slot} question: foreign-script leak — keeping EN", file=sys.stderr)
+                tr_question = q.get("question", "")
+            if foreign_script_leak(tr_explanation, locale):
+                print(f"{log_prefix} quiz q{slot} explanation: foreign-script leak — keeping EN", file=sys.stderr)
+                tr_explanation = q.get("explanation", "")
+            if any(foreign_script_leak(o, locale) for o in tr_options):
+                print(f"{log_prefix} quiz q{slot} options: foreign-script leak — keeping EN", file=sys.stderr)
+                tr_options = en_options
             out[slot] = {
                 "question": tr_question,
                 "options": tr_options,
@@ -515,7 +538,7 @@ def _translate_quizzes(
 
 def _translate_title(
     client: httpx.Client, vllm_url: str, model: str,
-    target_label: str, title: str, log_prefix: str,
+    target_label: str, title: str, log_prefix: str, locale: str,
 ) -> str:
     payload = {"t": title}
     messages = _title_batch_prompt(target_label, payload)
@@ -524,7 +547,18 @@ def _translate_title(
             raw = _post_chat(client, vllm_url, model, messages, 256)
             parsed = _parse_json_object(raw)
             if isinstance(parsed.get("t"), str) and parsed["t"].strip():
-                return parsed["t"]
+                tr_title = parsed["t"]
+                leak = foreign_script_leak(tr_title, locale)
+                if leak:
+                    print(
+                        f"{log_prefix} title attempt {attempt}: foreign-script "
+                        f"leak ({leak!r}) — retrying",
+                        file=sys.stderr,
+                    )
+                    if attempt == 1:
+                        time.sleep(2)
+                    continue
+                return tr_title
         except (httpx.HTTPError, ValueError, json.JSONDecodeError) as exc:
             print(
                 f"{log_prefix} title attempt {attempt} failed: "
@@ -560,7 +594,7 @@ def _process_lesson(
 
     # Step 3: translate prose.
     translated_prose = _translate_prose(
-        client, vllm_url, model, target_label, prose_with_sentinels, log_prefix,
+        client, vllm_url, model, target_label, prose_with_sentinels, log_prefix, locale,
     )
     if translated_prose is None:
         print(f"{log_prefix} prose translation failed; using English body",
@@ -571,7 +605,7 @@ def _process_lesson(
     if quizzes:
         translated_quizzes = _translate_quizzes(
             client, vllm_url, model, target_label, quizzes,
-            quiz_batch_size, log_prefix,
+            quiz_batch_size, log_prefix, locale,
         )
         # Reconstruct Quiz components with translated strings.
         for q_idx, tr in zip(quiz_index_map, translated_quizzes):
@@ -584,7 +618,7 @@ def _process_lesson(
     # Step 6: translate title.
     en_title = _frontmatter_title(fm_block) or ""
     tr_title = _translate_title(
-        client, vllm_url, model, target_label, en_title, log_prefix,
+        client, vllm_url, model, target_label, en_title, log_prefix, locale,
     ) if en_title else ""
     new_fm = _frontmatter_replace_title(fm_block, tr_title) if tr_title else fm_block
     new_fm = _frontmatter_set_locale(new_fm, locale)

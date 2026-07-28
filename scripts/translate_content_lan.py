@@ -34,6 +34,8 @@ from typing import Any
 
 import httpx
 
+from _i18n_script_guard import foreign_script_leak
+
 DEFAULT_VLLM_URL = "http://192.168.20.74:8000"
 DEFAULT_MODEL = "ami-llm"
 DEFAULT_TIMEOUT_S = 300.0
@@ -175,7 +177,9 @@ def _record_translatable_payload(record: dict, spec: ContentSpec) -> dict:
     return out
 
 
-def _apply_translations(record: dict, translated: dict, spec: ContentSpec) -> tuple[dict, list[str]]:
+def _apply_translations(
+    record: dict, translated: dict, spec: ContentSpec, locale: str,
+) -> tuple[dict, list[str]]:
     """Return (new_record, problems)."""
     problems: list[str] = []
     new = dict(record)
@@ -192,6 +196,10 @@ def _apply_translations(record: dict, translated: dict, spec: ContentSpec) -> tu
             continue
         if _placeholders_lost(str(en_val), tr_val):
             problems.append(f"field {f} placeholder mismatch")
+            continue
+        leak = foreign_script_leak(tr_val, locale)
+        if leak:
+            problems.append(f"field {f} foreign-script leak ({leak!r})")
             continue
         new[f] = tr_val
     for f in spec.list_text_fields:
@@ -214,6 +222,9 @@ def _apply_translations(record: dict, translated: dict, spec: ContentSpec) -> tu
             if _placeholders_lost(str(en_item), tr_item):
                 ok = False
                 break
+            if foreign_script_leak(tr_item, locale):
+                ok = False
+                break
             new_items.append(tr_item)
         if not ok:
             problems.append(f"list field {f} item mismatch")
@@ -224,7 +235,7 @@ def _apply_translations(record: dict, translated: dict, spec: ContentSpec) -> tu
 
 def _translate_batch_records(
     client: httpx.Client, vllm_url: str, model: str, target_label: str,
-    batch: list[tuple[int, dict]], spec: ContentSpec, log_prefix: str,
+    batch: list[tuple[int, dict]], spec: ContentSpec, log_prefix: str, locale: str,
 ) -> dict[int, dict] | None:
     """batch is [(index, record), ...]. Returns {index: translated_record}."""
     payload: dict[str, dict] = {}
@@ -246,7 +257,7 @@ def _translate_batch_records(
                 key = str(rec.get("id") or f"_idx_{idx}")
                 if key not in parsed or not isinstance(parsed[key], dict):
                     continue
-                new_rec, problems = _apply_translations(rec, parsed[key], spec)
+                new_rec, problems = _apply_translations(rec, parsed[key], spec, locale)
                 if problems:
                     print(
                         f"{log_prefix} key={key!r}: {'; '.join(problems)} — "
@@ -337,6 +348,7 @@ def _process_file(
         log_prefix = f"    [{source_path.name} b{bi}/{len(batches)} ({len(batch)})]"
         translations = _translate_batch_records(
             client, vllm_url, model, target_label, batch, spec, log_prefix=log_prefix,
+            locale=locale,
         )
         if not translations:
             print(
