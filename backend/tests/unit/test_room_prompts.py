@@ -148,18 +148,50 @@ def test_earnings_line_omitted_when_interval_not_computed(base_mandate):
 
 # ── DEF124 acceptance 6 — the invariant, not the one line ────────────────
 
-_ISO_DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
+# DEF130: the detector was ISO-only, so `July 30` or `14/03/2026` walked past
+# the invariant unseen. Every date this codebase renders goes through
+# `isoformat()` or `strftime("%Y-%m-%d")` today, so this is detection
+# completeness rather than a live hole — the point is to notice when a future
+# renderer introduces a human-formatted date, which is exactly when nobody is
+# looking. Widened here rather than by listing known formats at call sites:
+# an enumeration at the call site is the allowlist-instead-of-invariant shape
+# that produced findings on CR104 r1-2 and DEF120 r1-2.
+_MONTH = (
+    r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|"
+    r"Jul(?:y)?|Aug(?:ust)?|Sep(?:t)?(?:ember)?|Oct(?:ober)?|Nov(?:ember)?|"
+    r"Dec(?:ember)?)"
+)
+_ORD = r"(?:st|nd|rd|th)?"
+_DATE_RES = (
+    re.compile(r"\b\d{4}-\d{2}-\d{2}\b"),                       # 2026-07-30
+    re.compile(r"\b\d{4}/\d{2}/\d{2}\b"),                       # 2026/07/30
+    re.compile(r"\b\d{1,2}/\d{1,2}/\d{4}\b"),                   # 14/03/2026, 03/14/2026
+    re.compile(r"\b\d{1,2}\.\d{1,2}\.\d{4}\b"),                 # 14.03.2026
+    re.compile(rf"\b{_MONTH}\.?\s+\d{{1,2}}{_ORD},?\s+\d{{4}}\b"),   # July 30, 2026
+    re.compile(rf"\b\d{{1,2}}{_ORD}\s+{_MONTH}\.?,?\s+\d{{4}}\b"),   # 30 July 2026
+    # Month + day with no year. Kept because `July 30` is the row's own example
+    # of what used to walk past. "May" is excluded from THIS form only: it is
+    # the one month name that is also an ordinary English word, so `May 5` in
+    # prose would false-positive. `May 5, 2026` still matches the two forms
+    # above, so nothing carrying a year escapes.
+    re.compile(rf"\b(?!May\b){_MONTH}\.?\s+\d{{1,2}}{_ORD}\b"),
+)
 _ANCHOR_RE = re.compile(r"\bas of\b|\btoday\b|\bin \d+ days?\b|\b\d+ days? ago\b")
 
 
+def _dates_in(line: str) -> list[str]:
+    return [m for rx in _DATE_RES for m in rx.findall(line)]
+
+
 def _assert_every_date_is_anchored(prompt: str) -> None:
-    """Any absolute (ISO) date rendered anywhere in a Room prompt must carry
-    a relative anchor on the same line — either it IS the anchor line itself
+    """Any absolute date rendered anywhere in a Room prompt must carry a
+    relative anchor on the same line — either it IS the anchor line itself
     ("...as of..."), or it sits beside a computed "today" / "in N days" /
     "N days ago" phrase. A future date rendered without one fails here even
-    if no test hardcodes that specific field/string (DEF124's whole point)."""
+    if no test hardcodes that specific field/string (DEF124's whole point),
+    and since DEF130 that holds for human-formatted dates too, not just ISO."""
     for line in prompt.splitlines():
-        for date_str in _ISO_DATE_RE.findall(line):
+        for date_str in _dates_in(line):
             assert _ANCHOR_RE.search(line), (
                 f"unanchored absolute date {date_str!r} in line: {line!r}"
             )
@@ -215,3 +247,83 @@ def test_derived_line_only_for_trade_judging_phases(base_mandate):
     assert has_proposal(AgentId.CONSERVATIVE_DEBATOR)
     assert not has_proposal(AgentId.FUNDAMENTALS_ANALYST)
     assert not has_proposal(AgentId.BULL_RESEARCHER)
+
+
+# ── DEF130 — the detector's own coverage ─────────────────────────────────
+#
+# The invariant above is only as good as what it can see. Before DEF130 it
+# recognised ISO only, and the DEF124 auditor measured that directly: a
+# fact-sheet header carrying "Last 10-K filed March 14, 2026" left the suite
+# GREEN. These tests pin the detector itself, so widening it cannot silently
+# narrow again.
+
+@pytest.mark.parametrize("line", [
+    "Last 10-K filed 2026-03-14",
+    "Last 10-K filed 2026/03/14",
+    "Last 10-K filed 14/03/2026",
+    "Last 10-K filed 03/14/2026",
+    "Last 10-K filed 14.03.2026",
+    "Last 10-K filed March 14, 2026",
+    "Last 10-K filed Mar 14 2026",
+    "Last 10-K filed Mar. 14th, 2026",
+    "Last 10-K filed 14 March 2026",
+    "Last 10-K filed 14th March, 2026",
+    "Next earnings July 30",
+    "Next earnings Jul 30th",
+    "Next earnings September 1",
+    "Next earnings Sept 1",
+    "Next earnings May 5, 2026",
+])
+def test_detector_sees_a_date_in_every_format_we_might_render(line):
+    assert _dates_in(line), f"detector blind to: {line!r}"
+    with pytest.raises(AssertionError, match="unanchored absolute date"):
+        _assert_every_date_is_anchored(line)
+
+
+@pytest.mark.parametrize("line", [
+    "as of 2026-03-14",
+    "Next earnings (LIVE): 2026-07-30 (Q3) — in 3 days",
+    "Next earnings: March 14, 2026 — in 3 days",
+    "filed 2026-03-14, 5 days ago",
+    "Next earnings Jul 30 — in 3 days",
+])
+def test_an_anchored_date_still_passes_in_every_format(line):
+    assert _dates_in(line), f"detector blind to: {line!r}"
+    _assert_every_date_is_anchored(line)
+
+
+@pytest.mark.parametrize("line", [
+    "P/E 30 vs sector 22",
+    "Conviction 7/10 on this setup",
+    "Stop at 182.50, target 195.00",
+    "Revenue grew 14% YoY to 94.8B",
+    "May 5 analysts covering, 3 rate it a buy",
+    "It may 5x from here",
+    "Q3 2026 guidance raised",
+    "RSI 14 period, MACD 12/26/9",
+])
+def test_detector_does_not_fire_on_prose_or_numbers_that_are_not_dates(line):
+    assert not _dates_in(line), (
+        f"false positive — {line!r} is not a date, but the detector matched "
+        f"{_dates_in(line)}. A guard that cries wolf gets waived."
+    )
+
+
+def test_detector_sweeps_the_user_message_too_not_only_the_system_prompt(base_mandate):
+    """DEF124's own test only ever inspected the system prompt. The user
+    message is a rendered surface the agent reads just as directly, so a date
+    introduced there would be equally unanchored and equally unseen."""
+    profile = {
+        "run_date": "2026-07-27", "next_earnings_date": "2026-07-30",
+        "next_earnings_quarter": "Q3", "next_earnings_interval": "in 3 days",
+        "field_state": {"run_date": "live", "next_earnings": "live"},
+    }
+    for agent_id in _PHASE_FOR_AGENT:
+        sp, um = build_room_messages(
+            agent_id=agent_id, mandate=base_mandate, user_id=None,
+            ticker="AAPL", profile=profile, transcript=[],
+        )
+        _assert_every_date_is_anchored(sp)
+        for msg in (um or []):
+            content = msg.content if hasattr(msg, "content") else str(msg)
+            _assert_every_date_is_anchored(content)
