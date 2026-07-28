@@ -137,3 +137,69 @@ outstanding (not this routine's job — domain owners').
 - **DEF102** — its own row narrative says "fully resolved (class B + class A)" and commit history confirms fix + verification commits (`5fc1f38`, `672466e`, `8e0aec5`); register `Status` field is simply stale (`open`), needs flipping to `resolved`.
 
 ---
+
+## 2026-07-28
+
+Session-start check fired live in-conversation (CLAUDE.md step 2). Registers verified
+clean (`verify all` — 137 DEF + 104 CR rows, no drift). List built from row files: 24
+`proposed` CRs + 19 `open` Defects. Per-item `git log --since` follow-up run before
+asking, so anything that actually moved is logged as closed rather than re-asked.
+
+**Asked:**
+
+- **CR028** (proposed since 2026-07-12, trailing stop) — follow-up: start-now on 07-24, 07-26 AND 07-27, zero commits tagged CR028 since any of them → re-asked → Saiful: "Still start now" (4th consecutive; needs an actual lane, not another log line)
+- **CR002** (proposed since 2026-07-06, `bug_reports` status vocabulary) — follow-up: start-now 07-27, 0 commits since → re-asked → Saiful: "Still start now"
+- **CR006** (proposed since 2026-07-09, Beta infra cost research) — follow-up: start-now 07-26 + 07-27, 0 commits since → re-asked → Saiful: "Still start now"
+- **CR017** (proposed since 2026-07-10, multi-provider LLM routing + caching) — follow-up: start-now 07-27, 0 commits since → re-asked → Saiful: "Keep deferring" (reversal from yesterday)
+- **CR031** (proposed since 2026-07-12, on-device STT/TTS, narrowed scope) — follow-up: start-now 07-27, 0 commits since → re-asked → Saiful: "Keep deferring" (reversal from yesterday)
+- **CR063** (proposed since 2026-07-23, in-app competition rules + league info) — follow-up: start-now 07-26 + 07-27, 0 commits since → re-asked → Saiful: "Keep deferring" (reversal after two start-nows)
+- **DEF113** (open since 2026-07-27, 1-on-1 chat never billed) — follow-up: ship-now-Alpha ruling 07-27, 0 commits since → asked to confirm a build slot → Saiful: "Yes — lane it now"
+- **Stale register rows** (CR007, CR008, CR019, CR020, CR021, CR036, CR037, DEF102, DEF120 — all decided/closed elsewhere but still reading `proposed`/`open`, polluting this list daily; the CR seven for the 4th day) — asked whether to flip → Saiful: "Flip all nine now" → **acted on this session** (row files edited + registers regenerated), an explicit live instruction overriding this routine's default hard-rule 1 (never flip a status)
+- **CR022** (proposed since 2026-07-12, app manual corpus for Concierge) — follow-up: keep-deferring 07-26 + 07-27 → re-asked → Saiful: "Keep deferring" (3rd consecutive)
+- **CR027** (proposed since 2026-07-12, price alerts/push, cert-gated; also blocks CR095's push half) — follow-up: keep-deferring 07-26 + 07-27 → re-asked → Saiful: "Keep deferring" (3rd consecutive)
+- **CR089** (proposed since 2026-07-25, richer Mandate fields) — follow-up: keep-deferring/post-MVP 07-27; flagged CR101 covers the same ground → re-asked → Saiful: "Drop it — CR101 supersedes"
+- **DEF104** (open since 2026-07-22, plaintext IMAP/SMTP credential + dead KB path; offered credential-rotation-only as a middle option) — follow-up: keep-deferring 07-26 + 07-27 → re-asked → Saiful: "Keep deferring the fix" (3rd consecutive; live credential stays)
+- **DEF110** (open since 2026-07-26, stop/target hit leaves a phantom holding) — follow-up: keep-deferring 07-27; re-asked with the portfolio/league-scoring corruption spelled out → Saiful: "Lane it now" (reversal)
+- **DEF100** (open since 2026-07-24, RevenueCat/store billing config, Saiful-liaison) — nagged per his 07-26 instruction → Saiful: "Still working on it"
+- **DEF105** (open since 2026-07-23, AR/MS staleness on 7 rewritten lessons) — follow-up: "still needs dedicated check" 07-27; re-asked now that DEF126 reports a corpus-wide AR/MS gap → Saiful: "Fold into DEF126" (reversal — DEF105 closes as a subset of the corpus-wide pass)
+- **DEF117** (open since 2026-07-27, 15 daily-challenge/glossary content defects, 0 wrong answer keys) — asked fresh → Saiful: "Keep deferring"
+- **CR102** (proposed since 2026-07-27, in-app messaging to beta testers) — asked fresh → Saiful: "Keep deferring" (note: he requested this CR himself on 07-27, and is deferring it a day later)
+- **CR103** (proposed since 2026-07-27, admin compose tab for CR102) — asked fresh → Saiful: "Queue behind CR102" (so effectively deferred with it)
+- **CR105** (proposed since 2026-07-27, agent-prompt copy drift, amended scope) — asked fresh → Saiful: "Keep deferring"
+- **CR107** (proposed 2026-07-28, agent icons sized by surface) — asked fresh → Saiful: "Queue behind CR106"
+- **CR108** (proposed 2026-07-28, lessons track hex label wraps to two lines) — asked fresh → Saiful: "Queue behind CR106/CR107" (all three UI items batch into one mobile lane)
+- **DEF137** (open since 2026-07-28, 24 EN-only strings reachable via the live language picker) — asked fresh → Saiful: "AT:Language Manager is working on this" → **owned by the Language Manager track; stop asking, it is not unowned**
+- **DEF126** (open since 2026-07-27, corpus-wide AR/MS translation quality gap, 87.7% flagged; DEF105 folded in earlier today) — asked fresh → Saiful: "AT:Language Manager is working on this" → **same: Language-Manager-owned, drop from the daily ask**
+- **DEF125** (open since 2026-07-27, flat `max_tokens=400` truncates the Research Manager in 66% of convenes) — asked fresh → Saiful: "Leave queued behind CR104"
+- **DEF136** (open since 2026-07-28, Room convene path still blocks the event loop — the un-closed remainder of DEF116/DEF120) — asked fresh → Saiful: "Assign it now" (top of the coder.room/coder.api queue)
+- **DEF129** (open since 2026-07-28, Concierge claims briefing-scheduling + agent mute/promote that do not exist; already fired on a real user) — asked fresh → Saiful: "Keep deferring"
+- **DEF119** (open since 2026-07-27, streak-freeze COUNT-then-INSERT race) — asked fresh → Saiful: "Lane it now"
+- **DEF127** (open since 2026-07-27, no guard pins DEF114's COMPLETE-value SSE invariant) — asked fresh → Saiful: "Lane it now"
+- **DEF130** (open since 2026-07-28, unanchored-date invariant is ISO-only) — asked fresh → Saiful: "Lane it now"
+- **DEF132** (open since 2026-07-28, `watcher.sh state` exits 1 on a successful board read) — asked fresh → Saiful: "AT:Governance is looking at this now" → **owned by track G; drop from the daily ask**
+- **DEF133** (open since 2026-07-28, DEF120's walk flags the correct lambda-deferral idiom) — asked fresh → Saiful: "Lane it now"
+- **DEF135** (open since 2026-07-28, an audit watcher can die silently and every board still reads healthy) — asked fresh → Saiful: "AT:Governance is looking at this now" → **owned by track G; drop from the daily ask**
+- **CR106** (proposed 2026-07-28, Room result Verdict Board + collapsed transcript; CR107 + CR108 both queued behind it) — asked fresh → Saiful: "Start now"
+- **CR109** (proposed 2026-07-28, P&L game on AMI Cash) — asked fresh → Saiful: "Keep deferring"
+- **Parser bug in this command** (step 3 read Status by fixed field index, so any row whose text contains a `|` shifted the column: DEF102 + DEF136 were wrongly listed as open, CR106 + CR109 were silently missed) — asked whether to fix → Saiful: "Fix it now" → **command doc corrected this session** to index from the end of the row (`NF-3`)
+
+**Flagged, not re-asked:**
+
+- **CR093, CR095, CR101** — verdict already embedded in each row ("build it" / "both stay, rename one") and spec'd into the `CR091-STREAKS` lane; still waiting on a `coder.api` slot. Lane assignment is the Architect's job, not a Saiful decision. 2nd day flagged.
+- **DEF102, DEF136** — appeared on today's list only because of the parser bug above. DEF102 is `resolved`, DEF136 is `fixed` (`7d35466`, both convene call sites now `await asyncio.to_thread(...)`, submitted to audit at `88f6926` *during this review*). No flip needed on either. Saiful's "assign it now" on DEF136 was answered against a stale reading — the work he asked for had already been done and submitted an hour earlier, so the answer is satisfied, not outstanding.
+
+**Status flips applied this session** (explicit live instruction, overriding hard-rule 1):
+
+- CR007, CR008, CR019, CR037 → `done` · CR021 → `dropped` (superseded) · CR036 → `in_progress` — all per his 2026-07-24 rulings, unflipped for 4 days.
+- CR020 → `done` (his 07-24 "Closed. Done").
+- CR089 → `dropped`, superseded by CR101 (today's ruling).
+- DEF120 → `resolved` (lane audited COMPLETE r4, merged `7ec6d1b`, archived).
+- DEF105 → `closed`, folded into DEF126 (today's ruling); the 7 lessons recorded on DEF126's row as a **named must-cover subset with a phantom-Mandate token check**, not an assumed sweep-up.
+- DEF102 was on the flip list when asked but needed no flip (already `resolved`) — 8 rows changed, not 9.
+
+**Note — the checkout moved under this review.** Other tracks committed to shared `main`
+while the questions were being asked: DEF136 fixed + submitted (`7d35466`, `88f6926`),
+DEF137's translation half landed (`7751ff5`, 28 keys not the 24 the row claimed), CR109
+filed (`2256e1b`). The list was rebuilt against live state mid-run rather than trusting
+the opening snapshot. Worth doing every run — this routine reads a register that other
+sessions are actively writing.

@@ -68,11 +68,34 @@ git commit -m "chore(governance): regenerate registers — drift fix (AT:R<N>)" 
 
 Parse directly from the row files (never the generated tables):
 
-- **CRs:** every `docs/forward_planning/_registry/CR*.row.md` whose Status column
-  (5th `|`-delimited field) is exactly `proposed`.
-- **Defects:** every `docs/defect/_registry/DEF*.row.md` whose Status column (7th
-  `|`-delimited field) starts with `open` — tolerate `**open**` and `open — <note>`
-  variants (seen in practice on DEF089/DEF097).
+**Index the Status column from the END of the row, never from the start.** Both schemas
+put Status 4th-from-last (`… | Status | Fix-or-Folder | Session |`), so `$(NF-3)` under
+`awk -F'|'` finds it in both registers:
+
+```bash
+# open Defects
+for f in docs/defect/_registry/DEF*.row.md; do
+  s=$(awk -F'|' '{print $(NF-3)}' "$f" | tr -d ' *`')
+  case "$s" in open*) basename "$f" .row.md;; esac
+done
+# proposed CRs
+for f in docs/forward_planning/_registry/CR*.row.md; do
+  s=$(awk -F'|' '{print $(NF-3)}' "$f" | tr -d ' *`')
+  [ "$s" = "proposed" ] && basename "$f" .row.md
+done
+```
+
+Tolerate `**open**` and `open — <note>` variants (seen in practice on DEF089/DEF097).
+
+*Why from the end:* a fixed field index (the original `$5` for CRs / `$7` for Defects)
+silently breaks on any row whose **narrative text contains a `|`** — every column after
+it shifts, so the check reads a fragment of the title instead of the Status. Measured on
+2026-07-28: 5 Defect rows and 4 CR rows carry an embedded pipe. That run wrongly listed
+DEF102 and DEF136 as `open` (both were already `resolved`/`fixed` — a title fragment
+happened to contain the word "open") and **silently missed CR106 and CR109**, which were
+genuinely `proposed`. A false positive wastes one question; a silent miss defeats the
+whole point of the routine — the item never gets asked and nobody notices. The trailing
+columns are short, fixed-shape and pipe-free, so counting backwards is stable.
 
 ### 4. Pull prior context per item
 
