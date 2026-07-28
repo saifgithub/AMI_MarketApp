@@ -88,5 +88,5 @@ sees until a threshold is set. Prove it.
 
 ---
 
-ASSIGNED: -
-DISPATCH: UNASSIGNED
+ASSIGNED: architect round 1
+DISPATCH: OPEN
