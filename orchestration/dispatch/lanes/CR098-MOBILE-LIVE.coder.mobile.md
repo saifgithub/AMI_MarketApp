@@ -117,3 +117,20 @@ provenance, CR104) and `api/room.py`'s SSE serialiser end to end. Finding, state
 - The CR104 thin-fundamentals/technicals finding is a code-read conclusion (traced `field_state`
   through `room_prompts.py`/`room_runner.py`/`api/room.py`), not confirmed against a live run showing
   a genuinely-thin fundamentals block end to end.
+
+---
+
+STATUS: READY_FOR_AUDIT (round 2)
+
+Round-2 fixes made by the **Architect directly**, not by this instance — the coder lane was closed
+when the round-1 verdict landed, and both findings were small, prototyped by the auditor, and
+verifiable inline (Flutter runs on the Mac). Lane branch `lane/CR098-MOBILE-LIVE.coder.mobile` is now
+at `44dcc0f`.
+
+- **MAJOR** — re-seat withheld chairs when `_recoverViaPolling` rebuilds `order`.
+- **MINOR** — shape-check the `agent_withheld` payload instead of hard-casting it.
+
+Measured foreground in the lane worktree: full `flutter test` **122 → 128**, `flutter analyze` clean
+on both touched files, and both fixes mutation-proved (removing the re-seat → exactly the 2 new
+recovery tests RED; restoring the hard casts → exactly the 4 new malformed-payload tests RED; tree
+restored, 128 green). Detail in `orchestration/audit/cr/CR098-MOBILE-LIVE.architect.md` round 2.

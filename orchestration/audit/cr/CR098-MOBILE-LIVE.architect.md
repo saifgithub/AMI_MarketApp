@@ -2,11 +2,93 @@
 # CR098-MOBILE-LIVE — architect bridge
 
 ITEM: CR098-MOBILE-LIVE
-INSTANCE: coder.mobile
+INSTANCE: coder.mobile (round 2 fixed by the Architect directly — the worker's lane is closed)
 GATE: independent
-BRANCH: `lane/CR098-MOBILE-LIVE.coder.mobile` @ `dca1051`
+SCOPE: cr
+BRANCH: `lane/CR098-MOBILE-LIVE.coder.mobile` @ `44dcc0f`
 WORKTREE: `.claude/worktrees/coder.mobile-CR098-LIVE`
-SUBMITTED: round 1
+SUBMITTED: round 2
+
+---
+
+# Round 2
+
+Both findings fixed on the lane branch at `44dcc0f` (round 1 was `dca1051`). Suite **122 → 128**.
+
+## MAJOR — the chair now survives recovery
+
+Your diagnosis was exact and I am not re-deriving it. `_recoverViaPolling` rebuilds `order` from the
+snapshot transcript alone; a locked chair is never in the transcript; `RoomScreen` iterates `order`.
+Fixed where you said, with **one deliberate deviation** from your prototype:
+
+```dart
+final chairs = state.withheldAgents.keys.where((id) => !order.contains(id)).toList();
+order.insertAll(0, chairs);
+```
+
+rather than `insert(0, id)` per key. With a single withheld analyst the two are identical — your
+measurement stands. With **two or more**, per-key `insert(0)` reverses their relative order, so the
+chairs would render in the opposite order to the one the stream seated them in. `insertAll` keeps
+arrival order. Say if you read that as gold-plating; the one-liner is genuinely fine for today's
+single-chair reality and I chose the version that does not have a second-chair surprise in it.
+
+**Test, in the file next to the existing `agent_withheld` coverage:**
+`recovery re-seats the withheld agent into order` drives the real notifier through a stream that
+yields `started` + `agent_withheld` and then **throws**, with `getRoom` answering a completed
+snapshot whose transcript contains only agents that spoke. It asserts recovery ran, `done`,
+`error == null`, the chair is in `order`, seated **ahead** of the agents that did speak, and still
+absent from the transcript. A second test feeds that recovered state into the real `RoomScreen` and
+asserts the chair renders.
+
+**Two harness notes, because both nearly produced a false result and one is yours.**
+
+1. I took your `container.listen`-from-the-start advice — the autoDispose/self-start race you hit is
+   real and my stream does real async work.
+2. **`testWidgets` runs in a fake-async zone**, so the real timers the scripted stream and the
+   polling loop await never fire: the widget test hung for the full 10-minute timeout while the
+   identical plain `test` passed. It needs `tester.runAsync()` around the drive, with only the
+   render left on the fake clock. Worth knowing before you probe this surface again.
+3. `journalNotifierProvider` / `lessonsNotifierProvider` self-refresh on creation **and** are
+   refreshed again when a run completes, so left real they issue live HTTP at `test://localhost` and
+   park. Overridden with no-op notifiers. That is also why the pre-existing tests never emit `done`.
+
+## MINOR — malformed payloads no longer abort the stream
+
+Fixed, and **your shorthand does not work**: `as String?` still throws on a non-String, so it leaves
+your own probes **B5** (`reason` is `7`) and **B6** (`agent_id` is `7`) live. Shape-checked instead —
+`is String` for the id and reason, `is num` + `.toInt()` for the days, skip the event on a bad id.
+`is num` also covers **B2**/**B3** (`"4"` → dropped, `4.0` → `4`) where `(as num?)?.toInt()` still
+throws on the String form.
+
+Four table-driven tests, one per bad shape, each asserting the event **after** the malformed one
+still lands and that `getRoom` was called **zero** times — i.e. the run never entered the disconnect
+path at all. That last assertion is what makes it a discriminator rather than a coincidence, so the
+scripted client grew a `breakStream: false` mode for them.
+
+## Measured — round 2, foreground, this worktree
+
+| Check | Round 1 | Round 2 |
+|---|---|---|
+| Full `flutter test` | 122/122 | **128/128** |
+| `flutter analyze --no-fatal-infos`, both touched files | clean | **No issues found** |
+| **M-A** remove the re-seat | — | **RED — exactly the 2 new recovery tests** |
+| **M-B** restore the hard casts | — | **RED — exactly the 4 new malformed tests** |
+| Tree after mutations reverted | — | clean, **128** restored |
+
+Your five round-1 mutations are untouched by this change and still hold.
+
+## What I did NOT do
+
+- **Nothing on a device or against melehost.** Promotion hold; unchanged from round 1.
+- **The `ar`/`ms` translation flag is still open** — the 4 strings you enumerated are unchanged and
+  still carry English in the generated files. No new user-visible strings in round 2.
+- **Did not touch the notifier-race pattern you recorded but did not score.** You said you were not
+  asking for a change and I am not making one; my new tests simply hold a listener.
+- **Did not re-trace the CR104 thin-fundamentals claim.** Still unmeasured by all three of us.
+
+---
+
+# Round 1 (superseded — kept for the audit trail)
 
 ## Why this took an independent gate
 
