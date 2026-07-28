@@ -207,6 +207,66 @@ def _route_walk_leaf_method_names() -> set[str]:
     return _BLOCKING_LEAF_METHOD_NAMES | _SIM_ENGINE_SYNC_SAFE_METHODS
 
 
+def _is_to_thread(func: ast.AST) -> bool:
+    """`asyncio.to_thread` / `to_thread`, however it was imported."""
+    if isinstance(func, ast.Attribute):
+        return func.attr == "to_thread"
+    return isinstance(func, ast.Name) and func.id == "to_thread"
+
+
+def _deferred_lambda_ids(fn: ast.AST) -> set[int]:
+    """`id()`s of Lambda nodes handed directly to `asyncio.to_thread(...)`.
+
+    `await asyncio.to_thread(lambda: sim.current_marks(t))` defers correctly — the
+    lambda body runs on the worker thread — but the leaf `ast.Call` still sits
+    lexically inside the async body, so an `ast.walk` flags it identically to a raw
+    blocking call (DEF133, raised as MINOR 1 by the DEF120 round-4 audit).
+
+    Scoped deliberately to lambdas that are ARGUMENTS OF a `to_thread` call, never to
+    "any lambda". The naive form — skip every `Call` under any `Lambda` — is FAIL-OPEN:
+    a lambda that is never handed to `to_thread` (a callback, a `sorted(key=…)`, a
+    default factory) would then hide a genuine blocking call. Widening
+    `_WAIVED_CALL_CHAIN_NAMES` to silence the false positive is the same trap and is the
+    reason this earned its own id: it converts a precision complaint into a real hole.
+    """
+    out: set[int] = set()
+    for node in ast.walk(fn):
+        if not isinstance(node, ast.Call) or not _is_to_thread(node.func):
+            continue
+        for arg in [*node.args, *(kw.value for kw in node.keywords)]:
+            if isinstance(arg, ast.Lambda):
+                out.add(id(arg))
+    return out
+
+
+def _deferred_call_ids(fn: ast.AST) -> set[int]:
+    """`id()`s of every Call lexically inside a `to_thread`-deferred lambda.
+
+    Ancestry, not "is my direct parent a Lambda": the leaf can sit arbitrarily deep
+    inside the lambda body. Computed once per fn and shared by both walks below so the
+    two guards cannot drift into disagreeing about what "deferred" means.
+    """
+    deferred_lambdas = _deferred_lambda_ids(fn)
+    if not deferred_lambdas:
+        return set()
+    parent: dict[int, ast.AST] = {}
+    for node in ast.walk(fn):
+        for child in ast.iter_child_nodes(node):
+            parent[id(child)] = node
+
+    out: set[int] = set()
+    for node in ast.walk(fn):
+        if not isinstance(node, ast.Call):
+            continue
+        cur = parent.get(id(node))
+        while cur is not None:
+            if isinstance(cur, ast.Lambda) and id(cur) in deferred_lambdas:
+                out.add(id(node))
+                break
+            cur = parent.get(id(cur))
+    return out
+
+
 def _blocking_call_sites(fn: ast.AST) -> list[str]:
     """Direct (un-deferred) calls to a known blocking leaf inside fn.
 
@@ -225,8 +285,11 @@ def _blocking_call_sites(fn: ast.AST) -> list[str]:
     """
     hits: list[str] = []
     leaf_methods = _route_walk_leaf_method_names()
+    deferred = _deferred_call_ids(fn)
     for node in ast.walk(fn):
         if not isinstance(node, ast.Call):
+            continue
+        if id(node) in deferred:
             continue
         f = node.func
         if isinstance(f, ast.Name) and f.id in _BLOCKING_LEAF_FUNC_NAMES:
@@ -633,10 +696,15 @@ def test_every_network_reaching_simengine_method_is_declared():
 # is not an `ast.Call` at all and is structurally invisible to this check;
 # no exemption needs to be carved out for it.
 def _direct_sync_safe_calls(fn: ast.AST) -> list[str]:
+    # Shares `_deferred_call_ids` with the route walk above: the lambda idiom defers here
+    # for exactly the same reason, and two guards with two notions of "deferred" is how a
+    # fix passes one and is bounced by the other (DEF133).
+    deferred = _deferred_call_ids(fn)
     return [
         f"<obj>.{node.func.attr}"
         for node in ast.walk(fn)
         if isinstance(node, ast.Call)
+        and id(node) not in deferred
         and isinstance(node.func, ast.Attribute)
         and node.func.attr in _SIM_ENGINE_SYNC_SAFE_METHODS
     ]
@@ -686,4 +754,88 @@ def test_no_blocking_leaf_call_reachable_from_async_route():
         "the call site: `await asyncio.to_thread(<leaf>, ...)`, never make "
         "the leaf itself `async def` (breaks its monkeypatch.setattr unit "
         "tests):\n" + "\n".join(offenders)
+    )
+
+
+# ── DEF133: the `to_thread(lambda: …)` deferral, proved in BOTH directions ────
+#
+# The false positive is easy to silence and easy to silence WRONGLY. Skipping
+# every `Call` under any `Lambda` makes the guard fail-open, and widening
+# `_WAIVED_CALL_CHAIN_NAMES` to quiet the complaint does the same thing one level
+# up. Neither shortcut is caught by asserting only that the correct idiom passes
+# — that is why every case below comes in pairs: the shape that must pass, beside
+# the shape that must still fail for the same edit.
+def _sites(src: str) -> list[str]:
+    """Blocking sites the route walk reports inside the first function in `src`."""
+    return _blocking_call_sites(ast.parse(src).body[0])
+
+
+def _leaf() -> str:
+    """A real blocking leaf method, read from the set rather than hardcoded so this
+    proof follows the declaration instead of drifting away from it."""
+    return sorted(_BLOCKING_LEAF_METHOD_NAMES)[0]
+
+
+def test_to_thread_lambda_is_recognised_as_deferred():
+    """The reported false positive: correct code, flagged identically to a raw call."""
+    src = f"async def r():\n    return await asyncio.to_thread(lambda: sim.{_leaf()}('AAPL'))\n"
+    assert _sites(src) == [], (
+        "`to_thread(lambda: <leaf>(...))` defers correctly — the lambda body runs on "
+        "the worker thread — but the guard still reports it as blocking."
+    )
+
+
+def test_lambda_not_handed_to_to_thread_is_still_flagged():
+    """The fail-OPEN direction, and the whole reason this needed more than a one-liner.
+    A lambda is not deferral; being handed to `to_thread` is. If this ever passes, the
+    guard has been widened into a hole and DEF116's class ships green."""
+    src = f"async def r():\n    return sorted(xs, key=lambda x: sim.{_leaf()}(x))\n"
+    assert _sites(src), (
+        "a blocking call inside a lambda that is NEVER handed to `to_thread` went "
+        "unreported — the naive 'skip anything under a Lambda' fix, which hides real "
+        "blocking calls in callbacks, sort keys and default factories."
+    )
+
+
+def test_raw_blocking_call_is_still_flagged():
+    src = f"async def r():\n    return sim.{_leaf()}('AAPL')\n"
+    assert _sites(src), "the plain DEF116 bug must still be caught"
+
+
+def test_by_reference_to_thread_remains_invisible():
+    """Unchanged behaviour, pinned so the new ancestry walk cannot disturb it."""
+    src = f"async def r():\n    return await asyncio.to_thread(sim.{_leaf()}, 'AAPL')\n"
+    assert _sites(src) == []
+
+
+def test_called_leaf_passed_to_to_thread_is_still_flagged():
+    """Probe P-E from the round-1 audit: `to_thread(<leaf>(t))` calls the leaf INLINE and
+    hands `to_thread` its result, so it blocks the loop and then raises in the worker.
+    The lambda exemption must not resurrect the exemption that probe killed — the
+    difference is one `lambda:`, and only one of the two shapes defers."""
+    src = f"async def r():\n    return await asyncio.to_thread(sim.{_leaf()}('AAPL'))\n"
+    assert _sites(src), (
+        "a leaf CALLED inline and handed to `to_thread` is never correct and must stay "
+        "flagged; the new exemption covers `lambda:` only."
+    )
+
+
+def test_deferral_is_recognised_arbitrarily_deep_inside_the_lambda():
+    src = (
+        f"async def r():\n"
+        f"    return await asyncio.to_thread(lambda: [sim.{_leaf()}(t) for t in ts])\n"
+    )
+    assert _sites(src) == [], "the leaf can sit anywhere in the lambda body, not just at its root"
+
+
+def test_sync_safe_guard_agrees_with_the_route_walk_on_deferral():
+    """D10 walks separately, so it needs the same notion of deferred or a correct fix
+    passes one guard and is bounced by the other."""
+    name = sorted(_SIM_ENGINE_SYNC_SAFE_METHODS)[0]
+    deferred = f"async def r():\n    return await asyncio.to_thread(lambda: sim.{name}(t))\n"
+    bare = f"async def r():\n    return sorted(xs, key=lambda x: sim.{name}(x))\n"
+
+    assert _direct_sync_safe_calls(ast.parse(deferred).body[0]) == []
+    assert _direct_sync_safe_calls(ast.parse(bare).body[0]), (
+        "D10 must stay fail-closed on a lambda that is not handed to `to_thread`"
     )

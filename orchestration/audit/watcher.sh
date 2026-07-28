@@ -10,6 +10,8 @@
 #   AWAITING_FIXES : auditor's LATEST verdict keyword is AWAITING_FIXES (keyword wins, per protocol note)
 #   COMPLETE       : auditor's latest verdict keyword is COMPLETE and rounds have caught up
 #   BAD_ROUND      : VERDICT round > SUBMITTED round — impossible, so a round was mistyped  <-- loud
+# `state` also reports a watcher that DIED — a stale heartbeat it never cleaned up — because a
+# dead watcher and an empty queue are otherwise byte-identical from the outside.
 # Only lines that EMIT a token count as state (see TOK below); a line quoting one is prose.
 # Usage:
 #   watcher.sh state                     print the derived state table once and exit
@@ -128,6 +130,47 @@ lane_state() {  # $1=item id; echoes "STATE sub vr keyword"
   esac
 }
 
+# --- watcher liveness -----------------------------------------------------------------------------
+# A blocking watcher that DIES is indistinguishable from an empty queue: both produce silence, so the
+# audit queue stops being served while every board still reads healthy. A running watcher therefore
+# stamps a heartbeat each poll and REMOVES it on any clean exit (work found, or the -t timeout). A
+# stamp left behind does not mean "a watcher is running" — it means "a watcher stopped without saying
+# so", which is the only thing worth alarming on.
+#
+# Absence is deliberately NOT an alarm. An auditor spawned per item is told not to watch at all, so no
+# heartbeat is the normal state under that model; alarming on it would be permanently red and would
+# desensitise the one signal this exists to carry.
+#
+# TERM and KILL are deliberately NOT trapped: a watcher killed by a process teardown is exactly the
+# failure being caught, and cleaning up on the way out would erase the evidence. INT is trapped
+# because a human pressing ctrl-C already knows the watcher stopped.
+hb_path() { echo "$CR_DIR/.watch-$1.hb"; }
+hb_write() { printf '%s %s\n' "$(date +%s)" "$INTERVAL" > "$(hb_path "$1")" 2>/dev/null || true; }
+hb_clear() { rm -f "$(hb_path "$1")" 2>/dev/null || true; }
+
+hb_stale() {  # $1=mode; echoes "age limit" if a stamp exists and is too old, else nothing
+  f=$(hb_path "$1"); [ -f "$f" ] || return 0
+  read -r ts iv < "$f" 2>/dev/null || return 0
+  case "${ts:-}" in ''|*[!0-9]*) return 0 ;; esac
+  case "${iv:-}" in ''|*[!0-9]*) iv=30 ;; esac
+  age=$(( $(date +%s) - ts ))
+  # Three missed polls, floored so a fast poll interval cannot alarm on ordinary scheduling jitter.
+  limit=$((iv * 3)); [ "$limit" -lt 90 ] && limit=90
+  [ "$age" -gt "$limit" ] && echo "$age $limit"
+  return 0
+}
+
+print_liveness() {  # loud line per mode whose watcher died; silent when none did
+  for m in auditor architect; do
+    set -- $(hb_stale "$m")
+    [ -n "${1:-}" ] || continue
+    printf '!! NO %s WATCHER — last poll %ss ago (limit %ss), and it never exited cleanly.\n' \
+      "$(echo "$m" | tr 'a-z' 'A-Z')" "$1" "$2"
+    echo "   Nothing is serving this queue. Restart it; the table above is still accurate."
+  done
+  return 0
+}
+
 items() {
   for f in "$CR_DIR"/*.architect.md; do
     [ -f "$f" ] || continue
@@ -144,6 +187,12 @@ print_state() {
     printf '%-22s %-16s %-10s %-9s\n' "$it" "$1" "r$2" "r$3(${4})"
   done
   [ "$n" -eq 0 ] && echo "(no lanes yet under $CR_DIR)"
+  print_liveness
+  # Explicit, and load-bearing: without it the bare `&&` above is the function's last statement, so
+  # its status becomes the script's. A populated board makes that test FALSE and a correct table
+  # exits 1 — the only exit 0 being the empty board, which is the one result a caller would least
+  # want to read as success. The sibling dispatch.sh already returns 0 here; this closes the gap.
+  return 0
 }
 
 count_state() {  # counts lanes whose state == $TARGET
@@ -167,7 +216,7 @@ while [ $# -gt 0 ]; do
 done
 
 case "$MODE" in
-  state) print_state ;;
+  state) print_state; exit 0 ;;
   auditor|architect)
     [ "$MODE" = "auditor" ] && TARGET=AWAITING_AUDIT || TARGET=AWAITING_FIXES
     if [ "$TIMEOUT" -gt 0 ]; then
@@ -176,9 +225,12 @@ case "$MODE" in
       echo "watching $CR_DIR for $TARGET (poll ${INTERVAL}s, ctrl-c to stop)..."
     fi
     elapsed=0
+    trap 'hb_clear "$MODE"; exit 130' INT
+    hb_write "$MODE"
     while :; do
       c=$(count_state "$TARGET")
       if [ "$c" -gt 0 ]; then
+        hb_clear "$MODE"
         echo "$(date '+%H:%M:%S') $c lane(s) $TARGET:"; print_state; exit 0
       fi
       # A blocking watch is correct for a standing session and fatal for a one-shot: an agent
@@ -186,11 +238,13 @@ case "$MODE" in
       # killed by its own harness with no verdict and no trace of why. -t bounds it and exits 3,
       # which a caller can tell apart from "found work" (0) and "bad usage" (2).
       if [ "$TIMEOUT" -gt 0 ] && [ "$elapsed" -ge "$TIMEOUT" ]; then
+        hb_clear "$MODE"
         echo "no lane reached $TARGET within ${TIMEOUT}s — exiting rather than blocking." >&2
         exit 3
       fi
       sleep "$INTERVAL"
       elapsed=$((elapsed + INTERVAL))
+      hb_write "$MODE"
     done ;;
   *) echo "usage: watcher.sh state | auditor [-i N] [-t N] | architect [-i N] [-t N]" >&2; exit 2 ;;
 esac

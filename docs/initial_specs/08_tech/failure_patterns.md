@@ -79,6 +79,7 @@ real thing. The less the system knows, the more assured it sounds.
 | **CR037** | social feed unavailable | 23/32 messages assert invented sentiment with no hedge | none |
 | **CR038** | no macro/Fed feed exists | 62/88 macro citations asserted as fact across all 12 agents | none |
 | **DEF123** | yfinance lacks a field (loss-making name, no `trailingPE`) | `_profile_for_ticker` pre-filled an rng-seeded value BEFORE the live fetch; a partial `dict.update` overlay left it in place while `data_source` flipped to `"yfinance_live"` for the whole profile — 178/842 (21.1%, 36 tickers) live-declared Room prompts carried a fabricated P/E, four agents rationalised it as real | the disclosure header itself, which said LIVE |
+| **DEF135** | the background audit watcher process died | the audit queue stopped being served for ~10 h; every board still read healthy, because a dead watcher and an empty queue are byte-identical from outside — the checkpoint memo recorded "queue is EMPTY", true when written and wrong 2 h later, and every later report inherited it | none: no lane, no exit-3 timeout, no error, no non-zero status anyone saw |
 
 **The invariant.** *Degrade loudly, never confidently.* A degraded path must be visible to
 whoever depends on it — the user (honest copy), the operator (a distinct signal, not a log line
@@ -102,6 +103,14 @@ in a stream nobody tails), or the caller (an explicit status).
 - DEF059 → `test_room_pm_llm_outage_fails_safe_to_pass` (same file) — asserts a dead LLM can
   never yield APPROVE.
 - DEF063 → P1's parity test + config-check.
+- DEF135 → **`test_orchestration_watcher_contract.py`** (`backend/tests/unit/`). The watcher stamps
+  a heartbeat each poll and clears it on either clean exit, so a stamp left behind means *stopped
+  without saying so*; `watcher.sh state` says it and `dispatch.sh inbox` exits non-zero on it. The
+  pin starts a real watcher, **SIGKILLs it**, and asserts the board says so — the only way to test a
+  failure whose whole nature is producing nothing to assert on. Note the shape of the alarm: it
+  fires on a *stale* stamp, never on an *absent* one, because a per-item spawned auditor never
+  watches at all and alarming on that would be permanently red. **A loud signal that is always on
+  is the same as no signal** — this pattern's own lesson applied to its own guard.
 - CR037 / CR038 → **no guard yet; both undecided.** The measurement that would enforce them
   exists: the CR035 harness transcript audit (unhedged-assertion count over a ≥30-run batch).
 - DEF123 → **`test_no_protected_numeric_field_in_the_unconditional_baseline_dict` +

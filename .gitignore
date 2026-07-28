@@ -116,3 +116,6 @@ qa/appium/test_data/.env
 qa/appium/.venv/
 qa/appium/_report/
 docs/forward_planning/CR106_room_result_visual_summary/prototype/.fonts/
+
+# audit watcher liveness stamps (runtime state, never committed)
+orchestration/audit/cr/.watch-*.hb

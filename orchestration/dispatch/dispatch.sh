@@ -32,8 +32,10 @@
 #                                    taking new work — a finished verdict (AUDIT_PASSED,
 #                                    UNCOMMITTED, UNPUSHED), an unreadable stamp (BAD_ROUND), or
 #                                    THEIR OWN undelivered submission (UNCOMMITTED_SUBMIT,
-#                                    UNPUSHED_SUBMIT). Exit 1 if any. Run at session start + each
-#                                    work unit.
+#                                    UNPUSHED_SUBMIT). Also reports a DEAD audit watcher — a
+#                                    heartbeat it never cleaned up, the one condition under which
+#                                    every row can be right and nobody is reading them.
+#                                    Exit 1 if any. Run at session start + each work unit.
 #   dispatch.sh verdict <ITEM>     print a lane's verdict, refusing if it is not yet delivered
 #   dispatch.sh architect [-i N]   block until >=1 lane needs the Architect — every state in
 #                                    needs_architect() below; keep that function the only list.
@@ -113,6 +115,22 @@ unpushed() {  # $1=file; echoes "1" if the file's newest commit is not on the sh
   # the next fetch. Narrow, since it requires rewriting shared history, but real.
   git -C "$d" merge-base --is-ancestor "$sha" "$rem" 2>/dev/null && { echo ""; return; }
   echo "1"
+}
+
+hb_stale() {  # $1=mode; echoes "age limit" if the audit watcher's heartbeat is stale, else nothing
+  # Byte-identical twin of the same function in orchestration/audit/watcher.sh — keep them in step.
+  # A running watcher stamps each poll and removes the stamp on any clean exit, so a stamp left
+  # behind means it stopped without saying so. Absence is NOT an alarm: an auditor spawned per item
+  # never watches, so no-heartbeat is normal under that model and alarming on it would be
+  # permanently red.
+  f="$AUDIT_DIR/.watch-$1.hb"; [ -f "$f" ] || return 0
+  read -r ts iv < "$f" 2>/dev/null || return 0
+  case "${ts:-}" in ''|*[!0-9]*) return 0 ;; esac
+  case "${iv:-}" in ''|*[!0-9]*) iv=30 ;; esac
+  age=$(( $(date +%s) - ts ))
+  limit=$((iv * 3)); [ "$limit" -lt 90 ] && limit=90
+  [ "$age" -gt "$limit" ] && echo "$age $limit"
+  return 0
 }
 
 lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
@@ -323,6 +341,17 @@ print_inbox() {
 $orph
 EOF
   fi
+  # A watcher that DIED is not a lane, so it cannot appear in the rows above — and it is the one
+  # condition under which every row above can be correct and still nobody is reading them.
+  dead=0
+  for m in auditor architect; do
+    set -- $(hb_stale "$m")
+    [ -n "${1:-}" ] || continue
+    dead=$((dead+1))
+    echo "!! NO $(echo "$m" | tr 'a-z' 'A-Z') WATCHER — last poll $1s ago (limit $2s), never exited cleanly."
+    echo "   Nothing is serving that queue: a lane can sit waiting indefinitely while every board"
+    echo "   reads healthy. Restart it before you submit anything else."
+  done
   if [ "$hot" -gt 0 ]; then
     # Not "AUDITOR DONE": the *_SUBMIT states are the Architect's OWN undelivered work, and a heading
     # naming the auditor teaches exactly the misattribution these states exist to prevent.
@@ -333,6 +362,7 @@ EOF
   fi
   [ "$other" -gt 0 ] && echo "(also owing you: $other lane(s) UNASSIGNED/BLOCKED/NEEDS-INFO/IN_REVIEW/UNGATED — full board: dispatch.sh state)"
   [ "$hot" -gt 0 ] && return 1
+  [ "$dead" -gt 0 ] && return 1
   return 0
 }
 
