@@ -299,3 +299,28 @@ out as **DEF145** — which is why this batch numbers from DEF146.
 user-reported defects are invisible to it until the track-R monitor runs — and that monitor's
 watermark has not moved in 7 days. The two highest-severity items this morning (a live leak of
 machine syntax, and a 6-day-old raw exception) both came from the DB, neither from a register.
+
+#### 2026-07-29 — 0900 check-in, part 3: one more report
+
+`5c6f260f` (Platinum Anchor, `+57`, `/floor`) — *"the larger buttons should all be normal
+rounded edge buttons. there are several of these so let's fix them all."* Filed as **CR113**.
+
+Sized before asking, and it is smaller than "several" implies: **all six** user-facing large
+CTAs go through one widget. `hex_button.dart:42` clips unconditionally with no size variant, so
+SAVE MY TEAM / CONVENE THE ROOM / MEET {AGENT} / SUBMIT / CONTINUE / TRY AGAIN all change from a
+single edit.
+
+The question worth asking was **where the rule stops**, not what to change — hex also lives in
+the lessons honeycomb, chips, avatars, toasts, bottom nav, the ticker period toggle and the
+BOARD|TRANSCRIPT toggle the AT:Designer had specified as hex *hours earlier* the same morning
+(`df515c35` → DEF146). Three of the four options offered would have swept one of those away. →
+Saiful: **"Only `HexButton` — large CTAs."**
+
+This confirms CR106 §4.0 rather than inventing a rule (hex for marks and controls; rounded rects
+for surfaces) — `HexButton` predates it and was never reconciled. **The durable half is writing
+it into `ami_hex_in_flutter.md`**, which CR106 §4.0 flagged and which still has not happened;
+without it the next new button reintroduces this. Note **CR108** edits `TrackHexButton`, the
+widget CR113 deliberately leaves hex — same lane, opposite rulings, must not be conflated.
+
+**Mobile batch now stands at seven items** — CR107, CR108, DEF142, DEF146, DEF148, CR111, CR113
+— all in `mobile/lib`, all authorised today.
