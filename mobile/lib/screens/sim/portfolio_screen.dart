@@ -303,13 +303,32 @@ class _ValueCard extends StatelessWidget {
                 size: 16,
               ),
               const SizedBox(width: 4),
-              Text(pnlText, style: AmiTypography.statSmall.copyWith(color: accent)),
-              const Spacer(),
+              // CR120/§9 acceptance 9 — a bare Text here has no width bound;
+              // a Spacer only claims leftover space, it does not shrink its
+              // siblings, so a long P&L run (or 1.15 text scale) overflowed
+              // the row instead of clipping cleanly. Flexible + ellipsis
+              // keeps this row from ever throwing a RenderFlex error.
+              Flexible(
+                child: Text(
+                  pnlText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AmiTypography.statSmall.copyWith(color: accent),
+                ),
+              ),
+              const SizedBox(width: AmiSpacing.s),
               Text(AppLocalizations.of(context).portfolioCash,
                   style: AmiTypography.labelMono.copyWith(fontSize: 10)),
               const SizedBox(width: 6),
-              Text('\$${fmt.format(portfolio.currentCash)}',
-                  style: AmiTypography.statSmall),
+              Flexible(
+                child: Text(
+                  '\$${fmt.format(portfolio.currentCash)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: AmiTypography.statSmall,
+                ),
+              ),
             ],
           ),
           if (portfolio.drawdownPct > 0) ...[
@@ -548,7 +567,13 @@ class _HoldingCard extends StatelessWidget {
         )),
         borderRadius: BorderRadius.circular(AmiRadii.card),
         child: Container(
-          padding: const EdgeInsets.all(AmiSpacing.m),
+          // CR120 §9 acceptance 1 — this list is one of three growing lists
+          // the CR exists to keep scannable; a tighter row (vertical s
+          // instead of m) is what buys back screens at the heavy profile
+          // without hiding any content.
+          padding: const EdgeInsets.symmetric(
+            horizontal: AmiSpacing.m, vertical: AmiSpacing.s,
+          ),
           decoration: BoxDecoration(
             color: AmiColors.slate800,
             borderRadius: BorderRadius.circular(AmiRadii.card),
@@ -649,7 +674,7 @@ class _PositionsTab extends StatelessWidget {
                 if (holdings.isEmpty && openTrades.isEmpty)
                   _NewTraderHint(onTradeTicket: onTradeTicket)
                 else ...[
-                  const SizedBox(height: AmiSpacing.m),
+                  const SizedBox(height: AmiSpacing.s),
                   if (holdings.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s),
@@ -671,7 +696,7 @@ class _PositionsTab extends StatelessWidget {
         if (holdings.isNotEmpty || openTrades.isNotEmpty)
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(
-              AmiSpacing.m, AmiSpacing.l, AmiSpacing.m, AmiSpacing.s,
+              AmiSpacing.m, AmiSpacing.m, AmiSpacing.m, AmiSpacing.s,
             ),
             sliver: SliverToBoxAdapter(
               child: Text(l.portfolioOpenTrades, style: AmiTypography.labelMono),
@@ -697,7 +722,7 @@ class _PositionsTab extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
           sliver: SliverToBoxAdapter(child: _AlpacaPortfolioSection()),
         ),
-        const SliverToBoxAdapter(child: SizedBox(height: AmiSpacing.xxl)),
+        const SliverToBoxAdapter(child: SizedBox(height: AmiSpacing.m)),
       ],
     );
   }
