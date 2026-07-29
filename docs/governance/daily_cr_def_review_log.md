@@ -363,3 +363,21 @@ widget CR113 deliberately leaves hex — same lane, opposite rulings, must not b
 CR113, CR114, CR115) + DEF129 reversed, from **10 user reports** — 9 of them on `+57`, all from
 one tester. Two-thirds are CR106 fallout, which is what shipping a large surface change into an
 alpha with an engaged tester looks like; the register-only check-in saw none of it.
+
+#### 2026-07-29 — 0900 check-in, part 5: `5cc94e0e`
+
+**CR116** — *"holdings should be above watch list."* No decision needed and none manufactured:
+`portfolio_screen.dart:139-155` renders `_ValueCard` → sector allocation → **watchlist** →
+**holdings** → trades, so what the user owns sits below what they are merely watching, on the
+screen whose job is the position book. Swap ruled as stated. Two things flagged for the builder
+that the one-line report does not carry: the holdings block is a **conditional** (`if
+(p.holdings.isEmpty)` renders `_NewTraderHint` instead), so the swap silently promotes the
+new-trader hint to the top of the screen for anyone with no positions — a different change than
+the one asked for, worth a deliberate look rather than inheriting; and `_watchlistKey` is a
+`GlobalKey` used as a scroll/coach-mark target, which has to stay attached to the same widget
+through the move.
+
+**Final tally for this check-in: 11 user reports → 10 items filed** (DEF146, DEF147, DEF148,
+DEF150, CR111–CR116) + DEF129 reversed. Ten of the eleven were on `+57`, all from one tester,
+and roughly two-thirds are CR106 fallout. **None of it was visible to the register-only
+check-in** — the sweep only happened because Saiful asked whether the live DB had been checked.
