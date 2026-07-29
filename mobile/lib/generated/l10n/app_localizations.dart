@@ -304,10 +304,10 @@ abstract class AppLocalizations {
   /// **'RESTART ONBOARDING?'**
   String get floorRestartOnboardingConfirmTitle;
 
-  /// DEF152 confirm-dialog body. It must NAME what is lost — the control is caption-sized text in the footer and signals nothing about being destructive, so the copy carries the whole warning. 'Portfolio and trades are untouched' is accurate and verified: reset() only clears a SharedPreferences flag plus in-memory state, and the sim is keyed on user_id, not on the onboarding session. retranslate:[ar,ms]
+  /// DEF152 confirm-dialog body, corrected by DEF158. The original copy claimed restarting 'clears the mandate your interview produced'. It does not, and the claim was false for exactly the users who had a mandate to lose: reset() (onboarding_providers.dart) clears only a SharedPreferences flag and in-memory state with no API call; the sole interview→mandate persist path (_bind_onboarding_session, api/auth.py) deliberately skips when a mandate row already exists; and /onboarding/readback/confirm builds a preview the client never PATCHes. Mandate rows are created only at claim-binding or by a Settings edit — get_or_default() returns a default WITHOUT persisting — so a user who has one keeps it, governed by the old answers, while the dialog promised otherwise. The copy now states the one thing true for both populations (no mandate yet → the retaken interview forms it at claim; mandate already there → untouched) and names the control that does work. 'Portfolio and trades are untouched' is unchanged and still verified. Whether restart SHOULD replace the mandate is a product question tracked separately, not a copy question. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'This clears the mandate your interview produced — goal, risk score, drawdown cap and constraints — and runs the whole interview again from the first question. Your portfolio and trades are untouched.'**
+  /// **'This runs the whole interview again from the first question. It does not replace a mandate you already have — change that in Settings → My Mandate. Your portfolio and trades are untouched.'**
   String get floorRestartOnboardingConfirmBody;
 
   /// DEF152 destructive CTA on the restart-onboarding confirm dialog. Rendered in hexRed. retranslate:[ar,ms]

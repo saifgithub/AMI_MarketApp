@@ -51,7 +51,7 @@
     "floorConveneCaption": "Jalankan debat pelbagai ejen sepenuhnya pada ticker.",
     "floorRestartOnboarding": "mulakan semula orientasi",
     "floorRestartOnboardingConfirmTitle": "MULAKAN SEMULA ORIENTASI?",
-    "floorRestartOnboardingConfirmBody": "Ini akan memadam mandat yang dihasilkan oleh temu bual anda — matlamat, skor risiko, had susut nilai dan kekangan — dan menjalankan semula keseluruhan temu bual dari soalan pertama. Portfolio dan dagangan anda tidak terjejas.",
+    "floorRestartOnboardingConfirmBody": "This runs the whole interview again from the first question. It does not replace a mandate you already have — change that in Settings → My Mandate. Your portfolio and trades are untouched.",
     "floorRestartOnboardingConfirmCta": "MULA SEMULA",
     "floorFooter": "⬢  AMI TRADE • SIMULASI PENDIDIKAN • BUKAN NASIHAT",
     "floorLockedHowTo": "CARA UNLOCK",

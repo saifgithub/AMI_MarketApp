@@ -116,7 +116,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get floorRestartOnboardingConfirmBody =>
-      'This clears the mandate your interview produced — goal, risk score, drawdown cap and constraints — and runs the whole interview again from the first question. Your portfolio and trades are untouched.';
+      'This runs the whole interview again from the first question. It does not replace a mandate you already have — change that in Settings → My Mandate. Your portfolio and trades are untouched.';
 
   @override
   String get floorRestartOnboardingConfirmCta => 'RESTART';

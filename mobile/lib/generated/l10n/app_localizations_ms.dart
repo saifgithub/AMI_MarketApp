@@ -117,7 +117,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get floorRestartOnboardingConfirmBody =>
-      'Ini akan memadam mandat yang dihasilkan oleh temu bual anda — matlamat, skor risiko, had susut nilai dan kekangan — dan menjalankan semula keseluruhan temu bual dari soalan pertama. Portfolio dan dagangan anda tidak terjejas.';
+      'This runs the whole interview again from the first question. It does not replace a mandate you already have — change that in Settings → My Mandate. Your portfolio and trades are untouched.';
 
   @override
   String get floorRestartOnboardingConfirmCta => 'MULA SEMULA';

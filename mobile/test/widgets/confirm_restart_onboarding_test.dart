@@ -81,9 +81,9 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
     });
 
-    testWidgets('the body names what is lost', (t) async {
+    testWidgets('the body names the real cost', (t) async {
       // Not a bare "are you sure?". The control's placement and styling carry
-      // no signal that it is destructive, so the copy has to carry all of it.
+      // no signal that it costs anything, so the copy has to carry all of it.
       await t.pumpWidget(_harness((_) {}));
       await t.tap(find.text('open'));
       await t.pumpAndSettle();
@@ -94,10 +94,49 @@ void main() {
       expect(find.text(l.floorRestartOnboardingConfirmBody), findsOneWidget);
 
       final body = l.floorRestartOnboardingConfirmBody.toLowerCase();
-      expect(body, contains('mandate'),
-          reason: 'the user must be told the mandate is what goes');
       expect(body, contains('interview'),
-          reason: 'and that the cost is sitting through it again');
+          reason: 'the cost is sitting through the interview again');
+      expect(body, contains('mandate'),
+          reason: 'the mandate is what the user thinks is at stake, so the '
+              'copy has to address it one way or the other');
+    });
+
+    testWidgets('DEF158 — the body does not promise a wipe that never happens',
+        (t) async {
+      // The original copy said restarting "clears the mandate your interview
+      // produced". Nothing clears it: reset() only drops a SharedPreferences
+      // flag, _bind_onboarding_session refuses to overwrite an existing
+      // mandate (pinned backend-side by
+      // test_def060_onboarding_claim_mandate.py::
+      // test_claim_does_not_clobber_an_existing_mandate), and the readback
+      // preview is never PATCHed. So the promise was false for exactly the
+      // users who had a mandate to lose. This test exists to stop the
+      // destructive phrasing coming back without the mechanism behind it.
+      await t.pumpWidget(_harness((_) {}));
+      await t.tap(find.text('open'));
+      await t.pumpAndSettle();
+
+      final l = AppLocalizations.of(
+          t.element(find.byType(AlertDialog)) as BuildContext);
+      final body = l.floorRestartOnboardingConfirmBody.toLowerCase();
+
+      for (final claim in const [
+        'clears the mandate',
+        'clear your mandate',
+        'deletes the mandate',
+        'delete your mandate',
+        'erases the mandate',
+        'resets your mandate',
+      ]) {
+        expect(body, isNot(contains(claim)),
+            reason: 'the app must not claim an outcome it does not deliver — '
+                'if restart is ever made to actually replace the mandate, '
+                'change the mechanism first, then this test, then the copy');
+      }
+
+      expect(body, contains('settings'),
+          reason: 'having told the user restart will not change the mandate, '
+              'the copy must name the control that does');
     });
   });
 

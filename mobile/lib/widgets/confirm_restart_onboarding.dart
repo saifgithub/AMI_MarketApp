@@ -1,10 +1,16 @@
 /// DEF152 — the confirmation gate in front of "restart onboarding".
 ///
-/// Restarting destroys the mandate the conversational interview produced —
-/// goal, risk score, drawdown cap, compliance constraints — and it was a bare
-/// `TextButton` in the Floor footer, caption-sized and in `hexBlue`, i.e. it
-/// read as a link rather than as the most damaging control on the screen. A
+/// The control was a bare `TextButton` in the Floor footer, caption-sized and
+/// in `hexBlue`, i.e. it read as a link rather than as a consequential one. A
 /// tester hit it by accident and had to sit through the whole interview again.
+/// The cost the gate protects against is that lost time.
+///
+/// DEF158 corrected what the gate CLAIMS. It originally said restarting
+/// "clears the mandate your interview produced"; traced end to end, nothing
+/// clears it — so for exactly the users who had a mandate to lose, the dialog
+/// described a wipe that never happened. The body now states what is true for
+/// both populations. Do not reinstate destructive language here without a
+/// mechanism that actually replaces the mandate.
 ///
 /// It lives in its own file rather than inline in `floor_screen.dart` for one
 /// reason: the screen needs a dozen providers to pump, so an inline dialog is

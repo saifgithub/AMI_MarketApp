@@ -31,7 +31,7 @@
     "floorConveneCaption": "إجراء مناظرة كاملة متعددة الوكلاء حول ticker.",
     "floorRestartOnboarding": "إعادة تشغيل الجولة التعريفية",
     "floorRestartOnboardingConfirmTitle": "إعادة تشغيل الجولة التعريفية؟",
-    "floorRestartOnboardingConfirmBody": "سيؤدي هذا إلى مسح التفويض الذي أنتجته مقابلتك — الهدف ودرجة المخاطرة وحد التراجع والقيود — وإعادة المقابلة بالكامل من السؤال الأول. محفظتك وصفقاتك لن تتأثر.",
+    "floorRestartOnboardingConfirmBody": "This runs the whole interview again from the first question. It does not replace a mandate you already have — change that in Settings → My Mandate. Your portfolio and trades are untouched.",
     "floorRestartOnboardingConfirmCta": "إعادة التشغيل",
     "floorFooter": "⬢  AMI TRADE • محاكاة تعليمية • ليست نصيحة استثمارية",
     "floorLockedHowTo": "كيفية إلغاء القفل",

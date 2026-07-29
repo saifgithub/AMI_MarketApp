@@ -117,7 +117,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get floorRestartOnboardingConfirmBody =>
-      'سيؤدي هذا إلى مسح التفويض الذي أنتجته مقابلتك — الهدف ودرجة المخاطرة وحد التراجع والقيود — وإعادة المقابلة بالكامل من السؤال الأول. محفظتك وصفقاتك لن تتأثر.';
+      'This runs the whole interview again from the first question. It does not replace a mandate you already have — change that in Settings → My Mandate. Your portfolio and trades are untouched.';
 
   @override
   String get floorRestartOnboardingConfirmCta => 'إعادة التشغيل';
