@@ -324,3 +324,42 @@ widget CR113 deliberately leaves hex — same lane, opposite rulings, must not b
 
 **Mobile batch now stands at seven items** — CR107, CR108, DEF142, DEF146, DEF148, CR111, CR113
 — all in `mobile/lib`, all authorised today.
+
+#### 2026-07-29 — 0900 check-in, part 4: three more, one of them a reversal
+
+- **DEF129 — REVERSED, now "remove Q8 now"** (was "keep deferring", 07-28). Saiful hit it live
+  (`56a05dc5`) and asked *"what will the room report daily?"*. **The row understated it:** the
+  briefing is not just claimed by the LLM, it is a scripted step whose answer is **persisted and
+  confirmed back** — `concierge_engine.py:290` writes `daily_briefing`, `:486-499` prints
+  `🎙️ Briefing: 07:00 daily briefing with voice` into the readback the user is asked to approve.
+  A specific time the user never chose, a voice mode that cannot exist. Textbook **CR040** — the
+  user finishes onboarding believing a 7am briefing is scheduled. Removing the question, the
+  field, the readback line and the `Edit briefing` chip. Guard note: Q8 is **hardcoded Python**,
+  so DEF129's own prompt-alignment guard would have passed it clean — the guard has to cover
+  scripted steps too.
+- **CR115** — the briefing respec'd, so the removal is a deferral and not a quiet abandonment.
+  Saiful's question is its first open item, and the honest answer is that the hard part is not
+  the scheduler: it is what a simulation-only, unlicensed-to-advise product says unprompted at
+  07:00 on a morning when nothing happened. `project_plan.md` A17 says `⚡ partial`; it is not
+  started, and that row gets corrected as part of this.
+- **CR114** ← `b5a5e923` — Q7 asks *"what you'd NEVER want to invest in"* and offers 7 chips of
+  which **2 are exclusions**; `Halal only` read literally answers the inverse of its intent.
+  Mandate data is fine (`_parse` keys off substrings), so no backend test could catch it. Matters
+  because Q7 is where halal screening is captured and CR036 §3 names that as the AR/MS moat. →
+  Saiful: **"Keep one question, regroup the chips under ONLY / NEVER headers"** — not the split he
+  floated, and not a reword; rejected splitting because it lengthens the flow DEF060 exists to
+  protect. Flagged for the builder: headers in a chip row are cramped on a phone and **untested
+  in RTL**, where a mirrored layout can detach a header from its chips silently.
+- **DEF150** ← `86f35b5f` — the Journal renders the verdict's reasoning **above** the board that
+  states the verdict, so the entry opens with an argument for a conclusion not yet given. →
+  Saiful: **move the reason inside the board, below the outcome.** Two things he did not report,
+  found in the same screenshot: the reason is **cut mid-word** (*"…the potential fo"*) in what is
+  the permanent record — and whether that is a render cap or a truncated stored value must be
+  established first, because the latter means the Room shows it too; and the strip is clipped,
+  already covered by CR111. Fix goes through the shared mapper, not `journal_detail_screen.dart`
+  — that shortcut is DEF098's named class and produced DEF143.
+
+**Running total for this check-in: 9 items filed** (DEF146, DEF147, DEF148, DEF150, CR111, CR112,
+CR113, CR114, CR115) + DEF129 reversed, from **10 user reports** — 9 of them on `+57`, all from
+one tester. Two-thirds are CR106 fallout, which is what shipping a large surface change into an
+alpha with an engaged tester looks like; the register-only check-in saw none of it.
