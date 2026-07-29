@@ -293,3 +293,186 @@ def test_the_scripted_demo_path_states_no_stance_rather_than_inventing_one():
     run = runner.get_run(events[0].run_id)
     assert len(run.transcript) == 12, "vacuity guard"
     assert all(m.stance is None for m in run.transcript)
+
+
+# ── DEF147 — the malformed envelope ──────────────────────────────────────
+#
+# Every fixture above is well-formed, which is exactly why the defect shipped.
+# The tail the model actually writes is not the tail the prompt asked for: on
+# live Alpha 3 of 11 agents (27%) produced one this parser had rejected, and
+# because ONE regex did both the parse and the strip, each of those was a null
+# stance AND raw machine syntax on the user's screen at the same time. The two
+# jobs are now separate, and these fixtures are the shapes that were measured
+# leaking, verbatim.
+
+
+_UNTERMINATED = "[STANCE: against | CONVICTION: medium | HEADLINE: 6-day binary"
+_UNBRACKETED = "STANCE: against | CONVICTION: medium | HEADLINE: 40.2x P/E]"
+
+
+def test_an_unterminated_envelope_is_stripped_and_still_read():
+    """`conservative_debator` on run bd31e46a: cut off before the closing
+    bracket. Under the old regex it was neither read nor removed."""
+    body, env = parse_stance_envelope(f"{_PROSE}\n{_UNTERMINATED}")
+    assert env.stance == "against"
+    assert env.conviction == "medium"
+    assert env.headline == "6-day binary"
+    assert body == _PROSE
+    assert "STANCE" not in body
+
+
+def test_an_unbracketed_envelope_is_stripped_and_still_read():
+    """`fundamentals_analyst` on the same run: the opening bracket never came."""
+    body, env = parse_stance_envelope(f"{_PROSE}\n{_UNBRACKETED}")
+    assert env.stance == "against"
+    assert env.headline == "40.2x P/E"
+    assert body == _PROSE
+    assert "STANCE" not in body
+
+
+def test_an_envelope_that_parses_to_nothing_is_still_stripped():
+    """The decoupling itself, stated as a rule: the user must not read the
+    machine channel REGARDLESS of what the parser made of it. A tail this
+    mangled yields no stance — that part is honest and unchanged — but it
+    still comes off the prose."""
+    for mangled in ("[STANCE:", "[STANCE: ", "STANCE: |", "[ stance : ??? |"):
+        body, env = parse_stance_envelope(f"{_PROSE}\n{mangled}")
+        assert env.stance is None, mangled
+        assert body == _PROSE, mangled
+        assert "STANCE" not in body.upper(), mangled
+
+
+def test_one_mangled_field_costs_one_field_not_three():
+    """Per-field parsing. A truncation that ate the headline leaves the stance
+    standing — the old all-or-nothing match threw away everything the agent
+    did manage to say."""
+    _, env = parse_stance_envelope(f"{_PROSE}\n[STANCE: for | CONVICTION: hi")
+    assert env.stance == "for"
+    assert env.conviction is None, "'hi' is not a conviction value"
+    assert env.headline is None
+
+
+# ── DEF147 — the envelope now leads the turn ─────────────────────────────
+
+
+def test_the_envelope_may_lead_the_turn():
+    body, env = parse_stance_envelope(
+        f"[STANCE: for | CONVICTION: high | HEADLINE: FCF 6.2%]\n{_PROSE}"
+    )
+    assert env.stance == "for"
+    assert env.headline == "FCF 6.2%"
+    assert body == _PROSE
+
+
+def test_a_leading_envelope_survives_the_truncation_that_used_to_eat_it():
+    """The whole point of the move. A length-stopped turn now loses prose —
+    which degrades gracefully and DEF125 already marks — instead of the
+    structured field the entire Verdict Board is built on."""
+    body, env = parse_stance_envelope(
+        "[STANCE: against | CONVICTION: high | HEADLINE: Debt/EBITDA 4.1x]\n"
+        "The leverage is the whole story and the buyback pace of **3"
+    )
+    assert env.stance == "against"
+    assert env.conviction == "high"
+    assert body.endswith("**3")
+
+
+def test_an_envelope_at_both_ends_is_stripped_at_both_ends():
+    """Belt and braces while the prompt change lands: a model that obeys the
+    new instruction and then repeats the old habit must not leak the repeat."""
+    body, env = parse_stance_envelope(
+        "[STANCE: for | CONVICTION: high | HEADLINE: FCF 6.2%]\n"
+        f"{_PROSE}\n"
+        "[STANCE: against | CONVICTION: low | HEADLINE: elsewhere]"
+    )
+    assert env.stance == "for", "the instructed slot wins"
+    assert env.headline == "FCF 6.2%"
+    assert body == _PROSE
+    assert "STANCE" not in body
+
+
+def test_a_stance_line_mid_argument_is_prose_not_the_machine_channel():
+    """The search stays bounded to the first and last non-blank lines. An agent
+    quoting the format mid-paragraph is writing prose about it."""
+    text = "First.\n[STANCE: for | CONVICTION: high | HEADLINE: quoted]\nLast."
+    body, env = parse_stance_envelope(text)
+    assert env.stance is None
+    assert body == text
+
+
+def test_the_prompt_asks_for_the_envelope_first_not_last():
+    for agent in [a for a in AgentId if a != AgentId.PORTFOLIO_MANAGER][:11]:
+        prompt = _system_prompt_for(agent)
+        assert "VERY FIRST line" in prompt, agent.value
+        assert "Do not repeat it at the end." in prompt, agent.value
+        assert "After your prose, end with" not in prompt, agent.value
+
+
+# ── DEF147 — end to end, with the shapes that leaked ─────────────────────
+
+
+class _MalformedStanceGateway:
+    """Answers with a LEADING envelope, malformed the way live Alpha's were."""
+
+    def __init__(self, body: str = "The case holds on **6.2%** FCF yield.") -> None:
+        self._body = body
+
+    def has_real_provider(self) -> bool:
+        return True
+
+    async def stream_chat(
+        self, *, system_prompt, messages, model_tier,
+        locale="en", max_tokens=1024, audit_agent_id=None, meta=None, **_kw,
+    ):
+        if audit_agent_id == AgentId.PORTFOLIO_MANAGER.value:
+            yield (
+                '{"action": "APPROVE", "size_pct": 3.0, "entry": 150, '
+                '"stop": 141, "target": 172, "horizon_days": 42, '
+                '"narration": "PM: APPROVE."}'
+            )
+            return
+        yield f"{_UNTERMINATED}\n{self._body}" if self._body else _UNTERMINATED
+
+
+def _run_malformed(body: str = "The case holds on **6.2%** FCF yield."):
+    runner = RoomRunner(llm=_MalformedStanceGateway(body))  # type: ignore[arg-type]
+    events = _collect(runner.run(
+        user_id=uuid4(),
+        ticker="AAPL",
+        mandate=hydrate_coach_mandate({"plan": "trader", "risk_score": 3}),
+        char_delay_min=0.0,
+        char_delay_max=0.0,
+    ))
+    return runner.get_run(events[0].run_id)
+
+
+def test_no_malformed_envelope_reaches_the_transcript_or_the_next_agent():
+    """Platinum Anchor's report, as an assertion. The transcript is both what
+    the user reads and what the following ten agents reason from, so a leak
+    here is a leak twice (DEF095)."""
+    run = _run_malformed()
+    voices = [
+        m for m in run.transcript
+        if m.agent_id != AgentId.PORTFOLIO_MANAGER.value
+    ]
+    assert len(voices) == 11, "vacuity guard — the comb is 11 voices"
+    for m in voices:
+        assert "STANCE" not in m.content.upper(), m.agent_id
+        assert m.stance == "against", m.agent_id
+        assert m.headline == "6-day binary", m.agent_id
+
+
+def test_an_envelope_with_no_prose_after_it_is_never_a_blank_contribution():
+    """New edge opened by the move to the front: a generation that stops right
+    after the envelope leaves nothing to render. It takes the same fallback an
+    empty stream already takes — the stance still parsed, so it is kept."""
+    run = _run_malformed(body="")
+    voices = [
+        m for m in run.transcript
+        if m.agent_id != AgentId.PORTFOLIO_MANAGER.value
+    ]
+    assert len(voices) == 11, "vacuity guard"
+    for m in voices:
+        assert m.content.strip(), m.agent_id
+        assert "STANCE" not in m.content.upper(), m.agent_id
+        assert m.stance == "against", m.agent_id

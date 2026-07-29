@@ -226,11 +226,26 @@ _PROSE_FORMAT = (
 # user reads raw JSON in the transcript. DEF058 measured the same contract
 # failing to parse in ~22% of PM runs — that is the precedent's real rate.
 #
-# A trailing line degrades PARTIALLY instead: an unparseable or absent tail
+# A single line degrades PARTIALLY instead: an unparseable or absent envelope
 # costs the stance and nothing else, the prose is untouched, and the agent
 # lands in the comb's "NOT STATED" gutter — which is exactly the degradation
 # CR106 §3.4 already designed for a null stance. The wire contract the client
 # sees is unchanged from the CR: stance · conviction · headline, each nullable.
+#
+# DEF147 — it shipped TRAILING, and the position was the defect. A machine
+# field written after the prose in a length-capped generation is the first
+# thing a truncation eats, so it was lost precisely on the longest, most
+# substantive turns: 3 of 11 agents on live Alpha the day it shipped (27%),
+# worse than the ~22% the JSON shape was rejected over. DEF125's larger budgets
+# move that cliff without changing which side the field sits on. It now LEADS
+# the turn, so what truncation eats is prose — which degrades gracefully and is
+# already marked `[AMI: …incomplete]`. The cost is real and accepted: the agent
+# names its stance before writing the argument for it, so the stance is a prior
+# the prose then defends rather than a conclusion the prose reaches. It is
+# smallest exactly where it would be worst — the eleven voices' roles and the
+# transcript already in context largely fix the side each takes.
+
+
 #
 # Quantisation is in the ENVELOPE, not the renderer (CR106 B2): the model picks
 # one of three words. No number is ever produced, so no widget can be tempted
@@ -245,8 +260,8 @@ truncation over. An over-length headline falls back to the row's other sources
 quotation reads as the fragment it is."""
 
 _STANCE_FORMAT = (
-    "\n\nAfter your prose, end with ONE final line in exactly this shape, and "
-    "write nothing after it:\n"
+    "\n\nBEFORE the thesis sentence, your VERY FIRST line must be this one line, "
+    "in exactly this shape, with your prose starting on the line after it:\n"
     "[STANCE: for|against|neutral | CONVICTION: low|medium|high | HEADLINE: <max "
     f"{STANCE_HEADLINE_MAX_CHARS} characters>]\n"
     "- STANCE: your view on taking this position now — 'for', 'against', or "
@@ -255,7 +270,8 @@ _STANCE_FORMAT = (
     "- HEADLINE: the single number or fact that carries your view, in your own "
     "words. Not a summary of your whole argument.\n"
     "- If your role this turn is not to take a side at all, write "
-    "'STANCE: none'. Never guess a side to fill the field."
+    "'STANCE: none'. Never guess a side to fill the field.\n"
+    "- Write this line ONCE, at the top only. Do not repeat it at the end."
 )
 
 

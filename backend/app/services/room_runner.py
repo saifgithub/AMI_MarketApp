@@ -1062,23 +1062,57 @@ def _annotate_rr_against_levels(
     return annotated, {"stated_rr": stated, "implied_rr": implied}
 
 
-# CR106 B2 — the trailing stance envelope, and its extraction.
+# CR106 B2 / DEF147 — the stance envelope, and its extraction.
 #
-# Anchored to the END of the turn (`\s*\Z`) so a bracketed aside earlier in the
-# prose cannot be mistaken for the envelope, and parsed BEFORE either `[AMI …]`
-# annotation is appended — a turn that was truncated has no tail at all, which
-# is the honest outcome: no stance, straight to the gutter.
+# DEF147: one regex used to do BOTH jobs — locate-and-strip, and parse — and it
+# demanded both brackets and all three fields intact at the very end of the
+# turn. So an envelope the model got slightly wrong was neither read (→ a null
+# stance → the comb reports "did not state a view", a lie: the agent stated one)
+# nor removed (→ the user reads raw machine syntax inside what CR106 calls a
+# quotation). Measured 3 of 11 agents on live Alpha the day it shipped, 27% —
+# worse than the ~22% JSON-parse rate (DEF058) this shape was chosen to beat.
+# One mechanism silently doing two jobs, so neither could fail alone. Split:
 #
-# Precision-biased throughout. Every unrecognised token yields `None`, and
-# `None` reaches the pixel as "did not state a view". Nothing here guesses:
-# a stance inferred from prose would be exactly the client-side keyword
-# heuristic CR106 §2.2 rejected, moved one layer down.
+#   * FIND + STRIP is deliberately loose. A line that merely BEGINS with
+#     `STANCE:` (opening bracket optional, terminator optional) IS the machine
+#     channel and comes off, whether or not a single field parses. A tail the
+#     user can read is a defect regardless of what the parser made of it.
+#   * PARSE is per-field and independently nullable, so a truncation that ate
+#     the headline still yields the stance.
+#
+# Position: the envelope now LEADS the turn (Saiful's ruling, DEF147). Appended
+# after prose in a length-capped generation it was the first thing truncation
+# ate — sacrificed precisely on the longest, most substantive turns, which
+# DEF125's bigger budgets move but cannot fix. The trailing position is still
+# accepted on read, because the model drifts and a tail we refuse to recognise
+# is a leak by construction; it is simply no longer what the prompt asks for.
+# When both positions carry one, the front wins — that is the instructed slot.
+#
+# Precision-biased throughout, unchanged: every unrecognised token yields
+# `None`, and `None` reaches the pixel as "did not state a view". Nothing here
+# guesses — a stance inferred from prose would be exactly the client-side
+# keyword heuristic CR106 §2.2 rejected, moved one layer down.
+
+# The locator. Bracket optional, terminator absent by design: this must match
+# every tail the model has actually produced, not the one the prompt asked for.
+_STANCE_LINE_RE = re.compile(r"^\s*\[?\s*STANCE\s*:", re.IGNORECASE)
+
+# The legacy inline form — an envelope sharing its line with the prose that
+# precedes it, at the very end of the turn. Kept strict and end-anchored so a
+# bracketed aside mid-paragraph is read as the prose it is.
 _STANCE_TAIL_RE = re.compile(
-    r"\[\s*STANCE\s*:\s*(?P<stance>[A-Za-z]+)\s*\|"
-    r"\s*CONVICTION\s*:\s*(?P<conviction>[A-Za-z]+)\s*\|"
-    r"\s*HEADLINE\s*:\s*(?P<headline>[^\]]*)\]\s*\Z",
+    r"\[\s*STANCE\s*:\s*[A-Za-z]*\s*\|"
+    r"\s*CONVICTION\s*:\s*[A-Za-z]*\s*\|"
+    r"\s*HEADLINE\s*:\s*[^\]]*\]\s*\Z",
     re.IGNORECASE,
 )
+
+# Read one field at a time. Each stops at the next `|`, the terminator, or the
+# end of the line — so a missing `]` costs nothing, and one mangled field costs
+# one field rather than all three.
+_STANCE_FIELD_RE = re.compile(r"STANCE\s*:\s*([^|\]\n]*)", re.IGNORECASE)
+_CONVICTION_FIELD_RE = re.compile(r"CONVICTION\s*:\s*([^|\]\n]*)", re.IGNORECASE)
+_HEADLINE_FIELD_RE = re.compile(r"HEADLINE\s*:\s*([^\]\n]*)", re.IGNORECASE)
 
 _STANCE_VALUES = {"for", "against", "neutral"}
 _CONVICTION_VALUES = {"low", "medium", "high"}
@@ -1091,23 +1125,55 @@ class _StanceEnvelope:
     headline: str | None = None
 
 
+def _stance_field(pattern: re.Pattern[str], envelope: str) -> str | None:
+    match = pattern.search(envelope)
+    return match.group(1).strip() if match else None
+
+
 def parse_stance_envelope(text: str) -> tuple[str, _StanceEnvelope]:
     """Split a Room agent's turn into (prose, stance envelope).
 
-    Returns the text with the trailing envelope removed — the envelope is a
-    machine channel, never shown to the user and never fed to the next agent —
-    and whatever of it parsed. An absent or malformed tail returns the text
-    unchanged and an all-`None` envelope; it is not an error and not logged as
-    one, because a null stance is a supported, rendered outcome.
+    Two independent jobs, deliberately decoupled (DEF147). Anything shaped like
+    the machine channel is REMOVED whether or not it parses; whatever parses is
+    read field by field. An absent envelope returns the text unchanged and an
+    all-`None` envelope — not an error and not logged as one, because a null
+    stance is a supported, rendered outcome (the comb's §3.4 gutter).
     """
-    match = _STANCE_TAIL_RE.search(text)
-    if match is None:
+    lines = text.split("\n")
+    filled = [i for i, line in enumerate(lines) if line.strip()]
+    if not filled:
         return text, _StanceEnvelope()
 
-    body = text[: match.start()].rstrip()
-    stance = match.group("stance").strip().lower()
-    conviction = match.group("conviction").strip().lower()
-    headline = match.group("headline").strip()
+    # Only the first and last non-blank lines are candidates. The envelope is
+    # never mid-turn, and bounding the search is what keeps a bracketed aside
+    # in the middle of an argument from being eaten as a machine channel.
+    found: list[int] = []
+    for i in (filled[0], filled[-1]):
+        if i not in found and _STANCE_LINE_RE.match(lines[i]):
+            found.append(i)
+
+    if found:
+        envelope = lines[found[0]]
+        body = "\n".join(line for i, line in enumerate(lines) if i not in found)
+        if len(found) > 1 and lines[found[0]].strip() != lines[found[-1]].strip():
+            # Both ends carry one and they disagree. Both are stripped either
+            # way; this says which the user is being shown, and is the signal
+            # that the prompt's position instruction is not landing.
+            logger.warning(
+                "room_stance_envelope_conflict",
+                front=lines[found[0]].strip()[:120],
+                tail=lines[found[-1]].strip()[:120],
+            )
+    else:
+        match = _STANCE_TAIL_RE.search(text)
+        if match is None:
+            return text, _StanceEnvelope()
+        envelope = match.group(0)
+        body = text[: match.start()]
+
+    stance = (_stance_field(_STANCE_FIELD_RE, envelope) or "").lower()
+    conviction = (_stance_field(_CONVICTION_FIELD_RE, envelope) or "").lower()
+    headline = _stance_field(_HEADLINE_FIELD_RE, envelope)
 
     # "none" is the prompt's own opt-out and lands here as an unrecognised
     # value — same destination, no special case needed.
@@ -1125,7 +1191,7 @@ def parse_stance_envelope(text: str) -> tuple[str, _StanceEnvelope]:
     if stance is None:
         conviction = None  # type: ignore[assignment]
 
-    return body, _StanceEnvelope(
+    return body.strip(), _StanceEnvelope(
         stance=stance, conviction=conviction, headline=headline
     )
 
@@ -2691,12 +2757,17 @@ async def _compute_agent_text(
                 timeout=agent_timeout_s,
             )
             text = "".join(chunks).strip() or _scripted_for(agent_id, formatter)
-            # CR106 B2: strip the stance tail FIRST. It must come off before the
-            # `[AMI …]` marks below, which would otherwise sit between the prose
-            # and the tail and break the end-anchor — and before the transcript
-            # commit, so no downstream agent ever reads a machine channel as if
-            # it were another agent's argument (DEF095).
+            # CR106 B2: strip the stance envelope FIRST. It must come off before
+            # the `[AMI …]` marks below — which would otherwise sit between the
+            # prose and a trailing envelope and break its end-anchor — and before
+            # the transcript commit, so no downstream agent ever reads a machine
+            # channel as if it were another agent's argument (DEF095).
             text, envelope = parse_stance_envelope(text)
+            # DEF147: with the envelope leading the turn, a generation that
+            # stopped right after it leaves no prose at all. Same destination as
+            # an empty stream two lines up, rather than a blank contribution.
+            # The stance itself parsed and is kept — it is what the agent said.
+            text = text or _scripted_for(agent_id, formatter)
             text = _mark_if_truncated(text, agent_id=agent_id, meta=stream_meta)
         except asyncio.TimeoutError:
             logger.warning(
