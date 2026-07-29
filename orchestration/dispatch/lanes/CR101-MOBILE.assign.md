@@ -91,7 +91,8 @@ Hiding the dial is opacity, and opacity is what CR040 exists to stop.
 
 ## Acceptance
 
-1. Every one of the six limits is visible and settable, each in its own units.
+1. Every one of the **seven fields** in the table above is visible and settable, each in its own
+   units, and an unset (`None`) limit renders as OFF rather than as `0`.
 2. A value set in L2 round-trips: set, save, reload from server, and the **server's** value is what
    renders. Test asserts against the server value, not local state.
 3. L1 preset selection writes all caps coherently; changing any single cap in L2 moves the dial to
@@ -127,5 +128,5 @@ amended to grant, and it ships to testers in the same build. Name your numbers, 
 not verify (finger-on-glass behaviour is a legitimate NEEDS-DEVICE-CHECK), and disclose every
 judgment call rather than letting the auditor find it.
 
-ASSIGNED: —
-DISPATCH: BLOCKED
+ASSIGNED: coder.mobile round 1
+DISPATCH: OPEN
