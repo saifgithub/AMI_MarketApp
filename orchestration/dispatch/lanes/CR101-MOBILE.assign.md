@@ -32,16 +32,49 @@ Hiding the dial is opacity, and opacity is what CR040 exists to stop.
 
 ## What to build
 
-1. L1/L2/L3 as above, for all six limits: sector cap and single-name cap (from **CR101-BE1**),
-   plus post-loss cooldown, max open positions, max trades per day/week, and total open risk
-   (from **CR101-BE2**).
+1. L1/L2/L3 as above. **The backend shipped SEVEN settable fields, not six** — read the two bridges
+   (`orchestration/audit/cr/CR101-BE1.architect.md`, `CR101-BE2.architect.md`) for exact names,
+   units and semantics before you build a single control:
+
+   | Field | Units | From |
+   |---|---|---|
+   | `sector_cap_pct` | percent (0-100) | CR101-BE1 |
+   | `single_name_cap_pct` | percent (0-100) | CR101-BE1 |
+   | `post_loss_cooldown_hours` | hours | CR101-BE2 |
+   | `max_open_positions` | count | CR101-BE2 |
+   | `max_trades_per_day` | count | CR101-BE2 |
+   | `max_trades_per_week` | count | CR101-BE2 |
+   | `max_open_risk_pct` | percent (0-100) | CR101-BE2 |
+
+   "Max trades per day/week" is **one named limit but two independent fields** — either at its cap
+   blocks. Do not collapse them into one control. **`None` means the limit is OFF**, and that is a
+   real, common state a user must be able to see and return to — an off limit must render as off,
+   not as zero. Zero is a real value meaning "block everything."
+
+   Behaviours that are fixed backend-side, so do not re-invent or contradict them: the day/week
+   boundary is **fixed UTC** (calendar day, ISO week from Monday 00:00 UTC), not the user's
+   timezone; `max_open_positions` counts **distinct tickers**, so adding to a name already held is
+   never a new position; post-loss cooldown is a **hard block** that names when it lifts.
 2. **Every displayed number comes from the server's mandate, never a client-side constant.** CR046's
    shown-equals-enforced applies verbatim: the number on screen must be the number enforced. A
    hard-coded `0.40` or `4.5` anywhere in the client is a defect even when it currently matches.
 3. **Retro-tightening disclosure.** When a new value would put current holdings in breach, say so
    before saving, and state what actually happens: **affected holdings are flagged and new buys are
    blocked — nothing is force-sold.** Do not invent a different remedy; that behaviour is fixed
-   backend-side in BE2.
+   backend-side in BE2. Note only `max_open_positions` and `max_open_risk_pct` have a
+   portfolio-state dimension at all — the cooldown and the two trade-pace fields constrain the
+   NEXT trade, so there is nothing to flag for them. Do not show a retro-breach warning for a
+   limit that cannot have one.
+
+3b. **Known backend gap you must not paper over (auditor M1 on CR101-BE2).** The trade-ticket
+   **preview** path cannot price a proposal's OWN contribution to `max_open_risk_pct`, because
+   `preview()` has no stop parameter. So a trade that would tip an under-cap portfolio over the
+   open-risk cap **shows as fine in preview and then blocks at submit**. Do not present preview as
+   authoritative for that one limit. Either say plainly that open-risk is confirmed at submit, or
+   leave it unstated — but never render a green "within your limits" for open-risk on the preview
+   path, because that is a shown-vs-enforced lie of exactly the kind CR046 exists to stop. If you
+   think the honest fix is a `stop` param on `preview()`, say so in the hand-off; that is backend
+   scope, not yours.
 4. **ARB strings** in `app_en.arb` + `app_ar.arb` + `app_ms.arb`, EN placeholders in AR/MS flagged
    `retranslate:[ar,ms]`. Do not ship a fluent translation of a claim you have not verified — that
    was **DEF158**.
