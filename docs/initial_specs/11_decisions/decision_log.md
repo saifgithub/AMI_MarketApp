@@ -270,6 +270,21 @@ deprecated.
 - **Decided**: Riverpod over Bloc/Redux
 - **Rationale**: Type-safe, testable, low boilerplate.
 
+### D-066 — Beta compute/DB path confirmed: GCP Cloud Run + Supabase
+- **Decided**: Keep GCP Cloud Run + Supabase as Beta's compute + DB path (re-affirms D-041/D-042). Neon + Vercel evaluated and rejected.
+- **Source**: CR006 research (2026-07-09) + Saiful, 2026-07-30 (AT:Infrastructure)
+- **Rationale**: Vercel's mandatory $20/seat Pro tier (Hobby is banned for commercial use by Vercel's own ToS) makes Neon+Vercel ~$45–75/mo vs. Cloud Run + Supabase's realistic $0–30/mo at Beta's 100–500-user scale. Execution fit is also weaker — no guaranteed WebSocket pinning, 300s default/800s max duration cap vs. Cloud Run's 60-minute ceiling (a Room session already needs a 300s timeout). See [CR006](../../forward_planning/CR006_beta_infra_cost_research/CR006_beta_infra_cost_research.md), [CR126](../../forward_planning/CR126_beta_infra_provisioning/CR126_beta_infra_provisioning.md).
+
+### D-067 — Beta ships as one Cloud Run service, scale-to-zero, no separate staging environment
+- **Decided**: Beta launches as a single `ami-trade-api` Cloud Run service (the existing FastAPI monolith, already Dockerized) with `min_instances=0`, rather than `hosting.md`'s original 3-service (`api`/`agents`/`workers`) always-warm (`min_instances=1` each) sample. Staging uses Cloud Run revision tags + traffic-splitting (deploy at 0% traffic, smoke-test, then shift) instead of a second full GCP+Supabase environment.
+- **Source**: Saiful, 2026-07-30 — "optimize toward the cheap end" (AT:Infrastructure)
+- **Rationale**: `hosting.md`'s 3-service/always-warm sample was sized for MVP/Growth traffic ($100–200/mo Cloud Run baseline); running that shape at Beta's low, unproven traffic pays for always-warm capacity nothing uses yet. A duplicate staging environment adds 30–50% overhead for no proven need at this scale. Both the 3-way split and a real staging project remain additive Terraform changes, not a redesign, once Growth-phase scale or independent-deploy-cadence needs materialize. See [CR126](../../forward_planning/CR126_beta_infra_provisioning/CR126_beta_infra_provisioning.md).
+
+### D-068 — B7 (cloud LLM provider) deliberately deferred; Anthropic direct is the interim default
+- **Decided**: The Beta/MVP cloud-LLM provider pick (Sonnet-5-everywhere vs. Sonnet+GLM-5.2-hybrid vs. other) stays open — not locked by this decision. Anthropic Claude direct (already the coded fallback in the gateway's `vllm > anthropic > mock` preference order) is the interim default the moment Beta needs a live cloud LLM path, since Cloud Run cannot reach the on-prem vLLM box (`192.168.20.74`, LAN-only, never exposed publicly).
+- **Source**: Saiful, 2026-07-30 — explicit "defer the LLM pick" instruction (AT:Infrastructure)
+- **Rationale**: CR006's frontier-LLM cost comparison is already 3 weeks stale and Claude Sonnet 5 has a confirmed Sep 1, 2026 price change on file — locking in now risks deciding on numbers that won't hold. GLM-5.2 remains the leading cost-conscious alternative pending Saiful's explicit sign-off on Zhipu's Jan-2025 US Commerce Entity List flag. Secret Manager reserves a placeholder slot for a second provider key so this stays a config change, not a re-architecture, whenever it's decided. See [CR006](../../forward_planning/CR006_beta_infra_cost_research/CR006_beta_infra_cost_research.md), [CR126](../../forward_planning/CR126_beta_infra_provisioning/CR126_beta_infra_provisioning.md).
+
 ---
 
 ## Delivery
