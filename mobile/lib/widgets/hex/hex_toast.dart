@@ -104,7 +104,7 @@ class _HexToastCardState extends State<_HexToastCard>
               child: GestureDetector(
                 onTap: _dismiss,
                 child: ClipPath(
-                  clipper: const FlatTopHexagonClipper(cornerCut: 10),
+                  clipper: const CutCornerOctagonClipper(cornerCut: 10),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: AmiSpacing.m, vertical: AmiSpacing.s + 2),

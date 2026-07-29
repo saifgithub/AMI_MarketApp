@@ -649,7 +649,7 @@ class _RibbonTrack extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           ClipPath(
-            clipper: const FlatTopHexagonClipper(cornerCut: 4),
+            clipper: const CutCornerOctagonClipper(cornerCut: 4),
             child: SizedBox(
               height: 8,
               child: Row(

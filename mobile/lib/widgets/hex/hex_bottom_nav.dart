@@ -7,7 +7,7 @@
 /// the visuals change. Drop-in for the stock `BottomNavigationBar` in
 /// `home_shell.dart`.
 ///
-/// DEF043: the earlier build used `FlatTopHexagonClipper` (a cut-corner *octagon*)
+/// DEF043: the earlier build used `CutCornerOctagonClipper` (a cut-corner *octagon*)
 /// as an elongated pill, and the label kept `labelMono`'s 1.8 tracking so
 /// `PORTFOLIO` wrapped to two lines. This version uses a genuine hexagon and
 /// single-line labels.

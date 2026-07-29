@@ -73,7 +73,7 @@ class HexChip extends StatelessWidget {
     }
 
     return ClipPath(
-      clipper: const FlatTopHexagonClipper(cornerCut: 6),
+      clipper: const CutCornerOctagonClipper(cornerCut: 6),
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AmiSpacing.s,

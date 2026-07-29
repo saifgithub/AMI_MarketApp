@@ -40,7 +40,7 @@ class HexButton extends StatelessWidget {
     final borderColor = isFilled ? color : (_isEnabled ? color : AmiColors.slate600);
 
     Widget button = ClipPath(
-      clipper: const FlatTopHexagonClipper(cornerCut: AmiRadii.hexCornerMobile),
+      clipper: const CutCornerOctagonClipper(cornerCut: AmiRadii.hexCornerMobile),
       child: AnimatedContainer(
         duration: AmiMotion.normal,
         curve: AmiMotion.easeOut,

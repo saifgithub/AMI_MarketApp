@@ -182,7 +182,7 @@ class _PeriodCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget cell = ClipPath(
-      clipper: const FlatTopHexagonClipper(cornerCut: 8),
+      clipper: const CutCornerOctagonClipper(cornerCut: 8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(

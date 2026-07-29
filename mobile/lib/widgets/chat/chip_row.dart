@@ -40,7 +40,7 @@ class _Chip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: ClipPath(
-        clipper: const FlatTopHexagonClipper(cornerCut: 8),
+        clipper: const CutCornerOctagonClipper(cornerCut: 8),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m, vertical: 10),
           decoration: BoxDecoration(

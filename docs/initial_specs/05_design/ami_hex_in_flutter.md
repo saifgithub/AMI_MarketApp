@@ -100,13 +100,38 @@ class AmiMotion {
 
 ## Hex clip-paths in Flutter
 
+> **CR117 (2026-07-29) — there are THREE shapes, and two of them are not hexagons.**
+> This section used to describe two, under names that claimed otherwise. `FlatTopHexagonClipper`
+> emitted an **eight**-point path while its own docstring called it a cut-corner octagon; the name
+> misled every reader for months, including CR106's spec work, which reasoned about "hex geometry"
+> on controls that have none. Saiful found it from the outside, on the ticker-period toggle:
+> *"the buttons are octagonal, not hexagonal."*
+>
+> | Class | Sides | Use |
+> |---|---|---|
+> | `CutCornerOctagonClipper` | 8 — angled corners all round | `HexButton`, `HexChip`, `GlassPanel` accents, bottom nav, toasts, ticker-period chips. **The app's default control shape**, shipped for months, reads as intentional — not to be swept |
+> | `FlatTopHexagonBarClipper` | 6 — angled **ends**, flat top and bottom, any aspect ratio | Segmented bars and wide pills. Built for DEF146's BOARD\|TRANSCRIPT toggle; CR120's Portfolio tabs use it |
+> | `FlatTopRegularHexagon` | 6, locked to a 2:√3 box | Agent avatars, honeycomb tessellation |
+>
+> **`FlatTopHexagonClipper` no longer names anything, deliberately.** The true hexagon could have
+> taken the freed name — it is what the name always claimed — but then any unmigrated call site, or
+> one written in a lane in flight, would keep compiling and *silently change shape*. Because the
+> identifier is gone, a stale reference is a compile error. Degrade loudly, applied to a rename.
+> Geometry is pinned by side count in `mobile/test/widgets/hex_geometry_test.dart`.
+>
+> **Migrate on evidence, not tidiness.** CR117 deliberately leaves open which remaining controls
+> become true hexagons: move one when there is a design or a report asking for it. Note CR113
+> removes the shape from large CTAs entirely, and CR108 edits `TrackHexButton`, which already uses
+> the regular hexagon and must not be caught in any migration.
+
 The flat-topped hexagon is the AMI signature. Implement via `ClipPath`:
 
 ```dart
-class FlatTopHexagonClipper extends CustomClipper<Path> {
+// CR117: renamed. This is the OCTAGON — see the table above.
+class CutCornerOctagonClipper extends CustomClipper<Path> {
   final double cornerCut;
   
-  FlatTopHexagonClipper({this.cornerCut = 10.0});
+  CutCornerOctagonClipper({this.cornerCut = 10.0});
 
   @override
   Path getClip(Size size) {
