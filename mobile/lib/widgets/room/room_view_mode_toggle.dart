@@ -35,10 +35,16 @@ class RoomSubHeader extends StatelessWidget {
     this.showToggle = true,
   });
 
-  /// Already-resolved text — the Room shows `41s · 3 CREDITS`, the Journal
-  /// `MID TIER · MANDATE v7`, because the snapshot never serialised the first
-  /// pair. One slot, two facts, resolved by the caller.
-  final String meta;
+  /// Already-resolved text, or **null for no strip at all** (CR111).
+  ///
+  /// The Room shows `41s · 3 CREDITS`. The Journal used to show
+  /// `MID TIER · MANDATE v7` — a *substitute*, because `duration_ms` and
+  /// `credit_cost` were never serialised into the snapshot and entries already
+  /// written never will be. Saiful ruled the substitute out rather than pick
+  /// between two surfaces wearing different text in the same slot, or a corpus
+  /// split by entry age. Nothing is backfilled: an inferred duration would be a
+  /// guess wearing the authority of a record.
+  final String? meta;
 
   final RoomViewMode mode;
 
@@ -55,6 +61,12 @@ class RoomSubHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+
+    // CR111 — with no strip AND no toggle there is nothing in this bar, and a
+    // 44pt empty chrome band with a bottom border reads as a rendering fault.
+    // Draw nothing rather than an empty frame.
+    if (meta == null && !showToggle) return const SizedBox.shrink();
+
     return Container(
       height: 44,
       padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m),
@@ -65,13 +77,15 @@ class RoomSubHeader extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              meta,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AmiTypography.labelMono
-                  .copyWith(fontSize: 10, color: AmiColors.textLow),
-            ),
+            child: meta == null
+                ? const SizedBox.shrink()
+                : Text(
+                    meta!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AmiTypography.labelMono
+                        .copyWith(fontSize: 10, color: AmiColors.textLow),
+                  ),
           ),
           if (showToggle)
             // DEF146 — ONE clip around BOTH halves. Clipping each segment

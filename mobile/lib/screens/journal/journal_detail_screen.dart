@@ -125,7 +125,20 @@ class _JournalDetailScreenState extends ConsumerState<JournalDetailScreen> {
                           .format(entry.createdAt.toLocal()),
                       style: AmiTypography.caption,
                     ),
-                    if (entry.agentsInvolved.isNotEmpty) ...[
+                    // CR111 — the pills answer "which agents?", and for a Room
+                    // run the answer is "all of them", which the reader already
+                    // knows. Twelve full-width pills over six rows is a whole
+                    // phone screen of static labels between the reader and the
+                    // REJECT line they opened the entry to read. Every OTHER
+                    // entry type names one or two agents the reader cannot
+                    // otherwise derive, so the suppression is per type, not
+                    // wholesale.
+                    //
+                    // The exception — a run where an analyst was WITHHELD — is
+                    // still disclosed, by `_RosterGap` inside the board, which
+                    // is the widget that actually knows about it. Dropping the
+                    // pills does not drop the gap.
+                    if (showsAgentPills(entry)) ...[
                       const SizedBox(height: AmiSpacing.s),
                       Wrap(
                         spacing: 8,
@@ -190,6 +203,19 @@ class _Header extends StatelessWidget {
   }
 }
 
+
+/// CR111 — whether the entry header lists the agents involved as pills.
+///
+/// Extracted so the rule is testable without pumping `JournalDetailScreen`,
+/// which needs a dozen providers. It is a **whitelist by exclusion of one
+/// type**, deliberately: a new `JournalEntryType` gets the pills by default,
+/// because the failure of showing them (a little redundancy) is far cheaper
+/// than the failure of hiding them (a reader who cannot tell which agent
+/// produced the entry).
+@visibleForTesting
+bool showsAgentPills(JournalEntry entry) =>
+    entry.agentsInvolved.isNotEmpty &&
+    entry.entryType != JournalEntryType.roomRun;
 
 class _AgentPill extends StatelessWidget {
   const _AgentPill({required this.agentId});
@@ -379,18 +405,18 @@ class _RoomRunReplayState extends ConsumerState<_RoomRunReplay> {
     }
     final storedMode = ref.watch(roomViewModeProvider);
     final mode = _sessionMode ?? storedMode;
-    final meta = board.meta;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // The Room's strip shows `41s · 3 CREDITS`; neither number was ever
-        // serialised into the snapshot, so the record shows what it does have.
+        // CR111 — no strip on the Journal. The Room shows `41s · 3 CREDITS`;
+        // neither number was ever serialised into the snapshot and entries
+        // already written never will be, so this slot used to carry a
+        // SUBSTITUTE (`MID TIER · MANDATE v7`). Saiful ruled the substitute out
+        // rather than have two surfaces wear different text in the same slot,
+        // or split the corpus by entry age. The toggle keeps the bar.
         RoomSubHeader(
-          meta: l.journalStripMeta(
-            (meta.modelTier ?? '—').toUpperCase(),
-            meta.mandateVersion ?? 0,
-          ),
+          meta: null,
           mode: mode,
           onModeChanged: (m) {
             setState(() => _sessionMode = null);
