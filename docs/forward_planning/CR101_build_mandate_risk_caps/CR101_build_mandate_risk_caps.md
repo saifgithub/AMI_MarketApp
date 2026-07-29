@@ -3,6 +3,7 @@
 **Filed:** 2026-07-27 · **Status:** proposed · **Decision:** Saiful, 2026-07-27 — *"create a CR for the caps. It will be build."*
 **Amended:** 2026-07-29 (AT:R59, room-quality) — Saiful, verbatim: **"All risk parameters must be disclosed and user-settable."** Read Amendment 1 first; it adds a governing principle, an audit of what exists today, one blocker that must land first, and a schema decision the original scope left open.
 **Amended again:** 2026-07-29 (AT:R65, architect review at Saiful's request) — Amendment 2 corrects one factual claim in Amendment 1 that would have caused a silent behaviour change if built as written, and adds two build-blocking gaps. **Read Amendment 2 before acting on Amendment 1's scope item 10.**
+**Amendment 3:** 2026-07-29 (AT:R65) — Saiful's decisions on the three questions Amendment 2 left open. AT:R59 has closed; **track R is the sole architect and owns this CR.** Amendment 3 **supersedes** Amendment 2's recommendations where they differ, and supersedes scope item 10. **It is the current statement of scope — read it last and treat it as binding.**
 
 ---
 
@@ -108,6 +109,131 @@ for Layer 3's loud disclosure: **that breach was enforced and invisible for week
 13 scope items and 10 acceptance criteria is large for one CR, and item 7 (nested merge) is a
 small, independently-shippable fix that everything else waits on. Suggest landing item 7 alone
 first, then schema + enforcement, then UI.
+
+---
+
+## Amendment 3 (2026-07-29, AT:R65) — Saiful's decisions on the three open questions
+
+AT:R59 closed; track R is now the sole architect and owns this CR. The three questions Amendment 2
+left open were put to Saiful and decided. **These decisions supersede Amendment 2's recommendations
+where they differ** — Amendment 2 recommended moving the two fields off the Mandate and deleting the
+50% backstop; Saiful chose to wire and to keep, respectively.
+
+### Decision 1 — wire `drawdown_response` and `regret_asymmetry` to real behaviour
+
+Chosen over "move off the Mandate" and over "delete". Both fields stay, and each gets a named
+enforced consumer:
+
+| Field | Becomes | Enforced by |
+|---|---|---|
+| `drawdown_response` 1–5 | `cooldown_after_stop_minutes` | new floor check: block a new buy inside the cooldown window after a stop-out |
+| `regret_asymmetry` −1…1 | `min_reward_risk_ratio` | new floor check: block a setup whose computed R:R is below the user's minimum |
+
+**This composes with item 8 rather than fighting it.** Item 8 says *store the limit, not the
+ordinal*. Applied to all three `risk_components` at once, the ordinals become explicit limits:
+
+```
+concentration_tolerance 1-5  ->  sector_cap_pct
+drawdown_response       1-5  ->  cooldown_after_stop_minutes
+regret_asymmetry       -1..1 ->  min_reward_risk_ratio
+```
+
+The onboarding classifiers keep their questions and become **preset selectors** that write the
+initial explicit values, exactly as `_TOLERANCE_TO_CAP` is demoted to a preset table.
+
+**Consequence worth noting: `RiskComponents` may dissolve entirely.** If all three members become
+flat explicit limits on `Mandate`, the nested object has no remaining members, and the shallow-merge
+422 (Amendment 1 finding 4 / item 7) stops applying *to these fields*. **Item 7 still lands** —
+`compliance` is still nested and carries its own hand-written special case, and any future nested
+group needs the same treatment — but its urgency as a blocker for items 5/8 drops. Confirm the
+member list is empty before removing the class; do not remove it speculatively.
+
+`_derive_risk_score` (`concierge_engine.py:429-435`) must be reworked either way, because it reads
+`concentration_tolerance`, which item 8 removes.
+
+### Decision 2 — keep `SINGLE_NAME_ABSOLUTE_CAP_PCT`, and make it user-settable
+
+Chosen over removing it. This resolves Amendment 1 finding 3 ("two single-name caps ~11× apart, and
+item 3 does not say which binds") **by making the two roles explicit rather than collapsing them**.
+They are not duplicates; they are a *target* and a *hard limit*:
+
+| Number | Role | Who applies it | Today |
+|---|---|---|---|
+| `single_name_target_pct` | what the PM **sizes to** | `risk_tier_cap` in PM sizing | 1.5–4.5% by tier |
+| `single_name_limit_pct` | what the floor **blocks at** | `check_mandate_compliance` check 6 | flat 50%, unchangeable |
+
+Both become explicit, disclosed and user-settable. **Add a cross-field validation: target ≤ limit**,
+rejected loudly at `PATCH` time rather than silently clamped. The settings UI must state each
+number's job in one line, or it ships the confusion Amendment 1 flagged — "we size to this / we
+refuse above this".
+
+This also sharpens Amendment 2's smaller finding 1: PM sizing must read the stored
+`single_name_target_pct`, not `DEFAULT_RISK_TIER_CAPS`, or shown ≠ enforced.
+
+### Decision 3 — `regret_asymmetry` controls the minimum reward:risk ratio
+
+Chosen over overlay-context-only and over dropping the field. The point of this option is that
+**nothing is invented** — every piece already exists and was verified on `main` (2026-07-29):
+
+- `trading_math/trade.py::risk_reward(entry, stop, target)` computes it, `(target−entry)/(entry−stop)`
+- `room_runner.py:955` and `:1019` already call it at verdict time
+- it is a CR046 metric (M06) and is already drawn on the CR106 Verdict Board ribbon as `2.8 : 1`
+- lesson `016_risk_reward_ratio` already teaches it
+
+Semantics: a loss-averse user (`+1`) demands a fatter payoff before risking capital; a
+fear-of-missing-out user (`−1`) accepts thinner setups. Suggested preset spine, to be confirmed
+against lesson 016's own numbers so the curriculum and the product agree: `−1 → 1.0`, `0 → 1.5`,
+`+1 → 2.5`.
+
+**Blocker for this check — the floor cannot currently see the levels.** `ProposedTrade`
+(`schemas/trade.py:61-78`) carries `ticker`, `side`, `quantity`, `order_type`, `limit_price` and
+**no entry / stop / target**, so `check_mandate_compliance` has nothing to compute R:R from, even
+though `SimEngine.submit` accepts `stop=` and `target=` at the call site and drops them before
+building the `ProposedTrade`. Two routes, and this CR must pick one:
+
+1. **Add `stop` / `target` to `ProposedTrade`** and thread them from `SimEngine.submit`. Keeps every
+   floor check in one place, which is the CR038 "make it structural" argument. Touches the shared
+   schema.
+2. **Enforce at the verdict layer** in `room_runner`, where `risk_reward` is already computed. Less
+   plumbing, but splits mandate enforcement across two modules — the DEF098 failure class (two
+   renderers of one rule, neither a superset). **Not recommended.**
+
+Route 1 is recommended.
+
+**Decide the no-levels case explicitly, do not let it be discovered.** A market order with no stop
+has no R:R by construction. A user who has set a 2.5:1 minimum and then trades with no stop has
+escaped their own mandate through a hole. State the rule in the build: either such a trade is
+refused with a named reason, or the minimum only binds when levels are present — and if the latter,
+the overlay and the UI must say so. Silently skipping the check is the CR040 failure.
+
+### Amended Scope — supersedes item 10, adds items 14–16
+
+10. ~~Wire or delete `drawdown_response` and `regret_asymmetry`~~ → **WIRE both**, per Decision 1:
+    `drawdown_response` → `cooldown_after_stop_minutes`, `regret_asymmetry` →
+    `min_reward_risk_ratio`, both stored as explicit limits under item 8's rule, both enforced by a
+    deterministic floor check, both in the overlay, both settable.
+14. **Two named single-name numbers** (Decision 2) — `single_name_target_pct` (PM sizes to) and
+    `single_name_limit_pct` (floor blocks at), both settable, with a `target ≤ limit` cross-field
+    validation and a one-line role statement each in the UI. Supersedes the open question in item 9.
+15. **Carry the levels into the floor** (Decision 3 blocker) — add `stop` / `target` to
+    `ProposedTrade` and thread them from `SimEngine.submit`, so the R:R check lives with every other
+    mandate check. State the no-levels rule.
+16. **Rework `_derive_risk_score`** — it reads `concentration_tolerance`, which item 8 removes.
+    Onboarding classifiers become preset selectors writing explicit limits.
+
+### Amended Acceptance — adds to the previous ten
+
+- A stop-out starts the cooldown, and a buy inside the window is blocked with a named reason;
+  outside it, allowed. Cooldown 0 disables the check.
+- A setup below the user's `min_reward_risk_ratio` is blocked with a named reason, and the number
+  the floor used equals the one the Verdict Board renders — the same `risk_reward` call, asserted
+  against one computation, not two.
+- The no-levels case behaves as the CR states, tested both ways.
+- `PATCH` with `single_name_target_pct > single_name_limit_pct` is refused with a readable message,
+  not clamped.
+- PM sizing reads the stored target, proven by setting it to a non-preset value (e.g. 7.3%) and
+  reading the size the PM actually proposes.
+- Preset spine for `min_reward_risk_ratio` agrees with lesson `016_risk_reward_ratio`.
 
 ---
 
