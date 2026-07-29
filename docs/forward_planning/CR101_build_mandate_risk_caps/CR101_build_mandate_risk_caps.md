@@ -2,6 +2,112 @@
 
 **Filed:** 2026-07-27 · **Status:** proposed · **Decision:** Saiful, 2026-07-27 — *"create a CR for the caps. It will be build."*
 **Amended:** 2026-07-29 (AT:R59, room-quality) — Saiful, verbatim: **"All risk parameters must be disclosed and user-settable."** Read Amendment 1 first; it adds a governing principle, an audit of what exists today, one blocker that must land first, and a schema decision the original scope left open.
+**Amended again:** 2026-07-29 (AT:R65, architect review at Saiful's request) — Amendment 2 corrects one factual claim in Amendment 1 that would have caused a silent behaviour change if built as written, and adds two build-blocking gaps. **Read Amendment 2 before acting on Amendment 1's scope item 10.**
+
+---
+
+## Amendment 2 (2026-07-29, AT:R65) — review findings
+
+Reviewed at Saiful's request. Amendment 1's four load-bearing facts were re-verified
+independently against `main` and **all four hold**: `_TOLERANCE_TO_CAP` = 25/30/40/50/60
+(`sector_allocation.py:52-58`), `DEFAULT_RISK_TIER_CAPS = {1:1.5, 2:1.5, 3:3.0, 4:4.5, 5:4.5}`
+(`trading_math/sizing.py:22`), `SINGLE_NAME_ABSOLUTE_CAP_PCT = 50.0` (`sizing.py:26`), and the
+shallow merge with its `compliance`-only special case (`mandate_store.py:91-113`). The blocker
+diagnosis and its sequencing are correct. What follows is what the review changes.
+
+### Correction — `drawdown_response` and `regret_asymmetry` are NOT dead (blocks scope item 10)
+
+Amendment 1 states they are *"consumed by **nothing**"* and recommends deleting both. **That is
+wrong.** Both are read by `_derive_risk_score` (`concierge_engine.py:429-435`):
+
+```python
+def _derive_risk_score(session: OnboardingSession) -> int:
+    rc = session.risk_components_partial
+    a = rc.get("drawdown_response", 3)
+    asym = rc.get("regret_asymmetry", 0)
+    c = rc.get("concentration_tolerance", 3)
+    base = round((a + c) / 2)
+    return max(1, min(5, base + asym))
+```
+
+`risk_score` selects the enforced single-name cap via `risk_tier_cap`. So both fields **do**
+influence an enforced limit — once, at onboarding. Amendment 1's grep missed it because it
+classified `concierge_engine` wholesale as "a constructor that defaults them"; this call site is
+in that same module but is a *consumer*, not a default.
+
+Consequence: **deleting them silently changes how every new user's risk tier is derived**, and
+with it their single-name cap. That is a behaviour change disguised as a cleanup.
+
+The accurate characterisation is that they are **onboarding interview inputs, not mandate state** —
+written once, consumed once to derive `risk_score`, then inert. Under the Amendment 1 invariant
+they fail (b), (c) and (d) *as Mandate fields*, which is a reason to move them off the Mandate (the
+Mandate is the enforcement instrument), not to delete the inputs. **Recommended resolution:** keep
+the two interview questions and the derivation, relocate the values to the onboarding session
+record, and drop them from `Mandate`. The user's post-onboarding control over the result is the
+`risk_score` slider, which already satisfies (d).
+
+### Gap 1 — the rename breaks BL5 rollback (build-blocking, affects scope item 8)
+
+`get_version` does `Mandate.model_validate(row.snapshot)` (`mandate_store.py:149`) — historical
+versions are stored as raw JSON (`snapshot=updated.model_dump(mode="json")`, `:85`) and parsed
+through the **current** schema on every read. Renaming `concentration_tolerance` to a required
+`sector_cap_pct` therefore makes **every pre-migration version unparseable**, so `get_version`,
+`list_versions` and `rollback_to` start raising `ValidationError` for any user with history.
+
+This is load-bearing precisely because Amendment 1 cites rollback as the reason this CR does not
+need to rebuild auditing ("every risk change is therefore already auditable and revertable"). The
+migration in item 8 must **rewrite historical snapshots**, not just current rows — or the schema
+must carry a deserialisation alias for the old key. Add a test that rolls back to a snapshot
+written under the old schema.
+
+### Gap 2 — the invariant guard must derive its field set, not hard-code it
+
+Amended Acceptance asks for "one guard [that] enumerates every Mandate field that feeds an enforced
+limit." If that enumeration is a literal list inside the test, the guard has the **same drift
+failure it exists to prevent**: field 8 gets added, nobody updates the list, and the guard passes
+while the field is undisclosed. Derive the set from the schema instead — mark enforced fields
+declaratively (e.g. `Field(json_schema_extra={"enforced": True})`) and have the guard iterate
+`Mandate.model_fields` — so a new field is inside the guard by construction. Per the house rule the
+`failure_patterns.md` entry should name the *derived* check, not the list.
+
+### Three smaller findings
+
+1. **Shown-equals-enforced has a second path (sharpen item 9).** Item 8 demotes
+   `DEFAULT_RISK_TIER_CAPS` to a preset, but PM sizing calls `risk_tier_cap(risk_score)` directly.
+   If a user sets 35% and the PM still clamps to 4.5% off the tier table, shown ≠ enforced and
+   CR046 is violated at the only place it matters. Item 9 must state explicitly that the sizing
+   path reads the **stored** cap.
+2. **The sector cap silently does not fire when its context degrades.**
+   `_build_room_sector_context` (`room_runner.py:729-747`) returns empties on **any** exception, so
+   `allocate_by_sector` never runs and check 6b cannot fire. Defensible today as a
+   don't-block-on-outage guard. Once the cap is a number the user chose and was shown, a silent
+   non-application is exactly the failure CR040 exists to stop — the run must disclose that the cap
+   could not be evaluated.
+3. **The time-based caps are undefined.** `max_trades_per_day` / `max_trades_per_week` need a
+   stated basis: whose day (UTC or the user's timezone), and rolling-window or calendar. Settle it
+   here rather than in the lane.
+
+### Design position on item 9
+
+Amendment 1 proposes making `SINGLE_NAME_ABSOLUTE_CAP_PCT` user-settable. Agreed, and it should go
+further: once the user's own cap is enforced, a second 50% backstop they cannot change **is** the
+thing Saiful's rule removes. Keep one enforced number — theirs. The floor loses no power; it
+enforces what the user set. If a backstop survives it needs a stated reason that is not its name.
+
+### Interaction with DEF110 (fixed + promoted 2026-07-29, `alpha-2026-07-29-3`)
+
+Two of this CR's proposed caps — `max_open_positions` and `total_open_risk_pct` — read the same
+`sim_holdings` the sector cap reads. Until DEF110 was fixed that table carried phantom shares from
+self-closed positions (measured: 101 phantom shares across 3 accounts; one account read Technology
+75% against its 40% cap when it held no Technology at all). Those caps would have been built on
+corrupted input. The inputs are correct now, but the episode is the strongest available argument
+for Layer 3's loud disclosure: **that breach was enforced and invisible for weeks.**
+
+### Scope observation
+
+13 scope items and 10 acceptance criteria is large for one CR, and item 7 (nested merge) is a
+small, independently-shippable fix that everything else waits on. Suggest landing item 7 alone
+first, then schema + enforcement, then UI.
 
 ---
 
