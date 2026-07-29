@@ -113,6 +113,11 @@ class Mandate(BaseModel):
     # "fall back to a preset" (unlike sector_cap_pct/single_name_cap_pct above).
     # Each is enforced deterministically in `agents/safety_floor.py`, disclosed
     # in its own units in `agents/overlay_generator.py`, and settable via PATCH.
+    # Round 2: enforced at EVERY `check_mandate_compliance` call site — the
+    # direct trade-ticket path AND the Room (both the scripted path and the
+    # LLM-override wrapper) — not just the ticket path round 1 shipped it on;
+    # a fifth call site omitting the context now fails loudly rather than
+    # silently, per the CR101-BE2 round-2 architect/auditor findings.
     # No ceiling is imposed on what a user may set (L3) — loud disclosure at
     # set-time is a mobile concern (CR101-MOBILE), out of scope here.
     #
