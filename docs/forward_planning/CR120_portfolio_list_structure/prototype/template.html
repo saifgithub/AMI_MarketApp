@@ -420,10 +420,12 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
       <div class="ctl">
         <span class="lbl">Plan</span>
         <div class="ctl-list" id="c-plan"></div>
-        <p class="hint">Changes <b>one line</b>, at the foot of History. Nothing
-        else on this screen is plan-gated — verified, there are no <code>plan</code>
-        references in <code>sim.py</code> or <code>watchlist.py</code>. Toggling
-        jumps you to it.</p>
+        <p class="hint">Changes <b>one line</b>, at the foot of History — toggling
+        jumps you to it. Nothing else on this screen is plan-gated (verified: no
+        <code>plan</code> references in <code>sim.py</code> or
+        <code>watchlist.py</code>). <b>The client never branches on plan</b> — it
+        branches on <code>retention_days</code>, a number the server computes;
+        <code>null</code> means unlimited.</p>
       </div>
       <div class="ctl">
         <span class="lbl">Theme</span>
@@ -711,15 +713,18 @@ function capLine(closed, shown) {
    sim_trades is kept forever. Degrade loudly (CR040). */
 function journalFoot(closed, shown) {
   const hidden = closed.length - shown;
-  const stale = closed.filter(t => (NOW - t.opened) / DAY > 30).length;
-  const capped = state.plan === 'floor' && stale > 0;
+  // retention_days is what the client actually has: a number, or null for
+  // unlimited. The plan name never reaches this decision.
+  const retention = state.plan === 'floor' ? 30 : null;
+  const stale = retention == null ? 0 : closed.filter(t => (NOW - t.opened) / DAY > retention).length;
+  const capped = stale > 0;
   return `
   <div class="foot">
     ${hidden > 0 ? `<span class="a lbl" data-push="closed">Show all ${closed.length}</span>` : ''}
     <span class="sp"></span>
     <span class="a lbl">Review in journal ›</span>
   </div>
-  ${capped ? `<div class="cav"><i class="mk"></i><span>Journal keeps 30 days on Floor Pass — ${stale} of these ${closed.length} are older. They stay here.</span></div>` : ''}`;
+  ${capped ? `<div class="cav"><i class="mk"></i><span>Your Journal shows the last ${retention} days — ${stale} of these ${closed.length} are older. Nothing is deleted; they stay here.</span></div>` : ''}`;
 }
 
 function moreRow(key, n, label) {
