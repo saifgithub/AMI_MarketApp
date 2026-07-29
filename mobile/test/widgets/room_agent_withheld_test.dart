@@ -416,9 +416,15 @@ void main() {
 
       expect(find.textContaining('off your roster'), findsOneWidget);
       // Roster-level: names the NEXT step's agent (Social), never claims
-      // the withheld chair (Market) itself is the one returning.
-      expect(find.textContaining('Social Media Analyst'), findsOneWidget);
-      expect(find.textContaining('4 days'), findsOneWidget);
+      // the withheld chair (Market) itself is the one returning. Matched by
+      // the FULL countdown sentence, not just the agent's name — CR112's
+      // fixed 12-seat roster now also renders a plain "Social Media Analyst"
+      // roster row for that agent's own seat, so a bare-name finder would
+      // ambiguously match both.
+      expect(
+        find.textContaining('Next roster change: Social Media Analyst in 4 days'),
+        findsOneWidget,
+      );
       expect(t.takeException(), isNull);
     });
 
@@ -447,7 +453,9 @@ void main() {
       expect(t.takeException(), isNull);
     });
 
-    testWidgets('locked chair sits ahead of a real agent line in the same order',
+    testWidgets(
+        'locked chair renders in its own fixed roster seat alongside a real '
+        'agent row (CR112: seating is the fixed roster order, not arrival)',
         (t) async {
       const ticker = 'AAPL';
       await pumpFixed(
@@ -468,12 +476,20 @@ void main() {
       await t.pump();
 
       final chairFinder = find.textContaining('off your roster');
-      final lineFinder = find.textContaining('balance sheet is solid');
+      // CR112: the live roster is fixed (all 12 seats, kAllAgents order),
+      // never the old growing arrival-order list — so a real agent's row is
+      // found by its NAME, not its (now unrendered) prose.
+      final rowFinder = find.text('Fundamentals Analyst');
       expect(chairFinder, findsOneWidget);
-      expect(lineFinder, findsOneWidget);
+      expect(rowFinder, findsOneWidget);
+      // No prose reaches the tree at all during a live run (acceptance 1).
+      expect(find.textContaining('balance sheet is solid'), findsNothing);
+      // Fundamentals Analyst sits BEFORE Market Analyst in kAllAgents, so its
+      // row renders above the withheld chair — the fixed roster's own order,
+      // not the arrival order the two agents happened to speak/withhold in.
       final chairY = t.getTopLeft(chairFinder).dy;
-      final lineY = t.getTopLeft(lineFinder).dy;
-      expect(chairY, lessThan(lineY));
+      final rowY = t.getTopLeft(rowFinder).dy;
+      expect(rowY, lessThan(chairY));
     });
   });
 
