@@ -381,3 +381,48 @@ through the move.
 DEF150, CR111–CR116) + DEF129 reversed. Ten of the eleven were on `+57`, all from one tester,
 and roughly two-thirds are CR106 fallout. **None of it was visible to the register-only
 check-in** — the sweep only happened because Saiful asked whether the live DB had been checked.
+
+#### 2026-07-29 — 0900 check-in, part 6: four more reports, one of them a silent total outage
+
+- **DEF151** ← `589e7607` part 2 (*"why are we missing the chart?"*) — **the ticker chart has been
+  100% dark, every ticker, every period.** `ticker_chart.dart:29` sends `['1D','1W',…]`; the
+  backend accepts `1d,1w,1m,3m,1y,5y` **lowercase only**. Measured against live Alpha: **18/18
+  (6 periods × 3 tickers) return HTTP 422**; drop the param and the same endpoint returns a full
+  yfinance candle series, so every layer below the case mismatch is healthy. **The reason it sat
+  unreported is the real lesson:** it degrades to `Chart unavailable. Tap to retry.` — copy that
+  describes a *transient* fault — so users retry a request that can never succeed and read it as
+  a bad connection. A silent total outage wearing the costume of a flaky network; it took Saiful
+  asking to surface it. Guard must ship with the fix: a test tying `_kPeriods` to the server's
+  allow-list (a cross-language contract with nothing holding it together), and ideally a retry
+  surface that distinguishes 4xx-never-retryable from network-retryable. → Saiful: **"File it and
+  lane it"** (fix-in-session was offered and declined).
+- **CR117** ← `589e7607` part 1 (*"the buttons are octagonal, not hexagonal"*) — **correct, and
+  the code says so itself:** `FlatTopHexagonClipper`'s own docstring reads *"cut-corner octagon"*
+  and it emits an 8-point path. Every "hex" **control** in the app is an octagon; only the avatars
+  and honeycomb use the true hexagon. **This reframes DEF146** — the AT:Designer's toggle is a
+  true hexagon, unbuildable at any `cornerCut` of the existing clipper, so DEF146 was mis-scoped
+  as "apply the same clipper to both halves" and is now blocked on this. → Saiful: **"Add a real
+  hexagon clipper, migrate controls to it."** Explicitly NOT a sweep — migrate on evidence (a
+  design, a report), not tidiness; and rename the octagon clipper, which has misled every reader
+  since it was written, including CR106 §4.0's reasoning about "hex geometry" on controls that
+  have none.
+- **DEF152** ← `0b8c44c4` — "Restart onboarding" destroys the mandate on one tap with no
+  confirmation, from a caption-sized blue link in the Floor footer. Reported from experience, not
+  inspection (*"accidentally touched it"*). Same class as **DEF060**: the mandate is the most
+  expensive thing a user produces and the code treats it as cheap. → Saiful: **confirm dialog**
+  (not the relocate-to-Settings option) — and the copy must name what is lost, since the
+  control's placement fails to.
+- **CR118** ← `7f631a72` — sector legend renders every sector inline, so the card grows with
+  diversification, the one thing the product encourages. → **cap the height, scroll inside.**
+  Flagged: nested scrollables inside `portfolio_screen.dart`'s `ListView` need a bounded height,
+  and a `shrinkWrap` fix silently re-expands — it would look correct in a 4-sector test and
+  regress on a real diversified portfolio. Test with 13 rows, and give the cut a visible
+  affordance (DEF075's precedent: clipped content with no cue reads as a rendering bug).
+- **CR119** ← `9d51ce11` — filed as a **design commission**, not an implementation CR, because
+  Saiful named the owner (*"we need a AT:Design to work on this"*). No solution proposed. Row
+  carries the constraints instead: three of the five portfolio sections are unbounded and all
+  three grow through the exact behaviour the product teaches, so a user the app has succeeded
+  with is a user whose portfolio screen is unusable. CR116 and CR118 are small and ruled — they
+  land first and are not blocked on this.
+
+**Running total: 15 reports → 15 items** (DEF146–148, DEF150–152, CR111–CR119) + DEF129 reversed.
