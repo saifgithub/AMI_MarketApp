@@ -15,21 +15,21 @@ locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Pelarasan mandat mengikut rejim: panduan utama
+# Pelarasan mandat mengikut rejim: Panduan utama
 
-Setiap pelajaran dalam Modul 10 diakhiri dengan cadangan sebelah <Term id="ami_mandate" />. Pelajaran ini mengumpulnya menjadi satu panduan utama: untuk setiap rejim, apa yang Editor Mandat harus kodkan. Mandat adalah lapisan antara panggilan rejim anda dan pendedahan sebenar anda — tempat di mana sintesis rejim menjadi kawalan risiko yang boleh dikuatkuasakan. Selepas pelajaran ini, anda akan dapat memetakan setiap rejim yang dikesan kepada tetapan mandat konkrit, menamakan apa yang <Term id="ami_pm_safety_floor" /> Pengurus Portofolio akan kuatkuasakan tanpa mengira keadaan, dan menyatakan apa yang TIDAK boleh disentuh (lantai yang tidak boleh dilatih).
+Setiap pelajaran dalam Modul 10 berakhir dengan cadangan di sebelah <Term id="ami_mandate" />. Pelajaran ini mengumpulkan cadangan tersebut ke dalam satu panduan: untuk setiap rejim, apa yang Editor Mandat harus kodkan. Mandat adalah lapisan antara panggilan rejim anda dan pendedahan sebenar anda — tempat sintesis rejim menjadi kawalan risiko yang boleh dikuatkuasakan. Selepas pelajaran ini, anda akan dapat memetakan setiap rejim yang dikesan kepada preset mandat yang konkrit, menamakan apa yang <Term id="ami_pm_safety_floor" /> Pengurus Portofolio akan kuatkuasakan tanpa kira, dan menyatakan apa yang TIDAK boleh disentuh (lantai yang tidak boleh dilatih).
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
-Pemetaan utama, yang dikalibrasi terhadap rejim yang dicakupkan dalam 059–064 dan 242–252:
+Pemetaan utama, yang dikalibrasi terhadap rejim yang dicakup dalam 059–064 dan 242–252:
 
-Bull disahkan, lebar luas (contohnya, SPX Q4 2024 +5.9% dari 31 Oktober 2024 hingga 6 Disember 2024 dengan lebar berkembang):
-- max_single_position_pct: 10% (tetapan lalai mandat)
+Bull disahkan, lebar rentang (contohnya, SPX Q4 2024 +5.9% dari 30 Oktober 2024 hingga 6 Disember 2024 dengan lebar rentang berkembang):
+- max_single_position_pct: 10% (lalai mandat)
 - max_drawdown_pct: 25%
 - stop_loss_pct: 8%
 - gross_exposure_pct: 100%
 
-Bull disahkan, lebar sempit / kluster bull lewat menembak (contohnya, akhir 2021):
+Bull disahkan, lebar rentang sempit / kluster akhir-bull menembak (contohnya, akhir 2021):
 - max_single_position_pct: 5–7%
 - max_drawdown_pct: 18–20%
 - stop_loss_pct: 5%
@@ -38,7 +38,7 @@ Bull disahkan, lebar sempit / kluster bull lewat menembak (contohnya, akhir 2021
 
 Rejim Julat (contohnya, SPX Mac–Mei 2023):
 - max_single_position_pct: 5–7%
-- stop_loss_pct: 3–4% (lebih kecil kerana sasaran lebih kecil — tengah jalur, bukan terusan trend)
+- stop_loss_pct: 3–4% (lebih kecil kerana sasaran lebih kecil — tengah jalur, bukan sambungan trend)
 - gross_exposure_pct: 60–70%
 - Tindihan strategi: utamakan mean-reversion di hujung jalur, tangguhkan trend-following.
 
@@ -47,67 +47,67 @@ Rejim Bear disahkan (contohnya, 14 Mac 2022 hingga 12 Oktober 2022, SPX -25.4%):
 - max_drawdown_pct: 12–15%
 - stop_loss_pct: 4–5%
 - gross_exposure_pct: 30–50%
-- Tambah: posisi hanya dalam pemimpin kekuatan relatif yang disahkan ATAU pendedahan defensif/pendek yang dibenarkan mandat.
+- Tambah: kedudukan hanya dalam pemimpin kekuatan relatif yang disahkan ATAU pendedahan defensif/pendek yang dibenarkan mandat.
 
-Rejim volatiliti tinggi (contohnya, Oktober 2022, VIX > 25 berterusan):
-- Saiz posisi berskala songsang dengan ATR: apabila ATR 20-hari berganda, bilangan saham separuh untuk mengekalkan $-risiko malar.
+Rejim Volatiliti Tinggi (contohnya, Oktober 2022, VIX > 25 berterusan):
+- Saiz kedudukan berskala songsang dengan ATR: apabila ATR 20-hari berganda, bilangan saham separuh untuk mengekalkan risiko $ malar.
 - max_drawdown_pct: turun satu pertiga daripada asas anda.
 
 Rejim Backwardation (per <Lesson id="248_vix_term_structure"/>, VIX1M/VIX3M > 1.0 selama 3+ sesi):
-- Semua posisi panjang dimampatkan ~25% sehingga backwardation kembali normal.
+- Semua kedudukan panjang dimampatkan ~25% sehingga backwardation kembali normal.
 
-Lantai keselamatan Pengurus Portofolio adalah tidak boleh dilatih. Tidak kira tetapan rejim, PM akan kuatkuasakan: bendera pematuhan (halal / tiada T/A/G / tiada fosil / long-only / ESG-lite jika ditetapkan), had maksimum keras pada saiz posisi tunggal, lantai keras pada keperluan stop-loss. PM akan menyekat perdagangan yang melanggar ini walaupun anda <Term id="ami_coach_your_agent" /> untuk mengabaikan rejim. Ini adalah reka bentuk — pelarasan rejim adalah tuil dalam had, bukan tindihan atas had.
+Lantai keselamatan Pengurus Portofolio adalah tidak boleh dilatih. Tidak kira preset rejim, PM akan menguatkuasakan: penanda pematuhan (halal / tiada T/A/G / tiada fosil / long-only / ESG-lite jika ditetapkan), had maksimum keras pada saiz kedudukan tunggal, lantai keras pada keperluan stop-loss. PM akan menyekat perdagangan yang melanggar ini walaupun anda <Term id="ami_coach_your_agent" /> untuk mengabaikan rejim. Ini adalah reka bentuk — pelarasan rejim adalah dail dalam had, bukan tindihan atas had.
 
 ## Perangkap
 
-Perangkap pelarasan mandat adalah flip semua-atau-kosong. Pedagang mengesan rejim bear dan mengosongkan pendedahan semalaman — dan tersentak jika panggilan itu adalah tipuan kepala (<Lesson id="252_regime_change_realtime_vs_hindsight"/>). Atau mereka mengesan rejim bull dan serta-merta memaksimumkan setiap tuil — dan terperangkap pada pendedahan penuh apabila kejutan vol keluar (contoh 5 Ogos 2024 di <Lesson id="062_volatility_regimes"/>).
+Perangkap pelarasan mandat adalah flip semua-atau-tiada. Pedagang mengesan rejim bear dan mengosongkan pendedahan semalaman — dan tersentak jika panggilan itu adalah tipuan kepala (<Lesson id="252_regime_change_realtime_vs_hindsight"/>). Atau mereka mengesan rejim bull dan serta-merta memaksimumkan setiap dail — dan terperangkap pada pendedahan penuh apabila kejutan volatiliti berlaku (contoh 5 Ogos 2024 <Lesson id="062_volatility_regimes"/>).
 
-Model yang betul: pelarasan mandat berskala dengan kekuatan pengesahan. Dua daripada tiga penanda rejim menembak = separuh jalan ke tetapan rejim. Tiga daripada tiga disahkan = tetapan penuh. Bertahan 4 minggu = tetapan stabil. Dan apabila rejim tidak sah, anda kurangkan skala — anda tidak membalikkan semua pada satu masa. Anggap mandat sebagai tuil berterusan, bukan suis binari.
+Model yang betul: pelarasan mandat berskala dengan kekuatan pengesahan. Dua daripada tiga penanda rejim menembak = separuh jalan ke preset rejim. Tiga daripada tiga disahkan = preset penuh. Bertahan 4 minggu = preset stabil. Dan apabila rejim tidak sah, anda kurangkan skala — anda tidak membalikkan semua pada sekali gus. Anggap mandat sebagai dail berterusan, bukan suis binari.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Anda mengesan kluster rejim bear menembak sepenuhnya pada indeks pasaran saham 4 minggu lalu, dan rejim ini telah bertahan tanpa pembatalan. Mandat semasa anda ditetapkan pada preset lembu (max_position 10%, max_drawdown 25%, stop 8%, gross 100%). Apakah kemasukan mandat yang membetulkan rejim?"
+  question="Anda mengesan kluster rejim bear menembak sepenuhnya pada indeks pasaran saham 4 minggu lalu, dan rejim telah bertahan tanpa pembatalan. Mandat semasa anda ditetapkan kepada preset bull (max_position 10%, max_drawdown 25%, stop 8%, gross 100%). Apakah kemasukan mandat yang membetulkan rejim?"
   options={[
-    "Kemasukan ke preset bear yang disahkan secara berperingkat: max_single_position_pct turun ke arah 3–5%, max_drawdown_pct turun ke arah 12–15%, stop_loss_pct turun ke arah 4–5%, gross_exposure_pct turun ke arah 30–50%. Lantai keselamatan PM (penanda aras kepatuhan, had keras) tidak berubah — ia tidak boleh diajar. Jika rejim berbalik (SMA 200 hari direbut semula secara mingguan), balikkan pelarasan mandat kembali ke preset lembu; jangan ubah semua sekaligus.",
-    "Tukar mandat kepada 200% pendek dengan leverage maksimum.",
+    "Kemasukan kepada preset bear yang disahkan secara berperingkat: max_single_position_pct turun ke arah 3–5%, max_drawdown_pct turun ke arah 12–15%, stop_loss_pct turun ke arah 4–5%, gross_exposure_pct turun ke arah 30–50%. Lantai keselamatan PM (penanda aras pematuhan, had keras) tidak berubah — ia tidak boleh dilatih. Jika rejim berbalik (SMA 200-hari dipulihkan secara mingguan), kembalikan kemasukan mandat ke arah preset bull; jangan ubah semua sekaligus.",
+    "Tukar mandat kepada 200% short dengan leverage maksimum.",
     "Nolkan semua pendedahan semalaman.",
-    "Biarkan ia — preset lembu cukup konservatif."
+    "Biarkan ia begitu — preset bull cukup konservatif."
   ]}
   answer={0}
-  explanation="Jawapan salah yang menggoda ialah nolkan semua pendedahan semalaman — 'hanya pergi ke tunai' rasa selamat tetapi mengabaikan sintesis dari <Lesson id="252_regime_change_realtime_vs_hindsight"/> tentang tipuan kepala. Meninggalkan preset lembu seperti sedia ada mengabaikan rejim sepenuhnya. Menukar kepada 200% pendek membalikkan keselamatan menjadi kebiadapan. Sintesisnya ialah pelarasan mandat berperingkat dalam lingkungan lantai keselamatan PM, disalin apabila keluar kembali."
+  explanation="Jawapan salah yang menggoda ialah nolkan semua pendedahan semalaman — 'hanya pergi ke tunai' rasa selamat tetapi mengabaikan sintesis dari <Lesson id="252_regime_change_realtime_vs_hindsight"/> tentang kepala palsu. Meninggalkan preset bull begitu mengabaikan rejim sepenuhnya. Menukar kepada 200% short membalikkan keselamatan menjadi kecerobohan. Sintesisnya ialah kemasukan mandat berperingkat dalam lingkungan keselamatan PM, dipantulkan apabila keluar."
 />
 
 <Quiz
-  question="Antara berikut, manakah lantai keselamatan yang TIDAK BOLEH DIAJAR oleh Portfolio Manager — peraturan yang TIDAK berubah dengan pelarasan rejim?"
+  question="Yang manakah antara ini adalah lantai keselamatan yang TIDAK BOLEH DILATIH oleh Pengurus Portofolio — peraturan yang TIDAK berubah dengan penyesuaian rejim?"
   options={[
-    "Penanda aras kepatuhan (halal / tiada T/A/G / tiada fosil / long-only / ESG-lite jika anda telah mengesahkannya), had keras pada saiz posisi tunggal, lantai keras pada keperluan stop-loss. Ini adalah pemeriksaan kepatuhan deterministik pada setiap perdagangan dan tidak boleh diatasi oleh Brief Your Agent, pelarasan rejim, atau perdebatan ejen.",
+    "Penanda aras pematuhan (halal / tiada T/A/G / tiada fosil / long-only / ESG-lite jika anda telah menyetapkannya), had maksimum keras pada saiz posisi tunggal, lantai keras pada keperluan stop-loss. Ini adalah semakan pematuhan deterministik pada setiap perdagangan dan tidak boleh diatasi oleh Brief Your Agent, penyesuaian rejim, atau perdebatan ejen.",
     "stop_loss_pct (berubah mengikut rejim).",
     "max_single_position_pct (berubah mengikut rejim).",
     "max_drawdown_pct (berubah mengikut rejim)."
   ]}
   answer={0}
-  explanation="Jawapan salah yang menggoda ialah max_single_position_pct — ia terdengar seperti peraturan keras tetapi sebenarnya adalah parameter mandat yang boleh laras. Lantai yang tidak boleh diajar ialah lapisan kepatuhan ditambah had keras deterministik yang dikuatkuasakan oleh PM tanpa mengira sebarang pengajaran. Ini ialah sintesis keseluruhan reka bentuk keselamatan dari seni bina AMI Trade: pelarasan rejim adalah tombol, lantai keselamatan adalah batu asas."
+  explanation="Jawapan salah yang menggoda ialah max_single_position_pct — ia terdengar seperti peraturan keras tetapi sebenarnya adalah parameter mandat yang boleh laras. Lantai yang tidak boleh dilatih ialah lapisan pematuhan ditambah dengan had keras deterministik yang ditegakkan oleh PM tanpa mengira sebarang latihan. Ini ialah sintesis keseluruhan reka bentuk keselamatan dari seni bina AMI Trade: penyesuaian rejim adalah dail, lantai keselamatan adalah batu asas."
 />
 
 <Quiz
-  question="Sintesis. Anda mengesan: rejim adalah lembu yang disahkan (<Lesson id="059_bull_markets"/>), lebar pasaran sempit (<Lesson id="064_market_breadth"/> / 242), rejim volatiliti adalah normal tetapi VVIX berada dalam 80th percentile (<Lesson id="249_vvix_and_iv_rv_divergence"/>), dan 2 daripada 5 tanda amaran lembu lewat sedang menembak (<Lesson id="242_late_bull_warning_signs"/>). Lembu masih utuh tetapi amaran bertimbun. Pelarasan mandat manakah yang paling konsisten dengan rejim?"
+  question="Sintesis. Anda mengesan: rejim adalah bull yang disahkan (<Lesson id="059_bull_markets"/>), lebar pasaran adalah sempit (<Lesson id="064_market_breadth"/> / 242), rejim volatiliti adalah normal tetapi VVIX berada dalam peratusil ke-80 (<Lesson id="249_vvix_and_iv_rv_divergence"/>), dan 2 daripada 5 tanda amaran akhir-bull sedang menembak (<Lesson id="242_late_bull_warning_signs"/>). Bull masih utuh tetapi amaran bertimbun. Penyesuaian mandat yang paling konsisten dengan rejim ialah?"
   options={[
     "Tunai 100% — terlalu banyak amaran.",
-    "Tukar ke preset bear secara proaktif.",
-    "Preset lembu dimampatkan kira-kira ke titik tengah antara lembu penuh dan lembu lewat: max_single_position sekitar 6–7%, max_drawdown sekitar 20%, stop_loss sekitar 6%, pendedahan kasar sekitar 85%, had kepekatan 25% pada 3 nama teratas. Lantai keselamatan PM tidak disentuh. Nilaikan semula apabila lebih banyak tanda amaran menembak (yang bergerak ke arah preset lembu lewat) atau apabila peratusan VVIX turun kembali (yang bergerak ke arah preset lembu penuh).",
-    "Preset lembu penuh — rejim adalah lembu yang disahkan."
+    "Tukar kepada preset bear secara proaktif.",
+    "Preset bull dimampatkan kira-kira ke titik tengah antara full-bull dan late-bull: max_single_position sekitar 6–7%, max_drawdown sekitar 20%, stop_loss sekitar 6%, pendedahan kasar sekitar 85%, had konsentrasi 25% pada 3 nama teratas. Lantai keselamatan PM tidak disentuh. Semak semula apabila lebih banyak tanda amaran menembak (yang bergerak ke arah preset late-bull) atau apabila peratusil VVIX turun kembali (yang bergerak ke arah preset full-bull).",
+    "Preset bull penuh — rejim adalah bull yang disahkan."
   ]}
   answer={2}
-  explanation="Jawapan salah yang menggoda ialah preset lembu penuh — 'rejim adalah disahkan, mengapa mampatkan?' Tetapi pelajaran ini seluruhnya tentang mandat yang laras pada amaran, bukan hanya pada putaran rejim. Pergi 100% tunai membetulkan terlalu jauh keluar dari rejim sepenuhnya. Menukar ke preset bear secara proaktif menghargakan rejim lembu yang masih ada sebagai bear. Sintesisnya ialah mampatan berperingkat pada lembu yang disahkan + amaran yang bertimbun — tepat kerangka kerja dari 242, 249, dan 252 digabungkan."
+  explanation="Jawapan salah yang menggoda ialah preset bull penuh — 'rejim telah disahkan, mengapa dimampatkan?' Tetapi titik pelajaran ini ialah mandat menyesuaikan diri pada amaran, bukan hanya pada perubahan rejim. Pergi 100% tunai membetulkan diri terlalu jauh keluar dari rejim. Menukar kepada preset bear secara proaktif menghargakan rejim bull yang masih bull sebagai bear. Sintesisnya ialah pemampatan berperingkat pada bull yang disahkan + amaran yang bertimbun — tepat kerangka kerja dari 242, 249, dan 252 digabungkan."
 />
 
 ## Cuba sendiri
 
-Buka Editor Mandat dalam aplikasi. Bina tiga tetapan bernama dalam jurnal anda: "Bull-broad", "Bull-narrow / late-bull", dan "Bear-confirmed". Tulis empat nombor untuk setiap satu (max_position, max_drawdown, stop_loss, gross_exposure). Kemudian jalankan simulasi cepat: turunkan risk_score kepada 1 (had 1.5% per nama) dan cuba hantar posisi 4% — perhatikan mesej lantai keselamatan PM menolaknya. Naikkan risk_score kepada 5 (had 4.5% per nama) dan hantar posisi 4% yang sama — perhatikan ia lulus. Anda sedang merasakan tuil dalam tindakan. Akhir sekali, <Term id="ami_convene_the_room" /> pada sebarang ticker dan tanya Pengurus Portofolio: "Memandangkan rejim semasa dan mandat saya, tuil mana yang anda akan laraskan dahulu?"
+Buka Editor Mandat dalam aplikasi. Bina tiga preset bernama dalam jurnal anda: "Bull-broad", "Bull-narrow / late-bull", dan "Bear-confirmed". Tulis empat nombor untuk setiap satu (max_position, max_drawdown, stop_loss, gross_exposure). Kemudian jalankan simulasi pantas: turunkan risk_score kepada 1 (had 1.5% per nama) dan cuba hantar kedudukan 4% — perhatikan mesej lantai keselamatan PM menolaknya. Naikkan risk_score kepada 5 (had 4.5% per nama) dan hantar kedudukan 4% yang sama — perhatikan ia lulus. Anda sedang merasai dail dalam tindakan. Akhir sekali, <Term id="ami_convene_the_room" /> pada mana-mana ticker dan tanya Pengurus Portofolio: "Memandangkan rejim semasa dan mandat saya, dail mana yang anda akan laraskan dahulu?"
 
-## Intipati
+## Pengambilan
 
-Mandat adalah lapisan yang mengubah panggilan rejim menjadi kawalan risiko yang boleh dikuatkuasakan. Laraskan tuil dengan kluster rejim; lantai keselamatan PM (pematuhan, had keras, lantai stop-loss) adalah batu asas dan tidak bergerak.
+Mandat adalah lapisan yang mengubah panggilan rejim menjadi kawalan risiko yang boleh dikuatkuasakan. Laraskan dail dengan kluster rejim; lantai keselamatan PM (pematuhan, had keras, lantai stop-loss) adalah batu asas dan tidak bergerak.

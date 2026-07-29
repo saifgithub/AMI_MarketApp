@@ -1,6 +1,6 @@
 ---
 id: "341_backtesting_rigor_the_basics"
-title: "Backtesting rigor — asas-asas"
+title: "Uji semula secara ketat — asas-asasnya"
 duration_min: 5
 level: 12
 module: 21
@@ -11,56 +11,56 @@ topic: "backtesting_basics"
 prerequisites: ["340_capstone_thinking_in_probabilities_bayesian_updating"]
 tags: ["backtesting", "expected-value", "quant"]
 agent_callouts: ["trader"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-21"
 updated_at: "2026-07-21"
 ---
-# Ketelusan backtesting — asas
+# Ketepatan backtesting — asas
 
-Backtesting mengulang semula peraturan perdagangan terhadap data harga sejarah untuk menganggarkan prestasi yang mungkin dicapai — dan ia boleh memberitahu anda nilai jangkaan sejarah bagi peraturan tersebut pada data yang spesifik, tiada lebih. Ia tidak dapat memberitahu anda bahawa peraturan itu akan terus berfungsi, bahawa tempoh sejarah itu adalah wakil yang baik, atau bahawa bilangan perdagangan yang diuji adalah mencukupi untuk dipercayai (itu adalah empat pelajaran seterusnya). Anggap setiap hasil backtesting sebagai anggaran nilai jangkaan (EV) sejarah dengan tahap keyakinan yang dilampirkan, bukan sebagai fakta yang disahkan tentang masa depan.
+Backtesting menjalankan semula peraturan perdagangan terhadap data harga sejarah untuk menganggar prestasi yang mungkin dicapai — dan ia boleh memberitahu anda nilai jangkaan sejarah bagi peraturan tersebut pada data tersebut, tiada lebih. Ia tidak boleh memberitahu anda bahawa peraturan itu akan terus berfungsi, bahawa tempoh sejarah itu mewakili keadaan semasa, atau bahawa bilangan perdagangan yang diuji adalah mencukupi untuk dipercayai (ini adalah empat pelajaran seterusnya). Anggap setiap hasil backtesting sebagai anggaran nilai jangkaan sejarah dengan tahap keyakinan yang dilampirkan, bukan sebagai fakta yang disahkan tentang masa depan.
 
 ## Contoh
 
-Seorang pedagang melakukan backtesting terhadap peraturan mudah pada 300 perdagangan sejarah: ia menang 65% daripada masa dengan purata +$150, dan rugi 35% daripada masa dengan purata -$100. Nilai jangkaan dalam sampel (in-sample) = (0.65 × $150) + (0.35 × -$100) = $97.50 - $35 = **+$62.50 per perdagangan**. Angka ini nyata — ia adalah penerangan yang tepat tentang apa yang dilakukan oleh peraturan ini pada data sejarah yang spesifik. Apa yang ia *bukan*: jaminan mengenai perdagangan yang belum pernah dilihat oleh peraturan tersebut, yang merupakan tuntutan yang berbeza sepenuhnya dan memerlukan bukti yang berbeza sepenuhnya (ujian luar sampel atau out-of-sample dua pelajaran lagi).
+Seorang pedagang menjalankan backtesting pada satu peraturan mudah ke atas 300 perdagangan sejarah: ia menang 65% daripada masa dengan purata +$150, dan rugi 35% daripada masa dengan purata -$100. Nilai jangkaan dalam sampel = (0.65 × $150) + (0.35 × -$100) = $97.50 - $35 = **+$62.50 per perdagangan**. Nombor ini nyata — ia adalah penerangan yang tepat tentang apa yang dilakukan oleh peraturan ini pada data sejarah ini. Apa yang ia *bukan*: jaminan mengenai perdagangan yang belum dilihat oleh peraturan tersebut, yang merupakan tuntutan yang sepenuhnya berbeza dan memerlukan bukti yang berbeza sepenuhnya (ujian luar sampel dua pelajaran akan datang).
 
-Backtesting yang teliti menyatakan tingkap masanya (tahun mana, rejim pasaran mana), bilangan perdagangannya (300, bukan "banyak"), dan andaan-andaannya (slippage, komisen, sama ada dividen disertakan) — kerana setiap pilihan tersebut boleh mengubah angka +$62.50 secara bermakna. Laporan backtesting yang hanya menyatakan "kadar kemenangan 65%, strategi hebat" tanpa butiran tersebut adalah tajuk utama, bukan bukti.
+Backtesting yang teliti menyatakan tingkap masanya (tahun mana, rejim pasaran mana), bilangan perdagangannya (300, bukan "banyak"), dan andaian-andaiannya (slippage, komisen, sama ada dividen dimasukkan) — kerana setiap pilihan tersebut boleh mengubah angka +$62.50 secara bermakna. Laporan backtesting yang hanya menyatakan "kadar kemenangan 65%, strategi hebat" tanpa butiran tersebut adalah tajuk utama, bukan bukti.
 
 ## Perangkap
 
-Perangkapnya ialah membaca angka backtesting yang kuat dan menganggap strategi itu telah terbukti, sedangkan backtesting hanya membuktikan apa yang berlaku pada data sejarah yang spesifik diuji — ia tidak berkata apa-apa mengenai sama ada data tersebut adalah wakil yang baik, sama ada peraturan itu telah disesuaikan untuk padan dengannya, atau sama ada sampelnya cukup besar untuk dipercayai. Tabiat yang betul: baca kadar kemenangan dan EV backtesting sebagai satu input, dan segera tanya apa tingkap yang dicakupi, berapa banyak perdagangan yang dibina atasnya, dan sama ada ia telah diuji pada data yang tidak dibina untuknya — soalan-soalan yang modul ini wujud untuk dijawab.
+Perangkapnya ialah membaca nombor backtesting yang kuat dan menganggap strategi itu telah terbukti, apabila backtesting hanya membuktikan apa yang berlaku pada data sejarah tertentu yang diuji — ia tidak mengatakan apa-apa mengenai sama ada data tersebut mewakili keadaan semasa, sama ada peraturan itu telah disesuaikan untuk memuatkan data tersebut, atau sama ada sampel tersebut cukup besar untuk dipercayai. Kebiasaan yang betul: baca kadar kemenangan dan nilai jangkaan backtesting sebagai satu input, dan segera tanya tingkap mana yang dicakupi, berapa banyak perdagangan yang menjadi asasnya, dan sama ada ia telah diuji pada data yang tidak dibina untuknya — soalan-soalan yang modul ini wujud untuk dijawab.
 
 <ChatWith agent="trader" />
 
 ## Kuiz
 
 <Quiz
-  question="Ujian semula (backtest) ke atas 300 dagangan menunjukkan kadar kemenangan 65% dengan purata keuntungan +$150 dan kadar kerugian 35% dengan purata kerugian -$100. Apakah nilai jangkaan dalam sampel (in-sample expected value) bagi setiap dagangan?"
+  question="Ujian semula (backtest) ke atas 300 perdagangan menunjukkan kadar kemenangan 65% dengan purata keuntungan +$150 dan kadar kerugian 35% dengan purata kerugian -$100. Berapakah nilai jangkaan dalam sampel (in-sample expected value) bagi setiap perdagangan?"
   options={[
     "+$62.50 — (0.65 × $150) + (0.35 × -$100) = $97.50 - $35 = $62.50",
     "+$97.50 — menggunakan hanya istilah sebelah kemenangan dan mengabaikan sebelah kerugian",
-    "+$50 — mengambil purata kadar kemenangan dan kadar kerugian secara langsung",
+    "+$50 — dengan menderetkan kadar kemenangan dan kadar kerugian secara langsung",
     "-$35 — menggunakan hanya istilah sebelah kerugian dan mengabaikan sebelah kemenangan"
   ]}
   answer={0}
-  explanation="EV = (0.65 × $150) + (0.35 × -$100) = $97.50 - $35 = $62.50 per dagangan. Pilihan lain masing-masing membuang satu istilah daripada hasil tambah tertimbang atau menggantikan operasi yang berbeza (salah) untuknya."
+  explanation="EV = (0.65 × $150) + (0.35 × -$100) = $97.50 - $35 = $62.50 bagi setiap perdagangan. Pilihan lain masing-masing membuang satu istilah hasil tambah berat atau menggantikan operasi yang berbeza (salah) untuknya."
 />
 
 <Quiz
-  question="Ujian semula di atas melaporkan nilai jangkaan dalam sampel yang kuat sebanyak +$62.50. Adakah nombor itu, secara sendirian, memberitahu anda bagaimana strategi akan berprestasi pada dagangan baharu yang belum pernah dilihat?"
+  question="Ujian semula di atas melaporkan nilai jangkaan dalam sampel (in-sample expected value) yang kuat sebanyak +$62.50. Adakah nombor itu, secara sendirian, memberitahu anda bagaimana strategi akan berprestasi pada perdagangan baharu yang belum pernah dilihat?"
   options={[
-    "Ya — nilai jangkaan (EV) ujian semula adalah secara definisinya sama dengan nilai jangkaan masa depan strategi",
+    "Ya — nilai jangkaan (EV) ujian semula adalah secara definisi sama dengan nilai jangkaan masa depan strategi",
     "Ya, selagi kadar kemenangan melebihi 60%",
-    "Tidak, dan ia tidak direka bentuk untuk itu — ujian semula mengukur prestasi sejarah pada data spesifik yang diuji; sama ada prestasi itu bertahan pada data yang tidak dilihat, sama peraturan itu telah diselaraskan untuk sesuai dengan sejarah tepat ini, dan sama ada 300 dagangan adalah cukup untuk dipercayai adalah soalan berasingan yang modul ini akan jawab seterusnya",
-    "Tidak — kerana ujian semula hanya sah jika dijalankan pada sekurang-kurangnya 10 tahun data tanpa mengira bilangan dagangan"
+    "Tidak, dan ia tidak direka bentuk untuk itu — ujian semula mengukur prestasi sejarah pada data khusus yang diuji; sama ada prestasi itu bertahan pada data yang tidak dilihat, sama peraturan telah diselaraskan untuk sesuai dengan sejarah tepat ini, dan sama ada 300 perdagangan adalah cukup untuk dipercayai adalah soalan berasingan yang dijawab oleh modul seterusnya",
+    "Tidak — kerana ujian semula hanya sah jika dijalankan pada sekurang-kurangnya 10 tahun data tanpa mengira bilangan perdagangan"
   ]}
   answer={2}
-  explanation="Nilai jangkaan (EV) ujian semula menerangkan apa yang berlaku secara sejarah pada data yang diuji — ia tidak mengatakan apa-apa secara sendirian tentang penyesuaian berlebihan (overfitting), kebergantungan rejim, atau sama ada saiz sampel adalah mencukupi, yang merupakan tepat apa yang beberapa pelajaran seterusnya (penyesuaian berlebihan, pengesahan luar sampel, bias kelestarian) wujud untuk menyemak. Tiada peraturan tetap 'mesti 10 tahun'; soalan sebenar adalah prestasi luar sampel dan penilaian bilangan dagangan yang jujur, bukan panjang kalendar tertentu."
+  explanation="EV ujian semula menerangkan apa yang berlaku secara sejarah pada data yang diuji — ia tidak mengatakan apa-apa secara sendirian tentang penyesuaian berlebihan (overfitting), kebergantungan rejim, atau sama saiz sampel adalah mencukupi, yang tepat apa yang pelajaran seterusnya (penyesuaian berlebihan, pengesahan luar sampel, bias kemandirian) wujud untuk diperiksa. Tiada peraturan 'mesti 10 tahun' yang tetap; soalan sebenar adalah prestasi luar sampel dan penilaian bilangan perdagangan yang jujur, bukan panjang kalendar khusus."
 />
 
 ## Cuba sendiri
 
-Buka strategi yang anda telah bina atau lihat dalam aplikasi dan cari kadar kemenangan yang dinyatakan serta purata untung/rugi. Kira manual nilai jangkaannya, kemudian semak sama ada laporan menyatakan bilangan perdagangan dan tingkap data yang menjadi asasnya. Ingat: output latihan AMI adalah artifak latihan, bukan nasihat pelaburan.
+Buka strategi yang telah anda bina atau lihat dalam aplikasi dan cari kadar kemenangan serta purata untung/rugi yang dinyatakan. Kira secara manual nilai jangkaannya, kemudian semak sama ada laporan tersebut menyatakan bilangan perdagangan dan tingkap data yang menjadi asasnya. Ingat: output latihan AMI adalah artifak latihan, bukan nasihat pelaburan.
 
 ## Penutup
 
-Nilai jangkaan backtesting hanya seboleh dipercayai seperti soalan yang anda tanya selepasnya — apa tingkap, berapa banyak perdagangan, dan adakah ia telah diuji pada data yang tidak dibina untuknya.
+Nilai jangkaan backtesting hanya setanding kebolehpercayaan dengan soalan yang anda tanya selepasnya — apa tingkapnya, berapa banyak perdagangan, dan adakah ia telah diuji pada data yang tidak dibina untuknya.

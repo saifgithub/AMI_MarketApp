@@ -1,6 +1,6 @@
 ---
 id: "238_strategy_correlation"
-title: "Korelasi strategi — mengukur dengan jujur"
+title: "Korelasi Strategi — Mengukurnya dengan Jujur"
 duration_min: 7
 level: 5
 module: 9
@@ -11,65 +11,65 @@ topic: "synthesis"
 prerequisites: ["017_portfolio_exposure_and_correlation", "108_regime_dependent_correlation", "236_combining_strategies_for_diversification", "232_regime_segmented_backtests"]
 tags: ["synthesis", "correlation", "diversification", "regime"]
 agent_callouts: ["research_manager", "neutral_debator"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Korelasi strategi — mengukur dengan jujur
 
-Pelajaran diversifikasi (236) menyatakan bahawa manfaat berasal daripada korelasi silang yang rendah antara strategi. Pelajaran ini adalah cara anda sebenarnya mengukur ia, kerana nombor korelasi yang anda kira adalah mengelirukan dalam dua cara khusus: ia purata merentasi rejim (menyembunyikan masa apabila korelasi melonjak ke +0.9), dan ia bergantung heavily pada panjang tetingkap masa yang anda pilih. Selepas pelajaran ini, anda boleh mengira korelasi strategi merentasi tetingkap gelangsar berbilang, mengenal pasti "korelasi tekanan" (korelasi yang muncul dalam rejim krisis), dan saizkan gabungan strategi anda menggunakan korelasi tekanan — bukan korelasi purata — kerana itulah yang menentukan penurunan (drawdown) dalam rejim yang paling penting.
+Pelajaran diversifikasi (236) menyatakan bahawa faedah datang daripada korelasi silang strategi yang rendah. Pelajaran ini adalah cara anda sebenarnya mengukur ia, kerana nombor korelasi yang anda kira adalah mengelirukan dalam dua cara khusus: ia purata merentasi rejim (menyembunyikan masa apabila korelasi melonjak ke +0.9), dan ia bergantung heavily pada panjang tetingkap masa yang anda pilih. Selepas pelajaran ini, anda boleh mengira korelasi strategi merentasi tetingkap gelung berganda, mengenal pasti "korelasi tekanan" (korelasi yang muncul dalam rejim krisis), dan saizkan gabungan strategi anda menggunakan korelasi tekanan — bukan korelasi purata — kerana itulah yang menentukan penurunan (drawdown) dalam rejim yang penting.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
-Ambil trend-following pada SPY dan strategi momentum top-decile long-only pada S&P 500 sepanjang 2010-2024.
+Ambil trend-following pada SPY dan strategi momentum top-decile long-only pada S&P 500 selama 2010-2024.
 
-Korelasi purata pulangan bulanan: +0.34. Nampaknya baik — bukan sepenuhnya terdiversifikasi tetapi jauh di bawah +1.0. Sekarang, segmentasikan.
+Korelasi purata pulangan bulanan: +0.34. Nampak baik — bukan sepenuhnya terdiversifikasi tetapi jauh di bawah +1.0. Sekarang, segmentasikan.
 
 - **Rejim volatiliti rendah (VIX < 18)**: korelasi +0.21. Terdiversifikasi.
 - **Rejim volatiliti sederhana (VIX 18-26)**: korelasi +0.41. Masih terdiversifikasi.
 - **Rejim volatiliti tinggi (VIX > 26)**: korelasi +0.78. Krisis.
-- **10 bulan terburuk berdasarkan penurunan SPY**: korelasi +0.86. Secara efektifnya adalah strategi yang sama.
+- **10 bulan terburuk berdasarkan penurunan SPY**: korelasi +0.86. Secara efektifnya strategi yang sama.
 
-Pada suku pertama 2020, kedua-dua strategi mengalami kerugian serentak — trend-following dipukul oleh kelajuan penurunan (50/200 tidak mempunyai masa untuk berbalik sebelum kejatuhan), dan momentum mencatatkan kerugian 14% apabila kepimpinan faktor berputar. "Korelasi purata +0.34" mengimplikasikan manfaat diversifikasi yang bermakna; pengalaman sebenar adalah korelasi hampir 1 dalam rejim di mana diversifikasi sepatutnya paling penting.
+Pada Q1 2020, kedua-dua strategi rugi serentak — trend-following dipusingkan oleh kelajuan penurunan (50/200 tidak sempat berbalik sebelum runtuh), dan momentum mencatat kerugian 14% apabila kepimpinan faktor berputar. "Korelasi purata +0.34" menyiratkan faedah diversifikasi yang bermakna; pengalaman sebenar adalah korelasi hampir 1 dalam rejim di mana diversifikasi sepatutnya paling penting.
 
-Pengukuran jujur: kira korelasi dalam tiga kumpulan — sampel penuh, decile bawah pulangan pasaran ("tekanan"), dan decile atas pulangan pasaran. Gunakan korelasi tekanan untuk saizkan. Pasangan strategi dengan korelasi purata +0.3 tetapi korelasi tekanan +0.85 harus disaizkan seolah-olah ia adalah satu strategi dalam model risiko anda, kerana itulah tingkah lakunya apabila anda paling memerlukan diversifikasi. Pasangan dengan purata +0.3 DAN tekanan +0.4 adalah benar-benar terdiversifikasi.
+Pengukuran jujur: kira korelasi dalam tiga bakul — sampel penuh, decile bawah pulangan pasaran ("tekanan"), dan decile atas pulangan pasaran. Gunakan korelasi tekanan untuk saizkan. Pasangan strategi dengan korelasi purata +0.3 tetapi korelasi tekanan +0.85 harus disaizkan seolah-olah ia adalah satu strategi dalam model risiko anda, kerana itulah tingkah lakunya apabila anda paling memerlukan diversifikasi. Pasangan dengan purata +0.3 DAN tekanan +0.4 adalah benar-benar terdiversifikasi.
 
 ## Perangkap
 
-Kesilapan pemula adalah menggunakan korelasi sampel penuh seolah-olah ia adalah pemalar. Korelasi bergantung pada rejim, dan ia melonjak menghampiri +1 dalam krisis — yang merupakan rejim di mana diversifikasi sepatutnya menyelamatkan anda. Model mental yang betul: "korelasi tekanan" adalah satu-satunya korelasi yang penting untuk pengurusan risiko. Korelasi purata memberitahu anda tentang hari-hari biasa; korelasi tekanan memberitahu anda tentang hari di mana anda akan kehilangan paling banyak. Perangkap kedua ialah mengira korelasi pada frekuensi yang salah. Korelasi harian adalah bising dan menyatakan diversifikasi secara berlebihan (bising intraday hilang); korelasi mingguan atau bulanan adalah lebih boleh dipercayai. Perangkap ketiga ialah menggunakan tetingkap pendek terkini (contohnya, 12 bulan terakhir) — jika tetingkap tidak mengandungi rejim tekanan, anggaran korelasi tekanan anda tidak boleh diukur. Gunakan tetingkap terpanjang yang mengandungi sekurang-kurangnya satu episod krisis (2008, 2020, 2022 sebagai minimum).
+Kesilapan pemula ialah menggunakan korelasi sampel penuh seolah-olah ia adalah pemalar. Korelasi bergantung pada rejim, dan ia melonjak menghampiri +1 dalam krisis — yang merupakan rejim di mana diversifikasi sepatutnya menyelamatkan anda. Model mental yang betul: "korelasi tekanan" adalah satu-satunya korelasi yang penting untuk pengurusan risiko. Korelasi purata memberitahu anda tentang hari biasa; korelasi tekanan memberitahu anda tentang hari di mana anda akan rugi paling banyak. Perangkap kedua ialah mengira korelasi pada frekuensi yang salah. Korelasi harian adalah bising dan menyatakan diversifikasi secara berlebihan (bising intrahari membasuh); korelasi mingguan atau bulanan lebih boleh dipercayai. Perangkap ketiga ialah menggunakan tetingkap pendek terkini (contohnya, 12 bulan terakhir) — jika tetingkap tidak mengandungi rejim tekanan, anggaran korelasi tekanan anda tidak boleh diukur. Gunakan tetingkap terpanjang yang mengandungi sekurang-kurangnya satu episod krisis (2008, 2020, 2022 minimum).
 
 <ChatWith agent="research_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Anda mempunyai tiga strategi. Korelasi sampel penuh pasangan-pasangan adalah semua menghampiri +0.3. Korelasi tekanan (bulan pasaran terburuk) pasangan-pasangan adalah semua menghampiri +0.85. Apakah yang ini memberitahu anda tentang faedah diversifikasi semasa krisis?"
+  question="Anda mempunyai tiga strategi. Korelasi sampel penuh berpasangan semuanya menghampiri +0.3. Korelasi tekanan (bulan pasaran terburuk) berpasangan semuanya menghampiri +0.85. Apakah ini memberitahu anda tentang faedah diversifikasi semasa krisis?"
   options={[
     "Korelasi tidak penting langsung",
     "Tambah strategi keempat untuk membetulkan masalah",
-    "Diversifikasi adalah kuat — nombor +0.3 mengatakan demikian",
-    "Diversifikasi hilang dalam rejim yang paling penting. Ketiga-tiga strategi akan berkelakuan seperti kira-kira satu strategi semasa krisis. Saiz portfolio gabungan sebagai pertaruhan tumpuan tunggal, bukan tiga yang bebas — anggaran penurunan (drawdown) harus menggunakan korelasi tekanan +0.85."
+    "Diversifikasi adalah kuat — nombor +0.3 menyatakan demikian",
+    "Diversifikasi hilang dalam rejim yang paling penting. Ketiga-tiga strategi akan berkelakuan seperti satu strategi semasa krisis. Saizkan portofolio gabungan seolah-olah ia adalah pertaruhan terkonsentrasi tunggal, bukan tiga yang bebas — anggaran penurunan (drawdown) harus menggunakan korelasi tekanan +0.85."
   ]}
   answer={3}
-  explanation="Korelasi tekanan menentukan penurunan (drawdown) krisis. Portfolio gabungan dengan korelasi tekanan +0.85 mempunyai anggaran penurunan krisis yang hampir sama dengan strategi tunggal pada saiz jumlah yang sama. Jawapan 'diversifikasi adalah kuat, +0.3 mengatakan demikian' adalah mod kegagalan yang tepat untuk pelajaran ini betulkan. Menambah strategi keempat tidak membantu melainkan strategi baru mempunyai korelasi tekanan rendah (kebanyakan strategi berkaitan ekuiti tidak melakukannya). Jawapan 'korelasi tidak penting langsung' adalah penafian."
+  explanation="Korelasi tekanan menentukan penurunan (drawdown) krisis. Portofolio gabungan dengan korelasi tekanan +0.85 mempunyai anggaran penurunan krisis yang hampir sama dengan strategi tunggal pada saiz jumlah yang sama. Jawapan 'diversifikasi adalah kuat, +0.3 menyatakan demikian' adalah mod kegagalan yang tepat untuk mana pelajaran ini wujud untuk membetulkan. Menambah strategi keempat tidak membantu kecuali strategi baharu mempunyai korelasi tekanan rendah (kebanyakan strategi berkaitan ekuiti tidak melakukannya). Jawapan 'korelasi tidak penting langsung' adalah penafian."
 />
 
 <Quiz
-  question="Anda menggabungkan trend-following dan mean-reversion. Purata korelasi +0.18, korelasi tekanan +0.45 (mean-reversion mempunyai rejim kegagalannya yang diketahui dalam bear trending, di mana trend-following berjaya — jadi mereka tidak bertindih sepenuhnya walaupun dalam krisis). Neutral Debator dan Research Manager sama-sama memberi pendapat. Tafsiran sintesis yang betul?"
+  question="Anda menggabungkan trend-following dan mean-reversion. Purata korelasi +0.18, korelasi tekanan +0.45 (mean-reversion mempunyai rejim kegagalannya yang diketahui dalam bearish trending, di mana trend-following berjaya — jadi mereka tidak sepenuhnya bertindan walaupun dalam krisis). Neutral Debator dan Research Manager masing-masing memberi pandangan. Tafsiran yang betul secara sintesis?"
   options={[
-    "Pasangan ini benar-benar terdiversifikasi KEDUA-DUA dalam rejim biasa DAN krisis — tepat kerana rejim kegagalan mereka tidak bertindih. Saiz setiap strategi secara bebas dan gabungkan, menggunakan korelasi tekanan +0.45 untuk anggaran penurunan (drawdown) portfolio, dengan pendedahan jumlah yang mematuhi mandat.",
+    "Pasangan ini benar-benar terdiversifikasi KEDUA-DUA dalam rejim normal DAN krisis — tepat kerana rejim kegagalannya tidak bertindan. Saizkan setiap strategi secara bebas dan gabungkan, menggunakan korelasi tekanan +0.45 untuk anggaran penurunan portofolio, dengan pendedahan jumlah yang mematuhi mandat.",
     "Pasangan ini sepenuhnya terdiversifikasi pada semua masa",
     "Gabungkan tetapi alokasikan 90% kepada mean-reversion kerana ia mempunyai CAGR backtest yang lebih tinggi",
     "Pasangan ini tidak terdiversifikasi kerana korelasi tekanan adalah positif"
   ]}
   answer={0}
-  explanation="Sintesis: trend-following dan mean-reversion benar-benar terdiversifikasi kerana rejim kegagalan mereka bertentangan (chop vs bear trending). Korelasi tekanan +0.45 mencerminkan pergerakan bersama baki (kedua-duanya kehilangan sedikit dalam lonjakan volatiliti ekstrem) tanpa menghapuskan faedah diversifikasi. Jawapan 'sepenuhnya terdiversifikasi pada semua masa' melebih-lebihkan diversifikasi. Jawapan 'tidak terdiversifikasi kerana korelasi tekanan positif' menetapkan bar terlalu tinggi — pasangan korelasi sifar sempurna jarang berlaku. Jawapan 90%-ke-mean-reversion menumpukan dalam satu strategi, mengalahkan diversifikasi."
+  explanation="Sintesis: trend-following dan mean-reversion benar-benar terdiversifikasi kerana rejim kegagalannya bertentangan (sideways vs bearish trending). Korelasi tekanan +0.45 mencerminkan pergerakan bersama baki (kedua-duanya kehilangan sedikit dalam lonjakan volatiliti ekstrem) tanpa menghapuskan faedah diversifikasi. Jawapan 'sepenuhnya terdiversifikasi pada semua masa' melebih-lebihkan diversifikasi. Jawapan 'tidak terdiversifikasi kerana korelasi tekanan adalah positif' menetapkan bar yang terlalu tinggi — pasangan korelasi sifar yang sempurna adalah jarang. Jawapan 90%-ke-mean-reversion memusatkan dalam satu strategi, mengalahkan diversifikasi."
 />
 
 ## Cuba sendiri
 
-Dalam <Term id="ami_one_on_one" /> dengan Research Manager, tampal pulangan bulanan strategi anda dan tanya: "Kira korelasi berpasangan pada tiga kumpulan: sampel penuh, bulan pasaran decile terburuk, dan bulan pasaran decile terbaik. Laporkan matriks korelasi 3x3 untuk setiap kumpulan." Catatkan ketiga-tiga matriks dalam <Term id="ami_decision_journal" />. Saizkan gabungan strategi anda menggunakan matriks korelasi tekanan, bukan matriks sampel penuh.
+Dalam <Term id="ami_one_on_one" /> dengan Research Manager, tampal pulangan bulanan strategi anda dan tanya: "Kira korelasi berpasangan pada tiga bakul: sampel penuh, bulan pasaran decile terburuk, dan bulan pasaran decile terbaik. Laporkan matriks korelasi 3x3 untuk setiap bakul." Log semua tiga matriks dalam <Term id="ami_decision_journal" />. Saizkan gabungan strategi anda menggunakan matriks korelasi tekanan, bukan matriks sampel penuh.
 
 ## Pengambilan
 
-Korelasi purata memukau; korelasi tekanan mendedahkan. Saizkan portfolio anda untuk korelasi yang muncul dalam rejim di mana anda akan kehilangan paling banyak, bukan rejim di mana semuanya tenang.
+Korelasi purata mempercantikkan; korelasi tekanan mendedahkan. Saizkan portfolio anda untuk korelasi yang muncul dalam rejim di mana anda akan rugi paling banyak, bukan rejim di mana semuanya tenang.

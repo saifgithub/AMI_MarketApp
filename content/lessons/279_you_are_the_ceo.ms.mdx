@@ -15,60 +15,60 @@ locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Anda ialah CEO — apa maksudnya dalam alur kerja aplikasi
+# Anda adalah CEO — apa maksudnya dalam alur kerja aplikasi
 
-"Anda ialah <Term id="ceo_framing" /> bagi <Term id="twelve_agent_team" />" bukan sekadar baris pemasaran. Ia adalah huraian literal bagi empat titik kuasa yang <Term id="ami" /> <Term id="training_simulator" /> berikan kepada anda dan tidak kepada sesiapa pun: anda menulis <Term id="ami_mandate" />, anda menjemput Bilik, anda menerima atau menolak <Term id="ami_verdict" /> simulasi, dan anda membawa *pembelajaran* daripada setiap senario. Anda ialah CEO bagi *penilaian* — kemahiran yang simulator ini dibina untuk melatih — bukan CEO bagi melaksanakan dagangan yang AMI suruh anda ambil. AMI adalah simulasi sahaja, latihan sahaja, selamanya. Tiada integrasi broker, tiada permukaan pelaksanaan, tiada lesen nasihat pelaburan. Kerusi CEO adalah satu-satunya kerusi yang melakukan apa-apa dalam aplikasi. Pada akhir pelajaran ini, anda akan tahu bagaimana empat titik kuasa tersebut muncul merentasi skrin aplikasi.
+"Anda adalah <Term id="ceo_framing" /> bagi <Term id="twelve_agent_team" />" bukan satu baris pemasaran. Ia adalah huraian literal bagi empat titik kuasa yang <Term id="ami" /> <Term id="training_simulator" /> berikan kepada anda dan tidak kepada sesiapa pun: anda menulis <Term id="ami_mandate" />, anda mengumpulkan Bilik, anda menerima atau menolak <Term id="ami_verdict" /> simulasi, dan anda membawa *pembelajaran* daripada setiap senario. Anda adalah CEO bagi *penilaian* — kemahiran yang simulator ini dibina untuk melatih — bukan CEO bagi melaksanakan dagangan yang AMI suruh anda ambil. AMI adalah simulasi sahaja, latihan sahaja, selamanya. Tiada integrasi broker, tiada permukaan pelaksanaan, tiada lesen nasihat pelaburan. Kerusi CEO adalah satu-satunya kerusi yang melakukan apa-apa dalam aplikasi. Pada akhir pelajaran ini, anda akan tahu bagaimana empat titik kuasa tersebut muncul merentas skrin aplikasi.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
 Lalui sesi biasa pada AAPL.
 
-1. **Menulis Mandat.** Hari pertama (atau hari anda memutuskan untuk memperbaharuinya), anda buka Tetapan → Mandat dan tulis medan anda: `risk_score: 4, max_drawdown_pct: 20, halal: true, no_fossil_fuels: false, long_only: true`. Ini adalah keputusan CEO-penilaian. <Term id="concierge_agent" /> boleh membimbing anda melaluinya tetapi tidak boleh menetapkan nilai untuk anda. Simulator ini hidup di dalam apa jua yang anda tulis.
+1. **Menulis Mandat.** Hari pertama (atau hari anda memutuskan untuk memperbaharuinya), anda buka Tetapan → Mandat dan tulis medan anda: `risk_score: 4, max_drawdown_pct: 20, halal: true, no_fossil_fuels: false, long_only: true`. Ini adalah keputusan CEO-penilaian. <Term id="concierge_agent" /> boleh membimbing anda melaluinya tetapi tidak boleh menetapkan nilai untuk anda. Simulator ini hidup di dalam apa sahaja yang anda tulis.
 
-2. **Memanggil Bilik.** Anda memutuskan mana-mana ticker yang wajar menjalani latihan 12-agen. Anda memutuskan hari ini. Anda memutuskan sama ada soalan latihan ialah *"bagaimana Bilik menilai AAPL?"* atau *"bagaimana Bilik menilai pemotongan AAPL?"*. AMI tidak memulakan Bilik. Kos kredit adalah milik anda; keputusan untuk membelanjakannya untuk latihan adalah milik anda.
+2. **Mengumpulkan Bilik.** Anda memutuskan mana antara ticker yang layak menjalani latihan 12-agen. Anda memutuskan hari ini. Anda memutuskan sama ada soalan latihan ialah *"bagaimana Bilik menilai AAPL?"* atau *"bagaimana Bilik menilai pemangkasan AAPL?"*. AMI tidak memulakan Bilik. Kos kredit adalah milik anda; keputusan untuk membelanjakannya untuk latihan adalah milik anda.
 
-3. **Menerima, mengubah suai, atau menolak Verdict simulasi.** Verdict kembali: BELI AAPL 3%, PM LULUS. Anda baca kes Bull, kes Bear, condong Pengurus Penyelidikan (0.62), sebaran Debator Risiko (2%–4%), dan pelan Trader (masuk $227, henti $215, sasaran $244). Anda boleh menerima Verdict dalam <Term id="ami_decision_journal" /> — yang merakam penilaian anda tetapi *tidak* meletakkan dagangan, di mana-mana pun. Anda boleh menerima pada saiz yang lebih kecil. Anda boleh menolak. Anda boleh menunggu. Butang bertanda *Terima Verdict* menggerakkan sifar dolar; ia menggerakkan entri jurnal.
+3. **Menerima, mengubah suai, atau menolak Verdict simulasi.** Verdict kembali: BELI AAPL 3%, PM PASS. Anda baca kes Bull, kes Bear, pandangan Pengurus Penyelidikan (0.62), sebaran Debator Risiko (2%–4%), pelan Trader (masuk $227, henti rugi $215, sasaran $244). Anda boleh menerima Verdict dalam <Term id="ami_decision_journal" /> — yang merakam penilaian anda tetapi *tidak* meletakkan dagangan, di mana-mana pun. Anda boleh menerima pada saiz yang lebih kecil. Anda boleh menolak. Anda boleh menunggu. Butang yang dilabel *Terima Verdict* menggerakkan sifar dolar; ia menggerakkan entri jurnal.
 
-4. **Membawa pembelajaran, bukan posisi.** Tiada dagangan pernah diletakkan oleh AMI, dan tiada apa-apa dalam AMI suruh anda letakkan dagangan di tempat lain — AMI tidak berlesen untuk memberikan nasihat pelaburan. Perkara yang dibawa keluar oleh kerusi CEO daripada setiap senario ialah *penilaian* itu sendiri: bagaimana penentangan kelihatan, di mana anda bersetuju dengan Pengurus Penyelidikan, di mana anda akan menulis Mandat dengan berbeza. Jurnal Keputusan dibina untuk menangkap itu.
+4. **Membawa pembelajaran, bukan posisi.** Tiada dagangan pernah diletakkan oleh AMI, dan tiada apa-apa dalam AMI memberitahu anda untuk meletakkan dagangan di tempat lain — AMI tidak berlesen untuk memberikan nasihat pelaburan. Perkara yang dibawa keluar oleh kerusi CEO daripada setiap senario ialah *penilaian* itu sendiri: bagaimana perbezaan pendapat itu kelihatan, di mana anda bersetuju dengan Pengurus Penyelidikan, di mana anda akan menulis Mandat secara berbeza. Jurnal Keputusan dibina untuk menangkap perkara itu.
 
-Perhatikan apa yang *tidak* ada dalam senarai. AMI tidak mengumpul modal. AMI tidak meletakkan dagangan. AMI tidak menyelaraskan semula secara automatik. AMI tidak menelefon anda apabila had henti dicapai. Empat titik kuasa adalah keseluruhan kerja CEO-penilaian, dan ia adalah keseluruhan apa yang aplikasi berikan kepada anda untuk dikawal.
+Perhatikan apa yang *tidak* ada dalam senarai. AMI tidak mengumpul modal. AMI tidak meletakkan dagangan. AMI tidak menyeimbangkan semula secara automatik. AMI tidak menghubungi anda apabila had henti rugi dilanggar. Empat titik kuasa adalah keseluruhan pekerjaan CEO-penilaian, dan ia adalah keseluruhan apa yang aplikasi berikan kepada anda untuk dikawal.
 
 ## Perangkap
 
-Perangkap ialah minda separa-CEO: menulis Mandat, memanggil Bilik, membaca Verdict — dan kemudian secara lalai memilih BELI kerana Verdict berkata BELI. Itu bertindak sebagai *permukaan tandatangan* simulator latihan yang sepatutnya melatih otot penilaian anda. CEO sebenar menolak laporan analis secara kerap. CEO sebenar mengubah mandat firma apabila keadaan berubah. CEO sebenar menilai kerja tanpa menyalahkan analis. Jika Jurnal Keputusan anda menunjukkan anda menerima setiap Verdict yang lulus tanpa pengubahsuaian, anda tidak melatih kemahiran penilaian yang simulator ini dibina untuk; anda menukarkan persekitaran latihan menjadi perkhidmatan isyarat palsu dengan langkah tambahan. Penyelesaiannya adalah mekanikal: setiap Verdict, tulis satu ayat dalam Jurnal yang merupakan *alasan anda*, bukan AMI. Jika anda tidak boleh, anda tidak membuat penilaian; anda hanya menyalinnya.
+Perangkap ialah minda setengah-CEO: menulis Mandat, mengumpulkan Bilik, membaca Verdict — dan kemudian secara lalai memilih BELI kerana Verdict berkata BELI. Itu bertindak sebagai *permukaan tandatangan* bagi simulator latihan yang sepatutnya melatih otot penilaian anda. CEO sebenar sering menolak laporan penganalisis. CEO sebenar mengubah mandat firma apabila keadaan berubah. CEO sebenar menilai kerja tanpa menyalahkan penganalisis. Jika Jurnal Keputusan anda menunjukkan anda menerima setiap Verdict yang lulus tanpa sebarang pengubahsuaian, anda tidak melatih kemahiran penilaian yang simulator ini dibina untuknya; anda menukarkan persekitaran latihan menjadi perkhidmatan isyarat palsu dengan langkah tambahan. Penyelesaiannya adalah mekanikal: bagi setiap Verdict, tulis satu ayat dalam Jurnal yang merupakan *penyebab anda*, bukan AMI. Jika anda tidak boleh, anda tidak membuat penilaian; anda hanya menyalinnya.
 
 <ChatWith agent="concierge" />
 
 ## Kuiz
 
 <Quiz
-  question="Seorang pengguna telah menjemput Bilik 14 kali bulan ini, menerima setiap Verdict BELI pada saiz yang dicadangkan, tidak pernah menolak, tidak pernah mengubah. Mereka memberitahu seorang rakan: 'AMI membuatkan saya untung 4% bulan ini.' Apa kritikan yang paling tepat?"
+  question="Seorang pengguna telah menjemput Bilik 14 kali bulan ini, menerima setiap Verdict BELI pada saiz yang dicadangkan, tidak pernah menolak, tidak pernah mengubah. Mereka memberitahu rakan: 'AMI menjana 4% bulan ini.' Apa kritikan yang paling tepat?"
   options={[
     "Tiada apa-apa — proses AMI berjaya",
-    "Pengguna harus memberi ringkasan kepada Pengurus Portofolio (PM) untuk lebih konservatif",
-    "Pengguna harus menggunakan 1-satu-1 bukannya menjemput Bilik",
-    "Pengguna bertindak sebagai permukaan tandatangan, bukan sebagai Ketua Pegawai Eksekutif Penilaian. AMI adalah simulator latihan, bukan penasihat kewangan; menerima setiap Verdict simulasi tanpa pengubahsuaian atau refleksi adalah melangkau latihan yang aplikasi ini wujudkan untuk disampaikan. AMI tidak 'membuatkan' apa-apa — tiada pelaksanaan di dalam AMI, dan simulator ini tidak berlesen untuk mengarahkan mana-mana pihak di luar aplikasi"
+    "Pengguna harus memberi ringkasan kepada Pengurus Portfolio (PM) untuk lebih konservatif",
+    "Pengguna sepatutnya menggunakan 1-on-1 bukan menjemput Bilik",
+    "Pengguna bertindak sebagai permukaan tandatangan, bukan sebagai Ketua Pegawai Eksekutif penilaian. AMI adalah simulator latihan, bukan penasihat kewangan; menerima setiap Verdict simulasi tanpa perubahan atau refleksi adalah melangkau latihan yang aplikasi ini wujud untuk hantar. AMI tidak 'menjana' apa-apa — tiada pelaksanaan di dalam AMI, dan simulator tidak berlesen untuk mengarahkan mana-mana pihak di luar aplikasi"
   ]}
   answer={3}
-  explanation="Bingkai Ketua Pegawai Eksekutif Penilaian rosak apabila setiap Verdict hanya diluluskan secara automatik. Peranan AMI adalah menjalankan senario latihan; peranan pengguna adalah menilai Verdict tersebut — termasuk menolak dan mengubah. Jawapan salah yang paling menarik ialah 'tiada apa-apa — proses berjaya' — hasil tidak mengesahkan proses; proses yang menukar anda menjadi permukaan tandatangan adalah rosak tanpa mengira P&L satu bulan, dan AMI bukan sumber P&L dalam apa jua keadaan."
+  explanation="Bingkai Ketua Pegawai Eksekutif penilaian rosak apabila setiap Verdict hanya disahkan tanpa semakan. Peranan AMI adalah menjalankan senario latihan; peranan pengguna adalah menilai ia — termasuk menolak dan mengubah. Jawapan salah yang paling menggoda ialah 'tiada apa-apa — proses berjaya' — hasil tidak mengesahkan proses; proses yang menukar anda menjadi permukaan tandatangan adalah rosak tidak kira berapa P&L satu bulan, dan AMI bukan sumber P&L dalam apa jua cara."
 />
 
 <Quiz
-  question="Antara berikut, yang manakah *bukan* kuasa yang diberikan aplikasi AMI Trade kepada pengguna?"
+  question="Yang manakah *bukan* kuasa yang diberikan aplikasi AMI Trade kepada pengguna?"
   options={[
     "Memutuskan ticker mana untuk menjemput Bilik",
-    "Membenarkan AMI meletakkan perdagangan dalam akaun broker anda apabila keyakinan adalah tinggi",
+    "Membenarkan AMI meletakkan perdagangan dalam akaun broker anda apabila keyakinan tinggi",
     "Menerima, mengubah, atau menolak sebarang Verdict",
     "Menulis dan mengedit Mandat pada bila-bila masa"
   ]}
   answer={1}
-  explanation="Memutuskan ticker mana untuk menjemput Bilik, menerima/mengubah/menolak sebarang Verdict, dan menulis serta mengedit Mandat pada bila-bila masa adalah titik kuasa Ketua Pegawai Eksekutif Penilaian. Membenarkan AMI meletakkan perdagangan dalam akaun broker anda menggambarkan ciri yang tidak wujud dan tidak akan wujud — AMI adalah persekitaran latihan simulasi sahaja, kekal sedemikian; tiada integrasi broker untuk dibenarkan, dan AMI tidak berlesen untuk mengarahkan pelaksanaan di mana-mana. Ia adalah jawapan salah yang menarik tepat kerana ia terdengar seperti ciri seterusnya yang semula jadi; ia bukan item pelan jalan, ia adalah sempadan reka bentuk."
+  explanation="Memutuskan ticker mana untuk menjemput Bilik, menerima/mengubah/menolak sebarang Verdict, dan menulis serta mengedit Mandat pada bila-bila masa adalah titik kuasa Ketua Pegawai Eksekutif penilaian. Membenarkan AMI meletakkan perdagangan dalam akaun broker anda menggambarkan ciri yang tidak wujud dan tidak akan wujud — AMI adalah persekitaran latihan simulasi sahaja, kekal; tiada integrasi broker untuk dibenarkan, dan AMI tidak berlesen untuk mengarahkan pelaksanaan di mana-mana. Ia adalah jawapan salah yang menggoda tepat kerana ia terdengar seperti ciri seterusnya yang semula jadi; ia bukan item peta jalan, ia adalah sempadan reka bentuk."
 />
 
 ## Cuba sendiri
 
-Buka **Jurnal Keputusan**. Cari penerimaan Verdict terkini anda. Baca entri. Adakah terdapat ayat dalam kata-kata anda sendiri yang menjelaskan *mengapa anda* menilai senario itu dengan cara itu — bukan apa yang AMI kata? Jika ya, anda menjalankan senario itu sebagai CEO-penilaian. Jika tidak, sunting entri sekarang dan tambahkannya. Kemudian, pada Verdict seterusnya, tulis ayat itu *sebelum* anda menerima, mengubah suai, atau menolak.
+Buka **Jurnal Keputusan**. Cari penerimaan Verdict terkini anda. Baca entri tersebut. Adakah terdapat satu ayat dalam kata-kata anda sendiri yang menjelaskan *mengapa anda* menilai senario itu dengan cara itu — bukan apa yang AMI katakan? Jika ya, anda menjalankan senario itu sebagai CEO-penilaian. Jika tidak, sunting entri itu sekarang dan tambahkan ia. Kemudian, pada Verdict seterusnya, tulis ayat itu *sebelum* anda menerima, mengubah suai, atau menolak.
 
 ## Penutup
 
-Empat kuasa CEO-penilaian — Mandat, Panggil, Terima/Ubah Suai/Tolak, Bawa-pembelajaran. AMI menjalankan meja analis simulasi; anda menjalankan latihan. Latihan adalah produknya. AMI tidak, tidak akan, dan tidak berlesen untuk memberikan nasihat pelaburan.
+Empat kuasa CEO-penilaian — Mandat, Kumpulkan, Terima/Ubah Suai/Tolak, Bawa-pembelajaran. AMI menjalankan meja penganalisis simulasi; anda menjalankan latihan. Latihan ialah produknya. AMI tidak, tidak akan, dan tidak berlesen untuk memberikan nasihat pelaburan.

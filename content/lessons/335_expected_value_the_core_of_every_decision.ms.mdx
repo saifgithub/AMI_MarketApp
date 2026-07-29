@@ -13,56 +13,56 @@ tags: ["expected-value", "probability", "ev", "quant"]
 sources: ["Blaise Pascal & Pierre de Fermat — correspondence on the problem of points (1654), the origin of expected value"]
 verified: {by: "cr060-ai-dual-pass", date: "2026-07-22", method: "web-corroborated fact-check + adversarial refute"}
 agent_callouts: ["research_manager"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-21"
 updated_at: "2026-07-21"
 ---
 # Nilai jangkaan — teras setiap keputusan
 
-Nilai jangkaan (EV) ialah purata berat kebarangkalian bagi setiap kemungkinan hasil daripada satu keputusan, dan ia ialah nombor tunggal yang semua alat kuantitatif lain dalam modul ini bina berdasarkan. EV = Σ pᵢ·xᵢ — darabkan setiap hasil dengan kebarangkaliannya, kemudian tambahkan hasil darab tersebut. Satu dagangan, pertaruhan, atau strategi hanya "baik" dalam erti kata jangka panjang jika EV-nya positif; kadar kemenangan yang tinggi sahaja tidak memberitahu anda apa-apa tanpa mengetahui berapa yang anda menang dan rugi setiap kali. Berikut ialah bahagian yang sering mengelirukan: satu keputusan dengan EV positif masih boleh menyebabkan kerugian wang pada sebarang percubaan tunggal — EV menerangkan purata jangka panjang, bukan mana-mana hasil tunggal.
+Nilai jangkaan (EV) ialah purata berat kebarangkalian bagi setiap hasil yang mungkin daripada satu keputusan, dan ia merupakan nombor tunggal yang semua alat kuantitatif lain dalam modul ini bina berdasarkan. EV = Σ pᵢ·xᵢ — darabkan setiap hasil dengan kebarangkaliannya, kemudian tambahkan hasil darab tersebut. Satu dagangan, pertaruhan, atau strategi hanya "baik" dalam erti kata jangka panjang jika EV-nya positif; kadar kemenangan yang tinggi semata-mata tidak memberitahu anda apa yang anda menang dan rugi setiap kali tanpa mengetahui nilai tersebut. Berikut adalah bahagian yang sering mengelirukan: keputusan EV positif masih boleh menyebabkan kerugian wang pada sebarang percubaan tunggal — EV menerangkan purata jangka panjang, bukan mana-mana hasil tunggal.
 
 ## Contoh
 
-Katakan satu persediaan menang 60% masa untuk +$500, dan rugi 40% masa selebihnya untuk -$300. EV = (0.6 × $500) + (0.4 × -$300) = $300 - $120 = **+$180 setiap dagangan**. Ambil persediaan ini 100 kali dan hasil *purata* setiap dagangan akan menghampiri +$180 — kira-kira +$18,000 keseluruhan, walaupun mana-mana larian individu akan berselerak di sekitar nombor tersebut.
+Katakan satu persediaan menang 60% masa untuk +$500, dan rugi 40% masa yang lain untuk -$300. EV = (0.6 × $500) + (0.4 × -$300) = $300 - $120 = **+$180 per dagangan**. Ambil persediaan ini 100 kali dan hasil *purata* per dagangan akan menghampiri +$180 — kira-kira +$18,000 keseluruhan, walaupun mana-mana larian individu akan berselerak di sekitar nombor tersebut.
 
-Sekarang lihat apa yang EV TIDAK janjikan: pada sebarang kejadian tunggal dagangan ini, masih terdapat **40% peluang untuk rugi $300** — itu ialah istilah p=0.4 dalam persamaan yang sama, bukan risiko berasingan yang bersembunyi di luarnya. Pedagang yang mengambil persediaan ini sekali dan rugi bukanlah "malang dengan cara yang menafikan kelebihan" — kadar kerugian 40% telah dikira masuk ke dalam EV +$180 dari awal. Kumpulkan Bilik pada nama seperti NVDA dan lihat saiz yang dicadangkan oleh Trader di sebelah kes Bull dan Bear: saiz yang diurus dengan baik menganggap senario kerugian sebagai hasil normal yang dijangka daripada proses EV positif, bukan kegagalan proses tersebut.
+Sekarang lihat apa yang EV TIDAK janjikan: pada mana-mana kejadian tunggal dagangan ini, masih terdapat **40% peluang untuk rugi $300** — itu ialah istilah p=0.4 dalam persamaan yang sama, bukan risiko berasingan yang bersembunyi di luarnya. Pedagang yang mengambil persediaan ini sekali dan rugi bukanlah "sial dengan cara yang menafikan kelebihan" — kadar kerugian 40% telah dikira masuk ke dalam EV +$180 dari awal. Rundingkan di Ruang pada nama seperti NVDA dan lihat saiz yang dicadangkan oleh Pedagang bersebelahan dengan kes Bull dan Bear: saiz yang dijalankan dengan baik menganggap senario kerugian sebagai hasil normal yang dijangkakan daripada proses EV positif, bukan kegagalan proses tersebut.
 
 ## Perangkap
 
-Perangkapnya ialah menghakimi satu hasil tunggal bukannya proses yang menghasilkannya. Seorang pedagang mengambil persediaan EV +$180 sekali, rugi $300, dan menyimpulkan "kelebihan itu tidak berfungsi" — meninggalkan proses EV yang benar-benar positif kerana satu tarikan dari cabang kebarangkalian 40% itu jatuh pada satu titik. Model mental yang betul: EV ialah tuntutan mengenai *purata* ke atas banyak pengulangan, bukan ramalan tentang yang seterusnya. Hakimi satu keputusan sama ada EV-nya positif sebelum dimulakan, bukan sama ada kejadian khusus itu menang atau rugi.
+Perangkapnya ialah menghakimi satu hasil tunggal sebaliknya daripada proses yang menghasilkannya. Seorang pedagang mengambil persediaan EV +$180 sekali, rugi $300, dan menyimpulkan "kelebihan itu tidak berfungsi" — meninggalkan proses EV yang benar-benar positif kerana satu tarikan dari cabang kebarangkalian 40% itu jatuh pada satu titik. Model mental yang betul: EV ialah tuntutan mengenai *purata* ke atas banyak pengulangan, bukan ramalan mengenai yang seterusnya. Hakimi satu keputusan sama ada EV-nya positif sebelum dimulakan, bukan sama ada kejadian tertentu itu menang.
 
 <ChatWith agent="research_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Satu setup menang 70% pada +$100, dan kalah 30% pada -$400. Berapakah nilai jangkaannya (expected value), dan adakah ia setup yang baik berdasarkan faktor ini sahaja?"
+  question="Satu setup menang 70% kali dengan +$100, dan kalah 30% kali dengan -$400. Berapakah nilai jangkaannya (expected value), dan adakah ia setup yang baik berdasarkan faktor ini sahaja?"
   options={[
-    "+$70 — kerana setup ini menang lebih kerap, kebarangkalian menang sahaja menentukan nilai jangkaan",
-    "-$120 — hanya sisi kerugian yang penting sebaik sahaja kemungkinan kerugian wujud",
-    "-$50 — dengan menimbang kedua-dua hasil mengikut kebarangkalian, (0.7 × $100) + (0.3 × -$400) = $70 - $120 = -$50, jadi walaupun menang 70% dari masa, ini adalah setup bernilai-EV negatif",
+    "+$70 — kerana setup ini menang dalam kebanyakan kes, kebarangkalian menang sahaja menetapkan nilai jangkaan",
+    "-$120 — hanya sisi kerugian yang penting apabila kerugian adalah mungkin",
+    "-$50 — dengan menimbang kedua-dua hasil mengikut kebarangkalian, (0.7 × $100) + (0.3 × -$400) = $70 - $120 = -$50, jadi walaupun menang 70% kali, ini adalah setup bernilai jangkaan negatif",
     "+$50 — kadar kemenangan melebihi 50% menjamin kelebihan positif tanpa mengira saiz ganjaran"
   ]}
   answer={2}
-  explanation="EV = Σ pᵢ·xᵢ = (0.7 × $100) + (0.3 × -$400) = $70 - $120 = -$50. Saiz kerugian yang besar berbanding saiz kemenangan yang kecil mengatasi kadar kemenangan yang tinggi — kadar kemenangan 70% bukan, secara sendirinya, bukti setup yang baik. Jawapan '+$70, kebarangkalian-menang-sahaja' dan '+$50, kadar-kemenangan-di-atas-50%-menjamin-kelebihan' mengasingkan istilah kadar kemenangan dan mengabaikan istilah kerugian sepenuhnya; jawapan '-$120, hanya-sisi-kerugian-yang-penting' melakukan sebaliknya."
+  explanation="EV = Σ pᵢ·xᵢ = (0.7 × $100) + (0.3 × -$400) = $70 - $120 = -$50. Saiz kerugian yang besar berbanding saiz kemenangan yang kecil mengatasi kadar kemenangan yang tinggi — kadar kemenangan 70% bukan, pada sendirinya, bukti setup yang baik. Jawapan '+$70, kebarangkalian menang sahaja' dan '+$50, kadar kemenangan melebihi 50% menjamin kelebihan' mengasingkan istilah kadar kemenangan dan mengabaikan istilah kerugian sepenuhnya; jawapan '-$120, hanya sisi kerugian yang penting' melakukan sebaliknya."
 />
 
 <Quiz
-  question="Bagi setup +$180-EV di atas (menang 60% pada +$500, kalah 40% pada -$300), seorang trader mengambilnya sekali dan rugi $300. Adakah hasil tunggal ini bermakna kelebihan setup tersebut salah?"
+  question="Bagi setup bernilai jangkaan +$180 di atas (menang 60% pada +$500, kalah 40% pada -$300), seorang pedagang mengambilnya sekali dan kehilangan $300. Adakah satu hasil ini bermaksud kelebihan (edge) setup tersebut adalah salah?"
   options={[
-    "Ya — setup bernilai-EV positif yang tulen tidak sepatutnya rugi pada sebarang percubaan individu",
-    "Tidak — kebarangkalian kalah 40% telah dibina dalam pengiraan EV +$180; rugi sekali adalah cabang yang normal dan dijangkakan bagi proses bernilai-EV positif, bukan bukti proses itu rosak",
-    "Ya — EV hanya terpakai apabila sekurang-kurangnya 1,000 pengulangan telah diperhatikan, jadi satu kerugian sebelum itu membatalkannya",
-    "Tidak — kerana EV menjamin perdagangan tepat ini akhirnya akan menjadi untung jika diulang"
+    "Ya — setup bernilai jangkaan positif yang tulen tidak sepatutnya kalah pada sebarang percubaan individu",
+    "Tidak — kebarangkalian kalah 40% telah dibina dalam pengiraan EV +$180; kehilangan sekali adalah cabang normal yang dijangka dalam proses bernilai jangkaan positif, bukan bukti proses itu rosak",
+    "Ya — EV hanya terpakai apabila sekurang-kurangnya 1,000 pengulangan telah diperhatikan, jadi satu kehilangan sebelum itu membatalkannya",
+    "Tidak — kerana EV menjamin perdagangan tepat ini akan akhirnya menjadi kemenangan jika diulang"
   ]}
   answer={1}
-  explanation="Kebarangkalian kalah 40% adalah sebahagian daripada persamaan yang sama yang menghasilkan EV +$180 — ia bukan peristiwa luar yang tidak dijangka. Satu kerugian adalah sepenuhnya konsisten dengan proses bernilai-EV positif; menilai proses berdasarkan satu tarikan (daripada sama ada EVnya positif semasa masuk) adalah tepat perangkap yang dinamakan dalam pelajaran ini. EV tidak berkata apa-apa tentang sebarang pengulangan masa depan khusus bagi perdagangan tepat ini — ia adalah pernyataan tentang purata jangka panjang merentasi banyak contoh bebas."
+  explanation="Kebarangkalian kalah 40% adalah sebahagian daripada persamaan yang sama yang menghasilkan EV +$180 — ia bukan peristiwa luar yang tidak dijangka. Satu kehilangan adalah sepenuhnya konsisten dengan proses bernilai jangkaan positif; menilai proses berdasarkan satu tarikan (daripada sama ada EVnya positif semasa masuk) adalah tepat perangkap yang dinamakan dalam pelajaran ini. EV tidak mengatakan apa-apa tentang sebarang pengulangan masa depan spesifik bagi perdagangan tepat ini — ia adalah pernyataan tentang purata jangka panjang merentasi banyak contoh bebas."
 />
 
 ## Cuba sendiri
 
-Buka sesi Convene the Room pada sebarang ticker senarai pantau dan cari saiz posisi yang dicadangkan oleh Trader. Anggaran kebarangkalian menang/rugi yang tersirat dan ganjaran daripada kes Bull dan Bear, kemudian kira EV sendiri secara manual sebelum membandingkannya dengan keyakinan yang dinyatakan oleh Trader. Ingat: output latihan AMI ialah artifak latihan, bukan nasihat pelaburan.
+Buka sesi Rundingkan di Ruang pada mana-mana ticker senarai pantauan dan cari saiz kedudukan yang dicadangkan oleh Pedagang. Anggarkan kebarangkalian kemenangan/kemerosotan dan ganjaran yang tersirat daripada kes Bull dan Bear, kemudian kira EV sendiri secara manual sebelum membandingkannya dengan keyakinan yang dinyatakan oleh Pedagang. Ingat: output latihan AMI ialah artifak latihan, bukan nasihat pelaburan.
 
 ## Penutup
 
-Kualiti satu keputusan ditetapkan oleh nilai jangkaannya — purata berat kebarangkalian bagi setiap hasil — bukan sama ada mana-mana kejadian tunggalnya menang atau rugi.
+Kualiti satu keputusan ditetapkan oleh nilai jangkaannya — purata berat kebarangkalian bagi setiap hasil — bukan sama ada mana-mana kejadian tunggalnya itu menang atau rugi.

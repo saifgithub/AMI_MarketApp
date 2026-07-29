@@ -17,24 +17,24 @@ updated_at: "2026-05-12"
 ---
 # Kriteria Kelly, dipermudahkan
 
-Pelajaran ini mengandaikan anda telah menyelesaikan <Lesson id="014_position_sizing_basics"/> (Asas saiz kedudukan); di sini kita menyelami lebih dalam model saiz yang berbeza — Kelly — yang menggunakan kadar kemenangan sejarah dan purata R:R anda untuk mengesyorkan pecahan per-dagangan. Formula Kelly memberitahu anda saiz yang memaksimumkan pertumbuhan terkompound jangka panjang dengan memberikan kelebihan sebenar. Namun, ia mengandaikan kadar kemenangan dan ganjaran anda adalah stabil dan diukur dengan tepat, dan Kelly penuh menghasilkan penurunan (drawdown) yang mencabar emosi. Kebanyakan pedagang berdisiplin menjalankan Kelly pecahan — satu suku atau separuh — atas sebab ini. Pelajaran ini mengajar formula yang dipermudahkan, input yang merusakkannya, dan mengapa "Kelly separuh" adalah kompromi praktikal.
+Pelajaran ini andaikan anda telah menyelesaikan <Lesson id="014_position_sizing_basics"/> (Asas saiz kedudukan); di sini kita menyelami lebih dalam model saiz yang berbeza — Kelly — yang menggunakan kadar kemenangan sejarah dan nisbah R:R purata anda untuk mengesyorkan pecahan per-dagangan. Formula Kelly memberitahu anda saiz yang memaksimumkan pertumbuhan berkompaun jangka panjang dengan memberikan kelebihan sebenar. Tangkapan: ia andaikan kadar kemenangan dan ganjaran anda stabil dan diukur dengan tepat, dan Kelly penuh menghasilkan penurunan (drawdown) yang mencabar mental. Kebanyakan pedagang yang disiplin menjalankan Kelly pecahan — seperempat atau separuh — atas sebab itu. Pelajaran ini mengajar formula yang dipermudahkan, input yang merusakkannya, dan mengapa "Kelly separuh" adalah kompromi operasi.
 
 ## Contoh
 
-Lihat sampel 60 dagangan pada setup teknologi AS dari <Term id="ami_decision_journal" /> anda. Anda menang 38 daripadanya — iaitu kadar kemenangan 63%. Pemenang purata: +1.8R. Penenang purata: −1R. Formula Kelly yang dipermudahkan untuk ganjaran asimetri ialah f = (W × R − L) ÷ R, di mana W ialah kebarangkalian kemenangan, L = 1 − W, dan R ialah nisbah ganjaran kemenangan/kekalahan. Masukkan nilai: f = (0.63 × 1.8 − 0.37) ÷ 1.8 = (1.134 − 0.37) ÷ 1.8 = 0.424. Kelly penuh menyatakan saiz setiap dagangan pada 42% daripada akaun anda.
+Lihat sampel 60 dagangan pada setup teknologi AS dari <Term id="ami_decision_journal" /> anda. Anda menang 38 daripadanya — kadar kemenangan 63%. Pemenang purata: +1.8R. Pemenang kalah purata: −1R. Formula Kelly yang dipermudahkan untuk ganjaran asimetri ialah f = (W × R − L) ÷ R, di mana W ialah kebarangkalian kemenangan, L = 1 − W, dan R ialah nisbah ganjaran kemenangan/kalah. Masukkan: f = (0.63 × 1.8 − 0.37) ÷ 1.8 = (1.134 − 0.37) ÷ 1.8 = 0.424. Kelly penuh mengatakan saiz setiap dagangan pada 42% daripada akaun anda.
 
-Nombor itu harus mengejutkan anda. Satu dagangan kalah pada 42% daripada akaun ialah penurunan 42% — jauh melebihi tebing pemulihan dari <Lesson id="018_drawdown_management"/>. Lebih buruk, "kadar kemenangan 63%" anda ialah anggaran sampel; kadar kemenangan sebenar boleh jadi 55% (Kelly = 30%) atau 50% (Kelly = 22%). Kelly separuh pada nombor yang sama ialah 21%, Kelly suku ialah 10.6% — masih agresif. Peraturan 1% yang anda gunakan kini adalah kira-kira Kelly kesepuluh pada kelebihan yang boleh dipercayai, itulah sebabnya ia bertahan daripada ralat pensampelan. Di Bursa Malaysia: sampel 38/60 yang sama pada setup swing syarikat besar Bursa, formula yang sama, output yang bermasalah sama. Ujian boleh disangkal: jika kadar kemenangan yang diukur × nisbah ganjaran tidak melebihi kebarangkalian kekalahan anda (W × R > 1 − W), kelebihan anda adalah negatif dan Kelly mengembalikan pecahan negatif — elakkan, bukan tingkatkan saiz.
+Nombor itu harus mengejutkan anda. Satu dagangan kalah pada 42% daripada akaun ialah penurunan 42% — jauh melebihi tebing pemulihan dari <Lesson id="018_drawdown_management"/>. Lebih buruk, "kadar kemenangan 63%" anda ialah anggaran sampel; kadar kemenangan sebenar boleh jadi 55% (Kelly = 30%) atau 50% (Kelly = 22%). Kelly separuh pada nombor yang sama ialah 21%, Kelly suku ialah 10.6% — masih agresif. Peraturan 1% yang sudah anda gunakan adalah kira-kira Kelly suku pada kelebihan yang boleh dipercayai, itulah sebabnya ia bertahan daripada ralat pensampelan. Di Bursa Malaysia: sampel 38/60 yang sama pada setup swing syarikat besar Bursa, formula yang sama, output bermasalah yang sama. Ujian boleh dipalsukan: jika kadar kemenangan yang diukur × nisbah ganjaran tidak melebihi kebarangkalian kekalahan anda (W × R > 1 − W), kelebihan anda adalah negatif dan Kelly mengembalikan pecahan negatif — elakkan, bukan tingkatkan saiz.
 
 ## Perangkap
 
-Perangkapnya ialah memasukkan nombor yang terlalu optimistik dan mempercayai output. Pemula menjalankan 12 dagangan, menang 8, mengira Kelly pada 40%, dan saiz kedudukan seterusnya pada 40% daripada akaun. Sampel 12 dagangan itu adalah hingar statistik — kadar kemenangan sebenar boleh jadi 50% dengan nilai jangkaan yang sama. Kelly penuh pada anggaran yang salah bukan sahaja gagal mencapai prestasi; ia boleh memusnahkan akaun pada kemerosotan normal. Model mental yang betul: Kelly adalah had atas, bukan sasaran. Jalankan Kelly pecahan (biasanya 0.25× hingga 0.5×), minta sampel minimum 50 dagangan sebelum mempercayai input, dan hadkan output pada apa jua yang diperbolehkan oleh mandat anda. Peraturan 1% adalah lantai; Kelly adalah siling; anda hidup di antara keduanya.
+Perangkapnya ialah memasukkan nombor yang optimistik dan mempercayai output. Pemula menjalankan 12 dagangan, menang 8, mengira Kelly pada 40%, dan saiz kedudukan seterusnya pada 40% daripada akaun. Sampel 12 dagangan adalah hingar statistik — kadar kemenangan sebenar boleh jadi 50% dengan nilai jangkaan yang sama. Kelly penuh pada anggaran yang salah bukan sahaja kurang berprestasi; ia boleh menghancurkan akaun pada siri kekalahan biasa. Model mental yang betul: Kelly ialah had atas, bukan sasaran. Jalankan Kelly pecahan (biasanya 0.25× hingga 0.5×), memerlukan sampel minimum 50 dagangan sebelum mempercayai input, dan hadkan output pada apa sahaja yang dibenarkan oleh mandat anda. Peraturan 1% ialah lantai; Kelly ialah siling; anda hidup di antaranya.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Anda telah melakukan 100 dagangan. Kadar kemenangan 55%, purata pemenang +1.5R, purata kerugian −1R. Apakah pecahan Kelly penuh yang disyorkan oleh formula Kelly yang dipermudahkan?"
+  question="Anda telah membuat 100 dagangan. Kadar kemenangan 55%, pemenang purata +1.5R, penerloai purata −1R. Apakah pecahan Full-Kelly yang disyorkan oleh formula Kelly termudah?"
   options={[
     "6.25%",
     "55%",
@@ -42,25 +42,25 @@ Perangkapnya ialah memasukkan nombor yang terlalu optimistik dan mempercayai out
     "37.5%"
   ]}
   answer={2}
-  explanation="f = (0.55 × 1.5 − 0.45) ÷ 1.5 = (0.825 − 0.45) ÷ 1.5 = 0.375 ÷ 1.5 = 0.25, atau 25%. Berhenti pada 0.375 sebelum membahagikan dengan nisbah ganjaran memberikan 37.5% — kesilapan paling biasa dalam formula ini. Kelly penuh menyatakan 25% daripada akaun per dagangan, yang tepat sebabnya anda akan menjalankan Kelly suku (6.25%) atau mematuhi peraturan mandat 1% berbanding mempercayai satu sampel 100 dagangan."
+  explanation="f = (0.55 × 1.5 − 0.45) ÷ 1.5 = (0.825 − 0.45) ÷ 1.5 = 0.375 ÷ 1.5 = 0.25, atau 25%. Berhenti pada 0.375 sebelum membahagi dengan nisbah ganjaran memberikan 37.5% — kesilapan paling biasa dalam formula ini. Full Kelly menyatakan 25% daripada akaun per dagangan, yang merupakan sebab tepat mengapa anda akan menjalankan quarter-Kelly (6.25%) atau mematuhi peraturan mandat 1% berbanding mempercayai satu sampel 100 dagangan."
 />
 
 <Quiz
-  question="Dua pedagang mengira Kelly penuh pada 20% per dagangan daripada ujian backtest mereka. Pedagang A saiz setiap dagangan pada 20%. Pedagang B saiz pada 5% (Kelly suku). Kedua-duanya menjalankan urutan 100 dagangan yang sama dengan tepi yang nyata tetapi bising. Mengapa Pedagang B biasanya berkompaun lebih baik dalam amalan?"
+  question="Dua pedagang mengira Full-Kelly pada 20% per dagangan daripada backtest mereka. Pedagang A saiz setiap dagangan pada 20%. Pedagang B saiz pada 5% (quarter-Kelly). Kedua-duanya menjalankan urutan 100 dagangan yang sama dengan tepi yang nyata tetapi bising. Mengapa Pedagang B biasanya mencecah lebih baik dalam amalan?"
   options={[
-    "Mereka seri — Kelly hanyalah panduan, bukan tepi sebenar dalam dirinya sendiri.",
-    "Pedagang A selalu berkompaun lebih cepat — Kelly penuh adalah optimum secara matematik.",
-    "Pecahan Kelly yang dianggarkan daripada sampel adalah berat sebelah ke atas oleh hingar, dan penurunan penuh-Kelly adalah cukup dalam (biasanya 50%+) sehingga anggaran yang salah atau siri kerugian normal boleh memusnahkan akaun sebelum tepi itu terserlah; Kelly pecahan berdagang sebahagian kecil daripada pulangan dijangka untuk kelangsungan hidup.",
-    "Pedagang B berkompaun lebih cepat kerana dagangan peratusan lebih rendah mempunyai yuran yang lebih rendah."
+    "Seri — Kelly hanyalah panduan, bukan tepi sebenar dalam dirinya sendiri.",
+    "Pedagang A sentiasa mencecah lebih cepat — Full-Kelly adalah optimum secara matematik.",
+    "Pecahan Kelly yang dianggarkan daripada sampel adalah berat sebelah ke atas oleh hingar, dan drawdown Full-Kelly adalah cukup dalam (biasanya 50%+) sehingga anggaran yang salah atau siri kerugian normal boleh memusnahkan akaun sebelum tepi terwujud; Kelly pecahan memperdagangkan sekeping kecil pulangan dijangka untuk kelangsungan hidup.",
+    "Pedagang B mencecah lebih cepat kerana dagangan peratusan lebih rendah mempunyai yuran lebih rendah."
   ]}
   answer={2}
-  explanation="Jawapan salah yang menarik ialah 'Kelly penuh adalah optimum secara matematik' — Kelly penuh terbukti optimum pertumbuhan, jadi ia sepatutnya menang. Catchesnya ialah 'optimum terbukti' mengandaikan kadar kemenangan dan ganjaran sebenar diketahui dengan tepat. Dalam amalan, input adalah anggaran sampel dengan ralat, dan fungsi ganjaran Kelly adalah tidak simetri — melebihi saiz menghukum anda jauh lebih banyak daripada undershooting. Penurunan penuh-Kelly secara kerap mencapai 50%+ walaupun pada tepi yang betul, meletakkan akaun dalam lubang pemulihan dari <Lesson id="018_drawdown_management"/>. Kelly pecahan adalah pelarasan kelangsungan hidup untuk ralat pengukuran."
+  explanation="Jawapan salah yang menggoda ialah 'Full-Kelly adalah optimum secara matematik' — Full-Kelly terbukti optimum pertumbuhan, jadi ia sepatutnya menang. Catchesnya ialah 'dibuktikan optimum' mengandaikan kadar kemenangan dan ganjaran sebenar diketahui dengan tepat. Dalam amalan, input adalah anggaran sampel dengan ralat, dan fungsi ganjaran Kelly adalah tidak simetri — saiz yang melangkaui menghukum anda jauh lebih banyak daripada saiz yang kurang. Drawdown Full-Kelly sering mencapai 50%+ walaupun pada tepi yang betul, meletakkan akaun dalam lubang pemulihan dari <Lesson id="018_drawdown_management"/>. Kelly pecahan adalah pelarasan kelangsungan hidup untuk ralat pengukuran."
 />
 
 ## Cuba sendiri
 
-Buka Jurnal Keputusan, tapis kepada dagangan tertutup, dan kira: jumlah dagangan, kemenangan, purata pemenang R, purata penenang R. Kira Kelly penuh dengan formula di atas. Kemudian buka <Term id="ami_one_on_one" /> dengan Pengurus Portofolio, tampal nombor tersebut, dan tanya "Memandangkan ralat pensampelan pada saiz ini, pecahan Kelly apa yang anda syorkan, dan bagaimana ia berbanding dengan peraturan 1% semasa saya?"
+Buka Jurnal Keputusan, tapis kepada dagangan tertutup, dan kira: jumlah dagangan, kemenangan, R pemenang purata, R kalah purata. Kira Kelly penuh dengan formula di atas. Kemudian buka <Term id="ami_one_on_one" /> dengan Pengurus Portofolio, tampal nombor, dan tanya "Memandangkan ralat pensampelan pada saiz ini, pecahan Kelly apa yang anda syorkan, dan bagaimana ia berbanding dengan peraturan 1% semasa saya?"
 
-## Terasan
+## Penafian
 
-Kelly penuh adalah siling; peraturan 1% adalah lantai — hidup di antara keduanya dengan Kelly pecahan hanya selepas 50+ dagangan sebenar, bukan permulaan panas.
+Kelly penuh ialah siling; peraturan 1% ialah lantai — hidup di antaranya dengan Kelly pecahan hanya selepas 50+ dagangan sebenar, bukan permulaan panas.

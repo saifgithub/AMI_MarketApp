@@ -11,64 +11,64 @@ topic: "synthesis"
 prerequisites: ["052_trend_following", "055_mean_reversion", "056_momentum_trading", "058_strategy_failure_modes", "017_portfolio_exposure_and_correlation"]
 tags: ["synthesis", "diversification", "correlation", "portfolio"]
 agent_callouts: ["research_manager", "neutral_debator"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Menggabungkan strategi untuk diversifikasi — apabila 1+1 = 1.4
 
-Asas mod kegagalan (058) menunjukkan setiap strategi mempunyai rejim di mana ia mengalami kerugian. Pertahanan terbaik bukanlah memilih satu strategi yang lebih baik, tetapi menjalankan beberapa strategi yang mod kegagalannya tidak bertindih. Apabila trend-following mengalami kerugian (dalam pasaran chop), mean-reversion berkembang. Apabila mean-reversion gagal (dalam trend bear), overlay rejim momentum telah memotong pendedahannya. Portfolio multi-strategi dengan korelasi silang-strategi yang rendah boleh mempunyai drawdown yang lebih rendah secara signifikan berbanding mana-mana strategi individu sambil mengekalkan sebahagian besar pulangan agregat. Selepas pelajaran ini, anda boleh memadankan strategi berdasarkan pertindihan rejim kegagalannya, mengira faedah diversifikasi secara kasar, dan mengelakkan perangkap sintesis yang paling biasa (menjalankan tiga strategi yang semua mengalami kerugian dalam rejim yang sama).
+Asas mod kegagalan (058) menunjukkan setiap strategi mempunyai rejim di mana ia mengalami kerugian. Pertahanan terbaik bukan memilih satu strategi yang lebih baik — tetapi menjalankan beberapa strategi yang mod kegagalannya tidak bertindih. Apabila trend-following mengalami kerugian (dalam keadaan chop), mean-reversion berkembang. Apabila mean-reversion meletup (dalam trend bear), overlay rejim momentum telah memotong pendedahannya. Portfolio multi-strategi dengan korelasi silang-strategi yang rendah boleh mempunyai drawdown yang lebih rendah secara bermakna berbanding mana-mana strategi individu sambil mengekalkan kebanyakan pulangan agregat. Selepas pelajaran ini, anda boleh memadankan strategi berdasarkan pertindihan rejim kegagalannya, mengira faedah diversifikasi secara kasar, dan mengelakkan perangkap sintesis yang paling biasa (menjalankan tiga strategi yang semuanya mengalami kerugian dalam rejim yang sama).
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
-Tiga strategi selama 2010-2024 pada saham besar AS:
+Tiga strategi selama 2010-2024 pada large-cap AS:
 
-- **Trend-following (silang MA 50/200)**: CAGR 9.2%, drawdown maksimum 18%, tahun terburuk -7% (2015, whipsaw)
-- **Mean-reversion (RSI(2) dengan penapis 200-hari)**: CAGR 11.4%, drawdown maksimum 14%, tahun terburuk -9% (Q1 2020)
-- **Momentum rentas keratan (desil teratas 12-bulan, rebalans bulanan)**: CAGR 10.8%, drawdown maksimum 22%, tahun terburuk -12% (keruntuhan momentum 2020)
+- **Trend-following (persilangan MA 50/200)**: CAGR 9.2%, drawdown maksimum 18%, tahun terburuk -7% (2015, whipsaw)
+- **Mean-reversion (RSI(2) dengan penapis 200-hari)**: CAGR 11.4%, drawdown maksimum 14%, tahun terburuk -9% (S1 2020)
+- **Momentum rentas-potongan (decile teratas 12-bulan, rebalans bulanan)**: CAGR 10.8%, drawdown maksimum 22%, tahun terburuk -12% (keruntuhan momentum 2020)
 
-Portfolio berat sama bagi ketiga-tiganya, rebalans bulanan: CAGR 10.4%, drawdown maksimum 11%, tahun terburuk -4%. CAGR agregat hampir sama dengan purata ketiga-tiga individu, tetapi drawdown maksimum turun dari 18-22% (mana-mana strategi tunggal) kepada 11% (gabungan), dan pengalaman tahun terburuk adalah lebih baik secara signifikan. Itulah diversifikasi berfungsi — strategi-strategi ini mempunyai korelasi kira-kira +0.2 hingga +0.4 antara satu sama lain, bukan +1.0.
+Portfolio berat sama ketiga-tiganya, rebalans bulanan: CAGR 10.4%, drawdown maksimum 11%, tahun terburuk -4%. CAGR agregat hampir sama dengan purata ketiga-tiga individu, tetapi drawdown maksimum turun dari 18-22% (mana-mana strategi tunggal) kepada 11% (gabungan), dan pengalaman tahun terburuk adalah lebih baik secara bermakna. Itulah diversifikasi berfungsi — strategi-strategi ini mempunyai korelasi kira-kira +0.2 hingga +0.4 antara satu sama lain, bukan +1.0.
 
-Yang paling penting, kalendar rejim kegagalan menunjukkan mengapa: trend-following rugi dalam chop 2015 manakala mean-reversion menjana wang (volatiliti terkawal). Mean-reversion rugi dalam Q1 2020 manakala trend-following telah memotong pendedahan (penapis 200-hari). Momentum rugi pada November 2020 manakala mean-reversion berkembang dalam putaran pasaran. TIADA rejim dalam tetingkap 14 tahun tersebut menyerang ketiga-tiganya serentak.
+Yang paling penting, kalendar rejim kegagalan menunjukkan mengapa: trend-following rugi pada 2015 semasa chop manakala mean-reversion menjana wang (volatiliti terkawal). Mean-reversion rugi pada S1 2020 manakala trend-following telah memotong pendedahan (penapis 200-hari). Momentum rugi pada November 2020 manakala mean-reversion berkembang dalam putaran. TIADA rejim dalam tetingkap 14 tahun tersebut menyerang ketiga-tiganya serentak.
 
-Contoh lawan: menggabungkan trend 50/200, breakout (Donchian-20), dan momentum memberikan tiga strategi yang SEMUA mengalami kerugian dalam rejim yang sama (chop / drift vol rendah). Profil drawdown portfolio gabungan hampir tidak bertambah baik berbanding mana-mana satu daripadanya — korelasi antara strategi "keluarga trend" adalah ~0.7, bukan 0.2. Portfolio kelihatan berdiversifikasi tetapi tidak.
+Contoh lawan: menggabungkan trend 50/200, breakout (Donchian-20), dan momentum memberikan tiga strategi yang SEMUA mengalami kerugian dalam rejim yang sama (chop / drift vol rendah). Profil drawdown portfolio gabungan hampir tidak bertambah baik berbanding mana-mana satu daripadanya — korelasi merentas strategi "keluarga trend" adalah ~0.7, bukan 0.2. Portfolio Nampak seperti terdiversifikasi tetapi tidak.
 
 ## Perangkap
 
-Kesilapan pemula adalah berfikir "lebih banyak strategi = lebih banyak diversifikasi". Diversifikasi datang dari korelasi silang-strategi yang rendah, yang datang dari rejim kegagalan yang tidak bertindih — bukan dari bilangan semata-mata. Tiga strategi keluarga trend pada dasarnya adalah satu strategi dengan tiga nama; tiga strategi ortogonal rejim (trend + mean-reversion + momentum) adalah benar-benar berdiversifikasi. Model mental yang betul: padankan strategi berdasarkan rejim kegagalan, bukan mekanik. Perangkap kedua adalah mengalokasikan terlalu banyak kepada strategi CAGR-historikal tertinggi — anda memiringkan portfolio ke arah mod kegagalan satu strategi dan membatalkan diversifikasi yang telah anda bayar. Mulakan dengan berat sama atau berat sama volatiliti (dibincangkan dalam 241). Perangkap ketiga: memotong strategi yang sedang kehilangan wang kerana "ia tidak berfungsi". Setiap strategi sepatutnya kehilangan wang dalam rejim kegagalannya; memotongnya menukar kerugian rejim kepada pengurangan modal kekal dan membuang faedah diversifikasi apabila rejim tersebut selesai.
+Kesilapan pemula adalah berfikir "lebih banyak strategi = lebih banyak diversifikasi". Diversifikasi datang daripada korelasi silang-strategi yang rendah, yang datang daripada rejim kegagalan yang tidak bertindih — bukan daripada bilangan semata-mata. Tiga strategi keluarga trend pada asasnya adalah satu strategi dengan tiga nama; tiga strategi rejim-ortogonal (trend + mean-reversion + momentum) adalah benar-benar terdiversifikasi. Model mental yang betul: padankan strategi berdasarkan rejim kegagalan, bukan mekanik. Perangkap kedua adalah mengalokasikan berlebihan kepada strategi dengan CAGR sejarah tertinggi — anda memiringkan portfolio ke arah mod kegagalan satu strategi dan membatalkan diversifikasi yang telah anda bayar. Mulakan dengan berat sama atau berat sama volatiliti (dicakup dalam 241). Perangkap ketiga: memotong strategi yang sedang kehilangan wang kerana "ia tidak berfungsi". Setiap strategi sepatutnya kehilangan wang dalam rejim kegagalannya; memotongnya menukarkan kerugian rejim kepada pengurangan modal kekal dan menghilangkan faedah diversifikasi apabila rejim tersebut selesai.
 
 <ChatWith agent="research_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Anda kini hanya menjalankan strategi mengikut trend. Anda ingin menambah satu lagi untuk pelbagai portfolio. Penambahan manakah memberikan faedah pelbagai portfolio yang terbesar?"
+  question="Anda kini hanya menjalankan strategi mengikuti trend. Anda ingin menambah strategi kedua untuk tujuan diversifikasi. Penambahan manakah memberikan manfaat diversifikasi yang terbesar?"
   options={[
-    "Pulangan ke purata dengan penapis rejim (rejim kegagalan ialah trend turun, iaitu apabila strategi mengikut trend berjaya)",
-    "Pecahan saluran Donchian (rejim kegagalan bertindih dengan strategi mengikut trend — kedua-duanya rugi dalam keadaan pasaran bising)",
-    "Trend dengan henti rugi berjalankan ATR (juga variasi trend)",
-    "Pengesahan trend berbilang masa (variasi strategi mengikut trend)"
+    "Pembalikan purata dengan penapis rejim (rejim kegagalan ialah trend turun, iaitu ketika strategi mengikuti trend berkembang)",
+    "Pecahan saluran Donchian (rejim kegagalan bertindih dengan strategi mengikuti trend — kedua-duanya rugi dalam keadaan pasaran bising)",
+    "Trend dengan henti rugi berundur berdasarkan ATR (juga merupakan varian trend)",
+    "Pengesahan trend berbilang masa (variasi daripada strategi mengikuti trend)"
   ]}
   answer={0}
-  explanation="Rejim kegagalan strategi pulangan ke purata (trend turun) adalah masa apabila strategi mengikut trend mendapat untung — dan sebaliknya. Kedua-duanya mempunyai mod kegagalan yang tidak bertindih, yang merupakan keperluan tepat untuk pelbagai portfolio. Jawapan pecahan Donchian, pengesahan berbilang masa, dan henti rugi ATR adalah semua variasi trend yang rugi dalam rejim yang sama — menambahkannya memberikan ilusi pelbagai portfolio tanpa substansi. Korelasi merentas strategi mendedahkan perbezaan ini."
+  explanation="Rejim kegagalan strategi pembalikan purata (trend turun) adalah ketika strategi mengikuti trend memperoleh keuntungan — dan sebaliknya. Kedua-duanya mempunyai mod kegagalan yang tidak bertindih, yang merupakan keperluan tepat untuk diversifikasi. Jawapan pecahan Donchian, pengesahan berbilang masa, dan henti rugi ATR adalah semua variasi trend yang rugi dalam rejim yang sama — menambahkannya memberikan ilusi diversifikasi tanpa substansi. Korelasi merentas strategi mendedahkan perbezaan ini."
 />
 
 <Quiz
-  question="Anda menjalankan strategi trend + pulangan ke purata + momentum, dengan pemberat sama. Strategi pulangan ke purata turun 8% YTD manakala dua lagi naik. Conservative Debator: 'seimbangkan semula ke arah strategi yang sedang berjaya'. Research Manager: 'menyeimbangkan semula KE ARAH peninggalan baru-baru ini ialah peraturan pelbagai portfolio yang sebenar'. Tindakan sintesis yang betul?"
+  question="Anda menjalankan strategi trend + pembalikan purata + momentum, dengan pemberat sama. Strategi pembalikan purata menurun 8% YTD manakala dua lagi meningkat. Conservative Debator: 'seimbangkan semula ke arah strategi yang sedang berjaya'. Research Manager: 'menyeimbangkan semula MENUJU pendatang baru yang rugi adalah peraturan diversifikasi sebenar'. Tindakan sintesis yang betul?"
   options={[
-    "Potong strategi pulangan ke purata sepenuhnya",
-    "Mengikut peraturan penyeimbangan semula, jual sebahagian daripada pemenang terkini dan beli semula strategi yang rugi untuk mencapai pemberat sama, dengan menerima hakikat bahawa strategi pulangan ke purata beroperasi dalam rejim kegagalannya seperti yang dirancang. Sahkan setiap strategi berada dalam had penurunan yang diterima menurut mandatnya sebelum menyeimbangkan semula.",
-    "Tambahan leverage keseluruhan untuk pulih lebih cepat",
-    "Tambah hanya kepada pemenang"
+    "Potong strategi pembalikan purata sepenuhnya",
+    "Mengikut peraturan penyeimbangan semula, jual sebahagian daripada pendatang baru yang berjaya dan beli semula strategi yang rugi untuk mencapai pemberat sama, dengan menerima hakikat bahawa strategi pembalikan purata sedang beroperasi dalam rejim kegagalannya seperti yang dirancang. Sahkan setiap strategi berada dalam had penurunan yang dipatuhi mandatnya sebelum menyeimbangkan semula.",
+    "Meningkatkan leverage keseluruhan untuk pemulihan lebih pantas",
+    "Tambah hanya kepada pendatang baru yang berjaya"
   ]}
   answer={1}
-  explanation="Menyeimbangkan semula ke arah peninggalan terkini menangkap faedah pelbagai portfolio — dan strategi yang rugi ini sedang rugi dalam rejim kegagalan yang diketahui, yang dibiayai oleh kemenangan strategi lain. Memotong peninggalan pada dasar penurunan drawdownnya adalah langkah yang tepat untuk menukar kerugian rejim biasa kepada pengurangan kekal. Memotong strategi pulangan ke purata memusnahkan pelbagai portfolio. Menambah hanya kepada pemenang mengukuhkan kepekatan dalam rejim semasa. Meningkatkan leverage melanggar pengurusan risiko. Sintesis menggabungkan literasi rejim kegagalan + disiplin penyeimbangan semula + pematuhan mandat."
+  explanation="Menyeimbangkan semula ke arah pendatang baru yang rugi menangkap manfaat diversifikasi — dan strategi yang rugi ini sedang rugi dalam rejim kegagalan yang diketahui, yang dibiayai oleh kejayaan strategi lain. Memotong strategi yang rugi pada dasar penurunan adalah tepat, kerana ia mengubah kerugian rejim normal kepada pengurangan kekal. Memotong strategi pembalikan purata memusnahkan diversifikasi. Menambah hanya kepada pendatang baru yang berjaya meningkatkan kepekatan dalam rejim semasa. Meningkatkan leverage melanggar pengurusan risiko. Sintesis menggabungkan literasi rejim kegagalan + disiplin penyeimbangan semula + kepatuhan mandat."
 />
 
 ## Cuba sendiri
 
-Dalam <Term id="ami_one_on_one" /> dengan Research Manager, senaraikan setiap strategi yang sedang anda jalankan dan tanya: "Hitung pertindihan rejim kegagalan untuk setiap pasangan. Pasangan mana yang berkongsi rejim kegagalan dan mana yang ortogonal? Apakah anggaran korelasi yang realistik?" Log matriks korelasi dalam <Term id="ami_decision_journal" /> — dan tambah strategi baru HANYA jika ia mengembangkan ortogonaliti, bukan bilangan.
+Dalam <Term id="ami_one_on_one" /> dengan Research Manager, senaraikan setiap strategi yang sedang anda jalankan dan tanya: "Kira pertindihan rejim kegagalan untuk setiap pasangan. Pasangan mana yang berkongsi rejim kegagalan dan mana yang ortogonal? Berapakah anggaran korelasi yang realistik?" Log matriks korelasi dalam <Term id="ami_decision_journal" /> — dan tambah strategi baru HANYA jika ia mengembangkan ortogonaliti, bukan bilangan.
 
-## Intipati
+## Penafian
 
 Diversifikasi adalah tentang rejim kegagalan yang tidak bertindih, bukan bilangan strategi. Tiga strategi keluarga trend adalah satu strategi. Trend + mean-reversion + momentum adalah benar-benar tiga.

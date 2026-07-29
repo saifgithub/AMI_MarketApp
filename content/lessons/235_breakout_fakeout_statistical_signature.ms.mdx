@@ -1,6 +1,6 @@
 ---
 id: "235_breakout_fakeout_statistical_signature"
-title: "Palsu breakout — tanda statistik bagi kegagalan breakout"
+title: "Pecahan palsu — tanda statistik bagi pecahan yang gagal"
 duration_min: 7
 level: 5
 module: 9
@@ -17,50 +17,50 @@ updated_at: "2026-05-12"
 ---
 # Palsu pecahan — tanda statistik bagi pecahan yang gagal
 
-Asas mod kegagalan (058) mengenal pasti rejim hanyut volatiliti rendah dan isipadu rendah sebagai pembunuh strategi pecahan. Pelajaran ini memberikan cap jari statistik bagi satu kejadian palsu, supaya anda dapat mengenal pasti kegagalan tersebut semasa ia berlaku — bukan selepas berlalu. Corak ini mempunyai tiga komponen yang boleh diukur: isipadu di bawah purata 20 hari pada bar pecahan, ATR yang mengecut dalam hari-hari sebelumnya, dan harga kembali ke dalam julat sebelumnya dalam masa 1-3 sesi. Apabila ketiga-tiganya berlaku, kebarangkalian palsu adalah kira-kira 70-80% secara sejarah. Selepas pelajaran ini, anda boleh menjalankan semakan tiga mata sebelum memasuki sebarang pecahan dan anda boleh menetapkan henti yang peka terhadap palsu untuk mengelakkan diri daripada dipotong dua kali pada paras yang sama.
+Asas mod kegagalan (058) mengenal pasti rejim hanyut isipadu rendah dan isipadu rendah sebagai pembunuh strategi pecahan. Pelajaran ini memberikan cap jari statistik bagi satu kejadian palsu, supaya anda dapat mengenal pasti kegagalan tersebut semasa ia berlaku — bukan selepas fakta. Corak ini mempunyai tiga komponen yang boleh diukur: isipadu di bawah purata 20 hari pada bar pecahan, ATR mengecut dalam hari-hari sebelumnya, dan harga kembali ke dalam julat sebelumnya dalam masa 1-3 sesi. Apabila ketiga-tiganya berlaku, kebarangkalian kejadian palsu adalah kira-kira 70-80% secara sejarah. Selepas pelajaran ini, anda boleh menjalankan pemeriksaan tiga mata sebelum memasuki sebarang pecahan dan anda boleh menetapkan henti yang sedar akan kejadian palsu supaya tidak tersentak dua kali pada paras yang sama.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
-Pertimbangkan syarikat besar-kap yang telah berjangka selama tiga minggu dengan ATR(14) yang mampat: ia melepasi paras tinggi julat dengan isipadu di bawah purata dan kembali ke dalam julat dalam masa lima sesi — tanda palsu lengkap.
+Pertimbangkan syarikat besar yang telah berjangka selama tiga minggu dengan ATR(14) yang mampat: ia melepasi paras tinggi julat dengan isipadu di bawah purata dan kembali ke dalam julat dalam masa lima sesi — tanda kejadian palsu lengkap.
 
-Kadar asas adalah penting. Merentasi syarikat besar-kap AS dari 2018-2024, pecahan dengan ketiga-tiga isyarat negatif (isipadu di bawah purata + ATR mengecut + rejim trend rendah oleh ADX < 20) gagal dalam masa 5 sesi lebih kerap daripada tidak. Pecahan dengan profil BERBANDING (isipadu >1.5x purata 20 hari + ATR berkembang + ADX > 25) berjaya (mempertahankan julat baru selama 20+ sesi) lebih kerap daripada tidak. Cap jari ini tidak sempurna, tetapi asimetri adalah dramatik. <Term id="ami_mandate" />-compliant breakout traders only take the high-quality signature.
+Kadar asas itu penting. Merentasi syarikat besar AS dari 2018-2024, pecahan dengan ketiga-tiga isyarat negatif (isipadu di bawah purata + ATR mengecut + rejim trend rendah oleh ADX < 20) gagal dalam masa 5 sesi lebih kerap daripada tidak. Pecahan dengan profil BERBANDING (isipadu >1.5x purata 20 hari + ATR berkembang + ADX > 25) berjaya (mempertahankan julat baharu selama 20+ sesi) lebih kerap daripada tidak. Cap jari itu tidak sempurna, tetapi ketidaksimetrian itu dramatik. <Term id="ami_mandate" />-pematuhterdagang pecahan hanya mengambil tanda berkualiti tinggi.
 
 ## Perangkap
 
-Kesilapan pemula ialah "pecahan = masuk" — mengambil setiap pecahan tanpa mengira konteks. Peraturan tunggal ini mengubah kadar kejayaan strategi 64% (dengan pengesahan) kepada kadar kejayaan berblended 45% (dengan pemilihan rawak merentasi tanda), yang berada di bawah titik pulangan kos. Model mental yang betul: pecahan adalah hipotesis, dan isipadu + ATR + rejim trend adalah bukti pengesahan. Tiada pengesahan = tiada masuk, tidak kira betapa bersihnya paras itu kelihatan. Perangkap kedua ialah purata masuk ke dalam palsu — membeli lagi apabila harga kembali ke dalam julat, berharap untuk "kaki kedua". Palsu sering mempunyai bounce susut semula singkat yang memerangkap peneroka trend DAN pedagang lawan-trend. Perangkap ketiga ialah pembetulan berlebihan "terbakar dua kali, malu sekali": menolak untuk mengambil sebarang pecahan selepas palsu. Rejim yang menghasilkan palsu mempunyai tanda; apabila tanda itu berbalik (isipadu kembali, ATR berkembang, rejim trend mengesahkan), pecahan seterusnya adalah jauh lebih mungkin berjaya secara statistik.
+Kesilapan pemula ialah "pecahan = masuk" — mengambil setiap pecahan tanpa mengira konteks. Peraturan tunggal itu menukar kadar kejayaan strategi 64% (dengan pengesahan) kepada kadar kejayaan berblended 45% (dengan pemilihan rawak merentasi tanda), yang berada di bawah titik impas selepas kos. Model mental yang betul: pecahan adalah hipotesis, dan isipadu + ATR + rejim trend adalah bukti pengesahan. Tiada pengesahan = tiada masuk, tidak kira betapa bersihnya paras itu kelihatan. Perangkap kedua ialah purata ke dalam kejadian palsu — membeli lagi apabila harga kembali ke dalam julat, berharap untuk "kaki kedua". Kejadian palsu sering mempunyai pantulan susut semula sebentar yang memerangkap peneraju trend DAN pedagang lawan trend. Perangkap ketiga ialah pembetulan berlebihan "kali kedua terbakar, kali ketiga malu": menolak untuk mengambil sebarang pecahan selepas kejadian palsu. Rejim yang menghasilkan kejadian palsu mempunyai tanda; apabila tanda itu berbalik (isipadu kembali, ATR berkembang, rejim trend mengesahkan), pecahan seterusnya jauh lebih mungkin berjaya secara statistik.
 
 <ChatWith agent="market_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="NVDA menembusi paras tinggi julat 6 minggu. Isipadu bar penembusan ialah 28M berbanding purata 20 hari sebanyak 45M. ATR(14) telah mengecut selama dua minggu. ADX(14) berada pada 16. Aggressive Debator berkata 'paras telah ditembusi, masuk'. Market Analyst dan Bear Researcher kedua-duanya mengesahkan tanda palsu. Mana antara pandangan ini benar secara empirikal?"
+  question="NVDA menembusi paras tinggi julat 6 minggu. Isipadu bar pecah adalah 28M berbanding purata 20 hari sebanyak 45M. ATR(14) telah mengecut selama dua minggu. ADX(14) berada pada 16. Aggressive Debator berkata 'paras telah pecah, masuk'. Market Analyst dan Bear Researcher kedua-duanya mengesahkan tanda palsu. Mana satu pandangan yang betul secara empirikal?"
   options={[
-    "Aggressive — tindakan harga ialah isyarat, bukan isipadu",
+    "Aggressive — tindakan harga adalah isyarat, bukan isipadu",
     "Tunggu ujian semula sebelum masuk",
-    "Masuk separuh saiz — paras telah ditembusi walaupun pengesahan lemah",
-    "Market Analyst dan Bear — ketiga-tiga komponen tanda palsu sedang aktif serentak (isipadu di bawah purata, ATR mengecut, ADX < 20). Kadar asas mencadangkan ~72% kemungkinan tanda palsu dalam 5 sesi; elakkan masuk ini."
+    "Masuk separuh saiz — paras telah pecah walaupun pengesahan lemah",
+    "Market Analyst dan Bear — ketiga-tiga komponen tanda palsu sedang berlaku serentak (isipadu di bawah purata, ATR mengecut, ADX < 20). Kadar asas mencadangkan kebarangkalian ~72% untuk tanda palsu dalam 5 sesi; elakkan masuk ini."
   ]}
   answer={3}
-  explanation="Semua tiga keadaan tanda negatif yang aktif serentak meningkatkan kadar kegagalan sejarah kepada ~72%. Masuk pada masa ini mengambil sisi yang salah bagi ketidakseimbangan yang boleh diukur. Jawapan 'tindakan harga ialah isyarat, bukan isipadu' memperlakukan harga sebagai maklumat mutlak — ia bukan, konteks penting. Masuk separuh saiz menyembunyikan taruhan buruk sebagai taruhan buruk yang lebih kecil (anda masih berada di sisi 28%). Menunggu ujian semula terdengar berdisiplin tetapi dalam rejim tanda palsu, ujian semula sering gagal juga — masalah asas bukan pada masa masuk, tetapi pada rejim."
+  explanation="Ketiga-tiga keadaan tanda negatif yang berlaku serentak meningkatkan kadar kegagalan sejarah kepada ~72%. Masuk pada keadaan ini adalah mengambil sisi yang salah terhadap ketidakseimbangan yang boleh diukur. Jawapan 'tindakan harga adalah isyarat, bukan isipadu' memperlakukan harga sebagai maklumat mutlak — ia bukan, konteks penting. Masuk separuh saiz menyembunyikan pertaruhan buruk sebagai pertaruhan buruk yang lebih kecil (anda masih berada di sisi 28%). Menunggu ujian semula kelihatan disiplin tetapi dalam rejim tanda palsu, ujian semula sering gagal juga — masalah asas bukan pada masa masuk, tetapi pada rejim."
 />
 
 <Quiz
-  question="Anda telah mengambil tiga percubaan penembusan pada QQQ dalam sebulan lalu — semua tanda palsu, masing-masing dengan isipadu di bawah purata. Hari ini QQQ menembusi paras tinggi 6 bulan baru dengan isipadu 70% DI ATAS purata 20 hari, ATR(14) sedang berkembang buat pertama kali dalam beberapa minggu, dan ADX(14) telah melintasi 24. Tindakan sintesis yang betul?"
+  question="Anda telah cuba tiga kali pecah pada QQQ dalam sebulan lalu — semua tanda palsu, setiap satu dengan isipadu di bawah purata. Hari ini QQQ menembusi paras tinggi 6 bulan baru dengan isipadu 70% DI ATAS purata 20 hari, ATR(14) mengembang buat pertama kali dalam beberapa minggu, dan ADX(14) melintasi 24. Tindakan sintesis yang betul?"
   options={[
-    "Langkau — tiga kerugian berturut-turut bermakna penembusan tidak berfungsi",
-    "Tunggu rejim sepenuhnya terbentuk sebelum masuk",
+    "Langkau — tiga kerugian berturut-turut bermakna pecah tidak berfungsi",
+    "Tunggu rejim untuk sepenuhnya terbentuk sebelum masuk",
     "Masuk saiz tiga kali ganda untuk memulihkan kerugian",
-    "Semua tiga komponen tanda palsu telah BERBALIK — isipadu disahkan, ATR berkembang, ADX > 22. Rejim yang menghasilkan tanda palsu sebelum ini telah berubah; kadar asas untuk tanda palsu baru ini ialah ~64% kejayaan. Masuk mengikut peraturan, menghormati had saiz posisi daripada kerugian sebelum ini."
+    "Ketiga-tiga komponen tanda palsu telah BERBALIK — isipadu disahkan, ATR mengembang, ADX > 22. Rejim yang menghasilkan tanda palsu sebelumnya telah berubah; kadar asas untuk tanda baru ini adalah kejayaan ~64%. Masuk mengikut peraturan, menghormati had saiz posisi daripada kerugian sebelum ini."
   ]}
   answer={3}
-  explanation="Sintesis: pengesanan rejim adalah dua sisi. Tiga penunjuk yang sama yang menandakan tanda palsu kini menandakan rejim pengesahan. Menolak untuk terlibat apabila rejim berubah ke arah yang menguntungkan bermaksud terlepas bahagian besar kelebihan strategi. Jawapan langkau-selepas-tiga-kerugian mengelirukan kerugian terkini (beroperasi dalam rejim kegagalan) dengan kesahihan strategi. Masuk saiz tiga kali ganda ialah saiz balas dendam. Menunggu rejim sepenuhnya terbentuk ialah kos kesempurnaan — jika ketiga-tiga tanda aktif secara positif, masuk ialah dagangan itu sendiri."
+  explanation="Sintesis: pengesanan rejim adalah dua hala. Tiga penunjuk yang sama yang menandakan tanda palsu kini menandakan rejim pengesahan. Menolak untuk terlibat apabila rejim berubah ke arah yang menguntungkan bermakna terlepas bahagian utama tepi strategi. Jawapan langkau-selepas-tiga-kerugian keliru antara kerugian terkini (beroperasi dalam rejim kegagalan) dengan keabsahan strategi. Masuk saiz tiga kali ganda adalah saiz balas dendam. Menunggu rejim untuk sepenuhnya terbentuk adalah kos kesempurnaan — jika ketiga-tiga tanda menyala secara positif, masuk adalah dagangan itu sendiri."
 />
 
 ## Cuba sendiri
 
-Dalam <Term id="ami_one_on_one" /> dengan Market Analyst, tampal persediaan pecahan yang anda pertimbangkan dan tanya: "Jalankan semakan palsu tiga mata — isipadu bar pecahan berbanding purata 20 hari, trend ATR(14) merentasi 10 sesi sebelumnya, bacaan ADX(14). Nyatakan sama ada tanda adalah positif, negatif, atau bercampur, dan apakah kebarangkalian kejayaan kadar asas." Log setiap masuk pecahan dengan bacaan tiga mata dalam <Term id="ami_decision_journal" /> — dari masa ke masa, anda akan mempunyai kadar asas empirikal anda sendiri.
+Dalam <Term id="ami_one_on_one" /> dengan Penganalisis Pasaran, tampal susunan pecahan yang anda pertimbangkan dan tanya: "Jalankan pemeriksaan kejadian palsu tiga mata — isipadu bar pecahan berbanding purata 20 hari, trend ATR(14) merentasi 10 sesi sebelumnya, bacaan ADX(14). Nyatakan sama ada tanda itu positif, negatif, atau bercampur, dan berapakah kebarangkalian kejayaan kadar asas." Catatkan setiap masuk pecahan dengan bacaan tiga mata dalam <Term id="ami_decision_journal" /> — dari masa ke masa, anda akan mempunyai kadar asas empirikal sendiri.
 
-## Pengajaran
+## Penamatan
 
-Pecahan adalah hipotesis sehingga isipadu, ATR, dan rejim trend mengesahkannya. Cap jari boleh diperhatikan secara masa nyata, dan mengelakkan pecahan tanda palsu adalah kebanyakan kelebihan strategi.
+Pecahan adalah hipotesis sehingga isipadu, ATR, dan rejim trend mengesahkannya. Cap jari itu boleh diperhatikan secara masa nyata, dan melompati pecahan tanda kejadian palsu adalah kebanyakan kelebihan strategi.

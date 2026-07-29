@@ -17,7 +17,7 @@ updated_at: "2026-05-12"
 ---
 # Mandat adalah kontrak anda dengan AMI
 
-<Term id="ami_mandate" /> bukan skrin tetapan. Di dalam <Term id="ami" /> <Term id="training_simulator" />, ia adalah kontrak yang anda tulis dengan pasukan analis simulasi anda sendiri — batasan yang Pengurus Portfoli (PM) akan kuatkan terhadap setiap <Term id="ami_verdict" /> yang dihasilkan oleh Bilik. Medan-medangan tersebut — `risk_score`, `max_drawdown_pct`, `halal`, `no_fossil_fuels`, `long_only`, `ticker_blocklist` — adalah had *anda* tetapkan. AMI tidak berunding mengenai Mandat. AMI tidak mencadangkan "anda sepatutnya kurangkan ini kepada 3%" — itu adalah nasihat, dan AMI bukan penasihat berlesen. Anda tetapkan ia; simulator beroperasi di dalamnya; anda berlatih menilai output analis di bawah peraturan yang anda nyatakan sendiri. Pada akhir pelajaran ini, anda akan memahami mengapa menyusun Mandat adalah tindakan paling berimplikasi dalam aplikasi ini.
+<Term id="ami_mandate" /> bukan skrin tetapan. Di dalam <Term id="ami" /> <Term id="training_simulator" />, ia adalah kontrak yang anda tulis dengan pasukan analis simulasi anda sendiri — iaitu batasan yang Pengurus Portfolio (PM) akan kuasakan terhadap setiap <Term id="ami_verdict" /> yang dihasilkan oleh Bilik. Medan-medan — `risk_score`, `max_drawdown_pct`, `halal`, `no_fossil_fuels`, `long_only`, `ticker_blocklist` — adalah had *anda* tetapkan. AMI tidak berunding mengenai Mandat. AMI tidak mencadangkan "anda sepatutnya kurangkan ini kepada 3%" — itu adalah nasihat, dan AMI bukan penasihat berlesen. Anda tetapkan; simulator beroperasi di dalamnya; anda berlatih menilai output analis di bawah peraturan yang anda nyatakan sendiri. Pada akhir pelajaran ini, anda akan memahami mengapa penyusunan Mandat adalah tindakan paling bermakna dalam aplikasi.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
@@ -31,30 +31,30 @@ no_fossil_fuels: false
 long_only: true
 ```
 
-Setiap Verdict untuk tahun seterusnya akan diperiksa terhadap medan-medan tersebut. <Term id="ami_convene_the_room" /> pada PCHEM (5183) di Bursa: Trader mencadangkan 2%. Semakan kepatuhan PM — `halal: true` memerlukan skrin, PCHEM lulus skrin, saiz dalam had, wilayah dibenarkan. LULUS. Sekarang rujuk pada TOPGLOV: trader mencadangkan posisi pendek. `long_only: true` mencetuskan BLOK sebelum saiz pun diperiksa.
+Setiap Verdict untuk tahun seterusnya disemak terhadap medan-medan tersebut. <Term id="ami_convene_the_room" /> pada PCHEM (5183) di Bursa: Trader mencadangkan 2%. Semakan pematuhan PM — `halal: true` memerlukan skrin, PCHEM lulus skrin, saiz dalam had, wilayah dibenarkan. LULUS. Kini, rujuk pada TOPGLOV: trader mencadangkan posisi pendek. `long_only: true` mengaktifkan BLOK sebelum saiz pun disemak.
 
-Mandat juga boleh diaudit. Setiap blokan yang dikeluarkan oleh PM merujuk kepada klausa khusus: *"Dagangan diblok — medan mandat `long_only` tidak membenarkan cadangan pendek."* Anda boleh melungsur ke bawah melalui sejarah keputusan anda dan melihat klausa mana yang paling kerap aktif — itu memberitahu anda sama ada Mandat anda membentuk keputusan seperti yang anda niatkan, atau sama ada anda menulis sesuatu pada hari pertama yang tidak lagi sesuai.
+Mandat juga boleh diaudit. Setiap blokir yang dikeluarkan oleh PM merujuk kepada klausa khusus: *"Dagangan diblokir — medan mandat `long_only` tidak membenarkan cadangan posisi pendek."* Anda boleh menatal kembali melalui sejarah keputusan anda dan melihat klausa mana yang paling kerap aktif — ini memberitahu anda sama ada Mandat anda membentuk keputusan seperti yang anda niatkan, atau sama ada anda menulis sesuatu pada hari pertama yang tidak lagi sesuai.
 
-Arah kontrak itu penting. Anda menulis Mandat; PM mengkuatkuarkannya. Pasukan dagangan bekerja *di dalam* batasan tersebut — cadangan Trader sudah cuba kekal dalam had, itulah sebabnya blokan PM kurang kerap berlaku daripada yang anda jangka. Tetapi apabila semangat pasukan dagangan melampaui batas, PM adalah garisan yang tidak bergerak. Walaupun **<Term id="ami_coach_your_agent" />** mengubah suai tidak mengedit Mandat. Mandat adalah objek data yang anda kawal secara langsung dalam Tetapan; ia tidak berada dalam sebarang arahan.
+Arah kontrak itu penting. Anda menulis Mandat; PM kuasakan ia. Pasukan dagangan bekerja *di dalam* batasan itu — cadangan Trader sudah cuba kekal dalam had, itulah sebabnya blokir PM kurang biasa daripada yang anda jangka. Tetapi apabila semangat pasukan dagangan melampaui batas, PM adalah garisan yang tidak bergerak. Walaupun perubahan **<Term id="ami_coach_your_agent" />** tidak mengedit Mandat. Mandat adalah objek data yang anda kawal secara langsung dalam Tetapan; ia tidak berada dalam sebarang arahan.
 
 ## Perangkap
 
-Perangkapnya ialah memperlakukan Mandat sebagai tetapan 'lepas dan lupa' dari proses pendaftaran awal. Kehidupan anda berubah — pendapatan, kewajipan, jangka masa, selera risiko — dan Mandat sepatutnya berubah bersamanya. Pengguna yang tidak pernah membuka semula editor mendapati diri mereka sama ada (a) sentiasa bertempur dengan PM kerana Mandat mereka lebih ketat daripada cara mereka sebenarnya ingin berdagang sekarang, atau (b) hanyut ke dalam dagangan yang Mandat akan telah blokan jika mereka mengemaskininya selepas penurunan terakhir mereka. Kontrak itu adalah antara *anda-sekarang* dan *AMI*. *Anda-enam-bulan-lalu* mungkin telah menulis sesuatu yang *anda-sekarang* tidak akan. Mengedit Mandat bukan melanggar peraturan; ia adalah memperbaharui kontrak.
+Perangkapnya ialah memperlakukan Mandat sebagai tetapan "lepas dan lupa" dari proses pendaftaran awal. Kehidupan anda berubah — pendapatan, kewajipan, jangka masa, selera risiko — dan Mandat sepatutnya berubah bersamanya. Pengguna yang tidak pernah membuka semula editor mendapati diri mereka sama ada (a) sentiasa bertelagah dengan PM kerana Mandat mereka lebih ketat daripada cara mereka sebenarnya ingin berdagang sekarang, atau (b) hanyut ke dalam dagangan yang akan diblokir oleh Mandat jika mereka mengemaskininya selepas penurunan terakhir mereka. Kontrak ini adalah antara *anda-sekarang* dan *AMI*. *Anda-enam-bulan-lalu* mungkin telah menulis sesuatu yang *anda-sekarang* tidak akan lakukan. Mengedit Mandat bukan melanggar peraturan; ia adalah memperbaharui kontrak.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="PM menyekat dagangan dengan menyatakan `risk_score: 3`. Anda tidak bersetuju — anda mahu kedudukan 4% ini. Apakah cara yang betul untuk mengendalikan situasi ini?"
+  question="PM menyekat dagangan dengan `risk_score: 3`. Anda tidak bersetuju — anda mahu posisi 4% ini. Bagaimana cara yang betul untuk mengendalikan ini?"
   options={[
-    "Buka editor Mandat, sama ada terima sekatan, ambil dagangan pada 3%, atau ubah `risk_score` selepas mempertimbangkan sama ada had baharu sesuai dengan kehidupan sebenar anda",
-    "Berbincang dengan PM agar lebih fleksibel terhadap dagangan yang yakin",
-    "Jalankan semula Verdict sehingga mendapat jawapan berbeza",
-    "Minta Peneliti Bull untuk berhujah dengan lebih kuat"
+    "Buka editor Mandat dan sama ada terima sekatan, ambil dagangan pada 3%, atau ubah `risk_score` selepas mempertimbangkan sama ada had baharu sesuai dengan kehidupan sebenar anda",
+    "Bimbing PM untuk lebih fleksibel terhadap dagangan yang yakin",
+    "Jalankan semula Verdict sehingga anda mendapat jawapan berbeza",
+    "Minta Penyelung Bull untuk berhujah dengan lebih kuat"
   ]}
   answer={0}
-  explanation="Mandat adalah milik anda untuk diedit. PM melaksanakan apa yang anda tulis. Jika Mandat anda tidak lagi sesuai dengan kehidupan anda, ubah ia dengan sengaja — tetapi ubah dalam editor, bukan melalui persuasi. Jawapan salah yang paling menggoda ialah 'brief PM' — brief tidak boleh mengedit Mandat; itu direka sedemikian rupa."
+  explanation="Mandat adalah milik anda. PM melaksanakan apa yang anda tulis. Jika Mandat anda tidak lagi sesuai dengan kehidupan anda, ubah ia dengan sengaja — tetapi ubah dalam editor, bukan melalui persuasi. Jawapan salah yang paling menggoda ialah 'brief PM' — brief tidak boleh mengedit Mandat; itu direka sedemikian rupa."
 />
 
 <Quiz
@@ -66,13 +66,13 @@ Perangkapnya ialah memperlakukan Mandat sebagai tetapan 'lepas dan lupa' dari pr
     "PM menulisnya dan pengguna melaksanakannya secara manual"
   ]}
   answer={1}
-  explanation="Mandat adalah milik anda. Concierge membantu anda menulisnya semasa onboarding, tetapi nilai-nilai itu milik anda dan anda boleh mengeditnya pada bila-bila masa dalam Tetapan. Tugas satu-satunya PM ialah melaksanakan apa yang anda tulis. Jawapan salah yang menggoda ialah 'dokumen berkongsi' — AMI tidak boleh mengedit Mandat anda, tidak pernah; ketidaksimetrian inilah yang menjadikan kontrak ini bermakna."
+  explanation="Mandat adalah milik anda. Concierge membantu anda menulisnya semasa onboarding, tetapi nilai-nilai adalah milik anda dan anda boleh mengeditnya pada bila-bila masa dalam Tetapan. Tugas PM hanyalah melaksanakan apa yang anda tulis. Jawapan salah yang menggoda ialah yang 'dokumen berkongsi' — AMI tidak boleh mengedit Mandat anda, sekali pun; asimetri inilah yang menjadikan kontrak itu bermakna."
 />
 
 ## Cuba sendiri
 
-Buka **Tetapan → Mandat**. Lihat nilai yang ditetapkan semasa. Tanya diri sendiri: *adakah saya menulis ini atau adakah saya menerima lalai pendaftaran awal enam minggu lalu?* Tukar satu medan yang tidak lagi sesuai — walaupun dengan satu nombor — dan simpan. Anda baru saja menggunakan satu-satunya kuasa yang PM tidak boleh mengatasi: kuasa anda sendiri.
+Buka **Tetapan → Mandat**. Lihat nilai yang ditetapkan semasa. Tanya diri sendiri: *adakah saya menulis ini atau saya menerima lalai pendaftaran awal enam minggu lalu?* Tukar satu medan yang tidak lagi sesuai — walaupun sebanyak satu nombor — dan simpan. Anda baru sahaja menggunakan satu-satunya kuasa yang PM tidak boleh mengatasi: kuasa anda sendiri.
 
-## Pengajaran
+## Kesimpulan
 
-Anda menulis Mandat; PM mengkuatkuarkan Mandat di dalam simulator. Perbaharui kontrak apabila kehidupan anda berubah — ia adalah satu-satunya dokumen dalam aplikasi yang AMI tidak boleh edit. AMI sedang mengajar anda menilai output analis di bawah peraturan anda sendiri, bukan memberikan nasihat untuk diikuti.
+Anda menulis Mandat; PM kuasakan Mandat di dalam simulator. Perbaharui kontrak apabila kehidupan anda berubah — ia adalah satu-satunya dokumen dalam aplikasi yang AMI tidak boleh edit. AMI sedang mengajar anda menilai output analis di bawah peraturan anda sendiri, bukan memberikan anda nasihat untuk diikuti.

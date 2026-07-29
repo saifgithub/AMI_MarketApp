@@ -11,64 +11,64 @@ topic: "breadth"
 prerequisites: ["029_volume_confirmation", "030_trend_confirmation_across_indicators", "059_bull_markets", "060_bear_markets"]
 tags: ["regime", "breadth", "advance_decline", "new_highs_lows", "confirmation"]
 agent_callouts: ["market_analyst", "research_manager"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Lebar pasaran
 
-Lebar pasaran adalah jawapan kepada satu soalan: apabila indeks bergerak, berapa banyak saham bergerak bersamanya? Rezim bull yang dipacu oleh 8 mega-cap adalah berbeza secara struktur daripada rezim bull di mana 70% isu NYSE berada di atas SMA 200-hari — dan yang kedua bertahan daripada kejutan yang pertama tidak. Selepas pelajaran ini, anda akan dapat mengesan lebar secara numerik (advance/decline, new-highs vs new-lows, % saham di atas SMA 200-hari), menamakan apa yang memberitahu lebar tentang ketahanan rezim, menamakan strategi yang gagal apabila lebar menyimpang, dan menyatakan keadaan pembatalan untuk pergerakan yang disahkan oleh lebar.
+Lebar pasaran adalah jawapan kepada satu soalan: apabila indeks bergerak, berapa banyak saham bergerak bersamanya? Rezim bull yang diketuai oleh 8 mega-cap adalah berbeza secara struktur daripada rezim bull di mana 70% isu NYSE berada di atas SMA 200-hari — dan yang kedua bertahan daripada kejutan yang tidak dapat ditanggung oleh yang pertama. Selepas pelajaran ini, anda akan dapat mengesan lebar pasaran secara numerik (kemajuan/penurunan, new-highs vs new-lows, % saham di atas SMA 200-hari), menamakan apa yang memberitahu lebar pasaran tentang ketahanan rezim, menamakan strategi yang gagal apabila lebar pasaran menyimpang, dan menyatakan keadaan pembatalan untuk pergerakan yang disahkan oleh lebar pasaran.
 
-## Bagaimana ia berlaku dalam pasaran sebenar
+## Bagaimana ini berlaku dalam pasaran sebenar
 
 Dua kes bertentangan dalam bull SPX yang sama:
 
-Peningkatan lebar sempit (Q1 2024): SPX meningkat 10.2% dari 1 Januari hingga 31 Mac 2024 dan ditutup pada 5,254 pada 28 Mac 2024. Tetapi hanya ~38% isu NYSE berada di atas SMA 200-hari mereka pada paras tinggi itu, berbanding 70%+ pada puncak bull sihat sebelumnya. Peningkatan itu dibawa oleh 7 nama mega-cap tech. Bacaan osilator A/D McClellan pada SPX berulang kali *lebih rendah* pada paras indeks baru — penyimpangan lebar bearish dalam buku teks.
+Kemajuan lebar sempit (Q1 2024): SPX meningkat 10.2% dari 1 Januari hingga 31 Mac 2024 dan menutup pada 5,254 pada 28 Mac 2024. Tetapi hanya ~38% isu NYSE berada di atas SMA 200-hari mereka pada paras tinggi itu, berbanding 70%+ pada puncak bull sihat sebelumnya. Kemajuan itu dibawa oleh 7 nama teknologi mega-cap. Bacaan osilator A/D McClellan pada SPX berulang kali *lebih rendah* pada paras indeks baru — perbezaan lebar pasaran bearish teks buku teks.
 
-Peningkatan lebar luas (Q4 2024): dari akhir Oktober hingga awal Disember 2024, SPX rali dari 5,750 ke 6,090 manakala % isu NYSE di atas SMA 200-hari mereka berkembang dari 58% ke 73%, new 52-week highs NYSE melebihi new 52-week lows sebanyak purata 250+ isu per sesi selama 7 minggu berturut-turut, dan Russell 2000 (IWM) berprestasi lebih baik daripada SPX sebanyak 4.5%. Small caps yang menyertai + advance/decline luas = rezim berkualiti tinggi.
+Kemajuan lebar luas (Q4 2024): dari akhir Oktober hingga awal Disember 2024, SPX naik dari 5,750 ke 6,090 manakala % isu NYSE di atas SMA 200-hari mereka berkembang dari 58% ke 73%, new 52-week highs NYSE melebihi new 52-week lows dengan purata 250+ isu per sesi selama 7 minggu berturut-turut, dan Russell 2000 (IWM) mengatasi SPX sebanyak 4.5%. Suku kecil yang menyertai + kemajuan/penurunan luas = rezim berkualiti tinggi.
 
-Peraturan pengesanan: "bull" yang "luas" sedang berkuat kuasa apabila % saham NYSE di atas SMA 200-hari mereka > 60% DAN new 52-week highs melebihi new 52-week lows selama 5 daripada 7 minggu terakhir DAN IWM mengekalkan irama atau berprestasi lebih baik daripada SPY selama 50 hari. Peningkatan "sempit" (≥3 minggu new SPX highs manakala % isu di atas SMA 200-hari < 50%) adalah isyarat penyimpangan lebar — kebimbangan ketahanan, bukan isyarat jual secara terpencil.
+Peraturan pengesanan: bull "luas" sedang berkuat kuasa apabila % saham NYSE di atas SMA 200-hari mereka > 60% DAN new 52-week highs melebihi new 52-week lows untuk 5 daripada 7 minggu terakhir DAN IWM mengekalkan irama atau mengatasi SPY selama 50 hari. Kemajuan "sempit" (≥3 minggu new SPX highs manakala % isu di atas SMA 200-hari < 50%) adalah isyarat perbezaan lebar pasaran — kebimbangan ketahanan, bukan isyarat jual secara terpencil.
 
-Di Bursa Malaysia: prinsip yang sama pada garis Advance/Decline KLCI; apabila KLCI naik tetapi A/D mendatar, rali itu tertumpu pada heavyweights dan secara struktur lebih nipis.
+Pada Bursa Malaysia: prinsip yang sama pada Garis Kemajuan/Penurunan KLCI; apabila KLCI naik tetapi A/D mendatar, rally itu tertumpu pada heavyweights dan secara struktur lebih nipis.
 
 ## Perangkap
 
-Perangkap lebar ialah membaca nombor indeks utama dan menganggap "pasaran" melakukan apa yang ditunjukkan olehnya. Pada Q1 2024, pelabur yang melihat SPX mencapai paras baru setiap dua minggu secara munasabah menganggap kekuatan adalah luas — dan tertumpu pada mega-cap yang paling melampau sebagai "pemenang" yang jelas. Apabila kejutan vol Ogos 2024 melanda, mega-cap itu turun 12–20% manakala purata saham S&P 500 hanya turun 6%. Portfoli "terdiversifikasi" pedagang yang terdiri daripada 5 mega-cap turun seperti satu sektor kerana itulah sebenarnya ia.
+Perangkap lebar pasaran ialah membaca nombor indeks utama dan menganggap "pasaran" melakukan apa yang ditunjukkan olehnya. Pada Q1 2024, pelabur yang melihat SPX mencapai paras baru setiap dua minggu secara munasabah menganggap kekuatan itu luas — dan menumpu kepada mega-cap yang paling melampau sebagai "pemenang" yang jelas. Apabila kejutan vol Ogos 2024 melanda, mega-cap itu turun 12–20% manakala purata saham S&P 500 hanya turun 6%. Portfolio "terdiversifikasi" pedagang yang terdiri daripada 5 mega-cap turun seperti satu sektor kerana itulah sebenarnya ia.
 
-Model yang betul: lebar adalah papan skor kualiti rezim. Peningkatan sempit tidak semestinya maut — banyak berjalan selama berbulan-bulan — tetapi ia memerlukan saiz kedudukan yang lebih kecil, diversifikasi yang lebih banyak, dan pembatalan yang dipantau rapat. Peningkatan luas memperoleh saiz yang dibenarkan oleh mandatnya.
+Model yang betul: lebar pasaran adalah papan skor kualiti rezim. Kemajuan sempit tidak semestinya maut — banyak berjalan selama berbulan-bulan — tetapi ia memerlukan saiz kedudukan yang lebih kecil, diversifikasi yang lebih banyak, dan pembatalan yang dipantau rapat. Kemajuan luas memperoleh saiz yang dibenarkan oleh mandat mereka.
 
 <ChatWith agent="market_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="SPX berada pada paras tertinggi sepanjang masa. Peratusan saham NYSE di atas SMA 200-hari ialah 41%. Jumlah baru 52-minggu tertinggi NYSE gagal berkembang selama 4 minggu walaupun indeks terus mencetak rekod baharu. Apa yang ditetapkan oleh kerangka lebar pasaran?"
+  question="SPX mencapai rekod tertinggi baharu. % saham NYSE di atas SMA 200-hari ialah 41%. Jumlah rekod tertinggi 52-minggu baharu NYSE gagal berkembang selama 4 minggu sambil indeks terus mencetak rekod baharu. Apa yang ditetapkan oleh kerangka lebar pasaran (breadth)?"
   options={[
     "Jual semua — perbezaan lebar pasaran sentiasa mendahului kejatuhan.",
-    "Indeks membuat rekod baharu — tingkatkan pendedahan untuk mengikuti indeks.",
+    "Indeks mencapai rekod tertinggi baharu — tingkatkan pendedahan untuk mengesan indeks.",
     "Abaikan lebar pasaran — hanya harga yang penting.",
-    "Peneraju sempit sedang berlaku; rejim adalah bullish tetapi berkualiti lebih rendah. Batasi kepekatan mega-cap lebih ketat daripada lantai mandat; perlukan pembatalan yang lebih dekat (contohnya, bertindak atas penutupan mingguan tunggal di bawah SMA 20-minggu berbanding menunggu pecahan 200-hari); kurangkan saiz posisi tunggal sebanyak ~25%."
+    "Lebar pasaran sempit sedang berlaku; rejim adalah bullish tetapi berkualiti lebih rendah. Batasi kepekatan mega-cap lebih ketat daripada lantai mandat; minta pembatalan yang lebih dekat (contohnya, bertindak pada penutupan mingguan tunggal di bawah SMA 200-minggu berbanding menunggu pecahan 200-hari); kurangkan saiz kedudukan tunggal sebanyak ~25%."
   ]}
   answer={3}
-  explanation="Jawapan salah yang menarik ialah meningkatkan pendedahan untuk mengikuti indeks — 'rekod baharu = tingkatkan pendedahan' adalah buku permainan rejim bullish tetapi melangkau semakan kualiti. Perbezaan lebar pasaran tidak mewajibkan penjualan semua aset, dan jawapan mengabaikan lebar pasaran-hanya-harga adalah apa yang menghasilkan penurunan drawdown mega-cap terkonsentrasi yang diterangkan dalam pelajaran. Jawapan sintesis menyesuaikan parameter mandat — kepekatan, pembatalan, saiz — tanpa meninggalkan rejim."
+  explanation="Jawapan salah yang menipu ialah meningkatkan pendedahan untuk mengesan indeks — 'rekod tertinggi = tingkatkan pendedahan' ialah buku permainan rejim bullish tetapi melangkau pemeriksaan kualiti. Perbezaan lebar pasaran tidak menetapkan penjualan semua, dan jawapan abaikan-lebar-pasaran-hanya-harga ialah apa yang menghasilkan penurunan terpusat mega-cap yang diterangkan dalam pelajaran. Jawapan sintesis menyesuaikan parameter mandat — kepekatan, pembatalan, saiz — tanpa meninggalkan rejim."
 />
 
 <Quiz
-  question="Dua senario. (A) SPX +8% dalam 60 hari, IWM +9%, % di atas SMA 200-hari meningkat dari 55% ke 71%, garisan A/D pada rekod baharu. (B) SPX +8% dalam 60 hari, IWM +1%, % di atas SMA 200-hari jatuh dari 60% ke 47%, garisan A/D di bawah rekod sebelumnya. Mensintesis rejim + lebar pasaran, yang manakah persekitar sisi panjang keyakinan tinggi dan apa akibat mandatnya?"
+  question="Dua senario. (A) SPX +8% selama 60 hari, IWM +9%, % di atas SMA 200-hari meningkat dari 55% ke 71%, garisan A/D pada rekod tertinggi baharu. (B) SPX +8% selama 60 hari, IWM +1%, % di atas SMA 200-hari jatuh dari 60% ke 47%, garisan A/D di bawah rekod tertinggi sebelumnya. Mensintesis rejim + lebar pasaran, yang manakah persekitaran sisi panjang berkeyakinan tinggi dan apa akibat mandatnya?"
   options={[
-    "(B) adalah keyakinan tinggi kerana mega-cap sedang memimpin.",
-    "(A) adalah keyakinan tinggi; saiz yang dibenarkan penuh mandat merentasi posisi, pelbagai merentas sektor. (B) adalah keyakinan rendah; kurangkan saiz, fokus hanya pada pemimpin yang disahkan, rancang pembatalan pada paras yang lebih dekat daripada yang diperlukan oleh (A).",
-    "Kedua-duanya adalah jual kerana volatiliti diandaikan.",
+    "(B) berkeyakinan tinggi kerana mega-cap sedang memimpin.",
+    "(A) berkeyakinan tinggi; saiz yang dibenarkan sepenuhnya mandat merentasi kedudukan, pelbagai merentasi sektor. (B) berkeyakinan rendah; kurangkan saiz, tumpukan hanya pada pemimpin yang disahkan, rancang pembatalan pada tahap yang lebih dekat daripada yang diperlukan oleh (A).",
+    "Kedua-duanya adalah jual kerana volatiliti disiratkan.",
     "Kedua-duanya sama — SPX +8% ialah SPX +8%."
   ]}
   answer={1}
-  explanation="Jawapan salah yang menarik ialah memanggil kedua-duanya sama — cetakan indeks yang sama, peluang yang sama. Tetapi dalaman membuat perbezaan antara rejim yang menyerap kejutan dan satu yang pecah pada lonjakan vol pertama. Memanggil (B) sebagai setup keyakinan tinggi songsangkan pelajaran — kepimpinan mega-cap tanpa penyertaan adalah setup yang lebih lemah, bukan yang lebih kuat. Sintesisnya ialah: rejim + lebar pasaran bersama menetapkan dials mandat, bukan hanya tajuk."
+  explanation="Jawapan salah yang menipu ialah menganggap kedua-duanya sama — cetak indeks yang sama, peluang yang sama. Tetapi dalaman membuat perbezaan antara rejim yang menyerap kejutan dan satu yang pecah pada lonjakan vol pertama. Memanggil (B) sebagai susunan berkeyakinan tinggi songsangkan pelajaran — kepimpinan mega-cap tanpa penyertaan ialah susunan yang lebih lemah, bukan yang lebih kuat. Sintesis ialah: rejim + lebar pasaran bersama menetapkan dials mandat, bukan tajuk sahaja."
 />
 
 ## Cuba sendiri
 
-Buka <Term id="ami_one_on_one" /> dengan Market Analyst dan tanya: "Berikan papan pemuka lebar hari ini — % saham NYSE di atas SMA 200-hari, new 52-week highs minus lows NYSE untuk 7 minggu lalu, dan prestasi 50-hari IWM vs SPY." Kemudian <Term id="ami_convene_the_room" /> pada mana-mana ticker yang sudah ada dalam <Term id="ami_watchlist" /> anda dan perhatikan sintesis Research Manager — mereka harus secara eksplisit menyebut konteks lebar apabila berhujah untuk atau menentang saiz. Jika tidak, itu adalah momen <Term id="ami_coach_your_agent" /> untuk Research Manager.
+Buka <Term id="ami_one_on_one" /> dengan Market Analyst dan tanya: "Berikan papan pemuka lebar pasaran hari ini — % saham NYSE di atas SMA 200-hari, new 52-week highs minus lows NYSE untuk 7 minggu lalu, dan prestasi 50-hari IWM vs SPY." Kemudian <Term id="ami_convene_the_room" /> pada mana-mana ticker yang sudah ada dalam <Term id="ami_watchlist" /> anda dan perhatikan sintesis Research Manager — mereka harus secara eksplisit menyebut konteks lebar pasaran apabila berhujah untuk atau menentang saiz. Jika tidak, itu adalah momen <Term id="ami_coach_your_agent" /> untuk Research Manager.
 
-## Pengambilan
+## Kesimpulan
 
-Lebar ialah gred kualiti pada rezim: peningkatan luas memperoleh saiz penuh yang dibenarkan mandat, peningkatan sempit memperoleh kedudukan yang lebih kecil dan pembatalan yang lebih rapat — cetakan indeks yang sama, preskripsi yang berbeza.
+Lebar pasaran adalah gred kualiti pada rezim: kemajuan luas memperoleh saiz penuh yang dibenarkan mandat, kemajuan sempit memperoleh kedudukan lebih kecil dan pembatalan yang lebih rapat — cetakan indeks sama, preskripsi berbeza.

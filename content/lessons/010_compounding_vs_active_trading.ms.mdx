@@ -1,6 +1,6 @@
 ---
 id: "010_compounding_vs_active_trading"
-title: "Pendapatan beraja berbanding dagangan aktif"
+title: "Percambahan vs dagangan aktif"
 duration_min: 5
 level: 1
 module: 2
@@ -11,46 +11,46 @@ topic: "compounding"
 prerequisites: ["009_risk_profile_basics"]
 tags: ["foundations", "compounding", "costs", "friction", "math"]
 agent_callouts: []
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Pendekatan Kompaun vs Perdagangan Aktif
+# Pendampingan vs Perdagangan Aktif
 
-Kompaun adalah pendekatan yang paling hampir dengan "makan percuma" yang ditawarkan oleh pasaran — tetapi hanya jika anda membiarkannya berjalan. Perdagangan aktif menjanjikan untuk mengatasi kompaun dengan menangkap pulangan tambahan di atas garis dasar, dan kadangkala ia berjaya. Perbandingan yang jujur bukanlah "perdagangan vs pelaburan" secara abstrak; ia adalah aritmetik pulangan berkompaun selama beberapa dekad berbanding garis dasar yang sama, tolak geseran (komisen, spread, cukai, kesilapan) yang pasti ditambah oleh perdagangan. Setelah anda dapat melakukan aritmetik tersebut, soalan tentang pendekatan mana yang sesuai untuk anda menjadi jauh lebih mudah dijawab.
+Pendampingan adalah pendekatan paling hampir kepada "makan percuma" yang ditawarkan oleh pasaran — tetapi hanya jika anda membiarkannya berjalan. Perdagangan aktif menjanjikan untuk mengatasi pendampingan dengan menangkap pulangan tambahan di atas asas, dan kadang-kadang ia berjaya. Perbandingan yang jujur bukanlah "perdagangan vs pelaburan" secara abstrak; ia adalah aritmetik pulangan berbanding (compounded) selama beberapa dekad berbanding asas yang sama tolak geseran (komisen, spread, cukai, kesilapan) yang pasti ditambahkan oleh perdagangan. Setelah anda dapat melakukan aritmetik itu, soalan tentang pendekatan mana yang sesuai untuk anda menjadi jauh lebih mudah dijawab.
 
 <Animation name="compounding_curve" />
 
 ## Contoh
 
-Lakukan pengiraan. Mulakan dengan $10,000 dilaburkan pada pulangan tahunan berkompaun 8% — kira-kira purata jangka panjang ekuiti AS yang luas, dengan dividen diulang pelaburan.
+Lakukan pengiraan. Mulakan dengan $10,000 dilaburkan pada pulangan tahunan berbanding 8% — kira-kira purata jangka panjang ekuiti AS yang luas, dengan dividen diinvestasikan semula.
 
 - Tahun 5: $10,000 × 1.08⁵ = **$14,693**
 - Tahun 10: $10,000 × 1.08¹⁰ = **$21,589**
 - Tahun 20: $10,000 × 1.08²⁰ = **$46,610**
 - Tahun 30: $10,000 × 1.08³⁰ = **$100,627**
 
-Akaun pelabur itu kira-kira **berganda setiap 9 tahun** tanpa tindakan lanjut. Sebahagian besar baki akhir adalah faedah atas faedah — pada tahun 30, lebih daripada 80% daripada $100,627 dijana *selepas* tahun 15.
+Akaun pelabur kira-kira **berganda setiap 9 tahun** tanpa tindakan lanjut. Sebahagian besar baki akhir adalah faedah atas faedah — pada tahun 30, lebih daripada 80% daripada $100,627 dijana *selepas* tahun 15.
 
-Sekarang, seorang pedagang aktif dengan $10,000 yang sama, "tepi" (edge) tahunan kasar 8%, berdagang 20 kali setahun. Geseran yang realistik dalam akaun runcit AS: ~$0.005/saham komisen ditambah ~0.05% kos spread berkesan setiap pusingan, ditambah cukai keuntungan modal jangka pendek kira-kira 25% ke atas keuntungan direalisasikan setiap tahun. Pulangan tahunan berkompaun bersih selepas geseran biasanya menciut kepada **5–6%** walaupun tepi kasar dikekalkan.
+Sekarang seorang pedagang aktif dengan $10,000 yang sama, "tepi" tahunan kasar 8% yang sama, berdagang 20 kali setahun. Geseran realistik dalam akaun runcit AS: komisen ~$0.005/saham ditambah kos spread efektif ~0.05% per pusingan, ditambah cukai keuntungan modal jangka pendek kira-kira 25% ke atas keuntungan direalisasikan setiap tahun. Pulangan tahunan berbanding bersih selepas geseran biasanya menciut kepada **5–6%** walaupun tepi kasar dikekalkan.
 
 - $10,000 pada 6% selama 20 tahun = **$32,071**
 - $10,000 pada 5% selama 20 tahun = **$26,533**
 
-Pedagang itu perlu betul sama seperti pelabur, setiap tahun selama 20 tahun, dan berakhir dengan $14,000–$20,000 *kurang*. Geseran itu bukan komisen — ia adalah kompaun keuntungan yang dicukai berbanding keuntungan tidak direalisasikan yang tidak dicukai.
+Pedagang perlu betul sama seperti pelabur, setiap tahun selama 20 tahun, dan berakhir dengan $14,000–$20,000 *lebih sedikit*. Geseran bukan komisen — ia adalah pendampingan keuntungan bercukai berbanding keuntungan tidak direalisasikan yang tidak bercukai.
 
 Peraturan yang boleh disangkal: perdagangan aktif mengalahkan beli-dan-pegang **hanya jika alpha tahunan kasar anda melebihi geseran transaksi + cukai keseluruhan** — biasanya 2–3% setahun untuk pedagang runcit AS.
 
 ## Perangkap
 
-Perangkapnya ialah menganggap kompaun membosankan dan perdagangan produktif. Kompaun kelihatan rata untuk dekad pertama — lengkung hanya melengkung dengan ketara selepas tahun 15 — jadi pemula meninggalkannya untuk dopamina P&L mingguan. Mereka menyerahkan fasa eksponensial lengkung itu untuk hidup dalam fasa linear hobi. Model mental yang membetulkan ini: kompaun dibayar oleh kesabaran, dan kesabaran adalah input paling jarang dalam pasaran. Jika anda berdagang, berdagang dengan wang yang **di atas** asas kompaun, bukan sebagai gantinya.
+Perangkapnya ialah menganggap pendampingan membosankan dan perdagangan produktif. Pendampingan kelihatan rata selama dekad pertama — lengkung hanya melengkung dengan ketara selepas tahun 15 — jadi pemula meninggalkannya untuk dopamin P&L mingguan. Mereka menyerahkan fasa eksponensial lengkung untuk hidup dalam fasa linear hobi. Model mental yang membetulkan ini: pendampingan dibayar oleh kesabaran, dan kesabaran adalah input paling langka dalam pasaran. Jika anda berdagang, berdagang dengan wang yang **di atas** asas pendampingan, bukan sebagai gantinya.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Berapakah jumlah anggaran pertumbuhan bagi $10,000 yang digabungkan pada kadar 8% setahun selama 20 tahun?"
+  question="$10,000 yang digabungkan pada kadar 8% setahun selama 20 tahun berkembang kepada jumlah anggaran sebanyak?"
   options={[
     "$80,000",
     "$46,610",
@@ -58,37 +58,37 @@ Perangkapnya ialah menganggap kompaun membosankan dan perdagangan produktif. Kom
     "$40,000"
   ]}
   answer={1}
-  explanation="$10,000 × 1.08²⁰ ≈ $46,610. Masa berganda pada 8% adalah kira-kira 9 tahun (Peraturan 72: 72 ÷ 8 = 9), jadi anda mendapat dua kali ganda penuh kepada $40,000 dan sedikit lebih di atasnya. Jawapan $26,000 adalah apa yang faedah mudah akan bayar — 8% × 20 tahun = 160% — dan jurang antara kedua-duanya ialah penggabungan."
+  explanation="$10,000 × 1.08²⁰ ≈ $46,610. Masa berganda pada 8% adalah kira-kira 9 tahun (Peraturan 72: 72 ÷ 8 = 9), jadi anda mendapat dua kali ganda penuh kepada $40,000 dan sedikit lagi di atasnya. Jawapan $26,000 adalah apa yang akan dibayar oleh faedah mudah — 8% × 20 tahun = 160% — dan jurang antara kedua-duanya ialah penggabungan."
 />
 
 <Quiz
-  question="Seorang pedagang mendakwa strateginya menghasilkan pulangan tahunan kasar sebanyak 9%, mengatasi penanda aras beli-dan-tahan sebanyak 8% dengan 1 mata peratus. Geseran tahunan anggaran mereka (komisen + spread + seretan cukai jangka pendek) ialah 3%. Kesimpulan manakah yang kukuh?"
+  question="Seorang pedagang mendakwa strateginya menjana pulangan tahunan kasar sebanyak 9%, mengatasi penanda aras beli dan pegang (buy-and-hold) sebanyak 8% dengan 1 mata peratus. Geseran tahunan anggaran mereka (komisen + spread + seretan cukai jangka pendek) ialah 3%. Kesimpulan manakah yang kukuh?"
   options={[
-    "Pulangan bersih pedagang selepas geseran adalah kira-kira 6%, yang lebih rendah daripada 8% beli-dan-tahan; pedagang tersebut memusnahkan nilai walaupun mempunyai alpha kasar positif",
+    "Pulangan bersih pedagang selepas geseran adalah kira-kira 6%, yang lebih rendah daripada 8% beli dan pegang; pedagang itu memusnahkan nilai walaupun mempunyai alpha kasar positif",
     "Geseran tidak digabungkan; hanya pulangan yang digabungkan, jadi seretan 3% ialah kos sekali",
-    "Pedagang menang sebanyak 1% setahun — selama 20 tahun itu ialah kelebihan bermakna",
-    "Pedagang memerlukan henti rugi yang lebih ketat untuk meningkatkan prestasi"
+    "Pedagang menang sebanyak 1% setahun — selama 20 tahun itu ialah kelebihan yang bermakna",
+    "Pedagang memerlukan had kerugian (stop-loss) yang lebih ketat untuk meningkatkan prestasi"
   ]}
   answer={0}
-  explanation="Kasar 9% tolak 3% geseran bersamaan dengan 6% bersih. Penanda aras ialah 8% dengan geseran hampir sifar (cukai ditangguhkan sehingga jualan, komisen rendah pada satu transaksi beli-dan-tahan). Pada $10K selama 20 tahun: pedagang berakhir hampir $32K, beli-dan-tahan berakhir hampir $46K. Pedagang mempunyai alpha kasar positif dan tetap kalah. Geseran digabungkan menentang anda sama seperti pulangan digabungkan untuk anda."
+  explanation="Kasar 9% tolak 3% geseran bersamaan dengan 6% bersih. Penanda aras ialah 8% dengan geseran hampir sifar (cukai ditangguhkan sehingga jualan, komisen rendah untuk satu transaksi beli dan pegang). Pada $10K selama 20 tahun: pedagang berakhir hampir $32K, beli dan pegang berakhir hampir $46K. Pedagang itu mempunyai alpha kasar positif dan masih rugi. Geseran menggabungkan menentang anda sama seperti pulangan menggabungkan untuk anda."
 />
 
 <Quiz
-  question="Seorang pembaca berhujah: 'Perdagangan aktif lebih baik kerana saya dapat mengelak pasaran bear yang pelabur beli-dan-tahan perlu hadapi.' Apakah hujah terkuat yang menggunakan apa yang diajar oleh pelajaran ini?"
+  question="Seorang pembaca berhujah: 'Perdagangan aktif lebih baik kerana saya boleh mengelak pasaran bear yang perlu ditunggui oleh pelabur beli dan pegang.' Apa penyangkal terkuat yang menggunakan apa yang diajar oleh pelajaran ini?"
   options={[
-    "Tuntutan itu boleh diuji: ia memerlukan pedagang betul tentang bila untuk keluar DAN bila untuk masuk semula, selepas geseran dan cukai, lebih kerap daripada tidak. Matematik lalai mengatakan mereka juga memerlukan ketepatan gabungan itu untuk menambah lebih daripada 2–3% tahunan — yang merupakan piawaian jauh lebih tinggi daripada yang disiratkan oleh 'mengelak pasaran bear'",
+    "Pernyataan itu boleh diuji: ia memerlukan pedagang itu betul tentang bila untuk keluar DAN bila untuk masuk semula, selepas geseran dan cukai, lebih kerap daripada tidak. Matematik lalai mengatakan mereka juga memerlukan ketepatan gabungan itu untuk menambah lebih daripada 2–3% tahunan — yang merupakan piawaian yang lebih tinggi daripada yang terdengar oleh 'mengelak pasaran bear'",
     "Perdagangan aktif lebih mudah secara psikologi daripada memegang melalui penurunan",
-    "Pasaran bear sentiasa pulih, jadi mengelakinya tidak perlu",
+    "Pasaran bear sentiasa pulih, jadi mengelak mereka tidak diperlukan",
     "Pasaran bear tidak dapat diramal, jadi ini adalah mustahil"
   ]}
   answer={0}
-  explanation="Sintesis: 'mengatasi beli-dan-tahan' bukan satu keputusan (keluar) tetapi dua (keluar + masuk semula), diulang, dicukai, dan dikomisenkan. Peraturan falsifikasi pelajaran — alpha kasar mesti melebihi geseran — terpakai di sini secara langsung. Kebanyakan strategi penjadualan pasaran gagal bukan kerana keluar adalah sukar tetapi kerana masuk semula selepas paras bawah lebih sukar daripada yang kelihatan, dan geseran digabungkan menentang anda semasa anda menunggu."
+  explanation="Sintesis: 'mengatasi beli dan pegang' bukan satu keputusan (keluar) tetapi dua (keluar + masuk semula), diulang, dicukai, dan dikomisenkan. Peraturan falsifikasi pelajaran — alpha kasar mesti melebihi geseran — terpakai di sini secara langsung. Kebanyakan strategi penjadualan pasaran gagal bukan kerana keluar adalah sukar tetapi kerana masuk semula selepas dasar lebih sukar daripada yang kelihatan, dan geseran menggabungkan menentang anda semasa anda menunggu."
 />
 
 ## Cuba sendiri
 
-Buka <Term id="ami_decision_journal" /> dan cipta entri "garis dasar": pembelian dan pegangan simulasi $10,000 bagi proksi indeks yang luas (SPY atau setara) yang dimasukkan hari ini. Tetapkan pengingat kalendar dalam 12 bulan. Kemudian, secara berasingan, jalankan <Term id="simulated_trade" /> aktif anda melalui <Term id="ami" /> seperti biasa. Pada tanda 12 bulan, bandingkan: adakah buku aktif anda mengalahkan garis dasar dengan lebih daripada geseran simulasi yang anda alami? Nombor itu — diulang selama bertahun-tahun — adalah satu-satunya ujian jujur sama ada anda sepatutnya berdagang atau tidak.
+Buka <Term id="ami_decision_journal" /> dan cipta entri "asas": pembelian dan pegangan simulasi $10,000 bagi proksi indeks yang luas (SPY atau setara) yang dimasukkan hari ini. Tetapkan peringatan kalendar dalam 12 bulan. Kemudian, secara berasingan, jalankan <Term id="simulated_trade" /> aktif anda melalui <Term id="ami" /> seperti biasa. Pada tanda 12 bulan, bandingkan: adakah buku aktif anda mengalahkan asas dengan lebih daripada geseran simulasi yang anda incurred? Nombor itu — diulang selama bertahun-tahun — adalah satu-satunya ujian jujur sama ada anda patut berdagang atau tidak.
 
-## Penamatan
+## Pengajaran
 
-Kompaun menang dengan kesabaran; perdagangan aktif menang hanya apabila tepi kasar anda melebihi geseran anda — ukur kedua-duanya, atau anda sedang menebak.
+Pendampingan menang dengan kesabaran; perdagangan aktif menang hanya apabila tepi kasar anda melebihi geseran anda — ukur kedua-duanya, atau anda sedang menebak.

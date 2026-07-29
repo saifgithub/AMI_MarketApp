@@ -1,6 +1,6 @@
 ---
 id: "231_transaction_cost_modeling"
-title: "Pemodelan kos transaksi — jurang antara simulasi dan pasaran sebenar"
+title: "Pemodelan kos transaksi — jurang antara simulasi dan sebenar"
 duration_min: 7
 level: 5
 module: 9
@@ -17,52 +17,52 @@ updated_at: "2026-05-12"
 ---
 # Pemodelan kos transaksi — jurang antara kertas dan pasaran sebenar
 
-Asas backtest (057) menamakan bias look-ahead dan overfitting sebagai pembunuh; pelajaran ini menamakan pembunuh senyap ketiga untuk peraturan berputaran tinggi: pemodelan kos. Backtest yang mengandaikan kos sifar adalah fiksyen. Backtest sebenar mesti memodelkan komisen, spread bid-ask, slippage pada pesanan pasaran, dan impak pasaran untuk sebarang saiz melebihi kecil. Untuk strategi berputaran rendah (1-2 perdagangan/tahun), kos adalah kesilapan pembundaran. Untuk strategi berputaran tinggi (RSI(2), intraday, scalping), kos boleh memakan 80% daripada kelebihan kasar. Selepas pelajaran ini, anda boleh menerapkan andaian kos yang realistik, mengenal pasti apabila strategi untung-kertas sebenarnya tidak untung dalam pasaran sebenar, dan memilih saiz kedudukan yang menyedari kos.
+Asas backtest (057) menamakan bias look-ahead dan overfitting sebagai pembunuh utama; pelajaran ini menamakan pembunuh senyap ketiga untuk peraturan perputaran tinggi: pemodelan kos. Backtest yang mengandaikan kos sifar adalah rekaan fiksyen. Backtest yang sebenar mesti memodelkan komisen, spread bid-ask, slippage pada pesanan pasaran, dan impak pasaran untuk sebarang saiz melebihi kecil. Untuk strategi perputaran rendah (1-2 perdagangan/tahun), kos adalah ralat pembundaran. Untuk strategi perputaran tinggi (RSI(2), intraday, scalping), kos boleh memakan 80% daripada margin kasar. Selepas pelajaran ini, anda boleh menggunakan andaian kos yang realistik, mengenal pasti apabila strategi yang untung di atas kertas sebenarnya tidak untung di pasaran sebenar, dan memilih saiz kedudukan yang menyedari kos.
 
 ## Bagaimana ia berlaku di pasaran sebenar
 
-Ambil peraturan reverensi-mean RSI(2) pada SPY: beli apabila RSI(2) < 5, jual apabila RSI(2) > 95. Selama 2015-2024, backtest kos sifar menunjukkan CAGR 18.2%, drawdown maksimum 9%, kadar kemenangan 71%, 89 perdagangan/tahun. Nampak seperti pencetak wang. Sekarang tambahkan kos.
+Ambil peraturan mean-reversion RSI(2) pada SPY: beli apabila RSI(2) < 5, jual apabila RSI(2) > 95. Selama 2015-2024, backtest tanpa kos menunjukkan CAGR 18.2%, drawdown maksimum 9%, kadar kemenangan 71%, 89 perdagangan/tahun. Nampak seperti pencetak wang. Sekarang tambahkan kos.
 
-SPY ialah ETF paling cecair di dunia. Spread biasanya $0.01 pada saham $500 — 0.2 bps setiap arah, ~0.4 bps pusing balik. Komisen pada broker moden ialah $0 setiap saham. Slippage pada pesanan pasaran biasanya 1-3 bps pusing balik pada waktu normal, lebih tinggi sekitar berita. Jumlah kos per pusing balik: ~3-5 bps. Dengan 89 pusing balik setahun, seretan kos keseluruhan ialah kira-kira 3-4.5% setahun. CAGR bersih turun dari 18.2% kepada kira-kira 14%. Masih sangat baik — cecairan SPY ialah kawan strategi.
+SPY ialah ETF paling cecair di dunia. Spread biasanya $0.01 pada saham $500 — 0.2 bps setiap arah, ~0.4 bps pusing balik. Komisen pada broker moden ialah $0 setiap saham. Slippage pada pesanan pasaran biasanya 1-3 bps pusing balik pada waktu biasa, lebih tinggi sekitar berita. Jumlah kos per pusing balik: ~3-5 bps. Dengan 89 pusing balik setahun, seretan kos keseluruhan adalah kira-kira 3-4.5% setahun. CAGR bersih turun dari 18.2% kepada kira-kira 14%. Masih sangat baik — kecairan SPY adalah rakan strategi.
 
-Sekarang cuba peraturan yang sama pada saham kap kecil seperti nama Bursa bervolume rendah (nama yang kurang diperdagangkan di Pasaran Utama dengan spread 30-50 bps dan slippage yang ketara). Kos pusing balik: 70-120 bps. Dengan 89 perdagangan/tahun, kos memakan 60-100% daripada kelebihan kertas — strategi itu tidak untung dalam pasaran sebenar. Peraturan yang sama, parameter yang sama, kelebihan yang sama — tetapi permukaan pelaksanaan memusnahkannya. Backtest yang jujur mengandaikan spread runcit kes terburuk untuk venue anda (kap besar AS: 3-5 bps pusing balik; kap kecil AS: 20-50 bps; kap besar Bursa seperti MAYBANK: 10-15 bps; kap kecil Bursa: 50-150 bps), komisen mengikut broker anda, dan model slippage yang berkadar dengan (saiz-perintah-anda / purata-isipadu-harian).
+Sekarang cuba peraturan yang sama pada saham kecil seperti nama Bursa bervolume rendah (nama yang kurang diperdagangkan di Pasaran Utama dengan spread 30-50 bps dan slippage yang ketara). Kos pusing balik: 70-120 bps. Dengan 89 perdagangan/tahun, kos memakan 60-100% daripada margin kertas — strategi ini tidak untung di pasaran sebenar. Peraturan yang sama, parameter yang sama, margin yang sama — tetapi permukaan pelaksanaan memusnahkannya. Backtest yang jujur mengandaikan spread runcit kes terburuk untuk venue anda (kapital besar AS: 3-5 bps pusing balik; kapital kecil AS: 20-50 bps; kapital besar Bursa seperti MAYBANK: 10-15 bps; kapital kecil Bursa: 50-150 bps), komisen mengikut broker anda, dan model slippage yang berkadar dengan (saiz-perintah-anda / purata-isi-padu-harian).
 
 ## Perangkap
 
-Kesilapan pemula ialah menggunakan satu nombor kos merentas semua strategi. Kos bergantung pada strategi, instrumen, dan saiz. Andaian 5 bps adalah tepat untuk kap besar AS yang cecair pada saiz runcit dan salah secara teruk untuk sebarang kap kecil atau sebarang saiz melebihi ~0.1% daripada purata isipadu harian. Model mental yang betul: model kos per kaki, kemudian SKALAKAN mereka dengan kes terburuk yang realistik (masuk pada hujung spread yang salah, isian separa pada stop, slippage jurang sesekali). Perangkap kedua ialah mengabaikan kos asimetri: stop yang ditembak pada pembukaan turun jurang sering dilaksanakan jauh di bawah harga pencetus — slippage pada stop boleh menjadi 5-10x slippage waktu normal. Perangkap ketiga ialah menguji pada venue yang tidak boleh anda dagangkan sebenarnya. <Term id="ami" /> ialah <Term id="training_simulator" />, tetapi kos dalam simulasi mesti mencerminkan venue sebenar anda atau <Term id="ami_verdict" />s tidak akan beralih.
+Kesilapan pemula ialah menggunakan satu nombor kos untuk semua strategi. Kos bergantung pada strategi, bergantung pada instrumen, dan bergantung pada saiz. Andaian 5 bps adalah tepat untuk kapital besar AS yang cecair pada saiz runcit dan salah secara teruk untuk sebarang kapital kecil atau sebarang saiz melebihi ~0.1% daripada purata isi padu harian. Model mental yang betul: modelkan kos per kaki, kemudian SKALAKAN ia dengan kes terburuk yang realistik (masuk pada hujung spread yang salah, isian separa pada stop, slippage jurang sesekali). Perangkap kedua ialah mengabaikan kos asimetri: stop yang ditembak pada pembukaan jurung ke bawah sering melaksanakan jauh di bawah harga pencetus — slippage pada stop boleh menjadi 5-10x slippage waktu biasa. Perangkap ketiga ialah menguji pada venue yang anda tidak boleh dagangkan sebenarnya. <Term id="ami" /> adalah <Term id="training_simulator" />, tetapi kos dalam simulasi mesti mencerminkan venue sebenar anda atau <Term id="ami_verdict" />s tidak akan beralih.
 
 <ChatWith agent="research_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Uji semula (backtest) peraturan intraday pada saham besar AS menunjukkan CAGR 15% dengan 200 dagangan setahun dan andaian kos sifar. Kos pusingan penuh (round-trip) realistik untuk runcit ialah 4 bps. Berapakah CAGR bersih selepas kos?"
+  question="Uji balik (backtest) peraturan intraday pada saham besar AS menunjukkan CAGR 15% dengan 200 dagangan setahun dan andaian kos sifar. Kos bulat (round-trip) realistik untuk runcit ialah 4 bps. Berapakah CAGR bersih selepas kos?"
   options={[
     "14.2%",
-    "Kira-kira 11% — 200 × 4 bps / 2 = seretan 4%",
-    "15% — kos tidak penting untuk nama yang cecair",
-    "Kira-kira 7% — 200 dagangan × 4 bps = 800 bps = seretan 8%"
+    "Kira-kira 11% — 200 × 4 bps / 2 = 5% seretan",
+    "15% — kos tidak penting untuk nama yang likuid",
+    "Kira-kira 7% — 200 dagangan × 4 bps = 800 bps = 8% seretan"
   ]}
   answer={3}
-  explanation="200 pusingan penuh × 4 bps setiap pusingan penuh = 800 mata asas = 8 mata peratusan seretan. Kasar 15% menjadi kira-kira 7% bersih. Jawapan 14.2% adalah salah yang memikat bagi pedagang yang lupa bahawa 4 bps adalah pusingan penuh setiap dagangan dan 200 dagangan mencecahkan seretan tersebut. Jawapan kira-kira 11% secara tersilap mengurangkan separuh kos (memperlakukannya sebagai satu hala apabila 4 bps sudah pun pusingan penuh)."
+  explanation="200 bulatan dagangan × 4 bps setiap bulatan = 800 titik asas = 8 mata peratusan seretan. Kasar 15% menjadi kira-kira 7% bersih. Jawapan 14.2% adalah salah yang memikat bagi pedagang yang lupa bahawa 4 bps adalah kos bulatan per dagangan dan 200 dagangan menggandakan seretan. Jawapan kira-kira 11% secara salah mengurangkan separuh kos (memandangkannya sebagai satu hala apabila 4 bps sudah pun kos bulatan)."
 />
 
 <Quiz
-  question="Anda mempunyai dua strategi yang diuji semula. Strategi A: CAGR 12%, 8 dagangan/tahun, pada saham besar AS. Strategi B: CAGR 28%, 250 dagangan/tahun, pada saham kecil Bursa dengan kos pusingan penuh purata 80 bps. Conservative Debator dan Research Manager menandakan soalan sintesis. Yang mana lebih baik untuk dilaksanakan?"
+  question="Anda mempunyai dua strategi yang diuji balik. Strategi A: CAGR 12%, 8 dagangan/tahun, pada saham besar AS. Strategi B: CAGR 28%, 250 dagangan/tahun, pada saham kecil Bursa dengan purata kos bulatan 80 bps. Conservative Debator dan Research Manager menandakan soalan sintesis. Yang mana lebih baik untuk dilancarkan?"
   options={[
-    "Strategi A bersih: 12% - (8 × 5bps) = 11.6%. Strategi B bersih: 28% - (250 × 80bps) = 28% - 200% = sangat negatif. Strategi A adalah pilihan yang boleh dilaksanakan — tepi (edge) Strategi B tidak dapat bertahan di permukaan pelaksanaannya.",
-    "Kedua-dua sama — pulangan kasar adalah serupa",
+    "Strategi A bersih: 12% - (8 × 5bps) = 11.6%. Strategi B bersih: 28% - (250 × 80bps) = 28% - 200% = sangat negatif. Strategi A adalah pilihan yang boleh dilancarkan — margin Strategi B tidak dapat bertahan di permukaan pelaksanaannya.",
+    "Kedua-duanya sama — pulangan kasar adalah serupa",
     "Strategi B — pulangan kasar yang lebih tinggi menang",
     "Strategi B dengan saiz lebih besar untuk mengatasi kos"
   ]}
   answer={0}
-  explanation="Sintesis: kos adalah fungsi bilangan dagangan × kos setiap dagangan, dan spread saham kecil adalah bencana untuk strategi berputaran tinggi. Seretan kos 200% Strategi B bermaksud ia bukan sekadar tidak menguntungkan — ia adalah bencana. Memilih Strategi B berdasarkan pulangan kasarnya adalah jawapan salah yang paling memikat kerana nombor kasar itulah yang dimahukan oleh spreadsheet. Membesarkan saiz Strategi B untuk mengatasi kos membuatnya lebih teruk dengan menambah kos impak pasaran di atas kos spread."
+  explanation="Sintesis: kos adalah fungsi bilangan dagangan × kos per dagangan, dan spread saham kecil adalah bencana untuk strategi berputaran tinggi. Seretan kos 200% Strategi B bermakna ia bukan sahaja tidak menguntungkan — ia adalah bencana. Memilih Strategi B berdasarkan pulangan kasarnya adalah jawapan salah yang paling memikat kerana nombor kasar itulah yang ganjaran oleh spreadsheet. Membesarkan saiz Strategi B untuk mengatasi kos menjadikannya lebih teruk dengan menambah kos impak pasaran di atas kos spread."
 />
 
 ## Cuba sendiri
 
-Dalam <Term id="ami_one_on_one" /> bersama Pengurus Penyelidikan, tampal purata perdagangan-per-tahun strategi semasa anda, spread bid-ask instrumen tipikal, komisen broker anda, dan saiz pesanan dijangka sebagai peratusan purata isipadu harian. Tanya: "Kira kos pusing balik yang realistik dan CAGR bersih selepas kos. Adakah strategi ini boleh bertahan di venue ini pada saiz ini?" Logkan nombor bersih dalam <Term id="ami_decision_journal" /> — itulah yang anda gunakan untuk saiz, bukan yang kasar.
+Dalam <Term id="ami_one_on_one" /> dengan Pengurus Penyelidikan, tampal purata perdagangan-per-tahun strategi semasa anda, spread bid-ask instrumen tipikal, komisen broker anda, dan saiz pesanan dijangka sebagai peratusan purata isi padu harian. Tanya: "Kira kos pusing balik yang realistik dan CAGR bersih selepas kos. Adakah strategi ini boleh dilaksanakan di venue ini pada saiz ini?" Logkan nombor bersih dalam <Term id="ami_decision_journal" /> — itulah yang anda gunakan untuk saiz, bukan margin kasar.
 
-## Terasan
+## Kesimpulan
 
-CAGR kasar adalah fiksyen; CAGR bersih selepas kos realistik ialah satu-satunya nombor yang penting. Strategi berputaran tinggi hidup atau mati oleh spread.
+CAGR kasar adalah rekaan; CAGR bersih selepas kos realistik ialah satu-satunya nombor yang penting. Strategi perputaran tinggi hidup atau mati oleh spread.

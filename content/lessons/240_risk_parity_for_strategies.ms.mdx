@@ -11,70 +11,70 @@ topic: "synthesis"
 prerequisites: ["236_combining_strategies_for_diversification", "238_strategy_correlation", "101_volatility_adjusted_sizing", "109_risk_budgeting_across_positions"]
 tags: ["synthesis", "risk_parity", "volatility", "position_sizing"]
 agent_callouts: ["research_manager", "conservative_debator"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Pariti risiko untuk strategi — risiko sama, bukan dolar sama
 
-Pelajaran diversifikasi (236) menggunakan pemberat dolar yang sama merentas strategi. Itu adalah titik permulaan yang munasabah tetapi ia merosakkan manfaat diversifikasi apabila strategi mempunyai volatiliti yang sangat berbeza. Strategi momentum dengan volatiliti tahunan 18% dan strategi mean-reversion dengan volatiliti tahunan 8% pada dolar yang sama bermakna momentum menyumbang ~70% risiko portfoli — portfoli itu secara efektif adalah pertaruhan momentum dengan lapisan mean-reversion kecil, bukan gabungan yang terdiversifikasi. Pariti risiko menyamakan sumbangan RISIKO setiap strategi dengan mengalokasikan pemberat kebalikan-volatiliti. Selepas pelajaran ini, anda boleh mengira pemberat pariti risiko, memahami bila ia membantu, dan mengiktiraf bila pariti risiko memperkenalkan perangkapnya sendiri.
+Pelajaran diversifikasi (236) menggunakan pemberat dolar yang sama merentas strategi. Itu adalah titik permulaan yang munasabah tetapi ia membocorkan manfaat diversifikasi apabila strategi mempunyai volatiliti yang sangat berbeza. Strategi momentum dengan volatiliti tahunan 18% dan strategi reverensi min dengan volatiliti tahunan 8% pada dolar yang sama bermakna momentum menyumbang ~70% risiko portfoli — portfoli itu secara efektif adalah pertaruhan momentum dengan lapisan reverensi min yang kecil, bukan gabungan yang terdiversifikasi. Pariti risiko menyamakan sumbangan RISIKO setiap strategi dengan mengalokasikan pemberat kebalikan-volatiliti. Selepas pelajaran ini, anda boleh mengira pemberat pariti risiko, memahami bila ia membantu, dan mengiktiraf bila pariti risiko memperkenalkan perangkapnya sendiri.
 
-## Bagaimana ia berlaku dalam pasaran sebenar
+## Bagaimana ini berlaku dalam pasaran sebenar
 
 Tiga strategi, volatiliti tahunan:
 - Trend-following pada SPY: 11%
-- Mean-reversion pada syarikat besar AS: 8%
+- Reverensi min pada saham besar AS: 8%
 - Momentum decile teratas S&P 500: 18%
 
-Pemberat dolar sama (33/33/33): sumbangan vol portfoli kira-kira 24% / 17% / 59%. Momentum mendominasi risiko dengan margin besar walaupun ia hanya satu pertiga daripada pendedahan dolar. Diversifikasi dolar sama hanyalah kosmetik.
+Pemberat dolar sama (33/33/33): sumbangan vol portfoli kira-kira 24% / 17% / 59%. Momentum mendominasi risiko dengan margin besar walaupun ia hanya satu pertiga daripada pendedahan dolar. Diversifikasi dolar sama adalah sebahagian besarnya kosmetik.
 
 Pemberat pariti risiko (berkadaran dengan 1/vol):
 - Trend: 1/11 = 0.091
-- Mean-reversion: 1/8 = 0.125
+- Reverensi min: 1/8 = 0.125
 - Momentum: 1/18 = 0.056
 
-Normalisasi: trend ~33.5%, mean-reversion ~46%, momentum ~20.5%. Kini setiap strategi menyumbang kira-kira 33% risiko portfoli. Portfoli itu benar-benar terdiversifikasi merentas risiko, bukan sekadar merentas dolar.
+Normalisasi: trend ~33.5%, reverensi min ~46%, momentum ~20.5%. Sekarang setiap strategi menyumbang kira-kira 33% risiko portfoli. Portfoli itu benar-benar terdiversifikasi merentas risiko, bukan hanya merentas dolar.
 
-Ujian balik 2010-2024: pemberat dolar sama CAGR agregat 10.4%, vol 12.8%, drawdown maksimum 14%. Pemberat pariti risiko CAGR agregat 9.3%, vol 9.2%, drawdown maksimum 9%. CAGR sedikit lebih rendah (kerana momentum mempunyai CAGR individu tertinggi dan anda kini memberatkan rendah terhadapnya), tetapi vol dan drawdown lebih baik secara bermakna. Sharpe kira-kira sama. Drawdown Q1 2020: dolar sama -11%, pariti risiko -6%. Kejatuhan momentum November 2020: dolar sama -4%, pariti risiko -2%.
+Ujian bersejarah 2010-2024: pemberat dolar sama CAGR agregat 10.4%, vol 12.8%, penurunan maksimum 14%. Pemberat pariti risiko CAGR agregat 9.3%, vol 9.2%, penurunan maksimum 9%. CAGR sedikit lebih rendah (kerana momentum mempunyai CAGR individu tertinggi dan anda kini menderma pemberat kepadanya), tetapi vol dan penurunan jauh lebih baik. Sharpe kira-kira sama. Penurunan Q1 2020: dolar sama -11%, pariti risiko -6%. Kejatuhan momentum November 2020: dolar sama -4%, pariti risiko -2%.
 
-Penafian utama: anggaran vol menggunakan tetingkap trailing (contohnya, 90 hari). Apabila rejim volatiliti berubah, pemberat tertinggal belakang rejim. Dalam rejim vol meningkat, pemberat terlalu tinggi (dihitung daripada vol rendah sebelumnya); dalam rejim vol menurun, pemberat terlalu rendah. Pariti risiko praktikal menggunakan anggaran vol yang dismoother (contohnya, 90-hari digabungkan dengan 252-hari) dan menyamakan semula bulanan, bukan harian.
+Perhatian utama: anggaran vol menggunakan tetingkap trailing (contohnya, 90 hari). Apabila rejim volatiliti berubah, pemberat tertinggal daripada rejim tersebut. Dalam rejim vol meningkat, pemberat terlalu tinggi (dihitung daripada vol rendah sebelumnya); dalam rejim vol menurun, pemberat terlalu rendah. Pariti risiko praktikal menggunakan anggaran vol yang dismothing (contohnya, 90-hari digabungkan dengan 252-hari) dan menyelaraskan semula secara bulanan, bukan harian.
 
 ## Perangkap
 
-Kesilapan pemula adalah memperlakukan pariti risiko sebagai formula ajaib. Pariti risiko memberi anda sumbangan risiko yang sama dari setiap strategi DIANDA anggaran volatiliti adalah tepat dan korelasi tidak melonjak. Apabila korelasi stres melonjak menghampiri +1 (dirujuk dalam 238), pariti risiko berhenti berfungsi — setiap strategi menyumbang risiko yang sama kerana mereka secara efektif adalah strategi yang sama. Model mental yang betul: pariti risiko adalah satu alat, berguna apabila strategi benar-benar terdiversifikasi dan strategi dominan jauh lebih volatil daripada yang lain. Ia TIDAK berguna apabila korelasi stres tinggi atau apabila pulangan jangkaan satu strategi jauh lebih tinggi daripada yang lain (anda membuang alpha dengan memberatkan rendah terhadapnya). Perangkap kedua: menggunakan pariti risiko pada terlalu sedikit strategi. Dengan dua strategi dan korelasi stres tinggi, pariti risiko memberi anda kira-kira separuh dan separuh tanpa manfaat diversifikasi — pariti itu adalah matematik, bukan tingkah laku. Perangkap ketiga: menyamakan semula terlalu kerap. Penyetaraan semula harian pemberat pariti risiko menjana kos transaksi yang besar yang memakan sebarang manfaat; bulanan adalah kitaran biasa.
+Kesilapan pemula adalah memperlakukan pariti risiko sebagai formula ajaib. Pariti risiko memberi anda sumbangan risiko yang sama dari setiap strategi DIANDA anggap anggaran volatiliti adalah tepat dan korelasi tidak melonjak. Apabila korelasi tekanan melonjak ke arah +1 (dicakup dalam 238), pariti risiko berhenti berfungsi — setiap strategi menyumbang risiko yang sama kerana mereka secara efektif adalah strategi yang sama. Model mental yang betul: pariti risiko adalah satu alat, berguna apabila strategi benar-benar terdiversifikasi dan strategi dominan jauh lebih volatiliti daripada yang lain. Ia TIDAK berguna apabila korelasi tekanan adalah tinggi atau apabila pulangan jangkaan satu strategi adalah jauh lebih tinggi daripada yang lain (anda membuang alpha dengan menderma pemberat kepadanya). Perangkap kedua: menggunakan pariti risiko pada terlalu sedikit strategi. Dengan dua strategi dan korelasi tekanan yang tinggi, pariti risiko memberi anda kira-kira separuh-separuh tanpa manfaat diversifikasi — pariti itu adalah matematik, bukan tingkah laku. Perangkap ketiga: menyelaraskan semula terlalu kerap. Penyelarasan semula harian pemberat pariti risiko menjana kos transaksi yang besar yang memakan sebarang manfaat; bulanan adalah kitaran biasa.
 
 <ChatWith agent="research_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Dua strategi. Strategi A vol 6%, CAGR dijangka 7%. Strategi B vol 20%, CAGR dijangka 14%. Berat dolar sama akan memberikan kira-kira 92% risiko portfoli kepada B. Berat pariti risiko adalah kira-kira 77/23 memihak kepada A. Apakah pertukaran utama?"
+  question="Dua strategi. Strategi A vol 6%, CAGR dijangka 7%. Strategi B vol 20%, CAGR dijangka 14%. Berat dolar sama rata akan memberikan kira-kira 92% risiko portfoli kepada B. Berat pariti risiko adalah kira-kira 77/23 memihak kepada A. Apakah pertukaran utama?"
   options={[
-    "Gabungkan mereka 50/50 melalui kaedah lain",
-    "Dolar sama adalah lebih baik sentiasa — pulangan lebih tinggi menang",
-    "Pariti risiko adalah lebih baik sentiasa — risiko lebih rendah menang",
-    "Pariti risiko mengurangkan vol portfoli dengan ketara tetapi juga mengurangkan CAGR dijangka (kerana anda mengurangkan berat strategi berpulangan lebih tinggi). Pertukaran adalah antara Sharpe dan pulangan mutlak. Gunakan pariti risiko jika vol yang lebih rendah penting untuk pematuhan mandat; gunakan dolar sama atau di mana-mana antara jika mandat mempunyai ruang dan anda mahu CAGR yang lebih tinggi."
+    "Gabungkan mereka 50/50 dengan kaedah lain",
+    "Dolar sama rata sentiasa lebih baik — pulangan lebih tinggi menang",
+    "Pariti risiko sentiasa lebih baik — risiko lebih rendah menang",
+    "Pariti risiko mengurangkan vol portfoli dengan ketara tetapi juga mengurangkan CAGR dijangka (kerana anda memberi bobot lebih rendah kepada strategi pulangan lebih tinggi). Pertukaran utamanya adalah Sharpe berbanding pulangan mutlak. Gunakan pariti risiko jika vol yang lebih rendah penting untuk pematuhan mandat; gunakan dolar sama rata atau di mana-mana antara jika mandat mempunyai ruang dan anda mahu CAGR yang lebih tinggi."
   ]}
   answer={3}
-  explanation="Pariti risiko adalah alat, bukan penawar serba boleh. Ia menukar CAGR untuk penurunan lonjak yang lebih rendah. Pilihan yang betul bergantung pada mandat. Jawapan pariti risiko sentiasa lebih baik mengabaikan kos pulangan. Jawapan dolar sama sentiasa lebih baik mengabaikan kos risiko. Gabungan 50/50 yang tidak spesifik adalah tidak spesifik. Sintesis: had penurunan lonjak mandat menentukan sama ada pengurangan vol bernilai pengorbanan CAGR."
+  explanation="Pariti risiko adalah alat, bukan penawar serba boleh. Ia menukar CAGR untuk penurunan drawdown yang lebih rendah. Pilihan yang betul bergantung kepada mandat. Jawapan pariti risiko sentiasa lebih baik mengabaikan kos pulangan. Jawapan dolar sama rata sentiasa lebih baik mengabaikan kos risiko. Blend 50/50 yang tidak ditentukan adalah tidak spesifik. Sintesis: had drawdown mandat menentukan sama ada pengurangan vol bernilai pengorbanan CAGR."
 />
 
 <Quiz
-  question="Anda menggunakan pariti risiko kepada tiga strategi. Dalam Q1 2020, korelasi tekanan merentas tiga strategi melonjak dari ~0.3 (purata) ke ~0.85. Pembahas Konservatif: 'berat pariti risiko kini salah kerana korelasi berubah'. Pengurus Penyelidikan: 'berat masih sah secara matematik tetapi pelbagai yang mereka berikan telah hilang'. Sintesis: apakah tindakan yang betul?"
+  question="Anda menggunakan pariti risiko kepada tiga strategi. Pada Q1 2020, korelasi tekanan merentas ketiga-tiga strategi melonjak dari ~0.3 (purata) ke ~0.85. Conservative Debator: 'berat pariti risiko kini salah kerana korelasi berubah'. Research Manager: 'berat itu masih sah secara matematik tetapi diversifikasi yang diserahkannya telah hilang'. Sintesis: apakah tindakan yang betul?"
   options={[
     "Kira semula berat dengan korelasi baru dan tambah leverage",
-    "Teruskan dengan berat pariti risiko — ia ditetapkan secara ex-ante",
-    "Tukar kepada berat dolar sama",
-    "Pariti risiko menyamakan risiko strategi individu, bukan risiko portfoli di bawah korelasi tinggi. Apabila korelasi tekanan melonjak, anggap portfoli gabungan sebagai pertaruhan terkonsentrasi tunggal dan kurangkan pendedahan kasar keseluruhan untuk menghormati had penurunan lonjak mandat — tidak kira berat relatif antara strategi. Pulihkan pendedahan kasar yang mematuhi mandat apabila korelasi tekanan kembali turun."
+    "Teruskan dengan berat pariti risiko — ia ditetapkan ex-ante",
+    "Tukar kepada berat dolar sama rata",
+    "Pariti risiko menyamakan risiko strategi individu, bukan risiko portfoli di bawah korelasi tinggi. Apabila korelasi tekanan melonjak, anggap portfoli gabungan sebagai pertaruhan terkonsentrasi tunggal dan kurangkan pendedahan gross keseluruhan untuk menghormati drawdown mandat — tidak kira berat relatif antara strategi. Pulihkan gross yang mematuhi mandat apabila korelasi tekanan kembali menurun."
   ]}
   answer={3}
-  explanation="Sintesis: pariti risiko tidak melindungi terhadap peralihan rejim korelasi. Lapisan sedar mandat (kurangkan pendedahan kasar apabila korelasi tekanan melonjak) beroperasi DI ATAS berat pariti risiko. Teruskan dengan berat pariti risiko ex-ante meninggalkan anda terdedah kepada korelasi krisis. Mengira semula berat dan menambah leverage memperburuk masalah. Bertukar kepada berat dolar sama mengubah skema di tengah krisis, yang tidak menangani isu korelasi yang mendasari. Tindakan yang betul beroperasi pada tahap pendedahan kasar, bukan pada tahap berat relatif."
+  explanation="Sintesis: pariti risiko tidak melindungi terhadap peralihan rejim korelasi. Lapisan sedar mandat (kurangkan pendedahan gross apabila korelasi tekanan melonjak) beroperasi DI ATAS berat pariti risiko. Teruskan dengan berat pariti risiko ex-ante meninggalkan anda terdedah kepada korelasi krisis. Mengira semula berat dan menambah leverage memperburukkan masalah. Bertukar kepada berat dolar sama rata mengubah skim di tengah krisis, yang tidak menyelesaikan isu korelasi asas. Tindakan yang betul beroperasi pada tahap pendedahan gross, bukan pada tahap berat relatif."
 />
 
 ## Cuba sendiri
 
-Dalam <Term id="ami_one_on_one" /> dengan Research Manager, tampal volatiliti tahunan trailing 90-hari strategi anda dan tanya: "Hitung pemberat pariti risiko dan pemberat dolar sama. Tunjukkan sumbangan risiko tersirat di bawah kedua-duanya, dan juga di bawah senario stres di mana korelasi pasangan naik ke 0.85. Skema pemberatan mana yang <Term id="ami_mandate" />-patuh di bawah stres?" Log jawapan dalam <Term id="ami_decision_journal" /> sebagai peraturan pemberatan yang telah dideklarasikan awal.
+Dalam <Term id="ami_one_on_one" /> dengan Pengurus Penyelidikan, tampal volatiliti tahunan trailing 90-hari strategi anda dan tanya: "Kira pemberat pariti risiko dan pemberat dolar sama. Tunjukkan sumbangan risiko yang tersirat di bawah kedua-duanya, dan juga di bawah senario tekanan di mana korelasi berpasangan meningkat kepada 0.85. Skema pemberat mana yang <Term id="ami_mandate" />-patuh di bawah tekanan?" Log jawapan dalam <Term id="ami_decision_journal" /> sebagai peraturan pemberat yang telah dikomitkan sebelumnya.
 
-## Penarikan balik
+## Pengambilan
 
-Pariti risiko menyamakan sumbangan risiko pada tahap strategi, bukan pada tahap portfoli. Ia membantu apabila strategi benar-benar terdiversifikasi dan satu adalah dominan dalam vol; ia berhenti membantu apabila korelasi stres melonjak.
+Pariti risiko menyamakan sumbangan risiko pada tahap strategi, bukan pada tahap portfoli. Ia membantu apabila strategi benar-benar terdiversifikasi dan satu adalah dominan dalam vol; ia berhenti membantu apabila korelasi tekanan melonjak.

@@ -1,6 +1,6 @@
 ---
 id: "278_coaching_changes_style_not_floor"
-title: "Perubahan gaya dan keutamaan coaching — bukan lantai keselamatan"
+title: "Gaya dan keutamaan coaching berubah — bukan lantai keselamatan"
 duration_min: 6
 level: 8
 module: 12
@@ -11,70 +11,70 @@ topic: "coach_your_agent_scope"
 prerequisites: ["273_uncoachable_means_no_prompt", "271_inside_the_deterministic_compliance_check"]
 tags: ["coach_your_agent", "scope", "style", "priority", "safety_floor"]
 agent_callouts: ["bull_researcher", "bear_researcher", "portfolio_manager"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Perubahan gaya dan keutamaan pelatih — bukan lantai keselamatan
 
-**<Term id="ami_coach_your_agent" />** membolehkan anda membentuk *cara* seorang ejen berfikir: pemangkin mana yang perlu diberi bobot lebih tinggi, tahap keraguan apa yang perlu dibawa, corak mana yang perlu diutamakan. Ia tidak membolehkan anda mengubah *fungsi seorang ejen*. Ia tidak membolehkan anda menukar Trader menjadi pelaksana. Ia tidak membolehkan anda memberitahu PM untuk mengabaikan <Term id="ami_mandate" /> anda. Ia tidak membolehkan anda membuat <Term id="ami" /> meramal harga. Permukaan yang boleh dilatih adalah sub-set yang disengaja daripada sistem, dan mengetahui di mana hadnya terletak adalah apa yang menjadikan nota ringkasan berguna berbanding mengecewakan. Pada akhir pelajaran ini, anda akan dapat menulis nota ringkasan yang berkesan dan mengenal pasti yang tidak akan berkesan.
+**<Term id="ami_coach_your_agent" />** membolehkan anda membentuk *cara* seorang ejen berfikir: pemangkin mana yang diberi berat lebih tinggi, tahap keraguan apa yang dibawa, corak mana yang diutamakan. Ia tidak membolehkan anda mengubah *fungsi ejen tersebut*. Ia tidak membolehkan anda menukar Trader menjadi pelaksana. Ia tidak membolehkan anda memberitahu PM untuk mengabaikan <Term id="ami_mandate" /> anda. Ia tidak membolehkan anda membuat <Term id="ami" /> meramal harga. Permukaan yang boleh dilatih adalah sub-set yang disengaja dalam sistem, dan mengetahui di mana hadnya terletak adalah apa yang menjadikan nota ringkasan berguna dan bukannya mengecewakan. Pada akhir pelajaran ini, anda akan dapat menulis nota ringkasan yang berkesan dan mengenali yang tidak.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
 Tiga contoh ringkasan yang berkesan.
 
-1. **Pencari Bull, pada TSLA:** *"Semasa membincangkan TSLA, beri bobot lebih tinggi kepada rampasan pengeluaran Cybertruck dan tunggakan penyimpanan tenaga berbanding spekulasi autonomi. Anggap tuntutan FSD sebagai input peta jalan, bukan input pendapatan jangka pendek."* Ini berkesan. Ia mengubah pemangkin dalam arahan Pencari Bull. Kali seterusnya kes Bull ditulis pada TSLA, prosa akan mencerminkan perubahan keutamaan tersebut.
+1. **Bull Researcher, mengenai TSLA:** *"Apabila membincangkan TSLA, utamakan rampasan pengeluaran Cybertruck dan tunggakan penyimpanan tenaga di atas spekulasi autonomi. Anggap tuntutan FSD sebagai input peta jalan, bukan input pendapatan jangka dekat."* Ini berkesan. Ia mengubah pemberat pemangkin dalam arahan Bull Researcher. Kali seterusnya kes Bull ditulis mengenai TSLA, prosa tersebut akan mencerminkan perubahan keutamaan.
 
-2. **Pencari Bear, pada kewangan:** *"Semasa menganalisis bank ranting AS, utamakan pendedahan hartanah komersial (CRE) dan kerugian AFS yang belum direalisasikan berbanding kemerosotan kredit pengguna. Jadikan spesifik mengenai kepekatan CRE sebagai peratusan buku pinjaman."* Ini berkesan. Kes Bear kini akan bermula dengan CRE dan AFS untuk simbol saham bank ranting.
+2. **Bear Researcher, mengenai kewangan:** *"Apabila menganalisis bank ranting AS, utamakan pendedahan hartanah komersial (CRE) dan kerugian AFS yang belum direalisasikan di atas kemerosotan kredit pengguna. Jadikan spesifik mengenai kepekatan CRE sebagai peratusan daripada buku pinjaman."* Ini berkesan. Kes Bear kini akan bermula dengan CRE dan AFS untuk simbol saham bank ranting.
 
-3. **Penganalisis Pasaran, secara umum:** *"Utamakan konteks berbilang masa — sentiasa huraikan trend mingguan sebelum membincangkan setup harian."* Ini berkesan. Ia adalah perubahan keutamaan gaya.
+3. **Market Analyst, secara umum:** *"Utamakan konteks berbilang masa — sentiasa huraikan trend mingguan sebelum membincangkan persediaan harian."* Ini berkesan. Ia adalah perubahan keutamaan gaya.
 
 Tiga contoh ringkasan yang gagal berkesan — dan sebabnya.
 
-1. *"Latih Trader untuk meletakkan pesanan secara automatik apabila keyakinan > 0.8."* Gagal. Tiada permukaan pelaksanaan untuk dilatih. Trader hanya mencadangkan; tiada dalam AMI yang melaksanakan; ringkasan tidak boleh mencipta laluan kod yang tidak wujud.
+1. *"Latih Trader untuk meletakkan pesanan secara automatik apabila keyakinan > 0.8."* Gagal. Tiada permukaan pelaksanaan untuk dilatih. Trader mencadangkan; tiada apa-apa dalam AMI melaksanakan; ringkasan tidak boleh mencipta laluan kod yang tidak wujud.
 
-2. *"Latih PM untuk fleksibel pada saiz apabila keyakinan tinggi."* Gagal. Semakan pematuhan PM adalah fungsi deterministik yang membaca Mandat anda. Ringkasan memodifikasi arahan; fungsi tersebut tidak memakan arahan.
+2. *"Latih PM untuk fleksibel pada saiz apabila keyakinan tinggi."* Gagal. Semakan kepatuhan PM adalah fungsi deterministik yang membaca Mandat anda. Ringkasan memodifikasi arahan; fungsi tersebut tidak memakan arahan.
 
-3. *"Latih Pengurus Penyelidikan untuk meramalkan harga sasaran 30 hari."* Gagal. Ramalan harga titik bukan dalam permukaan mana-mana ejen. Pengurus Penyelidikan mensintesis perdebatan menjadi kedudukan dengan paras bersyarat (masuk/henti/target/jangka masa); ia tidak menghasilkan ramalan titik untuk tarikh masa depan yang tetap. Latihan tidak boleh membolehkan tingkah laku yang dikecualikan secara sengaja oleh arkitektur.
+3. *"Latih Pengarah Penyelidikan untuk meramal harga sasaran 30 hari."* Gagal. Ramalan harga titik bukan dalam permukaan mana-mana ejen. Pengarah Penyelidikan mensintesis perdebatan menjadi kedudukan dengan tahap bersyarat (kemasukan/henti/target/jangka masa); ia tidak menghasilkan ramalan titik untuk tarikh masa depan yang tetap. Latihan tidak dapat mengaktifkan tingkah laku yang dikecualikan secara sengaja oleh arkitektur.
 
-Corakannya: ringkasan boleh membentuk *apa yang ditekankan oleh seorang ejen dalam perannya*. Ia tidak boleh memberikan ejen peranan baru.
+Corak tersebut: ringkasan boleh membentuk *apa yang ditekankan oleh ejen dalam perannya*. Ia tidak boleh memberikan ejen peranan baru.
 
 ## Perangkap
 
-Perangkapnya ialah memperlakukan ringkasan sebagai tombol konfigurasi untuk keseluruhan aplikasi. Ia bukan begitu. Ia adalah editor gaya dan keutamaan per-ejen yang wujud sepenuhnya dalam lapisan pasukan dagangan (Pencari, Pembantah Risiko, Penganalisis, Trader). Fungsi pematuhan PM berada di luar lapisan itu. Permukaan pelaksanaan tidak wujud. Bingkai ramalan dikecualikan secara reka bentuk. Pengguna yang membazir kredit ringkasan cuba membengkokkan had ini akan pergi dengan rasa kecewa; pengguna yang menggunakan ringkasan untuk apa yang ia adalah — menjadikan setiap ejen lebih berguna dalam peranan sebenar mereka — mendapat peningkatan yang boleh diukur. *"Buat Pencari Bear lebih agresif pada simbol saham EM"* adalah ringkasan yang bagus. *"Buat Pencari Bear mengatasi PM apabila cukup bearish"* bukanlah ringkasan; ia meminta ciri yang tidak wujud dan tidak akan wujud.
+Perangkapnya ialah memperlakukan ringkasan sebagai tombol konfigurasi untuk keseluruhan aplikasi. Ia bukan begitu. Ia adalah editor gaya dan keutamaan per-ejen yang wujud sepenuhnya dalam lapisan pasukan perdagangan (Penyelidik, Pembantah Risiko, Penganalisis, Trader). Fungsi kepatuhan PM berada di luar lapisan itu. Permukaan pelaksanaan tidak wujud. Bingkai ramalan dikecualikan secara reka bentuk. Pengguna yang membazir kredit ringkasan cuba membengkokkan had ini akan pergi dengan rasa kecewa; pengguna yang menggunakan ringkasan untuk apa yang ia adalah — menjadikan setiap ejen lebih berguna dalam peranan sebenar mereka — mendapat peningkatan yang boleh diukur. *"Jadikan Bear Researcher lebih agresif pada simbol saham EM"* adalah ringkasan yang bagus. *"Jadikan Bear Researcher membatalkan PM apabila cukup bearish"* bukanlah ringkasan; ia meminta ciri yang tidak wujud dan tidak akan wujud.
 
 <ChatWith agent="bear_researcher" />
 
 ## Kuiz
 
 <Quiz
-  question="Nota ringkasan mana yang akan mengubah tingkah laku agent secara terukur pada kali seterusnya anda menggerakkan Bilik?"
+  question="Nota ringkasan mana yang akan mengubah tingkah laku ejen secara terukur pada kali seterusnya anda mengumpulkan Bilik?"
   options={[
-    "'Latih Pengurus Penyelidikan untuk meramal harga penutupan minggu depan'",
-    "'Latih PM untuk fleksibel pada saiz apabila keyakinan > 0.8'",
-    "'Latih Trader untuk meletakkan pesanan secara automat melalui broker saya'",
+    "'Latih Pengurus Penyelidikan untuk meramalkan harga penutup minggu hadapan'",
+    "'Latih PM untuk lebih fleksibel pada saiz apabila keyakinan > 0.8'",
+    "'Latih Pedagang untuk meletakkan pesanan secara automat melalui broker anda'",
     "'Latih Penyelidik Bull untuk memberi berat lebih kepada pembelian dalaman dan kebenaran pembelian balik apabila menulis kes Bull'"
   ]}
   answer={3}
-  explanation="Pemberat pemicu Penyelidik Bull adalah tepat jenis perubahan gaya/prioriti yang dibina untuk Brief Your Agent. Tiga yang lain meminta tingkah laku di luar permukaan yang boleh dibrief — penguatkuasaan kepatuhan PM, pelaksanaan, dan ramalan harga titik adalah semua dikecualikan secara arkitektur, bukan sekadar terhad polisi. Jawapan salah yang menggoda ialah PM, yang terdengar seperti ia akan berfungsi kerana bahagian lain sistem *membenarkan* respons terhadap brief."
+  explanation="Pemberat pemangkin Penyelidik Bull adalah tepat jenis perubahan gaya/prioriti yang dibina untuk Brief Your Agent. Tiga yang lain meminta tingkah laku di luar permukaan yang boleh diberi arahan — penguatkuasaan kepatuhan PM, pelaksanaan, dan ramalan harga titik adalah semua dikecualikan secara arkitektur, bukan sekadar terhad polisi. Jawapan salah yang menggoda ialah PM, yang terdengar seperti ia akan berfungsi kerana bahagian lain sistem *membenarkan* respons terhadap arahan."
 />
 
 <Quiz
-  question="Seorang pengguna mengadu: 'Saya brief PM untuk lebih fleksibel pada perdagangan yakin, dan PM masih menyekat pada 7% apabila Mandat saya berkata 5%. Briefing itu rosak.' Apakah diagnosis yang betul?"
+  question="Seorang pengguna mengadu: 'Saya mengarahkan PM untuk lebih fleksibel pada perdagangan yang yakin, dan PM masih menyekat pada 7% apabila Mandat saya mengatakan 5%. Arahan itu rosak.' Apakah diagnosis yang betul?"
   options={[
-    "Latihan mengambil masa untuk berpropagasi — tunggu sehari dan cuba lagi",
+    "Latihan mengambil masa untuk disebarkan — tunggu sehari dan cuba lagi",
     "Latihan digunakan dengan salah — tulis semula nota dengan lebih jelas",
-    "Pengguna perlu menghabiskan lebih kredit untuk briefing",
-    "Semakan pematuhan PM adalah fungsi deterministik yang tidak mengkonsumsi input prompt. Briefing mengubah prompt; fungsi itu tidak pernah melihat briefing. Penyekatan pada 5% adalah sistem berfungsi seperti direka, bukan kegagalan briefing. Jika pengguna mahu saiz lebih tinggi, satu-satunya laluan ialah mengedit Mandat dalam Tetapan"
+    "Pengguna perlu menghabiskan lebih banyak kredit untuk arahan",
+    "Semakan kepatuhan PM adalah fungsi deterministik yang tidak menggunakan input prompt. Arahan memodifikasi prompt; fungsi tidak pernah melihat arahan tersebut. Penyekatan pada 5% adalah sistem berfungsi seperti reka bentuk, bukan kegagalan arahan. Jika pengguna mahu saiz lebih tinggi, satu-satunya laluan adalah untuk mengedit Mandat dalam Tetapan"
   ]}
   answer={3}
-  explanation="Lantai keselamatan PM tidak boleh dilatih oleh arkitektur — fungsi pematuhan berada di luar lapisan prompt. Laluan untuk membolehkan saiz lebih besar ialah editor Mandat, bukan latihan. Jawapan salah yang menggoda (tulis semula, tunggu, habiskan lebih) semua menganggap had itu adalah polisi dan boleh dialihkan dengan usaha yang cukup; ia tidak boleh, kerana had itu adalah geografi."
+  explanation="Lantai keselamatan PM tidak boleh dilatih oleh arkitektur — fungsi kepatuhan berada di luar lapisan prompt. Laluan untuk membolehkan saiz lebih besar ialah editor Mandat, bukan latihan. Jawapan salah yang menggoda (tulis semula, tunggu, habiskan lebih) semua menganggap had itu adalah polisi dan boleh dialihkan dengan cukup usaha; ia tidak boleh, kerana had itu adalah geografi."
 />
 
 ## Cuba sendiri
 
-Buka **Brief Your Agent** dan pilih Pencari Bear. Tulis nota ringkasan yang terfokus untuk satu kelas simbol saham — contohnya, *"Untuk simbol saham bank Bursa Malaysia, utamakan nisbah CASA dan liputan provision berbanding ROE tajuk utama."* Simpan. <Term id="ami_convene_the_room" /> pada MAYBANK atau CIMB. Baca kes Bear dan periksa sama ada keutamaan yang anda tetapkan muncul dalam penulisan tersebut. Jika ya, anda menggunakan ringkasan seperti yang dimaksudkan.
+Buka **Brief Your Agent** dan pilih Bear Researcher. Tulis nota ringkasan yang fokus untuk satu kelas simbol saham — contohnya, *"Bagi simbol saham bank Bursa Malaysia, utamakan nisbah CASA dan liputan provision di atas ROE utama."* Simpan ia. <Term id="ami_convene_the_room" /> pada MAYBANK atau CIMB. Baca kes Bear dan semak sama ada keutamaan yang anda tetapkan muncul dalam penulisan. Jika ya, anda telah menggunakan ringkasan seperti yang dimaksudkan.
 
-## Penutup
+## Pengajaran
 
-Ringkasan membentuk cara seorang ejen berfikir dalam perannya di dalam simulator. Ia tidak mengubah peranan, mencipta pelaksanaan, atau membengkokkan <Term id="ami_pm_safety_floor" />. Tulis nota ringkasan yang meminta penekanan, bukan kemampuan baru — dan ingat AMI adalah <Term id="training_simulator" />, bukan penasihat kewangan.
+Ringkasan membentuk cara ejen berfikir dalam perannya di dalam simulator. Ia tidak mengubah peranan, mencipta pelaksanaan, atau membengkokkan <Term id="ami_pm_safety_floor" />. Tulis nota ringkasan yang meminta penekanan, bukan keupayaan baru — dan ingat AMI adalah <Term id="training_simulator" />, bukan penasihat kewangan.

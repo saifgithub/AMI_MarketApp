@@ -17,24 +17,24 @@ updated_at: "2026-07-21"
 ---
 # Saiz sampel & keertian statistik
 
-Kadar kemenangan yang dikira daripada bilangan dagangan yang kecil membawa margin ralat yang luas — hingar n kecil yang boleh menjadikan sialan biasa kelihatan sebagai kelebihan sebenar, atau kelebihan sebenar kelihatan sebagai hingar. Ralat piawai bagi kadar kemenangan adalah kira-kira √(p(1-p)/n), di mana p ialah kadar kemenangan yang diperhatikan dan n ialah bilangan dagangan — ia memberitahu anda seberapa banyak kadar kemenangan tersebut boleh bergegar secara munasabah hanya kerana rawak semata-mata. Peraturan asas kasar: satu kelebihan perlu melebihi kira-kira dua ralat piawai di atas 50% sebelum anda mengambilnya sebagai lebih daripada lemparan syiling.
+Kadar kemenangan yang dikira daripada bilangan dagangan yang kecil membawa margin ralat yang luas — hingar n kecil yang boleh membuatkan sialan biasa kelihatan seperti kelebihan sebenar, atau kelebihan sebenar kelihatan seperti hingar. Ralat piawai bagi kadar kemenangan adalah kira-kira √(p(1-p)/n), di mana p ialah kadar kemenangan yang diperhatikan dan n ialah bilangan dagangan — ia memberitahu anda seberapa banyak kadar kemenangan itu boleh bergegar secara munasabah hanya kerana rawak semata-mata. Peraturan asas kasar: kelebihan perlu melebihi kira-kira dua ralat piawai di atas 50% sebelum anda mengambilnya sebagai lebih daripada sekadar lemparan syiling.
 
 ## Contoh
 
-Seorang pedagang menjalankan 20 dagangan dan menang 14 daripadanya — satu kadar kemenangan 70% (p = 0.7, n = 20). Ralat piawai = √(0.7 × 0.3 / 20) = √(0.21 / 20) = √0.0105 ≈ **10.25%**. Bar dua ralat pianggaran kasar ialah 2 × 10.25% = **20.5 mata peratus**. Kelebihan yang diperhatikan — 70% berbanding lemparan syiling 50% — ialah 20 mata, yang terletak tepat **di bawah** bar 20.5 mata tersebut. Dengan kata lain, pada hanya 20 dagangan, kadar kemenangan 70% belum lagi dapat dibezakan dengan jelas daripada lemparan syiling 50% yang sedang bernasib baik, walaupun ia kelihatan seperti keputusan yang kuat.
+Seorang pedagang menjalankan 20 dagangan dan menang 14 daripadanya — kadar kemenangan 70% (p = 0.7, n = 20). Ralat piawai = √(0.7 × 0.3 / 20) = √(0.21 / 20) = √0.0105 ≈ **10.25%**. Bar dua ralat pianggaran kasar ialah 2 × 10.25% = **20.5 mata peratus**. Kelebihan yang diperhatikan — 70% berbanding lemparan syiling 50% — ialah 20 mata, yang terletak tepat **di bawah** bar 20.5 mata itu. Dengan kata lain, pada hanya 20 dagangan, kadar kemenangan 70% belum dapat dibezakan dengan jelas daripada lemparan syiling 50% yang bertuah, walaupun ia kelihatan seperti keputusan yang kuat.
 
-Sekarang bandingkan sampel yang lebih besar: 200 dagangan pada kadar kemenangan 70% yang sama. Ralat piawai = √(0.7 × 0.3 / 200) = √(0.00105) ≈ **3.24%**, dan 2 × 3.24% = **6.5 mata** — kelebihan 20 mata yang sama kini melepasi bar dengan ruang yang banyak. Kadar kemenangan tidak berubah; keyakinan yang boleh anda letakkan padanya berubah secara besar-besaran, semata-mata kerana n meningkat dari 20 kepada 200.
+Sekarang bandingkan sampel yang lebih besar: 200 dagangan pada kadar kemenangan 70% yang sama. Ralat piawai = √(0.7 × 0.3 / 200) = √(0.00105) ≈ **3.24%**, dan 2 × 3.24% = **6.5 mata** — kelebihan 20 mata yang sama kini melepasi bar dengan ruang yang banyak. Kadar kemenangan tidak berubah; keyakinan yang boleh anda letakkan padanya berubah dengan ketara, semata-mata kerana n meningkat dari 20 kepada 200.
 
 ## Perangkap
 
-Perangkapnya ialah memperlakukan kadar kemenangan sampel kecil seolah-olah ia merupakan kelebihan sebenar yang stabil — 14 kemenangan daripada 20 dagangan *terasa* seperti bukti kukuh, kerana 70% ialah nombor yang besar, bulat, dan kedengaran mengagumkan. Kebiasaan yang betul: sebelum mempercayai mana-mana kadar kemenangan, semak saiz sampel di belakangnya dan anggaran ralat piawai. Rekod 70% selama 20 dagangan dan rekod 70% selama 200 dagangan bukanlah tuntutan yang sama, walaupun mereka melaporkan nombor yang identikal.
+Perangkapnya ialah memperlakukan kadar kemenangan sampel kecil seolah-olah ia merupakan kelebihan sebenar yang stabil — 14 kemenangan daripada 20 dagangan *terasa* seperti bukti kukuh, kerana 70% ialah nombor besar, bulat, dan kedengaran mengagumkan. Tabiat yang betul: sebelum mempercayai mana-mana kadar kemenangan, semak saiz sampel di belakangnya dan anggaran ralat piawai. Rekod 70% atas 20 dagangan dan rekod 70% atas 200 dagangan bukan tuntutan yang sama, walaupun mereka melaporkan nombor yang identikal.
 
 <ChatWith agent="research_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Seorang pedagang menunjukkan kadar kemenangan 70% (p = 0.7) atas 20 dagangan (n = 20). Menggunakan ralat piawai ≈ √(p(1-p)/n), berapakah anggaran ralat piawai bagi kadar kemenangan ini?"
+  question="Seorang pedagang menunjukkan kadar kemenangan 70% (p = 0.7) ke atas 20 dagangan (n = 20). Menggunakan ralat piawai ≈ √(p(1-p)/n), berapakah anggaran ralat piawai bagi kadar kemenangan ini?"
   options={[
     "≈20.5% — menggandakan jurang antara kadar kemenangan dan 50%",
     "≈1.05% — terlupa mengambil punca kuasa dua bagi 0.0105",
@@ -42,25 +42,25 @@ Perangkapnya ialah memperlakukan kadar kemenangan sampel kecil seolah-olah ia me
     "≈10.2% — √(0.7 × 0.3 / 20) = √0.0105 ≈ 0.1025, jadi kira-kira 10.2 mata peratusan"
   ]}
   answer={3}
-  explanation="√(0.7 × 0.3 / 20) = √0.0105 ≈ 0.1025, atau kira-kira 10.2 mata peratusan. Jawapan ≈20.5% terlepas punca kuasa dua dan hanya menggandakan jurang mentah dari 50%; jawapan ≈1.05% adalah varians sebelum punca kuasa dua (0.0105) yang dibaca sebagai peratusan; jawapan ≈0.105% membahagikan dengan saiz sampel yang salah dan terlepas punca kuasa dua."
+  explanation="√(0.7 × 0.3 / 20) = √0.0105 ≈ 0.1025, atau kira-kira 10.2 mata peratusan. Jawapan ≈20.5% terlepas punca kuasa dua dan hanya menggandakan jurang mentah dari 50%; jawapan ≈1.05% ialah varians sebelum punca kuasa dua (0.0105) yang dibaca sebagai peratusan; jawapan ≈0.105% membahagikan dengan saiz sampel yang salah dan terlepas punca kuasa dua."
 />
 
 <Quiz
-  question="Menggunakan bar dua ralat pianggaran kasar (2 × 10.2% ≈ 20.5 mata) terhadap tepi 20 mata yang diperhatikan (70% berbanding lemparan syiling 50%), adakah kadar kemenangan 70% atas hanya 20 dagangan boleh dibezakan secara statistik daripada kebetulan?"
+  question="Menggunakan bar anggaran dua ralat piawai (2 × 10.2% ≈ 20.5 mata) terhadap jurang diperhatikan 20 mata (70% berbanding lemparan syiling 50%), adakah kadar kemenangan 70% ke atas hanya 20 dagangan boleh dibezakan secara statistik daripada kebetulan?"
   options={[
-    "Tidak — tepi 20 mata yang diperhatikan berada sedikit di bawah bar dua ralat pianggaran ≈20.5 mata, bermakna 20 dagangan belum cukup untuk memisahkan rekod ini dengan jelas daripada satu siri nasib baik pada kadar sebenar 50%",
+    "Tidak — jurang diperhatikan 20 mata terletak sedikit di bawah bar dua ralat piawai ≈20.5 mata, bermakna 20 dagangan belum cukup untuk memisahkan rekod ini dengan jelas daripada satu siri nasib baik pada kadar sebenar 50%",
     "Ya — 70% jauh di atas 50%, dan jurang kadar kemenangan sebesar itu tidak memerlukan bar statistik untuk diambil serius",
-    "Ya — sebarang kadar kemenangan pada atau di atas 70% secara automatik melepasi ambang keertian standard tanpa mengira saiz sampel",
-    "Tidak — kerana menang 14 daripada 20 dagangan adalah mustahil secara matematik pada mulanya"
+    "Ya — sebarang kadar kemenangan pada atau di atas 70% secara automatik melangkaui ambang keertian piawai tanpa mengira saiz sampel",
+    "Tidak — kerana menang 14 daripada 20 dagangan adalah mustahil secara matematik"
   ]}
   answer={0}
-  explanation="20.5 mata adalah anggaran kasar bagi bar dua ralat pianggaran; tepi 20 mata yang diperhatikan jatuh sedikit di bawahnya, jadi pada n=20 rekod ini belum boleh dibezakan dengan jelas daripada kebetulan — walaupun ia kelihatan seperti keputusan yang kuat. Pelajaran saiz sampel dari modul ini adalah tepat sebabnya: kadar kemenangan 70% yang sama atas 200 dagangan (SE ≈3.24%, bar ≈6.5 mata) akan melepasi bar ini dengan mudah. Menang 14 daripada 20 dagangan adalah sepenuhnya mungkin; soalan adalah sama ada ia bermakna, bukan sama ada ia berlaku."
+  explanation="20.5 mata ialah anggaran kasar bagi bar dua ralat piawai; jurang diperhatikan 20 mata jatuh sedikit di bawahnya, jadi pada n=20 rekod ini belum boleh dibezakan dengan jelas daripada kebetulan — walaupun ia kelihatan seperti hasil yang kuat. Pelajaran saiz sampel dari modul ini adalah tepat mengapa: kadar kemenangan 70% yang sama ke atas 200 dagangan (RAL ≈3.24%, bar ≈6.5 mata) akan melangkaui bar ini dengan mudah. Menang 14 daripada 20 dagangan adalah sepenuhnya mungkin; soalan sama ada ia bermakna, bukan sama ada ia berlaku."
 />
 
 ## Cuba sendiri
 
-Buka Jurnal Keputusan anda, kira berapa banyak dagangan yang diliputi oleh siri terpanjang yang anda catat, dan kira manual ralat piawainya menggunakan √(p(1-p)/n). Bandingkan hasilnya dengan betapa yakinnya anda bahawa siri tersebut merupakan kelebihan "sebenar". Ingat: output latihan AMI ialah artifak latihan, bukan nasihat pelaburan.
+Buka Jurnal Keputusan anda, kira berapa banyak dagangan yang dicakupi oleh siri log terpanjang anda, dan kira ralat piawai secara manual menggunakan √(p(1-p)/n). Bandingkan hasilnya dengan seberapa yakin anda bahawa siri itu merupakan kelebihan "sebenar". Ingat: output latihan AMI ialah artifak latihan, bukan nasihat pelaburan.
 
-## Penafian
+## Pengambilan
 
-Kadar kemenangan hanya seboleh dipercayai seperti saiz sampel di belakangnya — selalu tanya "berdasarkan berapa banyak dagangan?" sebelum memperlakukan mana-mana siri sebagai bukti kelebihan.
+Kadar kemenangan hanya seteguh saiz sampel di belakangnya — selalu tanya "berdasarkan berapa banyak dagangan?" sebelum memperlakukan mana-mana siri sebagai bukti kelebihan.

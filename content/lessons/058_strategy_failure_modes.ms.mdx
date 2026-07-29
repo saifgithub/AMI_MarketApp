@@ -11,62 +11,62 @@ topic: "failure_modes"
 prerequisites: ["052_trend_following", "053_breakout_strategy", "054_pullback_strategy", "055_mean_reversion", "056_momentum_trading", "018_drawdown_management"]
 tags: ["failure_modes", "regime", "drawdown", "survival"]
 agent_callouts: ["bear_researcher", "conservative_debator"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Kegagalan strategi
 
-Setiap strategi dalam modul ini mempunyai rejim di mana ia mengalami kerugian. Tiada strategi universal. Mengetahui mod kegagalan peraturan yang anda jalankan adalah perbezaan antara "ini adalah penurunan normal, saya teruskan" dan "rejim telah berubah, saya kurangkan saiz". Pedagang yang tidak dapat menerangkan di mana strateginya gagal akan secara tidak elak membesarkannya seolah-olah ia tidak pernah gagal — dan kemudian hancur dalam rejim yang selalu menyebabkan ia kehilangan wang. Selepas pelajaran ini, anda boleh memadankan setiap strategi dari 052–056 dengan mod kegagalannya yang dinamakan dan isyarat amaran awal bahawa rejim sedang berubah.
+Setiap strategi dalam modul ini mempunyai rejim di mana ia mengalami kerugian. Tiada strategi universal. Memahami mod kegagalan peraturan yang anda jalankan adalah perbezaan antara "ini adalah penurunan biasa, saya teruskan" dan "rejim telah berubah, saya kurangkan saiz". Pedagang yang tidak dapat menerangkan di mana strateginya gagal akan secara tidak elak bersaiz seolah-olah ia tidak pernah gagal — dan kemudian mengalami kerugian besar dalam rejim yang selalu menyebabkan kerugian. Selepas pelajaran ini, anda boleh memadankan setiap strategi dari 052–056 dengan mod kegagalannya yang dinamakan dan isyarat amaran awal bahawa rejim sedang berubah.
 
-## Bagaimana ia berlaku di pasaran sebenar
+## Bagaimana ini berlaku dalam pasaran sebenar
 
 Padankan setiap strategi dengan mod kegagalannya yang dinamakan:
 
-- **Mengikut trend (052)** gagal dalam pasaran yang bergegar dan terikat dalam julat. Lihat KLCI dari pertengahan 2022 hingga pertengahan 2023 — peraturan trend 50/200 berayun masuk dan keluar daripada syarikat besar Bursa seperti MAYBANK dan TENAGA, menjana enam kerugian kecil untuk setiap kemenangan sederhana. Isyarat amaran awal: ADX jatuh di bawah 20 dan MA 50-hari menjadi rata.
-- **Pecahan (053)** gagal dalam rejim drift volatiliti rendah dan isipadu rendah. Lihat syarikat besar AS pada musim panas 2023 — pecahan berulang di atas rintangan gagal dalam beberapa hari apabila isipadu kering. Amaran awal: julat benar purata 20-hari runtuh ke paras terendah berbulan-bulan.
-- **Tarikan balik (054)** gagal pada puncak trend utama, di mana "tarikan balik pertama" sebenarnya adalah permulaan trend turun. Banyak nama pertumbuhan tinggi pada November 2021 memecahkan MA 50-hari mereka pada apa yang kelihatan seperti tarikan balik rutin dan tidak pernah pulih. Amaran awal: MA 200-hari menjadi rata atau berputar balik.
-- **Pulangan purata (055)** gagal dalam pasaran bear yang men trend — RSI(2) mencetak bacaan jenuh jual ekstrem selama ber minggu pada nama yang terus jatuh. S1 2020 merentasi seluruh pasaran AS adalah contoh gred muzium. Amaran awal: harga di bawah MA 200-hari DAN MA 200-hari condong ke bawah.
-- **Momentum (056)** gagal dalam pembalikan faktor yang ganas — momentum runtuh. 9 November 2020 (berita vaksin) melihat teknologi momentum tinggi dijual dan nilai momentum rendah berarak, dengan portfolio momentum kehilangan 10–15% dalam beberapa sesi. Amaran awal: peningkatan korelasi antara nama momentum rendah yang sebelumnya tidak berkorelasi dan lonjakan tajam dalam dispersi nilai-vs-pertumbuhan.
+- **Mengikuti trend (052)** gagal dalam pasaran yang bergegar dan terikat dalam julat. Lihat KLCI dari pertengahan 2022 hingga pertengahan 2023 — peraturan trend 50/200 berayun masuk dan keluar daripada saham besar Bursa seperti MAYBANK dan TENAGA, menghasilkan enam kerugian kecil untuk setiap kemenangan sederhana. Isyarat amaran awal: ADX jatuh di bawah 20 dan purata bergerak 50-hari menjadi rata.
+- **Pecahan (053)** gagal dalam rejim drift volatiliti rendah dan isipadu rendah. Lihat saham besar AS pada musim panas 2023 — pecahan berulang di atas rintangan gagal dalam masa beberapa hari apabila isipadu kering. Amaran awal: julat benar purata 20-hari runtuh ke paras terendah berbulan-bulan.
+- **Tarikan balik (054)** gagal pada puncak trend utama, di mana "tarikan balik pertama" sebenarnya adalah permulaan trend turun. Banyak nama pertumbuhan tinggi pada November 2021 memecahkan purata bergerak 50-hari pada apa yang kelihatan seperti tarikan balik rutin dan tidak pernah pulih. Amaran awal: purata bergerak 200-hari menjadi rata atau berputar turun.
+- **Pulangan purata (055)** gagal dalam pasaran bear yang trending — RSI(2) mencetak bacaan jualan berlebihan ekstrem selama ber minggu pada nama yang terus jatuh. Q1 2020 merentasi seluruh pasaran AS adalah contoh gred muzium. Amaran awal: harga di bawah purata bergerak 200-hari DAN purata bergerak 200-hari condong ke bawah.
+- **Momentum (056)** gagal dalam pembalikan faktor yang ganas — momentum runtuh. 9 November 2020 (berita vaksin) melihat teknologi momentum tinggi dijual dan nilai momentum rendah berarak, dengan portfolio momentum kehilangan 10–15% dalam beberapa sesi. Amaran awal: kenaikan korelasi antara nama momentum rendah yang sebelumnya tidak berkorelasi dan lonjakan tajam dalam dispersi nilai-vs-pertumbuhan.
 
-Setiap padanan mempunyai pembatalan yang boleh difalsifikasikan. Jika anda menjalankan mengikut trend dan ADX telah berada di bawah 20 selama 30 sesi, rejim mengatakan kurangkan saiz — bukan "teruskan dan harap".
+Setiap pasangan mempunyai pembatalan yang boleh difalsifikasikan. Jika anda menjalankan mengikuti trend dan ADX telah berada di bawah 20 selama 30 sesi, rejim berkata kurangkan saiz — bukan "teruskan dan berharap".
 
 ## Perangkap
 
-Kesilapan pemula adalah memperlakukan penurunan sebagai bukti bahawa strategi itu rosak. Setiap strategi mempunyai bulan-bulan kerugian. Memotong strategi semasa penurunan adalah cara paling biasa pedagang runcit mengubah kitaran normal menjadi kerugian kekal — anda keluar pada saat terburuk, strategi itu kembali ke purata, dan anda tidak ada untuk pemulihan. Model mental yang betul: bezakan "penurunan normal dalam envelope jangkaan strategi" dari "perubahan rejim di mana strategi saya mengalami kerugian secara struktur". Yang pertama anda lalui. Yang kedua anda hormati dengan mengurangkan saiz. Isyarat yang membezakan mereka adalah penunjuk rejim yang dinamakan di atas, bukan P&L anda. Penurunan sahaja bukan maklumat — penurunan PLUS perubahan rejim adalah.
+Kesilapan pemula adalah memperlakukan penurunan sebagai bukti bahawa strategi itu rosak. Setiap strategi mempunyai bulan kerugian. Memotong strategi semasa penurunan adalah cara paling biasa pedagang runcit mengubah kitaran normal menjadi kerugian kekal — anda keluar pada masa terburuk, strategi kembali ke purata, dan anda tidak ada untuk pemulihan. Model mental yang betul: bezakan "penurunan normal dalamEnvelope jangkaan strategi" dari "perubahan rejim di mana strategi saya mengalami kerugian secara struktur". Yang pertama anda tempuhi. Yang kedua anda hormati dengan mengurangkan saiz. Isyarat yang membezakan keduanya adalah penunjuk rejim yang dinamakan di atas, bukan P&L anda. Penurunan sahaja bukan maklumat — penurunan PLUS perubahan rejim adalah.
 
 <ChatWith agent="bear_researcher" />
 
 ## Kuiz
 
 <Quiz
-  question="Anda menjalankan peraturan mengikuti trend pada saham besar AS. Selama 60 sesi terakhir, ADX berada pada 14, purata bergerak 50-hari mendatar, dan anda telah mencatat lima kerugian kecil berturut-turut. Apa kata analisis rejim?"
+  question="Anda menjalankan peraturan mengikuti trend pada saham besar AS. Selama 60 sesi terakhir, ADX berada pada 14, MA 50-hari mendatar, dan anda telah mencatat lima kerugian kecil berturut-turut. Apa kata analisis rejim?"
   options={[
-    "Penunjuk rejim (ADX < 20, 50-hari mendatar) sepadan dengan mod kegagalan untuk mengikuti trend. Kurangkan saiz atau hentikan peraturan sehingga rejim selesai.",
+    "Penunjuk rejim (ADX < 20, MA 50-hari mendatar) sepadan dengan mod kegagalan mengikuti trend. Kurangkan saiz atau hentikan peraturan sehingga rejim selesai.",
     "Teruskan dagang peraturan — lima kerugian adalah varians normal",
-    "Tambah pada perdagangan seterusnya untuk menebus kerugian",
+    "Tambah pada dagangan seterusnya untuk menebus kerugian",
     "Tukar kepada reverensi purata serta-merta"
   ]}
   answer={0}
-  explanation="Drawdown itu sendiri tidak memberitahu anda apa-apa; drawdown ditambah dengan tanda rejim ya. Teruskan peraturan adalah jawapan salah yang menggoda kerana 'percaya proses' kedengaran disiplin — tetapi mempercayai proses dalam rejim kegagalannya yang diketahui adalah bagaimana anda mengubah drawdown 5% kepada 20%. Menambah pada perdagangan seterusnya adalah dagang balas dendam yang dibalut sebagai keyakinan."
+  explanation="Penurunan sendiri tidak memberitahu anda apa-apa; penurunan bersama tanda tangan rejim memberitahu anda. Meneruskan peraturan adalah jawapan salah yang menggoda kerana 'percaya pada proses' terdengar disiplin — tetapi mempercayai proses dalam mod kegagalannya yang diketahui adalah bagaimana anda mengubah penurunan 5% menjadi 20%. Menambah dagangan seterusnya adalah dagangan balas dendam yang dibalut sebagai keyakinan."
 />
 
 <Quiz
-  question="Seorang peniaga menjalankan peraturan reverensi purata pada teknologi AS. SPY berada dalam trend turun yang jelas di bawah purata bergerak 200-harinya. Peraturan telah kehilangan wang selama tiga bulan. Bear Researcher dan Conservative Debator kedua-duanya menandakan perubahan rejim. Peniaga berhujah 'peraturan ini mempunyai data backtest 14 tahun'. Apa sintesisnya?"
+  question="Seorang peniaga menjalankan peraturan reverensi purata pada teknologi AS. SPY berada dalam trend turun yang jelas di bawah MA 200-hari. Peraturan telah kehilangan wang selama tiga bulan. Bear Researcher dan Conservative Debator kedua-duanya menandakan perubahan rejim. Peniaga berhujah 'peraturan ini mempunyai data backtest 14 tahun'. Apa sintesisnya?"
   options={[
     "Peniaga itu betul — 14 tahun data mengatasi tiga bulan kerugian",
-    "Tingkatkan saiz posisi untuk memulihkan drawdown lebih cepat",
-    "Mod kegagalan reverensi purata yang didokumenkan adalah tepat 'pasar bear trending' — backtest 14 tahunnya termasuk tempoh tersebut SEBAGAI kerugian. Kerugian semasa adalah strategi beroperasi seperti direka dalam rejim kegagalannya. Kurangkan saiz ke tahap mematuhi mandat dan teruskan apabila SPY menduduki semula 200-hari.",
-    "Tukar peraturan kepada reverensi purata hanya pendek"
+    "Tingkatkan saiz posisi untuk menebus penurunan dengan lebih cepat",
+    "Mod kegagalan reverensi purata yang didokumenkan adalah tepat 'pasar bear yang men trend' — 14 tahun backtest termasuk tempoh tersebut SEBAGAI kerugian. Kerugian semasa adalah strategi beroperasi seperti yang direka dalam mod kegagalannya. Kurangkan saiz ke tahap mematuhi mandat dan teruskan apabila SPY menduduki semula 200-hari.",
+    "Tukar peraturan kepada reverensi purata pendek sahaja"
   ]}
   answer={2}
-  explanation="Sintesis: strategi yang beroperasi dalam rejim kegagalannya yang diketahui melakukan apa yang backtest katakan ia akan lakukan. Margin keseluruhan backtest tidak bermaksud setiap bulan untung — ia bermaksud bulan baik melebihi bulan buruk. Jawapan '14 tahun data mengatasi tiga bulan' adalah yang paling menggoda salah kerana ia membalut buta tuli sebagai pemikiran jangka panjang. Pergerakan betul adalah menghormati mod kegagalan DAN mandat, bukan meninggalkan peraturan."
+  explanation="Sintesis: strategi yang beroperasi dalam mod kegagalan yang diketahui sedang melakukan apa yang backtest kata ia akan lakukan. Margin keseluruhan backtest tidak bermaksud setiap bulan menguntungkan — ia bermaksud bulan baik melebihi bulan buruk. Jawapan '14 tahun data mengatasi tiga bulan' adalah yang paling menggoda dan salah kerana ia membalut kebutaan yang disengajakan sebagai pemikiran jangka panjang. Langkah yang betul adalah menghormati mod kegagalan DAN mandat, bukan meninggalkan peraturan."
 />
 
 ## Cuba
 
-Dalam <Term id="ami_one_on_one" /> dengan Bear Researcher, tampal strategi yang sedang anda jalankan dan tanya: "Namakan rejim kegagalan saya, berikan tiga penunjuk boleh diperhatikan yang mengatakan saya berada di dalamnya, dan beritahu saya tindakan apa yang dikehendaki mandat saya apabila saya berada di sana." Log jawapan dalam <Term id="ami_decision_journal" /> sebagai protokol pra-komitmen — jadi apabila rejim itu berlaku, anda tidak perlu membuat keputusan di bawah tekanan.
+Dalam <Term id="ami_one_on_one" /> dengan Bear Researcher, tampal strategi yang sedang anda jalankan dan tanya: "Namakan rejim kegagalan saya, berikan tiga penunjuk boleh diperhatikan yang mengatakan saya berada di dalamnya, dan beritahu saya tindakan apa yang diwajibkan mandat saya apabila saya berada di situ." Log jawapan dalam <Term id="ami_decision_journal" /> sebagai protokol pra-komitmen — jadi apabila rejim itu berlaku, anda tidak perlu membuat keputusan di bawah tekanan.
 
-## Teras
+## Penutup
 
 Setiap strategi mempunyai rejim di mana ia mengalami kerugian — tulis rejim itu sebelum anda menjalankan strategi. Pedagang yang dapat menamakan mod kegagalannya akan bertahan; pedagang yang tidak dapat tidak.

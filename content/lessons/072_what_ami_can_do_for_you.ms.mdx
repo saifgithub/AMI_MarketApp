@@ -17,54 +17,54 @@ updated_at: "2026-05-12"
 ---
 # Apa yang AMI boleh lakukan untuk anda
 
-<Term id="ami" /> ialah <Term id="training_simulator" />. Anda duduk di kerusi <Term id="ceo_framing" /> seorang <Term id="twelve_agent_team" /> dan berlatih kemahiran menilai kerja mereka. Agen-agen tersebut menarik data asas, mengimbas carta, meringkaskan berita dan sentimen, memperdebatkan pandangan bull vs bear, menguji tekanan kedudukan hipotetikal terhadap <Term id="ami_mandate" /> anda, dan menghasilkan <Term id="ami_verdict" /> simulasi yang boleh anda terima, tolak, atau ubah — semua dalam aplikasi, semua untuk latihan. AMI tidak pernah mengendalikan wang sebenar, tidak pernah berhubung dengan broker, dan tidak berlesen untuk memberikan nasihat pelaburan. Itu bukan ciri yang hilang; ia adalah reka bentuk sepenuhnya. Pada akhir pelajaran ini, anda akan mengetahui dengan tepat kemahiran penilaian mana yang dibina oleh AMI untuk dilatih dan keputusan mana yang kekal menjadi tanggungjawab anda.
+<Term id="ami" /> ialah <Term id="training_simulator" />. Anda duduk di kerusi <Term id="ceo_framing" /> seorang <Term id="twelve_agent_team" /> dan melatih kemahiran menilai kerja mereka. Agen-agen ini menarik data asas, memindai carta, meringkaskan berita dan sentimen, membahaskan bull vs bear, menguji tekanan kedudukan hipotetikal terhadap <Term id="ami_mandate" /> anda, dan menghasilkan <Term id="ami_verdict" /> simulasi yang boleh anda terima, tolak, atau ubah — semua dalam aplikasi, semata-mata untuk latihan. AMI tidak pernah mengendalikan wang sebenar, tidak disambungkan kepada mana-mana broker, dan tidak berlesen untuk memberikan nasihat pelaburan. Ini bukan ciri yang hilang; ia adalah reka bentuk sepenuhnya. Pada akhir pelajaran ini, anda akan tahu tepat kemahiran penilaian mana yang dibina oleh AMI untuk latih dan keputusan mana yang kekal di tangan anda.
 
 <Animation name="ami_constellation" />
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
-Katakan anda menyenaraikan NVDA dalam senarai pantau dan menekan **<Term id="ami_convene_the_room" />**. Dalam ~30 saat, 12 agen akan menghantar kerja mereka. Penganalisis Asas menarik laporan 10-Q terkini: hasil $35.1B, margin kasar 74%, P/E ke hadapan 32. Penganalisis Pasaran membaca carta: NVDA diperdagangkan pada $142, purata bergerak 50-hari pada $135, RSI 68. Penganalisis Berita meringkaskan tajuk berita 5 hari perdagangan terakhir. Penganalisis Media Sosial menandakan kecondongan sentimen X. Penganalisis Bull dan Bear memperdebatkan; Pengurus Penyelidikan mensintesis. Pengecam Risiko (Agresif / Konservatif / Neutral) berhujah tentang saiz kedudukan. Pedagang mencadangkan masuk/henti/sasaran. Pengurus Portfolio (PM) menyemak ia terhadap Mandat anda — katakan `risk_score: 3, max_drawdown_pct: 20, halal: false` — dan mengeluarkan Verdict Akhir:
+Andaikan anda memantau NVDA dan menekan **<Term id="ami_convene_the_room" />**. Dalam masa ~30 saat, 12 agen mengalirkan kerja mereka. Penganalisis Asas menarik 10-Q terkini: pendapatan $35.1B, margin kasar 74%, P/E ke hadapan 32. Penganalisis Pasaran membaca carta: NVDA diperdagangkan pada $142, Purata Pergerakan 50 hari pada $135, RSI 68. Penganalisis Berita meringkaskan tajuk berita 5 hari trading terakhir. Penganalisis Media Sosial menandakan kecondongan sentimen X. Penganalisis Bull dan Bear membahaskan; Pengurus Penyelidikan mensintesis. Pengecam Risiko (Agresif / Konservatif / Neutral) berhujah tentang saiz kedudukan. Pedagang mencadangkan entri/henti/target. PM menyemaknya terhadap Mandat anda — katakan `risk_score: 3, max_drawdown_pct: 20, halal: false` — dan mengeluarkan Verdict akhir:
 
-> **BELI NVDA · saiz 3% · masuk $141.50 · henti $134 (-5.3%) · sasaran $158 (+11.7%) · jangka masa 4–6 minggu · keyakinan 0.62**
+> **BELI NVDA · saiz 3% · entri $141.50 · stop $134 (-5.3%) · target $158 (+11.7%) · jangka masa 4–6 minggu · keyakinan 0.62**
 
-Anda melihat transkrip perbincangan penuh, alasan setiap agen, dan kes Bear yang menentang. Anda boleh meminta sebarang agen soalan susulan dalam <Term id="ami_one_on_one" />. Anda boleh mencatat keputusan dalam jurnal. Tiada apa-apa dihantar ke mana-mana. Tiada pesanan ditempatkan — bukan dalam aplikasi ini, bukan di mana-mana. Verdict ialah <Term id="training_artifact" />: pendapat berstruktur yang dihasilkan untuk anda menilai, bukan nasihat pelaburan untuk anda ikuti.
+Anda melihat transksep perbincangan penuh, setiap alasan agen, dan kes Bear yang menentang. Anda boleh bertanya soalan susulan kepada mana-mana agen dalam <Term id="ami_one_on_one" />. Anda boleh jurnal keputusan tersebut. Tiada apa-apa dihantar ke mana-mana. Tiada pesanan diletakkan — bukan dalam aplikasi ini, bukan di mana-mana. Verdict ialah <Term id="training_artifact" />: pendapat berstruktur yang dihasilkan untuk anda nilai, bukan nasihat pelaburan untuk anda ikut.
 
 ## Perangkap
 
-Salah faham biasa ialah memperlakukan AMI seperti perkhidmatan isyarat: "beritahu saya apa yang perlu dibeli". AMI akan menghasilkan Verdict simulasi, tetapi Verdict ialah *output daripada latihan yang anda mulakan*, bukan cadangan untuk dimasukkan ke akaun sebenar anda. Jika anda mengimbas transkrip perbincangan dan hanya membaca tajuk BELI/JUAL, anda membuang 90% daripada apa yang simulator dibina untuk latih. Nilainya terletak pada melihat mengapa Penganalisis Bull tidak bersetuju, apa yang dikehendaki oleh Pengecam Konservatif untuk memotong saiz kedudukan kepada, dan klausa mandat mana yang dikuatkuasakan oleh PM. AMI ialah persekitaran latihan pendapat kedua berstruktur pada kedalaman 12-agen — bukan bola kristal dengan nombor keyakinan yang dipasangkan.
+Salah faham biasa ialah memperlakukan AMI seperti perkhidmatan isyarat: "beritahu saya apa yang perlu dibeli". AMI akan menghasilkan Verdict simulasi, tetapi Verdict itu ialah *output daripada latihan yang anda mulakan*, bukan cadangan untuk diambil ke akaun sebenar anda. Jika anda mengimbas transksep perbincangan dan membaca hanya tajuk BUY/SELL, anda membuang 90% daripada apa yang simulator dibina untuk latih. Nilainya terletak pada melihat mengapa Penganalisis Bear tidak bersetuju, apa yang dikehendaki oleh Pengecam Konservatif untuk mengurangkan saiz kedudukan, dan klausa mandat mana yang dikuatkuasakan oleh PM. AMI ialah persekitaran latihan pendapat kedua berstruktur pada kedalaman 12 agen — bukan bola kristal dengan nombor keyakinan yang dipaku pada.
 
 <ChatWith agent="concierge" />
 
 ## Kuiz
 
 <Quiz
-  question="Anda menjemput Bilik untuk TSLA. Verdict keluar sebagai BELI pada saiz 3%. Anda mengabaikan transkrip, menerima BELI pada nilai muka, dan mengabaikan kes Bear. Apa yang anda hilang?"
+  question="Anda menggesa Room untuk TSLA. Verdict keluar sebagai BELI pada saiz 3%. Anda abaikan transkrip, ambil BELI pada nilai wajahnya, dan skip kes Bear. Apa yang anda hilang?"
   options={[
-    "Kos kredit — anda sepatutnya menggunakan 1-on-1",
-    "Tiada apa-apa — Verdict adalah jawapannya",
-    "Rantai alasan — kes pembangkang, penguatkuasaan mandat, dan keyakinan per-agen yang menjustifikasikan tajuk utama",
-    "Kelajuan — Memanggil Bilik lebih perlahan daripada hanya bertanya kepada Trader"
+    "Kos kredit — anda sepatutnya guna 1-on-1",
+    "Tiada apa — Verdict adalah jawapannya",
+    "Rantai reasoning — kes penentang, enforcement mandat, dan keyakinan per-agent yang menyokong tajuk utama",
+    "Kelajuan — Convene the Room lebih perlahan daripada tanya Trader sahaja"
   ]}
   answer={2}
-  explanation="Verdict tajuk utama adalah hujung tombak perdebatan 12 agen. Mengabaikan transkrip bermaksud anda tidak dapat mengaudit mengapa AMI berkata BELI, apa kes Bear, atau klausa mandat mana yang dikuatkuasakan oleh PM. Anda menukar pendapat kedua berstruktur menjadi isyarat — yang merupakan tepat apa yang AMI bukan."
+  explanation="Verdict tajuk adalah hujung tombak perdebatan 12-agent. Skip transkrip bermaksud anda tak boleh audit kenapa AMI kata BELI, apa kes Bear, atau klausa mandat mana PM enforce. Anda tukar second opinion berstruktur kepada signal — yang mana AMI sebenarnya bukan."
 />
 
 <Quiz
-  question="Antara berikut, yang manakah sebenarnya direka bentuk untuk dilakukan oleh AMI?"
+  question="Antara ini, yang mana AMI direka untuk buat?"
   options={[
-    "Menjalankan perdebatan 12 agen dan menyerahkan Verdict yang boleh anda terima, tolak, atau ubah",
-    "Meletakkan pesanan pasaran pada AAPL apabila anda menekan BELI",
-    "Menghantar isyarat ke telefon anda untuk 10-bagger seterusnya",
-    "Menyambung ke broker anda dan mengimbangi semula portfolio anda"
+    "Jalankan perdebatan 12-agent dan hantar Verdict yang anda boleh terima, tolak, atau ubah",
+    "Letak market order pada AAPL bila anda tekan BUY",
+    "Hantar signal ke telefon anda untuk 10-bagger seterusnya",
+    "Sambung ke broker anda dan rebalance portfolio"
   ]}
   answer={0}
-  explanation="AMI adalah simulasi sahaja dan bukan penasihat berlesen. Tiada sambungan broker — tidak sekarang, tidak pernah. Hasilnya ialah artifak latihan yang dibincangkan dan diperiksa mandat; disiplin yang dilatih ialah penilaian anda terhadapnya."
+  explanation="AMI hanya simulasi dan bukan penasihat berlesen. Tiada hook broker — tak sekarang, tak pernah. Deliverable ialah artifact latihan yang diperdebatkan dan diperiksa mandat; disiplin yang dilatih ialah evaluasi anda terhadapnya."
 />
 
 ## Cuba sendiri
 
-Buka aplikasi, tambah NVDA ke senarai pantau anda, dan tekan **Kumpulkan Bilik**. Apabila Verdict muncul, jangan baca tajuk dahulu. Skrol ke bahagian Penganalisis Bear dan baca itu. Kemudian baca semakan pematuhan PM. Kemudian kembali ke atas. Perhatikan bagaimana tajuk itu dibaca berbeza sekali anda telah melihat penentangan.
+Buka aplikasi, tambah NVDA ke senarai pantauan anda, dan tekan **Kumpulkan Bilik**. Apabila Verdict muncul, jangan baca tajuk dahulu. Skrol ke bahagian Penganalisis Bear dan baca itu. Kemudian baca semakan pematuhan PM. Kemudian kembali ke atas. Perhatikan bagaimana tajuk itu dibaca berbeza sekali anda telah melihat penentangan.
 
 ## Pengajaran
 
-AMI memberikan anda perdebatan 12-agen yang berakhir dengan Verdict yang disemak mandat — itulah artifak latihan. Ingat: AMI ialah simulator latihan, bukan penasihat kewangan. Verdict ialah artifak latihan untuk anda menilai, bukan nasihat pelaburan untuk diikuti.
+AMI memberikan anda perdebatan 12 agen yang berakhir dengan Verdict yang disemak mandat — itulah artifak latihan. Ingat: AMI ialah simulator latihan, bukan penasihat kewangan. Verdict ialah artifak latihan untuk anda nilai, bukan nasihat pelaburan untuk diikuti.

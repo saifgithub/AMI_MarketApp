@@ -1,6 +1,6 @@
 ---
 id: "223_rsi_2_mean_reversion_system"
-title: "Mekanik sistem reverensi-mean RSI(2)"
+title: "mekanik sistem reverensi purata RSI(2)"
 duration_min: 6
 level: 5
 module: 9
@@ -11,56 +11,56 @@ topic: "mean_reversion"
 prerequisites: ["055_mean_reversion", "027_rsi_momentum_oscillator", "018_drawdown_management", "026_moving_averages"]
 tags: ["strategy", "mean_reversion", "rsi", "rsi_2", "short_term"]
 agent_callouts: ["conservative_debator", "trader"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Mekanik sistem mean-reversion RSI(2)
+# Mekanisme sistem mean-reversion RSI(2)
 
-Asas mean-reversion (055) menggunakan RSI(2) dengan penapis rejim. RSI(2) — indeks kekuatan relatif tempoh 2 — adalah enjinnya. Jangka masa kembali yang pendek menjadikannya sangat responsif dan ekstrem, yang merupakan matlamatnya: RSI(2) mencatatkan bacaan di bawah 5 beberapa kali setahun pada instrumen yang mempunyai trend naik sihat selepas penurunan tajam, dan sebahagian besar bacaan tersebut mendahului pemulihan pantas (snapback) selama 1 hingga 5 hari. Strategi ini merupakan salah satu sistem mekanikal jangka pendek yang paling banyak dikaji dalam penyelidikan yang diterbitkan. Selepas pelajaran ini, anda boleh menentukan peraturan RSI(2) yang lengkap dengan ambang kemasukan, keluar berdasarkan masa, penapis rejim, dan skema saiz posisi yang mampu bertahan daripada gugusan kerugian yang tidak dapat dielakkan.
+Asas mean-reversion (055) menggunakan RSI(2) dengan penapis rejim. RSI(2) — indeks kekuatan relatif 2-tempoh — merupakan enjinnya. Jangka masa kembali yang pendek menjadikannya sangat responsif dan melampau, yang merupakan tujuannya: RSI(2) mencatatkan bacaan di bawah 5 beberapa kali setahun pada instrumen yang mempunyai trend naik sihat selepas penurunan tajam, dan sebahagian besar daripada bacaan tersebut mendahului pemulihan pantas (snapbacks) selama 1 hingga 5 hari. Strategi ini merupakan salah satu sistem mekanikal jangka pendek yang paling banyak dikaji dalam penyelidikan yang diterbitkan. Selepas pelajaran ini, anda boleh menentukan peraturan RSI(2) yang lengkap dengan ambang kemasukan, keluar berdasarkan masa, penapis rejim, dan skema saiz posisi yang mampu bertahan terhadap gugusan perdagangan rugi yang tidak dapat dielakkan.
 
-## Bagaimana ia berlaku dalam pasaran sebenar
+## Bagaimana ini berlaku dalam pasaran sebenar
 
-Lihat JPM sehingga 2024. Sistem ini: masuk posisi panjang apabila RSI(2) tutup di bawah 5 DAN harga tutup di atas Purata Bergerak 200 hari (200-day MA). Keluar pada tutup harian pertama di atas Purata Bergerak 5 hari (5-day MA), ATAU selepas 5 sesi berlalu (henti masa). JPM mencatatkan enam kali pemicu pada tahun 2024. Satu perdagangan wakil: 16 April 2024 — JPM tutup pada $182.66 akibat goncangan pasaran, RSI(2) pada 3.8, harga masih di atas 200-day MA (~$163). Masuk pada tutup pada $182.66 dengan henti (stop) diletakkan di bawah titik terendah ayunan hari sebelumnya pada $179.50. Dua sesi kemudian, 18 April, JPM tutup pada $186.79 — di atas 5-day MA pada $185.10 — dan posisi dikeluarkan. Keuntungan setiap saham: $4.13 berbanding risiko $3.16 = 1.3R dalam dua hari. Sepanjang 2024, keenam-enam perdagangan JPM menghasilkan kadar kejayaan sekitar 75% dengan purata kemenangan ~1.2R dan purata kerugian ~1R — jangkaan positif bersih daripada strategi yang hanya memegang perdagangan yang rugi selama beberapa hari sahaja.
+Lihat JPM sepanjang tahun 2024. Sistem ini: masuk posisi beli apabila RSI(2) tutup di bawah 5 DAN harga tutup di atas Purata Pergerakan 200-hari (200-day MA). Keluar pada penutupan harian pertama di atas Purata Pergerakan 5-hari (5-day MA), ATAU apabila 5 sesi telah berlalu (henti masa). JPM mencetuskan enam kali pada tahun 2024. Satu perdagangan wakil: 16 April 2024 — JPM tutup pada $182.66 akibat goncangan pasaran, RSI(2) pada 3.8, harga masih di atas 200-day MA (~$163). Kemasukan pada penutupan pada $182.66 dengan henti rugi diletakkan di bawah paras terendah swing hari sebelumnya pada $179.50. Dua sesi kemudian, 18 April, JPM tutup pada $186.79 — di atas 5-day MA pada $185.10 — dan posisi dikeluarkan. Keuntungan setiap saham: $4.13 daripada risiko $3.16 = 1.3R dalam dua hari. Sepanjang 2024, keenam-enam perdagangan JPM menghasilkan kadar kejayaan sekitar 75% dengan purata kemenangan ~1.2R dan purata kerugian ~1R — jangkaan positif bersih daripada strategi yang hanya memegang perdagangan rugi selama beberapa hari sahaja.
 
-Kriteria kemasukan: (1) RSI(2) tutup di bawah 5, (2) harga tutup di atas 200-day MA (penapis rejim), (3) tiada pemicu asas negatif yang disahkan (pemotongan panduan, tindakan pengawal selia, tuduhan penipuan). Kriteria keluar: tutup harian pertama di atas 5-day MA, ATAU 5 sesi berlalu (henti masa) tanpa mengira untung rugi. Henti pada kemasukan: titik terendah hari sebelumnya atau titik terendah hari semasa, yang mana lebih ketat. Pembatalan perdagangan individu: henti kena, atau henti masa aktif apabila perdagangan masih merah. Strategi ini GAGAL dalam tiga rejim: (1) pasaran beruang yang disahkan — RSI(2) mencetak harian di bawah 5 dan harga terus jatuh; (2) trend naik perlahan volatiliti rendah di mana RSI(2) jarang mencapai pencetus dan isyarat yang sedikit bertindih dengan pembalikan satu hari yang selesai sebelum kemasukan hari berikutnya; (3) penurunan korrelasi tinggi di mana portfolio perdagangan RSI(2) semua menurun serentak.
+Kriteria kemasukan: (1) RSI(2) tutup di bawah 5, (2) harga tutup di atas 200-day MA (penapis rejim), (3) tiada pemicu fundamental negatif yang disahkan (pemotongan panduan, tindakan pengawal selia, tuduhan penipuan). Kriteria keluar: penutupan harian pertama di atas 5-day MA, ATAU 5 sesi telah berlalu (henti masa) tanpa mengira untung rugi. Henti rugi pada kemasukan: paras terendah hari sebelumnya atau paras terendah hari semasa, yang mana lebih ketat. Pembatalan perdagangan individu: henti rugi terkena, atau henti masa dicetuskan apabila perdagangan masih merah. Strategi ini GAGAL dalam tiga rejim: (1) pasaran bear yang disahkan — RSI(2) mencetak bacaan harian di bawah 5 dan harga terus jatuh; (2) trend naik rendah volatiliti yang perlahan di mana RSI(2) jarang mencapai pencetus dan beberapa isyarat bertindih dengan pembalikan satu hari yang selesai sebelum kemasukan hari berikutnya; (3) penurunan berkorelasi tinggi di mana satu portofolio perdagangan RSI(2) semuanya menurun serentak.
 
 ## Perangkap
 
-Kesilapan pemula ialah menyahkod perdagangan RSI(2) dengan risiko per perdagangan yang sama seperti setup jangka panjang, mengabaikan sifat gugusan strategi. Perdagangan RSI(2) bergugusan — pada minggu pasaran yang buruk, anda boleh mempunyai 4-5 kemasukan serentak yang semuanya menjadi merah bersama-sama. Setiap satu secara individu adalah "hanya risiko 1%", tetapi bersama-sama anda telah mempertaruhkan 4-5% dalam perdagangan yang berkorelasi. Model mental yang betul: sistem RSI(2) adalah PORTFOLIO perdagangan mean-reversion, bukan siri yang bebas. Saiz setiap kemasukan pada SETENGAH risiko per perdagangan biasa anda, dan hadkan pendedahan serentak RSI(2) keseluruhan kepada 2-3% akaun. Perangkap lain: memegang melebihi henti masa. Seluruh kelebihan adalah mean-reversion jangka pendek; jika ia belum kembali dalam 5 sesi, kelebihan statistik telah hilang dan anda kini menjalankan strategi memegang beban (bag-holding).
+Kesilapan pemula ialah menyahsaiz perdagangan RSI(2) berdasarkan risiko per perdagangan yang sama dengan setup jangka panjang, mengabaikan sifat gugusan strategi. Perdagangan RSI(2) gugus — pada minggu pasaran yang buruk, anda boleh mempunyai 4-5 kemasukan serentak yang semuanya menjadi merah bersama. Setiap satu secara individu adalah "hanya risiko 1%", tetapi bersama-sama anda telah mempertaruhkan 4-5% dalam perdagangan yang berkorelasi. Model mental yang betul: sistem RSI(2) adalah PORTFOLIO perdagangan mean-reversion, bukan siri perdagangan bebas. Saiz setiap kemasukan pada SETENGAH daripada risiko per perdagangan biasa anda, dan hadkan pendedahan serentak RSI(2) keseluruhan kepada 2-3% daripada akaun. Perangkap lain: memegang melebihi henti masa. Seluruh kelebihan adalah mean-reversion jangka pendek; jika ia belum kembali dalam 5 sesi, kelebihan statistik telah hilang dan anda kini menjalankan strategi memegang barang rosak (bag-holding).
 
 <ChatWith agent="conservative_debator" />
 
 ## Kuiz
 
 <Quiz
-  question="AAPL ditutup pada $220 hari ini dengan RSI(2) pada 4.1. AAPL berada di atas purata bergerak 200-hariannya. Tiada katalis negatif yang diketahui. Anda telah memasuki dagangan. Hari ke-3 ditutup pada $221 — masih di bawah purata bergerak 5-hari pada $222.50, tiada pencetus keluar. Hari ke-5 ditutup pada $220.50 — masih di bawah purata bergerak 5-hari. Apa kata peraturan?"
+  question="AAPL ditutup pada $220 hari ini dengan RSI(2) pada 4.1. AAPL berada di atas purata bergerak 200-hariannya. Tiada pemicu negatif yang diketahui. Anda memasuki dagangan. Penutupan Hari 3 pada $221 — masih di bawah purata bergerak 5-hari pada $222.50, tiada pencetus keluar. Penutupan Hari 5 pada $220.50 — masih di bawah purata bergerak 5-hari. Apa kata peraturan?"
   options={[
-    "Tambah posisi kerana masuk masih baik",
-    "Pegang dan tukar kepada peraturan trend-follow jangka masa lebih panjang",
-    "Pegang — hanya $0.50 dari harga masuk dan pembetulan besar akan datang",
-    "Keluar pada pembukaan Hari ke-6 mengikut henti masa, walaupun anda pada titik impas"
+    "Tambah ke kedudukan kerana kemasukan masih baik",
+    "Pegang dan tukar kepada peraturan pengikut-trend jangka masa lebih panjang",
+    "Pegang — hanya $0.50 dari kemasukan dan pembalikan yang lebih besar sedang datang",
+    "Keluar pada pembukaan Hari 6 mengikut henti masa, walaupun anda berada pada titik impas"
   ]}
   answer={3}
-  explanation="Henti masa adalah tidak boleh dirunding. Ciri tepi strategi terletak pada 1-5 sesi pertama; selepas itu, pembetulan RSI(2) hanyalah posisi terbuka tanpa sokongan statistik. Pegang kerana hanya $0.50 dari harga masuk adalah jawapan salah yang menggoda — ia 'merasa' seperti impas boleh bertahan sedikit lagi — tetapi strategi mekanikal memerlukan keluar mekanikal atau ia menjadi dagangan diskresioner dengan logik henti yang salah. Menukar kepada peraturan trend-follow jangka masa lebih panjang adalah versi lebih canggih bagi kesilapan yang sama: mengubah strategi semasa dagangan."
+  explanation="Henti masa adalah tidak boleh dirunding. Margin strategi terletak pada 1-5 sesi pertama; selepas itu, pembalikan RSI(2) hanyalah kedudukan terbuka tanpa margin statistik menyokongnya. Memegang kerana anda hanya $0.50 dari kemasukan adalah jawapan salah yang memikat — ia 'merasa' seperti impas boleh bertahan sedikit lebih lama — tetapi strategi mekanikal memerlukan keluaran mekanikal atau ia menjadi dagangan diskresioner dengan logik henti yang salah. Bertukar kepada peraturan pengikut-trend jangka masa lebih panjang adalah versi lebih canggih bagi kesilapan yang sama: mengubah strategi semasa dagangan."
 />
 
 <Quiz
-  question="Anda menjalankan sistem RSI(2). Pada minggu yang bergegar, RSI(2) di bawah 5 mengaktifkan pada lima ticker serentak: AAPL, MSFT, GOOGL, AMZN, META. Semua berada di atas purata bergerak 200-hari mereka. Mandat anda mengekalkan risiko per-dagangan pada 1% dan penurunan jumlah pada 20% untuk akaun $100,000, kini pada penurunan 5% YTD. Pembahas Konservatif berhujah 'ini sangat berkorelasi; jangan ambil semua lima'. Sintesis: apakah tindakan yang betul?"
+  question="Anda menjalankan sistem RSI(2). Pada minggu yang bergegar, RSI(2) di bawah 5 mengaktifkan pada lima ticker serentak: AAPL, MSFT, GOOGL, AMZN, META. Semua berada di atas purata bergerak 200-hariannya. Mandat anda menetapkan risiko per-dagangan maksimum 1% dan penurunan jumlah 20% pada akaun $100,000, semasa pada penurunan 5% YTD. Pembahas Konservatif berhujah 'ini sangat berkorelasi; jangan ambil kesemua lima'. Sintesis: apakah tindakan yang betul?"
   options={[
-    "Ambil paling banyak 2-3, bersaiz pada separuh risiko (~0.5% setiap satu), untuk mengekspose korelasi serentak pada 1.5% daripada akaun",
-    "Ambil semua lima tetapi gunakan henti lebih lebar pada setiap satu untuk mengelakkan digoncang keluar",
-    "Jangan ambil langsung — isyarat kluster bermakna perubahan rejim sebenar akan datang",
-    "Ambil semua lima pada 1% setiap satu — setiap satu memenuhi peraturan masuk secara individu"
+    "Ambil maksimum 2-3, bersaiz pada separuh risiko (~0.5% setiap satu), untuk mengekspose korelasi serentak pada 1.5% daripada akaun",
+    "Ambil kesemua lima tetapi gunakan henti yang lebih lebar pada setiap satu untuk mengelakkan digoncang keluar",
+    "Jangan ambil langsung — isyarat kluster bermakna perubahan rejim sebenar sedang datang",
+    "Ambil kesemua lima pada 1% setiap satu — setiap satu memenuhi peraturan kemasukan secara individu"
   ]}
   answer={0}
-  explanation="Sintesis: dagangan RSI(2) pada teknologi besar AS sangat berkorelasi, jadi 5 dagangan 1% 'berasingan' berkelakuan seperti satu dagangan 5% dalam penurunan pasaran meluas. Kerangka Pembahas Konservatif adalah betul. Separuh saiz dan mengekalkan bakul menghormati kedua-dua sifat kluster strategi dan bajet risiko mandat. Mengambil semua lima pada 1% setiap satu adalah jawapan salah yang menggoda kerana setiap persediaan menyemak peraturan secara individu — tetapi risiko pada tahap mandat adalah pada tahap portfolio, bukan pada tahap per-dagangan. Mengambil semua lima dengan henti lebih lebar memperburuk kesilapan dengan meningkatkan kerugian per-dagangan."
+  explanation="Sintesis: dagangan RSI(2) pada teknologi besar AS sangat berkorelasi, jadi 5 dagangan 'bebas' 1% berkelakuan seperti satu dagangan 5% dalam penurunan pasaran meluas. Pembahasan Konservatif adalah betul. Separuh saiz dan mengekalkan bakul menghormati kedua-dua sifat kluster strategi dan bajet risiko mandat. Mengambil kesemua lima pada 1% setiap satu adalah jawapan salah yang memikat kerana setiap persediaan menyemak peraturan secara individu — tetapi risiko pada tahap mandat adalah pada tahap portfolio, bukan per-dagangan. Mengambil kesemua lima dengan henti yang lebih lebar memperburukkan kesilapan dengan meningkatkan kerugian per-dagangan."
 />
 
 ## Cuba sendiri
 
-Dalam <Term id="ami_one_on_one" /> dengan Conservative Debator, tampal <Term id="ami_watchlist" /> yang baru sahaja jatuh dan tanya: "Tiker mana yang mencetuskan RSI(2) < 5 hari ini dengan harga di atas 200-day MA? Untuk setiap satu, nyatakan kemasukan, henti, dan tarikh henti masa. Kenal pasti perdagangan mana yang berkorelasi dan cadangkan saiz bakul yang mengekalkan pendedahan serentak." Kemudian logkan rancangan bakul dalam <Term id="ami_decision_journal" /> sebelum mana-mana kemasukan aktif.
+Dalam <Term id="ami_one_on_one" /> dengan Conservative Debator, tampal <Term id="ami_watchlist" /> yang baru sahaja jatuh dan tanya: "Amanah mana yang mencetuskan RSI(2) < 5 hari ini dengan harga di atas 200-day MA? Untuk setiap satu, nyatakan tarikh kemasukan, henti rugi, dan henti masa. Kenal pasti perdagangan yang berkorelasi dan cadangkan saiz bakul yang menghadkan pendedahan serentak." Kemudian logkan pelan bakul dalam <Term id="ami_decision_journal" /> sebelum mana-mana kemasunan dicetuskan.
 
 ## Penutup
 
-RSI(2) adalah strategi portfolio yang disamar sebagai isyarat per perdagangan. Saiz mengikut korrelasi, hadkan pendedahan serentak, dan jangan pernah memegang melebihi henti masa. Kelebihan mati pada hari ke-6.
+RSI(2) ialah strategi portofolio yang disamarkan sebagai isyarat per perdagangan. Saiz berdasarkan korelasi, hadkan pendedahan serentak, dan jangan pernah memegang melebihi henti masa. Kelebihan mati pada hari ke-6.

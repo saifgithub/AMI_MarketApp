@@ -11,64 +11,64 @@ topic: "volatility_regime"
 prerequisites: ["014_position_sizing_basics", "018_drawdown_management", "026_moving_averages"]
 tags: ["regime", "volatility", "vix", "atr", "position_sizing"]
 agent_callouts: ["market_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Rejim volatiliti
 
-Volatiliti adalah rejim yang berbeza daripada arah. Pasaran boleh menjadi lembu dan tenang, lembu dan volatil, beruang dan tenang, atau beruang dan meletup. Rejim volatiliti adalah apa yang sepatutnya menentukan saiz posisi dan jarak henti anda — bukan keyakinan anda. Selepas pelajaran ini, anda akan dapat mengesan rejim volatiliti menggunakan ambang VIX dan ATR, menamakan strategi yang dipadankan dengan setiap rejim, menamakan strategi yang secara senyap memusnahkan modal apabila volatiliti berubah, dan menyatakan syarat pembatalan untuk panggilan rejim vol.
+Volatiliti adalah rejim yang berbeza daripada arah. Pasaran boleh menjadi lembu dan tenang, lembu dan volatil, beruang dan tenang, atau beruang dan meletup. Rejim volatiliti adalah apa yang sepatutnya menentukan saiz posisi dan jarak henti anda — bukan keyakinan anda. Selepas pelajaran ini, anda akan dapat mengesan rejim volatiliti menggunakan ambang VIX dan ATR, menamakan strategi yang dipadankan dengan setiap rejim, menamakan strategi yang secara senyap memusnahkan modal apabila volatiliti berubah, dan menyatakan keadaan pembatalan untuk panggilan rejim vol.
 
-## Bagaimana ini berlaku dalam pasaran sebenar
+## Bagaimana ia berlaku dalam pasaran sebenar
 
 Tiga rejim volatiliti sebenar dalam lembu SPX yang sama dari 2023–2024:
 
-Lembu vol-rendah (pertengahan 2023): VIX ditutup di bawah 15 selama 47 daripada 65 hari dagangan dari 19 Jun hingga 22 September 2023. ATR 20-hari SPX purata 38 mata (≈0.84% daripada harga). Pedagang dengan risiko 2%-akaun boleh membawa posisi 8–10% dengan henti carta 2% dan masih berada dalam mandat.
+Lembu vol-rendah (pertengahan 2023): VIX ditutup di bawah 15 selama 47 daripada 65 hari dagangan dari 19 Jun hingga 22 September 2023. ATR 20-hari SPX purata 38 mata (≈0.84% daripada harga). Pedagang dengan risiko 2%-dari-akaun boleh membawa posisi 8–10% dengan henti carta 2% dan masih berada dalam mandat.
 
-Puncak kejutan vol (5 Ogos 2024): VIX ditutup pada 38.57 pada 5 Ogos 2024 selepas pembatalan bawa yen — pergerakan satu hari dari VIX 23 pada sesi sebelumnya. ATR 20-hari SPX melonjak dari 50 ke 88 mata (1.0% ke 1.6% daripada harga) dalam lima hari dagangan. Risiko 2% per posisi yang sama kini memaksa saiz posisi turun ke bawah 5%.
+Lonjakan kejutan vol (5 Ogos 2024): VIX ditutup pada 38.57 pada 5 Ogos 2024 selepas pembatalan carry yen — pergerakan satu hari dari VIX 23 pada sesi sebelumnya. ATR 20-hari SPX melonjak dari 50 ke 88 mata (1.0% ke 1.6% daripada harga) dalam lima hari dagangan. Risiko 2% per-dagangan yang sama kini memaksa saiz posisi turun ke bawah 5%.
 
-Vol-tinggi berterusan (Oktober 2022): VIX kekal di atas 25 selama 30 hari dagangan berturut-turut semasa paras rendah pasaran beruang. ATR 20-hari SPX purata 75 mata (~2% daripada harga). Saiz posisi yang berfungsi pada pertengahan 2023 akan menghasilkan penurunan 2x daripada yang dikehendaki.
+Vol-tinggi berterusan (Oktober 2022): VIX kekal di atas 25 selama 30 hari dagangan berturut-turut semasa paras rendah pasaran beruang. ATR 20-hari SPX purata 75 mata (~2% daripada harga). Saiz posisi yang berfungsi pada pertengahan 2023 akan menghasilkan penurunan 2x daripada yang dijangkakan.
 
-Peraturan pengesanan: VIX < 15 selama 10 daripada 15 sesi terakhir → vol-rendah; VIX 15–25 → normal; VIX > 25 selama 10 daripada 15 sesi terakhir → vol-tinggi; puncak intraday di mana VIX naik >40% dalam satu sesi → kejutan vol. ATR mengesahkan: bacaan vol-rendah pada VIX dengan ATR > 1.2% daripada harga menandakan perbezaan yang sering mendahului kejutan.
+Peraturan pengesanan: VIX < 15 untuk 10 daripada 15 sesi terakhir → vol-rendah; VIX 15–25 → normal; VIX > 25 untuk 10 daripada 15 sesi terakhir → vol-tinggi; lonjakan intraday di mana VIX naik >40% dalam satu sesi → kejutan vol. ATR mengesahkan: bacaan vol-rendah pada VIX dengan ATR > 1.2% daripada harga menandakan perbezaan yang sering mendahului kejutan.
 
 ## Perangkap
 
-Perangkap rejim volatiliti ialah mengekalkan saiz posisi dolar yang sama merentasi rejim kerana keyakinan tidak berubah. Nombor yang perlu berubah ialah bilangan saham, bukan pendapat. Apabila VIX bergerak dari 13 ke 28, henti carta 2% yang sama kini mewakili kerugian 4% kerana harga bergerak dua kali lebih jauh antara bar. Pedagang yang tidak mengubah saiz menonton posisi "kecil" memberikan kerugian "besar" dan menyimpulkan mereka salah mengenai saham tersebut — apabila mereka sebenarnya salah mengenai rejim tersebut.
+Perangkap rejim volatiliti ialah mengekalkan saiz posisi dolar yang sama merentas rejim kerana keyakinan tidak berubah. Nombor yang perlu berubah ialah bilangan saham, bukan pendapat. Apabila VIX bergerak dari 13 ke 28, henti carta 2% yang sama kini mewakili kerugian 4% kerana harga bergerak dua kali lebih jauh antara bar. Pedagang yang tidak mengubah saiz menonton posisi "kecil" memberikan kerugian "besar" dan menyimpulkan mereka salah tentang saham tersebut — apabila sebenarnya mereka salah tentang rejim tersebut.
 
-Model yang betul: risiko per posisi tetap oleh mandat; saiz posisi adalah pembolehubah yang menyerap perubahan volatiliti. Apabila ATR berganda, bilangan saham separuh. Keyakinan kekal sama; matematik melindungi anda.
+Model yang betul: risiko-per-dagangan adalah tetap oleh mandat; saiz posisi adalah pemboleh ubah yang menyerap perubahan volatiliti. Apabila ATR berganda, bilangan saham separuh. Keyakinan kekal sama; matematik melindungi anda.
 
 <ChatWith agent="market_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="VIX telah berada di bawah 14 selama 12 daripada 15 sesi terakhir. Anda masuk posisi panjang dengan henti carta 2% pada saiz posisi 10%, berisiko 0.2% daripada akaun pada pergerakan tersebut. Dua minggu kemudian, VIX melonjak ke 32 dan ATR berganda. Henti anda belum dipukul lagi. Apakah pelarasan sedar rejim?"
+  question="VIX telah berada di bawah 14 selama 12 daripada 15 sesi terakhir. Anda masuk posisi panjang dengan henti carta 2% pada saiz posisi 10%, berisiko 0.2% daripada akaun pada pergerakan itu. Dua minggu kemudian, VIX melonjak ke 32 dan ATR berganda. Henti anda belum dipukul lagi. Apakah pelarasan sedar rejim?"
   options={[
-    "Potong saiz posisi kira-kira separuh untuk memulihkan risiko $-asal di bawah ATR baharu; luaskan henti secara berkadar jika struktur carta menuntutnya; atau tutup dagangan dan masuk semula pada saiz yang disesuaikan dengan rejim.",
+    "Potong saiz posisi kira-kira separuh untuk memulihkan risiko $ asal di bawah ATR baharu; luaskan henti secara berkadar jika struktur carta menuntutnya; atau tutup dagangan dan masuk semula pada saiz yang disesuaikan dengan rejim.",
     "Gandakan saiz posisi — ketakutan bermakna peluang.",
     "Jangan buat apa-apa; henti itu adalah henti.",
     "Gerakkan henti lebih ketat untuk mengunci keuntungan."
   ]}
   answer={0}
-  explanation="Jawapan salah yang menggoda ialah jawapan 'tidak buat apa-apa' — 'disiplin bermakna jangan sentuh henti'. Namun disiplin adalah tentang risiko $-, bukan harga henti. Apabila ATR berganda, jarak henti yang sama mewakili risiko bising volatiliti berganda, dan posisi kini secara efektif terlalu besar untuk rejim tersebut. Penyesuaian saiz ialah langkah yang betul mengikut rejim. Menggandakan saiz posisi ialah bencana kejutan volatiliti yang klasik."
+  explanation="Jawapan salah yang menggoda ialah jawapan 'jangan buat apa-apa' — 'disiplin bermakna jangan sentuh henti'. Tetapi disiplin adalah tentang risiko $, bukan harga henti. Apabila ATR berganda, jarak henti yang sama mewakili risiko bising volatiliti berganda, dan posisi kini secara efektif terlalu besar untuk rejim tersebut. Penyesuaian saiz ialah langkah yang betul mengikut rejim. Menganjakkan saiz posisi adalah bencana kejutan volatiliti yang klasik."
 />
 
 <Quiz
-  question="VIX = 11. ATR pada SPX = 1.4% daripada harga. Isyarat perbezaan mana yang ini pencetus, dan apa respons tahap mandat yang akan didorong oleh Conservative Risk Debator?"
+  question="VIX = 11. ATR pada SPX = 1.4% daripada harga. Isyarat penyingkiran (divergence) manakah ini memacu, dan apakah respons tahap mandat yang akan ditekan oleh Pembahas Risiko Konservatif?"
   options={[
-    "Perbezaan VIX rendah-ATR tinggi — pasaran pilihan raya tidak selesa dengan volatiliti direalisasikan. Ketatkan saiz posisi maksimum sebanyak ~25% secara proaktif; pertimbangkan mengurangkan pendedahan beta tinggi sehingga perbezaan selesai.",
-    "Beli lebih banyak — pilihan raya yang tenang bermakna kenaikan harga percuma.",
-    "Jual semua dengan segera; ini selalu mendahului kejatuhan.",
-    "Tiada perbezaan; kedua-dua bacaan berkata 'tenang'."
+    "Penyingkiran VIX rendah-ATR tinggi — ketenteraman pasaran pilihan raya tidak bersetuju dengan volatiliti direalisasikan. Ketatkan saiz posisi maksimum sebanyak ~25% secara proaktif; pertimbangkan mengurangkan pendedahan beta tinggi sehingga penyingkiran diselesaikan.",
+    "Beli lebih banyak — ketenteraman pilihan bermakna potensi naik percuma.",
+    "Jual semua serta-merta; ini selalu mendahului kejatuhan.",
+    "Tiada penyingkiran; kedua-dua bacaan berkata 'tenang'."
   ]}
   answer={0}
-  explanation="Jawapan salah yang menggoda ialah panggilan 'tiada perbezaan, kedua-dua bacaan berkata tenang' — VIX dan ATR kelihatan seperti mereka harus bersetuju, jadi 'tiada perbezaan' terasa betul. Namun VIX adalah volatiliti tersirat pilihan raya ke hadapan; ATR adalah volatiliti direalisasikan. Apabila VIX luar biasa rendah manakala ATR luar biasa tinggi, perbezaan itu ialah isyarat. Respons konservatif ialah pengurangan saiz proaktif, bukan keluar panik jual semua atau penafian beli lebih."
+  explanation="Jawapan salah yang menggoda ialah panggilan 'tiada penyingkiran, kedua-dua bacaan berkata tenang' — VIX dan ATR kelihatan sepatutnya bersetuju, jadi 'tiada penyingkiran' terasa betul. Tetapi VIX adalah volatiliti tersirat pilihan yang melihat ke hadapan; ATR adalah volatiliti direalisasikan. Apabila VIX luar biasa rendah sementara ATR luar biasa tinggi, penyingkiran itu adalah isyarat. Respons konservatif ialah pengurangan saiz proaktif, bukan keluar panik jual semua atau penafian beli lebih."
 />
 
 ## Cuba sendiri
 
-Buka <Term id="ami_one_on_one" /> dengan Penganalisis Pasaran dan tanya: "Tunjukkan rejim VIX semasa — di bawah 15, 15–25, atau lebih 25 selama 10 daripada 15 sesi terakhir — dan ATR 20-hari SPX semasa sebagai % daripada harga. Tandakan sebarang perbezaan." Kemudian buka editor <Term id="ami_mandate" /> dan tetapkan peraturan "saiz posisi maksimum larasan vol" dalam kepala anda: pada VIX < 15, maks 10%; VIX 15–25, maks 7%; VIX > 25, maks 5%. Simpan sebagai nota jurnal.
+Buka <Term id="ami_one_on_one" /> dengan Penganalisis Pasaran dan tanya: "Tunjukkan rejim VIX semasa — di bawah 15, 15–25, atau lebih 25 untuk 10 daripada 15 sesi terakhir — dan ATR 20-hari SPX semasa sebagai % daripada harga. Tandakan sebarang perbezaan." Kemudian buka editor <Term id="ami_mandate" /> dan tetapkan peraturan "saiz posisi maksimum larasan vol" dalam kepala anda: pada VIX < 15, maks 10%; VIX 15–25, maks 7%; VIX > 25, maks 5%. Simpan sebagai nota jurnal.
 
-## Pengajaran
+## Penegasan
 
-Risiko per posisi tetap; saiz posisi fleksibel dengan rejim volatiliti. Apabila ATR berganda, bilangan saham separuh — keyakinan tidak berubah, matematik yang berubah.
+Risiko-per-dagangan adalah tetap; saiz posisi fleksibel mengikut rejim volatiliti. Apabila ATR berganda, bilangan saham separuh — keyakinan tidak berubah, matematik yang berubah.

@@ -17,52 +17,52 @@ updated_at: "2026-05-12"
 ---
 # Risiko ketergantungan berlebihan
 
-Kesilapan yang bertentangan dengan mengabaikan <Term id="ami" /> ialah terlalu bergantung padanya untuk perkara yang hanya anda boleh putuskan. AMI ialah <Term id="training_simulator" /> untuk kemahiran menilai keluaran analis berbilang ejen — ia boleh menunjukkan kepada anda bahawa kedudukan NVDA 6% melanggar mandat `risk_score: 3` anda (had nama tunggal 3%) dalam senario simulasi. Ia tidak dapat memberitahu anda sama ada risk_score anda sepatutnya 3 pada mulanya — ia bergantung pada pendapatan anda, kewajipan anda, tidur anda, dan garis masa anda. Risiko ketergantungan berlebihan ialah membiarkan simulasi <Term id="ami_verdict" /> yang kedengaran yakin menggantikan penyesuaian peribadi yang mesti datang daripada anda. Pada akhir pelajaran ini, anda akan mampu mengesan saat-saat apabila "apa kata AMI?" ialah soalan yang salah.
+Kesalahan yang bertentangan dengan mengabaikan <Term id="ami" /> adalah terlalu bergantung padanya untuk perkara yang hanya anda boleh putuskan. AMI ialah <Term id="training_simulator" /> untuk kemahiran menilai output penganalisis berbilang agen — ia boleh menunjukkan kepada anda bahawa kedudukan NVDA 6% melanggar mandat `risk_score: 3` anda (had nama tunggal 3%) dalam senario simulasi. Ia tidak boleh memberitahu anda sama ada risk_score anda sepatutnya 3 pada mulanya — ia bergantung pada pendapatan anda, kewajipan anda, tidur anda, dan garis masa anda. Risiko ketergantungan berlebihan ialah membiarkan simulasi <Term id="ami_verdict" /> yang terdengar yakin menggantikan kalibrasi peribadi yang mesti datang daripada anda. Pada akhir pelajaran ini, anda akan dapat mengenal pasti momen apabila "apa kata AMI?" ialah soalan yang salah.
 
-## Bagaimana ia berlaku dalam pasaran sebenar
+## Bagaimana ini berlaku dalam pasaran sebenar
 
-Bayangkan seorang pengguna yang menjalankan <Term id="ami_convene_the_room" /> pada AMZN setiap pagi selama tiga minggu. Verdict Simulasi kembali: BELI 2%, TAHAN, BELI 3%, TAHAN, TAHAN, BELI 2%. Pengguna memperlakukan setiap satu sebagai lampu hijau berbanding sebagai penggalih latihan — mereka berhenti membaca pandangan berbeza, berhenti mendokumenkan pemikiran mereka sendiri, dan mula menggambarkan diri mereka sebagai "mengikut panggilan AMI". Penarikan semula simulasi dari awal bulan ialah -8%. Mereka mengumpulkan Bilik sekali lagi dan bertanya kepada Pengurus Portofolio: *"Adakah saya sepatutnya turun 8%?"*
+Bayangkan seorang pengguna yang menjalankan <Term id="ami_convene_the_room" /> pada AMZN setiap pagi selama tiga minggu. Verdict Simulasi kembali: BELI 2%, TAHAN, BELI 3%, TAHAN, TAHAN, BELI 2%. Pengguna memperlakukan setiap satu sebagai lampu hijau berbanding sebagai penggalih latihan — mereka berhenti membaca pembangkang, berhenti mendokumenkan reasoning peribadi mereka, dan mula menggambarkan diri mereka sebagai "mengikut panggilan AMI". Drawdown simulasi dari awal bulan ialah -8%. Mereka mengumpulkan semula Bilik dan bertanya kepada PM: *"Adakah saya sepatutnya turun 8%?"*
 
-> *Pengurus Portofolio:* Soalan itu tidak berada dalam permukaan saya. Saya melaksanakan `max_drawdown_pct: 20` dari <Term id="ami_mandate" /> anda — anda berada pada -8% dalam simulator, jauh di dalam lantai. Sama ada -8% dalam sebulan boleh diterima untuk *anda* bergantung pada fakta yang saya tidak miliki: kestabilan pendapatan anda, jangka masa, pegangan lain di luar simulasi ini, dan bagaimana kerugian itu akan mempengaruhi keputusan anda jika ia adalah nyata. Buka <Term id="ami_decision_journal" /> dan semak enam perdagangan tersebut. Semakan Pengurus Portofolio luluskan setiap satu. Soalan yang senario ini mengajar anda untuk tanya ialah sama ada nilai Mandat anda masih betul untuk kehidupan yang anda dagangkan.
+> *Portfolio Manager:* Soalan itu bukan dalam permukaan saya. Saya melaksanakan `max_drawdown_pct: 20` <Term id="ami_mandate" /> anda — anda berada pada -8% dalam simulator, jauh di dalam lantai. Sama ada -8% dalam sebulan boleh diterima untuk *anda* bergantung pada fakta yang saya tidak ada: kestabilan pendapatan anda, jangka masa, pegangan lain di luar simulasi ini, dan bagaimana kerugian itu akan mempengaruhi keputusan anda jika ia adalah nyata. Buka <Term id="ami_decision_journal" /> dan semak enam perdagangan tersebut. Semakan PM berjaya pada setiap satu. Soalan yang senario ini mengajar anda untuk tanya ialah sama ada nilai Mandat anda masih betul untuk kehidupan yang anda dagangkan.
 
-Pengguna yang sama juga mungkin terjebak dalam ketergantungan berlebihan yang lebih lembut: melangkau pemikiran pra-perdagangan mereka sendiri ("Saya akan lihat apa kata AMI") dan memperlakukan Verdict Simulasi sebagai verdict dalam erti kata undang-undang. Verdict itu ialah verdict dalam erti kata *pendapat yang sedang dilatih* — dan 12 ejen yang tidak bersetuju di dalamnya ialah ciri, bukan hingus. Jika anda berhenti membaca pandangan berbeza kerana tajuknya ialah BELI, anda telah menyerahkan bahagian yang sepatutnya anda latih.
+Pengguna yang sama juga mungkin terjebak dalam ketergantungan berlebihan yang lebih lembut: melangkau pemikiran pra-perdagangan peribadi ("Saya akan lihat apa kata AMI") dan memperlakukan Verdict simulasi sebagai verdict dalam erti kata undang-undang. Verdict itu ialah verdict dalam erti kata *pendapat yang sedang dilatih* — dan 12 agen yang tidak bersetuju di dalamnya ialah ciri, bukan hingus. Jika anda berhenti membaca pembangkang kerana tajuknya BELI, anda telah menyerahkan bahagian yang sepatutnya anda latih.
 
 ## Perangkap
 
-Bias automatik ialah nama klasik untuknya: manusia secara sistematik terlalu mempercayai keluaran sistem yang *kelihatan* yakin dan berstruktur. AMI adalah kedua-duanya. Ia menghasilkan Verdict berstruktur dengan nombor dan skor keyakinan, dan tarikan semula jadi ialah untuk memberi mandat. Model mental yang betul: AMI ialah persekitaran latihan untuk kemahiran menjalankan pasukan analis penyelidikan — bukan CIO yang keputusannya anda kumpulkan. Kerusi CIO adalah milik anda — anda menetapkan Mandat, anda memutuskan sama ada senario simulasi mengajar anda sesuatu, anda memutuskan apa (jika ada) untuk dibawa ke dalam pemikiran anda sendiri. AMI tidak memberitahu anda untuk melakukan apa-apa di luar aplikasi. Jika anda pernah menangkap diri anda berfikir *"AMI kata BELI jadi saya beli"* tanpa mengingat mengapa, itu ialah isyarat amaran. Buka semula transkrip. Titik latihan ialah penilaian, bukan tajuk.
+Bias pengautomasian ialah nama klasik untuknya: manusia secara sistematik terlalu mempercayai output sistem yang *kelihatan* yakin dan berstruktur. AMI ialah kedua-duanya. Ia menghasilkan Verdict berstruktur dengan nombor dan skor keyakinan, dan tarikan semula jadi ialah untuk menangguhkan keputusan. Model mental yang betul: AMI ialah persekitaran latihan untuk kemahiran menjalankan pasukan penganalisis penyelidikan — bukan CIO whose decisions anda kumpulkan. Kerusi CIO ialah milik anda — anda menetapkan Mandat, anda memutuskan sama ada senario simulasi mengajar anda sesuatu, anda memutuskan apa (jika ada) untuk dibawa ke dalam pemikiran anda sendiri. AMI tidak memberitahu anda untuk melakukan apa-apa di luar aplikasi. Jika anda pernah menangkap diri berfikir *"AMI kata BELI jadi saya beli"* tanpa mengingat mengapa, itu ialah isyarat amaran. Buka semula transkrip. Matlamat latihan ialah penilaian, bukan tajuk.
 
 <ChatWith agent="concierge" />
 
 ## Kuiz
 
 <Quiz
-  question="Anda telah menyetujui empat Verdict BELI simulasi bulan ini tanpa menulis alasan anda sendiri. Tiga daripada simulasi dagangan menentang anda. Anda mesyuaratkan Bilik untuk ticker kelima dan Verdict simulasi ialah BELI 3% dengan keyakinan 0.71. Apakah langkah seterusnya yang *betul*?"
+  question="Anda telah menyetujui empat Verdict BELI simulasi bulan ini tanpa menulis alasan anda sendiri. Tiga daripada dagangan simulasi tersebut menentang anda. Anda mengumpulkan Bilik untuk ticker kelima dan Verdict simulasi ialah BELI 3% dengan keyakinan 0.71. Apakah langkah seterusnya yang *betul*?"
   options={[
-    "Buka Jurnal Keputusan, semak apa yang sebenarnya salah pada tiga kerugian, dan putuskan sama ada Mandat anda atau tafsiran anda terhadap verdict (bukan proses AMI) perlu disesuaikan",
+    "Buka Jurnal Keputusan, semak apa yang sebenarnya salah pada tiga kerugian, dan putuskan sama ada Mandat anda atau tafsiran anda terhadap verdict (bukan proses AMI) perlu diselaraskan",
     "Langkau dagangan — tiga kerugian berturut-turut bermakna AMI salah",
-    "Lakukan dagangan — proses AMI telah konsisten",
-    "Bimbing Pengurus Portofolio (PM) untuk lebih konservatif"
+    "Ambil dagangan — proses AMI telah konsisten",
+    "Bimbing PM agar lebih konservatif"
   ]}
   answer={0}
-  explanation="Rangkaian kerugian bukan bukti bahawa proses itu rosak — tetapi ia berfungsi sebagai fungsi pemaksa untuk membuat audit. Jurnal adalah tempat anda mendapati sama ada anda melompati kes Bear, saiz melebihi cadangan Trader, atau berdagang dalam rejimen yang tidak sesuai dengan Mandat anda. Jawapan salah yang menggoda ialah 'brief PM' — PM adalah lantai anda, bukan strategi anda."
+  explanation="Rangkaian kerugian bukan bukti bahawa proses itu rosak — tetapi ia berfungsi sebagai fungsi paksaan untuk membuat audit. Jurnal adalah tempat anda menemui sama ada anda melangkau kes Bear, saiz melebihi cadangan Trader, atau berdagang dalam rejimen yang tidak sesuai dengan Mandat anda. Jawapan salah yang menarik ialah 'brief PM' — PM adalah lantai anda, bukan strategi anda."
 />
 
 <Quiz
-  question="Antara berikut, yang manakah tanda anda telah melampaui tahap ketergantungan berlebihan pada AMI?"
+  question="Antara berikut, yang manakah tanda anda telah melampaui ketergantungan berlebihan pada AMI?"
   options={[
-    "Anda menjurnal setiap dagangan dengan alasan anda sendiri bersama Verdict",
-    "Anda menyedari diri anda menggambarkan dagangan sebagai 'AMI suruh saya beli' berbanding 'Saya memutuskan untuk beli selepas melihat kes AMI'",
+    "Anda menjurnal setiap dagangan dengan alasan anda sendiri di samping Verdict",
+    "Anda tersedar sedang menggambarkan dagangan sebagai 'AMI suruh saya beli' berbanding 'Saya memutuskan untuk beli selepas melihat kes AMI'",
     "Anda membaca transkib debat penuh sebelum membuat keputusan",
-    "Anda kadang-kadang menolak Verdict sepenuhnya"
+    "Anda kadangkala menolak Verdict sepenuhnya"
   ]}
   answer={1}
-  explanation="Ujian bahasa itu nyata. 'AMI suruh saya' membingkai ejen sebagai pembuat keputusan; 'Saya memutuskan selepas melihat' mengekalkan anda di kerusi CEO yang simulator ini direka untuk melatih anda. Menjurnal alasan anda sendiri, membaca transkib debat penuh, dan menolak Verdict sepenuhnya adalah semua tingkah laku CEO yang sihat — termasuk menolaknya; AMI tidak berada dalam perniagaan mengeluarkan nasihat yang anda ikut."
+  explanation="Ujian bahasa itu nyata. 'AMI suruh saya' membingkai ejen sebagai pembuat keputusan; 'Saya memutuskan selepas melihat' mengekalkan anda di kerusi CEO yang simulator ini direka untuk melatih anda. Menjalinkan alasan anda sendiri, membaca transkib debat penuh, dan menolak Verdict sepenuhnya adalah semua tingkah laku CEO yang sihat — termasuk menolaknya; AMI tidak berada dalam perniagaan untuk mengeluarkan nasihat yang anda ikut."
 />
 
 ## Cuba sendiri
 
-Buka **Dokumen Keputusan** dan cari tiga perdagangan terkini anda yang merujuk kepada Verdict AMI. Untuk setiap satu, tulis satu ayat: *apa yang akan saya lakukan jika AMI tidak wujud?* Jika jawapannya "Saya tiada idea" pada lebih daripada satu, anda telah menemui titik lemah ketergantungan berlebihan anda — dan entri Dokumen itu sendiri ialah permulaan untuk membetulkannya.
+Buka **Buku Catatan Keputusan** dan cari tiga perdagangan terkini anda yang merujuk kepada Verdict AMI. Untuk setiap satu, tulis satu ayat: *apa yang saya akan lakukan jika AMI tidak wujud?* Jika jawapannya "Saya tidak tahu" pada lebih daripada satu, anda telah menemui titik lemah ketergantungan berlebihan anda — dan entri Buku Catatan itu sendiri ialah permulaan untuk membetulkannya.
 
-## Pengajaran
+## Penutup
 
-Tugas AMI ialah melatih penilaian anda; tugas anda ialah mengekalkan keputusan. Jika anda tidak dapat menjelaskan mengapa anda mengambil perdagangan tanpa mengutip Verdict simulasi, anda telah menyerahkan bahagian yang anda datang ke sini untuk latih. AMI mengajar anda untuk menilai keluaran analis, bukan memberikan nasihat untuk diikuti.
+Tugasan AMI ialah melatih penilaian anda; tugasan anda ialah mengekalkan keputusan. Jika anda tidak boleh menjelaskan mengapa anda mengambil perdagangan tanpa mengutip Verdict simulasi, anda telah menyerahkan bahagian yang anda datang ke sini untuk latih. AMI mengajar anda menilai output penganalisis, bukan memberikan nasihat untuk diikuti.

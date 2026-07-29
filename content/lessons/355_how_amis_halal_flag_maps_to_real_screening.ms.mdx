@@ -1,0 +1,73 @@
+---
+id: "355_how_amis_halal_flag_maps_to_real_screening"
+title: "Bagaimana bendera halal AMI berfungsi"
+duration_min: 5
+level: 13
+module: 25
+difficulty: 3
+track: "islamic_finance"
+code: "SHARIA 9"
+topic: "halal_flag_mapping"
+prerequisites: ["348_the_business_activity_screen", "349_the_three_financial_ratio_screens", "271_inside_the_deterministic_compliance_check"]
+tags: ["islamic-finance", "halal-flag", "mandate", "pm", "deterministic-compliance"]
+sources: ["S&P 500 Sharia Industry Exclusions Index — AAOIFI-standard constituents screened by S&P Dow Jones, tracked by the SPUS ETF (sp-funds.com/spus)", "AMI backend — app/services/sharia_universe.py + app/schemas/sharia.py (three-state sourced-allowlist resolver, CR069)"]
+verified: {by: "cr060-ai-dual-pass", date: "2026-07-25", method: "rewritten to the CR069 sourced four-state screen after DEF097; mechanism verified against sharia_universe.py + schemas/sharia.py; S&P 500 Sharia Industry Exclusions Index / SPUS / AAOIFI corroborated via sp-funds.com + zoya.finance"}
+agent_callouts: ["portfolio_manager", "fundamentals_analyst"]
+locale_versions: ["en", "ar", "ms"]
+created_at: "2026-07-22"
+updated_at: "2026-07-25"
+---
+# Bagaimana bendera halal AMI berfungsi
+
+Anda sudah tahu bahawa pemeriksaan kepatuhan deterministik oleh PM (<Lesson id="271_inside_the_deterministic_compliance_check"/>) adalah Python tulen, bukan prompt — input yang sama, jawapan yang sama, setiap kali. Bendera Mandat halal menggunakan seni bina yang sama, tetapi di sinilah pemula sering tersalah: ia **tidak** menjalankan skrin dua peringkat yang baru anda pelajari dalam <Lesson id="348_the_business_activity_screen"/> dan <Lesson id="349_the_three_financial_ratio_screens"/>, dan ia tidak mengira mana-mana nisbah secara langsung. Sebaliknya, ia menyemak ticker terhadap senarai **berpangkalan sumber** — iaitu komponen yang diterbitkan bagi indeks Syarie AAOIFI yang mapan — dan mengembalikan salah satu daripada empat hasil. Pada akhir pelajaran ini, anda akan dapat menyatakan dengan tepat apa yang dimaksudkan oleh PASS halal dan apa yang tidak.
+
+## Contoh
+
+Hidupkan bendera halal Mandat dan Convene the Room. Seperti dalam <Lesson id="271_inside_the_deterministic_compliance_check"/>, dua perkara berlaku secara berturut-turut: pasukan analis berdebat dan menghasilkan Verdict, kemudian — secara berasingan, selepas perdebatan tamat — pemeriksaan deterministik PM dijalankan. Untuk bendera halal, pemeriksaan tersebut melihat ticker dalam komponen **S&P 500 Sharia Industry Exclusions Index** — skrin standard AAOIFI yang dijalankan oleh S&P Dow Jones dan dipantau oleh ETF SPUS — yang telah dimuatkan bersama tarikh penerbitannya. Empat hasil:
+
+- Ticker berada dalam set yang patuh itu → **PASS**. (Nama besar seperti AAPL, MSFT dan NVDA biasanya berada di dalamnya.)
+- Ticker berada dalam S&P 500 induk tetapi *bukan* dalam set yang patuh → **SCREENED OUT**, dan bendera menyekat perdagangan. Bank konvensional adalah kes klasik.
+- Ticker tidak berada dalam S&P 500 langsung → **UNKNOWN**: peraturan indeks hanya terpakai pada anggotanya sendiri, jadi AMI tidak mempunyai sebarang keputusan sama ada arah. Ini *dibenarkan*, tetapi perdagangan membawa pendedahan bahawa tiada skrin yang meliputinya — diam bukan satu laluan.
+- Sumber tidak boleh dikemas kini, atau sudah luput dari tetingkap masa → bendera **PAUSES** dan menyekat dengan jelas, berbanding berdagang pada senarai yang hilang atau lapuk.
+
+Tiada satu pun daripada ini mengira nisbah hutang atau pendapatan secara langsung. Ia membaca skrin yang diterbitkan dan bertarikh oleh pihak lain, dan melaporkan mana daripada empat keadaan tersebut yang terpakai.
+
+## Perangkap
+
+Perangkapnya ialah membaca PASS sebagai "AMI menjalankan skrin tiga nisbah dari <Lesson id="348_the_business_activity_screen"/> dan <Lesson id="349_the_three_financial_ratio_screens"/> dan syarikat ini melaluinya." Ia tidak. AMI tidak mengira skrin ini di sini — pengiraan nisbah wujud dalam kod asas tetapi kekal tidak aktif pada laluan ini. PASS bermaksud "ticker ini adalah anggota semasa senarai yang diterbitkan dan diskrin oleh AAOIFI, pada suatu tarikh," tiada lebih; senarai tersebut mungkin tertinggal daripada pengemaskinian terkini syarikat, dan nama boleh masuk atau keluar pada masa penimbunan semula. Perangkap yang lebih halus ialah memperlakukan "tidak disekat" sebagai "diserin dan lulus" — ticker **UNKNOWN** dibenarkan *tepat kerana tiada skrin yang menjatuhkan keputusan ke atasnya*, yang merupakan kebalikan daripada lulus. Baca hasil yang AMI kembalikan sebenar, bukan yang anda anggap.
+
+<ChatWith agent="portfolio_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Flag Mandat halal diaktifkan. Anda Memanggil Bilik untuk syarikat kap kecil yang sama sekali bukan ahli S&P 500. Apakah semakan halal deterministik Pengurus Portfoli (PM) lakukan?"
+  options={[
+    "Menyekatnya — apa jua yang tidak disenaraikan oleh indeks dianggap tidak mematuhi",
+    "Membolehkannya, tetapi menandakannya sebagai UNKNOWN dengan pendedahan bahawa tiada skrin merangkuminya — peraturan indeks yang diperoleh hanya pada ahlinya, bukan nama di luar ia",
+    "Mengira skrin aktiviti perniagaan dan tiga nisbah secara langsung untuk mencapai keputusan",
+    "Luluskan secara automatik, kerana hanya bank konvensional yang disekat"
+  ]}
+  answer={1}
+  explanation="Flag halal AMI menyemak keanggotaan dalam senarai yang diperoleh — Indeks Pengecualian Industri Sharia S&P 500. Nama di luar S&P 500 induk adalah nama yang tidak pernah dinilai oleh indeks tersebut, jadi AMI tidak mempunyai sebarang keputusan: ia mengembalikan UNKNOWN, yang dibenarkan tetapi membawa pendedahan 'tiada skrin merangkumi ini'. Menyekat setiap nama yang tidak disenaraikan mengelirukan UNKNOWN dengan SCREENED-OUT — SCREENED-OUT dikhaskan untuk nama yang ADA dalam S&P 500 tetapi tiada dalam set yang dipatuhi. AMI tidak mengira nisbah secara langsung pada laluan ini, dan tidak benar bahawa hanya bank yang disekat."
+/>
+
+<Quiz
+  question="Dengan flag halal diaktifkan, ticker kembali PASS. Apakah yang sebenarnya AMI telah tegakkan?"
+  options={[
+    "Bahawa AMI menjalankan skrin aktiviti perniagaan modul dan tiga nisbah kewangan serta syarikat meluluskannya",
+    "Bahawa hutang kepada nilai pasaran syarikat, pada masa ini, di bawah ambang 30% AAOIFI — AMI mengira semulanya pada sesi ini",
+    "Tiada apa-apa tentang kepatuhan — PASS hanya bermaksud perdebatan penganalisis adalah bullish terhadap nama tersebut",
+    "Bahawa ticker adalah penyertaan semasa dalam indeks Sharia AAOIFI yang diperoleh pada tarikh penerbitannya — fakta keanggotaan, bukan skrin yang dikira oleh AMI"
+  ]}
+  answer={3}
+  explanation="PASS halal adalah carian keanggotaan: ticker berada dalam senarai penyertaan bertarikh dan diterbitkan bagi Indeks Pengecualian Industri Sharia S&P 500. AMI tidak menjalankan skrin dua peringkat itu sendiri — matematik nisbah kekal tidak aktif pada laluan ini — jadi 'AMI mengira nisbah' dan 'AMI mengira semula hutang kepada nilai pasaran pada sesi ini' kedua-duanya melebih-lebihkan apa yang berlaku; peraturan hutang 30% adalah asas penyedia indeks, digunakan apabila senarai dibina, bukan pengiraan langsung AMI. Dan PASS adalah hasil kepatuhan daripada langkah deterministik berasingan, sepenuhnya bebas sama ada perdebatan adalah bullish."
+/>
+
+## Cuba sendiri
+
+Togol bendera halal pada dalam Settings → Mandate, kemudian Convene the Room tiga kali: pada satu syarikat kap besar yang biasanya patuh (katakan AAPL), pada satu bank konvensional dalam S&P 500, dan pada satu syarikat kap kecil di luar S&P 500. Bandingkan hasil setiap kali — PASS, screened-out-and-blocked, dan permitted-but-UNKNOWN — dan baca sebab yang dirujuk oleh PM untuk setiap satu. Ingat: bendera halal AMI adalah alat kitaran latihan yang dibina atas skrin pihak ketiga yang diterbitkan, bukan fatwa agama atau nasihat kepatuhan peribadi; bawa soalan pengamatan sebenar kepada ahli kewangan Islam yang berkelayakan.
+
+## Intipati
+
+Bendera halal AMI tidak mengira skrin Syarie — ia menyemak ticker terhadap indeks AAOIFI yang berpangkalan sumber dan bertarikh, dan mengembalikan PASS, screened-out, UNKNOWN, atau paused. PASS adalah keanggotaan dalam senarai yang diterbitkan oleh pihak lain pada suatu tarikh; UNKNOWN adalah dibenarkan tetapi secara eksplisit tidak dijatuhkan keputusannya. Ini adalah latihan metodologi, bukan fatwa — rujuk ahli yang berkelayakan untuk pegangan anda sendiri.

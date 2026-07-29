@@ -15,64 +15,64 @@ locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-07-25"
 ---
-# Disiplin vs. Kegembiraan
+# Disiplin berbanding kegembiraan
 
-Disiplin ialah pedagang yang mematuhi pelan apabila pelan itu membosankan. Kegembiraan ialah pedagang yang menyimpang apabila pelan itu menarik. Selepas pelajaran ini, anda akan dapat membezakan kedua-duanya secara masa nyata, menamakan ejen dalam pasukan <Term id="ami" /> yang tugasnya menolak untuk menjadi menarik, dan menetapkan `risk_score`/`max_drawdown` supaya <Term id="ami_pm_safety_floor" /> menjadi penghalang mekanikal sebenar terhadap separuh daripada saiz posisi setiap emosi yang diterangkan dalam enam pelajaran sebelum ini — selebihnya (tempoh rehat, bilangan dagangan, bilangan posisi) anda pegang sendiri, dicatatkan dalam jurnal. Matlamatnya bukan untuk merasa kurang. Ia untuk menjadikan perasaan itu tidak relevan dengan saiz posisi.
+Disiplin ialah pedagang yang mematuhi pelan apabila pelan itu membosankan. Kegembiraan ialah pedagang yang menyimpang apabila pelan itu menggembirakan. Selepas pelajaran ini, anda akan dapat membezakan kedua-duanya secara masa nyata, mengenal pasti ejen dalam pasukan <Term id="ami" /> yang tugasnya menolak untuk menjadi menggembirakan, dan menetapkan `risk_score`/`max_drawdown` supaya <Term id="ami_pm_safety_floor" /> menjadi penghalang mekanikal sebenar terhadap separuh emosi yang diterangkan dalam enam pelajaran sebelum ini — iaitu saiz kedudukan. Baki (tempoh rehat, bilangan dagangan, bilangan kedudukan) anda kendalikan sendiri, dicatat dalam jurnal. Matlamatnya bukan untuk merasa kurang. Ia adalah untuk menjadikan perasaan itu tidak relevan dengan saiz kedudukan.
 
-## Bagaimana ini berlaku dalam pasaran sebenar
+## Bagaimana ia berlaku dalam pasaran sebenar
 
-Seorang pedagang mempunyai proses bertulis: risiko 1% per dagangan yang dikuatkuasakan oleh <Term id="ami_mandate" /> (melalui `risk_score`) dan penurunan maksimum 20%, ditambah peraturan yang dipatuhi sendiri yang dia catatkan dalam <Term id="ami_decision_journal" /> — maksimum 5 posisi terbuka, tempoh rehat 2 jam selepas berhenti rugi, maksimum 6 dagangan seminggu. Dalam suku tahun pertama yang panas, dia memerhatikan rakan sejawatannya menggandakan pulangan 35% melalui dagangan momentum pada TSLA dan NVDA, manakala buku dagangannya yang disiplin memberikan pulangan tenang sebanyak 7%. Kegembiraan menang dalam perdebatan; dia membuang had bilangan dagangan dan posisi yang dipatuhi sendiri, menaikkan `risk_score` untuk meningkatkan risiko per dagangan kepada 3%, dan berhenti mematuhi tempoh rehatnya sendiri "kerana rejim sedang mencaun". Bulan berikutnya membawa pembetulan tajam selama 9 hari yang sepatutnya menelan kos 3% pada tetapan asalnya. Ia menelan kos 14% — dan lantai keselamatan Pengurus Portofolio (bahagian yang *dikuatkuasakan secara mekanikal* — had penurunan mandatnya) adalah satu-satunya perkara yang menghalangnya menjadi peristiwa akaun 22%. Tiga bulan kemudian, pada hari Ahad yang tenang, dia memulihkan setiap peraturan yang telah dia buang. Pulangan bertulisnya selepas pemulihan sepadan dengan pulangan sebelum dia mematikan peraturan. Satu-satunya perkara yang ditambahkan oleh bulan kegembiraan itu adalah lubang 14%.
+Seorang pedagang mempunyai proses bertulis: risiko 1% per dagangan yang dikuatkuasakan oleh <Term id="ami_mandate" /> (melalui `risk_score`) dan serakan maksimum 20%, ditambah peraturan yang ditetapkan sendiri yang dicatat dalam <Term id="ami_decision_journal" /> — maksimum 5 kedudukan terbuka, tempoh rehat 2 jam selepas berhenti rugi, maksimum 6 dagangan seminggu. Dalam suku pertama yang panas, dia memerhati rakan-rakan kompaun 35% pada dagangan momentum TSLA dan NVDA manakala buku disiplinnya pulangan tenang 7%. Kegembiraan menang; dia membuang had bilangan dagangan dan kedudukan yang ditetapkan sendiri, menaikkan `risk_score` untuk meningkatkan risiko per dagangan kepada 3%, dan berhenti menghormati tempoh rehatnya "kerana rejim sedang menjejaki". Bulan berikutnya membawa penurunan tajam 9 hari yang sepatutnya menelan kos 3% pada tetapan asalnya. Ia menelan kos 14% — dan lantai keselamatan PM (bahagian yang *dikuatkuasakan secara mekanikal* — had serakan mandatnya) adalah satu-satunya perkara yang menghalangnya menjadi peristiwa akaun 22%. Tiga bulan kemudian, pada hari Ahad yang tenang, dia memulihkan setiap peraturan yang dibuang. Pulangan bertulis selepas pemulihan sepadan dengan pulangan sebelum dinyahaktif. Satu-satunya perkara yang ditambahkan oleh bulan kegembiraan ialah lubang 14%.
 
-Corak yang boleh disangkal: anda beroperasi berdasarkan kegembiraan, bukan disiplin, jika dalam 14 hari ke belakang anda telah melonggarkan *mana-mana* peraturan risiko — sama ada dikuatkuasakan oleh mandat (`risk_score`, `max_drawdown_pct`) atau dipatuhi sendiri (maksimum posisi, tempoh rehat, maksimum dagangan) — tanpa perubahan bertulis yang sepadan dalam kriteria strategi, dan pelonggaran itu berlaku semasa atau segera selepas rentetan kemenangan atau lonjakan ketakutan ketinggalan (FOMO). Satu perubahan, tiada alasan yang didokumenkan, masa yang mencurigakan. Itu adalah tandanya.
+Corak yang boleh disangkal: anda beroperasi berdasarkan kegembiraan, bukan disiplin, jika dalam 14 hari terakhir anda telah melonggarkan *mana-mana* peraturan risiko — yang dikuatkuasakan oleh mandat (`risk_score`, `max_drawdown_pct`) atau yang ditetapkan sendiri (maksimum kedudukan, tempoh rehat, maksimum dagangan) — tanpa perubahan bertulis yang sepadan dalam kriteria strategi, dan pelonggaran itu berlaku semasa atau serta-merta selepas rentetan kemenangan atau lonjakan takut ketinggalan. Satu perubahan, tiada alasan yang didokumenkan, masa yang mencurigakan. Itu tandanya.
 
 ## Perangkap
 
-Perangkap ialah kepercayaan bahawa mandat itu terlalu konservatif *untuk saat ini*. Setiap emosi dalam modul ini — keserakahan, ketakutan, balas dendam, FOMO, terlalu yakin, kebosanan — bercakap dalam ayat yang tepat ini. Mandat itu sentiasa terlalu konservatif untuk saat ini, kerana mandat itu dikalibrasi untuk *setiap* saat, termasuk saat yang belum anda lihat. Peranan Pengurus Portofolio ialah menjadi versi anda yang tidak mempunyai perut. Lantai keselamatannya sengaja tidak boleh diajar: sistem menolak untuk membiarkan mana-mana saat emosi tunggal mengalahkan pedagang yang menulis peraturan tersebut. Model mental yang betul: disiplin bukan ketiadaan kegembiraan. Disiplin ialah kegembiraan yang tidak menyentuh saiz posisi. Rasakan ia, catatkan dalam jurnal, ambil setup yang dibenarkan oleh pelan, tolak satu yang tidak. P&L selama setahun ditentukan secara majoriti oleh berapa banyak dagangan buruk yang tidak anda ambil, bukan berapa banyak dagangan baik yang anda ambil.
+Perangkap ialah kepercayaan bahawa mandat itu terlalu konservatif *untuk ketika ini*. Setiap emosi dalam modul ini — keserakahan, ketakutan, dendam, FOMO, overconfidence, kebosanan — bercakap dalam ayat yang tepat ini. Mandat itu sentiasa terlalu konservatif untuk ketika ini, kerana mandat itu dikalibrasi untuk *setiap* ketika, termasuk ketika yang belum anda lihat. Peranan Portfolio Manager ialah menjadi versi anda yang tidak mempunyai perut. Lantai keselamatannya tidak boleh dilatih dengan sengaja: sistem menolak untuk membiarkan mana-mana ketika emosi tunggal mengundi lebih daripada pedagang yang menulis peraturan. Model mental yang betul: disiplin bukan ketiadaan kegembiraan. Disiplin ialah kegembiraan yang tidak menyentuh saiz kedudukan. Rasanya, catatkan dalam jurnal, ambil setup yang dibenarkan pelan, tolak satu yang tidak dibenarkan. P&L selama setahun ditentukan secara luar biasa oleh berapa banyak dagangan buruk yang tidak anda ambil, bukan berapa banyak dagangan baik yang anda ambil.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Kawan anda untung 60% YTD dengan risiko 4% per trade. Anda untung 11% YTD dengan risiko 1% per trade mengikut Mandat anda. Pasaran sedang menjejaki trend. Apakah tindakan berdisiplin?"
+  question="Kawan anda untung 60% YTD dengan risiko per-trade 4%. Anda untung 11% YTD dengan risiko per-trade 1% mengikut Mandat anda. Pasaran sedang menjejaki trend. Apakah tindakan berdisiplin?"
   options={[
-    "Naikkan risiko per trade kepada 4% — keputusan kawan anda mengesahkan rejim menyokongnya.",
-    "Padankan posisi kawan anda secara tepat supaya anda mempunyai profil pulangan yang sama.",
+    "Naikkan risiko per-trade kepada 4% — keputusan kawan anda mengesahkan rejim menyokongnya.",
+    "Padankan kedudukan kawan anda tepat supaya profil pulangan anda sama.",
     "Berunding pada 2% — temui kawan anda di tengah jalan.",
-    "Tetap pada risiko 1% per trade; taburan kerugian kawan anda bukan taburan kerugian anda, dan anda belum melihat bagaimana 4% terasa pada minggu terburuk mereka."
+    "Kekalkan risiko per-trade 1%; taburan drawdown kawan anda bukan taburan drawdown anda, dan anda belum melihat bagaimana rasanya 4% dalam minggu terburuk mereka."
   ]}
   answer={3}
-  explanation="Jawapan salah yang menggoda ialah 2% — 'temui di tengah jalan' ialah bahasa yang digunakan oleh kegembiraan untuk berunding dengan disiplin. 4% mungkin nombor yang betul untuk strategi kawan anda dalam akaun mereka, atau ia mungkin nombor yang menghasilkan bulan -40% yang belum anda lihat lagi. Anda tidak akan tahu sehingga bulan itu tiba. Sehingga itu, mandat anda ialah nombor yang bertahan setiap bulan. Disiplin berkata: jangan meminjam minggu terburuk orang lain sebelum anda menjalani minggu terburuk anda pada saiz anda sendiri."
+  explanation="Jawapan salah yang menggoda ialah 2% — 'temui di tengah jalan' ialah bahasa yang digunakan kegembiraan untuk bernegosiasi dengan disiplin. 4% mungkin nombor yang betul untuk strategi kawan anda dalam akaun mereka, atau mungkin nombor yang menghasilkan bulan -40% yang belum anda lihat lagi. Anda tidak akan tahu sehingga bulan itu tiba. Sehingga itu, mandat anda ialah nombor yang bertahan setiap bulan. Disiplin berkata: jangan meminjam minggu terburuk orang lain sebelum anda menjalani minggu terburuk anda pada saiz anda sendiri."
 />
 
 <Quiz
   question="Apakah penunjuk objektif terkuat bahawa kegembiraan telah mengatasi disiplin dalam akaun anda?"
   options={[
-    "Akaun anda meningkat dengan ketara pada suku ini.",
-    "Anda mengambil trade yang tidak akan anda ambil tahun lalu.",
-    "Dalam 14 hari terakhir, anda melonggarkan sekurang-kurangnya satu parameter mandat tanpa perubahan bertulis sepadan dalam kriteria strategi, dan pelonggaran itu berlaku semasa atau segera selepas rentetan kemenangan atau lonjakan FOMO.",
+    "Akaun anda meningkat secara ketara pada suku ini.",
+    "Anda mengambil satu perdagangan yang tidak akan anda ambil tahun lalu.",
+    "Dalam 14 hari terakhir, anda longgarkan sekurang-kurangnya satu parameter mandat tanpa perubahan bertulis sepadan dalam kriteria strategi, dan longgaran itu berlaku semasa atau segera selepas rentetan kemenangan atau lonjakan FOMO.",
     "Anda berasa gembira tentang perdagangan anda."
   ]}
   answer={2}
-  explanation="Merasa gembira itu baik dan tidak boleh disangkal. Suku yang baik ialah hasil. Mengambil setup yang tidak akan anda ambil tahun lalu mungkin pertumbuhan atau mungkin hanyut — dengan sendirinya ia tidak mengatakan yang mana. Ujian kompaun — pelonggaran mandat, tiada perubahan kriteria berdokumen, masa yang mencurigakan — ialah tandatangan boleh audit yang membezakan kegembiraan daripada evolusi proses. Evolusi proses didokumenkan sebelum ia dilaksanakan; kegembiraan didokumenkan selepas, jika ada."
+  explanation="Berasa gembira adalah baik dan tidak boleh disangkal. Suku yang baik ialah hasil. Berdagang setup yang tidak akan anda ambil tahun lalu mungkin pertumbuhan atau mungkin hanyut — secara sendirian ia tidak memberitahu mana satu. Ujian gabungan — longgaran mandat, tiada perubahan kriteria berdokumen, masa yang mencurigakan — ialah tandatangan boleh audit yang membezakan kegembiraan daripada evolusi proses. Evolusi proses didokumenkan sebelum ia bertindak; kegembiraan didokumenkan selepas, jika ada."
 />
 
 <Quiz
-  question="Hari Jumaat. Anda untung 18% YTD berbanding mandat seretan maksimum 20%. Anda mempunyai 4 posisi terbuka. Portfolio Manager baru sahaja menandakan bahawa anda menghantar posisi ke-5 pada risiko 4% (mandat anda ialah 1%). Pasaran akan ditutup dalam 30 minit. Jawapan sintesis?"
+  question="Hari Jumaat. Anda untung 18% YTD berbanding mandat drawdown maksimum 20%. Anda mempunyai 4 kedudukan terbuka. Portfolio Manager baru-baru ini menandakan bahawa anda menghantar kedudukan ke-5 pada risiko 4% (mandat anda ialah 1%). Pasaran akan ditutup dalam 30 minit. Jawapan sintesis?"
   options={[
-    "Batalkan posisi ke-5 sepenuhnya dan tutup salah satu daripada 4 posisi sedia ada untuk memberi ruang kepadanya pada risiko penuh 4%.",
-    "Langkau isyarat PM — hari Jumaat, anda betul sepanjang tahun, dan lantai keselamatan terlalu konservatif untuk setup ini.",
-    "Kurangkan posisi ke-5 kepada 1% mengikut mandat dan hantar; jika setup itu nyata, saiz penuh tidak akan diperlukan.",
-    "Hantar posisi ke-5 pada 2% sebagai kompromi antara mandat dan keyakinan anda."
+    "Batal kedudukan ke-5 sepenuhnya dan tutup salah satu daripada 4 kedudukan sedia ada untuk memberi ruang kepadanya pada risiko penuh 4%.",
+    "Gagalkan penandaan PM — hari Jumaat, anda betul sepanjang tahun, dan lantai keselamatan terlalu konservatif untuk setup ini.",
+    "Kurangkan kedudukan ke-5 kepada 1% mengikut mandat dan hantar; jika setup itu nyata, saiz penuh tidak diperlukan.",
+    "Hantar kedudukan ke-5 pada 2% sebagai kompromi antara mandat dan keyakinan anda."
   ]}
   answer={2}
-  explanation="Isyarat lantai keselamatan PM ialah sistem memberitahu anda bahawa versi anda yang menulis mandat tidak bersetuju dengan versi anda yang menghantar pesanan ini. Jawapan yang betul ialah yang menghormati kedua-duanya: ambil setup pada saiz yang dibenarkan mandat. 'Langkau' ialah langkah kegembiraan buku teks — setiap kisah pengajaran dalam modul ini berakhir dengan seseorang melangkau lantai keselamatan pada petang Jumaat. 'Tutup satu untuk membiayai satu lagi pada saiz 4x' ialah langkau yang sama dibalut sebagai pengurusan portfolio. '2% sebagai kompromi' ialah kegembiraan yang bernegosiasi diskaun untuk dirinya sendiri. Jika setup itu nyata, 1% akan menjana wang; jika tidak, 4% akan kehilangan empat kali lebih banyak. Asimetri ialah keseluruhan titik mempunyai mandat."
+  explanation="Penandaan lantai keselamatan PM ialah sistem memberitahu anda bahawa versi anda yang menulis mandat tidak bersetuju dengan versi anda yang menghantar pesanan ini. Jawapan yang betul ialah yang menghormati kedua-duanya: ambil setup pada saiz yang dibenarkan mandat. 'Gagal' ialah pergerakan kegembiraan buku teks — setiap kisah penggera dalam modul ini berakhir dengan seseorang menggagalkan lantai keselamatan pada petang Jumaat. 'Batal satu untuk membiayai satu lagi pada saiz 4x' ialah kegagalan yang sama dibalut sebagai pengurusan portfoli. '2% sebagai kompromi' ialah kegembiraan yang bernegosiasi diskaun untuk dirinya sendiri. Jika setup itu nyata, 1% akan menjana wang; jika tidak, 4% akan kehilangan empat kali ganda lebih banyak. Asimetri ialah keseluruhan titik mempunyai mandat."
 />
 
 ## Cuba sendiri
 
-Buka Tetapan → Mandat dan semak apa yang sebenarnya dikuatkuasakan di sana: `risk_score` anda (yang menetapkan had per dagangan) dan `max_drawdown_pct`. Kemudian tuliskan peraturan yang dipatuhi sendiri anda — maksimum posisi terbuka, tempoh rehat selepas berhenti rugi, maksimum dagangan seminggu — di sebelahnya (AMI tidak mempunyai medan untuk ini; ia milik anda untuk dipegang). Untuk setiap satu, tanya: "Adakah saya mengubah ini dalam 14 hari ke belakang, dan adakah perubahan itu didokumenkan dalam <Term id="ami_decision_journal" /> dengan alasan kriteria bertulis?" Jika mana-mana jawapan ialah "berubah, tiada alasan", pulihkan nilai sebelumnya sebelum sesi seterusnya. Kemudian mulakan <Term id="ami_one_on_one" /> dengan Pengurus Portofolio dan tanya: "Jalankan mandat saya terhadap 30 dagangan terakhir saya — di mana lantai keselamatan akan memberi amaran?"
+Buka Tetapan → Mandat dan semak apa yang sebenarnya dikuatkuasakan di sana: `risk_score` anda (yang menetapkan had per dagangan) dan `max_drawdown_pct`. Kemudian tulis peraturan yang ditetapkan sendiri — maksimum kedudukan terbuka, tempoh rehat selepas berhenti rugi, maksimum dagangan seminggu — di sebelahnya (AMI tidak mempunyai medan untuk ini; ia milik anda untuk dipegang). Untuk setiap satu, tanya: adakah saya mengubah ini dalam 14 hari terakhir, dan adakah perubahan itu didokumenkan dalam <Term id="ami_decision_journal" /> dengan alasan kriteria bertulis? Jika mana-mana jawapan ialah "berubah, tiada alasan", pulihkan nilai sebelumnya sebelum sesi seterusnya. Kemudian mulakan <Term id="ami_one_on_one" /> dengan Portfolio Manager dan tanya: "Jalankan mandat saya terhadap 30 dagangan terakhir saya — di mana lantai keselamatan akan memberi amaran?"
 
 ## Kesimpulan
 
-Disiplin ialah kegembiraan yang tidak menyentuh saiz posisi. Lantai keselamatan Pengurus Portofolio ialah versi anda yang tidak mempunyai perut — biarkan ia mengundi.
+Disiplin ialah kegembiraan yang tidak menyentuh saiz kedudukan. Lantai keselamatan Portfolio Manager ialah versi anda yang tidak mempunyai perut — biarkan ia mengundi.

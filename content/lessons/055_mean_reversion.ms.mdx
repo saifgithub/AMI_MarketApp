@@ -11,56 +11,56 @@ topic: "mean_reversion"
 prerequisites: ["027_rsi_momentum_oscillator", "026_moving_averages", "015_stop_loss_basics", "018_drawdown_management"]
 tags: ["strategy", "mean_reversion", "rsi", "range"]
 agent_callouts: ["conservative_debator", "trader"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Reversion ke Purata
+# Reversi purata
 
-Pertaruhan reversion ke purata adalah songsangan daripada strategi mengikuti trend: apabila harga meregang jauh dari purata bergerak, ia cenderung untuk kembali semula. Ia berfungsi apabila pasaran berada dalam julat atau apabila instrumen mempunyai permintaan asas yang stabil. Ini adalah strategi paling berbahaya dalam modul ini kerana masuk pasaran terasa seperti menangkap pisau jatuh, dan satu perdagangan yang tidak revert boleh menghapuskan berbulan-bulan keuntungan kecil dari reversion. Selepas pelajaran ini, anda boleh menentukan peraturan reversion ke purata yang tahu bezakan antara regangan normal dan perubahan rejim.
+Pertaruhan reversi purata menentang trend-following: apabila harga meregang jauh dari purata bergerak, ia cenderung untuk kembali semula. Ia berfungsi apabila pasaran terikat dalam julat atau apabila instrumen mempunyai permintaan asas yang stabil. Ia adalah strategi paling berbahaya dalam modul ini kerana masuk pasaran terasa seperti menangkap pisau jatuh, dan satu perdagangan yang tidak kembali semula boleh menghapuskan berbulan-bulan keuntungan reversi kecil. Selepas pelajaran ini, anda boleh menentukan peraturan reversi purata yang tahu perbezaan antara regangan normal dan perubahan rejim.
 
-## Bagaimana ini berlaku di pasaran sebenar
+## Bagaimana ini berlaku dalam pasaran sebenar
 
-Lihat JPM pada pertengahan 2024. Saham ini mempunyai saluran naik yang stabil dan berosilasi sekitar MA 20-hariannya. Pada 12 Julai 2024, selepas cetakan Q2 yang kuat, JPM turun ~5% ke ~$203 dari $213 sebelumnya, membawa RSI(2) ke 4 — bacaan jualan melampau. Peraturan reversion ke purata mudah: masuk long apabila RSI(2) tutup di bawah 5 DAN harga di atas MA 200-hari (penapis rejim). Keluar apabila harga tutup kembali di atas MA 5-hari. JPM melakukan tepat seperti itu — tutup kembali di atas MA 5-hari tiga sesi kemudian berhampiran $209, satu snapback kira-kira 3%. Bersih 3R jika stop berada pada $200 (tutup harian di bawah $200 membatalkannya).
+Lihat JPM pada pertengahan 2024. Saham itu mempunyai saluran naik yang stabil dan berayun di sekitar MA 20-hari. Pada 12 Julai 2024, selepas cetakan Q2 yang kuat, JPM melompat turun ~5% ke ~$203 dari $213 sebelum ini, membawa RSI(2) ke 4 — bacaan jenuh jual yang melampau. Peraturan reversi purata mudah: masuk long apabila RSI(2) tutup di bawah 5 DAN harga di atas MA 200-hari (penapis rejim). Keluar apabila harga tutup kembali di atas MA 5-hari. JPM melakukan tepat seperti itu — tutup kembali di atas MA 5-hari tiga sesi kemudian berhampiran $209, satu snapback kira-kira 3%. Bersih 3R jika stop berada pada $200 (tutup harian di bawah $200 membatalkan).
 
-Kriteria masuk: RSI(2) < 5 (atau pencetus jualan melampau lain) DAN harga > MA 200-hari (penapis rejim yang mengekalkan anda keluar daripada trend turun) DAN tiada pencetus berita negatif (penurunan 5% pada penarikan bimbingan bukan sama seperti penurunan 5% pada hingar makro). Stop: tutup harian di bawah paras rendah swing pra-jatuh. Sasaran: tutup kembali di atas MA 5-hari, ATAU keluar masa tetap pada 5 sesi jika ia belum revert. Pembatalan perdagangan individu: tutup harian di bawah stop. Strategi GAGAL dalam pasaran bear yang menjejaki trend dan semasa peristiwa perubahan rejim sebenar: pada 2008, RSI(2) mencetak di bawah 5 pada kebanyakan large-cap AS dan mereka terus turun selama berbulan-bulan. Reversion ke purata dalam pasaran bear adalah cara anda meletupkan akaun.
+Kriteria masuk: RSI(2) < 5 (atau pencetus jenuh jual melampau lain) DAN harga > MA 200-hari (penapis rejim yang menghalang anda daripada pasaran turun) DAN tiada pencetus berita negatif (lompatan turun 5% pada penarikan panduan bukan sama dengan lompatan turun 5% pada bunyi makro). Stop: tutup harian di bawah paras rendah ayunan pra-lompatan. Sasaran: tutup kembali di atas MA 5-hari, ATAU keluar masa tetap pada 5 sesi jika ia belum kembali semula. Pembatalan perdagangan individu: tutup harian di bawah stop. Strategi GAGAL dalam pasaran bear yang menentu dan semasa peristiwa perubahan rejim sebenar: pada 2008, RSI(2) mencetak di bawah 5 pada kebanyakan large-cap AS dan mereka terus turun selama berbulan-bulan. Reversi purata dalam pasaran bear adalah cara anda meletupkan akaun.
 
 ## Perangkap
 
-Kesilapan pemula adalah melakukan reversion ke purata tanpa penapis rejim. RSI mengatakan jualan melampau, anda beli, dan anda long pada saham dalam trend turun struktur. Setiap hari ia menjadi "lebih jualan melampau" dan anda purata turun. Model mental yang betul: reversion ke purata adalah strategi lawan hingar, bukan strategi lawan trend. Penapis MA 200-hari wujud tepat untuk ini — ia memberitahu anda sama ada hingar itu reverting ke purata sekitar trend sihat atau sama ada trend itu sendiri telah berbalik. Tiada penapis, tiada perdagangan. Dan jika terdapat pencetus asas sebenar (pemotongan bimbingan, penipuan, penurunan rating), tepi statistik lenyap; bacaan jualan melampau pada syarikat rosak kekal jualan melampau.
+Kesilapan pemula ialah melakukan reversi purata tanpa penapis rejim. RSI mengatakan jenuh jual, anda beli, dan anda long pada saham dalam trend struktur turun. Setiap hari ia menjadi "lebih jenuh jual" dan anda purata ke bawah. Model mental yang betul: reversi purata adalah strategi lawan-bising, bukan strategi lawan-trend. Penapis MA 200-hari wujud tepat untuk ini — ia memberitahu anda sama ada bising itu berbalik purata di sekitar trend sihat atau sama ada trend itu sendiri telah terbalik. Tiada penapis, tiada perdagangan. Dan jika terdapat pencetus asas sebenar (pemotongan panduan, penipuan, penurunan rating), kelebihan statistik lenyap; bacaan jenuh jual pada syarikat rosak kekal jenuh jual.
 
 <ChatWith agent="conservative_debator" />
 
 ## Kuiz
 
 <Quiz
-  question="Sebuah saham mempunyai RSI(2) = 3 (terlampau jualan ekstrem). Purata bergerak 200-harinya condong ke bawah dan harga berada jauh di bawah purata 200-hari. Berita terkini ialah pemotongan panduan. Apa yang dikatakan oleh peraturan reverensi purata?"
+  question="Sebuah saham mempunyai RSI(2) = 3 (terlampau jenuh jual). Purata bergerak 200-harinya condong ke bawah dan harga berada jauh di bawah 200-hari. Berita terkini ialah pemotongan panduan. Apa yang dikatakan oleh peraturan reverensi purata?"
   options={[
-    "Beli kuat — RSI berada pada tahap rendah ekstrem",
+    "Beli kuat — RSI berada pada paras rendah yang ekstrem",
     "Tiada dagangan — penapis rejim (harga < 200-hari) dan pemangkin asas kedua-duanya melarangnya",
     "Masuk saiz separuh dengan henti rugi ketat",
     "Beli dan tambah apabila ia turun lebih rendah"
   ]}
   answer={1}
-  explanation="Tujuan utama penapis rejim adalah untuk menghalang anda daripada dagangan reverensi purata dalam trend turun, di mana reverensi purata berubah menjadi 'menangkap pisau jatuh'. Jawapan beli kuat pada RSI ekstrem adalah jawapan salah yang memikat — ia adalah cara buku teks pedagang reverensi purata meletup. Ekstrem RSI dalam trend turun terus mencetak ekstrem."
+  explanation="Tujuan penapis rejim adalah untuk menghalang anda daripada dagangan reverensi purata dalam trend turun, di mana reverensi purata berubah menjadi 'menangkap pisau jatuh'. Jawaban beli kuat pada RSI ekstrem adalah jawapan salah yang memikat — ia adalah cara buku teks pedagang reverensi purata meletup. Ekstrem RSI dalam trend turun terus mencetak ekstrem."
 />
 
 <Quiz
-  question="Pembahas Konservatif berhujah menentang dagangan reverensi purata pada TSLA: RSI(2) ialah 4 tetapi harga berada di bawah purata bergerak 200-hari dan terdapat berita segar mengenai ingatan semula. Mandat anda mengekalkan penurunan maksimum 20% dan anda sudah pada penurunan 12% tahun ini. Apakah panggilan yang betul?"
+  question="Pembahas Konservatif berhujah menentang dagangan reverensi purata pada TSLA: RSI(2) ialah 4 tetapi harga berada di bawah purata bergerak 200-hari dan terdapat tajuk berita pemanggilan segar. Mandat anda mengekalkan penurunan maksimum pada 20% dan anda sudah berada pada penurunan 12% YTD. Apakah panggilan yang betul?"
   options={[
-    "Gagal pendirian Pembahas Konservatif — RSI terlalu ekstrem untuk dilepaskan",
+    "Gagalkan Pembahas Konservatif — RSI terlalu ekstrem untuk dilepaskan",
     "Ambil dagangan dengan henti rugi lebih lebar untuk mengelakkan digoncang keluar",
     "Langkau dagangan — penapis rejim gagal, pemangkin asas adalah nyata, dan penurunan anda mengurangkan kapasiti untuk kerugian asimetri",
     "Ambil dagangan reverensi purata saiz separuh kerana isyaratnya kuat"
   ]}
   answer={2}
-  explanation="Sintesis: peraturan strategi adalah bersyarat terhadap rejim DAN mandat. Walaupun anda mahu mengambilnya, penurunan 12% anda bermakna kerugian 5% meletakkan anda dalam jarak dekat dengan lantai 20%. Jawapan henti rugi lebih lebar adalah yang paling memikat salah kerana ia terdengar berkesadaran risiko — henti rugi yang lebih lebar meningkatkan kerugian per dagangan, yang merupakan kebalikan daripada apa yang diperlukan oleh akaunter yang tertekan oleh penurunan."
+  explanation="Sintesis: peraturan strategi adalah bersyarat terhadap rejim DAN mandat. Walaupun anda mahu mengambilnya, penurunan 12% anda bermakna kerugian 5% meletakkan anda dalam jarak dekat dengan lantai 20%. Jawapan henti rugi lebih lebar adalah yang paling memikat sebagai jawapan salah kerana ia terdengar berkesadaran risiko — henti rugi yang lebih lebar meningkatkan kerugian per dagangan, yang merupakan tepat bertentangan dengan apa yang diperlukan oleh akaunter yang tertekan oleh penurunan."
 />
 
 ## Cuba sendiri
 
-Dalam <Term id="ami_one_on_one" /> dengan Debator Konservatif, tampal <Term id="ami_watchlist" /> ticker yang baru jatuh 5%+ dan tanya: "Terangkan penapis rejim dan semakan pencetus sebelum saya pertimbangkan untuk revert ke purata ini." Kemudian log perbualan dalam <Term id="ami_decision_journal" /> — walaupun anda tidak mengambil perdagangan, reasoning itu adalah pelajarannya.
+Dalam <Term id="ami_one_on_one" /> dengan Pembahas Konservatif, tampal <Term id="ami_watchlist" /> ticker yang baru jatuh 5%+ dan tanya: "Terangkan penapis rejim dan semakan pencetus kepada saya sebelum saya pertimbangkan untuk melakukan reversi purata ini." Kemudian log perbualan dalam <Term id="ami_decision_journal" /> — walaupun anda tidak mengambil perdagangan, reasoning itu adalah pelajarannya.
 
-## Penutup
+## Penafian
 
-Reversion ke purata tanpa penapis rejim adalah menangkap pisau jatuh dengan tangan kosong. Ekstrem RSI dalam trend turun kekal ekstrem; penapis adalah keseluruhan strategi.
+Reversi purata tanpa penapis rejim adalah menangkap pisau jatuh dengan tangan kosong. Ekstrem RSI dalam trend turun kekal ekstrem; penapis adalah keseluruhan strategi.

@@ -15,60 +15,60 @@ locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# ATR sebagai pengukur volatiliti
+# ATR sebagai penunjuk volatiliti
 
-Average True Range (ATR) mengukur berapa banyak saham biasanya bergerak per sesi, dalam dolar. Ia adalah purata 14-bar (lalai) bagi "true range" — iaitu nilai terbesar antara: tinggi hari ini tolak rendah hari ini; tinggi hari ini tolak penutupan semalam; atau penutupan semalam tolak rendah hari ini. Istilah ketiga menangkap jurang luar waktu (overnight gaps) yang diabaikan oleh tolakan tinggi tolak rendah mudah. ATR bukan penunjuk arah — ia tidak menyatakan naik atau turun. Ia menyatakan berapa banyak. Nombor tunggal ini ialah input volatiliti untuk setiap keputusan saiz kedudukan dan penempatan henti (stop); pelajaran ini mengajar pembacaan ATR sebagai pengukur rejim sebelum <Lesson id="102_atr_based_stops"/> mengaitkannya dengan henti dan <Lesson id="101_volatility_adjusted_sizing"/> mengaitkannya dengan saiz.
+Average True Range (ATR) mengukur berapa banyak harga saham biasanya bergerak setiap sesi, dalam dolar. Ia adalah purata 14-bar (lalai) bagi "true range" — nilai terbesar antara: tinggi hari ini tolak rendah hari ini; tinggi hari ini tolak penutupan semalam; atau penutupan semalam tolak rendah hari ini. Istilah ketiga menangkap jurang luar waktu perdagangan (overnight gaps) yang diabaikan oleh kiraan tinggi tolak rendah mudah. ATR bukan penunjuk arah — ia tidak menyatakan naik atau turun. Ia menyatakan berapa banyak. Nombor tunggal ini ialah input volatiliti untuk setiap keputusan saiz posisi dan penempatan henti (stop); pelajaran ini mengajar cara membaca ATR sebagai penunjuk rejim sebelum <Lesson id="102_atr_based_stops"/> mengaitkannya dengan henti dan <Lesson id="101_volatility_adjusted_sizing"/> mengaitkannya dengan saiz posisi.
 
-## Bagaimana ini berlaku dalam pasaran sebenar
+## Bagaimana ia berlaku dalam pasaran sebenar
 
-Ambil saham beta-tinggi sepanjang satu tahun penuh. Pada awal tahun, dengan saham sekitar 180, ATR(14) harian ialah kira-kira $4.40 — kira-kira 2.4% daripada harga. Berbulan-bulan kemudian, dengan saham sekitar 270 dan mempunyai trend yang kuat, ATR(14) harian telah meningkat kepada $8.20 — 3.0% daripada harga. Selepas penurunan tajam ke 230, ATR(14) melonjak kepada $11.50 — 5.0% daripada harga. Saham yang sama, penunjuk yang sama; nisbah ATR-peratusan-harga memberitahu anda rejim tersebut.
+Ambil saham beta-tinggi sepanjang setahun. Pada awal tahun, dengan harga saham sekitar 180, ATR(14) harian adalah kira-kira $4.40 — kira-kira 2.4% daripada harga. Beberapa bulan kemudian, dengan harga saham sekitar 270 dan mempunyai trend yang kuat, ATR(14) harian telah meningkat kepada $8.20 — 3.0% daripada harga. Selepas penurunan tajam ke 230, ATR(14) melonjak kepada $11.50 — 5.0% daripada harga. Saham yang sama, penunjuk yang sama; nisbah ATR-peratus-harga memberitahu anda rejim pasaran.
 
-Di bawah 2% nisbah ATR-harian kepada harga ialah rejim volatiliti rendah — julat ketat, pergerakan perlahan, risiko kecil setiap saham tetapi juga ganjaran kecil setiap saham. 2–4% ialah rejim normal untuk nama saham beta-tinggi. Di atas 4% ialah rejim volatiliti tinggi — henti yang lebih lebar diperlukan, saiz kedudukan yang lebih kecil diperlukan untuk mengekalkan risiko dolar yang sama.
+Di bawah nisbah ATR-harian kepada harga 2% ialah rejim volatiliti rendah — julat ketat, pergerakan perlahan, risiko kecil setiap saham tetapi juga ganjaran kecil setiap saham. 2–4% ialah rejim normal untuk nama saham beta-tinggi. Di atas 4% ialah rejim volatiliti tinggi — henti yang lebih lebar diperlukan, saiz posisi yang lebih kecil diperlukan untuk mengekalkan risiko dolar yang sama.
 
-Pernyataan boleh disangkal: ATR-peratusan-harga di bawah purata 6-bulan lalu saham bermakna pasaran tidak biasa tenang untuk nama ini dan bias mean-reversion dalam julat adalah sesuai; ATR-peratusan di atas purata 6-bulan bermakna pasaran tidak biasa gelisah dan strategi mengikuti trend mendominasi. Ketidaksahihan: sampel di mana rejim ATR-tinggi menghasilkan perilaku julat-sama seperti rejim ATR-rendah — secara empirikal, ia tidak berlaku. ATR-tinggi mengikuti ATR-tinggi (kluster volatiliti), dan kluster itulah yang membuatkan ATR boleh meramal watak jangka pendek.
+Pernyataan boleh disangkal: ATR-peratus-harga di bawah purata 6-bulan lalu saham bermaksud pasaran tidak biasa tenang untuk nama ini dan kecondongan mean-reversion dalam julat adalah sesuai; ATR-peratus di atas purata 6-bulan bermaksud pasaran tidak biasa gelisah dan strategi mengikuti trend mendominasi. Ketidaksahihan: sampel di mana rejim ATR-tinggi menghasilkan tingkah laku julat-sama seperti rejim ATR-rendah — secara empirikal, ia tidak berlaku. ATR-tinggi mengikut ATR-tinggi (volatiliti berkelompok), dan pengelompokan itulah yang menjadikan ATR boleh ramalkan untuk watak jangka pendek.
 
-Praktikal: Saham A dengan ATR(14) harian $2.80 pada harga 230 = 1.2% — rejim rendah, jangka julat harian $3. Saham B pada tarikh yang sama dengan ATR(14) harian $5.10 pada 140 = 3.6% — normal hingga tinggi untuk nama tersebut, jangka julat harian $5. Saiz harus mencerminkan perbezaan ini walaupun dengan risiko akaun dolar yang sama per dagangan.
+Praktikal: Saham A dengan ATR(14) harian $2.80 pada harga 230 = 1.2% — rejim volatiliti rendah, jangka julat harian lebar $3. Saham B pada tarikh yang sama dengan ATR(14) harian $5.10 pada 140 = 3.6% — normal hingga tinggi untuk nama ini, jangka julat harian lebar $5. Saiz posisi harus mencerminkan perbezaan ini walaupun dengan risiko akaun dolar yang sama bagi setiap dagangan.
 
-Di Bursa Malaysia: GENTING pada pertengahan 2025 mempunyai ATR harian sekitar RM0.08 terhadap harga RM4.20 — kira-kira 1.9%. Selepas pemotongan bimbingan yang tidak dijangka, ATR melonjak kepada RM0.18 — 4.3%. Perubahan rejim kelihatan dalam ATR seminggu penuh sebelum harga memecahkan julat perniagaannya.
+Di Bursa Malaysia: GENTING pada pertengahan 2025 mempunyai ATR harian sekitar RM0.08 terhadap harga RM4.20 — kira-kira 1.9%. Selepas pemotongan panduan yang tidak dijangka, ATR melonjak kepada RM0.18 — 4.3%. Perubahan rejim kelihatan dalam ATR seminggu penuh sebelum harga memecahkan julat perniagaannya.
 
 ## Perangkap
 
-Perangkapnya ialah memperlakukan ATR sebagai penunjuk arah atau kekuatan. "ATR sedang naik — trend itu kuat." Itu salah. ATR naik dalam kedua-dua arah; saham yang jatuh mempunyai ATR yang tinggi sama seperti saham yang meroket. Perangkap lain ialah mengabaikan ATR sepenuhnya dan menggunakan henti dolar tetap pada setiap nama — meletakkan henti $1 pada saham ATR-rendah (dengan ATR $2.80) dan henti $1 pada saham ATR-tinggi (dengan ATR $11.50) ialah kesilapan yang sama pada magnitud yang berbeza. Henti pertama adalah munasabah; henti kedua berada di dalam hingar harian.
+Perangkapnya ialah memperlakukan ATR sebagai penunjuk arah atau kekuatan. "ATR sedang naik — trendnya kuat." Itu salah. ATR naik dalam kedua-dua arah; saham yang jatuh mempunyai ATR yang tinggi sama seperti saham yang naik. Perangkap lain ialah mengabaikan ATR sepenuhnya dan menggunakan henti dolar tetap pada setiap nama — meletakkan henti $1 pada saham ATR-rendah (dengan ATR $2.80) dan henti $1 pada saham ATR-tinggi (dengan ATR $11.50) ialah kesilapan yang sama pada magnitud berbeza. Henti pertama adalah munasabah; henti kedua berada di dalam bunyi harian.
 
-Model mental yang betul: ATR ialah parameter kalibrasi untuk segala-galanya. Jarak henti ialah beberapa kali ganda ATR (<Lesson id="102_atr_based_stops"/>). Saiz kedudukan menyesuaikan secara songsang dengan ATR (<Lesson id="101_volatility_adjusted_sizing"/>). Rejim volatiliti — tenang vs normal vs tinggi — maklumatkan keluarga strategi mana yang sesuai dengan pita semasa. ATR ialah dail yang membuatkan alat lain dalam kit anda bercakap dalam bahasa saham yang anda sebenarnya dagangkan.
+Model mental yang betul: ATR ialah parameter kalibrasi untuk segala-galanya. Jarak henti ialah beberapa gandaan ATR (<Lesson id="102_atr_based_stops"/>). Saiz posisi menyesuaikan secara songsang dengan ATR (<Lesson id="101_volatility_adjusted_sizing"/>). Rejim volatiliti — tenang vs normal vs tinggi — maklumatkan keluarga strategi mana yang sesuai dengan pita semasa. ATR ialah tombol yang menjadikan alat lain dalam kit anda bercakap dalam bahasa saham yang anda sebenarnya dagangkan.
 
 <ChatWith agent="market_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="Stock A diperdagangkan pada 230 dengan ATR(14) harian sebanyak $2.80. Stock B diperdagangkan pada 140 dengan ATR(14) harian sebanyak $5.10. Dengan mengira ATR sebagai peratusan harga, apakah yang anda pelajari tentang kedua-dua saham tersebut?"
+  question="Stock A diperdagangkan pada 230 dengan ATR(14) harian sebanyak $2.80. Stock B diperdagangkan pada 140 dengan ATR(14) harian sebanyak $5.10. Mengira ATR sebagai peratusan harga, apakah yang anda pelajari tentang kedua-dua saham ini?"
   options={[
-    "Nisbah ATR-harga Stock A ialah 1.2% (regime volatiliti rendah); Stock B pula 3.6% (normal hingga meningkat). Risiko dolar yang sama pada kedua-dua saham memerlukan saiz posisi dan jarak henti yang sangat berbeza kerana julat harian tipikal adalah kira-kira 3× berbeza dari segi peratusan.",
+    "Nisbah ATR-harga Stock A ialah 1.2% (rezim volatiliti rendah); Stock B pula 3.6% (normal hingga tinggi). Risiko dolar yang sama pada kedua-dua saham memerlukan saiz posisi dan jarak henti yang sangat berbeza kerana julat harian tipikal adalah kira-kira 3× berbeza dari segi peratusan.",
     "Stock A lebih menarik kerana ATR-nya lebih rendah",
     "Stock B berada dalam trend yang lebih kuat kerana ATR-nya lebih tinggi",
     "ATR tidak penting pada tahap posisi — hanya jumlah dolar yang penting"
   ]}
   answer={0}
-  explanation="ATR sebagai peratusan harga adalah bacaan regime. Jawapan salah yang menipu ('ATR lebih tinggi = trend lebih kuat') adalah salah tafsir arah yang secara eksplisit disebut dalam pelajaran — ATR adalah tidak berarah. Kesilapan lain memberikan nilai moral (lebih menarik / kurang menarik) kepada volatiliti itu sendiri, sedangkan ATR adalah input kalibrasi, bukan penghakiman."
+  explanation="ATR sebagai peratusan harga adalah bacaan rezim. Jawapan salah yang memikat ('ATR lebih tinggi = trend lebih kuat') adalah salah tafsir arah yang secara eksplisit disebut dalam pelajaran — ATR adalah tidak berarah. Kesilapan lain memberikan nilai moral (lebih menarik / kurang menarik) kepada volatiliti itu sendiri, sedangkan ATR adalah input kalibrasi, bukan penghakiman."
 />
 
 <Quiz
-  question="ATR(14) harian saham melonjak dari $8.20 (3.0% daripada harga) kepada $11.50 (5.0% daripada harga) dalam tempoh empat minggu. Anda menjalankan strategi reverensi purata pada saham ini dengan henti $4. Kadar kemenangan strategi telah turun dari 58% kepada 41% dalam tempoh yang sama. Tafsiran manakah paling konsisten dengan kerangka pelajaran?"
+  question="ATR(14) harian sebuah saham melonjak dari $8.20 (3.0% daripada harga) kepada $11.50 (5.0% daripada harga) dalam tempoh empat minggu. Anda telah menjalankan strategi reverensi purata pada saham ini dengan henti $4. Kadar kemenangan strategi telah turun dari 58% kepada 41% dalam tempoh yang sama. Tafsiran manakah paling konsisten dengan kerangka pelajaran?"
   options={[
-    "Tambah pada posisi rugi — ATR tinggi bermaksud bounce yang lebih besar",
-    "Regime volatiliti telah beralih dari normal ke meningkat. Henti $4 kini berada jauh di dalam hingar harian (kira-kira 35% daripada satu ATR). Luaskan henti dan kurangkan saiz secara berkadar untuk mengekalkan risiko dolar yang malar, atau elakkan pasaran sehingga ATR normal — strategi reverensi purata cenderung kurang berprestasi dalam regime volatiliti meningkat.",
+    "Tambah pada posisi rugi — ATR tinggi bermaksud lantunan lebih besar",
+    "Rezim volatiliti telah beralih dari normal ke tinggi. Henti $4 kini berada jauh di dalam hingar harian (kira-kira 35% daripada satu ATR). Sama ada lebarkan henti dan kurangkan saiz secara berkadar untuk mengekalkan risiko dolar yang malar, atau elakkan pasaran sehingga ATR kembali normal — strategi reverensi purata cenderung gagal prestasi dalam rezim volatiliti tinggi.",
     "Kurangkan henti berasaskan ATR kerana ia menyebabkan kerugian",
-    "Trend saham telah berubah arah — tukar strategi kepada long-only"
+    "Trend saham telah berubah arah — tukar strategi kepada hanya beli"
   ]}
   answer={1}
-  explanation="Perubahan regime adalah tepat seperti yang diramalkan oleh pelajaran — kluster ATR tinggi, reverensi purata menghadapi kesukaran, trend-following mendominasi. Jawapan salah yang menipu (A) membaca volatiliti sebagai arah. Pilihan C ('kurangkan henti berasaskan ATR') adalah terbalik — ATR yang lebih luas memerlukan henti yang lebih luas. Pilihan D adalah corak anti-pemulihan yang dikesan dalam Modul 8."
+  explanation="Perubahan rezim adalah tepat seperti yang diramalkan oleh pelajaran — pengelompokan ATR tinggi, reverensi purata menghadapi kesukaran, trend-following mendominasi. Jawapan salah yang memikat (A) membaca volatiliti sebagai arah. Pilihan C ('kurangkan henti berasaskan ATR') adalah terbalik — ATR yang lebih luas menuntut henti yang lebih luas. Pilihan D adalah corak anti-pemulihan perdagangan balas dendam yang ditanamkan dalam Modul 8."
 />
 
 ## Cuba sendiri
 
-Dalam Market Analyst <Term id="ami_one_on_one" />, tampal dua ticker dari <Term id="ami_watchlist" /> anda dan tanya: "Kira ATR(14) harian sebagai peratusan harga untuk setiap satu, dan bandingkan setiap nisbah dengan purata 6-bulan lalu." Kemudian semak carta sendiri. Latihan ini ialah untuk dalami bahawa ATR-harga ialah pengukur rejim dan bahawa "di atas purata 6-bulan" dan "di bawah purata 6-bulan" meramal perilaku jangka pendek yang sangat berbeza.
+Dalam Market Analyst <Term id="ami_one_on_one" />, tampal dua simbol daripada <Term id="ami_watchlist" /> anda dan tanya: "Kira ATR(14) harian sebagai peratusan harga bagi setiap satu, dan bandingkan setiap nisbah dengan purata 6-bulan lalu." Kemudian semak carta sendiri. Latihan ini ialah untuk mendalami bahawa ATR-peratus ialah penunjuk rejim dan bahawa "di atas purata 6-bulan" dan "di bawah purata 6-bulan" meramalkan tingkah laku jangka pendek yang sangat berbeza.
 
-## Penegasan
+## Penafasan
 
 ATR memberitahu anda berapa banyak saham biasanya bergerak — bukan ke arah mana. Gunakan ia sebagai parameter kalibrasi untuk henti, saiz, dan pemilihan strategi; nisbah ATR-harga membaca rejim volatiliti.

@@ -17,26 +17,26 @@ updated_at: "2026-05-12"
 ---
 # Berhenti berdasarkan ATR
 
-Pelajaran ini andaikan anda telah menyelesaikan <Lesson id="015_stop_loss_basics"/> (Asas penghentian kerugian); di sini kita mendalami satu cara khusus untuk meletakkan penghentian tersebut — menggunakan ATR (Julat Benar Purata) untuk menguncinya kepada volatiliti semasa, bukan sekadar corak carta. Tahap carta memberitahu anda di mana tesis mati; ATR memberitahu anda berapa banyak ruang gerak (wiggle room) yang perlu ditinggalkan di bawah tahap tersebut supaya hari biasa yang bising tidak menjatuhkan anda. Padukan kedua-duanya: carta memilih pembatalan, ATR memilih penimbal. Pelajaran ini merangkumi cara mengira penghentian berpenimbal, apabila penghentian ATR mengatasi penghentian carta tulen, dan mod kegagalan apabila ATR dibaca secara terpencil.
+Pelajaran ini andaikan anda telah menyelesaikan <Lesson id="015_stop_loss_basics"/> (Asas stop-loss); di sini kita mendalami satu cara khusus untuk meletakkan stop tersebut — menggunakan ATR (Average True Range) untuk mengaitkannya dengan volatiliti semasa, bukan sekadar corak carta. Tahap carta memberitahu anda di mana tesis mati; ATR memberitahu anda berapa banyak ruang gerak (wiggle room) yang perlu ditinggalkan di bawah tahap tersebut supaya hari biasa yang bising tidak menyebabkan anda keluar. Padukan kedua-duanya: carta memilih titik ketidakabsahan, ATR memilih penimbal. Pelajaran ini merangkumi cara mengira stop berpenimbal, apabila stop ATR melebihi prestasi stop carta tulen, dan mod kegagalan apabila ATR dibaca secara terpencil.
 
-## Bagaimana ia berlaku dalam pasaran sebenar
+## Bagaimana ini berlaku dalam pasaran sebenar
 
-NVDA menembus asas pada $480 dengan isipadu tinggi. Penganalisis Pasaran menandakan $465 sebagai paras ayunan rendah sebelumnya — pembatalan carta yang bersih. ATR 14 hari = $14. Penghentian carta tulen terletak sedikit di bawah $465 (katakan $463). Penghentian 2× ATR tulen berada pada $480 − $28 = $452. Pendekatan berpenimbal menggabungkan keduanya: ambil tahap carta, kemudian tolak 0.5× ATR sebagai penimbal bising: $465 − $7 = $458. Ini meletakkan penghentian di mana penutupan di bawah tahap ditambah ekor bising normal adalah apa yang menjatuhkan anda, bukan lonjakan intraday tunggal.
+NVDA menembus asas pada $480 dengan isipadu tinggi. Market Analyst menandakan $465 sebagai paras swing rendah sebelumnya — ketidakabsahan carta yang jelas. ATR 14 hari = $14. Stop carta tulen diletakkan sedikit di bawah $465 (katakan $463). Stop 2× ATR tulen berada pada $480 − $28 = $452. Pendekatan berpenimbal menggabungkan keduanya: ambil tahap carta, kemudian tolak 0.5× ATR sebagai penimbal bising: $465 − $7 = $458. Ini meletakkan stop di mana penutupan di bawah tahap ditambah dengan ekor bising biasa adalah apa yang akan memusnahkan anda, bukan satu lonjakan intraday tunggal.
 
-Tiga hari kemudian, NVDA merosot intraday ke $461 — melalui tahap carta mentah — kemudian menutup pada $474. Penghentian carta $463 akan terpicu intraday; penghentian berpenimbal ATR $458 tidak. Dagangan selamat; tesis utuh. Dua minggu kemudian, NVDA turun celah ke $455 dan menutup pada $451. Penghentian $458 terpicu pada penutupan. Anda keluar pada sesi buka berikutnya — slippage kecil, tetapi peraturan struktur memegang: penutupan di bawah "tahap carta tolak penimbal bising" adalah pembatalan.
+Tiga hari kemudian, NVDA turun intraday ke $461 — menembusi tahap carta mentah — kemudian menutup pada $474. Stop carta $463 akan telah dicetuskan secara intraday; stop berpenimbal ATR $458 tidak. Dagangan selamat; tesis utuh. Dua minggu kemudian, NVDA turun secara gap ke $455 dan menutup pada $451. Stop $458 dicetuskan pada penutupan. Anda keluar pada sesi buka hari berikutnya — slippage kecil, tetapi peraturan struktur memegang: penutupan di bawah "tahap carta tolak penimbal bising" adalah ketidakabsahan.
 
-Di Bursa Malaysia: GENTING masuk RM4.20, paras ayunan rendah RM4.00, ATR 14 hari = RM0.08. Penghentian berpenimbal = RM4.00 − RM0.04 = RM3.96. Ujian boleh disangkal: jika anda mendapati diri anda dihentikan intraday pada lebih daripada 30% dagangan anda tetapi tesis kemudian menyelesaikan ke arah anda, penghentian anda terlalu dekat dengan tahap carta — tambah penimbal 0.3 hingga 0.5 ATR dan jalankan semula.
+Di Bursa Malaysia: entry GENTING RM4.20, paras swing rendah RM4.00, ATR 14 hari = RM0.08. Stop berpenimbal = RM4.00 − RM0.04 = RM3.96. Ujian boleh disangkal: jika anda mendapati diri anda dihentikan secara intraday pada lebih daripada 30% dagangan anda tetapi tesis kemudian menyelesaikan arah anda, stop anda terlalu dekat dengan tahap carta — tambah penimbal 0.3 hingga 0.5 ATR dan jalankan semula.
 
 ## Perangkap
 
-Perangkapnya ialah menggunakan ATR sendirian, mengabaikan carta. Pemula menetapkan penghentian pada "2 ATR di bawah masuk" tanpa mengindahkan di mana pembatalan sebenar berada, kemudian keliru apabila dagangan bergerak ke arah yang betul tetapi dihentikan sebelum pergerakan bermula. ATR ialah ukuran volatiliti terkini, bukan tahap kepentingan struktur — pasaran tidak tahu di mana 2 ATR di bawah masuk anda dan tiada sebab untuk menghormatinya. Model mental yang betul: tahap carta ialah di mana, ATR ialah seberapa jauh di luarnya. Jika tahap carta adalah 5% di bawah masuk dan 2 ATR hanya 3%, "penghentian 2 ATR" anda berada di dalam zon pembatalan dan dagangan akan dihentikan sebelum tesis diuji. Susun bertindih; jangan gantikan.
+Perangkapnya ialah menggunakan ATR secara tunggal, mengabaikan carta. Pemula menetapkan stop pada "2 ATR di bawah entry" tanpa mengira di mana ketidakabsahan sebenar berada, kemudian keliru apabila dagangan bergerak ke arah yang betul tetapi menghentikan mereka sebelum pergerakan bermula. ATR ialah ukuran volatiliti terkini, bukan tahap kepentingan struktur — pasaran tidak tahu di mana 2 ATR di bawah entry anda berada dan tiada sebab untuk menghormatinya. Model mental yang betul: tahap carta ialah "di mana", ATR ialah "berapa jauh melepasi". Jika tahap carta adalah 5% di bawah entry dan 2 ATR hanyalah 3%, "stop 2 ATR" anda berada di dalam zon ketidakabsahan dan dagangan akan dihentikan sebelum tesis diuji langsung. Susun bertindih; jangan ganti.
 
 <ChatWith agent="trader" />
 
 ## Kuiz
 
 <Quiz
-  question="MSFT masuk $415, paras rendah ayunan sebelumnya $405, 14-hari ATR = $6. Menggunakan penampan 0.5 ATR di bawah paras carta, di mana kedudukan had kerugian?"
+  question="MSFT masuk $415, paras swing rendah sebelumnya $405, 14-hari ATR = $6. Menggunakan penimbal 0.5 ATR di bawah paras carta, di mana letak henti rugi?"
   options={[
     "$409",
     "$405",
@@ -44,25 +44,25 @@ Perangkapnya ialah menggunakan ATR sendirian, mengabaikan carta. Pemula menetapk
     "$402"
   ]}
   answer={3}
-  explanation="Had kerugian berpenampan = paras carta − 0.5 ATR = $405 − $3 = $402. $405 adalah titik pembatalan struktur; penampan $3 adalah margin hingar supaya satu cetakan intraday yang buruk tidak melucutkan posisi anda sebelum penutupan mengesahkan pecahan. Meletakkan had kerugian tepat di $405 tidak memberi ruang kepada hingar tersebut."
+  explanation="Henti rugi berpenimbal = paras carta − 0.5 ATR = $405 − $3 = $402. Paras $405 ialah pembatalan struktur; penimbal $3 ialah margin hingar supaya satu cetakan intraday yang buruk tidak menjatuhkan anda sebelum penutupan mengesahkan pecahan. Meletakkan henti rugi tepat pada $405 tidak memberi ruang kepada hingar tersebut."
 />
 
 <Quiz
-  question="Anda memperdagangkan dua setup. AAPL: masuk $200, pembatalan carta pada $192, 14-hari ATR = $3. TSLA: masuk $250, pembatalan carta pada $235, 14-hari ATR = $12. Anda menggunakan penampan 0.5 ATR untuk kedua-duanya. Perdagangan mana mempunyai penampan struktur yang lebih ketat, dan apakah implikasinya?"
+  question="Anda sedang memperdagangkan dua setup. AAPL: masuk $200, pembatalan carta pada $192, 14-hari ATR = $3. TSLA: masuk $250, pembatalan carta pada $235, 14-hari ATR = $12. Anda menggunakan penimbal 0.5 ATR untuk kedua-duanya. Perdagangan mana mempunyai penimbal yang lebih ketat secara struktur, dan apakah implikasinya?"
   options={[
-    "TSLA — penampan 0.5 ATR itu sendiri adalah nisbah hingar yang sama untuk kedua-duanya ($1.50 pada AAPL, $6 pada TSLA), jadi tiada penampan yang 'lebih ketat' berdasarkan terma sendiri. Namun, jarak keseluruhan had kerugian dari masuk berbeza: AAPL ialah $9.50 — 3.2 ATR; TSLA ialah $21 — hanya 1.75 ATR. Had kerugian keseluruhan TSLA berada lebih dekat dengan julat hingarnya sendiri.",
-    "AAPL — penampan ialah $1.50, lebih kecil dalam dolar mutlak, jadi ia adalah had kerugian yang lebih selamat.",
-    "AAPL — saham berharga lebih rendah sentiasa memerlukan had kerugian yang lebih lebar secara peratusan.",
-    "Mereka identik — 0.5 ATR ialah 0.5 ATR."
+    "TSLA — penimbal 0.5 ATR itu sendiri adalah nisbah hingar yang sama untuk kedua-duanya ($1.50 pada AAPL, $6 pada TSLA), jadi tiada penimbal yang 'lebih ketat' berdasarkan terma sendiri. Namun, jarak henti rugi penuh dari masuk berbeza: AAPL ialah $9.50 — 3.2 ATR; TSLA ialah $21 — hanya 1.75 ATR. Henti rugi keseluruhan TSLA terletak lebih dekat dengan julat hingarnya sendiri.",
+    "AAPL — penimbalnya $1.50, lebih kecil dalam dolar mutlak, jadi ia adalah henti rugi yang lebih selamat.",
+    "AAPL — saham berharga lebih rendah sentiasa memerlukan henti rugi yang lebih luas peratusan.",
+    "Ia sama — 0.5 ATR ialah 0.5 ATR."
   ]}
   answer={0}
-  explanation="Jawapan salah yang menggoda ialah 'AAPL — penampan lebih kecil = had kerugian lebih ketat'. Perbandingan dolar mutlak adalah paksi yang salah. Penampan $1.50 pada saham yang bergerak $3 sehari adalah nisbah hingar yang sama dengan penampan $6 pada saham yang bergerak $12 sehari. Perangkap 'saham berharga lebih rendah memerlukan had kerugian lebih lebar' mengelirukan harga saham dengan volatiliti — ia adalah bebas."
+  explanation="Jawapan salah yang menggoda ialah 'AAPL — penimbal lebih kecil = henti rugi lebih ketat'. Perbandingan dolar mutlak adalah paksi yang salah. Penimbal $1.50 pada saham yang bergerak $3 sehari adalah nisbah hingar yang sama dengan penimbal $6 pada saham yang bergerak $12 sehari. Perangkap 'saham berharga lebih rendah memerlukan henti rugi lebih luas' keliru antara harga saham dengan volatiliti — ia adalah bebas."
 />
 
 ## Cuba sendiri
 
-Buka <Term id="ami_one_on_one" /> dengan Pengdagang, pilih ticker yang anda perhatikan, dan tanya "Berapakah ATR 14 hari semasa, sokongan carta terdekat, dan penghentian menggunakan sokongan tersebut tolak 0.5 ATR?" Kemudian bandingkan dengan apa yang akan anda tetapkan sebagai penghentian carta tulen. Catat perbezaan dalam bilangan saham yang dibenarkan pada risiko akaun 1%.
+Buka <Term id="ami_one_on_one" /> dengan Trader, pilih ticker yang anda perhatikan, dan tanya "Berapakah ATR 14 hari semasa, sokongan carta terdekat, dan stop menggunakan sokongan tersebut tolak 0.5 ATR?" Kemudian bandingkan dengan apa yang akan anda tetapkan sebagai stop carta tulen. Catat perbezaan dalam bilangan saham yang dibenarkan pada risiko akaun 1%.
 
-## Penutup
+## Penafian
 
-Carta memilih di mana penghentian sepatutnya; ATR memilih seberapa jauh di bawah — kedua-duanya bersama, jangan satu sendirian.
+Carta memilih di mana stop sepatutnya berada; ATR memilih seberapa jauh di bawah — kedua-duanya bersama, jangan gunakan satu secara tunggal.

@@ -1,6 +1,6 @@
 ---
 id: "340_capstone_thinking_in_probabilities_bayesian_updating"
-title: "Capstone: Berfikir dalam Kebarangkalian (Kemas kini Bayes)"
+title: "Capstone: Berfikir dalam kebarangkalian (kemas kini Bayes)"
 duration_min: 7
 level: 12
 module: 20
@@ -16,66 +16,66 @@ locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-21"
 updated_at: "2026-07-21"
 ---
-# Capstone: Berfikir dalam Kebarangkalian (Kemas kini Bayes)
+# Capstone: berfikir dalam kebarangkalian (kemas kini Bayes)
 
-Anda kini memegang toolkit M20 yang lengkap: nilai jangkaan sebagai purata berat kebarangkalian bagi sesuatu keputusan, kadar asas sebagai frekuensi latar belakang yang mesti dilalui oleh satu dakwaan sebelum bukti boleh mengubahnya, ekor tebal sebagai pengingat bahawa hasil ekstrem lebih kerap berlaku daripada yang dicadangkan oleh model yang bersih, korelasi berbanding kausasi sebagai semakan terhadap apa yang sebenarnya bermakna oleh satu hubungan, dan saiz sampel sebagai semakan terhadap berapa banyak satu hasil tunggal sepatutnya mengubah keyakinan anda. Kemas kini Bayes ialah formula yang mengaitkan semuanya: ia mengambil kebarangkalian prior (dipengaruhi oleh kadar asas), mengemaskininya dengan bukti baharu (kekuatannya bergantung kepada saiz sampel di belakangnya), dan menghasilkan kebarangkalian posterior yang kemudian boleh anda jalankan semula melalui pengiraan nilai jangkaan.
+Anda kini memegang keseluruhan alat M20: nilai jangkaan sebagai purata berat kebarangkalian bagi satu keputusan, kadar asas sebagai frekuensi latar belakang yang mesti dilalui oleh satu tuntutan sebelum bukti dapat mengubahnya, ekor gemuk sebagai pengingat bahawa hasil ekstrem lebih kerap berlaku daripada yang dicadangkan oleh model yang kemas, korelasi lawan kausasi sebagai semakan terhadap makna sebenar sesuatu hubungan, dan saiz sampel sebagai semakan terhadap seberapa banyak mana satu hasil tunggal harus mengubah keyakinan anda. Kemas kini Bayes ialah formula yang menyatukan semuanya: ia mengambil kebarangkalian awal (yang dipengaruhi oleh kadar asas), mengemas kininya dengan bukti baharu (yang kekuatannya bergantung kepada saiz sampel di sebaliknya), dan menghasilkan kebarangkalian posterior yang kemudiannya boleh dijalankan semula melalui pengiraan nilai jangkaan.
 
 ## Satu senario, setiap konsep M20
 
-Seorang penjual mendakwa strategi perdagangan baharu mempunyai kelebihan sebenar. Sebelum melihat sebarang bukti, apakah kebarangkalian **prior** bahawa "kelebihan" yang diklaim secara rawak seperti ini adalah benar-benar nyata? Mengikut pelajaran kadar asas: kebanyakan kelebihan yang diklaim adalah hingar, jadi mulakan dengan prior **10%** yang benar-benar nyata. Kini bukti tiba: ujian balik selama **20 perdagangan** menunjukkan **kadar kemenangan 70%** — senario yang sama dengan pelajaran saiz sampel, di mana kelebihan 20 mata yang diperhatikan hanya *hampir* gagal melepasi bar dua sisian piawai (≈20.5 mata). Oleh kerana bukti itu lemah (bukan kerana ia palsu), katakan ia akan muncul 80% daripada masa jika kelebihan itu benar-benar nyata, tetapi ia juga akan muncul 20% daripada masa secara kebetulan tulen walaupun tiada kelebihan sebenar — nisbah kebarangkalian 4-kepada-1 yang mendukung "nyata", bukan yang overwhelming.
+Seorang penjual mendakwa strategi perdagangan baharunya mempunyai kelebihan sebenar. Sebelum melihat sebarang bukti, apakah kebarangkalian **awal** bahawa satu "kelebihan" yang diklaim secara rawak seperti ini adalah benar-benar nyata? Mengikut pelajaran kadar asas: kebanyakan kelebihan yang diklaim hanyalah hingar, jadi mulakan dengan kebarangkalian awal **10%** bahawa ia benar. Kini bukti tiba: satu ujian balik ke atas **20 perdagangan** menunjukkan kadar kemenangan **70%** — senario yang sama dengan pelajaran saiz sampel, di mana kelebihan 20 mata yang diperhatikan hanya *hampir* gagal melepasi bar dua sisihan piawai (≈20.5 mata). Oleh kerana bukti itu lemah (bukan kerana ia palsu), katakan ia akan muncul 80% daripada masa jika kelebihan itu benar-benar nyata, tetapi ia juga akan muncul 20% daripada masa semata-mata kebetulan walaupun tanpa kelebihan sebenar langsung — nisbah kebarangkalian 4-ke-1 yang mendukung "nyata", tetapi tidak memukau.
 
-Peraturan Bayes: posterior = [P(bukti | nyata) × P(nyata)] ÷ [P(bukti | nyata) × P(nyata) + P(bukti | tidak nyata) × P(tidak nyata)] = (0.8 × 0.10) ÷ (0.8 × 0.10 + 0.2 × 0.90) = 0.08 ÷ (0.08 + 0.18) = 0.08 ÷ 0.26 ≈ **30.8%**. Bukti yang lemah itu menggerakkan keyakinan dari prior 10% kepada posterior 30.8% — pergerakan yang nyata, tetapi jauh daripada "terbukti". Kini jalankan posterior itu semula melalui nilai jangkaan: jika kelebihan itu nyata, anggap ia bernilai +$1,000; jika tidak, anggap bertindak atasnya menelan kos -$1,000. EV = (0.308 × $1,000) + (0.692 × -$1,000) = $308 - $692 ≈ **-$384**. Walaupun selepas dikemaskini ke atas dari 10% kepada 30.8% atas bukti nyata, nilai jangkaan untuk mempercayai dakwaan ini masih kukuh negatif.
+Peraturan Bayes: posterior = [P(bukti | nyata) × P(nyata)] ÷ [P(bukti | nyata) × P(nyata) + P(bukti | tidak nyata) × P(tidak nyata)] = (0.8 × 0.10) ÷ (0.8 × 0.10 + 0.2 × 0.90) = 0.08 ÷ (0.08 + 0.18) = 0.08 ÷ 0.26 ≈ **30.8%**. Bukti yang lemah telah menggerakkan keyakinan daripada kebarangkalian awal 10% kepada posterior 30.8% — pergerakan yang nyata, tetapi jauh sekali daripada "terbukti". Kini jalankan posterior itu semula melalui nilai jangkaan: jika kelebihan itu nyata, anggap ia bernilai +$1,000; jika tidak, anggap bertindak atasnya menelan kos -$1,000. EV = (0.308 × $1,000) + (0.692 × -$1,000) = $308 - $692 ≈ **-$384**. Walaupun selepas dikemas kini ke atas daripada 10% kepada 30.8% atas bukti nyata, nilai jangkaan bagi mempercayai tuntutan ini masih kukuh negatif.
 
 ## Steelman
 
-Kes terkuat terhadap keseluruhan latihan ini: "Anda mencipta prior (10%), nisbah kebarangkalian (4-kepada-1), dan bayaran yang diandaikan (±$1,000) — matematik yang kelihatan tepat dibina pada input tekaan adalah ketepatan palsu, bukan ketelusan." Itu adalah peringatan yang munasabah — kemas kini Bayes hanya sebaik inputnya, dan membalut tekaan dalam titik perpuluhan tidak menjadikannya kurang sebagai tekaan. Pengeyang: walaupun versi *kasar* input ini (prior rendah kerana kebanyakan kelebihan yang diklaim gagal, nisbah kebarangkalian sederhana kerana 20 perdagangan adalah bukti lemah mengikut pelajaran saiz sampel) membawa kepada kesimpulan arah yang sama — ujian balik 20 perdagangan sahaja sepatutnya menggerakkan keyakinan hanya secara sederhana, bukan kepada keyakinan penuh. Disiplinnya bukan "percaya pada titik perpuluhan"; ia adalah "kemas kini ke arah yang betul dengan jumlah yang kira-kira betul, dan jangan biarkan sampel kecil dan lemah melompatkan anda terus kepada kepastian."
+Kes terkuat menentang keseluruhan latihan ini: "Anda mencipta kebarangkalian awal (10%), nisbah kebarangkalian (4-ke-1), dan bayaran yang diandaikan (±$1,000) — matematik yang kelihatan tepat dibina atas input yang diteka adalah ketepatan palsu, bukan ketelitian." Itu adalah peringatan yang adil — kemas kini Bayes hanya setanding dengan inputnya, dan memakaikan tekaan dengan titik perpuluhan tidak menjadikannya kurang tekaan. Pengecam: walaupun *anggaran kasar* bagi input ini (kebarangkalian awal rendah kerana kebanyakan kelebihan yang diklaim gagal, nisbah kebarangkalian sederhana kerana 20 perdagangan adalah bukti lemah mengikut pelajaran saiz sampel) membawa kepada kesimpulan arah yang sama — ujian balik 20 perdagangan sahaja harus menggerakkan keyakinan secara sederhana, bukan kepada keyakinan penuh. Disiplinnya bukan "percayai titik perpuluhan"; ia adalah "kemas kini ke arah yang betul dengan jumlah yang kira-kira betul, dan jangan biarkan sampel kecil yang lemah melompatkan anda terus kepada kepastian."
 
 <ChatWith agent="research_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Bermula daripada kebarangkalian prior 10% bahawa tepi pasaran yang didakwa adalah benar, dan bukti yang 4 kali lebih mungkin berlaku jika 'benar' berbanding 'tidak benar' (0.8 berbanding 0.2), berapakah kebarangkalian posterior Bayes bahawa tepi pasaran itu benar?"
+  question="Bermula dari prior 10% bahawa tepi yang didakwa adalah benar, dan bukti yang 4 kali lebih mungkin berlaku jika 'benar' berbanding 'tidak benar' (0.8 vs. 0.2), berapakah kebarangkalian posterior Bayes bahawa tepi tersebut adalah benar?"
   options={[
     "80% — nisbah kebarangkalian itu sendiri menjadi posterior secara langsung",
-    "40% — mendarabkan prior dengan nisbah kebarangkalian (10% × 4)",
+    "40% — mendarab prior dengan nisbah kebarangkalian (10% × 4)",
     "18% — menggunakan hanya istilah positif palsu (0.2 × 0.90) sebagai jawapan",
     "≈30.8% — (0.8 × 0.10) ÷ [(0.8 × 0.10) + (0.2 × 0.90)] = 0.08 ÷ 0.26 ≈ 0.308"
   ]}
   answer={3}
-  explanation="Peraturan Bayes memerlukan pembahagian istilah 'benar dan bukti berlaku' dengan jumlah kebarangkalian bukti berlaku di bawah kedua-dua hipotesis: 0.08 ÷ (0.08 + 0.18) = 0.08 ÷ 0.26 ≈ 30.8%. Mendarabkan prior dengan nisbah kebarangkalian (memberikan 40%) melangkau langkah normalisasi sepenuhnya; dua pilihan lain masing-masing mengasingkan satu istilah daripada pengiraan penuh berbanding menggabungkannya dengan betul."
+  explanation="Peraturan Bayes memerlukan pembahagian istilah 'benar dan bukti berlaku' dengan jumlah kebarangkalian bukti berlaku di bawah kedua-dua hipotesis: 0.08 ÷ (0.08 + 0.18) = 0.08 ÷ 0.26 ≈ 30.8%. Mendarab prior dengan nisbah kebarangkalian (memberi 40%) melangkau langkah normalisasi sepenuhnya; dua pilihan lain masing-masing mengasingkan satu istilah daripada pengiraan penuh berbanding menggabungkannya dengan betul."
 />
 
 <Quiz
-  question="Selepas dikemaskini kepada posterior 30.8% bahawa tepi pasaran itu benar, dan dengan andaian tepi pasaran itu bernilai +$1,000 jika benar dan -$1,000 jika tidak, apakah yang dikatakan oleh pengiraan nilai jangkaan (expected value) mengenai tindakan terhadap tuntutan ini sekarang?"
+  question="Selepas dikemaskini kepada posterior 30.8% bahawa tepi tersebut adalah benar, dan dengan mengandaikan tepi tersebut bernilai +$1,000 jika benar dan -$1,000 jika tidak, apakah yang dikatakan oleh pengiraan nilai jangkaan mengenai tindakan terhadap tuntutan ini sekarang?"
   options={[
-    "EV ≈ -$384 — walaupun selepas kemas kini, (0.308 × $1,000) + (0.692 × -$1,000) masih jelas negatif, jadi bukti setakat ini tidak wajar untuk dianggap sebagai pertaruhan yang baik",
+    "EV ≈ -$384 — walaupun selepas kemas kini, (0.308 × $1,000) + (0.692 × -$1,000) masih jelas negatif, jadi bukti setakat ini tidak menjustifikasikan perlakuan ini sebagai pertaruhan yang baik",
     "EV ≈ +$384 — mengemaskini kebarangkalian ke atas sentiasa menjadikan nilai jangkaan positif",
     "EV ≈ +$1,000 — posterior di atas prior 10% bermaksud ganjaran penuh harus dikira",
-    "EV tidak boleh dikira kerana posterior bukan tepat 50%"
+    "EV tidak dapat dikira kerana posterior bukan tepat 50%"
   ]}
   answer={0}
-  explanation="(0.308 × $1,000) + (0.692 × -$1,000) = $308 - $692 ≈ -$384 — masih negatif, walaupun posterior telah lebih daripada tiga kali ganda daripada prior 10%. Menaikkan keyakinan tidak secara automatika menjadikan pertaruhan bernilai EV positif; ia bergantung pada sejauh mana keyakinan itu bergerak dan apa ganjarannya, yang merupakan sebab tepat mengapa penutup ini merangkaikan kemas kini Bayes kembali ke formula EV berbanding berhenti pada posterior."
+  explanation="(0.308 × $1,000) + (0.692 × -$1,000) = $308 - $692 ≈ -$384 — masih negatif, walaupun posterior lebih daripada tiga kali ganda daripada prior 10%. Menggerakkan kepercayaan ke atas tidak secara automatika menjadikan pertaruhan bernilai jangkaan positif; ia bergantung pada sejauh mana ia bergerak dan apakah ganjarannya, yang merupakan sebab tepat mengapa capstone ini merangkaikan kemas kini Bayes kembali ke formula EV berbanding berhenti pada posterior."
 />
 
 <Quiz
-  question="Menggabungkan kadar asas, saiz sampel, kemas kini Bayes, dan nilai jangkaan — apakah disiplin tunggal yang dilatih oleh penutup ini untuk anda gunakan kali seterusnya anda menilai tepi pasaran yang didakwa, dalam berita atau di dalam Verdicts simulasi AMI?"
+  question="Menggabungkan kadar asas, saiz sampel, kemas kini Bayes, dan nilai jangkaan — apakah disiplin tunggal yang dilatih oleh capstone ini untuk anda aplikasikan pada kali seterusnya anda menilai tepi perdagangan yang didakwa, dalam berita atau di dalam Verdicts simulasi AMI?"
   options={[
-    "Percayai sebarang ujian balik yang menunjukkan kadar kemenangan jelas di atas 50%, tidak kira berapa banyak perdagangan yang diliputinya",
-    "Tolak setiap tepi pasaran yang didakwa serta-merta, kerana kadar asas menunjukkan kebanyakan daripadanya adalah palsu",
-    "Hakim tuntutan hanya berdasarkan bukti terkini, tanpa rujukan kepada seberapa jarang tepi pasaran sebenar secara umum",
-    "Bermula dengan kadar asas yang realistik tentang seberapa sering tuntutan seperti ini adalah benar, beratkan bukti baru berdasarkan seberapa kuat ia sebenarnya (yang bergantung pada saiz sampel), kemas kini kebarangkalian dengan peraturan Bayes berbanding melompat terus kepada keyakinan atau ketidakpercayaan, dan kemudian jalankan kebarangkalian yang dikemaskini melalui pengiraan nilai jangkaan sebelum memutuskan untuk bertindak"
+    "Percayai sebarang backtest yang menunjukkan kadar kemenangan jelas di atas 50%, tidak kira berapa banyak perdagangan yang diliputinya",
+    "Tolak setiap tepi yang didakwa serta-merta, kerana kadar asas menunjukkan kebanyakan daripadanya adalah palsu",
+    "Hakim tuntutan hanya berdasarkan bukti terkini, tanpa rujukan kepada betapa jarangnya tepi sebenar secara umum",
+    "Bermula dengan kadar asas yang realistik tentang seberapa kerap tuntutan seperti ini adalah benar, timbang bukti baru oleh betapa kuatnya ia sebenarnya (yang bergantung pada saiz sampel), kemas kini kebarangkalian dengan peraturan Bayes berbanding melompat terus kepada kepercayaan atau ketidakpercayaan, dan kemudian jalankan kebarangkalian yang dikemaskini melalui pengiraan nilai jangkaan sebelum memutuskan sama ada untuk bertindak"
   ]}
   answer={3}
-  explanation="Ini adalah sintesis penuh penutup: tiada satu pelajaran M20 berdiri sendiri dalam menilai tuntutan sebenar — kadar asas menetapkan titik permulaan, saiz sampel menentukan seberapa banyak bukti baru harus menggerakkan titik permulaan itu, peraturan Bayes melakukan pergerakan dengan betul, dan nilai jangkaan menukar kebarangkalian yang terhasil kepada keputusan sebenar. Memperlakukan mana-mana satu bahagian secara terpencil — mempercayai kadar kemenangan tinggi secara sahaja, menolak semua tepi pasaran secara lalai, atau mengabaikan kadar asas — adalah tepat jalan pintas yang modul ini dibina untuk membetulkan."
+  explanation="Ini adalah sintesis penuh capstone: tiada satu pelajaran M20 berdiri sendiri dalam menilai tuntutan sebenar — kadar asas menetapkan titik permulaan, saiz sampel menentukan seberapa banyak bukti baru harus menggerakkan titik permulaan itu, peraturan Bayes melakukan pergerakan dengan betul, dan nilai jangkaan menukar kebarangkalian yang terhasil kepada keputusan sebenar. Memperlakukan mana-mana satu bahagian secara berasingan — mempercayai kadar kemenangan tinggi secara tunggal, menolak semua tepi secara lalai, atau mengabaikan kadar asas — adalah tepat pintasan yang modul ini dibina untuk membetulkan."
 />
 
 ## Cuba sendiri
 
-Pilih satu dakwaan strategi yang pernah anda dengar (hasil penapis, verdict Bilik, atau tip). Tulis prior anda sendiri, nisbah kebarangkalian kasar bagi bukti yang anda ada, kira posterior Bayes secara manual, dan kemudian jalankan posterior itu melalui pengiraan nilai jangkaan sebelum memutuskan apa yang perlu dilakukan dengannya. Ingat: output latihan AMI ialah artifak latihan, bukan nasihat pelaburan.
+Pilih satu tuntutan strategi yang pernah anda dengar (hasil penyaring, penghakiman Bilik, atau tip). Tulis kebarangkalian awal anda sendiri, anggaran nisbah kebarangkalian bagi bukti yang anda ada, kira posterior Bayes secara manual, dan kemudian jalankan posterior itu melalui pengiraan nilai jangkaan sebelum memutuskan apa yang perlu dilakukan dengannya. Ingat: output latihan AMI adalah artifak latihan, bukan nasihat pelaburan.
 
-## Terasan
+## Pengajaran
 
-Jangan hanya bertanya "adakah bukti ini meyakinkan?" — mulakan dari kadar asas yang realistik, kemas kini ia sebanyak yang dibenarkan oleh kekuatan bukti, dan hanya kemudian kira sama ada kebarangkalian yang terhasil menjadikan pertaruhan itu berbaloi.
+Jangan hanya bertanya "adakah bukti ini meyakinkan?" — mulakan daripada kadar asas yang realistik, kemas kininya sebanyak yang dibenarkan oleh kekuatan bukti tersebut, dan hanya kemudian kira sama ada kebarangkalian yang terhasil menjadikan pertaruhan itu berbaloi.
 
-*Asal usul: Teorem Bayes untuk mengemaskini kebarangkalian dengan bukti baharu — Thomas Bayes, An Essay towards solving a Problem in the Doctrine of Chances (1763).*
+*Asal usul: Teorem Bayes untuk mengemas kini kebarangkalian dengan bukti baharu — Thomas Bayes, An Essay towards solving a Problem in the Doctrine of Chances (1763).*

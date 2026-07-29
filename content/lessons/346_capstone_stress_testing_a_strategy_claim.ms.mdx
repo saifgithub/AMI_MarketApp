@@ -1,6 +1,6 @@
 ---
 id: "346_capstone_stress_testing_a_strategy_claim"
-title: "Capstone: Menguji Tegas Klaim Strategi"
+title: "Capstone: menguji strategi dengan tekanan"
 duration_min: 7
 level: 12
 module: 21
@@ -15,66 +15,66 @@ locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-21"
 updated_at: "2026-07-21"
 ---
-# Capstone: menguji ketegasan strategi
+# Capstone: menguji ketegangan terhadap klaim strategi
 
-Anda kini memegang toolkit M21 yang lengkap: apa yang boleh dan tidak boleh dibuktikan oleh backtest, bagaimana terlalu banyak parameter berbanding kiraan perdagangan menyebabkan curve-fit kepada hingar, mengapa hanya data out-of-sample yang tidak disentuh adalah ujian yang jujur, bagaimana simulasi Monte Carlo mendedahkan risiko ekor yang mungkin disembunyikan oleh satu laluan sejarah, dan bagaimana bias kelangsungan hidup (survivorship bias) meningkatkan pulangan apabila alam semesta backtest secara senyap mengecualikan apa yang gagal. Capstone ini menjalankan satu tuntutan vendor yang kelihatan munasabah melalui semua lima semakan serentak — disiplin untuk menguji ketegasan sebarang strategi sebelum mempercayainya.
+Anda kini memegang keseluruhan alat M21: apa yang boleh dan tidak boleh dibuktikan oleh backtest, bagaimana terlalu banyak parameter berbanding bilangan perdagangan menyebabkan curve-fit kepada hingar, mengapa hanya data out-of-sample yang tidak disentuh adalah ujian yang jujur, bagaimana simulasi Monte Carlo mendedahkan risiko ekor yang mungkin disembunyikan oleh satu laluan sejarah, dan bagaimana bias kelangsungan hidup (survivorship bias) meningkatkan pulangan apabila alam semesta backtest secara senyap mengecualikan apa yang gagal. Capstone ini menjalankan satu klaim vendor yang kelihatan munasabah melalui kesemua lima pemeriksaan sekaligus — disiplin menguji ketegangan terhadap sebarang klaim strategi sebelum mempercayainya.
 
 ## Satu senario, setiap konsep M21
 
-Seorang vendor mendakwa strategi yang di-backtest pada komponen S&P 500 dari 2015-2024 (300 perdagangan) menunjukkan **kadar kemenangan 68%**, purata **+$220** pada kemenangan dan **-$150** pada kerugian, menggunakan **14** penapis yang boleh laras. Pertama, semakan backtesting: EV dalam-sampel = (0.68 × $220) + (0.32 × -$150) = $149.60 - $48 = **+$101.60 per perdagangan** — nombor sebenar, yang hanya menerangkan data sejarah tepat ini. Kedua, semakan overfitting: 300 perdagangan ÷ 14 parameter = **≈21.4 perdagangan per parameter** — nipis, jauh di bawah nisbah 50-per-parameter yang digunakan dalam contoh lebih ringkas modul ini, bermakna bahagian yang bermakna daripada +$101.60 itu mungkin adalah curve-fit kepada sejarah khusus ini berbanding corak yang boleh diulang.
+Seorang vendor mendakwa strategi yang di-backtest pada komponen S&P 500 dari 2015-2024 (300 perdagangan) menunjukkan **kadar kemenangan 68%**, dengan purata **+$220** pada kemenangan dan **-$150** pada kerugian, menggunakan **14** penapis yang boleh dilaraskan. Pertama, pemeriksaan backtesting: EV dalam-sampel = (0.68 × $220) + (0.32 × -$150) = $149.60 - $48 = **+$101.60 per perdagangan** — satu nombor sebenar, yang hanya menerangkan data sejarah tepat ini. Kedua, pemeriksaan overfitting: 300 perdagangan ÷ 14 parameter = **≈21.4 perdagangan per parameter** — nipis, jauh di bawah nisbah 50-per-parameter yang digunakan dalam contoh lebih ringkas modul ini, bermakna bahagian yang bermakna daripada +$101.60 itu mungkin adalah curve-fit kepada sejarah khusus ini berbanding corak yang boleh diulang.
 
-Ketiga, semakan out-of-sample: bawa peraturan yang tidak diubah sama ke hadapan ke atas data 2025 yang tidak dilaraskan, dan kadar kemenangan turun kepada **45%**: EV = (0.45 × $220) + (0.55 × -$150) = $99 - $82.50 = **+$16.50 per perdagangan** — penurunan sebanyak ($101.60 - $16.50) ÷ $101.60 ≈ **84%** daripada angka dalam-sampel. Keempat, semakan Monte Carlo: walaupun mengambil EV +$16.50 yang terselamat itu pada nilai wajahnya, dengan kebarangkalian kerugian 55% per perdagangan, kebarangkalian lima kerugian berturut-turut = 0.55⁵ ≈ **5.03%** — kira-kira 1 dalam 20 rentetan lima perdagangan menghasilkan siri kerugian sebesar itu, satu risiko ekor yang nyata dan besar yang terletak di bawah purata yang masih positif. Kelima, semakan survivorship: alam semesta backtest adalah komponen S&P 500 *hari ini* — bermakna mana-mana syarikat yang disenaraikan semula, muflis, atau dikeluarkan dari indeks antara 2015 dan 2024 tidak pernah muncul dalam data yang diuji langsung, yang (mengikut pelajaran bias survivorship) bermakna walaupun angka out-of-sample +$16.50 yang terselamat mungkin masih terlalu tinggi berbanding apa yang sebenarnya akan dialami oleh pelabur yang memilih daripada alam semesta penuh 2015.
+Ketiga, pemeriksaan out-of-sample: laksanakan peraturan yang tidak diubah ke hadapan ke atas data 2025 yang tidak dilaraskan, dan kadar kemenangan jatuh kepada **45%**: EV = (0.45 × $220) + (0.55 × -$150) = $99 - $82.50 = **+$16.50 per perdagangan** — satu penurunan sebanyak ($101.60 - $16.50) ÷ $101.60 ≈ **84%** daripada angka dalam-sampel. Keempat, pemeriksaan Monte Carlo: walaupun mengambil EV +$16.50 yang tersisa itu pada nilai nominal, dengan kebarangkalian kerugian 55% per perdagangan, kebarangkalian lima kerugian berturut-turut = 0.55⁵ ≈ **5.03%** — kira-kira 1 dalam 20 rentetan lima perdagangan menghasilkan siri kerugian sebesar itu, satu risiko ekor yang nyata dan besar yang terletak di bawah purata yang masih positif. Kelima, pemeriksaan survivorship: alam semesta backtest adalah komponen S&P 500 *hari ini* — bermakna mana-mana syarikat yang disenarai semula, muflis, atau dikeluarkan dari indeks antara 2015 dan 2024 tidak pernah muncul dalam data yang diuji langsung, yang (mengikut pelajaran bias survivorship) bermakna walaupun angka out-of-sample +$16.50 yang tersisa itu mungkin masih terlalu tinggi berbanding apa yang sebenarnya dialami oleh pelabur yang memilih daripada keseluruhan alam semesta 2015.
 
-Lima semakan, satu tuntutan: kadar kemenangan 68% dan EV dalam-sampel +$101.60 mengecil kepada +$16.50 yang nipis, dibesarkan oleh survivorship, dan membawa risiko ekor apabila sebenarnya diuji ketegasan — masih mungkin menjadi kelebihan yang nyata, jika sederhana, tetapi tidak seperti nombor yang dipaparkan oleh vendor.
+Lima pemeriksaan, satu klaim: kadar kemenangan tajuk 68% dan EV dalam-sampel +$101.60 mengecil kepada +$16.50 yang nipis, dibesar-besarkan oleh survivorship, dan membawa risiko ekor, sekali benar-benar diuji keteganganannya — masih mungkin menjadi kelebihan yang nyata, walaupun sederhana, tetapi tidak seperti nombor yang dipaparkan oleh vendor.
 
 ## Steelman
 
-Kes terkuat menentang gauntlet lima semakan ini: "Tiada tuntutan boleh bertahan di bawah siasatan sedemikian rupa — anda boleh menenggelamkan sebarang strategi, sehalus mana pun, dengan menuntut nisbah perdagangan-per-parameter yang sempurna, prestasi out-of-sample yang tidak menurun, sifar risiko ekor, dan alam semesta bebas survivorship yang sempurna serentak." Itu adalah peringatan yang adil terhadap piawaian yang mustahil. Pengecam: gauntlet ini bukan gerbang lulus/gagal yang menuntut kesempurnaan pada semua lima — ia adalah disiplin untuk mengukur keyakinan kepada apa yang sebenarnya terselamat. Strategi dalam senario ini tidak gagal pada setiap semakan; ia mengekalkan EV out-of-sample yang positif, jika jauh lebih kecil, walaupun selepas semua lima ujian ketegasan. Kesimpulan yang betul bukan "tolak setiap strategi yang tidak sempurna" — ia adalah "ukur keyakinan dan saiz kedudukan anda kepada +$16.50 yang terselamat daripada ujian ketegasan, bukan +$101.60 tajuk yang tidak terselamat."
+Kes terkuat terhadap gerbang lima pemeriksaan ini: "Tiada klaim boleh bertahan di bawah siasatan sedalam ini — anda boleh menjatuhkan sebarang strategi, walaupun tulen, dengan menuntut nisbah perdagangan-per-parameter yang sempurna, prestasi out-of-sample yang tidak menurun, sifar risiko ekor, dan alam semesta bebas survivorship yang sempurna serentak." Itu adalah peringatan yang adil terhadap piawaian yang mustahil. Penyangkal: gerbang ini bukan gerbang lulus/gagal yang menuntut kesempurnaan pada kesemua lima — ia adalah disiplin untuk mengukur keyakinan kepada apa yang sebenarnya tersisa. Strategi dalam senario ini tidak gagal pada setiap pemeriksaan; ia mengekalkan EV out-of-sample yang positif, walaupun lebih kecil, walaupun selepas semua lima ujian ketegangan. Kesimpulan yang betul bukan "tolak setiap strategi yang tidak sempurna" — ia adalah "ukur keyakinan dan posisi anda kepada +$16.50 yang tersisa selepas ujian ketegangan, bukan +$101.60 tajuk yang tidak."
 
 <ChatWith agent="trader" />
 
 ## Kuiz
 
 <Quiz
-  question="Strategi vendor menunjukkan kadar kemenangan 68% (+$220 menang / -$150 rugi) dalam sampel, kemudian kadar kemenangan 45% luar sampel dengan saiz pembayaran yang sama. Apakah nilai jangkaan luar sampel, dan berapa banyak ia merosot daripada +$101.60 dalam sampel?"
+  question="Strategi vendor menunjukkan kadar kemenangan 68% (+$220 menang / -$150 kalah) dalam sampel, kemudian kadar kemenangan 45% luar sampel dengan saiz pembayaran yang sama. Berapakah nilai jangkaan luar sampel, dan berapa banyak ia merosot daripada +$101.60 dalam sampel?"
   options={[
     "+$16.50 luar sampel — merosot kira-kira 84% daripada +$101.60 dalam sampel",
     "+$101.60 luar sampel — sama dengan dalam sampel, kerana saiz pembayaran tidak berubah",
-    "-$16.50 luar sampel — pembalikan tanda penuh daripada angka dalam sampel",
-    "+$82.50 luar sampel — menggunakan hanya istilah sisi rugi dalam pengiraan luar sampel"
+    "-$16.50 luar sampel — perubahan tanda penuh daripada angka dalam sampel",
+    "+$82.50 luar sampel — menggunakan hanya terma sisi kerugian daripada pengiraan luar sampel"
   ]}
   answer={0}
-  explanation="Nilai Jangkaan (EV) luar sampel = (0.45 × $220) + (0.55 × -$150) = $99 - $82.50 = $16.50. Kerosotan = ($101.60 - $16.50) ÷ $101.60 ≈ 84%. Penurunan kadar kemenangan (68% ke 45%) adalah pemacu kerosotan walaupun saiz pembayaran menang/rugi kekal tetap — EV mengecut dengan ketara tetapi kekal positif, ia tidak membalik tanda."
+  explanation="Nilai Jangkaan Luar Sampel = (0.45 × $220) + (0.55 × -$150) = $99 - $82.50 = $16.50. Kerosakan = ($101.60 - $16.50) ÷ $101.60 ≈ 84%. Penurunan kadar kemenangan (68% ke 45%) adalah pemacu kerosakan walaupun saiz pembayaran menang/kalah kekal tetap — nilai jangkaan mengecut dengan ketara tetapi kekal positif, ia tidak berubah tanda."
 />
 
 <Quiz
-  question="Walaupun mengesahkan nilai jangkaan luar sampel +$16.50 yang bertahan, apakah yang pemeriksaan Monte Carlo dan kemandirian tambah kepada nombor luar sampel yang tidak ditangkap?"
+  question="Walaupun mengesahkan nilai jangkaan luar sampel +$16.50 yang bertahan, apakah yang pemeriksaan Monte Carlo dan kemandirian tambah kepada nombor luar sampel yang tidak dapat ditangkap?"
   options={[
     "Tiada apa-apa — sekali nilai jangkaan luar sampel positif, tiada pemeriksaan lanjut diperlukan",
     "Ia membuktikan strategi itu menipu dan harus dibuang sepenuhnya",
     "Ia hanya penting jika kadar kemenangan luar sampel berada di bawah 50%",
-    "Pemeriksaan Monte Carlo (0.55⁵ ≈ 5.03% peluang siri 5 kerugian) mengukur risiko ekor sebenar yang tersembunyi di bawah purata walaupun purata itu positif, manakala pemeriksaan kemandirian menandakan bahawa menguji hanya pada penyusun S&P 500 hari ini mengecualikan syarikat yang disenaraihapus atau gagal dari 2015-2024, bermakna angka +$16.50 itu mungkin masih dibesar-besarkan"
+    "Pemeriksaan Monte Carlo (0.55⁵ ≈ 5.03% peluang untuk siri 5 kekalahan) mengukur risiko ekor sebenar yang berada di bawah purata walaupun purata itu positif, manakala pemeriksaan kemandirian menandakan bahawa menguji hanya pada penyusun S&P 500 hari ini mengecualikan syarikat yang telah disenaraikan semula atau gagal dari 2015-2024, bermakna angka +$16.50 itu mungkin masih dibesar-besarkan"
   ]}
   answer={3}
-  explanation="Purata EV positif tidak menerangkan varians di sekelilingnya — pemeriksaan Monte Carlo menunjukkan peluang sebenar yang boleh diukur ≈5.03% untuk siri 5 kerugian, maklumat yang disembunyikan oleh purata. Secara berasingan, pemeriksaan kemandirian menangani mod kegagalan yang berbeza sepenuhnya: alam semesta yang diuji itu sendiri mengecualikan syarikat-syarikat yang kegagalannya dari 2015-2024 akan menjejaskan pelabur sejarah sebenar, bermakna EV sejarah sebenar mungkin lebih rendah daripada $16.50. Tiada isu ini diselesaikan hanya kerana EV luar sampel melepasi sifar."
+  explanation="Nilai jangkaan purata positif tidak menerangkan varians di sekelilingnya — pemeriksaan Monte Carlo menunjukkan peluang nyata yang boleh diukur ≈5.03% untuk siri 5 kekalahan, maklumat yang disembunyikan oleh purata itu sendiri. Secara berasingan, pemeriksaan kemandirian menangani mod kegagalan yang berbeza sepenuhnya: alam semesta yang diuji itu sendiri mengecualikan syarikat-syarikat yang kegagalannya dari 2015-2024 akan menjejaskan pelabur sejarah sebenar, bermakna nilai jangkaan sejarah sebenar mungkin lebih rendah daripada $16.50. Tiada isu diselesaikan hanya kerana nilai jangkaan luar sampel melepasi sifar."
 />
 
 <Quiz
-  question="Menggabungkan asas pengujian belakang, terlalu sesuaikan, pengesahan luar sampel, simulasi Monte Carlo, dan bias kemandirian — apakah disiplin tunggal yang latihan puncak ini melatih anda untuk menerapkan kali seterusnya apabila tuntutan strategi (tawaran vendor, hasil penapis, Verdict simulasi AMI) melaporkan kadar kemenangan diuji belakang yang mengagumkan?"
+  question="Menggabungkan asas pengujian semula, terlalu fitting, pengesahan luar sampel, simulasi Monte Carlo, dan kecacatan kemandirian — apakah disiplin tunggal yang latihan puncak ini melatih anda untuk menerapkan kali seterusnya apabila tuntutan strategi (tawaran vendor, hasil penapis, Verdict simulasi AMI) melaporkan kadar kemenangan diuji semula yang mengagumkan?"
   options={[
-    "Percayai kadar kemenangan dan EV tajuk secara langsung, kerana kiraan dagangan yang besar (300) sudah menafikan terlalu sesuaikan",
-    "Tolak setiap tuntutan strategi secara langsung, kerana semua ujian belakang tidak boleh dipercayai sama tanpa mengira bagaimana ia dibina",
-    "Jalankan tuntutan melalui semua lima pemeriksaan — EV dalam sampel/arithmetik ujian belakang, nisbah dagangan-per-parameter, ujian luar sampel yang tidak disentuh, taburan risiko ekor yang mendedahkan simulasi Monte Carlo, dan sama ada alam semesta yang diuji mengecualikan apa yang gagal — dan sauh keyakinan anda kepada EV yang bertahan melalui ujian itu, bukan kepada tajuk dalam sampel",
-    "Hakimi tuntutan hanya berdasarkan sama ada kadar kemenangan luar sampel melebihi 50%, kerana itu sahaja menentukan sama ada strategi bernilai digunakan"
+    "Percayai kadar kemenangan dan nilai jangkaan tajuk secara langsung, kerana kiraan dagangan yang cukup besar (300) sudah menyingkirkan terlalu fitting",
+    "Tolak setiap tuntutan strategi serta-merta, kerana semua ujian semula sama tidak boleh dipercayai tanpa mengira bagaimana ia dibina",
+    "Jalankan tuntutan melalui semua lima pemeriksaan — aritmetik nilai jangkaan/ujian semula dalam sampel, nisbah dagangan-per-parameter, ujian luar sampel yang tidak terganggu, taburan risiko ekor yang mendedahkan simulasi Monte Carlo, dan sama ada alam semesta yang diuji mengecualikan apa yang gagal — dan sauhkan keyakinan anda kepada apa-apa nilai jangkaan yang bertahan melalui ujian itu, bukan kepada tajuk dalam sampel",
+    "Hakim tuntutan hanya berdasarkan sama ada kadar kemenangan luar sampel melebihi 50%, kerana itu sahaja menentukan sama ada strategi itu berharga untuk digunakan"
   ]}
   answer={2}
-  explanation="Ini adalah sintesis penuh latihan puncak: tiada satu pelajaran M21 berdiri sendiri dalam menilai tuntutan strategi sebenar — nisbah dagangan-per-parameter menandakan risiko melentur lengkung, ujian luar sampel adalah satu-satunya pemeriksaan prestasi yang jujur, simulasi Monte Carlo mendedahkan risiko ekor yang disembunyikan purata, dan pemeriksaan kemandirian menguji sama ada alam semesta itu sendiri dikendalikan ke arah kejayaan. Kiraan dagangan yang besar sahaja tidak menafikan terlalu sesuaikan (14 parameter pada 300 dagangan masih nipis), menolak semuanya secara langsung membuang tepi tulen yang modest yang dikekalkan oleh strategi senario ini, dan ambang kadar kemenangan telanjang mengabaikan saiz pembayaran, risiko ekor, dan pembinaan alam semesta sepenuhnya."
+  explanation="Ini adalah sintesis penuh puncak: tiada satu pelajaran M21 berdiri sendiri dalam menilai tuntutan strategi sebenar — nisbah dagangan-per-parameter menandakan risiko melukis lengkung, ujian luar sampel adalah satu-satunya pemeriksaan prestasi yang jujur, simulasi Monte Carlo mendedahkan risiko ekor yang disembunyikan oleh purata, dan pemeriksaan kemandirian menguji sama ada alam semesta itu sendiri telah dimanipulasi menuju kejayaan. Kiraan dagangan yang besar sahaja tidak menyingkirkan terlalu fitting (14 parameter pada 300 dagangan masih nipis), menolak semuanya serta-merta membuang tepi tulen yang modest yang ditahap oleh strategi senario ini, dan ambang kadar kemenangan sahaja mengabaikan saiz pembayaran, risiko ekor, dan pembinaan alam semesta sepenuhnya."
 />
 
 ## Cuba sendiri
 
-Ambil satu tuntutan strategi yang pernah anda temui — tawaran vendor, keputusan screener, atau penghakiman Room — dan jalankannya melalui semua lima semakan M21 secara manual: EV dalam-sampel/aritmetik backtest, perdagangan-per-parameter, pecahan out-of-sample, anggaran siri kerugian Monte Carlo, dan semakan sama ada alam semestanya mengecualikan nama yang disenaraikan semula atau gagal. Catat apa yang terselamat dalam Journal Keputusan anda. Ingat: output latihan AMI adalah artifak latihan, bukan nasihat pelaburan.
+Ambil satu klaim strategi yang pernah anda temui — tawaran vendor, hasil penapis (screener), atau keputusan Bilik — dan jalankannya melalui kesemua lima pemeriksaan M21 secara manual: EV dalam-sampel/arithmetic backtest, perdagangan-per-parameter, pecahan out-of-sample, anggaran siri kerugian Monte Carlo, dan pemeriksaan sama ada alam semestanya mengecualikan nama yang disenarai semula atau gagal. Catat apa yang tersisa dalam Jurnal Keputusan anda. Ingat: output latihan AMI adalah artifak latihan, bukan nasihat pelaburan.
 
-## Ringkasan
+## Pengajaran
 
-Kadar kemenangan tajaman tuntutan strategi adalah nombor yang paling kurang diuji dalam tawaran tersebut — jalankannya melalui semakan perdagangan-per-parameter, ujian out-of-sample yang tidak disentuh, anggaran risiko ekor Monte Carlo, dan semakan survivorship sebelum mengukur sebarang keyakinan atasnya sama sekali.
+Kadar kemenangan tajuk bagi klaim strategi adalah nombor yang paling kurang diuji dalam tawaran tersebut — jalankannya melalui pemeriksaan perdagangan-per-parameter, ujian out-of-sample yang tidak disentuh, anggaran risiko ekor Monte Carlo, dan pemeriksaan survivorship sebelum mengukur sebarang keyakinan terhadapnya sama sekali.

@@ -1,6 +1,6 @@
 ---
 id: "317_payoff_diagrams_intrinsic_time_value"
-title: "Rajah Payoff — nilai intrinsik & masa"
+title: "AMI Payoff diagrams — nilai intrinsik & masa"
 duration_min: 6
 level: 9
 module: 15
@@ -16,72 +16,72 @@ locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-21"
 updated_at: "2026-07-21"
 ---
-# Diagram Payoff — Nilai Intrinsik & Nilai Masa
+# Diagram Payoff — nilai intrinsik & nilai masa
 
-Premium pilihan sebenarnya ialah dua nombor yang bertindih: nilai intrinsik (berapa nilainya jika anda melaksanakan ia pada saat ini juga) dan nilai masa (semua tambahan yang anda bayar, bertaruh bahawa nilai intrinsik akan berkembang sebelum tamat tempoh). Pada tamat tempoh, nilai masa hilang sepenuhnya — hanya nilai intrinsik yang tersisa, dan payoff pilihan ialah nilai intrinsik tersebut tolak apa yang anda bayar asal. Selepas pelajaran ini, anda akan dapat membaca diagram payoff dan membezakan "ini bernilai sesuatu" daripada "ini menjana wang."
+Premium pilihan sebenarnya terdiri daripada dua nombor yang disusun bersama: nilai intrinsik (nilainya jika anda melaksanakan pilihan itu pada saat ini juga) dan nilai masa (segala kelebihan yang anda bayar, bertaruh bahawa nilai intrinsik akan berkembang sebelum tamat tempoh). Pada tamat tempoh, nilai masa lenyap sepenuhnya — hanya nilai intrinsik yang terselamat, dan payoff pilihan ialah nilai intrinsik tersebut tolak apa yang anda bayar pada asalnya. Selepas pelajaran ini, anda akan dapat membaca diagram payoff dan membezakan "ini bernilai sesuatu" daripada "ini menjana keuntungan."
 
 ## Contoh
 
-Ambil panggilan (call) AAPL dengan harga pelaksanaan $200 secara hipotetikal, dibeli pada premium $6.50 (ilustratif — bukan sebut harga langsung). Pada mana-mana titik sebelum tamat tempoh, $6.50 itu terbahagi kepada nilai intrinsik dan nilai masa. Pada tamat tempoh, hanya nilai intrinsik yang tersisa — itulah sebabnya pelajaran Greeks yang seterusnya memperlakukan nilai masa sebagai sesuatu yang merosot.
+Ambil panggilan (call) AAPL dengan harga pelaksanaan (strike) $200 secara hipotetikal, dibeli pada premium $6.50 (hanya ilustrasi — bukan sebut harga langsung). Pada mana-mana titik sebelum tamat tempoh, $6.50 itu terbahagi kepada nilai intrinsik dan nilai masa. Pada tamat tempoh, hanya nilai intrinsik yang terselamat — itulah sebabnya pelajaran tentang Greeks seterusnya memperlakukan nilai masa sebagai sesuatu yang merosot.
 
-Jalankan nombor. Jika AAPL berakhir pada $180, $190, atau $195, panggilan tersebut berada di luar wang (out of the money); pada tepat $200 ia berada pada wang (at-the-money). Sama ada pun, hak untuk membeli pada $200 tidak bernilai apa-apa apabila AAPL berada pada atau di bawah $200, jadi nilai intrinsik ialah $0 dan payoff ialah -$6.50: kerugian penuh premium, tidak kira pada tahap mana daripada empat tahap tersebut AAPL sebenarnya mendarat. Titik pecah (break-even) untuk panggilan ini ialah $206.50 (harga pelaksanaan tolak premium) — pada harga tepat itu, nilai intrinsik sama dengan $6.50, yang mengimbangi tepat apa yang anda bayar, jadi payoff ialah $0.00. Anda tidak menjana untung sehingga AAPL diperdagangkan di atas $206.50. Pada $210, nilai intrinsik ialah $10.00 dan payoff ialah $3.50. Pada $220, nilai intrinsik ialah $20.00 dan payoff ialah $13.50. Di bawah harga pelaksanaan, payoff duduk rata pada -$6.50 tidak kira seberapa jauh di bawah; di atas titik pecah, payoff meningkat satu dolar demi satu dolar mengikut saham.
+Lakukan pengiraan. Jika AAPL berakhir pada $180, $190, atau $195, panggilan tersebut berada di luar wang (out of the money); pada tepat $200 ia berada pada wang (at-the-money). Dalam kedua-dua kes, hak untuk membeli pada $200 tidak bernilai apa-apa apabila AAPL berada pada atau bawah $200, jadi nilai intrinsik ialah $0 dan payoff ialah -$6.50: kerugian penuh premium, tidak kira pada tahap mana daripada empat tahap tersebut AAPL sebenarnya mendarat. Titik pulangan modal (break-even) untuk panggilan ini ialah $206.50 (harga pelaksanaan ditambah premium) — pada harga tepat itu, nilai intrinsik bersamaan dengan $6.50, yang mengimbangi tepat apa yang anda bayar, jadi payoff ialah $0.00. Anda tidak menjana keuntungan sehingga AAPL diperdagangkan di atas $206.50. Pada $210, nilai intrinsik ialah $10.00 dan payoff ialah $3.50. Pada $220, nilai intrinsik ialah $20.00 dan payoff ialah $13.50. Di bawah harga pelaksanaan, payoff kekal rata pada -$6.50 tidak kira seberapa jauh di bawahnya; di atas titik pulangan modal, payoff meningkat dolar demi dolar mengikut pergerakan saham.
 
-Pilihan jual (put) dengan harga pelaksanaan $200 dan premium $6.50 yang sama berjalan dalam arah bertentangan: titik pecah ialah $193.50 (harga pelaksanaan tolak premium). Pada $180, nilai intrinsik ialah $20 dan payoff ialah $13.50; pada $190, nilai intrinsik ialah $10 dan payoff ialah $3.50; pada $193.50 (titik pecah), nilai intrinsik ialah $6.50 dan payoff ialah $0.00; pada $200 atau $210, pilihan jual tidak bernilai apa-apa — nilai intrinsik $0, payoff -$6.50.
+Pilihan jual (put) dengan harga pelaksanaan $200 dan premium $6.50 yang sama bergerak dalam arah bertentangan: titik pulangan modal ialah $193.50 (harga pelaksanaan tolak premium). Pada $180, nilai intrinsik ialah $20 dan payoff ialah $13.50; pada $190, nilai intrinsik ialah $10 dan payoff ialah $3.50; pada $193.50 (titik pulangan modal), nilai intrinsik ialah $6.50 dan payoff ialah $0.00; pada $200 atau $210, pilihan jual tersebut tidak bernilai — nilai intrinsik $0, payoff -$6.50.
 
 ## Perangkap
 
-Pemula memperlakukan "di dalam wang" (in the money) sebagai sinonim untuk "beruntung." Ia bukan begitu. Pilihan boleh berada di dalam wang — bernilai sesuatu jika dilaksanakan — dan masih menjadi dagangan yang rugi jika ia belum melepasi titik pecah. Model mental yang betul: payoff tidak diukur terhadap harga pelaksanaan, ia diukur terhadap harga pelaksanaan ditambah premium (untuk panggilan) atau harga pelaksanaan tolak premium (untuk pilihan jual). Di antara harga pelaksanaan dan titik pecah, anda sedang memulihkan kerugian, bukan mencatat keuntungan — dan kebanyakan pemula berhenti menjejak kedudukan sebaik sahaja ia bertukar menjadi "di dalam wang," tepat pada julat di mana ia masih berada di bawah air.
+Pemula memperlakukan "di dalam wang" (in the money) sebagai sinonim untuk "beruntung." Ia bukan begitu. Pilihan boleh berada di dalam wang — bernilai sesuatu jika dilaksanakan — dan masih menjadi perdagangan yang rugi jika ia belum melepasi titik pulangan modal. Model mental yang betul: payoff tidak diukur terhadap harga pelaksanaan, ia diukur terhadap harga pelaksanaan ditambah premium (untuk panggilan) atau harga pelaksanaan tolak premium (untuk pilihan jual). Di antara harga pelaksanaan dan titik pulangan modal, anda sedang memulihkan kerugian, bukan mencatat keuntungan — dan kebanyakan pemula berhenti menjejak kedudukan sebaik sahaja ia bertukar menjadi "di dalam wang," tepat pada julat di mana ia masih terbenam.
 
-## Steelman
+## Argumen Kuat
 
-Pencabar mungkin berhujah bahawa diagram payoff pada tamat tempoh melebih-lebihkan risiko, kerana hampir tiada siapa yang sebenarnya memegang pilihan sehingga ke tamat tempoh — kebanyakan pedagang runcit menutup kedudukan awal, jadi lantai rata -$6.50 jarang penting dalam amalan. Penafinya: menutup awal mengubah *bila* anda merealisasikan kerugian, bukan arah di mana nilai masa bekerja. Theta (peluruhan masa, dicakup dalam pelajaran seterusnya) mengikis pilihan panjang yang tidak untung setiap hari ia dipegang, sama ada ditutup awal atau tidak — diagram payoff menerangkan destinasi yang kedudukan itu hanyut ke sepanjang masa, bukan sekadar peraturan yang hanya menggigit pada loceng akhir.
+Pencabar mungkin berhujah bahawa diagram payoff pada tamat tempoh melebih-lebihkan risiko, kerana hampir tiada siapa yang sebenarnya memegang pilihan sehingga ke tamat tempoh — kebanyakan peniaga runcit menutup kedudukan awal, jadi lantai flat -$6.50 jarang penting dalam amalan. Penafinya: menutup awal mengubah *bila* anda menyedari kerugian, bukan arah di mana nilai masa bekerja. Theta (pelupusan masa, dicakup dalam pelajaran seterusnya) mengikis pilihan panjang yang tidak menguntungkan setiap hari ia dipegang, sama ada ditutup awal atau tidak — diagram payoff menerangkan destinasi yang kedudukan itu hanyut ke arah sepanjang masa, bukan sekadar peraturan yang hanya berlaku pada loceng akhir.
 
 <ChatWith agent="market_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="Anda membeli pilihan call AAPL dengan harga larian $200 dengan premium $6.50. AAPL ditutup pada $195 pada tarikh luput. Apakah hasil (payoff)?"
+  question="Anda membeli pilihan panggilan (call) AAPL dengan harga pelaksanaan $200 sebagai ilustrasi dengan premium $6.50. AAPL berakhir pada $195 pada tarikh luput. Apakah hasil (payoff)?"
   options={[
-    "$0.00, kerana pilihan itu cukup dekat dengan harga larian untuk mencapai titik pulih modal",
-    "$5.00, nilai intrinsik yang akan dimiliki oleh pilihan jika dilaksanakan",
-    "-$6.50, kerugian penuh premium, kerana call tamat di luar wang (out of the money)",
-    "-$1.50, kerugian separa yang mencerminkan betapa dekatnya $195 dengan harga larian $200"
+    "$0.00, kerana pilihan itu cukup dekat dengan harga pelaksanaan untuk mencapai titik impas",
+    "$5.00, nilai intrinsik yang akan dimiliki pilihan jika dilaksanakan",
+    "-$6.50, kerugian penuh premium, kerana panggilan berakhir di luar wang (out of the money)",
+    "-$1.50, kerugian separa yang mencerminkan betapa dekatnya $195 dengan harga pelaksanaan $200"
   ]}
   answer={2}
-  explanation="Pada $195, call tersebut adalah di luar wang — tiada siapa yang akan membayar $200 untuk saham yang bernilai $195 — jadi nilai intrinsik adalah $0 dan hasil adalah kerugian penuh premium sebanyak -$6.50. Hasil di bawah harga larian tidak berskala dengan kedekatan; ia rata pada -$6.50 di mana-mana pada atau di bawah $200."
+  explanation="Pada $195, panggilan tersebut berada di luar wang — tiada siapa yang akan membayar $200 untuk saham bernilai $195 — jadi nilai intrinsik ialah $0 dan hasil ialah kerugian penuh premium -$6.50. Hasil di bawah harga pelaksanaan tidak berskala dengan kedekatan; ia malar pada -$6.50 di mana-mana pada atau di bawah $200."
 />
 
 <Quiz
-  question="Berapakah harga asas yang perlu dicapai oleh AAPL pada tarikh luput agar call ini mencapai titik pulih modal (break-even)?"
+  question="Berapakah harga asas yang perlu dicapai oleh AAPL pada tarikh luput agar panggilan ini mencapai titik impas?"
   options={[
-    "$200.00 — tepat pada harga larian",
-    "$193.50 — harga larian tolak premium",
-    "$213.00 — harga larian tambah dua kali ganda premium",
-    "$206.50 — harga larian tambah premium"
+    "$200.00 — tepat pada harga pelaksanaan",
+    "$193.50 — harga pelaksanaan tolak premium",
+    "$213.00 — harga pelaksanaan tambah dua kali ganda premium",
+    "$206.50 — harga pelaksanaan tambah premium"
   ]}
   answer={3}
-  explanation="Titik pulih modal untuk call panjang (long call) ialah harga larian ditambah premium: $200 + $6.50 = $206.50. Pada harga itu, nilai intrinsik ($6.50) mengimbangi tepat premium yang dibayar, jadi hasil ialah $0.00 — mencapai harga larian itu sendiri ($200) masih meninggalkan premium penuh sebagai kerugian."
+  explanation="Titik impas untuk panggilan panjang ialah harga pelaksanaan ditambah premium: $200 + $6.50 = $206.50. Pada harga itu, nilai intrinsik ($6.50) mengimbangi tepat premium yang dibayar, jadi hasil ialah $0.00 — mencapai harga pelaksanaan itu sendiri ($200) masih meninggalkan premium penuh sebagai kerugian."
 />
 
 <Quiz
-  question="AAPL ditutup pada tepat $200.00 pada tarikh luput — tepat pada harga larian, selepas meningkat dari $180. Seorang pedagang berkata 'Saya betul tentang arah, jadi saya sepatutnya hampir pulih modal.' Menggunakan nilai intrinsik, nilai masa, dan pengiraan titik pulih modal dari pelajaran ini, mengapa itu salah?"
+  question="AAPL berakhir pada tepat $200.00 pada tarikh luput — tepat pada harga pelaksanaan, selepas meningkat sepanjang jalan dari $180. Seorang pedagang berkata 'Saya betul tentang arah, jadi saya sepatutnya hampir impas.' Menggunakan nilai intrinsik, nilai masa, dan matematik titik impas dari pelajaran ini, mengapa itu salah?"
   options={[
-    "Pada $200, call mempunyai sifar nilai intrinsik kerana ia tidak berada di atas harga larian, jadi premium penuh $6.50 hilang — arah sahaja tidak cukup, asas perlu mengatasi harga larian ditambah premium yang dibayar, iaitu $206.50, sebelum sebarang keuntungan muncul",
-    "Pedagang itu betul — menjadi betul tentang arah sentiasa menghasilkan hasil pulih modal atau lebih baik tanpa mengira premium yang dibayar",
-    "Pedagang itu salah hanya kerana AAPL sepatutnya ditutup di atas $220 untuk pulih modal",
-    "Pedagang itu salah kerana nilai masa sentiasa sama dengan sifar tanpa mengira betapa dekatnya saham dengan harga larian"
+    "Pada $200, panggilan mempunyai sifar nilai intrinsik kerana ia tidak berada di atas harga pelaksanaan, jadi seluruh premium $6.50 hilang — arah sahaja tidak cukup, asas perlu mengatasi harga pelaksanaan ditambah premium yang dibayar, iaitu $206.50, sebelum sebarang keuntungan muncul",
+    "Pedagang itu betul — menjadi betul tentang arah sentiasa menghasilkan hasil impas atau lebih baik tanpa mengira premium yang dibayar",
+    "Pedagang itu salah hanya kerana AAPL sepatutnya berakhir di atas $220 untuk mencapai titik impas",
+    "Pedagang itu salah kerana nilai masa sentiasa sama dengan sifar tidak kira betapa dekatnya saham dengan harga pelaksanaan"
   ]}
   answer={0}
-  explanation="Mencapai harga larian tidak sama dengan mencapai titik pulih modal. Pada $200 tepat, nilai intrinsik masih $0 — call hanya mula mempunyai nilai pelaksanaan di atas $200 — jadi seluruh premium $6.50 hilang. Peningkatan dari $180 ke $200 adalah nyata dan dipanggil dengan betul, tetapi ia berhenti $6.50 sebelum premium yang dibayar dapat dipulihkan."
+  explanation="Mencapai harga pelaksanaan tidak sama dengan mencapai titik impas. Pada $200 tepat, nilai intrinsik masih $0 — panggilan hanya mula mempunyai nilai pelaksanaan di atas $200 — jadi seluruh premium $6.50 hilang. Peningkatan dari $180 ke $200 adalah nyata dan dipanggil dengan betul, tetapi ia berhenti $6.50 sebelum mana premium yang dibayar dapat dipulihkan."
 />
 
 ## Cuba sendiri
 
-Buka Market Analyst 1-on-1 dan pilih penanda harga (ticker) sebenar pada senarai pantauan anda. Tanya: "Jika saya melihat rantai pilihan penanda harga ini pada harga pelaksanaan di atas harga semasa, premium apa yang akan membezakan antara betul mengenai arah daripada benar-benar untung?" Gunakan penjelasan latihan AMI untuk memeriksa matematik titik pecah anda sendiri.
+Buka Market Analyst 1-on-1 dan pilih ticker sebenar pada senarai pantauan anda. Tanya: "Jika saya melihat rantaian pilihan (option chain) untuk ticker ini pada harga pelaksanaan di atas harga semasa, premium manakah yang akan membezakan antara betul mengenai arah dan benar-benar menjana keuntungan?" Gunakan penjelasan latihan AMI untuk memeriksa pengiraan titik pulangan modal anda sendiri.
 
-## Penarikan Kesimpulan
+## Penutup
 
-Payoff pilihan pada tamat tempoh bukan pergerakan saham — ia ialah pergerakan saham tolak premium yang anda bayar, dan sehingga anda melepasi titik pecah, menjadi betul mengenai arah masih kehilangan wang.
+Payoff pilihan pada tamat tempoh bukan pergerakan saham — ia ialah pergerakan saham tolak premium yang anda bayar, dan sehingga anda melepasi titik pulangan modal, menjadi betul mengenai arah masih menyebabkan kerugian.
 
-*Asal usul: penguraian payoff pilihan standard — nilai intrinsik ditambah nilai masa — yang digunakan merentasi semua model penentuan harga pilihan yang disenaraikan di bursa.*
+*Asal usul: penguraian payoff pilihan piawai — nilai intrinsik ditambah nilai masa — yang digunakan di setiap model penentuan harga pilihan yang disenaraikan di bursa.*

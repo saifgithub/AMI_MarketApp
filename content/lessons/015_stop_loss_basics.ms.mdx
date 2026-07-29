@@ -1,6 +1,6 @@
 ---
 id: "015_stop_loss_basics"
-title: "Asas stop-loss"
+title: "Asas Stop-loss"
 duration_min: 5
 level: 1
 module: 3
@@ -11,57 +11,57 @@ topic: "stop_loss"
 prerequisites: ["014_position_sizing_basics"]
 tags: ["risk", "stop_loss", "execution"]
 agent_callouts: ["trader"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Asas stop-loss
 
-Stop-loss ialah harga di mana tesis perdagangan anda salah. Bukan "cukup salah untuk rasa tidak selesa" — salah, habis. Tetapkan sebelum masuk, tulis dalam tiket, dan hormati tanpa runding semula. Tujuan stop bukan untuk meminimumkan kerugian; ia untuk menukar "saya salah" daripada keputusan emosi yang anda buat semasa drawdown kepada keputusan struktur yang anda sudah buat ketika tenang. Perisian ini merangkumi di mana stop sepatutnya diletakkan, mengapa kebanyakan pemula meletakkannya salah, dan apa yang menjadikan stop boleh disangkal.
+Stop-loss ialah harga di mana tesis perdagangan anda salah. Bukan "cukup salah untuk rasa tidak selesa" — salah, habis. Tetapkan sebelum entry, tulis dalam tiket, dan hormati tanpa runding semula. Tujuan stop bukan untuk meminimumkan kerugian; ia untuk menukar "saya salah" daripada keputusan emosi yang anda buat semasa drawdown kepada keputusan struktur yang anda sudah buat ketika tenang. Pelajaran ini merangkumi di mana stop perlu diletakkan, mengapa kebanyakan pemula meletakkannya salah, dan apa yang menjadikan stop boleh disangkal.
 
 <Animation name="stop_loss_trigger" />
 
-## Bagaimana ia berlaku dalam pasaran sebenar
+## Bagaimana ia berlaku di pasaran sebenar
 
-TSLA menembus julat tiga minggu, menutup pada $246 dengan isipadu tinggi. Market Analyst menandakan paras sokongan baru pada paras tinggi julat sebelumnya iaitu $238 — paras ini bertahan dua kali semasa kenaikan, dan sebarang penutupan berpanjangan di bawahnya membunuh tesis penembusan. Trader membina tiket: masuk $246, stop $237.50 (sedikit di bawah $238 untuk memberi ruang kepada wick noise), sasaran $268. Risiko per saham = $8.50, ganjaran = $22, nisbah R:R = 2.6.
+TSLA menembus keluar dari julat tiga minggu, menutup pada $246 dengan isipadu tinggi. Market Analyst menandakan tahap tinggi julat sebelumnya pada $238 sebagai lantai sokongan baharu — tahap ini bertahan dua kali semasa kenaikan, dan sebarang penutupan berpanjangan di bawahnya membunuh tesis breakout. Trader membina tiket: entry $246, stop $237.50 (sedikit di bawah $238 untuk memberi ruang bagi noise wick), target $268. Risiko per-saham = $8.50, ganjaran = $22, R:R = 2.6.
 
-Dua hari kemudian TSLA turun ke $239.10 intraday, kemudian menutup pada $244. Stop tidak kena. Hari berikutnya TSLA gap turun ke $235 dan menutup pada $233.80. Stop kena pada penutupan — tesis disangkal oleh definisi: harga menutup di bawah paras yang sepatutnya bertahan. Anda keluar. Perdagangan rugi $12.20 per saham (slippage pada gap), bukan $8.50 yang dirancang, tetapi struktur kekal: satu perdagangan adalah kira-kira 1% daripada akaun anda, dan anda hidup untuk mengambil setup seterusnya. Di Bursa Malaysia, padanan pada TENAGA mungkin masuk RM14.20, stop RM13.85 di bawah paras rendah mingguan yang bertahan — logik sama, nombor mutlak lebih kecil.
+Dua hari kemudian TSLA turun ke $239.10 intraday, kemudian menutup pada $244. Stop tidak kena. Hari berikutnya TSLA gap down ke $235 dan menutup pada $233.80. Stop kena pada penutupan — tesis tidak sah secara definisi: harga menutup di bawah tahap yang sepatutnya bertahan. Anda keluar. Perdagangan rugi $12.20 per-saham (slippage pada gap), bukan $8.50 yang dirancang, tetapi struktur kekal: satu perdagangan adalah kira-kira 1% daripada akaun anda, dan anda hidup untuk mengambil setup seterusnya. Di Bursa Malaysia, persamaan pada TENAGA mungkin entry RM14.20, stop RM13.85 di bawah tahap mingguan yang bertahan — logik sama, nombor mutlak lebih kecil.
 
 ## Perangkap
 
-Perangkap ialah meletakkan stop pada "jumlah dolar yang saya sanggup rugi" bukannya pada "harga yang membuktikan tesis salah." Pemula memilih peratusan — "saya akan keluar jika ia turun 5%" — dan tampalkannya pada tiket tanpa mengira di mana paras penyangalan sebenar carta berada. Ini menjamin salah satu daripada dua kegagalan: sama ada stop lebih ketat daripada noise biasa saham (anda digoncang keluar, kemudian perdagangan itu bergerak ke arah anda tanpa anda), atau ia lebih longgar daripada penyangalan carta (anda kekal dalam lama selepas setup telah mati, menukar kerugian 1% kepada 3%). Model mental yang betul: carta memilih paras stop, matematik memilih bilangan saham.
+Perangkap ialah meletakkan stop pada "jumlah dolar yang saya sanggup rugi" bukannya pada "harga yang membuktikan tesis salah." Pemula memilih peratusan — "saya akan keluar jika ia turun 5%" — dan tampalkannya pada tiket tanpa mengira di mana tahap ketidak sahihan sebenar carta berada. Ini menjamin salah satu daripada dua kegagalan: sama ada stop lebih ketat daripada noise biasa stok (anda digoncang keluar, kemudian perdagangan berjalan ke arah anda tanpa anda), atau ia lebih longgar daripada ketidak sahihan carta (anda kekal dalam lama selepas setup mati, menukar kerugian 1% kepada 3%). Model mental yang betul: carta memilih tahap stop, matematik memilih bilangan saham.
 
 <ChatWith agent="trader" />
 
 ## Kuiz
 
 <Quiz
-  question="Anda masuk NVDA pada $480 dengan henti rugi pada $470. NVDA turun ke $471.20 intraday atas berita, kemudian tutup pada $478. Apa yang perlu anda buat?"
+  question="Anda masuk NVDA pada $480 dengan henti rugi pada $470. NVDA turun ke $471.20 dalam sesi berita, kemudian tutup pada $478. Apa yang perlu anda buat?"
   options={[
     "Ambil untung separa untuk mengunci keuntungan sebelum penurunan seterusnya.",
-    "Keluar segera — pergerakan intraday membuktikan volatiliti terlalu tinggi.",
-    "Gerakkan henti rugi ke $465 untuk memberi ruang lebih pada dagangan kerana hampir menyentuh.",
-    "Jangan buat apa-apa. Henti rugi pada $470; harga tutup pada $478, jadi tesis masih utuh."
+    "Keluar segera — pergerakan dalam sesi membuktikan volatiliti terlalu tinggi.",
+    "Gerakkan henti rugi ke $465 untuk memberi ruang lebih kepada dagangan kerana ia hampir menyentuh.",
+    "Jangan buat apa-apa. Henti rugi berada pada $470; harga tutup pada $478, jadi tesis masih utuh."
   ]}
   answer={3}
-  explanation="Jawapan salah yang memikat ialah 'gerakkan henti rugi ke $465' — ia nampak seperti fleksibiliti. Tetapi melebarkan henti rugi selepas masuk adalah tingkah laku tepat yang henti rugi wujud untuk cegah: ia menukar 'salah' kepada 'belum salah'. Henti rugi ditetapkan pada harga yang membatalkan tesis. Harga tidak tutup di bawahnya. Dagangan baik; matematik tepat; jangan buat apa-apa."
+  explanation="Jawapan salah yang menggoda ialah 'gerakkan henti rugi ke $465' — ia nampak fleksibel. Tetapi memperlebar henti rugi selepas masuk adalah tingkah laku tepat yang henti rugi wujud untuk cegah: ia menukar 'salah' menjadi 'belum salah'. Henti rugi ditetapkan pada harga yang membatalkan tesis. Harga tidak tutup di bawahnya. Dagangan baik; matematik tepat; jangan buat apa-apa."
 />
 
 <Quiz
-  question="Dua pedagang beli AAPL pada $200 dengan risiko $100 setiap dagangan. Henti rugi berdasarkan carta Pedagang A pada $195. Pedagang B tetapkan henti rugi 2% rata pada $196. Setup sama, sasaran $215. Henti rugi siapa yang kukuh secara struktur?"
+  question="Dua pedagang membeli AAPL pada $200 dengan risiko $100 setiap dagangan. Henti rugi berasaskan carta Pedagang A berada pada $195. Pedagang B menetapkan henti rugi rata 2% pada $196. Setup sama, sasaran sama $215. Henti rugi siapa yang kukuh secara struktur?"
   options={[
-    "Pedagang A — henti rugi diletakkan pada harga yang membatalkan setup, bukan peratusan sewenang-wenangnya; Pedagang B akan tersentak oleh hingar yang tidak melanggar tesis.",
+    "Pedagang A — henti rugi diletakkan pada harga yang membatalkan setup, bukan peratusan sewenang-wenangnya; Pedagang B akan terkeluar oleh hingar yang tidak melanggar tesis.",
     "Pedagang B — 2% adalah peraturan profesional standard.",
     "Kedua-duanya setara kerana risiko dolar sama.",
     "Tiada — kedua-dua henti rugi terlalu ketat untuk saham $200."
   ]}
   answer={0}
-  explanation="Jawapan salah yang menggoda ialah 'kedua-dua setara — $100 sama'. Risiko dolar identikal, tetapi maksud struktur tidak sama. Henti rugi Pedagang A boleh disangkal: 'jika AAPL tutup di bawah $195, tesis saya mati.' Henti rugi Pedagang B hanyalah bajet — $196 mungkin masih dalam hingar harian normal, jadi dagangan boleh dihentikan tanpa setup gagal sebenar. Henti rugi mesti menandakan harga di mana tesis salah, bukan harga di mana dompet sakit."
+  explanation="Jawapan salah yang memikat ialah 'kedua-duanya setara — $100 sama'. Risiko dolar identikal, tetapi makna struktur tidak sama. Henti rugi Pedagang A boleh disangkal: 'jika AAPL tutup di bawah $195, tesis saya mati.' Henti rugi Pedagang B hanyalah bajet — $196 mungkin masih dalam hingar harian normal, jadi dagangan boleh dihentikan tanpa setup sebenar gagal. Henti rugi mesti menandakan harga di mana tesis salah, bukan harga di mana dompet sakit."
 />
 
 ## Cuba sendiri
 
-Buka <Term id="ami_decision_journal" /> dan cari mana-mana perdagangan tertutup di mana anda disingkirkan oleh stop. Tanya diri sendiri: adakah stop diletakkan di mana penyangalan carta sebenarnya berada, atau pada peratusan bulat? Kemudian buka <Term id="ami_one_on_one" /> dengan Trader, tampal ticker yang sama, dan tanya "Di mana anda akan meletakkan stop dan mengapa?" Bandingkan.
+Buka <Term id="ami_decision_journal" /> dan cari sebarang perdagangan tertutup di mana anda digoncang keluar. Tanya diri sendiri: adakah stop diletakkan di mana ketidak sahihan carta sebenarnya berada, atau pada peratusan bulat? Kemudian buka <Term id="ami_one_on_one" /> dengan Trader, tampal ticker yang sama, dan tanya "Di mana anda akan letakkan stop dan mengapa?" Bandingkan.
 
 ## Pengajaran
 

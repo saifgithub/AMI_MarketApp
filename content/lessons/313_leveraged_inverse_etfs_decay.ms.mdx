@@ -1,6 +1,6 @@
 ---
 id: "313_leveraged_inverse_etfs_decay"
-title: "ETF berleverage & songsang — perangkap peluruhan"
+title: "ETF berleverage & songsang — perangkap reputan"
 duration_min: 5
 level: 9
 module: 14
@@ -16,56 +16,56 @@ locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-21"
 updated_at: "2026-07-21"
 ---
-# ETF terleverage & songsang — perangkap reputasi
+# ETF tergerai & songsang — perangkap reputasi
 
-ETF terleverage 2x tidak menjanjikan pulangan indeks dua kali ganda untuk sebarang tempoh yang anda pilih — ia menjanjikan pulangan indeks dua kali ganda *untuk satu hari sahaja*, kemudian direset. Reset itu adalah keseluruhan cerita: sepanjang beberapa hari, pengkompaunan pendaraban yang direset harian terhadap pasaran yang bergegar dan tidak menentu menghasilkan keputusan yang boleh menyimpang dengan ketara, dan secara negatif, daripada "2x pergerakan indeks sebenar berbilang hari." Selepas pelajaran ini, anda akan mampu mengira mengapa ETF terleverage boleh rugi walaupun indeks asasnya berakhir rata atau malah naik.
+ETF tergerai 2x tidak menjanjikan pulangan dua kali ganda indeks pada mana-mana tempoh yang anda pilih — ia menjanjikan pulangan dua kali ganda indeks *untuk satu hari sahaja*, kemudian direset. Penyetelan semula itu adalah keseluruhan cerita: sepanjang beberapa hari, menggabungkan berbilang hari yang direset semula setiap hari terhadap pasaran yang volatil dan bergegar menghasilkan hasil yang boleh menyimpang dengan ketara, dan secara negatif, daripada "2x pergerakan multi-hari sebenar indeks." Selepas pelajaran ini, anda akan dapat mengira mengapa ETF tergerai boleh kehilangan wang walaupun indeks asasnya berakhir rata atau bahkan naik.
 
 ## Contoh
 
-Katakan indeks bermula pada 100. Hari 1 ia naik 10% ke 110. Hari 2 ia turun 10% (dari asas baru) kembali ke 99 — turun 1% dari mana ia bermula sepanjang dua hari, satu perjalanan pusingan yang realistik. ETF terleverage 2x yang mengesan indeks tersebut direset harian: Hari 1 ia mendapat 20% (2 × 10%), Hari 2 ia rugi 20% (2 × -10%). Bermula pada $100: Hari 1 → $120. Hari 2 → $120 × (1 − 0.20) = $96. Indeks asasnya rugi 1% sepanjang dua hari; ETF "2x" rugi 4% — empat kali ganda kerugian, bukan dua kali ganda, semata-mata daripada pengkompaunan harian melalui pembalikan. Jalankan corak bolak-balik yang bergegar yang sama selama beberapa minggu dan dana terleverage boleh mencairkan nilai dengan stabil walaupun indeks asasnya tidak bergerak ke mana-mana. Ini ialah reputasi volatiliti (juga dipanggil "beta slippage"): semakin pasaran bergegar ke sisi dengan volatiliti, semakin teruk prestasi terleverage yang direset harian berbanding pendaraban yang dinyatakan, tidak kira arah jangka panjang.
+Katakan indeks bermula pada 100. Hari 1 ia naik 10% kepada 110. Hari 2 ia jatuh 10% (dari asas baru) kembali ke 99 — turun 1% dari tempat ia bermula selama dua hari, satu perjalanan pusingan yang realistik. ETF tergerai 2x yang mengikuti indeks itu direset setiap hari: Hari 1 ia mendapat 20% (2 × 10%), Hari 2 ia kehilangan 20% (2 × -10%). Bermula pada $100: Hari 1 → $120. Hari 2 → $120 × (1 − 0.20) = $96. Indeks asasnya kehilangan 1% selama dua hari; ETF "2x" itu kehilangan 4% — empat kali ganda kerugian, bukan dua kali ganda, semata-mata daripada penggabungan harian melalui pembalikan. Jalankan corak bergegar bolak-balik yang sama selama berminggu-minggu dan dana tergerai boleh menipis nilai secara berterusan walaupun indeks asasnya tidak ke mana-mana. Ini adalah reputasi volatiliti (juga dipanggil "beta slippage"): semakin pasaran bergegar secara mendatar dengan volatiliti, semakin teruk prestasi leverage yang direset harian berbanding berbilang yang dinyatakan, tanpa mengira arah jangka panjang.
 
-Produk sebenar membawa amaran eksplisit mengenai ini: ETF terleverage dan songsang (simbol seperti TQQQ untuk pendedahan 3x Nasdaq-100, atau SQQQ untuk -3x) mendedahkan dalam prospektus mereka bahawa ia direka untuk memenuhi pendaraban yang dinyatakan hanya sepanjang satu hari perdagangan, dan bahawa tempoh pegangan melebihi itu membawa risiko pengkompaunan yang boleh menghasilkan keputusan yang jauh daripada apa yang dicadangkan oleh pengiraan "darabkan pulangan indeks" yang naif.
+Produk sebenar membawa amaran eksplisit tentang ini: ETF tergerai dan songsang (simbol seperti TQQQ untuk pendedahan 3x Nasdaq-100, atau SQQQ untuk -3x) mendedahkan dalam prospektus mereka bahawa mereka direka untuk memenuhi berbilang yang dinyatakan hanya selama satu hari perdagangan, dan bahawa tempoh pegangan melebihi itu membawa risiko penggabungan yang boleh menghasilkan hasil yang jauh daripada apa yang dicadangkan oleh pengiraan "darabkan pulangan indeks" yang naif.
 
 ## Perangkap
 
-Pemula melihat "ETF S&P 500 2x" dan memodelkannya secara mental sebagai "jika S&P 500 naik 8% tahun ini, saya untung 16%." Ia terasa seperti pendaraban mudah sepatutnya berfungsi. Model mental yang betul: pendaraban 2x direset setiap hari, dan terleverage yang direset harian dikompunkan — dalam pasaran yang bergegar, ia dikompunkan menentang anda, dan semakin laluan itu volatil, semakin jauh keputusan jatuh di bawah pendaraban naif, dan walaupun dalam pasaran yang mempunyai trend lancar, keputusan berbilang hari adalah hampir dua kali ganda tetapi tidak tepat dua kali ganda. Produk ini dibina dan didedahkan sebagai alat taktikal jangka pendek atau lindung nilai, bukan posisi beli dan pegang.
+Pemula melihat "ETF S&P 500 2x" dan memodelkannya secara mental sebagai "jika S&P 500 naik 8% tahun ini, saya mendapat 16%." Ia terasa seperti pendaraban mudah sepatutnya berfungsi. Model mental yang betul: berbilang 2x direset setiap hari, dan leverage yang direset harian digabungkan — dalam pasaran yang bergegar, ia menggabungkan terhadap anda, dan semakin laluan itu volatil, semakin jauh hasil jatuh di bawah berbilang naif, dan walaupun dalam pasaran yang mempunyai trend lancar, hasil multi-hari adalah hampir dua kali ganda tetapi tidak tepat dua kali ganda. Produk ini dibina dan didedahkan sebagai alat taktikal jangka pendek atau lindung nilai, bukan posisi beli-dan-pegang.
 
 ## Argumen terkuat
 
-Kes untuk menggunakan ETF terleverage secara disengajakan: seorang pedagang dengan pandangan arah jangka pendek yang kukuh — beberapa jam hingga beberapa hari, bukan berbulan-bulan — boleh menggunakan ETF terleverage untuk menyatakan pandangan itu tanpa akaun margin, kos pinjaman, atau risiko likuidasi posisi terleverage sebenar. Dalam pasaran yang mempunyai trend lancar (volatiliti rendah, satu arah) sepanjang tempoh pegangan pendek, pendaraban yang direset harian mengesan sasarannya dengan munasabah — masalah reputasi ialah masalah volatiliti dan tempoh pegangan secara khusus, bukan masalah terleverage yang sentiasa rosak. Penggugur: bandingkan pulangan berbilang hari yang direalisasikan oleh ETF terleverage dengan pendaraban naifnya, merentasi kedua-dua tempoh trend lancar dan tempoh bergegar ke sisi untuk indeks asasnya yang sama. Jika pengesanan kekal kukuh dalam trend dan gagal dalam keadaan bergegar, argumen terkuat itu betul mengenai *bila* terleverage berfungsi — yang tepat sebab mengapa ini ialah alat tempoh pegangan pendek, bukan jangka panjang.
+Kes untuk menggunakan ETF tergerai secara disengajakan: seorang pedagang dengan pandangan arah jangka pendek yang kuat — beberapa jam hingga beberapa hari, bukan berbulan-bulan — boleh menggunakan ETF tergerai untuk menyatakan pandangan itu tanpa akaun margin, kos pinjaman, atau risiko likuidasi posisi tergerai sebenar. Dalam pasaran yang mempunyai trend lancar (volatiliti rendah, satu arah) sepanjang tempoh pegangan pendek, berbilang yang direset harian mengikuti sasarannya dengan munasabah — masalah reputasi adalah khusus masalah volatiliti dan tempoh pegangan, bukan masalah leverage yang sentiasa rosak. Penggugur: bandingkan pulangan multi-hari yang direalisasikan ETF tergerai dengan berbilang naifnya, merentasi kedua-dua tempoh trend lancar dan tempoh bergegar mendatar untuk indeks asas yang sama. Jika pengesanan bertahan dalam trend dan gagal dalam bergegar, argumen terkuat itu betul tentang *bila* leverage berfungsi — yang tepat sebab mengapa ini adalah alat tempoh pegangan pendek, bukan jangka panjang.
 
 <ChatWith agent="market_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="Satu indeks bergerak 100 → 110 (Hari 1, +10%) → 99 (Hari 2, -10% daripada asas baru), jumlah bersih -1% selama dua hari. ETF terleveraj 2x bermula pada $100 naik ke $120 pada Hari 1, kemudian kehilangan 20% pada Hari 2. Apakah keputusan dua hari ETF tersebut, dan mengapa ia tidak sama dengan 2x daripada -1% indeks?"
+  question="Indeks bergerak 100 → 110 (Hari 1, +10%) → 99 (Hari 2, -10% daripada asas baharu), bersih -1% selama dua hari. ETF teragih 2x bermula pada $100 naik ke $120 pada Hari 1, kemudian kehilangan 20% pada Hari 2. Apakah keputusan dua hari ETF tersebut, dan mengapa ia tidak sama dengan 2x daripada kerugian indeks -1%?"
   options={[
-    "ETF berakhir pada $96, keputusan -4% — kerana pendarab 2x ditetapkan semula dan terkumpul secara harian, bukan terhadap pergerakan jumlah dua hari",
-    "ETF berakhir pada $98, keputusan -2%, tepat dua kali ganda -1% indeks",
+    "ETF berakhir pada $96, keputusan -4% — kerana pendarab 2x ditetapkan semula dan terkumpul setiap hari, bukan terhadap pergerakan jumlah dua hari",
+    "ETF berakhir pada $98, keputusan -2%, tepat dua kali ganda kerugian indeks -1%",
     "ETF berakhir pada $100, rata, kerana hari naik dan hari turun saling membatalkan",
-    "ETF berakhir pada $102, keuntungan +2%, kerana leverage sentiasa memperkuatkan keuntungan pemegang saham dari masa ke masa"
+    "ETF berakhir pada $102, keuntungan +2%, kerana agihan sentiasa menguntungkan pemegang saham dari masa ke masa"
   ]}
   answer={0}
-  explanation="$120 × 0.80 = $96, keputusan dua hari -4% — empat kali ganda kerugian -1% indeks, bukan dua kali ganda. Pendarab tersebut dikenakan pada pulangan setiap hari secara individu, kemudian dikumpulkan; ia tidak pernah sekadar 2x dikenakan pada jumlah berbilang hari. Keputusan rata atau positif mengabaikan fakta bahawa hari turun dikira terhadap asas yang lebih tinggi selepas kenaikan, yang merupakan tepat di mana pengumpulan penetapan harian menyebabkan kerosakan."
+  explanation="$120 × 0.80 = $96, keputusan dua hari -4% — empat kali ganda kerugian indeks -1%, bukan dua. Pendarab tersebut terpakai kepada pulangan setiap hari secara individu, kemudian terkumpul; ia tidak pernah sekadar 2x yang diaplikasikan kepada jumlah berbilang hari. Keputusan rata atau positif mengabaikan fakta bahawa hari turun dikira terhadap asas yang lebih tinggi selepas kenaikan, yang merupakan tepat di mana terkumpul harian menetapkan semula kesan merosakkannya."
 />
 
 <Quiz
-  question="Menggabungkan pelajaran ini dengan pelajaran pasif-vs-aktif, apakah perbezaan struktur terbesar antara ETF indeks pasaran luas (seperti satu yang menjejaki S&P 500) dan ETF terleveraj (seperti produk 2x atau 3x), dari segi tempoh pegangan yang sesuai?"
+  question="Menggabungkan pelajaran ini dengan pelajaran pasif-vs-aktif, apakah perbezaan struktur tunggal terbesar antara ETF indeks pasaran luas (seperti satu yang menjejak S&P 500) dan ETF teragih (seperti produk 2x atau 3x), dari segi tempoh pegangan yang sesuai?"
   options={[
     "Tiada perbezaan bermakna — kedua-duanya direka untuk dipegang secara kekal dengan risiko yang sama",
-    "ETF terleveraj sebenarnya lebih selamat untuk pegangan jangka panjang kerana pulangan jangkaannya yang lebih tinggi mengatasi sebarang reputan",
-    "Satu-satunya perbezaan adalah nisbah kos perkhidmatan, yang lebih tinggi pada produk terleveraj",
-    "Ralat penjejakan ETF indeks adalah seretan tahunan kecil dan perlahan yang sesuai untuk pegangan jangka panjang; pengumpulan penetapan harian ETF terleveraj boleh menghasilkan perbezaan tajam daripada pendarab yang dinyatakan dalam beberapa minggu dalam pasaran yang bergegar, menjadikannya tidak sesuai secara struktur untuk pegangan jangka panjang"
+    "ETF teragih sebenarnya lebih selamat untuk pegangan jangka panjang kerana pulangan jangkaan yang lebih tinggi mengatasi sebarang reputan",
+    "Satu-satunya perbezaan adalah nisbah perbelanjaan, yang lebih tinggi pada produk teragih",
+    "Ralat penjejakan ETF indeks adalah seretan tahunan kecil dan perlahan yang sesuai untuk pegangan jangka panjang; terkumpul harian-reset ETF teragih boleh menghasilkan perbezaan tajam daripada pendarab yang dinyatakan dalam masa beberapa minggu dalam pasaran yang bergegar, menjadikannya tidak sesuai secara struktur untuk pegangan jangka panjang"
   ]}
   answer={3}
-  explanation="Seretan kos utama ETF indeks standard (ralat penjejakan, nisbah kos perkhidmatan) adalah kecil dan kira-kira linear dari masa ke masa, konsisten dengan tempoh pegangan yang panjang. Mekanisme reputan ETF terleveraj adalah berbeza dari segi jenis, bukan darjah — ia didorong oleh pengumpulan harian melalui volatiliti, dan boleh menghapuskan nilai dalam beberapa minggu dalam pasaran yang bergegar tanpa mengira arah jangka panjang indeks. Itu adalah perbezaan struktur, bukan kebetulan. Nisbah kos perkhidmatan yang lebih tinggi pada produk terleveraj adalah nyata tetapi bukan risiko utama yang diterangkan dalam pelajaran ini — reputan akan wujud walaupun pada yuran sifar."
+  explanation="Seretan kos utama ETF indeks standard (ralat penjejakan, nisbah perbelanjaan) adalah kecil dan lebih kurang linear dari masa ke masa, konsisten dengan tempoh pegangan jangka panjang. Mekanisme reputan ETF teragih adalah berbeza dari segi jenis, bukan darjah — ia didorong oleh terkumpul harian melalui volatiliti, dan boleh menghapuskan nilai dalam masa beberapa minggu dalam pasaran bergegar tanpa mengira arah jangka panjang indeks. Itu adalah perbezaan struktur, bukan kebetulan. Nisbah perbelanjaan yang lebih tinggi pada produk teragih adalah nyata tetapi bukan risiko utama yang diterangkan dalam pelajaran ini — reputan akan wujud walaupun pada yuran sifar."
 />
 
 ## Cuba sendiri
 
-Dalam sesi 1-on-1 dengan Market Analyst, tanya: "Jika [simbol pada senarai pantauan anda] bergegar ke sisi selama dua minggu, apa kesan itu terhadap versi terleverage 2x-nya?" Gunakan jawapan ejen untuk memeriksa model mental anda mengenai reputasi terhadap contoh nyata semasa — ingat, respons AMI ialah penerangan latihan, bukan isyarat untuk memegang atau mengelakkan sebarang posisi sebenar.
+Dalam 1-on-1 dengan Penganalisis Pasaran, tanya: "Jika [simbol pada senarai pantauan anda] bergegar secara mendatar selama dua minggu, apa yang akan berlaku kepada versi tergerai 2x-nya?" Gunakan jawapan ejen untuk memeriksa model mental anda tentang reputasi terhadap contoh konkrit semasa — ingat jawapan AMI adalah penjelasan latihan, bukan isyarat untuk memegang atau mengelakkan sebarang posisi sebenar.
 
 ## Intipati
 
-Pendaraban ETF terleverage ialah janji tentang satu hari, bukan tempoh pegangan anda — semakin lama dan lebih bergegar pegangan tersebut, semakin jauh keputusan menyimpang daripada "darabkan indeks sahaja."
+Berbilang ETF tergerai adalah janji tentang satu hari, bukan tempoh pegangan anda — semakin lama dan bergegar pegangan itu, semakin jauh hasil menyimpang daripada "hanya darabkan indeks."

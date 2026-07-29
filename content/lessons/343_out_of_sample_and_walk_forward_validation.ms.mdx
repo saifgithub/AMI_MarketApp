@@ -1,6 +1,6 @@
 ---
 id: "343_out_of_sample_and_walk_forward_validation"
-title: "Validasi luar-sampel & laluan berjalan"
+title: "Validasi luar sampel & berjalan ke hadapan"
 duration_min: 5
 level: 12
 module: 21
@@ -11,56 +11,56 @@ topic: "out_of_sample_validation"
 prerequisites: ["342_overfitting_and_curve_fitting"]
 tags: ["out-of-sample", "walk-forward", "validation", "quant"]
 agent_callouts: ["trader"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-21"
 updated_at: "2026-07-21"
 ---
 # Validasi luar-sampel & laluan-maju
 
-Ujian luar-sampel bermaksud menguji strategi pada data yang tidak pernah digunakan untuk penalaan — tempoh pemegang yang tidak pernah dilihat oleh pengoptimum. Validasi laluan-maju melanjutkan ini kepada proses yang boleh diulang: tala pada satu tetingkap, uji pada tetingkap berikutnya yang tidak tersentuh, kemudian gerakkan ke hadapan dan ulangi. Pemegang adalah suci kerana ia adalah satu-satunya jawapan jujur kepada masalah terlalu-fit (overfitting) — strategi yang hanya berfungsi baik pada data yang telah dipadankannya sebenarnya tidak diuji langsung; ia hanya diterangkan.
+Ujian luar-sampel bermaksud memeriksa strategi pada data yang tidak pernah digunakan untuk penalaan — tempoh simpanan yang tidak pernah dilihat oleh pengoptimum. Validasi laluan-maju melanjutkan ini kepada proses yang boleh diulang: lakukan penalaan pada satu tetingkap, uji pada tetingkap berikutnya yang tidak tersentuh, kemudian gerakkan ke hadapan dan ulangi. Tempoh simpanan adalah suci kerana ia adalah satu-satunya jawapan yang jujur kepada masalah terlalu padan — strategi yang hanya berprestasi baik pada data yang telah dipadankannya sebenarnya tidak diuji sama sekali; ia hanya diterangkan.
 
 ## Contoh
 
-Ingatlah peraturan kadar-menang 65% dari pelajaran backtesting: EV dalam-sampel ialah (0.65 × $150) + (0.35 × -$100) = **+$62.50 per dagangan**, pada sejarah 300 dagangan peraturan itu dibina dan ditala. Sekarang jalankan peraturan yang sama, tanpa perubahan, pada tempoh luar-sampel segar yang tidak pernah dilihat semasa penalaan. Katakanlah kadar-menang jatuh kepada 35% luar-sampel, dengan saiz kemenangan dan kerugian purata yang sama: EV = (0.35 × $150) + (0.65 × -$100) = $52.50 - $65 = **-$12.50 per dagangan**. Peraturan itu tidak hanya menjadi lebih lemah luar-sampel — nilai jangkaannya berbalik dari jelas positif (+$62.50) kepada jelas negatif (-$12.50), pada peraturan yang sama tepat dengan tiada apa-apa yang diubah kecuali data yang diujinya.
+Ingatlah peraturan kadar kemenangan 65% dari pelajaran backtesting: EV dalam-sampel ialah (0.65 × $150) + (0.35 × -$100) = **+$62.50 per dagangan**, pada sejarah 300 dagangan di mana peraturan itu dibina dan ditala. Sekarang jalankan peraturan yang sama, tanpa perubahan, pada tempoh luar-sampel baharu yang tidak pernah dilihat semasa penalaan. Katakan kadar kemenangan turun kepada 35% luar-sampel, dengan saiz keuntungan dan kerugian purata yang sama: EV = (0.35 × $150) + (0.65 × -$100) = $52.50 - $65 = **-$12.50 per dagangan**. Peraturan itu tidak hanya menjadi lebih lemah luar-sampel — nilai jangkaannya berubah dari jelas positif (+$62.50) kepada jelas negatif (-$12.50), pada peraturan yang sama persis dengan tiada apa-apa yang diubah kecuali data yang diujinya.
 
-Pembalikan itu adalah ujian jujur yang berfungsi seperti dirancang: ia menunjukkan "tepi" yang ditemui backtest dalam-sampel adalah sebahagian besarnya hasil daripada pemadanan kepada tetingkap sejarah khusus itu, bukan corak sebenar yang boleh diulang. Strategi yang bertahan melalui validasi laluan-maju — ditala pada tetingkap 1, bertahan pada tetingkap 2 yang tidak tersentuh, kemudian tetingkap 3, dan sebagainya — telah melepasi bar yang jauh lebih tinggi daripada satu yang hanya mempunyai nombor dalam-sampel untuk ditunjukkan.
+Percikan itu adalah ujian jujur yang berfungsi seperti yang dirancang: ia menunjukkan bahawa "tepi" yang ditemui oleh backtesting dalam-sampel sebenarnya adalah hasil daripada pemadanan kepada tetingkap sejarah khusus itu, bukan corak sebenar yang boleh diulang. Strategi yang bertahan melalui validasi laluan-maju — ditala pada tetingkap 1, bertahan pada tetingkap 2 yang tidak tersentuh, kemudian tetingkap 3, dan seterusnya — telah melepasi bar yang jauh lebih tinggi daripada satu yang hanya mempunyai nombor dalam-sampel untuk ditunjukkan.
 
 ## Perangkap
 
-Perangkapnya ialah melangkau pemegang sepenuhnya, atau lebih teruk, "mengintip" data luar-sampel dan menala semula strategi sehingga ia berfungsi baik di sana juga — yang secara senyap mengubah pemegang menjadi lebih banyak data dalam-sampel, memusnahkan satu-satunya ujian jujur yang tersedia. Ia terasa efisien untuk menggunakan setiap titik data untuk meningkatkan strategi. Kebiasaan yang betul: sediakan data luar-sampel sebelum sebarang penalaan bermula, jangan sesuaikan strategi berdasarkan bagaimana ia berfungsi di sana, dan anggap hasil luar-sampel strategi — bukan hasil dalam-sampelnya — sebagai nombor yang benar-benar penting.
+Perangkapnya ialah melangkau tempoh simpanan sepenuhnya, atau lebih teruk, "melihat" data luar-sampel dan menala semula strategi sehingga ia berprestasi baik di sana juga — yang secara senyap mengubah tempoh simpanan menjadi lebih banyak data dalam-sampel, memusnahkan satu-satunya ujian jujur yang tersedia. Ia terasa efisien untuk menggunakan setiap titik data untuk meningkatkan strategi. Tabiat yang betul: sediakan data luar-sampel sebelum sebarang penalaan bermula, jangan sesuaikan strategi berdasarkan prestasinya di sana, dan anggap keputusan luar-sampel strategi — bukan keputusan dalam-sampelnya — sebagai nombor yang benar-benar penting.
 
 <ChatWith agent="trader" />
 
 ## Kuiz
 
 <Quiz
-  question="Peraturan dengan EV dalam sampel +$62.50 (kadar kemenangan 65%, +$150/-$100) diuji pada tempoh luar sampel baharu di mana kadar kemenangannya jatuh kepada 35%, dengan saiz kemenangan dan kerugian purata yang sama. Apakah nilai jangkaan luar sampel?"
+  question="Peraturan dengan EV dalam sampel +$62.50 (kadar kemenangan 65%, +$150/-$100) diuji pada tempoh luar sampel baharu di mana kadar kemenangannya turun kepada 35%, dengan saiz keuntungan dan kerugian purata yang sama. Berapakah nilai jangkaan luar sampel?"
   options={[
     "+$12.50 — tanda kekal positif kerana saiz kemenangan dan kerugian tidak berubah",
     "+$52.50 — menggunakan hanya istilah sebelah kemenangan dalam pengiraan",
     "-$65 — menggunakan hanya istilah sebelah kerugian dalam pengiraan",
-    "-$12.50 — (0.35 × $150) + (0.65 × -$100) = $52.50 - $65 = -$12.50, satu perubahan penuh daripada +$62.50 dalam sampel"
+    "-$12.50 — (0.35 × $150) + (0.65 × -$100) = $52.50 - $65 = -$12.50, perubahan penuh dari dalam sampel +$62.50"
   ]}
   answer={3}
-  explanation="EV = (0.35 × $150) + (0.65 × -$100) = $52.50 - $65 = -$12.50. Nilai jangkaan strategi berubah tanda sepenuhnya antara pengujian dalam sampel dan luar sampel, walaupun saiz pembayaran kemenangan/kerugian tidak pernah berubah — hanya kadar kemenangan yang berubah, sekali diuji pada data yang peraturan itu tidak dihalakan."
+  explanation="EV = (0.35 × $150) + (0.65 × -$100) = $52.50 - $65 = -$12.50. Nilai jangkaan strategi berubah tanda sepenuhnya antara pengujian dalam sampel dan luar sampel, walaupun saiz pembayaran kemenangan/kerugian tidak pernah berubah — hanya kadar kemenangan yang berubah, sekali diuji pada data yang peraturan itu tidak disesuaikan pada."
 />
 
 <Quiz
-  question="Jika seorang pedagang, selepas melihat keputusan luar sampel -$12.50, kembali dan menghalakan semula parameter strategi sehingga ia berfungsi baik pada tempoh luar sampel yang sama juga, apa yang sebenarnya telah berlaku kepada kesahihan ujian?"
+  question="Jika seorang pedagang, selepas melihat hasil luar sampel -$12.50, kembali dan menyelaraskan semula parameter strategi sehingga ia menunjukkan prestasi baik pada tempoh luar sampel yang sama juga, apakah yang sebenarnya berlaku kepada kesahihan ujian tersebut?"
   options={[
-    "Tiada perubahan — menghalakan semula strategi selepas melihat keputusan luar sampel adalah sebahagian normal daripada pengesahan laluan berjalan",
-    "Data pemegang telah dimusnahkan — sekali strategi disesuaikan berdasarkan prestasi pada data itu, ia bukan lagi data tidak tersentuh yang peraturan itu tidak dihalakan; ia telah menjadi lebih data dalam sampel, dan strategi itu sebenarnya tidak diuji luar sampel langsung",
+    "Tiada perubahan — menyelaraskan semula strategi selepas melihat hasil luar sampel adalah sebahagian normal daripada pengesahan laluan-maju",
+    "Data tahanan telah dimusnahkan — sekali strategi disesuaikan berdasarkan bagaimana ia berprestasi pada data itu, ia bukan lagi data yang tidak tersentuh yang peraturan itu tidak disesuaikan pada; ia telah secara efektif menjadi lebih banyak data dalam sampel, dan strategi itu sebenarnya tidak diuji luar sampel langsung",
     "Strategi kini terbukti lebih kukuh, kerana ia kini telah disahkan pada dua tempoh berasingan",
-    "Keputusan luar sampel menjadi lebih boleh dipercayai semakin kerap proses penghalakan semula ini diulang"
+    "Hasil luar sampel menjadi lebih boleh dipercayai semakin kerap proses penyelarasan semula ini diulang"
   ]}
   answer={1}
-  explanation="Nilai penuh ujian luar sampel datang daripada strategi tidak pernah disesuaikan berdasarkan data itu. Pada saat pedagang menghalakan semula untuk memperbaiki nombor luar sampel, tempoh itu berfungsi sebagai data dalam sampel — 'pengesahan' tidak lagi mengesahkan apa-apa, dan mengulang proses ini menjadikan nombor akhir kurang boleh dipercayai, bukan lebih, kerana tiada data tidak tersentuh tinggal untuk diuji."
+  explanation="Nilai keseluruhan ujian luar sampel datang daripada strategi tidak pernah disesuaikan berdasarkan data itu. Pada saat pedagang menyelaraskan semula untuk meningkatkan nombor luar sampel, tempoh itu berfungsi sebagai data dalam sampel sebaliknya — 'pengesahan' itu tidak lagi mengesahkan apa-apa, dan mengulang proses ini menjadikan nombor akhir kurang boleh dipercayai, bukan lebih, kerana kini tiada data yang tidak tersentuh tinggal untuk diuji."
 />
 
 ## Cuba sendiri
 
-Ambil peraturan yang telah anda backtest dan bahagikan log dagangan sejarahnya kepada tetingkap penalaan awal dan tetingkap pemegang kemudian yang belum anda lihat. Kira EV peraturan secara berasingan pada setiap satu, tanpa menyesuaikan apa-apa berdasarkan hasil pemegang. Ingat: output latihan AMI adalah artifak latihan, bukan nasihat pelaburan.
+Ambil peraturan yang telah anda backtest dan bahagikan log dagangan sejarahnya kepada tetingkap penalaan awal dan tetingkap simpanan kemudian yang belum anda lihat. Hitung EV peraturan secara berasingan pada setiap satu, tanpa menyesuaikan apa-apa berdasarkan keputusan simpanan. Ingat: output latihan AMI adalah artifak latihan, bukan nasihat pelaburan.
 
 ## Intipati
 
-Nombor dalam-sampel strategi memberitahu anda apa yang ia padankan; hanya hasil luar-sampel yang tidak tersentuh memberitahu anda sama ada ia benar-benar berfungsi — jangan sesuaikan strategi berdasarkan pemegang, atau anda telah memusnahkan satu-satunya ujian jujur yang anda ada.
+Nombor dalam-sampel strategi memberitahu anda apa yang telah dipadankannya; hanya keputusan luar-sampel yang tidak tersentuh memberitahu anda sama ada ia benar-benar berfungsi — jangan sesuaikan strategi berdasarkan tempoh simpanan, atau anda telah memusnahkan satu-satunya ujian jujur yang anda ada.

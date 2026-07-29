@@ -1,6 +1,6 @@
 ---
 id: "054_pullback_strategy"
-title: "Strategi pullback"
+title: "Strategi Pullback"
 duration_min: 5
 level: 5
 module: 9
@@ -11,42 +11,42 @@ topic: "pullback"
 prerequisites: ["022_trend_direction", "025_pullbacks", "026_moving_averages", "016_risk_reward_ratio"]
 tags: ["strategy", "pullback", "trend", "entry"]
 agent_callouts: ["market_analyst", "trader"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Strategi pullback
+# Strategi Pullback
 
-Strategi pullback membeli trend naik yang telah mapan pada penurunan terkawal kembali ke tahap sokongan yang diketahui — biasanya purata bergerak (moving average) yang menaik atau tahap pecahan breakout sebelumnya — dan keluar jika sokongan tersebut gagal. Teori asas adalah trend tidak bergerak dalam garis lurus; ia bernafas. Pullback membolehkan anda masuk pada harga yang lebih baik daripada mengejar peregangan (extension), dengan henti rugi (stop) yang lebih ketat dan lebih boleh dipertahankan. Selepas pelajaran ini, anda boleh menentukan kemasukan pullback yang menyatakan dengan tepat penurunan mana yang layak dan penurunan mana yang sebenarnya adalah pecahan trend yang menyamar.
+Strategi pullback membeli trend naik yang telah mapan pada penurunan terkawal kembali ke tahap sokongan yang diketahui — biasanya purata bergerak (moving average) yang menaik atau tahap pecahan sebelumnya — dan keluar jika tahap sokongan tersebut gagal. Teori asas adalah trend tidak bergerak dalam garis lurus; ia bernafas. Pullback membolehkan anda masuk pada harga yang lebih baik daripada mengejar lanjutan (extension), dengan henti rugi (stop) yang lebih ketat dan lebih boleh dipertahankan. Selepas pelajaran ini, anda boleh menentukan kemasukan pullback yang menyatakan dengan tepat penurunan mana yang layak dan penurunan mana yang sebenarnya adalah perubahan trend yang tersembunyi.
 
 ## Bagaimana ia berlaku dalam pasaran sebenar
 
-Lihat MSFT pada pertengahan 2024. Saham ini telah menjejak trend dari kira-kira $370 pada Januari hingga $465 pada awal Julai, bergerak di atas purata bergerak 50-harinya. Pada awal Ogos, ia mengalami pullback dari ~$465 ke paras rendah hampir $395 pada 5 Ogos — sentuhan tajam terhadap purata bergerak 200-hari pada ~$405 — dan kemudian menutup kembali di atas purata 50-hari dalam masa sepuluh sesi. Strategi pullback masuk long pada penutupan kembali di atas purata 50-hari sekitar $415 dengan henti rugi sedikit di bawah paras rendah swing 5 Ogos pada $390. Sasaran: paras tinggi swing sebelumnya pada $465, atau henti rugi mengikut (trailing stop) di bawah purata 50-hari yang menaik. Risiko setiap saham: $25. Ganjaran ke sasaran pertama: $50. Nisbah ganjaran-kepada-risiko: 2:1.
+Lihat MSFT pada pertengahan 2024. Saham ini telah menjejaki trend dari kira-kira $370 pada Januari hingga $465 pada awal Julai, bergerak di atas purata bergerak 50-harinya. Pada awal Ogos, ia turun dari ~$465 ke paras rendah hampir $395 pada 5 Ogos — sentuhan tajam pada purata bergerak 200-hari pada ~$405 — dan kemudian menutup di atas purata bergerak 50-hari dalam masa sepuluh sesi. Strategi pullback masuk posisi beli (long) pada penutupan di atas purata bergerak 50-hari pada sekitar $415 dengan henti rugi sedikit di bawah paras rendah swing Ogos pada $390. Sasaran: paras tinggi swing sebelumnya pada $465, atau henti rugi mengikut (trailing stop) di bawah purata bergerak 50-hari yang menaik. Risiko setiap saham: $25. Ganjaran ke sasaran pertama: $50. Ganjaran-kepada-risiko: 2:1.
 
-Kriteria kemasukan: trend naik yang mapan (purata bergerak 50-hari condong ke atas, harga di atas purata bergerak 200-hari) TAMBAH satu pullback yang menyentuh tetapi tidak menutup secara bermakna di bawah purata bergerak 50-hari, TAMBAH satu lilin pengesahan yang menutup kembali di atas purata 50-hari. Henti rugi: di bawah paras rendah swing pullback. Sasaran: paras tinggi swing sebelumnya atau henti rugi mengikut. Pembatalan perdagangan individu: penutupan harian di bawah paras rendah swing pullback — itu bukan lagi pullback, itu adalah perubahan trend. Strategi ini GAGAL pada puncak trend utama di mana pullback pertama selepas larian yang berterusan sebenarnya adalah permulaan trend turun (fikirkan penurunan pertama dalam banyak nama pertumbuhan pada akhir 2021).
+Kriteria kemasukan: trend naik yang mapan (purata bergerak 50-hari condong ke atas, harga di atas purata bergerak 200-hari) SERTA pullback yang menyentuh tetapi tidak menutup secara bermakna di bawah purata bergerak 50-hari, SERTA candle pengesahan yang menutup di atas purata bergerak 50-hari. Henti rugi: di bawah paras rendah swing pullback. Sasaran: paras tinggi swing sebelumnya atau henti rugi mengikut. Pembatalan perdagangan individu: penutupan harian di bawah paras rendah swing pullback — itu bukan lagi pullback, itu adalah perubahan trend. Strategi ini GAGAL di puncak trend utama di mana pullback pertama selepas runutan yang berterusan sebenarnya adalah permulaan trend turun (fikirkan penurunan pertama dalam banyak nama pertumbuhan pada akhir 2021).
 
 ## Perangkap
 
-Kesilapan pemula adalah membeli setiap penurunan tanpa membezakan pullback daripada pecahan breakdown. Setiap breakdown bermula sebagai "hanya pullback". Pedagang masuk long pada hari merah pertama, menontonnya turun lebih rendah, purata turun (averaging down) pada hari merah kedua, dan berakhir dengan mengurus kerugian 30% dalam apa yang sepatutnya menjadi pullback 5%. Model mental yang betul: pullback adalah penurunan yang memegang sokongan dan menutup kembali di atasnya. Sehingga penutupan pengesahan itu dicetak, anda hanya melihat, tidak membeli. Kos menunggu pengesahan adalah kehilangan paras rendah mutlak sebanyak beberapa peratus — kos tidak menunggu adalah masuk long semasa pullback satu-satunya dalam kerjaya anda yang sebenarnya bukan pullback.
+Kesilapan pemula adalah membeli setiap penurunan tanpa membezakan pullback daripada pecahan (breakdown). Setiap pecahan bermula sebagai "hanya pullback". Pedagang masuk posisi beli pada hari merah pertama, memerhatikannya turun lebih rendah, purata ke bawah (averaging down) pada hari merah kedua, dan berakhir dengan kerugian 30% dalam apa yang sepatutnya menjadi pullback 5%. Model mental yang betul: pullback adalah penurunan yang mengekalkan sokongan dan menutup di atasnya. Sehingga penutupan pengesahan itu dicetak, anda sedang memerhati, bukan membeli. Kos menunggu pengesahan adalah kehilangan paras rendah mutlak sebanyak beberapa peratus — kos tidak menunggu adalah berada dalam posisi beli semasa satu-satunya pullback dalam kerjaya anda yang sebenarnya bukan pullback.
 
 <ChatWith agent="trader" />
 
 ## Kuiz
 
 <Quiz
-  question="GOOGL berada dalam trend naik yang bersih di atas garis MA 50 hari yang meningkat pada $175. Harga turun semula dari $192 selama lima sesi dan menutup hari ini pada $176.50 — tepat pada garis 50 hari. Apa kata peraturan penurunan harga?"
+  question="GOOGL berada dalam trend naik yang bersih di atas purata bergerak 50-hari yang meningkat pada $175. Harga menarik balik dari $192 selama lima sesi dan menutup hari ini pada $176.50 — tepat pada garis 50-hari. Apa yang peraturan penarikan balik katakan?"
   options={[
-    "Pendek — penurunan harga menunjukkan kelemahan",
-    "Masuk posisi beli sekarang pada $176.50",
-    "Tunggu penutupan harian kembali di atas garis 50 hari dengan lilin pengesahan",
-    "Masuk separuh saiz dan tambah pada kelemahan"
+    "Pendek — penarikan balik menunjukkan kelemahan",
+    "Masuk panjang sekarang pada $176.50",
+    "Tunggu penutupan harian kembali di atas garis 50-hari dengan lilin pengesahan",
+    "Masuk saiz separuh dan tambah pada kelemahan"
   ]}
   answer={2}
-  explanation="Garis 50 hari sedang diuji, bukan disahkan. Masuk pada sentuhan — masuk beli sekarang pada $176.50 — adalah kesilapan penurunan harga yang paling biasa — anda tiada bukti sokongan sedang bertahan, dan henti rugi anda mesti terlalu ketat atau terlalu lebar. Peraturan ini berkata tunggu penutupan di ATAS sokongan dengan lilin pengesahan hijau."
+  explanation="Garis 50-hari sedang diuji, bukan disahkan. Masuk pada titik sentuhan — masuk panjang sekarang pada $176.50 — adalah kesilapan penarikan balik yang paling biasa — anda tiada bukti sokongan sedang bertahan, dan henti rugi anda mesti terlalu ketat atau terlalu lebar. Peraturan ini mengatakan tunggu penutupan kembali DI ATAS sokongan dengan lilin pengesahan hijau."
 />
 
 <Quiz
-  question="Anda mengambil posisi beli pada penurunan harga AMZN pada $185 dengan henti rugi pada $178 (rendah ayunan). Sasaran ganjaran-kepada-risiko ialah 2:1. Mandat anda mengekalkan risiko per perdagangan pada 1% daripada akaun $30,000. Berapakah saiz posisi DAN harga sasaran pertama?"
+  question="Anda mengambil panjang penarikan balik pada AMZN pada $185 dengan henti rugi pada $178 (rendah ayunan). Sasaran ganjaran-kepada-risiko ialah 2:1. Mandat anda mengekalkan risiko per-trade pada 1% daripada akaun $30,000. Berapakah saiz kedudukan DAN harga sasaran pertama?"
   options={[
     "16 saham, sasaran $192",
     "42 saham, sasaran $199",
@@ -54,13 +54,13 @@ Kesilapan pemula adalah membeli setiap penurunan tanpa membezakan pullback darip
     "16 saham, sasaran $199"
   ]}
   answer={1}
-  explanation="Risiko per saham = 185 - 178 = $7. Risiko maksimum = 1% daripada $30,000 = $300. Saham = 300 / 7 = 42. Sasaran pada 2R = 185 + (2 * 7) = $199. Sintesis: satu strategi hanya sebaik ukuran posisi dan matematik keluarannya. Jawapan 16 saham / sasaran $199 ialah apa yang anda dapat jika anda keliru dengan matematik henti rugi — jawapan salah yang menggoda untuk pedagang yang saizkan berdasarkan 'merasa cukup kecil'."
+  explanation="Risiko per saham = 185 - 178 = $7. Risiko maks = 1% daripada $30,000 = $300. Saham = 300 / 7 = 42. Sasaran pada 2R = 185 + (2 * 7) = $199. Sintesis: satu strategi hanya sebaik ukuran kedudukan dan matematik keluarannya. Jawapan 16 saham / sasaran $199 ialah apa yang anda akan dapatkan jika anda keliru dengan matematik henti rugi — jawapan salah yang menggoda untuk pedagang yang saizkan oleh 'merasa cukup kecil'."
 />
 
 ## Cuba sendiri
 
-Buka <Term id="ami_decision_journal" /> dan cari perdagangan terkini di mana anda membeli penurunan yang berubah menjadi kerugian yang lebih besar. Dalam <Term id="ami_one_on_one" /> dengan Market Analyst, tampal ticker dan tarikh tersebut, dan tanya: "Adakah ini layak sebagai pullback yang sah pada masa kemasukan, atau ia sudah menjadi breakdown?" Gunakan jawapan itu untuk menyempurnakan peraturan pullback anda sebelum setup seterusnya.
+Buka <Term id="ami_decision_journal" /> dan cari perdagangan terkini di mana anda membeli penurunan yang berubah menjadi kerugian yang lebih besar. Dalam <Term id="ami_one_on_one" /> bersama Market Analyst, tampal ticker dan tarikh tersebut, dan tanya: "Adakah ini layak sebagai pullback yang sah pada masa kemasukan, atau ia sudah menjadi pecahan?" Gunakan jawapan itu untuk menyempurnakan peraturan pullback anda sebelum persediaan seterusnya.
 
-## Ringkasan
+## Penutup
 
-Pullback bukan pullback sehingga ia menutup kembali di atas sokongan — membeli sentuhan (tag) adalah membeli harapan. Tunggu pengesahan; bayar beberapa peratus kosnya untuk menjadi betul.
+Pullback bukan pullback sehingga ia menutup di atas sokongan — membeli sentuhan adalah membeli harapan. Tunggu pengesahan; bayar beberapa peratus yang ia koskan anda untuk menjadi betul.

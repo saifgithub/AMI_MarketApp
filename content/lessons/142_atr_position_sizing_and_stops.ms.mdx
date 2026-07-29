@@ -1,6 +1,6 @@
 ---
 id: "142_atr_position_sizing_and_stops"
-title: "ATR untuk saiz posisi dan penempatan henti"
+title: "ATR untuk saiz posisi dan penempatan henti rugi"
 duration_min: 6
 level: 2
 module: 5
@@ -15,64 +15,64 @@ locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# ATR untuk saiz posisi dan penempatan had rugi
+# ATR untuk saiz posisi dan penempatan henti
 
-<Lesson id="141_atr_as_volatility_gauge"/> membentangkan ATR sebagai penunjuk volatiliti. <Lesson id="101_volatility_adjusted_sizing"/> dan <Lesson id="102_atr_based_stops"/> merangkumi mekanik saiz posisi dan had rugi. Pelajaran ini menyatukan kedua-duanya ke dalam satu aliran kerja tunggal yang dijangka oleh <Term id="ami_pm_safety_floor" /> Pengurus Portofolio: dengan diberikan simbol saham, saiz akaun, had risiko mandat, dan gandaan ATR untuk had rugi, saiz posisi ditentukan secara aritmetik sepenuhnya. Tiada ruang untuk discretion. Disiplin ini adalah mekanikal, dan itulah intipatinya — keputusan saiz yang dibuat dalam keadaan panas adalah di mana mandat gagal.
+<Lesson id="141_atr_as_volatility_gauge"/> membentangkan ATR sebagai penunjuk volatiliti. <Lesson id="101_volatility_adjusted_sizing"/> dan <Lesson id="102_atr_based_stops"/> merangkumi mekanik saiz posisi dan henti. Pelajaran ini menyatukan keduanya ke dalam aliran kerja tunggal yang dijangka oleh Portfolio Manager's <Term id="ami_pm_safety_floor" />: dengan diberi simbol saham, saiz akaun, had risiko mandat, dan gandaan ATR untuk henti, saiz posisi ditentukan secara aritmetik sepenuhnya. Tiada discretion. Disiplin ini adalah mekanikal, dan itulah intipatinya — keputusan saiz yang dibuat dalam keadaan panas adalah di mana mandat mati.
 
-## Bagaimana ini berlaku dalam pasaran sebenar
+## Bagaimana ini berlaku di pasaran sebenar
 
-Ambil NVDA pada entri hipotetikal: harga 140, ATR(14) harian = $5.10. Saiz akaun $25,000. Had mandat: risiko 1% per dagangan.
+Ambil NVDA pada entri hipotetikal: harga 140, ATR(14) harian = $5.10. Saiz akaun $25,000. Had mandat: 1% risiko per dagangan.
 
 Langkah 1 — Bajet risiko: 1% daripada $25,000 = $250 risiko per dagangan.
 
-Langkah 2 — Jarak had rugi: had rugi berasaskan ATR standard ialah 1.5× ATR untuk ayunan jangka sederhana, 2× ATR untuk nama yang lebih tinggi volatilitinya, 1× ATR untuk setup dagangan harian yang ketat. Menggunakan 1.5× ATR untuk ayunan: jarak had rugi = $5.10 × 1.5 = $7.65 setiap saham. Tahap had rugi = 140 − 7.65 = 132.35.
+Langkah 2 — Jarak henti: henti berasaskan ATR standard ialah 1.5× ATR untuk ayunan jangka sederhana, 2× ATR untuk nama volatiliti tinggi, 1× ATR untuk setup dagangan hari yang ketat. Menggunakan 1.5× ATR untuk ayunan: jarak henti = $5.10 × 1.5 = $7.65 per saham. Tahap henti = 140 − 7.65 = 132.35.
 
-Langkah 3 — Kiraan saham: $250 / $7.65 = 32.7 saham → bulatkan ke bawah kepada 32 saham. Modal dilaburkan: 32 × $140 = $4,480, atau 17.9% daripada akaun. Risiko pada saham tersebut pada had rugi: 32 × $7.65 = $244.80 — berada dalam had $250.
+Langkah 3 — Kiraan saham: $250 / $7.65 = 32.7 saham → bulatkan ke bawah kepada 32 saham. Modal dikerahkan: 32 × $140 = $4,480, atau 17.9% daripada akaun. Risiko pada saham tersebut pada henti: 32 × $7.65 = $244.80 — dalam had $250.
 
-Aritmetik yang sama pada AAPL pada 230 dengan ATR(14) = $2.80 dan had rugi 1.5×: jarak had rugi = $4.20, kiraan saham = $250 / $4.20 = 59 saham, modal dilaburkan = $13,570 — 54% daripada akaun. Risiko $250 yang sama, tetapi modal dilaburkan berbeza secara ketara kerana volatiliti setiap saham adalah berbeza. Saham ATR-rendah mendapat lebih banyak saham dan lebih banyak modal untuk risiko yang sama; saham ATR-tinggi mendapat lebih sedikit saham dan kurang modal.
+Aritmetik yang sama pada AAPL pada 230 dengan ATR(14) = $2.80 dan henti 1.5×: jarak henti = $4.20, kiraan saham = $250 / $4.20 = 59 saham, modal dikerahkan = $13,570 — 54% daripada akaun. Risiko $250 yang sama, modal dikerahkan berbeza secara ketara kerana volatiliti per saham berbeza. Saham ATR rendah mendapat lebih banyak saham dan lebih banyak modal untuk risiko yang sama; saham ATR tinggi mendapat lebih sedikit saham dan kurang modal.
 
-Pernyataan boleh disangkal: menggunakan had rugi gandaan ATR dengan matematik kiraan saham mekanikal mengekalkan risiko dolar kira-kira malar merentasi posisi dengan volatiliti berbeza. Pembatalan: jika kerugian sebenar yang direalisasikan pada penutupan had rugi berubah lebih daripada 1.5× merentasi buku posisi dalam sampel 30+ dagangan, matematik tersebut sedang diabaikan atau had rugi sedang diubah — disiplin telah gagal.
+Pernyataan boleh disangkal: menerapkan henti gandaan ATR dengan matematik kiraan saham mekanikal mengekalkan risiko dolar kira-kira malar merentasi posisi berbeza volatiliti. Pembatalan: jika kerugian sebenar yang direalisasikan pada henti berbeza lebih daripada 1.5× merentasi buku posisi dalam sampel 30+ dagangan, matematik sedang diabaikan atau henti sedang digerakkan — disiplin telah gagal.
 
-Di Bursa Malaysia: PETRONAS pada RM5.40 dengan ATR harian sekitar RM0.07 = 1.3% daripada harga. Akaun RM30,000, risiko 1% = bajet RM300. Had rugi 1.5× ATR = RM0.105. Kiraan saham = RM300 / RM0.105 = 2,857 saham → bulatkan kepada 2,800 saham. Aliran kerja yang sama, mata wang berbeza.
+Di Bursa Malaysia: PETRONAS pada RM5.40 dengan ATR harian sekitar RM0.07 = 1.3% daripada harga. Akaun RM30,000, risiko 1% = bajet RM300. Henti 1.5× ATR = RM0.105. Kiraan saham = RM300 / RM0.105 = 2,857 saham → bulatkan kepada 2,800 saham. Aliran kerja yang sama, mata wang berbeza.
 
 ## Perangkap
 
-Perangkapnya ialah menggunakan jarak had rugi tetap merentasi semua simbol saham — "Saya sentiasa menggunakan had rugi $1" atau "Saya sentiasa menggunakan had rugi 2%." Had rugi dolar tetap bermakna posisi ATR-rendah akan tercekik oleh hingar (had rugi berada di dalam goyangan harian, jadi dagangan keluar secara pramatang) dan posisi ATR-tinggi akan berisiko secara melampau (had rugi berada di luar julat harian, jadi kerugian sebenar apabila ia berlaku adalah jauh lebih besar daripada bajet risiko dolar yang diandaikan). Had rugi peratusan tetap adalah sedikit lebih baik tetapi masih mengabaikan ciri volatiliti setiap nama.
+Perangkap ialah menggunakan jarak henti tetap merentasi semua simbol — "Saya selalu guna henti $1" atau "Saya selalu guna henti 2%." Henti dolar tetap bermaksud posisi ATR rendah tercekik oleh hingar (henti berada di dalam goyangan harian, jadi dagangan keluar secara pramatang) dan posisi ATR tinggi berisiko secara melampau (henti berada di luar julat harian, jadi kerugian yang direalisasikan apabila ia mengenai jauh lebih besar daripada bajet risiko dolar yang diandaikan). Henti peratus tetap adalah sedikit lebih baik tetapi masih mengabaikan ciri volatiliti per nama.
 
-Model mental yang betul: ATR ialah unit jarak dalam ruang volatiliti, bukan ruang dolar. Had rugi 1.5× ATR adalah boleh dibandingkan merentasi simbol saham kerana ia menyesuaikan dengan julat harian tipikal setiap saham. Saiz posisi menyesuaikan secara berkadar. Risiko dolar kekal malar. Lantai keselamatan Pengurus Portofolio mengesahkan aritmetik ini pada setiap tiket dagangan — jika matematik tidak sepadan, dagangan akan disekat. Itulah lantai sedang menjalankan tugasnya.
+Model mental yang betul: ATR ialah unit jarak dalam ruang volatiliti, bukan ruang dolar. Henti 1.5× ATR adalah boleh dibandingkan merentasi simbol kerana ia menyesuaikan dengan julat harian tipikal setiap saham. Saiz posisi menyesuaikan secara berkadar. Risiko dolar kekal malar. Lantai keselamatan Portfolio Manager's mengesahkan aritmetik ini pada setiap tiket dagangan — jika matematik tidak sepadan, dagangan akan disekat. Itulah lantai melakukan tugasnya.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Saiz akaun $20,000, had mandat 1% per dagangan. Anda sedang saizkan posisi beli pada saham pada $80 dengan ATR(14) harian = $2.50. Peraturan anda ialah henti 1.5× ATR. Berapa banyak saham boleh diambil, dan berapakah modal yang dikerahkan?"
+  question="Saiz akaun $20,000, had mandat 1% per dagangan. Anda sedang saizkan posisi long pada saham pada $80 dengan ATR(14) harian = $2.50. Peraturan anda ialah had kerugian 1.5× ATR. Berapa banyak saham yang boleh diambil, dan berapakah modal yang dilaburkan?"
   options={[
-    "200 saham; $16,000 modal dikerahkan",
-    "53 saham (atau 50 dibundarkan); kira-kira $4,240 modal dikerahkan. Pengiraan: $200 bajet risiko / ($2.50 × 1.5 jarak henti) = 53.3 saham; bulatkan ke bawah kepada 53 atau 50.",
-    "Maklumat tidak mencukupi — perlu mengetahui pulangan dijangka terlebih dahulu",
-    "100 saham; $8,000 modal dikerahkan"
+    "200 saham; $16,000 modal dilaburkan",
+    "53 saham (atau 50 dibundarkan); kira-kira $4,240 modal dilaburkan. Pengiraan: $200 bajet risiko / ($2.50 × 1.5 jarak had) = 53.3 saham; bundarkan ke bawah kepada 53 atau 50.",
+    "Maklumat tidak mencukupi — perlu tahu pulangan dijangka terlebih dahulu",
+    "100 saham; $8,000 modal dilaburkan"
   ]}
   answer={1}
-  explanation="Bajet risiko = 1% daripada $20,000 = $200. Jarak henti = 1.5 × $2.50 = $3.75. Saham = $200 / $3.75 ≈ 53. Modal = 53 × $80 ≈ $4,240. Jawapan salah yang menggoda (100 atau 200 saham) mengabaikan jarak henti dan hanya mengerahkan jumlah dolar tetap — tepat perangkap henti tetap yang dikenal pasti dalam pelajaran ini. Pulangan dijangka ialah soalan berasingan; saiz datang daripada pengiraan risiko dahulu."
+  explanation="Bajet risiko = 1% daripada $20,000 = $200. Jarak had = 1.5 × $2.50 = $3.75. Saham = $200 / $3.75 ≈ 53. Modal = 53 × $80 ≈ $4,240. Jawapan salah yang memikat (100 atau 200 saham) mengabaikan jarak had dan hanya melaburkan jumlah dolar tetap — tepat perangkap had tetap yang dikenal pasti dalam pelajaran ini. Pulangan dijangka adalah soalan berasingan; saiz datang dari pengiraan risiko dahulu."
 />
 
 <Quiz
-  question="Anda mempunyai bajet risiko $250 per dagangan. NVDA pada 140 dengan ATR(14) = $5.10 bersaiz kepada 32 saham ($4,480 modal). AAPL pada 230 dengan ATR(14) = $2.80 bersaiz kepada 59 saham ($13,570 modal). Mengapa posisi AAPL mengerahkan tiga kali ganda modal posisi NVDA apabila kedua-duanya menanggung risiko dolar $250 yang sama?"
+  question="Anda mempunyai bajet risiko $250 per dagangan. NVDA pada 140 dengan ATR(14) = $5.10 bersaiz kepada 32 saham ($4,480 modal). AAPL pada 230 dengan ATR(14) = $2.80 bersaiz kepada 59 saham ($13,570 modal). Mengapa posisi AAPL melaburkan tiga kali ganda modal posisi NVDA apabila kedua-duanya menanggung risiko dolar $250 yang sama?"
   options={[
-    "Ini adalah kesilapan — kedua-dua posisi harus mengerahkan modal yang sama",
-    "Saham ATR rendah mempunyai henti yang lebih ketat, yang memuatkan lebih banyak saham ke dalam bajet risiko dolar yang sama. Modal yang dikerahkan ialah hasil sampingan, bukan input — risiko dolar ialah had, bukan pendedahan modal. Lantai keselamatan Pengurus Portofolio memeriksa pengiraan risiko, bukan modal kasar.",
+    "Ini adalah kesilapan — kedua-dua posisi harus melaburkan modal yang sama",
+    "Saham ber-ATR rendah mempunyai had yang lebih ketat, yang memuatkan lebih banyak saham ke dalam bajet risiko dolar yang sama. Modal yang dilaburkan adalah hasil sampingan, bukan input — risiko dolar adalah had, bukan pendedahan modal. Lantai keselamatan Pengurus Portofolio memeriksa pengiraan risiko, bukan modal kasar.",
     "Aritmetik ini hanya berfungsi untuk salah satu daripada dua ticker",
-    "AAPL ialah syarikat yang lebih besar jadi ia layak mendapat lebih banyak modal"
+    "AAPL adalah syarikat yang lebih besar jadi ia layak mendapat lebih banyak modal"
   ]}
   answer={1}
-  explanation="Tujuan utama saiz ATR ialah modal yang dikerahkan berubah secara songsang dengan volatiliti per-saham sambil risiko dolar kekal malar. Jawapan salah yang menggoda (A) mahu pengagihan modal yang sama, yang terdengar intuitif tetapi bermakna risiko dolar akan berayun dengan volatiliti — tepat apa yang kerangka ini direka untuk cegah. Lantai keselamatan PM menguatkan risiko, bukan simetri modal, kerana risiko itulah yang memusnahkan akaun."
+  explanation="Tujuan utama saiz ATR adalah modal yang dilaburkan berubah secara songsang dengan volatiliti per-saham manakala risiko dolar kekal malar. Jawapan salah yang memikat (A) mahu pengagihan modal yang sama, yang terdengar intuitif tetapi bermaksud risiko dolar akan berayun dengan volatiliti — tepat apa yang kerangka kerja ini direka untuk cegah. Lantai keselamatan PM menguatkan risiko, bukan simetri modal, kerana risiko itulah yang memusnahkan akaun."
 />
 
 ## Cuba sendiri
 
-Buka <Term id="ami_decision_journal" /> dan cari tiga dagangan terkini anda. Untuk setiap satu, kira: (1) berapakah ATR(14) harian pada masa entri? (2) adakah jarak had rugi merupakan gandaan ATR, dolar tetap, atau peratusan tetap? (3) adakah kerugian yang direalisasikan atau dirancang sama dengan 1% daripada akaun pada had rugi? Jika mana-mana daripada tiga jawapan mendedahkan had rugi dolar tetap atau peratusan tetap, pelajaran ini adalah penyelesaiannya.
+Buka <Term id="ami_decision_journal" /> dan cari tiga dagangan terkini anda. Untuk setiap satu, kira: (1) apakah ATR(14) harian pada entri? (2) adakah jarak henti merupakan gandaan ATR, dolar tetap, atau peratus tetap? (3) adakah kerugian yang direalisasikan atau dirancang sama dengan 1% daripada akaun pada henti? Jika mana-mana daripada tiga jawapan mendedahkan henti dolar tetap atau peratus tetap, pelajaran ini adalah pembaikan.
 
-## Penutup
+## Pengambilan
 
-Saiz posisi ditentukan secara aritmetik: (bajet risiko akaun) dibahagikan dengan (gandaan ATR × ATR) memberikan kiraan saham. Modal dilaburkan adalah hasil sampingan; risiko ialah input — dan lantai keselamatan memeriksa matematik tersebut.
+Saiz posisi ditentukan secara aritmetik: (bajet risiko akaun) dibahagikan dengan (gandaan ATR × ATR) memberikan kiraan saham. Modal dikerahkan adalah hasil sampingan; risiko ialah input — dan lantai keselamatan memeriksa matematik tersebut.

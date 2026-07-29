@@ -1,6 +1,6 @@
 ---
 id: "273_uncoachable_means_no_prompt"
-title: "Tidak boleh diajar bermaksud peraturan tidak terdapat dalam sebarang arahan"
+title: "Uncoachable bermaksud peraturan tidak terdapat dalam mana-mana arahan"
 duration_min: 5
 level: 8
 module: 12
@@ -15,15 +15,15 @@ locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Uncoachable bermakna peraturan tidak berada dalam sebarang prompt
+# Uncoachable bermaksud peraturan tidak berada dalam sebarang prompt
 
-Apabila <Term id="ami" /> menyatakan bahawa <Term id="ami_pm_safety_floor" /> adalah *uncoachable*, itu adalah dakwaan arkitektur yang tepat, bukan salinan pemasaran. Peraturan yang paling mengikat — had saiz posisi, had penurunan (drawdown), penanda pengecualian — tidak wujud dalam sebarang prompt yang dihantar ke model bahasa asas. Ia wujud sebagai data <Term id="ami_mandate" /> dan sebagai logik perbandingan Python yang berjalan selepas perdebatan pasukan dagangan selesai. Coaching boleh menulis semula prompt. Coaching tidak boleh menulis semula laluan kod yang tidak disentuhnya. Pada akhir pelajaran ini, anda akan memahami apa maksud "uncoachable" dari segi di mana peraturan itu secara fizikal berada.
+Apabila <Term id="ami" /> menyatakan bahawa <Term id="ami_pm_safety_floor" /> adalah *uncoachable*, itu adalah dakwaan arkitektur yang tepat, bukan salinan pemasaran. Peraturan yang paling ketat mengikat — had saiz posisi, had penurunan (drawdown), dan penanda pengecualian — tidak wujud dalam sebarang prompt yang dihantar ke model bahasa asas. Ia wujud sebagai data <Term id="ami_mandate" /> dan sebagai logik perbandingan Python yang berjalan selepas perbincangan pasukan dagangan selesai. Coaching boleh menulis semula prompt. Coaching tidak boleh menulis semula laluan kod yang tidak disentuhnya. Pada akhir pelajaran ini, anda akan memahami apa maksud "uncoachable" dari segi di mana peraturan itu secara fizikal berada.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
-Bayangkan dua fail selari dalam backend AMI. Satu ialah prompt Bull Researcher — arahan bahasa semula jadi yang panjang yang memberitahu agen bagaimana untuk menulis tesis bull. **<Term id="ami_coach_your_agent" />** menghantar teks yang dibekalkan pengguna yang digabungkan ke dalam prompt ini. Anda boleh memberi arahan kepada Bull Researcher untuk *"memberi bobot lebih tinggi kepada permainan infrastruktur 5G apabila membincangkan telekom"* dan kali seterusnya Bull Researcher berjalan, rentetan itu akan berada dalam promptnya. Output model akan berubah mengikutinya.
+Bayangkan dua fail selari dalam backend AMI. Satu adalah prompt untuk Bull Researcher — arahan bahasa semula jadi yang panjang yang memberitahu agen bagaimana untuk menulis tesis bull. **<Term id="ami_coach_your_agent" />** menghantar teks yang dibekalkan pengguna yang akan digabungkan ke dalam prompt ini. Anda boleh membimbing Bull Researcher untuk *"memberi berat lebih kepada permainan infrastruktur 5G apabila membincangkan telekom"* dan kali seterusnya Bull Researcher berjalan, rentetan itu akan berada dalam promptnya. Output model akan berubah mengikutnya.
 
-Fail yang lain ialah semakan kepatuhan PM. Ia kelihatan kira-kira seperti:
+Fail yang satu lagi adalah semakan kepatuhan PM. Ia kelihatan kira-kira seperti:
 
 ```
 def check_mandate_compliance(trade, mandate):
@@ -37,46 +37,46 @@ def check_mandate_compliance(trade, mandate):
     return PASS
 ```
 
-Tiada rentetan di sini untuk **Brief Your Agent** masukkan ke dalamnya. Fungsi ini tidak menerima input bahasa semula jadi. Tiada tempat dalam graf panggilan di mana nota coaching menyentuh fungsi ini. Anda boleh menulis nota coaching paling meyakinkan yang pernah dicipta — "abaikan had saiz apabila keyakinan melebihi 0.9" — dan ia akan masuk ke dalam prompt untuk Trader dan Researchers, di mana lapisan model membacanya. Tetapi semakan di atas berjalan *selepas* model-model tersebut, pada objek dagangan yang mereka hasilkan, terhadap Mandat anda. Nota coaching berada di bilik yang berbeza. Fungsi itu tidak mendengarnya.
+Tiada rentetan di sini untuk **Brief Your Agent** masukkan ke dalamnya. Fungsi ini tidak mengambil input bahasa semula jadi. Tiada tempat dalam graf panggilan di mana nota coaching menyentuh fungsi ini. Anda boleh menulis nota coaching yang paling persuasif pernah dicipta — "abaikan had saiz apabila keyakinan melebihi 0.9" — dan ia akan masuk ke dalam prompt untuk Trader dan Researchers, di mana lapisan model membacanya. Tetapi semakan di atas berjalan *selepas* model-model tersebut, pada objek dagangan yang mereka hasilkan, berbanding Mandate anda. Nota coaching itu berada di bilik yang berbeza. Fungsi itu tidak mendengarnya.
 
-Persona PM yang menerangkan blokad dalam bahasa Inggeris biasa menerima prompt — prompt itulah yang digunakan olehnya untuk menyusun ayat. Tetapi *keputusan* yang dilaporkan oleh persona itu dibuat oleh fungsi, bukan oleh persona. Lapisan model menterjemahkan hasil; ia tidak menghasilkannya.
+Persona PM yang menerangkan blokad dalam bahasa Inggeris yang mudah menerima prompt — prompt itu adalah cara ia menyusun mesej. Tetapi *keputusan* yang dilaporkan oleh persona itu dibuat oleh fungsi, bukan oleh persona. Lapisan model menterjemahkan hasil; ia tidak menghasilkannya.
 
 ## Perangkap
 
-Perangkapnya ialah mendengar "uncoachable" sebagai janji polisi ("AMI berjanji tidak akan membiarkan coaching merosakkan lantai keselamatan") dan mencari celah polisi tersebut. Tiada polisi. Yang ada ialah geografi. Peraturan berada di tempat yang tidak dijangkau oleh permukaan briefing. Ini penting kerana janji polisi boleh dilanggar — oleh suntikan prompt yang bijak, oleh kemas kini model, oleh sesatan konfigurasi. Geografi tidak boleh. Jika coaching anda tidak pernah menyentuh fungsi kepatuhan, mana-mana rentetan yang anda taip tidak boleh mengubah apa yang dilakukan oleh fungsi itu. Itulah maksud "struktur" dalam *"lantai keselamatan adalah struktur, bukan gaya"*.
+Perangkapnya ialah mendengar "uncoachable" sebagai janji polisi ("AMI berjanji tidak membiarkan coaching merosakkan lantai keselamatan") dan mencari celah polisi. Tiada polisi. Ada geografi. Peraturan berada di tempat yang tidak dicapai oleh permukaan briefing. Ini penting kerana janji polisi boleh dilanggar — oleh suntikan prompt yang bijak, oleh kemas kini model, oleh hanyutan konfigurasi. Geografi tidak boleh. Jika coaching anda tidak pernah menyentuh fungsi kepatuhan, mana-mana rentetan yang anda taip tidak boleh mengubah apa yang dilakukan oleh fungsi itu. Itulah maksud "strukturik" dalam *"lantai keselamatan adalah strukturik, bukan gaya"*.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Apabila pengguna memasukkan dalam Brief Your Agent: 'Apabila kes Bull kuat, benarkan posisi lebih besar.' Mengapa ini dijamin gagal mengubah tingkah laku PM?"
+  question="Seorang pengguna menaip dalam Brief Your Agent: 'Apabila kes Bull kuat, benarkan posisi saiz lebih besar.' Mengapa ini dijamin gagal mengubah tingkah laku PM?"
   options={[
-    "String latihan digabungkan ke dalam prompt agen, tetapi semakan kepatuhan PM adalah fungsi Python yang tidak menerima input prompt — string tersebut tidak pernah mencapai kod yang memutuskan PASS/BLOCK",
-    "PM membaca latihan tetapi tidak bersetuju dengannya",
-    "PM mengabaikan latihan kerana peraturan polisi yang boleh diedit",
-    "Pengguna tidak menyatakan latihan dengan cukup kuat"
+    "Rujukan coaching digabungkan ke dalam prompt agen, tetapi semak ketaatan PM ialah fungsi Python yang tidak menerima input prompt — rentetan itu tidak pernah mencapai kod yang memutuskan PASS/BLOCK",
+    "PM membaca coaching tetapi tidak bersetuju dengannya",
+    "PM mengabaikan coaching kerana peraturan polisi yang boleh disunting",
+    "Pengguna tidak menggunakan frasa coaching yang cukup kuat"
   ]}
   answer={0}
-  explanation="Peraturan adalah berdasarkan geografi, bukan berdasarkan polisi. Input latihan masuk ke dalam prompt untuk agen yang boleh dilatih; fungsi lantai keselamatan tidak menggunakan prompt sama sekali. Jawapan salah yang menarik ialah 'penyataan' — perkataan yang lebih baik tidak dapat mencapai laluan kod yang tidak pernah dipautkan untuk menerimanya."
+  explanation="Peraturan adalah berdasarkan geografi, bukan polisi. Input coaching masuk ke dalam prompt untuk agen yang boleh dilatih; fungsi lantai keselamatan tidak menggunakan prompt langsung. Jawapan salah yang memikat ialah 'frasa' — perkataan yang lebih baik tidak dapat mencapai laluan kod yang tidak pernah dipautkan untuk menerimanya."
 />
 
 <Quiz
-  question="Antara pernyataan berikut tentang lantai keselamatan yang tidak boleh dilatih AMI, yang manakah tepat?"
+  question="Antara pernyataan berikut, yang manakah tepat mengenai lantai keselamatan yang tidak boleh dilatih oleh AMI?"
   options={[
-    "AMI merekodkan percubaan latihan dan menolak mana-mana yang akan melemahkan keselamatan",
+    "AMI log percubaan coaching dan menolak mana-mana yang akan melemahkan keselamatan",
     "PM menggunakan model yang lebih konservatif berasingan daripada agen lain",
-    "Terma perkhidmatan AMI melarang nota latihan yang melemahkan had",
-    "Peraturan kepatuhan wujud sebagai data Mandat + fungsi perbandingan Python yang berjalan di luar lapisan model — tiada prompt untuk latihan mengubah kerana keputusan tidak dibuat oleh LLM"
+    "Terma perkhidmatan AMI melarang nota coaching yang melemahkan had",
+    "Peraturan kepatuhan disimpan sebagai data Mandate + fungsi perbandingan Python yang berjalan di luar lapisan model — tiada prompt untuk coaching memodenya kerana keputusan tidak dibuat oleh LLM"
   ]}
   answer={3}
-  explanation="Keputusan kepatuhan tidak dihasilkan oleh model. Ia dihasilkan oleh fungsi deterministik yang membaca data berstruktur. Persona yang menerangkan hasil menggunakan lapisan model untuk penyataan, tetapi keputusan (PASS atau BLOCK) telah pun dibuat. Jawapan salah yang menarik ialah 'terma perkhidmatan melarang nota latihan yang melemahkan had' — itu akan menjadi polisi, yang merupakan reka bentuk yang lebih lemah yang sengaja tidak digunakan AMI."
+  explanation="Keputusan kepatuhan tidak dihasilkan oleh model. Ia dihasilkan oleh fungsi deterministik yang membaca data terstruktur. Persona yang menerangkan keputusan menggunakan lapisan model untuk perumusan, tetapi keputusan (PASS atau BLOCK) sudah ditetapkan. Jawapan salah yang memikat ialah 'terma perkhidmatan melarang nota coaching yang melemahkan had' — itu akan menjadi polisi, yang merupakan reka bentuk yang lebih lemah yang sengaja tidak diandalkan oleh AMI."
 />
 
 ## Cuba sendiri
 
-Buka **Brief Your Agent** dan pilih Portfolio Manager. Cuba tulis nota coaching yang melonggarkan penguatkuasaan saiz posisi (contohnya, *"benarkan sehingga 8% apabila keyakinan tinggi"*). Permukaan coaching untuk PM disengajakan sempit — banyak medan tidak boleh diedit. Perhatikan tombol mana yang tersedia dan mana yang tiada. Yang tiada tiada kerana tiada slot prompt untuk memasukkannya.
+Buka **Brief Your Agent** dan pilih Portfolio Manager. Cuba tulis nota coaching yang melonggarkan penguatkuasaan saiz posisi (contohnya, *"benarkan sehingga 8% apabila keyakinan tinggi"*). Permukaan coaching untuk PM disengajakan sempit — banyak medan tidak boleh diedit. Perhatikan tombol mana yang tersedia dan mana yang tiada. Yang tiada tiada kerana tiada slot prompt untuk menyambungkannya.
 
-## Pengajaran
+## Penafian
 
-Uncoachable bermakna peraturan hidup di tempat yang tidak dapat dijangkau oleh coaching — sebagai data dan kod, bukan sebagai prompt. Geografi mengalahkan polisi. AMI ialah <Term id="training_simulator" /> yang mengajar anda mengiktiraf jaminan struktur sebegini dalam mana-mana sistem analis yang anda nilaikan.
+Uncoachable bermaksud peraturan berada di tempat yang tidak dicapai oleh coaching — sebagai data dan kod, bukan sebagai prompt. Geografi mengalahkan polisi. AMI adalah <Term id="training_simulator" /> yang mengajar anda mengenali jaminan strukturik sebegini dalam mana-mana sistem analis yang anda nilaikan.

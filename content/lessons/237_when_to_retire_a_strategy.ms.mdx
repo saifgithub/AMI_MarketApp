@@ -1,6 +1,6 @@
 ---
 id: "237_when_to_retire_a_strategy"
-title: "Bila untuk menamatkan strategi — falsifikasi, bukan kepercayaan"
+title: "Bila untuk menyingkirkan strategi — falsifikasi, bukan kepercayaan"
 duration_min: 7
 level: 5
 module: 9
@@ -11,64 +11,64 @@ topic: "synthesis"
 prerequisites: ["057_backtesting_a_strategy", "058_strategy_failure_modes", "229_walk_forward_analysis", "232_regime_segmented_backtests"]
 tags: ["synthesis", "retirement", "falsification", "edge_decay"]
 agent_callouts: ["research_manager", "bear_researcher"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Bila untuk bersara daripada strategi — falsifikasi, bukan kepercayaan
+# Bila hendak menyenaraikan semula strategi — falsifikasi, bukan kepercayaan
 
-Asas backtesting (057) berakhir dengan pernyataan "backtest adalah pemeriksaan kesihatan, bukan ramalan". Pelajaran ini adalah implikasinya: strategi langsung memerlukan protokol falsifikasi — satu set keadaan yang telah dipersetujui sebelumnya di mana anda akan bersara darinya. Tanpa protokol itu, anda akan bersara terlalu awal (memotong strategi dalam rejim kegagalan yang diketahui) atau terlalu lewat (terus menunggang tepi yang telah reput secara struktur hingga ke kemusnahan). Ujian yang jujur adalah sama ada prestasi langsung masih berada dalamEnvelope yang diramalkan oleh backtest anda, SELEPAS mengambil kira rejim yang sedang anda hadapi. Selepas pelajaran ini, anda boleh menulis protokol falsifikasi untuk setiap strategi anda SEBELUM menyebarkannya — dan melaksanakan bersara apabila keadaan itu berlaku, tanpa ego.
+Asas backtesting (057) berakhir dengan "backtest adalah pemeriksaan kesihatan, bukan ramalan". Pelajaran ini adalah akibat logiknya: strategi langsung memerlukan protokol falsifikasi — satu set keadaan yang telah dipersetujui sebelumnya di mana anda akan menyenaraikan semula strategi tersebut. Tanpa protokol itu, anda akan menyenaraikan semula terlalu awal (memotong strategi dalam rejim kegagalannya yang diketahui) atau terlalu lewat (memboncong tepi struktur yang reput hingga ke kebinasaan). Ujian yang jujur adalah sama ada prestasi langsung masih berada dalamEnvelope yang diramalkan oleh backtest anda, SELEPAS mengambil kira rejim yang anda hadapi. Selepas pelajaran ini, anda boleh menulis protokol falsifikasi untuk setiap strategi anda SEBELUM menyebarkannya — dan melaksanakan penyenaraian semula apabila keadaan itu berlaku, tanpa ego.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
-Bayangkan anda menyebarkan peraturan mean-reversion RSI(2) pada syarikat besar AS pada tahun 2018. Backtest dari 2005-2017 menunjukkan: CAGR purata ~12%, drawdown maksimum 11% (mengecualikan 2008 yang ditapis oleh lapisan 200-hari), Sharpe 1.3, kadar kemenangan 67%.
+Bayangkan anda menyebarkan peraturan reverensi purata RSI(2) pada syarikat besar AS pada tahun 2018. Backtest dari 2005-2017 menunjukkan: purata ~12% CAGR, drawdown maksimum 11% (mengecualikan 2008 yang ditapis oleh lapisan 200-hari), Sharpe 1.3, kadar kemenangan 67%.
 
-Protokol falsifikasi yang dipersetujui sebelumnya semasa penyebaran: bersara daripada strategi jika SEBARANG satu daripada ini berlaku dalam tetingkap 24-bulan berjalan:
+Protokol falsifikasi yang dipersetujui sebelumnya pada masa penyebaran: senaraikan semula strategi jika SEBARANG satu daripada ini berlaku dalam tetingkap 24-bulan berjalan:
 1. Drawdown melebihi 1.5× drawdown maksimum backtest (iaitu, 16.5%) semasa keadaan rejim (di atas 200-hari, VIX < 25) adalah menguntungkan.
 2. Kadar kemenangan jatuh di bawah 55% (jauh di bawah garis dasar backtest 67%) untuk 50+ dagangan.
 3. Nisbah purata kemenangan / purata kerugian jatuh di bawah 0.7 (backtest adalah 1.1) untuk 50+ dagangan.
-4. Nisbah kecekapan walk-forward yang dikira pada data langsung 12-bulan berjalan jatuh di bawah 0.4.
+4. Nisbah kecekapan berjalan ke hadapan yang dikira pada data langsung 12-bulan berjalan jatuh di bawah 0.4.
 
-Prestasi langsung 2018-2024: CAGR 8.4%, drawdown maksimum 9% (Q1 2020, dalam rejim kegagalan — tidak mengaktifkan keadaan 1 kerana keadaan rejim tidak menguntungkan). Kadar kemenangan 64% (di atas ambang 55%), avg win/loss 0.95 (di atas 0.7). Kecekapan walk-forward 0.7. Tiada keadaan diaktifkan. Strategi telah merosot berbanding backtest tetapi beroperasi dalam envelope. Keputusan: teruskan berjalan pada saiz semasa.
+Prestasi langsung 2018-2024: CAGR 8.4%, drawdown maksimum 9% (Q1 2020, dalam rejim kegagalan — tidak memicu keadaan 1 kerana keadaan rejim tidak menguntungkan). Kadar kemenangan 64% (di atas ambang 55%), purata kemenangan/kerugian 0.95 (di atas 0.7). Kecekapan berjalan ke hadapan 0.7. Tiada keadaan dipicu. Strategi telah reput berbanding backtest tetapi beroperasi dalam envelope. Keputusan: teruskan berjalan pada saiz semasa.
 
-Bandingkan: strategi perdagangan berpasangan yang disebarkan pada 2010 dalam syarikat besar AS yang berfungsi dengan baik sehingga 2015 (CAGR 14%, drawdown 8%) tetapi tepinya telah reput secara struktur oleh aliran ETF dan mampatan kuantitatif. Pada tahun 2018, kadar kemenangan telah jatuh kepada 51% (gagal keadaan 2), avg win/loss kepada 0.6 (gagal keadaan 3), dan kecekapan walk-forward kepada 0.25 (gagal keadaan 4). Tiga daripada empat keadaan diaktifkan — strategi tersebut telah bersara pada awal 2019 dan modalnya dialihkan. Pada tahun 2024, strategi tersebut akan memulangkan kira-kira 0% dengan beberapa drawdown, mengesahkan bersara tersebut.
+Bandingkan: strategi perdagangan berpasangan yang disebarkan pada 2010 dalam syarikat besar AS yang berfungsi dengan indah sehingga 2015 (CAGR 14%, drawdown 8%) tetapi tepinya reput secara struktur oleh aliran ETF dan mampatan kuantitatif. Pada 2018, kadar kemenangan telah jatuh kepada 51% (gagal keadaan 2), purata kemenangan/kerugian kepada 0.6 (gagal keadaan 3), dan kecekapan berjalan ke hadapan kepada 0.25 (gagal keadaan 4). Tiga daripada empat keadaan dipicu — strategi tersebut disenaraikan semula pada awal 2019 dan modalnya dialihkan semula. Pada 2024, strategi itu akan mengembalikan kira-kira 0% dengan beberapa drawdown, mengesahkan penyenaraian semula.
 
 ## Perangkap
 
-Kesilapan pemula adalah tidak mempunyai protokol falsifikasi — menjalankan strategi "selagi ia berfungsi" dan menyedari selepas beberapa tahun bahawa "berfungsi" ditakrifkan secara emosional. Model mental yang betul: setiap strategi mendapat protokol bersara bertulis pada saat ia disebarkan, dengan ambang yang dipersetujui sebelumnya yang dikunci kepada statistik backtest. Perangkap kedua adalah bersara semasa rejim kegagalan yang diketahui strategi ("RSI mean-reversion kehilangan wang pada Q1 2020 — bunuh ia"). Rejim kegagalan adalah apabila strategi DIJANGKA kehilangan wang; bersara di sana adalah menukar kitaran rejim kepada pengurangan modal kekal. Perangkap ketiga adalah sebaliknya — menolak untuk bersara walaupun beberapa keadaan telah diaktifkan, kerana emosi kos terbenam atau keyakinan bahawa strategi "akan kembali". Strategi yang kecekapan walk-forward langsungnya telah berada di bawah 0.4 selama 24 bulan adalah rosak secara struktur, tidak kira bila puncaknya.
+Kesilapan pemula adalah tidak mempunyai protokol falsifikasi — menjalankan strategi "selagi ia berfungsi" dan mendapati selepas beberapa tahun bahawa "berfungsi" ditakrifkan secara emosional. Model mental yang betul: setiap strategi mendapat protokol penyenaraian semula yang ditulis pada saat ia disebarkan, dengan ambang yang dipersetujui sebelumnya yang dikunci kepada statistik backtest. Perangkap kedua adalah menyenaraikan semula semasa rejim kegagalan yang diketahui strategi ("RSI reverensi purata kehilangan wang pada Q1 2020 — bunuh ia"). Rejim kegagalan adalah apabila strategi DIJANGKA kehilangan wang; menyenaraikan semula di sana adalah mengitar kitaran rejim menjadi pengurangan modal kekal. Perangkap ketiga adalah sebaliknya — menolak untuk menyenaraikan semula walaupun beberapa keadaan telah dipicu, kerana emosi kos terbenam atau keyakinan bahawa strategi "akan kembali". Strategi yang kecekapan berjalan kehadirannya telah di bawah 0.4 selama 24 bulan adalah rosak secara struktur, tidak kira bila puncaknya.
 
 <ChatWith agent="research_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Satu strategi yang anda laksanakan 18 bulan lalu sedang mengalami drawdown sebanyak -11%. Drawdown maksimum backtest ialah 8%. Regim semasa ialah regim kegagalan yang didokumenkan bagi strategi tersebut (contohnya, mean-reversion dalam bear trending). Protokol falsifikasi: bersara jika drawdown melebihi 1.5× drawdown maksimum backtest DALAM regim yang menguntungkan. Tindakan mana yang betul?"
+  question="Strategi yang anda deploy 18 bulan lalu berada pada drawdown -11%. Drawdown maksimum backtest ialah 8%. Regim semasa ialah regim kegagalan yang didokumenkan untuk strategi ini (contohnya, mean-reversion dalam bear trending). Protokol falsifikasi: bersara jika drawdown melebihi 1.5× maksimum backtest DALAM REGIM YANG MEMBAIK. Tindakan mana yang betul?"
   options={[
-    "Teruskan — protokol secara eksplisit mensyaratkan pencetus berdasarkan regim. Strategi berada dalam regim kegagalannya yang diketahui; drawdown yang lebih besar adalah dijangka. Bersara hanya jika drawdown bertambah besar apabila regim bertukar kepada keadaan menguntungkan.",
+    "Teruskan — protokol secara eksplisit mensyaratkan pencetus berdasarkan regim. Strategi ini berada dalam regim kegagalannya yang diketahui; drawdown yang lebih besar adalah dijangka. Bersara hanya jika drawdown bertambah besar apabila regim bertukar kepada keadaan baik.",
     "Tukar kepada strategi lain serta-merta",
     "Bersara — drawdown telah melebihi maksimum backtest",
     "Tingkatkan saiz untuk pulihkan drawdown"
   ]}
   answer={0}
-  explanation="Ambang yang menyedari regim dalam protokol adalah intipati perkara ini — drawdown dalam regim kegagalan bukanlah satu falsifikasi, ia adalah strategi beroperasi seperti direka. Jawapan bersara sekarang memutuskan aliran pada saat apabila strategi melakukan apa yang diramalkan oleh backtestnya. Meningkatkan saiz memperbesar risiko semasa regim kegagalan. Menukar strategi serta-merta meninggalkan diversifikasi strategi pada saat yang paling salah."
+  explanation="Ambang yang sedar regim dalam protokol adalah intipati — drawdown dalam regim kegagalan bukan satu falsifikasi, ia strategi beroperasi seperti direka. Jawapan bersara sekarang memutuskan sokongan pada ketika strategi melakukan apa yang ramalan backtestnya jangka. Meningkatkan saiz menggalakkan risiko semasa regim kegagalan. Menukar strategi serta-merta meninggalkan diversifikasi strategi pada saat yang paling salah."
 />
 
 <Quiz
-  question="Strategi anda telah beroperasi secara langsung selama 30 bulan. Drawdown ialah 12% (maksimum backtest 11%, regim semasa menguntungkan). Kadar kemenangan ialah 51% (backtest 67%). Purata win/loss ialah 0.62 (backtest 1.1). Kecekapan walk-forward ialah 0.32. Bear Researcher dan Research Manager kedua-duanya memanggil protokol bersara. Aggressive Debator berhujah 'setiap strategi mempunyai tempoh kering'. Keputusan sintesis yang betul?"
+  question="Strategi anda telah beroperasi secara langsung selama 30 bulan. Drawdown ialah 12% (maksimum backtest 11%, regim semasa baik). Kadar kemenangan ialah 51% (backtest 67%). Purata menang/kalah ialah 0.62 (backtest 1.1). Kecekapan walk-forward ialah 0.32. Bear Researcher dan Research Manager kedua-duanya memanggil protokol bersara. Aggressive Debator berhujah 'setiap strategi mempunyai tempoh kering'. Keputusan sintesis yang betul?"
   options={[
     "Kurangkan saiz dan teruskan",
     "Optimum semula parameter pada data terkini",
-    "Tiga daripada empat keadaan falsifikasi sedang aktif serentak, dalam regim menguntungkan. Strategi telah reput secara struktur, bukan dalam tempoh kering sementara. Bersara darinya, alokasikan semula modal kepada strategi dalam envelope mereka, dan jalankan post-mortem yang mendokumentasikan apa yang berubah.",
+    "Tiga daripada empat keadaan falsifikasi sedang aktif serentak, dalam regim baik. Strategi telah reput secara struktur, bukan dalam tempoh kering sementara. Bersara darinya, alokasikan modal kepada strategi dalam envelope mereka, dan jalankan post-mortem yang mendokumenkan apa yang berubah.",
     "Aggressive betul — beri strategi lebih masa"
   ]}
   answer={2}
-  explanation="Sintesis: keadaan serentak dalam regim menguntungkan ialah tanda reputan struktur. Jawapan 'beri strategi lebih masa' ialah pemikiran kos terbenam — 'lebih masa' tidak mempunyai titik akhir yang ditakrifkan dan mengabaikan protokol. Mengurangkan saiz dan teruskan memotong alokasi modal tetapi mengekalkan strategi yang rosak dalam campuran, menarik prestasi diversifikasi. Optimum semula parameter ialah perangkap overfitting tepat dari 057/228 — menyesuaikan semula pada data terkini untuk memulihkan tepi yang telah hilang. Protokol bersara wujud tepat untuk membuat keputusan ini secara automatik."
+  explanation="Sintesis: keadaan aktif serentak dalam regim baik ialah tanda reput struktur. Jawapan 'beri strategi lebih masa' ialah alasan kos terbenam — 'lebih masa' tiada hujung yang ditakrifkan dan mengabaikan protokol. Mengurangkan saiz dan teruskan memotong alokasi modal tetapi mengekalkan strategi rosak dalam campuran, menarik diversifikasi. Mengoptimumkan semula parameter ialah perangkap overfitting tepat dari 057/228 — menyambung semula pada data terkini untuk memulihkan tepi yang telah hilang. Protokol bersara wujud tepat untuk membuat keputusan ini secara automatik."
 />
 
 ## Cuba sendiri
 
-Untuk setiap strategi yang anda jalankan semasa, tulis protokol falsifikasi: pencetus drawdown (berkondisi rejim), pencetus kadar kemenangan, pencetus nisbah kemenangan/kerugian, pencetus kecekapan walk-forward, dan saiz tetingkap berjalan untuk setiap satu. Hantar kepada Research Manager dalam <Term id="ami_one_on_one" />: "Adakah ambang ini dicalibrasi kepada backtest saya, sedar rejim, dan bermakna secara statistik?" Log setiap protokol dalam <Term id="ami_decision_journal" /> bersama strategi tersebut. Apabila mana-mana keadaan diaktifkan, bersara adalah automatik — tiada ego terlibat.
+Untuk setiap strategi yang anda jalankan semasa, tulis protokol falsifikasi: pencetus drawdown (berkondisi rejim), pencetus kadar kemenangan, pencetus nisbah kemenangan/kerugian, pencetus kecekapan berjalan ke hadapan, dan saiz tetingkap berjalan untuk setiap satu. Hantar kepada Pengurus Penyelidikan dalam <Term id="ami_one_on_one" />: "Adakah ambang ini dicalibrasi kepada backtest saya, sedar rejim, dan bermakna secara statistik?" Log setiap protokol dalam <Term id="ami_decision_journal" /> bersama strategi. Apabila sebarang keadaan dipicu, penyenaraian semula adalah automatik — tiada ego terlibat.
 
-## Pengajaran
+## Teras
 
-Setiap strategi memerlukan protokol bersara bertulis pada saat ia disebarkan. Falsifikasi, bukan kepercayaan — bersara apabila beberapa keadaan diaktifkan dalam rejim menguntungkan, bukan pada bulan buruk tunggal.
+Setiap strategi memerlukan protokol penyenaraian semula yang ditulis pada saat ia disebarkan. Falsifikasi, bukan kepercayaan — senaraikan semula apabila beberapa keadaan dipicu dalam rejim menguntungkan, bukan pada bulan buruk tunggal.

@@ -9,19 +9,19 @@ topic: "orders"
 prerequisites: ["281_what_is_a_market"]
 tags: ["foundations", "orders", "execution"]
 agent_callouts: ["trader"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-11"
 updated_at: "2026-05-11"
 ---
 # Pesanan Pasaran vs Pesanan Had
 
-Dua cara asas untuk meminta bursa melaksanakan dagangan anda. Setiap satu mempunyai pertukaran (tradeoff).
+Dua cara asas untuk meminta bursa melaksanakan perdagangan anda. Setiap satu mempunyai pertukaran (tradeoff).
 
 ## Pesanan Pasaran
 
 > *"Laksanakan sahaja untuk saya. Saya tidak kisah harga tepat."*
 
-Pesanan pasaran bermaksud: ambil harga terbaik yang tersedia sekarang. Anda akan diluluskan hampir serta-merta. Anda tidak boleh berbincang mengenai harga.
+Pesanan pasaran bermaksud: ambil harga terbaik yang tersedia pada masa ini. Anda akan dilaksanakan hampir serta-merta. Anda tidak boleh berbincang mengenai harga.
 
 **Kelebihan:**
 - Pelaksanaan serta-merta
@@ -29,60 +29,60 @@ Pesanan pasaran bermaksud: ambil harga terbaik yang tersedia sekarang. Anda akan
 
 **Kekurangan:**
 - Tiada kawalan harga
-- Dalam pasaran yang bergerak pantas, anda mungkin mendapat pelaksanaan yang *jauh lebih teruk* daripada jangkaan
+- Dalam pasaran yang bergerak pantas, anda boleh mendapat pelaksanaan yang *jauh lebih buruk* daripada jangkaan
 - "Slippage" — perbezaan antara harga yang anda niatkan dan harga pelaksanaan sebenar — boleh menjadi menyakitkan
 
-**Gunakan apabila:** tesis dagangan lebih penting daripada beberapa sen per saham. Atau apabila likuiditi tinggi dan slippage adalah boleh diabaikan.
+**Gunakan apabila:** tesis perdagangan lebih penting daripada beberapa sen per saham. Atau apabila likuiditi tinggi dan slippage adalah boleh diabaikan.
 
 ## Pesanan Had
 
 > *"Saya akan beli jika anda boleh dapatkannya pada $150 atau lebih baik. Jika tidak, tunggu."*
 
-Pesanan had menetapkan had atas harga tertentu (untuk pembelian) atau had bawah (untuk jualan). Bursa hanya akan melaksanakan pesanan anda jika ia dapat melakukannya pada harga tersebut atau lebih baik.
+Pesanan had menetapkan had atas harga tertentu (untuk pembelian) atau had bawah (untuk jualan). Bursa hanya akan melaksanakan anda jika ia boleh melakukannya pada harga tersebut atau lebih baik.
 
 **Kelebihan:**
 - Kawalan harga
-- Boleh menangkap penurunan sementara dengan menetapkan harga beli di bawah harga pasaran
-- Disiplin — memaksa anda berkomitmen kepada satu angka
+- Boleh memanfaatkan penurunan sementara dengan menetapkan harga beli di bawah harga pasaran
+- Disiplin — memaksa anda berkomitmen kepada satu nombor
 
 **Kekurangan:**
-- Mungkin tidak diluluskan langsung
-- Mungkin hanya diluluskan separuh
-- Dalam pasaran yang bergerak pantas, harga bergerak melepasi had anda dan anda terlepas dagangan
+- Mungkin tidak dilaksanakan langsung
+- Mungkin hanya dilaksanakan separuh
+- Dalam pasaran yang bergerak pantas, harga bergerak melepasi had anda dan anda terlepas perdagangan
 
-**Gunakan apabila:** harga itu penting. Atau apabila likuiditi tipis dan slippage daripada pesanan pasaran akan menjadi mahal. Atau apabila anda ingin bersabar.
+**Gunakan apabila:** harga adalah penting. Atau apabila likuiditi tipis dan slippage daripada pesanan pasaran akan menjadi mahal. Atau apabila anda mahu bersabar.
 
 ## Contoh pengiraan
 
-NVDA sedang diperdagangkan pada $152. Anda menganggap ia sesuai dibeli pada $150.
+NVDA sedang diperdagangkan pada $152. Anda fikir ia adalah pembelian pada $150.
 
 | Tindakan | Apa yang berlaku |
 |---|---|
-| **Pesanan pasaran untuk beli 10 NVDA** | Diluluskan hampir serta-merta pada $152 (atau $152.05, bergantung pada ask). |
-| **Pesanan had untuk beli 10 NVDA pada $150** | Berdiri dalam buku pesanan. Jika NVDA turun ke $150 hari ini, anda akan diluluskan. Jika ia naik ke $155 sebaliknya, pesanan anda tidak diluluskan. |
-| **Pesanan had untuk beli 10 NVDA pada $155** | Diluluskan serta-merta pada $152 — had tersebut adalah *had atas kes terburuk*, dan $152 lebih baik daripada $155. |
+| **Pesanan pasaran untuk beli 10 NVDA** | Dilaksanakan hampir serta-merta pada $152 (atau $152.05, bergantung pada ask). |
+| **Pesanan had untuk beli 10 NVDA pada $150** | Duduk dalam buku pesanan. Jika NVDA turun ke $150 hari ini, anda akan dilaksanakan. Jika ia naik ke $155 sebaliknya, pesanan anda tidak dilaksanakan. |
+| **Pesanan had untuk beli 10 NVDA pada $155** | Dilaksanakan serta-merta pada $152 — had tersebut adalah *had atas kes terburuk*, dan $152 lebih baik daripada $155. |
 
-Kes terakhir ini adalah kejutan biasa: pesanan had pada harga yang *lebih teruk* daripada pasaran semasa adalah setara dengan pesanan pasaran, kerana bursa hanya memberikan harga terbaik yang tersedia.
+Kes terakhir ini adalah kejutan biasa: pesanan had pada harga yang *lebih buruk* daripada pasaran semasa adalah setara dengan pesanan pasaran, kerana bursa hanya memberikan anda harga terbaik yang tersedia.
 
 ## Masa dalam kuasa
 
 Pesanan had memerlukan tempoh. Pilihan biasa:
 
-- **Day** — tamat pada penutupan pasaran hari ini
-- **GTC (Good Till Cancelled)** — kekal terbuka sehingga anda membatalkannya (kebanyakan broker akan tamat tempoh selepas 60–90 hari sebagai langkah keselamatan)
-- **IOC (Immediate or Cancel)** | melaksanakan apa yang boleh sekarang, batalkan baki
-- **FOK (Fill or Kill)** — laksanakan keseluruhan pesanan sekarang atau batalkan sepenuhnya
+- **Hari** — luput pada penutupan pasaran hari ini
+- **GTC (Good Till Cancelled)** — kekal terbuka sehingga anda membatalkannya (kebanyakan broker akan luput selepas 60–90 hari sebagai langkah keselamatan)
+- **IOC (Immediate or Cancel)** — melaksanakan apa yang boleh pada masa ini, membatalkan baki
+- **FOK (Fill or Kill)** — laksanakan keseluruhan pesanan pada masa ini atau batalkannya sepenuhnya
 
-Untuk kebanyakan dagangan pemula, Day atau GTC adalah cukup.
+Untuk kebanyakan perdagangan pemula, Hari atau GTC adalah cukup.
 
 ## Dalam simulasi anda
 
-Apabila anda mengemukakan dagangan dalam simulasi AMI Trade, anda akan memilih **pasaran** atau **had**:
+Apabila anda menghantar perdagangan dalam simulasi AMI Trade, anda akan memilih **pasaran** atau **had**:
 
-- **Pasaran** diluluskan pada harga semasa (terlambat 15 minit) serta-merta.
-- **Had** berdiri dalam jurnal sebagai "menunggu" sehingga harga mencapai tahap anda.
+- **Pasaran** dilaksanakan pada harga semasa (terlambat 15 minit) serta-merta.
+- **Had** duduk dalam jurnal sebagai "tertunda" sehingga harga mencapai tahap anda.
 
-Bagaimanapun, PM anda masih menjalankan pemeriksaan pematuhan sebelum dagatan direkodkan. Walaupun simulasi mematuhi mandat anda.
+Bagaimanapun, Pengurus Portfolio (PM) anda masih menjalankan pemeriksaan kepatuhan sebelum perdagangan direkodkan. Walaupun simulasi mematuhi mandat anda.
 
 ## Kuiz
 
@@ -95,11 +95,11 @@ Bagaimanapun, PM anda masih menjalankan pemeriksaan pematuhan sebelum dagatan di
     "Pesanan anda dipenuhi pada $155"
   ]}
   answer={2}
-  explanation="Harga had adalah had atas untuk pembelian. $152 lebih baik daripada $155, jadi bursa akan memenuhi pesanan anda pada $152 serta-merta. Pesanan had hanya tertangguh jika hadnya *lebih buruk* daripada pasaran semasa."
+  explanation="Harga had adalah had atas untuk pembelian. $152 lebih baik daripada $155, jadi bursa akan memenuhi pesanan anda pada $152 serta-merta. Pesanan had hanya menunggu jika had tersebut *lebih buruk* daripada pasaran semasa."
 />
 
 <Quiz
-  question="Pesanan manakah menjamin pelaksanaan tetapi bukan harga?"
+  question="Pesanan manakah yang menjamin pelaksanaan tetapi bukan harga?"
   options={[
     "Pesanan pasaran",
     "Pesanan GTC",
@@ -110,8 +110,8 @@ Bagaimanapun, PM anda masih menjalankan pemeriksaan pematuhan sebelum dagatan di
   explanation="Pesanan pasaran menjamin pelaksanaan tetapi bukan harga tepat (slippage mungkin berlaku). Pesanan had menjamin harga tetapi bukan pelaksanaan (mungkin tidak dipenuhi)."
 />
 
-## Ingin mendalam lagi?
+## Ingin pergi lebih mendalam?
 
-Agen **Trader** anda adalah orang yang sebenarnya mencadangkan butiran pesanan selepas pasukan telah membincangkan dagangan tersebut. Mereka akan memilih antara pasaran vs had, harga had, saiz, dan jangka masa.
+Agen **Trader** anda adalah orang yang sebenarnya mencadangkan butiran pesanan selepas pasukan telah membincangkan perdagangan tersebut. Mereka akan memilih antara pasaran vs had, harga had, saiz, dan jangka masa.
 
 <ChatWith agent="trader" />

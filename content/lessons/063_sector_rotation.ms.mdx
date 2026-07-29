@@ -11,64 +11,64 @@ topic: "sector_rotation"
 prerequisites: ["022_trend_direction", "030_trend_confirmation_across_indicators", "017_portfolio_exposure_and_correlation"]
 tags: ["regime", "sectors", "rotation", "macro", "etfs"]
 agent_callouts: ["news_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Putaran sektor
 
-Indeks adalah purata; tindakan berada di sektor. Pada sebulan tertentu, sesetengah sektor menjadi pemimpin manakala yang lain mengalami penurunan, dan peta kepimpinan berubah mengikut input makro — kadar faedah, jangkaan pertumbuhan, harga komoditi, dan kekuatan dolar. Selepas pelajaran ini, anda akan dapat mengesan rejim putaran sektor secara numerik menggunakan kekuatan relatif terhadap SPY, menyebut cerita makro yang biasanya dipadankan dengan peta kepimpinan tertentu, menyebut strategi yang gagal apabila anda melawan putaran, dan menyatakan syarat pembatalan untuk panggilan putaran.
+Indeks adalah purata; tindakan berlaku pada sektor. Pada mana-mana bulan, sesetengah sektor menjadi pemimpin manakala yang lain mengalami kerugian, dan peta kepimpinan berubah mengikut input makro — kadar faedah, jangkaan pertumbuhan, harga komoditi, dan kekuatan dolar. Selepas pelajaran ini, anda akan dapat mengesan rejim putaran sektor secara numerikal menggunakan kekuatan relatif terhadap SPY, menyebut cerita makro yang biasanya berpasangan dengan peta kepimpinan tertentu, menyebut strategi yang gagal apabila anda melawan putaran, dan menyatakan pembatalan untuk panggilan putaran.
 
 ## Bagaimana ia berlaku dalam pasaran sebenar
 
-Tiga putaran yang didokumenkan, semua boleh diukur dari data ETF awam:
+Tiga putaran yang didokumenkan, semua boleh diukur daripada data ETF awam:
 
-Tenaga → Teknologi, Januari 2023: XLE (tenaga) telah melebihi SPY sebanyak 50%+ pada tahun 2022. Pada Januari 2023, nisbah XLE/SPY mencapai puncak pada 27 Januari 2023 dan mula menurun; XLK/SPY (teknologi) mencapai dasar pada awal Januari dan mula naik. Dari 1 Januari 2023 hingga 19 Julai 2023, XLK meningkat 41.8% manakala XLE jatuh 2.4% — satu sebaran 44 mata dalam enam bulan. Cerita makro: jangkaan inflasi puncak, penurunan hasil 10-tahun dari 4.05% ke 3.55%, pertumbuhan sensitif kadar dinilai semula.
+Tenaga → Teknologi, Januari 2023: XLE (tenaga) telah melebihi SPY sebanyak 50%+ pada 2022. Pada Januari 2023, nisbah XLE/SPY mencapai puncak pada 27 Januari 2023 dan mula menurun; XLK/SPY (teknologi) mencapai dasar pada awal Januari dan mula naik. Dari 1 Januari 2023 hingga 19 Julai 2023, XLK mencatat kenaikan 41.8% manakala XLE jatuh 2.4% — satu jurang 44 mata dalam enam bulan. Cerita makro: jangkaan inflasi mencapai puncak, penurunan hasil 10-tahun dari 4.05% ke 3.55%, pertumbuhan sensitif kadar dinilai semula.
 
-Teknologi → Pertahanan, akhir musim panas 2024: XLK mencapai puncak pada 240.50 pada 10 Julai 2024. XLP (keperluan asas) dan XLV (kesihatan) melebihi SPY melalui Ogos 2024 manakala XLK terunderperform sebanyak 9% selama enam minggu. Cerita makro: ketakutan pertumbuhan sekitar kejutan VIX Ogos + potongan Fed pertama pada 18 September 2024 telah dibundarkan.
+Teknologi → Pertahanan, akhir musim panas 2024: XLK mencapai puncak pada 240.50 pada 10 Julai 2024. XLP (keperluan asas) dan XLV (kesihatan) melebihi SPY melalui Ogos 2024 manakala XLK terperforma rendah sebanyak 9% dalam tempoh enam minggu. Cerita makro: ketakutan pertumbuhan sekitar kejutan VIX Ogos + potongan Fed pertama pada 18 September 2024 telah diharga dalam pasaran.
 
-Peraturan pengesanan: kira pulangan 20-hari setiap ETF sektor tolak pulangan 20-hari SPY. Satu sektor dianggap "memimpin" apabila bacaan kekuatan relatifnya positif DAN purata bergerak 50-hari kekuatan relatifnya sedang naik. Putaran rejim sedang berlaku apabila sekurang-kurangnya tiga sektor bertukar status kepimpinan (positif → negatif atau sebaliknya) dalam tetingkap 20-hari perdagangan.
+Peraturan pengesanan: kira pulangan 20-hari setiap ETF sektor tolak pulangan 20-hari SPY. Satu sektor dianggap "memimpin" apabila bacaan kekuatan relatifnya positif DAN purata bergerak 50-hari kekuatan relatifnya sedang naik. Putaran rejim sedang berkuat kuasa apabila sekurang-kurangnya tiga sektor menukar status kepimpinan (positif → negatif atau sebaliknya) dalam tetingkap 20-hari dagangan.
 
-Di Bursa Malaysia: putaran serupa antara saham-heavy tanaman dan teknologi/keuangan berlaku berdasarkan harga minyak sawit + ringgit; prinsip ini umum.
+Di Bursa Malaysia: putaran serupa antara saham berat perladangan dan teknologi/keuangan berlaku berdasarkan harga minyak kelapa sawit + ringgit; prinsip ini boleh digeneralisasikan.
 
 ## Perangkap
 
-Perangkap putaran adalah berjangkar pada pemimpin terdahulu. Pedagang yang mendapat wang dalam XLE melalui 2022 terus membeli penurunan tenaga melalui 2023 kerana "tenaga adalah perdagangan". Sementara itu, XLK naik 40% dalam enam bulan dan mereka tidak memilikinya. Pada masa pedagang itu berputar, mereka mengejar pemimpin baru berhampiran cluster-extension pertama, sering menangkap penurunan 10% pertama dalam sektor baru dan meninggalkan putaran sepenuhnya.
+Perangkap putaran adalah berjangkar pada pemimpin terdahulu. Pedagang yang menjana wang dalam XLE melalui 2022 terus membeli penurunan tenaga pada 2023 kerana "tenaga adalah dagangan". Sementara itu, XLK naik 40% dalam enam bulan dan mereka tidak memiliki sebarang bahagian di dalamnya. Apabila pedagang itu akhirnya berputar, mereka mengejar pemimpin baharu berhampiran kluster pengembangan pertamanya, sering kali menangkap pembetulan 10% pertama dalam sektor baharu dan meninggalkan putaran sepenuhnya.
 
-Model yang betul: putaran adalah isyarat rejim, bukan satu perdagangan tunggal. Apabila kepimpinan kekuatan relatif bertukar untuk tiga atau lebih sektor dalam tetingkap 20-hari, latar belakang makro telah berubah di bawah kaki anda. Potong pemimpin lama, skala masuk ke pemimpin baru, dan biarkan kekuatan relatif — bukan naratif — memilih urutan.
+Model yang betul: putaran adalah isyarat rejim, bukan satu dagangan tunggal. Apabila kepimpinan kekuatan relatif bertukar bagi tiga atau lebih sektor dalam tetingkap 20-hari, latar belakang makro telah berubah di bawah kaki anda. Potong pemimpin lama, skala masuk ke pemimpin baharu, dan biarkan kekuatan relatif — bukan naratif — memilih pesanan.
 
 <ChatWith agent="news_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="Dalam 20 hari dagangan terakhir: pulangan 20 hari XLK ialah +6%, SPY ialah +2%, XLE ialah -3%, XLP beralih daripada underperforming kepada outperforming. Tiga bulan lalu, XLE merupakan pemimpin. Apa yang ditetapkan oleh kerangka putaran?"
+  question="Dalam 20 hari dagangan terakhir: pulangan 20 hari XLK ialah +6%, SPY ialah +2%, XLE ialah -3%, XLP beralih daripada underperforming kepada outperforming. Tiga bulan lalu, XLE merupakan pemimpin. Rangka kerja putaran (rotation) menetapkan apa?"
   options={[
-    "Putaran kepimpinan sedang berlaku (pelbagai sektor beralih dalam tempoh 20 hari). Kurangkan pendedahan XLE, tingkatkan ke XLK/XLP berdasarkan kekuatan relatif, dan biarkan saiz kedudukan mengikut ranking kekuatan relatif berbanding keyakinan sebelum ini.",
+    "Putaran kepimpinan sedang berlaku (pelbagai sektor beralih dalam tempoh 20 hari). Kurangkan pendedahan XLE, tingkatkan pelaburan ke XLK/XLP berdasarkan kekuatan relatif, dan biarkan saiz kedudukan mengikuti ranking kekuatan relatif berbanding keyakinan terdahulu.",
     "Beli lebih XLE — ia kini murah.",
-    "Pegang XLE — ia akan kembali; mean reversion adalah undang-undang.",
-    "Jual semua; putaran bermaksud kemarau akan berlaku."
+    "Pegang XLE — ia akan kembali; reverensi purata adalah undang-undang.",
+    "Jual semua; putaran sektor bermaksud kemusnahan akan berlaku."
   ]}
   answer={0}
-  explanation="Jawapan salah yang menarik ialah pegang XLE — 'XLE akan kembali'. Mean reversion dalam satu sektor adalah nyata dalam tempoh tahun, bukan minggu. Dalam rejim putaran, isyaratnya ialah pusingan rentas sektor, dan langkah yang betul ialah menyeimbangkan semula ke arah kepimpinan yang diukur. Membeli lebih XLE — lebih banyak penenang — memperburuk kesilapan; menjual semua membingungkan putaran sektor dengan arah indeks — mereka adalah bebas."
+  explanation="Jawapan salah yang menggoda ialah pegang XLE — 'XLE akan kembali'. Reverensi purata dalam satu sektor adalah nyata selama bertahun-tahun, bukan berminggu-minggu. Dalam rejim putaran, isyaratnya ialah beralih rentas (cross-sectional flip), dan langkah betul ialah menyeimbangkan semula ke arah kepimpinan yang diukur. Membeli lebih XLE — lebih banyak daripada yang kalah — memperburuk kesilapan; menjual semua membingungkan putaran sektor dengan arah indeks — ia adalah bebas."
 />
 
 <Quiz
-  question="Fed menurunkan kadar 50bp dalam tetingkap 6 minggu dan hasil 10-tahun turun 80bp. Secara sejarah, corak putaran sektor manakah yang berkorelasi dengan tetapan makro ini, dan apakah cara yang betul untuk menyatakannya dalam mandat?"
+  question="The Fed memotong kadar 50bp dalam tetingkap 6 minggu dan hasil 10-tahun turun 80bp. Secara sejarah, corak putaran sektor manakah yang berkorelasi dengan tetapan makro ini, dan apakah cara betul untuk menyatakannya dalam mandat?"
   options={[
     "Ia tidak penting — putaran adalah rawak.",
     "Tenaga + komoditi memimpin; putar 30% portfolio ke XLE.",
-    "Kewangan selalu memimpin penurunan kadar; muatkan XLF.",
-    "Pertumbuhan sensitif kadar dan saham kecil (XLK, IWM) serta defensif sensitif hasil (XLU, hartanah) melebihi tenaga dan kewangan; tingkatkan pendedahan secara berperingkat pada bacaan kekuatan relatif yang disahkan, mematuhi had kedudukan tunggal dan sektor tunggal dalam mandat."
+    "Kewangan sentiasa memimpin pemotongan kadar; muatkan XLF.",
+    "Pertumbuhan sensitif kadar dan syarikat kecil (XLK, IWM) serta defensif sensitif hasil (XLU, hartanah) mengatasi tenaga dan kewangan; tingkatkan pendedahan secara berperingkat pada bacaan kekuatan relatif yang disahkan, mematuhi had kedudukan tunggal dan sektor tunggal dalam mandat."
   ]}
   answer={3}
-  explanation="Jawapan salah yang menarik ialah muatkan XLF — 'kewangan memimpin penurunan kadar' ialah heuristik biasa, tetapi dalam kenyataannya kitaran penurunan kadar yang curam mampat margin bersih faedah bank dan secara sejarah perniagaan ialah pertumbuhan sensitif kadar + defensif tempoh. Sintesis yang betul menghubungkan input makro kepada bacaan kekuatan relatif sektor dan mematuhi had diversifikasi mandat supaya anda tidak memuatkan 30%+ ke dalam satu sektor seperti jawapan putar-ke-XLE lakukan."
+  explanation="Jawapan salah yang menggoda ialah muatkan XLF — 'kewangan memimpin pemotongan kadar' adalah heuristik biasa, tetapi dalam kenyataannya kitaran pemotongan kadar yang curam memampatkan margin bersih faedah bank dan secara sejarah perniagaan ini ialah pertumbuhan sensitif kadar + defensif tempoh. Sintesis yang betul menghubungkan input makro kepada bacaan kekuatan relatif sektor dan mematuhi had diversifikasi mandat supaya anda tidak memuatkan lebih 30% ke dalam satu sektor seperti yang dilakukan oleh jawapan putar-ke-XLE."
 />
 
 ## Cuba sendiri
 
-Buka <Term id="ami_one_on_one" /> dengan News Analyst dan tanya: "Sektor manakah yang memimpin SPY oleh kekuatan relatif 20-hari sekarang, sektor manakah yang telah bertukar status dalam 20 hari perdagangan terakhir, dan naratif makro manakah yang dipadankan dengan peta kepimpinan semasa?" Kemudian buka <Term id="ami_decision_journal" />, lihat kembali tiga perdagangan terakhir anda, dan tandakan sektor. Jika anda terkonsentrasi dalam satu sektor, tulis sama ada ia masih memimpin.
+Buka <Term id="ami_one_on_one" /> dengan News Analyst dan tanya: "Sektor manakah yang memimpin SPY berdasarkan kekuatan relatif 20-hari sekarang, sektor manakah yang telah menukar status dalam 20 hari dagangan terakhir, dan naratif makro manakah yang berpasangan dengan peta kepimpinan semasa?" Kemudian buka <Term id="ami_decision_journal" />, lihat kembali tiga dagangan terakhir anda, dan tandakan sektornya. Jika anda terkonsentrasi dalam satu sektor, tulis sama ada ia masih memimpin.
 
-## Intipati
+## Pengajaran
 
-Kepimpinan sektor berputar mengikut input makro lebih cepat daripada yang diakui naratif; percayai kekuatan relatif 20-hari terhadap SPY melebihi keyakinan anda tentang pemenang tahun lalu.
+Kepimpinan sektor berputar mengikut input makro dengan lebih pantas daripada yang diakui naratif; percayai kekuatan relatif 20-hari terhadap SPY melebihi keyakinan anda tentang pemenang tahun lalu.

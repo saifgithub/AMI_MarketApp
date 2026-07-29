@@ -17,26 +17,26 @@ updated_at: "2026-05-12"
 ---
 # Pengurusan Drawdown
 
-Drawdown ialah penurunan dari puncak ke lembah dalam ekuiti akaun anda. Ia juga bersifat asimetrik dalam cara yang kebanyakan pemula tidak sedari: kerugian 20% memerlukan keuntungan 25% untuk pulih; kerugian 50% memerlukan keuntungan 100%; kerugian 75% memerlukan keuntungan 300%. Semakin dalam lubang itu, semakin tidak seimbang usaha untuk memulihkannya. Pelajaran ini mengajar matematik pemulihan, peranan had drawdown yang diwajibkan, dan mengapa "Saya akan trade untuk pulih semula" adalah ayat paling mahal dalam industri ini.
+Drawdown ialah penurunan dari puncak ke lembah dalam ekuiti akaun anda. Ia juga bersifat asimetrik dalam cara yang jarang difahami oleh pemula: kerugian 20% memerlukan kenaikan 25% untuk pulih; kerugian 50% memerlukan kenaikan 100%; kerugian 75% memerlukan kenaikan 300%. Semakin dalam lubang itu, semakin tidak seimbang usaha untuk memanjat keluar. Pelajaran ini mengajar matematik pemulihan, peranan had drawdown yang diwajibkan, dan mengapa "saya akan trade untuk pulih semula" adalah ayat paling mahal dalam industri ini.
 
 <Animation name="drawdown_recovery" />
 
 ## Contoh
 
-Ambil akaun simulasi $50,000. Anda menghadapi cabaran: pertaruhan terkonsentrasi pada NVDA sebelum hasil, tambahan sektor cip yang berkorelasi yang jatuh bersamanya, dan trade kejar pada TSLA apabila dua yang pertama gagal. Akaun turun ke $35,000 — drawdown 30%. Untuk kembali ke $50,000, anda memerlukan keuntungan $15,000 pada asas $35,000. Itu adalah 42.9%, bukan 30%. Jika anda mendapat keuntungan 1% sebulan sebelum drawdown, anda memerlukan kira-kira 30 bulan untuk mendapat 30%; kini anda memerlukan 36 bulan prestasi sama untuk pulih dari satu minggu buruk.
+Ambil akaun simulasi $50,000. Anda menghadapi tempoh sukar: pertaruhan terkonsentrasi pada NVDA menjelang hasil kewangan, tambahan sektor cip yang berkorelasi yang jatuh bersamanya, dan trade kejar pada TSLA apabila dua yang pertama gagal. Akaun turun ke $35,000 — drawdown 30%. Untuk kembali ke $50,000, anda memerlukan keuntungan $15,000 pada asas $35,000. Itu adalah 42.9%, bukan 30%. Jika anda mendapat keuntungan 1% sebulan sebelum drawdown, anda memerlukan kira-kira 30 bulan untuk mendapat 30%; kini anda memerlukan 36 bulan prestasi sama untuk pulih daripada satu minggu buruk.
 
-Bandingkan dengan had drawdown diwajibkan 15%. Permulaan $50,000 sama, henti keras untuk trade baru pada $42,500. Drawdown 15% hanya memerlukan 17.6% untuk pulih — kira-kira 16 bulan pada kadar 1% sebulan yang sama. Asimetri ini menunjukkan mengapa had itu penting: setiap peratusan drawdown yang dielakkan bernilai lebih daripada peratusan keuntungan yang mungkin anda dapat. Tuntutan boleh disangkal: jika drawdown anda kekal bawah 20%, pemulihan masih kira-kira grind dua tahun pada pulangan disiplin biasa; melebihi 35% dan pemulihan menjadi masalah bertahun-tahun tanpa mengira kemahiran. Di Bursa Malaysia, akaun RM100,000 yang turun ke RM65,000 (drawdown 35%) memerlukan RM35,000 pada asas RM65,000 — 53.8% untuk mendaki keluar.
+Bandingkan dengan had drawdown diwajibkan 15%. Permulaan $50,000 yang sama, henti keras pada trade baru apabila ekuiti mencapai $42,500. Drawdown 15% hanya memerlukan 17.6% untuk pulih — kira-kira 16 bulan pada kadar 1% sebulan yang sama. Asimetri ini memberitahu anda mengapa had itu penting: setiap peratusan drawdown yang anda elakkan bernilai lebih daripada peratusan keuntungan yang mungkin anda dapat. Klaim boleh disangkal: jika drawdown anda kekal di bawah 20%, pemulihan masih memerlukan kira-kira dua tahun pada pulangan disiplin biasa; melebihi 35% dan pemulihan menjadi masalah bertahun-tahun tanpa mengira kemahiran. Di Bursa Malaysia, akaun RM100,000 yang turun ke RM65,000 (drawdown 35%) memerlukan RM35,000 pada asas RM65,000 — 53.8% untuk memanjat keluar.
 
 ## Perangkap
 
-Perangkapnya ialah meningkatkan saiz untuk pulih lebih cepat. Selepas drawdown 30%, akaun rasa rosak dan perlahan — keuntungan 1% hampir tidak menggerakkan bar ekuiti. Jadi, pemula menggandakan saiz posisi: "Saya perlu keuntungan lebih besar untuk mendaki keluar." Ini adalah tingkah laku tepat yang menukar drawdown 30% kepada drawdown 60%, kerana volatiliti yang sama yang menghasilkan lubang pertama kini mengenai pendedahan berganda. Model mental yang betul: drawdown dipulihkan dengan mengurangkan saiz dan memperketat disiplin, bukan mengejar skala. Anda mengecil apabila anda berdarah, bukan apabila anda menang. PM melaksanakan ini untuk anda — `max_drawdown_pct` yang diwajibkan menghentikan entry baru sekali ekuiti melintasi ambang, tidak kira seberapa yakin anda rasa.
+Perangkapnya ialah meningkatkan saiz untuk pulih lebih cepat. Selepas drawdown 30%, akaun terasa rosak dan perlahan — keuntungan 1% hampir tidak menggerakkan bar ekuiti. Jadi, pemula menggandakan saiz posisi: "Saya perlukan keuntungan lebih besar untuk memanjat keluar." Ini adalah tingkah laku tepat yang menukar drawdown 30% kepada drawdown 60%, kerana volatiliti yang sama yang menghasilkan lubang pertama kini mengenai pendedahan berganda. Model mental yang betul: drawdown dipulihkan dengan mengurangkan saiz dan memperketatkan disiplin, bukan mengejar skala. Anda mengecil apabila anda sedang berdarah, bukan apabila anda sedang menang. Pengurus Portfolio (PM) melaksanakan ini untuk anda — `max_drawdown_pct` yang diwajibkan menghentikan entry baru sekali ekuiti melintasi ambang, tidak kira seberapa yakin anda.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Akaun anda bernilai $100,000. Selepas bulan yang buruk, ia jatuh kepada $60,000. Berapakah pulangan yang diperlukan pada asas $60,000 ini untuk kembali ke $100,000?"
+  question="Akaun anda bernilai $100,000. Selepas bulan yang buruk, ia turun kepada $60,000. Berapakah pulangan (gain) yang diperlukan pada asas $60,000 untuk pulih ke $100,000?"
   options={[
     "66.67%",
     "150%",
@@ -44,25 +44,25 @@ Perangkapnya ialah meningkatkan saiz untuk pulih lebih cepat. Selepas drawdown 3
     "60%"
   ]}
   answer={0}
-  explanation="Pulih = (100,000 − 60,000) ÷ 60,000 = 40,000 ÷ 60,000 = 66.67%. Penurunan 40% memerlukan pulangan 66.67% untuk pulih. Menjawab 40% andaikan anda memulihkan peratusan yang hilang, tetapi peratusan itu kini terpakai pada asas yang lebih kecil, jadi ia meninggalkan anda dengan baki yang kurang."
+  explanation="Pulih = (100,000 − 60,000) ÷ 60,000 = 40,000 ÷ 60,000 = 66.67%. Penurunan 40% memerlukan pulangan 66.67% untuk pulih. Menjawab 40% mengandaikan anda memulihkan peratusan yang hilang, tetapi peratusan itu kini dikenakan ke atas asas yang lebih kecil, jadi ia meninggalkan anda dengan baki yang kurang."
 />
 
 <Quiz
-  question="Trader A beroperasi dengan had penurunan keras 15% — mereka menghentikan entri baharu sekali turun 15% dari puncak. Trader B tiada had dan bersedia terus berdagang melalui sebarang penurunan. Kedua-duanya mempunyai strategi yang sama yang menghasilkan pulangan purata bulanan 1% apabila aktif. Dalam simulasi lima tahun dengan dua suku tahun buruk dan tiga suku tahun baik setiap tahun, siapa yang berakhir dengan ekuiti lebih tinggi?"
+  question="Trader A beroperasi dengan had penurunan (drawdown) keras 15% — mereka menghentikan entri baharu apabila turun 15% dari puncak. Trader B tiada had dan bersedia terus berdagang melalui sebarang penurunan. Kedua-duanya mempunyai strategi yang sama yang menghasilkan pulangan purata bulanan 1% apabila aktif. Dalam simulasi lima tahun dengan dua suku tahun buruk dan tiga suku tahun baik setiap tahun, siapa yang berakhir dengan ekuiti lebih banyak?"
   options={[
     "Trader B — lebih hari dagangan dengan jangkaan +1% bermakna lebih banyak pulangan terkumpul.",
-    "Seri — strategi asas adalah sama jadi jangkaan akan bertemu.",
+    "Seri — strategi teras adalah sama jadi jangkaan akan konvergen.",
     "Trader A — had tersebut mengekalkan matematik pemulihan pada saiz yang boleh dikendalikan (penurunan 15% memerlukan 17.6% untuk pulih); penurunan lebih dalam Trader B memerlukan pulangan yang tidak seimbang lebih besar, dan masa yang dihabiskan untuk pemulihan adalah masa yang tidak digunakan untuk terkumpul ke atas.",
     "Trader B — menghentikan dagangan adalah sama seperti tiada kelebihan semasa penghentian."
   ]}
   answer={2}
-  explanation="Jawapan salah yang memikat ialah 'Trader B — lebih hari dagangan = lebih banyak kemenangan'. Ia terasa betul kerana jangkaan asas adalah positif. Tetapi matematik pemulihan memecahkan simetri: setiap penurunan yang dilalui Trader B memerlukan pulangan yang tidak seimbang lebih besar untuk pulih, dan bulan-bulan yang dihabiskan untuk memulihkan diri adalah bulan yang di mana pulangan kecil Trader A dan pemulihan yang lebih pantas digunakan untuk terkumpul ke atas dari asas yang lebih tinggi. Perangkap 'seri — strategi sama' mengabaikan bahawa kedalaman penurunan mengubah ekuiti asas yang pulangan masa depan terkumpul padanya."
+  explanation="Jawapan salah yang menarik ialah 'Trader B — lebih hari dagangan = lebih banyak kemenangan'. Ia terasa betul kerana jangkaan teras adalah positif. Tetapi matematik pemulihan memecahkan simetri: setiap penurunan yang dilalui Trader B memerlukan pulangan yang tidak seimbang lebih besar untuk pulih, dan bulan-bulan yang dihabiskan untuk memulihkan keadaan adalah bulan yang di mana Trader A menghabiskan masa untuk terkumpul ke atas dari asas yang lebih tinggi akibat penurunan yang lebih kecil dan pemulihan yang lebih pantas. Perangkap 'seri — strategi sama' mengabaikan bahawa kedalaman penurunan mengubah ekuiti asas yang pulangan masa hadapan terkumpul ke atasnya."
 />
 
 ## Cuba sendiri
 
-Buka editor <Term id="ami_mandate" /> dan tetapkan `max_drawdown_pct` kepada 20. Kemudian buka <Term id="ami_decision_journal" /> dan lihat lengkung ekuiti simulasi anda. Cari penurunan puncak ke lembah terbesar anda dan kira peratusan pemulihan yang diperlukan. Buka <Term id="ami_one_on_one" /> dengan Portfolio Manager dan tanya "Berapakah drawdown semasa saya dari puncak, dan pada kadar kemenangan terkini saya, berapa banyak trade sehingga saya pulih?"
+Buka editor <Term id="ami_mandate" /> dan tetapkan `max_drawdown_pct` kepada 20. Kemudian buka <Term id="ami_decision_journal" /> dan lihat lengkung ekuiti simulasi anda. Cari penurunan puncak-ke-lembah terbesar anda dan kira peratusan pemulihan yang diperlukan. Buka <Term id="ami_one_on_one" /> dengan Pengurus Portfolio dan tanya "Berapakah drawdown semasa saya dari puncak, dan pada kadar kemenangan terkini saya, berapa banyak trade sehingga saya pulih?"
 
-## Intipati
+## Penutup
 
-Kerugian 50% memerlukan keuntungan 100% — lubang sentiasa menggali lebih cepat daripada pengisian mendaki. Hadkan drawdown anda sebelum matematik menjadi masalah orang lain.
+Kerugian 50% memerlukan keuntungan 100% — lubang sentiasa menggali lebih cepat daripada pengisian naik. Hadkan drawdown anda sebelum matematik menjadi masalah orang lain.
