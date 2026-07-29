@@ -737,10 +737,15 @@ def _build_room_sector_context(
         return [], {}, None, {}
     try:
         sim = get_sim_engine()
-        holdings = list(sim.ensure_portfolio(user_id).holdings)
+        portfolio = sim.ensure_portfolio(user_id)
+        holdings = list(portfolio.holdings)
         marks = sim.current_marks([h.ticker for h in holdings]) if holdings else {}
         smap = default_sector_map()
-        weights = allocate_by_sector(holdings, marks, sector_of=smap.sector)
+        # DEF149: cash is part of the denominator, so the weights the agents reason
+        # from are the same ones the floor enforces and the donut draws.
+        weights = allocate_by_sector(
+            holdings, marks, cash=portfolio.current_cash, sector_of=smap.sector,
+        )
         return holdings, marks, smap, weights
     except Exception as exc:  # noqa: BLE001 — degrade, never sink the run
         logger.warning("room_sector_context_failed", user_id=str(user_id), error=str(exc)[:200])

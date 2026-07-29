@@ -554,6 +554,11 @@ class _SectorLegendRow extends StatelessWidget {
 /// DEF059 inversion guard (the "Other" bucket is disclosed, never a breach).
 Color _sectorColor(String sector) {
   if (sector == 'Other') return AmiColors.slate500;
+  // DEF149: uninvested cash is its own slice now. Deliberately neutral and dimmer
+  // than a sector — it is the part of the portfolio that is NOT an allocation
+  // decision, and it never counts toward a concentration breach. Without this it
+  // would draw a hash-assigned sector colour and read as a holding.
+  if (sector == 'Cash') return AmiColors.slate700;
   const palette = [
     AmiColors.hexCyan,
     AmiColors.hexPurple,

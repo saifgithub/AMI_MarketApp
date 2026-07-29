@@ -41,6 +41,15 @@ from app.services.classification_universe import latest_sector_map
 # allocation feed, but it can NEVER trigger a concentration block (DEF059 guard).
 OTHER = "Other"
 
+# Uninvested cash, as its own allocation bucket (DEF149). Disclosed on the feed so the
+# donut's slices are honest about what fraction of the portfolio is NOT invested, and
+# excluded from the concentration judgement for the same reason OTHER is — holding cash
+# is never a concentration breach.
+CASH = "Cash"
+
+# Buckets that are disclosed but can never breach the concentration cap.
+NON_SECTOR_BUCKETS = frozenset({OTHER, CASH})
+
 # Default sector-concentration cap when the mandate carries the middle
 # concentration_tolerance (per `lifecycle.md:120` — "any sector > 40% (default)").
 _DEFAULT_SECTOR_CAP = 0.40
@@ -108,17 +117,33 @@ def allocate_by_sector(
     holdings: Iterable[Any],
     quotes: dict[str, float],
     *,
+    cash: float = 0.0,
     sector_of: Callable[[str], str] | None = None,
 ) -> dict[str, float]:
-    """Sector → weight (0.0–1.0), normalised over invested market value.
+    """Sector → weight (0.0–1.0), normalised over TOTAL portfolio value.
 
-    Sums `quantity × current_price` per sector and divides by the total invested
-    value. Empty portfolio (or all-zero value) → `{}`. A ticker whose sector is
-    unknown lands in the "Other" bucket — logged, never raised. Pure given
+    Sums `quantity × current_price` per sector, adds `cash` as its own bucket, and
+    divides by the total. Empty portfolio (or all-zero value) → `{}`. A ticker whose
+    sector is unknown lands in the "Other" bucket — logged, never raised. Pure given
     `sector_of` (the ticker → sector resolver); production callers omit it and get the
-    snapshot-backed `default_sector_map().sector`, tests inject a fixture."""
+    snapshot-backed `default_sector_map().sector`, tests inject a fixture.
+
+    DEF149: the denominator used to be invested value alone, so a user's FIRST buy was
+    100% of "the portfolio" no matter how small it was against their cash. Cash is a
+    position — it is the one every allocation is measured against — and the breach copy
+    already said "of your portfolio". Callers that hold cash MUST pass it; the 0.0
+    default exists for the genuinely cash-free caller, not as a convenience.
+    """
     resolver = sector_of or default_sector_map().sector
     values = _sector_values(holdings, quotes, resolver)
+    if not values:
+        # Nothing invested — there is no allocation to speak of, and the CR026
+        # contract is `{}` so the client hides the card entirely. Returning a
+        # lone 100%-Cash ring would put a meaningless donut on every new user's
+        # portfolio screen, restating the cash figure already above it.
+        return {}
+    if cash and cash > 0:
+        values[CASH] = float(cash)
     total = sum(values.values())
     if total <= 0:
         return {}
@@ -162,15 +187,24 @@ def sector_cap_breach(
     proposed_value: float,
     sector_map: Any,
     cap: float,
+    portfolio_value: float,
 ) -> SectorBreach | None:
     """Deterministic sector-concentration check for a proposed BUY.
 
     Returns a `SectorBreach` when adding `proposed_value` of `proposed_ticker` would
-    push that ticker's sector past `cap` (as a fraction of the post-trade invested
-    value), else None. Buying a sector only raises THAT sector's weight (every other
-    known sector's weight falls as the denominator grows), so only the proposed
+    push that ticker's sector past `cap` **as a fraction of total portfolio value**,
+    else None. Buying a sector only raises THAT sector's weight, so only the proposed
     sector can newly breach — an existing over-cap sector is never used to block a
     DIFFERENT-sector buy that would actually improve diversification.
+
+    DEF149 — the denominator is `portfolio_value` (cash + invested), NOT invested
+    alone. A BUY spends cash to acquire shares, so it moves value between two buckets
+    and leaves the total unchanged: the correct denominator is the PRE-trade total,
+    and adding `proposed_value` to it (as this did) double-counts the purchase. With
+    the old invested-only denominator a brand-new user's first buy was always exactly
+    100% of "the portfolio" and was always blocked, whatever its size against their
+    cash. `portfolio_value` is required, not defaulted — a caller that cannot supply
+    it must not silently fall back to the arithmetic that caused the defect.
 
     The "Other" (unknown) bucket NEVER breaches — an unclassified ticker is no ruling
     either way (the DEF059 inversion guard), mirroring the classification UNKNOWN=
@@ -185,7 +219,12 @@ def sector_cap_breach(
         return None  # unknown sector → disclosed elsewhere, never a block
     current = _sector_values(holdings, quotes, resolver)
     projected_sector_val = current.get(proposed_sector, 0.0) + proposed_value
-    projected_total = sum(current.values()) + proposed_value
+    # Guard a stale/short portfolio_value: the total can never be less than what the
+    # post-trade portfolio demonstrably holds, or the weight reads above 1.0.
+    projected_total = max(
+        float(portfolio_value or 0.0),
+        sum(current.values()) + proposed_value,
+    )
     if projected_total <= 0:
         return None
     weight = projected_sector_val / projected_total

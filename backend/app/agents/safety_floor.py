@@ -262,7 +262,12 @@ def check_mandate_compliance(
         and holdings is not None
         and quotes is not None
     ):
-        proposed_value = (proposed.limit_price or 0.0) * proposed.quantity
+        # DEF149: a MARKET order carries no limit_price, so pricing the proposal off
+        # limit_price alone made proposed_value 0 and the whole check silently
+        # no-opped — the sector cap never fired on a market buy. Fall back to the
+        # mark we were already handed for this ticker.
+        unit_price = proposed.limit_price or (quotes or {}).get(t) or 0.0
+        proposed_value = float(unit_price) * proposed.quantity
         breach = _sector_cap_breach(
             holdings=holdings,
             quotes=quotes,
@@ -270,6 +275,7 @@ def check_mandate_compliance(
             proposed_value=proposed_value,
             sector_map=sector_map,
             cap=_sector_concentration_cap(mandate),
+            portfolio_value=portfolio_value,
         )
         if breach is not None:
             violations.append(breach.message())

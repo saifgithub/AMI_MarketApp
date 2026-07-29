@@ -196,18 +196,23 @@ def test_other_bucket_never_blocks_the_inversion_guard(base_mandate: Mandate):
 
 
 def test_sector_cap_breach_helper_only_flags_the_proposed_sector():
+    # DEF149: `portfolio_value` (cash + invested) is now the denominator and is a
+    # required argument. This book is fully invested — $10,000 of holdings, no cash
+    # left — so the weights are the same ones this test always asserted.
     holdings = [_H("AAPL", 30), _H("JPM", 30), _H("XOM", 40)]
     quotes = {"AAPL": 100.0, "JPM": 100.0, "XOM": 100.0}
     # Buying MORE Energy (already 40%) breaches; buying FS does not.
     breach = sector_cap_breach(
         holdings=holdings, quotes=quotes, proposed_ticker="XOM",
         proposed_value=2000.0, sector_map=_map(), cap=0.40,
+        portfolio_value=10_000.0,
     )
     assert breach is not None and breach.sector == "Energy"
     assert breach.projected_weight > 0.40
     ok = sector_cap_breach(
         holdings=holdings, quotes=quotes, proposed_ticker="JPM",
         proposed_value=500.0, sector_map=_map(), cap=0.40,
+        portfolio_value=10_000.0,
     )
     assert ok is None
 
@@ -291,16 +296,22 @@ def test_sector_allocation_endpoint_contract_and_ownership():
     assert r.status_code == 200, r.text
     body = r.json()
     assert set(body.keys()) == {"allocation", "total_value", "compliance"}
-    assert body["allocation"] == {"Technology": 1.0}  # 100% AAPL → Technology
-    assert body["total_value"] == pytest.approx(1000.0)
+    # DEF149: weights are a fraction of the WHOLE portfolio. $1,000 of AAPL bought
+    # from $10,000 of starting capital leaves $9,000 in cash, so this is Technology
+    # 10% / Cash 90% — not the "Technology 100%" the invested-only denominator used
+    # to report. That old reading is the defect: it made a user's first buy look
+    # like total concentration and the floor blocked it.
+    assert body["allocation"] == {"Technology": 0.1, "Cash": 0.9}
+    assert body["total_value"] == pytest.approx(10_000.0)  # cash + invested
     comp = body["compliance"]
     assert set(comp.keys()) == {"max_sector", "max_sector_name", "max_allowed", "compliant"}
-    # A single-name Tech book is 100% > 40% → non-compliant, and max_allowed is the
-    # mandate default 0.40 (a fresh user resolves to the hydrated default mandate).
+    # max_allowed is the mandate default 0.40 (a fresh user resolves to the hydrated
+    # default mandate). Cash is disclosed in `allocation` but never judged, the same
+    # way "Other" isn't — so the max SECTOR is Technology at 10%, and compliant.
     assert comp["max_allowed"] == 0.40
     assert comp["max_sector_name"] == "Technology"
-    assert comp["max_sector"] == pytest.approx(1.0)
-    assert comp["compliant"] is False
+    assert comp["max_sector"] == pytest.approx(0.1)
+    assert comp["compliant"] is True
 
     # Another user cannot read this user's allocation.
     app.dependency_overrides[get_current_user] = lambda: _U(id=uuid4())
@@ -316,8 +327,12 @@ def test_sector_allocation_endpoint_empty_portfolio():
     r = client.get(f"/v1/portfolio/sector-allocation/{user_id}")
     assert r.status_code == 200, r.text
     body = r.json()
+    # DEF149: nothing invested → still `{}`, so the client keeps hiding the card
+    # rather than drawing a meaningless 100%-Cash ring on a brand-new portfolio.
+    # `total_value` is the portfolio total though, and a fresh user holds $10,000
+    # of starting capital in cash.
     assert body["allocation"] == {}
-    assert body["total_value"] == 0.0
+    assert body["total_value"] == pytest.approx(10_000.0)
     assert body["compliance"]["compliant"] is True  # nothing held → nothing breaches
 
 
@@ -650,9 +665,23 @@ def test_room_runner_live_pm_enforce_safety_floor_rejects_sector_breach():
         user_id = uuid4()
         mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
 
-        # Tech 30% / FS 30% / Energy 40% book, sized off the REAL deterministic
+        # Tech 39% / FS 30% / Energy 30% book, sized off the REAL deterministic
         # mock-walk price (this is the process-wide sim engine room_runner uses).
-        for ticker, target_value in (("AAPL", 3000.0), ("JPM", 3000.0), ("XOM", 4000.0)):
+        #
+        # DEF149 reshaped this book, for two reasons.
+        # 1. Energy sat at exactly 40% — ON the cap — which only survived because
+        #    the old denominator excluded cash. Now that a weight is a fraction of
+        #    total portfolio value, mock-walk drift moved the denominator and the
+        #    SETUP buy itself tripped the floor.
+        # 2. Tech had to rise to 39%, because the PM's requested 20% size is clamped
+        #    to `risk_tier_cap(risk_score=3)` = 3% before it ever reaches the floor.
+        #    The old book only breached because run()'s PLACEHOLDER $20k
+        #    portfolio_value made that clamped 3% worth $600 against a real $10k
+        #    book — an inflated denominator doing the work. At 39% + 3% = 42% the
+        #    veto is earned by the concentration itself.
+        # The boundary is probed properly in test_def149_sector_cap_includes_cash.py;
+        # this test exists to prove a live-PM APPROVE gets vetoed at all.
+        for ticker, target_value in (("AAPL", 3900.0), ("JPM", 3000.0), ("XOM", 3000.0)):
             price = sim.current_price(ticker)
             qty = target_value / price
             r = sim.submit(
@@ -661,12 +690,22 @@ def test_room_runner_live_pm_enforce_safety_floor_rejects_sector_breach():
             )
             assert r.accepted, r.compliance.violations
 
-        # A liberal PM APPROVEs a 20%-of-portfolio ($20k default portfolio_value)
-        # Tech (MSFT) buy — massively over the sector cap regardless of exact
-        # rounding, so the deterministic floor, not the LLM, must veto it.
+        # A liberal PM APPROVEs a Tech (MSFT) buy on top of a book already 39% Tech.
+        # Its 20% request is clamped to the 3% risk-tier cap, so this lands Tech at
+        # 42% — over the 40% sector cap — and the deterministic floor, not the LLM,
+        # must veto it.
+        #
+        # DEF149: `portfolio_value` is now the sector denominator, so it has to be
+        # the user's REAL total rather than run()'s placeholder default. Production
+        # already does exactly this — `api/room.py:171` passes
+        # `sim.valuation_snapshot(user_id)`. Leaving the default here had the floor
+        # judging a $10k book against a $20k denominator, which halves every weight
+        # and is not a scenario the app can produce.
+        portfolio_value = sim.total_value(user_id)
         runner = RoomRunner(llm=_SectorPmGateway())  # type: ignore[arg-type]
         events = _collect(runner.run(
             user_id=user_id, ticker="MSFT", mandate=mandate,
+            portfolio_value=portfolio_value,
             char_delay_min=0.0, char_delay_max=0.0,
         ))
         v = next(e.verdict for e in events if e.kind == "verdict")

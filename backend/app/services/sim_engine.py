@@ -546,7 +546,11 @@ class SimEngine:
             # CR026: sector-concentration cap bites the same gate. Resolver reads the
             # stored snapshot — no request-path socket (CR075/DEF089).
             holdings=portfolio.holdings,
-            quotes=self.current_marks([h.ticker for h in portfolio.holdings]),
+            # DEF149: the proposed ticker must be priced too, or the sector cap
+            # cannot value a first-time buy of a name not already held.
+            quotes=self.current_marks(
+                [h.ticker for h in portfolio.holdings] + [ticker]
+            ),
             sector_map=default_sector_map(),
         )
 
@@ -716,7 +720,11 @@ class SimEngine:
             # CR026: sector-concentration cap bites the preview gate too, so the
             # trade ticket's "would this be allowed?" reflects it. No request socket.
             holdings=portfolio.holdings,
-            quotes=self.current_marks([h.ticker for h in portfolio.holdings]),
+            # DEF149: the proposed ticker must be priced too, or the sector cap
+            # cannot value a first-time buy of a name not already held.
+            quotes=self.current_marks(
+                [h.ticker for h in portfolio.holdings] + [ticker]
+            ),
             sector_map=default_sector_map(),
         )
 

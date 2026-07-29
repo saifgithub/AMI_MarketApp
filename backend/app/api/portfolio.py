@@ -22,7 +22,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.api.dependencies import get_current_user
 from app.db.models import User
 from app.services.sector_allocation import (
-    OTHER,
+    NON_SECTOR_BUCKETS,
     SectorMap,
     allocate_by_sector,
     default_sector_map,
@@ -68,14 +68,19 @@ async def sector_allocation(
     p, marks, _total_value, _drawdown_pct, _source = await asyncio.to_thread(
         sim.portfolio_marks_snapshot, user_id,
     )
-    total_value = round(sum(marks.get(h.ticker, 0.0) * h.quantity for h in p.holdings), 2)
+    invested = sum(marks.get(h.ticker, 0.0) * h.quantity for h in p.holdings)
+    # DEF149: allocation is a fraction of the WHOLE portfolio, cash included, so the
+    # donut and the cap agree with the breach copy's own words ("of your portfolio").
+    total_value = round(invested + p.current_cash, 2)
 
-    allocation = allocate_by_sector(p.holdings, marks, sector_of=sector_map.sector)
+    allocation = allocate_by_sector(
+        p.holdings, marks, cash=p.current_cash, sector_of=sector_map.sector,
+    )
 
     mandate = resolve_mandate(user_id, None)
     cap = sector_concentration_cap(mandate)
 
-    known = {s: w for s, w in allocation.items() if s != OTHER}
+    known = {s: w for s, w in allocation.items() if s not in NON_SECTOR_BUCKETS}
     if known:
         max_name, max_weight = max(known.items(), key=lambda kv: kv[1])
     else:
