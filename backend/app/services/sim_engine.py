@@ -26,7 +26,8 @@ Architecture overview:
     │       4. If failed: return ComplianceResult with violations.
     ├── tick_marks() → refresh every ticker's mark
     └── evaluate_outcomes() → for each open trade with a stop/target,
-            flip outcome to WIN / LOSS when hit.
+            flip outcome to WIN / LOSS when hit, and liquidate the
+            position — reduce the holding, credit the proceeds.
 
 Setting `USE_REAL_MARKET_DATA=true` in env flips quotes from the
 deterministic mock walk to live Yahoo prices (with mock fallback on
@@ -787,23 +788,40 @@ class SimEngine:
 
     def _apply_sell_row(
         self, s, p_row: SimPortfolioRow, ticker: str, qty: float, fill: float,
-    ) -> None:
-        proceeds = fill * qty
+    ) -> float:
+        """Reduce (or remove) the holding, credit the proceeds, return qty sold.
+
+        Sells only what is still on the books, and only cash for what it sold.
+        `evaluate_outcomes` closes several trades against one holding in a
+        single pass, and a row already deleted earlier in that pass is still
+        present in `p_row.holdings` until the session expires it — selling it
+        twice would credit cash for shares that no longer exist.
+        """
+        sold = 0.0
         for h in list(p_row.holdings):
-            if h.ticker != ticker:
+            if h.ticker != ticker or h in s.deleted:
                 continue
-            remaining = float(h.quantity) - qty
+            sold = min(qty, float(h.quantity))
+            remaining = float(h.quantity) - sold
             if remaining > 1e-6:
                 h.quantity = remaining
             else:
                 s.delete(h)
             break
-        p_row.current_cash = round(float(p_row.current_cash) + proceeds, 2)
+        p_row.current_cash = round(float(p_row.current_cash) + fill * sold, 2)
+        return sold
 
     # ── Outcomes ───────────────────────────────────────────────────────
 
     def evaluate_outcomes(self, user_id: UUID) -> list[OutcomeUpdate]:
-        """Check open trades against stop/target and flip status if hit."""
+        """Check open trades against stop/target, and liquidate the ones that hit.
+
+        A hit closes the position for real — the holding is reduced or removed
+        and the proceeds credited, exactly as `manual_close` does. DEF110: this
+        used to stamp `realised_pnl` and leave the shares on the books, so a
+        stopped-out position stayed in the portfolio, in `total_value`, and in
+        the sector concentration `check_mandate_compliance` hard-REJECTs on.
+        """
         updates: list[OutcomeUpdate] = []
         with get_session() as s:
             rows = s.execute(
@@ -812,6 +830,8 @@ class SimEngine:
                     SimTradeRow.status == "open",
                 )
             ).scalars().all()
+            # Once, not per trade: N trades must sell against one live row.
+            p_row = self._load_portfolio_row(s, user_id)
             for t in rows:
                 price = self.current_price(t.ticker)
                 new_status: TradeStatus | None = None
@@ -828,10 +848,13 @@ class SimEngine:
                 t.closed_at = datetime.now(timezone.utc)
                 t.closed_price = price
                 t.realised_pnl = round((price - float(t.entry_price)) * float(t.quantity), 2)
+                if p_row is not None:
+                    self._apply_sell_row(s, p_row, t.ticker, float(t.quantity), price)
                 updates.append(OutcomeUpdate(
                     trade_id=t.id, new_status=new_status,
                     closed_price=price, realised_pnl=float(t.realised_pnl),
                 ))
+            s.flush()
         return updates
 
     def manual_close(self, user_id: UUID, trade_id: UUID) -> SimTrade | None:

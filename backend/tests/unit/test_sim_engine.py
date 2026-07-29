@@ -7,7 +7,6 @@ manual close.
 
 from __future__ import annotations
 
-import time
 from uuid import uuid4
 
 from app.schemas.trade import OrderType, Side
@@ -16,7 +15,6 @@ from app.services.market_data import (
     FallbackProvider,
     MockWalkProvider,
     Quote,
-    get_market_data_provider,
 )
 from app.services.sim_engine import SimEngine
 
@@ -202,27 +200,40 @@ def test_insufficient_cash_blocks_buy():
 
 
 def test_target_hit_flips_outcome_to_won():
-    sim = SimEngine()
+    """DEF110: this used to price off the stochastic mock walk and assert only
+    `isinstance(updates, list)` — a test that cannot fail, which is how a
+    stop/target hit shipped for months without ever closing the position.
+    Prices are fixed here so the outcome is decidable. The portfolio-side
+    consequences are pinned in test_def110_outcome_liquidates.py."""
+
+    class _FixedPrice:
+        name = "fixed"
+
+        def __init__(self, price):
+            self.price = price
+
+        def quote(self, ticker):
+            return Quote(price=self.price, source="fixed")
+
+        def get_price(self, ticker):
+            return self.price
+
+    provider = _FixedPrice(100.0)
+    sim = SimEngine(provider=provider)
     user_id = uuid4()
     mandate = hydrate_coach_mandate({"plan": "trader"})
-    price = sim.current_price("AAPL")
     result = sim.submit(
         user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=1,
-        mandate=mandate,
-        stop=price * 0.9,
-        target=price * 1.001,  # target right above mark — easy to trip
+        mandate=mandate, stop=90.0, target=110.0,
     )
     assert result.accepted
-    # Force the walk a few ticks forward by adjusting started_at backwards
-    provider = get_market_data_provider()
-    assert isinstance(provider, MockWalkProvider)
-    walk = provider._walks["AAPL"]
-    walk.started_at = time.time() - 60  # 60s of drift
-    # Direct outcome eval
+    assert sim.evaluate_outcomes(user_id) == [], "flipped before the target was hit"
+
+    provider.price = 110.0
     updates = sim.evaluate_outcomes(user_id)
-    # The walk is stochastic; depending on seed, target may or may not trip
-    # in 60s. We assert the function ran and either flipped or didn't.
-    assert isinstance(updates, list)
+    assert [u.new_status for u in updates] == ["won"]
+    assert updates[0].closed_price == 110.0
+    assert updates[0].realised_pnl == 10.0
 
 
 def test_aggregate_source_reports_leaf_when_all_same():
