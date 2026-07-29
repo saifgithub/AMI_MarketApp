@@ -148,6 +148,35 @@ Build proceeds against these as config placeholders (degrade-loudly if unset); t
 `READY_FOR_AUDIT` with the webhook + SDK wired and unit-tested against **mocked** RC payloads. The
 live-device purchase smoke test waits on Saiful (route via `coder.store` for the store side).
 
+### Provisioning status — 2026-07-29
+
+Saiful reports two RevenueCat keys added to `infra/alpha.env` (gitignored; canonical on the Mac,
+scp'd to `melehost:~/ami_trade/.env` by `/promote-to-alpha`). Values not inspected. **Neither is
+live yet** — three gaps between "in the file" and "working":
+
+1. **Key names are lowercase** (`revenuecat_public_sdk_api_key`, `revenuecat_secret_api_key`); every
+   other entry in the file is UPPERCASE. `docker-compose.yml:92` substitutes
+   `${REVENUECAT_SECRET_API_KEY:-}`, and Compose variable substitution is **case-sensitive** — a
+   lowercase name does not satisfy it, so the container still receives an empty value and the
+   alias transfer keeps returning `not_configured` (CR040 degrade-loudly, working as designed and
+   therefore easy to mistake for "not deployed yet"). Rename to `REVENUECAT_SECRET_API_KEY`.
+2. **The public SDK key has no consumer.** No backend setting reads it (`config.py` defines only
+   `revenuecat_webhook_secret` + `revenuecat_secret_api_key`); the app takes it at build time via
+   `--dart-define=REVENUECAT_IOS_SDK_KEY` / `REVENUECAT_ANDROID_SDK_KEY`
+   (`mobile/lib/services/billing/billing_config.dart:25-32`), and **no build script passes either
+   flag** — `scripts/build_testflight.sh:108-109`, `scripts/build_playstore.sh:111-114`,
+   `scripts/install_iphone.sh:97-98`. Until those are wired, every build ships with an empty
+   `publicSdkKey` and the paywall stays in the out-of-credits info state. Also note RC issues one
+   public key **per platform** (`appl_…` iOS, `goog_…` Android); a single stored value cannot serve
+   both.
+3. **`REVENUECAT_WEBHOOK_SECRET` is still absent** from `infra/alpha.env`. It is not issued by
+   RevenueCat — generate it (`openssl rand -hex 32`) and paste the same string into the RC
+   dashboard's webhook config. Until then `POST /v1/webhooks/revenuecat` refuses loudly (503), so
+   no entitlement or credit grant can land.
+
+Tracking stays on **DEF100** (`open`, Saiful-liaison) until a real purchase completes on a device;
+this CR is the code, DEF100 is the provisioning. DEF099's live RC-alias hop is gated on gap 1.
+
 ---
 
 ## Acceptance
