@@ -486,6 +486,20 @@ class SimEngine:
             )
         return last_loss_closed_at, trade_open_timestamps, existing_open_risk_pct
 
+    def risk_limit_context(
+        self, user_id: UUID, *, portfolio_value: float, quotes: dict[str, float]
+    ) -> tuple[datetime | None, list[datetime], float]:
+        """Public entry point to `_risk_limit_context` — for callers outside
+        submit()/preview() that need the SAME cooldown/over-trading/open-risk
+        trade-history context those two build for their own `check_mandate_compliance`
+        calls. CR101-BE2 round 2: the Room's scripted path (`room_runner._assemble_verdict`)
+        and the LLM-override wrapper (`enforce_safety_floor`) previously supplied none
+        of this, so three of the four new limits were silently off on the path the
+        user actually watches — this method is what they now call instead."""
+        return self._risk_limit_context(
+            user_id, portfolio_value=portfolio_value, quotes=quotes,
+        )
+
     def existing_open_risk_pct(
         self, user_id: UUID, *, portfolio_value: float, quotes: dict[str, float]
     ) -> float:

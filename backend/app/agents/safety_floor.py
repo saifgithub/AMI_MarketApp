@@ -8,6 +8,7 @@ See docs/initial_specs/02_agents/safety_floor.md for the full rationale.
 """
 
 from datetime import datetime, timezone
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -165,6 +166,14 @@ def append_safety_floor(prompt: str, agent_id: AgentId, mandate: Mandate) -> str
     return prompt + render_safety_floor_block(mandate)
 
 
+# CR101-BE2 round 2: `last_loss_closed_at=None` is a legitimate VALUE (the user has
+# never had a loss) as well as the "caller omitted this kwarg" default — the two
+# cannot share one sentinel or a set cooldown field goes silently unenforced
+# whenever a caller forgets the argument (the round-1 Room/LLM-override BLOCKER).
+# This sentinel is the "omitted" state; a real `None` stays a real `None`.
+CONTEXT_NOT_SUPPLIED: Any = object()
+
+
 def check_mandate_compliance(
     proposed: ProposedTrade,
     portfolio_value: float,
@@ -178,7 +187,7 @@ def check_mandate_compliance(
     quotes: dict[str, float] | None = None,
     sector_map: object | None = None,
     now: datetime | None = None,
-    last_loss_closed_at: datetime | None = None,
+    last_loss_closed_at: datetime | None = CONTEXT_NOT_SUPPLIED,
     trade_open_timestamps: list[datetime] | None = None,
     existing_open_risk_pct: float | None = None,
     proposed_stop: float | None = None,
@@ -215,12 +224,25 @@ def check_mandate_compliance(
         for callers that don't pass sector context). The "Other" (unclassified) bucket
         NEVER breaches — an unknown sector is no ruling either way (the DEF059 guard).
     now / last_loss_closed_at / trade_open_timestamps / existing_open_risk_pct /
-        proposed_stop: CR101-BE2's four new limits. All optional and independently
-        omittable — a caller that doesn't pass the data a given limit needs simply
-        doesn't get that limit checked (same "skip, don't crash" contract as
-        holdings/quotes/sector_map above), regardless of whether the mandate field
-        is set. `now` defaults to the real clock ONLY when omitted; every acceptance
-        test passes an explicit `now` (acceptance 7 — no reliance on wall-clock time).
+        proposed_stop: CR101-BE2's four new limits. `now` defaults to the real clock
+        ONLY when omitted; every acceptance test passes an explicit `now`
+        (acceptance 7 — no reliance on wall-clock time).
+
+        ROUND 2: "the caller didn't pass this" and "the user hasn't set this limit"
+        used to collapse to the same silent skip — the round-1 BLOCKER (a set
+        `post_loss_cooldown_hours` / over-trading brake / `max_open_risk_pct` went
+        unenforced at `room_runner.py` and the LLM-override wrapper, which never
+        supplied the context `sim_engine.py` does). Now: if the MANDATE FIELD is
+        unset, the limit is off, silently, same as before. If the mandate field IS
+        set, missing context is a LOUD failure — a violation naming the missing
+        input, hard-blocking the trade — never a silent pass. `holdings` (6d),
+        `trade_open_timestamps` (6e) and `existing_open_risk_pct` (6f) already
+        distinguish "omitted" from "a real empty/zero value" (their omitted state is
+        `None`; a real value is never `None` — an empty trade history is `[]`, zero
+        risk is `0.0`). `last_loss_closed_at` cannot: `None` is BOTH "omitted" and
+        "this user has never had a loss", a real, common value — so it defaults to
+        the `CONTEXT_NOT_SUPPLIED` sentinel instead of `None`, keeping a real `None`
+        distinguishable from an absent argument.
         `last_loss_closed_at`: the most recent trade closed with a realised loss
         (`post_loss_cooldown_hours`). `trade_open_timestamps`: every trade's
         `opened_at`, for the day/week over-trading brake — boundary is a FIXED UTC
@@ -390,7 +412,13 @@ def check_mandate_compliance(
     #   hard-blocks the next BUY (never a soft warning; L3/CR089 decided this).
     #   Sells are never blocked by a cooldown — it constrains new entries only.
     if proposed.is_buy and mandate.post_loss_cooldown_hours is not None:
-        if _in_cooldown(now_, last_loss_closed_at, mandate.post_loss_cooldown_hours):
+        if last_loss_closed_at is CONTEXT_NOT_SUPPLIED:
+            violations.append(
+                "post-loss cooldown is set on the mandate but the caller did not "
+                "supply loss history — blocked rather than silently skipped (CR040)"
+            )
+            blocked_by = blocked_by or "cooldown"
+        elif _in_cooldown(now_, last_loss_closed_at, mandate.post_loss_cooldown_hours):
             lifts_at = _cooldown_lifts_at(last_loss_closed_at, mandate.post_loss_cooldown_hours)
             violations.append(
                 f"post-loss cooldown active until {lifts_at.isoformat()} "
@@ -405,40 +433,50 @@ def check_mandate_compliance(
     #   not a buying freeze. Retro-tightening (a cap lowered below the current
     #   count) blocks every subsequent new-ticker BUY exactly this way; it never
     #   force-sells (BL12's `check_holdings_against_mandate` flags the breach).
-    if (
-        proposed.is_buy
-        and mandate.max_open_positions is not None
-        and holdings is not None
-    ):
-        held_tickers = {getattr(h, "ticker", "").upper() for h in holdings}
-        if t not in held_tickers and len(held_tickers) >= mandate.max_open_positions:
+    if proposed.is_buy and mandate.max_open_positions is not None:
+        if holdings is None:
             violations.append(
-                f"opening {t} would exceed the max open positions cap "
-                f"({mandate.max_open_positions}) — {len(held_tickers)} already held"
+                "max open positions cap is set on the mandate but the caller did "
+                "not supply holdings — blocked rather than silently skipped (CR040)"
             )
             blocked_by = blocked_by or "max_open_positions"
+        else:
+            held_tickers = {getattr(h, "ticker", "").upper() for h in holdings}
+            if t not in held_tickers and len(held_tickers) >= mandate.max_open_positions:
+                violations.append(
+                    f"opening {t} would exceed the max open positions cap "
+                    f"({mandate.max_open_positions}) — {len(held_tickers)} already held"
+                )
+                blocked_by = blocked_by or "max_open_positions"
 
     # 6e) Over-trading brake — max trades per day / per week (CR101-BE2). Counts
     #   every trade already submitted (either side) in the current UTC calendar
     #   day / ISO week; this proposal would be one more. Both windows are
     #   independent — either one at its cap blocks.
-    if trade_open_timestamps is not None:
-        if mandate.max_trades_per_day is not None:
-            count_today = _trades_since(trade_open_timestamps, _utc_day_start(now_))
-            if count_today >= mandate.max_trades_per_day:
-                violations.append(
-                    f"max trades per day ({mandate.max_trades_per_day}) already reached "
-                    f"({count_today} today, UTC calendar day)"
-                )
-                blocked_by = blocked_by or "over_trading"
-        if mandate.max_trades_per_week is not None:
-            count_week = _trades_since(trade_open_timestamps, _utc_week_start(now_))
-            if count_week >= mandate.max_trades_per_week:
-                violations.append(
-                    f"max trades per week ({mandate.max_trades_per_week}) already reached "
-                    f"({count_week} this ISO week, Monday 00:00 UTC)"
-                )
-                blocked_by = blocked_by or "over_trading"
+    if mandate.max_trades_per_day is not None or mandate.max_trades_per_week is not None:
+        if trade_open_timestamps is None:
+            violations.append(
+                "max trades per day/week is set on the mandate but the caller did "
+                "not supply trade history — blocked rather than silently skipped (CR040)"
+            )
+            blocked_by = blocked_by or "over_trading"
+        else:
+            if mandate.max_trades_per_day is not None:
+                count_today = _trades_since(trade_open_timestamps, _utc_day_start(now_))
+                if count_today >= mandate.max_trades_per_day:
+                    violations.append(
+                        f"max trades per day ({mandate.max_trades_per_day}) already reached "
+                        f"({count_today} today, UTC calendar day)"
+                    )
+                    blocked_by = blocked_by or "over_trading"
+            if mandate.max_trades_per_week is not None:
+                count_week = _trades_since(trade_open_timestamps, _utc_week_start(now_))
+                if count_week >= mandate.max_trades_per_week:
+                    violations.append(
+                        f"max trades per week ({mandate.max_trades_per_week}) already reached "
+                        f"({count_week} this ISO week, Monday 00:00 UTC)"
+                    )
+                    blocked_by = blocked_by or "over_trading"
 
     # 6f) Total open-risk cap (CR101-BE2). Sum of (position size % x stop
     #   distance %)/100 across open positions, including this proposal's own
@@ -446,19 +484,27 @@ def check_mandate_compliance(
     #   contributes 0 (nothing to sum) — same "unpriceable = no contribution"
     #   contract as 6/6b's unpriced-proposal guard, not a block.
     if mandate.max_open_risk_pct is not None and proposed.is_buy:
-        proposed_contribution = 0.0
-        if proposed_stop is not None and portfolio_value > 0 and proposed_value > 0:
-            position_pct_for_risk = _position_pct(proposed_value, portfolio_value)
-            proposed_contribution = _position_risk_contribution(
-                position_pct_for_risk, float(unit_price), proposed_stop
-            )
-        total_open_risk = (existing_open_risk_pct or 0.0) + proposed_contribution
-        if total_open_risk > mandate.max_open_risk_pct:
+        if existing_open_risk_pct is None:
             violations.append(
-                f"total open risk {total_open_risk:.2f}% exceeds cap "
-                f"{mandate.max_open_risk_pct}%"
+                "total open-risk cap is set on the mandate but the caller did not "
+                "supply existing_open_risk_pct — blocked rather than silently "
+                "skipped (CR040)"
             )
             blocked_by = blocked_by or "open_risk"
+        else:
+            proposed_contribution = 0.0
+            if proposed_stop is not None and portfolio_value > 0 and proposed_value > 0:
+                position_pct_for_risk = _position_pct(proposed_value, portfolio_value)
+                proposed_contribution = _position_risk_contribution(
+                    position_pct_for_risk, float(unit_price), proposed_stop
+                )
+            total_open_risk = existing_open_risk_pct + proposed_contribution
+            if total_open_risk > mandate.max_open_risk_pct:
+                violations.append(
+                    f"total open risk {total_open_risk:.2f}% exceeds cap "
+                    f"{mandate.max_open_risk_pct}%"
+                )
+                blocked_by = blocked_by or "open_risk"
 
     # 7) Drawdown projection
     # The actual worst-case drawdown after this trade depends on entry/stop;
@@ -604,10 +650,21 @@ def enforce_safety_floor(
     holdings: object | None = None,
     quotes: dict[str, float] | None = None,
     sector_map: object | None = None,
+    now: datetime | None = None,
+    last_loss_closed_at: datetime | None = CONTEXT_NOT_SUPPLIED,
+    trade_open_timestamps: list[datetime] | None = None,
+    existing_open_risk_pct: float | None = None,
+    proposed_stop: float | None = None,
 ) -> Verdict:
     """Wrap an LLM-produced verdict. If APPROVE, re-check via deterministic function.
 
     If the deterministic check finds violations, override to REJECT.
+
+    now / last_loss_closed_at / trade_open_timestamps / existing_open_risk_pct /
+        proposed_stop: forwarded verbatim to `check_mandate_compliance` — CR101-BE2
+        round 2. This is the LLM-override wrapper; before round 2 it supplied none
+        of these, so a set post-loss cooldown / over-trading brake / open-risk cap
+        was silently unenforced against the live PM's own APPROVE.
     """
     if llm_verdict.action != VerdictAction.APPROVE:
         return llm_verdict
@@ -623,6 +680,11 @@ def enforce_safety_floor(
         holdings=holdings,
         quotes=quotes,
         sector_map=sector_map,
+        now=now,
+        last_loss_closed_at=last_loss_closed_at,
+        trade_open_timestamps=trade_open_timestamps,
+        existing_open_risk_pct=existing_open_risk_pct,
+        proposed_stop=proposed_stop,
     )
 
     if result.passed:

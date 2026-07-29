@@ -348,3 +348,81 @@ def test_retro_tightened_max_open_risk_pct_flags_and_blocks_any_new_buy():
     )
     assert not blocked.passed
     assert blocked.blocked_by == "open_risk"
+
+
+# ── round 2: missing context, with the mandate field SET, must block loudly ──
+#
+# The round-1 BLOCKER: `check_mandate_compliance`'s four context kwargs all
+# defaulted to a value meaning "not enforced" — indistinguishable from "the user
+# hasn't set this limit". `room_runner.py` and the LLM-override wrapper supplied
+# none of the context, so a SET post-loss cooldown / over-trading brake /
+# open-risk cap silently passed. These three tests assert the floor's own
+# contract directly: mandate field set + context omitted entirely = a hard
+# block naming the missing input, never a silent pass (CR040).
+
+
+def test_missing_last_loss_closed_at_blocks_loudly_when_cooldown_is_set(base_mandate: Mandate):
+    mandate = base_mandate.model_copy(update={"post_loss_cooldown_hours": 24.0})
+    result = check_mandate_compliance(
+        _buy("AAPL"), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
+        holdings=[], quotes={"AAPL": 100.0}, now=_NOW,
+        # last_loss_closed_at deliberately omitted — simulates a caller that forgot it.
+    )
+    assert not result.passed
+    assert result.blocked_by == "cooldown"
+    assert any("did not supply" in v for v in result.violations)
+
+
+def test_missing_trade_open_timestamps_blocks_loudly_when_over_trading_brake_is_set(
+    base_mandate: Mandate,
+):
+    mandate = base_mandate.model_copy(update={"max_trades_per_day": 5})
+    result = check_mandate_compliance(
+        _buy("AAPL"), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
+        holdings=[], quotes={"AAPL": 100.0}, now=_NOW,
+        # trade_open_timestamps deliberately omitted.
+    )
+    assert not result.passed
+    assert result.blocked_by == "over_trading"
+    assert any("did not supply" in v for v in result.violations)
+
+
+def test_missing_existing_open_risk_pct_blocks_loudly_when_open_risk_cap_is_set(
+    base_mandate: Mandate,
+):
+    mandate = base_mandate.model_copy(update={"max_open_risk_pct": 5.0})
+    result = check_mandate_compliance(
+        _buy("AAPL"), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
+        holdings=[], quotes={"AAPL": 100.0}, now=_NOW, proposed_stop=90.0,
+        # existing_open_risk_pct deliberately omitted.
+    )
+    assert not result.passed
+    assert result.blocked_by == "open_risk"
+    assert any("did not supply" in v for v in result.violations)
+
+
+def test_missing_holdings_blocks_loudly_when_max_open_positions_is_set(base_mandate: Mandate):
+    mandate = base_mandate.model_copy(update={"max_open_positions": 3})
+    result = check_mandate_compliance(
+        _buy("AAPL"), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
+        quotes={"AAPL": 100.0}, now=_NOW,
+        # holdings deliberately omitted.
+    )
+    assert not result.passed
+    assert result.blocked_by == "max_open_positions"
+    assert any("did not supply" in v for v in result.violations)
+
+
+def test_explicit_none_last_loss_closed_at_still_means_no_prior_loss_not_missing(
+    base_mandate: Mandate,
+):
+    """The sentinel distinguishes 'omitted' from a real `None` — a caller that
+    HAS the data and knows the user never took a loss must still pass cleanly,
+    exactly as round 1 designed it (see the identical assertion earlier in this
+    file: test_post_loss_cooldown_blocks_the_next_buy's `no_loss` case)."""
+    mandate = base_mandate.model_copy(update={"post_loss_cooldown_hours": 24.0})
+    result = check_mandate_compliance(
+        _buy("AAPL"), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
+        holdings=[], quotes={"AAPL": 100.0}, now=_NOW, last_loss_closed_at=None,
+    )
+    assert result.passed
