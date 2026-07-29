@@ -245,3 +245,57 @@ status flip, both Architect-side):
 - **DEF126** — `c8b5f5f` re-translated all 296 AR-flagged lessons, DEF144-guarded. Language-Manager-
   owned per the 07-28 ruling; drop from the ask, but the row has not been reconciled against that
   commit.
+
+#### 2026-07-29 — 0900 check-in, part 2: live `bug_reports` sweep
+
+Saiful asked *"Did we check the live DB for user reported errors?"* — part 1 had not; it was
+registers + `git log` only. **That was a gap in the check-in, not in the registers:** six open
+user reports were sitting in `bug_reports` on melehost, four of them unseen by any session, and
+the track-R monitor watermark is still `2026-07-22T03:00:30+00` (7 days stale). Polled live,
+diagnosed against the DB and the running Alpha, and ruled item by item.
+
+**Filed (5) — all from Platinum Anchor `8f1e288a`, five of six on `0.1.0+57`, the CR106 build:**
+
+- **DEF147** ← `6ba6ec7f` — the CR106 stance envelope leaks raw `[STANCE: …` into user-visible
+  prose *and* the comb reports "no stance", because one regex does both the parse and the strip.
+  **Measured, not reported:** 2/2 runs since ship carry a leaked tail; on `bd31e46a` 3 of 11
+  prose agents parsed `null` (**27%**) — one truncated mid-tail with no closing `]`, one emitted
+  with no opening `[`, one emitted nothing (the only honest gutter of the three). B2 chose a
+  trailing line over a JSON envelope to beat DEF058's 22% parse failure; day one it fails at 27%
+  **and** produces the leak the shape was chosen to avoid. → Saiful: **"That, plus move the
+  envelope to the front of the turn"** — decouple strip from parse AND relocate the field, so
+  truncation eats prose instead of the structured data the whole board is built on.
+- **DEF146** ← `07d80ab2` (+ `df515c35`) — the BOARD|TRANSCRIPT toggle ships as two objects with
+  mismatched geometry (selected half hex-cut, unselected half a rounded rect), against CR106
+  §4.0's own rule. → Saiful: **"The AT:Designer has made the design… Follow it"**, then supplied
+  it as `df515c35`: **one** continuous elongated hexagon, outer edges angled only, straight
+  internal divider, selected half filled. Materially different from the fix the defect would
+  otherwise have taken — independently hex-cutting both segments reproduces the reported defect
+  symmetrically.
+- **DEF148** ← `34861dc8` (open 6 days, `+51`) — a raw `DioException` printed to the user, MDN
+  link and all, under an app bar still reading "Loading...". → Saiful: **"This needs to be
+  validated. A lot of movement since build 51."** Validated: **all 70 `related_lesson` refs
+  fetched against live Alpha, 70/70 return 200** — the 404 half is closed by corpus movement
+  (`320bf45`, DEF079's floor raise) and does not reproduce. The raw-exception half **is** still
+  shipping (`lessons_providers.dart:174`) and is a **second occurrence** of DEF073 ⇒ earns a
+  `failure_patterns.md` entry with a guard.
+- **CR111** ← `f06385e4` — the Journal's 12-agent roster costs a full phone screen above the
+  verdict. → Saiful: **remove from the Journal only**, keep it live in the Room (there it is a
+  progress display; in a finished entry every agent has spoken). Plus: the Designer's strip reads
+  `41S · 3 CREDITS`, which the Journal payload cannot render — → Saiful: **drop the strip from
+  the Journal** rather than fall back or start writing the fields. Guard: the roster-gap
+  disclosure (`opinions_not_included`) must survive the roster's removal.
+- **CR112** ← `583602ee` — the live convene still streams full prose; CR106 fixed the destination
+  and left the journey. → Saiful: **"Status + the agent's headline as it lands."** **Blocked on
+  DEF147** — a headline reveal on a 27%-null envelope would put the leak in the most prominent
+  position in the app; the status half can ship alone.
+
+**Correction to part 1's closing summary:** it listed DEF110 as a ruling carried without a lane.
+It shipped while this check-in was running — `dc57f38` fix + backfill, promoted
+`alpha-2026-07-29-3` (`d6ad0fb`), verified and closed (`234b19ec`), with the Alpaca half split
+out as **DEF145** — which is why this batch numbers from DEF146.
+
+**Standing gap worth fixing:** the 0900 check-in reads the registers but not `bug_reports`, so
+user-reported defects are invisible to it until the track-R monitor runs — and that monitor's
+watermark has not moved in 7 days. The two highest-severity items this morning (a live leak of
+machine syntax, and a 6-day-old raw exception) both came from the DB, neither from a register.
