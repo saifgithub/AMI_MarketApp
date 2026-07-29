@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from uuid import uuid4
 
+import pytest
+
 from app.services.mandate_store import MandateStore, resolve_mandate, get_mandate_store
 
 
@@ -32,6 +34,37 @@ def test_patch_bumps_version_and_merges_compliance():
     assert m3.version == 3
     assert m3.compliance.halal is True
     assert m3.compliance.esg_lite is True
+
+
+def test_patch_nested_risk_components_key_preserves_siblings():
+    """CR101-BE1 acceptance 1: `PATCH {"risk_components": {"concentration_tolerance": 4}}`
+    must not drop `drawdown_response` / `regret_asymmetry` — the shallow-merge bug that
+    blocked every settable-cap PATCH (DEF062's re-validation 422'd on the resulting
+    incomplete object). Assert the SIBLINGS survive, not merely that the call returns."""
+    store = MandateStore()
+    user_id = uuid4()
+    before = store.get_or_default(user_id)
+    assert before.risk_components.drawdown_response == 3
+    assert before.risk_components.regret_asymmetry == 0
+
+    updated = store.patch(user_id, {"risk_components": {"concentration_tolerance": 4}})
+
+    assert updated.risk_components.concentration_tolerance == 4
+    assert updated.risk_components.drawdown_response == 3  # sibling survived
+    assert updated.risk_components.regret_asymmetry == 0  # sibling survived
+
+
+def test_patch_nested_merge_still_rejects_invalid_sibling_type():
+    """DEF062 must survive the merge change (CR101-BE1 acceptance 2): a nested PATCH
+    that leaves a sibling with an out-of-range value still 422s via re-validation,
+    it doesn't silently persist because the merge is now recursive."""
+    from pydantic import ValidationError
+
+    store = MandateStore()
+    user_id = uuid4()
+    with pytest.raises(ValidationError):
+        store.patch(user_id, {"risk_components": {"concentration_tolerance": 99}})
+    assert store.get_or_default(user_id).risk_components.concentration_tolerance != 99
 
 
 def test_resolve_mandate_prefers_store_over_override():

@@ -96,6 +96,18 @@ class Mandate(BaseModel):
     risk_quotes: list[str] = Field(default_factory=list)
     max_drawdown_pct: Literal[10, 20, 30, 50, 100]
 
+    # CR101-BE1: the two ALREADY-enforced risk caps (sector concentration, single-name
+    # position size), made explicit and settable. `None` = not explicitly set — the
+    # enforcement/overlay/disclosure resolvers (`sector_allocation.sector_concentration_cap`,
+    # `safety_floor.single_name_cap_pct`) fall back to the preset table keyed by
+    # `risk_components.concentration_tolerance` / `risk_score`, i.e. the SAME computation
+    # this replaces. An existing stored mandate snapshot has no such key at all (same as
+    # `None`), so it enforces IDENTICALLY post-migration. Percentage points (e.g. 40.0 =
+    # 40%), matching `max_drawdown_pct`'s units. Once a PATCH sets either field it is
+    # sticky — it no longer moves if risk_score/concentration_tolerance later change.
+    sector_cap_pct: float | None = None
+    single_name_cap_pct: float | None = None
+
     # Constraints — hard rules
     compliance: Compliance = Field(default_factory=Compliance)
 

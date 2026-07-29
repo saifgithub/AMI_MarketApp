@@ -92,7 +92,7 @@ def build_agent_prompt(
     if alpaca_snapshot:
         composed = composed + f"\n\n{alpaca_snapshot}"
 
-    return append_safety_floor(composed, agent_id)
+    return append_safety_floor(composed, agent_id, mandate)
 
 
 def _append_user_overlay(prompt: str, agent_id: AgentId, user_id: UUID) -> str:

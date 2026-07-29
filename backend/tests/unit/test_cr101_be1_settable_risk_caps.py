@@ -1,0 +1,214 @@
+"""CR101-BE1 — the sector-concentration and single-name caps become settable.
+
+Covers acceptance criteria 3-6 from the lane assign
+(orchestration/dispatch/lanes/CR101-BE1.assign.md); criteria 1/2 (the nested-merge
+fix + DEF062 survival) live in test_mandate_store.py next to the store they patch.
+
+  3. Both `sector_cap_pct` and `single_name_cap_pct` are settable via PATCH and
+     ENFORCED — the floor's block moves with the stored value.
+  4. Migration proof (the criterion read first): for every
+     concentration_tolerance x risk_score (1-5 each), the post-CR101 enforced cap
+     for a mandate with NO override — i.e. every existing stored snapshot, which
+     has no such key at all — equals what main enforced at 73a25c7f before this
+     CR. Pinned against the actual pre-CR101 numbers, not this CR's own tables,
+     so a regression in either can't mark itself green.
+  5. Both caps appear in the agent overlay, in their own units, interpolated from
+     the canonical resolver rather than a literal.
+  6. A guard test enumerating every enforced-limit field's four legs (enforced /
+     disclosed in its own units / disclosed in the agent overlay / settable) —
+     "no third state", the invariant CR101 exists to hold.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from uuid import uuid4
+
+import pytest
+
+from app.agents.overlay_generator import _max_position_pct, _sector_cap_pct, generate_overlay
+from app.agents.safety_floor import check_mandate_compliance, single_name_cap_pct
+from app.schemas import AgentId, Mandate, RiskComponents
+from app.schemas.trade import OrderType, ProposedTrade, Side
+from app.services.mandate_store import MandateStore
+from app.services.sector_allocation import OTHER, sector_concentration_cap
+
+
+@dataclass
+class _H:
+    ticker: str
+    quantity: float
+
+
+_SECTORS = {"AAPL": "Technology", "MSFT": "Technology", "JPM": "Financial Services", "XOM": "Energy"}
+
+
+class _Map:
+    def sector(self, ticker: str) -> str:
+        return _SECTORS.get(str(ticker).upper(), OTHER)
+
+
+def _sector_breach_check(mandate: Mandate, *, buy_value: float):
+    """Tech 30% / FS 30% / Energy 40% book ($10k invested); proposed BUY adds
+    Tech at $100/share. Mirrors test_cr026_sector_allocation.py's `_breach_check`."""
+    holdings = [_H("AAPL", 30), _H("JPM", 30), _H("XOM", 40)]
+    quotes = {"AAPL": 100.0, "JPM": 100.0, "XOM": 100.0}
+    proposed = ProposedTrade(ticker="MSFT", side=Side.BUY, quantity=buy_value / 100.0, limit_price=100.0)
+    return check_mandate_compliance(
+        proposed, portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
+        holdings=holdings, quotes=quotes, sector_map=_Map(),
+    )
+
+
+# ── acceptance 3: settable + enforced ──────────────────────────────────────
+
+
+def test_sector_cap_settable_and_the_floor_block_moves_with_it(base_mandate: Mandate):
+    # Buying $500 MSFT (Tech) -> Tech 3500 of 10500 = 33.3%.
+    default_result = _sector_breach_check(base_mandate, buy_value=500.0)
+    assert default_result.passed  # 33.3% < the 40% default (tolerance=3)
+
+    tightened = base_mandate.model_copy(update={"sector_cap_pct": 20.0})
+    tight_result = _sector_breach_check(tightened, buy_value=500.0)
+    assert not tight_result.passed  # 33.3% > the explicit 20% override
+    assert tight_result.blocked_by == "compliance"
+    assert any("sector-concentration limit" in v.lower() for v in tight_result.violations)
+
+
+def test_single_name_cap_settable_and_the_floor_block_moves_with_it(base_mandate: Mandate):
+    proposed = ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=10, order_type=OrderType.MARKET)
+    quotes = {"AAPL": 100.0}
+    # $1000 of a $10,000 book = 10%.
+    default_result = check_mandate_compliance(
+        proposed, portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=base_mandate,
+        holdings=[], quotes=quotes,
+    )
+    assert default_result.passed  # 10% < the 50% unset-default backstop
+
+    tightened = base_mandate.model_copy(update={"single_name_cap_pct": 5.0})
+    tight_result = check_mandate_compliance(
+        proposed, portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=tightened,
+        holdings=[], quotes=quotes,
+    )
+    assert not tight_result.passed  # 10% > the explicit 5% override
+    assert tight_result.blocked_by == "concentration"
+    assert any("single-name cap" in v for v in tight_result.violations)
+
+
+def test_both_caps_persist_and_enforce_through_a_real_patch_round_trip():
+    """The settable leg end-to-end through the real store, not just model_copy."""
+    store = MandateStore()
+    user_id = uuid4()
+    updated = store.patch(user_id, {"sector_cap_pct": 22.0, "single_name_cap_pct": 6.0})
+    assert updated.sector_cap_pct == 22.0
+    assert updated.single_name_cap_pct == 6.0
+
+    reloaded = store.get_or_default(user_id)
+    assert sector_concentration_cap(reloaded) == pytest.approx(0.22)
+    assert single_name_cap_pct(reloaded) == 6.0
+
+
+# ── acceptance 4: migration proof — the criterion read first ───────────────
+
+# Pre-CR101 enforced values, measured on main at 73a25c7f — pinned as literals so
+# a regression in this CR's OWN preset tables can't accidentally validate itself.
+_PRE_CR101_SECTOR_CAP_BY_TOLERANCE = {1: 0.25, 2: 0.30, 3: 0.40, 4: 0.50, 5: 0.60}
+# The deterministic floor's single-name cap was the FIXED absolute backstop,
+# unconditional of risk_score (safety_floor.SINGLE_NAME_CAP_PCT ==
+# trading_math.sizing.SINGLE_NAME_ABSOLUTE_CAP_PCT) — NOT the risk-tier preset,
+# which bound only on the Room path via room_runner's separate pre-clamp. See
+# safety_floor.single_name_cap_pct's docstring for the measurement.
+_PRE_CR101_SINGLE_NAME_CAP_PCT = 50.0
+
+
+@pytest.mark.parametrize("concentration_tolerance", [1, 2, 3, 4, 5])
+@pytest.mark.parametrize("risk_score", [1, 2, 3, 4, 5])
+def test_migration_no_existing_users_enforced_cap_changes(
+    risk_score: int, concentration_tolerance: int, base_mandate: Mandate
+):
+    """CR101-BE1 acceptance 4. Simulates an ACTUAL pre-CR101 stored snapshot — the
+    two new keys absent from the dict entirely, not merely None in memory — for
+    every (concentration_tolerance, risk_score) pair and asserts the enforced cap
+    is bit-identical to what main enforced before this CR landed."""
+    mandate = base_mandate.model_copy(update={
+        "risk_score": risk_score,
+        "risk_components": RiskComponents(
+            drawdown_response=3, regret_asymmetry=0,
+            concentration_tolerance=concentration_tolerance,
+        ),
+    })
+    raw = mandate.model_dump(mode="json")
+    del raw["sector_cap_pct"]
+    del raw["single_name_cap_pct"]
+    loaded = Mandate.model_validate(raw)
+
+    assert sector_concentration_cap(loaded) == pytest.approx(
+        _PRE_CR101_SECTOR_CAP_BY_TOLERANCE[concentration_tolerance]
+    )
+    assert single_name_cap_pct(loaded) == _PRE_CR101_SINGLE_NAME_CAP_PCT
+
+
+# ── acceptance 5: both caps in the overlay, in their own units, interpolated ─
+
+
+def test_overlay_discloses_both_caps_interpolated_not_literal(base_mandate: Mandate):
+    overlay = generate_overlay(AgentId.MARKET_ANALYST, base_mandate)
+    assert f"{_max_position_pct(base_mandate)}% of portfolio in any one name" in overlay
+    assert f"{_sector_cap_pct(base_mandate)}% of portfolio in any one" in overlay
+
+    # Interpolated from the resolver, not a hardcoded literal: an explicit
+    # override changes what's shown.
+    overridden = base_mandate.model_copy(
+        update={"single_name_cap_pct": 7.0, "sector_cap_pct": 33.0}
+    )
+    overlay2 = generate_overlay(AgentId.MARKET_ANALYST, overridden)
+    assert "7.0% of portfolio in any one name" in overlay2
+    assert "33.0% of portfolio in any one" in overlay2
+
+
+# ── acceptance 6: the four-leg invariant, enumerated ───────────────────────
+
+
+def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mandate: Mandate):
+    """A Mandate field feeding an enforced limit is (a) enforced, (b) disclosed
+    in its own units, (c) disclosed in the agent overlay, (d) settable — or it is
+    deleted. No third state. Enumerates the three numeric enforced-limit fields
+    this repo has today; a future field joins this list or fails the review that
+    should have caught it missing here."""
+    store = MandateStore()
+
+    # -- max_drawdown_pct ----------------------------------------------------
+    dd_result = check_mandate_compliance(
+        ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=1, limit_price=100.0),
+        portfolio_value=10_000.0, current_drawdown_pct=base_mandate.max_drawdown_pct,
+        mandate=base_mandate, holdings=[], quotes={"AAPL": 100.0},
+    )
+    assert not dd_result.passed and any("drawdown" in v for v in dd_result.violations)  # (a)
+    assert f"{base_mandate.max_drawdown_pct}%" in generate_overlay(AgentId.AGGRESSIVE_DEBATOR, base_mandate)  # (c)
+    dd_user = uuid4()
+    dd_patched = store.patch(dd_user, {"max_drawdown_pct": 20})
+    assert dd_patched.max_drawdown_pct == 20  # (d) settable
+    assert store.get_or_default(dd_user).max_drawdown_pct == 20  # (b) disclosed verbatim, own units, on read-back
+
+    # -- sector_cap_pct --------------------------------------------------------
+    tight_sector = base_mandate.model_copy(update={"sector_cap_pct": 20.0})
+    sector_result = _sector_breach_check(tight_sector, buy_value=500.0)
+    assert not sector_result.passed and sector_result.blocked_by == "compliance"  # (a)
+    assert sector_concentration_cap(tight_sector) == pytest.approx(0.20)  # (b) own units (fraction)
+    assert f"{_sector_cap_pct(tight_sector)}% of portfolio" in generate_overlay(AgentId.MARKET_ANALYST, tight_sector)  # (c)
+    assert store.patch(uuid4(), {"sector_cap_pct": 45.0}).sector_cap_pct == 45.0  # (d)
+
+    # -- single_name_cap_pct -----------------------------------------------------
+    tight_single = base_mandate.model_copy(update={"single_name_cap_pct": 5.0})
+    single_result = check_mandate_compliance(
+        ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=10, order_type=OrderType.MARKET),
+        portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=tight_single,
+        holdings=[], quotes={"AAPL": 100.0},
+    )
+    assert not single_result.passed and any("single-name cap" in v for v in single_result.violations)  # (a)
+    assert single_name_cap_pct(tight_single) == 5.0  # (b) own units
+    assert (
+        f"{_max_position_pct(tight_single)}% of portfolio in any one name"
+        in generate_overlay(AgentId.TRADER, tight_single)
+    )  # (c)
+    assert store.patch(uuid4(), {"single_name_cap_pct": 2.0}).single_name_cap_pct == 2.0  # (d)

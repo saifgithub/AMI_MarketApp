@@ -103,7 +103,7 @@ from app.services.alpaca_service import snapshot_text as alpaca_snapshot_text
 from app.services.sim_engine import get_sim_engine
 from app.trading_math.portfolio import shares_for_size
 from app.trading_math.risk import drawdown_contribution
-from app.trading_math.sizing import risk_debator_sizes, risk_tier_cap
+from app.trading_math.sizing import resolved_single_name_cap_pct, risk_debator_sizes
 from app.trading_math.trade import risk_reward, rr_is_coherent, trade_asymmetry
 from app.trading_math.valuation import multiple_compression_downside, net_position_phrase
 
@@ -617,14 +617,16 @@ def _profile_for_ticker(
 # ── Verdict assembly ──────────────────────────────────────────────────────
 
 
-def _risk_tier_size_ceiling(risk_score: int) -> float:
+def _risk_tier_size_ceiling(mandate: Mandate) -> float:
     """Max position size (%) for a mandate's risk tier — a ceiling the PM's
     LLM-decided size gets clamped to (DEF056), and the default cosmetic size
     for the pre-debate aggressive/conservative/neutral display values.
 
-    Canonical values live in app.trading_math.sizing (CR046 M03) — the same
-    table the Trader's prompt narration now reads, so shown == enforced."""
-    return risk_tier_cap(risk_score)
+    Canonical resolver lives in app.trading_math.sizing (CR046 M03 / CR101-BE1):
+    the mandate's explicit, settable `single_name_cap_pct` when set, else the
+    risk-tier preset — the same value the Trader's prompt narration now reads,
+    so shown == enforced."""
+    return resolved_single_name_cap_pct(mandate.risk_score, mandate.single_name_cap_pct)
 
 
 # ── Portfolio holdings block (CR055) ──────────────────────────────────────
@@ -881,7 +883,7 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     except (TypeError, ValueError):
         horizon_days = ctx.trader_horizon_weeks * 7
 
-    ceiling = _risk_tier_size_ceiling(ctx.mandate.risk_score)
+    ceiling = _risk_tier_size_ceiling(ctx.mandate)
     reason = narration or "Synthesis defended."
     if size_pct > ceiling:
         size_pct = ceiling
@@ -2296,7 +2298,7 @@ class RoomRunner:
         ctx.trader_entry = round(base, 2)
         ctx.trader_stop = round(base * 0.94, 2)
         ctx.trader_target = round(base * 1.13, 2)
-        ctx.trader_size_pct = _risk_tier_size_ceiling(mandate.risk_score)
+        ctx.trader_size_pct = _risk_tier_size_ceiling(mandate)
         # Debate spread lives next to the caps it orbits (CR046 M03).
         _debator = risk_debator_sizes(ctx.trader_size_pct)
         ctx.aggressive_size_pct = _debator.aggressive

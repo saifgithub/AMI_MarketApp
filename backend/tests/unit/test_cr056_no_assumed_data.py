@@ -23,7 +23,7 @@ from collections.abc import AsyncIterator
 
 import pytest
 
-from app.agents.safety_floor import SAFETY_FLOOR_BLOCK
+from app.agents.safety_floor import SAFETY_FLOOR_BLOCK, render_safety_floor_block
 from app.schemas import AgentId
 from app.services.agent_prompts import build_agent_prompt
 from app.services.llm_gateway import (
@@ -205,11 +205,12 @@ def test_prepend_keeps_trailing_safety_floor_last():
 def test_pm_floor_last_through_build_agent_prompt(base_mandate):
     """Faithful check: a real PM prompt (build_agent_prompt appends the floor
     LAST) still ends with the floor after the directive is prepended."""
+    rendered_floor = render_safety_floor_block(base_mandate)
     pm = build_agent_prompt(AgentId.PORTFOLIO_MANAGER, base_mandate)
-    assert pm.endswith(SAFETY_FLOOR_BLOCK)  # precondition: floor is last today
+    assert pm.endswith(rendered_floor)  # precondition: floor is last today
     injected = prepend_grounding_directive(pm)
     assert injected.startswith(GROUNDING_DIRECTIVE_SENTINEL)
-    assert injected.endswith(SAFETY_FLOOR_BLOCK)
+    assert injected.endswith(rendered_floor)
 
 
 # ── 4. idempotency: prepend once, never stacked ────────────────────────────

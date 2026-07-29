@@ -36,6 +36,7 @@ from app.core.logging import logger
 from app.db import get_session
 from app.schemas.mandate import Mandate
 from app.services.classification_universe import latest_sector_map
+from app.trading_math.sizing import resolved_sector_cap_pct
 
 # The catch-all bucket for a ticker with no stored GICS sector. Disclosed on the
 # allocation feed, but it can NEVER trigger a concentration block (DEF059 guard).
@@ -52,19 +53,10 @@ NON_SECTOR_BUCKETS = frozenset({OTHER, CASH})
 
 # Default sector-concentration cap when the mandate carries the middle
 # concentration_tolerance (per `lifecycle.md:120` — "any sector > 40% (default)").
+# The concentration_tolerance → cap preset table itself now lives in
+# `trading_math.sizing` (CR101-BE1 — the enforced value is the mandate's explicit
+# `sector_cap_pct`; the preset is only the fallback for a user who hasn't set one).
 _DEFAULT_SECTOR_CAP = 0.40
-
-# concentration_tolerance (1..5, the RiskComponents scale) → sector cap fraction.
-# The middle value (3, the mandate default) anchors to the advertised 0.40; a more
-# concentration-averse user gets a tighter cap, a tolerant one a looser cap. Read
-# from the user's mandate — never hard-coded at the call site.
-_TOLERANCE_TO_CAP: dict[int, float] = {
-    1: 0.25,
-    2: 0.30,
-    3: 0.40,
-    4: 0.50,
-    5: 0.60,
-}
 
 
 def _ticker_of(h: Any) -> str:
@@ -152,14 +144,19 @@ def allocate_by_sector(
 
 def sector_concentration_cap(mandate: Mandate) -> float:
     """The user's sector-concentration cap (0.0–1.0), read from the mandate's
-    `risk_components.concentration_tolerance`. Defaults to 0.40 when the tolerance is
-    unset/out of range — never hard-coded at the enforcement site."""
-    rc = getattr(mandate, "risk_components", None)
-    tol = getattr(rc, "concentration_tolerance", None)
-    try:
-        return _TOLERANCE_TO_CAP.get(int(tol), _DEFAULT_SECTOR_CAP)
-    except (TypeError, ValueError):
-        return _DEFAULT_SECTOR_CAP
+    explicit `sector_cap_pct` (CR101-BE1 — settable, percentage points) when set,
+    else the `risk_components.concentration_tolerance`-keyed preset table. Defaults
+    to 0.40 when the tolerance itself is unset/out of range — never hard-coded at
+    the enforcement site."""
+    pct = getattr(mandate, "sector_cap_pct", None)
+    if pct is None:
+        rc = getattr(mandate, "risk_components", None)
+        tol = getattr(rc, "concentration_tolerance", None)
+        try:
+            pct = resolved_sector_cap_pct(int(tol))
+        except (TypeError, ValueError):
+            return _DEFAULT_SECTOR_CAP
+    return float(pct) / 100.0
 
 
 @dataclass(frozen=True)
