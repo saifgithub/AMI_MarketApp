@@ -86,6 +86,14 @@ points to portfolio drawdown (e.g. 5% size, 20% stop → 1.0 pt, i.e. 1/30th of 
 one name — the SAME ceiling the Portfolio Manager clamps every trade to (CR101).
 - Sector-concentration cap: {_sector_cap_pct(mandate)}% of portfolio in any one \
 GICS sector — the SAME ceiling the safety floor blocks a proposed BUY against.
+- Post-loss cooldown: {_cooldown_text(mandate)} — enforced as a hard block on the \
+next BUY, not a suggestion.
+- Max open positions: {_max_open_positions_text(mandate)} — a ceiling on distinct \
+tickers held concurrently; adding to an existing holding doesn't count against it.
+- Trading pace cap: {_max_trades_per_day_text(mandate)} per day, \
+{_max_trades_per_week_text(mandate)} per week (UTC calendar day / Monday-start ISO week).
+- Total open-risk cap: {_max_open_risk_pct_text(mandate)} — the sum of (position \
+size % × stop distance %)/100 across all open positions, including this one.
 
 ## Compliance constraints (HARD — cannot violate)
 {_compliance_block(mandate.compliance, halal_universe=halal_universe, ticker=ticker)}
@@ -515,6 +523,41 @@ def _sector_cap_pct(mandate: Mandate) -> float:
     # Same settable-with-preset-fallback contract as `_max_position_pct` (CR101-BE1).
     rc = mandate.risk_components
     return resolved_sector_cap_pct(rc.concentration_tolerance, mandate.sector_cap_pct)
+
+
+# CR101-BE2's four new limits have no preset fallback — unlike the two caps
+# above there was no pre-CR101 enforced value to migrate, so `None` narrates
+# plainly as "not set" rather than falling back to a computed number.
+
+
+def _cooldown_text(m: Mandate) -> str:
+    if m.post_loss_cooldown_hours is None:
+        return "not set (no cooldown enforced)"
+    return f"{m.post_loss_cooldown_hours}h after a stop-out"
+
+
+def _max_open_positions_text(m: Mandate) -> str:
+    if m.max_open_positions is None:
+        return "not set (no cap enforced)"
+    return f"{m.max_open_positions}"
+
+
+def _max_trades_per_day_text(m: Mandate) -> str:
+    if m.max_trades_per_day is None:
+        return "not set"
+    return f"{m.max_trades_per_day}"
+
+
+def _max_trades_per_week_text(m: Mandate) -> str:
+    if m.max_trades_per_week is None:
+        return "not set"
+    return f"{m.max_trades_per_week}"
+
+
+def _max_open_risk_pct_text(m: Mandate) -> str:
+    if m.max_open_risk_pct is None:
+        return "not set (no cap enforced)"
+    return f"{m.max_open_risk_pct}%"
 
 
 _ROLE_BUILDERS = {

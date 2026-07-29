@@ -107,6 +107,23 @@ async def patch_mandate(
             diffs.append(f"max drawdown {before.max_drawdown_pct}% → {updates['max_drawdown_pct']}%")
         if updates.get("risk_score") and updates["risk_score"] != before.risk_score:
             diffs.append(f"risk score {before.risk_score} → {updates['risk_score']}")
+        # CR101-BE2 — the four new risk limits, plain-English per PATCH-able key
+        # (`"key" in updates`, not `updates.get("key")`: these are legitimately
+        # settable back to `None`/0, which the max_drawdown_pct/risk_score
+        # truthy checks above would silently swallow).
+        for field, label, suffix in (
+            ("post_loss_cooldown_hours", "post-loss cooldown", "h"),
+            ("max_open_positions", "max open positions", ""),
+            ("max_trades_per_day", "max trades/day", ""),
+            ("max_trades_per_week", "max trades/week", ""),
+            ("max_open_risk_pct", "total open-risk cap", "%"),
+        ):
+            if field in updates and updates[field] != getattr(before, field):
+                old = getattr(before, field)
+                old_text = "not set" if old is None else f"{old}{suffix}"
+                new = updates[field]
+                new_text = "not set" if new is None else f"{new}{suffix}"
+                diffs.append(f"{label} {old_text} → {new_text}")
         if "compliance" in updates and isinstance(updates["compliance"], dict):
             before_c = before.compliance.model_dump()
             for k, v in updates["compliance"].items():
@@ -266,6 +283,12 @@ async def audit_holdings(
     portfolio, marks, portfolio_value, drawdown_pct, _source = await asyncio.to_thread(
         sim.portfolio_marks_snapshot, user_id,
     )
+    # CR101-BE2 retro-tightening: the portfolio's CURRENT open-risk sum, so a
+    # just-tightened max_open_risk_pct can flag a breach against real history.
+    existing_open_risk_pct = await asyncio.to_thread(
+        sim.existing_open_risk_pct, user_id,
+        portfolio_value=portfolio_value, quotes=marks,
+    )
     return check_holdings_against_mandate(
         holdings=portfolio.holdings,
         marks=marks,
@@ -273,4 +296,5 @@ async def audit_holdings(
         current_drawdown_pct=drawdown_pct,
         mandate=mandate,
         halal_universe=await default_halal_universe_async(),
+        existing_open_risk_pct=existing_open_risk_pct,
     )

@@ -83,7 +83,12 @@ class ComplianceResult(BaseModel):
 
     passed: bool
     violations: list[str] = Field(default_factory=list)
-    blocked_by: Literal["compliance", "drawdown", "concentration", "long_only", "blocklist", "allowlist", "locale", "duplicate_verdict", None] = None
+    blocked_by: Literal[
+        "compliance", "drawdown", "concentration", "long_only", "blocklist",
+        "allowlist", "locale", "duplicate_verdict",
+        "cooldown", "max_open_positions", "over_trading", "open_risk",
+        None,
+    ] = None
     # CR069: the sourced Sharia verdict (with provenance) when the halal flag is
     # on. Present on BOTH a blocked screened-out trade AND a permitted PASS/UNKNOWN
     # one, so the disclosure travels even when the trade succeeds — a permitted
