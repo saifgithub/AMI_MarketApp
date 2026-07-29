@@ -877,10 +877,17 @@ class ApiClient {
 
   /// OHLCV history for the TickerDetail chart.
   /// `period` is one of: 1d, 1w, 1m, 3m, 1y, 5y. Server caches 60s.
+  ///
+  /// DEF151: lowercased on the wire. `ticker_chart.dart` labels its chips
+  /// `1D/1W/1M/…` and passed the label through verbatim, so every request
+  /// 422'd and the chart was dark on every ticker and period. The label is UI
+  /// copy; the wire token is not. The server normalises too — that half is
+  /// what repairs the builds already installed — so this is the belt to its
+  /// braces, not the fix on its own.
   Future<SimHistory> simHistory(String ticker, String period) async {
     final r = await _dio.get<Map<String, dynamic>>(
       '/v1/sim/history/$ticker',
-      queryParameters: {'period': period},
+      queryParameters: {'period': period.trim().toLowerCase()},
     );
     return SimHistory.fromJson(r.data!);
   }

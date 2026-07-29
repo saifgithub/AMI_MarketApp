@@ -553,7 +553,18 @@ async def history(
     Public — same as `/quote`. Period must be one of:
     1d, 1w, 1m, 3m, 1y, 5y. Response is cached server-side
     for 60s per (ticker, period) in CachingProvider.
+
+    DEF151: the period token is case-normalised before the allow-list check.
+    `ticker_chart.dart` labels its chips `1D/1W/1M/3M/1Y/5Y` and sent that
+    label verbatim on the wire, so every request 422'd and the chart was dark
+    for every ticker on every period — measured 18/18 against live Alpha. Case
+    was the entire fault. Normalising here rather than only at the call site is
+    deliberate: it repairs the +56/+57 builds already in testers' hands, which
+    a client-only fix cannot reach until the next release. The chip label is UI
+    copy and stays uppercase; the wire token is a separate concern, and the
+    response echoes the canonical form actually served.
     """
+    period = (period or "").strip().lower()
     if period not in VALID_PERIODS:
         raise HTTPException(
             status.HTTP_422_UNPROCESSABLE_ENTITY,
