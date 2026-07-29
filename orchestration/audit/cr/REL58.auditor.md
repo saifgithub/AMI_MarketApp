@@ -1,6 +1,8 @@
 <!-- auditor lane — track U (Kimi session). orchestration/audit/PROTOCOL.md. -->
 # REL58 — auditor
 
+## Round 1
+
 VERDICT: AWAITING_FIXES (round 1)
 
 Audited SHA `83e8506a` on `main` (pushed; build `0.1.0+58` already on
@@ -188,3 +190,52 @@ it. Recorded as a routing finding, per the lane's invitation.
   `0fcbfc8d`); surfaced by the CR118 interaction read.
 - DEF142's `honeycombTrackLabel` hardcoded English — already known, restated
   here only because the lane lists it as not-in-batch.
+
+---
+
+## Round 2
+
+Audited SHA `d5a02a89` (the resubmission's measured SHA) in scratch worktree
+`.claude/worktrees/audit-REL58r2/`, detached, `git status --short` empty.
+Commits since (`00946f4f`, `dd71c7e8`, `bcaa668a`) verified docs/lane-only by
+diff — they carry no code. Run report: `runs/2026-07-29_run-03/`.
+
+- **Every count reproduced in the detached checkout.** Backend **1589 passed**
+  (257s, claim 1589/253s) — including `test_registers_no_drift` green. Flutter
+  **300 passed** (claim 300). `flutter analyze --no-fatal-infos` exit 0, the
+  same 5 pre-existing infos. `gen_registers verify all` → **DEF OK 173 rows,
+  CR OK 117 rows, no drift** (156 + DEF157 + DEF158–173 = 173, arithmetic
+  checks). The round-1 failing claim is now true of the repository, not just
+  of the architect's desk.
+- **M1 closed.** `CR121.row.md` is committed (`62192f3c`); the drift the
+  register guard caught at `83e8506a` no longer exists in a clean checkout.
+  The root cause — `gen` consuming untracked row files so the generated table
+  can outrun the index — is minted as `DEF159` with a degrade-loudly proposal.
+  Correctly scoped: the guard being RED only in clean checkouts is exactly the
+  failure shape that a working-tree measurement cannot see.
+- **M2 closed, copy verified against my own trace.** New body: *"…does not
+  replace a mandate you already have — change that in Settings → My Mandate."*
+  True for both populations (the architect's added fact — `get_or_default()`
+  hydrates without persisting, `mandate_store.py:51-56` — is confirmed by
+  read, and it makes the old copy false precisely for its audience). AR/MS
+  carry loud EN placeholders, replacing fluent translations of the false
+  claim. The mechanism question (should restart replace the mandate?) is
+  minted as `DEF160` for the stakeholder rather than self-ruled — the right
+  response to the routing finding.
+- **Mutation claim re-derived physically.** Restored the original sentence in
+  the generated EN localization and ran
+  `confirm_restart_onboarding_test.dart`: **exactly 1 RED of 7** — "DEF158 —
+  the body does not promise a wipe that never happens" — the six wiring and
+  gate tests green. Reverted. The guard bites the copy it exists to guard.
+- **Findings register:** all 12 MINORs, both OUT-OF-SCOPE items and both
+  MAJOR root causes minted `DEF158`–`DEF173`, one row each, none dismissed.
+  Register verify confirms every row has a table entry. The architect's
+  correction stands and is accepted: four of my MINOR citations named wrong
+  directories (`app/agents/`, `lib/theme/`, `lib/models/`,
+  `lib/services/billing/`); the findings reproduced, the paths were sloppy —
+  noted for my own write-ups.
+- **Routing response noted.** CR112 went to `coder.mobile` under
+  `GATE: independent` — the finding changed behaviour, which is what it was
+  for. (CR112 is its own lane; not audited here.)
+
+VERDICT: COMPLETE (round 2)
