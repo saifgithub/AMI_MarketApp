@@ -121,7 +121,7 @@ CR120's Journal pointer reads.
 ## Not in this build, stated so you do not look for them
 
 - **DEF142 + CR108** (the mobile legibility pass). Round 1 **rejected by me pre-audit**
-  (`b9671fe6`, full measurement in `DEF142.architect.md`): CR108's wrap never engages because
+  (`b9671fe6`, full measurement in `DEF142.round1-rejected.md`): CR108's wrap never engages because
   `FittedBox` gives its child unbounded constraints, and the test that proves it works cannot fail —
   deleting the feature leaves all 27 tests green. Re-laned round 2. **CR107 stays HELD** on it.
 - **CR112**, blocked on DEF147's unverified null rate.
