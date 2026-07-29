@@ -216,6 +216,7 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   padding: 8px 16px 10px; background: var(--panel);
   border-bottom: 1px solid var(--border);
 }
+.srch.inline { padding: 0 0 8px; background: none; border-bottom: 0; }
 .srch .fld {
   flex: 1; padding: 8px 10px; font-size: var(--t10); color: var(--text-low);
   background: var(--card-alt); border: 1px solid var(--border); border-radius: var(--r-card);
@@ -345,6 +346,7 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .stats .s { flex: 1; background: var(--card); padding: 8px 6px; text-align: center; }
 .stats .s .k { font-size: var(--t9); color: var(--text-low); }
 .stats .s .v { font-size: var(--t16); color: var(--text-high); margin-top: 2px; }
+.scope { font-size: var(--t9); color: var(--text-low); padding: 2px 0 6px; }
 .wl { display: flex; height: 4px; border-radius: 2px; overflow: hidden; margin-bottom: 8px; background: var(--border); }
 .wl i { display: block; height: 100%; }
 
@@ -523,9 +525,9 @@ const DATA = {
 /* ══════════════════════════ State ══════════════════════════ */
 
 const state = {
-  struct: 'dash', vol: 'sixmo', plan: 'floor',
+  struct: 'tabs', vol: 'sixmo', plan: 'floor',
   theme: 'dark', dir: 'ltr', ts: 1,
-  tab: 'holdings',
+  tab: 'positions',
   open: { holdings: true, watchlist: false, closed: false, trades: false },
   // A "see all" pushes a route. Nothing expands in place — expanding inline is
   // what un-bounds the dashboard, which is the whole point of the structure.
@@ -533,10 +535,10 @@ const state = {
 };
 
 const STRUCTS = [
+  ['tabs',  'Segmented tabs — CHOSEN', 'Pinned value card, one list at a time'],
   ['today', 'Today (shipped)', 'One eager ListView, three lists stacked'],
-  ['dash',  'Bounded dashboard', 'Fixed-height previews, each with a real destination'],
-  ['tabs',  'Segmented tabs', 'Pinned value card, one list at a time'],
-  ['acc',   'Collapsible sections', 'Same scroll, foldable headings'],
+  ['dash',  'Bounded dashboard', 'Rejected: previews + pushed routes'],
+  ['acc',   'Collapsible sections', 'Rejected: foldable headings'],
 ];
 
 const CAP_CLOSED = 25;   // Saiful, 2026-07-29 — "last 25, span described"
@@ -659,7 +661,9 @@ function closedSummary(closed, shown) {
   const losses = closed.length - wins;
   const net = closed.reduce((s, t) => s + t.pnl, 0);
   const wPct = (wins / Math.max(1, closed.length)) * 100;
+  const capped = shown != null && shown < closed.length;
   return `
+  ${capped ? `<div class="scope lbl">Across all <span class="num">${closed.length}</span> closed</div>` : ''}
   <div class="wl">
     <i style="width:${wPct}%;background:var(--green)"></i>
     <i style="width:${100 - wPct}%;background:var(--red)"></i>
@@ -749,7 +753,7 @@ function viewDash(d) {
     ${d.watchlist.length > watch.length ? moreRow('watchlist', d.watchlist.length - watch.length, '') : ''}
 
     ${head('Closed', d.closed.length, null)}
-    ${closedSummary(d.closed)}
+    ${closedSummary(d.closed, PREVIEW)}
     ${d.closed.slice(0, PREVIEW).map(tradeRow).join('')}
     ${journalFoot(d.closed, PREVIEW)}
     <div style="height:32px"></div>
@@ -768,7 +772,7 @@ function viewPush(d) {
   else {
     n = d.closed.length;
     rows = d.closed.map(tradeRow).join('');
-    extra = closedSummary(d.closed);
+    extra = closedSummary(d.closed, d.closed.length);
   }
   return `
   <div class="hdr">
@@ -778,30 +782,56 @@ function viewPush(d) {
   </div>
   <div class="srch">
     <span class="fld lbl">Search ${K === 'closed' ? 'ticker' : 'ticker'}…</span>
-    <span class="sortc lbl">${K === 'closed' ? 'Newest ▾' : 'Value ▾'}</span>
+    <span class="sortc lbl">${SORT_DEFAULT[K] || 'Newest ▾'}</span>
   </div>
   <div class="body"><div class="pad">${extra}${rows}<div style="height:32px"></div></div></div>`;
 }
 
+/* A list longer than this gets search + sort inside its own tab. Below it the
+   controls cost more height than they save. */
+const SEARCH_AT = 12;
+
+const SORT_DEFAULT = { holdings: 'Value ▾', watchlist: 'A–Z ▾', closed: 'Newest ▾' };
+
+function tabSearch(kind, n) {
+  if (n <= SEARCH_AT) return '';
+  return `<div class="srch inline">
+    <span class="fld lbl">Search ticker…</span>
+    <span class="sortc lbl">${SORT_DEFAULT[kind]}</span>
+  </div>`;
+}
+
 function viewTabs(d) {
   const T = state.tab;
+  // POSITIONS carries holdings AND open trades. Open trades are money at risk
+  // with a stop that can fire; putting them behind a tab the user does not land
+  // on is the one thing this structure could get wrong, so it does not.
+  // HISTORY is therefore closed trades only, and its count says so.
   const tabs = [
-    ['holdings', 'Held', d.holdings.length],
-    ['watchlist', 'Watch', d.watchlist.length],
-    ['history', 'History', d.open.length + d.closed.length],
+    ['positions', 'Positions', d.holdings.length],
+    ['watchlist', 'Watchlist', d.watchlist.length],
+    ['history', 'History', d.closed.length],
   ];
   let inner = '';
-  if (T === 'holdings') {
-    inner = `${donut(d.sectors)}<div style="height:12px"></div>${d.holdings.map(holdRow).join('')}`;
+  if (T === 'positions') {
+    inner = `
+      ${donut(d.sectors)}
+      <div style="height:12px"></div>
+      ${tabSearch('holdings', d.holdings.length)}
+      ${d.holdings.map(holdRow).join('')}
+      ${head('Open trades', d.open.length, null)}
+      ${d.open.length ? d.open.map(tradeRow).join('') : `<div class="empty">No open positions</div>`}`;
   } else if (T === 'watchlist') {
-    inner = `${head('Watchlist', d.watchlist.length, '+ Add')}${d.watchlist.map(watchRow).join('')}`;
+    inner = `
+      ${head('Watchlist', d.watchlist.length, '+ Add')}
+      ${tabSearch('watchlist', d.watchlist.length)}
+      ${d.watchlist.map(watchRow).join('')}`;
   } else {
     const shown = Math.min(CAP_CLOSED, d.closed.length);
     inner = `
-      ${head('Open', d.open.length, null)}
-      ${d.open.length ? d.open.map(tradeRow).join('') : `<div class="empty">No open positions</div>`}
       ${capLine(d.closed, shown)}
-      ${closedSummary(d.closed)}
+      ${closedSummary(d.closed, shown)}
+      ${tabSearch('closed', d.closed.length)}
       ${d.closed.slice(0, shown).map(tradeRow).join('')}
       ${journalFoot(d.closed, shown)}`;
   }
@@ -832,7 +862,7 @@ function viewAcc(d) {
     ${sec('holdings', 'Holdings', d.holdings.length, donut(d.sectors) + '<div style="height:8px"></div>' + d.holdings.map(holdRow).join(''))}
     ${sec('trades', 'Open trades', d.open.length, d.open.map(tradeRow).join(''))}
     ${sec('watchlist', 'Watchlist', d.watchlist.length, d.watchlist.map(watchRow).join(''))}
-    ${sec('closed', 'Closed', d.closed.length, capLine(d.closed, shown) + closedSummary(d.closed) + d.closed.slice(0, shown).map(tradeRow).join('') + journalFoot(d.closed, shown))}
+    ${sec('closed', 'Closed', d.closed.length, capLine(d.closed, shown) + closedSummary(d.closed, shown) + d.closed.slice(0, shown).map(tradeRow).join('') + journalFoot(d.closed, shown))}
     <div style="height:32px"></div>
   </div></div>`;
 }
@@ -846,20 +876,26 @@ const NOTE_TEXT = {
     <b>3.6 → 8.9 → 25.4 screens</b>.</p>
     <p>Open and closed trades are <b>interleaved by open date</b>. Scroll to the
     bottom of Trades: live positions are buried among closed ones.</p>`,
-  dash: `<p><b>Bounded dashboard.</b> Every list previews ${PREVIEW} rows and carries a
-    real destination. Measured <b>2.5 → 3.0 → 3.2 screens</b> across modest, six
-    months and heavy: height barely moves as the account grows, because nothing
-    expands in place — "see all" pushes a route with its own search and sort.</p>
-    <p>Order is money-at-risk first: holdings, then open trades, then watchlist,
-    then closed. Closed leads with a <b>summary</b> — the win/loss split and net
-    are the answer most users want, and neither requires reading a row.</p>`,
-  tabs: `<p><b>Segmented tabs.</b> Value card pins; one list at a time, so each gets
-    the full viewport and lazy building is trivial. Landing measures
-    <b>1.0 → 1.4 → 2.3 screens</b>; the worst tab (History, heavy) is 4.2.</p>
-    <p>The cost: a horizontal switcher nested inside the bottom-nav tab you are
-    already in, and two-thirds of the screen becomes a mode you must remember to
-    enter. No tab pattern exists in the app today outside one settings screen.</p>`,
-  acc: `<p><b>Collapsible sections.</b> Cheapest change — everything stays on one
+  dash: `<p><b>Not chosen</b> — kept so the comparison stays auditable. Every list
+    previews ${PREVIEW} rows and carries a pushed destination; measured
+    <b>2.5 → 3.0 → 3.2 screens</b>, bounded by construction.</p>
+    <p>Its one real advantage over tabs is that nothing is ever behind a mode. Its
+    cost is that no list ever gets a full viewport, so search and sort always live
+    one navigation away.</p>`,
+  tabs: `<p><b>Chosen, 2026-07-29.</b> Value card pins; one list at a time, so each
+    tab gets the full viewport and lazy building is trivial.</p>
+    <p><b>Positions carries holdings AND open trades.</b> An open trade is money at
+    risk with a stop that can fire — putting it behind a tab you do not land on is
+    the one thing this structure could get wrong. History is therefore closed
+    trades only, and its count says so.</p>
+    <p>A list over ${SEARCH_AT} items gets <b>search and sort inside its own tab</b> —
+    which is what a whole viewport per list buys, and what the capped preview in
+    the rejected dashboard could not offer.</p>
+    <p>Known cost, accepted: a horizontal switcher nested inside the bottom-nav tab
+    you are already in. No tab pattern exists in the app today outside one settings
+    screen, so the counts on each label do the work of telling you the other two
+    are not empty.</p>`,
+  acc: `<p><b>Not chosen.</b> Cheapest change — everything stays on one
     screen and reachable, <b>1.0 → 1.5 → 2.4 screens</b> with only Holdings open.</p>
     <p>But that number is a choice the user can undo: expand everything on
     <b>Heavy</b> and it measures <b>9.7 screens</b>. Anything collapsed by default is
