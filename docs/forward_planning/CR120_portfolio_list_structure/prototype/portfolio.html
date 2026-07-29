@@ -149,6 +149,16 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .seg { display: flex; gap: 3px; }
 .seg .opt { justify-content: center; padding: 7px 8px; font-size: 10px; letter-spacing: 0.08em; }
 
+.ctl .hint { margin: 8px 0 0; font-size: 10px; line-height: 1.45; color: var(--text-low); }
+.ctl .hint b { color: var(--text-med); font-weight: 600; }
+.ctl .hint code { font-size: 9px; color: var(--text-med); }
+
+/* Flash the one element the plan controls, so a reviewer can find it. Review
+   instrument only — the app does not do this. */
+@keyframes findme { 0%, 100% { background: transparent; } 30% { background: color-mix(in srgb, var(--blue) 22%, transparent); } }
+.cav.findme, .foot.findme { animation: findme 1.6s var(--ease) 1; border-radius: var(--r-card); }
+@media (prefers-reduced-motion: reduce) { .cav.findme, .foot.findme { animation: none; outline: 1px solid var(--blue); } }
+
 .notes { border-inline-start: 2px solid var(--border); padding-inline-start: 12px; font-size: 12px; color: var(--text-low); }
 .notes p { margin: 0 0 8px; }
 .notes b { color: var(--text-med); font-weight: 600; }
@@ -413,7 +423,11 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
       </div>
       <div class="ctl">
         <span class="lbl">Plan</span>
-        <div class="seg" id="c-plan"></div>
+        <div class="ctl-list" id="c-plan"></div>
+        <p class="hint">Changes <b>one line</b>, at the foot of History. Nothing
+        else on this screen is plan-gated — verified, there are no <code>plan</code>
+        references in <code>sim.py</code> or <code>watchlist.py</code>. Toggling
+        jumps you to it.</p>
       </div>
       <div class="ctl">
         <span class="lbl">Theme</span>
@@ -958,8 +972,10 @@ function buildControls() {
     STRUCTS.map(([k, l, s]) => optBtn(state.struct === k, k, l, s)).join('');
   document.getElementById('c-vol').innerHTML =
     Object.entries(DATA).map(([k, v]) => optBtn(state.vol === k, k, v.label, v.sub)).join('');
-  document.getElementById('c-plan').innerHTML =
-    [['floor', 'Floor Pass'], ['trader', 'Trader']].map(([k, l]) => optBtn(state.plan === k, k, l)).join('');
+  document.getElementById('c-plan').innerHTML = [
+    ['floor', 'Floor Pass', 'Journal keeps 30 days — the Portfolio says so, and says it keeps them'],
+    ['trader', 'Trader', 'Journal keeps everything — no caveat line'],
+  ].map(([k, l, sub]) => optBtn(state.plan === k, k, l, sub)).join('');
   document.getElementById('c-theme').innerHTML =
     [['dark', 'Dark'], ['light', 'Light']].map(([k, l]) => optBtn(state.theme === k, k, l)).join('');
   document.getElementById('c-dir').innerHTML =
@@ -974,7 +990,21 @@ document.addEventListener('click', e => {
     const k = rail.dataset.k, group = rail.closest('.ctl').querySelector('.lbl').textContent;
     if (group === 'Structure') { state.struct = k; state.push = null; }
     else if (group === 'How much data') { state.vol = k; state.push = null; }
-    else if (group === 'Plan') state.plan = k;
+    else if (group === 'Plan') {
+      state.plan = k;
+      // take the reviewer to the only thing this control changes
+      if (state.struct === 'tabs') state.tab = 'history';
+      if (state.struct === 'acc') state.open = { ...state.open, closed: true };
+      state.push = null;
+      buildControls(); render();
+      requestAnimationFrame(() => {
+        const b = document.querySelector('#screen .body');
+        if (b) b.scrollTop = b.scrollHeight;
+        const el = document.querySelector('#screen .cav') || document.querySelector('#screen .foot');
+        if (el) { el.classList.add('findme'); }
+      });
+      return;
+    }
     else if (group === 'Theme') state.theme = k;
     else if (k === 'ltr' || k === 'rtl') state.dir = k;
     else state.ts = parseFloat(k);
