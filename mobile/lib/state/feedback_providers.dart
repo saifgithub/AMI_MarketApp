@@ -7,6 +7,7 @@ library;
 
 import 'dart:io' show Platform;
 
+import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -101,7 +102,9 @@ class FeedbackNotifier extends StateNotifier<FeedbackState> {
       );
       return true;
     } catch (e) {
-      state = state.copyWith(submitting: false, error: '$e');
+      state = state.copyWith(
+          submitting: false,
+          error: friendlyError(e, action: 'send your report'));
       return false;
     }
   }

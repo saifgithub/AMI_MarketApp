@@ -5,6 +5,7 @@
 library;
 
 import 'package:ami_trade/services/api/api_client.dart';
+import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/backend_mode_provider.dart';
 import 'package:ami_trade/widgets/chat/chat_bubble.dart';
@@ -161,7 +162,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     } catch (e) {
       state = state.copyWith(
         phase: OnboardingPhase.error,
-        errorMessage: 'Could not reach the backend: $e',
+        errorMessage: friendlyError(e, action: 'start onboarding'),
       );
     }
   }
@@ -210,7 +211,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
       state = state.copyWith(
         submitting: false,
         phase: OnboardingPhase.error,
-        errorMessage: 'Couldn\'t submit answer: $e',
+        errorMessage: friendlyError(e, action: 'send your answer'),
       );
     }
   }
@@ -236,7 +237,7 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     } catch (e) {
       state = state.copyWith(
         phase: OnboardingPhase.error,
-        errorMessage: 'Couldn\'t confirm: $e',
+        errorMessage: friendlyError(e, action: 'confirm your mandate'),
       );
     }
   }

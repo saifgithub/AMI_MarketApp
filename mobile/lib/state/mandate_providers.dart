@@ -2,6 +2,7 @@
 library;
 
 import 'package:ami_trade/models/mandate.dart';
+import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
@@ -46,7 +47,9 @@ class MandateNotifier extends StateNotifier<MandateState> {
       final m = await api.getMandate(userId);
       state = state.copyWith(mandate: m, loading: false);
     } catch (e) {
-      state = state.copyWith(loading: false, error: 'Could not load mandate: $e');
+      state = state.copyWith(
+          loading: false,
+          error: friendlyError(e, action: 'load your mandate'));
     }
   }
 
@@ -59,7 +62,9 @@ class MandateNotifier extends StateNotifier<MandateState> {
       state = state.copyWith(mandate: updated, saving: false);
       await _ref.read(journalNotifierProvider.notifier).refresh();
     } catch (e) {
-      state = state.copyWith(saving: false, error: 'Save failed: $e');
+      state = state.copyWith(
+          saving: false,
+          error: friendlyError(e, action: 'save your mandate'));
     }
   }
 }

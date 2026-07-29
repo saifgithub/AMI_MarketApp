@@ -94,6 +94,7 @@
     "lessonsUnlocksAgent": "يفتح",
     "lessonsDurationMin": "{min} دقيقة",
     "lessonReaderLoading": "جاري التحميل...",
+    "lessonReaderUnavailableTitle": "الدرس غير متاح",
     "lessonReaderQuizOnlyBadge": "اختبار فقط",
     "lessonReaderQuizOnlyBannerOne": "سيتم الانتقال مباشرة إلى الاختبار الواحد. عند اجتيازه، سيتم احتساب الدرس ضمن عمليات فتح الوكلاء. ستظهر التوضيحات عند الإجابات الخاطئة — هذه هي مساحة التعلم الخاصة بك.",
     "lessonReaderQuizOnlyBannerMany": "سيتم الانتقال مباشرة إلى {count} اختبارات. عند اجتيازها جميعاً، سيتم احتساب الدرس ضمن عمليات فتح الوكلاء. ستظهر التوضيحات عند الإجابات الخاطئة.",

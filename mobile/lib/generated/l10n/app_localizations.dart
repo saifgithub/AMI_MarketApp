@@ -1048,6 +1048,12 @@ abstract class AppLocalizations {
   /// **'Loading…'**
   String get lessonReaderLoading;
 
+  /// DEF148: app-bar title on the lesson reader's error state. The bar used to keep saying 'Loading…' above a failed load, which is the CR040 question answered wrong — the user waits for something that already stopped. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'LESSON UNAVAILABLE'**
+  String get lessonReaderUnavailableTitle;
+
   /// No description provided for @lessonReaderPrerequisites.
   ///
   /// In en, this message translates to:

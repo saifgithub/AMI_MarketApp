@@ -14,6 +14,7 @@ library;
 
 import 'package:ami_trade/models/brief.dart';
 import 'package:ami_trade/models/one_on_one.dart';
+import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:flutter/foundation.dart';
@@ -109,7 +110,8 @@ class BriefNotifier extends StateNotifier<BriefState> {
       );
       await loadHistory();
     } catch (e) {
-      state = state.copyWith(error: 'Could not start briefing: $e');
+      state = state.copyWith(
+          error: friendlyError(e, action: 'start the briefing'));
     }
   }
 
@@ -157,10 +159,13 @@ class BriefNotifier extends StateNotifier<BriefState> {
       final updated = List<ChatMessage>.from(state.messages);
       updated[assistantIdx] = ChatMessage(
         role: 'assistant',
-        content: 'Coach couldn\'t reach the agent: $e',
+        content: friendlyError(e, action: 'reach your analyst'),
         isStreaming: false,
       );
-      state = state.copyWith(messages: updated, streaming: false, error: '$e');
+      state = state.copyWith(
+          messages: updated,
+          streaming: false,
+          error: friendlyError(e, action: 'reach your analyst'));
     }
   }
 
@@ -176,7 +181,9 @@ class BriefNotifier extends StateNotifier<BriefState> {
       );
       state = state.copyWith(pendingProposal: proposal, proposing: false);
     } catch (e) {
-      state = state.copyWith(proposing: false, error: 'Could not propose: $e');
+      state = state.copyWith(
+          proposing: false,
+          error: friendlyError(e, action: 'propose that change'));
     }
   }
 
@@ -210,7 +217,8 @@ class BriefNotifier extends StateNotifier<BriefState> {
         );
       }
     } catch (e) {
-      state = state.copyWith(error: 'Could not save: $e');
+      state = state.copyWith(
+          error: friendlyError(e, action: 'save the brief'));
     }
   }
 
@@ -250,7 +258,8 @@ class BriefNotifier extends StateNotifier<BriefState> {
       state = state.copyWith(currentOverlay: rolled, savedOverlay: rolled);
       await loadHistory();
     } catch (e) {
-      state = state.copyWith(error: 'Rollback failed: $e');
+      state = state.copyWith(
+          error: friendlyError(e, action: 'roll back the brief'));
     }
   }
 

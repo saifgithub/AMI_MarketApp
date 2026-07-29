@@ -7,6 +7,7 @@
 library;
 
 import 'package:ami_trade/models/watchlist.dart';
+import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:flutter/foundation.dart';
@@ -56,7 +57,9 @@ class WatchlistNotifier extends StateNotifier<WatchlistState> {
       final items = await api.watchlistList(userId);
       state = state.copyWith(items: items, loading: false);
     } catch (e) {
-      state = state.copyWith(error: '$e', loading: false);
+      state = state.copyWith(
+          error: friendlyError(e, action: 'load your watchlist'),
+          loading: false);
     }
   }
 
@@ -71,7 +74,9 @@ class WatchlistNotifier extends StateNotifier<WatchlistState> {
       final items = await api.watchlistList(userId);
       state = state.copyWith(items: items, busy: false);
     } catch (e) {
-      state = state.copyWith(error: '$e', busy: false);
+      state = state.copyWith(
+          error: friendlyError(e, action: 'add that ticker'),
+          busy: false);
     }
   }
 
@@ -84,7 +89,9 @@ class WatchlistNotifier extends StateNotifier<WatchlistState> {
       final items = await api.watchlistList(userId);
       state = state.copyWith(items: items, busy: false);
     } catch (e) {
-      state = state.copyWith(error: '$e', busy: false);
+      state = state.copyWith(
+          error: friendlyError(e, action: 'remove that ticker'),
+          busy: false);
     }
   }
 }

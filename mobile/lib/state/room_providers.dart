@@ -14,6 +14,7 @@ import 'dart:async';
 
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/services/api/api_exceptions.dart';
+import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
@@ -326,7 +327,9 @@ class RoomNotifier extends StateNotifier<RoomState> {
       if (state.runId != null) {
         await _recoverViaPolling(state.runId!);
       } else {
-        state = state.copyWith(streaming: false, error: 'Stream failed: $e');
+        state = state.copyWith(
+            streaming: false,
+            error: friendlyError(e, action: 'run the Room'));
       }
     }
   }

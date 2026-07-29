@@ -415,6 +415,10 @@
         "placeholders": {"min": {"type": "int"}}
     },
     "lessonReaderLoading": "Loading…",
+    "lessonReaderUnavailableTitle": "LESSON UNAVAILABLE",
+    "@lessonReaderUnavailableTitle": {
+        "description": "DEF148: app-bar title on the lesson reader's error state. The bar used to keep saying 'Loading…' above a failed load, which is the CR040 question answered wrong — the user waits for something that already stopped. retranslate:[ar,ms]"
+    },
     "lessonReaderPrerequisites": "PREREQUISITES",
     "lessonReaderQuizOnlyBadge": "QUIZ ONLY",
     "lessonReaderQuizOnlyBannerOne": "Skipping straight to the 1 quiz. Pass it and the lesson still counts toward agent unlocks. Wrong answers will show the explanation — that's your teaching surface.",

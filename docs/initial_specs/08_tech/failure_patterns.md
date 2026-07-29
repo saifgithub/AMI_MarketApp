@@ -493,6 +493,50 @@ approximation and is what DEF153 did.
 
 ---
 
+## P11 — A rule fixed at the call site that reported it, in a codebase with forty call sites
+
+A defect is filed, the fix is correct, and it is applied **where the bug was seen**. The class
+survives untouched everywhere else, so the second report is not a regression — it is the same
+defect arriving from one of the sites nobody edited. The tell is a fix whose diff touches one
+file while the rule it enforces is a property of *every* file of that kind.
+
+| | The rule | Where it was fixed | Where it still wasn't | What the second report looked like |
+|---|---|---|---|---|
+| **DEF073 → DEF148** (2026-07-23 → 07-29) | never show a user a raw exception | the Room convene's 5xx path got a typed exception + a friendly card | **39 other `catch (e) { error: '…: $e' }` sites** across 12 provider/screen files | a lesson load 404'd and printed `DioException [bad response] … RequestOptions.validateStatus … developer.mozilla.org` to the screen, under an app bar still reading "Loading…" |
+| **DEF149 → DEF153** (2026-07-29) | price the proposal before gating on it | step 6b, the site the defect named | step 6, three lines above, computing the same value for itself | a 90% market buy passed a 50% single-name cap the same afternoon the sector cap was fixed |
+
+**Why the previous guard failed.** There was no guard — there was a *fix*, and a fix is not a
+guard. DEF073 produced good machinery (`ServerUnavailableException`, an interceptor, a friendly
+card) and then relied on every future author noticing it existed. Thirty-nine authors did not,
+including the one who wrote the interceptor. The rule was **enforced in one place and stated
+nowhere**, which is indistinguishable from not existing.
+
+The reason this is worth its own entry rather than folding into P10: P10 is about one expression
+carrying two duties, and its remedy is adversarial input. This is about *N* expressions carrying
+one duty, and no input finds it — the ninth site is not reachable from the first site's test at
+all. What finds it is a **sweep**.
+
+**The invariant.** *When a defect's rule is a property of a kind of code rather than of one
+function, the fix is not complete until something enumerates every instance of that kind. Count
+the sites before fixing one — if the count is greater than one, the deliverable is a sweep plus a
+check that runs over all of them, not a patch.*
+
+**Enforcing checks.**
+
+- `mobile/test/friendly_error_test.dart::no caught object is interpolated into a user-facing string`
+  — reads every `.dart` under `lib/state`, `lib/screens`, `lib/widgets`, `lib/features` and fails
+  on `'…$e…'` in a string literal. It carries a **vacuity guard** (the sweep must still reach
+  `lessons_providers.dart` and still see >40 files) and a **pin on its own regex** against the
+  real DEF148 source lines, because a source-scanning guard that quietly stops matching is worse
+  than none — it reads as proof.
+- `test_def153_single_name_cap_market_order.py` plus the pricing hoist (see P10) — the structural
+  half of the same lesson: leave one site to change, not two.
+
+The general control is a counting question at file time, not at fix time: **"how many places
+implement this rule?"** If the answer is not one, say so in the row, and make the fix a sweep.
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.

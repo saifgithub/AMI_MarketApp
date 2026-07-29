@@ -164,6 +164,7 @@
     "journalFilterUnlocks": "NYAHKUNCI",
     "lessonsNextUp": "SETERUSNYA",
     "lessonReaderLoading": "Memuatkan…",
+    "lessonReaderUnavailableTitle": "PELAJARAN TIDAK TERSEDIA",
     "lessonReaderQuizOnlyBadge": "KUIZ SAHAJA",
     "lessonReaderQuizOnlyBannerOne": "Terus ke 1 kuiz. Luluskan dan pelajaran tetap dikira untuk pembukaan ejen. Jawapan salah akan memaparkan penjelasan — itulah ruang pembelajaran anda.",
     "lessonReaderQuizOnlyBannerMany": "Terus ke {count} kuiz. Luluskan semua dan pelajaran tetap dikira untuk pembukaan ejen. Jawapan salah akan memaparkan penjelasan.",

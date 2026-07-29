@@ -77,7 +77,14 @@ class _LessonReaderScreenState extends ConsumerState<LessonReaderScreen> {
         child: Column(
           children: [
             _Header(
-              title: state.lesson?.meta.title ?? l.lessonReaderLoading,
+              // DEF148: the error path clears `loading` without ever giving
+              // the screen a title, so a failed load left the bar reading
+              // "Loading…" above a wall of stack text about a request that
+              // had already finished failing.
+              title: state.lesson?.meta.title ??
+                  (state.error != null
+                      ? l.lessonReaderUnavailableTitle
+                      : l.lessonReaderLoading),
               suffix: widget.quizOnly ? l.lessonReaderQuizOnlyBadge : null,
             ),
             Expanded(child: _body(context, ref, state)),

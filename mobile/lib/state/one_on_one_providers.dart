@@ -2,6 +2,7 @@
 library;
 
 import 'package:ami_trade/models/one_on_one.dart';
+import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -51,7 +52,8 @@ class OneOnOneNotifier extends StateNotifier<OneOnOneState> {
       );
       state = state.copyWith(session: session, messages: const []);
     } catch (e) {
-      state = state.copyWith(error: 'Could not open session: $e');
+      state = state.copyWith(
+          error: friendlyError(e, action: 'open this 1-on-1'));
     }
   }
 
@@ -105,10 +107,13 @@ class OneOnOneNotifier extends StateNotifier<OneOnOneState> {
       final updated = List<ChatMessage>.from(state.messages);
       updated[assistantIdx] = ChatMessage(
         role: 'assistant',
-        content: 'Couldn\'t reach the agent: $e',
+        content: friendlyError(e, action: 'reach your analyst'),
         isStreaming: false,
       );
-      state = state.copyWith(messages: updated, streaming: false, error: '$e');
+      state = state.copyWith(
+          messages: updated,
+          streaming: false,
+          error: friendlyError(e, action: 'reach your analyst'));
     }
   }
 

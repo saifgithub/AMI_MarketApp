@@ -544,6 +544,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lessonReaderLoading => 'جاري التحميل...';
 
   @override
+  String get lessonReaderUnavailableTitle => 'الدرس غير متاح';
+
+  @override
   String get lessonReaderPrerequisites => 'المتطلبات السابقة';
 
   @override

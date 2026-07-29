@@ -545,6 +545,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get lessonReaderLoading => 'Memuatkan…';
 
   @override
+  String get lessonReaderUnavailableTitle => 'PELAJARAN TIDAK TERSEDIA';
+
+  @override
   String get lessonReaderPrerequisites => 'PRA-SYARAT';
 
   @override

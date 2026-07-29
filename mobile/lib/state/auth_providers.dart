@@ -15,6 +15,7 @@
 library;
 
 import 'package:ami_trade/models/auth.dart';
+import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:flutter/foundation.dart';
@@ -122,7 +123,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await DeviceUser.setIdAndToken(r.user.id, r.token);
       state = _commitUserChange(state, user: r.user, token: r.token, loading: false);
     } catch (e) {
-      state = state.copyWith(loading: false, error: '$e');
+      state = state.copyWith(
+          loading: false, error: friendlyError(e, action: 'reach AMI'));
     }
   }
 
@@ -162,7 +164,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       return r.sent;
     } catch (e) {
-      state = state.copyWith(loading: false, error: '$e');
+      state = state.copyWith(
+          loading: false,
+          error: friendlyError(e, action: 'send your sign-in link'));
       return false;
     }
   }
@@ -187,7 +191,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       return ClaimOutcome(success: true, adoptedFromUserId: r.adoptedFromUserId);
     } catch (e) {
-      state = state.copyWith(loading: false, error: '$e');
+      state = state.copyWith(
+          loading: false, error: friendlyError(e, action: 'sign you in'));
       return const ClaimOutcome(success: false);
     }
   }
@@ -218,7 +223,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = _commitUserChange(state, user: r.user, token: r.token);
       return ClaimOutcome(success: true, adoptedFromUserId: r.adoptedFromUserId);
     } catch (e) {
-      state = state.copyWith(loading: false, error: '$e');
+      state = state.copyWith(
+          loading: false, error: friendlyError(e, action: 'sign you in'));
       return const ClaimOutcome(success: false);
     }
   }
@@ -243,7 +249,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = _commitUserChange(state, user: r.user, token: r.token);
       return ClaimOutcome(success: true, adoptedFromUserId: r.adoptedFromUserId);
     } catch (e) {
-      state = state.copyWith(loading: false, error: '$e');
+      state = state.copyWith(
+          loading: false, error: friendlyError(e, action: 'sign you in'));
       return const ClaimOutcome(success: false);
     }
   }

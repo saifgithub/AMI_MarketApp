@@ -3,6 +3,7 @@ library;
 
 import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/models/lessons.dart';
+import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:flutter/foundation.dart';
@@ -95,7 +96,9 @@ class LessonsNotifier extends StateNotifier<LessonsState> {
         loading: false,
       );
     } catch (e) {
-      state = state.copyWith(loading: false, error: 'Could not load lessons: $e');
+      state = state.copyWith(
+          loading: false,
+          error: friendlyError(e, action: 'load your lessons'));
     }
   }
 }
@@ -171,7 +174,9 @@ class LessonReaderNotifier extends StateNotifier<LessonReaderState> {
       await api.startLesson(userId: userId, lessonId: _lessonId);
       state = state.copyWith(lesson: lesson, loading: false);
     } catch (e) {
-      state = state.copyWith(loading: false, error: 'Lesson load failed: $e');
+      state = state.copyWith(
+          loading: false,
+          error: friendlyError(e, action: 'open this lesson'));
     }
   }
 
@@ -204,7 +209,9 @@ class LessonReaderNotifier extends StateNotifier<LessonReaderState> {
       // Refresh the top-level lessons state so unlocks and progress propagate
       await _ref.read(lessonsNotifierProvider.notifier).refresh();
     } catch (e) {
-      state = state.copyWith(submitting: false, error: 'Submit failed: $e');
+      state = state.copyWith(
+          submitting: false,
+          error: friendlyError(e, action: 'submit your answer'));
     }
   }
 

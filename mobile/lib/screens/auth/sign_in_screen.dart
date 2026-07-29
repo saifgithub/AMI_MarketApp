@@ -21,6 +21,7 @@ import 'dart:io' show Platform;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/auth/merge_sheet.dart';
+import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
@@ -130,7 +131,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Apple sign-in failed: $e')),
+        SnackBar(
+            content:
+                Text(friendlyError(e, action: 'sign you in with Apple'))),
       );
       return;
     }
@@ -194,7 +197,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google sign-in failed: $e')),
+        SnackBar(
+            content:
+                Text(friendlyError(e, action: 'sign you in with Google'))),
       );
       return;
     }

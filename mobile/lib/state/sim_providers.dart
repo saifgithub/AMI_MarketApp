@@ -2,6 +2,7 @@
 library;
 
 import 'package:ami_trade/models/sim.dart';
+import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
@@ -65,7 +66,9 @@ class SimNotifier extends StateNotifier<SimState> {
       final trades = await api.simListTrades(userId);
       state = state.copyWith(portfolio: portfolio, trades: trades, loading: false);
     } catch (e) {
-      state = state.copyWith(loading: false, error: 'Could not load sim: $e');
+      state = state.copyWith(
+          loading: false,
+          error: friendlyError(e, action: 'load your portfolio'));
     }
   }
 
@@ -101,7 +104,9 @@ class SimNotifier extends StateNotifier<SimState> {
       await _ref.read(watchlistNotifierProvider.notifier).refresh();
       return result;
     } catch (e) {
-      state = state.copyWith(submitting: false, error: 'Submit failed: $e');
+      state = state.copyWith(
+          submitting: false,
+          error: friendlyError(e, action: 'place that trade'));
       return null;
     }
   }
@@ -114,7 +119,8 @@ class SimNotifier extends StateNotifier<SimState> {
       await refresh();
       await _ref.read(journalNotifierProvider.notifier).refresh();
     } catch (e) {
-      state = state.copyWith(error: 'Close failed: $e');
+      state = state.copyWith(
+          error: friendlyError(e, action: 'close that trade'));
     }
   }
 
@@ -125,7 +131,8 @@ class SimNotifier extends StateNotifier<SimState> {
       await api.simResetPortfolio(userId);
       await refresh();
     } catch (e) {
-      state = state.copyWith(error: 'Reset failed: $e');
+      state = state.copyWith(
+          error: friendlyError(e, action: 'reset your portfolio'));
     }
   }
 

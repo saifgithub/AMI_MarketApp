@@ -542,6 +542,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonReaderLoading => 'Loading…';
 
   @override
+  String get lessonReaderUnavailableTitle => 'LESSON UNAVAILABLE';
+
+  @override
   String get lessonReaderPrerequisites => 'PREREQUISITES';
 
   @override

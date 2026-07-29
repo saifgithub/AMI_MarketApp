@@ -2,6 +2,7 @@
 library;
 
 import 'package:ami_trade/models/journal.dart';
+import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:flutter/foundation.dart';
@@ -73,7 +74,9 @@ class JournalNotifier extends StateNotifier<JournalState> {
         filterType: filterType,
       );
     } catch (e) {
-      state = state.copyWith(loading: false, error: 'Could not load journal: $e');
+      state = state.copyWith(
+          loading: false,
+          error: friendlyError(e, action: 'load your journal'));
     }
   }
 
@@ -110,7 +113,8 @@ class JournalNotifier extends StateNotifier<JournalState> {
           .toList(growable: false);
       state = state.copyWith(entries: replaced);
     } catch (e) {
-      state = state.copyWith(error: 'Note save failed: $e');
+      state = state.copyWith(
+          error: friendlyError(e, action: 'save your note'));
     }
   }
 
@@ -126,7 +130,9 @@ class JournalNotifier extends StateNotifier<JournalState> {
       await api.deleteJournalEntry(userId: userId, entryId: entryId);
     } catch (e) {
       // Restore on failure
-      state = state.copyWith(entries: previous, error: 'Delete failed: $e');
+      state = state.copyWith(
+          entries: previous,
+          error: friendlyError(e, action: 'delete that entry'));
     }
   }
 
@@ -144,7 +150,8 @@ class JournalNotifier extends StateNotifier<JournalState> {
         q: state.searchQuery.isEmpty ? null : state.searchQuery,
       );
     } catch (e) {
-      state = state.copyWith(error: 'Undo failed: $e');
+      state = state.copyWith(
+          error: friendlyError(e, action: 'undo that delete'));
     }
   }
 }
@@ -201,7 +208,9 @@ class JournalTrashNotifier extends StateNotifier<JournalTrashState> {
       final resp = await api.listJournalTrash(userId: userId);
       state = state.copyWith(entries: resp.entries, loading: false);
     } catch (e) {
-      state = state.copyWith(loading: false, error: 'Could not load trash: $e');
+      state = state.copyWith(
+          loading: false,
+          error: friendlyError(e, action: 'load your trash'));
     }
   }
 
@@ -220,7 +229,9 @@ class JournalTrashNotifier extends StateNotifier<JournalTrashState> {
             filterType: _ref.read(journalNotifierProvider).filterType,
           );
     } catch (e) {
-      state = state.copyWith(entries: previous, error: 'Restore failed: $e');
+      state = state.copyWith(
+          entries: previous,
+          error: friendlyError(e, action: 'restore that entry'));
     }
   }
 }
