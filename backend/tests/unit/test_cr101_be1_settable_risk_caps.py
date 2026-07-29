@@ -29,7 +29,7 @@ import pytest
 from app.agents.overlay_generator import _max_position_pct, _sector_cap_pct, generate_overlay
 from app.agents.safety_floor import check_mandate_compliance, single_name_cap_pct
 from app.schemas import AgentId, Mandate, RiskComponents
-from app.schemas.trade import OrderType, ProposedTrade, Side
+from app.schemas.trade import Holding, OrderType, ProposedTrade, Side
 from app.services.mandate_store import MandateStore
 from app.services.sector_allocation import OTHER, sector_concentration_cap
 
@@ -174,7 +174,17 @@ def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mand
     in its own units, (c) disclosed in the agent overlay, (d) settable — or it is
     deleted. No third state. Enumerates the three numeric enforced-limit fields
     this repo has today; a future field joins this list or fails the review that
-    should have caught it missing here."""
+    should have caught it missing here.
+
+    CR101-BE2 disclosure: this list is hand-enumerated, not derived from the
+    schema, so a new field does NOT automatically join it — the guard's own
+    P12-shaped gap the BE2 assign asked to be named rather than silently
+    inherited. Fixing it properly (auto-discovering every "enforced limit"
+    field) needs a marker distinguishing them from ordinary Mandate fields,
+    which doesn't exist yet; out of scope here, flagged for a DEF in the
+    CR101-BE2 hand-off. The four new limits are added as five explicit blocks
+    below instead (post_loss_cooldown_hours, max_open_positions,
+    max_trades_per_day, max_trades_per_week, max_open_risk_pct)."""
     store = MandateStore()
 
     # -- max_drawdown_pct ----------------------------------------------------
@@ -212,3 +222,66 @@ def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mand
         in generate_overlay(AgentId.TRADER, tight_single)
     )  # (c)
     assert store.patch(uuid4(), {"single_name_cap_pct": 2.0}).single_name_cap_pct == 2.0  # (d)
+
+    # -- post_loss_cooldown_hours (CR101-BE2) -------------------------------
+    from datetime import datetime, timedelta, timezone as _tz
+    cooldown_mandate = base_mandate.model_copy(update={"post_loss_cooldown_hours": 24.0})
+    now = datetime(2026, 7, 30, 12, 0, tzinfo=_tz.utc)
+    cooldown_result = check_mandate_compliance(
+        ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=1, limit_price=100.0),
+        portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=cooldown_mandate,
+        holdings=[], quotes={"AAPL": 100.0}, now=now, last_loss_closed_at=now - timedelta(hours=1),
+    )
+    assert not cooldown_result.passed and cooldown_result.blocked_by == "cooldown"  # (a)
+    assert cooldown_mandate.post_loss_cooldown_hours == 24.0  # (b) own units (hours)
+    assert "24.0h after a stop-out" in generate_overlay(AgentId.PORTFOLIO_MANAGER, cooldown_mandate)  # (c)
+    assert store.patch(uuid4(), {"post_loss_cooldown_hours": 6.0}).post_loss_cooldown_hours == 6.0  # (d)
+
+    # -- max_open_positions (CR101-BE2) --------------------------------------
+    positions_mandate = base_mandate.model_copy(update={"max_open_positions": 1})
+    positions_result = check_mandate_compliance(
+        ProposedTrade(ticker="MSFT", side=Side.BUY, quantity=1, limit_price=100.0),
+        portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=positions_mandate,
+        holdings=[Holding(ticker="AAPL", quantity=1, avg_cost=100.0, opened_at=now)],
+        quotes={"AAPL": 100.0, "MSFT": 100.0},
+    )
+    assert not positions_result.passed and positions_result.blocked_by == "max_open_positions"  # (a)
+    assert positions_mandate.max_open_positions == 1  # (b) own units (count)
+    assert "Max open positions: 1" in generate_overlay(AgentId.PORTFOLIO_MANAGER, positions_mandate)  # (c)
+    assert store.patch(uuid4(), {"max_open_positions": 5}).max_open_positions == 5  # (d)
+
+    # -- max_trades_per_day / max_trades_per_week (CR101-BE2) ----------------
+    day_mandate = base_mandate.model_copy(update={"max_trades_per_day": 1})
+    day_result = check_mandate_compliance(
+        ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=1, limit_price=100.0),
+        portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=day_mandate,
+        holdings=[], quotes={"AAPL": 100.0}, now=now, trade_open_timestamps=[now],
+    )
+    assert not day_result.passed and day_result.blocked_by == "over_trading"  # (a)
+    assert day_mandate.max_trades_per_day == 1  # (b) own units (count/day)
+    assert "1 per day" in generate_overlay(AgentId.PORTFOLIO_MANAGER, day_mandate)  # (c)
+    assert store.patch(uuid4(), {"max_trades_per_day": 3}).max_trades_per_day == 3  # (d)
+
+    week_mandate = base_mandate.model_copy(update={"max_trades_per_week": 1})
+    week_result = check_mandate_compliance(
+        ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=1, limit_price=100.0),
+        portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=week_mandate,
+        holdings=[], quotes={"AAPL": 100.0}, now=now, trade_open_timestamps=[now],
+    )
+    assert not week_result.passed and week_result.blocked_by == "over_trading"  # (a)
+    assert week_mandate.max_trades_per_week == 1  # (b) own units (count/week)
+    assert "1 per week" in generate_overlay(AgentId.PORTFOLIO_MANAGER, week_mandate)  # (c)
+    assert store.patch(uuid4(), {"max_trades_per_week": 8}).max_trades_per_week == 8  # (d)
+
+    # -- max_open_risk_pct (CR101-BE2) ---------------------------------------
+    risk_mandate = base_mandate.model_copy(update={"max_open_risk_pct": 0.5})
+    risk_result = check_mandate_compliance(
+        ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=10, order_type=OrderType.MARKET),
+        portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=risk_mandate,
+        holdings=[], quotes={"AAPL": 100.0}, proposed_stop=90.0,
+    )
+    assert not risk_result.passed and risk_result.blocked_by == "open_risk"  # (a)
+    assert risk_mandate.max_open_risk_pct == 0.5  # (b) own units (percentage points)
+    assert "9.5%" not in generate_overlay(AgentId.PORTFOLIO_MANAGER, risk_mandate)
+    assert "0.5%" in generate_overlay(AgentId.PORTFOLIO_MANAGER, risk_mandate)  # (c)
+    assert store.patch(uuid4(), {"max_open_risk_pct": 4.0}).max_open_risk_pct == 4.0  # (d)

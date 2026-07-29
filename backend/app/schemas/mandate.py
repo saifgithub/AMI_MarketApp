@@ -108,6 +108,34 @@ class Mandate(BaseModel):
     sector_cap_pct: float | None = None
     single_name_cap_pct: float | None = None
 
+    # CR101-BE2: four risk limits that did not exist in ANY form pre-CR101 — no
+    # legacy value to migrate, so `None` simply means "off / not enforced", not
+    # "fall back to a preset" (unlike sector_cap_pct/single_name_cap_pct above).
+    # Each is enforced deterministically in `agents/safety_floor.py`, disclosed
+    # in its own units in `agents/overlay_generator.py`, and settable via PATCH.
+    # No ceiling is imposed on what a user may set (L3) — loud disclosure at
+    # set-time is a mobile concern (CR101-MOBILE), out of scope here.
+    #
+    # Hours after a stop-out (a trade closed with a realised loss) before the
+    # next BUY is allowed. Evaluated against the most recent lost trade's
+    # `closed_at`.
+    post_loss_cooldown_hours: float | None = None
+    # Ceiling on distinct tickers concurrently held. A BUY that would open a
+    # NEW position (a ticker not already held) is blocked once the count is
+    # already at/above this; adding to an existing holding is unaffected.
+    max_open_positions: int | None = None
+    # Over-trading brake — a ceiling on trades submitted (any side) within the
+    # current UTC calendar day / ISO week (Monday 00:00 UTC boundary). Fixed
+    # UTC basis, not `Mandate.timezone` — see `agents/safety_floor.py` for why.
+    max_trades_per_day: int | None = None
+    max_trades_per_week: int | None = None
+    # Sum of (position size % of portfolio) x (stop distance % below entry) /
+    # 100 across open positions, in percentage points. Caps the portfolio's
+    # total capital-at-risk-to-stops, not any single position. Requires a
+    # stop on the proposed trade to price its own contribution; an open
+    # position with no stop contributes 0 (nothing to sum).
+    max_open_risk_pct: float | None = None
+
     # Constraints — hard rules
     compliance: Compliance = Field(default_factory=Compliance)
 

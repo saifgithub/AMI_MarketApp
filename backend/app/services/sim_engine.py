@@ -72,6 +72,8 @@ from app.services.market_data import (
 from app.services.classification_universe import default_classification_universe
 from app.services.sector_allocation import default_sector_map
 from app.services.sharia_universe import default_halal_universe
+from app.trading_math.portfolio import position_pct as _position_pct
+from app.trading_math.risk_limits import position_risk_contribution as _position_risk_contribution
 
 
 # ── Halal-flag universe (CR069) ─────────────────────────────────────────────
@@ -453,6 +455,48 @@ class SimEngine:
             rows = s.execute(stmt).scalars().all()
             return [SimTrade.from_row(r) for r in rows]
 
+    def _risk_limit_context(
+        self, user_id: UUID, *, portfolio_value: float, quotes: dict[str, float]
+    ) -> tuple[datetime | None, list[datetime], float]:
+        """CR101-BE2: the trade-history context `check_mandate_compliance` needs
+        for the post-loss cooldown, over-trading brake, and total open-risk cap
+        — computed here (not in the floor, which is pure/DB-free) from this
+        user's real `sim_trades` history.
+
+        Returns (last_loss_closed_at, all trade opened_at timestamps,
+        existing_open_risk_pct). The risk sum is per OPEN TRADE ROW (each buy
+        execution carries its own stop), not per aggregated holding — a ticker
+        bought twice at different stops sums both legs correctly.
+        """
+        trades = self.list_trades(user_id)
+        last_loss_closed_at = max(
+            (t.closed_at for t in trades if t.status == "lost" and t.closed_at is not None),
+            default=None,
+        )
+        trade_open_timestamps = [t.opened_at for t in trades]
+        existing_open_risk_pct = 0.0
+        for t in trades:
+            if t.status != "open" or t.stop is None:
+                continue
+            mark = quotes.get(t.ticker, t.entry_price)
+            market_value = mark * t.quantity
+            position_pct = _position_pct(market_value, portfolio_value)
+            existing_open_risk_pct += _position_risk_contribution(
+                position_pct, t.entry_price, t.stop
+            )
+        return last_loss_closed_at, trade_open_timestamps, existing_open_risk_pct
+
+    def existing_open_risk_pct(
+        self, user_id: UUID, *, portfolio_value: float, quotes: dict[str, float]
+    ) -> float:
+        """Public entry point to the open-risk sum in `_risk_limit_context` — for
+        callers (BL12's audit endpoint) that need only this one figure, not the
+        full submit()-path context."""
+        _, _, risk_pct = self._risk_limit_context(
+            user_id, portfolio_value=portfolio_value, quotes=quotes,
+        )
+        return risk_pct
+
     def holding_lots(
         self, user_id: UUID, ticker: str, *, current_price: float | None = None,
     ) -> list[Lot]:
@@ -533,9 +577,22 @@ class SimEngine:
             limit_price=limit_price,
         )
 
+        submit_portfolio_value = self.total_value(user_id)
+        submit_quotes = self.current_marks(
+            [h.ticker for h in portfolio.holdings] + [ticker]
+        )
+        # CR101-BE2: cooldown / over-trading / open-risk all read this user's
+        # real trade history — computed here (sim_engine owns the DB access;
+        # the floor stays pure) and handed to the floor as plain data.
+        last_loss_closed_at, trade_open_timestamps, existing_open_risk_pct = (
+            self._risk_limit_context(
+                user_id, portfolio_value=submit_portfolio_value, quotes=submit_quotes,
+            )
+        )
+
         compliance = check_mandate_compliance(
             proposed,
-            portfolio_value=self.total_value(user_id),
+            portfolio_value=submit_portfolio_value,
             current_drawdown_pct=self.current_drawdown_pct(user_id),
             mandate=mandate,
             halal_universe=halal_universe or default_halal_universe(),
@@ -548,10 +605,12 @@ class SimEngine:
             holdings=portfolio.holdings,
             # DEF149: the proposed ticker must be priced too, or the sector cap
             # cannot value a first-time buy of a name not already held.
-            quotes=self.current_marks(
-                [h.ticker for h in portfolio.holdings] + [ticker]
-            ),
+            quotes=submit_quotes,
             sector_map=default_sector_map(),
+            last_loss_closed_at=last_loss_closed_at,
+            trade_open_timestamps=trade_open_timestamps,
+            existing_open_risk_pct=existing_open_risk_pct,
+            proposed_stop=stop,
         )
 
         if not compliance.passed:
@@ -707,9 +766,22 @@ class SimEngine:
             limit_price=limit_price,
         )
 
+        preview_portfolio_value = self.total_value(user_id)
+        preview_quotes = self.current_marks(
+            [h.ticker for h in portfolio.holdings] + [ticker]
+        )
+        # CR101-BE2: same trade-history context as submit() (no `stop` param on
+        # preview(), so the proposed trade's own open-risk contribution can't be
+        # priced here — an ALREADY-breached existing_open_risk_pct still blocks).
+        last_loss_closed_at, trade_open_timestamps, existing_open_risk_pct = (
+            self._risk_limit_context(
+                user_id, portfolio_value=preview_portfolio_value, quotes=preview_quotes,
+            )
+        )
+
         compliance = check_mandate_compliance(
             proposed,
-            portfolio_value=self.total_value(user_id),
+            portfolio_value=preview_portfolio_value,
             current_drawdown_pct=self.current_drawdown_pct(user_id),
             mandate=mandate,
             halal_universe=halal_universe or default_halal_universe(),
@@ -722,10 +794,11 @@ class SimEngine:
             holdings=portfolio.holdings,
             # DEF149: the proposed ticker must be priced too, or the sector cap
             # cannot value a first-time buy of a name not already held.
-            quotes=self.current_marks(
-                [h.ticker for h in portfolio.holdings] + [ticker]
-            ),
+            quotes=preview_quotes,
             sector_map=default_sector_map(),
+            last_loss_closed_at=last_loss_closed_at,
+            trade_open_timestamps=trade_open_timestamps,
+            existing_open_risk_pct=existing_open_risk_pct,
         )
 
         notional = fill_price * quantity
