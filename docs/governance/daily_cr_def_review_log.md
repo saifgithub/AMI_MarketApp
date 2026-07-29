@@ -203,3 +203,45 @@ DEF137's translation half landed (`7751ff5`, 28 keys not the 24 the row claimed)
 filed (`2256e1b`). The list was rebuilt against live state mid-run rather than trusting
 the opening snapshot. Worth doing every run — this routine reads a register that other
 sessions are actively writing.
+
+---
+
+### 2026-07-29 — 0900 automated check-in (NOT the daily review)
+
+Deliberately an `###`, not a `## 2026-07-29`: CLAUDE.md step 2 skips the full review when a
+`##`-level section for today exists, and this pass asked **three** items, not the full sweep.
+Today's 13:00 Asia/Riyadh review still owes the complete `proposed`/`open` walk — it should
+read this block first and **not re-ask these three**.
+
+Read-only pass over `git log -20` + both registers. CR106 landed since the 07-28 review (all
+four phases, `b9ab31e` + `642f258`, build `0.1.0+57` to TestFlight), which cleared the queue
+gate three items were parked behind.
+
+**Asked (3):**
+
+- **CR107 + CR108 + DEF142** (mobile lane, all three parked behind CR106 which is now `done`;
+  DEF142 measured `Colors.white` on the family fills at 2.15:1 amber / 2.43 cyan / 2.54 green,
+  all below the 4.5:1 floor, and `size*0.16` giving 3.2pt on `lesson_tile`'s 20pt call site)
+  → Saiful: **"Lane all three together"** — one `coder.mobile` lane; they edit the same avatar
+  and track-label sizing, so three separate passes over `hex_avatar.dart` is the wrong shape.
+- **DEF139 + DEF140** (DEF127's two follow-ups, minted 07-28, never asked before now; DEF139 is
+  live on the `+56`/`+57` build testers are running — a multi-line SSE `error` payload reaches
+  the user with a literal `\n`; DEF140 is the same framing hole for a bare `\r`, latent only
+  because our one consumer is not a spec-compliant parser) → Saiful: **"Lane both now"** —
+  one lane, one audit.
+- **DEF141** (all five auditor-authored regression pins uncollected — `testpaths = ["tests"]`
+  never reaches `orchestration/audit/regression/`, so none has run since the day it was
+  written) → Saiful: **"Fix now."**
+
+**Flagged, not asked** (no Saiful decision outstanding — these need lane assignment or a
+status flip, both Architect-side):
+
+- **DEF110** ("Lane it now", 07-28) · **DEF119** ("Lane it now", 07-28) · **DEF113**
+  ("Yes — lane it now", 07-27) — ruling given, still `open`, zero fix commits since. 1st/1st/2nd
+  day carried.
+- **DEF144** — row reads `open` but the fix shipped: `e294ed6` (guard), `179ae1d` (unconditional
+  veto in `_is_verified`), `2936474` (the 2 contaminated files retranslated). Stale row, needs a
+  flip, not a decision.
+- **DEF126** — `c8b5f5f` re-translated all 296 AR-flagged lessons, DEF144-guarded. Language-Manager-
+  owned per the 07-28 ruling; drop from the ask, but the row has not been reconciled against that
+  commit.
