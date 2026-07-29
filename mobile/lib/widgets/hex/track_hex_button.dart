@@ -36,15 +36,29 @@ class TrackHexButton extends StatelessWidget {
           final h = constraints.maxHeight;
           final w = constraints.maxWidth;
           final donutSize = h * 0.52;
-          // The label sits above centre, where a flat-top hexagon is far
-          // narrower than its bounding box — 0.72 x W, not W. Sizing the text
-          // against the box let ISLAMIC FINANCE run under the diagonal and get
-          // sliced (4.7 pt of headroom at 1.0 text scale, negative at 1.15).
-          final labelBox = w * flatTopHexWidthFractionAtLabel;
           // The DEF082 palette is optimised for separation *between* hexes, so
           // it admits a token too dark to set type in (hexIndigo600, 2.8:1).
           // Fill keeps the true brand colour; foreground marks get the lift.
           final ink = readableOnCanvas(color);
+          // CR108: a long label used to shrink instead of wrap — the only
+          // label in the app that got SMALLER at a bigger text scale. Measure
+          // whether it fits one line at the raised 10px cap inside the
+          // one-line box (0.724 x W); if not, wrap to two lines sized against
+          // the narrower top-line box (0.676 x W) instead of the single-line
+          // one, or the second line would run under the diagonal exactly as
+          // the shrink-only version did.
+          final oneLineBox = w * flatTopHexWidthFractionAtLabel;
+          final labelStyle =
+              AmiTypography.labelMono.copyWith(fontSize: 10, color: ink);
+          final measured = TextPainter(
+            text: TextSpan(text: label, style: labelStyle),
+            maxLines: 1,
+            textDirection: TextDirection.ltr,
+          )..layout(maxWidth: double.infinity);
+          final needsTwoLines = measured.width > oneLineBox;
+          final labelBox = needsTwoLines
+              ? w * flatTopHexWidthFractionAtTwoLineLabel
+              : oneLineBox;
           return ClipPath(
             clipper: const FlatTopRegularHexagon(),
             child: Container(
@@ -54,21 +68,19 @@ class TrackHexButton extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: labelBox,
-                    // Long track names shrink to fit rather than being clipped
-                    // or ellipsised — a half-readable label is worse than a
-                    // slightly smaller one, and this also absorbs the user's
-                    // system text-scale setting.
+                    // A label that still doesn't fit two lines at the cap
+                    // absorbs the user's text-scale setting by scaling down —
+                    // never below its own base, unlike the old single-line
+                    // FittedBox, which is exactly how `ISLAMIC FINANCE` used
+                    // to shrink under a larger text scale instead of growing.
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
                         label,
-                        maxLines: 1,
-                        softWrap: false,
+                        maxLines: needsTwoLines ? 2 : 1,
+                        softWrap: needsTwoLines,
                         textAlign: TextAlign.center,
-                        style: AmiTypography.labelMono.copyWith(
-                          fontSize: 8,
-                          color: ink,
-                        ),
+                        style: labelStyle,
                       ),
                     ),
                   ),
