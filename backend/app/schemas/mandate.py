@@ -71,17 +71,6 @@ class Compliance(BaseModel):
     custom_constraints: list[str] = Field(default_factory=list)
 
 
-class DailyBriefing(BaseModel):
-    enabled: bool = False
-    time_local: str = "07:00"
-    timezone: str = "UTC"
-    voice_id: str | None = None
-    delivery_channels: list[Literal["push", "in_app", "email"]] = Field(
-        default_factory=lambda: ["in_app"]
-    )
-    language: str = "en"
-
-
 class Mandate(BaseModel):
     """Versioned user mandate. Injected into every agent's prompt as an overlay."""
 
@@ -113,8 +102,11 @@ class Mandate(BaseModel):
     # Preferences
     learning_style: LearningStyle = LearningStyle.QUICK
 
-    # Delivery
-    daily_briefing: DailyBriefing = Field(default_factory=DailyBriefing)
+    # DEF129 removed `daily_briefing: DailyBriefing`. It was collected at
+    # onboarding, persisted, and echoed back as a settled arrangement, while
+    # nothing in the backend could schedule or deliver it. Existing mandate
+    # snapshots in the `mandates` JSONB column still carry the key; Pydantic
+    # ignores unknown fields, so they load unchanged and no migration is owed.
 
     # Plan. Not persisted on the mandate row — these live on `users` and are
     # stamped onto the response by the mandate API (CR039). Until then they

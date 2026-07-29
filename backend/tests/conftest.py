@@ -18,7 +18,6 @@ import pytest
 from app.schemas import (
     AgentId,
     Compliance,
-    DailyBriefing,
     Horizon,
     LearningStyle,
     Mandate,
@@ -110,7 +109,6 @@ def base_mandate() -> Mandate:
         max_drawdown_pct=30,
         compliance=Compliance(long_only=True, liquid_only=True),
         learning_style=LearningStyle.QUICK,
-        daily_briefing=DailyBriefing(enabled=False),
         plan=Plan.TRADER,
         trial_expires_at=None,
         credit_balance=150,

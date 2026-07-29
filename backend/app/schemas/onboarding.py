@@ -18,7 +18,12 @@ from app.core.time import now_utc
 
 
 class ConversationStep(str, Enum):
-    """The 8 ordered steps of the Express path."""
+    """The 7 ordered questions of the Express path, plus welcome and readback.
+
+    Q8_BRIEFING is gone (DEF129) — it offered a daily briefing no part of the
+    backend can schedule or send. Sessions live in an in-memory store that a
+    deploy wipes, so no in-flight session can carry the retired value.
+    """
 
     WELCOME = "welcome"
     Q1_GOAL = "q1_goal"
@@ -28,7 +33,6 @@ class ConversationStep(str, Enum):
     Q5_SCENARIO_CONCENTRATION = "q5_scenario_concentration"
     Q6_MAX_DRAWDOWN = "q6_max_drawdown"
     Q7_CONSTRAINTS = "q7_constraints"
-    Q8_BRIEFING = "q8_briefing"
     READBACK = "readback"
     COMPLETE = "complete"
 

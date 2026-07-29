@@ -41,7 +41,6 @@ from app.schemas.brief import (
 )
 from app.schemas.mandate import (
     Compliance,
-    DailyBriefing,
     Horizon,
     LearningStyle,
     Path,
@@ -534,7 +533,6 @@ def hydrate_brief_mandate(overrides: dict[str, Any] | None) -> Mandate:
         max_drawdown_pct=o.get("max_drawdown_pct", 30),
         compliance=Compliance(**(o.get("compliance") or {})),
         learning_style=LearningStyle(o.get("learning_style", "quick")),
-        daily_briefing=DailyBriefing(timezone=o.get("timezone", "UTC")),
         plan=Plan(o.get("plan", "trial_trader")),
         trial_expires_at=None,
         credit_balance=75,

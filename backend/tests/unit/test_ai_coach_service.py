@@ -125,7 +125,7 @@ def test_concierge_fallback_uses_coach_qa():
     from uuid import uuid4
 
     from app.schemas import (
-        Compliance, DailyBriefing, Horizon, LearningStyle, Mandate, Path as P,
+        Compliance, Horizon, LearningStyle, Mandate, Path as P,
         Plan, PrimaryGoal, RiskComponents,
     )
     from app.services.concierge_prompts import scripted_reply
@@ -141,7 +141,6 @@ def test_concierge_fallback_uses_coach_qa():
         risk_quotes=[], max_drawdown_pct=30,
         compliance=Compliance(long_only=True, liquid_only=True),
         learning_style=LearningStyle.QUICK,
-        daily_briefing=DailyBriefing(enabled=False),
         plan=Plan.TRADER, trial_expires_at=None, credit_balance=150,
         created_at=datetime(2026, 5, 11), updated_at=datetime(2026, 5, 11),
     )

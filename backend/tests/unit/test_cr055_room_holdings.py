@@ -269,7 +269,6 @@ def _mandate(*, long_only: bool = True):
 
     from app.schemas.mandate import (
         Compliance,
-        DailyBriefing,
         Horizon,
         LearningStyle,
         Mandate,
@@ -297,7 +296,6 @@ def _mandate(*, long_only: bool = True):
         max_drawdown_pct=30,
         compliance=Compliance(long_only=long_only, liquid_only=True),
         learning_style=LearningStyle.QUICK,
-        daily_briefing=DailyBriefing(enabled=False),
         plan=Plan.TRADER,
         trial_expires_at=None,
         credit_balance=150,
