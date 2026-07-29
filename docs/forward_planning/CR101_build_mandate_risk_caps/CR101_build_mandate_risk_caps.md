@@ -3,7 +3,8 @@
 **Filed:** 2026-07-27 · **Status:** proposed · **Decision:** Saiful, 2026-07-27 — *"create a CR for the caps. It will be build."*
 **Amended:** 2026-07-29 (AT:R59, room-quality) — Saiful, verbatim: **"All risk parameters must be disclosed and user-settable."** Read Amendment 1 first; it adds a governing principle, an audit of what exists today, one blocker that must land first, and a schema decision the original scope left open.
 **Amended again:** 2026-07-29 (AT:R65, architect review at Saiful's request) — Amendment 2 corrects one factual claim in Amendment 1 that would have caused a silent behaviour change if built as written, and adds two build-blocking gaps. **Read Amendment 2 before acting on Amendment 1's scope item 10.**
-**Amendment 3:** 2026-07-29 (AT:R65) — Saiful's decisions on the three questions Amendment 2 left open. AT:R59 has closed; **track R is the sole architect and owns this CR.** Amendment 3 **supersedes** Amendment 2's recommendations where they differ, and supersedes scope item 10. **It is the current statement of scope — read it last and treat it as binding.**
+**Amendment 3:** 2026-07-29 (AT:R65) — Saiful's decisions on the three questions Amendment 2 left open. AT:R59 has closed; **track R is the sole architect and owns this CR.** Amendment 3 **supersedes** Amendment 2's recommendations where they differ, and supersedes scope item 10.
+**Amendment 4:** 2026-07-29 (AT:R65) — reconciles Decision 3's preset spine against the curriculum, as Amendment 3 required. Saiful approved the spine and the lesson agrees with it; the field is renamed to the curriculum's own `min_risk_reward_ratio`; and it turns out **the cap is already a phantom-mandate field taught by two lessons in three languages**, which moves it from "a job invented for `regret_asymmetry`" into the DEF102/DEF117 cohort this CR exists to close. Carries the no-levels recommendation, awaiting Saiful. **Amendments 3 + 4 together are the current statement of scope — read them last and treat them as binding.**
 
 ---
 
@@ -220,6 +221,64 @@ the overlay and the UI must say so. Silently skipping the check is the CR040 fai
     mandate check. State the no-levels rule.
 16. **Rework `_derive_risk_score`** — it reads `concentration_tolerance`, which item 8 removes.
     Onboarding classifiers become preset selectors writing explicit limits.
+
+### Amendment 4 (2026-07-29, AT:R65) — the R:R cap is already in the curriculum
+
+Reconciling Decision 3's preset spine against lesson `016_risk_reward_ratio`, as Amendment 3
+required, turned up three things that change the item rather than confirm it.
+
+**1. Saiful approved the spine, and the lesson agrees with it.** Lesson 016 states 1.5 twice —
+the falsification rule (*"if the chart's natural target is closer than 1.5× the stop distance,
+the setup fails the filter before you even price it"*) and the practice task. That is exactly the
+midpoint, so **`−1 → 1.0`, `0 → 1.5`, `+1 → 2.5` stands**, confirmed against the curriculum rather
+than asserted.
+
+**2. Use the curriculum's field name: `min_risk_reward_ratio`.** Not the `min_reward_risk_ratio`
+Amendment 3 coined. The lessons already name it, and it matches the existing
+`trading_math/trade.py::risk_reward`. (Both compute reward ÷ risk despite the word order — that is
+the conventional reading of the phrase "risk/reward ratio", and the lesson's own worked example
+confirms it: `15 ÷ 5 = 3.0`.)
+
+**3. This cap is ALREADY a phantom-mandate field — it belongs to the DEF102/DEF117 cohort this CR
+was created for.** It is not a new dial being invented to give `regret_asymmetry` a job; it is a
+promise the curriculum already makes and the product does not keep. Measured on `main`:
+
+| Lesson | Languages | What it tells the user |
+|---|---|---|
+| `016_risk_reward_ratio` | en / ar / ms | *"set `min_risk_reward_ratio` to 1.5 … the PM safety floor will **refuse the ticket**"* |
+| `106_asymmetric_rr_in_regimes` | en / ar / ms | sets it to 2.0, and teaches per-regime thresholds — 2:1 trending, 1.5:1–2:1 ranging |
+
+Six files. Lesson 016 also specifies the **enforcement behaviour** — the floor refuses — which
+settles by itself the part of Decision 3 that was open, and confirms the "refuse" reading below.
+Lesson 106 implies the user re-tunes the threshold by market regime, which the Layer 2 dial
+satisfies; it does NOT require a per-regime schema field, and should not be read as asking for one.
+
+**Consequence for content:** once this ships, both lessons flip from wrong-vs-product to correct
+with **no text change**, so no AR/MS re-translation is triggered. Add them to the cohort that gets
+re-verified green under the original filing's "Consequences for content" section.
+
+### The no-levels ruling — recommendation, awaiting Saiful
+
+Amendment 3 flagged that a market order with no stop has no computable R:R, and that a user who set
+a 2.5:1 minimum and then traded without a stop would escape their own mandate. Recommended
+resolution:
+
+**Refuse, and make "none" a real setting.** A trade with no stop does not *pass* the check, it is
+**unevaluable** — risk is undefined, so it cannot demonstrate 1.5:1. Treating unevaluable as passing
+is the DEF059 pattern (proceeding confidently on absent data) and is exactly the bypass shape. The
+escape valve is the dial itself: `0` = no minimum, a legal, disclosed, user-chosen setting under
+Layer 3. The user can switch it off deliberately but cannot bypass it by accident — which is the
+distinction the whole CR rests on. The refusal must name both exits: *"add a stop and target, or
+set your minimum to none."*
+
+**Migration guard, and it is not optional.** Migrate every existing user to `0`. If the preset
+shipped at 1.5 by default, every stop-less market order in the app would start being refused by a
+rule the user never set — which is precisely how DEF149 happened the same day (*"when 1 buy for the
+1st time, I am immediately violating the allocation"*). Only onboarding, or the user opening the
+dial, should produce a positive value.
+
+**Scope note:** the Room path always carries entry/stop/target, so this hole exists only on the
+manual trade ticket. Enforcing on Room verdicts is free.
 
 ### Amended Acceptance — adds to the previous ten
 
