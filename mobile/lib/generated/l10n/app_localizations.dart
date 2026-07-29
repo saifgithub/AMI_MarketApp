@@ -64,7 +64,7 @@ import 'app_localizations_ms.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -87,17 +87,17 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
     Locale('en'),
-    Locale('ms'),
+    Locale('ms')
   ];
 
   /// Application title. Used in MaterialApp and system places. Keep as 'AMI Trade' across all locales — it's a product name, not translatable.
@@ -634,11 +634,23 @@ abstract class AppLocalizations {
   /// **'No open position or watchlist entry for {ticker}.'**
   String tickerDetailNoPosition(String ticker);
 
-  /// Error state shown in the chart slot on Ticker Detail when /v1/sim/history fails (network down, server returned no candles). Tapping retries the fetch.
+  /// Chart slot on Ticker Detail, TRANSIENT failure only — network down, timeout, or a 5xx. Tapping retries the fetch and could genuinely succeed. Do NOT reuse this for a rejected request or an empty result; those are tickerDetailChartRejected and tickerDetailChartNoHistory, and promising a retry that cannot work is the DEF151 defect.
   ///
   /// In en, this message translates to:
   /// **'Chart unavailable. Tap to retry.'**
   String get tickerDetailChartUnavailable;
+
+  /// Chart slot on Ticker Detail when the server REJECTED the request (a 4xx other than 429) — an unknown ticker, or a period it will not serve. Re-sending the identical request would fail identically, so this state offers no retry and is not tappable.
+  ///
+  /// In en, this message translates to:
+  /// **'AMI can\'t chart this one.'**
+  String get tickerDetailChartRejected;
+
+  /// Chart slot on Ticker Detail when the request SUCCEEDED and returned zero candles — e.g. a recently listed ticker viewed on 5Y. Not an error: nothing failed and nothing will change on a retry, so this state offers none. Keep the wording neutral, not apologetic.
+  ///
+  /// In en, this message translates to:
+  /// **'No price history for this period.'**
+  String get tickerDetailChartNoHistory;
 
   /// Tooltip on the small expand icon at the top-right of the portrait chart on Ticker Detail. Pushes the landscape fullscreen chart route.
   ///
@@ -1419,22 +1431,14 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{ticker} passes the {standard} screen ({source}, as of {date}).'**
   String shariaVerdictPass(
-    String ticker,
-    String standard,
-    String source,
-    String date,
-  );
+      String ticker, String standard, String source, String date);
 
   /// CR069 Phase 1b. Shown on a REJECTED trade: the ticker is inside the parent index and absent from the compliant set, so it is a real exclusion under this standard and the trade is blocked. OBSERVANCE-SENSITIVE. Translator notes: (a) this is the ONLY one of the four verdict strings that reports a negative screen result — keep it clearly distinct from shariaVerdictUnknown, which reports NO ruling; conflating the two is the specific confusion CR069 design constraint 2 forbids; (b) attribute the exclusion to the named standard, not to AMI. {standard} and {source} arrive untranslated.
   ///
   /// In en, this message translates to:
   /// **'{ticker} is in the S&P 500 but does not pass the {standard} screen ({source}, as of {date}), so this mandate won\'t trade it.'**
   String shariaVerdictScreenedOut(
-    String ticker,
-    String standard,
-    String source,
-    String date,
-  );
+      String ticker, String standard, String source, String date);
 
   /// CR069 Phase 1b. Shown on a SUCCESSFUL, PERMITTED trade (G3, resolved 2026-07-23: unknown permits, with the disclosure attached) when the ticker sits outside the parent index and the standard therefore never examined it. OBSERVANCE-SENSITIVE and the highest-risk string in this set. Translator notes: (a) this is NOT a rejection, NOT a warning, and NOT a statement that the trade was risky — the trade went through; (b) 'hasn't reviewed it' must NOT become 'not permitted', 'haram', 'non-compliant', 'doubtful' or 'mashbooh' — turning an absence of a ruling into a negative ruling is a false assurance in the direction nobody checks, and is exactly what CR069 design constraint 2 forbids; (c) 'AMI doesn't know' is deliberate humility and must survive. {standard} arrives untranslated.
   ///
@@ -2599,11 +2603,7 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Filled: {side} {qty} {ticker} @ \\\${price}'**
   String tradeTicketFilled(
-    String side,
-    String qty,
-    String ticker,
-    String price,
-  );
+      String side, String qty, String ticker, String price);
 
   /// Label above a Concierge chat bubble in the conversation surfaces (Onboarding, 1-on-1).
   ///
@@ -3121,12 +3121,6 @@ abstract class AppLocalizations {
   /// **'TRANSCRIPT'**
   String get roomViewModeTranscript;
 
-  /// Sub-header strip on a LIVE Room: how long the run took and what it cost. Mono. The Journal shows journalStripMeta instead — the snapshot never recorded either number.
-  ///
-  /// In en, this message translates to:
-  /// **'{seconds}s · {credits} CREDITS'**
-  String roomStripMeta(int seconds, int credits);
-
   /// Hero heading when the Portfolio Manager approved the trade. Mono uppercase.
   ///
   /// In en, this message translates to:
@@ -3409,12 +3403,6 @@ abstract class AppLocalizations {
   /// **'LEVELS AS OF {date} — A RECORD, NOT A CURRENT SETUP'**
   String journalLevelsAsOf(String date);
 
-  /// Sub-header strip on a journal replay, where duration and credit cost were never recorded.
-  ///
-  /// In en, this message translates to:
-  /// **'{tier} TIER · MANDATE v{version}'**
-  String journalStripMeta(String tier, int version);
-
   /// Action on a journal replay: convene the room again on this ticker under today's rules, instead of trading a months-old price.
   ///
   /// In en, this message translates to:
@@ -3451,9 +3439,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }

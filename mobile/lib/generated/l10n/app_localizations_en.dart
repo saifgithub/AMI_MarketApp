@@ -310,6 +310,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tickerDetailChartUnavailable => 'Chart unavailable. Tap to retry.';
 
   @override
+  String get tickerDetailChartRejected => 'AMI can\'t chart this one.';
+
+  @override
+  String get tickerDetailChartNoHistory => 'No price history for this period.';
+
+  @override
   String get tickerDetailChartExpand => 'Expand chart';
 
   @override
@@ -754,21 +760,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String shariaVerdictPass(
-    String ticker,
-    String standard,
-    String source,
-    String date,
-  ) {
+      String ticker, String standard, String source, String date) {
     return '$ticker passes the $standard screen ($source, as of $date).';
   }
 
   @override
   String shariaVerdictScreenedOut(
-    String ticker,
-    String standard,
-    String source,
-    String date,
-  ) {
+      String ticker, String standard, String source, String date) {
     return '$ticker is in the S&P 500 but does not pass the $standard screen ($source, as of $date), so this mandate won\'t trade it.';
   }
 
@@ -1489,11 +1487,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tradeTicketFilled(
-    String side,
-    String qty,
-    String ticker,
-    String price,
-  ) {
+      String side, String qty, String ticker, String price) {
     return 'Filled: $side $qty $ticker @ \\\$$price';
   }
 
@@ -1787,11 +1781,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomViewModeTranscript => 'TRANSCRIPT';
 
   @override
-  String roomStripMeta(int seconds, int credits) {
-    return '${seconds}s · $credits CREDITS';
-  }
-
-  @override
   String get roomHeroApprove => 'THE ROOM APPROVED';
 
   @override
@@ -1949,11 +1938,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String journalLevelsAsOf(String date) {
     return 'LEVELS AS OF $date — A RECORD, NOT A CURRENT SETUP';
-  }
-
-  @override
-  String journalStripMeta(String tier, int version) {
-    return '$tier TIER · MANDATE v$version';
   }
 
   @override

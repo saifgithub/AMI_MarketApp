@@ -18,6 +18,7 @@ import 'dart:ui' as ui;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/sim.dart';
+import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/state/ticker_history_provider.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/theme/hex_clipper.dart';
@@ -94,16 +95,27 @@ class _TickerChartState extends ConsumerState<TickerChart> {
             children: [
               async.when(
                 loading: () => const _ChartSkeleton(),
-                error: (_, __) => _ChartError(
-                  label: l.tickerDetailChartUnavailable,
-                  onRetry: () => ref.invalidate(tickerHistoryProvider(key)),
-                ),
+                // DEF151 follow-up: three states used to render as one string
+                // with one retry, and the error object was discarded entirely
+                // so nothing could tell them apart.
+                error: (e, __) {
+                  final retryable = isRetryable(e);
+                  return _ChartNotice(
+                    label: retryable
+                        ? l.tickerDetailChartUnavailable
+                        : l.tickerDetailChartRejected,
+                    onRetry: retryable
+                        ? () => ref.invalidate(tickerHistoryProvider(key))
+                        : null,
+                  );
+                },
                 data: (history) {
                   if (history.candles.isEmpty) {
-                    return _ChartError(
-                      label: l.tickerDetailChartUnavailable,
-                      onRetry: () => ref.invalidate(tickerHistoryProvider(key)),
-                    );
+                    // Not an error: the server answered, with no candles. A
+                    // recent listing on 5Y hits this on every visit, and a
+                    // retry would return the same empty result forever.
+                    return _ChartNotice(
+                        label: l.tickerDetailChartNoHistory);
                   }
                   return _ChartBody(
                     history: history,
@@ -240,38 +252,50 @@ class _ChartSkeleton extends StatelessWidget {
 }
 
 
-class _ChartError extends StatelessWidget {
-  const _ChartError({required this.label, required this.onRetry});
+/// The chart's non-chart state. [onRetry] is null when tapping could not
+/// change the outcome — a 4xx, or a successful response with no candles — and
+/// then nothing here is tappable and no refresh glyph is shown. An affordance
+/// that cannot do what it depicts is the DEF151 defect in a quieter register.
+class _ChartNotice extends StatelessWidget {
+  const _ChartNotice({required this.label, this.onRetry});
 
   final String label;
-  final VoidCallback onRetry;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
+    final body = Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            onRetry == null ? Icons.show_chart : Icons.refresh,
+            color: AmiColors.textLow,
+            size: 24,
+          ),
+          const SizedBox(height: AmiSpacing.xs),
+          Text(
+            label,
+            style: AmiTypography.caption,
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+
     return Container(
       decoration: BoxDecoration(
         color: AmiColors.slate800.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AmiRadii.card),
         border: Border.all(color: AmiColors.slate700),
       ),
-      child: InkWell(
-        onTap: onRetry,
-        borderRadius: BorderRadius.circular(AmiRadii.card),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.refresh, color: AmiColors.textLow, size: 24),
-              const SizedBox(height: AmiSpacing.xs),
-              Text(
-                label,
-                style: AmiTypography.caption,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
+      child: onRetry == null
+          ? body
+          : InkWell(
+              onTap: onRetry,
+              borderRadius: BorderRadius.circular(AmiRadii.card),
+              child: body,
+            ),
     );
   }
 }

@@ -202,7 +202,7 @@ Map<String, dynamic>? parseRoomSseEvent(String eventType, String data) {
         final j = jsonDecode(data) as Map<String, dynamic>;
         return {'kind': 'done', 'run_id': j['run_id']};
       case 'error':
-        return {'kind': 'error', 'message': data};
+        return {'kind': 'error', 'message': unescapeSseText(data)};
       default:
         // CR040 degrade loudly: log only, never surface to the user.
         debugPrint('room stream: unknown event kind "$eventType"');
@@ -389,7 +389,7 @@ class ApiClient {
         } else if (eventType == 'done') {
           return;
         } else if (eventType == 'error') {
-          throw Exception('Server error: $data');
+          throw Exception('Server error: ${unescapeSseText(data)}');
         }
       }
     }
@@ -503,7 +503,7 @@ class ApiClient {
         } else if (eventType == 'done') {
           return;
         } else if (eventType == 'error') {
-          throw Exception('Server error: $data');
+          throw Exception('Server error: ${unescapeSseText(data)}');
         }
       }
     }

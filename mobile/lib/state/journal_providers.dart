@@ -47,11 +47,16 @@ class JournalState {
     String? error,
     bool clearError = false,
     bool clearFilter = false,
+    // `retentionDays: null` cannot mean "unlimited" through `?? this.x` — it
+    // reads as "unchanged". So an upgrade to an unlimited plan could never
+    // clear a stale finite value, and the caveat kept showing (DEF156).
+    bool clearRetentionDays = false,
   }) {
     return JournalState(
       entries: entries ?? this.entries,
       loading: loading ?? this.loading,
-      retentionDays: retentionDays ?? this.retentionDays,
+      retentionDays:
+          clearRetentionDays ? null : (retentionDays ?? this.retentionDays),
       retentionLoaded: retentionLoaded ?? this.retentionLoaded,
       filterType: clearFilter ? null : (filterType ?? this.filterType),
       searchQuery: searchQuery ?? this.searchQuery,
@@ -84,6 +89,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
         entries: resp.entries,
         loading: false,
         retentionDays: resp.retentionDays,
+        clearRetentionDays: resp.retentionDays == null,
         retentionLoaded: true,
         filterType: filterType,
       );

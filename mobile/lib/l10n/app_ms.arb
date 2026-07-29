@@ -368,6 +368,8 @@
     "tickerDetailAdded": "Ditambah {date}",
     "tickerDetailNoPosition": "Tiada posisi terbuka atau entri senarai pantau untuk {ticker}.",
     "tickerDetailChartUnavailable": "Carta tidak tersedia. Tekan untuk cuba lagi.",
+    "tickerDetailChartRejected": "AMI can't chart this one.",
+    "tickerDetailChartNoHistory": "No price history for this period.",
     "tickerDetailChartExpand": "Kembangkan carta",
     "tickerDetailChartClose": "Tutup carta skrin penuh",
     "tickerDetailActionTrade": "DAGANG",
@@ -508,7 +510,6 @@
     "roomVerdictOpinionsNote": "Keputusan ini dicapai tanpa input mereka.",
     "roomViewModeBoard": "PAPAN",
     "roomViewModeTranscript": "TRANSKRIP",
-    "roomStripMeta": "{seconds}s · {credits} KREDIT",
     "roomHeroApprove": "BILIK MELULUSKAN",
     "roomHeroPass": "BILIK BERLALU",
     "roomHeroReject": "DISEKAT OLEH MANDAT ANDA",
@@ -556,6 +557,5 @@
     "roomPhaseRisk": "RISIKO",
     "roomPhaseVerdict": "KEPUTUSAN",
     "journalLevelsAsOf": "HARGA PADA {date} — SATU REKOD, BUKAN PERSEDIAAN SEMASA",
-    "journalStripMeta": "TAHAP {tier} · MANDAT v{version}",
     "journalRerunWithMandate": "JALANKAN SEMULA DENGAN MANDAT SEMASA"
 }

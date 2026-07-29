@@ -369,6 +369,8 @@
     "tickerDetailAdded": "تمت الإضافة في {date}",
     "tickerDetailNoPosition": "لا يوجد مركز مفتوح أو إدخال قائمة مراقبة لـ {ticker}.",
     "tickerDetailChartUnavailable": "الرسم البياني غير متاح. انقر للمحاولة مرة أخرى.",
+    "tickerDetailChartRejected": "AMI can't chart this one.",
+    "tickerDetailChartNoHistory": "No price history for this period.",
     "tickerDetailChartExpand": "توسيع الرسم البياني",
     "tickerDetailChartClose": "إغلاق الرسم البياني بملء الشاشة",
     "tickerDetailActionTrade": "تداول",
@@ -508,7 +510,6 @@
     "roomVerdictOpinionsNote": "تم التوصل إلى هذا القرار دون مدخلاتهم.",
     "roomViewModeBoard": "اللوحة",
     "roomViewModeTranscript": "النص الكامل",
-    "roomStripMeta": "{seconds} ث · {credits} رصيد",
     "roomHeroApprove": "وافقت الغرفة",
     "roomHeroPass": "تجاوزت الغرفة",
     "roomHeroReject": "محظور بموجب تفويضك",
@@ -556,6 +557,5 @@
     "roomPhaseRisk": "المخاطر",
     "roomPhaseVerdict": "القرار",
     "journalLevelsAsOf": "الأسعار بتاريخ {date} — سجلّ، وليست صفقة قائمة الآن",
-    "journalStripMeta": "الفئة {tier} · التفويض الإصدار {version}",
     "journalRerunWithMandate": "أعد التشغيل بالتفويض الحالي"
 }

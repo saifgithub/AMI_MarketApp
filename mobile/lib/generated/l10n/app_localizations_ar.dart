@@ -312,6 +312,12 @@ class AppLocalizationsAr extends AppLocalizations {
       'الرسم البياني غير متاح. انقر للمحاولة مرة أخرى.';
 
   @override
+  String get tickerDetailChartRejected => 'AMI can\'t chart this one.';
+
+  @override
+  String get tickerDetailChartNoHistory => 'No price history for this period.';
+
+  @override
   String get tickerDetailChartExpand => 'توسيع الرسم البياني';
 
   @override
@@ -756,21 +762,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String shariaVerdictPass(
-    String ticker,
-    String standard,
-    String source,
-    String date,
-  ) {
+      String ticker, String standard, String source, String date) {
     return '$ticker passes the $standard screen ($source, as of $date).';
   }
 
   @override
   String shariaVerdictScreenedOut(
-    String ticker,
-    String standard,
-    String source,
-    String date,
-  ) {
+      String ticker, String standard, String source, String date) {
     return '$ticker is in the S&P 500 but does not pass the $standard screen ($source, as of $date), so this mandate won\'t trade it.';
   }
 
@@ -1493,11 +1491,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String tradeTicketFilled(
-    String side,
-    String qty,
-    String ticker,
-    String price,
-  ) {
+      String side, String qty, String ticker, String price) {
     return 'تم التنفيذ: $side $qty $ticker بسعر \$$price';
   }
 
@@ -1788,11 +1782,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get roomViewModeTranscript => 'النص الكامل';
 
   @override
-  String roomStripMeta(int seconds, int credits) {
-    return '$seconds ث · $credits رصيد';
-  }
-
-  @override
   String get roomHeroApprove => 'وافقت الغرفة';
 
   @override
@@ -1950,11 +1939,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String journalLevelsAsOf(String date) {
     return 'الأسعار بتاريخ $date — سجلّ، وليست صفقة قائمة الآن';
-  }
-
-  @override
-  String journalStripMeta(String tier, int version) {
-    return 'الفئة $tier · التفويض الإصدار $version';
   }
 
   @override

@@ -81,6 +81,44 @@ String friendlyError(Object error, {required String action}) {
   return '$lead. Try again.';
 }
 
+/// Whether re-sending the identical request could plausibly succeed.
+///
+/// DEF151 shipped "Chart unavailable. Tap to retry." over a 422 that could
+/// never succeed: every tap re-sent the same rejected request and failed the
+/// same way, so the feature was 100% dark while wearing the costume of a flaky
+/// network. A retry affordance on a permanently-rejected call is a promise the
+/// app cannot keep — so the caller needs to know whether to offer one, not just
+/// what to say.
+///
+/// Unknown errors default to **retryable**. Offering a retry that turns out not
+/// to help is a smaller wrong than refusing one that would have worked, and the
+/// cases that must not offer it are the ones we can name.
+bool isRetryable(Object error) {
+  if (error is ServerUnavailableException) return true;
+  if (error is InsufficientCreditsException) return false;
+
+  if (error is DioException) {
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.connectionError:
+      case DioExceptionType.unknown:
+        return true;
+      case DioExceptionType.cancel:
+      case DioExceptionType.badCertificate:
+        return false;
+      case DioExceptionType.badResponse:
+        final status = error.response?.statusCode;
+        if (status == null) return true;
+        // 429 is the one 4xx that a later identical request can clear.
+        return status == 429 || status >= 500;
+    }
+  }
+
+  return true;
+}
+
 /// The distinctions worth drawing for a person. A 404 and a 503 both mean "no
 /// data", and only one of them is worth retrying — telling them apart is the
 /// difference between a useful message and DEF151's "Tap to retry" on a

@@ -212,7 +212,15 @@
     },
     "tickerDetailChartUnavailable": "Chart unavailable. Tap to retry.",
     "@tickerDetailChartUnavailable": {
-        "description": "Error state shown in the chart slot on Ticker Detail when /v1/sim/history fails (network down, server returned no candles). Tapping retries the fetch."
+        "description": "Chart slot on Ticker Detail, TRANSIENT failure only — network down, timeout, or a 5xx. Tapping retries the fetch and could genuinely succeed. Do NOT reuse this for a rejected request or an empty result; those are tickerDetailChartRejected and tickerDetailChartNoHistory, and promising a retry that cannot work is the DEF151 defect."
+    },
+    "tickerDetailChartRejected": "AMI can't chart this one.",
+    "@tickerDetailChartRejected": {
+        "description": "Chart slot on Ticker Detail when the server REJECTED the request (a 4xx other than 429) — an unknown ticker, or a period it will not serve. Re-sending the identical request would fail identically, so this state offers no retry and is not tappable."
+    },
+    "tickerDetailChartNoHistory": "No price history for this period.",
+    "@tickerDetailChartNoHistory": {
+        "description": "Chart slot on Ticker Detail when the request SUCCEEDED and returned zero candles — e.g. a recently listed ticker viewed on 5Y. Not an error: nothing failed and nothing will change on a retry, so this state offers none. Keep the wording neutral, not apologetic."
     },
     "tickerDetailChartExpand": "Expand chart",
     "@tickerDetailChartExpand": {
@@ -1201,11 +1209,6 @@
     "@roomViewModeBoard": {"description": "Segmented-control label for the graphical Verdict Board view of a finished Room run. Mono uppercase, ~5 chars — it shares a 152pt control with roomViewModeTranscript."},
     "roomViewModeTranscript": "TRANSCRIPT",
     "@roomViewModeTranscript": {"description": "Segmented-control label for the collapsed per-agent transcript view. Mono uppercase; keep as short as the language allows."},
-    "roomStripMeta": "{seconds}s · {credits} CREDITS",
-    "@roomStripMeta": {
-        "description": "Sub-header strip on a LIVE Room: how long the run took and what it cost. Mono. The Journal shows journalStripMeta instead — the snapshot never recorded either number.",
-        "placeholders": {"seconds": {"type": "int", "example": "41"}, "credits": {"type": "int", "example": "3"}}
-    },
     "roomHeroApprove": "THE ROOM APPROVED",
     "@roomHeroApprove": {"description": "Hero heading when the Portfolio Manager approved the trade. Mono uppercase."},
     "roomHeroPass": "THE ROOM PASSED",
@@ -1323,11 +1326,6 @@
     "@journalLevelsAsOf": {
         "description": "Caption over prices in a saved journal entry. The prices are historical; offering them as a live setup would invite a trade at a stale level.",
         "placeholders": {"date": {"type": "String", "example": "02 JUN 2026"}}
-    },
-    "journalStripMeta": "{tier} TIER · MANDATE v{version}",
-    "@journalStripMeta": {
-        "description": "Sub-header strip on a journal replay, where duration and credit cost were never recorded.",
-        "placeholders": {"tier": {"type": "String", "example": "MID"}, "version": {"type": "int", "example": "7"}}
     },
     "journalRerunWithMandate": "RE-RUN WITH CURRENT MANDATE",
     "@journalRerunWithMandate": {"description": "Action on a journal replay: convene the room again on this ticker under today's rules, instead of trading a months-old price."}

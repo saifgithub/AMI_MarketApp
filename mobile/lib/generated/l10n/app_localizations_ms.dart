@@ -312,6 +312,12 @@ class AppLocalizationsMs extends AppLocalizations {
       'Carta tidak tersedia. Tekan untuk cuba lagi.';
 
   @override
+  String get tickerDetailChartRejected => 'AMI can\'t chart this one.';
+
+  @override
+  String get tickerDetailChartNoHistory => 'No price history for this period.';
+
+  @override
   String get tickerDetailChartExpand => 'Kembangkan carta';
 
   @override
@@ -757,21 +763,13 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String shariaVerdictPass(
-    String ticker,
-    String standard,
-    String source,
-    String date,
-  ) {
+      String ticker, String standard, String source, String date) {
     return '$ticker passes the $standard screen ($source, as of $date).';
   }
 
   @override
   String shariaVerdictScreenedOut(
-    String ticker,
-    String standard,
-    String source,
-    String date,
-  ) {
+      String ticker, String standard, String source, String date) {
     return '$ticker is in the S&P 500 but does not pass the $standard screen ($source, as of $date), so this mandate won\'t trade it.';
   }
 
@@ -1493,11 +1491,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String tradeTicketFilled(
-    String side,
-    String qty,
-    String ticker,
-    String price,
-  ) {
+      String side, String qty, String ticker, String price) {
     return 'Dipenuhi: $side $qty $ticker @ \$$price';
   }
 
@@ -1791,11 +1785,6 @@ class AppLocalizationsMs extends AppLocalizations {
   String get roomViewModeTranscript => 'TRANSKRIP';
 
   @override
-  String roomStripMeta(int seconds, int credits) {
-    return '${seconds}s · $credits KREDIT';
-  }
-
-  @override
   String get roomHeroApprove => 'BILIK MELULUSKAN';
 
   @override
@@ -1953,11 +1942,6 @@ class AppLocalizationsMs extends AppLocalizations {
   @override
   String journalLevelsAsOf(String date) {
     return 'HARGA PADA $date — SATU REKOD, BUKAN PERSEDIAAN SEMASA';
-  }
-
-  @override
-  String journalStripMeta(String tier, int version) {
-    return 'TAHAP $tier · MANDAT v$version';
   }
 
   @override
