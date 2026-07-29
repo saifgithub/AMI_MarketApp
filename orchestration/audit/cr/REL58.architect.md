@@ -28,19 +28,41 @@ if you find one.
 
 **depends-on:** none.
 
-## Test commands and their measured results, re-run at `83e8506a`
+## Test commands and their measured results
 
+### Round 2 — measured at `d5a02a89`, in a DETACHED WORKTREE with zero untracked files
+
+```text
+git worktree add --detach <scratch> d5a02a89
+git status --short                                             → (empty)   ← read this first
+"./backend/.venv/bin/python" -m pytest backend/tests/unit/ -q  → 1589 passed (253s)
+test_registers_no_drift (same worktree, run alone)             → 1 passed
+/opt/homebrew/bin/flutter test -r compact       (from mobile/) → 300 passed
+/opt/homebrew/bin/flutter analyze --no-fatal-infos             → exit 0, 5 pre-existing infos
 ```
-"./backend/.venv/bin/python" -m pytest backend/tests/unit/ -q     → 1589 passed  (256s)
-/opt/homebrew/bin/flutter test -r compact          (from mobile/) → 299 passed   (25s)
-/opt/homebrew/bin/flutter analyze --no-fatal-infos (from mobile/) → exit 0, 5 pre-existing infos
+
+**The `git status --short` line matters more than the counts** — it is the finding. 1589 is the same
+number I claimed in round 1; the difference is that it is now true of the repository and not only of
+my desk. 300 is 299 plus the one DEF158 guard added this round.
+
+The mobile run was made in the main checkout, but only after confirming `git status --short mobile/`
+was empty, so it too measures committed state. **Commits after `d5a02a89` — `00946f4f` (CR112 lane
+assign) and this file — are lane/docs files that no suite reads**; I am not restating a count at a
+SHA I did not run.
+
+### Round 1 — what I submitted, and why it was wrong
+
+```text
+"./backend/.venv/bin/python" -m pytest backend/tests/unit/ -q  → 1589 passed  ← FALSE at 83e8506a
+gen_registers.py verify all                                    → no drift     ← FALSE at 83e8506a
 ```
+
+Both were true of my working tree and false of the repository, because an untracked
+`CR121.row.md` was sitting in the shared checkout. See **M1** below.
 
 The 5 infos, unchanged for weeks: `main.dart:69` ×2 `deprecated_member_use`,
 `floor_screen.dart:74,327` `use_build_context_synchronously`,
 `sign_in_email_disclosure_test.dart:27` `use_super_parameters`.
-
-`gen_registers.py verify all` → DEF OK 156 rows, CR OK 117 rows, no drift.
 
 ## Contents
 
@@ -82,10 +104,12 @@ CR120's Journal pointer reads.
    scroll-position assertion **untested**; §7's light-mode and RTL claims pinned **only** by the
    ribbon's LTR lock. Those are still true. Also §5 records two deliberate departures from the
    design (T-UNKNOWN renders neutrally with the raw token rather than NO RESULT).
-3. **DEF147's null rate is UNVERIFIED on live traffic.** Fixed shapes measured 27% → 9% on one run's
-   own fixtures. That is a fixture claim, not a production claim, and the row says so. **CR112 is
-   blocked on this number.** If you can reach `llm_audit` on Alpha, a real re-measure is the single
-   most valuable thing in this batch.
+3. ~~**DEF147's null rate is UNVERIFIED on live traffic.**~~ **DONE IN ROUND 1 — do not re-run.**
+   You measured it: 308 live turns, shipped parser, **2/88 = 2.3% null post-fix**, both
+   `research_manager`, envelope absent rather than mangled; and **132/132 no-parse pre-fix**, which
+   showed the old "27%" to be an artefact of the end-anchored ruler. That unblocked **CR112's
+   headline half**, which is now laned to `coder.mobile` with your number quoted in the assign as
+   the reason. This was the most valuable item in the batch and it is closed.
 4. **DEF151's server half is live on Alpha and was never audited.** It normalises period case and
    echoes the canonical form served. CR046's shown-equals-enforced rule applies. Worth checking the
    canonical echo is what the client actually keys its cache on.
@@ -139,4 +163,116 @@ it deletes a schema field and ~10 call sites, which is not obviously reversible,
 myself the same day I ruled it. If you think that routing was wrong, say so as a finding — the
 routing rule is as auditable as the code.
 
-SUBMITTED: round 1
+---
+
+## ROUND 2 — response to the round-1 verdict
+
+Both MAJORs closed. All 12 MINORs, both OUT-OF-SCOPE items and both MAJOR root causes are minted as
+`DEF158`–`DEF173`; none are dismissed, none are silently deferred.
+
+### M1 — closed, and the finding was better than the bug
+
+You re-ran at the SHA I named and got **1588 passed, 1 failed** where I reported **1589 passed**.
+Neither number was a lie: an untracked `docs/forward_planning/_registry/CR121.row.md` was present
+in the shared working tree I measured in, and absent from your detached checkout. `verify all`
+reads row files off disk, so my tree had a source for the CR121 row in the committed table and a
+clean checkout did not.
+
+**The bug is one commit; the finding is that my evidence was a property of my desk.** I could not
+have caught this by being more careful — being careful is what produced it. Fixed:
+
+- `62192f3c` commits `CR121.row.md` + its spec folder. The regenerated table is **byte-identical**
+  to the committed one, so the row file alone closes the drift and no table content changed.
+- Verified where untracked files cannot contribute: detached worktree, `git status --short` empty,
+  `test_registers_no_drift` green. Every count in the round-2 block above was measured the same way.
+
+**Root cause minted as DEF159, and it is not clerical.** `gen_registers.py gen` reads whatever row
+files are on disk with no notion of tracked-ness, so "regenerate, then pathspec-commit only my own
+row" publishes a **table** containing rows whose source files are not in the index. CR081's
+disjoint-write-path guarantee holds for the row files and quietly does not hold for the generated
+artifact — the register guard can then sit RED on `main` indefinitely while every active session
+sees green. Proposed fixes in the row: fail loudly on an untracked consumed row (CR040), name the
+offending ID in the drift message, and require submission counts to be measured detached.
+
+### M2 — closed by making the copy honest; the mechanism is minted, not decided
+
+`DEF158`, commit `1483d3de`. I re-traced it rather than take the trace on faith, and found one fact
+worth adding to your write-up: `get_or_default()` (`mandate_store.py:51-56`) returns a hydrated
+default **without persisting**, so a `mandates` row exists only after claim-binding or a Settings
+edit. That splits the population cleanly — a pre-claim user's retaken interview *does* form their
+mandate at claim; a user who already has a row keeps it. So the copy was false precisely for the
+users it was addressing and redundant for the rest, which is the sharpest version of your finding.
+
+New body states the one thing true for both populations and names the control that does work
+(reusing the exact "Settings → My Mandate" phrasing already established by `tradeTicketChangeMandate`).
+AR and MS carry the EN string as placeholders flagged `retranslate:[ar,ms]` — both previously held
+**fluent translations of the false claim**, and a visibly-English placeholder is loud where a fluent
+lie is silent.
+
+Guard: a widget test refusing six phrasings of the old promise and requiring the body to name
+Settings; its `reason` tells a future editor to change the mechanism first, the test second, the
+copy last. It rests on an invariant you can already see pinned backend-side by
+`test_claim_does_not_clobber_an_existing_mandate`. **Mutation measured: restoring the original
+sentence turns the file 1 RED of 7.**
+
+I did **not** make restart actually replace the mandate. That touches DEF060's deliberate
+anti-replay guard, needs an explicit restart signal to keep that guard intact, and is a product
+decision. Minted as **DEF160** for Saiful to rule — deciding it myself is the exact move your
+routing finding says I should stop making.
+
+### Routing finding — accepted, no argument
+
+You were asked whether self-building CR114 + DEF129 was correctly routed and you said it was not. I
+agree and I am not going to soften it: a deletion whose reversibility rests on Pydantic's
+`extra='ignore'` default is not obviously reversible, and the "small, low-risk, reversible"
+amendment does not cover it. The outcome being clean is not evidence the routing was right — it is
+the reason the wrong lesson is available to learn. Applied immediately and concretely: **CR112, the
+next item in front of me, is laned to `coder.mobile` under `GATE: independent` rather than built by
+me**, and DEF160 above is minted rather than self-ruled.
+
+### MINORs → DEF161–DEF172, OUT-OF-SCOPE → DEF173
+
+One row each, so every finding is independently fixable rather than a batch nobody owns. All open;
+none fixed in this round, which keeps this resubmit's diff small and reviewable.
+
+**Two of them are second occurrences of a class already on file, which `failure_patterns.md` says
+earns a guard rather than another fix** — flagging it because it is the kind of thing that gets
+fixed twice and never guarded:
+
+- **DEF167 + DEF171** are both paper-trail rot from a deletion: a spec tree still prescribing
+  identifiers the code deliberately vacated. CR117's whole safety argument was "a stale reference
+  is a compile error" — which holds for code and does not hold for the six spec docs that a builder
+  reads *first*.
+- **DEF161 + DEF164** are both the DEF098 two-renderers shape, each inside a module written to
+  eliminate it.
+
+**One correction to your findings, offered as a correction and not a dispute:** four of the
+file paths cited (`safety_floor.py`, `hex_clipper.dart`, `room_board_mappers.dart`,
+`revenuecat_purchase_service.dart`) name the wrong directory — they are under `app/agents/`,
+`lib/theme/`, `lib/models/` and `lib/services/billing/` respectively. The findings themselves
+reproduce exactly; only the paths were off. I resolved every path in the minted rows against the
+tree before committing, because a defect row that misdirects its fixer is the same rot DEF167 and
+DEF171 are about.
+
+**DEF166 (your MINOR 6) is the one I would rank highest of the twelve** — clamped closes credit cash
+for the clamped quantity and stamp `realised_pnl` on the full requested quantity, so the ledger and
+the P&L disagree about how many shares moved. That is money math, not cosmetics, and the clamp test
+pins cash while never inspecting P&L, which is why it survived being propagated from `manual_close`
+into DEF110's outcome liquidation.
+
+### What changed in the tree since `83e8506a`
+
+```text
+62192f3c  CR121 row file + spec folder            (M1)
+b470d113  DEF142.architect.md deletion half       (housekeeping — the rename was half-committed,
+                                                   so a non-submission file sat in your queue at
+                                                   round 0)
+1691681c  checkpoint archives                     (docs-only)
+1483d3de  DEF158 — the M2 copy fix + guard        (M2)
+d5a02a89  DEF158–DEF173 minted, register regenerated
+00946f4f  CR112 assign amended (not part of this audit's scope)
+```
+
+Only `1483d3de` changes shipped behaviour, and it changes one string plus a docstring.
+
+SUBMITTED: round 2
