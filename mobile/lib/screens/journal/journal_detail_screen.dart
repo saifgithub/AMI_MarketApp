@@ -20,6 +20,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+/// DEF150 — true when the board below already renders this entry's reasoning,
+/// in which case `entry.summary` above it is a **second, worse copy** and must
+/// not be drawn.
+///
+/// The report was "the PASS decision should come after the NO POSITION
+/// statement". Measuring first showed that it already does: `RoomBoard` puts
+/// `_ReasonBlock` after `_HeroTile`, on both surfaces, from the untruncated
+/// `verdict.reason` in the payload. What sat above the board was
+/// `entry.summary` — the same sentence, prefixed with the action and **stored
+/// truncated to 240 characters** by `room_runner.build_journal_entry_for_run`.
+/// So the entry opened with an argument for a conclusion the reader had not
+/// been given, and that copy was the one severed mid-word.
+///
+/// Deleting the duplicate fixes both at once and leaves the board untouched on
+/// both surfaces, so CR106 acceptance #10's parity test still holds without a
+/// new declared difference. Moving the reason instead would have needed one.
+///
+/// The condition is deliberately not `entryType == roomRun`: an entry written
+/// with no verdict and no transcript draws no board at all, and suppressing its
+/// summary would leave the screen with no prose whatsoever. Degrade per entry
+/// (T-BACKFILL) — if there is no board reason, the summary is still the only
+/// account of what happened and it stays.
+@visibleForTesting
+bool boardCarriesTheReason(JournalEntry entry) {
+  if (entry.entryType != JournalEntryType.roomRun) return false;
+  final reason = boardFromJournalEntry(entry)?.reason;
+  return reason != null && reason.trim().isNotEmpty;
+}
+
 class JournalDetailScreen extends ConsumerStatefulWidget {
   const JournalDetailScreen({super.key, required this.entryId});
 
@@ -108,7 +137,7 @@ class _JournalDetailScreenState extends ConsumerState<JournalDetailScreen> {
                       ),
                     ],
                     const SizedBox(height: AmiSpacing.l),
-                    if (entry.summary != null) ...[
+                    if (entry.summary != null && !boardCarriesTheReason(entry)) ...[
                       Text(entry.summary!,
                           style: AmiTypography.body.copyWith(color: AmiColors.textMed)),
                       const SizedBox(height: AmiSpacing.m),

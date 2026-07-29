@@ -1490,6 +1490,32 @@ def _checkpoint_run(run: RoomRun) -> None:
         )
 
 
+JOURNAL_SUMMARY_MAX = 240
+
+
+def _clip_summary(text: str, limit: int = JOURNAL_SUMMARY_MAX) -> str:
+    """Clip to [limit] on a word boundary, marking the cut.
+
+    DEF150: this was a bare ``summary[:240]``, so the Journal's permanent
+    record of a decision ended ``"…the 3.05 PEG and the potential fo"`` — no
+    ellipsis, no marker, a severed word. Two readers consume this field and
+    both were served a fragment: the user on the Journal detail screen, and
+    **Bull/Bear via ``journal_context.format_journal_entry``**, which feeds it
+    back into a later run as decision-lookback (DEF098). An agent reasoning
+    from a sentence that stops mid-word is the DEF125 class arriving through a
+    different door — the model cannot tell a deliberate ending from a cut one.
+
+    The mark is what makes it honest rather than merely tidier: a clip with an
+    ellipsis says "there is more"; a clip without one asserts that this is the
+    whole thought.
+    """
+    if len(text) <= limit:
+        return text
+    head = text[: limit - 1]
+    cut = head.rsplit(" ", 1)[0] if " " in head else head
+    return f"{cut.rstrip().rstrip(',;:')}…"
+
+
 def build_journal_entry_for_run(run: RoomRun, user_id: UUID) -> JournalEntryCreate:
     """Build a JournalEntryCreate from a finished (or failed) RoomRun.
 
@@ -1521,7 +1547,7 @@ def build_journal_entry_for_run(run: RoomRun, user_id: UUID) -> JournalEntryCrea
         entry_type=EntryType.ROOM_RUN,
         reference_id=run.id,
         title=title,
-        summary=summary[:240],
+        summary=_clip_summary(summary),
         ticker=run.ticker,
         agents_involved=[
             m.agent_id if isinstance(m.agent_id, str) else m.agent_id.value
