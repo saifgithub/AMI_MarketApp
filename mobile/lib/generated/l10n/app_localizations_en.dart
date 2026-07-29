@@ -200,6 +200,80 @@ class AppLocalizationsEn extends AppLocalizations {
   String get portfolioAddDialogHint => 'Ticker (e.g. NVDA)';
 
   @override
+  String get portfolioTabPositions => 'POSITIONS';
+
+  @override
+  String get portfolioTabWatchlist => 'WATCHLIST';
+
+  @override
+  String get portfolioTabHistory => 'HISTORY';
+
+  @override
+  String get portfolioOpenTrades => 'OPEN TRADES';
+
+  @override
+  String portfolioClosedScope(int count) {
+    return 'ACROSS ALL $count CLOSED';
+  }
+
+  @override
+  String get portfolioClosed => 'CLOSED';
+
+  @override
+  String portfolioLastNClosed(int count) {
+    return 'LAST $count CLOSED';
+  }
+
+  @override
+  String portfolioClosedSpan(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String portfolioShowAll(int count) {
+    return 'SHOW ALL $count';
+  }
+
+  @override
+  String get portfolioReviewInJournal => 'REVIEW IN JOURNAL';
+
+  @override
+  String portfolioJournalRetention(int days, int count, int total) {
+    return 'Your Journal shows the last $days days — $count of these $total are older. Nothing is deleted; they stay here.';
+  }
+
+  @override
+  String get portfolioJournalRetentionUnknown =>
+      'Your Journal may not show all of these. Nothing is deleted; they stay here.';
+
+  @override
+  String get portfolioStatWon => 'WON';
+
+  @override
+  String get portfolioStatLost => 'LOST';
+
+  @override
+  String get portfolioStatHitRate => 'HIT RATE';
+
+  @override
+  String get portfolioStatNet => 'NET';
+
+  @override
+  String get portfolioSearchTicker => 'SEARCH TICKER…';
+
+  @override
+  String get portfolioSortNewest => 'NEWEST';
+
+  @override
+  String get portfolioSortValue => 'VALUE';
+
+  @override
+  String get portfolioSortAZ => 'A–Z';
+
+  @override
+  String get portfolioNoOpenPositions => 'No open positions';
+
+  @override
   String get tickerDetailValue => 'VALUE';
 
   @override
@@ -378,7 +452,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String journalRetentionWarning(int days) {
-    return 'Floor Pass: last $days days only. Upgrade to keep everything.';
+    return 'Floor Pass: last $days days only. Upgrade to see everything — nothing is deleted.';
   }
 
   @override
@@ -680,13 +754,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String shariaVerdictPass(
-      String ticker, String standard, String source, String date) {
+    String ticker,
+    String standard,
+    String source,
+    String date,
+  ) {
     return '$ticker passes the $standard screen ($source, as of $date).';
   }
 
   @override
   String shariaVerdictScreenedOut(
-      String ticker, String standard, String source, String date) {
+    String ticker,
+    String standard,
+    String source,
+    String date,
+  ) {
     return '$ticker is in the S&P 500 but does not pass the $standard screen ($source, as of $date), so this mandate won\'t trade it.';
   }
 
@@ -1407,7 +1489,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tradeTicketFilled(
-      String side, String qty, String ticker, String price) {
+    String side,
+    String qty,
+    String ticker,
+    String price,
+  ) {
     return 'Filled: $side $qty $ticker @ \\\$$price';
   }
 
