@@ -20,16 +20,18 @@ That rules **out** direct-deal inventory (the $10–25 eCPM tier in `ads.md:97` 
 
 Ads are the Floor Pass tier's entire revenue model (`tiers_and_pricing.md`), spec'd in detail since the initial specs, and **nothing has been built**: no ads CR existed before this one, no ad SDK in `mobile/pubspec.yaml`, no ad code in `mobile/lib/`. CR084 just landed real IAP, so the upsell destination a house ad points at now exists and works.
 
-## Revenue timing — state this plainly, do not let it be discovered later
+## Objective: beta/production readiness, not alpha revenue
 
-`ads.md:96-100` targets **$2–5 eCPM** programmatic and **$1–3/month ARPU** per Floor Pass MAU, capped at ≤8 impressions/user/day. Those are per-MAU targets, not totals. At stealth-alpha tester counts the programmatic total rounds to zero — ads are a MAU-leveraged lever.
+Saiful, 2026-07-29: *"I am not looking for meaningful revenue. I am preparing for the beta and production, so i need them to be developed and tested properly."*
 
-Two hard gates on programmatic revenue, both outside this CR's code:
+So the success measure is **a complete, verified ads subsystem ready to switch on at Beta/Prod**, not a revenue number. Two consequences for how this CR is built and judged:
 
-1. **Real AdMob fill requires a published app.** Test ads render pre-launch; live fill needs the app listed in the App Store / Play, an approved AdMob account, and `app-ads.txt` served from `agenticmarketintel.ai`.
-2. **The compliance slice gates store submission** (see below), so shipping the SDK without it is not shippable at all.
+- **Depth of verification is the deliverable.** See *Test plan* below. Every lane carries its own tests, and the AdMob lane must be proven on a real device, not just in widget tests.
+- **Revenue expectations are explicitly not a gate.** For the record so nobody re-derives it later: `ads.md:96-100` targets $2–5 eCPM and $1–3/month ARPU **per Floor Pass MAU**, so alpha-scale totals round to zero, and live programmatic fill additionally needs the app store-listed with an approved AdMob account and `app-ads.txt`. None of that blocks building or testing.
 
-House ads have neither gate. That is why they are built first and why the AdMob impl is flag-gated rather than assumed-on: **an unset AdMob config must fill 100% house, never render a blank slot.**
+**Testability is not gated on any of it** — this is the important distinction. AdMob is fully exercisable pre-launch: Google publishes reserved test ad unit ids per format and platform, registering a test device forces test fill on real unit ids, and the UMP SDK's consent-debug settings force an EEA consent form from any geography. So MOBILE-C and COMPLIANCE can both be verified end-to-end on Saiful's iPhone **before** an AdMob account or a store listing exists. What cannot be verified pre-listing is *fill rate and eCPM* — a revenue property, not a correctness one.
+
+House ads have no external dependency at all, which is why they are lane A and why the AdMob impl is flag-gated rather than assumed-on: **an unset AdMob config must fill 100% house, never render a blank slot.**
 
 ---
 
@@ -93,6 +95,46 @@ Accounts and money, same class as DEF100. **Do not fabricate app ids or ad unit 
 - Rating set to 17+ in both consoles.
 
 House ads need **none** of this and can ship and earn while it is outstanding.
+
+---
+
+## Test plan
+
+The objective is beta/prod readiness, so this section is normative, not advisory. A lane is not `READY_FOR_AUDIT` until its slice here is green.
+
+### Widget / unit (`mobile/test/`, runs in CI and on every lane)
+
+| Area | What is asserted |
+| --- | --- |
+| Facade seam | No screen imports an ad SDK — a source-level test over `mobile/lib/screens/**` and `mobile/lib/widgets/**`, mirroring how CR084 kept `purchases_flutter` behind `purchase_service.dart` |
+| Placement allowlist | An ad renders in each of the 6 approved placements (`ads.md:39-44`) |
+| **Placement denylist** | An ad **cannot** render in any of the 7 forbidden contexts (`ads.md:46-54`) — see Acceptance; structural, one test per context |
+| Plan gating | `floor_pass` → ads; `trader` / `floor_manager` / `trial_trader` → zero ads; table-driven over every `Plan` value so a new plan cannot silently default to ad-serving |
+| Upgrade path | A CR084 entitlement change removes ads without an app restart |
+| House targeting | Each of the 4 slots (`ads.md:85-88`) fires on its own usage precondition and not on the others' |
+| Caps — arithmetic | 1 per 5 lessons, ≤4 per session, ≥10 min apart, ≤8/day, at and around each boundary |
+| **Caps — persistence** | Counters survive a simulated cold start; a corrupt/unreadable cap store **blocks** the ad rather than allowing it |
+| Labels + dismiss | Every ad surface carries `AD`/`SPONSORED` in JetBrains Mono UPPERCASE and a working one-tap dismiss |
+| AdMob unset | Facade returns house inventory, logs once, renders no blank slot and throws nothing |
+| Blocklist | Programmatic requests carry the `ads.md:20-31` banned categories |
+
+### On-device (real build on Saiful's iPhone — release build per standing rule)
+
+1. Test ad fill using Google's reserved test unit ids, then again with a **registered test device** against real unit ids, so both paths are proven.
+2. Interstitial is genuinely skippable at 5s; no autoplay sound.
+3. UMP consent form forced via consent-debug geography = EEA: accept, decline, and re-open paths all serve ads, non-personalised after a decline.
+4. ATT prompt appears once on first ad request; declining still serves ads.
+5. CCPA toggle in Settings flips the request flag and survives a restart.
+6. Cap behaviour across a real force-quit — the failure mode MOBILE-B exists to prevent.
+7. A real CR084 purchase removes ads immediately; a lapse restores them next session.
+
+### UAT (`qa/appium/`, melehost device — Hermes operates it)
+
+Add ad-placement coverage to the existing harness: an ad appears post-lesson for a Floor Pass account, none for a Trader account, and none anywhere in the Room / Concierge / honeycomb flows. This is the regression net that catches a future screen quietly gaining an ad slot.
+
+### Explicitly NOT claimed by any test
+
+Fill rate, eCPM, and revenue — they need a live listing and real inventory. Do not let a green suite be reported as "ads are earning".
 
 ---
 
