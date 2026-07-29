@@ -365,6 +365,14 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 }
 .tabbar button[aria-selected="true"] { background: var(--blue-fill); color: #f3f4f6; }
 .tabbar button .n { opacity: 0.75; }
+/* "something live in here" — costs no label width, and reads on the inactive
+   tab where it matters. Family cyan, not amber: an open position is a state,
+   not a warning. */
+.tabbar button .live-pip {
+  display: inline-block; width: 6px; height: 6px; margin-inline-start: 5px;
+  vertical-align: 1px; background: var(--cyan); clip-path: var(--clip-hex-flat);
+}
+.tabbar button[aria-selected="true"] .live-pip { background: #f3f4f6; }
 
 /* ── Accordion ── */
 .acc { border-bottom: 1px solid var(--border-subtle); }
@@ -808,9 +816,9 @@ function viewTabs(d) {
   // on is the one thing this structure could get wrong, so it does not.
   // HISTORY is therefore closed trades only, and its count says so.
   const tabs = [
-    ['positions', 'Positions', d.holdings.length],
-    ['watchlist', 'Watchlist', d.watchlist.length],
-    ['history', 'History', d.closed.length],
+    ['positions', 'Positions', d.holdings.length, d.open.length > 0],
+    ['watchlist', 'Watchlist', d.watchlist.length, false],
+    ['history', 'History', d.closed.length, false],
   ];
   let inner = '';
   if (T === 'positions') {
@@ -838,7 +846,7 @@ function viewTabs(d) {
   return `
   ${valueCard(d, true)}
   <div class="tabbar" role="tablist">
-    ${tabs.map(([k, l, n]) => `<button role="tab" aria-selected="${T === k}" data-tab="${k}">${l} <span class="n num">${n}</span></button>`).join('')}
+    ${tabs.map(([k, l, n, live]) => `<button role="tab" aria-selected="${T === k}" data-tab="${k}"${live ? ` aria-label="${l}, ${n}, has open trades"` : ''}>${l} <span class="n num">${n}</span>${live ? '<i class="live-pip"></i>' : ''}</button>`).join('')}
   </div>
   <div class="body"><div class="pad">${inner}<div style="height:32px"></div></div></div>`;
 }
