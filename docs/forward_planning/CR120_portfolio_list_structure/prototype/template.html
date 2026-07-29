@@ -1,0 +1,946 @@
+<meta charset="utf-8">
+<title>CR120 — Portfolio: three growing lists</title>
+
+<style>
+/*@FONTS@*/
+
+/* ─────────────────────────────────────────────────────────────
+   CR120 prototype — AMI "Hex-Reinforced Precision".
+   Tokens copied verbatim from the CR106 prototype, which copied
+   them from /Volumes/Extreme Pro/AMI AI Design System/
+   colors_and_type.css. Nothing here invents a colour.
+
+   Surfaces are rounded rects (AmiRadii.card = 8, sheet = 12),
+   matching the shipped app. Hex clipping is reserved for marks
+   and controls — see --clip-hex-* below.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: dark;
+  --canvas:      #0f172a;
+  --panel:       #111827;
+  --card:        #152845;
+  --card-alt:    #121e37;
+  --border:      #374151;
+  --border-light: rgba(255,255,255,0.10);
+  --border-subtle: rgba(255,255,255,0.05);
+  --text-high:   #f3f4f6;
+  --text-med:    #94a3b8;
+  --text-low:    #64748b;
+  --slate500:    #64748b;
+  --slate700:    #374151;
+
+  /* FILL tones — identical in both themes (shapes, bars, hexes, buttons) */
+  --blue:        #3b82f6;
+  --cyan:        #06b6d4;
+  --green:       #10b981;
+  --amber:       #f59e0b;
+  --red:         #ef4444;
+  --purple:      #8b5cf6;
+  --pink:        #ec4899;
+  --orange:      #f97316;
+  --indigo:      #4f46e5;
+  --blue-fill:   #3b82f6;
+  /* INK tones — accent used as TYPE. On the dark ground, ink == fill. */
+  --blue-ink:    #3b82f6;
+  --cyan-ink:    #06b6d4;
+  --green-ink:   #10b981;
+  --amber-ink:   #f59e0b;
+  --red-ink:     #ef4444;
+  --purple-ink:  #8b5cf6;
+  --slate-ink:   #64748b;
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur: 0.2s;
+
+  --clip-hex-flat:   polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  --clip-hex-toggle: polygon(8px 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 8px 100%, 0 50%);
+  --r-card:  8px;
+  --r-sheet: 12px;
+}
+
+/* Light register — accent FILLS keep their tone; only accent INK darkens. */
+@media (prefers-color-scheme: light) {
+  :root { color-scheme: light;
+    --canvas: #f1f5f9; --panel: #ffffff; --card: #f8fafc; --card-alt: #eef2f7;
+    --border: #cbd5e1; --border-light: rgba(15,23,42,0.10); --border-subtle: rgba(15,23,42,0.05);
+    --text-high: #0f172a; --text-med: #475569; --text-low: #64748b; --slate700: #cbd5e1;
+    --blue-fill: #2563eb;
+    --blue-ink: #2563eb; --cyan-ink: #0891b2; --green-ink: #047857; --amber-ink: #b45309;
+    --red-ink: #b91c1c; --purple-ink: #6d28d9; --slate-ink: #475569; }
+}
+:root[data-theme="light"] { color-scheme: light;
+  --canvas: #f1f5f9; --panel: #ffffff; --card: #f8fafc; --card-alt: #eef2f7;
+  --border: #cbd5e1; --border-light: rgba(15,23,42,0.10); --border-subtle: rgba(15,23,42,0.05);
+  --text-high: #0f172a; --text-med: #475569; --text-low: #64748b; --slate700: #cbd5e1;
+  --blue-fill: #2563eb;
+  --blue-ink: #2563eb; --cyan-ink: #0891b2; --green-ink: #047857; --amber-ink: #b45309;
+  --red-ink: #b91c1c; --purple-ink: #6d28d9; --slate-ink: #475569; }
+:root[data-theme="dark"] { color-scheme: dark;
+  --canvas: #0f172a; --panel: #111827; --card: #152845; --card-alt: #121e37;
+  --border: #374151; --border-light: rgba(255,255,255,0.10); --border-subtle: rgba(255,255,255,0.05);
+  --text-high: #f3f4f6; --text-med: #94a3b8; --text-low: #64748b; --slate700: #374151;
+  --blue-fill: #3b82f6;
+  --blue-ink: #3b82f6; --cyan-ink: #06b6d4; --green-ink: #10b981; --amber-ink: #f59e0b;
+  --red-ink: #ef4444; --purple-ink: #8b5cf6; --slate-ink: #64748b; }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--text-med);
+  font-family: 'AMI Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono { font-family: 'AMI Mono', ui-monospace, 'SF Mono', Menlo, monospace; font-variant-numeric: tabular-nums; }
+.lbl {
+  font-family: 'AMI Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em;
+}
+/* Every numeric run stays LTR inside RTL text — CR106 trap T-BIDI, where
+   bidi reordering turned "2.8 : 1" into "1 : 2.8", a wrong number. */
+.num { direction: ltr; unicode-bidi: isolate; font-family: 'AMI Mono', ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+
+/* ══════════════ Page chrome (the review instrument, not the app) ══════════════ */
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 24px 16px 64px; }
+
+.masthead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; margin-bottom: 4px; }
+.masthead h1 { margin: 0; font-size: 24px; font-weight: 700; color: var(--text-high); letter-spacing: -0.01em; }
+.masthead .tag { font-size: 10px; color: var(--blue-ink); }
+.standfirst { max-width: 66ch; margin: 0 0 24px; font-size: 13px; color: var(--text-med); }
+.standfirst b { color: var(--text-high); font-weight: 600; }
+
+.layout { display: grid; grid-template-columns: 244px minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+.rail { display: flex; flex-direction: column; gap: 14px; }
+
+.ctl { border: 1px solid var(--border); background: var(--panel); border-radius: var(--r-card); padding: 12px; }
+.ctl > .lbl { display: block; font-size: 9px; color: var(--text-low); margin-bottom: 8px; }
+.ctl-list { display: flex; flex-direction: column; gap: 4px; }
+.ctl-row { display: flex; flex-wrap: wrap; gap: 4px; }
+
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.opt {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: start;
+  padding: 7px 10px; font-size: 11px; color: var(--text-med);
+  border: 1px solid transparent; background: var(--card-alt);
+  border-radius: var(--r-card);
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.opt:hover { color: var(--text-high); }
+.opt[aria-pressed="true"] { background: var(--card); color: var(--text-high); border-color: var(--blue); }
+.opt .dot { width: 6px; height: 6px; flex: none; background: var(--text-low); clip-path: var(--clip-hex-flat); }
+.opt[aria-pressed="true"] .dot { background: var(--blue); }
+.opt small { display: block; font-size: 9px; color: var(--text-low); line-height: 1.3; }
+.opt .txt { min-width: 0; }
+
+.seg { display: flex; gap: 3px; }
+.seg .opt { justify-content: center; padding: 7px 8px; font-size: 10px; letter-spacing: 0.08em; }
+
+.notes { border-inline-start: 2px solid var(--border); padding-inline-start: 12px; font-size: 12px; color: var(--text-low); }
+.notes p { margin: 0 0 8px; }
+.notes b { color: var(--text-med); font-weight: 600; }
+.notes .hd { font-size: 9px; color: var(--blue-ink); margin-bottom: 6px; }
+
+/* ══════════════ Device ══════════════ */
+
+.stage { display: flex; flex-direction: column; align-items: center; }
+.device {
+  width: 390px; max-width: 100%; height: 844px;
+  border: 1px solid var(--border);
+  background: var(--canvas);
+  overflow: hidden; position: relative;
+  filter: drop-shadow(0 8px 30px rgba(0,0,0,0.30));
+}
+@media (max-width: 460px) {
+  .wrap { padding: 16px 0 40px; }
+  .masthead, .standfirst, .rail { padding-inline: 16px; }
+  .device { width: 100%; height: 720px; border-inline: 0; }
+}
+.device-meta {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 14px;
+  width: 390px; max-width: 100%; margin: 10px auto 0; padding-inline: 4px;
+  font-size: 10px; color: var(--text-low);
+}
+.device-meta b { color: var(--text-high); font-weight: 700; }
+.device-meta .warn { color: var(--amber-ink); }
+
+/* ══════════════ THE APP SCREEN ══════════════ */
+
+.screen {
+  --ts: 1;
+  --t9:  calc(9px  * var(--ts));  --t10: calc(10px * var(--ts));
+  --t11: calc(11px * var(--ts));  --t12: calc(12px * var(--ts));
+  --t13: calc(13px * var(--ts));  --t14: calc(14px * var(--ts));
+  --t16: calc(16px * var(--ts));  --t18: calc(18px * var(--ts));
+  --t24: calc(24px * var(--ts));  --t34: calc(34px * var(--ts));
+  --t42: calc(42px * var(--ts));
+  height: 100%; display: flex; flex-direction: column;
+  background: var(--canvas); color: var(--text-med);
+  font-size: var(--t13);
+}
+
+/* Header — today's _Header, 64pt */
+.hdr {
+  flex: none; height: 64px; display: flex; align-items: center; gap: 8px;
+  padding-inline: 16px; border-bottom: 1px solid var(--border); background: var(--panel);
+}
+.hdr .ttl { flex: 1; font-size: var(--t12); color: var(--cyan-ink); }
+.hdr .add {
+  width: 40px; height: 40px; display: grid; place-items: center;
+  color: var(--cyan-ink); font-size: var(--t18); border-radius: 20px;
+}
+.hdr .back {
+  width: 32px; height: 40px; display: grid; place-items: center;
+  margin-inline-start: -8px; color: var(--text-high); font-size: var(--t18);
+}
+[dir="rtl"] .hdr .back { transform: scaleX(-1); }
+.hdr .ct { font-size: var(--t11); color: var(--text-low); padding: 1px 7px; border: 1px solid var(--border); border-radius: 9px; }
+
+/* Pushed-route chrome: the search + sort a capped preview cannot offer, and
+   the reason the cap costs the user nothing. Inert in the prototype. */
+.srch {
+  flex: none; display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px 10px; background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+.srch .fld {
+  flex: 1; padding: 8px 10px; font-size: var(--t10); color: var(--text-low);
+  background: var(--card-alt); border: 1px solid var(--border); border-radius: var(--r-card);
+  letter-spacing: 0.08em;
+}
+.srch .sortc {
+  flex: none; padding: 8px 10px; font-size: var(--t10); color: var(--cyan-ink);
+  background: color-mix(in srgb, var(--cyan) 12%, transparent);
+  clip-path: var(--clip-hex-toggle);
+}
+
+.body { flex: 1; overflow-y: auto; overflow-x: hidden; }
+.pad { padding: 16px; }
+
+/* ── Value card (unchanged from today, compacted in the new structures) ── */
+.value {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-sheet); padding: 16px;
+}
+.value .row1 { display: flex; align-items: center; gap: 8px; }
+.value .row1 .k { flex: 1; font-size: var(--t12); color: var(--cyan-ink); }
+.value .big { font-size: var(--t42); font-weight: 700; color: var(--text-high); line-height: 1.15; margin-top: 4px; }
+.value .row2 { display: flex; align-items: center; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.value .row2 .pnl { font-size: var(--t13); }
+.value .row2 .sp { flex: 1; min-width: 8px; }
+.value .row2 .ck { font-size: var(--t10); color: var(--text-low); }
+.value .row2 .cv { font-size: var(--t13); color: var(--text-high); }
+.value.compact { padding: 12px 16px; border-radius: 0; border-inline: 0; border-top: 0; background: var(--panel); }
+.value.compact .big { font-size: var(--t34); }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px;
+  font-size: var(--t10); clip-path: var(--clip-hex-toggle);
+}
+.pill .pip { width: 6px; height: 6px; background: currentColor; clip-path: var(--clip-hex-flat); }
+.pill.live { color: var(--green-ink); background: color-mix(in srgb, var(--green) 15%, transparent); }
+.pill.mock { color: var(--amber-ink); background: color-mix(in srgb, var(--amber) 15%, transparent); }
+
+.up { color: var(--green-ink); }
+.dn { color: var(--red-ink); }
+
+/* ── Section heading ── */
+.sec-hd {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 0; min-height: 32px;
+}
+.sec-hd .h { font-size: var(--t12); color: var(--text-high); }
+.sec-hd .ct {
+  font-size: var(--t10); color: var(--text-low);
+  padding: 1px 7px; border: 1px solid var(--border); border-radius: 9px;
+}
+.sec-hd .sp { flex: 1; }
+.sec-hd .act { font-size: var(--t10); color: var(--cyan-ink); white-space: nowrap; }
+.sec-hd.tap { cursor: pointer; }
+/* Mono deliberately: Inter has no U+25BE/U+25B8, so a sans caret falls back
+   silently to whatever the platform substitutes — which is how it first
+   shipped here as a full stop. */
+.sec-hd .caret {
+  font-family: 'AMI Mono', ui-monospace, Menlo, monospace;
+  font-size: var(--t13); color: var(--text-med); width: 14px;
+}
+
+/* ── Rows ── */
+.hold, .watch, .trade { border: 1px solid var(--border); background: var(--card); border-radius: var(--r-card); }
+
+.hold { display: flex; align-items: center; gap: 8px; padding: 16px; margin-bottom: 8px; }
+.hold .id { flex: 1; min-width: 0; }
+.hold .tk { font-size: var(--t24); font-weight: 600; color: var(--text-high); }
+.hold .qty { font-size: var(--t11); color: var(--text-low); margin-top: 2px; }
+.hold .rt { text-align: end; }
+.hold .val { font-size: var(--t13); color: var(--text-high); }
+.hold .pl { font-size: var(--t11); margin-top: 2px; }
+.hold .chev { color: var(--text-low); font-size: var(--t14); }
+
+.watch { display: flex; align-items: center; gap: 8px; padding: 8px 16px; margin-bottom: 6px; }
+.watch .tk { width: 62px; flex: none; font-size: var(--t12); color: var(--text-high); }
+.watch .note { flex: 1; min-width: 0; font-size: var(--t11); color: var(--text-low); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.watch .px { font-size: var(--t24); color: var(--text-high); }
+.watch .ch { font-size: var(--t11); }
+.watch .chev { color: var(--text-low); font-size: var(--t14); }
+
+.trade { display: flex; align-items: center; gap: 8px; padding: 8px; margin-bottom: 6px; }
+.trade .st {
+  flex: none; padding: 2px 6px; border-radius: 4px; font-size: var(--t10);
+}
+.trade .id { flex: 1; min-width: 0; }
+.trade .l1 { font-size: var(--t13); color: var(--text-med); }
+.trade .l2 { font-size: var(--t11); color: var(--text-low); margin-top: 2px; }
+.trade .rt { flex: none; font-size: var(--t12); }
+.trade .x { flex: none; width: 40px; height: 40px; display: grid; place-items: center; color: var(--text-low); font-size: var(--t14); }
+.trade.open  { border-color: color-mix(in srgb, var(--cyan)  40%, transparent); }
+.trade.won   { border-color: color-mix(in srgb, var(--green) 40%, transparent); }
+.trade.lost  { border-color: color-mix(in srgb, var(--red)   40%, transparent); }
+.st.open { color: var(--cyan-ink);  background: color-mix(in srgb, var(--cyan)  15%, transparent); }
+.st.won  { color: var(--green-ink); background: color-mix(in srgb, var(--green) 15%, transparent); }
+.st.lost { color: var(--red-ink);   background: color-mix(in srgb, var(--red)   15%, transparent); }
+
+/* ── Sector donut ── */
+.sector { display: flex; gap: 16px; align-items: flex-start; padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-card); }
+.donut { flex: none; width: 72px; height: 72px; }
+.legend { flex: 1; min-width: 0; }
+.legend .lr { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.legend .sw { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.legend .nm { flex: 1; min-width: 0; font-size: var(--t11); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.legend .pc { font-size: var(--t11); color: var(--text-med); }
+
+/* ── Footers / more-rows ── */
+.more {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px; margin-bottom: 8px;
+  font-size: var(--t10); color: var(--text-med);
+  border: 1px dashed var(--border); border-radius: var(--r-card);
+}
+.more b { color: var(--text-high); font-weight: 700; }
+
+.foot {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 0 2px;
+}
+.foot .a { font-size: var(--t10); color: var(--cyan-ink); }
+.foot .sp { flex: 1; }
+.cav { font-size: var(--t10); color: var(--amber-ink); padding: 2px 0 6px; display: flex; gap: 6px; align-items: flex-start; }
+.cav .mk { flex: none; width: 8px; height: 8px; margin-top: 4px; background: var(--amber); clip-path: var(--clip-hex-flat); }
+
+/* Stat strip above closed trades — the summary that replaces reading rows */
+.stats { display: flex; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; margin-bottom: 8px; }
+.stats .s { flex: 1; background: var(--card); padding: 8px 6px; text-align: center; }
+.stats .s .k { font-size: var(--t9); color: var(--text-low); }
+.stats .s .v { font-size: var(--t16); color: var(--text-high); margin-top: 2px; }
+.wl { display: flex; height: 4px; border-radius: 2px; overflow: hidden; margin-bottom: 8px; background: var(--border); }
+.wl i { display: block; height: 100%; }
+
+/* ── Tabs structure ── */
+.tabbar {
+  flex: none; display: flex; gap: 3px; padding: 6px 16px 10px;
+  background: var(--panel); border-bottom: 1px solid var(--border);
+}
+.tabbar button {
+  flex: 1; padding: 9px 4px; font-size: var(--t10);
+  font-family: 'AMI Mono', ui-monospace, Menlo, monospace; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-low); background: var(--card-alt);
+  clip-path: var(--clip-hex-toggle);
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.tabbar button[aria-selected="true"] { background: var(--blue-fill); color: #f3f4f6; }
+.tabbar button .n { opacity: 0.75; }
+
+/* ── Accordion ── */
+.acc { border-bottom: 1px solid var(--border-subtle); }
+.acc:last-child { border-bottom: 0; }
+
+.empty { padding: 24px 16px; text-align: center; border: 1px dashed var(--border); border-radius: var(--r-card); font-size: var(--t11); color: var(--text-low); }
+
+[dir="rtl"] .hold .rt, [dir="rtl"] .value .row2 { text-align: start; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+  <div class="masthead">
+    <h1>Portfolio — three growing lists</h1>
+    <span class="tag lbl">CR120 · PROTOTYPE</span>
+  </div>
+  <p class="standfirst">
+    The Portfolio stacks watchlist, holdings and trade history in one eager
+    <b>ListView</b> — not a <code>.builder</code>, so every row is constructed on
+    every rebuild. At six months that measures <b>8.9 screens</b> of scroll and 84
+    row widgets at once; at heavy use, <b>25.4 screens</b> and 252. Four structures
+    below, on the same data. The strip under the phone <b>measures the rendered
+    result</b> — read from the DOM, not claimed. Closed trades cap at <b>25 with the
+    span they cover stated</b>; open trades are never capped, and every "see all"
+    pushes a real route rather than expanding in place.
+  </p>
+
+  <div class="layout">
+    <div class="rail">
+      <div class="ctl">
+        <span class="lbl">Structure</span>
+        <div class="ctl-list" id="c-struct"></div>
+      </div>
+      <div class="ctl">
+        <span class="lbl">How much data</span>
+        <div class="ctl-list" id="c-vol"></div>
+      </div>
+      <div class="ctl">
+        <span class="lbl">Plan</span>
+        <div class="seg" id="c-plan"></div>
+      </div>
+      <div class="ctl">
+        <span class="lbl">Theme</span>
+        <div class="seg" id="c-theme"></div>
+        <span class="lbl" style="display:block;margin:10px 0 8px">Direction</span>
+        <div class="seg" id="c-dir"></div>
+        <span class="lbl" style="display:block;margin:10px 0 8px">Text scale</span>
+        <div class="seg" id="c-ts"></div>
+      </div>
+      <div class="notes" id="notes"></div>
+    </div>
+
+    <div class="stage">
+      <div class="device"><div class="screen" id="screen"></div></div>
+      <div class="device-meta" id="meta"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════ Seeded data ══════════════════════════
+   A fixed LCG so every screenshot of the same volume is identical —
+   a comparison instrument has to be reproducible.                  */
+function lcg(seed) { let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+
+const UNIVERSE = [
+  ['NVDA','Technology'], ['AAPL','Technology'], ['MSFT','Technology'], ['GOOGL','Technology'],
+  ['AMZN','Consumer'],   ['TSLA','Consumer'],   ['META','Technology'], ['AMD','Technology'],
+  ['JPM','Financials'],  ['BAC','Financials'],  ['GS','Financials'],   ['V','Financials'],
+  ['XOM','Energy'],      ['CVX','Energy'],      ['SLB','Energy'],      ['COP','Energy'],
+  ['JNJ','Healthcare'],  ['PFE','Healthcare'],  ['UNH','Healthcare'],  ['LLY','Healthcare'],
+  ['CAT','Industrials'], ['BA','Industrials'],  ['GE','Industrials'],  ['HON','Industrials'],
+  ['KO','Staples'],      ['PG','Staples'],      ['WMT','Staples'],     ['COST','Staples'],
+  ['SMCI','Technology'], ['COIN','Financials'], ['PLTR','Technology'], ['SHOP','Consumer'],
+  ['NFLX','Consumer'],   ['DIS','Consumer'],    ['UBER','Industrials'],['ABNB','Consumer'],
+  ['MU','Technology'],   ['INTC','Technology'], ['QCOM','Technology'], ['TXN','Technology'],
+  ['NKE','Consumer'],    ['SBUX','Consumer'],   ['MCD','Consumer'],    ['LOW','Consumer'],
+];
+
+const NOTES = ['earnings 12 Aug', 'watching the 200DMA', 'PM flagged it', 'post-split', '', '', 'gap fill', ''];
+
+const NOW = new Date(2026, 6, 29);           // 2026-07-29, the prototype's "today"
+const DAY = 86400000;
+const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const fmtDay = d => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+
+function build(seed, nHold, nWatch, nOpen, nClosed, cash) {
+  const r = lcg(seed);
+  // Round-robin across sectors so a 6-holding portfolio produces a donut with
+  // something in it. Taking the head of the list gives four Technology names.
+  const bySector = {};
+  UNIVERSE.forEach(u => (bySector[u[1]] = bySector[u[1]] || []).push(u));
+  const ORDER = Object.keys(bySector);
+  const spread = [];
+  for (let d = 0; spread.length < UNIVERSE.length; d++) {
+    ORDER.forEach(s => { if (bySector[s][d]) spread.push(bySector[s][d]); });
+  }
+  const pick = n => spread.slice(0, Math.min(n, spread.length));
+
+  const holdings = pick(nHold).map(([tk, sector], i) => {
+    const avg = 40 + r() * 380;
+    const mark = avg * (0.82 + r() * 0.42);
+    const qty = Math.round(8 + r() * 120);
+    return { tk, sector, qty, avg, mark, value: qty * mark, pnl: qty * (mark - avg) };
+  });
+
+  // The watchlist is a superset by construction: sim.py:302 auto-adds every
+  // traded ticker, so held names always appear here too.
+  const watchlist = pick(nWatch).map(([tk]) => ({
+    tk, px: 20 + r() * 460, chg: (r() * 12) - 5.5,
+    note: NOTES[Math.floor(r() * NOTES.length)],
+  }));
+
+  const mk = (status, ageDays) => {
+    const [tk] = UNIVERSE[Math.floor(r() * UNIVERSE.length)];
+    const entry = 30 + r() * 400;
+    const qty = Math.round(5 + r() * 90);
+    const won = status === 'open' ? null : r() > 0.36;
+    const st = status === 'open' ? 'open' : (won ? 'won' : 'lost');
+    const move = won ? (0.04 + r() * 0.14) : -(0.02 + r() * 0.09);
+    return {
+      tk, qty, entry, st,
+      stop: entry * 0.94, target: entry * 1.13,
+      closedPrice: st === 'open' ? null : entry * (1 + move),
+      pnl: st === 'open' ? 0 : qty * entry * move,
+      opened: new Date(NOW - ageDays * DAY),
+    };
+  };
+
+  // Open trades are deliberately OLD — that is the shipped bug: sorted by
+  // opened_at desc with no status split, a live position from months ago is
+  // buried below every newer closed one.
+  const spanDays = Math.max(30, nClosed * 3);
+  const open = Array.from({ length: nOpen }, (_, i) => mk('open', Math.round(spanDays * (0.35 + 0.6 * (i / Math.max(1, nOpen))))));
+  const closed = Array.from({ length: nClosed }, (_, i) => mk('closed', Math.round((i / nClosed) * spanDays) + 1));
+  closed.sort((a, b) => b.opened - a.opened);
+
+  const sectors = {};
+  holdings.forEach(h => { sectors[h.sector] = (sectors[h.sector] || 0) + h.value; });
+  sectors['Cash'] = cash;
+
+  const invested = holdings.reduce((s, h) => s + h.value, 0);
+  const pnl = holdings.reduce((s, h) => s + h.pnl, 0);
+  return {
+    holdings, watchlist, open, closed, sectors, cash,
+    totalValue: invested + cash, pnl,
+    pnlPct: (pnl / Math.max(1, invested + cash - pnl)) * 100,
+  };
+}
+
+const DATA = {
+  modest: { label: 'Modest', sub: '8 watch · 3 held · 2 open + 18 closed', d: build(11, 3, 8, 2, 18, 6220) },
+  sixmo:  { label: 'Six months', sub: '18 watch · 6 held · 3 open + 57 closed', d: build(29, 6, 18, 3, 57, 12400) },
+  heavy:  { label: 'Heavy', sub: '40 watch · 12 held · 5 open + 195 closed', d: build(47, 12, 40, 5, 195, 31050) },
+};
+
+/* ══════════════════════════ State ══════════════════════════ */
+
+const state = {
+  struct: 'dash', vol: 'sixmo', plan: 'floor',
+  theme: 'dark', dir: 'ltr', ts: 1,
+  tab: 'holdings',
+  open: { holdings: true, watchlist: false, closed: false, trades: false },
+  // A "see all" pushes a route. Nothing expands in place — expanding inline is
+  // what un-bounds the dashboard, which is the whole point of the structure.
+  push: null,
+};
+
+const STRUCTS = [
+  ['today', 'Today (shipped)', 'One eager ListView, three lists stacked'],
+  ['dash',  'Bounded dashboard', 'Fixed-height previews, each with a real destination'],
+  ['tabs',  'Segmented tabs', 'Pinned value card, one list at a time'],
+  ['acc',   'Collapsible sections', 'Same scroll, foldable headings'],
+];
+
+const CAP_CLOSED = 25;   // Saiful, 2026-07-29 — "last 25, span described"
+const PREVIEW = 5;       // dashboard preview depth for every other list
+
+/* ══════════════════════════ Formatting ══════════════════════════ */
+
+const money = n => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money0 = n => n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+const sgn = n => (n >= 0 ? '+' : '−');
+const num = s => `<span class="num">${s}</span>`;
+
+const SECTOR_COLOR = {
+  Technology: 'var(--cyan)', Financials: 'var(--purple)', Energy: 'var(--amber)',
+  Healthcare: 'var(--green)', Consumer: 'var(--pink)', Industrials: 'var(--blue)',
+  Staples: 'var(--orange)', Other: 'var(--slate500)', Cash: 'var(--slate700)',
+};
+
+/* ══════════════════════════ Screen pieces ══════════════════════════ */
+
+function valueCard(d, compact) {
+  const cls = d.pnl >= 0 ? 'up' : 'dn';
+  return `
+  <div class="value${compact ? ' compact' : ''}">
+    <div class="row1">
+      <span class="k lbl">Total value</span>
+      <span class="pill live lbl"><i class="pip"></i>Live</span>
+    </div>
+    <div class="big num">$${money(d.totalValue)}</div>
+    <div class="row2">
+      <span class="pnl num ${cls}">${sgn(d.pnl)}$${money(Math.abs(d.pnl))} (${sgn(d.pnl)}${Math.abs(d.pnlPct).toFixed(2)}%)</span>
+      <span class="sp"></span>
+      <span class="ck lbl">Cash</span>
+      <span class="cv num">$${money(d.cash)}</span>
+    </div>
+  </div>`;
+}
+
+function donut(sectors) {
+  const entries = Object.entries(sectors).sort((a, b) => {
+    if (a[0] === 'Cash') return 1; if (b[0] === 'Cash') return -1;
+    return b[1] - a[1];
+  });
+  const total = entries.reduce((s, e) => s + e[1], 0);
+  const R = 30, C = 2 * Math.PI * R;
+  let off = 0;
+  const arcs = entries.map(([k, v]) => {
+    const len = (v / total) * C;
+    const el = `<circle cx="36" cy="36" r="${R}" fill="none" stroke="${SECTOR_COLOR[k] || 'var(--slate500)'}"
+      stroke-width="12" stroke-dasharray="${len.toFixed(2)} ${(C - len).toFixed(2)}"
+      stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 36 36)"></circle>`;
+    off += len; return el;
+  }).join('');
+  const legend = entries.map(([k, v]) => `
+    <div class="lr">
+      <i class="sw" style="background:${SECTOR_COLOR[k] || 'var(--slate500)'}"></i>
+      <span class="nm">${k}</span>
+      <span class="pc num">${((v / total) * 100).toFixed(1)}%</span>
+    </div>`).join('');
+  return `<div class="sector"><svg class="donut" viewBox="0 0 72 72" aria-hidden="true">${arcs}</svg>
+    <div class="legend">${legend}</div></div>`;
+}
+
+function holdRow(h) {
+  const pct = ((h.mark - h.avg) / h.avg) * 100;
+  const cls = h.pnl >= 0 ? 'up' : 'dn';
+  return `<div class="hold">
+    <div class="id">
+      <div class="tk num">${h.tk}</div>
+      <div class="qty num">${h.qty} @ $${money(h.avg)}</div>
+    </div>
+    <div class="rt">
+      <div class="val num">$${money(h.value)}</div>
+      <div class="pl num ${cls}">${sgn(h.pnl)}$${money(Math.abs(h.pnl))} (${sgn(pct)}${Math.abs(pct).toFixed(2)}%)</div>
+    </div>
+    <span class="chev">›</span>
+  </div>`;
+}
+
+function watchRow(w) {
+  const cls = w.chg >= 0 ? 'up' : 'dn';
+  return `<div class="watch">
+    <span class="tk lbl">${w.tk}</span>
+    <span class="note">${w.note}</span>
+    <span class="px num">$${money(w.px)}</span>
+    <span class="ch num ${cls}">${sgn(w.chg)}${Math.abs(w.chg).toFixed(1)}%</span>
+    <span class="chev">›</span>
+  </div>`;
+}
+
+function tradeRow(t) {
+  const parts = [`stop $${money(t.stop)}`, `target $${money(t.target)}`];
+  if (t.closedPrice) parts.push(`closed $${money(t.closedPrice)}`);
+  const rt = t.st === 'open'
+    ? `<span class="x">✕</span>`
+    : `<span class="rt num ${t.pnl >= 0 ? 'up' : 'dn'}">${sgn(t.pnl)}$${money(Math.abs(t.pnl))}</span>`;
+  return `<div class="trade ${t.st}">
+    <span class="st ${t.st} lbl">${t.st}</span>
+    <div class="id">
+      <div class="l1 num">BUY ${t.qty} ${t.tk} @ $${money(t.entry)}</div>
+      <div class="l2 num">${parts.join(' • ')}</div>
+    </div>
+    ${rt}
+  </div>`;
+}
+
+function head(title, count, action) {
+  return `<div class="sec-hd">
+    <span class="h lbl">${title}</span>
+    ${count != null ? `<span class="ct num">${count}</span>` : ''}
+    <span class="sp"></span>
+    ${action ? `<span class="act lbl">${action}</span>` : ''}
+  </div>`;
+}
+
+/* The closed-trade summary — the part that is meant to replace *reading* the
+   rows. Win/loss split, net, and the span the capped window actually covers. */
+function closedSummary(closed, shown) {
+  const wins = closed.filter(t => t.st === 'won').length;
+  const losses = closed.length - wins;
+  const net = closed.reduce((s, t) => s + t.pnl, 0);
+  const wPct = (wins / Math.max(1, closed.length)) * 100;
+  return `
+  <div class="wl">
+    <i style="width:${wPct}%;background:var(--green)"></i>
+    <i style="width:${100 - wPct}%;background:var(--red)"></i>
+  </div>
+  <div class="stats">
+    <div class="s"><div class="k lbl">Won</div><div class="v num up">${wins}</div></div>
+    <div class="s"><div class="k lbl">Lost</div><div class="v num dn">${losses}</div></div>
+    <div class="s"><div class="k lbl">Hit rate</div><div class="v num">${wPct.toFixed(0)}%</div></div>
+    <div class="s"><div class="k lbl">Net</div><div class="v num ${net >= 0 ? 'up' : 'dn'}">${sgn(net)}$${money0(Math.abs(net))}</div></div>
+  </div>`;
+}
+
+/* Header for the capped list. The period is DESCRIBED, never used to filter —
+   so the list is never empty while trades exist, and never unbounded. */
+function capLine(closed, shown) {
+  if (shown >= closed.length) return head('Closed', closed.length, null);
+  const first = closed[0].opened, last = closed[shown - 1].opened;
+  return `<div class="sec-hd">
+    <span class="h lbl">Last ${shown} closed</span>
+    <span class="ct num">${fmtDay(last)} – ${fmtDay(first)}</span>
+    <span class="sp"></span>
+  </div>`;
+}
+
+/* The Journal pointer. Floor Pass sees what the Journal will NOT have —
+   journal_store.py:42-47 enforces 30-day retention on that plan, while
+   sim_trades is kept forever. Degrade loudly (CR040). */
+function journalFoot(closed, shown) {
+  const hidden = closed.length - shown;
+  const stale = closed.filter(t => (NOW - t.opened) / DAY > 30).length;
+  const capped = state.plan === 'floor' && stale > 0;
+  return `
+  <div class="foot">
+    ${hidden > 0 ? `<span class="a lbl" data-push="closed">Show all ${closed.length}</span>` : ''}
+    <span class="sp"></span>
+    <span class="a lbl">Review in journal ›</span>
+  </div>
+  ${capped ? `<div class="cav"><i class="mk"></i><span>Journal keeps 30 days on Floor Pass — ${stale} of these ${closed.length} are older. They stay here.</span></div>` : ''}`;
+}
+
+function moreRow(key, n, label) {
+  return `<div class="more lbl" data-push="${key}"><b class="num">${n}</b> more${label} ›</div>`;
+}
+
+/* ══════════════════════════ Structures ══════════════════════════ */
+
+function viewToday(d) {
+  // Exactly what ships: one list, watchlist → holdings → every trade
+  // interleaved by opened_at desc with no status split.
+  const all = [...d.open, ...d.closed].sort((a, b) => b.opened - a.opened);
+  return `<div class="body"><div class="pad">
+    ${valueCard(d, false)}
+    <div style="height:16px"></div>
+    ${donut(d.sectors)}
+    <div style="height:16px"></div>
+    ${head('Watchlist', null, '+ Add')}
+    ${d.watchlist.map(watchRow).join('')}
+    <div style="height:16px"></div>
+    ${head('Holdings', null, null)}
+    ${d.holdings.map(holdRow).join('')}
+    <div style="height:24px"></div>
+    ${head('Trades', null, null)}
+    ${all.map(tradeRow).join('')}
+    <div style="height:48px"></div>
+  </div></div>`;
+}
+
+function viewDash(d) {
+  const hold = d.holdings.slice(0, PREVIEW);
+  const watch = d.watchlist.slice(0, PREVIEW);
+  const restVal = d.holdings.slice(PREVIEW).reduce((s, h) => s + h.value, 0);
+  const seeAll = (k, n) => (n > PREVIEW ? `<span data-push="${k}">See all ›</span>` : null);
+  return `
+  ${valueCard(d, true)}
+  <div class="body"><div class="pad">
+    ${head('Holdings', d.holdings.length, seeAll('holdings', d.holdings.length))}
+    ${donut(d.sectors)}
+    <div style="height:8px"></div>
+    ${hold.map(holdRow).join('')}
+    ${d.holdings.length > hold.length ? moreRow('holdings', d.holdings.length - hold.length, ` · <span class="num">$${money0(restVal)}</span>`) : ''}
+
+    ${head('Open trades', d.open.length, null)}
+    ${d.open.length ? d.open.map(tradeRow).join('') : `<div class="empty">No open positions</div>`}
+
+    ${head('Watchlist', d.watchlist.length, seeAll('watchlist', d.watchlist.length))}
+    ${watch.map(watchRow).join('')}
+    ${d.watchlist.length > watch.length ? moreRow('watchlist', d.watchlist.length - watch.length, '') : ''}
+
+    ${head('Closed', d.closed.length, null)}
+    ${closedSummary(d.closed)}
+    ${d.closed.slice(0, PREVIEW).map(tradeRow).join('')}
+    ${journalFoot(d.closed, PREVIEW)}
+    <div style="height:32px"></div>
+  </div></div>`;
+}
+
+/* The destination behind every "see all". A real route with its own header,
+   its own search and sort — the things a capped preview cannot offer and the
+   reason the cap is not a loss. */
+function viewPush(d) {
+  const K = state.push;
+  const TITLE = { holdings: 'All holdings', watchlist: 'Watchlist', closed: 'Closed trades' }[K];
+  let n, rows, extra = '';
+  if (K === 'holdings') { n = d.holdings.length; rows = d.holdings.map(holdRow).join(''); }
+  else if (K === 'watchlist') { n = d.watchlist.length; rows = d.watchlist.map(watchRow).join(''); }
+  else {
+    n = d.closed.length;
+    rows = d.closed.map(tradeRow).join('');
+    extra = closedSummary(d.closed);
+  }
+  return `
+  <div class="hdr">
+    <span class="back" data-push="">‹</span>
+    <span class="ttl lbl">${TITLE}</span>
+    <span class="ct num">${n}</span>
+  </div>
+  <div class="srch">
+    <span class="fld lbl">Search ${K === 'closed' ? 'ticker' : 'ticker'}…</span>
+    <span class="sortc lbl">${K === 'closed' ? 'Newest ▾' : 'Value ▾'}</span>
+  </div>
+  <div class="body"><div class="pad">${extra}${rows}<div style="height:32px"></div></div></div>`;
+}
+
+function viewTabs(d) {
+  const T = state.tab;
+  const tabs = [
+    ['holdings', 'Held', d.holdings.length],
+    ['watchlist', 'Watch', d.watchlist.length],
+    ['history', 'History', d.open.length + d.closed.length],
+  ];
+  let inner = '';
+  if (T === 'holdings') {
+    inner = `${donut(d.sectors)}<div style="height:12px"></div>${d.holdings.map(holdRow).join('')}`;
+  } else if (T === 'watchlist') {
+    inner = `${head('Watchlist', d.watchlist.length, '+ Add')}${d.watchlist.map(watchRow).join('')}`;
+  } else {
+    const shown = Math.min(CAP_CLOSED, d.closed.length);
+    inner = `
+      ${head('Open', d.open.length, null)}
+      ${d.open.length ? d.open.map(tradeRow).join('') : `<div class="empty">No open positions</div>`}
+      ${capLine(d.closed, shown)}
+      ${closedSummary(d.closed)}
+      ${d.closed.slice(0, shown).map(tradeRow).join('')}
+      ${journalFoot(d.closed, shown)}`;
+  }
+  return `
+  ${valueCard(d, true)}
+  <div class="tabbar" role="tablist">
+    ${tabs.map(([k, l, n]) => `<button role="tab" aria-selected="${T === k}" data-tab="${k}">${l} <span class="n num">${n}</span></button>`).join('')}
+  </div>
+  <div class="body"><div class="pad">${inner}<div style="height:32px"></div></div></div>`;
+}
+
+function viewAcc(d) {
+  const S = state.open;
+  const shown = Math.min(CAP_CLOSED, d.closed.length);
+  const sec = (key, title, count, inner) => `
+    <div class="acc">
+      <div class="sec-hd tap" data-acc="${key}">
+        <span class="caret">${S[key] ? '▾' : '▸'}</span>
+        <span class="h lbl">${title}</span>
+        <span class="ct num">${count}</span>
+        <span class="sp"></span>
+      </div>
+      ${S[key] ? inner : ''}
+    </div>`;
+  return `
+  ${valueCard(d, true)}
+  <div class="body"><div class="pad">
+    ${sec('holdings', 'Holdings', d.holdings.length, donut(d.sectors) + '<div style="height:8px"></div>' + d.holdings.map(holdRow).join(''))}
+    ${sec('trades', 'Open trades', d.open.length, d.open.map(tradeRow).join(''))}
+    ${sec('watchlist', 'Watchlist', d.watchlist.length, d.watchlist.map(watchRow).join(''))}
+    ${sec('closed', 'Closed', d.closed.length, capLine(d.closed, shown) + closedSummary(d.closed) + d.closed.slice(0, shown).map(tradeRow).join('') + journalFoot(d.closed, shown))}
+    <div style="height:32px"></div>
+  </div></div>`;
+}
+
+/* ══════════════════════════ Render ══════════════════════════ */
+
+const NOTE_TEXT = {
+  today: `<p><b>What ships today.</b> One <code>ListView(children:)</code> — not
+    <code>.builder</code> — so every row is constructed on every rebuild, and the
+    screen watches sim state, so a price refresh rebuilds all of them. Measured
+    <b>3.6 → 8.9 → 25.4 screens</b>.</p>
+    <p>Open and closed trades are <b>interleaved by open date</b>. Scroll to the
+    bottom of Trades: live positions are buried among closed ones.</p>`,
+  dash: `<p><b>Bounded dashboard.</b> Every list previews ${PREVIEW} rows and carries a
+    real destination. Measured <b>2.5 → 3.0 → 3.2 screens</b> across modest, six
+    months and heavy: height barely moves as the account grows, because nothing
+    expands in place — "see all" pushes a route with its own search and sort.</p>
+    <p>Order is money-at-risk first: holdings, then open trades, then watchlist,
+    then closed. Closed leads with a <b>summary</b> — the win/loss split and net
+    are the answer most users want, and neither requires reading a row.</p>`,
+  tabs: `<p><b>Segmented tabs.</b> Value card pins; one list at a time, so each gets
+    the full viewport and lazy building is trivial. Landing measures
+    <b>1.0 → 1.4 → 2.3 screens</b>; the worst tab (History, heavy) is 4.2.</p>
+    <p>The cost: a horizontal switcher nested inside the bottom-nav tab you are
+    already in, and two-thirds of the screen becomes a mode you must remember to
+    enter. No tab pattern exists in the app today outside one settings screen.</p>`,
+  acc: `<p><b>Collapsible sections.</b> Cheapest change — everything stays on one
+    screen and reachable, <b>1.0 → 1.5 → 2.4 screens</b> with only Holdings open.</p>
+    <p>But that number is a choice the user can undo: expand everything on
+    <b>Heavy</b> and it measures <b>9.7 screens</b>. Anything collapsed by default is
+    also invisible to a user who never learns that headings are tappable.</p>`,
+};
+
+function render() {
+  const d = DATA[state.vol].d;
+  const scr = document.getElementById('screen');
+  const view = { today: viewToday, dash: viewDash, tabs: viewTabs, acc: viewAcc }[state.struct];
+  scr.style.setProperty('--ts', state.ts);
+  scr.innerHTML = state.push
+    ? viewPush(d)
+    : `<div class="hdr">
+        <span class="ttl lbl">Portfolio</span>
+        <span class="add">+</span>
+      </div>
+      ${view(d)}`;
+
+  document.documentElement.setAttribute('data-theme', state.theme);
+  document.documentElement.setAttribute('dir', state.dir);
+  document.getElementById('notes').innerHTML =
+    `<div class="hd lbl">Reading this one</div>${NOTE_TEXT[state.struct]}`;
+
+  requestAnimationFrame(measure);
+}
+
+/* The honest part: read the rendered result out of the DOM rather than
+   asserting it. Same instrument for all four structures. */
+function measure() {
+  const body = document.querySelector('#screen .body');
+  if (!body) return;
+  const h = body.scrollHeight, v = body.clientHeight;
+  const rows = document.querySelectorAll('#screen .hold, #screen .watch, #screen .trade').length;
+  const screens = h / Math.max(1, v);
+  const warn = screens > 3 ? ' warn' : '';
+  document.getElementById('meta').innerHTML = `
+    <span>scroll <b class="num">${Math.round(h)}</b> pt in a <span class="num">${Math.round(v)}</span> pt viewport</span>
+    <span class="${warn}"><b class="num">${screens.toFixed(1)}</b> screens</span>
+    <span><b class="num">${rows}</b> rows rendered</span>`;
+}
+
+/* ══════════════════════════ Controls ══════════════════════════ */
+
+function optBtn(active, key, label, sub) {
+  return `<button class="opt" aria-pressed="${active}" data-k="${key}">
+    <i class="dot"></i><span class="txt">${label}${sub ? `<small>${sub}</small>` : ''}</span></button>`;
+}
+
+function buildControls() {
+  document.getElementById('c-struct').innerHTML =
+    STRUCTS.map(([k, l, s]) => optBtn(state.struct === k, k, l, s)).join('');
+  document.getElementById('c-vol').innerHTML =
+    Object.entries(DATA).map(([k, v]) => optBtn(state.vol === k, k, v.label, v.sub)).join('');
+  document.getElementById('c-plan').innerHTML =
+    [['floor', 'Floor Pass'], ['trader', 'Trader']].map(([k, l]) => optBtn(state.plan === k, k, l)).join('');
+  document.getElementById('c-theme').innerHTML =
+    [['dark', 'Dark'], ['light', 'Light']].map(([k, l]) => optBtn(state.theme === k, k, l)).join('');
+  document.getElementById('c-dir').innerHTML =
+    [['ltr', 'LTR'], ['rtl', 'RTL']].map(([k, l]) => optBtn(state.dir === k, k, l)).join('');
+  document.getElementById('c-ts').innerHTML =
+    [[1, '1.0×'], [1.15, '1.15×']].map(([k, l]) => optBtn(state.ts === k, k, l)).join('');
+}
+
+document.addEventListener('click', e => {
+  const rail = e.target.closest('.rail .opt');
+  if (rail) {
+    const k = rail.dataset.k, group = rail.closest('.ctl').querySelector('.lbl').textContent;
+    if (group === 'Structure') { state.struct = k; state.push = null; }
+    else if (group === 'How much data') { state.vol = k; state.push = null; }
+    else if (group === 'Plan') state.plan = k;
+    else if (group === 'Theme') state.theme = k;
+    else if (k === 'ltr' || k === 'rtl') state.dir = k;
+    else state.ts = parseFloat(k);
+    buildControls(); render(); return;
+  }
+  const tab = e.target.closest('[data-tab]');
+  if (tab) { state.tab = tab.dataset.tab; state.push = null; render(); return; }
+  const acc = e.target.closest('[data-acc]');
+  if (acc) { const k = acc.dataset.acc; state.open[k] = !state.open[k]; render(); return; }
+  const push = e.target.closest('[data-push]');
+  if (push) { state.push = push.dataset.push || null; render(); return; }
+});
+
+window.addEventListener('resize', measure);
+buildControls();
+render();
+</script>
