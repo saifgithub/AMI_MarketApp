@@ -102,18 +102,36 @@ _LENGTH_GUIDE: dict[AgentId, str] = {
 # lived in different files. `test_def125_*` fails the build if an agent gains a
 # length guide without a budget.
 #
-# Kept modest where the measurement says it can be: `max_tokens` costs nothing
-# in decode unless the tokens are actually generated, but vLLM reserves KV-cache
-# blocks against it when scheduling, so an inflated ceiling on eleven concurrent
-# agents buys truncation headroom with concurrency. Raise only where truncation
-# was measured.
-_DEFAULT_AGENT_MAX_TOKENS = 400
+# **Why the floor is 600 and not 400 (AT:R65, corrected 2026-07-29).**
+#
+# The first pass held the five agents measured at ≤0.1% down at 400, on the
+# stated grounds that vLLM reserves KV-cache blocks against `max_tokens` when
+# scheduling, so headroom would cost concurrency. **That was asserted, not
+# measured, and it is wrong for this deployment.** Measured against the host's
+# own `/metrics`: `num_preemptions_total` 0, `num_requests_waiting_by_reason
+# {reason="capacity"}` 0, `gpu_memory_utilization` 0.5, `num_gpu_blocks` 1664
+# against a 262k `max_model_len`. A convene is ~12 requests. Capacity has never
+# been the binding constraint on this box, so an unused ceiling costs nothing —
+# `max_tokens` is a ceiling, not an allocation, and decode is paid per token
+# actually generated.
+#
+# With the cost gone, the asymmetry decides it: being twenty tokens short
+# amputates a turn mid-sentence and — since CR106 B2 — silently costs that
+# agent's stance too, because the trailing envelope is the last thing written
+# and a cut turn never reaches it. Unused headroom costs nothing. So the floor
+# is 600, which is ~75% clear of the 1,531-char (~322-token) worst case those
+# five have ever produced, instead of ~15%.
+#
+# That B2 tail is itself new since the 30-day measurement above: every agent's
+# effective budget shrank by ~15-25 tokens the day the envelope shipped, which
+# the original numbers do not account for.
+_DEFAULT_AGENT_MAX_TOKENS = 600
 
 _AGENT_MAX_TOKENS: dict[AgentId, int] = {
-    AgentId.FUNDAMENTALS_ANALYST: 500,
-    AgentId.MARKET_ANALYST: 400,
-    AgentId.NEWS_ANALYST: 400,
-    AgentId.SOCIAL_MEDIA_ANALYST: 400,
+    AgentId.FUNDAMENTALS_ANALYST: 600,
+    AgentId.MARKET_ANALYST: 600,
+    AgentId.NEWS_ANALYST: 600,
+    AgentId.SOCIAL_MEDIA_ANALYST: 600,
     # Thesis + evidence + falsifier, in three-to-five sentences, and both
     # researchers write to the same shape — budget them symmetrically so the
     # Bear case is never the shorter one for a reason the reader cannot see.
@@ -126,10 +144,10 @@ _AGENT_MAX_TOKENS: dict[AgentId, int] = {
     # Only 2.1%, but a truncated Trader loses the level triple that
     # `_LEVEL_PATTERNS` and the whole downstream geometry depend on — the one
     # agent where a cut tail is unparseable rather than merely incomplete.
-    AgentId.TRADER: 500,
-    AgentId.AGGRESSIVE_DEBATOR: 400,
-    AgentId.CONSERVATIVE_DEBATOR: 400,
-    AgentId.NEUTRAL_DEBATOR: 500,
+    AgentId.TRADER: 600,
+    AgentId.AGGRESSIVE_DEBATOR: 600,
+    AgentId.CONSERVATIVE_DEBATOR: 600,
+    AgentId.NEUTRAL_DEBATOR: 600,
     # The PM emits a JSON envelope, not prose, and DEF058 (verdict fails to
     # parse in ~22% of runs) suspected its own 600-token cap clipping the JSON
     # one line from the end. Same family, one line apart in the source.

@@ -85,17 +85,41 @@ def test_the_three_measured_truncated_agents_got_more_than_the_flat_cap():
     )
 
 
-def test_agents_measured_inside_the_cap_were_not_inflated():
-    """`max_tokens` is free in decode but not in scheduling — vLLM reserves KV
-    blocks against it. The four agents measured at ≤0.1% keep the low budget."""
+def test_no_agent_is_budgeted_below_the_floor():
+    """The floor was 400 and is now 600 — see `room_prompts` for the correction.
+
+    The original reason for holding the five ≤0.1% agents at 400 (that vLLM
+    reserves KV blocks against `max_tokens`, so headroom costs concurrency) was
+    asserted rather than measured, and the host says otherwise: zero preemptions
+    ever, zero capacity waits ever, at `gpu_memory_utilization` 0.5. With the
+    cost gone the asymmetry is one-sided — an unused ceiling is free, while being
+    twenty tokens short amputates a turn AND (since CR106 B2) silently costs that
+    agent's stance, because the envelope is the last thing written.
+    """
+    assert _DEFAULT_AGENT_MAX_TOKENS >= 600
+    for agent in _LENGTH_GUIDE:
+        assert max_tokens_for(agent) >= _DEFAULT_AGENT_MAX_TOKENS, agent.value
+
+    # The floor clears the worst output any of the low-truncation agents has
+    # ever produced (1,531 chars ≈ 322 tokens at this model's ~4.75 chars/token)
+    # with real margin, rather than the ~15% that 400 left.
+    worst_observed_tokens = 1531 / 4.75
+    assert _DEFAULT_AGENT_MAX_TOKENS > worst_observed_tokens * 1.5
+
+
+def test_the_budget_is_still_per_agent_and_not_one_flat_number():
+    """Raising the floor must not quietly collapse the table back into the
+    single value that WAS the defect."""
+    assert len(set(_AGENT_MAX_TOKENS.values())) > 1
     for agent in (
-        AgentId.MARKET_ANALYST,
-        AgentId.NEWS_ANALYST,
-        AgentId.SOCIAL_MEDIA_ANALYST,
-        AgentId.AGGRESSIVE_DEBATOR,
-        AgentId.CONSERVATIVE_DEBATOR,
+        AgentId.RESEARCH_MANAGER,
+        AgentId.BULL_RESEARCHER,
+        AgentId.BEAR_RESEARCHER,
     ):
-        assert max_tokens_for(agent) == _DEFAULT_AGENT_MAX_TOKENS
+        assert max_tokens_for(agent) > _DEFAULT_AGENT_MAX_TOKENS, (
+            f"{agent.value} was measured truncating; it must sit ABOVE the "
+            f"floor, not merely at it"
+        )
 
 
 def test_the_pm_reformatter_is_never_budgeted_below_the_pm():
