@@ -12,6 +12,7 @@ import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
 import 'package:ami_trade/widgets/agent_action_sheet.dart';
+import 'package:ami_trade/widgets/confirm_restart_onboarding.dart';
 import 'package:ami_trade/screens/floor/daily_challenge_card.dart';
 import 'package:ami_trade/screens/league/league_card.dart';
 import 'package:ami_trade/screens/lessons/lesson_reader_screen.dart';
@@ -299,6 +300,19 @@ class _FloorScreenState
     );
   }
 
+  /// DEF152 — "restart onboarding" destroys the most expensive artefact the
+  /// user produces, and it sat one scroll under the Convene CTA styled as a
+  /// caption-sized link. A tester hit it by accident and had to redo the whole
+  /// interview. The dialog names what is lost rather than asking a bare "are
+  /// you sure?", because the control's own placement carries no such signal.
+  Future<void> _restartOnboarding(BuildContext context, WidgetRef ref) async {
+    if (!await confirmRestartOnboarding(context)) return;
+    if (!context.mounted) return;
+    await ref.read(onboardingNotifierProvider.notifier).reset();
+    if (!context.mounted) return;
+    Navigator.of(context).pushReplacementNamed('/onboarding');
+  }
+
   @override
   Widget build(BuildContext context) {
     // Listen for Floor becoming the active tab after the user switches away and back.
@@ -443,13 +457,7 @@ class _FloorScreenState
 
                   // ── Footer ──
                   TextButton(
-                    onPressed: () async {
-                      await ref
-                          .read(onboardingNotifierProvider.notifier)
-                          .reset();
-                      if (!context.mounted) return;
-                      Navigator.of(context).pushReplacementNamed('/onboarding');
-                    },
+                    onPressed: () => _restartOnboarding(context, ref),
                     child: Text(
                       l.floorRestartOnboarding,
                       style: AmiTypography.caption.copyWith(color: AmiColors.hexBlue),

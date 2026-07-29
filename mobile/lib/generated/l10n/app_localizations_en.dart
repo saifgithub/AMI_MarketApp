@@ -112,6 +112,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get floorRestartOnboarding => 'restart onboarding';
 
   @override
+  String get floorRestartOnboardingConfirmTitle => 'RESTART ONBOARDING?';
+
+  @override
+  String get floorRestartOnboardingConfirmBody =>
+      'This clears the mandate your interview produced — goal, risk score, drawdown cap and constraints — and runs the whole interview again from the first question. Your portfolio and trades are untouched.';
+
+  @override
+  String get floorRestartOnboardingConfirmCta => 'RESTART';
+
+  @override
   String get floorFooter =>
       '⬢  AMI TRADE • EDUCATIONAL SIMULATION • NOT ADVICE';
 

@@ -113,6 +113,16 @@ class AppLocalizationsMs extends AppLocalizations {
   String get floorRestartOnboarding => 'mulakan semula orientasi';
 
   @override
+  String get floorRestartOnboardingConfirmTitle => 'MULAKAN SEMULA ORIENTASI?';
+
+  @override
+  String get floorRestartOnboardingConfirmBody =>
+      'Ini akan memadam mandat yang dihasilkan oleh temu bual anda — matlamat, skor risiko, had susut nilai dan kekangan — dan menjalankan semula keseluruhan temu bual dari soalan pertama. Portfolio dan dagangan anda tidak terjejas.';
+
+  @override
+  String get floorRestartOnboardingConfirmCta => 'MULA SEMULA';
+
+  @override
   String get floorFooter =>
       '⬢  AMI TRADE • SIMULASI PENDIDIKAN • BUKAN NASIHAT';
 

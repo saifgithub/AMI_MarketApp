@@ -298,6 +298,24 @@ abstract class AppLocalizations {
   /// **'restart onboarding'**
   String get floorRestartOnboarding;
 
+  /// DEF152 confirm-dialog title, guarding the 'restart onboarding' link in the Floor footer. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RESTART ONBOARDING?'**
+  String get floorRestartOnboardingConfirmTitle;
+
+  /// DEF152 confirm-dialog body. It must NAME what is lost — the control is caption-sized text in the footer and signals nothing about being destructive, so the copy carries the whole warning. 'Portfolio and trades are untouched' is accurate and verified: reset() only clears a SharedPreferences flag plus in-memory state, and the sim is keyed on user_id, not on the onboarding session. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'This clears the mandate your interview produced — goal, risk score, drawdown cap and constraints — and runs the whole interview again from the first question. Your portfolio and trades are untouched.'**
+  String get floorRestartOnboardingConfirmBody;
+
+  /// DEF152 destructive CTA on the restart-onboarding confirm dialog. Rendered in hexRed. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RESTART'**
+  String get floorRestartOnboardingConfirmCta;
+
   /// No description provided for @floorFooter.
   ///
   /// In en, this message translates to:

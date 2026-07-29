@@ -112,6 +112,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get floorRestartOnboarding => 'إعادة تشغيل الجولة التعريفية';
 
   @override
+  String get floorRestartOnboardingConfirmTitle =>
+      'إعادة تشغيل الجولة التعريفية؟';
+
+  @override
+  String get floorRestartOnboardingConfirmBody =>
+      'سيؤدي هذا إلى مسح التفويض الذي أنتجته مقابلتك — الهدف ودرجة المخاطرة وحد التراجع والقيود — وإعادة المقابلة بالكامل من السؤال الأول. محفظتك وصفقاتك لن تتأثر.';
+
+  @override
+  String get floorRestartOnboardingConfirmCta => 'إعادة التشغيل';
+
+  @override
   String get floorFooter =>
       '⬢  AMI TRADE • محاكاة تعليمية • ليست نصيحة استثمارية';
 

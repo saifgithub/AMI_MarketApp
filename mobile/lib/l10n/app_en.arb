@@ -78,6 +78,18 @@
     "floorConveneCta": "CONVENE THE ROOM",
     "floorConveneCaption": "Run a full multi-agent debate on a ticker.",
     "floorRestartOnboarding": "restart onboarding",
+    "floorRestartOnboardingConfirmTitle": "RESTART ONBOARDING?",
+    "@floorRestartOnboardingConfirmTitle": {
+        "description": "DEF152 confirm-dialog title, guarding the 'restart onboarding' link in the Floor footer. retranslate:[ar,ms]"
+    },
+    "floorRestartOnboardingConfirmBody": "This clears the mandate your interview produced — goal, risk score, drawdown cap and constraints — and runs the whole interview again from the first question. Your portfolio and trades are untouched.",
+    "@floorRestartOnboardingConfirmBody": {
+        "description": "DEF152 confirm-dialog body. It must NAME what is lost — the control is caption-sized text in the footer and signals nothing about being destructive, so the copy carries the whole warning. 'Portfolio and trades are untouched' is accurate and verified: reset() only clears a SharedPreferences flag plus in-memory state, and the sim is keyed on user_id, not on the onboarding session. retranslate:[ar,ms]"
+    },
+    "floorRestartOnboardingConfirmCta": "RESTART",
+    "@floorRestartOnboardingConfirmCta": {
+        "description": "DEF152 destructive CTA on the restart-onboarding confirm dialog. Rendered in hexRed. retranslate:[ar,ms]"
+    },
     "floorFooter": "⬢  AMI TRADE • EDUCATIONAL SIMULATION • NOT ADVICE",
     "floorLockedHowTo": "HOW TO UNLOCK",
     "floorLockedNoLessons": "This agent unlocks automatically once the Earn-Path lessons for them ship. For now you can preview them via 1-on-1 if your plan allows.",
