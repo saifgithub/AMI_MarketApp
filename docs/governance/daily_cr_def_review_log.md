@@ -426,3 +426,41 @@ check-in** — the sweep only happened because Saiful asked whether the live DB 
   land first and are not blocked on this.
 
 **Running total: 15 reports → 15 items** (DEF146–148, DEF150–152, CR111–CR119) + DEF129 reversed.
+
+---
+
+## 2026-07-29
+
+Ran live in-conversation across two sessions of track R (CLAUDE.md step 2). The 0900
+check-in is already recorded item-by-item in the row files it produced; this section
+records it in one place and adds the rulings made later the same day, plus what was
+actually built against each — because a ruling with no build behind it is what this log
+exists to surface.
+
+Registers verified clean at both ends of the day (`verify all`): 155 DEF + 117 CR rows
+at the start of the build pass, 156 DEF after DEF156 was minted. `cr_list.md` was held
+un-regenerated for part of the day (a concurrent session had an uncommitted `CR121` row);
+regenerated at `b79dd445` **preserving** that row rather than sweeping it, since the CR081
+failure mode is losing another track's rows.
+
+**Asked and ruled:**
+
+- **DEF151** (bug `589e7607`, ticker chart dark on every ticker/period) — asked file-and-lane vs fix-in-session → Saiful: **"File it and lane it"** → **superseded later the same day** once the *server-side* half was weighed: normalising on the server repairs the `+56`/`+57` binaries already on testers' devices, so it shipped in-session instead. Laning it would have left the chart dark on every installed build until the next release.
+- **DEF129** (Concierge offers a daily briefing nothing can send) — re-asked after he hit it live on `+57` and filed `56a05dc5` (*"the function it offers does not exist. and what will the room report daily?"*) → Saiful: **"Remove Q8 now, spec the briefing separately"**, reversing 07-28's "keep deferring".
+- **CR115** (spec the daily briefing properly — split out of DEF129 above) — asked hold-open / draft-a-spec / drop → Saiful: **"Remove the q from onboarding"** → **dropped**. So the briefing is not deferred, it is not being built, which removed DEF129's last reason to wait. **Built today** (`d6932f15`): Q8 gone whole — question, chips, enum member, step hop, parser, mandate carry, readback line, `Edit briefing` chip, and the `daily_briefing` field with the `DailyBriefing` model behind it.
+- **CR114** (Q7 asks for exclusions but 5 of 7 chips are inclusions) — asked → Saiful: **"I build it now"** → **built today** in the same pass as DEF129, since both edit the same question block.
+- **CR118** (sector legend grows with diversification) — from his own report `7f631a72` → Saiful: **"Cap the height, scroll inside the card"** → **built today** (`60efa05d`).
+- **CR119 / CR116 / CR118** (the Portfolio growing-lists cluster) — asked → Saiful: **"119 - close, 116 - superseded, close. 118 - fold into 120"** → CR119 `done`, CR116 `dropped`, CR118 folded into the CR120 assign as acceptance 11.
+- **CR111 / CR112 / CR113** — first ruled **"Hold it"** on CR113, then **superseded within the same session**: *"for 111,112,113. if they can run in parallel, you can build them. otherwise hold until after 120"* → CR111 and CR113 built and shipped; **CR112 held**, blocked on DEF147 rather than on CR120.
+- **DEF142 + CR108** (mobile legibility pass) — asked → Saiful: **"Second parallel lane now, ~$20 (Recommended)"** → dispatched, and **round 1 rejected pre-audit** (`b9671fe6`): CR108's wrap never engages and its test cannot fail. Re-laned as round 2, Part B only.
+- **Store release** — asked what else was buildable for `+58` → Saiful: **"OK, lets finish these 5 and build +58"** → all five built (CR118, the DEF151 follow-up, DEF139, DEF156, the CR111 ARB tidy) and `0.1.0+58` cut.
+
+**Not asked, and why:** the ordinary sweep of every `proposed` CR / `open` Defect did not
+run a second time today. The day was spent building against rulings already made, and
+re-asking items ruled hours earlier would have produced a log of noise. Items still
+unruled and owed a fresh ask tomorrow: **CR121** (another session's), **CR107** (HELD —
+its control, the DEF142 pass, is not yet valid), **CR112** (blocked on DEF147), and the
+long-standing set CR002/CR006/CR017/CR022/CR027/CR028/CR031/CR063.
+
+**Running total: 15 reports → 16 items** (DEF146–148, DEF150–152, DEF155, DEF156,
+CR111–CR119) + DEF129 reversed and now half-fixed.
