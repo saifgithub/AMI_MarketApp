@@ -1,6 +1,6 @@
 ---
 id: "311_expense_ratio_tracking_error"
-title: "نسبة النفقات وخطأ التتبع"
+title: "نسبة المصروفات وخطأ التتبع"
 duration_min: 5
 level: 9
 module: 14
@@ -16,56 +16,57 @@ locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-21"
 updated_at: "2026-07-21"
 ---
-# نسبة النفقات وخطأ التتبع
 
-تبدو نسبة النفقات صغيرة — جزء من百分، تُخصم بصمت من أصول الصندوق قبل أن ترى أي كشف حساب. وهذا بالضبط ما يجعلها خطيرة: رسوم صغيرة لا تلاحظها في أي سنة فردية تتراكم لتصبح رقماً كبيراً لا يمكن تجاهله على مدى عقود، لأنها لا تكلفك فقط قيمة الرسوم — بل تكلفك العوائد التي كانت ستحققها تلك الرسوم لو بقيت مستثمرة. بعد هذه الدرس، ستكون قادراً على حساب التكلفة الفعلية للرسوم على مر الزمن وشرح لماذا يُعد خطأ التتبع تكلفة ثانية منفصلة لا يتحقق منها معظم المبتدئين.
+# Expense ratio & tracking error
 
-## مثال
+An expense ratio looks small — a fraction of a percent, deducted quietly from a fund's assets before you ever see a statement. That's exactly why it's dangerous: a fee too small to notice in any single year compounds into a number too large to ignore over decades, because it doesn't just cost you the fee — it costs you the returns that fee would have earned had it stayed invested. After this lesson you'll be able to compute what a fee actually costs over time and explain why tracking error is a second, separate cost most beginners never check.
 
-شغّل مبلغ 10,000 دولار عبر صندوقين يحتفظان بتعرض مماثل للسوق الواسع، ينموان بنفس العائد السنوي الإجمالي 7% قبل خصم الرسوم، لمدة 30 عاماً. صندوق مؤشرات منخفض التكلفة بفائدة 0.03% يحقق عائدًا سنويًا صافيًا قدره 6.97% وينمو ليصل إلى **75,484.86 دولار**. صندوق نشط مماثل بفائدة 0.75% يحقق عائدًا سنويًا صافيًا قدره 6.25% وينمو ليصل إلى **61,640.79 دولار**. الفجوة — **13,844.08 دولار** — تمثل 18.3% من القيمة النهائية للصندوق منخفض التكلفة، مُهدرة مقابل تعرض سوق إجمالي مماثل، وليس بسبب سوء اختيار الأسهم. هذه هي تكلفة الرسوم وحدها، قبل الحكم على ما إذا كانت اختيارات المدير النشط قد نجحت أم لا.
+## Example
 
-توضح المنتجات المعروفة منخفضة التكلفة مثل صناديق المؤشرات نطاق العمليات الذي تعمل فيه الصناديق اليوم: صناديق ETF واسعة النطاق مثل VOO (تتبع S&P 500) أو VTI (السوق الأمريكي الكلي) تعمل بنسب نفقات في نطاق الكسور من百分 — بعيداً كل البعد عن 0.75% المستخدمة أعلاه، والتي تمثل فئة ذات تكلفة أعلى من الصناديق النشطة، وليست أي صندوق محدد يُعرض مباشرة. على بورصة ماليزيا، صندوق تتبع مؤشر FBM KLCI يلعب نفس الدور الهيكلي: تعرض واسع بنسب سنوية منخفضة ومعلنة مقابل صندوق استئماني نشط عالي التكلفة يحمل أسماء مماثلة من الشركات الكبيرة.
+Run the same $10,000 through two funds holding identical broad-market exposure, growing at the same 7% gross annual return before fees, for 30 years. A low-cost index fund charging a 0.03% expense ratio nets a 6.97% annual return and grows to **$75,484.86**. A comparable actively-managed fund charging a 0.75% expense ratio nets 6.25% and grows to **$61,640.79**. The gap — **$13,844.08** — is 18.3% of the low-cost fund's terminal value, given up for identical gross market exposure, not for worse stock-picking. That's the fee alone, before judging whether the active manager's picks even worked.
 
-## الفخ
+Well-known low-cost index products illustrate the scale funds operate at today: broad-market ETFs like VOO (tracking the S&P 500) or VTI (total US market) run expense ratios in the fractions-of-a-percent range — nowhere near the 0.75% used above, which represents a higher-cost actively managed category, not any specific fund quoted live. On Bursa Malaysia, an FBM KLCI tracker fund plays the same structural role: broad exposure at a low, disclosed annual fee versus a higher-cost actively managed unit trust holding similar large-cap names.
 
-يقارن المبتدئون الصناديق بناءً على الأداء لمدة سنة واحدة ويعاملون نسبة النفقات كشيء ثانوي — "0.75% لا شيء، إنها أقل من 1%". يبدو الأمر غير ضار لأنه يُخصم بشكل غير مرئي من صافي قيمة الأصول للصندوق، ولا يُفوت عليك مباشرةً مثل الاشتراكات. النموذج الذهني الصحيح: الرسوم المتكررة هي *ضريبة دائمة على الفائدة المركبة*، تُفرض كل سنة بغض النظر عما إذا كان الصندوق قد حقق أرباحاً أو خسائر في تلك السنة. فرق الرسوم بمقدار 0.72 نقطة مئوية لا يكلفك 0.72% مرة واحدة — بل عند تراكمها على مدى 30 عاماً، تكلف مثال الـ 10,000 دولار أعلاه أكثر من كامل الاستثمار الأصلي البالغ 10,000 دولار.
+## The trap
 
-يُضاعف فرق التتبع المشكلة في الاتجاه الآخر. حتى صناديق المؤشرات السلبية نادراً ما تحقق العائد الدقيق للمؤشر — أخذ العينات (حجز مجموعة ممثلة بدلاً من كل مكون)، سحب النقد (حجز احتياطي نقدي صغير لسحب الأموال)، ونسبة النفقات نفسها تسحب عائد الصندوق المحقق قليلاً بعيداً عن مؤشره المرجعي. فرق تتبع أوسع يعني أن الصندوق نسخة أقل دقة مما ظننت أنك تشتريه، بالإضافة إلى أي رسوم يفرضها.
+Beginners compare funds on 1-year performance and treat the expense ratio as an afterthought — "0.75% is nothing, it's less than 1%." It feels harmless because it's deducted invisibly from the fund's NAV, never billed to you directly like a subscription. The correct mental model: a recurring fee is a *permanent tax on compounding*, charged every single year regardless of whether the fund made or lost money that year. A fee difference of 0.72 percentage points doesn't cost you 0.72% once — compounded over 30 years, it cost the $10,000 example above more than the entire original $10,000 investment.
+
+Tracking difference compounds the problem in the other direction. Even a passive index fund rarely delivers the index's exact return — sampling (holding a representative subset instead of every constituent), cash drag (holding a small cash buffer for redemptions), and the expense ratio itself all pull the fund's realized return slightly away from its benchmark. A wider tracking difference means the fund is a less faithful copy of what you thought you were buying, on top of whatever it charges.
 
 <ChatWith agent="fundamentals_analyst" />
 
-## اختبار
+## Quiz
 
 <Quiz
-  question="تمتلك صندوقان نفس التعرض للسوق. يتقاضى أحدهما نسبة مصاريف إدارية تبلغ 0.03%، والآخر 0.75%. على مدى 30 عاماً، مع استثمار بقيمة 10,000 دولار وعائد سنوي إجمالي بنسبة 7%، ينمو الصندوق منخفض التكلفة ليصل إلى 75,484.86 دولاراً، بينما يصل الصندوق مرتفع التكلفة إلى 61,640.79 دولاراً. ماذا يمثل الفارق البالغ 13,844.08 دولار؟"
+  question="صندوقان يحتفظان بتعرض سوق متطابق. أحدهما يتقاضى نسبة مصروفات 0.03% والآخر 0.75%. على مدى 30 عاماً على استثمار بقيمة 10,000 دولار بعائد سنوي إجمالي 7%، ينمو الصندوق منخفض التكلفة إلى 75,484.86 دولار والصندوق مرتفع التكلفة إلى 61,640.79 دولار. ماذا يمثل الفارق البالغ 13,844.08 دولار؟"
   options={[
-    "سحب الرسوم على نفس العائد الإجمالي — أموال تُصرف لصالح تراكم الرسوم، بغض النظر عن أي مهارة لإدارة المحفظة",
-    "تكلفة قرارات اختيار الأسهم الأسوأ التي اتبعها الصندوق النشط",
+    "سحب رسوم صافي على تعرض إجمالي متطابق — أموال تُسلم لآلية الفائدة المركبة للرسوم، بغض النظر عن أي مهارة لإدارة المحفظة",
+    "تكلفة قرارات اختيار الأسهم الأسوأ التي اتخذها الصندوق النشط",
     "تكلفة معاملة لمرة واحدة تُدفع فقط في السنة الأولى",
-    "الفرق الضريبي بين الصندوقين"
+    "الفرق الضريبي بين الصندين"
   ]}
   answer={0}
-  explanation="تم نمذجة كلا الصندوقين بعائد إجمالي سنوي بنسبة 7% — والفارق بأكمله ناتج عن فرق الرسوم الذي يتراكم على مدى 30 عاماً، وليس عن اختلاف في اختيار الأسهم أو رسوم لمرة واحدة. كما أنه ليس تأثيراً ضريبياً؛ فالسيناريو يعزل نسبة المصاريف الإدارية كمتغير وحيد. هذه هي الدرس الجوهري: سحب الرسوم هو تكلفة تدفعها مقابل نفس التعرض للسوق، قبل أي نقاش حول ما إذا كانت الإدارة النشطة قد 'نجحت' أم لا."
+  explanation="تم نمذجة كلا الصندوقين بعائد إجمالي 7% — والفارق بأكمله ناتج عن فرق الرسوم الذي يتراكم بفائدة مركبة على مدى 30 عاماً، وليس من اختلاف اختيار الأسهم أو رسوم لمرة واحدة. كما أنه ليس تأثيراً ضريبياً؛ فالسيناريو يعزل نسبة المصروفات كمتغير وحيد. هذه هي الدرس الجوهري: سحب الرسوم هو تكلفة تدفعها مقابل تعرض متطابق، قبل أي نقاش حول ما إذا كانت الإدارة النشطة 'نجحت' أم لا."
 />
 
 <Quiz
-  question="تظهر نشرة حقائق الصندوق نسبة المصاريف الإدارية وخطأ التتبع مقابل مؤشره المرجعي. لماذا تحتاج إلى التحقق من كليهما، وليس فقط نسبة المصاريف الإدارية؟"
+  question="تظهر ورقة بيانات الصندوق نسبة المصروفات الخاصة به وَخطأ التتبع مقابل مؤشر المعيار الخاص به. لماذا تحتاج إلى التحقق من الاثنين، وليس فقط نسبة المصروفات؟"
   options={[
-    "يتحرك خطأ التتبع ونسبة المصاريف الإدارية دائماً في اتجاهين متعاكسين، لذا فإن التحقق من أحدهما يخبرك بالآخر",
-    "لا يهم خطأ التتبع إلا للصناديق ذات الإدارة النشطة، وليس لصناديق المؤشرات",
-    "نسبة المصاريف الإدارية هي تكلفة سنوية معلنة يمكنك حساب سحبها المركب منها مباشرة، بينما يلتقط خطأ التتبع الانزلاق الإضافي — الناتج عن العينة، وسحب النقد، والرسوم نفسها — مما يعني أن حتى صندوق المؤشرات منخفض الرسوم قد لا يقدم بالضبط ما قدمه مؤشره المرجعي",
-    "يستبدل خطأ التتبع الحاجة إلى التحقق من نسبة المصاريف الإدارية تماماً"
+    "يتحرك خطأ التتبع ونسبة المصروفات دائماً في اتجاهين متعاكسين، لذا فإن التحقق من أحدهما يخبرك بالآخر",
+    "خطأ التتبع يهم فقط الصناديق ذات الإدارة النشطة، وليس أبداً صناديق المؤشرات",
+    "نسبة المصروفات هي تكلفة معلنة ومحددة يمكنك حساب سحب الفائدة المركبة منها مباشرة، بينما يلتقط خطأ التتبع الانزلاق الإضافي — الناتج عن العينات، وسحب النقد، والرسوم نفسها — مما يعني أن صندوق مؤشرات منخفض الرسوم قد لا يقدم بالضبط ما قدمه مؤشره المرجعي",
+    "خطأ التتبع يحل محل الحاجة للتحقق من نسبة المصروفات تماماً"
   ]}
   answer={2}
-  explanation="نسبة المصاريف الإدارية هي تكلفة سنوية معلومة ومعروفة يمكنك تشغيلها عبر حساب مركب، كما فعلنا في هذه الدرس. فرق التتبع هو فجوة منفصلة ومحققة بين العائد الفعلي للصندوق وعائد مؤشره المرجعي — وهو موجود حتى للصناديق السلبية (التي تتبع المؤشر) بسبب أخذ العينات وسحب النقد، وتعد نسبة المصاريف الإدارية أحد مساهماتها، وليست بديلاً عن التحقق منها. يجيب الرقمان على أسئلة مختلفة: ما الذي تُفرضه عليك الرسوم، وكم faithfully نسخ الصندوق ما ظننت أنك اشتريته."
+  explanation="نسبة المصروفات هي تكلفة سنوية معلنة ومحددة يمكنك تشغيلها عبر حساب مركب، كما فعلنا في هذه الدرس. فرق التتبع هو فجوة منفذة ومحققة بين العائد الفعلي للصندوق وعائد مؤشره المرجعي — وهي موجودة حتى للصناديق السلبية (المؤشرية) بسبب العينات وسحب النقد، ونسبة المصروفات هي أحد مساهميها، وليست بديلاً عن التحقق منها. الرقمان يجيبان على أسئلة مختلفة: ما الذي تُ charged به، وكم faithfully نسخ الصندوق ما ظننت أنك اشتريته."
 />
 
-## جرب بنفسك
+## Try it
 
-افتح ورقة الحقائق لأحد صناديق ETF في قائمة مراقبتك (في مرجع محو الأمية المالية للتطبيق أو خارجه). ابحث عن نسبة النفقات المعلنة، ثم قدر التكلفة على مدى 10 سنوات بالدولار على مركز بقيمة 10,000 دولار باستخدام نفس طريقة المثال العملي في هذه الدرس — قارنها بما كان سيكلفه صندوق مماثل بنسبة 0.75% على نفس الفترة.
+Pull up the fact sheet for one ETF on your watchlist (in the app's fund-literacy reference or off-app). Find its stated expense ratio, then estimate the 10-year cost in dollars on a $10,000 position using the same method as this lesson's worked example — compare it to what a 0.75% comparable would have cost over the same period.
 
-## الخلاصة
+## Takeaway
 
-الرسوم ليست ما تدفعه مرة واحدة — بل ما تدفعه كل سنة، للأبد، بالإضافة إلى أي مكاسب كنت ستحققها مركبة على ذلك المال بدلاً من ذلك.
+A fee is not what you pay once — it's what you pay every year, forever, on top of whatever gains you would have compounded on that money instead.
 
-*المصدر: فرضية أهمية التكلفة لبوجل — Common Sense on Mutual Funds (1999) — الحجة القائلة بأن السوق الكفؤ إلى حد كبير، التكلفة هي التنبؤ الأكثر موثوقية بأداء الصناديق النسبي.*
+*Where this comes from: Bogle's cost-matters hypothesis — Common Sense on Mutual Funds (1999) — the case that in a mostly efficient market, cost is the most reliable predictor of relative fund performance.*
