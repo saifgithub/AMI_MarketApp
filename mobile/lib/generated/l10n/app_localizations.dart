@@ -64,7 +64,7 @@ import 'app_localizations_ms.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -87,17 +87,17 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
     Locale('en'),
-    Locale('ms')
+    Locale('ms'),
   ];
 
   /// Application title. Used in MaterialApp and system places. Keep as 'AMI Trade' across all locales — it's a product name, not translatable.
@@ -454,6 +454,132 @@ abstract class AppLocalizations {
   /// **'Ticker (e.g. NVDA)'**
   String get portfolioAddDialogHint;
 
+  /// No description provided for @portfolioTabPositions.
+  ///
+  /// In en, this message translates to:
+  /// **'POSITIONS'**
+  String get portfolioTabPositions;
+
+  /// No description provided for @portfolioTabWatchlist.
+  ///
+  /// In en, this message translates to:
+  /// **'WATCHLIST'**
+  String get portfolioTabWatchlist;
+
+  /// No description provided for @portfolioTabHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'HISTORY'**
+  String get portfolioTabHistory;
+
+  /// No description provided for @portfolioOpenTrades.
+  ///
+  /// In en, this message translates to:
+  /// **'OPEN TRADES'**
+  String get portfolioOpenTrades;
+
+  /// CR120 — caption under the closed-trade summary strip on the Portfolio History tab. {count} is the total number of closed trades, not the visible (capped) count.
+  ///
+  /// In en, this message translates to:
+  /// **'ACROSS ALL {count} CLOSED'**
+  String portfolioClosedScope(int count);
+
+  /// No description provided for @portfolioClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'CLOSED'**
+  String get portfolioClosed;
+
+  /// CR120 — History tab header when the closed-trade cap is in effect. {count} is the cap (25).
+  ///
+  /// In en, this message translates to:
+  /// **'LAST {count} CLOSED'**
+  String portfolioLastNClosed(int count);
+
+  /// CR120 — the date span covered by the visible capped closed-trade list, e.g. '17 MAY – 28 JUL'. {from}/{to} arrive pre-formatted so this key never reformats a date itself.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} – {to}'**
+  String portfolioClosedSpan(String from, String to);
+
+  /// CR120 — History tab escape hatch. In-place expansion from the 25-cap to every closed trade the Portfolio holds; {count} is the full total.
+  ///
+  /// In en, this message translates to:
+  /// **'SHOW ALL {count}'**
+  String portfolioShowAll(int count);
+
+  /// No description provided for @portfolioReviewInJournal.
+  ///
+  /// In en, this message translates to:
+  /// **'REVIEW IN JOURNAL'**
+  String get portfolioReviewInJournal;
+
+  /// CR120/D3 — plan-aware Journal pointer on the History tab, shown when retention_days is known and finite. Branches on retention_days, never on plan name or a hardcoded 30.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Journal shows the last {days} days — {count} of these {total} are older. Nothing is deleted; they stay here.'**
+  String portfolioJournalRetention(int days, int count, int total);
+
+  /// CR120/D3 fail-safe — shown when retention_days has not been fetched yet (the Portfolio never calls the journal endpoint itself). Never the reassuring 'nothing deleted, no caveat' branch when it is merely unloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Journal may not show all of these. Nothing is deleted; they stay here.'**
+  String get portfolioJournalRetentionUnknown;
+
+  /// No description provided for @portfolioStatWon.
+  ///
+  /// In en, this message translates to:
+  /// **'WON'**
+  String get portfolioStatWon;
+
+  /// No description provided for @portfolioStatLost.
+  ///
+  /// In en, this message translates to:
+  /// **'LOST'**
+  String get portfolioStatLost;
+
+  /// No description provided for @portfolioStatHitRate.
+  ///
+  /// In en, this message translates to:
+  /// **'HIT RATE'**
+  String get portfolioStatHitRate;
+
+  /// No description provided for @portfolioStatNet.
+  ///
+  /// In en, this message translates to:
+  /// **'NET'**
+  String get portfolioStatNet;
+
+  /// No description provided for @portfolioSearchTicker.
+  ///
+  /// In en, this message translates to:
+  /// **'SEARCH TICKER…'**
+  String get portfolioSearchTicker;
+
+  /// No description provided for @portfolioSortNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'NEWEST'**
+  String get portfolioSortNewest;
+
+  /// No description provided for @portfolioSortValue.
+  ///
+  /// In en, this message translates to:
+  /// **'VALUE'**
+  String get portfolioSortValue;
+
+  /// No description provided for @portfolioSortAZ.
+  ///
+  /// In en, this message translates to:
+  /// **'A–Z'**
+  String get portfolioSortAZ;
+
+  /// No description provided for @portfolioNoOpenPositions.
+  ///
+  /// In en, this message translates to:
+  /// **'No open positions'**
+  String get portfolioNoOpenPositions;
+
   /// Label above the big position value on the Ticker Detail screen (Position card variant — user holds this ticker).
   ///
   /// In en, this message translates to:
@@ -754,10 +880,10 @@ abstract class AppLocalizations {
   /// **'UNLOCKS'**
   String get journalFilterUnlocks;
 
-  /// Amber notice on Journal when the user is on Floor Pass. {days} is the retention window.
+  /// DEF155 — amber notice on Journal when the user is on Floor Pass. {days} is the retention window. Was 'Upgrade to keep everything', which asserted a data loss that does not happen: retention is a read-time filter (journal_store.py), not a delete, and entries reappear on upgrade. Fixed to the honest verb (see, not keep) plus an explicit nothing-is-deleted clause.
   ///
   /// In en, this message translates to:
-  /// **'Floor Pass: last {days} days only. Upgrade to keep everything.'**
+  /// **'Floor Pass: last {days} days only. Upgrade to see everything — nothing is deleted.'**
   String journalRetentionWarning(int days);
 
   /// No description provided for @journalEmptyTitle.
@@ -1293,14 +1419,22 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{ticker} passes the {standard} screen ({source}, as of {date}).'**
   String shariaVerdictPass(
-      String ticker, String standard, String source, String date);
+    String ticker,
+    String standard,
+    String source,
+    String date,
+  );
 
   /// CR069 Phase 1b. Shown on a REJECTED trade: the ticker is inside the parent index and absent from the compliant set, so it is a real exclusion under this standard and the trade is blocked. OBSERVANCE-SENSITIVE. Translator notes: (a) this is the ONLY one of the four verdict strings that reports a negative screen result — keep it clearly distinct from shariaVerdictUnknown, which reports NO ruling; conflating the two is the specific confusion CR069 design constraint 2 forbids; (b) attribute the exclusion to the named standard, not to AMI. {standard} and {source} arrive untranslated.
   ///
   /// In en, this message translates to:
   /// **'{ticker} is in the S&P 500 but does not pass the {standard} screen ({source}, as of {date}), so this mandate won\'t trade it.'**
   String shariaVerdictScreenedOut(
-      String ticker, String standard, String source, String date);
+    String ticker,
+    String standard,
+    String source,
+    String date,
+  );
 
   /// CR069 Phase 1b. Shown on a SUCCESSFUL, PERMITTED trade (G3, resolved 2026-07-23: unknown permits, with the disclosure attached) when the ticker sits outside the parent index and the standard therefore never examined it. OBSERVANCE-SENSITIVE and the highest-risk string in this set. Translator notes: (a) this is NOT a rejection, NOT a warning, and NOT a statement that the trade was risky — the trade went through; (b) 'hasn't reviewed it' must NOT become 'not permitted', 'haram', 'non-compliant', 'doubtful' or 'mashbooh' — turning an absence of a ruling into a negative ruling is a false assurance in the direction nobody checks, and is exactly what CR069 design constraint 2 forbids; (c) 'AMI doesn't know' is deliberate humility and must survive. {standard} arrives untranslated.
   ///
@@ -2465,7 +2599,11 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Filled: {side} {qty} {ticker} @ \\\${price}'**
   String tradeTicketFilled(
-      String side, String qty, String ticker, String price);
+    String side,
+    String qty,
+    String ticker,
+    String price,
+  );
 
   /// Label above a Concierge chat bubble in the conversation surfaces (Onboarding, 1-on-1).
   ///
@@ -3313,8 +3451,9 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
 }

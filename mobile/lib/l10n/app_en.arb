@@ -126,6 +126,50 @@
     "portfolioCloseTooltip": "Close",
     "portfolioAddDialogTitle": "ADD TO WATCHLIST",
     "portfolioAddDialogHint": "Ticker (e.g. NVDA)",
+    "portfolioTabPositions": "POSITIONS",
+    "portfolioTabWatchlist": "WATCHLIST",
+    "portfolioTabHistory": "HISTORY",
+    "portfolioOpenTrades": "OPEN TRADES",
+    "portfolioClosedScope": "ACROSS ALL {count} CLOSED",
+    "@portfolioClosedScope": {
+        "description": "CR120 — caption under the closed-trade summary strip on the Portfolio History tab. {count} is the total number of closed trades, not the visible (capped) count.",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "portfolioClosed": "CLOSED",
+    "portfolioLastNClosed": "LAST {count} CLOSED",
+    "@portfolioLastNClosed": {
+        "description": "CR120 — History tab header when the closed-trade cap is in effect. {count} is the cap (25).",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "portfolioClosedSpan": "{from} – {to}",
+    "@portfolioClosedSpan": {
+        "description": "CR120 — the date span covered by the visible capped closed-trade list, e.g. '17 MAY – 28 JUL'. {from}/{to} arrive pre-formatted so this key never reformats a date itself.",
+        "placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}
+    },
+    "portfolioShowAll": "SHOW ALL {count}",
+    "@portfolioShowAll": {
+        "description": "CR120 — History tab escape hatch. In-place expansion from the 25-cap to every closed trade the Portfolio holds; {count} is the full total.",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "portfolioReviewInJournal": "REVIEW IN JOURNAL",
+    "portfolioJournalRetention": "Your Journal shows the last {days} days — {count} of these {total} are older. Nothing is deleted; they stay here.",
+    "@portfolioJournalRetention": {
+        "description": "CR120/D3 — plan-aware Journal pointer on the History tab, shown when retention_days is known and finite. Branches on retention_days, never on plan name or a hardcoded 30.",
+        "placeholders": {"days": {"type": "int"}, "count": {"type": "int"}, "total": {"type": "int"}}
+    },
+    "portfolioJournalRetentionUnknown": "Your Journal may not show all of these. Nothing is deleted; they stay here.",
+    "@portfolioJournalRetentionUnknown": {
+        "description": "CR120/D3 fail-safe — shown when retention_days has not been fetched yet (the Portfolio never calls the journal endpoint itself). Never the reassuring 'nothing deleted, no caveat' branch when it is merely unloaded."
+    },
+    "portfolioStatWon": "WON",
+    "portfolioStatLost": "LOST",
+    "portfolioStatHitRate": "HIT RATE",
+    "portfolioStatNet": "NET",
+    "portfolioSearchTicker": "SEARCH TICKER…",
+    "portfolioSortNewest": "NEWEST",
+    "portfolioSortValue": "VALUE",
+    "portfolioSortAZ": "A–Z",
+    "portfolioNoOpenPositions": "No open positions",
 
     "tickerDetailValue": "VALUE",
     "@tickerDetailValue": {
@@ -322,9 +366,9 @@
     "journalFilterBrief": "BRIEF",
     "journalFilterLessons": "LESSONS",
     "journalFilterUnlocks": "UNLOCKS",
-    "journalRetentionWarning": "Floor Pass: last {days} days only. Upgrade to keep everything.",
+    "journalRetentionWarning": "Floor Pass: last {days} days only. Upgrade to see everything — nothing is deleted.",
     "@journalRetentionWarning": {
-        "description": "Amber notice on Journal when the user is on Floor Pass. {days} is the retention window.",
+        "description": "DEF155 — amber notice on Journal when the user is on Floor Pass. {days} is the retention window. Was 'Upgrade to keep everything', which asserted a data loss that does not happen: retention is a read-time filter (journal_store.py), not a delete, and entries reappear on upgrade. Fixed to the honest verb (see, not keep) plus an explicit nothing-is-deleted clause.",
         "placeholders": {"days": {"type": "int"}}
     },
     "journalEmptyTitle": "No entries yet.",
