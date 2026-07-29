@@ -120,9 +120,9 @@ class AmiMotion {
 > Geometry is pinned by side count in `mobile/test/widgets/hex_geometry_test.dart`.
 >
 > **Migrate on evidence, not tidiness.** CR117 deliberately leaves open which remaining controls
-> become true hexagons: move one when there is a design or a report asking for it. Note CR113
-> removes the shape from large CTAs entirely, and CR108 edits `TrackHexButton`, which already uses
-> the regular hexagon and must not be caught in any migration.
+> become true hexagons: move one when there is a design or a report asking for it. **CR113 has since
+> landed** and removed the shape from large CTAs entirely — see the rule below; CR108 edits
+> `TrackHexButton`, which already uses the regular hexagon and must not be caught in any migration.
 
 The flat-topped hexagon is the AMI signature. Implement via `ClipPath`:
 
@@ -184,60 +184,79 @@ class FlatTopRegularHexagon extends CustomClipper<Path> {
 
 For aspect ratio of regular hexagons: `width:height = 2:√3 ≈ 1.155`. Wrap with `AspectRatio(aspectRatio: 2/sqrt(3))`.
 
+## Where hex goes, and where it does not — the rule (CR113)
+
+**Hex geometry is for marks and controls. Surfaces and large CTAs are rounded rects.**
+
+This is the app's rule, and it deliberately **diverges from the design-system mount**: the DS
+defines `--clip-angle-panel` for content panels, and the Flutter port does not carry it. CR106 §4.0
+settled that the app wins. It was never written down *here*, where the port is documented, which is
+why `HexButton` was still shipping the old behaviour months later — the rule existed in a decision
+record nobody reads before writing a button.
+
+| Category | Shape | Examples |
+|---|---|---|
+| **Marks** — identity, at small size | hex | `HexAvatar`, the honeycomb, `TrackHexButton`, agent marks, the outcome mark |
+| **Controls** — chips, toggles, chrome | hex | `HexChip`, `HexBottomNav`, `HexToast`, ticker-period chips, the BOARD\|TRANSCRIPT toggle, CR120's Portfolio tabs |
+| **Surfaces** — anything that holds content | rounded rect, `AmiRadii.card` | `GlassPanel` bodies, cards, sheets, list rows |
+| **Large CTAs** | rounded rect, `AmiRadii.card` | `HexButton` — every full-width action in the app |
+
+**Why width decides it.** The cut corner is a *mark* — it reads as AMI's signature at chip scale.
+Stretch the identical shape to full width and the two long angled edges dominate: it stops reading
+as a hexagon and reads as a **chevron banner**. Saiful, on the pink full-width `SAVE MY TEAM`:
+*"the larger buttons should all be normal rounded edge buttons."* A full-width CTA is a surface
+wearing a control's clothes.
+
+**Sized before it was changed, and it was smaller than "several" suggested.** Every large CTA in the
+app goes through **one** widget — `HexButton` clipped unconditionally, with no size variant, so
+width never entered the decision. Its six user-facing call sites (`onboardingSaveTeam`,
+`onboardingReadbackContinue`, `onboardingTryAgain`, `floorConveneCta`, `agentUnlockedMeet`, the
+daily-challenge `SUBMIT`) all changed together from one edit. *Count the sites before fixing one*
+(`failure_patterns.md` **P11**) cuts both ways: here it turned "fix them all" from a sweep into a
+one-line change.
+
+**What was deliberately NOT swept.** Three wider options were offered and rejected. Hex also lives in
+`TrackHexButton`, `HexChip`, `HexAvatar`, `HexToast`, `HexBottomNav`, `ticker_chart.dart`'s period
+toggle and the BOARD\|TRANSCRIPT toggle the AT:Designer had specified as hex *hours* earlier
+(DEF146). Sweeping further would delete the app's identity. **The boundary is pinned in
+`mobile/test/widgets/cta_shape_test.dart`** — it asserts the CTA has no clip *and* that the chip,
+the avatar and the track button still do, in both directions, so a later "AMI moved off hex
+clipping" tidy-up trips rather than lands.
+
+Note **CR108** edits `TrackHexButton` — the widget this rule deliberately leaves hex. The two must
+not be conflated in one pass.
+
 ## The HexButton widget
 
 ```dart
-class HexButton extends StatelessWidget {
-  final String label;            // typically UPPERCASE
-  final VoidCallback onPressed;
-  final Color color;             // role color
-  final HexVariant variant;      // filled / outlined / glow
-
-  const HexButton({
-    required this.label,
-    required this.onPressed,
-    this.color = AmiColors.hexBlue,
-    this.variant = HexVariant.filled,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: ClipPath(
-        clipper: FlatTopHexagonClipper(),
-        child: AnimatedContainer(
-          duration: AmiMotion.normal,
-          curve: AmiMotion.easeOut,
-          padding: EdgeInsets.symmetric(
-            horizontal: AmiSpacing.l,
-            vertical: AmiSpacing.m,
-          ),
-          decoration: BoxDecoration(
-            color: variant == HexVariant.filled
-                ? color
-                : Colors.transparent,
-            border: variant != HexVariant.filled
-                ? Border.all(color: color, width: 1)
-                : null,
-          ),
-          child: Text(
-            label,
-            style: AmiTypography.labelMono.copyWith(
-              color: variant == HexVariant.filled
-                  ? Colors.white
-                  : color,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    );
-  }
-}
+// CR113: no ClipPath. Shape is unconditional — there is no size variant, which
+// is why "fix all the large buttons" was one edit.
+Widget button = AnimatedContainer(
+  duration: AmiMotion.normal,
+  curve: AmiMotion.easeOut,
+  padding: padding ?? const EdgeInsets.symmetric(
+    horizontal: AmiSpacing.l,
+    vertical: AmiSpacing.m,
+  ),
+  decoration: BoxDecoration(
+    color: fillColor,
+    border: Border.all(color: borderColor, width: 1),
+    borderRadius: BorderRadius.circular(AmiRadii.card),   // <- the whole change
+  ),
+  alignment: Alignment.center,
+  child: Text(label, style: AmiTypography.labelMono.copyWith(color: textColor)),
+);
 ```
 
-**Note:** clip-paths cut off `box-shadow` in CSS — same gotcha in Flutter. For "glow" effects on hex elements, use `BackdropFilter` + a colored gradient *inside* the clipped area, or use `filter: DropShadow` (Flutter equivalent) on the parent. Per AMI spec, glow on a hex = a colored radial gradient layered behind the clip.
+**The glow variant's halo must carry the same radius.** It sits on a `DecoratedBox` *behind* the
+button. That container used to exist because a clip-path crops `box-shadow` — the same gotcha as
+CSS — so the halo had to live outside the clip. With the clip gone it is cropped by nothing, and if
+it keeps a square silhouette the result is a square shadow behind a rounded button: visible only on
+the glow variant, only as a slightly-wrong outline, which is exactly how it would survive a review.
+Asserted in `cta_shape_test.dart`.
+
+For glow on anything that *is* still hex-clipped, the original guidance stands: a coloured radial
+gradient layered behind the clip, not a `boxShadow` inside it.
 
 ## Glass panel
 

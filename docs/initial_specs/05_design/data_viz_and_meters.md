@@ -92,7 +92,8 @@ What ships is:
 |---|---|---|
 | Cards, panels, sheets, inner blocks | **Rounded rect**, `AmiRadii.card` (8) — `AmiRadii.sheet` (12) for the verdict card | `_VerdictCard` `room_screen.dart:906`, `AccentCard` `accent_card.dart:43`, every `journal_detail_screen.dart` block |
 | Agent avatars, chips, toasts, bottom nav, track button | **Hex clip** | `hex_avatar.dart`, `hex_chip.dart`, `hex_toast.dart`, `hex_bottom_nav.dart`, `track_hex_button.dart` |
-| Segmented / period toggles | **Hex clip**, `FlatTopHexagonClipper(cornerCut: 8)` | `ticker_chart.dart:185` |
+| Segmented / period toggles | **Hex clip.** Period chips: `CutCornerOctagonClipper(cornerCut: 8)`. Segmented **bars**: `FlatTopHexagonBarClipper(endInset: 8)`, one clip around the whole bar (CR117/DEF146) | `ticker_chart.dart:185`, `room_view_mode_toggle.dart` |
+| **Large CTAs** | **Rounded rect**, `AmiRadii.card` — **CR113 removed the clip**. At full width the cut corners read as a chevron banner, not a mark | `hex_button.dart`, 6 call sites |
 | Primary / secondary buttons | **Material 3 default** (stadium) — no `shape:` override anywhere in the Room | `room_screen.dart` |
 
 **The app wins over the mount.** A new surface lives inside these screens, so matching them beats matching
@@ -103,8 +104,13 @@ The standard card is `slate800` fill, 1px `slate700` border, 8px radius, optiona
 stripe (`AccentCard` — 2px on mobile, 3px desktop). An outcome surface may instead take a 1.5px accent
 border on all four sides at 12px radius, which is what `_VerdictCard` does.
 
-*(Flagged: `ami_hex_in_flutter.md` should carry this rule too, so the divergence is recorded where the port
-is documented rather than only here.)*
+**CR113 closed the flag this section used to carry.** The rule now lives in
+[`ami_hex_in_flutter.md`](ami_hex_in_flutter.md) §*"Where hex goes, and where it does not"* as well —
+where the Flutter port is documented, which is where someone writing a new button will actually look.
+It was recorded only here for months, and in that time `HexButton` kept clipping unconditionally;
+a rule filed where its audience does not read is not a control. That file also carries the boundary
+(which widgets keep hex, and why sweeping further would delete the app's identity), pinned in
+`mobile/test/widgets/cta_shape_test.dart`.
 
 ### 4.1 Stat tile (KPI)
 
