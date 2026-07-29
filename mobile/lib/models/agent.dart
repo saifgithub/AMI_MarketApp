@@ -163,3 +163,34 @@ Agent agentById(String id) {
   return kAllAgents.firstWhere((a) => a.id == id,
       orElse: () => kAllAgents.last); // fall back to Concierge if unknown
 }
+
+/// CR106 — the six Room phases, mirroring `room_prompts._PHASE_FOR_AGENT`.
+///
+/// Held client-side because the Journal replay has no phase events to group by
+/// — the snapshot froze the transcript, not the stream — and the collapsed
+/// transcript has to group identically on both surfaces or the two renderers
+/// have diverged again (T-TWICE).
+enum RoomPhase { analysts, researchers, synthesis, execution, risk, verdict }
+
+const Map<String, RoomPhase> kAgentPhase = {
+  'fundamentals_analyst': RoomPhase.analysts,
+  'market_analyst': RoomPhase.analysts,
+  'news_analyst': RoomPhase.analysts,
+  'social_media_analyst': RoomPhase.analysts,
+  'bull_researcher': RoomPhase.researchers,
+  'bear_researcher': RoomPhase.researchers,
+  'research_manager': RoomPhase.synthesis,
+  'trader': RoomPhase.execution,
+  'aggressive_debator': RoomPhase.risk,
+  'conservative_debator': RoomPhase.risk,
+  'neutral_debator': RoomPhase.risk,
+  'portfolio_manager': RoomPhase.verdict,
+};
+
+/// The eleven voices of the consensus comb, in speaking order — every agent
+/// except the Portfolio Manager, whose decision is the hero tile rather than
+/// one vote among twelve (CR106 T-VOTE).
+final List<Agent> kCombVoices = kAllAgents
+    .where((a) =>
+        kAgentPhase.containsKey(a.id) && a.id != 'portfolio_manager')
+    .toList(growable: false);

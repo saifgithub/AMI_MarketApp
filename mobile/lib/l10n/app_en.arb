@@ -1134,5 +1134,141 @@
         "placeholders": {
             "title": {"type": "String", "example": "Lesson doesn't return to the lesson UI"}
         }
-    }
+    },
+
+    "@_CR106": "── CR106 Verdict Board ──────────────────────────────",
+    "roomViewModeBoard": "BOARD",
+    "@roomViewModeBoard": {"description": "Segmented-control label for the graphical Verdict Board view of a finished Room run. Mono uppercase, ~5 chars — it shares a 152pt control with roomViewModeTranscript."},
+    "roomViewModeTranscript": "TRANSCRIPT",
+    "@roomViewModeTranscript": {"description": "Segmented-control label for the collapsed per-agent transcript view. Mono uppercase; keep as short as the language allows."},
+    "roomStripMeta": "{seconds}s · {credits} CREDITS",
+    "@roomStripMeta": {
+        "description": "Sub-header strip on a LIVE Room: how long the run took and what it cost. Mono. The Journal shows journalStripMeta instead — the snapshot never recorded either number.",
+        "placeholders": {"seconds": {"type": "int", "example": "41"}, "credits": {"type": "int", "example": "3"}}
+    },
+    "roomHeroApprove": "THE ROOM APPROVED",
+    "@roomHeroApprove": {"description": "Hero heading when the Portfolio Manager approved the trade. Mono uppercase."},
+    "roomHeroPass": "THE ROOM PASSED",
+    "@roomHeroPass": {"description": "Hero heading for a PASS — the room had no strong view and sat out. NOT a rejection: it must not read as the thesis being turned down."},
+    "roomHeroReject": "BLOCKED BY YOUR MANDATE",
+    "@roomHeroReject": {"description": "Hero heading when the user's own mandate rules blocked the trade. The user's rules did this, not AMI's opinion."},
+    "roomHeroNoVerdict": "NO VERDICT ISSUED",
+    "@roomHeroNoVerdict": {"description": "Hero heading when the PM declined to price a trade because the run had no market read. A professional refusal, NOT a rejection."},
+    "roomHeroNoResult": "THE ROOM DID NOT FINISH",
+    "@roomHeroNoResult": {"description": "Hero heading when the run ended with no verdict at all — an outage. Must not be phrased like an outcome."},
+    "roomHeroUnitPortfolio": "OF PORTFOLIO",
+    "@roomHeroUnitPortfolio": {"description": "Dim unit line under the hero's position-size number. Without it a bare '3.0%' reads as an expected return."},
+    "roomHeroUnitHorizon": "{days}-DAY HORIZON",
+    "@roomHeroUnitHorizon": {
+        "description": "Dim unit line beside OF PORTFOLIO giving the holding period.",
+        "placeholders": {"days": {"type": "int", "example": "42"}}
+    },
+    "roomHeroNoPosition": "NO POSITION",
+    "@roomHeroNoPosition": {"description": "Hero value line for a PASS. Deliberately words, not '0%' — zero is a size, and no position is not."},
+    "roomHeroNotIssued": "NOT ISSUED",
+    "@roomHeroNotIssued": {"description": "Hero value line for NO_VERDICT."},
+    "roomHeroBlockedCount": "BLOCKED · {count} VIOLATIONS",
+    "@roomHeroBlockedCount": {
+        "description": "Hero value line for a mandate rejection, with how many rules were broken.",
+        "placeholders": {"count": {"type": "int", "example": "11"}}
+    },
+    "roomHeroNoResultValue": "NO RESULT",
+    "@roomHeroNoResultValue": {"description": "Hero value line when the run produced nothing."},
+    "roomHeroConveneAgain": "CONVENE AGAIN",
+    "@roomHeroConveneAgain": {"description": "Button under the NO RESULT hero — the run failed, so the honest action is to retry it."},
+    "roomOverrideHeading": "MANDATE OVERRIDE — YOUR RULES CHANGED THE PM'S CALL",
+    "@roomOverrideHeading": {"description": "Mandatory line between hero and comb whenever the safety floor overrode the PM. Without it the board contradicts itself: the comb can show a majority in favour while the hero says PASS."},
+    "roomCombVoices": "{count} VOICES",
+    "@roomCombVoices": {
+        "description": "Comb heading. Always 11 — the Portfolio Manager is excluded because its decision is the hero tile, not one vote among twelve.",
+        "placeholders": {"count": {"type": "int", "example": "11"}}
+    },
+    "roomCombStated": "{count} STATED A VIEW",
+    "@roomCombStated": {
+        "description": "Comb sub-heading: how many of the voices actually took a side. Counted over stated positions only, so it does NOT always equal the total.",
+        "placeholders": {"count": {"type": "int", "example": "11"}}
+    },
+    "roomCombFor": "FOR",
+    "@roomCombFor": {"description": "Comb band label — agents in favour of taking the position. Mono uppercase, very short."},
+    "roomCombNeutral": "NEUTRAL",
+    "@roomCombNeutral": {"description": "Comb band label — agents who expressed a genuinely middle view."},
+    "roomCombAgainst": "AGAINST",
+    "@roomCombAgainst": {"description": "Comb band label — agents opposed."},
+    "roomCombNotStated": "NOT STATED",
+    "@roomCombNotStated": {"description": "Gutter label for agents that took no side. Distinct from NEUTRAL: neutral is a position, this is the absence of one."},
+    "roomCombPmDecides": "THE PM DECIDES — THIS IS NOT A VOTE",
+    "@roomCombPmDecides": {"description": "Caption under the comb. The Portfolio Manager makes the call and the safety floor can override even that; the comb shows who said what, not a tally."},
+    "roomCombNotRecorded": "NOT RECORDED",
+    "@roomCombNotRecorded": {"description": "Comb heading for an older journal entry whose run predates per-agent positions."},
+    "roomCombNotRecordedBody": "Agent stances were not recorded for this run. Open the transcript to read what each one said.",
+    "@roomCombNotRecordedBody": {"description": "Body under NOT RECORDED. Sentence case — this one is prose, not a mono label."},
+    "roomRibbonHeading": "RISK → REWARD",
+    "@roomRibbonHeading": {"description": "Heading over the to-scale stop/entry/target bar."},
+    "roomRibbonDerived": "{levels} SET BY AMI, NOT THE PM",
+    "@roomRibbonDerived": {
+        "description": "Footnote naming which prices AMI supplied because nobody stated them. {levels} is an already-joined list like 'STOP · TARGET'.",
+        "placeholders": {"levels": {"type": "String", "example": "STOP · TARGET"}}
+    },
+    "roomGeometryNoProvenance": "TRADE GEOMETRY · PROVENANCE UNAVAILABLE",
+    "@roomGeometryNoProvenance": {"description": "Caption over the plain price list on an older entry, where we cannot say which prices the PM chose — so no bar is drawn."},
+    "roomRosterGap": "THE ROSTER GAP",
+    "@roomRosterGap": {"description": "Heading over the analysts who were not in the room for this run."},
+    "roomRosterGapCount": "{count} NOT HEARD",
+    "@roomRosterGapCount": {
+        "description": "Count beside THE ROSTER GAP.",
+        "placeholders": {"count": {"type": "int", "example": "11"}}
+    },
+    "roomRowNotHeard": "NOT HEARD",
+    "@roomRowNotHeard": {"description": "Transcript row for a withheld analyst — it was never in the room, so there is nothing to expand."},
+    "roomRowNoResponse": "NO RESPONSE",
+    "@roomRowNoResponse": {"description": "Transcript row for an agent that produced nothing. Never a blank row."},
+    "roomTranscriptHint": "{count} CONTRIBUTIONS · TAP A ROW TO READ IT IN FULL",
+    "@roomTranscriptHint": {
+        "description": "One-line hint above the collapsed rows.",
+        "placeholders": {"count": {"type": "int", "example": "11"}}
+    },
+    "roomWhyExpand": "WHY",
+    "@roomWhyExpand": {"description": "Expander label revealing the PM's full reasoning behind an approval."},
+    "roomSheetStance": "STANCE",
+    "@roomSheetStance": {"description": "Chip label in the agent peek sheet."},
+    "roomSheetConviction": "CONVICTION",
+    "@roomSheetConviction": {"description": "Chip label in the agent peek sheet — how strongly the agent held its view."},
+    "roomSheetReadFullDebate": "READ THE FULL DEBATE",
+    "@roomSheetReadFullDebate": {"description": "Action in the agent peek sheet: switch to the transcript and jump to this agent's own contribution."},
+    "roomStanceFor": "FOR",
+    "@roomStanceFor": {"description": "Value of the STANCE chip."},
+    "roomStanceAgainst": "AGAINST",
+    "@roomStanceAgainst": {"description": "Value of the STANCE chip."},
+    "roomStanceNeutral": "NEUTRAL",
+    "@roomStanceNeutral": {"description": "Value of the STANCE chip."},
+    "roomConvictionLow": "LOW",
+    "@roomConvictionLow": {"description": "Value of the CONVICTION chip."},
+    "roomConvictionMedium": "MEDIUM",
+    "@roomConvictionMedium": {"description": "Value of the CONVICTION chip."},
+    "roomConvictionHigh": "HIGH",
+    "@roomConvictionHigh": {"description": "Value of the CONVICTION chip."},
+    "roomPhaseAnalysts": "ANALYSTS",
+    "@roomPhaseAnalysts": {"description": "Transcript group header — the four analysts who read the company, chart, news and sentiment."},
+    "roomPhaseResearchers": "RESEARCHERS",
+    "@roomPhaseResearchers": {"description": "Transcript group header — the bull and bear cases."},
+    "roomPhaseSynthesis": "SYNTHESIS",
+    "@roomPhaseSynthesis": {"description": "Transcript group header — the Research Manager adjudicating bull vs bear."},
+    "roomPhaseExecution": "EXECUTION",
+    "@roomPhaseExecution": {"description": "Transcript group header — the Trader turning the synthesis into a trade idea."},
+    "roomPhaseRisk": "RISK",
+    "@roomPhaseRisk": {"description": "Transcript group header — the three risk debators arguing sizing."},
+    "roomPhaseVerdict": "VERDICT",
+    "@roomPhaseVerdict": {"description": "Transcript group header — the Portfolio Manager's final call."},
+    "journalLevelsAsOf": "LEVELS AS OF {date} — A RECORD, NOT A CURRENT SETUP",
+    "@journalLevelsAsOf": {
+        "description": "Caption over prices in a saved journal entry. The prices are historical; offering them as a live setup would invite a trade at a stale level.",
+        "placeholders": {"date": {"type": "String", "example": "02 JUN 2026"}}
+    },
+    "journalStripMeta": "{tier} TIER · MANDATE v{version}",
+    "@journalStripMeta": {
+        "description": "Sub-header strip on a journal replay, where duration and credit cost were never recorded.",
+        "placeholders": {"tier": {"type": "String", "example": "MID"}, "version": {"type": "int", "example": "7"}}
+    },
+    "journalRerunWithMandate": "RE-RUN WITH CURRENT MANDATE",
+    "@journalRerunWithMandate": {"description": "Action on a journal replay: convene the room again on this ticker under today's rules, instead of trading a months-old price."}
 }

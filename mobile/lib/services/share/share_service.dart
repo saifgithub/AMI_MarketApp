@@ -14,7 +14,10 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
-import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/models/room_board.dart';
+// `accentForOutcome` — the SAME resolver the on-screen board uses, so the image
+// the user posts cannot disagree with the card they tapped share on.
+import 'package:ami_trade/widgets/room/room_board.dart';
 import 'package:ami_trade/widgets/share/share_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -23,28 +26,27 @@ import 'package:share_plus/share_plus.dart';
 
 abstract final class ShareService {
   /// The Room's verdict (ticker + stance + reasoning; no prices/P&L).
+  ///
+  /// CR106 Phase 4 (T-SHARE) — takes the [VerdictOutcome] enum, not the
+  /// `isApprove` / `isPass` / `isNeutral` booleans it used to. Three flags were
+  /// a 3-bit encoding of a five-value enum whose caller had to set them
+  /// consistently at every call site, and the enum has now grown twice. The
+  /// accent is resolved from the same `accentForOutcome` the on-screen board
+  /// uses, so the image the user posts cannot disagree with the card they were
+  /// looking at when they tapped share. This one goes public.
   static Future<void> shareVerdict(
     BuildContext context, {
     required String ticker,
     required String stanceLabel,
-    required bool isApprove,
+    required VerdictOutcome outcome,
     required String reason,
-    bool isPass = false,
-    // CR098: NO_VERDICT is a professional refusal, not a turn-down. Without
-    // this the shared image renders it in the amber reject accent — the card
-    // on screen would say one thing and the image the user posts another.
-    bool isNeutral = false,
   }) async {
     final l = AppLocalizations.of(context);
     await _capture(
       context,
       VerdictShareData(
         kicker: l.shareCardVerdictKicker,
-        accent: isApprove
-            ? AmiColors.hexGreen
-            : (isPass || isNeutral)
-                ? AmiColors.slate500
-                : AmiColors.hexAmber,
+        accent: accentForOutcome(outcome),
         ticker: ticker,
         stanceLabel: stanceLabel,
         reason: reason,

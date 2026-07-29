@@ -7,8 +7,15 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/journal.dart';
+import 'package:ami_trade/models/room_board_mappers.dart';
+import 'package:ami_trade/screens/room/room_screen.dart';
+import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/state/journal_providers.dart';
+import 'package:ami_trade/state/room_view_mode_provider.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/room/room_board.dart';
+import 'package:ami_trade/widgets/room/room_transcript_rows.dart';
+import 'package:ami_trade/widgets/room/room_view_mode_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -106,8 +113,7 @@ class _JournalDetailScreenState extends ConsumerState<JournalDetailScreen> {
                           style: AmiTypography.body.copyWith(color: AmiColors.textMed)),
                       const SizedBox(height: AmiSpacing.m),
                     ],
-                    if (entry.payload.isNotEmpty)
-                      _PayloadBlock(payload: entry.payload, entryType: entry.entryType),
+                    if (entry.payload.isNotEmpty) _PayloadBlock(entry: entry),
                     const SizedBox(height: AmiSpacing.l),
                     _NoteEditor(
                       controller: _noteCtrl,
@@ -178,9 +184,15 @@ class _AgentPill extends StatelessWidget {
 
 
 class _PayloadBlock extends StatelessWidget {
-  const _PayloadBlock({required this.payload, required this.entryType});
-  final Map<String, dynamic> payload;
-  final JournalEntryType entryType;
+  const _PayloadBlock({required this.entry});
+
+  /// The whole entry, not just the payload: a Room replay needs the ticker,
+  /// the run date and the mandate version, and none of those are in the
+  /// payload — they live on the entry row.
+  final JournalEntry entry;
+
+  Map<String, dynamic> get payload => entry.payload;
+  JournalEntryType get entryType => entry.entryType;
 
   @override
   Widget build(BuildContext context) {
@@ -270,42 +282,24 @@ class _PayloadBlock extends StatelessWidget {
         }
       }
     } else if (entryType == JournalEntryType.roomRun) {
-      final v = (payload['verdict'] as Map?)?.cast<String, dynamic>();
-      if (v != null) {
-        final action = v['action'] as String? ?? '—';
-        final verdictColor = action == 'APPROVE'
-            ? AmiColors.hexGreen
-            : action == 'PASS'
-                ? AmiColors.slate500
-                : AmiColors.hexAmber;
-        children.add(Text(l.journalDetailVerdictLine(action),
-            style: AmiTypography.labelMono.copyWith(color: verdictColor)));
-        final reason = v['reason'] as String? ?? '';
-        if (reason.isNotEmpty) {
-          children.add(const SizedBox(height: 4));
-          children.add(Text(reason, style: AmiTypography.body));
-        }
-        children.add(const SizedBox(height: AmiSpacing.s));
-      }
-      final transcript = (payload['transcript'] as List?) ?? const [];
-      for (final m in transcript) {
-        final mm = (m as Map).cast<String, dynamic>();
-        final agentId = (mm['agent_id'] as String?) ?? '';
-        final content = (mm['content'] as String?) ?? '';
-        final a = agentById(agentId);
-        children.add(Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(a.abbreviation,
-                  style: AmiTypography.labelMono.copyWith(color: a.color, fontSize: 11)),
-              const SizedBox(height: 2),
-              Text(content, style: AmiTypography.body),
-            ],
-          ),
-        ));
-      }
+      // CR106 / DEF143 — the Journal now replays a Room run through the SAME
+      // widget the live Room renders, via a mapper (T-TWICE).
+      //
+      // What used to be here was 36 lines of a second, independent renderer
+      // that never received CR098: `action == 'APPROVE' ? green : action ==
+      // 'PASS' ? slate : amber` put `NO_VERDICT` in the reject bucket and
+      // printed the raw enum, so a user could watch the PM's professional
+      // refusal render correctly in the Room and then open the same run in the
+      // Journal thirty seconds later and be told the thesis was turned down —
+      // in the durable copy, which is the one that is wrong. It also never read
+      // `opinions_not_included`, so a replay of a partial-roster run silently
+      // asserted a full roster, and it emitted a bare `Text(content)` per line,
+      // so `_PROSE_FORMAT`'s `**bold**` metrics reached the user as literal
+      // asterisks.
+      //
+      // None of that can recur here, because there is no longer a second
+      // renderer to fall behind.
+      return _RoomRunReplay(entry: entry);
     } else {
       payload.forEach((k, v) {
         children.add(_Block(label: k.toUpperCase(), body: '$v'));
@@ -315,6 +309,140 @@ class _PayloadBlock extends StatelessWidget {
   }
 }
 
+
+/// CR106 §3.4 — a saved Room run, replayed through the shared board.
+///
+/// Two things make this a **record**, not a setup, and both are structural
+/// rather than a matter of copy:
+///
+///   - **No trade ticket, ever** (T-STALE). A June entry's `$118.20` entry
+///     price is not a live setup; offering a one-tap ticket against it invites
+///     a trade at a stale price. The actions are `SEE CHART` +
+///     `RE-RUN WITH CURRENT MANDATE`, which is also what `screen_inventory.md`
+///     already specifies for this screen.
+///   - **The geometry is dated.** `RoomBoard` prints the run date under any
+///     board it renders with `isRecord`.
+///
+/// The board degrades per ENTRY, off the payload the snapshot froze: no
+/// `level_provenance` → the metric list and no ribbon; no stances → the comb's
+/// one honest sentence. Nothing is inferred to fill a gap (T-BACKFILL).
+class _RoomRunReplay extends ConsumerStatefulWidget {
+  const _RoomRunReplay({required this.entry});
+  final JournalEntry entry;
+
+  @override
+  ConsumerState<_RoomRunReplay> createState() => _RoomRunReplayState();
+}
+
+class _RoomRunReplayState extends ConsumerState<_RoomRunReplay> {
+  /// Per-screen only. The Journal never writes `ami_room_view_mode` — see
+  /// T-MODESIDE; only the segmented toggle does, and this screen's toggle is
+  /// that same control.
+  RoomViewMode? _sessionMode;
+  String? _jumpAgentId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final board = boardFromJournalEntry(widget.entry);
+    if (board == null) {
+      return Text(l.journalDetailLoading, style: AmiTypography.body);
+    }
+    final storedMode = ref.watch(roomViewModeProvider);
+    final mode = _sessionMode ?? storedMode;
+    final meta = board.meta;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // The Room's strip shows `41s · 3 CREDITS`; neither number was ever
+        // serialised into the snapshot, so the record shows what it does have.
+        RoomSubHeader(
+          meta: l.journalStripMeta(
+            (meta.modelTier ?? '—').toUpperCase(),
+            meta.mandateVersion ?? 0,
+          ),
+          mode: mode,
+          onModeChanged: (m) {
+            setState(() => _sessionMode = null);
+            ref.read(roomViewModeProvider.notifier).setMode(m);
+          },
+        ),
+        const SizedBox(height: AmiSpacing.m),
+        if (mode == RoomViewMode.board)
+          RoomBoard(
+            data: board,
+            onVoiceTap: (voice) => showAgentPeekSheet(
+              context,
+              voice: voice,
+              onReadFullDebate: () => setState(() {
+                _sessionMode = RoomViewMode.transcript;
+                _jumpAgentId = voice.agentId;
+              }),
+            ),
+            footer: _RecordActions(entry: widget.entry),
+          )
+        else ...[
+          RoomTranscriptRows(
+            voices: transcriptVoicesFromJournalEntry(widget.entry),
+            expandedAgentId: _jumpAgentId,
+            highlightAgentId: _jumpAgentId,
+          ),
+          const SizedBox(height: AmiSpacing.m),
+          _RecordActions(entry: widget.entry),
+        ],
+      ],
+    );
+  }
+}
+
+class _RecordActions extends StatelessWidget {
+  const _RecordActions({required this.entry});
+  final JournalEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final ticker = entry.ticker;
+    if (ticker == null || ticker.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AmiColors.hexCyan,
+            side: const BorderSide(color: AmiColors.hexCyan),
+            padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+          ),
+          icon: const Icon(Icons.show_chart),
+          label: Text(l.roomVerdictSeeChart),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => TickerDetailScreen(ticker: ticker),
+            ),
+          ),
+        ),
+        const SizedBox(height: AmiSpacing.s),
+        // The honest counterpart to a trade ticket on a record: run the room
+        // again under today's rules rather than acting on months-old prices.
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AmiColors.hexCyan,
+            foregroundColor: AmiColors.slate900,
+            padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+          ),
+          icon: const Icon(Icons.groups_2_outlined),
+          label: Text(l.journalRerunWithMandate),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => RoomScreen(ticker: ticker),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class _Block extends StatelessWidget {
   const _Block({required this.label, required this.body});

@@ -74,7 +74,20 @@ Map<String, dynamic> approvePayload({
     };
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  // CR106 added a BOARD | TRANSCRIPT toggle whose default is BOARD, so a
+  // finished run no longer opens on `_VerdictCard`. This file's subject is
+  // `_VerdictCard`, which is still a real and reachable surface — so it now
+  // declares the mode it is testing instead of relying on the default.
+  //
+  // The board is NOT left unguarded: `room_board_test.dart` re-asserts every
+  // invariant below against the hero tile, and `room_board_parity_test.dart`
+  // asserts the Journal renders it identically. Between them the NO_VERDICT
+  // treatment is pinned on all three surfaces — which is one more than CR098
+  // shipped with, and is why the Journal was free to contradict the Room
+  // (DEF143) in the first place.
+  setUp(() => SharedPreferences.setMockInitialValues(
+        {'ami_room_view_mode': 'transcript'},
+      ));
 
   Future<void> pumpVerdict(WidgetTester t, RoomVerdict v) async {
     const ticker = 'AAPL';

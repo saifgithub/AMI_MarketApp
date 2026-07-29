@@ -1684,4 +1684,183 @@ class AppLocalizationsMs extends AppLocalizations {
   String bugReportResolved(String title) {
     return 'Dibetulkan: $title';
   }
+
+  @override
+  String get roomViewModeBoard => 'PAPAN';
+
+  @override
+  String get roomViewModeTranscript => 'TRANSKRIP';
+
+  @override
+  String roomStripMeta(int seconds, int credits) {
+    return '${seconds}s · $credits KREDIT';
+  }
+
+  @override
+  String get roomHeroApprove => 'BILIK MELULUSKAN';
+
+  @override
+  String get roomHeroPass => 'BILIK BERLALU';
+
+  @override
+  String get roomHeroReject => 'DISEKAT OLEH MANDAT ANDA';
+
+  @override
+  String get roomHeroNoVerdict => 'TIADA KEPUTUSAN DIKELUARKAN';
+
+  @override
+  String get roomHeroNoResult => 'BILIK TIDAK SELESAI';
+
+  @override
+  String get roomHeroUnitPortfolio => 'DARIPADA PORTFOLIO';
+
+  @override
+  String roomHeroUnitHorizon(int days) {
+    return 'UFUK $days HARI';
+  }
+
+  @override
+  String get roomHeroNoPosition => 'TIADA POSISI';
+
+  @override
+  String get roomHeroNotIssued => 'TIDAK DIKELUARKAN';
+
+  @override
+  String roomHeroBlockedCount(int count) {
+    return 'DISEKAT · $count PELANGGARAN';
+  }
+
+  @override
+  String get roomHeroNoResultValue => 'TIADA KEPUTUSAN';
+
+  @override
+  String get roomHeroConveneAgain => 'HIMPUN SEMULA';
+
+  @override
+  String get roomOverrideHeading =>
+      'MANDAT MENGATASI — PERATURAN ANDA MENGUBAH KEPUTUSAN PM';
+
+  @override
+  String roomCombVoices(int count) {
+    return '$count SUARA';
+  }
+
+  @override
+  String roomCombStated(int count) {
+    return '$count MENYATAKAN PANDANGAN';
+  }
+
+  @override
+  String get roomCombFor => 'SOKONG';
+
+  @override
+  String get roomCombNeutral => 'NEUTRAL';
+
+  @override
+  String get roomCombAgainst => 'BANTAH';
+
+  @override
+  String get roomCombNotStated => 'TIDAK DINYATAKAN';
+
+  @override
+  String get roomCombPmDecides => 'PM YANG MEMUTUSKAN — INI BUKAN UNDIAN';
+
+  @override
+  String get roomCombNotRecorded => 'TIDAK DIREKODKAN';
+
+  @override
+  String get roomCombNotRecordedBody =>
+      'Pendirian ejen tidak direkodkan untuk sesi ini. Buka transkrip untuk membaca apa yang diperkatakan setiap seorang.';
+
+  @override
+  String get roomRibbonHeading => 'RISIKO → GANJARAN';
+
+  @override
+  String roomRibbonDerived(String levels) {
+    return '$levels DITETAPKAN OLEH AMI, BUKAN PM';
+  }
+
+  @override
+  String get roomGeometryNoProvenance =>
+      'GEOMETRI DAGANGAN · SUMBER HARGA TIDAK DIKETAHUI';
+
+  @override
+  String get roomRosterGap => 'JURANG SENARAI';
+
+  @override
+  String roomRosterGapCount(int count) {
+    return '$count TIDAK DIDENGARI';
+  }
+
+  @override
+  String get roomRowNotHeard => 'TIDAK DIDENGARI';
+
+  @override
+  String get roomRowNoResponse => 'TIADA JAWAPAN';
+
+  @override
+  String roomTranscriptHint(int count) {
+    return '$count SUMBANGAN · KETIK BARIS UNTUK MEMBACANYA PENUH';
+  }
+
+  @override
+  String get roomWhyExpand => 'MENGAPA';
+
+  @override
+  String get roomSheetStance => 'PENDIRIAN';
+
+  @override
+  String get roomSheetConviction => 'KEYAKINAN';
+
+  @override
+  String get roomSheetReadFullDebate => 'BACA PERBAHASAN PENUH';
+
+  @override
+  String get roomStanceFor => 'SOKONG';
+
+  @override
+  String get roomStanceAgainst => 'BANTAH';
+
+  @override
+  String get roomStanceNeutral => 'NEUTRAL';
+
+  @override
+  String get roomConvictionLow => 'RENDAH';
+
+  @override
+  String get roomConvictionMedium => 'SEDERHANA';
+
+  @override
+  String get roomConvictionHigh => 'TINGGI';
+
+  @override
+  String get roomPhaseAnalysts => 'PENGANALISIS';
+
+  @override
+  String get roomPhaseResearchers => 'PENYELIDIK';
+
+  @override
+  String get roomPhaseSynthesis => 'SINTESIS';
+
+  @override
+  String get roomPhaseExecution => 'PELAKSANAAN';
+
+  @override
+  String get roomPhaseRisk => 'RISIKO';
+
+  @override
+  String get roomPhaseVerdict => 'KEPUTUSAN';
+
+  @override
+  String journalLevelsAsOf(String date) {
+    return 'HARGA PADA $date — SATU REKOD, BUKAN PERSEDIAAN SEMASA';
+  }
+
+  @override
+  String journalStripMeta(String tier, int version) {
+    return 'TAHAP $tier · MANDAT v$version';
+  }
+
+  @override
+  String get journalRerunWithMandate => 'JALANKAN SEMULA DENGAN MANDAT SEMASA';
 }

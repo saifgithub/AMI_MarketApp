@@ -11,6 +11,8 @@ import 'dart:async';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room.dart';
+import 'package:ami_trade/models/room_board.dart';
+import 'package:ami_trade/models/room_board_mappers.dart';
 import 'package:ami_trade/screens/lessons/lessons_screen.dart';
 import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
@@ -19,11 +21,15 @@ import 'package:ami_trade/services/celebration.dart';
 import 'package:ami_trade/services/share/share_service.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/state/room_providers.dart';
+import 'package:ami_trade/state/room_view_mode_provider.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
+import 'package:ami_trade/widgets/room/room_board.dart';
+import 'package:ami_trade/widgets/room/room_transcript_rows.dart';
+import 'package:ami_trade/widgets/room/room_view_mode_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -41,10 +47,24 @@ class RoomScreen extends ConsumerStatefulWidget {
 class _RoomScreenState extends ConsumerState<RoomScreen> {
   final _scrollCtrl = ScrollController();
 
+  /// CR106 T-MODESIDE — a mode change made FOR THIS SCREEN ONLY, by the peek
+  /// sheet's `READ THE FULL DEBATE`. It deliberately does not go through
+  /// `setMode`, because one curious tap on a 26pt mark must not rewrite what
+  /// every future Room opens as. Null means "use the stored preference".
+  RoomViewMode? _sessionMode;
+  String? _jumpAgentId;
+
   @override
   void dispose() {
     _scrollCtrl.dispose();
     super.dispose();
+  }
+
+  void _jumpToAgent(RoomVoice voice) {
+    setState(() {
+      _sessionMode = RoomViewMode.transcript;
+      _jumpAgentId = voice.agentId;
+    });
   }
 
   void _scrollToBottom() {
@@ -85,12 +105,30 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
       },
     );
 
+    // T-LIVE: the board only exists once the run has landed. While it streams,
+    // the screen is always the live wall — a comb filling in agent by agent
+    // reads as a running vote count.
+    final settled = state.done || state.verdict != null;
+    final storedMode = ref.watch(roomViewModeProvider);
+    final mode = _sessionMode ?? storedMode;
+    final showBoard = settled && mode == RoomViewMode.board;
+
     return Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
           children: [
             _Header(ticker: widget.ticker, phase: state.phase),
+            if (settled)
+              RoomSubHeader(
+                meta: _stripMeta(context, state),
+                mode: mode,
+                // The ONLY caller of setMode in the feature (T-MODESIDE).
+                onModeChanged: (m) {
+                  setState(() => _sessionMode = null);
+                  ref.read(roomViewModeProvider.notifier).setMode(m);
+                },
+              ),
             Expanded(
               child: SingleChildScrollView(
                 controller: _scrollCtrl,
@@ -110,34 +148,74 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                     if (state.error != null)
                       _ErrorBanner(message: state.error!),
                     if (state.reconnecting) const _ReconnectingBanner(),
-                    if (state.streaming && state.order.isEmpty)
-                      _RoomRoster(state: state),
-                    for (final agentId in state.order)
-                      if (state.withheldAgents[agentId] != null)
-                        _WithheldAgentChair(
-                          info: state.withheldAgents[agentId]!,
+                    if (showBoard)
+                      RoomBoard(
+                        data: boardFromRoomState(
+                          state: state,
+                          ticker: widget.ticker,
+                        ),
+                        onVoiceTap: (voice) => showAgentPeekSheet(
+                          context,
+                          voice: voice,
+                          onReadFullDebate: () => _jumpToAgent(voice),
+                        ),
+                        footer: state.verdict == null
+                            ? _ConveneAgainButton(ticker: widget.ticker)
+                            : _VerdictActions(
+                                verdict: state.verdict!,
+                                ticker: widget.ticker,
+                                runId: state.runId,
+                              ),
+                      )
+                    else ...[
+                      if (state.streaming && state.order.isEmpty)
+                        _RoomRoster(state: state),
+                      // A settled run shows the collapsed rows; a streaming one
+                      // keeps the live wall, where the typewriter cadence and
+                      // the growing text are the whole point.
+                      if (settled)
+                        RoomTranscriptRows(
+                          voices: transcriptVoicesFromRoomState(state),
+                          expandedAgentId: _jumpAgentId,
+                          highlightAgentId: _jumpAgentId,
+                          // A locked chair keeps its own row rather than
+                          // collapsing to a bare `NOT HEARD`: CR098 D1's
+                          // roster countdown says WHICH remedy applies, and
+                          // losing it once a run finishes would re-open the
+                          // exact hole the CR098 audit closed.
+                          withheldDetail: {
+                            for (final e in state.withheldAgents.entries)
+                              e.key: _WithheldAgentChair(info: e.value),
+                          },
                         )
                       else
-                        _AgentLine(
-                          agentId: agentId,
-                          text: state.transcript[agentId] ?? '',
-                          active: state.activeAgent == agentId,
+                        for (final agentId in state.order)
+                          if (state.withheldAgents[agentId] != null)
+                            _WithheldAgentChair(
+                              info: state.withheldAgents[agentId]!,
+                            )
+                          else
+                            _AgentLine(
+                              agentId: agentId,
+                              text: state.transcript[agentId] ?? '',
+                              active: state.activeAgent == agentId,
+                            ),
+                      if (settled && state.verdict != null) ...[
+                        const SizedBox(height: AmiSpacing.l),
+                        _VerdictCard(
+                          verdict: state.verdict!,
+                          ticker: widget.ticker,
+                          runId: state.runId,
                         ),
-                    if (state.verdict != null) ...[
-                      const SizedBox(height: AmiSpacing.l),
-                      _VerdictCard(
-                        verdict: state.verdict!,
-                        ticker: widget.ticker,
-                        runId: state.runId,
-                      ),
+                      ],
+                      if (settled && state.verdict == null)
+                        Padding(
+                          padding: const EdgeInsets.all(AmiSpacing.l),
+                          child: Text(
+                              AppLocalizations.of(context).roomEndedNoVerdict,
+                              style: AmiTypography.body),
+                        ),
                     ],
-                    if (state.done && state.verdict == null)
-                      Padding(
-                        padding: const EdgeInsets.all(AmiSpacing.l),
-                        child: Text(
-                            AppLocalizations.of(context).roomEndedNoVerdict,
-                            style: AmiTypography.body),
-                      ),
                     const SizedBox(height: AmiSpacing.xxl),
                   ],
                 ),
@@ -146,6 +224,41 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
             _Footer(state: state),
           ],
         ),
+      ),
+    );
+  }
+
+  /// The strip's leading half. `duration_ms` and `credit_cost` live on
+  /// `RoomRun` server-side but never reach the live stream, so the Room shows
+  /// what it does know: how many of the twelve spoke.
+  String _stripMeta(BuildContext context, RoomState state) {
+    final l = AppLocalizations.of(context);
+    return l.roomTranscriptHint(state.transcript.length);
+  }
+}
+
+/// The NO RESULT hero's action. The run produced nothing, so the honest offer
+/// is to run it again — not a trade, and not a chart of a thesis that was never
+/// reached.
+class _ConveneAgainButton extends ConsumerWidget {
+  const _ConveneAgainButton({required this.ticker});
+  final String ticker;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AmiColors.hexCyan,
+          foregroundColor: AmiColors.slate900,
+          padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+        ),
+        icon: const Icon(Icons.refresh),
+        label: Text(l.roomHeroConveneAgain),
+        onPressed: () =>
+            ref.read(roomNotifierProvider(ticker).notifier).start(),
       ),
     );
   }
@@ -1112,9 +1225,7 @@ class _VerdictCard extends ConsumerWidget {
                   ticker: ticker,
                   stanceLabel:
                       l.roomVerdictHeading(_actionLabel(l, verdict.action)),
-                  isApprove: isApprove,
-                  isPass: isPass,
-                  isNeutral: isNoVerdict,
+                  outcome: outcomeFromAction(verdict.action),
                   reason: verdict.reason,
                 ),
               ),
@@ -1314,6 +1425,136 @@ class _VerdictCard extends ConsumerWidget {
   }
 }
 
+
+/// The board's action footer on the LIVE Room: share, the trade ticket when
+/// there is a trade to place, the NO_VERDICT upgrade CTA, and SEE CHART.
+///
+/// The Journal deliberately gets a different footer — a June entry's `$118.20`
+/// is not a live price, and a one-tap ticket against it invites a trade at a
+/// stale level (T-STALE).
+class _VerdictActions extends ConsumerWidget {
+  const _VerdictActions({
+    required this.verdict,
+    required this.ticker,
+    this.runId,
+  });
+
+  final RoomVerdict verdict;
+  final String ticker;
+  final String? runId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final outcome = outcomeFromAction(verdict.action);
+    final trades = ref.watch(simNotifierProvider).trades;
+    final existingTrade = runId == null
+        ? null
+        : trades.where((t) => t.verdictRef == runId).firstOrNull;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (verdict.isApprove)
+          if (existingTrade != null)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                vertical: AmiSpacing.s + 4,
+                horizontal: AmiSpacing.m,
+              ),
+              decoration: BoxDecoration(
+                color: AmiColors.hexGreen.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AmiRadii.card),
+                border: Border.all(color: AmiColors.hexGreen, width: 1.5),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.check_circle,
+                      color: AmiColors.hexGreen, size: 20),
+                  const SizedBox(width: AmiSpacing.s),
+                  Text(
+                    '${existingTrade.side.toUpperCase()} '
+                    '${existingTrade.quantity.toStringAsFixed(0)} '
+                    '${existingTrade.ticker} @ '
+                    '\$${existingTrade.entryPrice.toStringAsFixed(2)}',
+                    style: AmiTypography.labelMono.copyWith(
+                      color: AmiColors.hexGreen,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AmiColors.hexCyan,
+                foregroundColor: AmiColors.slate900,
+                padding:
+                    const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+              ),
+              icon: const Icon(Icons.add_circle_outline),
+              label: Text(l.roomOpenTradeTicket),
+              onPressed: () => TradeTicketSheet.show(
+                context,
+                prefill: verdict,
+                verdictRef: runId,
+                tickerPrefill: ticker,
+              ),
+            ),
+        // CR098 D2 — app chrome, deliberately outside the PM's voice. The PM
+        // declines on professional grounds and never sells.
+        if (verdict.isNoVerdict) ...[
+          const SizedBox(height: AmiSpacing.s),
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AmiColors.hexCyan,
+              side: const BorderSide(color: AmiColors.hexCyan),
+              padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+            ),
+            onPressed: () => showUpgradeSheet(
+              context,
+              resetDateLabel: _verdictResetDateStr(ref),
+            ),
+            child: Text(
+              l.roomVerdictIncludeAnalystCta(
+                  _analystLabel(_blockingAnalystId(verdict))),
+            ),
+          ),
+        ],
+        const SizedBox(height: AmiSpacing.s),
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AmiColors.hexCyan,
+            side: const BorderSide(color: AmiColors.hexCyan),
+            padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+          ),
+          icon: const Icon(Icons.show_chart),
+          label: Text(l.roomVerdictSeeChart),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => TickerDetailScreen(ticker: ticker),
+            ),
+          ),
+        ),
+        const SizedBox(height: AmiSpacing.s),
+        TextButton.icon(
+          style: TextButton.styleFrom(foregroundColor: AmiColors.textMed),
+          icon: const Icon(Icons.ios_share, size: 18),
+          label: Text(l.shareTooltip),
+          onPressed: () => ShareService.shareVerdict(
+            context,
+            ticker: ticker,
+            stanceLabel:
+                l.roomVerdictHeading(_actionLabel(l, verdict.action)),
+            outcome: outcome,
+            reason: verdict.reason,
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class _MetricRow extends StatelessWidget {
   const _MetricRow({

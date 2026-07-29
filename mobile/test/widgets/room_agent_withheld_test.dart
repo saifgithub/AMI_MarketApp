@@ -128,7 +128,14 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
-    SharedPreferences.setMockInitialValues({});
+    // CR106: the locked chair (`_WithheldAgentChair`) is a transcript-mode
+    // widget, and a finished run now defaults to the board. Declared rather
+    // than inherited. The board's own equivalent — the roster gap surviving
+    // the same dropped connection, from `agent_withheld` alone with no verdict
+    // to read `opinions_not_included` off — is pinned in `room_board_test.dart`.
+    SharedPreferences.setMockInitialValues(
+      {'ami_room_view_mode': 'transcript'},
+    );
   });
 
   group('agent_withheld reaches RoomState via the real notifier', () {

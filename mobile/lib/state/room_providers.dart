@@ -59,6 +59,27 @@ class WithheldAgentInfo {
   final int? nextStepDays;
 }
 
+/// CR106 B2 — one agent's stated position, as it arrived on `agent_done`.
+@immutable
+class AgentStance {
+  const AgentStance({
+    this.stance,
+    this.conviction,
+    this.headline,
+    this.recorded = false,
+  });
+
+  /// `for` / `against` / `neutral`, or null for "stated no view". Null is
+  /// never coerced to neutral anywhere in the pipeline.
+  final String? stance;
+  final String? conviction;
+  final String? headline;
+
+  /// Whether the event carried the field at all — see
+  /// [RoomTranscriptLine.stanceRecorded].
+  final bool recorded;
+}
+
 @immutable
 class RoomState {
   const RoomState({
@@ -76,6 +97,7 @@ class RoomState {
     this.serverError = false,
     this.liveDataNotice,
     this.withheldAgents = const {},
+    this.agentStances = const {},
   });
 
   final String? phase;
@@ -109,6 +131,10 @@ class RoomState {
   // separate list that could drift out of position.
   final Map<String, WithheldAgentInfo> withheldAgents;
 
+  /// CR106 B2: agentId -> its stated position. Absent key = that agent has not
+  /// finished yet; present with a null `stance` = it finished and stated none.
+  final Map<String, AgentStance> agentStances;
+
   RoomState copyWith({
     String? phase,
     String? activeAgent,
@@ -126,6 +152,7 @@ class RoomState {
     bool? serverError,
     RoomLiveDataNotice? liveDataNotice,
     Map<String, WithheldAgentInfo>? withheldAgents,
+    Map<String, AgentStance>? agentStances,
   }) {
     return RoomState(
       phase: phase ?? this.phase,
@@ -142,6 +169,7 @@ class RoomState {
       serverError: serverError ?? this.serverError,
       liveDataNotice: liveDataNotice ?? this.liveDataNotice,
       withheldAgents: withheldAgents ?? this.withheldAgents,
+      agentStances: agentStances ?? this.agentStances,
     );
   }
 }
@@ -191,7 +219,31 @@ class RoomNotifier extends StateNotifier<RoomState> {
             );
             break;
           case 'agent_done':
-            state = state.copyWith(activeAgent: null);
+            // CR106 B2: the agent's own stated position arrives with its
+            // completion. Shape-checked, never cast — the `agent_withheld`
+            // case below records what a bad cast inside `await for` costs
+            // (the generic catch reads any throw as a dropped socket and
+            // diverts the whole run to polling recovery).
+            final doneId = ev['agent_id'];
+            if (doneId is String && doneId.isNotEmpty) {
+              final rawStance = ev['stance'];
+              final rawConviction = ev['conviction'];
+              final rawHeadline = ev['headline'];
+              final stances =
+                  Map<String, AgentStance>.from(state.agentStances);
+              stances[doneId] = AgentStance(
+                stance: rawStance is String ? rawStance : null,
+                conviction: rawConviction is String ? rawConviction : null,
+                headline: rawHeadline is String ? rawHeadline : null,
+                // The key's PRESENCE is what says the run recorded stances at
+                // all; its value being null says this agent stated none. The
+                // comb needs both facts and they are not the same (T-BACKFILL).
+                recorded: ev.containsKey('stance'),
+              );
+              state = state.copyWith(activeAgent: null, agentStances: stances);
+            } else {
+              state = state.copyWith(activeAgent: null);
+            }
             break;
           case 'agent_withheld':
             // CR098: one event per withheld analyst, all emitted before any
@@ -295,9 +347,20 @@ class RoomNotifier extends StateNotifier<RoomState> {
           // streamed before the disconnect.
           final transcript = <String, String>{};
           final order = <String>[];
+          // CR106 B2: rebuild the stances too. `order` and `transcript` are
+          // rebuilt from the snapshot, and without this the comb would come
+          // back empty after a dropped socket — the same shape as the locked
+          // chairs being dropped below.
+          final stances = <String, AgentStance>{};
           for (final line in snap.transcript) {
             transcript[line.agentId] = line.content;
             if (!order.contains(line.agentId)) order.add(line.agentId);
+            stances[line.agentId] = AgentStance(
+              stance: line.stance,
+              conviction: line.conviction,
+              headline: line.headline,
+              recorded: line.stanceRecorded,
+            );
           }
           // Re-seat the locked chairs. `order` is rebuilt from the transcript
           // alone, and a withheld analyst is deliberately never in the
@@ -319,6 +382,7 @@ class RoomNotifier extends StateNotifier<RoomState> {
             order: order,
             verdict: snap.verdict,
             activeAgent: null,
+            agentStances: stances,
           );
           await _ref.read(journalNotifierProvider.notifier).refresh();
           await _ref.read(lessonsNotifierProvider.notifier).refresh();

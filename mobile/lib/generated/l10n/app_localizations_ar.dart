@@ -1680,4 +1680,183 @@ class AppLocalizationsAr extends AppLocalizations {
   String bugReportResolved(String title) {
     return 'تم الإصلاح: $title';
   }
+
+  @override
+  String get roomViewModeBoard => 'اللوحة';
+
+  @override
+  String get roomViewModeTranscript => 'النص الكامل';
+
+  @override
+  String roomStripMeta(int seconds, int credits) {
+    return '$seconds ث · $credits رصيد';
+  }
+
+  @override
+  String get roomHeroApprove => 'وافقت الغرفة';
+
+  @override
+  String get roomHeroPass => 'تجاوزت الغرفة';
+
+  @override
+  String get roomHeroReject => 'محظور بموجب تفويضك';
+
+  @override
+  String get roomHeroNoVerdict => 'لم يصدر قرار';
+
+  @override
+  String get roomHeroNoResult => 'لم تكتمل الغرفة';
+
+  @override
+  String get roomHeroUnitPortfolio => 'من المحفظة';
+
+  @override
+  String roomHeroUnitHorizon(int days) {
+    return 'أفق $days يوماً';
+  }
+
+  @override
+  String get roomHeroNoPosition => 'لا مركز';
+
+  @override
+  String get roomHeroNotIssued => 'لم يصدر';
+
+  @override
+  String roomHeroBlockedCount(int count) {
+    return 'محظور · $count مخالفات';
+  }
+
+  @override
+  String get roomHeroNoResultValue => 'لا نتيجة';
+
+  @override
+  String get roomHeroConveneAgain => 'اعقد الغرفة مجدداً';
+
+  @override
+  String get roomOverrideHeading =>
+      'تجاوز التفويض — قواعدك غيّرت قرار مدير المحفظة';
+
+  @override
+  String roomCombVoices(int count) {
+    return '$count أصوات';
+  }
+
+  @override
+  String roomCombStated(int count) {
+    return '$count أبدوا رأياً';
+  }
+
+  @override
+  String get roomCombFor => 'مؤيد';
+
+  @override
+  String get roomCombNeutral => 'محايد';
+
+  @override
+  String get roomCombAgainst => 'معارض';
+
+  @override
+  String get roomCombNotStated => 'لم يُبدِ رأياً';
+
+  @override
+  String get roomCombPmDecides => 'مدير المحفظة هو من يقرر — هذا ليس تصويتاً';
+
+  @override
+  String get roomCombNotRecorded => 'غير مسجّل';
+
+  @override
+  String get roomCombNotRecordedBody =>
+      'لم تُسجَّل مواقف الوكلاء في هذه الجلسة. افتح النص الكامل لقراءة ما قاله كل واحد منهم.';
+
+  @override
+  String get roomRibbonHeading => 'المخاطرة ← العائد';
+
+  @override
+  String roomRibbonDerived(String levels) {
+    return '$levels حدّدتها AMI، لا مدير المحفظة';
+  }
+
+  @override
+  String get roomGeometryNoProvenance =>
+      'هندسة الصفقة · مصدر الأسعار غير معروف';
+
+  @override
+  String get roomRosterGap => 'الفجوة في الفريق';
+
+  @override
+  String roomRosterGapCount(int count) {
+    return '$count لم يُسمع لهم';
+  }
+
+  @override
+  String get roomRowNotHeard => 'لم يُسمع له';
+
+  @override
+  String get roomRowNoResponse => 'لا رد';
+
+  @override
+  String roomTranscriptHint(int count) {
+    return '$count مساهمة · اضغط على أي سطر لقراءته كاملاً';
+  }
+
+  @override
+  String get roomWhyExpand => 'لماذا';
+
+  @override
+  String get roomSheetStance => 'الموقف';
+
+  @override
+  String get roomSheetConviction => 'درجة القناعة';
+
+  @override
+  String get roomSheetReadFullDebate => 'اقرأ النقاش كاملاً';
+
+  @override
+  String get roomStanceFor => 'مؤيد';
+
+  @override
+  String get roomStanceAgainst => 'معارض';
+
+  @override
+  String get roomStanceNeutral => 'محايد';
+
+  @override
+  String get roomConvictionLow => 'منخفضة';
+
+  @override
+  String get roomConvictionMedium => 'متوسطة';
+
+  @override
+  String get roomConvictionHigh => 'عالية';
+
+  @override
+  String get roomPhaseAnalysts => 'المحللون';
+
+  @override
+  String get roomPhaseResearchers => 'الباحثون';
+
+  @override
+  String get roomPhaseSynthesis => 'التركيب';
+
+  @override
+  String get roomPhaseExecution => 'التنفيذ';
+
+  @override
+  String get roomPhaseRisk => 'المخاطر';
+
+  @override
+  String get roomPhaseVerdict => 'القرار';
+
+  @override
+  String journalLevelsAsOf(String date) {
+    return 'الأسعار بتاريخ $date — سجلّ، وليست صفقة قائمة الآن';
+  }
+
+  @override
+  String journalStripMeta(String tier, int version) {
+    return 'الفئة $tier · التفويض الإصدار $version';
+  }
+
+  @override
+  String get journalRerunWithMandate => 'أعد التشغيل بالتفويض الحالي';
 }

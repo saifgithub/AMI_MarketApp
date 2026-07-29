@@ -171,8 +171,18 @@ Map<String, dynamic>? parseRoomSseEvent(String eventType, String data) {
         final text = unescapeSseText(j['text'] as String? ?? '');
         return {'kind': 'agent_token', 'agent_id': j['agent_id'], 'text': text};
       case 'agent_done':
+        // CR106 B2 — the agent's own stated position rides its completion
+        // event. `containsKey` on the decoded map is what tells the client the
+        // run recorded stances AT ALL: a server that predates B2 sends neither
+        // key, and that is a different fact from an agent that took no side.
         final j = jsonDecode(data) as Map<String, dynamic>;
-        return {'kind': 'agent_done', 'agent_id': j['agent_id']};
+        return {
+          'kind': 'agent_done',
+          'agent_id': j['agent_id'],
+          if (j.containsKey('stance')) 'stance': j['stance'],
+          if (j.containsKey('conviction')) 'conviction': j['conviction'],
+          if (j.containsKey('headline')) 'headline': j['headline'],
+        };
       case 'agent_withheld':
         // CR098 — one per withheld analyst, emitted before any analyst
         // speaks. `next_step_agent`/`next_step_days` are roster-level (the

@@ -2946,6 +2946,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fixed: {title}'**
   String bugReportResolved(String title);
+
+  /// Segmented-control label for the graphical Verdict Board view of a finished Room run. Mono uppercase, ~5 chars — it shares a 152pt control with roomViewModeTranscript.
+  ///
+  /// In en, this message translates to:
+  /// **'BOARD'**
+  String get roomViewModeBoard;
+
+  /// Segmented-control label for the collapsed per-agent transcript view. Mono uppercase; keep as short as the language allows.
+  ///
+  /// In en, this message translates to:
+  /// **'TRANSCRIPT'**
+  String get roomViewModeTranscript;
+
+  /// Sub-header strip on a LIVE Room: how long the run took and what it cost. Mono. The Journal shows journalStripMeta instead — the snapshot never recorded either number.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s · {credits} CREDITS'**
+  String roomStripMeta(int seconds, int credits);
+
+  /// Hero heading when the Portfolio Manager approved the trade. Mono uppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'THE ROOM APPROVED'**
+  String get roomHeroApprove;
+
+  /// Hero heading for a PASS — the room had no strong view and sat out. NOT a rejection: it must not read as the thesis being turned down.
+  ///
+  /// In en, this message translates to:
+  /// **'THE ROOM PASSED'**
+  String get roomHeroPass;
+
+  /// Hero heading when the user's own mandate rules blocked the trade. The user's rules did this, not AMI's opinion.
+  ///
+  /// In en, this message translates to:
+  /// **'BLOCKED BY YOUR MANDATE'**
+  String get roomHeroReject;
+
+  /// Hero heading when the PM declined to price a trade because the run had no market read. A professional refusal, NOT a rejection.
+  ///
+  /// In en, this message translates to:
+  /// **'NO VERDICT ISSUED'**
+  String get roomHeroNoVerdict;
+
+  /// Hero heading when the run ended with no verdict at all — an outage. Must not be phrased like an outcome.
+  ///
+  /// In en, this message translates to:
+  /// **'THE ROOM DID NOT FINISH'**
+  String get roomHeroNoResult;
+
+  /// Dim unit line under the hero's position-size number. Without it a bare '3.0%' reads as an expected return.
+  ///
+  /// In en, this message translates to:
+  /// **'OF PORTFOLIO'**
+  String get roomHeroUnitPortfolio;
+
+  /// Dim unit line beside OF PORTFOLIO giving the holding period.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}-DAY HORIZON'**
+  String roomHeroUnitHorizon(int days);
+
+  /// Hero value line for a PASS. Deliberately words, not '0%' — zero is a size, and no position is not.
+  ///
+  /// In en, this message translates to:
+  /// **'NO POSITION'**
+  String get roomHeroNoPosition;
+
+  /// Hero value line for NO_VERDICT.
+  ///
+  /// In en, this message translates to:
+  /// **'NOT ISSUED'**
+  String get roomHeroNotIssued;
+
+  /// Hero value line for a mandate rejection, with how many rules were broken.
+  ///
+  /// In en, this message translates to:
+  /// **'BLOCKED · {count} VIOLATIONS'**
+  String roomHeroBlockedCount(int count);
+
+  /// Hero value line when the run produced nothing.
+  ///
+  /// In en, this message translates to:
+  /// **'NO RESULT'**
+  String get roomHeroNoResultValue;
+
+  /// Button under the NO RESULT hero — the run failed, so the honest action is to retry it.
+  ///
+  /// In en, this message translates to:
+  /// **'CONVENE AGAIN'**
+  String get roomHeroConveneAgain;
+
+  /// Mandatory line between hero and comb whenever the safety floor overrode the PM. Without it the board contradicts itself: the comb can show a majority in favour while the hero says PASS.
+  ///
+  /// In en, this message translates to:
+  /// **'MANDATE OVERRIDE — YOUR RULES CHANGED THE PM\'S CALL'**
+  String get roomOverrideHeading;
+
+  /// Comb heading. Always 11 — the Portfolio Manager is excluded because its decision is the hero tile, not one vote among twelve.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} VOICES'**
+  String roomCombVoices(int count);
+
+  /// Comb sub-heading: how many of the voices actually took a side. Counted over stated positions only, so it does NOT always equal the total.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} STATED A VIEW'**
+  String roomCombStated(int count);
+
+  /// Comb band label — agents in favour of taking the position. Mono uppercase, very short.
+  ///
+  /// In en, this message translates to:
+  /// **'FOR'**
+  String get roomCombFor;
+
+  /// Comb band label — agents who expressed a genuinely middle view.
+  ///
+  /// In en, this message translates to:
+  /// **'NEUTRAL'**
+  String get roomCombNeutral;
+
+  /// Comb band label — agents opposed.
+  ///
+  /// In en, this message translates to:
+  /// **'AGAINST'**
+  String get roomCombAgainst;
+
+  /// Gutter label for agents that took no side. Distinct from NEUTRAL: neutral is a position, this is the absence of one.
+  ///
+  /// In en, this message translates to:
+  /// **'NOT STATED'**
+  String get roomCombNotStated;
+
+  /// Caption under the comb. The Portfolio Manager makes the call and the safety floor can override even that; the comb shows who said what, not a tally.
+  ///
+  /// In en, this message translates to:
+  /// **'THE PM DECIDES — THIS IS NOT A VOTE'**
+  String get roomCombPmDecides;
+
+  /// Comb heading for an older journal entry whose run predates per-agent positions.
+  ///
+  /// In en, this message translates to:
+  /// **'NOT RECORDED'**
+  String get roomCombNotRecorded;
+
+  /// Body under NOT RECORDED. Sentence case — this one is prose, not a mono label.
+  ///
+  /// In en, this message translates to:
+  /// **'Agent stances were not recorded for this run. Open the transcript to read what each one said.'**
+  String get roomCombNotRecordedBody;
+
+  /// Heading over the to-scale stop/entry/target bar.
+  ///
+  /// In en, this message translates to:
+  /// **'RISK → REWARD'**
+  String get roomRibbonHeading;
+
+  /// Footnote naming which prices AMI supplied because nobody stated them. {levels} is an already-joined list like 'STOP · TARGET'.
+  ///
+  /// In en, this message translates to:
+  /// **'{levels} SET BY AMI, NOT THE PM'**
+  String roomRibbonDerived(String levels);
+
+  /// Caption over the plain price list on an older entry, where we cannot say which prices the PM chose — so no bar is drawn.
+  ///
+  /// In en, this message translates to:
+  /// **'TRADE GEOMETRY · PROVENANCE UNAVAILABLE'**
+  String get roomGeometryNoProvenance;
+
+  /// Heading over the analysts who were not in the room for this run.
+  ///
+  /// In en, this message translates to:
+  /// **'THE ROSTER GAP'**
+  String get roomRosterGap;
+
+  /// Count beside THE ROSTER GAP.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} NOT HEARD'**
+  String roomRosterGapCount(int count);
+
+  /// Transcript row for a withheld analyst — it was never in the room, so there is nothing to expand.
+  ///
+  /// In en, this message translates to:
+  /// **'NOT HEARD'**
+  String get roomRowNotHeard;
+
+  /// Transcript row for an agent that produced nothing. Never a blank row.
+  ///
+  /// In en, this message translates to:
+  /// **'NO RESPONSE'**
+  String get roomRowNoResponse;
+
+  /// One-line hint above the collapsed rows.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} CONTRIBUTIONS · TAP A ROW TO READ IT IN FULL'**
+  String roomTranscriptHint(int count);
+
+  /// Expander label revealing the PM's full reasoning behind an approval.
+  ///
+  /// In en, this message translates to:
+  /// **'WHY'**
+  String get roomWhyExpand;
+
+  /// Chip label in the agent peek sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'STANCE'**
+  String get roomSheetStance;
+
+  /// Chip label in the agent peek sheet — how strongly the agent held its view.
+  ///
+  /// In en, this message translates to:
+  /// **'CONVICTION'**
+  String get roomSheetConviction;
+
+  /// Action in the agent peek sheet: switch to the transcript and jump to this agent's own contribution.
+  ///
+  /// In en, this message translates to:
+  /// **'READ THE FULL DEBATE'**
+  String get roomSheetReadFullDebate;
+
+  /// Value of the STANCE chip.
+  ///
+  /// In en, this message translates to:
+  /// **'FOR'**
+  String get roomStanceFor;
+
+  /// Value of the STANCE chip.
+  ///
+  /// In en, this message translates to:
+  /// **'AGAINST'**
+  String get roomStanceAgainst;
+
+  /// Value of the STANCE chip.
+  ///
+  /// In en, this message translates to:
+  /// **'NEUTRAL'**
+  String get roomStanceNeutral;
+
+  /// Value of the CONVICTION chip.
+  ///
+  /// In en, this message translates to:
+  /// **'LOW'**
+  String get roomConvictionLow;
+
+  /// Value of the CONVICTION chip.
+  ///
+  /// In en, this message translates to:
+  /// **'MEDIUM'**
+  String get roomConvictionMedium;
+
+  /// Value of the CONVICTION chip.
+  ///
+  /// In en, this message translates to:
+  /// **'HIGH'**
+  String get roomConvictionHigh;
+
+  /// Transcript group header — the four analysts who read the company, chart, news and sentiment.
+  ///
+  /// In en, this message translates to:
+  /// **'ANALYSTS'**
+  String get roomPhaseAnalysts;
+
+  /// Transcript group header — the bull and bear cases.
+  ///
+  /// In en, this message translates to:
+  /// **'RESEARCHERS'**
+  String get roomPhaseResearchers;
+
+  /// Transcript group header — the Research Manager adjudicating bull vs bear.
+  ///
+  /// In en, this message translates to:
+  /// **'SYNTHESIS'**
+  String get roomPhaseSynthesis;
+
+  /// Transcript group header — the Trader turning the synthesis into a trade idea.
+  ///
+  /// In en, this message translates to:
+  /// **'EXECUTION'**
+  String get roomPhaseExecution;
+
+  /// Transcript group header — the three risk debators arguing sizing.
+  ///
+  /// In en, this message translates to:
+  /// **'RISK'**
+  String get roomPhaseRisk;
+
+  /// Transcript group header — the Portfolio Manager's final call.
+  ///
+  /// In en, this message translates to:
+  /// **'VERDICT'**
+  String get roomPhaseVerdict;
+
+  /// Caption over prices in a saved journal entry. The prices are historical; offering them as a live setup would invite a trade at a stale level.
+  ///
+  /// In en, this message translates to:
+  /// **'LEVELS AS OF {date} — A RECORD, NOT A CURRENT SETUP'**
+  String journalLevelsAsOf(String date);
+
+  /// Sub-header strip on a journal replay, where duration and credit cost were never recorded.
+  ///
+  /// In en, this message translates to:
+  /// **'{tier} TIER · MANDATE v{version}'**
+  String journalStripMeta(String tier, int version);
+
+  /// Action on a journal replay: convene the room again on this ticker under today's rules, instead of trading a months-old price.
+  ///
+  /// In en, this message translates to:
+  /// **'RE-RUN WITH CURRENT MANDATE'**
+  String get journalRerunWithMandate;
 }
 
 class _AppLocalizationsDelegate

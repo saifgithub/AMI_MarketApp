@@ -2,6 +2,28 @@
 /// Mirrors backend/app/schemas/room.py.
 library;
 
+/// CR106 B1 — where one price on a verdict came from.
+///
+/// `unknown` is a value the wire sent that this build does not recognise, kept
+/// distinct from `null` (the field was absent, i.e. the run predates B1). Both
+/// suppress the risk/reward ribbon; only the second suppresses the whole
+/// provenance treatment, because a level we cannot attribute is not the same
+/// thing as a run that recorded no attributions.
+enum LevelSource { pm, trader, amiDefault, unknown }
+
+LevelSource _levelSourceFrom(Object? raw) {
+  switch (raw) {
+    case 'pm':
+      return LevelSource.pm;
+    case 'trader':
+      return LevelSource.trader;
+    case 'ami_default':
+      return LevelSource.amiDefault;
+    default:
+      return LevelSource.unknown;
+  }
+}
+
 class RoomVerdict {
   const RoomVerdict({
     required this.action,
@@ -14,6 +36,7 @@ class RoomVerdict {
     this.stop,
     this.timeHorizonDays,
     this.opinionsNotIncluded = const [],
+    this.levelProvenance,
   });
 
   /// 'APPROVE' | 'REJECT' | 'MODIFY' | 'PASS' | 'NO_VERDICT'.
@@ -36,6 +59,13 @@ class RoomVerdict {
   /// Always present on the wire, empty on an ordinary full-roster run — so
   /// empty must render nothing at all, never an empty header (D4).
   final List<String> opinionsNotIncluded;
+
+  /// CR106 B1 — `entry` / `stop` / `target` → where each price came from.
+  ///
+  /// `null` means the run predates the field, NOT that everything came from the
+  /// PM. The board never infers it: an entry with no provenance renders in the
+  /// plain metric list with no ribbon and no ratio (T-PROV / T-BACKFILL).
+  final Map<String, LevelSource>? levelProvenance;
 
   bool get isApprove => action == 'APPROVE';
   bool get isReject => action == 'REJECT';
@@ -65,18 +95,54 @@ class RoomVerdict {
       opinionsNotIncluded: ((j['opinions_not_included'] as List?) ?? const [])
           .whereType<String>()
           .toList(),
+      levelProvenance: parseLevelProvenance(j['level_provenance']),
     );
   }
+}
+
+/// Shared by [RoomVerdict.fromJson] and the Journal's payload mapper so the
+/// two surfaces cannot disagree about what a provenance map means (T-TWICE).
+/// An absent or non-map value stays `null` — "not recorded", never inferred.
+Map<String, LevelSource>? parseLevelProvenance(Object? raw) {
+  if (raw is! Map) return null;
+  final out = <String, LevelSource>{};
+  for (final key in const ['entry', 'stop', 'target']) {
+    final v = raw[key];
+    if (v != null) out[key] = _levelSourceFrom(v);
+  }
+  return out.isEmpty ? null : out;
 }
 
 class RoomTranscriptLine {
   const RoomTranscriptLine({
     required this.agentId,
     required this.content,
+    this.stance,
+    this.conviction,
+    this.headline,
+    this.stanceRecorded = false,
   });
 
   final String agentId;
   final String content;
+
+  /// CR106 B2 — the agent's own stated position: `for` / `against` / `neutral`,
+  /// or null when it stated none. Null NEVER means neutral; the comb puts it in
+  /// a separate gutter and counts bands over non-null stances only (T-SUM11).
+  final String? stance;
+
+  /// `low` / `medium` / `high`, quantised server-side. Null renders no bar and
+  /// no track at all — absence must not look like "low".
+  final String? conviction;
+
+  /// The agent's own headline number, already length-capped server-side.
+  final String? headline;
+
+  /// Whether the payload carried the stance field at all. Distinguishes "this
+  /// agent took no side" (recorded, null) from "this run predates B2" (not
+  /// recorded) — the comb shows a gutter for the first and one honest sentence
+  /// for the second, and never reconstructs either (T-BACKFILL).
+  final bool stanceRecorded;
 }
 
 class RoomRunSnapshot {
@@ -113,6 +179,13 @@ class RoomRunSnapshot {
           .map((m) => RoomTranscriptLine(
                 agentId: (m['agent_id'] as String?) ?? '',
                 content: (m['content'] as String?) ?? '',
+                stance: m['stance'] as String?,
+                conviction: m['conviction'] as String?,
+                headline: m['headline'] as String?,
+                // Key PRESENCE, not value: a server that predates B2 sends no
+                // key at all, and "this run recorded no stances" is a
+                // different fact from "this agent stated none" (T-BACKFILL).
+                stanceRecorded: m is Map && m.containsKey('stance'),
               ))
           .toList(),
       verdict: j['verdict'] == null

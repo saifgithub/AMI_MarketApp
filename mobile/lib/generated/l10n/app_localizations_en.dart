@@ -1680,4 +1680,183 @@ class AppLocalizationsEn extends AppLocalizations {
   String bugReportResolved(String title) {
     return 'Fixed: $title';
   }
+
+  @override
+  String get roomViewModeBoard => 'BOARD';
+
+  @override
+  String get roomViewModeTranscript => 'TRANSCRIPT';
+
+  @override
+  String roomStripMeta(int seconds, int credits) {
+    return '${seconds}s · $credits CREDITS';
+  }
+
+  @override
+  String get roomHeroApprove => 'THE ROOM APPROVED';
+
+  @override
+  String get roomHeroPass => 'THE ROOM PASSED';
+
+  @override
+  String get roomHeroReject => 'BLOCKED BY YOUR MANDATE';
+
+  @override
+  String get roomHeroNoVerdict => 'NO VERDICT ISSUED';
+
+  @override
+  String get roomHeroNoResult => 'THE ROOM DID NOT FINISH';
+
+  @override
+  String get roomHeroUnitPortfolio => 'OF PORTFOLIO';
+
+  @override
+  String roomHeroUnitHorizon(int days) {
+    return '$days-DAY HORIZON';
+  }
+
+  @override
+  String get roomHeroNoPosition => 'NO POSITION';
+
+  @override
+  String get roomHeroNotIssued => 'NOT ISSUED';
+
+  @override
+  String roomHeroBlockedCount(int count) {
+    return 'BLOCKED · $count VIOLATIONS';
+  }
+
+  @override
+  String get roomHeroNoResultValue => 'NO RESULT';
+
+  @override
+  String get roomHeroConveneAgain => 'CONVENE AGAIN';
+
+  @override
+  String get roomOverrideHeading =>
+      'MANDATE OVERRIDE — YOUR RULES CHANGED THE PM\'S CALL';
+
+  @override
+  String roomCombVoices(int count) {
+    return '$count VOICES';
+  }
+
+  @override
+  String roomCombStated(int count) {
+    return '$count STATED A VIEW';
+  }
+
+  @override
+  String get roomCombFor => 'FOR';
+
+  @override
+  String get roomCombNeutral => 'NEUTRAL';
+
+  @override
+  String get roomCombAgainst => 'AGAINST';
+
+  @override
+  String get roomCombNotStated => 'NOT STATED';
+
+  @override
+  String get roomCombPmDecides => 'THE PM DECIDES — THIS IS NOT A VOTE';
+
+  @override
+  String get roomCombNotRecorded => 'NOT RECORDED';
+
+  @override
+  String get roomCombNotRecordedBody =>
+      'Agent stances were not recorded for this run. Open the transcript to read what each one said.';
+
+  @override
+  String get roomRibbonHeading => 'RISK → REWARD';
+
+  @override
+  String roomRibbonDerived(String levels) {
+    return '$levels SET BY AMI, NOT THE PM';
+  }
+
+  @override
+  String get roomGeometryNoProvenance =>
+      'TRADE GEOMETRY · PROVENANCE UNAVAILABLE';
+
+  @override
+  String get roomRosterGap => 'THE ROSTER GAP';
+
+  @override
+  String roomRosterGapCount(int count) {
+    return '$count NOT HEARD';
+  }
+
+  @override
+  String get roomRowNotHeard => 'NOT HEARD';
+
+  @override
+  String get roomRowNoResponse => 'NO RESPONSE';
+
+  @override
+  String roomTranscriptHint(int count) {
+    return '$count CONTRIBUTIONS · TAP A ROW TO READ IT IN FULL';
+  }
+
+  @override
+  String get roomWhyExpand => 'WHY';
+
+  @override
+  String get roomSheetStance => 'STANCE';
+
+  @override
+  String get roomSheetConviction => 'CONVICTION';
+
+  @override
+  String get roomSheetReadFullDebate => 'READ THE FULL DEBATE';
+
+  @override
+  String get roomStanceFor => 'FOR';
+
+  @override
+  String get roomStanceAgainst => 'AGAINST';
+
+  @override
+  String get roomStanceNeutral => 'NEUTRAL';
+
+  @override
+  String get roomConvictionLow => 'LOW';
+
+  @override
+  String get roomConvictionMedium => 'MEDIUM';
+
+  @override
+  String get roomConvictionHigh => 'HIGH';
+
+  @override
+  String get roomPhaseAnalysts => 'ANALYSTS';
+
+  @override
+  String get roomPhaseResearchers => 'RESEARCHERS';
+
+  @override
+  String get roomPhaseSynthesis => 'SYNTHESIS';
+
+  @override
+  String get roomPhaseExecution => 'EXECUTION';
+
+  @override
+  String get roomPhaseRisk => 'RISK';
+
+  @override
+  String get roomPhaseVerdict => 'VERDICT';
+
+  @override
+  String journalLevelsAsOf(String date) {
+    return 'LEVELS AS OF $date — A RECORD, NOT A CURRENT SETUP';
+  }
+
+  @override
+  String journalStripMeta(String tier, int version) {
+    return '$tier TIER · MANDATE v$version';
+  }
+
+  @override
+  String get journalRerunWithMandate => 'RE-RUN WITH CURRENT MANDATE';
 }
