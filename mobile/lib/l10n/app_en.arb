@@ -790,6 +790,12 @@
 
     "roomHeadingPrefix": "CONVENE ›",
     "roomStandingBy": "standing by",
+    "roomAgentThinking": "thinking…",
+    "@roomAgentThinking": {"description": "Live roster row status while an agent's turn is in progress (CR112). retranslate:[ar,ms]"},
+    "roomAgentInterrupted": "INTERRUPTED",
+    "@roomAgentInterrupted": {"description": "Live roster row terminal status for an agent whose turn never completed because the run itself broke (stream error / reconnect timeout) — never rendered as RESPONDED (CR112, DEF059-class). retranslate:[ar,ms]"},
+    "roomAgentTruncatedMark": "Cut short by its length limit — open the transcript to read what landed.",
+    "@roomAgentTruncatedMark": {"description": "Tooltip/semantic label for the amber DEF125 mark on a live roster row whose contribution hit its length limit (CR112). retranslate:[ar,ms]"},
     "roomDeliberating": "Team deliberating…",
     "roomEndedNoVerdict": "Room ended without a verdict.",
     "roomSavedToJournal": "Saved to Journal",
