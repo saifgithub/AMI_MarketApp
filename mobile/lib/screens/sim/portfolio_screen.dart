@@ -790,14 +790,7 @@ class _SectorAllocationCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AmiSpacing.m),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (final e in entries) _SectorLegendRow(sector: e.key, weight: e.value),
-                  ],
-                ),
-              ),
+              Expanded(child: _SectorLegend(entries: entries)),
             ],
           ),
           // Breach line reads straight off the response — never re-derives
@@ -816,6 +809,94 @@ class _SectorAllocationCard extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+
+/// CR118: the legend used to render every sector inline, so the card's height
+/// was a function of how diversified the portfolio is — the one thing the
+/// product tells the user to increase. At the GICS level the backend
+/// classifies to, a well-spread portfolio reaches 11 sectors plus Cash plus
+/// Other, which pushed holdings and trades off the first screen.
+///
+/// Fixed, not maximum: the card's footprint is constant whatever the
+/// allocation. Rows have a fixed extent so "does it scroll" is arithmetic
+/// rather than text measurement, which is what makes it testable.
+const double _kSectorLegendRowHeight = 22;
+
+/// 4.5 rows. The half-row at the cut IS the scroll affordance — a list clipped
+/// with no cue reads as a rendering bug, which is how the same pattern produced
+/// clipped-CTA reports under DEF075.
+///
+/// CR118 says "approximately the donut's height" (72). Read as a sizing hint,
+/// not a hard number: 3.5 rows would be 77 and closer, but it would make the
+/// reporter's own 4-sector portfolio start scrolling — a present regression for
+/// the person who filed a forward-looking request. 4.5 rows keeps every typical
+/// allocation static and still bounds the card.
+const double _kSectorLegendViewportHeight = _kSectorLegendRowHeight * 4.5;
+
+@visibleForTesting
+bool sectorLegendScrolls(int sectorCount) =>
+    sectorCount * _kSectorLegendRowHeight > _kSectorLegendViewportHeight;
+
+class _SectorLegend extends StatefulWidget {
+  const _SectorLegend({required this.entries});
+
+  final List<MapEntry<String, double>> entries;
+
+  @override
+  State<_SectorLegend> createState() => _SectorLegendState();
+}
+
+class _SectorLegendState extends State<_SectorLegend> {
+  // Its own controller. This list is nested inside the screen's scroll view;
+  // without one it would attach to the inherited PrimaryScrollController and
+  // drive the outer list instead of itself.
+  final ScrollController _controller = ScrollController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scrolls = sectorLegendScrolls(widget.entries.length);
+
+    Widget list = ListView.builder(
+      controller: _controller,
+      // A fitting legend must not swallow drags meant for the outer list.
+      physics: scrolls
+          ? const ClampingScrollPhysics()
+          : const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      itemExtent: _kSectorLegendRowHeight,
+      itemCount: widget.entries.length,
+      itemBuilder: (context, i) => _SectorLegendRow(
+        sector: widget.entries[i].key,
+        weight: widget.entries[i].value,
+      ),
+    );
+
+    if (scrolls) {
+      list = ShaderMask(
+        shaderCallback: (rect) => const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.white, Colors.white, Colors.transparent],
+          stops: [0.0, 0.8, 1.0],
+        ).createShader(rect),
+        blendMode: BlendMode.dstIn,
+        child: list,
+      );
+    }
+
+    return SizedBox(
+      key: const ValueKey('sector-legend'),
+      height: _kSectorLegendViewportHeight,
+      child: list,
     );
   }
 }
