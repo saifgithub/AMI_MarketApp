@@ -21,9 +21,34 @@ from typing import NamedTuple
 # AMI's enforced per-risk-tier single-name cap (% of portfolio).
 DEFAULT_RISK_TIER_CAPS: dict[int, float] = {1: 1.5, 2: 1.5, 3: 3.0, 4: 4.5, 5: 4.5}
 
-# Absolute single-name ceiling, independent of risk tier. Every tier cap is <= this;
-# it is the deterministic backstop the compliance floor enforces regardless of mandate.
+# Absolute single-name ceiling, independent of risk tier. Two roles, and CR101-BE1
+# found they'd quietly diverged: (1) the bound `risk_debator_sizes` spreads the
+# Aggressive Debator's narrated position up against; (2) the deterministic
+# compliance floor's (`safety_floor.single_name_cap_pct`) DEFAULT for a mandate with
+# no explicit `single_name_cap_pct` override — measured still live on the direct
+# trade-ticket path (`sim.submit()`, not pre-clamped by the Room's tighter
+# DEFAULT_RISK_TIER_CAPS the way a Room-debated trade is), so defaulting it to the
+# risk-tier preset instead would have silently tightened every existing user's
+# direct-submit cap ~11x. See `safety_floor.single_name_cap_pct`'s docstring for the
+# measurement and the disclosed shown-vs-enforced split this leaves for a user who
+# hasn't set an override.
 SINGLE_NAME_ABSOLUTE_CAP_PCT: float = 50.0
+
+# Sector-concentration cap preset by `concentration_tolerance` (1-5), in percentage
+# points (25.0-60.0) — the same units as `Mandate.sector_cap_pct` (CR101-BE1). Preset
+# table only: the enforced value is that explicit per-user mandate field, and this is
+# what a user who hasn't set one falls back to (identically to what every user was
+# getting pre-CR101, so an existing mandate snapshot — which has no such field at all —
+# migrates in unchanged).
+DEFAULT_CONCENTRATION_TOLERANCE_CAPS: dict[int, float] = {
+    1: 25.0, 2: 30.0, 3: 40.0, 4: 50.0, 5: 60.0,
+}
+
+
+def _nearest_tier(table: dict[int, float], score: int) -> float:
+    if score in table:
+        return table[score]
+    return table[min(table, key=lambda k: (abs(k - score), k))]
 
 
 def risk_tier_cap(risk_score: int, caps: dict[int, float] | None = None) -> float:
@@ -35,10 +60,39 @@ def risk_tier_cap(risk_score: int, caps: dict[int, float] | None = None) -> floa
     An empty table is the one unsupported input — a caller error, not a score one.
     """
     table = DEFAULT_RISK_TIER_CAPS if caps is None else caps
-    score = int(risk_score)
-    if score in table:
-        return table[score]
-    return table[min(table, key=lambda k: (abs(k - score), k))]
+    return _nearest_tier(table, int(risk_score))
+
+
+def sector_cap_preset_pct(concentration_tolerance: int, caps: dict[int, float] | None = None) -> float:
+    """Preset sector-concentration cap (percentage points) for a `concentration_tolerance`
+    1-5. Same nearest-key-snap contract as `risk_tier_cap` (CR046 O1)."""
+    table = DEFAULT_CONCENTRATION_TOLERANCE_CAPS if caps is None else caps
+    return _nearest_tier(table, int(concentration_tolerance))
+
+
+def resolved_single_name_cap_pct(
+    risk_score: int, override: float | None = None, *, caps: dict[int, float] | None = None
+) -> float:
+    """The single-name cap (%) actually enforced/narrated for a mandate: the
+    explicit per-user override when set (CR101-BE1 — settable), else the
+    risk-tier preset. ONE function so every site that shows or enforces this
+    number (Trader/PM/Researcher overlays, the safety floor, the Room PM
+    clamp) reads the identical value — the CR046 'shown == enforced'
+    invariant, extended to a settable field."""
+    if override is not None:
+        return float(override)
+    return risk_tier_cap(risk_score, caps)
+
+
+def resolved_sector_cap_pct(
+    concentration_tolerance: int, override: float | None = None, *, caps: dict[int, float] | None = None
+) -> float:
+    """Sector-concentration cap (percentage points) actually enforced/narrated for
+    a mandate: the explicit per-user override when set (CR101-BE1), else the
+    concentration-tolerance preset."""
+    if override is not None:
+        return float(override)
+    return sector_cap_preset_pct(concentration_tolerance, caps)
 
 
 def clamp_size(proposed_pct: float, cap_pct: float) -> float:

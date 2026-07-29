@@ -26,8 +26,26 @@ from sqlalchemy import select, update
 
 from app.db import get_session, init_schema
 from app.db.models import MandateRow
-from app.schemas import Compliance, Mandate
+from app.schemas import Mandate
 from app.services.brief_engine import hydrate_brief_mandate
+
+
+def _deep_merge(base: dict[str, Any], updates: dict[str, Any]) -> dict[str, Any]:
+    """Recursively merge `updates` into `base`. A nested dict field (e.g. a
+    BaseModel field's own keys, like `risk_components` or `compliance`) merges
+    key-by-key instead of being replaced wholesale — the CR101-BE1 fix: PATCHing
+    ONE nested key (`{"risk_components": {"concentration_tolerance": 4}}`) used
+    to drop that object's required siblings entirely, and DEF062's re-validation
+    then 422'd on the resulting incomplete object. Lists and scalars still
+    replace wholesale (unchanged); only dict-vs-dict recurses."""
+    merged = dict(base)
+    for key, value in updates.items():
+        existing = merged.get(key)
+        if isinstance(existing, dict) and isinstance(value, dict):
+            merged[key] = _deep_merge(existing, value)
+        else:
+            merged[key] = value
+    return merged
 
 
 class MandateStore:
@@ -89,10 +107,10 @@ class MandateStore:
             return updated
 
     def patch(self, user_id: UUID, updates: dict[str, Any]) -> Mandate:
-        """Shallow-merge updates into the current mandate, bump version.
-
-        `compliance` is merged by key and re-coerced into a Compliance
-        instance so downstream code (.compliance.halal etc) keeps working.
+        """Recursively merge updates into the current mandate, bump version
+        (CR101-BE1). A nested BaseModel field (`risk_components`, `compliance`,
+        ...) merges key-by-key — see `_deep_merge` — so PATCHing one nested key
+        no longer drops its required siblings.
 
         DEF062: `model_copy(update=...)` explicitly skips validation, so an
         out-of-range `max_drawdown_pct` / `risk_score` (or any wrong-typed
@@ -104,12 +122,8 @@ class MandateStore:
         schema wouldn't have accepted on write.
         """
         current = self.get_or_default(user_id)
-        if "compliance" in updates and isinstance(updates["compliance"], dict):
-            current_compl = current.compliance.model_dump()
-            current_compl.update(updates["compliance"])
-            updates = {**updates, "compliance": Compliance(**current_compl)}
-        merged = current.model_copy(update=updates)
-        new = Mandate.model_validate(merged.model_dump(mode="json"))
+        merged_dict = _deep_merge(current.model_dump(mode="json"), updates)
+        new = Mandate.model_validate(merged_dict)
         return self.upsert(user_id, new)
 
     def list_versions(self, user_id: UUID) -> list[dict]:

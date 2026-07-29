@@ -26,7 +26,7 @@ from app.services.agent_prompts import build_agent_prompt
 from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
 from app.trading_math.risk import drawdown_contribution
-from app.trading_math.sizing import risk_tier_cap
+from app.trading_math.sizing import resolved_single_name_cap_pct
 from app.trading_math.valuation import net_position_phrase
 
 # ── Phase framing ────────────────────────────────────────────────────────
@@ -417,7 +417,7 @@ def build_room_messages(
         AgentId.BEAR_RESEARCHER,
         AgentId.RESEARCH_MANAGER,
     ):
-        cap = risk_tier_cap(mandate.risk_score)
+        cap = resolved_single_name_cap_pct(mandate.risk_score, mandate.single_name_cap_pct)
         researcher_cap_note = (
             f"\nSizing ceiling: any position size you suggest must respect the enforced "
             f"single-name cap of {cap:.1f}% of portfolio (risk_score={mandate.risk_score}). "

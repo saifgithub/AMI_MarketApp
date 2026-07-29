@@ -223,10 +223,16 @@ def test_sector_cap_breach_helper_only_flags_the_proposed_sector():
 def test_sector_cap_reads_mandate_default_is_040(base_mandate: Mandate):
     # base_mandate has concentration_tolerance=3 (the default) → 0.40.
     assert base_mandate.risk_components.concentration_tolerance == 3
+    assert base_mandate.sector_cap_pct is None  # no explicit override
     assert sector_concentration_cap(base_mandate) == 0.40
 
 
 def test_sector_cap_tightens_for_concentration_averse(base_mandate: Mandate):
+    # CR101-BE1: `sector_cap_pct` is now the explicit, settable, sticky value;
+    # `concentration_tolerance` only supplies the PRESET fallback used when it is
+    # unset. `model_copy` doesn't run validators, so changing risk_components alone
+    # (with no explicit sector_cap_pct) still resolves through the preset table —
+    # exactly the pre-CR101 behaviour this test originally pinned.
     m = base_mandate.model_copy(
         update={
             "risk_components": RiskComponents(
@@ -234,7 +240,16 @@ def test_sector_cap_tightens_for_concentration_averse(base_mandate: Mandate):
             )
         }
     )
+    assert m.sector_cap_pct is None
     assert sector_concentration_cap(m) == 0.25  # not the 0.40 default → read, not hard-coded
+
+
+def test_sector_cap_honours_explicit_override(base_mandate: Mandate):
+    """CR101-BE1 acceptance 3: an explicit `sector_cap_pct` overrides the preset
+    even when `concentration_tolerance` would suggest a different one."""
+    m = base_mandate.model_copy(update={"sector_cap_pct": 55.0})
+    assert base_mandate.risk_components.concentration_tolerance == 3  # preset would be 0.40
+    assert sector_concentration_cap(m) == 0.55
 
 
 # ── 4. Endpoint: contract + ownership (mirrors CR029 lots endpoint) ───────────

@@ -17,7 +17,7 @@ from app.schemas import (
     Mandate,
     Path,
 )
-from app.trading_math.sizing import risk_tier_cap
+from app.trading_math.sizing import resolved_sector_cap_pct, resolved_single_name_cap_pct
 
 
 def generate_overlay(
@@ -82,6 +82,10 @@ total drawdown, NOT a per-trade stop budget. A single position of size P% (of \
 portfolio) with a stop S% below entry contributes only about P×S/100 percentage \
 points to portfolio drawdown (e.g. 5% size, 20% stop → 1.0 pt, i.e. 1/30th of a \
 30% cap). Do not compare a stop's distance directly against this cap.
+- Single-name position-size cap: {_max_position_pct(mandate)}% of portfolio in any \
+one name — the SAME ceiling the Portfolio Manager clamps every trade to (CR101).
+- Sector-concentration cap: {_sector_cap_pct(mandate)}% of portfolio in any one \
+GICS sector — the SAME ceiling the safety floor blocks a proposed BUY against.
 
 ## Compliance constraints (HARD — cannot violate)
 {_compliance_block(mandate.compliance, halal_universe=halal_universe, ticker=ticker)}
@@ -373,7 +377,7 @@ def _research_manager_block(m: Mandate) -> str:
 
 
 def _trader_block(m: Mandate) -> str:
-    max_pos = _max_position_pct(m.risk_score)
+    max_pos = _max_position_pct(m)
     parts = [
         "## Role guidance — Trader",
         "You translate synthesis into a trade idea. Given this mandate:",
@@ -497,10 +501,20 @@ or Convene the Room?"
 ---"""
 
 
-def _max_position_pct(risk_score: int) -> float:
-    # Canonical per-risk-tier cap lives in app.trading_math.sizing (CR046 M03).
-    # The Trader is now told the same cap the Portfolio Manager clamps to.
-    return risk_tier_cap(risk_score)
+def _max_position_pct(mandate: Mandate) -> float:
+    # Canonical resolver lives in app.trading_math.sizing (CR046 M03 / CR101-BE1):
+    # the mandate's explicit, settable `single_name_cap_pct` when set, else the
+    # risk-tier preset. Every agent is now told the SAME cap the Portfolio Manager
+    # (and the deterministic safety floor) actually clamps/enforces to.
+    return resolved_single_name_cap_pct(mandate.risk_score, mandate.single_name_cap_pct)
+
+
+def _sector_cap_pct(mandate: Mandate) -> float:
+    # Percentage-point form of `sector_allocation.sector_concentration_cap`
+    # (which returns the 0.0-1.0 fraction the enforcement code compares against).
+    # Same settable-with-preset-fallback contract as `_max_position_pct` (CR101-BE1).
+    rc = mandate.risk_components
+    return resolved_sector_cap_pct(rc.concentration_tolerance, mandate.sector_cap_pct)
 
 
 _ROLE_BUILDERS = {

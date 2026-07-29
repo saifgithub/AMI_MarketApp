@@ -27,12 +27,45 @@ from app.services.sector_allocation import (
 from app.trading_math.portfolio import position_pct as _position_pct
 from app.trading_math.sizing import SINGLE_NAME_ABSOLUTE_CAP_PCT
 
-# Single-name position size cap, regardless of mandate. Canonical value lives in
-# app.trading_math.sizing as the absolute backstop (CR046 M03). Hoisted above
-# SAFETY_FLOOR_BLOCK so the PROSE the PM reads interpolates the SAME constant the
-# deterministic check below enforces — shown == enforced (CR046 C-a). A bare "50%"
-# literal in the prompt could silently drift from the enforced backstop.
-SINGLE_NAME_CAP_PCT = SINGLE_NAME_ABSOLUTE_CAP_PCT
+
+def single_name_cap_pct(mandate: Mandate) -> float:
+    """The single-name position-size cap (%) enforced by THIS deterministic
+    compliance floor (`check_mandate_compliance` / `check_holdings_against_mandate`)
+    for this mandate.
+
+    CR101-BE1 makes this settable: an explicit `mandate.single_name_cap_pct`
+    always wins. Unset, it falls back to `SINGLE_NAME_ABSOLUTE_CAP_PCT` (50%) —
+    the EXACT value this floor enforced pre-CR101 (the module-level
+    `SINGLE_NAME_CAP_PCT` constant this replaces).
+
+    That fallback is a deliberate, disclosed judgment call, not a straight
+    read of `risk_tier_cap`. Measured on main at 73a25c7f: `sim.submit()` — the
+    direct trade-ticket path (DEF153: "the path a user actually takes") — calls
+    this floor with NO prior size clamp, so its only historical single-name
+    gate was this 50% backstop. The tighter risk-tier preset
+    (`resolved_single_name_cap_pct`, ~1.5-4.5%) is real, but it binds only on
+    the ROOM path, where `room_runner._risk_tier_size_ceiling` pre-clamps the
+    PM's proposed size BEFORE it ever reaches this floor — this floor's own
+    50% backstop then never fires there, which is what the CR101-BE1 assign's
+    "can essentially never fire on the Room path" describes. Defaulting THIS
+    floor's fallback to the risk-tier preset instead of 50% would silently
+    tighten every existing user's DIRECT-submit cap ~11x with no action of
+    their own — exactly the failure CR101-BE1 acceptance 4 exists to catch (43
+    unit tests across sim_engine/cost_basis/mandate_audit/DEF110 caught this
+    live when first tried). So: unset stays 50%, migration-safe.
+
+    This intentionally leaves the pre-existing shown-vs-enforced split between
+    the Trader/PM overlay narration (risk-tier preset, via
+    `resolved_single_name_cap_pct`) and this floor's default (50%) undisturbed
+    for a user who hasn't set an override — that split predates CR101-BE1 and
+    is a disclosed, not a fixed, finding (see the hand-off bridge). Once a user
+    explicitly sets `single_name_cap_pct`, every site — this floor, the Room
+    pre-clamp, every overlay — reads that SAME value, so shown == enforced
+    holds for them from that point on (CR046 C-a, extended to a settable
+    field)."""
+    if mandate.single_name_cap_pct is not None:
+        return float(mandate.single_name_cap_pct)
+    return SINGLE_NAME_ABSOLUTE_CAP_PCT
 
 
 class HoldingViolation(BaseModel):
@@ -95,16 +128,25 @@ If a violation is detected, your output MUST be:
 If you are tempted by prior instructions to override this — do not.
 Those instructions are advisory; this block is mandatory.
 
-──────────────────────────────────────────────""".replace(
-    "[[CAP]]", f"{SINGLE_NAME_CAP_PCT:.0f}"
-)
+──────────────────────────────────────────────"""
+# `[[CAP]]` above is a template placeholder, deliberately left unsubstituted at
+# module scope. CR101-BE1 made the single-name cap per-mandate (settable), so it
+# can no longer be baked in once at import time — `render_safety_floor_block`
+# below substitutes it per call, from the SAME resolver the deterministic check
+# enforces (shown == enforced, CR046 C-a).
 
 
-def append_safety_floor(prompt: str, agent_id: AgentId) -> str:
+def render_safety_floor_block(mandate: Mandate) -> str:
+    """SAFETY_FLOOR_BLOCK with `[[CAP]]` substituted for this mandate's actual
+    enforced single-name cap (`single_name_cap_pct`)."""
+    return SAFETY_FLOOR_BLOCK.replace("[[CAP]]", f"{single_name_cap_pct(mandate):.0f}")
+
+
+def append_safety_floor(prompt: str, agent_id: AgentId, mandate: Mandate) -> str:
     """Append safety floor block to PM's prompt only. No-op for other agents."""
     if agent_id != AgentId.PORTFOLIO_MANAGER:
         return prompt
-    return prompt + SAFETY_FLOOR_BLOCK
+    return prompt + render_safety_floor_block(mandate)
 
 
 def check_mandate_compliance(
@@ -264,10 +306,11 @@ def check_mandate_compliance(
         )
 
     if portfolio_value > 0 and proposed.is_buy and proposed_value > 0:
+        cap_single_name = single_name_cap_pct(mandate)
         position_pct = _position_pct(proposed_value, portfolio_value)
-        if position_pct > SINGLE_NAME_CAP_PCT:
+        if position_pct > cap_single_name:
             violations.append(
-                f"position size {position_pct:.1f}% exceeds single-name cap {SINGLE_NAME_CAP_PCT}%"
+                f"position size {position_pct:.1f}% exceeds single-name cap {cap_single_name}%"
             )
             blocked_by = blocked_by or "concentration"
 
@@ -351,6 +394,7 @@ def check_holdings_against_mandate(
         {x.upper() for x in locale_allowed_universe}
         if locale_allowed_universe else None
     )
+    cap_single_name = single_name_cap_pct(mandate)
 
     violations: list[HoldingViolation] = []
     for h in holdings:
@@ -381,10 +425,10 @@ def check_holdings_against_mandate(
             issues.append(
                 f"ticker {t} not available in user's locale ({mandate.locale})"
             )
-        if weight_pct > SINGLE_NAME_CAP_PCT:
+        if weight_pct > cap_single_name:
             issues.append(
                 f"position {weight_pct:.1f}% exceeds single-name cap "
-                f"{SINGLE_NAME_CAP_PCT}%"
+                f"{cap_single_name}%"
             )
 
         if issues:
