@@ -31,6 +31,7 @@ from app.db import get_session
 from app.db.models import SimTradeRow
 from app.schemas import Mandate
 from app.schemas.room import VerdictAction
+from app.schemas.trade import ProposedTrade
 from app.services.classification_universe import default_classification_universe
 from app.services.coach_engine import hydrate_coach_mandate
 from app.services.room_runner import (
@@ -235,4 +236,86 @@ def test_room_live_pm_enforce_safety_floor_rejects_a_post_loss_cooldown_approve(
     v = next(e.verdict for e in events if e.kind == "verdict")
     assert v.action == VerdictAction.REJECT.value
     assert v.overridden_from_llm is True
-    assert any("cooldown" in vio.lower() for vio in v.violations)
+    # Auditor M4: asserting only `"cooldown" in vio` cannot tell a REAL cooldown veto
+    # from the loud missing-context veto, because the fallback text
+    # ("post-loss cooldown is set on the mandate but the caller did not supply …")
+    # contains that substring too. The auditor proved it: dropping all five kwargs at
+    # this call site left the suite GREEN. Pin the veto that only the WIRED path can
+    # produce — the computed lift time — and explicitly refuse the fallback wording.
+    assert any("active until" in vio.lower() for vio in v.violations), v.violations
+    assert not any("did not supply" in vio.lower() for vio in v.violations), (
+        "the live-PM call site stopped supplying its risk-limit context: this is the "
+        "loud missing-context veto, not a real cooldown veto"
+    )
+
+
+def test_room_risk_limit_context_degrades_loudly_when_the_db_lookup_fails(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """Auditor M5. `_build_room_risk_limit_context`'s outage branch must return the
+    sentinel, NOT plausible-looking real values.
+
+    The auditor flipped that branch's return from `(CONTEXT_NOT_SUPPLIED, None, None)`
+    to `(None, [], 0.0)` and the whole suite stayed GREEN — nothing pinned it. That
+    tuple is the dangerous one precisely because every element reads as a legitimate
+    measurement: "no prior loss", "no trades today", "zero open risk". Under it, a
+    database outage would silently disable every risk limit the user explicitly set,
+    on exactly the Room path the round-1 BLOCKER was about, and the floor would report
+    a clean pass. Losing enforcement during an outage is survivable; not being able to
+    tell that it happened is not (CR040).
+    """
+    from app.agents.safety_floor import CONTEXT_NOT_SUPPLIED
+
+    def _boom(*_a, **_k):
+        raise RuntimeError("simulated database outage")
+
+    monkeypatch.setattr("app.services.room_runner.get_sim_engine", _boom)
+
+    last_loss, timestamps, open_risk = _build_room_risk_limit_context(
+        uuid4(), portfolio_value=100_000.0, quotes={},
+    )
+
+    assert last_loss is CONTEXT_NOT_SUPPLIED, (
+        "an outage must be distinguishable from 'this user has never had a loss' — "
+        "a real None here is a legitimate value and would silently pass the cooldown"
+    )
+    assert timestamps is None, "None means 'not supplied'; [] would read as 'no trades'"
+    assert open_risk is None, "None means 'not supplied'; 0.0 would read as 'no risk'"
+
+
+def test_a_set_limit_blocks_loudly_when_the_room_context_lookup_fails(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """The other half of M5: prove the sentinel actually reaches the floor and blocks.
+
+    Asserting the tuple's shape only pins the helper. This pins the CONSEQUENCE — that
+    a user with a cooldown set is not silently waved through during an outage.
+    """
+    monkeypatch.setattr(safety_floor, "datetime", _FrozenClock)
+
+    def _boom(*_a, **_k):
+        raise RuntimeError("simulated database outage")
+
+    monkeypatch.setattr("app.services.room_runner.get_sim_engine", _boom)
+
+    last_loss, timestamps, open_risk = _build_room_risk_limit_context(
+        uuid4(), portfolio_value=100_000.0, quotes={},
+    )
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3}).model_copy(
+        update={"post_loss_cooldown_hours": 24.0}
+    )
+    result = safety_floor.check_mandate_compliance(
+        ProposedTrade(ticker="AAPL", side="buy", quantity=10.0),
+        portfolio_value=100_000.0,
+        current_drawdown_pct=0.0,
+        mandate=mandate,
+        last_loss_closed_at=last_loss,
+        trade_open_timestamps=timestamps,
+        existing_open_risk_pct=open_risk,
+    )
+
+    assert result.passed is False, (
+        "an outage silently disabled a limit the user explicitly set — this is the "
+        "round-1 BLOCKER's failure mode arriving by a different route"
+    )
+    assert any("did not supply" in v.lower() for v in result.violations), result.violations
