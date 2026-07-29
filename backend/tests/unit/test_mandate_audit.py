@@ -168,12 +168,16 @@ def test_audit_endpoint_surfaces_violation_after_blocklist_patch(
     sim = get_sim_engine()
     mandate = hydrate_coach_mandate({"plan": "trader"})
 
-    # Buy something — under 50% single-name cap.
+    # Buy something — genuinely under the 50% single-name cap, sized against the
+    # live mark rather than a fixed 20 shares. DEF153: at 20 shares this was 77%
+    # of the book and only ever accepted because the cap was dark on MARKET
+    # orders; the comment claiming "under 50%" was never checked by anything.
     res = sim.submit(
-        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=20,
+        user_id=user_id, ticker="AAPL", side=Side.BUY,
+        quantity=int(10_000 * 0.30 / sim.current_price("AAPL")),
         mandate=mandate, order_type=OrderType.MARKET,
     )
-    assert res.accepted
+    assert res.accepted, res.compliance.violations
 
     # Persist a mandate with AAPL on the blocklist.
     store = get_mandate_store()

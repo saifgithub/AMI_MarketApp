@@ -322,31 +322,49 @@ def test_preview_rejects_on_mandate_violation():
 
 def test_preview_rejects_on_insufficient_cash():
     """BL9: preview() rejects when notional > current cash (after compliance
-    passes). Has to first reduce cash since the 50% single-name cap on a
-    fresh $10k portfolio bites before the cash check."""
+    passes).
+
+    Cash must be driven below HALF the book first, and that takes two buys, not
+    one. The 50% single-name cap is measured against total portfolio value, so
+    while cash is still the larger share of the book, any notional that exceeds
+    cash is over the cap by construction — it is rejected for concentration and
+    never reaches the cash check at all.
+
+    DEF153: this test used to do it in one 40% buy and then preview 90% of the
+    book. That only reached the cash check because the single-name cap was dark
+    on MARKET orders — the test was passing on a hole in the safety floor, which
+    is why its premise is now asserted rather than described in a comment.
+    """
     sim = SimEngine()
     user_id = uuid4()
     mandate = hydrate_coach_mandate({"plan": "trader"})
-    # Spend most of the cash on one ticker first.
-    price = sim.current_price("AAPL")
-    qty = int((10_000 * 0.40) / price)  # ~40% of portfolio — under 50% cap
-    submit_res = sim.submit(
-        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=qty,
-        mandate=mandate, order_type=OrderType.MARKET,
-    )
-    assert submit_res.accepted
-    p = sim.ensure_portfolio(user_id)
-    cash_left = p.current_cash
-    # Now preview a different-ticker buy that's compliance-clean
-    # (under 50% single-name cap on current total value) but exceeds cash.
-    other_price = sim.current_price("NVDA")
-    over_cash_qty = int((cash_left * 1.5) / other_price) + 1
+    for ticker, weight in (("AAPL", 0.45), ("NVDA", 0.30)):
+        qty = int((10_000 * weight) / sim.current_price(ticker))
+        res = sim.submit(
+            user_id=user_id, ticker=ticker, side=Side.BUY, quantity=qty,
+            mandate=mandate, order_type=OrderType.MARKET,
+        )
+        assert res.accepted, res.compliance.violations
+
+    cash_left = sim.ensure_portfolio(user_id).current_cash
+    total = sim.total_value(user_id)
+    assert cash_left < total * 0.5, "premise: cash is now the smaller share"
+
+    price = sim.current_price("MSFT")
+    # The SMALLEST quantity that exceeds cash — anything larger risks clearing
+    # the 50% cap instead, and the prices here walk between runs.
+    over_cash_qty = int(cash_left / price) + 1
+    assert over_cash_qty * price > cash_left, "premise: the buy exceeds cash"
+    assert over_cash_qty * price < total * 0.5, "premise: and is under the cap"
+
     pv = sim.preview(
-        user_id=user_id, ticker="NVDA", side=Side.BUY, quantity=over_cash_qty,
+        user_id=user_id, ticker="MSFT", side=Side.BUY, quantity=over_cash_qty,
         mandate=mandate, order_type=OrderType.MARKET,
     )
     assert not pv.accepted
-    assert any("insufficient cash" in v for v in pv.compliance.violations)
+    assert any("insufficient cash" in v for v in pv.compliance.violations), (
+        pv.compliance.violations
+    )
 
 
 def test_manual_close_realises_pnl_and_returns_cash():

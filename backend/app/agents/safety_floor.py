@@ -9,6 +9,7 @@ See docs/initial_specs/02_agents/safety_floor.md for the full rationale.
 
 from pydantic import BaseModel, Field
 
+from app.core.logging import logger
 from app.schemas import AgentId, Mandate, Verdict, VerdictAction
 from app.schemas.classification import (
     ClassificationKind,
@@ -238,15 +239,37 @@ def check_mandate_compliance(
         blocked_by = blocked_by or "locale"
 
     # 6) Position-size cap (single-name)
-    if portfolio_value > 0:
-        proposed_value = (proposed.limit_price or 0.0) * proposed.quantity
-        if proposed.is_buy and proposed_value > 0:
-            position_pct = _position_pct(proposed_value, portfolio_value)
-            if position_pct > SINGLE_NAME_CAP_PCT:
-                violations.append(
-                    f"position size {position_pct:.1f}% exceeds single-name cap {SINGLE_NAME_CAP_PCT}%"
-                )
-                blocked_by = blocked_by or "concentration"
+    #
+    # DEF153: the proposal is priced ONCE, here, and BOTH concentration caps —
+    # single-name below and sector at 6b — read that one number. They used to
+    # price it independently off the same source, and when DEF149 taught 6b
+    # that a MARKET order carries no `limit_price`, the single-name cap two
+    # lines above was left on the old formula: measured at 0 on every market
+    # buy, so a 90%-of-portfolio market order sailed through a 50% cap while
+    # the identical limit order was blocked. Two renderers of one rule with
+    # neither a superset (the DEF098 shape) — now one renderer.
+    unit_price = proposed.limit_price or (quotes or {}).get(t) or 0.0
+    proposed_value = float(unit_price) * proposed.quantity
+
+    if proposed.is_buy and proposed_value <= 0:
+        # CR040 degrade loudly: both caps below are size-based, so a buy we
+        # cannot price is not "compliant", it is UNEVALUATED — and it passes.
+        # Silence is precisely how DEF149 stayed invisible for the life of
+        # CR026; this line is what makes the next occurrence findable.
+        logger.warning(
+            "safety_floor_proposal_unpriced",
+            ticker=t,
+            order_type=getattr(proposed.order_type, "value", None),
+            quoted=bool((quotes or {}).get(t)),
+        )
+
+    if portfolio_value > 0 and proposed.is_buy and proposed_value > 0:
+        position_pct = _position_pct(proposed_value, portfolio_value)
+        if position_pct > SINGLE_NAME_CAP_PCT:
+            violations.append(
+                f"position size {position_pct:.1f}% exceeds single-name cap {SINGLE_NAME_CAP_PCT}%"
+            )
+            blocked_by = blocked_by or "concentration"
 
     # 6b) Sector-concentration cap (CR026) — the gap this CR closes. A proposed BUY
     #   that would push its GICS sector over the mandate's sector cap is blocked, the
@@ -264,10 +287,9 @@ def check_mandate_compliance(
     ):
         # DEF149: a MARKET order carries no limit_price, so pricing the proposal off
         # limit_price alone made proposed_value 0 and the whole check silently
-        # no-opped — the sector cap never fired on a market buy. Fall back to the
-        # mark we were already handed for this ticker.
-        unit_price = proposed.limit_price or (quotes or {}).get(t) or 0.0
-        proposed_value = float(unit_price) * proposed.quantity
+        # no-opped — the sector cap never fired on a market buy. The fallback to
+        # the mark we were already handed now lives at step 6 (DEF153), computed
+        # once for both caps.
         breach = _sector_cap_breach(
             holdings=holdings,
             quotes=quotes,

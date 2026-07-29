@@ -445,6 +445,54 @@ to prove the revert was total. Structural, so the rule survives the operator for
 
 ---
 
+## P10 — One expression, two obligations (and only malformed input can tell them apart)
+
+A single expression is the **sole implementation of two independent duties**. When it fails it
+fails both at once, silently — and because a *valid* input satisfies both duties simultaneously,
+a test suite built from valid fixtures can never observe that they are coupled. The suite is
+green, thorough-looking, and structurally incapable of seeing the bug.
+
+| | The one expression | Duty A | Duty B | What the failure looked like |
+|---|---|---|---|---|
+| **DEF147** (2026-07-29) | `_STANCE_TAIL_RE`, end-anchored, both brackets required | *remove* the machine channel from the prose | *extract* stance / conviction / headline | a slightly-wrong tail was neither read nor removed, so "this agent stated no view" and raw `[STANCE: …` on the user's screen were **the same event**. 3 of 11 agents on live Alpha, 27% |
+| **DEF149 (B)** (2026-07-29) | `proposed_value = (limit_price or 0.0) × qty` | *measure* the trade's size | *gate* whether the cap is evaluated at all | a MARKET order priced to 0, so the sector cap returned at its first guard. The cap never fired on a market buy for the life of CR026 |
+| **DEF153** (2026-07-29) | the same expression, duplicated at the twin site | — | — | DEF149 fixed step 6b and left step 6 on the old formula. A 90% market buy passed a 50% single-name cap the same afternoon |
+
+**Why the previous guard failed.** There were tests, and they were good tests — they were just all
+*well-formed*. Every CR106 fixture was a correctly-bracketed envelope; every CR026 fixture was a
+limit order. A well-formed input discharges both duties at once, so no assertion in either suite
+could distinguish "it parsed" from "it was stripped", or "it was measured" from "it was checked".
+Coverage was not the missing thing. **Adversarial input was.**
+
+And DEF153 is the evidence that fixing one site is not fixing the class: DEF149's own repair
+touched the three lines directly below the identical bug and did not see it, because each site
+computed the shared value for itself.
+
+**The invariant.** *Where one expression discharges two duties, at least one test must supply an
+input that satisfies one duty and violates the other — and where the same value is needed at two
+sites, compute it once and let both read it, so the sites cannot drift.*
+
+**Enforcing checks.** Per instance, each an input that splits the two duties apart:
+
+- `test_cr106_stance_envelope.py::test_an_envelope_that_parses_to_nothing_is_still_stripped` —
+  parses to nothing, must still come off the prose (DEF147). Plus the leading/trailing/both-ends
+  and malformed-tail fixtures alongside it.
+- `test_def149_sector_cap_includes_cash.py::test_b_a_market_order_is_priced_and_therefore_checked` —
+  an order the old gate valued at zero (DEF149).
+- `test_def153_single_name_cap_market_order.py::test_the_two_order_types_agree_on_identical_economics`
+  — the same economics routed two ways must get the same ruling (DEF153), backed by the pricing
+  hoist that leaves only one site to change.
+
+No static check can find the *next* coupling — the general control is a review question with a
+concrete trigger: **when one expression is the only thing standing between two separate
+guarantees, name the input that would satisfy one and break the other, and write it down as a
+test. If no such input can exist, the duties are not actually coupled.** A structural version
+would need a way to assert "these two obligations are discharged by different code", which the
+language does not give us; hoisting the shared computation to one site is the closest available
+approximation and is what DEF153 did.
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.
