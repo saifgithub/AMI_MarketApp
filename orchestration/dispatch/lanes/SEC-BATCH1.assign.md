@@ -103,4 +103,4 @@ invisible at once (**DEF175**).
 Three of the Architect's rulings were overturned that way on CR101 and each was the cheap outcome.
 
 ASSIGNED: coder.api round 2
-DISPATCH: OPEN
+DISPATCH: ACCEPTED
