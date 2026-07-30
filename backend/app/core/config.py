@@ -94,6 +94,24 @@ class Settings(BaseSettings):
     # kimi-k3/kimi-k2.7-code/kimi-k2.6 despite the similar names.
     kimi_model: str = "kimi-for-coding"
 
+    # CR130 calibration finding: Kimi's Coding Plan models are genuine
+    # reasoning models whose chain-of-thought shares the SAME `max_tokens`
+    # budget as the final answer. The Room's per-agent budgets in
+    # `room_prompts.py` (600-900) are tuned for vLLM's non-reasoning model and
+    # get fully consumed by invisible reasoning before any visible content is
+    # emitted — 4/5 calibration tickers hit the DEF059 fail-safe this way.
+    # Isolated via direct curl: max_tokens=900 -> empty content
+    # (finish_reason=length, 100% reasoning); max_tokens=4000 -> clean verdict
+    # (~1,200 reasoning tokens + real content, finish_reason=stop).
+    # This is a FLOOR, not a per-role tune: `OpenAICompatibleProvider` raises
+    # whatever max_tokens room_runner.py requests up to at least this value
+    # for this provider only — vLLM/Anthropic's tuned budgets are untouched.
+    # Generous on purpose (Saiful: "remove the token limit completely...I
+    # just need to let KIMI give us 1 full room") rather than the measured
+    # 4000 minimum — this is a calibration knob, not a cost-tuned production
+    # value yet.
+    kimi_max_tokens_floor: int = 8000
+
     # Manual provider-selection override for testing (e.g. exercising Kimi
     # without touching LLMGateway._PREFERENCE or unregistering vLLM). Empty
     # = normal preference order. An unregistered/typo'd name falls through

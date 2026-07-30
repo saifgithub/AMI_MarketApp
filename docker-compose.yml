@@ -124,6 +124,12 @@ services:
       # the former; the latter 401s it. See config.py for the full story.
       KIMI_BASE_URL: ${KIMI_BASE_URL:-https://api.kimi.com/coding}
       KIMI_MODEL: ${KIMI_MODEL:-kimi-for-coding}
+      # CR130: Kimi is a reasoning model whose chain-of-thought shares the
+      # room's per-agent max_tokens budget (600-900, tuned for vLLM) — this
+      # floor raises every Kimi call up to at least this value so reasoning
+      # never starves the visible answer. See config.py for the measured
+      # 900-fails/4000-works curl finding.
+      KIMI_MAX_TOKENS_FLOOR: ${KIMI_MAX_TOKENS_FLOOR:-8000}
       LLM_FORCE_PROVIDER: ${LLM_FORCE_PROVIDER:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       SENTRY_DSN: ${SENTRY_DSN:-}

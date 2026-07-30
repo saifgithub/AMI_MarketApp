@@ -472,6 +472,63 @@ async def test_openai_compatible_provider_extra_body_merged_into_request():
     assert captured["json"]["model"] == "kimi-for-coding"
 
 
+@pytest.mark.asyncio
+async def test_openai_compatible_provider_max_tokens_floor_raises_low_request():
+    """CR130: a reasoning provider's chain-of-thought shares max_tokens with
+    the visible answer, so the Room's per-agent budgets (600-900) starve it.
+    max_tokens_floor must raise a low caller-requested value up to the floor."""
+    captured: dict = {}
+    p = OpenAICompatibleProvider(
+        name="kimi", base_url="https://api.kimi.com/coding", model_name="kimi-for-coding",
+        max_tokens_floor=8000,
+    )
+    p._client = _FakeClient(_FakeSSEResponse(200, ["data: [DONE]"]), captured)  # type: ignore[assignment]
+
+    async for _ in p.stream_chat(
+        system_prompt="x", messages=[ChatMessage(role="user", content="ping")], max_tokens=900,
+    ):
+        pass
+
+    assert captured["json"]["max_tokens"] == 8000
+
+
+@pytest.mark.asyncio
+async def test_openai_compatible_provider_max_tokens_floor_never_lowers_high_request():
+    """The floor is a minimum, not a cap — a caller asking for more than the
+    floor must not be clamped down to it."""
+    captured: dict = {}
+    p = OpenAICompatibleProvider(
+        name="kimi", base_url="https://api.kimi.com/coding", model_name="kimi-for-coding",
+        max_tokens_floor=8000,
+    )
+    p._client = _FakeClient(_FakeSSEResponse(200, ["data: [DONE]"]), captured)  # type: ignore[assignment]
+
+    async for _ in p.stream_chat(
+        system_prompt="x", messages=[ChatMessage(role="user", content="ping")], max_tokens=12000,
+    ):
+        pass
+
+    assert captured["json"]["max_tokens"] == 12000
+
+
+@pytest.mark.asyncio
+async def test_openai_compatible_provider_without_floor_passes_max_tokens_through():
+    """Default (no floor, e.g. vLLM) must not alter the caller's requested
+    max_tokens at all — this is Kimi-specific behavior, not global."""
+    captured: dict = {}
+    p = OpenAICompatibleProvider(
+        name="vllm", base_url="http://lan:8000", model_name="ami-llm",
+    )
+    p._client = _FakeClient(_FakeSSEResponse(200, ["data: [DONE]"]), captured)  # type: ignore[assignment]
+
+    async for _ in p.stream_chat(
+        system_prompt="x", messages=[ChatMessage(role="user", content="ping")], max_tokens=600,
+    ):
+        pass
+
+    assert captured["json"]["max_tokens"] == 600
+
+
 # ── CR077 Phase 0 second guard — prefix-cache startup check ──────────────
 
 

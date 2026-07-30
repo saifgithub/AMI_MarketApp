@@ -338,10 +338,18 @@ class OpenAICompatibleProvider(LLMProvider):
         api_key: str | None = None,
         timeout_seconds: float = 60.0,
         extra_body: dict[str, Any] | None = None,
+        max_tokens_floor: int | None = None,
     ) -> None:
         self.name = name
         self._model_name = model_name
         self._extra_body = extra_body or {}
+        # CR130: reasoning-style providers (Kimi) spend `max_tokens` on
+        # invisible chain-of-thought before any visible content, so the
+        # Room's per-agent budgets (tuned for vLLM, a non-reasoning model)
+        # starve them. A floor here raises whatever the caller requests up
+        # to at least this value for THIS provider instance only — every
+        # other provider is unaffected.
+        self._max_tokens_floor = max_tokens_floor
         headers = {"Content-Type": "application/json"}
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"
@@ -367,10 +375,14 @@ class OpenAICompatibleProvider(LLMProvider):
         for m in messages:
             openai_messages.append({"role": m.role, "content": m.content})
 
+        effective_max_tokens = max_tokens
+        if self._max_tokens_floor is not None:
+            effective_max_tokens = max(max_tokens, self._max_tokens_floor)
+
         body = {
             "model": self._model_name,
             "messages": openai_messages,
-            "max_tokens": max_tokens,
+            "max_tokens": effective_max_tokens,
             "stream": True,
             **self._extra_body,
         }
@@ -565,12 +577,14 @@ class LLMGateway:
                 base_url=settings.kimi_base_url,
                 model_name=settings.kimi_model,
                 api_key=settings.kimi_api_key,
+                max_tokens_floor=settings.kimi_max_tokens_floor,
             )
             logger.info(
                 "llm_gateway_provider_registered",
                 provider="kimi",
                 base_url=settings.kimi_base_url,
                 model=settings.kimi_model,
+                max_tokens_floor=settings.kimi_max_tokens_floor,
             )
         else:
             logger.info(
