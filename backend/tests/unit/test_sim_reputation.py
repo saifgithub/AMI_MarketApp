@@ -18,6 +18,7 @@ from app.api.sim import router as sim_router
 from app.db import get_session
 from app.db.models import ReputationEventRow, SimPortfolioRow
 from app.services.auth_service import AuthService
+from app.services.mandate_store import get_mandate_store
 
 
 @pytest.fixture
@@ -95,6 +96,13 @@ def test_reset_after_cooldown_succeeds(client: TestClient):
 
 def test_disciplined_buy_awards_points_once(client: TestClient):
     user_id, token = _make_user_and_token()
+    # CR129/DEF187: a fresh anonymous mandate's single-name cap now resolves
+    # to the risk-tier preset (3.0% at the default risk_score=3), not the
+    # pre-CR129 flat 50% backstop — 1 share of AAPL against a $10k default
+    # portfolio is ~3-4% and would be rejected on concentration, not the
+    # disciplined-trade behaviour this test actually exercises. Pin it
+    # permissive, same fix as test_sim_engine.py's non-concentration tests.
+    get_mandate_store().patch(user_id, {"single_name_cap_pct": 100.0})
     r = _submit(client, user_id, token, stop=90.0, target=200.0)
     assert r.status_code == 200, r.text
     assert r.json()["ok"] is True
@@ -105,6 +113,7 @@ def test_disciplined_buy_awards_points_once(client: TestClient):
 
 def test_buy_without_stop_or_target_awards_nothing(client: TestClient):
     user_id, token = _make_user_and_token()
+    get_mandate_store().patch(user_id, {"single_name_cap_pct": 100.0})
     r = _submit(client, user_id, token, stop=90.0)  # no target
     assert r.status_code == 200, r.text
     assert r.json()["ok"] is True
