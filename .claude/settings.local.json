@@ -20,7 +20,28 @@
       "Bash(git commit *)",
       "Bash(sort -t R -k2 -n)",
       "Bash(sort -t F -k2 -n)",
-      "Bash(./backend/.venv/bin/python -m pytest backend/tests/unit/test_def061_compliance_enforcement.py backend/tests/unit/test_safety_floor.py backend/tests/unit/test_config_compose_parity.py -q)"
+      "Bash(./backend/.venv/bin/python -m pytest backend/tests/unit/test_def061_compliance_enforcement.py backend/tests/unit/test_safety_floor.py backend/tests/unit/test_config_compose_parity.py -q)",
+      "Bash(awk -F'|' 'NR<=3 || /proposed|in_progress/' docs/forward_planning/cr_list.md)",
+      "Bash(awk 'NR<=3 || /open|in_progress|triage/' docs/defect/def_list.md)",
+      "Bash(awk -F'|' '/^\\\\| *DEF/ {st=$\\(NF-2\\); gsub\\(/ /,\"\",st\\); if \\(st==\"open\"||st==\"in_progress\"||st==\"inprogress\"\\) print}' docs/defect/def_list.md)",
+      "Bash(awk -F'|' '{st=$\\(NF-3\\); gsub\\(/^ +| +$/,\"\",st\\); if \\(st==\"open\"||st==\"in_progress\"\\) print}')",
+      "Bash(awk -F'|' '{st=$\\(NF-2\\); gsub\\(/^ +| +$/,\"\",st\\); if \\(st==\"proposed\"||st==\"in_progress\"\\) print}')",
+      "Bash(ssh -o ConnectTimeout=10 melehost \"docker exec ami_postgres psql -U postgres -d ami_trade -c \\\\\"SELECT status, count\\(*\\) FROM bug_reports GROUP BY status ORDER BY 2 DESC;\\\\\" -c \\\\\"SELECT max\\(created_at\\) AS newest, count\\(*\\) FILTER \\(WHERE created_at > '2026-07-22T03:00:30+00'\\) AS since_watermark FROM bug_reports;\\\\\"\")",
+      "Bash(mkdir -p /private/tmp/claude-501/-Volumes-Extreme-Pro-AMI-MarketApp/e026199f-0fec-41fb-9902-aaa4bca9a2ab/scratchpad/bugshots)",
+      "Bash(python3 -)",
+      "Bash(curl -s --max-time 25 \"http://192.168.20.59:8000/v1/lessons\" -o /tmp/cat.json)",
+      "Bash(python3 scripts/registers/gen_registers.py gen all)",
+      "Bash(python3 scripts/registers/gen_registers.py gen cr)",
+      "Bash(python3 scripts/registers/gen_registers.py verify cr)",
+      "Bash(curl -s --max-time 20 \"http://192.168.20.59:8000/v1/sim/history/NVDA?period=1M\")",
+      "Bash(curl -s -w '\\\\n%{http_code}\\\\n' --max-time 20 \"http://192.168.20.59:8000/v1/sim/history/NVDA\")",
+      "WebFetch(domain:docs.shorebird.dev)",
+      "WebFetch(domain:pro.codewithandrea.com)",
+      "WebFetch(domain:shorebird.dev)",
+      "Bash(grep -rniE \"app_?store_?id|apple.*id.*[0-9]{9,}|itms-apps\" mobile/lib docs/initial_specs/08_tech Apple_Store)",
+      "Bash(awk '/Map<String, String> _headers|_baseHeaders|Map<String,String> _headers/,/^  }/' mobile/lib/services/api/api_client.dart)",
+      "Bash(python scripts/registers/gen_registers.py gen cr)",
+      "Bash(git status *)"
     ]
   }
 }
