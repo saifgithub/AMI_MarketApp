@@ -2,8 +2,8 @@
 /// hexagons, and until CR117 all three were named as if they were.**
 ///
 ///   - [CutCornerOctagonClipper]: an **eight**-sided cut-corner rectangle —
-///     angled ends *and* angled top and bottom. Used by [HexButton],
-///     [HexChip], [GlassPanel] accents, the bottom nav, toasts.
+///     angled ends *and* angled top and bottom. Used by [HexChip],
+///     [GlassPanel] accents, the bottom nav, toasts.
 ///   - [FlatTopHexagonBarClipper]: a **true** flat-top hexagon at any aspect
 ///     ratio — angled ends, flat top and bottom. For rect-proportioned
 ///     controls: segmented bars, wide pills.

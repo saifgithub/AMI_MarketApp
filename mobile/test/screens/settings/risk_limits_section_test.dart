@@ -55,7 +55,6 @@ UserMandate _mandate({
     maxOpenRiskPct: maxOpenRiskPct,
     learningStyle: 'quick',
     compliance: const ComplianceFlags(),
-    dailyBriefing: const DailyBriefing(),
     plan: 'trial_trader',
     creditBalance: 75,
   );

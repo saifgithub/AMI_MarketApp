@@ -132,44 +132,6 @@ class RiskComponents {
       };
 }
 
-/// Daily briefing preferences — time, channels, TTS voice.
-class DailyBriefing {
-  const DailyBriefing({
-    this.enabled = false,
-    this.timeLocal = '07:00',
-    this.timezone = 'UTC',
-    this.voiceId,
-    this.deliveryChannels = const ['in_app'],
-    this.language = 'en',
-  });
-
-  final bool enabled;
-  final String timeLocal;
-  final String timezone;
-  final String? voiceId;
-  final List<String> deliveryChannels; // push / in_app / email
-  final String language;
-
-  factory DailyBriefing.fromJson(Map<String, dynamic> j) => DailyBriefing(
-        enabled: (j['enabled'] as bool?) ?? false,
-        timeLocal: j['time_local'] as String? ?? '07:00',
-        timezone: j['timezone'] as String? ?? 'UTC',
-        voiceId: j['voice_id'] as String?,
-        deliveryChannels:
-            ((j['delivery_channels'] as List?) ?? const ['in_app']).cast<String>(),
-        language: j['language'] as String? ?? 'en',
-      );
-
-  Map<String, dynamic> toJson() => {
-        'enabled': enabled,
-        'time_local': timeLocal,
-        'timezone': timezone,
-        if (voiceId != null) 'voice_id': voiceId,
-        'delivery_channels': deliveryChannels,
-        'language': language,
-      };
-}
-
 /// BL12 holdings-vs-mandate audit result. CR101-MOBILE calls this
 /// immediately after a risk-limit PATCH to render the retro-tightening
 /// disclosure — flag, never a forced sell (`GET /v1/mandate/{id}/audit`).
@@ -223,7 +185,6 @@ class UserMandate {
     required this.maxDrawdownPct,
     required this.learningStyle,
     required this.compliance,
-    required this.dailyBriefing,
     required this.plan,
     this.trialExpiresAt,
     required this.creditBalance,
@@ -270,7 +231,6 @@ class UserMandate {
   final double? maxOpenRiskPct;
   final String learningStyle;
   final ComplianceFlags compliance;
-  final DailyBriefing dailyBriefing;
   final String plan;
   final DateTime? trialExpiresAt;
   final int creditBalance;
@@ -320,9 +280,6 @@ class UserMandate {
       learningStyle: j['learning_style'] as String? ?? 'quick',
       compliance: ComplianceFlags.fromJson(
         (j['compliance'] as Map?)?.cast<String, dynamic>() ?? const {},
-      ),
-      dailyBriefing: DailyBriefing.fromJson(
-        (j['daily_briefing'] as Map?)?.cast<String, dynamic>() ?? const {},
       ),
       plan: j['plan'] as String? ?? 'trial_trader',
       trialExpiresAt: j['trial_expires_at'] != null

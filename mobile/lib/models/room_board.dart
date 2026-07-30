@@ -100,20 +100,6 @@ class RoomVoice {
   bool get statedNoView => stance == null;
 }
 
-/// The sub-header strip's leading half. The Room has a duration and a credit
-/// cost; the Journal snapshot never serialised either, and carries the tier and
-/// mandate version instead. Two different facts, one slot — modelled as text
-/// the mapper resolves rather than as fields the widget has to branch on.
-@immutable
-class RoomBoardMeta {
-  const RoomBoardMeta({this.durationMs, this.creditCost, this.modelTier, this.mandateVersion});
-
-  final int? durationMs;
-  final int? creditCost;
-  final String? modelTier;
-  final int? mandateVersion;
-}
-
 @immutable
 class RoomBoardData {
   const RoomBoardData({
@@ -131,7 +117,6 @@ class RoomBoardData {
     this.overriddenFromLlm = false,
     this.opinionsNotIncluded = const [],
     this.levelProvenance,
-    this.meta = const RoomBoardMeta(),
     this.isRecord = false,
     this.recordedAt,
     this.runId,
@@ -157,7 +142,6 @@ class RoomBoardData {
   final bool overriddenFromLlm;
   final List<String> opinionsNotIncluded;
   final Map<String, LevelSource>? levelProvenance;
-  final RoomBoardMeta meta;
 
   /// True on the Journal. A journal entry is a **record, not a setup**: a June
   /// entry's `$118.20` is not a live price, so there is no trade ticket

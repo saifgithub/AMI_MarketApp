@@ -198,11 +198,6 @@ void main() {
     // Only a live run can link a trade back to its verdict.
     expect(fromRoom.runId, 'run-1');
     expect(fromJournal.runId, isNull);
-
-    // The strip: `duration_ms` and `credit_cost` were never serialised into
-    // the snapshot, so the record shows tier + mandate version instead.
-    expect(fromJournal.meta.modelTier, 'mid');
-    expect(fromJournal.meta.mandateVersion, 7);
   });
 
   test('every VerdictAction maps to the same outcome on both surfaces', () {

@@ -82,7 +82,6 @@ class _ScriptedMandateNotifier extends MandateNotifier {
       maxOpenRiskPct: before.maxOpenRiskPct,
       learningStyle: before.learningStyle,
       compliance: before.compliance,
-      dailyBriefing: before.dailyBriefing,
       plan: before.plan,
       creditBalance: before.creditBalance,
     );
@@ -109,7 +108,6 @@ UserMandate _mandate() => const UserMandate(
       maxOpenPositions: null,
       learningStyle: 'quick',
       compliance: ComplianceFlags(),
-      dailyBriefing: DailyBriefing(),
       plan: 'trial_trader',
       creditBalance: 75,
     );
