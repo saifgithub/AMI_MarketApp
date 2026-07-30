@@ -39,8 +39,13 @@ class OneOnOneMessageRequest(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
     session_id: UUID
-    user_message: str
-    history: list[ChatMsg] = Field(default_factory=list)
+    # DEF186 (security review H6): unbounded — a client could pass a
+    # megabyte-scale user_message/history straight through to the LLM.
+    # 8,000 chars is comfortably above any real chat turn (~1-2k tokens)
+    # and history caps at 100 turns (a long real conversation, not an
+    # attacker-supplied wall of scripted turns).
+    user_message: str = Field(max_length=8_000)
+    history: list[ChatMsg] = Field(default_factory=list, max_length=100)
 
 
 class OneOnOneSession(BaseModel):

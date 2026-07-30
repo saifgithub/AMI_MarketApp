@@ -107,10 +107,19 @@ class AppleSignInRequest(BaseModel):
     verification and treat the `sub` as the user's stable apple_id. This
     is NOT secure — production swap-in does proper key-rotation + JWKS
     validation, OR delegates to Supabase Auth which does it for us.
+
+    DEF176 (security review C1): `user_id` used to be accepted from the
+    body and trusted as "the anon row to attach this identity to" — an
+    attacker with their own valid identity_token could pass a victim's
+    user_id and take over that account. The pre-claim anon row is now
+    bound to the caller's Bearer token (`Depends(get_current_user)` in
+    the route), exactly like the magic-link routes. A client still on
+    the old contract that sends `user_id` in the body is simply ignored
+    (pydantic drops unknown fields by default) — no breaking change,
+    since the Dio interceptor already sends the Bearer on every call.
     """
 
     identity_token: str
-    user_id: UUID | None = None
     full_name: str | None = None
     # BL13 (AT:R32): see MagicLinkVerifyRequest.onboarding_session_id.
     onboarding_session_id: UUID | None = None
@@ -125,10 +134,12 @@ class GoogleSignInRequest(BaseModel):
     verified claims. Per D-057 minimum-data policy, only `sub`, `email`,
     `name` are persisted; other claims (`picture`, `locale`, `given_name`,
     `family_name`, `hd`) are dropped.
+
+    DEF176: see AppleSignInRequest — `user_id` is no longer accepted from
+    the body; the pre-claim anon row is bound to the caller's Bearer.
     """
 
     identity_token: str
-    user_id: UUID | None = None
     onboarding_session_id: UUID | None = None
 
 

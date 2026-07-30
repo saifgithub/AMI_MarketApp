@@ -28,7 +28,9 @@ _COMPOSE = _REPO_ROOT / "docker-compose.yml"
 # UPPERCASE name. Each entry states WHY — an unexplained entry is a bug hiding.
 _NOT_FORWARDED: dict[str, str] = {
     # Forwarded under a different name (host var AMI_ENV → container var ENV).
-    "env": "forwarded as ENV: ${AMI_ENV:-local}",
+    # DEF185: AMI_ENV is now mandatory at the compose level (`:?`), no
+    # silent `local` default.
+    "env": "forwarded as ENV: ${AMI_ENV:?...}",
     # Compose-level wiring, not app config: the api container reaches these
     # services by compose DNS, set in the same block via their own literals.
     "database_url": "set literally in the api-alpha environment block",
