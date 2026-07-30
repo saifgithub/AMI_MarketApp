@@ -67,12 +67,14 @@ DO_BUMP=1
 DO_UPLOAD=1
 DO_COMMIT=1
 DO_BILLING=1
+DO_PRODUCTION=0
 for arg in "$@"; do
   case "$arg" in
     --no-bump)    DO_BUMP=0 ;;
     --no-upload)  DO_UPLOAD=0 ;;
     --no-commit)  DO_COMMIT=0 ;;
     --no-billing) DO_BILLING=0 ;;
+    --production) DO_PRODUCTION=1 ;;
     -h|--help)
       sed -n '2,/^$/p' "$0"
       exit 0
@@ -122,6 +124,28 @@ fi
 
 archive_path="${MOBILE_DIR}/build/Runner.xcarchive"
 ipa_dir="${MOBILE_DIR}/build/ios/ipa"
+
+# CR084 — RevenueCat Test Store key (`test_…`). Purchases are SIMULATED by
+# RevenueCat: the paywall, the webhook, the entitlement grant and the credit
+# top-up all run for real, but no money moves and no store product is needed.
+# That is exactly what alpha wants. It is also a giveaway if it ever reaches
+# real users, so it is banner-loud here and hard-blocked from production.
+if [[ "$REVENUECAT_IOS_SDK_KEY" == test_* ]]; then
+  if [[ "${RELEASE_CHANNEL:-}" == "production" || "$DO_PRODUCTION" -eq 1 ]]; then
+    echo "✗ REVENUECAT_IOS_SDK_KEY is a Test Store key (test_…) and this is a PRODUCTION build." >&2
+    echo "  Every user would receive paid entitlements without paying. Refusing." >&2
+    echo "  Use the App-specific public key (appl_…) for production." >&2
+    exit 1
+  fi
+  cat <<'EOF'
+┌──────────────────────────────────────────────────────────────────┐
+│  SIMULATED PURCHASES — RevenueCat Test Store key in this build.  │
+│  Buying grants Plan + credits for real in our DB. No money moves.│
+│  Fine for TestFlight/alpha. NEVER promote this build to the App  │
+│  Store. Rebuild with an appl_… key before any production release.│
+└──────────────────────────────────────────────────────────────────┘
+EOF
+fi
 
 # CR084 billing gate — fail loudly rather than ship a paywall that cannot charge.
 if [[ "$DO_BILLING" -eq 1 && -z "$REVENUECAT_IOS_SDK_KEY" ]]; then

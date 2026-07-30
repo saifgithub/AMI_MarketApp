@@ -30,16 +30,19 @@
 #                                    (CR084/DEF100). Auto-sourced from
 #                                    infra/alpha.env if not exported. Public by
 #                                    design — safe to embed in a shipped client.
+#                                    A `test_…` key is RevenueCat's Test Store:
+#                                    purchases are SIMULATED, no store products
+#                                    needed. Right for alpha, blocked in prod.
+#   GOOGLE_OAUTH_WEB_CLIENT_ID     - GCP OAuth 2.0 Web client_id for Google Sign-In
+#                                    (the same value the backend has in
+#                                     GOOGLE_AUDIENCES env var on melehost)
+#   SENTRY_DSN                     - optional; left empty if unset
 #
 # BILLING GATE (CR084 / CR040 degrade-loudly): without the SDK key,
 # `BillingConfig.isConfigured` is false and the paywall renders the info state
 # with NO buy button — the app cannot take money. Correct for a dev build, a
 # silent revenue outage for a store build, so this script REFUSES to build
 # without the key unless you pass --no-billing.
-#   GOOGLE_OAUTH_WEB_CLIENT_ID     - GCP OAuth 2.0 Web client_id for Google Sign-In
-#                                    (the same value the backend has in
-#                                     GOOGLE_AUDIENCES env var on melehost)
-#   SENTRY_DSN                     - optional; left empty if unset
 #
 # Required setup before first run (per D-057):
 #   - ~/.android-keys/ami-trade-upload.keystore     (Saiful's keystore)
@@ -73,11 +76,13 @@ fi
 DO_BUMP=1
 DO_COMMIT=1
 DO_BILLING=1
+DO_PRODUCTION=0
 for arg in "$@"; do
   case "$arg" in
     --no-bump)    DO_BUMP=0 ;;
     --no-commit)  DO_COMMIT=0 ;;
     --no-billing) DO_BILLING=0 ;;
+    --production) DO_PRODUCTION=1 ;;
     -h|--help)
       sed -n '2,/^$/p' "$0"
       exit 0
@@ -123,6 +128,27 @@ if [[ -z "$GOOGLE_OAUTH_WEB_CLIENT_ID" ]]; then
   echo "⚠ GOOGLE_OAUTH_WEB_CLIENT_ID is empty — Google Sign-In button will be"
   echo "  disabled in this build. Set it once the GCP OAuth Web client is created."
   echo ""
+fi
+
+# CR084 — RevenueCat Test Store key (`test_…`). Purchases are SIMULATED by
+# RevenueCat: paywall, webhook, entitlement grant and credit top-up all run for
+# real, but no money moves and no store product is needed. Right for alpha; a
+# giveaway if it reaches real users, so: banner-loud here, blocked in production.
+if [[ "$REVENUECAT_ANDROID_SDK_KEY" == test_* ]]; then
+  if [[ "${RELEASE_CHANNEL:-}" == "production" || "$DO_PRODUCTION" -eq 1 ]]; then
+    echo "✗ REVENUECAT_ANDROID_SDK_KEY is a Test Store key (test_…) and this is a PRODUCTION build." >&2
+    echo "  Every user would receive paid entitlements without paying. Refusing." >&2
+    echo "  Use the App-specific public key (goog_…) for production." >&2
+    exit 1
+  fi
+  cat <<'BANNER'
+┌──────────────────────────────────────────────────────────────────┐
+│  SIMULATED PURCHASES — RevenueCat Test Store key in this build.  │
+│  Buying grants Plan + credits for real in our DB. No money moves.│
+│  Fine for Play internal/alpha. NEVER promote this build to Play  │
+│  production. Rebuild with a goog_… key before any prod release.  │
+└──────────────────────────────────────────────────────────────────┘
+BANNER
 fi
 
 # CR084 billing gate — fail loudly rather than ship a paywall that cannot charge.
