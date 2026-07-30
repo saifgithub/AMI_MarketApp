@@ -127,6 +127,30 @@ accounts are nearly free; direct challenge plus cheap accounts is a trivial coll
 alt, throw the duel, bank the win). Auto-matching closes it structurally. If challenge-a-friend is
 added later it must either award no career points or be capped per period.
 
+### Slice 3c — house desks · **what makes 3b and 4 work at alpha**
+
+Disclosed strategy desks (§11.2 of the design). Sequenced here because slice 3b's duels need an
+opponent and slice 4's board needs a field — at alpha neither exists without them.
+
+- desk accounts: users with an internal `is_desk` flag, real portfolios, real NAV rows
+- deterministic strategy runners (index / momentum / dividend / equal-weight / contrarian /
+  concentrated) executing through the **same game trade path** as humans
+- fill-to-target-field-size, not a fixed count; taper as real entrants arrive
+- kill switch, forwarded in `docker-compose.yml` (CR040 parity test)
+- desk exclusion added to the existing real-user metric filter
+- Flutter: the shared entrant renderer marks a desk on every surface
+
+**Acceptance:** a desk's return is **computed from real prices via its stated rule** — a test asserts
+no code path can write a desk NAV that was not produced by the strategy runner; a desk renders as a
+desk on board, duel, Close and share card (one renderer, so a new surface cannot forget); desks never
+receive a title or champion reward; the kill switch removes them from all *future* fields without
+disturbing settled ones; desks are absent from every real-user metric.
+
+**Fence — never fabricate a desk return.** Sampling a plausible-looking number is not a shortcut, it
+is a scoring defect: desk results feed real users' career points, so a fabricated number lands in a
+real person's permanent Record. This is the DEF059 shape and it is the one thing in this slice that
+cannot be traded for speed.
+
 ### Slice 4 — the field · **turns on at scale**
 
 Everything that needs players to exist. Build when fields regularly clear `n ≥ 8`.
