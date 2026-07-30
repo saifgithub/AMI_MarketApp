@@ -23,7 +23,7 @@ from collections.abc import AsyncIterator
 
 import pytest
 
-from app.agents.safety_floor import SAFETY_FLOOR_BLOCK, render_safety_floor_block
+from app.agents.safety_floor import render_safety_floor_block
 from app.schemas import AgentId
 from app.services.agent_prompts import build_agent_prompt
 from app.services.llm_gateway import (
@@ -111,21 +111,24 @@ async def test_directive_reaches_provider_and_audit(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "flow, agent_id, base_prompt",
+    "flow, agent_id, base_prompt_template",
     [
         ("one_on_one", "market_analyst", "You are the Market Analyst."),
         ("concierge_floor", "concierge", "You are the AMI Concierge."),
         ("pm_reformat", None, "Reformat the following verdict into strict JSON."),
-        (
-            "room",
-            "portfolio_manager",
-            "You are the Portfolio Manager." + SAFETY_FLOOR_BLOCK,
-        ),
+        ("room", "portfolio_manager", "You are the Portfolio Manager.{floor}"),
     ],
 )
-async def test_directive_is_flow_agnostic(flow, agent_id, base_prompt):
+async def test_directive_is_flow_agnostic(flow, agent_id, base_prompt_template, base_mandate):
     """Injected regardless of flow — Room agent, Concierge, and reformatter alike
-    (build_agent_prompt would miss the latter two; the gateway does not)."""
+    (build_agent_prompt would miss the latter two; the gateway does not).
+
+    The "room" case's floor block is rendered through render_safety_floor_block
+    (DEF188) rather than the raw SAFETY_FLOOR_BLOCK template, so this test never
+    exercises the unsubstituted `[[CAP]]` placeholder.
+    """
+    floor = render_safety_floor_block(base_mandate) if flow == "room" else ""
+    base_prompt = base_prompt_template.format(floor=floor)
     g, cap = _gateway_with_capture()
     await _drain(
         g.stream_chat(
@@ -194,11 +197,12 @@ async def test_mock_routing_survives_directive(monkeypatch, agent_key, needle):
 # ── 3. CAVEAT 2: PM safety floor stays last after prepend ──────────────────
 
 
-def test_prepend_keeps_trailing_safety_floor_last():
-    pm_prompt = "You are the Portfolio Manager." + SAFETY_FLOOR_BLOCK
+def test_prepend_keeps_trailing_safety_floor_last(base_mandate):
+    rendered_floor = render_safety_floor_block(base_mandate)
+    pm_prompt = "You are the Portfolio Manager." + rendered_floor
     injected = prepend_grounding_directive(pm_prompt)
     assert injected.startswith(GROUNDING_DIRECTIVE_SENTINEL)
-    assert injected.endswith(SAFETY_FLOOR_BLOCK)  # floor untouched at the tail
+    assert injected.endswith(rendered_floor)  # floor untouched at the tail
     assert injected.index(GROUNDING_DIRECTIVE_SENTINEL) < injected.index("SAFETY FLOOR")
 
 
