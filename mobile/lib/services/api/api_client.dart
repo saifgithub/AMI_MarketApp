@@ -967,6 +967,15 @@ class ApiClient {
     return UserMandate.fromJson(r.data!);
   }
 
+  /// BL12 (CR101-MOBILE): audit current holdings against the mandate that is
+  /// now persisted server-side. Call immediately after a risk-limit PATCH —
+  /// there is no "preview" endpoint, so retro-tightening disclosure is
+  /// necessarily post-save, not pre-save (see the CR101-MOBILE bridge).
+  Future<HoldingsAuditResult> auditMandateHoldings(String userId) async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/mandate/$userId/audit');
+    return HoldingsAuditResult.fromJson(r.data!);
+  }
+
   // ── Billing identity (CR084) ────────────────────────────────────────────
 
   /// The id the RevenueCat SDK logs in with, so RC's `app_user_id` on every

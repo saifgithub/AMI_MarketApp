@@ -527,6 +527,119 @@
     "settingsRiskLabel5": "Highest risk tolerance. Concentrated bets allowed.",
     "settingsMaxDrawdown": "Max drawdown",
     "settingsMaxDrawdownExplain": "Your PM refuses trades that would push the portfolio past this.",
+    "settingsSectionRiskLimits": "RISK LIMITS",
+    "@settingsSectionRiskLimits": {
+        "description": "CR101-MOBILE. Section header for the seven settable risk-limit fields (sector cap, single-name cap, post-loss cooldown, max open positions, max trades/day, max trades/week, total open-risk cap). retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsProfileFollowing": "Following your risk profile",
+    "@settingsRiskLimitsProfileFollowing": {
+        "description": "CR101-MOBILE. Shown under the L1 risk-profile dial when neither sector_cap_pct nor single_name_cap_pct has an explicit override — those two fields fall back to a server-side preset this API does not expose a number for (CR101-BE1 bridge), so this deliberately does NOT claim a value, and deliberately does NOT say 'OFF' (a cap is still enforced, just not an explicit one). Reused as the OFF-chip label for the same two fields inside the L2 editor. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsProfileCustom": "Custom",
+    "@settingsRiskLimitsProfileCustom": {
+        "description": "CR101-MOBILE. Shown under the L1 dial once the user has set an explicit sector or single-name cap override in L2 (acceptance 3: any L2 edit to either field moves the dial to Custom). retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsExpand": "Set my own limits",
+    "@settingsRiskLimitsExpand": {
+        "description": "CR101-MOBILE L2 disclosure toggle — expands the seven per-field editors, each in its own units. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsOff": "OFF",
+    "@settingsRiskLimitsOff": {
+        "description": "CR101-MOBILE. OFF-chip label for the five CR101-BE2 fields, where an unset value is genuinely unenforced (not a preset fallback like the two BE1 caps). retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsSectorCapLabel": "Sector concentration cap",
+    "@settingsRiskLimitsSectorCapLabel": {
+        "description": "CR101-MOBILE / CR101-BE1 `sector_cap_pct`, percentage points. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsSectorCapExplain": "Blocks a BUY that would push any one sector above this share of your portfolio. Unset follows your risk profile.",
+    "@settingsRiskLimitsSectorCapExplain": {
+        "description": "CR101-MOBILE / CR101-BE1 `sector_cap_pct` explainer. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsSingleNameCapLabel": "Single-name position cap",
+    "@settingsRiskLimitsSingleNameCapLabel": {
+        "description": "CR101-MOBILE / CR101-BE1 `single_name_cap_pct`, percentage points. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsSingleNameCapExplain": "Blocks a BUY that would size one position above this share of your portfolio. Unset follows your risk profile.",
+    "@settingsRiskLimitsSingleNameCapExplain": {
+        "description": "CR101-MOBILE / CR101-BE1 `single_name_cap_pct` explainer. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsCooldownLabel": "Post-loss cooldown",
+    "@settingsRiskLimitsCooldownLabel": {
+        "description": "CR101-MOBILE / CR101-BE2 `post_loss_cooldown_hours`, in hours. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsCooldownExplain": "Blocks new BUYs for this many hours after your last realised loss.",
+    "@settingsRiskLimitsCooldownExplain": {
+        "description": "CR101-MOBILE / CR101-BE2 `post_loss_cooldown_hours` explainer. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxOpenPositionsLabel": "Max open positions",
+    "@settingsRiskLimitsMaxOpenPositionsLabel": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_open_positions`, a distinct-ticker count. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxOpenPositionsExplain": "Blocks a BUY that would open a new ticker once you're at this many distinct positions. Adding to a position you already hold is unaffected.",
+    "@settingsRiskLimitsMaxOpenPositionsExplain": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_open_positions` explainer. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxTradesPerDayLabel": "Max trades per day",
+    "@settingsRiskLimitsMaxTradesPerDayLabel": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_trades_per_day`, a count. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxTradesPerDayExplain": "Blocks any trade once you've submitted this many today (UTC calendar day).",
+    "@settingsRiskLimitsMaxTradesPerDayExplain": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_trades_per_day` explainer — fixed UTC basis per the BE2 bridge, not the user's local timezone. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxTradesPerWeekLabel": "Max trades per week",
+    "@settingsRiskLimitsMaxTradesPerWeekLabel": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_trades_per_week`, a count. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxTradesPerWeekExplain": "Blocks any trade once you've submitted this many this week (Monday 00:00 UTC).",
+    "@settingsRiskLimitsMaxTradesPerWeekExplain": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_trades_per_week` explainer — fixed ISO week from Monday 00:00 UTC per the BE2 bridge. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxOpenRiskLabel": "Total open-risk cap",
+    "@settingsRiskLimitsMaxOpenRiskLabel": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_open_risk_pct`, percentage points. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxOpenRiskExplain": "Caps the sum of (position size % x stop distance %) across your open positions — your total capital at risk to stops.",
+    "@settingsRiskLimitsMaxOpenRiskExplain": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_open_risk_pct` explainer. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxOpenRiskPreviewNote": "Confirmed at trade submission — not shown as within-limits in the trade preview.",
+    "@settingsRiskLimitsMaxOpenRiskPreviewNote": {
+        "description": "CR101-MOBILE, per the assign's item 3b and CR101-BE2 auditor finding M1: sim_engine.preview() has no `stop` parameter, so it cannot price a proposed trade's OWN contribution to max_open_risk_pct — a trade that would tip an under-cap portfolio over the cap shows as fine in preview and only blocks at real submit. This note sits next to the field so the trade-ticket preview is never read as authoritative for this one limit (CR046 shown-equals-enforced). retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsDisclosureFollowing": "This replaces your risk-profile default with an explicit value, effective immediately.",
+    "@settingsRiskLimitsDisclosureFollowing": {
+        "description": "CR101-MOBILE L3 disclosure: shown when sector_cap_pct or single_name_cap_pct moves from unset (profile preset) to an explicit value. Direction (looser/tighter than the preset) is unknowable client-side — the preset's resolved number is never returned by the API (CR101-BE1 bridge) — so this states the mechanism honestly instead of guessing a direction. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsDisclosureLooser": "This allows more risk than your current setting.",
+    "@settingsRiskLimitsDisclosureLooser": {
+        "description": "CR101-MOBILE L3 disclosure: shown when an edit numerically loosens an already-explicit limit (e.g. raising a percent/count cap, or shortening the cooldown). retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsDisclosureOff": "This removes the limit entirely — it will not block anything.",
+    "@settingsRiskLimitsDisclosureOff": {
+        "description": "CR101-MOBILE L3 disclosure: shown when clearing a previously-explicit value back to OFF/unset. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsDisclosure100": "100% removes any real ceiling from this limit — allowed, but it means no protection here.",
+    "@settingsRiskLimitsDisclosure100": {
+        "description": "CR101-MOBILE L3 disclosure, CR040 'a silent 100% is not allowed': shown whenever a percent field (sector_cap_pct / single_name_cap_pct / max_open_risk_pct) is set to exactly 100, regardless of its prior value — a nominally-set cap that in practice enforces nothing. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsRetroTitle": "Some holdings now breach this limit",
+    "@settingsRiskLimitsRetroTitle": {
+        "description": "CR101-MOBILE retro-tightening dialog title (assign §3), shown after a save when GET /v1/mandate/{id}/audit reports max_open_positions_breach or max_open_risk_pct_breach — the only two of the seven fields with a portfolio-state dimension (BE2 bridge judgment call 3). retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsRetroBody": "Affected holdings are flagged below. New BUYs that would add to the breach are blocked. Nothing is sold automatically.",
+    "@settingsRiskLimitsRetroBody": {
+        "description": "CR101-MOBILE retro-tightening dialog body — must never imply a forced sell (backend fixed behaviour, BE2 bridge acceptance 6). retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsRetroTickers": "Flagged: {tickers}",
+    "@settingsRiskLimitsRetroTickers": {
+        "description": "CR101-MOBILE retro-tightening dialog — comma-joined list of the tickers HoldingsAuditResult.violations names. {tickers} is a plain joined string, not a count.",
+        "placeholders": {"tickers": {"type": "String"}}
+    },
+    "settingsRiskLimitsRetroDismiss": "Got it",
+    "@settingsRiskLimitsRetroDismiss": {
+        "description": "CR101-MOBILE retro-tightening dialog dismiss CTA. retranslate:[ar,ms]"
+    },
     "settingsComplianceHalal": "Sharia screen — AAOIFI",
     "@settingsComplianceHalal": {
         "description": "CR069 Phase 1b (supersedes the DEF084 placeholder). Toggle label for the halal mandate flag. The flag now enforces a REAL, SOURCED screen: AMI reads the published constituents of the S&P 500 Sharia Industry Exclusions Index, which S&P Dow Jones screens to the AAOIFI standard. AMI does not run its own ruling and computes no ratios. OBSERVANCE-SENSITIVE. Translator notes: (a) 'AAOIFI' is the proper name of a standards body (Accounting and Auditing Organization for Islamic Financial Institutions) — transliterate, never translate or expand it; (b) 'Sharia screen' means a compliance filter applied by that standard, NOT a religious ruling by AMI; (c) do not render this as 'halal' or 'permitted' — naming the standard is the whole point of the string. Saiful arranges translation externally."

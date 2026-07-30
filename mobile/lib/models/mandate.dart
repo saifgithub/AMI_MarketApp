@@ -170,6 +170,42 @@ class DailyBriefing {
       };
 }
 
+/// BL12 holdings-vs-mandate audit result. CR101-MOBILE calls this
+/// immediately after a risk-limit PATCH to render the retro-tightening
+/// disclosure — flag, never a forced sell (`GET /v1/mandate/{id}/audit`).
+class HoldingsAuditResult {
+  const HoldingsAuditResult({
+    required this.passed,
+    required this.mandateVersion,
+    required this.maxOpenPositionsBreach,
+    required this.maxOpenRiskPctBreach,
+    required this.violationTickers,
+  });
+
+  final bool passed;
+  final int mandateVersion;
+  final bool maxOpenPositionsBreach;
+  final bool maxOpenRiskPctBreach;
+  final List<String> violationTickers;
+
+  bool get anyRetroBreach => maxOpenPositionsBreach || maxOpenRiskPctBreach;
+
+  factory HoldingsAuditResult.fromJson(Map<String, dynamic> j) {
+    final violations = (j['violations'] as List? ?? const [])
+        .cast<Map>()
+        .map((v) => v['ticker'] as String? ?? '')
+        .where((t) => t.isNotEmpty)
+        .toList();
+    return HoldingsAuditResult(
+      passed: (j['passed'] as bool?) ?? true,
+      mandateVersion: (j['mandate_version'] as num?)?.toInt() ?? 0,
+      maxOpenPositionsBreach: (j['max_open_positions_breach'] as bool?) ?? false,
+      maxOpenRiskPctBreach: (j['max_open_risk_pct_breach'] as bool?) ?? false,
+      violationTickers: violations,
+    );
+  }
+}
+
 class UserMandate {
   const UserMandate({
     required this.userId,
@@ -197,6 +233,13 @@ class UserMandate {
     this.roomCooldownUntil,
     this.createdAt,
     this.updatedAt,
+    this.sectorCapPct,
+    this.singleNameCapPct,
+    this.postLossCooldownHours,
+    this.maxOpenPositions,
+    this.maxTradesPerDay,
+    this.maxTradesPerWeek,
+    this.maxOpenRiskPct,
   });
 
   final String userId;
@@ -212,6 +255,19 @@ class UserMandate {
   final RiskComponents riskComponents;
   final List<String> riskQuotes;
   final int maxDrawdownPct;
+  // CR101-BE1: sector-concentration + single-name position caps, percentage
+  // points (40.0 = 40%). `null` = not explicitly set — the server falls back
+  // to a risk-profile preset it does not expose a number for, so `null` here
+  // means "following your risk profile", not "off". See CR101-MOBILE bridge.
+  final double? sectorCapPct;
+  final double? singleNameCapPct;
+  // CR101-BE2: five risk limits with no legacy value and no preset — `null`
+  // means OFF (not enforced at all), a real and common state.
+  final double? postLossCooldownHours;
+  final int? maxOpenPositions;
+  final int? maxTradesPerDay;
+  final int? maxTradesPerWeek;
+  final double? maxOpenRiskPct;
   final String learningStyle;
   final ComplianceFlags compliance;
   final DailyBriefing dailyBriefing;
@@ -254,6 +310,13 @@ class UserMandate {
       riskQuotes:
           ((j['risk_quotes'] as List?) ?? const []).cast<String>(),
       maxDrawdownPct: (j['max_drawdown_pct'] as num?)?.toInt() ?? 30,
+      sectorCapPct: (j['sector_cap_pct'] as num?)?.toDouble(),
+      singleNameCapPct: (j['single_name_cap_pct'] as num?)?.toDouble(),
+      postLossCooldownHours: (j['post_loss_cooldown_hours'] as num?)?.toDouble(),
+      maxOpenPositions: (j['max_open_positions'] as num?)?.toInt(),
+      maxTradesPerDay: (j['max_trades_per_day'] as num?)?.toInt(),
+      maxTradesPerWeek: (j['max_trades_per_week'] as num?)?.toInt(),
+      maxOpenRiskPct: (j['max_open_risk_pct'] as num?)?.toDouble(),
       learningStyle: j['learning_style'] as String? ?? 'quick',
       compliance: ComplianceFlags.fromJson(
         (j['compliance'] as Map?)?.cast<String, dynamic>() ?? const {},
