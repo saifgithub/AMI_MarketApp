@@ -5,10 +5,17 @@
 
 # CR109 — final review
 
-**Closes the CR109 documentation.** `AT:Gamer`, 2026-07-30.
+`AT:Gamer`, 2026-07-30.
 Package: [`CR109.md`](CR109.md) · [`implementation_plan.md`](implementation_plan.md) ·
 [`playability_review.md`](playability_review.md) · [`games_roadmap.md`](games_roadmap.md) ·
 this document.
+
+> **Superseded as the closing pass.** This document closed the design round; Saiful then
+> commissioned the independent `AT:Fable` review series, and **Amendment D** (CR109.md §0, §20) is
+> the current closing state. Everything below still holds — the ad invariant, the reminder rule and
+> the social phasing were all endorsed by the review series unchanged — but the ad section's
+> conclusion gained a companion: §10.2 gives the game a **direct** revenue line (the paid agent
+> post-mortem) that the *"monetises indirectly"* framing here predates.
 
 Saiful: *"We need to make this addictive. We need to remind them to play. The players will be a
 source of income if they view adverts etc… and we need to enable the social aspect of the game.

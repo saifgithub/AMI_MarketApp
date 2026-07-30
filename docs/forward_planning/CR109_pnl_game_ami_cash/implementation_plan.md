@@ -8,11 +8,30 @@
 **Companion to [`CR109.md`](CR109.md)** (the game design) and
 [`games_roadmap.md`](games_roadmap.md) (modes beyond MVP).
 **Status:** design stage. Not laned. `AT:Gamer`, 2026-07-30.
+**Revision 2 — Amendment D.** Updated for the `AT:Fable` review series and Saiful's two rulings on
+it. Every disposition is in §20 of the design; the build consequences are here.
 
 Saiful: *"as much as we can upfront, so that when it reaches the architect, they are ready."*
 
 This document carries the schema, the contracts, the slice boundaries and the fences. A lane
 assign should reference it rather than restate it.
+
+**What Amendment D changed for the build**, so nobody diffs two revisions to find it:
+
+| Change | Lands in | Why it matters to the build |
+|---|---|---|
+| **Trading cost** — 10 bps, min 1.00, burned, game-only | slice 2 | touches the fill path, cash checks, and every TWR test's expected numbers |
+| **Finish stipend + alpha→points formula** | slice 3 | **the structural pair** — neither ships alone (§6.5 of the design) |
+| **The ledger clamps, not the display** | slice 3 | **changes §4.5's logic** — the previous plan specified `max(0, SUM(delta))`, which is now wrong |
+| **Achievable benchmark** — alpha scored net of one entry fee | slice 3 | one constant, but it is the difference between fair and a hidden tax on early players |
+| **First title rung is a milestone**, not a threshold | slice 4 | a predicate over `game_entries`, not a number comparison |
+| **3-tap ticket, queue-first** | slice 2 mobile | queue-first is the **primary** flow for GCC/SEA, not an edge case |
+| **Splits (G2)** | slice 2 | a scored run is corrupted by an unhandled split |
+| **Mirrors** — intent, wildness, counterfactuals, heat | slices 2–3 | all computed from data the scoring pass already walks |
+| **PR board** | slice 3 | the only competitive surface that works at `n = 1` |
+| **Agent post-mortem — paying customers only** | slice 3–5 | a template-filled LLM call, plus an entitlement check |
+| **Private fields** | Stage 2 | placement capped, **stipend still pays** |
+| **`games_scoring.py` owns all twelve constants** | slice 1 onward | §18 of the design is generated from it |
 
 ---
 
@@ -77,14 +96,27 @@ A game portfolio you can enter and trade. **No score, no board, no close.**
 - game portfolio rows (§4.2), `game_fields`, `game_runs`, `game_entries`
 - `games_service` field roll for **weekly only**, fixed calendar starts
 - the game trade path (§4.5) — **no mandate**, **market-hours rule**
+- **the trading cost** — 10 bps of notional, min 1.00 AMI Cash, at fill, both sides, **burned**
+- **split handling (G2)** — adjust quantity and basis in place, flag the row, **no TWR break**
 - one-live-run-per-cadence guard
 - restart → `FORFEIT` (no career debit yet — nothing to debit)
 - `merge_service` fix so a claim keeps runs
-- Flutter: lobby with the no-rules disclosure, my-run screen
+- **intent tag** — one enum on `game_entries`, written at entry
+- Flutter: lobby with the no-rules disclosure (full text on first entry, chip after), the **3-tap
+  ticket** with size chips and stop/target presets, my-run screen with the **book heat gauge**
 
 **Acceptance:** entering a second weekly run is refused; an out-of-hours order queues and does not
 fill at a stale price; a queued order does not appear in a NAV snapshot before it fills; a claimed
-account keeps its runs; the **training** submit path still rejects mandate breaches.
+account keeps its runs; the **training** submit path still rejects mandate breaches; a 1,000-notional
+BUY deducts 1,001.00 and a 50-notional BUY deducts 51.00; **training-path trades carry zero fee**;
+the fee is **not** a capital event and does not split the TWR chain; a 4:1 split leaves NAV
+continuous and flags the row; **no table, counter or field total ever accumulates fees** (burned, not
+pooled — a pool is a wagered stake and §15 dies).
+
+**Queue-first is the primary flow, not the fallback.** US regular hours are evening in the Gulf and
+past midnight in Malaysia, so most target users place orders outside market hours as a matter of
+course. The lobby, ticket and beat card are designed around *plan tonight, fills at the open,
+morning card reports what filled* — not around a live-market assumption.
 
 `DARK`: placement, career points, titles, boards, ceremony, cadences beyond weekly.
 
@@ -94,14 +126,31 @@ The loop closes. Benchmark scoring only — which is the correct scoring at alph
 placeholder.
 
 - `SETTLING → CLOSED` scoring pass, idempotent
-- benchmark-relative scoring (§6.6 of the design)
-- career-point ledger, signed, floored at zero
+- benchmark-relative scoring (§6.6 of the design), **against the achievable benchmark** — net of one
+  entry fee, because the index pays no fees and the player does
+- **the alpha → points formula** (§6.6.1) — same 2.5 : 1 asymmetry as placement, capped at ±1
+- **the finish stipend** (§6.5) — the structural pair with the fee; **neither ships alone**
+- career-point ledger, signed, **clamped at the ledger, not the display**
 - `VOID` on mock-priced days, stated loudly
-- Flutter: the Close screen, the Record surface (career points + run history)
+- **the mirrors** — wildness index and the two counterfactual lines, both computed inside the
+  scoring pass, which already walks the trade log and the price series
+- **the PR board** — a max-query over `portfolio_nav_daily`; the only competitive surface that works
+  at `n = 1`, which is the alpha condition
+- **`close → re-entry` and `first-run activation` instrumented from day one** — these two numbers
+  are what Gate 1 runs on (§17.1 of the design)
+- Flutter: the Close on the **three-beat budget** with a debrief panel behind it, the re-entry CTA
+  as the final beat, the Record surface designed as a surface (identity / movement / history)
 
 **Acceptance:** a field of one scores, does not crash, and does not pay a win; a thin-field run
-states its basis (field size + benchmark) on the board and in the Close; career points never render
-below zero; scoring is idempotent across a restart.
+states its basis (field size + benchmark) on the board and in the Close; scoring is idempotent
+across a restart; **a player at 0 who scores +8 displays 8** (the ledger clamps, so there is no
+invisible debt); a forfeited run, a run with zero executed trades and a run not held to close each
+pay **no stipend**; no alpha outcome at any magnitude pays more than winning a field outright; alpha
+is **scored** against the achievable benchmark while the Close **displays** the gross comparison —
+both asserted, because the point is that they differ; the Close renders three beats and everything
+else is reachable only from the debrief panel; **a free user's Close contains rank, delta, curve and
+both counterfactual lines**; intent, wildness, counterfactuals and heat appear in **no** board or
+opponent-facing payload, asserted at the serializer.
 
 `DARK`: placement, the field board, titles, cosmetics.
 
@@ -127,6 +176,14 @@ accounts are nearly free; direct challenge plus cheap accounts is a trivial coll
 alt, throw the duel, bank the win). Auto-matching closes it structurally. If challenge-a-friend is
 added later it must either award no career points or be capped per period.
 
+**The queue carries a pairing key from day one.** Alpha pairs whoever is waiting, which is correct.
+At scale, repeated blowout mismatches demotivate both sides, so pairing moves to career-point or
+title proximity when the pool allows. Nothing to build now — but the queue's schema must not
+preclude it, and the rolling skill stat (Stage 2) is the natural key.
+
+**House duels are recorded separately from human duels.** Beating a desk is a real result, but a
+single W–L mixing the two lets a deterministic opponent inflate a social stat.
+
 ### Slice 3c — house desks · **what makes 3b and 4 work at alpha**
 
 Disclosed strategy desks (§11.2 of the design). Sequenced here because slice 3b's duels need an
@@ -138,6 +195,11 @@ opponent and slice 4's board needs a field — at alpha neither exists without t
 - fill-to-target-field-size, not a fixed count; taper as real entrants arrive
 - kill switch, forwarded in `docker-compose.yml` (CR040 parity test)
 - desk exclusion added to the existing real-user metric filter
+- **desks pay identical trading costs** — a fee-exempt desk is a tuned result by the back door
+- **first-run routing: a new player's first run is always a duel against the Index Desk.** A routing
+  rule over 3b + 3c, not a feature. It is the only thing that gives a first close a real opponent at
+  alpha field sizes, and it bounds a beginner's first act — the Index Desk holds the benchmark, so
+  it never embarrasses them the way a concentrated moonshot on the open board would.
 - Flutter: the shared entrant renderer marks a desk on every surface
 
 **Acceptance:** a desk's return is **computed from real prices via its stated rule** — a test asserts
@@ -278,9 +340,37 @@ untouched and only game surfaces pass `kind="game"`.
 | `final_rank` | `Integer`, nullable | |
 | `career_points_delta` | `Integer`, nullable | signed; the audit trail for the ledger |
 | `scored_at` | `DateTime(tz)`, nullable | **presence = idempotency guard** |
+| `intent` | `String`, nullable | `wild` / `thesis` / `disciplined` — the intent tag, set at entry (Amendment D) |
+| `wildness_index` | `Numeric(12,4)`, nullable | computed at close from concentration, effective position count, turnover, book volatility |
+| `fees_paid` | `Numeric(12,2)` | denormalised total, for the Close's cost line and the turnover analysis Gate 1 needs |
+| `trade_count` | `Integer` | the stipend's `≥ 1 executed trade` guard, without re-counting the trade log |
 
 `UniqueConstraint("field_id", "user_id", name="uq_entry_field_user")` — also enforces
 one-live-run-per-cadence when combined with a partial check on open fields.
+
+### 4.4.1 `game_fields` additions — Amendment D
+
+| Column | Type | Note |
+|---|---|---|
+| `kind` | `String` | `open` / `duel` / **`private`** — private fields are Stage 2, but the column ships with the table so the predicate has somewhere to live |
+| `join_code` | `String`, nullable, unique | private fields only |
+| `owner_user_id` | `Uuid()`, nullable | private fields only |
+| `points_policy` | `String` | `full` / **`stipend_only`** — the private-field rule (see below) |
+| `theme` | `String`, nullable | a theme reference **from day one**, so theme runs and private fields compose as config rather than a later migration |
+
+> **The private-field rule, and why it is not just "capped".** Placement points are **rank-dependent**,
+> so five alts finishing below you manufactures a `p` of 1.0 — that is farmable and must be capped.
+> The **finish stipend is rank-dependent on nothing**: it requires a real entry, a real trade and a
+> real hold to close, and no arrangement between accounts can conjure one. So `stipend_only` caps
+> what can be farmed and leaves what cannot — which matters because private leagues are the genre's
+> most retentive mode, and a player who lives in them must still have a Record that moves.
+
+### 4.4.2 Personal records — slice 3
+
+No new table needed. PRs are a **max-query** over `portfolio_nav_daily` + `game_entries` (best
+weekly TWR, best alpha, best drawdown control, longest hold, longest streak of finishes), each
+carrying the `entry_id` that set it. Materialise later only if the query shows up in a profile —
+premature denormalisation here buys nothing and creates a second source of truth.
 
 ### 4.5 Career points ledger — slice 3
 
@@ -288,13 +378,29 @@ one-live-run-per-cadence when combined with a partial check on open fields.
 can be recomputed from events is debuggable; one that can't isn't.
 
 `career_events`: `id`, `user_id` (indexed), `delta` (Integer, signed), `reason`
-(`run_close` / `forfeit` / `forfeit_minimum`), `field_id`, `entry_id`, `created_at`.
+(`run_close` / `forfeit` / `forfeit_minimum` / **`finish_stipend`** / **`duel`**), `field_id`,
+`entry_id`, `created_at`.
 Unique on `(entry_id, reason)` so a re-run of the scoring pass cannot double-post — the same
-DEF039/DEF049 dedup shape already used for reputation.
+DEF039/DEF049 dedup shape already used for reputation. The stipend and the run's placement or alpha
+points are **separate rows with separate reasons**, so the Record can show what came from showing up
+versus what came from performing.
 
-The **displayed** total is `max(0, SUM(delta))` (floor at zero, §6.5), with the true signed sum and
-the forfeit count also available — the Record surface shows earned, given-back and forfeits
-separately or the headline is unreadable.
+> **CHANGED BY AMENDMENT D — the previous revision of this plan was wrong here.**
+> It specified the displayed total as `max(0, SUM(delta))` — a clamp on the **display**. That
+> produces the failure §6.5 of the design now documents: a player whose signed sum is −30 earns +8
+> and **the screen does not move**, because they are climbing out of a hole the UI never showed
+> them. And when it does move it moves on a ≈ zero-drift walk, which is variable-ratio
+> reinforcement on a status number.
+>
+> **Clamp at write time instead.** When posting a debit, write
+> `delta = max(raw_delta, -current_total)` so the running sum can never go below zero. The stored
+> `delta` is the amount actually applied; the raw computed value goes in a separate column
+> (`delta_uncapped`) for the audit trail, since the Record still shows forfeit counts and
+> given-back totals. **`SUM(delta)` is then always the displayed number**, with no clamp on read
+> anywhere.
+
+**Test this directly against the ledger, not the screen** — it is the failure mode a display-layer
+test cannot see.
 
 ---
 
@@ -313,6 +419,36 @@ def time_weighted_return(navs: Sequence[NavPoint]) -> float | None:
 def alpha_vs_benchmark(run_twr: float, benchmark_twr: float) -> float:
     """Excess return — the thin-field scoring basis."""
 ```
+
+**Added by Amendment D**, in `backend/app/services/games_scoring.py` — pure, no DB, and the module
+that owns every tunable constant:
+
+```python
+def achievable_benchmark(benchmark_twr: float) -> float:
+    """The benchmark net of the one entry fee a player pays to hold it.
+
+    Runs end marked, not liquidated (§5.2), so holding the index inside the game
+    costs exactly one fill. Scoring against the costless index would tax every
+    player on the benchmark path — which is the alpha-window cohort, and nobody
+    else once fields clear n >= 8.
+    """
+
+def alpha_to_points(alpha: float) -> float:
+    """Alpha -> base points. Same 2.5:1 asymmetry as placement, clamped at +/-1."""
+
+def finish_stipend(cadence: str) -> int:
+    """Fixed award for a completed run. Guards live at the call site:
+    entered, >= 1 executed trade, not forfeited, held to close."""
+
+def trade_fee(notional: float) -> float:
+    """FEE_BPS of notional, floored at FEE_MIN. Burned, never pooled."""
+
+def wildness_index(...) -> float:
+    """Per-run width: concentration, effective position count, turnover, vol."""
+```
+
+**All twelve constants live here** (§13.2 of the design), each with a loud test, and **§18 of the
+design is generated from this module** rather than maintained by hand across five documents.
 
 **Already shipped, reuse rather than rewrite:**
 
@@ -347,10 +483,23 @@ New `backend/app/api/games.py`. Shapes follow the existing `api/league.py` conve
 | `GET` | `/v1/games/fields/{field_id}/board` | the open field; **never another player's AMI Cash** |
 | `GET` | `/v1/games/record` | career points, signed net, forfeit count, titles, run history |
 | `GET` | `/v1/games/rules` | the in-app rules surface (ex-CR063 scope) |
+| `POST` | `/v1/games/runs/{run_id}/trade/quote` | **Amendment D** — the ticket's pre-confirm card: shares, est. fee, book-percentage. Rides the existing 60s `CachingProvider` TTL. |
+| `GET` | `/v1/games/runs/{run_id}/close` | the Close payload: three beats, plus the debrief block behind them. **Entitlement decides whether the post-mortem is present, never whether the rest is.** |
+| `GET` | `/v1/games/record/prs` | the PR board — works at `n = 1` |
 
 **Every response that carries a score must also carry its basis** — `scoring_basis`,
 `entrant_count`, and any `void_reason`. A client must never have to infer why a number is what it
 is. This is CR040 applied to the wire format, not just the UI.
+
+**Two Amendment-D contract rules:**
+
+- **The Close payload is complete without an entitlement.** A free user's response carries rank,
+  delta, curve, both counterfactual lines, markers and the re-entry CTA; the paid response adds the
+  post-mortem. Building it the other way — assembling the full payload and stripping it — is how the
+  free Close quietly becomes a fragment.
+- **Alpha responses carry both numbers.** `alpha_scored` (net of the entry fee) and
+  `alpha_display` (gross vs the costless index) are separate fields. The client must not derive
+  either, because the whole point is that the honest scoring number and the honest boast differ.
 
 ---
 
@@ -377,6 +526,25 @@ difference is then structural, which is what CR040 asks for.
 - **Do NOT render another player's AMI Cash** on any board.
 - **Do NOT implement placement scoring without the `n < 8` guard** — the formula divides by zero.
 - **Do NOT put navigation changes in this CR.** They are CR133.
+- **Do NOT clamp career points on read** (§4.5). The clamp happens at write, or the player carries
+  an invisible debt.
+- **Do NOT pool the trading fee** anywhere — no table, no counter, no field total. Burned. A pool of
+  forfeited stakes is a wagered stake and the §15 prize leg dies.
+- **Do NOT exempt house desks from the fee.** Identical costs, or their P&L is tuned by omission.
+- **Do NOT ship the fee without the stipend, or the stipend without the fee** (§6.5 of the design).
+  The fee is scoring-neutral under placement and scoring-negative under the benchmark, so alone it
+  tilts the median early player's Record negative.
+- **Do NOT let a paid feature touch a run's inputs, scoring or ranking.** The agent post-mortem is
+  post-close explanation and nothing else (§3.1.1 of the design).
+- **Do NOT prompt the post-mortem's retrospective-only constraint** — CR038: agents ignore emphatic
+  instructions ~70% of the time. It is a **fixed template filled from computed run data**, and a
+  test asserts no forward-looking field exists in that template.
+- **Do NOT put an upsell inside the Close's three beats.** The locked card lives in the debrief
+  panel, one tap deeper.
+- **Do NOT render a mirror on a board.** Intent, wildness, counterfactuals and heat are private —
+  assert it at the serializer, not the widget, or the next surface leaks them.
+- **Do NOT treat the fee or a split as a capital event.** Neither breaks the TWR chain: the fee is a
+  cost inside the period, and a split leaves economic value unchanged.
 - **Registers are generated** — write the row file, run
   `python3 scripts/registers/gen_registers.py gen cr`, commit both in the same commit (DEF159).
   `python3`, not `python`.
@@ -401,12 +569,33 @@ Disjoint write paths, per the CR052 dispatch protocol.
 | Lane | Owns | Fences |
 |---|---|---|
 | `coder.api` | `models.py` + alembic, `trading_math/twr.py`, `games_scoring.py`, `games_service.py`, `api/games.py`, `main.py` tick, `merge_service.py` | do not touch `mobile/` |
-| `coder.mobile` | `screens/games/`, the equity curve, the Close, the Record surface, ARB strings | do not touch `backend/`; do not make nav changes (CR133) |
+| `coder.mobile` | `screens/games/`, the equity curve, the trade ticket, the Close, the Record surface, ARB strings | do not touch `backend/`; do not make nav changes (CR133) |
 | CR133 lane | `home_shell.dart`, `hex_bottom_nav.dart`, tab-index enum | do not implement game surfaces |
 
 **Slice 1 is a single `coder.api` lane plus one small `coder.mobile` lane** and is the natural first
 assign — it has no compliance surface, no cross-lane contract beyond the NAV read, and it delivers
 the equity curve regardless of whether the rest is ever built.
+
+**Amendment D's mobile work concentrates in slice 2**, and it is larger than the original plan
+implied: the 3-tap ticket with size chips and stop/target presets, the queue-first rhythm, the heat
+gauge, and the one-screen entry fence. Worth its own `coder.mobile` assign rather than riding along
+with the lobby.
+
+### 8.1 The funding stages, and what they gate
+
+The slice list above is the **build** order. §17.1 of the design sets the **funding** order, and a
+lane assign should know which side of a gate it is on:
+
+| Stage | Slices | Gate to pass before the next |
+|---|---|---|
+| **1 — the addictive core** | 1, 2, 3, 3b, 3c + every Amendment-D item attached to them | **Gate 1:** `first-run activation` and `close → re-entry` meet targets Saiful sets **before** the build |
+| **2** | 4, monthly, full ceremony, push (own CR), private fields, the skill stat | **Gate 2:** fields clearing `n ≥ 8` organically; title rungs being crossed |
+| **3** | Q/H/Y, slice 8 rewards, roadmap modes (#9 and #8 early — XS each) | — |
+
+Stage 1 is roughly a third of the plan's surface and contains every hook that matters. The expensive
+machinery — the placement curve at scale, five concurrent cadences, cosmetics — is Stage 2+, because
+**status systems only pay once there is a crowd to hold status in**, and the crowd is built by the
+cheap loop.
 
 ---
 
@@ -439,6 +628,28 @@ backend work that does).
 | 20 | No API response contains another user's absolute AMI Cash | 3 |
 | 21 | **No reward or title alters capital, data or any trade constraint** — the one-way rule, as a test | 4 |
 
+**Added by Amendment D:**
+
+| # | Test | Slice |
+|---|---|---|
+| 22 | 1,000-notional BUY deducts 1,001.00; 50-notional BUY deducts 51.00 (minimum applies) | 2 |
+| 23 | **Training-path trades carry zero fee** — the split, asserted from both sides | 2 |
+| 24 | Two identical gross sequences, one padded with 40 wash fills: the padded run's TWR is lower **by the fee drag**, asserted numerically | 2 |
+| 25 | The fee is not a capital event — it does not split the TWR chain | 2 |
+| 26 | **No table, counter or aggregate accumulates fees** (burned, not pooled) | 2 |
+| 27 | A 4:1 split leaves NAV continuous, adjusts quantity and basis, flags the row, does not break the chain | 2 |
+| 28 | A dividend-paying holding accrues no cash **and** the benchmark series is price-only — asserted together | 3 |
+| 29 | **A player at 0 who scores +8 shows 8** — asserted against the ledger, not the screen | 3 |
+| 30 | Forfeited / zero-trade / not-held-to-close runs each pay **no** stipend | 3 |
+| 31 | No alpha magnitude pays more than winning a field outright (the ±1 clamp) | 3 |
+| 32 | Alpha is **scored** net of one entry fee while the Close **displays** gross — both asserted | 3 |
+| 33 | Intent, wildness, counterfactuals and heat appear in no board or opponent payload — **at the serializer** | 3 |
+| 34 | A free user's Close contains rank, delta, curve and both counterfactual lines | 3 |
+| 35 | The post-mortem template contains no forward-looking field (CR038 — structural, not prompted) | 3–5 |
+| 36 | House desks pay identical fees to humans | 3c |
+| 37 | The first title rung fires on 3 finished runs with no forfeit, and never on points | 4 |
+| 38 | A private field caps placement points **and still pays the stipend** | Stage 2 |
+
 Mobile: `flutter test`, `flutter analyze --no-fatal-infos`.
 
 Test 21 is the one worth writing even though it looks philosophical. It is the executable form of
@@ -449,18 +660,49 @@ starting capital.
 
 ## 10. What is still open
 
-These block nothing in slices 1–3 and must be answered before slice 4:
+**The authoritative list is §18 of the design**, which is generated from `games_scoring.py`'s
+constants. Restated here only where it changes what a lane can start.
 
-1. **Thin-field thresholds** — placement `n ≥ 8`, titles `n ≥ 20`, max wait 30 days, min entrants 8.
+**Blocks slice 2** (nothing else does):
+
+1. **`FEE_BPS` and `FEE_MIN`** — first cut 10 bps / 1.00. The lane can build against the first cut,
+   because the whole point of putting them in `games_scoring.py` is that retuning is one line and a
+   failing test. But **do not ship the fee to users before the stipend exists** (§6.5 of the design).
+
+**Blocks slice 3:**
+
+2. **`FINISH_STIPEND`** — the fee's pair. ~5 per weekly finish, scaled by cadence.
+3. **`ALPHA_FULL`** — the alpha that pays a full win. Sized so a typical good week (+1–2% excess)
+   pays like a good placement finish.
+4. **The benchmark index** — the *basis* is settled (price-only), the index is not. SPY by default,
+   but a small-cap-heavy run judged against a mega-cap index reads as skill or failure that is
+   really style drift.
+
+**Blocks slice 4:**
+
+5. **Thin-field thresholds** — placement `n ≥ 8`, titles `n ≥ 20`, max wait 30 days, min entrants 8.
    All four interact; set them together against a **measured** alpha entry rate, not a guess.
-2. **The benchmark** — SPY by default, but a small-cap-heavy run judged against a mega-cap index
-   reads as skill or failure that is really style drift.
-3. **Minimum forfeit debit** — the size of the floor.
-4. **Title thresholds** — first cut 0 / 500 / 2,500 / 10,000 / 30,000.
-5. **Naming** — the game, a run, the boards. AMI Cash is settled as the money.
-6. **Blowup threshold** for the proactive restart offer.
-7. **Settlement freeze duration.**
-8. **Queued-order visibility** — pending on the board, or private until it fills?
+6. **`MIN_FORFEIT_DEBIT`** · **title thresholds** (500 / 2,500 / 10,000 / 30,000 above the milestone
+   rung) · **duel deltas** by cadence.
+
+**Blocks nothing, needed before launch:**
+
+7. **Naming** — the game, a run, the boards, and the new first title rung. AMI Cash is settled.
+8. **Blowup threshold** · **settlement freeze duration** · **queued-order visibility** (more
+   load-bearing now that queue-first is the primary flow).
+
+**Saiful's, and required *before* the build rather than during it:**
+
+9. **Gate 1 and Gate 2 targets** (§17.1 of the design) — `first-run activation` and
+   `close → re-entry`. Set them first, or the gate gets argued backwards from whatever the data
+   turns out to be.
+10. **Whether first entry is gated behind a training milestone** (§16.10) — it delays the headline
+    feature.
+
+**A measurement task, not a decision:** G3 — sample Yahoo's quote lag against a reference on
+melehost during market hours, **before any board is live**. The fee raised the bar on the exploit
+(it must now clear ~20 bps per round trip), so this is due diligence rather than urgent — but a
+board scored on lagged quotes is a time machine one timescale below §5.1.
 
 **Not open, and not engineering:** the compliance work in §15 of the design runs in parallel and
 gates nothing before a board is user-visible. Slices 1–2 carry **zero** compliance surface.
