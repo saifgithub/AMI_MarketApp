@@ -66,12 +66,44 @@ String? levelTriple(String content) {
 
 /// The row's one-line gist, by the ranked sources above. Returns null when
 /// nothing quotable exists — the caller then renders `NO RESPONSE`.
+///
+/// This stays null for verdict prose on purpose (DEF189): the PM's reasoning
+/// matches none of the three analyst-commentary patterns above, and forcing
+/// it through them would just be a different way of mangling it. The caller
+/// handles that null case — see [collapsedLabel] — because the fallback there
+/// (first sentence of `voice.content`) is a presentation choice, not another
+/// quotable-source rank, and mixing the two here would blur why each one
+/// exists.
 String? gistFor(RoomVoice voice) {
   if (voice.withheld) return null;
   if (voice.headline != null) return voice.headline;
   final bold = firstBoldSpan(voice.content);
   if (bold != null) return bold;
   return levelTriple(voice.content);
+}
+
+/// `voice.content`'s first sentence, verbatim up to and including its first
+/// `.`/`!`/`?` — never a mid-sentence cut. Falls back to the full content when
+/// no terminator exists; the row's `maxLines: 1` + ellipsis handles the
+/// overflow, so there is no separate length cap to get wrong here.
+String firstSentence(String content) {
+  final trimmed = content.trim();
+  final m = RegExp(r'[.!?]').firstMatch(trimmed);
+  if (m == null) return trimmed;
+  return trimmed.substring(0, m.end).trim();
+}
+
+/// The collapsed row's label. `NO RESPONSE` is reserved for a voice that is
+/// neither withheld nor quotable nor holding any content at all — a genuinely
+/// empty contribution. Anything with content but no [gistFor] match (verdict
+/// prose, DEF189) falls back to [firstSentence] instead of being folded into
+/// the same `NO RESPONSE` branch the copy-paste bug used to render for both.
+String collapsedLabel(AppLocalizations l, RoomVoice voice) {
+  if (voice.withheld) return l.roomRowNotHeard;
+  final gist = gistFor(voice);
+  if (gist != null) return gist;
+  if (voice.content.isEmpty) return l.roomRowNoResponse;
+  return firstSentence(voice.content);
 }
 
 class RoomTranscriptRows extends StatefulWidget {
@@ -206,6 +238,9 @@ class TranscriptRow extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final agent = agentById(voice.agentId);
     final gist = gistFor(voice);
+    final label = collapsedLabel(l, voice);
+    final hasReadableText =
+        !voice.withheld && (gist != null || voice.content.isNotEmpty);
     final marked = !voice.withheld && hasAmiAnnotation(voice.content);
     return AnimatedContainer(
       duration: AmiMotion.normal,
@@ -250,14 +285,10 @@ class TranscriptRow extends StatelessWidget {
                 const SizedBox(width: AmiSpacing.s),
                 Expanded(
                   child: Text(
-                    voice.withheld
-                        ? l.roomRowNotHeard
-                        : (gist ?? (voice.content.isEmpty
-                            ? l.roomRowNoResponse
-                            : l.roomRowNoResponse)),
+                    label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: gist != null
+                    style: hasReadableText
                         ? AmiTypography.statSmall
                             .copyWith(color: AmiColors.textMed)
                         : AmiTypography.labelMono
@@ -285,11 +316,37 @@ class TranscriptRow extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(
                   left: 36, top: AmiSpacing.xs, bottom: AmiSpacing.xs),
-              child: MarkdownBody(
-                data: voice.content,
-                shrinkWrap: true,
-                styleSheet: agentMarkdownStyle(AmiColors.textMed),
-              ),
+              child: voice.agentId == 'portfolio_manager'
+                  ? Container(
+                      key: const Key('pmVerdictCard'),
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(AmiSpacing.s),
+                      decoration: BoxDecoration(
+                        color: AmiColors.slate900,
+                        borderRadius: BorderRadius.circular(AmiRadii.card),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            agent.displayName.toUpperCase(),
+                            style: AmiTypography.labelMono.copyWith(
+                                fontSize: 9, color: agent.color),
+                          ),
+                          const SizedBox(height: AmiSpacing.xs),
+                          MarkdownBody(
+                            data: voice.content,
+                            shrinkWrap: true,
+                            styleSheet: agentMarkdownStyle(AmiColors.textMed),
+                          ),
+                        ],
+                      ),
+                    )
+                  : MarkdownBody(
+                      data: voice.content,
+                      shrinkWrap: true,
+                      styleSheet: agentMarkdownStyle(AmiColors.textMed),
+                    ),
             ),
         ],
       ),
