@@ -4,7 +4,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.api.dependencies import get_current_user_optional
 from app.core.time import now_utc
+from app.db.models import User
+from app.schemas import Mandate
 from app.schemas.onboarding import (
     AnswerRequest,
     AnswerResponse,
@@ -22,6 +25,7 @@ from app.services.concierge_engine import (
     process_answer,
     session_to_mandate_dict,
 )
+from app.services.mandate_store import get_mandate_store
 from app.services.session_store import InMemorySessionStore, get_session_store
 
 router = APIRouter(prefix="/v1/onboarding", tags=["onboarding"])
@@ -99,8 +103,23 @@ async def submit_answer(
 async def confirm_readback(
     req: ReadbackConfirmRequest,
     store: InMemorySessionStore = Depends(get_session_store),
+    current_user: User | None = Depends(get_current_user_optional),
 ) -> ReadbackConfirmResponse:
-    """User confirms (or edits) the readback summary. Marks session complete."""
+    """User confirms (or edits) the readback summary. Marks session complete.
+
+    DEF160: onboarding stays anonymous-first — `current_user` is a best-effort
+    Bearer read (`get_current_user_optional`), never required, so an anon
+    caller with no token still completes the interview exactly as before.
+    An already-signed-in user retaking the interview *is* authenticated here
+    (unlike the anonymous-then-claim path), so this is the only place that
+    can carry an explicit, authorised "replace my mandate" signal. That
+    signal is `req.restart` — it must be BOTH true AND paired with a valid
+    Bearer token to do anything, so it can't be set by accident from an
+    anonymous client. This is a distinct operation from
+    `_bind_onboarding_session`'s claim-time bind in auth.py: that guard
+    (DEF060) still refuses to clobber a mandate on session_id replay with no
+    restart signal, and this path never touches it.
+    """
     session = await store.get(req.session_id)
     if session is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "session not found or expired")
@@ -121,9 +140,19 @@ async def confirm_readback(
     session.current_step = ConversationStep.COMPLETE
     await store.save(session)
 
-    # In a real flow this is where account claim is offered; in V0 we just produce
-    # a mandate preview for the next screen.
-    mandate_preview = session_to_mandate_dict(session, user_id="anonymous-pending-claim")
+    if req.restart and current_user is not None:
+        # Explicit + authenticated: replace the caller's current mandate
+        # outright. upsert() bumps the version and keeps prior rows for
+        # history/journal replay.
+        mandate_dict = session_to_mandate_dict(session, user_id=current_user.id)
+        applied = get_mandate_store().upsert(
+            current_user.id, Mandate.model_validate(mandate_dict)
+        )
+        mandate_preview = applied.model_dump(mode="json")
+    else:
+        # In a real flow this is where account claim is offered; in V0 we
+        # just produce a mandate preview for the next screen.
+        mandate_preview = session_to_mandate_dict(session, user_id="anonymous-pending-claim")
 
     follow_up = Message(
         author=Author.CONCIERGE,
