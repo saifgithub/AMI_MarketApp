@@ -74,7 +74,12 @@ def _mandate_body(user_id, ticker: str, *, flag: str, **overrides) -> dict:
         "side": "buy",
         "quantity": 1,
         "order_type": "market",
-        "mandate_override": {"compliance": {flag: True, "long_only": True}},
+        # CR129/DEF187: pin a permissive single-name cap — this file is about
+        # the classification verdict crossing the wire, not position sizing.
+        "mandate_override": {
+            "compliance": {flag: True, "long_only": True},
+            "single_name_cap_pct": 100.0,
+        },
     }
     body.update(overrides)
     return body
@@ -247,7 +252,9 @@ def test_submit_accepted_empty_when_no_classification_flags_active(client: TestC
             "side": "buy",
             "quantity": 1,
             "order_type": "market",
-            "mandate_override": {"compliance": {"long_only": True}},
+            "mandate_override": {
+                "compliance": {"long_only": True}, "single_name_cap_pct": 100.0,
+            },
         },
         headers={"Authorization": f"Bearer {token}"},
     )

@@ -160,6 +160,9 @@ def test_b_a_small_market_order_still_passes():
         current_drawdown_pct=0.0,
         mandate=hydrate_coach_mandate({"plan": "trader"}),
         holdings=[], quotes={"AAPL": 100.0}, sector_map=_Map(),
+        # CR129: the five BE2 limits are always-active now; this file is
+        # about the sector cap, not these — harmless real context.
+        last_loss_closed_at=None, trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
     assert result.passed, result.violations
 

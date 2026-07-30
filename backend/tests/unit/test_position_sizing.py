@@ -28,11 +28,14 @@ def test_trader_narration_cap_equals_pm_clamp_ceiling(risk_score, base_mandate: 
     assert told <= SINGLE_NAME_ABSOLUTE_CAP_PCT
 
 
-def test_single_name_compliance_cap_falls_back_to_the_library_backstop(base_mandate: Mandate):
-    """CR101-BE1: with no explicit `single_name_cap_pct` override, the
-    deterministic compliance check's single-name cap still falls back to the
-    fixed absolute backstop — measured, migration-safe (see
-    safety_floor.single_name_cap_pct's docstring for why this deliberately
-    differs from the risk-tier preset the Trader/PM overlay narrates)."""
-    assert single_name_cap_pct(base_mandate) == SINGLE_NAME_ABSOLUTE_CAP_PCT
-    assert single_name_cap_pct(base_mandate) != risk_tier_cap(base_mandate.risk_score)
+def test_single_name_compliance_cap_now_matches_the_risk_tier_preset(base_mandate: Mandate):
+    """CR129 closes DEF187: with no explicit `single_name_cap_pct` override,
+    the deterministic compliance floor's single-name cap now reads the SAME
+    risk-tier preset the Trader/PM overlay narrates and the Room pre-clamps
+    to — completing the CR046 "shown == enforced" invariant this file's other
+    test already holds for the narration/clamp pair. Pre-CR129 this floor
+    fell back to the flat `SINGLE_NAME_ABSOLUTE_CAP_PCT` (50%) backstop
+    instead, a disclosed divergence DEF187 named and Saiful has now
+    authorised closing (13 live alpha mandates)."""
+    assert single_name_cap_pct(base_mandate) == risk_tier_cap(base_mandate.risk_score)
+    assert single_name_cap_pct(base_mandate) != SINGLE_NAME_ABSOLUTE_CAP_PCT

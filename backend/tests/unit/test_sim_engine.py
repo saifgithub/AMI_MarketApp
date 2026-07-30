@@ -31,7 +31,7 @@ def test_portfolio_init_at_10k():
 def test_buy_fills_and_updates_holdings_and_cash():
     sim = SimEngine()
     user_id = uuid4()
-    mandate = hydrate_coach_mandate({"plan": "trader"})
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
     price = sim.current_price("AAPL")
     result = sim.submit(
         user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=5,
@@ -56,7 +56,7 @@ def test_duplicate_verdict_rejects_second_buy():
     that surfaces the existing trade_id."""
     sim = SimEngine()
     user_id = uuid4()
-    mandate = hydrate_coach_mandate({"plan": "trader"})
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
     verdict_id = uuid4()
     price = sim.current_price("AAPL")
 
@@ -93,7 +93,7 @@ def test_no_verdict_ref_allows_multiple_trades():
     guard — the user can buy AAPL twice from the Floor without a Room run."""
     sim = SimEngine()
     user_id = uuid4()
-    mandate = hydrate_coach_mandate({"plan": "trader"})
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
     for _ in range(2):
         result = sim.submit(
             user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=1,
@@ -131,7 +131,9 @@ def test_halal_screens_out_in_index_but_permits_unknown():
         {"AAPL", "MSFT"}, parent_index={"AAPL", "MSFT", "JPM"}, as_of=date(2026, 7, 22)
     )
     sim = SimEngine()
-    mandate = hydrate_coach_mandate({"plan": "trader", "compliance": {"halal": True}})
+    mandate = hydrate_coach_mandate(
+        {"plan": "trader", "compliance": {"halal": True}, "single_name_cap_pct": 100.0}
+    )
 
     # JPM: in the parent index, not compliant → screened out → rejected.
     screened = sim.submit(
@@ -156,9 +158,11 @@ def test_halal_screens_out_in_index_but_permits_unknown():
 def test_single_name_cap_rejects_too_large_buy():
     sim = SimEngine()
     user_id = uuid4()
+    # CR129/DEF187: no override → resolves to the risk-tier preset (3.0% at
+    # the default risk_score=3), not the pre-CR129 flat 50% backstop.
     mandate = hydrate_coach_mandate({"plan": "trader"})
     price = sim.current_price("MSFT")
-    # Buy 70% of the portfolio in MSFT — exceeds 50% single-name cap
+    # Buy 70% of the portfolio in MSFT — exceeds the single-name cap either way
     qty = int((10_000 * 0.7) / price)
     result = sim.submit(
         user_id=user_id, ticker="MSFT", side=Side.BUY, quantity=qty,
@@ -171,7 +175,7 @@ def test_single_name_cap_rejects_too_large_buy():
 def test_insufficient_cash_blocks_buy():
     sim = SimEngine()
     user_id = uuid4()
-    mandate = hydrate_coach_mandate({"plan": "trader"})
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
     # Pretend the price is high — sim has $10k, ask for 100 shares of a $500+
     # base, exceeds cash regardless of single-name cap.
     price = sim.current_price("AAPL")
@@ -221,7 +225,7 @@ def test_target_hit_flips_outcome_to_won():
     provider = _FixedPrice(100.0)
     sim = SimEngine(provider=provider)
     user_id = uuid4()
-    mandate = hydrate_coach_mandate({"plan": "trader"})
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
     result = sim.submit(
         user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=1,
         mandate=mandate, stop=90.0, target=110.0,
@@ -285,7 +289,7 @@ def test_preview_accepts_compliant_trade_without_persisting():
     Cash unchanged + no holdings recorded after a passing preview."""
     sim = SimEngine()
     user_id = uuid4()
-    mandate = hydrate_coach_mandate({"plan": "trader"})
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
     price = sim.current_price("AAPL")
     pv = sim.preview(
         user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=2,
@@ -337,7 +341,7 @@ def test_preview_rejects_on_insufficient_cash():
     """
     sim = SimEngine()
     user_id = uuid4()
-    mandate = hydrate_coach_mandate({"plan": "trader"})
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
     for ticker, weight in (("AAPL", 0.45), ("NVDA", 0.30)):
         qty = int((10_000 * weight) / sim.current_price(ticker))
         res = sim.submit(
@@ -370,7 +374,7 @@ def test_preview_rejects_on_insufficient_cash():
 def test_manual_close_realises_pnl_and_returns_cash():
     sim = SimEngine()
     user_id = uuid4()
-    mandate = hydrate_coach_mandate({"plan": "trader"})
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
     price = sim.current_price("AAPL")
     res = sim.submit(
         user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=2,

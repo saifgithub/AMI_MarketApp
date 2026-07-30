@@ -50,6 +50,7 @@ def test_post_loss_cooldown_blocks_the_next_buy(base_mandate: Mandate):
     blocked = check_mandate_compliance(
         _buy(), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
         holdings=[], quotes={"AAPL": 100.0}, now=_NOW, last_loss_closed_at=last_loss,
+        trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
     assert not blocked.passed
     assert blocked.blocked_by == "cooldown"
@@ -60,6 +61,7 @@ def test_post_loss_cooldown_blocks_the_next_buy(base_mandate: Mandate):
     cleared = check_mandate_compliance(
         _buy(), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
         holdings=[], quotes={"AAPL": 100.0}, now=_NOW, last_loss_closed_at=old_loss,
+        trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
     assert cleared.passed
 
@@ -67,6 +69,7 @@ def test_post_loss_cooldown_blocks_the_next_buy(base_mandate: Mandate):
     no_loss = check_mandate_compliance(
         _buy(), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
         holdings=[], quotes={"AAPL": 100.0}, now=_NOW, last_loss_closed_at=None,
+        trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
     assert no_loss.passed
 
@@ -75,6 +78,7 @@ def test_post_loss_cooldown_blocks_the_next_buy(base_mandate: Mandate):
     sell_result = check_mandate_compliance(
         sell, portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
         holdings=[_H("AAPL", 1)], quotes={"AAPL": 100.0}, now=_NOW, last_loss_closed_at=last_loss,
+        trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
     assert sell_result.passed
 
@@ -86,23 +90,24 @@ def test_max_open_positions_blocks_a_new_ticker_but_not_adding_to_a_held_one(bas
     mandate = base_mandate.model_copy(update={"max_open_positions": 2})
     holdings = [_H("AAPL", 10), _H("MSFT", 5)]
 
+    ctx = dict(last_loss_closed_at=None, trade_open_timestamps=[], existing_open_risk_pct=0.0)
     new_ticker = check_mandate_compliance(
         _buy("GOOG"), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
-        holdings=holdings, quotes={"AAPL": 100.0, "MSFT": 100.0, "GOOG": 100.0},
+        holdings=holdings, quotes={"AAPL": 100.0, "MSFT": 100.0, "GOOG": 100.0}, **ctx,
     )
     assert not new_ticker.passed
     assert new_ticker.blocked_by == "max_open_positions"
 
     add_to_existing = check_mandate_compliance(
         _buy("AAPL"), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
-        holdings=holdings, quotes={"AAPL": 100.0, "MSFT": 100.0},
+        holdings=holdings, quotes={"AAPL": 100.0, "MSFT": 100.0}, **ctx,
     )
     assert add_to_existing.passed  # not a NEW position, so the cap doesn't fire
 
     under_cap = check_mandate_compliance(
         _buy("GOOG"), portfolio_value=10_000.0, current_drawdown_pct=0.0,
         mandate=base_mandate.model_copy(update={"max_open_positions": 3}),
-        holdings=holdings, quotes={"AAPL": 100.0, "MSFT": 100.0, "GOOG": 100.0},
+        holdings=holdings, quotes={"AAPL": 100.0, "MSFT": 100.0, "GOOG": 100.0}, **ctx,
     )
     assert under_cap.passed
 
@@ -123,6 +128,7 @@ def test_max_trades_per_day_and_week_use_a_pinned_utc_clock(base_mandate: Mandat
     at_cap = check_mandate_compliance(
         _buy(), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
         holdings=[], quotes={"AAPL": 100.0}, now=_NOW, trade_open_timestamps=two_today,
+        last_loss_closed_at=None, existing_open_risk_pct=0.0,
     )
     assert not at_cap.passed
     assert at_cap.blocked_by == "over_trading"
@@ -132,6 +138,7 @@ def test_max_trades_per_day_and_week_use_a_pinned_utc_clock(base_mandate: Mandat
     under_cap = check_mandate_compliance(
         _buy(), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
         holdings=[], quotes={"AAPL": 100.0}, now=_NOW, trade_open_timestamps=one_today_one_yesterday,
+        last_loss_closed_at=None, existing_open_risk_pct=0.0,
     )
     assert under_cap.passed
 
@@ -144,6 +151,7 @@ def test_max_trades_per_day_and_week_use_a_pinned_utc_clock(base_mandate: Mandat
         _buy(), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=week_mandate,
         holdings=[], quotes={"AAPL": 100.0}, now=_NOW,
         trade_open_timestamps=[monday, prior_sunday],
+        last_loss_closed_at=None, existing_open_risk_pct=0.0,
     )
     assert not this_week_only.passed  # 1 trade already this week (monday) >= cap 1
     assert this_week_only.blocked_by == "over_trading"
@@ -152,6 +160,7 @@ def test_max_trades_per_day_and_week_use_a_pinned_utc_clock(base_mandate: Mandat
         _buy(), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=week_mandate,
         holdings=[], quotes={"AAPL": 100.0}, now=_NOW,
         trade_open_timestamps=[prior_sunday],
+        last_loss_closed_at=None, existing_open_risk_pct=0.0,
     )
     assert prior_week_doesnt_count.passed
 
@@ -160,7 +169,7 @@ def test_max_trades_per_day_and_week_use_a_pinned_utc_clock(base_mandate: Mandat
 
 
 def test_total_open_risk_cap_sums_size_x_stop_distance(base_mandate: Mandate):
-    mandate = base_mandate.model_copy(update={"max_open_risk_pct": 2.0})
+    mandate = base_mandate.model_copy(update={"max_open_risk_pct": 2.0, "single_name_cap_pct": 100.0})
 
     # Existing open positions already contribute 1.8 pts. Proposed: $1000 of a
     # $10,000 book (10%) with a 10%-below-entry stop -> +1.0 pt. Total 2.8 > 2.0.
@@ -168,6 +177,7 @@ def test_total_open_risk_cap_sums_size_x_stop_distance(base_mandate: Mandate):
         ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=10, order_type=OrderType.MARKET),
         portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
         holdings=[], quotes={"AAPL": 100.0}, proposed_stop=90.0, existing_open_risk_pct=1.8,
+        last_loss_closed_at=None, trade_open_timestamps=[],
     )
     assert not over_cap.passed
     assert over_cap.blocked_by == "open_risk"
@@ -177,6 +187,7 @@ def test_total_open_risk_cap_sums_size_x_stop_distance(base_mandate: Mandate):
         ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=10, order_type=OrderType.MARKET),
         portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
         holdings=[], quotes={"AAPL": 100.0}, proposed_stop=90.0, existing_open_risk_pct=0.5,
+        last_loss_closed_at=None, trade_open_timestamps=[],
     )
     assert under_cap.passed  # 0.5 + 1.0 = 1.5 <= 2.0
 
@@ -185,6 +196,7 @@ def test_total_open_risk_cap_sums_size_x_stop_distance(base_mandate: Mandate):
         ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=10, order_type=OrderType.MARKET),
         portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
         holdings=[], quotes={"AAPL": 100.0}, existing_open_risk_pct=1.5,
+        last_loss_closed_at=None, trade_open_timestamps=[],
     )
     assert no_stop.passed  # 1.5 + 0 <= 2.0
 
@@ -192,6 +204,7 @@ def test_total_open_risk_cap_sums_size_x_stop_distance(base_mandate: Mandate):
         ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=10, order_type=OrderType.MARKET),
         portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
         holdings=[], quotes={"AAPL": 100.0}, existing_open_risk_pct=2.5,
+        last_loss_closed_at=None, trade_open_timestamps=[],
     )
     assert not already_over.passed  # existing alone already exceeds cap -> any BUY blocked
 
@@ -252,21 +265,24 @@ def test_overlay_discloses_all_four_limits_interpolated_not_literal(base_mandate
     assert "3.0%" in overlay2
 
 
-def test_overlay_discloses_unset_limits_plainly(base_mandate: Mandate):
+def test_overlay_discloses_resolved_preset_when_unset(base_mandate: Mandate):
+    """CR129: unset now resolves to the risk-tier preset (base_mandate is
+    risk_score=3), not "not set"."""
     overlay = generate_overlay(AgentId.MARKET_ANALYST, base_mandate)
-    assert "Post-loss cooldown: not set" in overlay
-    assert "Max open positions: not set" in overlay
-    assert "Total open-risk cap: not set" in overlay
+    assert "Post-loss cooldown: 1.0h after a stop-out" in overlay
+    assert "Max open positions: 35" in overlay
+    assert "Total open-risk cap: 10.5%" in overlay
 
 
 # ── acceptance 4: defaults are non-binding ─────────────────────────────────
 
 
-def test_defaults_are_non_binding_byte_identical_to_field_absent(base_mandate: Mandate):
-    """A mandate with the five new fields entirely ABSENT from its stored dict
-    (the real shape of every pre-CR101 snapshot) enforces identically to one
-    with them explicitly None in memory — no existing user is silently
-    constrained on deploy."""
+def test_defaults_are_now_binding_byte_identical_to_field_absent(base_mandate: Mandate):
+    """CR129 acceptance 2 (inverting CR101-BE2 acceptance 4): a mandate with the
+    five fields entirely ABSENT from its stored dict (the real shape of every
+    one of the 13 live alpha mandates) now enforces IDENTICALLY to one with
+    them explicitly None in memory — and both now DO bind, to the risk-tier
+    preset, unlike before CR129."""
     raw = base_mandate.model_dump(mode="json")
     for f in (
         "post_loss_cooldown_hours", "max_open_positions",
@@ -287,9 +303,14 @@ def test_defaults_are_non_binding_byte_identical_to_field_absent(base_mandate: M
         proposed_stop=50.0,
     )
     result = check_mandate_compliance(_buy("TSLA"), **args)
-    assert result.passed
-    assert result.blocked_by is None
-    assert result.violations == []
+    assert not result.passed
+    assert result.blocked_by == "cooldown"
+
+    # And a mandate whose fields are explicitly None (in-memory, not absent from
+    # the dict) enforces byte-identically — the coalesce reads the same either way.
+    result_explicit = check_mandate_compliance(_buy("TSLA"), **{**args, "mandate": base_mandate})
+    assert result_explicit.blocked_by == result.blocked_by
+    assert result_explicit.violations == result.violations
 
 
 # ── acceptance 6: retro-tightening flags + blocks new buys, never force-sells ─
@@ -314,6 +335,7 @@ def test_retro_tightened_max_open_positions_flags_and_blocks_new_buys_not_sell()
     blocked = check_mandate_compliance(
         _buy("TSLA"), portfolio_value=13_000.0, current_drawdown_pct=0.0, mandate=tightened,
         holdings=holdings, quotes={"AAPL": 100.0, "MSFT": 100.0, "GOOG": 100.0, "TSLA": 100.0},
+        last_loss_closed_at=None, trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
     assert not blocked.passed
     assert blocked.blocked_by == "max_open_positions"
@@ -324,6 +346,7 @@ def test_retro_tightened_max_open_positions_flags_and_blocks_new_buys_not_sell()
     sell_result = check_mandate_compliance(
         sell, portfolio_value=13_000.0, current_drawdown_pct=0.0, mandate=tightened,
         holdings=holdings, quotes={"AAPL": 100.0, "MSFT": 100.0, "GOOG": 100.0},
+        last_loss_closed_at=None, trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
     assert sell_result.passed
 
@@ -345,6 +368,7 @@ def test_retro_tightened_max_open_risk_pct_flags_and_blocks_any_new_buy():
         ProposedTrade(ticker="MSFT", side=Side.BUY, quantity=1, limit_price=100.0),
         portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
         holdings=holdings, quotes={"AAPL": 100.0, "MSFT": 100.0}, existing_open_risk_pct=3.0,
+        last_loss_closed_at=None, trade_open_timestamps=[],
     )
     assert not blocked.passed
     assert blocked.blocked_by == "open_risk"
@@ -379,7 +403,7 @@ def test_missing_trade_open_timestamps_blocks_loudly_when_over_trading_brake_is_
     mandate = base_mandate.model_copy(update={"max_trades_per_day": 5})
     result = check_mandate_compliance(
         _buy("AAPL"), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
-        holdings=[], quotes={"AAPL": 100.0}, now=_NOW,
+        holdings=[], quotes={"AAPL": 100.0}, now=_NOW, last_loss_closed_at=None,
         # trade_open_timestamps deliberately omitted.
     )
     assert not result.passed
@@ -394,6 +418,7 @@ def test_missing_existing_open_risk_pct_blocks_loudly_when_open_risk_cap_is_set(
     result = check_mandate_compliance(
         _buy("AAPL"), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
         holdings=[], quotes={"AAPL": 100.0}, now=_NOW, proposed_stop=90.0,
+        last_loss_closed_at=None, trade_open_timestamps=[],
         # existing_open_risk_pct deliberately omitted.
     )
     assert not result.passed
@@ -405,7 +430,8 @@ def test_missing_holdings_blocks_loudly_when_max_open_positions_is_set(base_mand
     mandate = base_mandate.model_copy(update={"max_open_positions": 3})
     result = check_mandate_compliance(
         _buy("AAPL"), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
-        quotes={"AAPL": 100.0}, now=_NOW,
+        quotes={"AAPL": 100.0}, now=_NOW, last_loss_closed_at=None,
+        trade_open_timestamps=[], existing_open_risk_pct=0.0,
         # holdings deliberately omitted.
     )
     assert not result.passed
@@ -424,5 +450,6 @@ def test_explicit_none_last_loss_closed_at_still_means_no_prior_loss_not_missing
     result = check_mandate_compliance(
         _buy("AAPL"), portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
         holdings=[], quotes={"AAPL": 100.0}, now=_NOW, last_loss_closed_at=None,
+        trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
     assert result.passed

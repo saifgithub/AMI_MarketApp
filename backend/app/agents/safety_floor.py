@@ -32,11 +32,19 @@ from app.trading_math.risk_limits import (
     cooldown_lifts_at as _cooldown_lifts_at,
     in_cooldown as _in_cooldown,
     position_risk_contribution as _position_risk_contribution,
+    resolved_max_open_positions as _resolved_max_open_positions,
+    resolved_max_open_risk_pct as _resolved_max_open_risk_pct,
+    resolved_max_trades_per_day as _resolved_max_trades_per_day,
+    resolved_max_trades_per_week as _resolved_max_trades_per_week,
+    resolved_post_loss_cooldown_hours as _resolved_post_loss_cooldown_hours,
     trades_since as _trades_since,
     utc_day_start as _utc_day_start,
     utc_week_start as _utc_week_start,
 )
-from app.trading_math.sizing import SINGLE_NAME_ABSOLUTE_CAP_PCT
+from app.trading_math.sizing import (
+    SINGLE_NAME_ABSOLUTE_CAP_PCT,
+    resolved_single_name_cap_pct as _resolved_single_name_cap_pct,
+)
 
 
 def single_name_cap_pct(mandate: Mandate) -> float:
@@ -44,39 +52,27 @@ def single_name_cap_pct(mandate: Mandate) -> float:
     compliance floor (`check_mandate_compliance` / `check_holdings_against_mandate`)
     for this mandate.
 
-    CR101-BE1 makes this settable: an explicit `mandate.single_name_cap_pct`
-    always wins. Unset, it falls back to `SINGLE_NAME_ABSOLUTE_CAP_PCT` (50%) —
-    the EXACT value this floor enforced pre-CR101 (the module-level
-    `SINGLE_NAME_CAP_PCT` constant this replaces).
+    CR129 (closing DEF187): an explicit `mandate.single_name_cap_pct` always
+    wins; unset now falls back to the SAME risk-tier preset
+    (`resolved_single_name_cap_pct`) the Room path and every agent overlay
+    already read — not the flat `SINGLE_NAME_ABSOLUTE_CAP_PCT` (50%) backstop
+    this floor used pre-CR129.
 
-    That fallback is a deliberate, disclosed judgment call, not a straight
-    read of `risk_tier_cap`. Measured on main at 73a25c7f: `sim.submit()` — the
-    direct trade-ticket path (DEF153: "the path a user actually takes") — calls
-    this floor with NO prior size clamp, so its only historical single-name
-    gate was this 50% backstop. The tighter risk-tier preset
-    (`resolved_single_name_cap_pct`, ~1.5-4.5%) is real, but it binds only on
-    the ROOM path, where `room_runner._risk_tier_size_ceiling` pre-clamps the
-    PM's proposed size BEFORE it ever reaches this floor — this floor's own
-    50% backstop then never fires there, which is what the CR101-BE1 assign's
-    "can essentially never fire on the Room path" describes. Defaulting THIS
-    floor's fallback to the risk-tier preset instead of 50% would silently
-    tighten every existing user's DIRECT-submit cap ~11x with no action of
-    their own — exactly the failure CR101-BE1 acceptance 4 exists to catch (43
-    unit tests across sim_engine/cost_basis/mandate_audit/DEF110 caught this
-    live when first tried). So: unset stays 50%, migration-safe.
+    CR101-BE1 deliberately kept the 50% fallback here, because defaulting to
+    the risk-tier preset would have silently tightened every existing user's
+    DIRECT-submit cap ~11-16.7x with no action of their own (DEF187). Saiful
+    has now explicitly authorised exactly that constraint at 13 live alpha
+    mandates (docs/forward_planning/CR129_risk_limits_from_risk_tolerance/
+    README.md, "The decision this CR carries") — a legitimate product call at
+    this population size, not a bug fix. `SINGLE_NAME_ABSOLUTE_CAP_PCT` stays
+    as the debate-spread ceiling `risk_debator_sizes` bounds against; it is no
+    longer this floor's own fallback.
 
-    This intentionally leaves the pre-existing shown-vs-enforced split between
-    the Trader/PM overlay narration (risk-tier preset, via
-    `resolved_single_name_cap_pct`) and this floor's default (50%) undisturbed
-    for a user who hasn't set an override — that split predates CR101-BE1 and
-    is a disclosed, not a fixed, finding (see the hand-off bridge). Once a user
-    explicitly sets `single_name_cap_pct`, every site — this floor, the Room
-    pre-clamp, every overlay — reads that SAME value, so shown == enforced
-    holds for them from that point on (CR046 C-a, extended to a settable
-    field)."""
-    if mandate.single_name_cap_pct is not None:
-        return float(mandate.single_name_cap_pct)
-    return SINGLE_NAME_ABSOLUTE_CAP_PCT
+    Once a user explicitly sets `single_name_cap_pct`, every site — this
+    floor, the Room pre-clamp, every overlay — already read that SAME value;
+    CR129 makes the UNSET case converge too, so shown == enforced holds for
+    every mandate, not only ones with an explicit override (CR046 C-a)."""
+    return _resolved_single_name_cap_pct(mandate.risk_score, mandate.single_name_cap_pct)
 
 
 class HoldingViolation(BaseModel):
@@ -408,32 +404,45 @@ def check_mandate_compliance(
 
     now_ = now if now is not None else datetime.now(timezone.utc)
 
-    # 6c) Post-loss cooldown (CR101-BE2). A self-imposed pause after a stop-out —
-    #   hard-blocks the next BUY (never a soft warning; L3/CR089 decided this).
-    #   Sells are never blocked by a cooldown — it constrains new entries only.
-    if proposed.is_buy and mandate.post_loss_cooldown_hours is not None:
+    # 6c) Post-loss cooldown (CR101-BE2, CR129). A self-imposed pause after a
+    #   stop-out — hard-blocks the next BUY (never a soft warning; L3/CR089
+    #   decided this). Sells are never blocked by a cooldown — it constrains
+    #   new entries only. CR129: `mandate.post_loss_cooldown_hours` unset now
+    #   resolves to the risk-tier preset (always > 0) rather than "off" — this
+    #   check is always active; "off" is expressible only via an explicit `0`
+    #   override (Day Trader preset).
+    resolved_cooldown_hours = _resolved_post_loss_cooldown_hours(
+        mandate.risk_score, mandate.post_loss_cooldown_hours
+    )
+    if proposed.is_buy and resolved_cooldown_hours > 0:
         if last_loss_closed_at is CONTEXT_NOT_SUPPLIED:
             violations.append(
                 "post-loss cooldown is set on the mandate but the caller did not "
                 "supply loss history — blocked rather than silently skipped (CR040)"
             )
             blocked_by = blocked_by or "cooldown"
-        elif _in_cooldown(now_, last_loss_closed_at, mandate.post_loss_cooldown_hours):
-            lifts_at = _cooldown_lifts_at(last_loss_closed_at, mandate.post_loss_cooldown_hours)
+        elif _in_cooldown(now_, last_loss_closed_at, resolved_cooldown_hours):
+            lifts_at = _cooldown_lifts_at(last_loss_closed_at, resolved_cooldown_hours)
             violations.append(
                 f"post-loss cooldown active until {lifts_at.isoformat()} "
-                f"({mandate.post_loss_cooldown_hours}h after the last stop-out)"
+                f"({resolved_cooldown_hours}h after the last stop-out)"
             )
             blocked_by = blocked_by or "cooldown"
 
-    # 6d) Max open positions (CR101-BE2). A BUY that would open a NEW position
-    #   (a ticker not already held) is blocked once the current count is
-    #   already at/above the cap. Adding to an EXISTING holding never counts as
-    #   a new position, so it is unaffected — this is a diversification brake,
-    #   not a buying freeze. Retro-tightening (a cap lowered below the current
-    #   count) blocks every subsequent new-ticker BUY exactly this way; it never
-    #   force-sells (BL12's `check_holdings_against_mandate` flags the breach).
-    if proposed.is_buy and mandate.max_open_positions is not None:
+    # 6d) Max open positions (CR101-BE2, CR129). A BUY that would open a NEW
+    #   position (a ticker not already held) is blocked once the current count
+    #   is already at/above the cap. Adding to an EXISTING holding never counts
+    #   as a new position, so it is unaffected — this is a diversification
+    #   brake, not a buying freeze. Retro-tightening (a cap lowered below the
+    #   current count) blocks every subsequent new-ticker BUY exactly this
+    #   way; it never force-sells (BL12's `check_holdings_against_mandate`
+    #   flags the breach). CR129: unset resolves to the risk-tier preset
+    #   (always active) rather than "off" — "off" is a very high explicit
+    #   count (Day Trader preset), not a mandate-field sentinel.
+    resolved_max_positions = _resolved_max_open_positions(
+        mandate.risk_score, mandate.max_open_positions
+    )
+    if proposed.is_buy:
         if holdings is None:
             violations.append(
                 "max open positions cap is set on the mandate but the caller did "
@@ -442,48 +451,57 @@ def check_mandate_compliance(
             blocked_by = blocked_by or "max_open_positions"
         else:
             held_tickers = {getattr(h, "ticker", "").upper() for h in holdings}
-            if t not in held_tickers and len(held_tickers) >= mandate.max_open_positions:
+            if t not in held_tickers and len(held_tickers) >= resolved_max_positions:
                 violations.append(
                     f"opening {t} would exceed the max open positions cap "
-                    f"({mandate.max_open_positions}) — {len(held_tickers)} already held"
+                    f"({resolved_max_positions}) — {len(held_tickers)} already held"
                 )
                 blocked_by = blocked_by or "max_open_positions"
 
-    # 6e) Over-trading brake — max trades per day / per week (CR101-BE2). Counts
-    #   every trade already submitted (either side) in the current UTC calendar
-    #   day / ISO week; this proposal would be one more. Both windows are
-    #   independent — either one at its cap blocks.
-    if mandate.max_trades_per_day is not None or mandate.max_trades_per_week is not None:
-        if trade_open_timestamps is None:
+    # 6e) Over-trading brake — max trades per day / per week (CR101-BE2, CR129).
+    #   Counts every trade already submitted (either side) in the current UTC
+    #   calendar day / ISO week; this proposal would be one more. Both windows
+    #   are independent — either one at its cap blocks. CR129: unset resolves
+    #   to the risk-tier preset (always active) rather than "off".
+    resolved_trades_per_day = _resolved_max_trades_per_day(
+        mandate.risk_score, mandate.max_trades_per_day
+    )
+    resolved_trades_per_week = _resolved_max_trades_per_week(
+        mandate.risk_score, mandate.max_trades_per_week
+    )
+    if trade_open_timestamps is None:
+        violations.append(
+            "max trades per day/week is set on the mandate but the caller did "
+            "not supply trade history — blocked rather than silently skipped (CR040)"
+        )
+        blocked_by = blocked_by or "over_trading"
+    else:
+        count_today = _trades_since(trade_open_timestamps, _utc_day_start(now_))
+        if count_today >= resolved_trades_per_day:
             violations.append(
-                "max trades per day/week is set on the mandate but the caller did "
-                "not supply trade history — blocked rather than silently skipped (CR040)"
+                f"max trades per day ({resolved_trades_per_day}) already reached "
+                f"({count_today} today, UTC calendar day)"
             )
             blocked_by = blocked_by or "over_trading"
-        else:
-            if mandate.max_trades_per_day is not None:
-                count_today = _trades_since(trade_open_timestamps, _utc_day_start(now_))
-                if count_today >= mandate.max_trades_per_day:
-                    violations.append(
-                        f"max trades per day ({mandate.max_trades_per_day}) already reached "
-                        f"({count_today} today, UTC calendar day)"
-                    )
-                    blocked_by = blocked_by or "over_trading"
-            if mandate.max_trades_per_week is not None:
-                count_week = _trades_since(trade_open_timestamps, _utc_week_start(now_))
-                if count_week >= mandate.max_trades_per_week:
-                    violations.append(
-                        f"max trades per week ({mandate.max_trades_per_week}) already reached "
-                        f"({count_week} this ISO week, Monday 00:00 UTC)"
-                    )
-                    blocked_by = blocked_by or "over_trading"
+        count_week = _trades_since(trade_open_timestamps, _utc_week_start(now_))
+        if count_week >= resolved_trades_per_week:
+            violations.append(
+                f"max trades per week ({resolved_trades_per_week}) already reached "
+                f"({count_week} this ISO week, Monday 00:00 UTC)"
+            )
+            blocked_by = blocked_by or "over_trading"
 
-    # 6f) Total open-risk cap (CR101-BE2). Sum of (position size % x stop
-    #   distance %)/100 across open positions, including this proposal's own
-    #   contribution when it carries a stop. An existing position with no stop
-    #   contributes 0 (nothing to sum) — same "unpriceable = no contribution"
-    #   contract as 6/6b's unpriced-proposal guard, not a block.
-    if mandate.max_open_risk_pct is not None and proposed.is_buy:
+    # 6f) Total open-risk cap (CR101-BE2, CR129). Sum of (position size % x
+    #   stop distance %)/100 across open positions, including this proposal's
+    #   own contribution when it carries a stop. An existing position with no
+    #   stop contributes 0 (nothing to sum) — same "unpriceable = no
+    #   contribution" contract as 6/6b's unpriced-proposal guard, not a block.
+    #   CR129: unset resolves to a fraction of THIS mandate's own
+    #   `max_drawdown_pct` (always active) rather than "off".
+    resolved_open_risk_pct = _resolved_max_open_risk_pct(
+        mandate.risk_score, mandate.max_drawdown_pct, mandate.max_open_risk_pct
+    )
+    if proposed.is_buy:
         if existing_open_risk_pct is None:
             violations.append(
                 "total open-risk cap is set on the mandate but the caller did not "
@@ -499,10 +517,10 @@ def check_mandate_compliance(
                     position_pct_for_risk, float(unit_price), proposed_stop
                 )
             total_open_risk = existing_open_risk_pct + proposed_contribution
-            if total_open_risk > mandate.max_open_risk_pct:
+            if total_open_risk > resolved_open_risk_pct:
                 violations.append(
                     f"total open risk {total_open_risk:.2f}% exceeds cap "
-                    f"{mandate.max_open_risk_pct}%"
+                    f"{resolved_open_risk_pct}%"
                 )
                 blocked_by = blocked_by or "open_risk"
 
@@ -610,14 +628,16 @@ def check_holdings_against_mandate(
             ))
 
     drawdown_breach = current_drawdown_pct >= mandate.max_drawdown_pct
-    max_open_positions_breach = (
-        mandate.max_open_positions is not None
-        and len(holdings) > mandate.max_open_positions
+    # CR129: unset resolves to the risk-tier preset (always active), same as
+    # `check_mandate_compliance`'s 6d/6f above.
+    max_open_positions_breach = len(holdings) > _resolved_max_open_positions(
+        mandate.risk_score, mandate.max_open_positions
     )
     max_open_risk_pct_breach = (
-        mandate.max_open_risk_pct is not None
-        and existing_open_risk_pct is not None
-        and existing_open_risk_pct > mandate.max_open_risk_pct
+        existing_open_risk_pct is not None
+        and existing_open_risk_pct > _resolved_max_open_risk_pct(
+            mandate.risk_score, mandate.max_drawdown_pct, mandate.max_open_risk_pct
+        )
     )
 
     return HoldingsAuditResult(

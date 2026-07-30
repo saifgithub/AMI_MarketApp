@@ -77,6 +77,8 @@ def _check(mandate: Mandate, ticker: str, universe) -> object:
         current_drawdown_pct=0,
         mandate=mandate,
         classification_universe=universe,
+        holdings=[], last_loss_closed_at=None, trade_open_timestamps=[],
+        existing_open_risk_pct=0.0,
     )
 
 

@@ -32,6 +32,7 @@ from app.schemas import AgentId, Mandate, RiskComponents
 from app.schemas.trade import Holding, OrderType, ProposedTrade, Side
 from app.services.mandate_store import MandateStore
 from app.services.sector_allocation import OTHER, sector_concentration_cap
+from app.trading_math.sizing import risk_tier_cap
 
 
 @dataclass
@@ -50,13 +51,20 @@ class _Map:
 
 def _sector_breach_check(mandate: Mandate, *, buy_value: float):
     """Tech 30% / FS 30% / Energy 40% book ($10k invested); proposed BUY adds
-    Tech at $100/share. Mirrors test_cr026_sector_allocation.py's `_breach_check`."""
+    Tech at $100/share. Mirrors test_cr026_sector_allocation.py's `_breach_check`.
+
+    CR129/DEF187: pins a permissive single-name cap — this file's sector-cap
+    tests deliberately buy 4.8-19% of the book in one name, which the
+    risk-tier single-name preset (~3%) would otherwise also (and irrelevantly)
+    reject before the sector check is ever reached."""
     holdings = [_H("AAPL", 30), _H("JPM", 30), _H("XOM", 40)]
     quotes = {"AAPL": 100.0, "JPM": 100.0, "XOM": 100.0}
     proposed = ProposedTrade(ticker="MSFT", side=Side.BUY, quantity=buy_value / 100.0, limit_price=100.0)
     return check_mandate_compliance(
-        proposed, portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=mandate,
+        proposed, portfolio_value=10_000.0, current_drawdown_pct=0.0,
+        mandate=mandate.model_copy(update={"single_name_cap_pct": 100.0}),
         holdings=holdings, quotes=quotes, sector_map=_Map(),
+        last_loss_closed_at=None, trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
 
 
@@ -78,17 +86,30 @@ def test_sector_cap_settable_and_the_floor_block_moves_with_it(base_mandate: Man
 def test_single_name_cap_settable_and_the_floor_block_moves_with_it(base_mandate: Mandate):
     proposed = ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=10, order_type=OrderType.MARKET)
     quotes = {"AAPL": 100.0}
+    ctx = dict(last_loss_closed_at=None, trade_open_timestamps=[], existing_open_risk_pct=0.0)
     # $1000 of a $10,000 book = 10%.
+    # CR129 (closing DEF187): unset now resolves to the risk-tier preset
+    # (3.0% at risk_score=3), not the pre-CR129 flat 50% backstop — so this
+    # 10% buy is now ALSO blocked with no override, the inverse of what
+    # this test asserted before CR129.
     default_result = check_mandate_compliance(
         proposed, portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=base_mandate,
-        holdings=[], quotes=quotes,
+        holdings=[], quotes=quotes, **ctx,
     )
-    assert default_result.passed  # 10% < the 50% unset-default backstop
+    assert not default_result.passed
+    assert default_result.blocked_by == "concentration"
+
+    loosened = base_mandate.model_copy(update={"single_name_cap_pct": 50.0})
+    loose_result = check_mandate_compliance(
+        proposed, portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=loosened,
+        holdings=[], quotes=quotes, **ctx,
+    )
+    assert loose_result.passed  # 10% < the explicit 50% override
 
     tightened = base_mandate.model_copy(update={"single_name_cap_pct": 5.0})
     tight_result = check_mandate_compliance(
         proposed, portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=tightened,
-        holdings=[], quotes=quotes,
+        holdings=[], quotes=quotes, **ctx,
     )
     assert not tight_result.passed  # 10% > the explicit 5% override
     assert tight_result.blocked_by == "concentration"
@@ -108,28 +129,30 @@ def test_both_caps_persist_and_enforce_through_a_real_patch_round_trip():
     assert single_name_cap_pct(reloaded) == 6.0
 
 
-# ── acceptance 4: migration proof — the criterion read first ───────────────
-
-# Pre-CR101 enforced values, measured on main at 73a25c7f — pinned as literals so
-# a regression in this CR's OWN preset tables can't accidentally validate itself.
+# ── acceptance 2/4: the INVERTED migration proof — the criterion read first ──
+#
+# CR101-BE1 acceptance 4 proved nobody's enforcement changed on deploy. CR129
+# proves the opposite, by explicit authorisation (Saiful, 13 live alpha
+# mandates — see docs/forward_planning/CR129_risk_limits_from_risk_tolerance/
+# README.md, "The decision this CR carries"): for a pre-CR129 stored snapshot
+# (the two BE1 keys absent from the dict entirely, not merely None in memory),
+# the single-name cap now enforces the NEW risk-tier preset, not the old flat
+# 50% backstop. Sector cap is untouched by CR129 (it already resolved through
+# the SAME preset-fallback pattern pre-CR129) and stays pinned to prove that.
 _PRE_CR101_SECTOR_CAP_BY_TOLERANCE = {1: 0.25, 2: 0.30, 3: 0.40, 4: 0.50, 5: 0.60}
-# The deterministic floor's single-name cap was the FIXED absolute backstop,
-# unconditional of risk_score (safety_floor.SINGLE_NAME_CAP_PCT ==
-# trading_math.sizing.SINGLE_NAME_ABSOLUTE_CAP_PCT) — NOT the risk-tier preset,
-# which bound only on the Room path via room_runner's separate pre-clamp. See
-# safety_floor.single_name_cap_pct's docstring for the measurement.
-_PRE_CR101_SINGLE_NAME_CAP_PCT = 50.0
+_PRE_CR129_SINGLE_NAME_CAP_PCT = 50.0
 
 
 @pytest.mark.parametrize("concentration_tolerance", [1, 2, 3, 4, 5])
 @pytest.mark.parametrize("risk_score", [1, 2, 3, 4, 5])
-def test_migration_no_existing_users_enforced_cap_changes(
+def test_migration_every_risk_score_now_enforces_the_new_single_name_value(
     risk_score: int, concentration_tolerance: int, base_mandate: Mandate
 ):
-    """CR101-BE1 acceptance 4. Simulates an ACTUAL pre-CR101 stored snapshot — the
-    two new keys absent from the dict entirely, not merely None in memory — for
-    every (concentration_tolerance, risk_score) pair and asserts the enforced cap
-    is bit-identical to what main enforced before this CR landed."""
+    """CR129 acceptance 2 (read first): for every risk_score 1-5, a mandate
+    with NO explicit single_name_cap_pct override — the real shape of every
+    one of the 13 live alpha mandates — now enforces the DOCUMENTED risk-tier
+    value, never the old 50% backstop. Sector cap (untouched by CR129) stays
+    pinned to its pre-existing value as the control."""
     mandate = base_mandate.model_copy(update={
         "risk_score": risk_score,
         "risk_components": RiskComponents(
@@ -145,7 +168,8 @@ def test_migration_no_existing_users_enforced_cap_changes(
     assert sector_concentration_cap(loaded) == pytest.approx(
         _PRE_CR101_SECTOR_CAP_BY_TOLERANCE[concentration_tolerance]
     )
-    assert single_name_cap_pct(loaded) == _PRE_CR101_SINGLE_NAME_CAP_PCT
+    assert single_name_cap_pct(loaded) == risk_tier_cap(risk_score)
+    assert single_name_cap_pct(loaded) != _PRE_CR129_SINGLE_NAME_CAP_PCT
 
 
 # ── acceptance 5: both caps in the overlay, in their own units, interpolated ─
@@ -192,6 +216,7 @@ def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mand
         ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=1, limit_price=100.0),
         portfolio_value=10_000.0, current_drawdown_pct=base_mandate.max_drawdown_pct,
         mandate=base_mandate, holdings=[], quotes={"AAPL": 100.0},
+        last_loss_closed_at=None, trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
     assert not dd_result.passed and any("drawdown" in v for v in dd_result.violations)  # (a)
     assert f"{base_mandate.max_drawdown_pct}%" in generate_overlay(AgentId.AGGRESSIVE_DEBATOR, base_mandate)  # (c)
@@ -214,6 +239,7 @@ def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mand
         ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=10, order_type=OrderType.MARKET),
         portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=tight_single,
         holdings=[], quotes={"AAPL": 100.0},
+        last_loss_closed_at=None, trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
     assert not single_result.passed and any("single-name cap" in v for v in single_result.violations)  # (a)
     assert single_name_cap_pct(tight_single) == 5.0  # (b) own units
@@ -231,6 +257,7 @@ def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mand
         ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=1, limit_price=100.0),
         portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=cooldown_mandate,
         holdings=[], quotes={"AAPL": 100.0}, now=now, last_loss_closed_at=now - timedelta(hours=1),
+        trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
     assert not cooldown_result.passed and cooldown_result.blocked_by == "cooldown"  # (a)
     assert cooldown_mandate.post_loss_cooldown_hours == 24.0  # (b) own units (hours)
@@ -243,7 +270,8 @@ def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mand
         ProposedTrade(ticker="MSFT", side=Side.BUY, quantity=1, limit_price=100.0),
         portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=positions_mandate,
         holdings=[Holding(ticker="AAPL", quantity=1, avg_cost=100.0, opened_at=now)],
-        quotes={"AAPL": 100.0, "MSFT": 100.0},
+        quotes={"AAPL": 100.0, "MSFT": 100.0}, now=now, last_loss_closed_at=None,
+        trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
     assert not positions_result.passed and positions_result.blocked_by == "max_open_positions"  # (a)
     assert positions_mandate.max_open_positions == 1  # (b) own units (count)
@@ -256,6 +284,7 @@ def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mand
         ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=1, limit_price=100.0),
         portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=day_mandate,
         holdings=[], quotes={"AAPL": 100.0}, now=now, trade_open_timestamps=[now],
+        last_loss_closed_at=None, existing_open_risk_pct=0.0,
     )
     assert not day_result.passed and day_result.blocked_by == "over_trading"  # (a)
     assert day_mandate.max_trades_per_day == 1  # (b) own units (count/day)
@@ -267,6 +296,7 @@ def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mand
         ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=1, limit_price=100.0),
         portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=week_mandate,
         holdings=[], quotes={"AAPL": 100.0}, now=now, trade_open_timestamps=[now],
+        last_loss_closed_at=None, existing_open_risk_pct=0.0,
     )
     assert not week_result.passed and week_result.blocked_by == "over_trading"  # (a)
     assert week_mandate.max_trades_per_week == 1  # (b) own units (count/week)
@@ -274,11 +304,16 @@ def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mand
     assert store.patch(uuid4(), {"max_trades_per_week": 8}).max_trades_per_week == 8  # (d)
 
     # -- max_open_risk_pct (CR101-BE2) ---------------------------------------
-    risk_mandate = base_mandate.model_copy(update={"max_open_risk_pct": 0.5})
+    # CR129/DEF187: permissive single-name cap — $1000/$10,000 = 10% is over
+    # the ~3% risk-tier preset, which isn't this sub-block's point.
+    risk_mandate = base_mandate.model_copy(
+        update={"max_open_risk_pct": 0.5, "single_name_cap_pct": 100.0}
+    )
     risk_result = check_mandate_compliance(
         ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=10, order_type=OrderType.MARKET),
         portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=risk_mandate,
         holdings=[], quotes={"AAPL": 100.0}, proposed_stop=90.0,
+        last_loss_closed_at=None, trade_open_timestamps=[],
     )
     assert not risk_result.passed and risk_result.blocked_by == "open_risk"  # (a)
     assert risk_mandate.max_open_risk_pct == 0.5  # (b) own units (percentage points)

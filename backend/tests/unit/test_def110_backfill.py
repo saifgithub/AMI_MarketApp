@@ -53,7 +53,7 @@ def _phantom_state(sim, user_id, ticker, qty, entry, close_price, status="lost")
     """Buy, then close the trade the way the DEF110 bug did — label only."""
     result = sim.submit(
         user_id=user_id, ticker=ticker, side=Side.BUY, quantity=qty,
-        mandate=hydrate_coach_mandate({"plan": "trader"}),
+        mandate=hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0}),
         order_type=OrderType.MARKET, stop=entry * 0.9, target=entry * 1.1,
         horizon_days=30, verdict_ref=uuid4(),
     )
@@ -156,7 +156,7 @@ def test_backfill_spares_a_genuinely_open_position():
     _phantom_state(sim, user_id, "TSLA", 1, 100.0, close_price=120.0, status="won")
     open_buy = sim.submit(
         user_id=user_id, ticker="TSLA", side=Side.BUY, quantity=2,
-        mandate=hydrate_coach_mandate({"plan": "trader"}),
+        mandate=hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0}),
         order_type=OrderType.MARKET, verdict_ref=uuid4(),
     )
     assert open_buy.accepted
@@ -177,7 +177,7 @@ def test_backfill_does_nothing_to_a_clean_portfolio():
     user_id = uuid4()
     sim.submit(
         user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=3,
-        mandate=hydrate_coach_mandate({"plan": "trader"}),
+        mandate=hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0}),
         order_type=OrderType.MARKET, verdict_ref=uuid4(),
     )
     before = _portfolio(user_id)
@@ -220,7 +220,7 @@ def test_backfill_after_the_fix_finds_nothing():
     user_id = uuid4()
     sim.submit(
         user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=5,
-        mandate=hydrate_coach_mandate({"plan": "trader"}),
+        mandate=hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0}),
         order_type=OrderType.MARKET, stop=90.0, target=110.0,
         horizon_days=30, verdict_ref=uuid4(),
     )
