@@ -340,6 +340,76 @@ void main() {
       expect(t.takeException(), isNull);
     });
   });
+
+  group('DEF174 — per-agent status reaches the accessibility tree', () {
+    testWidgets(
+        'thinking and responded each carry a semantic label naming the '
+        'agent and its state', (t) async {
+      final handle = t.ensureSemantics();
+
+      await _pump(
+        t,
+        const RoomState(
+          streaming: true,
+          order: ['fundamentals_analyst'],
+          activeAgent: 'fundamentals_analyst',
+          transcript: {
+            'fundamentals_analyst': 'partial thought still streaming',
+          },
+          agentStances: {
+            'news_analyst': AgentStance(recorded: true, headline: null),
+          },
+        ),
+      );
+
+      // `thinking` used to be a colour-changing dot with zero semantics —
+      // the exact gap DEF174 reports. A screen-reader-visible label naming
+      // both the agent and the state must exist for it now.
+      expect(
+        find.bySemanticsLabel('Fundamentals Analyst: thinking…'),
+        findsOneWidget,
+      );
+      // `responded` was an Icon(Icons.check) with no semantic label at all.
+      expect(
+        find.bySemanticsLabel('News Analyst: responded'),
+        findsOneWidget,
+      );
+      // `waiting` (STANDING BY) is covered too, for a roster seat neither
+      // active nor recorded — proving the label tracks every branch, not
+      // just the two that were silent before the fix.
+      expect(
+        find.bySemanticsLabel('Trader: standing by'),
+        findsOneWidget,
+      );
+      expect(t.takeException(), isNull);
+      handle.dispose();
+    });
+
+    testWidgets('interrupted carries its own distinct semantic label',
+        (t) async {
+      final handle = t.ensureSemantics();
+
+      await _pump(
+        t,
+        const RoomState(
+          streaming: false,
+          reconnecting: false,
+          done: false,
+          error: 'connection dropped',
+          order: ['fundamentals_analyst'],
+          activeAgent: 'fundamentals_analyst',
+          transcript: {'fundamentals_analyst': 'cut off mid-sentence'},
+        ),
+      );
+
+      expect(
+        find.bySemanticsLabel('Fundamentals Analyst: INTERRUPTED'),
+        findsOneWidget,
+      );
+      expect(t.takeException(), isNull);
+      handle.dispose();
+    });
+  });
 }
 
 /// Small helper — the live roster's `SingleChildScrollView` is the only

@@ -135,6 +135,7 @@
     "settingsSaving": "جاري الحفظ…",
     "settingsSave": "حفظ",
     "settingsMandateUpdated": "تم تحديث التفويض.",
+    "settingsRetroAuditFailed": "Couldn't check your holdings against the new limit — open Portfolio to verify.",
     "settingsSectionMandate": "التفويض الخاص بي",
     "settingsSectionCompliance": "الامتثال",
     "settingsSectionProfile": "الملف الشخصي",
@@ -262,6 +263,8 @@
     "roomAgentThinking": "thinking…",
     "roomAgentInterrupted": "INTERRUPTED",
     "roomAgentTruncatedMark": "Cut short by its length limit — open the transcript to read what landed.",
+    "roomAgentResponded": "responded",
+    "roomAgentStatusSemantic": "{agent}: {status}",
     "roomDeliberating": "الفريق يتداول…",
     "roomEndedNoVerdict": "انتهت الجلسة دون قرار.",
     "roomSavedToJournal": "تم الحفظ في السجل",
@@ -588,5 +591,6 @@
     "roomPhaseRisk": "المخاطر",
     "roomPhaseVerdict": "القرار",
     "journalLevelsAsOf": "الأسعار بتاريخ {date} — سجلّ، وليست صفقة قائمة الآن",
-    "journalRerunWithMandate": "أعد التشغيل بالتفويض الحالي"
+    "journalRerunWithMandate": "أعد التشغيل بالتفويض الحالي",
+    "aiCoachEmptyStateHint": "{count} questions and answers across platform, psychology, scams, AI meta, and beginner / intermediate topics. Type to search."
 }

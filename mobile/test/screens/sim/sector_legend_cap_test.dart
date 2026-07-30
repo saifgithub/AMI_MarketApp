@@ -144,7 +144,7 @@ Size _cardSize(WidgetTester tester) {
   // card and not just the legend is what proves the *footprint* is constant.
   final card = find
       .ancestor(of: _legend, matching: find.byType(Container))
-      .last;
+      .first;
   return tester.getSize(card);
 }
 
@@ -232,6 +232,27 @@ void main() {
       expect(sectorLegendScrolls(4), isFalse);
       expect(sectorLegendScrolls(5), isTrue);
       expect(sectorLegendScrolls(13), isTrue);
+    });
+
+    testWidgets('DEF170: the fade stops once nothing is hidden below',
+        (t) async {
+      await _pump(t, sectorCount: 13);
+      expect(find.descendant(of: _legend, matching: find.byType(ShaderMask)),
+          findsOneWidget,
+          reason: 'scrolled to the top, 9 sectors are still below the cut');
+
+      // Drag far past the true scroll extent — ClampingScrollPhysics stops
+      // it at the real bottom, which is exactly the state DEF170 reported:
+      // the fade kept implying more content when there was none left.
+      await t.drag(
+          find.descendant(of: _legend, matching: find.byType(Scrollable)),
+          const Offset(0, -1000));
+      await t.pump();
+
+      expect(find.descendant(of: _legend, matching: find.byType(ShaderMask)),
+          findsNothing,
+          reason: 'at max scroll extent nothing remains hidden — the fade '
+              'must not keep signalling "more below"');
     });
   });
 }

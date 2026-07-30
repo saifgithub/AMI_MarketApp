@@ -48,6 +48,11 @@ DioException _dio(DioExceptionType type, {int? status}) => DioException(
 ///   string literal, not because a test can tell the difference today.
 final _leak = RegExp(r"""'(?:[^'\\\n]|\\.)*\$e(?![a-zA-Z0-9_{])""");
 
+/// The caught object's own `.toString()`, passed on with no
+/// `friendlyError(...)` in between. `\be\.toString\(\)` — the word boundary
+/// is what stops this from matching `locale.toString()`.
+final _rawToString = RegExp(r'\be\.toString\(\)');
+
 /// The strings that were on screen in the bug report, plus the shapes any
 /// other leak would take.
 const _tells = [
@@ -120,21 +125,40 @@ void main() {
       expect(friendlyError(Exception('x'), action: 'save your note'),
           contains('save your note'));
     });
+
+    test('DEF164: the copy never offers a retry isRetryable() refuses', () {
+      // Table-driven over every badResponse status code both functions
+      // handle, so the next status either function grows a special case for
+      // fails the build instead of shipping a second silent divergence.
+      const statuses = [401, 403, 404, 418, 422, 429, 500, 502, 503];
+      for (final status in statuses) {
+        final err = _dio(DioExceptionType.badResponse, status: status);
+        final retryable = isRetryable(err);
+        final msg = friendlyError(err, action: 'load this').toLowerCase();
+        final offersRetry = msg.contains('try again');
+        expect(offersRetry, retryable,
+            reason: 'status $status: isRetryable()=$retryable but copy '
+                '${offersRetry ? 'offers' : 'does not offer'} a retry — '
+                '"$msg"');
+      }
+    });
   });
 
   group('DEF148 — the guard: no call site may bypass it', () {
     /// Every file that can put text in front of a user.
-    List<File> userFacingSources() => [
-          Directory('lib/state'),
-          Directory('lib/screens'),
-          Directory('lib/widgets'),
-          Directory('lib/features'),
-        ]
-            .where((d) => d.existsSync())
-            .expand((d) => d.listSync(recursive: true))
-            .whereType<File>()
-            .where((f) => f.path.endsWith('.dart'))
-            .toList();
+    ///
+    /// DEF164b: this used to be four hand-picked directories, and
+    /// `lib/services/billing/revenuecat_purchase_service.dart` sat just
+    /// outside them — a live counterexample the guard could not see. The
+    /// whole of `lib/` is the accurate boundary: anything under `lib/` can
+    /// end up on screen, `lib/generated/` is the one exception (l10n
+    /// scaffolding, not hand-written call sites).
+    List<File> userFacingSources() => Directory('lib')
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.dart'))
+        .where((f) => !f.path.contains('${Platform.pathSeparator}generated${Platform.pathSeparator}'))
+        .toList();
 
     test('the sweep actually reaches the file the bug was reported against',
         () {
@@ -160,7 +184,13 @@ void main() {
           final line = lines[i];
           if (line.trimLeft().startsWith('//')) continue;
           if (line.contains('debugPrint')) continue; // logs, not screens
-          if (_leak.hasMatch(line) || line.contains(r"'$e'")) {
+          final leaksInterpolated = _leak.hasMatch(line) || line.contains(r"'$e'");
+          // DEF164b: e.toString() passed straight into a value is the same
+          // leak with no string interpolation to catch it with — the
+          // shape revenuecat_purchase_service.dart used.
+          final leaksToString =
+              _rawToString.hasMatch(line) && !line.contains('friendlyError(');
+          if (leaksInterpolated || leaksToString) {
             offenders.add('${file.path}:${i + 1}  ${line.trim()}');
           }
         }

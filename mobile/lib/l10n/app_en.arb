@@ -508,6 +508,8 @@
     "settingsSaving": "SAVING…",
     "settingsSave": "SAVE",
     "settingsMandateUpdated": "Mandate updated.",
+    "settingsRetroAuditFailed": "Couldn't check your holdings against the new limit — open Portfolio to verify.",
+    "@settingsRetroAuditFailed": {"description": "DEF194 — the mandate PATCH succeeded, but the follow-up retro-tightening breach check (GET /v1/mandate/{id}/audit) failed. Deliberately NOT an error dialog: the save DID succeed, so this must read as 'we could not check', never as 'something went wrong with your save' or 'you are compliant'. retranslate:[ar,ms]"},
     "settingsSectionMandate": "MY MANDATE",
     "settingsSectionCompliance": "COMPLIANCE",
     "settingsSectionProfile": "PROFILE",
@@ -909,6 +911,13 @@
     "@roomAgentInterrupted": {"description": "Live roster row terminal status for an agent whose turn never completed because the run itself broke (stream error / reconnect timeout) — never rendered as RESPONDED (CR112, DEF059-class). retranslate:[ar,ms]"},
     "roomAgentTruncatedMark": "Cut short by its length limit — open the transcript to read what landed.",
     "@roomAgentTruncatedMark": {"description": "Tooltip/semantic label for the amber DEF125 mark on a live roster row whose contribution hit its length limit (CR112). retranslate:[ar,ms]"},
+    "roomAgentResponded": "responded",
+    "@roomAgentResponded": {"description": "Live roster row status once an agent's turn has completed and a stance was recorded (CR112). retranslate:[ar,ms]"},
+    "roomAgentStatusSemantic": "{agent}: {status}",
+    "@roomAgentStatusSemantic": {
+        "description": "DEF174 — accessibility label for a live-roster seat, combining the agent's name and its status (waiting / thinking / responded / interrupted) so a screen reader is told the same thing the pulsing hex avatar shows sighted users.",
+        "placeholders": {"agent": {"type": "String"}, "status": {"type": "String"}}
+    },
     "roomDeliberating": "Team deliberating…",
     "roomEndedNoVerdict": "Room ended without a verdict.",
     "roomSavedToJournal": "Saved to Journal",
@@ -1447,5 +1456,10 @@
         "placeholders": {"date": {"type": "String", "example": "02 JUN 2026"}}
     },
     "journalRerunWithMandate": "RE-RUN WITH CURRENT MANDATE",
-    "@journalRerunWithMandate": {"description": "Action on a journal replay: convene the room again on this ticker under today's rules, instead of trading a months-old price."}
+    "@journalRerunWithMandate": {"description": "Action on a journal replay: convene the room again on this ticker under today's rules, instead of trading a months-old price."},
+    "aiCoachEmptyStateHint": "{count} questions and answers across platform, psychology, scams, AI meta, and beginner / intermediate topics. Type to search.",
+    "@aiCoachEmptyStateHint": {
+        "description": "DEF198 — AI Coach empty-state hint shown before the user has typed a query (fewer than 2 characters). {count} is AiCoachCorpus.totalCount (lib/models/ai_coach.dart) — a hand-maintained literal until a backend total-entry field exists; see that class's doc for why. This copy was previously a raw, unlocalized Dart string. retranslate:[ar,ms]",
+        "placeholders": {"count": {"type": "int"}}
+    }
 }

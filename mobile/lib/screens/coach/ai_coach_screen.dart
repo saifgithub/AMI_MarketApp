@@ -1,4 +1,5 @@
-/// AI Coach Q&A — searchable help screen over the 280-entry Q&A library.
+/// AI Coach Q&A — searchable help screen over the Q&A library
+/// (`AiCoachCorpus.totalCount` entries — DEF198).
 ///
 /// Accessed from Settings → Help. Search-as-you-type with debounce;
 /// tapping a hit opens a sheet with the long answer + related lessons
@@ -8,6 +9,7 @@ library;
 
 import 'dart:async';
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/ai_coach.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -121,8 +123,8 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
       return Padding(
         padding: const EdgeInsets.all(AmiSpacing.l),
         child: Text(
-          '280 questions and answers across platform, psychology, scams, AI '
-          'meta, and beginner / intermediate topics. Type to search.',
+          AppLocalizations.of(context)
+              .aiCoachEmptyStateHint(AiCoachCorpus.totalCount),
           style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
         ),
       );
