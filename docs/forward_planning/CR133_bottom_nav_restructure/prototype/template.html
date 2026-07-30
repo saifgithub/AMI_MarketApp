@@ -431,6 +431,15 @@ tr.hi td { background: color-mix(in srgb, var(--blue) 8%, transparent); }
   font-size: 12.5px;
 }
 .ticket .tb .good .x { color: var(--green-ink); font-weight: 600; }
+/* The affordance that replaces the directions — hex-cut like every other
+   control in the system, ink on fill is slate900 and never white. */
+.cta-btn {
+  display: inline-block; margin: 9px 0 4px; padding: 8px 14px;
+  background: var(--green); color: #0f172a;
+  clip-path: var(--clip-hex-toggle);
+  font-family: 'AMI Mono', monospace; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.13em;
+}
 
 /* ── phases ───────────────────────────────────────────────── */
 .phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr)); gap: 18px; }
@@ -674,11 +683,13 @@ tr.hi td { background: color-mix(in srgb, var(--blue) 8%, transparent); }
 <!-- ═══ 5 · THE WRONG STRING ═════════════════════════════ -->
 <section class="sec">
   <div class="sec-head">
-    <span class="lbl">05 — copy that becomes false</span>
-    <h2>AMI tells you to go somewhere that won't exist</h2>
+    <span class="lbl">05 — directions replaced by a door</span>
+    <h2>Don't tell them where to go. Take them.</h2>
     <p>
-      Two shipped strings name the old path. One of them fires at the worst possible moment: when a
-      mandate breach has just blocked your trade.
+      Two shipped strings name a screen by its position in the nav, and one fires at the worst
+      possible moment: a compliance breach has just blocked your trade and you want to know how to
+      change the rule. Renaming the path to "YOU → Mandate" would work — and would leave the same
+      trap armed for the next nav change, while still making the user walk there.
     </p>
   </div>
 
@@ -691,31 +702,52 @@ tr.hi td { background: color-mix(in srgb, var(--blue) 8%, transparent); }
           PM cannot be coached past it.</div>
         <div class="bad">
           <span class="x">Shipped today · <code>app_en.arb:1121</code></span><br>
-          "Change what is enforced via <b>Settings → My Mandate</b>."
+          "Change what is enforced via <b>Settings → My Mandate</b>."<br>
+          <span style="color:var(--text-low);font-size:11.5px">Directions. The user still has to
+          walk there, and the path goes stale the moment the nav moves.</span>
         </div>
         <div class="good">
           <span class="x">After CR133</span><br>
-          "Change what is enforced in <b>YOU → Mandate</b>." &nbsp;<code>retranslate:[ar,ms]</code>
+          "Change what is enforced."
+          <span class="cta-btn">OPEN MY MANDATE</span><br>
+          <span style="color:var(--text-low);font-size:11.5px">One tap from the block to the rule
+          that caused it. No path in the copy, so nothing left to go stale.</span>
         </div>
       </div>
     </div>
 
     <div style="flex:1;min-width:290px;max-width:500px">
       <div class="panel">
+        <h3>Not a new pattern — one the app already ships</h3>
+        <p style="margin-top:8px">
+          <code>app_en.arb:101</code> <code>floorLockedGoToLessons</code> is already
+          <b>"GO TO LESSONS"</b> — a button, not directions. CR133 applies it consistently.
+        </p>
+      </div>
+
+      <div class="panel" style="margin-top:16px">
         <h3>The full list</h3>
         <p style="margin-top:8px">
-          <code>app_en.arb:1121</code> <code>tradeTicketChangeMandate</code> — shown on a blocked
-          trade.<br>
-          <code>app_en.arb:85</code> <code>floorRestartOnboardingConfirmBody</code> — same
-          instruction, in the restart-onboarding dialog.<br>
-          <code>safety_floor.md:182,190</code> repeats it in spec copy — flagged for the agents
-          track. Not in shipped <code>.py</code>.
+          <code>app_en.arb:1121</code> <code>tradeTicketChangeMandate</code> — on a blocked trade
+          (<code>trade_ticket_sheet.dart:416</code>). Becomes copy + button.<br>
+          <code>app_en.arb:85</code> <code>floorRestartOnboardingConfirmBody</code> — the
+          restart-onboarding dialog. Path removed, <b>no button</b>: it is a two-action confirm, and
+          a third action that navigates away mid-decision is worse, not easier.<br>
+          <code>safety_floor.md:182,190</code> has the PM <i>say</i> it — worse than a label, because
+          it reads as AMI's own reasoning. Agents track. Not in shipped <code>.py</code>.
         </p>
-        <p>
-          Both app strings need <code>retranslate:[ar,ms]</code>. A user-facing instruction that
-          names a screen which no longer exists is the CR038 / DEF059 pattern — confident copy over
-          a fact that contradicts it.
-        </p>
+        <p>Both app strings carry <code>retranslate:[ar,ms]</code>.</p>
+      </div>
+
+      <div class="note good">
+        <p><strong>And a guard, because this string has been wrong before.</strong>
+        <code>@floorRestartOnboardingConfirmBody</code>'s own metadata records that
+        <b>DEF158</b> already corrected it once, for claiming a data loss that never happened. Same
+        string, same class. Nothing couples <code>app_en.arb</code> to <code>home_shell.dart</code>,
+        so <code>l10n_key_parity_test.dart</code> gains one rule: <b>no message value may name a nav
+        destination followed by <code>→</code></b>. Checked against today's file — the other arrows
+        are CTAs ("Next →", "Try it now →") and the label "RISK → REWARD". Only the two offenders
+        hit.</p>
       </div>
     </div>
   </div>
