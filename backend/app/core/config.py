@@ -340,6 +340,23 @@ class Settings(BaseSettings):
     # Hard cap per upload — generous enough for a phone photo at native
     # resolution, small enough that an abusive client can't flood the disk.
     bug_attachment_max_bytes: int = 5 * 1024 * 1024
+    # DEF201 (H9 follow-up): the per-file cap bounds one upload; nothing
+    # bounded the VOLUME, so uploads above zero net rate filled the disk
+    # over time regardless of the per-file cap. 2 GiB is generous for an
+    # alpha-scale tester population while still being a real ceiling.
+    bug_attachments_total_cap_bytes: int = 2 * 1024 * 1024 * 1024
+    # DEF201: once the total cap above is reached, EVERY future upload is
+    # rejected until something frees space — nothing did. Read by
+    # scripts/prune_bug_attachments.py (a melehost cron job, not this
+    # process), not by the API itself; lives here so both the cap and the
+    # window that keeps it from becoming permanent are one settings class.
+    bug_attachments_retention_days: int = 60
+
+    # DEF201 (H6 follow-up): 1-on-1 + Brief were rate-limited to 12/min/user
+    # (DEF186) but nothing bounded how many SSE streams one account could
+    # hold open AT ONCE — pace was capped, concurrency was not. Shared
+    # across both surfaces (same underlying LLM compute budget).
+    agent_stream_max_concurrent_per_user: int = 2
 
     # Auth — HMAC key for scaffold tokens. Override in prod/.env.
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.

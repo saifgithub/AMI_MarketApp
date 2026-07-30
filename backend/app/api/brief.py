@@ -53,7 +53,7 @@ from app.services.overlay_store import (
 from app.api.dependencies import get_current_user
 from app.api.sse import sse_json, sse_text
 from app.db.models import User
-from app.services.rate_limit import brief_message_rate_limit
+from app.services.rate_limit import agent_stream_concurrency_limit, brief_message_rate_limit
 
 
 router = APIRouter(
@@ -116,6 +116,11 @@ async def brief_message(
     session = engine.get_session(req.session_id)
     _own_session(current_user, session)
 
+    # DEF201: shared cap with one_on_one.py's send_message — same LLM
+    # compute budget regardless of which surface it's spent through.
+    concurrency_key = f"user:{current_user.id}"
+    agent_stream_concurrency_limit.acquire(concurrency_key)
+
     async def event_stream():
         total = 0
         try:
@@ -132,6 +137,9 @@ async def brief_message(
             # at its first line — and a blank line in it forged a new event.
             yield sse_text("error", str(e)[:300])
         finally:
+            # DEF201: release on every exit — success, in-stream error, or
+            # client disconnect.
+            agent_stream_concurrency_limit.release(concurrency_key)
             yield sse_json("done", json.dumps({"chars": total}))
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")

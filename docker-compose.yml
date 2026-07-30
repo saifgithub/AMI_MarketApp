@@ -220,8 +220,13 @@ services:
       ALPACA_PAPER_BASE_URL: ${ALPACA_PAPER_BASE_URL:-https://paper-api.alpaca.markets}
       ALPACA_OAUTH_TOKEN_URL: ${ALPACA_OAUTH_TOKEN_URL:-https://api.alpaca.markets/oauth/token}
       ALPACA_REDIRECT_URI: ${ALPACA_REDIRECT_URI:-amitrade://alpaca/callback}
-      # Bug-report upload cap (bytes).
+      # Bug-report upload cap (bytes) — per-file, then total volume (DEF201).
       BUG_ATTACHMENT_MAX_BYTES: ${BUG_ATTACHMENT_MAX_BYTES:-5242880}
+      BUG_ATTACHMENTS_TOTAL_CAP_BYTES: ${BUG_ATTACHMENTS_TOTAL_CAP_BYTES:-2147483648}
+      BUG_ATTACHMENTS_RETENTION_DAYS: ${BUG_ATTACHMENTS_RETENTION_DAYS:-60}
+      # Concurrent SSE streams one user may hold open across 1-on-1 + Brief
+      # combined (DEF201 — the H6 rate limit bounds pace, not concurrency).
+      AGENT_STREAM_MAX_CONCURRENT_PER_USER: ${AGENT_STREAM_MAX_CONCURRENT_PER_USER:-2}
       # Reputation + weekly leagues (CR004, D-060).
       REPUTATION_DAILY_CAP: ${REPUTATION_DAILY_CAP:-25}
       LEAGUE_COHORT_SIZE: ${LEAGUE_COHORT_SIZE:-30}
@@ -245,6 +250,12 @@ services:
     volumes:
       - ./backend/app:/app/app:ro
       - ./backend/tests:/app/tests:ro
+      # DEF201: scripts/ isn't baked into the image, so a script here can't
+      # `docker exec` (the way social_cache_warm.py's own docstring already
+      # assumes) without this — prune_bug_attachments.py needs app.core.config
+      # (pydantic-settings isn't on melehost's bare python3, confirmed 2026-07-30,
+      # so it must run inside this container, not on the host).
+      - ./backend/scripts:/app/scripts:ro
       # Lessons + glossary + ai_coach + daily_challenges all live under
       # /content and are read at boot by LessonsService (and the soon-to-
       # exist GlossaryService etc). lessons_service.py resolves the path

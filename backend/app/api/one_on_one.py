@@ -24,7 +24,10 @@ from app.services.mandate_store import resolve_mandate
 from app.api.dependencies import get_current_user
 from app.api.sse import sse_json, sse_text
 from app.db.models import User
-from app.services.rate_limit import one_on_one_message_rate_limit
+from app.services.rate_limit import (
+    agent_stream_concurrency_limit,
+    one_on_one_message_rate_limit,
+)
 
 router = APIRouter(
     prefix="/v1/agents",
@@ -123,6 +126,13 @@ async def send_message(
     session = runner.get_session(req.session_id)
     _own_session(current_user, session)
 
+    # DEF201: claim a concurrency slot before spending — a request bounced
+    # for holding too many streams already open must never be charged.
+    # Released in event_stream()'s finally, shared with brief.py (same
+    # LLM compute budget regardless of surface).
+    concurrency_key = f"user:{current_user.id}"
+    agent_stream_concurrency_limit.acquire(concurrency_key)
+
     # DEF113: debit before the stream is on the wire — once the SSE status is
     # sent a refusal can only be an in-band error event, which the client
     # renders as a crash, not a paywall (same reasoning as room.py's 402).
@@ -134,6 +144,10 @@ async def send_message(
     try:
         spend(current_user.id, cost, reason=f"one_on_one:{_agent_id_str(session)}")
     except InsufficientCredits as e:
+        # DEF201: the generator (which would otherwise release the slot in
+        # its finally) never runs on this path — release here or a 402
+        # permanently steals one of this user's concurrency slots.
+        agent_stream_concurrency_limit.release(concurrency_key)
         detail = {
             "code": "insufficient_credits",
             "balance": e.balance,
@@ -161,6 +175,10 @@ async def send_message(
             failed = True
             yield sse_text("error", str(e)[:300])
         finally:
+            # DEF201: release the concurrency slot on every exit — success,
+            # in-stream error, or client disconnect (an `async for` broken
+            # by cancellation still runs this finally).
+            agent_stream_concurrency_limit.release(concurrency_key)
             # DEF113: charged-then-failed is a real user-visible wrong on a
             # money path even at price 0 (the ledger row persists regardless).
             # Refund before the journal write, mirroring room_runner's

@@ -33,6 +33,7 @@ from threading import RLock
 
 from fastapi import HTTPException, Request, status
 
+from app.core.config import settings
 from app.core.logging import logger
 
 
@@ -139,6 +140,68 @@ class RateLimiter:
         self.check(key)
 
 
+class ConcurrencyLimiter:
+    """Per-key concurrent-usage cap — how many operations for this key are
+    open RIGHT NOW, distinct from [RateLimiter]'s "how many in the last N
+    seconds". A key can be well under its rate limit while holding many
+    streams open simultaneously; this bounds that separately.
+
+    DEF201 (H6 follow-up): DEF186 rate-limited 1-on-1 + Brief turns to
+    12/min/user but that bounds pace, not concurrency — nothing stopped
+    one account holding many simultaneous SSE streams open at once, each
+    burning a full LLM turn's worth of compute for the run's duration.
+
+    `acquire()`/`release()` must be paired by the caller — always release
+    from a `finally` (or equivalent exception-safe teardown), since a
+    leaked acquire permanently steals one of that key's slots.
+    """
+
+    def __init__(self, *, name: str, max_concurrent: int) -> None:
+        self.name = name
+        self.max_concurrent = max_concurrent
+        self._counts: dict[str, int] = {}
+        self._lock = RLock()
+
+    def reset(self) -> None:
+        """Drop every counter — for tests."""
+        with self._lock:
+            self._counts.clear()
+
+    def acquire(self, key: str) -> None:
+        """Raise 429 if `key` is already at its cap; otherwise claim a slot."""
+        with self._lock:
+            current = self._counts.get(key, 0)
+            if current >= self.max_concurrent:
+                logger.warning(
+                    "concurrency_limit_hit",
+                    limiter=self.name,
+                    key=key,
+                    max_concurrent=self.max_concurrent,
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail=f"concurrency_limit_exceeded: {self.name}",
+                )
+            self._counts[key] = current + 1
+
+    def release(self, key: str) -> None:
+        """Free a slot claimed by `acquire`.
+
+        Never raises: a release for a key with no counted slot (double
+        release, or release without a matching acquire — a bug elsewhere)
+        is a no-op rather than a crash in stream teardown, which runs
+        inside a `finally` where raising would mask the real exception.
+        """
+        with self._lock:
+            current = self._counts.get(key)
+            if not current:
+                return
+            if current <= 1:
+                del self._counts[key]
+            else:
+                self._counts[key] = current - 1
+
+
 # ── Module-level limiters (one per route — registered at import) ────────
 
 # /v1/auth/anon — generous, since legit retries can fire on reconnect
@@ -195,6 +258,16 @@ one_on_one_message_rate_limit = RateLimiter(
 )
 brief_message_rate_limit = RateLimiter(
     name="brief_message", per_minute=12,
+)
+
+# DEF201 (H6 follow-up to DEF186): rate limiting bounds pace, not how many
+# turns one account can have in flight at once. Shared across 1-on-1 +
+# Brief — same LLM compute budget regardless of which surface it's spent
+# through. Configurable via settings so alpha can retune the cap with an
+# env change + container restart, no code change needed.
+agent_stream_concurrency_limit = ConcurrencyLimiter(
+    name="agent_stream_concurrency",
+    max_concurrent=settings.agent_stream_max_concurrent_per_user,
 )
 
 # DEF186 / H9: unauthenticated bug-report uploads had no rate limit and no
