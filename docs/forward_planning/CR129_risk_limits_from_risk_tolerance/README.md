@@ -81,13 +81,27 @@ not by a new measurement.** Say so in the commit; do not present it as a bug tha
    (a content follow-up), which reverses the intended dependency: the mandate becomes the source of
    truth and the lessons are made true against it.
 
-   **A real interaction the table must resolve, surfaced before proposing numbers:**
-   `max_open_positions` does not scale monotonically with risk the way the others do. It is coupled
-   to `single_name_cap_pct` — at risk 1 the per-name cap is **1.5%**, so a conservative user needs
-   *many* names to be meaningfully invested (20 × 1.5% = 30%), and a low position cap would lock
-   them out of their own portfolio. At risk 5 the per-name cap is 4.5%, so fewer names reach the
-   same exposure. Naively giving the "safest" profile the tightest number on every row inverts this
-   one and produces a mandate that cannot be satisfied.
+   **`max_open_positions` is NOT a risk-appetite parameter — ruled by Saiful, 2026-07-30.** The
+   Architect's first derivation set it to `60% / per-name-cap`, which made position count a function
+   of the risk dial and quietly encoded *"aggressive ⇒ holds fewer names."* Saiful rejected the
+   premise: *"I understand if I am a low risk tolerance person, I should diversify my holdings, but
+   it does not mean if I am a high risk tolerance person I should not. I should still diversify my
+   holdings, just that I may trade in riskier investments."* Correct, and the error was worse than a
+   wrong number — a **ceiling** of 13 does not *permit* concentration, it **forces** it. No risk
+   profile should compel a user to be concentrated, and the per-name cap already does the
+   risk-scaling work (at risk 5 you *may* size 4.5% into one name; nothing should require it).
+
+   **Replacement rule — two forces, neither of them risk appetite:**
+   `max_open_positions = max(DIVERSIFICATION_FLOOR, names needed to deploy fully at your own
+   per-name cap)`, with `DIVERSIFICATION_FLOOR = 30`. It still declines across the profiles, but
+   only because a larger per-name cap mechanically needs fewer names to deploy the same capital —
+   never because an aggressive user should hold less. A flat value fails for the mirror reason:
+   30 names × 1.5% caps a risk-1 user at **45% deployable**, so they could not fully invest.
+
+   **Guard this rule with a test, not a comment:** for every risk score, the number of names a user
+   can actually reach — after the open-risk cap is also applied — must be **≥ 30**. That is the
+   "nobody is forced to concentrate" invariant, and it is the one a future tweak to any of the three
+   coupled numbers could silently break.
 5. **The backfill must be loud (CR040).** 13 real users acquire limits they never set. At minimum a
    `MANDATE_EDIT` journal entry per user describing what changed and why; ideally a one-time in-app
    notice. A user hitting a cooldown block they never configured, with no explanation, is the
@@ -106,3 +120,40 @@ not by a new measurement.** Say so in the commit; do not present it as a bug tha
 
 **CR101** (built the fields), **DEF187** (closed by this CR's decision), **DEF193** (blocks the
 mobile half), **DEF102** / **DEF117** (the curriculum this makes true), **CR040**, **CR046**.
+
+## Proposed preset tables — awaiting Saiful's confirmation
+
+Derived from the anchors that exist, not invented. `max_drawdown_pct` shown at its default of 30;
+the open-risk column is **per-user**, computed from the drawdown the user themselves stated.
+
+| risk | max open positions | post-loss cooldown | trades/day | trades/week | total open risk |
+|---|---|---|---|---|---|
+| 1 | 65 | 2h | 10 | 40 | 25% of drawdown (7.5%) |
+| 2 | 65 | 1h | 15 | 60 | 30% of drawdown (9.0%) |
+| 3 | 35 | 1h | 20 | 80 | 35% of drawdown (10.5%) |
+| 4 | 30 | 0.5h | 30 | 120 | 45% of drawdown (13.5%) |
+| 5 | 30 | 0h | 50 | 200 | 50% of drawdown (15.0%) |
+
+Rules behind each column:
+
+1. **Max open positions** — `max(30, names needed to deploy fully at your per-name cap)`. Declines
+   only because a bigger per-name cap needs fewer names. Never forces concentration (see above).
+2. **Total open risk** — a fraction of the drawdown *the user said they could stomach*, so a
+   simultaneous stop-cascade costs part of that budget rather than all of it. The only one of the
+   five with a genuine user-stated anchor.
+3. **Post-loss cooldown** — interrupts a tilt sequence inside one session. **The clock is real
+   wall-clock** (`last_loss_closed_at + timedelta(hours=…)`), so an aggressive number locks a user
+   out of a *learning app* for real days. An earlier draft proposed 48h at risk 1; that was wrong.
+4. **Trade pace** — catches bursts, never throttles deliberate practice. Sanity metric: days to
+   accumulate 30 trade outcomes — 5.2 at risk 1 down to 1.1 at risk 5. An earlier draft's 3/week
+   meant **10 weeks** for a beginner to see 30 outcomes, which inverts the product's purpose.
+
+**Binding order at a 10% stop** (measured): open-risk binds first for risk 1–2, position count for
+risk 3–5. Names actually reachable after both apply: 50 / 60 / 35 / 30 / 30 — all ≥ the
+diversification floor.
+
+**Calibration stance, stated so it is not mistaken for sloppiness:** these are deliberately looser
+than a real-money risk framework. CR101's own L3 rationale governs — *in a simulation-only trainer
+the blow-up IS the lesson*. These limits are teaching instruments that should bite when a user is
+genuinely over-extended and stay out of the way otherwise; a limit that fires constantly trains
+users to resent it, and one that never fires teaches nothing.
