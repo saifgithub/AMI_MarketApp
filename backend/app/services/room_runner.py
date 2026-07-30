@@ -912,14 +912,25 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     # is kept: a zero entry is not a price either.
     entry_raw = _safe_float(parsed.get("entry"))
     entry = entry_raw or ctx.trader_entry
-    entry_src = "pm" if entry_raw else "trader"
+    entry_src = "pm" if entry_raw else ("trader" if ctx.trader_entry else None)
     # Explicit None-checks (not `or`): a real level is used as-is; only a genuinely
     # missing stop/target is defaulted, and that default is disclosed (audit F6) so
     # a minted ~6%/13% protective level is never shown as a PM-chosen price.
     stop_raw = _safe_float(parsed.get("stop"))
     target_raw = _safe_float(parsed.get("target"))
-    stop = stop_raw if stop_raw is not None else round(entry * 0.94, 2)
-    target = target_raw if target_raw is not None else round(entry * 1.13, 2)
+    # DEF172: neither entry source may hold — entry_raw absent (PM stated
+    # none) and ctx.trader_entry absent (no Trader price to fall back to).
+    # `entry * 0.94` would then be `None * float`, killing the whole turn.
+    # There is no honest level to mint in that case, so the derivation is
+    # skipped and stop/target stay whatever the PM stated (possibly None) —
+    # the absence surfaces below (reason text + a missing provenance key),
+    # never a stack trace and never a silently-dropped field (CR040).
+    if entry is not None:
+        stop = stop_raw if stop_raw is not None else round(entry * 0.94, 2)
+        target = target_raw if target_raw is not None else round(entry * 1.13, 2)
+    else:
+        stop = stop_raw
+        target = target_raw
     try:
         horizon_days = int(parsed.get("horizon_days"))
     except (TypeError, ValueError):
@@ -930,12 +941,34 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     if size_pct > ceiling:
         size_pct = ceiling
         reason += f" (sized down to {ceiling:.1f}% — mandate risk-tier ceiling.)"
-    _defaulted = [n for n, raw in (("stop", stop_raw), ("target", target_raw)) if raw is None]
+    _defaulted = [n for n, raw in (("stop", stop_raw), ("target", target_raw)) if raw is None and entry is not None]
     if _defaulted:
         reason += (
             f" ({'/'.join(_defaulted)} not stated by the PM — defaulted to a "
             f"~6%/13%-from-entry protective level, not a PM-chosen price.)"
         )
+    _unavailable = [n for n, raw in (("stop", stop_raw), ("target", target_raw)) if raw is None and entry is None]
+    if _unavailable:
+        reason += (
+            f" ({'/'.join(_unavailable)} not stated by the PM, and no entry "
+            f"price was available to derive a protective level from.)"
+        )
+
+    # CR106 B1 — the same facts the sentence above states in prose, in a shape
+    # a graphic can be gated on. The sentence STAYS: the board clamps `reason`
+    # behind a WHY expander, and demoting the only existing disclosure while
+    # promoting the same numbers into a to-scale ribbon would be a net loss of
+    # honesty (T-PROV). DEF172: a key is only present for a price that was
+    # actually attributed to something — a `None` level (entry unresolved,
+    # so stop/target never minted) has no source to name and is omitted
+    # rather than mislabelled (T-BACKFILL: absence must read as absence).
+    _prov: dict[str, str] = {}
+    if entry_src is not None:
+        _prov["entry"] = entry_src
+    if stop is not None:
+        _prov["stop"] = "pm" if stop_raw is not None else "ami_default"
+    if target is not None:
+        _prov["target"] = "pm" if target_raw is not None else "ami_default"
 
     return narration, Verdict(
         action=VerdictAction.APPROVE,
@@ -945,16 +978,7 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
         target=target,
         time_horizon_days=horizon_days,
         reason=reason,
-        # CR106 B1 — the same three facts the sentence above states in prose,
-        # in a shape a graphic can be gated on. The sentence STAYS: the board
-        # clamps `reason` behind a WHY expander, and demoting the only existing
-        # disclosure while promoting the same numbers into a to-scale ribbon
-        # would be a net loss of honesty (T-PROV).
-        level_provenance={
-            "entry": entry_src,
-            "stop": "pm" if stop_raw is not None else "ami_default",
-            "target": "pm" if target_raw is not None else "ami_default",
-        },
+        level_provenance=_prov or None,
     )
 
 
@@ -1564,7 +1588,7 @@ def _clip_summary(text: str, limit: int = JOURNAL_SUMMARY_MAX) -> str:
         return text
     head = text[: limit - 1]
     cut = head.rsplit(" ", 1)[0] if " " in head else head
-    return f"{cut.rstrip().rstrip(',;:')}…"
+    return f"{cut.rstrip(',;:').rstrip()}…"
 
 
 def build_journal_entry_for_run(run: RoomRun, user_id: UUID) -> JournalEntryCreate:
