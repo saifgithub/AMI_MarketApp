@@ -62,6 +62,25 @@ CLIENT_UNWRITABLE_MANDATE_FIELDS = frozenset({
     "trial_started_at",
 })
 
+# DEF191: the marker that makes a Mandate field's enforced-limit status
+# structural instead of a hand-maintained list. A field carrying
+# `Field(json_schema_extra={ENFORCED_LIMIT_MARKER: True})` is asserting "I am
+# enforced (agents/safety_floor.py or a peer enforcement site), disclosed in
+# my own units, disclosed in the agent overlay, and settable via PATCH — or
+# I am deleted. No third state" — the CR101-BE1 four-leg invariant. Picked
+# over a class-level registry (the other shape named in the DEF191 row)
+# because the declaration then lives next to the field itself, where someone
+# adding a new limit is already looking and editing; a separate registry
+# module is one more file a developer adding a field has no reason to visit
+# unless they already know it exists — the exact kind of tribal knowledge
+# CR038 says not to rely on. The tradeoff: it does NOT, by itself, catch a
+# developer who adds an enforced field and forgets the marker entirely
+# (nothing forces them to touch this file at all) — see
+# `test_no_unmarked_numeric_field_is_referenced_by_enforcement_code` in
+# test_cr101_be1_settable_risk_caps.py for the (heuristic, explicitly
+# incomplete) mitigation for that half.
+ENFORCED_LIMIT_MARKER = "enforced_limit"
+
 
 class TargetOutcome(BaseModel):
     amount: float
@@ -127,7 +146,9 @@ class Mandate(BaseModel):
     risk_score: int = Field(..., ge=1, le=5)
     risk_components: RiskComponents
     risk_quotes: list[str] = Field(default_factory=list)
-    max_drawdown_pct: Literal[10, 20, 30, 50, 100]
+    max_drawdown_pct: Literal[10, 20, 30, 50, 100] = Field(
+        ..., json_schema_extra={ENFORCED_LIMIT_MARKER: True}
+    )
 
     # CR101-BE1: the two ALREADY-enforced risk caps (sector concentration, single-name
     # position size), made explicit and settable. `None` = not explicitly set — the
@@ -138,8 +159,8 @@ class Mandate(BaseModel):
     # `None`), so it enforces IDENTICALLY post-migration. Percentage points (e.g. 40.0 =
     # 40%), matching `max_drawdown_pct`'s units. Once a PATCH sets either field it is
     # sticky — it no longer moves if risk_score/concentration_tolerance later change.
-    sector_cap_pct: float | None = None
-    single_name_cap_pct: float | None = None
+    sector_cap_pct: float | None = Field(default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True})
+    single_name_cap_pct: float | None = Field(default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True})
 
     # CR101-BE2: four risk limits that did not exist in ANY form pre-CR101 — no
     # legacy value to migrate, so `None` simply means "off / not enforced", not
@@ -157,22 +178,24 @@ class Mandate(BaseModel):
     # Hours after a stop-out (a trade closed with a realised loss) before the
     # next BUY is allowed. Evaluated against the most recent lost trade's
     # `closed_at`.
-    post_loss_cooldown_hours: float | None = None
+    post_loss_cooldown_hours: float | None = Field(
+        default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True}
+    )
     # Ceiling on distinct tickers concurrently held. A BUY that would open a
     # NEW position (a ticker not already held) is blocked once the count is
     # already at/above this; adding to an existing holding is unaffected.
-    max_open_positions: int | None = None
+    max_open_positions: int | None = Field(default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True})
     # Over-trading brake — a ceiling on trades submitted (any side) within the
     # current UTC calendar day / ISO week (Monday 00:00 UTC boundary). Fixed
     # UTC basis, not `Mandate.timezone` — see `agents/safety_floor.py` for why.
-    max_trades_per_day: int | None = None
-    max_trades_per_week: int | None = None
+    max_trades_per_day: int | None = Field(default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True})
+    max_trades_per_week: int | None = Field(default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True})
     # Sum of (position size % of portfolio) x (stop distance % below entry) /
     # 100 across open positions, in percentage points. Caps the portfolio's
     # total capital-at-risk-to-stops, not any single position. Requires a
     # stop on the proposed trade to price its own contribution; an open
     # position with no stop contributes 0 (nothing to sum).
-    max_open_risk_pct: float | None = None
+    max_open_risk_pct: float | None = Field(default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True})
 
     # Constraints — hard rules
     compliance: Compliance = Field(default_factory=Compliance)
@@ -207,3 +230,16 @@ class Mandate(BaseModel):
 
     created_at: datetime
     updated_at: datetime
+
+
+def enforced_limit_field_names() -> list[str]:
+    """DEF191: the four-leg invariant guard's subject list, derived from the
+    schema instead of hand-enumerated. Every `Mandate` field carrying
+    `Field(json_schema_extra={ENFORCED_LIMIT_MARKER: True})`, sorted for a
+    stable, diffable order. See `ENFORCED_LIMIT_MARKER`'s docstring above for
+    why a per-field marker was picked over a class-level registry."""
+    return sorted(
+        name
+        for name, field in Mandate.model_fields.items()
+        if isinstance(field.json_schema_extra, dict) and field.json_schema_extra.get(ENFORCED_LIMIT_MARKER)
+    )
