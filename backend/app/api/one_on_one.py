@@ -16,6 +16,7 @@ from app.schemas.one_on_one import (
     OneOnOneStartRequest,
 )
 from app.services.agent_runner import AgentRunner, get_agent_runner
+from app.services.credit_service import InsufficientCredits, one_on_one_cost, refund, spend
 from app.services.entitlements import effective_plan_for_user
 from app.services.journal_store import get_journal_store
 from app.services.lessons_service import get_lessons_service
@@ -45,6 +46,14 @@ def _own_session(current_user: User, session: OneOnOneSession | None) -> None:
     # Strict: a session with no owner cannot be operated on by anyone.
     if session.user_id is None or session.user_id != current_user.id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
+
+
+def _agent_id_str(session: OneOnOneSession) -> str:
+    return (
+        session.agent_id.value
+        if isinstance(session.agent_id, AgentId)
+        else str(session.agent_id)
+    )
 
 
 @router.post(
@@ -114,9 +123,30 @@ async def send_message(
     session = runner.get_session(req.session_id)
     _own_session(current_user, session)
 
+    # DEF113: debit before the stream is on the wire — once the SSE status is
+    # sent a refusal can only be an in-band error event, which the client
+    # renders as a crash, not a paywall (same reasoning as room.py's 402).
+    # `spend()` always runs the full path (ledger row written, balance
+    # arithmetic executed) even at Alpha's configured price of 0 — a charge of
+    # zero, never a skipped charge, so flipping the price later needs no new
+    # code path.
+    cost = one_on_one_cost()
+    try:
+        spend(current_user.id, cost, reason=f"one_on_one:{_agent_id_str(session)}")
+    except InsufficientCredits as e:
+        detail = {
+            "code": "insufficient_credits",
+            "balance": e.balance,
+            "cost": e.cost,
+            "plan": e.plan.value,
+            "resets_at": e.resets_at.isoformat(),
+        }
+        raise HTTPException(status.HTTP_402_PAYMENT_REQUIRED, detail=detail) from e
+
     async def event_stream():
         total_chars = 0
         buffer: list[str] = []
+        failed = False
         try:
             async for chunk in runner.stream_one_on_one_message(
                 session=session,
@@ -128,18 +158,25 @@ async def send_message(
                 yield sse_text("token", chunk)
         except Exception as e:
             # DEF127: framed, not interpolated — see app/api/sse.py.
+            failed = True
             yield sse_text("error", str(e)[:300])
         finally:
+            # DEF113: charged-then-failed is a real user-visible wrong on a
+            # money path even at price 0 (the ledger row persists regardless).
+            # Refund before the journal write, mirroring room_runner's
+            # failed-run refund — never let a provider blip silently eat a
+            # turn the user never got.
+            if failed and cost > 0:
+                try:
+                    refund(current_user.id, cost, reason=f"one_on_one_failed:{session.id}")
+                except Exception:  # pragma: no cover
+                    pass
             # Capture to Decision Journal — best-effort, never fail the stream
             try:
                 if session.user_id is not None:
                     reply = "".join(buffer)
                     summary = reply[:240].rstrip() + ("…" if len(reply) > 240 else "")
-                    agent_id_str = (
-                        session.agent_id.value
-                        if isinstance(session.agent_id, AgentId)
-                        else str(session.agent_id)
-                    )
+                    agent_id_str = _agent_id_str(session)
                     get_journal_store().append(JournalEntryCreate(
                         user_id=session.user_id,
                         entry_type=EntryType.ONE_ON_ONE,

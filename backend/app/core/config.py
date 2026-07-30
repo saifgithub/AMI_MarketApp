@@ -224,6 +224,23 @@ class Settings(BaseSettings):
     # between free Rooms. Only consulted when gtm_funnel == "winzip".
     winzip_cooldown_minutes: int = 5
 
+    # DEF113 — 1-on-1 chat's credit price. credits.md:18 prices it at 1; Saiful
+    # ruled (2026-07-30) to wire the full spend()/ledger/402 spine now but keep
+    # Alpha priced at 0 so no existing tester hits a paywall they've never seen
+    # mid-test. This is a DECLARED setting, not a literal 0 at the call site —
+    # flipping to 1 in credits.md's spec is then a one-line env change, already
+    # exercised by the 402 test at a non-zero price (test_def113_one_on_one_credit_gate.py).
+    one_on_one_credit_cost: int = 0
+
+    @field_validator("one_on_one_credit_cost")
+    @classmethod
+    def _one_on_one_cost_non_negative(cls, v: int) -> int:
+        # CR040 degrade-loudly, same shape as the CR098 pull-back validator: a
+        # negative price is nonsensical — fail boot instead of charging garbage.
+        if v < 0:
+            raise ValueError("one_on_one_credit_cost must be >= 0")
+        return v
+
     # Reputation + weekly leagues (CR004, D-060).
     # daily_cap bounds total points/user/local-day so no single behaviour
     # can be farmed. eligible_plans empty = every plan competes (Engagement

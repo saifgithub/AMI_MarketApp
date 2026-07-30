@@ -133,3 +133,7 @@ class AdminConfigCheckResponse(BaseModel):
     env: str
     gates: list[FeatureGate]
     dark_count: int
+    # DEF113 — the configured 1-on-1 credit price. Not a FeatureGate (those
+    # are booleans, "is X configured"); this is a tunable price, so "what are
+    # we charging in production" is one curl instead of a code read.
+    one_on_one_credit_cost: int

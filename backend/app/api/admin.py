@@ -239,6 +239,7 @@ def config_check(_: None = Depends(get_admin)) -> AdminConfigCheckResponse:
         env=settings.env,
         gates=gates,
         dark_count=sum(1 for g in gates if not g.configured),
+        one_on_one_credit_cost=settings.one_on_one_credit_cost,
     )
 
 
