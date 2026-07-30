@@ -11,7 +11,10 @@ Land the four "app uses stock Material where the DS ships a signature component"
   dev screen alone) to the three bottom sheets users actually stare at: trade-ticket, agent-action,
   watchlist. The signature glassmorphism look lands where it counts.
 - **C3 — hex period toggle:** replace the chart's rounded `ChoiceChip` period selector with an
-  elongated-hex toggle (`FlatTopHexagonClipper`, cornerCut 10; active = solid `hexBlue` + glow).
+  elongated toggle (`CutCornerOctagonClipper`, cornerCut 10; active = solid `hexBlue` + glow).
+  CR117 renamed the class and vacated `FlatTopHexagonClipper`; note this control is an **octagon**,
+  not the "elongated hex" the original wording claimed. If an elongated hex is what C3 actually
+  wants, that is `FlatTopHexagonBarClipper` and it is a design decision, not a rename.
 - **C4 — HexToast:** a bespoke hex toast (clip-path, mono, accent border, slide-in) + one helper that
   routes the ~11 `SnackBar` call sites through it.
 - **C5 — logo:** drop the bundled-but-unused `assets/logo_hex.svg` into an app bar.

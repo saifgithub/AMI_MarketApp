@@ -100,5 +100,23 @@ audits the sprint as one batch afterwards.
 
 **If you can measure that an instruction here is wrong, stop and disclose with the measurement.**
 
+## INTEGRATION NOTE — Architect, added after launch (AT:R65)
+
+**This lane's worktree was cut at `1e2336e7`, which is BEFORE the SEC-BATCH1 merge (`6c80ede0`).**
+Measured: `backend/app/api/one_on_one.py` has **0** rate-limit references at that base and **2** on
+current `main` — DEF186 added a per-user 12/min limiter to the exact file this lane edits, and
+`brief_engine.py` is in the same position.
+
+**Consequence if unhandled:** a 3-way merge of this lane could drop DEF186's limiter, reverting a
+shipped security fix silently, in the file that most looks fine at a glance.
+
+**Required at integration (mine, not the builder's):** after merging, assert the limiter still
+exists in `one_on_one.py` and that `test_def186_llm_spend_limits.py` passes — not merely that the
+suite count is unchanged, since a reverted limiter plus a lane's new tests can net to the same
+number.
+
+**Builder: merge `main` into your lane branch before you finish**, and say in your hand-off whether
+the merge touched `one_on_one.py` or `brief_engine.py` and what you did about it.
+
 ASSIGNED: coder.api round 1
 DISPATCH: OPEN
