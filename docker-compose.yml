@@ -109,6 +109,19 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+      # Kimi (Moonshot AI), direct API — CR126, Saiful testing as a
+      # candidate B7 provider. Mirrors config.py's own defaults into the
+      # compose substitution (same pattern as VLLM_MODEL below) — an EMPTY
+      # env var still overrides a Settings default, so a bare ":-" here
+      # would silently blank base_url/model out even though config.py
+      # itself would have picked a sensible default.
+      # LLM_FORCE_PROVIDER=kimi actually exercises it for real traffic
+      # without touching the vllm>anthropic>kimi>mock preference order —
+      # unset (or set to any other registered name) to go back to normal.
+      KIMI_API_KEY: ${KIMI_API_KEY:-}
+      KIMI_BASE_URL: ${KIMI_BASE_URL:-https://api.moonshot.ai}
+      KIMI_MODEL: ${KIMI_MODEL:-kimi-k3}
+      LLM_FORCE_PROVIDER: ${LLM_FORCE_PROVIDER:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
       POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}

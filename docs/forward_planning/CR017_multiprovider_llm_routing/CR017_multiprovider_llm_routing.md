@@ -17,6 +17,12 @@ It also logs three factual corrections to CR008 that change the strategy (§6).
 
 This is a **research spec.** No code ships under CR017. Implementation, if approved, becomes a separate build CR.
 
+**Partial execution (2026-07-30, CR130):** the §3/§5 provider-generalization
+slice — `VLLMProvider` → `OpenAICompatibleProvider(name, base_url, model,
+api_key, extra_body)` — shipped, scoped to registering Kimi (Saiful wanted to
+test it directly). §2.4 (usage capture), §4 (routing-by-level), and §5.5
+(Anthropic `cache_control`) remain open/unbuilt.
+
 ---
 
 ## 1. Where the code stands today

@@ -9,9 +9,13 @@ Providers implemented:
   - MockProvider     → returns canned responses; used when no real key is set.
                        Lets the full UX work without API keys configured.
   - AnthropicProvider → direct Anthropic API. Supports streaming.
+  - OpenAICompatibleProvider → any OpenAI-chat-completions-compatible endpoint
+                       (CR017). VLLMProvider is a thin subclass of this;
+                       KimiProvider instances register the same way.
 
 Coming later (W4+):
-  - OpenAIProvider, GoogleProvider, OpenRouterProvider
+  - GoogleProvider, OpenRouterProvider, DeepSeek/Qwen (CR017 §3 — same
+    OpenAICompatibleProvider class, just a new registration block each)
 
 See docs/initial_specs/08_tech/llm_routing.md for the routing strategy.
 """
@@ -302,36 +306,42 @@ class AnthropicProvider(LLMProvider):
         await self._client.aclose()
 
 
-# ── vLLM provider (on-prem, OpenAI-compatible) ───────────────────────────
+# ── OpenAI-compatible provider (vLLM, Kimi, and any future chat-completions
+#    endpoint — CR017) ────────────────────────────────────────────────────
 
 
-class VLLMProvider(LLMProvider):
-    """Streams completions from an on-prem vLLM server.
+class OpenAICompatibleProvider(LLMProvider):
+    """Streams completions from any OpenAI `/v1/chat/completions`-shaped API.
 
-    vLLM exposes the OpenAI `/v1/chat/completions` schema, so the only
-    bespoke logic here is the SSE parser (`choices[0].delta.content`
-    instead of Anthropic's `content_block_delta`) and the system-prompt
-    placement (vLLM/OpenAI puts `system` inside `messages`, not as a
-    sibling field).
+    CR017: our on-prem vLLM server, Moonshot's Kimi API, and (later)
+    DeepSeek/Qwen/Gemini's OpenAI-compat endpoints all speak the same
+    request/response shape — the only bespoke logic anywhere is the SSE
+    parser (`choices[0].delta.content` instead of Anthropic's
+    `content_block_delta`) and the system-prompt placement (OpenAI-style
+    puts `system` inside `messages`, not as a sibling field). So this is
+    ONE class, instantiated once per provider with a different
+    name/base_url/model/key — not a new class per provider.
 
-    Tier mapping: vLLM serves a single model at a time, so all tiers
+    Tier mapping: each instance serves a single model, so all tiers
     resolve to the same `model_name`. The per-(plan, agent) tier policy
-    in `tier_policy.py` still picks a tier — vLLM just ignores the
-    distinction. When the day comes that we host multiple sizes side by
-    side, swap `model_name` for a `tier_to_model` map.
+    in `tier_policy.py` still picks a tier — this class just ignores the
+    distinction. `extra_body` exists for provider-specific request-body
+    quirks (e.g. Qwen's `enable_thinking`, CR017 §3) — unused today.
     """
-
-    name = "vllm"
 
     def __init__(
         self,
         *,
+        name: str,
         base_url: str,
         model_name: str,
         api_key: str | None = None,
         timeout_seconds: float = 60.0,
+        extra_body: dict[str, Any] | None = None,
     ) -> None:
+        self.name = name
         self._model_name = model_name
+        self._extra_body = extra_body or {}
         headers = {"Content-Type": "application/json"}
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"
@@ -350,7 +360,7 @@ class VLLMProvider(LLMProvider):
         max_tokens: int = 1024,
         meta: dict[str, Any] | None = None,
     ) -> AsyncIterator[str]:
-        # OpenAI / vLLM put the system message as the first entry of `messages`.
+        # OpenAI-style puts the system message as the first entry of `messages`.
         openai_messages: list[dict[str, str]] = [
             {"role": "system", "content": system_prompt}
         ]
@@ -362,19 +372,20 @@ class VLLMProvider(LLMProvider):
             "messages": openai_messages,
             "max_tokens": max_tokens,
             "stream": True,
+            **self._extra_body,
         }
 
         async with self._client.stream("POST", "/v1/chat/completions", json=body) as resp:
             if resp.status_code != 200:
                 err_body = await resp.aread()
                 logger.error(
-                    "vllm_error",
+                    f"{self.name}_error",
                     status=resp.status_code,
                     body=err_body.decode()[:500],
                 )
                 yield (
-                    f"\n\n[AMI error: HTTP {resp.status_code} from the on-prem AMI server. "
-                    "Check backend logs.]"
+                    f"\n\n[AMI error: HTTP {resp.status_code} from the upstream provider "
+                    f"({self.name}). Check backend logs.]"
                 )
                 return
 
@@ -391,9 +402,10 @@ class VLLMProvider(LLMProvider):
                     choices = obj.get("choices") or []
                     if not choices:
                         continue
-                    # DEF125: vLLM sends `finish_reason` on the final chunk,
-                    # whose delta is empty — so read it BEFORE the `content`
-                    # guard, which would otherwise `continue` straight past it.
+                    # DEF125: the terminal `finish_reason` arrives on the
+                    # final chunk, whose delta is empty — read it BEFORE the
+                    # `content` guard, which would otherwise `continue`
+                    # straight past it.
                     if meta is not None:
                         finish = choices[0].get("finish_reason")
                         if finish:
@@ -403,10 +415,37 @@ class VLLMProvider(LLMProvider):
                     if content:
                         yield content
                 except Exception as e:
-                    logger.warn("vllm_chunk_parse_failed", error=str(e), line=line[:200])
+                    logger.warn(
+                        f"{self.name}_chunk_parse_failed", error=str(e), line=line[:200]
+                    )
 
     async def aclose(self) -> None:
         await self._client.aclose()
+
+
+class VLLMProvider(OpenAICompatibleProvider):
+    """Thin subclass, not a plain alias — CR077's `check_prefix_cache_at_startup`
+    identifies "the vLLM instance" by `isinstance(provider, VLLMProvider)` to
+    call the vLLM-only `/metrics` endpoint below. A bare `OpenAICompatibleProvider`
+    instance (e.g. Kimi) must NOT satisfy that isinstance check, or startup would
+    try to scrape a hosted API's `/metrics` path that doesn't exist.
+    """
+
+    def __init__(
+        self,
+        *,
+        base_url: str,
+        model_name: str,
+        api_key: str | None = None,
+        timeout_seconds: float = 60.0,
+    ) -> None:
+        super().__init__(
+            name="vllm",
+            base_url=base_url,
+            model_name=model_name,
+            api_key=api_key,
+            timeout_seconds=timeout_seconds,
+        )
 
     async def log_prefix_cache_status(self) -> None:
         """CR077 Phase 0 second guard.
@@ -478,8 +517,15 @@ class LLMGateway:
     """Single entry point for LLM calls. Picks provider based on config + tier."""
 
     # Preference order: on-prem vLLM first (free + private + fast LAN),
-    # Anthropic second (managed fallback), mock last.
-    _PREFERENCE: tuple[str, ...] = ("vllm", "anthropic", "mock")
+    # Anthropic second (managed fallback), Kimi third (CR126 — a candidate
+    # B7 provider being manually tested, not yet trusted as a default),
+    # mock last.
+    _PREFERENCE: tuple[str, ...] = ("vllm", "anthropic", "kimi", "mock")
+
+    # Single-model providers: every tier resolves to the one hosted/selected
+    # model rather than TIER_TO_MODEL's cheap/mid/premium Anthropic aliases.
+    # Keyed by provider name -> the Settings attribute holding its model id.
+    _SINGLE_MODEL_SETTING: dict[str, str] = {"vllm": "vllm_model", "kimi": "kimi_model"}
 
     def __init__(self) -> None:
         self._providers: dict[str, LLMProvider] = {"mock": MockProvider()}
@@ -513,6 +559,26 @@ class LLMGateway:
                 reason="no ANTHROPIC_API_KEY in env",
             )
 
+        if settings.kimi_api_key:
+            self._providers["kimi"] = OpenAICompatibleProvider(
+                name="kimi",
+                base_url=settings.kimi_base_url,
+                model_name=settings.kimi_model,
+                api_key=settings.kimi_api_key,
+            )
+            logger.info(
+                "llm_gateway_provider_registered",
+                provider="kimi",
+                base_url=settings.kimi_base_url,
+                model=settings.kimi_model,
+            )
+        else:
+            logger.info(
+                "llm_gateway_provider_skipped",
+                provider="kimi",
+                reason="no KIMI_API_KEY in env",
+            )
+
     def has_real_provider(self) -> bool:
         return any(name != "mock" for name in self._providers)
 
@@ -523,6 +589,19 @@ class LLMGateway:
             await provider.log_prefix_cache_status()
 
     def _active_provider_name(self) -> str:
+        """Which provider a call will actually hit right now.
+
+        `LLM_FORCE_PROVIDER` (settings.llm_force_provider) short-circuits the
+        preference order for manual testing — e.g. exercising Kimi without
+        touching `_PREFERENCE` or unregistering vLLM. An unregistered/typo'd
+        name falls through to normal preference rather than erroring: a test
+        env var must never be able to 500 a live flow. `status()` and
+        `_pick_provider()` both read this, so /v1/llm/status never disagrees
+        with what a real call would do.
+        """
+        forced = settings.llm_force_provider
+        if forced and forced in self._providers:
+            return forced
         for name in self._PREFERENCE:
             if name in self._providers:
                 return name
@@ -537,9 +616,10 @@ class LLMGateway:
         `app.services.tier_policy.pick_tier`, not in the gateway.
         """
         active = self._active_provider_name()
-        # When vLLM is active, every tier resolves to the single hosted model.
-        if active == "vllm":
-            tier_to_model: dict[str, str] = {t: settings.vllm_model for t in TIER_TO_MODEL}
+        single_model_setting = self._SINGLE_MODEL_SETTING.get(active)
+        if single_model_setting:
+            single_model = getattr(settings, single_model_setting)
+            tier_to_model: dict[str, str] = {t: single_model for t in TIER_TO_MODEL}
         else:
             tier_to_model = dict(TIER_TO_MODEL)
         return {
@@ -550,11 +630,8 @@ class LLMGateway:
         }
 
     def _pick_provider(self, locale: str, model_tier: ModelTier) -> LLMProvider:
-        """Pick a provider in preference order (vllm > anthropic > mock)."""
-        for name in self._PREFERENCE:
-            if name in self._providers:
-                return self._providers[name]
-        return self._providers["mock"]
+        """Pick a provider — see `_active_provider_name` for the actual logic."""
+        return self._providers[self._active_provider_name()]
 
     async def stream_chat(
         self,

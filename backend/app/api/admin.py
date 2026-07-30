@@ -204,6 +204,8 @@ _FEATURE_GATES: list[tuple[str, str, str]] = [
      "Yahoo-only headlines; news_source still reads 'live' so the gap is invisible"),
     ("vllm_base_url", "LLM — on-prem vLLM provider",
      "gateway falls back to anthropic/mock"),
+    ("kimi_api_key", "LLM — Kimi (Moonshot) provider, candidate B7 (CR126)",
+     "LLM_FORCE_PROVIDER=kimi silently falls through to vllm/anthropic/mock"),
     ("use_real_market_data", "Market data — real Yahoo quotes",
      "deterministic mock random-walk prices"),
     ("admin_secret", "Admin back-office auth",

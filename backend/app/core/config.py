@@ -64,6 +64,31 @@ class Settings(BaseSettings):
     vllm_model: str = "ami-llm"
     vllm_api_key: str = ""  # optional bearer auth — leave empty for unauth LAN servers
 
+    # Kimi (Moonshot AI) — direct API, OpenAI-compatible. Wired 2026-07-30 for
+    # Saiful to test as a candidate B7 provider (see CR006/CR126); CR017
+    # already generalized the vLLM provider class specifically so a new
+    # OpenAI-compatible provider is this small. Direct-to-Moonshot chosen
+    # over routing through OpenRouter — CR006 flagged the ToS/data-training
+    # exposure that entails; a knowing choice, not an oversight.
+    # base_url deliberately excludes the trailing /v1 — llm_gateway.py's
+    # OpenAICompatibleProvider appends /v1/chat/completions itself, same
+    # convention as vllm_base_url above.
+    kimi_api_key: str = ""
+    kimi_base_url: str = "https://api.moonshot.ai"
+    # kimi-k3 (Moonshot's current flagship, released 2026-07-26) by default.
+    # CR006's quality/cost assessment ("trails Sonnet 5") was for the older
+    # kimi-k2.7-code — K3 is unevaluated by that research; this is a fresh
+    # read, not an inherited verdict. Override to kimi-k2.7-code / kimi-k2.6
+    # to test those instead.
+    kimi_model: str = "kimi-k3"
+
+    # Manual provider-selection override for testing (e.g. exercising Kimi
+    # without touching LLMGateway._PREFERENCE or unregistering vLLM). Empty
+    # = normal preference order. An unregistered/typo'd name falls through
+    # to normal preference rather than erroring — a test env var should
+    # never be able to 500 a live flow.
+    llm_force_provider: str = ""
+
     # Email / SMS / push
     resend_api_key: str = ""
     twilio_account_sid: str = ""
