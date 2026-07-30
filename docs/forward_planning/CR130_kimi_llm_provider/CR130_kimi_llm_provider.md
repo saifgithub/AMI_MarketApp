@@ -74,5 +74,11 @@ for those yet).
       failures unrelated to this change, flagged separately, not fixed here)
 - [x] `docker-compose.yml` forwards all 4 new fields; `test_config_compose_parity.py`
       passes
-- [ ] Calibration rooms (recent Room results vs. Kimi, across its model
-      variants) — tracked separately, not part of this CR's acceptance
+- [x] Calibration rooms run (5 real Room verdicts replayed under their
+      original mandate, across kimi-k3/k2.7-code/k2.6) — **blocked on
+      authentication, not a quality result.** All 180 agent calls (3 models ×
+      5 tickers × 12 agents) got `401 Invalid Authentication` from
+      `api.moonshot.ai`; isolated to the key itself via a bare curl bypassing
+      our code entirely (same 401). Provider wiring, error labeling, and the
+      degrade-loudly safety fallback all worked correctly under real failure.
+      See `calibration_results/README.md`. Re-run once the key is fixed.
