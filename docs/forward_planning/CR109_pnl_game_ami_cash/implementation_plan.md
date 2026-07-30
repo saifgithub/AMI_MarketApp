@@ -52,11 +52,11 @@ first means building machinery that cannot run.
 
 | Piece | Cost | Note |
 |---|---|---|
-| `portfolio_nav_daily` | one table | no FK to `sim_portfolios` (§5.1) |
+| `portfolio_nav_daily` | one table | no FK to `sim_portfolios` (§5.1). Append-only shape: mirror `ShariaUniverseSnapshotRow` (`models.py:822`), which documents the rationale. |
 | `trading_math/twr.py` | one pure function | chain-link across capital events |
-| snapshot tick | mirrors `_league_roll_tick()` | `main.py:74` is the working pattern |
-| benchmark series | **already works** | `sim_engine.current_history("SPY", period)` |
-| equity curve + a close screen | `fl_chart` is already a dependency | |
+| snapshot tick | **mirror `_sharia_universe_refresh` (`main.py:111`) or `_classification_universe_refresh` (`main.py:129`)** — both are **daily, idempotent** ticks whose docstrings state the guarantee: *"a tick that finds a fresh stored row does nothing, so a restart can't miss a boundary."* Blocking work goes in `asyncio.to_thread`. **Not `_league_roll_tick` (`main.py:95`)** — that is hourly and drives a weekly roll, a different shape. | |
+| benchmark series | **already works** | `sim_engine.current_history("SPY", period)` — `sim_engine.py:311` |
+| equity curve + a close screen | `fl_chart ^0.69.0` already in `pubspec.yaml:38` | |
 
 That is a run you enter, trade, and get scored on against the S&P with a close-out moment — a real
 loop, with the placement machinery still dark.
@@ -81,7 +81,7 @@ touches D-060. Valuable on its own: the app cannot draw a portfolio's history to
 - `portfolio_nav_daily` + alembic (§4.1)
 - daily snapshot tick in `main.py` lifespan
 - `trading_math/twr.py`
-- Flutter: equity curve on `portfolio_screen.dart`
+- Flutter: equity curve on `mobile/lib/screens/sim/portfolio_screen.dart`
 
 **Acceptance:** snapshots survive `reset_portfolio()`; the tick is idempotent across a container
 restart; TWR chain-links across a reset (a −40% run then a fresh stake must not read as flat);
@@ -557,7 +557,7 @@ Stop scoring: `reputation_service.award()` call sites at `daily_challenge.py:212
 `lessons.py:167,172`, `room.py:140`, `sim.py:337`, `journal.py:148`.
 Stop rendering: `league_screen.dart`, `league_card.dart`, `streak_chip.dart`, `_LeagueSection`
 (`settings_screen.dart:606`).
-Stop rolling: `_league_roll_tick()` (`main.py:74`).
+Stop rolling: `_league_roll_tick()` (`main.py:95`).
 **Tables stay** — no migration, no deletion (Amendment A).
 
 ---
