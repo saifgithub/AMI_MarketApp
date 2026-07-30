@@ -289,9 +289,17 @@ class ApiClient {
     return AnswerResponse.fromJson(r.data!);
   }
 
+  /// DEF160 (mobile half): [restart] is the explicit "replace my mandate"
+  /// signal — the backend only acts on it when the request is ALSO
+  /// authenticated (see `confirm_readback` in `onboarding.py`), and the
+  /// Bearer header is attached automatically by [_AuthInterceptor] whenever
+  /// a signed-in user's token is set via [setToken]. Defaults to `false` so
+  /// every existing anonymous-onboarding call site is byte-for-byte
+  /// unchanged.
   Future<ReadbackConfirmResponse> confirmReadback({
     required String sessionId,
     required bool confirm,
+    bool restart = false,
   }) async {
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/onboarding/readback/confirm',
@@ -299,6 +307,7 @@ class ApiClient {
         'session_id': sessionId,
         'confirm': confirm ? 'confirm' : 'edit',
         'edits': const <String, dynamic>{},
+        'restart': restart,
       },
     );
     return ReadbackConfirmResponse.fromJson(r.data!);

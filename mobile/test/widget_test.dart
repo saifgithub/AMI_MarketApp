@@ -52,6 +52,7 @@ class _FakeApiClient extends ApiClient {
   Future<ReadbackConfirmResponse> confirmReadback({
     required String sessionId,
     required bool confirm,
+    bool restart = false,
   }) async {
     return const ReadbackConfirmResponse(
       completed: true,

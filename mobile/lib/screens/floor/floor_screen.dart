@@ -308,7 +308,9 @@ class _FloorScreenState
   Future<void> _restartOnboarding(BuildContext context, WidgetRef ref) async {
     if (!await confirmRestartOnboarding(context)) return;
     if (!context.mounted) return;
-    await ref.read(onboardingNotifierProvider.notifier).reset();
+    // DEF160 (mobile half): this IS the restart path — the only place
+    // `isRestart: true` should ever be set. See OnboardingNotifier.reset.
+    await ref.read(onboardingNotifierProvider.notifier).reset(isRestart: true);
     if (!context.mounted) return;
     Navigator.of(context).pushReplacementNamed('/onboarding');
   }

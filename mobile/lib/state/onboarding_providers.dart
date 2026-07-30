@@ -61,6 +61,7 @@ class OnboardingState {
     this.readbackSummary,
     this.mandatePreview,
     this.submitting = false,
+    this.isRestart = false,
   });
 
   final OnboardingPhase phase;
@@ -71,6 +72,15 @@ class OnboardingState {
   final Map<String, dynamic>? readbackSummary;
   final Map<String, dynamic>? mandatePreview;
   final bool submitting;
+
+  /// DEF160 (mobile half): set by [OnboardingNotifier.reset]'s `isRestart`
+  /// argument. Carries the "this interview is replacing an existing
+  /// mandate" signal from the Floor footer control all the way to
+  /// [OnboardingNotifier.confirmReadback], which is the only place that
+  /// can turn it into the backend's `restart` flag — plain onboarding
+  /// (fresh install, no prior mandate) never sets it, so this defaults to
+  /// `false` and existing behaviour is unchanged.
+  final bool isRestart;
 
   /// Available chip suggestions for the most recent Concierge message
   /// (only when waiting on user input).
@@ -90,6 +100,7 @@ class OnboardingState {
     Map<String, dynamic>? readbackSummary,
     Map<String, dynamic>? mandatePreview,
     bool? submitting,
+    bool? isRestart,
   }) {
     return OnboardingState(
       phase: phase ?? this.phase,
@@ -99,6 +110,7 @@ class OnboardingState {
       errorMessage: errorMessage,
       readbackSummary: readbackSummary ?? this.readbackSummary,
       mandatePreview: mandatePreview ?? this.mandatePreview,
+      isRestart: isRestart ?? this.isRestart,
       submitting: submitting ?? this.submitting,
     );
   }
@@ -119,12 +131,23 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
   }
 
   /// Clear the completion flag and reset state back to [OnboardingPhase.notStarted].
-  /// Called by "Restart Onboarding" in Settings/Floor.
-  Future<void> reset() async {
+  /// Called by "Restart Onboarding" in Settings/Floor, and (with the
+  /// default `isRestart: false`) nowhere else today — a fresh install never
+  /// has state to reset.
+  ///
+  /// DEF160 (mobile half): [isRestart] is the only place this signal
+  /// enters the flow. Floor's "Restart onboarding" passes `true`; the
+  /// resulting session carries it through [OnboardingState.isRestart] to
+  /// [confirmReadback] below, which turns it into the backend's `restart`
+  /// flag. Getting this wrong in either direction is real: `true` for a
+  /// fresh anonymous install would try to overwrite a mandate that does
+  /// not exist yet, and `false` here is exactly the bug DEF160 exists to
+  /// fix — the control does nothing.
+  Future<void> reset({bool isRestart = false}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kOnboardingDoneKey);
     _lineCounter = 0;
-    state = const OnboardingState();
+    state = OnboardingState(isRestart: isRestart);
   }
 
   Future<void> start({required String locale, required String timezone}) async {
@@ -221,7 +244,11 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     if (sid == null) return;
     state = state.copyWith(phase: OnboardingPhase.completing);
     try {
-      final resp = await _api.confirmReadback(sessionId: sid, confirm: true);
+      final resp = await _api.confirmReadback(
+        sessionId: sid,
+        confirm: true,
+        restart: state.isRestart,
+      );
       state = state.copyWith(
         phase: OnboardingPhase.completed,
         mandatePreview: resp.mandatePreview,

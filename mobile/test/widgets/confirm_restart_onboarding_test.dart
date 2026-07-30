@@ -145,13 +145,16 @@ void main() {
         File('lib/screens/floor/floor_screen.dart').readAsStringSync();
 
     test('the Floor resets onboarding in exactly one place', () {
-      expect(RegExp(r'\.reset\(\)').allMatches(source).length, 1,
+      // DEF160 (mobile half): the call now carries `isRestart: true`, so
+      // this can no longer pin the literal `.reset()` — matches the call
+      // regardless of arguments, still proving there is exactly one.
+      expect(RegExp(r'\.reset\(').allMatches(source).length, 1,
           reason: 'a second unguarded door is the defect again, elsewhere');
     });
 
     test('the confirm gates the reset, and can abort it', () {
       final confirm = source.indexOf('confirmRestartOnboarding(context)');
-      final reset = source.indexOf('.reset()');
+      final reset = source.indexOf('.reset(');
       expect(confirm, greaterThan(-1),
           reason: 'the dialog was removed from the call site');
       expect(confirm, lessThan(reset),
