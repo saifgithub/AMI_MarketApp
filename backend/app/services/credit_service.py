@@ -75,6 +75,15 @@ def room_cost_for_plan(plan: Plan) -> int:
     return _ROOM_COST_BY_PLAN.get(plan, ROOM_COST_BASIC)
 
 
+# DEF113 — 1-on-1 chat's price. Unlike ROOM_COST_*, this is not a plan-keyed
+# table: credits.md:18 prices every 1-on-1 turn at 1 credit flat regardless of
+# plan. `settings.one_on_one_credit_cost` is the single source of truth (Alpha
+# runs it at 0 — see config.py's DEF113 comment); this accessor is so callers
+# never read `settings` directly and the figure stays swappable from one place.
+def one_on_one_cost() -> int:
+    return settings.one_on_one_credit_cost
+
+
 # CR090 — live-data feed surcharge. The News/Social Analyst live feeds (Alpha
 # Vantage NEWS_SENTIMENT, Adanos Reddit) cost real money per call, so a turn
 # that actually fires one is metered on TOP of the flat Room/1-on-1 price —

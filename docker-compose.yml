@@ -162,6 +162,11 @@ services:
       # infra/alpha.env to arm it on Alpha. Unknown value fails boot by design.
       GTM_FUNNEL: ${GTM_FUNNEL:-none}
       WINZIP_COOLDOWN_MINUTES: ${WINZIP_COOLDOWN_MINUTES:-5}
+      # DEF113 — 1-on-1 chat's credit price. 0 in Alpha on purpose (Saiful
+      # ruled 2026-07-30): the charging spine is wired and exercised, priced
+      # at zero so no existing tester hits a paywall mid-test. Flip to 1 (the
+      # credits.md spec price) via infra/alpha.env when ready.
+      ONE_ON_ONE_CREDIT_COST: ${ONE_ON_ONE_CREDIT_COST:-0}
       # CR035 ablation toggle — hides the Street consensus line from the
       # agents' fundamentals context. Benchmark windows only; keep false.
       SUPPRESS_ANALYST_CONSENSUS: ${SUPPRESS_ANALYST_CONSENSUS:-false}
