@@ -56,7 +56,7 @@ from app.services.room_runner import (
 from app.api.dependencies import get_current_user
 from app.api.sse import escape_sse_text, sse_json, sse_text
 from app.db import get_session
-from app.db.models import User
+from app.db.models import RoomRunRow, User
 from app.services.credit_service import InsufficientCredits
 from app.services.rate_limit import room_stream_rate_limit
 from app.services.reputation_service import get_reputation_service
@@ -215,20 +215,45 @@ async def stream_room(
             # event (the client concatenates into transcript[agent_id]).
             persisted = runner.get_run(run_id)
             if persisted is not None:
+                # DEF161: the DB row's raw JSON is the only place that still
+                # knows whether a message's dict ever HAD a 'stance' key —
+                # `runner.get_run` round-trips through the AgentMessage schema,
+                # which defaults a missing key to `stance=None`, the exact same
+                # value a genuinely-recorded "agent stated no view" produces.
+                # Read the raw dicts alongside the validated model so the two
+                # cases can still be told apart at the wire boundary, the way
+                # the Journal mapper already does off the same stored column
+                # (`room_board_mappers.dart` `_voiceFromRow`:
+                # `stanceRecorded: row?.containsKey('stance')`).
+                with get_session() as s:
+                    row = s.get(RoomRunRow, run_id)
+                    raw_transcript = (row.transcript or []) if row else []
                 yield sse_json("started", json.dumps({'run_id': str(run_id)}))
-                for msg in persisted.transcript:
+                for i, msg in enumerate(persisted.transcript):
                     aid = msg.agent_id if isinstance(msg.agent_id, str) else msg.agent_id.value
                     safe = escape_sse_text(msg.content or "")
                     yield sse_json("agent_token", json.dumps({'agent_id': aid, 'text': safe}))
                     # CR106 B2: the replay carries the stances too, so a client
                     # that reconnects mid-run gets the same comb as one that
                     # watched it live rather than an all-gutter board.
-                    yield sse_json("agent_done", json.dumps({
-                        'agent_id': aid,
-                        'stance': msg.stance,
-                        'conviction': msg.conviction,
-                        'headline': msg.headline,
-                    }))
+                    #
+                    # DEF161: a run persisted before the stance envelope
+                    # existed never had these keys at all — that is a
+                    # different fact from an agent that stated no position
+                    # (which stores `stance: null`, key present). Emitting
+                    # `null` for both collapses "unknown" into "everyone
+                    # abstained". Mirror the source dict's key presence
+                    # instead of defaulting all three at the wire boundary;
+                    # the mobile SSE decoder already keys off `containsKey`
+                    # for exactly this (`api_client.dart`, `agent_done` case).
+                    raw = raw_transcript[i] if i < len(raw_transcript) else {}
+                    stance_recorded = isinstance(raw, dict) and "stance" in raw
+                    payload = {'agent_id': aid}
+                    if stance_recorded:
+                        payload['stance'] = msg.stance
+                        payload['conviction'] = msg.conviction
+                        payload['headline'] = msg.headline
+                    yield sse_json("agent_done", json.dumps(payload))
                 if persisted.verdict is not None:
                     yield sse_json("phase", json.dumps({'label': 'VERDICT'}))
                     yield sse_json("verdict", persisted.verdict.model_dump_json())
