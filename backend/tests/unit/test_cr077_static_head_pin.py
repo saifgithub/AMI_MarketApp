@@ -4,16 +4,16 @@ wildly different mandates. Stronger than the architect's 2-user byte test:
 it also asserts the ABSENCE of user-specific strings in the head, catching a
 future personalised-line regression that a same-value fixture could miss.
 
-Run (needs the backend venv + rootdir; not on the tests/unit auto-run path):
-  cp orchestration/audit/regression/test_cr077_static_head_pin.py backend/tests/unit/ && \
-  cd backend && "/Volumes/Extreme Pro/AMI_MarketApp/backend/.venv/bin/python" \
-    -m pytest tests/unit/test_cr077_static_head_pin.py -q
+DEF141: this pin now LIVES on the auto-run path (`backend/tests/unit/`) instead of
+being copied there by hand. It sat in `orchestration/audit/regression/` for months,
+outside every collection path this project runs, and therefore protected nothing.
+DEF168: the `DailyBriefing` import was deleted by CR114/DEF129 — dropped here.
 Verified: PASS at f297196, RED at pre-fix ordering (d99502f~1)."""
 from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 from app.schemas import (Compliance, Mandate, Horizon, Path, PrimaryGoal,
-                         RiskComponents, LearningStyle, DailyBriefing, Plan)
+                         RiskComponents, LearningStyle, Plan)
 from app.schemas.journal import EntryType, JournalEntry
 from app.services.concierge_prompts import build_concierge_messages
 from app.services.lessons_service import get_lessons_service
@@ -28,7 +28,7 @@ def _m(uid, name, goal, horizon, path, risk, dd, comp, locale, tz):
         risk_score=risk,
         risk_components=RiskComponents(drawdown_response=risk, regret_asymmetry=0, concentration_tolerance=3),
         risk_quotes=[], max_drawdown_pct=dd, compliance=comp,
-        learning_style=LearningStyle.QUICK, daily_briefing=DailyBriefing(enabled=False),
+        learning_style=LearningStyle.QUICK,
         plan=Plan.TRADER, trial_expires_at=None, credit_balance=150,
         created_at=datetime(2026, 5, 11), updated_at=datetime(2026, 5, 11),
     )
