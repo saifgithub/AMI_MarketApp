@@ -23,7 +23,7 @@
     "type": "read_the_chart",
     "difficulty": 1,
     "locale": "en",
-    "scenario": "On August 1 NVDA prints a daily candle: open $122.40, high $128.10, low $121.80, close $122.90. The body is small and red; the upper wick is roughly 5x the body length; the lower wick is tiny. Volume is 1.6x the 20-day average. This sits at the top of a 4-week uptrend from $108.",
+    "scenario": "On August 1 NVDA prints a daily candle: open $122.40, high $123.90, low $121.95, close $122.10. The body is small and red; the upper wick is roughly 5x the body length; the lower wick is tiny. Volume is 1.6x the 20-day average. This sits at the top of a 4-week uptrend from $108.",
     "question": "What does the Market Analyst call this candle?",
     "options": [
       "A bullish hammer signalling continuation",
@@ -32,7 +32,7 @@
       "A bullish engulfing bar"
     ],
     "answer": 1,
-    "explanation": "Anatomy: open $122.40, close $122.90 — body is tiny and near the low of the day. High $128.10 means the upper wick is $5.20 — roughly 5x the body. Lower wick is negligible. After a 4-week uptrend, that pattern on 1.6x volume is the textbook shooting star — buyers pushed price up $5.70 from the open then surrendered all of it. The 'hammer' answer fails because a hammer has a long LOWER wick at the bottom of a downtrend; the wicks and trend context here are inverted.",
+    "explanation": "Anatomy: open $122.40, close $122.10 — body is tiny and near the low of the day. High $123.90 means the upper wick is $1.50 — roughly 5x the body. Lower wick is negligible. After a 4-week uptrend, that pattern on 1.6x volume is the textbook shooting star — buyers pushed price up $1.50 from the open then sellers took it all back and then some, closing below where the day started. The 'hammer' answer fails because a hammer has a long LOWER wick at the bottom of a downtrend; the wicks and trend context here are inverted.",
     "related_lesson": "020_candlesticks_anatomy_of_a_bar",
     "related_agent": "market_analyst",
     "tags": ["candlesticks", "reversal", "module_4"]
@@ -441,7 +441,7 @@
     "type": "match_the_agent",
     "difficulty": 2,
     "locale": "en",
-    "scenario": "An agent says: 'Setup confirmed by the analyst — pullback to the 50-day, volume drying up, MACD positive. Entry 412.40, stop 405.80 below the swing low, target 432 at the prior breakout extension. Risk-reward 1:3.0, sizes to 3.2% of NAV at the mandate-permitted 1.5% loss cap. Ready to execute.'",
+    "scenario": "An agent says: 'Setup confirmed by the analyst — pullback to the 50-day, volume drying up, MACD positive. Entry 412.40, stop 405.80 below the swing low, target 432 at the prior breakout extension. Risk-reward 1:3.0, sizes to 3.2% of NAV at the mandate-permitted 1.6% loss cap. Ready to execute.'",
     "question": "Which agent is most likely speaking?",
     "options": [
       "The Market Analyst describing the technical setup",

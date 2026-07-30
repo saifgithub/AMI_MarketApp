@@ -22,14 +22,19 @@ Glossary is clean bar 3 Islamic-finance definitions + 22 dead lesson-links.
 
 3 change user-facing meaning → AR/MS re-translation flagged (`cr060_dc_glossary_retranslate.md`).
 
-## Routed — apply-ready fix list (deliberate; graded content, dual-pass the number changes)
+## APPLIED (AT:R65, 2026-07-30) — the routed fix list, dual-pass verified
 
-| id | class | lead |
+| id | class | fix |
 |---|---|---|
-| dc_2026_08_02_nvda_candle_anatomy | fact | "small and red" but open 122.40 < close 122.90 = green; wick ratio ~10.4x not "~5x". Set close < open (e.g. 122.10) and/or adjust high. Verify key unaffected (shooting star) |
-| dc_2026_08_24_match_pullback_entry | fact | trader-ticket sizing doesn't reconcile: $6.60 stop at 1.5% NAV cap ≠ "3.2% of NAV". Rescale stop distance or position % so the numbers close |
-| dc_2026_09_02_tnb_dividend_call | fact | explanation calls RM3.2B FCF "operating FCF" pre-capex, then says RM12B capex exceeds it — FCF is already post-capex. Reword to "capex stepping up to RM12B turns the positive RM3.2B FCF negative" |
-| dc_2026_09_09_tsla_no_stop_violation | fact | notional 18×$268=$4,824 = 6.03% NAV, not "exactly at the 6% cap" — adjust share count so it's cleanly ≤6% (single intended violation is the stop-loss waiver) |
+| dc_2026_08_02_nvda_candle_anatomy | fact | OHLC rescaled: close 122.90→122.10, high 128.10→123.90, low 121.80→121.95 (open unchanged). Body now genuinely red (close<open), upper wick $1.50 = exactly 5.0x the $0.30 body, lower wick $0.15 (10% of upper — clearly "tiny"). Answer (shooting star) and every distractor's reasoning unaffected |
+| dc_2026_08_24_match_pullback_entry | fact | entry/stop/target/R:R untouched (6.60/412.40=1.60% stop distance was already consistent with the stated 1:3.0 R:R — touching stop would have broken it). Fixed the ONE actual contradiction instead: quoted loss cap 1.5%→1.6%, matching the stop distance's own math |
+| dc_2026_09_02_tnb_dividend_call | fact | "Free cash flow is RM3.2B ... FCF after capex slightly negative" was self-contradictory (FCF is already post-capex by definition) → "Operating cash flow is RM3.2B ... turning FCF sharply negative after capex" (RM3.2B − RM12B = −RM8.8B, not "slightly") |
+| dc_2026_09_09_tsla_no_stop_violation | fact | share price $268→$266.50 (18 shares unchanged). Notional $4,824→$4,797, now 5.996% — genuinely under the $4,800/6% cap rather than 6.03% over it, matching "not over" in the explanation and preserving the single-position-cap distractor's intended design |
+
+All 4: `flutter`... n/a (backend content) — `pytest backend/tests/unit/test_daily_challenge_service.py
+test_daily_challenge_attempt.py test_lesson_corpus_integrity.py` still 46/46 green (answer keys, IDs, schema
+untouched — only scenario/explanation prose numbers changed). Flagged AR/MS re-translation in
+`cr060_dc_glossary_retranslate.md`.
 
 ## RESOLVED — phantom mandate premise → BUILD (CR101)
 

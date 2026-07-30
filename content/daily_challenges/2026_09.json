@@ -23,7 +23,7 @@
     "type": "predict_the_call",
     "difficulty": 2,
     "locale": "en",
-    "scenario": "TENAGA (TNB) trailing twelve months: revenue RM58.4B (+4.2% YoY), net profit RM4.1B, EPS RM0.71. Stock at RM14.80. Declared dividends RM0.50/share, giving a dividend yield of 3.4%. Payout ratio 70%. Free cash flow is RM3.2B but capex is stepping up to RM12B for grid modernisation, leaving FCF after capex slightly negative. Debt-to-equity 0.92x.",
+    "scenario": "TENAGA (TNB) trailing twelve months: revenue RM58.4B (+4.2% YoY), net profit RM4.1B, EPS RM0.71. Stock at RM14.80. Declared dividends RM0.50/share, giving a dividend yield of 3.4%. Payout ratio 70%. Operating cash flow is RM3.2B but capex is stepping up to RM12B for grid modernisation, turning FCF sharply negative after capex. Debt-to-equity 0.92x.",
     "question": "What is the Fundamentals Analyst most likely to say about the dividend's sustainability?",
     "options": [
       "Unsafe — dividend yield of 3.4% is too low to attract investors",
@@ -156,7 +156,7 @@
     "type": "spot_the_violation",
     "difficulty": 1,
     "locale": "en",
-    "scenario": "User's mandate: max single-position 6% of NAV, stop-loss required on every entry within 8% of fill price, no leverage. Account NAV $80,000. The user submits a buy ticket for TSLA: 18 shares at $268 (notional $4,824, 6.0% of NAV — exactly at the cap). No stop is attached. The user notes in the comment box: 'Conviction trade, holding for two years, don't need a stop.'",
+    "scenario": "User's mandate: max single-position 6% of NAV, stop-loss required on every entry within 8% of fill price, no leverage. Account NAV $80,000. The user submits a buy ticket for TSLA: 18 shares at $266.50 (notional $4,797, 6.0% of NAV — right at the cap, not over it). No stop is attached. The user notes in the comment box: 'Conviction trade, holding for two years, don't need a stop.'",
     "question": "Which mandate rule does the Portfolio Manager flag as violated?",
     "options": [
       "Single-position cap — the ticket is right at the limit",
@@ -165,7 +165,7 @@
       "Concentration rule — TSLA is a tech name"
     ],
     "answer": 2,
-    "explanation": "Single-position size is at the cap but not over (6.0% = 6.0%). The clean violation is the stop-loss rule: the mandate says 'every entry within 8% of fill' and the user is explicitly waiving it. This is exactly what the safety floor is designed to block — the user's mandate is uncoachable; the PM cannot let 'conviction trade' override a rule the user set for themselves. The tempting wrong answer 'single-position cap' fails on arithmetic: 6.0% is within 6.0%, not over it.",
+    "explanation": "Single-position size is at the cap but not over (6.0% of NAV against a 6% cap). The clean violation is the stop-loss rule: the mandate says 'every entry within 8% of fill' and the user is explicitly waiving it. This is exactly what the safety floor is designed to block — the user's mandate is uncoachable; the PM cannot let 'conviction trade' override a rule the user set for themselves. The tempting wrong answer 'single-position cap' fails on arithmetic: $4,797 is under the $4,800 cap, not over it.",
     "related_lesson": "015_stop_loss_basics",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "stop_loss", "safety_floor", "module_3"]
