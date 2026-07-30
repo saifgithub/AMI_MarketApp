@@ -53,6 +53,7 @@ from app.services.overlay_store import (
 from app.api.dependencies import get_current_user
 from app.api.sse import sse_json, sse_text
 from app.db.models import User
+from app.services.rate_limit import brief_message_rate_limit
 
 
 router = APIRouter(
@@ -103,6 +104,15 @@ async def brief_message(
     current_user: User = Depends(get_current_user),
     engine: BriefEngine = Depends(get_brief_engine),
 ) -> StreamingResponse:
+    # DEF186 (security review H6): Brief turns spent zero credits and had
+    # NO rate limiter at all — one free anon token bought unlimited LLM
+    # turns. Per-user (bearer-derived, not IP — an anon user can rotate
+    # devices/IPs trivially but the bearer identifies the same billed
+    # user), 12/min. Checked here rather than as a router-level Depends
+    # so the deprecated /v1/coach/* shim (which calls this same function
+    # directly) inherits the same protection instead of needing its own
+    # copy.
+    brief_message_rate_limit.check(f"user:{current_user.id}")
     session = engine.get_session(req.session_id)
     _own_session(current_user, session)
 

@@ -68,7 +68,13 @@ services:
       redis:
         condition: service_healthy
     environment:
-      ENV: ${AMI_ENV:-local}
+      # DEF185 (security review H2): used to default to `local` when
+      # AMI_ENV was unset — a publicly-tunneled container silently booting
+      # `local` enables legacy unsigned scaffold tokens and leaks
+      # magic-link debug codes in the API response. `:?` makes compose
+      # itself refuse to start the service rather than silently
+      # defaulting — loud per CR040, not a runtime app-level guess.
+      ENV: ${AMI_ENV:?AMI_ENV must be set — refusing to silently default to local}
       # Auth HMAC key for scaffold Bearer tokens. Set via ~/ami_trade/.env
       # on melehost (canonical source: infra/alpha.env on Mac, shipped by
       # /promote-to-alpha). Backend refuses to start when env!=local and

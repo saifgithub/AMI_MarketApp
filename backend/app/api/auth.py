@@ -20,8 +20,9 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlalchemy import select
+from starlette.concurrency import run_in_threadpool
 
 from app.db import get_session
 from app.db.models import SubscriptionEventRow, User
@@ -47,7 +48,11 @@ from app.services.mandate_store import get_mandate_store
 from app.services.merge_service import MergeError, MergeService, get_merge_service
 from app.services.rate_limit import (
     anon_rate_limit,
+    magic_link_start_email_rate_limit,
     magic_link_start_rate_limit,
+    magic_link_verify_email_rate_limit,
+    magic_link_verify_global_rate_limit,
+    magic_link_verify_ip_rate_limit,
 )
 from app.services.session_store import get_session_store
 
@@ -135,6 +140,10 @@ def magic_link_start(
     # Adversarial audit (2026-05-18) finding A3: the challenge row is bound to
     # the caller's authenticated user_id from the Bearer token. Body-supplied
     # user_id is no longer accepted (the field is removed from the schema).
+    # DEF180 (security review H5 + M5): per-IP throttling alone didn't stop
+    # an attacker (or botnet) hammering ONE target email — throttle by the
+    # target email too, on top of the existing per-IP limiter dependency.
+    magic_link_start_email_rate_limit.check(f"email:{req.email.lower().strip()}")
     code = auth.start_magic_link(email=req.email, user_id=current_user.id)
     # Dev affordance: only env=local returns the code in the response so the
     # developer can paste it without an email send. _is_dev_env() now means
@@ -148,14 +157,30 @@ def magic_link_start(
 @router.post("/magic_link/verify", response_model=AuthVerifyResponse)
 async def magic_link_verify(
     req: MagicLinkVerifyRequest,
+    request: Request,
     current_user: User = Depends(get_current_user),
     auth: AuthService = Depends(get_auth_service),
 ) -> AuthVerifyResponse:
     # Adversarial audit (2026-05-18) finding A3: the claim binds to the
     # caller's authenticated user_id. Body-supplied user_id is no longer
     # accepted.
+    # DEF180 (security review H5): /verify previously had NO rate limiter
+    # at all. Three layers per lane acceptance #3 ("per identifier AND
+    # globally"): per-IP, per-target-email (the tight one — this is what
+    # actually bounds the brute-force budget against one victim), and a
+    # global cap across every key (bounds distributed guessing spread
+    # across many emails/IPs).
+    magic_link_verify_ip_rate_limit.check(magic_link_verify_ip_rate_limit.resolve_ip_key(request))
+    magic_link_verify_email_rate_limit.check(f"email:{req.email.lower().strip()}")
+    magic_link_verify_global_rate_limit.check("global")
+    # DEF180: the active-challenge lookup used to match on email alone, so
+    # ANY authenticated caller could guess codes against a challenge some
+    # OTHER user started (e.g. the real owner's own claim-my-email flow).
+    # Binding to the caller's own user_id means a caller can only ever
+    # guess against challenges they themselves created.
     result = auth.verify_magic_link(
         email=req.email, code=req.code, user_id=current_user.id,
+        challenge_owner_id=current_user.id,
     )
     if result is None:
         raise HTTPException(
@@ -173,15 +198,26 @@ async def magic_link_verify(
 @router.post("/apple", response_model=AuthVerifyResponse)
 async def sign_in_with_apple(
     req: AppleSignInRequest,
+    current_user: User = Depends(get_current_user),
     auth: AuthService = Depends(get_auth_service),
 ) -> AuthVerifyResponse:
     # Phase 3 (AT:R29) closed audit finding A4. The endpoint now verifies
     # the identity token against Apple's JWKS (signature + iss + aud +
     # exp) via OIDCVerifier. Any failure surfaces as 400.
+    # DEF176 (security review C1): the pre-claim anon row is bound to the
+    # caller's Bearer-authenticated user_id, not a body-supplied value —
+    # otherwise an attacker with their own valid identity_token could pass
+    # a victim's user_id and take over that account.
+    # DEF183 (security review N2): sign_in_with_apple does a synchronous
+    # JWKS fetch (httpx.Client) inside this `async def` handler. An
+    # unknown-kid token forces two 5s fetches on the single uvicorn
+    # worker's event loop, stalling every other request. run_in_threadpool
+    # moves the blocking call off the loop.
     try:
-        user, token, adopted_from = auth.sign_in_with_apple(
+        user, token, adopted_from = await run_in_threadpool(
+            auth.sign_in_with_apple,
             identity_token=req.identity_token,
-            user_id=req.user_id,
+            user_id=current_user.id,
             full_name=req.full_name,
         )
     except ValueError as e:
@@ -196,15 +232,20 @@ async def sign_in_with_apple(
 @router.post("/google", response_model=AuthVerifyResponse)
 async def sign_in_with_google(
     req: GoogleSignInRequest,
+    current_user: User = Depends(get_current_user),
     auth: AuthService = Depends(get_auth_service),
 ) -> AuthVerifyResponse:
     # D-057 (AT:R36). Mirrors the Apple route. Verifies the identity token
     # against Google's JWKS (signature + iss + aud + exp + email_verified)
     # via OIDCVerifier. Any failure surfaces as 400.
+    # DEF176: see sign_in_with_apple — bind to the caller's Bearer, not a
+    # body-supplied user_id. DEF183: see sign_in_with_apple — offload the
+    # blocking JWKS fetch to the threadpool.
     try:
-        user, token, adopted_from = auth.sign_in_with_google(
+        user, token, adopted_from = await run_in_threadpool(
+            auth.sign_in_with_google,
             identity_token=req.identity_token,
-            user_id=req.user_id,
+            user_id=current_user.id,
         )
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
@@ -323,10 +364,16 @@ def sign_out(
 @router.get("/me", response_model=AuthUser)
 def whoami(
     authorization: str | None = Header(default=None),
-    token: str | None = Query(default=None),
 ) -> AuthUser:
-    raw = token
-    if raw is None and authorization and authorization.lower().startswith("bearer "):
+    # DEF181 (security review H4): the `?token=` query-param variant is
+    # dropped — a bearer in the URL gets logged verbatim by proxies, CDN
+    # access logs, and (pre-fix) this app's own http_audit query-string
+    # capture, and stateless HMAC tokens have no exp/revocation, so a
+    # single log read yields permanent access. The Flutter client has
+    # always used the header; grep confirms no caller anywhere uses the
+    # query form.
+    raw = None
+    if authorization and authorization.lower().startswith("bearer "):
         raw = authorization.split(" ", 1)[1]
     user_id = _user_id_from_token(raw)
     if user_id is None:

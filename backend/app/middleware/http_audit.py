@@ -17,18 +17,38 @@ are skipped to avoid burying real activity.
 
 from __future__ import annotations
 
+import json
+import re
 import time
 from typing import Awaitable, Callable, Optional
 from uuid import UUID
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import Response, StreamingResponse
+from starlette.responses import JSONResponse, Response, StreamingResponse
 
 from app.services.audit import MAX_BODY_BYTES, record_http
+from app.services.auth_service import parse_scaffold_token
 
 
 SKIP_PATHS = {"/v1/health"}
+
+# DEF184 (security review N3): this middleware used to call
+# `await request.body()` unconditionally for every non-skipped route,
+# buffering the ENTIRE body into RAM *before* any handler-level cap (e.g.
+# the 5 MB streaming upload cap in bug_attachments.py) ever got a chance
+# to run — a single multi-GB POST to any route OOM-kills the whole
+# process (Postgres + API), with no compose `mem_limit` to backstop it.
+# Two mitigations here, both applied before any bytes are read:
+#   1. A declared Content-Length above this hard ceiling is rejected with
+#      413 before `request.body()` is ever called.
+#   2. multipart/form-data bodies (file uploads) are never captured at
+#      the middleware level at all — that's exactly the path with its
+#      own purpose-built streaming cap; buffering it here would defeat
+#      that cap even when Content-Length is absent/understated.
+# 10 MB is comfortably above the 5 MB attachment cap (room for form
+# fields alongside the file) and far below "OOM the box."
+MAX_REQUEST_BODY_BYTES = 10 * 1024 * 1024
 
 # Auth routes that issue or accept credentials (bearer tokens, magic-link
 # codes, Apple JWTs). Bodies are replaced with [REDACTED] before being
@@ -42,7 +62,51 @@ SCRUB_PATHS = {
     "/v1/auth/apple",
     "/v1/auth/google",
     "/v1/auth/session",
+    # DEF181 (security review H4): both were persisted CLEARTEXT to
+    # http_audit.request_body for 90 days — bypassing the DEF044
+    # encryption-at-rest control on Alpaca broker credentials.
+    "/v1/alpaca/link",
+    "/v1/alpaca/link_apikey",
 }
+
+# DEF181: SCRUB_PATHS is a hand-maintained list — every past leak (this
+# one included) was a route someone forgot to add to it. Structural
+# backstop: ANY JSON body, on ANY route, has values redacted wherever the
+# KEY looks secret-shaped, whether or not the route is in SCRUB_PATHS.
+# Path-level scrubbing above still wins for routes carrying a whole
+# credential blob under a non-obvious key name; this catches the rest.
+_SECRET_FIELD_RE = re.compile(
+    r"(secret|token|api[_-]?key|password|credential)",
+    re.IGNORECASE,
+)
+
+
+def _scrub_secret_fields(body: bytes) -> bytes:
+    """Redact values of secret-shaped JSON keys, recursively. Returns the
+    input unchanged if it isn't parseable JSON (e.g. already scrubbed,
+    binary, or malformed) — never raises."""
+    try:
+        parsed = json.loads(body)
+    except Exception:
+        return body
+
+    def _walk(node):
+        if isinstance(node, dict):
+            out = {}
+            for k, v in node.items():
+                if isinstance(k, str) and _SECRET_FIELD_RE.search(k):
+                    out[k] = "[REDACTED]"
+                else:
+                    out[k] = _walk(v)
+            return out
+        if isinstance(node, list):
+            return [_walk(v) for v in node]
+        return node
+
+    try:
+        return json.dumps(_walk(parsed)).encode("utf-8")
+    except Exception:
+        return body
 
 
 class HTTPAuditMiddleware(BaseHTTPMiddleware):
@@ -57,20 +121,42 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
 
         started = time.perf_counter()
 
+        # DEF184: reject an oversized declared body BEFORE any buffering.
+        content_length = request.headers.get("content-length")
+        if content_length is not None:
+            try:
+                declared_len = int(content_length)
+            except ValueError:
+                declared_len = None
+            if declared_len is not None and declared_len > MAX_REQUEST_BODY_BYTES:
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": "request body too large"},
+                )
+
         # Capture request body — Starlette body() caches so downstream handlers
         # still see it. For huge bodies (file upload), truncate.
         scrub = path in SCRUB_PATHS
+        content_type = request.headers.get("content-type", "")
+        # DEF184: multipart bodies (file uploads) are never buffered here —
+        # the handler streams them with its own cap. Reading them into RAM
+        # in this middleware first would defeat that cap.
+        is_multipart = content_type.lower().startswith("multipart/form-data")
 
-        try:
-            body_bytes = await request.body()
-        except Exception:
-            body_bytes = b""
         if scrub:
             captured_request = b"[REDACTED]"
-        elif len(body_bytes) > MAX_BODY_BYTES:
-            captured_request = body_bytes[:MAX_BODY_BYTES]
+        elif is_multipart:
+            captured_request = b"[NOT_CAPTURED:multipart]"
         else:
-            captured_request = body_bytes
+            try:
+                body_bytes = await request.body()
+            except Exception:
+                body_bytes = b""
+            body_bytes = _scrub_secret_fields(body_bytes)
+            if len(body_bytes) > MAX_BODY_BYTES:
+                captured_request = body_bytes[:MAX_BODY_BYTES]
+            else:
+                captured_request = body_bytes
 
         # NOTE: we deliberately do NOT replace request._receive.
         #
@@ -124,11 +210,12 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
             async for chunk in response.body_iterator:  # type: ignore[attr-defined]
                 body_chunks.append(chunk)
             full = b"".join(body_chunks)
-            if len(full) > MAX_BODY_BYTES:
-                captured_response = full[:MAX_BODY_BYTES]
+            scrubbed = _scrub_secret_fields(full)
+            if len(scrubbed) > MAX_BODY_BYTES:
+                captured_response = scrubbed[:MAX_BODY_BYTES]
                 response_truncated = True
             else:
-                captured_response = full
+                captured_response = scrubbed
             response = Response(
                 content=full,
                 status_code=response.status_code,
@@ -161,13 +248,28 @@ def _client_ip(request: Request) -> Optional[str]:
 
 
 def _user_id_from_request(request: Request) -> Optional[UUID]:
-    """Extract the user_id from path params or the scaffold:<hex> bearer.
+    """Extract the user_id that performed this request, for attribution.
 
-    Best-effort: many routes don't have a user, and the auth scaffold's
-    scaffold:<hex> token is a session opaque blob — we look it up via the
-    auth service only if needed. For alpha we just grab user_id from the
-    path if present (most routes are /v1/.../<user_id> shaped).
+    DEF181 (security review H4 + N5): this used to ONLY check path params
+    despite its docstring claiming to also parse the bearer — it never
+    did, so the audit record had `user_id = NULL` for nearly every
+    authenticated action (most routes derive the caller from the Bearer
+    token, not a path segment), leaving the post-breach forensic trail
+    blind. Bearer now takes priority — it identifies the ACTUAL caller;
+    a `user_id`-shaped path param can name someone ELSE entirely (e.g.
+    `/v1/auth/merge/preview/{from_user_id}` — that's the orphan being
+    inspected, not the caller). Path param is only a fallback for the
+    rare unauthenticated-but-path-scoped route.
     """
+    authorization = request.headers.get("authorization")
+    if authorization and authorization.lower().startswith("bearer "):
+        token = authorization.split(" ", 1)[1]
+        try:
+            user_id = parse_scaffold_token(token)
+        except Exception:
+            user_id = None
+        if user_id is not None:
+            return user_id
     for key in ("user_id", "userId"):
         val = request.path_params.get(key)
         if val:
