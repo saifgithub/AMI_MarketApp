@@ -180,3 +180,75 @@ provenance per the BOK rule). **`retranslate:[ar,ms]`** — AR/MS versions owed.
 **Content follow-up owed:** lesson 047 currently says the cooldown is *"tracked in the Decision
 Journal, not enforced by the app."* CR129 makes that false — it becomes enforced. That line must
 change in the same release, and it also carries `retranslate:[ar,ms]`.
+
+## The "Day Trader" preset — Saiful, 2026-07-30
+
+> *"this is a training app. i expect a day trader may also try to learn from using the app, and
+> learn the risk. if we do not let them fail in a safe environment, they will fail with real money.
+> However, I do also understand the view that the training app should have some basic discipline. I
+> suppose since we do allow the customer to change the levels, they do have that facility. I am now
+> wondering if we can have a 'day trader' preset, that takes off all the safeguard."*
+
+**Accepted.** It is consistent with CR101's own L3 rationale — in a simulation-only trainer the
+blow-up IS the lesson — and it fills a real gap that L2/L3 do not. The capability already exists
+(every limit is settable); what does not exist is a **user who can find it**. A day trader today
+would have to know to open L2 and loosen seven fields one at a time. A preset makes an intent that
+the product should recognise into one tap.
+
+It also fixes a category error in the current design: **a day trader is not "risk 5 but more so."**
+The five profiles all implicitly describe swing/position trading at different sizes. Intraday is a
+different strategy, not a further point on the same axis, and the five-profile dial cannot express
+it at any setting.
+
+### What it must NOT do — the boundary, drawn explicitly
+
+"Takes off all the safeguards" must mean **every user risk limit goes permissive**. It must not
+mean the floor is bypassed. `safety_floor.py` already splits `blocked_by` into two families and the
+preset touches exactly one of them:
+
+| Family | Reasons | Day-trader preset |
+|---|---|---|
+| **Not the user's to relax** | `compliance` (Sharia verdict, halal universe, classification), `locale`, `allowlist`, `blocklist` | **untouched** |
+| **The user's own risk limits** | `concentration`, `cooldown`, `max_open_positions`, over-trading, open-risk, single-name, drawdown | set permissive |
+
+**No bypass flag.** The deterministic check still runs on every trade; it simply evaluates
+permissive numbers. A `skip_floor` boolean would be a second code path that leaks later — precisely
+the structural mistake `failure_patterns.md` keeps recording. The floor keeps one path.
+
+### Mechanism — no schema change
+
+The preset writes **explicit permissive overrides** into the seven fields and leaves `risk_score`
+alone. It is emphatically **not** `risk_score = 6`: the field is `ge=1, le=5`, feeds `risk_tier_cap`
+and appears at 12+ sites in `overlay_generator.py`, and widening it would ripple through all of
+them. This rides the machinery CR129 already defines — `None` = follow profile, explicit value =
+override — so the preset is a set of writes, nothing new underneath.
+
+Values: sector 100%, single-name 100%, cooldown 0h, open-risk 100%, positions and trade counts set
+high. Every one is already a legal value, so the preset is expressible today.
+
+### The part that makes it training rather than just permission
+
+A preset that only removes limits is a faster way to lose with nothing learned. **Instrument it.**
+Record when a user switches, then show them their own outcome against the published baselines this
+CR is already grounded in: Barber & Odean's most-active cohort at **11.4%**/yr vs least-active
+**18.5%**, and the Taiwan day-trading survival curve — **44%** at one year, **24%** at two, **15%**
+at three, with under **1%** reliably profitable.
+
+That converts the preset from a permission into an experiment the user runs on themselves, and it
+delivers the lesson the way it actually lands — through their own P&L rather than a lesson page.
+Without the measurement this is worth building but only half worth having.
+
+### Disclosure
+
+Selecting it must state plainly what it turns off and what the evidence says happens — not to block
+(L3: no ceiling, loud disclosure) but because a silent 100% is the thing CR040 exists to stop. The
+switch is journalled like any mandate edit, so it is reversible and visible in the Decision Journal.
+
+### Lane impact
+
+Folded into **CR129** rather than filed separately: the machinery is identical (write explicit
+overrides through the same resolvers), so a separate lane would duplicate it. Adds to CR129-BE the
+preset definition and the switch journalling; adds to CR129-MOBILE the L1 preset entry and its
+disclosure. **The outcome instrumentation is a separate follow-up CR** — it needs trade-history
+aggregation and a comparison surface, which is real scope and should not ride in behind a settings
+change.
