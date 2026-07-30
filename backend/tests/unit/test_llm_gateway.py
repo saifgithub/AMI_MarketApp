@@ -78,14 +78,14 @@ def test_gateway_status_with_only_kimi(monkeypatch):
     from app.core import config as cfg
 
     monkeypatch.setattr(cfg.settings, "kimi_api_key", "sk-kimi-fake")
-    monkeypatch.setattr(cfg.settings, "kimi_model", "kimi-k3")
+    monkeypatch.setattr(cfg.settings, "kimi_model", "kimi-for-coding")
     g = LLMGateway()
     s = g.status()
     assert s["active_provider"] == "kimi"
     assert s["has_real_provider"] is True
     # Kimi serves a single selected model; every tier resolves to it.
-    assert s["tier_to_model"]["cheap"] == "kimi-k3"
-    assert s["tier_to_model"]["premium"] == "kimi-k3"
+    assert s["tier_to_model"]["cheap"] == "kimi-for-coding"
+    assert s["tier_to_model"]["premium"] == "kimi-for-coding"
 
 
 def test_gateway_kimi_ranks_below_vllm_and_anthropic(monkeypatch):
@@ -379,7 +379,7 @@ async def test_openai_compatible_provider_parses_deltas_under_kimi_name():
         "data: [DONE]",
     ]
     p = OpenAICompatibleProvider(
-        name="kimi", base_url="https://api.moonshot.ai", model_name="kimi-k3",
+        name="kimi", base_url="https://api.kimi.com/coding", model_name="kimi-for-coding",
         api_key="sk-kimi-fake",
     )
     p._client = _FakeClient(_FakeSSEResponse(200, lines), captured)  # type: ignore[assignment]
@@ -392,7 +392,38 @@ async def test_openai_compatible_provider_parses_deltas_under_kimi_name():
         chunks.append(c)
 
     assert "".join(chunks) == "PONG"
-    assert captured["json"]["model"] == "kimi-k3"
+    assert captured["json"]["model"] == "kimi-for-coding"
+
+
+@pytest.mark.asyncio
+async def test_openai_compatible_provider_skips_reasoning_content_deltas():
+    """Kimi's Coding Plan models (kimi-for-coding, k3) are reasoning models —
+    verified live (CR130) that streaming deltas carry reasoning as a separate
+    `reasoning_content` field, with no `content` key at all on those chunks,
+    before the real answer starts arriving under `content`. The parser must
+    silently skip the reasoning chunks and only yield real content — not
+    error, and not leak chain-of-thought into what an agent "says"."""
+    captured: dict = {}
+    lines = [
+        _sse('{"choices":[{"index":0,"delta":{"role":"assistant","content":null}}]}'),
+        _sse('{"choices":[{"index":0,"delta":{"reasoning_content":"thinking..."}}]}'),
+        _sse('{"choices":[{"index":0,"delta":{"reasoning_content":"more thinking"}}]}'),
+        _sse('{"choices":[{"index":0,"delta":{"content":"PO"}}]}'),
+        _sse('{"choices":[{"index":0,"delta":{"content":"NG"}}]}'),
+        "data: [DONE]",
+    ]
+    p = OpenAICompatibleProvider(
+        name="kimi", base_url="https://api.kimi.com/coding", model_name="kimi-for-coding",
+    )
+    p._client = _FakeClient(_FakeSSEResponse(200, lines), captured)  # type: ignore[assignment]
+
+    chunks: list[str] = []
+    async for c in p.stream_chat(
+        system_prompt="x", messages=[ChatMessage(role="user", content="ping")],
+    ):
+        chunks.append(c)
+
+    assert "".join(chunks) == "PONG"
 
 
 @pytest.mark.asyncio
@@ -401,7 +432,7 @@ async def test_openai_compatible_provider_error_names_the_provider():
     would be actively wrong for a hosted API like Kimi."""
     captured: dict = {}
     p = OpenAICompatibleProvider(
-        name="kimi", base_url="https://api.moonshot.ai", model_name="kimi-k3",
+        name="kimi", base_url="https://api.kimi.com/coding", model_name="kimi-for-coding",
         api_key="sk-kimi-fake",
     )
     p._client = _FakeClient(  # type: ignore[assignment]
@@ -427,7 +458,7 @@ async def test_openai_compatible_provider_extra_body_merged_into_request():
     outbound request body without disturbing the required fields."""
     captured: dict = {}
     p = OpenAICompatibleProvider(
-        name="kimi", base_url="https://api.moonshot.ai", model_name="kimi-k3",
+        name="kimi", base_url="https://api.kimi.com/coding", model_name="kimi-for-coding",
         extra_body={"reasoning_effort": "low"},
     )
     p._client = _FakeClient(_FakeSSEResponse(200, ["data: [DONE]"]), captured)  # type: ignore[assignment]
@@ -438,7 +469,7 @@ async def test_openai_compatible_provider_extra_body_merged_into_request():
         pass
 
     assert captured["json"]["reasoning_effort"] == "low"
-    assert captured["json"]["model"] == "kimi-k3"
+    assert captured["json"]["model"] == "kimi-for-coding"
 
 
 # ── CR077 Phase 0 second guard — prefix-cache startup check ──────────────

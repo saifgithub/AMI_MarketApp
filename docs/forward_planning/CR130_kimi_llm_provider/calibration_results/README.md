@@ -1,6 +1,26 @@
 # Kimi calibration rooms — 2026-07-30
 
-**Result: blocked on authentication, not a quality read.** Every one of the 180
+## UPDATE — root cause found, re-run in progress
+
+Saiful asked directly: *"are we using `https://api.kimi.com/coding/v1`?"* —
+no, the first pass used `api.moonshot.ai`. That question was the right one:
+**his key is a Kimi Coding Plan subscription key** (console: kimi.com/code),
+a separate product from the general Moonshot Open Platform, with its own
+host and its own model-id namespace. Verified live:
+
+```
+curl https://api.moonshot.ai/v1/chat/completions      → 401 Invalid Authentication
+curl https://api.kimi.com/coding/v1/chat/completions   → 200 OK
+```
+
+`kimi_base_url`/`kimi_model` defaults corrected to `https://api.kimi.com/coding`
+/ `kimi-for-coding` (config.py, docker-compose.yml, infra/alpha.env.example).
+The section below is the **first-pass run**, left as-written for the
+record — everything past "Result" in that section describes the 401 failure,
+not Kimi's actual quality. See the bottom of this file for the corrected
+re-run's results once complete.
+
+## First-pass run (pre-correction) — blocked on authentication Every one of the 180
 agent calls made during this run (3 model variants × 5 tickers × 12 agents)
 got **HTTP 401 from `https://api.moonshot.ai`**. The "PASS" verdicts recorded
 below are the Portfolio Manager's degrade-loudly safety fallback (`"Portfolio
