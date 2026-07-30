@@ -22,7 +22,7 @@ merits — it is not scaffolding for the game, and nothing here is game-facing.
 future game surface is **CR133**, not this lane.
 
 **1. The curve** on `mobile/lib/screens/sim/portfolio_screen.dart`:
-- `fl_chart ^0.69.0` is already a dependency (`pubspec.yaml:38`) and already in use in
+- `fl_chart ^0.69.0` is already a dependency (`pubspec.yaml`) and already in use in
   `widgets/ticker_chart.dart` — **follow that widget's conventions** rather than inventing a second
   charting idiom.
 - Reads `GET /v1/sim/portfolio/{user_id}/history` (contract owned by CR109-1-BE). Plot `nav` over

@@ -11,6 +11,18 @@ it tells you what to read, what you can lane today, and what you must not.
 
 `AT:Gamer`, 2026-07-30. **Status: `proposed`, design complete, not laned.**
 
+> **Convention: this package cites symbols, never line numbers.** You are fixing defects while this
+> sits unlaned, so the code underneath it moves — and a coordinate that was right when written is a
+> lie by the time someone follows it. Every reference here is a **greppable anchor**
+> (`sim_engine.reset_portfolio()`, `_sharia_universe_refresh`, `ShariaUniverseSnapshotRow`) that
+> survives an edit above it.
+>
+> This is not theoretical. The first draft of this package carried 60 `file.py:NNN` citations; four
+> were already wrong within a day, and two more drifted **while the package was being written** —
+> `safety_floor.py`'s halal branch moved 289→286 and `resolve_mandate` moved 193→204. All 60 are now
+> symbols. **Keep it that way in any revision**, and if you need a location, grep for the symbol
+> rather than trusting a number.
+
 ---
 
 ## 1. What it is, in five lines
@@ -105,8 +117,8 @@ than advisory:
 
 | Where | Action needed |
 |---|---|
-| `roadmap.md:138` — "P&L-based leaderboards — encourages gambling psychology" | strike or amend |
-| `decision_log.md:302` — **D-060**, which rejected exactly this | superseding decision |
+| `roadmap.md` — the "P&L-based leaderboards … encourages gambling psychology" line | strike or amend |
+| **D-060** in `decision_log.md` — it rejected exactly this | superseding decision |
 | `daily_and_streaks.md` — "Sim P&L — 0, explicitly not counted" | amend |
 | `legal/policies/competition_rules.md` v1.0 §1, §8 | re-version to **v2.0**, with the §8.5 eligibility clause |
 
@@ -125,8 +137,8 @@ surface and cannot ship before it lands.
 Full list in `implementation_plan.md` §7.2. These are the ones where a reasonable-looking shortcut
 silently breaks something:
 
-1. **`portfolio_nav_daily` must NOT foreign-key to `sim_portfolios`.** `reset_portfolio()`
-   (`sim_engine.py:394`) hard-deletes the portfolio row and every trade; a FK cascades the game's
+1. **`portfolio_nav_daily` must NOT foreign-key to `sim_portfolios`.** `sim_engine.reset_portfolio()`
+   hard-deletes the portfolio row and every trade; a FK cascades the game's
    entire history away on the first restart. Key on `user_id` + `run_id`. **A test must assert
    snapshots survive a reset**, or this regresses silently.
 2. **Do not add a `skip_compliance` flag to `sim_engine.submit()`.** The game needs no mandate; the

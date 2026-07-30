@@ -265,5 +265,5 @@ Not a commitment — a default, ordered by cost-to-value rather than by exciteme
 
 **Prerequisite that sits outside this list:** push notifications. CR109 §7 records that they do
 not exist — the only trace in the repo is `note="TODO B1: fire APNs push notification here"` at
-`api/room.py:134`. Several modes here (duels especially — an opponent's move is meaningless if
+`api/room.py`'s `TODO B1: fire APNs push notification here`. Several modes here (duels especially — an opponent's move is meaningless if
 you don't hear about it) are substantially weaker until push lands.

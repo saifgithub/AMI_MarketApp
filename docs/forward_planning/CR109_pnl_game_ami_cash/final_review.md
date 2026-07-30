@@ -200,7 +200,7 @@ queued-order visibility) and **naming** — the game, a run, and the boards are 
 AMI Cash is settled as the money.
 
 **Not engineering, and on the critical path to launch rather than to build:** the §15 compliance
-work — D-060 superseded, `roadmap.md:138` amended, `daily_and_streaks.md` amended,
+work — D-060 superseded, `roadmap.md`'s "P&L-based leaderboards" line amended, `daily_and_streaks.md` amended,
 `competition_rules.md` re-versioned to v2.0 with the §8.5 eligibility clause, and the App Store
 declaration re-validated. Slices 1–2 carry zero compliance surface, so this runs in parallel rather
 than in front.

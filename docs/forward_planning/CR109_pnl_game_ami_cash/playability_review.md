@@ -75,7 +75,7 @@ feature, which is a real cost.
 ## 3. We are deleting the only daily mechanic — verified
 
 Amendment A removes `reputation_service.py`. **The streak lives there** —
-`reputation_service.py:271`, `def streak(...)`, with milestones at 7 / 30 / 100 / 365 days.
+`reputation_service.streak()`, `def streak(...)`, with milestones at 7 / 30 / 100 / 365 days.
 
 | | Today | After CR109 |
 |---|---|---|

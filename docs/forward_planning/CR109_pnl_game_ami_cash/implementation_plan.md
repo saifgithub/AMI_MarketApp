@@ -52,11 +52,11 @@ first means building machinery that cannot run.
 
 | Piece | Cost | Note |
 |---|---|---|
-| `portfolio_nav_daily` | one table | no FK to `sim_portfolios` (§5.1). Append-only shape: mirror `ShariaUniverseSnapshotRow` (`models.py:822`), which documents the rationale. |
+| `portfolio_nav_daily` | one table | no FK to `sim_portfolios` (§5.1). Append-only shape: mirror `ShariaUniverseSnapshotRow` (`ShariaUniverseSnapshotRow`), which documents the rationale. |
 | `trading_math/twr.py` | one pure function | chain-link across capital events |
-| snapshot tick | **mirror `_sharia_universe_refresh` (`main.py:111`) or `_classification_universe_refresh` (`main.py:129`)** — both are **daily, idempotent** ticks whose docstrings state the guarantee: *"a tick that finds a fresh stored row does nothing, so a restart can't miss a boundary."* Blocking work goes in `asyncio.to_thread`. **Not `_league_roll_tick` (`main.py:95`)** — that is hourly and drives a weekly roll, a different shape. | |
-| benchmark series | **already works** | `sim_engine.current_history("SPY", period)` — `sim_engine.py:311` |
-| equity curve + a close screen | `fl_chart ^0.69.0` already in `pubspec.yaml:38` | |
+| snapshot tick | **mirror `_sharia_universe_refresh` (`_sharia_universe_refresh`) or `_classification_universe_refresh` (`_classification_universe_refresh`)** — both are **daily, idempotent** ticks whose docstrings state the guarantee: *"a tick that finds a fresh stored row does nothing, so a restart can't miss a boundary."* Blocking work goes in `asyncio.to_thread`. **Not `_league_roll_tick` (`_league_roll_tick`)** — that is hourly and drives a weekly roll, a different shape. | |
+| benchmark series | **already works** | `sim_engine.current_history("SPY", period)` — `sim_engine.current_history()` |
+| equity curve + a close screen | `fl_chart ^0.69.0` already in `pubspec.yaml` | |
 
 That is a run you enter, trade, and get scored on against the S&P with a close-out moment — a real
 loop, with the placement machinery still dark.
@@ -292,14 +292,14 @@ The one table the whole design rests on.
 `UniqueConstraint("user_id", "run_id", "as_of_date", name="uq_nav_user_run_date")`
 
 > **FENCE — this table must NOT foreign-key to `sim_portfolios`.**
-> `sim_engine.reset_portfolio()` (`sim_engine.py:394`) hard-deletes the portfolio row and every
+> `sim_engine.reset_portfolio()` hard-deletes the portfolio row and every
 > `SimTradeRow`. A FK cascades the game's entire history away on the first restart. Key on
 > `user_id` + `run_id` — the reset-immune shape `reputation_events` already proves. **A test must
 > assert snapshots survive `reset_portfolio()`**, or this regresses silently.
 
 ### 4.2 Game portfolios — slice 2
 
-`SimPortfolioRow.user_id` is `unique=True` today (`models.py:325`), which allows exactly one
+`SimPortfolioRow.user_id` is `unique=True` today (`SimPortfolioRow.user_id`), which allows exactly one
 portfolio per user.
 
 **Preferred: do not widen `SimPortfolioRow`.** Add a `kind` column and replace the unique
@@ -308,8 +308,8 @@ and `run_id` is `NULL` for training. `name` and `starting_capital` are already p
 shape mostly exists.
 
 Every existing caller reaches the portfolio through `_load_portfolio_row(s, user_id)` /
-`ensure_portfolio(user_id)` (`sim_engine.py:353,378`) — roughly eighteen call sites, all internal
-except `api/sim.py:166`, `merge_service.py:177,180,403` and `room_runner.py:680,755`. **Add a
+`ensure_portfolio(user_id)` (`_load_portfolio_row` / `ensure_portfolio`) — roughly eighteen call sites, all internal
+except `api/sim.py`'s `ensure_portfolio` call, `merge_service.py` and `room_runner.py`. **Add a
 defaulted `kind="training"` parameter** so every existing caller keeps its current behaviour
 untouched and only game surfaces pass `kind="game"`.
 
@@ -459,8 +459,8 @@ design is generated from this module** rather than maintained by hand across fiv
 | `cagr_pct(...)` | `trading_math/returns.py` | long-cadence display |
 | `beta(...)` | `trading_math/portfolio_stats.py` | benchmark work |
 | `total_value` / `drawdown_pct` | `trading_math/portfolio.py` | NAV snapshot |
-| `portfolio_marks_snapshot()` | `sim_engine.py:415` | the one-fetch path (DEF120) |
-| `current_history(ticker, period)` | `sim_engine.py:311` | **benchmark series — already serves any ticker with a source flag** |
+| `portfolio_marks_snapshot()` | `sim_engine.portfolio_marks_snapshot()` | the one-fetch path (DEF120) |
+| `current_history(ticker, period)` | `sim_engine.current_history()` | **benchmark series — already serves any ticker with a source flag** |
 
 Scoring itself (`base(p)`, cadence weight, title threshold) belongs in a pure module too — give it
 `games_scoring.py` so the curve can be unit-tested without a database, and so retuning a constant
@@ -507,7 +507,7 @@ is. This is CR040 applied to the wire format, not just the UI.
 
 ### 7.1 The game trade path must not reuse the training submit path
 
-`sim_engine.submit()` calls `check_mandate_compliance` unconditionally (`sim_engine.py:607`). The
+`sim_engine.submit()` calls `check_mandate_compliance` unconditionally (`sim_engine.submit()`'s `check_mandate_compliance` call). The
 game requires the opposite. **Do not add a `skip_compliance` flag to `submit()`** — a boolean that
 disables the safety floor is exactly the kind of switch that ends up `True` on the training path
 one day.
@@ -553,11 +553,11 @@ difference is then structural, which is what CR040 asks for.
 
 ### 7.3 Removal scope — slice 7
 
-Stop scoring: `reputation_service.award()` call sites at `daily_challenge.py:212`,
-`lessons.py:167,172`, `room.py:140`, `sim.py:337`, `journal.py:148`.
+Stop scoring: `reputation_service.award()` call sites at every `reputation_service.award()` call site
+(`grep -rn '\.award(' backend/app/api/` — 6 today).
 Stop rendering: `league_screen.dart`, `league_card.dart`, `streak_chip.dart`, `_LeagueSection`
-(`settings_screen.dart:606`).
-Stop rolling: `_league_roll_tick()` (`main.py:95`).
+(`_LeagueSection` in `settings_screen.dart`).
+Stop rolling: `_league_roll_tick()` (`_league_roll_tick`).
 **Tables stay** — no migration, no deletion (Amendment A).
 
 ---
