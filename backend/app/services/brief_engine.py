@@ -531,6 +531,17 @@ def hydrate_brief_mandate(overrides: dict[str, Any] | None) -> Mandate:
         ),
         risk_quotes=o.get("risk_quotes", []),
         max_drawdown_pct=o.get("max_drawdown_pct", 30),
+        # CR129: the seven settable risk-limit fields — `None` (the default
+        # when omitted from `overrides`) resolves through the risk-tier
+        # preset exactly like a real stored mandate would; passing one
+        # explicitly here is the dev/test equivalent of a PATCH.
+        sector_cap_pct=o.get("sector_cap_pct"),
+        single_name_cap_pct=o.get("single_name_cap_pct"),
+        post_loss_cooldown_hours=o.get("post_loss_cooldown_hours"),
+        max_open_positions=o.get("max_open_positions"),
+        max_trades_per_day=o.get("max_trades_per_day"),
+        max_trades_per_week=o.get("max_trades_per_week"),
+        max_open_risk_pct=o.get("max_open_risk_pct"),
         compliance=Compliance(**(o.get("compliance") or {})),
         learning_style=LearningStyle(o.get("learning_style", "quick")),
         plan=Plan(o.get("plan", "trial_trader")),

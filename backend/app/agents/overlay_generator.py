@@ -17,6 +17,13 @@ from app.schemas import (
     Mandate,
     Path,
 )
+from app.trading_math.risk_limits import (
+    resolved_max_open_positions,
+    resolved_max_open_risk_pct,
+    resolved_max_trades_per_day,
+    resolved_max_trades_per_week,
+    resolved_post_loss_cooldown_hours,
+)
 from app.trading_math.sizing import resolved_sector_cap_pct, resolved_single_name_cap_pct
 
 
@@ -525,39 +532,36 @@ def _sector_cap_pct(mandate: Mandate) -> float:
     return resolved_sector_cap_pct(rc.concentration_tolerance, mandate.sector_cap_pct)
 
 
-# CR101-BE2's four new limits have no preset fallback — unlike the two caps
-# above there was no pre-CR101 enforced value to migrate, so `None` narrates
-# plainly as "not set" rather than falling back to a computed number.
+# CR129: the five CR101-BE2 limits now follow the SAME settable-with-preset-
+# fallback contract as `_max_position_pct`/`_sector_cap_pct` above — `None`
+# resolves to the risk-tier preset (always shown/enforced) rather than
+# narrating "not set". "Off" is still expressible (a `0` cooldown, a very high
+# count, a `100%` open-risk cap) but is now an explicit override, not the
+# unset-field state.
 
 
 def _cooldown_text(m: Mandate) -> str:
-    if m.post_loss_cooldown_hours is None:
-        return "not set (no cooldown enforced)"
-    return f"{m.post_loss_cooldown_hours}h after a stop-out"
+    hours = resolved_post_loss_cooldown_hours(m.risk_score, m.post_loss_cooldown_hours)
+    if hours <= 0:
+        return "off (no cooldown enforced)"
+    return f"{hours}h after a stop-out"
 
 
 def _max_open_positions_text(m: Mandate) -> str:
-    if m.max_open_positions is None:
-        return "not set (no cap enforced)"
-    return f"{m.max_open_positions}"
+    return f"{resolved_max_open_positions(m.risk_score, m.max_open_positions)}"
 
 
 def _max_trades_per_day_text(m: Mandate) -> str:
-    if m.max_trades_per_day is None:
-        return "not set"
-    return f"{m.max_trades_per_day}"
+    return f"{resolved_max_trades_per_day(m.risk_score, m.max_trades_per_day)}"
 
 
 def _max_trades_per_week_text(m: Mandate) -> str:
-    if m.max_trades_per_week is None:
-        return "not set"
-    return f"{m.max_trades_per_week}"
+    return f"{resolved_max_trades_per_week(m.risk_score, m.max_trades_per_week)}"
 
 
 def _max_open_risk_pct_text(m: Mandate) -> str:
-    if m.max_open_risk_pct is None:
-        return "not set (no cap enforced)"
-    return f"{m.max_open_risk_pct}%"
+    pct = resolved_max_open_risk_pct(m.risk_score, m.max_drawdown_pct, m.max_open_risk_pct)
+    return f"{pct}%"
 
 
 _ROLE_BUILDERS = {

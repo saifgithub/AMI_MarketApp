@@ -50,7 +50,7 @@ def _engine(price: float) -> tuple[SimEngine, _FixedPrice]:
 
 
 def _mandate():
-    return hydrate_coach_mandate({"plan": "trader"})
+    return hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
 
 
 def _buy(sim, user_id, ticker, qty, *, stop, target, verdict=None):

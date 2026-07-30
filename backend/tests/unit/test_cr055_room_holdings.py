@@ -104,7 +104,10 @@ def test_held_user_shows_weight_matching_sim():
         ticker="AAPL",
         side=Side.BUY,
         quantity=5,
-        mandate=_mandate(),
+        # CR129/DEF187: permissive single-name cap — 5 shares is ~5% of the
+        # book, over the ~3% risk-tier preset, which isn't what this test
+        # (holdings display) is about.
+        mandate=_mandate(single_name_cap_pct=100.0),
         order_type=OrderType.MARKET,
         stop=round(price * 0.94, 2),
         target=round(price * 1.13, 2),
@@ -135,7 +138,7 @@ def test_held_other_ticker_still_states_zero_for_discussed_name():
     price = sim.current_price("AAPL")
     sim.submit(
         user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=5,
-        mandate=_mandate(), order_type=OrderType.MARKET,
+        mandate=_mandate(single_name_cap_pct=100.0), order_type=OrderType.MARKET,
         stop=round(price * 0.94, 2), target=round(price * 1.13, 2), horizon_days=30,
     )
     block = _build_sim_holdings_block(user_id, "SCHD")
@@ -264,7 +267,7 @@ def test_runner_injects_portfolio_snapshot_at_every_call_site():
 # ── helpers ──
 
 
-def _mandate(*, long_only: bool = True):
+def _mandate(*, long_only: bool = True, single_name_cap_pct: float | None = None):
     from datetime import datetime
 
     from app.schemas.mandate import (
@@ -294,6 +297,7 @@ def _mandate(*, long_only: bool = True):
         ),
         risk_quotes=[],
         max_drawdown_pct=30,
+        single_name_cap_pct=single_name_cap_pct,
         compliance=Compliance(long_only=long_only, liquid_only=True),
         learning_style=LearningStyle.QUICK,
         plan=Plan.TRADER,

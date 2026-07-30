@@ -81,6 +81,9 @@ def _check(
         holdings=[],
         quotes={"AAPL": _PRICE} if quotes is None else quotes,
         sector_map=sector_map,
+        # CR129: the five BE2 limits are always-active now; this file is
+        # about single-name-cap pricing, not these — harmless real context.
+        last_loss_closed_at=None, trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
 
 

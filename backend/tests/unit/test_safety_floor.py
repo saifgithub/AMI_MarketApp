@@ -21,6 +21,16 @@ from app.trading_math.sizing import risk_tier_cap
 # on a None classification universe — the intended loud degrade, covered by DEF061).
 _NVDA_CLEAN_UNIVERSE = ClassificationUniverse(classified={"NVDA", "AAPL", "MSFT"})
 
+# CR129: the five CR101-BE2 limits are now always-active (resolved from the
+# risk-tier preset when unset, never silently "off") — a call site that isn't
+# testing one of them needs this harmless real context (no prior loss, no
+# trade history, zero existing open risk, no other holdings) or it picks up
+# an unrelated cooldown/over-trading/open-risk/max-open-positions violation.
+_HARMLESS_RISK_CONTEXT = dict(
+    holdings=[], last_loss_closed_at=None, trade_open_timestamps=[],
+    existing_open_risk_pct=0.0,
+)
+
 
 def test_safety_floor_only_on_portfolio_manager(base_mandate: Mandate):
     base = "BASE PROMPT"
@@ -52,11 +62,11 @@ def test_safety_floor_prose_cap_equals_the_enforced_constant(base_mandate: Manda
     m = re.search(r"above (\d+)% of user's portfolio", rendered)
     assert m is not None, "single-name cap line missing from the rendered safety floor block"
     assert int(m.group(1)) == int(single_name_cap_pct(base_mandate))
-    # base_mandate has no explicit override → falls back to the 50% absolute
-    # backstop this floor has always enforced (migration-safe; see
-    # safety_floor.single_name_cap_pct's docstring for why this is NOT the
-    # risk-tier preset).
-    assert single_name_cap_pct(base_mandate) == 50.0
+    # CR129 (closing DEF187): base_mandate has no explicit override → this
+    # floor now falls back to the SAME risk-tier preset the Trader/PM overlay
+    # narrates and the Room pre-clamps to (~3.0% at risk_score=3), not the
+    # flat 50% absolute backstop it enforced pre-CR129.
+    assert single_name_cap_pct(base_mandate) == risk_tier_cap(base_mandate.risk_score)
 
 
 def test_safety_floor_carries_classroom_framing():
@@ -78,9 +88,13 @@ def test_compliance_passes_clean_trade(
 ):
     result = check_mandate_compliance(
         proposed_buy_nvda,
-        portfolio_value=10_000,
+        # CR129/DEF187: a large enough book that 10 * $152 sits under the
+        # ~3% risk-tier single-name preset too — this test is about a clean
+        # trade passing every check, not position sizing.
+        portfolio_value=1_000_000,
         current_drawdown_pct=0,
         mandate=base_mandate,
+        **_HARMLESS_RISK_CONTEXT,
     )
     assert result.passed
     assert result.violations == []
@@ -144,11 +158,14 @@ def test_compliance_halal_with_passing_universe(
 ):
     result = check_mandate_compliance(
         proposed_buy_nvda,
-        portfolio_value=10_000,
+        # CR129/DEF187: large enough book to sit under the ~3% single-name
+        # preset — this test is about halal passing, not position sizing.
+        portfolio_value=1_000_000,
         current_drawdown_pct=0,
         mandate=halal_mandate,
         halal_universe={"NVDA", "AAPL", "MSFT"},
         classification_universe=_NVDA_CLEAN_UNIVERSE,
+        **_HARMLESS_RISK_CONTEXT,
     )
     assert result.passed
 
@@ -189,12 +206,15 @@ def test_compliance_rejects_oversized_position(
 def test_compliance_rejects_when_at_drawdown_cap(
     base_mandate: Mandate, proposed_buy_nvda: ProposedTrade
 ):
-    # base_mandate.max_drawdown_pct = 30
+    # base_mandate.max_drawdown_pct = 30. CR129/DEF187: a large enough book
+    # (and harmless context for the always-active BE2 checks) so drawdown is
+    # the ONLY thing that can block — isolating the check under test.
     result = check_mandate_compliance(
         proposed_buy_nvda,
-        portfolio_value=10_000,
+        portfolio_value=1_000_000,
         current_drawdown_pct=30.0,
         mandate=base_mandate,
+        **_HARMLESS_RISK_CONTEXT,
     )
     assert not result.passed
     assert result.blocked_by == "drawdown"
@@ -233,6 +253,9 @@ def test_enforce_safety_floor_passes_clean_approve(
         portfolio_value=100_000,
         current_drawdown_pct=2.0,
         mandate=base_mandate,
+        # CR129: the five BE2 limits are always-active now; harmless real
+        # context so this "clean approve" stays clean.
+        **_HARMLESS_RISK_CONTEXT,
     )
     assert final.action == VerdictAction.APPROVE
     assert final.overridden_from_llm is False
@@ -254,16 +277,16 @@ def test_enforce_safety_floor_does_not_touch_rejects(
     assert final.overridden_from_llm is False
 
 
-def test_single_name_cap_falls_back_to_absolute_backstop(base_mandate: Mandate):
-    """CR101-BE1: with no explicit `single_name_cap_pct` override, this floor's
-    enforced cap falls back to the fixed 50% absolute backstop — the EXACT
-    value it enforced pre-CR101 (migration-safe). NOT the tighter risk-tier
-    preset the Trader/PM overlay narrates and the Room's own pre-clamp uses —
-    see safety_floor.single_name_cap_pct's docstring for the measured reason
-    this floor's default deliberately differs from that preset."""
+def test_single_name_cap_falls_back_to_the_risk_tier_preset(base_mandate: Mandate):
+    """CR129 closes DEF187: with no explicit `single_name_cap_pct` override,
+    this floor's enforced cap now falls back to the SAME risk-tier preset the
+    Trader/PM overlay narrates and the Room's own pre-clamp uses — not the
+    flat 50% absolute backstop it fell back to pre-CR129. Saiful explicitly
+    authorised tightening this for existing users (13 live alpha mandates);
+    see safety_floor.single_name_cap_pct's docstring."""
     assert base_mandate.single_name_cap_pct is None
-    assert single_name_cap_pct(base_mandate) == 50.0
-    assert single_name_cap_pct(base_mandate) != risk_tier_cap(base_mandate.risk_score)
+    assert single_name_cap_pct(base_mandate) == risk_tier_cap(base_mandate.risk_score)
+    assert single_name_cap_pct(base_mandate) != 50.0
 
 
 def test_single_name_cap_honours_explicit_override(base_mandate: Mandate):

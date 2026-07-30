@@ -70,7 +70,15 @@ def _halal_body(user_id, ticker: str, **overrides) -> dict:
         "side": "buy",
         "quantity": 1,
         "order_type": "market",
-        "mandate_override": {"compliance": {"halal": True, "long_only": True}},
+        # CR129/DEF187: the single-name cap now defaults to the risk-tier
+        # preset (~3%) instead of a flat 50% backstop. This file is about the
+        # Sharia verdict crossing the wire, not position sizing, so pin an
+        # explicit permissive cap to keep a single mock-priced share from
+        # tripping it.
+        "mandate_override": {
+            "compliance": {"halal": True, "long_only": True},
+            "single_name_cap_pct": 100.0,
+        },
     }
     body.update(overrides)
     return body

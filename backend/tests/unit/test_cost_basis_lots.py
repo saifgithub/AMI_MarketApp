@@ -238,7 +238,11 @@ class _ConstProvider:
 
 def _engine_with_buy(user_id: UUID, qty: float, price: float) -> SimEngine:
     sim = SimEngine(provider=_ConstProvider(price))
-    mandate = hydrate_coach_mandate({"plan": "trader"})
+    # CR129/DEF187: pin a permissive single-name cap — this file is about
+    # cost-basis lot reconstruction, not position sizing.
+    mandate = hydrate_coach_mandate({"plan": "trader"}).model_copy(
+        update={"single_name_cap_pct": 100.0}
+    )
     result = sim.submit(
         user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=qty, mandate=mandate,
     )
