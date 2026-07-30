@@ -153,3 +153,14 @@ double flatTopHexWidthFractionAt(double yFraction) {
 const double flatTopHexLabelYFraction = 0.224;
 final double flatTopHexWidthFractionAtLabel =
     flatTopHexWidthFractionAt(flatTopHexLabelYFraction);
+
+/// Where a two-line label's TOP line sits, once wrapped (CR108).
+///
+/// A two-line block centred on [flatTopHexLabelYFraction] puts its first line
+/// higher, not at the same y — ≈0.176 rather than 0.224 — so the first line
+/// is narrower than the single-line box, not the same width. Sizing a wrapped
+/// label against [flatTopHexWidthFractionAtLabel] instead is what let
+/// `ISLAMIC FINANCE` run under the diagonal in the first place.
+const double flatTopHexLabelTwoLineTopYFraction = 0.176;
+final double flatTopHexWidthFractionAtTwoLineLabel =
+    flatTopHexWidthFractionAt(flatTopHexLabelTwoLineTopYFraction);

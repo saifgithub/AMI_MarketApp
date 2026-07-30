@@ -36,15 +36,56 @@ class TrackHexButton extends StatelessWidget {
           final h = constraints.maxHeight;
           final w = constraints.maxWidth;
           final donutSize = h * 0.52;
-          // The label sits above centre, where a flat-top hexagon is far
-          // narrower than its bounding box — 0.72 x W, not W. Sizing the text
-          // against the box let ISLAMIC FINANCE run under the diagonal and get
-          // sliced (4.7 pt of headroom at 1.0 text scale, negative at 1.15).
-          final labelBox = w * flatTopHexWidthFractionAtLabel;
           // The DEF082 palette is optimised for separation *between* hexes, so
           // it admits a token too dark to set type in (hexIndigo600, 2.8:1).
           // Fill keeps the true brand colour; foreground marks get the lift.
           final ink = readableOnCanvas(color);
+          // CR108: a long label used to shrink instead of wrap — the only
+          // label in the app that got SMALLER at a bigger text scale. Measure
+          // whether it fits one line at the raised 10px cap inside the
+          // one-line box (0.724 x W); if not, wrap to two lines sized against
+          // the narrower top-line box (0.676 x W) instead of the single-line
+          // one, or the second line would run under the diagonal exactly as
+          // the shrink-only version did.
+          //
+          // Round 2 (DEF142 audit): a `FittedBox` always lays its child out
+          // with UNBOUNDED constraints before scaling the result, so a
+          // `Text` inside one can never wrap — `softWrap`/`maxLines: 2` had
+          // no width to break against. The two-line branch below therefore
+          // gives the `Text` its width from a plain `SizedBox`, not a
+          // `FittedBox`, so real line breaks can happen; `FittedBox` is kept
+          // only for the single-line branch, where it did already work
+          // (that half of the mechanism was never the bug).
+          final oneLineBox = w * flatTopHexWidthFractionAtLabel;
+          final twoLineBox = w * flatTopHexWidthFractionAtTwoLineLabel;
+          final labelStyle =
+              AmiTypography.labelMono.copyWith(fontSize: 10, color: ink);
+          final singleLineMeasure = TextPainter(
+            text: TextSpan(text: label, style: labelStyle),
+            maxLines: 1,
+            textDirection: TextDirection.ltr,
+          )..layout(maxWidth: double.infinity);
+          var needsTwoLines = singleLineMeasure.width > oneLineBox;
+          if (needsTwoLines) {
+            // Confirm the wrap actually produces two lines that each fit the
+            // two-line box, rather than assuming a candidate wraps. A single
+            // unbreakable word (`FUNDAMENTALS`, 12 characters, no space) has
+            // no break opportunity: constrained layout still reports it as
+            // one line whose natural width is the whole word, wider than the
+            // box. That case is decided explicitly here — it is not a wrap,
+            // so it falls back to the single-line branch and scales down
+            // instead, the same way any long single-line label always did.
+            final wrapMeasure = TextPainter(
+              text: TextSpan(text: label, style: labelStyle),
+              maxLines: 2,
+              textDirection: TextDirection.ltr,
+            )..layout(maxWidth: twoLineBox);
+            final lines = wrapMeasure.computeLineMetrics();
+            needsTwoLines = !wrapMeasure.didExceedMaxLines &&
+                lines.length > 1 &&
+                lines.every((line) => line.width <= twoLineBox + 0.5);
+          }
+          final labelBox = needsTwoLines ? twoLineBox : oneLineBox;
           return ClipPath(
             clipper: const FlatTopRegularHexagon(),
             child: Container(
@@ -54,23 +95,33 @@ class TrackHexButton extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: labelBox,
-                    // Long track names shrink to fit rather than being clipped
-                    // or ellipsised — a half-readable label is worse than a
-                    // slightly smaller one, and this also absorbs the user's
-                    // system text-scale setting.
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        softWrap: false,
-                        textAlign: TextAlign.center,
-                        style: AmiTypography.labelMono.copyWith(
-                          fontSize: 8,
-                          color: ink,
-                        ),
-                      ),
-                    ),
+                    child: needsTwoLines
+                        // A confirmed wrap already fits within labelBox at
+                        // the base font — it never needs to shrink, unlike
+                        // the old single-line-only version.
+                        ? Text(
+                            label,
+                            maxLines: 2,
+                            softWrap: true,
+                            textAlign: TextAlign.center,
+                            style: labelStyle,
+                          )
+                        // Single line, possibly an unbreakable word wider
+                        // than its box: absorb the user's text-scale setting
+                        // by scaling down, never below its own base, unlike
+                        // the old single-line FittedBox, which is exactly
+                        // how `ISLAMIC FINANCE` used to shrink under a
+                        // larger text scale instead of growing.
+                        : FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              label,
+                              maxLines: 1,
+                              softWrap: false,
+                              textAlign: TextAlign.center,
+                              style: labelStyle,
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 4),
                   SizedBox(

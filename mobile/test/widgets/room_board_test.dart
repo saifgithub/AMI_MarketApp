@@ -19,10 +19,42 @@ import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room.dart' show LevelSource;
 import 'package:ami_trade/models/room_board.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/room/room_board.dart';
 import 'package:ami_trade/widgets/room/room_transcript_rows.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+// ─── DEF142 contrast helpers — shared by the palette test and the HexAvatar
+// widget test below, so extending coverage to a second widget never means a
+// second copy of the WCAG math (DEF098's class).
+
+const _familyFills = [
+  AmiColors.hexCyan,
+  AmiColors.hexAmber,
+  AmiColors.hexGreen,
+  AmiColors.hexPink,
+  AmiColors.hexPurple,
+];
+
+double _wcagLuminance(Color c) {
+  double ch(double v) {
+    v = v / 255.0;
+    return v <= 0.03928
+        ? v / 12.92
+        : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
+  }
+
+  return 0.2126 * ch((c.r * 255).roundToDouble()) +
+      0.7152 * ch((c.g * 255).roundToDouble()) +
+      0.0722 * ch((c.b * 255).roundToDouble());
+}
+
+double _wcagRatio(Color a, Color b) {
+  final la = _wcagLuminance(a), lb = _wcagLuminance(b);
+  final hi = la > lb ? la : lb, lo = la > lb ? lb : la;
+  return (hi + 0.05) / (lo + 0.05);
+}
 
 RoomVoice _voice(
   String agentId, {
@@ -289,53 +321,28 @@ void main() {
 
   group('DEF142 — the comb does not inherit HexAvatar\'s unreadable ink', () {
     test('the label clears the canvas floor on every family', () {
-      double luminance(Color c) {
-        double ch(double v) {
-          v = v / 255.0;
-          return v <= 0.03928
-              ? v / 12.92
-              : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
-        }
-
-        return 0.2126 * ch((c.r * 255).roundToDouble()) +
-            0.7152 * ch((c.g * 255).roundToDouble()) +
-            0.0722 * ch((c.b * 255).roundToDouble());
-      }
-
-      double ratio(Color a, Color b) {
-        final la = luminance(a), lb = luminance(b);
-        final hi = la > lb ? la : lb, lo = la > lb ? lb : la;
-        return (hi + 0.05) / (lo + 0.05);
-      }
-
-      const fills = [
-        AmiColors.hexCyan,
-        AmiColors.hexAmber,
-        AmiColors.hexGreen,
-        AmiColors.hexPink,
-        AmiColors.hexPurple,
-      ];
+      const fills = _familyFills;
 
       // Non-vacuity, and the DEF142 defect stated as a measurement: the shipped
       // `HexAvatar` ink (white on the saturated family fill) fails the 4.5:1
       // normal-text floor on every one of the five.
       for (final fill in fills) {
-        expect(ratio(Colors.white, fill), lessThan(4.5),
+        expect(_wcagRatio(Colors.white, fill), lessThan(4.5),
             reason: 'white on $fill was supposed to be the defect');
       }
 
       // Nor is there a dark ink that rescues a solid fill: on `hexPurple`,
       // `slate900` measures 4.22 against white's 4.23 (a wash) and `textHigh`
       // is 3.85 — WORSE than white. That is why the comb changes the FILL.
-      expect(ratio(AmiColors.slate900, AmiColors.hexPurple), lessThan(4.5));
-      expect(ratio(AmiColors.textHigh, AmiColors.hexPurple), lessThan(4.5));
+      expect(_wcagRatio(AmiColors.slate900, AmiColors.hexPurple), lessThan(4.5));
+      expect(_wcagRatio(AmiColors.textHigh, AmiColors.hexPurple), lessThan(4.5));
 
       // The shipped treatment: family colour on the canvas interior. Every
       // family clears the project's own accent-as-type floor, which was itself
       // set by the dimmest token here.
       for (final fill in fills) {
         expect(
-          ratio(combInkFor(fill), AmiColors.slate900),
+          _wcagRatio(combInkFor(fill), AmiColors.slate900),
           greaterThanOrEqualTo(amiCanvasContrastFloor),
           reason: 'comb label fails the canvas floor on $fill',
         );
@@ -343,14 +350,45 @@ void main() {
       // Four of the five clear the full 4.5:1 normal-text floor outright.
       final clearing = [
         for (final f in fills)
-          if (ratio(combInkFor(f), AmiColors.slate900) >= 4.5) f,
+          if (_wcagRatio(combInkFor(f), AmiColors.slate900) >= 4.5) f,
       ];
       expect(clearing.length, 4);
 
       // The palette has moved once already (`hexPurple` was `#A855F7`), so pin
       // the value the floor is calibrated against.
-      expect(ratio(AmiColors.hexPurple, AmiColors.slate900),
+      expect(_wcagRatio(AmiColors.hexPurple, AmiColors.slate900),
           closeTo(4.22, 0.02));
+    });
+
+    // `HexAvatar` used to inherit none of the above — this asserts it now
+    // does, against the WIDGET itself rather than the abstract palette, so a
+    // future edit to `hex_avatar.dart` alone (not just the comb) can't
+    // silently re-open DEF142. Extends this test rather than starting a
+    // second one over the same palette rule (DEF098's class).
+    testWidgets('HexAvatar renders the same canvas-interior ink, per family',
+        (t) async {
+      for (final fill in _familyFills) {
+        await t.pumpWidget(MaterialApp(
+          home: Scaffold(
+            body: Center(child: HexAvatar(label: 'AB', color: fill, size: 96)),
+          ),
+        ));
+        final container = t.widget<Container>(find.descendant(
+          of: find.byType(HexAvatar),
+          matching: find.byType(Container),
+        ));
+        final decoration = container.decoration! as BoxDecoration;
+        expect(decoration.color, AmiColors.slate900,
+            reason: 'HexAvatar must not fall back to a solid family fill');
+
+        final label = t.widget<Text>(find.text('AB'));
+        expect(label.style!.color, fill);
+        expect(
+          _wcagRatio(label.style!.color!, AmiColors.slate900),
+          greaterThanOrEqualTo(amiCanvasContrastFloor),
+          reason: 'HexAvatar label fails the canvas floor on $fill',
+        );
+      }
     });
 
     test('comb labels fit and stay recognisable', () {
