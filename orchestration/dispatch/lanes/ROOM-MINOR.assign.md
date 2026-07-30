@@ -56,7 +56,7 @@ a shipped guard that could not catch a one-token bug.
 5. **Mutations:** revert each fix in turn, show the corresponding test goes RED. Report honestly,
    **including any that come back GREEN**.
 6. Full suite from repo root: `"./backend/.venv/bin/python" -m pytest backend/tests/unit/ -q`.
-   **`python` is not on PATH. Never use `-x`.** Baseline **1719**; finish `>= 1719`, zero failures.
+   **`python` is not on PATH. Never use `-x`.** Baseline **1743**; finish `>= 1743`, zero failures.
    **Do not pipe pytest through `tail`/`head` and read the exit code** — that gives you the pipe's
    exit code, not pytest's. Read the `N passed, M failed` line.
 

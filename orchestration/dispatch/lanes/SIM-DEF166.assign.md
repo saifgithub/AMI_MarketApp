@@ -64,7 +64,7 @@ user as evidence about their own trading.
 6. **Mutation:** revert the P&L stamp fix at each site in turn and show the corresponding test goes
    RED. Report honestly, **including any that come back GREEN**.
 7. Full suite from repo root: `"./backend/.venv/bin/python" -m pytest backend/tests/unit/ -q`.
-   **`python` is not on PATH. Never use `-x`.** Baseline **1719**; finish `>= 1719`, zero failures.
+   **`python` is not on PATH. Never use `-x`.** Baseline **1743**; finish `>= 1743`, zero failures.
    **Do not pipe pytest through `tail`/`head` and read the exit code** — you get the pipe's exit
    code, not pytest's. Read the `N passed, M failed` line.
 

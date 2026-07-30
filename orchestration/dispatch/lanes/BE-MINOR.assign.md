@@ -66,7 +66,7 @@ the fix is the reason these shipped.
    Report honestly, **including any that come back GREEN** — a green mutation means the test does
    not pin the fix and the lane is not done.
 6. Full suite from repo root: `"./backend/.venv/bin/python" -m pytest backend/tests/unit/ -q`.
-   **`python` is not on PATH. Never use `-x`.** Baseline is **1719**; finish `>= 1719` with zero
+   **`python` is not on PATH. Never use `-x`.** Baseline is **1743**; finish `>= 1743` with zero
    failures. **Do not pipe the run through `tail`/`head` and read the exit code — you get the
    pipe's exit code, not pytest's.** Read the `N passed, M failed` line.
 
