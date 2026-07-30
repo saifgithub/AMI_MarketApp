@@ -1402,6 +1402,174 @@ abstract class AppLocalizations {
   /// **'Your PM refuses trades that would push the portfolio past this.'**
   String get settingsMaxDrawdownExplain;
 
+  /// CR101-MOBILE. Section header for the seven settable risk-limit fields (sector cap, single-name cap, post-loss cooldown, max open positions, max trades/day, max trades/week, total open-risk cap). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RISK LIMITS'**
+  String get settingsSectionRiskLimits;
+
+  /// CR101-MOBILE. Shown under the L1 risk-profile dial when neither sector_cap_pct nor single_name_cap_pct has an explicit override — those two fields fall back to a server-side preset this API does not expose a number for (CR101-BE1 bridge), so this deliberately does NOT claim a value, and deliberately does NOT say 'OFF' (a cap is still enforced, just not an explicit one). Reused as the OFF-chip label for the same two fields inside the L2 editor. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Following your risk profile'**
+  String get settingsRiskLimitsProfileFollowing;
+
+  /// CR101-MOBILE. Shown under the L1 dial once the user has set an explicit sector or single-name cap override in L2 (acceptance 3: any L2 edit to either field moves the dial to Custom). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get settingsRiskLimitsProfileCustom;
+
+  /// CR101-MOBILE L2 disclosure toggle — expands the seven per-field editors, each in its own units. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Set my own limits'**
+  String get settingsRiskLimitsExpand;
+
+  /// CR101-MOBILE. OFF-chip label for the five CR101-BE2 fields, where an unset value is genuinely unenforced (not a preset fallback like the two BE1 caps). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'OFF'**
+  String get settingsRiskLimitsOff;
+
+  /// CR101-MOBILE / CR101-BE1 `sector_cap_pct`, percentage points. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Sector concentration cap'**
+  String get settingsRiskLimitsSectorCapLabel;
+
+  /// CR101-MOBILE / CR101-BE1 `sector_cap_pct` explainer. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks a BUY that would push any one sector above this share of your portfolio. Unset follows your risk profile.'**
+  String get settingsRiskLimitsSectorCapExplain;
+
+  /// CR101-MOBILE / CR101-BE1 `single_name_cap_pct`, percentage points. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Single-name position cap'**
+  String get settingsRiskLimitsSingleNameCapLabel;
+
+  /// CR101-MOBILE / CR101-BE1 `single_name_cap_pct` explainer. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks a BUY that would size one position above this share of your portfolio. Unset follows your risk profile.'**
+  String get settingsRiskLimitsSingleNameCapExplain;
+
+  /// CR101-MOBILE / CR101-BE2 `post_loss_cooldown_hours`, in hours. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Post-loss cooldown'**
+  String get settingsRiskLimitsCooldownLabel;
+
+  /// CR101-MOBILE / CR101-BE2 `post_loss_cooldown_hours` explainer. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks new BUYs for this many hours after your last realised loss.'**
+  String get settingsRiskLimitsCooldownExplain;
+
+  /// CR101-MOBILE / CR101-BE2 `max_open_positions`, a distinct-ticker count. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Max open positions'**
+  String get settingsRiskLimitsMaxOpenPositionsLabel;
+
+  /// CR101-MOBILE / CR101-BE2 `max_open_positions` explainer. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks a BUY that would open a new ticker once you\'re at this many distinct positions. Adding to a position you already hold is unaffected.'**
+  String get settingsRiskLimitsMaxOpenPositionsExplain;
+
+  /// CR101-MOBILE / CR101-BE2 `max_trades_per_day`, a count. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Max trades per day'**
+  String get settingsRiskLimitsMaxTradesPerDayLabel;
+
+  /// CR101-MOBILE / CR101-BE2 `max_trades_per_day` explainer — fixed UTC basis per the BE2 bridge, not the user's local timezone. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks any trade once you\'ve submitted this many today (UTC calendar day).'**
+  String get settingsRiskLimitsMaxTradesPerDayExplain;
+
+  /// CR101-MOBILE / CR101-BE2 `max_trades_per_week`, a count. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Max trades per week'**
+  String get settingsRiskLimitsMaxTradesPerWeekLabel;
+
+  /// CR101-MOBILE / CR101-BE2 `max_trades_per_week` explainer — fixed ISO week from Monday 00:00 UTC per the BE2 bridge. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks any trade once you\'ve submitted this many this week (Monday 00:00 UTC).'**
+  String get settingsRiskLimitsMaxTradesPerWeekExplain;
+
+  /// CR101-MOBILE / CR101-BE2 `max_open_risk_pct`, percentage points. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Total open-risk cap'**
+  String get settingsRiskLimitsMaxOpenRiskLabel;
+
+  /// CR101-MOBILE / CR101-BE2 `max_open_risk_pct` explainer. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Caps the sum of (position size % x stop distance %) across your open positions — your total capital at risk to stops.'**
+  String get settingsRiskLimitsMaxOpenRiskExplain;
+
+  /// CR101-MOBILE, per the assign's item 3b and CR101-BE2 auditor finding M1: sim_engine.preview() has no `stop` parameter, so it cannot price a proposed trade's OWN contribution to max_open_risk_pct — a trade that would tip an under-cap portfolio over the cap shows as fine in preview and only blocks at real submit. This note sits next to the field so the trade-ticket preview is never read as authoritative for this one limit (CR046 shown-equals-enforced). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed at trade submission — not shown as within-limits in the trade preview.'**
+  String get settingsRiskLimitsMaxOpenRiskPreviewNote;
+
+  /// CR101-MOBILE L3 disclosure: shown when sector_cap_pct or single_name_cap_pct moves from unset (profile preset) to an explicit value. Direction (looser/tighter than the preset) is unknowable client-side — the preset's resolved number is never returned by the API (CR101-BE1 bridge) — so this states the mechanism honestly instead of guessing a direction. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'This replaces your risk-profile default with an explicit value, effective immediately.'**
+  String get settingsRiskLimitsDisclosureFollowing;
+
+  /// CR101-MOBILE L3 disclosure: shown when an edit numerically loosens an already-explicit limit (e.g. raising a percent/count cap, or shortening the cooldown). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'This allows more risk than your current setting.'**
+  String get settingsRiskLimitsDisclosureLooser;
+
+  /// CR101-MOBILE L3 disclosure: shown when clearing a previously-explicit value back to OFF/unset. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the limit entirely — it will not block anything.'**
+  String get settingsRiskLimitsDisclosureOff;
+
+  /// CR101-MOBILE L3 disclosure, CR040 'a silent 100% is not allowed': shown whenever a percent field (sector_cap_pct / single_name_cap_pct / max_open_risk_pct) is set to exactly 100, regardless of its prior value — a nominally-set cap that in practice enforces nothing. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'100% removes any real ceiling from this limit — allowed, but it means no protection here.'**
+  String get settingsRiskLimitsDisclosure100;
+
+  /// CR101-MOBILE retro-tightening dialog title (assign §3), shown after a save when GET /v1/mandate/{id}/audit reports max_open_positions_breach or max_open_risk_pct_breach — the only two of the seven fields with a portfolio-state dimension (BE2 bridge judgment call 3). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Some holdings now breach this limit'**
+  String get settingsRiskLimitsRetroTitle;
+
+  /// CR101-MOBILE retro-tightening dialog body — must never imply a forced sell (backend fixed behaviour, BE2 bridge acceptance 6). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Affected holdings are flagged below. New BUYs that would add to the breach are blocked. Nothing is sold automatically.'**
+  String get settingsRiskLimitsRetroBody;
+
+  /// CR101-MOBILE retro-tightening dialog — comma-joined list of the tickers HoldingsAuditResult.violations names. {tickers} is a plain joined string, not a count.
+  ///
+  /// In en, this message translates to:
+  /// **'Flagged: {tickers}'**
+  String settingsRiskLimitsRetroTickers(String tickers);
+
+  /// CR101-MOBILE retro-tightening dialog dismiss CTA. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get settingsRiskLimitsRetroDismiss;
+
   /// CR069 Phase 1b (supersedes the DEF084 placeholder). Toggle label for the halal mandate flag. The flag now enforces a REAL, SOURCED screen: AMI reads the published constituents of the S&P 500 Sharia Industry Exclusions Index, which S&P Dow Jones screens to the AAOIFI standard. AMI does not run its own ruling and computes no ratios. OBSERVANCE-SENSITIVE. Translator notes: (a) 'AAOIFI' is the proper name of a standards body (Accounting and Auditing Organization for Islamic Financial Institutions) — transliterate, never translate or expand it; (b) 'Sharia screen' means a compliance filter applied by that standard, NOT a religious ruling by AMI; (c) do not render this as 'halal' or 'permitted' — naming the standard is the whole point of the string. Saiful arranges translation externally.
   ///
   /// In en, this message translates to:

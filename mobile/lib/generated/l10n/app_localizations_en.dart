@@ -745,6 +745,107 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your PM refuses trades that would push the portfolio past this.';
 
   @override
+  String get settingsSectionRiskLimits => 'RISK LIMITS';
+
+  @override
+  String get settingsRiskLimitsProfileFollowing =>
+      'Following your risk profile';
+
+  @override
+  String get settingsRiskLimitsProfileCustom => 'Custom';
+
+  @override
+  String get settingsRiskLimitsExpand => 'Set my own limits';
+
+  @override
+  String get settingsRiskLimitsOff => 'OFF';
+
+  @override
+  String get settingsRiskLimitsSectorCapLabel => 'Sector concentration cap';
+
+  @override
+  String get settingsRiskLimitsSectorCapExplain =>
+      'Blocks a BUY that would push any one sector above this share of your portfolio. Unset follows your risk profile.';
+
+  @override
+  String get settingsRiskLimitsSingleNameCapLabel => 'Single-name position cap';
+
+  @override
+  String get settingsRiskLimitsSingleNameCapExplain =>
+      'Blocks a BUY that would size one position above this share of your portfolio. Unset follows your risk profile.';
+
+  @override
+  String get settingsRiskLimitsCooldownLabel => 'Post-loss cooldown';
+
+  @override
+  String get settingsRiskLimitsCooldownExplain =>
+      'Blocks new BUYs for this many hours after your last realised loss.';
+
+  @override
+  String get settingsRiskLimitsMaxOpenPositionsLabel => 'Max open positions';
+
+  @override
+  String get settingsRiskLimitsMaxOpenPositionsExplain =>
+      'Blocks a BUY that would open a new ticker once you\'re at this many distinct positions. Adding to a position you already hold is unaffected.';
+
+  @override
+  String get settingsRiskLimitsMaxTradesPerDayLabel => 'Max trades per day';
+
+  @override
+  String get settingsRiskLimitsMaxTradesPerDayExplain =>
+      'Blocks any trade once you\'ve submitted this many today (UTC calendar day).';
+
+  @override
+  String get settingsRiskLimitsMaxTradesPerWeekLabel => 'Max trades per week';
+
+  @override
+  String get settingsRiskLimitsMaxTradesPerWeekExplain =>
+      'Blocks any trade once you\'ve submitted this many this week (Monday 00:00 UTC).';
+
+  @override
+  String get settingsRiskLimitsMaxOpenRiskLabel => 'Total open-risk cap';
+
+  @override
+  String get settingsRiskLimitsMaxOpenRiskExplain =>
+      'Caps the sum of (position size % x stop distance %) across your open positions — your total capital at risk to stops.';
+
+  @override
+  String get settingsRiskLimitsMaxOpenRiskPreviewNote =>
+      'Confirmed at trade submission — not shown as within-limits in the trade preview.';
+
+  @override
+  String get settingsRiskLimitsDisclosureFollowing =>
+      'This replaces your risk-profile default with an explicit value, effective immediately.';
+
+  @override
+  String get settingsRiskLimitsDisclosureLooser =>
+      'This allows more risk than your current setting.';
+
+  @override
+  String get settingsRiskLimitsDisclosureOff =>
+      'This removes the limit entirely — it will not block anything.';
+
+  @override
+  String get settingsRiskLimitsDisclosure100 =>
+      '100% removes any real ceiling from this limit — allowed, but it means no protection here.';
+
+  @override
+  String get settingsRiskLimitsRetroTitle =>
+      'Some holdings now breach this limit';
+
+  @override
+  String get settingsRiskLimitsRetroBody =>
+      'Affected holdings are flagged below. New BUYs that would add to the breach are blocked. Nothing is sold automatically.';
+
+  @override
+  String settingsRiskLimitsRetroTickers(String tickers) {
+    return 'Flagged: $tickers';
+  }
+
+  @override
+  String get settingsRiskLimitsRetroDismiss => 'Got it';
+
+  @override
   String get settingsComplianceHalal => 'Sharia screen — AAOIFI';
 
   @override
