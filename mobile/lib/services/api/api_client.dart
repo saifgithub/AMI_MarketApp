@@ -513,7 +513,9 @@ class ApiClient {
 
   Future<JournalListResponse> listJournal({
     required String userId,
-    String plan = 'trial_trader',
+    // DEF173 — no default: a missing plan is a compile error, not a silent
+    // 'trial_trader'. The caller must derive it from the authenticated user.
+    required String plan,
     String? entryType,
     String? ticker,
     String? q,

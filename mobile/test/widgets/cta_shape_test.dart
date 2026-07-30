@@ -19,6 +19,7 @@
 library;
 
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/theme/hex_clipper.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
@@ -152,6 +153,67 @@ void main() {
         findsWidgets,
         reason: 'the 12 agent avatars ARE the honeycomb — this is the identity '
             'the CR refused to sweep',
+      );
+    });
+
+    // DEF167(a) — CR113's "all three shapes covered" claim was false: the
+    // octagon (chip) and the regular hexagon (avatar, track button) were
+    // both represented above, but `FlatTopHexagonBarClipper` — the shape
+    // whose entire reason to exist is arbitrary aspect ratio (the
+    // BOARD|TRANSCRIPT toggle, the Portfolio journal-pointer bar) — had no
+    // case at all. A square-ish size would prove nothing about that; this
+    // uses a 300x44 bar (ratio ~6.8:1), nowhere near the regular hexagon's
+    // fixed 2:√3 (~1.1547:1).
+    testWidgets(
+        'FlatTopHexagonBarClipper is a true hexagon at a wide, non-2:√3 '
+        'aspect ratio', (tester) async {
+      const size = Size(300, 44);
+      const endInset = 10.0;
+      final path = const FlatTopHexagonBarClipper(endInset: endInset)
+          .getClip(size);
+
+      // The defining difference from the octagon: the octagon chamfers each
+      // corner with its OWN diagonal, leaving a vertical edge down the
+      // right/left sides between the two corner cuts. The hex-bar's two
+      // corner diagonals on each end converge to a single point at the
+      // vertical middle — there is no vertical edge at all. So just inside
+      // the right edge, near the top or bottom, must be OUTSIDE the hex-bar
+      // even though the equivalent point is inside an octagon of the same
+      // envelope and corner size.
+      expect(
+        path.contains(Offset(size.width - 0.1, 15)),
+        isFalse,
+        reason: 'no vertical right edge — the ends taper to a point, unlike '
+            'the octagon',
+      );
+      expect(
+        path.contains(Offset(size.width - 0.1, 29)),
+        isFalse,
+        reason: 'symmetric check below the vertical middle',
+      );
+      // The point itself — dead centre of the right end — IS the vertex.
+      expect(
+        path.contains(Offset(size.width - 0.05, size.height / 2)),
+        isTrue,
+        reason: 'the tip of the point sits at the vertical middle',
+      );
+      // Flat top/bottom (not angled, unlike the octagon's chamfered top
+      // corners): just inside the inset, at y=0, is on the boundary of the
+      // filled region — a point one pixel further in, at (endInset + 1, 1),
+      // must be INSIDE, proving the top edge is flat between the insets.
+      expect(
+        path.contains(const Offset(endInset + 1, 1)),
+        isTrue,
+        reason: 'flat top edge between the two end insets',
+      );
+
+      final octagon =
+          const CutCornerOctagonClipper(cornerCut: endInset).getClip(size);
+      expect(
+        octagon.contains(Offset(size.width - 0.1, 15)),
+        isTrue,
+        reason: 'the octagon DOES keep a vertical right edge at the same '
+            'envelope — this is the mechanical difference DEF167(a) proves',
       );
     });
 

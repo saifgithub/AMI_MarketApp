@@ -46,6 +46,10 @@ class MandateNotifier extends StateNotifier<MandateState> {
       final userId = await DeviceUser.getOrCreate();
       final m = await api.getMandate(userId);
       state = state.copyWith(mandate: m, loading: false);
+      // DEF173 — the Journal derives its retention plan from this mandate
+      // and bails out of its own refresh if the mandate isn't loaded yet;
+      // re-trigger it now that the real plan is known.
+      await _ref.read(journalNotifierProvider.notifier).refresh();
     } catch (e) {
       state = state.copyWith(
           loading: false,

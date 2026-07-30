@@ -59,7 +59,6 @@ RoomBoardData boardFromRoomState({
     opinionsNotIncluded: verdict?.opinionsNotIncluded ?? const [],
     levelProvenance: verdict?.levelProvenance,
     runId: state.runId,
-    meta: const RoomBoardMeta(),
     voices: [
       for (final agent in kCombVoices)
         RoomVoice(
@@ -145,10 +144,6 @@ RoomBoardData? boardFromJournalEntry(JournalEntry entry) {
     levelProvenance: parseLevelProvenance(rawVerdict?['level_provenance']),
     isRecord: true,
     recordedAt: entry.createdAt,
-    meta: RoomBoardMeta(
-      modelTier: payload['model_tier'] as String?,
-      mandateVersion: entry.mandateVersion,
-    ),
     voices: [
       for (final agent in kCombVoices)
         _voiceFromRow(agent.id, rows[agent.id]),

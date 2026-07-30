@@ -261,8 +261,6 @@ abstract final class AmiRadii {
   static const double md = 6.0; // --radius-md
   static const double card = 8.0;
   static const double sheet = 12.0;
-  static const double hexCornerMobile = 10.0;
-  static const double hexCornerDesktop = 20.0;
 }
 
 abstract final class AmiMotion {

@@ -4,6 +4,7 @@ library;
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
+import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,11 +71,21 @@ class JournalNotifier extends StateNotifier<JournalState> {
 
   final Ref _ref;
 
+  /// DEF173 — `plan` used to be a client-supplied argument with a default of
+  /// `'trial_trader'`, so the retention window was computed against
+  /// whichever plan the caller (or the default) happened to name, not the
+  /// signed-in user's actual entitlement. It is derived here from the
+  /// authenticated user's own mandate — never accepted as a parameter — so
+  /// there is no client-controlled value on this entitlement-bearing read.
+  /// If the mandate has not loaded yet, this bails without guessing: a
+  /// wrong plan is worse than a stale/empty retention read, and
+  /// `MandateNotifier.refresh()` re-triggers this once the real plan lands.
   Future<void> refresh({
     JournalEntryType? filterType,
-    String plan = 'trial_trader',
     String? q,
   }) async {
+    final plan = _ref.read(mandateNotifierProvider).mandate?.plan;
+    if (plan == null) return;
     state = state.copyWith(loading: true, clearError: true);
     try {
       final api = _ref.read(apiClientProvider);
