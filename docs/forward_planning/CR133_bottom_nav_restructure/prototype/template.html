@@ -299,8 +299,9 @@ code {
 .bars { display: flex; flex-direction: column; gap: 8px; }
 .bar { display: flex; align-items: center; gap: 9px; font-size: 11.5px; }
 .bar .nm {
-  width: 50px; flex: none; color: var(--text-med);
+  width: 66px; flex: none; color: var(--text-med);
   font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .bar .tr {
   flex: 1; height: 7px; background: var(--card-alt);
@@ -315,6 +316,30 @@ code {
   text-align: center; padding: 30px 18px; color: var(--text-low);
   border: 1px dashed var(--border); border-radius: var(--r-card); font-size: 12.5px;
 }
+.src-note { font-size: 11px; color: var(--text-low); margin: 11px 0 0; line-height: 1.45; }
+.src-note b { color: var(--text-med); }
+
+/* mandate drift — a version ledger, not a chart. The interesting event is
+   WHICH limit moved and in which direction, and a sparkline of "version
+   number over time" would say nothing at all. */
+.drift { display: flex; flex-direction: column; }
+.dr { display: flex; align-items: flex-start; gap: 9px; position: relative; padding-bottom: 11px; }
+.dr:last-child { padding-bottom: 0; }
+.dr .dv { width: 20px; flex: none; font-size: 10px; color: var(--text-low); padding-top: 1px; }
+.dr .dm {
+  width: 9px; height: 8px; flex: none; margin-top: 4px;
+  clip-path: var(--clip-hex-flat); background: var(--text-low);
+}
+.dr.loosen  .dm { background: var(--amber); }
+.dr.tighten .dm { background: var(--green); }
+.dr.rollback .dm { background: var(--purple); }
+.dr .dt { flex: 1; font-size: 11.5px; color: var(--text-med); line-height: 1.35; }
+/* the connecting rail, drawn between marks rather than through them */
+.dr::before {
+  content: ''; position: absolute; left: 33px; top: 14px; bottom: 0;
+  width: 1px; background: var(--border);
+}
+.dr:last-child::before { display: none; }
 
 /* ── HexBottomNav — 64pt, 38x33 active hexagon ────────────── */
 .navbar {
@@ -455,6 +480,35 @@ tr.hi td { background: color-mix(in srgb, var(--blue) 8%, transparent); }
 .ph ul { margin: 10px 0 0; padding-left: 17px; color: var(--text-med); font-size: 13px; }
 .ph li { margin-bottom: 5px; }
 .ph.now { border-color: var(--cyan); }
+
+/* ── insights build reference ─────────────────────────────── */
+.refgrid { display: flex; flex-direction: column; gap: 22px; }
+.ref {
+  display: grid; grid-template-columns: 358px 1fr; gap: 24px; align-items: start;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--r-sheet); padding: 20px;
+}
+@media (max-width: 820px) { .ref { grid-template-columns: 1fr; } }
+.ref .render { background: var(--canvas); border-radius: var(--r-card); padding: 14px; }
+.ref .render .blk { margin-bottom: 0; }
+.ref .spec h3 { margin: 0 0 4px; font-size: 15px; }
+.ref .spec .q {
+  font-family: 'AMI Mono', monospace; font-size: 11.5px; line-height: 1.55;
+  background: var(--card-alt); border: 1px solid var(--border-subtle);
+  border-radius: 4px; padding: 10px 12px; margin: 10px 0;
+  color: var(--text-med); overflow-x: auto;
+  /* pre-wrap, or the authored line breaks in each query collapse into one run */
+  white-space: pre-wrap;
+}
+.ref .spec .q b { color: var(--cyan-ink); font-weight: 400; }
+.ref .spec dl { margin: 0; font-size: 12.5px; }
+.ref .spec dt {
+  font-family: 'AMI Mono', monospace; font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.13em; color: var(--text-low); margin-top: 11px;
+}
+.ref .spec dd { margin: 3px 0 0; color: var(--text-med); line-height: 1.5; }
+.ref .spec dd b { color: var(--text-high); font-weight: 600; }
+.ref .spec dd.warn b { color: var(--amber-ink); }
 
 .measure {
   font-family: 'AMI Mono', monospace; font-size: 10.5px; color: var(--text-low);
@@ -800,6 +854,33 @@ tr.hi td { background: color-mix(in srgb, var(--blue) 8%, transparent); }
   </div>
 </section>
 
+<!-- ═══ 7 · INSIGHTS REFERENCE ═══════════════════════════ -->
+<section class="sec">
+  <div class="sec-head">
+    <span class="lbl">07 — build reference</span>
+    <h2>INSIGHTS, card by card</h2>
+    <p>
+      One card per finding, each with the journal rows it is built from, its empty state and the
+      edge case that will bite. <strong>The cards below are the same renderer as the phone above</strong>
+      — one implementation, two placements, so the spec and the screen cannot drift apart.
+    </p>
+    <p>
+      Nothing here needs a new table or a migration. Two further findings are <em>not</em>
+      derivable and are specified as absent rather than as zeros.
+    </p>
+  </div>
+
+  <div class="refgrid" id="ref-cards"></div>
+
+  <div class="note">
+    <p><strong>One dead enum found on the way through.</strong> <code>EntryType.DRIFT_ALERT</code>
+    exists in <code>schemas/journal.py:31</code> and <strong>has no writer anywhere</strong> — no
+    capture site ever produces one. Either it was planned and dropped, or its capture was lost. It
+    is the natural home for "your mandate loosened right after a loss", which is the sharpest
+    version of the drift card. Flagged, not claimed.</p>
+  </div>
+</section>
+
 <footer class="sec" style="color:var(--text-low);font-size:12.5px">
   <p style="color:var(--text-low)">
     Rendered at 390×844 with the shipped tokens — <code>AmiSpacing</code>, <code>AmiRadii</code>,
@@ -970,51 +1051,123 @@ function viewJournal() {
     </p>`;
 }
 
-function viewInsights() {
-  const max = Math.max(...AGENTS.map(a => a[1]));
-  return `
-    <div class="stat4">
-      <div class="stat">
-        <div class="k">ROOMS CONVENED</div>
-        <div class="v num" style="color:var(--cyan-ink)">38</div>
-        <div class="s">Across <span class="num">19</span> tickers</div>
-      </div>
-      <div class="stat">
-        <div class="k">PM SAID NO</div>
-        <div class="v num" style="color:var(--amber-ink)">9</div>
-        <div class="s"><span class="num">24%</span> of your rooms</div>
-      </div>
-      <div class="stat">
-        <div class="k">MANDATE VERSION</div>
-        <div class="v num">v7</div>
-        <div class="s"><span class="num">7</span> edits since you started</div>
-      </div>
-      <div class="stat">
-        <div class="k">LESSONS PASSED</div>
-        <div class="v num" style="color:var(--green-ink)">12</div>
-        <div class="s"><span class="num">3</span> analysts unlocked</div>
-      </div>
-    </div>
+/* ── INSIGHTS cards ───────────────────────────────────────────
+   Every card below names the journal rows it is built from. The
+   card functions are reused verbatim by the reference section at
+   the bottom of the page, so the spec sheet and the phone can
+   never drift apart — one renderer, two placements (DEF098). */
 
+const EXITS = [
+  ['TARGET',   9, 'var(--green)'],
+  ['STOP',     6, 'var(--red)'],
+  ['BY HAND', 14, 'var(--amber)'],
+];
+
+const VERDICTS = [
+  ['APPROVE',     21, 'var(--green)'],
+  ['MODIFY',       8, 'var(--cyan)'],
+  ['REJECT',       5, 'var(--red)'],
+  ['PASS',         3, 'var(--slate-ink)'],
+  ['NO_VERDICT',   1, 'var(--purple)'],
+];
+
+const CHALLENGE = [
+  ['Chart read',    12, 8,  'var(--cyan)'],
+  ['Risk sizing',    9, 4,  'var(--amber)'],
+  ['Headline call',  6, 5,  'var(--purple)'],
+];
+
+/* MANDATE_EDIT stores payload.before + payload.after — full snapshots — so
+   every limit's trajectory is reconstructable without a new table. */
+const DRIFT = [
+  ['v2', 'Max position 10% → 12%',  'loosen'],
+  ['v3', 'Added no-tobacco screen', 'tighten'],
+  ['v4', 'Max drawdown 25% → 20%',  'tighten'],
+  ['v5', 'Max position 12% → 18%',  'loosen'],
+  ['v6', 'Rolled back to v4',       'rollback'],
+  ['v7', 'Max drawdown 20% → 15%',  'tighten'],
+];
+
+function barList(rows, opts = {}) {
+  const max = Math.max(...rows.map(r => r[1]));
+  const total = rows.reduce((a, r) => a + r[1], 0);
+  return `<div class="bars">` + rows.map(([nm, n, col]) => `
+    <div class="bar">
+      <span class="nm mono">${nm}</span>
+      <span class="tr"><span class="fl" style="width:${(n / max) * 100}%;background:${col}"></span></span>
+      <span class="n num">${opts.pct ? Math.round((n / total) * 100) + '%' : n}</span>
+    </div>`).join('') + `</div>`;
+}
+
+const CARDS = {
+  exits: () => `
+    <div class="blk">
+      <div class="h">HOW YOUR TRADES ENDED</div>
+      ${barList(EXITS)}
+      <p class="src-note">
+        <b>48%</b> of your closes were by hand, before the stop or target was reached.
+        That is your plan being overruled by you — not by the market.
+      </p>
+    </div>`,
+
+  verdicts: () => `
+    <div class="blk">
+      <div class="h">WHAT PM DECIDED</div>
+      ${barList(VERDICTS, { pct: true })}
+      <p class="src-note">
+        <b>NO_VERDICT is not a rejection</b> — it is the PM declining to rule because the run had no
+        market read. Rendering it as a REJECT is a shipped defect elsewhere; it must not be repeated
+        here.
+      </p>
+    </div>`,
+
+  agents: () => `
     <div class="blk">
       <div class="h">ANALYSTS YOU SOUGHT OUT</div>
-      <div class="bars">
-        ${AGENTS.map(([nm, n, col, full]) => `
-          <div class="bar">
-            <span class="nm mono" title="${full}">${nm}</span>
-            <span class="tr"><span class="fl" style="width:${(n / max) * 100}%;background:${col}"></span></span>
-            <span class="n num">${n}</span>
+      ${barList(AGENTS.map(([nm, n, col]) => [nm, n, col]))}
+      <p class="src-note">
+        One-on-ones and briefs you opened — <b>not</b> who spoke in the Room, where all
+        <span class="num">12</span> always do. Colour is the <b>family</b>: cyan Analysts, amber
+        Risk, purple Research, green Execution. <span class="num">7</span> voices you have never once
+        opened are not listed, which is the finding.
+      </p>
+    </div>`,
+
+  drift: () => `
+    <div class="blk">
+      <div class="h">HOW YOUR MANDATE HAS MOVED</div>
+      <div class="drift">
+        ${DRIFT.map(([v, txt, kind]) => `
+          <div class="dr ${kind}">
+            <span class="dv num">${v}</span>
+            <span class="dm"></span>
+            <span class="dt">${txt}</span>
           </div>`).join('')}
       </div>
-      <p style="font-size:11px;color:var(--text-low);margin-top:11px">
-        One-on-ones and briefs you opened — <strong style="color:var(--text-med)">not</strong> who
-        spoke in the Room, where all <span class="num">12</span> always do. Bar colour is the
-        <strong style="color:var(--text-med)">family</strong>: cyan Analysts, amber Risk, purple
-        Research, green Execution. <span class="num">7</span> voices you have never once opened are
-        not listed, which is the finding.
+      <p class="src-note">
+        Three loosenings, three tightenings and one rollback. The question the card exists to raise:
+        <b>did a limit loosen right after a loss?</b>
       </p>
-    </div>
+    </div>`,
 
+  challenge: () => `
+    <div class="blk">
+      <div class="h">DAILY CHALLENGE — BY TYPE</div>
+      <div class="bars">
+        ${CHALLENGE.map(([nm, tot, right, col]) => `
+          <div class="bar">
+            <span class="nm" style="width:74px">${nm}</span>
+            <span class="tr"><span class="fl" style="width:${(right / tot) * 100}%;background:${col}"></span></span>
+            <span class="n num">${right}/${tot}</span>
+          </div>`).join('')}
+      </div>
+      <p class="src-note">
+        Risk sizing is your weakest type at <span class="num">44%</span>. Lessons on that track are
+        one tap away.
+      </p>
+    </div>`,
+
+  gaps: () => `
     <div class="blk" style="border-style:dashed">
       <div class="h" style="color:var(--amber-ink)">NOT MEASURABLE YET — DO NOT SHIP AS ZEROS</div>
       <p style="font-size:11.5px;color:var(--text-med);margin:0 0 8px">
@@ -1030,18 +1183,39 @@ function viewInsights() {
       </div>
       <div class="field" style="align-items:flex-start;border-top:1px solid var(--border-subtle)">
         <span class="k"><b style="color:var(--text-high)">Times the safety floor stopped you</b><br>
-          A blocked trade never reaches the journal — capture runs after
+          A blocked trade never reaches the journal — capture at <code>sim.py:307</code> runs after
           <code>result.trade is not None</code>, and a blocked trade has no trade.
           <strong style="color:var(--amber-ink)">The app never records that it stopped you</strong>,
           which for a training product is the teaching moment going unlogged.</span>
         <span class="v" style="color:var(--amber-ink);white-space:nowrap">new<br>capture</span>
       </div>
-    </div>
+    </div>`,
+};
 
+function viewInsights() {
+  return `
+    <div class="stat4">
+      <div class="stat">
+        <div class="k">ROOMS CONVENED</div>
+        <div class="v num" style="color:var(--cyan-ink)">38</div>
+        <div class="s">Across <span class="num">19</span> tickers</div>
+      </div>
+      <div class="stat">
+        <div class="k">MANDATE</div>
+        <div class="v num">v7</div>
+        <div class="s"><span class="num">7</span> edits since you started</div>
+      </div>
+    </div>
+    ${CARDS.exits()}
+    ${CARDS.verdicts()}
+    ${CARDS.agents()}
+    ${CARDS.drift()}
+    ${CARDS.challenge()}
+    ${CARDS.gaps()}
     <p style="font-size:11.5px;color:var(--text-low);margin:0 0 8px">
-      Everything above the dashed panel is aggregated from journal rows already being written —
-      no new tables, no CR109 dependency.
-      <strong style="color:var(--amber-ink)">This is the least-settled segment — argue with it.</strong>
+      Every card above the dashed panel is aggregated from journal rows already being written —
+      no new tables, no CR109 dependency. <strong style="color:var(--amber-ink)">Argue with the
+      selection; the sources are checked.</strong>
     </p>`;
 }
 
@@ -1116,6 +1290,125 @@ function render() {
   measure();
 }
 
+/* ── build reference: one spec per card ───────────────────────
+   `card` names a key in CARDS, so the reference renders the SAME
+   markup the phone does. A second hand-drawn copy here would be
+   the two-renderer class this project keeps getting bitten by. */
+const REF = [
+  {
+    card: 'exits',
+    title: 'How your trades ended',
+    why: 'The strongest training signal in the set, and it costs nothing. A user who closes ' +
+         'by hand before stop or target is overriding the plan they wrote — that is a habit, ' +
+         'and habits are what the product exists to change.',
+    q: `entries WHERE entry_type = <b>SIM_TRADE</b> AND 'closed' IN tags\n` +
+       `  bucket on tags: <b>'won'</b> → target hit\n` +
+       `                  <b>'lost'</b> → stop hit\n` +
+       `                  <b>'manual'</b> → closed by hand`,
+    src: 'sim.py:395 (auto close, tags won|lost) · sim.py:448 (manual close, tag manual)',
+    empty: 'Fewer than <b>3</b> closed trades: hide the card entirely. Three closes is not a ' +
+           'habit and a 1-of-1 bar reads as 100%.',
+    edge: 'A trade closed manually <i>at</i> the target still tags <b>manual</b> — correctly, ' +
+          'since the user acted rather than the level. Do not reclassify it by comparing prices.',
+  },
+  {
+    card: 'verdicts',
+    title: 'What PM decided',
+    why: 'Shows whether the team is actually being listened to, and surfaces PASS and ' +
+         'NO_VERDICT — two outcomes the user currently has no way to see the shape of.',
+    q: `entries WHERE entry_type = <b>ROOM_RUN</b>\n` +
+       `  group by <b>payload.verdict.action</b>\n` +
+       `  → APPROVE | MODIFY | REJECT | PASS | NO_VERDICT`,
+    src: 'room_runner.py:1610 writes payload.verdict = Verdict.model_dump() · schemas/room.py:33',
+    empty: 'No rooms yet: hide. Do not render five zero bars — an empty distribution looks ' +
+           'like a flat one.',
+    edge: '<b>NO_VERDICT is not a rejection.</b> It is the PM declining to rule because the run ' +
+          'had no market read (CR098). Bucketing it with REJECT tells the user their idea was ' +
+          'turned down when it was never judged. Also: <b>payload.verdict is null</b> on a failed ' +
+          'or cancelled run — exclude, never count as PASS.',
+    warn: true,
+  },
+  {
+    card: 'agents',
+    title: 'Analysts you sought out',
+    why: 'Twelve analysts is a lot to have opinions about. This is the only place that says ' +
+         'which of them you have actually chosen to hear from, and which seven you never have.',
+    q: `entries WHERE entry_type IN (<b>ONE_ON_ONE</b>, <b>AGENT_COACH</b>, <b>AGENT_UNLOCK</b>)\n` +
+       `  count <b>agents_involved[0]</b>  — always exactly one agent\n` +
+       `  colour by <b>Agent.family</b>, never by agent`,
+    src: 'one_on_one.py:137 · brief.py:165 · lessons.py:154 — each writes a single agent id',
+    empty: 'No one-on-ones yet: show the twelve unopened, greyed, with "you have not asked ' +
+           'any of them directly yet". This is the one card whose empty state is the point.',
+    edge: '<b>Never source this from ROOM_RUN.</b> room_runner.py:1603 sets agents_involved to ' +
+          'every agent in the transcript and all 12 speak every run — a chart built on it ' +
+          'reports participation and labels it readership.',
+    warn: true,
+  },
+  {
+    card: 'drift',
+    title: 'How your mandate has moved',
+    why: 'The mandate is the user\'s own rulebook. Whether it has been quietly loosened over ' +
+         'time is the single most useful thing a training product can reflect back — and ' +
+         'MANDATE_EDIT already stores full before/after snapshots, so it is free.',
+    q: `entries WHERE entry_type = <b>MANDATE_EDIT</b> ORDER BY created_at\n` +
+       `  diff <b>payload.before</b> vs <b>payload.after</b> per field\n` +
+       `  classify: limit raised → loosen · lowered → tighten\n` +
+       `  <b>'rollback' IN tags</b> → rollback`,
+    src: 'mandate.py:147 (edit) · mandate.py:259 (rollback, adds rolled_back_to_version)',
+    empty: 'One version and no edits: hide. "v1, never changed" is not a finding.',
+    edge: 'The <b>Day Trader preset</b> sets seven limits at once (mandate.py:140) — render it ' +
+          'as one event, not seven loosenings, or it swamps the ledger. A rollback\'s ' +
+          'direction is neither loosen nor tighten; give it its own mark.',
+  },
+  {
+    card: 'challenge',
+    title: 'Daily challenge, by type',
+    why: 'The only per-topic competence signal in the app. It points straight at the lesson ' +
+         'track that would help, which is what makes it actionable rather than decorative.',
+    q: `entries WHERE entry_type = <b>DAILY_CHALLENGE</b>\n` +
+       `  group by <b>payload.type</b>\n` +
+       `  correct = <b>outcome = WIN</b>  (payload.correct agrees)`,
+    src: 'daily_challenge.py:223 — carries type, difficulty, correct, outcome',
+    empty: 'Fewer than <b>5</b> attempts in a type: omit that row rather than showing 1/1.',
+    edge: 'Attempts carry <b>difficulty</b> too. A 40% on hard is not worse than 80% on easy, ' +
+          'so either weight by difficulty or say the row is unweighted — do not imply a ' +
+          'comparison the number does not support.',
+  },
+  {
+    card: 'gaps',
+    title: 'What is deliberately absent',
+    why: 'CR040. A panel that renders an uncomputable figure as 0 is worse than one that ' +
+         'omits it, because 0 is a claim.',
+    q: `— no query. Both require a backend change first.`,
+    src: 'sim.py:307 (capture runs only after result.trade is not None)',
+    empty: 'This card <i>is</i> the empty state. It ships as-is until the two captures land, ' +
+           'then it is deleted.',
+    edge: 'Do not approximate followed-vs-overrode by matching ticker and time window. A ' +
+          'heuristic rendered at the same weight as a fact is exactly the failure this ' +
+          'card exists to avoid.',
+    warn: true,
+  },
+];
+
+function paintRef() {
+  const host = document.getElementById('ref-cards');
+  if (!host) return;
+  host.innerHTML = REF.map(r => `
+    <div class="ref">
+      <div class="render">${CARDS[r.card]()}</div>
+      <div class="spec">
+        <h3>${r.title}</h3>
+        <p style="margin:6px 0 0;font-size:13px">${r.why}</p>
+        <div class="q">${r.q}</div>
+        <dl>
+          <dt>WRITTEN BY</dt><dd>${r.src}</dd>
+          <dt>EMPTY STATE</dt><dd>${r.empty}</dd>
+          <dt>EDGE CASE</dt><dd class="${r.warn ? 'warn' : ''}">${r.edge}</dd>
+        </dl>
+      </div>
+    </div>`).join('');
+}
+
 /* ── measurement: read it out of the DOM, never estimate ──── */
 function measure() {
   const body = document.getElementById('you-body');
@@ -1137,4 +1430,5 @@ function measure() {
 }
 
 render();
+paintRef();
 </script>
