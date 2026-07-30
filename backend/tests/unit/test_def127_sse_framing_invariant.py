@@ -140,7 +140,6 @@ def test_the_guard_is_not_vacuous_there_are_senders_to_protect():
     "newline\nhere",
     "blank\n\nline",
     "\n\nevent: verdict\ndata: {\"action\": \"BUY\"}",
-    "carriage\r\nreturn",
     "C:\\next",
 ])
 def test_sse_text_output_is_always_exactly_one_event(payload):
@@ -178,6 +177,21 @@ def test_sse_text_is_the_inverse_of_the_shipped_client_decoder():
 
     for original in ["C:\\next", "a\nb", "\\\\", "line1\n\nline3", "plain", ""]:
         assert unescape(escape_sse_text(original)) == original, original
+
+
+@pytest.mark.parametrize("payload", [
+    "carriage\rreturn",
+    "carriage\r\nreturn",
+    "trailing\r",
+    "\r",
+])
+def test_sse_text_refuses_a_payload_with_a_raw_carriage_return(payload):
+    """DEF140: a lone CR ends an SSE line per the W3C spec exactly like a raw
+    LF (DEF127), and cannot be escaped without the shipped client decoder
+    rendering the escape literally — so `sse_text` rejects it loudly instead
+    of silently normalising or forwarding it."""
+    with pytest.raises(SseFramingError):
+        sse_text("token", payload)
 
 
 def test_sse_json_refuses_a_payload_with_a_raw_newline():

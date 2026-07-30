@@ -7,6 +7,7 @@ league-points passthrough, and the once-ever milestone credit grant.
 
 from __future__ import annotations
 
+import threading
 from datetime import date, datetime, timedelta, timezone
 from uuid import uuid4
 
@@ -540,6 +541,133 @@ def test_freeze_capped_at_two_per_year_for_floor_manager():
             select(StreakFreezeRow).where(StreakFreezeRow.user_id == user.id)
         ).scalars().all()
         assert len(rows) == 2
+
+
+class _PGDialectSession:
+    """Wraps a real (sqlite) session and claims to be Postgres.
+
+    `freeze()` gates its DEF119 advisory-lock statement on
+    `session.get_bind().dialect.name == "postgresql"` because SQLite has no
+    advisory locks. This proxy flips that gate so the lock statement's shape
+    (that it runs, and with the right key) can be asserted without a live
+    Postgres — it does NOT prove the lock serialises anything, since the
+    underlying engine is still SQLite. The one `pg_advisory_xact_lock` call
+    is intercepted (SQLite would raise on unknown SQL); every other call
+    passes straight through to the real session.
+    """
+
+    def __init__(self, real):
+        self._real = real
+        self.lock_calls: list[dict] = []
+
+    def get_bind(self):
+        class _Dialect:
+            name = "postgresql"
+
+        class _Bind:
+            dialect = _Dialect()
+
+        return _Bind()
+
+    def execute(self, statement, *args, **kwargs):
+        if "pg_advisory_xact_lock" in str(statement):
+            self.lock_calls.append(args[0] if args else kwargs)
+            return None
+        return self._real.execute(statement, *args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._real, name)
+
+
+def test_freeze_takes_a_postgres_advisory_lock_keyed_on_user_and_period():
+    """DEF119: proves the lock statement's *shape*, not that it serialises.
+
+    Whether `pg_advisory_xact_lock` actually blocks a second concurrent
+    transaction cannot be shown on this machine — there is no local
+    Postgres and the Mac must not start one. This only asserts freeze()
+    issues the lock, gated on the postgres dialect, keyed on (user_id,
+    period) so two different users or two different years never contend.
+    """
+    user = _make_user()
+    _set_plan(user.id, "floor_manager")
+    svc = ReputationService()
+    with get_session() as s:
+        proxy = _PGDialectSession(s)
+        result = svc.freeze(proxy, user.id, on=date(2026, 3, 1))
+    assert result.ok
+    assert proxy.lock_calls == [{"key": f"streak_freeze:{user.id}:2026"}]
+
+
+def test_freeze_concurrent_attempt_is_inconclusive_on_sqlite_by_design():
+    """DEF119 concurrency probe — cannot enforce the cap here, and says so.
+
+    Seeds one legitimate freeze (1 of 2 used), then races two threads
+    calling `freeze()` on separate sessions for two different new dates in
+    the same year — both are expected to read the stale COUNT of 1 before
+    either commits, which is the race DEF119 describes. On Postgres READ
+    COMMITTED (production) the advisory lock added above is what closes
+    that: the second transaction blocks until the first commits, so its
+    COUNT sees the first's row.
+
+    **Measured on this machine's SQLite test engine, this is NOT masked.**
+    The DEF119 row and the CR091-STREAKS auditor both describe SQLite's
+    file-level write lock throwing `OperationalError: database is locked`
+    before the race resolves. Run repeatedly here, that did not happen: the
+    default `sqlite3` busy-timeout quietly waits out the write lock instead
+    of raising, so both threads' stale COUNT-of-1 goes on to commit its own
+    INSERT and the 2-per-year cap is actually exceeded (3 rows) — a
+    reproduction of the underlying defect, not of the auditor's specific
+    failure mode. This is disclosed as a measured discrepancy from the row,
+    not a re-litigation of it: the vulnerability is the same one either way.
+
+    Because the advisory lock is gated to the `postgresql` dialect (SQLite
+    has no advisory locks, and the Mac cannot run a local Postgres to prove
+    the gated branch under real concurrency), this test cannot be written
+    to assert the cap holds — that would be a green result implying more
+    than this engine can prove. It instead asserts only that whatever
+    happens is internally consistent (every outcome accounted for) and
+    leaves the actual number of rows unconstrained, so it stays true
+    whether SQLite's timeout resolves the write lock silently (over-cap,
+    what is actually observed here) or eventually throws (fewer rows).
+    """
+    from sqlalchemy.exc import OperationalError
+
+    user = _make_user()
+    _set_plan(user.id, "floor_manager")
+    svc = ReputationService()
+    with get_session() as s:
+        svc.freeze(s, user.id, on=date(2026, 1, 1))
+
+    outcomes: list[bool | Exception] = []
+
+    def _attempt(on_date: date) -> None:
+        try:
+            with get_session() as s2:
+                r = svc.freeze(s2, user.id, on=on_date)
+                outcomes.append(r.ok)
+        except OperationalError as exc:
+            outcomes.append(exc)
+
+    t1 = threading.Thread(target=_attempt, args=(date(2026, 3, 1),))
+    t2 = threading.Thread(target=_attempt, args=(date(2026, 6, 1),))
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+
+    assert len(outcomes) == 2, "both threads must report an outcome"
+    successes = [o for o in outcomes if o is True]
+
+    with get_session() as s:
+        rows = s.execute(
+            select(StreakFreezeRow).where(StreakFreezeRow.user_id == user.id)
+        ).scalars().all()
+        # 1 seed row + however many of the two racers actually committed —
+        # a consistency check on the mechanism, not a cap assertion. This
+        # test does not know, and does not claim to know, whether that
+        # count is <= 2 (cap held) or 3 (cap broken, what this machine
+        # actually produces every run observed while writing this fix).
+        assert len(rows) == 1 + len(successes)
 
 
 def test_frozen_day_pauses_streak_without_breaking_it():

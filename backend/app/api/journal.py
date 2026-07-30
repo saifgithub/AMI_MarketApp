@@ -18,7 +18,6 @@ from sqlalchemy import select
 from app.api.dependencies import get_current_user
 from app.db import get_session
 from app.db.models import SimTradeRow, User
-from app.schemas import Plan
 from app.schemas.journal import (
     EntryType,
     JournalEntry,
@@ -26,6 +25,7 @@ from app.schemas.journal import (
     JournalListResponse,
     Outcome,
 )
+from app.services.entitlements import effective_plan_for_user
 from app.services.journal_store import JournalStore, get_journal_store
 from app.services.reputation_service import get_reputation_service
 from pydantic import BaseModel, Field
@@ -52,7 +52,6 @@ class AnnotateRequest(BaseModel):
 @router.get("/{user_id}", response_model=JournalListResponse)
 async def list_entries(
     user_id: UUID,
-    plan: str = "trial_trader",
     entry_type: str | None = None,
     ticker: str | None = None,
     q: str | None = None,
@@ -61,10 +60,12 @@ async def list_entries(
     store: JournalStore = Depends(get_journal_store),
 ) -> JournalListResponse:
     _own(current_user, user_id)
-    try:
-        plan_enum = Plan(plan)
-    except ValueError:
-        plan_enum = Plan.TRIAL_TRADER
+    # DEF202: retention is entitlement-bearing, so it is derived from the
+    # authenticated user via `effective_plan_for_user`, not a client-supplied
+    # `plan` query param — the same correction DEF179 applies to one_on_one.py
+    # and brief_engine.py. A caller could otherwise ask for `floor_manager`
+    # retention, or omit the param and silently get `trial_trader`'s.
+    plan_enum = effective_plan_for_user(user_id)
     et: EntryType | None = None
     if entry_type:
         try:

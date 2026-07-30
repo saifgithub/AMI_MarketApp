@@ -21,7 +21,7 @@ from typing import NamedTuple
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
@@ -315,6 +315,24 @@ class ReputationService:
 
         target_date = on or _utcnow().astimezone(_user_tz(user)).date()
         period_key = str(target_date.year)
+
+        # DEF119: the cap is enforced by a COUNT-then-INSERT, which is a
+        # check-then-act race — two concurrent calls for the *same* user+year
+        # but *different* target dates can both read the stale COUNT before
+        # either commits. `UniqueConstraint(user_id, frozen_date)` only
+        # blocks re-freezing the same date, not this. A transaction-scoped
+        # Postgres advisory lock keyed on (user_id, period) forces the second
+        # concurrent call to block until the first commits, so its COUNT
+        # sees the first's row. Gated to postgresql: SQLite (the test engine)
+        # has no advisory locks and its own coarse file-level write lock
+        # already serialises writers, which is exactly why this race could
+        # not be mutation-confirmed on this machine (see the test's
+        # docstring) — the lock below is load-bearing only in production.
+        if session.get_bind().dialect.name == "postgresql":
+            session.execute(
+                text("SELECT pg_advisory_xact_lock(hashtext(:key))"),
+                {"key": f"streak_freeze:{user_id}:{period_key}"},
+            )
 
         used = session.execute(
             select(func.count()).select_from(StreakFreezeRow).where(

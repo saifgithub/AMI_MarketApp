@@ -46,12 +46,30 @@ def escape_sse_text(text: str) -> str:
     Complete is the load-bearing word. The client decodes each event's data
     independently, so an escape sequence must never span two events; callers
     pass a whole chunk, never a partial one.
+
+    DEF140: only a raw LF is escaped, a raw CR is not — despite the W3C SSE
+    spec also terminating a line on a lone CR, which makes a raw CR here the
+    same framing hole DEF127 closed for LF. It is not escaped to a literal
+    backslash-r because the shipped `0.1.0+56` Flutter decoder only inverts
+    a backslash-n and a doubled backslash; an escaped CR would render as
+    two literal characters in the field instead of being decoded back.
+    `sse_text` below refuses a raw CR outright instead — the loud
+    DEF127/CR040 shape — rather than silently normalising it to LF, since
+    normalising would change delivered text a producer never asked to
+    change.
     """
     return text.replace("\\", "\\\\").replace("\n", "\\n")
 
 
 def sse_text(event: str, text: str) -> str:
     """Frame one SSE event whose payload is bare (non-JSON) text."""
+    if "\r" in text:
+        raise SseFramingError(
+            f"SSE text payload for event {event!r} contains a raw carriage "
+            f"return; a lone CR ends an SSE line per the W3C spec just like "
+            f"a raw LF, and it cannot be escaped without the shipped client "
+            f"decoder rendering the escape literally (see escape_sse_text)"
+        )
     return f"event: {event}\ndata: {escape_sse_text(text)}\n\n"
 
 
