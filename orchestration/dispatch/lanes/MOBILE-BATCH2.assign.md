@@ -112,4 +112,4 @@ The CR101-MOBILE builder did exactly that — my field table was wrong and it re
 That was the right call and it is the standard here.
 
 ASSIGNED: coder.mobile round 1
-DISPATCH: OPEN
+DISPATCH: ACCEPTED
