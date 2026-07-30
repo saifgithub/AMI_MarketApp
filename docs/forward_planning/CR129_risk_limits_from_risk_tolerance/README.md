@@ -69,10 +69,25 @@ not by a new measurement.** Say so in the commit; do not present it as a bug tha
    is already a legal number — cooldown `0` hours, percentages `100`, counts set high. L3's
    loud-disclosure machinery already covers a looser-than-profile value, so choosing off discloses
    itself through a path that exists.
-4. **Preset numbers come from the curriculum, not from invention.** ~6 lessons and ~26 daily
-   challenges already teach specific discipline numbers. Derive the 1–5 tables from what the
-   teaching material actually says, so the lessons become true as written. Where the curriculum is
-   silent, say so and propose a number with its reasoning.
+4. **Preset numbers — CORRECTED 2026-07-30, my first wording was wrong.** This originally said
+   "derive the 1–5 tables from what the teaching material actually says." **Measured against the
+   1,026 files in `content/lessons` and `content/daily_challenges`: the concepts are taught but no
+   number is.** "cooling" appears in 6 files, over-trading in 3, "position limit" in 1, and none of
+   them states a threshold. So there is nothing to derive from, and a lane following that
+   instruction would be silently inventing the numbers instead — which is worse than inventing them
+   openly, because the invention would arrive wearing a citation. **The tables are a product
+   decision and belong to Saiful**, proposed by the Architect with reasoning and confirmed before
+   any lane builds them. Once fixed, the curriculum should be updated to cite the real numbers
+   (a content follow-up), which reverses the intended dependency: the mandate becomes the source of
+   truth and the lessons are made true against it.
+
+   **A real interaction the table must resolve, surfaced before proposing numbers:**
+   `max_open_positions` does not scale monotonically with risk the way the others do. It is coupled
+   to `single_name_cap_pct` — at risk 1 the per-name cap is **1.5%**, so a conservative user needs
+   *many* names to be meaningfully invested (20 × 1.5% = 30%), and a low position cap would lock
+   them out of their own portfolio. At risk 5 the per-name cap is 4.5%, so fewer names reach the
+   same exposure. Naively giving the "safest" profile the tightest number on every row inverts this
+   one and produces a mandate that cannot be satisfied.
 5. **The backfill must be loud (CR040).** 13 real users acquire limits they never set. At minimum a
    `MANDATE_EDIT` journal entry per user describing what changed and why; ideally a one-time in-app
    notice. A user hitting a cooldown block they never configured, with no explanation, is the
