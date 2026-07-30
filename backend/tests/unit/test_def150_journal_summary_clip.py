@@ -134,3 +134,15 @@ def test_the_clip_is_total_over_its_input(text: str) -> None:
     assert len(out) <= JOURNAL_SUMMARY_MAX
     if len(text) <= JOURNAL_SUMMARY_MAX:
         assert out == text
+
+
+def test_a_cut_landing_on_punctuation_before_a_space_leaves_no_trailing_space() -> None:
+    """DEF163: the original guard's single fixture (`_REPORTED`) has no cut
+    point that lands on punctuation-then-space, so it could not catch this.
+    `cut.rstrip().rstrip(',;:')` strips the space first — a cut landing on
+    `"… ,"` then has its punctuation removed and the space it was hiding
+    exposed, leaving `" …"` in text the user reads on the Journal detail
+    screen. `('ab , cd ' * 40)` is the row's own reproduction (DEF163)."""
+    out = _clip_summary("ab , cd " * 40)
+    assert not out.endswith(" …"), "punctuation strip exposed a trailing space"
+    assert out.endswith("…")
