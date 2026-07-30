@@ -93,4 +93,4 @@ and track U audits the sprint as one batch afterwards.
 That is the standard here and it has been the right call every time it has happened.
 
 ASSIGNED: coder.api round 1
-DISPATCH: OPEN
+DISPATCH: ACCEPTED

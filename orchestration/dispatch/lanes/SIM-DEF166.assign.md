@@ -89,4 +89,4 @@ audits the sprint as one batch afterwards.
 This is money math; a confident wrong answer here is worse than a disclosed gap.
 
 ASSIGNED: coder.api round 1
-DISPATCH: OPEN
+DISPATCH: ACCEPTED
