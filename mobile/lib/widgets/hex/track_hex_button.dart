@@ -47,18 +47,45 @@ class TrackHexButton extends StatelessWidget {
           // the narrower top-line box (0.676 x W) instead of the single-line
           // one, or the second line would run under the diagonal exactly as
           // the shrink-only version did.
+          //
+          // Round 2 (DEF142 audit): a `FittedBox` always lays its child out
+          // with UNBOUNDED constraints before scaling the result, so a
+          // `Text` inside one can never wrap — `softWrap`/`maxLines: 2` had
+          // no width to break against. The two-line branch below therefore
+          // gives the `Text` its width from a plain `SizedBox`, not a
+          // `FittedBox`, so real line breaks can happen; `FittedBox` is kept
+          // only for the single-line branch, where it did already work
+          // (that half of the mechanism was never the bug).
           final oneLineBox = w * flatTopHexWidthFractionAtLabel;
+          final twoLineBox = w * flatTopHexWidthFractionAtTwoLineLabel;
           final labelStyle =
               AmiTypography.labelMono.copyWith(fontSize: 10, color: ink);
-          final measured = TextPainter(
+          final singleLineMeasure = TextPainter(
             text: TextSpan(text: label, style: labelStyle),
             maxLines: 1,
             textDirection: TextDirection.ltr,
           )..layout(maxWidth: double.infinity);
-          final needsTwoLines = measured.width > oneLineBox;
-          final labelBox = needsTwoLines
-              ? w * flatTopHexWidthFractionAtTwoLineLabel
-              : oneLineBox;
+          var needsTwoLines = singleLineMeasure.width > oneLineBox;
+          if (needsTwoLines) {
+            // Confirm the wrap actually produces two lines that each fit the
+            // two-line box, rather than assuming a candidate wraps. A single
+            // unbreakable word (`FUNDAMENTALS`, 12 characters, no space) has
+            // no break opportunity: constrained layout still reports it as
+            // one line whose natural width is the whole word, wider than the
+            // box. That case is decided explicitly here — it is not a wrap,
+            // so it falls back to the single-line branch and scales down
+            // instead, the same way any long single-line label always did.
+            final wrapMeasure = TextPainter(
+              text: TextSpan(text: label, style: labelStyle),
+              maxLines: 2,
+              textDirection: TextDirection.ltr,
+            )..layout(maxWidth: twoLineBox);
+            final lines = wrapMeasure.computeLineMetrics();
+            needsTwoLines = !wrapMeasure.didExceedMaxLines &&
+                lines.length > 1 &&
+                lines.every((line) => line.width <= twoLineBox + 0.5);
+          }
+          final labelBox = needsTwoLines ? twoLineBox : oneLineBox;
           return ClipPath(
             clipper: const FlatTopRegularHexagon(),
             child: Container(
@@ -68,21 +95,33 @@ class TrackHexButton extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: labelBox,
-                    // A label that still doesn't fit two lines at the cap
-                    // absorbs the user's text-scale setting by scaling down —
-                    // never below its own base, unlike the old single-line
-                    // FittedBox, which is exactly how `ISLAMIC FINANCE` used
-                    // to shrink under a larger text scale instead of growing.
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        label,
-                        maxLines: needsTwoLines ? 2 : 1,
-                        softWrap: needsTwoLines,
-                        textAlign: TextAlign.center,
-                        style: labelStyle,
-                      ),
-                    ),
+                    child: needsTwoLines
+                        // A confirmed wrap already fits within labelBox at
+                        // the base font — it never needs to shrink, unlike
+                        // the old single-line-only version.
+                        ? Text(
+                            label,
+                            maxLines: 2,
+                            softWrap: true,
+                            textAlign: TextAlign.center,
+                            style: labelStyle,
+                          )
+                        // Single line, possibly an unbreakable word wider
+                        // than its box: absorb the user's text-scale setting
+                        // by scaling down, never below its own base, unlike
+                        // the old single-line FittedBox, which is exactly
+                        // how `ISLAMIC FINANCE` used to shrink under a
+                        // larger text scale instead of growing.
+                        : FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              label,
+                              maxLines: 1,
+                              softWrap: false,
+                              textAlign: TextAlign.center,
+                              style: labelStyle,
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 4),
                   SizedBox(
