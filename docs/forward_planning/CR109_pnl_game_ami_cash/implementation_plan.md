@@ -670,6 +670,30 @@ backend work that does).
 | 37 | The first title rung fires on 3 finished runs with no forfeit, and never on points | 4 |
 | 38 | A private field caps placement points **and still pays the stipend** | Stage 2 |
 
+**Feature interactions** (§12.2 of the design — where two features meet, and the class of bug that
+stalls a lane at 2am):
+
+| # | Test | Slice |
+|---|---|---|
+| 39 | An open weekly + a weekly duel + a private weekly can be held **simultaneously**; a second **open** weekly is refused | 3b |
+| 40 | **Duel deltas are symmetric** — winner's gain == loser's debit, asserted numerically | 3b |
+| 41 | **The stipend pays once per cadence period** — three qualifying finishes in one week pay one stipend, and the other two still pay placement/alpha | 3 |
+| 42 | A **VOID** run pays the stipend and pays no placement, alpha or title | 3 |
+| 43 | Queued orders are **cancelled on forfeit** and **cancelled at the close** — never filled after either | 2 |
+| 44 | A first-time player routes to a duel and holds **no other book**; the open weekly is enterable from run two | 3c |
+| 45 | The post-mortem is present for **Trader and above**, absent for Floor Pass, and **still readable after a downgrade** | 3–5 |
+| 46 | The board during `SETTLING` renders the frozen last standing marked provisional — not blank, not partial | 3 |
+| 47 | The Record renders for a user with **zero finished runs** | 3 |
+
+**Schema consequences of the above** — cheaper to carry from the first migration than to add later:
+
+- `game_entries` needs a **`stipend_claimed`** marker resolvable per `(user_id, cadence, period)`,
+  or test 41 needs a scan. A partial unique index on the claiming row is the cheap shape.
+- `career_events.reason` gains **`duel_win` / `duel_loss`** as distinct reasons, so a symmetric
+  delta is auditable from the ledger alone (test 40).
+- The one-per-cadence guard is **`kind = 'open'`-scoped**, not cadence-scoped. Writing it
+  cadence-scoped is the natural mistake and it silently blocks duels and private fields.
+
 Mobile: `flutter test`, `flutter analyze --no-fatal-infos`.
 
 Test 21 is the one worth writing even though it looks philosophical. It is the executable form of
