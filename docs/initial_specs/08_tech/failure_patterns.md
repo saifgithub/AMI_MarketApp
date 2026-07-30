@@ -580,12 +580,19 @@ unset field, never a recomputation that fires again on every read.
 **Enforcing checks.**
 
 - `test_cr101_be1_settable_risk_caps.py::test_every_enforced_limit_field_is_enforced_disclosed_and_settable`
-  — enumerates every enforced numeric-limit field on `Mandate` (`max_drawdown_pct`,
-  `sector_cap_pct`, `single_name_cap_pct`) and asserts all four legs concretely: a breaching trade
-  is rejected, the resolved value round-trips through its own resolver in its own units, the
-  agent overlay narrates the same number, and a PATCH sets it. A future enforced field that skips
-  this file fails review the moment it's added, not the second time a user complains they can't
-  change it.
+  — asserts all four legs concretely for every derived subject: a breaching trade is rejected, the
+  resolved value round-trips through its own resolver in its own units, the agent overlay narrates
+  the same number, and a PATCH sets it. **DEF191 (2026-07-30):** this test originally enumerated
+  its subject fields **by hand**, and failed its own purpose the very next CR — CR101-BE2 added
+  five new enforced limits and the hand-written list picked up none of them, staying green.
+  The subject list is now **derived**, not enumerated: `Mandate.enforced_limit_field_names()`
+  (`app/schemas/mandate.py`) walks `Mandate.model_fields` for the `Field(json_schema_extra=
+  {"enforced_limit": True})` marker, and a second test,
+  `test_no_unmarked_numeric_field_is_referenced_by_enforcement_code`, heuristically cross-checks
+  for a numeric field that got wired into enforcement code but never marked — a disclosed partial
+  fix, not a closed one; see that test's docstring for exactly what it does and doesn't catch. A
+  future enforced field now fails review the moment it's marked without a probe, or — best-effort —
+  the moment it's referenced by enforcement code without being marked at all.
 - `test_cr101_be1_settable_risk_caps.py::test_migration_no_existing_users_enforced_cap_changes` — the
   migration corollary, pinned against the actual pre-CR101 numbers (not this CR's own tables) for
   every `concentration_tolerance` × `risk_score` combination, so a regression in either preset

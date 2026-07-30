@@ -21,7 +21,10 @@ fix + DEF062 survival) live in test_mandate_store.py next to the store they patc
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone as _tz
+from pathlib import Path
 from uuid import uuid4
 
 import pytest
@@ -29,6 +32,7 @@ import pytest
 from app.agents.overlay_generator import _max_position_pct, _sector_cap_pct, generate_overlay
 from app.agents.safety_floor import check_mandate_compliance, single_name_cap_pct
 from app.schemas import AgentId, Mandate, RiskComponents
+from app.schemas.mandate import enforced_limit_field_names
 from app.schemas.trade import Holding, OrderType, ProposedTrade, Side
 from app.services.mandate_store import MandateStore
 from app.services.sector_allocation import OTHER, sector_concentration_cap
@@ -190,50 +194,51 @@ def test_overlay_discloses_both_caps_interpolated_not_literal(base_mandate: Mand
     assert "33.0% of portfolio in any one" in overlay2
 
 
-# ── acceptance 6: the four-leg invariant, enumerated ───────────────────────
+# ── acceptance 6: the four-leg invariant, DERIVED (DEF191) ─────────────────
+#
+# DEF191: this used to be one giant test hand-enumerating its subjects — three
+# blocks from CR101-BE1, five more appended by hand in CR101-BE2, with nothing
+# checking the list against the schema. CR101-BE2 proved the failure mode: the
+# guard picked up none of its five new fields and stayed green throughout.
+#
+# Fix: `Mandate.enforced_limit_field_names()` (backend/app/schemas/mandate.py)
+# derives the subject list from `Field(json_schema_extra={"enforced_limit":
+# True})` markers on the schema itself — see that function's docstring for why
+# a per-field marker was picked over a class-level registry. Below, each
+# field's four-leg check is still a bespoke function (verifying "enforced"
+# means exercising the real business-logic scenario that trips THAT specific
+# limit — that can't be generic), but which fields get checked, and whether
+# every derived field HAS a check, is now asserted structurally rather than
+# left to whoever remembers to append a block.
+
+_NOW = datetime(2026, 7, 30, 12, 0, tzinfo=_tz.utc)
 
 
-def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mandate: Mandate):
-    """A Mandate field feeding an enforced limit is (a) enforced, (b) disclosed
-    in its own units, (c) disclosed in the agent overlay, (d) settable — or it is
-    deleted. No third state. Enumerates the three numeric enforced-limit fields
-    this repo has today; a future field joins this list or fails the review that
-    should have caught it missing here.
-
-    CR101-BE2 disclosure: this list is hand-enumerated, not derived from the
-    schema, so a new field does NOT automatically join it — the guard's own
-    P12-shaped gap the BE2 assign asked to be named rather than silently
-    inherited. Fixing it properly (auto-discovering every "enforced limit"
-    field) needs a marker distinguishing them from ordinary Mandate fields,
-    which doesn't exist yet; out of scope here, flagged for a DEF in the
-    CR101-BE2 hand-off. The four new limits are added as five explicit blocks
-    below instead (post_loss_cooldown_hours, max_open_positions,
-    max_trades_per_day, max_trades_per_week, max_open_risk_pct)."""
-    store = MandateStore()
-
-    # -- max_drawdown_pct ----------------------------------------------------
+def _probe_max_drawdown_pct(base_mandate: Mandate, store: MandateStore) -> None:
     dd_result = check_mandate_compliance(
         ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=1, limit_price=100.0),
         portfolio_value=10_000.0, current_drawdown_pct=base_mandate.max_drawdown_pct,
         mandate=base_mandate, holdings=[], quotes={"AAPL": 100.0},
         last_loss_closed_at=None, trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
-    assert not dd_result.passed and any("drawdown" in v for v in dd_result.violations)  # (a)
-    assert f"{base_mandate.max_drawdown_pct}%" in generate_overlay(AgentId.AGGRESSIVE_DEBATOR, base_mandate)  # (c)
+    assert not dd_result.passed and any("drawdown" in v for v in dd_result.violations)  # (a) enforced
+    assert f"{base_mandate.max_drawdown_pct}%" in generate_overlay(AgentId.AGGRESSIVE_DEBATOR, base_mandate)  # (c) overlay
     dd_user = uuid4()
     dd_patched = store.patch(dd_user, {"max_drawdown_pct": 20})
     assert dd_patched.max_drawdown_pct == 20  # (d) settable
     assert store.get_or_default(dd_user).max_drawdown_pct == 20  # (b) disclosed verbatim, own units, on read-back
 
-    # -- sector_cap_pct --------------------------------------------------------
+
+def _probe_sector_cap_pct(base_mandate: Mandate, store: MandateStore) -> None:
     tight_sector = base_mandate.model_copy(update={"sector_cap_pct": 20.0})
     sector_result = _sector_breach_check(tight_sector, buy_value=500.0)
-    assert not sector_result.passed and sector_result.blocked_by == "compliance"  # (a)
+    assert not sector_result.passed and sector_result.blocked_by == "compliance"  # (a) enforced
     assert sector_concentration_cap(tight_sector) == pytest.approx(0.20)  # (b) own units (fraction)
     assert f"{_sector_cap_pct(tight_sector)}% of portfolio" in generate_overlay(AgentId.MARKET_ANALYST, tight_sector)  # (c)
-    assert store.patch(uuid4(), {"sector_cap_pct": 45.0}).sector_cap_pct == 45.0  # (d)
+    assert store.patch(uuid4(), {"sector_cap_pct": 45.0}).sector_cap_pct == 45.0  # (d) settable
 
-    # -- single_name_cap_pct -----------------------------------------------------
+
+def _probe_single_name_cap_pct(base_mandate: Mandate, store: MandateStore) -> None:
     tight_single = base_mandate.model_copy(update={"single_name_cap_pct": 5.0})
     single_result = check_mandate_compliance(
         ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=10, order_type=OrderType.MARKET),
@@ -249,14 +254,13 @@ def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mand
     )  # (c)
     assert store.patch(uuid4(), {"single_name_cap_pct": 2.0}).single_name_cap_pct == 2.0  # (d)
 
-    # -- post_loss_cooldown_hours (CR101-BE2) -------------------------------
-    from datetime import datetime, timedelta, timezone as _tz
+
+def _probe_post_loss_cooldown_hours(base_mandate: Mandate, store: MandateStore) -> None:
     cooldown_mandate = base_mandate.model_copy(update={"post_loss_cooldown_hours": 24.0})
-    now = datetime(2026, 7, 30, 12, 0, tzinfo=_tz.utc)
     cooldown_result = check_mandate_compliance(
         ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=1, limit_price=100.0),
         portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=cooldown_mandate,
-        holdings=[], quotes={"AAPL": 100.0}, now=now, last_loss_closed_at=now - timedelta(hours=1),
+        holdings=[], quotes={"AAPL": 100.0}, now=_NOW, last_loss_closed_at=_NOW - timedelta(hours=1),
         trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
     assert not cooldown_result.passed and cooldown_result.blocked_by == "cooldown"  # (a)
@@ -264,13 +268,14 @@ def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mand
     assert "24.0h after a stop-out" in generate_overlay(AgentId.PORTFOLIO_MANAGER, cooldown_mandate)  # (c)
     assert store.patch(uuid4(), {"post_loss_cooldown_hours": 6.0}).post_loss_cooldown_hours == 6.0  # (d)
 
-    # -- max_open_positions (CR101-BE2) --------------------------------------
+
+def _probe_max_open_positions(base_mandate: Mandate, store: MandateStore) -> None:
     positions_mandate = base_mandate.model_copy(update={"max_open_positions": 1})
     positions_result = check_mandate_compliance(
         ProposedTrade(ticker="MSFT", side=Side.BUY, quantity=1, limit_price=100.0),
         portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=positions_mandate,
-        holdings=[Holding(ticker="AAPL", quantity=1, avg_cost=100.0, opened_at=now)],
-        quotes={"AAPL": 100.0, "MSFT": 100.0}, now=now, last_loss_closed_at=None,
+        holdings=[Holding(ticker="AAPL", quantity=1, avg_cost=100.0, opened_at=_NOW)],
+        quotes={"AAPL": 100.0, "MSFT": 100.0}, now=_NOW, last_loss_closed_at=None,
         trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
     assert not positions_result.passed and positions_result.blocked_by == "max_open_positions"  # (a)
@@ -278,12 +283,13 @@ def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mand
     assert "Max open positions: 1" in generate_overlay(AgentId.PORTFOLIO_MANAGER, positions_mandate)  # (c)
     assert store.patch(uuid4(), {"max_open_positions": 5}).max_open_positions == 5  # (d)
 
-    # -- max_trades_per_day / max_trades_per_week (CR101-BE2) ----------------
+
+def _probe_max_trades_per_day(base_mandate: Mandate, store: MandateStore) -> None:
     day_mandate = base_mandate.model_copy(update={"max_trades_per_day": 1})
     day_result = check_mandate_compliance(
         ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=1, limit_price=100.0),
         portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=day_mandate,
-        holdings=[], quotes={"AAPL": 100.0}, now=now, trade_open_timestamps=[now],
+        holdings=[], quotes={"AAPL": 100.0}, now=_NOW, trade_open_timestamps=[_NOW],
         last_loss_closed_at=None, existing_open_risk_pct=0.0,
     )
     assert not day_result.passed and day_result.blocked_by == "over_trading"  # (a)
@@ -291,11 +297,13 @@ def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mand
     assert "1 per day" in generate_overlay(AgentId.PORTFOLIO_MANAGER, day_mandate)  # (c)
     assert store.patch(uuid4(), {"max_trades_per_day": 3}).max_trades_per_day == 3  # (d)
 
+
+def _probe_max_trades_per_week(base_mandate: Mandate, store: MandateStore) -> None:
     week_mandate = base_mandate.model_copy(update={"max_trades_per_week": 1})
     week_result = check_mandate_compliance(
         ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=1, limit_price=100.0),
         portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=week_mandate,
-        holdings=[], quotes={"AAPL": 100.0}, now=now, trade_open_timestamps=[now],
+        holdings=[], quotes={"AAPL": 100.0}, now=_NOW, trade_open_timestamps=[_NOW],
         last_loss_closed_at=None, existing_open_risk_pct=0.0,
     )
     assert not week_result.passed and week_result.blocked_by == "over_trading"  # (a)
@@ -303,7 +311,8 @@ def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mand
     assert "1 per week" in generate_overlay(AgentId.PORTFOLIO_MANAGER, week_mandate)  # (c)
     assert store.patch(uuid4(), {"max_trades_per_week": 8}).max_trades_per_week == 8  # (d)
 
-    # -- max_open_risk_pct (CR101-BE2) ---------------------------------------
+
+def _probe_max_open_risk_pct(base_mandate: Mandate, store: MandateStore) -> None:
     # CR129/DEF187: permissive single-name cap — $1000/$10,000 = 10% is over
     # the ~3% risk-tier preset, which isn't this sub-block's point.
     risk_mandate = base_mandate.model_copy(
@@ -320,3 +329,142 @@ def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mand
     assert "9.5%" not in generate_overlay(AgentId.PORTFOLIO_MANAGER, risk_mandate)
     assert "0.5%" in generate_overlay(AgentId.PORTFOLIO_MANAGER, risk_mandate)  # (c)
     assert store.patch(uuid4(), {"max_open_risk_pct": 4.0}).max_open_risk_pct == 4.0  # (d)
+
+
+# Every derived enforced-limit field must have a probe. This dict, not the
+# schema markers, is what a developer edits to add coverage for a new field —
+# but the NEXT test proves the two are kept in lockstep.
+_FOUR_LEG_PROBES = {
+    "max_drawdown_pct": _probe_max_drawdown_pct,
+    "sector_cap_pct": _probe_sector_cap_pct,
+    "single_name_cap_pct": _probe_single_name_cap_pct,
+    "post_loss_cooldown_hours": _probe_post_loss_cooldown_hours,
+    "max_open_positions": _probe_max_open_positions,
+    "max_trades_per_day": _probe_max_trades_per_day,
+    "max_trades_per_week": _probe_max_trades_per_week,
+    "max_open_risk_pct": _probe_max_open_risk_pct,
+}
+
+
+def test_every_enforced_limit_field_is_enforced_disclosed_and_settable(base_mandate: Mandate):
+    """The four-leg invariant guard (DEF191): every field
+    `Mandate.enforced_limit_field_names()` derives from the schema must have a
+    registered probe verifying (a) enforced, (b) disclosed in its own units,
+    (c) disclosed in the agent overlay, (d) settable — or the guard fails
+    naming exactly which derived field has no probe. The vacuity leg: if the
+    derivation itself breaks and finds nothing, that is a FAIL, not a vacuous
+    pass — an empty guard is worse than no guard (DEF191)."""
+    derived = enforced_limit_field_names()
+
+    assert derived, (
+        "enforced_limit_field_names() returned nothing — either every enforced "
+        "limit was removed from the schema (unlikely) or the "
+        "ENFORCED_LIMIT_MARKER derivation itself is broken. A guard that finds "
+        "zero subjects must fail loudly, never pass vacuously."
+    )
+
+    missing_probes = sorted(set(derived) - set(_FOUR_LEG_PROBES))
+    assert not missing_probes, (
+        f"{missing_probes} carries Field(json_schema_extra={{'enforced_limit': True}}) "
+        "but has no entry in _FOUR_LEG_PROBES above — add one covering all four "
+        "legs (enforced / disclosed own-units / disclosed overlay / settable) "
+        "before this can pass."
+    )
+    stale_probes = sorted(set(_FOUR_LEG_PROBES) - set(derived))
+    assert not stale_probes, (
+        f"{stale_probes} has a probe in _FOUR_LEG_PROBES but is no longer marked "
+        "enforced_limit on Mandate — delete the probe or restore the marker."
+    )
+
+    store = MandateStore()
+    for field_name in derived:
+        _FOUR_LEG_PROBES[field_name](base_mandate, store)
+
+
+# ── DEF191 acceptance 4: catching a field that forgot the marker entirely ──
+
+
+def _is_numeric_annotation(annotation: object) -> bool:
+    """True for `int`, `float`, `Optional[int|float]`, and numeric `Literal`s
+    — the shapes an enforced-limit field is plausibly declared with."""
+    import types
+    from typing import Literal, Union, get_args, get_origin
+
+    if annotation in (int, float):
+        return True
+    origin = get_origin(annotation)
+    if origin in (Union, types.UnionType):
+        return any(_is_numeric_annotation(a) for a in get_args(annotation) if a is not type(None))
+    if origin is Literal:
+        return all(isinstance(v, (int, float)) for v in get_args(annotation))
+    return False
+
+
+# Numeric Mandate fields that are NOT enforced limits — resolver inputs
+# (risk_score), bookkeeping (version), or entitlement state stamped
+# server-side (credit_balance/credit_allowance/room_cost — the latter three
+# already client-unwritable per CLIENT_UNWRITABLE_MANDATE_FIELDS). A new
+# numeric field belongs here ONLY with a reason it is not a limit.
+_NON_LIMIT_NUMERIC_FIELDS = frozenset({"version", "risk_score", "credit_balance", "credit_allowance", "room_cost"})
+
+# Files where an enforced limit's business logic actually reads
+# `mandate.<field>` — enforcement (safety_floor, sector_allocation),
+# disclosure (overlay_generator), the Room LLM-facing prompt builder, the
+# backfill migration, and the mandate API's resolved-caps stamping. Not
+# exhaustive by construction — see the test docstring below for what this
+# cross-check does and does not prove.
+_ENFORCEMENT_ADJACENT_SOURCE_FILES = (
+    "app/agents/safety_floor.py",
+    "app/agents/overlay_generator.py",
+    "app/services/sector_allocation.py",
+    "app/services/room_runner.py",
+    "app/services/room_prompts.py",
+    "app/services/risk_limit_backfill.py",
+    "app/api/mandate.py",
+)
+
+
+def test_no_unmarked_numeric_field_is_referenced_by_enforcement_code():
+    """DEF191 acceptance 4 — the harder half of the guard: catching a
+    developer who wires up enforcement/disclosure for a NEW numeric Mandate
+    field but never adds `Field(json_schema_extra={"enforced_limit": True})`
+    at all, so `enforced_limit_field_names()` never sees it and the four-leg
+    guard above silently never runs for it.
+
+    This is a HEURISTIC cross-check, not a closed proof: it greps the known
+    enforcement/disclosure/prompt call sites for a literal `mandate.<field>`
+    attribute read and fails if an unmarked, non-exempt numeric field shows
+    up there. Stated explicitly, per the DEF191 row's acceptance 4: this does
+    NOT catch a field wired through a mechanism that never spells
+    `mandate.<name>` in one of the listed files — e.g. threaded through
+    `mandate.model_dump()` and read by key, aliased to a local variable
+    before use, or enforced from a file not in
+    `_ENFORCEMENT_ADJACENT_SOURCE_FILES`. The class this DOES catch — by far
+    the common case, since every existing enforced limit is read this exact
+    way — is a developer implementing the (a)/(c) legs in the usual places
+    and forgetting the marker. The class it disclaims is a developer who
+    forgets BOTH the marker and reads the field unconventionally; no
+    mechanism here claims to close that."""
+    marked = set(enforced_limit_field_names())
+    numeric_fields = {
+        name
+        for name, field in Mandate.model_fields.items()
+        if _is_numeric_annotation(field.annotation) and name not in _NON_LIMIT_NUMERIC_FIELDS
+    }
+    unmarked = numeric_fields - marked
+
+    backend_root = Path(__file__).resolve().parents[2]  # backend/tests/unit/ -> backend/
+    offenders: dict[str, list[str]] = {}
+    for rel_path in _ENFORCEMENT_ADJACENT_SOURCE_FILES:
+        src = (backend_root / rel_path).read_text()
+        for field_name in unmarked:
+            if re.search(rf"mandate\.{re.escape(field_name)}\b", src):
+                offenders.setdefault(field_name, []).append(rel_path)
+
+    assert not offenders, (
+        f"unmarked numeric Mandate field(s) referenced by enforcement-adjacent "
+        f"code: {offenders} — add Field(json_schema_extra={{'enforced_limit': "
+        f"True}}) to declare it an enforced limit (and a probe in "
+        f"_FOUR_LEG_PROBES above), or add it to _NON_LIMIT_NUMERIC_FIELDS with "
+        f"a reason if it genuinely isn't one."
+    )
