@@ -102,5 +102,5 @@ invisible at once (**DEF175**).
 **If you can measure that an instruction here is wrong, stop and disclose with the measurement.**
 Three of the Architect's rulings were overturned that way on CR101 and each was the cheap outcome.
 
-ASSIGNED: coder.api round 1
+ASSIGNED: coder.api round 2
 DISPATCH: OPEN

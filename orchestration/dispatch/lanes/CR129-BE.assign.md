@@ -73,4 +73,4 @@ that is never pushed leaves the auditor nothing to fetch.
 Three of the Architect's rulings were overturned that way on CR101 and each was the cheap outcome.
 
 ASSIGNED: coder.api round 1
-DISPATCH: OPEN
+DISPATCH: ACCEPTED

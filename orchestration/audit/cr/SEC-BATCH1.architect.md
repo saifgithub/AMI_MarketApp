@@ -7,7 +7,7 @@ per the source review; a wrong fix here is worse than no fix, because it reads a
 
 # SEC-BATCH1 — audit lane (8 security defects, one lane)
 
-SUBMITTED: round 1
+SUBMITTED: round 2
 
 **Item:** close the internet-reachable and unauthenticated holes from `docs/governance/security_review_2026-07-29.md` (umbrella CR123): DEF176, DEF177, DEF180, DEF181, DEF183, DEF184, DEF185, DEF186.
 
@@ -59,3 +59,28 @@ The exploit: attacker authenticates with their OWN valid identity token, but sup
 - **`/promote-to-alpha`'s `AMI_ENV` forwarding not independently checked** — see DEF185 note above.
 - **The full-suite run after the rebase onto `origin/main` @ `e961dfd1` was still in progress when this file was written** — final pass/fail count to follow in a round-1 addendum if it differs from the pre-rebase 1702-passed/3-pre-existing-failures result already reported in the hand-off.
 - **DEF183 and DEF186 are partial by design**, disclosed above and in the hand-off — not something the auditor needs to independently discover, but should independently judge whether the disclosed scope is the right call.
+
+---
+
+## Round 2 — `69896836`
+
+Round-1 MAJOR M1 closed by the **Architect directly** (small, test-only, two lines;
+the fix shape was fully specified in the verdict). No builder relaunch.
+
+`test_def183_oidc_blocking_dos.py` now uses a `yield` fixture with `try/finally`
+that restores `auth_service._service = None`, mirroring
+`test_def176_account_takeover.py::_swap_verifiers`.
+
+**Verified, not asserted:**
+- Reproduced the auditor's exact ordering case — `pytest test_def183_oidc_blocking_dos.py
+  test_auth_phase1_5_audit_fixes.py` (polluter FIRST) → **23 passed**.
+- **Mutation:** removed only the `try/finally` restore, kept everything else →
+  reproduces the auditor's failure exactly, `test_apple_endpoint_rejects_unverifiable_token`,
+  **1 failed / 22 passed**. Restored → re-green 23.
+
+Nothing else in the lane changed. The eight fixes the round-1 verdict already
+cleared are untouched — the diff `9c8caccd..69896836` is one test file.
+
+Note for round 2: `main` has moved on considerably (CR129-BE and MOBILE-BATCH1
+both integrated; backend suite on `main` is now **1691 passed**). The lane branch
+has not been rebased onto that.

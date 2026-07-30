@@ -62,4 +62,4 @@ New files: `test_def176_account_takeover.py`, `test_def177_llm_proxy_auth.py`, `
 
 **Auditor:** independent (GATE: independent per the assign — two of these were proven exploitable live from the public internet).
 
-STATUS: READY_FOR_AUDIT (round 1)
+STATUS: READY_FOR_AUDIT (round 2)
