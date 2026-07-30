@@ -48,21 +48,21 @@ prediction markets.
 
 ## The modes
 
-### 1. Duels — one-versus-one
+### 1. Duels — one-versus-one · **PROMOTED OUT OF THIS ROADMAP**
 
-**Cost: S.** Challenge a player to a head-to-head over one run; higher TWR wins. Match by
-title, or accept a random opponent.
+**Now slice 3b in [`implementation_plan.md`](implementation_plan.md); designed in
+[`CR109.md`](CR109.md) §11.1.** Saiful: *"I really like the Dual….. how can we bring it back?"*
 
-Mechanically **a duel is just a two-person field** over machinery the MVP already builds, which
-is what makes it the cheapest real rivalry available. What it needs beyond that: an
-invite/accept flow, a duel record on the career surface (W–L against named opponents), and a
-decision on whether duel results feed career points or sit in their own ledger.
+Kept here only as a pointer, because the reasoning matters for how the rest of this list is
+ordered: **a duel needs two players and the open board needs eight.** At alpha every field is below
+the placement threshold, so the flagship competitive surface is inert exactly when the product most
+needs players to feel something — and the duel is the only competitive format that still works.
+That inverts its position: it is not a post-MVP luxury, it is the fix for the thin-field problem.
 
-The reason it is first on this list: it creates the thing the MVP most conspicuously lacks — a
-specific reason to open the app on a Sunday night. An open field of 400 strangers does not
-produce that; one named opponent who is 0.4% ahead of you does.
-
-Explicitly excluded from MVP by Saiful (*"no duals"*).
+Two constraints carried into the design: head-to-head scoring must be carved out of the placement
+curve (at `n = 2`, `p` is exactly 1.0 or 0.0) and out of the benchmark path (`n = 2` is intended,
+not a shortfall); and **MVP duels are auto-matched only**, because anonymous-first onboarding makes
+alt accounts nearly free and direct challenge would be a trivial collusion farm.
 
 ### 2. Rivals — pin up to three
 

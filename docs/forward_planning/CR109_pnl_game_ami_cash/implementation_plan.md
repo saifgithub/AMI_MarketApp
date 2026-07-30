@@ -105,6 +105,28 @@ below zero; scoring is idempotent across a restart.
 
 `DARK`: placement, the field board, titles, cosmetics.
 
+### Slice 3b — duels · **the competition that works at alpha**
+
+Added after Saiful asked for duels back (§11.1 of the design). Sequenced **before** the open board,
+not after, because a duel needs two players and the board needs eight — at alpha the duel is the
+only competitive format that functions.
+
+- `game_fields.kind = duel`, `entrant_count = 2` — reuses the field/entry machinery from slices 2–3
+- **auto-matching only**: a queue, paired on cadence, never opponent-chosen
+- head-to-head scoring, explicitly carved out of both the placement curve and the benchmark path
+- duel record (W–L) on the Record surface + a fixed career-point delta by cadence
+- Flutter: "find me an opponent", the duel board (two rows), the duel Close
+
+**Acceptance:** a duel never reaches the placement formula (at `n = 2`, `p` is exactly 1.0 or 0.0,
+which would pay the maximum in the game); a duel never routes to the benchmark path either, because
+`n = 2` is intended here rather than a shortfall; a player cannot select their opponent; a forfeited
+duel counts as a loss, not a void.
+
+**Fence — do not build challenge-by-handle in this slice.** Onboarding is anonymous-first, so alt
+accounts are nearly free; direct challenge plus cheap accounts is a trivial collusion farm (make an
+alt, throw the duel, bank the win). Auto-matching closes it structurally. If challenge-a-friend is
+added later it must either award no career points or be capped per period.
+
 ### Slice 4 — the field · **turns on at scale**
 
 Everything that needs players to exist. Build when fields regularly clear `n ≥ 8`.
