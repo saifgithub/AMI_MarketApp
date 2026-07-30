@@ -49,14 +49,35 @@ def app() -> FastAPI:
     return a
 
 
-@pytest.mark.asyncio
-async def test_slow_oidc_verify_does_not_stall_concurrent_requests(app: FastAPI, monkeypatch):
+@pytest.fixture
+def slow_auth_singleton():
+    """Swap the AuthService singleton for one with a deliberately slow verifier,
+    and RESTORE it afterwards.
+
+    The restore is the point (SEC-BATCH1 auditor M1). `conftest.py`'s singleton
+    reset does not cover `auth_service._service`, and `_SlowVerifier` accepts ANY
+    token and returns a fixed `sub` — so leaking it makes every later test that
+    posts to `/v1/auth/apple` receive a fake 200. The suite was green only because
+    alphabetical file order happens to run the victim before this file; a future
+    `test_sec_*.py` would land after it and get a silent false PASS in the auth
+    suite. Mirrors `test_def176_account_takeover.py::_swap_verifiers`.
+    """
     import app.services.auth_service as svc
-    from app.services.auth_service import get_auth_service
 
     svc._service = None
     slow = AuthService(apple_verifier=_SlowVerifier(delay=1.5))
     svc._service = slow
+    try:
+        yield slow
+    finally:
+        svc._service = None
+
+
+@pytest.mark.asyncio
+async def test_slow_oidc_verify_does_not_stall_concurrent_requests(
+    app: FastAPI, monkeypatch, slow_auth_singleton
+):
+    slow = slow_auth_singleton
     monkeypatch.setattr("app.api.auth.get_auth_service", lambda: slow)
 
     transport = httpx.ASGITransport(app=app)
