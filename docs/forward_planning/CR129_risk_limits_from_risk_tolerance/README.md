@@ -121,39 +121,62 @@ not by a new measurement.** Say so in the commit; do not present it as a bug tha
 **CR101** (built the fields), **DEF187** (closed by this CR's decision), **DEF193** (blocks the
 mobile half), **DEF102** / **DEF117** (the curriculum this makes true), **CR040**, **CR046**.
 
-## Proposed preset tables — awaiting Saiful's confirmation
+## Preset tables — grounded in the curriculum + published behavioural-finance data
 
-Derived from the anchors that exist, not invented. `max_drawdown_pct` shown at its default of 30;
-the open-risk column is **per-user**, computed from the drawdown the user themselves stated.
+Saiful, 2026-07-30: *"use our lessons as guidance for these numbers. And then search the web for
+similar behavioural investments data and let's set it that way."* Both done. **An earlier draft of
+this doc claimed the curriculum states no numbers — that was wrong**, the greps were bad. Lesson
+**047 Revenge trading** specifies a 60-minute tilt window and a 2-hour cooldown example; **014
+Position sizing** teaches 1% risk per trade; **017 Portfolio exposure** works the 5 × 1% = 5%
+correlated-cluster example; **018 Drawdown management** uses a 15% mandated ceiling.
 
-| risk | max open positions | post-loss cooldown | trades/day | trades/week | total open risk |
-|---|---|---|---|---|---|
-| 1 | 65 | 2h | 10 | 40 | 25% of drawdown (7.5%) |
-| 2 | 65 | 1h | 15 | 60 | 30% of drawdown (9.0%) |
-| 3 | 35 | 1h | 20 | 80 | 35% of drawdown (10.5%) |
-| 4 | 30 | 0.5h | 30 | 120 | 45% of drawdown (13.5%) |
-| 5 | 30 | 0h | 50 | 200 | 50% of drawdown (15.0%) |
+| risk | max positions | cooldown | trades/day | trades/week | total open risk | names reachable |
+|---|---|---|---|---|---|---|
+| 1 | 65 | 4h | 2 | 6 | 25% of drawdown (7.5%) | 50 |
+| 2 | 65 | 2h | 3 | 9 | 30% of drawdown (9.0%) | 60 |
+| 3 | 35 | 1h | 4 | 12 | 35% of drawdown (10.5%) | 35 |
+| 4 | 30 | 1h | 5 | 15 | 45% of drawdown (13.5%) | 30 |
+| 5 | 30 | 0.5h | 6 | 20 | 50% of drawdown (15.0%) | 30 |
 
-Rules behind each column:
+### Sourcing, per column
 
-1. **Max open positions** — `max(30, names needed to deploy fully at your per-name cap)`. Declines
-   only because a bigger per-name cap needs fewer names. Never forces concentration (see above).
-2. **Total open risk** — a fraction of the drawdown *the user said they could stomach*, so a
-   simultaneous stop-cascade costs part of that budget rather than all of it. The only one of the
-   five with a genuine user-stated anchor.
-3. **Post-loss cooldown** — interrupts a tilt sequence inside one session. **The clock is real
-   wall-clock** (`last_loss_closed_at + timedelta(hours=…)`), so an aggressive number locks a user
-   out of a *learning app* for real days. An earlier draft proposed 48h at risk 1; that was wrong.
-4. **Trade pace** — catches bursts, never throttles deliberate practice. Sanity metric: days to
-   accumulate 30 trade outcomes — 5.2 at risk 1 down to 1.1 at risk 5. An earlier draft's 3/week
-   meant **10 weeks** for a beginner to see 30 outcomes, which inverts the product's purpose.
+1. **Max open positions** — `max(30, names needed to deploy fully at your per-name cap)`.
+   The floor of 30 is the evidence: Evans & Archer (1968) put the old rule at 8-10; the modern range
+   is ~20-40 with 30-50 the usual "past here it stops helping" band; Raju (2021) needs 40-50 names
+   for a 90% cut in idiosyncratic risk. **Never below 30 for any profile** — diversification is not
+   what a user trades away for return.
+2. **Total open risk** — a fraction of the drawdown *the user stated*, so it is per-user rather than
+   a constant. Consistent with lesson 017's teaching that N correlated positions at 1% each carry N%
+   of real risk.
+3. **Cooldown** — anchored on lesson 047's own 60-minute tilt window, scaled 30min-4h. **No profile
+   defaults to zero**: the cortisol/prefrontal response to a loss is universal, not a beginner trait,
+   and the cooldown is the cheapest intervention in the literature.
+4. **Trade pace** — the strongest evidence of the four. Barber & Odean (66,465 households,
+   1991-1996): most-active **11.4%**/yr vs least-active **18.5%**, market 17.9% — before costs both
+   groups picked about equally well, so the whole gap was activity. Taiwan (1992-2006): **<1%** of
+   day traders reliably profitable, **>80%** losing in a typical half-year, **15%** still active
+   after three years. These caps catch a *burst* (lesson 047's tilt spiral), and even risk 5 sits
+   far below day-trading frequency **on purpose** — a simulator that permits 50 trades/day trains
+   the single most reliably wealth-destroying retail behaviour on record.
 
-**Binding order at a 10% stop** (measured): open-risk binds first for risk 1–2, position count for
-risk 3–5. Names actually reachable after both apply: 50 / 60 / 35 / 30 / 30 — all ≥ the
-diversification floor.
+### The tension, stated rather than hidden
 
-**Calibration stance, stated so it is not mistaken for sloppiness:** these are deliberately looser
-than a real-money risk framework. CR101's own L3 rationale governs — *in a simulation-only trainer
-the blow-up IS the lesson*. These limits are teaching instruments that should bite when a user is
-genuinely over-extended and stay out of the way otherwise; a limit that fires constantly trains
-users to resent it, and one that never fires teaches nothing.
+These limits are **looser than the evidence would justify for real money**. At 75% average annual
+turnover the Barber-Odean households were already over-trading, and this table permits well beyond
+that. Deliberate: CR101's L3 rationale is that in a simulation-only trainer the blow-up IS the
+lesson, and a learner cannot learn from trades they were never allowed to place. Days to accumulate
+30 trade outcomes: 35 / 23 / 17.5 / 14 / 10.5 — slow enough to discourage churn, fast enough to
+learn. The lesson below carries the rest of the teaching.
+
+### Companion lesson — required, not optional
+
+`content/lessons/365_your_risk_limits_in_ami.en.mdx` — **"Your risk limits, and why they sit where
+they do."** Saiful: *"create at least one lesson that explains this all to the user specifically for
+Ami trade settings so that the user understands."* Explains all seven limits, why max-positions is
+not a risk dial, that open risk is exposure × stop distance (not exposure), and that loosening a
+limit the first time it binds is the trap. Carries `sources:` in frontmatter (internal-only
+provenance per the BOK rule). **`retranslate:[ar,ms]`** — AR/MS versions owed.
+
+**Content follow-up owed:** lesson 047 currently says the cooldown is *"tracked in the Decision
+Journal, not enforced by the app."* CR129 makes that false — it becomes enforced. That line must
+change in the same release, and it also carries `retranslate:[ar,ms]`.
