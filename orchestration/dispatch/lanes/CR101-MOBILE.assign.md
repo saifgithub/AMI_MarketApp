@@ -129,4 +129,5 @@ not verify (finger-on-glass behaviour is a legitimate NEEDS-DEVICE-CHECK), and d
 judgment call rather than letting the auditor find it.
 
 ASSIGNED: coder.mobile round 1
-DISPATCH: OPEN
+DISPATCH: ACCEPTED
+
