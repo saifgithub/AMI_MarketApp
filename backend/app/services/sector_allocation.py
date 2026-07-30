@@ -217,11 +217,21 @@ def sector_cap_breach(
     current = _sector_values(holdings, quotes, resolver)
     projected_sector_val = current.get(proposed_sector, 0.0) + proposed_value
     # Guard a stale/short portfolio_value: the total can never be less than what the
-    # post-trade portfolio demonstrably holds, or the weight reads above 1.0.
-    projected_total = max(
-        float(portfolio_value or 0.0),
-        sum(current.values()) + proposed_value,
-    )
+    # post-trade portfolio demonstrably holds, or the weight reads above 1.0. DEF165:
+    # this fallback re-adopts the pre-DEF149 invested-only denominator whenever
+    # portfolio_value understates the trade, so taking it must be loud, not silent.
+    supplied_total = float(portfolio_value or 0.0)
+    holdings_total = sum(current.values()) + proposed_value
+    fallback_taken = holdings_total > supplied_total
+    projected_total = holdings_total if fallback_taken else supplied_total
+    if fallback_taken:
+        logger.warning(
+            "sector_cap_stale_portfolio_value_fallback",
+            ticker=str(proposed_ticker).upper().strip(),
+            sector=proposed_sector,
+            supplied_portfolio_value=supplied_total,
+            holdings_derived_total=holdings_total,
+        )
     if projected_total <= 0:
         return None
     weight = projected_sector_val / projected_total

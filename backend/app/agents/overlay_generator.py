@@ -93,8 +93,7 @@ points to portfolio drawdown (e.g. 5% size, 20% stop → 1.0 pt, i.e. 1/30th of 
 one name — the SAME ceiling the Portfolio Manager clamps every trade to (CR101).
 - Sector-concentration cap: {_sector_cap_pct(mandate)}% of portfolio in any one \
 GICS sector — the SAME ceiling the safety floor blocks a proposed BUY against.
-- Post-loss cooldown: {_cooldown_text(mandate)} — enforced as a hard block on the \
-next BUY, not a suggestion.
+- Post-loss cooldown: {_cooldown_text(mandate)}
 - Max open positions: {_max_open_positions_text(mandate)} — a ceiling on distinct \
 tickers held concurrently; adding to an existing holding doesn't count against it.
 - Trading pace cap: {_max_trades_per_day_text(mandate)} per day, \
@@ -538,13 +537,26 @@ def _sector_cap_pct(mandate: Mandate) -> float:
 # narrating "not set". "Off" is still expressible (a `0` cooldown, a very high
 # count, a `100%` open-risk cap) but is now an explicit override, not the
 # unset-field state.
+#
+# DEF196: `0` does NOT mean the same thing on all seven of these settable caps.
+# On single_name_cap_pct, sector_cap_pct, max_open_positions, max_trades_per_day,
+# max_trades_per_week and max_open_risk_pct, `0` binds as "block everything" — the
+# cap is a ceiling and zero leaves no room under it. `post_loss_cooldown_hours` is
+# the one exception: `0` is a zero-HOUR wait, i.e. a no-op — the cooldown simply
+# never engages. Do not read a `0` cooldown as "disabled vs. blocking"; it is
+# neither, it is an instantaneous cooldown.
 
 
 def _cooldown_text(m: Mandate) -> str:
+    """DEF196: the "off" state and the "enforced as a hard block" mechanism
+    sentence must never land in the same line — a static suffix that assumed the
+    cooldown is always active read as a self-contradicting instruction on every
+    `0`-hour override, which CR129 made an explicit, common state. The mechanism
+    clause now lives ONLY on the branch where the cooldown actually runs."""
     hours = resolved_post_loss_cooldown_hours(m.risk_score, m.post_loss_cooldown_hours)
     if hours <= 0:
-        return "off (no cooldown enforced)"
-    return f"{hours}h after a stop-out"
+        return "off (no cooldown enforced) — 0 is a no-op here, not a block (unlike the other size/pace caps below)"
+    return f"{hours}h after a stop-out — enforced as a hard block on the next BUY, not a suggestion."
 
 
 def _max_open_positions_text(m: Mandate) -> str:

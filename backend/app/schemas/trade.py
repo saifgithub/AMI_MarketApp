@@ -101,3 +101,8 @@ class ComplianceResult(BaseModel):
     # UNKNOWN disclosure ("AMI hasn't classified this name") travels even when the
     # trade succeeds. Empty when neither flag is on.
     classification_verdicts: list[ClassificationVerdict] = Field(default_factory=list)
+    # DEF169: checks that COULD NOT run (e.g. the single-name cap when
+    # portfolio_value <= 0) — distinct from `violations`. A skipped check must
+    # never collapse into either "blocked" or a silent "passed"; the caller reads
+    # this list to tell "checked and clear" apart from "could not check" (CR040).
+    not_evaluated: list[str] = Field(default_factory=list)

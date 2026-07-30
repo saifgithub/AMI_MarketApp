@@ -251,6 +251,7 @@ def check_mandate_compliance(
         `max_open_risk_pct`.
     """
     violations: list[str] = []
+    not_evaluated: list[str] = []
     blocked_by: str | None = None
     sharia_verdict: ShariaVerdict | None = None
     classification_verdicts: list[ClassificationVerdict] = []
@@ -361,14 +362,28 @@ def check_mandate_compliance(
             quoted=bool((quotes or {}).get(t)),
         )
 
-    if portfolio_value > 0 and proposed.is_buy and proposed_value > 0:
-        cap_single_name = single_name_cap_pct(mandate)
-        position_pct = _position_pct(proposed_value, portfolio_value)
-        if position_pct > cap_single_name:
-            violations.append(
-                f"position size {position_pct:.1f}% exceeds single-name cap {cap_single_name}%"
+    if proposed.is_buy and proposed_value > 0:
+        if portfolio_value > 0:
+            cap_single_name = single_name_cap_pct(mandate)
+            position_pct = _position_pct(proposed_value, portfolio_value)
+            if position_pct > cap_single_name:
+                violations.append(
+                    f"position size {position_pct:.1f}% exceeds single-name cap {cap_single_name}%"
+                )
+                blocked_by = blocked_by or "concentration"
+        else:
+            # DEF169: portfolio_value <= 0 means the cap has nothing to divide
+            # by — the same UNEVALUATED shape as the unpriced-proposal branch
+            # above, not a silent pass. `not_evaluated` (not `violations`) so
+            # the trade is not blocked on a check that never ran.
+            logger.warning(
+                "safety_floor_single_name_cap_unevaluated",
+                ticker=t,
+                portfolio_value=portfolio_value,
             )
-            blocked_by = blocked_by or "concentration"
+            not_evaluated.append(
+                "single-name cap not evaluated — portfolio_value is not positive"
+            )
 
     # 6b) Sector-concentration cap (CR026) — the gap this CR closes. A proposed BUY
     #   that would push its GICS sector over the mandate's sector cap is blocked, the
@@ -541,6 +556,7 @@ def check_mandate_compliance(
         blocked_by=blocked_by,
         sharia_verdict=sharia_verdict,
         classification_verdicts=classification_verdicts,
+        not_evaluated=not_evaluated,
     )
 
 
