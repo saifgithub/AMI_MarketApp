@@ -244,3 +244,53 @@ def test_room_runner_threads_user_id_through_to_overlay(base_mandate: Mandate):
             f"build_room_messages call site #{i + 1} hard-codes "
             f"`user_id=None`. AT:R27 bug regression."
         )
+
+
+# ── DEF129 (mute/promote half) — Concierge must not claim capabilities ────
+# that don't exist: agent mute/promote and briefing scheduling have no
+# backend implementation anywhere (no scheduler, no sender, no mute/promote
+# symbols). Both layers that compose into the live system prompt — the
+# base prompt (content/agents/concierge.md) and the mandate overlay
+# (overlay_generator._concierge_overlay) — must carry an explicit negative,
+# not merely omit the claim, per CR038 (the model re-invents a feature from
+# surrounding product context unless told it is absent).
+
+
+def test_def129_concierge_prompt_makes_no_mute_promote_or_briefing_claim(base_mandate: Mandate):
+    prompt = build_agent_prompt(AgentId.CONCIERGE, base_mandate)
+    lowered = prompt.lower()
+
+    # The old capability claims (a "You DO" bullet offering the feature)
+    # must be gone — not merely reworded.
+    assert "mute / promote agents" not in lowered
+    assert "schedule morning briefings" not in lowered
+    assert "schedule briefings" not in lowered
+
+    # Explicit negative present in its place (CR038: deletion alone lets the
+    # model re-invent the feature from surrounding product context).
+    assert "no such capability anywhere in the app" in lowered
+    assert "no scheduler" in lowered and "no sender" in lowered
+
+    # Positive leg: the guard must not pass on a blank/gutted prompt — the
+    # Concierge still describes its real capabilities.
+    assert prompt
+    assert "search" in lowered and ("lesson" in lowered or "journal" in lowered)
+    assert "route" in lowered
+
+
+# ── DEF188 — no unsubstituted `[[...]]` template placeholder ships live ───
+# SAFETY_FLOOR_BLOCK carries a literal `[[CAP]]` at module scope, substituted
+# only by render_safety_floor_block(). Swept over every agent's full
+# assembled prompt (base + mandate overlay + user overlay + safety floor for
+# the PM) — not just the safety floor module in isolation — so a future
+# call site that reaches for the raw template instead of the renderer is
+# caught structurally.
+
+
+def test_def188_no_assembled_prompt_carries_a_raw_template_placeholder(
+    base_mandate: Mandate, halal_mandate: Mandate, all_agents: tuple[AgentId, ...]
+):
+    for mandate in (base_mandate, halal_mandate):
+        for agent_id in all_agents:
+            prompt = build_agent_prompt(agent_id, mandate)
+            assert "[[" not in prompt, f"raw template leak in {agent_id} prompt: {prompt!r}"

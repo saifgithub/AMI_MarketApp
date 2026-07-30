@@ -293,3 +293,19 @@ def test_single_name_cap_honours_explicit_override(base_mandate: Mandate):
     """CR101-BE1 acceptance 3: an explicit `single_name_cap_pct` overrides the preset."""
     m = base_mandate.model_copy(update={"single_name_cap_pct": 12.5})
     assert single_name_cap_pct(m) == 12.5
+
+
+def test_def188_raw_template_not_exported_from_agents_package():
+    """The raw, unsubstituted SAFETY_FLOOR_BLOCK template (carrying a literal
+    `[[CAP]]`) must not be reachable via `app.agents` — only via
+    `app.agents.safety_floor` directly, or (correctly substituted) via
+    `render_safety_floor_block`. Re-exporting it at the package level made
+    `from app.agents import SAFETY_FLOOR_BLOCK` look like the supported
+    shortcut; it isn't."""
+    import app.agents as agents_pkg
+
+    assert "SAFETY_FLOOR_BLOCK" not in agents_pkg.__all__
+    assert not hasattr(agents_pkg, "SAFETY_FLOOR_BLOCK")
+    # Sanity: the module itself still carries the raw template (it's the
+    # source of truth render_safety_floor_block substitutes from).
+    assert "[[CAP]]" in SAFETY_FLOOR_BLOCK
