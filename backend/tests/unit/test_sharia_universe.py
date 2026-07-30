@@ -7,7 +7,7 @@ junk rows dropped, as-of extracted; a truncated body and a 500 both RAISE; three
 resolution; loud degrade on disable/stale.
 """
 
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import httpx
@@ -266,7 +266,15 @@ def test_f3_async_accessor_does_not_block_the_event_loop():
 
     def slow_fetch():
         _time.sleep(0.3)
-        return frozenset({"AAA"}), date(2026, 7, 22), frozenset({"AAA", "ZZZ"})
+        # DEF192: this returned a LITERAL date(2026, 7, 22). The test asserts a PASS
+        # verdict, but the provider's `staleness_days=7` guard correctly downgrades
+        # anything older than a week to UNAVAILABLE — so the test began failing on
+        # 2026-07-29 and would have stayed red forever, blocking every release
+        # (promotion requires pytest exit 0). The product was right; the test had a
+        # wall-clock expiry baked in. What this test is actually about is the event
+        # loop staying responsive during a slow fetch, so the fetched data just needs
+        # to be FRESH, not any particular day.
+        return frozenset({"AAA"}), date.today() - timedelta(days=1), frozenset({"AAA", "ZZZ"})
 
     provider = ShariaUniverseProvider(
         compliant_url="x", parent_url="y", staleness_days=7, enabled=True,
