@@ -581,6 +581,26 @@ implied: the 3-tap ticket with size chips and stop/target presets, the queue-fir
 gauge, and the one-screen entry fence. Worth its own `coder.mobile` assign rather than riding along
 with the lobby.
 
+### 8.2 The landing surface matures across slices — build it as one stateful screen
+
+§13.3 of the design specifies the game's home as **one screen in three states**, not a lobby. Each
+state lands in a different slice, so build the state machine first and fill it in, rather than
+shipping a lobby in slice 2 and retrofitting:
+
+| State | Ships in | Needs |
+|---|---|---|
+| **B** — a run is live | **slice 2** | the run card; the daily beat lands with slice 3's attribution |
+| **C** — between runs | **slice 3** | there is no "last run" until a close exists |
+| **A** — never entered | **slice 3c** | it *is* the first-run duel against the Index Desk |
+
+Until slice 3c, state A falls back to state C's next-field card — correct, and not a placeholder:
+a new player simply enters the next open weekly field with no duel framing. **`GET
+/v1/games/cadences` already returns everything all three states need** (next field, entry state,
+queue count, whether the user holds one); add the caller's run count and last-closed entry and the
+client can resolve its own state in one call.
+
+**The five-cadence lobby is a separate route, one tap deeper.** Do not make it the landing.
+
 ### 8.1 The funding stages, and what they gate
 
 The slice list above is the **build** order. §17.1 of the design sets the **funding** order, and a
