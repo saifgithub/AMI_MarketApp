@@ -22,9 +22,20 @@
 #   scripts/build_playstore.sh                  # bump + build + show path
 #   scripts/build_playstore.sh --no-bump        # use whatever's in pubspec
 #   scripts/build_playstore.sh --no-commit      # don't auto-commit the bump
+#   scripts/build_playstore.sh --no-billing     # deliberately ship WITHOUT in-app purchase
 #
 # Required env (defaults match the production alpha setup):
 #   AMI_API_URL_ALPHA              - backend URL baked into the build
+#   REVENUECAT_ANDROID_SDK_KEY     - public RC SDK key for Android, `goog_…`
+#                                    (CR084/DEF100). Auto-sourced from
+#                                    infra/alpha.env if not exported. Public by
+#                                    design — safe to embed in a shipped client.
+#
+# BILLING GATE (CR084 / CR040 degrade-loudly): without the SDK key,
+# `BillingConfig.isConfigured` is false and the paywall renders the info state
+# with NO buy button — the app cannot take money. Correct for a dev build, a
+# silent revenue outage for a store build, so this script REFUSES to build
+# without the key unless you pass --no-billing.
 #   GOOGLE_OAUTH_WEB_CLIENT_ID     - GCP OAuth 2.0 Web client_id for Google Sign-In
 #                                    (the same value the backend has in
 #                                     GOOGLE_AUDIENCES env var on melehost)
@@ -52,12 +63,21 @@ MOBILE_DIR="${PROJECT_ROOT}/mobile"
 : "${GOOGLE_OAUTH_WEB_CLIENT_ID:=153141744056-03d6sabmvita0a2civs6e0ngjoac54v7.apps.googleusercontent.com}"
 : "${SENTRY_DSN:=}"
 
+# CR084: source the public RC SDK key from the canonical gitignored env file
+# unless already exported, so there is one place to paste a key, not two.
+if [[ -z "${REVENUECAT_ANDROID_SDK_KEY:-}" && -f "${PROJECT_ROOT}/infra/alpha.env" ]]; then
+  REVENUECAT_ANDROID_SDK_KEY="$(grep -E '^REVENUECAT_ANDROID_SDK_KEY=' "${PROJECT_ROOT}/infra/alpha.env" 2>/dev/null | cut -d= -f2- | tr -d '"'"'"' ' || true)"
+fi
+: "${REVENUECAT_ANDROID_SDK_KEY:=}"
+
 DO_BUMP=1
 DO_COMMIT=1
+DO_BILLING=1
 for arg in "$@"; do
   case "$arg" in
-    --no-bump)   DO_BUMP=0 ;;
-    --no-commit) DO_COMMIT=0 ;;
+    --no-bump)    DO_BUMP=0 ;;
+    --no-commit)  DO_COMMIT=0 ;;
+    --no-billing) DO_BILLING=0 ;;
     -h|--help)
       sed -n '2,/^$/p' "$0"
       exit 0
@@ -105,13 +125,41 @@ if [[ -z "$GOOGLE_OAUTH_WEB_CLIENT_ID" ]]; then
   echo ""
 fi
 
+# CR084 billing gate — fail loudly rather than ship a paywall that cannot charge.
+if [[ "$DO_BILLING" -eq 1 && -z "$REVENUECAT_ANDROID_SDK_KEY" ]]; then
+  cat >&2 <<'EOF'
+✗ REVENUECAT_ANDROID_SDK_KEY is empty — this build could not take a payment.
+
+  BillingConfig.isConfigured would be false, so the paywall renders the
+  info state with no buy button. Nothing crashes and nothing warns; the
+  app simply never sells anything (CR084 / DEF100).
+
+  Fix: add the Android public SDK key to infra/alpha.env —
+
+      REVENUECAT_ANDROID_SDK_KEY=goog_xxxxxxxxxxxxxxxxxxxx
+
+  Get it from RevenueCat → Project Settings → API keys → the *App-specific
+  public* key for the Android app. It starts with `goog_`. Do NOT use the
+  secret `sk_…` key here; that one is backend-only and must never ship in
+  a client.
+
+  If you genuinely want a build with purchasing disabled, re-run with
+  --no-billing and this check will stand down.
+EOF
+  exit 1
+fi
+if [[ "$DO_BILLING" -eq 0 ]]; then
+  echo "⚠ --no-billing: shipping WITHOUT in-app purchase (paywall = info state only)"
+fi
+
 echo "▶ flutter build appbundle  (release, signed if keystore present)"
 cd "$MOBILE_DIR"
 flutter build appbundle --release \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
   --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
   --dart-define=GOOGLE_OAUTH_WEB_CLIENT_ID="${GOOGLE_OAUTH_WEB_CLIENT_ID}" \
-  --dart-define=SENTRY_DSN="${SENTRY_DSN}"
+  --dart-define=SENTRY_DSN="${SENTRY_DSN}" \
+  --dart-define=REVENUECAT_ANDROID_SDK_KEY="${REVENUECAT_ANDROID_SDK_KEY}"
 
 aab="${MOBILE_DIR}/build/app/outputs/bundle/release/app-release.aab"
 if [[ ! -f "$aab" ]]; then
