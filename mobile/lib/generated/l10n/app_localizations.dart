@@ -1312,6 +1312,12 @@ abstract class AppLocalizations {
   /// **'Mandate updated.'**
   String get settingsMandateUpdated;
 
+  /// DEF194 — the mandate PATCH succeeded, but the follow-up retro-tightening breach check (GET /v1/mandate/{id}/audit) failed. Deliberately NOT an error dialog: the save DID succeed, so this must read as 'we could not check', never as 'something went wrong with your save' or 'you are compliant'. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check your holdings against the new limit — open Portfolio to verify.'**
+  String get settingsRetroAuditFailed;
+
   /// No description provided for @settingsSectionMandate.
   ///
   /// In en, this message translates to:
@@ -2333,6 +2339,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cut short by its length limit — open the transcript to read what landed.'**
   String get roomAgentTruncatedMark;
+
+  /// Live roster row status once an agent's turn has completed and a stance was recorded (CR112). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'responded'**
+  String get roomAgentResponded;
+
+  /// DEF174 — accessibility label for a live-roster seat, combining the agent's name and its status (waiting / thinking / responded / interrupted) so a screen reader is told the same thing the pulsing hex avatar shows sighted users.
+  ///
+  /// In en, this message translates to:
+  /// **'{agent}: {status}'**
+  String roomAgentStatusSemantic(String agent, String status);
 
   /// No description provided for @roomDeliberating.
   ///
@@ -3594,6 +3612,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'RE-RUN WITH CURRENT MANDATE'**
   String get journalRerunWithMandate;
+
+  /// DEF198 — AI Coach empty-state hint shown before the user has typed a query (fewer than 2 characters). {count} is AiCoachCorpus.totalCount (lib/models/ai_coach.dart) — a hand-maintained literal until a backend total-entry field exists; see that class's doc for why. This copy was previously a raw, unlocalized Dart string. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count} questions and answers across platform, psychology, scams, AI meta, and beginner / intermediate topics. Type to search.'**
+  String aiCoachEmptyStateHint(int count);
 }
 
 class _AppLocalizationsDelegate

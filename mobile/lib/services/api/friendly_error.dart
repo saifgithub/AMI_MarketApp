@@ -109,14 +109,20 @@ bool isRetryable(Object error) {
       case DioExceptionType.badCertificate:
         return false;
       case DioExceptionType.badResponse:
-        final status = error.response?.statusCode;
-        if (status == null) return true;
-        // 429 is the one 4xx that a later identical request can clear.
-        return status == 429 || status >= 500;
+        return _statusRetryable(error.response?.statusCode);
     }
   }
 
   return true;
+}
+
+/// DEF164 — the one place badResponse retryability is decided. `_forStatus`
+/// below reads this too, so the copy and the retry affordance cannot disagree
+/// about the same status code by construction.
+bool _statusRetryable(int? status) {
+  if (status == null) return true;
+  // 429 is the one 4xx that a later identical request can clear.
+  return status == 429 || status >= 500;
 }
 
 /// The distinctions worth drawing for a person. A 404 and a 503 both mean "no
@@ -137,5 +143,10 @@ String _forStatus(int? status, String lead) {
   if (status >= 500) {
     return '$lead — AMI is temporarily unavailable. Try again in a moment.';
   }
-  return '$lead. Try again.';
+  // DEF164: any other 4xx (422 among them) is not retryable — see
+  // _statusRetryable — so it must not invite the same "Try again" a caller
+  // would read as "resend and it might work".
+  if (_statusRetryable(status)) return '$lead. Try again.';
+  return "$lead — that request wasn't accepted. Check the details before "
+      'trying again.';
 }

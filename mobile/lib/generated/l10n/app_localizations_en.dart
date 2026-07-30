@@ -694,6 +694,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsMandateUpdated => 'Mandate updated.';
 
   @override
+  String get settingsRetroAuditFailed =>
+      'Couldn\'t check your holdings against the new limit — open Portfolio to verify.';
+
+  @override
   String get settingsSectionMandate => 'MY MANDATE';
 
   @override
@@ -1327,6 +1331,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get roomAgentTruncatedMark =>
       'Cut short by its length limit — open the transcript to read what landed.';
+
+  @override
+  String get roomAgentResponded => 'responded';
+
+  @override
+  String roomAgentStatusSemantic(String agent, String status) {
+    return '$agent: $status';
+  }
 
   @override
   String get roomDeliberating => 'Team deliberating…';
@@ -2053,4 +2065,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get journalRerunWithMandate => 'RE-RUN WITH CURRENT MANDATE';
+
+  @override
+  String aiCoachEmptyStateHint(int count) {
+    return '$count questions and answers across platform, psychology, scams, AI meta, and beginner / intermediate topics. Type to search.';
+  }
 }

@@ -129,8 +129,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (!audit.anyRetroBreach || !mounted) return;
       await RetroTighteningDialog.show(context, audit.violationTickers);
     } catch (_) {
-      // Best-effort disclosure — a failed audit read must not block or
-      // misrepresent a save that already succeeded.
+      // DEF194 — the swallow itself stays (a failed audit read must not
+      // block or misrepresent a save that already succeeded), but silence
+      // on this path used to be indistinguishable from "nothing is in
+      // breach": the user tightened a limit specifically to find out
+      // whether it bites, and got the same nothing either way. This is
+      // NOT an error dialog — the save DID succeed, and presenting it as a
+      // failure would be the opposite misrepresentation — just the third,
+      // honest state: "we could not check", visible rather than logged.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content:
+                Text(AppLocalizations.of(context).settingsRetroAuditFailed)),
+      );
     }
   }
 

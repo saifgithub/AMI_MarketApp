@@ -31,7 +31,6 @@ import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/watchlist.dart';
-import 'package:ami_trade/screens/journal/journal_screen.dart';
 import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/models/alpaca.dart';
@@ -97,8 +96,8 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
         final ctx = target.keyTarget?.currentContext;
         if (ctx == null) return;
         final contents = target.contents ?? const [];
-        final tooltipAbove = contents.isNotEmpty &&
-            contents.first.align == ContentAlign.top;
+        final tooltipAbove =
+            contents.isNotEmpty && contents.first.align == ContentAlign.top;
         await Scrollable.ensureVisible(
           ctx,
           duration: const Duration(milliseconds: 350),
@@ -136,7 +135,9 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _Header(key: _headerKey, onTradeTicket: () => TradeTicketSheet.show(context)),
+            _Header(
+                key: _headerKey,
+                onTradeTicket: () => TradeTicketSheet.show(context)),
             Expanded(child: _body(context, state, watchlist)),
           ],
         ),
@@ -181,7 +182,10 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(
-              AmiSpacing.m, AmiSpacing.m, AmiSpacing.m, AmiSpacing.s,
+              AmiSpacing.m,
+              AmiSpacing.m,
+              AmiSpacing.m,
+              AmiSpacing.s,
             ),
             child: _ValueCard(key: _valueCardKey, portfolio: p),
           ),
@@ -220,7 +224,6 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
   }
 }
 
-
 class _Header extends StatelessWidget {
   const _Header({super.key, required this.onTradeTicket});
   final VoidCallback onTradeTicket;
@@ -237,10 +240,12 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           Text(AppLocalizations.of(context).portfolioHeading,
-              style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
+              style:
+                  AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
           const Spacer(),
           IconButton(
-            icon: const Icon(Icons.add_circle_outline, color: AmiColors.hexCyan),
+            icon:
+                const Icon(Icons.add_circle_outline, color: AmiColors.hexCyan),
             tooltip: AppLocalizations.of(context).portfolioNewTradeTooltip,
             onPressed: onTradeTicket,
           ),
@@ -249,7 +254,6 @@ class _Header extends StatelessWidget {
     );
   }
 }
-
 
 class _ValueCard extends StatelessWidget {
   const _ValueCard({super.key, required this.portfolio});
@@ -278,7 +282,8 @@ class _ValueCard extends StatelessWidget {
           Row(
             children: [
               Text(AppLocalizations.of(context).portfolioTotalValue,
-                  style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
+                  style: AmiTypography.labelMono
+                      .copyWith(color: AmiColors.hexCyan)),
               const Spacer(),
               _QuoteSourcePill(portfolio: portfolio),
             ],
@@ -338,7 +343,9 @@ class _ValueCard extends StatelessWidget {
                 portfolio.drawdownPct.toStringAsFixed(1),
               ),
               style: AmiTypography.caption.copyWith(
-                color: portfolio.drawdownPct > 20 ? AmiColors.hexAmber : AmiColors.textLow,
+                color: portfolio.drawdownPct > 20
+                    ? AmiColors.hexAmber
+                    : AmiColors.textLow,
               ),
             ),
           ],
@@ -347,7 +354,6 @@ class _ValueCard extends StatelessWidget {
     );
   }
 }
-
 
 // ── Segmented tab bar (CR120/D1) ────────────────────────────────────────
 //
@@ -381,7 +387,8 @@ class _PortfolioTabBar extends StatelessWidget {
     final l = AppLocalizations.of(context);
     return Container(
       height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m, vertical: 6),
+      padding:
+          const EdgeInsets.symmetric(horizontal: AmiSpacing.m, vertical: 6),
       decoration: const BoxDecoration(
         color: AmiColors.glassChrome,
         border: Border(bottom: BorderSide(color: AmiColors.slate700)),
@@ -395,9 +402,7 @@ class _PortfolioTabBar extends StatelessWidget {
                 label: '${l.portfolioTabPositions} $positionsCount',
                 active: selected == 0,
                 onTap: () => onSelect(0),
-                trailing: hasOpenTrade
-                    ? _LivePip(active: selected == 0)
-                    : null,
+                trailing: hasOpenTrade ? _LivePip(active: selected == 0) : null,
               ),
             ),
             Container(width: 1, height: 32, color: AmiColors.slate700),
@@ -504,7 +509,6 @@ class _LivePip extends StatelessWidget {
   }
 }
 
-
 class _NewTraderHint extends StatelessWidget {
   const _NewTraderHint({required this.onTradeTicket});
   final VoidCallback onTradeTicket;
@@ -521,7 +525,8 @@ class _NewTraderHint extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Icon(Icons.lightbulb_outline, color: AmiColors.hexCyan, size: 32),
+          const Icon(Icons.lightbulb_outline,
+              color: AmiColors.hexCyan, size: 32),
           const SizedBox(height: AmiSpacing.s),
           Text(l.portfolioStartSimTrading, style: AmiTypography.h4),
           const SizedBox(height: AmiSpacing.xs),
@@ -545,7 +550,6 @@ class _NewTraderHint extends StatelessWidget {
     );
   }
 }
-
 
 class _HoldingCard extends StatelessWidget {
   const _HoldingCard({required this.holding});
@@ -572,7 +576,8 @@ class _HoldingCard extends StatelessWidget {
           // instead of m) is what buys back screens at the heavy profile
           // without hiding any content.
           padding: const EdgeInsets.symmetric(
-            horizontal: AmiSpacing.m, vertical: AmiSpacing.s,
+            horizontal: AmiSpacing.m,
+            vertical: AmiSpacing.s,
           ),
           decoration: BoxDecoration(
             color: AmiColors.slate800,
@@ -586,7 +591,8 @@ class _HoldingCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(holding.ticker,
-                        style: AmiTypography.statMid.copyWith(color: AmiColors.textHigh)),
+                        style: AmiTypography.statMid
+                            .copyWith(color: AmiColors.textHigh)),
                     const SizedBox(height: 2),
                     Text(
                       '${holding.quantity.toStringAsFixed(0)} @ \$${fmt.format(holding.avgCost)}',
@@ -606,12 +612,14 @@ class _HoldingCard extends StatelessWidget {
                       '${pnl >= 0 ? '+' : ''}\$${fmt.format(pnl)} '
                       '(${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(2)}%)',
                     ),
-                    style: AmiTypography.labelMono.copyWith(color: accent, fontSize: 11),
+                    style: AmiTypography.labelMono
+                        .copyWith(color: accent, fontSize: 11),
                   ),
                 ],
               ),
               const SizedBox(width: AmiSpacing.s),
-              const Icon(Icons.chevron_right, color: AmiColors.textLow, size: 18),
+              const Icon(Icons.chevron_right,
+                  color: AmiColors.textLow, size: 18),
             ],
           ),
         ),
@@ -619,7 +627,6 @@ class _HoldingCard extends StatelessWidget {
     );
   }
 }
-
 
 /// Tiny indicator next to TOTAL VALUE that tells the user whether marks
 /// are real Yahoo quotes or the deterministic mock walk. Green dot = LIVE,
@@ -643,9 +650,7 @@ class _QuoteSourcePill extends StatelessWidget {
   }
 }
 
-
 // ── Positions tab (holdings + open trades) — CR120 §4.1 ─────────────────
-
 
 class _PositionsTab extends StatelessWidget {
   const _PositionsTab({
@@ -677,8 +682,10 @@ class _PositionsTab extends StatelessWidget {
                   const SizedBox(height: AmiSpacing.s),
                   if (holdings.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s),
-                      child: Text(l.portfolioHoldings, style: AmiTypography.labelMono),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: AmiSpacing.s),
+                      child: Text(l.portfolioHoldings,
+                          style: AmiTypography.labelMono),
                     ),
                 ],
               ],
@@ -696,10 +703,14 @@ class _PositionsTab extends StatelessWidget {
         if (holdings.isNotEmpty || openTrades.isNotEmpty)
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(
-              AmiSpacing.m, AmiSpacing.m, AmiSpacing.m, AmiSpacing.s,
+              AmiSpacing.m,
+              AmiSpacing.m,
+              AmiSpacing.m,
+              AmiSpacing.s,
             ),
             sliver: SliverToBoxAdapter(
-              child: Text(l.portfolioOpenTrades, style: AmiTypography.labelMono),
+              child:
+                  Text(l.portfolioOpenTrades, style: AmiTypography.labelMono),
             ),
           ),
         if (openTrades.isEmpty && (holdings.isNotEmpty))
@@ -707,7 +718,8 @@ class _PositionsTab extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m),
             sliver: SliverToBoxAdapter(
               child: Text(l.portfolioNoOpenPositions,
-                  style: AmiTypography.caption.copyWith(color: AmiColors.textLow)),
+                  style:
+                      AmiTypography.caption.copyWith(color: AmiColors.textLow)),
             ),
           )
         else if (openTrades.isNotEmpty)
@@ -728,9 +740,7 @@ class _PositionsTab extends StatelessWidget {
   }
 }
 
-
 // ── Sector allocation donut (CR100/CR026) — now inside Positions ────────
-
 
 class _SectorAllocationSection extends ConsumerWidget {
   const _SectorAllocationSection();
@@ -739,14 +749,14 @@ class _SectorAllocationSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(sectorAllocationProvider);
     return async.when(
-      data: (a) =>
-          a.allocation.isEmpty ? const SizedBox.shrink() : _SectorAllocationCard(allocation: a),
+      data: (a) => a.allocation.isEmpty
+          ? const SizedBox.shrink()
+          : _SectorAllocationCard(allocation: a),
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
 }
-
 
 class _SectorAllocationCard extends StatelessWidget {
   const _SectorAllocationCard({required this.allocation});
@@ -777,7 +787,8 @@ class _SectorAllocationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.portfolioSectorAllocationHeading, style: AmiTypography.labelMono),
+          Text(l.portfolioSectorAllocationHeading,
+              style: AmiTypography.labelMono),
           const SizedBox(height: AmiSpacing.s),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -812,7 +823,6 @@ class _SectorAllocationCard extends StatelessWidget {
     );
   }
 }
-
 
 /// CR118: the legend used to render every sector inline, so the card's height
 /// was a function of how diversified the portfolio is — the one thing the
@@ -881,14 +891,28 @@ class _SectorLegendState extends State<_SectorLegend> {
     );
 
     if (scrolls) {
-      list = ShaderMask(
-        shaderCallback: (rect) => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.white, Colors.white, Colors.transparent],
-          stops: [0.0, 0.8, 1.0],
-        ).createShader(rect),
-        blendMode: BlendMode.dstIn,
+      // DEF170: the fade means "more below" — it must stop signalling once
+      // there genuinely is nothing below. `hasClients` is false on the very
+      // first build (before the ScrollView attaches), when `scrolls` being
+      // true already means the list starts scrolled-to-top with content
+      // hidden, so falling back to `true` there is correct, not a guess.
+      list = AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final hasMoreBelow =
+              !_controller.hasClients || _controller.position.extentAfter > 0;
+          if (!hasMoreBelow) return child!;
+          return ShaderMask(
+            shaderCallback: (rect) => const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.white, Colors.white, Colors.transparent],
+              stops: [0.0, 0.8, 1.0],
+            ).createShader(rect),
+            blendMode: BlendMode.dstIn,
+            child: child,
+          );
+        },
         child: list,
       );
     }
@@ -900,7 +924,6 @@ class _SectorLegendState extends State<_SectorLegend> {
     );
   }
 }
-
 
 class _SectorLegendRow extends StatelessWidget {
   const _SectorLegendRow({required this.sector, required this.weight});
@@ -941,7 +964,6 @@ class _SectorLegendRow extends StatelessWidget {
   }
 }
 
-
 /// Deterministic sector -> color mapping. "Other" always renders neutral
 /// gray — never the red/amber palette a breach indicator would use, per the
 /// DEF059 inversion guard (the "Other" bucket is disclosed, never a breach).
@@ -964,7 +986,6 @@ Color _sectorColor(String sector) {
   ];
   return palette[sector.hashCode.abs() % palette.length];
 }
-
 
 class _DonutPainter extends CustomPainter {
   const _DonutPainter({required this.entries});
@@ -1001,9 +1022,7 @@ class _DonutPainter extends CustomPainter {
       !identical(oldDelegate.entries, entries);
 }
 
-
 // ── Watchlist tab (A18) — CR120 §6 defect 6: ticker is the loud element ──
-
 
 class _WatchlistTab extends ConsumerWidget {
   const _WatchlistTab({required this.state});
@@ -1017,7 +1036,10 @@ class _WatchlistTab extends ConsumerWidget {
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
-            AmiSpacing.m, AmiSpacing.m, AmiSpacing.m, 0,
+            AmiSpacing.m,
+            AmiSpacing.m,
+            AmiSpacing.m,
+            0,
           ),
           sliver: SliverToBoxAdapter(
             child: Row(
@@ -1026,10 +1048,12 @@ class _WatchlistTab extends ConsumerWidget {
                 const Spacer(),
                 TextButton.icon(
                   onPressed: () => _showAddDialog(context, ref),
-                  icon: const Icon(Icons.add, color: AmiColors.hexCyan, size: 16),
+                  icon:
+                      const Icon(Icons.add, color: AmiColors.hexCyan, size: 16),
                   label: Text(
                     l.watchlistAdd,
-                    style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan),
+                    style: AmiTypography.labelMono
+                        .copyWith(color: AmiColors.hexCyan),
                   ),
                 ),
               ],
@@ -1071,7 +1095,8 @@ class _WatchlistTab extends ConsumerWidget {
         return AlertDialog(
           backgroundColor: AmiColors.slate800,
           title: Text(l.portfolioAddDialogTitle,
-              style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
+              style:
+                  AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
           content: TextField(
             controller: ctrl,
             autofocus: true,
@@ -1106,7 +1131,6 @@ class _WatchlistTab extends ConsumerWidget {
   }
 }
 
-
 class _WatchlistRow extends ConsumerWidget {
   const _WatchlistRow({required this.entry});
   final WatchlistEntry entry;
@@ -1133,7 +1157,8 @@ class _WatchlistRow extends ConsumerWidget {
           borderRadius: BorderRadius.circular(AmiRadii.card),
           child: Container(
             padding: const EdgeInsets.symmetric(
-              horizontal: AmiSpacing.m, vertical: AmiSpacing.s,
+              horizontal: AmiSpacing.m,
+              vertical: AmiSpacing.s,
             ),
             decoration: BoxDecoration(
               color: AmiColors.slate800,
@@ -1149,14 +1174,16 @@ class _WatchlistRow extends ConsumerWidget {
                 SizedBox(
                   width: 72,
                   child: Text(entry.ticker,
-                      style: AmiTypography.statMid.copyWith(color: AmiColors.textHigh)),
+                      style: AmiTypography.statMid
+                          .copyWith(color: AmiColors.textHigh)),
                 ),
                 const SizedBox(width: AmiSpacing.s),
                 Expanded(
                   child: Text(
                     entry.notes ?? '',
                     style: AmiTypography.caption,
-                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Text(priceText, style: AmiTypography.labelMono),
@@ -1168,7 +1195,9 @@ class _WatchlistRow extends ConsumerWidget {
                         '${dayChangePct >= 0 ? '+' : ''}${dayChangePct.toStringAsFixed(1)}%',
                       ),
                       style: AmiTypography.caption.copyWith(
-                        color: dayChangePct >= 0 ? AmiColors.hexGreen : AmiColors.hexRed,
+                        color: dayChangePct >= 0
+                            ? AmiColors.hexGreen
+                            : AmiColors.hexRed,
                       ),
                     ),
                   ),
@@ -1212,7 +1241,6 @@ class _WatchlistRow extends ConsumerWidget {
   }
 }
 
-
 class _WatchlistDeleteBackground extends StatelessWidget {
   const _WatchlistDeleteBackground();
 
@@ -1230,9 +1258,7 @@ class _WatchlistDeleteBackground extends StatelessWidget {
   }
 }
 
-
 // ── History tab (closed trades) — CR120 §3, §4.1, D2, D3, D4 ────────────
-
 
 class _HistoryTab extends ConsumerStatefulWidget {
   const _HistoryTab({required this.closedTrades});
@@ -1292,12 +1318,14 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _ClosedTradeSummary(won: won, lost: lost, hitRate: hitRate, net: net),
+                _ClosedTradeSummary(
+                    won: won, lost: lost, hitRate: hitRate, net: net),
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     l.portfolioClosedScope(closed.length),
-                    style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
+                    style: AmiTypography.caption
+                        .copyWith(color: AmiColors.textLow),
                   ),
                 ),
                 const SizedBox(height: AmiSpacing.m),
@@ -1331,7 +1359,8 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
                   onPressed: () => setState(() => _showAll = true),
                   child: Text(
                     l.portfolioShowAll(closed.length),
-                    style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan),
+                    style: AmiTypography.labelMono
+                        .copyWith(color: AmiColors.hexCyan),
                   ),
                 ),
               ),
@@ -1339,7 +1368,10 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
           ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
-            AmiSpacing.m, AmiSpacing.l, AmiSpacing.m, 0,
+            AmiSpacing.m,
+            AmiSpacing.l,
+            AmiSpacing.m,
+            0,
           ),
           sliver: SliverToBoxAdapter(
             child: _JournalPointer(journal: journal, closedTrades: closed),
@@ -1350,7 +1382,6 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
     );
   }
 }
-
 
 class _ClosedTradeSummary extends StatelessWidget {
   const _ClosedTradeSummary({
@@ -1372,7 +1403,8 @@ class _ClosedTradeSummary extends StatelessWidget {
     final wonFlex = total == 0 ? 1 : won;
     final lostFlex = total == 0 ? 1 : lost;
     final fmt = NumberFormat('#,##0.00');
-    final netText = _isolateNumeric('${net >= 0 ? '+' : ''}\$${fmt.format(net)}');
+    final netText =
+        _isolateNumeric('${net >= 0 ? '+' : ''}\$${fmt.format(net)}');
     return Container(
       padding: const EdgeInsets.all(AmiSpacing.m),
       decoration: BoxDecoration(
@@ -1390,8 +1422,14 @@ class _ClosedTradeSummary extends StatelessWidget {
                 height: 6,
                 child: Row(
                   children: [
-                    if (won > 0) Expanded(flex: wonFlex, child: const ColoredBox(color: AmiColors.hexGreen)),
-                    if (lost > 0) Expanded(flex: lostFlex, child: const ColoredBox(color: AmiColors.hexRed)),
+                    if (won > 0)
+                      Expanded(
+                          flex: wonFlex,
+                          child: const ColoredBox(color: AmiColors.hexGreen)),
+                    if (lost > 0)
+                      Expanded(
+                          flex: lostFlex,
+                          child: const ColoredBox(color: AmiColors.hexRed)),
                   ],
                 ),
               ),
@@ -1403,7 +1441,9 @@ class _ClosedTradeSummary extends StatelessWidget {
             children: [
               _StatLabel(label: l.portfolioStatWon, value: '$won'),
               _StatLabel(label: l.portfolioStatLost, value: '$lost'),
-              _StatLabel(label: l.portfolioStatHitRate, value: '${hitRate.toStringAsFixed(0)}%'),
+              _StatLabel(
+                  label: l.portfolioStatHitRate,
+                  value: '${hitRate.toStringAsFixed(0)}%'),
               _StatLabel(
                 label: l.portfolioStatNet,
                 value: netText,
@@ -1428,15 +1468,15 @@ class _StatLabel extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('$label ', style: AmiTypography.caption.copyWith(color: AmiColors.textLow)),
+        Text('$label ',
+            style: AmiTypography.caption.copyWith(color: AmiColors.textLow)),
         Text(value,
-            style: AmiTypography.labelMono
-                .copyWith(color: valueColor ?? AmiColors.textHigh, fontSize: 11)),
+            style: AmiTypography.labelMono.copyWith(
+                color: valueColor ?? AmiColors.textHigh, fontSize: 11)),
       ],
     );
   }
 }
-
 
 /// CR120 §2/§2.1/D3/D4 — the plan-aware Journal pointer. Branches on
 /// `retentionDays`/`retentionLoaded`, never on plan name, never on a
@@ -1447,14 +1487,14 @@ class _StatLabel extends StatelessWidget {
 ///    caveat line at all.
 ///  * known-finite — states how many of the closed trades the Journal
 ///    will not show, and that nothing is deleted (DEF155).
-class _JournalPointer extends StatelessWidget {
+class _JournalPointer extends ConsumerWidget {
   const _JournalPointer({required this.journal, required this.closedTrades});
 
   final JournalState journal;
   final List<SimTrade> closedTrades;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     String? caveat;
     if (!journal.retentionLoaded) {
@@ -1473,20 +1513,28 @@ class _JournalPointer extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (caveat != null) ...[
-          Text(caveat, style: AmiTypography.caption.copyWith(color: AmiColors.hexAmber)),
+          Text(caveat,
+              style: AmiTypography.caption.copyWith(color: AmiColors.hexAmber)),
           const SizedBox(height: AmiSpacing.xs),
         ],
         InkWell(
-          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-            builder: (_) => const JournalScreen(),
-          )),
+          // DEF190 — this used to push a second, orphaned JournalScreen on
+          // top of HomeShell, which covered the bottom nav (the nav lives in
+          // HomeShell's own Scaffold, below whatever gets pushed on top of
+          // it) and disconnected from whatever state the real Journal tab
+          // held. Switching HomeShell's own tab is what "review in Journal"
+          // should have always meant.
+          onTap: () =>
+              ref.read(activeTabIndexProvider.notifier).state = 2, // Journal
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(l.portfolioReviewInJournal,
-                  style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
+                  style: AmiTypography.labelMono
+                      .copyWith(color: AmiColors.hexCyan)),
               const SizedBox(width: 4),
-              const Icon(Icons.chevron_right, color: AmiColors.hexCyan, size: 16),
+              const Icon(Icons.chevron_right,
+                  color: AmiColors.hexCyan, size: 16),
             ],
           ),
         ),
@@ -1495,9 +1543,7 @@ class _JournalPointer extends StatelessWidget {
   }
 }
 
-
 // ── Alpaca paper portfolio section (AT:R45) ────────────────────────────
-
 
 class _AlpacaPortfolioSection extends ConsumerWidget {
   const _AlpacaPortfolioSection();
@@ -1565,9 +1611,11 @@ class _AlpacaAccountSummary extends ConsumerWidget {
             children: [
               _AlpacaStat(label: 'CASH', value: fmt.format(p.cash)),
               const SizedBox(width: AmiSpacing.m),
-              _AlpacaStat(label: 'PORTFOLIO', value: fmt.format(p.portfolioValue)),
+              _AlpacaStat(
+                  label: 'PORTFOLIO', value: fmt.format(p.portfolioValue)),
               const SizedBox(width: AmiSpacing.m),
-              _AlpacaStat(label: 'BUYING PWR', value: fmt.format(p.buyingPower)),
+              _AlpacaStat(
+                  label: 'BUYING PWR', value: fmt.format(p.buyingPower)),
             ],
           ),
         );
@@ -1587,8 +1635,11 @@ class _AlpacaStat extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: AmiTypography.caption.copyWith(color: AmiColors.slate500)),
-          Text(value, style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh)),
+          Text(label,
+              style: AmiTypography.caption.copyWith(color: AmiColors.slate500)),
+          Text(value,
+              style:
+                  AmiTypography.labelMono.copyWith(color: AmiColors.textHigh)),
         ],
       ),
     );
@@ -1610,7 +1661,8 @@ class _AlpacaPositionsList extends ConsumerWidget {
           );
         }
         return Column(
-          children: positions.map((p) => _AlpacaPositionTile(position: p)).toList(),
+          children:
+              positions.map((p) => _AlpacaPositionTile(position: p)).toList(),
         );
       },
     );
@@ -1634,7 +1686,8 @@ class _AlpacaPositionTile extends StatelessWidget {
           Expanded(
             child: Text(
               position.symbol,
-              style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh),
+              style:
+                  AmiTypography.labelMono.copyWith(color: AmiColors.textHigh),
             ),
           ),
           Text(

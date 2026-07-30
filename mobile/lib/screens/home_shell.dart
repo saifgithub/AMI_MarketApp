@@ -37,6 +37,19 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    // DEF190 — `activeTabIndexProvider` used to be write-only from this
+    // shell's own tap handler below; a screen buried inside a tab (Portfolio
+    // History's "Review in Journal") had no way to actually switch tabs, so
+    // it pushed a second, orphaned JournalScreen on top of the shell instead
+    // — which covers the bottom nav, because the nav lives in THIS Scaffold,
+    // below the pushed route. Listening here makes an external write to the
+    // provider do what the tap handler already does: switch `_tab`. Guarded
+    // on `next != _tab` so the tap handler's own write (which already set
+    // `_tab` directly, synchronously, before this listener next fires) is a
+    // no-op here, not a second rebuild.
+    ref.listen<int>(activeTabIndexProvider, (prev, next) {
+      if (next != _tab) setState(() => _tab = next);
+    });
     return Scaffold(
       backgroundColor: AmiColors.slate900,
       body: IndexedStack(index: _tab, children: _tabs),

@@ -238,7 +238,6 @@ class _ConveneAgainButton extends ConsumerWidget {
   }
 }
 
-
 class _Header extends StatelessWidget {
   const _Header({required this.ticker, required this.phase});
   final String ticker;
@@ -281,12 +280,16 @@ class _Header extends StatelessWidget {
                   children: [
                     Icon(Icons.bolt,
                         size: 12,
-                        color: phase == null ? AmiColors.textLow : AmiColors.hexGreen),
+                        color: phase == null
+                            ? AmiColors.textLow
+                            : AmiColors.hexGreen),
                     const SizedBox(width: 4),
                     Text(
                       phase ?? l.roomStandingBy,
                       style: AmiTypography.caption.copyWith(
-                        color: phase == null ? AmiColors.textLow : AmiColors.hexGreen,
+                        color: phase == null
+                            ? AmiColors.textLow
+                            : AmiColors.hexGreen,
                       ),
                     ),
                   ],
@@ -299,7 +302,6 @@ class _Header extends StatelessWidget {
     );
   }
 }
-
 
 /// CR098 — a locked chair for one tenure-withheld analyst. Renders inline in
 /// `state.order` at the point the `agent_withheld` event arrived (before any
@@ -377,7 +379,6 @@ class _WithheldAgentChair extends StatelessWidget {
   }
 }
 
-
 /// CR112 — the live roster. Replaces both the old pre-order skeleton (B3) and
 /// the growing per-agent prose feed. Fixed at all 12 seats from the first
 /// frame — there is nowhere to scroll to, so unlike the feed it replaces this
@@ -452,6 +453,21 @@ class _AgentStatusRow extends StatelessWidget {
     final truncated =
         responded && hasAmiAnnotation(state.transcript[agent.id] ?? '');
 
+    // DEF174 — thinking (and, via the icon-only `responded` check, the
+    // completed state too) was colour + motion only: a screen reader was
+    // told nothing while the hex avatar pulsed. `roomAgentStatusSemantic`
+    // names both the agent and its status so the same information sighted
+    // users read off the dot/icon/text reaches the accessibility tree.
+    final statusWord = interrupted
+        ? l.roomAgentInterrupted
+        : thinking
+            ? l.roomAgentThinking
+            : responded
+                ? l.roomAgentResponded
+                : l.roomStandingBy;
+    final statusSemanticLabel =
+        l.roomAgentStatusSemantic(agent.displayName, statusWord);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AmiSpacing.s),
       child: Column(
@@ -466,9 +482,8 @@ class _AgentStatusRow extends StatelessWidget {
                   color: agent.color,
                   size: 28,
                   // CR014/D3: the currently-speaking agent pulses (signal).
-                  status: thinking
-                      ? HexAvatarStatus.signal
-                      : HexAvatarStatus.idle,
+                  status:
+                      thinking ? HexAvatarStatus.signal : HexAvatarStatus.idle,
                 ),
               ),
               const SizedBox(width: AmiSpacing.s),
@@ -489,35 +504,50 @@ class _AgentStatusRow extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
               ],
-              if (interrupted)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.error_outline,
-                        color: AmiColors.hexRed, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      l.roomAgentInterrupted,
-                      style: AmiTypography.labelMono
-                          .copyWith(color: AmiColors.hexRed, fontSize: 10),
-                    ),
-                  ],
-                )
-              else if (thinking)
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                      color: agent.color, shape: BoxShape.circle),
-                )
-              else if (responded)
-                const Icon(Icons.check, color: AmiColors.hexGreen, size: 16)
-              else
-                Text(
-                  l.roomStandingBy.toUpperCase(),
-                  style: AmiTypography.labelMono
-                      .copyWith(color: AmiColors.textLow, fontSize: 10),
-                ),
+              // DEF174 — the trailing indicator (a colour-changing dot for
+              // `thinking`, a bare check icon for `responded`) carried no
+              // text a screen reader could read; `waiting`/`interrupted`
+              // already had visible text, but folding all four into one
+              // Semantics node means the next new state can't reopen this
+              // gap by accident. `excludeSemantics` replaces whatever each
+              // branch's own child semantics would say (nothing, for the
+              // dot and the icon) with the one label naming the agent and
+              // its state — scoped to just this indicator so the agent-name
+              // Text above and the headline below stay independently
+              // readable.
+              Semantics(
+                label: statusSemanticLabel,
+                excludeSemantics: true,
+                child: interrupted
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.error_outline,
+                              color: AmiColors.hexRed, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            l.roomAgentInterrupted,
+                            style: AmiTypography.labelMono.copyWith(
+                                color: AmiColors.hexRed, fontSize: 10),
+                          ),
+                        ],
+                      )
+                    : thinking
+                        ? Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                                color: agent.color, shape: BoxShape.circle),
+                          )
+                        : responded
+                            ? const Icon(Icons.check,
+                                color: AmiColors.hexGreen, size: 16)
+                            : Text(
+                                l.roomStandingBy.toUpperCase(),
+                                style: AmiTypography.labelMono.copyWith(
+                                    color: AmiColors.textLow, fontSize: 10),
+                              ),
+              ),
             ],
           ),
           if (responded && stance.recorded) _headline(stance),
@@ -555,7 +585,6 @@ class _AgentStatusRow extends StatelessWidget {
     );
   }
 }
-
 
 /// CR047 "The Winzip" — the soft credit wall, rendered as a warm countdown
 /// instead of a dead paywall. Under the winzip funnel the server has already
@@ -633,7 +662,13 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
       final voices = (await tts.getVoices) as List?;
       if (voices == null) return;
       const preferred = {
-        'samantha', 'karen', 'moira', 'tessa', 'fiona', 'serena', 'aria',
+        'samantha',
+        'karen',
+        'moira',
+        'tessa',
+        'fiona',
+        'serena',
+        'aria',
       };
       for (final v in voices) {
         final m = Map<String, dynamic>.from(v as Map);
@@ -675,7 +710,8 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
   /// CR047 "The Winzip" cooldown countdown — untouched by CR084.
   Widget _buildWinzip(BuildContext context, AppLocalizations l) {
     const accent = AmiColors.hexAmber;
-    final body = _ready ? l.roomWinzipReady : l.roomWinzipBody(_fmt(_remaining));
+    final body =
+        _ready ? l.roomWinzipReady : l.roomWinzipBody(_fmt(_remaining));
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: AmiSpacing.m),
@@ -784,9 +820,8 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
           const SizedBox(height: AmiSpacing.m),
           UpgradePaywall(
             resetDateLabel: _resetDateStr(),
-            onPurchased: () => ref
-                .read(roomNotifierProvider(widget.ticker).notifier)
-                .start(),
+            onPurchased: () =>
+                ref.read(roomNotifierProvider(widget.ticker).notifier).start(),
           ),
           SizedBox(
             width: double.infinity,
@@ -804,7 +839,6 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
     );
   }
 }
-
 
 class _ErrorBanner extends StatelessWidget {
   const _ErrorBanner({required this.message});
@@ -831,7 +865,6 @@ class _ErrorBanner extends StatelessWidget {
     );
   }
 }
-
 
 /// DEF073: friendly card shown when a Room convene hits a 5xx (502/503/504).
 /// Reassures the user it's transient and offers a one-tap Retry (re-runs the
@@ -890,7 +923,6 @@ class _ServerErrorCard extends ConsumerWidget {
     );
   }
 }
-
 
 /// CR090: renders the structural live-data disclosure (`live_data_notice`),
 /// one per run. Now four states, four distinct renderings (D3, extended by
@@ -966,8 +998,7 @@ class _LiveDataNoticeCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AmiSpacing.s),
-          Text(_stateLine(l, 'News', notice.news),
-              style: AmiTypography.body),
+          Text(_stateLine(l, 'News', notice.news), style: AmiTypography.body),
           Text(_stateLine(l, 'Social', notice.social),
               style: AmiTypography.body),
           if (_anyLive) ...[
@@ -1040,7 +1071,6 @@ class _LiveDataNoticeCard extends ConsumerWidget {
   }
 }
 
-
 class _ReconnectingBanner extends StatelessWidget {
   const _ReconnectingBanner();
 
@@ -1077,7 +1107,6 @@ class _ReconnectingBanner extends StatelessWidget {
     );
   }
 }
-
 
 /// The wire enum is rendered raw for every action that is already a readable
 /// English word. `NO_VERDICT` is not — and an unrecognised future value is
@@ -1150,9 +1179,7 @@ class _VerdictCard extends ConsumerWidget {
     final trades = ref.watch(simNotifierProvider).trades;
     final existingTrade = runId == null
         ? null
-        : trades
-            .where((t) => t.verdictRef == runId)
-            .firstOrNull;
+        : trades.where((t) => t.verdictRef == runId).firstOrNull;
     return Container(
       padding: const EdgeInsets.all(AmiSpacing.m),
       decoration: BoxDecoration(
@@ -1182,14 +1209,15 @@ class _VerdictCard extends ConsumerWidget {
               const Spacer(),
               if (verdict.overriddenFromLlm)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: AmiColors.hexAmber.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(l.roomSafetyFloorPill,
-                      style: AmiTypography.labelMono.copyWith(
-                          color: AmiColors.hexAmber, fontSize: 9)),
+                      style: AmiTypography.labelMono
+                          .copyWith(color: AmiColors.hexAmber, fontSize: 9)),
                 ),
               IconButton(
                 tooltip: l.shareTooltip,
@@ -1211,7 +1239,8 @@ class _VerdictCard extends ConsumerWidget {
           ),
           const SizedBox(height: AmiSpacing.m),
           if (isApprove) ...[
-            _MetricRow(label: l.roomMetricTicker, value: ticker, accent: accent),
+            _MetricRow(
+                label: l.roomMetricTicker, value: ticker, accent: accent),
             _MetricRow(
               label: l.roomMetricSize,
               value: verdict.sizePct == null
@@ -1221,17 +1250,23 @@ class _VerdictCard extends ConsumerWidget {
             ),
             _MetricRow(
               label: l.roomMetricEntry,
-              value: verdict.entry == null ? '—' : '\$${verdict.entry!.toStringAsFixed(2)}',
+              value: verdict.entry == null
+                  ? '—'
+                  : '\$${verdict.entry!.toStringAsFixed(2)}',
               accent: accent,
             ),
             _MetricRow(
               label: l.roomMetricStop,
-              value: verdict.stop == null ? '—' : '\$${verdict.stop!.toStringAsFixed(2)}',
+              value: verdict.stop == null
+                  ? '—'
+                  : '\$${verdict.stop!.toStringAsFixed(2)}',
               accent: accent,
             ),
             _MetricRow(
               label: l.roomMetricTarget,
-              value: verdict.target == null ? '—' : '\$${verdict.target!.toStringAsFixed(2)}',
+              value: verdict.target == null
+                  ? '—'
+                  : '\$${verdict.target!.toStringAsFixed(2)}',
               accent: accent,
             ),
             _MetricRow(
@@ -1245,8 +1280,8 @@ class _VerdictCard extends ConsumerWidget {
           ],
           if (verdict.violations.isNotEmpty) ...[
             Text(l.roomViolations,
-                style: AmiTypography.labelMono.copyWith(
-                    fontSize: 11, color: AmiColors.hexAmber)),
+                style: AmiTypography.labelMono
+                    .copyWith(fontSize: 11, color: AmiColors.hexAmber)),
             const SizedBox(height: 4),
             for (final v in verdict.violations)
               Padding(
@@ -1334,7 +1369,8 @@ class _VerdictCard extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.check_circle, color: AmiColors.hexGreen, size: 20),
+                    const Icon(Icons.check_circle,
+                        color: AmiColors.hexGreen, size: 20),
                     const SizedBox(width: AmiSpacing.s),
                     Text(
                       '${existingTrade.side.toUpperCase()} ${existingTrade.quantity.toStringAsFixed(0)} '
@@ -1354,7 +1390,8 @@ class _VerdictCard extends ConsumerWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AmiColors.hexCyan,
                     foregroundColor: AmiColors.slate900,
-                    padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
                   ),
                   icon: const Icon(Icons.add_circle_outline),
                   label: Text(l.roomOpenTradeTicket),
@@ -1402,7 +1439,6 @@ class _VerdictCard extends ConsumerWidget {
     );
   }
 }
-
 
 /// The board's action footer on the LIVE Room: share, the trade ticket when
 /// there is a trade to place, the NO_VERDICT upgrade CTA, and SEE CHART.
@@ -1468,8 +1504,7 @@ class _VerdictActions extends ConsumerWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AmiColors.hexCyan,
                 foregroundColor: AmiColors.slate900,
-                padding:
-                    const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+                padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
               ),
               icon: const Icon(Icons.add_circle_outline),
               label: Text(l.roomOpenTradeTicket),
@@ -1523,8 +1558,7 @@ class _VerdictActions extends ConsumerWidget {
           onPressed: () => ShareService.shareVerdict(
             context,
             ticker: ticker,
-            stanceLabel:
-                l.roomVerdictHeading(_actionLabel(l, verdict.action)),
+            stanceLabel: l.roomVerdictHeading(_actionLabel(l, verdict.action)),
             outcome: outcome,
             reason: verdict.reason,
           ),
@@ -1557,14 +1591,12 @@ class _MetricRow extends StatelessWidget {
                 style: AmiTypography.labelMono
                     .copyWith(fontSize: 11, color: AmiColors.textLow)),
           ),
-          Text(value,
-              style: AmiTypography.statSmall.copyWith(color: accent)),
+          Text(value, style: AmiTypography.statSmall.copyWith(color: accent)),
         ],
       ),
     );
   }
 }
-
 
 class _Footer extends StatelessWidget {
   const _Footer({required this.state});

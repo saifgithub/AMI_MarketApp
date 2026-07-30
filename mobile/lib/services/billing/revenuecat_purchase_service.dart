@@ -16,6 +16,7 @@
 library;
 
 import 'package:ami_trade/services/api/api_client.dart';
+import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/billing/billing_config.dart';
 import 'package:ami_trade/services/billing/purchase_models.dart';
 import 'package:ami_trade/services/billing/purchase_service.dart';
@@ -38,7 +39,8 @@ class RevenueCatPurchaseService implements PurchaseService {
       // Should be guarded by callers, but never configure without a key.
       throw StateError('RevenueCat SDK key not set (DEF100)');
     }
-    await Purchases.configure(PurchasesConfiguration(BillingConfig.publicSdkKey));
+    await Purchases.configure(
+        PurchasesConfiguration(BillingConfig.publicSdkKey));
     // Bind the RC customer to our backend user so the webhook can map the
     // purchase back. app_user_id is authoritative from the backend, not a
     // locally-assumed device id.
@@ -95,7 +97,9 @@ class RevenueCatPurchaseService implements PurchaseService {
     } on PlatformException catch (e) {
       return _mapError(e);
     } catch (e) {
-      return PurchaseOutcome(PurchaseStatus.error, message: e.toString());
+      if (kDebugMode) debugPrint('RevenueCat purchase error: $e');
+      return PurchaseOutcome(PurchaseStatus.error,
+          message: friendlyError(e, action: 'complete this purchase'));
     }
   }
 
@@ -109,7 +113,9 @@ class RevenueCatPurchaseService implements PurchaseService {
     } on PlatformException catch (e) {
       return _mapError(e);
     } catch (e) {
-      return PurchaseOutcome(PurchaseStatus.error, message: e.toString());
+      if (kDebugMode) debugPrint('RevenueCat restore error: $e');
+      return PurchaseOutcome(PurchaseStatus.error,
+          message: friendlyError(e, action: 'restore your purchases'));
     }
   }
 
