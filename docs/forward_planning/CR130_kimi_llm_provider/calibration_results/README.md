@@ -20,6 +20,53 @@ record — everything past "Result" in that section describes the 401 failure,
 not Kimi's actual quality. See the bottom of this file for the corrected
 re-run's results once complete.
 
+## SECOND UPDATE — real root cause: reasoning-token budget, not endpoint or quality
+
+Re-ran against the corrected `api.kimi.com/coding` endpoint (`kimi-for-coding`,
+batch `kimi-calib-forcoding-2026-07-30`). Real calls now happen (200s, no
+auth failures) but 4/5 runs still landed on the PM's `DEF059` fail-safe
+("lost its model connection... reconvene the room") with realistic
+multi-minute durations (186–349s) — a materially different failure from the
+first pass's instant 401s.
+
+**Root cause, confirmed via container logs + isolated curl tests:** every
+agent call hit `llm_call_length_stop` with `chars: 0` — the model spent its
+**entire** `max_tokens` budget (600–900, varies by agent role) on invisible
+`reasoning_content` and never emitted a single visible `content` character.
+This is not a connection issue and not a Kimi quality issue — it's Kimi's
+Coding Plan models being genuine reasoning models whose chain-of-thought
+consumes the same token budget as the final answer, and this codebase's
+per-agent budgets (tuned for non-reasoning providers) are too small to leave
+room for both.
+
+Isolated with direct curl tests (bypassing the app, same prompt complexity as
+a real PM call — 374 prompt tokens):
+
+| max_tokens | reasoning_effort | reasoning_tokens | content | finish_reason |
+|---|---|---|---|---|
+| 600 (trivial prompt) | — | 388 | real, 921 chars | stop |
+| 900 (realistic PM prompt) | — | 899 (all of it) | **empty** | length |
+| 900 (realistic PM prompt) | `low` | 899 (all of it) | **empty** | length — `reasoning_effort` did not help |
+| 4000 (realistic PM prompt) | — | 1,207 | **real, 643 chars, clean JSON verdict** | stop |
+
+`reasoning_effort: "low"` did not measurably reduce reasoning length in this
+test — not a usable lever here, at least not with that value. The fix that
+actually works is simply a larger `max_tokens` ceiling for this provider —
+roughly 1,200+ tokens of reasoning overhead on top of whatever content
+budget an agent role needs, so ~2,000–4,000 depending on role, vs. the
+current 600–900.
+
+**Not yet fixed in code** — this needs either a per-provider `max_tokens`
+override (Kimi/reasoning-style providers get a higher ceiling, vLLM/Anthropic
+keep their current tuned values) or some other mechanism; `room_runner.py`
+currently hardcodes shared per-agent-role budgets with no provider
+awareness. Left as an open item pending Saiful's call on whether to invest
+in it now. The other 3 Coding Plan model variants (`kimi-for-coding-highspeed`,
+`k3`, `k3-256k`) were not calibration-tested — all four are reasoning models
+on the same endpoint, so they'd almost certainly hit the identical
+token-budget wall; re-running them now would just reconfirm this finding,
+not add new information.
+
 ## First-pass run (pre-correction) — blocked on authentication Every one of the 180
 agent calls made during this run (3 model variants × 5 tickers × 12 agents)
 got **HTTP 401 from `https://api.moonshot.ai`**. The "PASS" verdicts recorded

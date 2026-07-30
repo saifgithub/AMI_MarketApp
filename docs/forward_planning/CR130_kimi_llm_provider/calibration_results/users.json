@@ -16,5 +16,11 @@
     "token": "scaffold:cc14d553e3b24fd3948e920e5990fa2a:ceb15c3da02bc28f34ee8eb746e1bc53bec4e2ef2c4090c5b114be38a777a2b6",
     "plan": "trial_trader",
     "created_at": "2026-07-30T06:13:02.946714+00:00"
+  },
+  "kimi-calib-forcoding-2026-07-30": {
+    "user_id": "613f75fd-7b77-4cec-a527-1d65b61936d6",
+    "token": "scaffold:613f75fd7b774ceca5271d65b61936d6:7b89a2fede6d36606f5d958339c7a58df41738f0d97a1758e03ed13d0c11bcb6",
+    "plan": "trial_trader",
+    "created_at": "2026-07-30T06:55:53.921647+00:00"
   }
 }

@@ -74,19 +74,24 @@ for those yet).
       failures unrelated to this change, flagged separately, not fixed here)
 - [x] `docker-compose.yml` forwards all 4 new fields; `test_config_compose_parity.py`
       passes
-- [x] Calibration rooms run (5 real Room verdicts replayed under their
-      original mandate, across kimi-k3/k2.7-code/k2.6) — **first pass blocked
-      on authentication, not a quality result.** All 180 agent calls got
-      `401 Invalid Authentication` from `api.moonshot.ai`. **Root cause found
-      same day:** Saiful's key is a **Kimi Coding Plan** subscription key
-      (console: kimi.com/code) — a separate product from the general Moonshot
-      Open Platform, with its own host (`api.kimi.com/coding`) and its own
-      model-id namespace (`kimi-for-coding`, `k3`, `k3-256k`,
-      `kimi-for-coding-highspeed`), distinct from Open Platform's
-      `kimi-k3`/`kimi-k2.7-code`/`kimi-k2.6` despite similar names. Verified
-      live: `api.moonshot.ai` 401s the key outright; `api.kimi.com/coding`
-      returns 200. `kimi_base_url`/`kimi_model` defaults corrected; provider
-      wiring, error labeling, and the degrade-loudly safety fallback all
-      worked correctly under the real failure — this was a config/product
-      mismatch, not a code bug. See `calibration_results/README.md` for the
-      full trail (first-pass failure + root cause + corrected re-run).
+- [x] Calibration rooms run — **two blockers found and diagnosed, no clean
+      quality read yet.** (1) First pass hit `401` on every call —
+      Saiful's key is a **Kimi Coding Plan** subscription key
+      (console: kimi.com/code), a separate product from the general Moonshot
+      Open Platform with its own host (`api.kimi.com/coding`) and model-id
+      namespace (`kimi-for-coding`/`k3`/`k3-256k`/`kimi-for-coding-highspeed`).
+      Corrected and verified live. (2) Re-run against the corrected endpoint
+      hit a second, more interesting wall: Kimi's Coding Plan models are
+      genuine **reasoning models** whose chain-of-thought shares the same
+      `max_tokens` budget as the final answer — this codebase's per-agent
+      budgets (600-900 tokens, tuned for non-reasoning providers) get fully
+      consumed by invisible reasoning before any visible content is emitted,
+      4/5 tickers landing on the PM's DEF059 safety fallback. Isolated via
+      direct curl: the identical realistic prompt produces a clean verdict
+      at `max_tokens=4000` (finish_reason=stop, ~1,200 reasoning tokens +
+      real content) but empty content at 900 (finish_reason=length, 100%
+      reasoning). `reasoning_effort: "low"` did not help. **Not yet fixed in
+      code** — needs a per-provider `max_tokens` override, an open item
+      pending Saiful's call. See `calibration_results/README.md` for the
+      full trail (three passes: auth failure → endpoint fix → token-budget
+      finding).
