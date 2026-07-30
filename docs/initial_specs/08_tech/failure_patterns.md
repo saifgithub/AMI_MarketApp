@@ -641,6 +641,53 @@ eye. Filed as DEF175.
 
 ---
 
+## P14 — A spec governed by a system that references it zero times
+
+**Symptom.** A design or spec document reaches build-ready, is reviewed by several people, and
+**never mentions the system it has to obey**. The work is careful and internally consistent, so
+review finds nothing: reviewers check the artefact against its own goals, which it meets. The gap
+is invisible until someone whose job *is* the system reads it, which happens after the design is
+done, or after it has shipped.
+
+**The inversion of P11.** P11 is a rule *enforced* in one place and *stated* nowhere, found by a
+sweep. This is a rule *stated* in one place and *enforced* nowhere, and no sweep finds it — there
+is nothing to sweep, because the offending document contains no instance of the thing.
+
+| | The system | The spec that didn't cite it | What was actually wrong |
+|---|---|---|---|
+| **CR113 / CR106 §4.0** (2026-07-28) | *"hex is for marks and controls; large CTAs are rounded rects"* — recorded only in a decision log | `hex_button.dart` and the six CTA call sites | `HexButton` clipped unconditionally for months; Saiful found it from the outside — *"the larger buttons should all be normal rounded edge buttons"* |
+| **CR109 → CR134** (2026-07-30) | `05_design/` — the hex rule, the family-colour rule, the honesty rules, the motion rule | the CR109 package: **13 documents, 5,297 lines, one reference**, in a lane draft | 20 screens drawn with **zero hexagons**, family hues spent on player titles and CTAs, derived values drawn as measured ones, mirrors rendered in warning colours |
+
+**Why the previous guard failed.** CR113's remedy was to **move the rule to where its audience
+reads** — out of the decision log and into `ami_hex_in_flutter.md`, beside the widget. That was
+right and it was not enough. Relocating a rule improves the odds that someone consults it; it does
+nothing when the author never asks the question at all. The CR109 package's failure is not that
+its author looked in the wrong file — it is that **nothing in the pipeline made the design system
+a thing you have to answer to.** §19 carried ~60 acceptance criteria, exhaustive on scoring,
+integrity, restart, fees and feature cross-products, and **not one design criterion**. A CR's
+acceptance list is its real specification; anything absent from it is optional in practice.
+
+**The invariant.** *A spec that produces user-visible surfaces is not complete until its acceptance
+criteria include the design system — as assertions, not as a reminder to read something. If the
+acceptance list has no shape, colour, provenance or motion criterion, the design system did not
+enter the room, regardless of how good the design is.*
+
+**Enforcing checks.**
+
+- **`mobile/test/widgets/cta_shape_test.dart`** is the existing bidirectional shape pin — CTAs have
+  no clip, chips/avatars/track-button do. Every new surface family joins it. It is the right host
+  because it already fails in *both* directions, so neither adding nor removing a clip is silent.
+- **Design acceptance as assertions**, per-CR, in the CR's own §Acceptance: no colour literal
+  outside `AmiColors`; no family hue on a non-agent concept; no agent mark changing hue; provenance
+  by fill-vs-outline, never opacity and never amber; no numeric animation; every mono numeric run
+  LTR-locked. CR134's `CR109_pnl_game_ami_cash/design_conformance_review.md` §3 is the first
+  worked instance and the template for the next one.
+- **The cheap upstream check, at CR-filing time:** `grep -rL "05_design" <cr-folder>/`. A CR that
+  ships screens and never names the design system has not been reviewed against it. It costs one
+  command and it is the only check that runs *before* the design exists.
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.

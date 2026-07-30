@@ -114,11 +114,26 @@ a rule filed where its audience does not read is not a control. That file also c
 
 ### 4.1 Stat tile (KPI)
 
-The DS's `KPITile` / `MobKPI`, ported. `CutCornerOctagonClipper(cornerCut: 10)` panel, 3px top border in the
-status colour, two internal rows:
+The DS's `KPITile` / `MobKPI`, ported. **A rounded rect at `AmiRadii.card` (8) with a 2px accent top
+stripe — `AccentCard`.** Two internal rows:
 
 - **Row 1** — a 56pt outcome hexagon carrying **one glyph**, plus a `labelMono` heading.
 - **Row 2** — the number, full width, `AmiTypography.statBig`-class mono, with a dim `labelMono` unit line.
+
+> **Shape corrected under CR134.** This section specified a
+> `CutCornerOctagonClipper(cornerCut: 10)` panel, which contradicted §4.0 two paragraphs above
+> (*"content surfaces are rounded rects"*) and, more to the point, **described a component nothing
+> implements**. All four private reimplementations in the app are rounded-rect or unclipped:
+> `_AlpacaStat` (`portfolio_screen.dart:1627`, radius 8 on `glassChrome`), `_MetricRow`
+> (`room_screen.dart:1571`, no container), `_StatRow` (`ticker_detail_screen.dart:392`),
+> `_ReadOnlyRow` (`settings_screen.dart:629`).
+>
+> A tile **holds content**, so §4.0 governs: the surface is a rounded rect and the hexagon is
+> reserved for the **mark inside it**. That preserves the whole point of the rule — spend the
+> hexagon on the mark that should carry it, not on the chrome around it.
+>
+> Found because CR109 §13.3 is the first change that has to actually extract this widget, and its
+> author would have been sent into the contradiction.
 
 **Never set a multi-word label inside a hexagon.** A flat-top regular hexagon's usable width at the label
 line is `0.724` of its bounding box (`hex_clipper.dart:85`, which records `ISLAMIC FINANCE` clipping at
@@ -257,6 +272,38 @@ A chart appears with one short opacity fade of the whole figure. Marks must not 
 counters must not tick up, and a segmented control flips its fill rather than sliding a pill — an
 orchestrated assembly implies live computation that is not happening. `prefers-reduced-motion` /
 `MediaQuery.disableAnimations` removes the fade entirely.
+
+### 7.1 The ceremony exception — named, bounded, and the only one
+
+**Decided by Saiful, 2026-07-30, on CR109 §10.2's Close.** One class of screen may draw a chart on
+rather than fade it in:
+
+> **A settled result may draw its final curve on once** — a single pass in reading order,
+> **≤600ms**, `AmiMotion.easeOut`, **removed entirely** under `MediaQuery.disableAnimations`.
+> **Only on a ceremony surface**: the Close and the season Wind-Up. Nowhere else.
+
+**Why the general rule does not reach here.** §7's stated reason is that an orchestrated assembly
+*"implies live computation that is not happening."* On a Close the computation genuinely did just
+happen — the field settled and the scoring pass ran seconds earlier — so the animation implies
+something true. That is the whole of the carve-out; it does not generalise to a chart that merely
+happens to be interesting.
+
+**600ms is not a new number.** `HexBurstOverlay` (`services/celebration.dart:154`) already runs at
+600ms `easeOutCubic` and has shipped since CR004. This documents an exception the app has rather
+than inventing one.
+
+**What the exception does NOT cover, in either direction:**
+
+- **No number animates. Ever.** The rank, the career-point delta and every figure beside them are
+  **stamped**. *No motion on text* (`colors_motion_rtl.md`) is a separate rule with a separate
+  reason and is unamended — a counter ticking up is the thing that reads as a slot machine.
+- Marks still do not fly into position. A curve drawing along its own path is one mark revealing
+  itself; a scatter assembling is many marks arriving, and that stays forbidden.
+- No other surface inherits this. A ceremony is a destination the user arrives at once per period,
+  which is why it can afford a beat that a screen visited daily cannot.
+
+Recorded under **CR134**, because CR109 §10.2 specified *"the curve replayed"* against a rule that
+forbade it and the conflict had no written resolution — leaving a build lane to pick one silently.
 
 ---
 
