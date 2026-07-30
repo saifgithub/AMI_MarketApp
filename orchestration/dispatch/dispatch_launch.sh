@@ -75,7 +75,23 @@ case "$FANOUT" in
 esac
 
 SID=$(uuidgen | tr '[:upper:]' '[:lower:]')
-PROMPT="AMI-TRADE · $INSTANCE · $LANE — ${BODY}${ULTRA_CLAUSE}"
+
+# FINISH-THE-TURN clause, appended to every launch. Measured 2026-07-30: three of four lanes in one
+# wave (BE-AGENTS, BE-GUARD191, ROOM-DEF161) backgrounded the test suite, said "I'll pause here and
+# wait for the background run to notify me", and ENDED THE TURN — which in `claude -p` terminates
+# the process. All three left complete, correct, uncommitted work in their worktrees and no hand-off,
+# and the Architect had to verify and land it by hand. This is the same shape as the budget-cap
+# death (work done, nothing delivered) but self-inflicted and entirely avoidable: a headless run has
+# no next turn to be notified into. The rule is about the LAST step, not about backgrounding per se.
+FINISH_CLAUSE=" HARD RULE — YOU ARE HEADLESS, THERE IS NO NEXT TURN: this is a \`claude -p\` run, so
+when your turn ends the process exits. NEVER end your turn waiting to be notified about a background
+job — no \"I'll pause here and pick up when the suite finishes\". If you background the test suite,
+you MUST block until it completes (poll it in the foreground) and then finish the lane in the SAME
+turn: commit, push your lane branch, and write the hand-off file. Three lanes were lost to exactly
+this on 2026-07-30, each with correct work already written and nothing delivered. Write the hand-off
+file EARLY and update it as you go, so that even a hard stop leaves your account behind."
+
+PROMPT="AMI-TRADE · $INSTANCE · $LANE — ${BODY}${ULTRA_CLAUSE}${FINISH_CLAUSE}"
 
 # Record the live handle in a PER-LANE file so the worker is interrogable (CR061). Writing the
 # shared roster/<instance>.md (old behaviour) collided under same-instance concurrency and left it

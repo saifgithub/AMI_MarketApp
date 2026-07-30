@@ -339,11 +339,20 @@ stranded_on_lane_branches() {  # echoes "ITEM WHAT" per lane branch carrying wor
       lane=${lane#lane/}
       it=${lane%%.*}          # ITEM never contains a dot; the instance (`coder.api`) does
       [ -n "$it" ] || continue
-      [ "$it" != "$lane" ] || continue
 
       # Cheap file tests BEFORE emitting a probe — the filter that keeps this affordable.
       [ -f "$LANE_DIR/$it.assign.md" ] || continue
       [ -n "$(emits "$LANE_DIR/$it.assign.md" 'DISPATCH: *ACCEPTED')" ] && continue
+
+      # The hand-off filename is `<ITEM>.<instance>.md`, and the instance comes from the ASSIGN
+      # file — NOT from the branch name. Measured 2026-07-30: the BE-TRUST worker pushed
+      # `lane/BE-TRUST` instead of `lane/BE-TRUST.coder.api`, and the first version of this guard
+      # skipped any branch without a dot outright — so a lane that named its branch loosely became
+      # invisible to the check written to stop lanes being invisible. Deriving from the assign also
+      # survives a worker that renames its branch for any other reason.
+      inst=$(last_match "$LANE_DIR/$it.assign.md" 'INSTANCE: *[A-Za-z0-9_.-]+' | sed 's/^INSTANCE: *//')
+      [ -n "$inst" ] || inst=${lane#"$it."}
+      lane="$it.$inst"
 
       # Only probe for what this checkout is actually missing. A lane whose hand-off is already on
       # `main` is the normal, healthy case and needs no object lookup at all.
