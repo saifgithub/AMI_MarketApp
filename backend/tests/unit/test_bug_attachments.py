@@ -183,3 +183,65 @@ async def test_streaming_picks_extension_from_mime(tmp_path: Path):
         upload=_FakeUpload(b"\xff\xd8\xff" + b"y" * 50), mime="image/jpeg",
     )
     assert rel.endswith(".jpg")
+
+
+# ── total volume cap (DEF201, H9 follow-up) ─────────────────────────────
+#
+# The per-upload cap above bounds ONE file; nothing bounded the volume, so
+# uploads above zero net rate filled the disk over time regardless of the
+# per-file cap. These pin the ceiling that closes that.
+
+
+def test_save_rejects_once_the_volume_is_at_cap(tmp_path: Path):
+    # One 300 B file already on disk...
+    save_attachment(content=b"x" * 300, mime="image/png")
+    # ...a 300 B total cap means a second upload of any size is rejected,
+    # even though it would pass the (much larger) per-file cap alone.
+    with pytest.raises(AttachmentRejected, match="storage total exceeds"):
+        save_attachment(
+            content=b"y" * 50, mime="image/png", total_cap_bytes=300,
+        )
+
+
+def test_save_allows_uploads_that_keep_the_volume_under_cap(tmp_path: Path):
+    save_attachment(content=b"x" * 100, mime="image/png", total_cap_bytes=1000)
+    # Still room: 100 + 100 = 200 <= 1000.
+    rel = save_attachment(content=b"y" * 100, mime="image/png", total_cap_bytes=1000)
+    assert (tmp_path / rel).exists()
+
+
+async def test_streaming_rejects_once_the_volume_is_at_cap(tmp_path: Path):
+    save_attachment(content=b"x" * 300, mime="image/png")
+    with pytest.raises(AttachmentRejected, match="storage total exceeds"):
+        await save_attachment_streaming(
+            upload=_FakeUpload(b"y" * 50),
+            mime="image/png",
+            total_cap_bytes=300,
+        )
+    # Mid-stream abort must clean up the partial file, same as the
+    # per-file cap's existing behaviour.
+    leftovers = [p for p in tmp_path.iterdir() if p.suffix == ".png"]
+    assert len(leftovers) == 1  # only the pre-existing 300 B file remains
+
+
+async def test_streaming_volume_cap_counts_pre_existing_files_not_just_this_upload(
+    tmp_path: Path,
+):
+    """A cap that only checked THIS upload's own size would never fire —
+    proves it's measured against the directory total, not the argument."""
+    for _ in range(3):
+        save_attachment(content=b"x" * 100, mime="image/png")
+    # 300 B already on disk; cap is 305 — even a 10 B upload tips it over.
+    with pytest.raises(AttachmentRejected, match="storage total exceeds"):
+        await save_attachment_streaming(
+            upload=_FakeUpload(b"z" * 10),
+            mime="image/png",
+            total_cap_bytes=305,
+        )
+
+
+def test_save_volume_cap_defaults_to_settings(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(settings, "bug_attachments_total_cap_bytes", 100)
+    save_attachment(content=b"x" * 80, mime="image/png")
+    with pytest.raises(AttachmentRejected, match="storage total exceeds"):
+        save_attachment(content=b"y" * 50, mime="image/png")
