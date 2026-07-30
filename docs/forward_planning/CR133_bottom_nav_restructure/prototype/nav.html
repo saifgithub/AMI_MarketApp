@@ -873,13 +873,19 @@ const JOURNAL = [
    Analysts cyan (FUND/MKT/NEWS/SOC) · Researchers+Managers purple
    (BULL/BEAR/RES-M/PM) · Risk amber (AGG/CON/NEU) · Execution green (TRADE).
    Colour identifies the family, never the member — so four analysts sharing
-   one cyan is correct, and giving each its own hue would be the bug. */
+   one cyan is correct, and giving each its own hue would be the bug.
+
+   Counts come from ONE_ON_ONE + AGENT_COACH entries, where `agents_involved`
+   holds exactly ONE agent the user chose to open (one_on_one.py:137,
+   brief.py:165, lessons.py:157). NOT from ROOM_RUN — room_runner.py:1603
+   writes every agent in the transcript, so a Room-derived chart would report
+   participation and label it readership. */
 const AGENTS = [
-  ['FUND',  34, 'var(--cyan)',   'Fundamentals Analyst'],
-  ['MKT',   28, 'var(--cyan)',   'Market Analyst'],
-  ['CON',   21, 'var(--amber)',  'Conservative Debator'],
-  ['BEAR',   9, 'var(--purple)', 'Bear Researcher'],
-  ['NEWS',   3, 'var(--cyan)',   'News Analyst'],
+  ['FUND',  14, 'var(--cyan)',   'Fundamentals Analyst'],
+  ['CON',   11, 'var(--amber)',  'Conservative Debator'],
+  ['MKT',    8, 'var(--cyan)',   'Market Analyst'],
+  ['BEAR',   4, 'var(--purple)', 'Bear Researcher'],
+  ['TRADE',  1, 'var(--green)',  'Trader'],
 ];
 
 function segbar() {
@@ -941,29 +947,29 @@ function viewInsights() {
   return `
     <div class="stat4">
       <div class="stat">
-        <div class="k">TOOK PM'S CALL</div>
-        <div class="v num" style="color:var(--cyan-ink)">71%</div>
-        <div class="s"><span class="num">27</span> of <span class="num">38</span> Room runs</div>
+        <div class="k">ROOMS CONVENED</div>
+        <div class="v num" style="color:var(--cyan-ink)">38</div>
+        <div class="s">Across <span class="num">19</span> tickers</div>
       </div>
       <div class="stat">
-        <div class="k">OVERRODE PM</div>
-        <div class="v num" style="color:var(--amber-ink)">11</div>
-        <div class="s"><span class="num">6</span> ended green</div>
+        <div class="k">PM SAID NO</div>
+        <div class="v num" style="color:var(--amber-ink)">9</div>
+        <div class="s"><span class="num">24%</span> of your rooms</div>
       </div>
       <div class="stat">
-        <div class="k">SAFETY FLOOR STOPS</div>
-        <div class="v num" style="color:var(--red-ink)">4</div>
-        <div class="s">All <span class="num">4</span> on the halal screen</div>
+        <div class="k">MANDATE VERSION</div>
+        <div class="v num">v7</div>
+        <div class="s"><span class="num">7</span> edits since you started</div>
       </div>
       <div class="stat">
-        <div class="k">MANDATE EDITS</div>
-        <div class="v num">7</div>
-        <div class="s">Now on version <span class="num">7</span></div>
+        <div class="k">LESSONS PASSED</div>
+        <div class="v num" style="color:var(--green-ink)">12</div>
+        <div class="s"><span class="num">3</span> analysts unlocked</div>
       </div>
     </div>
 
     <div class="blk">
-      <div class="h">VOICES YOU ACTUALLY READ</div>
+      <div class="h">ANALYSTS YOU SOUGHT OUT</div>
       <div class="bars">
         ${AGENTS.map(([nm, n, col, full]) => `
           <div class="bar">
@@ -973,15 +979,40 @@ function viewInsights() {
           </div>`).join('')}
       </div>
       <p style="font-size:11px;color:var(--text-low);margin-top:11px">
-        Opened from a Room run, over <span class="num">38</span> runs. Bar colour is the
-        <strong style="color:var(--text-med)">family</strong> — cyan Analysts, amber Risk, purple
-        Research — never the individual. <span class="num">7</span> voices you have never opened
-        are not shown, which is the finding.
+        One-on-ones and briefs you opened — <strong style="color:var(--text-med)">not</strong> who
+        spoke in the Room, where all <span class="num">12</span> always do. Bar colour is the
+        <strong style="color:var(--text-med)">family</strong>: cyan Analysts, amber Risk, purple
+        Research, green Execution. <span class="num">7</span> voices you have never once opened are
+        not listed, which is the finding.
       </p>
     </div>
 
+    <div class="blk" style="border-style:dashed">
+      <div class="h" style="color:var(--amber-ink)">NOT MEASURABLE YET — DO NOT SHIP AS ZEROS</div>
+      <p style="font-size:11.5px;color:var(--text-med);margin:0 0 8px">
+        The two most valuable numbers here are <em>not</em> in the data today. Naming them is the
+        point: a panel that renders them anyway would be inventing them.
+      </p>
+      <div class="field" style="align-items:flex-start">
+        <span class="k"><b style="color:var(--text-high)">Followed PM vs overrode</b><br>
+          No link exists between a Room run and the trade that followed —
+          <code>reference_id</code> holds the run on one entry and the trade on the other.
+          Correlating by ticker and time is a guess, not a fact.</span>
+        <span class="v" style="color:var(--amber-ink);white-space:nowrap">1 line<br>backend</span>
+      </div>
+      <div class="field" style="align-items:flex-start;border-top:1px solid var(--border-subtle)">
+        <span class="k"><b style="color:var(--text-high)">Times the safety floor stopped you</b><br>
+          A blocked trade never reaches the journal — capture runs after
+          <code>result.trade is not None</code>, and a blocked trade has no trade.
+          <strong style="color:var(--amber-ink)">The app never records that it stopped you</strong>,
+          which for a training product is the teaching moment going unlogged.</span>
+        <span class="v" style="color:var(--amber-ink);white-space:nowrap">new<br>capture</span>
+      </div>
+    </div>
+
     <p style="font-size:11.5px;color:var(--text-low);margin:0 0 8px">
-      Every figure here is aggregated from journal rows already being written. No new tables.
+      Everything above the dashed panel is aggregated from journal rows already being written —
+      no new tables, no CR109 dependency.
       <strong style="color:var(--amber-ink)">This is the least-settled segment — argue with it.</strong>
     </p>`;
 }
