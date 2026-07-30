@@ -74,24 +74,31 @@ for those yet).
       failures unrelated to this change, flagged separately, not fixed here)
 - [x] `docker-compose.yml` forwards all 4 new fields; `test_config_compose_parity.py`
       passes
-- [x] Calibration rooms run — **two blockers found and diagnosed, no clean
-      quality read yet.** (1) First pass hit `401` on every call —
-      Saiful's key is a **Kimi Coding Plan** subscription key
-      (console: kimi.com/code), a separate product from the general Moonshot
-      Open Platform with its own host (`api.kimi.com/coding`) and model-id
-      namespace (`kimi-for-coding`/`k3`/`k3-256k`/`kimi-for-coding-highspeed`).
+- [x] Calibration rooms run — **three passes, root-caused and fixed.**
+      (1) First pass hit `401` on every call — Saiful's key is a **Kimi
+      Coding Plan** subscription key (console: kimi.com/code), a separate
+      product from the general Moonshot Open Platform with its own host
+      (`api.kimi.com/coding`) and model-id namespace
+      (`kimi-for-coding`/`k3`/`k3-256k`/`kimi-for-coding-highspeed`).
       Corrected and verified live. (2) Re-run against the corrected endpoint
-      hit a second, more interesting wall: Kimi's Coding Plan models are
-      genuine **reasoning models** whose chain-of-thought shares the same
-      `max_tokens` budget as the final answer — this codebase's per-agent
-      budgets (600-900 tokens, tuned for non-reasoning providers) get fully
-      consumed by invisible reasoning before any visible content is emitted,
-      4/5 tickers landing on the PM's DEF059 safety fallback. Isolated via
-      direct curl: the identical realistic prompt produces a clean verdict
-      at `max_tokens=4000` (finish_reason=stop, ~1,200 reasoning tokens +
-      real content) but empty content at 900 (finish_reason=length, 100%
-      reasoning). `reasoning_effort: "low"` did not help. **Not yet fixed in
-      code** — needs a per-provider `max_tokens` override, an open item
-      pending Saiful's call. See `calibration_results/README.md` for the
-      full trail (three passes: auth failure → endpoint fix → token-budget
-      finding).
+      hit a second wall: Kimi's Coding Plan models are genuine **reasoning
+      models** whose chain-of-thought shares the same `max_tokens` budget as
+      the final answer — this codebase's per-agent budgets (600-900 tokens,
+      tuned for non-reasoning providers) got fully consumed by invisible
+      reasoning before any visible content was emitted, 4/5 tickers landing
+      on the PM's DEF059 safety fallback. Isolated via direct curl:
+      `max_tokens=4000` produced a clean verdict, `900` produced empty
+      content; `reasoning_effort: "low"` did not help. (3) **Fixed** per
+      Saiful's direction ("remove the token limit completely... I just need
+      to let KIMI give us 1 full room") — `OpenAICompatibleProvider` gained
+      an optional `max_tokens_floor`, wired to `KIMI_MAX_TOKENS_FLOOR`
+      (default 8000), which raises whatever `room_runner.py` requests up to
+      that floor for Kimi only; vLLM/Anthropic untouched. Re-ran ONE
+      calibration ticker (BAC) with the fix live: genuine `APPROVE` verdict,
+      `overridden_from_llm: false`, matching the vLLM baseline's action,
+      zero length-stop events across all 12 agents, 611s duration (~10x
+      vLLM's usual latency — noted as an open cost question for B7, not
+      re-measured across the full 5-ticker set here since the ask was
+      specifically for one full room). `LLM_FORCE_PROVIDER` restored to
+      vLLM immediately after. See `calibration_results/README.md` for the
+      full trail and verbatim PM reasoning.

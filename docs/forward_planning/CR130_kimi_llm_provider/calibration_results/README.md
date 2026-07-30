@@ -1,5 +1,54 @@
 # Kimi calibration rooms — 2026-07-30
 
+## THIRD UPDATE — fixed, full genuine Room verdict obtained
+
+Saiful's direction: *"remove the token limit completely. The token limit was
+a local inferencing limitation. I just need to let KIMI give us 1 full
+room."* Implemented as a provider-scoped floor rather than deleting the
+per-agent budget system — `OpenAICompatibleProvider` now takes an optional
+`max_tokens_floor`; Kimi is registered with `KIMI_MAX_TOKENS_FLOOR` (default
+`8000`), which raises whatever `room_runner.py` requests up to at least that
+value for Kimi calls only. vLLM/Anthropic are untouched. See
+`backend/app/services/llm_gateway.py` (`OpenAICompatibleProvider.stream_chat`)
+and `backend/app/core/config.py`. Commit: `fix(CR130): provider-scoped
+max_tokens floor for Kimi's reasoning overhead`.
+
+Re-ran exactly one calibration ticker (BAC, matching Saiful's ask for one
+full room, not a re-run of all five) via
+`backend/scripts/room_benchmark.py`, `LLM_FORCE_PROVIDER=kimi`,
+batch `kimi-calib-floorfix-2026-07-30`:
+
+| | |
+|---|---|
+| Action | **APPROVE** (matches the vLLM baseline's APPROVE for BAC) |
+| `overridden_from_llm` | `false` — a genuine Room verdict, not the DEF059 fallback |
+| Size / entry / target / stop | 1.5% / $61.07 / $69.01 / $57.41 |
+| Duration | 611s (~10.2 min) — vs. vLLM's baseline of a few tens of seconds |
+| Container logs | zero `room_agent_truncated` / length-stop events across all 12 agents |
+
+Full PM reasoning (verbatim, from `runs_kimi-calib-floorfix-2026-07-30.jsonl`):
+
+> "BAC clears mandate compliance: it is long-only, liquid, and the 1.5%
+> starter contributes only ~0.09 percentage points of the 50% portfolio
+> drawdown cap with a 6% stop. The fundamentals support a long-term GARP
+> thesis at P/E 14.5, PEG 1.07, 21% revenue growth, 30% margins, and
+> $280,819M net cash, but the chart offers no breakout confirmation at
+> $61.07 with only $1.92 of upside to the $62.99 ceiling and RSI 61 / in-line
+> volume. I am approving a half-size starter now to begin accumulating while
+> keeping powder dry to scale toward the 3% cap on a confirmed daily close
+> above $62.99 with above-average volume; the 6-week horizon lands near the
+> FOMC decision in 48 days, with a stop at $57.41 and a target at $69.01."
+
+**Read:** the reasoning-token diagnosis (SECOND UPDATE, below) was correct
+and the fix resolves it — Kimi can produce a coherent, well-grounded,
+mandate-compliant Room verdict once given enough token budget for its
+chain-of-thought. The ~10x latency vs. vLLM (611s vs. vLLM's usual
+tens-of-seconds) is the open cost question for any B7 candidacy — not
+re-measured across a full 5-ticker set here, since Saiful's ask was
+specifically for one full room, not a re-benchmark. `LLM_FORCE_PROVIDER`
+restored to empty (vLLM default) on melehost immediately after this run;
+verified via `/v1/llm/status` → `active_provider: vllm`.
+
 ## UPDATE — root cause found, re-run in progress
 
 Saiful asked directly: *"are we using `https://api.kimi.com/coding/v1`?"* —
