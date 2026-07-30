@@ -34,7 +34,11 @@
 #                                    THEIR OWN undelivered submission (UNCOMMITTED_SUBMIT,
 #                                    UNPUSHED_SUBMIT). Also reports a DEAD audit watcher — a
 #                                    heartbeat it never cleaned up, the one condition under which
-#                                    every row can be right and nobody is reading them.
+#                                    every row can be right and nobody is reading them — and work
+#                                    STRANDED on a lane branch (STRANDED_HANDOFF / STRANDED_BRIDGE,
+#                                    DEF175): a finished lane whose hand-off or audit bridge never
+#                                    reached this checkout is otherwise indistinguishable from a
+#                                    lane that never started. Scoped to lanes not yet ACCEPTED.
 #                                    Exit 1 if any. Run at session start + each work unit.
 #   dispatch.sh verdict <ITEM>     print a lane's verdict, refusing if it is not yet delivered
 #   dispatch.sh architect [-i N]   block until >=1 lane needs the Architect — every state in
@@ -282,6 +286,105 @@ orphan_undelivered() {  # echoes "ITEM STATE" per undelivered orphan; nothing fo
   done
 }
 
+# DEF175 — a finished lane and an invisible lane look identical from `main`.
+#
+# Every state above is derived from files in THIS checkout. A coder works in its own worktree on
+# `lane/<ITEM>.<instance>` — correctly; that isolation is what CR052 rests on — and writes its
+# hand-off and its §6 audit bridge THERE. Nothing transports them. So a complete, self-verified,
+# pushed lane sits one branch away reading as ASSIGNED-with-no-status, and the independent gate
+# never fires because the queue it reads from is empty. The failure state is SILENCE, and silence
+# is also what an unstarted lane looks like — which is why this escaped notice three times (CR120,
+# DEF142 `d5ac6614`, CR112 `eab8470f`) and was hand-delivered by the Architect each time.
+#
+# This is the guard `failure_patterns.md` asked for on occurrence two. It reads the lane branches
+# directly, so a hand-off that exists ONLY on a branch is loud instead of invisible.
+#
+# Scans local `lane/*` AND `origin/lane/*`: a worker on this machine may not have pushed yet, and a
+# worker elsewhere shows up only on origin. Refs can be stale — `git fetch` before trusting a clean
+# result on a lane built off this box.
+#
+# SCOPED TO IN-FLIGHT LANES, deliberately. An ACCEPTED lane whose hand-off never reached `main` is
+# history: the work is integrated, and the only thing left on the branch is the paperwork. Measured
+# on the first run of this guard, the unscoped version reported CR087-BE, CR087-MOBILE and DEF114 —
+# all three long since merged and closed. Those rows would be permanently red and never actionable,
+# which is precisely the desensitisation print_inbox's own comment warns about: a chronic backlog
+# teaches the reader to skip the section that exists to catch two rare events.
+#
+# KNOWN LIMIT: a lane with no `*.assign.md` (self-executed, no coder lane) is not scanned here. Its
+# delivery question is already swept by orphan_undelivered() for the audit bridge, and its author is
+# by definition the one holding the file locally. If self-executed lanes ever start being run by
+# someone other than their author, this is the line to revisit.
+# PERFORMANCE, because this runs on every work unit: a `git show` per candidate path cost ~130ms on
+# this repo (large history, external volume), so the obvious loop spent ~11s on top of the board's
+# own ~9s and would have been switched off within a day. Existence is resolved for every candidate
+# in ONE `git cat-file --batch-check`, and content is read only for the handful that exist.
+stranded_on_lane_branches() {  # echoes "ITEM WHAT" per lane branch carrying work `main` lacks
+  command -v git >/dev/null 2>&1 || return 0
+  git rev-parse --git-dir >/dev/null 2>&1 || return 0
+
+  # Build every candidate as "<ref>:<path> <item>|<kind>|<lane>". batch-check echoes %(rest) for an
+  # object that exists and prints "<input-up-to-first-space> missing" for one that does not, so the
+  # tag after the space is how a hit is identified without a second lookup.
+  probes=$(
+    # One ref per LANE, not per ref: a lane that exists both locally and on origin would otherwise
+    # be walked twice, doubling the grep cost for an identical answer. Heads are listed first, so
+    # keeping the first occurrence prefers the local ref — which is the fresher one for a lane built
+    # on this box, and the only one that exists before the worker pushes.
+    { git for-each-ref --format='%(refname:short)' refs/heads/lane/ 2>/dev/null
+      git for-each-ref --format='%(refname:short)' refs/remotes/origin/lane/ 2>/dev/null
+    } | awk '{ l=$0; sub(/^origin\//,"",l); sub(/^lane\//,"",l);
+               if (!(l in seen)) { seen[l]=1; print } }' | while IFS= read -r br; do
+      ref="$br"
+      lane=${br#origin/}      # remotes arrive as `origin/lane/<ITEM>.<instance>`
+      lane=${lane#lane/}
+      it=${lane%%.*}          # ITEM never contains a dot; the instance (`coder.api`) does
+      [ -n "$it" ] || continue
+      [ "$it" != "$lane" ] || continue
+
+      # Cheap file tests BEFORE emitting a probe — the filter that keeps this affordable.
+      [ -f "$LANE_DIR/$it.assign.md" ] || continue
+      [ -n "$(emits "$LANE_DIR/$it.assign.md" 'DISPATCH: *ACCEPTED')" ] && continue
+
+      # Only probe for what this checkout is actually missing. A lane whose hand-off is already on
+      # `main` is the normal, healthy case and needs no object lookup at all.
+      [ -z "$(emits "$LANE_DIR/$lane.md" 'STATUS: *READY_FOR_')" ] &&
+        printf '%s:orchestration/dispatch/lanes/%s.md %s|handoff\n' "$ref" "$lane" "$it"
+      [ -z "$(emits "$AUDIT_DIR/$it.architect.md" 'SUBMITTED: *round *[0-9]+')" ] &&
+        printf '%s:orchestration/audit/cr/%s.architect.md %s|bridge\n' "$ref" "$it" "$it"
+    done
+  )
+  [ -n "$probes" ] || return 0
+
+  hits=$(printf '%s\n' "$probes" | git cat-file --batch-check='%(objectname) %(rest)' 2>/dev/null \
+           | grep -v ' missing$')
+  [ -n "$hits" ] || return 0
+
+  # Dedupe per item: the same lane present both locally and on origin yields two identical hits, and
+  # one lane must not produce two rows.
+  seen=""
+  while read -r oid tag; do
+    [ -n "${oid:-}" ] || continue
+    it=${tag%%|*}
+    kind=${tag##*|}
+    case " $seen " in *" $it "*) continue ;; esac
+
+    # Only now read content, and only for objects that exist. A file can be present on the branch
+    # without carrying the token — an in-progress hand-off is not a stranded one.
+    case "$kind" in
+      handoff)
+        git cat-file -p "$oid" 2>/dev/null | grep -qE "${TOK}STATUS: *READY_FOR_" || continue
+        seen="$seen $it"
+        echo "$it STRANDED_HANDOFF" ;;
+      bridge)
+        git cat-file -p "$oid" 2>/dev/null | grep -qE "${TOK}SUBMITTED: *round *[0-9]+" || continue
+        seen="$seen $it"
+        echo "$it STRANDED_BRIDGE" ;;
+    esac
+  done <<EOF
+$hits
+EOF
+}
+
 count_architect() {
   c=0
   for it in $(items); do
@@ -339,6 +442,21 @@ print_inbox() {
 "
     done <<EOF
 $orph
+EOF
+  fi
+  # DEF175 — work that exists only on a lane branch. Same heredoc-not-pipe reason as above: a
+  # `while` on the right of a pipe runs in a subshell and its increments are discarded, which would
+  # print the rows and still exit 0 — the exact silent-pass this guard exists to remove.
+  strand=$(stranded_on_lane_branches)
+  if [ -n "$strand" ]; then
+    while read -r sit swhat; do
+      [ -n "$sit" ] || continue
+      hot=$((hot+1))
+      row=$(printf '  %-14s %-13s %-16s verdict=%s' "$sit" "$swhat" "(on lane branch)" "-")
+      hot_rows="${hot_rows}${row}
+"
+    done <<EOF
+$strand
 EOF
   fi
   # A watcher that DIED is not a lane, so it cannot appear in the rows above — and it is the one

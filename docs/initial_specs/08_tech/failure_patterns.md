@@ -593,6 +593,47 @@ unset field, never a recomputation that fires again on every read.
 
 ---
 
+## P13 — Completion that lives only where nobody looks (silence means both "done" and "never started")
+
+**Symptom.** A unit of work is finished, verified and pushed, and every board that is supposed to
+show it reads as though it never began. Nobody notices, because the failure state is *silence* —
+and silence is exactly what not-yet-started looks like. It surfaces only when a human re-reads a
+board and thinks a number looks wrong, days later.
+
+**Mechanism.** The producer and the reader are isolated from each other **by design**, and the
+isolation is correct — it is the thing that makes parallel work safe. What is missing is a
+*transport*, and because the producer's own view is complete and green, the producer has no signal
+that anything is undelivered. CR052: a coder works in its own worktree on `lane/<ITEM>.<instance>`
+and writes its hand-off and its §6 audit bridge **there**; `dispatch.sh` derives lane state from
+files on `main`, and the auditor's watcher globs `orchestration/audit/cr/*.architect.md` on `main`.
+Nothing moves the two files between them. So a complete, self-verified, pushed lane sits one branch
+away reading as `ASSIGNED` with no status, and the independent gate never fires because the queue it
+reads from is empty.
+
+**Why the previous guard failed.** There was no guard — there was a *protocol line* telling workers
+to land the hand-off on `main`, plus an Architect who hand-delivered it whenever it went missing.
+Hand-delivery is the symptom, not the fix: it succeeds often enough to hide the defect, it depends
+on the one person most likely to be busy, and recovering it badly costs real money (resuming a
+worker to write a missing bridge re-pays for its whole accumulated context — a CR120 resume burned
+a $3 cap that way). A rule that is enforced by someone remembering is not enforced.
+
+**Instances.** CR120; DEF142 (`d5ac6614`); CR112 (`eab8470f`+). Three occurrences, each caught by
+eye. Filed as DEF175.
+
+**Enforcing check.**
+
+- `dispatch.sh inbox` → `stranded_on_lane_branches()` scans local `lane/*` and `origin/lane/*` for a
+  `STATUS: READY_FOR_*` hand-off or a `SUBMITTED: round N` audit bridge that this checkout does not
+  have, and reports `STRANDED_HANDOFF` / `STRANDED_BRIDGE` with **exit 1**. It lands there because
+  polling `inbox` after every work unit is already a standing rule, so the check runs where someone
+  is already looking rather than where they would have to remember to look.
+- Scoped to lanes not yet `DISPATCH: ACCEPTED`. The unscoped first version reported three lanes
+  (CR087-BE, CR087-MOBILE, DEF114) that were all long since merged and closed — permanently red,
+  never actionable, which would have trained the reader to skip the whole section. **The guard's
+  usefulness and its noise floor are the same design decision.**
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.
