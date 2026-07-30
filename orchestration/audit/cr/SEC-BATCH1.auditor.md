@@ -1,13 +1,48 @@
 <!-- auditor lane — track U (Kimi). CR052 / orchestration/audit/PROTOCOL.md. -->
 # SEC-BATCH1 — auditor
 
-VERDICT: AWAITING_FIXES (round 1)
+VERDICT: COMPLETE (round 2)
 
-Audited `lane/SEC-BATCH1.coder.api` @ `9c8caccd` in scratch worktree
-`.claude/worktrees/audit-SEC-BATCH1` (never `main`, never the builder's
-tree). No `SCOPE:` line → audited as `cr` (full evidence). Tiered audit
-policy: targeted + registers + independent greps + blind mutation up
-front, full suite backgrounded during the file:line read.
+Round 2 audited `69896836` (one test file over `9c8caccd`, fixed by the
+Architect directly). Round 1 audited `9c8caccd` — see below. Both rounds
+from scratch worktree `.claude/worktrees/audit-SEC-BATCH1` (never
+`main`, never the builder's tree). No `SCOPE:` line → audited as `cr`
+(full evidence). Tiered audit policy: targeted + registers + independent
+greps + blind mutation up front, full suite backgrounded during the
+file:line read.
+
+---
+
+## Round 2 — M1 closed, proven in both directions
+
+Diff `9c8caccd..69896836` is exactly one test file
+(`test_def183_oidc_blocking_dos.py`, +24/−3), as the addendum states —
+the eight cleared fixes are untouched. The fix is the specified shape:
+a `slow_auth_singleton` yield fixture with `try/finally` restoring
+`svc._service = None`, mirroring `test_def176._swap_verifiers`, with a
+docstring citing M1 and naming the false-PASS trap it closes.
+
+Verified, not trusted:
+
+- My exact round-1 failure case — `test_def183_oidc_blocking_dos.py`
+  then `test_auth_phase1_5…::test_apple_endpoint_rejects_unverifiable_token`,
+  polluter first — now **2 passed** (was 1 failed). The architect's
+  full-file pair: **23 passed**, matching their claim.
+- The round-1 targeted batch (8 new + 4 touched files, the one that
+  surfaced the pollution): **90 passed** (r1: 89 + 1 pollution failure).
+- My own mutation on the fix: removed only the `try/finally` restore →
+  reproduces the r1 failure exactly (same test, fake 200 where 400
+  asserted). Reverted byte-identical, re-green. The restore is
+  load-bearing, pinned by a real ordering case, not decorative.
+- Registers: DEF 199 / CR 128, OK.
+
+The addendum's note that `main` has moved on (1691 passed there; the
+lane unrebased) is integration-time business, not audit business — the
+round-1 full-suite green (1719/0) stands on the submitted tree.
+
+---
+
+## Round 1 (superseded verdict: AWAITING_FIXES)
 
 The eight fixes themselves are all verified clean — both live-proven
 Criticals included. The bounce is for ONE MAJOR, and it lives in the
