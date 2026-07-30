@@ -236,9 +236,24 @@ def test_floor_pass_capped_at_three_lifetime_edits(mock_gateway: LLMGateway):
 
 
 def test_trader_plan_has_unlimited_edits(mock_gateway: LLMGateway):
+    # DEF179: `accept()` now resolves the edit-cap plan via
+    # `effective_plan_for_user` (server truth on `users.plan`), not the
+    # mandate's own `plan` field — so this needs a real user row, not just a
+    # mandate built to say "trader".
+    from app.db import get_session
+    from app.db.models import User as UserRow
+    from app.services.auth_service import AuthService
+    from sqlalchemy import select
+
+    auth = AuthService()
+    user, _, _ = auth.ensure_anonymous(device_user_id=None)
+    with get_session() as s:
+        row = s.execute(select(UserRow).where(UserRow.id == user.id)).scalar_one()
+        row.plan = "trader"
+
     store = OverlayStore()
     engine = BriefEngine(mock_gateway, store)
-    user_id = uuid4()
+    user_id = user.id
     mandate = hydrate_brief_mandate({"plan": "trader"})
     for i in range(6):
         session, _, _ = engine.open_session(

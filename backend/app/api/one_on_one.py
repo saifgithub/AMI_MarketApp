@@ -16,6 +16,7 @@ from app.schemas.one_on_one import (
     OneOnOneStartRequest,
 )
 from app.services.agent_runner import AgentRunner, get_agent_runner
+from app.services.entitlements import effective_plan_for_user
 from app.services.journal_store import get_journal_store
 from app.services.lessons_service import get_lessons_service
 from app.services.mandate_store import resolve_mandate
@@ -68,19 +69,25 @@ async def start_one_on_one(
 
     # Gate: Floor Pass users must earn agents. Paid tiers (trader / floor
     # manager / trial_trader) skip-path everything. Concierge is always free.
-    plan = (
-        mandate.plan if isinstance(mandate.plan, Plan)
-        else Plan(mandate.plan)
-    )
+    # DEF179: reads `users.plan` via `effective_plan_for_user`, not
+    # `mandate.plan` — the mandate's plan field is client-influenced (a
+    # PATCH's stripped-but-formerly-writable field, or a `mandate_override`
+    # body) and is not the entitlement source of truth.
+    plan = effective_plan_for_user(user_id)
     if plan == Plan.FLOOR_PASS and req.agent_id != AgentId.CONCIERGE:
         unlocked = {a.agent_id for a in get_lessons_service().list_activations(user_id)}
-        if req.agent_id.value not in unlocked:
+        # `OneOnOneStartRequest` has `use_enum_values=True`, so `req.agent_id`
+        # is already the raw string value here, not an `AgentId` member —
+        # `.value` on it raised `AttributeError` (masked as a 500) on every
+        # locked-agent request; found while adding DEF179 coverage for this
+        # exact gate, fixed in the same touch.
+        if req.agent_id not in unlocked:
             raise HTTPException(
                 status.HTTP_403_FORBIDDEN,
                 detail={
                     "reason": "agent_locked",
                     "message": "This agent is locked. Earn it by completing the related lessons, or upgrade to skip.",
-                    "agent_id": req.agent_id.value,
+                    "agent_id": req.agent_id,
                 },
             )
 

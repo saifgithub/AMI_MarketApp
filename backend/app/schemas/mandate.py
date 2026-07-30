@@ -47,6 +47,22 @@ class Plan(str, Enum):
     TRIAL_TRADER = "trial_trader"
 
 
+# DEF179: these Mandate fields describe entitlement state that actually lives
+# on `users` (see `Mandate.plan` docstring below) and is resolved server-side
+# via `effective_plan_for_user()` / `balance_for()`. A client-supplied value
+# for any of them — via `PATCH /v1/mandate/{user_id}` or a Brief/1-on-1
+# `mandate_override` body — is dropped rather than honoured, silently: the
+# server always re-stamps the real value on read (`_with_plan_state`), so a
+# stored/overridden client value would be invisible on the next GET anyway.
+CLIENT_UNWRITABLE_MANDATE_FIELDS = frozenset({
+    "plan",
+    "credit_balance",
+    "credit_allowance",
+    "trial_expires_at",
+    "trial_started_at",
+})
+
+
 class TargetOutcome(BaseModel):
     amount: float
     currency: str = "USD"
@@ -57,6 +73,23 @@ class RiskComponents(BaseModel):
     drawdown_response: int = Field(..., ge=1, le=5)
     regret_asymmetry: int = Field(..., ge=-1, le=1)
     concentration_tolerance: int = Field(..., ge=1, le=5)
+
+
+class ResolvedCaps(BaseModel):
+    """DEF193: the ENFORCED value of each preset-backed cap, server-resolved.
+
+    `Mandate.sector_cap_pct` / `single_name_cap_pct` are `None` until a user
+    explicitly overrides them, but a real, binding preset still applies —
+    `GET /v1/portfolio/sector-allocation/{id}`'s `max_allowed` has shown that
+    resolved number for months. Stamping the SAME resolution
+    (`app.trading_math.sizing.resolved_sector_cap_pct` /
+    `resolved_single_name_cap_pct` — the one place each cap is computed, per
+    CR046) onto the mandate GET response closes the gap where a client had to
+    choose between fabricating a number or hiding one. Same percentage-point
+    units as the field each resolves; never null."""
+
+    sector_cap_pct: float
+    single_name_cap_pct: float
 
 
 class Compliance(BaseModel):
@@ -167,6 +200,10 @@ class Mandate(BaseModel):
     # in cooldown — the client shows the countdown card instead of firing a
     # doomed request. NULL / past = no cooldown pending.
     room_cooldown_until: datetime | None = None
+
+    # DEF193: stamped by the mandate API's read path (`_with_plan_state`),
+    # same as `plan`/`credit_balance` above — never persisted on the row.
+    resolved: ResolvedCaps | None = None
 
     created_at: datetime
     updated_at: datetime

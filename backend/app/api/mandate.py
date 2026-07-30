@@ -25,7 +25,7 @@ from app.agents.safety_floor import (
 )
 from app.api.dependencies import get_current_user
 from app.db.models import User
-from app.schemas import Compliance, Mandate
+from app.schemas import Compliance, Mandate, ResolvedCaps
 from app.services.credit_service import balance_for, room_cost_for_plan
 from app.services.day_trader_preset import is_day_trader_preset
 from app.services.entitlements import effective_plan_for_user
@@ -36,6 +36,10 @@ from app.services.sharia_universe import default_halal_universe_async
 from app.services.sim_engine import (
     SimEngine,
     get_sim_engine,
+)
+from app.trading_math.sizing import (
+    resolved_sector_cap_pct,
+    resolved_single_name_cap_pct,
 )
 
 
@@ -66,6 +70,17 @@ def _with_plan_state(mandate: Mandate, user: User) -> Mandate:
     """
     plan = effective_plan_for_user(user.id)
     balance, allowance, resets_at = balance_for(user.id)
+    # DEF193: stamp the SAME resolution `GET /v1/portfolio/sector-allocation`
+    # uses for `max_allowed`, so the two endpoints can never disagree about
+    # whether a preset-backed cap is knowable.
+    resolved = ResolvedCaps(
+        sector_cap_pct=resolved_sector_cap_pct(
+            mandate.risk_components.concentration_tolerance, mandate.sector_cap_pct,
+        ),
+        single_name_cap_pct=resolved_single_name_cap_pct(
+            mandate.risk_score, mandate.single_name_cap_pct,
+        ),
+    )
     return mandate.model_copy(update={
         "plan": plan,
         "trial_expires_at": user.trial_expires_at,
@@ -74,6 +89,7 @@ def _with_plan_state(mandate: Mandate, user: User) -> Mandate:
         "credits_reset_at": resets_at,
         "room_cost": room_cost_for_plan(plan),
         "room_cooldown_until": user.room_cooldown_until,
+        "resolved": resolved,
     })
 
 

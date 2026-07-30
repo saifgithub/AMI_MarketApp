@@ -379,9 +379,12 @@ class BriefEngine:
                 message=session.pending_proposal.refusal_reason or "Proposal already refused.",
             )
 
-        mandate = Mandate.model_validate(session.mandate_used)
         agent_id = _coerce_agent_id(session.agent_id)
-        plan = _plan_from_mandate(mandate)
+        # DEF179: entitlement source of truth is `users.plan` via
+        # `effective_plan_for_user`, not `session.mandate_used`'s `plan` field
+        # — the mandate is client-influenced (a PATCH's stripped-but-formerly-
+        # writable field, or a `mandate_override` body at session start).
+        plan = effective_plan_for_user(session.user_id)
 
         if not self._store.can_edit(session.user_id, agent_id, plan):
             return BriefRefusal(
@@ -486,10 +489,6 @@ def _coerce_agent_id(value: Any) -> AgentId:
     return value if isinstance(value, AgentId) else AgentId(value)
 
 
-def _plan_from_mandate(mandate: Mandate) -> Plan:
-    return mandate.plan if isinstance(mandate.plan, Plan) else Plan(mandate.plan)
-
-
 # ── DI singleton ───────────────────────────────────────────────────────────
 
 
@@ -510,7 +509,13 @@ def get_brief_engine() -> BriefEngine:
 
 def hydrate_brief_mandate(overrides: dict[str, Any] | None) -> Mandate:
     """Mirror of agent_runner.hydrate_mandate — duplicated here to keep
-    brief_engine independent of one_on_one routing."""
+    brief_engine independent of one_on_one routing.
+
+    Trusted constructor — callers (tests, `MandateStore`) may legitimately
+    pass an explicit `plan` to build a specific fixture. DEF179's untrusted
+    input is the client's `mandate_override` body, filtered at that boundary
+    in `resolve_mandate` (`mandate_store.py`), not here.
+    """
     o = overrides or {}
     now = datetime.now(timezone.utc)
     return Mandate(

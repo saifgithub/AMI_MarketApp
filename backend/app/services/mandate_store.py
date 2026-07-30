@@ -27,6 +27,7 @@ from sqlalchemy import select, update
 from app.db import get_session, init_schema
 from app.db.models import MandateRow
 from app.schemas import Mandate
+from app.schemas.mandate import CLIENT_UNWRITABLE_MANDATE_FIELDS
 from app.services.brief_engine import hydrate_brief_mandate
 
 
@@ -120,7 +121,17 @@ class MandateStore:
         result through the full `Mandate` schema before persisting —
         `Mandate.model_validate` raises `ValidationError` on anything the
         schema wouldn't have accepted on write.
+
+        DEF179: entitlement fields (`plan`, `credit_balance`, ...) are silently
+        dropped from `updates` before the merge — they are `Mandate` fields
+        with no columns behind them (CR039, `_with_plan_state`), and letting
+        a PATCH set them was a paywall bypass. Every field the schema still
+        validates types for; only these five never reach the merge.
         """
+        updates = {
+            k: v for k, v in updates.items()
+            if k not in CLIENT_UNWRITABLE_MANDATE_FIELDS
+        }
         current = self.get_or_default(user_id)
         merged_dict = _deep_merge(current.model_dump(mode="json"), updates)
         new = Mandate.model_validate(merged_dict)
@@ -204,13 +215,24 @@ def resolve_mandate(
       3. Hydrated defaults.
 
     Any caller-provided locale wins over what's stored.
+
+    DEF179: `override` is the client-supplied `mandate_override` body on
+    `/v1/brief/start` and `/v1/agents/one_on_one/start` (a paywall bypass
+    vector reachable with no PATCH at all) — entitlement fields are stripped
+    from it before hydrating, same fields `MandateStore.patch()` drops.
+    `hydrate_brief_mandate` itself stays a trusted constructor for its other
+    (test/internal) callers.
     """
     store = get_mandate_store()
     mandate: Mandate
     if user_id is not None and (existing := store.get(user_id)) is not None:
         mandate = existing
     else:
-        mandate = hydrate_brief_mandate(override)
+        safe_override = (
+            {k: v for k, v in override.items() if k not in CLIENT_UNWRITABLE_MANDATE_FIELDS}
+            if override else override
+        )
+        mandate = hydrate_brief_mandate(safe_override)
     patch: dict[str, Any] = {}
     if user_id is not None:
         patch["user_id"] = user_id

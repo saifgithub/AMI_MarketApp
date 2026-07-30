@@ -32,6 +32,7 @@ from app.schemas.mandate import (
     Path,
     Plan,
     PrimaryGoal,
+    ResolvedCaps,
     RiskComponents,
     TargetOutcome,
 )
@@ -62,6 +63,7 @@ __all__ = [
     "Path",
     "Plan",
     "PrimaryGoal",
+    "ResolvedCaps",
     "RiskComponents",
     "RoomRun",
     "RoomStatus",
