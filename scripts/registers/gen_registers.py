@@ -44,6 +44,57 @@ PREAMBLE = "_preamble.md"   # intro prose + column header + separator, verbatim
 FOOTER = "_footer.md"       # optional trailing note (e.g. the DEF backfill note)
 
 
+# DEF159 — the seam in CR081's disjoint-write-path design.
+#
+# `gen` reads whatever row files are ON DISK. On the shared `main` checkout that includes another
+# track's UNTRACKED row, so "regenerate, then pathspec-commit only my own row" quietly commits a
+# TABLE containing a row whose source file is in nobody's index. The guarantee holds for the row
+# files and silently does not hold for the generated artifact.
+#
+# What that cost: at `b79dd445` CR121's untracked row was baked into the committed `cr_list.md`.
+# `test_registers_no_drift` went RED at HEAD from that moment — for every checkout EXCEPT the one
+# holding the untracked file. The architect's own pre-submission run reported 1589 passed; the
+# auditor's detached worktree at the same SHA got 1588 passed, 1 failed. A green measurement taken
+# in a dirty shared checkout is not evidence about the repository.
+#
+# Deliberately NOT a hard failure in `gen`: creating a new row means the file is untracked at the
+# moment you generate, which is the normal, correct flow (`write row` -> `gen` -> `commit both`).
+# Failing there would train people to pass a bypass flag. So `gen` warns loudly and hands back the
+# exact `git add` line, while `verify` FAILS on the state that is actually broken — a row present
+# in the live table whose source file is not in the index, which is the thing a clean checkout
+# cannot reproduce.
+def _git_lines(args: list[str]) -> list[str]:
+    """Run a git command under REPO; empty list if git is unavailable or this is not a repo."""
+    import subprocess
+    try:
+        out = subprocess.run(
+            ["git", *args], cwd=REPO, capture_output=True, text=True, timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return []
+    if out.returncode != 0:
+        return []
+    return [ln for ln in out.stdout.splitlines() if ln.strip()]
+
+
+def _row_ids_by_state(reg: dict) -> tuple[set[str], set[str]]:
+    """(untracked, unstaged-modified) row IDs for this register, per git."""
+    rel = reg["registry"].relative_to(REPO).as_posix()
+    prefix = reg["prefix"]
+
+    def ids(paths: list[str]) -> set[str]:
+        found = set()
+        for p in paths:
+            name = p.rsplit("/", 1)[-1]
+            if name.endswith(".row.md") and name.startswith(prefix):
+                found.add(name.split(".")[0])
+        return found
+
+    untracked = ids(_git_lines(["ls-files", "--others", "--exclude-standard", "--", rel]))
+    dirty = ids(_git_lines(["diff", "--name-only", "--", rel]))
+    return untracked, dirty
+
+
 def _row_id(line: str, prefix: str) -> str | None:
     """The first cell of a data row is the ID, e.g. '| DEF061 | ...' -> 'DEF061'."""
     m = re.match(rf"^\|\s*({prefix}\d{{3,}})\b", line)
@@ -112,6 +163,24 @@ def verify(reg: dict) -> bool:
     if missing:
         ok = False
         print(f"[verify] {prefix}: rows in live NOT in _registry: {sorted(missing)}")
+        print(f"[verify] {prefix}:   the live table carries a row with no source file. Either the "
+              f"row file was deleted without regenerating, or this checkout never had it — which "
+              f"is what DEF159 looks like from the OTHER side: someone regenerated the table while "
+              f"the row file was untracked in their tree, so it was never committed.")
+
+    # DEF159's real check: a row that IS in both, whose source file is not in the index. This
+    # checkout passes drift, and every clean checkout of the same SHA fails it.
+    untracked, dirty = _row_ids_by_state(reg)
+    published_untracked = sorted(untracked & set(live_rows))
+    if published_untracked:
+        ok = False
+        print(f"[verify] {prefix}: PUBLISHED BUT UNCOMMITTED — {published_untracked}")
+        print(f"[verify] {prefix}:   these rows are in the committed table but their row files are "
+              f"UNTRACKED. The table references a source that is not in the repo, so a clean "
+              f"checkout regenerates a DIFFERENT table and the drift guard fails there while it "
+              f"passes here (DEF159). Fix: git add -- " +
+              " ".join(f"{reg['registry'].relative_to(REPO).as_posix()}/{r}.row.md"
+                       for r in published_untracked))
     if extra:
         ok = False
         print(f"[verify] {prefix}: rows in _registry NOT in live: {sorted(extra)}")
@@ -136,6 +205,22 @@ def main(argv: list[str]) -> int:
         for r in regs:
             r["md"].write_text(gen(r))
             print(f"[gen] wrote {r['md'].relative_to(REPO)}")
+            # DEF159: say out loud whose rows just went into the table but are not in the index.
+            # On the shared `main` checkout the answer is routinely "another track's", and
+            # committing the table without their row file is what leaves `main` red for everyone
+            # but you.
+            untracked, dirty = _row_ids_by_state(r)
+            rel = r["registry"].relative_to(REPO).as_posix()
+            if untracked:
+                print(f"[gen] !! {r['prefix']}: baked in UNTRACKED row files: {sorted(untracked)}")
+                print(f"[gen]    Commit them WITH the table or the table points at nothing "
+                      f"(DEF159). If any belong to another track, do NOT commit the table:")
+                print(f"[gen]    git add -- " +
+                      " ".join(f"{rel}/{i}.row.md" for i in sorted(untracked)))
+            if dirty:
+                print(f"[gen] !! {r['prefix']}: baked in UNCOMMITTED EDITS to: {sorted(dirty)}")
+                print(f"[gen]    If any of those are not yours, committing this table publishes "
+                      f"another track's unreleased row (DEF159).")
     elif cmd == "print":                           # gen to stdout (scratch round-trip)
         for r in regs:
             sys.stdout.write(gen(r))
