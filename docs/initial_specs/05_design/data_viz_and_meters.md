@@ -114,7 +114,7 @@ a rule filed where its audience does not read is not a control. That file also c
 
 ### 4.1 Stat tile (KPI)
 
-The DS's `KPITile` / `MobKPI`, ported. `FlatTopHexagonClipper(cornerCut: 10)` panel, 3px top border in the
+The DS's `KPITile` / `MobKPI`, ported. `CutCornerOctagonClipper(cornerCut: 10)` panel, 3px top border in the
 status colour, two internal rows:
 
 - **Row 1** — a 56pt outcome hexagon carrying **one glyph**, plus a `labelMono` heading.
@@ -194,7 +194,7 @@ or the group is unreadable.
 
 A to-scale horizontal track carrying two or three positioned marks (e.g. stop | entry | target).
 
-- 8pt track, ends cut with `FlatTopHexagonClipper(cornerCut: 4)`.
+- 8pt track, ends cut with `FlatTopHexagonBarClipper(cornerCut: 4)`.
 - Segments in status colour at ~45% alpha; the pivot mark solid in `textHigh`, end caps smaller.
 - **Split the labels across two rows** — pivot above the track, ends below. On one row they collide
   whenever the pivot falls within ~22% of either end, which is exactly what the interesting cases look

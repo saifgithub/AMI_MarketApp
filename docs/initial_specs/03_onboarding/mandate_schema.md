@@ -54,14 +54,12 @@ type Mandate = {
   learning_style: "quick" | "story" | "visual" | "hands_on";
 
   // Delivery
-  daily_briefing: {
-    enabled: boolean;
-    time_local: string;          // "HH:MM"
-    timezone: string;            // IANA (mirrors user.timezone)
-    voice_id: string | null;     // TTS voice; null = text-only briefing
-    delivery_channels: Array<"push" | "in_app" | "email">;
-    language: string;            // override locale for briefing language
-  };
+  // REMOVED (CR114 / DEF129, 2026-07-29). `daily_briefing` was collected at
+  // onboarding (Q8) and echoed in the readback, and nothing anywhere delivered
+  // it — no scheduler, no sender, no TTS. Saiful dropped the feature rather
+  // than hold the field open ("Remove the q from onboarding"), so the question,
+  // the field and the DailyBriefing model are all gone. Do not re-add this
+  // without A17. See DEF129 and CR115 (dropped).
 
   // Plan / commerce
   plan: "floor_pass" | "trader" | "floor_manager" | "trial_trader";
@@ -147,15 +145,7 @@ class Compliance(BaseModel):
     custom_constraints: list[str] = Field(default_factory=list)
 
 
-class DailyBriefing(BaseModel):
-    enabled: bool = False
-    time_local: str = "07:00"
-    timezone: str = "UTC"
-    voice_id: str | None = None
-    delivery_channels: list[Literal["push", "in_app", "email"]] = Field(
-        default_factory=lambda: ["in_app"]
-    )
-    language: str = "en"
+# DailyBriefing was DELETED by CR114 / DEF129 (2026-07-29) — see the note above.
 
 
 class Mandate(BaseModel):
@@ -182,7 +172,6 @@ class Mandate(BaseModel):
 
     compliance: Compliance = Field(default_factory=Compliance)
     learning_style: LearningStyle = LearningStyle.QUICK
-    daily_briefing: DailyBriefing = Field(default_factory=DailyBriefing)
 
     plan: Plan = Plan.FLOOR_PASS
     trial_expires_at: datetime | None = None
@@ -195,7 +184,7 @@ class Mandate(BaseModel):
 Notes:
 - Pydantic v2 throughout — `model_config = ConfigDict(...)`, not the legacy `class Config`.
 - `user_id` is `UUID`, not `str`.
-- Several fields have safe defaults that earlier docs didn't show (`compliance`, `learning_style`, `daily_briefing`) — concierge can produce a valid mandate without explicitly composing every nested object.
+- Several fields have safe defaults that earlier docs didn't show (`compliance`, `learning_style`) — concierge can produce a valid mandate without explicitly composing every nested object.
 
 ## Database table
 
@@ -227,7 +216,7 @@ CREATE TABLE mandates (
 
     -- Preferences
     learning_style TEXT NOT NULL,
-    daily_briefing JSONB NOT NULL,
+    -- daily_briefing JSONB removed by CR114 / DEF129 (2026-07-29)
 
     -- Plan
     plan TEXT NOT NULL DEFAULT 'floor_pass',
@@ -294,14 +283,6 @@ CREATE POLICY mandates_user_only ON mandates
     "custom_constraints": []
   },
   "learning_style": "hands_on",
-  "daily_briefing": {
-    "enabled": true,
-    "time_local": "07:00",
-    "timezone": "Asia/Riyadh",
-    "voice_id": "azure-ar-SA-Hamed",
-    "delivery_channels": ["push", "in_app"],
-    "language": "ar-SA"
-  },
   "plan": "trial_trader",
   "trial_expires_at": "2026-05-18T07:00:00Z",
   "credit_balance": 75,
