@@ -73,14 +73,6 @@ def _completed_session(**overrides) -> OnboardingSession:
                 "ticker_allowlist": None,
                 "custom_constraints": [],
             },
-            "daily_briefing": {
-                "enabled": True,
-                "time_local": "07:00",
-                "timezone": "America/New_York",
-                "voice_id": None,
-                "delivery_channels": ["push", "in_app"],
-                "language": "en",
-            },
         },
         risk_components_partial={
             "drawdown_response": 3,
@@ -147,7 +139,8 @@ def test_claim_persists_mandate_from_completed_onboarding_session(
     assert mandate["max_drawdown_pct"] == 20
     assert mandate["compliance"]["halal"] is True
     assert mandate["compliance"]["no_tobacco_alcohol_gambling"] is True
-    assert mandate["daily_briefing"]["enabled"] is True
+    # DEF129 retired `daily_briefing`; the mandate no longer carries it.
+    assert "daily_briefing" not in mandate
     assert mandate["risk_quotes"] == [
         "Hold and wait",
         "Losing in feels worse",

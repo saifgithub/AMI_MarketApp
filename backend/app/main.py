@@ -44,15 +44,36 @@ configure_logging()
 # SENTRY_DSN is unset (dev).
 init_sentry()
 
-# Boot-time secret check — adversarial audit (2026-05-18) finding A1.
-# Any env reachable from the public tunnel MUST set its own SECRET_KEY;
-# the source-visible default would make HMAC signatures trivially forgeable.
-if settings.env != "local" and settings.secret_key == "dev-secret-change-in-prod":
-    raise RuntimeError(
-        f"Refusing to start: env={settings.env} requires SECRET_KEY to be set "
-        "to a non-default value (env file or environment variable). "
-        "Generate one with: openssl rand -hex 32"
-    )
+def check_secret_key_boot(env: str, secret_key: str) -> None:
+    """Boot-time secret check — adversarial audit (2026-05-18) finding A1.
+
+    Any env reachable from the public tunnel MUST set its own SECRET_KEY;
+    the source-visible default would make HMAC signatures trivially
+    forgeable. Raises RuntimeError (refusing to start) rather than
+    warning — CR040 degrade-loudly.
+
+    DEF185 (security review H2 + M15): the ORIGINAL check only refused
+    the literal default string — an EMPTY SECRET_KEY (`SECRET_KEY=""`,
+    e.g. a missing/typo'd env file line) sailed straight through, and an
+    empty key makes every bearer token forgeable via HMAC(b"", user_id)
+    while also silently disabling Alpaca ciphertext decryption (DEF182 —
+    not touched here). Extended to refuse any non-local key shorter than
+    32 bytes (an `openssl rand -hex 32` key is 64 hex chars; 32 is a
+    generous floor that still catches "someone pasted three characters").
+    Pulled into its own function (rather than inline module-level code)
+    so it's unit-testable without reloading the whole app module.
+    """
+    if env != "local" and (
+        secret_key == "dev-secret-change-in-prod" or len(secret_key) < 32
+    ):
+        raise RuntimeError(
+            f"Refusing to start: env={env} requires SECRET_KEY to be set "
+            "to a non-default value at least 32 characters long (env file "
+            "or environment variable). Generate one with: openssl rand -hex 32"
+        )
+
+
+check_secret_key_boot(settings.env, settings.secret_key)
 
 _TRIM_INTERVAL_SECONDS = 24 * 60 * 60  # 24 h
 _LEAGUE_ROLL_INTERVAL_SECONDS = 60 * 60  # hourly — weekly_roll() is idempotent

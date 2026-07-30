@@ -32,7 +32,6 @@ Editable fields:
 | `compliance.*` flags | **Hard** | Audit triggered |
 | `ticker_blocklist`, `ticker_allowlist` | **Hard** | Audit triggered |
 | `learning_style` | Soft | Immediate (tutor adapts) |
-| `daily_briefing.*` | Soft | Immediate |
 
 Every edit increments `mandate.version` and creates a new row.
 

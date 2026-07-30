@@ -64,6 +64,61 @@ class Settings(BaseSettings):
     vllm_model: str = "ami-llm"
     vllm_api_key: str = ""  # optional bearer auth — leave empty for unauth LAN servers
 
+    # Kimi (Moonshot AI) — direct API, OpenAI-compatible. Wired 2026-07-30 for
+    # Saiful to test as a candidate B7 provider (see CR006/CR126); CR017
+    # already generalized the vLLM provider class specifically so a new
+    # OpenAI-compatible provider is this small. Direct, not via OpenRouter —
+    # CR006 flagged the ToS/data-training exposure that entails; a knowing
+    # choice, not an oversight.
+    #
+    # CORRECTED same-day (CR130): the key Saiful holds is a **Kimi Coding
+    # Plan** subscription key (console: kimi.com/code), not a general
+    # Moonshot Open Platform key — two separate products with separate key
+    # scopes. `api.moonshot.ai` (Open Platform, pay-per-token, model ids
+    # like `kimi-k3`/`kimi-k2.7-code`/`kimi-k2.6`) 401s this key outright;
+    # `api.kimi.com/coding` (Coding Plan, subscription, DIFFERENT model id
+    # namespace) is what actually authenticates — verified live via a bare
+    # curl bypassing this codebase entirely. If a general Open Platform key
+    # is ever added instead, both this base_url and kimi_model need to
+    # switch back.
+    # base_url deliberately excludes the trailing /v1 — llm_gateway.py's
+    # OpenAICompatibleProvider appends /v1/chat/completions itself, same
+    # convention as vllm_base_url above.
+    kimi_api_key: str = ""
+    kimi_base_url: str = "https://api.kimi.com/coding"
+    # kimi-for-coding is available to every Coding Plan membership tier
+    # (verified live, 200 OK). Higher tiers unlock kimi-for-coding-highspeed,
+    # k3, and k3-256k (Moderato+/Allegretto+ only, per platform docs) — try
+    # those via KIMI_MODEL if Saiful's tier supports them. Note this model-id
+    # namespace is Coding-Plan-specific and distinct from Open Platform's
+    # kimi-k3/kimi-k2.7-code/kimi-k2.6 despite the similar names.
+    kimi_model: str = "kimi-for-coding"
+
+    # CR130 calibration finding: Kimi's Coding Plan models are genuine
+    # reasoning models whose chain-of-thought shares the SAME `max_tokens`
+    # budget as the final answer. The Room's per-agent budgets in
+    # `room_prompts.py` (600-900) are tuned for vLLM's non-reasoning model and
+    # get fully consumed by invisible reasoning before any visible content is
+    # emitted — 4/5 calibration tickers hit the DEF059 fail-safe this way.
+    # Isolated via direct curl: max_tokens=900 -> empty content
+    # (finish_reason=length, 100% reasoning); max_tokens=4000 -> clean verdict
+    # (~1,200 reasoning tokens + real content, finish_reason=stop).
+    # This is a FLOOR, not a per-role tune: `OpenAICompatibleProvider` raises
+    # whatever max_tokens room_runner.py requests up to at least this value
+    # for this provider only — vLLM/Anthropic's tuned budgets are untouched.
+    # Generous on purpose (Saiful: "remove the token limit completely...I
+    # just need to let KIMI give us 1 full room") rather than the measured
+    # 4000 minimum — this is a calibration knob, not a cost-tuned production
+    # value yet.
+    kimi_max_tokens_floor: int = 8000
+
+    # Manual provider-selection override for testing (e.g. exercising Kimi
+    # without touching LLMGateway._PREFERENCE or unregistering vLLM). Empty
+    # = normal preference order. An unregistered/typo'd name falls through
+    # to normal preference rather than erroring — a test env var should
+    # never be able to 500 a live flow.
+    llm_force_provider: str = ""
+
     # Email / SMS / push
     resend_api_key: str = ""
     twilio_account_sid: str = ""

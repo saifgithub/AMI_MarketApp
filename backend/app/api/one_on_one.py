@@ -22,6 +22,7 @@ from app.services.mandate_store import resolve_mandate
 from app.api.dependencies import get_current_user
 from app.api.sse import sse_json, sse_text
 from app.db.models import User
+from app.services.rate_limit import one_on_one_message_rate_limit
 
 router = APIRouter(
     prefix="/v1/agents",
@@ -99,6 +100,10 @@ async def send_message(
     Each event payload is a single content chunk (text). The stream ends with
     `event: done\\ndata: {...}` containing minimal stats.
     """
+    # DEF186 (security review H6): messages spent zero credits and had NO
+    # rate limiter at all. Per-user, 12/min — see brief.py's brief_message
+    # for the same rationale (bearer-keyed, not IP).
+    one_on_one_message_rate_limit.check(f"user:{current_user.id}")
     session = runner.get_session(req.session_id)
     _own_session(current_user, session)
 

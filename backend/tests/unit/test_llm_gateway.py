@@ -18,6 +18,7 @@ from app.services.llm_gateway import (
     ChatMessage,
     LLMGateway,
     MockProvider,
+    OpenAICompatibleProvider,
     TIER_TO_MODEL,
     VLLMProvider,
 )
@@ -71,6 +72,56 @@ def test_gateway_status_with_only_vllm(monkeypatch):
     s = g.status()
     assert s["active_provider"] == "vllm"
     assert s["has_real_provider"] is True
+
+
+def test_gateway_status_with_only_kimi(monkeypatch):
+    from app.core import config as cfg
+
+    monkeypatch.setattr(cfg.settings, "kimi_api_key", "sk-kimi-fake")
+    monkeypatch.setattr(cfg.settings, "kimi_model", "kimi-for-coding")
+    g = LLMGateway()
+    s = g.status()
+    assert s["active_provider"] == "kimi"
+    assert s["has_real_provider"] is True
+    # Kimi serves a single selected model; every tier resolves to it.
+    assert s["tier_to_model"]["cheap"] == "kimi-for-coding"
+    assert s["tier_to_model"]["premium"] == "kimi-for-coding"
+
+
+def test_gateway_kimi_ranks_below_vllm_and_anthropic(monkeypatch):
+    """With every provider configured, preference order still wins — Kimi is
+    a candidate B7 provider being tested, not yet a default (CR126/D-068)."""
+    from app.core import config as cfg
+
+    monkeypatch.setattr(cfg.settings, "vllm_base_url", "http://lan:8000")
+    monkeypatch.setattr(cfg.settings, "anthropic_api_key", "sk-ant-fake")
+    monkeypatch.setattr(cfg.settings, "kimi_api_key", "sk-kimi-fake")
+    g = LLMGateway()
+    assert g.status()["active_provider"] == "vllm"
+    assert g.status()["providers_registered"] == ["anthropic", "kimi", "mock", "vllm"]
+
+
+def test_llm_force_provider_overrides_preference(monkeypatch):
+    """LLM_FORCE_PROVIDER lets Kimi be exercised for real without touching
+    _PREFERENCE or unregistering vLLM."""
+    from app.core import config as cfg
+
+    monkeypatch.setattr(cfg.settings, "vllm_base_url", "http://lan:8000")
+    monkeypatch.setattr(cfg.settings, "kimi_api_key", "sk-kimi-fake")
+    monkeypatch.setattr(cfg.settings, "llm_force_provider", "kimi")
+    g = LLMGateway()
+    assert g.status()["active_provider"] == "kimi"
+
+
+def test_llm_force_provider_falls_through_when_unregistered(monkeypatch):
+    """A typo'd/unconfigured forced provider must never 500 a live flow —
+    fall through to normal preference instead."""
+    from app.core import config as cfg
+
+    monkeypatch.setattr(cfg.settings, "vllm_base_url", "http://lan:8000")
+    monkeypatch.setattr(cfg.settings, "llm_force_provider", "kimi")  # not registered
+    g = LLMGateway()
+    assert g.status()["active_provider"] == "vllm"
 
 
 # ── mock provider ─────────────────────────────────────────────────────────
@@ -260,7 +311,8 @@ async def test_vllm_provider_error_yields_inline_error():
     full = "".join(chunks)
     assert "503" in full
     assert "AMI error" in full
-    assert "on-prem" in full
+    assert "upstream provider" in full
+    assert "vllm" in full
 
 
 @pytest.mark.asyncio
@@ -309,6 +361,172 @@ async def test_vllm_provider_omits_bearer_without_api_key():
         assert "Authorization" not in p._client.headers
     finally:
         await p.aclose()
+
+
+# ── OpenAICompatibleProvider (Kimi, and any future chat-completions API,
+#    CR017) — proves the generalized class works under a non-vllm name ─────
+
+
+@pytest.mark.asyncio
+async def test_openai_compatible_provider_parses_deltas_under_kimi_name():
+    """Same OpenAI-shaped SSE parsing VLLMProvider already covers, but through
+    a plain OpenAICompatibleProvider("kimi", ...) instance — proving the
+    generalization didn't silently couple the parser to the vllm name."""
+    captured: dict = {}
+    lines = [
+        _sse('{"choices":[{"index":0,"delta":{"content":"PO"}}]}'),
+        _sse('{"choices":[{"index":0,"delta":{"content":"NG"}}]}'),
+        "data: [DONE]",
+    ]
+    p = OpenAICompatibleProvider(
+        name="kimi", base_url="https://api.kimi.com/coding", model_name="kimi-for-coding",
+        api_key="sk-kimi-fake",
+    )
+    p._client = _FakeClient(_FakeSSEResponse(200, lines), captured)  # type: ignore[assignment]
+
+    chunks: list[str] = []
+    async for c in p.stream_chat(
+        system_prompt="be terse",
+        messages=[ChatMessage(role="user", content="ping")],
+    ):
+        chunks.append(c)
+
+    assert "".join(chunks) == "PONG"
+    assert captured["json"]["model"] == "kimi-for-coding"
+
+
+@pytest.mark.asyncio
+async def test_openai_compatible_provider_skips_reasoning_content_deltas():
+    """Kimi's Coding Plan models (kimi-for-coding, k3) are reasoning models —
+    verified live (CR130) that streaming deltas carry reasoning as a separate
+    `reasoning_content` field, with no `content` key at all on those chunks,
+    before the real answer starts arriving under `content`. The parser must
+    silently skip the reasoning chunks and only yield real content — not
+    error, and not leak chain-of-thought into what an agent "says"."""
+    captured: dict = {}
+    lines = [
+        _sse('{"choices":[{"index":0,"delta":{"role":"assistant","content":null}}]}'),
+        _sse('{"choices":[{"index":0,"delta":{"reasoning_content":"thinking..."}}]}'),
+        _sse('{"choices":[{"index":0,"delta":{"reasoning_content":"more thinking"}}]}'),
+        _sse('{"choices":[{"index":0,"delta":{"content":"PO"}}]}'),
+        _sse('{"choices":[{"index":0,"delta":{"content":"NG"}}]}'),
+        "data: [DONE]",
+    ]
+    p = OpenAICompatibleProvider(
+        name="kimi", base_url="https://api.kimi.com/coding", model_name="kimi-for-coding",
+    )
+    p._client = _FakeClient(_FakeSSEResponse(200, lines), captured)  # type: ignore[assignment]
+
+    chunks: list[str] = []
+    async for c in p.stream_chat(
+        system_prompt="x", messages=[ChatMessage(role="user", content="ping")],
+    ):
+        chunks.append(c)
+
+    assert "".join(chunks) == "PONG"
+
+
+@pytest.mark.asyncio
+async def test_openai_compatible_provider_error_names_the_provider():
+    """Errors must identify which provider failed — generic "on-prem" wording
+    would be actively wrong for a hosted API like Kimi."""
+    captured: dict = {}
+    p = OpenAICompatibleProvider(
+        name="kimi", base_url="https://api.kimi.com/coding", model_name="kimi-for-coding",
+        api_key="sk-kimi-fake",
+    )
+    p._client = _FakeClient(  # type: ignore[assignment]
+        _FakeSSEResponse(429, [], body=b'{"error":"rate_limited"}'),
+        captured,
+    )
+
+    chunks: list[str] = []
+    async for c in p.stream_chat(
+        system_prompt="x", messages=[ChatMessage(role="user", content="ping")],
+    ):
+        chunks.append(c)
+
+    full = "".join(chunks)
+    assert "429" in full
+    assert "kimi" in full
+    assert "on-prem" not in full
+
+
+@pytest.mark.asyncio
+async def test_openai_compatible_provider_extra_body_merged_into_request():
+    """extra_body (CR017 §3 — e.g. Qwen's enable_thinking) must reach the
+    outbound request body without disturbing the required fields."""
+    captured: dict = {}
+    p = OpenAICompatibleProvider(
+        name="kimi", base_url="https://api.kimi.com/coding", model_name="kimi-for-coding",
+        extra_body={"reasoning_effort": "low"},
+    )
+    p._client = _FakeClient(_FakeSSEResponse(200, ["data: [DONE]"]), captured)  # type: ignore[assignment]
+
+    async for _ in p.stream_chat(
+        system_prompt="x", messages=[ChatMessage(role="user", content="ping")],
+    ):
+        pass
+
+    assert captured["json"]["reasoning_effort"] == "low"
+    assert captured["json"]["model"] == "kimi-for-coding"
+
+
+@pytest.mark.asyncio
+async def test_openai_compatible_provider_max_tokens_floor_raises_low_request():
+    """CR130: a reasoning provider's chain-of-thought shares max_tokens with
+    the visible answer, so the Room's per-agent budgets (600-900) starve it.
+    max_tokens_floor must raise a low caller-requested value up to the floor."""
+    captured: dict = {}
+    p = OpenAICompatibleProvider(
+        name="kimi", base_url="https://api.kimi.com/coding", model_name="kimi-for-coding",
+        max_tokens_floor=8000,
+    )
+    p._client = _FakeClient(_FakeSSEResponse(200, ["data: [DONE]"]), captured)  # type: ignore[assignment]
+
+    async for _ in p.stream_chat(
+        system_prompt="x", messages=[ChatMessage(role="user", content="ping")], max_tokens=900,
+    ):
+        pass
+
+    assert captured["json"]["max_tokens"] == 8000
+
+
+@pytest.mark.asyncio
+async def test_openai_compatible_provider_max_tokens_floor_never_lowers_high_request():
+    """The floor is a minimum, not a cap — a caller asking for more than the
+    floor must not be clamped down to it."""
+    captured: dict = {}
+    p = OpenAICompatibleProvider(
+        name="kimi", base_url="https://api.kimi.com/coding", model_name="kimi-for-coding",
+        max_tokens_floor=8000,
+    )
+    p._client = _FakeClient(_FakeSSEResponse(200, ["data: [DONE]"]), captured)  # type: ignore[assignment]
+
+    async for _ in p.stream_chat(
+        system_prompt="x", messages=[ChatMessage(role="user", content="ping")], max_tokens=12000,
+    ):
+        pass
+
+    assert captured["json"]["max_tokens"] == 12000
+
+
+@pytest.mark.asyncio
+async def test_openai_compatible_provider_without_floor_passes_max_tokens_through():
+    """Default (no floor, e.g. vLLM) must not alter the caller's requested
+    max_tokens at all — this is Kimi-specific behavior, not global."""
+    captured: dict = {}
+    p = OpenAICompatibleProvider(
+        name="vllm", base_url="http://lan:8000", model_name="ami-llm",
+    )
+    p._client = _FakeClient(_FakeSSEResponse(200, ["data: [DONE]"]), captured)  # type: ignore[assignment]
+
+    async for _ in p.stream_chat(
+        system_prompt="x", messages=[ChatMessage(role="user", content="ping")], max_tokens=600,
+    ):
+        pass
+
+    assert captured["json"]["max_tokens"] == 600
 
 
 # ── CR077 Phase 0 second guard — prefix-cache startup check ──────────────
@@ -415,3 +633,16 @@ async def test_gateway_check_prefix_cache_at_startup_is_noop_without_vllm():
     """No vLLM provider registered ⇒ no-op, doesn't raise."""
     g = LLMGateway()
     await g.check_prefix_cache_at_startup()  # must not raise
+
+
+@pytest.mark.asyncio
+async def test_gateway_check_prefix_cache_at_startup_ignores_kimi(monkeypatch):
+    """Kimi registered (no vLLM) must NOT trip the vLLM-only /metrics probe —
+    a bare OpenAICompatibleProvider instance must fail the isinstance(VLLMProvider)
+    check, or startup would try to scrape a hosted API path that doesn't exist."""
+    from app.core import config as cfg
+
+    monkeypatch.setattr(cfg.settings, "kimi_api_key", "sk-kimi-fake")
+    g = LLMGateway()
+    assert not isinstance(g._providers["kimi"], VLLMProvider)
+    await g.check_prefix_cache_at_startup()  # must not raise or hit /metrics

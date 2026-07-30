@@ -184,7 +184,9 @@ CONCIERGE: What time and timezone?
 
 If user picks a non-default language, Concierge briefly confirms voice options.
 
-**Maps to:** `daily_briefing.{enabled, time_local, timezone, voice_id, language}`.
+**REMOVED (CR114 / DEF129, 2026-07-29).** This question (Q8) and the `daily_briefing` mandate field
+it mapped to were both deleted: the preference was collected and read back, and nothing anywhere
+delivered a briefing. The question is gone from the interview — do not re-add it without A17.
 
 ## The readback
 
@@ -214,7 +216,7 @@ CONCIERGE: Here's what I've got for your mandate. Read this
            rather try first, then read).
 
            [Looks right]  [Edit goal]  [Edit risk]  
-           [Edit constraints]  [Edit briefing]  [Edit other]
+           [Edit constraints]  [Edit other]
 ```
 
 User can tap any badge to revise that field — Concierge enters a quick edit dialog for just that field, then re-confirms.

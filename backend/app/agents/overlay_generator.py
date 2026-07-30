@@ -17,7 +17,14 @@ from app.schemas import (
     Mandate,
     Path,
 )
-from app.trading_math.sizing import risk_tier_cap
+from app.trading_math.risk_limits import (
+    resolved_max_open_positions,
+    resolved_max_open_risk_pct,
+    resolved_max_trades_per_day,
+    resolved_max_trades_per_week,
+    resolved_post_loss_cooldown_hours,
+)
+from app.trading_math.sizing import resolved_sector_cap_pct, resolved_single_name_cap_pct
 
 
 def generate_overlay(
@@ -82,6 +89,18 @@ total drawdown, NOT a per-trade stop budget. A single position of size P% (of \
 portfolio) with a stop S% below entry contributes only about P×S/100 percentage \
 points to portfolio drawdown (e.g. 5% size, 20% stop → 1.0 pt, i.e. 1/30th of a \
 30% cap). Do not compare a stop's distance directly against this cap.
+- Single-name position-size cap: {_max_position_pct(mandate)}% of portfolio in any \
+one name — the SAME ceiling the Portfolio Manager clamps every trade to (CR101).
+- Sector-concentration cap: {_sector_cap_pct(mandate)}% of portfolio in any one \
+GICS sector — the SAME ceiling the safety floor blocks a proposed BUY against.
+- Post-loss cooldown: {_cooldown_text(mandate)} — enforced as a hard block on the \
+next BUY, not a suggestion.
+- Max open positions: {_max_open_positions_text(mandate)} — a ceiling on distinct \
+tickers held concurrently; adding to an existing holding doesn't count against it.
+- Trading pace cap: {_max_trades_per_day_text(mandate)} per day, \
+{_max_trades_per_week_text(mandate)} per week (UTC calendar day / Monday-start ISO week).
+- Total open-risk cap: {_max_open_risk_pct_text(mandate)} — the sum of (position \
+size % × stop distance %)/100 across all open positions, including this one.
 
 ## Compliance constraints (HARD — cannot violate)
 {_compliance_block(mandate.compliance, halal_universe=halal_universe, ticker=ticker)}
@@ -373,7 +392,7 @@ def _research_manager_block(m: Mandate) -> str:
 
 
 def _trader_block(m: Mandate) -> str:
-    max_pos = _max_position_pct(m.risk_score)
+    max_pos = _max_position_pct(m)
     parts = [
         "## Role guidance — Trader",
         "You translate synthesis into a trade idea. Given this mandate:",
@@ -497,10 +516,52 @@ or Convene the Room?"
 ---"""
 
 
-def _max_position_pct(risk_score: int) -> float:
-    # Canonical per-risk-tier cap lives in app.trading_math.sizing (CR046 M03).
-    # The Trader is now told the same cap the Portfolio Manager clamps to.
-    return risk_tier_cap(risk_score)
+def _max_position_pct(mandate: Mandate) -> float:
+    # Canonical resolver lives in app.trading_math.sizing (CR046 M03 / CR101-BE1):
+    # the mandate's explicit, settable `single_name_cap_pct` when set, else the
+    # risk-tier preset. Every agent is now told the SAME cap the Portfolio Manager
+    # (and the deterministic safety floor) actually clamps/enforces to.
+    return resolved_single_name_cap_pct(mandate.risk_score, mandate.single_name_cap_pct)
+
+
+def _sector_cap_pct(mandate: Mandate) -> float:
+    # Percentage-point form of `sector_allocation.sector_concentration_cap`
+    # (which returns the 0.0-1.0 fraction the enforcement code compares against).
+    # Same settable-with-preset-fallback contract as `_max_position_pct` (CR101-BE1).
+    rc = mandate.risk_components
+    return resolved_sector_cap_pct(rc.concentration_tolerance, mandate.sector_cap_pct)
+
+
+# CR129: the five CR101-BE2 limits now follow the SAME settable-with-preset-
+# fallback contract as `_max_position_pct`/`_sector_cap_pct` above — `None`
+# resolves to the risk-tier preset (always shown/enforced) rather than
+# narrating "not set". "Off" is still expressible (a `0` cooldown, a very high
+# count, a `100%` open-risk cap) but is now an explicit override, not the
+# unset-field state.
+
+
+def _cooldown_text(m: Mandate) -> str:
+    hours = resolved_post_loss_cooldown_hours(m.risk_score, m.post_loss_cooldown_hours)
+    if hours <= 0:
+        return "off (no cooldown enforced)"
+    return f"{hours}h after a stop-out"
+
+
+def _max_open_positions_text(m: Mandate) -> str:
+    return f"{resolved_max_open_positions(m.risk_score, m.max_open_positions)}"
+
+
+def _max_trades_per_day_text(m: Mandate) -> str:
+    return f"{resolved_max_trades_per_day(m.risk_score, m.max_trades_per_day)}"
+
+
+def _max_trades_per_week_text(m: Mandate) -> str:
+    return f"{resolved_max_trades_per_week(m.risk_score, m.max_trades_per_week)}"
+
+
+def _max_open_risk_pct_text(m: Mandate) -> str:
+    pct = resolved_max_open_risk_pct(m.risk_score, m.max_drawdown_pct, m.max_open_risk_pct)
+    return f"{pct}%"
 
 
 _ROLE_BUILDERS = {

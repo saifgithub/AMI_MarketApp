@@ -116,7 +116,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get floorRestartOnboardingConfirmBody =>
-      'This clears the mandate your interview produced — goal, risk score, drawdown cap and constraints — and runs the whole interview again from the first question. Your portfolio and trades are untouched.';
+      'This runs the whole interview again from the first question. It does not replace a mandate you already have — change that in Settings → My Mandate. Your portfolio and trades are untouched.';
 
   @override
   String get floorRestartOnboardingConfirmCta => 'RESTART';
@@ -200,6 +200,80 @@ class AppLocalizationsEn extends AppLocalizations {
   String get portfolioAddDialogHint => 'Ticker (e.g. NVDA)';
 
   @override
+  String get portfolioTabPositions => 'POSITIONS';
+
+  @override
+  String get portfolioTabWatchlist => 'WATCHLIST';
+
+  @override
+  String get portfolioTabHistory => 'HISTORY';
+
+  @override
+  String get portfolioOpenTrades => 'OPEN TRADES';
+
+  @override
+  String portfolioClosedScope(int count) {
+    return 'ACROSS ALL $count CLOSED';
+  }
+
+  @override
+  String get portfolioClosed => 'CLOSED';
+
+  @override
+  String portfolioLastNClosed(int count) {
+    return 'LAST $count CLOSED';
+  }
+
+  @override
+  String portfolioClosedSpan(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String portfolioShowAll(int count) {
+    return 'SHOW ALL $count';
+  }
+
+  @override
+  String get portfolioReviewInJournal => 'REVIEW IN JOURNAL';
+
+  @override
+  String portfolioJournalRetention(int days, int count, int total) {
+    return 'Your Journal shows the last $days days — $count of these $total are older. Nothing is deleted; they stay here.';
+  }
+
+  @override
+  String get portfolioJournalRetentionUnknown =>
+      'Your Journal may not show all of these. Nothing is deleted; they stay here.';
+
+  @override
+  String get portfolioStatWon => 'WON';
+
+  @override
+  String get portfolioStatLost => 'LOST';
+
+  @override
+  String get portfolioStatHitRate => 'HIT RATE';
+
+  @override
+  String get portfolioStatNet => 'NET';
+
+  @override
+  String get portfolioSearchTicker => 'SEARCH TICKER…';
+
+  @override
+  String get portfolioSortNewest => 'NEWEST';
+
+  @override
+  String get portfolioSortValue => 'VALUE';
+
+  @override
+  String get portfolioSortAZ => 'A–Z';
+
+  @override
+  String get portfolioNoOpenPositions => 'No open positions';
+
+  @override
   String get tickerDetailValue => 'VALUE';
 
   @override
@@ -234,6 +308,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tickerDetailChartUnavailable => 'Chart unavailable. Tap to retry.';
+
+  @override
+  String get tickerDetailChartRejected => 'AMI can\'t chart this one.';
+
+  @override
+  String get tickerDetailChartNoHistory => 'No price history for this period.';
 
   @override
   String get tickerDetailChartExpand => 'Expand chart';
@@ -378,7 +458,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String journalRetentionWarning(int days) {
-    return 'Floor Pass: last $days days only. Upgrade to keep everything.';
+    return 'Floor Pass: last $days days only. Upgrade to see everything — nothing is deleted.';
   }
 
   @override
@@ -614,6 +694,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsMandateUpdated => 'Mandate updated.';
 
   @override
+  String get settingsRetroAuditFailed =>
+      'Couldn\'t check your holdings against the new limit — open Portfolio to verify.';
+
+  @override
   String get settingsSectionMandate => 'MY MANDATE';
 
   @override
@@ -663,6 +747,107 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsMaxDrawdownExplain =>
       'Your PM refuses trades that would push the portfolio past this.';
+
+  @override
+  String get settingsSectionRiskLimits => 'RISK LIMITS';
+
+  @override
+  String get settingsRiskLimitsProfileFollowing =>
+      'Following your risk profile';
+
+  @override
+  String get settingsRiskLimitsProfileCustom => 'Custom';
+
+  @override
+  String get settingsRiskLimitsExpand => 'Set my own limits';
+
+  @override
+  String get settingsRiskLimitsOff => 'OFF';
+
+  @override
+  String get settingsRiskLimitsSectorCapLabel => 'Sector concentration cap';
+
+  @override
+  String get settingsRiskLimitsSectorCapExplain =>
+      'Blocks a BUY that would push any one sector above this share of your portfolio. Unset follows your risk profile.';
+
+  @override
+  String get settingsRiskLimitsSingleNameCapLabel => 'Single-name position cap';
+
+  @override
+  String get settingsRiskLimitsSingleNameCapExplain =>
+      'Blocks a BUY that would size one position above this share of your portfolio. Unset follows your risk profile.';
+
+  @override
+  String get settingsRiskLimitsCooldownLabel => 'Post-loss cooldown';
+
+  @override
+  String get settingsRiskLimitsCooldownExplain =>
+      'Blocks new BUYs for this many hours after your last realised loss.';
+
+  @override
+  String get settingsRiskLimitsMaxOpenPositionsLabel => 'Max open positions';
+
+  @override
+  String get settingsRiskLimitsMaxOpenPositionsExplain =>
+      'Blocks a BUY that would open a new ticker once you\'re at this many distinct positions. Adding to a position you already hold is unaffected.';
+
+  @override
+  String get settingsRiskLimitsMaxTradesPerDayLabel => 'Max trades per day';
+
+  @override
+  String get settingsRiskLimitsMaxTradesPerDayExplain =>
+      'Blocks any trade once you\'ve submitted this many today (UTC calendar day).';
+
+  @override
+  String get settingsRiskLimitsMaxTradesPerWeekLabel => 'Max trades per week';
+
+  @override
+  String get settingsRiskLimitsMaxTradesPerWeekExplain =>
+      'Blocks any trade once you\'ve submitted this many this week (Monday 00:00 UTC).';
+
+  @override
+  String get settingsRiskLimitsMaxOpenRiskLabel => 'Total open-risk cap';
+
+  @override
+  String get settingsRiskLimitsMaxOpenRiskExplain =>
+      'Caps the sum of (position size % x stop distance %) across your open positions — your total capital at risk to stops.';
+
+  @override
+  String get settingsRiskLimitsMaxOpenRiskPreviewNote =>
+      'Confirmed at trade submission — not shown as within-limits in the trade preview.';
+
+  @override
+  String get settingsRiskLimitsDisclosureFollowing =>
+      'This replaces your risk-profile default with an explicit value, effective immediately.';
+
+  @override
+  String get settingsRiskLimitsDisclosureLooser =>
+      'This allows more risk than your current setting.';
+
+  @override
+  String get settingsRiskLimitsDisclosureOff =>
+      'This removes the limit entirely — it will not block anything.';
+
+  @override
+  String get settingsRiskLimitsDisclosure100 =>
+      '100% removes any real ceiling from this limit — allowed, but it means no protection here.';
+
+  @override
+  String get settingsRiskLimitsRetroTitle =>
+      'Some holdings now breach this limit';
+
+  @override
+  String get settingsRiskLimitsRetroBody =>
+      'Affected holdings are flagged below. New BUYs that would add to the breach are blocked. Nothing is sold automatically.';
+
+  @override
+  String settingsRiskLimitsRetroTickers(String tickers) {
+    return 'Flagged: $tickers';
+  }
+
+  @override
+  String get settingsRiskLimitsRetroDismiss => 'Got it';
 
   @override
   String get settingsComplianceHalal => 'Sharia screen — AAOIFI';
@@ -1136,6 +1321,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomStandingBy => 'standing by';
+
+  @override
+  String get roomAgentThinking => 'thinking…';
+
+  @override
+  String get roomAgentInterrupted => 'INTERRUPTED';
+
+  @override
+  String get roomAgentTruncatedMark =>
+      'Cut short by its length limit — open the transcript to read what landed.';
+
+  @override
+  String get roomAgentResponded => 'responded';
+
+  @override
+  String roomAgentStatusSemantic(String agent, String status) {
+    return '$agent: $status';
+  }
 
   @override
   String get roomDeliberating => 'Team deliberating…';
@@ -1701,11 +1904,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomViewModeTranscript => 'TRANSCRIPT';
 
   @override
-  String roomStripMeta(int seconds, int credits) {
-    return '${seconds}s · $credits CREDITS';
-  }
-
-  @override
   String get roomHeroApprove => 'THE ROOM APPROVED';
 
   @override
@@ -1866,10 +2064,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String journalStripMeta(String tier, int version) {
-    return '$tier TIER · MANDATE v$version';
-  }
+  String get journalRerunWithMandate => 'RE-RUN WITH CURRENT MANDATE';
 
   @override
-  String get journalRerunWithMandate => 'RE-RUN WITH CURRENT MANDATE';
+  String aiCoachEmptyStateHint(int count) {
+    return '$count questions and answers across platform, psychology, scams, AI meta, and beginner / intermediate topics. Type to search.';
+  }
 }

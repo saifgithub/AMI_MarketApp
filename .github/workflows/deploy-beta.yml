@@ -1,0 +1,85 @@
+# CR126 — Beta Cloud Run deploy. First GitHub Actions workflow in this repo
+# (B10 was previously unstarted). `workflow_dispatch`-only on purpose: no
+# GCP credentials exist as repo secrets/vars yet (B1 not done), so a
+# push-triggered run would just fail loudly on every commit. Switch to a
+# push trigger once B1's IAM (Workload Identity Federation, preferred over a
+# long-lived service-account key) is wired up — see infra/gcp/README.md.
+name: Deploy Beta (Cloud Run)
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Git tag or commit SHA to deploy"
+        required: true
+        type: string
+
+env:
+  REGION: europe-west3
+  REPOSITORY: ami-trade-backend
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install backend deps
+        working-directory: backend
+        run: |
+          pip install --no-cache-dir uv
+          uv pip install --system -e ".[dev]"
+      - name: Run backend unit tests
+        working-directory: backend
+        run: pytest tests/unit/ -q
+
+  build-and-deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Workload Identity Federation — no long-lived key
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SA_EMAIL }} # infra/gcp output: deployer_service_account_email
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build image
+        working-directory: backend
+        run: |
+          docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/api:${{ inputs.image_tag }} .
+
+      - name: Push image
+        run: |
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/api:${{ inputs.image_tag }}
+
+      - name: Deploy to Cloud Run (0% traffic, tagged revision)
+        run: |
+          gcloud run deploy ami-trade-api \
+            --project=${{ vars.GCP_PROJECT_ID }} \
+            --region=${{ env.REGION }} \
+            --image=${{ env.REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/api:${{ inputs.image_tag }} \
+            --tag=canary \
+            --no-traffic
+
+      - name: Smoke test the tagged revision
+        run: |
+          URL=$(gcloud run services describe ami-trade-api --project=${{ vars.GCP_PROJECT_ID }} --region=${{ env.REGION }} --format='value(status.traffic[?tag=="canary"].url)')
+          curl -sf "$URL/v1/health"
+
+      # Manual step, deliberately not automated here: once the canary looks
+      # good, shift traffic —
+      #   gcloud run services update-traffic ami-trade-api --to-latest
+      # No separate staging environment per D-067; this canary-tag step is
+      # the lightweight substitute.

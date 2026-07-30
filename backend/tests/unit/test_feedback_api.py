@@ -10,6 +10,17 @@ from fastapi.testclient import TestClient
 
 from app.api.feedback import router as feedback_router
 from app.core.config import settings
+from app.services.rate_limit import bug_upload_rate_limit
+
+
+@pytest.fixture(autouse=True)
+def _reset_bug_upload_rate_limit():
+    # DEF186: /v1/feedback/bug is now rate-limited (5/hour/IP) — without a
+    # reset, tests in this module would share one IP's budget and later
+    # tests would flake with 429 instead of exercising their own scenario.
+    bug_upload_rate_limit.reset()
+    yield
+    bug_upload_rate_limit.reset()
 
 
 @pytest.fixture

@@ -44,7 +44,11 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import select
 
-from app.agents.safety_floor import check_mandate_compliance, enforce_safety_floor
+from app.agents.safety_floor import (
+    CONTEXT_NOT_SUPPLIED,
+    check_mandate_compliance,
+    enforce_safety_floor,
+)
 from app.core.config import settings
 from app.core.logging import logger
 from app.core.time import relative_day_phrase
@@ -103,7 +107,7 @@ from app.services.alpaca_service import snapshot_text as alpaca_snapshot_text
 from app.services.sim_engine import get_sim_engine
 from app.trading_math.portfolio import shares_for_size
 from app.trading_math.risk import drawdown_contribution
-from app.trading_math.sizing import risk_debator_sizes, risk_tier_cap
+from app.trading_math.sizing import resolved_single_name_cap_pct, risk_debator_sizes
 from app.trading_math.trade import risk_reward, rr_is_coherent, trade_asymmetry
 from app.trading_math.valuation import multiple_compression_downside, net_position_phrase
 
@@ -295,6 +299,15 @@ class _RoomContext:
     sector_holdings: list = field(default_factory=list)
     sector_marks: dict[str, float] = field(default_factory=dict)
     sector_weights: dict[str, float] = field(default_factory=dict)
+    # CR101-BE2 round 2: the same cooldown/over-trading/open-risk trade-history
+    # context sim_engine.py builds for its own check_mandate_compliance calls, built
+    # once per run so the Room path stops silently skipping these three limits.
+    # `CONTEXT_NOT_SUPPLIED` (not None/[]/0.0) on failure — a real "no prior loss"
+    # or "no open risk" is a value the floor must accept; an outage computing that
+    # value must not be indistinguishable from it (CR040 degrade-loudly).
+    risk_last_loss_closed_at: object = field(default=CONTEXT_NOT_SUPPLIED)
+    risk_trade_open_timestamps: list | None = None
+    risk_existing_open_risk_pct: float | None = None
     # Populated as phases progress
     bull_thesis: str = ""
     bear_risk: str = ""
@@ -617,14 +630,16 @@ def _profile_for_ticker(
 # ── Verdict assembly ──────────────────────────────────────────────────────
 
 
-def _risk_tier_size_ceiling(risk_score: int) -> float:
+def _risk_tier_size_ceiling(mandate: Mandate) -> float:
     """Max position size (%) for a mandate's risk tier — a ceiling the PM's
     LLM-decided size gets clamped to (DEF056), and the default cosmetic size
     for the pre-debate aggressive/conservative/neutral display values.
 
-    Canonical values live in app.trading_math.sizing (CR046 M03) — the same
-    table the Trader's prompt narration now reads, so shown == enforced."""
-    return risk_tier_cap(risk_score)
+    Canonical resolver lives in app.trading_math.sizing (CR046 M03 / CR101-BE1):
+    the mandate's explicit, settable `single_name_cap_pct` when set, else the
+    risk-tier preset — the same value the Trader's prompt narration now reads,
+    so shown == enforced."""
+    return resolved_single_name_cap_pct(mandate.risk_score, mandate.single_name_cap_pct)
 
 
 # ── Portfolio holdings block (CR055) ──────────────────────────────────────
@@ -750,6 +765,35 @@ def _build_room_sector_context(
     except Exception as exc:  # noqa: BLE001 — degrade, never sink the run
         logger.warning("room_sector_context_failed", user_id=str(user_id), error=str(exc)[:200])
         return [], {}, None, {}
+
+
+def _build_room_risk_limit_context(
+    user_id: UUID | None, *, portfolio_value: float, quotes: dict[str, float],
+) -> tuple[object, list | None, float | None]:
+    """CR101-BE2 round 2: the same cooldown/over-trading/open-risk trade-history
+    context `sim_engine.py` builds for its own `check_mandate_compliance` calls,
+    built once per run for the Room's scripted path and the LLM-override wrapper —
+    previously neither supplied any of it, so a set `post_loss_cooldown_hours` /
+    `max_trades_per_day`/`max_trades_per_week` / `max_open_risk_pct` was silently
+    unenforced on the path the user actually watches (round-1 BLOCKER).
+
+    Returns `(last_loss_closed_at, trade_open_timestamps, existing_open_risk_pct)`.
+    On no `user_id` or any failure, returns `(CONTEXT_NOT_SUPPLIED, None, None)` —
+    NOT `(None, [], 0.0)`. Those look like real values (no prior loss, no trade
+    history, zero open risk) and `check_mandate_compliance` would silently pass a
+    limit the user explicitly set; `CONTEXT_NOT_SUPPLIED`/`None` make it block
+    loudly instead (CR040), same as a caller that forgot the argument entirely.
+    """
+    if user_id is None:
+        return CONTEXT_NOT_SUPPLIED, None, None
+    try:
+        sim = get_sim_engine()
+        return sim.risk_limit_context(
+            user_id, portfolio_value=portfolio_value, quotes=quotes,
+        )
+    except Exception as exc:  # noqa: BLE001 — degrade loudly (see docstring), never sink the run
+        logger.warning("room_risk_limit_context_failed", user_id=str(user_id), error=str(exc)[:200])
+        return CONTEXT_NOT_SUPPLIED, None, None
 
 
 def _compose_portfolio_block(sim_block: str, alpaca_snap: str | None) -> str:
@@ -881,7 +925,7 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     except (TypeError, ValueError):
         horizon_days = ctx.trader_horizon_weeks * 7
 
-    ceiling = _risk_tier_size_ceiling(ctx.mandate.risk_score)
+    ceiling = _risk_tier_size_ceiling(ctx.mandate)
     reason = narration or "Synthesis defended."
     if size_pct > ceiling:
         size_pct = ceiling
@@ -1311,6 +1355,13 @@ def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
         holdings=ctx.sector_holdings,
         quotes=ctx.sector_marks,
         sector_map=ctx.sector_map,
+        # CR101-BE2 round 2: same trade-history context sim_engine.py supplies at
+        # submit()/preview() — previously omitted here, so a set post-loss cooldown
+        # / over-trading brake / open-risk cap was silently unenforced.
+        last_loss_closed_at=ctx.risk_last_loss_closed_at,
+        trade_open_timestamps=ctx.risk_trade_open_timestamps,
+        existing_open_risk_pct=ctx.risk_existing_open_risk_pct,
+        proposed_stop=ctx.trader_stop,
     )
 
     if not result.passed:
@@ -2257,6 +2308,15 @@ class RoomRunner:
             await asyncio.to_thread(_build_room_sector_context, user_id)
         )
 
+        # CR101-BE2 round 2: same trade-history context sim_engine.py's submit()/
+        # preview() build for themselves — the Room used to supply none of it.
+        risk_last_loss_closed_at, risk_trade_open_timestamps, risk_existing_open_risk_pct = (
+            await asyncio.to_thread(
+                _build_room_risk_limit_context,
+                user_id, portfolio_value=portfolio_value, quotes=sector_marks,
+            )
+        )
+
         profile = await asyncio.to_thread(
             _profile_for_ticker,
             ticker,
@@ -2278,6 +2338,9 @@ class RoomRunner:
             sector_holdings=sector_holdings,
             sector_marks=sector_marks,
             sector_weights=sector_weights,
+            risk_last_loss_closed_at=risk_last_loss_closed_at,
+            risk_trade_open_timestamps=risk_trade_open_timestamps,
+            risk_existing_open_risk_pct=risk_existing_open_risk_pct,
             withheld=roster.withheld,
             roster_next_step=roster.next_step,
             profile=profile,
@@ -2296,7 +2359,7 @@ class RoomRunner:
         ctx.trader_entry = round(base, 2)
         ctx.trader_stop = round(base * 0.94, 2)
         ctx.trader_target = round(base * 1.13, 2)
-        ctx.trader_size_pct = _risk_tier_size_ceiling(mandate.risk_score)
+        ctx.trader_size_pct = _risk_tier_size_ceiling(mandate)
         # Debate spread lives next to the caps it orbits (CR046 M03).
         _debator = risk_debator_sizes(ctx.trader_size_pct)
         ctx.aggressive_size_pct = _debator.aggressive
@@ -2566,6 +2629,16 @@ class RoomRunner:
                                     holdings=ctx.sector_holdings,
                                     quotes=ctx.sector_marks,
                                     sector_map=ctx.sector_map,
+                                    # CR101-BE2 round 2: same trade-history context
+                                    # sim_engine.py supplies at submit()/preview() —
+                                    # previously omitted here, so a set post-loss
+                                    # cooldown / over-trading brake / open-risk cap
+                                    # was silently unenforced on the live PM's own
+                                    # APPROVE (round-1 BLOCKER).
+                                    last_loss_closed_at=ctx.risk_last_loss_closed_at,
+                                    trade_open_timestamps=ctx.risk_trade_open_timestamps,
+                                    existing_open_risk_pct=ctx.risk_existing_open_risk_pct,
+                                    proposed_stop=parsed.stop,
                                 )
                             else:
                                 verdict = parsed  # PASS — nothing to check compliance on

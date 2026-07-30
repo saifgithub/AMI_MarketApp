@@ -1,0 +1,32 @@
+{
+  "kimi-calib-k3-2026-07-30": {
+    "user_id": "d93c1479-54b3-40a5-9e05-b4bb54952ab5",
+    "token": "scaffold:d93c147954b340a59e05b4bb54952ab5:fead00d712f5c2b3dc7cd61a77d6d8749fb27703266b4b8904c5a798dac4b3e4",
+    "plan": "trial_trader",
+    "created_at": "2026-07-30T06:04:55.507776+00:00"
+  },
+  "kimi-calib-k27code-2026-07-30": {
+    "user_id": "07b18fb9-fe3b-4195-bb49-32ffadea1afa",
+    "token": "scaffold:07b18fb9fe3b4195bb4932ffadea1afa:8c80aaa86407bd76f96186983bb8b886f2623d2559f1c534b66939a554789052",
+    "plan": "trial_trader",
+    "created_at": "2026-07-30T06:08:58.094845+00:00"
+  },
+  "kimi-calib-k26-2026-07-30": {
+    "user_id": "cc14d553-e3b2-4fd3-948e-920e5990fa2a",
+    "token": "scaffold:cc14d553e3b24fd3948e920e5990fa2a:ceb15c3da02bc28f34ee8eb746e1bc53bec4e2ef2c4090c5b114be38a777a2b6",
+    "plan": "trial_trader",
+    "created_at": "2026-07-30T06:13:02.946714+00:00"
+  },
+  "kimi-calib-forcoding-2026-07-30": {
+    "user_id": "613f75fd-7b77-4cec-a527-1d65b61936d6",
+    "token": "scaffold:613f75fd7b774ceca5271d65b61936d6:7b89a2fede6d36606f5d958339c7a58df41738f0d97a1758e03ed13d0c11bcb6",
+    "plan": "trial_trader",
+    "created_at": "2026-07-30T06:55:53.921647+00:00"
+  },
+  "kimi-calib-floorfix-2026-07-30": {
+    "user_id": "0fa64c4e-72f0-406b-8e49-d35ad6fbee94",
+    "token": "scaffold:0fa64c4e72f0406b8e49d35ad6fbee94:8a01f135744ec3939b5f1f7f9fd3908f03e006310e8502faab7e843b250465fa",
+    "plan": "trial_trader",
+    "created_at": "2026-07-30T08:20:40.627847+00:00"
+  }
+}

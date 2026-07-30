@@ -21,7 +21,6 @@ from typing import Any
 from app.core.time import now_utc
 from app.schemas.mandate import (
     Compliance,
-    DailyBriefing,
     Horizon,
     LearningStyle,
     Path,
@@ -110,26 +109,25 @@ def q6_text(risk_score: int) -> str:
 Q6_CHIPS = ["10%", "20%", "30%", "50%", "No cap"]
 
 
+# CR114: this used to ask only what you'd NEVER invest in, while five of its
+# seven chips were inclusions ("Halal only", "ESG-leaning") or strategy and
+# liquidity limits. Read literally, picking "Halal only" answered "I'd never
+# want to invest in halal-only" — the inverse of the intent. The chips now say
+# which direction each rule runs, and the question asks for both.
 Q7_TEXT = (
-    "Anything I should know about what you'd NEVER want to invest in? "
-    "Pick any that apply, or tell me freeform."
+    "Any hard rules I should hand your analysts? ONLY narrows where they can "
+    "invest; NEVER puts something off the table entirely. Pick any that apply, "
+    "or tell me freeform."
 )
 Q7_CHIPS = [
-    "Halal only",
-    "ESG-leaning",
-    "No tobacco/alcohol/gambling",
-    "No fossil fuels",
-    "Long-only (no shorting)",
-    "Liquid only (no microcaps)",
-    "None of those",
+    "ONLY halal / Sharia-compliant",
+    "ONLY ESG-leaning",
+    "ONLY liquid names (no microcaps)",
+    "ONLY long positions (no shorting)",
+    "NEVER tobacco, alcohol or gambling",
+    "NEVER fossil fuels",
+    "No hard rules",
 ]
-
-
-Q8_TEXT = (
-    "Do you want a 90-second briefing every morning from your team? "
-    "I can deliver it as text, or text + voice."
-)
-Q8_CHIPS = ["Yes, text only", "Yes, with voice", "Not now"]
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -145,8 +143,9 @@ _NEXT_STEP: dict[ConversationStep, ConversationStep] = {
     ConversationStep.Q4_SCENARIO_REGRET: ConversationStep.Q5_SCENARIO_CONCENTRATION,
     ConversationStep.Q5_SCENARIO_CONCENTRATION: ConversationStep.Q6_MAX_DRAWDOWN,
     ConversationStep.Q6_MAX_DRAWDOWN: ConversationStep.Q7_CONSTRAINTS,
-    ConversationStep.Q7_CONSTRAINTS: ConversationStep.Q8_BRIEFING,
-    ConversationStep.Q8_BRIEFING: ConversationStep.READBACK,
+    # DEF129: Q7 used to hand off to Q8_BRIEFING, which offered a 07:00 daily
+    # briefing nothing in the backend can send. Q7 is now the last question.
+    ConversationStep.Q7_CONSTRAINTS: ConversationStep.READBACK,
     ConversationStep.READBACK: ConversationStep.COMPLETE,
 }
 
@@ -197,7 +196,7 @@ def process_answer(
             author=Author.CONCIERGE,
             content=_readback_text(summary),
             step=ConversationStep.READBACK,
-            chips=["Looks right", "Edit goal", "Edit risk", "Edit constraints", "Edit briefing"],
+            chips=["Looks right", "Edit goal", "Edit risk", "Edit constraints"],
         )
         return next_step, message, summary
 
@@ -226,8 +225,6 @@ def _question_message(step: ConversationStep, session: OnboardingSession) -> Mes
         )
     if step == ConversationStep.Q7_CONSTRAINTS:
         return Message(author=Author.CONCIERGE, content=Q7_TEXT, step=step, chips=Q7_CHIPS)
-    if step == ConversationStep.Q8_BRIEFING:
-        return Message(author=Author.CONCIERGE, content=Q8_TEXT, step=step, chips=Q8_CHIPS)
     raise ValueError(f"No question for step={step}")
 
 
@@ -285,9 +282,6 @@ def _record_answer(session: OnboardingSession, step: ConversationStep, answer: s
 
     elif step == ConversationStep.Q7_CONSTRAINTS:
         session.answers["compliance"] = _parse_constraints(a)
-
-    elif step == ConversationStep.Q8_BRIEFING:
-        session.answers["daily_briefing"] = _parse_briefing(a)
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -407,20 +401,6 @@ def _parse_constraints(text: str) -> dict[str, Any]:
     }
 
 
-def _parse_briefing(text: str) -> dict[str, Any]:
-    t = text.lower()
-    enabled = "yes" in t
-    voice = "voice" in t
-    return {
-        "enabled": enabled,
-        "time_local": "07:00",
-        "timezone": "UTC",
-        "voice_id": "default" if voice else None,
-        "delivery_channels": ["push", "in_app"] if enabled else ["in_app"],
-        "language": "en",
-    }
-
-
 # ──────────────────────────────────────────────────────────────────────────
 # Risk score derivation (after Q5)
 # ──────────────────────────────────────────────────────────────────────────
@@ -449,7 +429,6 @@ def _build_readback_summary(session: OnboardingSession) -> dict[str, Any]:
         "risk_score": risk_score,
         "max_drawdown_pct": session.answers.get("max_drawdown_pct", 30),
         "compliance": session.answers.get("compliance", {}),
-        "daily_briefing": session.answers.get("daily_briefing", {"enabled": False}),
         "locale": session.locale,
         "timezone": session.timezone,
         "risk_quotes": [
@@ -466,7 +445,6 @@ def _readback_text(summary: dict[str, Any]) -> str:
     risk = summary["risk_score"]
     drawdown = summary["max_drawdown_pct"]
     compliance = summary["compliance"]
-    briefing = summary["daily_briefing"]
 
     flags: list[str] = []
     if compliance.get("halal"):
@@ -483,20 +461,15 @@ def _readback_text(summary: dict[str, Any]) -> str:
         flags.append("liquid only")
     flags_text = ", ".join(flags) if flags else "no special constraints"
 
-    briefing_text = (
-        f"{briefing.get('time_local', '07:00')} daily briefing"
-        + (" with voice" if briefing.get("voice_id") else " (text only)")
-        if briefing.get("enabled")
-        else "no daily briefing"
-    )
-
+    # DEF129: this used to close with "🎙️ Briefing: 07:00 daily briefing with
+    # voice" — a time the user never chose and a voice mode that cannot exist —
+    # in the very screen the user is asked to confirm as correct.
     return (
         f"Here's what I've got for your mandate. Read this and tell me if anything's off.\n\n"
         f"🎯 Goal: {goal}\n"
         f"📅 Horizon: {horizon}\n"
         f"⚖️ Risk: {risk}/5 — moderate.  Max drawdown {drawdown}%.\n"
-        f"🛡️ Constraints: {flags_text}.\n"
-        f"🎙️ Briefing: {briefing_text}."
+        f"🛡️ Constraints: {flags_text}."
     )
 
 
@@ -531,8 +504,6 @@ def session_to_mandate_dict(session: OnboardingSession, user_id: Any) -> dict[st
         "compliance": summary["compliance"]
         or Compliance().model_dump(),
         "learning_style": LearningStyle.QUICK.value,
-        "daily_briefing": summary["daily_briefing"]
-        or DailyBriefing(timezone=session.timezone).model_dump(),
         "plan": Plan.TRIAL_TRADER.value,
         "trial_expires_at": None,  # populated on claim
         "credit_balance": 75,

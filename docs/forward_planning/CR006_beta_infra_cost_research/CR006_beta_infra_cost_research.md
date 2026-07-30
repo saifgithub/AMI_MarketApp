@@ -1,6 +1,6 @@
 # CR006 — Beta infra cost research: replacing melehost + the on-prem LLM box
 
-**Status:** proposed · **Session:** AT:G1 · **Date:** 2026-07-09
+**Status:** done · **Session:** AT:G1 · **Date:** 2026-07-09
 **Source:** Saiful — *"melehost and ami-host will not be available [at Beta]... research a VPS
 service that will allow me to replace melehost and ami-host... open to using an LLM API
 service as ami-host replacement, so I need a report on the cost of all alternatives."*
@@ -19,6 +19,21 @@ No code changes ship under this CR.
 
 Full report with charts: see the artifact delivered in-session. This doc is the filed,
 version-controlled copy.
+
+## Outcome (2026-07-30, AT:Infrastructure)
+
+This research's deferred decisions are now locked in `decision_log.md` and carried into
+execution under [CR126](../CR126_beta_infra_provisioning/CR126_beta_infra_provisioning.md):
+
+- **Compute + DB** — [D-066](../../initial_specs/11_decisions/decision_log.md#d-066--beta-computedb-path-confirmed-gcp-cloud-run--supabase):
+  Cloud Run + Supabase confirmed over Neon + Vercel.
+- **Architecture shape** — [D-067](../../initial_specs/11_decisions/decision_log.md#d-067--beta-ships-as-one-cloud-run-service-scale-to-zero-no-separate-staging-environment):
+  single Cloud Run service, scale-to-zero, no separate staging environment — a deliberate
+  cheap-end deviation from this doc's / `hosting.md`'s original 3-service sample.
+- **B7 (LLM provider)** — [D-068](../../initial_specs/11_decisions/decision_log.md#d-068--b7-cloud-llm-provider-deliberately-deferred-anthropic-direct-is-the-interim-default):
+  deliberately left open per Saiful — this doc's pricing is already 3 weeks stale and Sonnet 5
+  has a confirmed Sep 1, 2026 price change on file. Anthropic direct is the interim default;
+  the Sonnet-vs-GLM-5.2-hybrid call gets revisited closer to the actual Beta cutover.
 
 ## Problem
 

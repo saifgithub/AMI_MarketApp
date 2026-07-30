@@ -1,0 +1,104 @@
+# CR130 — Kimi (Moonshot) LLM provider, direct API
+
+**Status:** done · **Session:** AT:Infrastructure · **Date:** 2026-07-30
+**Source:** Saiful — *"I am looking to try KIMI"* (correcting my earlier framing of
+Anthropic as the B7 interim default under D-068), then, on routing: *"Direct to
+Moonshot"* over OpenRouter.
+
+Executes the provider-layer half of [CR017](../CR017_multiprovider_llm_routing/CR017_multiprovider_llm_routing.md)
+§3/§5 — which was research-only and explicitly deferred implementation to a
+separate build CR — scoped down to exactly what's needed to make Kimi callable
+for manual testing. Does not implement CR017's other open items (usage
+capture §2.4, provider routing-by-level §4, Anthropic `cache_control` §5.5).
+
+## What
+
+- Generalized `VLLMProvider` into `OpenAICompatibleProvider(name, base_url,
+  model_name, api_key, extra_body=None)` per CR017's own design; kept
+  `VLLMProvider` as a real (not aliased) subclass so `check_prefix_cache_at_startup`'s
+  `isinstance` check still correctly excludes non-vLLM instances.
+- Registered Kimi as an `OpenAICompatibleProvider` instance, direct to
+  `https://api.moonshot.ai` (not OpenRouter — Saiful's explicit choice,
+  knowingly accepting the ToS/data-training exposure CR006 flagged).
+- New `Settings` fields: `kimi_api_key`, `kimi_base_url` (default
+  `https://api.moonshot.ai`), `kimi_model` (default `kimi-k3`, Moonshot's
+  current flagship as of 2026-07-26 — CR006's "trails Sonnet 5" verdict was
+  measured on the older `kimi-k2.7-code`, not K3, which is unevaluated).
+- `_PREFERENCE` extended to `vllm > anthropic > kimi > mock` — Kimi ranks
+  below the two already-trusted providers, so setting the key alone does not
+  redirect live Alpha traffic.
+- New `llm_force_provider` / `LLM_FORCE_PROVIDER` override so Kimi (or any
+  registered provider) can actually be exercised for a manual test without
+  touching `_PREFERENCE` or unregistering vLLM. Falls through to normal
+  preference on an unregistered/typo'd name — a test env var must never be
+  able to 500 a live flow.
+- Forwarded in `docker-compose.yml`'s `api-alpha` block (CR040 compose-parity
+  — `test_config_compose_parity.py` catches a forgotten forward). `KIMI_BASE_URL`/`KIMI_MODEL`
+  mirror their Settings defaults into the compose substitution
+  (`${KIMI_MODEL:-kimi-k3}`), matching the existing `VLLM_MODEL` pattern —
+  a bare `:-` would have silently blanked the non-empty defaults.
+- Documented in `infra/alpha.env.example` and added to `admin.py`'s
+  `_FEATURE_GATES` config-check registry.
+
+## Why
+
+Saiful wants to manually test Kimi as a candidate B7 provider (the Beta cloud
+LLM pick, deliberately left open under D-068/CR126) — both against CR006's
+existing quality bar (measured on `kimi-k2.7-code`) and fresh against `kimi-k3`
+(released 4 days before this session, unevaluated by any prior research).
+None of the four keys already in `Settings` (`openrouter`, `openai`,
+`google_ai`, `deepseek`) had a registered provider class to test against —
+CR017 already identified this gap and scoped the fix; this CR just executes
+the smallest slice of it for Kimi specifically, rather than build the full
+routing-by-level layer nobody asked for yet.
+
+## Scope
+
+**In scope:** provider class + registration + config + compose forwarding +
+tests, as above. **Out of scope:** CR017's usage-capture/telemetry (§2.4),
+provider routing-by-user-level (§4), Anthropic `cache_control` wiring (§5.5 —
+flagged separately as a real gap the D-068 Anthropic-interim-default framing
+exposed), and DeepSeek/Qwen/Gemini registration (same class, but no key/ask
+for those yet).
+
+## Acceptance
+
+- [x] `OpenAICompatibleProvider` generalized, `VLLMProvider` behavior
+      unchanged (existing vLLM tests pass unmodified except one wording
+      assertion, updated to match the now-generic error message)
+- [x] Kimi registers when `KIMI_API_KEY` is set; ranks below vllm/anthropic
+      in `_PREFERENCE`
+- [x] `LLM_FORCE_PROVIDER` overrides preference for testing; falls through
+      safely when unregistered
+- [x] `backend/tests/unit/ -q` green (1653 passed; 2 pre-existing lesson-corpus
+      failures unrelated to this change, flagged separately, not fixed here)
+- [x] `docker-compose.yml` forwards all 4 new fields; `test_config_compose_parity.py`
+      passes
+- [x] Calibration rooms run — **three passes, root-caused and fixed.**
+      (1) First pass hit `401` on every call — Saiful's key is a **Kimi
+      Coding Plan** subscription key (console: kimi.com/code), a separate
+      product from the general Moonshot Open Platform with its own host
+      (`api.kimi.com/coding`) and model-id namespace
+      (`kimi-for-coding`/`k3`/`k3-256k`/`kimi-for-coding-highspeed`).
+      Corrected and verified live. (2) Re-run against the corrected endpoint
+      hit a second wall: Kimi's Coding Plan models are genuine **reasoning
+      models** whose chain-of-thought shares the same `max_tokens` budget as
+      the final answer — this codebase's per-agent budgets (600-900 tokens,
+      tuned for non-reasoning providers) got fully consumed by invisible
+      reasoning before any visible content was emitted, 4/5 tickers landing
+      on the PM's DEF059 safety fallback. Isolated via direct curl:
+      `max_tokens=4000` produced a clean verdict, `900` produced empty
+      content; `reasoning_effort: "low"` did not help. (3) **Fixed** per
+      Saiful's direction ("remove the token limit completely... I just need
+      to let KIMI give us 1 full room") — `OpenAICompatibleProvider` gained
+      an optional `max_tokens_floor`, wired to `KIMI_MAX_TOKENS_FLOOR`
+      (default 8000), which raises whatever `room_runner.py` requests up to
+      that floor for Kimi only; vLLM/Anthropic untouched. Re-ran ONE
+      calibration ticker (BAC) with the fix live: genuine `APPROVE` verdict,
+      `overridden_from_llm: false`, matching the vLLM baseline's action,
+      zero length-stop events across all 12 agents, 611s duration (~10x
+      vLLM's usual latency — noted as an open cost question for B7, not
+      re-measured across the full 5-ticker set here since the ask was
+      specifically for one full room). `LLM_FORCE_PROVIDER` restored to
+      vLLM immediately after. See `calibration_results/README.md` for the
+      full trail and verbatim PM reasoning.

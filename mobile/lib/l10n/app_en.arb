@@ -82,9 +82,9 @@
     "@floorRestartOnboardingConfirmTitle": {
         "description": "DEF152 confirm-dialog title, guarding the 'restart onboarding' link in the Floor footer. retranslate:[ar,ms]"
     },
-    "floorRestartOnboardingConfirmBody": "This clears the mandate your interview produced — goal, risk score, drawdown cap and constraints — and runs the whole interview again from the first question. Your portfolio and trades are untouched.",
+    "floorRestartOnboardingConfirmBody": "This runs the whole interview again from the first question. It does not replace a mandate you already have — change that in Settings → My Mandate. Your portfolio and trades are untouched.",
     "@floorRestartOnboardingConfirmBody": {
-        "description": "DEF152 confirm-dialog body. It must NAME what is lost — the control is caption-sized text in the footer and signals nothing about being destructive, so the copy carries the whole warning. 'Portfolio and trades are untouched' is accurate and verified: reset() only clears a SharedPreferences flag plus in-memory state, and the sim is keyed on user_id, not on the onboarding session. retranslate:[ar,ms]"
+        "description": "DEF152 confirm-dialog body, corrected by DEF158. The original copy claimed restarting 'clears the mandate your interview produced'. It does not, and the claim was false for exactly the users who had a mandate to lose: reset() (onboarding_providers.dart) clears only a SharedPreferences flag and in-memory state with no API call; the sole interview→mandate persist path (_bind_onboarding_session, api/auth.py) deliberately skips when a mandate row already exists; and /onboarding/readback/confirm builds a preview the client never PATCHes. Mandate rows are created only at claim-binding or by a Settings edit — get_or_default() returns a default WITHOUT persisting — so a user who has one keeps it, governed by the old answers, while the dialog promised otherwise. The copy now states the one thing true for both populations (no mandate yet → the retaken interview forms it at claim; mandate already there → untouched) and names the control that does work. 'Portfolio and trades are untouched' is unchanged and still verified. Whether restart SHOULD replace the mandate is a product question tracked separately, not a copy question. retranslate:[ar,ms]"
     },
     "floorRestartOnboardingConfirmCta": "RESTART",
     "@floorRestartOnboardingConfirmCta": {
@@ -126,6 +126,50 @@
     "portfolioCloseTooltip": "Close",
     "portfolioAddDialogTitle": "ADD TO WATCHLIST",
     "portfolioAddDialogHint": "Ticker (e.g. NVDA)",
+    "portfolioTabPositions": "POSITIONS",
+    "portfolioTabWatchlist": "WATCHLIST",
+    "portfolioTabHistory": "HISTORY",
+    "portfolioOpenTrades": "OPEN TRADES",
+    "portfolioClosedScope": "ACROSS ALL {count} CLOSED",
+    "@portfolioClosedScope": {
+        "description": "CR120 — caption under the closed-trade summary strip on the Portfolio History tab. {count} is the total number of closed trades, not the visible (capped) count.",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "portfolioClosed": "CLOSED",
+    "portfolioLastNClosed": "LAST {count} CLOSED",
+    "@portfolioLastNClosed": {
+        "description": "CR120 — History tab header when the closed-trade cap is in effect. {count} is the cap (25).",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "portfolioClosedSpan": "{from} – {to}",
+    "@portfolioClosedSpan": {
+        "description": "CR120 — the date span covered by the visible capped closed-trade list, e.g. '17 MAY – 28 JUL'. {from}/{to} arrive pre-formatted so this key never reformats a date itself.",
+        "placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}
+    },
+    "portfolioShowAll": "SHOW ALL {count}",
+    "@portfolioShowAll": {
+        "description": "CR120 — History tab escape hatch. In-place expansion from the 25-cap to every closed trade the Portfolio holds; {count} is the full total.",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "portfolioReviewInJournal": "REVIEW IN JOURNAL",
+    "portfolioJournalRetention": "Your Journal shows the last {days} days — {count} of these {total} are older. Nothing is deleted; they stay here.",
+    "@portfolioJournalRetention": {
+        "description": "CR120/D3 — plan-aware Journal pointer on the History tab, shown when retention_days is known and finite. Branches on retention_days, never on plan name or a hardcoded 30.",
+        "placeholders": {"days": {"type": "int"}, "count": {"type": "int"}, "total": {"type": "int"}}
+    },
+    "portfolioJournalRetentionUnknown": "Your Journal may not show all of these. Nothing is deleted; they stay here.",
+    "@portfolioJournalRetentionUnknown": {
+        "description": "CR120/D3 fail-safe — shown when retention_days has not been fetched yet (the Portfolio never calls the journal endpoint itself). Never the reassuring 'nothing deleted, no caveat' branch when it is merely unloaded."
+    },
+    "portfolioStatWon": "WON",
+    "portfolioStatLost": "LOST",
+    "portfolioStatHitRate": "HIT RATE",
+    "portfolioStatNet": "NET",
+    "portfolioSearchTicker": "SEARCH TICKER…",
+    "portfolioSortNewest": "NEWEST",
+    "portfolioSortValue": "VALUE",
+    "portfolioSortAZ": "A–Z",
+    "portfolioNoOpenPositions": "No open positions",
 
     "tickerDetailValue": "VALUE",
     "@tickerDetailValue": {
@@ -168,7 +212,15 @@
     },
     "tickerDetailChartUnavailable": "Chart unavailable. Tap to retry.",
     "@tickerDetailChartUnavailable": {
-        "description": "Error state shown in the chart slot on Ticker Detail when /v1/sim/history fails (network down, server returned no candles). Tapping retries the fetch."
+        "description": "Chart slot on Ticker Detail, TRANSIENT failure only — network down, timeout, or a 5xx. Tapping retries the fetch and could genuinely succeed. Do NOT reuse this for a rejected request or an empty result; those are tickerDetailChartRejected and tickerDetailChartNoHistory, and promising a retry that cannot work is the DEF151 defect."
+    },
+    "tickerDetailChartRejected": "AMI can't chart this one.",
+    "@tickerDetailChartRejected": {
+        "description": "Chart slot on Ticker Detail when the server REJECTED the request (a 4xx other than 429) — an unknown ticker, or a period it will not serve. Re-sending the identical request would fail identically, so this state offers no retry and is not tappable."
+    },
+    "tickerDetailChartNoHistory": "No price history for this period.",
+    "@tickerDetailChartNoHistory": {
+        "description": "Chart slot on Ticker Detail when the request SUCCEEDED and returned zero candles — e.g. a recently listed ticker viewed on 5Y. Not an error: nothing failed and nothing will change on a retry, so this state offers none. Keep the wording neutral, not apologetic."
     },
     "tickerDetailChartExpand": "Expand chart",
     "@tickerDetailChartExpand": {
@@ -322,9 +374,9 @@
     "journalFilterBrief": "BRIEF",
     "journalFilterLessons": "LESSONS",
     "journalFilterUnlocks": "UNLOCKS",
-    "journalRetentionWarning": "Floor Pass: last {days} days only. Upgrade to keep everything.",
+    "journalRetentionWarning": "Floor Pass: last {days} days only. Upgrade to see everything — nothing is deleted.",
     "@journalRetentionWarning": {
-        "description": "Amber notice on Journal when the user is on Floor Pass. {days} is the retention window.",
+        "description": "DEF155 — amber notice on Journal when the user is on Floor Pass. {days} is the retention window. Was 'Upgrade to keep everything', which asserted a data loss that does not happen: retention is a read-time filter (journal_store.py), not a delete, and entries reappear on upgrade. Fixed to the honest verb (see, not keep) plus an explicit nothing-is-deleted clause.",
         "placeholders": {"days": {"type": "int"}}
     },
     "journalEmptyTitle": "No entries yet.",
@@ -456,6 +508,8 @@
     "settingsSaving": "SAVING…",
     "settingsSave": "SAVE",
     "settingsMandateUpdated": "Mandate updated.",
+    "settingsRetroAuditFailed": "Couldn't check your holdings against the new limit — open Portfolio to verify.",
+    "@settingsRetroAuditFailed": {"description": "DEF194 — the mandate PATCH succeeded, but the follow-up retro-tightening breach check (GET /v1/mandate/{id}/audit) failed. Deliberately NOT an error dialog: the save DID succeed, so this must read as 'we could not check', never as 'something went wrong with your save' or 'you are compliant'. retranslate:[ar,ms]"},
     "settingsSectionMandate": "MY MANDATE",
     "settingsSectionCompliance": "COMPLIANCE",
     "settingsSectionProfile": "PROFILE",
@@ -475,6 +529,119 @@
     "settingsRiskLabel5": "Highest risk tolerance. Concentrated bets allowed.",
     "settingsMaxDrawdown": "Max drawdown",
     "settingsMaxDrawdownExplain": "Your PM refuses trades that would push the portfolio past this.",
+    "settingsSectionRiskLimits": "RISK LIMITS",
+    "@settingsSectionRiskLimits": {
+        "description": "CR101-MOBILE. Section header for the seven settable risk-limit fields (sector cap, single-name cap, post-loss cooldown, max open positions, max trades/day, max trades/week, total open-risk cap). retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsProfileFollowing": "Following your risk profile",
+    "@settingsRiskLimitsProfileFollowing": {
+        "description": "CR101-MOBILE. Shown under the L1 risk-profile dial when neither sector_cap_pct nor single_name_cap_pct has an explicit override — those two fields fall back to a server-side preset this API does not expose a number for (CR101-BE1 bridge), so this deliberately does NOT claim a value, and deliberately does NOT say 'OFF' (a cap is still enforced, just not an explicit one). Reused as the OFF-chip label for the same two fields inside the L2 editor. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsProfileCustom": "Custom",
+    "@settingsRiskLimitsProfileCustom": {
+        "description": "CR101-MOBILE. Shown under the L1 dial once the user has set an explicit sector or single-name cap override in L2 (acceptance 3: any L2 edit to either field moves the dial to Custom). retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsExpand": "Set my own limits",
+    "@settingsRiskLimitsExpand": {
+        "description": "CR101-MOBILE L2 disclosure toggle — expands the seven per-field editors, each in its own units. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsOff": "OFF",
+    "@settingsRiskLimitsOff": {
+        "description": "CR101-MOBILE. OFF-chip label for the five CR101-BE2 fields, where an unset value is genuinely unenforced (not a preset fallback like the two BE1 caps). retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsSectorCapLabel": "Sector concentration cap",
+    "@settingsRiskLimitsSectorCapLabel": {
+        "description": "CR101-MOBILE / CR101-BE1 `sector_cap_pct`, percentage points. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsSectorCapExplain": "Blocks a BUY that would push any one sector above this share of your portfolio. Unset follows your risk profile.",
+    "@settingsRiskLimitsSectorCapExplain": {
+        "description": "CR101-MOBILE / CR101-BE1 `sector_cap_pct` explainer. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsSingleNameCapLabel": "Single-name position cap",
+    "@settingsRiskLimitsSingleNameCapLabel": {
+        "description": "CR101-MOBILE / CR101-BE1 `single_name_cap_pct`, percentage points. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsSingleNameCapExplain": "Blocks a BUY that would size one position above this share of your portfolio. Unset follows your risk profile.",
+    "@settingsRiskLimitsSingleNameCapExplain": {
+        "description": "CR101-MOBILE / CR101-BE1 `single_name_cap_pct` explainer. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsCooldownLabel": "Post-loss cooldown",
+    "@settingsRiskLimitsCooldownLabel": {
+        "description": "CR101-MOBILE / CR101-BE2 `post_loss_cooldown_hours`, in hours. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsCooldownExplain": "Blocks new BUYs for this many hours after your last realised loss.",
+    "@settingsRiskLimitsCooldownExplain": {
+        "description": "CR101-MOBILE / CR101-BE2 `post_loss_cooldown_hours` explainer. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxOpenPositionsLabel": "Max open positions",
+    "@settingsRiskLimitsMaxOpenPositionsLabel": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_open_positions`, a distinct-ticker count. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxOpenPositionsExplain": "Blocks a BUY that would open a new ticker once you're at this many distinct positions. Adding to a position you already hold is unaffected.",
+    "@settingsRiskLimitsMaxOpenPositionsExplain": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_open_positions` explainer. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxTradesPerDayLabel": "Max trades per day",
+    "@settingsRiskLimitsMaxTradesPerDayLabel": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_trades_per_day`, a count. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxTradesPerDayExplain": "Blocks any trade once you've submitted this many today (UTC calendar day).",
+    "@settingsRiskLimitsMaxTradesPerDayExplain": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_trades_per_day` explainer — fixed UTC basis per the BE2 bridge, not the user's local timezone. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxTradesPerWeekLabel": "Max trades per week",
+    "@settingsRiskLimitsMaxTradesPerWeekLabel": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_trades_per_week`, a count. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxTradesPerWeekExplain": "Blocks any trade once you've submitted this many this week (Monday 00:00 UTC).",
+    "@settingsRiskLimitsMaxTradesPerWeekExplain": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_trades_per_week` explainer — fixed ISO week from Monday 00:00 UTC per the BE2 bridge. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxOpenRiskLabel": "Total open-risk cap",
+    "@settingsRiskLimitsMaxOpenRiskLabel": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_open_risk_pct`, percentage points. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxOpenRiskExplain": "Caps the sum of (position size % x stop distance %) across your open positions — your total capital at risk to stops.",
+    "@settingsRiskLimitsMaxOpenRiskExplain": {
+        "description": "CR101-MOBILE / CR101-BE2 `max_open_risk_pct` explainer. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsMaxOpenRiskPreviewNote": "Confirmed at trade submission — not shown as within-limits in the trade preview.",
+    "@settingsRiskLimitsMaxOpenRiskPreviewNote": {
+        "description": "CR101-MOBILE, per the assign's item 3b and CR101-BE2 auditor finding M1: sim_engine.preview() has no `stop` parameter, so it cannot price a proposed trade's OWN contribution to max_open_risk_pct — a trade that would tip an under-cap portfolio over the cap shows as fine in preview and only blocks at real submit. This note sits next to the field so the trade-ticket preview is never read as authoritative for this one limit (CR046 shown-equals-enforced). retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsDisclosureFollowing": "This replaces your risk-profile default with an explicit value, effective immediately.",
+    "@settingsRiskLimitsDisclosureFollowing": {
+        "description": "CR101-MOBILE L3 disclosure: shown when sector_cap_pct or single_name_cap_pct moves from unset (profile preset) to an explicit value. Direction (looser/tighter than the preset) is unknowable client-side — the preset's resolved number is never returned by the API (CR101-BE1 bridge) — so this states the mechanism honestly instead of guessing a direction. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsDisclosureLooser": "This allows more risk than your current setting.",
+    "@settingsRiskLimitsDisclosureLooser": {
+        "description": "CR101-MOBILE L3 disclosure: shown when an edit numerically loosens an already-explicit limit (e.g. raising a percent/count cap, or shortening the cooldown). retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsDisclosureOff": "This removes the limit entirely — it will not block anything.",
+    "@settingsRiskLimitsDisclosureOff": {
+        "description": "CR101-MOBILE L3 disclosure: shown when clearing a previously-explicit value back to OFF/unset. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsDisclosure100": "100% removes any real ceiling from this limit — allowed, but it means no protection here.",
+    "@settingsRiskLimitsDisclosure100": {
+        "description": "CR101-MOBILE L3 disclosure, CR040 'a silent 100% is not allowed': shown whenever a percent field (sector_cap_pct / single_name_cap_pct / max_open_risk_pct) is set to exactly 100, regardless of its prior value — a nominally-set cap that in practice enforces nothing. retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsRetroTitle": "Some holdings now breach this limit",
+    "@settingsRiskLimitsRetroTitle": {
+        "description": "CR101-MOBILE retro-tightening dialog title (assign §3), shown after a save when GET /v1/mandate/{id}/audit reports max_open_positions_breach or max_open_risk_pct_breach — the only two of the seven fields with a portfolio-state dimension (BE2 bridge judgment call 3). retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsRetroBody": "Affected holdings are flagged below. New BUYs that would add to the breach are blocked. Nothing is sold automatically.",
+    "@settingsRiskLimitsRetroBody": {
+        "description": "CR101-MOBILE retro-tightening dialog body — must never imply a forced sell (backend fixed behaviour, BE2 bridge acceptance 6). retranslate:[ar,ms]"
+    },
+    "settingsRiskLimitsRetroTickers": "Flagged: {tickers}",
+    "@settingsRiskLimitsRetroTickers": {
+        "description": "CR101-MOBILE retro-tightening dialog — comma-joined list of the tickers HoldingsAuditResult.violations names. {tickers} is a plain joined string, not a count.",
+        "placeholders": {"tickers": {"type": "String"}}
+    },
+    "settingsRiskLimitsRetroDismiss": "Got it",
+    "@settingsRiskLimitsRetroDismiss": {
+        "description": "CR101-MOBILE retro-tightening dialog dismiss CTA. retranslate:[ar,ms]"
+    },
     "settingsComplianceHalal": "Sharia screen — AAOIFI",
     "@settingsComplianceHalal": {
         "description": "CR069 Phase 1b (supersedes the DEF084 placeholder). Toggle label for the halal mandate flag. The flag now enforces a REAL, SOURCED screen: AMI reads the published constituents of the S&P 500 Sharia Industry Exclusions Index, which S&P Dow Jones screens to the AAOIFI standard. AMI does not run its own ruling and computes no ratios. OBSERVANCE-SENSITIVE. Translator notes: (a) 'AAOIFI' is the proper name of a standards body (Accounting and Auditing Organization for Islamic Financial Institutions) — transliterate, never translate or expand it; (b) 'Sharia screen' means a compliance filter applied by that standard, NOT a religious ruling by AMI; (c) do not render this as 'halal' or 'permitted' — naming the standard is the whole point of the string. Saiful arranges translation externally."
@@ -738,6 +905,19 @@
 
     "roomHeadingPrefix": "CONVENE ›",
     "roomStandingBy": "standing by",
+    "roomAgentThinking": "thinking…",
+    "@roomAgentThinking": {"description": "Live roster row status while an agent's turn is in progress (CR112). retranslate:[ar,ms]"},
+    "roomAgentInterrupted": "INTERRUPTED",
+    "@roomAgentInterrupted": {"description": "Live roster row terminal status for an agent whose turn never completed because the run itself broke (stream error / reconnect timeout) — never rendered as RESPONDED (CR112, DEF059-class). retranslate:[ar,ms]"},
+    "roomAgentTruncatedMark": "Cut short by its length limit — open the transcript to read what landed.",
+    "@roomAgentTruncatedMark": {"description": "Tooltip/semantic label for the amber DEF125 mark on a live roster row whose contribution hit its length limit (CR112). retranslate:[ar,ms]"},
+    "roomAgentResponded": "responded",
+    "@roomAgentResponded": {"description": "Live roster row status once an agent's turn has completed and a stance was recorded (CR112). retranslate:[ar,ms]"},
+    "roomAgentStatusSemantic": "{agent}: {status}",
+    "@roomAgentStatusSemantic": {
+        "description": "DEF174 — accessibility label for a live-roster seat, combining the agent's name and its status (waiting / thinking / responded / interrupted) so a screen reader is told the same thing the pulsing hex avatar shows sighted users.",
+        "placeholders": {"agent": {"type": "String"}, "status": {"type": "String"}}
+    },
     "roomDeliberating": "Team deliberating…",
     "roomEndedNoVerdict": "Room ended without a verdict.",
     "roomSavedToJournal": "Saved to Journal",
@@ -1157,11 +1337,6 @@
     "@roomViewModeBoard": {"description": "Segmented-control label for the graphical Verdict Board view of a finished Room run. Mono uppercase, ~5 chars — it shares a 152pt control with roomViewModeTranscript."},
     "roomViewModeTranscript": "TRANSCRIPT",
     "@roomViewModeTranscript": {"description": "Segmented-control label for the collapsed per-agent transcript view. Mono uppercase; keep as short as the language allows."},
-    "roomStripMeta": "{seconds}s · {credits} CREDITS",
-    "@roomStripMeta": {
-        "description": "Sub-header strip on a LIVE Room: how long the run took and what it cost. Mono. The Journal shows journalStripMeta instead — the snapshot never recorded either number.",
-        "placeholders": {"seconds": {"type": "int", "example": "41"}, "credits": {"type": "int", "example": "3"}}
-    },
     "roomHeroApprove": "THE ROOM APPROVED",
     "@roomHeroApprove": {"description": "Hero heading when the Portfolio Manager approved the trade. Mono uppercase."},
     "roomHeroPass": "THE ROOM PASSED",
@@ -1280,11 +1455,11 @@
         "description": "Caption over prices in a saved journal entry. The prices are historical; offering them as a live setup would invite a trade at a stale level.",
         "placeholders": {"date": {"type": "String", "example": "02 JUN 2026"}}
     },
-    "journalStripMeta": "{tier} TIER · MANDATE v{version}",
-    "@journalStripMeta": {
-        "description": "Sub-header strip on a journal replay, where duration and credit cost were never recorded.",
-        "placeholders": {"tier": {"type": "String", "example": "MID"}, "version": {"type": "int", "example": "7"}}
-    },
     "journalRerunWithMandate": "RE-RUN WITH CURRENT MANDATE",
-    "@journalRerunWithMandate": {"description": "Action on a journal replay: convene the room again on this ticker under today's rules, instead of trading a months-old price."}
+    "@journalRerunWithMandate": {"description": "Action on a journal replay: convene the room again on this ticker under today's rules, instead of trading a months-old price."},
+    "aiCoachEmptyStateHint": "{count} questions and answers across platform, psychology, scams, AI meta, and beginner / intermediate topics. Type to search.",
+    "@aiCoachEmptyStateHint": {
+        "description": "DEF198 — AI Coach empty-state hint shown before the user has typed a query (fewer than 2 characters). {count} is AiCoachCorpus.totalCount (lib/models/ai_coach.dart) — a hand-maintained literal until a backend total-entry field exists; see that class's doc for why. This copy was previously a raw, unlocalized Dart string. retranslate:[ar,ms]",
+        "placeholders": {"count": {"type": "int"}}
+    }
 }

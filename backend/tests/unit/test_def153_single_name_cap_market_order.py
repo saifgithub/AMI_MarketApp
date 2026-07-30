@@ -32,13 +32,20 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from app.agents.safety_floor import SINGLE_NAME_CAP_PCT, check_mandate_compliance
+from app.agents.safety_floor import check_mandate_compliance
 from app.schemas.trade import OrderType, ProposedTrade, Side
 from app.services.coach_engine import hydrate_coach_mandate
 from app.services.sector_allocation import OTHER
 
 _PORTFOLIO = 10_000.0
 _PRICE = 100.0
+
+# CR101-BE1 made the single-name cap per-mandate (settable) rather than the fixed
+# 50% absolute backstop. This suite is about the DEF153 pricing mechanism (one
+# price feeds both concentration caps), not about a specific cap value, so the
+# fixture mandate pins an explicit `single_name_cap_pct` override to 50.0 —
+# preserving every percentage threshold this file already asserts.
+_CAP = 50.0
 
 _SECTORS = {"AAPL": "Technology"}
 
@@ -68,10 +75,15 @@ def _check(
         proposed,
         portfolio_value=portfolio_value,
         current_drawdown_pct=0.0,
-        mandate=hydrate_coach_mandate({"plan": "trader"}),
+        mandate=hydrate_coach_mandate({"plan": "trader"}).model_copy(
+            update={"single_name_cap_pct": _CAP}
+        ),
         holdings=[],
         quotes={"AAPL": _PRICE} if quotes is None else quotes,
         sector_map=sector_map,
+        # CR129: the five BE2 limits are always-active now; this file is
+        # about single-name-cap pricing, not these — harmless real context.
+        last_loss_closed_at=None, trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
 
 
@@ -87,7 +99,7 @@ def test_a_market_buy_over_the_cap_is_blocked():
     result = _check(quantity=90.0, order_type=OrderType.MARKET)
     assert not result.passed, "a 90% market buy sailed past a 50% single-name cap"
     assert _size_violations(result) == [
-        f"position size 90.0% exceeds single-name cap {SINGLE_NAME_CAP_PCT}%"
+        f"position size 90.0% exceeds single-name cap {_CAP}%"
     ]
     assert result.blocked_by == "concentration"
 
@@ -112,7 +124,7 @@ def test_a_market_buy_under_the_cap_still_passes():
 def test_the_boundary_sits_where_it_did_before():
     """Exactly at the cap passes; a cent over does not. Pinned so a later change
     to the pricing expression cannot quietly move the line."""
-    at_cap = _PORTFOLIO * SINGLE_NAME_CAP_PCT / 100 / _PRICE
+    at_cap = _PORTFOLIO * _CAP / 100 / _PRICE
     assert _check(quantity=at_cap, order_type=OrderType.MARKET).passed
     assert not _check(quantity=at_cap + 0.01, order_type=OrderType.MARKET).passed
 

@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, UploadFile, status
 
 from app.core.logging import logger
 from app.schemas.feedback import (
@@ -35,6 +35,7 @@ from app.services.bug_attachments import (
     save_attachment_streaming,
 )
 from app.services.feedback_store import get_feedback_store
+from app.services.rate_limit import bug_upload_rate_limit
 
 router = APIRouter(prefix="/v1/feedback", tags=["feedback"])
 
@@ -54,6 +55,7 @@ def _resolve_user_id(authorization: str | None) -> UUID | None:
     "/bug",
     response_model=BugReportResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(bug_upload_rate_limit)],
 )
 async def submit_bug_report(
     category: str = Form(...),
@@ -65,6 +67,10 @@ async def submit_bug_report(
     file: UploadFile | None = File(default=None),
     authorization: str | None = Header(default=None),
 ) -> BugReportResponse:
+    # DEF186 / H9 (security review): unauthenticated by design (a crash
+    # report should survive a broken session), but was completely
+    # unrate-limited — looping 5 MB uploads fills the disk. IP-keyed,
+    # 5/hour (the review's own suggested figure).
     user_id = _resolve_user_id(authorization)
 
     attachment_path: str | None = None

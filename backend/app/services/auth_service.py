@@ -360,23 +360,39 @@ class AuthService:
         email: str,
         code: str,
         user_id: UUID | None,
+        challenge_owner_id: UUID | None = None,
     ) -> tuple[AuthUser, str, UUID | None] | None:
         """Returns (user, token, adopted_from_user_id) on success.
         `adopted_from_user_id` is set when account-linking Phase 1 silently
         adopted an existing email-row over the caller's anon — i.e. the
-        returned `user.id` differs from the caller's pre-claim user_id."""
+        returned `user.id` differs from the caller's pre-claim user_id.
+
+        DEF180 (security review H5): `challenge_owner_id`, when supplied
+        (the route always supplies the caller's Bearer-authenticated
+        user_id), scopes the active-challenge lookup to challenges THAT
+        user themselves started via `/magic_link/start`. Without this, the
+        lookup matched on `target` email alone, so any authenticated
+        caller could brute-force-guess the code on a challenge some OTHER
+        user started for their own email-claim flow. None (only used by
+        direct service-layer callers/tests, never the route) preserves
+        the old email-only lookup.
+        """
         target = email.lower().strip()
         with get_session() as s:
             # Find the most recent active (unconsumed + unexpired) challenge
             # for this target regardless of code, so a wrong-code attempt can
             # bump its counter. The hash comparison happens after.
+            conditions = [
+                AuthChallengeRow.kind == "magic_link",
+                AuthChallengeRow.target == target,
+                AuthChallengeRow.consumed_at.is_(None),
+                AuthChallengeRow.expires_at > datetime.now(timezone.utc),
+            ]
+            if challenge_owner_id is not None:
+                conditions.append(AuthChallengeRow.user_id == challenge_owner_id)
             active = s.execute(
-                select(AuthChallengeRow).where(
-                    AuthChallengeRow.kind == "magic_link",
-                    AuthChallengeRow.target == target,
-                    AuthChallengeRow.consumed_at.is_(None),
-                    AuthChallengeRow.expires_at > datetime.now(timezone.utc),
-                ).order_by(AuthChallengeRow.created_at.desc()).limit(1)
+                select(AuthChallengeRow).where(*conditions)
+                .order_by(AuthChallengeRow.created_at.desc()).limit(1)
             ).scalar_one_or_none()
             if active is None:
                 return None

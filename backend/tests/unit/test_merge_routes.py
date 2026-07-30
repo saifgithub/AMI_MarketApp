@@ -94,10 +94,13 @@ def test_apple_response_carries_adopted_from_user_id_on_adoption(client: TestCli
 
     # Second device — fresh anon, then Apple ships same email.
     user_b_au, token_b, _ = auth.ensure_anonymous(device_user_id=None)
-    r = client.post("/v1/auth/apple", json={
-        "identity_token": _apple_jwt("apple-sub-adopt", email="adopt-me@example.com"),
-        "user_id": str(user_b_au.id),
-    })
+    r = client.post(
+        "/v1/auth/apple",
+        json={
+            "identity_token": _apple_jwt("apple-sub-adopt", email="adopt-me@example.com"),
+        },
+        headers={"Authorization": f"Bearer {token_b}"},
+    )
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["user"]["id"] == str(user_a_au.id)
@@ -109,10 +112,13 @@ def test_apple_response_adopted_from_is_null_on_fresh_claim(client: TestClient):
     must be null (the same row got claimed, not adopted)."""
     auth = get_auth_service()
     user_au, token, _ = auth.ensure_anonymous(device_user_id=None)
-    r = client.post("/v1/auth/apple", json={
-        "identity_token": _apple_jwt("brand-new-sub", email="fresh@example.com"),
-        "user_id": str(user_au.id),
-    })
+    r = client.post(
+        "/v1/auth/apple",
+        json={
+            "identity_token": _apple_jwt("brand-new-sub", email="fresh@example.com"),
+        },
+        headers={"Authorization": f"Bearer {token}"},
+    )
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["user"]["id"] == str(user_au.id)  # promoted in place

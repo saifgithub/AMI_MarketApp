@@ -14,6 +14,7 @@ class JournalState {
     this.entries = const [],
     this.loading = false,
     this.retentionDays,
+    this.retentionLoaded = false,
     this.filterType,
     this.searchQuery = '',
     this.error,
@@ -22,6 +23,16 @@ class JournalState {
   final List<JournalEntry> entries;
   final bool loading;
   final int? retentionDays;
+
+  /// CR120/D3 — `retentionDays == null` is ambiguous on its own: it means
+  /// both "unlimited" and "never fetched", and a screen that never calls
+  /// the journal endpoint (the Portfolio) cannot tell those apart from
+  /// `retentionDays` alone. This flips true only once a `refresh()` call
+  /// has actually completed successfully, so a caller can distinguish
+  /// unknown (`!retentionLoaded`) from known-unlimited
+  /// (`retentionLoaded && retentionDays == null`). Deliberately NOT set on
+  /// a failed refresh — an error tells us nothing about retention either.
+  final bool retentionLoaded;
   final JournalEntryType? filterType;
   final String searchQuery;
   final String? error;
@@ -30,16 +41,23 @@ class JournalState {
     List<JournalEntry>? entries,
     bool? loading,
     int? retentionDays,
+    bool? retentionLoaded,
     JournalEntryType? filterType,
     String? searchQuery,
     String? error,
     bool clearError = false,
     bool clearFilter = false,
+    // `retentionDays: null` cannot mean "unlimited" through `?? this.x` — it
+    // reads as "unchanged". So an upgrade to an unlimited plan could never
+    // clear a stale finite value, and the caveat kept showing (DEF156).
+    bool clearRetentionDays = false,
   }) {
     return JournalState(
       entries: entries ?? this.entries,
       loading: loading ?? this.loading,
-      retentionDays: retentionDays ?? this.retentionDays,
+      retentionDays:
+          clearRetentionDays ? null : (retentionDays ?? this.retentionDays),
+      retentionLoaded: retentionLoaded ?? this.retentionLoaded,
       filterType: clearFilter ? null : (filterType ?? this.filterType),
       searchQuery: searchQuery ?? this.searchQuery,
       error: clearError ? null : (error ?? this.error),
@@ -71,6 +89,8 @@ class JournalNotifier extends StateNotifier<JournalState> {
         entries: resp.entries,
         loading: false,
         retentionDays: resp.retentionDays,
+        clearRetentionDays: resp.retentionDays == null,
+        retentionLoaded: true,
         filterType: filterType,
       );
     } catch (e) {

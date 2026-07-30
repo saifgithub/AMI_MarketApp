@@ -19,6 +19,7 @@ import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/state/backend_mode_provider.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/screens/settings/alpaca_connect_screen.dart';
+import 'package:ami_trade/screens/settings/risk_limits_section.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
 import 'package:ami_trade/state/league_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
@@ -42,10 +43,49 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   ComplianceFlags? _localCompliance;
   bool _dirty = false;
 
+  // CR101-MOBILE — the seven risk-limit fields. `containsKey` marks a field
+  // touched this session; the (possibly null) value is what gets PATCHed.
+  // Cleared after a successful save so the NEXT build reads straight off
+  // the server's returned mandate (acceptance 2's round-trip contract).
+  final Map<String, dynamic> _pendingRiskLimits = {};
+  bool _riskLimitsExpanded = false;
+
   void _initFrom(UserMandate m) {
     _localRiskScore ??= m.riskScore;
     _localMaxDD ??= m.maxDrawdownPct;
     _localCompliance ??= m.compliance;
+  }
+
+  void _onRiskLimitChanged(LimitFieldConfig cfg, num? value) {
+    setState(() => _pendingRiskLimits[cfg.key] = value);
+  }
+
+  /// Acceptance 3: an explicit override on EITHER CR101-BE1 cap moves the
+  /// dial to Custom — those two are the only fields the backend defines a
+  /// risk-profile preset relationship for (see file header).
+  bool _isCustomRiskProfile(UserMandate m) {
+    final sector = _pendingRiskLimits.containsKey('sector_cap_pct')
+        ? _pendingRiskLimits['sector_cap_pct'] as num?
+        : m.sectorCapPct;
+    final singleName = _pendingRiskLimits.containsKey('single_name_cap_pct')
+        ? _pendingRiskLimits['single_name_cap_pct'] as num?
+        : m.singleNameCapPct;
+    return sector != null || singleName != null;
+  }
+
+  /// L1: choosing a risk-profile score re-asserts "follow the profile
+  /// preset" for the two CR101-BE1 caps, so the dial always writes a
+  /// coherent, non-Custom state — matching the assign's "L1 writes all
+  /// caps coherently from a preset". The five CR101-BE2 fields have no
+  /// backend-defined preset relationship to risk_score (disclosed in the
+  /// hand-off), so L1 does not touch them.
+  void _onRiskScoreChanged(int v) {
+    setState(() {
+      _localRiskScore = v;
+      _dirty = true;
+      _pendingRiskLimits['sector_cap_pct'] = null;
+      _pendingRiskLimits['single_name_cap_pct'] = null;
+    });
   }
 
   Future<void> _save() async {
@@ -61,9 +101,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (_localCompliance != null) {
       updates['compliance'] = _localCompliance!.toPatchJson();
     }
+    final touchedRiskLimits = Map<String, dynamic>.from(_pendingRiskLimits);
+    updates.addAll(touchedRiskLimits);
     if (updates.isEmpty) return;
     await ref.read(mandateNotifierProvider.notifier).patch(updates);
-    setState(() => _dirty = false);
+    setState(() {
+      _dirty = false;
+      _pendingRiskLimits.clear();
+    });
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(AppLocalizations.of(context).settingsMandateUpdated)),
@@ -71,6 +116,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     // Sim portfolio's compliance evaluation depends on the mandate —
     // refresh so any newly-rejectable holdings show up correctly.
     await ref.read(simNotifierProvider.notifier).refresh();
+    // CR101-MOBILE retro-tightening (assign §3): only `max_open_positions`
+    // and `max_open_risk_pct` have a portfolio-state dimension at all. No
+    // preview endpoint exists (BL12's audit reads the CURRENTLY PERSISTED
+    // mandate), so this necessarily runs immediately after the save, not
+    // before it — disclosed in the bridge.
+    final touchedRetroFields = touchedRiskLimits.keys
+        .where((k) => k == 'max_open_positions' || k == 'max_open_risk_pct');
+    if (touchedRetroFields.isEmpty || !mounted) return;
+    try {
+      final audit = await ref.read(apiClientProvider).auditMandateHoldings(m.userId);
+      if (!audit.anyRetroBreach || !mounted) return;
+      await RetroTighteningDialog.show(context, audit.violationTickers);
+    } catch (_) {
+      // DEF194 — the swallow itself stays (a failed audit read must not
+      // block or misrepresent a save that already succeeded), but silence
+      // on this path used to be indistinguishable from "nothing is in
+      // breach": the user tightened a limit specifically to find out
+      // whether it bites, and got the same nothing either way. This is
+      // NOT an error dialog — the save DID succeed, and presenting it as a
+      // failure would be the opposite misrepresentation — just the third,
+      // honest state: "we could not check", visible rather than logged.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content:
+                Text(AppLocalizations.of(context).settingsRetroAuditFailed)),
+      );
+    }
   }
 
   @override
@@ -90,7 +163,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _Header(version: m.version, saving: state.saving, dirty: _dirty, onSave: _save),
+            _Header(
+              version: m.version,
+              saving: state.saving,
+              dirty: _dirty || _pendingRiskLimits.isNotEmpty,
+              onSave: _save,
+            ),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(AmiSpacing.m),
@@ -98,10 +176,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   _Section(title: l.settingsSectionMandate, children: [
                     _RiskSlider(
                       value: _localRiskScore ?? m.riskScore,
-                      onChanged: (v) => setState(() {
-                        _localRiskScore = v;
-                        _dirty = true;
-                      }),
+                      onChanged: _onRiskScoreChanged,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _isCustomRiskProfile(m)
+                          ? l.settingsRiskLimitsProfileCustom
+                          : l.settingsRiskLimitsProfileFollowing,
+                      style: AmiTypography.caption.copyWith(color: AmiColors.hexCyan),
                     ),
                     const SizedBox(height: AmiSpacing.l),
                     _DrawdownPicker(
@@ -110,6 +192,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         _localMaxDD = v;
                         _dirty = true;
                       }),
+                    ),
+                  ]),
+                  const SizedBox(height: AmiSpacing.l),
+                  _Section(title: l.settingsSectionRiskLimits, children: [
+                    RiskLimitsSection(
+                      mandate: m,
+                      pending: _pendingRiskLimits,
+                      onFieldChanged: _onRiskLimitChanged,
+                      expanded: _riskLimitsExpanded,
+                      onToggleExpanded: () =>
+                          setState(() => _riskLimitsExpanded = !_riskLimitsExpanded),
                     ),
                   ]),
                   const SizedBox(height: AmiSpacing.l),

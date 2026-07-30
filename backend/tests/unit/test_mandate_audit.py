@@ -39,12 +39,16 @@ def _holding(ticker: str, qty: float = 1.0, avg_cost: float = 100.0) -> Holding:
 
 
 def test_audit_passes_when_holdings_compliant(base_mandate: Mandate) -> None:
+    # CR129/DEF187: permissive single-name cap — this test is about the
+    # audit's blocklist/halal/drawdown legs, not position sizing (MSFT here
+    # is 6% of the book, over the ~3% risk-tier preset).
+    mandate = base_mandate.model_copy(update={"single_name_cap_pct": 100.0})
     result = check_holdings_against_mandate(
         holdings=[_holding("AAPL", 5, 100), _holding("MSFT", 3, 200)],
         marks={"AAPL": 100, "MSFT": 200},
         portfolio_value=10_000,
         current_drawdown_pct=2.0,
-        mandate=base_mandate,
+        mandate=mandate,
     )
     assert result.passed
     assert result.violations == []
@@ -54,9 +58,14 @@ def test_audit_passes_when_holdings_compliant(base_mandate: Mandate) -> None:
 
 def test_audit_flags_blocklisted_holding(base_mandate: Mandate) -> None:
     mandate = base_mandate.model_copy(
-        update={"compliance": Compliance(
-            long_only=True, liquid_only=True, ticker_blocklist=["AAPL"],
-        )},
+        update={
+            "compliance": Compliance(
+                long_only=True, liquid_only=True, ticker_blocklist=["AAPL"],
+            ),
+            # CR129/DEF187: permissive single-name cap — MSFT is 6% of the
+            # book, over the ~3% risk-tier preset, which isn't this test's point.
+            "single_name_cap_pct": 100.0,
+        },
     )
     result = check_holdings_against_mandate(
         holdings=[_holding("AAPL", 5, 100), _holding("MSFT", 3, 200)],
@@ -74,9 +83,14 @@ def test_audit_flags_blocklisted_holding(base_mandate: Mandate) -> None:
 
 def test_audit_flags_halal_violation(base_mandate: Mandate) -> None:
     mandate = base_mandate.model_copy(
-        update={"compliance": Compliance(
-            halal=True, long_only=True, liquid_only=True,
-        )},
+        update={
+            "compliance": Compliance(
+                halal=True, long_only=True, liquid_only=True,
+            ),
+            # CR129/DEF187: permissive single-name cap — AAPL is 5% of the
+            # book, over the ~3% risk-tier preset, which isn't this test's point.
+            "single_name_cap_pct": 100.0,
+        },
     )
     # NEVR is not in halal universe; AAPL is.
     result = check_holdings_against_mandate(
@@ -166,7 +180,10 @@ def test_audit_endpoint_surfaces_violation_after_blocklist_patch(
     user_id, token = _make_user_and_token()
     hdr = {"Authorization": f"Bearer {token}"}
     sim = get_sim_engine()
-    mandate = hydrate_coach_mandate({"plan": "trader"})
+    # CR129/DEF187: permissive single-name cap — this setup buy is
+    # deliberately ~30% of the book (see comment below); the risk-tier
+    # preset (~3%) isn't what this test is about.
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
 
     # Buy something — genuinely under the 50% single-name cap, sized against the
     # live mark rather than a fixed 20 shares. DEF153: at 20 shares this was 77%

@@ -515,7 +515,7 @@ duplicating, because the Pydantic shape drifts faster than markdown
 can keep up.
 
 - `app/schemas/auth.py` — `AuthUser`, `AnonSessionRequest/Response`, magic-link + Apple verify
-- `app/schemas/mandate.py` — full `Mandate` + nested `Compliance`, `RiskComponents`, `DailyBriefing`, `TargetOutcome`
+- `app/schemas/mandate.py` — full `Mandate` + nested `Compliance`, `RiskComponents`, `TargetOutcome` (`DailyBriefing` deleted by CR114 / DEF129)
 - `app/schemas/brief.py` — `BriefSession`, `BriefProposal`, `BriefRefusal`, `UserOverlay`, history
 - `app/schemas/onboarding.py` — `OnboardingSession`, question/answer types
 - `app/schemas/room.py` — `RoomRun`, `AgentMessage`, `Verdict`

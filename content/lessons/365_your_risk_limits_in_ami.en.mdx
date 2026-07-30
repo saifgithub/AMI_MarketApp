@@ -1,0 +1,100 @@
+---
+id: "365_your_risk_limits_in_ami"
+title: "Your risk limits, and why they sit where they do"
+duration_min: 7
+level: 2
+module: 3
+difficulty: 2
+track: "edge_process"
+code: "EDGE 99"
+prerequisites: ["009_risk_profile_basics", "014_position_sizing_basics", "017_portfolio_exposure_and_correlation", "047_revenge_trading"]
+topic: "mandate_risk_limits"
+tags: ["mandate", "risk_limits", "settings", "cooldown", "diversification", "overtrading", "position_sizing"]
+sources: ["Barber & Odean — Trading Is Hazardous to Your Wealth, Journal of Finance 55(2), 2000 (66,465 households, 1991–1996)", "Barber, Lee, Liu & Odean — Do Individual Day Traders Make Money? / The Cross-Section of Speculator Skill (Taiwan, 1992–2006)", "Evans & Archer — Diversification and the Reduction of Dispersion, Journal of Finance, 1968", "Raju, R. — Equity Portfolio Diversification: How Many Stocks Are Enough? (2021)", "Statman, M. — How Many Stocks Make a Diversified Portfolio?, JFQA, 1987"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en", "ar", "ms"]
+created_at: "2026-07-30"
+updated_at: "2026-07-30"
+---
+
+# Your risk limits, and why they sit where they do
+
+Open Settings → Risk Limits and you will find seven numbers. You did not type any of them. AMI derived every one from the risk tolerance you gave during your interview, and every one of them can be changed by you at any time. After this lesson you will know what each limit does, where its number came from, and — the part most people skip — why a limit you never chose is still worth keeping.
+
+## The seven, and what each one actually stops
+
+| Limit | What it blocks | Where the number comes from |
+|---|---|---|
+| Sector cap | A buy that pushes one sector past your share | Your concentration answer |
+| Single-name cap | A position too large in one ticker | Your risk score |
+| Post-loss cooldown | The next buy, for a set time after a stop-out | Your risk score |
+| Max open positions | Opening a name you don't already hold | Diversification research (below) |
+| Max trades per day | The next trade once you hit the count | Burst detection, not turnover |
+| Max trades per week | Same, over a rolling week | Same |
+| Total open risk | A buy that pushes your combined risk over budget | The drawdown *you* said you could stomach |
+
+The last one is the one people misread. **Total open risk is not how much you have invested — it is how much you lose if every stop hits at once.** A position of 3% of your portfolio with a stop 10% below entry puts 0.3% at risk, not 3%. That is the number AMI adds up.
+
+## Where the numbers came from — the honest version
+
+Three of these are grounded in published data rather than judgement, and it is worth knowing which.
+
+**Max open positions is not a risk dial.** This is the one that surprises people: a more aggressive profile does not get *fewer* names. Diversification is not something you trade away for returns. [Evans & Archer (1968)](https://www.jstor.org/stable/2325950) put the old rule of thumb at 8–10 stocks; later work pushed it up, and the modern range is roughly 20–40, with 30–50 usually described as the point past which extra names stop helping much. Raju (2021) found you need 40–50 names to cut company-specific risk by 90%.
+
+So AMI never lets any profile hold fewer than **30** names. What *does* change is the arithmetic: if your single-name cap is 1.5%, you need around 65 names to be fully invested; at 4.5% you need about 22. Your ceiling moves because your per-name size moved, not because AMI thinks you should concentrate. **You take more risk by choosing riskier positions, not by holding fewer of them.**
+
+**The trade-pace limits exist because frequency is the most reliably destructive habit in the retail data.** Barber and Odean tracked 66,465 households from 1991 to 1996. The most active traders earned **11.4%** a year. The least active earned **18.5%**. The market returned 17.9%. Before costs the two groups picked stocks about equally well — the entire gap was activity. Their follow-up work in Taiwan is starker: of everyone who day-traded between 1992 and 2006, under **1%** were reliably profitable, more than **eight in ten** lost money in a typical half-year, and only **15%** were still trading after three years.
+
+Your daily and weekly caps are set to catch a *burst* — the spiral described in [Revenge trading](/lessons/047_revenge_trading) — not to police your strategy. Even the most aggressive profile is capped well below day-trading frequency, deliberately.
+
+**The cooldown is the cheapest intervention available.** A loss is not just an accounting event; it raises cortisol, narrows attention, and suppresses exactly the part of your brain you need for the next decision. That is why the trade after a loss is statistically your worst. AMI's cooldown runs from **30 minutes to 4 hours** depending on your profile — anchored on the 60-minute window used in the tilt test you already learned.
+
+**Nobody's default cooldown is zero.** Tilt is not a beginner problem, and the setting exists to be felt at the moment you least want it.
+
+## The trap
+
+The trap is treating a limit you did not choose as a limit that does not apply to you. Every number here is a ceiling, not a target — hitting one is information, not failure. But the reverse is the real trap: **loosening a limit at the exact moment it first binds.** That moment is precisely when your judgement is least reliable, because a limit only binds when you are already doing the thing it was set to catch.
+
+AMI will never stop you. Set your cooldown to zero and it will be zero. What AMI will do is show you the consequence at the moment you change it, and record the change in your Decision Journal so tomorrow's calmer version of you can see what yesterday's did.
+
+One honest caveat: these limits are **looser than the research would justify for real money.** At 75% average annual turnover the Barber–Odean households were already trading more than was good for them, and AMI lets you exceed that comfortably. That is deliberate — this is a simulator, and you cannot learn from trades you were never allowed to place. The blow-up is part of the lesson here in a way it never is with real capital.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="Your profile moves from risk 2 to risk 5. What happens to the maximum number of positions you may hold?"
+  options={[
+    "It falls — but only because your per-name cap rose, so fewer names now fill the same portfolio. You are never pushed below 30 names.",
+    "It falls, because aggressive investors are supposed to concentrate their bets.",
+    "It rises, because higher risk tolerance means you can handle more positions.",
+    "It stays the same — position count has nothing to do with your risk profile."
+  ]}
+  answer={0}
+  explanation="Diversification is not the thing you trade away for higher returns; position size and instrument choice are. Your ceiling drops from about 65 to 30 because each name may now be 4.5% instead of 1.5%, so it takes fewer of them to be fully invested. The floor of 30 holds for everyone, because company-specific risk does not care about your risk tolerance."
+/>
+
+<Quiz
+  question="You hold four positions, each 3% of your portfolio, each with a stop 10% below entry. What is your total open risk?"
+  options={[
+    "1.2% — each position risks 0.3% (3% × 10%), and there are four of them.",
+    "12% — four positions at 3% each.",
+    "40% — four positions with 10% stops.",
+    "3% — the largest single position."
+  ]}
+  answer={0}
+  explanation="Open risk is exposure multiplied by stop distance, not exposure alone. This is why the open-risk cap can look generous next to your invested percentage: you would have to be both heavily invested and running wide stops to reach it. It is also why tightening your stops lets you carry more positions within the same risk budget."
+/>
+
+<Quiz
+  question="You have just been stopped out. A setup appears 20 minutes later and your cooldown blocks the buy. What does the evidence say is the best response?"
+  options={[
+    "Wait out the cooldown and re-evaluate the setup afterwards — the block is doing the job you set it for, and the timing itself is the tilt signature.",
+    "Set the cooldown to zero — you can tell the difference between a real setup and tilt.",
+    "Take the trade in a different sector, since the cooldown is about the ticker you lost on.",
+    "Halve your position size and take it — smaller size cancels out the tilt risk."
+  ]}
+  answer={0}
+  explanation="You may well be right about the setup. The problem is that right now you cannot tell, and neither can anyone else — the cortisol response to a loss measurably degrades exactly the judgement you would need to check. Changing sector or halving size keeps the timing, which is the part that identifies the pattern. And loosening the limit the first time it binds is the trap: it binds precisely when it is working."
+/>

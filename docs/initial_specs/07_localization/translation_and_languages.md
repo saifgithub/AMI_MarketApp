@@ -100,7 +100,10 @@ Each locale gets a default M and F voice. The user picks during onboarding (or a
 | ar-SA | ar-SA-HamedNeural | ar-SA-ZariyahNeural | ElevenLabs custom (curated) |
 | ms-MY | ms-MY-OsmanNeural | ms-MY-YasminNeural | (none at v1.0; Azure for Floor Manager too) |
 
-Voice IDs are stored in `mandate.daily_briefing.voice_id` and rendered via the TTS service facade.
+Voice IDs have **no storage location today** — `mandate.daily_briefing` was deleted by CR114 /
+DEF129 (2026-07-29) along with the feature that would have consumed it. This table is a forward
+reference for A13/A14/A17; whichever of those ships first owns picking where a voice preference
+lives. Do not cite `mandate.daily_briefing.voice_id` as current schema.
 
 ## Hijri calendar (Phase 2)
 

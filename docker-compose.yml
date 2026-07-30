@@ -68,7 +68,13 @@ services:
       redis:
         condition: service_healthy
     environment:
-      ENV: ${AMI_ENV:-local}
+      # DEF185 (security review H2): used to default to `local` when
+      # AMI_ENV was unset — a publicly-tunneled container silently booting
+      # `local` enables legacy unsigned scaffold tokens and leaks
+      # magic-link debug codes in the API response. `:?` makes compose
+      # itself refuse to start the service rather than silently
+      # defaulting — loud per CR040, not a runtime app-level guess.
+      ENV: ${AMI_ENV:?AMI_ENV must be set — refusing to silently default to local}
       # Auth HMAC key for scaffold Bearer tokens. Set via ~/ami_trade/.env
       # on melehost (canonical source: infra/alpha.env on Mac, shipped by
       # /promote-to-alpha). Backend refuses to start when env!=local and
@@ -109,6 +115,28 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+      # Kimi (Moonshot AI), direct API — CR126, Saiful testing as a
+      # candidate B7 provider. Mirrors config.py's own defaults into the
+      # compose substitution (same pattern as VLLM_MODEL below) — an EMPTY
+      # env var still overrides a Settings default, so a bare ":-" here
+      # would silently blank base_url/model out even though config.py
+      # itself would have picked a sensible default.
+      # LLM_FORCE_PROVIDER=kimi actually exercises it for real traffic
+      # without touching the vllm>anthropic>kimi>mock preference order —
+      # unset (or set to any other registered name) to go back to normal.
+      KIMI_API_KEY: ${KIMI_API_KEY:-}
+      # Coding Plan endpoint (kimi.com/code console), NOT the general
+      # Moonshot Open Platform (api.moonshot.ai) — Saiful's key is scoped to
+      # the former; the latter 401s it. See config.py for the full story.
+      KIMI_BASE_URL: ${KIMI_BASE_URL:-https://api.kimi.com/coding}
+      KIMI_MODEL: ${KIMI_MODEL:-kimi-for-coding}
+      # CR130: Kimi is a reasoning model whose chain-of-thought shares the
+      # room's per-agent max_tokens budget (600-900, tuned for vLLM) — this
+      # floor raises every Kimi call up to at least this value so reasoning
+      # never starves the visible answer. See config.py for the measured
+      # 900-fails/4000-works curl finding.
+      KIMI_MAX_TOKENS_FLOOR: ${KIMI_MAX_TOKENS_FLOOR:-8000}
+      LLM_FORCE_PROVIDER: ${LLM_FORCE_PROVIDER:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
       POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}

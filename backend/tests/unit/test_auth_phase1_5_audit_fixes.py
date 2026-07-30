@@ -186,13 +186,25 @@ def test_magic_link_verify_binds_to_current_user(monkeypatch, client: TestClient
 
 def test_apple_endpoint_rejects_unverifiable_token(monkeypatch, client: TestClient):
     monkeypatch.setattr(settings, "env", "staging")
+    _, token = _new_user()
     r = client.post(
         "/v1/auth/apple",
-        json={"identity_token": "header.body.sig", "user_id": str(uuid4())},
+        json={"identity_token": "header.body.sig"},
+        headers={"Authorization": f"Bearer {token}"},
     )
     # Verifier rejects: malformed/unsigned token can't be validated against
     # Apple's JWKS. Route translates the OIDCVerificationError into HTTP 400.
     assert r.status_code == 400
+
+
+def test_apple_endpoint_requires_auth(client: TestClient):
+    """DEF176 (security review C1): the route no longer accepts a
+    body-supplied user_id — it must be authenticated via Bearer."""
+    r = client.post(
+        "/v1/auth/apple",
+        json={"identity_token": "header.body.sig"},
+    )
+    assert r.status_code == 401
 
 
 # ── A5: lessons grant route removed ───────────────────────────────────────

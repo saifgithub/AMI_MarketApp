@@ -52,8 +52,8 @@ def test_trader_position_size_scales_with_risk_score(
     aggressive = generate_overlay(AgentId.TRADER, aggressive_mandate)
     # CR046 M03: the Trader is told exactly the per-risk-tier cap the PM enforces,
     # and the cap still scales with risk (risk 1 → 1.5%, risk 5 → 4.5%).
-    lo = _max_position_pct(conservative_mandate.risk_score)
-    hi = _max_position_pct(aggressive_mandate.risk_score)
+    lo = _max_position_pct(conservative_mandate)
+    hi = _max_position_pct(aggressive_mandate)
     assert f"{lo}% per name" in conservative
     assert f"{hi}% per name" in aggressive
     assert hi > lo

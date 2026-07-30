@@ -31,7 +31,6 @@ import 'package:ami_trade/widgets/room/room_board.dart';
 import 'package:ami_trade/widgets/room/room_transcript_rows.dart';
 import 'package:ami_trade/widgets/room/room_view_mode_toggle.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
@@ -67,25 +66,9 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
     });
   }
 
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollCtrl.hasClients) return;
-      _scrollCtrl.animateTo(
-        _scrollCtrl.position.maxScrollExtent + 400,
-        duration: AmiMotion.normal,
-        curve: AmiMotion.easeOut,
-      );
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(roomNotifierProvider(widget.ticker));
-
-    ref.listen<int>(
-      roomNotifierProvider(widget.ticker).select((s) => s.transcript.length),
-      (_, __) => _scrollToBottom(),
-    );
 
     // Celebration hook (CR004 B1): the verdict landing is the payoff of a
     // 12-agent run — mark the moment it arrives with the micro tier.
@@ -168,11 +151,12 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                               ),
                       )
                     else ...[
-                      if (state.streaming && state.order.isEmpty)
-                        _RoomRoster(state: state),
-                      // A settled run shows the collapsed rows; a streaming one
-                      // keeps the live wall, where the typewriter cadence and
-                      // the growing text are the whole point.
+                      // CR112: a settled run shows the collapsed rows with
+                      // the full text reachable; a live run shows PER-AGENT
+                      // STATUS + headline, never the growing prose — that is
+                      // the entire point of this CR. The roster is fixed
+                      // (all 12 seats, always) because there is nothing to
+                      // scroll to as agents move through it.
                       if (settled)
                         RoomTranscriptRows(
                           voices: transcriptVoicesFromRoomState(state),
@@ -189,17 +173,7 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                           },
                         )
                       else
-                        for (final agentId in state.order)
-                          if (state.withheldAgents[agentId] != null)
-                            _WithheldAgentChair(
-                              info: state.withheldAgents[agentId]!,
-                            )
-                          else
-                            _AgentLine(
-                              agentId: agentId,
-                              text: state.transcript[agentId] ?? '',
-                              active: state.activeAgent == agentId,
-                            ),
+                        _RoomLiveRoster(state: state),
                       if (settled && state.verdict != null) ...[
                         const SizedBox(height: AmiSpacing.l),
                         _VerdictCard(
@@ -264,7 +238,6 @@ class _ConveneAgainButton extends ConsumerWidget {
   }
 }
 
-
 class _Header extends StatelessWidget {
   const _Header({required this.ticker, required this.phase});
   final String ticker;
@@ -307,12 +280,16 @@ class _Header extends StatelessWidget {
                   children: [
                     Icon(Icons.bolt,
                         size: 12,
-                        color: phase == null ? AmiColors.textLow : AmiColors.hexGreen),
+                        color: phase == null
+                            ? AmiColors.textLow
+                            : AmiColors.hexGreen),
                     const SizedBox(width: 4),
                     Text(
                       phase ?? l.roomStandingBy,
                       style: AmiTypography.caption.copyWith(
-                        color: phase == null ? AmiColors.textLow : AmiColors.hexGreen,
+                        color: phase == null
+                            ? AmiColors.textLow
+                            : AmiColors.hexGreen,
                       ),
                     ),
                   ],
@@ -325,73 +302,6 @@ class _Header extends StatelessWidget {
     );
   }
 }
-
-
-class _AgentLine extends StatelessWidget {
-  const _AgentLine({
-    required this.agentId,
-    required this.text,
-    required this.active,
-  });
-
-  final String agentId;
-  final String text;
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    final a = agentById(agentId);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AmiSpacing.s),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          HexAvatar(
-            label: a.abbreviation,
-            color: a.color,
-            size: 28,
-            status: active ? HexAvatarStatus.recentCall : HexAvatarStatus.idle,
-          ),
-          const SizedBox(width: AmiSpacing.s),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(a.abbreviation,
-                        style: AmiTypography.labelMono
-                            .copyWith(color: a.color, fontSize: 11)),
-                    if (active) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: a.color,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                MarkdownBody(
-                  data: text,
-                  shrinkWrap: true,
-                  styleSheet: _agentMarkdownStyle(
-                    active ? AmiColors.textHigh : AmiColors.textMed,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 
 /// CR098 — a locked chair for one tenure-withheld analyst. Renders inline in
 /// `state.order` at the point the `agent_withheld` event arrived (before any
@@ -469,16 +379,15 @@ class _WithheldAgentChair extends StatelessWidget {
   }
 }
 
-
-/// B3 — Room roster skeleton. Replaces the empty-body + footer-spinner wait
-/// with the 12-agent lineup so convening the Room reads as a team assembling.
-/// Rows derive their state from `RoomState` (no per-agent status map exists):
-/// speaking = `activeAgent`, done = already in `order`, else standing by. In
-/// the display window (streaming + `order` empty) every row is standing by;
-/// the speaking/done branches light up automatically if the lineup is ever
-/// shown mid-run (the live pulse arrives with D3).
-class _RoomRoster extends StatelessWidget {
-  const _RoomRoster({required this.state});
+/// CR112 — the live roster. Replaces both the old pre-order skeleton (B3) and
+/// the growing per-agent prose feed. Fixed at all 12 seats from the first
+/// frame — there is nowhere to scroll to, so unlike the feed it replaces this
+/// never needs `_scrollToBottom`. Each seat renders STATUS
+/// (waiting / thinking / responded / interrupted), and on `responded` the
+/// agent's own one-line headline — never the growing prose (bug 583602ee:
+/// CR106 fixed the destination, this fixes the journey).
+class _RoomLiveRoster extends StatelessWidget {
+  const _RoomLiveRoster({required this.state});
   final RoomState state;
 
   @override
@@ -488,96 +397,194 @@ class _RoomRoster extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (final agent in kAllAgents.sublist(0, 12))
-          _RosterRow(agent: agent, state: state, standingByLabel: l.roomStandingBy),
+          state.withheldAgents[agent.id] != null
+              ? _WithheldAgentChair(info: state.withheldAgents[agent.id]!)
+              : _AgentStatusRow(agent: agent, state: state, l: l),
       ],
     );
   }
 }
 
-
-class _RosterRow extends StatelessWidget {
-  const _RosterRow({
+/// One roster seat. No per-agent status map exists — every state below is
+/// derived from `RoomState` alone:
+///   - `responded`    = `state.agentStances` carries a key for this agent
+///     (set the instant `agent_done` lands, whatever it recorded).
+///   - `thinking`     = not yet responded, the stream is still `streaming`,
+///     and `state.activeAgent == agent.id`.
+///   - `interrupted`  = not yet responded, not thinking, but the agent DID
+///     start (`state.order` contains it) and the run itself has already
+///     stopped (`!state.streaming && !state.reconnecting`) without ever
+///     completing this agent's turn — a stream break or reconnect timeout
+///     catching an agent mid-turn. Must read as neither RESPONDED (a lie)
+///     nor an unending spinner — silence here is exactly the DEF059-class
+///     inversion this state exists to avoid (acceptance 5).
+///   - `waiting`      = none of the above.
+class _AgentStatusRow extends StatelessWidget {
+  const _AgentStatusRow({
     required this.agent,
     required this.state,
-    required this.standingByLabel,
+    required this.l,
   });
 
   final Agent agent;
   final RoomState state;
-  final String standingByLabel;
+  final AppLocalizations l;
 
   @override
   Widget build(BuildContext context) {
-    final speaking = state.activeAgent == agent.id;
-    final done = !speaking && state.order.contains(agent.id);
-    final lit = speaking || done;
+    final stance = state.agentStances[agent.id];
+    final responded = stance != null;
+    // Gated on `streaming` too: once the stream itself has stopped, a
+    // lingering `activeAgent` from before the break is not "in progress"
+    // anymore — it is the interrupted case below.
+    final thinking =
+        !responded && state.streaming && state.activeAgent == agent.id;
+    final started = state.order.contains(agent.id);
+    final interrupted = !responded &&
+        !thinking &&
+        started &&
+        !state.streaming &&
+        !state.reconnecting;
+    final lit = responded || thinking || interrupted;
+    // DEF125: a length-stopped turn is marked `[AMI …]` in the raw text; the
+    // settled comb (`room_transcript_rows.dart`) marks it with the same
+    // amber hex, reused here (acceptance 6) so a truncated turn never reads
+    // as a clean completion on either surface.
+    final truncated =
+        responded && hasAmiAnnotation(state.transcript[agent.id] ?? '');
+
+    // DEF174 — thinking (and, via the icon-only `responded` check, the
+    // completed state too) was colour + motion only: a screen reader was
+    // told nothing while the hex avatar pulsed. `roomAgentStatusSemantic`
+    // names both the agent and its status so the same information sighted
+    // users read off the dot/icon/text reaches the accessibility tree.
+    final statusWord = interrupted
+        ? l.roomAgentInterrupted
+        : thinking
+            ? l.roomAgentThinking
+            : responded
+                ? l.roomAgentResponded
+                : l.roomStandingBy;
+    final statusSemanticLabel =
+        l.roomAgentStatusSemantic(agent.displayName, statusWord);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AmiSpacing.s),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Opacity(
-            opacity: lit ? 1.0 : 0.35,
-            child: HexAvatar(
-              label: agent.abbreviation,
-              color: agent.color,
-              size: 28,
-              // CR014/D3: the currently-streaming agent pulses (signal).
-              status:
-                  speaking ? HexAvatarStatus.signal : HexAvatarStatus.idle,
-            ),
-          ),
-          const SizedBox(width: AmiSpacing.s),
-          Expanded(
-            child: Text(
-              agent.displayName,
-              style: AmiTypography.body.copyWith(
-                color: lit ? AmiColors.textHigh : AmiColors.textMed,
+          Row(
+            children: [
+              Opacity(
+                opacity: lit ? 1.0 : 0.35,
+                child: HexAvatar(
+                  label: agent.abbreviation,
+                  color: agent.color,
+                  size: 28,
+                  // CR014/D3: the currently-speaking agent pulses (signal).
+                  status:
+                      thinking ? HexAvatarStatus.signal : HexAvatarStatus.idle,
+                ),
               ),
-            ),
+              const SizedBox(width: AmiSpacing.s),
+              Expanded(
+                child: Text(
+                  agent.displayName,
+                  style: AmiTypography.body.copyWith(
+                    color: lit ? AmiColors.textHigh : AmiColors.textMed,
+                  ),
+                ),
+              ),
+              if (truncated) ...[
+                Semantics(
+                  label: l.roomAgentTruncatedMark,
+                  child: const Text('⬢',
+                      style:
+                          TextStyle(fontSize: 11, color: AmiColors.hexAmber)),
+                ),
+                const SizedBox(width: 4),
+              ],
+              // DEF174 — the trailing indicator (a colour-changing dot for
+              // `thinking`, a bare check icon for `responded`) carried no
+              // text a screen reader could read; `waiting`/`interrupted`
+              // already had visible text, but folding all four into one
+              // Semantics node means the next new state can't reopen this
+              // gap by accident. `excludeSemantics` replaces whatever each
+              // branch's own child semantics would say (nothing, for the
+              // dot and the icon) with the one label naming the agent and
+              // its state — scoped to just this indicator so the agent-name
+              // Text above and the headline below stay independently
+              // readable.
+              Semantics(
+                label: statusSemanticLabel,
+                excludeSemantics: true,
+                child: interrupted
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.error_outline,
+                              color: AmiColors.hexRed, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            l.roomAgentInterrupted,
+                            style: AmiTypography.labelMono.copyWith(
+                                color: AmiColors.hexRed, fontSize: 10),
+                          ),
+                        ],
+                      )
+                    : thinking
+                        ? Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                                color: agent.color, shape: BoxShape.circle),
+                          )
+                        : responded
+                            ? const Icon(Icons.check,
+                                color: AmiColors.hexGreen, size: 16)
+                            : Text(
+                                l.roomStandingBy.toUpperCase(),
+                                style: AmiTypography.labelMono.copyWith(
+                                    color: AmiColors.textLow, fontSize: 10),
+                              ),
+              ),
+            ],
           ),
-          if (speaking)
-            Container(
-              width: 6,
-              height: 6,
-              decoration:
-                  BoxDecoration(color: agent.color, shape: BoxShape.circle),
-            )
-          else if (done)
-            const Icon(Icons.check, color: AmiColors.hexGreen, size: 16)
-          else
-            Text(
-              standingByLabel.toUpperCase(),
-              style: AmiTypography.labelMono
-                  .copyWith(color: AmiColors.textLow, fontSize: 10),
-            ),
+          if (responded && stance.recorded) _headline(stance),
         ],
       ),
     );
   }
+
+  /// CR112 acceptance 9 — the three `recorded`/`headline` states, each a
+  /// DIFFERENT widget so none can be mistaken for another:
+  ///   (a) `recorded == false` — this run carries no stances at all. Never
+  ///       reaches here (guarded by the caller) — no headline row at all.
+  ///   (b) `recorded == true`, `headline == null` — the agent finished and
+  ///       stated no view. Reuses the Verdict Board's own `NOT STATED`
+  ///       gutter label (`roomCombNotStated`) so the same fact reads
+  ///       identically on both surfaces — never neutral, never a blank that
+  ///       could pass for a rendering bug.
+  ///   (c) `recorded == true`, `headline` present — the headline itself.
+  Widget _headline(AgentStance stance) {
+    final headline = stance.headline;
+    return Padding(
+      padding: const EdgeInsets.only(left: 36, top: 2),
+      child: headline == null
+          ? Text(
+              l.roomCombNotStated,
+              style: AmiTypography.labelMono
+                  .copyWith(fontSize: 10, color: AmiColors.textLow),
+            )
+          : Text(
+              headline,
+              style: AmiTypography.body.copyWith(color: AmiColors.textMed),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+    );
+  }
 }
-
-
-/// Markdown styling for agent stream text. Inherits the screen-wide
-/// stream typography so bold / bullets / inline code stay visually
-/// consistent with the surrounding monospace-paced reading flow.
-MarkdownStyleSheet _agentMarkdownStyle(Color color) {
-  final base = AmiTypography.stream.copyWith(color: color);
-  return MarkdownStyleSheet(
-    p: base,
-    listBullet: base,
-    strong: base.copyWith(fontWeight: FontWeight.w700),
-    em: base.copyWith(fontStyle: FontStyle.italic),
-    code: base.copyWith(
-      fontFamily: 'JetBrainsMono',
-      backgroundColor: AmiColors.slate800,
-    ),
-    blockSpacing: 6,
-    h1: base.copyWith(fontWeight: FontWeight.w600, fontSize: 16),
-    h2: base.copyWith(fontWeight: FontWeight.w600, fontSize: 15),
-    h3: base.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
-  );
-}
-
 
 /// CR047 "The Winzip" — the soft credit wall, rendered as a warm countdown
 /// instead of a dead paywall. Under the winzip funnel the server has already
@@ -655,7 +662,13 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
       final voices = (await tts.getVoices) as List?;
       if (voices == null) return;
       const preferred = {
-        'samantha', 'karen', 'moira', 'tessa', 'fiona', 'serena', 'aria',
+        'samantha',
+        'karen',
+        'moira',
+        'tessa',
+        'fiona',
+        'serena',
+        'aria',
       };
       for (final v in voices) {
         final m = Map<String, dynamic>.from(v as Map);
@@ -697,7 +710,8 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
   /// CR047 "The Winzip" cooldown countdown — untouched by CR084.
   Widget _buildWinzip(BuildContext context, AppLocalizations l) {
     const accent = AmiColors.hexAmber;
-    final body = _ready ? l.roomWinzipReady : l.roomWinzipBody(_fmt(_remaining));
+    final body =
+        _ready ? l.roomWinzipReady : l.roomWinzipBody(_fmt(_remaining));
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: AmiSpacing.m),
@@ -806,9 +820,8 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
           const SizedBox(height: AmiSpacing.m),
           UpgradePaywall(
             resetDateLabel: _resetDateStr(),
-            onPurchased: () => ref
-                .read(roomNotifierProvider(widget.ticker).notifier)
-                .start(),
+            onPurchased: () =>
+                ref.read(roomNotifierProvider(widget.ticker).notifier).start(),
           ),
           SizedBox(
             width: double.infinity,
@@ -826,7 +839,6 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
     );
   }
 }
-
 
 class _ErrorBanner extends StatelessWidget {
   const _ErrorBanner({required this.message});
@@ -853,7 +865,6 @@ class _ErrorBanner extends StatelessWidget {
     );
   }
 }
-
 
 /// DEF073: friendly card shown when a Room convene hits a 5xx (502/503/504).
 /// Reassures the user it's transient and offers a one-tap Retry (re-runs the
@@ -912,7 +923,6 @@ class _ServerErrorCard extends ConsumerWidget {
     );
   }
 }
-
 
 /// CR090: renders the structural live-data disclosure (`live_data_notice`),
 /// one per run. Now four states, four distinct renderings (D3, extended by
@@ -988,8 +998,7 @@ class _LiveDataNoticeCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AmiSpacing.s),
-          Text(_stateLine(l, 'News', notice.news),
-              style: AmiTypography.body),
+          Text(_stateLine(l, 'News', notice.news), style: AmiTypography.body),
           Text(_stateLine(l, 'Social', notice.social),
               style: AmiTypography.body),
           if (_anyLive) ...[
@@ -1062,7 +1071,6 @@ class _LiveDataNoticeCard extends ConsumerWidget {
   }
 }
 
-
 class _ReconnectingBanner extends StatelessWidget {
   const _ReconnectingBanner();
 
@@ -1099,7 +1107,6 @@ class _ReconnectingBanner extends StatelessWidget {
     );
   }
 }
-
 
 /// The wire enum is rendered raw for every action that is already a readable
 /// English word. `NO_VERDICT` is not — and an unrecognised future value is
@@ -1172,9 +1179,7 @@ class _VerdictCard extends ConsumerWidget {
     final trades = ref.watch(simNotifierProvider).trades;
     final existingTrade = runId == null
         ? null
-        : trades
-            .where((t) => t.verdictRef == runId)
-            .firstOrNull;
+        : trades.where((t) => t.verdictRef == runId).firstOrNull;
     return Container(
       padding: const EdgeInsets.all(AmiSpacing.m),
       decoration: BoxDecoration(
@@ -1204,14 +1209,15 @@ class _VerdictCard extends ConsumerWidget {
               const Spacer(),
               if (verdict.overriddenFromLlm)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: AmiColors.hexAmber.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(l.roomSafetyFloorPill,
-                      style: AmiTypography.labelMono.copyWith(
-                          color: AmiColors.hexAmber, fontSize: 9)),
+                      style: AmiTypography.labelMono
+                          .copyWith(color: AmiColors.hexAmber, fontSize: 9)),
                 ),
               IconButton(
                 tooltip: l.shareTooltip,
@@ -1233,7 +1239,8 @@ class _VerdictCard extends ConsumerWidget {
           ),
           const SizedBox(height: AmiSpacing.m),
           if (isApprove) ...[
-            _MetricRow(label: l.roomMetricTicker, value: ticker, accent: accent),
+            _MetricRow(
+                label: l.roomMetricTicker, value: ticker, accent: accent),
             _MetricRow(
               label: l.roomMetricSize,
               value: verdict.sizePct == null
@@ -1243,17 +1250,23 @@ class _VerdictCard extends ConsumerWidget {
             ),
             _MetricRow(
               label: l.roomMetricEntry,
-              value: verdict.entry == null ? '—' : '\$${verdict.entry!.toStringAsFixed(2)}',
+              value: verdict.entry == null
+                  ? '—'
+                  : '\$${verdict.entry!.toStringAsFixed(2)}',
               accent: accent,
             ),
             _MetricRow(
               label: l.roomMetricStop,
-              value: verdict.stop == null ? '—' : '\$${verdict.stop!.toStringAsFixed(2)}',
+              value: verdict.stop == null
+                  ? '—'
+                  : '\$${verdict.stop!.toStringAsFixed(2)}',
               accent: accent,
             ),
             _MetricRow(
               label: l.roomMetricTarget,
-              value: verdict.target == null ? '—' : '\$${verdict.target!.toStringAsFixed(2)}',
+              value: verdict.target == null
+                  ? '—'
+                  : '\$${verdict.target!.toStringAsFixed(2)}',
               accent: accent,
             ),
             _MetricRow(
@@ -1267,8 +1280,8 @@ class _VerdictCard extends ConsumerWidget {
           ],
           if (verdict.violations.isNotEmpty) ...[
             Text(l.roomViolations,
-                style: AmiTypography.labelMono.copyWith(
-                    fontSize: 11, color: AmiColors.hexAmber)),
+                style: AmiTypography.labelMono
+                    .copyWith(fontSize: 11, color: AmiColors.hexAmber)),
             const SizedBox(height: 4),
             for (final v in verdict.violations)
               Padding(
@@ -1356,7 +1369,8 @@ class _VerdictCard extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.check_circle, color: AmiColors.hexGreen, size: 20),
+                    const Icon(Icons.check_circle,
+                        color: AmiColors.hexGreen, size: 20),
                     const SizedBox(width: AmiSpacing.s),
                     Text(
                       '${existingTrade.side.toUpperCase()} ${existingTrade.quantity.toStringAsFixed(0)} '
@@ -1376,7 +1390,8 @@ class _VerdictCard extends ConsumerWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AmiColors.hexCyan,
                     foregroundColor: AmiColors.slate900,
-                    padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
                   ),
                   icon: const Icon(Icons.add_circle_outline),
                   label: Text(l.roomOpenTradeTicket),
@@ -1424,7 +1439,6 @@ class _VerdictCard extends ConsumerWidget {
     );
   }
 }
-
 
 /// The board's action footer on the LIVE Room: share, the trade ticket when
 /// there is a trade to place, the NO_VERDICT upgrade CTA, and SEE CHART.
@@ -1490,8 +1504,7 @@ class _VerdictActions extends ConsumerWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AmiColors.hexCyan,
                 foregroundColor: AmiColors.slate900,
-                padding:
-                    const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+                padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
               ),
               icon: const Icon(Icons.add_circle_outline),
               label: Text(l.roomOpenTradeTicket),
@@ -1545,8 +1558,7 @@ class _VerdictActions extends ConsumerWidget {
           onPressed: () => ShareService.shareVerdict(
             context,
             ticker: ticker,
-            stanceLabel:
-                l.roomVerdictHeading(_actionLabel(l, verdict.action)),
+            stanceLabel: l.roomVerdictHeading(_actionLabel(l, verdict.action)),
             outcome: outcome,
             reason: verdict.reason,
           ),
@@ -1579,14 +1591,12 @@ class _MetricRow extends StatelessWidget {
                 style: AmiTypography.labelMono
                     .copyWith(fontSize: 11, color: AmiColors.textLow)),
           ),
-          Text(value,
-              style: AmiTypography.statSmall.copyWith(color: accent)),
+          Text(value, style: AmiTypography.statSmall.copyWith(color: accent)),
         ],
       ),
     );
   }
 }
-
 
 class _Footer extends StatelessWidget {
   const _Footer({required this.state});

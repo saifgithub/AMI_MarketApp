@@ -30,7 +30,6 @@ from app.core.time import now_utc
 from app.schemas import AgentId, Mandate
 from app.schemas.mandate import (
     Compliance,
-    DailyBriefing,
     Horizon,
     LearningStyle,
     Path,
@@ -371,9 +370,18 @@ def hydrate_mandate(overrides: dict[str, Any] | None) -> Mandate:
         ),
         risk_quotes=o.get("risk_quotes", []),
         max_drawdown_pct=o.get("max_drawdown_pct", 30),
+        # CR129: mirrors brief_engine.hydrate_brief_mandate's same addition —
+        # the seven settable risk-limit fields, `None` (omitted) resolving
+        # through the risk-tier preset like a real stored mandate.
+        sector_cap_pct=o.get("sector_cap_pct"),
+        single_name_cap_pct=o.get("single_name_cap_pct"),
+        post_loss_cooldown_hours=o.get("post_loss_cooldown_hours"),
+        max_open_positions=o.get("max_open_positions"),
+        max_trades_per_day=o.get("max_trades_per_day"),
+        max_trades_per_week=o.get("max_trades_per_week"),
+        max_open_risk_pct=o.get("max_open_risk_pct"),
         compliance=Compliance(**(o.get("compliance") or {})),
         learning_style=LearningStyle(o.get("learning_style", "quick")),
-        daily_briefing=DailyBriefing(timezone=o.get("timezone", "UTC")),
         plan=Plan(o.get("plan", "trial_trader")),
         trial_expires_at=None,
         credit_balance=75,

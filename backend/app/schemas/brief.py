@@ -118,8 +118,10 @@ class BriefStartResponse(BaseModel):
 
 class BriefMessageRequest(BaseModel):
     session_id: UUID
-    user_message: str
-    history: list[ChatMsg] = Field(default_factory=list)
+    # DEF186 (security review H6): same rationale as
+    # OneOnOneMessageRequest — unbounded fields fed straight to the LLM.
+    user_message: str = Field(max_length=8_000)
+    history: list[ChatMsg] = Field(default_factory=list, max_length=100)
 
 
 class BriefProposeRequest(BaseModel):

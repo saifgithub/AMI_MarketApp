@@ -125,7 +125,12 @@ def test_allocate_by_sector_unknown_ticker_goes_to_other():
 
 def _breach_check(mandate: Mandate, *, buy_value: float):
     """A portfolio at Tech 30% / FS 30% / Energy 40% (total $10k invested); the
-    proposed BUY adds Tech at limit $100. buy_value = 100 * qty."""
+    proposed BUY adds Tech at limit $100. buy_value = 100 * qty.
+
+    CR129/DEF187: pins a permissive single-name cap — this file is about the
+    SECTOR cap, and the fixture book concentrates 30-40% in one name on
+    purpose, which the risk-tier single-name preset (~3%) would otherwise
+    also (and irrelevantly) reject."""
     holdings = [_H("AAPL", 30), _H("JPM", 30), _H("XOM", 40)]
     quotes = {"AAPL": 100.0, "JPM": 100.0, "XOM": 100.0}
     qty = buy_value / 100.0
@@ -136,10 +141,11 @@ def _breach_check(mandate: Mandate, *, buy_value: float):
         proposed,
         portfolio_value=10_000.0,
         current_drawdown_pct=0.0,
-        mandate=mandate,
+        mandate=mandate.model_copy(update={"single_name_cap_pct": 100.0}),
         holdings=holdings,
         quotes=quotes,
         sector_map=_map(),
+        last_loss_closed_at=None, trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
 
 
@@ -168,7 +174,12 @@ def test_sector_check_is_skipped_without_sector_context(base_mandate: Mandate):
         proposed,
         portfolio_value=10_000.0,
         current_drawdown_pct=0.0,
-        mandate=base_mandate,
+        # CR129/DEF187: permissive single-name cap — 20 * $100 = $2000 = 20%
+        # of the book, well over the ~3% risk-tier preset, which isn't what
+        # this test is about.
+        mandate=base_mandate.model_copy(update={"single_name_cap_pct": 100.0}),
+        holdings=[], last_loss_closed_at=None, trade_open_timestamps=[],
+        existing_open_risk_pct=0.0,
     )
     assert res.passed
     assert res.violations == []
@@ -186,10 +197,14 @@ def test_other_bucket_never_blocks_the_inversion_guard(base_mandate: Mandate):
         proposed,
         portfolio_value=10_000.0,
         current_drawdown_pct=0.0,
-        mandate=base_mandate,
+        # CR129/DEF187: permissive single-name cap — the comment above
+        # dates from the 50% flat backstop; the risk-tier preset (~3%) would
+        # otherwise ALSO reject this 10% buy, which isn't what this test is about.
+        mandate=base_mandate.model_copy(update={"single_name_cap_pct": 100.0}),
         holdings=holdings,
         quotes=quotes,
         sector_map=_map(),  # neither ZZZZ nor YYYY is in it → both 'Other'
+        last_loss_closed_at=None, trade_open_timestamps=[], existing_open_risk_pct=0.0,
     )
     assert res.passed
     assert not any("sector-concentration" in v.lower() for v in res.violations)
@@ -223,10 +238,16 @@ def test_sector_cap_breach_helper_only_flags_the_proposed_sector():
 def test_sector_cap_reads_mandate_default_is_040(base_mandate: Mandate):
     # base_mandate has concentration_tolerance=3 (the default) → 0.40.
     assert base_mandate.risk_components.concentration_tolerance == 3
+    assert base_mandate.sector_cap_pct is None  # no explicit override
     assert sector_concentration_cap(base_mandate) == 0.40
 
 
 def test_sector_cap_tightens_for_concentration_averse(base_mandate: Mandate):
+    # CR101-BE1: `sector_cap_pct` is now the explicit, settable, sticky value;
+    # `concentration_tolerance` only supplies the PRESET fallback used when it is
+    # unset. `model_copy` doesn't run validators, so changing risk_components alone
+    # (with no explicit sector_cap_pct) still resolves through the preset table —
+    # exactly the pre-CR101 behaviour this test originally pinned.
     m = base_mandate.model_copy(
         update={
             "risk_components": RiskComponents(
@@ -234,7 +255,16 @@ def test_sector_cap_tightens_for_concentration_averse(base_mandate: Mandate):
             )
         }
     )
+    assert m.sector_cap_pct is None
     assert sector_concentration_cap(m) == 0.25  # not the 0.40 default → read, not hard-coded
+
+
+def test_sector_cap_honours_explicit_override(base_mandate: Mandate):
+    """CR101-BE1 acceptance 3: an explicit `sector_cap_pct` overrides the preset
+    even when `concentration_tolerance` would suggest a different one."""
+    m = base_mandate.model_copy(update={"sector_cap_pct": 55.0})
+    assert base_mandate.risk_components.concentration_tolerance == 3  # preset would be 0.40
+    assert sector_concentration_cap(m) == 0.55
 
 
 # ── 4. Endpoint: contract + ownership (mirrors CR029 lots endpoint) ───────────
@@ -264,7 +294,7 @@ class _ConstProvider:
 
 def _engine_with_buy(user_id: UUID, ticker: str, qty: float, price: float) -> SimEngine:
     sim = SimEngine(provider=_ConstProvider(price))
-    mandate = hydrate_coach_mandate({"plan": "trader"})
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
     result = sim.submit(
         user_id=user_id, ticker=ticker, side=Side.BUY, quantity=qty, mandate=mandate,
     )
@@ -508,7 +538,7 @@ def test_sim_engine_submit_rejects_a_sector_breaching_buy_end_to_end():
     try:
         user_id = uuid4()
         sim = SimEngine(provider=_ConstProvider(100.0))
-        mandate = hydrate_coach_mandate({"plan": "trader"})
+        mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
         # Tech 30% / FS 30% / Energy 40% book on $10k invested (mirrors the
         # pure-function fixture above).
         for ticker, qty in (("AAPL", 30), ("JPM", 30), ("XOM", 40)):
@@ -554,7 +584,7 @@ def test_sim_engine_preview_rejects_a_sector_breaching_buy_end_to_end():
     try:
         user_id = uuid4()
         sim = SimEngine(provider=_ConstProvider(100.0))
-        mandate = hydrate_coach_mandate({"plan": "trader"})
+        mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
         for ticker, qty in (("AAPL", 30), ("JPM", 30), ("XOM", 40)):
             r = sim.submit(
                 user_id=user_id, ticker=ticker, side=Side.BUY,
@@ -663,7 +693,9 @@ def test_room_runner_live_pm_enforce_safety_floor_rejects_sector_breach():
     try:
         sim = get_sim_engine()
         user_id = uuid4()
-        mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+        mandate = hydrate_coach_mandate(
+            {"plan": "trader", "risk_score": 3, "single_name_cap_pct": 100.0}
+        )
 
         # Tech 39% / FS 30% / Energy 30% book, sized off the REAL deterministic
         # mock-walk price (this is the process-wide sim engine room_runner uses).

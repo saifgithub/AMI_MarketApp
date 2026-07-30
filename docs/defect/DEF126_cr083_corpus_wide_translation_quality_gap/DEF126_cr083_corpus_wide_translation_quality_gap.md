@@ -112,12 +112,75 @@ noted for discussion, not decided here:
 ## Open, unresolved by this Defect
 
 - **Remediation scope/approach** — Saiful's call (see options above). Not started.
-- **Sharia `strict_review` lessons' ≥3-model bar** (`348`/`349`/`350`/`354`/`356`): with
-  `allam` unreachable for this entire run, these currently cap at 2 models
-  (`primary`+`falcon`), same as ordinary lessons — the elevated bar is not being silently
-  downgraded, it's just unmet. Needs `allam` back online (AR-only) or a decision on an
-  alternate 3rd verifier for MS.
+- **Sharia `strict_review` lessons' ≥3-model bar** (the full 10-lesson `347`-`356` unit,
+  corrected below — not 5 as first written here): with `allam` unreachable for this
+  entire run, these currently cap at 2 models (`primary`+`falcon`), same as ordinary
+  lessons — the elevated bar is not being silently downgraded, it's just unmet. Needs
+  `allam` back online (AR-only) or a decision on an alternate 3rd verifier for MS.
 - The 3 `falcon`-JSON-bug combos stay capped at single-model (`primary`) coverage unless
   a future pass works around the bug or another model covers them.
 - `ami-llm` (port 8000) production-instability episode from earlier this CR — still an
   open question for Saiful, unrelated to this Defect, not actioned.
+
+## Update 2026-07-29 — remediation executed, partial improvement, still open
+
+Saiful's call, given the four options above: **blind re-translation** (cheapest, no
+guarantee of a better outcome since it's the same underlying model). Executed exactly
+that — `translate_lessons_lan.py --overwrite` against the 296 AR-flagged + 304 MS-flagged
+lesson ids (derived from `--summary`'s NEEDS REVIEW output, not guessed), then a full
+`primary`+`falcon` re-verify (1,189 fresh checks: 589 AR + 600 MS).
+
+**Result: 81 → 152 verified (+71), 600 → 529 need review (-71), 3 capped unchanged.**
+Per locale: AR 79 verified / 261 need review; MS 73 / 268. A real gain, but partial —
+**529/600 combos are still flagged.** If Saiful wants a second pass, the terminology-first,
+feedback-fix-tooling, and severity-triage options from the original list are all still on
+the table and none has been tried yet.
+
+**DEF105's 7-lesson named subset verified clean.** Before folding this update in, grepped
+all 11 phantom-Mandate tokens (DEF102's class-A set + the richer-Mandate set:
+`cooldown_after_stop_minutes`, `max_sector_exposure_pct`, `max_open_positions`,
+`max_trades_per_week`, `total_open_risk_pct`, `max_single_factor_exposure_pct`, plus
+`max_position_pct`, `max_risk_per_trade_pct`, `max_single_name_notional_pct`,
+`pause_at_drawdown_pct`, `region_allowlist`) across all 14 `.ar.mdx`/`.ms.mdx` files for
+`017`/`047`/`050`/`051`/`109`/`204`/`205`. **Zero residuals.** 13/14 were actually
+retranslated this pass; `017` MS wasn't flagged but is independently clean.
+
+**Sharia `strict_review` scope correction.** The unit is the full 10-lesson `347`-`356`
+Islamic-finance track (`content/i18n/sensitive_keys.json`'s `strict_review` scope), not 5
+as this doc first said. None of the 10 show VERIFIED — correct and expected, since
+`_is_verified`'s strict path needs 3 models and only 2 are active. The `allam`/3rd-verifier
+decision above now gates all 10, not 5.
+
+### Two process findings from mid-remediation — both read by hand, both flagged, neither hidden
+
+**1. The MS batch recreated a deliberately-quarantined file.** `355_how_amis_
+halal_flag_maps_to_real_screening.ms.mdx` had been physically deleted from the repo after
+an earlier translation attempt inverted its halal-mechanism description (see git history
+on that path: `bc02bb13`). The id-list for this remediation was built from `--summary`'s
+output, which read a **stale confidence-log entry** from before the quarantine — the log
+isn't pruned when a translated file is deleted, so a deleted file can still look like an
+ordinary flagged lesson to anything that reads the log rather than the filesystem. The
+fresh translation was read in full before being allowed to ride through the commit: it
+correctly describes the current four-outcome mechanism (PASS/SCREENED OUT/UNKNOWN/PAUSED),
+both quiz answers are correctly keyed to that mechanism, and the SME-escalation disclaimer
+("not a fatwa... consult a qualified scholar") is intact. Kept, not reverted — but flagged
+to Saiful rather than silently accepted, since Sharia content is exactly the class this
+project's own convention says should escalate, not auto-pass.
+
+**2. DEF144's own fix bypassed the sensitive-key exclusion mechanism.** Fixing the
+`platform.json` foreign-script leak (DEF144) used an ad-hoc script that called
+`translate_content_lan.py`'s internals directly, with no awareness of
+`content/i18n/sensitive_keys.json`. That file's `content_json_ids` scope flags exactly one
+entry in `platform.json` — `qa_plt_halal_flag`, the halal-filter Q&A — as
+Sharia-ruling-adjacent and requiring the stricter bar. The ad-hoc fix retranslated it
+along with the other 39 records. Read by hand afterward: matches the current four-outcome
+mechanism, no ruling fabrication, disclaimer intact — correct by the luck of careful
+review, not by design. **The exclusion mechanism only protects the four standing CLI
+tools; an emergency/ad-hoc fix path has no guard at all.** That's a real gap, not a
+one-off — flagged here rather than fixed, since building it properly is more than this
+defect's scope.
+
+Both findings land on the same point Saiful raised at the start of this remediation:
+guardrails built for the planned path don't cover the emergency-fix path, and Sharia
+content needs the exclusion check to be structural — checked by the tooling, not
+remembered by whoever is driving it.

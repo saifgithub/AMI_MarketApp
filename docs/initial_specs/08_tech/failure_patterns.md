@@ -537,6 +537,62 @@ implement this rule?"** If the answer is not one, say so in the row, and make th
 
 ---
 
+## P12 — An enforced limit with no settable twin (the user cannot change what binds them)
+
+**Symptom.** A number the system enforces against a user — a cap, a floor, a ceiling — is derived
+from something the user set once (an onboarding answer, a classification), but there is no write
+path back to it. The user is bound by a rule they never had a chance to choose and cannot revisit.
+Nobody notices because the number still shows up correctly everywhere it's *read* — Settings
+simply never sends the key, and the derivation quietly re-runs the same default every time.
+
+**Mechanism.** A mandate field gets **enforced** (a deterministic check reads it) and **disclosed**
+(an agent overlay or a screen narrates it) early, because those are the steps that make the
+feature visibly work. **Settable** is a fourth step — a Settings row, a PATCH path, a re-validation
+— that ships later, or not at all, because the first three already look like "done". CR101: the
+sector-concentration cap (`concentration_tolerance` → a preset table) and the single-name cap
+(`risk_score` → a preset table) were both enforced and disclosed on `main`, and neither had a write
+path — Settings sent exactly three keys (`risk_score`, `max_drawdown_pct`, `compliance`) of the
+CR's promised set, and the sole write path for the sector cap's input was a keyword match on
+onboarding free text that could never re-run. Saiful's own ruling: *"a risk setting that a user
+cannot change violates the user's rights."*
+
+**Instances.**
+
+| | The field | Enforced at | Disclosed at | Missing leg |
+|---|---|---|---|---|
+| **CR101-BE1** (2026-07-30) | sector-concentration cap | `safety_floor.py` sector-breach check | the allocation donut | settable — no PATCH key existed |
+| **CR101-BE1** (2026-07-30) | single-name cap | `safety_floor.py` position-size check | Trader/PM overlay narration | settable — no PATCH key existed |
+
+**Why the previous guard failed.** There was no guard — enforced + disclosed is the state that
+*looks* finished from the outside (the number is correct, the block fires), so nothing red ever
+pointed at the missing fourth leg. A review that only asks "does this number get enforced?" or
+"is this number shown correctly?" passes both fields long before either becomes settable, because
+neither question is actually about the write path.
+
+**The invariant.** *A field feeding an enforced limit is (a) enforced, (b) disclosed in its own
+units, (c) disclosed wherever the system narrates the rule to an agent or the user, and (d)
+settable — or it is deleted. No third state:* a field cannot sit at "enforced + disclosed,
+not settable" indefinitely; that state is exactly the rights violation Saiful named. The migration
+corollary, just as load-bearing: making a previously-implicit field explicit and settable must not
+silently move any EXISTING user's enforced value — the preset table becomes the fallback for an
+unset field, never a recomputation that fires again on every read.
+
+**Enforcing checks.**
+
+- `test_cr101_be1_settable_risk_caps.py::test_every_enforced_limit_field_is_enforced_disclosed_and_settable`
+  — enumerates every enforced numeric-limit field on `Mandate` (`max_drawdown_pct`,
+  `sector_cap_pct`, `single_name_cap_pct`) and asserts all four legs concretely: a breaching trade
+  is rejected, the resolved value round-trips through its own resolver in its own units, the
+  agent overlay narrates the same number, and a PATCH sets it. A future enforced field that skips
+  this file fails review the moment it's added, not the second time a user complains they can't
+  change it.
+- `test_cr101_be1_settable_risk_caps.py::test_migration_no_existing_users_enforced_cap_changes` — the
+  migration corollary, pinned against the actual pre-CR101 numbers (not this CR's own tables) for
+  every `concentration_tolerance` × `risk_score` combination, so a regression in either preset
+  table cannot mark itself green.
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.

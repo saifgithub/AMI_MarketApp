@@ -304,10 +304,10 @@ abstract class AppLocalizations {
   /// **'RESTART ONBOARDING?'**
   String get floorRestartOnboardingConfirmTitle;
 
-  /// DEF152 confirm-dialog body. It must NAME what is lost — the control is caption-sized text in the footer and signals nothing about being destructive, so the copy carries the whole warning. 'Portfolio and trades are untouched' is accurate and verified: reset() only clears a SharedPreferences flag plus in-memory state, and the sim is keyed on user_id, not on the onboarding session. retranslate:[ar,ms]
+  /// DEF152 confirm-dialog body, corrected by DEF158. The original copy claimed restarting 'clears the mandate your interview produced'. It does not, and the claim was false for exactly the users who had a mandate to lose: reset() (onboarding_providers.dart) clears only a SharedPreferences flag and in-memory state with no API call; the sole interview→mandate persist path (_bind_onboarding_session, api/auth.py) deliberately skips when a mandate row already exists; and /onboarding/readback/confirm builds a preview the client never PATCHes. Mandate rows are created only at claim-binding or by a Settings edit — get_or_default() returns a default WITHOUT persisting — so a user who has one keeps it, governed by the old answers, while the dialog promised otherwise. The copy now states the one thing true for both populations (no mandate yet → the retaken interview forms it at claim; mandate already there → untouched) and names the control that does work. 'Portfolio and trades are untouched' is unchanged and still verified. Whether restart SHOULD replace the mandate is a product question tracked separately, not a copy question. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'This clears the mandate your interview produced — goal, risk score, drawdown cap and constraints — and runs the whole interview again from the first question. Your portfolio and trades are untouched.'**
+  /// **'This runs the whole interview again from the first question. It does not replace a mandate you already have — change that in Settings → My Mandate. Your portfolio and trades are untouched.'**
   String get floorRestartOnboardingConfirmBody;
 
   /// DEF152 destructive CTA on the restart-onboarding confirm dialog. Rendered in hexRed. retranslate:[ar,ms]
@@ -454,6 +454,132 @@ abstract class AppLocalizations {
   /// **'Ticker (e.g. NVDA)'**
   String get portfolioAddDialogHint;
 
+  /// No description provided for @portfolioTabPositions.
+  ///
+  /// In en, this message translates to:
+  /// **'POSITIONS'**
+  String get portfolioTabPositions;
+
+  /// No description provided for @portfolioTabWatchlist.
+  ///
+  /// In en, this message translates to:
+  /// **'WATCHLIST'**
+  String get portfolioTabWatchlist;
+
+  /// No description provided for @portfolioTabHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'HISTORY'**
+  String get portfolioTabHistory;
+
+  /// No description provided for @portfolioOpenTrades.
+  ///
+  /// In en, this message translates to:
+  /// **'OPEN TRADES'**
+  String get portfolioOpenTrades;
+
+  /// CR120 — caption under the closed-trade summary strip on the Portfolio History tab. {count} is the total number of closed trades, not the visible (capped) count.
+  ///
+  /// In en, this message translates to:
+  /// **'ACROSS ALL {count} CLOSED'**
+  String portfolioClosedScope(int count);
+
+  /// No description provided for @portfolioClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'CLOSED'**
+  String get portfolioClosed;
+
+  /// CR120 — History tab header when the closed-trade cap is in effect. {count} is the cap (25).
+  ///
+  /// In en, this message translates to:
+  /// **'LAST {count} CLOSED'**
+  String portfolioLastNClosed(int count);
+
+  /// CR120 — the date span covered by the visible capped closed-trade list, e.g. '17 MAY – 28 JUL'. {from}/{to} arrive pre-formatted so this key never reformats a date itself.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} – {to}'**
+  String portfolioClosedSpan(String from, String to);
+
+  /// CR120 — History tab escape hatch. In-place expansion from the 25-cap to every closed trade the Portfolio holds; {count} is the full total.
+  ///
+  /// In en, this message translates to:
+  /// **'SHOW ALL {count}'**
+  String portfolioShowAll(int count);
+
+  /// No description provided for @portfolioReviewInJournal.
+  ///
+  /// In en, this message translates to:
+  /// **'REVIEW IN JOURNAL'**
+  String get portfolioReviewInJournal;
+
+  /// CR120/D3 — plan-aware Journal pointer on the History tab, shown when retention_days is known and finite. Branches on retention_days, never on plan name or a hardcoded 30.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Journal shows the last {days} days — {count} of these {total} are older. Nothing is deleted; they stay here.'**
+  String portfolioJournalRetention(int days, int count, int total);
+
+  /// CR120/D3 fail-safe — shown when retention_days has not been fetched yet (the Portfolio never calls the journal endpoint itself). Never the reassuring 'nothing deleted, no caveat' branch when it is merely unloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Journal may not show all of these. Nothing is deleted; they stay here.'**
+  String get portfolioJournalRetentionUnknown;
+
+  /// No description provided for @portfolioStatWon.
+  ///
+  /// In en, this message translates to:
+  /// **'WON'**
+  String get portfolioStatWon;
+
+  /// No description provided for @portfolioStatLost.
+  ///
+  /// In en, this message translates to:
+  /// **'LOST'**
+  String get portfolioStatLost;
+
+  /// No description provided for @portfolioStatHitRate.
+  ///
+  /// In en, this message translates to:
+  /// **'HIT RATE'**
+  String get portfolioStatHitRate;
+
+  /// No description provided for @portfolioStatNet.
+  ///
+  /// In en, this message translates to:
+  /// **'NET'**
+  String get portfolioStatNet;
+
+  /// No description provided for @portfolioSearchTicker.
+  ///
+  /// In en, this message translates to:
+  /// **'SEARCH TICKER…'**
+  String get portfolioSearchTicker;
+
+  /// No description provided for @portfolioSortNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'NEWEST'**
+  String get portfolioSortNewest;
+
+  /// No description provided for @portfolioSortValue.
+  ///
+  /// In en, this message translates to:
+  /// **'VALUE'**
+  String get portfolioSortValue;
+
+  /// No description provided for @portfolioSortAZ.
+  ///
+  /// In en, this message translates to:
+  /// **'A–Z'**
+  String get portfolioSortAZ;
+
+  /// No description provided for @portfolioNoOpenPositions.
+  ///
+  /// In en, this message translates to:
+  /// **'No open positions'**
+  String get portfolioNoOpenPositions;
+
   /// Label above the big position value on the Ticker Detail screen (Position card variant — user holds this ticker).
   ///
   /// In en, this message translates to:
@@ -508,11 +634,23 @@ abstract class AppLocalizations {
   /// **'No open position or watchlist entry for {ticker}.'**
   String tickerDetailNoPosition(String ticker);
 
-  /// Error state shown in the chart slot on Ticker Detail when /v1/sim/history fails (network down, server returned no candles). Tapping retries the fetch.
+  /// Chart slot on Ticker Detail, TRANSIENT failure only — network down, timeout, or a 5xx. Tapping retries the fetch and could genuinely succeed. Do NOT reuse this for a rejected request or an empty result; those are tickerDetailChartRejected and tickerDetailChartNoHistory, and promising a retry that cannot work is the DEF151 defect.
   ///
   /// In en, this message translates to:
   /// **'Chart unavailable. Tap to retry.'**
   String get tickerDetailChartUnavailable;
+
+  /// Chart slot on Ticker Detail when the server REJECTED the request (a 4xx other than 429) — an unknown ticker, or a period it will not serve. Re-sending the identical request would fail identically, so this state offers no retry and is not tappable.
+  ///
+  /// In en, this message translates to:
+  /// **'AMI can\'t chart this one.'**
+  String get tickerDetailChartRejected;
+
+  /// Chart slot on Ticker Detail when the request SUCCEEDED and returned zero candles — e.g. a recently listed ticker viewed on 5Y. Not an error: nothing failed and nothing will change on a retry, so this state offers none. Keep the wording neutral, not apologetic.
+  ///
+  /// In en, this message translates to:
+  /// **'No price history for this period.'**
+  String get tickerDetailChartNoHistory;
 
   /// Tooltip on the small expand icon at the top-right of the portrait chart on Ticker Detail. Pushes the landscape fullscreen chart route.
   ///
@@ -754,10 +892,10 @@ abstract class AppLocalizations {
   /// **'UNLOCKS'**
   String get journalFilterUnlocks;
 
-  /// Amber notice on Journal when the user is on Floor Pass. {days} is the retention window.
+  /// DEF155 — amber notice on Journal when the user is on Floor Pass. {days} is the retention window. Was 'Upgrade to keep everything', which asserted a data loss that does not happen: retention is a read-time filter (journal_store.py), not a delete, and entries reappear on upgrade. Fixed to the honest verb (see, not keep) plus an explicit nothing-is-deleted clause.
   ///
   /// In en, this message translates to:
-  /// **'Floor Pass: last {days} days only. Upgrade to keep everything.'**
+  /// **'Floor Pass: last {days} days only. Upgrade to see everything — nothing is deleted.'**
   String journalRetentionWarning(int days);
 
   /// No description provided for @journalEmptyTitle.
@@ -1174,6 +1312,12 @@ abstract class AppLocalizations {
   /// **'Mandate updated.'**
   String get settingsMandateUpdated;
 
+  /// DEF194 — the mandate PATCH succeeded, but the follow-up retro-tightening breach check (GET /v1/mandate/{id}/audit) failed. Deliberately NOT an error dialog: the save DID succeed, so this must read as 'we could not check', never as 'something went wrong with your save' or 'you are compliant'. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check your holdings against the new limit — open Portfolio to verify.'**
+  String get settingsRetroAuditFailed;
+
   /// No description provided for @settingsSectionMandate.
   ///
   /// In en, this message translates to:
@@ -1263,6 +1407,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your PM refuses trades that would push the portfolio past this.'**
   String get settingsMaxDrawdownExplain;
+
+  /// CR101-MOBILE. Section header for the seven settable risk-limit fields (sector cap, single-name cap, post-loss cooldown, max open positions, max trades/day, max trades/week, total open-risk cap). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RISK LIMITS'**
+  String get settingsSectionRiskLimits;
+
+  /// CR101-MOBILE. Shown under the L1 risk-profile dial when neither sector_cap_pct nor single_name_cap_pct has an explicit override — those two fields fall back to a server-side preset this API does not expose a number for (CR101-BE1 bridge), so this deliberately does NOT claim a value, and deliberately does NOT say 'OFF' (a cap is still enforced, just not an explicit one). Reused as the OFF-chip label for the same two fields inside the L2 editor. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Following your risk profile'**
+  String get settingsRiskLimitsProfileFollowing;
+
+  /// CR101-MOBILE. Shown under the L1 dial once the user has set an explicit sector or single-name cap override in L2 (acceptance 3: any L2 edit to either field moves the dial to Custom). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get settingsRiskLimitsProfileCustom;
+
+  /// CR101-MOBILE L2 disclosure toggle — expands the seven per-field editors, each in its own units. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Set my own limits'**
+  String get settingsRiskLimitsExpand;
+
+  /// CR101-MOBILE. OFF-chip label for the five CR101-BE2 fields, where an unset value is genuinely unenforced (not a preset fallback like the two BE1 caps). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'OFF'**
+  String get settingsRiskLimitsOff;
+
+  /// CR101-MOBILE / CR101-BE1 `sector_cap_pct`, percentage points. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Sector concentration cap'**
+  String get settingsRiskLimitsSectorCapLabel;
+
+  /// CR101-MOBILE / CR101-BE1 `sector_cap_pct` explainer. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks a BUY that would push any one sector above this share of your portfolio. Unset follows your risk profile.'**
+  String get settingsRiskLimitsSectorCapExplain;
+
+  /// CR101-MOBILE / CR101-BE1 `single_name_cap_pct`, percentage points. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Single-name position cap'**
+  String get settingsRiskLimitsSingleNameCapLabel;
+
+  /// CR101-MOBILE / CR101-BE1 `single_name_cap_pct` explainer. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks a BUY that would size one position above this share of your portfolio. Unset follows your risk profile.'**
+  String get settingsRiskLimitsSingleNameCapExplain;
+
+  /// CR101-MOBILE / CR101-BE2 `post_loss_cooldown_hours`, in hours. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Post-loss cooldown'**
+  String get settingsRiskLimitsCooldownLabel;
+
+  /// CR101-MOBILE / CR101-BE2 `post_loss_cooldown_hours` explainer. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks new BUYs for this many hours after your last realised loss.'**
+  String get settingsRiskLimitsCooldownExplain;
+
+  /// CR101-MOBILE / CR101-BE2 `max_open_positions`, a distinct-ticker count. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Max open positions'**
+  String get settingsRiskLimitsMaxOpenPositionsLabel;
+
+  /// CR101-MOBILE / CR101-BE2 `max_open_positions` explainer. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks a BUY that would open a new ticker once you\'re at this many distinct positions. Adding to a position you already hold is unaffected.'**
+  String get settingsRiskLimitsMaxOpenPositionsExplain;
+
+  /// CR101-MOBILE / CR101-BE2 `max_trades_per_day`, a count. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Max trades per day'**
+  String get settingsRiskLimitsMaxTradesPerDayLabel;
+
+  /// CR101-MOBILE / CR101-BE2 `max_trades_per_day` explainer — fixed UTC basis per the BE2 bridge, not the user's local timezone. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks any trade once you\'ve submitted this many today (UTC calendar day).'**
+  String get settingsRiskLimitsMaxTradesPerDayExplain;
+
+  /// CR101-MOBILE / CR101-BE2 `max_trades_per_week`, a count. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Max trades per week'**
+  String get settingsRiskLimitsMaxTradesPerWeekLabel;
+
+  /// CR101-MOBILE / CR101-BE2 `max_trades_per_week` explainer — fixed ISO week from Monday 00:00 UTC per the BE2 bridge. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Blocks any trade once you\'ve submitted this many this week (Monday 00:00 UTC).'**
+  String get settingsRiskLimitsMaxTradesPerWeekExplain;
+
+  /// CR101-MOBILE / CR101-BE2 `max_open_risk_pct`, percentage points. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Total open-risk cap'**
+  String get settingsRiskLimitsMaxOpenRiskLabel;
+
+  /// CR101-MOBILE / CR101-BE2 `max_open_risk_pct` explainer. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Caps the sum of (position size % x stop distance %) across your open positions — your total capital at risk to stops.'**
+  String get settingsRiskLimitsMaxOpenRiskExplain;
+
+  /// CR101-MOBILE, per the assign's item 3b and CR101-BE2 auditor finding M1: sim_engine.preview() has no `stop` parameter, so it cannot price a proposed trade's OWN contribution to max_open_risk_pct — a trade that would tip an under-cap portfolio over the cap shows as fine in preview and only blocks at real submit. This note sits next to the field so the trade-ticket preview is never read as authoritative for this one limit (CR046 shown-equals-enforced). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed at trade submission — not shown as within-limits in the trade preview.'**
+  String get settingsRiskLimitsMaxOpenRiskPreviewNote;
+
+  /// CR101-MOBILE L3 disclosure: shown when sector_cap_pct or single_name_cap_pct moves from unset (profile preset) to an explicit value. Direction (looser/tighter than the preset) is unknowable client-side — the preset's resolved number is never returned by the API (CR101-BE1 bridge) — so this states the mechanism honestly instead of guessing a direction. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'This replaces your risk-profile default with an explicit value, effective immediately.'**
+  String get settingsRiskLimitsDisclosureFollowing;
+
+  /// CR101-MOBILE L3 disclosure: shown when an edit numerically loosens an already-explicit limit (e.g. raising a percent/count cap, or shortening the cooldown). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'This allows more risk than your current setting.'**
+  String get settingsRiskLimitsDisclosureLooser;
+
+  /// CR101-MOBILE L3 disclosure: shown when clearing a previously-explicit value back to OFF/unset. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the limit entirely — it will not block anything.'**
+  String get settingsRiskLimitsDisclosureOff;
+
+  /// CR101-MOBILE L3 disclosure, CR040 'a silent 100% is not allowed': shown whenever a percent field (sector_cap_pct / single_name_cap_pct / max_open_risk_pct) is set to exactly 100, regardless of its prior value — a nominally-set cap that in practice enforces nothing. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'100% removes any real ceiling from this limit — allowed, but it means no protection here.'**
+  String get settingsRiskLimitsDisclosure100;
+
+  /// CR101-MOBILE retro-tightening dialog title (assign §3), shown after a save when GET /v1/mandate/{id}/audit reports max_open_positions_breach or max_open_risk_pct_breach — the only two of the seven fields with a portfolio-state dimension (BE2 bridge judgment call 3). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Some holdings now breach this limit'**
+  String get settingsRiskLimitsRetroTitle;
+
+  /// CR101-MOBILE retro-tightening dialog body — must never imply a forced sell (backend fixed behaviour, BE2 bridge acceptance 6). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Affected holdings are flagged below. New BUYs that would add to the breach are blocked. Nothing is sold automatically.'**
+  String get settingsRiskLimitsRetroBody;
+
+  /// CR101-MOBILE retro-tightening dialog — comma-joined list of the tickers HoldingsAuditResult.violations names. {tickers} is a plain joined string, not a count.
+  ///
+  /// In en, this message translates to:
+  /// **'Flagged: {tickers}'**
+  String settingsRiskLimitsRetroTickers(String tickers);
+
+  /// CR101-MOBILE retro-tightening dialog dismiss CTA. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get settingsRiskLimitsRetroDismiss;
 
   /// CR069 Phase 1b (supersedes the DEF084 placeholder). Toggle label for the halal mandate flag. The flag now enforces a REAL, SOURCED screen: AMI reads the published constituents of the S&P 500 Sharia Industry Exclusions Index, which S&P Dow Jones screens to the AAOIFI standard. AMI does not run its own ruling and computes no ratios. OBSERVANCE-SENSITIVE. Translator notes: (a) 'AAOIFI' is the proper name of a standards body (Accounting and Auditing Organization for Islamic Financial Institutions) — transliterate, never translate or expand it; (b) 'Sharia screen' means a compliance filter applied by that standard, NOT a religious ruling by AMI; (c) do not render this as 'halal' or 'permitted' — naming the standard is the whole point of the string. Saiful arranges translation externally.
   ///
@@ -2009,6 +2321,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'standing by'**
   String get roomStandingBy;
+
+  /// Live roster row status while an agent's turn is in progress (CR112). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'thinking…'**
+  String get roomAgentThinking;
+
+  /// Live roster row terminal status for an agent whose turn never completed because the run itself broke (stream error / reconnect timeout) — never rendered as RESPONDED (CR112, DEF059-class). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'INTERRUPTED'**
+  String get roomAgentInterrupted;
+
+  /// Tooltip/semantic label for the amber DEF125 mark on a live roster row whose contribution hit its length limit (CR112). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Cut short by its length limit — open the transcript to read what landed.'**
+  String get roomAgentTruncatedMark;
+
+  /// Live roster row status once an agent's turn has completed and a stance was recorded (CR112). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'responded'**
+  String get roomAgentResponded;
+
+  /// DEF174 — accessibility label for a live-roster seat, combining the agent's name and its status (waiting / thinking / responded / interrupted) so a screen reader is told the same thing the pulsing hex avatar shows sighted users.
+  ///
+  /// In en, this message translates to:
+  /// **'{agent}: {status}'**
+  String roomAgentStatusSemantic(String agent, String status);
 
   /// No description provided for @roomDeliberating.
   ///
@@ -2983,12 +3325,6 @@ abstract class AppLocalizations {
   /// **'TRANSCRIPT'**
   String get roomViewModeTranscript;
 
-  /// Sub-header strip on a LIVE Room: how long the run took and what it cost. Mono. The Journal shows journalStripMeta instead — the snapshot never recorded either number.
-  ///
-  /// In en, this message translates to:
-  /// **'{seconds}s · {credits} CREDITS'**
-  String roomStripMeta(int seconds, int credits);
-
   /// Hero heading when the Portfolio Manager approved the trade. Mono uppercase.
   ///
   /// In en, this message translates to:
@@ -3271,17 +3607,17 @@ abstract class AppLocalizations {
   /// **'LEVELS AS OF {date} — A RECORD, NOT A CURRENT SETUP'**
   String journalLevelsAsOf(String date);
 
-  /// Sub-header strip on a journal replay, where duration and credit cost were never recorded.
-  ///
-  /// In en, this message translates to:
-  /// **'{tier} TIER · MANDATE v{version}'**
-  String journalStripMeta(String tier, int version);
-
   /// Action on a journal replay: convene the room again on this ticker under today's rules, instead of trading a months-old price.
   ///
   /// In en, this message translates to:
   /// **'RE-RUN WITH CURRENT MANDATE'**
   String get journalRerunWithMandate;
+
+  /// DEF198 — AI Coach empty-state hint shown before the user has typed a query (fewer than 2 characters). {count} is AiCoachCorpus.totalCount (lib/models/ai_coach.dart) — a hand-maintained literal until a backend total-entry field exists; see that class's doc for why. This copy was previously a raw, unlocalized Dart string. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count} questions and answers across platform, psychology, scams, AI meta, and beginner / intermediate topics. Type to search.'**
+  String aiCoachEmptyStateHint(int count);
 }
 
 class _AppLocalizationsDelegate

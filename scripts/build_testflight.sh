@@ -25,11 +25,22 @@
 #   scripts/build_testflight.sh --no-upload      # build IPA, skip the upload step
 #   scripts/build_testflight.sh --no-bump        # use whatever's in pubspec
 #   scripts/build_testflight.sh --no-commit      # don't auto-commit the bump
+#   scripts/build_testflight.sh --no-billing     # deliberately ship WITHOUT in-app purchase
 #
 # Required env (defaults to Saiful's setup):
 #   APP_STORE_API_KEY_ID   - 10-char key ID, e.g. 44VJ5WADL2
 #   APP_STORE_API_ISSUER   - team issuer UUID
 #   AMI_API_URL_ALPHA      - backend URL baked into the build
+#   REVENUECAT_IOS_SDK_KEY - public RC SDK key for iOS, `appl_…` (CR084/DEF100).
+#                            Auto-sourced from infra/alpha.env if not exported.
+#                            Public by design — safe to embed in a shipped client.
+#
+# BILLING GATE (CR084 / CR040 degrade-loudly): without the SDK key,
+# `BillingConfig.isConfigured` is false and the paywall renders the info state
+# with NO buy button — the app cannot take money. That is the correct fallback
+# for a dev build and a silent revenue outage for a store build, so this script
+# REFUSES to build without the key unless you pass --no-billing. Every release
+# from `+61` back shipped that way, unnoticed, because nothing checked.
 #
 # Processing in App Store Connect takes ~15-30 min after a successful
 # upload before the build shows up in TestFlight.
@@ -44,14 +55,26 @@ IOS_DIR="${MOBILE_DIR}/ios"
 : "${APP_STORE_API_ISSUER:=289e6201-8fc9-44a3-abde-59e8e278527c}"
 : "${AMI_API_URL_ALPHA:=https://api-alpha.agenticmarketintel.ai}"
 
+# CR084: source the public RC SDK key from the canonical gitignored env file
+# unless it is already exported. Same file the backend keys live in, so there is
+# one place to paste a key rather than two.
+if [[ -z "${REVENUECAT_IOS_SDK_KEY:-}" && -f "${PROJECT_ROOT}/infra/alpha.env" ]]; then
+  REVENUECAT_IOS_SDK_KEY="$(grep -E '^REVENUECAT_IOS_SDK_KEY=' "${PROJECT_ROOT}/infra/alpha.env" 2>/dev/null | cut -d= -f2- | tr -d '"'"'"' ' || true)"
+fi
+: "${REVENUECAT_IOS_SDK_KEY:=}"
+
 DO_BUMP=1
 DO_UPLOAD=1
 DO_COMMIT=1
+DO_BILLING=1
+DO_PRODUCTION=0
 for arg in "$@"; do
   case "$arg" in
-    --no-bump)   DO_BUMP=0 ;;
-    --no-upload) DO_UPLOAD=0 ;;
-    --no-commit) DO_COMMIT=0 ;;
+    --no-bump)    DO_BUMP=0 ;;
+    --no-upload)  DO_UPLOAD=0 ;;
+    --no-commit)  DO_COMMIT=0 ;;
+    --no-billing) DO_BILLING=0 ;;
+    --production) DO_PRODUCTION=1 ;;
     -h|--help)
       sed -n '2,/^$/p' "$0"
       exit 0
@@ -102,11 +125,61 @@ fi
 archive_path="${MOBILE_DIR}/build/Runner.xcarchive"
 ipa_dir="${MOBILE_DIR}/build/ios/ipa"
 
+# CR084 — RevenueCat Test Store key (`test_…`). Purchases are SIMULATED by
+# RevenueCat: the paywall, the webhook, the entitlement grant and the credit
+# top-up all run for real, but no money moves and no store product is needed.
+# That is exactly what alpha wants. It is also a giveaway if it ever reaches
+# real users, so it is banner-loud here and hard-blocked from production.
+if [[ "$REVENUECAT_IOS_SDK_KEY" == test_* ]]; then
+  if [[ "${RELEASE_CHANNEL:-}" == "production" || "$DO_PRODUCTION" -eq 1 ]]; then
+    echo "✗ REVENUECAT_IOS_SDK_KEY is a Test Store key (test_…) and this is a PRODUCTION build." >&2
+    echo "  Every user would receive paid entitlements without paying. Refusing." >&2
+    echo "  Use the App-specific public key (appl_…) for production." >&2
+    exit 1
+  fi
+  cat <<'EOF'
+┌──────────────────────────────────────────────────────────────────┐
+│  SIMULATED PURCHASES — RevenueCat Test Store key in this build.  │
+│  Buying grants Plan + credits for real in our DB. No money moves.│
+│  Fine for TestFlight/alpha. NEVER promote this build to the App  │
+│  Store. Rebuild with an appl_… key before any production release.│
+└──────────────────────────────────────────────────────────────────┘
+EOF
+fi
+
+# CR084 billing gate — fail loudly rather than ship a paywall that cannot charge.
+if [[ "$DO_BILLING" -eq 1 && -z "$REVENUECAT_IOS_SDK_KEY" ]]; then
+  cat >&2 <<'EOF'
+✗ REVENUECAT_IOS_SDK_KEY is empty — this build could not take a payment.
+
+  BillingConfig.isConfigured would be false, so the paywall renders the
+  info state with no buy button. Nothing would crash and nothing would
+  warn; the app would simply never sell anything (CR084 / DEF100).
+
+  Fix: add the iOS public SDK key to infra/alpha.env —
+
+      REVENUECAT_IOS_SDK_KEY=appl_xxxxxxxxxxxxxxxxxxxx
+
+  Get it from RevenueCat → Project Settings → API keys → the *App-specific
+  public* key for the iOS app. It starts with `appl_`. Do NOT use the
+  secret `sk_…` key here; that one is backend-only and must never ship in
+  a client.
+
+  If you genuinely want a build with purchasing disabled, re-run with
+  --no-billing and this check will stand down.
+EOF
+  exit 1
+fi
+if [[ "$DO_BILLING" -eq 0 ]]; then
+  echo "⚠ --no-billing: shipping WITHOUT in-app purchase (paywall = info state only)"
+fi
+
 echo "▶ flutter build ios  (release, no-codesign — framework only)"
 cd "$MOBILE_DIR"
 flutter build ios --release --no-codesign \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
-  --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}"
+  --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
+  --dart-define=REVENUECAT_IOS_SDK_KEY="${REVENUECAT_IOS_SDK_KEY}"
 
 echo "▶ xcodebuild archive  (signs + auto-refreshes provisioning profile)"
 cd "$IOS_DIR"
