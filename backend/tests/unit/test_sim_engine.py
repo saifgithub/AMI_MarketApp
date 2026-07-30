@@ -371,6 +371,64 @@ def test_preview_rejects_on_insufficient_cash():
     )
 
 
+class _FixedPrice:
+    """Quotes one settable price for every ticker, so P&L is decidable."""
+
+    name = "fixed"
+
+    def __init__(self, price: float) -> None:
+        self.price = price
+
+    def quote(self, ticker: str) -> Quote:
+        return Quote(price=self.price, source="fixed")
+
+    def get_price(self, ticker: str) -> float:
+        return self.price
+
+
+def test_manual_close_clamped_by_holding_realises_pnl_on_shares_actually_sold():
+    """DEF166: a clamped close must not stamp P&L on shares that weren't sold.
+
+    Buy 5 AAPL, sell 2 outright (holding now 3), then `manual_close` the
+    original buy trade — its `quantity` is still 5, but only 3 shares remain
+    on the books. `_apply_sell_row` clamps the cash credit to 3; `realised_pnl`
+    must describe that same 3, not the trade's full requested 5, or the
+    journal's per-trade P&L and the portfolio's cash movement disagree about
+    how many shares were sold.
+    """
+    provider = _FixedPrice(100.0)
+    sim = SimEngine(provider=provider)
+    user_id = uuid4()
+    mandate = hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0})
+    res = sim.submit(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=5,
+        mandate=mandate, order_type=OrderType.MARKET,
+    )
+    assert res.accepted
+    trade_id = res.trade.id  # type: ignore[union-attr]
+
+    sold = sim.submit(
+        user_id=user_id, ticker="AAPL", side=Side.SELL, quantity=2,
+        mandate=mandate, order_type=OrderType.MARKET,
+    )
+    assert sold.accepted
+    p = sim.ensure_portfolio(user_id)
+    assert p.holdings[0].quantity == 3
+    cash_before = p.current_cash
+
+    provider.price = 110.0
+    closed = sim.manual_close(user_id, trade_id)
+
+    assert closed is not None
+    p = sim.ensure_portfolio(user_id)
+    cash_credited = round(p.current_cash - cash_before, 2)
+    assert cash_credited == 3 * 110.0, "clamp: cash credited for 3 shares, not 5"
+    assert closed.realised_pnl == 30.0, (
+        "realised_pnl must match the 3 shares actually sold: "
+        "(110 - 100) * 3 = 30, not (110 - 100) * 5 = 50"
+    )
+
+
 def test_manual_close_realises_pnl_and_returns_cash():
     sim = SimEngine()
     user_id = uuid4()

@@ -49,9 +49,14 @@ is NOT in the image and has to be copied in. `ENV PYTHONPATH=/app` makes the
     # apply
     ssh melehost "docker exec ami_api_alpha python /tmp/def110_backfill.py --apply"
 
-Exit codes: 0 clean (nothing to do, or applied); 2 if any phantom shares
-could not be attributed to a closed trade — that is unexplained drift and
-wants eyes, not an automatic write.
+Exit codes: 0 clean (nothing to do, or everything attributable was applied);
+2 if any phantom shares could not be attributed to a closed trade. Under
+--apply, exit 2 does NOT mean nothing was written: whatever WAS attributable
+is committed same as a clean run, and only the unattributed remainder is left
+in place (see "LEFT IN PLACE" in the printed plan). Exit 2 flags unexplained
+drift that wants eyes on the next run, not a rollback of the current one —
+check the printed plan, not just the exit code, before assuming a repair was
+a no-op.
 """
 
 from __future__ import annotations

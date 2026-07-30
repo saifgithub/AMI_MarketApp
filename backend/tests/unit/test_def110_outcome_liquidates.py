@@ -169,6 +169,10 @@ def test_a_trade_larger_than_its_holding_sells_only_what_is_there():
     Buy 5, sell 2 outright, then the original buy stops out still carrying
     quantity 5 against a holding of 3. Unclamped it credits 5 shares of
     proceeds and drives the holding negative before deleting it.
+
+    DEF166: the clamp must hold for `realised_pnl` too, not only cash — a
+    partially-fillable close whose P&L is stamped on the full requested 5
+    disagrees with a cash movement that only paid out for 3.
     """
     sim, provider = _engine(100.0)
     user_id = uuid4()
@@ -183,12 +187,15 @@ def test_a_trade_larger_than_its_holding_sells_only_what_is_there():
     cash_before = p.current_cash  # 10000 - 500 + 200
 
     provider.price = 110.0
-    sim.evaluate_outcomes(user_id)
+    updates = sim.evaluate_outcomes(user_id)
 
     p = sim.ensure_portfolio(user_id)
     assert p.holdings == []
-    assert p.current_cash == cash_before + 3 * 110.0, \
+    cash_credited = round(p.current_cash - cash_before, 2)
+    assert cash_credited == 3 * 110.0, \
         "credited proceeds for 5 shares when only 3 were held"
+    assert updates[0].realised_pnl == cash_credited - 3 * 100.0 == 30.0, \
+        "realised_pnl must describe the same 3 shares the cash movement does"
 
 
 def test_trades_outrunning_the_holding_never_credit_phantom_cash():

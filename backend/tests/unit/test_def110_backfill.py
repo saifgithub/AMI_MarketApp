@@ -213,6 +213,53 @@ def test_backfill_refuses_to_price_a_close_with_no_closed_price():
     assert any("LEFT IN PLACE" in line for line in lines)
 
 
+def test_sell_trade_rows_stay_open_forever():
+    """DEF166 coupling guard.
+
+    `_plan_and_apply`'s `expected()` formula (above) subtracts Σ quantity
+    over status='open' SELL trades to derive what a holding SHOULD be. That
+    only holds if a SELL trade row never transitions off "open" — nothing
+    in the engine currently closes one; `evaluate_outcomes` only watches BUY
+    rows against stop/target. If a future change ever flips a sell row's
+    status, this formula silently drifts and the backfill's phantom-share
+    detection goes wrong without a code change anywhere near it. Pin the
+    invariant here so that change has to touch this test.
+    """
+    provider = _FixedPrice(100.0)
+    sim = SimEngine(provider=provider)
+    user_id = uuid4()
+    sim.submit(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=5,
+        mandate=hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0}),
+        order_type=OrderType.MARKET, stop=50.0, target=500.0,
+        horizon_days=30, verdict_ref=uuid4(),
+    )
+    sold = sim.submit(
+        user_id=user_id, ticker="AAPL", side=Side.SELL, quantity=2,
+        mandate=hydrate_coach_mandate({"plan": "trader", "single_name_cap_pct": 100.0}),
+        order_type=OrderType.MARKET,
+    )
+    assert sold.accepted
+    sell_trade_id = sold.trade.id
+
+    # A price move that would flip a BUY (stop/target) does nothing to a
+    # SELL row — `evaluate_outcomes` never inspects Side.SELL trades.
+    provider.price = 1_000.0
+    sim.evaluate_outcomes(user_id)
+
+    s = get_sessionmaker()()
+    try:
+        row = s.execute(
+            select(SimTradeRow).where(SimTradeRow.id == sell_trade_id)
+        ).scalar_one()
+        assert row.status == "open", (
+            "a sell trade row moved off 'open' — def110_backfill.py's "
+            "expected() formula must be updated in the same change"
+        )
+    finally:
+        s.close()
+
+
 def test_backfill_after_the_fix_finds_nothing():
     """End-to-end: the fixed engine liquidates, so the backfill is a no-op."""
     provider = _FixedPrice(100.0)

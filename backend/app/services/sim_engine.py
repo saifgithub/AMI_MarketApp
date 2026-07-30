@@ -679,6 +679,15 @@ class SimEngine:
                 self._apply_buy_row(s, p_row, ticker, quantity, fill_price, opened_at)
             else:
                 self._apply_sell_row(s, p_row, ticker, quantity, fill_price)
+            # DEF166/DEF110: a SELL trade row is created "open" and NEVER
+            # transitions — only `evaluate_outcomes` closes trades, and it
+            # only watches BUY rows against stop/target. This permanent-open
+            # is load-bearing: `def110_backfill.py`'s `expected()` formula
+            # subtracts Σ quantity over status='open' SELL trades to derive
+            # what a portfolio's holdings SHOULD be. Closing a sell row here
+            # (or anywhere) without updating that formula silently corrupts
+            # its phantom-share detection. Guarded by
+            # test_def110_backfill.py::test_sell_trade_rows_stay_open_forever.
             s.add(SimTradeRow(
                 id=trade_id,
                 user_id=user_id,
@@ -942,9 +951,15 @@ class SimEngine:
                 t.status = new_status
                 t.closed_at = datetime.now(timezone.utc)
                 t.closed_price = price
-                t.realised_pnl = round((price - float(t.entry_price)) * float(t.quantity), 2)
-                if p_row is not None:
+                # DEF166: a clamped close (the holding has fewer shares than
+                # `t.quantity` requests — see `_apply_sell_row`) must stamp
+                # `realised_pnl` on the shares actually sold, or the P&L and
+                # the cash movement disagree about how many shares moved.
+                sold = (
                     self._apply_sell_row(s, p_row, t.ticker, float(t.quantity), price)
+                    if p_row is not None else float(t.quantity)
+                )
+                t.realised_pnl = round((price - float(t.entry_price)) * sold, 2)
                 updates.append(OutcomeUpdate(
                     trade_id=t.id, new_status=new_status,
                     closed_price=price, realised_pnl=float(t.realised_pnl),
@@ -967,12 +982,16 @@ class SimEngine:
             row.status = "closed"
             row.closed_at = datetime.now(timezone.utc)
             row.closed_price = price
-            row.realised_pnl = round(
-                (price - float(row.entry_price)) * float(row.quantity), 2,
-            )
             p_row = self._load_portfolio_row(s, user_id)
-            if p_row is not None:
+            # DEF166: a clamped close (the holding has fewer shares than
+            # `row.quantity` requests — see `_apply_sell_row`) must stamp
+            # `realised_pnl` on the shares actually sold, or the P&L and
+            # the cash movement disagree about how many shares moved.
+            sold = (
                 self._apply_sell_row(s, p_row, row.ticker, float(row.quantity), price)
+                if p_row is not None else float(row.quantity)
+            )
+            row.realised_pnl = round((price - float(row.entry_price)) * sold, 2)
             s.flush()
             return SimTrade.from_row(row)
 
