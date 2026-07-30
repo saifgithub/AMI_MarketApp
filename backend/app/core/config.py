@@ -67,20 +67,32 @@ class Settings(BaseSettings):
     # Kimi (Moonshot AI) — direct API, OpenAI-compatible. Wired 2026-07-30 for
     # Saiful to test as a candidate B7 provider (see CR006/CR126); CR017
     # already generalized the vLLM provider class specifically so a new
-    # OpenAI-compatible provider is this small. Direct-to-Moonshot chosen
-    # over routing through OpenRouter — CR006 flagged the ToS/data-training
-    # exposure that entails; a knowing choice, not an oversight.
+    # OpenAI-compatible provider is this small. Direct, not via OpenRouter —
+    # CR006 flagged the ToS/data-training exposure that entails; a knowing
+    # choice, not an oversight.
+    #
+    # CORRECTED same-day (CR130): the key Saiful holds is a **Kimi Coding
+    # Plan** subscription key (console: kimi.com/code), not a general
+    # Moonshot Open Platform key — two separate products with separate key
+    # scopes. `api.moonshot.ai` (Open Platform, pay-per-token, model ids
+    # like `kimi-k3`/`kimi-k2.7-code`/`kimi-k2.6`) 401s this key outright;
+    # `api.kimi.com/coding` (Coding Plan, subscription, DIFFERENT model id
+    # namespace) is what actually authenticates — verified live via a bare
+    # curl bypassing this codebase entirely. If a general Open Platform key
+    # is ever added instead, both this base_url and kimi_model need to
+    # switch back.
     # base_url deliberately excludes the trailing /v1 — llm_gateway.py's
     # OpenAICompatibleProvider appends /v1/chat/completions itself, same
     # convention as vllm_base_url above.
     kimi_api_key: str = ""
-    kimi_base_url: str = "https://api.moonshot.ai"
-    # kimi-k3 (Moonshot's current flagship, released 2026-07-26) by default.
-    # CR006's quality/cost assessment ("trails Sonnet 5") was for the older
-    # kimi-k2.7-code — K3 is unevaluated by that research; this is a fresh
-    # read, not an inherited verdict. Override to kimi-k2.7-code / kimi-k2.6
-    # to test those instead.
-    kimi_model: str = "kimi-k3"
+    kimi_base_url: str = "https://api.kimi.com/coding"
+    # kimi-for-coding is available to every Coding Plan membership tier
+    # (verified live, 200 OK). Higher tiers unlock kimi-for-coding-highspeed,
+    # k3, and k3-256k (Moderato+/Allegretto+ only, per platform docs) — try
+    # those via KIMI_MODEL if Saiful's tier supports them. Note this model-id
+    # namespace is Coding-Plan-specific and distinct from Open Platform's
+    # kimi-k3/kimi-k2.7-code/kimi-k2.6 despite the similar names.
+    kimi_model: str = "kimi-for-coding"
 
     # Manual provider-selection override for testing (e.g. exercising Kimi
     # without touching LLMGateway._PREFERENCE or unregistering vLLM). Empty

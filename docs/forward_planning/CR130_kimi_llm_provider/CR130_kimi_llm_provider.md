@@ -75,10 +75,18 @@ for those yet).
 - [x] `docker-compose.yml` forwards all 4 new fields; `test_config_compose_parity.py`
       passes
 - [x] Calibration rooms run (5 real Room verdicts replayed under their
-      original mandate, across kimi-k3/k2.7-code/k2.6) — **blocked on
-      authentication, not a quality result.** All 180 agent calls (3 models ×
-      5 tickers × 12 agents) got `401 Invalid Authentication` from
-      `api.moonshot.ai`; isolated to the key itself via a bare curl bypassing
-      our code entirely (same 401). Provider wiring, error labeling, and the
-      degrade-loudly safety fallback all worked correctly under real failure.
-      See `calibration_results/README.md`. Re-run once the key is fixed.
+      original mandate, across kimi-k3/k2.7-code/k2.6) — **first pass blocked
+      on authentication, not a quality result.** All 180 agent calls got
+      `401 Invalid Authentication` from `api.moonshot.ai`. **Root cause found
+      same day:** Saiful's key is a **Kimi Coding Plan** subscription key
+      (console: kimi.com/code) — a separate product from the general Moonshot
+      Open Platform, with its own host (`api.kimi.com/coding`) and its own
+      model-id namespace (`kimi-for-coding`, `k3`, `k3-256k`,
+      `kimi-for-coding-highspeed`), distinct from Open Platform's
+      `kimi-k3`/`kimi-k2.7-code`/`kimi-k2.6` despite similar names. Verified
+      live: `api.moonshot.ai` 401s the key outright; `api.kimi.com/coding`
+      returns 200. `kimi_base_url`/`kimi_model` defaults corrected; provider
+      wiring, error labeling, and the degrade-loudly safety fallback all
+      worked correctly under the real failure — this was a config/product
+      mismatch, not a code bug. See `calibration_results/README.md` for the
+      full trail (first-pass failure + root cause + corrected re-run).

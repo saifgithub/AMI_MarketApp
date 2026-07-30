@@ -119,8 +119,11 @@ services:
       # without touching the vllm>anthropic>kimi>mock preference order —
       # unset (or set to any other registered name) to go back to normal.
       KIMI_API_KEY: ${KIMI_API_KEY:-}
-      KIMI_BASE_URL: ${KIMI_BASE_URL:-https://api.moonshot.ai}
-      KIMI_MODEL: ${KIMI_MODEL:-kimi-k3}
+      # Coding Plan endpoint (kimi.com/code console), NOT the general
+      # Moonshot Open Platform (api.moonshot.ai) — Saiful's key is scoped to
+      # the former; the latter 401s it. See config.py for the full story.
+      KIMI_BASE_URL: ${KIMI_BASE_URL:-https://api.kimi.com/coding}
+      KIMI_MODEL: ${KIMI_MODEL:-kimi-for-coding}
       LLM_FORCE_PROVIDER: ${LLM_FORCE_PROVIDER:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
