@@ -109,6 +109,13 @@ class ReadbackConfirmRequest(BaseModel):
     session_id: UUID
     confirm: Literal["confirm", "edit"]
     edits: dict[str, Any] = Field(default_factory=dict)
+    # DEF160: explicit "this interview is a deliberate restart" signal.
+    # Defaults False — a request that omits it behaves exactly as before
+    # (preview only, nothing persisted here). Only takes effect when the
+    # caller is ALSO authenticated (Bearer token) — see confirm_readback.
+    # Distinct from, and must never be folded into, DEF060's claim-time bind
+    # guard in auth.py (`_bind_onboarding_session`), which stays untouched.
+    restart: bool = False
 
 
 class ReadbackConfirmResponse(BaseModel):
