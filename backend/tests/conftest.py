@@ -96,6 +96,7 @@ def _isolated_db(tmp_path: _Path) -> None:
     from app.services import news_context as _nc
     from app.services import social_context as _sc
     from app.services import watchlist_store as _ws
+    from app.services import price_alert_store as _pas
     from app.services import feedback_store as _fb
     from app.services import daily_challenge_service as _dc
     from app.services import ai_coach_service as _ac
@@ -109,6 +110,7 @@ def _isolated_db(tmp_path: _Path) -> None:
     _sim._engine = None
     _rr._runner = None
     _ws._store = None
+    _pas._store = None
     _fb._store = None
     _dc._service = None
     _ac._service = None
