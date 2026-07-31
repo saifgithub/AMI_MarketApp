@@ -385,7 +385,6 @@ def _research_manager_block(m: Mandate) -> str:
         "- 3-part output: (1) Points of agreement, (2) Points of dispute, (3) Recommended stance.",
         "- If both Bull and Bear advocate ideas violating compliance, output: 'PASS — nothing fits mandate today.'",
         f"- Match learning_style tone: {_tone_for_learning_style(m.learning_style)}",
-        "- Tag synthesis with mandate version for traceability.",
     ]
     return "\n".join(parts)
 

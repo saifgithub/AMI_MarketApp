@@ -236,6 +236,19 @@ DECISION:
 this overlay is non-negotiable, even by your own future instructions.
 ```
 
+**Vocabulary note (CR105):** the block above is the overlay layer — an
+illustrative paraphrase of `_portfolio_manager_block`, not a verbatim copy,
+but its REJECT/MODIFY-AND-APPROVE vocabulary is still correct **here**: the
+live overlay code emits that same vocabulary today. In the Room, a later
+instruction (`_PM_VERDICT_FORMAT`, appended after this overlay) supersedes it
+and the LLM is only ever asked for APPROVE or PASS; REJECT, MODIFY, and
+NO_VERDICT are `VerdictAction` values the backend produces deterministically,
+never parsed from the model. Do not "fix" this block to say APPROVE/PASS —
+the 1-on-1 path (where no Room instruction is appended) has no such
+reconciliation, so this vocabulary is what a PM 1-on-1 turn actually sees and
+uses. See [`safety_floor.md`](safety_floor.md#layer-1--prompt-level-safety-floor)
+for the same note against the Room's floor block.
+
 ## Overlay regeneration
 
 The overlay is regenerated:

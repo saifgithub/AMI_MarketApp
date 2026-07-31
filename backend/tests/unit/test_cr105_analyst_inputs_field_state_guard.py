@@ -1,0 +1,152 @@
+"""GUARD (CR105 item 5) — an analyst's `## Inputs` claim of real/live data
+must map to a field the Room renderer can actually source, so a new
+capability claim can't drift in silently the way the Concierge's did (DEF129,
+CR023 class: `overlay_generator.py` claimed scheduling/mute capabilities that
+were never wired). Same shape as `test_def084_halal_flag_copy_guard.py` /
+`test_def084_overlay_narration_copy_guard.py` — an explicit, authored
+phrase<->mechanism mapping checked for presence, not NLP claim-extraction.
+
+`profile["field_state"]`'s populated keys (`room_runner.py::_profile_for_ticker`,
+building on `_FUNDAMENTALS_NUMERIC_FIELDS`/`_FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS`
+plus the "week52"/"technicals"/"next_earnings"/"news"/"social" domain keys) are
+the ONLY thing `_format_profile` (room_prompts.py) treats as sourced — CR104
+made that the single per-field provenance mechanism. This guard binds each of
+the four analysts' declared `content/agents/*.md` Inputs to that same key set,
+checked in both directions:
+
+  1. every claimed-real field in the mapping below resolves to a field_state
+     key that still exists — imported live from room_runner.py's own
+     fundamentals-field tuples, so a rename/removal there breaks THIS test
+     rather than leaving a claim silently unbacked;
+  2. the mapping's keyword phrase is still literally present in the agent's
+     .md file — so if the prose drifts (reworded, or a new claim added), the
+     mapping goes stale and red rather than silently checking nothing, the
+     exact "allowlist blind spot" `test_cr104_...` warns about;
+  3. the two already-guarded negative claims (no MACD/Bollinger/crossover; no
+     Twitter/X/StockTwits/Discord) remain present verbatim.
+
+Acceptance #4 (CR105): the checker is demonstrated red against a fabricated
+claim, then green against the real mapping — see the last two tests.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from app.services.room_runner import (
+    _FUNDAMENTALS_NUMERIC_FIELDS,
+    _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS,
+)
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_AGENTS_DIR = _REPO_ROOT / "content" / "agents"
+
+# The ONLY provenance keys `_format_profile` ever reads off `profile["field_state"]`
+# (CR104) — the "week52"/"technicals"/"next_earnings"/"news"/"social" domain
+# keys are set directly by string literal in room_runner.py (not drawn from a
+# tuple), so they're listed here rather than imported; the two fundamentals
+# tuples ARE imported so a rename there breaks this test, not silently no-ops.
+_FIELD_STATE_KEY_UNIVERSE = (
+    set(_FUNDAMENTALS_NUMERIC_FIELDS)
+    | set(_FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS)
+    | {"week52", "technicals", "next_earnings", "news", "social"}
+)
+
+# Authored mapping: (agent stem, keyword phrase as it appears verbatim in the
+# .md's Inputs section, the field_state key that phrase's "real"/"live"/
+# "computed from real" claim rests on).
+_CLAIMED_REAL_INPUTS = [
+    ("fundamentals_analyst", "P/E, P/S, EV/EBITDA, PEG, FCF yield", "pe"),
+    ("fundamentals_analyst", "P/E, P/S, EV/EBITDA, PEG, FCF yield", "price_to_sales"),
+    ("fundamentals_analyst", "P/E, P/S, EV/EBITDA, PEG, FCF yield", "ev_to_ebitda"),
+    ("fundamentals_analyst", "P/E, P/S, EV/EBITDA, PEG, FCF yield", "peg_ratio"),
+    ("fundamentals_analyst", "P/E, P/S, EV/EBITDA, PEG, FCF yield", "fcf_yield"),
+    ("fundamentals_analyst", "TTM revenue growth, profit margin, net cash, 52-week range", "rev_growth"),
+    ("fundamentals_analyst", "TTM revenue growth, profit margin, net cash, 52-week range", "profit_margin"),
+    ("fundamentals_analyst", "TTM revenue growth, profit margin, net cash, 52-week range", "net_cash"),
+    ("fundamentals_analyst", "TTM revenue growth, profit margin, net cash, 52-week range", "week52"),
+    ("fundamentals_analyst", "Sector/industry classification", "sector"),
+    ("fundamentals_analyst", "Sector/industry classification", "industry"),
+    ("fundamentals_analyst", "Dividend yield", "dividend_yield"),
+    ("fundamentals_analyst", "Analyst consensus (rating + target price)", "analyst_rating"),
+    ("fundamentals_analyst", "Analyst consensus (rating + target price)", "analyst_target_price"),
+    ("fundamentals_analyst", "Consensus EPS estimate for the next reporting date", "next_earnings"),
+    (
+        "market_analyst",
+        "RSI(14), a 20/50-day moving-average trend read, and volume vs. a 20-day",
+        "technicals",
+    ),
+    ("market_analyst", "Recent-range support/breakout levels", "technicals"),
+    ("news_analyst", "Recent headlines for the ticker in question, pulled live", "news"),
+    ("news_analyst", "Next earnings date, when within a 90-day window, sourced live.", "next_earnings"),
+    ("social_media_analyst", "Reddit-only aggregate sentiment", "social"),
+]
+
+# The negative claims — each must remain present verbatim, or the prompt has
+# silently reopened the exact capability-drift class DEF129 was.
+_NEGATIVE_CLAIMS = [
+    ("market_analyst", "No MACD, moving-average crossover signal, or Bollinger Bands are"),
+    ("social_media_analyst", "No Twitter/X, StockTwits, Google Trends, or Discord access exists"),
+]
+
+
+def _inputs_section(agent_stem: str) -> str:
+    text = (_AGENTS_DIR / f"{agent_stem}.md").read_text(encoding="utf-8")
+    start = text.index("## Inputs")
+    end = text.index("## Output", start)
+    return text[start:end]
+
+
+def test_every_claimed_real_field_maps_to_a_field_state_key_that_still_exists():
+    bad_keys = sorted(
+        {key for _, _, key in _CLAIMED_REAL_INPUTS if key not in _FIELD_STATE_KEY_UNIVERSE}
+    )
+    assert not bad_keys, (
+        "CR105 guard: these claimed fields no longer map to a field_state key "
+        "_format_profile can source — either room_runner.py renamed/removed "
+        f"the field (update this mapping) or an analyst's .md claim is now "
+        f"unbacked: {bad_keys}"
+    )
+
+
+def test_every_claimed_real_field_keyword_is_still_present_in_its_md_file():
+    missing = [
+        (agent, phrase)
+        for agent, phrase, _ in _CLAIMED_REAL_INPUTS
+        if phrase not in _inputs_section(agent)
+    ]
+    assert not missing, (
+        "CR105 guard: this mapping's keyword phrase is no longer found in the "
+        "agent's Inputs section — the .md wording drifted; update the mapping "
+        f"(or the .md, if the underlying claim itself changed): {missing}"
+    )
+
+
+def test_negative_claims_still_present():
+    missing = [
+        (agent, phrase) for agent, phrase in _NEGATIVE_CLAIMS if phrase not in _inputs_section(agent)
+    ]
+    assert not missing, f"CR105 guard: a negative-capability claim was removed or reworded: {missing}"
+
+
+def _unbacked_claims(claims: list[tuple[str, str, str]]) -> list[str]:
+    """The checking logic under test — pulled out as a function so the
+    red/green demonstration below can call it directly against synthetic
+    input, the same pattern test_cr104_...'s `_offenders_for_synthetic_source`
+    uses to prove the checker generalises rather than just matching today's
+    files by luck."""
+    return sorted({key for _, _, key in claims if key not in _FIELD_STATE_KEY_UNIVERSE})
+
+
+def test_the_checker_is_demonstrated_red_against_a_fabricated_claim():
+    """CR105 acceptance #4. `insider_flow_pct` is not a field_state key
+    anywhere in room_runner.py — a claim resting on it is exactly the DEF129
+    shape: a capability claim with no data path behind it."""
+    fabricated = _CLAIMED_REAL_INPUTS + [
+        ("fundamentals_analyst", "Insider buy/sell flow — real, pulled live", "insider_flow_pct"),
+    ]
+    assert _unbacked_claims(fabricated) == ["insider_flow_pct"]
+
+
+def test_the_checker_is_green_against_the_real_mapping():
+    assert _unbacked_claims(_CLAIMED_REAL_INPUTS) == []

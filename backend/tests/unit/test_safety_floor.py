@@ -12,6 +12,7 @@ from app.agents.safety_floor import (
 )
 from app.schemas import AgentId, Mandate, Verdict, VerdictAction
 from app.schemas.trade import ComplianceResult, OrderType, ProposedTrade, Side
+from app.services.agent_prompts import build_agent_prompt
 from app.services.classification_universe import ClassificationUniverse
 from app.trading_math.sizing import risk_tier_cap
 
@@ -67,6 +68,85 @@ def test_safety_floor_prose_cap_equals_the_enforced_constant(base_mandate: Manda
     # narrates and the Room pre-clamps to (~3.0% at risk_score=3), not the
     # flat 50% absolute backstop it enforced pre-CR129.
     assert single_name_cap_pct(base_mandate) == risk_tier_cap(base_mandate.risk_score)
+
+
+_SINGLE_NAME_CAP_MENTION_RE = re.compile(
+    r"(?:(\d+(?:\.\d+)?)%[^\n]{0,60}?single[- ]name)"
+    r"|(?:single[- ]name[^\n]{0,60}?(\d+(?:\.\d+)?)%)",
+    re.IGNORECASE,
+)
+
+
+def _single_name_cap_numbers_in(text: str) -> list[float]:
+    """Every number within ~60 chars of "single-name"/"single name" on either
+    side, across the WHOLE text — deliberately not anchored to one known
+    sentence shape, so it catches a regression in either the mandate header's
+    "Single-name position-size cap: N%" phrasing, the safety floor's "N% of
+    user's portfolio (single-name cap)" phrasing, or a reintroduced bare
+    literal like the old "Approve positions exceeding 50% single-name
+    concentration." Does NOT match the unrelated sector-concentration cap
+    line ("Sector-concentration cap: N% of portfolio in any one GICS
+    sector") — it has no "single-name"/"single name" text near its number.
+    """
+    return [
+        float(g1 or g2) for g1, g2 in _SINGLE_NAME_CAP_MENTION_RE.findall(text)
+    ]
+
+
+def test_cr105_no_stray_single_name_cap_literal_in_the_assembled_pm_prompt(
+    base_mandate: Mandate,
+):
+    """CR105 item 2: `portfolio_manager.md` used to hardcode a bare 50%
+    single-name-cap literal (CR046 C-a class) — a number independent of the
+    mandate's actual resolved cap. `base_mandate` (risk_score=3, no explicit
+    override) resolves to the risk-tier preset, ~3%, not 50% — so this
+    mandate can actually catch a stray "50%" if one reappears; a mandate that
+    happened to resolve to 50 could not.
+
+    Builds the REAL assembled PM prompt (base + mandate header + PM overlay +
+    safety floor) via `build_agent_prompt`, exactly what the LLM gateway
+    sends. Every single-name-cap-adjacent number in it must equal the one
+    resolved value — mandate header and safety floor block each interpolate
+    it once, and nothing else may mention it.
+    """
+    resolved = single_name_cap_pct(base_mandate)
+    assert resolved != 50, (
+        "base_mandate's resolved cap is 50 — this test can no longer "
+        "distinguish 'the interpolated value' from 'a stray 50% literal'; "
+        "pick a different mandate/risk_score."
+    )
+    prompt = build_agent_prompt(AgentId.PORTFOLIO_MANAGER, base_mandate)
+    numbers = _single_name_cap_numbers_in(prompt)
+    assert len(numbers) == 2, (
+        "expected exactly 2 single-name-cap mentions in the assembled PM "
+        f"prompt (mandate header + safety floor) — found {numbers}. A count "
+        "of 3+ means a stray literal (e.g. a reintroduced bare '50%' in "
+        "portfolio_manager.md) survived alongside the two correct ones."
+    )
+    assert all(n == resolved for n in numbers), (
+        f"single-name-cap mentions {numbers} don't all equal the resolved "
+        f"cap {resolved} — the assembled prompt is telling the PM a "
+        "different number than the deterministic check enforces (CR046 C-a)."
+    )
+
+
+def test_cr105_checker_demonstrated_red_against_the_old_hardcoded_50_percent():
+    """CR105 acceptance #2: the checker above is demonstrated red against the
+    pre-fix shape, not just observed to pass against today's files by luck —
+    same demonstration pattern as test_cr104_...'s synthetic-source tests.
+    Reproduces the exact retired sentence from `portfolio_manager.md`
+    ("Approve positions exceeding 50% single-name concentration.") inside an
+    otherwise-correct assembled prompt and confirms the checker flags the
+    resulting 3-way mismatch.
+    """
+    synthetic_prompt = (
+        "- Approve positions exceeding 50% single-name concentration.\n\n"
+        "- Single-name position-size cap: 3.0% of portfolio in any one name.\n\n"
+        '3. Sizes a position above 3% of user\'s portfolio (single-name cap)\n'
+    )
+    numbers = _single_name_cap_numbers_in(synthetic_prompt)
+    assert numbers == [50.0, 3.0, 3.0]
+    assert not all(n == 3.0 for n in numbers)  # the shape this CR's fix removed
 
 
 def test_safety_floor_carries_classroom_framing():

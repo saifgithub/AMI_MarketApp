@@ -10,7 +10,7 @@ The 12 agents are powered by the [TradingAgents](https://github.com/TauricResear
 | # | Agent ID | Display name | Family | Role color | One-line role |
 |---|---|---|---|---|---|
 | 1 | `fundamentals_analyst` | Fundamentals Analyst | Analyst | Cyan | Financials, intrinsic value, red flags |
-| 2 | `market_analyst` | Market Analyst | Analyst | Cyan | Technicals (MACD, RSI, chart patterns) |
+| 2 | `market_analyst` | Market Analyst | Analyst | Cyan | Technicals (RSI, moving-average trend, chart patterns) |
 | 3 | `news_analyst` | News Analyst | Analyst | Cyan | Macro events, headline impact |
 | 4 | `social_media_analyst` | Social Media Analyst | Analyst | Cyan | Sentiment, social mood |
 | 5 | `bull_researcher` | Bull Researcher | Researcher | Purple | Builds the long case |
@@ -49,7 +49,7 @@ Plus, distinct from the 12:
 
 **Role.** Technical analysis. Patterns, indicators, momentum, volume.
 
-**Tools.** Indicators (MACD, RSI, MA, Bollinger), pattern recognition, support/resistance, trend identification, volume analysis.
+**Tools.** Indicators (RSI, moving-average trend), pattern recognition, support/resistance, trend identification, volume analysis. **Not MACD, moving-average crossover, or Bollinger Bands at Alpha** — `market_analyst.md` explicitly excludes all three (not computed anywhere in the app); TradingAgents' underlying `market_analyst.py` may compute them, but nothing in this product surfaces them to the LLM or the user.
 
 **Mandate sensitivity.**
 - `path: active` → emphasises short-timeframe signals (intraday-to-weekly)
@@ -208,7 +208,7 @@ All 12 agents are gated by tier + (when Earn Path ships) Agent Academy completio
 | `neutral_debator` | `tradingagents/agents/risk_mgmt/neutral_debator.py` |
 | `portfolio_manager` | `tradingagents/agents/managers/portfolio_manager.py` |
 
-**Status:** This mapping is the intended Beta+ end state. **Alpha does not call TradingAgents at runtime** — each agent's behaviour is driven by a deterministic prompt in `backend/app/services/agent_prompts.py` running through the LLM gateway (on-prem vLLM Gemma 4 31B today). The `tradingagent_integration.md` doc describes the planned swap-in; the actual integration lands when the Beta cloud-migration stream picks it up. See [`docs/initial_specs/08_tech/tradingagent_integration.md`](../08_tech/tradingagent_integration.md).
+**Status:** This mapping is the intended Beta+ end state. **Alpha does not call TradingAgents at runtime** — each agent's behaviour is driven by a deterministic prompt in `backend/app/services/agent_prompts.py` running through the LLM gateway (on-prem vLLM serving `ami-llm`, currently `RedHatAI/Qwen3.6-35B-A3B-NVFP4`). The `tradingagent_integration.md` doc describes the planned swap-in; the actual integration lands when the Beta cloud-migration stream picks it up. See [`docs/initial_specs/08_tech/tradingagent_integration.md`](../08_tech/tradingagent_integration.md).
 
 ---
 
