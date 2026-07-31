@@ -125,6 +125,26 @@ Flutter prompt's iOS section needs deeper native-level troubleshooting.
 >
 > App ID: 3c2020b6-d8b0-493f-b0e3-5d6ede868d7b
 
+**Do NOT run — native-Android prompt, conflicts with the primary prompt.** Checked
+before recording this: it adds `com.onesignal:OneSignal` as a **native Gradle
+dependency** and calls `OneSignal.initWithContext(context, appId)` in
+`Application.onCreate()` — a **second, competing SDK initialization** alongside
+`onesignal_flutter`'s own native Android layer, producing duplicate subscriptions
+and unpredictable behaviour. Its own instructions say so directly: *"if the
+`onesignal_flutter` package is already integrated... adding native Gradle
+dependencies and manually calling `initWithContext()` would cause duplicate
+initialization and competing subscription logic."* This app is all-Flutter — the
+Flutter prompt already covers Android (§2.1 above, and A15b). Recorded here only so
+it isn't reached for by mistake; there is no native-Android-only module in this repo
+for it to apply to.
+
+> Integrate the OneSignal SDK into this codebase.
+>
+> Follow the instructions at:
+> https://raw.githubusercontent.com/OneSignal/sdk-ai-prompts/main/docs/android/ai-prompt.md
+>
+> App ID: 3c2020b6-d8b0-493f-b0e3-5d6ede868d7b
+
 ---
 
 ## 3. In-app notification facility (the other new part)
