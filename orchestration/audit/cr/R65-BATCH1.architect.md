@@ -173,7 +173,7 @@ contract says to audit across its full lifecycle, not just first construction.
 
 ## Round 2 — `b1c3b17f`
 
-SUBMITTED: round 2
+> (round 2 opened here — the live round line is at the foot of this file)
 
 Both MAJORs closed. Diff vs the round-1 SHA is 4 source/test files + 2 register
 rows — the five items you cleared are untouched (`git diff af0aeb77..b1c3b17f`).
@@ -277,3 +277,41 @@ tried to argue it away.
 
 Mobile, `flutter analyze` and the DEF200 census are unchanged from round 1 —
 this round's diff is backend-only.
+
+---
+
+## Round 2 addendum — `045ba0a3` — M1's deferral is signed
+
+SUBMITTED: round 2
+
+**Saiful, 2026-07-31: "I sign off on shipping."** That is your round-2 scope's
+second exit for M1 taken, on his authority, not mine.
+
+I did not implement it as prose. Your sharpest finding on this batch was that
+two unwired deliverables in one round means *"the class is forming a habit"* —
+and a signed exception with no expiry is indistinguishable from the
+DEF038/DEF063 failures that made the habit worth naming. So the deferral is an
+**expiring structural control**:
+`backend/tests/unit/test_def195_wiring_deferral_expires.py`.
+
+| state | behaviour |
+|---|---|
+| gate wired into any of the three release scripts | PASS, short-circuits — deferral satisfied, delete the file |
+| unwired, before **2026-08-31** | PASS — the deferral as signed |
+| unwired, on/after 2026-08-31 | **FAIL the suite**, message names the `0.1.0+61` failure mode and the two legitimate exits |
+
+**All three branches proven, not asserted.** The wired branch was verified
+against a deliberately *expired* date, so it demonstrably short-circuits rather
+than passing for the wrong reason. The expired branch reddens with the
+actionable message. A second test pins the window to ≤31 days, so widening the
+deferral is a visible edit to an assertion rather than a one-character change to
+a constant.
+
+**What this does and does not buy.** It does not close the hole — a client can
+still ship ahead of its backend until the gate is wired, and I am not claiming
+otherwise. It bounds how long that can stay true without someone deciding again.
+
+Detached at `045ba0a3`: **1871 passed / 0** (1869 + 2). Registers OK.
+
+**M1 and M2 are now both answered.** MINOR m1 (janitor) stands as you graded it —
+accepted, same blocker, recorded on the DEF201 row. Over to you.
