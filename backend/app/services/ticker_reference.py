@@ -30,6 +30,7 @@ CR075).
 
 from __future__ import annotations
 
+import re
 import time
 from datetime import datetime, timezone
 
@@ -312,38 +313,42 @@ def run_ticker_reference_refresh_tick(
 
 # ── Read path: exact lookup + closest-match suggestion ──────────────────────
 
-# In-process cache of active symbols for `suggest_closest` — difflib needs the
-# candidate pool in memory (no SQL equivalent of fuzzy string distance), and
-# re-querying + re-listing ~13k rows on every miss is wasted work. TTL, not
-# tied to the refresh tick, so a fresh refresh is picked up within minutes
-# without needing the reader and refresher to coordinate directly.
+# In-process cache of (symbol, company_name) for `suggest_closest` — fuzzy
+# matching has no SQL equivalent, and re-listing ~13k rows on every miss is
+# wasted work. TTL, not tied to the refresh tick, so a fresh refresh is picked
+# up within minutes without the reader and refresher coordinating directly.
 _ACTIVE_SYMBOLS_CACHE_TTL_S = 300.0
 
-_active_symbols_cache: list[str] | None = None
-_active_symbols_cached_at: float | None = None
+_active_rows_cache: list[tuple[str, str]] | None = None
+_active_rows_cached_at: float | None = None
 
 
 def _invalidate_active_symbol_cache() -> None:
-    global _active_symbols_cache, _active_symbols_cached_at
-    _active_symbols_cache = None
-    _active_symbols_cached_at = None
+    global _active_rows_cache, _active_rows_cached_at
+    _active_rows_cache = None
+    _active_rows_cached_at = None
 
 
-def _active_symbols(session) -> list[str]:
-    global _active_symbols_cache, _active_symbols_cached_at
+def _active_rows(session) -> list[tuple[str, str]]:
+    """(symbol, NORMALIZED company name) for every active row, in-process
+    cached. Normalizing at cache-fill rather than per query matters: it is
+    ~13k regex substitutions, which measured ~77ms per lookup when done on
+    every call and ~1ms from the primed cache."""
+    global _active_rows_cache, _active_rows_cached_at
     now = time.monotonic()
     if (
-        _active_symbols_cache is not None
-        and _active_symbols_cached_at is not None
-        and (now - _active_symbols_cached_at) < _ACTIVE_SYMBOLS_CACHE_TTL_S
+        _active_rows_cache is not None
+        and _active_rows_cached_at is not None
+        and (now - _active_rows_cached_at) < _ACTIVE_SYMBOLS_CACHE_TTL_S
     ):
-        return _active_symbols_cache
-    symbols = session.execute(
-        select(TickerReferenceRow.symbol).where(TickerReferenceRow.is_active.is_(True))
-    ).scalars().all()
-    _active_symbols_cache = list(symbols)
-    _active_symbols_cached_at = now
-    return _active_symbols_cache
+        return _active_rows_cache
+    rows = session.execute(
+        select(TickerReferenceRow.symbol, TickerReferenceRow.company_name)
+        .where(TickerReferenceRow.is_active.is_(True))
+    ).all()
+    _active_rows_cache = [(s, _normalize_name(c)) for s, c in rows]
+    _active_rows_cached_at = now
+    return _active_rows_cache
 
 
 def lookup_ticker(session, symbol: str) -> TickerReferenceRow | None:
@@ -377,35 +382,82 @@ def _edit_distance(a: str, b: str) -> int:
     return prev[lb]
 
 
-# Loosest typo tolerated. Tried difflib.get_close_matches first (stdlib,
-# ratio-based) but it ranks "AAPLE" -> "APLE" ahead of the obviously-intended
-# "AAPL" (verified against a live NASDAQ Trader pull, 2026-07-31) — a
-# character-overlap ratio doesn't weight a single-edit typo highly enough.
-# Plain edit distance, pre-filtered to plausible candidates (same first
-# letter or a length within 2) before scoring, ranks the actual typo
-# patterns correctly and stays fast (~25ms over the ~13k-symbol table on a
-# cache hit, measured) since ticker symbols are short.
+# Loosest symbol typo tolerated. Tried difflib.get_close_matches first
+# (stdlib, ratio-based) but it ranks "AAPLE" -> "APLE" ahead of the
+# obviously-intended "AAPL" — a character-overlap ratio doesn't weight a
+# single-edit typo highly enough.
 _MAX_SUGGEST_DISTANCE = 2
+
+# Boilerplate that follows the actual company name in NASDAQ Trader's
+# `Security Name` column ("Netflix, Inc. - Common Stock"). Stripped before
+# matching so a typed company name compares against the name a human would
+# recognise, not against the share-class tail.
+_NAME_NOISE = re.compile(
+    r"\s*(-\s*)?\b("
+    r"common stock|common shares|ordinary shares|class [a-z]|"
+    r"american depositary shares?|depositary shares?|"
+    r"warrants?|rights?|units?|notes?|preferred|series [a-z]|"
+    r"inc|incorporated|corp|corporation|company|co|ltd|limited|plc|"
+    r"holdings?|group|s\.?a\.?|n\.?v\.?|the"
+    r")\b\.?,?",
+    re.IGNORECASE,
+)
+
+
+def _normalize_name(name: str) -> str:
+    """"Netflix, Inc. - Common Stock" -> "NETFLIX"."""
+    cleaned = _NAME_NOISE.sub(" ", name)
+    return re.sub(r"[^A-Z0-9 ]", " ", cleaned.upper()).strip()
 
 
 def suggest_closest(session, symbol: str, limit: int = 1) -> list[TickerReferenceRow]:
-    """Nearest active symbol(s) by edit distance. Empty list when nothing is
-    within `_MAX_SUGGEST_DISTANCE` — callers show a plain "not found" rather
-    than a low-confidence guess."""
-    symbol = symbol.upper().strip()
-    if not symbol:
+    """Best active match(es) for what the user typed.
+
+    DEF207: symbol edit-distance alone was the wrong model. Users type COMPANY
+    NAMES ("NETFLIX", "TESLA"), not near-miss symbols, and against the live
+    13k-row table that produced no suggestion for NETFLIX (distance to NFLX is
+    3) and actively wrong ones for TESLA -> ESLA and APPLE -> APLE (Apple
+    Hospitality REIT). So the name column is searched too, and a name hit
+    outranks a symbol typo — "TESLA" resolving to Estrella Immunopharma
+    because five of six letters line up is worse than no suggestion at all.
+
+    Tiers, best first:
+      0. normalized company name == query           NETFLIX -> NFLX
+      1. company name starts with query             APPLE   -> AAPL
+      2. symbol is one edit away                    AAPLE   -> AAPL
+      3. company name contains query as a word      -
+      4. symbol is two edits away                   -
+
+    Within a tier: shorter normalized name first (so "Apple Inc." beats
+    "Apple Hospitality REIT"), then shorter symbol, then alphabetical — a
+    total order, so the same query always returns the same suggestion.
+    Empty list when nothing qualifies; callers show a plain "not found"
+    rather than a low-confidence guess."""
+    query = symbol.upper().strip()
+    if not query:
         return []
-    candidates = _active_symbols(session)
-    scored: list[tuple[int, int, str]] = []
-    for c in candidates:
-        if abs(len(c) - len(symbol)) > 2 and (not c or c[0] != symbol[0]):
-            continue
-        d = _edit_distance(symbol, c)
-        if d <= _MAX_SUGGEST_DISTANCE:
-            scored.append((d, len(c), c))
+    scored: list[tuple[int, int, int, str]] = []
+    for sym, norm in _active_rows(session):
+        tier = None
+        if norm == query:
+            tier = 0
+        elif norm.startswith(query):
+            tier = 1
+        elif abs(len(sym) - len(query)) <= _MAX_SUGGEST_DISTANCE and (
+            _edit_distance(query, sym) == 1
+        ):
+            tier = 2
+        elif query in norm.split():
+            tier = 3
+        elif abs(len(sym) - len(query)) <= _MAX_SUGGEST_DISTANCE and (
+            _edit_distance(query, sym) <= _MAX_SUGGEST_DISTANCE
+        ):
+            tier = 4
+        if tier is not None:
+            scored.append((tier, len(norm), len(sym), sym))
     scored.sort()
     rows = []
-    for _, _, sym in scored[:limit]:
+    for _, _, _, sym in scored[:limit]:
         row = session.get(TickerReferenceRow, sym)
         if row is not None:
             rows.append(row)

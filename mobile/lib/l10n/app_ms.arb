@@ -44,6 +44,7 @@
     "tickerConfirmBody": "{typed} isn't a listed ticker. {company} trades on {exchange}.",
     "tickerConfirmCta": "USE {ticker}",
     "tickerNotFound": "{ticker} isn't a listed ticker — check the symbol and try again.",
+    "tickerDidYouMean": "Did you mean {ticker} — {company}?",
     "floorTabUpper": "LANTAI",
     "journalTabUpper": "JURNAL",
     "lessonsTabUpper": "PELAJARAN",

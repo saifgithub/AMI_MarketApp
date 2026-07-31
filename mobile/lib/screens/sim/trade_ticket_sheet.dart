@@ -11,6 +11,7 @@ import 'dart:async';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/sim.dart';
+import 'package:ami_trade/models/tickers.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
@@ -83,10 +84,16 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   Timer? _quoteDebounce;
 
   // CR128: existence check + "did you mean X" confirmation before a trade is
-  // submitted — distinct from the debounced live-quote fetch above, which is
-  // a price preview only and never signals "ticker doesn't exist" (it falls
-  // through to a fabricated mock quote for any string).
+  // submitted. DEF207 additionally runs the check on the SAME debounce as the
+  // quote so the not-found state is visible while typing, not only on submit.
   bool _validatingTicker = false;
+
+  /// DEF207 — the typed string, when the debounced check says it is not a
+  /// listed ticker. Non-null suppresses the price chip entirely.
+  String? _unknownTicker;
+
+  /// The suggestion that came back with it, if any ("did you mean NFLX?").
+  TickerSuggestion? _liveSuggestion;
 
   @override
   void initState() {
@@ -136,6 +143,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       setState(() {
         _quote = null;
         _quoteTicker = null;
+        _unknownTicker = null;
+        _liveSuggestion = null;
       });
     }
     _scheduleQuoteFetch();
@@ -154,6 +163,25 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     if (!mounted) return;
     setState(() => _quoteLoading = true);
     try {
+      // DEF207: existence FIRST, and the price chip is suppressed when the
+      // ticker does not exist. `simQuoteDetail` can never answer this — it
+      // falls through to the mock walk and fabricates a plausible price for
+      // any string, which is exactly how "NETFLIX" rendered as a confident
+      // $287.82 with nothing to say it is not a ticker (bug ab1d5664, the
+      // half CR128's submit-time-only gate left on screen).
+      final v = await ref.read(apiClientProvider).validateTicker(ticker);
+      if (!mounted) return;
+      if (_ticker.text.trim().toUpperCase() != ticker) return;
+      if (!v.exists) {
+        setState(() {
+          _quote = null;
+          _quoteTicker = null;
+          _quoteLoading = false;
+          _unknownTicker = ticker;
+          _liveSuggestion = v.suggestion;
+        });
+        return;
+      }
       final q = await ref.read(apiClientProvider).simQuoteDetail(ticker);
       if (!mounted) return;
       // If the user kept typing past us, drop the stale result.
@@ -162,6 +190,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         _quote = q;
         _quoteTicker = ticker;
         _quoteLoading = false;
+        _unknownTicker = null;
+        _liveSuggestion = null;
       });
       // Anchor TP/SL off the live price when the user hasn't set them —
       // matches the Convene the Room trader template (-6% / +13%) so the
@@ -178,6 +208,10 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         _quote = null;
         _quoteTicker = null;
         _quoteLoading = false;
+        // A network failure is NOT "this ticker doesn't exist" — leave the
+        // not-found state alone rather than accusing a real ticker.
+        _unknownTicker = null;
+        _liveSuggestion = null;
       });
     }
   }
@@ -476,11 +510,27 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                 ),
               ],
             ),
+            // DEF207 — not-found takes the price chip's place entirely. A
+            // price of ANY kind next to a string that isn't a ticker is the
+            // fabrication this defect is about; the two are mutually
+            // exclusive by construction, not by z-order.
+            if (_unknownTicker != null) ...[
+              const SizedBox(height: AmiSpacing.xs),
+              _UnknownTickerPanel(
+                typed: _unknownTicker!,
+                suggestion: _liveSuggestion,
+                onAccept: (t) {
+                  _ticker.text = t;
+                  _ticker.selection =
+                      TextSelection.collapsed(offset: t.length);
+                },
+              ),
+            ]
             // Live price anchor for setting TP / SL when no verdict has
             // been convened. Source pill (LIVE / MOCK) reflects what the
             // backend actually returned for this ticker — yfinance leaf
             // shows LIVE, mock_walk fallback shows MOCK.
-            if (_quote != null || _quoteLoading) ...[
+            else if (_quote != null || _quoteLoading) ...[
               const SizedBox(height: AmiSpacing.xs),
               _QuoteChip(
                 quote: _quote,
@@ -626,6 +676,75 @@ class _SideToggle extends StatelessWidget {
             style: AmiTypography.labelMono.copyWith(
               color: active ? color : AmiColors.textLow,
             )),
+      ),
+    );
+  }
+}
+
+/// DEF207 — what sits where the price chip would be when the typed string
+/// is not a listed ticker. Occupies the same slot deliberately: the defect
+/// was a fabricated price ($287.82 for "NETFLIX") reading as a real quote,
+/// so the fix is that a non-ticker can never render a number at all.
+///
+/// When a suggestion came back, tapping it rewrites the field, which
+/// re-triggers the same debounce and resolves to a real quote — one tap
+/// from "NETFLIX" to a priced NFLX.
+class _UnknownTickerPanel extends StatelessWidget {
+  const _UnknownTickerPanel({
+    required this.typed,
+    required this.suggestion,
+    required this.onAccept,
+  });
+
+  final String typed;
+  final TickerSuggestion? suggestion;
+  final ValueChanged<String> onAccept;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final s = suggestion;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AmiSpacing.s),
+      decoration: BoxDecoration(
+        color: AmiColors.hexAmber.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.hexAmber.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.error_outline,
+                  color: AmiColors.hexAmber, size: 16),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  l.tickerNotFound(typed),
+                  style: AmiTypography.body,
+                ),
+              ),
+            ],
+          ),
+          if (s != null) ...[
+            const SizedBox(height: AmiSpacing.s),
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AmiColors.hexCyan,
+                side: const BorderSide(color: AmiColors.hexCyan),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AmiSpacing.s, vertical: 8),
+              ),
+              onPressed: () => onAccept(s.ticker),
+              child: Text(
+                l.tickerDidYouMean(s.ticker, s.companyName),
+                textAlign: TextAlign.start,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

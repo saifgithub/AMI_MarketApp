@@ -85,6 +85,14 @@
         "description": "CR128 inline/snackbar error when a typed ticker has no close match at all (no confirm dialog to show). {ticker} is what the user entered. retranslate:[ar,ms]",
         "placeholders": {"ticker": {"type": "String"}}
     },
+    "tickerDidYouMean": "Did you mean {ticker} — {company}?",
+    "@tickerDidYouMean": {
+        "description": "DEF207 tappable suggestion under the trade ticket's ticker field when the typed string is not a listed ticker but a match was found (e.g. typed NETFLIX, suggests NFLX / Netflix, Inc.). Tapping rewrites the field. retranslate:[ar,ms]",
+        "placeholders": {
+            "ticker": {"type": "String"},
+            "company": {"type": "String"}
+        }
+    },
 
     "floorTabUpper": "FLOOR",
     "portfolioTabUpper": "PORTFOLIO",

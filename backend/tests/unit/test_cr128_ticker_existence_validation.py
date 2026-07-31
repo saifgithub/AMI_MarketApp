@@ -158,6 +158,43 @@ def test_lookup_and_suggest_against_the_seeded_common_set():
         assert suggest_closest(s, "ZZZZZQQQQQ", limit=1) == []
 
 
+def test_company_name_resolves_to_its_ticker():
+    """DEF207 — the case CR128 shipped broken. Users type company NAMES, and
+    symbol edit-distance alone answered NETFLIX with nothing (distance to
+    NFLX is 3) and TESLA with ESLA (Estrella Immunopharma), both verified
+    against the live 13k-row table. conftest seeds "Netflix, Inc." etc., so
+    the same tiering is exercised here on a small fixture."""
+    with get_session() as s:
+        for typed, expected in [
+            ("NETFLIX", "NFLX"),
+            ("TESLA", "TSLA"),
+            ("APPLE", "AAPL"),
+            ("MICROSOFT", "MSFT"),
+        ]:
+            match = suggest_closest(s, typed, limit=1)
+            assert match, f"{typed} produced no suggestion"
+            assert match[0].symbol == expected, f"{typed} -> {match[0].symbol}"
+
+
+def test_a_name_hit_outranks_a_coincidental_symbol_typo():
+    """DEF207's sharpest case: TESLA is one edit from ESLA-shaped junk, so a
+    pure edit-distance ranking prefers a random microcap over Tesla. The name
+    tier must win — a wrong-company suggestion is worse than none."""
+    now = datetime.now(timezone.utc)
+    with get_session() as s:
+        s.add(TickerReferenceRow(
+            symbol="ESLA", company_name="Estrella Immunopharma, Inc.",
+            exchange="NASDAQ", is_etf=False, is_active=True, last_seen_at=now,
+        ))
+    from app.services.ticker_reference import _invalidate_active_symbol_cache
+    _invalidate_active_symbol_cache()
+    with get_session() as s:
+        match = suggest_closest(s, "TESLA", limit=1)
+        assert match[0].symbol == "TSLA", (
+            f"a one-edit junk symbol outranked the named company: {match[0].symbol}"
+        )
+
+
 def test_require_ticker_exists_raises_with_suggestion_attached():
     with get_session() as s:
         with pytest.raises(TickerNotFoundError) as exc_info:

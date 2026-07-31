@@ -51,6 +51,7 @@ _COMMON_TEST_TICKERS = {
     "TSLA": ("Tesla, Inc.", "NASDAQ"),
     "AMZN": ("Amazon.com, Inc.", "NASDAQ"),
     "NVDA": ("NVIDIA Corporation", "NASDAQ"),
+    "NFLX": ("Netflix, Inc.", "NASDAQ"),
     "XOM": ("Exxon Mobil Corporation", "NYSE"),
     "JPMX": ("Synthetic Sharia-screened-out test fixture", "TEST"),
     "NEVR": ("Synthetic sharia/classification-unknown test fixture", "TEST"),

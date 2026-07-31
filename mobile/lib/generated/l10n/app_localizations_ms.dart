@@ -93,6 +93,11 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
+  String tickerDidYouMean(String ticker, String company) {
+    return 'Did you mean $ticker — $company?';
+  }
+
+  @override
   String get floorTabUpper => 'LANTAI';
 
   @override
