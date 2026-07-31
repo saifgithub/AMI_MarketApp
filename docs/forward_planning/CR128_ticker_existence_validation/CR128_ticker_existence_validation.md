@@ -1,6 +1,6 @@
 # CR128 — Ticker existence validation + closest-match suggestion
 
-**Status:** proposed · **Session:** AT:architect · **Date:** 2026-07-30
+**Status:** proposed · **Session:** AT:architect · **Date:** 2026-07-30 · **HIGH PRIORITY (Saiful, 2026-07-31)**
 **Source:** in-app bug report `ab1d5664` (Platinum Anchor, `8f1e288a`, `0.1.0+58`) —
 *"when we convene a room, start a trade or adding to a watch list, we need to check
 that the ticker actually exist. otherwise we need to suggest the closest one."*
