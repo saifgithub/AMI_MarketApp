@@ -44,6 +44,16 @@ consumer**, not a one-off alert feature that happens to use OneSignal.
     into the OneSignal dashboard. Own quota, own Firebase console visibility.
   - **OneSignal's auto-generated Firebase project** — zero external setup, shared
     quota. Recommended for alpha; revisit before Beta scale.
+- **A15c — OneSignal REST API Key (backend secret). NEW, found 2026-07-31 —
+  distinct from the App ID.** The App ID is client-side (SDK init, already in the
+  build prompts above); the **backend** needs a separate REST API Key to actually
+  call OneSignal's send API. Already wired as a config field —
+  `backend/app/core/config.py:126-127` has `onesignal_app_id` / `onesignal_rest_key`
+  (both empty today), and `test_config_compose_parity.py:52-53` already carries a
+  documented exemption for both pending this CR, so no `docker-compose.yml`
+  fire-drill is needed at wiring time. Saiful pulls it from OneSignal dashboard →
+  Settings → Keys & IDs → REST API Key, once the app is otherwise configured, and it
+  goes into melehost's `.env` the way every other provider key does.
 - **Platform runtime permission, not a cert but easy to miss:**
   - iOS: `UNUserNotificationCenter` authorization prompt. A cold OS prompt on first
     launch is a known bad pattern (declines are permanent without a Settings trip)
@@ -52,7 +62,7 @@ consumer**, not a one-off alert feature that happens to use OneSignal.
     changed from "on by default" in prior Android versions. Missing this silently
     means zero Android push with no error surfaced anywhere (CR040 shape again).
 
-Once A15/A15b clear, A16 (below) is Claude's build — nothing else is externally
+Once A15/A15b/A15c clear, A16 (below) is Claude's build — nothing else is externally
 blocked.
 
 ---
