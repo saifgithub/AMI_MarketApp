@@ -81,6 +81,7 @@ _LEAGUE_ROLL_INTERVAL_SECONDS = 60 * 60  # hourly — weekly_roll() is idempoten
 _SHARIA_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — SPUS publishes daily
 _CLASSIFICATION_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — sectors drift slowly
 _TICKER_REFERENCE_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — CR128
+_PRICE_ALERT_EVAL_INTERVAL_SECONDS = 5 * 60  # CR027
 
 
 async def _nightly_audit_trim() -> None:
@@ -162,6 +163,21 @@ async def _ticker_reference_refresh() -> None:
         await asyncio.sleep(_TICKER_REFERENCE_REFRESH_INTERVAL_SECONDS)
 
 
+async def _price_alert_evaluation_tick() -> None:
+    """Background task: evaluate active price alerts every 5 min (CR027).
+    Work-first-then-sleep like `_sharia_universe_refresh` — a container
+    restart shouldn't leave a breached alert unchecked for a full interval."""
+    from app.services.price_alert_evaluator import evaluate_price_alerts
+
+    while True:
+        try:
+            stats = await evaluate_price_alerts()
+            logger.info("price_alert_evaluation_complete", **stats)
+        except Exception:
+            logger.exception("price_alert_evaluation_failed")
+        await asyncio.sleep(_PRICE_ALERT_EVAL_INTERVAL_SECONDS)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # AT:R34 (eeeb866f): respawn any room runs the previous boot left
@@ -190,6 +206,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_sharia_universe_refresh()),
         asyncio.create_task(_classification_universe_refresh()),
         asyncio.create_task(_ticker_reference_refresh()),
+        asyncio.create_task(_price_alert_evaluation_tick()),
     ]
     try:
         yield
