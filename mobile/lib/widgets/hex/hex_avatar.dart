@@ -54,12 +54,6 @@ class HexAvatar extends StatefulWidget {
   State<HexAvatar> createState() => _HexAvatarState();
 }
 
-/// Below this, a bold monospace glyph is a texture, not a label. DEF142's
-/// 20pt call site (`lesson_tile.dart`) renders at 3.2px; every other census
-/// size — 28pt and up, 4.48px and up — clears it, so the floor sits strictly
-/// between the two rather than at the edge of the smallest surviving size.
-const double _minHexAvatarLabelFontSize = 4.0;
-
 class _HexAvatarState extends State<HexAvatar>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
@@ -110,9 +104,6 @@ class _HexAvatarState extends State<HexAvatar>
     final effectiveColor = _isLocked ? AmiColors.slate700 : widget.color;
     final attention = widget.status == HexAvatarStatus.attention;
     final glowColor = attention ? AmiColors.hexAmber : effectiveColor;
-    final labelFontSize = widget.size * 0.16;
-    final showLabel =
-        widget.label.isNotEmpty && labelFontSize >= _minHexAvatarLabelFontSize;
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -148,38 +139,35 @@ class _HexAvatarState extends State<HexAvatar>
               child: Container(
                 width: widget.size,
                 height: hexHeight,
-                // Canvas interior, family-coloured border, label in the family
-                // colour itself — never a solid family fill. No ink clears
-                // 4.5:1 on `hexPurple` while the fill stays saturated (DEF142,
-                // measured: slate900 4.22:1 vs white's 4.23, textHigh 3.85).
-                // Same treatment as the Verdict Board's comb
-                // (`room_board.dart`'s `_HexOutlinePainter`); this is where
-                // it generalises to every agent surface.
+                // Solid family fill, white label (DEF206 — reverting DEF142).
+                // DEF142 swapped this for a canvas interior with the label in
+                // the family colour, on a WCAG 4.5:1 measurement. Saiful
+                // reverted it on sight of the shipped +62 build: the hex grid
+                // IS the Floor's identity, and the outline treatment read as
+                // washed-out and made the lock glyph collide with the label.
+                // The brand call outranks the contrast metric here — do not
+                // re-apply the canvas interior to this widget without him.
                 decoration: BoxDecoration(
-                  color: _isLocked ? AmiColors.slate800 : AmiColors.slate900,
+                  color: _isLocked ? AmiColors.slate800 : effectiveColor,
                   border: Border.all(
                     color: _isLocked ? AmiColors.slate600 : effectiveColor,
                     width: 1,
                   ),
                 ),
                 alignment: Alignment.center,
-                child: !showLabel
-                    ? null
-                    : Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(
-                          widget.label,
-                          style: AmiTypography.labelMono.copyWith(
-                            fontSize: labelFontSize,
-                            color: _isLocked
-                                ? AmiColors.textLow
-                                : effectiveColor,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.clip,
-                        ),
-                      ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    widget.label,
+                    style: AmiTypography.labelMono.copyWith(
+                      fontSize: widget.size * 0.16,
+                      color: _isLocked ? AmiColors.textLow : Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.clip,
+                  ),
+                ),
               ),
             ),
             // Lock glyph

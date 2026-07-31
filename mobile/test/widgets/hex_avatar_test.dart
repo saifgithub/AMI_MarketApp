@@ -1,10 +1,14 @@
-/// DEF142 — `HexAvatar` legibility: canvas-interior treatment + font floor.
+/// DEF206 — `HexAvatar` renders a SOLID family fill with a white label.
 ///
-/// `room_board_test.dart` pins the contrast math (the comb already shares it,
-/// non-vacuously); this file pins the two things that are `HexAvatar`-shaped
-/// specifically — the census-derived font floor and the render-no-label
-/// branch below it — by iterating every real call-site size rather than
-/// asserting on one.
+/// This file used to pin the opposite (DEF142's canvas interior + a 4.0px
+/// font floor that suppressed the label entirely below it). Saiful reverted
+/// that treatment on sight of the shipped `0.1.0+62` build: the saturated hex
+/// grid is the Floor's identity, the outline version read as washed out, and
+/// the lock glyph collided with the low-contrast label.
+///
+/// The tests are inverted rather than deleted, deliberately — DEF142 was a
+/// deliberate, argued change, so the thing that stops it being re-applied by
+/// someone reading only its rationale is a red test, not a comment.
 library;
 
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -17,10 +21,10 @@ Future<void> _pump(WidgetTester t, Widget child) async {
 }
 
 void main() {
-  // Every distinct `size` actually passed at a real call site (DEF142's
-  // 20-site, ten-size census), plus what it renders — `size * 0.16`.
+  // Every distinct `size` actually passed at a real call site (the 20-site,
+  // ten-size census), plus what it renders — `size * 0.16`.
   const census = {
-    20: 3.2, // lesson_tile.dart:104 — below the floor
+    20: 3.2, // lesson_tile.dart:104
     28: 4.48, // room_screen.dart x3, lesson_reader_screen.dart:278
     32: 5.12, // league_screen.dart, room_transcript_rows.dart
     44: 7.04, // brief/brief-history/one-on-one
@@ -30,51 +34,28 @@ void main() {
     96: 15.36, // default (unlock screen uses 160)
   };
 
-  group('DEF142 — font-size floor, derived from the census', () {
+  group('DEF206 — every census size keeps its label', () {
     for (final entry in census.entries) {
       final size = entry.key.toDouble();
       final expectedPx = entry.value;
 
-      testWidgets('size $size renders at ${expectedPx}px', (t) async {
+      testWidgets('size $size renders its label at ${expectedPx}px', (t) async {
         await _pump(
           t,
           HexAvatar(label: 'FUND', color: AmiColors.hexCyan, size: size),
         );
-        final belowFloor = expectedPx < 4.0;
         final finder = find.text('FUND');
-        if (belowFloor) {
-          expect(finder, findsNothing,
-              reason: 'a $expectedPx label is a smudge, not a label — '
-                  'DEF142 A3 says render none');
-        } else {
-          expect(finder, findsOneWidget);
-          final text = t.widget<Text>(finder);
-          expect(text.style!.fontSize, closeTo(expectedPx, 0.01));
-        }
+        expect(finder, findsOneWidget,
+            reason: 'DEF206 removed DEF142\'s font floor — no size suppresses '
+                'the label any more, including the 20pt lesson_tile site');
+        final text = t.widget<Text>(finder);
+        expect(text.style!.fontSize, closeTo(expectedPx, 0.01));
       });
     }
-
-    testWidgets('the census names a real site below the floor', (t) async {
-      // lesson_tile.dart:104 — size 20, 3.2px. Pinned by name per acceptance
-      // #4: "a test names a real site that hits this branch."
-      await _pump(
-        t,
-        HexAvatar(label: 'FUND', color: AmiColors.hexCyan, size: 20),
-      );
-      expect(find.text('FUND'), findsNothing);
-    });
-
-    testWidgets('an empty label never renders a Text either', (t) async {
-      await _pump(
-        t,
-        HexAvatar(label: '', color: AmiColors.hexCyan, size: 96),
-      );
-      expect(find.byType(Text), findsNothing);
-    });
   });
 
-  group('DEF142 — canvas-interior treatment', () {
-    testWidgets('interior is the canvas, border and label are the family colour',
+  group('DEF206 — solid family fill, white label', () {
+    testWidgets('interior is the family colour and the label is white',
         (t) async {
       await _pump(
         t,
@@ -85,12 +66,14 @@ void main() {
         matching: find.byType(Container),
       ));
       final decoration = container.decoration! as BoxDecoration;
-      expect(decoration.color, AmiColors.slate900,
-          reason: 'the interior must be the canvas, never a solid family fill');
+      expect(decoration.color, AmiColors.hexPurple,
+          reason: 'the interior is a SOLID family fill — reverting to the '
+              'canvas interior is the DEF142 regression this pins');
       expect(decoration.border!.top.color, AmiColors.hexPurple);
 
       final text = t.widget<Text>(find.text('FUND'));
-      expect(text.style!.color, AmiColors.hexPurple);
+      expect(text.style!.color, Colors.white,
+          reason: 'white on the family fill, not the family colour on canvas');
     });
 
     testWidgets('locked state keeps its own muted treatment', (t) async {

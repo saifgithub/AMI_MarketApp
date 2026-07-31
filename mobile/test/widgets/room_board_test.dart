@@ -19,7 +19,6 @@ import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room.dart' show LevelSource;
 import 'package:ami_trade/models/room_board.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
-import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/room/room_board.dart';
 import 'package:ami_trade/widgets/room/room_transcript_rows.dart';
 import 'package:flutter/material.dart';
@@ -405,36 +404,13 @@ void main() {
           closeTo(4.22, 0.02));
     });
 
-    // `HexAvatar` used to inherit none of the above — this asserts it now
-    // does, against the WIDGET itself rather than the abstract palette, so a
-    // future edit to `hex_avatar.dart` alone (not just the comb) can't
-    // silently re-open DEF142. Extends this test rather than starting a
-    // second one over the same palette rule (DEF098's class).
-    testWidgets('HexAvatar renders the same canvas-interior ink, per family',
-        (t) async {
-      for (final fill in _familyFills) {
-        await t.pumpWidget(MaterialApp(
-          home: Scaffold(
-            body: Center(child: HexAvatar(label: 'AB', color: fill, size: 96)),
-          ),
-        ));
-        final container = t.widget<Container>(find.descendant(
-          of: find.byType(HexAvatar),
-          matching: find.byType(Container),
-        ));
-        final decoration = container.decoration! as BoxDecoration;
-        expect(decoration.color, AmiColors.slate900,
-            reason: 'HexAvatar must not fall back to a solid family fill');
-
-        final label = t.widget<Text>(find.text('AB'));
-        expect(label.style!.color, fill);
-        expect(
-          _wcagRatio(label.style!.color!, AmiColors.slate900),
-          greaterThanOrEqualTo(amiCanvasContrastFloor),
-          reason: 'HexAvatar label fails the canvas floor on $fill',
-        );
-      }
-    });
+    // DEF206 removed the `HexAvatar` half of this group. DEF142 had extended
+    // the comb's contrast rule onto `HexAvatar` too; Saiful reverted that
+    // widget to its solid family fill on sight of the `0.1.0+62` build, so
+    // asserting the canvas interior there would now be asserting the bug.
+    // THE COMB'S OWN TREATMENT IS UNCHANGED and still pinned above — the
+    // revert is scoped to `hex_avatar.dart` (the Floor grid), not to
+    // `room_board.dart`. `hex_avatar_test.dart` pins the reverted shape.
 
     test('comb labels fit and stay recognisable', () {
       for (final a in kCombVoices) {
