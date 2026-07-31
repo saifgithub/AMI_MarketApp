@@ -37,6 +37,11 @@ from app.services.reputation_service import get_reputation_service
 from app.services.classification_universe import default_classification_universe_async
 from app.services.sharia_universe import default_halal_universe_async
 from app.services.sim_engine import SimEngine, SimTrade, get_sim_engine
+from app.services.ticker_reference import (
+    TickerNotFoundError,
+    require_ticker_exists,
+    ticker_not_found_detail,
+)
 from app.services.watchlist_store import get_watchlist_store
 from app.api.dependencies import get_current_user
 from app.db import get_session
@@ -49,6 +54,19 @@ router = APIRouter(prefix="/v1/sim", tags=["sim"])
 def _own(current_user: User, user_id: UUID) -> None:
     if current_user.id != user_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
+
+
+def _require_ticker_or_422(ticker: str) -> None:
+    """CR128 guard shared by preview + submit. Defense in depth — the client
+    already checked via GET /v1/tickers/validate, so this only fires for a
+    stale client or a direct API call."""
+    try:
+        with get_session() as session:
+            require_ticker_exists(session, ticker)
+    except TickerNotFoundError as exc:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, detail=ticker_not_found_detail(exc)
+        ) from exc
 
 
 class SubmitTradeRequest(BaseModel):
@@ -194,6 +212,7 @@ async def preview_trade(
     """
     if current_user.id != req.user_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
+    _require_ticker_or_422(req.ticker)
     mandate = resolve_mandate(req.user_id, req.mandate_override)
     side = req.side if isinstance(req.side, Side) else Side(req.side)
     order_type = (
@@ -244,6 +263,7 @@ async def submit_trade(
 ) -> dict:
     if current_user.id != req.user_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
+    _require_ticker_or_422(req.ticker)
     mandate = resolve_mandate(req.user_id, req.mandate_override)
     side = req.side if isinstance(req.side, Side) else Side(req.side)
     order_type = (

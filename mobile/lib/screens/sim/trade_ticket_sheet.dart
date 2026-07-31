@@ -16,6 +16,7 @@ import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/confirm_ticker_match.dart';
 import 'package:ami_trade/widgets/sharia_verdict_banner.dart';
 import 'package:ami_trade/widgets/sheet_insets.dart';
 import 'package:flutter/material.dart';
@@ -80,6 +81,12 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   String? _quoteTicker; // ticker that _quote belongs to
   bool _quoteLoading = false;
   Timer? _quoteDebounce;
+
+  // CR128: existence check + "did you mean X" confirmation before a trade is
+  // submitted — distinct from the debounced live-quote fetch above, which is
+  // a price preview only and never signals "ticker doesn't exist" (it falls
+  // through to a fabricated mock quote for any string).
+  bool _validatingTicker = false;
 
   @override
   void initState() {
@@ -187,10 +194,38 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     }
   }
 
+  // CR128: resolves `typed` to a confirmed-valid ticker, or null if the user
+  // should not proceed (not found, or a suggestion was offered and rejected).
+  Future<String?> _resolveValidTicker(String typed) async {
+    setState(() => _validatingTicker = true);
+    try {
+      final result = await ref.read(apiClientProvider).validateTicker(typed);
+      if (!mounted) return null;
+      if (result.exists) return typed;
+      if (result.suggestion != null) {
+        return confirmTickerMatch(
+          context,
+          typed: typed,
+          suggestedTicker: result.suggestion!.ticker,
+          suggestedCompanyName: result.suggestion!.companyName,
+          exchange: result.suggestion!.exchange,
+        );
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).tickerNotFound(typed))),
+      );
+      return null;
+    } finally {
+      if (mounted) setState(() => _validatingTicker = false);
+    }
+  }
+
   Future<void> _submit() async {
-    final ticker = _ticker.text.trim().toUpperCase();
+    final typed = _ticker.text.trim().toUpperCase();
     final qty = double.tryParse(_qty.text.trim());
-    if (ticker.isEmpty || qty == null || qty <= 0) return;
+    if (typed.isEmpty || qty == null || qty <= 0 || _validatingTicker) return;
+    final ticker = await _resolveValidTicker(typed);
+    if (ticker == null || !mounted) return;
     final result = await ref.read(simNotifierProvider.notifier).submit(
       ticker: ticker,
       side: _side,
@@ -506,11 +541,18 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                   foregroundColor: AmiColors.slate900,
                   padding: const EdgeInsets.symmetric(vertical: AmiSpacing.m),
                 ),
-                icon: Icon(_side == 'buy' ? Icons.add : Icons.remove),
+                icon: (state.submitting || _validatingTicker)
+                    ? const SizedBox(
+                        width: 16, height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2, color: AmiColors.slate900,
+                        ),
+                      )
+                    : Icon(_side == 'buy' ? Icons.add : Icons.remove),
                 label: Text(state.submitting
                     ? l.tradeTicketSubmitting
                     : l.tradeTicketSubmit),
-                onPressed: state.submitting ? null : _submit,
+                onPressed: (state.submitting || _validatingTicker) ? null : _submit,
               ),
             ),
             const SizedBox(height: AmiSpacing.xs),

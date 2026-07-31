@@ -22,6 +22,7 @@ from app.schemas.watchlist import (
     WatchlistListResponse,
 )
 from app.services.market_data import get_market_data_provider
+from app.services.ticker_reference import TickerNotFoundError, ticker_not_found_detail
 from app.services.watchlist_store import get_watchlist_store
 
 router = APIRouter(
@@ -72,6 +73,10 @@ async def add_to_watchlist(
     _own(current_user, user_id)
     try:
         entry = get_watchlist_store().add(user_id, req.ticker, req.notes)
+    except TickerNotFoundError as exc:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, detail=ticker_not_found_detail(exc)
+        ) from exc
     except ValueError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
     provider = get_market_data_provider()

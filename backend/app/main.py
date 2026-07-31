@@ -28,6 +28,7 @@ from app.api.one_on_one import router as one_on_one_router
 from app.api.portfolio import router as portfolio_router  # CR026 sector allocation
 from app.api.room import router as room_router
 from app.api.sim import router as sim_router
+from app.api.tickers import router as tickers_router
 from app.api.watchlist import router as watchlist_router
 from app.api.webhooks import router as webhooks_router
 from app.core.config import settings
@@ -79,6 +80,7 @@ _TRIM_INTERVAL_SECONDS = 24 * 60 * 60  # 24 h
 _LEAGUE_ROLL_INTERVAL_SECONDS = 60 * 60  # hourly — weekly_roll() is idempotent
 _SHARIA_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — SPUS publishes daily
 _CLASSIFICATION_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — sectors drift slowly
+_TICKER_REFERENCE_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — CR128
 
 
 async def _nightly_audit_trim() -> None:
@@ -142,6 +144,24 @@ async def _classification_universe_refresh() -> None:
         await asyncio.sleep(_CLASSIFICATION_REFRESH_INTERVAL_SECONDS)
 
 
+async def _ticker_reference_refresh() -> None:
+    """Background task: fetch NASDAQ Trader's listed-securities files once a day
+    and upsert the ticker reference table (CR128). Idempotent like
+    `_sharia_universe_refresh` — a tick that finds a fresh refresh already stored
+    does nothing, so a restart can't miss a boundary. The network fetch happens
+    HERE (the only socket this feature opens), off the request path and off the
+    event loop (`to_thread`); the read path (existence check + closest-match
+    suggestion) resolves from the stored table and never blocks on the network."""
+    from app.services.ticker_reference import run_ticker_reference_refresh_tick
+
+    while True:
+        try:
+            await asyncio.to_thread(run_ticker_reference_refresh_tick)
+        except Exception:
+            logger.exception("ticker_reference_refresh_failed")
+        await asyncio.sleep(_TICKER_REFERENCE_REFRESH_INTERVAL_SECONDS)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # AT:R34 (eeeb866f): respawn any room runs the previous boot left
@@ -169,6 +189,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_league_roll_tick()),
         asyncio.create_task(_sharia_universe_refresh()),
         asyncio.create_task(_classification_universe_refresh()),
+        asyncio.create_task(_ticker_reference_refresh()),
     ]
     try:
         yield
@@ -222,6 +243,7 @@ app.include_router(mandate_router)
 app.include_router(portfolio_router)
 app.include_router(room_router)
 app.include_router(sim_router)
+app.include_router(tickers_router)
 app.include_router(feedback_router)
 app.include_router(watchlist_router)
 app.include_router(webhooks_router)

@@ -30,6 +30,7 @@ import 'package:ami_trade/models/one_on_one.dart';
 import 'package:ami_trade/models/onboarding.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/sim.dart';
+import 'package:ami_trade/models/tickers.dart';
 import 'package:ami_trade/models/watchlist.dart';
 import 'package:ami_trade/services/api/api_exceptions.dart';
 import 'package:ami_trade/services/yahoo_finance_service.dart';
@@ -929,6 +930,21 @@ class ApiClient {
     final r = await _dio
         .get<Map<String, dynamic>>('/v1/portfolio/sector-allocation/$userId');
     return SectorAllocation.fromJson(r.data!);
+  }
+
+  // ── Ticker Reference (CR128) ────────────────────────────────────
+
+  /// Existence check + closest-match suggestion, called at submit-time from
+  /// Convene the Room, trade submit, and watchlist add before the actual
+  /// action request — the client resolves to a valid ticker here so the
+  /// action endpoints' own guard (defense in depth) never fires in the
+  /// normal path.
+  Future<TickerValidation> validateTicker(String ticker) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/tickers/validate',
+      queryParameters: {'ticker': ticker},
+    );
+    return TickerValidation.fromJson(r.data!);
   }
 
   // ── Watchlist (A18) ─────────────────────────────────────────────

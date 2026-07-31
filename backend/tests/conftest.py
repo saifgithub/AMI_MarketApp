@@ -9,7 +9,7 @@ tests that don't touch persistence pay almost no cost.
 
 import os
 import tempfile
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path as _Path
 from uuid import uuid4
 
@@ -28,6 +28,47 @@ from app.schemas import (
 )
 from app.schemas.trade import OrderType, ProposedTrade, Side
 
+# CR128: tickers the existing test suite already posts through the three
+# now-guarded routes (Room convene, trade preview/submit, watchlist add).
+# Seeded into every fresh test DB so pre-existing tests keep passing without
+# each one needing its own `ticker_reference` setup. CR128's own tests cover
+# the not-found/suggestion behavior explicitly against this same seeded set
+# (or an unseeded DB). Two groups:
+#   - Real tickers (also convene_sheet.dart's own hardcoded suggestion chips,
+#     plus XOM/GOOG used by the Sharia/classification "PASS on a real name"
+#     fixtures).
+#   - Synthetic fixture tickers (JPMX, NEVR) that pre-date CR128 — the Sharia/
+#     classification wire-format tests (DEF094/DEF112) use these specifically
+#     BECAUSE they're outside those universes (SCREENED_OUT / UNKNOWN verdict
+#     paths), a concern orthogonal to CR128's existence check. Seeding them
+#     here only affects test-only data, never production.
+_COMMON_TEST_TICKERS = {
+    "AAPL": ("Apple Inc.", "NASDAQ"),
+    "MSFT": ("Microsoft Corporation", "NASDAQ"),
+    "GOOGL": ("Alphabet Inc.", "NASDAQ"),
+    "GOOG": ("Alphabet Inc.", "NASDAQ"),
+    "META": ("Meta Platforms, Inc.", "NASDAQ"),
+    "TSLA": ("Tesla, Inc.", "NASDAQ"),
+    "AMZN": ("Amazon.com, Inc.", "NASDAQ"),
+    "NVDA": ("NVIDIA Corporation", "NASDAQ"),
+    "XOM": ("Exxon Mobil Corporation", "NYSE"),
+    "JPMX": ("Synthetic Sharia-screened-out test fixture", "TEST"),
+    "NEVR": ("Synthetic sharia/classification-unknown test fixture", "TEST"),
+}
+
+
+def _seed_common_test_tickers() -> None:
+    from app.db import get_session
+    from app.db.models import TickerReferenceRow
+
+    now = datetime.now(timezone.utc)
+    with get_session() as s:
+        for symbol, (name, exchange) in _COMMON_TEST_TICKERS.items():
+            s.add(TickerReferenceRow(
+                symbol=symbol, company_name=name, exchange=exchange,
+                is_etf=False, is_active=True, last_seen_at=now,
+            ))
+
 
 @pytest.fixture(autouse=True)
 def _isolated_db(tmp_path: _Path) -> None:
@@ -41,6 +82,7 @@ def _isolated_db(tmp_path: _Path) -> None:
 
     from app.db import reset_for_tests
     reset_for_tests(url)
+    _seed_common_test_tickers()
 
     # Reset module-level singletons so cached pre-DB instances don't leak.
     from app.services import mandate_store as _ms
@@ -86,6 +128,13 @@ def _isolated_db(tmp_path: _Path) -> None:
     _rl.anon_rate_limit.reset()
     _rl.magic_link_start_rate_limit.reset()
     _rl.room_stream_rate_limit.reset()
+    # CR128: the ticker reference module holds an in-process active-symbols
+    # cache + a refresh-failure counter as module globals — clear both so a
+    # cached symbol list (or a raised failure count) from one test's seeded
+    # DB doesn't leak into the next.
+    from app.services import ticker_reference as _tr
+    _tr._invalidate_active_symbol_cache()
+    _tr.reset_refresh_failures()
 
 
 @pytest.fixture

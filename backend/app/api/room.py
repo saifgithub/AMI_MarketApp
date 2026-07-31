@@ -61,6 +61,11 @@ from app.services.credit_service import InsufficientCredits
 from app.services.rate_limit import room_stream_rate_limit
 from app.services.reputation_service import get_reputation_service
 from app.services.sim_engine import SimEngine, get_sim_engine
+from app.services.ticker_reference import (
+    TickerNotFoundError,
+    require_ticker_exists,
+    ticker_not_found_detail,
+)
 
 
 router = APIRouter(
@@ -112,6 +117,18 @@ async def stream_room(
     ticker = req.ticker.upper().strip()
     if not ticker:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "ticker required")
+    # CR128: reject a nonexistent ticker before ANY credit/feed-quota spend —
+    # this must stay strictly before `_resolve_and_charge_feeds` inside
+    # `start_run`. Defense in depth: the client already checked via
+    # GET /v1/tickers/validate, so this only fires for a stale client or a
+    # direct API call.
+    try:
+        with get_session() as session:
+            require_ticker_exists(session, ticker)
+    except TickerNotFoundError as exc:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, detail=ticker_not_found_detail(exc)
+        ) from exc
 
     mandate = resolve_mandate(req.user_id, req.mandate_override, locale=req.locale)
 

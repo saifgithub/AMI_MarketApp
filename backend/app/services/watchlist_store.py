@@ -22,6 +22,7 @@ from sqlalchemy.exc import IntegrityError
 from app.db import get_session, init_schema
 from app.db.models import SimWatchlistRow
 from app.schemas.watchlist import WatchlistEntry
+from app.services.ticker_reference import require_ticker_exists
 
 
 class WatchlistStore:
@@ -42,6 +43,11 @@ class WatchlistStore:
         if not ticker_norm:
             raise ValueError("ticker cannot be empty")
         with get_session() as s:
+            # CR128: defense in depth — the client already checked via
+            # GET /v1/tickers/validate. Raises TickerNotFoundError (a
+            # ValueError subclass); the route catches it specifically for a
+            # structured 422 before the generic ValueError -> 400 mapping.
+            require_ticker_exists(s, ticker_norm)
             # Idempotent: if it already exists, update notes (if supplied) and return.
             existing = s.execute(
                 select(SimWatchlistRow).where(

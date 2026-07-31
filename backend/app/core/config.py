@@ -322,6 +322,18 @@ class Settings(BaseSettings):
         "1UC1Bk67bGuYsos_i8y_HQpNoHpVHAvqf71MbgrafJOQ/export?format=csv&gid=0"
     )
 
+    # CR128 — ticker existence validation. NASDAQ Trader's public, no-auth
+    # symbol-directory files: nasdaqlisted.txt (NASDAQ-listed) + otherlisted.txt
+    # (NYSE/AMEX/ARCA-listed), together ~13k US-listed symbols incl. ETFs.
+    # Refreshed daily by `_ticker_reference_refresh()`, same pattern as CR075/
+    # DEF061 above. Config, not a literal — CR040 rule forwards it in compose.
+    ticker_reference_nasdaq_listed_url: str = (
+        "https://www.nasdaqtrader.com/dynamic/symdir/nasdaqlisted.txt"
+    )
+    ticker_reference_nasdaq_other_url: str = (
+        "https://www.nasdaqtrader.com/dynamic/symdir/otherlisted.txt"
+    )
+
     # Concierge lesson-context router (CR021). Selects how much lesson
     # knowledge the Floor Concierge is given:
     #   saver        — first 25 lessons, id/title/track/level (legacy)

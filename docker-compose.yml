@@ -213,6 +213,11 @@ services:
       # CR069-DIVERGE: second-source (HLAL/FTSE) holdings CSV for the
       # divergence MONITOR only — log-only, never read by the halal flag.
       SHARIA_HLAL_HOLDINGS_URL: ${SHARIA_HLAL_HOLDINGS_URL:-https://docs.google.com/spreadsheets/d/1UC1Bk67bGuYsos_i8y_HQpNoHpVHAvqf71MbgrafJOQ/export?format=csv&gid=0}
+      # CR128: ticker existence validation — NASDAQ Trader's public, no-auth
+      # symbol-directory files, refreshed daily, always on (no feature flag —
+      # a bug fix, not a gated feature).
+      TICKER_REFERENCE_NASDAQ_LISTED_URL: ${TICKER_REFERENCE_NASDAQ_LISTED_URL:-https://www.nasdaqtrader.com/dynamic/symdir/nasdaqlisted.txt}
+      TICKER_REFERENCE_NASDAQ_OTHER_URL: ${TICKER_REFERENCE_NASDAQ_OTHER_URL:-https://www.nasdaqtrader.com/dynamic/symdir/otherlisted.txt}
       # Alpaca paper-trading (AT:R45, DEF044). Encryption key is optional —
       # empty derives the cipher from SECRET_KEY, so at-rest encryption stays
       # on; set it only to rotate independently.

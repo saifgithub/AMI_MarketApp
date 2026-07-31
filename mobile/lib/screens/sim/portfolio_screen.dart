@@ -36,10 +36,12 @@ import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';
+import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/theme/hex_clipper.dart';
+import 'package:ami_trade/widgets/confirm_ticker_match.dart';
 import 'package:ami_trade/widgets/empty_state.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:ami_trade/widgets/hex/hex_toast.dart';
@@ -1123,9 +1125,33 @@ class _WatchlistTab extends ConsumerWidget {
     );
   }
 
-  void _commit(BuildContext ctx, WidgetRef ref, String raw) {
-    final ticker = raw.trim();
-    if (ticker.isEmpty) return;
+  // CR128: existence check + "did you mean X" confirmation before a ticker
+  // is added — previously any string was accepted (the store only rejected
+  // empty input). Shown as a nested dialog on top of the add dialog, which
+  // stays open until a valid ticker is resolved.
+  Future<void> _commit(BuildContext ctx, WidgetRef ref, String raw) async {
+    final typed = raw.trim().toUpperCase();
+    if (typed.isEmpty) return;
+    final result = await ref.read(apiClientProvider).validateTicker(typed);
+    if (!ctx.mounted) return;
+    String? ticker;
+    if (result.exists) {
+      ticker = typed;
+    } else if (result.suggestion != null) {
+      ticker = await confirmTickerMatch(
+        ctx,
+        typed: typed,
+        suggestedTicker: result.suggestion!.ticker,
+        suggestedCompanyName: result.suggestion!.companyName,
+        exchange: result.suggestion!.exchange,
+      );
+    } else {
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(ctx).tickerNotFound(typed))),
+      );
+      return;
+    }
+    if (ticker == null || !ctx.mounted) return;
     ref.read(watchlistNotifierProvider.notifier).add(ticker);
     Navigator.of(ctx).pop();
   }

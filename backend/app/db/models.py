@@ -920,3 +920,32 @@ class ClassificationUniverseSnapshotRow(Base):
     # (and the migration's back-fill) read as an empty map; a ticker absent from it
     # resolves to "Other" (disclosed, never blocking — the DEF059 inversion guard).
     sectors: Mapped[dict] = mapped_column(JsonB(), default=dict, nullable=True)
+
+
+class TickerReferenceRow(Base):
+    """One row per known US-listed ticker (CR128).
+
+    Unlike the Sharia/classification snapshot tables (one append-only row per
+    refresh, list-membership use case), this is one row PER SYMBOL — existence
+    checks and "did you mean X" suggestions need an O(1) point lookup by symbol,
+    not a scan of a JSON blob. The daily `_ticker_reference_refresh()` background
+    task upserts every symbol from NASDAQ Trader's listed-securities files
+    (`nasdaqlisted.txt` + `otherlisted.txt` — NASDAQ + NYSE + AMEX + ARCA, no
+    auth). A symbol missing from the latest refresh gets `is_active = False`
+    (soft-delete — a delisting or a transient source hiccup should never make a
+    previously-valid ticker silently vanish from history; existence checks just
+    filter on `is_active`).
+    """
+
+    __tablename__ = "ticker_reference"
+
+    symbol: Mapped[str] = mapped_column(String, primary_key=True)
+    company_name: Mapped[str] = mapped_column(String, nullable=False)
+    exchange: Mapped[str] = mapped_column(String, nullable=False)
+    is_etf: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False, index=True,
+    )
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
