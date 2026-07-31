@@ -4,7 +4,9 @@ AT:R16 — comprehensive alpha-era logging. Every write here is best-effort:
 any exception in audit code MUST NOT break the request that triggered it.
 Wrap callers in try/except logging.exception and continue.
 
-Retention: 90-day rolling window on all three audit tables. The nightly
+Retention: 90-day rolling window on the audit tables, plus `notifications`
+(CR027 — riding this existing job rather than a new scheduled task; the
+doc flags unbounded per-user growth as a real risk). The nightly
 `trim_audit_tables()` is called from the lifespan background task in main.py.
 """
 
@@ -17,14 +19,20 @@ from uuid import UUID
 from sqlalchemy import delete, update
 
 from app.core.logging import logger
-from app.db.models import HTTPAuditRow, LLMAuditRow, OneOnOneMessageRow, RoomRunRow
+from app.db.models import (
+    HTTPAuditRow,
+    LLMAuditRow,
+    NotificationRow,
+    OneOnOneMessageRow,
+    RoomRunRow,
+)
 from app.db.session import get_session
 
 AUDIT_RETENTION_DAYS = 90
 
 
 def trim_audit_tables(days: int = AUDIT_RETENTION_DAYS) -> dict[str, int]:
-    """Delete rows older than `days` from all three audit tables.
+    """Delete rows older than `days` from the audit + notifications tables.
 
     Returns a dict of {table: rows_deleted} for logging. Raises on DB errors
     (caller decides whether to swallow).
@@ -36,6 +44,7 @@ def trim_audit_tables(days: int = AUDIT_RETENTION_DAYS) -> dict[str, int]:
             (LLMAuditRow, "llm_audit"),
             (HTTPAuditRow, "http_audit"),
             (OneOnOneMessageRow, "one_on_one_messages"),
+            (NotificationRow, "notifications"),
         ):
             result = s.execute(
                 delete(model).where(model.created_at < cutoff)

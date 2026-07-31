@@ -8,7 +8,13 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select
 
-from app.db.models import HTTPAuditRow, LLMAuditRow, OneOnOneMessageRow, RoomRunRow
+from app.db.models import (
+    HTTPAuditRow,
+    LLMAuditRow,
+    NotificationRow,
+    OneOnOneMessageRow,
+    RoomRunRow,
+)
 from app.db.session import get_session
 from app.services.audit import (
     record_http,
@@ -353,3 +359,29 @@ def test_trim_audit_tables_aborts_stale_room_runs():
         ).scalar_one()
         assert stale_row.status == "aborted"
         assert recent_row.status == "running"
+
+
+def test_trim_audit_tables_ages_out_old_notifications():
+    """CR027: notifications rides the existing 90-day trim job — old rows
+    age out, recent ones survive, same as the audit tables above."""
+    old_ts = datetime.now(timezone.utc) - timedelta(days=91)
+    new_ts = datetime.now(timezone.utc) - timedelta(days=1)
+    old_id, new_id = uuid4(), uuid4()
+
+    with get_session() as s:
+        s.add(NotificationRow(
+            id=old_id, user_id=uuid4(), type="price_alert", title="old",
+            body="old", deep_link={}, created_at=old_ts,
+        ))
+        s.add(NotificationRow(
+            id=new_id, user_id=uuid4(), type="price_alert", title="new",
+            body="new", deep_link={}, created_at=new_ts,
+        ))
+        s.commit()
+
+    counts = trim_audit_tables(days=90)
+    assert counts["notifications"] >= 1
+
+    with get_session() as s:
+        assert s.get(NotificationRow, old_id) is None
+        assert s.get(NotificationRow, new_id) is not None
