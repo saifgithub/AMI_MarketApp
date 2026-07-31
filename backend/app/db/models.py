@@ -429,6 +429,67 @@ class SimWatchlistRow(Base):
     )
 
 
+class NotificationRow(Base):
+    """CR027 -- one row per notification regardless of delivery channel or
+    outcome. The durable source of truth; push (OneSignal) is best-effort on
+    top of this, never the other way round. Written only by
+    notification_service.notify().
+    """
+
+    __tablename__ = "notifications"
+    __table_args__ = (
+        Index("ix_notifications_user_created", "user_id", "created_at"),
+        Index("ix_notifications_user_read", "user_id", "read_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    # Open-ended on purpose (price_alert | daily_challenge | game_event |
+    # trial_end | room_verdict | ...) -- plain String, not an enum, so a
+    # future consumer never needs a migration just to add a type.
+    type: Mapped[str] = mapped_column(String, nullable=False)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    body: Mapped[str] = mapped_column(String, nullable=False)
+    deep_link: Mapped[dict] = mapped_column(JsonB(), default=dict, nullable=False)
+    source_ref: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    read_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
+class PriceAlertRow(Base):
+    """CR027 §4 -- a user's stop/target/manual price-threshold watch.
+    ACTIVE -> FIRED (breach) or ACTIVE -> CANCELLED (user/system cancel);
+    terminal states are read-only (audit trail -- closing the linked trade
+    does not delete or mutate the alert).
+    """
+
+    __tablename__ = "price_alerts"
+    __table_args__ = (
+        Index("ix_price_alerts_user_status", "user_id", "status"),
+        Index("ix_price_alerts_ticker_status", "ticker", "status"),
+        Index("ix_price_alerts_fired_at", "fired_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    ticker: Mapped[str] = mapped_column(String, nullable=False)
+    threshold_type: Mapped[str] = mapped_column(String, nullable=False)  # stop|target|manual_above|manual_below
+    threshold_price: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+    status: Mapped[str] = mapped_column(String, default="active", nullable=False)  # active|fired|cancelled
+    # No FK constraint, matching SimTradeRow.verdict_ref's convention -- a
+    # bare nullable reference so closing/deleting a trade never cascades
+    # into this audit-trail row.
+    trade_ref: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    fired_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    cancelled_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    agent_commentary: Mapped[Optional[str]] = mapped_column(String(280), nullable=True)
+
+
 class BugReportRow(Base):
     """In-app bug reports — shake / long-press trigger on the iPhone.
 
