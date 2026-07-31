@@ -722,7 +722,14 @@ class _UnknownTickerPanel extends StatelessWidget {
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  l.tickerNotFound(typed),
+                  // "check the symbol and try again" is the right instruction
+                  // ONLY when we have nothing better to offer. With a
+                  // suggestion on the next line it contradicts itself, so the
+                  // two states get different copy rather than one string that
+                  // is wrong half the time.
+                  s == null
+                      ? l.tickerNotFound(typed)
+                      : l.tickerNotFoundWithSuggestion(typed),
                   style: AmiTypography.body,
                 ),
               ),

@@ -93,6 +93,11 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
+  String tickerNotFoundWithSuggestion(String ticker) {
+    return '$ticker was not found.';
+  }
+
+  @override
   String tickerDidYouMean(String ticker, String company) {
     return 'Did you mean $ticker — $company?';
   }

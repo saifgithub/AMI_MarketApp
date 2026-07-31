@@ -250,6 +250,12 @@ abstract class AppLocalizations {
   /// **'{ticker} isn\'t a listed ticker — check the symbol and try again.'**
   String tickerNotFound(String ticker);
 
+  /// DEF207 not-found line used ONLY when a suggestion IS available — deliberately omits `tickerNotFound`'s 'check the symbol and try again', which contradicts itself when the very next line hands the user the answer. {ticker} is what they typed. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{ticker} was not found.'**
+  String tickerNotFoundWithSuggestion(String ticker);
+
   /// DEF207 tappable suggestion under the trade ticket's ticker field when the typed string is not a listed ticker but a match was found (e.g. typed NETFLIX, suggests NFLX / Netflix, Inc.). Tapping rewrites the field. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
