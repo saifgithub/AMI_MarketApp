@@ -28,7 +28,9 @@ consumer**, not a one-off alert feature that happens to use OneSignal.
 ## 1. Prerequisites (external, before any of this can ship)
 
 - **A15 — OneSignal account + Apple Dev APNs certificate (iOS).** Saiful, external.
-  Blocked today.
+  **The OneSignal account half is done** — App ID `3c2020b6-d8b0-493f-b0e3-5d6ede868d7b`
+  provisioned, 2026-07-31. **Still blocked:** the Apple Dev APNs certificate has to be
+  generated and uploaded to that OneSignal app before iOS push actually works.
 - **A15b — Android/FCM credential for OneSignal. NEW, found during this expansion.**
   APNs is Apple-only; Android-GMS push goes through **Firebase Cloud Messaging**, a
   separate credential OneSignal also requires — `project_plan.md`'s original A15
@@ -85,6 +87,28 @@ per the soft-ask pattern above, registers the device. A single deep-link dispatc
 maps `deep_link.route` to a Flutter route (`open_holding_detail`,
 `open_journal_entry`, `open_room_verdict`, `open_lesson`, `open_game_close`, ...) —
 one table, not one `if` per feature.
+
+### iOS SDK integration — build prompt (Saiful, 2026-07-31, ready to run)
+
+OneSignal App ID (already provisioned, see §1): **`3c2020b6-d8b0-493f-b0e3-5d6ede868d7b`**
+
+Hand this verbatim to whoever builds the iOS side of A16:
+
+> Integrate the OneSignal SDK into this codebase.
+>
+> Follow the instructions at:
+> https://raw.githubusercontent.com/OneSignal/sdk-ai-prompts/main/docs/ios/ai-prompt.md
+>
+> App ID: 3c2020b6-d8b0-493f-b0e3-5d6ede868d7b
+
+**Context for whoever runs it:** this app is Flutter, not native iOS — the prompt
+above is scoped to the native `mobile/ios/` Xcode project (Notification Service
+Extension, App Group entitlement, `aps-environment`, background modes in
+`Info.plist`), which the Dart-side `onesignal_flutter` plugin doesn't configure for
+you. Check OneSignal's Flutter-specific prompt in the same repo
+(`docs/flutter/ai-prompt.md`) for the `pubspec.yaml` + `OneSignal.initialize()` side
+before treating this as the whole iOS integration. Android's equivalent (FCM
+credential wiring, `google-services.json`) is A15b/§1, not this prompt.
 
 ---
 
