@@ -415,6 +415,17 @@
     "tickerDetailActionConvene": "CONVENE",
     "tickerDetailActionWatch": "PANTAU",
     "tickerDetailActionClose": "TUTUP",
+    "tickerDetailActionSetAlert": "ALERT",
+    "priceAlertSheetTitle": "Set price alert — {ticker}",
+    "priceAlertSheetThresholdLabel": "Alert type",
+    "priceAlertTypeStop": "Stop — price falls below (protective)",
+    "priceAlertTypeTarget": "Target — price rises above (profit-taking)",
+    "priceAlertTypeManualAbove": "Price rises above",
+    "priceAlertTypeManualBelow": "Price falls below",
+    "priceAlertSheetPriceLabel": "Price",
+    "priceAlertSheetCreate": "Create alert",
+    "priceAlertsSectionHeading": "PRICE ALERTS",
+    "priceAlertRowCancelTooltip": "Cancel this alert",
     "tickerDetailTradesHeading": "PERNIAGAAN UNTUK {ticker}",
     "tickerDetailNoTrades": "Tiada rekod perniagaan untuk ticker ini lagi.",
     "tickerDetailClosePositionConfirmTitle": "TUTUP POSISI {ticker}?",
@@ -595,5 +606,9 @@
     "roomPhaseVerdict": "KEPUTUSAN",
     "journalLevelsAsOf": "HARGA PADA {date} — SATU REKOD, BUKAN PERSEDIAAN SEMASA",
     "journalRerunWithMandate": "JALANKAN SEMULA DENGAN MANDAT SEMASA",
-    "aiCoachEmptyStateHint": "{count} questions and answers across platform, psychology, scams, AI meta, and beginner / intermediate topics. Type to search."
+    "aiCoachEmptyStateHint": "{count} questions and answers across platform, psychology, scams, AI meta, and beginner / intermediate topics. Type to search.",
+    "pushSoftAskTitle": "Notifications",
+    "pushSoftAskBody": "AMI can notify you the moment a price alert fires or a Room verdict is ready. Turn on notifications?",
+    "pushSoftAskDecline": "Not now",
+    "pushSoftAskAccept": "Turn on"
 }

@@ -416,6 +416,17 @@
     "tickerDetailActionConvene": "CONVENE",
     "tickerDetailActionWatch": "مراقبة",
     "tickerDetailActionClose": "إغلاق",
+    "tickerDetailActionSetAlert": "ALERT",
+    "priceAlertSheetTitle": "Set price alert — {ticker}",
+    "priceAlertSheetThresholdLabel": "Alert type",
+    "priceAlertTypeStop": "Stop — price falls below (protective)",
+    "priceAlertTypeTarget": "Target — price rises above (profit-taking)",
+    "priceAlertTypeManualAbove": "Price rises above",
+    "priceAlertTypeManualBelow": "Price falls below",
+    "priceAlertSheetPriceLabel": "Price",
+    "priceAlertSheetCreate": "Create alert",
+    "priceAlertsSectionHeading": "PRICE ALERTS",
+    "priceAlertRowCancelTooltip": "Cancel this alert",
     "tickerDetailTradesHeading": "الصفقات لـ {ticker}",
     "tickerDetailNoTrades": "لا توجد صفقات مسجلة لهذا الرمز بعد.",
     "tickerDetailClosePositionConfirmTitle": "إغلاق مركز {ticker}؟",
@@ -595,5 +606,9 @@
     "roomPhaseVerdict": "القرار",
     "journalLevelsAsOf": "الأسعار بتاريخ {date} — سجلّ، وليست صفقة قائمة الآن",
     "journalRerunWithMandate": "أعد التشغيل بالتفويض الحالي",
-    "aiCoachEmptyStateHint": "{count} questions and answers across platform, psychology, scams, AI meta, and beginner / intermediate topics. Type to search."
+    "aiCoachEmptyStateHint": "{count} questions and answers across platform, psychology, scams, AI meta, and beginner / intermediate topics. Type to search.",
+    "pushSoftAskTitle": "Notifications",
+    "pushSoftAskBody": "AMI can notify you the moment a price alert fires or a Room verdict is ready. Turn on notifications?",
+    "pushSoftAskDecline": "Not now",
+    "pushSoftAskAccept": "Turn on"
 }

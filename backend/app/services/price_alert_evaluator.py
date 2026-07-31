@@ -92,7 +92,8 @@ def _alert_mandate_check(alert: _AlertSnapshot, mandate: Mandate, halal_universe
     (not None) dodges the one branch — the over-trading brake — that
     isn't is_buy-gated, since an empty list can never manufacture a false
     block (0 is never >= a real per-day/week cap). Only allowlist/
-    blocklist/halal/classification/locale run.
+    blocklist/halal/classification run (locale isn't passed here, so its
+    branch is None-gated off).
     """
     proposed = ProposedTrade(
         ticker=alert.ticker, side=Side.SELL, quantity=1, order_type=OrderType.MARKET,

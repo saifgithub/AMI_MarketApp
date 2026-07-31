@@ -17,6 +17,8 @@ from typing import Sequence, Union
 import sqlalchemy as sa
 from alembic import op
 
+from app.db.base import JsonB
+
 revision: str = "8a4ce4f8abc3"
 down_revision: Union[str, Sequence[str], None] = "e5f6a7b80025"
 branch_labels: Union[str, Sequence[str], None] = None
@@ -31,7 +33,7 @@ def upgrade() -> None:
         sa.Column("type", sa.String(), nullable=False),
         sa.Column("title", sa.String(), nullable=False),
         sa.Column("body", sa.String(), nullable=False),
-        sa.Column("deep_link", sa.JSON(), nullable=False, server_default=sa.text("'{}'")),
+        sa.Column("deep_link", JsonB(), nullable=False, server_default=sa.text("'{}'")),
         sa.Column("source_ref", sa.String(), nullable=True),
         sa.Column("read_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
