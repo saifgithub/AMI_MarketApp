@@ -10,7 +10,7 @@ at once, and none of them has had one.
 
 # R65-BATCH1 — audit lane (7 fast-tracked items, one lane)
 
-SUBMITTED: round 1
+> Round 1 submitted at `af0aeb77`; the live round line is at the foot of this file.
 
 **SHA:** `af0aeb777ef3020553370c94747f3c1faf3b45ce` (`main`, pushed to origin)
 **SCOPE:** chunk — seven independent items, not one CR's definition-of-done. Judge each on its own.
@@ -168,3 +168,112 @@ contract says to audit across its full lifecycle, not just first construction.
   CLAUDE.md. The CR053/058/059 flips were status corrections for work shipped weeks ago — I
   verified each against git history and live code before flipping, and that verification is
   itself unaudited.
+
+---
+
+## Round 2 — `b1c3b17f`
+
+SUBMITTED: round 2
+
+Both MAJORs closed. Diff vs the round-1 SHA is 4 source/test files + 2 register
+rows — the five items you cleared are untouched (`git diff af0aeb77..b1c3b17f`).
+
+### M2 — fixed. You were right, and the trigger is real
+
+`one_on_one.py:send_message` now carries, alongside the 402 handler:
+
+```python
+except BaseException:
+    agent_stream_concurrency_limit.release(concurrency_key)
+    raise
+```
+
+**`BaseException`, not `Exception`** — deliberate, and worth your judgement. A
+`CancelledError` (client hangs up while `spend()` is mid-commit) leaks the slot
+by exactly the same mechanism, and asyncio's `CancelledError` descends from
+`BaseException`, so `except Exception` would have left the cancellation half of
+this hole open. The re-`raise` is unconditional, so nothing is swallowed.
+
+**Test:** `test_a_non_402_spend_failure_releases_the_slot_rather_than_leaking_it`
+— patches `spend()` to raise a `RuntimeError`, asserts the 500, then asserts the
+**next** request at `cap=1` is not 429. Asserted through the **contract**, not
+`_counts`: the private counter is an implementation detail, and the thing that
+actually harms a user is the permanent 429.
+
+**Mutation:** removed the `release` line, kept the `except` → exactly **1 RED**
+(that test), 12 others green. Restored byte-identical, 13/13 re-green.
+
+**Also fixed in `brief.py`, which you did NOT scope into M2.** Brief has no
+`spend()`, so its acquire→generator window is only `StreamingResponse`
+construction — much narrower, and I could not construct a trigger for it. I
+guarded it anyway because the leak class is identical and it wedges the *same
+shared counter*; fixing the reported instance while knowingly leaving its twin
+is how a class becomes a recurrence. **Judge whether that was scope creep** — I
+would rather be told off for the extra four lines than explain the twin later.
+
+**One thing I could not close, stated rather than left for you to find:** if
+Starlette abandons the returned `StreamingResponse` without ever iterating the
+generator, that generator's `finally` never runs and the slot leaks. I could not
+produce that state in a test and I do not know whether Starlette can reach it.
+Structurally it would be closed by acquiring *inside* the generator, but that
+weakens the cap (a burst would all pass the check before any slot is claimed),
+so I did not. Flagging it as a known gap rather than claiming the path is proven
+safe.
+
+### M1 — two of three parts closed; the third is a decision, not a task
+
+**Done:** `backend/tests/unit/test_def195_release_schema_parity.py`, 8 tests.
+
+- Five drive the gate's **logic** off fixture OpenAPI docs: passes on parity;
+  fails on a dropped top-level key; fails on a dropped nested compliance key;
+  fails **closed** on a spec with no `Mandate` schema; fails **closed** on an
+  unreachable host. Mutation: blinded `missing_top` to `[]` → exactly 1 RED
+  (the dropped-key test). Restored, re-green.
+- One is a **real caller that runs on every suite run** —
+  `test_client_patch_keys_all_exist_in_this_checkouts_schema` builds this
+  checkout's own OpenAPI via `get_openapi(app)` and asserts every scraped client
+  PATCH key exists in it. That also puts the gate's logic in CI, since
+  `.github/workflows/deploy-beta.yml` runs `pytest tests/unit/ -q`.
+
+**NOT done, and explicitly not claimed: the release-time call against the
+DEPLOYED backend.** The new test is not a substitute and its own docstring says
+so — it compares the client to the schema *in this repo*, and DEF195 exists
+precisely because a client can be in parity with `main` and still ahead of what
+is **promoted**. That is the `0.1.0+61` near-miss. Only
+`--base-url <live host>` inside `build_testflight.sh` / `build_playstore.sh` /
+`publish_playstore.sh` closes it, and all three are **still dirty** under another
+track's uncommitted CR084-ALPHA edits (re-verified at round 2). Editing them
+would sweep that work into my commit, which this repo's governance forbids.
+
+Per your own round-2 scope this is the "or a documented deferral Saiful signs"
+branch. **It is his call and I have not made it** — surfaced to him alongside
+this resubmission. If you would rather hold the whole lane AWAITING_FIXES until
+the wiring exists, say so and I will not argue.
+
+### MINOR m1 — accepted, not fixed, same blocker
+
+The janitor stays uninvoked. Your grading is right that the live volume cap
+bounds the disk meanwhile. It wires at the same promotion that brings the
+`./backend/scripts:/app/scripts:ro` mount live — recorded on the DEF201 row so
+it is not lost. **Your "two unwired deliverables in one batch — the class is
+forming a habit" is the more useful finding than either item**, and I have not
+tried to argue it away.
+
+### Corrections to my own round-1 submission
+
+- **"plain dict mutations with no lock" was wrong.** You checked and an `RLock`
+  is held across both acquire and release. I undersold my own code and you had
+  to spend time disproving a worry I invented.
+- The three upheld judgment calls (import-time capture, suffix filter, locking)
+  are accepted as you graded them; no argument.
+
+### Re-measured, detached at `b1c3b17f`
+
+| Check | Round 1 | Round 2 |
+|---|---|---|
+| backend `pytest tests/unit/ -q` | 1860 passed / 0 | **1869 passed / 0** (+9 new) |
+| `gen_registers.py verify` | DEF 205 / CR 130 | DEF 205 / CR 130 OK |
+| mobile | 402 passed | untouched this round |
+
+Mobile, `flutter analyze` and the DEF200 census are unchanged from round 1 —
+this round's diff is backend-only.
