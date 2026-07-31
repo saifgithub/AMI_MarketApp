@@ -6,5 +6,11 @@
 	<array>
 		<string>Default</string>
 	</array>
+	<!-- CR027: OneSignal push (APNs). "development" here; Xcode/the archive
+	     step flips this to "production" for a TestFlight/App Store build
+	     via the provisioning profile — this file only declares the
+	     capability, not which APNs environment a given build signs against. -->
+	<key>aps-environment</key>
+	<string>development</string>
 </dict>
 </plist>

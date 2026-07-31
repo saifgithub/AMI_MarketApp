@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- CR027: OneSignal push. Declared explicitly rather than relying on
+         the SDK's own manifest merge, matching this file's existing
+         convention of stating every permission it needs directly. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="ami_trade"
         android:name="${applicationName}"

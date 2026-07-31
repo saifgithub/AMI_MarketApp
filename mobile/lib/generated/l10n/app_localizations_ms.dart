@@ -2089,4 +2089,17 @@ class AppLocalizationsMs extends AppLocalizations {
   String aiCoachEmptyStateHint(int count) {
     return '$count questions and answers across platform, psychology, scams, AI meta, and beginner / intermediate topics. Type to search.';
   }
+
+  @override
+  String get pushSoftAskTitle => 'Notifications';
+
+  @override
+  String get pushSoftAskBody =>
+      'AMI can notify you the moment a price alert fires or a Room verdict is ready. Turn on notifications?';
+
+  @override
+  String get pushSoftAskDecline => 'Not now';
+
+  @override
+  String get pushSoftAskAccept => 'Turn on';
 }

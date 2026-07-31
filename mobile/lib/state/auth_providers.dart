@@ -17,6 +17,7 @@ library;
 import 'package:ami_trade/models/auth.dart';
 import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
+import 'package:ami_trade/state/notification_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -122,10 +123,30 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // backend minted fresh (A2 path), this overwrites the stale local id.
       await DeviceUser.setIdAndToken(r.user.id, r.token);
       state = _commitUserChange(state, user: r.user, token: r.token, loading: false);
+      await _pushLogin(r.user.id);
     } catch (e) {
       state = state.copyWith(
           loading: false, error: friendlyError(e, action: 'reach AMI'));
     }
+  }
+
+  /// Binds this device to [userId] for push (OneSignal `external_user_id`).
+  /// Non-fatal by design — a push-registration hiccup must never block
+  /// auth. Fires on every login (anon bootstrap or a claimed sign-in);
+  /// idempotent on OneSignal's side, so no need to diff against the
+  /// previous id.
+  Future<void> _pushLogin(String userId) async {
+    try {
+      await _ref.read(notificationServiceProvider).login(userId);
+    } catch (_) {}
+  }
+
+  /// Clears the `external_user_id` binding. Non-fatal, same reasoning as
+  /// [_pushLogin].
+  Future<void> _pushLogout() async {
+    try {
+      await _ref.read(notificationServiceProvider).logout();
+    } catch (_) {}
   }
 
   /// Centralised state-mutation for "this op might have changed user.id".
@@ -189,6 +210,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = _commitUserChange(
         state, user: r.user, token: r.token, clearDebugCode: true,
       );
+      await _pushLogin(r.user.id);
       return ClaimOutcome(success: true, adoptedFromUserId: r.adoptedFromUserId);
     } catch (e) {
       state = state.copyWith(
@@ -199,6 +221,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> signOut() async {
     final api = _ref.read(apiClientProvider);
+    // Clear the external_user_id BEFORE bootstrap() mints a fresh anon
+    // identity — closes the gap where a shared device could receive the
+    // outgoing user's push between logout and the new identity's login.
+    await _pushLogout();
     await api.signOut();
     await DeviceUser.clear();
     state = const AuthState();
@@ -221,6 +247,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await DeviceUser.setIdAndToken(r.user.id, r.token);
       await DeviceUser.clearOnboardingSessionId();
       state = _commitUserChange(state, user: r.user, token: r.token);
+      await _pushLogin(r.user.id);
       return ClaimOutcome(success: true, adoptedFromUserId: r.adoptedFromUserId);
     } catch (e) {
       state = state.copyWith(
@@ -247,6 +274,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await DeviceUser.setIdAndToken(r.user.id, r.token);
       await DeviceUser.clearOnboardingSessionId();
       state = _commitUserChange(state, user: r.user, token: r.token);
+      await _pushLogin(r.user.id);
       return ClaimOutcome(success: true, adoptedFromUserId: r.adoptedFromUserId);
     } catch (e) {
       state = state.copyWith(

@@ -17,7 +17,9 @@ import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/screens/dev_preview_screen.dart';
 import 'package:ami_trade/screens/feedback/bug_resolution_toasts.dart';
 import 'package:ami_trade/screens/home_shell.dart';
+import 'package:ami_trade/screens/notifications/push_notification_listener.dart';
 import 'package:ami_trade/screens/onboarding/onboarding_screen.dart';
+import 'package:ami_trade/services/notifications/app_navigator_key.dart';
 import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
@@ -38,6 +40,7 @@ class AmiTradeApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeNotifierProvider);
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       title: 'AMI Trade',
       debugShowCheckedModeBanner: false,
       theme: amiLightTheme(),
@@ -97,7 +100,9 @@ class _AuthGate extends ConsumerWidget {
     // in onboarding has no reported bugs, and the sheet that files them
     // isn't reachable from there.
     return startOnFloor
-        ? const BugResolutionToasts(child: HomeShell())
+        ? const PushNotificationListener(
+            child: BugResolutionToasts(child: HomeShell()),
+          )
         : const OnboardingScreen();
   }
 }

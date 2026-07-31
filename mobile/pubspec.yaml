@@ -56,6 +56,13 @@ dependencies:
   # time via --dart-define, never fabricated here.
   purchases_flutter: ^10.4.3
 
+  # Push + in-app notifications (CR027) — OneSignal SDK. NEW dependency
+  # (flagged per CLAUDE.md "lean stack"): unifies APNs (iOS) + FCM
+  # (Android) behind one abstraction layer, per the locked decision in
+  # core_loop_and_features.md. App ID is public/safe to embed (client-side
+  # SDK init); the backend's separate REST API key is the actual secret.
+  onesignal_flutter: ^5.5.2
+
   # Observability
   sentry_flutter: ^9.0.0
 

@@ -7,7 +7,10 @@
 library;
 
 import 'package:ami_trade/app.dart';
+import 'package:ami_trade/services/notifications/onesignal_notification_service.dart';
+import 'package:ami_trade/state/notification_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,8 +41,29 @@ Future<void> main() async {
   final prefs = await SharedPreferences.getInstance();
   final startOnFloor = prefs.getBool('ami_onboarding_done') ?? false;
 
+  // CR027: OneSignal.initialize() must run before runApp() — the SDK
+  // buffers any notification tap that arrives before a click listener is
+  // registered (up to 50, flushed once one attaches), so a cold-start tap
+  // is never lost even though listener registration happens later in the
+  // widget tree. One instance, constructed here and injected via
+  // ProviderScope's `overrides` below, so the rest of the app reads the
+  // SAME instance rather than a fresh unregistered one. Never blocks boot —
+  // a push-registration hiccup must not take the whole app down with it.
+  final notificationService = OneSignalNotificationService();
+  try {
+    await notificationService.initialize();
+  } catch (e) {
+    if (kDebugMode) debugPrint('OneSignal initialize failed: $e');
+  }
+  final providerOverrides = [
+    notificationServiceProvider.overrideWithValue(notificationService),
+  ];
+
   if (_sentryDsn.isEmpty) {
-    runApp(ProviderScope(child: AmiTradeApp(startOnFloor: startOnFloor)));
+    runApp(ProviderScope(
+      overrides: providerOverrides,
+      child: AmiTradeApp(startOnFloor: startOnFloor),
+    ));
     return;
   }
 
@@ -69,6 +93,9 @@ Future<void> main() async {
         return event.copyWith(request: req.copyWith(headers: headers));
       };
     },
-    appRunner: () => runApp(ProviderScope(child: AmiTradeApp(startOnFloor: startOnFloor))),
+    appRunner: () => runApp(ProviderScope(
+      overrides: providerOverrides,
+      child: AmiTradeApp(startOnFloor: startOnFloor),
+    )),
   );
 }

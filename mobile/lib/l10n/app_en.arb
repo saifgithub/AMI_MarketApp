@@ -1480,5 +1480,13 @@
     "@aiCoachEmptyStateHint": {
         "description": "DEF198 — AI Coach empty-state hint shown before the user has typed a query (fewer than 2 characters). {count} is AiCoachCorpus.totalCount (lib/models/ai_coach.dart) — a hand-maintained literal until a backend total-entry field exists; see that class's doc for why. This copy was previously a raw, unlocalized Dart string. retranslate:[ar,ms]",
         "placeholders": {"count": {"type": "int"}}
-    }
+    },
+    "pushSoftAskTitle": "Notifications",
+    "@pushSoftAskTitle": {"description": "CR027 — title of the one-time in-app dialog shown BEFORE the OS push-permission prompt, asking the user to opt in. NEW key, needs ar/ms translation."},
+    "pushSoftAskBody": "AMI can notify you the moment a price alert fires or a Room verdict is ready. Turn on notifications?",
+    "@pushSoftAskBody": {"description": "CR027 — body of the soft-ask dialog. Lists the two notification types this CR actually ships (price alerts, Room verdicts); update if more consumers (CR095/CR109/BL11) land later. NEW key, needs ar/ms translation."},
+    "pushSoftAskDecline": "Not now",
+    "@pushSoftAskDecline": {"description": "CR027 — soft-ask dialog's decline action. Recoverable later from the OS Settings app; no in-app retry surface exists yet (that's CR135). NEW key, needs ar/ms translation."},
+    "pushSoftAskAccept": "Turn on",
+    "@pushSoftAskAccept": {"description": "CR027 — soft-ask dialog's accept action; triggers the real OS permission prompt. NEW key, needs ar/ms translation."}
 }

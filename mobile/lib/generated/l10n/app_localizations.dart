@@ -3636,6 +3636,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} questions and answers across platform, psychology, scams, AI meta, and beginner / intermediate topics. Type to search.'**
   String aiCoachEmptyStateHint(int count);
+
+  /// CR027 — title of the one-time in-app dialog shown BEFORE the OS push-permission prompt, asking the user to opt in. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get pushSoftAskTitle;
+
+  /// CR027 — body of the soft-ask dialog. Lists the two notification types this CR actually ships (price alerts, Room verdicts); update if more consumers (CR095/CR109/BL11) land later. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'AMI can notify you the moment a price alert fires or a Room verdict is ready. Turn on notifications?'**
+  String get pushSoftAskBody;
+
+  /// CR027 — soft-ask dialog's decline action. Recoverable later from the OS Settings app; no in-app retry surface exists yet (that's CR135). NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get pushSoftAskDecline;
+
+  /// CR027 — soft-ask dialog's accept action; triggers the real OS permission prompt. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get pushSoftAskAccept;
 }
 
 class _AppLocalizationsDelegate
