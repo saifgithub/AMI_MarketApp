@@ -226,25 +226,7 @@ abstract class AppLocalizations {
   /// **'UNDO'**
   String get watchlistUndo;
 
-  /// CR128 confirm-dialog title shown when a typed ticker doesn't exist but a close match was found — shared across Convene the Room, trade submit, and watchlist add. {ticker} is the suggested symbol. retranslate:[ar,ms]
-  ///
-  /// In en, this message translates to:
-  /// **'DID YOU MEAN {ticker}?'**
-  String tickerConfirmTitle(String ticker);
-
-  /// CR128 confirm-dialog body — the CR's own acceptance requirement to 'display a bit about the company' before confirming a suggested ticker. {typed} is what the user entered; {company} and {exchange} describe the suggestion. retranslate:[ar,ms]
-  ///
-  /// In en, this message translates to:
-  /// **'{typed} isn\'t a listed ticker. {company} trades on {exchange}.'**
-  String tickerConfirmBody(String typed, String company, String exchange);
-
-  /// CR128 confirm-dialog accept button — proceeds with the suggested ticker instead of what was typed. retranslate:[ar,ms]
-  ///
-  /// In en, this message translates to:
-  /// **'USE {ticker}'**
-  String tickerConfirmCta(String ticker);
-
-  /// CR128 inline/snackbar error when a typed ticker has no close match at all (no confirm dialog to show). {ticker} is what the user entered. retranslate:[ar,ms]
+  /// CR128 not-found line, used when the typed ticker has no close match at all. Shown in the shared TickerNotFoundPanel under the ticker field in Convene the Room, the trade ticket, and watchlist add (DEF208 — this is the ONE not-found surface; there is no dialog and no snackbar variant). {ticker} is what the user entered. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
   /// **'{ticker} isn\'t a listed ticker — check the symbol and try again.'**

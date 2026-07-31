@@ -11,15 +11,14 @@ import 'dart:async';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/sim.dart';
-import 'package:ami_trade/models/tickers.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
-import 'package:ami_trade/widgets/confirm_ticker_match.dart';
 import 'package:ami_trade/widgets/sharia_verdict_banner.dart';
 import 'package:ami_trade/widgets/sheet_insets.dart';
+import 'package:ami_trade/widgets/ticker_not_found_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -81,19 +80,14 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   ({double price, double changePct, String source, String marketState})? _quote;
   String? _quoteTicker; // ticker that _quote belongs to
   bool _quoteLoading = false;
-  Timer? _quoteDebounce;
 
-  // CR128: existence check + "did you mean X" confirmation before a trade is
-  // submitted. DEF207 additionally runs the check on the SAME debounce as the
-  // quote so the not-found state is visible while typing, not only on submit.
-  bool _validatingTicker = false;
-
-  /// DEF207 — the typed string, when the debounced check says it is not a
-  /// listed ticker. Non-null suppresses the price chip entirely.
-  String? _unknownTicker;
-
-  /// The suggestion that came back with it, if any ("did you mean NFLX?").
-  TickerSuggestion? _liveSuggestion;
+  /// CR128 existence check, DEF207's on-the-same-debounce-as-the-quote
+  /// timing, and DEF208's shared not-found panel — all of it lives in the
+  /// validator now, which owns the debounce this sheet used to run itself.
+  /// The quote fetch chains off [TickerFieldValidator]'s `onExists`, so a
+  /// price can only ever be requested for a ticker the reference table
+  /// confirmed.
+  late final TickerFieldValidator _validator;
 
   @override
   void initState() {
@@ -115,17 +109,24 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         _qty.text = qty <= 0 ? '1' : '$qty';
       }
     }
-    // If a ticker is prefilled (verdict path), fetch its quote immediately
-    // so the price chip lands without the user having to retype.
+    _validator = TickerFieldValidator(
+      validate: (t) => ref.read(apiClientProvider).validateTicker(t),
+      onChanged: () {
+        if (mounted) setState(() {});
+      },
+      onExists: _fetchQuote,
+    );
+    // If a ticker is prefilled (verdict path), check + fetch its quote
+    // immediately so the price chip lands without the user having to retype.
     if (_ticker.text.trim().isNotEmpty) {
-      _scheduleQuoteFetch();
+      _validator.onTextChanged(_ticker.text);
     }
     _ticker.addListener(_onTickerChanged);
   }
 
   @override
   void dispose() {
-    _quoteDebounce?.cancel();
+    _validator.dispose();
     _ticker.removeListener(_onTickerChanged);
     _ticker.dispose();
     _qty.dispose();
@@ -143,45 +144,21 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       setState(() {
         _quote = null;
         _quoteTicker = null;
-        _unknownTicker = null;
-        _liveSuggestion = null;
       });
     }
-    _scheduleQuoteFetch();
+    _validator.onTextChanged(_ticker.text);
   }
 
-  void _scheduleQuoteFetch() {
-    _quoteDebounce?.cancel();
-    final t = _ticker.text.trim().toUpperCase();
-    if (t.isEmpty) return;
-    _quoteDebounce = Timer(const Duration(milliseconds: 450), () {
-      _fetchQuote(t);
-    });
-  }
-
+  /// Only ever called by the validator, and only for a ticker it has just
+  /// confirmed exists (DEF207): `simQuoteDetail` cannot answer the
+  /// existence question itself — it falls through to the mock walk and
+  /// fabricates a plausible price for any string, which is exactly how
+  /// "NETFLIX" rendered as a confident $287.82 with nothing to say it is
+  /// not a ticker (bug `ab1d5664`).
   Future<void> _fetchQuote(String ticker) async {
     if (!mounted) return;
     setState(() => _quoteLoading = true);
     try {
-      // DEF207: existence FIRST, and the price chip is suppressed when the
-      // ticker does not exist. `simQuoteDetail` can never answer this — it
-      // falls through to the mock walk and fabricates a plausible price for
-      // any string, which is exactly how "NETFLIX" rendered as a confident
-      // $287.82 with nothing to say it is not a ticker (bug ab1d5664, the
-      // half CR128's submit-time-only gate left on screen).
-      final v = await ref.read(apiClientProvider).validateTicker(ticker);
-      if (!mounted) return;
-      if (_ticker.text.trim().toUpperCase() != ticker) return;
-      if (!v.exists) {
-        setState(() {
-          _quote = null;
-          _quoteTicker = null;
-          _quoteLoading = false;
-          _unknownTicker = ticker;
-          _liveSuggestion = v.suggestion;
-        });
-        return;
-      }
       final q = await ref.read(apiClientProvider).simQuoteDetail(ticker);
       if (!mounted) return;
       // If the user kept typing past us, drop the stale result.
@@ -190,8 +167,6 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         _quote = q;
         _quoteTicker = ticker;
         _quoteLoading = false;
-        _unknownTicker = null;
-        _liveSuggestion = null;
       });
       // Anchor TP/SL off the live price when the user hasn't set them —
       // matches the Convene the Room trader template (-6% / +13%) so the
@@ -208,60 +183,39 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         _quote = null;
         _quoteTicker = null;
         _quoteLoading = false;
-        // A network failure is NOT "this ticker doesn't exist" — leave the
-        // not-found state alone rather than accusing a real ticker.
-        _unknownTicker = null;
-        _liveSuggestion = null;
       });
     }
   }
 
-  void _convene() {
+  Future<void> _convene() async {
     final ticker = _ticker.text.trim().toUpperCase();
-    Navigator.of(context).pop();
-    if (ticker.isNotEmpty) {
-      Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => RoomScreen(ticker: ticker),
-      ));
-    } else {
+    if (ticker.isEmpty) {
+      Navigator.of(context).pop();
       ConveneSheet.show(context);
+      return;
     }
-  }
-
-  // CR128: resolves `typed` to a confirmed-valid ticker, or null if the user
-  // should not proceed (not found, or a suggestion was offered and rejected).
-  Future<String?> _resolveValidTicker(String typed) async {
-    setState(() => _validatingTicker = true);
-    try {
-      final result = await ref.read(apiClientProvider).validateTicker(typed);
-      if (!mounted) return null;
-      if (result.exists) return typed;
-      if (result.suggestion != null) {
-        return confirmTickerMatch(
-          context,
-          typed: typed,
-          suggestedTicker: result.suggestion!.ticker,
-          suggestedCompanyName: result.suggestion!.companyName,
-          exchange: result.suggestion!.exchange,
-        );
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).tickerNotFound(typed))),
-      );
-      return null;
-    } finally {
-      if (mounted) setState(() => _validatingTicker = false);
-    }
+    // Convening burns credits + paid feed quota before a single agent
+    // speaks, so this route out of the sheet gets the same gate as submit.
+    if (_validator.checking) return;
+    if (!await _validator.check(ticker)) return;
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => RoomScreen(ticker: ticker),
+    ));
   }
 
   Future<void> _submit() async {
     final typed = _ticker.text.trim().toUpperCase();
     final qty = double.tryParse(_qty.text.trim());
-    if (typed.isEmpty || qty == null || qty <= 0 || _validatingTicker) return;
-    final ticker = await _resolveValidTicker(typed);
-    if (ticker == null || !mounted) return;
+    if (typed.isEmpty || qty == null || qty <= 0 || _validator.checking) return;
+    // DEF208: no modal here. A failed check leaves the shared panel under
+    // the field explaining why, which is the same thing the user has been
+    // looking at since they stopped typing.
+    if (!await _validator.check(typed)) return;
+    if (!mounted) return;
     final result = await ref.read(simNotifierProvider.notifier).submit(
-      ticker: ticker,
+      ticker: typed,
       side: _side,
       quantity: qty,
       stop: double.tryParse(_stop.text.trim()),
@@ -514,11 +468,11 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
             // price of ANY kind next to a string that isn't a ticker is the
             // fabrication this defect is about; the two are mutually
             // exclusive by construction, not by z-order.
-            if (_unknownTicker != null) ...[
+            if (_validator.unknownTicker != null) ...[
               const SizedBox(height: AmiSpacing.xs),
-              _UnknownTickerPanel(
-                typed: _unknownTicker!,
-                suggestion: _liveSuggestion,
+              TickerNotFoundPanel(
+                typed: _validator.unknownTicker!,
+                suggestion: _validator.suggestion,
                 onAccept: (t) {
                   _ticker.text = t;
                   _ticker.selection =
@@ -530,11 +484,11 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
             // been convened. Source pill (LIVE / MOCK) reflects what the
             // backend actually returned for this ticker — yfinance leaf
             // shows LIVE, mock_walk fallback shows MOCK.
-            else if (_quote != null || _quoteLoading) ...[
+            else if (_quote != null || _quoteLoading || _validator.checking) ...[
               const SizedBox(height: AmiSpacing.xs),
               _QuoteChip(
                 quote: _quote,
-                loading: _quoteLoading,
+                loading: _quoteLoading || _validator.checking,
               ),
             ],
             const SizedBox(height: AmiSpacing.m),
@@ -591,7 +545,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                   foregroundColor: AmiColors.slate900,
                   padding: const EdgeInsets.symmetric(vertical: AmiSpacing.m),
                 ),
-                icon: (state.submitting || _validatingTicker)
+                icon: (state.submitting || _validator.checking)
                     ? const SizedBox(
                         width: 16, height: 16,
                         child: CircularProgressIndicator(
@@ -602,7 +556,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                 label: Text(state.submitting
                     ? l.tradeTicketSubmitting
                     : l.tradeTicketSubmit),
-                onPressed: (state.submitting || _validatingTicker) ? null : _submit,
+                onPressed: (state.submitting || _validator.checking) ? null : _submit,
               ),
             ),
             const SizedBox(height: AmiSpacing.xs),
@@ -676,82 +630,6 @@ class _SideToggle extends StatelessWidget {
             style: AmiTypography.labelMono.copyWith(
               color: active ? color : AmiColors.textLow,
             )),
-      ),
-    );
-  }
-}
-
-/// DEF207 — what sits where the price chip would be when the typed string
-/// is not a listed ticker. Occupies the same slot deliberately: the defect
-/// was a fabricated price ($287.82 for "NETFLIX") reading as a real quote,
-/// so the fix is that a non-ticker can never render a number at all.
-///
-/// When a suggestion came back, tapping it rewrites the field, which
-/// re-triggers the same debounce and resolves to a real quote — one tap
-/// from "NETFLIX" to a priced NFLX.
-class _UnknownTickerPanel extends StatelessWidget {
-  const _UnknownTickerPanel({
-    required this.typed,
-    required this.suggestion,
-    required this.onAccept,
-  });
-
-  final String typed;
-  final TickerSuggestion? suggestion;
-  final ValueChanged<String> onAccept;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final s = suggestion;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AmiSpacing.s),
-      decoration: BoxDecoration(
-        color: AmiColors.hexAmber.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(AmiRadii.card),
-        border: Border.all(color: AmiColors.hexAmber.withValues(alpha: 0.5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.error_outline,
-                  color: AmiColors.hexAmber, size: 16),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  // "check the symbol and try again" is the right instruction
-                  // ONLY when we have nothing better to offer. With a
-                  // suggestion on the next line it contradicts itself, so the
-                  // two states get different copy rather than one string that
-                  // is wrong half the time.
-                  s == null
-                      ? l.tickerNotFound(typed)
-                      : l.tickerNotFoundWithSuggestion(typed),
-                  style: AmiTypography.body,
-                ),
-              ),
-            ],
-          ),
-          if (s != null) ...[
-            const SizedBox(height: AmiSpacing.s),
-            OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AmiColors.hexCyan,
-                side: const BorderSide(color: AmiColors.hexCyan),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AmiSpacing.s, vertical: 8),
-              ),
-              onPressed: () => onAccept(s.ticker),
-              child: Text(
-                l.tickerDidYouMean(s.ticker, s.companyName),
-                textAlign: TextAlign.start,
-              ),
-            ),
-          ],
-        ],
       ),
     );
   }

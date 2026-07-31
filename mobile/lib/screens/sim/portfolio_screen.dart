@@ -41,10 +41,10 @@ import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/theme/hex_clipper.dart';
-import 'package:ami_trade/widgets/confirm_ticker_match.dart';
 import 'package:ami_trade/widgets/empty_state.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:ami_trade/widgets/hex/hex_toast.dart';
+import 'package:ami_trade/widgets/ticker_not_found_panel.dart';
 import 'package:ami_trade/widgets/trade_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1089,18 +1089,75 @@ class _WatchlistTab extends ConsumerWidget {
   }
 
   Future<void> _showAddDialog(BuildContext context, WidgetRef ref) async {
-    final ctrl = TextEditingController();
-    final l = AppLocalizations.of(context);
     await showDialog<void>(
       context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: AmiColors.slate800,
-          title: Text(l.portfolioAddDialogTitle,
-              style:
-                  AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
-          content: TextField(
-            controller: ctrl,
+      builder: (_) => const _AddWatchlistTickerDialog(),
+    );
+  }
+}
+
+/// CR128: existence check before a ticker is added — previously any string
+/// was accepted (the store only rejected empty input). DEF208: a stateful
+/// widget rather than an inline builder, because the not-found answer is
+/// now the same live inline panel the trade ticket and Convene use, and
+/// that needs somewhere to hold the debounce.
+class _AddWatchlistTickerDialog extends ConsumerStatefulWidget {
+  const _AddWatchlistTickerDialog();
+
+  @override
+  ConsumerState<_AddWatchlistTickerDialog> createState() =>
+      _AddWatchlistTickerDialogState();
+}
+
+class _AddWatchlistTickerDialogState
+    extends ConsumerState<_AddWatchlistTickerDialog> {
+  final _ctrl = TextEditingController();
+  late final TickerFieldValidator _validator;
+
+  @override
+  void initState() {
+    super.initState();
+    _validator = TickerFieldValidator(
+      validate: (t) => ref.read(apiClientProvider).validateTicker(t),
+      onChanged: () {
+        if (mounted) setState(() {});
+      },
+    );
+    _ctrl.addListener(_onTickerChanged);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.removeListener(_onTickerChanged);
+    _validator.dispose();
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _onTickerChanged() => _validator.onTextChanged(_ctrl.text);
+
+  Future<void> _commit() async {
+    final typed = _ctrl.text.trim().toUpperCase();
+    if (typed.isEmpty || _validator.checking) return;
+    if (!await _validator.check(typed)) return;
+    if (!mounted) return;
+    ref.read(watchlistNotifierProvider.notifier).add(typed);
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return AlertDialog(
+      backgroundColor: AmiColors.slate800,
+      title: Text(l.portfolioAddDialogTitle,
+          style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _ctrl,
             autofocus: true,
             decoration: InputDecoration(
               hintText: l.portfolioAddDialogHint,
@@ -1108,52 +1165,34 @@ class _WatchlistTab extends ConsumerWidget {
             ),
             style: AmiTypography.body,
             textCapitalization: TextCapitalization.characters,
-            onSubmitted: (_) => _commit(ctx, ref, ctrl.text),
+            onSubmitted: (_) => _commit(),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(l.actionCancel),
-            ),
-            TextButton(
-              onPressed: () => _commit(ctx, ref, ctrl.text),
-              child: Text(l.actionAdd),
+          // DEF208 — the one not-found surface, under the field, exactly as
+          // in Convene the Room and the trade ticket.
+          if (_validator.unknownTicker != null) ...[
+            const SizedBox(height: AmiSpacing.s),
+            TickerNotFoundPanel(
+              typed: _validator.unknownTicker!,
+              suggestion: _validator.suggestion,
+              onAccept: (t) {
+                _ctrl.text = t;
+                _ctrl.selection = TextSelection.collapsed(offset: t.length);
+              },
             ),
           ],
-        );
-      },
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.actionCancel),
+        ),
+        TextButton(
+          onPressed: _validator.checking ? null : _commit,
+          child: Text(l.actionAdd),
+        ),
+      ],
     );
-  }
-
-  // CR128: existence check + "did you mean X" confirmation before a ticker
-  // is added — previously any string was accepted (the store only rejected
-  // empty input). Shown as a nested dialog on top of the add dialog, which
-  // stays open until a valid ticker is resolved.
-  Future<void> _commit(BuildContext ctx, WidgetRef ref, String raw) async {
-    final typed = raw.trim().toUpperCase();
-    if (typed.isEmpty) return;
-    final result = await ref.read(apiClientProvider).validateTicker(typed);
-    if (!ctx.mounted) return;
-    String? ticker;
-    if (result.exists) {
-      ticker = typed;
-    } else if (result.suggestion != null) {
-      ticker = await confirmTickerMatch(
-        ctx,
-        typed: typed,
-        suggestedTicker: result.suggestion!.ticker,
-        suggestedCompanyName: result.suggestion!.companyName,
-        exchange: result.suggestion!.exchange,
-      );
-    } else {
-      ScaffoldMessenger.of(ctx).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(ctx).tickerNotFound(typed))),
-      );
-      return;
-    }
-    if (ticker == null || !ctx.mounted) return;
-    ref.read(watchlistNotifierProvider.notifier).add(ticker);
-    Navigator.of(ctx).pop();
   }
 }
 

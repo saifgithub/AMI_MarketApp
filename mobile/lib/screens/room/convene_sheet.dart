@@ -9,8 +9,8 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
-import 'package:ami_trade/widgets/confirm_ticker_match.dart';
 import 'package:ami_trade/widgets/sheet_insets.dart';
+import 'package:ami_trade/widgets/ticker_not_found_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -37,49 +37,46 @@ class ConveneSheet extends ConsumerStatefulWidget {
 
 class _ConveneSheetState extends ConsumerState<ConveneSheet> {
   final _ctrl = TextEditingController();
-  bool _validating = false;
+  late final TickerFieldValidator _validator;
+
+  @override
+  void initState() {
+    super.initState();
+    _validator = TickerFieldValidator(
+      validate: (t) => ref.read(apiClientProvider).validateTicker(t),
+      onChanged: () {
+        if (mounted) setState(() {});
+      },
+    );
+    _ctrl.addListener(_onTickerChanged);
+  }
 
   @override
   void dispose() {
+    _ctrl.removeListener(_onTickerChanged);
+    _validator.dispose();
     _ctrl.dispose();
     super.dispose();
   }
 
-  // CR128: existence check + "did you mean X" confirmation before Convene
-  // the Room ever runs — a bad ticker used to burn credits + feed quota on a
-  // full fake 12-agent debate before anything noticed (bug ab1d5664).
+  void _onTickerChanged() => _validator.onTextChanged(_ctrl.text);
+
+  // CR128: existence check before Convene the Room ever runs — a bad ticker
+  // used to burn credits + feed quota on a full fake 12-agent debate before
+  // anything noticed (bug ab1d5664). DEF208: the answer is the same inline
+  // panel the trade ticket uses, shown under the field as you type, rather
+  // than a modal that only fires once you've committed.
   Future<void> _go(String t) async {
     final typed = t.trim().toUpperCase();
-    if (typed.isEmpty || _validating) return;
-    setState(() => _validating = true);
-    try {
-      final result = await ref.read(apiClientProvider).validateTicker(typed);
-      if (!mounted) return;
-      String? ticker;
-      if (result.exists) {
-        ticker = typed;
-      } else if (result.suggestion != null) {
-        ticker = await confirmTickerMatch(
-          context,
-          typed: typed,
-          suggestedTicker: result.suggestion!.ticker,
-          suggestedCompanyName: result.suggestion!.companyName,
-          exchange: result.suggestion!.exchange,
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).tickerNotFound(typed))),
-        );
-        return;
-      }
-      if (ticker == null || !mounted) return;
-      Navigator.of(context).pop();
-      Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => RoomScreen(ticker: ticker!),
-      ));
-    } finally {
-      if (mounted) setState(() => _validating = false);
-    }
+    if (typed.isEmpty || _validator.checking) return;
+    // A tapped chip is a known-good ticker from our own list; typed input
+    // may not be. Both go through the same gate so there is one path.
+    if (!await _validator.check(typed)) return;
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => RoomScreen(ticker: typed),
+    ));
   }
 
   @override
@@ -130,6 +127,20 @@ class _ConveneSheetState extends ConsumerState<ConveneSheet> {
               ),
             ),
           ),
+          // DEF208 — the one not-found surface, same widget and same
+          // placement (directly under the ticker field) as the trade ticket
+          // and watchlist add.
+          if (_validator.unknownTicker != null) ...[
+            const SizedBox(height: AmiSpacing.s),
+            TickerNotFoundPanel(
+              typed: _validator.unknownTicker!,
+              suggestion: _validator.suggestion,
+              onAccept: (t) {
+                _ctrl.text = t;
+                _ctrl.selection = TextSelection.collapsed(offset: t.length);
+              },
+            ),
+          ],
           const SizedBox(height: AmiSpacing.m),
           Text(l.conveneOrPickOne,
               style: AmiTypography.labelMono.copyWith(fontSize: 11)),
@@ -145,7 +156,7 @@ class _ConveneSheetState extends ConsumerState<ConveneSheet> {
                           color: AmiColors.textHigh)),
                   backgroundColor: AmiColors.slate900,
                   side: const BorderSide(color: AmiColors.slate700),
-                  onPressed: _validating ? null : () => _go(t),
+                  onPressed: _validator.checking ? null : () => _go(t),
                 ),
             ],
           ),
@@ -158,7 +169,7 @@ class _ConveneSheetState extends ConsumerState<ConveneSheet> {
                 foregroundColor: AmiColors.slate900,
                 padding: const EdgeInsets.symmetric(vertical: AmiSpacing.m),
               ),
-              icon: _validating
+              icon: _validator.checking
                   ? const SizedBox(
                       width: 16, height: 16,
                       child: CircularProgressIndicator(
@@ -167,7 +178,7 @@ class _ConveneSheetState extends ConsumerState<ConveneSheet> {
                     )
                   : const Icon(Icons.bolt),
               label: Text(l.conveneCta),
-              onPressed: _validating ? null : () => _go(_ctrl.text),
+              onPressed: _validator.checking ? null : () => _go(_ctrl.text),
             ),
           ),
         ],

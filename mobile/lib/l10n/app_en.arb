@@ -61,28 +61,9 @@
     "watchlistRemoved": "Removed from watchlist",
     "watchlistUndo": "UNDO",
 
-    "tickerConfirmTitle": "DID YOU MEAN {ticker}?",
-    "@tickerConfirmTitle": {
-        "description": "CR128 confirm-dialog title shown when a typed ticker doesn't exist but a close match was found — shared across Convene the Room, trade submit, and watchlist add. {ticker} is the suggested symbol. retranslate:[ar,ms]",
-        "placeholders": {"ticker": {"type": "String"}}
-    },
-    "tickerConfirmBody": "{typed} isn't a listed ticker. {company} trades on {exchange}.",
-    "@tickerConfirmBody": {
-        "description": "CR128 confirm-dialog body — the CR's own acceptance requirement to 'display a bit about the company' before confirming a suggested ticker. {typed} is what the user entered; {company} and {exchange} describe the suggestion. retranslate:[ar,ms]",
-        "placeholders": {
-            "typed": {"type": "String"},
-            "company": {"type": "String"},
-            "exchange": {"type": "String"}
-        }
-    },
-    "tickerConfirmCta": "USE {ticker}",
-    "@tickerConfirmCta": {
-        "description": "CR128 confirm-dialog accept button — proceeds with the suggested ticker instead of what was typed. retranslate:[ar,ms]",
-        "placeholders": {"ticker": {"type": "String"}}
-    },
     "tickerNotFound": "{ticker} isn't a listed ticker — check the symbol and try again.",
     "@tickerNotFound": {
-        "description": "CR128 inline/snackbar error when a typed ticker has no close match at all (no confirm dialog to show). {ticker} is what the user entered. retranslate:[ar,ms]",
+        "description": "CR128 not-found line, used when the typed ticker has no close match at all. Shown in the shared TickerNotFoundPanel under the ticker field in Convene the Room, the trade ticket, and watchlist add (DEF208 — this is the ONE not-found surface; there is no dialog and no snackbar variant). {ticker} is what the user entered. retranslate:[ar,ms]",
         "placeholders": {"ticker": {"type": "String"}}
     },
     "tickerNotFoundWithSuggestion": "{ticker} was not found.",

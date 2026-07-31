@@ -73,21 +73,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get watchlistUndo => 'UNDO';
 
   @override
-  String tickerConfirmTitle(String ticker) {
-    return 'DID YOU MEAN $ticker?';
-  }
-
-  @override
-  String tickerConfirmBody(String typed, String company, String exchange) {
-    return '$typed isn\'t a listed ticker. $company trades on $exchange.';
-  }
-
-  @override
-  String tickerConfirmCta(String ticker) {
-    return 'USE $ticker';
-  }
-
-  @override
   String tickerNotFound(String ticker) {
     return '$ticker isn\'t a listed ticker — check the symbol and try again.';
   }
