@@ -2,6 +2,10 @@
 
 **Status:** proposed (documentation only — no implementation in this CR)
 **Filed:** 2026-07-12 (AT:R54)
+**Sequencing (Saiful, 2026-07-31):** **defer to just before release — a step before GTM,
+not now.** The app's features/flows are still changing, so authoring the manual corpus
+today means re-authoring it as each surface changes; do it once, close to launch, when
+the surfaces it documents have stopped moving.
 **Source:** Saiful — "the concierge is also supposed to know how to use the app fully."
 Give the Concierge a manual of how the app works, **treated the same way as lessons** so
 it flows through the same context router (CR021) and the same three modes
