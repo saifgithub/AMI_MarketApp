@@ -160,6 +160,51 @@ void main() {
       expect(seenHeadings.length, 5);
     });
 
+    testWidgets('CR127 — the hero names the PM as the decider, not "the room"',
+        (t) async {
+      // The tile used to head an approval "THE ROOM APPROVED" and then get
+      // corrected 300pt below by a caption under the comb. Attributing the
+      // call to the room is what made that caption necessary; the comb is
+      // eleven voices and none of them decided anything.
+      await _pump(t, _board(outcome: VerdictOutcome.approve));
+      expect(find.text('THE PM APPROVED'), findsOneWidget);
+      expect(find.text('THE ROOM APPROVED'), findsNothing);
+
+      await _pump(t, _board(outcome: VerdictOutcome.pass));
+      expect(find.text('THE PM PASSED'), findsOneWidget);
+      expect(find.text('THE ROOM PASSED'), findsNothing);
+    });
+
+    testWidgets('CR127 — a mandate block is NOT attributed to the PM',
+        (t) async {
+      // The floor blocked it, not the PM's judgement — the heading must keep
+      // naming the user's own rules. This is the case the "name the decider"
+      // rule would get wrong if it were applied blindly to every outcome.
+      await _pump(t, _board(outcome: VerdictOutcome.reject));
+      expect(find.text('BLOCKED BY YOUR MANDATE'), findsOneWidget);
+      expect(find.textContaining('THE PM REJECTED'), findsNothing);
+    });
+
+    testWidgets('CR127 — the PM identity label is on every card that carries '
+        'a PM decision, and absent from the one that does not', (t) async {
+      for (final o in [
+        VerdictOutcome.approve,
+        VerdictOutcome.pass,
+        VerdictOutcome.reject,
+        VerdictOutcome.noVerdict,
+        VerdictOutcome.unknown,
+      ]) {
+        await _pump(t, _board(outcome: o, actionToken: 'SOMETHING'));
+        expect(find.text('PORTFOLIO MANAGER'), findsOneWidget, reason: '$o');
+      }
+      // A run that never reached the PM has no decision to attribute — a
+      // PM-branded card there would be claiming one that was never made.
+      await _pump(t, _board(outcome: VerdictOutcome.noResult));
+      expect(find.text('PORTFOLIO MANAGER'), findsNothing);
+      expect(find.text('THE ROOM DID NOT FINISH'), findsOneWidget,
+          reason: 'the run, not the PM, is what failed here');
+    });
+
     testWidgets('NO_VERDICT and NO RESULT carry no reject accent', (t) async {
       for (final o in [VerdictOutcome.noVerdict, VerdictOutcome.pass]) {
         expect(accentForOutcome(o), isNot(AmiColors.hexAmber),
@@ -276,20 +321,22 @@ void main() {
   });
 
   group('acceptance #4 — the comb', () {
-    testWidgets('eleven hexes, the PM caption, counts over stated only',
-        (t) async {
+    testWidgets('eleven hexes, counts over stated only', (t) async {
       final voices = [
         for (final a in kCombVoices)
           _voice(a.id, stance: a.id == 'news_analyst' ? null : 'for'),
       ];
       await _pump(t, _board(voices: voices));
       expect(find.byType(CombHex), findsNWidgets(11));
-      expect(find.text('THE PM DECIDES — THIS IS NOT A VOTE'), findsOneWidget);
       expect(find.text('11 VOICES'), findsOneWidget);
       expect(find.text('10 STATED A VIEW'), findsOneWidget,
           reason: 'a count that always sums to 11 would state a consensus '
               'that never occurred (T-SUM11)');
       expect(find.text('NOT STATED'), findsOneWidget);
+      expect(find.text('THE PM DECIDES — THIS IS NOT A VOTE'), findsNothing,
+          reason: 'CR127 removed the caption — the hero card names the PM as '
+              'the decider instead, so the comb no longer has to disclaim '
+              'being a tally');
     });
 
     testWidgets('no recorded stances → one sentence, not empty bands',

@@ -53,9 +53,16 @@ enum VerdictOutcome {
 
 /// One of the eleven voices in the consensus comb. The Portfolio Manager is
 /// **not** among them: its position IS the hero tile, `_parse_pm_verdict` is
-/// the sole decision path, and the safety floor can override even that. Eleven
-/// hexes under `THE PM DECIDES — THIS IS NOT A VOTE` beats twelve under a
-/// disclaimer nobody reads (T-VOTE).
+/// the sole decision path, and the safety floor can override even that
+/// (T-VOTE).
+///
+/// CR127 moved how that is disclosed. It used to be a caption under the comb
+/// (`THE PM DECIDES — THIS IS NOT A VOTE`) correcting a hero tile that had
+/// just announced `THE ROOM APPROVED`. The hero now names the PM as the
+/// decider — its own labelled card, `THE PM APPROVED` — so the separation is
+/// visible in the layout instead of asserted in a disclaimer, and the caption
+/// is gone. A tester reported the caption as redundant; it was, but only
+/// because the fix belonged one card higher up.
 @immutable
 class RoomVoice {
   const RoomVoice({

@@ -207,6 +207,32 @@ class _HeroTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // CR127 — whose card this is, stated structurally rather than as a
+          // disclaimer under the comb. The board used to head this tile "THE
+          // ROOM APPROVED" and then correct itself 300pt lower with "THE PM
+          // DECIDES — THIS IS NOT A VOTE"; naming the decider here removes the
+          // contradiction at its source, and the caption with it.
+          //
+          // Omitted for noResult alone: that run never reached the PM, so
+          // there is no decision to attribute and a PM-branded card would be
+          // claiming one. Kept for reject — the mandate did the blocking (the
+          // heading says so, and the override line names it), but the card is
+          // still the verdict slot the PM's call went into.
+          if (!data.isNoResult) ...[
+            Text(
+              l.roomHeroPmCard,
+              style: AmiTypography.labelMono.copyWith(
+                fontSize: 10,
+                letterSpacing: 0.4,
+                // Family colour, as identity — distinct from `accent`, which
+                // is the OUTCOME's status colour. Purple-on-canvas is the
+                // shipped pattern here (see `_HexOutlinePainter`: hexPurple
+                // at 4.22 is itself the project's accent-as-type floor).
+                color: agentById('portfolio_manager').color,
+              ),
+            ),
+            const SizedBox(height: AmiSpacing.s),
+          ],
           Row(
             children: [
               _OutcomeHex(
@@ -829,18 +855,6 @@ class _ConsensusComb extends StatelessWidget {
             onVoiceTap: onVoiceTap,
             gutter: true,
           ),
-        const SizedBox(height: AmiSpacing.xs),
-        const Divider(height: 1, color: AmiColors.slate700),
-        const SizedBox(height: AmiSpacing.xs),
-        Text(
-          // There is no defensible weighting: the PM is not 1/11 of a vote, and
-          // the safety floor can override even the PM. Excluding the PM from
-          // the comb resolves that structurally; this caption says so out loud
-          // (T-VOTE).
-          l.roomCombPmDecides,
-          style: AmiTypography.labelMono
-              .copyWith(fontSize: 9, color: AmiColors.textLow),
-        ),
       ],
     );
   }

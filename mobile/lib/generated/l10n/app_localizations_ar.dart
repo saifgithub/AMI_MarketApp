@@ -1905,10 +1905,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get roomViewModeTranscript => 'النص الكامل';
 
   @override
-  String get roomHeroApprove => 'وافقت الغرفة';
+  String get roomHeroPmCard => 'مدير المحفظة';
 
   @override
-  String get roomHeroPass => 'تجاوزت الغرفة';
+  String get roomHeroApprove => 'وافق مدير المحفظة';
+
+  @override
+  String get roomHeroPass => 'تجاوز مدير المحفظة';
 
   @override
   String get roomHeroReject => 'محظور بموجب تفويضك';
@@ -1969,9 +1972,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get roomCombNotStated => 'لم يُبدِ رأياً';
-
-  @override
-  String get roomCombPmDecides => 'مدير المحفظة هو من يقرر — هذا ليس تصويتاً';
 
   @override
   String get roomCombNotRecorded => 'غير مسجّل';

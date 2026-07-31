@@ -3325,16 +3325,22 @@ abstract class AppLocalizations {
   /// **'TRANSCRIPT'**
   String get roomViewModeTranscript;
 
-  /// Hero heading when the Portfolio Manager approved the trade. Mono uppercase.
+  /// CR127 — identity label at the top of the hero card, naming whose decision this card carries. The card is the PM's own slot on the board; the eleven hexes in the comb below are everyone else. Mono uppercase, PM family purple. Shown for every outcome EXCEPT noResult (a run that never reached the PM).
   ///
   /// In en, this message translates to:
-  /// **'THE ROOM APPROVED'**
+  /// **'PORTFOLIO MANAGER'**
+  String get roomHeroPmCard;
+
+  /// Hero heading when the Portfolio Manager approved the trade. Mono uppercase. CR127: says THE PM, not THE ROOM — the PM decides alone and the comb below is not a tally, so attributing the call to 'the room' was the thing that made the old 'THIS IS NOT A VOTE' caption necessary.
+  ///
+  /// In en, this message translates to:
+  /// **'THE PM APPROVED'**
   String get roomHeroApprove;
 
-  /// Hero heading for a PASS — the room had no strong view and sat out. NOT a rejection: it must not read as the thesis being turned down.
+  /// Hero heading for a PASS — the PM had no strong view and sat out. NOT a rejection: it must not read as the thesis being turned down. CR127: says THE PM, not THE ROOM (see roomHeroApprove).
   ///
   /// In en, this message translates to:
-  /// **'THE ROOM PASSED'**
+  /// **'THE PM PASSED'**
   String get roomHeroPass;
 
   /// Hero heading when the user's own mandate rules blocked the trade. The user's rules did this, not AMI's opinion.
@@ -3438,12 +3444,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'NOT STATED'**
   String get roomCombNotStated;
-
-  /// Caption under the comb. The Portfolio Manager makes the call and the safety floor can override even that; the comb shows who said what, not a tally.
-  ///
-  /// In en, this message translates to:
-  /// **'THE PM DECIDES — THIS IS NOT A VOTE'**
-  String get roomCombPmDecides;
 
   /// Comb heading for an older journal entry whose run predates per-agent positions.
   ///

@@ -1908,10 +1908,13 @@ class AppLocalizationsMs extends AppLocalizations {
   String get roomViewModeTranscript => 'TRANSKRIP';
 
   @override
-  String get roomHeroApprove => 'BILIK MELULUSKAN';
+  String get roomHeroPmCard => 'PENGURUS PORTFOLIO';
 
   @override
-  String get roomHeroPass => 'BILIK BERLALU';
+  String get roomHeroApprove => 'PM MELULUSKAN';
+
+  @override
+  String get roomHeroPass => 'PM BERLALU';
 
   @override
   String get roomHeroReject => 'DISEKAT OLEH MANDAT ANDA';
@@ -1972,9 +1975,6 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get roomCombNotStated => 'TIDAK DINYATAKAN';
-
-  @override
-  String get roomCombPmDecides => 'PM YANG MEMUTUSKAN — INI BUKAN UNDIAN';
 
   @override
   String get roomCombNotRecorded => 'TIDAK DIREKODKAN';

@@ -75,8 +75,11 @@ RoomBoardData boardFromRoomState({
 }
 
 /// The transcript rows show all TWELVE agents, PM included — the comb shows
-/// eleven. That inconsistency is deliberate and labelled (`THE PM DECIDES —
-/// THIS IS NOT A VOTE`), and it beats a graphic that implies democracy.
+/// eleven. That inconsistency is deliberate, and it beats a graphic that
+/// implies democracy. CR127: what reconciles the two counts for the reader is
+/// the hero card, which now names the Portfolio Manager as the decider on its
+/// own tile — the PM is visibly the twelfth, sitting above the eleven rather
+/// than missing from them. It used to be a caption under the comb.
 List<RoomVoice> transcriptVoicesFromRoomState(RoomState state) {
   final withheldIds = state.withheldAgents.keys.toSet();
   return [

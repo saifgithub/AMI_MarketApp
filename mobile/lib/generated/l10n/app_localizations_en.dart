@@ -1904,10 +1904,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomViewModeTranscript => 'TRANSCRIPT';
 
   @override
-  String get roomHeroApprove => 'THE ROOM APPROVED';
+  String get roomHeroPmCard => 'PORTFOLIO MANAGER';
 
   @override
-  String get roomHeroPass => 'THE ROOM PASSED';
+  String get roomHeroApprove => 'THE PM APPROVED';
+
+  @override
+  String get roomHeroPass => 'THE PM PASSED';
 
   @override
   String get roomHeroReject => 'BLOCKED BY YOUR MANDATE';
@@ -1968,9 +1971,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomCombNotStated => 'NOT STATED';
-
-  @override
-  String get roomCombPmDecides => 'THE PM DECIDES — THIS IS NOT A VOTE';
 
   @override
   String get roomCombNotRecorded => 'NOT RECORDED';
