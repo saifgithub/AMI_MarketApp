@@ -1,6 +1,6 @@
 # CR027 — Notification infrastructure (push + in-app) and price alerts
 
-**Status:** proposed · **Session:** AT:architect · **Date:** 2026-07-12, scope expanded 2026-07-31
+**Status:** in-progress · **Session:** AT:R65 · **Date:** 2026-07-12, scope expanded and trimmed 2026-07-31 (A15/A15b/A15c cleared same day — build started)
 **Source:** migrated from `Silent_Scout/10_price_alerts/` as part of closing and
 deprecating Silent_Scout; expanded per Saiful, 2026-07-31 — *"let's put in all
 [that's] needed for a push notification capability, and an in-app notification
@@ -22,6 +22,28 @@ backend service + an in-app notification centre — with price alerts as its fir
 consumer**, not a one-off alert feature that happens to use OneSignal.
 
 **Nothing here is built. Design stage.**
+
+## Scope trim, 2026-07-31 (build kickoff)
+
+Live during build planning, Saiful cut the in-app notification *centre* (bell,
+unread badge, notification list screen, mark-read/mark-all-read, per-category
+preferences, the "notifications off" banner) from this CR entirely — *"This is a
+push/in app notification CR. why do we have 'bell/badge'?"* Building a
+provisional bell strip right before CR133's bottom-nav restructure lands was
+avoidable throwaway chrome. That whole surface moves to **CR135** (in-app
+notification centre), to be built once CR133 gives it a real home.
+
+CR027's "in-app notification facility" is now just the durable `notifications`
+row (§2 — written unconditionally by every `notify()` call) plus a toast via the
+existing `HexToast` primitive when a push arrives foregrounded. §3 below is kept
+for historical record of what CR135 inherits, not as this CR's own scope.
+
+Saiful also corrected the framing of "capability": *"The requirement is to have
+a capability for push and in-app notifications... we need to have at least a CLI
+to send messages. The first use of it is the price check."* — `notify()` isn't
+an internal helper price alerts happens to call, it's the deliverable itself;
+price alerts is only its first *automated* consumer. A `send_notification.py`
+CLI (§2) makes the capability directly usable/testable on its own.
 
 ---
 
@@ -96,6 +118,14 @@ cleared at logout (so a signed-out device stops receiving another user's push on
 shared phone); multi-device is native to OneSignal's model (one `external_user_id`,
 many subscribed devices).
 
+**CLI (the capability itself, not just a test hook):** `backend/scripts/send_notification.py`
+calls `notify()` directly — `--user-id`, `--type`, `--title`, `--body`,
+`--route`/`--ticker`/`--param`, `--source-ref` — matching the existing
+`scripts/llm_smoke.py` convention (argparse, `.venv/bin/python -m scripts.send_notification ...`).
+Lets Saiful or ops send a real push + durable row to any user without a price
+alert ever firing. Price alerts (§4) is the first automated caller of the same
+`notify()` function, not a separate path.
+
 **Frontend.** OneSignal Flutter SDK initialises at app start, requests permission
 per the soft-ask pattern above, registers the device. A single deep-link dispatcher
 maps `deep_link.route` to a Flutter route (`open_holding_detail`,
@@ -157,10 +187,13 @@ for it to apply to.
 
 ---
 
-## 3. In-app notification facility (the other new part)
+## 3. In-app notification facility — CUT to CR135, 2026-07-31
+
+**Not this CR's scope anymore** — see "Scope trim" above. Kept below verbatim as
+the handoff record for CR135, which owns this surface once CR133 lands.
 
 Nothing like this exists today — confirmed zero notification UI anywhere in
-`mobile/lib/`, no notification model in `backend/app/`. Scope:
+`mobile/lib/`, no notification model in `backend/app/`. Scope (→ CR135):
 
 - **Bell + unread-count badge**, home not yet decided — coordinate with CR133
   (bottom-nav restructure owns shell real estate); candidates are a Floor-header
@@ -248,32 +281,38 @@ instead of each shipping a parallel OneSignal integration.
 
 ## Scope
 
-**In:** `notifications` table + `notification_service.py` (generic service, §2); the
-in-app notification centre — bell/badge, list screen, preferences, retention (§3);
-OneSignal SDK integration + permission-priming UX (iOS soft-ask, Android
-`POST_NOTIFICATIONS`) + deep-link dispatcher; `price_alerts` table + evaluation loop
-plus rate limiting and mandate pre-check (§4), as the first consumer proving §2
-works end-to-end.
+**In:** `notifications` table + `notification_service.py::notify()` (§2) +
+`send_notification.py` CLI, the capability itself; OneSignal SDK integration +
+permission-priming UX (iOS soft-ask, Android `POST_NOTIFICATIONS`) + deep-link
+dispatcher + foreground toast (via `HexToast`); `price_alerts` table + evaluation
+loop plus rate limiting and mandate pre-check (§4), as the first automated
+consumer proving §2 works end-to-end.
 
-**Out:** A15/A15b (OneSignal account, APNs cert, Android/FCM credential — Saiful,
-external); actually wiring CR095/CR109/BL11/Room-verdict onto the service (their own
-CRs' scope — this CR builds the service and one working consumer, not every
-consumer); an Android-HMS push channel (v1.1, `platform_facade.md`).
+**Out:** the in-app notification centre — bell/badge, list screen, mark-read,
+preferences, "notifications off" banner (§3, cut 2026-07-31 → **CR135**);
+actually wiring CR095/CR109/BL11/Room-verdict onto the service (their own CRs'
+scope — this CR builds the service and one working consumer, not every
+consumer); an Android-HMS push channel (v1.1, `platform_facade.md`). A15/A15b/A15c
+are cleared (App ID, APNs cert, Android/FCM credential, REST API key all in
+place, 2026-07-31) — no remaining external blocker.
 
 ## Acceptance
 
-- Blocked until A15/A15b clear. Once unblocked:
 - A price alert fires correctly on threshold breach, never duplicate-fires, never
   fires on missing price data; mandate-incompliant alerts don't fire.
 - **Every** `notification_service.notify()` call writes a `notifications` row
   regardless of push outcome — push failure, denied permission, or OneSignal being
   unreachable never prevents the in-app record from existing.
-- The in-app notification list shows the row, correctly marks read on tap, and
-  navigates via the deep link; unread badge count matches between OS icon and
-  in-app bell.
+- `send_notification.py` can send a real push + durable row to any user from the
+  command line, independent of price alerts ever firing.
+- Tapping a push (foreground, backgrounded, or cold-started) navigates via the
+  deep-link dispatcher; a foreground push shows a toast. (No list screen or badge
+  in this CR — that's CR135's acceptance.)
 - iOS shows a soft in-app ask before the system permission prompt; Android requests
   `POST_NOTIFICATIONS` at the same point (API 33+) and the feature degrades
   visibly (not silently) when denied on either platform.
 - Push commentary for price alerts is generated from a real agent context
   (Portfolio Manager or Concierge), not the original "Risk Analyst" framing.
-- Rate limits and quiet hours enforced at the service layer, not per-consumer.
+- Rate limits enforced at the service layer, not per-consumer. Quiet hours are
+  explicitly NOT implemented in this CR (no hours specified anywhere in the repo;
+  CR109 would define real ones) — flagged as a gap for CR109, not silently skipped.
