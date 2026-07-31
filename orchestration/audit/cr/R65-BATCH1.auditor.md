@@ -1,15 +1,71 @@
 <!-- auditor lane — track U (Kimi). CR052 / orchestration/audit/PROTOCOL.md. -->
 # R65-BATCH1 — auditor
 
-VERDICT: AWAITING_FIXES (round 1)
+VERDICT: COMPLETE (round 2)
 
-Audited `af0aeb77` (on `main`, as submitted) in scratch worktree
-`.claude/worktrees/audit-R65-BATCH1`, detached — the DEF159 trap the
-bridge warns about does not apply here: my 1860/0 was measured in the
-detached worktree, matching the bridge's own detached number exactly.
-SCOPE: `chunk` — seven items judged individually. Tiered audit policy:
-targeted + registers + independent re-runs + blind mutation up front,
-both full suites backgrounded during the file:line read.
+Round 2 audited `b1c3b17f` (4 source/test files + 2 register rows over
+`af0aeb77`; the five cleared items confirmed untouched). Round 1 audited
+`af0aeb77` — see below. Both rounds from scratch worktree
+`.claude/worktrees/audit-R65-BATCH1`, detached at the submitted SHA.
+
+---
+
+## Round 2 — both MAJORs closed; one deferral recorded, signed scope
+
+**M2 closed, proven in both directions.** `one_on_one.py` now carries
+`except BaseException: release; raise` alongside the 402 handler. The
+`BaseException`-over-`Exception` choice is correct, not pedantic:
+`asyncio.CancelledError` descends from `BaseException`, and a client
+hanging up mid-`spend()` leaks by the identical mechanism — `except
+Exception` would have closed half the hole. Re-`raise` unconditional,
+nothing swallowed; no double-release on the 402 path (a raise inside a
+sibling except isn't re-caught; and `release()` is a tested safe no-op
+on over-release anyway). The new test asserts through the CONTRACT
+(next request at cap=1 is 200, not 429), not the private counter — the
+right pin. My own mutation (removed only the release line, kept the
+except) → exactly **1 RED** (that test), reverted byte-identical,
+targeted 21/21 re-green. **`brief.py` twin guarded too — scope
+judgment:** upheld, not creep. The counter is shared across both
+surfaces, the leak class identical, the cost four disclosed lines;
+fixing the reported instance while knowingly leaving its twin is how a
+class becomes a recurrence — his words, and he's right.
+
+**M1 closed to the extent this repo can close it; the live residue is
+the deferral branch my round-2 scope offered.** 8 new tests: five drive
+the gate's logic off fixture OpenAPI docs (including fail-closed on a
+spec with no `Mandate` schema and fail-closed on an unreachable host —
+the two silent-failure shapes), one proves the client-key scrape isn't
+vacuous, and one is a REAL caller running on every suite run
+(`get_openapi(app)` on this checkout, asserting every scraped client
+PATCH key exists) — which puts the gate's logic in CI, since the beta
+workflow runs the suite. What does NOT exist: the release-time call
+against the DEPLOYED backend (`--base-url` in the three build scripts,
+still dirty under CR084-ALPHA — editing them would sweep another
+track's uncommitted work into the commit, correctly refused). That is
+the "documented deferral Saiful signs" branch of my round-2 scope,
+surfaced to him by the architect; I record it here as the third party
+to the handshake. **One nit:** the deferral should also land on the
+DEF195 register row (the architect did exactly this for the janitor on
+the DEF201 row) so the residue survives the lane files' attention
+span.
+
+**Known gap, his disclosure, recorded:** if Starlette abandons the
+returned `StreamingResponse` without ever iterating the generator, its
+`finally` never runs and the slot leaks. Unproven either way; the
+structural fix (acquire inside the generator) would weaken the cap, so
+it stays open with eyes open.
+
+**MINOR m1 (janitor):** accepted-not-fixed, recorded on the DEF201 row,
+wires at the promotion that brings the mount live. Grading stands.
+
+**Re-measured, detached at `b1c3b17f`:** backend **1869/0** (264.33s —
+matches the bridge's +9-new claim exactly); registers DEF 205 / CR 130
+OK; targeted (DEF195 + DEF201 files) 21/21. Mobile untouched this round
+— round-1 mobile results stand.
+
+---
+
+## Round 1 (superseded verdict: AWAITING_FIXES)
 
 Five of seven items are clean. Two MAJORs, both in items the bridge
 itself flagged as weakest — one pre-judged by the architect and upheld,
