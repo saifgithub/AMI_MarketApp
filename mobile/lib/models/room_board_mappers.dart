@@ -77,9 +77,9 @@ RoomBoardData boardFromRoomState({
 /// The transcript rows show all TWELVE agents, PM included — the comb shows
 /// eleven. That inconsistency is deliberate, and it beats a graphic that
 /// implies democracy. CR127: what reconciles the two counts for the reader is
-/// the hero card, which now names the Portfolio Manager as the decider on its
-/// own tile — the PM is visibly the twelfth, sitting above the eleven rather
-/// than missing from them. It used to be a caption under the comb.
+/// the `PORTFOLIO MANAGER` card that follows the comb (`_ReasonBlock`) — the
+/// PM is visibly the twelfth, given its own card after the eleven rather than
+/// missing from them. It used to be a caption under the comb.
 List<RoomVoice> transcriptVoicesFromRoomState(RoomState state) {
   final withheldIds = state.withheldAgents.keys.toSet();
   return [

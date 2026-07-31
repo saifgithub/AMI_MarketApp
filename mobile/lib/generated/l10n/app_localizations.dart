@@ -3325,22 +3325,22 @@ abstract class AppLocalizations {
   /// **'TRANSCRIPT'**
   String get roomViewModeTranscript;
 
-  /// CR127 — identity label at the top of the hero card, naming whose decision this card carries. The card is the PM's own slot on the board; the eleven hexes in the comb below are everyone else. Mono uppercase, PM family purple. Shown for every outcome EXCEPT noResult (a run that never reached the PM).
+  /// CR127 — card header over the PM's reasoning, the last card on the Verdict Board (after the eleven-voice comb). Names whose words those are: the reason prose is the Portfolio Manager's own, and before this it carried no attribution at all. Giving the PM a titled card of its own is what makes the old 'THE PM DECIDES — THIS IS NOT A VOTE' caption redundant. Mono uppercase, PM family purple. Hidden when there is no reason text to head.
   ///
   /// In en, this message translates to:
   /// **'PORTFOLIO MANAGER'**
-  String get roomHeroPmCard;
+  String get roomPmCardHeading;
 
-  /// Hero heading when the Portfolio Manager approved the trade. Mono uppercase. CR127: says THE PM, not THE ROOM — the PM decides alone and the comb below is not a tally, so attributing the call to 'the room' was the thing that made the old 'THIS IS NOT A VOTE' caption necessary.
+  /// Hero heading when the Portfolio Manager approved the trade. Mono uppercase.
   ///
   /// In en, this message translates to:
-  /// **'THE PM APPROVED'**
+  /// **'THE ROOM APPROVED'**
   String get roomHeroApprove;
 
-  /// Hero heading for a PASS — the PM had no strong view and sat out. NOT a rejection: it must not read as the thesis being turned down. CR127: says THE PM, not THE ROOM (see roomHeroApprove).
+  /// Hero heading for a PASS — the room had no strong view and sat out. NOT a rejection: it must not read as the thesis being turned down.
   ///
   /// In en, this message translates to:
-  /// **'THE PM PASSED'**
+  /// **'THE ROOM PASSED'**
   String get roomHeroPass;
 
   /// Hero heading when the user's own mandate rules blocked the trade. The user's rules did this, not AMI's opinion.

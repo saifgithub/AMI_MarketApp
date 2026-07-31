@@ -57,12 +57,12 @@ enum VerdictOutcome {
 /// (T-VOTE).
 ///
 /// CR127 moved how that is disclosed. It used to be a caption under the comb
-/// (`THE PM DECIDES — THIS IS NOT A VOTE`) correcting a hero tile that had
-/// just announced `THE ROOM APPROVED`. The hero now names the PM as the
-/// decider — its own labelled card, `THE PM APPROVED` — so the separation is
-/// visible in the layout instead of asserted in a disclaimer, and the caption
-/// is gone. A tester reported the caption as redundant; it was, but only
-/// because the fix belonged one card higher up.
+/// (`THE PM DECIDES — THIS IS NOT A VOTE`). The PM now has a **card of its
+/// own after the eleven** — the reasoning block, titled `PORTFOLIO MANAGER`
+/// (`_ReasonBlock`) — so the twelfth agent is visibly present on the board as
+/// itself rather than absent from the comb and asserted in a disclaimer. A
+/// tester reported the caption as redundant; giving the PM its own card is
+/// what makes it so.
 @immutable
 class RoomVoice {
   const RoomVoice({

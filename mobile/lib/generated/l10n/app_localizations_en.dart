@@ -1904,13 +1904,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomViewModeTranscript => 'TRANSCRIPT';
 
   @override
-  String get roomHeroPmCard => 'PORTFOLIO MANAGER';
+  String get roomPmCardHeading => 'PORTFOLIO MANAGER';
 
   @override
-  String get roomHeroApprove => 'THE PM APPROVED';
+  String get roomHeroApprove => 'THE ROOM APPROVED';
 
   @override
-  String get roomHeroPass => 'THE PM PASSED';
+  String get roomHeroPass => 'THE ROOM PASSED';
 
   @override
   String get roomHeroReject => 'BLOCKED BY YOUR MANDATE';

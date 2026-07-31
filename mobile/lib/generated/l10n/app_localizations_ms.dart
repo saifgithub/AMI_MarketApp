@@ -1908,13 +1908,13 @@ class AppLocalizationsMs extends AppLocalizations {
   String get roomViewModeTranscript => 'TRANSKRIP';
 
   @override
-  String get roomHeroPmCard => 'PENGURUS PORTFOLIO';
+  String get roomPmCardHeading => 'PENGURUS PORTFOLIO';
 
   @override
-  String get roomHeroApprove => 'PM MELULUSKAN';
+  String get roomHeroApprove => 'BILIK MELULUSKAN';
 
   @override
-  String get roomHeroPass => 'PM BERLALU';
+  String get roomHeroPass => 'BILIK BERLALU';
 
   @override
   String get roomHeroReject => 'DISEKAT OLEH MANDAT ANDA';

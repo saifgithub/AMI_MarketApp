@@ -1905,13 +1905,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get roomViewModeTranscript => 'النص الكامل';
 
   @override
-  String get roomHeroPmCard => 'مدير المحفظة';
+  String get roomPmCardHeading => 'مدير المحفظة';
 
   @override
-  String get roomHeroApprove => 'وافق مدير المحفظة';
+  String get roomHeroApprove => 'وافقت الغرفة';
 
   @override
-  String get roomHeroPass => 'تجاوز مدير المحفظة';
+  String get roomHeroPass => 'تجاوزت الغرفة';
 
   @override
   String get roomHeroReject => 'محظور بموجب تفويضك';

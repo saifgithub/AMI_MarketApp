@@ -207,32 +207,6 @@ class _HeroTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // CR127 — whose card this is, stated structurally rather than as a
-          // disclaimer under the comb. The board used to head this tile "THE
-          // ROOM APPROVED" and then correct itself 300pt lower with "THE PM
-          // DECIDES — THIS IS NOT A VOTE"; naming the decider here removes the
-          // contradiction at its source, and the caption with it.
-          //
-          // Omitted for noResult alone: that run never reached the PM, so
-          // there is no decision to attribute and a PM-branded card would be
-          // claiming one. Kept for reject — the mandate did the blocking (the
-          // heading says so, and the override line names it), but the card is
-          // still the verdict slot the PM's call went into.
-          if (!data.isNoResult) ...[
-            Text(
-              l.roomHeroPmCard,
-              style: AmiTypography.labelMono.copyWith(
-                fontSize: 10,
-                letterSpacing: 0.4,
-                // Family colour, as identity — distinct from `accent`, which
-                // is the OUTCOME's status colour. Purple-on-canvas is the
-                // shipped pattern here (see `_HexOutlinePainter`: hexPurple
-                // at 4.22 is itself the project's accent-as-type floor).
-                color: agentById('portfolio_manager').color,
-              ),
-            ),
-            const SizedBox(height: AmiSpacing.s),
-          ],
           Row(
             children: [
               _OutcomeHex(
@@ -1137,6 +1111,16 @@ String analystDisplayName(String id) {
 /// render it unclamped.** The rule: the board's prose budget is inversely
 /// proportional to its numeric content. A PASS board has almost no numbers, and
 /// "the room split and the PM declined" is the most informative thing on it.
+///
+/// CR127 — titled `PORTFOLIO MANAGER`, because this prose IS the PM's, and it
+/// used to arrive with no attribution at all: unheaded body text after eleven
+/// clearly-labelled analyst hexes, reading as the board's own narration rather
+/// than as the twelfth agent's. Naming it is what makes the comb's old
+/// `THE PM DECIDES — THIS IS NOT A VOTE` caption redundant — the PM is now a
+/// visible card of its own after the eleven, so the comb no longer has to
+/// disclaim being a tally. Follows `_ConsensusComb`/`_RosterGap`'s header
+/// idiom, in the PM's family purple rather than their neutral `textLow`, since
+/// this header identifies an agent where theirs name a section.
 class _ReasonBlock extends StatefulWidget {
   const _ReasonBlock({required this.data});
   final RoomBoardData data;
@@ -1158,10 +1142,29 @@ class _ReasonBlockState extends State<_ReasonBlock> {
       decoration: BoxDecoration(
         color: AmiColors.slate900,
         borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.slate700),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Hidden when there is no reason text — a titled, empty PM card
+          // would assert the PM said something on a run where it said
+          // nothing (T-BACKFILL: absent is never inferred).
+          if (widget.data.reason.trim().isNotEmpty) ...[
+            Text(
+              l.roomPmCardHeading,
+              style: AmiTypography.labelMono.copyWith(
+                fontSize: 10,
+                letterSpacing: 0.4,
+                // Family colour as identity. Purple-as-type on this canvas is
+                // the pattern `_HexOutlinePainter` already documents —
+                // hexPurple at 4.22 is itself the project's accent-as-type
+                // floor, measured on slate900, which is this card's fill.
+                color: agentById('portfolio_manager').color,
+              ),
+            ),
+            const SizedBox(height: AmiSpacing.xs),
+          ],
           Text(
             widget.data.reason,
             style: AmiTypography.body,

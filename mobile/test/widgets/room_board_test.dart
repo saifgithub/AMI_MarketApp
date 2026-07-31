@@ -90,12 +90,13 @@ RoomBoardData _board({
   bool isRecord = false,
   bool recordedStances = true,
   double? sizePct = 3.0,
+  String reason = 'Synthesis defended; the mandate clears at this size.',
 }) =>
     RoomBoardData(
       ticker: 'AAPL',
       outcome: outcome,
       actionToken: actionToken,
-      reason: 'Synthesis defended; the mandate clears at this size.',
+      reason: reason,
       sizePct: sizePct,
       entry: 150,
       stop: 141,
@@ -158,51 +159,6 @@ void main() {
       }
       // Five states, five distinct headings — not one heading reused.
       expect(seenHeadings.length, 5);
-    });
-
-    testWidgets('CR127 — the hero names the PM as the decider, not "the room"',
-        (t) async {
-      // The tile used to head an approval "THE ROOM APPROVED" and then get
-      // corrected 300pt below by a caption under the comb. Attributing the
-      // call to the room is what made that caption necessary; the comb is
-      // eleven voices and none of them decided anything.
-      await _pump(t, _board(outcome: VerdictOutcome.approve));
-      expect(find.text('THE PM APPROVED'), findsOneWidget);
-      expect(find.text('THE ROOM APPROVED'), findsNothing);
-
-      await _pump(t, _board(outcome: VerdictOutcome.pass));
-      expect(find.text('THE PM PASSED'), findsOneWidget);
-      expect(find.text('THE ROOM PASSED'), findsNothing);
-    });
-
-    testWidgets('CR127 — a mandate block is NOT attributed to the PM',
-        (t) async {
-      // The floor blocked it, not the PM's judgement — the heading must keep
-      // naming the user's own rules. This is the case the "name the decider"
-      // rule would get wrong if it were applied blindly to every outcome.
-      await _pump(t, _board(outcome: VerdictOutcome.reject));
-      expect(find.text('BLOCKED BY YOUR MANDATE'), findsOneWidget);
-      expect(find.textContaining('THE PM REJECTED'), findsNothing);
-    });
-
-    testWidgets('CR127 — the PM identity label is on every card that carries '
-        'a PM decision, and absent from the one that does not', (t) async {
-      for (final o in [
-        VerdictOutcome.approve,
-        VerdictOutcome.pass,
-        VerdictOutcome.reject,
-        VerdictOutcome.noVerdict,
-        VerdictOutcome.unknown,
-      ]) {
-        await _pump(t, _board(outcome: o, actionToken: 'SOMETHING'));
-        expect(find.text('PORTFOLIO MANAGER'), findsOneWidget, reason: '$o');
-      }
-      // A run that never reached the PM has no decision to attribute — a
-      // PM-branded card there would be claiming one that was never made.
-      await _pump(t, _board(outcome: VerdictOutcome.noResult));
-      expect(find.text('PORTFOLIO MANAGER'), findsNothing);
-      expect(find.text('THE ROOM DID NOT FINISH'), findsOneWidget,
-          reason: 'the run, not the PM, is what failed here');
     });
 
     testWidgets('NO_VERDICT and NO RESULT carry no reject accent', (t) async {
@@ -317,6 +273,48 @@ void main() {
         (t) async {
       await _pump(t, _board(outcome: VerdictOutcome.pass));
       expect(find.textContaining('RISK'), findsNothing);
+    });
+  });
+
+  group('CR127 — the PM gets a card of its own, after the eleven', () {
+    testWidgets('the reasoning card is titled PORTFOLIO MANAGER', (t) async {
+      // The prose is the PM's, and it used to arrive unattributed — plain
+      // body text after eleven labelled analyst hexes, reading as the
+      // board's narration rather than as the twelfth agent's.
+      await _pump(t, _board());
+      expect(find.text('PORTFOLIO MANAGER'), findsOneWidget);
+    });
+
+    testWidgets('titled on every outcome that produced reasoning', (t) async {
+      for (final o in VerdictOutcome.values) {
+        await _pump(t, _board(outcome: o, actionToken: 'SOMETHING'));
+        expect(find.text('PORTFOLIO MANAGER'), findsOneWidget, reason: '$o');
+      }
+    });
+
+    testWidgets('no reason text → no titled card (T-BACKFILL)', (t) async {
+      // A titled but empty PM card asserts the PM said something on a run
+      // where it said nothing. Absent is never inferred.
+      await _pump(t, _board(reason: ''));
+      expect(find.text('PORTFOLIO MANAGER'), findsNothing);
+
+      await _pump(t, _board(reason: '   '));
+      expect(find.text('PORTFOLIO MANAGER'), findsNothing,
+          reason: 'whitespace is not reasoning');
+    });
+
+    testWidgets('the hero still reports the ROOM outcome, unchanged',
+        (t) async {
+      // Deliberately NOT re-attributed to the PM: the hero is the run's
+      // result, and the PM's own voice is the titled card lower down.
+      await _pump(t, _board(outcome: VerdictOutcome.approve));
+      expect(find.text('THE ROOM APPROVED'), findsOneWidget);
+
+      await _pump(t, _board(outcome: VerdictOutcome.pass));
+      expect(find.text('THE ROOM PASSED'), findsOneWidget);
+
+      await _pump(t, _board(outcome: VerdictOutcome.reject));
+      expect(find.text('BLOCKED BY YOUR MANDATE'), findsOneWidget);
     });
   });
 
