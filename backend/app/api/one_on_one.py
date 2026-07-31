@@ -156,6 +156,20 @@ async def send_message(
             "resets_at": e.resets_at.isoformat(),
         }
         raise HTTPException(status.HTTP_402_PAYMENT_REQUIRED, detail=detail) from e
+    except BaseException:
+        # DEF201 round 2 (audit M2). `spend()` opens a session, loads the user
+        # and commits, so it can raise anything the DB can raise — an
+        # OperationalError is not an InsufficientCredits, escapes the handler
+        # above, and the generator's finally never runs because the generator
+        # was never created. The slot then leaks with no TTL and no eviction:
+        # two such failures wedge this user's 1-on-1 at 429 until the process
+        # restarts, surviving the DB's own recovery.
+        #
+        # BaseException, not Exception: a CancelledError here (client hung up
+        # mid-spend) leaks the slot exactly the same way, and asyncio's
+        # CancelledError descends from BaseException.
+        agent_stream_concurrency_limit.release(concurrency_key)
+        raise
 
     async def event_stream():
         total_chars = 0

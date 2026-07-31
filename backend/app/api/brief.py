@@ -142,7 +142,18 @@ async def brief_message(
             agent_stream_concurrency_limit.release(concurrency_key)
             yield sse_json("done", json.dumps({"chars": total}))
 
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+    try:
+        return StreamingResponse(event_stream(), media_type="text/event-stream")
+    except BaseException:
+        # DEF201 round 2 (audit M2, symmetry). The auditor scoped M2 to
+        # one_on_one.py, where `spend()` gives the acquire→generator window a
+        # real trigger. Brief has no spend, so this window is far narrower —
+        # only StreamingResponse construction itself — but the leak class is
+        # identical and a leaked slot here wedges the SAME shared counter.
+        # Fixing the reported instance and knowingly leaving its twin is how
+        # a class becomes a recurrence.
+        agent_stream_concurrency_limit.release(concurrency_key)
+        raise
 
 
 @router.post("/propose", response_model=BriefProposal)

@@ -227,6 +227,60 @@ def test_402_insufficient_credits_releases_the_slot_rather_than_leaking_it(
     assert r2.status_code == 200, r2.text
 
 
+def test_a_non_402_spend_failure_releases_the_slot_rather_than_leaking_it(
+    client, monkeypatch,
+):
+    """AUDIT M2 (round 1). `spend()` opens a session, loads the user and
+    commits, so it can raise anything the DB can raise. An OperationalError is
+    NOT an InsufficientCredits: pre-fix it escaped that handler, the generator
+    (whose finally releases) was never created, and the slot leaked with no
+    TTL and no eviction — two of them wedge the user at 429 permanently,
+    surviving the DB's own recovery.
+
+    Distinct from the 402 test above: that path had an explicit release from
+    the start. This one is the fourth path the round-1 audit found."""
+    import app.api.one_on_one as one_on_one_mod
+
+    monkeypatch.setattr(agent_stream_concurrency_limit, "max_concurrent", 1)
+
+    _, headers = _new_real_user()
+    session_id = _open_one_on_one(client, headers)
+
+    real_spend = one_on_one_mod.spend
+
+    def _boom(*a, **kw):
+        raise RuntimeError("simulated DB failure inside spend()")
+
+    one_on_one_mod.spend = _boom
+    try:
+        # The `client` fixture is raise_server_exceptions=False, so the
+        # RuntimeError surfaces as a 500 rather than propagating — which is
+        # also what a real deployment does. Either way the route raised, and
+        # the generator was never created.
+        boom = client.post(
+            "/v1/agents/one_on_one/message",
+            json={"session_id": session_id, "user_message": "hi"},
+            headers=headers,
+        )
+        assert boom.status_code == 500, boom.text
+    finally:
+        one_on_one_mod.spend = real_spend
+
+    # Asserted through the CONTRACT, not the private counter: at cap=1, a
+    # leaked slot from the failure above makes the very next request 429
+    # forever. A 200 here is the proof the slot came back.
+    r = client.post(
+        "/v1/agents/one_on_one/message",
+        json={"session_id": session_id, "user_message": "hi"},
+        headers=headers,
+    )
+    assert r.status_code != 429, (
+        "the failed spend leaked its concurrency slot — this user is now "
+        "permanently capped at 429 until the process restarts"
+    )
+    assert r.status_code == 200, r.text
+
+
 class _Sess:
     def __init__(self, uid):
         self.user_id = uid
