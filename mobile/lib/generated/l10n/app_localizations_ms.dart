@@ -357,6 +357,42 @@ class AppLocalizationsMs extends AppLocalizations {
   String get tickerDetailActionClose => 'TUTUP';
 
   @override
+  String get tickerDetailActionSetAlert => 'ALERT';
+
+  @override
+  String priceAlertSheetTitle(String ticker) {
+    return 'Set price alert — $ticker';
+  }
+
+  @override
+  String get priceAlertSheetThresholdLabel => 'Alert type';
+
+  @override
+  String get priceAlertTypeStop => 'Stop — price falls below (protective)';
+
+  @override
+  String get priceAlertTypeTarget =>
+      'Target — price rises above (profit-taking)';
+
+  @override
+  String get priceAlertTypeManualAbove => 'Price rises above';
+
+  @override
+  String get priceAlertTypeManualBelow => 'Price falls below';
+
+  @override
+  String get priceAlertSheetPriceLabel => 'Price';
+
+  @override
+  String get priceAlertSheetCreate => 'Create alert';
+
+  @override
+  String get priceAlertsSectionHeading => 'PRICE ALERTS';
+
+  @override
+  String get priceAlertRowCancelTooltip => 'Cancel this alert';
+
+  @override
   String tickerDetailTradesHeading(String ticker) {
     return 'PERNIAGAAN UNTUK $ticker';
   }

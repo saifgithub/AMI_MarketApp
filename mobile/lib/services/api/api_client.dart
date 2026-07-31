@@ -28,6 +28,7 @@ import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/models/merge.dart';
 import 'package:ami_trade/models/one_on_one.dart';
 import 'package:ami_trade/models/onboarding.dart';
+import 'package:ami_trade/models/price_alert.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/tickers.dart';
@@ -974,6 +975,44 @@ class ApiClient {
 
   Future<void> watchlistRemove(String userId, String ticker) async {
     await _dio.delete<void>('/v1/watchlist/$userId/$ticker');
+  }
+
+  // ── Price alerts (CR027 §4) ──────────────────────────────────────
+
+  Future<List<PriceAlert>> priceAlerts(String userId, {String? status}) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/price_alerts/$userId',
+      queryParameters: status == null ? null : {'status': status},
+    );
+    final items = ((r.data?['items'] as List?) ?? const []);
+    return items
+        .map((j) => PriceAlert.fromJson(j as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<PriceAlert> createPriceAlert(
+    String userId, {
+    required String ticker,
+    required String thresholdType,
+    required double thresholdPrice,
+    String? tradeRef,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/price_alerts/$userId',
+      data: {
+        'ticker': ticker,
+        'threshold_type': thresholdType,
+        'threshold_price': thresholdPrice,
+        if (tradeRef != null) 'trade_ref': tradeRef,
+      },
+    );
+    return PriceAlert.fromJson(r.data!);
+  }
+
+  Future<PriceAlert> cancelPriceAlert(String userId, String alertId) async {
+    final r = await _dio
+        .delete<Map<String, dynamic>>('/v1/price_alerts/$userId/$alertId');
+    return PriceAlert.fromJson(r.data!);
   }
 
   // ── Mandate ─────────────────────────────────────────────────────

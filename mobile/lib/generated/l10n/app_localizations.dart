@@ -718,6 +718,72 @@ abstract class AppLocalizations {
   /// **'CLOSE'**
   String get tickerDetailActionClose;
 
+  /// CR027 — secondary chip on Ticker Detail, opens the price-alert creation sheet for this ticker. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'ALERT'**
+  String get tickerDetailActionSetAlert;
+
+  /// CR027 — title of the price-alert creation bottom sheet. {ticker} is the ticker it's being created for (read-only in this sheet). NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Set price alert — {ticker}'**
+  String priceAlertSheetTitle(String ticker);
+
+  /// CR027 — label above the 4-option threshold-type radio group in the price-alert sheet. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert type'**
+  String get priceAlertSheetThresholdLabel;
+
+  /// CR027 — threshold_type=stop option label. Framed as protecting an existing position, distinct from a plain manual downside watch. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop — price falls below (protective)'**
+  String get priceAlertTypeStop;
+
+  /// CR027 — threshold_type=target option label. Framed as a profit-taking level on an existing position. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Target — price rises above (profit-taking)'**
+  String get priceAlertTypeTarget;
+
+  /// CR027 — threshold_type=manual_above option label. A plain watchlist-style upside watch, no position implied. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Price rises above'**
+  String get priceAlertTypeManualAbove;
+
+  /// CR027 — threshold_type=manual_below option label. A plain watchlist-style downside watch, no position implied. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Price falls below'**
+  String get priceAlertTypeManualBelow;
+
+  /// CR027 — label for the numeric threshold-price text field in the price-alert sheet. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get priceAlertSheetPriceLabel;
+
+  /// CR027 — submit button on the price-alert creation sheet. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Create alert'**
+  String get priceAlertSheetCreate;
+
+  /// CR027 — heading over the inline active-price-alerts list on Ticker Detail, shown only when at least one active alert exists for this ticker. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'PRICE ALERTS'**
+  String get priceAlertsSectionHeading;
+
+  /// CR027 — tooltip on the cancel icon button in each inline price-alert row. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel this alert'**
+  String get priceAlertRowCancelTooltip;
+
   /// Section header above the per-ticker trade history list on Ticker Detail. {ticker} is the symbol.
   ///
   /// In en, this message translates to:

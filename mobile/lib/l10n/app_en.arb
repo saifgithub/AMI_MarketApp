@@ -273,6 +273,33 @@
     "@tickerDetailActionClose": {
         "description": "Destructive secondary chip on Ticker Detail — closes every open trade for this ticker after confirm. Only shown when at least one open trade exists."
     },
+    "tickerDetailActionSetAlert": "ALERT",
+    "@tickerDetailActionSetAlert": {
+        "description": "CR027 — secondary chip on Ticker Detail, opens the price-alert creation sheet for this ticker. NEW key, needs ar/ms translation."
+    },
+    "priceAlertSheetTitle": "Set price alert — {ticker}",
+    "@priceAlertSheetTitle": {
+        "description": "CR027 — title of the price-alert creation bottom sheet. {ticker} is the ticker it's being created for (read-only in this sheet). NEW key, needs ar/ms translation.",
+        "placeholders": {"ticker": {"type": "String", "example": "AAPL"}}
+    },
+    "priceAlertSheetThresholdLabel": "Alert type",
+    "@priceAlertSheetThresholdLabel": {"description": "CR027 — label above the 4-option threshold-type radio group in the price-alert sheet. NEW key, needs ar/ms translation."},
+    "priceAlertTypeStop": "Stop — price falls below (protective)",
+    "@priceAlertTypeStop": {"description": "CR027 — threshold_type=stop option label. Framed as protecting an existing position, distinct from a plain manual downside watch. NEW key, needs ar/ms translation."},
+    "priceAlertTypeTarget": "Target — price rises above (profit-taking)",
+    "@priceAlertTypeTarget": {"description": "CR027 — threshold_type=target option label. Framed as a profit-taking level on an existing position. NEW key, needs ar/ms translation."},
+    "priceAlertTypeManualAbove": "Price rises above",
+    "@priceAlertTypeManualAbove": {"description": "CR027 — threshold_type=manual_above option label. A plain watchlist-style upside watch, no position implied. NEW key, needs ar/ms translation."},
+    "priceAlertTypeManualBelow": "Price falls below",
+    "@priceAlertTypeManualBelow": {"description": "CR027 — threshold_type=manual_below option label. A plain watchlist-style downside watch, no position implied. NEW key, needs ar/ms translation."},
+    "priceAlertSheetPriceLabel": "Price",
+    "@priceAlertSheetPriceLabel": {"description": "CR027 — label for the numeric threshold-price text field in the price-alert sheet. NEW key, needs ar/ms translation."},
+    "priceAlertSheetCreate": "Create alert",
+    "@priceAlertSheetCreate": {"description": "CR027 — submit button on the price-alert creation sheet. NEW key, needs ar/ms translation."},
+    "priceAlertsSectionHeading": "PRICE ALERTS",
+    "@priceAlertsSectionHeading": {"description": "CR027 — heading over the inline active-price-alerts list on Ticker Detail, shown only when at least one active alert exists for this ticker. NEW key, needs ar/ms translation."},
+    "priceAlertRowCancelTooltip": "Cancel this alert",
+    "@priceAlertRowCancelTooltip": {"description": "CR027 — tooltip on the cancel icon button in each inline price-alert row. NEW key, needs ar/ms translation."},
     "tickerDetailTradesHeading": "TRADES FOR {ticker}",
     "@tickerDetailTradesHeading": {
         "description": "Section header above the per-ticker trade history list on Ticker Detail. {ticker} is the symbol.",

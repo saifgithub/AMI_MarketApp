@@ -12,12 +12,15 @@ library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
+import 'package:ami_trade/models/price_alert.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/watchlist.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/screens/sim/chart_fullscreen_screen.dart';
+import 'package:ami_trade/screens/sim/price_alert_sheet.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
+import 'package:ami_trade/state/price_alert_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/ticker_history_provider.dart';
 import 'package:ami_trade/services/celebration.dart';
@@ -182,6 +185,7 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
               ),
               if (isHeld)
                 _LotsSection(ticker: ticker),
+              _PriceAlertsSection(ticker: ticker),
               newsAsync.when(
                 data: (n) => n.articles.isEmpty
                     ? const SizedBox.shrink()
@@ -463,6 +467,10 @@ class _SecondaryActions extends ConsumerWidget {
     ));
   }
 
+  void _setAlert(BuildContext context) {
+    PriceAlertSheet.show(context, ticker: ticker);
+  }
+
   Future<void> _toggleWatch(BuildContext context, WidgetRef ref) async {
     final notifier = ref.read(watchlistNotifierProvider.notifier);
     if (isWatched) {
@@ -533,6 +541,12 @@ class _SecondaryActions extends ConsumerWidget {
           label: l.tickerDetailActionWatch,
           color: AmiColors.hexAmber,
           onTap: () => _toggleWatch(context, ref),
+        ),
+        _Chip(
+          icon: Icons.notifications_active_outlined,
+          label: l.tickerDetailActionSetAlert,
+          color: AmiColors.hexBlue,
+          onTap: () => _setAlert(context),
         ),
         if (hasOpenTrades)
           _Chip(
@@ -873,6 +887,101 @@ class _LotStatusChip extends StatelessWidget {
       child: Text(
         label,
         style: AmiTypography.labelMono.copyWith(color: color, fontSize: 9),
+      ),
+    );
+  }
+}
+
+
+/// CR027 §4 — this ticker's active price alerts, inline (no dedicated
+/// cross-ticker "all my alerts" screen — deferred, not required by any
+/// locked acceptance line). Hidden entirely when there are none.
+class _PriceAlertsSection extends ConsumerWidget {
+  const _PriceAlertsSection({required this.ticker});
+
+  final String ticker;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final alertsAsync = ref.watch(priceAlertsForTickerProvider(ticker));
+    return alertsAsync.when(
+      data: (alerts) => alerts.isEmpty
+          ? const SizedBox.shrink()
+          : Padding(
+              padding: const EdgeInsets.only(bottom: AmiSpacing.m),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppLocalizations.of(context).priceAlertsSectionHeading,
+                    style: AmiTypography.labelMono,
+                  ),
+                  const SizedBox(height: AmiSpacing.s),
+                  for (final alert in alerts)
+                    _PriceAlertRow(ticker: ticker, alert: alert),
+                ],
+              ),
+            ),
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _PriceAlertRow extends ConsumerWidget {
+  const _PriceAlertRow({required this.ticker, required this.alert});
+
+  final String ticker;
+  final PriceAlert alert;
+
+  String _label(AppLocalizations l) {
+    final price = alert.thresholdPrice.toStringAsFixed(2);
+    switch (alert.thresholdType) {
+      case 'stop':
+        return '${l.priceAlertTypeStop} \$$price';
+      case 'target':
+        return '${l.priceAlertTypeTarget} \$$price';
+      case 'manual_above':
+        return '${l.priceAlertTypeManualAbove} \$$price';
+      default:
+        return '${l.priceAlertTypeManualBelow} \$$price';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final busy = ref.watch(priceAlertControllerProvider).busy;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AmiSpacing.m, vertical: AmiSpacing.s,
+        ),
+        decoration: BoxDecoration(
+          color: AmiColors.slate800,
+          borderRadius: BorderRadius.circular(AmiRadii.card),
+          border: Border.all(color: AmiColors.slate700),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.notifications_active_outlined,
+                color: AmiColors.hexBlue, size: 16),
+            const SizedBox(width: AmiSpacing.s),
+            Expanded(
+              child: Text(_label(l), style: AmiTypography.body),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close, size: 18, color: AmiColors.textLow),
+              tooltip: l.priceAlertRowCancelTooltip,
+              onPressed: busy
+                  ? null
+                  : () => ref
+                      .read(priceAlertControllerProvider.notifier)
+                      .cancel(ticker, alert.id),
+            ),
+          ],
+        ),
       ),
     );
   }
