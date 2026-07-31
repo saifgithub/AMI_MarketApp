@@ -23,6 +23,7 @@
 #   scripts/build_playstore.sh --no-bump        # use whatever's in pubspec
 #   scripts/build_playstore.sh --no-commit      # don't auto-commit the bump
 #   scripts/build_playstore.sh --no-billing     # deliberately ship WITHOUT in-app purchase
+#   scripts/build_playstore.sh --internal-only  # required when the RC key is a test_… Test Store key
 #
 # Required env (defaults match the production alpha setup):
 #   AMI_API_URL_ALPHA              - backend URL baked into the build
@@ -32,7 +33,9 @@
 #                                    design — safe to embed in a shipped client.
 #                                    A `test_…` key is RevenueCat's Test Store:
 #                                    purchases are SIMULATED, no store products
-#                                    needed. Right for alpha, blocked in prod.
+#                                    needed. Right for alpha, but restricted to
+#                                    the Play INTERNAL testing track — requires
+#                                    --internal-only, and blocked in prod.
 #   GOOGLE_OAUTH_WEB_CLIENT_ID     - GCP OAuth 2.0 Web client_id for Google Sign-In
 #                                    (the same value the backend has in
 #                                     GOOGLE_AUDIENCES env var on melehost)
@@ -77,12 +80,14 @@ DO_BUMP=1
 DO_COMMIT=1
 DO_BILLING=1
 DO_PRODUCTION=0
+DO_INTERNAL_ONLY=0
 for arg in "$@"; do
   case "$arg" in
     --no-bump)    DO_BUMP=0 ;;
     --no-commit)  DO_COMMIT=0 ;;
     --no-billing) DO_BILLING=0 ;;
     --production) DO_PRODUCTION=1 ;;
+    --internal-only) DO_INTERNAL_ONLY=1 ;;
     -h|--help)
       sed -n '2,/^$/p' "$0"
       exit 0
@@ -141,12 +146,34 @@ if [[ "$REVENUECAT_ANDROID_SDK_KEY" == test_* ]]; then
     echo "  Use the App-specific public key (goog_…) for production." >&2
     exit 1
   fi
+  if [[ "$DO_INTERNAL_ONLY" -ne 1 ]]; then
+    cat >&2 <<'BANNER'
+✗ REVENUECAT_ANDROID_SDK_KEY is a Test Store key (test_…) and --internal-only was not passed.
+
+  RevenueCat's own rule: "Never submit an app to the App Store or Google Play
+  that is configured with a Test Store API key." This AAB is built for upload.
+
+  Our narrowing (CR084 "Alpha distribution constraint"): a test_… build may go
+  to the Play **internal testing** track only — never closed, open or production,
+  which are reviewed and reach people outside the team. Purchases in this build
+  are SIMULATED: buying grants Plan + credits for real in our DB, no money moves.
+
+  If this build is for internal testers, say so:
+
+      scripts/build_playstore.sh --internal-only
+      scripts/publish_playstore.sh --internal-only
+
+  For anything wider, rebuild with the App-specific public key (goog_…) and real
+  Play Console products (DEF100, production phase).
+BANNER
+    exit 1
+  fi
   cat <<'BANNER'
 ┌──────────────────────────────────────────────────────────────────┐
 │  SIMULATED PURCHASES — RevenueCat Test Store key in this build.  │
 │  Buying grants Plan + credits for real in our DB. No money moves.│
-│  Fine for Play internal/alpha. NEVER promote this build to Play  │
-│  production. Rebuild with a goog_… key before any prod release.  │
+│  PLAY *INTERNAL TESTING* TRACK ONLY — never closed/open/prod.    │
+│  Rebuild with a goog_… key for anything beyond internal testers. │
 └──────────────────────────────────────────────────────────────────┘
 BANNER
 fi

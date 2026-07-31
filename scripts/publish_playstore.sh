@@ -16,6 +16,11 @@
 #   scripts/publish_playstore.sh --no-bump      # upload whatever's in pubspec
 #   scripts/publish_playstore.sh --no-commit    # don't auto-commit the bump
 #   scripts/publish_playstore.sh --validate      # dry run: build + validate, no publish
+#   scripts/publish_playstore.sh --internal-only # required when the RC key is a test_… key
+#
+# Track: `internal` (PLAY_TRACK overrides). A RevenueCat Test Store key (test_…)
+# is refused on any other track — simulated purchases must not reach a reviewed,
+# non-team track. See CR084 "Alpha distribution constraint".
 #
 # Required setup before first run (Saiful's one-time work, per CR048):
 #   - ~/.android-keys/play-service-account.json   (Play Console API key; JSON)
@@ -41,6 +46,30 @@ for arg in "$@"; do
   esac
 done
 
+# CR084-ALPHA — which fastlane lane (= Play track) this publishes to. Hardcoded
+# `internal` since CR048; kept as a variable so the Test Store guard below has
+# something to assert against rather than trusting that nobody ever adds a flag.
+: "${PLAY_TRACK:=internal}"
+
+# CR084-ALPHA — a RevenueCat Test Store key (`test_…`) makes every purchase
+# simulated: the buyer gets Plan + credits for real in our DB, for free. RC's own
+# rule is "never submit an app to the App Store or Google Play that is configured
+# with a Test Store API key"; our narrowing allows the Play *internal testing*
+# track only, which is unreviewed and team-only. Anything wider is refused here,
+# at the point of upload, not just at the point of build.
+rc_android_key="${REVENUECAT_ANDROID_SDK_KEY:-}"
+if [[ -z "$rc_android_key" && -f "${PROJECT_ROOT}/infra/alpha.env" ]]; then
+  rc_android_key="$(grep -E '^REVENUECAT_ANDROID_SDK_KEY=' "${PROJECT_ROOT}/infra/alpha.env" 2>/dev/null | cut -d= -f2- | tr -d '"'"'"' ' || true)"
+fi
+if [[ "$rc_android_key" == test_* && "$PLAY_TRACK" != "internal" ]]; then
+  echo "✗ refusing to publish to the '${PLAY_TRACK}' track with a RevenueCat Test Store key." >&2
+  echo "  Purchases would be simulated — every tester on that track gets paid" >&2
+  echo "  entitlements for free, and the track is store-reviewed. Test Store" >&2
+  echo "  builds go to 'internal' only (CR084 alpha distribution constraint)." >&2
+  echo "  For a wider track, rebuild with the goog_… key and real Play products." >&2
+  exit 1
+fi
+
 : "${SUPPLY_JSON_KEY:=$HOME/.android-keys/play-service-account.json}"
 export SUPPLY_JSON_KEY
 if [[ ! -f "$SUPPLY_JSON_KEY" ]]; then
@@ -60,10 +89,10 @@ if [[ "$VALIDATE" == "1" ]]; then
   echo "▶ fastlane validate (dry run — no publish)"
   bundle exec fastlane validate
 else
-  echo "▶ fastlane internal (upload to Play internal testing track)"
-  bundle exec fastlane internal
+  echo "▶ fastlane ${PLAY_TRACK} (upload to the Play ${PLAY_TRACK} testing track)"
+  bundle exec fastlane "${PLAY_TRACK}"
   echo ""
-  echo "✓ pushed to internal track — testers get it as a Play Store update."
+  echo "✓ pushed to ${PLAY_TRACK} track — testers get it as a Play Store update."
 
   # CR079 — the store release ships an AAB to Play, but our automated tester on
   # melehost consumes an APK. Build + scp it here too so the rig is refreshed on

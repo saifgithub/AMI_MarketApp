@@ -17,6 +17,9 @@ Hard rules this file enforces (money + entitlements = D-5):
   * Single ledger. Credit/plan changes go THROUGH credit_service's allowance
     mechanism; every transition writes ONE subscription_events row
     (source="revenuecat", note=<rc event id>).
+  * No free lunch in production. A SANDBOX transaction (platform sandbox or the
+    Test Store alpha runs on) grants normally outside prod and is refused with
+    403 in prod — otherwise a simulated purchase would mint a paid plan.
 
 RC `app_user_id` MUST equal our `users.id` (UUID) — the mobile SDK logs in with
 the id served by GET /v1/billing/identity (app/api/billing.py).
@@ -65,6 +68,14 @@ _CREDIT_PACKS: dict[str, int] = {
 _SUBSCRIPTION_TYPES = {"INITIAL_PURCHASE", "RENEWAL", "PRODUCT_CHANGE"}
 _REVOKE_TYPES = {"CANCELLATION", "EXPIRATION", "BILLING_ISSUE"}
 _CREDIT_PACK_TYPE = "NON_RENEWING_PURCHASE"
+
+# CR084-ALPHA — RC stamps every non-production transaction (platform sandbox AND
+# the Test Store, which alpha runs on) with environment=SANDBOX. Alpha grants on
+# it deliberately: that is how a simulated purchase becomes a real entitlement
+# without money moving. Production must not, or a sandbox transaction mints a
+# paid plan for free. Structural mirror of build_testflight.sh's refusal to ship
+# a `test_…` key in a production build.
+_SANDBOX_ENV = "SANDBOX"
 
 
 class WebhookAck(BaseModel):
@@ -255,6 +266,28 @@ def revenuecat_webhook(
         or event_type in _REVOKE_TYPES
         or event_type == _CREDIT_PACK_TYPE
     )
+
+    # CR084-ALPHA: refuse a sandbox/Test-Store transaction in production, before
+    # anything is written. Scoped to actionable events so RC's dashboard "send
+    # test event" (type TEST, touches no money) still verifies reachability in
+    # production. No dedup row is recorded, so a retry after a genuine
+    # misconfiguration fix can still land.
+    if (
+        is_actionable
+        and settings.env == "prod"
+        and str(event.get("environment") or "").upper() == _SANDBOX_ENV
+    ):
+        logger.error(
+            "revenuecat_webhook_sandbox_in_production",
+            event_id=rc_event_id, event_type=event_type,
+            app_user_id=str(app_user_id) if app_user_id else None,
+            product_id=str(product_id) if product_id else None,
+        )
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "sandbox transaction refused in production — a simulated purchase "
+            "must never grant a paid entitlement",
+        )
 
     # One transaction: dedup insert + grant + audit row commit (or roll back)
     # together, so a failed delivery leaves no dedup trace and RC's retry can

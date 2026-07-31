@@ -4,11 +4,17 @@ What/why/scope/acceptance for wiring real in-app purchases + server-authoritativ
 entitlement/credit grants on top of the CR039 credit gate. Architect-filed 2026-07-24
 on the GTM manager's M1 follow-up. Cross-domain: coder.api (webhook + entitlement sync)
 + coder.mobile (SDK + paywall/purchase flow), joined by DEPENDS-ON.
+
+AMENDED 2026-07-30 (AT:R66): alpha now runs on RevenueCat's Test Store, not on real
+App Store Connect / Play Console products. Requirements re-cut into an alpha phase and
+a production phase; CR084-ALPHA added for the two enforcement gaps that switch opened
+(SANDBOX events in prod, and test-keys escaping internal distribution tracks).
 -->
 
 # CR084 — RevenueCat integration (GTM M1, final slice)
 
-**Status:** proposed → laned (CR084-BE + CR084-MOBILE)
+**Status:** CR084-BE + CR084-MOBILE integrated & audited COMPLETE → **CR084-ALPHA laned** (2026-07-30,
+requirements re-cut around the RevenueCat Test Store — see *Two provisioning phases*)
 **Milestone:** GTM **M1** (`project_plan.md:182`) — *"RevenueCat integration. Pricing tiers wired to backend (mandate.plan transitions); receipt validation; entitlement checks on premium routes."*
 **Requester:** `noncoder.gtm` (GTM manager follow-up, relayed by Saiful 2026-07-24).
 **Gate:** `independent` (D-5: money, entitlements, store-facing — a wrong grant is real dollars and a real trust breach).
@@ -37,10 +43,14 @@ This CR does **not** re-decide pricing — that is locked in
 
 ## Product catalog (locked — from `tiers_and_pricing.md`)
 
-Seven RevenueCat products. Saiful configures the store-side product IDs + RC offerings/entitlements
-(see **Saiful-liaison dependency** below); the IDs below are the proposed canonical keys.
+Seven RevenueCat products. **The IDs below are contracts with shipped code** — `webhooks.py`
+(`_CREDIT_PACKS`, the `trader_*` / `floor_manager_*` prefix fallback) and `purchase_models.dart`
+(`PaywallProductIds`) both key off these literal strings, so a typo fails silently rather than
+loudly. They are created **in the RevenueCat Test Store at alpha** (no App Store Connect / Play
+Console product needed — see *Two provisioning phases* below) and in ASC + Play Console at
+production. Same IDs both times.
 
-| RC product (proposed id) | Kind | Price | Grants |
+| RC product id (canonical) | Kind | Price | Grants |
 |---|---|---|---|
 | `trader_monthly` | auto-renew sub | $14.99/mo | entitlement `trader` → `Plan.TRADER` + 150 credits/mo |
 | `trader_annual` | auto-renew sub | $129/yr | entitlement `trader` → `Plan.TRADER` + 150 credits/mo |
@@ -134,76 +144,149 @@ entitlement-refresh endpoint shape before it can verify a real grant).
 
 ---
 
-## Saiful-liaison dependency (BLOCKING for end-to-end, NOT for build)
+## Two provisioning phases (amended 2026-07-30, AT:R66)
 
-RevenueCat + store config is Saiful's (CEO/board — accounts, money). **Do not fabricate keys or
-product IDs.** Needed before a real purchase can complete on a device:
+The original requirement made **App Store Connect + Play Console products and the Apple/Google
+paid-app agreements a prerequisite for any purchase at all** — which put a months-long liaison
+dependency in front of ever exercising the webhook, the grant, or the paywall. That is no longer
+the alpha path.
 
-- RC dashboard: project + **public SDK keys** (iOS, Android) + **webhook auth secret**.
-- 7 products created in **App Store Connect** + **Play Console**, mapped to RC offerings + the two
-  entitlements (`trader`, `floor_manager`).
-- Apple/Google paid-app agreements + banking (M1's stated blocker in `project_plan.md:182`).
+| | **Alpha — RevenueCat Test Store** | **Production — real stores** |
+|---|---|---|
+| Keys | `test_…` (one key, both platforms) | `appl_…` (iOS) + `goog_…` (Android) |
+| Products | 7, created **inside RevenueCat** | 7, created in ASC + Play Console |
+| Money | none moves; RC simulates the transaction | real |
+| Paid-app agreements | not required | required (M1's blocker, `project_plan.md:182`) |
+| Webhook / entitlement / credit grant | **all execute for real** | same |
+| Distribution | internal tracks only (see below) | any |
 
-Build proceeds against these as config placeholders (degrade-loudly if unset); the lanes can reach
-`READY_FOR_AUDIT` with the webhook + SDK wired and unit-tested against **mocked** RC payloads. The
-live-device purchase smoke test waits on Saiful (route via `coder.store` for the store side).
+Alpha is therefore unblocked on Saiful entirely except for the dashboard configuration itself,
+which is handed off as [`rc_dashboard_config_prompt.md`](rc_dashboard_config_prompt.md).
 
-### Provisioning status — 2026-07-29
+**Still Saiful's, never fabricated:** every key and product ID, in both phases.
 
-Saiful reports two RevenueCat keys added to `infra/alpha.env` (gitignored; canonical on the Mac,
-scp'd to `melehost:~/ami_trade/.env` by `/promote-to-alpha`). Values not inspected. **Neither is
-live yet** — three gaps between "in the file" and "working":
+### Alpha distribution constraint (Test Store)
 
-1. **Key names are lowercase** (`revenuecat_public_sdk_api_key`, `revenuecat_secret_api_key`); every
-   other entry in the file is UPPERCASE. `docker-compose.yml:92` substitutes
-   `${REVENUECAT_SECRET_API_KEY:-}`, and Compose variable substitution is **case-sensitive** — a
-   lowercase name does not satisfy it, so the container still receives an empty value and the
-   alias transfer keeps returning `not_configured` (CR040 degrade-loudly, working as designed and
-   therefore easy to mistake for "not deployed yet"). Rename to `REVENUECAT_SECRET_API_KEY`.
-2. **The public SDK key has no consumer.** No backend setting reads it (`config.py` defines only
-   `revenuecat_webhook_secret` + `revenuecat_secret_api_key`); the app takes it at build time via
-   `--dart-define=REVENUECAT_IOS_SDK_KEY` / `REVENUECAT_ANDROID_SDK_KEY`
-   (`mobile/lib/services/billing/billing_config.dart:25-32`), and **no build script passes either
-   flag** — `scripts/build_testflight.sh:108-109`, `scripts/build_playstore.sh:111-114`,
-   `scripts/install_iphone.sh:97-98`. Until those are wired, every build ships with an empty
-   `publicSdkKey` and the paywall stays in the out-of-credits info state. Also note RC issues one
-   public key **per platform** (`appl_…` iOS, `goog_…` Android); a single stored value cannot serve
-   both.
-3. **`REVENUECAT_WEBHOOK_SECRET` is still absent** from `infra/alpha.env`. It is not issued by
-   RevenueCat — generate it (`openssl rand -hex 32`) and paste the same string into the RC
-   dashboard's webhook config. Until then `POST /v1/webhooks/revenuecat` refuses loudly (503), so
-   no entitlement or credit grant can land.
+RevenueCat's own rule, verbatim:
 
-Tracking stays on **DEF100** (`open`, Saiful-liaison) until a real purchase completes on a device;
-this CR is the code, DEF100 is the provisioning. DEF099's live RC-alias hop is gated on gap 1.
+> Never submit an app to the App Store or Google Play that is configured with a Test Store API key.
+
+Our narrowing of it: a `test_…` key may reach **TestFlight *internal* groups and the Play
+*internal testing* track only** — neither is store-reviewed and neither reaches a member of the
+public. Never an external TestFlight group, never a closed/open Play track, never production.
+Enforced at build time by `build_testflight.sh` / `build_playstore.sh` (which refuse a `test_` key
+without an explicit `--internal-only`) and `publish_playstore.sh` (which refuses any lane other
+than `internal`). A production build with a `test_` key is a hard block — every user would receive
+paid entitlements without paying.
+
+### Test Store behaviours alpha must expect (NOT defects)
+
+1. **Purchases are a modal**, not a store sheet: RC presents product metadata with *simulate
+   success* / *simulate failure* / *cancel* buttons. All three map onto our existing
+   `PurchaseStatus` handling.
+2. **Subscriptions self-terminate.** Test Store subs renew on accelerated timers (~5 min for a
+   weekly product to ~1 hr for a yearly one) and **hard-cancel after 5 renewals**, firing a real
+   `EXPIRATION` → `revoke_to_base` → `floor_pass`. A tester loses Trader within hours and re-buys.
+   Deliberately left live: it is the only way the revoke path gets exercised before real money.
+3. **Accelerated renewals do not multiply credits.** The allowance is calendar-month
+   period-guarded in `credit_service.set_plan_and_grant_allowance` (`credit_service.py:365-381`) —
+   a second `RENEWAL` in the same month re-tags the period without re-granting, so a tester does
+   not accrue 150 credits per hour. Pinned by test.
+4. **Every event carries `environment: "SANDBOX"`.** The alpha backend accepts it by design; in
+   `prod` it is refused (see CR084-ALPHA below).
+5. **The catalog may legitimately be smaller than 7.** RevenueCat's Test Store documentation does
+   not confirm consumable / one-time product support. If the three `credits_*` packs cannot be
+   created, the current offering returns **4 packages**, `PaywallOffering.creditPacks` is empty,
+   and the paywall renders subscriptions only — a handled state, not a bug. The dashboard prompt
+   asks for that to be reported rather than worked around.
+
+### Provisioning status — 2026-07-30
+
+The three gaps recorded on 2026-07-29 are **all closed**:
+
+1. ~~Key names lowercase~~ → `infra/alpha.env` now carries `REVENUECAT_IOS_SDK_KEY`,
+   `REVENUECAT_ANDROID_SDK_KEY`, `REVENUECAT_SECRET_API_KEY`, `REVENUECAT_WEBHOOK_SECRET`, all
+   UPPERCASE, so Compose's case-sensitive substitution resolves them.
+2. ~~Public SDK key has no consumer~~ → `63598c82` wired `--dart-define=REVENUECAT_IOS_SDK_KEY` /
+   `REVENUECAT_ANDROID_SDK_KEY` into both build scripts, sourced from `infra/alpha.env`, with a
+   loud refusal to build a store release that cannot charge (`--no-billing` to override).
+3. ~~`REVENUECAT_WEBHOOK_SECRET` absent~~ → present (64 hex chars, `openssl rand -hex 32`).
+
+**Remaining for alpha:** the RevenueCat dashboard itself — 7 Test Store products, 2 entitlements,
+1 current offering, 1 webhook. Handed off as
+[`rc_dashboard_config_prompt.md`](rc_dashboard_config_prompt.md).
+
+Tracking stays on **DEF100** (`open`, Saiful-liaison), now with a split DoD: the alpha half closes
+when a simulated `trader_monthly` purchase grants `Plan.TRADER` + 150 credits end-to-end; the
+production half stays open until real money moves.
 
 ---
 
 ## Acceptance
 
-- [ ] `POST /v1/webhooks/revenuecat` verifies the shared secret, is idempotent on RC event id, and
+### Code acceptance — CR084-BE + CR084-MOBILE (both **met**, audited COMPLETE r1)
+
+- [x] `POST /v1/webhooks/revenuecat` verifies the shared secret, is idempotent on RC event id, and
       **fails closed** on a bad/absent signature (unit tests with mocked RC payloads for each event
       type).
-- [ ] A verified `INITIAL_PURCHASE` of `trader_monthly` sets `plan=trader`, grants 150 credits for the
+- [x] A verified `INITIAL_PURCHASE` of `trader_monthly` sets `plan=trader`, grants 150 credits for the
       period, and writes a `subscription_events` row (`source="revenuecat"`); a replay does **not**
       double-grant.
-- [ ] A verified `credits_standard` `NON_RENEWING_PURCHASE` adds 300 credits and does **not** change
+- [x] A verified `credits_standard` `NON_RENEWING_PURCHASE` adds 300 credits and does **not** change
       `plan`.
-- [ ] `EXPIRATION`/`CANCELLATION` drops the effective plan back to `floor_pass` (or `trial_trader` if
+- [x] `EXPIRATION`/`CANCELLATION` drops the effective plan back to `floor_pass` (or `trial_trader` if
       trial active) via `effective_plan`.
-- [ ] `revenuecat_webhook_secret` forwarded in `docker-compose.yml` api-alpha block →
+- [x] `revenuecat_webhook_secret` forwarded in `docker-compose.yml` api-alpha block →
       `test_config_compose_parity.py` green; webhook refuses loudly if unset in a live env.
-- [ ] Mobile: the 402 wall shows a live RC offering with real prices; a completed purchase refreshes
+- [x] Mobile: the 402 wall shows a live RC offering with real prices; a completed purchase refreshes
       entitlement **from the backend** and unlocks; "Restore purchases" works; cancel/pending/error
       handled.
-- [ ] Mobile `fromJson` re-verified against real CR084-BE JSON before audit (no silent `?? default`
+- [x] Mobile `fromJson` re-verified against real CR084-BE JSON before audit (no silent `?? default`
       masking a rename).
-- [ ] Full backend unit suite green; no room-cluster/forbidden-path edits from either lane.
-- [ ] Independent auditor `VERDICT: COMPLETE` on both sub-lanes.
+- [x] Full backend unit suite green; no room-cluster/forbidden-path edits from either lane.
+- [x] Independent auditor `VERDICT: COMPLETE` on both sub-lanes.
+
+### Alpha acceptance — CR084-ALPHA (Test Store)
+
+- [ ] Test Store catalog configured per [`rc_dashboard_config_prompt.md`](rc_dashboard_config_prompt.md):
+      products, the two entitlements, one **current** offering, and the webhook. Product/entitlement
+      IDs verified character-by-character against the catalog table above.
+- [ ] RC's "send test event" records a **2xx** (a 401 = wrong Authorization value, a 503 = our
+      secret is unset).
+- [ ] A simulated `trader_monthly` purchase from a device grants `Plan.TRADER` + 150 credits and
+      writes one `subscription_events` row — verified from the DB, not from the app's own display.
+- [ ] A SANDBOX event is **refused (403 + logged)** when `settings.env == "prod"`, and accepted
+      everywhere else.
+- [ ] `build_testflight.sh` / `build_playstore.sh` refuse a `test_…` key without `--internal-only`
+      and refuse it outright on `--production`; `publish_playstore.sh` refuses any lane but
+      `internal` while a `test_…` key is in play.
+- [ ] Two `RENEWAL`s inside one calendar month grant the allowance **once** (pins the accelerated
+      Test Store renewal behaviour).
+- [ ] Whatever the dashboard agent could **not** do is written down here — particularly whether the
+      three `credits_*` consumables exist. A 4-product offering is an acceptable alpha outcome.
+- [ ] Independent auditor `VERDICT: COMPLETE`.
+
+### Production acceptance (NOT gating alpha — tracked on DEF100)
+
+- [ ] 7 products live in App Store Connect + Play Console under the same IDs, mapped to the two
+      entitlements.
+- [ ] Apple + Google paid-app agreements and banking active.
+- [ ] Real StoreKit / Play Billing receipt validation observed end-to-end; price localisation
+      correct per region; restore-purchases verified across two real store accounts.
+- [ ] Store-driven renewal and cancellation observed against the live webhook.
+- [ ] Production builds carry `appl_…` / `goog_…` keys — no `test_…` key can reach a production
+      build (already a hard block).
 
 ---
 
 ## Lanes
 
 - **CR084-BE** → `coder.api`, `GATE: independent`, produces the entitlement/credit contract first.
+  *Integrated `f6f4cfd`, audited COMPLETE r1.*
 - **CR084-MOBILE** → `coder.mobile`, `GATE: independent`, `DEPENDS-ON: CR084-BE`.
+  *Integrated `cddf7b4`, audited COMPLETE r1.*
+- **CR084-ALPHA** → `coder.api` + build scripts, `GATE: independent` (still D-5 — money and
+  entitlements). Closes the two enforcement gaps the Test Store switch opened: the `SANDBOX`
+  guard in `webhooks.py`, and internal-track-only gating in the three build/publish scripts.
+  No mobile change — the paywall deliberately stays visually identical to production so alpha
+  pricing reactions are real; testers are briefed out-of-band that purchases are simulated.

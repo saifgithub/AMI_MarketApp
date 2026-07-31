@@ -76,6 +76,7 @@ def _event(
     event_id: str | None = None,
     product_id: str | None = None,
     entitlement_ids: list[str] | None = None,
+    environment: str | None = None,
 ) -> dict:
     ev: dict = {
         "id": event_id or str(uuid4()),
@@ -86,6 +87,8 @@ def _event(
         ev["product_id"] = product_id
     if entitlement_ids is not None:
         ev["entitlement_ids"] = entitlement_ids
+    if environment is not None:
+        ev["environment"] = environment
     return {"api_version": "1.0", "event": ev}
 
 
@@ -412,3 +415,146 @@ def test_revenuecat_secret_forwarded_in_compose():
     the api-alpha container or the feature ships dark."""
     compose = (Path(__file__).resolve().parents[3] / "docker-compose.yml").read_text()
     assert "REVENUECAT_WEBHOOK_SECRET:" in compose
+
+
+# ── 7. CR084-ALPHA — Test Store / sandbox behaviour ───────────────────────────
+#
+# Alpha runs on RevenueCat's Test Store: purchases are simulated, so every event
+# arrives with environment="SANDBOX". Those must grant outside production (that
+# is the whole alpha path) and must NOT grant in production, where a sandbox
+# transaction would hand out a paid plan for free.
+
+@pytest.fixture
+def prod_env(monkeypatch):
+    monkeypatch.setattr(settings, "env", "prod")
+
+
+def test_sandbox_purchase_grants_outside_production(client, secret):
+    """The alpha path itself: a Test Store purchase is a real grant."""
+    user_id, _ = _new_user()
+    resp = client.post(
+        "/v1/webhooks/revenuecat",
+        json=_event(
+            "INITIAL_PURCHASE", user_id,
+            entitlement_ids=["trader"], environment="SANDBOX",
+        ),
+        headers=_auth(),
+    )
+    assert resp.status_code == 200
+    assert _read_user(user_id) == ("trader", ALLOWANCE[Plan.TRADER])
+
+
+def test_sandbox_purchase_refused_in_production(client, secret, prod_env):
+    """A simulated purchase must never mint a paid entitlement in production —
+    the server-side mirror of build_testflight.sh refusing a test_… key in a
+    production build. Refused before anything is written, so no dedup row
+    blocks a legitimate retry once the misconfiguration is fixed."""
+    user_id, _ = _new_user()
+    resp = client.post(
+        "/v1/webhooks/revenuecat",
+        json=_event(
+            "INITIAL_PURCHASE", user_id,
+            entitlement_ids=["trader"], environment="SANDBOX",
+        ),
+        headers=_auth(),
+    )
+    assert resp.status_code == 403
+    assert _read_user(user_id) == ("floor_pass", 0)
+    assert _rc_rows(user_id) == []
+    assert _dedup_count() == 0
+
+
+def test_sandbox_credit_pack_refused_in_production(client, secret, prod_env):
+    user_id, _ = _new_user()
+    resp = client.post(
+        "/v1/webhooks/revenuecat",
+        json=_event(
+            "NON_RENEWING_PURCHASE", user_id,
+            product_id="credits_standard", environment="SANDBOX",
+        ),
+        headers=_auth(),
+    )
+    assert resp.status_code == 403
+    assert _read_user(user_id) == ("floor_pass", 0)
+
+
+def test_production_environment_still_grants_in_production(client, secret, prod_env):
+    """The guard keys off SANDBOX, not off being in production."""
+    user_id, _ = _new_user()
+    resp = client.post(
+        "/v1/webhooks/revenuecat",
+        json=_event(
+            "INITIAL_PURCHASE", user_id,
+            entitlement_ids=["trader"], environment="PRODUCTION",
+        ),
+        headers=_auth(),
+    )
+    assert resp.status_code == 200
+    assert _read_user(user_id) == ("trader", ALLOWANCE[Plan.TRADER])
+
+
+def test_sandbox_test_event_still_acknowledged_in_production(client, secret, prod_env):
+    """RC's dashboard "send test event" is how reachability is verified. It
+    touches no money, so the sandbox guard must not turn it into a 403 and make
+    a correctly-configured production webhook look broken."""
+    user_id, _ = _new_user()
+    resp = client.post(
+        "/v1/webhooks/revenuecat",
+        json=_event("TEST", user_id, environment="SANDBOX"),
+        headers=_auth(),
+    )
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ignored"
+
+
+def test_accelerated_renewals_grant_the_allowance_once_per_month(client, secret):
+    """Test Store subscriptions renew on accelerated timers (minutes, not a
+    month) up to 5 times. Those RENEWALs must not re-grant 150 credits each
+    time, and must not reset a balance the tester has spent down — the
+    allowance is calendar-month period-guarded in credit_service."""
+    user_id, _ = _new_user()
+    client.post(
+        "/v1/webhooks/revenuecat",
+        json=_event("INITIAL_PURCHASE", user_id, entitlement_ids=["trader"]),
+        headers=_auth(),
+    )
+    assert _read_user(user_id) == ("trader", ALLOWANCE[Plan.TRADER])
+
+    _set_balance_period(user_id, balance=40)  # tester spent 110 credits
+
+    for _ in range(3):  # three accelerated renewals, same calendar month
+        resp = client.post(
+            "/v1/webhooks/revenuecat",
+            json=_event("RENEWAL", user_id, entitlement_ids=["trader"]),
+            headers=_auth(),
+        )
+        assert resp.status_code == 200
+
+    assert _read_user(user_id) == ("trader", 40)
+
+
+def test_test_store_expiration_revokes_to_floor_pass(client, secret):
+    """After 5 accelerated renewals the Test Store cancels the subscription and
+    RC sends EXPIRATION. Deliberately left live at alpha — it is the only way
+    the revoke path gets exercised before real money."""
+    user_id, _ = _new_user()
+    client.post(
+        "/v1/webhooks/revenuecat",
+        json=_event(
+            "INITIAL_PURCHASE", user_id,
+            entitlement_ids=["trader"], environment="SANDBOX",
+        ),
+        headers=_auth(),
+    )
+    assert _read_user(user_id)[0] == "trader"
+
+    resp = client.post(
+        "/v1/webhooks/revenuecat",
+        json=_event(
+            "EXPIRATION", user_id,
+            entitlement_ids=["trader"], environment="SANDBOX",
+        ),
+        headers=_auth(),
+    )
+    assert resp.status_code == 200
+    assert effective_plan_for_user(user_id) == Plan.FLOOR_PASS

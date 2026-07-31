@@ -26,12 +26,17 @@
 #   scripts/build_testflight.sh --no-bump        # use whatever's in pubspec
 #   scripts/build_testflight.sh --no-commit      # don't auto-commit the bump
 #   scripts/build_testflight.sh --no-billing     # deliberately ship WITHOUT in-app purchase
+#   scripts/build_testflight.sh --internal-only  # required when the RC key is a test_… Test Store key
 #
 # Required env (defaults to Saiful's setup):
 #   APP_STORE_API_KEY_ID   - 10-char key ID, e.g. 44VJ5WADL2
 #   APP_STORE_API_ISSUER   - team issuer UUID
 #   AMI_API_URL_ALPHA      - backend URL baked into the build
-#   REVENUECAT_IOS_SDK_KEY - public RC SDK key for iOS, `appl_…` (CR084/DEF100).
+#   REVENUECAT_IOS_SDK_KEY - public RC SDK key for iOS (CR084/DEF100). Two shapes:
+#                            `appl_…` = the real App-specific public key (production);
+#                            `test_…` = a RevenueCat Test Store key — purchases are
+#                            SIMULATED, no ASC product needed, and distribution is
+#                            restricted to TestFlight INTERNAL groups (--internal-only).
 #                            Auto-sourced from infra/alpha.env if not exported.
 #                            Public by design — safe to embed in a shipped client.
 #
@@ -68,6 +73,7 @@ DO_UPLOAD=1
 DO_COMMIT=1
 DO_BILLING=1
 DO_PRODUCTION=0
+DO_INTERNAL_ONLY=0
 for arg in "$@"; do
   case "$arg" in
     --no-bump)    DO_BUMP=0 ;;
@@ -75,6 +81,7 @@ for arg in "$@"; do
     --no-commit)  DO_COMMIT=0 ;;
     --no-billing) DO_BILLING=0 ;;
     --production) DO_PRODUCTION=1 ;;
+    --internal-only) DO_INTERNAL_ONLY=1 ;;
     -h|--help)
       sed -n '2,/^$/p' "$0"
       exit 0
@@ -137,12 +144,36 @@ if [[ "$REVENUECAT_IOS_SDK_KEY" == test_* ]]; then
     echo "  Use the App-specific public key (appl_…) for production." >&2
     exit 1
   fi
+  if [[ "$DO_INTERNAL_ONLY" -ne 1 ]]; then
+    cat >&2 <<'EOF'
+✗ REVENUECAT_IOS_SDK_KEY is a Test Store key (test_…) and --internal-only was not passed.
+
+  RevenueCat's own rule: "Never submit an app to the App Store or Google Play
+  that is configured with a Test Store API key." This script uploads to App
+  Store Connect, so that rule applies here.
+
+  Our narrowing (CR084 "Alpha distribution constraint"): a test_… build may be
+  distributed to TestFlight **internal** groups only — never an external group,
+  which is store-reviewed and reaches people outside the team. Purchases in this
+  build are SIMULATED: buying grants Plan + credits for real in our DB while no
+  money moves.
+
+  If this build is for internal testers, say so:
+
+      scripts/build_testflight.sh --internal-only
+
+  For anything external, rebuild with the App-specific public key (appl_…) and
+  real App Store Connect products (DEF100, production phase).
+EOF
+    exit 1
+  fi
   cat <<'EOF'
 ┌──────────────────────────────────────────────────────────────────┐
 │  SIMULATED PURCHASES — RevenueCat Test Store key in this build.  │
 │  Buying grants Plan + credits for real in our DB. No money moves.│
-│  Fine for TestFlight/alpha. NEVER promote this build to the App  │
-│  Store. Rebuild with an appl_… key before any production release.│
+│  INTERNAL TestFlight GROUPS ONLY — do NOT add this build to an   │
+│  external group, and never promote it to the App Store. Rebuild  │
+│  with an appl_… key for anything beyond internal testers.        │
 └──────────────────────────────────────────────────────────────────┘
 EOF
 fi
