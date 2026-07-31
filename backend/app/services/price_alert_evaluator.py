@@ -83,11 +83,16 @@ def _implies_short_entry(alert: _AlertSnapshot, mandate: Mandate) -> bool:
 def _alert_mandate_check(alert: _AlertSnapshot, mandate: Mandate, halal_universe, classification_universe):
     """Ticker-eligibility-only reuse of check_mandate_compliance. Framed as
     a zero-context SELL so every position-sizing/cooldown/max-positions/
-    open-risk branch (each gated on `proposed.is_buy`) never engages;
-    `trade_open_timestamps=[]` (not None) dodges the one branch — the
-    over-trading brake — that isn't is_buy-gated, since an empty list can
-    never manufacture a false block (0 is never >= a real per-day/week
-    cap). Only allowlist/blocklist/halal/classification/locale run.
+    open-risk branch (each gated on `proposed.is_buy`) never engages. The
+    three CR101-BE2 context kwargs are passed explicitly (never omitted —
+    `test_cr101_be2_round2_call_site_guard.py` asserts every call site
+    names them) with values that stay inert given side=SELL:
+    `last_loss_closed_at=None` and `existing_open_risk_pct=0.0` are never
+    read (their branches are `if proposed.is_buy`); `trade_open_timestamps=[]`
+    (not None) dodges the one branch — the over-trading brake — that
+    isn't is_buy-gated, since an empty list can never manufacture a false
+    block (0 is never >= a real per-day/week cap). Only allowlist/
+    blocklist/halal/classification/locale run.
     """
     proposed = ProposedTrade(
         ticker=alert.ticker, side=Side.SELL, quantity=1, order_type=OrderType.MARKET,
@@ -99,7 +104,9 @@ def _alert_mandate_check(alert: _AlertSnapshot, mandate: Mandate, halal_universe
         mandate=mandate,
         halal_universe=halal_universe,
         classification_universe=classification_universe,
+        last_loss_closed_at=None,
         trade_open_timestamps=[],
+        existing_open_risk_pct=0.0,
     )
 
 

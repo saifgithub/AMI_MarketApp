@@ -502,6 +502,14 @@ _KNOWN_SYNC_HTTPX_COUNTS = {
     # A pin with a wrong reason is worse than a pin with none: it invites the
     # next reader to add a call on a false premise.)
     "app/services/room_runner.py": 1,
+    # CR027: notification_service.notify()'s OneSignal push attempt. Not
+    # reachable from any async route today — its only callers are
+    # scripts/send_notification.py (a standalone CLI, no event loop) and
+    # price_alert_evaluator.py's background tick, which wraps the call in
+    # `await asyncio.to_thread(notify, ...)`. A future consumer (CR095/
+    # CR109/BL11/Room-verdict) calling notify() straight from an async
+    # route MUST wrap it the same way — that isn't enforced here.
+    "app/services/notification_service.py": 1,
 }
 
 
