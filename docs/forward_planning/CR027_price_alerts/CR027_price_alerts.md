@@ -34,10 +34,14 @@ consumer**, not a one-off alert feature that happens to use OneSignal.
 - **A15b — Android/FCM credential for OneSignal. NEW, found during this expansion.**
   APNs is Apple-only; Android-GMS push goes through **Firebase Cloud Messaging**, a
   separate credential OneSignal also requires — `project_plan.md`'s original A15
-  line named only the APNs half. Two options, Saiful's call:
+  line named only the APNs half. **This is a OneSignal-dashboard-side credential,
+  not an app dependency** — confirmed by OneSignal's own Flutter integration prompt
+  (§2.1 below): the app itself must **not** add the Google Services Gradle plugin,
+  since OneSignal self-registers for FCM; what's actually needed is entering an FCM
+  Server Key/Service Account into OneSignal's Settings → Push & In-App → Google
+  Android (FCM). Two options for *that* credential, Saiful's call:
   - **Bring your own Firebase project** — Server Key/Service Account JSON entered
-    into the OneSignal dashboard, `google-services.json` bundled into
-    `mobile/android/app/`. Own quota, own Firebase console visibility.
+    into the OneSignal dashboard. Own quota, own Firebase console visibility.
   - **OneSignal's auto-generated Firebase project** — zero external setup, shared
     quota. Recommended for alpha; revisit before Beta scale.
 - **Platform runtime permission, not a cert but easy to miss:**
@@ -88,11 +92,31 @@ maps `deep_link.route` to a Flutter route (`open_holding_detail`,
 `open_journal_entry`, `open_room_verdict`, `open_lesson`, `open_game_close`, ...) —
 one table, not one `if` per feature.
 
-### iOS SDK integration — build prompt (Saiful, 2026-07-31, ready to run)
+### 2.1 SDK integration — build prompts (Saiful, 2026-07-31, ready to run)
 
 OneSignal App ID (already provisioned, see §1): **`3c2020b6-d8b0-493f-b0e3-5d6ede868d7b`**
 
-Hand this verbatim to whoever builds the iOS side of A16:
+**Primary — run this one first.** Covers the actual app: adds `onesignal_flutter` to
+`pubspec.yaml`, `OneSignal.initialize()` before `runApp()` (permission is **not**
+requested at init — only when the user taps the verification dialog), the native
+iOS side (Notification Service Extension, App Group entitlement, `aps-environment`,
+Background Modes), **and** the native Android side (`minSdkVersion` 21+/
+`compileSdkVersion` 33+ check, `INTERNET` permission, explicitly **no** Google
+Services Gradle plugin — confirms the A15b note above), plus a push-subscription
+verification dialog (shown once) and a centralized `OneSignalService` wrapper —
+which is the natural home for the device-token login/logout lifecycle §2 already
+specs.
+
+> Integrate the OneSignal SDK into this codebase.
+>
+> Follow the instructions at:
+> https://raw.githubusercontent.com/OneSignal/sdk-ai-prompts/main/docs/flutter/ai-prompt.md
+>
+> App ID: 3c2020b6-d8b0-493f-b0e3-5d6ede868d7b
+
+**Secondary — native-iOS reference only, largely subsumed by the prompt above.**
+Scoped purely to the native `mobile/ios/` Xcode project; keep on hand only if the
+Flutter prompt's iOS section needs deeper native-level troubleshooting.
 
 > Integrate the OneSignal SDK into this codebase.
 >
@@ -100,15 +124,6 @@ Hand this verbatim to whoever builds the iOS side of A16:
 > https://raw.githubusercontent.com/OneSignal/sdk-ai-prompts/main/docs/ios/ai-prompt.md
 >
 > App ID: 3c2020b6-d8b0-493f-b0e3-5d6ede868d7b
-
-**Context for whoever runs it:** this app is Flutter, not native iOS — the prompt
-above is scoped to the native `mobile/ios/` Xcode project (Notification Service
-Extension, App Group entitlement, `aps-environment`, background modes in
-`Info.plist`), which the Dart-side `onesignal_flutter` plugin doesn't configure for
-you. Check OneSignal's Flutter-specific prompt in the same repo
-(`docs/flutter/ai-prompt.md`) for the `pubspec.yaml` + `OneSignal.initialize()` side
-before treating this as the whole iOS integration. Android's equivalent (FCM
-credential wiring, `google-services.json`) is A15b/§1, not this prompt.
 
 ---
 
