@@ -49,8 +49,6 @@ _NOT_FORWARDED: dict[str, str] = {
     # Voice/TTS + SMS are unshipped surfaces (A13/A14/A17, CR031 pending).
     "twilio_account_sid": "SMS not shipped",
     "twilio_auth_token": "SMS not shipped",
-    "onesignal_app_id": "push not shipped (CR027 gated on A15/A16)",
-    "onesignal_rest_key": "push not shipped (CR027 gated on A15/A16)",
     "azure_speech_key": "voice not shipped (CR031)",
     "azure_speech_region": "voice not shipped (CR031)",
     "elevenlabs_api_key": "voice not shipped (CR031)",

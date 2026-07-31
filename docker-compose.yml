@@ -140,6 +140,12 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
       POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
+      # OneSignal push (CR027). App ID is client-side too (SDK init); REST
+      # key is backend-only, used to call OneSignal's send API. notify()
+      # still writes the notifications row and degrades loudly (a logged
+      # warning) if either is ever unset.
+      ONESIGNAL_APP_ID: ${ONESIGNAL_APP_ID:-}
+      ONESIGNAL_REST_KEY: ${ONESIGNAL_REST_KEY:-}
       # OIDC audiences (DEF038: these lived in .env but were never
       # forwarded here, so the container verified Google tokens against
       # an empty audience list). CSV or single bare value — config.py
