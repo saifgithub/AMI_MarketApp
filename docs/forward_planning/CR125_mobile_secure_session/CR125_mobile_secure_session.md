@@ -3,6 +3,9 @@
 > **BREAKING.** Changes the token format and storage; every installed build must
 > re-authenticate on update. Requires a mobile release. Acceptable per Saiful.
 
+> **Grouped (Saiful, 2026-07-31): decided together with CR123 (umbrella) + CR124
+> (melehost/compose hardening)**, not separately.
+
 ## What
 
 Move the mobile bearer off plaintext storage and make tokens expirable and revocable.

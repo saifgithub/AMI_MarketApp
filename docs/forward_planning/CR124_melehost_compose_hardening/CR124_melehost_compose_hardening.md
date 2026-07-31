@@ -1,5 +1,8 @@
 # CR124 — melehost / compose hardening
 
+> **Grouped (Saiful, 2026-07-31): decided together with CR123 (umbrella) + CR125
+> (mobile secure session)**, not separately.
+
 ## What
 
 Close the LAN-exposed datastore and the container-privilege gaps on melehost. Rolls up

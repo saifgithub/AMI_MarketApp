@@ -1,5 +1,10 @@
 # CR123 — Security-hardening program for beta/launch
 
+> **Grouped (Saiful, 2026-07-31): CR123 + CR124 + CR125 move and get decided together**,
+> not as three separate items — CR123 is the umbrella, CR124 (melehost/compose
+> hardening) and CR125 (mobile secure session) are its two sub-CRs, already scoped
+> "Under CR123" in their own docs.
+
 ## What
 
 Umbrella CR for the deepened security review of 2026-07-30
