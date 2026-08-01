@@ -101,7 +101,7 @@ def test_notify_posts_expected_payload(monkeypatch):
     assert captured["json"]["include_external_user_ids"] == [str(user_id)]
     assert captured["json"]["headings"] == {"en": "Price Alert: AAPL"}
     assert captured["json"]["data"] == {"route": "open_holding_detail", "ticker": "AAPL"}
-    assert captured["headers"]["Authorization"] == "Basic rest-key"
+    assert captured["headers"]["Authorization"] == "Key rest-key"
 
 
 def test_notify_per_minute_rate_limit_still_writes_row(monkeypatch):

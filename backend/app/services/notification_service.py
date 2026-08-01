@@ -110,7 +110,7 @@ def _attempt_push(
                 "data": deep_link,
             },
             headers={
-                "Authorization": f"Basic {settings.onesignal_rest_key}",
+                "Authorization": f"Key {settings.onesignal_rest_key}",
                 "Content-Type": "application/json",
             },
             timeout=_TIMEOUT,
