@@ -175,10 +175,77 @@ REGISTER_LEXICON = (
     "heteroskedastic", "JPM", "EWMA",
 )
 
-# Rev 4 §LLM prompt contract pt 5(c) — the fixed constants list checked in
-# beside SUFFICIENCY. Rev 4's own list is open ("citation years, …"); M06
-# extends THIS tuple, never a local one.
-VALIDATOR_FIXED_TOKENS = ("252", "95", "1.96", "500", "M11", "M12")
+# Rev 4 §LLM prompt contract pt 5(c) — the fixed constants list checked in beside
+# the sufficiency block. Rev 4's own list is open ("citation years, …"); M06
+# extends THESE sets, never a local one. Scale-aware, never unioned: the union
+# was MEASURED to false-accept "Your beta is 62." on a book whose 0.62 lives in
+# the percent set.
+VALIDATOR_FIXED_RAW = {
+    "1952", "2004", "2008",      # citation years: Markowitz; Ledoit & Wolf; Choueifaty & Coignard
+    "252", "504", "126", "21",   # annualisation, data window, sufficiency floor, trading-day month
+    "1.96", "1.645", "0.97",     # z for a 95% CI, z for the 1-in-20 month, λ
+    "500",                       # "S&P 500" tokenizes as 500
+    "30", "4", "3", "6", "2",    # fat-tail block: κ≈30 crash bound, the 4.0× factor, the κ 3–6 range, §5.3.2's tail
+    "5.3",                       # "§5.3.2" tokenizes as 5.3 and 2
+    "1", "20",                   # "1-in-20 bad month"
+    "10", "10000",               # $10k / $10,000 starting capital
+    "11", "12",                  # the M11 / M12 BOK lesson cross-reference
+    "2020", "2022",              # scenario-episode display years
+    "0",                         # "no commissions, spreads, or taxes" adjacents
+}
+VALIDATOR_FIXED_PCT = {
+    "95",                        # 95% CI
+    "40",                        # R1's own template literal, "more than 40%"
+    "97",                        # Barber & Odean's zero-cost line
+    "2.0", "2.5", "10", "13",    # the fat-tail honesty range: 2.0–2.5pp = 10–13%
+}
+
+# Rev 4 validator category (b): which slots of which rule are NUMBERS, and at
+# which scale. A slot not listed here is text and is never registered as one.
+RULE_SLOT_SCALE = {
+    "R0": {"cap": "pct", "weight": "pct"},
+    "R1": {"risk_share": "pct", "weight": "pct", "threshold_mention": "pct"},
+    "R2": {"n": "raw", "dr2": "raw"},
+    "R2b": {"rho": "raw"},
+    "R3": {"beta": "raw", "r2_pct": "pct", "window": "raw"},
+    "R4": {"cash": "pct"},
+    "R5": {"covered": "pct"},
+}
+
+# Rev 4 §F5's speech-act pin, made structural. The publisher's exclusion is
+# unavailable to us (15 U.S.C. §80b-2(a)(11)(D); Lowe v. SEC), worldwide store
+# distribution puts the FCA/MiFID II/CMA/SC perimeters in scope at alpha, and
+# the live site states the product "does not and will not give investment
+# advice" — so this has to hold on EVERY path, including the deterministic one.
+# Prompt instructions are not controls (CR038); these are.
+F5_FORBIDDEN_IMPERATIVES = (
+    "buy", "sell", "trim", "cut", "reduce", "add", "increase", "decrease",
+    "rebalance", "hedge", "diversify", "exit", "close", "open", "rotate",
+    "shift", "move", "switch", "take", "avoid",
+)
+F5_FORBIDDEN_PHRASES = (
+    "you should", "you must", "you need to", "we recommend", "we suggest",
+    "consider selling", "consider buying", "consider trimming",
+)
+
+# Rev 4 §F3's verbatim pin. One constant, no forked copies — the whole point is
+# that the same sentence appears in every Finding forever.
+# retranslate:[ar,ms]
+NON_STATIONARITY_CAVEAT = (
+    "These estimates describe the window just past. In market stress, "
+    "correlations between holdings rise sharply — diversification measured in "
+    "calm markets can overstate the protection available in a crisis."
+)
+
+# Verbatim from mobile/lib/l10n/app_en.arb `disclaimerShort`. Line 1 of every
+# Finding's head block, and the line the archived journal entry carries forever.
+# retranslate:[ar,ms]
+DISCLAIMER_SHORT = "Educational simulation. Not investment advice."
+
+# Rev 4 journal storage plan — the wire value. M08 lands the EntryType member and
+# the Dart mapping in one commit; until then M06 resolves it lazily and the call
+# raises loudly rather than writing an entry no client can name (DEF210).
+PORTFOLIO_HEALTH_ENTRY_TYPE = "portfolio_health_analysis"
 
 # ── Bad-print detector params (Rev 4 data-hygiene gate) ─────────────────────
 #

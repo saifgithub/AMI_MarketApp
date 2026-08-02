@@ -11,6 +11,7 @@ enum JournalEntryType {
   lessonComplete,
   agentUnlock,
   dailyChallenge,
+  portfolioHealthAnalysis,
 }
 
 extension JournalEntryTypeJson on JournalEntryType {
@@ -34,6 +35,8 @@ extension JournalEntryTypeJson on JournalEntryType {
         return 'agent_unlock';
       case JournalEntryType.dailyChallenge:
         return 'daily_challenge';
+      case JournalEntryType.portfolioHealthAnalysis:
+        return 'portfolio_health_analysis';
     }
   }
 
@@ -57,6 +60,8 @@ extension JournalEntryTypeJson on JournalEntryType {
         return JournalEntryType.agentUnlock;
       case 'daily_challenge':
         return JournalEntryType.dailyChallenge;
+      case 'portfolio_health_analysis':
+        return JournalEntryType.portfolioHealthAnalysis;
     }
     return null;
   }

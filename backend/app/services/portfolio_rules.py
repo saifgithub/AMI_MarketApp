@@ -76,7 +76,7 @@ _SECTOR_EPSILON = 1e-9
 RULE_TEMPLATES: dict[str, str] = {
     "R0": (
         "Your mandate caps a single {scope} at {cap}%. {name} is at {weight}% "
-        "of invested value today."
+        "of your total portfolio value today."
     ),
     "R1": (
         "When a single position accounts for more than 40% of a portfolio's "
@@ -207,23 +207,35 @@ def evaluate_rules(
     sector_cap_frac = float(sector_concentration_cap(mandate))
     sector_cap_pct = sector_cap_frac * 100.0
 
+    # R0 is the ONE deliberate exception to the SHARE/LEVEL rule: total-value
+    # weights, not invested-sleeve. The gate's own denominator is
+    # `position_pct(market_value, portfolio_value)` over TOTAL portfolio value,
+    # so an invested-sleeve R0 fires where the gate does not — which is exactly
+    # the shown-vs-enforced contradiction R0 exists to remove, inverted.
+    # Measured on a $10k book with 50% cash: the gate reported 0 violations and
+    # an invested-sleeve R0 reported 3.
+    invested_fraction = max(0.0, 1.0 - cash_pct_total / 100.0)
+
+    def _total_value_pct(holding: HoldingInput) -> float:
+        return holding.invested_weight_pct * invested_fraction
+
     breaches: list[dict] = []
     for holding in holdings:
         # Strict `>`, mirroring the floor's own `position_pct > cap` test — a
         # holding exactly AT its cap is compliant at the trade ticket and must
         # be compliant here too.
-        if holding.invested_weight_pct > name_cap:
+        if _total_value_pct(holding) > name_cap:
             breaches.append({
                 "scope": "name",
                 "cap_pct": name_cap,
                 "name": holding.ticker,
-                "weight_pct": round(holding.invested_weight_pct, 1),
+                "weight_pct": round(_total_value_pct(holding), 1),
             })
 
     by_sector: dict[str, float] = {}
     for holding in holdings:
         by_sector[holding.sector] = (
-            by_sector.get(holding.sector, 0.0) + holding.invested_weight_pct
+            by_sector.get(holding.sector, 0.0) + _total_value_pct(holding)
         )
     for sector, weight_pct in sorted(by_sector.items()):
         # The unclassified bucket never breaches — it is our ignorance about the
@@ -244,8 +256,10 @@ def evaluate_rules(
         {
             "breaches": breaches,
             "etf_disclosure": bool(contains_etfs),
+            # Machine-readable, so no downstream sentence can silently mix bases.
+            "basis": "total_value",
         },
-        ["invested_weights", "sector_weights"],
+        ["total_value_weights", "sector_weights"],
     ))
 
     # ── R1 — concentration ──────────────────────────────────────────────────

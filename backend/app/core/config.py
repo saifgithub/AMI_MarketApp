@@ -140,6 +140,12 @@ class Settings(BaseSettings):
     # When false (default), the legacy deterministic random walk runs.
     use_real_market_data: bool = False
 
+    # CR136 M06. Whether the Portfolio Health Finding may be narrated by the
+    # LLM at all. False = the deterministic rendering ships, which is a
+    # complete, correct report on its own — the LLM only ever rewrites prose
+    # the engine already produced, and every failure path falls back to it.
+    portfolio_health_llm_enabled: bool = True
+
     # CR136 M03. Tick cadence for the daily portfolio-value snapshot job.
     # Idempotent per trading day, so hourly only bounds post-restart catch-up
     # delay to <= 1h — it does not mean hourly rows.

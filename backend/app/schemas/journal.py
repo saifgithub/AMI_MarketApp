@@ -32,6 +32,7 @@ class EntryType(str, Enum):
     LESSON_COMPLETE = "lesson_complete"
     AGENT_UNLOCK = "agent_unlock"
     DAILY_CHALLENGE = "daily_challenge"
+    PORTFOLIO_HEALTH_ANALYSIS = "portfolio_health_analysis"
 
 
 class Outcome(str, Enum):

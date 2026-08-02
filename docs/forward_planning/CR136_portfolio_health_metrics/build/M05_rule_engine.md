@@ -183,8 +183,18 @@ trade gate uses"; clear: "mirror of fire"; template:
 per-sector, sector invested weight (sum of member holdings'
 `invested_weight_pct`, dropped holdings included — a dropped-for-data holding
 still counts toward its cap) vs `sector_concentration_cap(mandate) × 100` with
-the `1e-9` fraction-epsilon mirrored. **Basis is invested-sleeve weight, per Rev
-4's fire line and template.** Since invested weight ≥ total-value weight
+the `1e-9` fraction-epsilon mirrored. **Basis is TOTAL-VALUE weight.**
+
+> **AMENDED 2026-08-02 (AT:R66), after the M05 audit.** This section originally
+> said invested-sleeve, and the shipped code followed it. That is wrong: Rev 4's
+> R0 row and build/README.md's seam register ("R0 is total-value basis", already
+> folded in as an amendment to Rev 4 itself) both pin TOTAL-VALUE, and the
+> README overrides the module doc. Measured on a $10,000 book with 50% cash and
+> a 35% single-name cap: the trade gate reported ZERO violations while an
+> invested-sleeve R0 reported three — the shown-vs-enforced split CR046 closed,
+> inverted, with the report accusing the user of a breach their own trade ticket
+> denies. The agreement test could not catch it because it ran only at cash = 0,
+> the single point where the two bases coincide; a cash > 0 case now exists. Since invested weight ≥ total-value weight
 whenever cash ≥ 0, R0 is a conservative superset of the gate's total-value
 check: it can never stay silent on a book the gate would flag, and at cash = 0
 the two bases coincide exactly — which is where the agreement acceptance test

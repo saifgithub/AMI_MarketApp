@@ -189,6 +189,7 @@ def test_r0_carries_the_etf_disclosure_only_when_it_fires(
     r0 = _by_id(results)["R0"]
     assert r0["fired"] is True
     assert r0["slots"]["etf_disclosure"] is True
+    assert r0["slots"]["basis"] == "total_value"
 
     results, _ = _evaluate(
         mandate, holdings=[_holding("SPY", 10.0)], contains_etfs=True,
@@ -562,3 +563,69 @@ _MANDATE: Mandate = None  # type: ignore[assignment]
 def _bind_mandate(base_mandate: Mandate) -> None:
     global _MANDATE
     _MANDATE = base_mandate.model_copy(update={"single_name_cap_pct": 100.0})
+
+
+def test_r0_agrees_with_the_gate_on_a_book_holding_CASH(
+    base_mandate: Mandate,
+) -> None:
+    """The case the cash=0 agreement test structurally cannot catch, and the one
+    that matters: R0 is the ONE deliberate exception to the SHARE/LEVEL rule —
+    total-value weights, not invested-sleeve, because the gate's own denominator
+    is the whole portfolio.
+
+    Measured before this was fixed: a $10k book with 50% cash had the trade gate
+    reporting ZERO violations while an invested-sleeve R0 reported three. That is
+    the shown-vs-enforced split CR046 closed, inverted — the report accusing the
+    user of a breach their own trade ticket denies."""
+    from datetime import datetime, timezone
+
+    from app.schemas.trade import Holding
+
+    mandate = base_mandate.model_copy(update={"single_name_cap_pct": 35.0})
+    # $10,000 total: $5,000 cash, AAA $2,000, BBB $3,000.
+    # Total-value weights 20% / 30% — both compliant.
+    # Invested-sleeve weights 40% / 60% — both would falsely breach.
+    holdings = [
+        _holding("AAA", 40.0, sector="Tech"),
+        _holding("BBB", 60.0, sector="Health"),
+    ]
+    results, _ = _evaluate(mandate, holdings=holdings, cash_pct_total=50.0)
+    r0 = _by_id(results)["R0"]
+
+    gate = check_holdings_against_mandate(
+        holdings=[
+            Holding(ticker="AAA", quantity=20.0, avg_cost=100.0,
+                    opened_at=datetime(2026, 1, 5, tzinfo=timezone.utc)),
+            Holding(ticker="BBB", quantity=30.0, avg_cost=100.0,
+                    opened_at=datetime(2026, 1, 5, tzinfo=timezone.utc)),
+        ],
+        marks={"AAA": 100.0, "BBB": 100.0},
+        portfolio_value=10_000.0,
+        current_drawdown_pct=0.0,
+        mandate=mandate,
+    )
+    gate_flagged = {
+        v.ticker for v in gate.violations
+        if any("cap" in issue.lower() for issue in v.issues)
+    }
+    assert gate_flagged == set(), "vacuity guard — the gate must be silent here"
+    assert r0["fired"] is False, (
+        "R0 fired on a book the trade ticket finds fully compliant — the "
+        "contradiction R0 exists to remove, inverted"
+    )
+
+    # ...and it still fires where the gate DOES, on the same book.
+    over = [_holding("AAA", 80.0, sector="Tech"), _holding("BBB", 20.0, sector="Health")]
+    results, _ = _evaluate(mandate, holdings=over, cash_pct_total=50.0)
+    r0 = _by_id(results)["R0"]
+    assert r0["fired"] is True
+    breach = next(b for b in r0["slots"]["breaches"] if b["scope"] == "name")
+    assert breach["name"] == "AAA"
+    assert breach["weight_pct"] == 40.0, "quoted on the total-value basis"
+
+
+def test_r0_declares_its_basis_and_says_so_in_words() -> None:
+    """Rev 4: R0's `basis` field reads total_value and its copy says "of your
+    total portfolio value", so no sentence silently mixes bases."""
+    assert "of your total portfolio value today" in RULE_TEMPLATES["R0"]
+    assert "of invested value" not in RULE_TEMPLATES["R0"]
