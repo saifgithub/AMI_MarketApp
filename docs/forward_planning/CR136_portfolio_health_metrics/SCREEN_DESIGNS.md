@@ -253,3 +253,71 @@ requires `app_en.arb` + `app_ar.arb` + `app_ms.arb` parity.
 - A journal entry of the new type renders its five sections; a golden pins that
   it is **not** an empty block.
 - `flutter analyze` clean; l10n parity green across en/ar/ms.
+
+---
+
+## Rev 2 (build-final) amendments — 2026-08-02, integrates Rev 4 of the CR
+
+The sections above are kept as written (audit trail). The following
+amendments **supersede** them where they conflict; they carry the measured
+F9/F19/F20 fixes and the Rev 4 decisions. M09 builds from the base doc PLUS
+this section.
+
+1. **Bar-chart basis (supersedes the §07a caption).** Both bars are
+   **invested-sleeve**: solid = Euler risk share, outlined = invested money
+   share `wᵢ/(1−cash)`. Measured rationale: on the total basis the headline
+   gap widens purely with cash (+29.3pp → +59.3pp across 0→60% cash for an
+   identical sleeve) — a cash artefact read as a statement about the holding.
+   On the invested basis the gap is exactly cash-invariant. Risk shares are
+   numerically identical on either basis (verified to 3e-16), so no
+   recomputation. **New mandatory caption:** "Shares of invested risk and
+   invested money; cash is shown on its own line. Not a forecast and not a
+   return." Cash gets its own line beneath the bars (weight only, no risk
+   bar — its risk share is exactly 0).
+2. **Bar-chart edge cases (new, must be defined before build):**
+   - **Negative risk share** (a diversifier/hedge — measured −7.04% on a
+     plausible long-only book): draw from the shared origin leftward into a
+     reserved negative gutter, same solid treatment, caption note "a negative
+     share means this holding offset risk over the window."
+   - **Share > 100%** (measured 126.9% on a hedged two-name book): the axis
+     extends to the max share; the axis end-label shows the actual maximum —
+     never clamp or truncate a drawn-to-scale bar (`data_viz §2`).
+   - **Invested value = 0** (100% cash): the bar block is absent entirely;
+     the card shows the cash line + the empty state — never 0/0.
+3. **Weight-concentration tile**: computed on the **invested sleeve** and
+   labelled "INVESTED WEIGHT CONCENTRATION" (total-value HHI is non-monotone
+   in cash — measured eff-N 2.63→3.53→3.37→2.38 across 0/20/40/60% cash).
+   When `contains_etfs`, the tile carries the fixed ETF-overlap disclosure
+   chip ("ETF overlap not counted").
+4. **Disclosures move to the HEAD (supersedes §21's foot placement).** The
+   Finding's disclosure block renders first, before §F1, and is stored in the
+   journal payload: `disclaimerShort`, gross-of-fees + zero-cost sim,
+   backcast line, window + estimator line, non-stationarity caveat. The foot
+   may repeat them; the head placement is the requirement (F19 — "limitations
+   are disclosed before the reader finds them").
+5. **Estimator wording in any UI copy**: the window subtitle becomes
+   "≈66-DAY EFFECTIVE WINDOW · HOLDINGS-BASED" (EWMA λ=0.97; the rectangular
+   "126 TRADING DAYS" claim no longer describes the estimator). The 126
+   figure remains only in sufficiency copy ("needs 126 trading days of
+   history").
+6. **§F5 rename + speech act**: section title is **"What the numbers point
+   to"** (was "Actionable recommendations"). Templates are
+   conditional-educational — no imperatives on the user's tickers, no
+   severity bands. String keys change accordingly
+   (`findingSectionF5` label text; rule templates per Rev 4's table —
+   R0/R2b added, R1/R3/R4 reworded).
+7. **Plain-language R²**: §F1/§F2/§F5 never show "R²" — the flag renders as
+   "the market explains only {x}% of this book's day-to-day moves". "R²"
+   appears only inside the §F3 ledger.
+8. **Insufficient-state copy names OUR limit when that is the cause** (F20):
+   "price history available to AMI's engine covers {n} days; 126 needed" —
+   never "your oldest holding has {n} days" when the fetch depth is the
+   binding constraint.
+9. **Gate CTA states (new — Access gating, Rev 4)**: the card footer carries
+   the Finding entry point in one of: generate (available) / trial chip
+   ("{k} of {n} trial findings left" or "{d} days left") / daily-cap state /
+   upgrade state (plan-gated). Tiles themselves are never gated. Shapes come
+   from M07's gate-status payload.
+10. **Golden-test note**: the base doc's golden-test acceptance stands, with
+    the three new edge-case fixtures (negative share, >100% share, 100%
+    cash) added to the five card states.
