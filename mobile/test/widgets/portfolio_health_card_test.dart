@@ -4,8 +4,7 @@ import 'dart:async';
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/portfolio_health.dart';
-import 'package:ami_trade/screens/sim/portfolio_health_finding_screen.dart'
-    show healthFadeKey;
+import 'package:ami_trade/widgets/portfolio_health/health_chrome.dart';
 import 'package:ami_trade/services/billing/purchase_models.dart';
 import 'package:ami_trade/services/billing/purchase_service.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
@@ -133,6 +132,19 @@ bool _rendersAMetricValue(WidgetTester tester) =>
     tester.widgetList<Text>(find.byType(Text)).any((t) =>
         t.style?.fontSize == AmiTypography.dataMd.fontSize &&
         t.style?.fontFamily == AmiTypography.dataMd.fontFamily);
+
+
+/// A populated fixture whose top-3 risk rows are exactly [rows].
+Map<String, dynamic> _blocksWithRisk(List<Map<String, dynamic>> rows) {
+  final blocks = defaultBlocks();
+  blocks['risk_contribution'] = blockJson(
+    'risk_contribution',
+    value: rows.first['risk_share'] as double,
+    basis: 'invested_sleeve',
+    extensions: {'per_holding': rows},
+  );
+  return blocks;
+}
 
 void main() {
   group('1 — populated', () {
@@ -617,6 +629,146 @@ void main() {
           reason: 'never 0/0 — defence in depth behind the no_holdings path');
       expect(find.text('RISK VS MONEY'), findsNothing);
       expect(find.text('CASH · ${_iso('100')}% OF TOTAL BOOK'), findsOneWidget);
+    });
+  });
+
+  group('13 — findings from the M09 audit', () {
+    testWidgets('an all-positive book draws no negative caveat', (tester) async {
+      await _pump(tester);
+      await tester.tap(find.text('RISK VS MONEY'));
+      await tester.pump();
+      expect(
+        find.text('A negative share means this holding offset risk over the '
+            'window.'),
+        findsNothing,
+        reason: 'every share in the default fixture is positive',
+      );
+    });
+
+    testWidgets('a drawn negative share carries its caveat', (tester) async {
+      await _pump(
+        tester,
+        health: healthFixture(
+          blocks: _blocksWithRisk(const [
+            {'ticker': 'NVDA', 'invested_weight': 0.50, 'risk_share': 0.612},
+            {'ticker': 'AAPL', 'invested_weight': 0.30, 'risk_share': 0.458},
+            {'ticker': 'TLT', 'invested_weight': 0.20, 'risk_share': -0.0704},
+          ]),
+        ),
+      );
+      await tester.tap(find.text('RISK VS MONEY'));
+      await tester.pump();
+      expect(
+        find.text('A negative share means this holding offset risk over the '
+            'window.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('-7%'), findsOneWidget,
+          reason: 'the caveat explains a number the reader can see');
+    });
+
+    testWidgets('a negative share that rounds to 0% draws no caveat',
+        (tester) async {
+      await _pump(
+        tester,
+        health: healthFixture(
+          blocks: _blocksWithRisk(const [
+            {'ticker': 'NVDA', 'invested_weight': 0.50, 'risk_share': 0.700},
+            {'ticker': 'AAPL', 'invested_weight': 0.30, 'risk_share': 0.304},
+            {'ticker': 'TLT', 'invested_weight': 0.20, 'risk_share': -0.004},
+          ]),
+        ),
+      );
+      await tester.tap(find.text('RISK VS MONEY'));
+      await tester.pump();
+      expect(
+        find.text('A negative share means this holding offset risk over the '
+            'window.'),
+        findsNothing,
+        reason: 'the row prints 0%; a caveat about a negative number the '
+            'reader cannot see explains nothing',
+      );
+    });
+
+    testWidgets('a status this build does not know never renders as a result',
+        (tester) async {
+      for (final status in const ['', 'refused_stale_data', 'partially_ok']) {
+        final json = healthJson()..['status'] = status;
+        (json['metrics'] as Map)['status'] = status;
+        await _pump(tester, health: PortfolioHealth.fromJson(json));
+
+        expect(find.byType(AccentCard), findsNothing,
+            reason: 'status "$status" is not one of the three pinned values, '
+                'and a wire divergence must not wear the visual grammar of a '
+                'real measurement (CR040)');
+        expect(find.text('VOLATILITY'), findsNothing);
+        expect(
+          find.textContaining('does not recognise'),
+          findsOneWidget,
+          reason: 'the card says what happened rather than showing nothing',
+        );
+      }
+    });
+
+    testWidgets('a low-R² beta says what it means and never prints "R²"',
+        (tester) async {
+      final blocks = defaultBlocks();
+      blocks['beta'] = blockJson(
+        'beta',
+        value: 0.94,
+        lowExplanatoryPower: true,
+        extensions: {'r_squared': 0.31},
+      );
+      await _pump(tester, health: healthFixture(blocks: blocks));
+
+      expect(find.text('BETA'), findsOneWidget);
+      expect(
+        find.text('Market explains ${_iso('31')}% of daily moves'),
+        findsOneWidget,
+      );
+      final copy = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data ?? '')
+          .join(' ');
+      expect(copy.contains('R²'), isFalse,
+          reason: 'amendment 7: the card is the §F1 register — the literal '
+              'glyph belongs in the Finding, not on a tile');
+    });
+
+    testWidgets('a high-R² beta carries no explanatory note', (tester) async {
+      await _pump(tester);
+      expect(find.textContaining('Market explains'), findsNothing,
+          reason: 'the default fixture has low_explanatory_power false');
+    });
+
+    testWidgets('an ETF in the book discloses what AMI did not look through',
+        (tester) async {
+      final blocks = defaultBlocks();
+      blocks['weight_concentration'] = blockJson(
+        'weight_concentration',
+        value: 0.2650,
+        basis: 'weights',
+        backcast: false,
+        containsEtfs: true,
+        extensions: {'effective_n': 3.8, 'holdings_count': 6},
+      );
+      await _pump(tester, health: healthFixture(blocks: blocks));
+      expect(find.text('ETF OVERLAP NOT COUNTED'), findsOneWidget);
+    });
+
+    testWidgets('no ETF, no chip', (tester) async {
+      await _pump(tester);
+      expect(find.text('ETF OVERLAP NOT COUNTED'), findsNothing);
+    });
+
+    testWidgets('no benchmark, no comparison line', (tester) async {
+      await _pump(tester, health: healthFixture(benchmarkVolAnn: null));
+      expect(find.text('VOLATILITY'), findsOneWidget,
+          reason: 'the tile itself does not depend on the benchmark');
+      expect(find.textContaining('S&P 500 \u2066'), findsNothing,
+          reason: 'no comparison exists, so none is drawn — never "null%". '
+              'The BETA tile\'s own unit line also says "S&P 500", so the '
+              'assertion keys on the interpolated number that follows it');
     });
   });
 }

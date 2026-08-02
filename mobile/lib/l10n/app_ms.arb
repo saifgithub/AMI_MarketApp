@@ -649,6 +649,7 @@
     "portfolioHealthMockRefusalBody": "AMI measures portfolio risk from real price history only. It will not compute these numbers from simulated prices.",
     "portfolioHealthEmptyTitle": "NO HOLDINGS TO MEASURE",
     "portfolioHealthErrorBody": "AMI's engine did not respond. Tap to retry.",
+    "portfolioHealthUnknownStatusBody": "AMI's engine returned a result this version of the app does not recognise. Tap to retry.",
     "portfolioHealthCtaFinding": "FULL FINDING",
     "portfolioHealthTrialChip": "{k} of {n} trial Findings left · {d} days",
     "portfolioHealthDailyCapNote": "{used} of {cap} Findings used today. Available again tomorrow.",

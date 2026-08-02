@@ -10,6 +10,7 @@ import 'package:ami_trade/state/portfolio_health_providers.dart';
 import 'package:ami_trade/state/purchase_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
+import 'package:ami_trade/widgets/portfolio_health/health_chrome.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
@@ -200,15 +201,33 @@ void main() {
             'is off.'),
         findsOneWidget,
       );
-      final border = tester
-          .widgetList<Container>(find.byType(Container))
-          .map((c) => c.decoration)
-          .whereType<BoxDecoration>()
-          .map((d) => d.border)
-          .whereType<Border>()
-          .map((b) => b.top.color)
-          .toSet();
-      expect(border.contains(AmiColors.hexAmber), isTrue);
+      final panel = tester.widget<HealthDashedBox>(find.byType(HealthDashedBox));
+      expect(panel.borderColor, AmiColors.hexAmber,
+          reason: 'the engine refusing is a real exclusion');
+    });
+
+    testWidgets('every refusal panel wears the dashed frame', (tester) async {
+      for (final detail in const [
+        {'code': 'portfolio_health_unavailable'},
+        {'code': 'portfolio_health_gate_closed'},
+        {'code': 'portfolio_health_daily_cap_reached'},
+        {'code': 'something_new'},
+      ]) {
+        await _pump(tester, error: _refusal(409, detail));
+        expect(find.byType(HealthDashedBox), findsOneWidget,
+            reason: 'none of these four panels is a report, and the frame says '
+                'so before the copy does (${detail['code']})');
+      }
+    });
+
+    testWidgets('a gate panel is slate, never amber', (tester) async {
+      await _pump(
+        tester,
+        error: _refusal(402, {'code': 'portfolio_health_gate_closed'}),
+      );
+      final panel = tester.widget<HealthDashedBox>(find.byType(HealthDashedBox));
+      expect(panel.borderColor, isNot(AmiColors.hexAmber),
+          reason: 'a commercial gate is not a system fault');
     });
 
     testWidgets('402 offers plans and opens the sheet', (tester) async {

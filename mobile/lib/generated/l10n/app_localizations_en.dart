@@ -2280,6 +2280,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'AMI\'s engine did not respond. Tap to retry.';
 
   @override
+  String get portfolioHealthUnknownStatusBody =>
+      'AMI\'s engine returned a result this version of the app does not recognise. Tap to retry.';
+
+  @override
   String get portfolioHealthCtaFinding => 'FULL FINDING';
 
   @override

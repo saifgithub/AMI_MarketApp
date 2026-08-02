@@ -474,9 +474,13 @@ Plus: `l10n_key_parity_test.dart` green (ar/ms placeholders exist); M08's
 ## 7. Hand-off
 
 **M10/M11 may assume:** the card is live behind `portfolioHealthProvider`;
-all six presentation states + four CTA states are fixture-drivable for M11's
-device pass (iPhone 13/17 release builds: five card states, Finding render,
-journal markdown branch, trial/upgrade states); the Finding renders
+**seven** presentation states + four CTA states are fixture-drivable for M11's
+device pass — Loading, Transport error, **Unknown status** (added at AT:R66,
+see §8.10), Refusal, Empty, Insufficient, Populated. The device pass covers the
+six that persist; **Loading is excluded because it is transient** and cannot be
+held on a real device without a debugger, which is the discrepancy the original
+"six states … five card states" wording never explained. Plus: Finding render,
+journal markdown branch, trial/upgrade states. The Finding renders
 identically from card (POST envelope) and journal (stored payload) via the
 one shared `FindingSections`; all new EN strings flagged `retranslate:[ar,ms]`
 for the i18n lane.
@@ -533,13 +537,15 @@ section is the addition.
    table. CR120's scroll harness has to pump this card too, and two
    hand-written copies of the envelope would drift apart exactly when a wire
    change made it matter.
-5. **`healthFadeIn` + `healthFadeKey` live in
-   `portfolio_health_finding_screen.dart`**, not beside the card. The card
-   already imports that file (it pushes the screen), so one dependency edge
-   carries the helper and CR136 keeps exactly one implementation of the
-   reduced-motion rule — a second copy beside the card would have been a
-   duplicated rule, and importing the card from the screen would have been an
-   import cycle.
+5. **CR136's shared chrome lives in
+   `mobile/lib/widgets/portfolio_health/health_chrome.dart`** — a sixth lib
+   file, not in §2's table. It holds the two rules both surfaces obey: the one
+   whole-surface fade (`healthFadeIn` / `healthFadeKey`) and the dashed
+   "this is not a result" frame (`HealthDashedBox`). Both are single-sourced,
+   and neither surface imports the other, so there is no import cycle. (This
+   supersedes the first version of this amendment, which parked the fade in the
+   Finding screen for want of a better home; the M09 audit's §8.13 finding made
+   the dashed frame shared too, and a shared-chrome file is the honest shape.)
 6. **`RiskMoneyBars` owns its own `Directionality(ltr)` wrap**, rather than the
    card wrapping the block (§3.3 RTL). The invariant travels with the widget,
    so a second host cannot forget it.
@@ -555,6 +561,36 @@ section is the addition.
    write-time validator holds, and kept as defence in depth for F19: a report
    rendered without its disclosures outlives every caveat that was true when it
    was written.
+
+### Added after the M09 adversarial audit (7 confirmed findings, all fixed)
+
+10. **An unrecognised `status` no longer renders as a result** (major,
+    degrade-loudly). §3.3's state table matched the two known non-`ok` statuses
+    and fell through to Populated for everything else, so a status this build
+    has never heard of — or a body carrying none at all — drew a hexBlue
+    accent card with the visual grammar of a real measurement. The card now
+    matches `status != 'ok'` explicitly and shows a notice with a retry, using
+    a **new l10n key `portfolioHealthUnknownStatusBody`** (also not in §3.7's
+    table). Regression test mutates the guard away and fails.
+11. **The negative-share caveat is keyed on the DISPLAYED figure** (minor,
+    correctness). It was gated on `risk < 0`, but the row prints 0 dp, so a
+    share of −0.004 printed `0%` while the sentence explaining the negative
+    number appeared beside it — a caveat pointing at nothing. Now gated on
+    `(risk * 100).round() < 0`; the bar's geometry still uses the true value.
+    Regression test covers both sides.
+12. **Four untested branches now have tests** (one major, three minor —
+    test-adequacy). The audit proved by mutation that the whole 484-test suite
+    stayed green with each of these inverted or deleted: the negative-share
+    caveat (§5 named this case but placed it in `risk_money_bars_test.dart`,
+    where it is *impossible* — the note lives in the card, not the bars); the
+    beta low-R² note **plus** amendment 7's pin that the literal `R²` never
+    renders on the card; the ETF-overlap chip; and the benchmark comparison
+    line's null side.
+13. **All four Finding refusal panels are dashed**, not just the 409 (minor,
+    seam). §3.6 pinned "amber dashed panel" for the 409 and the shipped panels
+    were solid-bordered. None of the four is a report, so all four now wear the
+    same frame the card's non-populated states do — see §8.5 for where the
+    painter now lives.
 
 Also recorded: `portfolio_volatility` renders at 1 dp per §3.7's client pins, so
 the fixture's 0.1898 shows as `19.0`, not the `18.98` that appears in M06's

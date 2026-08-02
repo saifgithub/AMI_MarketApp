@@ -1639,6 +1639,8 @@
     "@portfolioHealthEmptyTitle": {"description": "CR136 — empty state (engine status no_holdings). No CTA here: the Positions tab's own new-trader hint owns the trade call to action, and two competing CTAs on one screen is the DEF151 class. NEW key, needs ar/ms translation. retranslate:[ar,ms]"},
     "portfolioHealthErrorBody": "AMI's engine did not respond. Tap to retry.",
     "@portfolioHealthErrorBody": {"description": "CR136 — transport-failure state on the card (the request itself failed). Slate, not amber: a failed fetch is not an engine refusal, and the two must not look alike. NEW key, needs ar/ms translation. retranslate:[ar,ms]"},
+    "portfolioHealthUnknownStatusBody": "AMI's engine returned a result this version of the app does not recognise. Tap to retry.",
+    "@portfolioHealthUnknownStatusBody": {"description": "CR136 \u2014 shown when the engine envelope carries a status outside the three pinned values (ok / refused_mock_data / no_holdings), including none at all. DEVIATION from M09 \u00a73.7's table, added after the M09 audit: without it an unrecognised status fell through to the populated card and a wire divergence rendered in the exact visual grammar of a real measurement (CR040). NEW key, needs ar/ms translation. retranslate:[ar,ms]"},
     "portfolioHealthCtaFinding": "FULL FINDING",
     "@portfolioHealthCtaFinding": {"description": "CR136 — the card's call to action: generate (or reopen today's) full written Finding. NEW key, needs ar/ms translation. retranslate:[ar,ms]"},
     "portfolioHealthTrialChip": "{k} of {n} trial Findings left · {d} days",

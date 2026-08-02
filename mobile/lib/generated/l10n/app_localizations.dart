@@ -3955,6 +3955,12 @@ abstract class AppLocalizations {
   /// **'AMI\'s engine did not respond. Tap to retry.'**
   String get portfolioHealthErrorBody;
 
+  /// CR136 — shown when the engine envelope carries a status outside the three pinned values (ok / refused_mock_data / no_holdings), including none at all. DEVIATION from M09 §3.7's table, added after the M09 audit: without it an unrecognised status fell through to the populated card and a wire divergence rendered in the exact visual grammar of a real measurement (CR040). NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI\'s engine returned a result this version of the app does not recognise. Tap to retry.'**
+  String get portfolioHealthUnknownStatusBody;
+
   /// CR136 — the card's call to action: generate (or reopen today's) full written Finding. NEW key, needs ar/ms translation. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

@@ -31,6 +31,7 @@ import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
 import 'package:ami_trade/widgets/empty_state.dart';
 import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
+import 'package:ami_trade/widgets/portfolio_health/health_chrome.dart';
 import 'package:ami_trade/widgets/portfolio_health/risk_money_bars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -110,11 +111,25 @@ class PortfolioHealthCard extends ConsumerWidget {
     if (health.status == 'no_holdings') {
       // No CTA: the Positions tab's own new-trader hint owns the trade call to
       // action, and two competing CTAs on one screen is the DEF151 class.
-      return _DashedBox(
+      return HealthDashedBox(
         child: AmiEmptyState(
           icon: Icons.hexagon_outlined,
           title: l.portfolioHealthEmptyTitle,
         ),
+      );
+    }
+    if (health.status != 'ok') {
+      // Anything outside the three pinned statuses — a status this build has
+      // never heard of, or a body that carried none at all. Falling through to
+      // the populated card would render a wire divergence in the exact visual
+      // grammar of a real measurement, hexBlue stripe and all, and the reader
+      // would have no way to tell "the engine measured nothing" from "this app
+      // could not read what it got" (CR040).
+      return _HealthNotice(
+        icon: Icons.help_outline,
+        iconColor: AmiColors.textLow,
+        body: l.portfolioHealthUnknownStatusBody,
+        onTap: () => ref.invalidate(portfolioHealthProvider),
       );
     }
     if (_allInsufficient(health)) {
@@ -136,58 +151,6 @@ class PortfolioHealthCard extends ConsumerWidget {
 }
 
 // ── Non-populated states ────────────────────────────────────────────────────
-
-/// A dashed rounded rect. Every non-populated state wears one, so "this is not
-/// a result" is carried by the frame itself rather than by copy the reader may
-/// skip. Precedent: CR098's dashed hexes (`room_board.dart`) and the dashed
-/// lesson threshold levels.
-class _DashedRectBorder extends CustomPainter {
-  const _DashedRectBorder({required this.color});
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1
-      ..color = color;
-    final path = Path()
-      ..addRRect(RRect.fromRectAndRadius(
-        Offset.zero & size,
-        const Radius.circular(AmiRadii.card),
-      ));
-    for (final metric in path.computeMetrics()) {
-      var d = 0.0;
-      while (d < metric.length) {
-        final next = math.min(d + 4.0, metric.length);
-        canvas.drawPath(metric.extractPath(d, next), paint);
-        d = next + 3.0;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DashedRectBorder old) => old.color != color;
-}
-
-class _DashedBox extends StatelessWidget {
-  const _DashedBox({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => CustomPaint(
-        painter: const _DashedRectBorder(color: AmiColors.slate700),
-        child: SizedBox(
-          width: double.infinity,
-          child: Padding(
-            padding: const EdgeInsets.all(AmiSpacing.m),
-            child: child,
-          ),
-        ),
-      );
-}
 
 class _HealthSkeleton extends StatelessWidget {
   const _HealthSkeleton();
@@ -226,7 +189,7 @@ class _HealthNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = _DashedBox(
+    final content = HealthDashedBox(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -293,7 +256,7 @@ class _InsufficientState extends StatelessWidget {
         body = l.portfolioHealthInsufficientGenericBody;
     }
 
-    return _DashedBox(
+    return HealthDashedBox(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -344,7 +307,11 @@ class _PopulatedCard extends ConsumerWidget {
     // Defence in depth against a 0/0 axis: in practice an empty invested
     // sleeve arrives as `no_holdings`, which never reaches this widget.
     final showBars = rows.isNotEmpty && health.coveredInvestedValue > 0;
-    final anyNegative = rows.any((r) => r.risk < 0);
+    // Keyed on the DISPLAYED figure, not the raw one. A risk share of −0.004
+    // is genuinely negative but prints as "0%", and a caveat explaining a
+    // negative number with no negative number on screen to point at explains
+    // nothing. The bar's geometry still uses the true value.
+    final anyNegative = rows.any((r) => (r.risk * 100).round() < 0);
 
     return AccentCard(
       accent: AmiColors.hexBlue,

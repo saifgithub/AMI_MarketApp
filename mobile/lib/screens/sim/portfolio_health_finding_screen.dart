@@ -20,36 +20,12 @@ import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
 import 'package:ami_trade/widgets/journal/finding_sections.dart';
+import 'package:ami_trade/widgets/portfolio_health/health_chrome.dart';
 import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-/// Key on the fade's `Opacity`, so a test asserts the reduced-motion rule on
-/// this specific widget rather than on whichever `Opacity` it happens to find.
-const healthFadeKey = ValueKey<String>('portfolioHealthFade');
-
-/// One opacity fade of the whole surface, and nothing else moves. Bars never
-/// grow and numbers are never counted up (data_viz §7): a figure that animates
-/// is unreadable while it moves and invites a screenshot of a value that was
-/// never true. `Duration.zero` under `disableAnimations` — the flag's first use
-/// in the app, and the spec is the pin.
-///
-/// It lives here rather than beside the card because the card already imports
-/// this file (it pushes the screen), so one dependency edge carries the helper
-/// and CR136 keeps exactly one implementation of the rule.
-Widget healthFadeIn(BuildContext context, Widget child) =>
-    TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0.0, end: 1.0),
-      duration: MediaQuery.of(context).disableAnimations
-          ? Duration.zero
-          : AmiMotion.fast,
-      curve: AmiMotion.easeOut,
-      builder: (_, value, child) =>
-          Opacity(key: healthFadeKey, opacity: value, child: child),
-      child: child,
-    );
 
 class PortfolioHealthFindingScreen extends ConsumerWidget {
   const PortfolioHealthFindingScreen({super.key});
@@ -186,14 +162,11 @@ class _Panel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AmiSpacing.m),
-      decoration: BoxDecoration(
-        color: AmiColors.slate800,
-        borderRadius: BorderRadius.circular(AmiRadii.card),
-        border: Border.all(color: accent),
-      ),
+    // Dashed, like the card's non-populated states: none of these four panels
+    // is a report, and the frame says so before the copy does.
+    final content = HealthDashedBox(
+      borderColor: accent,
+      fill: AmiColors.slate800,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
