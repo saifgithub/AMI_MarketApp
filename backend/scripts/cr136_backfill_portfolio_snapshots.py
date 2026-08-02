@@ -114,11 +114,22 @@ class _YfinanceProvider:
     """
 
     def __init__(self) -> None:
-        self._cache: dict[str, list[tuple[date, float]]] = {}
+        # Keyed by (ticker, start), not by ticker. A ticker-only key returns
+        # the FIRST caller's window to every later caller, so two portfolios
+        # holding the same name with different first-trade dates would leave
+        # the later one silently short of its own early history — measured:
+        # five days valued at the last execution price instead of the market
+        # close, `terminal OK`, exit 0, and permanent, because §3.8 never
+        # updates an existing row. `_run` also asks every ticker for the
+        # run-global earliest date, so in practice there is one window per
+        # ticker per run; this key is what makes that a property of the cache
+        # rather than a convention the caller has to remember.
+        self._cache: dict[tuple[str, date], list[tuple[date, float]]] = {}
 
     def unadjusted_daily(self, ticker: str, start: date) -> list[tuple[date, float]]:
-        if ticker in self._cache:
-            return self._cache[ticker]
+        key = (ticker, start)
+        if key in self._cache:
+            return self._cache[key]
         series: list[tuple[date, float]] = []
         try:
             import yfinance as yf
@@ -140,7 +151,7 @@ class _YfinanceProvider:
             print(f"  !! price fetch failed for {ticker}: {exc}")
         if not series:
             print(f"  !! no unadjusted bars for {ticker} — it will be ledger-priced")
-        self._cache[ticker] = series
+        self._cache[key] = series
         return series
 
 
@@ -447,9 +458,14 @@ def _run(
         first = _first_event_date(events)
         days = [d for d in grid if first is not None and d >= first]
 
+        # Every ticker is fetched from the RUN-GLOBAL earliest date, not this
+        # portfolio's own. Asking per portfolio means one window per
+        # (ticker, portfolio) and re-fetching a popular name once per holder;
+        # asking once from `earliest` gives every portfolio a series that
+        # already covers its own range.
         prices: dict[str, list[tuple[date, float]]] = {}
         for ticker in sorted({e.ticker for e in events}):
-            prices[ticker] = provider.unadjusted_daily(ticker, first)
+            prices[ticker] = provider.unadjusted_daily(ticker, earliest)
 
         series, terminal, stats = reconstruct_daily_values(
             events, days, prices, float(p_row.starting_capital),

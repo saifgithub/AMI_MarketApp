@@ -33,6 +33,8 @@ from app.db.session import get_sessionmaker  # noqa: E402
 
 from cr136_backfill_portfolio_snapshots import (  # noqa: E402
     _BACKFILL_SOURCE,
+    _CASH_TOL,
+    _run,
     DayValue,
     events_from_trades,
     main,
@@ -600,3 +602,205 @@ def test_terminal_mismatches_names_both_numbers() -> None:
     assert terminal_mismatches(
         TerminalState(holdings={}, cash=9000.0), [], 9000.02,
     ) == [], "two cents is inside the tolerance the 2 dp rounding leaves"
+
+
+# ── Findings from the M10 audit ─────────────────────────────────────────────
+
+
+def test_two_books_sharing_a_ticker_each_get_their_own_early_history() -> None:
+    """The audit's blocker, with the REAL provider.
+
+    The cache was keyed by ticker alone, so whichever portfolio was processed
+    first fixed that ticker's window for everyone else. A later portfolio with
+    an EARLIER first trade then lost its own early bars and fell into the
+    ledger-priced fallback — five days valued at the last execution price
+    instead of the market close, `terminal OK`, exit 0, and permanent, because
+    an existing row is never updated.
+
+    `FakeProvider` cannot catch this: it recomputes its series on every call
+    and holds no cache. Only the shipped `_YfinanceProvider` has one.
+    """
+    import cr136_backfill_portfolio_snapshots as script
+
+    session = get_sessionmaker()()
+    late = _portfolio(session, cash=9000.0)          # first trades in week two
+    _trade(session, late, ticker="AAPL", side="buy", qty=10, price=100.0,
+           opened=_GRID[5])
+    _holding(session, late, ticker="AAPL", qty=10, avg_cost=100.0)
+
+    early = _portfolio(session, cash=9000.0)         # first trades in week one
+    _trade(session, early, ticker="AAPL", side="buy", qty=10, price=100.0,
+           opened=_GRID[0])
+    _holding(session, early, ticker="AAPL", qty=10, avg_cost=100.0)
+    session.commit()
+    session.close()
+
+    class _Frame:
+        def __init__(self, rows):
+            self.rows = rows
+            self.empty = not rows
+
+        def iterrows(self):
+            for day, close in self.rows:
+                yield (datetime(day.year, day.month, day.day), {"Close": close})
+
+    fetches: list[tuple[str, str]] = []
+
+    class _Ticker:
+        def __init__(self, ticker):
+            self.ticker = ticker
+
+        def history(self, *, start, interval, auto_adjust):
+            fetches.append((self.ticker, start))
+            begin = date.fromisoformat(start)
+            if self.ticker == "SPY":
+                return _Frame([(d, 500.0) for d in _GRID if d >= begin])
+            # AAPL trades at 200 all along; the truncation is what used to
+            # replace the early days with the 100.0 execution price.
+            return _Frame([(d, 200.0) for d in _GRID if d >= begin])
+
+    import sys as _sys
+    _sys.modules["yfinance"] = type("yf", (), {"Ticker": _Ticker})
+    try:
+        assert main(["--apply"], provider=script._YfinanceProvider()) == 0
+    finally:
+        _sys.modules.pop("yfinance", None)
+
+    assert [f for f in fetches if f[0] == "AAPL"] == [
+        ("AAPL", _GRID[0].isoformat())
+    ], (
+        "one window per ticker per run, taken from the RUN-GLOBAL earliest "
+        "event date — asking per portfolio re-fetches a popular name once per "
+        "holder and is what made the cache key load-bearing in the first place"
+    )
+
+    rows = _snapshots(early.id)
+    assert [r.as_of for r in rows] == _GRID
+    for row in rows:
+        assert float(row.invested_value) == 2000.0, (
+            "10 shares at the 200.0 CLOSE. 1000.0 would be the 100.0 execution "
+            "price — the silent ledger-priced fallback the cache bug caused"
+        )
+        assert float(row.total_value) == 11000.0
+
+
+def test_the_price_cache_is_keyed_by_ticker_and_start() -> None:
+    """The cache's own contract, without a DB: the same ticker asked for two
+    different windows must not hand the second caller the first's answer."""
+    import cr136_backfill_portfolio_snapshots as script
+
+    calls: list[str] = []
+
+    class _Frame:
+        def __init__(self, rows):
+            self.rows = rows
+            self.empty = not rows
+
+        def iterrows(self):
+            for day, close in self.rows:
+                yield (datetime(day.year, day.month, day.day), {"Close": close})
+
+    class _Ticker:
+        def __init__(self, ticker):
+            self.ticker = ticker
+
+        def history(self, *, start, interval, auto_adjust):
+            calls.append(start)
+            begin = date.fromisoformat(start)
+            return _Frame([(d, 100.0) for d in _GRID if d >= begin])
+
+    import sys as _sys
+    _sys.modules["yfinance"] = type("yf", (), {"Ticker": _Ticker})
+    try:
+        provider = script._YfinanceProvider()
+        late = provider.unadjusted_daily("AAPL", _GRID[5])
+        early = provider.unadjusted_daily("AAPL", _GRID[0])
+        repeat = provider.unadjusted_daily("AAPL", _GRID[5])
+    finally:
+        _sys.modules.pop("yfinance", None)
+
+    assert len(late) == 5
+    assert len(early) == len(_GRID), "the second window is fetched, not served stale"
+    assert repeat == late, "the same window is still served from cache"
+    assert calls == [_GRID[5].isoformat(), _GRID[0].isoformat()], (
+        "two windows, two fetches, and the third call hits the cache"
+    )
+
+
+def test_a_book_holding_two_names_at_once_values_both() -> None:
+    session = get_sessionmaker()()
+    p_row = _portfolio(session, cash=10000.0 - 1000.0 - 2000.0)
+    _trade(session, p_row, ticker="AAPL", side="buy", qty=10, price=100.0,
+           opened=_GRID[0])
+    _trade(session, p_row, ticker="MSFT", side="buy", qty=20, price=100.0,
+           opened=_GRID[0])
+    _holding(session, p_row, ticker="AAPL", qty=10, avg_cost=100.0)
+    _holding(session, p_row, ticker="MSFT", qty=20, avg_cost=100.0)
+    session.commit()
+    session.close()
+
+    provider = _provider(
+        AAPL=_flat(_GRID, 150.0), MSFT=_flat(_GRID, 50.0),
+    )
+    assert main(["--apply"], provider=provider) == 0
+
+    rows = _snapshots(p_row.id)
+    assert float(rows[0].invested_value) == 10 * 150.0 + 20 * 50.0, (
+        "a regression that summed only one position would still look "
+        "plausible, and every multi-position book is a real one"
+    )
+    assert float(rows[0].total_value) == 7000.0 + 2500.0
+
+
+def test_today_is_never_written_because_the_live_tick_owns_it() -> None:
+    """§3.5's ownership boundary. `_run` takes `today` injectably; `main` does
+    not, so the seam is only reachable from here."""
+    session = get_sessionmaker()()
+    p_row = _portfolio(session, cash=9000.0)
+    _trade(session, p_row, ticker="AAPL", side="buy", qty=10, price=100.0,
+           opened=_GRID[0])
+    _holding(session, p_row, ticker="AAPL", qty=10, avg_cost=100.0)
+    session.commit()
+    session.close()
+
+    session = get_sessionmaker()()
+    try:
+        # "Today" is the fourth grid day, so days 0..2 are writable and day 3
+        # belongs to M03's tick — whose bar may still be forming.
+        results, grid = _run(
+            session, _provider(AAPL=_flat(_GRID, 100.0)), None, _GRID[3],
+        )
+        session.commit()
+    finally:
+        session.close()
+
+    assert grid == _GRID[:3]
+    assert [r.as_of for r in results[0].series] == _GRID[:3]
+    assert _GRID[3] not in {r.as_of for r in _snapshots(p_row.id)}
+
+
+def test_the_cash_tolerance_is_checked_at_its_own_boundary() -> None:
+    from cr136_backfill_portfolio_snapshots import TerminalState
+
+    walked = TerminalState(holdings={}, cash=9000.0)
+    assert terminal_mismatches(walked, [], 9000.0 + _CASH_TOL) == [], (
+        "exactly at tolerance is inside it — the check is > , not >="
+    )
+    assert terminal_mismatches(walked, [], 9000.0 + _CASH_TOL + 0.01) != []
+
+
+def test_the_guard_catches_a_holding_that_exists_on_only_one_side() -> None:
+    from cr136_backfill_portfolio_snapshots import TerminalState
+
+    class _Holding:
+        ticker = "MSFT"
+        quantity = 5.0
+
+    # Walk has a position the live book does not, and vice versa. Comparing
+    # only the tickers common to both sides would miss both.
+    lines = terminal_mismatches(
+        TerminalState(holdings={"AAPL": 10.0}, cash=9000.0), [_Holding()], 9000.0,
+    )
+    assert len(lines) == 2
+    assert any("AAPL" in line for line in lines)
+    assert any("MSFT" in line for line in lines)

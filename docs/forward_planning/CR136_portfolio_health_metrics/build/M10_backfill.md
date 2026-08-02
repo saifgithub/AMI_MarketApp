@@ -388,6 +388,54 @@ Four deviations from this doc, each with the reason.
    grid is simply empty and they all fall through the same no-trades branch,
    rather than through a second formatting path that would have dropped the
    `[synthetic]` marker.
+5. **§3.9 step 1's LEFT-join is a second `SELECT`.** The synthetic-user set is
+   read in one query over `User` filtered to `last_app_version =
+   'room-benchmark'`, rather than joined onto the portfolio query. Same result
+   set, one extra round trip, and the marker stays a set lookup rather than a
+   column the rest of the loop has to carry. Listed here because §6b claims to
+   be the complete list of where the code differs from the doc, and an
+   undisclosed shape deviation makes that claim false.
+6. **§6's `predicted_vol_ann` grep is prose-matching too.** The acceptance line
+   expects "only the explicit `None` assignment", but the module docstring
+   names the symbol while explaining why the F16 trio is null. Same fix as
+   #2: the real guard is `test_every_backfilled_row_is_identifiable_forever`,
+   which asserts `row.predicted_vol_ann is None` on rows actually in the DB —
+   strictly stronger than any grep.
+
+### Added after the M10 adversarial audit (7 confirmed findings, all fixed)
+
+7. **BLOCKER — the price cache was keyed by ticker alone, ignoring `start`.**
+   Two portfolios holding the same name with different first-trade dates: the
+   one processed FIRST fixed that ticker's window, and a later portfolio with
+   an *earlier* first trade silently received the truncated series. Its early
+   days then fell into the ledger-priced fallback and were valued at the last
+   execution price instead of the market close. Reproduced against the shipped
+   `_YfinanceProvider`: five days wrong, `terminal OK`, `main()` returned 0 —
+   and permanent, because §3.8 never updates an existing row, so a re-run
+   cannot repair it. The terminal guard cannot catch this by construction: it
+   compares holdings and cash, both derived from the ledger and both
+   price-independent.
+
+   Fixed twice over. The cache key is now `(ticker, start)`, and `_run` asks
+   every ticker for the RUN-GLOBAL earliest event date (§3.5 already computes
+   it for the SPY grid) instead of each portfolio's own — so there is one
+   window per ticker per run, and the cache cannot serve a wrong one even if
+   that ever changes. Both halves are separately mutation-checked.
+
+   Note for §3.4, which pinned "cached in-process per ticker": that phrasing is
+   what the defect was written to. Amended to per `(ticker, start)`.
+8. **Three test gaps closed** (two major, one minor), each mutation-checked:
+   no test ever held two tickers at once, so the `invested += qty × close`
+   summation across concurrent positions was never exercised; §3.5's
+   today-exclusion boundary was structurally unreachable, since `main()` does
+   not expose `today` (the new test drives `_run` directly, which does); and
+   the `_CASH_TOL` boundary was only tested well inside and well outside it,
+   never at the `>` vs `>=` line itself.
+9. **One dismissed finding, recorded because the cheap half was worth doing:**
+   the auditor claimed the terminal guard's "no extra/missing tickers" pin was
+   untested. Both verifiers refuted the impact, but the coverage claim was
+   accurate, so a one-assertion test now pins a ticker present on only one
+   side of the comparison.
 
 ## 7. Hand-off
 
