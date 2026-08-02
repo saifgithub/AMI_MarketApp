@@ -101,6 +101,33 @@ def build_finding_entry(
 ) -> JournalEntryCreate:
 ```
 
+> **AMENDED AT:R66, after M06/M07 shipped.** Four pins below were corrected by
+> build/README's seam register (which overrides this doc) or by what M06 had
+> already frozen. The mapper was NOT added as a second construction path — M06's
+> inline dict literal was EXTRACTED into it, so there is one place that builds
+> the artefact and one place that validates it:
+>
+> - **`reference_id=portfolio_id`, not `None`.** The register pins it (contract
+>   5), and M07 reads Findings by portfolio — a null would make that a payload
+>   scan.
+> - **The disclosure lives at `payload["sections"]["head"]`**, not a sibling
+>   `payload["disclosure"]`. Register-pinned; `SECTION_KEYS` is therefore
+>   `("head", "f1"…"f5")`. The mobile renderer reads a top-level `disclosure`
+>   as a fallback so an older entry still renders its caveats.
+> - **`payload["rules_fired"]`**, not `"rules"` — the name M06 shipped, and the
+>   register does not pin either.
+> - **`summary` is the first §F1 headline**, not `None`. This doc's rationale
+>   was the DEF150 class — a clipped markdown fragment in a list card — but §F1
+>   headlines are plain sentences with no markup, so the concern does not bind,
+>   and a card reading only "Portfolio Health — Finding 2026-08-02" tells the
+>   user nothing about their own book.
+> - `as_of` accepts an ISO string as well as a `date`: M06 carries it as a
+>   string end to end, and an unconverted `date` would render
+>   `datetime.date(2026, 8, 2)` into the title.
+> - `dedupe_key` is new (M07 audit): `"<portfolio_id>:<as_of>"` under
+>   `uq_journal_dedupe`, which is what stops two concurrent POSTs writing two
+>   Findings.
+
 Pinned output (each pin from Rev 4 "Journal storage plan" / the M08 brief,
 except where marked M08-pin):
 
@@ -176,6 +203,17 @@ def latest_portfolio_health_entry(
     self, user_id: UUID, portfolio_id: UUID | str,
 ) -> JournalEntry | None:
 ```
+> **AMENDED AT:R66 (M07 build + audit).** Both reads INCLUDE soft-deleted rows,
+> and `portfolio_health_stats` takes `(user_id, portfolio_id, *, now)` returning
+> `(trial_findings_used, first_finding_at, daily_used)` — the daily cap is
+> per-portfolio while the trial is per-user, so one read serves both. For the
+> latest-entry read, "live only" was wrong in the same way retention was: a
+> deleted Finding still counts against the budget and still carries the rule
+> hysteresis state, because it is still something that happened. The caller
+> distinguishes the two uses via `deleted_at` — the idempotent REPLAY requires
+> it to be null, since returning a deleted entry answers "regenerate" with a
+> journal id pointing at a row the user cannot open.
+
 Newest **live** (`deleted_at IS NULL`) row with
 `entry_type == EntryType.PORTFOLIO_HEALTH_ANALYSIS.value`, ordered
 `created_at` desc, first whose `payload["portfolio_id"] == str(portfolio_id)`

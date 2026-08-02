@@ -997,17 +997,22 @@ async def generate_and_persist_finding(
         line.lstrip("- ").strip()
         for line in sections["f1"].splitlines() if line.strip()
     ]
-    payload = {
-        "engine_version": ENGINE_VERSION,
-        "portfolio_id": str(portfolio_id),
-        "as_of": as_of,
+    # The entry's shape lives in M08's mapper, not in a dict literal here: it is
+    # the artefact M07, M09 and CR137 all read, and it validates that no section
+    # — the head disclosure included — reaches storage empty.
+    from app.services.portfolio_health_journal import build_finding_entry
+
+    draft = build_finding_entry(
+        user_id=user_id,
+        portfolio_id=portfolio_id,
+        as_of=as_of,
         # The head disclosure lives INSIDE sections, per the seam register's
-        # pinned payload shape — one place, not two. It is added here rather
+        # pinned payload shape — one place, not two. It is joined here rather
         # than upstream so the validator and register check keep seeing exactly
         # the five model-narratable sections.
-        "sections": {"head": head, **sections},
-        "context": context,
-        "rules_fired": [
+        sections={"head": head, **sections},
+        context=context,
+        fired_rules=[
             {
                 "rule_id": r["rule_id"],
                 "slots": r.get("slots", {}),
@@ -1015,12 +1020,12 @@ async def generate_and_persist_finding(
             }
             for r in rule_results if r.get("fired")
         ],
-        "rule_states": updated_states,
-        "llm_used": llm_used,
-        "llm_rejected_reason": rejected_reason,
-    }
-
-    from app.schemas.journal import EntryType
+        rule_states=updated_states,
+        engine_version=ENGINE_VERSION,
+        summary=headlines[0] if headlines else None,
+        llm_used=llm_used,
+        llm_rejected_reason=rejected_reason,
+    )
 
     # The write is the serialisation point, not the read above it: two
     # concurrent callers both pass the idempotency check, and only the unique
@@ -1028,18 +1033,7 @@ async def generate_and_persist_finding(
     # Finding this call was about to write, so the winner's row is the correct
     # answer — measured before the constraint existed, five concurrent requests
     # produced five Findings against a daily cap of two, and five LLM bills.
-    entry, created = store.append_unique(JournalEntryCreate(
-        user_id=user_id,
-        # Resolved lazily from the string constant: until M08 lands the enum
-        # member and its Dart mapping in one commit, this raises loudly rather
-        # than writing an entry no client can name (DEF210's lesson).
-        entry_type=EntryType(PORTFOLIO_HEALTH_ENTRY_TYPE),
-        reference_id=portfolio_id,
-        title=f"Portfolio Health — Finding {as_of}",
-        summary=headlines[0] if headlines else None,
-        payload=payload,
-        dedupe_key=f"{portfolio_id}:{as_of}",
-    ))
+    entry, created = store.append_unique(draft)
     if not created:
         logger.info(
             "portfolio_finding_lost_write_race",

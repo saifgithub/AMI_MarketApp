@@ -13,6 +13,7 @@ import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/room_view_mode_provider.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/journal/finding_sections.dart';
 import 'package:ami_trade/widgets/room/room_board.dart';
 import 'package:ami_trade/widgets/room/room_transcript_rows.dart';
 import 'package:ami_trade/widgets/room/room_view_mode_toggle.dart';
@@ -339,6 +340,15 @@ class _PayloadBlock extends StatelessWidget {
       if (correct is bool) rows.add(_KV('Result', correct ? 'Correct' : 'Wrong'));
       if (difficulty != null) rows.add(_KV('Difficulty', '$difficulty'.toUpperCase()));
       if (rows.isNotEmpty) children.add(_KVBox(rows: rows));
+    } else if (entryType == JournalEntryType.portfolioHealthAnalysis &&
+        FindingSections.isRenderable(payload)) {
+      // CR136 M08 — the STORED report, rendered verbatim. Early return like the
+      // roomRun replay above: this payload is a finished document, not fields
+      // to lay out beside the entry chrome. A malformed one (no disclosure, or
+      // no sections) deliberately falls through to the generic dump below —
+      // raw but visible and honestly labelled, never a disclosure-less Finding
+      // and never a blank screen.
+      return FindingSections(payload: payload);
     } else {
       payload.forEach((k, v) {
         children.add(_Block(label: k.toUpperCase(), body: '$v'));
