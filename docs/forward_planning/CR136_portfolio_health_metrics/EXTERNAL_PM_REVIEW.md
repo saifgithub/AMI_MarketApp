@@ -796,33 +796,141 @@ standard becomes achievable instead of hostage to a scope you never intended to 
 6. Reframe §F5 as conditional/educational, rename it, drop the severity bands — and
    reconcile with the website copy before anything ships. (F6)
 7. Move the market-data work to the top of the scope with an owner. (F20)
+8. **Add rule R0 — evaluate the book against the user's own mandate caps**
+   (`resolved_single_name_cap_pct` / `resolved_sector_cap_pct`), so the app stops
+   showing two concentration verdicts that can contradict each other. Adopted from
+   the parallel review; §7A. This is the most defensible rule in the set, because the
+   threshold is the user's own stated limit rather than an invented 40%.
 
 **Before the estimator is written:**
 
-8. Fix the fat-tail factor to 4.0× (or re-parameterise κ) and reconcile with the 126-day
+9. Fix the fat-tail factor to 4.0× (or re-parameterise κ) and reconcile with the 126-day
    floor. (F7)
-9. Replace the uniform-ρ known-answer test with a non-uniform fixture. (F8)
-10. Switch the risk-vs-money visual to invested-sleeve money share. (F9)
-11. Adopt EWMA at **λ = 0.97** (not RiskMetrics' 0.94, which is tuned for one-day VaR
+10. Replace the uniform-ρ known-answer test with a non-uniform fixture. (F8)
+11. Switch the risk-vs-money visual to invested-sleeve money share. (F9)
+12. Adopt EWMA at **λ = 0.97** (not RiskMetrics' 0.94, which is tuned for one-day VaR
     and would discard most of your disclosed window), or accept and disclose the echo. (F11)
-12. Add tracking error — three lines. (F12)
-13. Ship MCR as its own metric — free, and it is the actionable one. (F3)
-14. Scope T/N ≥ 5 to DR² and risk contributions only. (F17)
+13. Add tracking error — three lines. (F12)
+14. Ship MCR as its own metric — free, and it is the actionable one. (F3)
+15. Scope T/N ≥ 5 to DR² and risk contributions only. (F17)
 
 **Before it ships:**
 
-15. Re-specify the validator against a rendered-token allow-list. (F15)
-16. Fixed-window or expectation-anchored max drawdown. (F10)
-17. Add `predicted_vol_ann` to the snapshot row; add a bias statistic to acceptance. (F16)
-18. Label the beta as a backcast — in the external document especially. (F14)
-19. Ship parametric VaR, or replace the stated reason with the true one. (F13)
-20. Make the register split structural, and move disclosures to the head — including into
+16. Re-specify the validator against a rendered-token allow-list. (F15)
+17. Fixed-window or expectation-anchored max drawdown. (F10)
+18. Add `predicted_vol_ann` to the snapshot row; add a bias statistic to acceptance. (F16)
+19. Label the beta as a backcast — in the external document especially. (F14)
+20. Ship parametric VaR, or replace the stated reason with the true one. (F13)
+21. Make the register split structural, and move disclosures to the head — including into
      the journal payload. (F19)
-21. Fix the insufficient-state copy so it names our data limit, not the user's holdings. (F20)
+22. Fix the insufficient-state copy so it names our data limit, not the user's holdings. (F20)
+23. **Add a standing non-stationarity caveat** to every Finding — the window describes
+    the regime just passed, and correlations converge in crises. Adopted from the
+    parallel review; §7A. This is a larger error source than the fat-tail caveat the
+    pack already carries.
+24. **Add a volatility-scaled bad-print filter** on the return series feeding Σ; one bad
+    yfinance adjusted close otherwise enters the covariance unflagged. (§7D)
+25. **Gate the descriptive statistics too** — a minimum ~21 trading days before the
+    drawdown tile renders; "≥ 2 snapshots" is vacuous. (§7E)
+26. **Verify whether ETFs are reachable in the sim.** If they are, look-through is a
+    ship-blocker for DR², HHI and every risk share; if not, it is a v1.1 item. (§7C)
 
 ---
 
-## 7. How this review was produced
+## 7. Reconciliation with the parallel review (`PM_REVIEW.md`)
+
+A second review (track K) was written independently and in parallel. I read it only
+after filing the above, so the two are genuinely independent. They overlap on the
+rolling-window artefact, missing TEV, R3's stripped dispersion, threshold cliffs, the
+digit-validator's normalisation gap, the scenario-panel case, and the vacuous Tier-2
+drawdown floor. Where they differ is more useful than where they agree.
+
+### Adopted — findings that review has and this one missed
+
+**A. Non-stationarity is the larger error, and neither the CR nor I addressed it.**
+A 126–252 day window estimates the covariance of *the regime just passed*. Correlations
+are non-stationary and converge in crises (Longin & Solnik, *J. Finance* 56(2), 2001;
+Ang & Bekaert, *RFS* 15(4), 2002; S&P 500 pairwise correlations converged toward ~0.8 in
+March 2020). A user whose window ends February 2020 is told they hold "4 effective bets"
+two weeks before the book behaves like one. The CR caveats fat tails at length and never
+mentions regime instability, which dominates it. This is the strongest point in either
+review that I did not make — my F7 quantified the *tail* correction and stopped there.
+**Adopt:** a standing regime caveat in every Finding, plus the scenario panel as the
+structural mitigation.
+
+**B. Rule R0 — the report ignores the user's own mandate.** Verified in source: the
+safety floor already resolves per-user caps (`trading_math/sizing.py::resolved_single_name_cap_pct`,
+`::resolved_sector_cap_pct`, with sector presets 25–60pp by `concentration_tolerance`).
+The Finding's rule engine references none of them, so the app can show a user two
+concentration verdicts that contradict each other — one from the mandate layer, one from
+R1. **This is the best product suggestion in either review**, it is the most defensible
+rule available (the threshold is the user's own stated limit, not an invented 40%), and
+it costs nothing to compute. Adopt as R0.
+
+**C. ETF look-through** — SPY + QQQ + AAPL reads as three positions and the report never
+says "you own Apple three times," which corrupts DR², HHI and every risk share.
+*Adopted with a caveat I could not resolve:* I found no ETF tickers in the universe data
+and no instrument-type gate in the buy path, so I cannot confirm ETFs are reachable in
+the sim today. **Verify that first** — if they are, this is live and severe for an
+education product; if not, it is a v1.1 item, not a ship-blocker.
+
+**D. Data-hygiene gate.** No outlier screen on the return series feeding Σ. One bad
+adjusted close from yfinance prints a phantom ±40% return straight into the covariance,
+and nothing downstream would flag it. Adopt a volatility-scaled bad-print filter — this
+is a real operational risk given the data source, and cheap.
+
+**E. Gate the descriptive statistics too.** The Tier-2 drawdown floor of "≥ 2 snapshots"
+is vacuous: max drawdown of a two-point series carries no information. Complements my
+F10 — adopt a minimum (~21 trading days) before the tile renders at all.
+
+### Adjudicated — where the two reviews disagree
+
+**1. That review credits Ledoit–Wolf as "correct." It is not, for this use.** Measured:
+on a book whose true DR² is 1.855, LW shrinkage fires R2 in 29.6% of windows where the
+plain sample covariance fires it in 89.0% (F2). The credit is understandable — LW is the
+right answer to the question it was designed for — but CR136 never inverts Σ and never
+optimises, so it inherits the side effect without the benefit. **My F2 stands.**
+
+**2. The top-contributor sampling error is overstated by 4–5×.** That review estimates
+"plausibly ±15–20pp" at T/N = 5 and demands R1's threshold be recalibrated to it. Measured
+at exactly that operating point (N = 25, T = 126, top weight 30%, realistic single-factor
+structure, 1,500 draws): true share 24.7%, **sd 1.9pp, 95% range [20.8%, 28.5%] — a
+half-width of ±3.6pp.** Across N = 8–40 and T = 126–252 it stays in ±3.6 to ±4.2pp.
+
+The **demand is right and I endorse it** — an operating-point study belongs in acceptance,
+and §6 of this review now supplies most of it. But the magnitude is wrong, and so is the
+citation: Michaud (1989) is about error *amplification through the optimiser*, i.e.
+through **Σ⁻¹**. CR136 never inverts Σ, which is precisely why the measured error is
+small (§1.5). Recalibrating R1 to a ±15–20pp error that does not exist would be a real
+mistake. R1's problem is not noise — it is that the sentence is false (F3), and that a
+cliff at 40% flips on a 1.9pp sd (F4).
+
+**3. EWMA decay factor.** That review cites RiskMetrics λ = 0.94. That is their
+*trading* factor, tuned for one-day-ahead VaR; for a 126-day window regenerated monthly
+it discards most of the disclosed window. Derived recommendation: **λ = 0.97** (F11).
+
+**4. "~970 trading days" vs "971."** Both are right — the difference is z = 1.96 versus
+1.959964. Neither review's headline changes; but it is a 50%-power threshold either way,
+and the honest figure at 80% power is 1,982 days (§1.2).
+
+### Union of the two reviews
+
+Findings unique to this review that the parallel one does not raise: the cash-row NaN
+blocker (F1), the shrinkage/R2 suppression (F2), R1's mathematical falsity (F3), the
+advice-perimeter and website contradiction (F6), the 2.1× fat-tail error (F7), the
+acceptance test's blindness to its own failure mode (F8), the cash artefact in the
+signature visual (F9), the undisclosed backcast beta (F14), the T/N ≥ 5 misapplication
+(F17), the absence of a factor model and the IPO drop-rule (F18), and — the one with
+schedule consequences — **the feature cannot render a single number on the current data
+layer (F20)**, which the parallel review does not mention.
+
+Read together the two reviews reach the same verdict by different routes: the statistical
+spine is sound, the advice layer is not shippable, and the gap between what the pack cites
+and what it ships is the recurring theme.
+
+---
+
+## 8. How this review was produced
 
 Every quantitative claim in the pack was independently re-derived from its own stated
 formula; every counter-claim here was computed before it was written. Sources are primary
@@ -879,7 +987,7 @@ US10157419B1; 15 U.S.C. §80b-2(a)(11)(D); Lowe v. SEC, 472 U.S. 181 (1985); 17 
 
 ---
 
-## 8. Closing
+## 9. Closing
 
 I have been adversarial because you asked for it, and because a document claiming every
 quantitative claim was independently recomputed has to be right. Several were not — and
