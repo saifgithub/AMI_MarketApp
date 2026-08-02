@@ -50,6 +50,10 @@ MAX_RETURNS = 504
 # entry when the data-hygiene gate (not short history) removed the holding.
 DATA_QUALITY_DROP_REASON = "data_quality"
 SHORT_HISTORY_DROP_REASON = "short_history"
+# CR040: a feed outage and a genuinely young security are NOT the same fact, and
+# telling a user "not enough price history for this holding" when the truth is
+# "our feed is down" is the wrong answer to the question that rule asks.
+FEED_UNAVAILABLE_DROP_REASON = "feed_unavailable"
 
 # ── Sufficiency contract (Rev 4 table, supersedes Rev 3) ────────────────────
 
@@ -116,23 +120,44 @@ SCENARIO_EPISODES = (
 # threshold twice a week teaches nothing. CI-lower-bound gating was measured and
 # REJECTED: detection collapses to 50.8% on a genuinely high-beta book.
 
-R1_FIRE_RISK_SHARE = 0.415        # Rev 4 R1 — band ±1.5pp = 0.6× the measured per-window sd (~2.2–2.4pp at T/N=5); worst flip 7.7%, detection 95.6% at true 44%
-R1_CLEAR_RISK_SHARE = 0.385
-R1_MIN_RISKY_HOLDINGS = 4         # Rev 4 R1 — small books have structurally high top shares (60/40 SPY+AGG reads 94.5%); the contribution table carries the fact, the rule stays silent
+# UNITS. A threshold whose rule renders a percentage is stored in PERCENTAGE
+# POINTS and carries a `_PCT` suffix; everything else is in the metric's own
+# native unit. The suffix is load-bearing, not decoration: M04's payload is in
+# decimal fractions while M05's rule API is in percentage points, and an
+# unlabelled 0.415-vs-41.5 mix-up is not a visible error — it is a rule that
+# silently never fires.
 
-R2_FIRE_DR2 = 1.85                # Rev 4 R2 — band ±0.15 measured: 5.5% flips, 99.3% detection at true 1.7, 1.3% false-fire at true 2.3
-R2_CLEAR_DR2 = 2.15
-R2_MIN_HOLDINGS = 8
+RULE_R1_FIRE_TOP_RISK_SHARE_PCT = 41.5   # Rev 4 R1 — band ±1.5pp = 0.6× the measured per-window sd (~2.2–2.4pp at T/N=5); worst flip 7.7%, detection 95.6% at true 44%
+RULE_R1_CLEAR_TOP_RISK_SHARE_PCT = 38.5
+RULE_R1_MIN_RISKY_HOLDINGS = 4           # Rev 4 R1 — small books have structurally high top shares (60/40 SPY+AGG reads 94.5%); the contribution table carries the fact, the rule stays silent
+RULE_R1_TEXTBOOK_THRESHOLD_PCT = 40      # the literal "40" inside R1's own template — registered as a slot so M06's allow-list stays closed (F15)
 
-R2B_FIRE_RHO = 0.90               # Rev 4 R2b — band 0.05 ≈ 3× SE(ρ̂) at ρ=0.9, T=126
-R2B_CLEAR_RHO = 0.85
-R2B_MIN_PAIR_WEIGHT = 0.05        # Rev 4 R2b — R2's holdings≥8 gate structurally silences every small book; this is the rule that actually catches SPY+QQQ (ρ=0.952 measured)
+RULE_R2_FIRE_DR2 = 1.85                  # Rev 4 R2 — band ±0.15 measured: 5.5% flips, 99.3% detection at true 1.7, 1.3% false-fire at true 2.3
+RULE_R2_CLEAR_DR2 = 2.15
+RULE_R2_MIN_HOLDINGS = 8
 
-R3_BETA_LINE = 1.3                # Rev 4 R3 — fire at β̂ ≥ line + 0.6·SE(β̂), clear below line − 0.6·SE(β̂); band self-scales with sample size, worst flip 8.0%, detection 96.0% at true β 1.45
-R3_BAND_SE_MULT = 0.6             # R3's R² gate is LOW_R2_THRESHOLD above
+RULE_R2B_FIRE_RHO = 0.90                 # Rev 4 R2b — band 0.05 ≈ 3× SE(ρ̂) at ρ=0.9, T=126
+RULE_R2B_CLEAR_RHO = 0.85
+RULE_R2B_MIN_PAIR_WEIGHT_PCT = 5.0       # Rev 4 R2b — R2's holdings≥8 gate structurally silences every small book; this is the rule that actually catches SPY+QQQ (ρ=0.952 measured)
 
-R4_FIRE_CASH = 0.41               # Rev 4 R4 — ±1pp band is convention (an accounting quantity; the band only suppresses drift flap)
-R4_CLEAR_CASH = 0.39
+RULE_R3_BETA_BASE = 1.3                  # Rev 4 R3 — fire at β̂ ≥ base + 0.6·SE(β̂), clear below base − 0.6·SE(β̂); the band self-scales with sample size; worst flip 8.0%, detection 96.0% at true β 1.45
+RULE_R3_SE_BAND_MULT = 0.6
+# R3's R² co-gate is deliberately the SAME constant as `low_explanatory_power`
+# above, not a second 0.2: a beta the engine has already flagged as barely
+# explained by the market must not be the beta a rule fires on. One name keeps
+# the two from ever drifting apart.
+
+RULE_R4_FIRE_CASH_PCT = 41.0             # Rev 4 R4 — ±1pp band is convention (an accounting quantity; the band only suppresses drift flap)
+RULE_R4_CLEAR_CASH_PCT = 39.0
+
+# Rev 4 F21 — the fixed disclosure, shared by R0 and M04's weight tile. Measured:
+# an ETF counted as one holding understates true single-name exposure by ~5pp
+# (AAPL 38.5% look-through vs 33.3% naive), enough to cross a 35% cap silently.
+# retranslate:[ar,ms]
+ETF_OVERLAP_DISCLOSURE = (
+    "counts each ETF as one holding; index-fund overlap is not looked through "
+    "— your true single-name exposure can be higher."
+)
 
 # ── Validator constants (Rev 4 §LLM prompt contract pt 5; consumed by M06) ──
 
@@ -201,6 +226,8 @@ INSUFFICIENT_SHORT_WINDOW = "short_window"
 INSUFFICIENT_T_OVER_N = "t_over_n"
 INSUFFICIENT_BENCHMARK_MISALIGNED = "benchmark_misaligned"
 INSUFFICIENT_DROPPED_WEIGHT = "dropped_weight_exceeded"
+INSUFFICIENT_FEED_UNAVAILABLE = "feed_unavailable"
+INSUFFICIENT_ZERO_VARIANCE = "zero_variance"
 
 STATUS_OK = "ok"
 STATUS_NO_HOLDINGS = "no_holdings"

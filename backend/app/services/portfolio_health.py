@@ -29,7 +29,6 @@ All copy, including the "our data limit, not your book" phrasing that
 
 from __future__ import annotations
 
-import asyncio
 import math
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
@@ -43,6 +42,7 @@ from app.core.logging import logger
 from app.db import get_session
 from app.db.models import TickerReferenceRow
 from app.services import price_history
+from app.services.price_history import _MOCK_SOURCE
 from app.services.portfolio_health_constants import (
     BAD_PRINT_HARD_ABS_RETURN,
     BAD_PRINT_MIN_ABS_RETURN,
@@ -54,14 +54,17 @@ from app.services.portfolio_health_constants import (
     BENCHMARK_TICKER,
     DATA_QUALITY_DROP_REASON,
     DROPPED_WEIGHT_MAX,
+    FEED_UNAVAILABLE_DROP_REASON,
+    INSUFFICIENT_FEED_UNAVAILABLE,
     ENGINE_VERSION,
     INSUFFICIENT_BENCHMARK_MISALIGNED,
     INSUFFICIENT_DROPPED_WEIGHT,
     INSUFFICIENT_SHORT_WINDOW,
     INSUFFICIENT_T_OVER_N,
+    INSUFFICIENT_ZERO_VARIANCE,
     LOW_R2_THRESHOLD,
     MAX_RETURNS,
-    R2B_MIN_PAIR_WEIGHT,
+    RULE_R2B_MIN_PAIR_WEIGHT_PCT,
     SCENARIO_EPISODES,
     SHORT_HISTORY_DROP_REASON,
     STATUS_NO_HOLDINGS,
@@ -217,8 +220,16 @@ def compute_health(
     sector_of: Callable[[str], str],
     etf_tickers: frozenset[str],
     as_of: str,
+    feed_failed: frozenset[str] = frozenset(),
 ) -> dict:
     """The whole Tier-1 evaluation, pure and deterministic.
+
+    `feed_failed` names tickers whose provider fetch failed this evaluation.
+    Without it a data-feed outage is indistinguishable from a genuinely young
+    security, and the report would tell the user "not enough price history for
+    this holding" when the truth is "our feed is down" — the CR040 question
+    answered the wrong way, and the same mis-statement M01's own audit caught
+    one layer down.
 
     No I/O, no clock beyond `generated_at`, JSON-serialisable return — so the
     thing under test is the thing that ships.
@@ -262,7 +273,13 @@ def compute_health(
             dropped.append({"ticker": p.ticker, "reason": DATA_QUALITY_DROP_REASON})
             continue
         if len(dates) - 1 < T_MIN:
-            dropped.append({"ticker": p.ticker, "reason": SHORT_HISTORY_DROP_REASON})
+            dropped.append({
+                "ticker": p.ticker,
+                "reason": (
+                    FEED_UNAVAILABLE_DROP_REASON if p.ticker in feed_failed
+                    else SHORT_HISTORY_DROP_REASON
+                ),
+            })
             continue
         survivors.append(p)
 
@@ -277,6 +294,7 @@ def compute_health(
     # approximable (Rev 4 estimator pin 5 — the existing `beta()` validates
     # length rather than dates, which is how a silently wrong beta happens).
     bench_dates, bench_closes = prepared.get(BENCHMARK_TICKER, ([], {}))
+    bench_feed_failed = BENCHMARK_TICKER in feed_failed
     bench_clean = bool(bench_dates) and not _flagged_bad_print(
         [bench_closes[d] for d in bench_dates]
     )
@@ -328,6 +346,17 @@ def compute_health(
         ]
         cov_joint = ewma_covariance(returns, EWMA_LAMBDA)
         cov_risky = [row[:n_risky] for row in cov_joint[:n_risky]]
+        # A book whose adjusted closes never move has zero variance. M02
+        # documents that as the caller's precondition and raises on it; the
+        # honest answer here is "we cannot measure this", not a 500 and not a
+        # confident volatility of exactly zero.
+        if all(cov_risky[i][i] <= 0.0 for i in range(n_risky)):
+            estimator_ok = False
+            estimator_cause = INSUFFICIENT_ZERO_VARIANCE
+            cov_joint = None
+            cov_risky = None
+            b_index = None
+            benchmark_usable = False
 
     covered_invested = math.fsum(p.value for p in survivors)
     covered_total = covered_invested + cash
@@ -396,7 +425,10 @@ def compute_health(
     benchmark_vol_ann: float | None = None
     beta_cause = estimator_cause
     if estimator_ok and not benchmark_usable:
-        beta_cause = INSUFFICIENT_BENCHMARK_MISALIGNED
+        beta_cause = (
+            INSUFFICIENT_FEED_UNAVAILABLE if bench_feed_failed
+            else INSUFFICIENT_BENCHMARK_MISALIGNED
+        )
     if (
         estimator_ok and benchmark_usable and cov_full is not None
         and w_full is not None and b_index is not None and var_p_daily
@@ -575,10 +607,10 @@ def compute_health(
     if cov_risky is not None and v_weights:
         for i in range(n_risky):
             for j in range(i + 1, n_risky):
-                if (
-                    v_weights[i] < R2B_MIN_PAIR_WEIGHT
-                    or v_weights[j] < R2B_MIN_PAIR_WEIGHT
-                ):
+                # The threshold is stored in percentage points (M05's rule API
+                # works in those); the weights here are fractions.
+                floor = RULE_R2B_MIN_PAIR_WEIGHT_PCT / 100.0
+                if v_weights[i] < floor or v_weights[j] < floor:
                     continue
                 denom = math.sqrt(cov_risky[i][i] * cov_risky[j][j])
                 if denom <= 0.0:
@@ -638,19 +670,38 @@ def _etf_ticker_set(tickers: Iterable[str]) -> frozenset[str]:
     return frozenset(rows)
 
 
-def _gather_inputs(user_id: UUID, sim) -> dict:
+def _gather_inputs(user_id: UUID, sim) -> dict | None:
     """Every load the engine needs, synchronously, in one place.
 
     Deliberately one function rather than the four separate hops the module doc
     sketched: callers cross the sync boundary exactly once
     (`asyncio.to_thread`), which is the DEF116/DEF120 rule, and the snapshot
-    path can reuse it without duplicating the load order.
+    path reuses it without duplicating the load order. `default_sector_map()`
+    rather than the doc's `default_sector_map_async()` for the same reason —
+    inside a worker thread the sync accessor IS the async one's body.
+
+    Returns `None` when the MARKS are fabricated. This is the other half of the
+    mock refusal and it was missing: the engine refuses fabricated price
+    HISTORY, but `portfolio_marks_snapshot` resolves through
+    `FallbackProvider(cache(yfinance) → mock_walk)`, so a Yahoo rate-limit puts
+    random-walk prices into every weight in the payload — risk shares, HHI,
+    cash fraction, the LEVEL denominator, all of it — while the report still
+    says `status: "ok"`. Refusing costs a blank card during an outage; not
+    refusing publishes a confident risk analysis of a book that does not exist.
     """
-    portfolio, marks, _total, _dd, _source = sim.portfolio_marks_snapshot(user_id)
+    portfolio, marks, _total, _dd, price_source = sim.portfolio_marks_snapshot(user_id)
     holdings = [(h.ticker, float(h.quantity)) for h in portfolio.holdings]
     tickers = [t for t, _q in holdings]
 
+    if tickers and _MOCK_SOURCE in str(price_source):
+        logger.warn(
+            "portfolio_health_refused_mock_marks",
+            user_id=str(user_id), price_source=price_source,
+        )
+        return None
+
     series: dict[str, list[tuple[str, float]]] = {}
+    feed_failed: set[str] = set()
     if tickers:
         fetched = price_history.get_daily_series(
             [*tickers, BENCHMARK_TICKER], min_days=T_MIN + 1,
@@ -659,6 +710,8 @@ def _gather_inputs(user_id: UUID, sim) -> dict:
             series[ticker] = [
                 (d.isoformat(), px) for d, px in zip(daily.dates, daily.adj_closes)
             ]
+            if daily.fetch_failed:
+                feed_failed.add(ticker)
 
     sector_map = default_sector_map()
     return {
@@ -669,21 +722,29 @@ def _gather_inputs(user_id: UUID, sim) -> dict:
         "sector_of": sector_map.sector,
         "etf_tickers": _etf_ticker_set(tickers),
         "as_of": date.today().isoformat(),
+        "feed_failed": frozenset(feed_failed),
     }
 
 
-def _refusal_payload() -> dict:
+def _refusal_payload(reason: str) -> dict:
     return {
         "status": STATUS_REFUSED_MOCK_DATA,
-        "reason": "use_real_market_data=false",
+        "reason": reason,
         "engine_version": ENGINE_VERSION,
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
 
 
-async def build_portfolio_health(user_id: UUID, *, sim) -> dict:
-    """The engine entry point M07 calls. Exactly one of `refused_mock_data`,
-    `no_holdings` or `ok`; side-effect free (no journal writes).
+def build_health_context(user_id: UUID, *, sim=None) -> dict:
+    """The engine entry point (build/README.md seam register, M04 → M06/M07).
+
+    Exactly one of `refused_mock_data`, `no_holdings` or `ok`; side-effect free
+    — no journal writes, no snapshot rows. Synchronous, so an async caller wraps
+    it once in `asyncio.to_thread(build_health_context, user_id)`, which is the
+    form M07's own plan pins and the DEF116/DEF120 rule requires.
+
+    `sim` is injectable for tests only; production resolves the engine here so
+    the pinned single-argument call form works.
 
     The mock refusal comes FIRST and loads nothing. Serving mock-walk prices as
     a risk analysis would be the CR040 question answered the wrong way: the
@@ -691,8 +752,15 @@ async def build_portfolio_health(user_id: UUID, *, sim) -> dict:
     """
     if not settings.use_real_market_data:
         logger.warn("portfolio_health_refused_mock_data", user_id=str(user_id))
-        return _refusal_payload()
-    inputs = await asyncio.to_thread(_gather_inputs, user_id, sim)
+        return _refusal_payload("use_real_market_data=false")
+
+    if sim is None:
+        from app.services.sim_engine import get_sim_engine
+
+        sim = get_sim_engine()
+    inputs = _gather_inputs(user_id, sim)
+    if inputs is None:
+        return _refusal_payload("marks_source=mock_walk")
     return compute_health(**inputs)
 
 
@@ -705,11 +773,7 @@ def predicted_vol_for_snapshot(user_id: UUID) -> PredictedVol | None:
     the model. Synchronous: the snapshot job is a background task, already off
     the request path.
     """
-    if not settings.use_real_market_data:
-        return None
-    from app.services.sim_engine import get_sim_engine
-
-    payload = compute_health(**_gather_inputs(user_id, get_sim_engine()))
+    payload = build_health_context(user_id)
     if payload.get("status") != STATUS_OK:
         return None
     block = payload["blocks"]["portfolio_volatility"]

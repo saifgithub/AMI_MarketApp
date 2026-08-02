@@ -311,7 +311,7 @@ def test_mock_mode_refusal_loads_nothing(monkeypatch: pytest.MonkeyPatch) -> Non
     """Serving mock-walk prices as a risk analysis is the CR040 question
     answered the wrong way: the numbers would look entirely plausible and mean
     nothing. The refusal must come before any load, not after."""
-    import asyncio
+    from uuid import uuid4
 
     from app.core.config import settings
     from app.services import portfolio_health
@@ -323,14 +323,61 @@ def test_mock_mode_refusal_loads_nothing(monkeypatch: pytest.MonkeyPatch) -> Non
 
     monkeypatch.setattr(portfolio_health, "_gather_inputs", _explode)
 
-    payload = asyncio.run(
-        portfolio_health.build_portfolio_health(
-            __import__("uuid").uuid4(), sim=object(),
-        )
-    )
+    payload = portfolio_health.build_health_context(uuid4(), sim=object())
     assert payload["status"] == "refused_mock_data"
+    assert payload["reason"] == "use_real_market_data=false"
     assert "blocks" not in payload
     assert payload["engine_version"] == ENGINE_VERSION
+
+
+def test_the_entry_point_matches_the_pinned_seam() -> None:
+    """build/README.md's seam register pins `build_health_context(user_id)` as
+    the M04 → M06/M07 entry point, and M07's plan calls it as
+    `asyncio.to_thread(build_health_context, user_id)` — which requires it to be
+    single-argument AND synchronous, or the call returns an un-awaited coroutine
+    instead of a payload."""
+    import inspect
+
+    from app.services.portfolio_health import build_health_context
+
+    assert not inspect.iscoroutinefunction(build_health_context)
+    params = inspect.signature(build_health_context).parameters
+    required = [
+        name for name, p in params.items()
+        if p.default is inspect.Parameter.empty
+    ]
+    assert required == ["user_id"], required
+
+
+def test_fabricated_marks_are_refused_like_fabricated_history(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The other half of the mock refusal. `portfolio_marks_snapshot` resolves
+    through FallbackProvider(cache(yfinance) -> mock_walk), so a Yahoo outage
+    puts random-walk prices into EVERY weight in the payload — risk shares, HHI,
+    cash fraction, the LEVEL denominator — while the report still says ok."""
+    from uuid import uuid4
+
+    from app.core.config import settings
+    from app.services import portfolio_health
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+
+    class _Holding:
+        ticker, quantity = "AAA", 10.0
+
+    class _Portfolio:
+        holdings = [_Holding()]
+        current_cash = 100.0
+
+    class _Sim:
+        def portfolio_marks_snapshot(self, _user_id):
+            return _Portfolio(), {"AAA": 100.0}, 1100.0, 0.0, "mock_walk"
+
+    payload = portfolio_health.build_health_context(uuid4(), sim=_Sim())
+    assert payload["status"] == "refused_mock_data"
+    assert payload["reason"] == "marks_source=mock_walk"
+    assert "blocks" not in payload
 
 
 def test_benchmark_misalignment_is_never_re_gridded() -> None:
@@ -455,6 +502,12 @@ def test_scenario_and_bad_month_arithmetic() -> None:
     beta = payload["blocks"]["beta"]["value"]
     episodes = payload["blocks"]["scenario_panel"]["episodes"]
     assert [e["id"] for e in episodes] == ["covid_2020", "drawdown_2022"]
+    # The pinned constants themselves, not the payload's own echo of them.
+    # Verified 2026-08-02 against ^GSPC (the S&P 500 PRICE index) to 0.02pp and
+    # 0.03pp; a total-return series misses the 2022 episode by 0.91pp.
+    assert [e["benchmark_return"] for e in episodes] == [-0.339, -0.254]
+    assert [e["start"] for e in episodes] == ["2020-02-19", "2022-01-03"]
+    assert [e["end"] for e in episodes] == ["2020-03-23", "2022-10-12"]
     for episode in episodes:
         assert episode["implied_portfolio_return"] == pytest.approx(
             beta * episode["benchmark_return"]
@@ -679,3 +732,158 @@ def test_the_engine_holds_no_scattered_literals() -> None:
     )
     for literal in ("0.415", "1.85", "0.97", "126", "0.20", "1.645", "0.339"):
         assert not re.search(rf"(?<![\w.]){re.escape(literal)}(?![\w.])", code), literal
+
+
+# ── Value leaves the first pass never pinned (M04 audit, test-adequacy lens) ──
+
+
+def test_risk_contribution_value_is_the_risk_share_not_the_weight() -> None:
+    """The headline number of the whole feature is "X% of risk vs Y% of money".
+    A book where the two coincide cannot tell them apart, so this one is built
+    so the top RISK contributor is not the top holding by WEIGHT."""
+    kwargs = _book(T_MIN + 1)
+    kwargs["marks"] = {"AAA": 30.0, "BBB": 100.0, "CCC": 100.0}
+    payload = compute_health(**kwargs)
+    block = payload["blocks"]["risk_contribution"]
+
+    top = block["top"]
+    assert block["value"] == pytest.approx(top["risk_share"])
+    assert block["value"] != pytest.approx(top["invested_weight"]), (
+        "vacuity guard — on this book the two must differ, or the assertion "
+        "above proves nothing"
+    )
+    by_share = max(block["per_holding"], key=lambda e: e["risk_share"])
+    assert top["ticker"] == by_share["ticker"]
+
+
+def test_mcr_value_is_the_maximum_not_the_minimum() -> None:
+    payload = compute_health(**_book(T_MIN + 1))
+    block = payload["blocks"]["mcr"]
+    values = [e["mcr"] for e in block["per_holding"]]
+    assert len(set(values)) > 1, "vacuity guard — a flat book cannot tell max from min"
+    assert block["value"] == pytest.approx(max(values))
+    assert block["value"] != pytest.approx(min(values))
+
+
+def test_weight_concentration_counts_the_full_invested_sleeve() -> None:
+    """Counting weights needs no history, so a dropped holding still occupies
+    its share of the user's money and still counts here — computing HHI over the
+    survivors instead would flatter a book precisely when it is least
+    understood."""
+    kwargs = _book(T_MIN + 1)
+    kwargs["marks"] = {"AAA": 100.0, "BBB": 100.0, "CCC": 10.0}
+    kwargs["series"]["CCC"] = kwargs["series"]["CCC"][-60:]
+    payload = compute_health(**kwargs)
+
+    values = {"AAA": 1000.0, "BBB": 1000.0, "CCC": 100.0}
+    total = sum(values.values())
+    expected_hhi = sum((v / total) ** 2 for v in values.values())
+
+    block = payload["blocks"]["weight_concentration"]
+    assert block["value"] == pytest.approx(expected_hhi)
+    assert block["effective_n"] == pytest.approx(1.0 / expected_hhi)
+    assert block["holdings_count"] == 3
+
+    survivors_only = sum(
+        (v / 2000.0) ** 2 for k, v in values.items() if k != "CCC"
+    )
+    assert block["value"] != pytest.approx(survivors_only)
+
+
+def test_window_days_is_the_calendar_span_of_the_aligned_window() -> None:
+    """A drawdown or volatility figure without its window is not interpretable,
+    so the span has to be a real number rather than a present key."""
+    payload = compute_health(**_book(T_MIN + 1))
+    grid = _dates(T_MIN + 1)
+    span = (date.fromisoformat(grid[-1]) - date.fromisoformat(grid[0])).days
+    assert span > T_MIN, "vacuity guard — weekdays span more calendar days than rows"
+    for name, block in payload["blocks"].items():
+        assert block["window_days"] == span, name
+
+
+def test_benchmark_vol_is_annualised() -> None:
+    """Dropping the √252 is a 15.9x error that still produces a plausible-looking
+    number, which is the only kind of error worth a test."""
+    payload = compute_health(**_book(T_MIN + 1))
+    benchmark_vol = payload["context"]["benchmark_vol_ann"]
+    assert benchmark_vol is not None
+
+    grid = _dates(T_MIN + 1)
+    market = _closes(_walk(1, T_MIN + 1, sigma=0.009, dates=grid))
+    returns = [market[i] / market[i - 1] - 1.0 for i in range(1, len(market))]
+    from app.trading_math import annualize_vol, ewma_covariance
+
+    daily = math.sqrt(ewma_covariance([returns])[0][0])
+    assert benchmark_vol == pytest.approx(annualize_vol(daily))
+    assert benchmark_vol > 5.0 * daily, "vacuity guard — annualisation must bite"
+
+
+def test_the_level_denominator_is_the_covered_sleeve_plus_cash() -> None:
+    """In a partial book the LEVEL basis must be covered_invested + cash, not
+    full_invested + cash: σₚ describes the sleeve the engine actually measured,
+    and dividing by money it could not see would understate it."""
+    kwargs = _book(T_MIN + 1, cash=1000.0)
+    kwargs["marks"] = {"AAA": 100.0, "BBB": 100.0, "CCC": 10.0}
+    kwargs["series"]["CCC"] = kwargs["series"]["CCC"][-60:]
+    partial = compute_health(**kwargs)
+
+    covered = partial["covered_invested_value"]
+    assert covered == pytest.approx(2000.0)
+    assert partial["invested_value"] == pytest.approx(2100.0)
+
+    clean = dict(kwargs)
+    clean["holdings"] = [("AAA", 10.0), ("BBB", 10.0)]
+    clean_payload = compute_health(**clean)
+    ratio = covered / (covered + 1000.0)
+    assert partial["blocks"]["portfolio_volatility"]["value"] == pytest.approx(
+        ratio * clean_payload["blocks"]["portfolio_volatility"]["value"] /
+        (2000.0 / 3000.0), rel=1e-9,
+    )
+
+
+def test_a_feed_outage_is_not_reported_as_a_young_security() -> None:
+    """CR040, at the M04 seam this time. The engine must not tell a user "not
+    enough price history for this holding" when the truth is "our feed is down"
+    — the two call for completely different actions from them."""
+    kwargs = _book(T_MIN + 1)
+    kwargs["marks"] = {"AAA": 100.0, "BBB": 100.0, "CCC": 10.0}
+    kwargs["series"]["CCC"] = []
+    kwargs["feed_failed"] = frozenset({"CCC"})
+
+    payload = compute_health(**kwargs)
+    assert payload["dropped_holdings"] == [
+        {"ticker": "CCC", "reason": "feed_unavailable"}
+    ]
+
+    kwargs["feed_failed"] = frozenset()
+    payload = compute_health(**kwargs)
+    assert payload["dropped_holdings"] == [
+        {"ticker": "CCC", "reason": "short_history"}
+    ]
+
+
+def test_a_benchmark_feed_outage_says_so() -> None:
+    kwargs = _book(T_MIN + 1, with_benchmark=False)
+    kwargs["series"][BENCHMARK_TICKER] = []
+    kwargs["feed_failed"] = frozenset({BENCHMARK_TICKER})
+
+    payload = compute_health(**kwargs)
+    assert payload["blocks"]["beta"]["insufficient_cause"] == "feed_unavailable"
+    assert payload["blocks"]["portfolio_volatility"]["sufficient"] is True
+
+
+def test_a_zero_variance_book_is_insufficient_not_a_confident_zero() -> None:
+    """A book whose adjusted closes never move has zero variance. M02 raises on
+    it by contract; shipping 0.0 with sufficient:true would be a confident
+    claim of no risk at all."""
+    grid = _dates(T_MIN + 1)
+    flat = [(d, 100.0) for d in grid]
+    kwargs = _book(T_MIN + 1)
+    for ticker in ("AAA", "BBB", "CCC"):
+        kwargs["series"][ticker] = flat
+
+    payload = compute_health(**kwargs)
+    block = payload["blocks"]["portfolio_volatility"]
+    assert block["sufficient"] is False
+    assert block["value"] is None
+    assert block["insufficient_cause"] == "zero_variance"
