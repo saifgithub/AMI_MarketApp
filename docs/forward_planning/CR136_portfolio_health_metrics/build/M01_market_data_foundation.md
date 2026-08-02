@@ -139,8 +139,9 @@ BENCHMARK_TICKER = "SPY"                 # Rev 4 estimator pin 5 — SPY adjuste
 HISTORY_FETCH_PERIOD = "2y"              # Rev 4 estimator pin 4 — fetch 2y daily bars
 HISTORY_MAX_ROWS = 504                   # Rev 4 estimator pin 4 — estimator uses up to 504 returns
 DATA_QUALITY_DROP_REASON = "data_quality"  # Rev 4 uncertainty contract — dropped_holdings reason
-BAD_PRINT_SPIKE_ABS_RETURN = 0.40        # Rev 4 data-hygiene gate; convention, conservative (M01)
-BAD_PRINT_REVERSAL_MIN_FRACTION = 0.60   # ditto — next-day reversal ≥ 60% of the spike
+BAD_PRINT_SIGMA_MULT = 15.0              # Rev 4 data-hygiene gate — VOLATILITY-SCALED, measured (see amendment below)
+BAD_PRINT_MIN_ABS_RETURN = 0.10          # ditto — absolute floor; both bounds must be exceeded
+BAD_PRINT_REVERSAL_MIN_FRACTION = 0.60   # ditto — next day undoes ≥ 60% of the PRICE move
 BAD_PRINT_HARD_ABS_RETURN = 1.00         # ditto — |r| > 100% flagged unconditionally
 ```
 
@@ -263,20 +264,48 @@ Sessions: `get_daily_series` opens `with get_session() as s:` internally
 takes the caller's session.
 
 **Bad-print detector** (pure, stdlib, no I/O — Rev 4 data-hygiene gate).
-Input: ascending adjusted closes. Simple returns `r_i =
-adj_closes[i] / adj_closes[i-1] - 1` for `i ≥ 1`. Flag index `i` (into the
-closes/dates list) when ANY of:
 
-- `adj_closes[i] <= 0.0` or `adj_closes[i-1] <= 0.0` — an un-returnable
-  garbage print;
+> **AMENDED 2026-08-02 (AT:R66), after the M01 audit.** The first draft of this
+> section specified a flat absolute spike bound (`> 0.40`) with the reversal
+> scored on the two simple returns. Both were defective against Rev 4 and were
+> replaced on measurement:
+>
+> 1. **Rev 4 pins a VOLATILITY-SCALED bound** ("a same-day |return| exceeding a
+>    volatility-scaled bound with next-day reversal"), and a flat 40% is inert
+>    exactly where it is needed: on a bond ETF at 0.26%/day it sits at ~150
+>    daily σ, so the reviews' own worked example — a phantom ±40% adjusted close
+>    — was not caught at all.
+> 2. **Reversal scored on returns exempts every upward print above +66.7%.** For
+>    an exact price round trip, `|r_next| / |r|` is `1/(1+r)`, which falls below
+>    0.60 for `r > 2/3` while still sitting under the 100% hard bound.
+> 3. **NaN passed every screen** — all three comparisons are `<=` / `>`, and
+>    every comparison against NaN is False.
+>
+> `k = 15` and the 10% floor were measured, not chosen: 18 tickers × 3 two-year
+> windows (incl. the COVID crash and the 2022 drawdown), 8,671 genuine days that
+> ALSO pass the reversal test. The largest in σ units is BND 2020-03-12 at 27.6σ
+> (|r| = 5.44%) — which is why the floor exists; the largest above the floor is
+> XLU 2020-03-16 at 11.0σ (|r| = 11.36%). k = 15 leaves 36% headroom over that
+> and fires on none of the 8,671.
+
+Input: ascending adjusted closes. Robust daily scale
+`σ̂ = 1.4826 · median(|r − median(r)|)` over the usable returns — MAD rather
+than a plain sd because the observation being hunted is precisely the one that
+would inflate a plain sd and hide behind the widened bound. Bound =
+`max(BAD_PRINT_SIGMA_MULT · σ̂, BAD_PRINT_MIN_ABS_RETURN)`. Flag index `i` when
+ANY of:
+
+- `adj_closes[i]` or `adj_closes[i-1]` is non-finite or `<= 0.0` — an
+  un-returnable garbage print (NaN included, explicitly);
 - `abs(r_i) > BAD_PRINT_HARD_ABS_RETURN` — unconditional;
-- `abs(r_i) > BAD_PRINT_SPIKE_ABS_RETURN` AND `i + 1` exists AND
-  `r_{i+1}` has the opposite sign AND
-  `abs(r_{i+1}) >= BAD_PRINT_REVERSAL_MIN_FRACTION * abs(r_i)` — a spike
-  the next trading day reverses ≥ 60% of, in the opposite direction. Only
-  `i` is flagged (the reversal day is the correction). A spike on the
-  LAST day cannot be evaluated for reversal and is NOT flagged by this
-  rule (only the >100% rule applies there) — documented, tested.
+- `abs(r_i) > bound` AND `i + 1` exists AND the next trading day undoes at
+  least `BAD_PRINT_REVERSAL_MIN_FRACTION` of the **price** move:
+  `(p_i − p_{i+1}) / (p_i − p_{i-1}) >= 0.60`. An exact round trip scores
+  exactly 1.0 at any magnitude and in either direction; a same-direction
+  follow-through scores negative, so the direction requirement is subsumed
+  rather than tested separately. Only `i` is flagged (the reversal day is the
+  correction). A spike on the LAST day cannot be evaluated for reversal and is
+  NOT flagged by this rule (only the >100% rule applies there) — tested.
 
 Returns ascending flagged indices; `[]` when clean (inputs of length < 2
 return `[]`). **Detection is report-only:** M01 never repairs, drops, or

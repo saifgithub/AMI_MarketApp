@@ -1,21 +1,30 @@
-"""CR136 shared constants — every threshold, band, and pin in one module.
+"""CR136 M04 — single home for every CR136 constant (sufficiency floors, rule thresholds + hysteresis bands, validator constants, scenario episodes, bad-print params, gate defaults); import from here, never scatter literals.
 
-Rev 4's standing instruction is "never scattered literals": every sufficiency
-floor, rule threshold, hysteresis band, validator constant, scenario episode
-and gate default for Portfolio Health lives here, and every one of them carries
-a comment naming the Rev 4 derivation that pinned it. The reason is not tidiness
-— Rev 4's thresholds were each fixed by a measurement, and a literal copied into
-a call site is a number nobody can trace back to the simulation that justified
-it.
+Rev 4's standing instruction is "never scattered literals", and the reason is not
+tidiness: every threshold below was fixed by a measurement, and a number copied
+into a call site is a number nobody can trace back to the simulation that
+justified it. Each constant therefore names its Rev 4 derivation in a comment.
 
-Seeded by M01 with the data-layer pins. **M04 owns this module** and extends it
-with `SUFFICIENCY`, the rule thresholds/bands, validator constants, scenario
-episodes and gate defaults.
+**Import-pure: stdlib only, zero `app.*` imports.** `app/core/config.py` reads
+the gate defaults from here for its `Settings` field defaults, and M01's
+price-history store reads the data-layer pins — either import would become a
+cycle the moment this module reached back into `app`.
+
+That purity is also why the four *estimator-definition* constants
+(`EWMA_LAMBDA`, `TRADING_DAYS_PER_YEAR`, `TRADING_DAYS_PER_MONTH`,
+`BAD_MONTH_Z`) are deliberately NOT redefined here — they live in
+`app.trading_math.portfolio_risk`, which is where the estimator that uses them
+lives, and M02's hand-off forbids duplicating them. `portfolio_health.py`
+imports them from there. One definition, no drift.
+
+Seeded by M01 with the data-layer pins; M04 owns it and everything below.
 """
 
 from __future__ import annotations
 
-# ── Data layer (M01) ────────────────────────────────────────────────────────
+# ── Engine identity + data layer ────────────────────────────────────────────
+
+ENGINE_VERSION = "cr136.v1"              # Rev 4 estimator pin 8 — on root and every block, so old journal entries stay interpretable
 
 # Rev 4 estimator pin 5 — the benchmark leg is SPY's adjusted close, ridden
 # through the identical history path (same table, same hygiene rules) so the
@@ -25,19 +34,170 @@ BENCHMARK_TICKER = "SPY"
 # Rev 4 estimator pin 4 — fetch 2 years of daily bars. The pre-CR136 layer
 # topped out at 65 daily bars ("3m"), i.e. 64 returns against a floor of 126.
 HISTORY_FETCH_PERIOD = "2y"
+DATA_WINDOW_YEARS = 2
 
 # Rev 4 estimator pin 4 — "the estimator uses up to 504 returns" (2 × 252
-# trading days). Reads are trimmed to the trailing 504 rows.
+# trading days). HISTORY_MAX_ROWS caps stored CLOSES served per ticker;
+# MAX_RETURNS caps the RETURNS the estimator consumes. They are both 504, which
+# means a single ticker's own window yields at most 503 returns — immaterial by
+# Rev 4's own pin, which records ESS 65.61 at a 252-day lookback vs 65.67 at
+# 504 and calls a 252-day lookback acceptable. At λ=0.97 the 504th observation
+# carries a normalised weight of ~7e-9.
 HISTORY_MAX_ROWS = 504
+MAX_RETURNS = 504
 
 # Rev 4 uncertainty contract — the `reason` recorded on a `dropped_holdings`
 # entry when the data-hygiene gate (not short history) removed the holding.
 DATA_QUALITY_DROP_REASON = "data_quality"
+SHORT_HISTORY_DROP_REASON = "short_history"
 
-# Rev 4 data-hygiene gate. The three bad-print bounds are convention, chosen
-# conservatively (M01): they must not fire on a genuine crash day, because a
-# real -45% session is exactly the observation the volatility estimate needs
-# most. Calibration is deliberately loose in that direction.
-BAD_PRINT_SPIKE_ABS_RETURN = 0.40        # same-day |return| that opens the reversal test
-BAD_PRINT_REVERSAL_MIN_FRACTION = 0.60   # next-day reversal ≥ 60% of the spike, opposite sign
+# ── Sufficiency contract (Rev 4 table, supersedes Rev 3) ────────────────────
+
+# Rev 4 sufficiency table — 126 observed returns. Window coverage 1−λ^126 =
+# 97.85% of EWMA weight; ESS 62.9 = 96% of the asymptote, so the floor stays
+# meaningful under exponential weighting.
+T_MIN = 126
+
+# Rev 4 F17, measured: for a FIXED weight vector the relative sampling error of
+# σ̂ₚ is 1/√(2T) INDEPENDENT of N (6.29–6.37% across N = 5…200 at T = 126,
+# unchanged even where the sample covariance is singular). So this gate applies
+# ONLY to the quantities that touch off-diagonals — DR², risk contributions and
+# MCR. σₚ and beta gate on T alone.
+T_OVER_N_MIN = 5.0
+
+# Rev 4 short-history rule — dropped invested weight above this and the whole
+# Tier-1 block reads insufficient rather than describing a book it has not seen.
+DROPPED_WEIGHT_MAX = 0.20
+
+# Rev 4 Tier-1 table — R² below this sets `low_explanatory_power`; also R3's
+# own R² gate (M05). Beta still ships when the flag is true; it is labelled,
+# not withheld.
+LOW_R2_THRESHOLD = 0.20
+
+# Rev 4 F10 — the old "≥ 2 snapshots" floor was vacuous, and an
+# expanding-window max drawdown is a monotone ratchet a de-risking user can
+# never improve (measured: minimum day-over-day change exactly 0.0; the rolling
+# window restores improvability on 87.4% of paths).
+TIER2_MIN_SNAPSHOTS = 21
+TIER2_MDD_WINDOW_DAYS = 252
+
+# ── Typical bad month (Rev 4 F13) ───────────────────────────────────────────
+# The z and the 21-day month live in `trading_math.portfolio_risk` as
+# BAD_MONTH_Z / TRADING_DAYS_PER_MONTH (M02 owns the arithmetic). Pins
+# reproduce 2.71 / 6.07 / 12.44 % at σ = 26.2% for 1d / 1w / 1mo.
+
+# ── Scenario panel (Rev 4 Tier-1 table) ─────────────────────────────────────
+# Verified 2026-08-02 against SPY on the PRICE basis (`auto_adjust=False`):
+# COVID −34.10% vs −33.90% pinned (0.20pp), 2022 −25.36% vs −25.40% (0.04pp).
+# The price basis matters: on dividend-adjusted closes the 2022 episode reads
+# −24.50%, a 0.90pp miss, because Rev 4's figures are S&P 500 PRICE-index
+# returns and the sim pays no dividends. `backend/scripts/cr136_generate_fixtures.py
+# --verify-scenarios` re-runs the check; M11 re-runs it live at promotion.
+SCENARIO_EPISODES = (
+    {"id": "covid_2020", "label": "COVID crash",
+     "start": "2020-02-19", "end": "2020-03-23", "benchmark_return": -0.339},
+    {"id": "drawdown_2022", "label": "2022 drawdown",
+     "start": "2022-01-03", "end": "2022-10-12", "benchmark_return": -0.254},
+)
+
+# ── Rule engine thresholds + hysteresis (Rev 4 rule table; consumed by M05) ──
+#
+# Every band below is a measured width, not a round number. Under EWMA the
+# boundary flip rate is 21.3% (vs 8.9% for an equal-weight window), so
+# hysteresis is mandatory on every Σ-derived rule — a metric that crosses its
+# threshold twice a week teaches nothing. CI-lower-bound gating was measured and
+# REJECTED: detection collapses to 50.8% on a genuinely high-beta book.
+
+R1_FIRE_RISK_SHARE = 0.415        # Rev 4 R1 — band ±1.5pp = 0.6× the measured per-window sd (~2.2–2.4pp at T/N=5); worst flip 7.7%, detection 95.6% at true 44%
+R1_CLEAR_RISK_SHARE = 0.385
+R1_MIN_RISKY_HOLDINGS = 4         # Rev 4 R1 — small books have structurally high top shares (60/40 SPY+AGG reads 94.5%); the contribution table carries the fact, the rule stays silent
+
+R2_FIRE_DR2 = 1.85                # Rev 4 R2 — band ±0.15 measured: 5.5% flips, 99.3% detection at true 1.7, 1.3% false-fire at true 2.3
+R2_CLEAR_DR2 = 2.15
+R2_MIN_HOLDINGS = 8
+
+R2B_FIRE_RHO = 0.90               # Rev 4 R2b — band 0.05 ≈ 3× SE(ρ̂) at ρ=0.9, T=126
+R2B_CLEAR_RHO = 0.85
+R2B_MIN_PAIR_WEIGHT = 0.05        # Rev 4 R2b — R2's holdings≥8 gate structurally silences every small book; this is the rule that actually catches SPY+QQQ (ρ=0.952 measured)
+
+R3_BETA_LINE = 1.3                # Rev 4 R3 — fire at β̂ ≥ line + 0.6·SE(β̂), clear below line − 0.6·SE(β̂); band self-scales with sample size, worst flip 8.0%, detection 96.0% at true β 1.45
+R3_BAND_SE_MULT = 0.6             # R3's R² gate is LOW_R2_THRESHOLD above
+
+R4_FIRE_CASH = 0.41               # Rev 4 R4 — ±1pp band is convention (an accounting quantity; the band only suppresses drift flap)
+R4_CLEAR_CASH = 0.39
+
+# ── Validator constants (Rev 4 §LLM prompt contract pt 5; consumed by M06) ──
+
+HEADLINE_MAX_WORDS = 16           # Rev 4 §F1
+
+# Rev 4 F19 — §F1/§F2/§F5 are the plain-language register and must not match
+# any of these; §F3/§F4 are exempt. Measured 0/10 false positives on plausible
+# §F2 prose. This is why §F1's R² requirement is surfaced as "the market
+# explains only X% of this book's day-to-day moves" — the literal form would
+# trip the check by design.
+REGISTER_LEXICON = (
+    "shrinkage", "covariance", "OLS", "R²", "standard error", "estimator",
+    "regression", "confidence interval", "kurtosis", "Ledoit", "Markowitz",
+    "Choueifaty", "CAPM", "pro-forma", "eigen", "quadratic", "sampling error",
+    "heteroskedastic", "JPM", "EWMA",
+)
+
+# Rev 4 §LLM prompt contract pt 5(c) — the fixed constants list checked in
+# beside SUFFICIENCY. Rev 4's own list is open ("citation years, …"); M06
+# extends THIS tuple, never a local one.
+VALIDATOR_FIXED_TOKENS = ("252", "95", "1.96", "500", "M11", "M12")
+
+# ── Bad-print detector params (Rev 4 data-hygiene gate) ─────────────────────
+#
+# The ALGORITHM is owned by M01 — its detector takes these as arguments so it
+# keeps its zero-dependency contract (build/README.md seam register).
+#
+# Rev 4 pins the screen as "a same-day |return| exceeding a VOLATILITY-SCALED
+# bound with next-day reversal". A flat absolute bound cannot satisfy that: on a
+# bond ETF at 0.26%/day, a 40% threshold sits at ~150 daily sigma, so the screen
+# is inert on exactly the low-volatility holdings where a phantom print is most
+# visible and most damaging.
+#
+# Both numbers below were measured on real market data (2026-08-02, script
+# preserved in the CR136 audit pack): 18 tickers x 3 two-year windows including
+# the COVID crash and the 2022 drawdown, 8,671 genuine days that ALSO pass the
+# reversal test. The largest of those in sigma units is BND 2020-03-12 at 27.6σ
+# (|r| = 5.44%, sigma = 0.20%/day) — which is why the floor exists; the largest
+# above the floor is XLU 2020-03-16 at 11.0σ (|r| = 11.36%). k = 15 leaves 36%
+# headroom over that worst genuine event and fires on none of the 8,671.
+#
+# The direction of the calibration is deliberate and one-sided: a genuine crash
+# day is the single most informative observation a volatility estimate has, and
+# a false drop removes the user's holding from their own risk analysis. Missing
+# a small phantom costs a little accuracy; dropping a real crash costs the
+# estimate exactly when it matters most.
+BAD_PRINT_SIGMA_MULT = 15.0              # |r| must exceed this many robust (MAD-scaled) daily sigma
+BAD_PRINT_MIN_ABS_RETURN = 0.10          # ...AND this absolute floor, so a near-zero sigma cannot make the bound absurd
+BAD_PRINT_REVERSAL_MIN_FRACTION = 0.60   # next trading day must undo ≥60% of the PRICE move (not of the return — an exact round trip scores 1.0 at any magnitude)
 BAD_PRINT_HARD_ABS_RETURN = 1.00         # |r| > 100% is flagged unconditionally
+
+# ── Access-gate defaults (Rev 4 §Access gating) ─────────────────────────────
+# M07 wires these as the `Settings` field defaults. `trial` is the launch
+# default; flipping to full plan-gating later is a config change, not a code
+# change. The Health-card TILES are free in every mode — gating applies only to
+# full Finding generation.
+GATE_MODE_DEFAULT = "trial"
+TRIAL_DAYS_DEFAULT = 14
+TRIAL_FINDINGS_DEFAULT = 7
+DAILY_CAP_DEFAULT = 2
+PLANS_DEFAULT = "TRADER,FLOOR_MANAGER"
+
+# ── Machine-readable states (no user-visible copy anywhere in M04) ──────────
+
+INSUFFICIENT_SHORT_WINDOW = "short_window"
+INSUFFICIENT_T_OVER_N = "t_over_n"
+INSUFFICIENT_BENCHMARK_MISALIGNED = "benchmark_misaligned"
+INSUFFICIENT_DROPPED_WEIGHT = "dropped_weight_exceeded"
+
+STATUS_OK = "ok"
+STATUS_NO_HOLDINGS = "no_holdings"
+STATUS_REFUSED_MOCK_DATA = "refused_mock_data"
+
+BASIS_TOTAL_VALUE = "total_value"
+BASIS_INVESTED_SLEEVE = "invested_sleeve"
+BASIS_WEIGHTS = "weights"

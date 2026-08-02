@@ -34,6 +34,8 @@ This module never repairs, drops, or edits a row on quality grounds.
 
 from __future__ import annotations
 
+import math
+import statistics
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from typing import Sequence
@@ -52,12 +54,16 @@ from app.services.market_data import (
 )
 from app.services.portfolio_health_constants import (
     BAD_PRINT_HARD_ABS_RETURN,
+    BAD_PRINT_MIN_ABS_RETURN,
     BAD_PRINT_REVERSAL_MIN_FRACTION,
-    BAD_PRINT_SPIKE_ABS_RETURN,
+    BAD_PRINT_SIGMA_MULT,
     BENCHMARK_TICKER,
     HISTORY_FETCH_PERIOD,
     HISTORY_MAX_ROWS,
 )
+
+# MAD → Gaussian-consistent σ. 1/Φ⁻¹(0.75); the standard robust-scale constant.
+_MAD_TO_SIGMA = 1.4826
 
 # Per-ticker provider-fetch throttle. Daily bars change once per trading day,
 # so re-asking inside this window can only return what we already stored.
@@ -116,6 +122,12 @@ class DailySeries:
     ticker", which is the question the fetch throttle needs; the stamp on the
     last bar answers a different one and would let a series whose tail is a
     stale row re-fetch on every call.
+
+    `fetch_failed` says a fetch was attempted this call and produced nothing.
+    Without it a feed outage and a genuinely young security are the same empty
+    series, and the engine would tell a user "this holding does not have enough
+    price history" when the truth is "our data feed is down" — the CR040
+    question answered the wrong way.
     """
 
     ticker: str
@@ -124,11 +136,13 @@ class DailySeries:
     closes: list[float]
     sources: tuple[str, ...]
     fetched_at: datetime | None
+    fetch_failed: bool = False
 
 
-def _empty_series(ticker: str) -> DailySeries:
+def _empty_series(ticker: str, *, fetch_failed: bool = False) -> DailySeries:
     return DailySeries(
-        ticker=ticker, dates=[], adj_closes=[], closes=[], sources=(), fetched_at=None,
+        ticker=ticker, dates=[], adj_closes=[], closes=[], sources=(),
+        fetched_at=None, fetch_failed=fetch_failed,
     )
 
 
@@ -161,12 +175,21 @@ def upsert_daily_bars(
     *,
     source: str,
     now: datetime,
+    replace_foreign_rows: bool = True,
 ) -> dict:
-    """Insert-or-update `(ticker, date)` rows. Returns `{"inserted", "updated"}`.
+    """Insert-or-update `(ticker, date)` rows.
+
+    Returns `{"inserted", "updated", "skipped"}`.
 
     Existing rows are UPDATED, never skipped: a dividend or split rewrites the
     whole trailing adjusted series at the provider, so skip-if-exists would
     freeze stale values into every covariance computed afterwards.
+
+    `replace_foreign_rows=False` makes an existing row written by a DIFFERENT
+    provider untouchable. The mock path passes it: a local dev run in mock mode
+    would otherwise walk over accumulated real bars in place — value and
+    provenance both — and the destruction would be invisible, since the rows
+    still look like ordinary history afterwards.
 
     Runs in the caller's session/transaction. Insert-or-update by reading the
     affected dates into a dict first — portable across sqlite and Postgres,
@@ -177,7 +200,7 @@ def upsert_daily_bars(
     for bar_date, price in bars:
         by_date[bar_date] = float(price)
     if not by_date:
-        return {"inserted": 0, "updated": 0}
+        return {"inserted": 0, "updated": 0, "skipped": 0}
 
     existing = {
         row.date: row
@@ -191,6 +214,7 @@ def upsert_daily_bars(
 
     inserted = 0
     updated = 0
+    skipped = 0
     for bar_date, price in by_date.items():
         row = existing.get(bar_date)
         if row is None:
@@ -203,6 +227,8 @@ def upsert_daily_bars(
                 fetched_at=now,
             ))
             inserted += 1
+        elif not replace_foreign_rows and row.source != source:
+            skipped += 1
         else:
             row.close = price
             row.adj_close = price
@@ -210,29 +236,57 @@ def upsert_daily_bars(
             row.fetched_at = now
             updated += 1
     session.flush()
-    return {"inserted": inserted, "updated": updated}
+    if skipped:
+        logger.info(
+            "price_history_preserved_foreign_rows",
+            ticker=t, source=source, skipped=skipped,
+        )
+    return {"inserted": inserted, "updated": updated, "skipped": skipped}
 
 
 # ── Read-through ────────────────────────────────────────────────────────────
 
 
-def _candles_to_bars(candles: Sequence[Candle]) -> list[tuple[date, float]]:
+def _candles_to_bars(
+    candles: Sequence[Candle], *, ticker: str,
+) -> list[tuple[date, float]]:
     """Trading date + close per candle, later bars winning a duplicate date.
 
     `Candle.t` is epoch seconds UTC. yfinance stamps a daily bar at midnight
     exchange-tz (or naive midnight), so the UTC date equals the exchange
     trading date either way. Weekends and holidays exist only as absent bars.
+
+    Non-finite and non-positive closes are refused at the door and counted in a
+    log line, never persisted. `YfinanceProvider.history` does not filter them:
+    `float(row["Close"])` on a pandas NaN returns `nan` rather than raising, so
+    a malformed provider row would otherwise reach `Numeric(12, 4)` — where it
+    either fails the whole call with a DB error or, worse, lands in the table
+    and turns every covariance built from that ticker into NaN.
     """
     by_date: dict[date, float] = {}
+    rejected = 0
     for candle in candles:
+        close = float(candle.c)
+        if not (math.isfinite(close) and close > 0.0):
+            rejected += 1
+            continue
         bar_date = datetime.fromtimestamp(candle.t, timezone.utc).date()
-        by_date[bar_date] = float(candle.c)
+        by_date[bar_date] = close
+    if rejected:
+        logger.warn(
+            "price_history_rejected_unusable_close",
+            ticker=ticker,
+            rejected=rejected,
+            served=len(candles),
+        )
     return sorted(by_date.items())
 
 
-def _build_series(ticker: str, rows: list[PriceHistoryDailyRow]) -> DailySeries:
+def _build_series(
+    ticker: str, rows: list[PriceHistoryDailyRow], *, fetch_failed: bool = False,
+) -> DailySeries:
     if not rows:
-        return _empty_series(ticker)
+        return _empty_series(ticker, fetch_failed=fetch_failed)
     stamps = [s for s in (_as_utc(r.fetched_at) for r in rows) if s is not None]
     return DailySeries(
         ticker=ticker,
@@ -243,6 +297,7 @@ def _build_series(ticker: str, rows: list[PriceHistoryDailyRow]) -> DailySeries:
         closes=[float(r.close) for r in rows],
         sources=tuple(sorted({r.source for r in rows})),
         fetched_at=max(stamps) if stamps else None,
+        fetch_failed=fetch_failed,
     )
 
 
@@ -296,7 +351,10 @@ def get_daily_series(
     Synchronous. Callers on async routes must wrap this in
     `asyncio.to_thread(...)` (the DEF116/DEF120 rule).
     """
-    now = now or datetime.now(timezone.utc)
+    # A naive `now` is treated as UTC rather than raising: every stored stamp is
+    # normalised the same way, and a caller that passed `datetime.now()` should
+    # get a throttle decision, not a TypeError from a mixed-awareness subtract.
+    now = _as_utc(now) or datetime.now(timezone.utc)
     real_mode = bool(settings.use_real_market_data)
 
     wanted: list[str] = []
@@ -325,29 +383,37 @@ def get_daily_series(
             provider = _leaf_provider()
             provider_resolved = True
         if provider is None:
-            out[ticker] = series
+            # No provider is a fetch failure, not an absence of history: the
+            # caller must be able to tell "our feed is down" from "this
+            # security is young" (CR040).
+            out[ticker] = _replace_fetch_failed(series, ticker)
             continue
 
         # Network round-trip deliberately outside any open transaction.
         candles = provider.history(ticker, HISTORY_FETCH_PERIOD)
-        if not candles:
+        source = getattr(provider, "name", "unknown")
+        bars = _candles_to_bars(candles or (), ticker=ticker)
+        if not bars:
             logger.warn(
                 "price_history_fetch_failed",
                 ticker=ticker,
                 period=HISTORY_FETCH_PERIOD,
-                provider=getattr(provider, "name", "unknown"),
+                provider=source,
                 stored_rows=len(series.dates),
+                candles_served=len(candles or ()),
             )
-            out[ticker] = series
+            out[ticker] = _replace_fetch_failed(series, ticker)
             continue
 
         with get_session() as session:
             upsert_daily_bars(
                 session,
                 ticker,
-                _candles_to_bars(candles),
-                source=getattr(provider, "name", "unknown"),
+                bars,
+                source=source,
                 now=now,
+                # A mock run must never overwrite real history in place.
+                replace_foreign_rows=source != _MOCK_SOURCE,
             )
         # Re-read, so what is returned is exactly what is persisted.
         with get_session() as session:
@@ -356,6 +422,20 @@ def get_daily_series(
             )
 
     return out
+
+
+def _replace_fetch_failed(series: DailySeries, ticker: str) -> DailySeries:
+    if not series.dates:
+        return _empty_series(ticker, fetch_failed=True)
+    return DailySeries(
+        ticker=series.ticker,
+        dates=series.dates,
+        adj_closes=series.adj_closes,
+        closes=series.closes,
+        sources=series.sources,
+        fetched_at=series.fetched_at,
+        fetch_failed=True,
+    )
 
 
 def get_benchmark_series(
@@ -395,31 +475,76 @@ def latest_trading_day() -> date | None:
 # ── Data-hygiene gate ───────────────────────────────────────────────────────
 
 
+def _usable_price(value: float) -> bool:
+    """A price that a return can honestly be computed from.
+
+    NaN is the archetypal garbage print, and it is invisible to every ordinary
+    comparison — `nan > 0.40` and `nan <= 0.0` are BOTH False, so a threshold
+    screen written the obvious way lets it through untouched and it poisons
+    every covariance downstream as a silent NaN.
+    """
+    return isinstance(value, (int, float)) and math.isfinite(value) and value > 0.0
+
+
+def robust_daily_sigma(returns: Sequence[float]) -> float:
+    """MAD-scaled standard deviation of a return series.
+
+    Robust by necessity, not preference: the observation being hunted is
+    precisely the one that would inflate a plain standard deviation and hide
+    itself behind a widened bound. The median absolute deviation has a 50%
+    breakdown point, so a handful of bad prints in a 126–504 day window cannot
+    move it. ×1.4826 rescales MAD to a Gaussian-consistent σ.
+
+    Returns 0.0 for a series too short or too degenerate to estimate — the
+    caller's absolute floor takes over there.
+    """
+    if len(returns) < 3:
+        return 0.0
+    median = statistics.median(returns)
+    mad = statistics.median([abs(r - median) for r in returns])
+    return _MAD_TO_SIGMA * mad
+
+
 def detect_bad_print_days(
     adj_closes: list[float],
     *,
-    spike_abs_return: float = BAD_PRINT_SPIKE_ABS_RETURN,
+    sigma_mult: float = BAD_PRINT_SIGMA_MULT,
+    min_abs_return: float = BAD_PRINT_MIN_ABS_RETURN,
     reversal_min_fraction: float = BAD_PRINT_REVERSAL_MIN_FRACTION,
     hard_abs_return: float = BAD_PRINT_HARD_ABS_RETURN,
 ) -> list[int]:
     """Ascending indices of days whose print looks fabricated, not traded.
 
-    Pure and stdlib-only — no I/O, no session, and the three bounds arrive as
-    arguments (their values live in `portfolio_health_constants`) so the
-    detector stays independently testable at any calibration.
+    Pure and stdlib-only — no I/O, no session, and every bound arrives as an
+    argument (values live in `portfolio_health_constants`) so the detector stays
+    independently testable at any calibration.
 
-    Three signals, deliberately calibrated to under- rather than over-fire: a
-    genuine crash day is the single most informative observation a volatility
-    estimate has, and dropping it would bias σ̂ downward exactly when it matters.
+    Three signals:
 
-      * a non-positive close on either side of a return — un-returnable garbage;
-      * |r| > `hard_abs_return` — no US equity session does this honestly;
-      * |r| > `spike_abs_return` where the NEXT trading day reverses at least
-        `reversal_min_fraction` of it in the opposite direction — the signature
-        of a bad print followed by its correction. Only the spike index is
-        flagged; the reversal day IS the correction. A spike on the final day
-        has no next day to test and is therefore not flagged by this rule (the
-        hard bound still applies to it).
+      * a close that is non-finite or non-positive on either side of a return —
+        un-returnable garbage, flagged outright;
+      * `|r| > hard_abs_return` — no US equity session does this honestly;
+      * `|r|` exceeding BOTH `sigma_mult` robust daily sigma AND
+        `min_abs_return`, where the NEXT trading day undoes at least
+        `reversal_min_fraction` of the PRICE move — the signature of a bad
+        print followed by its correction. Only the spike index is flagged; the
+        reversal day IS the correction. A spike on the final day has no next
+        day to test and is not flagged by this rule (the hard bound still
+        applies).
+
+    **Volatility-scaled, per Rev 4's pin.** A flat absolute bound is inert
+    exactly where it is needed most: on a bond ETF at 0.26%/day, a 40%
+    threshold is ~150 daily sigma, so no phantom print short of the hard bound
+    could ever trip it. The absolute floor sits alongside the sigma multiple —
+    both must be exceeded — because a very low sigma would otherwise make the
+    bound absurdly tight; measured, the binding case is BND on 2020-03-12, a
+    genuine 5.44% bond dislocation that is 27.6 robust sigma and does reverse.
+
+    **Reversal is measured on the price move, not on the two returns.** For an
+    exact round trip `(cur − next)/(cur − prev)` is exactly 1.0 at any
+    magnitude and in either direction, whereas comparing the two simple returns
+    scores the same round trip as low as 1/(1+r) — which silently exempted
+    every upward print above +66.7%.
 
     Report-only. The caller (M04) drops the whole holding for the window with
     `reason: DATA_QUALITY_DROP_REASON` and `partial: true`; nothing here
@@ -429,28 +554,31 @@ def detect_bad_print_days(
     if n < 2:
         return []
 
-    def simple_return(i: int) -> float | None:
-        prev, cur = adj_closes[i - 1], adj_closes[i]
-        if prev <= 0.0 or cur <= 0.0:
-            return None
-        return cur / prev - 1.0
+    clean_returns = [
+        adj_closes[i] / adj_closes[i - 1] - 1.0
+        for i in range(1, n)
+        if _usable_price(adj_closes[i]) and _usable_price(adj_closes[i - 1])
+    ]
+    bound = max(sigma_mult * robust_daily_sigma(clean_returns), min_abs_return)
 
     flagged: list[int] = []
     for i in range(1, n):
-        r = simple_return(i)
-        if r is None:
+        prev, cur = adj_closes[i - 1], adj_closes[i]
+        if not _usable_price(prev) or not _usable_price(cur):
             flagged.append(i)
             continue
+        r = cur / prev - 1.0
         if abs(r) > hard_abs_return:
             flagged.append(i)
             continue
-        if abs(r) > spike_abs_return and i + 1 < n:
-            prev, nxt = adj_closes[i], adj_closes[i + 1]
-            r_next = (nxt / prev - 1.0) if prev > 0.0 else None
-            if (
-                r_next is not None
-                and r_next * r < 0.0
-                and abs(r_next) >= reversal_min_fraction * abs(r)
-            ):
+        if abs(r) > bound and i + 1 < n:
+            nxt = adj_closes[i + 1]
+            if not _usable_price(nxt):
+                continue
+            move = cur - prev
+            if move == 0.0:
+                continue
+            undone = (cur - nxt) / move
+            if undone >= reversal_min_fraction:
                 flagged.append(i)
     return flagged
