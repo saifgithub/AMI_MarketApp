@@ -176,10 +176,25 @@ estimated correlation structure at all: every pair is one scalar.
 **Fix.** Compute σₚ, DR² and the risk shares from the plain sample covariance. If you
 keep shrinkage for report-to-report stability, that is a legitimate but *different*
 rationale — say so, fire R2 off the unshrunk DR², publish δ in every block derived from
-Σ, and force `sufficient:false` for DR² and risk contributions above a δ threshold
-(0.7 is defensible given the measured errors). Replace "shrinkage is the standard fix
-for short-sample covariance instability" with the truth: it buys stability at the cost
-of understating concentration.
+Σ, and force `sufficient:false` for DR² and risk contributions above a δ ceiling.
+
+**The ceiling is δ ≤ 0.3, and it is derived, not asserted.** On the twin-heavy book
+above (true DR² = 1.8553, so R2 should fire):
+
+| δ | reported DR² | relative bias | R2 still fires? |
+|---|---|---|---|
+| 0.0 | 1.8553 | — | yes |
+| 0.2 | 1.9188 | +3.4% | yes |
+| **0.3** | **1.9522** | **+5.2%** | **yes (last safe point)** |
+| 0.4 | 1.9868 | +7.1% | yes, barely |
+| **0.5** | **2.0227** | **+9.0%** | **NO — rule silenced** |
+| 0.7 | 2.0984 | +13.1% | no |
+| 1.0 | 2.2233 | +19.8% | no |
+
+DR² crosses the 2.0 trigger at **δ ≈ 0.5**. And the measured *median* δ on real daily
+data is **0.476** — the real world sits essentially exactly on the point where the rule
+goes silent. Replace "shrinkage is the standard fix for short-sample covariance
+instability" with the truth: it buys stability at the cost of understating concentration.
 
 ### F3 — Rule R1's central claim is mathematically false · **BLOCKER**
 
@@ -249,13 +264,35 @@ rate at true β = 1.00: 2.7–6.0%. Power at true β = 1.30: 50.3%.
 R1 and R2 are better behaved away from their thresholds — but all three are unstable
 *at* the threshold, where a threshold rule lives.
 
-Worse because the Finding is **archived in the journal**: consecutive reports sit
-adjacent in a timeline, so the user sees advice appear and vanish and reasonably infers
-their portfolio changed.
+**How this actually reaches the user.** The figures above are independent windows, which
+answers "is any single report reliable?" Consecutive monthly Findings share 105 of their
+126 days, so they are far more correlated than that. Re-simulated on **overlapping**
+windows stepped 21 trading days over 25 monthly reports, the rate at which the advice
+appears or disappears between consecutive reports is **18%** at true β = 1.30 — lower
+than the independent-window figure implies, and still nearly one report pair in five
+changing its advice with nothing having happened. That matters because the Finding is
+**archived in the journal**: consecutive reports sit adjacent by design.
 
-**Fix.** Fire on the confidence bound, not the point estimate; or add hysteresis (fire
-at 1.35, clear at 1.25). Institutional rebalancing has used no-trade tolerance bands for
-this exact reason for decades.
+**Fix — and my first instinct was wrong.** I initially recommended firing on a
+confidence bound. Simulated, that is a bad design: it destroys detection without buying
+stability.
+
+| true β | point estimate | 90% CI lower bound | hysteresis ±0.6·SE |
+|---|---|---|---|
+| 1.00 | fires 0%, flips 0% | fires 0%, flips 0% | fires 0%, flips 0% |
+| 1.15 | fires 5%, flips 5% | fires 0%, flips 0% | fires 2%, flips 1% |
+| **1.30** | fires 50%, **flips 18%** | fires 10%, flips 8% | fires 51%, **flips 6%** |
+| **1.45** | fires 89%, flips 9% | **fires 49%**, flips 18% | **fires 93%**, flips 2% |
+| 1.60 | fires 99%, flips 1% | fires 85%, flips 11% | fires 100%, flips 0% |
+
+CI-gating fires on only **49%** of reports for a book whose true beta is 1.45 — a book
+that genuinely is high-beta — and its flip rate is *worse* than the point estimate's at
+that level. **Use hysteresis.** Sweeping band widths, the narrowest band holding
+worst-case flips under 10% while keeping ≥85% detection at β = 1.45 is **±0.06 on the
+beta scale = 0.57 × SE(β̂)**. Specify it as **fire at threshold + 0.6·SE, clear at
+threshold − 0.6·SE**, using the OLS standard error you already ship — that self-scales
+across sample sizes and R² instead of hard-coding 1.36/1.24. Institutional rebalancing
+has used no-trade tolerance bands for this exact reason for decades.
 
 ### F5 — R3 makes a return projection, forbidden three times in the same document · **BLOCKER**
 
@@ -445,10 +482,27 @@ Simulated: 600 daily returns at 20% annualised, one −8% day, 126-day window.
 - EWMA(λ = 0.94): responds *at* the event, 11.2-day half-life, **no discontinuity at
   exit** (−0.04 pp, within ordinary wobble).
 
-This is why RiskMetrics chose exponential weighting; λ = 0.94 for daily data is their
-published optimum, selected by minimising one-day-ahead forecast RMSE across 480 series
-(*RiskMetrics Technical Document*, 4th ed., 1996, §5.3.2). The pack does not mention the
-artefact or consider any within-window weighting.
+This is why RiskMetrics chose exponential weighting (*RiskMetrics Technical Document*,
+4th ed., 1996, §5.3.2). The pack does not mention the artefact or consider any
+within-window weighting.
+
+**But do not simply copy λ = 0.94.** That figure is RiskMetrics' *trading* factor,
+selected by minimising **one-day-ahead** forecast RMSE across 480 series — a different
+objective from CR136's, which is a 126-day risk profile regenerated monthly:
+
+| λ | effective sample (1+λ)/(1−λ) | 1% weight cutoff | half-life |
+|---|---|---|---|
+| 0.94 | 32 days | 74 days | 11.2 days |
+| 0.96 | 49 days | 113 days | 17.0 days |
+| **0.97** | **66 days** | **151 days** | **22.8 days** |
+| 0.98 | 99 days | 228 days | 34.3 days |
+
+At λ = 0.94 the estimator discards most of the window you disclose to the user, making
+the tile *jumpier* than the equal-weighted version it replaces — trading one honesty
+problem for another. **λ = 0.97** — RiskMetrics' own *investing* factor — gives a
+151-day 1% cutoff, the closest match to the 126-day window CR136 already states, with no
+exit discontinuity. Whichever you pick, the disclosed "window" must then describe the
+effective sample, not a rectangular 126.
 
 It does not stop at the volatility tile: **every** Tier-1 metric derives from the same
 Σ, so beta, DR², risk contributions and benchmark volatility all step together on the
@@ -733,9 +787,11 @@ standard becomes achievable instead of hostage to a scope you never intended to 
 
 1. Fix the cash/shrinkage construction order and short-circuit N = 1, N = 2. (F1)
 2. Decide the estimator on the right grounds — plain sample Σ for σₚ/DR²/risk shares, or
-   shrinkage with δ published, a δ ceiling, and R2 fired off the unshrunk DR². (F2)
+   shrinkage with δ published, **δ ≤ 0.3** enforced for DR² and the risk shares, and R2
+   fired off the unshrunk DR². (F2)
 3. Fix R1 — rank on MCR, or reword to the true statement. (F3)
-4. Gate every rule on a confidence bound or add hysteresis. (F4)
+4. Gate every rule with **hysteresis at ±0.6 × SE**, not a confidence bound — CI-gating
+   drops detection to 49% on a genuinely high-beta book. (F4)
 5. Delete R3's projection clause. (F5)
 6. Reframe §F5 as conditional/educational, rename it, drop the severity bands — and
    reconcile with the website copy before anything ships. (F6)
@@ -747,7 +803,8 @@ standard becomes achievable instead of hostage to a scope you never intended to 
    floor. (F7)
 9. Replace the uniform-ρ known-answer test with a non-uniform fixture. (F8)
 10. Switch the risk-vs-money visual to invested-sleeve money share. (F9)
-11. Adopt EWMA, or accept and disclose the echo. (F11)
+11. Adopt EWMA at **λ = 0.97** (not RiskMetrics' 0.94, which is tuned for one-day VaR
+    and would discard most of your disclosed window), or accept and disclose the echo. (F11)
 12. Add tracking error — three lines. (F12)
 13. Ship MCR as its own metric — free, and it is the actionable one. (F3)
 14. Scope T/N ≥ 5 to DR² and risk contributions only. (F17)
@@ -794,6 +851,16 @@ where a primary source exists.
   cash-row NaN demonstration; the σ̂ₚ precision sweep to N = 200; tracking error and
   parametric VaR from shipped quantities; and the `_PERIOD_MAP` / fee-model checks
   against source.
+- **Computed to substantiate the fixes, not just the findings:** the overlapping-window
+  flip-rate simulation (25 monthly reports, 126-day windows stepped 21 days); the
+  point-estimate vs CI-gate vs hysteresis comparison and the band-width sweep that
+  produced ±0.6 · SE; the DR²-bias-versus-δ curve that produced the δ ≤ 0.3 ceiling; and
+  the EWMA effective-sample table that produced λ = 0.97.
+- **Two recommendations in the first draft of this review were wrong and are corrected
+  above:** confidence-bound gating (it destroys detection — 49% on a book whose true beta
+  is 1.45) and a δ ceiling of 0.7 (DR² already crosses its rule trigger at δ ≈ 0.5). Both
+  were asserted before they were simulated. Stated here because a review that prescribes
+  without deriving is making the same error it charges.
 
 Literature: Lo (2002) *FAJ* 58(4); Ledoit & Wolf, *Honey, I Shrunk the Sample Covariance
 Matrix*, *JPM* 30(4) 2004; Choueifaty & Coignard (2008); Choueifaty, Froidure & Reynier
