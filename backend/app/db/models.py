@@ -261,6 +261,20 @@ class OverlayEditCounter(Base):
 
 class JournalEntryRow(Base):
     __tablename__ = "journal_entries"
+    __table_args__ = (
+        # CR136: the database-level backstop behind an application check-then-act.
+        # Two concurrent POSTs to the Finding route both read "no prior Finding
+        # today" and "budget available", then both generate and both write —
+        # measured at 5 concurrent requests producing 5 Findings against a cap of
+        # 2, with 5 LLM calls billed for one logical action. A double-tap or a
+        # client retry on a slow response is enough to trigger it.
+        #
+        # NULL for every other entry type, and NULLs do not collide in a unique
+        # index on either Postgres or SQLite, so this constrains CR136 rows only.
+        UniqueConstraint(
+            "user_id", "entry_type", "dedupe_key", name="uq_journal_dedupe",
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
@@ -283,6 +297,9 @@ class JournalEntryRow(Base):
     deleted_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True, index=True,
     )
+    # CR136: `<portfolio_id>:<as_of>` for a Portfolio Health Finding, NULL for
+    # every other entry type. See the unique constraint above.
+    dedupe_key: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
 
 class LessonProgressRow(Base):

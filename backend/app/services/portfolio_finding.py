@@ -1022,7 +1022,13 @@ async def generate_and_persist_finding(
 
     from app.schemas.journal import EntryType
 
-    entry = store.append(JournalEntryCreate(
+    # The write is the serialisation point, not the read above it: two
+    # concurrent callers both pass the idempotency check, and only the unique
+    # constraint can decide between them. Losing means someone else wrote the
+    # Finding this call was about to write, so the winner's row is the correct
+    # answer — measured before the constraint existed, five concurrent requests
+    # produced five Findings against a daily cap of two, and five LLM bills.
+    entry, created = store.append_unique(JournalEntryCreate(
         user_id=user_id,
         # Resolved lazily from the string constant: until M08 lands the enum
         # member and its Dart mapping in one commit, this raises loudly rather
@@ -1032,8 +1038,14 @@ async def generate_and_persist_finding(
         title=f"Portfolio Health — Finding {as_of}",
         summary=headlines[0] if headlines else None,
         payload=payload,
+        dedupe_key=f"{portfolio_id}:{as_of}",
     ))
+    if not created:
+        logger.info(
+            "portfolio_finding_lost_write_race",
+            portfolio_id=str(portfolio_id), as_of=as_of,
+        )
     return FindingResult(
-        entry=entry, created=True, llm_used=llm_used,
+        entry=entry, created=created, llm_used=llm_used,
         llm_rejected_reason=rejected_reason,
     )

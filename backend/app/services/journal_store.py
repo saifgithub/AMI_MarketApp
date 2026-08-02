@@ -28,6 +28,7 @@ from typing import Any
 from uuid import UUID
 
 from sqlalchemy import delete, or_, select
+from sqlalchemy.exc import IntegrityError
 
 from app.db import get_session, init_schema
 from app.db.models import JournalEntryRow
@@ -122,8 +123,39 @@ class JournalStore:
                 outcome=entry.outcome,
                 payload=dict(entry.payload),
                 created_at=entry.created_at,
+                dedupe_key=draft.dedupe_key,
             ))
         return entry
+
+    def append_unique(self, draft: JournalEntryCreate) -> tuple[JournalEntry, bool]:
+        """`(entry, created)` — append, or return the row that won the race.
+
+        The `uq_journal_dedupe` constraint is the only thing that actually
+        serialises two concurrent writers; an application re-read cannot,
+        because the competing INSERT may land immediately after it. Losing the
+        race is not an error — the winner's row is exactly what this caller was
+        about to write, so it is returned as `created=False`, the same answer a
+        same-day replay gets.
+        """
+        if not draft.dedupe_key:
+            raise ValueError("append_unique needs a dedupe_key to deduplicate on")
+        try:
+            return self.append(draft), True
+        except IntegrityError:
+            existing = self.find_by_dedupe_key(draft.user_id, draft.dedupe_key)
+            if existing is None:
+                raise
+            return existing, False
+
+    def find_by_dedupe_key(self, user_id: UUID, dedupe_key: str) -> JournalEntry | None:
+        with get_session() as s:
+            row = s.execute(
+                select(JournalEntryRow)
+                .where(JournalEntryRow.user_id == user_id)
+                .where(JournalEntryRow.dedupe_key == dedupe_key)
+                .limit(1)
+            ).scalar_one_or_none()
+            return _row_to_entry(row) if row else None
 
     def list_for_user(
         self,
@@ -321,7 +353,12 @@ class JournalStore:
         trial would reset itself every time a user resets their book. The daily
         counter is per PORTFOLIO, per Rev 4, and its day boundary is UTC.
         """
-        day_start = now.astimezone(timezone.utc).replace(
+        # `_as_utc` first, never a bare `astimezone`: astimezone() reinterprets
+        # a NAIVE datetime as LOCAL system time, so a caller passing a naive UTC
+        # `now` would silently get a day boundary offset by the server's tz —
+        # the daily cap resetting hours early or late depending on where the
+        # container runs.
+        day_start = _as_utc(now).astimezone(timezone.utc).replace(
             hour=0, minute=0, second=0, microsecond=0,
         )
         with get_session() as s:

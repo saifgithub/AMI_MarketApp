@@ -27,12 +27,12 @@ from fastapi import HTTPException, status
 
 from app.core.config import settings
 from app.services.entitlements import effective_plan_for_user
+# The wire value comes from M04's constants module — the one place it is
+# declared. This module still never imports the schema enum, so it keeps its
+# build-order independence from M08, but a second hardcoded copy of the same
+# string is the scattered-literal the binding conventions forbid.
+from app.services.portfolio_health_constants import PORTFOLIO_HEALTH_ENTRY_TYPE  # noqa: F401
 from app.services.journal_store import JournalStore, get_journal_store
-
-# Must equal the journal entry-type wire value for a Portfolio Health Finding.
-# The gate names it as a string and never imports the schema enum, so it carries
-# no build-order dependency on M08; the test suite pins the equality.
-PORTFOLIO_HEALTH_ENTRY_TYPE = "portfolio_health_analysis"
 
 GATE_CLOSED_CODE = "portfolio_health_gate_closed"
 DAILY_CAP_CODE = "portfolio_health_daily_cap_reached"

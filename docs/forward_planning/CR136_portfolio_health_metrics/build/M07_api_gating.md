@@ -36,7 +36,24 @@ mode; gating applies to full Finding generation only. Also lands the five new
   `environment:` :70).
 - `backend/app/services/rate_limit.py` — one module-level limiter (registry
   starts :209).
-- `backend/app/api/admin.py` — non-blocking hygiene (§3.6).
+- `backend/app/api/admin.py` + `backend/app/schemas/admin.py` — non-blocking
+  hygiene (§3.6).
+
+**Touched beyond this module's own layer** (recorded AT:R66 — M07 was the first
+real caller of two seams the register pinned but nobody had built; see the
+commit and §7):
+
+- `backend/app/services/portfolio_health.py` (M04) — emits the root-level
+  `holdings` rows M05's `HoldingInput` needs, sector included.
+- `backend/app/services/portfolio_rules.py` (M05) — `rule_inputs_from_context`
+  + `evaluate_rules_for_context`, the register's pinned two-argument shape.
+- `backend/app/services/journal_store.py` (M08) —
+  `latest_portfolio_health_entry`, `portfolio_health_stats`, and
+  `append_unique`/`find_by_dedupe_key` behind the CR136 uniqueness constraint.
+- `backend/app/services/portfolio_finding.py` (M06) — `load_latest_finding`
+  collapsed onto the store method; the write goes through `append_unique`.
+- `backend/app/db/models.py` + `alembic/versions/c2d3e4f50028_*.py` (M08) —
+  `journal_entries.dedupe_key` and `uq_journal_dedupe`.
 
 ## 3. Implementation spec
 
@@ -242,29 +259,49 @@ load-bearing:
    > query: `latest_portfolio_health_entry` returns `deleted_at` and the two
    > consumers read it differently.
 7. `gate = evaluate_gate(...)`; `enforce_gate(gate)` — 402/429 per §3.2.
-8. `result = await asyncio.to_thread(...)` the M06 pipeline (rules → render →
-   validate → deterministic fallback → M08 persist; seam, §7).
+8. `result = await generate_and_persist_finding(...)` — the M06 pipeline (rules
+   → render → validate → deterministic fallback → M08 persist; seam, §7).
+
+   > **CONCURRENCY (AT:R66, from the M07 audit).** Steps 5–8 are check-then-act,
+   > and nothing in the sequence serialises two callers: measured, five
+   > concurrent POSTs produced five Findings against a daily cap of two, with
+   > five LLM calls billed for one logical action. A double-tap or a client
+   > retry on a slow response reaches it — the 5/min limiter bounds the damage,
+   > it does not prevent it. The fix is a database constraint, because there is
+   > no point in the sequence where re-reading is safe: `journal_entries` gains
+   > `dedupe_key = "<portfolio_id>:<as_of>"` under `uq_journal_dedupe`, NULL for
+   > every other entry type, and M06 writes through `append_unique`, which
+   > returns the winner's row as `created: false` — the same answer a same-day
+   > replay gets. The gate reads stay as they are; they were never the
+   > serialisation point.
    **RECONCILED against shipped M06 (AT:R66)** — M06 landed first, so its
    signature is the one to code against. It is keyword-only and requires the
    rule-evaluator closure, because M06 renders rules but does not own their
    inputs:
 
    ```python
-   from functools import partial
-   from app.services.portfolio_rules import evaluate_rules
+   from app.services.portfolio_rules import evaluate_rules_for_context
 
-   result = await asyncio.to_thread(partial(
-       asyncio.run,
-       generate_and_persist_finding(
-           user_id=user_id, portfolio_id=p.id, as_of=context["as_of"],
-           metric_blocks=list(context["metrics"]), store=journal_store,
-           evaluate=lambda prior_states: evaluate_rules(
-               **rule_inputs_from(context), rule_states=prior_states,
-           ),
-           gateway=gateway,
+   mandate = await asyncio.to_thread(resolve_mandate, user_id, None)
+   result = await generate_and_persist_finding(
+       user_id=user_id,
+       portfolio_id=p.id,
+       as_of=context["as_of"],
+       metric_blocks=list(context["blocks"].values()),
+       store=store,
+       evaluate=lambda prior_states: evaluate_rules_for_context(
+           context, mandate, prior_states,
        ),
-   ))
+       gateway=get_llm_gateway(),
+   )
    ```
+
+   `generate_and_persist_finding` is already `async`, so it is awaited
+   directly — the earlier draft of this block wrapped it in
+   `asyncio.to_thread(partial(asyncio.run, ...))`, which would have started a
+   second event loop inside a worker thread to run a coroutine the request loop
+   could await itself. Nothing in this call blocks: the sync DB work sits behind
+   the same `to_thread` hops as the rest of the route.
 
    It returns `FindingResult(entry, created, llm_used, llm_rejected_reason)` —
    not a dict — and the response envelope of §3.5 is assembled from

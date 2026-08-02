@@ -82,6 +82,7 @@ class FakeJournalStore:
     def __init__(self) -> None:
         self.entries: list[JournalEntry] = []
         self.appends = 0
+        self.by_dedupe: dict[str, JournalEntry] = {}
 
     def append(self, draft) -> JournalEntry:
         self.appends += 1
@@ -95,6 +96,16 @@ class FakeJournalStore:
         )
         self.entries.insert(0, entry)
         return entry
+
+    def append_unique(self, draft):
+        """Mirrors the real store: the dedupe key decides, and losing the race
+        returns the winner's row rather than raising."""
+        existing = self.by_dedupe.get(draft.dedupe_key)
+        if existing is not None:
+            return existing, False
+        entry = self.append(draft)
+        self.by_dedupe[draft.dedupe_key] = entry
+        return entry, True
 
     def list_for_user(self, user_id, **kwargs):
         return list(self.entries), len(self.entries), None

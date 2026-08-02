@@ -93,3 +93,8 @@ class JournalEntryCreate(BaseModel):
     user_note: str | None = None
     outcome: Outcome | None = None
     payload: dict = Field(default_factory=dict)
+    # CR136: opaque per-entry-type uniqueness key, NULL for every writer that
+    # does not need one. `<portfolio_id>:<as_of>` for a Portfolio Health
+    # Finding — what makes a concurrent double-write a DB conflict instead of
+    # two Findings and two LLM bills.
+    dedupe_key: str | None = None

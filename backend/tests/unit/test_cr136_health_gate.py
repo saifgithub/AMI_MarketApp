@@ -538,6 +538,154 @@ def test_the_route_composes_the_real_engine_rules_and_renderer(
     assert replay.json()["journal_entry_id"] == body["journal_entry_id"]
 
 
+def test_concurrent_posts_write_exactly_one_finding(
+    monkeypatch: pytest.MonkeyPatch, base_mandate,
+) -> None:
+    """Measured before the unique constraint existed: five concurrent POSTs
+    produced five Findings against a daily cap of two, and five LLM bills for
+    one logical action. A double-tap, or a client retrying a slow response, is
+    enough — no attacker required.
+
+    An application re-read cannot fix this. There is no point in the sequence
+    where reading again is safe, because the competing INSERT may land right
+    after it, so the check has to be one the database makes.
+    """
+    import asyncio as _asyncio
+
+    import httpx
+
+    from tests.unit.test_cr136_metrics_engine import _book
+
+    from app.services.portfolio_health import compute_health
+
+    user_id = _seed_user(Plan.TRADER)
+    portfolio_id = uuid4()
+    context = compute_health(**_book())
+    llm_calls: list[int] = []
+
+    monkeypatch.setattr("app.api.portfolio.build_health_context", lambda uid: context)
+    monkeypatch.setattr("app.api.portfolio.resolve_mandate", lambda uid, v: base_mandate)
+    monkeypatch.setattr(settings, "portfolio_health_llm_enabled", True)
+
+    class _SlowGateway:
+        def has_real_provider(self) -> bool:
+            return True
+
+        def stream_chat(self, **kwargs):
+            llm_calls.append(1)
+
+            async def _gen():
+                # Wide enough for every request to clear the idempotency read
+                # before any of them writes — the window the defect lives in.
+                await _asyncio.sleep(0.05)
+                yield '{"f1": ["Calm."], "f2": "x", "f3": "y", "f4": "z", "f5": "w"}'
+
+            return _gen()
+
+    monkeypatch.setattr("app.api.portfolio.get_llm_gateway", lambda: _SlowGateway())
+
+    async def _fire(n: int):
+        app = _app(user_id, portfolio_id)
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(
+            transport=transport, base_url="http://test",
+        ) as client:
+            return await _asyncio.gather(*(
+                client.post(f"/v1/portfolio/health/{user_id}/finding")
+                for _ in range(n)
+            ))
+
+    responses = _asyncio.run(_fire(5))
+
+    assert all(r.status_code == 200 for r in responses), [r.status_code for r in responses]
+    ids = {r.json()["journal_entry_id"] for r in responses}
+    assert len(ids) == 1, f"five concurrent POSTs minted {len(ids)} Findings"
+    assert sum(1 for r in responses if r.json()["created"]) == 1
+
+    _used, _first, daily = get_journal_store().portfolio_health_stats(
+        user_id, portfolio_id, now=datetime.now(timezone.utc),
+    )
+    assert daily == 1, f"daily counter says {daily} — the cap was bypassed"
+
+
+def test_a_refused_user_over_the_cap_is_told_to_upgrade_not_to_come_back(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Both conditions true at once. Order is load-bearing and was asserted only
+    by the code's own docstring: a 429 tells a user who can never generate to
+    try again tomorrow, which will be just as false tomorrow."""
+    from app.services.health_gate import GateStatus, enforce_gate
+
+    both = GateStatus(
+        mode="plan", trial_active=False, trial_findings_used=9,
+        trial_findings_budget=7, trial_days_left=0, daily_used=2, daily_cap=2,
+        plan_has_access=False,
+    )
+    assert both.has_access is False and both.daily_cap_reached is True
+    with pytest.raises(Exception) as exc:
+        enforce_gate(both)
+    assert exc.value.status_code == 402
+    assert exc.value.detail["code"] == GATE_CLOSED_CODE
+
+
+def test_plan_mode_generates_end_to_end_for_an_entitled_plan(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Doc case 9's generate half, through the route rather than asserted on the
+    gate object — `has_access is True` proves the gate would allow it, not that
+    a POST returns a Finding."""
+    monkeypatch.setattr(settings, "portfolio_health_gate_mode", "plan")
+    user_id = _seed_user(Plan.TRADER)
+    portfolio_id = uuid4()
+    generated: list = []
+
+    monkeypatch.setattr(
+        "app.api.portfolio.build_health_context", lambda uid: dict(_OK_CONTEXT),
+    )
+    monkeypatch.setattr(
+        "app.api.portfolio.evaluate_rules_for_context",
+        lambda context, mandate, prior_states: ([], {}),
+    )
+    monkeypatch.setattr("app.api.portfolio.resolve_mandate", lambda uid, v: None)
+
+    async def _fake_generate(**kwargs):
+        generated.append(kwargs)
+        _seed_finding(kwargs["user_id"], kwargs["portfolio_id"],
+                      as_of=kwargs["as_of"], created_at=datetime.now(timezone.utc))
+        entry = get_journal_store().latest_portfolio_health_entry(
+            kwargs["user_id"], kwargs["portfolio_id"],
+        )
+        return portfolio_finding.FindingResult(
+            entry=entry, created=True, llm_used=False, llm_rejected_reason=None,
+        )
+
+    monkeypatch.setattr("app.api.portfolio.generate_and_persist_finding", _fake_generate)
+    client = TestClient(_app(user_id, portfolio_id), raise_server_exceptions=False)
+
+    r = client.post(f"/v1/portfolio/health/{user_id}/finding")
+    assert r.status_code == 200, r.text
+    assert r.json()["created"] is True
+    assert len(generated) == 1
+
+
+def test_a_naive_now_is_read_as_utc_not_as_server_local_time() -> None:
+    """`astimezone()` on a naive datetime reinterprets it as LOCAL time, so the
+    daily cap would reset hours early or late depending on where the container
+    runs."""
+    user_id = _seed_user()
+    portfolio_id = uuid4()
+    _seed_finding(user_id, portfolio_id, as_of="2026-08-02",
+                  created_at=datetime(2026, 8, 2, 3, 0, tzinfo=timezone.utc))
+
+    aware = datetime(2026, 8, 2, 12, 0, tzinfo=timezone.utc)
+    naive = aware.replace(tzinfo=None)
+    store = get_journal_store()
+    assert (
+        store.portfolio_health_stats(user_id, portfolio_id, now=naive)
+        == store.portfolio_health_stats(user_id, portfolio_id, now=aware)
+    )
+
+
 def test_the_entry_type_string_matches_the_enum() -> None:
     assert PORTFOLIO_HEALTH_ENTRY_TYPE == "portfolio_health_analysis"
     assert PORTFOLIO_HEALTH_ENTRY_TYPE == EntryType.PORTFOLIO_HEALTH_ANALYSIS.value
