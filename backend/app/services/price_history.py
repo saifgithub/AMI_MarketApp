@@ -79,12 +79,21 @@ _MOCK_SOURCE = "mock_walk"
 
 _history_provider: MarketDataProvider | None = None
 
+# Per-ticker timestamp of the last fetch ATTEMPT, successful or not. The stored
+# `fetched_at` column cannot serve this: it is written only by a successful
+# upsert, so a provider that keeps returning None would never advance it and the
+# throttle would never engage — a dead feed would be re-hit on every single
+# evaluation, for every holding, forever.
+_last_fetch_attempt: dict[str, datetime] = {}
+
 
 def set_history_provider(provider: MarketDataProvider | None) -> None:
     """Replace the leaf provider. Test hook, mirroring
-    `market_data.set_market_data_provider`; safe to call with None to reset."""
+    `market_data.set_market_data_provider`; safe to call with None to reset.
+    Also clears the failed-attempt throttle, which is in-process state."""
     global _history_provider
     _history_provider = provider
+    _last_fetch_attempt.clear()
 
 
 def _leaf_provider() -> MarketDataProvider | None:
@@ -307,6 +316,7 @@ def _should_fetch(
     min_days: int,
     now: datetime,
     force_refresh: bool,
+    last_attempt: datetime | None = None,
 ) -> bool:
     """Stale AND not throttled.
 
@@ -328,10 +338,12 @@ def _should_fetch(
     if not stale:
         return False
     stamps = [s for s in (_as_utc(r.fetched_at) for r in rows) if s is not None]
-    newest_fetched_at = max(stamps) if stamps else None
-    if newest_fetched_at is None:
+    if last_attempt is not None:
+        stamps.append(last_attempt)
+    newest_attempt = max(stamps) if stamps else None
+    if newest_attempt is None:
         return True
-    return (now - newest_fetched_at).total_seconds() >= _FETCH_FRESH_WINDOW_S
+    return (now - newest_attempt).total_seconds() >= _FETCH_FRESH_WINDOW_S
 
 
 def get_daily_series(
@@ -372,6 +384,7 @@ def get_daily_series(
             rows = _load_rows(session, ticker, real_mode=real_mode)
             fetch = _should_fetch(
                 rows, min_days=min_days, now=now, force_refresh=force_refresh,
+                last_attempt=_last_fetch_attempt.get(ticker),
             )
             series = _build_series(ticker, rows)
 
@@ -386,10 +399,22 @@ def get_daily_series(
             # No provider is a fetch failure, not an absence of history: the
             # caller must be able to tell "our feed is down" from "this
             # security is young" (CR040).
+            _last_fetch_attempt[ticker] = now
+            logger.warn(
+                "price_history_no_provider",
+                ticker=ticker,
+                stored_rows=len(series.dates),
+                newest_stored_date=(
+                    series.dates[-1].isoformat() if series.dates else None
+                ),
+            )
             out[ticker] = _replace_fetch_failed(series, ticker)
             continue
 
-        # Network round-trip deliberately outside any open transaction.
+        # Network round-trip deliberately outside any open transaction. The
+        # attempt is recorded BEFORE it is made, so a failure throttles the next
+        # one exactly as a success does.
+        _last_fetch_attempt[ticker] = now
         candles = provider.history(ticker, HISTORY_FETCH_PERIOD)
         source = getattr(provider, "name", "unknown")
         bars = _candles_to_bars(candles or (), ticker=ticker)
@@ -401,6 +426,11 @@ def get_daily_series(
                 provider=source,
                 stored_rows=len(series.dates),
                 candles_served=len(candles or ()),
+                # How degraded the served result actually is: without this an
+                # operator cannot tell a one-day gap from a six-month one.
+                newest_stored_date=(
+                    series.dates[-1].isoformat() if series.dates else None
+                ),
             )
             out[ticker] = _replace_fetch_failed(series, ticker)
             continue

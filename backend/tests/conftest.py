@@ -144,8 +144,12 @@ def _isolated_db(tmp_path: _Path) -> None:
     _tr._invalidate_active_symbol_cache()
     _tr.reset_refresh_failures()
     # CR136 M01: the price-history store holds its own leaf provider (never the
-    # fallback stack — see its module docstring). Reset it so a fake injected by
-    # one test cannot serve another, and so no test can reach live yfinance.
+    # fallback stack — see its module docstring) plus an in-process
+    # failed-fetch throttle. Reset both so a fake injected by one test cannot
+    # serve another, and a throttle tripped in one cannot suppress a fetch in
+    # the next. (What keeps tests off live yfinance is USE_REAL_MARKET_DATA
+    # defaulting to False, which resolves the leaf to the mock walk; a test that
+    # flips it to True must inject a fake itself.)
     from app.services import price_history as _ph
     _ph.set_history_provider(None)
 

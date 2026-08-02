@@ -280,6 +280,30 @@ def test_a_short_series_refetches_even_when_its_newest_bar_is_current() -> None:
     assert len(out["AAA"].dates) == 200
 
 
+def test_a_failing_provider_is_throttled_like_a_succeeding_one() -> None:
+    """The stored `fetched_at` cannot arm the throttle on failure — it is
+    written only by a successful upsert. Without an attempt stamp a dead feed is
+    re-hit on every evaluation, for every holding, forever."""
+    provider = FakeHistoryProvider({})            # history() → None, always
+    price_history.set_history_provider(provider)
+    now = _at(_ANCHOR)
+
+    price_history.get_daily_series(["AAA"], min_days=126, now=now)
+    assert len(provider.calls) == 1
+
+    price_history.get_daily_series(["AAA"], min_days=126, now=now)
+    price_history.get_daily_series(["AAA"], min_days=126, now=now + timedelta(hours=5))
+    assert len(provider.calls) == 1, "a failed fetch must arm the throttle too"
+
+    price_history.get_daily_series(["AAA"], min_days=126, now=now + timedelta(hours=7))
+    assert len(provider.calls) == 2, "...and release it when the window expires"
+
+    price_history.get_daily_series(
+        ["AAA"], min_days=126, now=now + timedelta(hours=7), force_refresh=True,
+    )
+    assert len(provider.calls) == 3, "force_refresh still overrides the throttle"
+
+
 def test_a_fetch_failure_serves_what_is_stored_and_never_fabricates() -> None:
     days = _trading_days(_ANCHOR, 30)
     _seed("AAA", days, fetched_at=_at(_ANCHOR) - timedelta(days=2))
