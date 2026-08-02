@@ -73,8 +73,11 @@ REGISTER_LEXICON = (            # Rev 4 register check — the 20 terms, verbati
     "Choueifaty", "CAPM", "pro-forma", "eigen*", "quadratic", "sampling error",
     "heteroskedastic*", "JPM", "EWMA",
 )
-F1_MAX_HEADLINE_WORDS = 16      # Rev 4 §F1 (whitespace-split token count)
+F1_MAX_HEADLINE_WORDS = 16      # shipped as HEADLINE_MAX_WORDS (Rev 4 §F1)
 F1_PARTIAL_MARKER = " (partial data)"   # +2 tokens; templates sized ≤14 so cap holds
+# AT:R66: the shipped RAW set also carries "0" — "no commissions, spreads, or
+# taxes" and the zero-cost line put a bare 0 in mandated prose, and a fixed set
+# that cannot pass its own required content is the Rev 3 failure repeating.
 VALIDATOR_FIXED_RAW = {         # category (c), RAW set. Closure is enforced by the
     # deterministic self-validation test — any template edit adding a literal
     # MUST extend this set or that test fails.
@@ -98,7 +101,10 @@ VALIDATOR_FIXED_PCT = {         # category (c), PCT set
 RULE_SLOT_SCALE = {             # category (b): scale per numeric slot, per rule.
     # Non-listed slots are text and are not registered as numbers.
     "R0": {"cap": "pct", "weight": "pct"},
-    "R1": {"risk_share": "pct", "weight": "pct"},
+    "R1": {"risk_share": "pct", "weight": "pct",
+           "threshold_mention": "pct"},   # AT:R66 — R1's template says "more than
+                                          # 40%"; the slot carries that literal so
+                                          # the closure test covers it (F15)
     "R2": {"n": "raw", "dr2": "raw"},
     "R2b": {"rho": "raw"},
     "R3": {"beta": "raw", "r2_pct": "pct", "window": "raw"},
@@ -191,6 +197,17 @@ optional beta sentence, and the window + sufficiency + backcast sentence (with t
 partial clause `, excluding {dropped_list} ({covered}% of invested value covered)`
 when partial). Forbidden: advice verbs, mean-return/performance claims, any number
 not in the payload.
+
+**§F3 units (AMENDED, M06 audit AT:R66)** — the value and SE are rendered
+through `METRIC_VALUE_UNIT`, the pinned per-metric unit map in the shared
+constants module: Tier-1 values are decimal fractions (×100 to display), Tier-2
+`realised_*` values are already percent (never ×100), and `beta` /
+`effective_bets` / `weight_concentration` are dimensionless ratios that take no
+percent sign at all — including their standard errors. An unpinned metric id
+raises. Applying the Tier-1 convention to a Tier-2 block published a 19.69% fall
+as "1969.00%" in §F3 while §F1 rendered the same block as 19.7%, and the
+allow-list registered BOTH readings, so the wrong one validated. The unit map is
+now consulted by the renderer and the allow-list builder alike.
 
 **§F3** — one block per sufficient metric: display name, value + SE where defined
 (`(standard error {se}, T_eff {t_eff})`; DR²/shares/MCR render "standard error:
@@ -363,11 +380,28 @@ class FindingResult:
 
 def load_latest_finding(store: JournalStore, user_id: UUID, portfolio_id: UUID) -> JournalEntry | None
 
-async def generate_finding(
+async def generate_and_persist_finding(
     *, user_id: UUID, portfolio_id: UUID, as_of: str,       # ISO date of evaluation
-    metric_blocks: list[dict], store: JournalStore, gateway: LLMGateway | None = None,
+    metric_blocks: list[dict], store: JournalStore,
+    evaluate: Callable[[dict], tuple[list[dict], dict]],    # REQUIRED, no default
+    gateway: LLMGateway | None = None,
 ) -> FindingResult
 ```
+
+> **AMENDED (M06 audit, AT:R66).** Two signature corrections, both from
+> build/README.md's seam register, which overrides this doc:
+>
+> - The name is **`generate_and_persist_finding`**, as the register pins it —
+>   not `generate_finding`. M07 codes against the register.
+> - **`evaluate` is a required keyword argument with no default.** M06 renders
+>   rules; it does not own their inputs (mandate, holdings, ρ), which live in
+>   M04's context, so M07 binds M05's `evaluate_rules` to them and passes the
+>   closure. The first implementation defaulted it to `None` and raised
+>   `ValueError` at runtime; a caller built to this doc's earlier signature hit
+>   that on every generating call. Requiring it makes omission a `TypeError` at
+>   the call, and no default is defensible — a no-rules default would publish a
+>   Finding whose §F5 says nothing fired, with no signal that the rules never
+>   ran.
 
 - `load_latest_finding`: `store.list_for_user(user_id, plan=Plan.FLOOR_MANAGER,
   entry_type=PORTFOLIO_HEALTH_ENTRY_TYPE, limit=50)` — `FLOOR_MANAGER` because
@@ -394,11 +428,20 @@ async def generate_finding(
   final f1 (`retranslate:[ar,ms]`).
 - Payload (README contract 5, stored verbatim; mobile renders the STORED
   sections): `{"engine_version": ENGINE_VERSION, "portfolio_id": str,
-  "as_of": str, "head_disclosure": str, "sections": {"f1"…"f5"},
+  "as_of": str, "sections": {"head", "f1"…"f5"},
   "context": <stripped context>, "rules_fired": [{rule_id, slots, based_on}],
   "rule_states": {…}, "llm_used": bool, "llm_rejected_reason": str|None}`.
   The head disclosure is stored in the payload — the archived artefact carries
   its own disclosures forever (F19).
+
+> **AMENDED (M06 audit, AT:R66).** The head block lives **inside `sections`**,
+> under the key `head`, exactly as the seam register pins the payload shape. The
+> first implementation hoisted it to a sibling `head_disclosure` key, and the
+> frozen-payload test asserted that shape — so the suite certified the drift
+> instead of catching it, and a consumer built to the pin would have hit
+> `KeyError: 'head'` with everything green. It is added at payload-assembly
+> time, so the validator and the register check still see exactly the five
+> model-narratable sections.
 
 ## 4. Out of scope for this module
 
@@ -505,8 +548,9 @@ no enum coercion).
 
 After M06, the next modules may assume:
 
-- `portfolio_finding.generate_finding(...)` exists with the exact signature in
-  3.7, returning `FindingResult`; `InsufficientContextError` for the M07
+- `portfolio_finding.generate_and_persist_finding(...)` exists with the exact
+  signature in 3.7 (note the REQUIRED `evaluate` closure), returning
+  `FindingResult`; `InsufficientContextError` for the M07
   not-enough-data mapping; tiles (M07 GET route) are untouched by this module and
   never require the LLM.
 - The Finding artefact matches README contract 5 exactly; mobile (M09) renders
@@ -514,7 +558,7 @@ After M06, the next modules may assume:
 - `PORTFOLIO_HEALTH_ENTRY_TYPE = "portfolio_health_analysis"` is the wire value.
   **M08 must land** the `EntryType` member (schemas/journal.py:25-34), the Dart
   `fromWire`/`wire` cases, and the parity-test update **before M07's POST
-  endpoint ships live** — until M08 lands, `generate_finding`'s lazy
+  endpoint ships live** — until M08 lands, `generate_and_persist_finding`'s lazy
   `EntryType(...)` resolution raises `ValueError` (loud by design, CR040), and
   old mobile clients degrade safely to the DEF210 UNKNOWN card after it lands.
 - The validator constant blocks (3.1) live beside `SUFFICIENCY` in M04's shared
@@ -522,6 +566,25 @@ After M06, the next modules may assume:
   `VALIDATOR_FIXED_*` + `RULE_SLOT_SCALE`, enforced by
   `test_deterministic_self_validates_zero_rejections` — any later template edit
   that adds a numeric literal must extend the FIXED sets or that test fails.
-- Rejection telemetry: `portfolio_finding_llm_rejected` (error level, with
-  `reason`, `section`, `tokens`) is the log line M11's verification watches in
-  `ami_api_alpha` logs.
+- Rejection telemetry: **every** LLM-failure path logs at **error** level with a
+  `reason`. `portfolio_finding_llm_rejected` (with `reason`, `section`, `tokens`)
+  covers the schema and validator/register rejections;
+  `portfolio_finding_llm_failed` (with `reason="provider_error"`) covers "nothing
+  came back at all" — a deliberately distinct event, because an outage and a
+  rejected narration are different operational facts. Both are what M11's
+  verification watches in `ami_api_alpha` logs.
+  > **AMENDED (M06 audit, AT:R66).** Two of the four paths originally logged at
+  > WARN — the provider-exception path and the schema path. A vLLM outage and a
+  > persistently malformed model, the two failure modes an operator most needs
+  > to see, therefore produced no ERROR-level signal at all, which is the exact
+  > silent degrade CR040 exists to surface.
+
+**Reconciliation still owed to M07/M08 (M06 audit, AT:R66).** The seam register
+pins `JournalStore.latest_portfolio_health_entry(...)` and
+`JournalStore.portfolio_health_stats(...)` as **M08-owned, consumed by M07,
+never re-implemented** — retention and soft-delete filters make the generic
+`list_for_user` path wrong here. M06 currently carries its own
+`load_latest_finding(store, …)`. When M08 lands those store methods,
+`load_latest_finding` must become a thin delegate or be deleted: two
+implementations of "the newest Finding for this portfolio" is precisely how the
+daily cap and the hysteresis memory drift apart.

@@ -47,14 +47,19 @@ from app.services.portfolio_health_constants import (
     DISCLAIMER_SHORT,
     ENGINE_VERSION,
     ETF_OVERLAP_DISCLOSURE,
+    F1_PARTIAL_MARKER,
     F5_FORBIDDEN_IMPERATIVES,
     F5_FORBIDDEN_PHRASES,
     HEADLINE_MAX_WORDS,
+    METRIC_VALUE_UNIT,
     NON_STATIONARITY_CAVEAT,
+    PERCENT_UNIT_KEYS,
     PORTFOLIO_HEALTH_ENTRY_TYPE,
     REGISTER_LEXICON,
     RULE_SLOT_SCALE,
     TIER2_MDD_WINDOW_SNAPSHOTS,
+    UNIT_FRACTION,
+    UNIT_PERCENT,
     VALIDATOR_FIXED_PCT,
     VALIDATOR_FIXED_RAW,
 )
@@ -62,11 +67,6 @@ from app.services.portfolio_rules import RULE_TEMPLATES
 
 PCT = "pct"
 RAW = "raw"
-
-# Appended to any headline built on a `partial: true` block. Two tokens, which is
-# why every headline template below is sized to 14 or fewer.
-# retranslate:[ar,ms]
-PARTIAL_MARKER = " (partial data)"
 
 _NUMBER_RE = re.compile(r"[−-]?\d{1,3}(?:,\d{3})+(?:\.\d+)?|[−-]?\d+(?:\.\d+)?")
 _PCT_SUFFIX_RE = re.compile(r"\s?(%|pp\b|percent\b|percentage point)")
@@ -261,7 +261,7 @@ def _headlines(context: dict) -> list[str]:
     out: list[str] = []
 
     def add(text: str, block: dict) -> None:
-        out.append(text + (PARTIAL_MARKER if block.get("partial") else ""))
+        out.append(text + (F1_PARTIAL_MARKER if block.get("partial") else ""))
 
     vol = _block(context, "portfolio_volatility")
     benchmark_vol = context.get("benchmark_vol_ann")
@@ -368,6 +368,20 @@ def _f2(context: dict, partial_note: str) -> str:
     return " ".join(sentences)
 
 
+def _unit(metric: str) -> str:
+    """A metric with no pinned unit is a renderer bug, not a default. Guessing
+    the fraction convention on a Tier-2 block published a 15.34% drawdown as
+    1534.00%, so the lookup raises rather than assumes."""
+    unit = METRIC_VALUE_UNIT.get(metric)
+    if unit is None:
+        raise ValueError(
+            f"no unit pinned for metric id {metric!r} — METRIC_VALUE_UNIT must "
+            f"cover the engine's frozen metric-id set exactly; a default would "
+            f"silently scale the value by 100 in one direction or the other"
+        )
+    return unit
+
+
 def _f3_metric_block(block: dict, context: dict) -> str:
     metric = block["metric"]
     name = _DISPLAY_NAMES.get(metric)
@@ -377,6 +391,7 @@ def _f3_metric_block(block: dict, context: dict) -> str:
             f"cover the engine's frozen metric-id set exactly, and a silent skip "
             f"would drop a measured number out of the report"
         )
+    unit = _unit(metric)
     lines = [f"**{name}**"]
 
     value = block.get("value")
@@ -397,13 +412,24 @@ def _f3_metric_block(block: dict, context: dict) -> str:
                 f"{_pct(abs(episode['implied_portfolio_return']))}%. A "
                 f"what-if on today's holdings, not a prediction."
             )
+    elif unit == UNIT_PERCENT:
+        lines.append(f"Value: {_fmt(value, 2)}%.")
     else:
         lines.append(f"Value: {_pct(value, 2)}%.")
 
     se = block.get("standard_error")
     if se is not None:
+        # The SE carries the metric's own unit. β = 1.19 with SE 0.093 read
+        # "Standard error 9.27%", which is not 9.27% of anything — it is ±0.09
+        # on the beta itself.
+        if unit == UNIT_FRACTION:
+            se_text = f"{_pct(se, 2)}%"
+        elif unit == UNIT_PERCENT:
+            se_text = f"{_fmt(se, 2)}%"
+        else:
+            se_text = _fmt(se, 2)
         lines.append(
-            f"Standard error {_pct(se, 2)}%, effective sample "
+            f"Standard error {se_text}, effective sample "
             f"{_fmt(block['t_eff'], 1)} days."
         )
     elif metric in _NO_SE_BY_DESIGN:
@@ -501,7 +527,11 @@ def _f5(rule_results: Sequence[dict]) -> str:
         rule_id = result["rule_id"]
         template = RULE_TEMPLATES.get(rule_id)
         if template is None:
-            continue
+            raise ValueError(
+                f"rule {rule_id!r} fired but has no template — §F5 is the only "
+                f"place a fired rule reaches the user, and dropping it silently "
+                f"publishes a Finding that says nothing fired when something did"
+            )
         slots = result.get("slots") or {}
         if rule_id == "R0":
             for breach in slots.get("breaches", []):
@@ -578,9 +608,14 @@ def _register(target: set[Decimal], rendered: str, dp: int) -> None:
         target.add((-candidate).normalize())
 
 
-def _register_number(value: float, scale: str, allow: Allowlist) -> None:
+def _register_number(
+    value: float, scale: str, allow: Allowlist, *, already_percent: bool = False
+) -> None:
+    """`already_percent` registers a Tier-2 value into the PERCENT set without
+    the ×100: its unit is already percent, so 19.69 must be admitted as "19.7%"
+    and 1969 must not be admitted at all."""
     target = allow.pct if scale == PCT else allow.raw
-    number = value * 100.0 if scale == PCT else value
+    number = value * 100.0 if scale == PCT and not already_percent else value
     dps = (0, 1, 2) if scale == PCT else (1, 2, 3, 4)
     for dp in dps:
         quant = Decimal(1).scaleb(-dp)
@@ -615,24 +650,44 @@ def build_allowlist(context: dict, rule_results: Sequence[dict]) -> Allowlist:
     allow = Allowlist(pct=set(), raw=set())
 
     # (a) every numeric leaf of every sufficient block, at both scales — the
-    # block does not know how the prose will render it.
-    for value in _numeric_leaves(context):
-        _register_number(value, PCT, allow)
-        _register_number(value, RAW, allow)
+    # block does not know how the prose will render it. The one thing the block
+    # DOES know is its unit: a percent-unit value is registered into the percent
+    # set verbatim and never at the ×100 scale, so the double-scaled reading of
+    # its own number is not a token this Finding may contain.
+    for key, node in context.items():
+        if key == "metrics":
+            continue
+        for value in _numeric_leaves(node):
+            _register_number(value, PCT, allow)
+            _register_number(value, RAW, allow)
 
-    # (b) every value the rule engine interpolated into a template.
+    for block in context["metrics"]:
+        percent_unit = _unit(block["metric"]) == UNIT_PERCENT
+        for key, node in block.items():
+            already = percent_unit and key in PERCENT_UNIT_KEYS
+            for value in _numeric_leaves(node):
+                _register_number(value, PCT, allow, already_percent=already)
+                _register_number(value, RAW, allow)
+
+    # (b) every value the rule engine interpolated into a template. Rule slots
+    # are ALREADY in their display unit — a "pct" slot holds 45.3, not 0.453 —
+    # so they register through the same dp ladder as everything else with the
+    # ×100 suppressed. Registering them only at 2 dp was measured to reject the
+    # engine's own §F5 line: a breach weight of 41.25 renders "41.3%", which a
+    # ±0.01 window around 41.25 does not contain.
     for result in rule_results:
         scales = RULE_SLOT_SCALE.get(result["rule_id"], {})
         slots = result.get("slots") or {}
         for key, scale in scales.items():
             if key in slots and isinstance(slots[key], (int, float)):
-                target = allow.pct if scale == PCT else allow.raw
-                _register(target, str(Decimal(str(slots[key]))), 2)
-                target.add(Decimal(str(slots[key])).normalize())
+                _register_number(
+                    float(slots[key]), scale, allow, already_percent=scale == PCT,
+                )
         for breach in slots.get("breaches", []) if isinstance(slots, dict) else []:
             for key in ("cap_pct", "weight_pct"):
-                _register(allow.pct, str(Decimal(str(breach[key]))), 2)
-                allow.pct.add(Decimal(str(breach[key])).normalize())
+                _register_number(
+                    float(breach[key]), PCT, allow, already_percent=True,
+                )
 
     # (c) the checked-in fixed sets.
     for token in VALIDATOR_FIXED_PCT:
@@ -803,7 +858,14 @@ async def llm_render_sections(
             chunks.append(chunk)
         raw = "".join(chunks)
     except Exception as exc:
-        logger.warn("portfolio_finding_llm_failed", error=str(exc))
+        # ERROR, not WARN, and it keeps its own event name: "nothing came back"
+        # is a different operational fact from "what came back was rejected".
+        # Both must be ERROR — a vLLM outage that only ever logs WARN is a
+        # silent degrade, which is the exact shape CR040 exists to surface, and
+        # M11's live verification greps at ERROR.
+        logger.error(
+            "portfolio_finding_llm_failed", reason="provider_error", error=str(exc),
+        )
         return None, "provider_error"
 
     from app.services.llm_json import extract_json_object
@@ -812,15 +874,24 @@ async def llm_render_sections(
     if not isinstance(parsed, dict) or not all(
         key in parsed for key in ("f1", "f2", "f3", "f4", "f5")
     ):
-        logger.warn("portfolio_finding_llm_rejected", reason="schema")
+        logger.error(
+            "portfolio_finding_llm_rejected",
+            reason="schema", section=None, tokens=[],
+        )
         return None, "schema"
     if not isinstance(parsed["f1"], list) or not all(
         isinstance(item, str) for item in parsed["f1"]
     ):
-        logger.warn("portfolio_finding_llm_rejected", reason="schema")
+        logger.error(
+            "portfolio_finding_llm_rejected",
+            reason="schema", section=None, tokens=[],
+        )
         return None, "schema"
     if not all(isinstance(parsed[key], str) for key in ("f2", "f3", "f4", "f5")):
-        logger.warn("portfolio_finding_llm_rejected", reason="schema")
+        logger.error(
+            "portfolio_finding_llm_rejected",
+            reason="schema", section=None, tokens=[],
+        )
         return None, "schema"
 
     sections = {
@@ -869,19 +940,27 @@ def load_latest_finding(store, user_id: UUID, portfolio_id: UUID):
     return None
 
 
-async def generate_finding(
+async def generate_and_persist_finding(
     *,
     user_id: UUID,
     portfolio_id: UUID,
     as_of: str,
     metric_blocks: list[dict],
     store,
+    evaluate,
     gateway=None,
-    evaluate=None,
 ) -> FindingResult:
     """Render, validate, persist. One journal read serves both the idempotency
     check and the hysteresis state — they are the same question about the same
-    prior entry."""
+    prior entry.
+
+    `evaluate(prior_states) -> (rule_results, updated_states)` is REQUIRED and
+    has no default: M06 renders rules, it does not own their inputs (mandate,
+    holdings, ρ) — those live in M04's context and M07 binds M05's
+    `evaluate_rules` to them. A default would have to be either a silent
+    no-rules render or a runtime raise, and the first ships a Finding with §F5
+    empty and no signal that anything was skipped.
+    """
     context = build_stripped_context(metric_blocks, as_of=as_of)
 
     prior = load_latest_finding(store, user_id, portfolio_id)
@@ -895,12 +974,6 @@ async def generate_finding(
         )
 
     prior_states = ((prior.payload if prior else None) or {}).get("rule_states") or {}
-
-    if evaluate is None:
-        raise ValueError(
-            "generate_finding needs a rule evaluator — M07 binds M05's "
-            "evaluate_rules with the engine's context"
-        )
     rule_results, updated_states = evaluate(prior_states)
 
     deterministic = render_deterministic_sections(context, rule_results)
@@ -924,8 +997,11 @@ async def generate_finding(
         "engine_version": ENGINE_VERSION,
         "portfolio_id": str(portfolio_id),
         "as_of": as_of,
-        "head_disclosure": head,
-        "sections": sections,
+        # The head disclosure lives INSIDE sections, per the seam register's
+        # pinned payload shape — one place, not two. It is added here rather
+        # than upstream so the validator and register check keep seeing exactly
+        # the five model-narratable sections.
+        "sections": {"head": head, **sections},
         "context": context,
         "rules_fired": [
             {

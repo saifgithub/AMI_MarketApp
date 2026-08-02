@@ -552,6 +552,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get journalEntryTypeChallenge => 'CHALLENGE';
 
   @override
+  String get journalEntryTypeHealth => 'HEALTH';
+
+  @override
   String get journalEntryTypeUnknown => 'UNKNOWN';
 
   @override

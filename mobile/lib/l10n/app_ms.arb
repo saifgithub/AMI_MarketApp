@@ -7,6 +7,7 @@
     "journalEmptyBody": "Bercakap dengan ejen, bimbing seorang, atau lengkapkan pelajaran — setiap tindakan direkodkan di sini secara automatik.",
     "journalEntryTypeRoom": "ROOM",
     "journalEntryTypeChallenge": "CHALLENGE",
+    "journalEntryTypeHealth": "HEALTH",
     "journalEntryTypeUnknown": "UNKNOWN",
     "journalDetailHeading": "BUTIRAN ENTRI",
     "journalDetailLoading": "Memuatkan…",

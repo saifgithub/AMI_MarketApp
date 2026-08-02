@@ -93,6 +93,7 @@
     "journalEmptyBody": "تحدث مع وكيل، أو مدرب، أو أكمل درساً — كل إجراء يظهر هنا تلقائياً.",
     "journalEntryTypeRoom": "غرفة",
     "journalEntryTypeChallenge": "CHALLENGE",
+    "journalEntryTypeHealth": "HEALTH",
     "journalEntryTypeUnknown": "UNKNOWN",
     "journalDetailHeading": "تفاصيل الإدخال",
     "journalDetailLoading": "جاري التحميل...",

@@ -94,6 +94,17 @@ def evaluate_gate(user_id: UUID, portfolio_id: UUID, *, now: datetime | None = N
 def enforce_gate(status: GateStatus) -> None: ...
 ```
 
+> **Seam-register note (AT:R66).** build/README.md pins
+> `JournalStore.latest_portfolio_health_entry(...)` and
+> `JournalStore.portfolio_health_stats(...)` as **M08-owned, consumed here,
+> never re-implemented** — retention and soft-delete filters make the generic
+> `list_for_user` path wrong for both the counters and the prior-Finding read.
+> The register overrides this doc's direct-`JournalEntryRow` sketch below, which
+> stands only as a description of the SEMANTICS each store method must have. M06
+> also carries its own `load_latest_finding`; when M08 lands the store methods,
+> both callers collapse onto them. Two implementations of "the newest Finding for
+> this portfolio" is how the daily cap and the hysteresis memory drift apart.
+
 **Counter reads** (one SELECT each, `get_session()` idiom as journal_store.py):
 
 - Trial counters are **per user** (any `reference_id`): count of rows with
@@ -219,9 +230,34 @@ load-bearing:
    returns the existing entry" is unconditional, README contract 4; the entry
    is journal-visible regardless).
 7. `gate = evaluate_gate(...)`; `enforce_gate(gate)` — 402/429 per §3.2.
-8. `result = await asyncio.to_thread(generate_and_persist_finding, user_id,
-   p, context, prior_entry)` — M06 pipeline (rules → render → validate →
-   deterministic fallback → M08 persist; seam, §7).
+8. `result = await asyncio.to_thread(...)` the M06 pipeline (rules → render →
+   validate → deterministic fallback → M08 persist; seam, §7).
+   **RECONCILED against shipped M06 (AT:R66)** — M06 landed first, so its
+   signature is the one to code against. It is keyword-only and requires the
+   rule-evaluator closure, because M06 renders rules but does not own their
+   inputs:
+
+   ```python
+   from functools import partial
+   from app.services.portfolio_rules import evaluate_rules
+
+   result = await asyncio.to_thread(partial(
+       asyncio.run,
+       generate_and_persist_finding(
+           user_id=user_id, portfolio_id=p.id, as_of=context["as_of"],
+           metric_blocks=list(context["metrics"]), store=journal_store,
+           evaluate=lambda prior_states: evaluate_rules(
+               **rule_inputs_from(context), rule_states=prior_states,
+           ),
+           gateway=gateway,
+       ),
+   ))
+   ```
+
+   It returns `FindingResult(entry, created, llm_used, llm_rejected_reason)` —
+   not a dict — and the response envelope of §3.5 is assembled from
+   `result.entry.payload["sections"]` (which carries `head` alongside `f1`…`f5`)
+   plus `result.entry.id`.
 9. Return, gate re-evaluated so `daily_used` includes the new row:
 
 ```json
@@ -370,9 +406,13 @@ landed first wins and the other is amended):
 - M04 exposes `build_health_context(user_id: UUID) -> dict` returning
   `{as_of, generated_at, engine_version, metrics: {…blocks…}}` with a
   machine-readable mock-mode refusal marker.
-- M06 exposes `generate_and_persist_finding(user_id, portfolio, context,
-  prior_entry) -> {journal_entry_id, created, as_of, sections}`, persisting
-  via M08 with `reference_id = portfolio_id`.
+- ~~M06 exposes `generate_and_persist_finding(user_id, portfolio, context,
+  prior_entry) -> {journal_entry_id, created, as_of, sections}`~~ — **superseded
+  by shipped M06 (AT:R66)**, per this section's own rule that the doc which
+  landed first wins: the name is right, but the call is keyword-only
+  (`user_id, portfolio_id, as_of, metric_blocks, store, evaluate, gateway=None`)
+  and it returns a `FindingResult` dataclass. It persists via M08 with
+  `reference_id = portfolio_id` as stated. See the corrected call in §3.5 step 8.
 - Finding journal payload carries at least `as_of`, `portfolio_id`,
   `sections` (`head`,`f1`…`f5` markdown), `rule_states` (README contract 5);
   M07 reads `as_of` + `sections`.

@@ -447,6 +447,10 @@ class _EntryCard extends StatelessWidget {
         return AmiColors.hexBlue;
       case JournalEntryType.dailyChallenge:
         return AmiColors.hexLime400;
+      case JournalEntryType.portfolioHealthAnalysis:
+        // hexBlue, never amber: M09 §1 pins it app-wide — amber reads as a
+        // mandate violation, and a measurement is not a warning.
+        return AmiColors.hexBlue;
       case null:
         return AmiColors.slate600;
     }
@@ -472,6 +476,8 @@ class _EntryCard extends StatelessWidget {
         return l.journalEntryTypeRoom;
       case JournalEntryType.dailyChallenge:
         return l.journalEntryTypeChallenge;
+      case JournalEntryType.portfolioHealthAnalysis:
+        return l.journalEntryTypeHealth;
       case null:
         return l.journalEntryTypeUnknown;
     }

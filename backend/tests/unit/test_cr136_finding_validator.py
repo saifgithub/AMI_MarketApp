@@ -144,6 +144,21 @@ def test_percent_suffixes_all_select_the_percent_set() -> None:
         assert validate_sections(_sections(f2=suffix), allow) is None, suffix
 
 
+def test_a_rule_slot_registers_at_every_dp_the_renderer_uses() -> None:
+    """Measured: a breach weight of 41.25 renders "41.3%" in §F5, and a ±0.01
+    window around 41.25 does not contain it — so the engine's OWN sentence was
+    rejected, pushing every R0 Finding with a non-round number onto the
+    fallback for no reason."""
+    context = _context()[0]
+    rules = _rules("R0")
+    rules[0]["slots"]["breaches"][0]["cap_pct"] = 33.333333333
+    rules[0]["slots"]["breaches"][0]["weight_pct"] = 41.25
+
+    sections = render_deterministic_sections(context, rules)
+    assert "41.3%" in sections["f5"] and "33.3%" in sections["f5"]
+    assert validate_sections(sections, build_allowlist(context, rules)) is None
+
+
 # ── Register check ──────────────────────────────────────────────────────────
 
 
@@ -323,6 +338,41 @@ def test_a_clean_narration_is_accepted_and_f3_stays_deterministic(
     assert sections["f2"] == "Nothing unusual."
     assert sections["f3"] == deterministic["f3"]
     assert "MODEL WROTE THIS" not in sections["f3"]
+
+
+def test_every_rejection_path_logs_at_error_level(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """M11's live verification greps ERROR. Two of the four paths logged WARN,
+    so a vLLM outage and a persistently malformed model — the two failure modes
+    an operator most needs to see — produced no ERROR-level signal at all."""
+    import structlog
+
+    class _Broken:
+        def has_real_provider(self):
+            return True
+
+        def stream_chat(self, **kwargs):
+            raise RuntimeError("vLLM down")
+
+    cases = {
+        "provider_error": _Broken(),
+        "schema": _FakeGateway("I'm afraid I can't do that"),
+        "unregistered_number": _FakeGateway(
+            '{"f1": ["Volatility was 47.3%."], "f2": "x", "f3": "y", "f4": "z", "f5": "w"}'
+        ),
+        "register_lexicon": _FakeGateway(
+            '{"f1": ["Calm."], "f2": "The covariance estimator agrees.",'
+            ' "f3": "y", "f4": "z", "f5": "w"}'
+        ),
+    }
+    for expected_reason, gateway in cases.items():
+        with structlog.testing.capture_logs() as captured:
+            (sections, reason), _det = _run(gateway, monkeypatch)
+        assert sections is None and reason == expected_reason
+        errors = [e for e in captured if e.get("log_level") == "error"]
+        assert errors, f"{expected_reason} produced no ERROR-level line"
+        assert errors[-1].get("reason") == expected_reason, errors[-1]
 
 
 def test_the_fallback_report_is_still_complete(monkeypatch: pytest.MonkeyPatch) -> None:

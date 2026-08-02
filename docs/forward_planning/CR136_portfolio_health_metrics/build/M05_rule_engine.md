@@ -194,11 +194,13 @@ the `1e-9` fraction-epsilon mirrored. **Basis is TOTAL-VALUE weight.**
 > invested-sleeve R0 reported three — the shown-vs-enforced split CR046 closed,
 > inverted, with the report accusing the user of a breach their own trade ticket
 > denies. The agreement test could not catch it because it ran only at cash = 0,
-> the single point where the two bases coincide; a cash > 0 case now exists. Since invested weight ≥ total-value weight
-whenever cash ≥ 0, R0 is a conservative superset of the gate's total-value
-check: it can never stay silent on a book the gate would flag, and at cash = 0
-the two bases coincide exactly — which is where the agreement acceptance test
-runs.
+> the single point where the two bases coincide; a cash > 0 case now exists.
+>
+> The sentence that stood here — "invested weight ≥ total-value weight whenever
+> cash ≥ 0, so R0 is a conservative superset of the gate's check" — was the
+> pre-fix reasoning and is now deleted. It was true arithmetic used to excuse
+> the wrong basis: a *superset* of the gate is exactly the defect, because the
+> extra members are books the gate calls compliant and R0 called breaches.
 
 **Slots:**
 
@@ -209,7 +211,9 @@ runs.
 ```
 
 M06 renders the template once per breach entry. Fired iff `breaches` non-empty.
-`based_on: ["invested_weights", "sector_weights"]`.
+`based_on: ["total_value_weights", "sector_weights"]` — the basis the shipped
+rule actually uses, and the one the result's `basis: "total_value"` field
+declares.
 
 ### 3.5 R1–R5 — conditions, templates (Rev 4 verbatim), slots
 

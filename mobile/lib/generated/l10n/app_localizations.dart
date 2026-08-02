@@ -1054,6 +1054,12 @@ abstract class AppLocalizations {
   /// **'CHALLENGE'**
   String get journalEntryTypeChallenge;
 
+  /// CR136 — Journal entry-card badge for a portfolio_health_analysis entry (the Portfolio Health Finding AMI writes to the journal). NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'HEALTH'**
+  String get journalEntryTypeHealth;
+
   /// DEF210 — Journal entry-card badge when the backend sent an entry_type this app build does not recognise. Deliberately honest rather than guessing a type: the previous behaviour silently labelled such entries '1-ON-1'. NEW key, needs ar/ms translation. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

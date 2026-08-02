@@ -163,6 +163,12 @@ ETF_OVERLAP_DISCLOSURE = (
 
 HEADLINE_MAX_WORDS = 16           # Rev 4 §F1
 
+# Appended to any headline built on a `partial: true` block. Two tokens, which
+# is why every §F1 template is sized to 14 or fewer — the pair has to stay
+# inside HEADLINE_MAX_WORDS, so the two constants belong together.
+# retranslate:[ar,ms]
+F1_PARTIAL_MARKER = " (partial data)"
+
 # Rev 4 F19 — §F1/§F2/§F5 are the plain-language register and must not match
 # any of these; §F3/§F4 are exempt. Measured 0/10 false positives on plausible
 # §F2 prose. This is why §F1's R² requirement is surfaced as "the market
@@ -174,6 +180,42 @@ REGISTER_LEXICON = (
     "Choueifaty", "CAPM", "pro-forma", "eigen", "quadratic", "sampling error",
     "heteroskedastic", "JPM", "EWMA",
 )
+
+# ── Metric value units (M09 §3.1 units pin, made machine-readable) ──────────
+#
+# Tier-1 engine values are decimal FRACTIONS (M04 §3.4) and any consumer
+# rendering a percent multiplies by 100. Tier-2 `realised_*` values arrive
+# ALREADY IN PERCENT (M03 §3.5) because they are computed from stored portfolio
+# values, not from returns. Tier-1 `beta` / `effective_bets` /
+# `weight_concentration` are dimensionless RATIOS and are never rendered with a
+# percent sign at all.
+#
+# The distinction is not cosmetic: applying the fraction convention to a Tier-2
+# block publishes a 15.34% drawdown as "1534.00%" — measured, and it reached §F3
+# while §F1 rendered the same block correctly, so the two sections of one
+# Finding disagreed by two orders of magnitude. The map is consulted by BOTH the
+# renderer and the allow-list builder, so a percent-unit value can never be
+# registered at the fraction scale and vice versa.
+UNIT_FRACTION = "fraction"
+UNIT_PERCENT = "percent"
+UNIT_RATIO = "ratio"
+METRIC_VALUE_UNIT = {
+    "portfolio_volatility": UNIT_FRACTION,
+    "beta": UNIT_RATIO,
+    "tracking_error": UNIT_FRACTION,
+    "effective_bets": UNIT_RATIO,
+    "risk_contribution": UNIT_FRACTION,
+    "mcr": UNIT_FRACTION,
+    "weight_concentration": UNIT_RATIO,
+    "typical_bad_month": UNIT_FRACTION,
+    "scenario_panel": UNIT_FRACTION,
+    "realised_max_drawdown": UNIT_PERCENT,
+    "realised_return": UNIT_PERCENT,
+}
+# Only the value-bearing keys carry the block's unit. `t_eff`, counts and window
+# lengths are plain numbers in every block, and treating them as percentages
+# would widen the allow-list for no gain.
+PERCENT_UNIT_KEYS = ("value", "standard_error")
 
 # Rev 4 §LLM prompt contract pt 5(c) — the fixed constants list checked in beside
 # the sufficiency block. Rev 4's own list is open ("citation years, …"); M06
