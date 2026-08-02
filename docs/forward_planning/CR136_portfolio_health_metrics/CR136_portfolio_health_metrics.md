@@ -314,11 +314,19 @@ cannot work for a new user.
    overstatement** — and at 5% return, rf=0 turns a portfolio that
    *underperformed T-bills* into a positive Sharpe. Moot in Rev 2 (no
    mean-term metric ships), but it must not silently return if one is revived.
-4. **Calendar-day snapshots would inflate Sharpe by 1.204×.** A daily tick with
-   no trading-day gate writes ~113 flat weekend/holiday rows a year (~31% of
-   the series); annualising that by √252 is inconsistent. No calendar exists,
-   and `Quote.market_state` cannot serve as one — it is only populated by the
-   legacy fallback provider, so the production path always reads `"CLOSED"`.
+4. **Calendar-day snapshots would UNDERSTATE portfolio volatility by ~15%.**
+   A daily tick with no trading-day gate writes ~113 flat weekend/holiday rows
+   a year (~31% of the series); annualising that padded series by √252
+   understates annualised volatility by a factor of `√(252/365) = 0.831`
+   (40-year Monte Carlo: true vol 15.87%, naive padded 13.41% — **0.845×**).
+   *Corrected 2026-08-02: the first Rev 2 draft stated this backwards as a
+   1.204× Sharpe inflation. The real direction matters more, not less —
+   volatility is a Rev 2 **shipping** metric, so the naive implementation
+   would tell users their portfolio is ~15% safer than it is.* Fix: gate the
+   snapshot to trading days (preferred), or annualise by the observed
+   frequency. No calendar exists, and `Quote.market_state` cannot serve as one
+   — it is only populated by the legacy fallback provider, so the production
+   path always reads `"CLOSED"`.
 5. **Two different quantities, both called "drawdown," in the same row.**
    `portfolio.py::drawdown_pct` measures *vs starting capital*;
    `returns.py::max_drawdown_pct` measures *peak-to-trough*. For $10k → $15k →
