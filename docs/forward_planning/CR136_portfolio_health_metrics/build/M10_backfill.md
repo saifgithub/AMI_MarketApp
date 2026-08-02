@@ -354,6 +354,41 @@ dependency); `FakeProvider` = dict of canned `(date, close)` series incl.
       (M11 records this as CR136 promotion evidence).
 - [ ] Commit tagged `(AT:R<N> CR136)`, pathspec-commit only.
 
+## 6b. Doc amendments — recorded at build (AT:R66)
+
+Four deviations from this doc, each with the reason.
+
+1. **No per-row `IntegrityError` catch, and no `SAVEPOINT`** (§3.8's
+   belt-and-braces). The obvious implementation is `session.begin_nested()`
+   per row, and **under pysqlite a `SAVEPOINT` implicitly commits the pending
+   transaction** — measured, not reasoned: with `begin_nested()` in place a
+   **DRY RUN wrote all ten rows** and the closing `rollback()` did nothing.
+   The dry run's promise is the more important of the two properties, so the
+   catch is gone: rows are added, flushed once per portfolio, and a duplicate
+   now aborts the whole run loudly with nothing committed. The exposure is
+   nil by construction — `uq_pvs_portfolio_asof`'s only other writer is M03's
+   tick, which writes **today** and only today, and today is excluded from the
+   grid. The remaining risk is two operators running `--apply` at the same
+   moment, which should fail loudly rather than be absorbed as
+   `skipped_existing`. The regression test
+   (`test_a_dry_run_exercises_the_insert_path_and_then_writes_nothing`) is what
+   caught this and is what keeps it caught.
+2. **§6's `get_market_data_provider` grep matches PROSE**, not a call: the
+   provider's own docstring names the symbol deliberately, to say why it is not
+   used. A grep cannot tell an explanation from a call, so the real guard is an
+   **AST-based test** that walks every `Name`, `Attribute` and `ImportFrom` in
+   the module. Same class as M01's `get_market_data_provider` docstring grep
+   and M06's `digit` grep — structural guarantees are the tests, not the greps.
+3. **`reconstruct_daily_values` builds its own per-ticker date index.** The
+   signature is as pinned (`dict[str, list[tuple[date, float]]]`), but a
+   `bisect` over a list rebuilt on every lookup is a linear scan wearing a
+   binary search's clothes, so the date/close columns are split once at entry.
+4. **No early return for "no events anywhere".** §3.9 step 2 skips a
+   never-traded portfolio; when *every* portfolio in scope is untraded the
+   grid is simply empty and they all fall through the same no-trades branch,
+   rather than through a second formatting path that would have dropped the
+   `[synthetic]` marker.
+
 ## 7. Hand-off
 
 M11 (verification + promotion) may now assume:
