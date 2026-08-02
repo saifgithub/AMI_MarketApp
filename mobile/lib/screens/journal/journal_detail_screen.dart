@@ -98,7 +98,9 @@ class _JournalDetailScreenState extends ConsumerState<JournalDetailScreen> {
             JournalEntry(
               id: widget.entryId,
               userId: '',
-              entryType: JournalEntryType.oneOnOne,
+              // No type yet — this is the not-yet-loaded placeholder, and
+              // claiming a concrete type here would flash the wrong branch.
+              entryType: null,
               title: l.journalDetailLoading,
               createdAt: DateTime.now(),
               agentsInvolved: const [],
@@ -247,7 +249,7 @@ class _PayloadBlock extends StatelessWidget {
   final JournalEntry entry;
 
   Map<String, dynamic> get payload => entry.payload;
-  JournalEntryType get entryType => entry.entryType;
+  JournalEntryType? get entryType => entry.entryType;
 
   @override
   Widget build(BuildContext context) {
@@ -302,39 +304,7 @@ class _PayloadBlock extends StatelessWidget {
           // AI-backed decisions from gut trades.
           rows.add(_KV('AI advice', 'Without — manual trade'));
         }
-        if (rows.isNotEmpty) {
-          children.add(Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AmiSpacing.s),
-            decoration: BoxDecoration(
-              color: AmiColors.slate800,
-              borderRadius: BorderRadius.circular(AmiRadii.card),
-              border: Border.all(color: AmiColors.slate700),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final row in rows)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          width: 110,
-                          child: Text(row.label.toUpperCase(),
-                              style: AmiTypography.labelMono.copyWith(fontSize: 11)),
-                        ),
-                        Expanded(
-                          child: Text(row.value, style: AmiTypography.body),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ));
-        }
+        if (rows.isNotEmpty) children.add(_KVBox(rows: rows));
       }
     } else if (entryType == JournalEntryType.roomRun) {
       // CR106 / DEF143 — the Journal now replays a Room run through the SAME
@@ -355,12 +325,68 @@ class _PayloadBlock extends StatelessWidget {
       // None of that can recur here, because there is no longer a second
       // renderer to fall behind.
       return _RoomRunReplay(entry: entry);
+    } else if (entryType == JournalEntryType.dailyChallenge) {
+      // DEF210. `selected_option` / `correct_option` are indices into the
+      // challenge's `options` list, and that list is NOT in the payload
+      // (daily_challenge.py writes the chosen option's TEXT into `summary`
+      // only) — so a wrong answer cannot be shown alongside the right one
+      // here. Rendering the bare integers would read as data while telling
+      // the reader nothing. Curated like the sim_trade branch above: only
+      // fields the title and summary don't already carry.
+      final rows = <_KV>[];
+      final correct = payload['correct'];
+      final difficulty = payload['difficulty'];
+      if (correct is bool) rows.add(_KV('Result', correct ? 'Correct' : 'Wrong'));
+      if (difficulty != null) rows.add(_KV('Difficulty', '$difficulty'.toUpperCase()));
+      if (rows.isNotEmpty) children.add(_KVBox(rows: rows));
     } else {
       payload.forEach((k, v) {
         children.add(_Block(label: k.toUpperCase(), body: '$v'));
       });
     }
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: children);
+  }
+}
+
+
+/// The label/value panel shared by the sim_trade and daily_challenge payload
+/// branches. Extracted at DEF210 so a second branch reusing it doesn't clone
+/// thirty lines of chrome.
+class _KVBox extends StatelessWidget {
+  const _KVBox({required this.rows});
+  final List<_KV> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AmiSpacing.s),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.slate700),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final row in rows)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 110,
+                    child: Text(row.label.toUpperCase(),
+                        style: AmiTypography.labelMono.copyWith(fontSize: 11)),
+                  ),
+                  Expanded(child: Text(row.value, style: AmiTypography.body)),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
 

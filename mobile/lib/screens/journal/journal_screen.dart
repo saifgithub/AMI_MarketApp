@@ -41,6 +41,7 @@ class JournalScreen extends ConsumerStatefulWidget {
       (type: JournalEntryType.agentCoach, label: l.journalFilterBrief),
       (type: JournalEntryType.lessonComplete, label: l.journalFilterLessons),
       (type: JournalEntryType.agentUnlock, label: l.journalFilterUnlocks),
+      (type: JournalEntryType.dailyChallenge, label: l.journalFilterChallenges),
     ];
   }
 
@@ -444,6 +445,10 @@ class _EntryCard extends StatelessWidget {
         return AmiColors.hexRed;
       case JournalEntryType.roomRun:
         return AmiColors.hexBlue;
+      case JournalEntryType.dailyChallenge:
+        return AmiColors.hexLime400;
+      case null:
+        return AmiColors.slate600;
     }
   }
 
@@ -465,6 +470,10 @@ class _EntryCard extends StatelessWidget {
         return l.journalEntryTypeDrift;
       case JournalEntryType.roomRun:
         return l.journalEntryTypeRoom;
+      case JournalEntryType.dailyChallenge:
+        return l.journalEntryTypeChallenge;
+      case null:
+        return l.journalEntryTypeUnknown;
     }
   }
 

@@ -976,6 +976,12 @@ abstract class AppLocalizations {
   /// **'UNLOCKS'**
   String get journalFilterUnlocks;
 
+  /// DEF210 — Journal filter chip for daily_challenge entries. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CHALLENGES'**
+  String get journalFilterChallenges;
+
   /// DEF155 — amber notice on Journal when the user is on Floor Pass. {days} is the retention window. Was 'Upgrade to keep everything', which asserted a data loss that does not happen: retention is a read-time filter (journal_store.py), not a delete, and entries reappear on upgrade. Fixed to the honest verb (see, not keep) plus an explicit nothing-is-deleted clause.
   ///
   /// In en, this message translates to:
@@ -1041,6 +1047,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ROOM'**
   String get journalEntryTypeRoom;
+
+  /// DEF210 — Journal entry-card badge for a daily_challenge entry. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CHALLENGE'**
+  String get journalEntryTypeChallenge;
+
+  /// DEF210 — Journal entry-card badge when the backend sent an entry_type this app build does not recognise. Deliberately honest rather than guessing a type: the previous behaviour silently labelled such entries '1-ON-1'. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'UNKNOWN'**
+  String get journalEntryTypeUnknown;
 
   /// No description provided for @journalDetailHeading.
   ///

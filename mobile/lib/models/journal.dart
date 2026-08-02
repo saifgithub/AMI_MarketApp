@@ -10,6 +10,7 @@ enum JournalEntryType {
   driftAlert,
   lessonComplete,
   agentUnlock,
+  dailyChallenge,
 }
 
 extension JournalEntryTypeJson on JournalEntryType {
@@ -31,6 +32,8 @@ extension JournalEntryTypeJson on JournalEntryType {
         return 'lesson_complete';
       case JournalEntryType.agentUnlock:
         return 'agent_unlock';
+      case JournalEntryType.dailyChallenge:
+        return 'daily_challenge';
     }
   }
 
@@ -52,6 +55,8 @@ extension JournalEntryTypeJson on JournalEntryType {
         return JournalEntryType.lessonComplete;
       case 'agent_unlock':
         return JournalEntryType.agentUnlock;
+      case 'daily_challenge':
+        return JournalEntryType.dailyChallenge;
     }
     return null;
   }
@@ -78,7 +83,12 @@ class JournalEntry {
 
   final String id;
   final String userId;
-  final JournalEntryType entryType;
+  /// Null when the backend sent an `entry_type` this build does not know
+  /// (DEF210). Deliberately NOT defaulted to a known member: a wrong-but-known
+  /// type is indistinguishable from a right one, so every renderer draws the
+  /// wrong branch confidently. Null routes to the generic fallback instead —
+  /// CR040, degrade loudly.
+  final JournalEntryType? entryType;
   final String? referenceId;
   final String title;
   final String? summary;
@@ -100,8 +110,7 @@ class JournalEntry {
     return JournalEntry(
       id: j['id'] as String,
       userId: j['user_id'] as String,
-      entryType: JournalEntryTypeJson.fromWire(j['entry_type'] as String?) ??
-          JournalEntryType.oneOnOne,
+      entryType: JournalEntryTypeJson.fromWire(j['entry_type'] as String?),
       referenceId: j['reference_id'] as String?,
       title: j['title'] as String,
       summary: j['summary'] as String?,

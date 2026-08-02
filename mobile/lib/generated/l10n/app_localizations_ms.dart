@@ -511,6 +511,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get journalFilterUnlocks => 'NYAHKUNCI';
 
   @override
+  String get journalFilterChallenges => 'CHALLENGES';
+
+  @override
   String journalRetentionWarning(int days) {
     return 'Floor Pass: last $days days only. Upgrade to see everything — nothing is deleted.';
   }
@@ -545,6 +548,12 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get journalEntryTypeRoom => 'ROOM';
+
+  @override
+  String get journalEntryTypeChallenge => 'CHALLENGE';
+
+  @override
+  String get journalEntryTypeUnknown => 'UNKNOWN';
 
   @override
   String get journalDetailHeading => 'BUTIRAN ENTRI';
