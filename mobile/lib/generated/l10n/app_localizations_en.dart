@@ -2146,4 +2146,178 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pushSoftAskAccept => 'Turn on';
+
+  @override
+  String get portfolioHealthTitle => 'PORTFOLIO HEALTH';
+
+  @override
+  String get portfolioHealthWindowSubtitle =>
+      '≈66-DAY EFFECTIVE WINDOW · HOLDINGS-BASED';
+
+  @override
+  String get portfolioHealthTileVolatility => 'VOLATILITY';
+
+  @override
+  String get portfolioHealthTileVolatilityUnit => '% ANNUALISED · TOTAL BOOK';
+
+  @override
+  String portfolioHealthTileVolatilityBenchmark(String pct) {
+    return 'S&P 500 $pct%';
+  }
+
+  @override
+  String get portfolioHealthTileBeta => 'BETA';
+
+  @override
+  String get portfolioHealthTileBetaUnit => '× THE S&P 500 · MEASURED WINDOW';
+
+  @override
+  String portfolioHealthBetaLowR2(String pct) {
+    return 'Market explains $pct% of daily moves';
+  }
+
+  @override
+  String get portfolioHealthTileBets => 'EFFECTIVE BETS';
+
+  @override
+  String portfolioHealthTileBetsUnit(String n) {
+    return 'INDEPENDENT BETS · OF $n HOLDINGS';
+  }
+
+  @override
+  String get portfolioHealthTileMdd => 'MAX DRAWDOWN';
+
+  @override
+  String portfolioHealthTileMddUnit(String n) {
+    return 'TRAILING $n-DAY WINDOW · REALISED';
+  }
+
+  @override
+  String get portfolioHealthTileConcentration =>
+      'INVESTED WEIGHT CONCENTRATION';
+
+  @override
+  String portfolioHealthTileConcentrationUnit(String n) {
+    return 'EFFECTIVE HOLDINGS BY WEIGHT · OF $n HELD';
+  }
+
+  @override
+  String get portfolioHealthEtfChip => 'ETF OVERLAP NOT COUNTED';
+
+  @override
+  String get portfolioHealthBarsHeading => 'RISK VS MONEY';
+
+  @override
+  String get portfolioHealthBarsCaption =>
+      'Shares of invested risk and invested money; cash is shown on its own line. Not a forecast and not a return.';
+
+  @override
+  String get portfolioHealthBarsNegativeNote =>
+      'A negative share means this holding offset risk over the window.';
+
+  @override
+  String get portfolioHealthLegendRisk => 'RISK';
+
+  @override
+  String get portfolioHealthLegendMoney => 'MONEY';
+
+  @override
+  String portfolioHealthCashLine(String pct) {
+    return 'CASH · $pct% OF TOTAL BOOK';
+  }
+
+  @override
+  String get portfolioHealthPartialChip => 'PARTIAL';
+
+  @override
+  String portfolioHealthPartialNote(String tickers, String covered) {
+    return 'Excludes $tickers. Numbers describe $covered% of invested value.';
+  }
+
+  @override
+  String get portfolioHealthInsufficientTitle => 'NOT ENOUGH HISTORY YET';
+
+  @override
+  String portfolioHealthInsufficientBody(String n) {
+    return 'Price history available to AMI\'s engine covers $n trading days; 126 needed.';
+  }
+
+  @override
+  String portfolioHealthInsufficientDroppedBody(String covered) {
+    return 'Usable price history covers $covered% of invested value; AMI needs at least 80%.';
+  }
+
+  @override
+  String get portfolioHealthInsufficientGenericBody =>
+      'AMI could not measure this book\'s risk over the available window.';
+
+  @override
+  String portfolioHealthTnNote(String t, String n) {
+    return '$t aligned trading days across $n holdings — too few for AMI to attribute risk reliably.';
+  }
+
+  @override
+  String get portfolioHealthBenchmarkNote =>
+      'S&P 500 history did not align with this book\'s window; beta is not measured.';
+
+  @override
+  String portfolioHealthMddNote(String n) {
+    return '$n daily snapshots so far; realised drawdown needs 21.';
+  }
+
+  @override
+  String get portfolioHealthMockRefusalTitle => 'LIVE MARKET DATA IS OFF';
+
+  @override
+  String get portfolioHealthMockRefusalBody =>
+      'AMI measures portfolio risk from real price history only. It will not compute these numbers from simulated prices.';
+
+  @override
+  String get portfolioHealthEmptyTitle => 'NO HOLDINGS TO MEASURE';
+
+  @override
+  String get portfolioHealthErrorBody =>
+      'AMI\'s engine did not respond. Tap to retry.';
+
+  @override
+  String get portfolioHealthCtaFinding => 'FULL FINDING';
+
+  @override
+  String portfolioHealthTrialChip(String k, String n, String d) {
+    return '$k of $n trial Findings left · $d days';
+  }
+
+  @override
+  String portfolioHealthDailyCapNote(String used, String cap) {
+    return '$used of $cap Findings used today. Available again tomorrow.';
+  }
+
+  @override
+  String get portfolioHealthUpgradeBody =>
+      'Findings are included in Trader and Floor Manager plans.';
+
+  @override
+  String get portfolioHealthUpgradeCta => 'SEE PLANS';
+
+  @override
+  String get findingScreenTitle => 'Portfolio Health';
+
+  @override
+  String get findingSectionF1 => 'F1 · HEADLINES';
+
+  @override
+  String get findingSectionF2 => 'F2 · EXECUTIVE SUMMARY';
+
+  @override
+  String get findingSectionF3 => 'F3 · DETAILED ANALYSIS';
+
+  @override
+  String get findingSectionF4 => 'F4 · CONCLUSION';
+
+  @override
+  String get findingSectionF5 => 'F5 · WHAT THE NUMBERS POINT TO';
+
+  @override
+  String get findingUnavailableBody =>
+      'AMI cannot generate a Finding right now — live market data is off.';
 }

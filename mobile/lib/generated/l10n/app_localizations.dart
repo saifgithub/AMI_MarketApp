@@ -3750,6 +3750,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Turn on'**
   String get pushSoftAskAccept;
+
+  /// CR136 — heading of the Portfolio Health card on the Sim Portfolio screen. A measurement of the user's own book, not a warning. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'PORTFOLIO HEALTH'**
+  String get portfolioHealthTitle;
+
+  /// CR136 — subtitle under the card heading. States the estimator's EFFECTIVE window (T_eff of the EWMA weights, ≈66 days at lambda 0.97), not the 126-day minimum sample — those are different numbers and only the sufficiency copy mentions 126. 'HOLDINGS-BASED' says the risk model reads today's holdings, not a history of past returns. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'≈66-DAY EFFECTIVE WINDOW · HOLDINGS-BASED'**
+  String get portfolioHealthWindowSubtitle;
+
+  /// CR136 — label of the portfolio-volatility tile. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'VOLATILITY'**
+  String get portfolioHealthTileVolatility;
+
+  /// CR136 — unit line under the volatility number. 'TOTAL BOOK' names the LEVEL basis: cash is included in the denominator, so this is the whole account's volatility, not the invested sleeve's. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'% ANNUALISED · TOTAL BOOK'**
+  String get portfolioHealthTileVolatilityUnit;
+
+  /// CR136 — comparison line under the volatility tile, shown ONLY when the engine published a benchmark volatility (context.benchmark_vol_ann non-null). {pct} is pre-formatted by the client to 1 dp and wrapped in directional isolates. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'S&P 500 {pct}%'**
+  String portfolioHealthTileVolatilityBenchmark(String pct);
+
+  /// CR136 — label of the beta tile. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'BETA'**
+  String get portfolioHealthTileBeta;
+
+  /// CR136 — unit line under the beta number. Beta is a dimensionless ratio and never carries a percent sign; '×' says what it multiplies. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'× THE S&P 500 · MEASURED WINDOW'**
+  String get portfolioHealthTileBetaUnit;
+
+  /// CR136 — note added to the beta tile when the block's low_explanatory_power is true (R² below LOW_R2_THRESHOLD, cr136.v1). The card is the F1 register, so the literal 'R²' never appears here — the sentence says what the statistic means instead. {pct} is r_squared × 100, pre-formatted to 0 dp. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Market explains {pct}% of daily moves'**
+  String portfolioHealthBetaLowR2(String pct);
+
+  /// CR136 — label of the effective-bets tile (the diversification ratio squared). NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'EFFECTIVE BETS'**
+  String get portfolioHealthTileBets;
+
+  /// CR136 — unit line under the effective-bets number. Says 'effective independent bets', never a literal count of positions: a 6-holding book that moves as one thing has ~1 effective bet, and the copy must not read as a claim about how many stocks are held. {n} is holdings_count. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'INDEPENDENT BETS · OF {n} HOLDINGS'**
+  String portfolioHealthTileBetsUnit(String n);
+
+  /// CR136 — label of the Tier-2 realised max-drawdown tile. Realised, from stored daily portfolio snapshots — not a prediction. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'MAX DRAWDOWN'**
+  String get portfolioHealthTileMdd;
+
+  /// CR136 — unit line under max drawdown. The window is always stated (Rev 4 F10): a drawdown without its window is not comparable to anything. {n} is the block's window_days. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'TRAILING {n}-DAY WINDOW · REALISED'**
+  String portfolioHealthTileMddUnit(String n);
+
+  /// CR136 — label of the full-width weight-concentration tile (HHI effective N over invested weights). NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'INVESTED WEIGHT CONCENTRATION'**
+  String get portfolioHealthTileConcentration;
+
+  /// CR136 — unit line under the concentration number. HHI is correlation-blind — it counts money, not independence — so the copy says 'by weight' and the effective-bets tile carries the risk reading. {n} is holdings_count. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'EFFECTIVE HOLDINGS BY WEIGHT · OF {n} HELD'**
+  String portfolioHealthTileConcentrationUnit(String n);
+
+  /// CR136 — inline chip on the concentration tile when the book holds an ETF. Two ETFs holding the same underlyings look diversified by weight; AMI does not look through them, and says so rather than implying it did. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'ETF OVERLAP NOT COUNTED'**
+  String get portfolioHealthEtfChip;
+
+  /// CR136 — heading over the signature bars: solid = share of invested risk, outlined = share of invested money. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RISK VS MONEY'**
+  String get portfolioHealthBarsHeading;
+
+  /// CR136 — MANDATORY caption under the bars (Rev 4 SCREEN_DESIGNS amendment 1, verbatim). Names the shared invested-sleeve basis, explains why cash is not a bar, and refuses the two readings a bar chart of percentages invites. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Shares of invested risk and invested money; cash is shown on its own line. Not a forecast and not a return.'**
+  String get portfolioHealthBarsCaption;
+
+  /// CR136 — shown only when a negative risk share is actually drawn. A bar extending left of the origin is otherwise unreadable; a diversifier subtracts risk rather than adding none. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'A negative share means this holding offset risk over the window.'**
+  String get portfolioHealthBarsNegativeNote;
+
+  /// CR136 — legend label for the solid bar (share of invested risk). NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RISK'**
+  String get portfolioHealthLegendRisk;
+
+  /// CR136 — legend label for the outlined bar (share of invested money). NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'MONEY'**
+  String get portfolioHealthLegendMoney;
+
+  /// CR136 — cash line under the bars. Text only, never a bar: cash is a total-book (LEVEL) quantity and the bars are invested-sleeve (SHARE), and one axis may not carry two bases. {pct} is cash_fraction × 100, 0 dp. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CASH · {pct}% OF TOTAL BOOK'**
+  String portfolioHealthCashLine(String pct);
+
+  /// CR136 — amber chip on the card when the engine dropped at least one holding from the estimate. Amber here is a real exclusion, not a mandate violation — the card's accent stays blue. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'PARTIAL'**
+  String get portfolioHealthPartialChip;
+
+  /// CR136 — note beside the PARTIAL chip. Names the excluded tickers and the covered share of INVESTED value (Rev 4 R5's basis, not the total book). {covered} is pre-formatted to 0 dp. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Excludes {tickers}. Numbers describe {covered}% of invested value.'**
+  String portfolioHealthPartialNote(String tickers, String covered);
+
+  /// CR136 — title of the card's insufficient state. Neutral slate, never amber: an absence of measurement is not a warning about the user's book. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NOT ENOUGH HISTORY YET'**
+  String get portfolioHealthInsufficientTitle;
+
+  /// CR136 — insufficient-state body for insufficient_cause=short_window. The literal 126 mirrors T_MIN in portfolio_health_constants.py (cr136.v1) — change that constant and this string is stale. Names AMI's own data limit, never the user's book (Rev 4 F20). {n} is the block's n_observations. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Price history available to AMI\'s engine covers {n} trading days; 126 needed.'**
+  String portfolioHealthInsufficientBody(String n);
+
+  /// CR136 — insufficient-state body for insufficient_cause=dropped_weight_exceeded. The literal 80 mirrors DROPPED_WEIGHT_MAX (0.20 dropped ⇒ 80% covered) in portfolio_health_constants.py (cr136.v1). {covered} is pre-formatted to 0 dp. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Usable price history covers {covered}% of invested value; AMI needs at least 80%.'**
+  String portfolioHealthInsufficientDroppedBody(String covered);
+
+  /// CR136 — insufficient-state body for any cause SCREEN_DESIGNS did not pin copy for (today: zero_variance, feed_unavailable). DEVIATION from M09 §3.7's table, added deliberately: naming the wrong cause would be worse than naming none, and leaving the state with no explanation at all is the silent hole CR040 exists to close. If a cause becomes common, give it its own string rather than widening this one. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI could not measure this book\'s risk over the available window.'**
+  String get portfolioHealthInsufficientGenericBody;
+
+  /// CR136 — shown in place of the effective-bets tile and the bars when insufficient_cause=t_over_n: the covariance matrix is estimable but too noisy to split risk across that many holdings (T/N below T_OVER_N_MIN, cr136.v1). Names AMI's limit, not the user's diversification. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{t} aligned trading days across {n} holdings — too few for AMI to attribute risk reliably.'**
+  String portfolioHealthTnNote(String t, String n);
+
+  /// CR136 — shown in place of the beta tile when insufficient_cause=benchmark_misaligned. The benchmark is never re-gridded to fit: a series that does not share trading days with the book is unusable, not approximable. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'S&P 500 history did not align with this book\'s window; beta is not measured.'**
+  String get portfolioHealthBenchmarkNote;
+
+  /// CR136 — shown when the Tier-2 max-drawdown block is PRESENT but insufficient. The literal 21 mirrors TIER2_MIN_SNAPSHOTS (cr136.v1). A block absent from the wire renders nothing at all — no tile and no note. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{n} daily snapshots so far; realised drawdown needs 21.'**
+  String portfolioHealthMddNote(String n);
+
+  /// CR136 — title of the card's refusal state (engine status refused_mock_data). Amber: the system is unavailable, which is a real exclusion. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE MARKET DATA IS OFF'**
+  String get portfolioHealthMockRefusalTitle;
+
+  /// CR136 — refusal-state body. States what AMI will not do rather than apologising for an outage: a risk analysis narrated over mock-walk prices would look entirely plausible and mean nothing (CR040). NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI measures portfolio risk from real price history only. It will not compute these numbers from simulated prices.'**
+  String get portfolioHealthMockRefusalBody;
+
+  /// CR136 — empty state (engine status no_holdings). No CTA here: the Positions tab's own new-trader hint owns the trade call to action, and two competing CTAs on one screen is the DEF151 class. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NO HOLDINGS TO MEASURE'**
+  String get portfolioHealthEmptyTitle;
+
+  /// CR136 — transport-failure state on the card (the request itself failed). Slate, not amber: a failed fetch is not an engine refusal, and the two must not look alike. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI\'s engine did not respond. Tap to retry.'**
+  String get portfolioHealthErrorBody;
+
+  /// CR136 — the card's call to action: generate (or reopen today's) full written Finding. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'FULL FINDING'**
+  String get portfolioHealthCtaFinding;
+
+  /// CR136 — chip beside the CTA during the trial. Shows BOTH remaining Findings and remaining days because the trial ends on whichever runs out first, so either number alone can mislead. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{k} of {n} trial Findings left · {d} days'**
+  String portfolioHealthTrialChip(String k, String n, String d);
+
+  /// CR136 — note under a disabled CTA when the daily cap is reached, and also the body of the Finding screen's 429 panel (where the numbers come from the server's own error payload). NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {cap} Findings used today. Available again tomorrow.'**
+  String portfolioHealthDailyCapNote(String used, String cap);
+
+  /// CR136 — shown when the gate is closed for this plan. The tiles above stay free and visible; only the written Finding is gated. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Findings are included in Trader and Floor Manager plans.'**
+  String get portfolioHealthUpgradeBody;
+
+  /// CR136 — outlined CTA opening the upgrade sheet from the Health card or the Finding screen's 402 panel. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SEE PLANS'**
+  String get portfolioHealthUpgradeCta;
+
+  /// CR136 — app-bar title of the Finding detail screen. Sentence case, unlike the card's mono heading: this is a document, not a dashboard label. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Portfolio Health'**
+  String get findingScreenTitle;
+
+  /// CR136 — section header above the stored §F1 block of a Finding. The body itself is stored markdown and is never regenerated; only this header is client copy. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'F1 · HEADLINES'**
+  String get findingSectionF1;
+
+  /// CR136 — section header above the stored §F2 block of a Finding. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'F2 · EXECUTIVE SUMMARY'**
+  String get findingSectionF2;
+
+  /// CR136 — section header above the stored §F3 block, which renders in a recessed 'ledger' container: it is the numbers section and carries a different document register from the prose around it. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'F3 · DETAILED ANALYSIS'**
+  String get findingSectionF3;
+
+  /// CR136 — section header above the stored §F4 block of a Finding. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'F4 · CONCLUSION'**
+  String get findingSectionF4;
+
+  /// CR136 — section header above the stored §F5 block. Deliberately NOT 'Recommendations' (SCREEN_DESIGNS amendment 6): AMI is a simulation-only training tool and is not licensed to advise. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'F5 · WHAT THE NUMBERS POINT TO'**
+  String get findingSectionF5;
+
+  /// CR136 — body of the Finding screen's 409 panel (detail code portfolio_health_unavailable). Same refusal as the card's amber state, reached by a user who tapped through before the card refreshed. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI cannot generate a Finding right now — live market data is off.'**
+  String get findingUnavailableBody;
 }
 
 class _AppLocalizationsDelegate

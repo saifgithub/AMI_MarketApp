@@ -19,11 +19,14 @@ import 'package:ami_trade/models/watchlist.dart';
 import 'package:ami_trade/screens/sim/portfolio_screen.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';
+import 'package:ami_trade/state/portfolio_health_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../support/portfolio_health_fixtures.dart';
 
 class _FixedSimNotifier extends SimNotifier {
   _FixedSimNotifier(super.ref, SimState fixed) {
@@ -161,6 +164,12 @@ Future<void> _pump(
               (ref) => _FixedJournalNotifier(ref, journal ?? const JournalState())),
         alpacaStatusProvider
             .overrideWith((ref) async => const AlpacaStatus(linked: false)),
+        // CR136 M09: the Health card is a real, permanent occupant of this
+        // tab, so the scroll budget below has to measure it in its POPULATED
+        // state — the state a user with holdings actually sees. Leaving it to
+        // hit the network here would measure the error notice instead, which
+        // is both smaller and not what ships.
+        portfolioHealthProvider.overrideWith((ref) async => healthFixture()),
         sectorAllocationProvider.overrideWith((ref) async => const SectorAllocation(
               allocation: {},
               totalValue: 0,
@@ -211,12 +220,21 @@ double _screensOfScroll(WidgetTester tester, String pageStorageKeyLabel) {
 
 void main() {
   group('CR120 §9 acceptance 1 — landing scroll at the heavy profile', () {
-    testWidgets('Positions tab is <= 3.0 screens, measured from ScrollPosition',
+    // The budget was 3.0 screens and measured 2.99 — saturated. CR136 M09 adds
+    // the Portfolio Health card to this tab, a deliberate new occupant, and it
+    // measures 563pt collapsed (803pt with the risk-vs-money breakdown open,
+    // which is why the breakdown ships collapsed at all — Saiful's call,
+    // 2026-08-03). The tab now measures 3.71 screens.
+    //
+    // The number moves because the content moved; the guard stays real. Anyone
+    // adding a THIRD card here has to make the same argument out loud rather
+    // than discovering the cap had quietly become decorative.
+    testWidgets('Positions tab is <= 3.75 screens, measured from ScrollPosition',
         (tester) async {
       await _pump(tester, sim: _heavySimState(), watchlist: _heavyWatchlistState());
 
       final screens = _screensOfScroll(tester, 'portfolioPositionsScroll');
-      expect(screens, lessThanOrEqualTo(3.0),
+      expect(screens, lessThanOrEqualTo(3.75),
           reason: 'measured ${screens.toStringAsFixed(2)} screens at the '
               'heavy profile (12 held, 5 open, 195 closed, 40 watch)');
       expect(tester.takeException(), isNull);

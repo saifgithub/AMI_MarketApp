@@ -28,6 +28,7 @@ import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/models/merge.dart';
 import 'package:ami_trade/models/one_on_one.dart';
 import 'package:ami_trade/models/onboarding.dart';
+import 'package:ami_trade/models/portfolio_health.dart';
 import 'package:ami_trade/models/price_alert.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/sim.dart';
@@ -931,6 +932,25 @@ class ApiClient {
     final r = await _dio
         .get<Map<String, dynamic>>('/v1/portfolio/sector-allocation/$userId');
     return SectorAllocation.fromJson(r.data!);
+  }
+
+  /// CR136 M09 — Portfolio Health tiles + gate status. Free, never gated (M07
+  /// §3.4): a mock-mode refusal or an all-insufficient book still answers 200,
+  /// carrying the state the card is meant to show.
+  Future<PortfolioHealth> portfolioHealth(String userId) async {
+    final r =
+        await _dio.get<Map<String, dynamic>>('/v1/portfolio/health/$userId');
+    return PortfolioHealth.fromJson(r.data!);
+  }
+
+  /// CR136 M09 — generate (or replay today's) Finding. A same-day repeat
+  /// returns the stored entry with `created:false` and consumes no budget
+  /// (M07 §3.5 step 6), which is what makes a `FutureProvider` around a POST
+  /// safe here.
+  Future<HealthFinding> generateHealthFinding(String userId) async {
+    final r = await _dio
+        .post<Map<String, dynamic>>('/v1/portfolio/health/$userId/finding');
+    return HealthFinding.fromJson(r.data!);
   }
 
   // ── Ticker Reference (CR128) ────────────────────────────────────

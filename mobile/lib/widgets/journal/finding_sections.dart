@@ -7,6 +7,7 @@
 /// would eventually disagree with its own stored copy.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/room/room_board.dart';
 import 'package:flutter/material.dart';
@@ -46,8 +47,22 @@ class FindingSections extends StatelessWidget {
   static bool isRenderable(Map<String, dynamic> payload) =>
       _disclosure(payload) != null && _sections(payload) != null;
 
+  /// CR136 M09 — the section headers. Client copy, unlike everything else here:
+  /// the bodies are stored markdown and are never regenerated, but a reader
+  /// needs to know which part of the report they are in, and §F5's label is
+  /// deliberately not "Recommendations" (SCREEN_DESIGNS amendment 6) — AMI is a
+  /// training simulator and is not licensed to advise.
+  static String _label(AppLocalizations l, String key) => switch (key) {
+        'f1' => l.findingSectionF1,
+        'f2' => l.findingSectionF2,
+        'f3' => l.findingSectionF3,
+        'f4' => l.findingSectionF4,
+        _ => l.findingSectionF5,
+      };
+
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final sections = _sections(payload) ?? const {};
     final disclosure = _disclosure(payload);
     final style = agentMarkdownStyle(AmiColors.textMed);
@@ -80,9 +95,35 @@ class FindingSections extends StatelessWidget {
       // it chose not to write, and inventing a placeholder here would put words
       // in the report that were never validated.
       if (body is! String || body.trim().isEmpty) continue;
-      children.add(const SizedBox(height: AmiSpacing.s));
+      children.add(const SizedBox(height: AmiSpacing.m));
       children.add(
-        MarkdownBody(data: body, shrinkWrap: true, styleSheet: style),
+        Text(
+          _label(l, key),
+          style: AmiTypography.labelMono
+              .copyWith(fontSize: 10, color: AmiColors.hexBlue),
+        ),
+      );
+      children.add(const SizedBox(height: AmiSpacing.xs));
+      final markdown =
+          MarkdownBody(data: body, shrinkWrap: true, styleSheet: style);
+      children.add(
+        // §F3 is the ledger — the numbers section. It carries a different
+        // document register from the prose around it, so it is recessed rather
+        // than reformatted: the KV grid the base doc sketched would mean
+        // parsing numbers back out of stored prose, and this widget renders the
+        // STORED report and regenerates nothing (README contract 5).
+        key == 'f3'
+            ? Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AmiSpacing.s),
+                decoration: BoxDecoration(
+                  color: AmiColors.slate900,
+                  borderRadius: BorderRadius.circular(AmiRadii.card),
+                  border: Border.all(color: AmiColors.slate700),
+                ),
+                child: markdown,
+              )
+            : markdown,
       );
     }
 

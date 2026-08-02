@@ -494,3 +494,70 @@ for the i18n lane.
   `disclosure`. M09 is insulated — the Finding screen consumes only M07's
   POST `sections.head`; the journal host consumes M08's widget contract. That
   key reconciliation belongs to M06/M08's build, not M09's.
+
+  **Resolved at build (AT:R66):** the shipped payload nests the disclosure at
+  `sections.head` and `FindingSections` reads that first, falling back to a
+  top-level `disclosure`. The Finding screen passes M07's `sections` map
+  through unchanged — the same map the journal host reads — so there is one
+  contract and no adapter to drift.
+
+## 8. Doc amendments — recorded at build (AT:R66)
+
+Nine deviations from this doc, each with the reason. Where a pin was wrong,
+this section is the correction; where a pin was right but incomplete, this
+section is the addition.
+
+1. **The risk-vs-money bars ship COLLAPSED (§3.3 items 6–7).** Fully expanded
+   the card measures **803pt** at 390×844 — a whole screen added to the
+   Positions tab, which CR120 §9 acceptance 1 budgets at ≤3.0 screens and
+   which already measured **2.99**. Collapsed it measures **563pt** and the tab
+   measures **3.71**. Tiles, cash line and CTA stay on first sight; the
+   breakdown is one tap away, and its mandatory caption ships inside the same
+   expanded block so no state can draw a bar without the sentence naming its
+   basis. Saiful's call, 2026-08-03, given the measurement.
+2. **CR120's acceptance number is re-pinned 3.0 → 3.75**, in
+   `test/screens/sim/portfolio_screen_test.dart`, with the measurement and the
+   reason in the test itself. The old cap was saturated; a new first-class card
+   on that tab is a real product cost, and hiding it by shrinking a fixture
+   would have made the guard decorative. That harness now also overrides
+   `portfolioHealthProvider` with a POPULATED fixture — left to itself it hit
+   the network and measured the error notice, which is both smaller than what
+   ships and not what a user sees.
+3. **New l10n key `portfolioHealthInsufficientGenericBody`**, not in §3.7's
+   table. §3.3 pinned copy for `short_window` and `dropped_weight_exceeded`
+   only, but `portfolio_volatility` can also arrive insufficient with
+   `zero_variance` or `feed_unavailable`. Naming the wrong cause is worse than
+   naming none; leaving the state with no explanation at all is the hole CR040
+   exists to close.
+4. **New test file `test/support/portfolio_health_fixtures.dart`**, not in §2's
+   table. CR120's scroll harness has to pump this card too, and two
+   hand-written copies of the envelope would drift apart exactly when a wire
+   change made it matter.
+5. **`healthFadeIn` + `healthFadeKey` live in
+   `portfolio_health_finding_screen.dart`**, not beside the card. The card
+   already imports that file (it pushes the screen), so one dependency edge
+   carries the helper and CR136 keeps exactly one implementation of the
+   reduced-motion rule — a second copy beside the card would have been a
+   duplicated rule, and importing the card from the screen would have been an
+   import cycle.
+6. **`RiskMoneyBars` owns its own `Directionality(ltr)` wrap**, rather than the
+   card wrapping the block (§3.3 RTL). The invariant travels with the widget,
+   so a second host cannot forget it.
+7. **The card does not watch `simNotifierProvider`** (§3.3). The cash line is
+   percent-only (`portfolioHealthCashLine`), so there is no dollar figure to
+   source and the watch would have been dead code.
+8. **`_TileGrid` wraps its row in `IntrinsicHeight`.** A `CrossAxisAlignment
+   .stretch` row inside a scroll view is handed an unbounded height and fails
+   to lay out; `IntrinsicHeight` keeps a tile pair matched in height when one
+   carries a note the other does not.
+9. **The Finding screen guards on `FindingSections.isRenderable`** before
+   rendering, falling through to the transport panel. Unreachable while M08's
+   write-time validator holds, and kept as defence in depth for F19: a report
+   rendered without its disclosures outlives every caveat that was true when it
+   was written.
+
+Also recorded: `portfolio_volatility` renders at 1 dp per §3.7's client pins, so
+the fixture's 0.1898 shows as `19.0`, not the `18.98` that appears in M06's
+prose examples. The unit map (`kMetricValueUnit`) mirrors the backend's
+`METRIC_VALUE_UNIT` and **throws** on an unpinned metric rather than guessing a
+scale — the structural form of the fix M06's audit forced after "1969.00%".
