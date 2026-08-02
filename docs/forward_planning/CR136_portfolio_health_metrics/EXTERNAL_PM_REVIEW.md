@@ -52,6 +52,7 @@ you compose the pack's own pinned decisions with each other.
 | F18 | **No factor model**, and your IPO drop-rule has no institutional precedent | Major |
 | F19 | The **register split is enforced by prompt instruction alone** — your own doctrine forbids that | Major |
 | F20 | The feature **cannot ship at all** on the current data layer | Delivery |
+| F21 | **ETF look-through is missing, and ETFs are confirmed tradeable in the sim today** — SPY+QQQ+AAPL reports as diversified | **Blocker** |
 
 ---
 
@@ -832,8 +833,11 @@ standard becomes achievable instead of hostage to a scope you never intended to 
     yfinance adjusted close otherwise enters the covariance unflagged. (§7D)
 25. **Gate the descriptive statistics too** — a minimum ~21 trading days before the
     drawdown tile renders; "≥ 2 snapshots" is vacuous. (§7E)
-26. **Verify whether ETFs are reachable in the sim.** If they are, look-through is a
-    ship-blocker for DR², HHI and every risk share; if not, it is a v1.1 item. (§7C)
+26. **Add ETF look-through before shipping DR², HHI or any risk share.** Confirmed live
+    — `ticker_reference.py` already tags `is_etf` per symbol; decompose ETF holdings to
+    their underlying constituents (or exclude ETFs from Tier-1 pending that work) so a
+    user's SPY/QQQ/AAPL book isn't reported as diversified. Move to the top with F20 —
+    this is a ship-blocker, not a v1.1 item. (§7C)
 
 ---
 
@@ -867,12 +871,21 @@ R1. **This is the best product suggestion in either review**, it is the most def
 rule available (the threshold is the user's own stated limit, not an invented 40%), and
 it costs nothing to compute. Adopt as R0.
 
-**C. ETF look-through** — SPY + QQQ + AAPL reads as three positions and the report never
-says "you own Apple three times," which corrupts DR², HHI and every risk share.
-*Adopted with a caveat I could not resolve:* I found no ETF tickers in the universe data
-and no instrument-type gate in the buy path, so I cannot confirm ETFs are reachable in
-the sim today. **Verify that first** — if they are, this is live and severe for an
-education product; if not, it is a v1.1 item, not a ship-blocker.
+**C. ETF look-through — confirmed live, not conditional.** SPY + QQQ + AAPL reads as
+three positions and the report never says "you own Apple three times," which corrupts
+DR², HHI and every risk share. On first pass I could not confirm ETFs were reachable in
+the sim and flagged this as conditional. Verified since: `ticker_reference.py:13` states
+the reference universe is *"~13k US-listed symbols including ETFs,"* and the parser
+explicitly stores an `is_etf` flag per symbol (`ticker_reference.py:115,141`) — but
+nothing downstream reads it. `submit()` (`sim_engine.py:536`) takes any ticker string,
+uppercases it, and the only filters are Sharia/sector/locale exclusion lists, none of
+which gate on instrument type; `current_quote` passes the ticker straight to the
+yfinance-backed provider, which serves ETFs identically to single names. The mobile
+trade ticket (`trade_ticket_sheet.dart`) is free-text, gated only by a
+reference-table existence check. **A user can buy SPY + QQQ + AAPL today**, and the
+engine would report their book as diversified while their real single-name exposure to
+Apple is understated. This is a ship-blocker, not a v1.1 item, for exactly the population
+CR136 exists to serve.
 
 **D. Data-hygiene gate.** No outlier screen on the return series feeding Σ. One bad
 adjusted close from yfinance prints a phantom ±40% return straight into the covariance,
