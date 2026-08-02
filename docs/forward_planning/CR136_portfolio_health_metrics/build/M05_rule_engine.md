@@ -391,6 +391,18 @@ Checklist a reviewer runs on the Mac (pure-editor rules):
 
 ## 7. Hand-off
 
+**ADDED AT:R66, when M07 became the first real caller:**
+`rule_inputs_from_context(context) -> dict` unpacks M04's engine context into
+this module's keyword arguments, and `evaluate_rules_for_context(context,
+mandate, rule_states)` is the seam register's pinned two-argument shape over the
+explicit core. Both are pure — a dict in, a dict out, no resolvers and no I/O —
+so the core stays testable without an engine. An insufficient block yields
+`None`, never a substituted number: a rule fed a fabricated input would fire on
+a measurement nobody took. The per-holding rows they read
+(`context["holdings"]`, sector included) are new in M04; §3.2's note that "M04
+resolves the sector via the CR026 SectorMap" was always the intent, but no list
+was emitted until now.
+
 After M05 lands, M06 may assume:
 
 - `from app.services.portfolio_rules import evaluate_rules, RULE_TEMPLATES,

@@ -201,8 +201,10 @@ async def portfolio_health(
   "gate": { "<the 8 GateStatus keys of §3.2>": "…" } }
 ```
 
-`as_of`/`generated_at`/`engine_version`/`metrics` come from M04's context
-unchanged — M07 wraps, never edits, never strips (stripping is the
+`metrics` carries M04's engine envelope whole (`status`, `blocks`, `context`,
+the accounting fields), with `as_of`/`generated_at`/`engine_version`/`status`
+also hoisted to the root — M09's `fromJson` reads `json['metrics'] ?? json`
+(M09 §3.1), so both nestings resolve. M07 wraps, never edits, never strips (stripping is the
 prompt-side context builder's job, not the tiles'). Mock-mode refusal and
 `sufficient:false` blocks render as M04 emits them — GET stays 200; a 5xx
 would hide the amber state from the card (CR040).
@@ -229,6 +231,16 @@ load-bearing:
    generation, no budget consumed, gate NOT enforced ("same-day regeneration
    returns the existing entry" is unconditional, README contract 4; the entry
    is journal-visible regardless).
+
+   > **REFINED (AT:R66).** §3.2's "soft-deleted included" holds for the READ
+   > and for everything the read feeds EXCEPT this replay. A soft-deleted prior
+   > still counts against both budgets and still supplies the rule hysteresis
+   > state — a deleted Finding is something that happened. But returning one to
+   > the client answers "regenerate" with a `journal_entry_id` pointing at a row
+   > the user cannot open, so the replay branch requires `deleted_at IS NULL`
+   > and a user who deleted today's Finding gets a genuinely new one. Still one
+   > query: `latest_portfolio_health_entry` returns `deleted_at` and the two
+   > consumers read it differently.
 7. `gate = evaluate_gate(...)`; `enforce_gate(gate)` — 402/429 per §3.2.
 8. `result = await asyncio.to_thread(...)` the M06 pipeline (rules → render →
    validate → deterministic fallback → M08 persist; seam, §7).
@@ -374,12 +386,18 @@ Cases (Rev 4 acceptance "Gate logic", boundaries at ±):
       tempfile; Mac is pure editor — no live backend).
 - [ ] `pytest backend/tests/unit/test_config_compose_parity.py -q` green.
 - [ ] `pytest backend/tests/unit/ -q` green (no regression).
-- [ ] `grep -n "portfolio_health_" backend/app/core/config.py` — exactly the
-      five §3.1 fields with §3.1 defaults.
+- [ ] `grep -n "portfolio_health_" backend/app/core/config.py` — the five §3.1
+      fields with §3.1 defaults (plus M06's `portfolio_health_llm_enabled`,
+      which predates this module).
 - [ ] `grep -n "PORTFOLIO_HEALTH_" docker-compose.yml` — the five §3.6 lines,
       mirrored defaults (no bare `:-` on GATE_MODE/PLANS).
 - [ ] `grep -n "enforce_gate" backend/app/api/portfolio.py` — exactly one
-      call site (POST); GET calls `evaluate_gate` only.
+      call site (POST); GET calls `evaluate_gate` only. The structural version
+      of this check is `test_the_tiles_route_never_calls_enforce_gate`, which
+      walks the GET handler's AST — a grep also matches the import and the
+      docstring, and the first draft of that test passed vacuously by looking
+      only at call nodes when both gate functions reach the thread pool as
+      `asyncio.to_thread(fn, …)` arguments.
 - [ ] `grep -n "EntryType" backend/app/services/health_gate.py` — no matches.
 - [ ] GET/POST responses match §3.4/§3.5 shapes verbatim.
 - [ ] No new user-visible strings (machine codes only) — nothing to flag

@@ -342,6 +342,18 @@ series only exercise pipeline/gating, so crafted walks suffice.
 
 ## 7. Hand-off
 
+**ADDED AT:R66** — the payload also carries a root-level `holdings` list, one
+row per risky holding (dropped ones included):
+`{ticker, sector, invested_weight_pct, included, drop_reason, risk_share_pct}`.
+M05's `HoldingInput` doc always pinned the sector as "M04 resolves via the CR026
+SectorMap" — M04 is the only layer holding `sector_of` — but the list itself was
+never emitted, so the M04 → M05 seam had no data path until M07 became the first
+caller. `invested_weight_pct` divides by FULL invested value, every risky
+holding included: R0 converts it to a total-value weight using the cash
+fraction, and that identity only holds while the denominators agree. Dropped
+holdings carry a weight because a mandate cap applies to real money whether or
+not the price history was long enough to estimate a covariance from.
+
 M05 may now assume: the frozen payload (§3.5) with 9 blocks + root context;
 `R*`/hysteresis constants importable from
 `app.services.portfolio_health_constants`; `correlation_pairs`, `cash_fraction`,

@@ -394,10 +394,72 @@ def evaluate_rules(
     return results, ordered
 
 
+def rule_inputs_from_context(context: dict) -> dict:
+    """Unpack M04's engine context into `evaluate_rules`' keyword arguments.
+
+    build/README.md's seam register pins the M05 → M06 evaluator as
+    `evaluate_rules(context, rule_states)`. The shipped core instead takes every
+    input explicitly, which is what makes it testable without an engine — so
+    this adapter carries the pinned shape, and stays as pure as the core: a dict
+    in, a dict out, no I/O and no resolvers.
+
+    A block that is insufficient yields `None`, never a substituted number. That
+    is the uncertainty contract's whole point, and a rule fed a fabricated input
+    would fire on a measurement nobody took.
+    """
+    blocks = context.get("blocks") or {}
+
+    def _value(metric: str):
+        block = blocks.get(metric) or {}
+        return block.get("value") if block.get("sufficient") else None
+
+    beta_block = blocks.get("beta") or {}
+    beta_sufficient = bool(beta_block.get("sufficient"))
+    pairs = (context.get("context") or {}).get("correlation_pairs") or []
+
+    return {
+        "holdings": [
+            HoldingInput(
+                ticker=row["ticker"],
+                invested_weight_pct=row["invested_weight_pct"],
+                sector=row["sector"],
+                included=row["included"],
+                drop_reason=row.get("drop_reason"),
+                risk_share_pct=row.get("risk_share_pct"),
+            )
+            for row in context.get("holdings") or []
+        ],
+        "dr2": _value("effective_bets"),
+        "beta": beta_block.get("value") if beta_sufficient else None,
+        "se_beta": beta_block.get("standard_error") if beta_sufficient else None,
+        "r2": beta_block.get("r_squared") if beta_sufficient else None,
+        "beta_window_days": beta_block.get("window_days") if beta_sufficient else None,
+        # Accounting, not estimation — always available, even when every block
+        # is insufficient. R4 is the one rule that can still speak on a book
+        # with no usable price history at all.
+        "cash_pct_total": 100.0 * float(context.get("cash_fraction") or 0.0),
+        "pairwise_rho": (
+            [(p["a"], p["b"], p["rho"]) for p in pairs] if pairs else None
+        ),
+        "contains_etfs": bool(context.get("contains_etfs")),
+    }
+
+
+def evaluate_rules_for_context(
+    context: dict, mandate: Mandate, rule_states: dict[str, str] | None = None,
+) -> tuple[list[dict], dict[str, str]]:
+    """The seam register's pinned call shape, over the explicit core."""
+    return evaluate_rules(
+        mandate=mandate, rule_states=rule_states, **rule_inputs_from_context(context),
+    )
+
+
 __all__ = [
     "ETF_OVERLAP_DISCLOSURE",
     "HoldingInput",
     "RULE_IDS",
     "RULE_TEMPLATES",
     "evaluate_rules",
+    "evaluate_rules_for_context",
+    "rule_inputs_from_context",
 ]

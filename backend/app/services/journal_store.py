@@ -14,7 +14,11 @@ Entries are appended by capture hooks across the codebase:
 Reads return Pydantic JournalEntry objects so callers don't see SQLAlchemy
 rows. The public sync API matches the previous in-memory store.
 
-Soft delete: DELETE sets deleted_at; all reads filter deleted_at IS NULL.
+Soft delete: DELETE sets deleted_at; all reads filter deleted_at IS NULL —
+EXCEPT the two CR136 Portfolio Health reads at the bottom of this class, which
+deliberately count and read soft-deleted rows. Deleting a Finding must not mint
+free trial budget, and must not wipe the rule hysteresis state the next Finding
+reads back.
 """
 
 from __future__ import annotations
@@ -45,6 +49,13 @@ def _retention_days_for_plan(plan: Plan | str) -> int | None:
     if p == Plan.FLOOR_PASS:
         return FLOOR_PASS_RETENTION_DAYS
     return None
+
+
+def _as_utc(value: datetime) -> datetime:
+    """SQLite (test fixtures) drops tzinfo; Postgres keeps it. Comparing the two
+    shapes raises, so every stored timestamp is normalised on read — the same
+    guard entitlements.py:51-55 already carries."""
+    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value
 
 
 def _row_to_entry(row: JournalEntryRow) -> JournalEntry:
@@ -265,6 +276,72 @@ class JournalStore:
     def clear(self) -> None:
         with get_session() as s:
             s.execute(delete(JournalEntryRow))
+
+    # ── CR136 Portfolio Health (M08 owns these; M07 consumes) ───────────────
+    #
+    # Both deliberately include soft-deleted rows, which is exactly why they
+    # exist rather than M07 filtering `list_for_user`: that read excludes
+    # soft-deleted AND applies the Floor Pass 30-day retention window, either of
+    # which would silently hand a user free Findings — delete yesterday's, get
+    # today's budget back — or reset a rule's hysteresis band to cleared because
+    # the entry holding its state aged out of a plan's view.
+
+    def latest_portfolio_health_entry(
+        self, user_id: UUID, portfolio_id: UUID,
+    ) -> JournalEntry | None:
+        """Newest Finding for this portfolio, soft-deleted included.
+
+        One read serves both callers, and they read different fields of it: the
+        rule hysteresis state is taken unconditionally, while the same-day
+        idempotency check consults `deleted_at` first — returning a deleted
+        entry to the client would answer "regenerate" with a journal id pointing
+        at a row the user cannot open.
+        """
+        with get_session() as s:
+            row = s.execute(
+                select(JournalEntryRow)
+                .where(JournalEntryRow.user_id == user_id)
+                .where(
+                    JournalEntryRow.entry_type
+                    == EntryType.PORTFOLIO_HEALTH_ANALYSIS.value
+                )
+                .where(JournalEntryRow.reference_id == portfolio_id)
+                .order_by(JournalEntryRow.created_at.desc())
+                .limit(1)
+            ).scalar_one_or_none()
+            return _row_to_entry(row) if row else None
+
+    def portfolio_health_stats(
+        self, user_id: UUID, portfolio_id: UUID, *, now: datetime,
+    ) -> tuple[int, datetime | None, int]:
+        """`(trial_findings_used, first_finding_at, daily_used)`.
+
+        The trial counters are per USER across every `reference_id`, because
+        `reset_portfolio` destroys and recreates the portfolio — a per-portfolio
+        trial would reset itself every time a user resets their book. The daily
+        counter is per PORTFOLIO, per Rev 4, and its day boundary is UTC.
+        """
+        day_start = now.astimezone(timezone.utc).replace(
+            hour=0, minute=0, second=0, microsecond=0,
+        )
+        with get_session() as s:
+            base = (
+                select(JournalEntryRow)
+                .where(JournalEntryRow.user_id == user_id)
+                .where(
+                    JournalEntryRow.entry_type
+                    == EntryType.PORTFOLIO_HEALTH_ANALYSIS.value
+                )
+            )
+            rows = s.execute(base).scalars().all()
+            created = [_as_utc(r.created_at) for r in rows]
+            daily = sum(
+                1
+                for r in rows
+                if r.reference_id == portfolio_id
+                and _as_utc(r.created_at) >= day_start
+            )
+            return len(rows), (min(created) if created else None), daily
 
 
 _store: JournalStore | None = None

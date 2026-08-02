@@ -247,6 +247,17 @@ room_stream_rate_limit = RateLimiter(
     name="room_stream", per_minute=5,
 )
 
+# CR136: Finding generation is one LLM call behind a 2/day gate, so this is not
+# the spend control — it brackets scripted hammering of the route itself, which
+# the daily cap alone would still let build context on every hit. User-keyed
+# like DEF186's chat limiters: the bearer identifies the billed user, and an
+# anon user rotates IPs trivially. 5/min matches the room_stream precedent
+# above. The GET tiles route gets NO limiter — parity with the
+# sector-allocation route in the same file, which has none.
+portfolio_health_finding_rate_limit = RateLimiter(
+    name="portfolio_health_finding", per_minute=5,
+)
+
 # DEF186 (security review H6): 1-on-1 and Brief turns spent zero credits
 # and had no rate limiter at all — one free anon token bought unlimited
 # LLM turns. Per-user (bearer-keyed, not IP — an anon user can rotate

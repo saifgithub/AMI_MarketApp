@@ -623,6 +623,36 @@ def compute_health(
                     "weight_b": v_weights[j],
                 })
 
+    # The per-holding row M05's rule engine consumes. Its doc pins the sector as
+    # "M04 resolves via the CR026 SectorMap", and M04 is the only layer holding
+    # `sector_of` — but the list itself was never emitted, so the M04 → M05 seam
+    # had no data path at all until M07 needed to call the rules.
+    #
+    # `invested_weight_pct` uses FULL invested value as the denominator (every
+    # risky holding, dropped ones included), not the covered sleeve: R0 converts
+    # it to a total-value weight with the cash fraction, and that identity only
+    # holds if the denominators agree. Dropped holdings still carry a weight —
+    # they hold real money and a mandate cap applies to them whether or not
+    # their price history was long enough to estimate a covariance from.
+    risk_share_of = {e["ticker"]: e["risk_share"] for e in per_holding}
+    drop_reason_of = {d["ticker"]: d["reason"] for d in dropped}
+    holdings_rows = [
+        {
+            "ticker": p.ticker,
+            "sector": sector_of(p.ticker),
+            "invested_weight_pct": (
+                100.0 * p.value / full_invested if full_invested > 0.0 else 0.0
+            ),
+            "included": p.ticker not in drop_reason_of,
+            "drop_reason": drop_reason_of.get(p.ticker),
+            "risk_share_pct": (
+                100.0 * risk_share_of[p.ticker]
+                if p.ticker in risk_share_of else None
+            ),
+        }
+        for p in positions
+    ]
+
     return {
         "status": STATUS_OK,
         "as_of": as_of,
@@ -632,6 +662,7 @@ def compute_health(
         "contains_etfs": contains_etfs,
         "partial": partial,
         "dropped_holdings": dropped,
+        "holdings": holdings_rows,
         "holdings_count": len(positions),
         "risky_holdings_count": n_risky,
         "total_value": total_value,

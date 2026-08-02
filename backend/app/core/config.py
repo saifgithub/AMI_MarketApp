@@ -18,7 +18,7 @@ class Settings(BaseSettings):
 
     @field_validator(
         "apple_audiences", "google_audiences", "league_eligible_plans",
-        "cors_origins", mode="before",
+        "portfolio_health_plans", "cors_origins", mode="before",
     )
     @classmethod
     def _csv_or_json_list(cls, v):
@@ -261,6 +261,37 @@ class Settings(BaseSettings):
     league_promote_count: int = 5
     league_relegate_count: int = 5
     league_eligible_plans: CsvList = Field(default_factory=list)
+
+    # CR136 — Portfolio Health access gating. Tiles are FREE in every mode; only
+    # full Finding generation is gated.
+    #   open   — no access gate at all (the daily cap still applies)
+    #   trial  — trial window OR budget, whichever exhausts first, then plan
+    #   plan   — plan membership only, from day one
+    # A Literal on purpose, the `gtm_funnel` idiom: a typo'd mode must fail boot
+    # LOUDLY rather than silently fall through to whichever branch a plain str
+    # happens to miss, quietly changing who pays for the feature (CR040).
+    portfolio_health_gate_mode: Literal["open", "trial", "plan"] = "trial"
+    portfolio_health_trial_days: int = 14
+    portfolio_health_trial_findings: int = 7
+    portfolio_health_daily_cap: int = 2
+    portfolio_health_plans: CsvList = Field(
+        default_factory=lambda: ["trader", "floor_manager"]
+    )
+
+    @field_validator(
+        "portfolio_health_trial_days", "portfolio_health_trial_findings",
+        "portfolio_health_daily_cap",
+    )
+    @classmethod
+    def _portfolio_health_counters_non_negative(cls, v: int) -> int:
+        # Same shape as the CR098 pull-back validator. `0` is LEGAL and
+        # documented — trial_days=0 or trial_findings=0 exhausts the trial
+        # immediately, daily_cap=0 generates nothing at all. Those are loud
+        # operator choices; a negative is nonsense and fails boot rather than
+        # being clamped into one of them.
+        if v < 0:
+            raise ValueError("portfolio health gate counters must be >= 0")
+        return v
 
     # CR069 — Sharia-compliance indicator for the `halal` mandate flag.
     # Off by default so the flag degrades LOUDLY (pauses) rather than silently

@@ -919,25 +919,20 @@ async def llm_render_sections(
 
 
 def load_latest_finding(store, user_id: UUID, portfolio_id: UUID):
-    """Newest prior Finding for this portfolio.
+    """Newest prior Finding for this portfolio — delegates to the store.
 
-    Read as FLOOR_MANAGER deliberately: this is an internal system read, and the
-    Floor Pass 30-day retention filter must not be able to hide hysteresis state
-    from the engine — a rule silently restarting `cleared` because the entry that
-    held its state aged out of a plan's view would make the band meaningless.
+    The read itself is `JournalStore.latest_portfolio_health_entry`, which the
+    seam register pins as M08-owned precisely because it must bypass two filters
+    `list_for_user` applies unconditionally: the Floor Pass 30-day retention
+    window, which would let a rule silently restart `cleared` because the entry
+    holding its state aged out of a plan's view, and the soft-delete filter,
+    which would do the same the moment a user tidies their journal.
+
+    This wrapper stays as the name M06's own call sites and tests use, but it
+    owns no query: two implementations of "the newest Finding for this
+    portfolio" is how the daily cap and the hysteresis memory drift apart.
     """
-    from app.schemas import Plan
-
-    entries, _total, _retention = store.list_for_user(
-        user_id,
-        plan=Plan.FLOOR_MANAGER,
-        entry_type=PORTFOLIO_HEALTH_ENTRY_TYPE,
-        limit=50,
-    )
-    for entry in entries:
-        if str((entry.payload or {}).get("portfolio_id")) == str(portfolio_id):
-            return entry
-    return None
+    return store.latest_portfolio_health_entry(user_id, portfolio_id)
 
 
 async def generate_and_persist_finding(
@@ -964,7 +959,16 @@ async def generate_and_persist_finding(
     context = build_stripped_context(metric_blocks, as_of=as_of)
 
     prior = load_latest_finding(store, user_id, portfolio_id)
-    if prior is not None and (prior.payload or {}).get("as_of") == as_of:
+    # The prior read includes soft-deleted entries, and the two things it feeds
+    # treat that differently on purpose: the hysteresis state below is taken
+    # unconditionally (a deleted Finding is still something that happened),
+    # while replaying one to the caller would answer "regenerate" with a journal
+    # id pointing at a row the user cannot open.
+    if (
+        prior is not None
+        and prior.deleted_at is None
+        and (prior.payload or {}).get("as_of") == as_of
+    ):
         logger.info(
             "portfolio_finding_idempotent_hit",
             portfolio_id=str(portfolio_id), as_of=as_of,

@@ -1,0 +1,146 @@
+"""CR136 Portfolio Health access gate — config-driven trial/plan/daily-cap gating for Finding generation; journal rows are the counter, no new table.
+
+Tiles are free in every mode. Only full Finding generation — the one LLM call —
+is gated, and the gate is composed from three independent facts: whether the
+CR136 Finding trial is still open (window OR budget, whichever exhausts first),
+whether the user's effective plan is entitled, and whether today's per-portfolio
+cap is spent. The daily cap applies in every mode, including `open`.
+
+The counters are journal rows rather than a new table, which means they are the
+same rows the user can see and delete. Both counting reads therefore include
+soft-deleted entries (`JournalStore.portfolio_health_stats`): a counter that
+skipped them would hand out unlimited Findings to anyone who deletes yesterday's
+before asking for today's.
+
+`evaluate_gate` never raises — it reports. `enforce_gate` is the only place a
+402/429 is produced, so the GET tiles route can call the first and not the
+second and be structurally incapable of gating a free surface.
+"""
+
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from uuid import UUID
+
+from fastapi import HTTPException, status
+
+from app.core.config import settings
+from app.services.entitlements import effective_plan_for_user
+from app.services.journal_store import JournalStore, get_journal_store
+
+# Must equal the journal entry-type wire value for a Portfolio Health Finding.
+# The gate names it as a string and never imports the schema enum, so it carries
+# no build-order dependency on M08; the test suite pins the equality.
+PORTFOLIO_HEALTH_ENTRY_TYPE = "portfolio_health_analysis"
+
+GATE_CLOSED_CODE = "portfolio_health_gate_closed"
+DAILY_CAP_CODE = "portfolio_health_daily_cap_reached"
+
+MODE_OPEN = "open"
+MODE_TRIAL = "trial"
+MODE_PLAN = "plan"
+
+
+@dataclass(frozen=True)
+class GateStatus:
+    mode: str
+    trial_active: bool
+    trial_findings_used: int
+    trial_findings_budget: int
+    trial_days_left: int
+    daily_used: int
+    daily_cap: int
+    plan_has_access: bool
+
+    def as_dict(self) -> dict:
+        return asdict(self)
+
+    @property
+    def has_access(self) -> bool:
+        if self.mode == MODE_OPEN:
+            return True
+        if self.mode == MODE_TRIAL:
+            return self.trial_active or self.plan_has_access
+        return self.plan_has_access
+
+    @property
+    def daily_cap_reached(self) -> bool:
+        return self.daily_used >= self.daily_cap
+
+
+def _entitled_plans() -> set[str]:
+    """Rev 4 spells the plans `TRADER,FLOOR_MANAGER`; the `Plan` enum values are
+    lowercase. Normalising on read means either spelling in the env works, and
+    an operator who copies the spec verbatim does not silently hard-close the
+    gate."""
+    return {p.strip().lower() for p in settings.portfolio_health_plans if p.strip()}
+
+
+def evaluate_gate(
+    user_id: UUID,
+    portfolio_id: UUID,
+    *,
+    now: datetime | None = None,
+    store: JournalStore | None = None,
+) -> GateStatus:
+    """Report the gate. Never raises, never writes."""
+    now = now or datetime.now(timezone.utc)
+    store = store or get_journal_store()
+
+    used, first_at, daily_used = store.portfolio_health_stats(
+        user_id, portfolio_id, now=now,
+    )
+
+    trial_days = settings.portfolio_health_trial_days
+    budget = settings.portfolio_health_trial_findings
+
+    if first_at is None:
+        # No Finding yet, so the window has not started. The trial is untouched
+        # rather than already ticking — a user who installs and waits a month
+        # still gets the full window when they first ask.
+        days_elapsed = 0
+        days_left = trial_days
+    else:
+        days_elapsed = (now - first_at).days
+        days_left = max(0, trial_days - days_elapsed)
+
+    trial_active = used < budget and days_elapsed < trial_days
+
+    # `effective_plan_for_user` is trial-expiry aware, so an expired
+    # TRIAL_TRADER resolves to FLOOR_PASS here. The two "trials" are distinct
+    # and deliberately so: the ACCOUNT trial (users.trial_expires_at) feeds
+    # plan_has_access, while the CR136 Finding trial is this journal-counted
+    # window. Consequence of the pinned default plan list: an active
+    # TRIAL_TRADER has no *plan* access, and in `trial` mode the Finding trial
+    # is what serves them.
+    plan_has_access = effective_plan_for_user(user_id).value in _entitled_plans()
+
+    return GateStatus(
+        mode=settings.portfolio_health_gate_mode,
+        trial_active=trial_active,
+        trial_findings_used=used,
+        trial_findings_budget=budget,
+        trial_days_left=days_left,
+        daily_used=daily_used,
+        daily_cap=settings.portfolio_health_daily_cap,
+        plan_has_access=plan_has_access,
+    )
+
+
+def enforce_gate(status_: GateStatus) -> None:
+    """402 for "not entitled", 429 for "entitled but spent for today".
+
+    Order is load-bearing: a user with no access at all should be told to
+    upgrade, not told to come back tomorrow.
+    """
+    if not status_.has_access:
+        raise HTTPException(
+            status.HTTP_402_PAYMENT_REQUIRED,
+            detail={"code": GATE_CLOSED_CODE, "gate": status_.as_dict()},
+        )
+    if status_.daily_cap_reached:
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={"code": DAILY_CAP_CODE, "gate": status_.as_dict()},
+        )

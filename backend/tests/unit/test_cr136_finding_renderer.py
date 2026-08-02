@@ -99,6 +99,13 @@ class FakeJournalStore:
     def list_for_user(self, user_id, **kwargs):
         return list(self.entries), len(self.entries), None
 
+    def latest_portfolio_health_entry(self, user_id, portfolio_id):
+        """Mirrors the real store: newest first, soft-deleted INCLUDED."""
+        for entry in self.entries:
+            if str((entry.payload or {}).get("portfolio_id")) == str(portfolio_id):
+                return entry
+        return None
+
 
 # ── Strip ───────────────────────────────────────────────────────────────────
 

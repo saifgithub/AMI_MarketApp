@@ -137,3 +137,8 @@ class AdminConfigCheckResponse(BaseModel):
     # are booleans, "is X configured"); this is a tunable price, so "what are
     # we charging in production" is one curl instead of a code read.
     one_on_one_credit_cost: int
+    # CR136 — which Portfolio Health gate mode this container is actually
+    # running. Not a FeatureGate either: it is a loud `Literal`, never a
+    # presence-gated silent fallback. M11 promotes `trial` → `plan` by env, and
+    # this is how "did it take" is answered without reading the container's env.
+    portfolio_health_gate_mode: str

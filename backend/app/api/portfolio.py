@@ -21,6 +21,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.dependencies import get_current_user
 from app.db.models import User
+from app.services.health_gate import GateStatus, enforce_gate, evaluate_gate
+from app.services.journal_store import get_journal_store
+from app.services.llm_gateway import get_llm_gateway
+from app.services.portfolio_finding import generate_and_persist_finding
+from app.services.portfolio_health import build_health_context
+from app.services.portfolio_health_constants import STATUS_OK
+from app.services.portfolio_rules import evaluate_rules_for_context
+from app.services.rate_limit import portfolio_health_finding_rate_limit
 from app.services.sector_allocation import (
     NON_SECTOR_BUCKETS,
     SectorMap,
@@ -96,4 +104,123 @@ async def sector_allocation(
             "max_allowed": cap,
             "compliant": compliant,
         },
+    }
+
+
+# ── CR136 Portfolio Health ──────────────────────────────────────────────────
+
+
+def _health_envelope(context: dict, gate: GateStatus) -> dict:
+    """M07 wraps M04's context; it never edits or strips it. Stripping is the
+    prompt-side context builder's job, and the tiles are entitled to the amber
+    states — a `sufficient: false` block renders as the engine emitted it."""
+    return {
+        "status": context.get("status"),
+        "as_of": context.get("as_of"),
+        "generated_at": context.get("generated_at"),
+        "engine_version": context.get("engine_version"),
+        "metrics": context,
+        "gate": gate.as_dict(),
+    }
+
+
+@router.get("/health/{user_id}")
+async def portfolio_health(
+    user_id: UUID,
+    current_user: User = Depends(get_current_user),
+    sim: SimEngine = Depends(get_sim_engine),
+) -> dict:
+    """Portfolio Health tiles. FREE in every gate mode.
+
+    Calls `evaluate_gate` and never `enforce_gate` — the gate is reported so the
+    card can render its CTA state, not applied. A mock-mode refusal or an
+    all-insufficient book still returns 200: a 5xx would hide the amber state
+    from the card, which is the CR040 question answered the wrong way.
+    """
+    _own(current_user, user_id)
+
+    p = await asyncio.to_thread(sim.ensure_portfolio, user_id)
+    context = await asyncio.to_thread(build_health_context, user_id)
+    gate = await asyncio.to_thread(evaluate_gate, user_id, p.id)
+    return _health_envelope(context, gate)
+
+
+@router.post("/health/{user_id}/finding")
+async def portfolio_health_finding(
+    user_id: UUID,
+    current_user: User = Depends(get_current_user),
+    sim: SimEngine = Depends(get_sim_engine),
+) -> dict:
+    """Generate + persist a Portfolio Health Finding. Gated.
+
+    Order is load-bearing, and two steps sit deliberately before the gate:
+    ownership (403 before anything is spent) and the same-day idempotency
+    return. Regenerating on the same day returns the existing entry
+    unconditionally — no LLM call, no write, no budget, and NOT gated, because
+    the entry is already in the user's journal and re-reading it must not cost
+    anything or be refusable.
+    """
+    _own(current_user, user_id)
+    portfolio_health_finding_rate_limit.check(f"user:{current_user.id}")
+
+    p = await asyncio.to_thread(sim.ensure_portfolio, user_id)
+    context = await asyncio.to_thread(build_health_context, user_id)
+    if context.get("status") != STATUS_OK:
+        # The engine refused (mock prices) or has nothing to measure. Saying so
+        # is the whole point — a Finding narrated over mock-walk prices would
+        # read exactly like a real one and mean nothing (CR040).
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail={
+                "code": "portfolio_health_unavailable",
+                "reason": context.get("status"),
+            },
+        )
+
+    store = get_journal_store()
+    prior = await asyncio.to_thread(
+        store.latest_portfolio_health_entry, user_id, p.id,
+    )
+    if (
+        prior is not None
+        and prior.deleted_at is None
+        and (prior.payload or {}).get("as_of") == context["as_of"]
+    ):
+        gate = await asyncio.to_thread(evaluate_gate, user_id, p.id)
+        return _finding_envelope(prior, created=False, gate=gate)
+
+    gate = await asyncio.to_thread(evaluate_gate, user_id, p.id)
+    enforce_gate(gate)
+
+    mandate = await asyncio.to_thread(resolve_mandate, user_id, None)
+    result = await generate_and_persist_finding(
+        user_id=user_id,
+        portfolio_id=p.id,
+        as_of=context["as_of"],
+        metric_blocks=list(context["blocks"].values()),
+        store=store,
+        evaluate=lambda prior_states: evaluate_rules_for_context(
+            context, mandate, prior_states,
+        ),
+        gateway=get_llm_gateway(),
+    )
+
+    # Re-evaluated so `daily_used` includes the row just written — a client that
+    # renders the returned gate must not show the user a budget they no longer
+    # have.
+    gate = await asyncio.to_thread(evaluate_gate, user_id, p.id)
+    return _finding_envelope(result.entry, created=result.created, gate=gate)
+
+
+def _finding_envelope(entry, *, created: bool, gate: GateStatus) -> dict:
+    payload = entry.payload or {}
+    return {
+        "journal_entry_id": str(entry.id),
+        "created": created,
+        "as_of": payload.get("as_of"),
+        # STORED sections, always — mobile renders these and never regenerates
+        # (README contract 5), so the idempotent replay and the fresh write
+        # return the same shape from the same source.
+        "sections": payload.get("sections") or {},
+        "gate": gate.as_dict(),
     }

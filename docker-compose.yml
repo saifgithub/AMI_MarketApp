@@ -251,6 +251,17 @@ services:
       LEAGUE_PROMOTE_COUNT: ${LEAGUE_PROMOTE_COUNT:-5}
       LEAGUE_RELEGATE_COUNT: ${LEAGUE_RELEGATE_COUNT:-5}
       LEAGUE_ELIGIBLE_PLANS: ${LEAGUE_ELIGIBLE_PLANS:-}
+      # CR136 — Portfolio Health access gate. Defaults are MIRRORED into the
+      # substitutions on purpose: an empty env var still overrides a Settings
+      # default (the KIMI block above records this trap), so a bare `:-` would
+      # blank the plans list and hard-close `plan` mode, or blank the mode and
+      # fail the Literal at boot. Launch `trial` → full `plan` gating is then a
+      # pure env change plus a container recreate; no code path differs.
+      PORTFOLIO_HEALTH_GATE_MODE: ${PORTFOLIO_HEALTH_GATE_MODE:-trial}
+      PORTFOLIO_HEALTH_TRIAL_DAYS: ${PORTFOLIO_HEALTH_TRIAL_DAYS:-14}
+      PORTFOLIO_HEALTH_TRIAL_FINDINGS: ${PORTFOLIO_HEALTH_TRIAL_FINDINGS:-7}
+      PORTFOLIO_HEALTH_DAILY_CAP: ${PORTFOLIO_HEALTH_DAILY_CAP:-2}
+      PORTFOLIO_HEALTH_PLANS: ${PORTFOLIO_HEALTH_PLANS:-trader,floor_manager}
       CORS_ORIGINS: '["https://api-alpha.agenticmarketintel.ai","http://localhost:3000","http://localhost:8000"]'
       # Mount point for the bug_attachments named volume.
       BUG_ATTACHMENTS_DIR: /data/bug_attachments
