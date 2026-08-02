@@ -264,8 +264,18 @@ def verify_scenarios() -> int:
         print("could not fetch SPY history", file=sys.stderr)
         return 2
     price = {ts.date(): float(row["Close"]) for ts, row in df.iterrows()}
-    adj_col = "Adj Close" if "Adj Close" in df.columns else "Close"
-    adjusted = {ts.date(): float(row[adj_col]) for ts, row in df.iterrows()}
+    if "Adj Close" not in df.columns:
+        # Silently substituting `Close` here would print the price return under
+        # a "total-return basis" label — a fabricated comparison, and the one
+        # thing this whole check exists to prevent.
+        print(
+            "yfinance served no 'Adj Close' column; cannot report the "
+            "total-return comparison. The price-basis gate below still stands.",
+            file=sys.stderr,
+        )
+        adjusted = None
+    else:
+        adjusted = {ts.date(): float(row["Adj Close"]) for ts, row in df.iterrows()}
     days = sorted(price)
 
     def on_or_before(target: date) -> date:
@@ -278,14 +288,18 @@ def verify_scenarios() -> int:
     for name, start, end, pinned in _EPISODES:
         d0, d1 = on_or_before(start), on_or_before(end)
         measured = price[d1] / price[d0] - 1.0
-        total_return = adjusted[d1] / adjusted[d0] - 1.0
         diff_pp = abs(measured - pinned) * 100.0
         worst = max(worst, diff_pp)
+        if adjusted is None:
+            aside = "   (total-return basis unavailable)"
+        else:
+            total_return = adjusted[d1] / adjusted[d0] - 1.0
+            aside = f"   (total-return basis, not gating: {total_return * 100:+.2f}%)"
         print(
             f"{name}: {d0} -> {d1}  price {measured * 100:+.2f}%  "
             f"pinned {pinned * 100:+.2f}%  diff {diff_pp:.2f}pp  "
             f"{'OK' if diff_pp <= _TOLERANCE_PP else 'OUT OF TOLERANCE'}"
-            f"   (total-return basis, not gating: {total_return * 100:+.2f}%)"
+            f"{aside}"
         )
     if worst > _TOLERANCE_PP:
         print(

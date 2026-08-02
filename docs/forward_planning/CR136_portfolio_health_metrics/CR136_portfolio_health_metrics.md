@@ -136,7 +136,7 @@ adjusted close). Build Σ once, derive everything:
 | **MCR** per holding | `(Σw)ᵢ/σₚ` | *New in Rev 4 (F3).* The true per-dollar quantity; powers any trim statement. Funding convention: trim-to-cash | SHARE-family — invested sleeve |
 | **Weight concentration** HHI → effective-N | `Σvᵢ²`, `1/HHI` over **invested-sleeve** weights vᵢ | *Basis changed in Rev 4 (F9):* total-value HHI is non-monotone in cash (measured eff-N 2.63→3.53→3.37→2.38 across 0/20/40/60% cash, peak at 27.5%). Invested sleeve only; labelled "invested weight concentration"; carries the ETF-overlap disclosure. DEF149's total-value convention continues to govern the *allocation donut* — two surfaces, two labelled bases | SHARE — invested sleeve |
 | **Typical bad month** | `1.645 · σₚ · √(21/252)` | *New in Rev 4 (F13).* Phrased as historical dispersion ("a 1-in-20 bad month over the window measured has been about −X%"), never a forecast; Gaussian understatement of tails disclosed. z=1.645, 1 month = 21 trading days (pins verified: reproduces 2.71%/6.07%/12.44% at σ=26.2% for 1d/1w/1mo) | LEVEL |
-| **Scenario panel** | `β × episode benchmark return` | *New in Rev 4.* Fixed named episodes: COVID crash 2020-02-19→03-23 (S&P 500 ≈ −33.9%), 2022 drawdown 2022-01-03→10-12 (≈ −25.4%) — constants verified against the SPY adjusted series at build time (M02 acceptance). Rendered only when the beta block is sufficient; labelled a backcast what-if with the R² share stated; **never** a prediction | LEVEL |
+| **Scenario panel** | `β × episode benchmark return` | *New in Rev 4.* Fixed named episodes: COVID crash 2020-02-19→03-23 (S&P 500 ≈ −33.9%), 2022 drawdown 2022-01-03→10-12 (≈ −25.4%) — constants verified against the SPY **price** series at build time (M02 acceptance) — **amended 2026-08-02 (AT:R66)**, see the Rev 4 amendments section. Rendered only when the beta block is sufficient; labelled a backcast what-if with the R² share stated; **never** a prediction | LEVEL |
 
 **SHARE vs LEVEL rule (F9, verified):** SHARE-type quantities (risk shares,
 money shares, MCR ranks, weight concentration) are **invested-sleeve**;
@@ -673,6 +673,34 @@ reset endpoint is a series discontinuity, handled by keying series to
 returns are gross; disclosed wherever performance-adjacent numbers appear.
 
 ---
+
+## Rev 4 amendments (2026-08-02, AT:R66 — during the build)
+
+**Scenario-episode basis: PRICE, not adjusted.** The Tier-1 table originally read
+"constants verified against the SPY *adjusted* series". That sentence was
+internally contradictory and is now corrected: measured 2026-08-02 against the
+index sources themselves,
+
+| source | COVID 2020-02-19→03-23 | 2022 01-03→10-12 |
+|---|---|---|
+| `^GSPC` — S&P 500 **price** index | **−33.92%** (pin −33.90%, 0.02pp) | **−25.43%** (pin −25.40%, 0.03pp) |
+| `^SP500TR` — S&P 500 **total-return** index | −33.79% (0.11pp) | −24.49% (**0.91pp**) |
+| SPY adjusted close (total return) | −33.72% (0.18pp) | −24.50% (**0.90pp**) |
+
+The pinned constants ARE the price-index returns, to 0.02–0.03pp. They cannot
+verify against a total-return series over a nine-month episode — the gap is the
+dividend yield, and it exceeds M02's own 0.5pp tolerance. The price basis is also
+the one the product needs: the sim pays no dividends
+(`Rev 2 — one worry the codebase cleared`), so a total-return episode constant
+would tell a user their book would have lost *less* than a price-only book
+actually would.
+
+`backend/scripts/cr136_generate_fixtures.py --verify-scenarios` gates on the
+price basis (`auto_adjust=False`) and prints the total-return figure beside it,
+un-gating. M02 §3 and M11 §3.3 are amended to match.
+
+*The constants are unchanged. Only the sentence describing how they were
+verified was wrong.*
 
 ## Rev 4 — verification record (2026-08-02)
 

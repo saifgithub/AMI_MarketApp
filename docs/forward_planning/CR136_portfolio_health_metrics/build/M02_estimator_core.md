@@ -194,12 +194,23 @@ zero row — structural, by bilinearity: `(Σw)_cash = 0` ⇒ contribution
   correlation structure is non-uniform before emitting** (F8 pin: at least
   one pair ρ ≥ +0.6, one pair ρ ≤ −0.3, one pair |ρ| ≤ 0.25) and aborts
   otherwise — a uniform-ρ fixture cannot detect a degenerate estimator.
-- `--verify-scenarios`: fetches SPY adjusted close via yfinance (dev-only
-  network), computes the two episode returns, compares to the pinned
-  constants (−33.9%, −25.4%); exits non-zero when |diff| > 0.5 pp (tolerance
-  is this doc's choice — Rev 4 pins "≈"; adjusted series drift with dividend
-  adjustments). Satisfies the Tier-1 table's "constants verified against the
-  SPY adjusted series at build time (M02 acceptance)"; M11 re-verifies live.
+- `--verify-scenarios`: fetches SPY **price** closes via yfinance
+  (`auto_adjust=False`; dev-only network), computes the two episode returns,
+  compares to the pinned constants (−33.9%, −25.4%); exits non-zero when
+  |diff| > 0.5 pp (tolerance is this doc's choice — Rev 4 pins "≈"). The
+  total-return figure is printed beside it, un-gating. M11 re-verifies live.
+
+  > **AMENDED 2026-08-02 (AT:R66), after the M02 audit.** This section first
+  > specified the ADJUSTED series, and the audit correctly flagged the shipped
+  > script as non-conforming to it. Measurement settled it the other way: the
+  > pinned constants reproduce `^GSPC` (the S&P 500 PRICE index) to 0.02pp and
+  > 0.03pp, and miss `^SP500TR` (total return) by 0.11pp and **0.91pp** — so the
+  > adjusted basis fails this doc's own 0.5pp tolerance for a reason that has
+  > nothing to do with the pin being wrong. It is also the wrong basis for the
+  > product: the sim pays no dividends, so a total-return episode constant would
+  > tell a user their book would have lost LESS than a price-only book actually
+  > would. Rev 4's Tier-1 table and M11 §3.3 are amended to match; the constants
+  > themselves are unchanged.
 
 ## 4. Out of scope for this module
 
@@ -315,10 +326,19 @@ Pro/AMI_MarketApp` — quote the path):
 
 - [ ] `pytest backend/tests/unit/test_cr136_estimator_core.py -q` green, then
       `pytest backend/tests/unit/ -q` (full suite) still green.
-- [ ] `grep -in -E "numpy|from app|import app|ledoit|shrink" backend/app/trading_math/portfolio_risk.py`
-      — no matches (stdlib purity; no LW, Rev 4 pin 1).
-- [ ] `grep -rn "cr136_generate_fixtures" backend/tests/` — no matches (the
-      script is never imported by tests).
+- [ ] `grep -in -E "numpy|from app|import app" backend/app/trading_math/portfolio_risk.py`
+      — no matches (stdlib purity). **Amended 2026-08-02 (AT:R66):** the
+      original grep also matched `ledoit|shrink`, which this same doc requires
+      the module to *explain the absence of*, so it could never pass. The
+      no-shrinkage guarantee is structural instead: `test_no_shrinkage_anywhere`
+      walks the module's AST and asserts no identifier (function, class, name,
+      attribute, argument) contains `shrink`, `ledoit` or `lw_` — which prose
+      cannot trip and rephrasing cannot weaken.
+- [ ] No `import`/`from` line in `backend/tests/` names
+      `cr136_generate_fixtures` (the script is never imported by tests).
+      **Amended 2026-08-02 (AT:R66):** the original grep was for any mention,
+      which contradicted this doc's own mandatory provenance comment naming the
+      generator; the check is on IMPORTS, which is what it meant.
 - [ ] The only SE divisor in the module is `2 * t_eff`; no function takes a
       raw `T` for an SE (Rev 4: the equal-weight formula is NOT used).
 - [ ] Fixture blocks carry provenance comments (script name, date, numpy

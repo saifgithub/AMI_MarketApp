@@ -50,6 +50,22 @@ _PSD_DUST = 1e-12
 # ── Internals ───────────────────────────────────────────────────────────────
 
 
+def _finite(value: float, what: str) -> float:
+    """Reject NaN and the infinities at the door.
+
+    Every guard in this module is a `<`, `>` or `<=` comparison, and every one
+    of those is False against NaN — so without an explicit screen a single
+    non-finite input passes validation untouched and every metric downstream
+    returns a NaN that serialises to the same `null` the uncertainty contract
+    uses to mean "not enough data". Two meanings for one wire value is exactly
+    what makes the contract unenforceable.
+    """
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError(f"{what} must be finite, got {value!r}")
+    return number
+
+
 def _ewma_weights(lam: float, t: int) -> list[float]:
     """Normalized truncated EWMA weights, newest last.
 
@@ -68,7 +84,7 @@ def _ewma_weights(lam: float, t: int) -> list[float]:
 
 
 def _validate(w: list[float], cov: list[list[float]]) -> int:
-    """Shared shape + symmetry guard. Returns n."""
+    """Shared shape, finiteness and symmetry guard. Returns n."""
     n = len(cov)
     if n == 0:
         raise ValueError("cov must be non-empty")
@@ -77,6 +93,10 @@ def _validate(w: list[float], cov: list[list[float]]) -> int:
     for i, row in enumerate(cov):
         if len(row) != n:
             raise ValueError(f"cov row {i} has length {len(row)}, expected {n}")
+        for j, value in enumerate(row):
+            _finite(value, f"cov[{i}][{j}]")
+    for i, weight in enumerate(w):
+        _finite(weight, f"w[{i}]")
     for i in range(n):
         for j in range(i + 1, n):
             if abs(cov[i][j] - cov[j][i]) > _SYMMETRY_TOL:
@@ -139,6 +159,8 @@ def ewma_covariance(
             raise ValueError(
                 f"returns is ragged: row {a} has length {len(row)}, expected {t}"
             )
+        for j, value in enumerate(row):
+            _finite(value, f"returns[{a}][{j}]")
 
     weights = _ewma_weights(lam, t)
     n = len(returns)
@@ -298,6 +320,9 @@ def tracking_error(sigma_p: float, sigma_b: float, beta: float) -> float:
     an annualized one. A derived quantity, so it publishes no standard error of
     its own — its three components each carry theirs.
     """
+    sigma_p = _finite(sigma_p, "sigma_p")
+    sigma_b = _finite(sigma_b, "sigma_b")
+    beta = _finite(beta, "beta")
     radicand = sigma_p * sigma_p + sigma_b * sigma_b - 2.0 * beta * sigma_b * sigma_b
     if radicand < 0.0:
         if radicand >= -_PSD_DUST:
@@ -325,6 +350,8 @@ def hhi_effective_n(weights: list[float]) -> float:
     """
     if not weights:
         raise ValueError("weights must be non-empty")
+    for i, v in enumerate(weights):
+        _finite(v, f"weights[{i}]")
     hhi = math.fsum(v * v for v in weights)
     if hhi <= 0.0:
         raise ValueError("weights are all zero — effective N is undefined")
@@ -338,6 +365,7 @@ def bad_month(sigma_p_ann: float) -> float:
     ("a 1-in-20 bad month over the window measured has been about −X%"), never
     as a forecast, and always with the Gaussian tail understatement disclosed.
     """
+    sigma_p_ann = _finite(sigma_p_ann, "sigma_p_ann")
     return BAD_MONTH_Z * sigma_p_ann * math.sqrt(
         TRADING_DAYS_PER_MONTH / TRADING_DAYS_PER_YEAR
     )
@@ -352,7 +380,7 @@ def scenario_replay(beta: float, episode_return: float) -> float:
     constants themselves live in the caller's constants module so they can be
     re-verified against the live benchmark series.
     """
-    return beta * episode_return
+    return _finite(beta, "beta") * _finite(episode_return, "episode_return")
 
 
 def se_sigma(sigma_hat: float, t_eff: float) -> float:
@@ -364,6 +392,8 @@ def se_sigma(sigma_hat: float, t_eff: float) -> float:
     (The parameter deliberately shadows the module's `t_eff` function inside
     this body: the pinned signature is what M04 calls by keyword.)
     """
+    sigma_hat = _finite(sigma_hat, "sigma_hat")
+    t_eff = _finite(t_eff, "t_eff")
     if t_eff <= 0.0:
         raise ValueError(f"t_eff must be > 0, got {t_eff}")
     return sigma_hat / math.sqrt(2.0 * t_eff)
@@ -382,11 +412,29 @@ def se_beta(
     R3's hysteresis band is ±0.6·SE(β̂), so this is load-bearing for whether the
     market-sensitivity rule fires; it is not decoration.
     """
+    var_p = _finite(var_p, "var_p")
+    var_b = _finite(var_b, "var_b")
+    beta = _finite(beta, "beta")
+    t_eff = _finite(t_eff, "t_eff")
     if var_b <= 0.0:
         raise ValueError(f"var_b must be > 0, got {var_b}")
     if t_eff <= 0.0:
         raise ValueError(f"t_eff must be > 0, got {t_eff}")
-    residual_var = max(0.0, var_p - beta * beta * var_b)
+    residual_var = var_p - beta * beta * var_b
+    if residual_var < 0.0:
+        # Bounded like the module's two sibling clamps, not unbounded. In real
+        # use var_p, var_b and beta all come from the same Σ, so the residual is
+        # non-negative by Cauchy-Schwarz and only floating error can push it
+        # under; a residual negative by more than dust means the caller mixed
+        # inputs from different matrices, and returning a confident SE of 0.0
+        # for that is precisely the silent-wrong-number path CR040 forbids.
+        if residual_var >= -_PSD_DUST * max(1.0, abs(var_p)):
+            residual_var = 0.0
+        else:
+            raise ValueError(
+                f"residual variance is negative ({residual_var}) — var_p={var_p}, "
+                f"var_b={var_b}, beta={beta} are mutually inconsistent"
+            )
     return math.sqrt(residual_var / (t_eff * var_b))
 
 
@@ -401,6 +449,11 @@ def append_zero_row(cov: list[list[float]]) -> list[list[float]]:
     shares and R² exactly invariant. The input is not mutated.
     """
     n = len(cov)
+    if n == 0:
+        raise ValueError(
+            "cov must be non-empty — an empty matrix would become a one-leg "
+            "riskless portfolio rather than an error"
+        )
     out = [[0.0] * (n + 1) for _ in range(n + 1)]
     for i in range(n):
         row = cov[i]
@@ -419,4 +472,4 @@ def annualize_vol(sigma_daily: float) -> float:
     hidden: the same serial-correlation objection that makes Sharpe inference
     hard applies to this scaling too.
     """
-    return sigma_daily * math.sqrt(TRADING_DAYS_PER_YEAR)
+    return _finite(sigma_daily, "sigma_daily") * math.sqrt(TRADING_DAYS_PER_YEAR)

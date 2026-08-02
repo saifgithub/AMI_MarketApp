@@ -139,6 +139,32 @@ def _uniform_rho_cov(n: int, sigma: float, rho: float) -> list[list[float]]:
 # ── 1-3. The estimator ──────────────────────────────────────────────────────
 
 
+def test_the_non_uniform_fixtures_are_the_estimator_own_output() -> None:
+    """Rev 4 F8's point is that a uniform-ρ fixture agrees with a fully
+    degenerate estimator. That only bites if the non-uniform RETURNS are
+    actually fed through `ewma_covariance` — checking the metrics against a
+    checked-in matrix leaves the estimator itself untested on that structure."""
+    cov_b = ewma_covariance(FIXTURE_B_RETURNS, EWMA_LAMBDA)
+    for i in range(4):
+        for j in range(4):
+            assert abs(cov_b[i][j] - FIXTURE_B_COV[i][j]) <= 1e-15, (i, j)
+
+    cov_d = ewma_covariance(FIXTURE_D_RETURNS, EWMA_LAMBDA)
+    for i in range(4):
+        for j in range(4):
+            assert abs(cov_d[i][j] - FIXTURE_D_COV[i][j]) <= 1e-15, (i, j)
+
+    # ...and the structure the fixture exists for really is non-uniform.
+    rho = [
+        [cov_b[i][j] / math.sqrt(cov_b[i][i] * cov_b[j][j]) for j in range(4)]
+        for i in range(4)
+    ]
+    pairs = [rho[i][j] for i in range(4) for j in range(i + 1, 4)]
+    assert any(r >= 0.6 for r in pairs), pairs
+    assert any(r <= -0.3 for r in pairs), pairs
+    assert any(abs(r) <= 0.25 for r in pairs), pairs
+
+
 def test_ewma_covariance_known_answer() -> None:
     cov = ewma_covariance(FIXTURE_A_RETURNS, EWMA_LAMBDA)
     assert len(cov) == 3
@@ -249,6 +275,26 @@ def test_portfolio_sigma_rejects_a_non_psd_matrix() -> None:
         portfolio_sigma([1.0, 1.0], [[1.0, -2.0], [-2.0, 1.0]])
 
 
+def test_the_psd_dust_clamp_is_exercised_on_the_clamping_side() -> None:
+    """Both sides of the boundary, not just the raise. A quadratic form that is
+    negative only by floating dust is a rounding artefact of an otherwise
+    healthy matrix, and raising on it would blank a whole book."""
+    dust = -5e-13
+    assert portfolio_sigma([1.0], [[dust]]) == 0.0
+    with pytest.raises(ValueError):
+        portfolio_sigma([1.0], [[-5e-12]])
+
+
+def test_the_tracking_error_clamp_is_exercised_on_real_dust() -> None:
+    """(0.2, 0.2, 1.0) gives a radicand of EXACTLY 0.0 and never reaches the
+    clamp; this case does."""
+    assert tracking_error(0.2, 0.2, 1.0) == 0.0
+    nudged = tracking_error(0.2, 0.2, 1.0 + 5e-12)
+    assert nudged == 0.0
+    with pytest.raises(ValueError, match="inconsistent"):
+        tracking_error(0.2, 0.2, 1.0 + 1e-6)
+
+
 # ── 6. Euler identity with the cash row ─────────────────────────────────────
 
 
@@ -353,7 +399,10 @@ def test_tracking_error_agrees_with_the_joint_fixture() -> None:
     beta, _ = beta_r2(FIXTURE_D_WEIGHTS, FIXTURE_D_COV, FIXTURE_D_B_INDEX)
     var_p = portfolio_sigma(FIXTURE_D_WEIGHTS, FIXTURE_D_COV) ** 2
     assert abs(var_p - FIXTURE_D_VAR_P) < 1e-18
-    assert abs(FIXTURE_D_COV[FIXTURE_D_B_INDEX][FIXTURE_D_B_INDEX] - FIXTURE_D_VAR_B) < 1e-20
+    # var_b comes from the ESTIMATOR here, not from the checked-in matrix —
+    # comparing two literals to each other would prove nothing.
+    computed = ewma_covariance(FIXTURE_D_RETURNS, EWMA_LAMBDA)
+    assert abs(computed[FIXTURE_D_B_INDEX][FIXTURE_D_B_INDEX] - FIXTURE_D_VAR_B) < 1e-20
     te = tracking_error(math.sqrt(FIXTURE_D_VAR_P), math.sqrt(FIXTURE_D_VAR_B), beta)
     assert abs(te - FIXTURE_D_TE_DAILY) < 1e-12
 
@@ -432,9 +481,15 @@ def test_se_sigma_is_not_the_equal_weight_formula() -> None:
 def test_se_beta() -> None:
     got = se_beta(FIXTURE_D_VAR_P, FIXTURE_D_VAR_B, FIXTURE_D_BETA, FIXTURE_D_T_EFF)
     assert abs(got - FIXTURE_D_SE_BETA) < 1e-12
-    # R² → 1: residual variance goes negative on floating dust and must clamp,
-    # not raise.
-    assert se_beta(0.0001, 0.0002, 1.0, 60.0) == 0.0
+
+    # R² → 1: a book that IS the benchmark has zero residual variance, and
+    # floating error can push the subtraction a hair below zero. That must
+    # clamp, not raise.
+    var_b, beta = FIXTURE_D_VAR_B, 1.0
+    dust = beta * beta * var_b - 1e-20
+    assert dust - beta * beta * var_b < 0.0, "vacuity guard — this must be negative"
+    assert se_beta(dust, var_b, beta, 60.0) == 0.0
+
     with pytest.raises(ValueError):
         se_beta(0.0001, 0.0, 1.0, 60.0)
     with pytest.raises(ValueError):
@@ -443,7 +498,66 @@ def test_se_beta() -> None:
         se_beta(0.0001, 0.0002, 1.0, 0.0)
 
 
+def test_se_beta_clamp_is_bounded_not_unbounded() -> None:
+    """The clamp exists for floating dust, not for arbitrary inconsistency.
+    var_p, var_b and beta always come from the SAME Σ in real use, so the
+    residual is non-negative by Cauchy–Schwarz; a residual negative by more than
+    dust means the caller mixed matrices, and answering that with a confident
+    SE of 0.0 is the silent-wrong-number path CR040 forbids."""
+    with pytest.raises(ValueError, match="mutually inconsistent"):
+        se_beta(0.0001, 0.0002, 1.0, 60.0)          # residual -1e-4, off by 2.5e11 dust
+
+
+def test_no_metric_accepts_a_non_finite_input() -> None:
+    """NaN is invisible to every guard in this module — `nan > x`, `nan < x` and
+    `nan <= x` are all False — so without an explicit screen one non-finite
+    input propagates a NaN through every metric, and that NaN serialises to the
+    same `null` the uncertainty contract uses for "not enough data"."""
+    nan, inf = float("nan"), float("inf")
+
+    for bad in (nan, inf, -inf):
+        with pytest.raises(ValueError, match="finite"):
+            ewma_covariance([[0.01, bad, 0.02]])
+        with pytest.raises(ValueError, match="finite"):
+            portfolio_sigma([1.0], [[bad]])
+        with pytest.raises(ValueError, match="finite"):
+            portfolio_sigma([bad], [[0.0004]])
+        with pytest.raises(ValueError, match="finite"):
+            euler_contributions([1.0], [[bad]])
+        with pytest.raises(ValueError, match="finite"):
+            mcr([1.0], [[bad]])
+        with pytest.raises(ValueError, match="finite"):
+            dr_squared([1.0], [[bad]])
+        with pytest.raises(ValueError, match="finite"):
+            beta_r2([1.0, 0.0], [[0.0004, 0.0], [0.0, bad]], 1)
+        with pytest.raises(ValueError, match="finite"):
+            tracking_error(bad, 0.15, 1.0)
+        with pytest.raises(ValueError, match="finite"):
+            hhi_effective_n([0.5, bad])
+        with pytest.raises(ValueError, match="finite"):
+            bad_month(bad)
+        with pytest.raises(ValueError, match="finite"):
+            scenario_replay(bad, -0.339)
+        with pytest.raises(ValueError, match="finite"):
+            se_sigma(bad, 62.9)
+        with pytest.raises(ValueError, match="finite"):
+            annualize_vol(bad)
+
+    # se_beta is the one that failed WORST without the screen: max(0.0, nan) is
+    # 0.0, so a NaN variance produced a confidently zero standard error rather
+    # than a NaN anyone would notice.
+    with pytest.raises(ValueError, match="finite"):
+        se_beta(nan, 0.0002, 1.0, 60.0)
+
+
 # ── 16. append_zero_row ─────────────────────────────────────────────────────
+
+
+def test_append_zero_row_refuses_an_empty_matrix() -> None:
+    """`[[0.0]]` would be a one-leg riskless portfolio, which is a plausible
+    number rather than an error — the worst kind of wrong answer."""
+    with pytest.raises(ValueError):
+        append_zero_row([])
 
 
 def test_append_zero_row() -> None:
@@ -482,13 +596,28 @@ def test_n2_boundary() -> None:
     ]
     cov = ewma_covariance(returns)
     w = [0.6, 0.4]
+    sigma = portfolio_sigma(w, cov)
+    joint = append_zero_row(cov)
+    beta, r2 = beta_r2([0.6, 0.0, 0.0], [[cov[0][0], cov[0][1], 0.0],
+                                         [cov[0][1], cov[1][1], 0.0],
+                                         [0.0, 0.0, cov[1][1]]], 2)
+    teff = t_eff(EWMA_LAMBDA, 8)
     for value in (
-        portfolio_sigma(w, cov),
+        sigma,
         dr_squared(w, cov),
         *euler_contributions(w, cov),
         *mcr(w, cov),
         hhi_effective_n(w),
-        bad_month(annualize_vol(portfolio_sigma(w, cov))),
+        bad_month(annualize_vol(sigma)),
+        annualize_vol(sigma),
+        beta,
+        r2,
+        teff,
+        se_sigma(sigma, teff),
+        se_beta(sigma * sigma, cov[1][1], beta, teff),
+        tracking_error(sigma, math.sqrt(cov[1][1]), beta),
+        scenario_replay(beta, -0.339),
+        *[v for row in joint for v in row],
     ):
         assert math.isfinite(value)
     assert abs(math.fsum(euler_contributions(w, cov)) - 1.0) <= 1e-9

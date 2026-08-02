@@ -117,7 +117,10 @@ the choice is recorded in the run output pasted into the lane/acceptance notes.
 
 - From the Mac (dev-only network, per M02 §3):
   `"/Volumes/Extreme Pro/AMI_MarketApp/backend/.venv/bin/python" backend/scripts/cr136_generate_fixtures.py --verify-scenarios`
-  — refetches the live SPY adjusted series, recomputes COVID crash
+  — refetches the live SPY **price** series (`auto_adjust=False`
+  — amended 2026-08-02 AT:R66; see Rev 4's amendments section: the pinned
+  constants are S&P 500 PRICE-index returns and miss a total-return series by
+  up to 0.91pp over the 2022 episode), recomputes COVID crash
   2020-02-19→03-23 and 2022 drawdown 2022-01-03→10-12 episode returns, diffs
   against `SCENARIO_EPISODES` in `app/services/portfolio_health_constants.py`
   (−0.339 / −0.254); exits non-zero when |diff| > 0.5 pp.
