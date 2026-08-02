@@ -108,7 +108,18 @@ def run_portfolio_snapshot_tick(
     if as_of is None:
         logger.warn(
             "portfolio_snapshot_no_trading_day",
-            reason="benchmark daily history unavailable — no row written",
+            # Names the real cause. On a cold database this fires because
+            # nothing has warmed `price_history_daily` yet — not because the
+            # market-data feed is down — and the two want completely different
+            # operator responses. The table is warmed by the first health
+            # evaluation of a book that HOLDS something; an empty book fetches
+            # no tickers, and M10's backfill uses its own provider and never
+            # writes here. See M11's promotion checklist.
+            reason=(
+                "no SPY rows in price_history_daily — the history table has "
+                "not been warmed yet (cold start), or every stored SPY row is "
+                "mock-source while USE_REAL_MARKET_DATA is true. No row written."
+            ),
         )
         return {
             "as_of": "none", "portfolios": 0, "written": 0,

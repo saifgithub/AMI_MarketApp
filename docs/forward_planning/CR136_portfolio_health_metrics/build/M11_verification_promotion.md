@@ -415,6 +415,63 @@ All commits: pathspec-only, tagged `(AT:R<N> CR136)` (docs-only commits may
 carry plain `(AT:R<N>)` per the exemption; the row-flip commit keeps the CR
 id).
 
+## 6b. Doc amendments — recorded at build (AT:R66)
+
+1. **Two new files, not in §2's list.**
+   `promotion_checklist.md` is §6 as a *live* checklist — the instance that
+   gets ticked, so §6 stays the specification and the run record does not
+   overwrite it. `screen_designs_consistency.md` is §3.8b's walk, which needed
+   a home: SCREEN_DESIGNS.md is an audit-trail document by its own opening
+   line, so the right move was to record the walk beside it rather than edit
+   it.
+2. **CR136 ships THREE migrations, not two.** §3.6 step 6 names
+   `a9b0c1d20026` (price_history_daily) and `b1c2d3e40027`
+   (portfolio_value_snapshots). `c2d3e4f50028` (`journal_entries.dedupe_key` +
+   `uq_journal_dedupe`) landed later, with M07's gate-bypass fix — the
+   concurrent-POST race had no safe application-level fix, so the constraint
+   is the fix. `alembic current` must be at `c2d3e4f50028`.
+3. **The M03 cold-start ordering constraint is recorded, and the log line that
+   hid it is fixed.** `run_portfolio_snapshot_tick` resolves its `as_of` from
+   `latest_trading_day()`, which is `max(date)` over SPY rows in
+   `price_history_daily`; on a cold database that is `None`, so the tick logs
+   and writes nothing on every run until something warms the table. What warms
+   it is a health evaluation of a book **that holds something** — not an empty
+   book, and not M10's backfill, which uses its own provider. The promotion
+   checklist therefore orders "warm the table" **before** the P5
+   idempotency check, which would otherwise read `no_trading_day` and prove
+   nothing.
+
+   The warning's `reason` said *"benchmark daily history unavailable"*, which
+   reads as a market-data outage and would send an operator to Yahoo instead of
+   to the empty table. It now names the real cause. This was flagged in M03's
+   audit as a cheap fix and never actioned; M11 owns the checklist that depends
+   on it, so it is actioned here rather than left as a note.
+4. **§3.1's harness was verified on the Mac against the shipped engine**,
+   which §5 does not require and which materially changes what a melehost FAIL
+   means. Its numpy EWMA covariance, σₚ, β, R², TE, DR² and Euler shares were
+   diffed against `app.trading_math` on a synthetic 4×300 series: covariance
+   agrees to 8e-20, every derived figure to < 1e-12, and the shares sum to 1.
+   The harness still imports nothing from `app.trading_math` — the comparison
+   was a throwaway script, not a dependency. **Consequence:** a FAIL on
+   melehost means the live engine disagrees with the formulas, not that the
+   harness is miscalibrated, which is the only reading that makes the check
+   worth running.
+5. **§6's grep for `predicted_vol_ann` and the `verification_fleet/` archive
+   step were both already satisfied.** The fleet scripts (26 of them plus the
+   README index) are present in the CR folder, so §3.5's "if the scratchpad has
+   been reaped" fallback never had to be invoked.
+
+### Deferred — melehost and device work
+
+Phases 2 and 3 in full, plus 4.1 (hostile-reader pass) and 4.5 (hands-on
+acceptance), are unrunnable from this Mac: it is off the LAN
+(`192.168.20.59` / `192.168.20.74` unreachable; melehost itself healthy — a Mac
+routing problem), and the device checks need physical iPhones. Saiful
+authorised Mac-only work for this build explicitly.
+
+None of it is blocked by CR136 itself. Every deferred item is a command that
+exists and a script that is committed; the checklist is the handover.
+
 ## 7. Hand-off
 
 CR136 is **done** when §6 is fully checked. CR137 (Portfolio Room) and any
