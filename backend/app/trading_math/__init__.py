@@ -21,7 +21,10 @@ contribution), `sizing` (per-risk-tier caps + the Risk-Debator spread), `trade`
 downside + fundamentals unit conversions), `portfolio` (value, drawdown,
 weight, size→shares), and — opened for the CR054 BOK Wave-1 worked examples —
 `bond` (price/YTM/duration, M09), `option` (payoff/break-even, M10),
-`portfolio_stats` (variance/correlation/beta/wᵀΣw, M11), `returns`
+`portfolio_stats` (variance/correlation/beta/wᵀΣw, M11), `portfolio_risk`
+(EWMA covariance + CR136 whole-portfolio risk metrics, M02 — population-style
+weighted and raising, deliberately NOT an extension of `portfolio_stats`, whose
+sample-convention/rounding/None-returning contract is the opposite), `returns`
 (Sharpe/max-drawdown/CAGR, M12, hand-rolled stdlib — the wider family Sortino/
 Calmar/vol stays on the D1 `empyrical-reloaded` backlog, a dep that needs
 sign-off), `screening` (opened for CR058 — Sharia debt/liquidity/income
@@ -42,6 +45,29 @@ from .portfolio_stats import (
     covariance,
     portfolio_variance,
     variance,
+)
+
+# CR136 portfolio risk estimator core (M02)
+from .portfolio_risk import (
+    BAD_MONTH_Z,
+    EWMA_LAMBDA,
+    TRADING_DAYS_PER_MONTH,
+    TRADING_DAYS_PER_YEAR,
+    annualize_vol,
+    append_zero_row,
+    bad_month,
+    beta_r2,
+    dr_squared,
+    euler_contributions,
+    ewma_covariance,
+    hhi_effective_n,
+    mcr,
+    portfolio_sigma,
+    scenario_replay,
+    se_beta,
+    se_sigma,
+    t_eff,
+    tracking_error,
 )
 from .returns import cagr_pct, max_drawdown_pct, sharpe_ratio
 from .risk import DrawdownContribution, drawdown_contribution
@@ -116,6 +142,26 @@ __all__ = [
     "covariance",
     "portfolio_variance",
     "variance",
+    # CR136 portfolio risk estimator core (M02)
+    "BAD_MONTH_Z",
+    "EWMA_LAMBDA",
+    "TRADING_DAYS_PER_MONTH",
+    "TRADING_DAYS_PER_YEAR",
+    "annualize_vol",
+    "append_zero_row",
+    "bad_month",
+    "beta_r2",
+    "dr_squared",
+    "euler_contributions",
+    "ewma_covariance",
+    "hhi_effective_n",
+    "mcr",
+    "portfolio_sigma",
+    "scenario_replay",
+    "se_beta",
+    "se_sigma",
+    "t_eff",
+    "tracking_error",
     # return-series metrics (M12)
     "cagr_pct",
     "max_drawdown_pct",
