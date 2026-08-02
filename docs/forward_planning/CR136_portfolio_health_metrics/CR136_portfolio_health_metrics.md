@@ -6,6 +6,15 @@ wrong in its foundation and has been replaced.** See "Rev 2 — quant review"
 below for what was wrong, the measured evidence, and what replaced it. Do not
 build from Rev 1; it survives only inside the review section as the record of
 what was rejected.
+**Revised:** 2026-08-02 (AT:R65) — **Rev 3, r1 audit integration.** Track-U
+audit (round 1, `CR136.auditor.md`) independently confirmed all five
+quantitative claims C1–C5 and the substance of C6, and returned 2 MAJORs + 5
+MINORs. Rev 3 integrates the auditor's spec pack (`CR136.spec-pack.md`) with
+two corrections found by verifying the pack itself (LW citation ambiguity;
+journal idempotency needing app-level enforcement), pins every sufficiency
+threshold and estimator choice, and adds the development-ready specs for the
+Finding (user-facing report), the recommendation rule engine, the journal
+integration, and the CR137 prompt contract.
 **Precedes:** CR137 — Portfolio Room (reserved by number, not yet filed; see below)
 
 ## Why
@@ -88,11 +97,16 @@ whole feature:
 - **Included** (pure second-moment): portfolio volatility, beta, correlation,
   risk contribution, diversification ratio.
 
-This is also exactly where BlackRock's Aladdin draws its line — its headline
-output is **TEV (tracking error volatility) and risk decomposition**, second-
-moment quantities, not performance ratios (US10157419B1; see the review
-section). The statistics, the professional precedent, and our actual data
-constraint all point the same way.
+This is also exactly where institutional risk platforms draw their line —
+**FMR LLC's (Fidelity's) risk-platform patent** (US10157419B1, the one
+institutional methodology publicly documented at claim level) makes its
+headline output **TEV (tracking error volatility) and risk decomposition**,
+second-moment quantities, not performance ratios. *(Attribution corrected in
+r1 audit — the patent was previously misattributed to BlackRock/Aladdin.
+Aladdin's public materials describe the same holdings-based, factor-exposure,
+scenario-simulation shape, but its methodology is not published at this level
+of detail; the claim-level evidence is Fidelity's.)* The statistics, the
+professional precedent, and our actual data constraint all point the same way.
 
 ## The framework
 
@@ -102,16 +116,17 @@ accumulates behind it.
 ### Tier 1 — forward-looking, holdings-based (works on day one, no portfolio history)
 
 Computed from **current holdings × each holding's own return history** — the
-Aladdin/Morningstar holdings-based approach, which needs the *securities* to
-have history, not the *portfolio*. This is what makes the feature work for a
-user who opened their account yesterday.
+institutional holdings-based approach (the FMR patent at claim level;
+Morningstar and Aladdin's public materials describe the same shape), which
+needs the *securities* to have history, not the *portfolio*. This is what
+makes the feature work for a user who opened their account yesterday.
 
 | Metric | Definition | Why it's defensible | Code |
 |---|---|---|---|
-| **Portfolio volatility** (annualised) | `√(wᵀΣw)`, Σ estimated with Ledoit–Wolf shrinkage | Markowitz; shrinkage is the standard fix for short-sample covariance instability ([Ledoit–Wolf 2004](https://alcapitaladvisory.com/research/frameworks/ledoit-wolf.html)) | `portfolio_stats.py::portfolio_variance` — **now the centrepiece**, not a stretch goal |
+| **Portfolio volatility** (annualised) | `√(wᵀΣw)`, Σ estimated with Ledoit–Wolf shrinkage | Markowitz; shrinkage is the standard fix for short-sample covariance instability (Ledoit & Wolf, [*Honey, I Shrunk the Sample Covariance Matrix*](http://www.ledoit.net/honey.pdf), JPM 2004 — constant-correlation target; see Estimator pins) | `portfolio_stats.py::portfolio_variance` — **now the centrepiece**, not a stretch goal |
 | **Beta vs. benchmark** + **R²** | Regression slope of portfolio returns on benchmark returns | CAPM. R² ships alongside because a beta with low R² is not a meaningful summary | `portfolio_stats.py::beta` (needs a **date-aligned** benchmark series — see defect 7) |
 | **Effective independent bets** | `DR²` where `DR = (Σwᵢσᵢ)/σₚ` | Choueifaty & Coignard diversification ratio; Choueifaty–Froidure–Reynier (2012) show `DR²` = number of independent bets ([Portfolio Optimizer](https://portfoliooptimizer.io/blog/the-diversification-ratio-measuring-portfolio-diversification/)) | New pure function over the same Σ |
-| **Risk contribution** by holding and by sector | `wᵢ·(Σw)ᵢ / σₚ²`, sums to 100% | The Aladdin-shaped output: "contribution to TEV by security, sector or factor" | New pure function over the same Σ; sector map reuses CR026 |
+| **Risk contribution** by holding and by sector | `wᵢ·(Σw)ᵢ / σₚ²`, sums to 100% | The institutional-platform headline output — the FMR patent's "contribution to TEV by security, sector or factor" | New pure function over the same Σ; sector map reuses CR026 |
 | **Weight concentration** — HHI → effective-N | `Σwᵢ²`, `1/HHI` | Standard concentration measure — **but labelled "weight concentration," never "diversification"** (see defect 2) | New pure function |
 
 The four Tier-1 risk metrics all fall out of **one covariance matrix**. Build Σ
@@ -129,6 +144,79 @@ once per request, derive everything from it.
 precedent but its weighting is proprietary — AMI cannot cite or defend a
 weighting it invented. Each metric above stands on its own named methodology.
 
+### Sufficiency contract (pinned per r1 audit M1)
+
+All thresholds in **trading days**, counted as returns (65 bars → 64 returns).
+Code reads them from one `SUFFICIENCY` constant block — never scattered
+literals. Every pinned number carries its derivation so the choice is
+re-derivable, not taken on anyone's word.
+
+| Metric | Min observations | Derivation | `standard_error` |
+|---|---|---|---|
+| Portfolio volatility σₚ | **T ≥ 126** | SE(σ̂) = σ/√(2T): at 126 obs and σ=20%, SE = **1.26pp**; at the ~251 obs a 1y daily fetch yields, 0.89pp. 126 = 6 trading months — the first day the number is defensible | `σ/√(2T)` (Gaussian); doc carries the fat-tail caveat: at daily excess kurtosis ≈ 30 the true SE is ~1.9× wider — still ≪ any mean-term SE, conclusion unmoved |
+| Beta + R² | **T ≥ 126**, same aligned window | Inherits the Σ window; the regression needs the same sample | OLS: `σ_ε/√(Σ(x−x̄)²)` |
+| Diversification ratio DR² | inherits Σ sufficiency | Same matrix, same window | **null by decision** — a delta-method SE for a ratio of quadratic forms is not defensible at our T; documented, not computed |
+| Risk contribution | inherits Σ sufficiency + conditioning rule | Same matrix | null (same decision) |
+| HHI / effective-N (weight concentration) | **none** — pure accounting of today's weights | No estimation involved; `basis: "weights"` | null always |
+| Benchmark volatility (context metric) | T ≥ 126 | Same formula on the benchmark leg | `σ/√(2T)` |
+| Tier-2 realised max drawdown | **≥ 2 snapshots** | Descriptive, no inferential claim — but `window_days` mandatory; cross-window comparisons forbidden | null always |
+
+- **Σ conditioning rule:** LW shrinkage applies at every T/N, but `sufficient`
+  additionally requires **T/N ≥ 5** (25 holdings need 126 obs → 5.04 ✓; 40
+  holdings need the 1y window). LW is valid well below this; 5 is the
+  conservative retail-book floor.
+- **Short-history holding rule** (recent IPO etc.): a holding with < T_min
+  observations is **dropped from Σ**, weights renormalised over the remainder,
+  metrics marked `partial: true` with `dropped_holdings: [...]`. If dropped
+  weight exceeds **20% of invested value**, the whole Tier-1 block returns
+  `sufficient: false` — a Σ that ignores a fifth of the book is not the user's
+  portfolio.
+- **R² companion flag** (not a sufficiency condition): `R² < 0.20` sets
+  `low_explanatory_power: true` on the beta block. Beta still ships — with the
+  flag, and the Finding's copy must say what it means.
+
+### Estimator pins (per r1 audit m4/m5, with one correction to the audit itself)
+
+- **Weight convention:** `w` spans **total portfolio value, cash included as a
+  zero-vol row**. The user is shown the risk of their whole book as the app
+  displays it; the invested-only alternative inflates every number for
+  cash-heavy users and contradicts the tile copy (and DEF149 already made cash
+  a position in the allocation denominator). Verified in r1: the Euler
+  identity holds exactly with a cash row (Σ contributions = 1.000000, cash
+  contributes 0.0000). Detailed section may additionally report the invested
+  sleeve, labelled, never mixed.
+- **Benchmark:** one series, **SPY adjusted close** (dividends included —
+  avoids the ^GSPC price-only inconsistency), date-aligned by **inner join on
+  candle timestamps**; misaligned or short → beta block `sufficient: false`,
+  never silently re-gridded (defect 7).
+- **Ledoit–Wolf — cite by title, and hand-roll stdlib-only.** *Correction to
+  the r1 spec pack, found in the architect's verification pass:* "Ledoit–Wolf
+  2004" pins nothing — there are **two** 2004 LW papers with different
+  targets ("A Well-Conditioned Estimator for Large-Dimensional Covariance
+  Matrices", JMVA 2004 → scaled-identity target; "Honey, I Shrunk the Sample
+  Covariance Matrix", J. Portfolio Management 30(4) 2004 →
+  constant-correlation target), and the 2003 J. Empirical Finance paper is the
+  single-factor target, not identity as the r1 verdict stated. **The shipping
+  estimator is the constant-correlation target of *Honey, I Shrunk the Sample
+  Covariance Matrix* (Ledoit & Wolf, JPM 2004), cited by title everywhere.**
+  Shrinkage intensity clamped to [0,1]; the shrunk matrix is PSD by convexity
+  (a convex combination of PSD matrices), which closes the non-PSD worry.
+- **Implementation home — `trading_math/`, stdlib-only, NO numpy.** *Second
+  deviation from the r1 spec pack, with derivation:* the pack proposed
+  declaring numpy; verification shows `trading_math/`'s package contract is
+  explicitly **stdlib-only and copy-portable** (`trading_math/__init__.py` —
+  "NO imports from anywhere else in `app` — only the Python stdlib"), CLAUDE.md
+  bans undiscussed new deps, and CR046 D1 already hand-rolled its metrics for
+  exactly this reason. The matrices are tiny (N ≤ ~50 holdings, T ≤ ~252 →
+  O(N²T) ≈ 630k float ops), so pure Python is milliseconds — there is no
+  performance case for numpy. LW closed form lands beside
+  `portfolio_variance` in `trading_math/`. Known-answer tests use
+  **precomputed fixtures** (generated once offline against an independent
+  numpy implementation, stored as literals) — no test-time numpy import, so
+  the suite never depends on an undeclared transitive.
+- **Annualisation:** √252, applied only to trading-day series; the snapshot
+  job writes trading days only (gated on candle timestamps, per scope 3a).
+
 ### The uncertainty contract (required, because an LLM consumes this)
 
 Saiful's architecture is quants compute, agents interpret. That makes the
@@ -137,17 +225,270 @@ whatever it is handed — it cannot know a number is noise. Feeding bare point
 estimates to the Room re-creates DEF059's failure class (confident output over
 a silently-degraded input) as confident fake risk assessment.
 
-So every metric in the API response carries, structurally:
+Every metric block in the API response carries, structurally:
 
 ```json
-{ "value": 0.0, "standard_error": null, "n_observations": 0,
-  "window_days": 0, "sufficient": false, "basis": "holdings" }
+{
+  "metric": "portfolio_volatility",
+  "value": null,
+  "standard_error": null,
+  "n_observations": 0,
+  "window_days": 0,
+  "sufficient": false,
+  "partial": false,
+  "dropped_holdings": [],
+  "low_explanatory_power": null,
+  "basis": "holdings",
+  "engine_version": "cr136.v1"
+}
 ```
 
-and the CR137 Room contract must **forbid narrating any metric with
-`sufficient: false`**. Enforced deterministically at the serialisation
-boundary, not by prompt instruction (CR038 — "prompt instructions are not
-controls").
+Hard rules (r1 audit m2 — the null is what makes enforcement structural):
+
+- `sufficient: false` ⇒ `value` **and** `standard_error` are **null**. Never
+  `0.0` — a zero is a number an agent can narrate; a null is not. This is
+  what makes serialisation-boundary enforcement structural rather than
+  aspirational (CR038 — "prompt instructions are not controls").
+- `partial: true` ⇒ `dropped_holdings` non-empty, and every surface (API
+  consumer, Room context, Finding, journal payload) carries both.
+- `engine_version` on every block — old journal entries stay interpretable
+  after the estimator changes.
+
+The CR137 context builder **strips** insufficient blocks before prompt
+assembly (see "LLM prompt contract" below) — the model never sees the metric
+name, so there is nothing to narrate.
+
+## The Finding — the user-facing report
+
+The engine's output reaches the user as a **critical financial analysis of
+their whole portfolio**, filed like a report from their analyst team. Saiful's
+audience requirement, verbatim into the standard this artefact must meet:
+*"the next person to read the report will be the user and their human
+portfolio manager. They will be extremely critical, to the point of being
+rude."*
+
+**The hostile-reader standard.** Every Finding must survive review by a
+professional portfolio manager actively looking for a reason to dismiss it:
+
+- Every number carries its **method, window, and sample size** — the three
+  things a professional checks first. A number without them is the first
+  thing a hostile reader circles in red.
+- **Limitations are disclosed before the reader finds them**: gross-of-fees,
+  simulation data, shrinkage estimator, observation window, any dropped
+  holdings. A report that discloses its own weaknesses first cannot be
+  ambushed by them.
+- **No judgement adjectives anywhere** ("risky", "healthy", "dangerous",
+  "impressive") — a professional reads those as salesmanship. Numbers and
+  comparisons only; the reader supplies the judgement.
+- **No claim outside the payload.** Every sentence must trace to a metric id
+  or a triggered rule id. If a hostile reader asks "where does this number
+  come from?", the answer is in the same document.
+- Register split: **headlines, executive summary, and recommendations are
+  plain language** (accessible to the user); **the detailed section is
+  technical** (satisfies the PM). Neither register leaks into the other.
+
+Five mandatory sections. Brand voice throughout: numbers over adjectives; AMI
+by name, never "the AI".
+
+**§F1 Headlines** (3–5 one-liners; each = one number + its plain meaning)
+
+- Required items: portfolio volatility with benchmark volatility alongside;
+  top risk contributor as "X% of risk vs Y% of money"; effective independent
+  bets (DR²) next to raw holding count; realised max drawdown **with its
+  window** (Tier-2, only when sufficient); beta, with the R² flag surfaced
+  when set.
+- Rules: no judgement adjectives; a headline built on a `partial` metric
+  carries the partial marker inline.
+
+**§F2 Executive summary** (4–8 sentences, descriptive only)
+
+- Required: a risk-posture sentence (σₚ vs benchmark σ); a diversification
+  sentence (DR² vs holding count — copy must honour the DR² caveat below:
+  "effective independent bets", never a promise of a literal bet count); a
+  concentration sentence (top contributor); a window + sufficiency disclosure
+  sentence.
+- Forbidden: advice verbs (recommendations live in §F5 only), any mean-return
+  or performance claim, any number not in the payload.
+
+**§F3 Detailed math analysis** (one block per metric — the PM's section)
+
+- Required per block: value, `standard_error` where defined,
+  `n_observations`, `window_days`, estimator name + citation (Markowitz;
+  Ledoit & Wolf, *Honey, I Shrunk the Sample Covariance Matrix*, JPM 2004;
+  Choueifaty & Coignard 2008; CAPM), one line of "what this measures",
+  data-quality notes (`partial`, `dropped_holdings`, `low_explanatory_power`).
+- Required once per section: the shrinkage disclosure ("covariance estimated
+  with Ledoit–Wolf constant-correlation shrinkage for a short sample") and
+  the gross-of-fees line (the sim deducts no fees or slippage — Rev 2
+  finding; disclose wherever performance-adjacent numbers appear).
+- This section cross-references CR054's M11/M12 BOK lessons — same metric
+  names, same formulas — so the report teaches what the lessons teach.
+
+**§F4 Conclusion** (2–4 sentences)
+
+- Ties the three threads: risk level, diversification quality, concentration.
+- Restates the window and any sufficiency limits. **No new numbers** — every
+  figure cited already appeared above.
+
+**§F5 Actionable recommendations** (deterministic rule engine — see below)
+
+- Required per recommendation: the trigger values shown in the sentence
+  ("because NVDA is 62% of your risk at 30% of your money"), the `based_on`
+  metric ids, and a severity band. One to three per Finding; none triggered ⇒
+  the section says so plainly — it never manufactures a suggestion.
+
+**DR² copy caveat (r1 audit m3, upheld):** DR² equals a literal independent-
+bet count only in the equal-vol/uniform-ρ case. The auditor's probe: a 60/40
+two-asset book, vols 16%/7%, ρ=0 reads DR² = 1.54, not 2 — DR² also penalises
+weight/vol imbalance. UI and lesson copy say "effective independent bets" as
+a *measure*, never promise a literal count. (If a literal count is ever
+wanted, Meucci's entropy-of-risk-contributions is the stricter tool — not
+required here.)
+
+Presentation surfaces: the Portfolio Health card (scope item 6) carries §F1
+headlines + the entry point; the full Finding is a detail view. Any
+`sufficient: false` block renders the explicit "not enough data yet" state —
+never a blank, a zero, or a number.
+
+## Recommendation rule engine (deterministic — the LLM never invents advice)
+
+Rules fire on the stripped metric context; templates are fixed strings with
+value slots. The LLM's only role is ordering and connective phrasing within
+triggered templates. Thresholds live in one constant block with known-answer
+fire/no-fire tests at every boundary.
+
+| Rule | Trigger | Template (slots in braces) |
+|---|---|---|
+| R1 concentration | top contributor risk_share ≥ 40% | "{ticker} is {risk_share}% of your portfolio's risk at {weight}% of its value. Trimming it reduces total risk more per dollar than any other single change." |
+| R2 correlated cluster | DR² < 2.0 AND holdings ≥ 8 | "You hold {n} positions but only {dr2} effective independent bets — they move together. Adding {count} more positions in the same sectors will not change this; a genuinely different exposure will." |
+| R3 beta band | β ≥ 1.3 AND R² ≥ 0.2 | "Your portfolio amplifies the market: β = {beta}. A 10% market move has historically meant ~{beta_x10}% for this book over the window." |
+| R4 cash drag | cash weight ≥ 40% | "{cash}% of your book is cash, which dilutes every risk number above. These metrics describe a smaller invested sleeve than your total suggests." |
+| R5 data limits | any `partial: true` | "Metrics exclude {dropped} (insufficient history). Treat the numbers as describing {covered}% of your invested value." |
+
+Simulation-only guard: recommendations phrase actions inside the sim ("trim",
+"add an exposure") and never constitute investment advice — the app's
+existing simulation-only framing applies to every template.
+
+## LLM prompt contract (CR136's renderer now; CR137's Room later)
+
+"Agents narrate, never compute" is only real if the context handed to the
+model is pre-digested. Structural rules, in enforcement order:
+
+1. **Strip before assembly.** The context builder drops any metric block with
+   `sufficient: false` *before* prompt construction. The model never sees the
+   number, the null, or the metric name — there is nothing to narrate.
+2. **Comparisons are precomputed, not derived.** Agents are forbidden
+   arithmetic, so any comparison the product wants stated must itself be a
+   metric in the payload. Ship exactly one context metric: **benchmark
+   volatility** (same window, same estimator). "23% vs the market's 15%" is
+   then a citation, not a computation. No other ratios — if a comparison is
+   not in the payload, it is not said.
+3. **Prompt skeleton** (system side; verbatim slots):
+
+   ```text
+   You are the AMI analyst team filing a Portfolio Health finding.
+   You may only cite numbers present in PORTFOLIO_CONTEXT below.
+   Never compute, estimate, extrapolate, or compare beyond what is present.
+   Never make return predictions or performance claims.
+   Volatility, beta, diversification and risk contribution are estimates
+   over the stated window — always keep the window attached.
+   If a metric is absent, the data was insufficient — do not mention it.
+   Headlines, executive summary and recommendations are plain language for
+   a non-professional reader. The detailed analysis section is written for
+   a professional reviewer. Do not mix the registers.
+   Never use judgement adjectives (risky, healthy, dangerous, strong).
+   PORTFOLIO_CONTEXT: {stripped_metric_blocks}
+   FINDING_SECTIONS: {section_specs}
+   TRIGGERED_RULES: {rule_ids_with_slot_values}
+   ```
+
+4. **Output is structured, not free prose.** The model returns the Finding as
+   sectioned JSON matching §F1–§F5; the renderer — not the model — owns
+   number formatting. Placeholders are filled from the same stripped context:
+   the model selects and orders, the deterministic layer interpolates. CR046's
+   discipline applied to prose.
+5. **Post-generation validation (structural, not prompt-based):** the
+   renderer rejects any model output containing a number absent from the
+   payload (digit-sequence match against the context values) or any
+   judgement adjective from a fixed lexicon, and falls back to the
+   deterministic template rendering. The templates stand alone — the model
+   adds fluency, never facts, so the fallback is always available (CR040:
+   degrade loudly, and the degraded state is still a correct report).
+
+## Journal storage plan
+
+Every generated Finding persists to the user's journal. Verified against the
+codebase 2026-08-02 (two corrections to the r1 spec pack marked ▲):
+
+- **Machinery exists:** `journal_entries` table (models.py:262),
+  `JournalStore.append` (journal_store.py:81), `EntryType(str, Enum)` at the
+  schema layer over a plain String column (models.py:267, no DB enum, no
+  CHECK) — adding `EntryType.PORTFOLIO_HEALTH_ANALYSIS =
+  "portfolio_health_analysis"` needs **no backend migration**. The `/note`
+  annotation endpoint (journal.py:119) works unchanged.
+- **Row fit:** `title`, nullable `ticker`, `agents_involved` (JsonB list),
+  `tags` (JsonB list), `payload` (JsonB dict) all exist. `title`: "Portfolio
+  Health — {as_of}"; `ticker: null`; `agents_involved`: the CR137 roster when
+  the Room narrates, else `[]`; `tags`: `["portfolio_health", "cr136"]`.
+- **Payload:** the full stripped metric context (every block with uncertainty
+  fields + `engine_version`), triggered rule ids with slot values, and the
+  five rendered sections as markdown. Storing the context verbatim makes the
+  entry self-explaining forever — no recomputation, no dependence on later
+  engine versions.
+- **▲ Idempotency needs app-level enforcement (spec-pack correction).** The
+  table has **no** `portfolio_id`/`as_of` columns and no unique constraints
+  (verified — `append` is an unconditional insert), so at-most-one Finding
+  per `(portfolio_id, as_of)` cannot be a DB constraint without a migration.
+  Decision: **application-level check-before-insert in the Finding service**
+  (query newest `portfolio_health_analysis` entry for the user, compare
+  payload `as_of` + `portfolio_id`), consistent with the store's existing
+  patterns; a partial unique index stays open as a hardening follow-up if
+  concurrent generation ever becomes possible (today it cannot — generation
+  is user-triggered, per-user serial). Series keyed to `portfolio_id`, and a
+  Finding **never spans a reset** — same rule as the value snapshots.
+- **▲ Mobile requires real work (spec-pack correction).** The Flutter journal
+  enum is hardcoded and coerces unknown wire types to `oneOnOne`
+  (journal.dart:103-104), which would render an **empty payload block** for
+  this entry type. Scope must include: the new enum value + wire mapping in
+  `mobile/lib/models/journal.dart`, and a markdown-rendering branch in
+  `journal_detail_screen.dart` (`_Block` currently renders bare `Text`;
+  `flutter_markdown_plus` is already a dependency, used by the Room widgets —
+  reuse it).
+- Surfacing: the entry appears in the existing journal timeline; opening it
+  renders the **stored** sections, never a live regeneration.
+
+## Cohesion map
+
+```text
+holdings + market data ──► metrics engine (deterministic, this CR)
+     │                         │  uncertainty contract on every block
+     │                         ▼
+     │                GET /v1/portfolio/health/{user_id}
+     │                         │
+     │            context builder (strip insufficient)
+     │                         │
+     │        ┌────────────────┼─────────────────┐
+     │        ▼                ▼                 ▼
+     │   Health card      CR137 Room        Finding renderer
+     │   (§F1 headlines)  (narrate only,    (§F1–F5 templates
+     │                    prompt contract)   + rule engine)
+     │                                          │
+     │                                          ▼
+     │                               journal_entries row
+     ▼
+portfolio_value_snapshots (Tier 2, trading-day gated)
+```
+
+- **Versioning:** `engine_version` in every metric block, journal payload and
+  Finding — estimator changes never make old artefacts ambiguous.
+- **Degrade-loudly matrix:** mock market-data mode → engine refuses entirely;
+  partial history → `partial` + disclosure everywhere; insufficient → null +
+  strip + "not enough data yet"; benchmark misalignment → beta insufficient,
+  never re-gridded; LLM unavailable or output rejected → deterministic
+  template rendering (still a correct, complete report).
+- **Sequencing unchanged:** CR136 engine first; CR137 Room consumes it. The
+  Finding renderer works with or without the Room — templates stand alone;
+  the Room adds debate, never numbers.
 
 ## Scope
 
@@ -245,9 +586,27 @@ blank, a zero, or a number.
 The **risk-contribution decomposition is the tile with the most teaching value**
 and has no analogue anywhere in the app today: "62% of your portfolio's risk
 comes from NVDA, which is 30% of your money" is a sentence a user learns from,
-it is computed deterministically, and it is precisely what Aladdin outputs.
+it is computed deterministically, and it is precisely the decomposition the
+FMR risk-platform patent describes as the institutional headline output.
 
-**7. Content tie-in** — cross-reference CR054's M11/M12 BOK lessons (same
+**7. Finding renderer + recommendation rule engine** — new
+`backend/app/services/portfolio_finding.py`: builds the stripped metric
+context, fires the rule engine (fixed templates, thresholds in one constant
+block), renders §F1–§F5 deterministically, and — when the LLM path is enabled
+— sends the prompt-contract skeleton and validates the structured output
+(post-generation number/adjective check, deterministic fallback). LW closed
+form (constant-correlation target, *Honey, I Shrunk the Sample Covariance
+Matrix*) lands in `trading_math/` stdlib-only beside `portfolio_variance`.
+
+**8. Journal integration** — new
+`EntryType.PORTFOLIO_HEALTH_ANALYSIS` (schema-layer only, no backend
+migration); Finding service persists via `JournalStore.append` with the
+app-level `(portfolio_id, as_of)` check-before-insert; mobile:
+`journal.dart` enum value + wire mapping, and a markdown-rendering branch in
+`journal_detail_screen.dart` (reuse `flutter_markdown_plus`, already a
+dependency).
+
+**9. Content tie-in** — cross-reference CR054's M11/M12 BOK lessons (same
 metrics, already scoped to be taught) — not a blocking dependency, just keeps
 the live feature and the lesson content honest about teaching the same
 numbers.
@@ -272,25 +631,32 @@ Do we know what it does? … So look deeper into the quant maths. Are we doing i
 right? Be critical."* The review found the Rev 1 foundation wrong. Record of
 what was found, since the failure modes are reusable.
 
-### The framing error: Aladdin was cited, then contradicted
+### The framing error: institutional precedent was cited, then contradicted
 
-Rev 1 cited Aladdin as precedent and then designed the structurally opposite
-system. BlackRock's own patent (**US10157419B1**, "Multi-factor risk modeling
-platform") settles what Aladdin does:
+Rev 1 cited institutional holdings-based risk platforms as precedent and then
+designed the structurally opposite system. **FMR LLC's (Fidelity's) patent**
+(**US10157419B1**, "Multi-factor risk modeling platform" — *attribution
+corrected in the r1 audit; the Rev 2 draft wrongly called this "BlackRock's
+own patent." The claim-level substance below was verified line-by-line by the
+auditor against the patent text; only the assignee was wrong*) documents the
+institutional methodology at claim level:
 
-| | Aladdin (per the patent) | CR136 Rev 1 |
+| | Institutional platform (per the FMR patent) | CR136 Rev 1 |
 |---|---|---|
-| Primary input | **Current holdings** × security-level factor exposures | The portfolio's own historical value series |
-| Method | Multi-factor model + Monte Carlo (~250k scenarios) | Backward-looking ratios on one series |
-| Headline output | Factor exposures; contribution to **TEV** by security/sector/factor | Sharpe, max drawdown, beta, HHI |
+| Primary input | **Current holdings** × security-level factor exposures ("multiply the current factor exposures by the simulated future market scenarios") | The portfolio's own historical value series |
+| Method | Multi-factor model; "historical parametric, historical simulation and Monte Carlo" | Backward-looking ratios on one series |
+| Headline output | "estimates tracking error volatility (TEV)"; contribution to TEV **by security, sector or factor** | Sharpe, max drawdown, beta, HHI |
 | Needs a track record? | **No** — analyses what you hold today | **Yes** — 90+ days, plus a backfill script |
 
 The patent is explicit that risk derives from current holdings × factor
 exposures, *not* the portfolio's historical return track record. Holdings-based
 analysis is also the documented industry choice for short track records
 ([CAIA](https://caia.org/blog/2024/10/28/holdings-based-vs-returns-based-analysis-deciphering-best-method-forecasting-fund)),
-and it is why Morningstar runs both approaches. Rev 1 picked the one that
-cannot work for a new user.
+and it is why Morningstar runs both approaches. Aladdin's public materials
+describe the same shape (holdings-based, factor exposures, scenario
+simulation) but are not published at claim level — the design pivot rests on
+the verified patent text, C2, and the day-one data constraint, not on any
+one firm's name. Rev 1 picked the approach that cannot work for a new user.
 
 ### Seven defects in the Rev 1 math
 
@@ -334,8 +700,9 @@ cannot work for a new user.
    first and computed the second under one label — DEF066's exact
    position-vs-portfolio scope confusion, which has already bitten this project.
 6. **`wᵀΣw` was dismissed as a "stretch goal."** It is the one function that
-   implements the Aladdin-shaped approach, and the covariance matrix is
-   obtainable from each holding's own history. Rev 2 makes it the centrepiece.
+   implements the institutional holdings-based approach, and the covariance
+   matrix is obtainable from each holding's own history. Rev 2 makes it the
+   centrepiece.
    Caveat it needs: sample covariance is unstable at low T/N (20 holdings on 64
    observations is poorly conditioned), so **Ledoit–Wolf shrinkage** is required,
    not optional.
@@ -364,8 +731,9 @@ path, so all returns are gross. Worth disclosing wherever performance is shown.
 - **Sharpe and every other mean-numerator ratio dropped** from the shipping set.
 - **Diversification ratio / effective independent bets** replaces naive HHI as
   the diversification metric; HHI demoted and relabelled.
-- **Risk-contribution decomposition added** — the Aladdin-shaped output, and
-  the highest-teaching-value tile in the feature.
+- **Risk-contribution decomposition added** — the institutional-platform
+  headline output (per the FMR patent), and the highest-teaching-value tile in
+  the feature.
 - **Uncertainty contract added** to every metric, because the CR137 agents
   consume these numbers and cannot themselves detect noise.
 - Backfill demoted from load-bearing to a Tier-2 nicety.
@@ -394,6 +762,23 @@ Backend unit tests (`pytest backend/tests/unit/ -q`, sqlite tempfile):
 - Snapshot-tick idempotency (two ticks same day → one row); a tick must not write
   on a non-trading day; a series must not span a portfolio reset.
 - `/v1/portfolio/health/{user_id}` auth (`_own` 403).
+- **Sufficiency thresholds**: every floor in the SUFFICIENCY block exercised at
+  boundary±1 (125/126 obs; T/N 4.99/5.0; dropped weight 19.9%/20.1%); LW
+  fixture tests against precomputed known answers (generated offline vs an
+  independent numpy implementation, stored as literals — no test-time numpy).
+- **Rule engine fire/no-fire at every boundary** (R1 39.9/40.1% risk share; R2
+  DR² 1.99/2.01 × holdings 7/8; R3 β 1.29/1.31 × R² 0.19/0.21; R4 cash
+  39.9/40.1%; R5 partial true/false). Rendered slots match the triggering
+  values exactly.
+- **Strip test**: a context with any `sufficient: false` block produces a
+  prompt (and a deterministic rendering) in which that metric's name appears
+  nowhere.
+- **Post-generation validation**: a model output containing a digit sequence
+  absent from the payload, or a lexicon adjective, is rejected and the
+  deterministic fallback is served — asserted on a fabricated bad output.
+- **Journal idempotency**: two generate calls same `(portfolio_id, as_of)` →
+  one `portfolio_health_analysis` entry; a post-reset portfolio does not
+  attach findings to the old portfolio's series.
 
 End-to-end:
 
@@ -405,7 +790,14 @@ End-to-end:
 - `/promote-to-alpha`, confirm the new endpoint live, confirm the daily tick
   logs an idempotent no-op on its second same-day run (`ami_api_alpha` logs).
 - Mobile: release-build install on the iPhone 13/17 test devices, confirm each
-  tile renders both populated and in the explicit "not enough data yet" state.
+  tile renders both populated and in the explicit "not enough data yet" state;
+  confirm a stored Finding renders its five sections as markdown in the
+  journal detail view (not an empty payload block).
+- **The hostile-reader pass**: before the Finding ships, one full generated
+  report is reviewed against the hostile-reader standard checklist (every
+  number has method/window/n; limitations disclosed first; no judgement
+  adjectives; every claim traceable) — Saiful's acceptance test, wearing the
+  rude-PM hat.
 
 ## Risk class
 
