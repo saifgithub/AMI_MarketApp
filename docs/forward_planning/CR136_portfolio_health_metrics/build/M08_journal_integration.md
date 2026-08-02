@@ -83,7 +83,7 @@ from uuid import UUID
 
 from app.schemas.journal import EntryType, JournalEntryCreate
 
-SECTION_KEYS = ("f1", "f2", "f3", "f4", "f5")
+SECTION_KEYS = ("head", "f1", "f2", "f3", "f4", "f5")
 FINDING_TAGS = ["portfolio_health", "cr136"]
 
 
@@ -91,13 +91,15 @@ def build_finding_entry(
     *,
     user_id: UUID,
     portfolio_id: UUID,
-    as_of: date,
-    disclosure_md: str,
-    sections_md: dict[str, str],
+    as_of: str | date,                     # M06 carries the ISO string
+    sections: dict[str, str],              # "head" + f1…f5 (the disclosure IS a section)
     context: dict,
     fired_rules: list[dict],
     rule_states: dict[str, str],
     engine_version: str,
+    summary: str | None = None,            # first §F1 headline
+    llm_used: bool = False,
+    llm_rejected_reason: str | None = None,
 ) -> JournalEntryCreate:
 ```
 
@@ -132,17 +134,25 @@ Pinned output (each pin from Rev 4 "Journal storage plan" / the M08 brief,
 except where marked M08-pin):
 
 - `entry_type=EntryType.PORTFOLIO_HEALTH_ANALYSIS`
-- `title=f"Portfolio Health — {as_of.isoformat()}"` (e.g.
-  `"Portfolio Health — 2026-08-02"`)
+- `title=f"Portfolio Health — Finding {as_of}"` (e.g. `"Portfolio Health —
+  Finding 2026-08-02"`) — **M06's pin** (M06 §3.7 "Title:"), which this doc
+  originally contradicted with the shorter form. M06 shipped first and M08's
+  job here was to EXTRACT its construction, so re-titling mid-extraction would
+  have silently changed every future Finding's title away from the pin.
 - `ticker=None` — structural consequence: `journal_context.py` fetches
   Bull/Bear lookback **by ticker** (`journal_context.py:48-50`), so Findings
   never leak into single-ticker Room prompts. No change needed there.
 - `agents_involved=[]` (deterministic engine; agents arrive with CR137)
 - `tags=list(FINDING_TAGS)` — exactly `["portfolio_health", "cr136"]`
-- `summary=None` (M08-pin: §F1 is markdown; a clipped markdown fragment in the
-  list card / prompt contexts is the DEF150 class — the title carries the date,
-  the badge carries the type)
-- `outcome=None`, `reference_id=None` (the entry IS the artefact)
+- `summary=` the first §F1 headline (**amended**; the original `None` pin
+  reasoned from a clipped MARKDOWN fragment, but §F1 headlines are plain
+  sentences carrying no markup, and a card showing only the date tells the user
+  nothing about their own book)
+- `outcome=None`; `reference_id=portfolio_id` (**seam register**, which
+  overrides this doc — M07 reads Findings by portfolio)
+- `dedupe_key=f"{portfolio_id}:{as_of}"` (**added AT:R66, M07 audit**) — the
+  `uq_journal_dedupe` value that stops two concurrent POSTs writing two
+  Findings
 - `payload=` exactly:
 
 ```python
@@ -150,11 +160,12 @@ except where marked M08-pin):
     "portfolio_id": str(portfolio_id),
     "as_of": as_of.isoformat(),            # "YYYY-MM-DD"
     "engine_version": engine_version,       # "cr136.v1" (Rev 4 pin 8; M06 supplies it)
-    "disclosure": disclosure_md,            # head disclosure block, markdown (F19)
-    "sections": {k: sections_md[k] for k in SECTION_KEYS},
+    "sections": {k: sections[k] for k in SECTION_KEYS},   # "head" IS the F19 disclosure
     "context": context,                     # stripped metric blocks (M06; insufficient already removed)
-    "rules": fired_rules,                   # README contract-3 dicts, FIRED rules only, slots interpolated
+    "rules_fired": fired_rules,             # README contract-3 dicts, FIRED rules only, slots interpolated
     "rule_states": rule_states,             # {"R1": "fired"|"cleared", ...} — full hysteresis memory
+    "llm_used": llm_used,
+    "llm_rejected_reason": llm_rejected_reason,
 }
 ```
 
@@ -164,9 +175,11 @@ Extra keys M06 may add ride along untouched; the pinned ones may not be
 renamed.
 
 Validation — degrade loudly (CR040), raise `ValueError` naming the field:
-`sections_md` keys must equal `set(SECTION_KEYS)` with non-empty `str` values;
-`disclosure_md` must be a non-empty `str` (F19: the archived artefact carries
-its own disclosures forever — a Finding without them must never be stored);
+`sections` keys must EQUAL `set(SECTION_KEYS)` — missing AND unexpected both
+raise, since the renderer walks a fixed order and a stray key would be stored
+forever and shown to nobody — with non-empty `str` values throughout. `head` is
+covered by that same check (F19: the archived artefact carries its own
+disclosures forever — a Finding without them must never be stored).
 `rule_states` values must be subsets of `{"fired", "cleared"}`.
 
 ### 3.3 Parity test (DEF210) — what actually must change
@@ -400,22 +413,28 @@ helper at `journal_store.py`):
 3. Raw-string append coerces (`entry_type="portfolio_health_analysis"` passes
    the `journal_store.py:84-86` path); unknown string
    (`"portfolio_health_analysis_v2"`) still raises — the guard is intact.
-4. **Entry shape pins**: title `"Portfolio Health — 2026-08-02"` for
-   `as_of=date(2026, 8, 2)`; `ticker is None`; `agents_involved == []`;
-   `tags == ["portfolio_health", "cr136"]`; `summary is None`;
-   `outcome is None`; payload keys exactly
-   `{portfolio_id, as_of, engine_version, disclosure, sections, context,
-   rules, rule_states}`; `sections` keys exactly `{f1..f5}`.
+4. **Entry shape pins** (**amended AT:R66** to the shipped shape): title
+   `"Portfolio Health — Finding 2026-08-02"` for `as_of=date(2026, 8, 2)`;
+   `ticker is None`; `agents_involved == []`;
+   `tags == ["portfolio_health", "cr136"]`; `summary` passes through (the first
+   §F1 headline); `outcome is None`; `reference_id == portfolio_id`;
+   `dedupe_key == f"{portfolio_id}:{as_of}"`; payload keys exactly
+   `{portfolio_id, as_of, engine_version, sections, context, rules_fired,
+   rule_states, llm_used, llm_rejected_reason}`; `sections` keys exactly
+   `{head, f1..f5}`.
 5. **Validation**: missing `"f3"` → `ValueError`; empty `disclosure_md` →
    `ValueError`; `rule_states={"R1": "armed"}` → `ValueError`.
-6. **`latest_portfolio_health_entry`**: two portfolios interleaved → returns
-   the newest for the queried `portfolio_id` only; a soft-deleted newest is
-   skipped (next live one returned); an entry backdated 31 days via
-   `_backdate_for_test` is STILL returned (no Floor Pass retention — the
-   hysteresis-memory property); no entries → `None`.
-7. **`portfolio_health_stats`**: `(0, None)` when empty; count includes a
-   soft-deleted row (delete-to-reset-trial must not work); `first_at` is the
-   earliest `created_at`.
+6. **`latest_portfolio_health_entry`** (**amended AT:R66**): two portfolios
+   interleaved → returns the newest for the queried `portfolio_id` only; a
+   soft-deleted newest IS returned, carrying `deleted_at` so the caller can
+   refuse to replay it while still reading its `rule_states`; an entry
+   backdated 31 days via `_backdate_for_test` is STILL returned (no Floor Pass
+   retention — the hysteresis-memory property); no entries → `None`.
+7. **`portfolio_health_stats`** (**amended AT:R66** — 3-tuple, per-portfolio
+   daily counter): `(0, None, 0)` when empty; count includes a soft-deleted row
+   (delete-to-reset-trial must not work); `first_at` is the earliest
+   `created_at`; `daily_used` counts only today's rows for THIS portfolio, on a
+   UTC day boundary.
 8. `test_journal_entry_type_parity.py` — run unmodified; green proves the Dart
    half landed in the same tree (§3.3).
 
@@ -481,8 +500,11 @@ After M08, the following exist and may be assumed:
   `get_journal_store().append(...)` it; may call
   `latest_portfolio_health_entry(user_id, portfolio_id)` for the shared
   idempotency + `rule_states` read (compare `payload["as_of"]`, read
-  `payload["rule_states"]`), and `portfolio_health_stats(user_id)` for trial
-  accounting. **Caution:** do NOT use `list_for_user` for either — its
+  `payload["rule_states"]`, and check `deleted_at is None` before replaying one
+  to a client), and `portfolio_health_stats(user_id, portfolio_id, *, now) ->
+  (trial_findings_used, first_finding_at, daily_used)` for trial AND daily-cap
+  accounting — **corrected AT:R66**; the single-argument form in the original
+  draft does not exist. **Caution:** do NOT use `list_for_user` for either — its
   retention + soft-delete filters break both semantics (§3.4).
 - **M05** may rely on `rule_states` round-tripping the journal payload
   verbatim, and on a fresh `portfolio_id` returning `None` from the read

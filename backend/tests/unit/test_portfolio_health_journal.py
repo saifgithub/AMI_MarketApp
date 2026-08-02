@@ -87,6 +87,23 @@ def test_the_entry_shape_is_pinned() -> None:
     assert set(draft.payload["sections"]) == set(SECTION_KEYS)
 
 
+def test_the_summary_is_the_first_headline_not_none() -> None:
+    """This doc pinned `summary is None`, reasoning that a clipped MARKDOWN
+    fragment in a list card is the DEF150 class. §F1 headlines are plain
+    sentences with no markup, so the concern does not bind — and a card reading
+    only the title tells the user nothing about their own book."""
+    assert _entry(summary=None).summary is None
+    headline = "Annualised volatility 18.98% over the measured window."
+    assert _entry(summary=headline).summary == headline
+
+
+def test_an_unexpected_section_key_is_rejected() -> None:
+    """The key set is pinned as EQUAL, not a superset: the renderer walks a
+    fixed order, so a stray key is stored forever and shown to nobody."""
+    with pytest.raises(ValueError, match="unexpected keys"):
+        _entry(sections=_sections(f6="orphan"))
+
+
 def test_an_iso_string_as_of_is_accepted_as_well_as_a_date() -> None:
     """M06 carries `as_of` as an ISO string end to end; the doc typed it as a
     `date`. Both produce the same stored value rather than one silently

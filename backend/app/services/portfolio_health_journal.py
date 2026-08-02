@@ -60,6 +60,16 @@ def build_finding_entry(
             f"one a user reopens in a year, and a section that is absent at "
             f"write time is absent forever"
         )
+    unexpected = sorted(set(sections) - set(SECTION_KEYS))
+    if unexpected:
+        # The doc pins the key set as EQUAL, not a superset. A stray key would
+        # be stored forever and rendered by nothing — the mobile renderer walks
+        # a fixed order — so it is content that silently never reaches the user.
+        raise ValueError(
+            f"Finding sections carry unexpected keys {unexpected} — the "
+            f"renderer walks a fixed order, so anything outside {list(SECTION_KEYS)} "
+            f"is stored forever and shown to nobody"
+        )
     for key in SECTION_KEYS:
         value = sections[key]
         if not isinstance(value, str) or not value.strip():

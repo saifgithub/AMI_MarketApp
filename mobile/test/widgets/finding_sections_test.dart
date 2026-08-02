@@ -57,8 +57,25 @@ void main() {
       }
     });
 
-    test('false when sections is missing entirely', () {
-      expect(FindingSections.isRenderable(const {'as_of': '2026-08-02'}), isFalse);
+    test('false when sections is missing, even with a valid disclosure', () {
+      // The disclosure must be VALID here, or the disclosure check alone
+      // decides the answer and this test passes with the sections check
+      // deleted — which is exactly what the first version of it did.
+      expect(
+        FindingSections.isRenderable(const {
+          'as_of': '2026-08-02',
+          'disclosure': 'DISCLOSURE-MARK',
+        }),
+        isFalse,
+      );
+      expect(
+        FindingSections.isRenderable(const {
+          'as_of': '2026-08-02',
+          'disclosure': 'DISCLOSURE-MARK',
+          'sections': 'not a map',
+        }),
+        isFalse,
+      );
     });
 
     test('an older top-level disclosure key still renders', () {
