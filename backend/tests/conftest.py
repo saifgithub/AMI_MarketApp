@@ -143,6 +143,11 @@ def _isolated_db(tmp_path: _Path) -> None:
     from app.services import ticker_reference as _tr
     _tr._invalidate_active_symbol_cache()
     _tr.reset_refresh_failures()
+    # CR136 M01: the price-history store holds its own leaf provider (never the
+    # fallback stack — see its module docstring). Reset it so a fake injected by
+    # one test cannot serve another, and so no test can reach live yfinance.
+    from app.services import price_history as _ph
+    _ph.set_history_provider(None)
 
 
 @pytest.fixture

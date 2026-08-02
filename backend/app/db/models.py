@@ -1010,3 +1010,41 @@ class TickerReferenceRow(Base):
     last_seen_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
+
+
+class PriceHistoryDailyRow(Base):
+    """One daily close per (ticker, trading day) — CR136's history store.
+
+    A read-through table over the market-data provider, and the ONLY source of
+    return series for the Portfolio Health engine. It exists for two reasons.
+    First, the quote path's 60-second `CachingProvider` TTL is built for "what
+    is AAPL worth right now", not for a 504-bar series: without a table, an
+    N-holding evaluation is N Yahoo round-trips every time anyone opens the
+    card. Second, trading days are derived from which bars exist — no trading
+    calendar is imported anywhere — so the series has to be persisted the way
+    it was served.
+
+    `adj_close` is the analytic column (dividends/splits already applied) and is
+    what every metric reads. `close` carries the same value today because the
+    provider's `Candle.c` is already adjusted (`yfinance` defaults
+    `auto_adjust=True`); the pair exists so a future provider serving raw closes
+    can diverge honestly rather than silently redefining what the stored number
+    means. `source` records the leaf provider that produced the row, so
+    fabricated mock bars can never be read as real market data.
+    """
+
+    __tablename__ = "price_history_daily"
+    __table_args__ = (
+        UniqueConstraint("ticker", "date", name="uq_price_history_ticker_date"),
+        Index("ix_price_history_ticker_date", "ticker", "date"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    ticker: Mapped[str] = mapped_column(String, nullable=False)
+    date: Mapped[date] = mapped_column(Date, nullable=False)
+    close: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+    adj_close: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+    source: Mapped[str] = mapped_column(String, nullable=False)
+    fetched_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )

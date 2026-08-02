@@ -153,6 +153,7 @@ _PERIOD_MAP: dict[str, tuple[str, str, int, int]] = {
     "1m": ("1mo", "1d",  22, 24 * 3600),               # ~22 trading days
     "3m": ("3mo", "1d",  65, 24 * 3600),               # ~65 trading days
     "1y": ("1y",  "1wk", 52, 7 * 24 * 3600),
+    "2y": ("2y",  "1d",  504, 24 * 3600),              # CR136 — ~504 trading days, daily bars
     "5y": ("5y",  "1mo", 60, 30 * 24 * 3600),
 }
 

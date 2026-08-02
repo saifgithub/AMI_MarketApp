@@ -50,11 +50,15 @@ _PERIODS_DECL = re.compile(
 )
 
 
-def test_the_allow_list_is_exactly_the_six_canonical_lowercase_tokens():
+def test_the_allow_list_is_exactly_the_seven_canonical_lowercase_tokens():
     """Pinned so the server half cannot drift on its own — this runs even where
     the Flutter source is not checked out (the container image ships only
-    `app/`, `tests/` and `alembic/`)."""
-    assert VALID_PERIODS == ("1d", "1w", "1m", "3m", "1y", "5y")
+    `app/`, `tests/` and `alembic/`).
+
+    `"2y"` joined the map in CR136 M01 (the Portfolio Health engine needs ≥126
+    daily returns; `"3m"` tops out at 65 bars). It is deliberately server-only —
+    no seventh chip ships, so the Dart vacuity guard below still reads 6."""
+    assert VALID_PERIODS == ("1d", "1w", "1m", "3m", "1y", "2y", "5y")
 
 
 @pytest.mark.skipif(
