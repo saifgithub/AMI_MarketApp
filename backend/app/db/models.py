@@ -380,6 +380,56 @@ class SimTradeRow(Base):
     realised_pnl: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
 
 
+class PortfolioValueSnapshotRow(Base):
+    """One valuation row per sim portfolio per TRADING DAY — CR136's Tier-2 history.
+
+    Append-only, one row per `(portfolio_id, as_of)`; the unique constraint is
+    the database-level backstop behind the tick's own check-before-insert. Rows
+    are keyed to `portfolio_id`, not `user_id`, so a series structurally cannot
+    span a reset: `reset_portfolio` is destroy-and-recreate, and the new
+    portfolio gets a new UUID.
+
+    `predicted_vol_ann` is the Tier-1 EWMA σₚ **as a decimal fraction**
+    (0.262 ≡ 26.2% annualised), stored beside the realised value so the model is
+    permanently auditable (Rev 4 F16): the bias test divides a realised return
+    by it and the units only cancel because both sides are fractions. Null when
+    the engine refused (mock data), was insufficient, or was unavailable — never
+    0.0, which would read as a confident prediction of no risk at all.
+
+    **`drawdown_pct` is NOT the Tier-2 max drawdown.** It is the sim's existing
+    vs-STARTING-CAPITAL number, persisted for continuity with what the app
+    already shows. The Tier-2 tile renders the rolling peak-to-trough figure
+    computed from `total_value` history and must never read this column: on the
+    path $10k → $15k → $12k this column reads 0.0 while the Tier-2 number reads
+    20.0. Two different quantities that were both once called "drawdown" is the
+    Rev 2 defect this warning exists to prevent recurring.
+    """
+
+    __tablename__ = "portfolio_value_snapshots"
+    __table_args__ = (
+        UniqueConstraint("portfolio_id", "as_of", name="uq_pvs_portfolio_asof"),
+        Index("ix_pvs_portfolio_asof", "portfolio_id", "as_of"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    portfolio_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("sim_portfolios.id", ondelete="CASCADE"), nullable=False,
+    )
+    as_of: Mapped[date] = mapped_column(Date, nullable=False)
+    total_value: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    cash: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    invested_value: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    drawdown_pct: Mapped[float] = mapped_column(Float, nullable=False)
+    source: Mapped[str] = mapped_column(String, nullable=False)
+    captured_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    predicted_vol_ann: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    n_observations: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    engine_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+
 class RoomRunRow(Base):
     __tablename__ = "room_runs"
 

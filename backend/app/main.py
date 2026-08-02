@@ -146,6 +146,24 @@ async def _classification_universe_refresh() -> None:
         await asyncio.sleep(_CLASSIFICATION_REFRESH_INTERVAL_SECONDS)
 
 
+async def _portfolio_snapshot_tick() -> None:
+    """Background task: one `portfolio_value_snapshots` row per sim portfolio per
+    trading day (CR136 M03). Idempotent like `_sharia_universe_refresh` — a tick
+    that finds today's row stored does nothing, so a restart cannot miss a
+    boundary, and the trading day comes from the benchmark's own candle grid
+    rather than from the calendar. The quote fan-out and the DB writes both run
+    off the event loop (`to_thread`)."""
+    from app.services.portfolio_snapshot import run_portfolio_snapshot_tick
+
+    while True:
+        try:
+            stats = await asyncio.to_thread(run_portfolio_snapshot_tick)
+            logger.info("portfolio_snapshot_tick_complete", **stats)
+        except Exception:
+            logger.exception("portfolio_snapshot_tick_failed")
+        await asyncio.sleep(settings.portfolio_snapshot_interval_seconds)
+
+
 async def _ticker_reference_refresh() -> None:
     """Background task: fetch NASDAQ Trader's listed-securities files once a day
     and upsert the ticker reference table (CR128). Idempotent like
@@ -208,6 +226,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_classification_universe_refresh()),
         asyncio.create_task(_ticker_reference_refresh()),
         asyncio.create_task(_price_alert_evaluation_tick()),
+        asyncio.create_task(_portfolio_snapshot_tick()),
     ]
     try:
         yield

@@ -49,7 +49,12 @@ from sqlalchemy import delete, select
 from app.agents.safety_floor import check_mandate_compliance
 from app.core.logging import logger
 from app.db import get_session, init_schema
-from app.db.models import SimHoldingRow, SimPortfolioRow, SimTradeRow
+from app.db.models import (
+    PortfolioValueSnapshotRow,
+    SimHoldingRow,
+    SimPortfolioRow,
+    SimTradeRow,
+)
 from app.services.cost_basis_lots import Lot, compute_lots_fifo
 from app.schemas import Mandate
 from app.schemas.trade import (
@@ -397,6 +402,15 @@ class SimEngine:
             if existing is not None:
                 s.execute(
                     delete(SimTradeRow).where(SimTradeRow.portfolio_id == existing.id)
+                )
+                # CR136 M03: explicit, like the trades above. The FK's CASCADE
+                # fires on Postgres but sqlite does not enforce FK pragmas by
+                # default, so without this the test DB and production would
+                # disagree about what a reset destroys.
+                s.execute(
+                    delete(PortfolioValueSnapshotRow).where(
+                        PortfolioValueSnapshotRow.portfolio_id == existing.id
+                    )
                 )
                 s.delete(existing)
                 s.flush()
@@ -997,6 +1011,7 @@ class SimEngine:
 
     def clear(self) -> None:
         with get_session() as s:
+            s.execute(delete(PortfolioValueSnapshotRow))
             s.execute(delete(SimTradeRow))
             s.execute(delete(SimHoldingRow))
             s.execute(delete(SimPortfolioRow))

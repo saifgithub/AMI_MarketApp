@@ -140,6 +140,11 @@ class Settings(BaseSettings):
     # When false (default), the legacy deterministic random walk runs.
     use_real_market_data: bool = False
 
+    # CR136 M03. Tick cadence for the daily portfolio-value snapshot job.
+    # Idempotent per trading day, so hourly only bounds post-restart catch-up
+    # delay to <= 1h — it does not mean hourly rows.
+    portfolio_snapshot_interval_seconds: int = 3600
+
     # CR035: hide the Street's analyst rating/target from the agents'
     # fundamentals context. Benchmark-only toggle — measures whether the
     # Room's verdict is its own or parrots the consensus it is fed. Must

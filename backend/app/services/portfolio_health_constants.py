@@ -79,7 +79,15 @@ LOW_R2_THRESHOLD = 0.20
 # never improve (measured: minimum day-over-day change exactly 0.0; the rolling
 # window restores improvability on 87.4% of paths).
 TIER2_MIN_SNAPSHOTS = 21
-TIER2_MDD_WINDOW_DAYS = 252
+# Named _SNAPSHOTS, not _DAYS: it counts stored snapshot ROWS, and rows exist
+# only for trading days. Calling it days would invite calendar arithmetic, which
+# is the one thing CR136 refuses to do anywhere.
+TIER2_MDD_WINDOW_SNAPSHOTS = 252
+
+# Rev 4 F16 — the institutional bias test. z = realised return / predicted vol
+# must have sd ~ 1; at T=252 the acceptance band is [0.911, 1.089]. The band
+# applies AT T=252, not at small n, so the helper reports n and never verdicts.
+BIAS_SD_BAND = (0.911, 1.089)
 
 # ── Typical bad month (Rev 4 F13) ───────────────────────────────────────────
 # The z and the 21-day month live in `trading_math.portfolio_risk` as

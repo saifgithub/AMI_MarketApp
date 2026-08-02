@@ -110,6 +110,10 @@ services:
       # .env to flip on real prices (with a mock-walk fallback). The
       # Yahoo provider works from melehost and the dev Mac.
       USE_REAL_MARKET_DATA: ${USE_REAL_MARKET_DATA:-false}
+      # CR136 M03 — cadence of the daily portfolio-value snapshot tick. The job
+      # is idempotent per TRADING DAY, so hourly bounds post-restart catch-up
+      # delay; it does not mean hourly rows.
+      PORTFOLIO_SNAPSHOT_INTERVAL_SECONDS: ${PORTFOLIO_SNAPSHOT_INTERVAL_SECONDS:-3600}
       # LLM keys — copy from .env file (don't bake into image)
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
