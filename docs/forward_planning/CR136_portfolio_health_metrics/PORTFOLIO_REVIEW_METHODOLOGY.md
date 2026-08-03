@@ -1,6 +1,6 @@
 # AMI Trade — Portfolio Review Methodology
 
-*Prepared for external review. Version 2.1 — August 2026.*
+*Prepared for external review. Version 2.2 — August 2026.*
 
 ---
 
@@ -283,6 +283,139 @@ first use — on a synthetic series its covariance matched to 8.1e-20 and every
 derived figure to better than 1e-12 — so that a disagreement on live data is
 attributable to the system under test rather than to the instrument. As of this
 version the first live run is pending promotion of the described system.
+
+## 9. Frequently asked questions
+
+Sections 1–8 are written for a professional reader. This section answers the
+same questions in two registers: plain language first, then — for the same
+question, where the plain answer leaves something out that a technical reader
+would want — the mechanism underneath it.
+
+### In plain language
+
+**What is Portfolio Health, in one sentence?**
+It's a report on how risky your simulated portfolio is and how spread out that
+risk is — never on whether it made money, and never a suggestion to buy or
+sell anything.
+
+**Does it tell me if I'm making or losing money?**
+Only one line does — "realised return", the plain arithmetic of how your
+stored portfolio value actually moved over the shown window. Everything else
+in the report is about risk, not return, on purpose (see the next question).
+
+**Why doesn't it show a "risk-adjusted return" score, or a Sharpe ratio?**
+Because with the amount of history a real account has, that kind of number is
+mostly noise wearing the shape of a signal — it can say your strategy looks
+great or terrible almost at random, and only starts meaning something after
+several years of daily data. Risk numbers (like volatility) become reliable
+much sooner, which is why the report is built entirely from those instead.
+
+**Why does it sometimes say "insufficient data" instead of giving me a
+number?**
+Because a number the app isn't confident in is worse than no number — it
+looks precise even when it isn't. Every metric has a minimum amount of price
+history it needs before it's shown; below that, you get an honest "not enough
+data yet" instead of a guess dressed up as a fact.
+
+**Is AMI (the AI) making these numbers up?**
+No. Every figure is produced by fixed, tested calculation code before AMI ever
+sees it. AMI's only job is to put the already-computed numbers into sentences.
+If it ever tried to state a number that isn't one of the real computed
+figures, that sentence gets thrown out automatically and replaced with a
+plain, pre-written one instead.
+
+**Why did my risk number change even though I didn't buy or sell anything?**
+Markets move relative to each other every day, and the report reflects the
+most recent relationship between your holdings — so those relationships
+(and the risk number built from them) can shift on their own even when your
+holdings don't.
+
+**Is holding a lot of cash the same as being diversified?**
+No, and the report is careful not to imply that. Cash lowers your risk
+number, but a separate "concentration" figure is deliberately not described
+as a diversification measure, because it can't tell the difference between
+"spread across unrelated holdings" and "mostly sitting in cash."
+
+**Can I trust these numbers if I only hold a few positions?**
+The report tells you when it can't be confident — a holding with too short a
+price history is dropped from the calculation and that's disclosed to you,
+and if too much of your portfolio had to be dropped that way, the whole
+report is withheld rather than shown on a shaky basis.
+
+**Does this affect whether I'm allowed to make a trade?**
+Only one line in the report — the one about your own trading rules ("mandate")
+— is built to match the same numbers your trade ticket already checks, so it
+never tells you that you've broken a rule your ticket says you haven't (or
+the reverse).
+
+**Will this ever tell me what to do?**
+No. The closing section describes what a textbook would generally say about a
+pattern like the one measured — it's written as "here's a general
+consideration," never as an instruction about your holdings. AMI Trade is a
+training simulator and isn't licensed to give investment advice.
+
+**Is any of this about real money?**
+No — every figure describes a paper-money practice portfolio, and every
+report says so up front.
+
+### For a technical reader
+
+**Why EWMA(λ=0.97) rather than a rolling window or a shrinkage estimator?**
+§5 — a rectangular window's roll-off echo (a measured
+2.9pp discontinuous drop when an old shock exits the window) is a bigger
+practical defect at this scale than the sample-covariance instability
+shrinkage addresses, which doesn't bind at the N ≤ ~30 book sizes here.
+
+**Why does the standard error use `T_eff` instead of raw `T`?** Because the
+weights aren't uniform, the effective number of independent observations is
+smaller than the raw count; using raw `T` in `σ̂/√(2T)` understates the true
+sampling error by ~27% at these weights (§5) — the SE ships as
+`σ̂ₚ/√(2·T_eff)` specifically to avoid publishing false precision.
+
+**How is beta/R² estimated — a standalone regression, or read off the same
+matrix?** Off the same joint EWMA matrix that produces the portfolio's own
+variance (§3) — the benchmark is one more leg of that matrix rather than a
+separately-windowed series, so portfolio and benchmark can never disagree
+about which days they were measured over.
+
+**Why is DR² never shown without risk contributions alongside it?** DR²
+conflates volatility imbalance with correlation — a correctly diversified
+60/40 book and a triple-overlapping equity book can produce nearly the same
+DR² for opposite reasons (§3). Risk contributions are what disambiguates the
+cause.
+
+**Exactly what makes a metric "insufficient"?** ≥126 trading-day observations
+for volatility/beta; additionally `T/N ≥ 5` before risk can be attributed
+across holdings; a holding is dropped (and disclosed) below its own floor,
+and the whole analysis is withheld if dropped weight exceeds 20% of invested
+value; realised drawdown needs ≥21 stored snapshots; realised return needs
+≥2 with a positive opening value (§5).
+
+**How is the language layer mechanically prevented from fabricating a
+number, not just instructed not to?** Every generated report is validated
+after generation against the computed payload; any sentence citing a figure
+absent from that payload is rejected and replaced by a fixed template
+rendering (§2, §7) — the control is the validator, not the prompt.
+
+**Where does the SHARE/LEVEL basis rule have a stated exception?** Mandate-
+breach reporting (R0) is total-value basis by design, so it agrees with the
+trade gate's own denominator rather than the invested-sleeve convention every
+other SHARE metric uses (§2) — the metric's stored `basis` field records
+which applies, so this is machine-checkable rather than a convention.
+
+**How is calibration monitored in production, not just verified once at
+launch?** The F16 bias check (§8): each portfolio's realised daily return
+divided by that day's predicted volatility should have a standard deviation
+of 1 if the model is calibrated; recomputed monthly per portfolio, with a
+decision band of [0.911, 1.089] at a full year of observations, and readings
+below that sample size are recorded as immature rather than judged.
+
+**How is the live output independently verified before users see it?** A
+separate harness re-reads the same stored closes, redoes the joins/returns,
+and recomputes every published figure in a different numerical library,
+applying the same data-hygiene exclusions the live engine applies, requiring
+agreement to two decimal places (§8) — a required gate at each promotion, not
+a one-time check.
 
 ## References
 
