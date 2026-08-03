@@ -3925,6 +3925,24 @@ abstract class AppLocalizations {
   /// **'S&P 500 history did not align with this book\'s window; beta is not measured.'**
   String get portfolioHealthBenchmarkNote;
 
+  /// CR136 — shown in place of the beta tile when the block is insufficient for ANY cause other than benchmark_misaligned (today that is feed_unavailable, i.e. the SPY feed was down). Added for M04 audit r1 MAJOR M1: the note used to fire only on benchmark_misaligned, so a feed outage deleted the tile and put nothing in its place. Names AMI's limit, never the user's book (Rev 4 F20), and never guesses a cause. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI could not measure this book\'s beta against the S&P 500 over the available window.'**
+  String get portfolioHealthBetaUnavailableNote;
+
+  /// CR136 — shown in place of the effective-bets tile when the block is insufficient for ANY cause other than t_over_n. No engine path reaches it today; it exists so the branch is closed by construction rather than by the current cause list (M04 audit r1 MAJOR M1). NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI could not measure how many independent bets this book holds over the available window.'**
+  String get portfolioHealthBetsUnavailableNote;
+
+  /// CR136 — shown in place of the volatility tile when its block is insufficient on an otherwise POPULATED card. Unreachable today: every cause that makes volatility insufficient makes all four core metrics insufficient, which switches the whole card to its insufficient state. Same closed-by-construction reason as the beta and effective-bets notes (M04 audit r1 MAJOR M1). NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI could not measure this book\'s volatility over the available window.'**
+  String get portfolioHealthVolUnavailableNote;
+
   /// CR136 — shown when the Tier-2 max-drawdown block is PRESENT but insufficient. The literal 21 mirrors TIER2_MIN_SNAPSHOTS (cr136.v1). A block absent from the wire renders nothing at all — no tile and no note. NEW key, needs ar/ms translation. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

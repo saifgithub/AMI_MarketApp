@@ -229,8 +229,19 @@ value, standard_error, n_observations, t_eff, window_days, sufficient, partial,
 dropped_holdings, low_explanatory_power, contains_etfs, backcast, basis,
 engine_version` — plus the per-block extensions in §3.4 and
 `insufficient_cause: str | null` (`"short_window" | "t_over_n" |
-"benchmark_misaligned" | "dropped_weight_exceeded"`; the machine hook for F20's
-our-limit copy, which M06/M09 own). Field rules:
+"benchmark_misaligned" | "dropped_weight_exceeded" | "feed_unavailable" |
+"zero_variance"`; the machine hook for F20's our-limit copy, which M06/M09 own).
+The last two were added during the build and the four-value list above stood
+uncorrected until audit round 1 — which is the whole finding: the enum widened
+4 → 6 across a language boundary with nothing holding either side. The values
+live in `INSUFFICIENT_*` (`portfolio_health_constants.py`), are mirrored by
+`kInsufficientCauses` in `mobile/lib/models/portfolio_health.dart`, and the two
+sets are compared by `backend/tests/unit/test_cr136_dart_parity.py`, which reads
+the backend side by introspection so a seventh cause fails on the commit that
+mints it. **Adding a cause is not a client-side breaking change** — every card
+branch is keyed on the block being insufficient, and a cause only chooses which
+copy — but the copy for an unknown cause is generic, so the parity failure is
+the prompt to write the specific line. Field rules:
 
 - `sufficient: false` ⇒ `value` AND `standard_error` **null — never 0.0**;
   `n_observations`/`window_days` still filled (they explain why).

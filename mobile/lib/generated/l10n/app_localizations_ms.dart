@@ -2265,6 +2265,18 @@ class AppLocalizationsMs extends AppLocalizations {
       'S&P 500 history did not align with this book\'s window; beta is not measured.';
 
   @override
+  String get portfolioHealthBetaUnavailableNote =>
+      'AMI could not measure this book\'s beta against the S&P 500 over the available window.';
+
+  @override
+  String get portfolioHealthBetsUnavailableNote =>
+      'AMI could not measure how many independent bets this book holds over the available window.';
+
+  @override
+  String get portfolioHealthVolUnavailableNote =>
+      'AMI could not measure this book\'s volatility over the available window.';
+
+  @override
   String portfolioHealthMddNote(String n) {
     return '$n daily snapshots so far; realised drawdown needs 21.';
   }

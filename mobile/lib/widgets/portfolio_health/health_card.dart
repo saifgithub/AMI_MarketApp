@@ -239,11 +239,11 @@ class _InsufficientState extends StatelessWidget {
 
     String body;
     switch (cause) {
-      case 'short_window':
+      case kCauseShortWindow:
         body = l.portfolioHealthInsufficientBody(
           _int(health.block('portfolio_volatility')?.nObservations ?? 0),
         );
-      case 'dropped_weight_exceeded':
+      case kCauseDroppedWeight:
         body = l.portfolioHealthInsufficientDroppedBody(
           _fixed(coveredPct, 0),
         );
@@ -413,24 +413,38 @@ class _PopulatedCard extends ConsumerWidget {
 
   /// Notes that stand in for a tile that is not there. Each names AMI's own
   /// limit rather than the user's book (Rev 4 F20).
+  ///
+  /// Every branch is keyed on the block being INSUFFICIENT, never on a
+  /// particular cause; a cause only ever chooses which note, never whether
+  /// there is one. That inversion is the fix for M04's audit r1 MAJOR M1: the
+  /// beta branch used to fire only on `benchmark_misaligned`, so a SPY feed
+  /// outage — the ordinary Yahoo rate-limit case — deleted the beta tile and
+  /// put nothing in its place, leaving a card that still read as a complete
+  /// measurement. Closed by construction here, so cause number seven cannot
+  /// reopen it.
   List<String> _notes(AppLocalizations l) {
     final out = <String>[];
 
+    final vol = health.block('portfolio_volatility');
+    if (vol != null && !vol.sufficient) {
+      out.add(l.portfolioHealthVolUnavailableNote);
+    }
+
     final bets = health.block('effective_bets');
-    if (bets != null &&
-        !bets.sufficient &&
-        bets.insufficientCause == 't_over_n') {
-      out.add(l.portfolioHealthTnNote(
-        _int(bets.nObservations),
-        _int(health.riskyHoldingsCount),
-      ));
+    if (bets != null && !bets.sufficient) {
+      out.add(bets.insufficientCause == kCauseTOverN
+          ? l.portfolioHealthTnNote(
+              _int(bets.nObservations),
+              _int(health.riskyHoldingsCount),
+            )
+          : l.portfolioHealthBetsUnavailableNote);
     }
 
     final beta = health.block('beta');
-    if (beta != null &&
-        !beta.sufficient &&
-        beta.insufficientCause == 'benchmark_misaligned') {
-      out.add(l.portfolioHealthBenchmarkNote);
+    if (beta != null && !beta.sufficient) {
+      out.add(beta.insufficientCause == kCauseBenchmarkMisaligned
+          ? l.portfolioHealthBenchmarkNote
+          : l.portfolioHealthBetaUnavailableNote);
     }
 
     final mdd = health.block('realised_max_drawdown');

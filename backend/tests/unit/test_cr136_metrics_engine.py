@@ -20,7 +20,7 @@ from datetime import date, timedelta
 
 import pytest
 
-from app.services.portfolio_health import compute_health
+from app.services.portfolio_health import _block, compute_health
 from app.services.portfolio_health_constants import (
     BASIS_INVESTED_SLEEVE,
     BASIS_TOTAL_VALUE,
@@ -260,6 +260,49 @@ def test_strip_readiness_null_never_zero() -> None:
                 assert block["standard_error"] is None, name
                 assert block["t_eff"] is None, name
                 assert block["insufficient_cause"] is not None, name
+
+
+def test_the_null_forcing_holds_against_a_caller_that_computed_a_value() -> None:
+    """AT:R66 — CR136-M04 audit round 1, MINOR m1.
+
+    `test_strip_readiness_null_never_zero` above reads the ENGINE's payload, and
+    every call site in the engine already passes `None` when it passes
+    `sufficient=False` — so deleting `_block`'s null-forcing outright left all
+    39 module tests and all 285 CR136 tests green (auditor's MUT-1). The
+    docstring calls that block "the contract's teeth, applied here rather than
+    at each call site", and teeth nothing pins are teeth a future call site can
+    walk straight through: compute a value, pass `sufficient=False`, publish
+    both. This addresses `_block` directly, which is the only way to test the
+    forcing rather than the callers' good manners."""
+    block = _block(
+        "portfolio_volatility",
+        value=1.0,
+        standard_error=0.5,
+        t_eff_value=99.0,
+        basis=BASIS_TOTAL_VALUE,
+        sufficient=False,
+        insufficient_cause=INSUFFICIENT_SHORT_WINDOW,
+        n_observations=10,
+        window_days=10,
+    )
+    assert block["value"] is None
+    assert block["standard_error"] is None
+    assert block["t_eff"] is None
+
+    kept = _block(
+        "portfolio_volatility",
+        value=1.0,
+        standard_error=0.5,
+        t_eff_value=99.0,
+        basis=BASIS_TOTAL_VALUE,
+        sufficient=True,
+        insufficient_cause=None,
+        n_observations=T_MIN,
+        window_days=T_MIN,
+    )
+    # Non-vacuity: the forcing has to be what nulls them, not the helper
+    # dropping all three on every path.
+    assert (kept["value"], kept["standard_error"], kept["t_eff"]) == (1.0, 0.5, 99.0)
 
 
 def test_every_block_carries_the_full_contract() -> None:

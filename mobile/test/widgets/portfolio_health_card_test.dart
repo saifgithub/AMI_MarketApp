@@ -394,6 +394,44 @@ void main() {
       expect(find.textContaining('did not align with this book'),
           findsOneWidget);
     });
+
+    // M04 audit r1, MAJOR M1. A SPY feed outage is the ordinary Yahoo
+    // rate-limit case, and it used to delete the beta tile with nothing in its
+    // place: no note, no placeholder, no change in the card's chrome, so the
+    // card still read as a complete measurement. The reader could not tell
+    // "beta was not measured" from "beta does not apply to this book".
+    testWidgets('a benchmark feed outage drops the beta tile and still says so',
+        (tester) async {
+      final blocks = defaultBlocks();
+      blocks['beta'] = blockJson(
+        'beta',
+        sufficient: false,
+        insufficientCause: kCauseFeedUnavailable,
+      );
+      await _pump(tester, health: healthFixture(blocks: blocks));
+      expect(find.text('BETA'), findsNothing);
+      expect(find.textContaining('could not measure this book\'s beta'),
+          findsOneWidget);
+      expect(find.textContaining('did not align with this book'), findsNothing,
+          reason: 'a feed outage is not a misaligned benchmark — the generic '
+              'note must not claim a cause the engine never reported');
+    });
+
+    // The same closure, one cause the engine cannot currently emit onto a
+    // populated card. It is the branch, not the cause list, that has to hold.
+    testWidgets('a cause the card has no copy for still gets a note',
+        (tester) async {
+      final blocks = defaultBlocks();
+      blocks['beta'] = blockJson(
+        'beta',
+        sufficient: false,
+        insufficientCause: 'a_cause_minted_after_this_build_shipped',
+      );
+      await _pump(tester, health: healthFixture(blocks: blocks));
+      expect(find.text('BETA'), findsNothing);
+      expect(find.textContaining('could not measure this book\'s beta'),
+          findsOneWidget);
+    });
   });
 
   group('8 — Tier-2 max drawdown', () {

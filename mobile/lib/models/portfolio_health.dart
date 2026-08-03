@@ -49,6 +49,32 @@ const Map<String, HealthMetricUnit> kMetricValueUnit = {
   'realised_return': HealthMetricUnit.percent,
 };
 
+/// Mirrors the backend's `INSUFFICIENT_*` constants
+/// (`app/services/portfolio_health_constants.py`). Every branch in the card
+/// that names a cause names it through one of these rather than through a bare
+/// literal, so a backend rename fails `test_cr136_dart_parity.py` instead of
+/// silently deleting the note that cause was supposed to carry.
+const String kCauseShortWindow = 'short_window';
+const String kCauseTOverN = 't_over_n';
+const String kCauseBenchmarkMisaligned = 'benchmark_misaligned';
+const String kCauseDroppedWeight = 'dropped_weight_exceeded';
+const String kCauseFeedUnavailable = 'feed_unavailable';
+const String kCauseZeroVariance = 'zero_variance';
+
+/// The closed set, compared as a SET against the backend's own `INSUFFICIENT_*`
+/// constants. This is the DEF210 shape's second occurrence: the enum widened
+/// 4 → 6 during CR136 with nothing holding the two sides together. Widening it
+/// again now fails on the backend side the day it happens, rather than the day
+/// a reader notices a tile is missing (M04 audit r1, MAJOR M1).
+const Set<String> kInsufficientCauses = {
+  kCauseShortWindow,
+  kCauseTOverN,
+  kCauseBenchmarkMisaligned,
+  kCauseDroppedWeight,
+  kCauseFeedUnavailable,
+  kCauseZeroVariance,
+};
+
 /// M07 §3.2's gate status — exactly the eight keys `GateStatus.as_dict()` ships.
 class HealthGateStatus {
   const HealthGateStatus({
