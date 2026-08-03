@@ -563,9 +563,9 @@ def test_a_rejected_narration_persists_the_deterministic_report_and_the_reason(
                        user_id=uuid4(), captured=[], gateway=gateway)
 
     assert result.llm_used is False
-    assert result.llm_rejected_reason == "unregistered_number"
+    assert result.llm_rejected_reason == "unsubstituted_digit"
     payload = result.entry.payload
-    assert payload["llm_rejected_reason"] == "unregistered_number"
+    assert payload["llm_rejected_reason"] == "unsubstituted_digit"
     assert "47.3" not in payload["sections"]["f1"]
     for key in ("head", "f1", "f2", "f3", "f4", "f5"):
         assert payload["sections"][key].strip(), key

@@ -144,15 +144,17 @@ class Settings(BaseSettings):
     # LLM at all. False = the deterministic rendering ships, which is a
     # complete, correct report on its own — the LLM only ever rewrites prose
     # the engine already produced, and every failure path falls back to it.
-    # AT:R66 — CR136-M06 audit round 1, BLOCKER B1. The post-generation
-    # validator checks that a figure APPEARS in the payload, not that it
-    # belongs to the metric its sentence names — measured, ~50 of 101 whole
-    # percentages are legal on an ordinary book, so a real figure quoted
-    # against the wrong metric passes. Default OFF until attribution-level
-    # validation ships; the deterministic rendering is complete and emits only
-    # registered values by construction. Re-enabling this without that fix
-    # re-opens the blocker.
-    portfolio_health_llm_enabled: bool = False
+    # AT:R66 — back ON now that CR136-M06 audit BLOCKER B1 is closed
+    # STRUCTURALLY: the model no longer emits digits at all, it emits
+    # `{{slot}}` references that `build_slot_map` resolves, so a figure cannot
+    # land on a metric it does not belong to. A model that ignores that and
+    # types a number is REJECTED (reason `unsubstituted_digit`) and the reader
+    # gets the deterministic report — the failure is safe and logged at ERROR,
+    # which is what makes enabling this defensible where B1's silent
+    # mis-attribution was not. The digit-compliance rate of the serving model
+    # is unmeasured until Alpha; `unsubstituted_digit` in the logs IS that
+    # measurement (promotion checklist 2.12).
+    portfolio_health_llm_enabled: bool = True
 
     # CR136 M03. Tick cadence for the daily portfolio-value snapshot job.
     # Idempotent per trading day, so hourly only bounds post-restart catch-up

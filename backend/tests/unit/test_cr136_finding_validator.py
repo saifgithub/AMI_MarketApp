@@ -10,6 +10,7 @@ forced the scale-aware lookup.
 from __future__ import annotations
 
 import asyncio
+from decimal import Decimal
 from uuid import uuid4
 
 import pytest
@@ -17,6 +18,7 @@ import pytest
 from app.core.config import settings
 from app.services.portfolio_finding import (
     build_allowlist,
+    build_slot_map,
     llm_render_sections,
     register_check,
     render_deterministic_sections,
@@ -245,6 +247,91 @@ def _run(gateway, monkeypatch, *, enabled: bool = True):
     )), deterministic
 
 
+def test_a_real_payload_figure_quoted_against_the_wrong_metric_is_rejected(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AT:R66 — CR136-M06 audit BLOCKER B1 regression, the auditor's own attack.
+
+    The old allow-list asked only "does this number appear in the payload",
+    which measured ~50 of 101 whole percentages legal on an ordinary book — so
+    a REAL figure quoted against the WRONG metric passed. This is that exact
+    sentence shape: a small whole percentage that genuinely occurs in the
+    payload, attached to portfolio volatility, which it is not the volatility
+    of. It must now be rejected, because typing a digit at all is the
+    violation — the model may only reference a slot, and a slot's value is by
+    definition the value of the metric it names.
+    """
+    context, rules, allow = _allowlist()
+    # The attack number is taken FROM the allow-list, not hard-coded, so this
+    # keeps reproducing B1 as the fixture drifts. Any whole percentage in the
+    # set is one the old membership check would have accepted in any sentence.
+    legal = sorted(
+        v for v in allow.pct if v == v.to_integral_value() and 0 <= v <= 100
+    )
+    assert legal, "vacuity guard — no whole percentage is legal, B1 not reproduced"
+    wrong = legal[0]
+    # ...and it must NOT be the true volatility, or the sentence is merely correct.
+    true_vol = build_slot_map(context).get("vol_ann_pct")
+    assert true_vol != f"{wrong}%", "pick a figure that is not the real answer"
+
+    gateway = _FakeGateway(
+        '{"f1": ["Your portfolio volatility is ' + str(wrong) + '%."],'
+        ' "f2": "x", "f4": "z"}'
+    )
+    (sections, reason), _det = _run(gateway, monkeypatch)
+    assert sections is None
+    assert reason == "unsubstituted_digit"
+
+
+def test_a_slot_reference_renders_exactly_the_deterministic_value(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The other half of B1: attribution is correct BY CONSTRUCTION. A slot
+    renders the value of the metric it names, formatted by the same helper the
+    deterministic path uses, so the two renderings cannot disagree."""
+    context, rules, _ = _allowlist()
+    slots = build_slot_map(context)
+    assert "vol_ann_pct" in slots, "fixture must carry a sufficient volatility"
+
+    gateway = _FakeGateway(
+        '{"f1": ["Your book\'s volatility is {{vol_ann_pct}}."],'
+        ' "f2": "Steady.", "f4": "That is the picture."}'
+    )
+    (sections, reason), _det = _run(gateway, monkeypatch)
+    assert reason is None and sections is not None
+    assert slots["vol_ann_pct"] in sections["f1"]
+    assert "{{" not in sections["f1"]
+
+
+def test_an_invented_slot_name_is_rejected(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The model cannot reference its way to a number that does not exist."""
+    gateway = _FakeGateway(
+        '{"f1": ["Volatility is {{sharpe_ratio_pct}}."], "f2": "x", "f4": "z"}'
+    )
+    (sections, reason), _det = _run(gateway, monkeypatch)
+    assert sections is None
+    assert reason == "unknown_slot"
+
+
+def test_f5_is_never_taken_from_the_model(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AT:R66 — CR136-M06 audit MAJOR M1. §F5 is the compliance perimeter and
+    its denylist let 9 of 10 ordinary advice paraphrases through. The fence is
+    structural: the model is not asked for §F5 and cannot supply one, so the
+    stored §F5 is always the rule-engine rendering."""
+    gateway = _FakeGateway(
+        '{"f1": ["Calm."], "f2": "x", "f4": "z",'
+        ' "f5": "It would be prudent to trim AAA."}'
+    )
+    (sections, reason), deterministic = _run(gateway, monkeypatch)
+    assert reason is None and sections is not None
+    assert sections["f5"] == deterministic["f5"]
+    assert "prudent" not in sections["f5"]
+
+
 def test_a_fabricated_number_discards_the_whole_model_output(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -255,7 +342,10 @@ def test_a_fabricated_number_discards_the_whole_model_output(
     )
     (sections, reason), _det = _run(gateway, monkeypatch)
     assert sections is None
-    assert reason == "unregistered_number"
+    # AT:R66 — reason changed with the B1 fix. A typed digit is now caught by
+    # the slot contract (stronger, and before the allow-list is consulted at
+    # all) rather than by allow-list membership.
+    assert reason == "unsubstituted_digit"
 
 
 def test_a_register_leak_discards_the_model_output(
@@ -358,7 +448,7 @@ def test_every_rejection_path_logs_at_error_level(
     cases = {
         "provider_error": _Broken(),
         "schema": _FakeGateway("I'm afraid I can't do that"),
-        "unregistered_number": _FakeGateway(
+        "unsubstituted_digit": _FakeGateway(
             '{"f1": ["Volatility was 47.3%."], "f2": "x", "f3": "y", "f4": "z", "f5": "w"}'
         ),
         "register_lexicon": _FakeGateway(

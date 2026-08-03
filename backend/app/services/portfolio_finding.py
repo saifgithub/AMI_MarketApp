@@ -797,24 +797,132 @@ def register_check(sections: dict[str, str]) -> ValidationFailure | None:
     return None
 
 
+# ── 3.5b Slot map — the attribution control (CR136-M06 audit BLOCKER B1) ────
+
+
+_SLOT_RE = re.compile(r"\{\{([a-z_]+)\}\}")
+_DIGIT_RE = re.compile(r"\d")
+
+
+def build_slot_map(context: dict) -> dict[str, str]:
+    """Every number the narration may contain, keyed by WHAT IT IS.
+
+    This is the attribution control. The previous design handed the model the
+    numbers and checked afterwards that whatever it typed appeared *somewhere*
+    in the payload — which constrains vocabulary, not assignment, and measured
+    ~50 of 101 whole percentages legal on an ordinary book (audit B1). The
+    model now never types a digit at all: it writes `{{vol_ann_pct}}` and this
+    map decides what that renders as, so a figure cannot land on a metric it
+    does not belong to. Correct by construction rather than by check.
+
+    Slot names carry NO DIGITS, which is what lets the guard be the flat rule
+    "after removing slot spans, any remaining digit is a rejection" — `r2`
+    would have made that rule ambiguous, hence `market_explains_pct`.
+
+    Values are rendered with the SAME helpers the deterministic path uses, so
+    the two renderings of one metric can never disagree.
+    """
+    slots: dict[str, str] = {}
+
+    def put(name: str, value: str | None) -> None:
+        if value is not None:
+            slots[name] = value
+
+    vol = _block(context, "portfolio_volatility")
+    if vol and vol.get("value") is not None:
+        put("vol_ann_pct", f"{_pct(vol['value'])}%")
+    benchmark_vol = context.get("benchmark_vol_ann")
+    if benchmark_vol is not None:
+        put("benchmark_vol_ann_pct", f"{_pct(benchmark_vol)}%")
+
+    beta = _block(context, "beta")
+    if beta and beta.get("value") is not None:
+        put("beta_ratio", _fmt(beta["value"], 2))
+        if beta.get("r_squared") is not None:
+            put("market_explains_pct", f"{_pct(beta['r_squared'], 0)}%")
+
+    te = _block(context, "tracking_error")
+    if te and te.get("value") is not None:
+        put("tracking_error_pct", f"{_pct(te['value'])}%")
+
+    risk = _block(context, "risk_contribution")
+    if risk and risk.get("top"):
+        top = risk["top"]
+        put("top_risk_ticker", str(top["ticker"]))
+        put("top_risk_share_pct", f"{_pct(top['risk_share'], 0)}%")
+        put("top_risk_weight_pct", f"{_pct(top['invested_weight'], 0)}%")
+
+    bets = _block(context, "effective_bets")
+    if bets and bets.get("value") is not None:
+        put("effective_bets", _fmt(bets["value"], 1))
+
+    weights = _block(context, "weight_concentration")
+    if weights and weights.get("holdings_count") is not None:
+        put("holdings_count", str(weights["holdings_count"]))
+
+    bad = _block(context, "typical_bad_month")
+    if bad and bad.get("value") is not None:
+        put("typical_bad_month_pct", f"{_pct(bad['value'])}%")
+
+    mdd = _block(context, "realised_max_drawdown")
+    if mdd and mdd.get("value") is not None:
+        put("realised_max_drawdown_pct", f"{_fmt(mdd['value'], 1)}%")
+
+    ret = _block(context, "realised_return")
+    if ret and ret.get("value") is not None:
+        put("realised_return_pct", f"{_fmt(ret['value'], 1)}%")
+
+    cash = context.get("cash_pct_total")
+    if cash is not None:
+        put("cash_pct", f"{_fmt(cash, 1)}%")
+
+    return slots
+
+
+def substitute_slots(
+    text: str, slots: dict[str, str],
+) -> tuple[str | None, ValidationFailure | None]:
+    """`{{name}}` → its value. Returns `(None, failure)` on any violation.
+
+    Two rejections, both closed:
+    - an unknown slot name (the model invented a reference), and
+    - **any digit outside a slot span** — the model typed a number itself,
+      which is the whole thing this design exists to prevent.
+    """
+    unknown = [n for n in _SLOT_RE.findall(text) if n not in slots]
+    if unknown:
+        return None, ValidationFailure(
+            reason="unknown_slot", section=None, tokens=sorted(set(unknown)),
+        )
+    stripped = _SLOT_RE.sub("", text)
+    stray = _DIGIT_RE.findall(stripped)
+    if stray:
+        return None, ValidationFailure(
+            reason="unsubstituted_digit", section=None, tokens=[stripped.strip()[:120]],
+        )
+    return _SLOT_RE.sub(lambda m: slots[m.group(1)], text), None
+
+
 # ── 3.6 LLM path ────────────────────────────────────────────────────────────
 
 _SYSTEM_PROMPT = """You rewrite an already-computed portfolio risk report into plain language for the person who owns the book.
 
-Every number you may use is in the JSON you are given. If a comparison is not in that JSON, do not make it. Invent nothing.
+**NEVER WRITE A DIGIT.** Not one, anywhere, for any reason. Every number is inserted for you afterwards from the `slots` object you are given. To place a number, write its slot name in double braces — for example `{{vol_ann_pct}}` — and it will be replaced by the correct, already-formatted value. `slots` shows you each value so you can phrase the sentence around its size, but you must type the NAME, never the value.
+
+Output containing any digit outside a slot reference is discarded in full and the reader gets a fixed template instead, so a single typed number costs the whole narration.
+
+Use only slot names present in `slots`. Do not invent a slot name. Do not compute, compare, or combine values yourself — if a comparison is not already in the JSON, do not make it.
 
 Number-bearing statements about volatility, beta, diversification and risk contribution describe the measured window only and are backcasts of today's holdings.
 
-Sections f1, f2 and f5 are plain language: no statistics jargon, no estimator names, no "standard error", no "covariance", no "R-squared". Explanatory power is written ONLY as "the market explains X% of this book's day-to-day moves".
+Sections f1, f2 and f4 are plain language: no statistics jargon, no estimator names, no "standard error", no "covariance", no "R-squared". Explanatory power is written ONLY as "the market explains {{market_explains_pct}} of this book's day-to-day moves".
 
-f1: 3 to 5 headlines, each 16 words or fewer, one number and its plain meaning each.
+f1: 3 to 5 headlines, each 16 words or fewer, one slot reference and its plain meaning each.
 f2: 4 to 8 descriptive sentences. No advice. No claims about returns or performance.
-f3: leave exactly as provided.
-f4: 2 to 4 sentences tying the picture together. No new numbers.
-f5: use ONLY the provided rule sentences, lightly connected. Nothing that reads as an instruction to trade.
+f4: 2 to 4 sentences tying the picture together. No slot references it has not already used.
 
 Output ONLY this JSON object and nothing else:
-{"f1": ["..."], "f2": "...", "f3": "...", "f4": "...", "f5": "..."}"""
+{"f1": ["..."], "f2": "...", "f4": "..."}"""
 
 
 async def llm_render_sections(
@@ -835,9 +943,21 @@ async def llm_render_sections(
         logger.info("portfolio_finding_llm_skipped", reason="no_real_provider")
         return None, None
 
+    slots = build_slot_map(context)
+    if not slots:
+        # Nothing citable survived sufficiency, so there is nothing for the
+        # model to place. The deterministic rendering already says so plainly.
+        logger.info("portfolio_finding_llm_skipped", reason="no_slots")
+        return None, None
+
+    # §F5 is NOT sent and NOT accepted back (CR136-M06 audit MAJOR M1): its
+    # advice denylist let 9 of 10 ordinary paraphrases through, and it is the
+    # compliance perimeter (15 U.S.C. §80b-2(a)(11)(D) / Lowe v. SEC). It ships
+    # rule-engine-templated on both paths, so the model cannot phrase it at all.
+    # A classifier-based control is future work, deliberately not MVP.
     payload = {
         "context": context,
-        "rule_sentences": deterministic["f5"],
+        "slots": slots,
         "f3": deterministic["f3"],
         "fired_rule_ids": [r["rule_id"] for r in rule_results if r.get("fired")],
     }
@@ -872,7 +992,7 @@ async def llm_render_sections(
 
     parsed = extract_json_object(raw)
     if not isinstance(parsed, dict) or not all(
-        key in parsed for key in ("f1", "f2", "f3", "f4", "f5")
+        key in parsed for key in ("f1", "f2", "f4")
     ):
         logger.error(
             "portfolio_finding_llm_rejected",
@@ -887,22 +1007,46 @@ async def llm_render_sections(
             reason="schema", section=None, tokens=[],
         )
         return None, "schema"
-    if not all(isinstance(parsed[key], str) for key in ("f2", "f3", "f4", "f5")):
+    if not all(isinstance(parsed[key], str) for key in ("f2", "f4")):
         logger.error(
             "portfolio_finding_llm_rejected",
             reason="schema", section=None, tokens=[],
         )
         return None, "schema"
 
-    sections = {
+    # Substitute BEFORE anything else looks at the text: until every slot is
+    # resolved the sections are not a report, and a stray digit at this point
+    # is a rejection of the whole narration.
+    raw_sections = {
         "f1": "\n".join(f"- {item}" for item in parsed["f1"]),
         "f2": parsed["f2"],
-        # §F3's mandated content is deterministic on both paths (CR038).
-        "f3": deterministic["f3"],
         "f4": parsed["f4"],
-        "f5": parsed["f5"],
+    }
+    substituted: dict[str, str] = {}
+    for section_id, text in raw_sections.items():
+        rendered, failure = substitute_slots(text, slots)
+        if failure is not None:
+            logger.error(
+                "portfolio_finding_llm_rejected",
+                reason=failure.reason, section=section_id, tokens=failure.tokens,
+            )
+            return None, failure.reason
+        substituted[section_id] = rendered
+
+    sections = {
+        "f1": substituted["f1"],
+        "f2": substituted["f2"],
+        # §F3's mandated content and §F5's rule sentences are deterministic on
+        # both paths — F3 by CR038, F5 by the M1 fence above.
+        "f3": deterministic["f3"],
+        "f4": substituted["f4"],
+        "f5": deterministic["f5"],
     }
 
+    # Defence in depth. After substitution every figure came from a slot, so
+    # these cannot fail on numbers the model chose — they catch a substitution
+    # bug on our side, and the register/headline rules still apply to prose the
+    # model did write.
     failure = validate_sections(sections, build_allowlist(context, rule_results))
     if failure is None:
         failure = register_check(sections)

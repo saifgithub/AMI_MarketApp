@@ -82,6 +82,7 @@ the picture. M11 owns it.*
 | 2.9 | `python -m scripts.cr136_live_crosscheck --user-id <real book>` exits **0**; output pasted into the CR136-M02 lane | ☐ | Book selection: no `room-benchmark` synthetics, no 05-24 05:10 seed rows |
 | 2.10 | `cr136_generate_fixtures.py --verify-scenarios` exits 0 against the live SPY series (fix the constants first if not — never ship stale) | ✅ | Runs from the Mac (M11 §3.3) — needs the internet, not the LAN. `covid_2020` price −34.10% vs pinned −33.90%, diff **0.20pp**; `drawdown_2022` −25.36% vs −25.40%, diff **0.04pp**. Both inside ±0.5pp; **exit 0, constants not stale**. Total-return basis printed for reference (−33.72% / −24.50%) and deliberately not gating — the pins are PRICE-index returns |
 | 2.11 | First bias reading recorded in `bias_readings.md` (immature is fine — record, don't gate) | ☐ | |
+| 2.12 | **Measure the serving model's digit-compliance rate.** After ~10 real Findings: `ssh melehost "docker logs ami_api_alpha 2>&1 \| grep -c portfolio_finding_llm_rejected"` and break down by `reason=`. `unsubstituted_digit` is the model typing a number instead of a `{{slot}}` reference — the B1 fix rejects it safely, so this is a QUALITY/availability reading, not a correctness one | ☐ | Saiful's open question: a high rate means `ami-llm` cannot hold the placeholder convention and we may need a different model for this flow. Record the number before deciding — no extrapolated figures |
 
 ## Phase 3 — mobile
 

@@ -116,7 +116,7 @@ services:
       PORTFOLIO_SNAPSHOT_INTERVAL_SECONDS: ${PORTFOLIO_SNAPSHOT_INTERVAL_SECONDS:-3600}
       # CR136 M06 — whether the Portfolio Health Finding may be narrated by the
       # LLM. False ships the deterministic rendering, which is a complete report.
-      PORTFOLIO_HEALTH_LLM_ENABLED: ${PORTFOLIO_HEALTH_LLM_ENABLED:-false}
+      PORTFOLIO_HEALTH_LLM_ENABLED: ${PORTFOLIO_HEALTH_LLM_ENABLED:-true}
       # LLM keys — copy from .env file (don't bake into image)
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
