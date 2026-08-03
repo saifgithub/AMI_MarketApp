@@ -24,6 +24,7 @@ reads back.
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from enum import Enum
 from typing import Any
 from uuid import UUID
 
@@ -50,6 +51,18 @@ def _retention_days_for_plan(plan: Plan | str) -> int | None:
     if p == Plan.FLOOR_PASS:
         return FLOOR_PASS_RETENTION_DAYS
     return None
+
+
+class RestoreOutcome(str, Enum):
+    """Why an undo did or did not happen.
+
+    `SUPERSEDED` exists because a refused undo and a missing entry are not the
+    same fact and must not become the same status code (audit r3, m4).
+    """
+
+    RESTORED = "restored"
+    NOT_FOUND = "not_found"
+    SUPERSEDED = "superseded"
 
 
 def _as_utc(value: datetime) -> datetime:
@@ -262,13 +275,25 @@ class JournalStore:
     def restore(self, user_id: UUID, entry_id: UUID) -> bool:
         """Clear deleted_at on a soft-deleted entry. Returns True if restored.
 
-        Refuses when a LIVE row already holds the same dedupe key. `deleted_at`
-        entered `uq_journal_dedupe` as a partial-index predicate (B1), which
-        makes undo the one operation that can turn a legal state into an illegal
-        one: delete today's Finding, regenerate, then undo, and two live rows
-        claim the same day. Answering `False` refuses the undo; letting it
-        through would be an IntegrityError from a route whose contract is a
-        boolean.
+        Callers that need to tell the refusals apart want `restore_with_reason`;
+        this stays boolean because three of its four outcomes mean the same thing
+        to every existing caller.
+        """
+        return self.restore_with_reason(user_id, entry_id) is RestoreOutcome.RESTORED
+
+    def restore_with_reason(self, user_id: UUID, entry_id: UUID) -> RestoreOutcome:
+        """`restore`, with the refusals distinguished.
+
+        Undo is the one operation that can turn a legal state into an illegal
+        one, because `deleted_at` became a predicate on `uq_journal_dedupe`
+        (CR136-M07 audit r1, B1): delete today's Finding, regenerate, then undo,
+        and two live rows claim the same day. Letting it through would be an
+        IntegrityError raised out of a route whose contract is a boolean.
+
+        That refusal is NOT "entry not found" — the entry exists and is the
+        caller's (audit r3, MINOR m4). Reporting it as a 404 would be the same
+        misdescription class B1's own log line was graded on: the loud thing
+        described quietly and wrongly.
         """
         with get_session() as s:
             row = s.execute(
@@ -279,7 +304,7 @@ class JournalStore:
                 )
             ).scalar_one_or_none()
             if row is None:
-                return False
+                return RestoreOutcome.NOT_FOUND
             if row.dedupe_key is not None:
                 taken = s.execute(
                     select(JournalEntryRow.id).where(
@@ -290,10 +315,10 @@ class JournalStore:
                     ).limit(1)
                 ).scalar_one_or_none()
                 if taken is not None:
-                    return False
+                    return RestoreOutcome.SUPERSEDED
             row.deleted_at = None
             s.flush()
-            return True
+            return RestoreOutcome.RESTORED
 
     def annotate(
         self,

@@ -845,6 +845,70 @@ def test_undo_is_refused_once_the_day_has_been_regenerated(
     assert store.get(user_id, second_id) is not None
 
 
+def test_a_superseded_undo_is_a_409_with_a_reason_not_a_404(
+    monkeypatch: pytest.MonkeyPatch, base_mandate,
+) -> None:
+    """AT:R66 — CR136-M07 audit round 3, MINOR m4.
+
+    The refusal above is right; reporting it as 404 "entry not found" was not.
+    The entry exists, is owned by the caller, and is refused because a newer live
+    row holds its dedupe key — describing that as missing is the same
+    misdescription class as B1's `portfolio_finding_lost_write_race` log line,
+    which is part of why B1 was graded a BLOCKER. `restore()` has three other
+    falsey paths where 404 is genuinely correct, so the store distinguishes the
+    outcomes rather than the route guessing from a boolean.
+    """
+    from fastapi import FastAPI as _FastAPI
+
+    from tests.unit.test_cr136_metrics_engine import _book
+
+    from app.api.journal import RESTORE_SUPERSEDED_CODE
+    from app.api.journal import router as journal_router
+    from app.services.portfolio_health import compute_health
+
+    user_id = _seed_user(Plan.TRADER)
+    portfolio_id = uuid4()
+    context = compute_health(**_book())
+    monkeypatch.setattr("app.api.portfolio.build_health_context", lambda uid: context)
+    monkeypatch.setattr("app.api.portfolio.resolve_mandate", lambda uid, v: base_mandate)
+    monkeypatch.setattr(settings, "portfolio_health_llm_enabled", False)
+    monkeypatch.setattr("app.api.portfolio.get_llm_gateway", lambda: None)
+
+    store = get_journal_store()
+    finding_client = TestClient(_app(user_id, portfolio_id), raise_server_exceptions=False)
+
+    journal_app = _FastAPI()
+    journal_app.include_router(journal_router)
+    journal_app.dependency_overrides[get_current_user] = lambda: _U(id=user_id)
+    journal = TestClient(journal_app, raise_server_exceptions=False)
+
+    dead_id = UUID(
+        finding_client.post(f"/v1/portfolio/health/{user_id}/finding")
+        .json()["journal_entry_id"]
+    )
+    assert store.soft_delete(user_id, dead_id) is True
+    finding_client.post(f"/v1/portfolio/health/{user_id}/finding")
+
+    r = journal.post(f"/v1/journal/{user_id}/entry/{dead_id}/restore")
+    assert r.status_code == 409, r.text
+    assert r.json()["detail"]["code"] == RESTORE_SUPERSEDED_CODE
+    assert "newer entry" in r.json()["detail"]["message"]
+
+    # The three genuine 404 paths are untouched: an id that never existed, an
+    # entry that was never deleted, and another user's row. Without these the
+    # change could have turned every failed undo into a 409.
+    assert journal.post(
+        f"/v1/journal/{user_id}/entry/{uuid4()}/restore"
+    ).status_code == 404
+    live_id = UUID(
+        finding_client.post(f"/v1/portfolio/health/{user_id}/finding")
+        .json()["journal_entry_id"]
+    )
+    assert journal.post(
+        f"/v1/journal/{user_id}/entry/{live_id}/restore"
+    ).status_code == 404
+
+
 def test_concurrent_posts_write_exactly_one_finding(
     monkeypatch: pytest.MonkeyPatch, base_mandate,
 ) -> None:

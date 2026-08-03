@@ -26,10 +26,18 @@ from app.schemas.journal import (
     Outcome,
 )
 from app.services.entitlements import effective_plan_for_user
-from app.services.journal_store import JournalStore, get_journal_store
+from app.services.journal_store import (
+    JournalStore,
+    RestoreOutcome,
+    get_journal_store,
+)
 from app.services.reputation_service import get_reputation_service
 from pydantic import BaseModel, Field
 
+
+# The Dart client switches on this string; it lives here rather than inline so a
+# rename fails a parity test rather than a user's undo (DEF210).
+RESTORE_SUPERSEDED_CODE = "journal_restore_superseded"
 
 router = APIRouter(
     prefix="/v1/journal",
@@ -187,8 +195,23 @@ async def restore_entry(
     row was never actually destroyed, just hidden by `deleted_at`.
     """
     _own(current_user, user_id)
-    restored = store.restore(user_id, entry_id)
-    if not restored:
+    outcome = store.restore_with_reason(user_id, entry_id)
+    if outcome is RestoreOutcome.SUPERSEDED:
+        # The entry exists and is this caller's; it is refused because a newer
+        # live row holds its dedupe key — delete today's Finding, regenerate,
+        # then undo. Reporting that as "entry not found" would describe a real,
+        # owned, restorable-looking row as missing (CR136-M07 audit r3, m4).
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            {
+                "code": RESTORE_SUPERSEDED_CODE,
+                "message": (
+                    "A newer entry has already taken this one's place. "
+                    "Undo is no longer available for it."
+                ),
+            },
+        )
+    if outcome is not RestoreOutcome.RESTORED:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "entry not found")
 
 
