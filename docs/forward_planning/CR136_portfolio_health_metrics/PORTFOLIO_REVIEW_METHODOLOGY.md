@@ -1,6 +1,6 @@
 # AMI Trade — Portfolio Review Methodology
 
-*Prepared for external review. Version 2.0 — August 2026.*
+*Prepared for external review. Version 2.1 — August 2026.*
 
 ---
 
@@ -47,6 +47,15 @@ concentration) are measured over the **invested sleeve**. Every stored metric
 carries its own basis field, so the rule is machine-checkable rather than a
 convention a writer has to remember.
 
+There is **one deliberate exception**, and it is stated rather than hidden: a
+sentence reporting a breach of the user's own mandate quotes the holding's
+weight over **total** value, because the mandate is enforced at the trade ticket
+on that same denominator. Reported on the invested sleeve it would name
+violations the enforcing surface does not — measured on a $10,000 book holding
+50% cash, three phantom breaches against the ticket's zero. Where a figure is
+shown to a user *and* enforced against them, agreeing with the enforcement
+outranks basis uniformity; the metric's basis field records which one applies.
+
 ## 3. What is measured
 
 All Tier-1 metrics derive from a **single covariance matrix** built from each
@@ -68,6 +77,7 @@ different windows.
 | Typical bad month | `1.645 · σₚ · √(21/252)` | LEVEL | A dispersion statement at the 5th percentile of a monthly horizon under the stated Gaussian assumption — explicitly not a forecast and not a loss estimate |
 | Scenario panel | `β × r_benchmark` over named historical episodes | LEVEL | A **backcast what-if**: today's holdings and today's beta applied to a past benchmark move. Not a prediction, and labelled as such wherever it renders |
 | Realised maximum drawdown | Deepest peak-to-trough fall of the stored portfolio-value series over a **rolling trailing 252-trading-day window**, floor **≥ 21 stored snapshots** | LEVEL | Descriptive statistic; the window is always stated, and figures from different windows are never compared |
+| Realised return over the window | `V_last/V_first − 1` over the same stored value series, **never annualised**, floor **≥ 2 stored snapshots and a positive opening value** | LEVEL | An accounting fact of the stored series rather than an estimate — see §4 for why this is not an exception to the mean-return exclusion |
 
 **Why weight concentration moved to the invested sleeve** (changed from version
 1.0): the total-value Herfindahl index is *non-monotone in cash* — measured,
@@ -98,6 +108,16 @@ after roughly **970 trading days (~4 years)**. Reporting such figures to a
 retail user presents noise as signal. They are excluded until the day the data
 supports them, and that exclusion is stated in the user-facing report rather
 than glossed over.
+
+**The realised return of §3 is not an exception to this.** What is excluded is
+the *expected* return term — a quantity inferred from a sample and projected
+forward, whose sampling error swamps it at every horizon a retail account has.
+Realised return is the arithmetic of what already happened to a stored value
+series, reported with its window attached, never annualised, never extrapolated,
+and never placed over a risk figure to form a ratio. The moment it were
+annualised it would become an estimate of the excluded kind, which is why the
+implementation computes it as a simple cumulative return and stores no
+annualised form.
 
 Also excluded: VaR/CVaR (insufficient history for tail estimation),
 factor-model exposures (roadmap), look-through into ETF constituents (roadmap —
@@ -249,10 +269,20 @@ judged — quoting a decision band against thirty observations would be the same
 over-confidence these design principles reject.
 
 The published figures are additionally cross-checked against an independent
-reimplementation: a separate harness reads the same stored closes, redoes the
-joins and the returns, recomputes every metric from the formulas above in a
-different numerical library, and diffs against what the live system published,
-requiring agreement to two decimal places in the rendered unit.
+reimplementation, and this check is a **required gate at each promotion** rather
+than a claim about the past: a separate harness reads the same stored closes,
+redoes the joins and the returns, recomputes every metric from the formulas
+above in a different numerical library, and diffs against what the live system
+published, requiring agreement to two decimal places in the rendered unit. It
+applies the same data-hygiene exclusions the live engine applies, so the two
+sides are answering one question of one dataset, and it reports any excluded
+rows rather than absorbing them silently.
+
+The harness itself was calibrated against the shipped implementation before
+first use — on a synthetic series its covariance matched to 8.1e-20 and every
+derived figure to better than 1e-12 — so that a disagreement on live data is
+attributable to the system under test rather than to the instrument. As of this
+version the first live run is pending promotion of the described system.
 
 ## References
 
