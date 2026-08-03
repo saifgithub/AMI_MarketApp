@@ -396,7 +396,14 @@ def _generate(store, *, as_of: str, portfolio_id, user_id, captured: list,
     ))
 
 
-def test_two_generates_on_the_same_day_write_one_entry() -> None:
+def test_two_generates_on_the_same_day_write_one_entry(monkeypatch) -> None:
+    # Explicit, not inherited from the default: this test's subject is that the
+    # generating run consults the gateway and the idempotent replay does not,
+    # which only says anything while the LLM path is ON. The default went OFF
+    # in AT:R66 (CR136-M06 audit BLOCKER B1), and a test that asserts
+    # "calls == 1" must own that precondition rather than depend on a config
+    # default that can move under it.
+    monkeypatch.setattr(settings, "portfolio_health_llm_enabled", True)
     store = FakeJournalStore()
     user_id, portfolio_id = uuid4(), uuid4()
     captured: list = []

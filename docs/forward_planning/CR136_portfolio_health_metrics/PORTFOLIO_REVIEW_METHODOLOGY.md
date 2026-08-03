@@ -26,12 +26,27 @@ estimable within months. Every metric in this review is a pure second-moment
 or accounting quantity; **no metric with a mean-return term is reported.**
 
 **Deterministic computation; narration only.** All numbers are computed by
-deterministic, unit-tested code. AMI's language layer receives finished figures
-and may only cite them — it is structurally prevented from computing,
-estimating, extrapolating, or comparing beyond what is present. Generated text
-is validated after the fact against the computed payload: any output containing
-a figure absent from that payload is rejected and replaced by a fixed template
-rendering. The instruction to behave is not the control; the validator is.
+deterministic, unit-tested code. The language layer never computes, estimates,
+or extrapolates: it receives finished figures and may only cite them.
+
+Two controls enforce that, and they are deliberately different in strength.
+The first is structural and complete: a metric that fails its sufficiency test
+is **removed from the model's input entirely** before any prompt exists, so
+there is nothing to narrate — no instruction is involved and none is relied on.
+The second is a post-generation validator that rejects any generated figure
+absent from the computed payload and falls back to a fixed template rendering.
+
+**The validator's limit, stated plainly because an external reviewer will find
+it otherwise:** it checks that a figure *appears in* the payload, not that it
+is attached to the metric the sentence names. On an ordinary book roughly half
+of all whole-number percentages appear somewhere in the payload, so the
+validator constrains the vocabulary of numbers, not their assignment — it
+would catch an invented figure and would not reliably catch a real figure
+quoted against the wrong metric. Attribution-level validation is therefore
+required before the generated-prose path may run in production, and until it
+ships **that path is disabled and every report is the deterministic
+rendering**, which emits only registered values by construction and is not
+subject to this limit.
 
 **Degrade loudly.** A metric that cannot be estimated to the stated standard is
 reported as "insufficient data", never as a number. When a metric is
@@ -232,7 +247,9 @@ the user's decision journal:
    cannot invent one, **and it is not trusted to refrain** — the validator
    described in §2 checks every rendered figure against the payload before the
    report is stored and falls back to the deterministic rendering if any figure
-   fails. If no rule fires, the report says so plainly.
+   fails. Subject to §2's stated attribution limit, which is why the generated-
+   prose path is currently disabled and this section ships as the deterministic
+   rendering. If no rule fires, the report says so plainly.
 
    The speech act of this section is **conditional and educational**: it states
    what a textbook response to a measured condition would consider, never an
@@ -392,10 +409,15 @@ value; realised drawdown needs ≥21 stored snapshots; realised return needs
 ≥2 with a positive opening value (§5).
 
 **How is the language layer mechanically prevented from fabricating a
-number, not just instructed not to?** Every generated report is validated
-after generation against the computed payload; any sentence citing a figure
-absent from that payload is rejected and replaced by a fixed template
-rendering (§2, §7) — the control is the validator, not the prompt.
+number, not just instructed not to?** Two ways, of unequal strength (§2). The
+complete one is the strip: an insufficient metric is removed from the model's
+input before a prompt exists, so it cannot be narrated at all. The partial one
+is the post-generation validator, which rejects any figure absent from the
+computed payload and falls back to the deterministic rendering — but it
+validates membership, not attribution, so it does not reliably catch a real
+payload figure quoted against the wrong metric. That gap is why the
+generated-prose path is disabled pending attribution-level validation, and why
+every report today is the deterministic rendering.
 
 **Where does the SHARE/LEVEL basis rule have a stated exception?** Mandate-
 breach reporting (R0) is total-value basis by design, so it agrees with the
