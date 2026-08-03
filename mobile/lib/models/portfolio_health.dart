@@ -26,8 +26,15 @@ enum HealthMetricUnit {
   ratio,
 }
 
+/// Stamped when the payload carries no `metrics` object at all. Not a backend
+/// status — it exists so an unrecognised envelope lands in the card's
+/// unknown-status branch rather than the populated one (M09 audit m1).
+const String kUnrecognisedEnvelopeStatus = 'unrecognised_envelope';
+
 /// Mirrors backend `METRIC_VALUE_UNIT`. Keep the two in step; a metric present
 /// there and absent here throws at render time rather than being scaled wrong.
+/// Drift in the other direction — a metric pinned to the WRONG unit — throws
+/// nothing here and is caught by `backend/tests/unit/test_cr136_dart_parity.py`.
 const Map<String, HealthMetricUnit> kMetricValueUnit = {
   'portfolio_volatility': HealthMetricUnit.fraction,
   'beta': HealthMetricUnit.ratio,
@@ -281,10 +288,19 @@ class PortfolioHealth {
 
   factory PortfolioHealth.fromJson(Map<String, dynamic> json) {
     // M07 nests the engine payload under `metrics` and hoists status/as_of/
-    // generated_at/engine_version to the root. Reading the root as the
-    // fallback means a backend that ever flattens the envelope is a
-    // one-`fromJson` fix rather than a dead card (M09 §7).
-    final m = (json['metrics'] as Map?)?.cast<String, dynamic>() ?? json;
+    // generated_at/engine_version to the root.
+    //
+    // AT:R66 — CR136-M09 audit round 1, MINOR m1. This used to read the ROOT as
+    // a fallback, justified as forward-compatibility. There is no second shape
+    // to be compatible with: M07 returns through one path, `_health_envelope`,
+    // which always nests under `metrics`. Worse, it defended by GUESSING — on a
+    // `metrics`-less payload `status` still hoisted to `ok` from the root, so
+    // the card took the POPULATED branch with zero blocks and routed around the
+    // unknown-status guard this model added for precisely that class. An
+    // envelope we do not recognise now surfaces as one.
+    final metricsRaw = json['metrics'];
+    final m = (metricsRaw as Map?)?.cast<String, dynamic>()
+        ?? const <String, dynamic>{};
     final context = (m['context'] as Map?)?.cast<String, dynamic>() ?? const {};
     final rawBlocks = (m['blocks'] as Map?)?.cast<String, dynamic>() ?? const {};
     final gateJson =
@@ -292,7 +308,9 @@ class PortfolioHealth {
             (m['gate'] as Map?)?.cast<String, dynamic>();
 
     return PortfolioHealth(
-      status: (json['status'] ?? m['status']) as String? ?? '',
+      status: metricsRaw is Map
+          ? ((json['status'] ?? m['status']) as String? ?? '')
+          : kUnrecognisedEnvelopeStatus,
       asOf: (json['as_of'] ?? m['as_of']) as String?,
       generatedAt: (json['generated_at'] ?? m['generated_at']) as String? ?? '',
       engineVersion:

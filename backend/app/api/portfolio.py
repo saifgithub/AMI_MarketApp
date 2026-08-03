@@ -41,6 +41,12 @@ from app.services.sim_engine import SimEngine, get_sim_engine
 
 router = APIRouter(prefix="/v1/portfolio", tags=["portfolio"])
 
+# AT:R66 — CR136-M09 audit round 1, MAJOR M1. The third refusal code the Flutter
+# Finding screen switches on. Named so the parity guard has a symbol to import
+# rather than re-deriving a literal that lives in two places; its siblings
+# already are (`health_gate.GATE_CLOSED_CODE` / `DAILY_CAP_CODE`).
+HEALTH_UNAVAILABLE_CODE = "portfolio_health_unavailable"
+
 
 def _own(current_user: User, user_id: UUID) -> None:
     if current_user.id != user_id:
@@ -172,7 +178,7 @@ async def portfolio_health_finding(
         raise HTTPException(
             status.HTTP_409_CONFLICT,
             detail={
-                "code": "portfolio_health_unavailable",
+                "code": HEALTH_UNAVAILABLE_CODE,
                 "reason": context.get("status"),
             },
         )

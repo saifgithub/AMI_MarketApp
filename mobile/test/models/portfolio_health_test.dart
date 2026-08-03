@@ -6,36 +6,38 @@ import 'package:flutter_test/flutter_test.dart';
 import '../support/portfolio_health_fixtures.dart';
 
 void main() {
-  group('envelope nesting', () {
-    test('the nested and flat shapes parse identically', () {
-      final nested = PortfolioHealth.fromJson(healthJson());
-      final flat = PortfolioHealth.fromJson(healthJson(nested: false));
-
-      for (final h in [nested, flat]) {
-        expect(h.status, 'ok');
-        expect(h.asOf, '2026-08-02');
-        expect(h.engineVersion, 'cr136.v1');
-        expect(h.holdingsCount, 6);
-        expect(h.riskyHoldingsCount, 6);
-        expect(h.investedValue, 100000);
-        expect(h.coveredInvestedValue, 100000);
-        expect(h.cashFraction, closeTo(0.1667, 1e-9));
-        expect(h.benchmarkVolAnn, closeTo(0.1510, 1e-9));
-        expect(h.blocks.keys, contains('portfolio_volatility'));
-      }
+  group('envelope shape', () {
+    test('the one shape M07 actually returns parses in full', () {
+      final h = PortfolioHealth.fromJson(healthJson());
+      expect(h.status, 'ok');
+      expect(h.asOf, '2026-08-02');
+      expect(h.engineVersion, 'cr136.v1');
+      expect(h.holdingsCount, 6);
+      expect(h.riskyHoldingsCount, 6);
+      expect(h.investedValue, 100000);
+      expect(h.coveredInvestedValue, 100000);
+      expect(h.cashFraction, closeTo(0.1667, 1e-9));
+      expect(h.benchmarkVolAnn, closeTo(0.1510, 1e-9));
+      expect(h.blocks.keys, contains('portfolio_volatility'));
     });
 
-    test('the flat variant really has no wrapper to fall back on', () {
-      // M09 §7 pins this seam deliberately: if M07 ever stops wrapping the
-      // engine payload under `metrics`, the card keeps working and the fix is
-      // one `fromJson`, not a dead surface. The fixture has to actually drop
-      // the wrapper or this proves nothing.
+    test('an envelope with no metrics object surfaces as unrecognised', () {
+      // AT:R66 — CR136-M09 audit round 1, MINOR m1. This used to fall back to
+      // reading the ROOT, sold as forward-compatibility for a second shape that
+      // does not exist: `_health_envelope` is M07's only return path and always
+      // nests. The fallback defended by GUESSING — `status` still hoisted to
+      // `ok`, so the card took the POPULATED branch with zero blocks, routing
+      // around the unknown-status guard added for exactly this class.
       final flat = healthJson(nested: false);
-      expect(flat.containsKey('metrics'), isFalse);
+      expect(flat.containsKey('metrics'), isFalse,
+          reason: 'vacuity guard — the fixture must really drop the wrapper');
+      expect(flat['status'], 'ok',
+          reason: 'the root status is what used to make this look healthy');
+
       final parsed = PortfolioHealth.fromJson(flat);
-      expect(parsed.holdingsCount, 6);
-      expect(parsed.blocks.length, 5);
-      expect(parsed.benchmarkVolAnn, closeTo(0.1510, 1e-9));
+      expect(parsed.status, kUnrecognisedEnvelopeStatus);
+      expect(parsed.isOk, isFalse);
+      expect(parsed.blocks, isEmpty);
     });
   });
 
