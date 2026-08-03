@@ -170,8 +170,8 @@ def _result(rule_id: str, state: str, slots: dict, based_on: list[str]) -> dict:
 
 
 def _ceil_display_pct(value: float, dp: int = 1) -> float:
-    """AT:R66 DEF212 fix — a breach slot must never render at or below the cap
-    it breached. `value` is only ever called on a weight that has already
+    """AT:R66 — CR136-M05 audit round 1, MAJOR M2. A breach slot must never
+    render at or below the cap it breached. `value` is only ever called on a weight that has already
     fired (strictly above the cap), so rounding it the ordinary way can round
     DOWN onto the cap's own displayed value (35.04 -> "35.0", equal to a
     "35.0%" cap) and produce a §F5 sentence that asserts a breach while

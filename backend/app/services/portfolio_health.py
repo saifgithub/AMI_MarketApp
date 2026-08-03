@@ -604,7 +604,8 @@ def compute_health(
 
     # ── Precomputed comparisons (Rev 4 prompt contract pt 2): if it is not in
     # the payload, it may not be said.
-    # AT:R66 DEF211 fix — the floor gate and the reported weights must read off
+    # AT:R66 — CR136-M05 audit round 1, MAJOR M1. The floor gate and the
+    # reported weights must read off
     # the SAME denominator M05 re-checks against (HoldingInput.invested_weight_pct,
     # full invested value, dropped holdings included). v_weights is the covered
     # sleeve (survivors only) and is right for the covariance-derived figures

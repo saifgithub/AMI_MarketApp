@@ -688,7 +688,7 @@ def test_correlation_pairs_are_precomputed_and_weight_gated() -> None:
 
 
 def test_r2b_pair_floor_uses_the_same_basis_the_rule_engine_re_checks() -> None:
-    """AT:R66 DEF211 regression (M05-r1 audit M1). M04 used to gate correlation-
+    """AT:R66 — CR136-M05 audit round 1, MAJOR M1 regression. M04 used to gate correlation-
     pair emission on the COVERED-sleeve weight (survivors only, `v_weights`)
     while M05 re-filters the same list on the FULL invested weight
     (`HoldingInput.invested_weight_pct`, dropped holdings still counted). With

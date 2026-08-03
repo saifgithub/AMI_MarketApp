@@ -92,7 +92,7 @@ def test_r0_single_name_cap_is_strict_and_from_the_gate(base_mandate: Mandate) -
 def test_r0_breach_weight_never_renders_at_or_below_its_own_cap(
     base_mandate: Mandate,
 ) -> None:
-    """AT:R66 DEF212 regression (M05-r1 audit M2). The breach fires on the
+    """AT:R66 — CR136-M05 audit round 1, MAJOR M2 regression. The breach fires on the
     unrounded weight (strict `>`, correct), but the slot used to be
     `round(weight, 1)` — at a true weight of 35.04% against a 35.0% cap, that
     rounds DOWN to "35.0", so the rendered §F5 line asserted a breach while
