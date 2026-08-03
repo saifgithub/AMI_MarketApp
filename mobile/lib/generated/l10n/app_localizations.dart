@@ -3943,6 +3943,12 @@ abstract class AppLocalizations {
   /// **'AMI could not measure this book\'s volatility over the available window.'**
   String get portfolioHealthVolUnavailableNote;
 
+  /// CR136 — shown in place of the risk-vs-money bars when the risk_contribution block is insufficient for any cause other than t_over_n (whose own note already covers the bars). Added for M04 audit r2 MINOR m2: the bars are the largest element on the card and had no note branch at all, so a share-basis cause the build had never seen deleted them in silence. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI could not measure how this book\'s risk splits across its holdings over the available window.'**
+  String get portfolioHealthRiskUnavailableNote;
+
   /// CR136 — shown when the Tier-2 max-drawdown block is PRESENT but insufficient. The literal 21 mirrors TIER2_MIN_SNAPSHOTS (cr136.v1). A block absent from the wire renders nothing at all — no tile and no note. NEW key, needs ar/ms translation. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

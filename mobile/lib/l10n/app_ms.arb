@@ -647,6 +647,7 @@
     "portfolioHealthBetaUnavailableNote": "AMI could not measure this book's beta against the S&P 500 over the available window.",
     "portfolioHealthBetsUnavailableNote": "AMI could not measure how many independent bets this book holds over the available window.",
     "portfolioHealthVolUnavailableNote": "AMI could not measure this book's volatility over the available window.",
+    "portfolioHealthRiskUnavailableNote": "AMI could not measure how this book's risk splits across its holdings over the available window.",
     "portfolioHealthMddNote": "{n} daily snapshots so far; realised drawdown needs 21.",
     "portfolioHealthMockRefusalTitle": "LIVE MARKET DATA IS OFF",
     "portfolioHealthMockRefusalBody": "AMI measures portfolio risk from real price history only. It will not compute these numbers from simulated prices.",

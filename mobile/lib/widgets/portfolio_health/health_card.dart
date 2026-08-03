@@ -447,12 +447,34 @@ class _PopulatedCard extends ConsumerWidget {
           : l.portfolioHealthBetaUnavailableNote);
     }
 
+    // `risk_contribution` gates the risk-vs-money bars — the largest element on
+    // the card — and had no branch here at all until audit r2 MINOR m2: on any
+    // share-basis cause other than `t_over_n` the bars vanished and the only
+    // note on screen spoke to effective bets, so nothing told the reader that
+    // risk attribution had not been measured.
+    final risk = health.block('risk_contribution');
+    if (risk != null && !risk.sufficient) {
+      out.add(risk.insufficientCause == kCauseTOverN
+          ? l.portfolioHealthTnNote(
+              _int(risk.nObservations),
+              _int(health.riskyHoldingsCount),
+            )
+          : l.portfolioHealthRiskUnavailableNote);
+    }
+
     final mdd = health.block('realised_max_drawdown');
     if (mdd != null && !mdd.sufficient) {
       out.add(l.portfolioHealthMddNote(_int(mdd.nObservations)));
     }
 
-    return out;
+    // `effective_bets` and `risk_contribution` are fed from one variable in the
+    // engine (`portfolio_health.py:377`), so they go insufficient together with
+    // the same cause — and on `t_over_n` they share one note, whose copy already
+    // covers both the bets tile and the bars. Deduping here is what lets every
+    // branch above stay keyed on insufficiency alone: the alternative is a
+    // branch that asks what some OTHER block's cause was, which is the exact
+    // coupling this fix exists to remove. Set preserves insertion order.
+    return out.toSet().toList();
   }
 }
 

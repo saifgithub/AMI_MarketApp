@@ -432,6 +432,89 @@ void main() {
       expect(find.textContaining('could not measure this book\'s beta'),
           findsOneWidget);
     });
+
+    // M04 audit r2, MINOR m3. The same closure on the two blocks the r2 fix
+    // volunteered beyond the finding: both reverted invisibly under the
+    // auditor's MUT-H and MUT-I, so the behaviour was right and nothing held it
+    // there. Neither state is reachable from the engine today — effective bets
+    // has only `t_over_n` on a populated card, and any cause that makes
+    // volatility insufficient makes all four core metrics insufficient and
+    // switches the whole card to its insufficient state.
+    testWidgets('effective bets insufficient for an unpinned cause still says so',
+        (tester) async {
+      final blocks = defaultBlocks();
+      blocks['effective_bets'] = blockJson(
+        'effective_bets',
+        sufficient: false,
+        insufficientCause: 'a_cause_minted_after_this_build_shipped',
+      );
+      await _pump(tester, health: healthFixture(blocks: blocks));
+      expect(find.text('EFFECTIVE BETS'), findsNothing);
+      expect(find.textContaining('how many independent bets'), findsOneWidget);
+      expect(find.textContaining('aligned trading days'), findsNothing,
+          reason: 'the T/N copy names a ratio the engine never reported');
+    });
+
+    testWidgets('volatility insufficient on a populated card still says so',
+        (tester) async {
+      final blocks = defaultBlocks();
+      blocks['portfolio_volatility'] = blockJson(
+        'portfolio_volatility',
+        sufficient: false,
+        insufficientCause: kCauseZeroVariance,
+      );
+      await _pump(tester, health: healthFixture(blocks: blocks));
+      expect(find.text('VOLATILITY'), findsNothing);
+      expect(find.textContaining('could not measure this book\'s volatility'),
+          findsOneWidget);
+      expect(find.text('BETA'), findsOneWidget,
+          reason: 'the card must still be the POPULATED one — otherwise this '
+              'asserts against the insufficient state and proves nothing');
+    });
+
+    // M04 audit r2, MINOR m2. `risk_contribution` gates the bars, the largest
+    // element on the card, and had no note branch at all: the auditor pumped a
+    // seventh share-basis cause and got a card whose bars were gone and whose
+    // only note spoke to effective bets.
+    testWidgets('risk attribution lost to an unpinned cause takes the bars '
+        'and says why', (tester) async {
+      final blocks = defaultBlocks();
+      // The engine feeds both share-basis blocks from one variable, so they go
+      // insufficient together with the same cause. Pumping only one would test
+      // a state the wire cannot carry.
+      for (final m in ['risk_contribution', 'effective_bets']) {
+        blocks[m] = blockJson(
+          m,
+          sufficient: false,
+          insufficientCause: 'a_share_cause_minted_after_this_build_shipped',
+        );
+      }
+      await _pump(tester, health: healthFixture(blocks: blocks));
+      expect(find.byType(RiskMoneyBars), findsNothing);
+      expect(find.textContaining('how this book\'s risk splits'), findsOneWidget);
+    });
+
+    // The dedupe, asserted rather than assumed: on `t_over_n` both share-basis
+    // blocks are insufficient with one cause and one note covers both, so the
+    // note must appear ONCE — the reason every branch can stay keyed on
+    // insufficiency without asking what another block's cause was.
+    testWidgets('the shared T/N note is not printed twice', (tester) async {
+      final blocks = defaultBlocks();
+      for (final m in ['risk_contribution', 'effective_bets']) {
+        blocks[m] = blockJson(
+          m,
+          sufficient: false,
+          insufficientCause: kCauseTOverN,
+          nObservations: 130,
+        );
+      }
+      await _pump(tester, health: healthFixture(blocks: blocks));
+      expect(find.byType(RiskMoneyBars), findsNothing);
+      expect(find.textContaining('aligned trading days'), findsOneWidget);
+      expect(find.textContaining('how this book\'s risk splits'), findsNothing,
+          reason: 'the T/N copy already covers the bars; the generic note would '
+              'be a second explanation of one fact');
+    });
   });
 
   group('8 — Tier-2 max drawdown', () {

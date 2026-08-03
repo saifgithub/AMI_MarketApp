@@ -2274,6 +2274,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'AMI could not measure this book\'s volatility over the available window.';
 
   @override
+  String get portfolioHealthRiskUnavailableNote =>
+      'AMI could not measure how this book\'s risk splits across its holdings over the available window.';
+
+  @override
   String portfolioHealthMddNote(String n) {
     return '$n daily snapshots so far; realised drawdown needs 21.';
   }
