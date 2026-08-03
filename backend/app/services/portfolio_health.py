@@ -549,6 +549,7 @@ def compute_health(
     # No history is needed to count weights, so dropped holdings stay in — this
     # block is never insufficient and never partial.
     full_weights = [p.value / full_invested for p in positions]
+    full_weight_by_ticker = {p.ticker: w for p, w in zip(positions, full_weights)}
     hhi = math.fsum(w * w for w in full_weights)
     blocks["weight_concentration"] = _block(
         "weight_concentration",
@@ -603,6 +604,17 @@ def compute_health(
 
     # ── Precomputed comparisons (Rev 4 prompt contract pt 2): if it is not in
     # the payload, it may not be said.
+    # AT:R66 DEF211 fix — the floor gate and the reported weights must read off
+    # the SAME denominator M05 re-checks against (HoldingInput.invested_weight_pct,
+    # full invested value, dropped holdings included). v_weights is the covered
+    # sleeve (survivors only) and is right for the covariance-derived figures
+    # above (portfolio_sigma/DR²/Euler/MCR all need weights over the same
+    # universe the matrix spans) — but reusing it here as a stand-in for "does
+    # this holding have enough weight to matter" diverges from M05's own filter
+    # the moment a holding is dropped, and a pair could be emitted here yet
+    # discarded there (or the reverse) for a reason that has nothing to do with
+    # correlation. Emit on full-invested weight so the two filters can only ever
+    # agree.
     correlation_pairs: list[dict] = []
     if cov_risky is not None and v_weights:
         for i in range(n_risky):
@@ -610,7 +622,9 @@ def compute_health(
                 # The threshold is stored in percentage points (M05's rule API
                 # works in those); the weights here are fractions.
                 floor = RULE_R2B_MIN_PAIR_WEIGHT_PCT / 100.0
-                if v_weights[i] < floor or v_weights[j] < floor:
+                weight_a = full_weight_by_ticker[survivors[i].ticker]
+                weight_b = full_weight_by_ticker[survivors[j].ticker]
+                if weight_a < floor or weight_b < floor:
                     continue
                 denom = math.sqrt(cov_risky[i][i] * cov_risky[j][j])
                 if denom <= 0.0:
@@ -619,8 +633,8 @@ def compute_health(
                     "a": survivors[i].ticker,
                     "b": survivors[j].ticker,
                     "rho": cov_risky[i][j] / denom,
-                    "weight_a": v_weights[i],
-                    "weight_b": v_weights[j],
+                    "weight_a": weight_a,
+                    "weight_b": weight_b,
                 })
 
     # The per-holding row M05's rule engine consumes. Its doc pins the sector as

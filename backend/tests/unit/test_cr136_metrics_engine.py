@@ -27,6 +27,7 @@ from app.services.portfolio_health_constants import (
     BASIS_WEIGHTS,
     BENCHMARK_TICKER,
     DAILY_CAP_DEFAULT,
+    DROPPED_WEIGHT_MAX,
     ENGINE_VERSION,
     GATE_MODE_DEFAULT,
     INSUFFICIENT_BENCHMARK_MISALIGNED,
@@ -683,6 +684,47 @@ def test_correlation_pairs_are_precomputed_and_weight_gated() -> None:
     assert pairs[("AAA", "BBB")]["rho"] > 0.9
     assert all("TINY" not in key for key in pairs), (
         "a holding under the 5% invested-weight floor must appear in no pair"
+    )
+
+
+def test_r2b_pair_floor_uses_the_same_basis_the_rule_engine_re_checks() -> None:
+    """AT:R66 DEF211 regression (M05-r1 audit M1). M04 used to gate correlation-
+    pair emission on the COVERED-sleeve weight (survivors only, `v_weights`)
+    while M05 re-filters the same list on the FULL invested weight
+    (`HoldingInput.invested_weight_pct`, dropped holdings still counted). With
+    one holding dropped at exactly `DROPPED_WEIGHT_MAX` (20%), the two bases
+    diverge by 1/(1-0.20)=1.25 — enough to put a pair genuinely BELOW the
+    5.0pp floor on the full basis (4.5pp) OVER it on the covered basis
+    (5.625pp, the auditor's own reproduction numbers). Before the fix, M04
+    emitted this pair into the payload and M05 silently discarded it — which
+    is not the same as never emitting it, since anything reading
+    `context["correlation_pairs"]` directly (not through the rule engine)
+    would still see a pair whose weights don't clear the one basis Rev 4
+    pins."""
+    grid = _dates(T_MIN + 1)
+    market = _closes(_walk(1, T_MIN + 1, sigma=0.009, dates=grid))
+    kwargs = _book(T_MIN + 1, tickers=("AAA", "BBB", "CCC", "BIG"))
+    kwargs["series"]["AAA"] = _walk(7, T_MIN + 1, sigma=0.001, dates=grid, market=market, beta=1.0)
+    kwargs["series"]["BBB"] = _walk(8, T_MIN + 1, sigma=0.001, dates=grid, market=market, beta=1.0)
+    # CCC dropped for short history, sized to exactly DROPPED_WEIGHT_MAX of
+    # full invested value — the boundary the engine still calls "sufficient".
+    kwargs["series"]["CCC"] = kwargs["series"]["CCC"][-T_MIN:]
+    kwargs["marks"] = {"AAA": 1.0, "BBB": 1.0, "CCC": 1.0, "BIG": 1.0}
+    kwargs["holdings"] = [
+        ("AAA", 4.5), ("BBB", 4.5),
+        ("CCC", DROPPED_WEIGHT_MAX * 100.0), ("BIG", 71.0),
+    ]
+
+    payload = compute_health(**kwargs)
+    assert payload["dropped_holdings"] == [{"ticker": "CCC", "reason": "short_history"}]
+    assert payload["partial"] is True, "20% dropped is partial, not blocked"
+
+    pairs = {(p["a"], p["b"]) for p in payload["context"]["correlation_pairs"]}
+    assert ("AAA", "BBB") not in pairs, (
+        "AAA/BBB are 4.5% of FULL invested value each — below the 5.0pp floor "
+        "on the one basis M05 re-checks against. Only the covered-sleeve "
+        "basis (5.625%, inflated by CCC's drop) clears the floor, and that "
+        "basis is not the one the payload may gate on."
     )
 
 

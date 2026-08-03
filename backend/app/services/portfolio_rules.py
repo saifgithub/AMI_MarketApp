@@ -35,6 +35,7 @@ Pure: no I/O, no clock, no randomness. State in, state out.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal, ROUND_CEILING
 from typing import Sequence
 
 from app.agents.safety_floor import single_name_cap_pct
@@ -168,6 +169,18 @@ def _result(rule_id: str, state: str, slots: dict, based_on: list[str]) -> dict:
     }
 
 
+def _ceil_display_pct(value: float, dp: int = 1) -> float:
+    """AT:R66 DEF212 fix — a breach slot must never render at or below the cap
+    it breached. `value` is only ever called on a weight that has already
+    fired (strictly above the cap), so rounding it the ordinary way can round
+    DOWN onto the cap's own displayed value (35.04 -> "35.0", equal to a
+    "35.0%" cap) and produce a §F5 sentence that asserts a breach while
+    showing two equal numbers. Ceiling instead of rounding guarantees the
+    displayed weight is always at least one display-unit above the cap."""
+    quant = Decimal(1).scaleb(-dp)
+    return float(Decimal(str(value)).quantize(quant, rounding=ROUND_CEILING))
+
+
 def _prior(rule_states: dict[str, str] | None, rule_id: str) -> str:
     """A missing or unrecognised state is `cleared`. A first Finding has no
     prior state, and an unknown value must not be able to make a rule start
@@ -229,7 +242,7 @@ def evaluate_rules(
                 "scope": "name",
                 "cap_pct": name_cap,
                 "name": holding.ticker,
-                "weight_pct": round(_total_value_pct(holding), 1),
+                "weight_pct": _ceil_display_pct(_total_value_pct(holding)),
             })
 
     by_sector: dict[str, float] = {}
@@ -247,7 +260,7 @@ def evaluate_rules(
                 "scope": "sector",
                 "cap_pct": sector_cap_pct,
                 "name": sector,
-                "weight_pct": round(weight_pct, 1),
+                "weight_pct": _ceil_display_pct(weight_pct),
             })
 
     states["R0"] = FIRED if breaches else CLEARED

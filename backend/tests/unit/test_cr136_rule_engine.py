@@ -89,6 +89,24 @@ def test_r0_single_name_cap_is_strict_and_from_the_gate(base_mandate: Mandate) -
         assert _by_id(results)["R0"]["fired"] is should_fire, weight
 
 
+def test_r0_breach_weight_never_renders_at_or_below_its_own_cap(
+    base_mandate: Mandate,
+) -> None:
+    """AT:R66 DEF212 regression (M05-r1 audit M2). The breach fires on the
+    unrounded weight (strict `>`, correct), but the slot used to be
+    `round(weight, 1)` — at a true weight of 35.04% against a 35.0% cap, that
+    rounds DOWN to "35.0", so the rendered §F5 line asserted a breach while
+    showing two equal numbers. `weight_pct` must always display strictly
+    above `cap_pct` for any breach that fired at all."""
+    mandate = base_mandate.model_copy(update={"single_name_cap_pct": 35.0})
+    results, _ = _evaluate(mandate, holdings=[_holding("AAA", 35.04)])
+    r0 = _by_id(results)["R0"]
+    assert r0["fired"] is True
+    breach = r0["slots"]["breaches"][0]
+    assert breach["weight_pct"] == 35.1, "ceiling, not round-half-up, at the display precision"
+    assert breach["weight_pct"] > breach["cap_pct"]
+
+
 def test_r0_uses_the_cr129_risk_tier_preset_not_the_fifty_percent_backstop(
     base_mandate: Mandate,
 ) -> None:
@@ -106,6 +124,26 @@ def test_r0_uses_the_cr129_risk_tier_preset_not_the_fifty_percent_backstop(
 
     results, _ = _evaluate(mandate, holdings=[_holding("AAA", 2.9)])
     assert _by_id(results)["R0"]["fired"] is False
+
+
+def test_r0_sector_cap_is_strict_and_from_the_gate(base_mandate: Mandate) -> None:
+    """The sector half of the same boundary `test_r0_single_name_cap_is_strict_
+    and_from_the_gate` pins for the name half — a sector exactly AT its cap is
+    compliant at the trade ticket (`sector_cap_breach`'s own `weight > cap +
+    1e-9`) and must be compliant here too. Added per the M11/M05-r1 audit: the
+    name half had this pin, the sector half did not, and a mutant flipping
+    `> sector_cap_frac + _SECTOR_EPSILON` to `>= sector_cap_frac -
+    _SECTOR_EPSILON` left the suite green without it."""
+    mandate = base_mandate.model_copy(update={"sector_cap_pct": 40.0})
+    assert sector_concentration_cap(mandate) == pytest.approx(0.40)
+
+    for weight, should_fire in ((40.1, True), (40.0, False), (39.9, False)):
+        results, _ = _evaluate(mandate, holdings=[_holding("AAA", weight, sector="Tech")])
+        sectors = [
+            b for b in _by_id(results)["R0"]["slots"].get("breaches", [])
+            if b["scope"] == "sector"
+        ]
+        assert bool(sectors) is should_fire, weight
 
 
 def test_r0_sector_cap_and_the_other_bucket(base_mandate: Mandate) -> None:
