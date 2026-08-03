@@ -349,9 +349,21 @@ def test_the_daily_boundary_is_utc_midnight(wired) -> None:
     assert gate.trial_findings_used == 2
 
 
-def test_the_daily_counter_is_per_portfolio_the_trial_is_per_user(wired) -> None:
-    """`reset_portfolio` destroys and recreates the book, so a per-portfolio
-    trial would reset itself on every reset."""
+def test_both_counters_are_per_user_so_resetting_the_book_does_not_reset_them(
+    wired,
+) -> None:
+    """AT:R66 — CR136-M07 audit round 1, MINOR m1. Saiful's call, 2026-08-03.
+
+    The daily counter used to filter on `reference_id == portfolio_id`, per Rev
+    4's "per portfolio per day". `reset_portfolio` deletes the row and
+    `ensure_portfolio` mints a fresh `uuid4()`, so the one limiter on an entitled
+    user was resettable by that user — and after B1 was fixed it was the only
+    remaining way past the cap. A user has exactly one book, so counting per user
+    changes nothing except closing that door.
+
+    The rows below are seeded under a DIFFERENT `portfolio_id`, which is exactly
+    what the same user's book looks like after a reset.
+    """
     _client, user_id, portfolio_id, _gen = wired
     other_portfolio = uuid4()
     now = datetime.now(timezone.utc)
@@ -359,8 +371,32 @@ def test_the_daily_counter_is_per_portfolio_the_trial_is_per_user(wired) -> None
     _seed_finding(user_id, other_portfolio, as_of="2026-08-02", created_at=now)
 
     gate = evaluate_gate(user_id, portfolio_id, now=now)
-    assert gate.daily_used == 0, "another portfolio's Findings are not this cap"
-    assert gate.trial_findings_used == 2, "...but they are the same user's trial"
+    assert gate.daily_used == 2, (
+        "a reset book restored the daily budget — the cap is resettable by the "
+        "user it exists to limit"
+    )
+    assert gate.trial_findings_used == 2
+    assert gate.daily_cap_reached is True
+
+    # Non-vacuity: it is TODAY that is counted, not everything the user has.
+    # Without this a `daily = len(rows)` bug would pass the assertions above.
+    _seed_finding(user_id, other_portfolio, as_of="2026-07-01",
+                  created_at=now - timedelta(days=9))
+    later = evaluate_gate(user_id, portfolio_id, now=now)
+    assert later.daily_used == 2 and later.trial_findings_used == 3
+
+
+def test_another_users_findings_are_not_this_users_counters(wired) -> None:
+    """The counters widened from per-book to per-user (m1); they did not widen
+    past the user. Nothing else in the suite pins that edge."""
+    _client, user_id, portfolio_id, _gen = wired
+    stranger = _seed_user(Plan.TRADER)
+    now = datetime.now(timezone.utc)
+    for _ in range(3):
+        _seed_finding(stranger, uuid4(), as_of="2026-08-02", created_at=now)
+
+    gate = evaluate_gate(user_id, portfolio_id, now=now)
+    assert gate.daily_used == 0 and gate.trial_findings_used == 0
 
 
 # ── Modes ───────────────────────────────────────────────────────────────────

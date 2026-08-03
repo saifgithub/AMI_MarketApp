@@ -378,10 +378,21 @@ class JournalStore:
     ) -> tuple[int, datetime | None, int]:
         """`(trial_findings_used, first_finding_at, daily_used)`.
 
-        The trial counters are per USER across every `reference_id`, because
-        `reset_portfolio` destroys and recreates the portfolio — a per-portfolio
-        trial would reset itself every time a user resets their book. The daily
-        counter is per PORTFOLIO, per Rev 4, and its day boundary is UTC.
+        Both counters are per USER across every `reference_id`, and for the same
+        reason: `reset_portfolio` destroys the row and `ensure_portfolio` mints a
+        fresh `uuid4()`, so anything keyed on `portfolio_id` resets itself every
+        time a user resets their book.
+
+        The daily counter was per PORTFOLIO, per Rev 4's wording, until the
+        CR136-M07 audit (round 1, MINOR m1) pointed out that it made "the only
+        limiter on an entitled user" resettable by the user. Saiful's call
+        (2026-08-03) was to count per user: a user has exactly one book, so the
+        two readings are identical except across resets, and the reset is the
+        loophole. `portfolio_id` is still taken because the caller has it and the
+        signature is shared with `latest_portfolio_health_entry`, which does
+        legitimately want the book.
+
+        The day boundary is UTC.
         """
         # `_as_utc` first, never a bare `astimezone`: astimezone() reinterprets
         # a NAIVE datetime as LOCAL system time, so a caller passing a naive UTC
@@ -403,10 +414,7 @@ class JournalStore:
             rows = s.execute(base).scalars().all()
             created = [_as_utc(r.created_at) for r in rows]
             daily = sum(
-                1
-                for r in rows
-                if r.reference_id == portfolio_id
-                and _as_utc(r.created_at) >= day_start
+                1 for r in rows if _as_utc(r.created_at) >= day_start
             )
             return len(rows), (min(created) if created else None), daily
 

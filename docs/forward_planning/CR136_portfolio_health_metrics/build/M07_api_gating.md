@@ -130,10 +130,22 @@ def enforce_gate(status: GateStatus) -> None: ...
   the first Finding's timestamp. Per-user because `reset_portfolio` is
   destroy-and-recreate (sim_engine.py:394-403 — new `portfolio_id`); a
   per-portfolio trial would reset with every portfolio reset.
-- Daily counter is **per portfolio** (Rev 4 "per portfolio per day"): rows
-  with `user_id` + `reference_id == portfolio_id` + entry type +
-  `created_at >= UTC midnight of now` — soft-deleted included
+- Daily counter is **per user** — rows with `user_id` + entry type +
+  `created_at >= UTC midnight of now`, soft-deleted included
   (delete-then-regenerate must not bypass the cap). Day boundary is **UTC**.
+
+  **Deviation from Rev 4's "per portfolio per day", decided by Saiful
+  2026-08-03** after the audit (round 1, MINOR m1) showed the per-portfolio
+  reading made the cap resettable by the user it exists to limit: the counter
+  filtered on `reference_id`, and `reset_portfolio` destroys the row while
+  `ensure_portfolio` mints a fresh `uuid4()`. Once B1 was fixed that was the
+  only remaining path past the cap. A user has exactly one book, so the two
+  readings are identical except across a reset — which is the loophole, not a
+  use case. Same argument the trial counters were already per-user for.
+- **The limiter is in-process.** `portfolio_health_finding_rate_limit` is an
+  `OrderedDict` singleton, so 5/min is 5/min on one container and 10/min on
+  two. Alpha runs one; this is a note for the day it does not, and the limiter
+  is explicitly not the spend control in either case.
 - Naive/aware datetime normalization as entitlements.py:51-55.
 
 **`evaluate_gate` semantics** (never raises):

@@ -539,7 +539,7 @@ the build otherwise):
 | `portfolio_health_gate_mode` | `trial` | `open` \| `trial` \| `plan` |
 | `portfolio_health_trial_days` | 14 | trial window, counted from the user's **first Finding** |
 | `portfolio_health_trial_findings` | 7 | trial Finding budget; window OR budget exhausting first ends the trial |
-| `portfolio_health_daily_cap` | 2 | per-portfolio Findings per day (all modes) |
+| `portfolio_health_daily_cap` | 2 | per-**user** Findings per day (all modes). Rev 4 said per-portfolio; changed by Saiful 2026-08-03 after the M07 audit showed `reset_portfolio` mints a new `portfolio_id`, making the cap resettable by the user it limits |
 | `portfolio_health_plans` | `TRADER,FLOOR_MANAGER` | plans with post-trial access (and full access in `plan` mode) |
 
 - The **Health card tiles are free for everyone in every mode** — cheap
