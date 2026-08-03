@@ -39,9 +39,16 @@ narrate — the metric's name never reaches the model.
 **The language layer does not supply figures.** It writes prose containing named
 references — `{{vol_ann_pct}}` — and every reference is replaced afterwards by
 the computed value of *that named metric*, formatted by the same code the
-deterministic report uses. A figure therefore cannot be attached to a metric it
-does not belong to: the reference names the metric, and the substitution reads
-that metric's value.
+deterministic report uses.
+
+**Every figure arrives carrying the name of the metric it was computed for.**
+`{{vol_ann_pct}}` renders as "an annualised volatility of 19.0%", never as a
+bare "19.0%". The name and the value are one inseparable unit, and the language
+layer cannot separate them. It still chooses which figure to place in which
+sentence, and nothing prevents it choosing wrongly — but a wrong choice can only
+produce a visible non-sequitur ("your beta to the market is an annualised
+volatility of 19.0%"), never a plausible false claim. What is prevented is not
+the mistake; it is the mistake reading as true.
 
 Output is discarded in full — and the reader receives the deterministic
 rendering — if it names a reference that does not exist, if a reference is
@@ -58,21 +65,28 @@ was found by independent audit before release, and the correction was to make
 mis-attribution unrepresentable rather than to detect it more cleverly.
 
 **What this does and does not guarantee.** Every figure published is computed,
-and is published against the metric it was computed for. What the screens do not
-police is unquantified language: "most of the risk sits in one name" states no
-number, so nothing rejects it. They are also deliberately blunt in the other
-direction — an ordinary phrase like "concentrated in a single name" is rejected,
-because a count is a number. The residual risk is therefore availability first
-(a model that will not follow the convention loses its narration to the
-deterministic template, which costs prose and never accuracy) and, for
-unquantified prose, tone. Every rejection is logged with its reason, so both are
-measured rather than assumed.
+and is published labelled with the metric it was computed for. What the screens
+do not police is unquantified language: "most of the risk sits in one name"
+states no number, so nothing rejects it. They are also deliberately blunt in the
+other direction — an ordinary phrase like "concentrated in a single name" is
+rejected, because a count is a number. And a mislabelled *emphasis* is still
+available: the language layer can lead with a figure that matters less than
+another, or omit one entirely, and no control here objects. The residual risk is
+therefore availability first (a model that will not follow the convention loses
+its narration to the deterministic template, which costs prose and never
+accuracy) and, for unquantified prose, tone and emphasis. Every rejection is
+logged with its reason, so both are measured rather than assumed.
 
-The audit that found the earlier design also found that banning digits alone
-still let a quantity through in words — "your beta is roughly double the market"
-against a measured beta of 0.89. The screens above are the closure of that
-finding, and this section has been corrected twice against measurement rather
-than once against intent.
+This section has now been corrected three times, each time against an
+independent audit's measurement rather than against intent, and each correction
+narrowed a claim that had been true of the control's *intent* and false of its
+*reach*: first that a post-hoc check on figures constrained their assignment
+(it constrained only their vocabulary); then that banning digits banned numbers
+(it left them spelled out — "your beta is roughly double the market", against a
+measured beta of 0.89); then that binding a value to its metric's name bound it
+to the sentence it lands in (it did not — the sentence is still written by the
+language layer). The current claim is deliberately the weakest one that is
+actually true, and it is stated above.
 
 **Degrade loudly.** A metric that cannot be estimated to the stated standard is
 reported as "insufficient data", never as a number. When a metric is
@@ -434,14 +448,17 @@ value; realised drawdown needs ≥21 stored snapshots; realised return needs
 **How is the language layer mechanically prevented from fabricating a
 number, not just instructed not to?** It supplies no figures at all (§2). It
 writes named references and the system substitutes the computed value of that
-named metric, so a figure cannot be attached to the wrong metric —
-mis-attribution is unrepresentable rather than detected. A quantity written any
-other way — a numeral in any script, a number spelled out, a percent unit word,
-or a malformed reference — discards the output in full and the deterministic
-report is served instead. What is *not* screened is unquantified language such
-as "most of the risk"; that carries no figure and is not rejected. Separately,
-an insufficient metric is stripped from the model's input before a prompt
-exists, so it cannot be narrated at all.
+named metric, rendered together with the metric's own name as one inseparable
+phrase — "an annualised volatility of 19.0%", never a bare "19.0%". A figure
+therefore cannot be *silently* attached to the wrong metric: the language layer
+can still place a reference in the wrong sentence, but the result is a visible
+non-sequitur rather than a plausible false claim. A quantity written any other
+way — a numeral in any script, a number spelled out, a percent unit word, or a
+malformed reference — discards the output in full and the deterministic report
+is served instead. What is *not* screened is unquantified language such as "most
+of the risk"; that carries no figure and is not rejected. Separately, an
+insufficient metric is stripped from the model's input before a prompt exists,
+so it cannot be narrated at all.
 
 **Where does the SHARE/LEVEL basis rule have a stated exception?** Mandate-
 breach reporting (R0) is total-value basis by design, so it agrees with the

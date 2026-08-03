@@ -829,6 +829,14 @@ _NUMBER_WORDS = (
     "seventh sevenths eighth eighths ninth ninths tenth tenths twentieth "
     "double doubles doubled twice thrice triple triples tripled quadruple "
     "couple pair dozen dozens single nil "
+    # AT:R66 — audit round 3, MAJOR M5. `\b` cannot see inside a compound, so
+    # `twofold` — "roughly double", the very example that produced the M3 fix —
+    # walked through the set that fix created. The multiplier run also stopped
+    # at `quadruple`. A closed set missing a productive morphological family is
+    # not closed. `\w*fold\b` below covers the whole family; over-rejecting
+    # "manifold" is consistent with already rejecting "one name".
+    "quintuple sextuple septuple octuple nonuple decuple "
+    "score naught nought unity umpteen "
     # Unit words, not counts: every percentage the narration may carry arrives
     # from a slot already rendered with "%", so the model has no legitimate
     # reason to type one. Banning them kills "twenty percent" and the audit's
@@ -836,7 +844,8 @@ _NUMBER_WORDS = (
     "percent pct"
 ).split()
 _NUMBER_WORD_RE = re.compile(
-    r"\b(?:" + "|".join(_NUMBER_WORDS) + r"|per\s+cent|percentage\s+points?)\b",
+    r"\b(?:" + "|".join(_NUMBER_WORDS)
+    + r"|per\s+cent|percentage\s+points?|\w*fold)\b",
     re.IGNORECASE,
 )
 
@@ -848,6 +857,45 @@ def numeric_chars(text: str) -> list[str]:
     numbers, and none of them is a decimal digit.
     """
     return [ch for ch in text if unicodedata.numeric(ch, None) is not None]
+
+
+# AT:R66 — CR136-M06 audit round 3, BLOCKER B2. Re-injection made FABRICATION
+# unrepresentable; it did nothing about ATTRIBUTION, because the model still
+# writes the sentence and still chooses WHICH slot lands in it. The audit
+# published "CCC drives 33% of your risk" — 33% is CCC's invested weight, its
+# risk share is 38% — and nothing in the sentence, the number or the report lets
+# a reader detect it. `top_risk_share_pct` and `top_risk_weight_pct` are
+# adjacent in this map, near-identically named, and carry plausible values for
+# each other's sentence.
+#
+# A slot therefore no longer renders a bare figure. It renders the metric's NAME
+# and its value as one inseparable token, so a misplaced slot cannot produce a
+# false statement — only a visible non-sequitur:
+#
+#     "Your portfolio volatility has been a beta of 1.19 a year."
+#
+# This does not PREVENT misplacement. It removes misplacement's ability to read
+# as a true sentence, which is the property that matters. Chosen over a
+# sentence→metric matcher deliberately: rounds 1 and 2 both established that
+# replacing one matching heuristic with another fails the same way.
+#
+# `top_risk_ticker` carries no label — it is a name, not a figure, and there is
+# no wrong metric for it to be attributed to.
+_SLOT_LABEL = {
+    "vol_ann_pct": "an annualised volatility",
+    "benchmark_vol_ann_pct": "a benchmark annualised volatility",
+    "beta_ratio": "a beta",
+    "market_explains_pct": "a market-explained share",
+    "tracking_error_pct": "a tracking error",
+    "top_risk_share_pct": "a risk share",
+    "top_risk_weight_pct": "an invested weight",
+    "effective_bets": "an effective-bets count",
+    "holdings_count": "a holdings count",
+    "typical_bad_month_pct": "a typical bad month",
+    "realised_max_drawdown_pct": "a realised maximum drawdown",
+    "realised_return_pct": "a realised return",
+    "cash_pct": "a cash share",
+}
 
 
 def build_slot_map(context: dict) -> dict[str, str]:
@@ -871,8 +919,10 @@ def build_slot_map(context: dict) -> dict[str, str]:
     slots: dict[str, str] = {}
 
     def put(name: str, value: str | None) -> None:
-        if value is not None:
-            slots[name] = value
+        if value is None:
+            return
+        label = _SLOT_LABEL.get(name)
+        slots[name] = f"{label} of {value}" if label else value
 
     vol = _block(context, "portfolio_volatility")
     if vol and vol.get("value") is not None:
@@ -981,7 +1031,9 @@ _SYSTEM_PROMPT = """You rewrite an already-computed portfolio risk report into p
 
 **NEVER WRITE A NUMBER, IN ANY FORM.** Not one, anywhere, for any reason. This means no digits (`20`, `٢٠`), no numbers spelled out ("twenty", "a fifth", "two thirds", "half", "double", "twice", "a couple", "a single"), no fraction or superscript characters (`½`, `²`), and not the word "percent". Every number is inserted for you afterwards from the `slots` object you are given.
 
-To place a number, write its slot name in double braces — exactly `{{vol_ann_pct}}`, lower case, no spaces inside the braces — and it will be replaced by the correct, already-formatted value, which carries its own `%` where one belongs. `slots` shows you each value so you can phrase the sentence around its size, but you must type the NAME, never the value.
+To place a number, write its slot name in double braces — exactly `{{vol_ann_pct}}`, lower case, no spaces inside the braces — and it will be replaced by the correct, already-formatted value. `slots` shows you each value so you can phrase the sentence around its size, but you must type the NAME, never the value.
+
+**A slot expands to the metric's NAME together with its value** — `{{vol_ann_pct}}` becomes "an annualised volatility of 19.0%", not "19.0%". Write the sentence around that phrase, do not repeat the metric's name yourself, and keep headlines short: a slot is several words once expanded.
 
 You have no way to write an approximation, and you must not try. "about a fifth", "roughly double", "nearly all" — none of these are available to you. State the slot and let it speak: not "your volatility is about a fifth" but "your volatility has been {{vol_ann_pct}} a year".
 
@@ -991,7 +1043,7 @@ Use only slot names present in `slots`. Do not invent a slot name. Do not comput
 
 Number-bearing statements about volatility, beta, diversification and risk contribution describe the measured window only and are backcasts of today's holdings.
 
-Sections f1, f2 and f4 are plain language: no statistics jargon, no estimator names, no "standard error", no "covariance", no "R-squared". Explanatory power is written ONLY as "the market explains {{market_explains_pct}} of this book's day-to-day moves".
+Sections f1, f2 and f4 are plain language: no statistics jargon, no estimator names, no "standard error", no "covariance", no "R-squared". Explanatory power is written ONLY by placing `{{market_explains_pct}}` — which expands to its own plain-language name — in a sentence about how much of this book's day-to-day movement comes from the market.
 
 f1: 3 to 5 headlines, each 16 words or fewer, carrying a slot reference and its plain meaning.
 f2: 4 to 8 descriptive sentences. No advice. No claims about returns or performance.

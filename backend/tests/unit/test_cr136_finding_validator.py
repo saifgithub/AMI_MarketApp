@@ -398,6 +398,67 @@ def test_malformed_slot_syntax_is_never_published_verbatim(
     assert reason == "malformed_slot"
 
 
+def test_a_slot_placed_in_the_wrong_sentence_cannot_read_as_a_true_claim(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AT:R66 — CR136-M06 audit round 3, BLOCKER B2, the auditor's own attack.
+
+    Re-injection made fabrication unrepresentable and left attribution wide
+    open: the model still writes the sentence and still picks which slot lands
+    in it. The published example was "CCC drives 33% of your risk" — 33% is
+    CCC's invested WEIGHT, its risk share is 38% — undetectable by any reader.
+
+    The fix does not reject this. It removes its ability to be FALSE: a slot
+    renders the metric's name and value as one token, so the wrong slot in the
+    wrong sentence is a visible non-sequitur instead of a plausible lie.
+    """
+    context, _rules, _allow = _allowlist()
+    slots = build_slot_map(context)
+    share, weight = slots.get("top_risk_share_pct"), slots.get("top_risk_weight_pct")
+    assert share and weight, "fixture must carry a top risk contributor"
+    # Vacuity guard: if the two ever render identically the swap proves nothing.
+    assert share != weight, "the attack needs two distinguishable figures"
+
+    gateway = _FakeGateway(json.dumps({
+        # The realistic swap: weight cited as if it were the risk share.
+        "f1": ["{{top_risk_ticker}} drives {{top_risk_weight_pct}} of your risk."],
+        # The loud swap: beta cited as if it were an annualised volatility.
+        "f2": "Your portfolio volatility has been {{beta_ratio}} a year.",
+        "f4": "That is the picture.",
+    }))
+    (sections, reason), _det = _run(gateway, monkeypatch)
+    assert reason is None and sections is not None
+
+    assert "an invested weight of" in sections["f1"], (
+        "the misplaced figure must carry its own metric's name, or the sentence "
+        "reads as a true risk-share claim — which is B2"
+    )
+    assert share not in sections["f1"], "the true risk share was never cited"
+    assert "a beta of" in sections["f2"]
+
+
+@pytest.mark.parametrize("compound", [
+    "twofold", "tenfold", "hundredfold", "quintuple", "decuple",
+    "score", "naught", "unity",
+])
+def test_the_number_word_set_is_closed_over_the_multiplier_family(
+    compound: str, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AT:R66 — CR136-M06 audit round 3, MAJOR M5.
+
+    `\\b` cannot see inside a compound word, so `twofold` — "roughly double",
+    the very example that produced the M3 fix — walked straight through the set
+    that fix created. `\\btwo\\b` does not match inside `twofold`. The
+    multiplier run also stopped at `quadruple`."""
+    gateway = _FakeGateway(json.dumps({
+        "f1": [f"Your risk is {compound} what it looks like."],
+        "f2": "Steady.", "f4": "That is the picture.",
+    }))
+    (sections, reason), _det = _run(gateway, monkeypatch)
+    assert sections is None
+    assert reason == "number_word"
+
+
 def test_the_number_screens_still_admit_ordinary_prose(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
