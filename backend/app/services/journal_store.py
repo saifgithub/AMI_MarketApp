@@ -148,11 +148,21 @@ class JournalStore:
             return existing, False
 
     def find_by_dedupe_key(self, user_id: UUID, dedupe_key: str) -> JournalEntry | None:
+        """The LIVE row holding this key, if any.
+
+        Tombstones are excluded (CR136-M07 audit r1, B1). This is the loser's
+        half of `append_unique`, so whatever it returns is handed to the client
+        as the entry it asked for — and a deleted row answered "regenerate" with
+        an id pointing into an empty journal. `latest_portfolio_health_entry`'s
+        docstring names that exact failure one call earlier; this is the same
+        rule applied one call later.
+        """
         with get_session() as s:
             row = s.execute(
                 select(JournalEntryRow)
                 .where(JournalEntryRow.user_id == user_id)
                 .where(JournalEntryRow.dedupe_key == dedupe_key)
+                .where(JournalEntryRow.deleted_at.is_(None))
                 .limit(1)
             ).scalar_one_or_none()
             return _row_to_entry(row) if row else None
@@ -250,7 +260,16 @@ class JournalStore:
             return True
 
     def restore(self, user_id: UUID, entry_id: UUID) -> bool:
-        """Clear deleted_at on a soft-deleted entry. Returns True if restored."""
+        """Clear deleted_at on a soft-deleted entry. Returns True if restored.
+
+        Refuses when a LIVE row already holds the same dedupe key. `deleted_at`
+        entered `uq_journal_dedupe` as a partial-index predicate (B1), which
+        makes undo the one operation that can turn a legal state into an illegal
+        one: delete today's Finding, regenerate, then undo, and two live rows
+        claim the same day. Answering `False` refuses the undo; letting it
+        through would be an IntegrityError from a route whose contract is a
+        boolean.
+        """
         with get_session() as s:
             row = s.execute(
                 select(JournalEntryRow).where(
@@ -261,6 +280,17 @@ class JournalStore:
             ).scalar_one_or_none()
             if row is None:
                 return False
+            if row.dedupe_key is not None:
+                taken = s.execute(
+                    select(JournalEntryRow.id).where(
+                        JournalEntryRow.user_id == user_id,
+                        JournalEntryRow.entry_type == row.entry_type,
+                        JournalEntryRow.dedupe_key == row.dedupe_key,
+                        JournalEntryRow.deleted_at.is_(None),
+                    ).limit(1)
+                ).scalar_one_or_none()
+                if taken is not None:
+                    return False
             row.deleted_at = None
             s.flush()
             return True

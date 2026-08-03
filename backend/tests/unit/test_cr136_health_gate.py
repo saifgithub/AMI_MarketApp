@@ -8,6 +8,8 @@ see and delete, and a mocked counter would not exercise that.
 
 from __future__ import annotations
 
+import os
+import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid4
@@ -15,6 +17,7 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from app.api.dependencies import get_current_user
 from app.api.portfolio import router as portfolio_router
@@ -551,6 +554,259 @@ def test_the_route_composes_the_real_engine_rules_and_renderer(
     assert replay.status_code == 200
     assert replay.json()["created"] is False
     assert replay.json()["journal_entry_id"] == body["journal_entry_id"]
+
+
+def test_deleting_todays_finding_and_regenerating_writes_a_live_row_and_spends_budget(
+    monkeypatch: pytest.MonkeyPatch, base_mandate,
+) -> None:
+    """AT:R66 — CR136-M07 audit round 1, BLOCKER B1.
+
+    `uq_journal_dedupe` covered tombstones, so a delete-then-regenerate always
+    collided with the deleted row: no row was written, the route handed back the
+    DELETED id — a link into an empty journal — and because `daily_used` counts
+    rows, both spend counters froze. Measured by the auditor against this route:
+
+        POST 2..5: 200  daily_used=1 cap=2  trial_used=1  generations=2,3,4,5
+        POST 6:    429  <- the RATE LIMITER, not the gate
+
+    five generations against a cap of two, each a billed LLM call on the enabled
+    path, reachable by an ordinary user through the journal's delete-with-undo.
+
+    This drives the REAL persistence path deliberately: the `wired` fixture
+    cannot see the defect, because `_fake_generate` seeds with `dedupe_key=None`
+    and so never reaches the constraint. The counter assertions are the point —
+    an id-only assertion would pass a fix that leaves the cap defeated.
+    """
+    from tests.unit.test_cr136_metrics_engine import _book
+
+
+    from app.services.portfolio_health import compute_health
+
+    user_id = _seed_user(Plan.TRADER)
+    portfolio_id = uuid4()
+    context = compute_health(**_book())
+    monkeypatch.setattr("app.api.portfolio.build_health_context", lambda uid: context)
+    monkeypatch.setattr("app.api.portfolio.resolve_mandate", lambda uid, v: base_mandate)
+    monkeypatch.setattr(settings, "portfolio_health_llm_enabled", False)
+    monkeypatch.setattr("app.api.portfolio.get_llm_gateway", lambda: None)
+
+    store = get_journal_store()
+    client = TestClient(_app(user_id, portfolio_id), raise_server_exceptions=False)
+
+    first = client.post(f"/v1/portfolio/health/{user_id}/finding")
+    assert first.status_code == 200, first.text
+    assert first.json()["created"] is True
+    first_id = UUID(first.json()["journal_entry_id"])
+    assert first.json()["gate"]["daily_used"] == 1
+
+    assert store.soft_delete(user_id, first_id) is True
+
+    second = client.post(f"/v1/portfolio/health/{user_id}/finding")
+    assert second.status_code == 200, second.text
+    body = second.json()
+    second_id = UUID(body["journal_entry_id"])
+
+    assert body["created"] is True, (
+        "the write collided with the tombstone and no row was created"
+    )
+    assert second_id != first_id, "the route handed back the DELETED entry's id"
+    assert store.get(user_id, second_id) is not None, (
+        "the id the route returned does not resolve — a link into nothing"
+    )
+    entries, total, _ = store.list_for_user(user_id, plan=Plan.TRADER)
+    assert total == 1 and entries[0].id == second_id, (
+        f"the journal shows {total} rows; the regenerated Finding is not in it"
+    )
+
+    # The expensive half. `daily_used` counts rows including tombstones, by
+    # design (deleting a Finding must not refund the budget), so a fix that
+    # returns a live id but writes no row would still leave the cap defeated.
+    assert body["gate"]["daily_used"] == 2, (
+        f"daily_used froze at {body['gate']['daily_used']} — both spend "
+        "controls are still defeated"
+    )
+    assert body["gate"]["trial_findings_used"] == 2
+
+    # Idempotency is restored along with the counter: the third POST replays the
+    # LIVE row rather than generating again. Before the fix this same call was
+    # the loop — it generated every time and returned the tombstone's id, which
+    # is how five generations fitted inside a cap of two.
+    third = client.post(f"/v1/portfolio/health/{user_id}/finding")
+    assert third.status_code == 200, third.text
+    assert third.json()["created"] is False
+    assert UUID(third.json()["journal_entry_id"]) == second_id
+    assert third.json()["gate"]["daily_used"] == 2, "a replay charged the budget"
+
+
+def test_a_naive_now_does_not_move_the_utc_day_boundary() -> None:
+    """AT:R66 — CR136-M07 audit round 1, MINOR m3.
+
+    `portfolio_health_stats` deliberately writes `_as_utc(now).astimezone(...)`
+    rather than a bare `astimezone()`, because `astimezone()` reinterprets a
+    NAIVE datetime as LOCAL system time — so the daily cap's day boundary would
+    shift by the container's timezone. The auditor reverted that call to the
+    bare form and all 34 tests passed: five lines of comment describing a defect
+    nothing would catch.
+
+    The guard is defensive — `evaluate_gate` always passes an aware value today
+    — so this addresses the store directly, which is where the hazard is.
+
+    The timezone is forced rather than inherited, and that is the whole design
+    of the test: the first version of it passed under the mutation because this
+    Mac and every CI container run UTC, where reinterpreting a naive UTC value
+    as local time changes nothing. The defect needs a container EAST of UTC and
+    a `now` early in the UTC day — then naive 00:01 reads as 00:01 Tokyo, i.e.
+    15:01 UTC *yesterday*, and `day_start` lands a whole day early, so
+    yesterday's Finding counts toward today's cap and the cap resets hours late.
+    A test that only fails on a machine we do not deploy on is not a guard.
+    """
+    user_id = _seed_user(Plan.TRADER)
+    portfolio_id = uuid4()
+    midnight = datetime.now(timezone.utc).replace(
+        hour=0, minute=0, second=0, microsecond=0,
+    )
+    _seed_finding(user_id, portfolio_id, as_of="2026-08-02",
+                  created_at=midnight - timedelta(hours=3))
+
+    aware = store_now = midnight + timedelta(minutes=1)
+    naive = aware.replace(tzinfo=None)
+    store = get_journal_store()
+
+    original_tz = os.environ.get("TZ")
+    os.environ["TZ"] = "Asia/Tokyo"
+    time.tzset()
+    try:
+        _u, _f, daily_east = store.portfolio_health_stats(
+            user_id, portfolio_id, now=naive,
+        )
+    finally:
+        if original_tz is None:
+            os.environ.pop("TZ", None)
+        else:
+            os.environ["TZ"] = original_tz
+        time.tzset()
+    assert daily_east == 0, (
+        "a naive `now` was reinterpreted as local time east of UTC, so the day "
+        "boundary moved back a day and yesterday's Finding counted toward the cap"
+    )
+
+    _u1, _f1, daily_aware = store.portfolio_health_stats(
+        user_id, portfolio_id, now=aware,
+    )
+    _u2, _f2, daily_naive = store.portfolio_health_stats(
+        user_id, portfolio_id, now=naive,
+    )
+    assert daily_aware == daily_naive == 0, (
+        f"a row from yesterday counted toward today: aware={daily_aware} "
+        f"naive={daily_naive} (now={store_now.isoformat()})"
+    )
+
+    # Non-vacuity: a row stamped after the boundary IS counted, so the
+    # assertion above is about the boundary and not about an empty table.
+    _seed_finding(user_id, portfolio_id, as_of="2026-08-03", created_at=aware)
+    assert store.portfolio_health_stats(user_id, portfolio_id, now=naive)[2] == 1
+
+
+def test_the_dedupe_lookup_resolves_the_live_row_when_a_tombstone_shares_its_key(
+    monkeypatch: pytest.MonkeyPatch, base_mandate,
+) -> None:
+    """The third half of B1, and the one the sequential flow cannot reach.
+
+    Once a day has been deleted and regenerated, a tombstone and a live row hold
+    the SAME dedupe key — the state the test above creates. `append_unique`'s
+    loser branch then calls `find_by_dedupe_key`, which is `LIMIT 1` with no
+    `ORDER BY`, and whatever it returns is handed to the client as their entry.
+    Without the `deleted_at` filter it can hand back the tombstone, which is B1
+    exactly, resurrected through the concurrency door the partial index leaves
+    open by design: two POSTs arriving after a delete both read "no live prior",
+    both generate, one inserts and the other loses.
+
+    Asserted against the store rather than through a race, so it is a statement
+    about the contract and not about scheduling luck.
+    """
+    from tests.unit.test_cr136_metrics_engine import _book
+
+    from app.services.portfolio_health import compute_health
+    from app.services.portfolio_health_journal import finding_dedupe_key
+
+    user_id = _seed_user(Plan.TRADER)
+    portfolio_id = uuid4()
+    context = compute_health(**_book())
+    monkeypatch.setattr("app.api.portfolio.build_health_context", lambda uid: context)
+    monkeypatch.setattr("app.api.portfolio.resolve_mandate", lambda uid, v: base_mandate)
+    monkeypatch.setattr(settings, "portfolio_health_llm_enabled", False)
+    monkeypatch.setattr("app.api.portfolio.get_llm_gateway", lambda: None)
+
+    store = get_journal_store()
+    client = TestClient(_app(user_id, portfolio_id), raise_server_exceptions=False)
+
+    dead_id = UUID(
+        client.post(f"/v1/portfolio/health/{user_id}/finding").json()["journal_entry_id"]
+    )
+    assert store.soft_delete(user_id, dead_id) is True
+    live_id = UUID(
+        client.post(f"/v1/portfolio/health/{user_id}/finding").json()["journal_entry_id"]
+    )
+
+    key = finding_dedupe_key(portfolio_id, context["as_of"])
+    found = store.find_by_dedupe_key(user_id, key)
+    assert found is not None, "the live row is not findable by its own key"
+    assert found.id == live_id, (
+        f"resolved {found.id}, the tombstone, instead of the live row {live_id}"
+    )
+    # Non-vacuity: both rows really do share the key, so the lookup had a
+    # tombstone available to return and chose against it.
+    assert store.get(user_id, dead_id) is None
+    with get_session() as s:
+        keys = s.execute(
+            select(JournalEntryRow.dedupe_key).where(
+                JournalEntryRow.user_id == user_id,
+            )
+        ).scalars().all()
+    assert keys == [key, key], f"expected two rows on one key, got {keys}"
+
+
+def test_undo_is_refused_once_the_day_has_been_regenerated(
+    monkeypatch: pytest.MonkeyPatch, base_mandate,
+) -> None:
+    """The other half of B1's fix. `deleted_at` is now a predicate on
+    `uq_journal_dedupe`, which makes undo the one operation that can turn a legal
+    state into an illegal one: delete, regenerate, then undo, and two live rows
+    claim the same day. `restore` refuses instead of raising IntegrityError out
+    of a route whose contract is a boolean — and the row stays deleted, so the
+    journal is never left holding two Findings for one day."""
+    from tests.unit.test_cr136_metrics_engine import _book
+
+    from app.services.portfolio_health import compute_health
+
+    user_id = _seed_user(Plan.TRADER)
+    portfolio_id = uuid4()
+    context = compute_health(**_book())
+    monkeypatch.setattr("app.api.portfolio.build_health_context", lambda uid: context)
+    monkeypatch.setattr("app.api.portfolio.resolve_mandate", lambda uid, v: base_mandate)
+    monkeypatch.setattr(settings, "portfolio_health_llm_enabled", False)
+    monkeypatch.setattr("app.api.portfolio.get_llm_gateway", lambda: None)
+
+    store = get_journal_store()
+    client = TestClient(_app(user_id, portfolio_id), raise_server_exceptions=False)
+
+    first_id = UUID(
+        client.post(f"/v1/portfolio/health/{user_id}/finding").json()["journal_entry_id"]
+    )
+    assert store.soft_delete(user_id, first_id) is True
+    second_id = UUID(
+        client.post(f"/v1/portfolio/health/{user_id}/finding").json()["journal_entry_id"]
+    )
+
+    assert store.restore(user_id, first_id) is False
+    assert store.get(user_id, first_id) is None, "the refused undo restored it anyway"
+    _entries, total, _ = store.list_for_user(user_id, plan=Plan.TRADER)
+    assert total == 1
+
+    # Non-vacuity: undo still works when nothing has taken the day back.
+    assert store.soft_delete(user_id, second_id) is True
+    assert store.restore(user_id, second_id) is True
+    assert store.get(user_id, second_id) is not None
 
 
 def test_concurrent_posts_write_exactly_one_finding(

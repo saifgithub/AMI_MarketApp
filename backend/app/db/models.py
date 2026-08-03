@@ -271,8 +271,26 @@ class JournalEntryRow(Base):
         #
         # NULL for every other entry type, and NULLs do not collide in a unique
         # index on either Postgres or SQLite, so this constrains CR136 rows only.
-        UniqueConstraint(
-            "user_id", "entry_type", "dedupe_key", name="uq_journal_dedupe",
+        #
+        # PARTIAL on `deleted_at IS NULL` (CR136-M07 audit r1, BLOCKER B1). As a
+        # plain constraint it also covered TOMBSTONES, so deleting today's
+        # Finding and regenerating collided with the deleted row: no new row was
+        # ever written, the route handed back the deleted id — a link into an
+        # empty journal — and because `daily_used` counts ROWS, both spend
+        # counters froze. Measured: five generations against a daily cap of two,
+        # stopped only by the rate limiter, each one a billed LLM call. The
+        # invariant we actually want is "at most one LIVE Finding per user per
+        # entry type per day"; a tombstone is not live.
+        #
+        # `WHERE deleted_at IS NULL` is spelled identically on Postgres and
+        # SQLite, so unlike the JSON-expression index this migration's docstring
+        # rejected, this one is enforced in production AND under test.
+        Index(
+            "uq_journal_dedupe",
+            "user_id", "entry_type", "dedupe_key",
+            unique=True,
+            sqlite_where=text("deleted_at IS NULL"),
+            postgresql_where=text("deleted_at IS NULL"),
         ),
     )
 
