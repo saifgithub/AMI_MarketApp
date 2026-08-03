@@ -10,6 +10,8 @@ forced the scale-aware lookup.
 from __future__ import annotations
 
 import asyncio
+import json
+import re
 from decimal import Decimal
 from uuid import uuid4
 
@@ -313,6 +315,109 @@ def test_an_invented_slot_name_is_rejected(
     (sections, reason), _det = _run(gateway, monkeypatch)
     assert sections is None
     assert reason == "unknown_slot"
+
+
+_SPELLED_OUT_NUMBERS = [
+    "Your portfolio volatility is about twenty percent a year.",
+    "Nearly ninety percent of the risk sits in one name.",
+    "The market explains about two thirds of this book's moves.",
+    "Your beta is roughly double the market.",
+    "Your largest holding is about half of your risk.",
+    "Roughly a fifth of your book moves with the market each year.",
+    "About one in three of your holdings drives the risk.",
+    "Your volatility is XX percent.",
+]
+
+
+@pytest.mark.parametrize("sentence", _SPELLED_OUT_NUMBERS)
+def test_a_number_spelled_out_in_words_is_rejected(
+    sentence: str, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AT:R66 — CR136-M06 audit round 2, MAJOR M3. The auditor's own accepted
+    narrations, verbatim.
+
+    B1's fix banned digits; these carry a quantity and no digit, so the digit
+    rule passed every one of them. "Your beta is roughly double the market"
+    was accepted against a true beta of 0.89 — a book slightly LESS volatile
+    than the market published as twice as volatile. Same failure class as B1 at
+    coarser resolution, and the prompt's own "plain language" instruction pushes
+    toward exactly this notation.
+    """
+    # Vacuity guard: if a digit ever creeps into this table the test would pass
+    # on the OLD rule and prove nothing about M3.
+    assert not re.search(r"\d", sentence), "attack must carry no digit"
+
+    gateway = _FakeGateway(
+        json.dumps({"f1": [sentence], "f2": "Steady.", "f4": "That is the picture."})
+    )
+    (sections, reason), _det = _run(gateway, monkeypatch)
+    assert sections is None
+    assert reason == "number_word"
+
+
+@pytest.mark.parametrize("glyph", ["½", "²", "Ⅻ", "٢", "２"])
+def test_a_numeral_that_is_not_a_decimal_digit_is_rejected(
+    glyph: str, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AT:R66 — CR136-M06 audit round 2, MAJOR M3, the character half.
+
+    `\\d` is Unicode category Nd, which already covered Arabic-Indic and
+    fullwidth forms — the last three here — but not `½`/`²` (No) or `Ⅻ` (Nl).
+    The rule is now the Unicode NUMERIC VALUE property, which is what actually
+    defines "this glyph means a number"."""
+    gateway = _FakeGateway(
+        json.dumps({"f1": [f"Your volatility is {glyph} of the market."],
+                    "f2": "Steady.", "f4": "That is the picture."})
+    )
+    (sections, reason), _det = _run(gateway, monkeypatch)
+    assert sections is None
+    assert reason == "unsubstituted_digit"
+
+
+@pytest.mark.parametrize("malformed", [
+    "{{ vol_ann_pct }}", "{{VOL_ANN_PCT}}", "{{vol-ann-pct}}", "{vol_ann_pct}",
+    "{{vol_ann_pct2}}",
+])
+def test_malformed_slot_syntax_is_never_published_verbatim(
+    malformed: str, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AT:R66 — CR136-M06 audit round 2, MAJOR M4.
+
+    `_SLOT_RE` matches exactly one form. Anything else is not a slot for the
+    unknown-name check and carries no digit for the numeral check, so it used to
+    pass straight through into a permanently archived financial report. Padding
+    spaces are an ordinary thing for a model to do with a template. The near-miss
+    the auditor flagged — `{{vol_ann_pct2}}` — was caught only because the typo
+    happened to contain a digit, which is luck, not design."""
+    gateway = _FakeGateway(
+        json.dumps({"f1": [f"Your volatility has been {malformed} a year."],
+                    "f2": "Steady.", "f4": "That is the picture."})
+    )
+    (sections, reason), _det = _run(gateway, monkeypatch)
+    assert sections is None
+    assert reason == "malformed_slot"
+
+
+def test_the_number_screens_still_admit_ordinary_prose(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The availability side of M3/M4. Blunt screens that reject everything are
+    indistinguishable from a broken LLM path, so pin that a narration written the
+    way the prompt asks for still gets through."""
+    context, _rules, _allow = _allowlist()
+    slots = build_slot_map(context)
+    assert "vol_ann_pct" in slots and "top_risk_ticker" in slots
+
+    gateway = _FakeGateway(json.dumps({
+        "f1": ["Your book has swung {{vol_ann_pct}} a year.",
+               "{{top_risk_ticker}} carries {{top_risk_share_pct}} of the risk."],
+        "f2": "Your holdings move together more than their names suggest, so the"
+              " book behaves like a narrower bet than it looks.",
+        "f4": "Concentration, not market exposure, is what drives this book.",
+    }))
+    (sections, reason), _det = _run(gateway, monkeypatch)
+    assert reason is None and sections is not None
+    assert slots["vol_ann_pct"] in sections["f1"]
 
 
 def test_f5_is_never_taken_from_the_model(

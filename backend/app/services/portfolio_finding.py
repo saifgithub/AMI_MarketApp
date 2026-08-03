@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from decimal import Decimal, ROUND_HALF_EVEN, ROUND_HALF_UP
 from typing import Iterable, Sequence
@@ -801,7 +802,52 @@ def register_check(sections: dict[str, str]) -> ValidationFailure | None:
 
 
 _SLOT_RE = re.compile(r"\{\{([a-z_]+)\}\}")
-_DIGIT_RE = re.compile(r"\d")
+_BRACE_RE = re.compile(r"[{}]")
+
+# AT:R66 — CR136-M06 audit round 2, MAJOR M3. A digit is not the only way to
+# write a number. `\d` is Unicode category Nd, so it already caught Arabic-Indic
+# and fullwidth forms — but not `½` (No), `²` (No) or `Ⅻ` (Nl), and not a number
+# spelled out in words. The audit published eight accepted narrations that carry
+# a quantity and no digit, including "Your beta is roughly double the market"
+# against a true beta of 0.89. Same failure class as B1 at coarser resolution.
+#
+# Two screens replace the single digit rule:
+#   1. any character carrying a Unicode NUMERIC VALUE, which is the property
+#      that actually defines "this glyph means a number" across Nd/Nl/No; and
+#   2. a closed set of number WORDS.
+#
+# Both are deliberately blunt. "concentrated in one name" is ordinary prose and
+# is now rejected — but it is also a count claim, and the module's contract is
+# that a failed narration costs prose and never accuracy. Availability is the
+# thing being traded, and it is measured (promotion checklist 2.12), not assumed.
+_NUMBER_WORDS = (
+    "zero one two three four five six seven eight nine ten "
+    "eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen "
+    "nineteen twenty thirty forty fifty sixty seventy eighty ninety "
+    "hundred hundreds thousand thousands million millions billion billions "
+    "half halves third thirds quarter quarters fifth fifths sixth sixths "
+    "seventh sevenths eighth eighths ninth ninths tenth tenths twentieth "
+    "double doubles doubled twice thrice triple triples tripled quadruple "
+    "couple pair dozen dozens single nil "
+    # Unit words, not counts: every percentage the narration may carry arrives
+    # from a slot already rendered with "%", so the model has no legitimate
+    # reason to type one. Banning them kills "twenty percent" and the audit's
+    # "XX percent" placeholder in the same rule. `\b` keeps "percentage" legal.
+    "percent pct"
+).split()
+_NUMBER_WORD_RE = re.compile(
+    r"\b(?:" + "|".join(_NUMBER_WORDS) + r"|per\s+cent|percentage\s+points?)\b",
+    re.IGNORECASE,
+)
+
+
+def numeric_chars(text: str) -> list[str]:
+    """Characters that carry a Unicode numeric value — Nd, Nl and No.
+
+    Broader than `\\d` by design: `½`, `²` and `Ⅻ` are numbers a reader reads as
+    numbers, and none of them is a decimal digit.
+    """
+    return [ch for ch in text if unicodedata.numeric(ch, None) is not None]
 
 
 def build_slot_map(context: dict) -> dict[str, str]:
@@ -884,21 +930,47 @@ def substitute_slots(
 ) -> tuple[str | None, ValidationFailure | None]:
     """`{{name}}` → its value. Returns `(None, failure)` on any violation.
 
-    Two rejections, both closed:
-    - an unknown slot name (the model invented a reference), and
-    - **any digit outside a slot span** — the model typed a number itself,
-      which is the whole thing this design exists to prevent.
+    Four rejections, all closed. The model may not express a quantity in ANY
+    form; every number in the output arrives from a slot or the narration is
+    discarded whole.
+
+    - `unknown_slot` — the model invented a reference.
+    - `unsubstituted_digit` — a character carrying a Unicode numeric value
+      survived outside a slot span, i.e. the model typed a number itself.
+    - `number_word` — a number spelled out, or a percent unit word. Digits are
+      only one notation (audit round 2, MAJOR M3).
+    - `malformed_slot` — a residual brace. `_SLOT_RE` matches exactly one form,
+      so `{{ vol_ann_pct }}` with padding spaces is not a slot, carries no
+      digit, and used to be published verbatim into a permanently archived
+      report (audit round 2, MAJOR M4).
     """
     unknown = [n for n in _SLOT_RE.findall(text) if n not in slots]
     if unknown:
         return None, ValidationFailure(
             reason="unknown_slot", section=None, tokens=sorted(set(unknown)),
         )
+
+    # Every remaining check reads the SAME text: the model's own words, with
+    # well-formed slot spans removed. Order matters only for which reason code
+    # is logged, and that drives the promotion measurement of what the serving
+    # model actually gets wrong (checklist 2.12) — so a malformed slot reports
+    # as a malformed slot, not as whatever fragment of its name trips a later
+    # screen (`{{vol-ann-pct}}` would otherwise be logged as `number_word`).
     stripped = _SLOT_RE.sub("", text)
-    stray = _DIGIT_RE.findall(stripped)
+
+    if _BRACE_RE.search(stripped):
+        return None, ValidationFailure(
+            reason="malformed_slot", section=None, tokens=[stripped.strip()[:120]],
+        )
+    stray = numeric_chars(stripped)
     if stray:
         return None, ValidationFailure(
             reason="unsubstituted_digit", section=None, tokens=[stripped.strip()[:120]],
+        )
+    word = _NUMBER_WORD_RE.search(stripped)
+    if word is not None:
+        return None, ValidationFailure(
+            reason="number_word", section=None, tokens=[word.group(0)],
         )
     return _SLOT_RE.sub(lambda m: slots[m.group(1)], text), None
 
@@ -907,9 +979,13 @@ def substitute_slots(
 
 _SYSTEM_PROMPT = """You rewrite an already-computed portfolio risk report into plain language for the person who owns the book.
 
-**NEVER WRITE A DIGIT.** Not one, anywhere, for any reason. Every number is inserted for you afterwards from the `slots` object you are given. To place a number, write its slot name in double braces — for example `{{vol_ann_pct}}` — and it will be replaced by the correct, already-formatted value. `slots` shows you each value so you can phrase the sentence around its size, but you must type the NAME, never the value.
+**NEVER WRITE A NUMBER, IN ANY FORM.** Not one, anywhere, for any reason. This means no digits (`20`, `٢٠`), no numbers spelled out ("twenty", "a fifth", "two thirds", "half", "double", "twice", "a couple", "a single"), no fraction or superscript characters (`½`, `²`), and not the word "percent". Every number is inserted for you afterwards from the `slots` object you are given.
 
-Output containing any digit outside a slot reference is discarded in full and the reader gets a fixed template instead, so a single typed number costs the whole narration.
+To place a number, write its slot name in double braces — exactly `{{vol_ann_pct}}`, lower case, no spaces inside the braces — and it will be replaced by the correct, already-formatted value, which carries its own `%` where one belongs. `slots` shows you each value so you can phrase the sentence around its size, but you must type the NAME, never the value.
+
+You have no way to write an approximation, and you must not try. "about a fifth", "roughly double", "nearly all" — none of these are available to you. State the slot and let it speak: not "your volatility is about a fifth" but "your volatility has been {{vol_ann_pct}} a year".
+
+Output containing a number in any notation outside a slot reference, or a brace that is not part of an exact slot reference, is discarded in full and the reader gets a fixed template instead — so one typed number costs the whole narration.
 
 Use only slot names present in `slots`. Do not invent a slot name. Do not compute, compare, or combine values yourself — if a comparison is not already in the JSON, do not make it.
 
@@ -917,7 +993,7 @@ Number-bearing statements about volatility, beta, diversification and risk contr
 
 Sections f1, f2 and f4 are plain language: no statistics jargon, no estimator names, no "standard error", no "covariance", no "R-squared". Explanatory power is written ONLY as "the market explains {{market_explains_pct}} of this book's day-to-day moves".
 
-f1: 3 to 5 headlines, each 16 words or fewer, one slot reference and its plain meaning each.
+f1: 3 to 5 headlines, each 16 words or fewer, carrying a slot reference and its plain meaning.
 f2: 4 to 8 descriptive sentences. No advice. No claims about returns or performance.
 f4: 2 to 4 sentences tying the picture together. No slot references it has not already used.
 
