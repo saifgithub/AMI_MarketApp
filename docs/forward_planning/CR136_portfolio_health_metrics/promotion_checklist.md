@@ -53,10 +53,10 @@ the picture. M11 owns it.*
 
 | # | Check | Status | Evidence |
 |---|---|---|---|
-| 0.1 | `pytest backend/tests/unit/ -q` green **at the ship SHA, in a scratch worktree of that SHA** (DEF159 — never the dirty shared tree) | ☐ | |
-| 0.2 | `flutter analyze --no-fatal-infos` + `flutter test` green | ☐ | |
-| 0.3 | `python3 scripts/registers/gen_registers.py verify` — no register drift, no untracked row files | ☐ | |
-| 0.4 | `git status --short` clean | ☐ | |
+| 0.1 | `pytest backend/tests/unit/ -q` green **at the ship SHA, in a scratch worktree of that SHA** (DEF159 — never the dirty shared tree) | ✅ | `a4265fd5` — `2240 passed in 274.16s`; M02 lane suite 42, M05 lane suite 33 |
+| 0.2 | `flutter analyze --no-fatal-infos` + `flutter test` green | ✅ | analyze: 6 pre-existing infos, zero errors/warnings from CR136; `flutter test` 495 passed |
+| 0.3 | `python3 scripts/registers/gen_registers.py verify` — no register drift, no untracked row files | ✅ | DEF 210 rows OK, CR 132 rows OK — identical to live |
+| 0.4 | `git status --short` clean | ✅ | clean at `a4265fd5` before this tick |
 
 ## Phase 1 — audit lanes (M11 §3.5)
 
@@ -80,7 +80,7 @@ the picture. M11 owns it.*
 | 2.7 | **P5** second same-day tick logs `written=0` (idempotent no-op). Wait one interval or `docker restart ami_api_alpha` | ☐ | Must come **after** 2.6, or it reads `no_trading_day` and proves nothing |
 | 2.8 | **M10 backfill**: dry-run all → every portfolio `terminal OK` → real-user spot-check with `--user-id` → `--apply` → re-run shows `inserted 0` → SQL sanity (no `as_of >= current_date`; all backfilled rows `source='yahoo_backfill'` with NULL F16 columns) | ☐ | |
 | 2.9 | `python -m scripts.cr136_live_crosscheck --user-id <real book>` exits **0**; output pasted into the CR136-M02 lane | ☐ | Book selection: no `room-benchmark` synthetics, no 05-24 05:10 seed rows |
-| 2.10 | `cr136_generate_fixtures.py --verify-scenarios` exits 0 against the live SPY series (fix the constants first if not — never ship stale) | ☐ | |
+| 2.10 | `cr136_generate_fixtures.py --verify-scenarios` exits 0 against the live SPY series (fix the constants first if not — never ship stale) | ✅ | Runs from the Mac (M11 §3.3) — needs the internet, not the LAN. `covid_2020` price −34.10% vs pinned −33.90%, diff **0.20pp**; `drawdown_2022` −25.36% vs −25.40%, diff **0.04pp**. Both inside ±0.5pp; **exit 0, constants not stale**. Total-return basis printed for reference (−33.72% / −24.50%) and deliberately not gating — the pins are PRICE-index returns |
 | 2.11 | First bias reading recorded in `bias_readings.md` (immature is fine — record, don't gate) | ☐ | |
 
 ## Phase 3 — mobile
