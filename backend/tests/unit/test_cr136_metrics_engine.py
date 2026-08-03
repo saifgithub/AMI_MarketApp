@@ -30,9 +30,11 @@ from app.services.portfolio_health_constants import (
     DROPPED_WEIGHT_MAX,
     ENGINE_VERSION,
     GATE_MODE_DEFAULT,
+    GRID_DENSITY_MAX,
     INSUFFICIENT_BENCHMARK_MISALIGNED,
     INSUFFICIENT_DROPPED_WEIGHT,
     INSUFFICIENT_SHORT_WINDOW,
+    INSUFFICIENT_SPARSE_GRID,
     INSUFFICIENT_T_OVER_N,
     LOW_R2_THRESHOLD,
     PLANS_DEFAULT,
@@ -972,3 +974,152 @@ def test_a_zero_variance_book_is_insufficient_not_a_confident_zero() -> None:
     assert block["sufficient"] is False
     assert block["value"] is None
     assert block["insufficient_cause"] == "zero_variance"
+
+
+# ── DEF213: the joined grid's density ───────────────────────────────────────
+
+
+def _book_thinned(total: int, keep: int, *, seed: int = 11, private: int = 0) -> dict:
+    """A book where every holding has plenty of its OWN history but ONE of them
+    is missing days, so the JOINED grid is `keep` dates long.
+
+    First and last date are always kept, so `window_days` is identical to the
+    clean book's and the only thing that moves is `n_observations` — which is
+    exactly the shape DEF213 describes: `_join` intersects, so one thinly-traded
+    holding thins the grid every metric in the book is computed on.
+
+    `private` gives every name that many dates of its own beyond the shared
+    span, disjoint from everyone else's. Needed whenever `keep` falls under the
+    126-close drop rule: without it the thin holding is dropped outright and the
+    join quietly reverts to the full grid — which is what the intersection does,
+    not what the test meant to build."""
+    tickers = ("AAA", "BBB", "CCC")
+    names = [*tickers, BENCHMARK_TICKER]
+    grid = _dates(total + private * len(names))
+    shared, extras = grid[:total], grid[total:]
+
+    market_by_date = dict(zip(grid, _closes(_walk(1, len(grid), sigma=0.009, dates=grid))))
+
+    step = (total - 1) / (keep - 1)
+    thin = sorted({shared[0], shared[-1]} | {shared[round(i * step)] for i in range(keep)})
+
+    own: dict[str, list[str]] = {}
+    for i, name in enumerate(names):
+        base = thin if name == tickers[0] else list(shared)
+        own[name] = sorted(base + extras[i::len(names)])
+
+    series: dict[str, list[tuple[str, float]]] = {}
+    for i, ticker in enumerate(tickers):
+        days = own[ticker]
+        series[ticker] = _walk(
+            seed + i, len(days), sigma=0.010, dates=days,
+            market=[market_by_date[d] for d in days], beta=1.0 + 0.2 * i,
+        )
+    series[BENCHMARK_TICKER] = [(d, market_by_date[d]) for d in own[BENCHMARK_TICKER]]
+    return {
+        "holdings": [(t, 10.0) for t in tickers],
+        "marks": {t: 100.0 for t in tickers},
+        "cash": 0.0,
+        "series": series,
+        "sector_of": lambda t: "Tech",
+        "etf_tickers": frozenset(),
+        "as_of": shared[-1],
+    }
+
+
+def test_a_gappy_joined_grid_is_refused_not_annualised_as_if_daily() -> None:
+    """DEF213. Every return is a close-to-close ratio on the JOINED grid and
+    `annualize_vol` scales all of them by √252, so a return spanning several
+    trading days is annualised as though it spanned one — measured at +12.5% on
+    σ with 20% of one holding's days missing, and +29.8% at 40%.
+
+    The half that makes it a defect rather than an estimator limitation is the
+    silence: nothing is dropped and nothing is partial, because the days simply
+    never lined up. This asserts the silence is over."""
+    payload = compute_health(**_book_thinned(500, 300))
+
+    for name in (
+        "portfolio_volatility", "beta", "effective_bets", "risk_contribution",
+    ):
+        block = payload["blocks"][name]
+        assert block["sufficient"] is False, name
+        assert block["value"] is None, name
+        assert block["insufficient_cause"] == INSUFFICIENT_SPARSE_GRID, name
+
+    vol = payload["blocks"]["portfolio_volatility"]
+    # Counting observations cannot see this: 299 returns is more than twice the
+    # 126-return floor, so every pre-DEF213 sufficiency check passes.
+    assert vol["n_observations"] > 2 * T_MIN
+    assert vol["window_days"] / vol["n_observations"] > GRID_DENSITY_MAX
+    # ...and this is what it looked like before the guard: a clean, confident
+    # measurement with nothing anywhere to say the grid had holes.
+    assert payload["dropped_holdings"] == []
+    assert vol["partial"] is False
+
+
+def test_the_grid_density_threshold_is_where_the_constant_says_it_is() -> None:
+    """Straddles GRID_DENSITY_MAX on one calendar span, so the test pins the
+    threshold rather than merely exercising the branch. Both books have the same
+    first and last date — only the observation count differs."""
+    grid = _dates(500)
+    span = (
+        date.fromisoformat(grid[-1]) - date.fromisoformat(grid[0])
+    ).days
+
+    # keep = returns + 1; ratio = span / returns.
+    just_under = math.floor(span / GRID_DENSITY_MAX) + 1
+    just_over = just_under - 1
+    assert span / just_under < GRID_DENSITY_MAX < span / just_over
+
+    dense = compute_health(**_book_thinned(500, just_under + 1))
+    sparse = compute_health(**_book_thinned(500, just_over + 1))
+
+    assert dense["blocks"]["portfolio_volatility"]["sufficient"] is True
+    assert dense["blocks"]["portfolio_volatility"]["value"] is not None
+    assert sparse["blocks"]["portfolio_volatility"]["sufficient"] is False
+    assert (
+        sparse["blocks"]["portfolio_volatility"]["insufficient_cause"]
+        == INSUFFICIENT_SPARSE_GRID
+    )
+
+
+def test_a_clean_book_never_trips_the_density_guard() -> None:
+    """The false-fire half. A guard that withholds every Σ-derived metric from a
+    user whose data is fine is worse than the overstatement it prevents, so the
+    threshold was set from the WORST clean window on the real US-equity calendar
+    (measured 1.4921 over 11,038 rolling windows; 1.5556 with a 5-session
+    closure constructed into it) — see GRID_DENSITY_MAX."""
+    for n_obs in (T_MIN + 1, 250, 400, 505):
+        payload = compute_health(**_book(n_obs))
+        vol = payload["blocks"]["portfolio_volatility"]
+        assert vol["window_days"] / vol["n_observations"] < GRID_DENSITY_MAX
+        assert vol["insufficient_cause"] != INSUFFICIENT_SPARSE_GRID
+        assert vol["sufficient"] is True, n_obs
+
+    # The loop above is NOT the guard: `_dates` is weekdays only, so every grid
+    # it builds sits at exactly 7/5 = 1.40 and the assertion holds for any
+    # threshold above that — including one well under the real calendar's worst
+    # clean window, which is the mistake that matters here. Measured on the real
+    # calendar, market holidays push a legitimate 126-return window to 1.4921,
+    # and a constructed 5-session closure inside one to 1.5556; a threshold set
+    # below either of those withholds every Σ-derived metric from a user whose
+    # data is fine. Both densities are reproduced exactly, and both must pass.
+    for keep, floor in ((468, 1.4921), (449, 1.5556)):
+        payload = compute_health(**_book_thinned(500, keep))
+        vol = payload["blocks"]["portfolio_volatility"]
+        assert vol["window_days"] / vol["n_observations"] >= floor
+        assert vol["sufficient"] is True, floor
+        assert vol["value"] is not None, floor
+
+
+def test_a_short_grid_reads_short_not_sparse() -> None:
+    """A book below the 126-return floor is BOTH short and — on a weekday grid
+    with a long tail — arbitrarily sparse. `short_window` is the more
+    fundamental fact and must win, or the user is told their feed has holes
+    when the truth is AMI has not watched them long enough yet."""
+    payload = compute_health(**_book_thinned(500, 100, private=60))
+    vol = payload["blocks"]["portfolio_volatility"]
+    assert payload["dropped_holdings"] == [], "no holding is short — the WINDOW is"
+    assert vol["n_observations"] < T_MIN
+    assert vol["window_days"] / vol["n_observations"] > GRID_DENSITY_MAX
+    assert vol["insufficient_cause"] == INSUFFICIENT_SHORT_WINDOW

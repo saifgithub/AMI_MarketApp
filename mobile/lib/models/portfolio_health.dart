@@ -60,12 +60,15 @@ const String kCauseBenchmarkMisaligned = 'benchmark_misaligned';
 const String kCauseDroppedWeight = 'dropped_weight_exceeded';
 const String kCauseFeedUnavailable = 'feed_unavailable';
 const String kCauseZeroVariance = 'zero_variance';
+const String kCauseSparseGrid = 'sparse_grid';
 
 /// The closed set, compared as a SET against the backend's own `INSUFFICIENT_*`
 /// constants. This is the DEF210 shape's second occurrence: the enum widened
 /// 4 → 6 during CR136 with nothing holding the two sides together. Widening it
 /// again now fails on the backend side the day it happens, rather than the day
-/// a reader notices a tile is missing (M04 audit r1, MAJOR M1).
+/// a reader notices a tile is missing (M04 audit r1, MAJOR M1). It did: DEF213's
+/// guard minted `sparse_grid` as the seventh cause and this test failed on that
+/// commit, before the card had ever seen the value.
 const Set<String> kInsufficientCauses = {
   kCauseShortWindow,
   kCauseTOverN,
@@ -73,6 +76,7 @@ const Set<String> kInsufficientCauses = {
   kCauseDroppedWeight,
   kCauseFeedUnavailable,
   kCauseZeroVariance,
+  kCauseSparseGrid,
 };
 
 /// M07 §3.2's gate status — exactly the eight keys `GateStatus.as_dict()` ships.

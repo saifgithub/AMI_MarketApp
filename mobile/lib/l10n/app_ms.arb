@@ -642,6 +642,7 @@
     "portfolioHealthInsufficientBody": "Price history available to AMI's engine covers {n} trading days; 126 needed.",
     "portfolioHealthInsufficientDroppedBody": "Usable price history covers {covered}% of invested value; AMI needs at least 80%.",
     "portfolioHealthInsufficientGenericBody": "AMI could not measure this book's risk over the available window.",
+    "portfolioHealthInsufficientSparseGridBody": "Price history available to AMI's engine has gaps: {n} trading days spread across {days} calendar days.",
     "portfolioHealthTnNote": "{t} aligned trading days across {n} holdings — too few for AMI to attribute risk reliably.",
     "portfolioHealthBenchmarkNote": "S&P 500 history did not align with this book's window; beta is not measured.",
     "portfolioHealthBetaUnavailableNote": "AMI could not measure this book's beta against the S&P 500 over the available window.",

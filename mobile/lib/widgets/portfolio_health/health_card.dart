@@ -247,11 +247,20 @@ class _InsufficientState extends StatelessWidget {
         body = l.portfolioHealthInsufficientDroppedBody(
           _fixed(coveredPct, 0),
         );
+      case kCauseSparseGrid:
+        // DEF213. The generic body would have carried this correctly — it says
+        // AMI could not measure, which is true — but "could not measure" reads
+        // as a limit of the book, and this one is a limit of the FEED: the
+        // dates simply never lined up. Both numbers are on the wire already.
+        body = l.portfolioHealthInsufficientSparseGridBody(
+          _int(health.block('portfolio_volatility')?.nObservations ?? 0),
+          _int(health.block('portfolio_volatility')?.windowDays ?? 0),
+        );
       default:
-        // zero_variance, feed_unavailable, or a cause added later. The two
-        // above are the only ones SCREEN_DESIGNS pinned copy for; naming the
-        // wrong cause would be worse than naming none, and leaving the state
-        // with no explanation at all is the hole CR040 exists to close.
+        // zero_variance, feed_unavailable, or a cause added later. The three
+        // above are the only ones with pinned copy; naming the wrong cause
+        // would be worse than naming none, and leaving the state with no
+        // explanation at all is the hole CR040 exists to close.
         // Recorded deviation: this key is not in M09 §3.7's table.
         body = l.portfolioHealthInsufficientGenericBody;
     }

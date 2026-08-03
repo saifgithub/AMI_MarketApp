@@ -259,6 +259,43 @@ void main() {
       );
     });
 
+    testWidgets('a gappy feed names the gap, not the book', (tester) async {
+      // DEF213. 251 observations across 585 calendar days is the 40%-gaps arm
+      // of that defect's own measurement: nothing was dropped, `partial` is
+      // false, and the pre-guard engine published a σ overstated by 29.8% as a
+      // clean measurement. The generic body would be TRUE here — AMI could not
+      // measure — but it reads as a limit of the user's book, and this one is a
+      // limit of the feed.
+      await _pump(
+        tester,
+        health: healthFixture(
+          blocks: insufficientBlocks(
+            cause: 'sparse_grid',
+            nObservations: 251,
+            windowDays: 585,
+          ),
+        ),
+      );
+      expect(
+        find.text("Price history available to AMI's engine has gaps: "
+            '${_iso('251')} trading days spread across ${_iso('585')} '
+            'calendar days.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text("AMI could not measure this book's risk over the available "
+            'window.'),
+        findsNothing,
+        reason: 'sparse_grid has pinned copy; falling to the generic body '
+            'would lose the only fact the user can act on',
+      );
+      expect(_colours(tester).contains(AmiColors.hexAmber), isFalse,
+          reason: 'a feed with holes is not a warning about the book');
+      expect(_rendersAMetricValue(tester), isFalse,
+          reason: 'the counts live in the reason copy; no value may render in '
+              'the metric register');
+    });
+
     testWidgets('an unpinned cause still says something', (tester) async {
       await _pump(
         tester,

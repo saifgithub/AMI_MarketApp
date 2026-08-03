@@ -894,9 +894,11 @@ def test_a_superseded_undo_is_a_409_with_a_reason_not_a_404(
     assert r.json()["detail"]["code"] == RESTORE_SUPERSEDED_CODE
     assert "newer entry" in r.json()["detail"]["message"]
 
-    # The three genuine 404 paths are untouched: an id that never existed, an
-    # entry that was never deleted, and another user's row. Without these the
-    # change could have turned every failed undo into a 409.
+    # Both genuine 404 paths are untouched: an id that never existed, and an
+    # entry that was never deleted. Without these the change could have turned
+    # every failed undo into a 409. There is no third — another user's row is a
+    # 403 from `_own` (journal.py:49-51) and never reaches `restore_with_reason`
+    # at all, so it cannot be asserted here (CR136-M07 audit r4).
     assert journal.post(
         f"/v1/journal/{user_id}/entry/{uuid4()}/restore"
     ).status_code == 404

@@ -166,6 +166,7 @@ Map<String, dynamic> defaultBlocks() => {
 Map<String, dynamic> insufficientBlocks({
   String cause = 'short_window',
   int nObservations = 47,
+  int windowDays = 288,
 }) =>
     {
       for (final m in const [
@@ -179,6 +180,7 @@ Map<String, dynamic> insufficientBlocks({
           sufficient: false,
           insufficientCause: cause,
           nObservations: nObservations,
+          windowDays: windowDays,
         ),
       'weight_concentration': blockJson(
         'weight_concentration',
@@ -186,6 +188,7 @@ Map<String, dynamic> insufficientBlocks({
         basis: 'weights',
         backcast: false,
         nObservations: nObservations,
+        windowDays: windowDays,
         extensions: {'effective_n': 3.8, 'holdings_count': 6},
       ),
     };

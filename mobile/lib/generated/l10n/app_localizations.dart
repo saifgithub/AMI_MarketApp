@@ -3913,6 +3913,12 @@ abstract class AppLocalizations {
   /// **'AMI could not measure this book\'s risk over the available window.'**
   String get portfolioHealthInsufficientGenericBody;
 
+  /// CR136/DEF213 — insufficient-state body for insufficient_cause=sparse_grid. The holdings' and benchmark's price dates are intersected, and when that joined grid is too sparse a single close-to-close return spans several days while the estimator still annualises it as one, overstating volatility (measured +12.5% at 20% of one holding's days missing). Fires above GRID_DENSITY_MAX = 1.65 (cr136.v1). Names AMI's own data limit, never the user's book (Rev 4 F20) — the user did nothing, a feed has holes. {n} is n_observations, {days} is window_days. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Price history available to AMI\'s engine has gaps: {n} trading days spread across {days} calendar days.'**
+  String portfolioHealthInsufficientSparseGridBody(String n, String days);
+
   /// CR136 — shown in place of the effective-bets tile and the bars when insufficient_cause=t_over_n: the covariance matrix is estimable but too noisy to split risk across that many holdings (T/N below T_OVER_N_MIN, cr136.v1). Names AMI's limit, not the user's diversification. NEW key, needs ar/ms translation. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

@@ -73,6 +73,41 @@ T_OVER_N_MIN = 5.0
 # Tier-1 block reads insufficient rather than describing a book it has not seen.
 DROPPED_WEIGHT_MAX = 0.20
 
+# DEF213 — the joined return grid's density, `window_days / n_observations`.
+# `_join` intersects dates across the holdings and the benchmark, `_returns_on`
+# then takes consecutive close-to-close ratios ON THAT GRID, and `annualize_vol`
+# multiplies by √252 unconditionally — so a return spanning k trading days is
+# annualised as if it spanned one. Measured: thinning to every other trading day
+# overstates σ by 1.372×/1.424× (24/24 seeds), and re-annualising the same
+# estimate at the grid's true period count returns 0.970, which puts the entire
+# gap in the annualisation constant. One thinly-traded holding of three is
+# enough — `_join` intersects, so its holes thin every metric in the book:
+# +6.1% σ at 5% of its days missing, +7.9% at 10%, +12.5% at 20%, +29.8% at 40%,
+# with `dropped_holdings` EMPTY and `partial` FALSE at every level.
+#
+# This constant is the LOUD-DEGRADATION half only (Saiful's call, 2026-08-03:
+# "guard now, correct later"). It refuses to publish a number the annualisation
+# does not fit; annualising by the grid's realised period length instead — which
+# the 0.970 above shows recovers the true figure — is its own future CR.
+#
+# 1.65 is derived, not round-numbered. Measured 2026-08-03 on the real US-equity
+# calendar (`def213_guard_threshold.py`, 10y of daily bars, 8 instruments across
+# both venues and four asset classes — all 8 share ONE calendar, 2513 of 2513
+# dates, so a clean book's join loses nothing for calendar reasons):
+#   · clean-book ratio, 11,038 rolling windows at every length the engine
+#     consumes (126…504 returns): mean 1.4535, MAX 1.4921 (a 126-return window
+#     over the holiday-dense 2024-12-31→2025-07-07 stretch).
+#   · CONSTRUCTED tail — Yahoo's free endpoint caps that ticker at ~10y today, so
+#     9/11 (4 sessions) and Sandy (2) are outside the fetchable window; deleting
+#     a block of L consecutive sessions from the real calendar reproduces the
+#     shape. Worst: 1.5556 at L=5, longer than any US closure since 1933.
+# 1.65 clears that constructed worst case by 6.1% and the observed one by 10.6%,
+# and fires above 11.9% of one holding's days missing — i.e. just past the point
+# where the bias overtakes the estimator's OWN error bar, which F17 measures at
+# 6.29–6.37% relative at T=126. Below that line a gap costs less than the
+# sampling noise the metric already carries; above it the bias dominates.
+GRID_DENSITY_MAX = 1.65
+
 # Rev 4 Tier-1 table — R² below this sets `low_explanatory_power`; also R3's
 # own R² gate (M05). Beta still ships when the flag is true; it is labelled,
 # not withheld.
@@ -337,6 +372,7 @@ INSUFFICIENT_BENCHMARK_MISALIGNED = "benchmark_misaligned"
 INSUFFICIENT_DROPPED_WEIGHT = "dropped_weight_exceeded"
 INSUFFICIENT_FEED_UNAVAILABLE = "feed_unavailable"
 INSUFFICIENT_ZERO_VARIANCE = "zero_variance"
+INSUFFICIENT_SPARSE_GRID = "sparse_grid"      # DEF213 — see GRID_DENSITY_MAX
 
 STATUS_OK = "ok"
 STATUS_NO_HOLDINGS = "no_holdings"

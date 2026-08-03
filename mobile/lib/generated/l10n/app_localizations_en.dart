@@ -2252,6 +2252,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'AMI could not measure this book\'s risk over the available window.';
 
   @override
+  String portfolioHealthInsufficientSparseGridBody(String n, String days) {
+    return 'Price history available to AMI\'s engine has gaps: $n trading days spread across $days calendar days.';
+  }
+
+  @override
   String portfolioHealthTnNote(String t, String n) {
     return '$t aligned trading days across $n holdings — too few for AMI to attribute risk reliably.';
   }

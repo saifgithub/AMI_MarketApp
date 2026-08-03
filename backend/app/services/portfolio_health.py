@@ -55,11 +55,13 @@ from app.services.portfolio_health_constants import (
     DATA_QUALITY_DROP_REASON,
     DROPPED_WEIGHT_MAX,
     FEED_UNAVAILABLE_DROP_REASON,
+    GRID_DENSITY_MAX,
     INSUFFICIENT_FEED_UNAVAILABLE,
     ENGINE_VERSION,
     INSUFFICIENT_BENCHMARK_MISALIGNED,
     INSUFFICIENT_DROPPED_WEIGHT,
     INSUFFICIENT_SHORT_WINDOW,
+    INSUFFICIENT_SPARSE_GRID,
     INSUFFICIENT_T_OVER_N,
     INSUFFICIENT_ZERO_VARIANCE,
     LOW_R2_THRESHOLD,
@@ -326,6 +328,18 @@ def compute_health(
         estimator_cause: str | None = INSUFFICIENT_SHORT_WINDOW
     elif dropped_weight_exceeded:
         estimator_cause = INSUFFICIENT_DROPPED_WEIGHT
+    elif window_days / t_obs > GRID_DENSITY_MAX:
+        # DEF213. Every return below is a close-to-close ratio on the JOINED
+        # grid, and `annualize_vol` scales all of them by √252 as though each
+        # spanned one trading day. When the join is sparse — one thinly-traded
+        # holding, a halted session, a feed with holes — a single "daily" return
+        # spans several days and the whole Tier-1 block is overstated, with
+        # `dropped_holdings` empty and `partial` false because nothing was
+        # dropped: the days simply never lined up. Counting observations cannot
+        # see it (t_obs is comfortably over T_MIN in every measured case); only
+        # the ratio can. Refusing here is the loud half of the fix — the
+        # estimator itself still assumes 252 (see GRID_DENSITY_MAX).
+        estimator_cause = INSUFFICIENT_SPARSE_GRID
     else:
         estimator_cause = None
     estimator_ok = estimator_cause is None
