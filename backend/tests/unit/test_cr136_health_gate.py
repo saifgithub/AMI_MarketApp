@@ -87,6 +87,21 @@ def _seed_user(plan: Plan = Plan.FLOOR_PASS, trial_expires_at=None) -> UUID:
     return user_id
 
 
+def _today_utc(offset: timedelta = timedelta()) -> datetime:
+    """A timestamp guaranteed to fall on TODAY in UTC.
+
+    `now - timedelta(minutes=10)` is not: run it in the first ten minutes after
+    UTC midnight and the row lands on yesterday, `daily_used` reads 0, and the
+    cap tests fail for eleven minutes a day. Measured by the M11 audit — the
+    suite really was green at the SHA it was measured at, and really would not
+    have been at 00:05 UTC. Clamping to the start of the UTC day makes the
+    fixture say what it means: "earlier today".
+    """
+    now = datetime.now(timezone.utc)
+    day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    return max(now + offset, day_start)
+
+
 def _seed_finding(
     user_id: UUID, portfolio_id: UUID, *, as_of: str, created_at: datetime,
     deleted: bool = False,
@@ -302,7 +317,7 @@ def test_the_daily_cap_applies_in_every_mode(
     now = datetime.now(timezone.utc)
     for i in range(2):
         _seed_finding(user_id, portfolio_id, as_of=f"2026-07-0{i + 1}",
-                      created_at=now - timedelta(minutes=10 + i))
+                      created_at=_today_utc(timedelta(minutes=-(10 + i))))
 
     r = client.post(f"/v1/portfolio/health/{user_id}/finding")
     assert r.status_code == 429, r.text
@@ -312,7 +327,7 @@ def test_the_daily_cap_applies_in_every_mode(
 def test_one_finding_today_still_leaves_the_second(wired) -> None:
     client, user_id, portfolio_id, _gen = wired
     _seed_finding(user_id, portfolio_id, as_of="2026-07-01",
-                  created_at=datetime.now(timezone.utc) - timedelta(minutes=5))
+                  created_at=_today_utc(timedelta(minutes=-5)))
     r = client.post(f"/v1/portfolio/health/{user_id}/finding")
     assert r.status_code == 200, r.text
     assert r.json()["gate"]["daily_used"] == 2, "re-evaluated to include the new row"

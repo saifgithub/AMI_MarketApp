@@ -31,7 +31,11 @@ from app.services.portfolio_rules import (
     HoldingInput,
     evaluate_rules,
 )
-from app.services.sector_allocation import sector_concentration_cap
+from app.services.sector_allocation import (
+    NON_SECTOR_BUCKETS,
+    allocate_by_sector,
+    sector_concentration_cap,
+)
 
 
 def _holding(
@@ -563,6 +567,109 @@ _MANDATE: Mandate = None  # type: ignore[assignment]
 def _bind_mandate(base_mandate: Mandate) -> None:
     global _MANDATE
     _MANDATE = base_mandate.model_copy(update={"single_name_cap_pct": 100.0})
+
+
+def test_r0_sector_cap_agrees_with_the_allocation_surface_on_a_cash_book(
+    base_mandate: Mandate,
+) -> None:
+    """The sector half of R0's mirror, which the single-name test cannot cover.
+
+    R0's whole justification is that it agrees with what the app already
+    ENFORCES and SHOWS. `/v1/portfolio/sector-allocation` is that surface for
+    sector concentration, and its denominator is the WHOLE portfolio, cash
+    included (DEF149). So the same $10k/50%-cash shape that broke the
+    single-name dimension has to be checked here too: invested-sleeve sector
+    weights are double the total-value ones, and R0 must not fire where the
+    allocation surface reports compliant.
+    """
+    # The single-name cap is raised out of the way so the only thing that can
+    # fire here is the sector dimension — the one under test.
+    mandate = base_mandate.model_copy(update={"single_name_cap_pct": 50.0})
+    cap = sector_concentration_cap(mandate)
+    assert cap == 0.40
+
+    # $10,000 total: $5,000 cash, Tech $3,000 (AAA+BBB), Health $2,000.
+    # Total-value Tech weight 30% — compliant. Invested-sleeve 60% — would fire.
+    holdings = [
+        _holding("AAA", 40.0, sector="Tech"),
+        _holding("BBB", 20.0, sector="Tech"),
+        _holding("CCC", 40.0, sector="Health"),
+    ]
+    results, _ = _evaluate(mandate, holdings=holdings, cash_pct_total=50.0)
+    r0 = _by_id(results)["R0"]
+
+    class _H:
+        def __init__(self, ticker, quantity):
+            self.ticker = ticker
+            self.quantity = quantity
+
+    allocation = allocate_by_sector(
+        [_H("AAA", 20.0), _H("BBB", 10.0), _H("CCC", 20.0)],
+        {"AAA": 100.0, "BBB": 100.0, "CCC": 100.0},
+        cash=5_000.0,
+        sector_of=lambda t: {"AAA": "Tech", "BBB": "Tech", "CCC": "Health"}[t],
+    )
+    known = {s: w for s, w in allocation.items() if s not in NON_SECTOR_BUCKETS}
+    assert known["Tech"] == pytest.approx(0.30), (
+        "vacuity guard — the allocation surface really is on the total-value "
+        "basis here, so the two layers are being compared on the same book"
+    )
+    assert max(known.values()) <= cap, "the surface reports compliant"
+    # The discriminating fact: on the invested sleeve Tech is 60%, which is
+    # over the cap. So this fixture DOES separate the two bases — reverting R0
+    # to the invested sleeve makes the assertion below fail.
+    assert (40.0 + 20.0) / 100.0 > cap
+
+    fired_sectors = {
+        b["name"] for b in r0["slots"].get("breaches", []) if b["scope"] == "sector"
+    }
+    assert fired_sectors == set(), (
+        "R0 reported a sector breach the allocation surface calls compliant — "
+        "the same shown-vs-enforced inversion the single-name dimension "
+        "shipped with, one column over"
+    )
+
+    # And the other direction: a genuine total-value breach must still fire, or
+    # the agreement above is agreement by silence.
+    loud = [
+        _holding("AAA", 45.0, sector="Tech"),
+        _holding("BBB", 45.0, sector="Tech"),
+        _holding("CCC", 10.0, sector="Health"),
+    ]
+    results, _ = _evaluate(mandate, holdings=loud, cash_pct_total=20.0)
+    fired = _by_id(results)["R0"]
+    sectors = {b["name"] for b in fired["slots"]["breaches"] if b["scope"] == "sector"}
+    assert fired["fired"] is True and sectors == {"Tech"}, (
+        "Tech is 72% of TOTAL value against a 40% cap, and no single name is "
+        "over its own 50% cap — so only the sector dimension can have fired"
+    )
+
+
+def test_r0_never_reports_a_breach_in_the_unclassified_bucket(
+    base_mandate: Mandate,
+) -> None:
+    """`Other` is our ignorance about the book, not a fact about it. The
+    allocation surface judges compliance over KNOWN sectors only (the DEF059
+    inversion guard), so R0 accusing a user of an `Other` breach would be a
+    contradiction the user cannot even act on."""
+    mandate = base_mandate.model_copy(update={"concentration_tolerance": 0.40})
+    holdings = [
+        _holding("AAA", 90.0, sector="Other"),
+        _holding("BBB", 10.0, sector="Health"),
+    ]
+    results, _ = _evaluate(mandate, holdings=holdings, cash_pct_total=0.0)
+    r0 = _by_id(results)["R0"]
+    breaches = r0["slots"].get("breaches", [])
+    assert r0["fired"] is True and breaches, (
+        "vacuity guard — AAA at 90% of total value breaches its single-name "
+        "cap, so `breaches` is populated and the sector check below is looking "
+        "at a real list rather than an empty one"
+    )
+    sectors = {b["name"] for b in breaches if b["scope"] == "sector"}
+    assert "Other" not in sectors
+    assert "Other" in NON_SECTOR_BUCKETS, (
+        "vacuity guard — this is the same bucket the allocation surface excludes"
+    )
 
 
 def test_r0_agrees_with_the_gate_on_a_book_holding_CASH(

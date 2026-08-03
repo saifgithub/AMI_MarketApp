@@ -70,8 +70,13 @@ from uuid import UUID
 import numpy as np
 from sqlalchemy import select
 
+from app.core.config import settings
 from app.db import get_session
 from app.db.models import PriceHistoryDailyRow
+# The mock-source sentinel, imported rather than retyped. Independence here is
+# about the ARITHMETIC — this is a data-hygiene rule, and a second hardcoded
+# copy of the string would silently stop filtering the day M01 renamed it.
+from app.services.price_history import _MOCK_SOURCE
 
 # Deliberately literals — see the module docstring. Importing these from the
 # constants module would route them through `app.trading_math`.
@@ -95,25 +100,44 @@ def _fetch_health(api_base: str, user_id: UUID, token: str) -> dict:
 # ── Raw history, read with this script's own SELECT ─────────────────────────
 
 
-def _load_closes(tickers: list[str]) -> dict[str, dict[date, float]]:
-    """`adj_close` per (ticker, day), straight out of M01's table.
+def _load_closes(
+    tickers: list[str],
+) -> tuple[dict[str, dict[date, float]], dict[str, int]]:
+    """`adj_close` per (ticker, day) out of M01's table, plus a per-ticker count
+    of mock-source rows skipped.
 
     Not via M01's series helpers: the point is to re-do the joining and the
     trimming here, so a bug in that layer shows up as a disagreement rather
     than being inherited by both sides of the comparison.
+
+    **But the same-source filter IS applied.** In real mode the engine reads
+    `source != 'mock_walk'` (`price_history._load_rows`, and `latest_trading_day`
+    likewise), so a table holding both real and fabricated bars — which this
+    codebase explicitly anticipates and tests for — would otherwise have the
+    harness recomputing from prices the live engine correctly refused. That is
+    not an independent check; it is a different question asked of different
+    data, and it would report a FAIL against an engine that was right. The
+    filter is a hygiene rule, not arithmetic, so mirroring it is what keeps the
+    comparison honest.
     """
+    real_mode = bool(settings.use_real_market_data)
     out: dict[str, dict[date, float]] = {t: {} for t in tickers}
+    skipped: dict[str, int] = {t: 0 for t in tickers}
     with get_session() as session:
         rows = session.execute(
             select(
                 PriceHistoryDailyRow.ticker,
                 PriceHistoryDailyRow.date,
                 PriceHistoryDailyRow.adj_close,
+                PriceHistoryDailyRow.source,
             ).where(PriceHistoryDailyRow.ticker.in_(tickers))
         ).all()
-    for ticker, day, adj_close in rows:
+    for ticker, day, adj_close, source in rows:
+        if real_mode and source == _MOCK_SOURCE:
+            skipped[ticker] += 1
+            continue
         out[ticker][day] = float(adj_close)
-    return out
+    return out, skipped
 
 
 def _joined_returns(
@@ -277,10 +301,10 @@ def main(argv: list[str] | None = None) -> int:
         return _fail("payload says partial but names no dropped holdings")
 
     # ── Rebuild the window from stored history ──────────────────────────────
-    closes = _load_closes([*tickers, _BENCHMARK])
+    closes, skipped_mock = _load_closes([*tickers, _BENCHMARK])
     missing = [t for t in [*tickers, _BENCHMARK] if not closes.get(t)]
     if missing:
-        return _fail(f"no price_history_daily rows for {missing}")
+        return _fail(f"no usable price_history_daily rows for {missing}")
 
     returns, days = _joined_returns(closes, [*tickers, _BENCHMARK])
     if returns.size == 0:
@@ -349,6 +373,12 @@ def main(argv: list[str] | None = None) -> int:
     print(f"risky holdings  : {', '.join(tickers)}")
     if dropped:
         print(f"dropped (partial): {', '.join(str(d) for d in dropped)}")
+    fabricated = {t: n for t, n in skipped_mock.items() if n}
+    if fabricated:
+        # Loud, not silent: the engine excluded these too, so the comparison is
+        # still valid — but a book being priced off a partially-fabricated
+        # table is something the operator should know before trusting a PASS.
+        print(f"mock-source rows skipped (real mode): {fabricated}")
     print(f"cash fraction   : {cash / total_value if total_value else 0.0:.4f}")
     print("-" * 78)
     print(f"  {'metric':<28} {'unit':<10} {'api':>12}  {'recomputed':>12}  "

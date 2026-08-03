@@ -62,9 +62,9 @@ the picture. M11 owns it.*
 
 | # | Check | Status | Evidence |
 |---|---|---|---|
-| 1.1 | `verification_fleet/` archived + committed, or its absence recorded in both lane files with the fallback pack named | ☐ | Already present in the CR folder — 26 scripts + README index |
-| 1.2 | `CR136-M02.architect.md` + `CR136-M05.architect.md` submitted (`SUBMITTED: round N` opens the line), INDEX rows added | ☐ | |
-| 1.3 | Pushed; origin confirmed advanced (`git branch -r --contains <sha>`) — delivery is on origin, not local | ☐ | |
+| 1.1 | `verification_fleet/` archived + committed, or its absence recorded in both lane files with the fallback pack named | ✅ | Present in the CR folder — 26 scripts + README index; §3.5's scratchpad-reaped fallback never had to be invoked |
+| 1.2 | `CR136-M02.architect.md` + `CR136-M05.architect.md` submitted (`SUBMITTED: round N` opens the line), INDEX rows added | ✅ | `b5bf766a`, round 1, both at ship SHA `1022428f` |
+| 1.3 | Pushed; origin confirmed advanced (`git branch -r --contains <sha>`) — delivery is on origin, not local | ☐ | **Blocking Phase 1.** `main` is 24+ commits ahead of `origin/main` and deliberately unpushed pending Saiful. Until this ticks, PROTOCOL.md's state is UNPUSHED_SUBMIT and the round has NOT passed to the auditor — INDEX says so |
 | 1.4 | Both lanes read `VERDICT: COMPLETE` (zero BLOCKER + zero MAJOR) | ☐ | |
 
 ## Phase 2 — promote + live verification
