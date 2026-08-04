@@ -53,10 +53,10 @@ the picture. M11 owns it.*
 
 | # | Check | Status | Evidence |
 |---|---|---|---|
-| 0.1 | `pytest backend/tests/unit/ -q` green **at the ship SHA, in a scratch worktree of that SHA** (DEF159 — never the dirty shared tree) | ✅ | `a4265fd5` — `2240 passed in 274.16s`; M02 lane suite 42, M05 lane suite 33 |
-| 0.2 | `flutter analyze --no-fatal-infos` + `flutter test` green | ✅ | analyze: 6 pre-existing infos, zero errors/warnings from CR136; `flutter test` 495 passed |
-| 0.3 | `python3 scripts/registers/gen_registers.py verify` — no register drift, no untracked row files | ✅ | DEF 210 rows OK, CR 132 rows OK — identical to live |
-| 0.4 | `git status --short` clean | ✅ | clean at `a4265fd5` before this tick |
+| 0.1 | `pytest backend/tests/unit/ -q` green **at the ship SHA, in a scratch worktree of that SHA** (DEF159 — never the dirty shared tree) | ✅ | **Re-measured 2026-08-04 at `afb1d6d8`** in a detached scratch worktree — `2290 passed in 294.08s`. Verified the worktree resolved its OWN package before trusting the number (`portfolio_health_constants.__file__` under the worktree path, `GRID_DENSITY_MAX = 1.65`), since the venv is borrowed from the main tree. Prior reading: `a4265fd5` — `2240 passed in 274.16s`; M02 lane suite 42, M05 lane suite 33 |
+| 0.2 | `flutter analyze --no-fatal-infos` + `flutter test` green | ✅ | **Re-measured 2026-08-04 at `afb1d6d8`** in the same scratch worktree — analyze `6 issues`, all pre-existing infos, zero errors; `flutter test` **502 passed**. Prior reading: 495 passed |
+| 0.3 | `python3 scripts/registers/gen_registers.py verify` — no register drift, no untracked row files | ✅ | **2026-08-04:** DEF OK — 214 rows, CR OK — 134 rows, both content-identical to live. Prior: DEF 210 / CR 132 |
+| 0.4 | `git status --short` clean | ✅ | clean at `afb1d6d8` before this tick (prior: `a4265fd5`) |
 
 ## Phase 1 — audit lanes (M11 §3.5)
 
@@ -65,14 +65,14 @@ the picture. M11 owns it.*
 | 1.1 | `verification_fleet/` archived + committed, or its absence recorded in both lane files with the fallback pack named | ✅ | Present in the CR folder — 26 scripts + README index; §3.5's scratchpad-reaped fallback never had to be invoked |
 | 1.2 | `CR136-M02.architect.md` + `CR136-M05.architect.md` submitted (`SUBMITTED: round N` opens the line), INDEX rows added | ✅ | `b5bf766a`, round 1, both at ship SHA `1022428f` |
 | 1.3 | Pushed; origin confirmed advanced (`git branch -r --contains <sha>`) — delivery is on origin, not local | ✅ | Saiful's instruction, 2026-08-03. `d597b3ae..5252bfda`, 26 commits. `git branch -r --contains a4265fd5` → `origin/main`; ahead-count now 0. Diff scanned for secret-shaped strings first — the only hits were truncated `os_v2_app_…`/last-4 references in checkpoint memos, no live key |
-| 1.4 | Both lanes read `VERDICT: COMPLETE` (zero BLOCKER + zero MAJOR) | ☐ | |
+| 1.4 | Both lanes read `VERDICT: COMPLETE` (zero BLOCKER + zero MAJOR) | ✅ | `CR136-M02.auditor.md` **COMPLETE (round 1)**; `CR136-M05.auditor.md` `AWAITING_FIXES (round 1)` → **COMPLETE (round 2)**. **This gate names M02 + M05 only** — the lane set has since grown to eleven, and at promotion time six were still outstanding: M04 r4 (submitted `b335bfb4`) and r1 on M01/M03/M08/M10/M11, none of those five ever graded. Promoting anyway is **Saiful's call, 2026-08-04**, taken with that stated: the deterministic half of Phase 2 does not need the LLM or those verdicts, Alpha is stealth, and `/rollback-alpha` exists |
 
 ## Phase 2 — promote + live verification
 
 | # | Check | Status | Evidence |
 |---|---|---|---|
 | 2.1 | `/promote-to-alpha` completed through step 8 | ☐ | |
-| 2.2 | Both CR136 migrations applied — `alembic current` at head. CR136 adds **three**: `a9b0c1d20026` (price_history_daily), `b1c2d3e40027` (portfolio_value_snapshots), `c2d3e4f50028` (journal dedupe_key + `uq_journal_dedupe`) | ☐ | M11 §3.6 says two; the third landed with M07's gate-bypass fix |
+| 2.2 | Both CR136 migrations applied — `alembic current` at head. CR136 adds **four**: `a9b0c1d20026` (price_history_daily), `b1c2d3e40027` (portfolio_value_snapshots), `c2d3e4f50028` (journal dedupe_key + `uq_journal_dedupe`), `d3e4f5a60029` (that constraint made a PARTIAL index on `deleted_at IS NULL`) | ☐ | M11 §3.6 says two; the third landed with M07's gate-bypass fix, the **fourth with M07's audit-r1 BLOCKER fix** — the original constraint covered tombstones, so delete-then-regenerate always collided. **Pre-promotion `alembic current` on Alpha was `8a4ce4f8abc3`** — none of the four, and `/v1/portfolio/health/{user}` answered 404, confirming CR136 had never been promoted |
 | 2.3 | **P1** `curl -fsS https://api-alpha.agenticmarketintel.ai/v1/health` → 200 | ☐ | |
 | 2.4 | **P2** both new routes answer **401/403, never 404** (auth-guarded, so a 404 means the router did not load) | ☐ | |
 | 2.5 | **P3** container env carries 5 `PORTFOLIO_HEALTH_*` vars + `PORTFOLIO_SNAPSHOT_INTERVAL_SECONDS`; `/v1/admin/config-check` shows `portfolio_health_gate_mode: "trial"` | ☐ | |
