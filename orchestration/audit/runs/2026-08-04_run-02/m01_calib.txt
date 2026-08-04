@@ -1,0 +1,58 @@
+candidate: k=10.0 sigma, floor=10.00%, hard=100%, reversal>=60% of the price move
+
+── recent 2y (2024-08-01 → 2026-08-01) ──
+  SPY    large-cap index        n= 501 sigma_robust= 0.68%/d  max|r|= 10.50% ( 15.5 sigma)  bound=10.00%
+  AAPL   mega-cap               n= 501 sigma_robust= 1.17%/d  max|r|= 15.33% ( 13.1 sigma)  bound=11.73%
+  NVDA   high-beta              n= 501 sigma_robust= 2.41%/d  max|r|= 18.72% (  7.8 sigma)  bound=24.05%
+  TSLA   very high vol          n= 501 sigma_robust= 3.21%/d  max|r|= 22.69% (  7.1 sigma)  bound=32.12%
+  BND    bond ETF               n= 501 sigma_robust= 0.26%/d  max|r|=  1.21% (  4.6 sigma)  bound=10.00%
+  AGG    bond ETF               n= 501 sigma_robust= 0.26%/d  max|r|=  1.27% (  4.9 sigma)  bound=10.00%
+  XLU    utilities              n= 501 sigma_robust= 0.89%/d  max|r|=  5.56% (  6.2 sigma)  bound=10.00%
+  KO     staple                 n= 501 sigma_robust= 1.00%/d  max|r|=  5.00% (  5.0 sigma)  bound=10.00%
+  JNJ    staple                 n= 501 sigma_robust= 0.95%/d  max|r|=  7.59% (  8.0 sigma)  bound=10.00%
+  GLD    gold                   n= 501 sigma_robust= 1.17%/d  max|r|= 10.27% (  8.8 sigma)  bound=11.71%
+  SMCI   volatile small/mid     n= 501 sigma_robust= 4.47%/d  max|r|= 33.32% (  7.5 sigma)  bound=44.65%
+  PFE    pharma                 n= 501 sigma_robust= 1.27%/d  max|r|=  6.83% (  5.4 sigma)  bound=12.73%
+
+── COVID crash window (2019-08-01 → 2021-08-01) ──
+  SPY    large-cap index        n= 504 sigma_robust= 0.87%/d  max|r|= 10.94% ( 12.6 sigma)  bound=10.00%
+  AAPL   mega-cap               n= 504 sigma_robust= 1.72%/d  max|r|= 12.86% (  7.5 sigma)  bound=17.22%
+  NVDA   high-beta              n= 504 sigma_robust= 2.33%/d  max|r|= 18.45% (  7.9 sigma)  bound=23.34%
+  TSLA   very high vol          n= 504 sigma_robust= 3.27%/d  max|r|= 21.06% (  6.4 sigma)  bound=32.69%
+  BND    bond ETF               n= 504 sigma_robust= 0.20%/d  max|r|=  5.44% ( 27.6 sigma)  bound=10.00%
+  AGG    bond ETF               n= 504 sigma_robust= 0.19%/d  max|r|=  4.00% ( 21.2 sigma)  bound=10.00%
+  XLU    utilities              n= 504 sigma_robust= 1.03%/d  max|r|= 12.79% ( 12.4 sigma)  bound=10.34%  FIRES=[156]
+  KO     staple                 n= 504 sigma_robust= 0.96%/d  max|r|=  9.67% ( 10.1 sigma)  bound=10.00%
+  JNJ    staple                 n= 504 sigma_robust= 0.91%/d  max|r|=  8.00% (  8.8 sigma)  bound=10.00%
+  GLD    gold                   n= 504 sigma_robust= 0.75%/d  max|r|=  5.37% (  7.2 sigma)  bound=10.00%
+  SMCI   volatile small/mid     n= 504 sigma_robust= 1.76%/d  max|r|= 24.17% ( 13.7 sigma)  bound=17.62%
+  PFE    pharma                 n= 504 sigma_robust= 1.12%/d  max|r|=  8.96% (  8.0 sigma)  bound=11.17%
+
+── 2022 drawdown window (2021-08-01 → 2023-08-01) ──
+  SPY    large-cap index        n= 502 sigma_robust= 1.10%/d  max|r|=  5.50% (  5.0 sigma)  bound=11.02%
+  AAPL   mega-cap               n= 502 sigma_robust= 1.56%/d  max|r|=  8.90% (  5.7 sigma)  bound=15.63%
+  NVDA   high-beta              n= 502 sigma_robust= 3.14%/d  max|r|= 24.37% (  7.8 sigma)  bound=31.43%
+  TSLA   very high vol          n= 502 sigma_robust= 3.00%/d  max|r|= 13.53% (  4.5 sigma)  bound=29.97%
+  BND    bond ETF               n= 502 sigma_robust= 0.42%/d  max|r|=  2.07% (  4.9 sigma)  bound=10.00%
+  AGG    bond ETF               n= 502 sigma_robust= 0.42%/d  max|r|=  2.15% (  5.2 sigma)  bound=10.00%
+  XLU    utilities              n= 502 sigma_robust= 1.06%/d  max|r|=  4.71% (  4.4 sigma)  bound=10.61%
+  KO     staple                 n= 502 sigma_robust= 0.85%/d  max|r|=  6.96% (  8.2 sigma)  bound=10.00%
+  JNJ    staple                 n= 502 sigma_robust= 0.87%/d  max|r|=  6.07% (  7.0 sigma)  bound=10.00%
+  GLD    gold                   n= 502 sigma_robust= 0.79%/d  max|r|=  3.07% (  3.9 sigma)  bound=10.00%
+  SMCI   volatile small/mid     n= 502 sigma_robust= 2.95%/d  max|r|= 31.21% ( 10.6 sigma)  bound=29.47%
+  PFE    pharma                 n= 502 sigma_robust= 1.50%/d  max|r|= 10.86% (  7.2 sigma)  bound=15.04%
+
+TOTAL FALSE FIRES ON CLEAN REAL DATA: 1
+largest real moves by sigma:
+  BND COVID crash window: 5.44% = 27.6 sigma (sigma=0.20%/d)
+  AGG COVID crash window: 4.00% = 21.2 sigma (sigma=0.19%/d)
+  SPY recent 2y: 10.50% = 15.5 sigma (sigma=0.68%/d)
+  SMCI COVID crash window: 24.17% = 13.7 sigma (sigma=1.76%/d)
+  AAPL recent 2y: 15.33% = 13.1 sigma (sigma=1.17%/d)
+
+── injected phantom print (full price round trip) ──
+  BND    sigma= 0.26%/d bound=10.00%  10%:HIT  15%:HIT  20%:HIT  30%:HIT  40%:HIT  80%:HIT  
+  XLU    sigma= 0.89%/d bound=10.00%  10%:HIT  15%:HIT  20%:HIT  30%:HIT  40%:HIT  80%:HIT  
+  KO     sigma= 1.00%/d bound=10.00%  10%:HIT  15%:HIT  20%:HIT  30%:HIT  40%:HIT  80%:HIT  
+  SPY    sigma= 0.68%/d bound=10.00%  10%:HIT  15%:HIT  20%:HIT  30%:HIT  40%:HIT  80%:HIT  
+  TSLA   sigma= 3.21%/d bound=32.12%  10%:miss 15%:miss 20%:miss 30%:miss 40%:HIT  80%:HIT  
