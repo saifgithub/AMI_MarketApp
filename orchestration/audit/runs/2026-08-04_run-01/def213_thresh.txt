@@ -1,0 +1,50 @@
+fetching 8 tickers, 10y…
+    SPY  2513 bars  2016-08-04 → 2026-08-04
+   AAPL  2513 bars  2016-08-04 → 2026-08-04
+   MSFT  2513 bars  2016-08-04 → 2026-08-04
+    BND  2513 bars  2016-08-04 → 2026-08-04
+    XLU  2513 bars  2016-08-04 → 2026-08-04
+    GLD  2513 bars  2016-08-04 → 2026-08-04
+    IWM  2513 bars  2016-08-04 → 2026-08-04
+    TLT  2513 bars  2016-08-04 → 2026-08-04
+
+intersection over the common span: 2513 of 2513 distinct dates (100.0000% lossless)
+
+clean-book ratio on 2513 real trading days:
+ n_ret  windows    mean     MAX  worst window
+   126     2387  1.4538  1.4921  2024-12-31→2025-07-07
+   199     2314  1.4534  1.4774  2024-11-27→2025-09-17
+   299     2214  1.4534  1.4716  2024-12-24→2026-03-09
+   399     2114  1.4535  1.4712  2024-11-27→2026-07-07
+   504     2009  1.4532  1.4643  2024-06-28→2026-07-06
+
+worst clean-book ratio anywhere: 1.4921
+
+────────────────────────────────────────────────────────────
+constructed extraordinary-closure tail (real calendar, sessions removed)
+ closure  n_ret     MAX  worst window
+       2    126  1.5238  2024-11-22→2025-06-02
+       2    199  1.4975  2024-11-08→2025-09-02
+       2    299  1.4849  2023-11-10→2025-01-27
+       2    399  1.4812  2024-11-22→2026-07-06
+       2    504  1.4683  2023-01-12→2025-01-21
+       4    126  1.5476  2024-12-24→2025-07-07
+       4    199  1.5075  2024-11-06→2025-09-02
+       4    299  1.4950  2024-11-27→2026-02-17
+       4    399  1.4862  2023-11-22→2025-07-07
+       4    504  1.4782  2023-12-22→2026-01-05
+       5    126  1.5556  2024-12-23→2025-07-07
+       5    199  1.5126  2024-11-05→2025-09-02
+       5    299  1.4983  2024-11-26→2026-02-17
+       5    399  1.4887  2023-11-21→2025-07-07
+       5    504  1.4802  2023-12-21→2026-01-05
+
+worst clean-book ratio incl. constructed closures: 1.5556
+  +5% headroom → threshold 1.6333
+  +10% headroom → threshold 1.7111
+  +15% headroom → threshold 1.7889
+
+mean clean ratio 1.4535 — smallest single-holding gap caught:
+  threshold 1.6333 → fires above 11.0% missing days
+  threshold 1.7111 → fires above 15.1% missing days
+  threshold 1.7889 → fires above 18.8% missing days
