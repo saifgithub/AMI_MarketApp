@@ -182,6 +182,57 @@ def test_an_expected_absence_can_be_waived_by_name(
     assert "4 of 7" in out, "5 named metrics + one risk_share row per holding"
 
 
+def test_a_partial_waiver_still_fails_on_the_absence_it_did_not_name(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture,
+) -> None:
+    """M11 r2 m5. This is the property that makes `--allow-unchecked` a WAIVER
+    rather than a `--force`, and it was stated only in prose — the auditor's
+    AUD-1 turned any waiver into a blanket one and all six tests still passed,
+    because the test above waives ALL of the absences.
+
+    That is the same shape as the MAJOR this flag fixes, one level down: a
+    control whose load-bearing property lives in a sentence. The flag will be
+    typed at a ship gate by an operator who wants a green result."""
+    envelope = _agreeing_payload(blocks={
+        "beta": {"sufficient": False, "value": None, "r_squared": None},
+        "tracking_error": {"sufficient": False, "value": None},
+    })
+    # Three metrics go unpublished; only two are named.
+    code = _run(monkeypatch, envelope, "--allow-unchecked", "beta,r_squared")
+    assert code == 1, "an unnamed absence must still fail the run"
+
+    out = capsys.readouterr().out
+    assert "FAIL" in out
+    assert "tracking_error" in out
+
+
+def test_a_waiver_cannot_launder_a_published_disagreement(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture,
+) -> None:
+    """The waiver covers ABSENCE only. A metric that is published and disagrees
+    is compared and fails whatever the flag names — otherwise `--allow-unchecked`
+    would be a way to make a wrong number green."""
+    envelope = _agreeing_payload(blocks={
+        "effective_bets": {"sufficient": True, "value": 99.0},
+    })
+    code = _run(monkeypatch, envelope, "--allow-unchecked", "effective_bets")
+    assert code == 1
+    assert "disagree beyond 2 dp" in capsys.readouterr().out
+
+
+def test_a_waiver_for_a_published_metric_is_reported_as_stale(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture,
+) -> None:
+    """AUD-3 — deleting this line survived the auditor's pass. Cosmetic in
+    consequence, but it is the only thing that stops a waiver quietly outliving
+    the reason it was added, which is how a subset becomes permanent."""
+    assert _run(monkeypatch, _agreeing_payload(), "--allow-unchecked", "beta") == 0
+
+    out = capsys.readouterr().out
+    assert "but PUBLISHED" in out
+    assert "beta" in out
+
+
 def test_a_full_payload_passes_and_says_how_many(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture,
 ) -> None:

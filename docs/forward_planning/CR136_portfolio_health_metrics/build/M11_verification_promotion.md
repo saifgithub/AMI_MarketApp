@@ -341,14 +341,28 @@ Never hand-edit `cr_list.md` (CR081); pathspec-commit only.
 
 ## 5. Tests
 
-M11 ships **no new pytest units** — the deliverable is the runbook: each §6
-item is a runnable command or a yes/no check, and full-suite green
-(`pytest backend/tests/unit/ -q`, which includes every M01–M08 suite, the
-updated `test_journal_entry_type_parity.py`, and
-`test_config_compose_parity.py`) is a *precondition* M11 consumes, not a
-deliverable it owns. Script-level guards stand in for tests, matching the
-`cr136_generate_fixtures.py` / `cr136_bias_test.py` precedent (dev scripts,
-never imported by tests or app code — acceptance greps enforce):
+**Corrected in round 2 — this section was wrong twice.** It claimed M11 ships
+*"no new pytest units"* and that *"acceptance greps enforce"* the scripts'
+independence. Neither held: no such grep existed in §6 or in the promotion
+checklist, and §4's stronger claim — that the substantive deliverable *"has no
+test that can be made to fail"* — was disproved by the auditor, who wrote one in
+a single sitting and it found a **MAJOR** immediately (A1: the ship gate exited
+0 having compared a strict subset).
+
+`backend/tests/unit/test_cr136_live_crosscheck_gate.py` now owns both jobs. It
+stubs the harness's two I/O seams (`_fetch_health`, `_load_closes`) and drives
+`main()` end to end — 9 tests covering the benchmark-drop route, a renamed
+payload field, the waiver (including the partial case that distinguishes a
+waiver from a `--force`), a numeric disagreement, the full-payload control, and
+the independence guard. That guard reads the harness's **import list from
+source**, deliberately, not `sys.modules`: under pytest the whole app is already
+imported, so a runtime check would pass no matter what the file did.
+
+Full-suite green (`pytest backend/tests/unit/ -q`, which includes every M01–M08
+suite, the updated `test_journal_entry_type_parity.py`, and
+`test_config_compose_parity.py`) remains a *precondition* M11 consumes rather
+than a deliverable it owns. The script-level exit-code contracts below still
+hold and are now asserted by the test file rather than by prose:
 
 - `cr136_live_crosscheck.py`: read-only DB access; exit 0 = all diffs ≤ 2 dp
   tolerance, exit 1 = numeric FAIL (table printed), exit 2 = preconditions
