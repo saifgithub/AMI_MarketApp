@@ -1078,3 +1078,105 @@ def test_the_gate_module_never_imports_the_journal_enum() -> None:
         for alias in node.names
     }
     assert "EntryType" not in imported, imported
+
+
+# ── DEF214: the spend counters are counted in SQL ───────────────────────────
+
+
+def _statements_during(fn):
+    """Every SQL statement the engine executes while `fn` runs, plus its
+    return value. Reading the emitted SQL is the only way to tell a COUNT from
+    a fetch-and-len — both return the same number, which is exactly why the
+    fetch survived a full lane audit."""
+    from sqlalchemy import event
+
+    from app.db import get_engine
+
+    engine = get_engine()
+    seen: list[str] = []
+
+    def _record(_conn, _cursor, statement, *_a, **_k):
+        seen.append(statement)
+
+    event.listen(engine, "before_cursor_execute", _record)
+    try:
+        result = fn()
+    finally:
+        event.remove(engine, "before_cursor_execute", _record)
+    return seen, result
+
+
+def test_the_spend_counters_are_counted_in_sql_not_fetched_and_len_ed() -> None:
+    """DEF214. This read runs on BOTH CR136 routes — the tiles GET and the
+    Finding POST — and it used to SELECT whole `JournalEntryRow` objects for
+    every Finding the user had ever generated, then take `len()` of the list.
+
+    The row count is bounded only by the daily cap working correctly, and
+    M07's own BLOCKER B1 was a live demonstration that the cap is an
+    assumption rather than a property: with it defeated an ordinary user
+    reached ~7,200 Findings in a day, every one of them a row this query would
+    then fetch in full on every subsequent request.
+    """
+    user_id = _seed_user(Plan.TRADER)
+    portfolio_id = uuid4()
+    now = datetime.now(timezone.utc).replace(
+        hour=12, minute=0, second=0, microsecond=0,
+    )
+    for i in range(4):
+        _seed_finding(user_id, portfolio_id, as_of=f"2026-08-0{i + 1}",
+                      created_at=now - timedelta(days=i))
+
+    store = get_journal_store()
+    seen, stats = _statements_during(
+        lambda: store.portfolio_health_stats(user_id, portfolio_id, now=now)
+    )
+    # Non-vacuity: the call really did read this user's four rows, so the
+    # statement assertions below are about a populated table.
+    assert stats[0] == 4
+
+    reads = [s for s in seen if "journal_entries" in s.lower()]
+    assert reads, "the call issued no query against journal_entries at all"
+    for statement in reads:
+        lowered = " ".join(statement.lower().split())
+        assert "count(" in lowered or "min(" in lowered, (
+            f"a non-aggregate read of journal_entries came back: {lowered}"
+        )
+        assert "journal_entries.payload" not in lowered, (
+            "whole rows were fetched — the payload column came back with them, "
+            "which is the memory cost DEF214 is about, not just the row count"
+        )
+
+
+def test_the_counted_triple_matches_what_fetching_every_row_would_have_said() -> None:
+    """The equivalence half. A wrong COUNT predicate does not fail loudly — it
+    silently changes the cap — so the rewrite is pinned against the reading it
+    replaced, on a book with rows either side of the day boundary and a
+    tombstone that both counters deliberately still see."""
+    user_id = _seed_user(Plan.TRADER)
+    portfolio_id = uuid4()
+    now = datetime.now(timezone.utc).replace(
+        hour=9, minute=30, second=0, microsecond=0,
+    )
+    day_start = now.replace(hour=0, minute=0)
+    oldest = day_start - timedelta(days=5)
+
+    _seed_finding(user_id, portfolio_id, as_of="2026-07-30", created_at=oldest)
+    _seed_finding(user_id, portfolio_id, as_of="2026-08-01",
+                  created_at=day_start - timedelta(microseconds=1))
+    _seed_finding(user_id, portfolio_id, as_of="2026-08-02", created_at=day_start)
+    _seed_finding(user_id, portfolio_id, as_of="2026-08-03",
+                  created_at=now, deleted=True)
+
+    # Another user's rows must not be counted into this one's spend.
+    _seed_finding(_seed_user(Plan.TRADER), uuid4(), as_of="2026-08-03",
+                  created_at=now)
+
+    used, first_at, daily = get_journal_store().portfolio_health_stats(
+        user_id, portfolio_id, now=now,
+    )
+    assert used == 4, "the trial counter is all-time and counts tombstones"
+    assert first_at == oldest
+    assert daily == 2, (
+        "exactly the two rows at or after the UTC day boundary — the row one "
+        "microsecond before it is yesterday's"
+    )

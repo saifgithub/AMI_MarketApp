@@ -28,7 +28,7 @@ from enum import Enum
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import delete, or_, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.exc import IntegrityError
 
 from app.db import get_session, init_schema
@@ -427,21 +427,46 @@ class JournalStore:
         day_start = _as_utc(now).astimezone(timezone.utc).replace(
             hour=0, minute=0, second=0, microsecond=0,
         )
+        # DEF214: counted in SQL, not in Python. This read runs on BOTH CR136
+        # routes — the tiles GET and the Finding POST — and it used to SELECT
+        # whole rows for every Finding the user had ever generated, then take
+        # `len()` of them. The row count is bounded only by the daily cap
+        # working correctly, and M07's own BLOCKER B1 was a live demonstration
+        # that the cap is an assumption rather than a property: with it
+        # defeated an ordinary user reached ~7,200 rows in a day, every one of
+        # them fetched in full on every subsequent request.
+        #
+        # The trial leg is deliberately still unbounded by date. `evaluate_gate`
+        # gates on `used < budget AND days_elapsed < trial_days`, so the window
+        # check already ends the trial regardless of the count — bounding the
+        # count would change the number reported to the client without changing
+        # a single gate decision, which is a semantic change wearing a
+        # performance fix's clothes.
+        conditions = (
+            JournalEntryRow.user_id == user_id,
+            JournalEntryRow.entry_type
+            == EntryType.PORTFOLIO_HEALTH_ANALYSIS.value,
+        )
         with get_session() as s:
-            base = (
-                select(JournalEntryRow)
-                .where(JournalEntryRow.user_id == user_id)
-                .where(
-                    JournalEntryRow.entry_type
-                    == EntryType.PORTFOLIO_HEALTH_ANALYSIS.value
-                )
+            used = s.execute(
+                select(func.count())
+                .select_from(JournalEntryRow)
+                .where(*conditions)
+            ).scalar_one()
+            first_at = s.execute(
+                select(func.min(JournalEntryRow.created_at)).where(*conditions)
+            ).scalar_one()
+            daily = s.execute(
+                select(func.count())
+                .select_from(JournalEntryRow)
+                .where(*conditions)
+                .where(JournalEntryRow.created_at >= day_start)
+            ).scalar_one()
+            return (
+                int(used),
+                _as_utc(first_at) if first_at is not None else None,
+                int(daily),
             )
-            rows = s.execute(base).scalars().all()
-            created = [_as_utc(r.created_at) for r in rows]
-            daily = sum(
-                1 for r in rows if _as_utc(r.created_at) >= day_start
-            )
-            return len(rows), (min(created) if created else None), daily
 
 
 _store: JournalStore | None = None
