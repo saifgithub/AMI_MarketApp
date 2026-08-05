@@ -297,7 +297,11 @@ class JournalEntryRow(Base):
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
     entry_type: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    reference_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
+    # Indexed under CR136-M08 m2: both of CR136's journal reads filter on it,
+    # so every Health-card open and every Finding write was a scan.
+    reference_id: Mapped[Optional[UUID]] = mapped_column(
+        Uuid(), index=True, nullable=True,
+    )
 
     title: Mapped[str] = mapped_column(String, nullable=False)
     summary: Mapped[Optional[str]] = mapped_column(String, nullable=True)

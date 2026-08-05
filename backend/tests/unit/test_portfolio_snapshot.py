@@ -316,6 +316,18 @@ def test_bias_helper_is_calibrated() -> None:
 
 
 def test_bias_helper_skips_pairs_without_a_prior_prediction() -> None:
+    """M03 r1 m1 — this test used to be unable to tell PRIOR from CURRENT.
+
+    The old fixture nulled `predicted_vol_ann` on alternating indices, so a
+    prev-guard yields pairs from {0,2} and a cur-guard yields {2,4}: `n == 2`
+    either way. The count was the only assertion, so it distinguished nothing,
+    and the lane doc's claim that QA-D proved "two independent assertions" on
+    one-step-ahead alignment was wrong — the second kill was this test CRASHING
+    on a `None` divisor, not asserting anything.
+
+    Nulling only the LAST point is what separates the two: a prev-guard is
+    unaffected (the last point is never a divisor) and a cur-guard loses a pair.
+    """
     values = [100.0, 101.0, 102.0, 103.0, 104.0]
     points = _points(values, vol=0.262)
     holed = [
@@ -324,6 +336,19 @@ def test_bias_helper_skips_pairs_without_a_prior_prediction() -> None:
     ]
     stats = bias_z_stats(holed)
     assert stats.n == 2, "only pairs whose PRIOR point carries a prediction count"
+
+    tail_only = [*points[:-1], points[-1]._replace(predicted_vol_ann=None)]
+    assert bias_z_stats(tail_only).n == 4, (
+        "the FINAL point's prediction is never a divisor — every one of the 4 "
+        "pairs still has a prior. A cur-guard reads 3 here, which is the whole "
+        "point of pinning it this way"
+    )
+
+    head_only = [points[0]._replace(predicted_vol_ann=None), *points[1:]]
+    assert bias_z_stats(head_only).n == 3, (
+        "the FIRST point's prediction is the divisor for pair 0 and nothing "
+        "else, so exactly one pair drops"
+    )
 
     assert bias_z_stats(_points([100.0, 101.0], vol=None)).n == 0
     assert bias_z_stats(_points([100.0, 101.0], vol=None)).sd_z is None
