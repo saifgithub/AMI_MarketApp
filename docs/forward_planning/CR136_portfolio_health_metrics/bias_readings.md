@@ -44,4 +44,4 @@ Prints `n`, `mean_z`, `sd_z` per portfolio against `BIAS_SD_BAND = (0.911, 1.089
 
 | Date | Portfolio | n | mean_z | sd_z | In band? | Note |
 |---|---|---|---|---|---|---|
-| _(none yet)_ | — | — | — | — | — | Ship has not happened; the first live-tick row does not exist. |
+| 2026-08-05 | all 95 | **0** | — | — | — | **Ship reading — the clock starts here.** `alpha-2026-08-04-1` promoted 2026-08-04; the first live snapshot tick ran 2026-08-05 and wrote **95 rows for as_of 2026-08-04**. Every portfolio reads `n<2 — nothing to say`, which is the structurally correct answer and not a defect: a z-pair needs the PRIOR day's `predicted_vol_ann`, and there is exactly one live row per book. Also recorded: that tick reported **`vol_null: 92` of 95** — only the three books whose price history had been warmed (2.6) carry a prediction at all, so the F16 series will accumulate for those three first and for the rest only as their histories warm. Nothing here is judged against `BIAS_SD_BAND`; per this file's own rule, that is decision-grade at n ≈ 252, i.e. ~12 months out. |
