@@ -145,10 +145,22 @@ def _joined_returns(
 ) -> tuple[np.ndarray, list[date]]:
     """(assets × time) simple returns over the shared trading days, newest last.
 
-    Mirrors M04's ORDER deliberately — per-ticker trim to the newest 505 dates
-    FIRST, then intersect, then trim the intersection — because doing it in the
-    other order silently yields a different window on any book where one
-    holding has a longer history than the rest.
+    **This does NOT mirror M04's order, and the docstring used to claim it did**
+    (M11 m2). Here: per-ticker trim to the newest 505 dates FIRST, then
+    intersect, then trim. Engine `_join` (`portfolio_health.py:302-307`):
+    intersect the FULL date sets, then trim once at the end. On a book where one
+    holding sits on a sparser calendar than the rest the two diverge hard —
+    measured at 390 dates engine vs 252 harness on a 780/390-weekday pair.
+
+    Left as-is rather than realigned, because the divergence is structurally
+    loud: pre-trimming can only REMOVE candidate dates, so the harness's
+    intersection is always a subset of the engine's, its count is always ≤ the
+    payload's `n_observations`, and `main()`'s window check fires and exits 2
+    before a single number is compared. The dangerous corner — equal counts over
+    different dates, yielding a spurious FAIL that blames a correct engine — is
+    unreachable: a subset still holding 505 dates must reach further back, so
+    the counts diverge first. What was wrong was the comment, and a comment that
+    misdescribes the one thing it exists to explain is graded as hard as code.
     """
     trimmed = {
         t: sorted(closes.get(t, {}))[-(_MAX_RETURNS + 1):] for t in tickers
@@ -254,7 +266,19 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--user-id", required=True)
     ap.add_argument("--api-base", default="http://localhost:8000")
     ap.add_argument("--token", required=True, help="bearer token for --user-id")
+    ap.add_argument(
+        "--allow-unchecked", default="",
+        help=(
+            "comma-separated metrics the payload is EXPECTED not to publish on "
+            "this book (e.g. beta,r_squared,tracking_error for a book whose "
+            "benchmark is unusable). Anything unpublished and not named here "
+            "fails the run — see M11 A1."
+        ),
+    )
     args = ap.parse_args(argv)
+    allowed_unchecked = {
+        m.strip() for m in args.allow_unchecked.split(",") if m.strip()
+    }
 
     user_id = UUID(args.user_id)
     try:
@@ -390,17 +414,48 @@ def main(argv: list[str] | None = None) -> int:
 
     unchecked = [r.metric for r in rows if r.api is None]
     failures = [r for r in rows if r.api is not None and not r.ok]
+    # M11 A1 — an unpublished metric used to be printed and then dropped from
+    # the exit code, so this gate returned 0 having compared a strict subset.
+    # Checklist 2.9's acceptance criterion is literally the exit code, and an
+    # exit code that cannot distinguish "compared all seven" from "compared
+    # four" is prose, not a control (CR038). The reachable route needs nothing
+    # exotic: a bad print in stored SPY drops the benchmark, three level
+    # metrics come back null, the window still matches, and the old gate
+    # printed PASS. Renaming a payload field (DEF210's shape, one layer out)
+    # does the same with no unusual book at all.
+    surprises = [m for m in unchecked if m not in allowed_unchecked]
+    stale_allowances = sorted(allowed_unchecked - set(unchecked))
+
     if unchecked:
         print(f"  not published by the payload, so not checked: {unchecked}")
+    if stale_allowances:
+        print(f"  --allow-unchecked named, but PUBLISHED: {stale_allowances}")
     print(f"  tolerance       : |diff| ≤ {_TOL} in the rendered unit")
-    print(f"  checked         : {len(rows) - len(unchecked)}")
+    print(f"  compared        : {len(rows) - len(unchecked)} of {len(rows)}")
     print(f"  FAILED          : {len(failures)}")
 
     if failures:
         print("\nFAIL — the live engine and an independent recomputation of the "
               "same stored prices disagree beyond 2 dp.")
         return 1
-    print("\nPASS — every published metric agrees to 2 dp.")
+    if surprises:
+        print(
+            f"\nFAIL — {len(surprises)} metric(s) the payload did not publish "
+            f"and no --allow-unchecked names: {surprises}. Nothing disagreed; "
+            "nothing compared them either. Either the engine withheld them "
+            "(a real finding) or the payload renamed a field this harness "
+            "reads (a schema drift this gate has no pin against)."
+        )
+        return 1
+    checked = len(rows) - len(unchecked)
+    if allowed_unchecked:
+        print(
+            f"\nPASS — all {checked} of {len(rows)} metrics agree to 2 dp; "
+            f"{len(unchecked)} expected-unpublished and waived by "
+            f"--allow-unchecked: {unchecked}."
+        )
+    else:
+        print(f"\nPASS — all {len(rows)} metrics published and agreeing to 2 dp.")
     return 0
 
 
