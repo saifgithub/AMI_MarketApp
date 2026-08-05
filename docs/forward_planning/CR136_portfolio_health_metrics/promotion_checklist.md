@@ -91,7 +91,7 @@ the picture. M11 owns it.*
 | 3.1 | `scripts/build_testflight.sh` then `scripts/publish_playstore.sh --no-bump` — same +N, **sequential, never parallel** | ☐ | |
 | 3.2 | iPhone 13 device pass: card states (populated, insufficient, empty, refusal, transport error, unknown status), Finding render, journal markdown branch, gate CTAs | ☐ | Loading is transient and is not held on a device — see M09 §7 |
 | 3.3 | iPhone 17 device pass, same list | ☐ | |
-| 3.4 | `mobile/test/l10n_key_parity_test.dart` green; AR/MS entries present pending retranslation | ☐ | |
+| 3.4 | `mobile/test/l10n_key_parity_test.dart` green; AR/MS entries present pending retranslation | ✅ | **10 passed**, 2026-08-05. Covers DEF213's new key `portfolioHealthInsufficientSparseGridBody` — present in ar+ms (EN text, pending retranslation, flagged `retranslate:[ar,ms]`) and its `{n}`/`{days}` placeholders preserved in both, which is the half a bare key-presence check would miss |
 
 ## Phase 4 — human gate + docs
 
