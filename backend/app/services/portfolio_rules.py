@@ -243,6 +243,10 @@ def evaluate_rules(
                 "cap_pct": name_cap,
                 "name": holding.ticker,
                 "weight_pct": _ceil_display_pct(_total_value_pct(holding)),
+                # DEF212: the un-ceilinged weight, carried so the renderer can
+                # separate a sub-0.1 cap from the weight breaching it without
+                # re-rounding a number that has already been rounded once.
+                "weight_pct_raw": _total_value_pct(holding),
             })
 
     by_sector: dict[str, float] = {}
@@ -261,6 +265,7 @@ def evaluate_rules(
                 "cap_pct": sector_cap_pct,
                 "name": sector,
                 "weight_pct": _ceil_display_pct(weight_pct),
+                "weight_pct_raw": weight_pct,
             })
 
     states["R0"] = FIRED if breaches else CLEARED

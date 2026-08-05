@@ -156,7 +156,8 @@ def test_a_rule_slot_registers_at_every_dp_the_renderer_uses() -> None:
     context = _context()[0]
     rules = _rules("R0")
     rules[0]["slots"]["breaches"][0]["cap_pct"] = 33.333333333
-    rules[0]["slots"]["breaches"][0]["weight_pct"] = 41.25
+    rules[0]["slots"]["breaches"][0]["weight_pct"] = 41.3
+    rules[0]["slots"]["breaches"][0]["weight_pct_raw"] = 41.25
 
     sections = render_deterministic_sections(context, rules)
     assert "41.3%" in sections["f5"] and "33.3%" in sections["f5"]
@@ -639,3 +640,68 @@ def test_the_fallback_report_is_still_complete(monkeypatch: pytest.MonkeyPatch) 
     assert sections is None
     for key in ("f1", "f2", "f3", "f4", "f5"):
         assert deterministic[key].strip(), key
+
+
+# ── DEF212: the breach pair must separate at whatever precision it takes ────
+
+
+@pytest.mark.parametrize(
+    "cap, weight",
+    [
+        (35.05, 35.06),    # the auditor's own reproduction
+        (39.95, 39.96),    # ...and the one that collided at "40.0"
+        (35.055, 35.0551),  # needs a third decimal to separate
+    ],
+)
+def test_a_sub_precision_cap_never_renders_level_with_the_weight_breaching_it(
+    cap: float, weight: float,
+) -> None:
+    """DEF212. `_ceil_display_pct` moved the WEIGHT up so it could not render
+    onto its cap, but the cap was still rendered round-half-up — so a cap with
+    sub-0.1 precision rounds UP to meet the ceilinged weight and §F5 asserts a
+    breach between two identical numbers. That is the shown-vs-enforced
+    contradiction R0 exists to remove, one precision level down.
+
+    Not reachable from any shipped preset (the risk-tier caps are 1.5/3.0/4.5
+    and the sector presets 25.0–60.0, all exact at 1 dp), which is why it
+    graded MINOR — but nothing stops a sub-0.1 override being stored, so it is
+    reachable by configuration rather than by accident.
+    """
+    context = _context()[0]
+    rules = _rules("R0")
+    breach = rules[0]["slots"]["breaches"][0]
+    breach["cap_pct"] = cap
+    breach["weight_pct"] = weight
+    breach["weight_pct_raw"] = weight
+
+    f5 = render_deterministic_sections(context, rules)["f5"]
+    shown = re.findall(r"(\d+\.\d+)%", f5)
+    assert len(shown) == 2, f5
+    cap_shown, weight_shown = Decimal(shown[0]), Decimal(shown[1])
+
+    assert cap_shown != weight_shown, f5
+    # Direction matters as much as inequality: a breach reads as a breach only
+    # if the weight is shown ABOVE the cap, and neither number may be moved
+    # across the truth — the cap never shown stricter than it is enforced, the
+    # weight never shown below what it really is.
+    assert weight_shown > cap_shown, f5
+    assert cap_shown <= Decimal(str(cap))
+    assert weight_shown >= Decimal(str(weight))
+
+
+def test_the_escalated_breach_pair_is_admitted_by_the_allowlist() -> None:
+    """The other half, and the one that would have bitten silently: the
+    allow-list's dp ladder for breach slots stops at 2, so a pair that only
+    separates at 3 dp renders a token the validator then rejects — the Finding
+    thrown away for containing its own §F5 line, falling back to the templated
+    text for no reason a reader could see."""
+    context = _context()[0]
+    rules = _rules("R0")
+    breach = rules[0]["slots"]["breaches"][0]
+    breach["cap_pct"] = 35.055
+    breach["weight_pct"] = 35.1
+    breach["weight_pct_raw"] = 35.0551
+
+    sections = render_deterministic_sections(context, rules)
+    assert "35.056%" in sections["f5"] and "35.055%" in sections["f5"]
+    assert validate_sections(sections, build_allowlist(context, rules)) is None

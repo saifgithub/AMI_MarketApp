@@ -37,7 +37,7 @@ import json
 import re
 import unicodedata
 from dataclasses import dataclass, field
-from decimal import Decimal, ROUND_HALF_EVEN, ROUND_HALF_UP
+from decimal import Decimal, ROUND_CEILING, ROUND_HALF_EVEN, ROUND_HALF_UP
 from typing import Iterable, Sequence
 from uuid import UUID
 
@@ -203,6 +203,47 @@ def _fmt(value: float, dp: int) -> str:
 
 def _pct(value: float, dp: int = 1) -> str:
     return _fmt(value * 100.0, dp)
+
+
+_BREACH_MAX_DP = 6
+
+
+def _breach_display(breach: dict) -> tuple[str, str]:
+    """DEF212 — R0's breach ceiling was one-sided, and one-sided is not enough.
+
+    `portfolio_rules._ceil_display_pct` moves the WEIGHT up so it can never
+    render onto the cap it breached, but the cap itself was rendered
+    round-half-up, so a cap carrying sub-0.1 precision rounds UP onto the
+    ceilinged weight: `cap=35.05 weight=35.06` both render "35.1", and the §F5
+    sentence then asserts a breach between two equal numbers — the same
+    shown-vs-enforced contradiction R0 exists to remove, one precision level
+    down. Escalate the pair TOGETHER until they separate; the sentence's claim
+    is about the two numbers relative to each other, so rendering them at
+    different precisions would just be a different lie.
+
+    The weight keeps its ceiling at every dp, so it is never shown below the
+    true one, and the cap keeps half-up, so it is never shown stricter than it
+    is enforced. The raw weight is strictly above the cap (the rule engine only
+    builds a breach on `>`), so once dp passes both numbers' significant digits
+    they must differ. `_BREACH_MAX_DP` is the backstop: it returns the last
+    pair rather than looping, because §F5 must still render, and says so.
+    """
+    cap = float(breach["cap_pct"])
+    weight = float(breach["weight_pct_raw"])
+    cap_text = weight_text = ""
+    for dp in range(1, _BREACH_MAX_DP + 1):
+        quant = Decimal(1).scaleb(-dp)
+        cap_text = str(Decimal(str(cap)).quantize(quant, rounding=ROUND_HALF_UP))
+        weight_text = str(
+            Decimal(str(weight)).quantize(quant, rounding=ROUND_CEILING)
+        )
+        if cap_text != weight_text:
+            return cap_text, weight_text
+    logger.warn(
+        "portfolio_finding_breach_display_unseparated",
+        cap=cap, weight=weight, max_dp=_BREACH_MAX_DP,
+    )
+    return cap_text, weight_text
 
 
 # ── 3.2 Strip ───────────────────────────────────────────────────────────────
@@ -536,11 +577,12 @@ def _f5(rule_results: Sequence[dict]) -> str:
         slots = result.get("slots") or {}
         if rule_id == "R0":
             for breach in slots.get("breaches", []):
+                cap_text, weight_text = _breach_display(breach)
                 text = template.format(
                     scope="holding" if breach["scope"] == "name" else "sector",
-                    cap=_fmt(breach["cap_pct"], 1),
+                    cap=cap_text,
                     name=breach["name"],
-                    weight=_fmt(breach["weight_pct"], 1),
+                    weight=weight_text,
                 )
                 if slots.get("etf_disclosure"):
                     text += f" This count {ETF_OVERLAP_DISCLOSURE}"
@@ -689,6 +731,15 @@ def build_allowlist(context: dict, rule_results: Sequence[dict]) -> Allowlist:
                 _register_number(
                     float(breach[key]), PCT, allow, already_percent=True,
                 )
+            # DEF212: the dp ladder above stops at 2, and a breach pair that
+            # only separates at 3 or more renders a token it would reject —
+            # the Finding thrown away for containing its own §F5 line. Ask the
+            # renderer what it is about to say and admit exactly that, so what
+            # is allowed is what is rendered, by construction rather than by
+            # two ladders agreeing.
+            for text in _breach_display(breach):
+                allow.pct.add(Decimal(text).normalize())
+                allow.pct.add((-Decimal(text)).normalize())
 
     # (c) the checked-in fixed sets.
     for token in VALIDATOR_FIXED_PCT:

@@ -52,7 +52,10 @@ def _rules(*fired: str) -> list[dict]:
     slots = {
         "R0": {
             "breaches": [
-                {"scope": "name", "cap_pct": 35.0, "name": "AAA", "weight_pct": 41.2},
+                {
+                    "scope": "name", "cap_pct": 35.0, "name": "AAA",
+                    "weight_pct": 41.2, "weight_pct_raw": 41.2,
+                },
             ],
             "etf_disclosure": False,
         },
