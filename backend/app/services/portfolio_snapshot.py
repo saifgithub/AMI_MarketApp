@@ -32,15 +32,18 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
+from app.core.config import settings
 from app.core.logging import logger
 from app.db import get_session
 from app.db.models import PortfolioValueSnapshotRow, SimPortfolioRow
 from app.services.portfolio_health_constants import (
     BASIS_TOTAL_VALUE,
     ENGINE_VERSION,
+    SNAPSHOT_SOURCE_CASH_ONLY,
     TIER2_MDD_WINDOW_SNAPSHOTS,
     TIER2_MIN_SNAPSHOTS,
 )
+from app.services.price_history import _MOCK_SOURCE
 from app.trading_math import TRADING_DAYS_PER_YEAR, max_drawdown_pct
 
 
@@ -136,6 +139,7 @@ def run_portfolio_snapshot_tick(
     written = 0
     skipped = 0
     vol_null = 0
+    mock_refused = 0
     for portfolio_id, user_id in targets:
         try:
             with get_session() as session:
@@ -153,6 +157,32 @@ def run_portfolio_snapshot_tick(
                 sim.portfolio_marks_snapshot(user_id)
             )
             cash = float(portfolio.current_cash)
+
+            # DEF217 — the same refusal Tier 1 already makes per portfolio
+            # (`portfolio_health.py:756`), which this tick was missing. The
+            # guard above resolves the trading DAY from SPY and aborts the
+            # whole sweep; it says nothing about whether THIS book's own
+            # tickers were priced for real. A book whose quotes fell through
+            # `fallback(cache(yfinance) -> mock_walk)` gets a valuation drawn
+            # from a random walk, and writing it stores a fabricated point in
+            # the very series F16 validates the model against.
+            #
+            # `portfolio.holdings` is the exemption, not an afterthought: an
+            # all-cash book consults no quote at all, so its total_value is
+            # exact and its `mock_walk` label is an artifact of the empty-dict
+            # default rather than evidence of anything. Both halves match
+            # Tier 1's `if tickers and _MOCK_SOURCE in str(price_source)`.
+            if portfolio.holdings:
+                if settings.use_real_market_data and _MOCK_SOURCE in str(source):
+                    logger.warn(
+                        "portfolio_snapshot_refused_mock_marks",
+                        portfolio_id=str(portfolio_id), user_id=str(user_id),
+                        price_source=str(source), as_of=as_of.isoformat(),
+                    )
+                    mock_refused += 1
+                    continue
+            else:
+                source = SNAPSHOT_SOURCE_CASH_ONLY
 
             predicted = None
             try:
@@ -205,6 +235,7 @@ def run_portfolio_snapshot_tick(
         "written": written,
         "skipped_existing": skipped,
         "vol_null": vol_null,
+        "mock_refused": mock_refused,
     }
 
 
@@ -214,11 +245,21 @@ def run_portfolio_snapshot_tick(
 def equity_curve(portfolio_id: UUID, *, limit: int = 504) -> list[SnapshotPoint]:
     """The trailing `limit` snapshots for one portfolio, ascending by date.
 
-    Keyed to `portfolio_id`, so the series never spans a reset."""
+    Keyed to `portfolio_id`, so the series never spans a reset.
+
+    Mock-sourced rows are excluded (DEF217), the same read-side filter
+    `price_history` already applies at `:175` and `:499`. The tick now refuses
+    to write them, so this covers rows written before that guard existed and
+    anything a non-real-data environment produces: a realised return computed
+    over a random walk is not a realised return.
+    """
     with get_session() as session:
         rows = session.execute(
             select(PortfolioValueSnapshotRow)
-            .where(PortfolioValueSnapshotRow.portfolio_id == portfolio_id)
+            .where(
+                PortfolioValueSnapshotRow.portfolio_id == portfolio_id,
+                PortfolioValueSnapshotRow.source != _MOCK_SOURCE,
+            )
             .order_by(PortfolioValueSnapshotRow.as_of.desc())
             .limit(limit)
         ).scalars().all()

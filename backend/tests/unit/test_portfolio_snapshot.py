@@ -24,6 +24,7 @@ from app.services.portfolio_health import PredictedVol
 from app.services.portfolio_health_constants import (
     BIAS_SD_BAND,
     ENGINE_VERSION,
+    SNAPSHOT_SOURCE_CASH_ONLY,
     TIER2_MDD_WINDOW_SNAPSHOTS,
     TIER2_MIN_SNAPSHOTS,
 )
@@ -365,6 +366,136 @@ def test_the_unique_constraint_is_the_backstop() -> None:
     _insert()
     with pytest.raises(IntegrityError):
         _insert()
+
+
+# ── T13-T16. DEF217 — provenance ────────────────────────────────────────────
+#
+# The tick's existing guard resolves the trading DAY from SPY and aborts the
+# whole sweep; nothing checked whether an individual book's own tickers were
+# priced for real. Tier 1 has made exactly this refusal per portfolio since it
+# shipped (`portfolio_health.py:756`) — these pin that Tier 2 now matches it.
+
+
+class _MarkedHolding:
+    ticker, quantity = "AAA", 10.0
+
+
+class _MarkedSim:
+    """A sim whose valuations carry a chosen provenance.
+
+    `holdings` is the axis under test, not incidental detail: the empty case is
+    what the live measurement actually found (92 of 92 mock-labelled rows had
+    `invested_value = 0`), and a fix that refused those would throw away exact
+    history.
+    """
+
+    def __init__(self, source: str, *, holdings: bool) -> None:
+        self._source = source
+        self._holdings = [_MarkedHolding()] if holdings else []
+
+    def portfolio_marks_snapshot(self, _user_id):
+        class _Portfolio:
+            holdings = self._holdings
+            current_cash = 100.0
+
+        total = 1_100.0 if self._holdings else 100.0
+        return _Portfolio(), {"AAA": 100.0}, total, 0.0, self._source
+
+
+def _tick_with(monkeypatch, source: str, *, holdings: bool, real_data: bool = True):
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "use_real_market_data", real_data)
+    monkeypatch.setattr(
+        "app.services.sim_engine.get_sim_engine",
+        lambda: _MarkedSim(source, holdings=holdings),
+    )
+    return _tick()
+
+
+def test_a_book_priced_from_mock_marks_writes_no_row(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A valuation drawn from a random walk is a fabricated point in the very
+    series F16 validates the model against. `realised_return` needs only two
+    snapshots, so it would publish almost immediately."""
+    get_sim_engine().ensure_portfolio(uuid4())
+
+    stats = _tick_with(monkeypatch, "mock_walk", holdings=True)
+    assert stats["written"] == 0
+    assert stats["mock_refused"] == 1
+    assert _row_count() == 0
+
+
+def test_a_real_priced_book_is_still_written(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The vacuity guard: a refusal that fires on everything is not a refusal."""
+    get_sim_engine().ensure_portfolio(uuid4())
+
+    stats = _tick_with(monkeypatch, "yfinance", holdings=True)
+    assert stats["written"] == 1
+    assert stats["mock_refused"] == 0
+    assert _rows()[0].source == "yfinance"
+
+
+def test_an_all_cash_book_is_labelled_cash_only_not_mock(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """MEASURED on live Alpha 2026-08-05: all 92 rows labelled `mock_walk` had
+    `invested_value = 0` — all-cash books whose total_value is EXACT, mislabelled
+    because `_aggregate_source_from_quotes({})` returns `mock_walk` for an empty
+    quote dict. No quote was consulted, so there was nothing to fabricate. The
+    label had to stop colliding before anything could filter on it."""
+    get_sim_engine().ensure_portfolio(uuid4())
+
+    stats = _tick_with(monkeypatch, "mock_walk", holdings=False)
+    assert stats["written"] == 1
+    assert stats["mock_refused"] == 0
+
+    row = _rows()[0]
+    assert row.source == SNAPSHOT_SOURCE_CASH_ONLY
+    assert float(row.invested_value) == 0.0
+    assert len(equity_curve(row.portfolio_id)) == 1, (
+        "an exact cash valuation belongs in the curve"
+    )
+
+
+def test_the_curve_excludes_stored_mock_rows(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Read-side defence in depth, the same filter `price_history` applies at
+    `:175` and `:499`. Covers rows written before the tick's guard existed, and
+    whatever a non-real-data environment produces — where the row is still
+    written for the record but can never become a realised number."""
+    sim = get_sim_engine()
+    user_id = uuid4()
+    portfolio_id = sim.ensure_portfolio(user_id).id
+
+    with get_session() as session:
+        for i, source in enumerate(("yfinance", "mock_walk", "cash_only")):
+            session.add(PortfolioValueSnapshotRow(
+                user_id=user_id, portfolio_id=portfolio_id,
+                as_of=_DAY - timedelta(days=i),
+                total_value=100.0, cash=100.0, invested_value=0.0,
+                drawdown_pct=0.0, source=source,
+            ))
+
+    assert _row_count() == 3
+    sources = {p.source for p in equity_curve(portfolio_id)}
+    assert sources == {"yfinance", "cash_only"}
+
+
+def test_mock_mode_still_records_but_never_serves(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The refusal is gated on `use_real_market_data`, exactly like Tier 1's:
+    in a mock environment mock IS the intended source, so the row is kept for
+    the record — and the read filter is what stops it reaching a user."""
+    get_sim_engine().ensure_portfolio(uuid4())
+
+    stats = _tick_with(monkeypatch, "mock_walk", holdings=True, real_data=False)
+    assert stats["written"] == 1
+    assert stats["mock_refused"] == 0
+    assert equity_curve(_rows()[0].portfolio_id) == []
 
 
 def test_equity_curve_is_ascending_and_portfolio_scoped() -> None:

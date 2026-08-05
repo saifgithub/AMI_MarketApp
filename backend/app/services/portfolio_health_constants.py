@@ -366,6 +366,14 @@ PLANS_DEFAULT = "TRADER,FLOOR_MANAGER"
 
 # ── Machine-readable states (no user-visible copy anywhere in M04) ──────────
 
+# ── Snapshot provenance (DEF217) ────────────────────────────────────────────
+# An all-cash book is valued from `current_cash` alone: no quote is consulted,
+# so `_aggregate_source_from_quotes` hits its empty-dict default and labels an
+# EXACT valuation `mock_walk`. That collision is what made the label useless —
+# a correct row and a fabricated one were indistinguishable, so nothing could
+# filter on it. Naming the cash case restores the label's one job.
+SNAPSHOT_SOURCE_CASH_ONLY = "cash_only"
+
 INSUFFICIENT_SHORT_WINDOW = "short_window"
 INSUFFICIENT_T_OVER_N = "t_over_n"
 INSUFFICIENT_BENCHMARK_MISALIGNED = "benchmark_misaligned"
