@@ -608,17 +608,23 @@ def test_terminal_mismatches_names_both_numbers() -> None:
 
 
 def test_two_books_sharing_a_ticker_each_get_their_own_early_history() -> None:
-    """The audit's blocker, with the REAL provider.
+    """One window per ticker per run, and the valuation that follows from it.
 
-    The cache was keyed by ticker alone, so whichever portfolio was processed
-    first fixed that ticker's window for everyone else. A later portfolio with
-    an EARLIER first trade then lost its own early bars and fell into the
-    ledger-priced fallback — five days valued at the last execution price
-    instead of the market close, `terminal OK`, exit 0, and permanent, because
-    an existing row is never updated.
+    **Corrected in round 2 (m2).** This docstring used to call itself "the
+    audit's blocker, with the REAL provider", implying it is the guard that
+    catches a ticker-only cache key. It is not, and cannot be: every ticker is
+    fetched from the run-global `earliest`, so within a single run there is
+    exactly one `start` per ticker and the key's second component never varies.
+    Re-keying the cache `(ticker, start) → ticker` leaves this test **passing**;
+    the auditor measured that (QA-C).
 
-    `FakeProvider` cannot catch this: it recomputes its series on every call
-    and holds no cache. Only the shipped `_YfinanceProvider` has one.
+    What this test actually pins is the run-global fetch (one window per ticker
+    however many books hold it) and the valuation it produces — 10 shares at the
+    200.0 close, not the 100.0 execution price. Both are worth pinning. The
+    cache key itself is guarded by
+    `test_the_price_cache_is_keyed_by_ticker_and_start`, which is the only guard
+    for it, and the narrative that treated that unit test as the weaker of the
+    two had it backwards.
     """
     import cr136_backfill_portfolio_snapshots as script
 
@@ -686,7 +692,14 @@ def test_two_books_sharing_a_ticker_each_get_their_own_early_history() -> None:
 
 def test_the_price_cache_is_keyed_by_ticker_and_start() -> None:
     """The cache's own contract, without a DB: the same ticker asked for two
-    different windows must not hand the second caller the first's answer."""
+    different windows must not hand the second caller the first's answer.
+
+    m2 — this is the ONLY guard on the cache key, and it has to reach past the
+    run to be one. A single run asks each ticker for exactly one `start` (every
+    fetch uses the run-global earliest), so no end-to-end test can vary the
+    second component at all — which is why re-keying to `ticker` alone leaves
+    the two-books test green. This calls the provider directly with two windows,
+    the shape a provider instance reused across runs would see."""
     import cr136_backfill_portfolio_snapshots as script
 
     calls: list[str] = []
@@ -804,3 +817,139 @@ def test_the_guard_catches_a_holding_that_exists_on_only_one_side() -> None:
     assert len(lines) == 2
     assert any("AAPL" in line for line in lines)
     assert any("MSFT" in line for line in lines)
+
+
+# ── M10 r2 A1 — a filtered run must value exactly as the full run ───────────
+
+
+def test_a_user_filtered_run_prices_from_the_run_global_window() -> None:
+    """A1. `--user-id` narrowed the portfolio set, which moved `earliest` later,
+    which shortened every price series, which changed what `_close_on_or_before`
+    could carry forward. Days the full run valued from a real prior close fell
+    back to `last_event_price` in the spot-check — and BOTH printed
+    `terminal OK` and exited 0, so nothing named the difference.
+
+    That is not hypothetical ordering: `promotion_checklist.md` row 2.8's
+    acceptance sequence is *dry-run all → spot-check with `--user-id` →
+    `--apply`*, and it was run that way with the spot-check recorded as
+    evidence. The step that exists to catch a bad backfill was reading a
+    valuation the apply would not write.
+
+    The reproduction needs a ticker whose bars STOP before its holder's first
+    trade: fetched from the run-global earliest it has bars to carry forward,
+    fetched from the holder's own first trade it has none at all.
+    """
+    import cr136_backfill_portfolio_snapshots as script
+
+    session = get_sessionmaker()()
+    early = _portfolio(session, cash=9000.0)
+    _trade(session, early, ticker="AAPL", side="buy", qty=10, price=100.0,
+           opened=_GRID[0])
+    _holding(session, early, ticker="AAPL", qty=10, avg_cost=100.0)
+
+    late = _portfolio(session, cash=9000.0)
+    _trade(session, late, ticker="STOP", side="buy", qty=10, price=100.0,
+           opened=_GRID[5])
+    _holding(session, late, ticker="STOP", qty=10, avg_cost=100.0)
+    session.commit()
+    session.close()
+
+    fetches: list[tuple[str, str]] = []
+
+    class _Frame:
+        def __init__(self, rows):
+            self.rows = rows
+            self.empty = not rows
+
+        def iterrows(self):
+            for day, close in self.rows:
+                yield (datetime(day.year, day.month, day.day), {"Close": close})
+
+    class _Ticker:
+        def __init__(self, ticker):
+            self.ticker = ticker
+
+        def history(self, *, start, interval, auto_adjust):
+            fetches.append((self.ticker, start))
+            begin = date.fromisoformat(start)
+            if self.ticker == "SPY":
+                return _Frame([(d, 500.0) for d in _GRID if d >= begin])
+            if self.ticker == "STOP":
+                # Bars stop at _GRID[2] — BEFORE this holder's first trade at
+                # _GRID[5]. Asked from the run-global earliest there is a close
+                # to carry forward; asked from _GRID[5] there is nothing.
+                return _Frame([
+                    (d, 200.0) for d in _GRID[:3] if d >= begin
+                ])
+            return _Frame([(d, 200.0) for d in _GRID if d >= begin])
+
+    import sys as _sys
+    _sys.modules["yfinance"] = type("yf", (), {"Ticker": _Ticker})
+    try:
+        code = main(
+            ["--user-id", str(late.user_id), "--apply"],
+            provider=script._YfinanceProvider(),
+        )
+    finally:
+        _sys.modules.pop("yfinance", None)
+
+    assert code == 0
+    assert ("STOP", _GRID[0].isoformat()) in fetches, (
+        "the window is a property of the RUN, so a --user-id run takes it from "
+        "every portfolio — not from the one it was asked to price"
+    )
+
+    rows = _snapshots(late.id)
+    assert rows, "the filtered run wrote nothing"
+    for row in rows:
+        assert float(row.invested_value) == 2000.0, (
+            "10 shares at the 200.0 close carried forward from _GRID[2]. "
+            "1000.0 is the 100.0 execution price — the ledger-priced fallback "
+            "a shortened window causes, and what the spot-check used to show "
+            "while --apply wrote 2000.0"
+        )
+        assert float(row.total_value) == 11000.0
+
+
+def test_a_cold_benchmark_with_ledgers_to_value_does_not_exit_clean() -> None:
+    """m1. An empty grid used to exit 0 and print `committed.` — nothing false,
+    but the exit code is the channel a runbook reads, and an empty
+    `price_history_daily` is M11 §1.2's cold-start state, not a clean backfill.
+
+    Scoped to the case that is actually wrong: books that HAVE ledgers and could
+    not be valued. A grid empty because nothing ever traded stays exit 0, which
+    a shipped test caught when the first version of this fix collapsed the two.
+    """
+    import cr136_backfill_portfolio_snapshots as script
+
+    session = get_sessionmaker()()
+    book = _portfolio(session, cash=9000.0)
+    _trade(session, book, ticker="AAPL", side="buy", qty=10, price=100.0,
+           opened=_GRID[0])
+    _holding(session, book, ticker="AAPL", qty=10, avg_cost=100.0)
+    session.commit()
+    session.close()
+
+    class _Frame:
+        empty = True
+        rows: list = []
+
+        def iterrows(self):
+            return iter(())
+
+    class _Ticker:
+        def __init__(self, ticker):
+            self.ticker = ticker
+
+        def history(self, *, start, interval, auto_adjust):
+            return _Frame()
+
+    import sys as _sys
+    _sys.modules["yfinance"] = type("yf", (), {"Ticker": _Ticker})
+    try:
+        code = main(["--apply"], provider=script._YfinanceProvider())
+    finally:
+        _sys.modules.pop("yfinance", None)
+
+    assert code == 3, "a cold benchmark with books to value is not a clean run"
+    assert _snapshots(book.id) == []

@@ -57,7 +57,9 @@ in. `ENV PYTHONPATH=/app` makes the `app.*` imports resolve from anywhere.
     # apply
     ssh melehost "docker exec ami_api_alpha python /tmp/cr136_backfill_portfolio_snapshots.py --apply"
 
-Exit codes: 0 clean; 2 if any portfolio failed the terminal-state guard. Under
+Exit codes: 0 clean; 2 if any portfolio failed the terminal-state guard; 3 if
+books have ledgers but the SPY grid is empty, so nothing could be valued (the
+cold-start state — an empty `price_history_daily`, which used to exit 0). Under
 `--apply`, exit 2 does NOT mean nothing was written — portfolios that passed
 the guard are committed, and only the failing ones are skipped and `!!`-flagged.
 A walk that cannot reproduce the present has no business writing the past, so a
@@ -381,6 +383,15 @@ def terminal_mismatches(
 
 
 class _PortfolioResult(NamedTuple):
+    """One portfolio's outcome.
+
+    `ledger_priced` is carried up to the summary (m3) because it used to appear
+    only inside an f-string: no branch, no return and no exit code read it, so a
+    book valued ENTIRELY off stale execution prices printed `terminal OK` and
+    exited 0 like any clean backfill. `mismatched` gates `return 2`; this gated
+    nothing at all.
+    """
+
     line: str
     detail: list[str]
     series: list[DayValue]
@@ -389,6 +400,7 @@ class _PortfolioResult(NamedTuple):
     skipped_existing: int
     mismatched: bool
     skipped_no_trades: bool
+    ledger_priced: int = 0
 
 
 def _first_event_date(events: list[_Event]) -> date | None:
@@ -416,18 +428,46 @@ def _run(
         ).scalars().all()
         synthetic = set(rows)
 
-    # One pass to find the earliest event across everything in scope, so the
-    # grid and every price series are fetched exactly once per run.
+    # A1 — the price window is a property of the RUN, not of the selection, so
+    # `earliest` is taken from EVERY portfolio even when `--user-id` narrows the
+    # work. It was previously the minimum over the filtered set, which made a
+    # spot-check a different question from the run it was meant to check:
+    # narrowing moved `earliest` later, which shortened every price series,
+    # which changed what `_close_on_or_before` could carry forward. Days the
+    # full run valued from a real prior close fell back to `last_event_price` in
+    # the spot-check — and both printed `terminal OK` and exited 0.
+    #
+    # Checklist 2.8's acceptance sequence is *dry-run all → spot-check with
+    # --user-id → --apply*, so the step that exists to catch a bad backfill was
+    # reading a valuation the apply would not write.
+    #
+    # Scanning the unfiltered set rather than deriving the same date from a
+    # `min(opened_at)` aggregate is deliberate: identical BY CONSTRUCTION beats
+    # identical by an argument about which event kinds can carry the earliest
+    # timestamp, and this is a verification tool whose whole failure was that a
+    # check checked something else. The cost falls only on `--user-id` runs,
+    # which read every ledger to price one book — acceptable for a spot-check.
+    scope: set[UUID] = {p.id for p in portfolios}
+    window_source = portfolios if user_id is None else session.execute(
+        select(SimPortfolioRow)
+    ).scalars().all()
+
     ledgers: dict[UUID, list[_Event]] = {}
     anomalies: dict[UUID, list[str]] = {}
     earliest: date | None = None
-    for p_row in portfolios:
+    for p_row in window_source:
         trades = session.execute(
             select(SimTradeRow).where(SimTradeRow.portfolio_id == p_row.id)
         ).scalars().all()
         events, notes = events_from_trades(trades)
-        ledgers[p_row.id] = events
-        anomalies[p_row.id] = notes
+        # `scope` bounds MEMORY, not behaviour: the valuation loop below
+        # iterates `portfolios` (the filtered list), so keeping every ledger
+        # would change nothing a caller can observe. Verified as an equivalent
+        # mutant rather than assumed — dropping this branch leaves all 28 tests
+        # green, and that is the correct result, not a coverage gap.
+        if p_row.id in scope:
+            ledgers[p_row.id] = events
+            anomalies[p_row.id] = notes
         first = _first_event_date(events)
         if first is not None and (earliest is None or first < earliest):
             earliest = first
@@ -561,7 +601,7 @@ def _run(
             ),
             detail=detail, series=series, planned=len(series), inserted=inserted,
             skipped_existing=skipped_existing, mismatched=False,
-            skipped_no_trades=False,
+            skipped_no_trades=False, ledger_priced=stats["ledger_priced"],
         ))
 
     return results, grid
@@ -600,6 +640,15 @@ def main(
             )
         else:
             print("trading-day grid: EMPTY — nothing can be valued this run")
+        if user_id is not None:
+            # A1 — say it out loud. The window above is the run-global one, so
+            # this spot-check values exactly as the unfiltered --apply will;
+            # an operator reading the table below is entitled to know that is
+            # true rather than to assume it.
+            print(
+                f"scope: --user-id {user_id} — one book priced, but the window "
+                f"above is the RUN-GLOBAL one, so these values match --apply"
+            )
         print("-" * 78)
 
         for result in results:
@@ -620,6 +669,7 @@ def main(
         planned = sum(r.planned for r in results)
         inserted = sum(r.inserted for r in results)
         skipped = sum(r.skipped_existing for r in results)
+        ledger_priced = sum(r.ledger_priced for r in results)
 
         print("-" * 78)
         print(f"  portfolios scanned      : {scanned}")
@@ -628,6 +678,18 @@ def main(
         print(f"  rows planned            : {planned}")
         print(f"  rows inserted           : {inserted}")
         print(f"  rows skipped (existing) : {skipped}")
+        print(f"  ledger-priced valuations: {ledger_priced}")
+        if ledger_priced:
+            # Not an error and not a mismatch — but "we had no bar for this
+            # ticker on or before this day, so we used the last execution
+            # price" is the one number in this run that says a valuation was
+            # not market-derived, and it is the operator's call whether that is
+            # acceptable for the book in front of them.
+            print(
+                "  !! those days were valued at the last EXECUTION price, not a "
+                "market close — check the tickers flagged above before trusting "
+                "the series"
+            )
 
         if args.apply:
             session.commit()
@@ -635,7 +697,28 @@ def main(
         else:
             session.rollback()
             print("\nrolled back — re-run with --apply to write.")
-        return 2 if mismatched else 0
+
+        if mismatched:
+            return 2
+        if not grid and any(not r.skipped_no_trades for r in results):
+            # m1 — an empty grid used to exit 0. Nothing printed was false
+            # (`rows inserted : 0` is true, and `committed.` describes an empty
+            # transaction accurately), but the exit code is the channel a
+            # runbook reads, and an empty `price_history_daily` is the
+            # cold-start state M11 §1.2 exists for — not a clean backfill.
+            #
+            # The `any(...)` is the distinction the first version of this fix
+            # collapsed, and a shipped test caught it: a grid can be empty
+            # because nothing ever traded, which is genuinely a clean no-op,
+            # or because the benchmark's bars are missing while books DO have
+            # ledgers to value. Only the second is a failure.
+            print(
+                f"\nEXIT 3 — books have trades but the {_BENCHMARK} grid is "
+                f"empty, so nothing could be valued. Warm {_BENCHMARK} in "
+                "price_history_daily and re-run."
+            )
+            return 3
+        return 0
     except Exception:
         session.rollback()
         raise
