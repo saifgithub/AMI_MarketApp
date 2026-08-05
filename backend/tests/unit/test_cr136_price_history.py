@@ -972,3 +972,43 @@ def test_duplicate_dates_are_not_counted_as_rejected_bars() -> None:
     assert series.fetch_failed is False, (
         "100 clean days is a short history, not a feed outage — nothing was rejected"
     )
+
+
+def test_a_narrower_caller_does_not_clear_a_wider_callers_feed_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """M01 r2 m4. The stored fact is `rejected > 0` — what the PROVIDER did —
+    and the shortfall test belongs to the reader. Keying the stored fact to
+    whoever happened to fetch let a caller with a smaller window clear a fact
+    still true for a wider one, silently reopening A1.
+
+    B asks for 20 days and gets 40, so B reading `False` is correct. What must
+    not happen is B's success erasing the flag A still depends on while the feed
+    is still serving 160 unusable closes out of 200."""
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    days = _trading_days(_ANCHOR, 200)
+    bars = _candles(days)
+    poisoned = [
+        Candle(t=b.t, o=b.o, h=b.h, low=b.low, c=float("nan"), v=b.v)
+        if i >= 40 else b
+        for i, b in enumerate(bars)
+    ]
+    price_history.set_history_provider(FakeHistoryProvider({"BAD": poisoned}))
+
+    wide = price_history.get_daily_series(
+        ["BAD"], min_days=126, now=_at(_ANCHOR),
+    )["BAD"]
+    assert wide.fetch_failed is True
+
+    narrow = price_history.get_daily_series(
+        ["BAD"], min_days=20, now=_at(_ANCHOR) + timedelta(hours=7),
+    )["BAD"]
+    assert len(narrow.dates) == 40
+    assert narrow.fetch_failed is False, "B got what it asked for"
+
+    again = price_history.get_daily_series(
+        ["BAD"], min_days=126, now=_at(_ANCHOR) + timedelta(hours=7, minutes=1),
+    )["BAD"]
+    assert again.fetch_failed is True, (
+        "B's success must not clear a fact that is still true for A"
+    )

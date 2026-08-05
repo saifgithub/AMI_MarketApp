@@ -713,12 +713,30 @@ explicitly, and the handler says which outcome it chose (skip / retry / re-read)
 a lock, or "only one process runs this" is not a substitute — those are deployment facts, and
 deployment facts change without the code changing.*
 
-**Enforcing check (P15-GUARD).** `backend/tests/unit/test_p15_check_then_insert_guard.py` — reads
-the source of every module that calls an `upsert_*` helper inside a `get_session()` block and fails
-if the call is not inside a `try` with an `except IntegrityError`. Source-read rather than runtime,
-for the same reason `test_cr136_dart_parity.py` is: the failure only reproduces under concurrency
-that a unit test cannot reliably stage, so the guard asserts the *handler exists* rather than trying
-to lose the race on demand.
+**Enforcing check (P15-GUARD).** `backend/tests/unit/test_p15_check_then_insert_guard.py`.
+Source-read rather than runtime, for the same reason `test_cr136_dart_parity.py` is: the failure
+only reproduces under concurrency a unit test cannot reliably stage, so the guard asserts the
+*handler exists* rather than trying to lose the race on demand. Two rules:
+
+1. **Call-site rule** — every `upsert_*` call inside a `get_session()` block sits inside a
+   `try` with an `except IntegrityError`.
+2. **Shape rule** — any function that reads a model AND `session.add`s that same model, where the
+   model can actually collide (`UniqueConstraint`, unique `Index`, `unique=True` column, or a
+   **primary key with no default** — the natural-key case). A uuid4-defaulted PK cannot collide and
+   is excluded, which is what stops the rule flagging every append-only insert.
+
+**The first version of this guard had only rule 1, and that was itself an instance of P11** — a rule
+fixed at the shape that reported it. Matching `upsert_*` **by name** enforces a naming convention,
+not this pattern: CR136-M01's round-2 auditor added an unguarded check-then-`session.add` that
+simply was not called `upsert_*` and the guard passed (`AUD-M4`). Rule 2 is the fix, and on its
+first run it surfaced **six** unguarded sites the name rule could not see — filed as **DEF220**,
+pinned in `_UNREVIEWED` so a seventh fails the build, and deliberately not fixed blind: each needs
+its own reachability answer, and wrapping all six in `except IntegrityError: pass` would satisfy
+the guard while answering none of them.
+
+**Corollary worth keeping:** *a guard that matches on a NAME tests that people followed a
+convention. A guard that matches on the SHAPE tests the thing you actually care about.* When both
+are cheap, write the shape one.
 
 ---
 

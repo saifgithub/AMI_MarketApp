@@ -522,11 +522,23 @@ def get_daily_series(
         # use (NaN / non-positive closes), so the shortfall is ours, not the
         # security's age. A clean 20-bar IPO rejects nothing and is correctly
         # left reading `short_history`, which is the distinction A1 is about.
-        if rejected > 0 and len(series.dates) < min_days:
+        #
+        # m4 — the STORED fact is `rejected > 0` alone, with no `min_days` in
+        # it, because the caller's threshold is not a property of the feed. The
+        # two are split deliberately: the dict records what the provider did,
+        # and each caller applies its own shortfall test on read. Keying the
+        # stored fact to whoever fetched let a caller with a SMALLER window
+        # clear a fact still true for a wider one — B asks for 20 days, gets 40,
+        # clears the flag, and A's next throttled call at 126 silently reads
+        # `short_history` again while the feed is still serving 160 NaNs in 200.
+        # Latent only because `get_daily_series` has one origin today; a
+        # watchlist sparkline is all it takes to reopen A1.
+        if rejected > 0:
             _last_fetch_failed[ticker] = True
-            series = _replace_fetch_failed(series, ticker)
         else:
             _last_fetch_failed.pop(ticker, None)
+        if _last_fetch_failed.get(ticker) and len(series.dates) < min_days:
+            series = _replace_fetch_failed(series, ticker)
         out[ticker] = series
 
     return out
