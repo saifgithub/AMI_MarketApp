@@ -36,6 +36,7 @@ from datetime import datetime, timezone
 
 import httpx
 from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
 from app.core.logging import logger
@@ -271,7 +272,8 @@ def _record_refresh_failure(exc: Exception) -> None:
 def run_ticker_reference_refresh_tick(
     *, fetcher=None, now: datetime | None = None, force: bool = False,
 ) -> str:
-    """One refresh cycle. Returns `skipped_fresh` | `stored` | `fetch_failed`.
+    """One refresh cycle. Returns `skipped_fresh` | `stored` | `fetch_failed` |
+    `skipped_concurrent`.
 
     Idempotent: a tick that finds a refresh already stored within the fresh
     window does nothing. A failed fetch leaves the held table untouched — the
@@ -303,8 +305,21 @@ def run_ticker_reference_refresh_tick(
         _record_refresh_failure(exc)
         return "fetch_failed"
 
-    with get_session() as session:
-        counts = upsert_reference(session, records, now)
+    try:
+        with get_session() as session:
+            counts = upsert_reference(session, records, now)
+    except IntegrityError:
+        # failure_patterns.md P15 — `upsert_reference` is `session.get(symbol)`
+        # then `session.add(...)` on a primary key, so two refreshes whose reads
+        # both land before either commits will both INSERT and one loses. Found
+        # by P15-GUARD on its first run, not by a failure: one process is what
+        # holds this today, and that is a deployment fact, not a guard.
+        #
+        # A concurrent refresh wrote the same source data, so losing the race
+        # costs nothing — but it is NOT `stored`, and saying so would tell the
+        # caller a refresh happened that did not.
+        logger.warn("ticker_reference_refresh_concurrent", fetched_at=now.isoformat())
+        return "skipped_concurrent"
     reset_refresh_failures()
     _invalidate_active_symbol_cache()
     logger.info("ticker_reference_refresh_stored", fetched_at=now.isoformat(), **counts)

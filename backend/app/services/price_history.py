@@ -41,6 +41,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Sequence
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
 from app.core.logging import logger
@@ -86,6 +87,24 @@ _history_provider: MarketDataProvider | None = None
 # evaluation, for every holding, forever.
 _last_fetch_attempt: dict[str, datetime] = {}
 
+# M01 A1 — per-ticker: did the MOST RECENT attempt leave usable history?
+#
+# `fetch_failed` used to answer only for the caller that made the failing call.
+# Every other caller inside `_FETCH_FRESH_WINDOW_S` — six hours — was told the
+# other thing, so for 359 of every 360 minutes after a feed hiccup a dropped
+# holding read `short_history` when the truth was `feed_unavailable`. That is
+# verbatim the confusion `FEED_UNAVAILABLE_DROP_REASON`'s own comment exists to
+# prevent, and it made that constant reachable by one request in 360.
+#
+# Set PESSIMISTICALLY, before the network call, and cleared only on an attempt
+# that leaves usable history. That ordering is what covers the sibling case: a
+# second caller throttled by an attempt still in flight reads True, because
+# there is not yet a success to clear it. The residual race — the sibling's
+# commit lands between this caller's row read and its flag read — narrows the
+# window to that gap rather than closing it, and errs toward "the feed is
+# unreliable", which is the safe direction.
+_last_fetch_failed: dict[str, bool] = {}
+
 
 def set_history_provider(provider: MarketDataProvider | None) -> None:
     """Replace the leaf provider. Test hook, mirroring
@@ -94,6 +113,7 @@ def set_history_provider(provider: MarketDataProvider | None) -> None:
     global _history_provider
     _history_provider = provider
     _last_fetch_attempt.clear()
+    _last_fetch_failed.clear()
 
 
 def _leaf_provider() -> MarketDataProvider | None:
@@ -132,11 +152,19 @@ class DailySeries:
     last bar answers a different one and would let a series whose tail is a
     stale row re-fetch on every call.
 
-    `fetch_failed` says a fetch was attempted this call and produced nothing.
-    Without it a feed outage and a genuinely young security are the same empty
-    series, and the engine would tell a user "this holding does not have enough
-    price history" when the truth is "our data feed is down" — the CR040
-    question answered the wrong way.
+    `fetch_failed` says **the most recent attempt for this TICKER left no
+    usable history** — not merely that this particular call got nothing (M01
+    A1). The narrower reading was the defect: the throttle window is six hours,
+    so every caller after the one that made the failing attempt was told the
+    other thing, and a dropped holding read `short_history` for 359 of every
+    360 minutes after a feed hiccup. Without this a feed outage and a genuinely
+    young security are the same empty series, and the engine tells a user "this
+    holding does not have enough price history" when the truth is "our data
+    feed is down" — the CR040 question answered the wrong way.
+
+    A young security is still reported as young: a clean fetch that returns 20
+    bars rejects nothing, and only a fetch that served bars we could not use
+    (`rejected > 0`) and still left the ticker short counts as a feed failure.
     """
 
     ticker: str
@@ -258,8 +286,14 @@ def upsert_daily_bars(
 
 def _candles_to_bars(
     candles: Sequence[Candle], *, ticker: str,
-) -> list[tuple[date, float]]:
-    """Trading date + close per candle, later bars winning a duplicate date.
+) -> tuple[list[tuple[date, float]], int]:
+    """(trading date + close per candle, rejected count), later bars winning a duplicate date.
+
+    The rejected count is RETURNED, not just logged (M01 A1 / attack 3). It is
+    the datum that separates "the provider served garbage" from "this security
+    is genuinely young": both end in a series too short to use, and only the
+    first is a feed failure. Counting it from `len(candles) - len(bars)` would
+    be wrong — that also counts duplicate dates collapsing, which is normal.
 
     `Candle.t` is epoch seconds UTC. yfinance stamps a daily bar at midnight
     exchange-tz (or naive midnight), so the UTC date equals the exchange
@@ -288,7 +322,7 @@ def _candles_to_bars(
             rejected=rejected,
             served=len(candles),
         )
-    return sorted(by_date.items())
+    return sorted(by_date.items()), rejected
 
 
 def _build_series(
@@ -389,6 +423,14 @@ def get_daily_series(
             series = _build_series(ticker, rows)
 
         if not fetch:
+            # M01 A1 — throttled, so this call made no attempt of its own. If
+            # the most recent attempt left no usable history, that fact belongs
+            # to the TICKER, not to the unlucky caller who happened to make it.
+            # Gated on the series still being unusable: a book that already has
+            # what it asked for is not degraded, and flagging it would be noise
+            # rather than the CR040 distinction this exists to draw.
+            if _last_fetch_failed.get(ticker) and len(series.dates) < min_days:
+                series = _replace_fetch_failed(series, ticker)
             out[ticker] = series
             continue
 
@@ -400,6 +442,7 @@ def get_daily_series(
             # caller must be able to tell "our feed is down" from "this
             # security is young" (CR040).
             _last_fetch_attempt[ticker] = now
+            _last_fetch_failed[ticker] = True
             logger.warn(
                 "price_history_no_provider",
                 ticker=ticker,
@@ -415,9 +458,10 @@ def get_daily_series(
         # attempt is recorded BEFORE it is made, so a failure throttles the next
         # one exactly as a success does.
         _last_fetch_attempt[ticker] = now
+        _last_fetch_failed[ticker] = True      # pessimistic; cleared on success
         candles = provider.history(ticker, HISTORY_FETCH_PERIOD)
         source = getattr(provider, "name", "unknown")
-        bars = _candles_to_bars(candles or (), ticker=ticker)
+        bars, rejected = _candles_to_bars(candles or (), ticker=ticker)
         if not bars:
             logger.warn(
                 "price_history_fetch_failed",
@@ -435,21 +479,55 @@ def get_daily_series(
             out[ticker] = _replace_fetch_failed(series, ticker)
             continue
 
-        with get_session() as session:
-            upsert_daily_bars(
-                session,
-                ticker,
-                bars,
-                source=source,
-                now=now,
-                # A mock run must never overwrite real history in place.
-                replace_foreign_rows=source != _MOCK_SOURCE,
+        try:
+            with get_session() as session:
+                upsert_daily_bars(
+                    session,
+                    ticker,
+                    bars,
+                    source=source,
+                    now=now,
+                    # A mock run must never overwrite real history in place.
+                    replace_foreign_rows=source != _MOCK_SOURCE,
+                )
+        except IntegrityError:
+            # M01 A2 — `upsert_daily_bars` SELECTs the affected dates and
+            # INSERTs what is missing, so two callers whose reads both land
+            # before either commits will both INSERT and one loses the unique
+            # constraint. M03 already answers this in this same CR
+            # (`portfolio_snapshot.py:192`): a concurrent writer losing the race
+            # wrote the same bars, so this is a skip, not a failure.
+            #
+            # Not hypothetical for long. `_last_fetch_attempt` is PER PROCESS
+            # and the throttle is what keeps a single uvicorn to one fetcher —
+            # measured at 0/60 races today. CLAUDE.md's Beta stack is Cloud Run,
+            # where instances share no dict, so two users on two instances
+            # hitting a cold ticker is the common case, and every evaluation
+            # fetches SPY. Raising here propagates through `build_health_context`
+            # → `asyncio.to_thread` → the tiles route, whose docstring commits
+            # to returning 200 with an amber state rather than a 5xx.
+            logger.warn(
+                "price_history_concurrent_write",
+                ticker=ticker, bars=len(bars), provider=source,
             )
         # Re-read, so what is returned is exactly what is persisted.
         with get_session() as session:
-            out[ticker] = _build_series(
+            series = _build_series(
                 ticker, _load_rows(session, ticker, real_mode=real_mode),
             )
+
+        # M01 A1, the third path — a fetch that SUCCEEDED and still left the
+        # ticker unusable. `rejected > 0` is what makes this a feed failure
+        # rather than a young security: the provider served bars we could not
+        # use (NaN / non-positive closes), so the shortfall is ours, not the
+        # security's age. A clean 20-bar IPO rejects nothing and is correctly
+        # left reading `short_history`, which is the distinction A1 is about.
+        if rejected > 0 and len(series.dates) < min_days:
+            _last_fetch_failed[ticker] = True
+            series = _replace_fetch_failed(series, ticker)
+        else:
+            _last_fetch_failed.pop(ticker, None)
+        out[ticker] = series
 
     return out
 

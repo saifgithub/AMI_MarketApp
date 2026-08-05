@@ -20,6 +20,7 @@ from datetime import date, datetime, time, timedelta, timezone
 
 import pytest
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
 from app.db import get_session
@@ -789,3 +790,185 @@ def test_latest_trading_day_ignores_fabricated_rows_in_real_mode(
 
     monkeypatch.setattr(settings, "use_real_market_data", False)
     assert price_history.latest_trading_day() == _ANCHOR
+
+
+# ── M01 A1 — the feed-failure fact belongs to the ticker, not the caller ────
+
+
+def test_a_second_caller_inside_the_throttle_still_reads_feed_failed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A1. `_FETCH_FRESH_WINDOW_S` is six hours and the attempt stamp is written
+    BEFORE the network call, so under the old behaviour exactly one caller in
+    360 was told the feed was down and the other 359 were told the security is
+    young. Every existing fixture makes ONE call, which is why the suite could
+    not see it.
+
+    `portfolio_health.py:279` turns this straight into the user-visible drop
+    reason, so the old behaviour shipped the exact confusion
+    `FEED_UNAVAILABLE_DROP_REASON`'s own comment exists to prevent."""
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    price_history.set_history_provider(FakeHistoryProvider({}))     # serves nothing
+
+    first = price_history.get_daily_series(
+        ["AAA"], min_days=126, now=_at(_ANCHOR),
+    )["AAA"]
+    assert first.dates == []
+    assert first.fetch_failed is True, "the caller that attempted knows"
+
+    # Every later caller inside the window makes no attempt of its own.
+    for minutes in (1, 30, 120, 359):
+        later = price_history.get_daily_series(
+            ["AAA"], min_days=126,
+            now=_at(_ANCHOR) + timedelta(minutes=minutes),
+        )["AAA"]
+        assert later.dates == []
+        assert later.fetch_failed is True, f"+{minutes}min reads as a young security"
+
+
+def test_a_clean_short_fetch_is_a_young_security_not_a_feed_failure() -> None:
+    """The vacuity guard, and the whole point of A1: a refusal that fires on
+    every short series has not distinguished anything. An IPO with 20 clean
+    bars rejects nothing, so it stays `short_history`."""
+    days = _trading_days(_ANCHOR, 20)
+    price_history.set_history_provider(
+        FakeHistoryProvider({"NEW": _candles(days)}),
+    )
+
+    series = price_history.get_daily_series(
+        ["NEW"], min_days=126, now=_at(_ANCHOR),
+    )["NEW"]
+    assert len(series.dates) == 20
+    assert series.fetch_failed is False, "20 clean bars is youth, not an outage"
+
+    # And the next caller inside the window agrees — nothing sticky was set.
+    again = price_history.get_daily_series(
+        ["NEW"], min_days=126, now=_at(_ANCHOR) + timedelta(minutes=30),
+    )["NEW"]
+    assert again.fetch_failed is False
+
+
+def test_a_garbage_fetch_that_leaves_the_ticker_short_reads_as_a_feed_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A1's third path — the fetch SUCCEEDS and still leaves nothing usable.
+    The provider serves 200 bars of which 160 carry NaN closes; 40 survive,
+    which is below the floor. `rejected > 0` is what separates this from the
+    young security above: the feed gave us data we could not use, so the
+    shortfall is ours."""
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    days = _trading_days(_ANCHOR, 200)
+    bars = _candles(days)
+    poisoned = [
+        Candle(t=b.t, o=b.o, h=b.h, low=b.low, c=float("nan"), v=b.v)
+        if i >= 40 else b
+        for i, b in enumerate(bars)
+    ]
+    price_history.set_history_provider(
+        FakeHistoryProvider({"BAD": poisoned}),
+    )
+
+    series = price_history.get_daily_series(
+        ["BAD"], min_days=126, now=_at(_ANCHOR),
+    )["BAD"]
+    assert len(series.dates) == 40, "only the finite closes are persisted"
+    assert series.fetch_failed is True
+
+    # Sticky for the next caller too — same fact, same ticker.
+    again = price_history.get_daily_series(
+        ["BAD"], min_days=126, now=_at(_ANCHOR) + timedelta(minutes=30),
+    )["BAD"]
+    assert again.fetch_failed is True
+
+
+def test_a_recovered_feed_clears_the_flag(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Sticky must not mean permanent — a flag that never clears is its own
+    CR040 failure in the other direction."""
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    provider = FakeHistoryProvider({})
+    price_history.set_history_provider(provider)
+
+    down = price_history.get_daily_series(
+        ["AAA"], min_days=126, now=_at(_ANCHOR),
+    )["AAA"]
+    assert down.fetch_failed is True
+
+    days = _trading_days(_ANCHOR, 200)
+    provider._bars["AAA"] = _candles(days)
+    recovered = price_history.get_daily_series(
+        ["AAA"], min_days=126,
+        now=_at(_ANCHOR) + timedelta(hours=7),        # past the throttle window
+    )["AAA"]
+    assert len(recovered.dates) == 200
+    assert recovered.fetch_failed is False
+
+
+# ── M01 A2 — a concurrent writer losing the race is a skip, not a 500 ───────
+
+
+def test_a_concurrent_write_is_a_skip_not_an_exception(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A2. `upsert_daily_bars` SELECTs the affected dates and INSERTs what is
+    missing, so two callers whose reads both land before either commits will
+    both INSERT and one loses the unique constraint. Raising propagates through
+    `build_health_context` → `asyncio.to_thread` → the tiles route, whose own
+    docstring commits to a 200 with an amber state rather than a 5xx.
+
+    Measured at 0/60 races on this single-uvicorn stack; the throttle is what
+    holds it, and `_last_fetch_attempt` is per-process. CLAUDE.md's Beta stack
+    is Cloud Run, where instances share no dict — this becomes the common case,
+    and every evaluation fetches SPY. Same class as M03's
+    `portfolio_snapshot.py:192`, which is why CLAUDE.md's second-occurrence
+    rule applies."""
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    days = _trading_days(_ANCHOR, 200)
+    price_history.set_history_provider(
+        FakeHistoryProvider({"RACE": _candles(days)}),
+    )
+
+    real_upsert = price_history.upsert_daily_bars
+    calls: list[int] = []
+
+    def _losing_upsert(session, ticker, bars, **kwargs):
+        calls.append(1)
+        if len(calls) == 1:
+            # The other caller committed the same bars an instant earlier.
+            raise IntegrityError("INSERT", {}, Exception("unique constraint"))
+        return real_upsert(session, ticker, bars, **kwargs)
+
+    monkeypatch.setattr(price_history, "upsert_daily_bars", _losing_upsert)
+
+    series = price_history.get_daily_series(
+        ["RACE"], min_days=126, now=_at(_ANCHOR),
+    )["RACE"]
+    assert calls == [1], "the exception is swallowed, not retried"
+    assert series.ticker == "RACE", "the caller is served, not raised at"
+
+
+def test_duplicate_dates_are_not_counted_as_rejected_bars() -> None:
+    """The rejection count must come from `_candles_to_bars`, never from
+    `len(candles) - len(bars)`. Collapsing a duplicate date is normal — the
+    docstring says later bars win — and counting it as garbage would flip a
+    genuinely short ticker into `feed_unavailable`.
+
+    This test exists because the naive count SURVIVED the mutation pass: no
+    other fixture serves a duplicate date, so nothing could tell the two
+    formulas apart. 200 clean candles over 100 distinct days, every close
+    finite."""
+    days = _trading_days(_ANCHOR, 100)
+    clean = _candles(days)
+    doubled = [c for c in clean for _ in (0, 1)]
+    assert len(doubled) == 200
+
+    price_history.set_history_provider(
+        FakeHistoryProvider({"DUP": doubled}),
+    )
+    series = price_history.get_daily_series(
+        ["DUP"], min_days=126, now=_at(_ANCHOR),
+    )["DUP"]
+
+    assert len(series.dates) == 100, "duplicates collapse, one row per day"
+    assert series.fetch_failed is False, (
+        "100 clean days is a short history, not a feed outage — nothing was rejected"
+    )

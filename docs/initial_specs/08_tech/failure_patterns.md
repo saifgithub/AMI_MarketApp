@@ -688,6 +688,40 @@ enter the room, regardless of how good the design is.*
 
 ---
 
+## P15 — A check-then-INSERT with no `IntegrityError` handler (correct until there are two writers)
+
+A function that SELECTs what exists and INSERTs the rest is correct in one process and raises in
+two. The read-to-commit gap is the whole bug: two callers whose reads both land before either
+commits will both INSERT, and one loses the unique constraint.
+
+| | The write path | What happened / would happen |
+|---|---|---|
+| **`043995b0`** (first occurrence) | the earlier check-then-insert this repo already fixed | the same class, fixed at the site |
+| **CR136 M03** | `portfolio_snapshot.py:192` | `except IntegrityError:` — *"a concurrent tick losing this race is a skip, not a failure"*. Written correctly the first time |
+| **CR136 M01** (`DEF`-free, caught in audit) | `price_history.upsert_daily_bars` via `get_daily_series` | **no exception handling at all**. Proven by the auditor with two threads and a widened window: `sqlalchemy.exc.IntegrityError` propagates through `build_health_context` → `asyncio.to_thread` → the tiles route, whose own docstring commits to a 200 with an amber state rather than a 5xx |
+
+**Why the previous guard failed.** There was none, and the reason it *looked* unnecessary is the
+interesting part: an in-process throttle was holding the invariant by accident. The auditor measured
+**0 races in 60 trials** on this stack, because `_last_fetch_attempt` is a per-process dict and one
+uvicorn with no `--workers` means one fetcher. So the code reads as safe, tests green, and the
+mechanism protecting it is not the one anybody wrote down. CLAUDE.md's stack decision for Beta is
+**GCP Cloud Run** — instances share no dict — and on the day a second instance exists this stops
+being a race and becomes the common case, since every single evaluation fetches SPY.
+
+**The invariant.** *Any check-then-INSERT under a unique constraint handles `IntegrityError`
+explicitly, and the handler says which outcome it chose (skip / retry / re-read). A throttle,
+a lock, or "only one process runs this" is not a substitute — those are deployment facts, and
+deployment facts change without the code changing.*
+
+**Enforcing check (P15-GUARD).** `backend/tests/unit/test_p15_check_then_insert_guard.py` — reads
+the source of every module that calls an `upsert_*` helper inside a `get_session()` block and fails
+if the call is not inside a `try` with an `except IntegrityError`. Source-read rather than runtime,
+for the same reason `test_cr136_dart_parity.py` is: the failure only reproduces under concurrency
+that a unit test cannot reliably stage, so the guard asserts the *handler exists* rather than trying
+to lose the race on demand.
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.
