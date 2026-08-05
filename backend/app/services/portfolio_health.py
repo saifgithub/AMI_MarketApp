@@ -298,6 +298,7 @@ def compute_health(
     # length rather than dates, which is how a silently wrong beta happens).
     bench_dates, bench_closes = prepared.get(BENCHMARK_TICKER, ([], {}))
     bench_feed_failed = BENCHMARK_TICKER in feed_failed
+    bench_zero_variance = False
     bench_clean = bool(bench_dates) and not _flagged_bad_print(
         [bench_closes[d] for d in bench_dates]
     )
@@ -372,6 +373,22 @@ def compute_health(
             cov_risky = None
             b_index = None
             benchmark_usable = False
+        # DEF211: the benchmark carries its own diagonal, and a flat benchmark
+        # against live holdings does not trip the check above — every risky
+        # diagonal is positive. `beta_r2` then raises by its own documented
+        # contract, which is a 500 on a book that is perfectly measurable
+        # apart from beta. Only the benchmark leg is unusable, so only the
+        # blocks derived from it go insufficient; volatility, DR² and the risk
+        # contributions are estimated off the risky block and are unaffected.
+        # `b_index` and `cov_joint` stay as they are — the benchmark column
+        # carries weight 0.0 in `w_full`, so it cannot move `portfolio_sigma`,
+        # and dropping it here would leave `w_full` and `cov_full` mismatched.
+        elif (
+            benchmark_usable and b_index is not None
+            and cov_joint[b_index][b_index] <= 0.0
+        ):
+            benchmark_usable = False
+            bench_zero_variance = True
 
     covered_invested = math.fsum(p.value for p in survivors)
     covered_total = covered_invested + cash
@@ -441,7 +458,8 @@ def compute_health(
     beta_cause = estimator_cause
     if estimator_ok and not benchmark_usable:
         beta_cause = (
-            INSUFFICIENT_FEED_UNAVAILABLE if bench_feed_failed
+            INSUFFICIENT_ZERO_VARIANCE if bench_zero_variance
+            else INSUFFICIENT_FEED_UNAVAILABLE if bench_feed_failed
             else INSUFFICIENT_BENCHMARK_MISALIGNED
         )
     if (

@@ -1231,3 +1231,58 @@ def test_the_snapshot_path_does_not_load_the_curve(
     predicted = portfolio_health.predicted_vol_for_snapshot(uuid4())
     assert predicted is not None
     assert predicted.predicted_vol_ann > 0.0
+
+
+# ── DEF211: a flat benchmark against live holdings ──────────────────────────
+
+
+def test_a_flat_benchmark_makes_beta_insufficient_rather_than_raising() -> None:
+    """DEF211. The zero-variance guard checked the RISKY diagonals only, so a
+    book with live holdings and a flat benchmark walked straight past it:
+    `benchmark_usable` stayed true and `beta_r2` was reached, which raises by
+    its own documented contract — a 500 on `GET /v1/portfolio/health/{user}`
+    for a book that is perfectly measurable apart from beta.
+
+    The asymmetry is the point. Every other degenerate-covariance case in this
+    engine names a cause; this was the one path that reached a raise instead.
+    """
+    grid = _dates(T_MIN + 1)
+    kwargs = _book(T_MIN + 1)
+    kwargs["series"][BENCHMARK_TICKER] = [(d, 100.0) for d in grid]
+
+    payload = compute_health(**kwargs)
+    blocks = payload["blocks"]
+
+    assert blocks["beta"]["sufficient"] is False
+    assert blocks["beta"]["value"] is None
+    assert blocks["beta"]["insufficient_cause"] == "zero_variance"
+    assert blocks["tracking_error"]["sufficient"] is False
+    assert blocks["tracking_error"]["insufficient_cause"] == "zero_variance"
+    assert blocks["scenario_panel"]["sufficient"] is False
+
+
+def test_a_flat_benchmark_costs_only_the_benchmark_derived_blocks() -> None:
+    """The narrow half of DEF211's fix, and the half a blanket
+    `estimator_ok = False` would have got wrong: the holdings' own covariance
+    is untouched by a flat benchmark, so volatility, DR² and the risk
+    contributions must all still be measured. Turning the whole estimator off
+    would have answered "we cannot measure this book" about a book we can."""
+    grid = _dates(T_MIN + 1)
+    flat = _book(T_MIN + 1)
+    flat["series"][BENCHMARK_TICKER] = [(d, 100.0) for d in grid]
+
+    live = compute_health(**_book(T_MIN + 1))
+    payload = compute_health(**flat)
+    blocks = payload["blocks"]
+
+    assert blocks["portfolio_volatility"]["sufficient"] is True
+    assert blocks["portfolio_volatility"]["value"] is not None
+    assert blocks["effective_bets"]["sufficient"] is True
+    # The risky block is sliced from the same joint Σ either way, so the
+    # holdings' own volatility is not merely sufficient — it is UNCHANGED.
+    assert (
+        blocks["portfolio_volatility"]["value"]
+        == live["blocks"]["portfolio_volatility"]["value"]
+    )
+    # Counter-case: the guard must not fire on a benchmark that does move.
+    assert live["blocks"]["beta"]["sufficient"] is True
