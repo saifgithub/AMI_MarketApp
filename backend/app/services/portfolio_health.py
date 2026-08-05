@@ -42,6 +42,7 @@ from app.core.logging import logger
 from app.db import get_session
 from app.db.models import TickerReferenceRow
 from app.services import price_history
+from app.services.portfolio_snapshot import equity_curve, tier2_blocks
 from app.services.price_history import _MOCK_SOURCE
 from app.services.portfolio_health_constants import (
     BAD_PRINT_HARD_ABS_RETURN,
@@ -730,8 +731,14 @@ def _etf_ticker_set(tickers: Iterable[str]) -> frozenset[str]:
     return frozenset(rows)
 
 
-def _gather_inputs(user_id: UUID, sim) -> dict | None:
+def _gather_inputs(user_id: UUID, sim) -> tuple[UUID, dict] | None:
     """Every load the engine needs, synchronously, in one place.
+
+    Returns `(portfolio_id, compute_health kwargs)`. The id rides along rather
+    than being fetched again because `portfolio_marks_snapshot` is the
+    expensive call (DEF120), and Tier 2's `equity_curve` is keyed to
+    `portfolio_id` — not `user_id` — so that a series structurally cannot span
+    a reset.
 
     Deliberately one function rather than the four separate hops the module doc
     sketched: callers cross the sync boundary exactly once
@@ -774,7 +781,7 @@ def _gather_inputs(user_id: UUID, sim) -> dict | None:
                 feed_failed.add(ticker)
 
     sector_map = default_sector_map()
-    return {
+    return portfolio.id, {
         "holdings": holdings,
         "marks": marks,
         "cash": float(portfolio.current_cash),
@@ -795,7 +802,9 @@ def _refusal_payload(reason: str) -> dict:
     }
 
 
-def build_health_context(user_id: UUID, *, sim=None) -> dict:
+def build_health_context(
+    user_id: UUID, *, sim=None, include_tier2: bool = True,
+) -> dict:
     """The engine entry point (build/README.md seam register, M04 → M06/M07).
 
     Exactly one of `refused_mock_data`, `no_holdings` or `ok`; side-effect free
@@ -805,6 +814,12 @@ def build_health_context(user_id: UUID, *, sim=None) -> dict:
 
     `sim` is injectable for tests only; production resolves the engine here so
     the pinned single-argument call form works.
+
+    `include_tier2` is off for exactly one caller — `predicted_vol_for_snapshot`,
+    which the snapshot tick calls per portfolio and which reads the Tier-1
+    volatility only. Tier 2 is built FROM snapshots, so loading the curve to
+    write the next snapshot row is a query per portfolio per tick in service of
+    a number nothing on that path reads.
 
     The mock refusal comes FIRST and loads nothing. Serving mock-walk prices as
     a risk analysis would be the CR040 question answered the wrong way: the
@@ -818,10 +833,25 @@ def build_health_context(user_id: UUID, *, sim=None) -> dict:
         from app.services.sim_engine import get_sim_engine
 
         sim = get_sim_engine()
-    inputs = _gather_inputs(user_id, sim)
-    if inputs is None:
+    gathered = _gather_inputs(user_id, sim)
+    if gathered is None:
         return _refusal_payload("marks_source=mock_walk")
-    return compute_health(**inputs)
+    portfolio_id, inputs = gathered
+    payload = compute_health(**inputs)
+
+    # DEF216 — Tier 2 is merged HERE, at the one seam every consumer already
+    # crosses. M03 built `equity_curve` / `tier2_blocks` and its own doc §4 put
+    # the caller out of scope ("M03 exposes Python functions only — M07");
+    # M07 then closed COMPLETE without ever calling them, so the two realised
+    # blocks existed, were tested, and reached nobody. Rev 4 makes Tier 2 the
+    # validation layer, not a nicety: it is how a predicted volatility is ever
+    # checked against a realised one.
+    #
+    # Merged only on `ok`, because that is the only status carrying `blocks` at
+    # all — a refusal or an empty book has no payload to extend.
+    if include_tier2 and payload.get("status") == STATUS_OK:
+        payload["blocks"].update(tier2_blocks(equity_curve(portfolio_id)))
+    return payload
 
 
 def predicted_vol_for_snapshot(user_id: UUID) -> PredictedVol | None:
@@ -833,7 +863,7 @@ def predicted_vol_for_snapshot(user_id: UUID) -> PredictedVol | None:
     the model. Synchronous: the snapshot job is a background task, already off
     the request path.
     """
-    payload = build_health_context(user_id)
+    payload = build_health_context(user_id, include_tier2=False)
     if payload.get("status") != STATUS_OK:
         return None
     block = payload["blocks"]["portfolio_volatility"]

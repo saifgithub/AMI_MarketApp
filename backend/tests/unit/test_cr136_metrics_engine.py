@@ -1123,3 +1123,111 @@ def test_a_short_grid_reads_short_not_sparse() -> None:
     assert vol["n_observations"] < T_MIN
     assert vol["window_days"] / vol["n_observations"] > GRID_DENSITY_MAX
     assert vol["insufficient_cause"] == INSUFFICIENT_SHORT_WINDOW
+
+
+# ── DEF216. The block SET ───────────────────────────────────────────────────
+
+
+_TIER2_BLOCKS = {"realised_max_drawdown", "realised_return"}
+
+
+def test_the_payload_publishes_every_block_the_card_can_render(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """DEF216. `tier2_blocks` and `equity_curve` had no production caller at all
+    — `grep -rn` outside `backend/tests/` returned only their definitions — so
+    `realised_max_drawdown` and `realised_return` could not render. Live Alpha
+    served 9 blocks; M09's card, its `portfolioHealthMddNote` string and both
+    Dart percent-unit mappings were unreachable, and no test failed, because
+    every existing assertion NAMES the block it wants and nothing ever counted
+    them. This one counts them.
+
+    It survived two audits because each lane was correctly scoped to itself:
+    M03 §4 assigned the consumer to M07 in as many words, and M07 closed
+    COMPLETE at round 4 without wiring it. The seam is what nobody owned.
+    """
+    from uuid import uuid4
+
+    from app.core.config import settings
+    from app.services import portfolio_health
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+
+    book = _book()
+    tier1 = set(compute_health(**book)["blocks"])
+    assert not (tier1 & _TIER2_BLOCKS), "Tier 2 is not computed by compute_health"
+
+    portfolio_id = uuid4()
+    monkeypatch.setattr(
+        portfolio_health, "_gather_inputs", lambda *_a, **_k: (portfolio_id, book),
+    )
+    monkeypatch.setattr(portfolio_health, "equity_curve", lambda _pid: [])
+
+    payload = portfolio_health.build_health_context(uuid4(), sim=object())
+    assert payload["status"] == "ok"
+    assert set(payload["blocks"]) == tier1 | _TIER2_BLOCKS, (
+        "the entry point must publish Tier 1 AND Tier 2 — count them, never "
+        "name the one you expect"
+    )
+
+
+def test_tier2_carries_real_snapshot_values_through_the_seam(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Wiring the names through is not the fix; wiring the NUMBERS through is.
+    A merge that always produced empty blocks would pass the set test above."""
+    from uuid import uuid4
+
+    from app.core.config import settings
+    from app.services import portfolio_health
+    from app.services.portfolio_snapshot import SnapshotPoint
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+
+    values = [100.0] * 19 + [150.0, 120.0]
+    points = [
+        SnapshotPoint(
+            as_of=date(2026, 1, 5) + timedelta(days=i), total_value=v, cash=0.0,
+            invested_value=v, drawdown_pct=99.0, source="yfinance",
+            predicted_vol_ann=0.262,
+        )
+        for i, v in enumerate(values)
+    ]
+
+    book = _book()
+    portfolio_id = uuid4()
+    monkeypatch.setattr(
+        portfolio_health, "_gather_inputs", lambda *_a, **_k: (portfolio_id, book),
+    )
+    monkeypatch.setattr(portfolio_health, "equity_curve", lambda _pid: points)
+
+    blocks = portfolio_health.build_health_context(uuid4(), sim=object())["blocks"]
+    assert blocks["realised_max_drawdown"]["value"] == pytest.approx(20.0)
+    assert blocks["realised_max_drawdown"]["sufficient"] is True
+    assert blocks["realised_return"]["value"] == pytest.approx(20.0)
+
+
+def test_the_snapshot_path_does_not_load_the_curve(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Tier 2 is built FROM snapshots. Loading the curve in order to write the
+    next snapshot row is a query per portfolio per tick for a number nothing on
+    that path reads."""
+    from uuid import uuid4
+
+    from app.core.config import settings
+    from app.services import portfolio_health
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+
+    def _explode(_pid):
+        raise AssertionError("the snapshot path must not load the equity curve")
+
+    monkeypatch.setattr(
+        portfolio_health, "_gather_inputs", lambda *_a, **_k: (uuid4(), _book()),
+    )
+    monkeypatch.setattr(portfolio_health, "equity_curve", _explode)
+
+    predicted = portfolio_health.predicted_vol_for_snapshot(uuid4())
+    assert predicted is not None
+    assert predicted.predicted_vol_ann > 0.0
