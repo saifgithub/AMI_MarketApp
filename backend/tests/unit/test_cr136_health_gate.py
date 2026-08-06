@@ -234,22 +234,32 @@ def test_the_tiles_route_never_calls_enforce_gate() -> None:
 # ── Trial: window and budget, whichever exhausts sooner ─────────────────────
 
 
-def test_trial_by_days_at_the_boundary(wired) -> None:
+def test_an_expired_window_no_longer_closes_a_trial_that_has_budget_left(wired) -> None:
+    """DEF219, and the inverse of what this test asserted before it.
+
+    The trial is counted in FINDINGS, not days. At Saiful's monthly cadence for
+    portfolio-level evaluation, a 14-day clock admitted exactly ONE Finding —
+    the rest of the budget was unreachable and the user never got a second
+    reading to compare the first against. The product is the CHANGE between
+    readings, so a trial that can only show one snapshot does not demonstrate
+    it.
+
+    A year-old first Finding with budget remaining must therefore still be
+    served. `trial_days_left` is still reported and still reaches zero; it is
+    advisory now, and asserting it here is the point — the number is present
+    and no longer decides anything.
+    """
     client, user_id, portfolio_id, _gen = wired
     now = datetime.now(timezone.utc)
     _seed_finding(user_id, portfolio_id, as_of="2026-07-01",
-                  created_at=now - timedelta(days=13, hours=23))
+                  created_at=now - timedelta(days=365))
 
     r = client.post(f"/v1/portfolio/health/{user_id}/finding")
     assert r.status_code == 200, r.text
 
-    get_journal_store().clear()
-    _seed_finding(user_id, portfolio_id, as_of="2026-07-01",
-                  created_at=now - timedelta(days=14))
-    r = client.post(f"/v1/portfolio/health/{user_id}/finding")
-    assert r.status_code == 402
-    assert r.json()["detail"]["code"] == GATE_CLOSED_CODE
-    assert r.json()["detail"]["gate"]["trial_days_left"] == 0
+    gate = client.get(f"/v1/portfolio/health/{user_id}").json()["gate"]
+    assert gate["trial_days_left"] == 0, "the window is long gone"
+    assert gate["trial_active"] is True, "and it no longer gates"
 
 
 def test_trial_by_findings_counts_soft_deleted_rows(wired) -> None:
@@ -273,27 +283,39 @@ def test_trial_by_findings_counts_soft_deleted_rows(wired) -> None:
     assert r.json()["detail"]["gate"]["trial_findings_used"] == 7
 
 
-def test_whichever_exhausts_sooner_wins(wired) -> None:
+def test_the_budget_is_now_the_only_thing_that_can_end_a_trial(wired) -> None:
+    """DEF219. Replaces `test_whichever_exhausts_sooner_wins`, which pinned the
+    two-limit semantics this change removes. Both directions, so the guard says
+    something in each:
+
+    - budget spent INSIDE the window still closes the trial (the limit that
+      remains, still works);
+    - budget unspent OUTSIDE the window does NOT (the limit that was removed,
+      is really gone).
+
+    The second half is the one that would have silently reverted: restoring the
+    `days_elapsed < trial_days` conjunct passes the first assertion untouched.
+    """
     client, user_id, portfolio_id, _gen = wired
     now = datetime.now(timezone.utc)
+    budget = settings.portfolio_health_trial_findings
 
-    for i in range(7):
+    for i in range(budget):
         _seed_finding(user_id, portfolio_id, as_of=f"2026-07-0{i + 1}",
                       created_at=now - timedelta(days=3))
     r = client.post(f"/v1/portfolio/health/{user_id}/finding")
-    assert r.status_code == 402
-    assert r.json()["detail"]["gate"]["trial_days_left"] > 0, "budget ran out first"
+    assert r.status_code == 402, "budget spent inside the window must still close"
+    assert r.json()["detail"]["code"] == GATE_CLOSED_CODE
+    assert r.json()["detail"]["gate"]["trial_days_left"] > 0, "…and not by the clock"
 
     get_journal_store().clear()
     _seed_finding(user_id, portfolio_id, as_of="2026-07-01",
                   created_at=now - timedelta(days=15))
-    _seed_finding(user_id, portfolio_id, as_of="2026-07-02",
-                  created_at=now - timedelta(days=14))
     r = client.post(f"/v1/portfolio/health/{user_id}/finding")
-    assert r.status_code == 402
-    gate = r.json()["detail"]["gate"]
-    assert gate["trial_findings_used"] < 7, "the window ran out first"
-    assert gate["trial_days_left"] == 0
+    assert r.status_code == 200, (
+        "a trial with budget left was refused because its window expired — the "
+        "day clock is gating again (DEF219)"
+    )
 
 
 def test_an_untouched_trial_has_not_started_ticking(wired) -> None:

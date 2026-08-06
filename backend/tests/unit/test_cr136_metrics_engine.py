@@ -779,9 +779,27 @@ def test_r2b_pair_floor_uses_the_same_basis_the_rule_engine_re_checks() -> None:
 def test_gate_default_constants() -> None:
     assert GATE_MODE_DEFAULT == "trial"
     assert TRIAL_DAYS_DEFAULT == 14
-    assert TRIAL_FINDINGS_DEFAULT == 7
+    assert TRIAL_FINDINGS_DEFAULT == 3
     assert DAILY_CAP_DEFAULT == 2
     assert PLANS_DEFAULT == "TRADER,FLOOR_MANAGER"
+
+
+def test_a_trial_admits_enough_findings_to_show_a_change() -> None:
+    """DEF219's invariant, which nothing expressed before: the three gate
+    constants were independent numbers that happened to sit next to each other,
+    so `TRIAL_FINDINGS_DEFAULT` could be set to 1 and no test would object.
+
+    One Finding is a snapshot. The product is the CHANGE between readings, so a
+    trial that cannot contain a second one cannot demonstrate what is being
+    sold — which is exactly the state a 14-day clock produced at a monthly
+    cadence, and the reason the clock stopped gating.
+
+    Two is the floor, not the target; the shipped 3 leaves room for a direction
+    rather than just a delta.
+    """
+    assert TRIAL_FINDINGS_DEFAULT >= 2, (
+        "a trial that admits one Finding shows a snapshot and never a change"
+    )
 
 
 def test_constants_module_is_import_pure() -> None:

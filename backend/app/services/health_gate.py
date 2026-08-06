@@ -96,16 +96,30 @@ def evaluate_gate(
     budget = settings.portfolio_health_trial_findings
 
     if first_at is None:
-        # No Finding yet, so the window has not started. The trial is untouched
-        # rather than already ticking — a user who installs and waits a month
-        # still gets the full window when they first ask.
         days_elapsed = 0
         days_left = trial_days
     else:
         days_elapsed = (now - first_at).days
         days_left = max(0, trial_days - days_elapsed)
 
-    trial_active = used < budget and days_elapsed < trial_days
+    # DEF219: the trial is counted in FINDINGS, not days. Saiful's cadence for
+    # portfolio-level evaluation is monthly, and a 14-day clock at that cadence
+    # admits exactly ONE Finding — six of the seven were unreachable and the
+    # user never got a second reading. The product is the CHANGE between
+    # readings, so a trial that can only ever show one snapshot does not
+    # demonstrate it.
+    #
+    # Dropping the clock does not make the trial unbounded: `dedupe_key` is
+    # `<portfolio_id>:<date>`, so a single-portfolio user can take at most one
+    # Finding per day and the budget is the only other limit. A trialist can
+    # pull one today, one after they next trade, one a week later — and see a
+    # delta, which is the thing being sold.
+    #
+    # `trial_days_left` is still reported (clients render it, and `plan` mode
+    # is unaffected) but it no longer GATES. Deliberately kept rather than
+    # removed: the field is part of a shipped API surface, and a client reading
+    # it as advisory is correct.
+    trial_active = used < budget
 
     # `effective_plan_for_user` is trial-expiry aware, so an expired
     # TRIAL_TRADER resolves to FLOOR_PASS here. The two "trials" are distinct

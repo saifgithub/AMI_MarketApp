@@ -359,8 +359,19 @@ BAD_PRINT_HARD_ABS_RETURN = 1.00         # |r| > 100% is flagged unconditionally
 # change. The Health-card TILES are free in every mode — gating applies only to
 # full Finding generation.
 GATE_MODE_DEFAULT = "trial"
+# DEF219. `TRIAL_DAYS_DEFAULT` no longer gates — `evaluate_gate` counts
+# Findings, not days — and is reported to clients as advisory only. The trial
+# budget is 3 rather than 7 because at Saiful's monthly cadence a user needs a
+# FIRST reading, a SECOND to compare it against, and a third for a direction;
+# seven was sized for a daily/weekly product that this is not. Three Findings
+# cost ~20s of on-prem GPU in total (measured: 6,539 ms for the one real
+# Finding on live Alpha), so the number is chosen for what a trialist needs to
+# see, not for what it costs us.
 TRIAL_DAYS_DEFAULT = 14
-TRIAL_FINDINGS_DEFAULT = 7
+TRIAL_FINDINGS_DEFAULT = 3
+# Unreachable for a single-portfolio user: `dedupe_key = <portfolio_id>:<date>`
+# already caps them at one Finding per day. This only binds a user holding 2+
+# portfolios.
 DAILY_CAP_DEFAULT = 2
 PLANS_DEFAULT = "TRADER,FLOOR_MANAGER"
 

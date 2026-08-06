@@ -282,7 +282,7 @@ class Settings(BaseSettings):
     # happens to miss, quietly changing who pays for the feature (CR040).
     portfolio_health_gate_mode: Literal["open", "trial", "plan"] = "trial"
     portfolio_health_trial_days: int = 14
-    portfolio_health_trial_findings: int = 7
+    portfolio_health_trial_findings: int = 3   # DEF219 — see TRIAL_FINDINGS_DEFAULT
     portfolio_health_daily_cap: int = 2
     portfolio_health_plans: CsvList = Field(
         default_factory=lambda: ["trader", "floor_manager"]
