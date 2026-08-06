@@ -400,12 +400,18 @@ def _is_numeric_annotation(annotation: object) -> bool:
     return False
 
 
-# Numeric Mandate fields that are NOT enforced limits — resolver inputs
-# (risk_score), bookkeeping (version), or entitlement state stamped
-# server-side (credit_balance/credit_allowance/room_cost — the latter three
-# already client-unwritable per CLIENT_UNWRITABLE_MANDATE_FIELDS). A new
-# numeric field belongs here ONLY with a reason it is not a limit.
-_NON_LIMIT_NUMERIC_FIELDS = frozenset({"version", "risk_score", "credit_balance", "credit_allowance", "room_cost"})
+# Numeric Mandate fields that are NOT enforced limits. DEF191 acceptance 4:
+# the reason is part of the entry, not a comment above the set — an exemption
+# without one is indistinguishable from a field somebody could not be bothered
+# to mark, and this list is the only place the difference is recorded.
+_NON_LIMIT_NUMERIC_FIELDS: dict[str, str] = {
+    "version": "bookkeeping — the mandate's own revision counter, not a limit on anything",
+    "risk_score": "an INPUT to the resolver that produces limits, not a limit itself",
+    "credit_balance": "entitlement state stamped server-side; client-unwritable per "
+                      "CLIENT_UNWRITABLE_MANDATE_FIELDS",
+    "credit_allowance": "entitlement state stamped server-side; client-unwritable",
+    "room_cost": "pricing, stamped server-side; client-unwritable",
+}
 
 # Files where an enforced limit's business logic actually reads
 # `mandate.<field>` — enforcement (safety_floor, sector_allocation),
@@ -468,3 +474,91 @@ def test_no_unmarked_numeric_field_is_referenced_by_enforcement_code():
         f"_FOUR_LEG_PROBES above), or add it to _NON_LIMIT_NUMERIC_FIELDS with "
         f"a reason if it genuinely isn't one."
     )
+
+
+def test_every_numeric_mandate_field_is_classified_as_a_limit_or_explicitly_not():
+    """DEF191 acceptance 4, closed — by changing the question.
+
+    The grep above searches CODE for an unmarked field, and a code search can
+    never be complete: the row's own disclaimer lists three ways round it
+    (`model_dump()` read by key, aliased to a local before use, enforcement
+    added to a file outside `_ENFORCEMENT_ADJACENT_SOURCE_FILES`). Widening
+    the file list or the pattern narrows that gap without closing it, because
+    the set of ways to read a field is unbounded.
+
+    The set of FIELDS is not. So this asks the bounded question instead: every
+    numeric field on `Mandate` must be either marked `enforced_limit` — which
+    drags in the four-leg probe requirement above — or listed in
+    `_NON_LIMIT_NUMERIC_FIELDS` with a reason. A developer who adds a numeric
+    field and forgets the marker now fails HERE, on the commit that adds the
+    field, no matter how the enforcement code reads it, and whether or not any
+    enforcement exists yet.
+
+    That is the same move as CR136-M01's P15 guard: matching on a NAME (or on
+    a call site) tests whether someone followed a convention; matching on the
+    SHAPE tests the thing you actually care about. It also inverts the failure
+    mode the DEF191 row objects to most — the old guard's green asserted
+    universality (`every_enforced_limit_field`) over a frozen list, which is a
+    positive, misleading signal. This one's green is a statement about the
+    schema, because it is derived from the schema.
+
+    The grep test stays. It is now a second net catching MISclassification —
+    a field exempted here but read by enforcement code anyway — rather than
+    the only net catching omission.
+    """
+    numeric = {
+        name for name, field in Mandate.model_fields.items()
+        if _is_numeric_annotation(field.annotation)
+    }
+    assert numeric, (
+        "vacuity: no numeric fields were derived from Mandate at all, so this "
+        "guard is asserting nothing — _is_numeric_annotation is broken or the "
+        "schema moved"
+    )
+
+    marked = set(enforced_limit_field_names())
+    unclassified = numeric - marked - set(_NON_LIMIT_NUMERIC_FIELDS)
+
+    assert not unclassified, (
+        f"numeric Mandate field(s) that are neither declared an enforced limit "
+        f"nor declared not to be one: {sorted(unclassified)}.\n"
+        f"Add Field(json_schema_extra={{'enforced_limit': True}}) to the field "
+        f"(and a probe in _FOUR_LEG_PROBES), or add it to "
+        f"_NON_LIMIT_NUMERIC_FIELDS with the reason it is not a limit. "
+        f"DEF191: an enforced limit that nobody declared is exactly the "
+        f"'settable but unenforced' class CR101 exists to prevent, and the old "
+        f"guard only noticed if the field also happened to appear in one of "
+        f"{len(_ENFORCEMENT_ADJACENT_SOURCE_FILES)} grepped files."
+    )
+
+
+def test_the_exemption_list_carries_a_reason_and_no_dead_entries():
+    """Non-vacuity for the classification above, both directions.
+
+    An exemption without a reason is indistinguishable from a field somebody
+    could not be bothered to mark, and a STALE exemption is worse than a
+    missing one: it silently re-exempts a field that has since become a real
+    limit, or hides the next one behind a name that no longer exists. Same
+    reasoning as the exact `_UNREVIEWED` pin in CR136-M01's P15 guard — a
+    pin left behind after the thing it pinned is gone stops being a guard.
+    """
+    numeric = {
+        name for name, field in Mandate.model_fields.items()
+        if _is_numeric_annotation(field.annotation)
+    }
+    stale = set(_NON_LIMIT_NUMERIC_FIELDS) - numeric
+    assert not stale, (
+        f"exemption(s) for field(s) that are no longer numeric fields on "
+        f"Mandate: {sorted(stale)} — remove them, or the list is hiding "
+        f"whatever takes their place"
+    )
+    overlap = set(_NON_LIMIT_NUMERIC_FIELDS) & set(enforced_limit_field_names())
+    assert not overlap, (
+        f"field(s) both marked an enforced limit and exempted from being one: "
+        f"{sorted(overlap)} — the two lists disagree and the exemption wins "
+        f"silently in the grep test"
+    )
+    for name, reason in _NON_LIMIT_NUMERIC_FIELDS.items():
+        assert len(reason.split()) >= 4, (
+            f"{name}'s exemption reason is too short to be a reason: {reason!r}"
+        )
