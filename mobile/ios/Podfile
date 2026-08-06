@@ -1,5 +1,5 @@
 # Uncomment this line to define a global platform for your project
-platform :ios, '13.0'
+platform :ios, '16.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -39,5 +39,19 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      # DEF221. Apple refuses any upload below 15.0 from Spring 2027; 16.0 is the
+      # floor Saiful chose (2026-08-06) — it costs the iPhone 6s/7/SE1 generation
+      # and buys headroom past the next ratchet. Pods default to their own
+      # podspec minimum, which is lower than ours for most of them, so pin the
+      # whole Pods project to the same floor rather than letting each drift.
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
+      # DEF221, second half: the 0.1.0+68 archive shipped no dSYM for
+      # objective_c.framework, so symbol upload failed and a crash inside it
+      # reaches Sentry unsymbolicated. Release builds must emit one.
+      if config.name == 'Release' || config.name == 'Profile'
+        config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
+      end
+    end
   end
 end
