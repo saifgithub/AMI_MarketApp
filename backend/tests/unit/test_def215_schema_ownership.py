@@ -154,3 +154,98 @@ def test_a_database_at_head_reports_nothing(
     init_schema()
 
     assert errors == [], "a DB the fixture just stamped to head is not behind it"
+
+
+# ── DEF215 audit round 1, the two MINORs ────────────────────────────────────
+
+
+def test_the_behind_head_report_fires_once_per_engine_not_once_per_store(
+    fresh_db_url, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Audit r1 MINOR m2. The auditor's AUD-2 removed `_schema_checked_for = engine`
+    from the NON-FRESH path only — leaving the fix itself intact — and all 4 tests
+    still passed. Nothing pinned the memoisation.
+
+    It guards something real. `init_schema()` is called from 13 store/service
+    constructors, so losing that one line means a DB behind head emits
+    `db_schema_behind_head` **13 times per process instead of once**. The control
+    introduced here specifically to be noticed becomes log spam, and a log nobody
+    reads is not a control.
+    """
+    reports: list[str] = []
+    monkeypatch.setattr(
+        db_session.logger, "error", lambda event, **kw: reports.append(event),
+    )
+    with get_engine().begin() as conn:
+        conn.execute(text("UPDATE alembic_version SET version_num = 'deadbeef0000'"))
+
+    _rearm()
+    for _ in range(13):          # one per real call site
+        init_schema()
+
+    assert reports == ["db_schema_behind_head"], (
+        f"13 calls produced {len(reports)} reports — the memoisation is gone and the "
+        f"control is now spam"
+    )
+
+
+def test_two_threads_initialising_a_fresh_schema_do_not_raise(
+    fresh_db_url, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Audit r1 MINOR m1. The submission called this "benign — `checkfirst=True`".
+    It is not: `checkfirst` inspects and then creates, without a lock, so two
+    threads both see a table missing and both issue `CREATE TABLE`. The auditor
+    measured `['OperationalError']` raising out of `init_schema` — the DB ended
+    coherent (one `alembic_version` row, all tables), so nothing corrupted, but a
+    caller ate an exception at boot.
+
+    Fresh-DB-only and therefore unreachable on Alpha, which carries
+    `alembic_version` — but FastAPI runs sync deps in a threadpool, so a first boot
+    against an empty database can reach it.
+
+    **A barrier alone does NOT reproduce this**, and the first version of this test
+    passed with the lock removed — a survived mutation, not a guard. On sqlite the
+    first thread finishes `create_all` before the second is scheduled, so the two
+    never overlap. The delay below widens the window `checkfirst` leaves open, which
+    is the thing under test: inspect, *then* create, with no lock between them. With
+    the lock the second thread parks on it and finds the memo set, so the delay
+    changes nothing; without the lock both threads see a missing table and both
+    issue `CREATE TABLE`.
+    """
+    import threading
+    import time
+
+    real_create_all = db_session.Base.metadata.create_all
+
+    def _slow_create_all(*args, **kwargs):
+        time.sleep(0.2)
+        return real_create_all(*args, **kwargs)
+
+    monkeypatch.setattr(db_session.Base.metadata, "create_all", _slow_create_all)
+
+    with get_engine().begin() as conn:
+        conn.execute(text(f"DROP TABLE {_A_TABLE_A_CR_MIGHT_ADD}"))
+        conn.execute(text("DROP TABLE alembic_version"))
+    _rearm()
+
+    barrier = threading.Barrier(2)
+    errors: list[BaseException] = []
+
+    def _race() -> None:
+        barrier.wait()
+        try:
+            init_schema()
+        except BaseException as exc:      # noqa: BLE001 — the thing under test
+            errors.append(exc)
+
+    threads = [threading.Thread(target=_race) for _ in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert errors == [], f"a caller ate {[type(e).__name__ for e in errors]} at boot"
+    assert _A_TABLE_A_CR_MIGHT_ADD in _tables()
+    with get_engine().connect() as conn:
+        rows = conn.execute(text("SELECT version_num FROM alembic_version")).fetchall()
+    assert len(rows) == 1, f"double-stamped: {rows}"

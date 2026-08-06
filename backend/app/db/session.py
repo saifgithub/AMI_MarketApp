@@ -12,6 +12,7 @@ this matches the existing sync ergonomics of the in-memory stores.
 from __future__ import annotations
 
 import os
+import threading
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
@@ -27,6 +28,7 @@ from app.db.base import Base
 _engine: Engine | None = None
 _SessionLocal: sessionmaker[Session] | None = None
 _schema_checked_for: Engine | None = None
+_schema_lock = threading.Lock()
 
 
 def _resolve_url() -> str:
@@ -174,13 +176,32 @@ def init_schema() -> None:
     from app.db import models as _models  # noqa: F401
     engine = get_engine()
 
-    # Every store calls this from its constructor, so without the guard a
-    # process pays two extra round trips per store for a question whose
-    # answer cannot change while the engine lives. Keyed on the engine
-    # OBJECT, not a bool: `reset_for_tests` builds a new one, which re-arms
-    # the check for free rather than needing its own reset line.
+    # Every store calls this from its constructor (13 sites), so without the
+    # guard a process pays two extra round trips per store for a question whose
+    # answer cannot change while the engine lives. Keyed on the engine OBJECT,
+    # not a bool: `reset_for_tests` builds a new one, which re-arms the check
+    # for free rather than needing its own reset line.
     if _schema_checked_for is engine:
         return
+
+    # DEF215 audit r1, MINOR m1. The first submission called the concurrent
+    # case "benign — checkfirst=True". `checkfirst` is not atomic: the auditor
+    # put two threads on a barrier against a stripped DB and measured
+    # `['OperationalError']` raising OUT of `init_schema`, with the DB itself
+    # left coherent (one `alembic_version` row, 35 tables). So it corrupted
+    # nothing, but one caller ate an exception at boot — which is not benign,
+    # it is just survivable. FastAPI runs sync deps in a threadpool, so it is
+    # reachable. The lock makes the whole check-and-build one critical section;
+    # it is taken at most once per engine, so it costs nothing after the first
+    # call and the fast path above never reaches it.
+    with _schema_lock:
+        if _schema_checked_for is engine:
+            return
+        _init_schema_locked(engine)
+
+
+def _init_schema_locked(engine: Engine) -> None:
+    global _schema_checked_for
 
     from sqlalchemy import inspect
 
