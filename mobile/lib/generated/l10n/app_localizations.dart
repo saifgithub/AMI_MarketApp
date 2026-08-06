@@ -3997,11 +3997,11 @@ abstract class AppLocalizations {
   /// **'FULL FINDING'**
   String get portfolioHealthCtaFinding;
 
-  /// CR136 — chip beside the CTA during the trial. Shows BOTH remaining Findings and remaining days because the trial ends on whichever runs out first, so either number alone can mislead. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  /// CR136/DEF219 — chip beside the CTA during the trial. Findings ONLY. It used to append · {d} days because the trial ended on whichever ran out first; DEF219 removed the day clock, so the trial now ends on the budget alone and naming days here contradicts what the server enforces — a user past the old 14-day window with budget left was shown "· 0 days" and read it as expired. `trial_days_left` is still returned by the API and is advisory only; do not render it. CHANGED key, ar/ms must be re-translated. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'{k} of {n} trial Findings left · {d} days'**
-  String portfolioHealthTrialChip(String k, String n, String d);
+  /// **'{k} of {n} trial Findings left'**
+  String portfolioHealthTrialChip(String k, String n);
 
   /// CR136 — note under a disabled CTA when the daily cap is reached, and also the body of the Finding screen's 429 panel (where the numbers come from the server's own error payload). NEW key, needs ar/ms translation. retranslate:[ar,ms]
   ///

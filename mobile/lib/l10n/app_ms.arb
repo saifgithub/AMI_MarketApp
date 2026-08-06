@@ -656,7 +656,7 @@
     "portfolioHealthErrorBody": "AMI's engine did not respond. Tap to retry.",
     "portfolioHealthUnknownStatusBody": "AMI's engine returned a result this version of the app does not recognise. Tap to retry.",
     "portfolioHealthCtaFinding": "FULL FINDING",
-    "portfolioHealthTrialChip": "{k} of {n} trial Findings left · {d} days",
+    "portfolioHealthTrialChip": "{k} of {n} trial Findings left",
     "portfolioHealthDailyCapNote": "{used} of {cap} Findings used today. Available again tomorrow.",
     "portfolioHealthUpgradeBody": "Findings are included in Trader and Floor Manager plans.",
     "portfolioHealthUpgradeCta": "SEE PLANS",

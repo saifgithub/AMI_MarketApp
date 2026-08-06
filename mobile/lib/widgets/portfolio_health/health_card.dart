@@ -810,12 +810,16 @@ class _GateCta extends ConsumerWidget {
             ),
             const SizedBox(height: AmiSpacing.xs),
             Text(
-              // Both numbers: the trial ends on whichever runs out first, so
-              // either one alone can mislead.
+              // DEF219: Findings only. This used to append `· N days` because
+              // the trial ended on whichever ran out first; the day clock is
+              // gone server-side, so naming days here states something the
+              // backend does not enforce — a user past the old 14-day window
+              // with budget left saw "· 0 days" and read it as expired.
+              // `gate.trialDaysLeft` is still returned and is advisory; it is
+              // deliberately not rendered.
               l.portfolioHealthTrialChip(
                 _int(math.max(0, gate.trialFindingsBudget - gate.trialFindingsUsed)),
                 _int(gate.trialFindingsBudget),
-                _int(gate.trialDaysLeft),
               ),
               style: AmiTypography.caption,
             ),

@@ -1653,13 +1653,12 @@
     "@portfolioHealthUnknownStatusBody": {"description": "CR136 \u2014 shown when the engine envelope carries a status outside the three pinned values (ok / refused_mock_data / no_holdings), including none at all. DEVIATION from M09 \u00a73.7's table, added after the M09 audit: without it an unrecognised status fell through to the populated card and a wire divergence rendered in the exact visual grammar of a real measurement (CR040). NEW key, needs ar/ms translation. retranslate:[ar,ms]"},
     "portfolioHealthCtaFinding": "FULL FINDING",
     "@portfolioHealthCtaFinding": {"description": "CR136 — the card's call to action: generate (or reopen today's) full written Finding. NEW key, needs ar/ms translation. retranslate:[ar,ms]"},
-    "portfolioHealthTrialChip": "{k} of {n} trial Findings left · {d} days",
+    "portfolioHealthTrialChip": "{k} of {n} trial Findings left",
     "@portfolioHealthTrialChip": {
-        "description": "CR136 — chip beside the CTA during the trial. Shows BOTH remaining Findings and remaining days because the trial ends on whichever runs out first, so either number alone can mislead. NEW key, needs ar/ms translation. retranslate:[ar,ms]",
+        "description": "CR136/DEF219 \u2014 chip beside the CTA during the trial. Findings ONLY. It used to append \u00b7 {d} days because the trial ended on whichever ran out first; DEF219 removed the day clock, so the trial now ends on the budget alone and naming days here contradicts what the server enforces \u2014 a user past the old 14-day window with budget left was shown \"\u00b7 0 days\" and read it as expired. `trial_days_left` is still returned by the API and is advisory only; do not render it. CHANGED key, ar/ms must be re-translated. retranslate:[ar,ms]",
         "placeholders": {
-            "k": {"type": "String", "example": "5"},
-            "n": {"type": "String", "example": "7"},
-            "d": {"type": "String", "example": "9"}
+            "k": {"type": "String", "example": "2"},
+            "n": {"type": "String", "example": "3"}
         }
     },
     "portfolioHealthDailyCapNote": "{used} of {cap} Findings used today. Available again tomorrow.",

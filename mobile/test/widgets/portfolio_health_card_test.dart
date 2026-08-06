@@ -667,7 +667,13 @@ void main() {
       );
     });
 
-    testWidgets('the trial chip states both numbers', (tester) async {
+    testWidgets('the trial chip states Findings and never days', (tester) async {
+      // DEF219. This test used to assert `· 9 days` alongside the Findings,
+      // because the trial ended on whichever ran out first. The day clock is
+      // gone server-side, so rendering it here states something the backend
+      // does not enforce. `trial_days_left` is deliberately still SENT — it is
+      // advisory — which is exactly why the client needs a guard: the field is
+      // present, plausible, and wrong to show.
       await _pump(
         tester,
         health: healthFixture(
@@ -676,16 +682,19 @@ void main() {
             trialActive: true,
             planHasAccess: false,
             trialFindingsUsed: 2,
-            trialFindingsBudget: 7,
-            trialDaysLeft: 9,
+            trialFindingsBudget: 3,
+            trialDaysLeft: 0,
           ),
         ),
       );
       expect(
-        find.text('${_iso('5')} of ${_iso('7')} trial Findings left · '
-            '${_iso('9')} days'),
+        find.text('${_iso('1')} of ${_iso('3')} trial Findings left'),
         findsOneWidget,
       );
+      // The case that made this user-visible: window expired, budget left. The
+      // old copy rendered "· 0 days" here and a user read it as expired while
+      // the server would still serve them.
+      expect(find.textContaining('days'), findsNothing);
       expect(
         tester.widget<HexButton>(find.byType(HexButton)).onPressed,
         isNotNull,

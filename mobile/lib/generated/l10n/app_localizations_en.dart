@@ -2308,8 +2308,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get portfolioHealthCtaFinding => 'FULL FINDING';
 
   @override
-  String portfolioHealthTrialChip(String k, String n, String d) {
-    return '$k of $n trial Findings left · $d days';
+  String portfolioHealthTrialChip(String k, String n) {
+    return '$k of $n trial Findings left';
   }
 
   @override
