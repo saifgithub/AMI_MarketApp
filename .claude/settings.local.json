@@ -41,7 +41,8 @@
       "Bash(grep -rniE \"app_?store_?id|apple.*id.*[0-9]{9,}|itms-apps\" mobile/lib docs/initial_specs/08_tech Apple_Store)",
       "Bash(awk '/Map<String, String> _headers|_baseHeaders|Map<String,String> _headers/,/^  }/' mobile/lib/services/api/api_client.dart)",
       "Bash(python scripts/registers/gen_registers.py gen cr)",
-      "Bash(git status *)"
+      "Bash(git status *)",
+      "Bash(awk '-F|' '/^\\\\| *DEF[0-9]/ {for\\(i=1;i<=NF;i++\\) gsub\\(/^ +| +$/,\"\",$i\\); if \\($0 ~ /open|in_progress|triage/\\) print}' docs/defect/def_list.md)"
     ]
   }
 }
