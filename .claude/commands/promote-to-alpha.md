@@ -188,6 +188,23 @@ promotion.
 
 ### 5. Recreate the backend container on melehost
 
+**Migrations run BEFORE the new container serves anything.** Build the
+image, run the chain against the live DB in a throwaway container, and
+only start the real one once it reports head:
+
+```bash
+ssh melehost "cd ~/ami_trade && docker compose --profile tunnel build api-alpha"
+ssh melehost "cd ~/ami_trade && docker compose run --rm --no-deps api-alpha alembic upgrade head"
+```
+
+If that fails, **stop here** — the old container is still up and serving
+the schema it was built for, which is the whole point of doing it in this
+order. Surface the error and let the user decide between fix-forward and
+abandoning the promotion. Do not start the new container on a schema its
+code does not match.
+
+Then swap:
+
 ```bash
 ssh melehost "cd ~/ami_trade && docker compose --profile tunnel up -d --build api-alpha"
 ```
@@ -214,22 +231,34 @@ ssh melehost "docker logs ami_api_alpha --tail 50"
 
 …and stop. The user decides whether to investigate or roll back.
 
-### 6. Run pending migrations
+### 6. Confirm the schema is at head
+
+Migrations already ran in step 5, before the new container served
+anything. This step only verifies:
 
 ```bash
-ssh melehost "cd ~/ami_trade && docker compose exec -T api-alpha alembic upgrade head"
+ssh melehost "cd ~/ami_trade && docker compose exec -T api-alpha alembic current"
 ```
 
-Note: `init_schema()` in `app/db/session.py` runs
-`Base.metadata.create_all()` on first DB touch, so for solo-dev
-schema changes Alembic-via-promotion is the formal record. A failed
-migration is **not auto-rolled-back** — surface the error and ask
-the user whether to roll back or fix forward.
+Expect `<revision> (head)`. Anything else means the running code and the
+schema disagree — the container's own logs will carry a
+`db_schema_behind_head` ERROR naming both revisions.
 
-**Fresh-DB boot:** `init_schema()` self-stamps Alembic to `head`
-after `create_all()`, so `alembic upgrade head` here is a clean
-no-op on a fresh container. (Was a real DuplicateTable footgun
-through AT:R13 — fixed post-R13.)
+**Why the order matters (DEF215, 2026-08-04).** This step used to be
+where migrations ran, *after* the container was already up and serving.
+`init_schema()` fired on the first request, `create_all()` built the new
+CR's tables behind Alembic's back without stamping, and `alembic upgrade
+head` then died on `DuplicateTable`. Alembic aborts the whole chain, so
+two later migrations that only ALTER `journal_entries` never ran, and
+**every journal read on live Alpha failed** on a missing column — an
+outage in an already-shipped feature, caused by a migration for a
+different one. Both halves are now fixed: `init_schema()` creates
+nothing on a database that has `alembic_version` (Alembic owns the
+schema; `create_all` is for fresh test fixtures), and migrations run
+against the live DB while the OLD container is still serving.
+
+A failed migration is **not auto-rolled-back** — surface the error and
+ask the user whether to roll back or fix forward.
 
 ### 7. Smoke check the public hostname
 
