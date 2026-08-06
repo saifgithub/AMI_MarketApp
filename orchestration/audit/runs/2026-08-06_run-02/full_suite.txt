@@ -1,0 +1,65 @@
+........................................................................ [  3%]
+........................................................................ [  6%]
+........................................................................ [  9%]
+........................................................................ [ 12%]
+........................................................................ [ 15%]
+........................................................................ [ 18%]
+........................................................................ [ 21%]
+........................................................................ [ 24%]
+........................................................................ [ 27%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 39%]
+........................................................................ [ 42%]
+........................................................................ [ 46%]
+........................................................................ [ 49%]
+........................................................................ [ 52%]
+........................................................................ [ 55%]
+........................................................................ [ 58%]
+........................................................................ [ 61%]
+........................................................................ [ 64%]
+........................................................................ [ 67%]
+........................................................................ [ 70%]
+........................................................................ [ 73%]
+........................................................................ [ 76%]
+........................................................................ [ 79%]
+........................................................................ [ 82%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 92%]
+........................................................................ [ 95%]
+........................................................................ [ 98%]
+...........................................                              [100%]
+=============================== warnings summary ===============================
+tests/unit/test_cr084_revenuecat_webhook.py::test_unknown_credit_pack_is_422
+  /Volumes/Extreme Pro/AMI_MarketApp/.claude/worktrees/audit-def215-r2s/backend/app/api/webhooks.py:346: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    credits = _pack_credits(product_id)
+
+tests/unit/test_cr084_revenuecat_webhook.py::test_unknown_entitlement_is_422
+  /Volumes/Extreme Pro/AMI_MarketApp/.claude/worktrees/audit-def215-r2s/backend/app/api/webhooks.py:327: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    target_plan = _entitlement_plan(event)
+
+tests/unit/test_cr128_ticker_existence_validation.py::test_watchlist_add_rejects_nonexistent_ticker
+tests/unit/test_cr128_ticker_existence_validation.py::test_room_stream_rejects_nonexistent_ticker_before_any_spend
+tests/unit/test_def062_mandate_patch_validation.py::test_patch_endpoint_returns_422_for_out_of_range_max_drawdown_pct
+tests/unit/test_def151_chart_period_contract.py::test_a_genuinely_unknown_period_is_still_refused
+tests/unit/test_def151_chart_period_contract.py::test_a_genuinely_unknown_period_is_still_refused
+tests/unit/test_def151_chart_period_contract.py::test_a_genuinely_unknown_period_is_still_refused
+tests/unit/test_def151_chart_period_contract.py::test_a_genuinely_unknown_period_is_still_refused
+tests/unit/test_price_alert_routes.py::test_create_rejects_unknown_ticker
+tests/unit/test_sim_history.py::test_history_invalid_period_returns_422
+  /Volumes/Extreme Pro/AMI_MarketApp/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py:328: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    return await dependant.call(**values)
+
+tests/unit/test_cr128_ticker_existence_validation.py::test_preview_trade_rejects_nonexistent_ticker
+  /Volumes/Extreme Pro/AMI_MarketApp/.claude/worktrees/audit-def215-r2s/backend/app/api/sim.py:215: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    _require_ticker_or_422(req.ticker)
+
+tests/unit/test_cr128_ticker_existence_validation.py::test_submit_trade_rejects_nonexistent_ticker
+  /Volumes/Extreme Pro/AMI_MarketApp/.claude/worktrees/audit-def215-r2s/backend/app/api/sim.py:266: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    _require_ticker_or_422(req.ticker)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+2347 passed, 13 warnings in 287.95s (0:04:47)
+EXIT=0
