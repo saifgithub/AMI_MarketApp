@@ -43,8 +43,17 @@ One file per item removes the shared write entirely. Instead:
 5. For a defect needing its own root-cause / design write-up, create
    `docs/defect/DEF###_<snake_case_topic>/` and link it from the row.
 
-**Status** mirrors the operational lifecycle: `resolved` · `wont_fix` · `closed` (fixed
-out-of-band) · `open` (in the DB, not yet worked — not usually listed here until processed).
+**Status** is one of exactly four tokens — `open` · `fixed` · `wontfix` · `dropped` —
+and nothing else. **Enforced** (DEF203) by `gen_registers.py verify` and by
+`backend/tests/unit/test_registers_no_drift.py`; the vocabulary itself lives in
+`scripts/registers/gen_registers.py`.
+
+Put qualifiers in the **description** column, never here. This legend used to read
+`resolved · wont_fix · closed · open` and did not mention `fixed`, which was the second
+most common value in the register — the drift it licensed cost real accuracy: 22 distinct
+status values across 221 rows, four spellings of "fixed", and 20 cells holding whole
+sentences. A cell holding prose is invisible to every filter that matches a token, always
+in the same direction, so the backlog reads shorter than it is.
 
 ## Register
 

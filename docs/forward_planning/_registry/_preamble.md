@@ -38,7 +38,15 @@ Governance rationale: decision **D-058** in [`../initial_specs/11_decisions/deci
 - **Exempt from needing a CR:** process commits — handover wraps (`chore(handover)`),
   TestFlight/build version bumps, and docs-only commits. These keep the plain `(AT:R<N>)` tag.
 
-**Status:** `proposed` · `in_progress` · `done` · `dropped`.
+**Status:** one of exactly five tokens — `proposed` · `in_progress` · `done` · `dropped` ·
+`standing` (an ongoing order with no completion date, e.g. CR060's content-quality
+mandate) — and nothing else. Qualifiers go in the description column.
+
+**Enforced** (DEF203) by `gen_registers.py verify` and
+`backend/tests/unit/test_registers_no_drift.py`. The vocabulary deliberately differs from
+the defect register's: a CR is planned work that can sit in progress, a defect is broken or
+it is not. This line previously omitted `standing` and the register carried `started`,
+`partial` and `in progress` alongside `in_progress`.
 
 ## Register
 

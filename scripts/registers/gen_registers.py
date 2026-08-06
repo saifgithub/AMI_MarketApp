@@ -32,13 +32,47 @@ REGISTERS = {
         "md": REPO / "docs/defect/def_list.md",
         "registry": REPO / "docs/defect/_registry",
         "prefix": "DEF",
+        # DEF203. The vocabularies differ because the lifecycles do: a defect is
+        # broken or it is not, while a CR is planned work that can legitimately
+        # sit in progress or stand open forever.
+        "statuses": ("open", "fixed", "wontfix", "dropped"),
+        "open_statuses": ("open",),
     },
     "cr": {
         "md": REPO / "docs/forward_planning/cr_list.md",
         "registry": REPO / "docs/forward_planning/_registry",
         "prefix": "CR",
+        "statuses": ("proposed", "in_progress", "done", "dropped", "standing"),
+        "open_statuses": ("proposed", "in_progress"),
     },
 }
+
+# DEF203 — why this vocabulary is enforced rather than merely documented.
+#
+# The status column was free text, and free text is not a state. Measured 2026-08-06 across
+# all 221 DEF + 134 CR rows: 22 distinct DEF values and 10 CR values, including FOUR
+# spellings of "this is fixed" (`resolved` 94, `fixed` 76, `done` 10, `closed` 2), two of
+# "in progress" (`in_progress`, `in progress`, plus `started` and `partial`), and 20 cells
+# holding whole sentences.
+#
+# The cost is not tidiness. Every status-based count of the backlog was wrong by an unknown
+# amount, ALWAYS in the same direction — a filter matching a token silently drops the rows
+# whose cell holds prose, so the backlog reads shorter than it is. DEF100's cell said
+# `**open** — Saiful-liaison (via coder.store)...` and it was invisible to exactly that
+# filter. Three more (DEF063, DEF084, DEF093) carried a fixed-family token whose own prose
+# said a half was still open; normalising them moved them to `open`, which is a correction
+# to the backlog and not a formatting change.
+#
+# A qualifier is not banned, it just does not live here — it goes in the description column,
+# where it is readable and where nothing parses it.
+
+
+def status_of(row: str) -> str:
+    """The status cell of one register row. Layout is
+    `| ID | date | source | area | description | status | files | tag |`, so the
+    status is the fourth cell from the end once the trailing empty split is counted."""
+    cells = row.rstrip("\n").split("|")
+    return cells[-4].strip() if len(cells) >= 4 else ""
 
 PREAMBLE = "_preamble.md"   # intro prose + column header + separator, verbatim
 FOOTER = "_footer.md"       # optional trailing note (e.g. the DEF backfill note)
@@ -189,8 +223,31 @@ def verify(reg: dict) -> bool:
     if drift:
         ok = False
         print(f"[verify] {prefix}: content drift on {sorted(drift)}")
+
+    # DEF203: the status cell must hold a state, not a sentence. Checked against the
+    # ROW FILES rather than the live table, so a bad status fails on the commit that
+    # writes it instead of waiting for someone to regenerate.
+    bad = {rid: status_of(row) for rid, row in src_rows.items()
+           if status_of(row) not in reg["statuses"]}
+    if bad:
+        ok = False
+        print(f"[verify] {prefix}: {len(bad)} row(s) with a status outside "
+              f"{list(reg['statuses'])}:")
+        for rid, status in sorted(bad.items()):
+            shown = status if len(status) <= 60 else status[:57] + "..."
+            print(f"[verify] {prefix}:   {rid}: {shown!r}")
+        print(f"[verify] {prefix}:   A status-based count of the backlog silently DROPS "
+              f"these, always reading shorter than the truth. Put the qualifier in the "
+              f"description column, where nothing parses it.")
+
     if ok:
+        counts: dict[str, int] = {}
+        for row in src_rows.values():
+            counts[status_of(row)] = counts.get(status_of(row), 0) + 1
+        still_open = sum(counts.get(s, 0) for s in reg["open_statuses"])
+        tally = " ".join(f"{s}={counts.get(s, 0)}" for s in reg["statuses"])
         print(f"[verify] {prefix}: OK — {len(src_rows)} rows, content identical to live")
+        print(f"[verify] {prefix}: {tally}  ({still_open} open)")
     return ok
 
 
