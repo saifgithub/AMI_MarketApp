@@ -587,6 +587,17 @@ class NotificationRow(Base):
     __table_args__ = (
         Index("ix_notifications_user_created", "user_id", "created_at"),
         Index("ix_notifications_user_read", "user_id", "read_at"),
+        # CR095 audit MAJOR: `source_ref` is the caller's dedupe business key,
+        # and until this constraint existed the ONLY thing preventing a
+        # double-send under concurrent execution was "in practice only one
+        # process ever calls this" — an operational fact of today's melehost
+        # topology, not a control. `docker compose up --scale`, a uvicorn
+        # `--workers` flag, or a promotion window where the outgoing
+        # container's in-flight sweep overlaps the incoming one's all break
+        # it, silently, by sending twice. SQL treats NULLs as distinct in a
+        # unique constraint, so callers that pass no `source_ref` (the
+        # majority) are deliberately unaffected — opting in is passing one.
+        UniqueConstraint("user_id", "type", "source_ref", name="uq_notifications_dedupe"),
     )
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)

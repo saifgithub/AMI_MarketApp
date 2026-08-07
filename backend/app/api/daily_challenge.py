@@ -257,7 +257,10 @@ class ReminderPreference(BaseModel):
         default=None,
         ge=0,
         le=23,
-        description="Hour in the user's own timezone (users.timezone). null = off.",
+        description=(
+            "Hour in the user's own timezone (users.timezone). Explicit null = "
+            "reminders off. Omit to leave unchanged."
+        ),
     )
     timezone: str | None = Field(
         default=None,
@@ -299,7 +302,16 @@ async def set_reminder_preference(
         row = s.get(User, current_user.id)
         if row is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "user not found")
-        row.daily_reminder_hour = req.daily_reminder_hour
+        # CR095 audit MAJOR: assign ONLY when the caller actually sent the
+        # field. A plain `Optional[int] = None` cannot distinguish "omitted"
+        # from "explicitly null", and `null` is a meaningful value here (it
+        # is the column's own "off"), so an unconditional assign turned a
+        # timezone-only PUT — the single most plausible real call, from a
+        # user who travels or relocates — into a silent 200 OK that cleared
+        # their reminder hour. `model_fields_set` carries exactly the
+        # distinction Pydantic drops on the value itself.
+        if "daily_reminder_hour" in req.model_fields_set:
+            row.daily_reminder_hour = req.daily_reminder_hour
         if req.timezone is not None:
             row.timezone = req.timezone
         s.commit()

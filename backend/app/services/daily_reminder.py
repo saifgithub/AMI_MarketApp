@@ -19,11 +19,26 @@ silently dropped.
 
 Idempotency is entirely DB-derived, not in-memory: "already reminded today"
 is answered by querying the `notifications` table (CR027) for a
-`type="daily_reminder"` row whose `source_ref` is the user's *local* calendar
-date — the same row `notification_service.notify()` always writes regardless
-of channel or outcome. That makes a container restart mid-day safe by
-construction (nothing here survives only in process memory) and makes the day
-boundary the user's own, not UTC's.
+`type="daily_reminder"` row — the same row `notification_service.notify()`
+always writes regardless of channel or outcome. That makes a container restart
+mid-day safe by construction (nothing here survives only in process memory).
+
+It rests on three legs, because the first two each have a hole the audit found:
+
+  1. `source_ref` = the user's *local* calendar date, which makes the day
+     boundary the user's own rather than UTC's;
+  2. a trailing `_MIN_HOURS_BETWEEN_REMINDERS` window on `created_at`, because
+     leg 1 alone is recomputed from the user's *current* timezone every tick
+     and so moves under it — one mid-day timezone change and today's local
+     date points at a row that doesn't exist yet;
+  3. the DB's own `uq_notifications_dedupe` unique constraint, because legs 1
+     and 2 are both check-then-write and two overlapping ticks pass both
+     before either writes. Only the constraint makes "at most once" a
+     property of the data rather than of how many processes happen to be
+     running.
+
+Leg 3 is why the free-tier path writes its row *before* sending the email:
+the row is the claim, and a claim made after delivery guards nothing.
 
 `notify()` is still the ONLY writer of the `notifications` table (see its own
 docstring) — including for the free-tier email path, which calls it with
@@ -34,11 +49,11 @@ not a delivery-failure fallback).
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from app.core.logging import logger
 from app.db import get_session, init_schema
@@ -52,6 +67,21 @@ from app.services.notification_service import notify
 _NOTIFICATION_TYPE = "daily_reminder"
 _TITLE = "Today's Daily Challenge"
 _TEASER_MAX_CHARS = 140
+
+# CR095 audit MAJOR: the local-date `source_ref` alone is not a dedupe key,
+# because it is recomputed from the user's CURRENT timezone on every tick with
+# no memory of which timezone produced the last one. Change timezone far enough
+# forward mid-day (travel, relocation, a device-locale resync) and today's
+# local date advances to a value with no row, so the sweep sends a second
+# reminder for the same calendar day.
+#
+# The real invariant is "at most one reminder per user per day", so this
+# enforces it directly in real elapsed time as well. 20h is chosen to sit
+# clearly below the 24h that separates two legitimate consecutive reminders,
+# while still covering the largest offset jump possible (UTC-12 → UTC+14 = 26h
+# of apparent local movement, which can re-trigger within minutes of the
+# first send).
+_MIN_HOURS_BETWEEN_REMINDERS = 20
 
 
 def _teaser(question: str) -> str:
@@ -77,13 +107,23 @@ def _resolve_tz(user: User) -> tuple[ZoneInfo, bool]:
         return ZoneInfo("UTC"), True
 
 
-def _already_reminded_today(user_id: UUID, local_date: date) -> bool:
+def _already_reminded_today(user_id: UUID, local_date: date, now: datetime) -> bool:
+    """Two independent tests, either of which means "don't send".
+
+    The `source_ref` match is the user's-own-calendar-day test. The trailing
+    `_MIN_HOURS_BETWEEN_REMINDERS` window is the real-elapsed-time test, and
+    it is the one that survives a timezone change: `source_ref` moves when
+    `users.timezone` moves, but a row's `created_at` does not."""
+    cutoff = now - timedelta(hours=_MIN_HOURS_BETWEEN_REMINDERS)
     with get_session() as s:
         row = s.execute(
             select(NotificationRow.id).where(
                 NotificationRow.user_id == user_id,
                 NotificationRow.type == _NOTIFICATION_TYPE,
-                NotificationRow.source_ref == local_date.isoformat(),
+                or_(
+                    NotificationRow.source_ref == local_date.isoformat(),
+                    NotificationRow.created_at >= cutoff,
+                ),
             ).limit(1)
         ).first()
         return row is not None
@@ -150,7 +190,7 @@ def _process_one_user(user: User, now: datetime, svc, stats: dict[str, int]) -> 
         return
     local_date = local_now.date()
 
-    if _already_reminded_today(user.id, local_date):
+    if _already_reminded_today(user.id, local_date, now):
         stats["already_reminded"] += 1
         return
 
@@ -175,7 +215,17 @@ def _process_one_user(user: User, now: datetime, svc, stats: dict[str, int]) -> 
     is_paid = plan != Plan.FLOOR_PASS
 
     if is_paid:
-        result = notify(user.id, _NOTIFICATION_TYPE, _TITLE, body, deep_link, source_ref=source_ref)
+        result = notify(
+            user.id, _NOTIFICATION_TYPE, _TITLE, body, deep_link,
+            source_ref=source_ref, created_at=now,
+        )
+        if result.was_duplicate:
+            # Lost the write race: another tick already notified this user for
+            # this source_ref. Must return BEFORE the email fallback below —
+            # falling through would treat "someone else already sent it" as
+            # "push didn't deliver" and send a second message on email.
+            stats["already_reminded"] += 1
+            return
         if result.push_status == "sent":
             stats["sent_push"] += 1
             logger.info("daily_reminder_sent", user_id=str(user.id), channel="push")
@@ -213,10 +263,13 @@ def _process_one_user(user: User, now: datetime, svc, stats: dict[str, int]) -> 
     # via notify(attempt_push=False), same idempotency guarantee as the
     # paid path.
     if not user.email:
-        notify(
+        result = notify(
             user.id, _NOTIFICATION_TYPE, _TITLE, body, deep_link,
-            source_ref=source_ref, attempt_push=False,
+            source_ref=source_ref, attempt_push=False, created_at=now,
         )
+        if result.was_duplicate:
+            stats["already_reminded"] += 1
+            return
         stats["unreachable"] += 1
         logger.error(
             "daily_reminder_unreachable",
@@ -224,11 +277,20 @@ def _process_one_user(user: User, now: datetime, svc, stats: dict[str, int]) -> 
         )
         return
 
-    attempted = send_daily_reminder(user.email, teaser)
-    notify(
+    # Claim the day BEFORE sending, not after. The notifications row IS the
+    # dedupe token, so writing it second leaves a window in which two
+    # overlapping ticks both send an email and only the loser fails to write
+    # — by which point the second email is already gone. Losing the claim
+    # here costs nothing; losing it after the send costs a duplicate message.
+    result = notify(
         user.id, _NOTIFICATION_TYPE, _TITLE, body, deep_link,
-        source_ref=source_ref, attempt_push=False,
+        source_ref=source_ref, attempt_push=False, created_at=now,
     )
+    if result.was_duplicate:
+        stats["already_reminded"] += 1
+        return
+
+    attempted = send_daily_reminder(user.email, teaser)
     if attempted:
         stats["sent_email"] += 1
         logger.info("daily_reminder_sent", user_id=str(user.id), channel="email")

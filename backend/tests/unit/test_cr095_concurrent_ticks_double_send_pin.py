@@ -1,4 +1,21 @@
-"""CR095 auditor pin (round 1) — concurrent ticks can double-send.
+"""CR095 auditor pin (round 1, FIXED in round 2) — concurrent ticks used to
+double-send.
+
+**Now asserts the fixed behaviour**: exactly one email, exactly one row, zero
+errors, with the TOCTOU window still forced wide open. The fix is the
+`uq_notifications_dedupe` unique constraint on
+`notifications(user_id, type, source_ref)`, plus `notify()` degrading the
+resulting IntegrityError to `push_status="duplicate"` so the losing racer sees
+a normal skip rather than an unhandled 500, plus reordering the free-tier path
+to write the claiming row BEFORE sending the email — a claim made after
+delivery guards nothing.
+
+Note what this test does NOT do: it does not narrow the race. The 0.4s sleep
+inside the real check is still there, so both ticks still observe "not yet
+reminded". The guarantee is now the DB's, which is the point — it holds
+regardless of how the two callers interleave.
+
+Original defect description follows, kept because it is why this pin exists:
 
 `daily_reminder.py`'s own docstring and `main.py::_daily_reminder_tick`'s
 docstring both claim idempotency is "entirely DB-derived" and that the
@@ -82,8 +99,8 @@ def test_two_overlapping_ticks_both_send_no_db_guard(
     # callers both observe "not yet reminded" before either writes.
     _real_check = dr._already_reminded_today
 
-    def _slow_check(user_id, local_date):
-        seen = _real_check(user_id, local_date)
+    def _slow_check(user_id, local_date, now):
+        seen = _real_check(user_id, local_date, now)
         time.sleep(0.4)
         return seen
 
@@ -125,16 +142,17 @@ def test_two_overlapping_ticks_both_send_no_db_guard(
             )
         ).scalars().all()
 
-    # The claim under test ("no risk of a double-send") predicts total_sent
-    # == 1 no matter how the two ticks interleave. It does not hold: with no
-    # unique constraint on (user_id, type, source_ref) and no locking around
-    # the check-then-write, two overlapping ticks each independently observe
-    # "not yet reminded" and each send — this asserts the actual (broken)
-    # behaviour so the pin fails the moment somebody adds the missing guard.
+    # The claim under test — "no risk of a double-send" — now holds, and holds
+    # because of the DB rather than because of how the two ticks happened to
+    # interleave. The losing racer must ALSO not error: a 500 from an
+    # unhandled IntegrityError would be a different failure wearing the same
+    # green tick.
     assert total_errors == 0, f"unexpected errors in either tick: {outcomes}"
-    assert len(calls) == 2, f"expected the race to double-send, got {calls}"
-    assert total_sent == 2, f"expected both ticks to report sent_email=1, got {outcomes}"
-    assert len(rows) == 2, (
-        "expected two notifications rows for the same user/day — proves "
-        "notify() has no atomic guard against concurrent duplicate writes"
+    assert len(calls) == 1, f"the race double-sent: {calls}"
+    assert total_sent == 1, f"exactly one tick must report sent_email=1, got {outcomes}"
+    assert len(rows) == 1, (
+        "two notifications rows for the same user/day — uq_notifications_dedupe "
+        "is not holding"
     )
+    # The loser reported the skip honestly rather than silently doing nothing.
+    assert sum(o["already_reminded"] for o in outcomes) == 1, outcomes

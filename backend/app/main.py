@@ -204,13 +204,16 @@ async def _price_alert_evaluation_tick() -> None:
 async def _daily_reminder_tick() -> None:
     """Background task: daily-challenge reminder sweep (CR095). Work-first-
     then-sleep like `_price_alert_evaluation_tick` — a restart shouldn't push
-    a user's reminder back by a full interval. Idempotency is DB-derived
-    (the `notifications` row per user per LOCAL day — see
-    `daily_reminder.send_due_reminders`'s own docstring), so unlike the
-    league/sharia/etc ticks above this one is safe to run on a MUCH shorter
-    interval without any risk of a double-send; the interval only bounds how
-    late a reminder can land after the user's chosen hour. The DB read is a
-    single `daily_reminder_hour IS NOT NULL` scan, cheap at alpha scale."""
+    a user's reminder back by a full interval. Idempotency is DB-derived and
+    ultimately enforced by `uq_notifications_dedupe`, not by this task being
+    the only thing running (see `daily_reminder`'s own docstring for all
+    three legs) — so unlike the league/sharia/etc ticks above this one is
+    safe to run on a MUCH shorter interval, and safe against a second copy of
+    itself: overlapping sweeps, a `--scale`d container, or a promotion window
+    where the outgoing container's in-flight sweep hasn't finished. The
+    interval only bounds how late a reminder can land after the user's chosen
+    hour. The DB read is a single `daily_reminder_hour IS NOT NULL` scan,
+    cheap at alpha scale."""
     from app.services.daily_reminder import send_due_reminders
 
     while True:
