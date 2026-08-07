@@ -73,6 +73,38 @@ where both define a term, they agree.
    COMPLETE. A false `N/A` in a table that IS rendered remains a MAJOR — the waiver covers the
    missing table only.
 
+8. **Audit escalation tiers (CR142, Saiful 2026-08-07 — "set the dial"):** not every item earns
+   an independent pass, and not every finding earns a round. Full reasoning and the evidence it
+   was derived from: [`docs/forward_planning/CR142_audit_escalation_tiers/`](../../docs/forward_planning/CR142_audit_escalation_tiers/CR142_audit_escalation_tiers.md).
+
+   - **Tier A — independent audit, rounds uncapped until COMPLETE.** Auth/sessions/tokens,
+     crypto, secrets; credits/billing/entitlements; migrations that alter or backfill existing
+     rows; compliance-perimeter surfaces (advice detection, Sharia, disclosures, published
+     methodology copy); live infra exposure; educational content asserting a sourced figure.
+   - **Tier B — one independent round; architect closes on MINOR-only.** User-visible behaviour,
+     new endpoints, background jobs, state machines. A MAJOR or BLOCKER promotes the item to
+     Tier A rounds. **Round cap 3** — a Tier B item bouncing at round 4 escalates to Saiful as a
+     design question, it does not keep cycling.
+   - **Tier C — architect self-verifies, no independent audit.** Docs/governance edits, pure
+     refactors, test-only additions, content asserting no new sourced figure.
+
+   Applies at every tier:
+   - **One auditor per lane per round.** Never dispatch a second instance to a round already in
+     flight; if a peer verdict is already on the lane, fold in as an ADDENDUM rather than
+     re-auditing the round from scratch. Two instances double-audited CR121 r2 and CR095 r2 on
+     2026-08-07 and produced two `git add` sweep incidents on the shared lane file.
+   - **Mutation proof belongs in the submission, not the verdict.** The architect states what it
+     mutated and what died. An auditor's budget is for attacking claims, not for discovering that
+     a fix was never tested.
+   - **A MINOR never forces another round.** Architect fixes, records the proof in the lane file,
+     closes.
+   - **Model tier follows audit tier** — strongest model for Tier A, cheap for Tier B/C, cheap
+     for build agents regardless.
+   - **Never accept an agent's self-report.** Verify against `git` and your own test run.
+
+   This tiering is a *spend* rule, not a *rigour* rule: nothing here relaxes DEF159 worktree
+   measurement, DEF141 pin registration, or Saiful's own acceptance test (gap-fill 4).
+
 ## Relationship to existing governance
 
 - Handshake COMPLETE does not replace the CR/Defect registers or their existing close-out
