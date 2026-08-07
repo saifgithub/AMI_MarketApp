@@ -118,10 +118,10 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
 
     Returned dict keys (all optional — missing fields mean yfinance
     didn't have them for this ticker):
-      base_price, pe, rev_growth, profit_margin, net_cash, low, high,
-      week52_range_live, support, breakout, price_to_sales, ev_to_ebitda,
-      peg_ratio, fcf_yield, dividend_yield, sector, industry,
-      analyst_target_price, analyst_rating
+      base_price, pe, forward_pe, rev_growth, profit_margin, net_cash, low,
+      high, week52_range_live, support, breakout, price_to_sales,
+      ev_to_ebitda, peg_ratio, peg_basis, fcf_yield, dividend_yield, sector,
+      industry, analyst_target_price, analyst_rating
 
     Only numeric fields the LLM is likely to misremember. Narrative
     fields stay synthetic at the call site so yfinance gaps don't
@@ -162,6 +162,23 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
 
     price = _num("currentPrice") or _num("regularMarketPrice")
     pe = _num("trailingPE")
+    # DEF233: the sheet carried ONLY the trailing multiple, so on every growth
+    # or cyclical name the Room reasoned about "valuation disconnect" from the
+    # one figure that argues against entry. Measured across a 10-name sample,
+    # trailing ÷ forward ran 1.6×–6.6× (median ~3.3×) and not one name went the
+    # other way — KTOS was rejected live on "357.5x P/E" with a forward P/E of
+    # 54.4. Forward P/E is an analyst ESTIMATE, so it is carried BESIDE the
+    # trailing figure and labelled as consensus at every render site, never
+    # swapped in for it (CR104/DEF123: an estimate must not render with a
+    # measurement's authority).
+    #
+    # A non-positive forward multiple is an artefact of a forecast loss, not a
+    # valuation — NBIS returns forwardPE=-86.97 against a real trailing 72.86,
+    # and LCID returns -1.41 with no trailing at all. Rendering either as "-87x
+    # forward" would be worse than the omission this defect is about, so a
+    # non-positive figure is treated as absent and the render sites say so.
+    forward_pe_raw = _num("forwardPE")
+    forward_pe = forward_pe_raw if forward_pe_raw is not None and forward_pe_raw > 0 else None
     # Anchor on real signals — if price + pe are both missing, the
     # ticker is unknown to yfinance and the caller should fall through.
     if price is None and pe is None:
@@ -186,6 +203,8 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
         out["week52_range_live"] = True
     if pe is not None:
         out["pe"] = f"{pe:.1f}"
+    if forward_pe is not None:
+        out["forward_pe"] = f"{forward_pe:.1f}"
     # Unit conversions live in trading_math.valuation (CR046 M04).
     rev_growth = _num("revenueGrowth")
     if rev_growth is not None:
@@ -212,11 +231,19 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
         out["ev_to_ebitda"] = f"{ev_to_ebitda:.1f}"
     # yfinance renamed pegRatio → trailingPegRatio; try the current key first,
     # fall back to the legacy one, so the PEG line doesn't silently disappear.
+    # DEF233: the current key states its own denominator — a PEG built on the
+    # same trailing earnings the P/E line now labels explicitly — so the basis
+    # is carried through and rendered. The legacy key does NOT declare a basis,
+    # so nothing is claimed for it rather than assuming it matches.
     peg_ratio = _num("trailingPegRatio")
+    peg_basis: str | None = "trailing"
     if peg_ratio is None:
         peg_ratio = _num("pegRatio")
+        peg_basis = None
     if peg_ratio is not None:
         out["peg_ratio"] = f"{peg_ratio:.2f}"
+        if peg_basis is not None:
+            out["peg_basis"] = peg_basis
     free_cash_flow = _num("freeCashflow")
     market_cap = _num("marketCap")
     fcf_yield = fcf_yield_pct(free_cash_flow, market_cap)
@@ -255,6 +282,54 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
             out["analyst_rating"] = str(rating).replace("_", " ")
 
     return out
+
+
+def pe_line(trailing: str | None, forward: str | None) -> str:
+    """The P/E fact-sheet line, on both bases, labelled (DEF233).
+
+    Lives here rather than in either renderer because the Room
+    (`room_prompts._format_profile`) and 1-on-1 (`build_live_data_block`)
+    render the same two numbers and drifted apart once already — same reason
+    `range_position_pct` sits in `technicals.py` (DEF228). Callers pass a
+    figure only once its own provenance is established: the Room gates each
+    basis on `field_state`, 1-on-1 on the fetcher having supplied the key.
+
+    The two bases are never merged or averaged, and neither substitutes for
+    the other — trailing is a measurement of reported earnings, forward is the
+    Street's estimate. An absent basis is stated as absent, never dropped
+    silently, so "P/E 357.5x" can no longer read as the whole valuation
+    picture.
+    """
+    trailing_part = (
+        f"{trailing} trailing (measured — last 12 months of reported earnings)"
+        if trailing
+        else "trailing not available"
+    )
+    forward_part = (
+        f"{forward} forward (CONSENSUS ESTIMATE of the next 12 months — "
+        "analysts' forecast, not a measurement)"
+        if forward
+        else "forward not available — do not estimate one"
+    )
+    if not trailing and not forward:
+        return "P/E: not available"
+    return f"P/E: {trailing_part} · {forward_part}. Say which basis you mean whenever you cite a P/E."
+
+
+def peg_part(peg_ratio: str | None, peg_basis: str | None) -> str | None:
+    """The PEG fragment of the valuation line, carrying its denominator when
+    the provider declared one (DEF233).
+
+    Once the P/E line states two bases, an unlabelled PEG beside it is the same
+    ambiguity one field over — `trailingPegRatio` divides the *trailing*
+    multiple by growth, so it moves with the figure the Room was over-weighting.
+    Shared by both renderers for the same reason `pe_line` is.
+    """
+    if not peg_ratio:
+        return None
+    if peg_basis:
+        return f"PEG {peg_ratio} ({peg_basis} basis)"
+    return f"PEG {peg_ratio}"
 
 
 def fetch_next_earnings(ticker: str):
@@ -305,8 +380,8 @@ def build_live_data_block(ticker: str) -> str | None:
     ]
     if "base_price" in data:
         lines.append(f"Price: ${data['base_price']}")
-    if "pe" in data:
-        lines.append(f"P/E: {data['pe']}")
+    if "pe" in data or "forward_pe" in data:
+        lines.append(pe_line(data.get("pe"), data.get("forward_pe")))
     if "rev_growth" in data:
         lines.append(f"TTM revenue growth: {data['rev_growth']}%")
     if "profit_margin" in data:
@@ -327,8 +402,9 @@ def build_live_data_block(ticker: str) -> str | None:
         multiples.append(f"P/S {data['price_to_sales']}x")
     if "ev_to_ebitda" in data:
         multiples.append(f"EV/EBITDA {data['ev_to_ebitda']}x")
-    if "peg_ratio" in data:
-        multiples.append(f"PEG {data['peg_ratio']}")
+    peg = peg_part(data.get("peg_ratio"), data.get("peg_basis"))
+    if peg:
+        multiples.append(peg)
     if "fcf_yield" in data:
         multiples.append(f"FCF yield {data['fcf_yield']}%")
     if multiples:

@@ -176,7 +176,9 @@ _TEMPLATES: dict[AgentId, list[str]] = {
         # No sector/peer P/E comparison — DEF053 (AT:R58) dropped the old
         # always-fake `sector_pe` rather than half-fixing it; nothing here
         # claims a peer-average multiple this app doesn't actually compute.
-        "{ticker} trades at a trailing P/E of {pe}x. "
+        # DEF233: both bases, since the trailing multiple alone was what the
+        # Room kept rejecting growth and cyclical names on.
+        "{ticker} trades at a trailing P/E of {pe}x{forward_pe_clause}. "
         "TTM revenue growth {rev_growth}%; profit margin {profit_margin}%. "
         "Balance sheet: {net_cash_phrase}. "
         "On the fundamentals alone, the name is {valuation_tone}.",
@@ -340,10 +342,31 @@ _FUNDAMENTALS_NUMERIC_FIELDS = (
 # each field's `field_state` entry below is what every render site now
 # actually consults.
 _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
-    "price_to_sales", "ev_to_ebitda", "peg_ratio", "fcf_yield",
-    "dividend_yield", "sector", "industry",
+    # DEF233: `forward_pe` is optional rather than a core numeric field
+    # because yfinance omits it for names with no forecast earnings, and a
+    # non-positive forecast multiple is dropped at the fetcher — so its
+    # absence is normal and gets stated, not treated as a provider outage.
+    # `peg_basis` is the denominator the PEG figure was built on, carried
+    # through the same per-field provenance as the number itself.
+    "forward_pe", "price_to_sales", "ev_to_ebitda", "peg_ratio", "peg_basis",
+    "fcf_yield", "dividend_yield", "sector", "industry",
     "analyst_target_price", "analyst_rating",
 )
+
+
+def _forward_pe_clause(profile: dict[str, Any]) -> str:
+    """The forward-P/E clause of the scripted Fundamentals sentence (DEF233).
+
+    A clause rather than a bare `{forward_pe}` substitution so an absent
+    figure reads as a sentence — the backfill that covers the rest of the
+    scripted template renders the literal "not available", which would land
+    as "not availablex" mid-sentence. Absence is stated either way; the
+    scripted path never quietly drops a basis the fact sheet would have named.
+    """
+    forward = profile.get("forward_pe")
+    if not forward:
+        return ", forward P/E not available"
+    return f", {forward}x on consensus forward estimates"
 
 
 def _profile_for_ticker(
@@ -886,6 +909,39 @@ def _safe_float(value: Any) -> float | None:
     return f if f > 0 else None
 
 
+# DEF232 — what the verdict says when the PM wrote nothing at all.
+#
+# The PM can return a well-formed decision — action, size, entry, stop, target —
+# with an EMPTY `narration`. Until now the two fallbacks below filled that
+# silence with a claim: an APPROVE shipped `reason: "Synthesis defended."` (19
+# chars) and a PASS shipped `"No trade — debate did not support entry."` (40).
+# Both assert something nobody said. The PM defended no synthesis; the debate's
+# conclusion was never stated. And `reason` is the string CR106 renders on the
+# Verdict Board as the decision's justification, so a user reads a defence that
+# does not exist — the CR040 question applied to this field: if this fires
+# silently, the user believes the Room deliberated and concluded.
+#
+# Measured on live Alpha 2026-08-07: 3 of 1016 stored verdicts have a
+# zero-length PM turn (1 human — a mid-tier sized/stopped/targeted APPROVE on
+# 08-07 — plus 2 room-benchmark PASSes on 07-18), and exactly 1 verdict carries
+# a reason under 40 characters. Rare, and user-visible on the surface that
+# matters most.
+#
+# The decision still ships. A missing DECISION fails safe to PASS (DEF059); a
+# missing SENTENCE is not the same thing — the levels are the PM's own and the
+# safety floor still validates them, so vetoing here would discard a real
+# verdict over its prose. What changes is that the silence is stated instead of
+# papered over, in the `[AMI …]` voice the client already amber-marks
+# (CR106 §3.3: `content.contains('[AMI')`), on BOTH the verdict reason and the
+# transcript turn — which was otherwise a blank row in the Room.
+_PM_NO_RATIONALE = (
+    "[AMI: the Portfolio Manager returned this decision as data only — it wrote "
+    "no rationale for the call. Nothing was said to defend it, so there is "
+    "nothing here to weigh. Treat it as an unexplained decision, not a "
+    "reasoned one.]"
+)
+
+
 def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None]:
     """Extract the PM's display narration + intended decision from its raw
     LLM response (DEF056). Returns (display_text, llm_verdict); llm_verdict
@@ -902,10 +958,12 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
         return narration or text.strip(), None
 
     if action == "PASS":
-        return narration, Verdict(
-            action=VerdictAction.PASS,
-            reason=narration or "No trade — debate did not support entry.",
-        )
+        if not narration:
+            logger.warning("room_pm_no_rationale", action="PASS", ticker=ctx.ticker)
+            return _PM_NO_RATIONALE, Verdict(
+                action=VerdictAction.PASS, reason=_PM_NO_RATIONALE
+            )
+        return narration, Verdict(action=VerdictAction.PASS, reason=narration)
 
     size_pct = _safe_float(parsed.get("size_pct"))
     if size_pct is None:
@@ -944,7 +1002,10 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
         horizon_days = ctx.trader_horizon_weeks * 7
 
     ceiling = _risk_tier_size_ceiling(ctx.mandate)
-    reason = narration or "Synthesis defended."
+    if not narration:
+        logger.warning("room_pm_no_rationale", action="APPROVE", ticker=ctx.ticker)
+    display = narration or _PM_NO_RATIONALE
+    reason = display
     if size_pct > ceiling:
         size_pct = ceiling
         reason += f" (sized down to {ceiling:.1f}% — mandate risk-tier ceiling.)"
@@ -977,7 +1038,7 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     if target is not None:
         _prov["target"] = "pm" if target_raw is not None else "ami_default"
 
-    return narration, Verdict(
+    return display, Verdict(
         action=VerdictAction.APPROVE,
         size_pct=size_pct,
         entry=entry,
@@ -1135,6 +1196,149 @@ def _annotate_rr_against_levels(
         f"{'; '.join(parts)} — {tail}. These are the figures of record.]"
     )
     return annotated, {"stated_rr": stated, "implied_rr": implied}
+
+
+# ── DEF231: a directional instruction the price has already invalidated ──────
+#
+# Twice in one afternoon on live Alpha the PM's `verdict.reason` — the string
+# CR106 renders as the decision's justification — told the user to wait for a
+# move the price had already made. SNDK: *"wait for the price to reclaim the
+# 50-day range low of $998.19"* with the last close at $1212.21, 21% above it.
+# GRAB: *"await a retest of the $3.18 support level"* while passing on a claimed
+# breakdown below that same level. Both numbers were correct; the instruction
+# composed from them was not followable.
+#
+# DEF228's general form — cross-check every agent's prose against its inputs —
+# was rejected because it needs claims read out of free text, and a regex that
+# silently passes reads as coverage (CLAUDE.md: prompt instructions are not
+# controls). This is the narrow version that survives that objection: ONE
+# agent, ONE field, and a comparison between two numbers rather than a claim
+# extraction. The only thing parsed out of prose is the level the sentence
+# itself names, in a `$`-anchored span immediately after a directional verb;
+# the price it is compared against is the structured `last_close` the fact
+# sheet already carries (DEF228), not another parse.
+#
+# Precision-biased, like CR106's stance parser: verbs whose required side is
+# ambiguous are deliberately absent. "Retest" can be awaited from either side
+# of a level and is NOT listed — GRAB's incoherence lived in the breakdown
+# claim beside it, which is a prose claim and stays out of scope. A miss costs
+# nothing; a false annotation on the Verdict Board would cost the surface its
+# credibility.
+#
+# Flag-and-annotate, never veto (DEF059 — the safety floor is the sole vetoer).
+_DIRECTIONAL_CLAIMS: tuple[tuple[str, str], ...] = (
+    # (verb phrase, the side of the level the price must be on for the
+    #  instruction to describe a move that is still ahead of it)
+    (r"reclaim(?:s|ing|ed)?", "below"),
+    (r"recover(?:s|ing|ed)?\s+(?:back\s+)?(?:to|above)", "below"),
+    (r"(?:break|breaks|breaking|broke)\s+(?:out\s+)?(?:back\s+)?above", "below"),
+    (r"(?:get|gets|getting|move|moves|moving|climb|climbs|climbing|back)\s+(?:back\s+)?above", "below"),
+    (r"rise[sn]?\s+(?:back\s+)?(?:to|above)", "below"),
+    (r"(?:break|breaks|breaking|broke)\s+(?:down\s+)?below", "above"),
+    (r"(?:fall|falls|falling|fell|drop|drops|dropping|decline[sd]?|slip[sp]*(?:ed|ing)?)"
+     r"\s+(?:back\s+)?(?:to|below)", "above"),
+    (r"pull(?:s|ing)?\s*back\s+(?:to|toward|towards)", "above"),
+)
+
+# The verb, then a short gap carrying no second price, then the level it names:
+# "reclaim the 50-day range low of $998.19". The gap is capped so a price
+# further down the sentence isn't attributed to this verb.
+_DIRECTIONAL_CLAIM_RES: tuple[tuple[re.Pattern[str], str], ...] = tuple(
+    (re.compile(rf"\b(?:{verb})\b[^\n$]{{0,45}}?\$\s*(\d+(?:\.\d+)?)", re.IGNORECASE), side)
+    for verb, side in _DIRECTIONAL_CLAIMS
+)
+
+# Below this the price is effectively AT the level, and "reclaim $X" from
+# 0.4% under it is a fair description of the next move, not a contradiction.
+_DIRECTION_TOLERANCE_PCT = 1.0
+
+
+def _reference_close(profile: dict[str, Any]) -> float | None:
+    """The price a directional instruction is measured against: the last close
+    of the same series the 50-day range was computed over (DEF228), which is
+    what the PM was actually shown. Gated on its own `field_state` entry — a
+    profile with no recorded technicals provenance yields no reference price
+    and no check, rather than a comparison against a number of unknown origin
+    (CR104)."""
+    if (profile.get("field_state") or {}).get("technicals") != LiveDataState.LIVE.value:
+        return None
+    try:
+        return float(profile["last_close"])
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+def _direction_contradictions(
+    text: str, close: float | None
+) -> list[dict[str, Any]]:
+    """Every directional instruction in `text` whose named level sits on the
+    side of `close` that makes the move already-made. Empty when the text
+    states none, when no reference close is available, or when every named
+    level is on the coherent side."""
+    if not text or close is None or close <= 0:
+        return []
+    out: list[dict[str, Any]] = []
+    for pattern, required_side in _DIRECTIONAL_CLAIM_RES:
+        for m in pattern.finditer(text):
+            try:
+                level = float(m.group(1))
+            except (TypeError, ValueError):
+                continue
+            if level <= 0:
+                continue
+            gap_pct = 100.0 * (close - level) / level
+            if abs(gap_pct) < _DIRECTION_TOLERANCE_PCT:
+                continue
+            actual_side = "above" if gap_pct > 0 else "below"
+            if actual_side == required_side:
+                continue
+            out.append({
+                "claim": m.group(0).strip(),
+                "level": level,
+                "close": close,
+                "gap_pct": round(gap_pct, 1),
+                "price_is": actual_side,
+            })
+    return out
+
+
+def _annotate_direction_against_price(
+    text: str, close: float | None
+) -> tuple[str, list[dict[str, Any]]]:
+    """Append AMI's reading of the price against any level the text tells the
+    user to wait for from the wrong side. Returns (annotated_text, signals);
+    `signals` is empty when the text is coherent, and the text is then returned
+    untouched — no note on a clean verdict (same rule as
+    `_annotate_rr_against_levels`).
+
+    The instruction is NOT rewritten. AMI does not know what the PM meant to
+    say, only that the two numbers in front of it do not support what it said,
+    so the correction states the numbers and leaves the sentence standing —
+    the user can see both and judge.
+    """
+    signals = _direction_contradictions(text, close)
+    if not signals:
+        return text, []
+    first = signals[0]
+    if first["price_is"] == "above":
+        detail = (
+            f"the last close ${first['close']:.2f} is already "
+            f"{abs(first['gap_pct']):.1f}% ABOVE ${first['level']:.2f}, so that "
+            f"level is not something the price has yet to win back"
+        )
+    else:
+        detail = (
+            f"the last close ${first['close']:.2f} is already "
+            f"{abs(first['gap_pct']):.1f}% BELOW ${first['level']:.2f}, so that "
+            f"level is not something the price has yet to give up"
+        )
+    return (
+        text
+        + f"\n\n[AMI checked this instruction against the price: {detail}. "
+          f"The close and the level are the figures of record — read them, not "
+          f"the direction the sentence implies.]",
+        signals,
+    )
 
 
 # CR106 B2 / DEF147 — the stance envelope, and its extraction.
@@ -2418,6 +2622,7 @@ class RoomRunner:
             formatter.setdefault(_field, "not available")
         formatter.update({
             "ticker": ctx.ticker,
+            "forward_pe_clause": _forward_pe_clause(profile),
             "risk_score": mandate.risk_score,
             "action": "BUY",
             "entry": ctx.trader_entry,
@@ -2711,6 +2916,26 @@ class RoomRunner:
                     verdict = verdict.model_copy(
                         update={"opinions_not_included": [a.value for a in ctx.withheld]}
                     )
+                    # DEF231 — the same insertion point, for the same reason:
+                    # BOTH live instances were PASS verdicts, so a check hung
+                    # off the APPROVE branch (where the R:R coherence check
+                    # lives) would have caught neither. The narration has
+                    # already streamed by here; `reason` is the string CR106
+                    # renders as the justification and is what both instances
+                    # landed in.
+                    _reason, _dir_signals = _annotate_direction_against_price(
+                        verdict.reason, _reference_close(profile)
+                    )
+                    if _dir_signals:
+                        logger.warning(
+                            "room_pm_direction_incoherent",
+                            run_id=str(run_id),
+                            ticker=ctx.ticker,
+                            action=str(verdict.action),
+                            count=len(_dir_signals),
+                            **_dir_signals[0],
+                        )
+                        verdict = verdict.model_copy(update={"reason": _reason})
                     run.verdict = verdict
                     yield RoomEvent(kind="verdict", run_id=run_id, verdict=verdict)
                 await asyncio.sleep(_PHASE_GAP_S)

@@ -16,6 +16,11 @@ market data actually delivers — not a full research-desk statement package.
 
 - Valuation multiples: P/E, P/S, EV/EBITDA, PEG, FCF yield — real, from live market
   data, when available for the ticker
+- P/E arrives on **two bases**: trailing (measured, on the last 12 months of reported
+  earnings) and forward (the analyst consensus estimate for the next 12 months — a
+  forecast, not a measurement). They diverge widely on growth and cyclical names, so
+  say which basis you mean and never let one stand in for the other. PEG, when the
+  provider states its basis, is built on the trailing multiple and carries that label
 - TTM revenue growth, profit margin, net cash, 52-week range — real
 - Sector/industry classification — real, but a category, not a numeric peer-average
   P/E (no peer-basket comparison is computed)

@@ -23,6 +23,7 @@ from typing import Any
 from app.schemas import AgentId, AgentMessage, Mandate
 from app.schemas.mandate import Plan
 from app.services.agent_prompts import build_agent_prompt
+from app.services.fundamentals import pe_line, peg_part
 from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
 from app.services.technicals import range_position_pct
@@ -670,8 +671,13 @@ def _format_profile(profile: dict[str, Any]) -> str:
         f"Reference price: ${profile.get('base_price')}" if _is("base_price", "live")
         else "Reference price: not available"
     )
+    # DEF233: both bases, each gated on its own `field_state` entry — a
+    # provider gap on one is stated, never papered over with the other.
     lines.append(
-        f"P/E: {profile.get('pe')}" if _is("pe", "live") else "P/E: not available"
+        pe_line(
+            profile.get("pe") if _is("pe", "live") else None,
+            profile.get("forward_pe") if _is("forward_pe", "live") else None,
+        )
     )
     lines.append(
         (f"TTM revenue growth: {profile.get('rev_growth')}%" if _is("rev_growth", "live")
@@ -819,7 +825,10 @@ def _valuation_line(profile: dict[str, Any]) -> str | None:
     if profile.get("ev_to_ebitda") and _field_is_live(profile, "ev_to_ebitda"):
         parts.append(f"EV/EBITDA {profile['ev_to_ebitda']}x")
     if profile.get("peg_ratio") and _field_is_live(profile, "peg_ratio"):
-        parts.append(f"PEG {profile['peg_ratio']}")
+        # DEF233: the basis rides its own field_state entry — an unlabelled PEG
+        # is claimed as bare, never labelled from an unrecorded provenance.
+        basis = profile.get("peg_basis") if _field_is_live(profile, "peg_basis") else None
+        parts.append(peg_part(profile["peg_ratio"], basis))
     if profile.get("fcf_yield") is not None and _field_is_live(profile, "fcf_yield"):
         parts.append(f"FCF yield {profile['fcf_yield']}%")
     if not parts:

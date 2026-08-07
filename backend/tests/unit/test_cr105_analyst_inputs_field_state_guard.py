@@ -61,6 +61,11 @@ _CLAIMED_REAL_INPUTS = [
     ("fundamentals_analyst", "P/E, P/S, EV/EBITDA, PEG, FCF yield", "ev_to_ebitda"),
     ("fundamentals_analyst", "P/E, P/S, EV/EBITDA, PEG, FCF yield", "peg_ratio"),
     ("fundamentals_analyst", "P/E, P/S, EV/EBITDA, PEG, FCF yield", "fcf_yield"),
+    # DEF233: the sheet carries forward P/E beside trailing, and the PEG's
+    # denominator when the provider declares one. Both are claimed in the .md,
+    # so both must resolve to a field_state key `_format_profile` can source.
+    ("fundamentals_analyst", "P/E arrives on **two bases**", "forward_pe"),
+    ("fundamentals_analyst", "is built on the trailing multiple and carries that label", "peg_basis"),
     ("fundamentals_analyst", "TTM revenue growth, profit margin, net cash, 52-week range", "rev_growth"),
     ("fundamentals_analyst", "TTM revenue growth, profit margin, net cash, 52-week range", "profit_margin"),
     ("fundamentals_analyst", "TTM revenue growth, profit margin, net cash, 52-week range", "net_cash"),

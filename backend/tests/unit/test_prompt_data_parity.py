@@ -69,6 +69,8 @@ _TICKER = "ZQXA"
 _FUND_SENTINEL: dict = {
     "base_price": 271.83,
     "pe": "48.77",            # kept a string — the fetcher emits it pre-formatted
+    "forward_pe": "12.34",    # DEF233 — the consensus-estimate basis, string-formatted too
+    "peg_basis": "PEGBASISSENT",  # the denominator label the PEG figure carries
     "rev_growth": 23.61,
     "profit_margin": 41.29,
     "net_cash": 944,          # → net_position_phrase → "net cash $944M"
@@ -392,6 +394,9 @@ def env(monkeypatch):
             "profit_margin": "41.29", "net_cash": "944M", "low": "155.4",
             "high": "402.9", "price_to_sales": "7.31x", "ev_to_ebitda": "19.42x",
             "peg_ratio": "PEG 2.15", "fcf_yield": "3.87", "dividend_yield": "1.63",
+            # DEF233 — both P/E bases render on both surfaces, and the PEG
+            # carries the denominator label the fetcher supplied.
+            "forward_pe": "12.34 forward", "peg_basis": "(PEGBASISSENT basis)",
             "sector": "ENERGYSENT", "industry": "DRILLSENT",
             "analyst_target_price": "488.12", "analyst_rating": "STRONGSENT",
         },
