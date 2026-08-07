@@ -401,7 +401,7 @@ class CachingProvider:
         self._inner = inner
         self._ttl = ttl_seconds
         self._cache: dict[str, tuple[Quote, float]] = {}  # ticker → (quote, expires_at)
-        self._history_cache: dict[str, tuple[list[Candle], float]] = {}  # f"{ticker}:{period}" → (candles, expires_at)
+        self._history_cache: dict[str, tuple[list[Candle], float, str]] = {}  # f"{ticker}:{period}" → (candles, expires_at, source)
         self._news_cache: dict[str, tuple[list[NewsItem], float]] = {}  # f"{ticker}:{limit}" → (items, expires_at)
         self._earnings_cache: dict[str, tuple[EarningsInfo, float]] = {}  # ticker → (info, expires_at)
         self._lock = RLock()
@@ -426,21 +426,28 @@ class CachingProvider:
         return q.price if q is not None else None
 
     def history_with_source(self, ticker: str, period: str) -> tuple[list[Candle] | None, str]:
-        # The cache wraps exactly one leaf, so a cache hit is attributable to
-        # that same leaf — same reasoning as `quote()` caching the full Quote.
-        return self.history(ticker, period), getattr(self._inner, "name", "unknown")
-
-    def history(self, ticker: str, period: str) -> list[Candle] | None:
+        # Cache the SOURCE beside the bars, exactly as `quote()` caches the
+        # full Quote — a cached series is honestly attributed to the leaf that
+        # produced it, under any composition. Reading `self._inner.name`
+        # instead would be right only while the inner is a leaf: wrap this
+        # around a FallbackProvider and a cache hit for bars the mock leg
+        # served during an outage would report the fallback's stack name,
+        # which matches nothing in SYNTHETIC_HISTORY_SOURCES and would let a
+        # synthetic series pass the refusal check (DEF229 audit r1, MINOR).
         key = f"{ticker.upper().strip()}:{period}"
         now = time.time()
         with self._lock:
             hit = self._history_cache.get(key)
             if hit is not None and hit[1] > now:
-                return hit[0]
-        bars = self._inner.history(ticker, period)
+                return hit[0], hit[2]
+        bars, source = history_with_source(self._inner, ticker, period)
         if bars is not None:
             with self._lock:
-                self._history_cache[key] = (bars, now + self._ttl)
+                self._history_cache[key] = (bars, now + self._ttl, source)
+        return bars, source
+
+    def history(self, ticker: str, period: str) -> list[Candle] | None:
+        bars, _ = self.history_with_source(ticker, period)
         return bars
 
     def news(self, ticker: str, limit: int = 5) -> list[NewsItem] | None:

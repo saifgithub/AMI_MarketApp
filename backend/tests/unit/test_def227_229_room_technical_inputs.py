@@ -218,6 +218,28 @@ def test_history_with_source_reports_the_real_leaf_not_the_cache_wrapper():
     assert source == "yfinance"
 
 
+def test_cached_bars_report_the_leg_that_served_them_under_either_composition():
+    """DEF229 audit round 1, MINOR. Reading `self._inner.name` is right only
+    while the inner is a leaf. Wrap the cache around the fallback instead —
+    the composition nothing constructs today — and a cache hit for bars the
+    mock leg served during an outage would report `fallback(...)`, which
+    matches nothing in SYNTHETIC_HISTORY_SOURCES and would let a fabricated
+    series pass the refusal check. The cache now stores the source beside the
+    bars, so the attribution survives the reordering."""
+    inverted = CachingProvider(
+        FallbackProvider(primary=_FakeProvider(None), secondary=MockWalkProvider()),
+        ttl_seconds=60.0,
+    )
+    bars, source = history_with_source(inverted, "AAPL", "3m")
+    assert bars
+    assert source == "mock_walk"
+
+    # And again off the cache — the hit path is where the shortcut lied.
+    cached_bars, cached_source = history_with_source(inverted, "AAPL", "3m")
+    assert cached_bars is bars
+    assert cached_source == "mock_walk"
+
+
 def test_compute_technicals_refuses_a_synthetic_series(monkeypatch):
     """The block this feeds asserts "Real yfinance OHLCV" in its own text. A
     mock walk arrives AS a successful history call, so the block would still
