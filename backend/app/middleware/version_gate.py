@@ -73,11 +73,9 @@ class VersionGateMiddleware(BaseHTTPMiddleware):
                         # not routine traffic.
                         logger.warning(
                             "version_gate_blocked_request",
-                            extra={
-                                "path": request.url.path,
-                                "client_build": build,
-                                "min_build": floor.min_build,
-                            },
+                            path=request.url.path,
+                            client_build=build,
+                            min_build=floor.min_build,
                         )
                         return JSONResponse(
                             status_code=426,

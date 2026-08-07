@@ -268,6 +268,45 @@ def test_426_fires_below_the_floor_on_a_non_exempt_route():
     assert r.json()["detail"]["headline"] == "Update now"
 
 
+def test_a_block_is_logged_with_the_numbers_an_operator_needs():
+    """CR121 audit MAJOR. `VersionGateMiddleware` sits OUTSIDE
+    `HTTPAuditMiddleware`, so a 426 short-circuits before the audit log ever
+    sees it. Without this event, raising the floor produces no signal
+    anywhere about how many clients it just cut off — and the fix for that
+    was itself unpinned, so deleting the six-line `logger.warning` block left
+    all 2654 tests green. That is DEF038/DEF063's shape recurring one layer
+    up: a fix for a silent failure, silently removable.
+
+    Asserts the fields, not just the event name — an operator needs to know
+    WHICH build got blocked by WHICH floor, and an event that fired with the
+    wrong numbers would be no more useful than no event."""
+    _make_floor(min_build=100, headline="Update now", body_en="Below floor.")
+    client = TestClient(_gated_app())
+
+    with structlog.testing.capture_logs() as captured:
+        r = client.get("/v1/sim/portfolio/x", headers={"X-App-Version": "0.1.0+50"})
+
+    assert r.status_code == 426
+    blocked = [e for e in captured if e["event"] == "version_gate_blocked_request"]
+    assert len(blocked) == 1, captured
+    assert blocked[0]["path"] == "/v1/sim/portfolio/x"
+    assert blocked[0]["client_build"] == 50
+    assert blocked[0]["min_build"] == 100
+
+
+def test_an_allowed_request_logs_no_block_event():
+    """The other half: an event that fired on every request would be noise an
+    operator learns to ignore, which is the same outcome as no event."""
+    _make_floor(min_build=100)
+    client = TestClient(_gated_app())
+
+    with structlog.testing.capture_logs() as captured:
+        r = client.get("/v1/sim/portfolio/x", headers={"X-App-Version": "0.1.0+100"})
+
+    assert r.status_code == 200
+    assert not [e for e in captured if e["event"] == "version_gate_blocked_request"]
+
+
 def test_no_426_at_or_above_the_floor():
     _make_floor(min_build=100)
     client = TestClient(_gated_app())
