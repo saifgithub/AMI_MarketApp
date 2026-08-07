@@ -4,7 +4,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
@@ -329,7 +329,17 @@ async def health() -> dict[str, str]:
 
 @app.get("/v1/client/release-floor", response_model=ReleaseFloorResponse)
 async def client_release_floor(
-    build: int | None = None,
+    # CR121 audit MINOR: `ge=0` for defence in depth. Round 1 claimed every
+    # degenerate `build` resolves to `ok`, never `block` — true for the header
+    # path (`parse_build_number` never raises, never returns negative) but this
+    # is a bare Pydantic query param that doesn't go through it, so
+    # `?build=not-a-number` 422s (a third outcome the claim didn't name) and,
+    # against a hand-written `min_build=0` row, `?build=-5` resolves to
+    # `block`. Neither is reachable by a real client — `DeviceContext`'s build
+    # is `int?` in Dart and the admin write path is `Field(gt=0)` — so this
+    # bricks nobody today. It is still one character of guarantee over an
+    # argument about who can reach what.
+    build: int | None = Query(default=None, ge=0),
     locale: str | None = None,
     platform: str | None = None,
 ) -> ReleaseFloorResponse:

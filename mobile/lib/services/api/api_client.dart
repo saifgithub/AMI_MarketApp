@@ -173,10 +173,25 @@ UpgradeRequiredException? upgradeRequiredExceptionFor(DioException err) {
 /// blocks are unchanged; a call site that wants the structured gate detail
 /// checks `upgradeRequiredFrom(e)`.
 class _VersionGateInterceptor extends Interceptor {
+  _VersionGateInterceptor(this._client);
+
+  final ApiClient _client;
+
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     final upgrade = upgradeRequiredExceptionFor(err);
     if (upgrade != null) {
+      // CR121 audit MAJOR: annotating the exception is not enough on its own.
+      // Every one of the 15 call sites funnels errors through
+      // `friendlyError`, which turned a 426 into "that request wasn't
+      // accepted" — so the middleware's whole reason to exist ("a patched
+      // binary that never calls the floor endpoint still cannot transact")
+      // produced a refusal with no screen, no headline and no way to update.
+      // The gate's own launch/resume checks don't cover the window between a
+      // floor being raised mid-session and the next backgrounding, which is
+      // precisely the window the middleware is for. Raising it here means any
+      // 426, from any call, surfaces the real block screen.
+      _client.onUpgradeRequired?.call(upgrade);
       handler.next(DioException(
         requestOptions: err.requestOptions,
         response: err.response,
@@ -194,13 +209,8 @@ class _VersionGateInterceptor extends Interceptor {
 /// Extract an [UpgradeRequiredException] from a thrown REST error, if
 /// [_VersionGateInterceptor] annotated it. Returns null for any other error
 /// (same shape as [serverUnavailableFrom]).
-UpgradeRequiredException? upgradeRequiredFrom(Object error) {
-  if (error is UpgradeRequiredException) return error;
-  if (error is DioException && error.error is UpgradeRequiredException) {
-    return error.error as UpgradeRequiredException;
-  }
-  return null;
-}
+UpgradeRequiredException? upgradeRequiredFrom(Object error) =>
+    asUpgradeRequired(error);
 
 /// Inverts the backend's per-chunk SSE escape (`room.py`, `brief.py`,
 /// `one_on_one.py`: `chunk.replace("\\", "\\\\").replace("\n", "\\n")`).
@@ -334,7 +344,7 @@ class ApiClient {
         _httpClient = httpClient ?? http.Client() {
     _dio.interceptors.add(_AuthInterceptor(this));
     _dio.interceptors.add(_ServerErrorInterceptor()); // DEF073
-    _dio.interceptors.add(_VersionGateInterceptor()); // CR121
+    _dio.interceptors.add(_VersionGateInterceptor(this)); // CR121
   }
 
   final Dio _dio;
@@ -349,6 +359,14 @@ class ApiClient {
   /// takes. Left null (no-op) outside the app's Riverpod wiring, e.g. in
   /// tests that talk to [ApiClient] directly.
   void Function()? onUnauthorized;
+
+  /// CR121 — fired when any request is refused with 426 by
+  /// `VersionGateMiddleware`. Wired by `versionGateControllerProvider` to
+  /// raise the block screen, so a floor raised mid-session reaches the user
+  /// on their next request rather than waiting for a backgrounding. Left
+  /// null (no-op) outside the app's Riverpod wiring, e.g. in tests that talk
+  /// to [ApiClient] directly.
+  void Function(UpgradeRequiredException)? onUpgradeRequired;
 
   /// CR125 retry-loop guard: the token that most recently triggered
   /// [onUnauthorized]. A 401 only fires the callback once per distinct

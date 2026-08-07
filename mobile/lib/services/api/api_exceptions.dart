@@ -14,6 +14,8 @@ library;
 /// Under GTM_FUNNEL=winzip it also carries `funnel`, `cooldown_until`, and
 /// `retry_after_seconds` — the server has already re-granted one Room, so the
 /// client just renders the countdown until [cooldownUntil].
+import 'package:dio/dio.dart';
+
 class InsufficientCreditsException implements Exception {
   final int balance;
   final int cost;
@@ -130,4 +132,24 @@ class UpgradeRequiredException implements Exception {
   @override
   String toString() =>
       'UpgradeRequiredException(minBuild: $minBuild, action: $action)';
+}
+
+/// Extract an [UpgradeRequiredException] from a thrown REST error, whether it
+/// arrives bare or annotated onto a `DioException.error` slot by
+/// `_VersionGateInterceptor`.
+///
+/// CR121 audit MAJOR — this lives here, next to the exception, rather than in
+/// `api_client.dart`, because BOTH the client and `friendly_error.dart` need
+/// it and `friendly_error.dart` must not depend on the whole API client. The
+/// wrapped shape is the one that matters in practice: the interceptor
+/// annotates and re-throws a `DioException`, so every real call site catches
+/// the wrapper, never the bare exception. A branch that only tests
+/// `error is UpgradeRequiredException` looks correct and matches nothing —
+/// which is exactly how the 426 reached users as "AMI is unreachable".
+UpgradeRequiredException? asUpgradeRequired(Object error) {
+  if (error is UpgradeRequiredException) return error;
+  if (error is DioException && error.error is UpgradeRequiredException) {
+    return error.error as UpgradeRequiredException;
+  }
+  return null;
 }

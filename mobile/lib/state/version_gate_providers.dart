@@ -21,6 +21,7 @@ import 'dart:io' show Platform;
 
 import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/models/release_floor.dart';
+import 'package:ami_trade/services/api/api_exceptions.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/onboarding_providers.dart' show apiClientProvider;
 import 'package:flutter/foundation.dart' show debugPrint;
@@ -96,6 +97,38 @@ class VersionGateController extends StateNotifier<VersionGateState> {
     }
   }
 
+  /// CR121 audit MAJOR — raise the gate from a 426 on ANY request, not only
+  /// from [check]'s two call sites (launch and foreground-resume).
+  ///
+  /// Those two cover the overwhelming majority of sessions, but they leave
+  /// exactly the window `VersionGateMiddleware` exists to close: a floor
+  /// raised while the app is already open and foregrounded. Before this, such
+  /// a user's next trade or lesson load got a 426 that `friendlyError`
+  /// rendered as "that request wasn't accepted. Check the details before
+  /// trying again." — no headline, no store link, and advice to re-check
+  /// details that were never the problem, about a request that cannot succeed
+  /// on this build.
+  ///
+  /// Only ever escalates to [VersionGateStatus.block]: the middleware emits
+  /// 426 for the block case alone, and `action` is carried rather than assumed
+  /// so a future server that reuses 426 for something softer cannot be
+  /// silently mis-rendered as a hard block.
+  void raiseFromServer(UpgradeRequiredException e) {
+    if (e.action != 'block') return;
+    if (state.isBlocked) return;
+    state = VersionGateState(
+      status: VersionGateStatus.block,
+      floor: ReleaseFloorResponse(
+        minBuild: e.minBuild,
+        recommendedBuild: e.recommendedBuild,
+        action: e.action,
+        headline: e.headline,
+        body: e.body,
+        storeUrl: e.storeUrl,
+      ),
+    );
+  }
+
   /// Dismiss the current nag sheet. No-ops if not currently nagging.
   void dismissNag() {
     if (state.status != VersionGateStatus.nag) return;
@@ -113,6 +146,10 @@ class VersionGateController extends StateNotifier<VersionGateState> {
 final versionGateControllerProvider =
     StateNotifierProvider<VersionGateController, VersionGateState>((ref) {
   final controller = VersionGateController(ref);
+  // CR121 audit MAJOR: subscribe to 426s from every request, not just this
+  // provider's own two checks. `_VersionGateInterceptor` fires this from
+  // ApiClient's error path — same wiring shape as CR125's `onUnauthorized`.
+  ref.read(apiClientProvider).onUpgradeRequired = controller.raiseFromServer;
   Future.microtask(controller.check);
   return controller;
 });

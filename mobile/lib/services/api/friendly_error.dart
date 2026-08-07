@@ -53,6 +53,17 @@ String friendlyError(Object error, {required String action}) {
   if (error is ServerUnavailableException) {
     return '$lead — AMI is temporarily unavailable. Try again in a moment.';
   }
+  // CR121 audit MAJOR. A 426 is the version gate refusing a build the server
+  // has condemned, and it can arrive on ANY call — the gate's own launch and
+  // resume checks don't cover the window between a floor being raised
+  // mid-session and the next backgrounding. Without this branch a 426 fell
+  // through to `_forStatus`, which produced "that request wasn't accepted.
+  // Check the details before trying again." — copy indistinguishable from a
+  // rejected form, telling the user to re-check details that were never the
+  // problem, about a request that can never succeed on this build.
+  if (asUpgradeRequired(error) != null) {
+    return '$lead — this version of AMI is out of date. Update to continue.';
+  }
   if (error is InsufficientCreditsException) {
     // Has its own surface (the credit wall). Reaching here means a caller let
     // it fall into a generic catch; say something true rather than a stack.
@@ -96,6 +107,10 @@ String friendlyError(Object error, {required String action}) {
 bool isRetryable(Object error) {
   if (error is ServerUnavailableException) return true;
   if (error is InsufficientCreditsException) return false;
+  // Never retryable, and this is exactly DEF151's lesson: the identical
+  // request cannot succeed until the app itself is updated, so a retry
+  // affordance here is a promise the app cannot keep.
+  if (asUpgradeRequired(error) != null) return false;
 
   if (error is DioException) {
     switch (error.type) {

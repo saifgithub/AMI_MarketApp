@@ -200,6 +200,28 @@ def test_build_release_floor_response_with_no_floor_is_ok_and_bare():
 
 # ── GET /v1/client/release-floor — unauthenticated read endpoint ──────────────
 
+def test_a_negative_or_unparseable_build_is_refused_at_the_boundary():
+    """CR121 audit MINOR. Round 1 claimed every degenerate `build` resolves to
+    `ok`, never `block`. True for the header path — `parse_build_number` never
+    raises and never returns a negative — but the read endpoint took a bare
+    `int | None` query param that never went through it, so `?build=` garbage
+    produced a 422 (a third outcome the claim didn't name) and, against a
+    hand-written `min_build=0` row, `?build=-5` resolved to `block`.
+
+    Neither is reachable by a real client (`DeviceContext.buildNumber` is
+    `int?` in Dart; the admin write path is `Field(gt=0)`), so nothing was ever
+    at risk. Pinned anyway: `ge=0` is one character, and "unreachable today"
+    is a property of the callers, not of this endpoint."""
+    from app.main import app
+
+    client = TestClient(app)
+    assert client.get("/v1/client/release-floor?build=not-a-number").status_code == 422
+    assert client.get("/v1/client/release-floor?build=-5").status_code == 422
+    # The legitimate shapes still work, including the omitted param.
+    assert client.get("/v1/client/release-floor").status_code == 200
+    assert client.get("/v1/client/release-floor?build=0").status_code == 200
+
+
 def test_read_endpoint_is_reachable_with_no_authorization_header():
     from app.main import app
 
