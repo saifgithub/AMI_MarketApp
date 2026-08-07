@@ -108,6 +108,10 @@ services:
       # /promote-to-alpha). Backend refuses to start when env!=local and
       # this is unset (see backend/app/main.py boot check).
       SECRET_KEY: ${SECRET_KEY:-}
+      # CR125 — scaffold Bearer token lifetime in days. Backstop expiry for
+      # a token nobody ever explicitly signed out; DELETE /v1/auth/session
+      # (token_version bump) is the immediate-revocation path.
+      AUTH_TOKEN_TTL_DAYS: ${AUTH_TOKEN_TTL_DAYS:-30}
       # Admin back-office static bearer (AT:R27). All /v1/admin/* routes
       # require it; empty value returns 503 from those routes (Alpha-only
       # mechanism, replaced by admin_users + JWT in Beta).

@@ -33,7 +33,7 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
 
 
 def _auth(user_id: UUID) -> dict[str, str]:
-    return {"Authorization": f"Bearer {_scaffold_token(user_id)}"}
+    return {"Authorization": f"Bearer {_scaffold_token(user_id, token_version=1)}"}
 
 
 def _make_report(

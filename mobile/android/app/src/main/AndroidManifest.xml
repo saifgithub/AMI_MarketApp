@@ -6,7 +6,21 @@
     <application
         android:label="ami_trade"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false">
+        <!-- CR125 (security review H8): unset before this defaulted to
+             `true`, so the bearer token rode Android Auto Backup — anyone
+             with a device backup read it cleartext and gained permanent
+             impersonation. `allowBackup="false"` disables both classic Auto
+             Backup and Android 12+ device-to-device transfer; the token now
+             lives in Keystore-backed EncryptedSharedPreferences anyway
+             (device_user.dart), which is itself non-exportable, but this is
+             belt-and-braces for the rest of the app's data too.
+             `fullBackupContent="false"` is the pre-12 explicit form of the
+             same rule for API levels that ignore allowBackup when a backup
+             agent/content descriptor is present. -->
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

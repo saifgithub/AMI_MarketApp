@@ -72,7 +72,9 @@ def test_legacy_unsigned_token_still_accepted_in_local(monkeypatch):
     auth = AuthService()
     user, _, _ = auth.ensure_anonymous(device_user_id=None)
     legacy = f"scaffold:{user.id.hex}"
-    assert parse_scaffold_token(legacy) == user.id
+    parsed = parse_scaffold_token(legacy)
+    assert parsed is not None
+    assert parsed.user_id == user.id
 
 
 # ── A2: /v1/auth/anon doesn't mint for arbitrary device_user_id ───────────

@@ -20,8 +20,10 @@ Three flows for now:
      verification landed in AT:R29; the earlier "trust the client"
      scaffold was the audit's must-fix-A4 finding.
 
-`SessionToken` in scaffold mode is just `user_id.hex`. When Supabase
-plugs in, the real access JWT replaces it and `kind` becomes `supabase`.
+`SessionToken` in scaffold mode is `scaffold:<user_id_hex>:<exp>:<ver>:<sig>`
+(CR125) — a signed, expiring, per-user-revocable Bearer. When Supabase plugs
+in, the real access JWT replaces it and `kind` becomes `supabase`; see the
+swap-point note on `parse_scaffold_token()`.
 """
 
 from __future__ import annotations
@@ -32,6 +34,7 @@ import hmac as _hmac
 import json
 import secrets
 from datetime import datetime, timedelta, timezone
+from typing import NamedTuple
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
@@ -158,55 +161,106 @@ def _row_to_user(row: User) -> AuthUser:
     )
 
 
-def _scaffold_token(user_id: UUID) -> str:
-    """Issue a scaffold Bearer token: `scaffold:<user_id_hex>:<hmac_sig>`.
+class ParsedToken(NamedTuple):
+    """Result of a successful `parse_scaffold_token()`.
 
-    HMAC prevents offline token forgery. The Beta swap point is a one-line
-    change in `parse_scaffold_token()` (verify a Supabase JWT instead).
+    `token_version` is `None` only for the local-only legacy unsigned format
+    (no version field exists there) — callers that enforce revocation treat
+    `None` as "skip the version check", matching that format's existing
+    local-only trust level. Every signed token carries a real int.
+    """
+
+    user_id: UUID
+    token_version: int | None
+
+
+def _scaffold_sig(hex_id: str, exp: int, token_version: int) -> str:
+    # HMAC over the joined hex|exp|ver so none of the three fields is
+    # malleable — signing only the hex would let an attacker rewrite `exp`
+    # or `ver` freely and replay a revoked or "expired" token forever.
+    payload = f"{hex_id}|{exp}|{token_version}"
+    return _hmac.new(
+        settings.secret_key.encode("utf-8"),
+        payload.encode("utf-8"),
+        "sha256",
+    ).hexdigest()
+
+
+def _scaffold_token(user_id: UUID, token_version: int, ttl_days: int | None = None) -> str:
+    """Issue a scaffold Bearer token: `scaffold:<hex>:<exp>:<ver>:<sig>` (CR125).
+
+    `exp` is a Unix timestamp (seconds); `ver` must match the user's current
+    `token_version` at parse time. HMAC over all three prevents offline
+    forgery of any field. The Beta swap point is a one-line change in
+    `parse_scaffold_token()` (verify a Supabase JWT instead).
 
     The legacy unsigned format `scaffold:<hex>` is still parseable, but
     only when `env == "local"` — see `parse_scaffold_token()`. Adversarial
     audit (2026-05-18) tightened this from "local|dev" because melehost
-    runs as `env=dev` and its tunnel is public.
+    runs as `env=dev` and its tunnel is public. The old 3-part signed
+    format (`scaffold:<hex>:<sig>`, pre-CR125, no exp/version) is rejected
+    everywhere — CR040 degrade loudly, not a silent downgrade.
     """
-    sig = _hmac.new(
-        settings.secret_key.encode("utf-8"),
-        user_id.hex.encode("utf-8"),
-        "sha256",
-    ).hexdigest()
-    return f"scaffold:{user_id.hex}:{sig}"
+    ttl = settings.auth_token_ttl_days if ttl_days is None else ttl_days
+    exp = int((datetime.now(timezone.utc) + timedelta(days=ttl)).timestamp())
+    hex_id = user_id.hex
+    sig = _scaffold_sig(hex_id, exp, token_version)
+    return f"scaffold:{hex_id}:{exp}:{token_version}:{sig}"
 
 
-def parse_scaffold_token(token: str) -> UUID | None:
-    """Parse and verify a scaffold Bearer token. Returns user_id or None."""
+def parse_scaffold_token(token: str) -> ParsedToken | None:
+    """Parse and verify a scaffold Bearer token. Returns `ParsedToken` or None.
+
+    Verifies signature and `exp` only — NOT `token_version` against the DB
+    (this function has no session). Version enforcement against the live
+    user row is `api/dependencies.py::get_current_user`'s job; that keeps
+    this a pure, session-free parse, and the Supabase swap a one-function
+    change (module docstring).
+    """
     if not token.startswith("scaffold:"):
         return None
     rest = token[len("scaffold:"):]
-    parts = rest.split(":", 1)
-    if len(parts) == 2:
-        # New signed format: scaffold:<hex>:<sig>
-        hex_id, claimed_sig = parts
+    parts = rest.split(":")
+    if len(parts) == 4:
+        # Current signed format: scaffold:<hex>:<exp>:<ver>:<sig>
+        hex_id, exp_str, ver_str, claimed_sig = parts
         try:
             user_id = UUID(hex_id)
+            exp = int(exp_str)
+            token_version = int(ver_str)
         except ValueError:
             return None
-        expected_sig = _hmac.new(
-            settings.secret_key.encode("utf-8"),
-            hex_id.encode("utf-8"),
-            "sha256",
-        ).hexdigest()
+        expected_sig = _scaffold_sig(hex_id, exp, token_version)
         if not _hmac.compare_digest(claimed_sig, expected_sig):
             return None
-        return user_id
+        if exp < int(datetime.now(timezone.utc).timestamp()):
+            return None
+        return ParsedToken(user_id=user_id, token_version=token_version)
     if len(parts) == 1 and settings.env == "local":
         # Legacy unsigned format — accepted only on the developer's local
         # machine. Adversarial audit (2026-05-18) closed dev-env acceptance:
-        # melehost is reachable via the public Cloudflare Tunnel.
+        # melehost is reachable via the public Cloudflare Tunnel. No version
+        # field exists in this format, so version enforcement is skipped
+        # (`token_version=None`) — consistent with the format's existing
+        # local-only trust level.
         try:
-            return UUID(parts[0])
+            return ParsedToken(user_id=UUID(parts[0]), token_version=None)
         except ValueError:
             return None
+    # Anything else — including the pre-CR125 3-part signed format
+    # (scaffold:<hex>:<sig>, no exp/version) — is rejected outright. CR040
+    # degrade loudly: a stale token 401s, it does not quietly pass.
     return None
+
+
+def parse_scaffold_token_user_id(token: str) -> UUID | None:
+    """Thin wrapper for best-effort attribution callers (audit middleware,
+    bug-report submission) that only ever needed the user_id, never full
+    auth enforcement. Does NOT check `token_version` — those call sites
+    don't authenticate, they attribute, and have no DB session to check
+    against. Still honours signature + `exp`."""
+    parsed = parse_scaffold_token(token)
+    return parsed.user_id if parsed is not None else None
 
 
 def _b64url_decode(seg: str) -> bytes:
@@ -335,7 +389,7 @@ class AuthService:
                     app_version=app_version,
                 )
 
-            return _row_to_user(row), _scaffold_token(row.id), is_new
+            return _row_to_user(row), _scaffold_token(row.id, row.token_version), is_new
 
     # ── Magic-link ─────────────────────────────────────────────────────
 
@@ -425,7 +479,7 @@ class AuthService:
                 _log_adoption_event(
                     s, from_user_id=adopted_from, to_user_id=user.id,
                 )
-            return _row_to_user(user), _scaffold_token(user.id), adopted_from
+            return _row_to_user(user), _scaffold_token(user.id, user.token_version), adopted_from
 
     # ── Apple Sign-In ──────────────────────────────────────────────────
 
@@ -517,7 +571,7 @@ class AuthService:
                 _log_adoption_event(
                     s, from_user_id=adopted_from, to_user_id=row.id,
                 )
-            return _row_to_user(row), _scaffold_token(row.id), adopted_from
+            return _row_to_user(row), _scaffold_token(row.id, row.token_version), adopted_from
 
     # ── Google Sign-In ─────────────────────────────────────────────────
 
@@ -609,7 +663,7 @@ class AuthService:
                 _log_adoption_event(
                     s, from_user_id=adopted_from, to_user_id=row.id,
                 )
-            return _row_to_user(row), _scaffold_token(row.id), adopted_from
+            return _row_to_user(row), _scaffold_token(row.id, row.token_version), adopted_from
 
     # ── Helpers ────────────────────────────────────────────────────────
 

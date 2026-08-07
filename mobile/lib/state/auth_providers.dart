@@ -92,9 +92,27 @@ class ClaimOutcome {
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier(this._ref) : super(const AuthState());
+  AuthNotifier(this._ref) : super(const AuthState()) {
+    // CR125: recover from a 401 on a guarded route (expired token, or
+    // revoked via sign-out on another session) the same way a manual
+    // sign-out does — minus the push-logout-then-mint-fresh-anon shape,
+    // since there's no user action to attribute here.
+    _ref.read(apiClientProvider).onUnauthorized = _handleUnauthorized;
+  }
 
   final Ref _ref;
+
+  /// CR125: the local credential is dead (expired `exp` or a revoked
+  /// `token_version`) — wipe it and re-bootstrap. `DeviceUser.getToken()`
+  /// will come back null on the next `bootstrap()` call, so the app
+  /// re-authenticates exactly like a genuine first launch would.
+  Future<void> _handleUnauthorized() async {
+    await _pushLogout();
+    _ref.read(apiClientProvider).setToken(null);
+    await DeviceUser.clearTokenOnly();
+    state = const AuthState();
+    await bootstrap();
+  }
 
   Future<void> bootstrap() async {
     state = state.copyWith(loading: true, clearError: true);

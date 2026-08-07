@@ -444,6 +444,12 @@ class Settings(BaseSettings):
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"
 
+    # CR125 — scaffold Bearer token lifetime, in days, from issue time.
+    # `parse_scaffold_token()` 401s once `exp` passes; `DELETE /v1/auth/session`
+    # (token_version bump) is the immediate-revocation path, this is the
+    # backstop for a token nobody ever explicitly signed out.
+    auth_token_ttl_days: int = 30
+
     # DEF044 — at-rest encryption for Alpaca brokerage creds. Optional: when
     # empty the cipher key is derived from SECRET_KEY, so encryption is active
     # out-of-box. Set a dedicated urlsafe secret here to rotate independently.

@@ -28,7 +28,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response, StreamingResponse
 
 from app.services.audit import MAX_BODY_BYTES, record_http
-from app.services.auth_service import parse_scaffold_token
+from app.services.auth_service import parse_scaffold_token_user_id
 
 
 SKIP_PATHS = {"/v1/health"}
@@ -265,7 +265,7 @@ def _user_id_from_request(request: Request) -> Optional[UUID]:
     if authorization and authorization.lower().startswith("bearer "):
         token = authorization.split(" ", 1)[1]
         try:
-            user_id = parse_scaffold_token(token)
+            user_id = parse_scaffold_token_user_id(token)
         except Exception:
             user_id = None
         if user_id is not None:

@@ -84,6 +84,11 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # CR125 — the platform-interface package flutter_secure_storage's own
+  # bundled test double (`package:flutter_secure_storage/test/...`) is built
+  # against. Was already resolved transitively; declared explicitly because
+  # test code imports it directly.
+  flutter_secure_storage_platform_interface: ^1.1.2
   integration_test:
     sdk: flutter
   flutter_lints: ^5.0.0

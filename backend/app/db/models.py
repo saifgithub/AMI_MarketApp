@@ -139,6 +139,15 @@ class User(Base):
         DateTime(timezone=True), nullable=True,
     )
 
+    # CR125 — revocation counter for scaffold Bearer tokens. Embedded in every
+    # token issued (`scaffold:<hex>:<exp>:<ver>:<sig>`); `get_current_user`
+    # 401s when a token's version doesn't match this. `DELETE /v1/auth/session`
+    # bumps it, which invalidates every outstanding token for the user in one
+    # write — the real-revocation half of CR125 (previously a no-op sign-out).
+    token_version: Mapped[int] = mapped_column(
+        Integer, default=1, server_default="1", nullable=False,
+    )
+
     # Alpaca paper trading link (AT:R45/R47). Null = unlinked.
     # auth_mode: 'oauth' (access_token = Bearer token) or 'apikey'
     # (access_token = key ID, refresh_token = key secret).

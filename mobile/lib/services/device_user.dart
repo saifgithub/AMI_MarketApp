@@ -1,15 +1,29 @@
-/// Device-stable user_id + persisted bearer token, via shared_preferences.
+/// Device-stable user_id (shared_preferences) + persisted bearer token
+/// (flutter_secure_storage, CR125).
 ///
 /// Pre-A7: only `device_user_id` was persisted, and the bearer token was
 /// re-issued from scratch on every app launch. Adversarial audit (2026-05-18)
 /// finding A2 closed the "device_user_id alone is proof of possession" hole,
 /// so the bearer token must now ride alongside the device id and be replayed
 /// to the backend on every bootstrap. Same property survives across launches.
+///
+/// CR125 (security review H8): the bearer token used to live in
+/// SharedPreferences — cleartext, and riding Android Auto Backup / iOS
+/// iCloud-iTunes backups, so anyone with a device backup read it and gained
+/// permanent impersonation. It now lives in the Keychain
+/// (`first_unlock_this_device` — decryptable only after the device's first
+/// unlock post-boot, and excluded from backups by construction) / Android
+/// Keystore (`encryptedSharedPreferences`, also backup-excluded via
+/// `android:allowBackup="false"` in AndroidManifest.xml). `device_user_id`,
+/// the install id, and the onboarding session id stay on SharedPreferences —
+/// none of them is a credential.
 library;
 
 import 'dart:io' show Platform;
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -89,6 +103,23 @@ class DeviceUser {
   static String? _cachedInstallId;
   static String? _cachedOnboardingSessionId;
 
+  /// CR125 — Keychain on iOS (`first_unlock_this_device`: decryptable only
+  /// once the device has been unlocked at least once since boot, never
+  /// synced via iCloud Keychain), Keystore-backed EncryptedSharedPreferences
+  /// on Android. `resetOnError` recovers from a corrupted keystore (e.g. a
+  /// restored-from-backup device with no matching key) by wiping the secure
+  /// store rather than throwing — the caller sees "no token", which is
+  /// exactly the re-auth path already in place for a first launch.
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.first_unlock_this_device,
+    ),
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+      resetOnError: true,
+    ),
+  );
+
   /// Return the persisted user_id, minting one on first launch.
   static Future<String> getOrCreate() async {
     if (_cachedId != null) return _cachedId!;
@@ -118,20 +149,54 @@ class DeviceUser {
 
   /// Return the persisted bearer token, or null on first launch (or after
   /// a `clear()` call). Caller is responsible for re-bootstrapping when null.
+  ///
+  /// CR125 first-launch migration: an install that predates the secure-
+  /// storage move still has its token sitting in plaintext SharedPreferences.
+  /// The first read here moves it across and deletes the plaintext copy.
+  /// Idempotent and interruption-safe:
+  ///   - normal case: secure storage has the value on every call after the
+  ///     first — the legacy branch never runs again.
+  ///   - interrupted after the secure write but before the prefs removal
+  ///     (app killed mid-migration): the secure value already reads back
+  ///     fine, and the leftover plaintext key is swept on this same call
+  ///     rather than being left to linger indefinitely.
+  ///   - interrupted before the secure write ever lands: secure storage is
+  ///     still empty, so the next call just retries the whole migration.
   static Future<String?> getToken() async {
     if (_cachedToken != null) return _cachedToken;
+    final secure = await _secureStorage.read(key: _kTokenKey);
     final prefs = await SharedPreferences.getInstance();
-    _cachedToken = prefs.getString(_kTokenKey);
-    return _cachedToken;
+    if (secure != null) {
+      _cachedToken = secure;
+      if (prefs.containsKey(_kTokenKey)) {
+        await prefs.remove(_kTokenKey);
+      }
+      return secure;
+    }
+    final legacy = prefs.getString(_kTokenKey);
+    if (legacy != null) {
+      await _secureStorage.write(key: _kTokenKey, value: legacy);
+      await prefs.remove(_kTokenKey);
+      _cachedToken = legacy;
+      return legacy;
+    }
+    return null;
   }
 
   /// Persist the backend-issued (user_id, token) pair. Call this after every
   /// successful bootstrap or claim — the returned user_id may differ from the
-  /// one we sent (when the backend mints fresh per A2).
+  /// one we sent (when the backend mints fresh per A2). `user_id` isn't a
+  /// credential, so it stays on SharedPreferences; the token goes to secure
+  /// storage only (CR125).
   static Future<void> setIdAndToken(String userId, String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kIdKey, userId);
-    await prefs.setString(_kTokenKey, token);
+    await _secureStorage.write(key: _kTokenKey, value: token);
+    // Defensive sweep: strip a lingering plaintext copy in case a
+    // first-launch migration was interrupted between its own write+remove.
+    if (prefs.containsKey(_kTokenKey)) {
+      await prefs.remove(_kTokenKey);
+    }
     _cachedId = userId;
     _cachedToken = token;
   }
@@ -143,8 +208,21 @@ class DeviceUser {
   static Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kIdKey);
-    await prefs.remove(_kTokenKey);
+    await prefs.remove(_kTokenKey); // sweep a stray legacy plaintext copy
+    await _secureStorage.delete(key: _kTokenKey);
     _cachedId = null;
+    _cachedToken = null;
+  }
+
+  /// CR125 — wipe only the dead credential, keeping `device_user_id`. Used
+  /// by the [ApiClient.onUnauthorized] recovery path (an expired or revoked
+  /// token), as opposed to [clear], which an explicit user-initiated
+  /// sign-out uses to also drop the device id so the next bootstrap can't
+  /// be mistaken for the signed-out identity.
+  static Future<void> clearTokenOnly() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kTokenKey); // sweep a stray legacy plaintext copy
+    await _secureStorage.delete(key: _kTokenKey);
     _cachedToken = null;
   }
 
@@ -170,6 +248,18 @@ class DeviceUser {
   static Future<void> clearOnboardingSessionId() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kOnboardingSessionIdKey);
+    _cachedOnboardingSessionId = null;
+  }
+
+  /// CR125 — drop the in-memory caches between test cases, so a fake
+  /// SharedPreferences/secure-storage backend swapped in by one test can't
+  /// leak a cached value into the next. Production code never calls this;
+  /// the real app process only ever cold-starts once.
+  @visibleForTesting
+  static void resetCacheForTest() {
+    _cachedId = null;
+    _cachedToken = null;
+    _cachedInstallId = null;
     _cachedOnboardingSessionId = null;
   }
 }

@@ -11,6 +11,8 @@ shape (single user_id path param, both GET and PATCH).
 
 from __future__ import annotations
 
+import hmac as _hmac
+from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 import pytest
@@ -18,6 +20,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.api.mandate import router as mandate_router
+from app.core.config import settings
 from app.services.auth_service import AuthService, _scaffold_token, parse_scaffold_token
 
 
@@ -45,15 +48,58 @@ def _make_user() -> tuple[UUID, str]:
 
 def test_parse_scaffold_token_round_trip():
     user_id = uuid4()
-    token = _scaffold_token(user_id)
+    token = _scaffold_token(user_id, token_version=1)
     parsed = parse_scaffold_token(token)
-    assert parsed == user_id
+    assert parsed is not None
+    assert parsed.user_id == user_id
+    assert parsed.token_version == 1
 
 
 def test_parse_scaffold_token_rejects_forged_hmac():
+    """A well-formed CR125 token (4 parts) with a tampered signature."""
     user_id = uuid4()
-    forged = f"scaffold:{user_id.hex}:" + ("0" * 64)
+    exp = int(datetime.now(timezone.utc).timestamp()) + 86400
+    forged = f"scaffold:{user_id.hex}:{exp}:1:" + ("0" * 64)
     assert parse_scaffold_token(forged) is None
+
+
+def test_parse_scaffold_token_rejects_tampered_exp():
+    """Rewriting `exp` upward without re-signing must fail — the HMAC covers
+    exp, not just the user_id hex."""
+    user_id = uuid4()
+    token = _scaffold_token(user_id, token_version=1)
+    hex_id, exp, ver, sig = token.removeprefix("scaffold:").split(":")
+    tampered = f"scaffold:{hex_id}:{int(exp) + 999999}:{ver}:{sig}"
+    assert parse_scaffold_token(tampered) is None
+
+
+def test_parse_scaffold_token_rejects_tampered_version():
+    """Rewriting `ver` without re-signing must fail — a stolen token can't be
+    replayed against a bumped token_version by just editing the field."""
+    user_id = uuid4()
+    token = _scaffold_token(user_id, token_version=1)
+    hex_id, exp, ver, sig = token.removeprefix("scaffold:").split(":")
+    tampered = f"scaffold:{hex_id}:{exp}:{int(ver) + 1}:{sig}"
+    assert parse_scaffold_token(tampered) is None
+
+
+def test_parse_scaffold_token_rejects_expired():
+    user_id = uuid4()
+    token = _scaffold_token(user_id, token_version=1, ttl_days=-1)
+    assert parse_scaffold_token(token) is None
+
+
+def test_parse_scaffold_token_rejects_old_3part_signed_format():
+    """CR040 degrade-loudly: the pre-CR125 signed format (no exp/version)
+    is rejected outright, not silently accepted. A stale token 401s."""
+    user_id = uuid4()
+    sig = _hmac.new(
+        settings.secret_key.encode("utf-8"),
+        user_id.hex.encode("utf-8"),
+        "sha256",
+    ).hexdigest()
+    old_format = f"scaffold:{user_id.hex}:{sig}"
+    assert parse_scaffold_token(old_format) is None
 
 
 def test_parse_scaffold_token_rejects_malformed():
@@ -67,10 +113,14 @@ def test_parse_scaffold_token_accepts_legacy_in_dev():
     """During the migration window dev env accepts the old `scaffold:<hex>` form.
 
     Tests run with env=local by default (Settings default), so legacy works.
+    No version field exists in this format — token_version comes back None.
     """
     user_id = uuid4()
     legacy = f"scaffold:{user_id.hex}"
-    assert parse_scaffold_token(legacy) == user_id
+    parsed = parse_scaffold_token(legacy)
+    assert parsed is not None
+    assert parsed.user_id == user_id
+    assert parsed.token_version is None
 
 
 # ── route guard: 401 paths ───────────────────────────────────────────────
@@ -105,7 +155,7 @@ def test_forged_hmac_returns_401(client: TestClient):
 def test_token_for_nonexistent_user_returns_401(client: TestClient):
     """Valid HMAC but no user row in DB."""
     ghost_id = uuid4()
-    token = _scaffold_token(ghost_id)
+    token = _scaffold_token(ghost_id, token_version=1)
     r = client.get(
         f"/v1/mandate/{ghost_id}",
         headers={"Authorization": f"Bearer {token}"},

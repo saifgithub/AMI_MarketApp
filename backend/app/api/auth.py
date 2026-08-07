@@ -9,18 +9,20 @@ Endpoint map:
   POST /v1/auth/google                Claim via Google Sign-In identity token (Android; D-057)
   GET  /v1/auth/me                    Read the current user (by token)
 
-The token format in scaffold mode is `scaffold:<user_id_hex>:<hmac_sig>`
-(post AT:R25 Phase 1.5). We accept it via the `Authorization: Bearer <token>`
-header or as `?token=...` for mobile WebView callbacks. The legacy
+The token format in scaffold mode is `scaffold:<user_id_hex>:<exp>:<ver>:<hmac_sig>`
+(CR125 — expirable + per-user revocable via `token_version`). Accepted only
+via the `Authorization: Bearer <token>` header (DEF181 dropped the `?token=`
+query-param variant — it leaked into proxy/CDN/audit logs). The legacy
 unsigned format `scaffold:<hex>` is still accepted when `env=local` for
-offline developer convenience, and rejected everywhere else.
+offline developer convenience; the pre-CR125 3-part signed format
+(`scaffold:<hex>:<sig>`, no exp/version) is rejected everywhere.
 """
 
 from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from starlette.concurrency import run_in_threadpool
 
@@ -40,9 +42,9 @@ from app.schemas.auth import (
     MergePreview,
     MergeResult,
 )
-from app.api.dependencies import get_current_user
+from app.api.dependencies import get_current_user, get_current_user_optional
 from app.schemas import Mandate
-from app.services.auth_service import AuthService, _is_dev_env, get_auth_service, parse_scaffold_token
+from app.services.auth_service import AuthService, _is_dev_env, get_auth_service
 from app.services.concierge_engine import session_to_mandate_dict
 from app.services.mandate_store import get_mandate_store
 from app.services.merge_service import MergeError, MergeService, get_merge_service
@@ -92,12 +94,6 @@ async def _bind_onboarding_session(session_id: UUID | None, user_id: UUID) -> No
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
 
 
-def _user_id_from_token(token: str | None) -> UUID | None:
-    if not token:
-        return None
-    return parse_scaffold_token(token)
-
-
 @router.post(
     "/anon",
     response_model=AnonSessionResponse,
@@ -105,15 +101,17 @@ def _user_id_from_token(token: str | None) -> UUID | None:
 )
 def anon_session(
     req: AnonSessionRequest,
-    authorization: str | None = Header(default=None),
+    current_user: User | None = Depends(get_current_user_optional),
     auth: AuthService = Depends(get_auth_service),
 ) -> AnonSessionResponse:
     # Adversarial audit (2026-05-18) finding A2: only honour an existing
     # device_user_id when the caller has proved possession by sending the
     # matching signed token. Otherwise treat the call as a fresh install.
-    bearer_user_id: UUID | None = None
-    if authorization and authorization.lower().startswith("bearer "):
-        bearer_user_id = _user_id_from_token(authorization.split(" ", 1)[1])
+    # CR125: `get_current_user_optional` also enforces `exp` + `token_version`
+    # — a signed-out (revoked) bearer no longer proves possession here either,
+    # which matters because this endpoint would otherwise happily re-mint a
+    # fresh valid token for that same user_id, silently undoing the sign-out.
+    bearer_user_id: UUID | None = current_user.id if current_user is not None else None
     user, token, is_new = auth.ensure_anonymous(
         device_user_id=req.device_user_id,
         authenticated_user_id=bearer_user_id,
@@ -354,41 +352,40 @@ def merge_execute(
 def sign_out(
     current_user: User = Depends(get_current_user),
 ) -> dict[str, bool]:
-    # Scaffold tokens are stateless HMAC — there is no server-side session
-    # to invalidate. The client clears its token + re-bootstraps an anon
-    # session. This endpoint exists as a clean HTTP contract for a future
-    # token blocklist (Phase 5+).
+    # CR125: real revocation. Bumping token_version means every outstanding
+    # scaffold token issued for this user — including the one the caller
+    # just authenticated with — fails `get_current_user`'s version check on
+    # its very next use. The client still clears its local copy and
+    # re-bootstraps an anon session, but that's now belt-and-braces: even a
+    # token that escaped the device (e.g. read out of a backup, pre-CR125)
+    # is dead server-side the moment sign-out is called.
+    with get_session() as s:
+        row = s.execute(select(User).where(User.id == current_user.id)).scalar_one()
+        row.token_version += 1
     return {"signed_out": True}
 
 
 @router.get("/me", response_model=AuthUser)
 def whoami(
-    authorization: str | None = Header(default=None),
+    current_user: User = Depends(get_current_user),
 ) -> AuthUser:
     # DEF181 (security review H4): the `?token=` query-param variant is
     # dropped — a bearer in the URL gets logged verbatim by proxies, CDN
     # access logs, and (pre-fix) this app's own http_audit query-string
-    # capture, and stateless HMAC tokens have no exp/revocation, so a
-    # single log read yields permanent access. The Flutter client has
-    # always used the header; grep confirms no caller anywhere uses the
-    # query form.
-    raw = None
-    if authorization and authorization.lower().startswith("bearer "):
-        raw = authorization.split(" ", 1)[1]
-    user_id = _user_id_from_token(raw)
-    if user_id is None:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "missing or invalid token")
-    with get_session() as s:
-        row = s.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
-        if row is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "user not found")
-        return AuthUser(
-            id=row.id,
-            email=row.email,
-            apple_id=row.apple_id,
-            google_id=row.google_id,
-            display_name=row.display_name,
-            is_anonymous=row.is_anonymous,
-            claimed_at=row.claimed_at,
-            created_at=row.created_at,
-        )
+    # capture, and a leaked token had no exp/revocation, so a single log
+    # read yielded permanent access. The Flutter client has always used the
+    # header; grep confirms no caller anywhere uses the query form.
+    # CR125: routed through `get_current_user` (was a bespoke parse here) so
+    # `/me` gets the same exp + token_version enforcement as every other
+    # guarded route — a signed-out token now 401s here too, not just
+    # elsewhere.
+    return AuthUser(
+        id=current_user.id,
+        email=current_user.email,
+        apple_id=current_user.apple_id,
+        google_id=current_user.google_id,
+        display_name=current_user.display_name,
+        is_anonymous=current_user.is_anonymous,
+        claimed_at=current_user.claimed_at,
+        created_at=current_user.created_at,
+    )

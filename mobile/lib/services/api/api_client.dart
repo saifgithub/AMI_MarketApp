@@ -75,6 +75,14 @@ class _AuthInterceptor extends Interceptor {
     }
     handler.next(options);
   }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    if (err.response?.statusCode == 401) {
+      _client._handleUnauthorized(err.requestOptions.path);
+    }
+    handler.next(err);
+  }
 }
 
 /// DEF073: annotate any 5xx response with a [ServerUnavailableException] on the
@@ -110,6 +118,30 @@ ServerUnavailableException? serverUnavailableFrom(Object error) {
     return error.error as ServerUnavailableException;
   }
   return null;
+}
+
+/// CR125 — the decision half of [_AuthInterceptor]'s 401-recovery guard,
+/// pulled out pure and testable the same way [upgradeRequiredExceptionFor]
+/// is. Returns true when a 401 on [path] should fire [ApiClient.onUnauthorized]:
+///   - never for the auth router itself (`/v1/auth/*`) — those flows
+///     (magic-link, Apple/Google claim, explicit sign-out) already surface
+///     their own errors and must not be short-circuited by a background
+///     recovery.
+///   - never when no bearer was attached — an anonymous/unauthenticated
+///     request can't have been "unauthorized" in the revocable-token sense.
+///   - never twice for the same [bearerToken] — the retry-loop guard: a
+///     backend that keeps 401ing even a freshly re-bootstrapped token can
+///     only trigger one recovery attempt per distinct token it rejects.
+@visibleForTesting
+bool shouldRecoverFromUnauthorized({
+  required String path,
+  required String? bearerToken,
+  required String? lastUnauthorizedToken,
+}) {
+  if (path.startsWith('/v1/auth/')) return false;
+  if (bearerToken == null) return false;
+  if (bearerToken == lastUnauthorizedToken) return false;
+  return true;
 }
 
 /// CR121 — the decision half of [_VersionGateInterceptor], pulled out as a
@@ -309,6 +341,34 @@ class ApiClient {
   final http.Client _httpClient;
   String? _bearerToken;
   String? _appVersion;
+
+  /// CR125 — fired when a guarded request 401s (expired `exp`, or a
+  /// `token_version` revoked by a sign-out on another session). Wired by
+  /// [AuthNotifier] to clear the local credential and re-bootstrap an
+  /// anonymous session, the same recovery path a manual sign-out already
+  /// takes. Left null (no-op) outside the app's Riverpod wiring, e.g. in
+  /// tests that talk to [ApiClient] directly.
+  void Function()? onUnauthorized;
+
+  /// CR125 retry-loop guard: the token that most recently triggered
+  /// [onUnauthorized]. A 401 only fires the callback once per distinct
+  /// bearer — the auth routes themselves are excluded (they own their own
+  /// error handling), and a request with no bearer attached can't be
+  /// "unauthorized" in the recoverable sense, so both are ignored.
+  String? _lastUnauthorizedToken;
+
+  void _handleUnauthorized(String path) {
+    final token = _bearerToken;
+    if (!shouldRecoverFromUnauthorized(
+      path: path,
+      bearerToken: token,
+      lastUnauthorizedToken: _lastUnauthorizedToken,
+    )) {
+      return;
+    }
+    _lastUnauthorizedToken = token;
+    onUnauthorized?.call();
+  }
 
   void setToken(String? token) {
     _bearerToken = token;

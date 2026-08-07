@@ -28,7 +28,7 @@ from app.schemas.feedback import (
     BugReportResponse,
     BugResolutionUpdate,
 )
-from app.services.auth_service import parse_scaffold_token
+from app.services.auth_service import parse_scaffold_token_user_id
 from app.services.bug_attachments import (
     AttachmentRejected,
     is_allowed_mime,
@@ -48,7 +48,7 @@ def _resolve_user_id(authorization: str | None) -> UUID | None:
     if not authorization or not authorization.startswith("Bearer "):
         return None
     token = authorization.removeprefix("Bearer ").strip()
-    return parse_scaffold_token(token)
+    return parse_scaffold_token_user_id(token)
 
 
 @router.post(
