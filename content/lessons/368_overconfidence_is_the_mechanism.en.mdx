@@ -10,7 +10,7 @@ code: "EDGE 102"
 prerequisites: ["367_why_activity_costs_you_before_costs"]
 topic: "trading_overconfidence"
 tags: ["day_trading", "overconfidence", "disposition_effect", "psychology"]
-sources: ["Barber & Odean — Boys Will Be Boys: Gender, Overconfidence, and Common Stock Investment, Quarterly Journal of Economics 116(1), 2001 (>35,000 households, Feb 1991–Jan 1997)", "Odean — Are Investors Reluctant to Realize Their Losses?, Journal of Finance 53(5), 1998 (10,000 accounts, 163,000 trades)"]
+sources: ["Barber & Odean — Boys Will Be Boys: Gender, Overconfidence, and Common Stock Investment, Quarterly Journal of Economics 116(1), 2001 (>35,000 households, Feb 1991–Jan 1997). FIGURES ARE THE PUBLISHED QJE VERSION'S: trading reduces net return by 2.65pp/yr for men vs 1.72pp/yr for women (gap 0.93pp), widening to a 1.44pp gap among singles. Do NOT use the 1.4/2.3 pair that circulates widely — those are the earlier SSRN WORKING-PAPER abstract's risk-adjusted figures and they do not appear in the published paper this lesson cites. The published paper also states raw net-return differences between men and women are NOT statistically significant, so this must never be written as 'men earn less'.", "Odean — Are Investors Reluctant to Realize Their Losses?, Journal of Finance 53(5), 1998 (10,000 accounts, 163,000 trades)"]
 agent_callouts: ["conservative_debator"]
 locale_versions: ["en", "ar", "ms"]
 retranslate: ["ar", "ms"]
@@ -24,7 +24,9 @@ updated_at: "2026-08-07"
 
 ## How this plays out in real markets
 
-Using the same discount-brokerage dataset as the turnover study, Barber and Odean partitioned over 35,000 households by gender specifically because psychology research finds men self-report higher confidence in their own ability than women do, on average, even when performance is comparable. If overconfidence drives overtrading, the more overconfident group should trade more and earn less on a risk-adjusted basis. It did: men traded 45% more than women and earned annual risk-adjusted net returns 1.4 percentage points lower. Narrow the sample to single people — removing any "one spouse handles the research" explanation — and the gap widens: single men traded 67% more than single women and earned 2.3 points less per year.
+Using the same discount-brokerage dataset as the turnover study, Barber and Odean partitioned over 35,000 households by gender specifically because psychology research finds men self-report higher confidence in their own ability than women do, on average, even when performance is comparable. If overconfidence drives overtrading, the more overconfident group should trade more and pay more for it. It did: men traded 45% more than women, and that trading cost them 2.65 percentage points of net return a year against 1.72 points for women — so men gave up **0.93 points a year more than women did, to trading itself**. Narrow the sample to single people, which removes any "one spouse handles the research" explanation, and the gap widens: single men traded 67% more than single women, and the cost gap grows to **1.44 points a year**.
+
+Two details are worth more than the headline. First, the paper is explicit that the difference in *raw* net returns between men and women was **not statistically significant** — this is not "men are worse investors." It is a finding about what trading costs, and men bought more of it. Second, the comparison is between two groups who were picking stocks about equally well; the gap is the fee for acting on conviction more often.
 
 A second, related mechanism shows up in what traders do once they're already in a position. Odean examined 10,000 accounts and 163,000 trades over six years and computed, for every month, the ratio of two numbers: the share of paper gains that got sold (realized) versus the share of paper losses that got sold. For every month except December, that ratio sat around 1.5 — a position sitting on a gain was more than 50% more likely to be sold on any given day than a position sitting on a loss. In December the pattern flips: tax-loss selling pushes more losers out the door than winners. That reversal matters, because it shows investors *can* act rationally on losers when the incentive is strong enough — the other eleven months aren't an inability to sell a loser, they're a preference not to.
 
@@ -39,15 +41,15 @@ Overconfidence doesn't feel like overconfidence from the inside — it feels lik
 ## Quiz
 
 <Quiz
-  question="In Boys Will Be Boys, what happened to the trading-frequency gap and the return gap when the sample was narrowed to single men versus single women, removing any household division-of-labour explanation?"
+  question="In Boys Will Be Boys, what happened to the trading-frequency gap and the trading-cost gap when the sample was narrowed to single men versus single women, removing any household division-of-labour explanation?"
   options={[
-    "Both gaps widened — single men traded 67% more (versus 45% for the full sample) and earned 2.3 points less per year (versus 1.4)",
+    "Both gaps widened — single men traded 67% more (versus 45% for the full sample) and trading cost them 1.44 points a year more than single women (versus 0.93 for the full sample)",
     "Both gaps disappeared — marital status explained the whole effect",
-    "The trading gap widened but the return gap disappeared",
+    "The trading gap widened but the cost gap disappeared",
     "The genders converged once household effects were removed"
   ]}
   answer={0}
-  explanation="The single-household comparison exists specifically to rule out the alternative story that one spouse trades while the other researches. Both gaps got larger, not smaller, once that explanation was removed — evidence that points at overconfidence itself rather than a division of labour within a couple."
+  explanation="The single-household comparison exists specifically to rule out the alternative story that one spouse trades while the other researches. Both gaps got larger, not smaller, once that explanation was removed — evidence that points at overconfidence itself rather than a division of labour within a couple. Note what the gap is measured on: the cost trading imposed on net return (2.65 points for men versus 1.72 for women), not raw performance — the paper found no statistically significant difference in raw net returns between men and women."
 />
 
 <Quiz
