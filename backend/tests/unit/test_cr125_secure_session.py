@@ -382,3 +382,20 @@ def test_an_expired_token_inside_the_grace_window_still_proves_ownership(
         headers={"Authorization": f"Bearer {recently_dead}"},
     )
     assert UUID(r.json()["user"]["id"]) == user_id
+
+
+def test_a_negative_grace_window_is_refused_at_boot():
+    """CR125 audit round-2 MINOR. A negative grace moves the cutoff BEFORE
+    `exp`, so a token that has not even expired stops proving ownership — the
+    setting added to stop accounts being orphaned would quietly orphan them.
+    Refused by the schema rather than discovered from support tickets."""
+    import pytest as _pytest
+    from pydantic import ValidationError
+
+    from app.core.config import Settings
+
+    with _pytest.raises(ValidationError):
+        Settings(auth_rebootstrap_grace_days=-1)
+
+    # 0 is a real choice (disable the leniency), not a mistake — it must pass.
+    assert Settings(auth_rebootstrap_grace_days=0).auth_rebootstrap_grace_days == 0

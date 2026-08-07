@@ -523,9 +523,11 @@ def _f3_standing_disclosures(context: dict) -> str:
         "window-realistic excess kurtosis of 3–6 the standard error is likely "
         "2.0–2.5pp, or 10–13% of the estimate; a crash-inclusive window (excess "
         "kurtosis near 30) raises the inflation factor to 4.0×.",
-        "Annualisation multiplies by the square root of 252 trading days, which "
-        "assumes days are independent. They are not exactly, and the same "
-        "objection applies to every annualised figure here.",
+        "Annualisation multiplies by the square root of however many periods "
+        "this book's own price grid actually fits into a year, which is 252 "
+        "only when every holding priced on every trading day. It assumes "
+        "periods are independent. They are not exactly, and the same objection "
+        "applies to every annualised figure here.",
         "All figures are gross of fees: this simulation charges no commissions, "
         "spreads, or taxes, and live trading does.",
         "Every forward-looking figure is a backcast of today's holdings against "

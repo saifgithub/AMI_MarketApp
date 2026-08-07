@@ -334,10 +334,23 @@ def test_f3_carries_the_mandated_standing_disclosures() -> None:
     for required in (
         "RiskMetrics", "§5.3.2", "No shrinkage is applied", "Ledoit & Wolf",
         "Markowitz (1952)", "Choueifaty & Coignard (2008)", "CAPM",
-        "excess kurtosis", "square root of 252", "gross of fees",
-        NON_STATIONARITY_CAVEAT, "M11 and M12",
+        "excess kurtosis", "Annualisation multiplies by the square root of",
+        "gross of fees", NON_STATIONARITY_CAVEAT, "M11 and M12",
     ):
         assert required in f3, required
+    # CR139: this used to pin the literal "square root of 252". That was a
+    # name guard on a constant, not a guard on the disclosure — and when
+    # CR139 made annualisation follow the book's own grid, the guard failed
+    # for the right reason and would have been "fixed" by deleting it.
+    # What F3 actually owes the reader is that annualisation is disclosed AND
+    # that the disclosure describes the method the code runs, so the claim
+    # must no longer assert a fixed 252.
+    assert "square root of 252 trading days" not in f3, (
+        "F3 still tells the reader annualisation multiplies by root-252. "
+        "Since CR139 it multiplies by the book's own realised grid rate, "
+        "which is 252 only when every holding priced every trading day — so "
+        "this disclosure now describes a method the code does not run."
+    )
 
 
 def test_an_unknown_metric_id_raises_rather_than_being_skipped() -> None:

@@ -457,7 +457,11 @@ class Settings(BaseSettings):
     # own. 180 days is generous for a returning user and finite for a thief.
     # 0 disables the leniency entirely, which re-opens the day-31 orphaning,
     # so it is a deliberate choice and not a safe default.
-    auth_rebootstrap_grace_days: int = 180
+    # `ge=0` because a negative value moves the cutoff BEFORE `exp` and starts
+    # refusing ownership proof from tokens that have not even expired yet —
+    # silently re-orphaning accounts via the very setting added to stop that.
+    # Refusing at boot beats discovering it from support tickets (DEF038/063).
+    auth_rebootstrap_grace_days: int = Field(default=180, ge=0)
 
     # CR125 audit BLOCKER — the last date on which a PRE-CR125 token may prove
     # ownership on `/v1/auth/anon`. Every installed token is in the old format
