@@ -14,7 +14,38 @@ To clear a hold: delete its block, and record in the trail *why* the preconditio
 
 ## ACTIVE HOLDS
 
-*(none — promotion is unblocked)*
+### CR124-HARDENING — compose now REQUIRES credentials the host has never been given
+
+**Raised:** 2026-08-07 (AT:R66) · **Blocks:** every Alpha promotion carrying `docker-compose.yml` at or after the CR124 commit
+
+**What breaks, precisely.** CR124 replaces the hardcoded `postgres`/`postgres` and unauthenticated
+Redis with `${POSTGRES_PASSWORD:?…}`, `${REDIS_PASSWORD:?…}` and `${WEBSITE_DB_PASSWORD:?…}`. Compose
+evaluates `:?` at *parse* time, so on a host whose `.env` lacks those keys **every compose command
+fails, including `docker compose up -d`**. A promotion that rsyncs this file and recreates the stack
+does not degrade — it takes Alpha down and cannot bring it back up until the keys exist.
+
+**Second, independent failure even once the keys exist.** `POSTGRES_PASSWORD` is read by Postgres
+**only at first initdb**. melehost's `postgres_data` volume already exists, so the `postgres` role
+keeps its current password no matter what the env says. Setting the variable without the matching
+`ALTER USER … WITH PASSWORD` leaves the API authenticating with a password the database does not
+have. Same shape for `ami_website`, whose role does not exist on that volume at all
+(`infra/local/postgres-init/01_website_role.sql` runs on a *fresh* volume only), and for the
+`bug_attachments` named volume, which is root-owned and becomes unwritable the moment the API runs as
+the non-root `ami` user.
+
+**This hold is not "wait for a build to ship" — it is "run the runbook".** The precondition is
+[`infra/CR124_HARDENING_RUNBOOK.md`](CR124_HARDENING_RUNBOOK.md) executed on melehost, in order, in
+one window. It is written to be run by hand because every step needs a live database.
+
+**To clear:** record here, measured rather than assumed — (1) `ssh melehost 'ss -ltn'` showing
+5434/6379/8001 on `127.0.0.1` only; (2) a psycopg2 connect from the Mac as `postgres`/`postgres`
+**failing**; (3) `/v1/health` through the tunnel returning 200 after the recreate; (4) `whoami` in
+both app containers returning non-root; (5) a POST to `/v1/feedback/bug` with an attachment
+succeeding, which is the one thing the non-root switch can silently break.
+
+**Blocked on, today:** SSH to melehost is down — `~/.ssh/id_ed25519` is passphrase-protected and the
+Keychain stopped supplying it (DEF224). Saiful runs `ssh-add --apple-use-keychain ~/.ssh/id_ed25519`;
+until then no step of the runbook can execute and this hold cannot be cleared by anyone.
 
 ---
 

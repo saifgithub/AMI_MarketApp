@@ -9,8 +9,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install uv for fast dependency management
 RUN pip install --no-cache-dir uv
 
-COPY pyproject.toml ./
-RUN uv pip install --system -e ".[dev]"
+# CR124/M14: install from the LOCKFILE, not from the version ranges. `uv pip
+# install -e ".[dev]"` re-resolved on every rebuild, so two builds of the same
+# commit could ship different package versions — and it pulled the dev group
+# (pytest, ruff, mypy) into a production image. `--locked` fails the build if
+# uv.lock has drifted from pyproject.toml rather than silently re-resolving.
+# `alembic` is a MAIN dependency, so `/promote-to-alpha` step 5's
+# `alembic upgrade head` still works without the dev group; pytest runs on the
+# Mac (promotion step 1), never in this image.
+# `--no-install-project` because `app/` is copied below (and bind-mounted over
+# at runtime anyway) — without it the setuptools backend would try to build the
+# project before its source exists. PYTHONPATH=/app is what makes `app.main`
+# importable, not a site-packages install.
+COPY pyproject.toml uv.lock ./
+RUN uv sync --locked --no-dev --no-install-project
+ENV PATH="/app/.venv/bin:$PATH"
 
 COPY app ./app
 COPY tests ./tests
@@ -25,6 +38,20 @@ COPY alembic ./alembic
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8000
+
+# CR124/N7: ran as root. Fixed uid/gid so the bug_attachments volume can be
+# chown'd to a stable owner.
+#
+# BEWARE: the named volume already exists on melehost and is root-owned, so the
+# chown below only fixes a FRESH volume. An existing one needs
+# `docker run --rm -v ami-trade-local_bug_attachments:/d alpine chown -R 1001:1001 /d`
+# before this image can accept an upload — runbook step 6. Without it POST
+# /v1/feedback/bug fails on write, which is the alpha feedback channel.
+RUN groupadd --system --gid 1001 ami \
+    && useradd --system --uid 1001 --gid ami --no-create-home ami \
+    && mkdir -p /data/bug_attachments \
+    && chown -R ami:ami /data /app
+USER ami
 
 EXPOSE 8000
 

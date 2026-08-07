@@ -19,16 +19,31 @@ name: ami-trade-local
 
 services:
   postgres:
-    image: postgres:15-alpine
+    # CR124/M14: pinned by digest, not by floating tag. `15-alpine` moves; a
+    # rebuild that silently resolves a different image is the supply-chain
+    # surface this closes. Refresh deliberately (see infra/README digest note).
+    image: postgres:15-alpine@sha256:3d0f7584ed7d04e27fa050d6683a74746608faf21f202be78460d679cc56461f
     container_name: ami_postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      # CR124/C3: `postgres`/`postgres` was reachable from any LAN device and
+      # read all 30 tables. `:?` refuses to start rather than silently
+      # re-defaulting to the known password — the DEF185 pattern, CR040 loud.
+      #
+      # BEWARE: Postgres only reads this at FIRST init. On an existing
+      # `postgres_data` volume the role keeps its OLD password, so changing
+      # this alone makes the API unable to connect. The live rotation is an
+      # `ALTER USER` in the same window as the recreate — see
+      # infra/CR124_HARDENING_RUNBOOK.md, which is the only supported path.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set — refusing to boot the default 'postgres' (CR124/C3); see infra/CR124_HARDENING_RUNBOOK.md}
       POSTGRES_DB: ami_trade
     ports:
       # Host port 5434 to avoid clashing with other Postgres instances on the
       # dev machine (5432, 5433 are commonly taken). Container port stays 5432.
-      - "5434:5432"
+      # CR124/C3: bound to loopback. Docker publishes on 0.0.0.0 by default AND
+      # bypasses ufw, so the previous "5434:5432" was reachable from the whole
+      # LAN regardless of the host firewall.
+      - "127.0.0.1:5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/local/postgres-init:/docker-entrypoint-initdb.d:ro
@@ -37,13 +52,24 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    # CR124/M13: containers were unbounded against the host's 14.86 GiB.
+    mem_limit: 2g
+    networks: [ami_internal]
     restart: unless-stopped
 
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine@sha256:e7723ff73d963f5cc6d9c4643ea3d989527a402a319239054e9472a7fb9219a2
     container_name: ami_redis
+    # CR124/C3: Redis answered PING with no auth from any LAN device. The
+    # loopback bind below is the primary fix; requirepass is the second layer,
+    # so a future port-publish mistake is not instantly fatal.
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD must be set (CR124/C3); see infra/CR124_HARDENING_RUNBOOK.md}"]
+    environment:
+      # redis-cli reads REDISCLI_AUTH, so the healthcheck authenticates without
+      # putting the password in the process args (`-a` also warns on stderr).
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -51,6 +77,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    mem_limit: 512m
+    networks: [ami_internal]
     restart: unless-stopped
 
   # Service name matches the public hostname (api-alpha) so the
@@ -97,8 +125,11 @@ services:
       # still re-targets deliveries. Set in infra/alpha.env once RC exists.
       REVENUECAT_SECRET_API_KEY: ${REVENUECAT_SECRET_API_KEY:-}
       # Container-to-container connection still uses 5432 (internal port).
-      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/ami_trade
-      REDIS_URL: redis://redis:6379/0
+      # CR124/C3: credentials now come from the environment. Both use the same
+      # `:?` refusal as the datastore services, so a half-configured host fails
+      # at compose time rather than booting an API that cannot reach its DB.
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set (CR124/C3)}@postgres:5432/ami_trade
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set (CR124/C3)}@redis:6379/0
       # On-prem vLLM (Gemma 4 on the LAN). Empty defaults so the
       # container falls back to mock when not configured. On melehost,
       # set VLLM_BASE_URL=http://192.168.20.74:8000 in .env so the
@@ -275,6 +306,16 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM: ${SMTP_FROM:-}
     ports:
+      # CR124 deliberately leaves this on 0.0.0.0 while 5434/6379/8001 move to
+      # loopback. The Cloudflare Tunnel's ingress target lives in the CF
+      # dashboard, not in this repo: if it still points at
+      # `http://host.docker.internal:8000` (see the cloudflared block's own
+      # comment) then host-gateway — NOT 127.0.0.1 — is the address it dials,
+      # and a loopback bind here takes Alpha down. Unlike the datastores this
+      # port fronts an authenticated API that is already internet-reachable
+      # through the tunnel, so the exposure delta is small. Flip it to
+      # "127.0.0.1:8000:8000" only after confirming the dashboard ingress reads
+      # `http://api-alpha:8000`; CR124's acceptance list covers 5434/6379/8001.
       - "8000:8000"
     volumes:
       - ./backend/app:/app/app:ro
@@ -303,6 +344,10 @@ services:
       timeout: 3s
       retries: 3
       start_period: 10s
+    # CR124/M13 + DEF184: bounds the request-body buffering DoS. yfinance pulls
+    # pandas/numpy in, so this sits well above the datastores.
+    mem_limit: 4g
+    networks: [ami_internal]
     restart: unless-stopped
 
   # Cloudflare Tunnel (A7) — token-mode connector. Ingress rules,
@@ -312,7 +357,10 @@ services:
   # `.env.example` (committed). See infra/cloudflared/README.md for the
   # systemd path used on the prod host.
   cloudflared:
-    image: cloudflare/cloudflared:latest
+    # CR124/M14: digest-pinned like the rest of the stack. `latest` on a tunnel
+    # connector is the one pin worth refreshing on a schedule — bump it
+    # deliberately when updating, don't drop back to the floating tag.
+    image: cloudflare/cloudflared:latest@sha256:e39ee8da81ad5e05d77f38d2f51c60ca51bf2a8450ac3abab50c17fdb91d91bf
     container_name: ami_tunnel
     command: tunnel --no-autoupdate run
     environment:
@@ -343,6 +391,8 @@ services:
     depends_on:
       api-alpha:
         condition: service_healthy
+    mem_limit: 256m
+    networks: [ami_internal]
     restart: unless-stopped
     profiles:
       # Enable with: docker compose --profile tunnel up -d
@@ -356,7 +406,14 @@ services:
     restart: unless-stopped
     environment:
       ENV: prod
-      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/ami_website
+      # CR124/M8: was the Postgres SUPERUSER, so any RCE in the public
+      # marketing API was a direct pivot into the app database (users,
+      # magic-link challenges, mandates). Now a dedicated role that owns only
+      # `ami_website`. The role is created by
+      # infra/local/postgres-init/01_website_role.sql on a FRESH volume; on the
+      # existing melehost volume it must be created by hand — see
+      # infra/CR124_HARDENING_RUNBOOK.md step 3.
+      DATABASE_URL: postgresql+psycopg2://ami_website:${WEBSITE_DB_PASSWORD:?WEBSITE_DB_PASSWORD must be set (CR124/M8)}@postgres:5432/ami_website
       CORS_ORIGINS: https://www.agenticmarketintel.ai,https://agenticmarketintel.ai
       # On-prem model for the website Concierge (reuses the same LAN server as api-alpha).
       VLLM_BASE_URL: ${VLLM_BASE_URL:-}
@@ -370,10 +427,26 @@ services:
       # Cloudflare Turnstile secret — unset → bot-check bypassed (see turnstile.py).
       TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
     ports:
-      - "8001:8000"
+      # CR124/C3: loopback only. Cloudflare reaches the marketing API through
+      # its own tunnel/proxy, never via a LAN-published port.
+      - "127.0.0.1:8001:8000"
     depends_on:
       postgres:
         condition: service_healthy
+    mem_limit: 1g
+    networks: [ami_internal]
+
+# CR124/N6: the AMI stack gets its OWN network. It previously sat on the
+# project default (`ami-trade-local_default`), which melehost's separate `n8n`
+# container had joined — giving an RCE-prone automation tool a direct route to
+# the superuser database, the unauthenticated Redis and the internal API.
+# Declaring the network here evicts it from our side; if n8n's own compose file
+# names this network explicitly it must also be edited on melehost (runbook
+# step 5).
+networks:
+  ami_internal:
+    name: ami_internal
+    driver: bridge
 
 volumes:
   postgres_data:
