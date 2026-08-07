@@ -12,6 +12,7 @@ import os
 import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
@@ -36,6 +37,11 @@ from app.services.health_gate import (
 from app.services.journal_store import get_journal_store
 from app.services.rate_limit import portfolio_health_finding_rate_limit
 from app.services.sim_engine import SimEngine, get_sim_engine
+
+# DEF225 — the two AST guards below read source files. Anchor them to this
+# file's location so they resolve regardless of the directory pytest is invoked
+# from. tests/unit/<this file> → parents[2] is `backend/`.
+_BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
 
 @dataclass
@@ -215,9 +221,13 @@ def test_the_tiles_route_never_calls_enforce_gate() -> None:
     """Structural, not behavioural: the free surface must be incapable of
     gating, not merely observed not to."""
     import ast
-    from pathlib import Path
 
-    tree = ast.parse(Path("app/api/portfolio.py").read_text())
+    # DEF225: anchored to this file, not to the cwd. A bare
+    # Path("app/api/portfolio.py") only resolved when pytest ran from
+    # `backend/`, so the command CLAUDE.md documents — `pytest
+    # backend/tests/unit/ -q` from the repo root — turned this guard into a
+    # FileNotFoundError instead of a pass.
+    tree = ast.parse((_BACKEND_ROOT / "app" / "api" / "portfolio.py").read_text())
     fn = next(
         n for n in ast.walk(tree)
         if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
@@ -1090,9 +1100,10 @@ def test_the_gate_module_never_imports_the_journal_enum() -> None:
     """M07 reads rows by the string constant so it carries no build-order
     dependency on M08's enum member."""
     import ast
-    from pathlib import Path
 
-    tree = ast.parse(Path("app/services/health_gate.py").read_text())
+    # DEF225: cwd-anchored path, see the note in
+    # test_the_tiles_route_never_calls_enforce_gate.
+    tree = ast.parse((_BACKEND_ROOT / "app" / "services" / "health_gate.py").read_text())
     imported = {
         alias.name
         for node in ast.walk(tree)

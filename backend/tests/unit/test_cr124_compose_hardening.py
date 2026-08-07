@@ -159,9 +159,9 @@ def test_the_stack_declares_its_own_network(compose: dict) -> None:
 
 @pytest.mark.parametrize(
     "dockerfile",
-    [Path("backend/Dockerfile"), Path("website_api/Dockerfile")],
+    ["backend/Dockerfile", "website_api/Dockerfile"],
 )
-def test_app_images_drop_root(dockerfile: Path) -> None:
+def test_app_images_drop_root(dockerfile: str) -> None:
     """N7 — both application containers ran as root.
 
     Asserts a USER directive exists and is not root, rather than asserting the
