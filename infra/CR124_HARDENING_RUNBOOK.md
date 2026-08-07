@@ -99,6 +99,23 @@ GRANT CONNECT ON DATABASE ami_website TO ami_website;
 SQL'
 ```
 
+> **Corrected (2026-08-07): verify a credential change OVER THE NETWORK, never via `docker exec`.**
+> The first attempt used shell-nested quote escaping and set the password to something other than the
+> intended value. `ALTER ROLE` reported success and a `docker exec … psql` check appeared to pass —
+> but that check is worthless: `docker exec` reaches Postgres over a local socket where `pg_hba`
+> trusts without a password, so `PGPASSWORD` is never exercised. **Only a TCP probe from another
+> machine tests the password at all.** Prefer piping SQL via stdin with psql's `:'var'` binding —
+> `-c` does not interpolate psql variables:
+>
+> ```bash
+> PGPW=$(grep '^POSTGRES_PASSWORD=' infra/alpha.env | cut -d= -f2-)
+> printf "ALTER USER postgres WITH PASSWORD :'pw';\n" \
+>   | ssh melehost "docker exec -i ami_postgres psql -v ON_ERROR_STOP=1 -U postgres -d ami_trade -v pw=\"$PGPW\""
+> ```
+>
+> Then prove it from the Mac with `psycopg2.connect(host=192.168.20.59, port=5434, ...)` — the old
+> password must fail AND the new one must succeed, both over TCP.
+
 Verify before going further — the new password must work and the website role must be locked out of
 the app DB:
 
@@ -116,10 +133,36 @@ ssh melehost 'cd ~/ami_trade && set -a && . ./.env && set +a && \
 Clear the hold in `infra/PROMOTION_HOLD.md` only *after* the acceptance checks below pass; for this
 first apply, copy the file directly rather than running the held promotion:
 
+> **Corrected after the first real execution (2026-08-07).** Two things below were wrong the first
+> time and both failed *silently* — the stack came up healthy while the hardening was absent.
+
+**Ship the Dockerfiles too, not just compose.** CR124 changes `backend/Dockerfile` and
+`website_api/Dockerfile`, and those live in melehost's **build context**. Shipping only
+`docker-compose.yml` produced containers that still ran as **root** with `HOME=/root` and the dev
+dependency group installed — `docker compose ps` said healthy and nothing complained. `uv.lock` must
+go too or `uv sync --locked` fails the build.
+
 ```bash
-scp docker-compose.yml melehost:~/ami_trade/docker-compose.yml
+scp docker-compose.yml   melehost:~/ami_trade/docker-compose.yml
+scp backend/Dockerfile   melehost:~/ami_trade/backend/Dockerfile
+scp backend/uv.lock      melehost:~/ami_trade/backend/uv.lock
+scp website_api/Dockerfile melehost:~/ami_trade/website_api/Dockerfile
+# uv sync --locked fails if the lock has drifted from pyproject — confirm they match first
+ssh melehost 'cd ~/ami_trade/backend && sha256sum pyproject.toml uv.lock'
 ssh melehost 'cd ~/ami_trade && docker compose config >/dev/null && echo "compose parses"'
-ssh melehost 'cd ~/ami_trade && docker compose up -d --build'
+```
+
+**Use `--profile tunnel` on the recreate.** `cloudflared` is profile-gated, so a bare
+`docker compose up -d` **skips it** — every other service moves to the new `ami_internal` network and
+the tunnel is left behind on the old one. That is a **502 on Alpha** until it is reattached, and it is
+the single most likely way this runbook takes the site down.
+
+```bash
+ssh melehost 'cd ~/ami_trade && docker compose --profile tunnel up -d --build'
+ssh melehost "docker inspect ami_tunnel --format '{{range \$k,\$v := .NetworkSettings.Networks}}{{\$k}} {{end}}'"
+# must print ami_internal. If you already broke it, `docker network connect ami_internal ami_tunnel`
+# restores service immediately — but recreate under the profile afterwards so compose owns it,
+# or the manual attach vanishes on the next recreate.
 ```
 
 `docker compose config` is the cheap check that step 2 was done: if any of the three keys is missing

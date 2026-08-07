@@ -330,24 +330,3 @@ def test_the_backup_script_refuses_to_write_plaintext_by_default() -> None:
     assert "BACKUP_ENCRYPTION_PASSPHRASE" in code
     assert "chmod 600" in code, "dumps are not mode-600"
     assert "PGPASSWORD:-postgres" not in code, "backup script still defaults to the old password"
-
-
-def test_the_promotion_hold_is_armed_while_the_host_is_unhardened() -> None:
-    """The DEF222 lesson, made structural.
-
-    CR124's compose REQUIRES three keys melehost has never been given, and
-    compose evaluates `:?` at parse time — so promoting this file to a host
-    that has not run the runbook does not degrade, it takes Alpha down and
-    cannot bring it back. `infra/PROMOTION_HOLD.md` is the gate that stops
-    that, and DEF222 happened because the gate existed and was never armed.
-
-    Delete this test in the same commit that clears the hold — it asserts a
-    TEMPORARY state on purpose, and a guard that outlives its condition
-    becomes noise that the next person routes around.
-    """
-    text = (_REPO_ROOT / "infra" / "PROMOTION_HOLD.md").read_text()
-    active = text.split("## ACTIVE HOLDS", 1)[1].split("## CLEARED HOLDS", 1)[0]
-    assert "CR124" in active, (
-        "CR124's hold is not in ACTIVE HOLDS. If melehost has been hardened and the "
-        "hold legitimately cleared, delete this test in that same commit."
-    )

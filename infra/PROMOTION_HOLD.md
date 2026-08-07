@@ -14,42 +14,54 @@ To clear a hold: delete its block, and record in the trail *why* the preconditio
 
 ## ACTIVE HOLDS
 
-### CR124-HARDENING — compose now REQUIRES credentials the host has never been given
-
-**Raised:** 2026-08-07 (AT:R66) · **Blocks:** every Alpha promotion carrying `docker-compose.yml` at or after the CR124 commit
-
-**What breaks, precisely.** CR124 replaces the hardcoded `postgres`/`postgres` and unauthenticated
-Redis with `${POSTGRES_PASSWORD:?…}`, `${REDIS_PASSWORD:?…}` and `${WEBSITE_DB_PASSWORD:?…}`. Compose
-evaluates `:?` at *parse* time, so on a host whose `.env` lacks those keys **every compose command
-fails, including `docker compose up -d`**. A promotion that rsyncs this file and recreates the stack
-does not degrade — it takes Alpha down and cannot bring it back up until the keys exist.
-
-**Second, independent failure even once the keys exist.** `POSTGRES_PASSWORD` is read by Postgres
-**only at first initdb**. melehost's `postgres_data` volume already exists, so the `postgres` role
-keeps its current password no matter what the env says. Setting the variable without the matching
-`ALTER USER … WITH PASSWORD` leaves the API authenticating with a password the database does not
-have. Same shape for `ami_website`, whose role does not exist on that volume at all
-(`infra/local/postgres-init/01_website_role.sql` runs on a *fresh* volume only), and for the
-`bug_attachments` named volume, which is root-owned and becomes unwritable the moment the API runs as
-the non-root `ami` user.
-
-**This hold is not "wait for a build to ship" — it is "run the runbook".** The precondition is
-[`infra/CR124_HARDENING_RUNBOOK.md`](CR124_HARDENING_RUNBOOK.md) executed on melehost, in order, in
-one window. It is written to be run by hand because every step needs a live database.
-
-**To clear:** record here, measured rather than assumed — (1) `ssh melehost 'ss -ltn'` showing
-5434/6379/8001 on `127.0.0.1` only; (2) a psycopg2 connect from the Mac as `postgres`/`postgres`
-**failing**; (3) `/v1/health` through the tunnel returning 200 after the recreate; (4) `whoami` in
-both app containers returning non-root; (5) a POST to `/v1/feedback/bug` with an attachment
-succeeding, which is the one thing the non-root switch can silently break.
-
-**Blocked on, today:** SSH to melehost is down — `~/.ssh/id_ed25519` is passphrase-protected and the
-Keychain stopped supplying it (DEF224). Saiful runs `ssh-add --apple-use-keychain ~/.ssh/id_ed25519`;
-until then no step of the runbook can execute and this hold cannot be cleared by anyone.
+*(none — promotion is unblocked)*
 
 ---
 
 ## CLEARED HOLDS
+
+### CR124-HARDENING — compose required credentials the host had never been given
+
+**Raised:** 2026-08-07 (AT:R66) · **CLEARED:** 2026-08-07 (AT:R66) · **Blocked:** every Alpha promotion carrying `docker-compose.yml` at or after the CR124 commit
+
+**Why the precondition is met — measured, not assumed.** `infra/CR124_HARDENING_RUNBOOK.md` was
+executed end to end on melehost with Saiful's explicit go-ahead. All five acceptance probes, run
+after the final rebuild:
+
+1. **Loopback binds** — `ss -ltn` on melehost: `127.0.0.1:5434`, `127.0.0.1:6379`,
+   `127.0.0.1:8001`. No `0.0.0.0`, no `[::]`.
+2. **The original exploit is dead.** From the Mac (an ordinary LAN device), `psycopg2.connect(host=192.168.20.59, port=5434, user=postgres, ...)` is refused with **both** the old
+   password and the new one; a raw socket `PING` to 6379 gets `ConnectionRefusedError`. Before the
+   apply the same two probes returned **35 readable tables** and `+PONG`.
+3. **API still serves** — `/v1/health` through the tunnel returns `{"status":"ok",...}`.
+4. **Non-root** — `docker exec ami_api_alpha whoami` → `ami`; `ami_website_api` → `amiweb`.
+5. **The attachment volume still works** — uid 1001 writes to `/data/bug_attachments` (60 existing
+   files preserved), and the DEF201 janitor still reports `scanned 59, would delete 8` as non-root.
+
+Also verified: `HOME=/data` with a writable cache (the audit's MAJOR 3 yfinance fix), `import pytest`
+fails inside the image (M14's `--no-dev` really took), `ami_internal` holds only the five AMI
+containers, and the website API answers `{"ok":true}` on its new low-privilege `ami_website` role.
+
+**Two things the runbook got wrong, both found by executing it and both now fixed in it:**
+
+- **It shipped only `docker-compose.yml`.** CR124 also changed `backend/Dockerfile` and
+  `website_api/Dockerfile`, which live in melehost's *build context* — so the first rebuild produced
+  containers that still ran as **root** with `HOME=/root`. Probe 4 caught it. N7, the `HOME` fix and
+  `--no-dev` were all silently absent until the Dockerfiles and `uv.lock` were shipped too.
+- **`cloudflared` is `profiles: [tunnel]`, so `docker compose up -d` skipped it** — every other
+  service moved to the new `ami_internal` network and the tunnel was left on the old one. **Alpha
+  returned 502 for about a minute.** Recovered with `docker network connect`, then made durable by
+  recreating it under `--profile tunnel` so compose owns the attachment rather than a manual attach
+  that would vanish on the next recreate.
+
+**One in-flight defect of my own, worth recording because the first attempt looked like it worked:**
+the initial `ALTER USER` used shell-nested quote escaping and set the password to something other
+than the intended value. `ALTER ROLE` reported success and a `docker exec` check "passed" — but that
+check was worthless, because `docker exec` reaches Postgres over a local socket where `pg_hba` trusts
+without a password, so `PGPASSWORD` was never exercised. **Only the network probe from the Mac
+revealed the mismatch.** Fixed by piping SQL via stdin with psql's `:'var'` binding (which `-c` does
+not interpolate). The lesson is in the runbook now: **verify a credential change over the network,
+never through `docker exec`.**
 
 ### CR090-ROOM — charging code on `main`, disclosure not on devices
 
