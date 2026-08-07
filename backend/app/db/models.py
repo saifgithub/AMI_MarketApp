@@ -658,7 +658,18 @@ class AuthChallengeRow(Base):
 class LLMAuditRow(Base):
     """Every LLM gateway call. Full prompt + full response captured for alpha
     triage. Volume is bounded by gateway calls (~10s per active session),
-    not by HTTP requests. Retention is unbounded until tester count grows."""
+    not by HTTP requests. Retention is unbounded until tester count grows.
+
+    CR141: the four `*_tokens` columns are the terminal `usage` block the
+    gateway previously discarded (DEF125's `meta` channel now carries it —
+    see `llm_gateway.py`). All four are NULLable and no code path is allowed
+    to write 0 in place of a value the provider never reported: a provider
+    that is silent on cache fields (most of them, outside Anthropic/DeepSeek)
+    means "unmeasured", and a 0 there would misrepresent that as "measured,
+    zero hits" — the exact CR040 degrade-loudly distinction. `cache_write_tokens`
+    is Anthropic-only (the only provider we register that charges a cache
+    write fee); every other provider's rows leave it NULL, permanently.
+    """
 
     __tablename__ = "llm_audit"
 
@@ -677,6 +688,10 @@ class LLMAuditRow(Base):
     response_text: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     latency_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     error: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    input_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    output_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    cache_read_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    cache_write_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
 
 class HTTPAuditRow(Base):

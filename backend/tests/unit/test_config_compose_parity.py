@@ -40,9 +40,6 @@ _NOT_FORWARDED: dict[str, str] = {
     "supabase_url": "unused on Alpha — melehost runs its own Postgres",
     "supabase_anon_key": "unused on Alpha — melehost runs its own Postgres",
     "supabase_service_key": "unused on Alpha — melehost runs its own Postgres",
-    # Providers not wired on Alpha (vLLM serves every tier). Listed rather than
-    # dropped so a future promotion notices them.
-    "deepseek_api_key": "no DeepSeek provider registered on Alpha (CR017 research)",
     # Bound by uvicorn from the compose command/port mapping (8000:8000), not
     # read from the container's env.
     "port": "compose maps 8000:8000; uvicorn binds it via the service command",

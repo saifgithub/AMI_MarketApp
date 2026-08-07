@@ -11,11 +11,22 @@ Providers implemented:
   - AnthropicProvider → direct Anthropic API. Supports streaming.
   - OpenAICompatibleProvider → any OpenAI-chat-completions-compatible endpoint
                        (CR017). VLLMProvider is a thin subclass of this;
-                       KimiProvider instances register the same way.
+                       KimiProvider/DeepSeek/Qwen/Gemini instances register
+                       the same way (CR141 registers the latter three from
+                       settings — see LLMGateway.__init__).
 
-Coming later (W4+):
-  - GoogleProvider, OpenRouterProvider, DeepSeek/Qwen (CR017 §3 — same
-    OpenAICompatibleProvider class, just a new registration block each)
+CR141 (build half of CR017) also added:
+  - Usage capture: every provider writes prompt/completion/cache token counts
+    into the shared DEF125 `meta` dict, which `stream_chat`'s `finally` block
+    reads and threads into `record_llm_call` → `llm_audit`'s four `*_tokens`
+    columns. See `_capture_anthropic_message_start_usage` /
+    `_capture_anthropic_message_delta_usage` (Anthropic splits usage across
+    two SSE frames) and `_parse_openai_compatible_usage` (single terminal
+    frame, `stream_options.include_usage`).
+  - `provider_policy.pick_provider` — a routing layer `_pick_provider`
+    consults when a caller supplies `plan`/`agent_id`; unconsumed by any
+    live call site yet (the plan→level mapping is still an open pricing
+    decision — see `provider_policy`'s module docstring).
 
 See docs/initial_specs/08_tech/llm_routing.md for the routing strategy.
 """
@@ -32,6 +43,8 @@ import httpx
 
 from app.core.config import settings
 from app.core.logging import logger
+from app.schemas import AgentId
+from app.schemas.mandate import Plan
 
 
 ModelTier = Literal["cheap", "mid", "premium"]
@@ -223,6 +236,52 @@ class MockProvider(LLMProvider):
 
 
 # ── Anthropic provider ───────────────────────────────────────────────────
+#
+# CR141 usage capture: Anthropic splits token counts across TWO SSE frames —
+# `message_start` carries input tokens + both cache fields once per stream;
+# `message_delta` carries a CUMULATIVE output_tokens count, updated as the
+# response grows. These two helpers merge into whatever `meta["usage"]`
+# already holds rather than overwriting it, and each swallows its own parse
+# failures (never raises) so a malformed usage sub-object degrades that one
+# field, not the stream (CR141 acceptance 3).
+
+
+def _capture_anthropic_message_start_usage(obj: dict, meta: dict[str, Any]) -> None:
+    """`message_start.message.usage` → input_tokens + both cache fields.
+
+    Anthropic's API always reports `cache_read_input_tokens` /
+    `cache_creation_input_tokens` (0 when caching wasn't used, never absent),
+    so `.get()` returning None here means a malformed/unexpected frame, not
+    "provider doesn't support cache" — that NULL-vs-0 distinction is real for
+    the OpenAI-compatible path (`_parse_openai_compatible_usage`), not this
+    one.
+    """
+    try:
+        msg_usage = ((obj.get("message") or {}).get("usage")) or {}
+        if not msg_usage:
+            return
+        usage = meta.setdefault("usage", {})
+        usage["input_tokens"] = msg_usage.get("input_tokens")
+        usage["cache_read_tokens"] = msg_usage.get("cache_read_input_tokens")
+        usage["cache_write_tokens"] = msg_usage.get("cache_creation_input_tokens")
+    except Exception as e:
+        logger.warn("anthropic_usage_parse_failed", error=str(e), frame="message_start")
+
+
+def _capture_anthropic_message_delta_usage(obj: dict, meta: dict[str, Any]) -> None:
+    """`message_delta.usage.output_tokens` → the cumulative output count.
+
+    Merges into whatever `message_start` already populated instead of
+    replacing it, so a stream missing one frame still records the other.
+    """
+    try:
+        delta_usage = obj.get("usage") or {}
+        if not delta_usage or "output_tokens" not in delta_usage:
+            return
+        usage = meta.setdefault("usage", {})
+        usage["output_tokens"] = delta_usage.get("output_tokens")
+    except Exception as e:
+        logger.warn("anthropic_usage_parse_failed", error=str(e), frame="message_delta")
 
 
 class AnthropicProvider(LLMProvider):
@@ -285,11 +344,16 @@ class AnthropicProvider(LLMProvider):
                     import json
 
                     obj = json.loads(data)
-                    if obj.get("type") == "content_block_delta":
+                    obj_type = obj.get("type")
+                    if obj_type == "content_block_delta":
                         delta = obj.get("delta") or {}
                         if delta.get("type") == "text_delta":
                             yield delta.get("text", "")
-                    elif obj.get("type") == "message_delta" and meta is not None:
+                    elif obj_type == "message_start" and meta is not None:
+                        # CR141: input tokens + both cache fields arrive once,
+                        # here — see the helper's docstring.
+                        _capture_anthropic_message_start_usage(obj, meta)
+                    elif obj_type == "message_delta" and meta is not None:
                         # DEF125: Anthropic reports the terminal stop on
                         # `message_delta.delta.stop_reason`. Normalise its
                         # `max_tokens` to the OpenAI/vLLM vocabulary so callers
@@ -299,6 +363,9 @@ class AnthropicProvider(LLMProvider):
                             meta["finish_reason"] = (
                                 "length" if stop == "max_tokens" else str(stop)
                             )
+                        # CR141: output_tokens is CUMULATIVE here, unlike the
+                        # OpenAI-compat path's single terminal usage frame.
+                        _capture_anthropic_message_delta_usage(obj, meta)
                 except Exception as e:
                     logger.warn("anthropic_chunk_parse_failed", error=str(e), line=line[:200])
 
@@ -308,6 +375,33 @@ class AnthropicProvider(LLMProvider):
 
 # ── OpenAI-compatible provider (vLLM, Kimi, and any future chat-completions
 #    endpoint — CR017) ────────────────────────────────────────────────────
+
+
+def _parse_openai_compatible_usage(usage: dict[str, Any]) -> dict[str, Any]:
+    """Normalise an OpenAI-compatible terminal `usage` object (CR141).
+
+    `prompt_cache_hit_tokens` is DeepSeek's field name; `prompt_tokens_
+    details.cached_tokens` is vLLM/OpenAI/Gemini's. A provider that reports
+    NEITHER key yields None here — never 0 — because an absent field means
+    "we don't know", not "zero cache hit" (CR040, CR141 acceptance 2): a key
+    that IS present with value 0 (a real cache miss) is returned as 0,
+    unchanged, since `.get()` only returns None on a genuine miss.
+
+    No OpenAI-compatible provider registered here charges a cache WRITE fee
+    (that's an Anthropic-only concept — see `AnthropicProvider`'s usage
+    helpers), so `cache_write_tokens` is always None on this path.
+    """
+    cache_read = usage.get("prompt_cache_hit_tokens")
+    if cache_read is None:
+        details = usage.get("prompt_tokens_details")
+        if isinstance(details, dict):
+            cache_read = details.get("cached_tokens")
+    return {
+        "input_tokens": usage.get("prompt_tokens"),
+        "output_tokens": usage.get("completion_tokens"),
+        "cache_read_tokens": cache_read,
+        "cache_write_tokens": None,
+    }
 
 
 class OpenAICompatibleProvider(LLMProvider):
@@ -384,6 +478,9 @@ class OpenAICompatibleProvider(LLMProvider):
             "messages": openai_messages,
             "max_tokens": effective_max_tokens,
             "stream": True,
+            # CR141: the terminal SSE frame otherwise carries no `usage` block
+            # at all on this family of APIs — this is what turns it on.
+            "stream_options": {"include_usage": True},
             **self._extra_body,
         }
 
@@ -411,9 +508,35 @@ class OpenAICompatibleProvider(LLMProvider):
                     import json
 
                     obj = json.loads(data)
-                    choices = obj.get("choices") or []
-                    if not choices:
-                        continue
+                except Exception as e:
+                    logger.warn(
+                        f"{self.name}_chunk_parse_failed", error=str(e), line=line[:200]
+                    )
+                    continue
+
+                # CR141: the terminal usage frame's `choices` is EMPTY — this
+                # must run before the `if not choices: continue` guard below,
+                # or the usage frame is skipped past exactly like DEF125's
+                # finish_reason would have been. Isolated in its own
+                # try/except so a malformed `usage` sub-object costs only
+                # this field, never the delta/finish_reason handling below
+                # (CR141 acceptance 3 — usage capture must never break the
+                # stream).
+                if meta is not None:
+                    usage = obj.get("usage")
+                    if usage:
+                        try:
+                            meta["usage"] = _parse_openai_compatible_usage(usage)
+                        except Exception as e:
+                            logger.warn(
+                                f"{self.name}_usage_parse_failed",
+                                error=str(e), line=line[:200],
+                            )
+
+                choices = obj.get("choices") or []
+                if not choices:
+                    continue
+                try:
                     # DEF125: the terminal `finish_reason` arrives on the
                     # final chunk, whose delta is empty — read it BEFORE the
                     # `content` guard, which would otherwise `continue`
@@ -593,6 +716,59 @@ class LLMGateway:
                 reason="no KIMI_API_KEY in env",
             )
 
+        # CR141 (build half of CR017 §3/§5 step 2): DeepSeek/Qwen/Gemini, all
+        # OpenAI-compatible, registered the same way as Kimi above — none of
+        # these are in `_PREFERENCE`, so registering them changes nothing
+        # about which provider wins today; they only get selected via
+        # `provider_policy.pick_provider` (not consumed by any live call site
+        # yet) or a manual `LLM_FORCE_PROVIDER` override.
+        if settings.deepseek_api_key:
+            self._providers["deepseek"] = OpenAICompatibleProvider(
+                name="deepseek",
+                base_url="https://api.deepseek.com",
+                model_name="deepseek-chat",
+                api_key=settings.deepseek_api_key,
+            )
+            logger.info("llm_gateway_provider_registered", provider="deepseek")
+        else:
+            logger.info(
+                "llm_gateway_provider_skipped",
+                provider="deepseek",
+                reason="no DEEPSEEK_API_KEY in env",
+            )
+
+        if settings.dashscope_api_key:
+            self._providers["qwen"] = OpenAICompatibleProvider(
+                name="qwen",
+                base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+                model_name="qwen-flash",
+                api_key=settings.dashscope_api_key,
+                # CR017 §3: forces the fast/non-thinking response mode.
+                extra_body={"enable_thinking": False},
+            )
+            logger.info("llm_gateway_provider_registered", provider="qwen")
+        else:
+            logger.info(
+                "llm_gateway_provider_skipped",
+                provider="qwen",
+                reason="no DASHSCOPE_API_KEY in env",
+            )
+
+        if settings.google_ai_api_key:
+            self._providers["gemini"] = OpenAICompatibleProvider(
+                name="gemini",
+                base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+                model_name="gemini-2.5-flash",
+                api_key=settings.google_ai_api_key,
+            )
+            logger.info("llm_gateway_provider_registered", provider="gemini")
+        else:
+            logger.info(
+                "llm_gateway_provider_skipped",
+                provider="gemini",
+                reason="no GOOGLE_AI_API_KEY in env",
+            )
+
     def has_real_provider(self) -> bool:
         return any(name != "mock" for name in self._providers)
 
@@ -643,8 +819,36 @@ class LLMGateway:
             "tier_to_model": tier_to_model,
         }
 
-    def _pick_provider(self, locale: str, model_tier: ModelTier) -> LLMProvider:
-        """Pick a provider — see `_active_provider_name` for the actual logic."""
+    def _pick_provider(
+        self,
+        locale: str,
+        model_tier: ModelTier,
+        plan: Plan | None = None,
+        agent_id: AgentId | None = None,
+    ) -> LLMProvider:
+        """Pick a provider.
+
+        CR141: when BOTH `plan` and `agent_id` are supplied, first consult
+        `provider_policy.pick_provider` for a routing preference — but only
+        ACT on it if the routed provider is actually registered (a missing
+        key must never surface as an error, matching every other
+        "presence of key turns it on" provider in this file). Falls through
+        to `_active_provider_name()`'s existing fixed-order logic otherwise —
+        the SAME logic this method used before CR141, unconditionally, when
+        either argument is omitted. No caller passes `plan`/`agent_id` yet
+        (see `provider_policy`'s module docstring for why), so this preserves
+        today's behaviour exactly until a call site opts in — CR141
+        acceptance 4.
+
+        Local import breaks a circular dependency: `provider_policy` imports
+        `ModelTier` from this module.
+        """
+        if plan is not None and agent_id is not None:
+            from app.services.provider_policy import pick_provider as _pick_routed
+
+            routed = _pick_routed(plan, agent_id, model_tier)
+            if routed is not None and routed in self._providers:
+                return self._providers[routed]
         return self._providers[self._active_provider_name()]
 
     async def stream_chat(
@@ -659,11 +863,13 @@ class LLMGateway:
         audit_agent_id: str | None = None,
         audit_flow: str | None = None,
         meta: dict[str, Any] | None = None,
+        plan: Plan | None = None,
+        agent_id: AgentId | None = None,
     ) -> AsyncIterator[str]:
         import time
         from app.services.audit import record_llm_call
 
-        provider = self._pick_provider(locale, model_tier)
+        provider = self._pick_provider(locale, model_tier, plan=plan, agent_id=agent_id)
         # CR056: every call gets the no-assumed-data directive prepended, so it is
         # both applied (handed to the provider) AND auditable (recorded to
         # llm_audit) on this one shared path — agents, Concierge, reformatter alike.
@@ -714,6 +920,14 @@ class LLMGateway:
                     max_tokens=max_tokens,
                     chars=sum(len(c) for c in buf),
                 )
+            # CR141: whatever the provider wrote into call_meta["usage"] (see
+            # AnthropicProvider / OpenAICompatibleProvider above). `.get()`
+            # on a missing/partial dict yields None per field, never 0 — a
+            # provider that never wrote `usage` at all (no frame, or every
+            # frame malformed) records all four columns NULL, exactly like a
+            # provider that reported some fields but not others records NULL
+            # only for the ones it omitted (CR141 acceptance 2 + 3).
+            usage = call_meta.get("usage") or {}
             record_llm_call(
                 user_id=audit_user_id if audit_user_id else None,
                 agent_id=audit_agent_id,
@@ -726,6 +940,10 @@ class LLMGateway:
                 response_text="".join(buf) if buf else None,
                 latency_ms=latency_ms,
                 error=error_str,
+                input_tokens=usage.get("input_tokens"),
+                output_tokens=usage.get("output_tokens"),
+                cache_read_tokens=usage.get("cache_read_tokens"),
+                cache_write_tokens=usage.get("cache_write_tokens"),
             )
 
 

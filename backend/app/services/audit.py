@@ -87,8 +87,19 @@ def record_llm_call(
     response_text: Optional[str],
     latency_ms: Optional[int],
     error: Optional[str],
+    input_tokens: Optional[int] = None,
+    output_tokens: Optional[int] = None,
+    cache_read_tokens: Optional[int] = None,
+    cache_write_tokens: Optional[int] = None,
 ) -> None:
-    """Persist one LLM gateway call. Safe to call from any code path."""
+    """Persist one LLM gateway call. Safe to call from any code path.
+
+    CR141: the four `*_tokens` kwargs default to None and are passed through
+    verbatim — NEVER coerced to 0 — so a caller that didn't capture usage (or
+    a provider that didn't report a given field) records NULL, not a
+    fabricated zero. See the LLMAuditRow docstring for why that distinction
+    matters (CR040 acceptance 2).
+    """
     try:
         with get_session() as session:
             row = LLMAuditRow(
@@ -103,6 +114,10 @@ def record_llm_call(
                 response_text=(response_text or "")[:MAX_RESPONSE_CHARS] if response_text is not None else None,
                 latency_ms=latency_ms,
                 error=(error or None) and error[:500],
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                cache_read_tokens=cache_read_tokens,
+                cache_write_tokens=cache_write_tokens,
             )
             session.add(row)
             session.commit()

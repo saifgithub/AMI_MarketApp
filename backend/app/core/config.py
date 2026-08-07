@@ -55,6 +55,11 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     google_ai_api_key: str = ""
     deepseek_api_key: str = ""
+    # Qwen Flash via Alibaba's DashScope OpenAI-compatible endpoint (CR017 §3,
+    # built CR141). Same "presence of key turns the feature on" convention as
+    # deepseek_api_key/google_ai_api_key above — an empty value means the
+    # provider is simply not registered, not an error.
+    dashscope_api_key: str = ""
 
     # On-prem vLLM (OpenAI-compatible). When `vllm_base_url` is set the
     # gateway routes every call to it instead of Anthropic/mock.

@@ -153,6 +153,14 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+      # DeepSeek V4 Flash + Qwen Flash (CR017 §3, registered CR141) — same
+      # "presence of key turns the feature on" pattern as every other LLM key
+      # in this block. DEEPSEEK_API_KEY previously sat in
+      # test_config_compose_parity.py's _NOT_FORWARDED (no provider registered
+      # against it yet); CR141 registers one, so it must be forwarded here now
+      # or it goes dark exactly like DEF063 (CR040).
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
       # Kimi (Moonshot AI), direct API — CR126, Saiful testing as a
       # candidate B7 provider. Mirrors config.py's own defaults into the
       # compose substitution (same pattern as VLLM_MODEL below) — an EMPTY
