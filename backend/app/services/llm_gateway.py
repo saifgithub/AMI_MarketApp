@@ -249,12 +249,17 @@ class MockProvider(LLMProvider):
 def _capture_anthropic_message_start_usage(obj: dict, meta: dict[str, Any]) -> None:
     """`message_start.message.usage` → input_tokens + both cache fields.
 
-    Anthropic's API always reports `cache_read_input_tokens` /
-    `cache_creation_input_tokens` (0 when caching wasn't used, never absent),
-    so `.get()` returning None here means a malformed/unexpected frame, not
-    "provider doesn't support cache" — that NULL-vs-0 distinction is real for
-    the OpenAI-compatible path (`_parse_openai_compatible_usage`), not this
-    one.
+    The cache fields are **not** guaranteed present. An earlier version of this
+    docstring claimed Anthropic "always reports" them and that a None here
+    therefore meant a malformed frame; the CR141 audit checked the official
+    streaming examples and found 2 of 3 omit them from `message_start.usage`
+    entirely. Corrected rather than deleted, because the wrong version was the
+    kind of claim that invites someone to "simplify" the `.get()` into a `[...]`
+    lookup and crash on a normal response.
+
+    Behaviour was already right: `.get()` yields None and None is stored, so an
+    absent field records NULL. Same NULL-vs-0 contract as the OpenAI-compatible
+    path — a missing cache field is not a measured zero.
     """
     try:
         msg_usage = ((obj.get("message") or {}).get("usage")) or {}
