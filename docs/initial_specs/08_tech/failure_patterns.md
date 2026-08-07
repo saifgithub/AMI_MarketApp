@@ -740,6 +740,63 @@ are cheap, write the shape one.
 
 ---
 
+## P16 — A prose pattern validated only against the examples that motivated it
+
+**Instances.** DEF147 (the stance envelope: one regex tuned to the shape the *prompt asked for*,
+failing on the shapes the model actually produced — measured at 27% of agents on live Alpha the day
+it shipped). DEF231 → its round-1 audit MAJOR and then DEF234 (a directional-instruction check
+built from the 2 live verdicts that motivated it; it annotated a level in *"reclaim its margin
+story before we'd pay $52.30"*, and once that was fixed, parsed `$1,073.46` as `$1.00` and told the
+user the price was "107900.0% ABOVE" it).
+
+**The class.** A pattern that reads a claim out of LLM prose is written from the handful of
+examples that revealed the need for it, tested against those same examples, and shipped. The
+positive cases are real; the *negative* cases are invented by the same person who wrote the pattern,
+from the same mental model, so they probe the dimension the author was already thinking about and
+no other. DEF231's negative cases all had the verb immediately followed by its own `$` level — they
+tested the *direction* logic exhaustively and the *extraction* logic not at all, because extraction
+felt like plumbing.
+
+**Why the existing guards did not catch it.** Three layers ran, and all three shared one input set:
+
+- *The build* — reasoning from the instances.
+- *The tests* — written from the instances.
+- *The revert-proof mutation pass* — nine mutations, all RED. **This is the load-bearing lesson.**
+  Mutation testing proves a test suite is sensitive to changes in the code *as written*. It cannot
+  detect a case nobody asserted on: a false-positive class produces no failing test under any
+  mutant, because no test exercises it, so no mutant dies. A green mutation table is strong
+  evidence the tests are not vacuous and **no evidence at all** that they are complete. It had
+  been read here as the latter.
+
+The independent auditor caught it — and the reason it could is that it generated **new inputs from
+a different distribution** instead of re-checking the author's. That is the only step that added
+information, and it is the property to reproduce mechanically rather than rely on.
+
+**The guard.** Any pattern that extracts a claim or a number from LLM-authored prose must be swept
+over the **real corpus** before it ships, not only over authored examples. The corpus exists and is
+free: `room_runs.verdict->>'reason'` (946 real PM verdicts as of 2026-08-08), plus the `transcript`
+JSONB for agent turns.
+
+```bash
+ssh melehost "docker exec ami_postgres psql -U postgres -d ami_trade -t -A -c \
+  \"SELECT replace(verdict->>'reason', chr(10), ' ') FROM room_runs \
+    WHERE jsonb_typeof(verdict)='object' \
+      AND coalesce((verdict->>'overridden_from_llm')::boolean,false)=false\"" > reasons.txt
+# then run the pattern over every line and READ every extraction
+```
+
+Read every extraction, not the count. On DEF231 the sweep took under a minute, returned 126
+extractions, and both defects were visible on sight: one extraction whose `$` figure was not the
+verb's object, and one truncated mid-number. Where a pattern's failure is *silent by design* (a
+miss), also diff the extraction set against the previous pattern's — DEF234's markdown hole was a
+coverage loss introduced by the fix for the MAJOR, and only the before/after diff showed it.
+
+**Corollary.** *A mutation table answers "would my tests notice if I broke this?". It never answers
+"did I think of this?". Only new inputs answer the second question, and inventing them yourself is
+not "new" — they come from the same model that wrote the bug.*
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.

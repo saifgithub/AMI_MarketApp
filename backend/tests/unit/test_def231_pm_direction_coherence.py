@@ -138,6 +138,64 @@ def test_the_tightened_grammar_still_catches_every_real_level_reference(text, cl
     assert len(_direction_contradictions(text, close)) == 1
 
 
+# ── DEF234: shapes drawn from the real corpus, not from imagination ──────────
+#
+# Every case below came from sweeping the pattern over all 946 real PM verdict
+# reasons stored on Alpha — the check that should have preceded the original
+# fix rather than following it. Two holes it found, one of them severe.
+
+def test_a_thousands_separator_no_longer_truncates_the_level():
+    """`break above $1,073.46` parsed as a level of $1.00 and the check then
+    announced the close was "107900.0% ABOVE $1.00". One real verdict in the
+    corpus carries this shape; every four-figure price does."""
+    assert _direction_contradictions("we'd want it to reclaim $1,073.46 first", 1300.00) == [
+        {"claim": "reclaim $1,073.46", "level": 1073.46, "close": 1300.00,
+         "gap_pct": 21.1, "price_is": "above"}
+    ]
+    assert _direction_contradictions("it must break above $1,073.46", 900.00) == []
+
+
+def test_markdown_emphasis_around_the_level_does_not_hide_it():
+    """The PM writes markdown; `break above **$27.65**` appears in the corpus.
+    The round-2 whitelist rejected it — a silent coverage hole in the fix for
+    the round-1 finding."""
+    signals = _direction_contradictions("needs to break above **$27.65** first", 30.00)
+    assert len(signals) == 1 and signals[0]["level"] == 27.65
+
+
+def test_a_parenthesised_level_is_still_read():
+    signals = _direction_contradictions("a drop to support ($3.81) would change this", 3.50)
+    assert len(signals) == 1 and signals[0]["level"] == 3.81
+
+
+def test_an_implausible_gap_is_refused_and_logged_not_rendered():
+    """The backstop for the NEXT parse defect in this class. A PM does not tell
+    a user to wait for a level 400× away from the price, so a gap that large is
+    evidence the extraction failed — and a miss is this check's designed
+    failure mode, where a confident "41566.7% ABOVE" is not."""
+    assert _direction_contradictions("wait for it to reclaim $12.00", 5000.00) == []
+    # ...and the same shape inside the plausible band still fires.
+    assert _direction_contradictions("wait for it to reclaim $12.00", 40.00) != []
+
+
+def test_the_whole_corpus_extracts_a_level_that_is_actually_a_price():
+    """Guard on the guard: no extraction may yield a level whose text form was
+    cut short of the digits the sentence actually wrote."""
+    import re
+    from app.services.room_runner import _DIRECTIONAL_CLAIM_RES
+    for text, close in [
+        ("break above $1,073.46 on volume", 1200.0),
+        ("reclaim the $12,340.00 level", 20000.0),
+    ]:
+        for pattern, _ in _DIRECTIONAL_CLAIM_RES:
+            for m in pattern.finditer(text):
+                # the captured level must run to the end of the written number
+                after = text[m.end():m.end() + 1]
+                assert not re.match(r"[\d,]", after), (
+                    f"level capture stopped mid-number in {text!r}: {m.group(1)!r}"
+                )
+
+
 def test_an_unknown_noun_between_verb_and_price_ends_the_match():
     """The mechanism, stated: the gap is a vocabulary, not a distance. One
     unrecognised word is enough to stop the match — which is why a miss is the

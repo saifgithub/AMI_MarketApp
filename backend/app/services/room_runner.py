@@ -1263,16 +1263,33 @@ _LEVEL_CONNECTIVE = (
     r"zone|area|floor|ceiling|band|base|range|session|close|day|week|month|"
     r"moving|average|sma|ema|\d+(?:-(?:day|week|month))?)"
 )
-_LEVEL_GAP = rf"(?:[\s,–—-]+{_LEVEL_CONNECTIVE}\b)*[\s,]*"
+_LEVEL_GAP = rf"(?:[\s,–—-]+{_LEVEL_CONNECTIVE}\b)*[\s,]*[*_(]*"
+
+# DEF234 — the level, WITH its thousands separators. `(\d+(?:\.\d+)?)` stopped
+# at the comma, so *"break above $1,073.46"* parsed as a level of **$1.00** and
+# the check then announced the close was "107900.0% ABOVE $1.00". Found by
+# sweeping the pattern over all 946 real PM verdict reasons on Alpha — the
+# corpus check that should have preceded the original fix, not followed it.
+_LEVEL_NUMBER = r"(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
 
 _DIRECTIONAL_CLAIM_RES: tuple[tuple[re.Pattern[str], str], ...] = tuple(
-    (re.compile(rf"\b(?:{verb})\b{_LEVEL_GAP}\$\s*(\d+(?:\.\d+)?)", re.IGNORECASE), side)
+    (re.compile(rf"\b(?:{verb})\b{_LEVEL_GAP}\$\s*{_LEVEL_NUMBER}", re.IGNORECASE), side)
     for verb, side in _DIRECTIONAL_CLAIMS
 )
 
 # Below this the price is effectively AT the level, and "reclaim $X" from
 # 0.4% under it is a fair description of the next move, not a contradiction.
 _DIRECTION_TOLERANCE_PCT = 1.0
+
+# DEF234 — and above this, the two numbers are not a price and a level it is
+# waiting for; something was mis-parsed. A PM does not tell a user to wait for
+# a level five times away from the price, so a gap that large is evidence the
+# extraction failed, not evidence of an incoherent instruction. Refusing to
+# annotate is a miss, which is this check's designed failure mode; rendering
+# "107900.0% ABOVE" confidently is the failure mode it must never have. The
+# comma bug above is fixed at source — this is the backstop for the NEXT parse
+# defect in the same class, and it is loud rather than silent.
+_DIRECTION_MAX_PLAUSIBLE_GAP_PCT = 400.0
 
 
 def _reference_close(profile: dict[str, Any]) -> float | None:
@@ -1303,13 +1320,23 @@ def _direction_contradictions(
     for pattern, required_side in _DIRECTIONAL_CLAIM_RES:
         for m in pattern.finditer(text):
             try:
-                level = float(m.group(1))
+                level = float(m.group(1).replace(",", ""))
             except (TypeError, ValueError):
                 continue
             if level <= 0:
                 continue
             gap_pct = 100.0 * (close - level) / level
             if abs(gap_pct) < _DIRECTION_TOLERANCE_PCT:
+                continue
+            if abs(gap_pct) > _DIRECTION_MAX_PLAUSIBLE_GAP_PCT:
+                # DEF234: not an incoherent instruction — a mis-parse. Loud, so
+                # the next one is found by reading logs rather than by a user
+                # reading nonsense on the Verdict Board.
+                logger.warning(
+                    "room_pm_direction_implausible_gap",
+                    claim=m.group(0).strip()[:120],
+                    level=level, close=close, gap_pct=round(gap_pct, 1),
+                )
                 continue
             actual_side = "above" if gap_pct > 0 else "below"
             if actual_side == required_side:
