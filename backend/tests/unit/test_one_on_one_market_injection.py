@@ -49,8 +49,9 @@ def _session(mandate: Mandate, agent: AgentId) -> OneOnOneSession:
 
 
 _TECHNICALS = Technicals(
-    rsi=67, rsi_tone="neither overbought nor oversold", trend="trading",
+    rsi=67, rsi_tone="neither overbought nor oversold", trend="uptrend",
     volume_tone="above 20-day average", support=90.0, breakout=110.0,
+    price=105.0,
 )
 
 

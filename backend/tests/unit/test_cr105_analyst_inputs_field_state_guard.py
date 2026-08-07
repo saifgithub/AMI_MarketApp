@@ -76,7 +76,11 @@ _CLAIMED_REAL_INPUTS = [
         "RSI(14), a 20/50-day moving-average trend read, and volume vs. a 20-day",
         "technicals",
     ),
-    ("market_analyst", "Recent-range support/breakout levels", "technicals"),
+    # DEF229(b): the .md no longer calls the 50-day high a "breakout level" —
+    # naming a level as a trade trigger is what made the only long entry
+    # unreachable. The underlying claim (a real recent range, from real price
+    # history) is unchanged, so the mapping follows the wording.
+    ("market_analyst", "The 50-day range (low and high) and where the last close sits", "technicals"),
     ("news_analyst", "Recent headlines for the ticker in question, pulled live", "news"),
     ("news_analyst", "Next earnings date, when within a 90-day window, sourced live.", "next_earnings"),
     ("social_media_analyst", "Reddit-only aggregate sentiment", "social"),

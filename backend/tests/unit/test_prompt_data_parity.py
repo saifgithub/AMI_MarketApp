@@ -95,6 +95,7 @@ _TECH_SENTINEL = Technicals(
     volume_tone="VOLSENT",
     support=333.11,
     breakout=888.99,
+    price=444.22,
 )
 
 _SOCIAL_SENTINEL = SocialSentiment(
@@ -397,6 +398,9 @@ def env(monkeypatch):
         "technicals": {
             "rsi": "57", "rsi_tone": "TONESENT", "trend": "TRENDSENT",
             "volume_tone": "VOLSENT", "support": "333.11", "breakout": "888.99",
+            # DEF228: the last close, rendered on both surfaces as the range's
+            # position anchor (`last close $444.22`).
+            "price": "444.22",
         },
         "social": {
             "buzz_score": "buzz score 88", "sentiment_score": "+0.42",

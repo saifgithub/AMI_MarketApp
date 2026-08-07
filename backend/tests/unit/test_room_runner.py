@@ -1106,8 +1106,9 @@ def test_profile_overlays_live_technicals_when_enabled(monkeypatch):
 
     monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _NoEarningsProvider())
     real = Technicals(
-        rsi=67, rsi_tone="neither overbought nor oversold", trend="trading",
+        rsi=67, rsi_tone="neither overbought nor oversold", trend="uptrend",
         volume_tone="above 20-day average", support=90.0, breakout=110.0,
+        price=105.0,
     )
     monkeypatch.setattr(room_runner, "compute_technicals", lambda t: real)
 
@@ -1115,10 +1116,11 @@ def test_profile_overlays_live_technicals_when_enabled(monkeypatch):
     assert profile["field_state"]["technicals"] == "live"
     assert profile["rsi"] == 67
     assert profile["rsi_tone"] == "neither overbought nor oversold"
-    assert profile["trend"] == "trading"
+    assert profile["trend"] == "uptrend"
     assert profile["volume_tone"] == "above 20-day average"
     assert profile["support"] == 90.0
     assert profile["breakout"] == 110.0
+    assert profile["last_close"] == 105.0
 
 
 def test_profile_technicals_falls_back_to_synthetic_when_unavailable(monkeypatch):
@@ -1171,6 +1173,7 @@ def test_profile_technicals_independent_of_fundamentals_overlay(monkeypatch):
     real = Technicals(
         rsi=50, rsi_tone="neither overbought nor oversold", trend="consolidating",
         volume_tone="in-line with 20-day average", support=90.0, breakout=110.0,
+        price=100.0,
     )
     monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
     monkeypatch.setattr(room_runner, "compute_technicals", lambda t: real)
@@ -1183,14 +1186,14 @@ def test_format_profile_labels_technicals_source_when_live():
     from app.services.room_prompts import _format_profile
 
     block = _format_profile({"field_state": {"technicals": "live"}})
-    assert "RSI, trend, volume, support/breakout: LIVE" in block
+    assert "RSI, trend, volume, 50-day range: LIVE" in block
 
 
 def test_format_profile_labels_technicals_source_when_synthetic():
     from app.services.room_prompts import _format_profile
 
     block = _format_profile({"field_state": {"technicals": "unavailable"}})
-    assert "RSI, trend, volume, support/breakout: not available" in block
+    assert "RSI, trend, volume, 50-day range: not available" in block
 
 
 # ── Live news + earnings overlay (CR023, AT:R57) ──────────────────────────

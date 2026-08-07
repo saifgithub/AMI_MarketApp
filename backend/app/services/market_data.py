@@ -425,6 +425,11 @@ class CachingProvider:
         q = self.quote(ticker)
         return q.price if q is not None else None
 
+    def history_with_source(self, ticker: str, period: str) -> tuple[list[Candle] | None, str]:
+        # The cache wraps exactly one leaf, so a cache hit is attributable to
+        # that same leaf — same reasoning as `quote()` caching the full Quote.
+        return self.history(ticker, period), getattr(self._inner, "name", "unknown")
+
     def history(self, ticker: str, period: str) -> list[Candle] | None:
         key = f"{ticker.upper().strip()}:{period}"
         now = time.time()
@@ -684,6 +689,12 @@ class FallbackProvider:
             return bars
         return self._secondary.history(ticker, period)
 
+    def history_with_source(self, ticker: str, period: str) -> tuple[list[Candle] | None, str]:
+        bars, source = history_with_source(self._primary, ticker, period)
+        if bars:
+            return bars, source
+        return history_with_source(self._secondary, ticker, period)
+
     def news(self, ticker: str, limit: int = 5) -> list[NewsItem] | None:
         items = self._primary.news(ticker, limit)
         if items:
@@ -695,6 +706,35 @@ class FallbackProvider:
         if info is not None:
             return info
         return self._secondary.earnings(ticker)
+
+
+# ── History provenance ───────────────────────────────────────────────────
+
+
+SYNTHETIC_HISTORY_SOURCES = frozenset({"mock_walk", "unavailable"})
+"""Leaf providers whose OHLCV is fabricated, not measured."""
+
+
+def history_with_source(
+    provider: MarketDataProvider, ticker: str, period: str
+) -> tuple[list[Candle] | None, str]:
+    """`provider.history(...)` plus the leaf that actually served the bars.
+
+    `Quote.source` has always carried its leaf so the LIVE/MOCK pill can't
+    lie about which leg fired. History carried no such marker, so a caller
+    that asserts provenance over its output — `compute_technicals`, whose
+    block is rendered under an explicit "Real yfinance OHLCV" claim — could
+    not tell a yfinance series from the synthetic walk the chain falls
+    through to (DEF229). This closes that gap the same way quotes did.
+
+    Providers that don't implement `history_with_source` (test fakes, and
+    any future leaf) report their own `name`, so a fake is never mistaken
+    for the mock walk it isn't.
+    """
+    fn = getattr(provider, "history_with_source", None)
+    if fn is not None:
+        return fn(ticker, period)
+    return provider.history(ticker, period), getattr(provider, "name", "unknown")
 
 
 # ── Singleton factory ────────────────────────────────────────────────────

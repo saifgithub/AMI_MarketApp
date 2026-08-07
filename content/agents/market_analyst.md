@@ -16,8 +16,10 @@ Technical analysis. Patterns, indicators, momentum, volume, support and resistan
 - Daily price history (yfinance OHLCV), when live market data is enabled
 - RSI(14), a 20/50-day moving-average trend read, and volume vs. a 20-day
   average — computed from real price history, not recalled from memory
-- Recent-range support/breakout levels derived from that same real price
-  history
+- The 50-day range (low and high) and where the last close sits inside it,
+  derived from that same real price history. These are levels, not entry
+  triggers — a price below the 50-day high is not by itself a reason to
+  wait, and a price inside the range is not a breakdown
 - No MACD, moving-average crossover signal, or Bollinger Bands are
   computed anywhere in this app — do not cite them, even if they'd sound
   plausible

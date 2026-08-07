@@ -25,6 +25,7 @@ from app.schemas.mandate import Plan
 from app.services.agent_prompts import build_agent_prompt
 from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
+from app.services.technicals import range_position_pct
 from app.trading_math.risk import drawdown_contribution
 from app.trading_math.sizing import resolved_single_name_cap_pct
 from app.trading_math.valuation import net_position_phrase
@@ -594,14 +595,14 @@ def _format_profile(profile: dict[str, Any]) -> str:
         pass  # stripped below; no scaffolding line to contradict it with
     elif technicals_live:
         header_lines.append(
-            "- RSI, trend, volume, support/breakout: LIVE, computed from "
+            "- RSI, trend, volume, 50-day range: LIVE, computed from "
             "real yfinance price history as of this call. No MACD, "
             "moving-average crossover signal, or Bollinger Bands are "
             "computed — do not cite them."
         )
     else:
         header_lines.append(
-            "- RSI, trend, volume, support/breakout: not available this "
+            "- RSI, trend, volume, 50-day range: not available this "
             "call — do not compute or estimate them yourself."
         )
     if news_withheld_tenure:
@@ -692,7 +693,13 @@ def _format_profile(profile: dict[str, Any]) -> str:
         # (profile['support'], the 50-day min that compute_technicals produced and
         # the 1-on-1 path already shows) — NOT the 52-week low, which is a
         # separately-sourced fundamentals field (see week52 below).
-        lines.append(f"Recent range: ${profile.get('support')}–${profile.get('breakout')}")
+        # DEF228: state where price sits in that range. The Room fact sheet
+        # carries a Reference price line, but it is a separately-sourced
+        # quote several lines up, and on live Alpha the agent joined the two
+        # wrong and invented a breakdown the whole Room then adopted. This
+        # is arithmetic on two numbers already on the sheet — it asserts
+        # nothing new. DEF229(b): "breakout" is a 50-day high, named as one.
+        lines.append(_range_line(profile))
         lines.append(f"Volume: {profile.get('volume_tone')}")
     else:
         lines.append("Market technicals: not available this call.")
@@ -777,6 +784,27 @@ def _net_position_line(profile: dict[str, Any]) -> str:
     if phrase is None:
         return "Balance sheet: net cash not available"
     return phrase[:1].upper() + phrase[1:]
+
+
+def _range_line(profile: dict[str, Any]) -> str:
+    """The 50-day range with the last close's position inside it (DEF228).
+
+    `last_close` rides the same `field_state["technicals"]` gate as the range
+    itself — it is the final candle of the very series the range was measured
+    over — so it is present whenever this line renders. Falls back to the
+    bare range if a caller ever supplies one without the other, rather than
+    printing a position derived from a missing number.
+    """
+    support = profile.get("support")
+    breakout = profile.get("breakout")
+    last_close = profile.get("last_close")
+    line = f"50-day range: ${support}–${breakout}"
+    if last_close is None:
+        return line
+    pct = range_position_pct(last_close, support, breakout)
+    if pct is None:
+        return f"{line}, last close ${last_close}"
+    return f"{line}, last close ${last_close} ({pct}% of that range)"
 
 
 def _valuation_line(profile: dict[str, Any]) -> str | None:

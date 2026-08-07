@@ -83,12 +83,14 @@ def test_recent_range_floor_is_technical_support_not_52w_low(base_mandate):
         agent_id=AgentId.MARKET_ANALYST, mandate=base_mandate, user_id=None,
         ticker="AAPL", profile=profile, transcript=[],
     )
-    # Floor is the technical support, not the 52-week low.
-    assert "Recent range: $273.75" in sp
+    # Floor is the technical support, not the 52-week low. (The label became
+    # "50-day range" in DEF229(b) — "breakout level" named a level as a trade
+    # trigger. The guarantee this test exists for is unchanged.)
+    assert "50-day range: $273.75" in sp
     # The 52-week low survives, but as its own, separately-sourced line (CR104).
     assert "52-week range: $201.5" in sp
     # Regression guard: the 52-week low must never be the recent-range floor again.
-    assert "Recent range: $201.5" not in sp
+    assert "50-day range: $201.5" not in sp
 
 
 def test_run_date_anchors_the_fact_sheet_header(base_mandate):

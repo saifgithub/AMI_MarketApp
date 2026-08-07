@@ -63,15 +63,16 @@ def test_rsi_pure_uptrend_is_overbought(monkeypatch):
     assert t.rsi_tone == "overbought"
 
 
-def test_trend_trading_when_price_and_moving_averages_aligned(monkeypatch):
+def test_trend_directional_when_price_and_moving_averages_aligned(monkeypatch):
     """Strictly increasing closes -> price > SMA20 > SMA50 -> real directional
-    bias, not a coin flip."""
+    bias, not a coin flip. DEF227 widened the reported value from the
+    direction-blind "trading" to the direction that was already computed."""
     closes = [100.0 + i * 0.5 for i in range(65)]
     monkeypatch.setattr(technicals, "get_market_data_provider", lambda: _FakeProvider(_candles(closes)))
 
     t = compute_technicals("AAPL")
     assert t is not None
-    assert t.trend == "trading"
+    assert t.trend == "uptrend"
 
 
 def test_trend_consolidating_when_no_clear_alignment(monkeypatch):

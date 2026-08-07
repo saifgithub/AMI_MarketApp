@@ -182,16 +182,18 @@ _TEMPLATES: dict[AgentId, list[str]] = {
         "On the fundamentals alone, the name is {valuation_tone}.",
     ],
     AgentId.MARKET_ANALYST: [
-        # Neutral on the 20/50-day relationship's direction ("{trend}" is
-        # "trading" or "consolidating", not "up"/"down") — same discipline as
-        # SOCIAL_MEDIA_ANALYST above. Support/breakout described as a recent
-        # range, not tied to a specific MA window this template doesn't
-        # actually compute (DEF052, AT:R58 — was previously "the 200-day",
-        # a claim the real computation never backed).
-        "Daily chart shows {ticker} {trend} around its 20/50-day moving "
-        "averages, with recent support around ${support}. RSI({rsi}) — "
-        "{rsi_tone}. 52-week range ${low}–${high}, breakout level "
-        "sits at ${breakout}. Volume {volume_tone}.",
+        # "{trend}" is compute_technicals' measured read — uptrend, downtrend
+        # or consolidating (DEF227; it used to be direction-blind). The
+        # sentence is worded so all three substitute grammatically. The range
+        # is described as the 50-day range it is, not a "breakout level"
+        # (DEF229b), and the last close is stated rather than left to be
+        # joined from elsewhere (DEF228). Still tied to no MA window this
+        # template doesn't compute (DEF052, AT:R58 — was previously "the
+        # 200-day", a claim the real computation never backed).
+        "Daily chart read for {ticker}: {trend}, measured against the 20/50-"
+        "day moving averages. RSI({rsi}) — {rsi_tone}. 50-day range "
+        "${support}–${breakout}, last close ${last_close}. 52-week range "
+        "${low}–${high}. Volume {volume_tone}.",
     ],
     AgentId.NEWS_ANALYST: [
         # CR038: macro/Fed tone dropped — no macro-calendar feed backed it and
@@ -489,6 +491,11 @@ def _profile_for_ticker(
                 profile["volume_tone"] = technicals.volume_tone
                 profile["support"] = technicals.support
                 profile["breakout"] = technicals.breakout
+                # DEF228: the last close of the same series the range was
+                # measured over, so `_format_profile` can state position-in-
+                # range instead of making the agent join to a separately-
+                # sourced quote several lines up.
+                profile["last_close"] = technicals.price
                 field_state["technicals"] = LiveDataState.LIVE.value
             else:
                 field_state["technicals"] = LiveDataState.UNAVAILABLE.value
@@ -2405,7 +2412,8 @@ class RoomRunner:
         # an honest "not available" for `.format()` rather than a KeyError.
         for _field in (
             "pe", "rev_growth", "profit_margin", "rsi", "rsi_tone", "trend",
-            "support", "breakout", "low", "high", "volume_tone", "base_price",
+            "support", "breakout", "last_close", "low", "high", "volume_tone",
+            "base_price",
         ):
             formatter.setdefault(_field, "not available")
         formatter.update({

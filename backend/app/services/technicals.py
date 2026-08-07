@@ -26,7 +26,11 @@ from typing import NamedTuple
 
 from app.core.config import settings
 from app.core.logging import logger
-from app.services.market_data import get_market_data_provider
+from app.services.market_data import (
+    SYNTHETIC_HISTORY_SOURCES,
+    get_market_data_provider,
+    history_with_source,
+)
 
 # RSI/SMA math now lives in the portable trading_math library (CR046 M01).
 # Re-exported under the original private names so this module's internals and
@@ -52,6 +56,20 @@ class Technicals(NamedTuple):
     volume_tone: str
     support: float
     breakout: float
+    price: float
+
+
+def range_position_pct(price: float, support: float, breakout: float) -> int | None:
+    """Where `price` sits between the 50-day low and high, 0–100.
+
+    None when the range has no width (every candle at one price), which is
+    the only case where the question has no answer. `price` is the last
+    close and support/breakout are the min-low/max-high over the same
+    window, so it is always within the range by construction.
+    """
+    if breakout <= support:
+        return None
+    return round(100 * (price - support) / (breakout - support))
 
 
 def compute_technicals(ticker: str) -> Technicals | None:
@@ -66,7 +84,19 @@ def compute_technicals(ticker: str) -> Technicals | None:
     Room Convene — not just this agent's technicals).
     """
     try:
-        candles = get_market_data_provider().history(ticker.upper().strip(), _HISTORY_PERIOD)
+        sym = ticker.upper().strip()
+        candles, source = history_with_source(
+            get_market_data_provider(), sym, _HISTORY_PERIOD
+        )
+        # DEF229: the provider chain ends in a synthetic random walk so a
+        # quote never fails. A quote says which leg served it; history did
+        # not, so a yfinance outage substituted a fabricated series into a
+        # block that asserts "Real yfinance OHLCV". Refuse it — the callers
+        # already render "not available this call" for None, which is the
+        # honest answer, and never the fabricated one.
+        if source in SYNTHETIC_HISTORY_SOURCES:
+            logger.warn("technicals_synthetic_feed_rejected", ticker=sym, source=source)
+            return None
         if not candles or len(candles) < _SMA_LONG:
             return None
 
@@ -86,11 +116,21 @@ def compute_technicals(ticker: str) -> Technicals | None:
         if sma_short is None or sma_long is None:
             return None
         price = closes[-1]
-        # "Trading" = a clear directional bias (price + both moving averages
-        # aligned the same way); "consolidating" = no clean read either way.
+        # The direction is computed here, so it is what gets reported (DEF227).
+        # This field used to collapse both alignments into one token,
+        # "trading", on this very line — so a stock at its 50-day high and a
+        # stock pinned to its 52-week low rendered byte-identically, and no
+        # bullish technical read was reachable on any ticker, ever. DEF052
+        # (AT:R58) was right to delete the *fabricated* direction claim that
+        # preceded it; this one is measured, which is the difference.
         aligned_up = price > sma_short > sma_long
         aligned_down = price < sma_short < sma_long
-        trend = "trading" if (aligned_up or aligned_down) else "consolidating"
+        if aligned_up:
+            trend = "uptrend"
+        elif aligned_down:
+            trend = "downtrend"
+        else:
+            trend = "consolidating"
 
         recent_vol = sum(volumes[-_RECENT_VOLUME_WINDOW:]) / _RECENT_VOLUME_WINDOW
         baseline_vol = sum(volumes[-_VOLUME_BASELINE_WINDOW:]) / _VOLUME_BASELINE_WINDOW
@@ -115,6 +155,7 @@ def compute_technicals(ticker: str) -> Technicals | None:
             volume_tone=volume_tone,
             support=round(support, 2),
             breakout=round(breakout, 2),
+            price=round(price, 2),
         )
     except Exception as exc:
         logger.warn("technicals_compute_error", ticker=ticker, error=str(exc)[:200])
@@ -131,12 +172,22 @@ def build_technicals_context_block(ticker: str) -> str | None:
     if t is None:
         return None
     sym = ticker.upper()
+    # DEF228: position-in-range is the single most decision-relevant fact a
+    # technical read produces, and it was the one thing this block made the
+    # model derive rather than stating. On live Alpha an agent got that join
+    # wrong and asserted a breakdown at $3.67 with the floor at $3.18; all
+    # twelve agents adopted it. State it.
+    # DEF229(b): "breakout level" named the 50-day high as a trade trigger,
+    # which makes the only long entry the analyst will authorise sit above
+    # the 50-day high by definition. It is a level; let the agent reason.
+    pct = range_position_pct(t.price, t.support, t.breakout)
+    position = f" — last close ${t.price} sits at {pct}% of that range" if pct is not None else ""
     return (
         f"─── LIVE TECHNICALS — {sym} ───\n"
         f"RSI(14): {t.rsi} ({t.rsi_tone})\n"
         f"Trend: {t.trend} (price vs. 20/50-day moving averages)\n"
         f"Volume: {t.volume_tone}\n"
-        f"Recent range (50-day) — support: ${t.support}, breakout level: ${t.breakout}\n"
+        f"50-day range — low: ${t.support}, high: ${t.breakout}{position}\n"
         f"(Real yfinance OHLCV for {sym}, computed this call. Use these "
         f"numbers when discussing {sym}'s technicals. Do NOT claim MACD, a "
         f"moving-average crossover signal, or Bollinger Bands — none of "
