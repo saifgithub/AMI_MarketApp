@@ -464,3 +464,120 @@ long-standing set CR002/CR006/CR017/CR022/CR027/CR028/CR031/CR063.
 
 **Running total: 15 reports → 16 items** (DEF146–148, DEF150–152, DEF155, DEF156,
 CR111–CR119) + DEF129 reversed and now half-fixed.
+
+## 2026-08-07
+
+Ran live in-conversation, track R (Saiful: "Let's go through the open cr list. We have
+a daily review tool, use it."). Scoped to the **CR register only** at his request (not
+Defects). `verify all` clean at start: 224 DEF rows / 135 CR rows, no drift, so no
+regenerate needed. 20 `proposed` CRs found; 2 skipped per rule (standing/self-flagged
+decisions, not re-asked), 18 asked in 5 batches.
+
+**Skipped (not asked):**
+
+- **CR022** (proposed since 2026-07-12, app manual corpus) — row carries a dated
+  standing decision newer than any prior ask: **"[DEFER TO PRE-RELEASE — Saiful,
+  2026-07-31]."** Unchanged, not re-asked.
+- **CR122** (proposed since 2026-07-29, ads monetization) — row carries its own
+  instruction: **"Decision already made — the daily CR/Def review should NOT re-ask
+  this; it needs lanes, not a decision."** Honored.
+
+**Asked and ruled:**
+
+- **CR017** (proposed since 2026-07-10, multi-provider LLM routing + caching) —
+  history: deferred → "start now" 07-26 → reversed 07-27 → asked fresh → Saiful:
+  **"Start now."**
+- **CR095** (proposed since 2026-07-27, daily challenge reminder push/email) — never
+  asked before; flagged that its push-half blocker (CR027/OneSignal) cleared
+  2026-08-01 → Saiful: **"If push is ready, let's use it now"** — both channels.
+- **CR102** (proposed since 2026-07-27, in-app messaging to beta testers) — asked
+  07-27, ruled "keep deferring" ("after a few more critical CRs"); re-asked now that
+  CR136 + defect cleanup landed → Saiful: **"Drop it."**
+- **CR103** (proposed since 2026-07-27, admin compose-tab UI for CR102) — asked 07-27,
+  ruled "queue behind CR102"; re-asked given CR102's drop → Saiful: **"102 has been
+  dropped. This CR has replaced it."** Reading: CR103 becomes the live vehicle for the
+  messaging feature (absorbing whatever backend scope it needs, since CR102's API/CLI
+  half no longer ships separately) — a scope/merge call for CR103's domain owner to
+  execute via the normal row-file process, not actioned by this review.
+
+- **CR107** (proposed since 2026-07-28, agent icons vs letters) — flagged that its
+  hold condition (DEF154) closed as duplicate of DEF142, and DEF142 is now fixed →
+  Saiful: **"Keep holding."** No new reason given; treat as unchanged, re-ask later.
+- **CR121** (proposed since 2026-07-29, client version gate) — asked fresh, flagged
+  every day's wait is another ungateable build → Saiful: **"Start now."**
+- **CR138** (proposed since 2026-08-03, §F5 advice classifier) — asked whether "CR136
+  promoted" (its stated blocker) counts as satisfied given this week's live
+  /promote-to-alpha despite CR136's register status still `in_progress` → Saiful:
+  **"CR136 has been delivered. Let's do this."** — start now.
+- **CR140** (proposed since 2026-08-06, Portfolio Health cadence — Saiful's own
+  filing) — asked which of the 3 shapes → Saiful: **"(b) Rolling 30 days"** (the
+  recommended option). Row's other 2 open questions (Floor Manager vs Trader cadence;
+  credit-buyout of an off-cadence reading) not yet asked — follow-up below.
+  - **Follow-up 1 (Floor Manager vs Trader cadence):** asked plain, then he asked
+    for clarification ("does this mean both get 1/30 days?") → confirmed yes, then
+    he asked a second clarifying question — **is Portfolio Health user-initiated or
+    backend-scheduled?** Checked the code live: `GET /health/{user_id}` (tiles) is
+    free/always-live, `POST /health/{user_id}/finding` (the 1 LLM-call Finding)
+    fires only on a user tap — pull, not push, no scheduled job exists today.
+    Re-asked "same cadence for both?" with that confirmed → Saiful: **"We need a
+    different look at this. We should be using the credits."** Reading: the
+    cadence question should route through a credit-metered access model (couples
+    to DEF205/credit-buyout, which he already said yes to) rather than a flat
+    30-day wall differentiated by plan. **Not a snap decision** — CR140's a/b/c
+    framing and the FM-vs-Trader question need a redraft around credits before
+    this is actionable; flagged for a dedicated design pass, not resolved today.
+  - **Follow-up 2 (credit buyout of an off-cadence reading):** Saiful: **"Yes,
+    allow credit buyout"** — now folded into follow-up 1's larger redirect (the
+    whole cadence should likely BE the credit mechanism, not a separate escape
+    hatch from one).
+
+- **CR123** (proposed since 2026-07-30, security-hardening umbrella) — flagged
+  9/11 child DEFs fixed, only DEF178/DEF182 open, CR124/125 unstarted → Saiful:
+  **"Close DEF-level, split remainder"** — formally separate the finished DEF work
+  from the still-open CR124/CR125, rather than the umbrella staying one blob.
+  Governance action for CR123's domain owner (row-file edit), not done by this
+  review.
+- **CR124** (proposed since 2026-07-30, melehost/compose hardening) — asked, he
+  asked for a re-explanation → re-explained (Postgres 5434 + Redis 6379 published
+  on every interface, live-proven reachable with superuser/no-auth from an ordinary
+  LAN device, not melehost itself; fix is loopback binds + real passwords + network
+  isolation, infra-only, no app code) → Saiful: **"Start now."**
+- **CR125** (proposed since 2026-07-30, mobile secure session, BREAKING) — asked →
+  Saiful: **"Start now."**
+- **CR139** (proposed since 2026-08-03, re-annualise Portfolio Health by real
+  period length) — asked, flagged not urgent → Saiful: **"Start now."**
+
+- **CR133** (proposed since 2026-07-30, bottom-nav restructure) — asked fresh,
+  flagged as the prerequisite for CR109/CR135 → Saiful: **"Keep deferring."**
+- **CR134** (proposed since 2026-07-30, CR109 design-conformance review) — asked
+  fresh → Saiful: **"Fold into CR109's build"** — no standalone pass, apply when
+  CR109 builds.
+- **CR109** (proposed since 2026-07-30, P&L Game / AMI Cash) — asked fresh →
+  Saiful: **"Wait for CR133 first"** — consistent with CR133's defer above.
+- **CR135** (proposed since 2026-07-31, in-app notification centre) — asked fresh
+  → Saiful: **"Queue behind CR133"** — consistent, automatic once CR133 ships.
+
+- **CR131** (proposed since 2026-07-30, Day Trader outcome instrumentation) — asked
+  fresh, flagged CR129 (its dependency) is in_progress not done → Saiful: **"Start
+  now"** — build alongside CR129, ready when it lands.
+- **CR132** (proposed since 2026-07-30, Day Trader lesson track) — asked fresh →
+  Saiful asked **"How many lessons and where will it be stored"** → answered from
+  the CR doc + repo (6 lessons; `content/lessons/NNN_<slug>.en.mdx`, the 047/365
+  convention) → Saiful asked **"In which lesson group?"** → checked lesson
+  frontmatter live: 13 tracks exist, `edge_process` (99 lessons) already houses
+  012/047/049/051 and matches CR132's own stated prerequisite chain → Saiful:
+  **"Yes — edge_process."** Re-asked the original question with track settled →
+  Saiful: **"Start lessons 1-5 now"** — lesson 6 (needs CR131's data) follows once
+  CR131 lands.
+
+**Running total: 20 proposed CRs found (Defects out of scope this run, per Saiful's
+request) → 2 skipped (standing/self-flagged) → 18 asked, all ruled, 0 left
+unresolved for a re-ask tomorrow.** Rulings needing follow-up build/governance
+action (not done by this review): CR017/CR095/CR121/CR124/CR125/CR131/CR132/CR138/
+CR139 start now; CR102 drop (CR103 absorbs it — needs a row-file merge decision by
+CR103's owner); CR103 becomes the live vehicle; CR107 keep holding; CR109/CR133/
+CR134/CR135 sequenced behind CR133 (deferred); CR123 split DEF-level-done from
+CR124/125-open (governance action); CR140 shape = rolling 30 days, but its
+FM-vs-Trader question reopened into a **credit-metered access model** ("We should
+be using the credits") — needs a redraft pass before it's buildable, not resolved
+today.
