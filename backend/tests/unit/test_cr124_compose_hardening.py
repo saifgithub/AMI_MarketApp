@@ -137,12 +137,70 @@ def test_every_service_has_a_memory_limit(compose: dict) -> None:
 
 def test_every_image_is_pinned_by_digest(compose: dict) -> None:
     """M14 — a floating tag means two builds of the same commit can ship
-    different images."""
+    different images.
+
+    Covers services with an `image:` key. Services built from a Dockerfile are
+    covered by `test_every_dockerfile_base_image_is_pinned_by_digest` below —
+    see its docstring for why splitting them is load-bearing rather than tidy.
+    """
     for name, service in compose["services"].items():
         image = service.get("image")
         if image is None:
-            continue  # built from a Dockerfile in this repo
+            continue  # built from a Dockerfile — asserted by the next test
         assert "@sha256:" in image, f"{name} uses the floating tag {image!r} (CR124/M14)"
+
+
+def test_every_dockerfile_base_image_is_pinned_by_digest(compose: dict) -> None:
+    """M14, the other half — and the half CR124 round 1 shipped unpinned.
+
+    The audit found `backend/Dockerfile` still on a bare `FROM python:3.13-slim`
+    while the register claimed "all five images digest-pinned". The claim was
+    false, and the reason the suite did not catch it is the more useful lesson:
+    the test above `continue`s on any service without an `image:` key, and BOTH
+    application services are `build:`-only. So the digest guard covered exactly
+    the three services nobody was going to unpin, and neither application image
+    was ever checked.
+
+    The mutation proof offered for M14 (unpin the postgres digest → red) was
+    real but only ever exercised the compose path, so it was never evidence
+    about the Dockerfile-FROM class at all. A mutation that cannot reach a
+    surface is not proof about that surface.
+
+    Discovers Dockerfiles from the compose `build:` context rather than a
+    hardcoded list, so a service added later is covered without anyone
+    remembering to extend this.
+    """
+    checked = 0
+    for name, service in compose["services"].items():
+        build = service.get("build")
+        if build is None:
+            continue
+        if isinstance(build, str):
+            context, dockerfile = build, "Dockerfile"
+        else:
+            context = build.get("context", ".")
+            dockerfile = build.get("dockerfile", "Dockerfile")
+        path = (_REPO_ROOT / context / dockerfile).resolve()
+        assert path.is_file(), f"{name}: build context resolves to no Dockerfile at {path}"
+        froms = [
+            line.split(maxsplit=1)[1].strip()
+            for line in _code_only(path.read_text()).splitlines()
+            if line.strip().upper().startswith("FROM ")
+        ]
+        assert froms, f"{name}: {path} has no FROM instruction"
+        for image in froms:
+            base = image.split(" AS ")[0].split(" as ")[0].strip()
+            assert "@sha256:" in base, (
+                f"{name}: {dockerfile} builds on the floating tag {base!r}. "
+                "A rebuild of this same commit can silently resolve a different "
+                "image (CR124/M14)."
+            )
+        checked += 1
+    assert checked >= 2, (
+        f"only {checked} build-from-Dockerfile services found; expected both "
+        "application images. If a service was renamed, fix this guard rather "
+        "than letting it pass vacuously."
+    )
 
 
 def test_the_stack_declares_its_own_network(compose: dict) -> None:
