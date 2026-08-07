@@ -208,7 +208,7 @@ def _scaffold_token(user_id: UUID, token_version: int, ttl_days: int | None = No
     return f"scaffold:{hex_id}:{exp}:{token_version}:{sig}"
 
 
-def parse_scaffold_token(token: str) -> ParsedToken | None:
+def parse_scaffold_token(token: str, *, allow_expired: bool = False) -> ParsedToken | None:
     """Parse and verify a scaffold Bearer token. Returns `ParsedToken` or None.
 
     Verifies signature and `exp` only — NOT `token_version` against the DB
@@ -216,6 +216,23 @@ def parse_scaffold_token(token: str) -> ParsedToken | None:
     user row is `api/dependencies.py::get_current_user`'s job; that keeps
     this a pure, session-free parse, and the Supabase swap a one-function
     change (module docstring).
+
+    `allow_expired=True` skips ONLY the `exp` check. It has exactly one
+    caller — `get_rebootstrap_identity_optional`, behind `/v1/auth/anon` —
+    and the reason is that **expiry must bound a session, not destroy an
+    identity**. This app is anonymous-first: most users have no Apple/Google/
+    email credential to sign back in with, and `ensure_anonymous` only reuses
+    an existing row when the caller proves possession of a token for that
+    same user (the A2 anti-spoofing rule). Without this flag, the day a
+    token expires the proof disappears, a fresh user is minted, and that
+    user's portfolio, journal, streaks and credits are orphaned in silence —
+    the app simply looks brand new.
+
+    Relaxing `exp` here costs nothing the revocation story depends on: the
+    signature is still required, and `token_version` is still checked
+    against the live row by the caller, so a signed-out token cannot
+    resurrect anything. Expiry keeps its full force everywhere that matters
+    — an expired token still authenticates NO ordinary API request.
     """
     if not token.startswith("scaffold:"):
         return None
@@ -233,7 +250,7 @@ def parse_scaffold_token(token: str) -> ParsedToken | None:
         expected_sig = _scaffold_sig(hex_id, exp, token_version)
         if not _hmac.compare_digest(claimed_sig, expected_sig):
             return None
-        if exp < int(datetime.now(timezone.utc).timestamp()):
+        if not allow_expired and exp < int(datetime.now(timezone.utc).timestamp()):
             return None
         return ParsedToken(user_id=user_id, token_version=token_version)
     if len(parts) == 1 and settings.env == "local":

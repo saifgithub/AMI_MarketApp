@@ -78,6 +78,46 @@ def get_current_user(
         return row
 
 
+def get_rebootstrap_identity_optional(
+    authorization: str | None = Header(default=None),
+) -> User | None:
+    """CR125 — identity for `/v1/auth/anon`'s device-trust decision ONLY.
+
+    Identical to `get_current_user_optional` except that an EXPIRED token
+    still resolves. Everything else is enforced exactly the same: signature,
+    the user row existing, not suspended, and `token_version` matching the
+    live row — so a signed-out (revoked) bearer resolves to None here too and
+    cannot resurrect a session.
+
+    Why this exists: `ensure_anonymous` reuses an existing user row only when
+    the caller proves possession of a token for that same user (audit finding
+    A2 — otherwise the endpoint is a token-minting oracle). Before CR125
+    tokens never expired, so that proof was permanent. With a 30-day TTL, an
+    anonymous user — which is most of them, this product being anonymous-first
+    — would lose that proof on day 31, get a fresh user minted, and find their
+    portfolio, journal, streaks and credits gone, with no error and no way
+    back. Expiry is meant to bound how long a token authenticates requests,
+    not to delete the account behind it.
+
+    This dependency must not be used to authorize anything. It answers one
+    question — "does this caller hold a token we issued for the user they
+    claim to be?" — and `/v1/auth/anon` is the only route entitled to ask it.
+    """
+    token = _extract_token(authorization)
+    if not token:
+        return None
+    parsed = parse_scaffold_token(token, allow_expired=True)
+    if parsed is None:
+        return None
+    with get_session() as s:
+        row = s.execute(select(User).where(User.id == parsed.user_id)).scalar_one_or_none()
+        if row is None or row.suspended_at is not None:
+            return None
+        if not _version_matches(parsed, row):
+            return None
+        return row
+
+
 def get_current_user_optional(
     authorization: str | None = Header(default=None),
 ) -> User | None:

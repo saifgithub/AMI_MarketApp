@@ -159,7 +159,22 @@ def test_revoked_token_no_longer_proves_ownership_on_anon(client: TestClient):
     assert returned_id != user_id, "revoked bearer must not prove ownership"
 
 
-def test_expired_token_also_does_not_prove_ownership_on_anon(client: TestClient):
+def test_an_expired_token_still_proves_ownership_on_anon(client: TestClient):
+    """Expiry bounds a session; it must not destroy an identity.
+
+    This app is anonymous-first: most users hold no Apple/Google/email
+    credential to sign back in with. `ensure_anonymous` reuses an existing
+    row only when the caller proves possession of a token for that same user
+    (audit finding A2). If an expired token proved nothing, then on day 31
+    every anonymous user would be handed a brand-new user_id and their
+    portfolio, journal, streaks and credits would be orphaned — with no
+    error, the app simply looking new. Nothing about that is a security
+    property; it is data loss on a timer.
+
+    So `/v1/auth/anon` — and only `/v1/auth/anon` — accepts an expired
+    token as proof of ownership. The signature and `token_version` are still
+    enforced (see the two tests below), and the expired token still
+    authenticates no ordinary request (`test_token_rejected_after_expiry`)."""
     user_id, _ = _new_user()
     expired = _scaffold_token(user_id, token_version=_current_version(user_id), ttl_days=-1)
     r = client.post(
@@ -168,8 +183,56 @@ def test_expired_token_also_does_not_prove_ownership_on_anon(client: TestClient)
         headers={"Authorization": f"Bearer {expired}"},
     )
     assert r.status_code == 200
-    returned_id = UUID(r.json()["user"]["id"])
-    assert returned_id != user_id
+    assert UUID(r.json()["user"]["id"]) == user_id, (
+        "an anonymous user was handed a fresh identity when their token "
+        "expired — their entire account is now orphaned"
+    )
+    assert r.json()["is_new"] is False
+
+
+def test_an_expired_token_that_was_also_revoked_proves_nothing(client: TestClient):
+    """The security leg. Relaxing `exp` on this one route must not weaken
+    revocation: sign-out bumps `token_version`, and a token failing THAT
+    check is still worthless here no matter how the expiry lands."""
+    user_id, token = _new_user()
+    client.delete("/v1/auth/session", headers={"Authorization": f"Bearer {token}"})
+    stale_version = _current_version(user_id) - 1
+    expired_and_revoked = _scaffold_token(
+        user_id, token_version=stale_version, ttl_days=-1,
+    )
+    r = client.post(
+        "/v1/auth/anon",
+        json={"device_user_id": str(user_id)},
+        headers={"Authorization": f"Bearer {expired_and_revoked}"},
+    )
+    assert r.status_code == 200
+    assert UUID(r.json()["user"]["id"]) != user_id
+
+
+def test_a_forged_expired_token_proves_nothing(client: TestClient):
+    """The other security leg. `allow_expired` skips ONLY the `exp` check —
+    the HMAC is still required, so an attacker cannot hand-write a token for
+    a user_id they do not own and claim their account."""
+    victim_id, _ = _new_user()
+    forged = f"scaffold:{victim_id.hex}:1:1:deadbeef"
+    r = client.post(
+        "/v1/auth/anon",
+        json={"device_user_id": str(victim_id)},
+        headers={"Authorization": f"Bearer {forged}"},
+    )
+    assert r.status_code == 200
+    assert UUID(r.json()["user"]["id"]) != victim_id
+
+
+def test_an_expired_token_still_authenticates_nothing_else(client: TestClient):
+    """Non-vacuity for the whole relaxation: the flag is scoped to the
+    re-bootstrap decision. If it leaked into ordinary auth, expiry would be
+    decorative."""
+    user_id, _ = _new_user()
+    expired = _scaffold_token(user_id, token_version=_current_version(user_id), ttl_days=-1)
+    headers = {"Authorization": f"Bearer {expired}"}
+    assert client.get(f"/v1/mandate/{user_id}", headers=headers).status_code == 401
+    assert client.get("/v1/auth/me", headers=headers).status_code == 401
 
 
 # ── issue/parse round trip carries the version ───────────────────────────

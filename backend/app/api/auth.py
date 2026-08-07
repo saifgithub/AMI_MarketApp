@@ -42,7 +42,11 @@ from app.schemas.auth import (
     MergePreview,
     MergeResult,
 )
-from app.api.dependencies import get_current_user, get_current_user_optional
+from app.api.dependencies import (
+    get_current_user,
+    get_current_user_optional,
+    get_rebootstrap_identity_optional,
+)
 from app.schemas import Mandate
 from app.services.auth_service import AuthService, _is_dev_env, get_auth_service
 from app.services.concierge_engine import session_to_mandate_dict
@@ -101,16 +105,25 @@ router = APIRouter(prefix="/v1/auth", tags=["auth"])
 )
 def anon_session(
     req: AnonSessionRequest,
-    current_user: User | None = Depends(get_current_user_optional),
+    current_user: User | None = Depends(get_rebootstrap_identity_optional),
     auth: AuthService = Depends(get_auth_service),
 ) -> AnonSessionResponse:
     # Adversarial audit (2026-05-18) finding A2: only honour an existing
     # device_user_id when the caller has proved possession by sending the
     # matching signed token. Otherwise treat the call as a fresh install.
-    # CR125: `get_current_user_optional` also enforces `exp` + `token_version`
-    # — a signed-out (revoked) bearer no longer proves possession here either,
-    # which matters because this endpoint would otherwise happily re-mint a
-    # fresh valid token for that same user_id, silently undoing the sign-out.
+    #
+    # CR125: this dependency enforces `token_version` — a signed-out (revoked)
+    # bearer no longer proves possession, which matters because this endpoint
+    # would otherwise happily re-mint a fresh valid token for that same
+    # user_id and silently undo the sign-out.
+    #
+    # It deliberately does NOT enforce `exp`, and this is the one route where
+    # that is correct. Most users here are anonymous with no credential to
+    # sign back in with, so treating an expired token as "not the owner"
+    # mints them a fresh user and orphans their portfolio, journal, streaks
+    # and credits on day 31 — silently, with the app just looking new.
+    # Expiry bounds how long a token authenticates requests; it must not
+    # delete the account behind it. See `get_rebootstrap_identity_optional`.
     bearer_user_id: UUID | None = current_user.id if current_user is not None else None
     user, token, is_new = auth.ensure_anonymous(
         device_user_id=req.device_user_id,
