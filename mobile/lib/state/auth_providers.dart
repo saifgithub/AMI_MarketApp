@@ -110,6 +110,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // with every bootstrap. install_id keys user_devices so two phones on
       // one Apple ID show as two rows under one user post-claim.
       final ctx = await DeviceContext.read();
+      // CR121: replay this build's version on every request from here on
+      // (the single _AuthInterceptor choke point) — same shape as the
+      // bearer token above. Set even before the bootstrap call below
+      // resolves, so the server sees a real X-App-Version as early as this
+      // one request.
+      api.setAppVersion(ctx.appVersion);
       final installId = await DeviceUser.getOrCreateInstallId();
       final r = await api.bootstrapAnon(
         deviceUserId: deviceUserId,

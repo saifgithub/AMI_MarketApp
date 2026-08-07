@@ -13,6 +13,7 @@ Endpoint map:
   POST   /v1/admin/users/{user_id}/suspend     Suspend account
   POST   /v1/admin/users/{user_id}/reinstate   Lift suspension
   GET    /v1/admin/users/{user_id}/events      Paginated subscription_events
+  POST   /v1/admin/release-floor               Raise the client version floor (CR121)
 """
 
 from __future__ import annotations
@@ -27,6 +28,16 @@ from sqlalchemy import func, select
 from app.core.config import settings
 from app.db import get_session
 from app.db.models import SubscriptionEventRow, User, UserDeviceRow
+from app.schemas.client_release_floor import (
+    AdminReleaseFloorOut,
+    AdminReleaseFloorRequest,
+)
+from app.services.client_release_floor import (
+    ReleaseFloorDuplicateError,
+    ReleaseFloorFootgunError,
+    create_floor_raise,
+    get_active_floor,
+)
 from app.schemas.admin import (
     AdminConfigCheckResponse,
     AdminCreditsRequest,
@@ -235,13 +246,84 @@ def config_check(_: None = Depends(get_admin)) -> AdminConfigCheckResponse:
             configured=configured,
             effect_when_unconfigured=effect,
         ))
+    # CR121 — surface the version-gate's live state here too. Not a
+    # FeatureGate (those are Settings presence checks); this is DB-derived
+    # runtime state, same shape as portfolio_health_gate_mode above. This is
+    # also the "surfaced in the admin config check" half of the mobile
+    # gate's fail-open contract: an operator can always see whether a floor
+    # is even configured, independent of whether any one client's fetch
+    # happened to succeed.
+    with get_session() as session:
+        active_floor = get_active_floor(session)
+
     return AdminConfigCheckResponse(
         env=settings.env,
         gates=gates,
         dark_count=sum(1 for g in gates if not g.configured),
         one_on_one_credit_cost=settings.one_on_one_credit_cost,
         portfolio_health_gate_mode=settings.portfolio_health_gate_mode,
+        client_release_floor_configured=active_floor is not None,
+        client_release_floor_min_build=(
+            active_floor.min_build if active_floor is not None else None
+        ),
     )
+
+
+@router.post("/release-floor", response_model=AdminReleaseFloorOut)
+def raise_release_floor(
+    req: AdminReleaseFloorRequest, _: None = Depends(get_admin),
+) -> AdminReleaseFloorOut:
+    """CR121 — raise the client version floor. One API call, no deploy, no
+    container recreate — the entire point of an append-only DB table over an
+    env var. Refuses `min_build` above the highest build the server has ever
+    observed in `users.last_app_version` / `user_devices.app_version` unless
+    `force=true` is passed: raising the floor above what TestFlight has
+    actually approved bricks every iOS tester with nowhere to go.
+    """
+    with get_session() as session:
+        try:
+            row, highest = create_floor_raise(
+                session,
+                min_build=req.min_build,
+                recommended_build=req.recommended_build,
+                headline=req.headline,
+                body_en=req.body_en,
+                body_ar=req.body_ar,
+                body_ms=req.body_ms,
+                created_by=req.created_by,
+                force=req.force,
+            )
+        except ReleaseFloorFootgunError as exc:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                detail={
+                    "error": "min_build_exceeds_highest_observed",
+                    "min_build": exc.min_build,
+                    "highest_observed_build": exc.highest_observed,
+                    "hint": "pass force=true to override",
+                },
+            ) from exc
+        except ReleaseFloorDuplicateError as exc:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                detail={
+                    "error": "min_build_already_exists",
+                    "min_build": exc.min_build,
+                },
+            ) from exc
+        return AdminReleaseFloorOut(
+            id=row.id,
+            min_build=row.min_build,
+            recommended_build=row.recommended_build,
+            headline=row.headline,
+            body_en=row.body_en,
+            body_ar=row.body_ar,
+            body_ms=row.body_ms,
+            created_at=row.created_at,
+            created_by=row.created_by,
+            active=row.active,
+            highest_observed_build=highest,
+        )
 
 
 @router.get("/users", response_model=list[AdminUserSummary])

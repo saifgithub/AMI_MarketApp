@@ -30,6 +30,7 @@ import 'package:ami_trade/models/one_on_one.dart';
 import 'package:ami_trade/models/onboarding.dart';
 import 'package:ami_trade/models/portfolio_health.dart';
 import 'package:ami_trade/models/price_alert.dart';
+import 'package:ami_trade/models/release_floor.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/tickers.dart';
@@ -61,6 +62,16 @@ class _AuthInterceptor extends Interceptor {
     final token = _client._bearerToken;
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
+    }
+    // CR121: the version-gate header, set alongside the bearer at this same
+    // single choke point. Sourced from DeviceContext.appVersion
+    // (device_user.dart) via ApiClient.setAppVersion — nothing new is
+    // computed here, same shape as the token above. Omitted (not sent as an
+    // empty string) until bootstrap has read it once, so the server's
+    // build-number parser only ever sees a real value or no header at all.
+    final appVersion = _client._appVersion;
+    if (appVersion != null) {
+      options.headers['X-App-Version'] = appVersion;
     }
     handler.next(options);
   }
@@ -97,6 +108,64 @@ ServerUnavailableException? serverUnavailableFrom(Object error) {
   if (error is ServerUnavailableException) return error;
   if (error is DioException && error.error is ServerUnavailableException) {
     return error.error as ServerUnavailableException;
+  }
+  return null;
+}
+
+/// CR121 — the decision half of [_VersionGateInterceptor], pulled out as a
+/// pure, side-effect-free function for the same reason [parseRoomSseEvent]
+/// is: the interceptor class itself is private to this library (matching
+/// DEF073's `_ServerErrorInterceptor`), but the "is this a 426 the gate
+/// should raise" question needs to be directly unit-testable against a real
+/// backend-shaped response, not only exercisable through a live HTTP round
+/// trip. Returns null for any status other than 426 (including 5xx, which
+/// stays [_ServerErrorInterceptor]'s to annotate).
+@visibleForTesting
+UpgradeRequiredException? upgradeRequiredExceptionFor(DioException err) {
+  final code = err.response?.statusCode;
+  if (code != 426) return null;
+  final data = err.response?.data;
+  if (data is Map<String, dynamic>) {
+    return UpgradeRequiredException.fromJson(data);
+  }
+  // 426 with an unparseable/missing body still means "raise the gate" —
+  // the caller degrades to the generic chrome copy rather than the
+  // per-raise message, never to "not gated at all".
+  return const UpgradeRequiredException();
+}
+
+/// CR121: catches HTTP 426 (Upgrade Required — the client version floor)
+/// and annotates it onto the `DioException.error` slot, same shape as
+/// DEF073's [_ServerErrorInterceptor] one class above. Purely additive —
+/// the exception still propagates as a `DioException`, so existing `catch`
+/// blocks are unchanged; a call site that wants the structured gate detail
+/// checks `upgradeRequiredFrom(e)`.
+class _VersionGateInterceptor extends Interceptor {
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    final upgrade = upgradeRequiredExceptionFor(err);
+    if (upgrade != null) {
+      handler.next(DioException(
+        requestOptions: err.requestOptions,
+        response: err.response,
+        type: err.type,
+        message: err.message,
+        stackTrace: err.stackTrace,
+        error: upgrade,
+      ));
+      return;
+    }
+    handler.next(err);
+  }
+}
+
+/// Extract an [UpgradeRequiredException] from a thrown REST error, if
+/// [_VersionGateInterceptor] annotated it. Returns null for any other error
+/// (same shape as [serverUnavailableFrom]).
+UpgradeRequiredException? upgradeRequiredFrom(Object error) {
+  if (error is UpgradeRequiredException) return error;
+  if (error is DioException && error.error is UpgradeRequiredException) {
+    return error.error as UpgradeRequiredException;
   }
   return null;
 }
@@ -233,14 +302,24 @@ class ApiClient {
         _httpClient = httpClient ?? http.Client() {
     _dio.interceptors.add(_AuthInterceptor(this));
     _dio.interceptors.add(_ServerErrorInterceptor()); // DEF073
+    _dio.interceptors.add(_VersionGateInterceptor()); // CR121
   }
 
   final Dio _dio;
   final http.Client _httpClient;
   String? _bearerToken;
+  String? _appVersion;
 
   void setToken(String? token) {
     _bearerToken = token;
+  }
+
+  /// CR121: the version string sent as `X-App-Version` on every request from
+  /// here on (via `_AuthInterceptor`). Set once from `DeviceContext.appVersion`
+  /// during auth bootstrap — same "compute once, replay on every request"
+  /// shape as [setToken].
+  void setAppVersion(String? version) {
+    _appVersion = version;
   }
 
   /// Build a raw `http.Request` for SSE endpoints that can't go through Dio.
@@ -323,6 +402,27 @@ class ApiClient {
     } catch (_) {
       return false;
     }
+  }
+
+  /// CR121 — the client version-gate read. UNAUTHENTICATED, same as
+  /// [health]: it must answer even before bootstrap (the token may not
+  /// exist yet, or may belong to a build the server refuses). Callers MUST
+  /// fail open on any error — see `version_gate_providers.dart`'s
+  /// `VersionGateController`, which is the one place this is called from.
+  Future<ReleaseFloorResponse> getReleaseFloor({
+    required int? build,
+    required String locale,
+    required String platform,
+  }) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/client/release-floor',
+      queryParameters: {
+        if (build != null) 'build': build,
+        'locale': locale,
+        'platform': platform,
+      },
+    );
+    return ReleaseFloorResponse.fromJson(r.data!);
   }
 
   // ── 1-on-1 ──────────────────────────────────────────────────────

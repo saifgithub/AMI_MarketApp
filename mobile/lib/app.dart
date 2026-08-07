@@ -19,12 +19,14 @@ import 'package:ami_trade/screens/feedback/bug_resolution_toasts.dart';
 import 'package:ami_trade/screens/home_shell.dart';
 import 'package:ami_trade/screens/notifications/push_notification_listener.dart';
 import 'package:ami_trade/screens/onboarding/onboarding_screen.dart';
+import 'package:ami_trade/screens/version_gate/version_gate_screen.dart';
 import 'package:ami_trade/services/notifications/app_navigator_key.dart';
 import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
+import 'package:ami_trade/state/version_gate_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
@@ -51,13 +53,73 @@ class AmiTradeApp extends ConsumerWidget {
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: supportedLocales,
-      home: _AuthGate(startOnFloor: startOnFloor),
+      home: _VersionGateGate(startOnFloor: startOnFloor),
       routes: {
         '/onboarding': (_) => const OnboardingScreen(),
         '/floor': (_) => const HomeShell(),
         '/dev-preview': (_) => const DevPreviewScreen(),
       },
     );
+  }
+}
+
+/// CR121 — outermost gate, ahead of `_AuthGate`: a `block` verdict must
+/// pre-empt onboarding/home rendering entirely, not just the parts of the
+/// app that happen to make API calls. Also owns the `AppLifecycleState`
+/// observer that re-checks on every foreground-resume (the launch check
+/// alone can't catch a floor raised while the app was already open), and
+/// the nag-sheet trigger, deferred until `_AuthGate` has cleared its own
+/// splash so a dismissible sheet never appears over a loading screen.
+class _VersionGateGate extends ConsumerStatefulWidget {
+  const _VersionGateGate({required this.startOnFloor});
+
+  final bool startOnFloor;
+
+  @override
+  ConsumerState<_VersionGateGate> createState() => _VersionGateGateState();
+}
+
+class _VersionGateGateState extends ConsumerState<_VersionGateGate>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // A session left open for days must not outlive a floor raise —
+      // fire-and-forget; VersionGateController.check() fails open on its
+      // own and never throws out of here.
+      ref.read(versionGateControllerProvider.notifier).check();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final gate = ref.watch(versionGateControllerProvider);
+    if (gate.isBlocked && gate.floor != null) {
+      return VersionGateBlockScreen(floor: gate.floor!);
+    }
+
+    final auth = ref.watch(authNotifierProvider);
+    ref.listen<VersionGateState>(versionGateControllerProvider, (prev, next) {
+      if (next.isNagging && next.floor != null && auth.token != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) showVersionGateNagSheet(context, ref, next.floor!);
+        });
+      }
+    });
+
+    return _AuthGate(startOnFloor: widget.startOnFloor);
   }
 }
 

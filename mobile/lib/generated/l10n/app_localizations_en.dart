@@ -2345,4 +2345,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get findingUnavailableBody =>
       'AMI cannot generate a Finding right now — live market data is off.';
+
+  @override
+  String get versionGateScreenTitle => 'Update Required';
+
+  @override
+  String get versionGateUpdateCta => 'Update Now';
+
+  @override
+  String get versionGateNagDismissCta => 'Later';
+
+  @override
+  String get versionGateRetryCta => 'I\'ve updated — check again';
+
+  @override
+  String get versionGateOfflineRetryHint =>
+      'Still on the old version, or AMI couldn\'t be reached. Try again in a moment.';
 }

@@ -18,15 +18,29 @@ import 'package:uuid/uuid.dart';
 /// values are best-effort — a read failure on any of them yields null,
 /// never blocks the bootstrap call.
 class DeviceContext {
-  const DeviceContext({this.deviceModel, this.osVersion, this.appVersion});
+  const DeviceContext({
+    this.deviceModel,
+    this.osVersion,
+    this.appVersion,
+    this.buildNumber,
+  });
   final String? deviceModel;
   final String? osVersion;
   final String? appVersion;
+
+  /// CR121 — the numeric build number alone (e.g. 26 out of "0.1.0+26"),
+  /// parsed straight from `PackageInfo.buildNumber` rather than re-derived
+  /// from [appVersion] by string-splitting it a second time. Null on the
+  /// same best-effort basis as the other fields. This is what the version
+  /// gate compares against the server's floor — a single integer, not a
+  /// semver parse.
+  final int? buildNumber;
 
   static Future<DeviceContext> read() async {
     String? deviceModel;
     String? osVersion;
     String? appVersion;
+    int? buildNumber;
     try {
       final di = DeviceInfoPlugin();
       if (Platform.isIOS) {
@@ -44,11 +58,13 @@ class DeviceContext {
     try {
       final p = await PackageInfo.fromPlatform();
       appVersion = '${p.version}+${p.buildNumber}'; // e.g. "0.1.0+26"
+      buildNumber = int.tryParse(p.buildNumber);
     } catch (_) {}
     return DeviceContext(
       deviceModel: deviceModel,
       osVersion: osVersion,
       appVersion: appVersion,
+      buildNumber: buildNumber,
     );
   }
 }

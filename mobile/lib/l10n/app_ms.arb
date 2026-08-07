@@ -666,5 +666,11 @@
     "findingSectionF3": "F3 · DETAILED ANALYSIS",
     "findingSectionF4": "F4 · CONCLUSION",
     "findingSectionF5": "F5 · WHAT THE NUMBERS POINT TO",
-    "findingUnavailableBody": "AMI cannot generate a Finding right now — live market data is off."
+    "findingUnavailableBody": "AMI cannot generate a Finding right now — live market data is off.",
+
+    "versionGateScreenTitle": "Update Required",
+    "versionGateUpdateCta": "Update Now",
+    "versionGateNagDismissCta": "Later",
+    "versionGateRetryCta": "I've updated — check again",
+    "versionGateOfflineRetryHint": "Still on the old version, or AMI couldn't be reached. Try again in a moment."
 }

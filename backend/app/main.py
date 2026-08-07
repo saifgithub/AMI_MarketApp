@@ -36,8 +36,12 @@ from app.core.config import settings
 from app.core.logging import configure_logging
 from app.core.observability import init_sentry
 from app.core.logging import logger
+from app.db import get_session
 from app.middleware.http_audit import HTTPAuditMiddleware
+from app.middleware.version_gate import VersionGateMiddleware
+from app.schemas.client_release_floor import ReleaseFloorResponse
 from app.services.audit import trim_audit_tables
+from app.services.client_release_floor import build_release_floor_response
 from app.services.room_runner import get_room_runner
 
 configure_logging()
@@ -273,6 +277,12 @@ app = FastAPI(
 
 app.add_middleware(HTTPAuditMiddleware)
 
+# CR121 — server-side 426 enforcement, belt-and-braces on top of the
+# client's own gate check. Added between Audit and CORS so a below-floor
+# request never reaches a route handler or the audit log, while CORS still
+# wraps the 426 response with the usual headers.
+app.add_middleware(VersionGateMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -312,6 +322,28 @@ app.include_router(webhooks_router)
 @app.get("/v1/health")
 async def health() -> dict[str, str]:
     return {"status": "ok", "version": "0.1.0", "env": settings.env}
+
+
+@app.get("/v1/client/release-floor", response_model=ReleaseFloorResponse)
+async def client_release_floor(
+    build: int | None = None,
+    locale: str | None = None,
+    platform: str | None = None,
+) -> ReleaseFloorResponse:
+    """CR121 — client version gate. UNAUTHENTICATED, sibling of `/v1/health`:
+    it must answer *before* a session exists, because a blocked client may
+    be too old to authenticate at all. `action` (block/nag/ok) is decided
+    server-side so raising or retracting the floor takes effect with no
+    client release. `build` is the caller's own numeric build (pubspec.yaml
+    `version: <semver>+<build>`, one integer, no per-platform pair);
+    `locale` selects the per-raise message (en/ar/ms, EN fallback);
+    `platform` (ios/android) selects the store deep link — the two bundle
+    IDs differ, so nothing here derives one platform's URL from the other.
+    """
+    with get_session() as session:
+        return build_release_floor_response(
+            session, build=build, locale=locale, platform=platform,
+        )
 
 
 # Admin back-office stop-gap UI (AT:R27). The page itself is public; every

@@ -207,6 +207,48 @@ class UserDeviceRow(Base):
     )
 
 
+class ClientReleaseFloorRow(Base):
+    """CR121 — append-only client version-gate log. One row per raise, NOT a
+    mutable setting: "message will be added for each time we move the bar"
+    means the answer to "what did we tell users when we killed build N?" is a
+    row, not a memory.
+
+    The ACTIVE floor is the row with the highest `min_build` among rows where
+    `active` is true — never mutated in place; a bad raise is retracted by
+    flipping `active` to false on the offending row, which lets the
+    previous-highest active row govern again without losing history.
+
+    `min_build` is a single integer (not a per-platform pair) — pubspec.yaml
+    carries one `version: <semver>+<build>` shared by iOS and Android, and
+    the gate compares plain `int >=` on the build number, never semver.
+    """
+
+    __tablename__ = "client_release_floors"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    min_build: Mapped[int] = mapped_column(Integer, nullable=False, unique=True)
+    # Soft nag threshold: min_build <= build < recommended_build shows a
+    # dismissible nag instead of the hard block. Null = no nag band.
+    recommended_build: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    headline: Mapped[str] = mapped_column(String, nullable=False)
+    body_en: Mapped[str] = mapped_column(String, nullable=False)
+    # Nullable — EN fallback when unset. The per-raise message is
+    # operational copy authored at raise time, not shipped ARB content, so
+    # it cannot go through the normal translation cycle before Saiful needs
+    # to raise the bar.
+    body_ar: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    body_ms: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, server_default=func.now(),
+        nullable=False,
+    )
+    created_by: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # Retraction flag — flip false to undo a bad raise without deleting the
+    # row (the history stays queryable). Default true: a freshly-created
+    # raise is live immediately.
+    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+
 class MandateRow(Base):
     __tablename__ = "mandates"
     __table_args__ = (UniqueConstraint("user_id", "version", name="uq_mandate_user_version"),)

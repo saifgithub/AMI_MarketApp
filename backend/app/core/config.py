@@ -455,6 +455,18 @@ class Settings(BaseSettings):
     # Beta: replace with admin_users table + JWT (middleware accepts both).
     admin_secret: str = ""
 
+    # CR121 — iOS store deep link for the client-version-gate block screen.
+    # We do NOT have a numeric App Store ID (no App Store record exists yet —
+    # same provisioning gap as DEF100/CR084), so this is the TestFlight
+    # public join link, set once Saiful creates one. Android needs no
+    # equivalent setting: its Play Store URL is derived from the known,
+    # stable applicationId (`ai.agenticmarketintel.ami_trade`), a compile-time
+    # constant, not an operational secret. Empty = the release-floor endpoint
+    # falls back to the generic https://testflight.apple.com/ page and logs
+    # `release_floor_ios_store_url_unconfigured` — degrades loudly, never a
+    # dead link with no signal (CR040).
+    ios_testflight_join_url: str = ""
+
     # RevenueCat webhook shared secret (CR084). RC sends this verbatim as the
     # `Authorization` header on every webhook POST to /v1/webhooks/revenuecat;
     # the endpoint constant-time-compares it and fails CLOSED (401) on any

@@ -112,6 +112,13 @@ services:
       # require it; empty value returns 503 from those routes (Alpha-only
       # mechanism, replaced by admin_users + JWT in Beta).
       ADMIN_SECRET: ${ADMIN_SECRET:-}
+      # CR121 — iOS TestFlight join link for the client-version-gate block
+      # screen (no numeric App Store ID exists yet — same DEF100/CR084
+      # provisioning gap). Empty = the endpoint falls back to the generic
+      # https://testflight.apple.com/ page and logs
+      # release_floor_ios_store_url_unconfigured. Set once Saiful has a
+      # real join link.
+      IOS_TESTFLIGHT_JOIN_URL: ${IOS_TESTFLIGHT_JOIN_URL:-}
       # RevenueCat webhook shared secret (CR084). RC sends this verbatim as the
       # Authorization header on POST /v1/webhooks/revenuecat; the endpoint
       # fails CLOSED (401) on mismatch and refuses LOUDLY (503 + log) when

@@ -142,3 +142,11 @@ class AdminConfigCheckResponse(BaseModel):
     # presence-gated silent fallback. M11 promotes `trial` → `plan` by env, and
     # this is how "did it take" is answered without reading the container's env.
     portfolio_health_gate_mode: str
+    # CR121 — is a client-version floor currently active, and what is it.
+    # DB-derived runtime state (client_release_floors), not a Settings
+    # presence check, same shape as portfolio_health_gate_mode above. This is
+    # the "surfaced in the admin config check" half of the version gate's
+    # fail-open contract — an operator can see the gate's live state
+    # independent of whether any individual client's own fetch succeeded.
+    client_release_floor_configured: bool
+    client_release_floor_min_build: Optional[int] = None

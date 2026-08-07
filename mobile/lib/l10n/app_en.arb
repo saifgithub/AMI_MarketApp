@@ -1686,5 +1686,16 @@
     "findingSectionF5": "F5 · WHAT THE NUMBERS POINT TO",
     "@findingSectionF5": {"description": "CR136 — section header above the stored §F5 block. Deliberately NOT 'Recommendations' (SCREEN_DESIGNS amendment 6): AMI is a simulation-only training tool and is not licensed to advise. NEW key, needs ar/ms translation. retranslate:[ar,ms]"},
     "findingUnavailableBody": "AMI cannot generate a Finding right now — live market data is off.",
-    "@findingUnavailableBody": {"description": "CR136 — body of the Finding screen's 409 panel (detail code portfolio_health_unavailable). Same refusal as the card's amber state, reached by a user who tapped through before the card refreshed. NEW key, needs ar/ms translation. retranslate:[ar,ms]"}
+    "@findingUnavailableBody": {"description": "CR136 — body of the Finding screen's 409 panel (detail code portfolio_health_unavailable). Same refusal as the card's amber state, reached by a user who tapped through before the card refreshed. NEW key, needs ar/ms translation. retranslate:[ar,ms]"},
+
+    "versionGateScreenTitle": "Update Required",
+    "@versionGateScreenTitle": {"description": "CR121 — static eyebrow/chrome title on the non-dismissible version-gate block screen, above the server's own per-raise headline. This is shipped copy (unlike the headline/body below it, which are operator-authored at raise time and not translated). NEW key, needs ar/ms translation. retranslate:[ar,ms]"},
+    "versionGateUpdateCta": "Update Now",
+    "@versionGateUpdateCta": {"description": "CR121 — primary CTA on both the block screen and the nag sheet; opens the store deep link (Play Store on Android, TestFlight join link on iOS — server-decided, see GET /v1/client/release-floor's store_url). NEW key, needs ar/ms translation. retranslate:[ar,ms]"},
+    "versionGateNagDismissCta": "Later",
+    "@versionGateNagDismissCta": {"description": "CR121 — dismiss action on the soft 'nag' sheet only (the hard block screen has no dismiss). Shown at most once per app session. NEW key, needs ar/ms translation. retranslate:[ar,ms]"},
+    "versionGateRetryCta": "I've updated — check again",
+    "@versionGateRetryCta": {"description": "CR121 — secondary action on the block screen for a user who already updated in the store but whose app session hasn't re-checked the floor yet; re-runs the same GET /v1/client/release-floor check. NEW key, needs ar/ms translation. retranslate:[ar,ms]"},
+    "versionGateOfflineRetryHint": "Still on the old version, or AMI couldn't be reached. Try again in a moment.",
+    "@versionGateOfflineRetryHint": {"description": "CR121 — small caption under the recheck button on the block screen, covering both 'you're still below the floor' and 'the recheck call itself failed' (the fail-open path never removes the block screen, so this explains why nothing happened after tapping retry). NEW key, needs ar/ms translation. retranslate:[ar,ms]"}
 }

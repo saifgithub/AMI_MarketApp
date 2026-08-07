@@ -4062,6 +4062,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'AMI cannot generate a Finding right now — live market data is off.'**
   String get findingUnavailableBody;
+
+  /// CR121 — static eyebrow/chrome title on the non-dismissible version-gate block screen, above the server's own per-raise headline. This is shipped copy (unlike the headline/body below it, which are operator-authored at raise time and not translated). NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Update Required'**
+  String get versionGateScreenTitle;
+
+  /// CR121 — primary CTA on both the block screen and the nag sheet; opens the store deep link (Play Store on Android, TestFlight join link on iOS — server-decided, see GET /v1/client/release-floor's store_url). NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Update Now'**
+  String get versionGateUpdateCta;
+
+  /// CR121 — dismiss action on the soft 'nag' sheet only (the hard block screen has no dismiss). Shown at most once per app session. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get versionGateNagDismissCta;
+
+  /// CR121 — secondary action on the block screen for a user who already updated in the store but whose app session hasn't re-checked the floor yet; re-runs the same GET /v1/client/release-floor check. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ve updated — check again'**
+  String get versionGateRetryCta;
+
+  /// CR121 — small caption under the recheck button on the block screen, covering both 'you're still below the floor' and 'the recheck call itself failed' (the fail-open path never removes the block screen, so this explains why nothing happened after tapping retry). NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Still on the old version, or AMI couldn\'t be reached. Try again in a moment.'**
+  String get versionGateOfflineRetryHint;
 }
 
 class _AppLocalizationsDelegate

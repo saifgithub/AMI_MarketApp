@@ -83,3 +83,51 @@ class ServerUnavailableException implements Exception {
   @override
   String toString() => 'ServerUnavailableException(status: $statusCode)';
 }
+
+/// Raised when the backend refuses a request from a build below the active
+/// version floor (HTTP 426 Upgrade Required — CR121).
+///
+/// Same shape DEF073 established for [ServerUnavailableException]: annotated
+/// onto the `DioException.error` slot by `_VersionGateInterceptor`
+/// (`api_client.dart`), so the existing `DioException` still propagates
+/// unchanged for any caller that doesn't specifically check for this.
+///
+/// The body is `{"detail": {min_build, recommended_build, action, headline,
+/// body, store_url}}` — the same JSON `GET /v1/client/release-floor`
+/// returns, so one screen can render either source. `action` is always
+/// `"block"` here (the middleware only emits 426 for the block case), kept
+/// as a field rather than assumed so a future server change that reuses 426
+/// for a different action doesn't silently mis-render.
+class UpgradeRequiredException implements Exception {
+  final int? minBuild;
+  final int? recommendedBuild;
+  final String action;
+  final String? headline;
+  final String? body;
+  final String? storeUrl;
+
+  const UpgradeRequiredException({
+    this.minBuild,
+    this.recommendedBuild,
+    this.action = 'block',
+    this.headline,
+    this.body,
+    this.storeUrl,
+  });
+
+  factory UpgradeRequiredException.fromJson(Map<String, dynamic> json) {
+    final detail = (json['detail'] as Map<String, dynamic>?) ?? json;
+    return UpgradeRequiredException(
+      minBuild: (detail['min_build'] as num?)?.toInt(),
+      recommendedBuild: (detail['recommended_build'] as num?)?.toInt(),
+      action: detail['action'] as String? ?? 'block',
+      headline: detail['headline'] as String?,
+      body: detail['body'] as String?,
+      storeUrl: detail['store_url'] as String?,
+    );
+  }
+
+  @override
+  String toString() =>
+      'UpgradeRequiredException(minBuild: $minBuild, action: $action)';
+}
