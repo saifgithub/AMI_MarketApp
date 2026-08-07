@@ -1240,11 +1240,33 @@ _DIRECTIONAL_CLAIMS: tuple[tuple[str, str], ...] = (
     (r"pull(?:s|ing)?\s*back\s+(?:to|toward|towards)", "above"),
 )
 
-# The verb, then a short gap carrying no second price, then the level it names:
-# "reclaim the 50-day range low of $998.19". The gap is capped so a price
-# further down the sentence isn't attributed to this verb.
+# The verb, then the level it names: "reclaim the 50-day range low of $998.19".
+#
+# What may sit between the two is a WHITELIST, not a length cap — round-1 audit
+# MAJOR. The cap was `[^\n$]{0,45}?`, which asks only that the `$` figure be
+# NEAR the verb, never that it be the verb's own object. So ordinary PM prose
+# where "reclaim" takes a non-price object and an unrelated price follows —
+# *"the company must reclaim its margin story before we'd pay $52.30 for it"* —
+# annotated a level the sentence made no directional claim about. Same shape
+# broke `pull back toward caution … last quoted at $52.30`: anchoring the
+# preposition to the verb does not make what follows the preposition the object.
+#
+# Every token between verb and level must now come from the small vocabulary a
+# level reference is actually built from. An unrecognised noun ends the match,
+# so an unknown phrase means no fire — the precision bias this check is built
+# on, enforced by the grammar rather than by distance. The whitelist also makes
+# the old "no second `$` in the gap" rule redundant: `$` is not in it.
+_LEVEL_CONNECTIVE = (
+    r"(?:the|a|an|its|their|this|that|prior|previous|former|recent|old|key|"
+    r"to|toward|towards|above|below|back|of|at|around|near|over|under|"
+    r"level|levels|support|resistance|line|low|lows|high|highs|price|mark|"
+    r"zone|area|floor|ceiling|band|base|range|session|close|day|week|month|"
+    r"moving|average|sma|ema|\d+(?:-(?:day|week|month))?)"
+)
+_LEVEL_GAP = rf"(?:[\s,–—-]+{_LEVEL_CONNECTIVE}\b)*[\s,]*"
+
 _DIRECTIONAL_CLAIM_RES: tuple[tuple[re.Pattern[str], str], ...] = tuple(
-    (re.compile(rf"\b(?:{verb})\b[^\n$]{{0,45}}?\$\s*(\d+(?:\.\d+)?)", re.IGNORECASE), side)
+    (re.compile(rf"\b(?:{verb})\b{_LEVEL_GAP}\$\s*(\d+(?:\.\d+)?)", re.IGNORECASE), side)
     for verb, side in _DIRECTIONAL_CLAIMS
 )
 

@@ -108,6 +108,44 @@ def test_a_second_price_in_the_gap_is_not_attributed_to_the_verb():
     assert _direction_contradictions(text, _SNDK_CLOSE) == []
 
 
+# ── round-1 audit MAJOR: the `$` figure must be the verb's OWN object ─────────
+#
+# The first cut asked only that the price sit within 45 characters of the verb,
+# which is proximity, not grammar. Both sentences below are ordinary PM prose
+# where the verb takes a NON-price object and an unrelated figure follows; both
+# annotated a level the sentence made no directional claim about. Reproduced by
+# the auditor against the real function, not hand-traced — kept verbatim.
+
+@pytest.mark.parametrize("text,close", [
+    ("The company must reclaim its margin story before we'd pay $52.30 for it.", 60.00),
+    ("Sentiment could pull back toward caution before the print, last quoted at $52.30.", 45.00),
+])
+def test_a_verb_with_a_non_price_object_does_not_annotate(text, close):
+    assert _direction_contradictions(text, close) == []
+    assert _annotate_direction_against_price(text, close) == (text, [])
+
+
+@pytest.mark.parametrize("text,close", [
+    ("Wait for the price to reclaim the 50-day range low of $998.19 first.", 1212.21),
+    ("It must recover to the $52.30 support level.", 60.00),
+    ("Needs to break above the $4.06 50-day high.", 5.00),
+    ("Expect it to fall back to the prior low of $900.00.", 800.00),
+    ("Wait for it to reclaim $1000.00 before revisiting.", 1015.00),
+])
+def test_the_tightened_grammar_still_catches_every_real_level_reference(text, close):
+    """The other half of the fix: a whitelist that also excluded the real
+    shapes would be a silent no-op, which is worse than the false positive."""
+    assert len(_direction_contradictions(text, close)) == 1
+
+
+def test_an_unknown_noun_between_verb_and_price_ends_the_match():
+    """The mechanism, stated: the gap is a vocabulary, not a distance. One
+    unrecognised word is enough to stop the match — which is why a miss is the
+    failure mode and a false annotation is not."""
+    assert _direction_contradictions("reclaim the momentum of $998.19", _SNDK_CLOSE) == []
+    assert _direction_contradictions("reclaim the low of $998.19", _SNDK_CLOSE) != []
+
+
 def test_two_different_closes_disagree_about_the_same_sentence():
     """Non-vacuity: the close reaches the comparison. Same sentence, one price
     on each side of the level — exactly one must fire."""
