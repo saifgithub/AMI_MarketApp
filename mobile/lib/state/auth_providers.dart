@@ -102,14 +102,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   final Ref _ref;
 
-  /// CR125: the local credential is dead (expired `exp` or a revoked
-  /// `token_version`) — wipe it and re-bootstrap. `DeviceUser.getToken()`
-  /// will come back null on the next `bootstrap()` call, so the app
-  /// re-authenticates exactly like a genuine first launch would.
+  /// CR125: the local credential was refused (expired `exp`, or a
+  /// `token_version` revoked by a sign-out elsewhere) — re-bootstrap.
+  ///
+  /// **The dying bearer is deliberately still attached.** Clearing it first
+  /// and then re-bootstrapping was the CR125 audit's BLOCKER: `bootstrap()`
+  /// reads the persisted token to prove ownership, so wiping it meant the
+  /// recovery `POST /v1/auth/anon` went out with no `Authorization` header at
+  /// all. The server then had no way to recognise a returning user, minted a
+  /// fresh anonymous identity, and the account's portfolio, journal, streaks
+  /// and credits were orphaned — including for a merely-expired token the
+  /// backend was explicitly built to still honour on this one route.
+  ///
+  /// Deciding a token is worthless is the server's call, not ours. A revoked
+  /// token still proves nothing (`token_version` is checked), so the only
+  /// behaviour this changes is the case where the identity could have been
+  /// saved. The local copy is cleared *after* the ask, by `bootstrap()`
+  /// persisting whatever the server returns.
   Future<void> _handleUnauthorized() async {
     await _pushLogout();
-    _ref.read(apiClientProvider).setToken(null);
-    await DeviceUser.clearTokenOnly();
     state = const AuthState();
     await bootstrap();
   }

@@ -246,3 +246,139 @@ def test_issued_token_carries_current_version(client: TestClient):
     assert parsed is not None
     assert parsed.user_id == user_id
     assert parsed.token_version == _current_version(user_id) == 1
+
+
+# ── the upgrade path: a PRE-CR125 token must still prove ownership ──────
+
+
+def _legacy_token(user_id: UUID) -> str:
+    """A token in the exact pre-CR125 shape: scaffold:<hex>:<sig>, HMAC over
+    the hex id alone. This is what every installed device is holding on the
+    day CR125 ships."""
+    import hmac as _hmac
+
+    from app.core.config import settings as _s
+
+    sig = _hmac.new(
+        _s.secret_key.encode("utf-8"), user_id.hex.encode("utf-8"), "sha256",
+    ).hexdigest()
+    return f"scaffold:{user_id.hex}:{sig}"
+
+
+def test_a_pre_cr125_token_still_proves_ownership_on_anon(client: TestClient):
+    """CR125 audit BLOCKER, and the one the 30-day fix did not cover.
+
+    Every installed token is in the old format the day this ships. If the old
+    format proves nothing, then on the FIRST call after the update every
+    returning user looks like a brand-new install and gets a fresh identity —
+    100% of the alpha cohort, on day zero, not day 31. The expiry fix does not
+    help: the token never gets the chance to expire."""
+    user_id, _ = _new_user()
+    legacy = _legacy_token(user_id)
+
+    r = client.post(
+        "/v1/auth/anon",
+        json={"device_user_id": str(user_id)},
+        headers={"Authorization": f"Bearer {legacy}"},
+    )
+    assert r.status_code == 200
+    assert UUID(r.json()["user"]["id"]) == user_id, (
+        "every existing account was orphaned by the token-format change itself"
+    )
+    assert r.json()["is_new"] is False
+
+
+def test_a_pre_cr125_token_authenticates_nothing_else(client: TestClient):
+    """The legacy format is ownership proof on ONE route, not a credential.
+    It carries no version field, so it cannot be revoked — which is precisely
+    why it must not authenticate anything."""
+    user_id, _ = _new_user()
+    headers = {"Authorization": f"Bearer {_legacy_token(user_id)}"}
+    assert client.get(f"/v1/mandate/{user_id}", headers=headers).status_code == 401
+    assert client.get("/v1/auth/me", headers=headers).status_code == 401
+
+
+def test_a_forged_legacy_token_proves_nothing(client: TestClient):
+    victim_id, _ = _new_user()
+    forged = f"scaffold:{victim_id.hex}:deadbeef"
+    r = client.post(
+        "/v1/auth/anon",
+        json={"device_user_id": str(victim_id)},
+        headers={"Authorization": f"Bearer {forged}"},
+    )
+    assert r.status_code == 200
+    assert UUID(r.json()["user"]["id"]) != victim_id
+
+
+def test_legacy_proof_stops_once_the_migration_window_closes(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch,
+):
+    """The widening is bounded. A legacy token cannot be revoked, so it must
+    not be honoured forever — an empty/past window closes it."""
+    from app.core.config import settings
+
+    user_id, _ = _new_user()
+    monkeypatch.setattr(settings, "auth_legacy_rebootstrap_until", "2020-01-01")
+    r = client.post(
+        "/v1/auth/anon",
+        json={"device_user_id": str(user_id)},
+        headers={"Authorization": f"Bearer {_legacy_token(user_id)}"},
+    )
+    assert UUID(r.json()["user"]["id"]) != user_id
+
+
+def test_a_malformed_window_refuses_rather_than_accepting_forever(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch,
+):
+    """CR040: a typo'd date must not silently mean "accept legacy forever"."""
+    from app.core.config import settings
+
+    user_id, _ = _new_user()
+    monkeypatch.setattr(settings, "auth_legacy_rebootstrap_until", "not-a-date")
+    r = client.post(
+        "/v1/auth/anon",
+        json={"device_user_id": str(user_id)},
+        headers={"Authorization": f"Bearer {_legacy_token(user_id)}"},
+    )
+    assert UUID(r.json()["user"]["id"]) != user_id
+
+
+def test_an_expired_token_past_the_grace_window_proves_nothing(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch,
+):
+    """CR125 audit MAJOR. `allow_expired` never looked at `exp` at all, so a
+    stolen expired token could resurrect its account forever — strictly worse
+    than a stolen unexpired one, which dies on its own. Now bounded."""
+    from app.core.config import settings
+
+    user_id, _ = _new_user()
+    monkeypatch.setattr(settings, "auth_rebootstrap_grace_days", 30)
+    long_dead = _scaffold_token(
+        user_id, token_version=_current_version(user_id), ttl_days=-400,
+    )
+    r = client.post(
+        "/v1/auth/anon",
+        json={"device_user_id": str(user_id)},
+        headers={"Authorization": f"Bearer {long_dead}"},
+    )
+    assert UUID(r.json()["user"]["id"]) != user_id
+
+
+def test_an_expired_token_inside_the_grace_window_still_proves_ownership(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch,
+):
+    """The non-vacuity leg: a grace window that rejected everything would pass
+    the test above and re-open the day-31 orphaning it exists to prevent."""
+    from app.core.config import settings
+
+    user_id, _ = _new_user()
+    monkeypatch.setattr(settings, "auth_rebootstrap_grace_days", 180)
+    recently_dead = _scaffold_token(
+        user_id, token_version=_current_version(user_id), ttl_days=-5,
+    )
+    r = client.post(
+        "/v1/auth/anon",
+        json={"device_user_id": str(user_id)},
+        headers={"Authorization": f"Bearer {recently_dead}"},
+    )
+    assert UUID(r.json()["user"]["id"]) == user_id

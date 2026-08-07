@@ -112,6 +112,15 @@ services:
       # a token nobody ever explicitly signed out; DELETE /v1/auth/session
       # (token_version bump) is the immediate-revocation path.
       AUTH_TOKEN_TTL_DAYS: ${AUTH_TOKEN_TTL_DAYS:-30}
+      # CR125 audit — how long past exp a token may still prove account
+      # OWNERSHIP on /v1/auth/anon (never authenticate a request). 0
+      # re-opens the day-31 orphaning, so it is a choice, not a default.
+      AUTH_REBOOTSTRAP_GRACE_DAYS: ${AUTH_REBOOTSTRAP_GRACE_DAYS:-180}
+      # CR125 audit — last date a PRE-CR125 token may prove ownership.
+      # Empty refuses legacy proof, which orphans every account that has
+      # not opened the app since the upgrade. Drop it once the fleet has
+      # rolled over (see auth_legacy_rebootstrap_until's log line).
+      AUTH_LEGACY_REBOOTSTRAP_UNTIL: ${AUTH_LEGACY_REBOOTSTRAP_UNTIL:-2027-02-07}
       # Admin back-office static bearer (AT:R27). All /v1/admin/* routes
       # require it; empty value returns 503 from those routes (Alpha-only
       # mechanism, replaced by admin_users + JWT in Beta).

@@ -14,9 +14,13 @@ get_current_user — extract and verify the Bearer token from the
 
 from __future__ import annotations
 
+from datetime import date, datetime, timezone
+
 from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy import select
 
+from app.core.config import settings
+from app.core.logging import logger
 from app.db import get_session
 from app.db.models import User
 from app.services.auth_service import ParsedToken, parse_scaffold_token
@@ -78,6 +82,54 @@ def get_current_user(
         return row
 
 
+def _legacy_rebootstrap_open() -> bool:
+    """Whether a PRE-CR125 token may still prove ownership today.
+
+    Bounded by wall clock because a legacy token has no `exp` to bound from
+    and no `token_version` to revoke against. Logged when it is actually
+    used, so "is it safe to drop this yet?" is answerable from the logs
+    rather than from a guess (CR040)."""
+    raw = settings.auth_legacy_rebootstrap_until.strip()
+    if not raw:
+        return False
+    try:
+        until = date.fromisoformat(raw)
+    except ValueError:
+        # A malformed date must not silently mean "accept forever".
+        logger.error(
+            "auth_legacy_rebootstrap_until_unparseable",
+            value=raw, effect="legacy re-bootstrap refused",
+        )
+        return False
+    return datetime.now(timezone.utc).date() <= until
+
+
+def _within_rebootstrap_grace(token: str) -> bool:
+    """Whether an EXPIRED current-format token is still young enough to prove
+    ownership. A legacy token has no `exp` and is governed by
+    `_legacy_rebootstrap_open` instead, so it passes here.
+
+    CR125 audit MAJOR: without this, `allow_expired` never looks at `exp` at
+    all, so a stolen expired token resurrects its account forever — strictly
+    worse than a stolen unexpired one, which dies on its own."""
+    parts = token[len("scaffold:"):].split(":") if token.startswith("scaffold:") else []
+    if len(parts) != 4:
+        return True
+    try:
+        exp = int(parts[1])
+    except ValueError:
+        return True
+    grace = settings.auth_rebootstrap_grace_days
+    cutoff = exp + grace * 86400
+    if int(datetime.now(timezone.utc).timestamp()) <= cutoff:
+        return True
+    logger.info(
+        "auth_rebootstrap_outside_grace",
+        grace_days=grace, effect="treated as a new install",
+    )
+    return False
+
+
 def get_rebootstrap_identity_optional(
     authorization: str | None = Header(default=None),
 ) -> User | None:
@@ -106,8 +158,12 @@ def get_rebootstrap_identity_optional(
     token = _extract_token(authorization)
     if not token:
         return None
-    parsed = parse_scaffold_token(token, allow_expired=True)
+    parsed = parse_scaffold_token(
+        token, allow_expired=True, allow_legacy=_legacy_rebootstrap_open(),
+    )
     if parsed is None:
+        return None
+    if not _within_rebootstrap_grace(token):
         return None
     with get_session() as s:
         row = s.execute(select(User).where(User.id == parsed.user_id)).scalar_one_or_none()

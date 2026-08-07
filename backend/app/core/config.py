@@ -450,6 +450,24 @@ class Settings(BaseSettings):
     # backstop for a token nobody ever explicitly signed out.
     auth_token_ttl_days: int = 30
 
+    # CR125 audit MAJOR — how long past `exp` a token may still prove account
+    # OWNERSHIP on `/v1/auth/anon` (never authenticate a request). Without a
+    # bound, an expired stolen token resurrects a session forever, which is
+    # strictly worse than an unexpired stolen one — that at least dies on its
+    # own. 180 days is generous for a returning user and finite for a thief.
+    # 0 disables the leniency entirely, which re-opens the day-31 orphaning,
+    # so it is a deliberate choice and not a safe default.
+    auth_rebootstrap_grace_days: int = 180
+
+    # CR125 audit BLOCKER — the last date on which a PRE-CR125 token may prove
+    # ownership on `/v1/auth/anon`. Every installed token is in the old format
+    # when CR125 ships, so without this every existing account is orphaned on
+    # day zero, not day 31. Legacy tokens carry no `token_version` and so
+    # cannot be revoked — that is not a regression (nothing revoked them
+    # before either) but it is a real widening, so it expires by wall clock.
+    # ISO date, e.g. "2027-02-07". Empty = legacy proof refused.
+    auth_legacy_rebootstrap_until: str = "2027-02-07"
+
     # DEF044 — at-rest encryption for Alpaca brokerage creds. Optional: when
     # empty the cipher key is derived from SECRET_KEY, so encryption is active
     # out-of-box. Set a dedicated urlsafe secret here to rotate independently.

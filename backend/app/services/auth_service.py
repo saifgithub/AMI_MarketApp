@@ -208,7 +208,9 @@ def _scaffold_token(user_id: UUID, token_version: int, ttl_days: int | None = No
     return f"scaffold:{hex_id}:{exp}:{token_version}:{sig}"
 
 
-def parse_scaffold_token(token: str, *, allow_expired: bool = False) -> ParsedToken | None:
+def parse_scaffold_token(
+    token: str, *, allow_expired: bool = False, allow_legacy: bool = False,
+) -> ParsedToken | None:
     """Parse and verify a scaffold Bearer token. Returns `ParsedToken` or None.
 
     Verifies signature and `exp` only — NOT `token_version` against the DB
@@ -228,11 +230,28 @@ def parse_scaffold_token(token: str, *, allow_expired: bool = False) -> ParsedTo
     user's portfolio, journal, streaks and credits are orphaned in silence —
     the app simply looks brand new.
 
-    Relaxing `exp` here costs nothing the revocation story depends on: the
-    signature is still required, and `token_version` is still checked
-    against the live row by the caller, so a signed-out token cannot
-    resurrect anything. Expiry keeps its full force everywhere that matters
-    — an expired token still authenticates NO ordinary API request.
+    Relaxing `exp` here does not weaken revocation: the signature is still
+    required, and `token_version` is still checked against the live row by
+    the caller, so a signed-out token cannot resurrect anything. Expiry keeps
+    its full force everywhere that matters — an expired token still
+    authenticates NO ordinary API request. It IS strictly more permissive
+    than an unexpired stolen token, which dies on its own; that is why the
+    caller bounds it (`AUTH_REBOOTSTRAP_GRACE_DAYS`) rather than accepting
+    any age.
+
+    `allow_legacy=True` additionally accepts the **pre-CR125** signed format
+    `scaffold:<hex>:<sig>` (HMAC over the hex id alone, no exp, no version),
+    same single caller. Without it, CR125 orphans every existing account on
+    day zero rather than on day 31: every installed token is in the old
+    format, so `/v1/auth/anon` would see no proof of ownership from ANY
+    returning user on their first call after the update, and mint each of
+    them a brand-new identity. The 30-day expiry fix does not cover this —
+    the token never gets the chance to expire.
+
+    A legacy token carries no version field, so it cannot be revoked. That is
+    not a regression (nothing could revoke it before CR125 either) but it is
+    a real widening, so it is bounded by wall-clock date rather than left
+    open forever — see `settings.auth_legacy_rebootstrap_until`.
     """
     if not token.startswith("scaffold:"):
         return None
@@ -264,9 +283,27 @@ def parse_scaffold_token(token: str, *, allow_expired: bool = False) -> ParsedTo
             return ParsedToken(user_id=UUID(parts[0]), token_version=None)
         except ValueError:
             return None
-    # Anything else — including the pre-CR125 3-part signed format
-    # (scaffold:<hex>:<sig>, no exp/version) — is rejected outright. CR040
-    # degrade loudly: a stale token 401s, it does not quietly pass.
+    if len(parts) == 2 and allow_legacy:
+        # Pre-CR125 signed format: scaffold:<hex>:<sig>, HMAC over the hex id
+        # alone. Accepted ONLY as proof of ownership on the re-bootstrap path,
+        # never for ordinary auth. `token_version=None` because the format
+        # predates the column; the caller decides what that means.
+        hex_id, claimed_sig = parts
+        try:
+            user_id = UUID(hex_id)
+        except ValueError:
+            return None
+        expected_sig = _hmac.new(
+            settings.secret_key.encode("utf-8"),
+            hex_id.encode("utf-8"),
+            "sha256",
+        ).hexdigest()
+        if not _hmac.compare_digest(claimed_sig, expected_sig):
+            return None
+        return ParsedToken(user_id=user_id, token_version=None)
+    # Anything else — including the pre-CR125 signed format when
+    # `allow_legacy` is not set — is rejected outright. CR040 degrade
+    # loudly: a stale token 401s, it does not quietly pass.
     return None
 
 

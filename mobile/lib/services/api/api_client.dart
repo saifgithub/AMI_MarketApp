@@ -405,6 +405,24 @@ class ApiClient {
   /// bypassed the Dio interceptor and sent no Authorization header, so
   /// `/v1/brief/message`, `/v1/agents/one_on_one/message`, and
   /// `/v1/room/stream` would 401 once the backend enforced auth.
+  /// CR125 audit MAJOR — the three SSE routes send via raw
+  /// `_httpClient.send()` (see [_sseRequest]) and so bypass every Dio
+  /// interceptor, including the one that fires [onUnauthorized]. That was
+  /// pre-existing (AT:R33 finding A8) and harmless while tokens never
+  /// expired; CR125 is what makes a 401 on these routes routine rather than
+  /// attacker-only. Without this, a mid-session revocation on Convene the
+  /// Room, a Brief, or a 1-on-1 — the app's three flagship interactive
+  /// surfaces — throws an inert exception, and retrying keeps 401ing until
+  /// some unrelated Dio call happens to trigger recovery or the user
+  /// force-quits.
+  ///
+  /// Deliberately fires only on 401. A 403 is an authorization decision
+  /// about a valid identity; clearing the session over one would log the
+  /// user out of an account that is working fine.
+  void _notifyIfUnauthorized(int statusCode) {
+    if (statusCode == 401) onUnauthorized?.call();
+  }
+
   http.Request _sseRequest(Uri uri, String body) {
     final token = _bearerToken;
     if (token == null) {
@@ -554,6 +572,7 @@ class ApiClient {
     });
     final response = await _httpClient.send(_sseRequest(uri, body));
     if (response.statusCode != 200) {
+      _notifyIfUnauthorized(response.statusCode);
       throw Exception('HTTP ${response.statusCode} from brief stream');
     }
     String buffer = '';
@@ -666,6 +685,7 @@ class ApiClient {
 
     final response = await _httpClient.send(_sseRequest(uri, body));
     if (response.statusCode != 200) {
+      _notifyIfUnauthorized(response.statusCode);
       throw Exception('HTTP ${response.statusCode} from 1-on-1 stream');
     }
 
@@ -935,6 +955,7 @@ class ApiClient {
       throw ServerUnavailableException(response.statusCode);
     }
     if (response.statusCode != 200) {
+      _notifyIfUnauthorized(response.statusCode);
       throw Exception('HTTP ${response.statusCode} from room stream');
     }
     String buffer = '';
