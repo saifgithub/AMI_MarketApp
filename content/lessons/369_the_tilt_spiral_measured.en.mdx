@@ -1,0 +1,73 @@
+---
+id: "369_the_tilt_spiral_measured"
+title: "The tilt spiral, measured"
+duration_min: 7
+level: 2
+module: 3
+difficulty: 4
+track: "edge_process"
+code: "EDGE 103"
+prerequisites: ["368_overconfidence_is_the_mechanism", "047_revenge_trading"]
+topic: "intraday_tilt"
+tags: ["day_trading", "tilt", "cortisol", "revenge_trading", "cooldown"]
+sources: ["Coates & Herbert — Endogenous Steroids and Financial Risk Taking on a London Trading Floor, Proceedings of the National Academy of Sciences 105(16), 2008 (17 male traders, 8 trading days)", "Kandasamy et al. — Cortisol Shifts Financial Risk Preferences, Proceedings of the National Academy of Sciences 111(9), 2014", "Huang & Chan — The House Money and Break-Even Effects for Different Types of Traders: Evidence from Taiwan Futures Markets, Pacific-Basin Finance Journal 26, 2014"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en", "ar", "ms"]
+retranslate: ["ar", "ms"]
+created_at: "2026-08-07"
+updated_at: "2026-08-07"
+---
+
+# The tilt spiral, measured
+
+<Lesson id="047_revenge_trading"/> named the pattern and gave you a falsifiable test for it. This lesson extends that to intraday and asks a sharper question: is anything actually, physically measurable happening to you when it fires — not just behaviourally? Short answer: yes, and it has been measured directly on a real trading floor.
+
+## How this plays out in real markets
+
+Coates and Herbert sampled 17 male traders on a City of London derivatives desk over 8 consecutive trading days — morning testosterone plus two cortisol readings a day. Two findings, both statistically clean: a trader's own cortisol level tracked the variance of his daily P&L (r²=0.48), and tracked the market's own implied volatility even more tightly (r²=0.86, using German Bund options as the volatility proxy). Uncertainty itself — not losing specifically, but not knowing what's about to happen — is what drove the hormone up. Separately, a trader's morning testosterone level predicted that day's trading profitability.
+
+Then came the causal follow-up. Kandasamy and colleagues, including Coates, took healthy volunteers with no trading background and, over 8 days, raised their cortisol with a tailored hydrocortisone regimen to the same levels Coates had measured in stressed traders. Under that chronically elevated cortisol, the same people chose measurably safer, lower-payoff bets than before. Cortisol wasn't just a symptom of a stressful trading day — deliberately raising it changed what someone was willing to risk next, in a controlled experiment where nothing else changed.
+
+That's the physiology, and it points toward caution, not recklessness — a useful correction to the idea that tilt is simply reckless abandon. But the behavioural record on actual post-loss trading tells a more specific story for individual traders. Huang and Chan, working from Taiwan Futures Exchange transaction records, found that active individual traders — not the futures firms and not the foreign institutions trading the same book — specifically increased their afternoon risk-taking after a losing morning, a pattern they call the break-even effect. It was large enough, for that one group alone, to move the market's own volatility and liquidity. The institutions on the other side of those same trades showed no such pattern.
+
+Put the two pieces together and the honest picture is: your body's baseline stress response to uncertainty likely pushes toward caution, but somewhere between that hormone shift and your finger on the buy button, a specific group — active individual traders trying to get back to even — overrides it and does the opposite. That override is the trade this whole track keeps coming back to.
+
+## The trap
+
+The trap is treating this as unfalsifiable — psychology as an excuse rather than a pattern you can catch in your own record. It isn't. <Lesson id="047_revenge_trading"/> already gave you the objective test: entries within 60 minutes of a closed loss, sized at least 1.5x your normal risk, concentrated in the same name or sector as the original loss. That test doesn't care why it's happening physiologically — cortisol, testosterone, the break-even effect, or all three at once. It cares whether the pattern shows up in your <Term id="ami_decision_journal"/>. The mechanism explains why the pull is real and not a character flaw; it does not make the pull optional to guard against.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="In Coates and Herbert's trading-floor study, what did a trader's cortisol level track most strongly?"
+  options={[
+    "The market's own implied volatility (r-squared 0.86) — even more strongly than his own P&L variance (r-squared 0.48)",
+    "His account balance",
+    "The number of trades he placed that day",
+    "Nothing measurable — cortisol was unrelated to trading conditions"
+  ]}
+  answer={0}
+  explanation="Uncertainty in the market itself, not just personal losses, was the stronger driver — which matters because it means a calm personal session inside a volatile market still carries the physiological load. Cortisol is a response to not-knowing, not only to losing."
+/>
+
+<Quiz
+  question="Kandasamy's follow-up study raised volunteers' cortisol experimentally and found they became MORE risk-averse. How does that square with Huang and Chan's finding that individual traders take MORE risk after a loss, the break-even effect?"
+  options={[
+    "They are not contradictory — chronic cortisol elevation appears to push general risk preference toward caution, while the break-even effect is a specific behavioural override where a trader takes on more risk in order to recoup a loss; both can be true of the same person at different moments",
+    "They are contradictory, and one of the two studies must be wrong",
+    "Kandasamy's study proves the break-even effect does not exist",
+    "The two findings describe the same mechanism under different labels"
+  ]}
+  answer={0}
+  explanation="Holding two true findings at once is the honest reading here: a hormonal baseline that leans cautious does not prevent a specific, goal-directed override — the drive to get back to even — from winning out in the moment that matters. Flattening this into a single slogan either way loses the actual mechanism."
+/>
+
+## Try it
+
+AMI's post-loss cooldown, covered in <Lesson id="365_your_risk_limits_in_ami"/>, is the one control in your <Term id="ami_mandate"/> built directly around this research — it doesn't know or care whether your next trade would have been a good one; it removes your ability to place it inside the exact window this lesson's evidence flags as compromised. If your risk profile has it set short or off, that's your call — the <Term id="ami_pm_safety_floor"/> only enforces the mandate you agreed to, not a version you didn't choose. But before you loosen it, pull your last five stop-outs from the <Term id="ami_decision_journal"/> and check what you did in the following hour. If a pattern shows up, you've just watched cortisol and the break-even effect happen to you, in your own numbers.
+
+## Takeaway
+
+The pull to trade bigger and faster right after a loss is not a story you're telling yourself — it shows up in cortisol, in testosterone, and in transaction records from a real futures exchange. None of that makes it un-fightable. It makes it exactly the kind of pattern a falsifiable test and a mechanical cooldown are built to catch.

@@ -1,0 +1,80 @@
+---
+id: "367_why_activity_costs_you_before_costs"
+title: "Why activity costs you, before costs"
+duration_min: 6
+level: 2
+module: 3
+difficulty: 3
+track: "edge_process"
+code: "EDGE 101"
+prerequisites: ["366_what_the_data_actually_says_about_day_trading", "014_position_sizing_basics"]
+topic: "overtrading_costs"
+tags: ["day_trading", "overtrading", "turnover", "transaction_costs", "position_sizing"]
+sources: ["Barber & Odean — Trading Is Hazardous to Your Wealth: The Common Stock Investment Performance of Individual Investors, Journal of Finance 55(2), 2000 (66,465 households, 1991–1996)"]
+agent_callouts: ["trader"]
+locale_versions: ["en", "ar", "ms"]
+retranslate: ["ar", "ms"]
+created_at: "2026-08-07"
+updated_at: "2026-08-07"
+---
+
+# Why activity costs you, before costs
+
+<Lesson id="366_what_the_data_actually_says_about_day_trading"/> gave you the population base rate. This lesson gives you the single biggest mechanism behind most of it — and it isn't bad stock picking. It's how many times you pick.
+
+## How this plays out in real markets
+
+Barber and Odean followed 66,465 households at a large U.S. discount broker from 1991 to 1996, sorted every year into five equal groups by portfolio turnover. The gap between the busiest and the quietest group is the whole lesson in one table.
+
+| Group | Behaviour | Net annual return |
+|---|---|---|
+| Quintile 1 | Least active (closest to buy-and-hold) | 18.5% |
+| Quintile 5 | Most active | 11.4% |
+| Average household | ~75% annual turnover | 16.4% |
+| Market (value-weighted index) | — | 17.9% |
+
+That's a 7.1-point annual gap between the most and least active groups, and here's the part that should surprise you: it wasn't because the busy group picked worse stocks. Barber and Odean also computed *gross* returns — performance before any commission, spread, or tax is subtracted — and found that quintile 5 did not significantly outperform quintile 1 before costs. Both groups picked stocks about equally well. The entire 7-point gap opened up after costs.
+
+Run the mechanism yourself, at a much smaller scale than the paper's aggregate. Take a $20,000 account trading a liquid name like AAPL, where the combined bid-ask spread and a discount broker's commission might run on the order of 0.05–0.1% of position value per round trip — call it $15 on a $20,000 position, roughly 0.075%. Trivial, per trade. Do that three times a day, fully sized each time, across 250 trading days: 3 × 250 × 0.075% is around 56% of account value paid in friction over the year, purely from the *count* of trades, before a single one of them has to be right or wrong. Barber and Odean's quintile 5 households were nowhere near 750 round trips a year on average — their real drag was smaller than this toy number — but the direction and the mechanism are identical: cost scales with how often you trade, not with how good the trades are.
+
+## The trap
+
+Someone reading this will object, correctly, that a 1990s discount-brokerage sample of average households says nothing about a specifically skilled trader today. Fair — except the paper's own test is built to catch exactly that claim. If the busiest households had genuinely sharper picks, it would show up gross of costs, before the friction bill arrives. It didn't. The trap is treating "I trade more because my edge is sharper" as self-evidently true, when it's a claim your own <Term id="ami_decision_journal"/> can test the same way Barber and Odean tested 66,465 accounts: split your gross P&L from your net P&L and see whether the gap between them is growing faster than your edge is.
+
+One caution running the other direction: AMI's simulator fills your <Term id="simulated_trade"/>s at the quoted price without modelling spread or commission drag. That's a deliberate simplification for a training app, not a claim that frictions don't exist — it means the gap this lesson describes will not show up automatically in your simulated P&L the way it would in a real account. Your simulated numbers are gross numbers. Treat them that way.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="In Barber and Odean's data, what accounted for most of the 7-point annual return gap between the highest-turnover and lowest-turnover household quintiles?"
+  options={[
+    "Costs, not stock-picking — gross of fees the two quintiles performed about equally well, and the gap opened up almost entirely after costs",
+    "The low-turnover group happened to hold fundamentally better stocks",
+    "There was no measurable gap in this sample",
+    "Taxes alone explained the entire gap, independent of commissions or spread"
+  ]}
+  answer={0}
+  explanation="The tempting wrong answer is that the busy group simply picked worse — most people assume trading skill explains a return gap this size. Barber and Odean checked that directly with gross returns and found the two groups statistically indistinguishable before costs. Only after subtracting commissions, spread and tax drag does the 11.4% vs 18.5% split appear."
+/>
+
+<Quiz
+  question="A trader says: my win rate is 58% and my average win is bigger than my average loss, so I must be making money. What is missing from that claim, per this lesson?"
+  options={[
+    "Whether the gross edge survives after transaction costs and taxes — a real edge on paper can be entirely consumed by the cost of accessing it often enough to realize it",
+    "Nothing — win rate and average win/loss size are sufficient on their own",
+    "The claim is meaningless without knowing the exact tickers traded",
+    "A 58% win rate is definitionally unprofitable"
+  ]}
+  answer={0}
+  explanation="Win rate and payoff ratio describe the gross shape of an edge, not whether it survives contact with frictions. Barber and Odean's own households averaged a positive 16.4% return gross of the comparison to the market — the number that mattered wasn't whether they picked reasonably, it was how much of that got eaten by how often they acted on it."
+/>
+
+## Try it
+
+Open your <Term id="ami_decision_journal"/> and pull your last ten closed <Term id="simulated_trade"/>s. Sum the price-move P&L alone, then count how many round trips it took to get there. Take that count to the Trader agent in <Term id="ami_one_on_one"/> and ask what a realistic per-trade cost would look like at your position size and frequency — spread, commission, and short-term tax treatment, since AMI's simulator won't compute that for you. Do the multiplication yourself before you decide your edge is real.
+
+## Takeaway
+
+Barber and Odean found a level playing field before costs and a lopsided one after them: 11.4% versus 18.5%, from quintiles that picked stocks about equally well. The cost of a trade isn't only the spread you paid on that trade — it's every other trade compounding fees and friction against you before your picks ever get judged on their own merits.

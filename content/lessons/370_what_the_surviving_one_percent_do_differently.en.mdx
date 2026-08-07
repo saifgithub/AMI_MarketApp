@@ -1,0 +1,75 @@
+---
+id: "370_what_the_surviving_one_percent_do_differently"
+title: "What the surviving 1% do differently"
+duration_min: 6
+level: 2
+module: 3
+difficulty: 3
+track: "edge_process"
+code: "EDGE 104"
+prerequisites: ["369_the_tilt_spiral_measured"]
+topic: "day_trading_survivor_habits"
+tags: ["day_trading", "skill_persistence", "process", "decision_journal"]
+sources: ["Barber, Lee, Liu & Odean — The Cross-Section of Speculator Skill: Evidence from Day Trading, Journal of Financial Markets 18, 2014 (Taiwan Stock Exchange, 1992–2006)"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en", "ar", "ms"]
+retranslate: ["ar", "ms"]
+created_at: "2026-08-07"
+updated_at: "2026-08-07"
+---
+
+# What the surviving 1% do differently
+
+<Lesson id="366_what_the_data_actually_says_about_day_trading"/> gave you the headline: under 1% of Taiwan's day traders were reliably profitable net of fees. This lesson asks the question everyone skips — reliably *how*? Not by mindset. The same dataset that found the 1% also found the single best predictor of whether someone would be in it, and it's a number you can start computing on yourself today, for free, in a simulator.
+
+## How this plays out in real markets
+
+Barber, Lee, Liu and Odean ranked every day trader in a given year by the Sharpe ratio of their day-trading returns — mean net daily return divided by its own standard deviation, the same risk-adjusted measure a fund would report. Then they simply watched what that same group did the following year. The top 500, ranked purely on the prior year's Sharpe ratio, went on to earn 61.3 basis points a day before fees (37.9bps after fees) in the next year. The bottom-ranked 500 went on to earn -11.5bps before fees (-28.9bps after) — reliably negative, not unlucky once. The researchers' own conclusion, stated plainly: past performance, whether measured as returns or dollar profits, is by a large margin the best predictor of future performance they tested.
+
+Two things follow from that finding, and together they're what actually separates the roughly one-in-a-hundred from everyone else.
+
+First, skill is measurable before it's provable. You don't need ten years to start telling signal from noise — you need a Sharpe ratio computed the way theirs was: net of costs, over enough trades that one lucky week can't dominate it, tracked consistently rather than checked selectively.
+
+Second, the ranking only works as a test if it's run *before* you know the answer. The paper's persistence result holds because traders were sorted on one full year of data and graded on the next year's results — out of sample. A trader who only checks their record after a good stretch, or only when they feel confident, isn't running this test. They're running a search for confirmation.
+
+## The trap
+
+The trap is treating "what separates them" as a personality question — grit, discipline, nerve — instead of the unglamorous, falsifiable thing the data actually points to: a continuously kept, honestly scored record, checked against itself out of sample, over a run long enough that one hot week can't hide inside it. That's not inspiring copy. It's also the only thing in this entire track the research actually measured as predictive, as opposed to merely plausible.
+
+The second trap is specific to this lesson: reading "past performance predicts future performance" as a green light to size up the moment your own numbers turn positive. The paper's top group was ranked on a full prior year, not a hot week — and <Lesson id="368_overconfidence_is_the_mechanism"/> already covered what a short winning streak does to confidence. A month of good <Term id="simulated_trade"/>s is data. It is not yet a Sharpe ratio you can trust.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="What did Barber, Lee, Liu and Odean find was the strongest predictor of a Taiwanese day trader's future profitability?"
+  options={[
+    "Past performance — ranked by the Sharpe ratio of the prior year's day-trading returns — predicted the next year's performance by a large margin; the top 500 stayed reliably profitable, the bottom 500 stayed reliably unprofitable",
+    "Account size — traders with more capital did reliably better",
+    "Years of experience alone, regardless of past results",
+    "Nothing predicted future performance; every year was independent"
+  ]}
+  answer={0}
+  explanation="The paper's own framing is direct: past performance, whether measured in returns or dollar profits, was by a large margin the best predictor tested. That is what turns 'skilled' from a story someone tells about themselves into something measured against a later, independent period."
+/>
+
+<Quiz
+  question="Why does it matter that the top and bottom groups in this study were ranked on one full prior year of Sharpe ratio, not a hot week or a single lucky month?"
+  options={[
+    "A full year of net returns is far less likely to be dominated by a lucky streak, which is exactly the confusion covered earlier in this track — a short winning window inflates confidence without being real evidence of skill",
+    "It does not matter — a week or a year would have produced the same ranking",
+    "One year was chosen arbitrarily and has no bearing on how reliable the result is",
+    "Longer measurement periods always produce higher reported returns"
+  ]}
+  answer={0}
+  explanation="A single winning week is exactly the kind of evidence overconfidence is built from — impressive in the moment, statistically weak. A full year of net Sharpe ratio is what lets the researchers claim persistence rather than a run of good luck being mistaken for one."
+/>
+
+## Try it
+
+You can't get a year of intraday history for free with real money — you can with AMI's simulator. Pick a rule for yourself right now: a minimum number of <Term id="simulated_trade"/>s, logged honestly in the <Term id="ami_decision_journal"/> including the losers, before you let yourself compute a Sharpe ratio and treat it as meaningful. Then, and only then, take the number to the Research Manager in <Term id="ami_one_on_one"/> and ask it to help you read it against this lesson's numbers — not as a verdict on whether you're good, but as the same out-of-sample test the paper ran, at a scale you can actually run on yourself.
+
+## Takeaway
+
+The 1% aren't defined by conviction, temperament, or a system someone would sell you. In the one dataset that actually tracked it, they're defined by a number computed the same honest way twice — once to rank them, once to check whether the ranking held — and it did. That test is available to you for free, starting with your next simulated trade.
