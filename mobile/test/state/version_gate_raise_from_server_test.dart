@@ -113,13 +113,42 @@ void main() {
       expect(c.state.isBlocked, isFalse);
     });
 
-    test('a second 426 does not overwrite the first block', () {
+    test('a later bodyless 426 does not blank a real message', () {
       // Several in-flight requests all 426 at once. The first raise carries
       // the real per-raise copy; a later bodyless one must not blank it.
       final c = _controller();
       c.raiseFromServer(_blocked);
       c.raiseFromServer(const UpgradeRequiredException());
       expect(c.state.floor!.headline, 'Update required');
+    });
+
+    test('a bodyless 426 arriving FIRST is upgraded by the real one', () {
+      // The reverse ordering, and the round-3 audit MINOR. A naive
+      // "first raise wins" rule is right in the test above and wrong here:
+      // a 426 whose body was absent or unparseable would permanently suppress
+      // the real headline and store link behind it, leaving the user on
+      // generic chrome with no explanation and no way out. Richest-wins means
+      // neither ordering can lose the message.
+      final c = _controller();
+      c.raiseFromServer(const UpgradeRequiredException());
+      expect(c.state.isBlocked, isTrue);
+      expect(c.state.floor!.headline, isNull);
+
+      c.raiseFromServer(_blocked);
+
+      expect(c.state.floor!.headline, 'Update required');
+      expect(c.state.floor!.storeUrl, 'https://testflight.apple.com/join/ABC123');
+    });
+
+    test('a store link alone counts as detail worth upgrading to', () {
+      // The way out is detail even with no copy attached — it is the only
+      // thing on that screen the user can act on.
+      final c = _controller();
+      c.raiseFromServer(const UpgradeRequiredException());
+      c.raiseFromServer(const UpgradeRequiredException(
+        storeUrl: 'https://play.google.com/store/apps/details?id=x',
+      ));
+      expect(c.state.floor!.storeUrl, isNotNull);
     });
   });
 

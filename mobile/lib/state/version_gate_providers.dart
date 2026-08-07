@@ -115,7 +115,19 @@ class VersionGateController extends StateNotifier<VersionGateState> {
   /// silently mis-rendered as a hard block.
   void raiseFromServer(UpgradeRequiredException e) {
     if (e.action != 'block') return;
-    if (state.isBlocked) return;
+    // Several in-flight requests can 426 at once, and a 426 whose body was
+    // unparseable or absent yields a detail-less exception (see
+    // `upgradeRequiredExceptionFor`). The first raise usually carries the real
+    // per-raise copy, so the naive "first wins" rule is right most of the
+    // time — but not always, and the reverse ordering is what the round-3
+    // audit caught: a bodyless 426 arriving FIRST permanently suppressed the
+    // real headline and store link behind it, leaving the user on generic
+    // chrome with no explanation of why this build stopped working.
+    //
+    // So the rule is richest-wins, not first-wins: only replace a standing
+    // block when the incoming raise carries detail the stored one lacks.
+    // Neither ordering can lose the message that way.
+    if (state.isBlocked && !_addsDetail(e, state.floor)) return;
     state = VersionGateState(
       status: VersionGateStatus.block,
       floor: ReleaseFloorResponse(
@@ -127,6 +139,21 @@ class VersionGateController extends StateNotifier<VersionGateState> {
         storeUrl: e.storeUrl,
       ),
     );
+  }
+
+  /// Whether [e] tells the user something the already-stored [current] does
+  /// not. "Detail" is the per-raise copy and the way out — a headline, a body,
+  /// or a store link. `minBuild` alone is not detail: it renders as chrome
+  /// either way.
+  static bool _addsDetail(UpgradeRequiredException e, ReleaseFloorResponse? current) {
+    bool has(String? headline, String? body, String? storeUrl) =>
+        (headline != null && headline.isNotEmpty) ||
+        (body != null && body.isNotEmpty) ||
+        (storeUrl != null && storeUrl.isNotEmpty);
+    final incoming = has(e.headline, e.body, e.storeUrl);
+    final stored = current != null &&
+        has(current.headline, current.body, current.storeUrl);
+    return incoming && !stored;
   }
 
   /// Dismiss the current nag sheet. No-ops if not currently nagging.
