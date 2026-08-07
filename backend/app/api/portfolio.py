@@ -7,6 +7,12 @@ GET /v1/portfolio/sector-allocation/{user_id}
     yfinance socket on this request path (the CR075/DEF089 rule); an unclassified
     holding lands in the "Other" bucket (disclosed, never a compliance breach).
 
+GET /v1/portfolio/day-trader-outcomes/{user_id}
+    CR131 — a measured before/after comparison of a user's own sim trading
+    around when they switched on the Day Trader preset (CR129), beside the
+    published Barber & Odean / Taiwan retail-trading baselines. See
+    `app.services.day_trader_outcomes` for the honesty rules this enforces.
+
 The path carries `{user_id}` (like `sim.py`'s `/v1/sim/portfolio/{user_id}`) so the
 `_own` guard can 403 another user's request — the documented base path
 `/v1/portfolio/sector-allocation` with the owned id appended.
@@ -21,6 +27,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.dependencies import get_current_user
 from app.db.models import User
+from app.services.day_trader_outcomes import compute_day_trader_outcomes
 from app.services.health_gate import GateStatus, enforce_gate, evaluate_gate
 from app.services.journal_store import get_journal_store
 from app.services.llm_gateway import get_llm_gateway
@@ -216,6 +223,28 @@ async def portfolio_health_finding(
     # have.
     gate = await asyncio.to_thread(evaluate_gate, user_id, p.id)
     return _finding_envelope(result.entry, created=result.created, gate=gate)
+
+
+@router.get("/day-trader-outcomes/{user_id}")
+async def day_trader_outcomes(
+    user_id: UUID,
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """CR131 — a measured before/after comparison of a user's own sim
+    trading around the moment they switched on the Day Trader preset (CR129),
+    placed beside the published Barber & Odean / Taiwan retail-trading
+    baselines. Read-only, ownership-guarded like every other endpoint on this
+    router (`_own`).
+
+    Three response shapes — see `compute_day_trader_outcomes`'s docstring:
+    `not_in_cohort` (never applied the preset), `too_early` (applied it, but
+    the sample either side of the switch is too thin to compare honestly —
+    no numeric figure in that payload, by design), or `ready` (the full
+    comparison). Never a judgement, grade, or warning — numbers and baseline
+    provenance only.
+    """
+    _own(current_user, user_id)
+    return await asyncio.to_thread(compute_day_trader_outcomes, user_id)
 
 
 def _finding_envelope(entry, *, created: bool, gate: GateStatus) -> dict:
