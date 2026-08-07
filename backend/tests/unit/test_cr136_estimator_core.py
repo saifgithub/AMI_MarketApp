@@ -14,12 +14,15 @@ from __future__ import annotations
 
 import ast
 import math
+import random
+from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
 
 from app.trading_math import (
     BAD_MONTH_Z,
+    CALENDAR_DAYS_PER_YEAR,
     EWMA_LAMBDA,
     TRADING_DAYS_PER_MONTH,
     TRADING_DAYS_PER_YEAR,
@@ -30,6 +33,7 @@ from app.trading_math import (
     dr_squared,
     euler_contributions,
     ewma_covariance,
+    grid_periods_per_year,
     hhi_effective_n,
     mcr,
     portfolio_sigma,
@@ -636,10 +640,142 @@ def test_zero_risk_inputs_raise() -> None:
 
 def test_annualize_vol() -> None:
     assert annualize_vol(0.0165) == 0.0165 * math.sqrt(252)
+    assert annualize_vol(0.0165, 126.0) == 0.0165 * math.sqrt(126.0)
     assert TRADING_DAYS_PER_YEAR == 252
     assert TRADING_DAYS_PER_MONTH == 21
     assert BAD_MONTH_Z == 1.645
     assert EWMA_LAMBDA == 0.97
+    assert CALENDAR_DAYS_PER_YEAR == 365.25
+
+
+def test_annualize_vol_rejects_a_non_positive_periods_per_year() -> None:
+    with pytest.raises(ValueError, match="periods_per_year"):
+        annualize_vol(0.02, 0.0)
+    with pytest.raises(ValueError, match="periods_per_year"):
+        annualize_vol(0.02, -10.0)
+
+
+# ── CR139: annualise by the grid's own realised period length ──────────────
+#
+# The correcting half of DEF213 — see `docs/defect/_registry/DEF213.row.md`
+# and `docs/forward_planning/_registry/CR139.row.md`.
+
+
+def _weekdays(n: int, *, end: date = date(2026, 7, 31)) -> list[str]:
+    """`n` weekday iso dates ending at `end`, ascending. Mirrors the CR136
+    audit pack's own `def213_attack2_measure.py` exactly, so this reproduces
+    that measurement rather than a fresh, unrelated one."""
+    out: list[date] = []
+    cursor = end
+    while len(out) < n:
+        if cursor.weekday() < 5:
+            out.append(cursor)
+        cursor -= timedelta(days=1)
+    return [d.isoformat() for d in reversed(out)]
+
+
+def _gauss_walk(
+    seed: int, grid: list[str], *, sigma: float,
+    market: list[float] | None = None, beta: float = 0.0,
+) -> list[float]:
+    """A deterministic close series over `grid`. With `market` and `beta` the
+    series is `beta` times the market's daily move plus its own idiosyncratic
+    noise — same construction as `def213_attack2_measure.py`."""
+    rnd = random.Random(seed)
+    closes = [100.0]
+    for i in range(1, len(grid)):
+        shock = rnd.gauss(0.0, sigma)
+        if market is not None:
+            shock += beta * (market[i] / market[i - 1] - 1.0)
+        closes.append(closes[-1] * (1.0 + shock))
+    return closes
+
+
+def test_grid_periods_per_year() -> None:
+    """The grid's own realised annualisation rate — CR139's replacement for
+    assuming every joined-grid period spans one trading day."""
+    with pytest.raises(ValueError, match="n_observations"):
+        grid_periods_per_year(100, 0)
+    with pytest.raises(ValueError, match="window_days"):
+        grid_periods_per_year(0, 100)
+    with pytest.raises(ValueError, match="window_days"):
+        grid_periods_per_year(-5, 100)
+
+    assert grid_periods_per_year(365, 252) == pytest.approx(
+        CALENDAR_DAYS_PER_YEAR * 252 / 365
+    )
+    # A weekday-only grid (7 calendar days / 5 trading days, no holidays) is
+    # close to — but not exactly — the real-market 252/year convention; the
+    # DEF213 guard-threshold measurement found the real calendar (with
+    # holidays) averages 1.4535 calendar days/observation, and
+    # 365.25 / 1.4535 = 251.3, 0.3% off 252.
+    weekday_clean = grid_periods_per_year(700, 500)  # ratio 1.4, ≈7/5
+    assert 255.0 < weekday_clean < 262.0
+
+    # Halving n_observations at a fixed window_days halves the rate — this is
+    # the exact DEF213 "every OTHER trading day" shape (Arm D: 252/yr → 126/yr).
+    dense = grid_periods_per_year(1000, 400)
+    thinned = grid_periods_per_year(1000, 200)
+    assert thinned == pytest.approx(dense / 2.0)
+
+
+def test_def213_annualisation_recovers_the_unthinned_truth_on_a_thinned_grid() -> None:
+    """CR139 — the correcting half of DEF213. `annualize_vol` must scale by
+    the joined grid's own realised period length, not assume every return
+    spans one trading day.
+
+    DEF213's boundary case: ONE underlying daily price process, observed two
+    ways — every trading day (dense) and every OTHER trading day (thinned,
+    the SAME closes, just fewer of them kept). The thinned ratio is far past
+    `GRID_DENSITY_MAX` (1.65), so `compute_health` would refuse this book
+    outright — the correction under test lives in the estimator
+    (`annualize_vol` / `grid_periods_per_year`), not the gate, so this drives
+    them directly rather than through `compute_health`.
+
+    DEF213 Arm D measured that re-annualising a thinned estimate at its TRUE
+    period count (126/yr rather than 252/yr, for an exact every-other-day
+    thinning) recovers the untrinned truth to a ratio of 0.970 (sd 0.060).
+    This reproduces that finding and MUST fail if the code reverts to an
+    unconditional √252 — which is exactly what `naive` below computes."""
+    grid = _weekdays(401)                          # odd: stride-2 keeps both ends
+    market = _gauss_walk(1, grid, sigma=0.009)
+    holding = _gauss_walk(21, grid, sigma=0.012, market=market, beta=1.0)
+
+    def _sigma_daily_and_window(
+        dates: list[str], closes: list[float],
+    ) -> tuple[float, int, int]:
+        returns = [closes[i] / closes[i - 1] - 1.0 for i in range(1, len(closes))]
+        daily = math.sqrt(ewma_covariance([returns])[0][0])
+        window_days = (
+            date.fromisoformat(dates[-1]) - date.fromisoformat(dates[0])
+        ).days
+        return daily, window_days, len(returns)
+
+    dense_daily, dense_window, dense_n = _sigma_daily_and_window(grid, holding)
+    dense_truth = annualize_vol(
+        dense_daily, grid_periods_per_year(dense_window, dense_n),
+    )
+
+    thin_dates, thin_closes = grid[::2], holding[::2]
+    thin_daily, thin_window, thin_n = _sigma_daily_and_window(thin_dates, thin_closes)
+
+    naive = annualize_vol(thin_daily)               # the pre-CR139 bug: unconditional √252
+    corrected = annualize_vol(
+        thin_daily, grid_periods_per_year(thin_window, thin_n),
+    )
+
+    # The pre-fix defect's own signature: thinning to every other trading day
+    # overstates σ by ~1.37-1.42x (DEF213, 24/24 seeds) — close to √2 ≈ 1.414.
+    naive_ratio = naive / dense_truth
+    assert naive_ratio > 1.25, naive_ratio
+
+    # The corrected path recovers the dense-grid truth far more closely than
+    # the naive path does. This is the assertion that fails if `annualize_vol`
+    # (or its wiring) reverts to assuming 252 unconditionally: `corrected`
+    # would then equal `naive`, and this bound would not hold.
+    corrected_ratio = corrected / dense_truth
+    assert 0.80 < corrected_ratio < 1.20, corrected_ratio
+    assert abs(corrected_ratio - 1.0) < abs(naive_ratio - 1.0) / 2.0
 
 
 # ── 20. Package contract ────────────────────────────────────────────────────

@@ -86,6 +86,7 @@ from app.trading_math import (
     dr_squared,
     euler_contributions,
     ewma_covariance,
+    grid_periods_per_year,
     hhi_effective_n,
     mcr,
     portfolio_sigma,
@@ -331,16 +332,25 @@ def compute_health(
     elif dropped_weight_exceeded:
         estimator_cause = INSUFFICIENT_DROPPED_WEIGHT
     elif window_days / t_obs > GRID_DENSITY_MAX:
-        # DEF213. Every return below is a close-to-close ratio on the JOINED
-        # grid, and `annualize_vol` scales all of them by √252 as though each
-        # spanned one trading day. When the join is sparse — one thinly-traded
-        # holding, a halted session, a feed with holes — a single "daily" return
-        # spans several days and the whole Tier-1 block is overstated, with
-        # `dropped_holdings` empty and `partial` false because nothing was
-        # dropped: the days simply never lined up. Counting observations cannot
-        # see it (t_obs is comfortably over T_MIN in every measured case); only
-        # the ratio can. Refusing here is the loud half of the fix — the
-        # estimator itself still assumes 252 (see GRID_DENSITY_MAX).
+        # DEF213 / CR139. Every return below is a close-to-close ratio on the
+        # JOINED grid; `annualize_vol` now scales each block by the grid's OWN
+        # realised period length (`grid_periods_per_year`, derived from these
+        # same two numbers) rather than assuming every return spans one
+        # trading day, so a sparse join no longer overstates σ the way DEF213
+        # measured. This guard's ORIGINAL job — refusing because the old √252
+        # annualisation would not fit — is therefore moot. It still fires,
+        # for a DIFFERENT reason: `grid_periods_per_year` reads the grid's
+        # spacing off calendar days, a proxy for how many trading days each
+        # period truly spans, and it also feeds the SAME EWMA Σ that DR²,
+        # beta and every risk share are computed from (they are ratios of
+        # Σ's own entries and so are unaffected by the annualisation constant
+        # — only the σ-denominated blocks are) — a grid gappy enough to trip
+        # this line stretches EWMA's λ=0.97 half-life (22.8 grid periods, M02)
+        # into real calendar time far enough that "responds at the event" (the
+        # reason EWMA was chosen over an equal-weight window at all) stops
+        # being a fair description of what the estimate is doing. See
+        # GRID_DENSITY_MAX for the re-derivation and why the number itself is
+        # unchanged.
         estimator_cause = INSUFFICIENT_SPARSE_GRID
     else:
         estimator_cause = None
@@ -405,6 +415,12 @@ def compute_health(
     )
 
     teff_value = t_eff(EWMA_LAMBDA, t_obs) if estimator_ok else None
+    # CR139 — the grid's own realised annualisation rate, derived once here
+    # (mirroring `teff_value` just above) and threaded through every
+    # `annualize_vol` call below, rather than each call site assuming 252.
+    periods_per_year_value = (
+        grid_periods_per_year(window_days, t_obs) if estimator_ok else None
+    )
     tn_ok = estimator_ok and n_risky > 0 and (t_obs / n_risky) >= T_OVER_N_MIN
     share_cause = estimator_cause if not estimator_ok else (
         None if tn_ok else INSUFFICIENT_T_OVER_N
@@ -432,7 +448,7 @@ def compute_health(
         w_full.append(cash / covered_total if covered_total > 0.0 else 0.0)
         sigma_daily = portfolio_sigma(w_full, cov_full)
         var_p_daily = sigma_daily * sigma_daily
-        vol_ann = annualize_vol(sigma_daily)
+        vol_ann = annualize_vol(sigma_daily, periods_per_year_value)
 
     blocks: dict[str, dict] = {}
     vol_sufficient = vol_ann is not None
@@ -469,7 +485,7 @@ def compute_health(
         beta_value, r2_value = beta_r2(w_full, cov_full, b_index)
         var_b_daily = cov_joint[b_index][b_index]
         beta_se = se_beta(var_p_daily, var_b_daily, beta_value, teff_value)
-        benchmark_vol_ann = annualize_vol(math.sqrt(var_b_daily))
+        benchmark_vol_ann = annualize_vol(math.sqrt(var_b_daily), periods_per_year_value)
         beta_cause = None
     beta_sufficient = beta_value is not None
 
@@ -509,10 +525,15 @@ def compute_health(
     mcr_values: list[float] = []
     sigma_inv_ann: float | None = None
     if tn_ok and cov_risky is not None and v_weights:
-        sigma_inv_ann = annualize_vol(portfolio_sigma(v_weights, cov_risky))
+        sigma_inv_ann = annualize_vol(
+            portfolio_sigma(v_weights, cov_risky), periods_per_year_value,
+        )
         dr2_value = dr_squared(v_weights, cov_risky)
         contributions = euler_contributions(v_weights, cov_risky)
-        mcr_values = [annualize_vol(m) for m in mcr(v_weights, cov_risky)]
+        mcr_values = [
+            annualize_vol(m, periods_per_year_value)
+            for m in mcr(v_weights, cov_risky)
+        ]
 
     blocks["effective_bets"] = _block(
         "effective_bets",

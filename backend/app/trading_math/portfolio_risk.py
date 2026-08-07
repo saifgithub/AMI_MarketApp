@@ -37,6 +37,27 @@ TRADING_DAYS_PER_YEAR = 252   # Rev 4 estimator pin 6 — trading-day series onl
 TRADING_DAYS_PER_MONTH = 21   # Rev 4 F13 — one month is 21 trading days
 BAD_MONTH_Z = 1.645           # Rev 4 F13 — one-sided Gaussian z for a 1-in-20 month
 
+# CR139 — the correcting half of DEF213. `TRADING_DAYS_PER_YEAR` annualises a
+# period that spans exactly one trading day; M04's `_join` can produce a
+# period that spans MORE than one when the joined grid has holes (one
+# thinly-traded holding, a halted session, a feed gap), and `annualize_vol`
+# used to multiply every such period by √252 regardless. `grid_periods_per_year`
+# below derives the correction from the SAME two numbers M04's GRID_DENSITY_MAX
+# guard already computes (window_days, n_observations), not a second,
+# disconnected estimate.
+#
+# 365.25 is the mean Gregorian year — already this codebase's convention for a
+# calendar-time annualisation (`app.services.day_trader_outcomes.DAYS_PER_YEAR`).
+# It is not a new assumption on a CLEAN grid: DEF213's own guard-threshold
+# measurement (`def213_guard_threshold.py`, 10y of real US-equity bars, 8
+# instruments across both venues and four asset classes) found the real
+# market's clean-book ratio (window_days / n_observations) averages 1.4535 —
+# and 365.25 / 252 = 1.4494 is 0.3% off that, i.e. this constant reproduces the
+# existing 252-trading-day/year convention almost exactly on an unthinned
+# grid, which is the same clean-book consistency check GRID_DENSITY_MAX's own
+# derivation relied on.
+CALENDAR_DAYS_PER_YEAR = 365.25
+
 # Symmetry tolerance for a supplied covariance matrix. Mirrors the check in
 # `portfolio_stats.py`, but raises instead of returning None.
 _SYMMETRY_TOL = 1e-9
@@ -464,12 +485,61 @@ def append_zero_row(cov: list[list[float]]) -> list[list[float]]:
     return out
 
 
-def annualize_vol(sigma_daily: float) -> float:
-    """`σ_daily · √252` — the one annualisation helper; everything else here
-    works in daily units.
+def grid_periods_per_year(window_days: int, n_observations: int) -> float:
+    """How many of the joined grid's OWN periods a year holds, extrapolated
+    from its realised spacing — the CR139 replacement for assuming every
+    period is exactly one trading day.
 
-    The IID assumption behind √252 is disclosed in the report rather than
-    hidden: the same serial-correlation objection that makes Sharpe inference
-    hard applies to this scaling too.
+    `window_days / n_observations` is the grid's average calendar-day gap
+    between consecutive observations — the SAME ratio M04's GRID_DENSITY_MAX
+    guard already computes, to refuse a grid too gappy to trust at all. Below
+    that refusal line the grid still has slack: real-market weekends and
+    holidays alone put a clean book's ratio at ~1.45, not 1.0 (see
+    `CALENDAR_DAYS_PER_YEAR`), and every point of EXTRA slack beyond that
+    baseline — whatever the cause — means each "daily" return on the grid
+    actually spans more than one trading day. Dividing `CALENDAR_DAYS_PER_YEAR`
+    by the observed ratio turns it back into a rate: how many such periods
+    would occur in a full year at this SAME observed density.
+
+    DEF213 Arm D measured that re-annualising a thinned estimate (every OTHER
+    trading day kept, so this ratio roughly doubles) at its TRUE period count
+    — 126/yr rather than 252/yr — recovers the untrinned truth (ratio 0.970,
+    sd 0.060). This reproduces that halving exactly, because `n_observations`
+    halves while `window_days` is essentially unchanged; on an unthinned grid
+    it recovers ~252.
+
+    Raises rather than returning a fallback number — CR040: silently
+    defaulting to 252 on a malformed window is the exact failure this
+    replaces. Both inputs are already validated non-degenerate by every
+    caller (T_MIN and GRID_DENSITY_MAX are checked before this is ever
+    reached), so a violation here is a caller bug, not a data condition.
     """
-    return _finite(sigma_daily, "sigma_daily") * math.sqrt(TRADING_DAYS_PER_YEAR)
+    if n_observations <= 0:
+        raise ValueError(f"n_observations must be > 0, got {n_observations}")
+    if window_days <= 0:
+        raise ValueError(f"window_days must be > 0, got {window_days}")
+    return CALENDAR_DAYS_PER_YEAR * n_observations / window_days
+
+
+def annualize_vol(
+    sigma_period: float, periods_per_year: float = TRADING_DAYS_PER_YEAR,
+) -> float:
+    """`σ_period · √periods_per_year` — the one annualisation helper;
+    everything else here works in per-period units.
+
+    CR139: `periods_per_year` defaults to the plain trading-day convention
+    (252) for a caller with nothing better to pass, but a caller that has
+    derived the joined grid's OWN realised rate (`grid_periods_per_year`) must
+    pass it explicitly — the default exists for callers outside M04 (this
+    module's own tests, a single clean series), not as a silent fallback for a
+    grid M04 already knows is sparse.
+
+    The IID assumption behind the scaling is disclosed in the report rather
+    than hidden: the same serial-correlation objection that makes Sharpe
+    inference hard applies to this scaling too.
+    """
+    sigma_period = _finite(sigma_period, "sigma_period")
+    periods_per_year = _finite(periods_per_year, "periods_per_year")
+    if periods_per_year <= 0.0:
+        raise ValueError(f"periods_per_year must be > 0, got {periods_per_year}")
+    return sigma_period * math.sqrt(periods_per_year)

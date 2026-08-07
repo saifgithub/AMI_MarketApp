@@ -10,12 +10,13 @@ the gate defaults from here for its `Settings` field defaults, and M01's
 price-history store reads the data-layer pins — either import would become a
 cycle the moment this module reached back into `app`.
 
-That purity is also why the four *estimator-definition* constants
+That purity is also why the five *estimator-definition* constants
 (`EWMA_LAMBDA`, `TRADING_DAYS_PER_YEAR`, `TRADING_DAYS_PER_MONTH`,
-`BAD_MONTH_Z`) are deliberately NOT redefined here — they live in
-`app.trading_math.portfolio_risk`, which is where the estimator that uses them
-lives, and M02's hand-off forbids duplicating them. `portfolio_health.py`
-imports them from there. One definition, no drift.
+`BAD_MONTH_Z`, `CALENDAR_DAYS_PER_YEAR`) are deliberately NOT redefined here —
+they live in `app.trading_math.portfolio_risk`, which is where the estimator
+that uses them lives, and M02's hand-off forbids duplicating them.
+`portfolio_health.py` imports them (and `grid_periods_per_year`, CR139) from
+there. One definition, no drift.
 
 Seeded by M01 with the data-layer pins; M04 owns it and everything below.
 """
@@ -73,26 +74,53 @@ T_OVER_N_MIN = 5.0
 # Tier-1 block reads insufficient rather than describing a book it has not seen.
 DROPPED_WEIGHT_MAX = 0.20
 
-# DEF213 — the joined return grid's density, `window_days / n_observations`.
-# `_join` intersects dates across the holdings and the benchmark, `_returns_on`
-# then takes consecutive close-to-close ratios ON THAT GRID, and `annualize_vol`
-# multiplies by √252 unconditionally — so a return spanning k trading days is
-# annualised as if it spanned one. Measured: thinning to every other trading day
-# overstates σ by 1.372×/1.424× (24/24 seeds), and re-annualising the same
-# estimate at the grid's true period count returns 0.970, which puts the entire
-# gap in the annualisation constant. One thinly-traded holding of three is
-# enough — `_join` intersects, so its holes thin every metric in the book:
-# +6.1% σ at 5% of its days missing, +7.9% at 10%, +12.5% at 20%, +29.8% at 40%,
-# with `dropped_holdings` EMPTY and `partial` FALSE at every level.
+# DEF213 / CR139 — the joined return grid's density, `window_days /
+# n_observations`. `_join` intersects dates across the holdings and the
+# benchmark, `_returns_on` then takes consecutive close-to-close ratios ON
+# THAT GRID. Originally (DEF213, 2026-08-03) `annualize_vol` multiplied by
+# √252 unconditionally, so a return spanning k trading days was annualised as
+# if it spanned one — measured: thinning to every other trading day overstated
+# σ by 1.372×/1.424× (24/24 seeds), and re-annualising the same estimate at
+# the grid's true period count returned 0.970, localising the entire gap in
+# the annualisation constant. One thinly-traded holding of three was enough —
+# `_join` intersects, so its holes thinned every metric in the book: +6.1% σ
+# at 5% of its days missing, +7.9% at 10%, +12.5% at 20%, +29.8% at 40%, with
+# `dropped_holdings` EMPTY and `partial` FALSE at every level.
 #
-# This constant is the LOUD-DEGRADATION half only (Saiful's call, 2026-08-03:
-# "guard now, correct later"). It refuses to publish a number the annualisation
-# does not fit; annualising by the grid's realised period length instead — which
-# the 0.970 above shows recovers the true figure — is its own future CR.
+# CR139 shipped the correction: `annualize_vol` now takes the grid's own
+# realised rate (`trading_math.grid_periods_per_year`, derived from these same
+# two numbers) instead of assuming 252, so the bias above no longer occurs at
+# ANY density — this guard's ORIGINAL justification ("refuse because the old
+# annualisation would not fit") is gone.
 #
-# 1.65 is derived, not round-numbered. Measured 2026-08-03 on the real US-equity
-# calendar (`def213_guard_threshold.py`, 10y of daily bars, 8 instruments across
-# both venues and four asset classes — all 8 share ONE calendar, 2513 of 2513
+# RE-DERIVED, NOT RETIRED — for a DIFFERENT reason, argued here rather than
+# measured, because measuring it properly would need a fresh live-market
+# fetch and a new Monte-Carlo sweep this pass did not run (flagged as
+# follow-on work, not silently skipped):
+#   `grid_periods_per_year` reads a calendar-day ratio as a PROXY for how many
+#   trading days each period truly spans. That proxy is validated (by the
+#   clean-book measurement below) up to the density a real calendar naturally
+#   produces; past that, an increasingly large gap is decreasingly well
+#   modelled as ordinary weekend/holiday spacing, and the σ this produces —
+#   though no longer biased in the DEF213 direction — carries growing,
+#   unquantified extra uncertainty the disclosed F17 sampling error does not
+#   cover. Separately, and more concretely: every metric this book computes
+#   (σ, DR², beta, risk shares — R1–R3's inputs are ratios of Σ's own entries
+#   and so are UNAFFECTED by the annualisation constant, but they still come
+#   from the SAME Σ) is weighted by the same EWMA λ=0.97, whose half-life is
+#   22.8 GRID periods (M02). On a grid sparse enough to trip this line, those
+#   22.8 periods span more than 22.8 real trading days — at the threshold
+#   itself, ratio 1.65 implies grid periods ~1.65/1.4535 ≈ 1.135 real trading
+#   days each, stretching the half-life to ~25.8 trading days (~1.14 months,
+#   against the nominal "about a month" M02 describes) — a small, clearly
+#   tolerable drift, well inside the ~66-day effective sample the module
+#   already discloses as its ordinary operating point. That smallness is why
+#   1.65 is RETAINED rather than loosened: it is comfortably conservative
+#   under this new argument too, even though it was not re-derived FROM it.
+#
+# 1.65 itself, measured 2026-08-03 on the real US-equity calendar
+# (`def213_guard_threshold.py`, 10y of daily bars, 8 instruments across both
+# venues and four asset classes — all 8 share ONE calendar, 2513 of 2513
 # dates, so a clean book's join loses nothing for calendar reasons):
 #   · clean-book ratio, 11,038 rolling windows at every length the engine
 #     consumes (126…504 returns): mean 1.4535, MAX 1.4921 (a 126-return window
@@ -102,10 +130,7 @@ DROPPED_WEIGHT_MAX = 0.20
 #     a block of L consecutive sessions from the real calendar reproduces the
 #     shape. Worst: 1.5556 at L=5, longer than any US closure since 1933.
 # 1.65 clears that constructed worst case by 6.1% and the observed one by 10.6%,
-# and fires above 11.9% of one holding's days missing — i.e. just past the point
-# where the bias overtakes the estimator's OWN error bar, which F17 measures at
-# 6.29–6.37% relative at T=126. Below that line a gap costs less than the
-# sampling noise the metric already carries; above it the bias dominates.
+# and fires above 11.9% of one holding's days missing.
 GRID_DENSITY_MAX = 1.65
 
 # Rev 4 Tier-1 table — R² below this sets `low_explanatory_power`; also R3's

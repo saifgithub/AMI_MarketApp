@@ -62,9 +62,17 @@ def _agreeing_payload(**overrides) -> dict:
     the suite would prove nothing."""
     closes = _closes()
     tickers = list(_TICKERS)
-    returns, _days = crosscheck._joined_returns(closes, [*tickers, _BENCH])
+    returns, days = crosscheck._joined_returns(closes, [*tickers, _BENCH])
     n_risky = len(tickers)
     b_index = n_risky
+    window_days = (days[-1] - days[0]).days
+    # CR139 — periods_per_year is the grid's own realised rate, not an
+    # unconditional 252; main() now checks window_days parity the same way it
+    # already checked n_observations parity, so this fixture must publish one
+    # that matches what `crosscheck._joined_returns` itself produces over the
+    # SAME stubbed closes, or every "agreeing" test below would fail on a
+    # precondition rather than actually agreeing.
+    ppy = crosscheck.periods_per_year(window_days, returns.shape[1])
 
     weights = np.array([0.5, 0.5])
     cov_joint = crosscheck.ewma_covariance(returns)
@@ -73,16 +81,16 @@ def _agreeing_payload(**overrides) -> dict:
 
     w_full = np.zeros(n_risky + 2)
     w_full[:n_risky] = weights
-    sigma_ann = math.sqrt(crosscheck.variance(w_full, cov_full)) * math.sqrt(252.0)
+    sigma_ann = math.sqrt(crosscheck.variance(w_full, cov_full)) * math.sqrt(ppy)
     beta, r_squared = crosscheck.beta_r2(w_full, cov_full, b_index)
-    sigma_b_ann = math.sqrt(cov_joint[b_index, b_index] * 252.0)
+    sigma_b_ann = math.sqrt(cov_joint[b_index, b_index] * ppy)
     te_ann = crosscheck.tracking_error(sigma_ann, sigma_b_ann, beta)
     shares = crosscheck.risk_shares(weights, cov_risky)
 
     blocks = {
         "portfolio_volatility": {
             "sufficient": True, "value": sigma_ann,
-            "n_observations": returns.shape[1],
+            "n_observations": returns.shape[1], "window_days": window_days,
         },
         "beta": {"sufficient": True, "value": beta, "r_squared": r_squared},
         "tracking_error": {"sufficient": True, "value": te_ann},

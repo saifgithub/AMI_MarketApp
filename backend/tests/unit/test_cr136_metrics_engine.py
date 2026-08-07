@@ -907,8 +907,12 @@ def test_window_days_is_the_calendar_span_of_the_aligned_window() -> None:
 
 
 def test_benchmark_vol_is_annualised() -> None:
-    """Dropping the √252 is a 15.9x error that still produces a plausible-looking
-    number, which is the only kind of error worth a test."""
+    """Dropping the annualisation entirely is a ~16x error that still
+    produces a plausible-looking number, which is the only kind of error
+    worth a test. CR139: the multiplier is the GRID's own realised rate, not
+    an unconditional √252 — this book's weekday-only calendar (no holidays)
+    already puts that rate at ~261/yr, not 252, so asserting against
+    `annualize_vol(daily)`'s default would itself be wrong post-CR139."""
     payload = compute_health(**_book(T_MIN + 1))
     benchmark_vol = payload["context"]["benchmark_vol_ann"]
     assert benchmark_vol is not None
@@ -916,11 +920,71 @@ def test_benchmark_vol_is_annualised() -> None:
     grid = _dates(T_MIN + 1)
     market = _closes(_walk(1, T_MIN + 1, sigma=0.009, dates=grid))
     returns = [market[i] / market[i - 1] - 1.0 for i in range(1, len(market))]
-    from app.trading_math import annualize_vol, ewma_covariance
+    from app.trading_math import annualize_vol, ewma_covariance, grid_periods_per_year
 
     daily = math.sqrt(ewma_covariance([returns])[0][0])
-    assert benchmark_vol == pytest.approx(annualize_vol(daily))
+    window_days = (
+        date.fromisoformat(grid[-1]) - date.fromisoformat(grid[0])
+    ).days
+    ppy = grid_periods_per_year(window_days, len(returns))
+    assert benchmark_vol == pytest.approx(annualize_vol(daily, ppy))
     assert benchmark_vol > 5.0 * daily, "vacuity guard — annualisation must bite"
+    # And the naive pre-CR139 formula must NOT be what the engine reports —
+    # this book's own ratio (~1.4) means default-252 and the grid rate
+    # (~261) differ enough to be a real, non-rounding-noise gap.
+    assert benchmark_vol != pytest.approx(annualize_vol(daily))
+
+
+def test_portfolio_volatility_and_mcr_are_annualised_by_the_grids_own_rate() -> None:
+    """CR139 — the headline block, and the per-holding MCR figures, must use
+    the SAME grid-derived rate `test_benchmark_vol_is_annualised` verified for
+    the context figure. All four `annualize_vol` call sites in `compute_health`
+    are threaded from the ONE `periods_per_year_value` computed once per
+    evaluation, so this closes the loop on the metric users actually see."""
+    from app.trading_math import (
+        annualize_vol,
+        ewma_covariance,
+        grid_periods_per_year,
+        mcr,
+        portfolio_sigma,
+    )
+
+    kwargs = _book(T_MIN + 1)
+    payload = compute_health(**kwargs)
+    vol = payload["blocks"]["portfolio_volatility"]
+    assert vol["sufficient"] is True
+
+    grid = _dates(T_MIN + 1)
+    market = _closes(_walk(1, T_MIN + 1, sigma=0.009, dates=grid))
+    returns = [
+        [
+            c / p - 1.0 for p, c in zip(series[:-1], series[1:])
+        ]
+        for series in (
+            _closes(_walk(
+                11 + i, T_MIN + 1, sigma=0.010, dates=grid,
+                market=market, beta=1.0 + 0.2 * i,
+            ))
+            for i in range(3)
+        )
+    ]
+    cov = ewma_covariance(returns)
+    equal_weights = [1.0 / 3.0] * 3          # AAA/BBB/CCC, equal qty and mark, no cash
+    daily = portfolio_sigma(equal_weights, cov)
+    window_days = (
+        date.fromisoformat(grid[-1]) - date.fromisoformat(grid[0])
+    ).days
+    ppy = grid_periods_per_year(window_days, T_MIN)
+
+    assert vol["value"] == pytest.approx(annualize_vol(daily, ppy))
+    assert vol["value"] != pytest.approx(annualize_vol(daily))
+
+    expected_mcr = [annualize_vol(m, ppy) for m in mcr(equal_weights, cov)]
+    reported_mcr = {
+        row["ticker"]: row["mcr"] for row in payload["blocks"]["mcr"]["per_holding"]
+    }
+    for ticker, expected in zip(("AAA", "BBB", "CCC"), expected_mcr):
+        assert reported_mcr[ticker] == pytest.approx(expected)
 
 
 def test_the_level_denominator_is_the_covered_sleeve_plus_cash() -> None:

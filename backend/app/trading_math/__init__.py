@@ -50,6 +50,7 @@ from .portfolio_stats import (
 # CR136 portfolio risk estimator core (M02)
 from .portfolio_risk import (
     BAD_MONTH_Z,
+    CALENDAR_DAYS_PER_YEAR,
     EWMA_LAMBDA,
     TRADING_DAYS_PER_MONTH,
     TRADING_DAYS_PER_YEAR,
@@ -60,6 +61,7 @@ from .portfolio_risk import (
     dr_squared,
     euler_contributions,
     ewma_covariance,
+    grid_periods_per_year,
     hhi_effective_n,
     mcr,
     portfolio_sigma,
@@ -144,6 +146,7 @@ __all__ = [
     "variance",
     # CR136 portfolio risk estimator core (M02)
     "BAD_MONTH_Z",
+    "CALENDAR_DAYS_PER_YEAR",
     "EWMA_LAMBDA",
     "TRADING_DAYS_PER_MONTH",
     "TRADING_DAYS_PER_YEAR",
@@ -154,6 +157,7 @@ __all__ = [
     "dr_squared",
     "euler_contributions",
     "ewma_covariance",
+    "grid_periods_per_year",
     "hhi_effective_n",
     "mcr",
     "portfolio_sigma",

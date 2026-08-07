@@ -1,5 +1,14 @@
 """CR136 M11 live cross-check (dev-only, run inside ami_api_alpha) — recomputes σₚ/β/R²/DR²/risk shares/TE for one real book from raw price_history_daily rows with an independent numpy implementation and diffs against the live /v1/portfolio/health payload to 2 dp. Never imported by tests or app code; must not import app.trading_math.
 
+CR139: the engine no longer annualises by an unconditional √252 — it uses the
+joined grid's own realised period length (`app.trading_math.grid_periods_per_year`).
+This script reimplements that derivation independently (below, `periods_per_year`),
+not by importing it: a real book's window/observation ratio is essentially never
+exactly 252 (weekends and holidays alone put a clean book at ~1.45 calendar days
+per trading day — see DEF213's `def213_guard_threshold.py`), so leaving this
+script on a hardcoded 252 after the engine changed would make EVERY live book
+disagree with an independent recomputation that is independently wrong.
+
 The engine's own unit tests prove it matches its fixtures. They cannot prove the
 fixtures describe the same arithmetic an independent reader would do, and they
 say nothing at all about the LIVE book on Alpha. This script closes both gaps:
@@ -14,8 +23,12 @@ The formulas are reimplemented from Rev 4's own definitions, not copied:
                                                       last, λ = 0.97)
     covariance     Σ_ab = Σⱼ wⱼ (r_aj − μ_a)(r_bj − μ_b),  μ_a = Σⱼ wⱼ r_aj
                    — weighted-demeaned, population style, no dof correction
-    σₚ             √(wᵀΣw) · √252, w over the TOTAL book (cash as a zero row
-                   appended AFTER estimation, benchmark leg weighted exactly 0)
+    σₚ             √(wᵀΣw) · √periods_per_year, w over the TOTAL book (cash as
+                   a zero row appended AFTER estimation, benchmark leg
+                   weighted exactly 0). `periods_per_year` (CR139) is
+                   365.25 · n_observations / window_days — the joined grid's
+                   own realised rate, not an unconditional 252; see
+                   `periods_per_year()` below
     β, R²          Cov_w(p,b)/Var(b) and Cov_w(p,b)²/(Var(p)·Var(b)) — both
                    read off the ONE joint matrix, so the two sides can never
                    come from different windows
@@ -24,7 +37,7 @@ The formulas are reimplemented from Rev 4's own definitions, not copied:
     risk shares    wᵢ(Σw)ᵢ / σₚ², same invested-sleeve block — Euler's theorem,
                    so they sum to 1
 
-λ, √252 and the 504-return cap are spelled as literals here rather than
+λ, 365.25 and the 504-return cap are spelled as literals here rather than
 imported from the constants module: that module re-exports from
 `app.trading_math`, and an "independent" check that imports the thing it checks
 is not one. If a constant ever changes, this script failing IS the signal.
@@ -81,10 +94,25 @@ from app.services.price_history import _MOCK_SOURCE
 # Deliberately literals — see the module docstring. Importing these from the
 # constants module would route them through `app.trading_math`.
 _LAMBDA = 0.97
-_TRADING_DAYS = 252.0
+_CALENDAR_DAYS_PER_YEAR = 365.25     # CR139 — mirrors `trading_math.CALENDAR_DAYS_PER_YEAR`, reimplemented not imported
 _MAX_RETURNS = 504
 _BENCHMARK = "SPY"
 _TOL = 0.005          # 2 dp in the rendered unit
+
+
+def periods_per_year(window_days: int, n_observations: int) -> float:
+    """CR139, reimplemented independently — see `app.trading_math.grid_periods_per_year`
+    for the derivation. `window_days / n_observations` is the joined grid's own
+    average calendar-day spacing; dividing the calendar year by it turns that
+    spacing back into a rate. On an unthinned real-market grid this recovers
+    ~252 (DEF213's own clean-book measurement: mean ratio 1.4535, and
+    365.25 / 252 = 1.4494 is 0.3% off that)."""
+    if n_observations <= 0 or window_days <= 0:
+        raise ValueError(
+            f"window_days={window_days}, n_observations={n_observations} "
+            "must both be > 0"
+        )
+    return _CALENDAR_DAYS_PER_YEAR * n_observations / window_days
 
 
 # ── The payload under test ──────────────────────────────────────────────────
@@ -346,6 +374,21 @@ def main(argv: list[str] | None = None) -> int:
             f"has caught up, or investigate M01's join."
         )
 
+    # CR139 — `periods_per_year` needs the CALENDAR span, not just the return
+    # count, and a mismatch there would silently compare two different
+    # annualisations rather than two implementations of the same one, exactly
+    # the failure mode the `t_obs != api_t` check above exists to catch for
+    # the observation count.
+    window_days = (days[-1] - days[0]).days
+    api_window_days = int(vol_block.get("window_days") or 0)
+    if window_days != api_window_days:
+        return _fail(
+            f"window mismatch — this script's joined window spans {window_days} "
+            f"calendar days, the payload reports window_days={api_window_days}. "
+            "Re-run after the history warmer has caught up, or investigate M01's join."
+        )
+    ppy = periods_per_year(window_days, t_obs)
+
     n_risky = len(tickers)
     b_index = n_risky                       # benchmark is the last estimated leg
     cov_joint = ewma_covariance(returns)
@@ -359,9 +402,9 @@ def main(argv: list[str] | None = None) -> int:
     cov_full = append_cash_row(cov_joint)
 
     sigma_daily = math.sqrt(variance(w_full, cov_full))
-    sigma_ann = sigma_daily * math.sqrt(_TRADING_DAYS)
+    sigma_ann = sigma_daily * math.sqrt(ppy)
     beta, r_squared = beta_r2(w_full, cov_full, b_index)
-    sigma_b_ann = math.sqrt(cov_joint[b_index, b_index] * _TRADING_DAYS)
+    sigma_b_ann = math.sqrt(cov_joint[b_index, b_index] * ppy)
     te_ann = tracking_error(sigma_ann, sigma_b_ann, beta)
 
     # SHARE basis: invested sleeve, risky block only.
