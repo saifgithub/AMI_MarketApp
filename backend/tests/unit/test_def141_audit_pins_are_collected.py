@@ -32,6 +32,7 @@ MIGRATED_PINS = (
     "test_cr054_w0b_track_label_parity_pin.py",
     "test_cr077_static_head_pin.py",
     "test_cr095_concurrent_ticks_double_send_pin.py",
+    "test_cr121_highest_observed_scans_both_columns_pin.py",
     "test_cr095_reminder_hour_omitted_disables_pin.py",
     "test_cr095_timezone_change_double_send_pin.py",
     "test_cr131_cohort_marker_coupling_pin.py",
