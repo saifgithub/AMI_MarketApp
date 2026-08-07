@@ -49,8 +49,22 @@ ENV PORT=8000
 # /v1/feedback/bug fails on write, which is the alpha feedback channel.
 RUN groupadd --system --gid 1001 ami \
     && useradd --system --uid 1001 --gid ami --no-create-home ami \
-    && mkdir -p /data/bug_attachments \
+    && mkdir -p /data/bug_attachments /data/.cache \
     && chown -R ami:ami /data /app
+
+# CR124 round 2 / audit MAJOR 3 — `HOME` must point somewhere this uid can write.
+#
+# `--no-create-home` skips making the directory but still records `/home/ami` in
+# passwd, and Docker sets no HOME on a USER switch. So `expanduser("~")` resolved
+# to a non-existent dir under root-owned `/home`, and yfinance caches to
+# `platformdirs.user_cache_dir()` → `~/.cache/py-yfinance`. It does not crash — it
+# catches the OSError, logs via its own plain `logging` logger (not our structlog
+# JSON stream) and sets `dummy = True` — but it never memoises the failure, so it
+# retried the failing `makedirs` on EVERY call and permanently lost the
+# cookie/crumb cache that pyproject's own comment says exists to survive Yahoo's
+# rate-limit dance. A silent functional regression introduced by the non-root
+# switch: exactly the CR040 shape.
+ENV HOME=/data
 USER ami
 
 EXPOSE 8000

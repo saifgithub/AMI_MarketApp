@@ -39,18 +39,27 @@ _COMPOSE_PATH = _REPO_ROOT / "docker-compose.yml"
 _MUST_BE_LOOPBACK = ("postgres", "redis", "api-website")
 
 
-def _code_only(text: str) -> str:
-    """Drop whole-line `#` comments.
+def _code_only(text: str, markers: tuple[str, ...] = ("#", "--")) -> str:
+    """Drop whole-line comments, in every comment syntax this file inspects.
 
     Every "must NOT contain" assertion below runs against this rather than the
-    raw file. Both of these guards initially failed against their own targets:
-    the comments explaining what was removed necessarily *quote the removed
-    thing*, so a naive substring check on the raw text can never pass unless the
-    fix ships undocumented. Asserting on the executable lines is the honest
-    reading of "the old form is gone".
+    raw file. Three guards in this file have now failed against their own
+    targets: the comment explaining what was removed necessarily *quotes the
+    removed thing*, so a naive substring check on raw text can only pass if the
+    fix ships undocumented. Asserting on executable lines is the honest reading
+    of "the old form is gone".
+
+    `--` was added after the SQL guard hit the same wall that `#` was added for
+    — `01_website_role.sql`'s own header explains that the website API *used to
+    be* the Postgres SUPERUSER, and the guard asserting the role is not granted
+    SUPERUSER matched that sentence. Defaulting to both markers means the next
+    file type does not repeat it a fourth time; `--` is not a comment in Python
+    or YAML, so including it costs those callers nothing.
     """
     return "\n".join(
-        line for line in text.splitlines() if not line.lstrip().startswith("#")
+        line
+        for line in text.splitlines()
+        if not line.lstrip().startswith(markers)
     )
 
 
@@ -242,6 +251,76 @@ def test_the_backend_image_installs_from_the_lockfile() -> None:
     assert "--locked" in code, "backend image does not install from uv.lock (CR124/M14)"
     assert "--no-dev" in code, "backend image still installs the dev dependency group"
     assert '-e ".[dev]"' not in code
+
+
+def test_the_backend_image_gives_the_non_root_user_a_writable_home() -> None:
+    """Audit MAJOR 3 — the non-root switch silently broke yfinance's cache.
+
+    `--no-create-home` still records `/home/ami` in passwd, and Docker sets no
+    `HOME` on a `USER` switch, so `expanduser("~")` resolved under root-owned
+    `/home`. yfinance caches to `platformdirs.user_cache_dir()` and does NOT
+    crash on failure — it catches the `OSError`, logs to its own plain logger
+    (not our structlog stream), and never memoises the failure, so it retried
+    the failing `makedirs` on every single call while permanently losing the
+    cookie/crumb cache Yahoo's rate limiting needs.
+
+    Nothing about that is visible from a passing test suite, which is why this
+    asserts the *precondition* — a HOME the runtime uid can write — rather than
+    trying to simulate yfinance.
+    """
+    code = _code_only((_REPO_ROOT / "backend" / "Dockerfile").read_text())
+    homes = [
+        line.split("HOME=", 1)[1].strip().strip('"').split()[0]
+        for line in code.splitlines()
+        if line.strip().startswith("ENV ") and "HOME=" in line
+    ]
+    assert homes, (
+        "backend/Dockerfile sets no HOME. A non-root USER without one resolves "
+        "~ under root-owned /home and every library that caches to "
+        "user_cache_dir() fails silently (CR124 audit MAJOR 3)."
+    )
+    home = homes[-1]
+    assert home != "/home/ami", "HOME points at the uncreated default home dir"
+    # Must be a path the image actually chowns to the runtime user.
+    chowned = [
+        line for line in code.splitlines() if "chown -R ami:ami" in line
+    ]
+    assert chowned, "no chown to the runtime user at all"
+    assert any(home.split("/")[1] in line for line in chowned), (
+        f"HOME={home} is not under any path chown'd to ami — it will not be writable"
+    )
+
+
+def test_the_redis_healthcheck_can_actually_authenticate(compose: dict) -> None:
+    """Audit MINOR 1 — `requirepass` without a matching healthcheck credential
+    makes the container permanently unhealthy, which blocks `depends_on:
+    service_healthy` and takes the whole stack down. The password is supplied
+    via `REDISCLI_AUTH` (which `redis-cli` reads) rather than `-a`, so it stays
+    out of the process args."""
+    redis = compose["services"]["redis"]
+    check = " ".join(map(str, redis["healthcheck"]["test"]))
+    assert "redis-cli" in check
+    env = redis.get("environment") or {}
+    supplies_auth = "REDISCLI_AUTH" in env or "-a" in check
+    assert supplies_auth, (
+        "redis requires a password but the healthcheck supplies none — the "
+        "container never reports healthy (CR124/C3)"
+    )
+
+
+def test_the_website_role_sql_actually_restricts_the_app_database() -> None:
+    """Audit MINOR 2 — M8's whole point is that a second role is only a boundary
+    if PUBLIC's default CONNECT is revoked. A file that creates a role and stops
+    there looks like privilege separation and is not."""
+    sql = (_REPO_ROOT / "infra" / "local" / "postgres-init" / "01_website_role.sql").read_text()
+    upper = _code_only(sql).upper().replace("\n", " ")
+    assert "CREATE ROLE AMI_WEBSITE" in upper, "the low-privilege role is not created"
+    assert "REVOKE CONNECT ON DATABASE AMI_TRADE FROM PUBLIC" in upper, (
+        "PUBLIC may connect to any database by default — without this revoke the "
+        "separate role grants nothing (CR124/M8)"
+    )
+    for forbidden in ("SUPERUSER", "CREATEROLE", "CREATEDB"):
+        assert forbidden not in upper, f"ami_website is granted {forbidden}"
 
 
 def test_the_backup_script_refuses_to_write_plaintext_by_default() -> None:

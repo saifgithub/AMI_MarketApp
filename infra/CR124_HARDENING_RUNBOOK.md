@@ -12,8 +12,21 @@ ssh-add --apple-use-keychain ~/.ssh/id_ed25519   # one passphrase prompt, then d
 ssh melehost 'echo ok'
 ```
 
-**Expect a short outage.** Step 4 recreates the stack. Everything before it is additive and safe to
-run against the live system.
+**Expect a short outage at step 4, and errors in the window BEFORE it.**
+
+> **Correction (audit MAJOR 2).** An earlier version of this runbook said everything before step 4
+> was "additive and safe to run against the live system." **That is wrong, and step 3 is the
+> reason.** The currently-running `api-alpha` has `postgres:postgres` as a *hardcoded literal* in
+> its container env — it cannot pick up the new password without the recreate in step 4. Postgres
+> does not drop open sessions on `ALTER USER … PASSWORD`, so the existing pool keeps working, but
+> `session.py` sets no `pool_size`/`pool_pre_ping`, so SQLAlchemy defaults apply
+> (`QueuePool`, base 5, overflow 10, no pre-ping). **Any burst past 5 concurrent DB operations
+> between step 3 and step 4 opens a fresh connection with the stale password and fails**, surfacing
+> as an error to whatever request triggered it.
+>
+> **Therefore: run steps 3 and 4 back-to-back, in one sitting, at a quiet hour.** Do not run step 3
+> and come back later. The SQL ordering itself is correct — the new password is never used before
+> it is set — but the gap between them is a live-error window, not a safe pause point.
 
 ---
 
