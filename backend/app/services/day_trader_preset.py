@@ -32,6 +32,26 @@ DAY_TRADER_PRESET_OVERRIDES: dict[str, float | int] = {
 # Disclosed at selection time (CR040 — a silent 100% is exactly what "degrade
 # loudly" exists to stop), not a block: L3 draws no ceiling on what a user may
 # set. The two published baselines this CR is already grounded in.
+# CR131 audit MAJOR — the ONE copy of the journal marker.
+#
+# `mandate.py` writes this sentence when the preset is applied and
+# `day_trader_outcomes.py` prefix-matches it to find the cohort boundary. They
+# used to hold that string independently, and the audit proved the drift is
+# exploitable rather than theoretical: rewording mandate.py's summary left the
+# entire 2589-test suite green while cohort detection silently returned
+# "not_in_cohort" for a user who had just switched — a failure indistinguishable
+# from "nobody has tried the preset".
+#
+# It lives HERE, in the preset's own module, because the preset is the thing both
+# sides are talking about. Both now import it, so there is nothing left to keep
+# in sync.
+DAY_TRADER_JOURNAL_MARKER = "Day Trader preset applied"
+
+DAY_TRADER_JOURNAL_SUMMARY = (
+    f"{DAY_TRADER_JOURNAL_MARKER} — all seven risk limits set permissive "
+    "(compliance, locale and halal/allow-blocklist rules unaffected)."
+)
+
 DAY_TRADER_DISCLOSURE = (
     "Day Trader preset removes every risk limit you control: sector and "
     "single-name concentration caps, the post-loss cooldown, max open "

@@ -72,7 +72,11 @@ from app.schemas.journal import EntryType
 # LIKE 'marker%'), not equality, because the summary sentence continues past
 # it — prefix-matching keeps this module decoupled from the rest of that
 # wording.
-DAY_TRADER_JOURNAL_MARKER = "Day Trader preset applied"
+# CR131 audit MAJOR — re-exported, not redefined. `mandate.py` writes the
+# summary from the same constant, so the two cannot drift apart.
+from app.services.day_trader_preset import (  # noqa: E402
+    DAY_TRADER_JOURNAL_MARKER as DAY_TRADER_JOURNAL_MARKER,
+)
 
 # ── Honesty thresholds — the CR131 acceptance criteria ─────────────────
 #

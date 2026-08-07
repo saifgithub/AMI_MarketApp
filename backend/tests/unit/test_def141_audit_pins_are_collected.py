@@ -31,6 +31,7 @@ MIGRATED_PINS = (
     "test_cr054_guard_capstone_floor_pin.py",
     "test_cr054_w0b_track_label_parity_pin.py",
     "test_cr077_static_head_pin.py",
+    "test_cr131_cohort_marker_coupling_pin.py",
     "test_def127_sse_frame_literal_pin.py",
     "test_streak_milestone_cap_pin.py",
 )

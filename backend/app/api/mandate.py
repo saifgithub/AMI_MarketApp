@@ -27,7 +27,10 @@ from app.api.dependencies import get_current_user
 from app.db.models import User
 from app.schemas import Compliance, Mandate, ResolvedCaps
 from app.services.credit_service import balance_for, room_cost_for_plan
-from app.services.day_trader_preset import is_day_trader_preset
+from app.services.day_trader_preset import (
+    DAY_TRADER_JOURNAL_SUMMARY,
+    is_day_trader_preset,
+)
 from app.services.entitlements import effective_plan_for_user
 from app.schemas.journal import EntryType, JournalEntryCreate
 from app.services.journal_store import get_journal_store
@@ -152,10 +155,9 @@ async def patch_mandate(
                 if before_c.get(k) != v:
                     diffs.append(f"compliance.{k}: {before_c.get(k)} → {v}")
         if is_day_trader_preset(updates):
-            summary = (
-                "Day Trader preset applied — all seven risk limits set permissive "
-                "(compliance, locale and halal/allow-blocklist rules unaffected)."
-            )
+            # CR131 audit MAJOR: one shared constant, not a second copy.
+            # day_trader_outcomes.py cohort-detects on this prefix.
+            summary = DAY_TRADER_JOURNAL_SUMMARY
         else:
             summary = "; ".join(diffs) if diffs else "Mandate updated."
         get_journal_store().append(JournalEntryCreate(
