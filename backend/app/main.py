@@ -197,6 +197,27 @@ async def _price_alert_evaluation_tick() -> None:
         await asyncio.sleep(_PRICE_ALERT_EVAL_INTERVAL_SECONDS)
 
 
+async def _daily_reminder_tick() -> None:
+    """Background task: daily-challenge reminder sweep (CR095). Work-first-
+    then-sleep like `_price_alert_evaluation_tick` — a restart shouldn't push
+    a user's reminder back by a full interval. Idempotency is DB-derived
+    (the `notifications` row per user per LOCAL day — see
+    `daily_reminder.send_due_reminders`'s own docstring), so unlike the
+    league/sharia/etc ticks above this one is safe to run on a MUCH shorter
+    interval without any risk of a double-send; the interval only bounds how
+    late a reminder can land after the user's chosen hour. The DB read is a
+    single `daily_reminder_hour IS NOT NULL` scan, cheap at alpha scale."""
+    from app.services.daily_reminder import send_due_reminders
+
+    while True:
+        try:
+            stats = await asyncio.to_thread(send_due_reminders)
+            logger.info("daily_reminder_tick_complete", **stats)
+        except Exception:
+            logger.exception("daily_reminder_tick_failed")
+        await asyncio.sleep(settings.daily_reminder_tick_interval_seconds)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # AT:R34 (eeeb866f): respawn any room runs the previous boot left
@@ -227,6 +248,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_ticker_reference_refresh()),
         asyncio.create_task(_price_alert_evaluation_tick()),
         asyncio.create_task(_portfolio_snapshot_tick()),
+        asyncio.create_task(_daily_reminder_tick()),
     ]
     try:
         yield

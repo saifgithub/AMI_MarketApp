@@ -145,6 +145,11 @@ services:
       # is idempotent per TRADING DAY, so hourly bounds post-restart catch-up
       # delay; it does not mean hourly rows.
       PORTFOLIO_SNAPSHOT_INTERVAL_SECONDS: ${PORTFOLIO_SNAPSHOT_INTERVAL_SECONDS:-3600}
+      # CR095 — cadence of the daily-challenge reminder sweep. Users pick an
+      # hour, not a minute, so this needs to be well under 3600s (see
+      # config.py). Idempotent per (user, local day), so shortening it only
+      # tightens latency, never causes a double-send.
+      DAILY_REMINDER_TICK_INTERVAL_SECONDS: ${DAILY_REMINDER_TICK_INTERVAL_SECONDS:-900}
       # CR136 M06 — whether the Portfolio Health Finding may be narrated by the
       # LLM. False ships the deterministic rendering, which is a complete report.
       PORTFOLIO_HEALTH_LLM_ENABLED: ${PORTFOLIO_HEALTH_LLM_ENABLED:-true}

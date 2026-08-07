@@ -166,6 +166,19 @@ class Settings(BaseSettings):
     # delay to <= 1h — it does not mean hourly rows.
     portfolio_snapshot_interval_seconds: int = 3600
 
+    # CR095. Tick cadence for the daily-challenge reminder sweep
+    # (app/services/daily_reminder.py). Users only pick an HOUR (0-23), not a
+    # minute, so this has to be meaningfully finer than 3600s or the reminder
+    # habitually lands up to 59 minutes into the user's chosen hour — an
+    # hourly tick would be a worse experience than the feature it's gating.
+    # 15 min bounds the worst-case delay to <15 min after the target hour
+    # while keeping the per-tick query (one `daily_reminder_hour IS NOT NULL`
+    # scan) cheap at alpha scale. The tick is idempotent per (user, local
+    # calendar day) — see the module docstring — so a shorter interval only
+    # changes latency, never correctness, and a restart can't cause a
+    # double-send.
+    daily_reminder_tick_interval_seconds: int = 900
+
     # CR035: hide the Street's analyst rating/target from the agents'
     # fundamentals context. Benchmark-only toggle — measures whether the
     # Room's verdict is its own or parrots the consensus it is fed. Must

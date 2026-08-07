@@ -100,6 +100,13 @@ class User(Base):
     )
     locale: Mapped[str] = mapped_column(String, default="en", nullable=False)
     timezone: Mapped[str] = mapped_column(String, default="UTC", nullable=False)
+    # CR095 — the local hour (0-23) the daily-challenge reminder should fire
+    # at, evaluated against `timezone` above (no second timezone column —
+    # reuse the one that already exists). NULL = reminders off. Nullable
+    # with no server_default and no backfill: every existing row opts out
+    # until the user picks a time, which is the correct reading (never
+    # silently opt a pre-CR095 user into a new push/email).
+    daily_reminder_hour: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     is_anonymous: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     anonymous_session_started_at: Mapped[Optional[datetime]] = mapped_column(

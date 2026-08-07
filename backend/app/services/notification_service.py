@@ -31,7 +31,7 @@ from app.services.rate_limit import RateLimiter
 _ONESIGNAL_API_BASE = "https://onesignal.com/api/v1"
 _TIMEOUT = httpx.Timeout(10.0)
 
-PushStatus = Literal["sent", "rate_limited", "not_configured", "failed"]
+PushStatus = Literal["sent", "rate_limited", "not_configured", "failed", "skipped"]
 
 # Service-layer limits, not per-consumer (CR027 acceptance) — every caller
 # of notify() shares the same per-user push budget regardless of type.
@@ -55,8 +55,20 @@ def notify(
     body: str,
     deep_link: dict[str, Any],
     source_ref: str | None = None,
+    *,
+    attempt_push: bool = True,
 ) -> NotifyResult:
-    """The only write path. Writes the row, then best-effort pushes."""
+    """The only write path. Writes the row, then best-effort pushes.
+
+    `attempt_push=False` (CR095): still writes the durable row — this is
+    the only place `notifications` is written, per the table's own
+    docstring — but skips the OneSignal call entirely. For a caller that
+    has already decided, by product rule rather than by delivery failure,
+    that THIS user should not receive a push (e.g. daily_reminder routes
+    push to paid tiers only and must not push a free-tier user just
+    because they happen to have a device registered). Every existing
+    caller is unaffected — this is a keyword-only, default-True addition.
+    """
     init_schema()
     notification_id = uuid4()
     with get_session() as s:
@@ -69,6 +81,11 @@ def notify(
             deep_link=deep_link,
             source_ref=source_ref,
         ))
+
+    if not attempt_push:
+        return NotifyResult(
+            notification_id=notification_id, push_status="skipped", push_detail=None,
+        )
 
     push_status, push_detail = _attempt_push(
         user_id=user_id, notification_id=notification_id, type=type, title=title,

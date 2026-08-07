@@ -5,11 +5,13 @@ GET  /v1/daily_challenge/by_date/YYYY-MM-DD specific date
 GET  /v1/daily_challenge/by_id/{id}         specific challenge by id
 GET  /v1/daily_challenge/all                full list (admin / debugging)
 POST /v1/daily_challenge/{cid}/attempt      record an attempt + journal it (BL10)
+PUT  /v1/daily_challenge/reminder           set the daily-reminder hour + timezone (CR095)
 """
 
 from __future__ import annotations
 
 from datetime import date, datetime
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -245,3 +247,63 @@ async def attempt(
         related_agent=ch.related_agent,
         selected_option=req.selected_option,
     )
+
+
+class ReminderPreference(BaseModel):
+    """`null` turns reminders off — the column's own "off" value, so there is no
+    separate enabled flag to drift out of sync with the hour."""
+
+    daily_reminder_hour: int | None = Field(
+        default=None,
+        ge=0,
+        le=23,
+        description="Hour in the user's own timezone (users.timezone). null = off.",
+    )
+    timezone: str | None = Field(
+        default=None,
+        description="IANA name, e.g. Asia/Riyadh. Omit to leave unchanged.",
+    )
+
+
+@router.put("/reminder", response_model=ReminderPreference)
+async def set_reminder_preference(
+    req: ReminderPreference,
+    current_user: User = Depends(get_current_user),
+) -> ReminderPreference:
+    """CR095 — the write path for the daily-reminder time.
+
+    Without this the reminder job is unreachable: `daily_reminder_hour` is NULL
+    for every user, NULL means off, and nothing else in the API writes it — so
+    the tick would run forever and correctly send nothing. The CR's acceptance
+    says "at their configured local time", and there was no way to configure it.
+
+    Timezone is settable here rather than in a separate call because the hour is
+    meaningless without it, and a user who sets one and not the other gets a
+    reminder at the wrong time — an error they cannot see or diagnose. Validated
+    against `zoneinfo` so an unknown name is rejected at the boundary instead of
+    surfacing later inside the tick.
+
+    Scoped to the caller's own row (`get_current_user`); there is no user_id in
+    the path, so there is nothing to authorize across users.
+    """
+    if req.timezone is not None:
+        try:
+            ZoneInfo(req.timezone)
+        except (ZoneInfoNotFoundError, ValueError) as exc:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                f"unknown timezone {req.timezone!r}",
+            ) from exc
+
+    with get_session() as s:
+        row = s.get(User, current_user.id)
+        if row is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "user not found")
+        row.daily_reminder_hour = req.daily_reminder_hour
+        if req.timezone is not None:
+            row.timezone = req.timezone
+        s.commit()
+        return ReminderPreference(
+            daily_reminder_hour=row.daily_reminder_hour,
+            timezone=row.timezone,
+        )
