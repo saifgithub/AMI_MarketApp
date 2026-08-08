@@ -782,7 +782,9 @@ ssh melehost "docker exec ami_postgres psql -U postgres -d ami_trade -t -A -c \
   \"SELECT replace(verdict->>'reason', chr(10), ' ') FROM room_runs \
     WHERE jsonb_typeof(verdict)='object' \
       AND coalesce((verdict->>'overridden_from_llm')::boolean,false)=false\"" > reasons.txt
-# then run the pattern over every line and READ every extraction
+# then run the pattern over every line and READ every extraction.
+# NOTE: no `length(...) > 40` filter — an earlier sweep carried one and
+# undercounted the corpus 946 vs 949. Match this query exactly.
 ```
 
 Read every extraction, not the count. On DEF231 the sweep took under a minute, returned 126
@@ -791,9 +793,41 @@ verb's object, and one truncated mid-number. Where a pattern's failure is *silen
 miss), also diff the extraction set against the previous pattern's — DEF234's markdown hole was a
 coverage loss introduced by the fix for the MAJOR, and only the before/after diff showed it.
 
+**The two methods are not interchangeable — this is the part that took three audit rounds to get
+right.** A corpus sweep and adversarial construction fail on opposite classes:
+
+| | corpus sweep | adversarial construction |
+|---|---|---|
+| **coverage** bug (real prose the pattern should match and doesn't, or mis-parses) | **finds it** — DEF234's `$1,073.46 → $1.00` and the markdown hole were both visible on sight | usually misses — you don't invent the shape you forgot |
+| **false-positive** class (prose the pattern matches and shouldn't) | **cannot find it** unless the corpus happens to contain the shape | **finds it** — all three DEF231 MAJORs came this way |
+
+The auditor's round-3 note is the precise statement: *nothing in the corpus asserts that an
+extraction is wrong, so nothing about reading it looks wrong either, unless the reader already
+knows to check.* DEF231's round-2 MAJOR — a sentence naming two levels, where the second level's
+price was attributed to the first level's verb — **does not appear once in 949 real verdicts**. The
+sweep read all 121 extractions and none of them exhibited it. Only a constructed sentence did.
+
+So the guard is **both**, always, for any check that reads a claim out of prose:
+
+1. **Sweep the corpus** and read every extraction — catches coverage bugs.
+2. **Construct adversarial sentences** that satisfy the pattern's grammar while violating its
+   intent — catches false-positive classes. Ask specifically: *what else could sit where my target
+   sits?* For a level-reference pattern the answer was "a different level" and "a non-price noun".
+3. **Diff the extraction set against the previous version** — a fix's own coverage loss is
+   invisible in either set alone. DEF234's markdown hole showed up only as 126 → 119.
+4. **Re-sweep after the fix and assert the count is unchanged** where it should be. DEF231's
+   round-4 fix had to leave all 121 real extractions intact while killing three constructed ones;
+   a tightening that silently zeroed the check would pass every negative test.
+
+**Watch the harness too.** The round-4 sweep first reported **0 of 121** extractions — a generator
+was passed where a tuple was needed and exhausted after the first line. The number was implausible
+enough to catch, which is the only reason it was caught. A measurement that would have "confirmed"
+a wrong conclusion is the same failure as the defect being measured.
+
 **Corollary.** *A mutation table answers "would my tests notice if I broke this?". It never answers
-"did I think of this?". Only new inputs answer the second question, and inventing them yourself is
-not "new" — they come from the same model that wrote the bug.*
+"did I think of this?". A corpus answers "what does the world actually send?". It never answers
+"what else would my pattern accept?". Three different questions, three different instruments — and
+the third one only an adversary asks.*
 
 ---
 

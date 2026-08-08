@@ -39,6 +39,7 @@ from app.schemas.room import VerdictAction
 from app.services import room_runner
 from app.services.coach_engine import hydrate_coach_mandate
 from app.services.room_runner import (
+    _DIRECTIONAL_CLAIM_RES,
     RoomRunner,
     _annotate_direction_against_price,
     _direction_contradictions,
@@ -136,6 +137,68 @@ def test_the_tightened_grammar_still_catches_every_real_level_reference(text, cl
     """The other half of the fix: a whitelist that also excluded the real
     shapes would be a silent no-op, which is worse than the false positive."""
     assert len(_direction_contradictions(text, close)) == 1
+
+
+# ── round-2 audit MAJOR: two levels in one sentence ──────────────────────────
+#
+# The round-1 whitelist is built out of level nouns PLUS the prepositions that
+# relate two levels to each other, so a sentence naming TWO levels walked the
+# vocabulary end to end and attributed the second level's price to the first
+# level's verb. Nothing required the captured figure to be the verb's level.
+#
+# Note for anyone reading this later: NONE of these three shapes appears in the
+# 949-verdict Alpha corpus. A corpus sweep cannot find a false-positive class
+# the corpus has not happened to produce yet — it finds coverage bugs (DEF234).
+# These came from adversarial construction. The two methods catch different
+# classes and neither substitutes for the other; see failure pattern P16.
+
+@pytest.mark.parametrize("text,close", [
+    ("It needs to recover to the prior high, above the recent low of $52.30.", 60.00),
+    ("It needs to recover to the prior high above the recent low of $52.30.", 60.00),
+    ("Reclaim the 200-day, under the recent high of $52.30.", 60.00),
+])
+def test_a_second_level_in_the_sentence_is_not_read_as_the_verbs_level(text, close):
+    assert _direction_contradictions(text, close) == []
+
+
+def test_a_preposition_adjacent_to_the_verb_is_still_part_of_the_verb_phrase():
+    """The fix admits a preposition once, in the verb's own slot — `reclaim
+    above $51.40` is in the corpus. It is a second preposition, deeper in the
+    gap, that opens a new phrase whose level is not the verb's."""
+    assert len(_direction_contradictions("it must reclaim above $51.40", 60.00)) == 1
+    assert len(_direction_contradictions("a reclaim of $65 would change it", 80.00)) == 1
+
+
+def test_the_real_corpus_extraction_set_is_unchanged_by_the_two_level_fix():
+    """Guard on the fix: a whitelist tightened until nothing matches would pass
+    every negative test above and be a silent no-op. These are the shapes the
+    949-verdict Alpha corpus actually produces — sampled across all seven verb
+    families — and every one must still extract its own level."""
+    corpus_shapes = [
+        ("break above $109.49", 100.0, 109.49),
+        ("break above the $533.67", 500.0, 533.67),
+        ("break below the $139.18", 150.0, 139.18),
+        ("breaks above the $19.62", 18.0, 19.62),
+        ("drop to the $28.98", 40.0, 28.98),
+        ("drop below $22.13", 30.0, 22.13),
+        ("move above $15.15", 14.0, 15.15),
+        ("pullback to the $146.03", 200.0, 146.03),
+        ("pullback toward the $238.82", 300.0, 238.82),
+        ("pulls back to the $107.75", 150.0, 107.75),
+        ("reclaim the $105.38", 90.0, 105.38),
+        ("reclaiming the $534.0", 500.0, 534.0),
+        ("reclaims $5.46", 4.0, 5.46),
+        ("reclaim the 50-day range low of $998.19", 900.0, 998.19),
+    ]
+    for text, close, expected in corpus_shapes:
+        # `close` is placed on the coherent side, so extraction is proven by the
+        # regex finding the level at all — asserted directly, not via a fire.
+        found = [
+            float(m.group(1).replace(",", ""))
+            for pattern, _ in _DIRECTIONAL_CLAIM_RES
+            for m in pattern.finditer(text)
+        ]
+        assert expected in found, f"corpus shape no longer extracts its level: {text!r}"
 
 
 # ── DEF234: shapes drawn from the real corpus, not from imagination ──────────

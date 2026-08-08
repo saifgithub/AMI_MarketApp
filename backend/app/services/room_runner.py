@@ -1256,14 +1256,31 @@ _DIRECTIONAL_CLAIMS: tuple[tuple[str, str], ...] = (
 # so an unknown phrase means no fire — the precision bias this check is built
 # on, enforced by the grammar rather than by distance. The whitelist also makes
 # the old "no second `$` in the gap" rule redundant: `$` is not in it.
-_LEVEL_CONNECTIVE = (
-    r"(?:the|a|an|its|their|this|that|prior|previous|former|recent|old|key|"
-    r"to|toward|towards|above|below|back|of|at|around|near|over|under|"
+# Round-2 audit MAJOR: the whitelist above was itself built out of level nouns
+# PLUS the prepositions that relate two levels to each other, so a sentence
+# naming TWO different levels — *"recover to the prior high, above the recent
+# low of $52.30"* — walked the vocabulary end to end and attributed the second
+# level's price to the first level's verb. Nothing required the captured figure
+# to belong to the level the verb actually names.
+#
+# The split below is the grammar that distinguishes them. A preposition sitting
+# ADJACENT to the verb is part of the verb phrase ("reclaim above $51.40" — the
+# corpus contains this). The same word deeper in the gap OPENS A NEW
+# prepositional phrase, and the level that follows belongs to that phrase, not
+# to the verb. So a preposition is admitted once, in the verb's own slot, and
+# never again.
+_LEVEL_PREPOSITION = (
+    r"(?:to|toward|towards|above|below|over|under|near|around|back|beneath|atop|at)"
+)
+_LEVEL_NOUN = (
+    r"(?:the|a|an|its|their|this|that|prior|previous|former|recent|old|key|of|"
     r"level|levels|support|resistance|line|low|lows|high|highs|price|mark|"
     r"zone|area|floor|ceiling|band|base|range|session|close|day|week|month|"
     r"moving|average|sma|ema|\d+(?:-(?:day|week|month))?)"
 )
-_LEVEL_GAP = rf"(?:[\s,–—-]+{_LEVEL_CONNECTIVE}\b)*[\s,]*[*_(]*"
+_LEVEL_GAP = (
+    rf"(?:\s+{_LEVEL_PREPOSITION}\b)?(?:[\s,–—-]+{_LEVEL_NOUN}\b)*[\s,]*[*_(]*"
+)
 
 # DEF234 — the level, WITH its thousands separators. `(\d+(?:\.\d+)?)` stopped
 # at the comma, so *"break above $1,073.46"* parsed as a level of **$1.00** and
