@@ -1444,8 +1444,9 @@ _LEVEL_NUMBER = r"(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
 # So the subject is not the discriminator. It never was — it correlated with
 # one in the corpus and nowhere else. **What actually separates a price level
 # from a quantity of money is the OBJECT: a level is bare, a quantity carries a
-# scale or a measure.** No price is ever "$52.30 billion" or "$52.30 per share"
-# or "$52.30 in short interest".
+# scale or a measure.** No price is ever "$52.30 billion" or "$52.30 in short
+# interest". (This sentence originally also claimed "$52.30 per share". Round 8
+# corrected that — a share price IS a per-share figure; see `_NOT_A_PRICE_AFTER`.)
 #
 # This gate therefore applies to the WHOLE family, not to `clear` alone — which
 # also closes the round-6 residual I left open and the auditor declined to gate
@@ -1460,8 +1461,35 @@ _LEVEL_NUMBER = r"(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
 # The subject gate STAYS. Neither alone is sufficient — this one does not stop
 # *"Net of fees the trader clears $52.30 on this position"* (no scale, no
 # measure), and the subject gate does not stop the four constructions above.
+# Round-8 audit MAJOR — the first draft asserted *"no price is ever `$52.30 per
+# share`"*, and that is simply false. A share price IS a per-share dollar
+# figure, and PM prose says so out loud exactly when a level needs
+# disambiguating from an aggregate in the same paragraph:
+#
+#     "Price breaks above $52.30 per share resistance."          was MISSED
+#     "Shares reclaim $52.30 per share support in the final hour." was MISSED
+#     "The stock clears $52.30 per share, confirming the breakout." was MISSED
+#
+# The auditor also checked the obvious repair before filing, and it is wrong
+# too: deleting the clause outright lets *"$52.30 per share in cumulative
+# dividends"* and *"$52.30 per share in option premium"* back in. The clause was
+# necessary AND insufficient — because **the gate was reading the wrong word.**
+# What makes those two non-prices is "cumulative dividends" and "option
+# premium"; "per share" carries no information about which sense is meant, and
+# on its own it is as compatible with a level as with a payout.
+#
+# So a share-denomination phrase no longer excludes anything by itself — it may
+# only sit BETWEEN the figure and a quantity noun. A scale word still excludes
+# on its own, because "$52.30 billion" has no price reading at all.
+#
+# Measured: 364 extractions, unchanged, and the corpus contains zero `$X per
+# share` / `$X a share` of either sense — so this is derived from the language,
+# not from the fixture, and the fixture is only evidence that it costs nothing.
 _NOT_A_PRICE_AFTER = (
-    r"(?!\s*(?:million|billion|trillion|[mb]n\b|[MBK]\b|per\s+share|in\s+\w+))"
+    r"(?!"
+    r"\s*(?:million|billion|trillion|[mb]n\b|[MBK]\b)"
+    r"|(?:\s+(?:per|a)\s+share)?\s+(?:in|of)\s+\w+"
+    r")"
 )
 
 # Round-4 audit MINOR: most verb phrases END in their own preposition

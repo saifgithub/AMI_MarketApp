@@ -636,6 +636,38 @@ def test_a_quantity_of_money_is_not_a_price_level(text):
     assert _direction_contradictions(text, 60.00, _lv(52.30)) == []
 
 
+# Round-8 audit MAJOR. The object gate's first draft excluded anything followed by
+# "per share", on the stated ground that "no price is ever $52.30 per share". A
+# share price is exactly that, and saying so out loud is how PM prose separates a
+# level from an aggregate in the same paragraph. Deleting the clause is not the
+# repair either — it lets the dividend/premium cases back in — because the gate
+# was reading the wrong word: "cumulative dividends" and "option premium" are what
+# make those non-prices. A share-denomination phrase may now only sit BETWEEN the
+# figure and a quantity noun; it excludes nothing on its own.
+@pytest.mark.parametrize("text", [
+    # The auditor's three, verbatim. All were MISSED before round 9.
+    "Price breaks above $52.30 per share resistance.",
+    "Shares reclaim $52.30 per share support in the final hour.",
+    "The stock clears $52.30 per share, confirming the breakout.",
+])
+def test_a_share_price_is_allowed_to_say_it_is_per_share(text):
+    assert _direction_contradictions(text, 60.00, _lv(52.30)) != []
+
+
+@pytest.mark.parametrize("text", [
+    # …while the quantity noun still decides, with or without the share phrase.
+    "The stock clears $52.30 per share in cumulative dividends paid since IPO.",
+    "The strike price clears $52.30 per share in option premium.",
+    # Mine: "of" as well as "in", and "a share" as well as "per share" — neither
+    # form appears in the corpus, so these are derived from the language rather
+    # than fitted to the fixture.
+    "The stock clears $52.30 per share of cumulative free cash flow.",
+    "Price breaks above $52.30 a share in total dividends.",
+])
+def test_a_share_phrase_still_cannot_shield_a_quantity(text):
+    assert _direction_contradictions(text, 60.00, _lv(52.30)) == []
+
+
 def test_the_level_number_is_atomic_so_the_gate_cannot_be_negotiated_around():
     """The gate above is worthless without atomic grouping, and the naive form
     fired on all nine constructions it was written to stop.
