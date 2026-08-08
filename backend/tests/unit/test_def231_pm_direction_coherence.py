@@ -401,16 +401,17 @@ def test_the_match_band_is_rounding_wide_and_no_wider(quoted, expected):
 
 
 def test_a_match_inside_the_band_can_never_flip_the_direction():
-    """Why a band is safe at all, and the reason it is half the size of the
-    coherence tolerance rather than equal to it.
+    """Why the band is half the coherence tolerance rather than equal to it.
 
-    Substituting the run's level for the PM's rounded figure would be a real
-    risk if the two could land on opposite sides of the close. They cannot: a
-    match is within 0.5% of the level, and anything within 1.0% of the close is
-    discarded as "price is effectively AT the level", so by the time a signal
-    is emitted the level is more than 1% clear of the close and the quoted
-    figure is on the same side of it. Asserted here on the worst case — the
-    quoted number pushed to the far edge of the band, straddling the close."""
+    It is NOT what makes the direction safe — `gap_pct` is computed from the
+    close and the matched run's own level, and never reads the quoted figure,
+    so the PM's rounding cannot reach the verdict by any path (round-5 auditor's
+    correction to this docstring; the proof answers a narrower question than the
+    original wording implied). What the ordering buys is that the level AMI
+    NAMES sits on the same side of the close as the number the PM wrote, so the
+    note can substitute one for the other without describing a different
+    situation. Asserted on the worst case — the quoted number pushed to the far
+    edge of the band, straddling the close."""
     close = 1000.00
     level = 1004.00                      # 0.4% above the close
     quoted = level * 0.995               # 998.98 — below the close, other side
@@ -512,6 +513,58 @@ def test_what_the_sweep_proposed_and_was_rejected_on_reading(text):
     and not an answer."""
     assert _direction_contradictions(text, 60.00, _lv(52.30)) == []
     assert _direction_contradictions(text, 45.00, _lv(52.30)) == []
+
+
+def test_a_pm_can_name_the_verdicts_own_levels_in_its_own_words():
+    """Round-5 MINOR. `_structured_levels` made entry/stop/target candidate
+    levels, but `_LEVEL_NOUN` had no words for them, so a plain sentence naming
+    one never matched at all — a gap this change's own predecessor created.
+    Adding the three nouns moves the extraction set over all 811 corpus rows by
+    exactly zero, so it costs none of the precision the whitelist buys."""
+    assert len(_direction_contradictions(
+        "Reclaim the entry of $52.30 before we add.", 60.00, [("entry", 52.30)]
+    )) == 1
+    assert len(_direction_contradictions(
+        "A break below the stop of $52.30 ends it.", 45.00, [("stop", 52.30)]
+    )) == 1
+    assert len(_direction_contradictions(
+        "Wait for a pullback to the target of $52.30.", 45.00, [("target", 52.30)]
+    )) == 1
+    # Still refused, and deliberately: `break below` already carries its
+    # preposition, so round 4's fix withholds the gap's own preposition slot and
+    # `at` ends the match. That rule exists because the two never legitimately
+    # compose (`break above near the recent low of $X`), and it is not worth
+    # reopening for a phrasing with zero corpus support — the designed failure
+    # mode is a miss.
+    assert _direction_contradictions(
+        "A break below the stop at $52.30 ends it.", 45.00, [("stop", 52.30)]
+    ) == []
+
+
+def test_a_comma_chain_of_level_nouns_is_apposition_not_a_second_referent():
+    """The property the round-5 auditor established with four constructions, and
+    the reason it is a design property rather than luck.
+
+    English builds a genuine second referent with a conjunction ("the range low
+    AND the range high of $X") or a preposition ("the range low, ABOVE the range
+    high of $X"). `and`/`or` were never in `_LEVEL_NOUN`, and round 2's fix
+    blocks a second preposition — so the only chains the vocabulary can walk are
+    bare comma-appositions, where the trailing clauses re-describe the SAME
+    thing the figure names. Both mechanisms are asserted, so adding a conjunction
+    to the vocabulary later fails here rather than silently reopening round 2."""
+    levels = [("support", 900.00), ("breakout", 52.30)]
+    # Apposition: fires, and correctly — one referent, redundantly worded.
+    assert len(_direction_contradictions(
+        "Reclaim the range low, the key level of $52.30.", 60.00, levels
+    )) == 1
+    # A conjunction asserts two referents; the vocabulary cannot cross it.
+    assert _direction_contradictions(
+        "Reclaim the range low and the range high of $52.30.", 60.00, levels
+    ) == []
+    # A second preposition opens a new phrase; round 2's fix ends the match.
+    assert _direction_contradictions(
+        "Reclaim the range low, above the range high of $52.30.", 60.00, levels
+    ) == []
 
 
 def test_bare_clear_is_an_adjective_and_is_not_a_verb_here():

@@ -1306,10 +1306,28 @@ _DIRECTIONAL_CLAIMS: tuple[tuple[str, str], ...] = (
 _LEVEL_PREPOSITION = (
     r"(?:to|toward|towards|above|below|over|under|near|around|back|beneath|atop|at)"
 )
+# Note what is NOT in here, because it is load-bearing rather than an omission.
+# `and`/`or` are absent, and a second preposition is refused by the split below.
+# Those are the only two ways English builds a genuine second referent — "the
+# range low AND the range high of $52.30", "the range low, ABOVE the range high
+# of $52.30". A bare comma-chain of these nouns cannot: "reclaim the range low,
+# the key level of $52.30" reads as apposition, where the trailing clauses
+# re-describe the SAME thing the figure names, however redundantly. So the
+# comma-apposition class is safe by construction and not by luck — worth knowing
+# before adding a word here, since a conjunction would break the property.
+# (Round-5 auditor, who spent four constructions establishing it.)
+#
+# `entry`/`stop`/`target` are here because `_structured_levels` made them
+# candidate levels, and a vocabulary that admits `support` but not `entry` would
+# let a PM's own words reach one and not the other. Adding them changes the
+# extraction set over all 811 corpus rows by exactly ZERO — measured, not
+# assumed — so this closes a gap without spending any of the precision the
+# whitelist exists to buy.
 _LEVEL_NOUN = (
     r"(?:the|a|an|its|their|this|that|prior|previous|former|recent|old|key|of|"
     r"level|levels|support|resistance|line|low|lows|high|highs|price|mark|"
     r"zone|area|floor|ceiling|band|base|range|session|close|day|week|month|"
+    r"entry|entries|stop|stops|target|targets|"
     r"moving|average|sma|ema|\d+(?:-(?:day|week|month))?)"
 )
 _LEVEL_GAP = (
@@ -1396,6 +1414,16 @@ _STRUCTURED_LEVEL_LABELS: dict[str, str] = {
 # deliberately far too tight to let a different level of the same run stand in,
 # and far too tight for a round number the PM invented ($100 against a support
 # of $104) to pass as a quote of one.
+#
+# Being HALF `_DIRECTION_TOLERANCE_PCT` is what makes naming the matched level
+# safe. It is not what makes the DIRECTION safe — the direction is computed from
+# `close` and the matched run's own `level`, and never reads the quoted figure at
+# all, so the PM's rounding cannot reach the verdict either way. What the
+# ordering buys is that the level AMI names is on the same side of the close as
+# the number the PM wrote, so the note can substitute one for the other without
+# describing a different situation: |level−close| ≥ 0.01·level and
+# |quoted−level| ≤ 0.005·level give |quoted−close| ≥ 0.005·level > 0, with the
+# sign of (level−close). Holds with equality at both bounds simultaneously.
 _STRUCTURED_LEVEL_MATCH_PCT = 0.5
 
 
