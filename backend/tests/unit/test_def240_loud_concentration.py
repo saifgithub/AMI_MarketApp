@@ -38,19 +38,43 @@ def test_above_the_threshold_states_the_share_and_the_cap():
     note = _concentration_note(50.0, 100.0)
     assert "50.0% of the portfolio in one name" in note
     assert "single-name cap is 100.0%" in note
-    assert "the safety floor permits it" in note
+    assert "this position does not exceed it" in note
 
 
 def test_the_note_is_factual_not_advisory():
-    """AMI is simulation-only and does not advise. The sentence states a share, a
-    cap, and that the floor permits it — no recommendation, no adjective, no
-    second person imperative. This is the compliance perimeter, not style."""
+    """AMI is simulation-only and does not advise. The sentence states a share and
+    the cap it sits under — no recommendation, no adjective, no imperative.
+
+    **This list is a floor, not the check.** The round-1 audit MAJOR was
+    "so the safety floor permits it", and no word here would have caught it:
+    "permits" is not advice-shaped in isolation, only as this sentence's
+    conclusion, where it reads as authorization — the same connotation as "the
+    law permits it". Tone is settled by a human reading the sentence; these
+    assertions only stop a known regression.
+    """
     note = _concentration_note(60.0, 100.0).lower()
-    for banned in (
+    advisory = (
         "should", "recommend", "advise", "consider reducing", "too much",
         "risky", "dangerous", "warning", "careful", "we suggest",
-    ):
-        assert banned not in note, f"{banned!r} turns a disclosure into advice"
+    )
+    # Round-1 MAJOR: authorization verbs turn a disclosure into a sanction.
+    authorising = (
+        "permits", "permitted", "allows", "allowed", "approved", "sanctioned",
+        "cleared", "acceptable", "is fine", "is safe", "no problem",
+    )
+    for banned in advisory + authorising:
+        assert banned not in note, f"{banned!r} turns a disclosure into a verdict on the trade"
+
+
+def test_the_note_states_what_is_true_not_what_is_sanctioned():
+    """The sibling disclosures are the standard: "(sized down to 40.0% — mandate
+    risk-tier ceiling.)" states what HAPPENED. The round-1 version of this note
+    stated an evaluative OUTCOME (permitted vs not). Both are true; only one is a
+    disclosure. The user must still learn why the trade was not blocked."""
+    note = _concentration_note(50.0, 100.0)
+    assert "does not exceed" in note, (
+        "the user still needs to know why this was not blocked"
+    )
 
 
 def test_a_missing_cap_still_states_the_share():

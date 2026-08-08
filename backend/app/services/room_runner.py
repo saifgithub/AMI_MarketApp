@@ -703,15 +703,36 @@ _LOUD_CONCENTRATION_PCT = 25.0
 def _concentration_note(size_pct: float | None, cap_pct: float | None) -> str:
     """DEF240 — the plain-words concentration statement, or "" below the threshold.
 
-    Factual only: the share, the cap, and the fact that the floor permits it. No
-    recommendation and no adjective — AMI is simulation-only and does not advise,
-    and a warning the user did not ask for would be exactly that.
+    Two facts and no third thing: the share, and the cap it sits under. AMI is
+    simulation-only and does not advise, so neither a caution nor a reassurance
+    belongs here.
+
+    **Round-1 audit MAJOR — why the second clause reads the way it does.** It
+    first shipped as *"…so the safety floor permits it"*, and the auditor was
+    asked to read the sentence for tone rather than scan it for banned words.
+    "Permits" is an authorization verb: it carries the same connotation as "the
+    law permits it" — not merely *this breaks no rule* but *this is sanctioned*.
+    A user who has just watched twelve analysts argue for half their portfolio in
+    one name, and then reads that the safety floor permits it, has a
+    recommendation-shaped inference handed to them for free.
+
+    The sibling disclosures are the standard this failed against. *"(sized down
+    to 40.0% — mandate risk-tier ceiling.)"* and *"(stop/target not stated by
+    the PM…)"* state **what happened**; "permits" states **an evaluative
+    outcome**. Both are true; only one is a disclosure. So the clause now states
+    the comparison and stops: the user still learns why this was not blocked,
+    without being told it is therefore a good idea.
+
+    No word list can settle this — "permits" was never a banned-word candidate
+    because it is not advice-shaped in isolation, only in this position as the
+    sentence's conclusion. The assertions below are a floor, not the check; the
+    check is a human reading it.
     """
     if size_pct is None or size_pct <= _LOUD_CONCENTRATION_PCT:
         return ""
     cap = (
-        f" Your mandate's single-name cap is {cap_pct:.1f}%, so the safety floor "
-        f"permits it."
+        f" Your mandate's single-name cap is {cap_pct:.1f}%; this position does "
+        f"not exceed it."
         if cap_pct is not None else ""
     )
     return (
