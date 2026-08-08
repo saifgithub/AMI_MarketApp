@@ -1429,6 +1429,41 @@ _LEVEL_GAP = (
 # corpus check that should have preceded the original fix, not followed it.
 _LEVEL_NUMBER = r"(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
 
+# Round-7 audit MAJOR — and it is the SUBJECT gate that failed, not just one
+# word in it. Round 6 fixed `clear` firing on the earnings sense by requiring a
+# price-sense subject. The auditor broke that with `"The stock clears $52.30
+# billion in market capitalization"` — `stock` is as good a metonym for the
+# company as `management` is. Probing my own remaining three before submitting,
+# ALL of them break the same way:
+#
+#     "The offering price clears $52.30 million in gross proceeds."
+#     "The strike price clears $52.30 per share in option premium."
+#     "The breakout clears $52.30 billion in market value added."
+#     "Price action clears $52.30 million in cumulative volume."
+#
+# So the subject is not the discriminator. It never was — it correlated with
+# one in the corpus and nowhere else. **What actually separates a price level
+# from a quantity of money is the OBJECT: a level is bare, a quantity carries a
+# scale or a measure.** No price is ever "$52.30 billion" or "$52.30 per share"
+# or "$52.30 in short interest".
+#
+# This gate therefore applies to the WHOLE family, not to `clear` alone — which
+# also closes the round-6 residual I left open and the auditor declined to gate
+# on: `"posted a breakout to $52.30 in quarterly revenue"`.
+#
+# Measured: excludes **0 of the 364** real extractions across all 811 corpus
+# rows. The corpus does carry 243 scale-suffixed figures (`$7.59B`, `$6,912M`)
+# — they are the fundamentals numbers in the PM's prose, and not one of them is
+# a level any directional verb names. A free gate, and it is a proper subset
+# rule: it can only ever remove a match, never create one.
+#
+# The subject gate STAYS. Neither alone is sufficient — this one does not stop
+# *"Net of fees the trader clears $52.30 on this position"* (no scale, no
+# measure), and the subject gate does not stop the four constructions above.
+_NOT_A_PRICE_AFTER = (
+    r"(?!\s*(?:million|billion|trillion|[mb]n\b|[MBK]\b|per\s+share|in\s+\w+))"
+)
+
 # Round-4 audit MINOR: most verb phrases END in their own preposition
 # ("break above", "pull back to"). Handing those a second, independent
 # preposition slot lets two compose — `break above near the recent low of $X`
@@ -1444,7 +1479,15 @@ _DIRECTIONAL_CLAIM_RES: tuple[tuple[re.Pattern[str], str], ...] = tuple(
         re.compile(
             rf"\b(?:{verb})\b"
             rf"{_LEVEL_GAP_NO_PREP if _VERB_ENDS_IN_PREPOSITION.search(verb) else _LEVEL_GAP}"
-            rf"\$\s*{_LEVEL_NUMBER}",
+            # The number is ATOMIC. Without `(?>…)` the gate below is worthless:
+            # on "$52.30 billion" the engine simply backtracks the number to
+            # "52.3", sees "0 billion" — not a scale word — and the negative
+            # lookahead passes, capturing a shortened figure. Worse at "52",
+            # which reads ".30 billion" and also passes. Atomic grouping locks
+            # the longest number in so the gate decides the whole match rather
+            # than being negotiated around. (Verified: the naive form fired on
+            # all 9 constructions it was written to stop.)
+            rf"\$\s*(?>{_LEVEL_NUMBER}){_NOT_A_PRICE_AFTER}",
             re.IGNORECASE,
         ),
         side,

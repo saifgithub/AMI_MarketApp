@@ -609,6 +609,60 @@ def test_clear_still_fires_on_the_price_sense(text):
     assert _direction_contradictions(text, 60.00, _lv(52.30)) != []
 
 
+# Round-7 audit MAJOR. Round 6's fix keyed on the SUBJECT, and the subject turned
+# out to correlate with the price sense only inside the corpus it was built from.
+# `stock` is as good a metonym for the company as `management` is — and probing
+# the other three before resubmitting, every one of them breaks the same way. The
+# discriminator is the OBJECT: a price level is bare, a quantity of money carries
+# a scale or a measure. No price is ever "$52.30 billion" or "$52.30 per share".
+@pytest.mark.parametrize("text", [
+    # The auditor's four, verbatim.
+    "The stock clears $52.30 billion in market capitalization this quarter.",
+    "The stock clears $52.30 billion in daily trading volume today.",
+    "The stock clears $52.30 million in short interest outstanding.",
+    "The stock clears $52.30 per share in cumulative dividends paid since IPO.",
+    # Mine — the same attack against the three subjects the auditor did NOT name,
+    # which is why this gate is not "drop `stock`".
+    "The offering price clears $52.30 million in gross proceeds.",
+    "The strike price clears $52.30 per share in option premium.",
+    "The breakout clears $52.30 billion in market value added.",
+    "Price action clears $52.30 million in cumulative volume.",
+    # The round-6 residual, previously left open on purpose and now closed for
+    # free: this one is not `clear` at all, which is the point — the gate is on
+    # the whole verb family.
+    "The company posted a breakout to $52.30 in quarterly revenue.",
+])
+def test_a_quantity_of_money_is_not_a_price_level(text):
+    assert _direction_contradictions(text, 60.00, _lv(52.30)) == []
+
+
+def test_the_level_number_is_atomic_so_the_gate_cannot_be_negotiated_around():
+    """The gate above is worthless without atomic grouping, and the naive form
+    fired on all nine constructions it was written to stop.
+
+    `_LEVEL_NUMBER` alternates `\\d+(?:\\.\\d+)?`, so on "$52.30 billion" the
+    engine backtracks the number to "52.3", reads "0 billion" — not a scale word
+    — and the negative lookahead passes. It will even settle on "52", reading
+    ".30 billion". Both capture a shortened figure AND defeat the gate, which is
+    strictly worse than not having it. `(?>…)` locks the longest number in.
+
+    Asserting the absence of a *wrong* capture, not just the absence of a match:
+    a future edit that drops the atomic group would otherwise look like a pass.
+    """
+    from app.services.room_runner import _DIRECTIONAL_CLAIM_RES
+
+    text = "until price clears $52.30 billion in market capitalization"
+    captured = [m.group(1) for pat, _ in _DIRECTIONAL_CLAIM_RES for m in pat.finditer(text)]
+    assert captured == [], f"the number was shortened to {captured} to slip the gate"
+
+    # And the gate must not cost the thousands-separator fix (DEF234) or a level
+    # that simply ends a sentence. (Close ABOVE the level, or "break above" is
+    # coherent and correctly says nothing — the incoherence is what's asserted.)
+    assert _direction_contradictions("break above $1,073.46 today.", 2000.00,
+                                     [("support", 1073.46)]) != []
+    assert _direction_contradictions("reclaim $52.30.", 60.00, _lv(52.30)) != []
+
+
 def test_clear_with_an_elided_subject_is_a_deliberate_miss():
     """The one extraction the round-6 fix gives up, recorded so it cannot be
     "fixed" by accident. The subject is `price`, six words back across a
