@@ -1,0 +1,946 @@
+{
+  "epoch_turns": 198,
+  "epoch_convenes": 18,
+  "m1_identifiability": {
+    "n": 198,
+    "accuracy": 0.879,
+    "chance": 0.091,
+    "lift_over_chance": 9.67,
+    "top_confusions": [
+      [
+        "trader -> bull_researcher",
+        3
+      ],
+      [
+        "neutral_debator -> trader",
+        2
+      ],
+      [
+        "conservative_debator -> bear_researcher",
+        2
+      ],
+      [
+        "research_manager -> fundamentals_analyst",
+        2
+      ],
+      [
+        "trader -> bear_researcher",
+        2
+      ],
+      [
+        "research_manager -> bear_researcher",
+        2
+      ],
+      [
+        "aggressive_debator -> trader",
+        1
+      ],
+      [
+        "conservative_debator -> market_analyst",
+        1
+      ]
+    ]
+  },
+  "m2_role_vs_ticker": {
+    "same_agent_cross_ticker": {
+      "mean": 0.302,
+      "n": 1683
+    },
+    "same_ticker_cross_agent": {
+      "mean": 0.199,
+      "n": 935
+    },
+    "analyst_pairs_same_convene": {
+      "mean": 0.128,
+      "n": 102
+    },
+    "role_signal_exceeds_ticker_signal": true,
+    "margin": 0.103
+  },
+  "m3_number_provenance": {
+    "totals": {
+      "grounded": 2660,
+      "novel": 123,
+      "inherited": 90
+    },
+    "pct": {
+      "grounded": 92.6,
+      "novel": 4.3,
+      "inherited": 3.1
+    },
+    "per_agent_novel_pct": {
+      "aggressive_debator": 4.9,
+      "bear_researcher": 6.0,
+      "bull_researcher": 7.5,
+      "conservative_debator": 5.4,
+      "fundamentals_analyst": 2.3,
+      "market_analyst": 3.1,
+      "neutral_debator": 5.6,
+      "news_analyst": 0.0,
+      "research_manager": 1.0,
+      "social_media_analyst": 0.0,
+      "trader": 6.7
+    },
+    "novel_samples": [
+      {
+        "agent": "bull_researcher",
+        "num": "22.9%",
+        "ctx": "s **$608.23** by **2026-11-03** (88 days), representing a **22.9%** potential gain from current levels. Given the **risk_sco"
+      },
+      {
+        "agent": "bull_researcher",
+        "num": "$941.12",
+        "ctx": "e-name cap, I suggest sizing at **10.0%** of the portfolio ($941.12), aligning with the maximum allowance for this conviction l"
+      },
+      {
+        "agent": "research_manager",
+        "num": "9.4%",
+        "ctx": "gle-name cap already active in the portfolio (via NVDA at **9.4%**), initiating a new position at the midpoint of the **$424"
+      },
+      {
+        "agent": "trader",
+        "num": "0.00",
+        "ctx": "rt floor and the **$608.23** consensus target, creating a **0.00:1.00** or perfectly symmetric risk-reward profile that offe"
+      },
+      {
+        "agent": "trader",
+        "num": "0%",
+        "ctx": "for a **long_horizon** mandate. * Initiating a new **10.0%** position now violates the discipline of waiting for a bre"
+      },
+      {
+        "agent": "conservative_debator",
+        "num": "-14.2%",
+        "ctx": "claims the **$424.03** support floor on volume, we face a **-14.2%** drawdown from the **$494.31** entry, which would consume"
+      },
+      {
+        "agent": "conservative_debator",
+        "num": "1.17%",
+        "ctx": "drawdown from the **$494.31** entry, which would consume **1.17%** of our total **50%** portfolio drawdown cap and hit the *"
+      },
+      {
+        "agent": "neutral_debator",
+        "num": "0.30%",
+        "ctx": "ard stop at **$464.65** (-6.0%), sized to contribute only **0.30%** to the portfolio drawdown cap. * **Agreed** with Aggr"
+      },
+      {
+        "agent": "neutral_debator",
+        "num": "60.0%",
+        "ctx": "0%** single-name cap and keeps total open risk within the **60.0%** limit, hedging against the **14.2%** drawdown risk the Be"
+      },
+      {
+        "agent": "bear_researcher",
+        "num": "55%",
+        "ctx": "DA** multiples price in perfection while the stock trades **55%** below the consensus target of **$5.89**, creating a dange"
+      },
+      {
+        "agent": "bear_researcher",
+        "num": "-15%",
+        "ctx": "valuation gap. If growth decelerates even moderately to **10-15%**, the multiple compresses to **20-25x**, implying a **-25%"
+      },
+      {
+        "agent": "bear_researcher",
+        "num": "-25",
+        "ctx": "en moderately to **10-15%**, the multiple compresses to **20-25x**, implying a **-25% to -35%** correction to justify the e"
+      },
+      {
+        "agent": "bear_researcher",
+        "num": "-25%",
+        "ctx": "-15%**, the multiple compresses to **20-25x**, implying a **-25% to -35%** correction to justify the earnings reality, a ris"
+      },
+      {
+        "agent": "bear_researcher",
+        "num": "-35%",
+        "ctx": "the multiple compresses to **20-25x**, implying a **-25% to -35%** correction to justify the earnings reality, a risk amplif"
+      },
+      {
+        "agent": "trader",
+        "num": "0%",
+        "ctx": "n a risk score 3 profile. * **Side:** WAIT * **Size:** 0% (No position opened) * **Entry:** None \u2014 await a clear br"
+      },
+      {
+        "agent": "fundamentals_analyst",
+        "num": "44%",
+        "ctx": "ices in a **strong buy** consensus at **$5.89**, implying **44%** upside from the **$3.67** reference, backed by a **PEG**"
+      },
+      {
+        "agent": "research_manager",
+        "num": "10.5%",
+        "ctx": ", we allocate to the lower end of that cap to respect the **10.5%** total open-risk cap while capturing the upside. The post-"
+      },
+      {
+        "agent": "neutral_debator",
+        "num": "0.12",
+        "ctx": "50-day low, limiting portfolio drawdown contribution to ~**0.12** pts. * **Rationale:** This captures the **$5.89** targe"
+      },
+      {
+        "agent": "market_analyst",
+        "num": "14",
+        "ctx": "er half of the **50-day range** of **$424.03\u2013$584.73**. RSI(14) at **46** confirms neither momentum nor oversold condition"
+      },
+      {
+        "agent": "bull_researcher",
+        "num": "2.0%",
+        "ctx": "the 3.0% single-name cap and a risk score of 3, a size of **2.0%** balances the conviction in the bull case against the curr"
+      },
+      {
+        "agent": "bear_researcher",
+        "num": "$400",
+        "ctx": "term valuation compression; waiting for a re-rating below **$400** or a confirmed break above the **50-day high** is the onl"
+      },
+      {
+        "agent": "conservative_debator",
+        "num": "0.12",
+        "ctx": "ion at this level risks a **6.0%** stop-out, contributing **0.12** points to our **30%** portfolio drawdown cap on a setup t"
+      },
+      {
+        "agent": "bull_researcher",
+        "num": "35.8%",
+        "ctx": "y** consensus with a **$302.83** target, offering a clear **35.8%** upside from the current **$222.82** reference price over"
+      },
+      {
+        "agent": "bull_researcher",
+        "num": "$40.358",
+        "ctx": "alidates the buy, with a robust **63%** profit margin and **$40.358B** in net cash providing a fortress balance sheet that cush"
+      },
+      {
+        "agent": "bull_researcher",
+        "num": "$40.358",
+        "ctx": "alidates the buy, with a robust **63%** profit margin and **$40.358B** in net cash providing a fortress balance sheet that cush"
+      },
+      {
+        "agent": "bull_researcher",
+        "num": "35.8%",
+        "ctx": "y** consensus with a **$302.83** target, offering a clear **35.8%** upside from the current **$222.82** reference price over"
+      },
+      {
+        "agent": "bull_researcher",
+        "num": "0.6%",
+        "ctx": "ial with manageable total open-risk contribution (approx. **0.6%** to total portfolio risk assuming a **20%** stop distance)"
+      },
+      {
+        "agent": "market_analyst",
+        "num": "$60",
+        "ctx": "ide the **50-day range** of **$43.09\u2013$66.83**, trading at **$60.69** (74% of the range) with RSI at **74**, indicating an o"
+      },
+      {
+        "agent": "fundamentals_analyst",
+        "num": "10",
+        "ctx": "exhibits valuation metrics that are inconsistent with the 3\u201310 year long-term wealth mandate, specifically due to an extre"
+      },
+      {
+        "agent": "neutral_debator",
+        "num": "0%",
+        "ctx": ".23** price offers no technical confirmation despite the **30%** upside to the **$608.23** target. * Aggressive convict"
+      },
+      {
+        "agent": "bear_researcher",
+        "num": "25",
+        "ctx": "on in an uptrend prone to rapid mean-reversion suggests a **25\u201330%** drawdown to the **$189.80** support level is a distin"
+      },
+      {
+        "agent": "bull_researcher",
+        "num": "77%",
+        "ctx": "lay because the street\u2019s **$107.14** target price implies **77%** upside from the current **$60.65** reference, justified b"
+      },
+      {
+        "agent": "bull_researcher",
+        "num": "1.5%",
+        "ctx": "k score of 3** and the **3.0%** single-name cap, allocate **1.5%** of the portfolio ($150) to initiate a core position, leve"
+      },
+      {
+        "agent": "bull_researcher",
+        "num": "$150",
+        "ctx": "3.0%** single-name cap, allocate **1.5%** of the portfolio ($150) to initiate a core position, leveraging the **$10,000** ca"
+      },
+      {
+        "agent": "bull_researcher",
+        "num": "$10,000",
+        "ctx": "tfolio ($150) to initiate a core position, leveraging the **$10,000** cash reserve to add on dips toward the **50-day** support"
+      },
+      {
+        "agent": "bull_researcher",
+        "num": "10.5%",
+        "ctx": "dips toward the **50-day** support without breaching the **10.5%** total open-risk cap."
+      },
+      {
+        "agent": "bull_researcher",
+        "num": "$632.61",
+        "ctx": "eet's **strong buy** consensus at **$1,507.79** defines a **$632.61** upside target, offering a clear path to double the price"
+      },
+      {
+        "agent": "bull_researcher",
+        "num": "10",
+        "ctx": "t, offering a clear path to double the price within the **3\u201310 year** horizon. The bearish **downtrend** is a temporary di"
+      },
+      {
+        "agent": "research_manager",
+        "num": "10",
+        "ctx": "oday.** The user\u2019s mandate specifies a **long_horizon** (3\u201310 years) and a **risk_score** of 3/5, but the current valuati"
+      },
+      {
+        "agent": "trader",
+        "num": "6",
+        "ctx": "2**), targeting the analyst consensus of $**302.83** with a 6-month horizon. The **0.55** PEG ratio signals growth is out"
+      }
+    ],
+    "grounded_samples": [
+      {
+        "agent": "social_media_analyst",
+        "num": "73",
+        "ctx": "Social sentiment shows a **73/100 buzz score** with a **32%** bullish vs **19%** bearish"
+      },
+      {
+        "agent": "social_media_analyst",
+        "num": "100",
+        "ctx": "Social sentiment shows a **73/100 buzz score** with a **32%** bullish vs **19%** bearish spli"
+      },
+      {
+        "agent": "social_media_analyst",
+        "num": "32%",
+        "ctx": "Social sentiment shows a **73/100 buzz score** with a **32%** bullish vs **19%** bearish split, indicating strong but f"
+      },
+      {
+        "agent": "social_media_analyst",
+        "num": "19%",
+        "ctx": "t shows a **73/100 buzz score** with a **32%** bullish vs **19%** bearish split, indicating strong but fractured retail int"
+      },
+      {
+        "agent": "social_media_analyst",
+        "num": "7",
+        "ctx": "Social sentiment shows a **73/100 buzz score** with a **32%** bullish vs **19%** bearish"
+      },
+      {
+        "agent": "social_media_analyst",
+        "num": "126.4",
+        "ctx": "on or meme-driven volatility. High valuation metrics (**P/E 126.4**) combined with extreme retail enthusiasm signal reversion"
+      },
+      {
+        "agent": "news_analyst",
+        "num": "15",
+        "ctx": "Headline \"AMD Buys AI Chip Startup Taalas\" drives 15-minute buzz but lacks immediate revenue impact data. Valuat"
+      },
+      {
+        "agent": "news_analyst",
+        "num": "126.4",
+        "ctx": "but lacks immediate revenue impact data. Valuation at **P/E 126.4** and **EV/EBITDA 82.6x** requires precise execution to jus"
+      },
+      {
+        "agent": "news_analyst",
+        "num": "82.6",
+        "ctx": "nue impact data. Valuation at **P/E 126.4** and **EV/EBITDA 82.6x** requires precise execution to justify against consensus"
+      },
+      {
+        "agent": "news_analyst",
+        "num": "$1.92529",
+        "ctx": "res precise execution to justify against consensus EPS of **$1.92529** due in **88 days**. Current **RSI 49** and **volume** in-"
+      }
+    ]
+  },
+  "m4_risk_spread": {
+    "convenes_with_2plus_sizes": 3,
+    "convenes_total": 18,
+    "mean_spread_pts": 46.83,
+    "zero_spread_convenes": 0,
+    "rows": [
+      {
+        "ticker": "GRAB",
+        "sizes": {
+          "aggressive_debator": 44.0,
+          "neutral_debator": 3.5
+        },
+        "spread_pts": 40.5
+      },
+      {
+        "ticker": "LITE",
+        "sizes": {
+          "aggressive_debator": 6.0,
+          "neutral_debator": 0.0
+        },
+        "spread_pts": 6.0
+      },
+      {
+        "ticker": "KTOS",
+        "sizes": {
+          "aggressive_debator": 100.0,
+          "neutral_debator": 6.0
+        },
+        "spread_pts": 94.0
+      }
+    ]
+  },
+  "m5_pm_groundedness": {
+    "closest_voice_counts": [
+      [
+        "trader",
+        9
+      ],
+      [
+        "research_manager",
+        3
+      ],
+      [
+        "neutral_debator",
+        2
+      ],
+      [
+        "aggressive_debator",
+        1
+      ],
+      [
+        "<no match>",
+        1
+      ],
+      [
+        "market_analyst",
+        1
+      ],
+      [
+        "conservative_debator",
+        1
+      ]
+    ],
+    "rows": [
+      {
+        "ticker": "AMD",
+        "action": "PASS",
+        "reason_chars": 747,
+        "closest": "trader",
+        "sim": 0.492,
+        "all_sims": {
+          "fundamentals_analyst": 0.124,
+          "market_analyst": 0.159,
+          "news_analyst": 0.105,
+          "social_media_analyst": 0.083,
+          "bull_researcher": 0.149,
+          "bear_researcher": 0.142,
+          "research_manager": 0.372,
+          "trader": 0.492,
+          "aggressive_debator": 0.019,
+          "conservative_debator": 0.164,
+          "neutral_debator": 0.201
+        }
+      },
+      {
+        "ticker": "GRAB",
+        "action": "PASS",
+        "reason_chars": 574,
+        "closest": "aggressive_debator",
+        "sim": 0.562,
+        "all_sims": {
+          "fundamentals_analyst": 0.099,
+          "market_analyst": 0.276,
+          "news_analyst": 0.046,
+          "social_media_analyst": 0.132,
+          "bull_researcher": 0.235,
+          "bear_researcher": 0.251,
+          "research_manager": 0.424,
+          "trader": 0.409,
+          "aggressive_debator": 0.562,
+          "conservative_debator": 0.538,
+          "neutral_debator": 0.465
+        }
+      },
+      {
+        "ticker": "GRAB",
+        "action": "APPROVE",
+        "reason_chars": 19,
+        "closest": null,
+        "sim": 0.0,
+        "all_sims": {
+          "fundamentals_analyst": 0.0,
+          "market_analyst": 0.0,
+          "news_analyst": 0.0,
+          "social_media_analyst": 0.0,
+          "bull_researcher": 0.0,
+          "bear_researcher": 0.0,
+          "research_manager": 0.0,
+          "trader": 0.0,
+          "aggressive_debator": 0.0,
+          "conservative_debator": 0.0,
+          "neutral_debator": 0.0
+        }
+      },
+      {
+        "ticker": "AMD",
+        "action": "PASS",
+        "reason_chars": 520,
+        "closest": "market_analyst",
+        "sim": 0.345,
+        "all_sims": {
+          "fundamentals_analyst": 0.133,
+          "market_analyst": 0.345,
+          "news_analyst": 0.094,
+          "social_media_analyst": 0.0,
+          "bull_researcher": 0.19,
+          "bear_researcher": 0.264,
+          "research_manager": 0.224,
+          "trader": 0.254,
+          "aggressive_debator": 0.117,
+          "conservative_debator": 0.17,
+          "neutral_debator": 0.276
+        }
+      },
+      {
+        "ticker": "NVDA",
+        "action": "APPROVE",
+        "reason_chars": 297,
+        "closest": "neutral_debator",
+        "sim": 0.293,
+        "all_sims": {
+          "fundamentals_analyst": 0.034,
+          "market_analyst": 0.089,
+          "news_analyst": 0.0,
+          "social_media_analyst": 0.0,
+          "bull_researcher": 0.22,
+          "bear_researcher": 0.115,
+          "research_manager": 0.209,
+          "trader": 0.228,
+          "aggressive_debator": 0.271,
+          "conservative_debator": 0.211,
+          "neutral_debator": 0.293
+        }
+      },
+      {
+        "ticker": "ANET",
+        "action": "PASS",
+        "reason_chars": 571,
+        "closest": "research_manager",
+        "sim": 0.36,
+        "all_sims": {
+          "fundamentals_analyst": 0.139,
+          "market_analyst": 0.079,
+          "news_analyst": 0.173,
+          "social_media_analyst": 0.065,
+          "bull_researcher": 0.257,
+          "bear_researcher": 0.266,
+          "research_manager": 0.36,
+          "trader": 0.318,
+          "aggressive_debator": 0.198,
+          "conservative_debator": 0.273,
+          "neutral_debator": 0.241
+        }
+      },
+      {
+        "ticker": "KTOS",
+        "action": "PASS",
+        "reason_chars": 868,
+        "closest": "trader",
+        "sim": 0.433,
+        "all_sims": {
+          "fundamentals_analyst": 0.392,
+          "market_analyst": 0.066,
+          "news_analyst": 0.109,
+          "social_media_analyst": 0.016,
+          "bull_researcher": 0.34,
+          "bear_researcher": 0.326,
+          "research_manager": 0.324,
+          "trader": 0.433,
+          "aggressive_debator": 0.244,
+          "conservative_debator": 0.304,
+          "neutral_debator": 0.317
+        }
+      },
+      {
+        "ticker": "MU",
+        "action": "PASS",
+        "reason_chars": 499,
+        "closest": "trader",
+        "sim": 0.405,
+        "all_sims": {
+          "fundamentals_analyst": 0.129,
+          "market_analyst": 0.193,
+          "news_analyst": 0.086,
+          "social_media_analyst": 0.04,
+          "bull_researcher": 0.133,
+          "bear_researcher": 0.258,
+          "research_manager": 0.385,
+          "trader": 0.405,
+          "aggressive_debator": 0.17,
+          "conservative_debator": 0.283,
+          "neutral_debator": 0.281
+        }
+      },
+      {
+        "ticker": "SNDK",
+        "action": "PASS",
+        "reason_chars": 753,
+        "closest": "trader",
+        "sim": 0.429,
+        "all_sims": {
+          "fundamentals_analyst": 0.117,
+          "market_analyst": 0.132,
+          "news_analyst": 0.291,
+          "social_media_analyst": 0.097,
+          "bull_researcher": 0.262,
+          "bear_researcher": 0.407,
+          "research_manager": 0.368,
+          "trader": 0.429,
+          "aggressive_debator": 0.146,
+          "conservative_debator": 0.307,
+          "neutral_debator": 0.264
+        }
+      },
+      {
+        "ticker": "AVGO",
+        "action": "PASS",
+        "reason_chars": 453,
+        "closest": "trader",
+        "sim": 0.429,
+        "all_sims": {
+          "fundamentals_analyst": 0.087,
+          "market_analyst": 0.284,
+          "news_analyst": 0.168,
+          "social_media_analyst": 0.071,
+          "bull_researcher": 0.203,
+          "bear_researcher": 0.262,
+          "research_manager": 0.247,
+          "trader": 0.429,
+          "aggressive_debator": 0.12,
+          "conservative_debator": 0.299,
+          "neutral_debator": 0.23
+        }
+      },
+      {
+        "ticker": "LITE",
+        "action": "PASS",
+        "reason_chars": 472,
+        "closest": "trader",
+        "sim": 0.304,
+        "all_sims": {
+          "fundamentals_analyst": 0.175,
+          "market_analyst": 0.111,
+          "news_analyst": 0.069,
+          "social_media_analyst": 0.065,
+          "bull_researcher": 0.181,
+          "bear_researcher": 0.205,
+          "research_manager": 0.245,
+          "trader": 0.304,
+          "aggressive_debator": 0.0,
+          "conservative_debator": 0.171,
+          "neutral_debator": 0.165
+        }
+      },
+      {
+        "ticker": "NBIS",
+        "action": "PASS",
+        "reason_chars": 451,
+        "closest": "trader",
+        "sim": 0.397,
+        "all_sims": {
+          "fundamentals_analyst": 0.126,
+          "market_analyst": 0.071,
+          "news_analyst": 0.343,
+          "social_media_analyst": 0.16,
+          "bull_researcher": 0.127,
+          "bear_researcher": 0.276,
+          "research_manager": 0.382,
+          "trader": 0.397,
+          "aggressive_debator": 0.03,
+          "conservative_debator": 0.313,
+          "neutral_debator": 0.124
+        }
+      },
+      {
+        "ticker": "TSLA",
+        "action": "PASS",
+        "reason_chars": 571,
+        "closest": "trader",
+        "sim": 0.446,
+        "all_sims": {
+          "fundamentals_analyst": 0.33,
+          "market_analyst": 0.222,
+          "news_analyst": 0.202,
+          "social_media_analyst": 0.043,
+          "bull_researcher": 0.242,
+          "bear_researcher": 0.309,
+          "research_manager": 0.346,
+          "trader": 0.446,
+          "aggressive_debator": 0.081,
+          "conservative_debator": 0.26,
+          "neutral_debator": 0.153
+        }
+      },
+      {
+        "ticker": "NVDA",
+        "action": "PASS",
+        "reason_chars": 531,
+        "closest": "conservative_debator",
+        "sim": 0.492,
+        "all_sims": {
+          "fundamentals_analyst": 0.038,
+          "market_analyst": 0.071,
+          "news_analyst": 0.141,
+          "social_media_analyst": 0.0,
+          "bull_researcher": 0.276,
+          "bear_researcher": 0.234,
+          "research_manager": 0.467,
+          "trader": 0.482,
+          "aggressive_debator": 0.201,
+          "conservative_debator": 0.492,
+          "neutral_debator": 0.266
+        }
+      },
+      {
+        "ticker": "BAC",
+        "action": "APPROVE",
+        "reason_chars": 472,
+        "closest": "neutral_debator",
+        "sim": 0.364,
+        "all_sims": {
+          "fundamentals_analyst": 0.174,
+          "market_analyst": 0.036,
+          "news_analyst": 0.035,
+          "social_media_analyst": 0.022,
+          "bull_researcher": 0.324,
+          "bear_researcher": 0.065,
+          "research_manager": 0.242,
+          "trader": 0.312,
+          "aggressive_debator": 0.205,
+          "conservative_debator": 0.22,
+          "neutral_debator": 0.364
+        }
+      },
+      {
+        "ticker": "SNDK",
+        "action": "PASS",
+        "reason_chars": 443,
+        "closest": "research_manager",
+        "sim": 0.346,
+        "all_sims": {
+          "fundamentals_analyst": 0.068,
+          "market_analyst": 0.255,
+          "news_analyst": 0.113,
+          "social_media_analyst": 0.052,
+          "bull_researcher": 0.145,
+          "bear_researcher": 0.185,
+          "research_manager": 0.346,
+          "trader": 0.304,
+          "aggressive_debator": 0.108,
+          "conservative_debator": 0.147,
+          "neutral_debator": 0.326
+        }
+      },
+      {
+        "ticker": "KTOS",
+        "action": "PASS",
+        "reason_chars": 398,
+        "closest": "research_manager",
+        "sim": 0.405,
+        "all_sims": {
+          "fundamentals_analyst": 0.29,
+          "market_analyst": 0.136,
+          "news_analyst": 0.157,
+          "social_media_analyst": 0.024,
+          "bull_researcher": 0.154,
+          "bear_researcher": 0.294,
+          "research_manager": 0.405,
+          "trader": 0.404,
+          "aggressive_debator": 0.096,
+          "conservative_debator": 0.182,
+          "neutral_debator": 0.155
+        }
+      },
+      {
+        "ticker": "SNOA",
+        "action": "PASS",
+        "reason_chars": 396,
+        "closest": "trader",
+        "sim": 0.436,
+        "all_sims": {
+          "fundamentals_analyst": 0.136,
+          "market_analyst": 0.024,
+          "news_analyst": 0.125,
+          "social_media_analyst": 0.11,
+          "bull_researcher": 0.1,
+          "bear_researcher": 0.194,
+          "research_manager": 0.267,
+          "trader": 0.436,
+          "aggressive_debator": 0.085,
+          "conservative_debator": 0.225,
+          "neutral_debator": 0.402
+        }
+      }
+    ]
+  },
+  "m6_stance_entropy": {
+    "overall_stance_mix": {
+      "for": 60,
+      "neutral": 48,
+      "against": 80,
+      "none": 10
+    },
+    "mean_entropy_bits": 1.48,
+    "max_possible_bits": 1.58,
+    "unanimous_convenes": 0,
+    "rows": [
+      {
+        "ticker": "AMD",
+        "stances": {
+          "for": 2,
+          "neutral": 5,
+          "against": 1,
+          "none": 3
+        },
+        "entropy_bits": 1.79
+      },
+      {
+        "ticker": "GRAB",
+        "stances": {
+          "for": 3,
+          "against": 6,
+          "neutral": 1,
+          "none": 1
+        },
+        "entropy_bits": 1.62
+      },
+      {
+        "ticker": "GRAB",
+        "stances": {
+          "neutral": 4,
+          "for": 4,
+          "against": 2,
+          "none": 1
+        },
+        "entropy_bits": 1.82
+      },
+      {
+        "ticker": "AMD",
+        "stances": {
+          "against": 6,
+          "neutral": 3,
+          "for": 2
+        },
+        "entropy_bits": 1.44
+      },
+      {
+        "ticker": "NVDA",
+        "stances": {
+          "for": 10,
+          "against": 1
+        },
+        "entropy_bits": 0.44
+      },
+      {
+        "ticker": "ANET",
+        "stances": {
+          "neutral": 5,
+          "for": 2,
+          "against": 3,
+          "none": 1
+        },
+        "entropy_bits": 1.79
+      },
+      {
+        "ticker": "KTOS",
+        "stances": {
+          "against": 8,
+          "for": 2,
+          "neutral": 1
+        },
+        "entropy_bits": 1.1
+      },
+      {
+        "ticker": "MU",
+        "stances": {
+          "neutral": 2,
+          "against": 6,
+          "for": 3
+        },
+        "entropy_bits": 1.44
+      },
+      {
+        "ticker": "SNDK",
+        "stances": {
+          "for": 3,
+          "against": 4,
+          "neutral": 3,
+          "none": 1
+        },
+        "entropy_bits": 1.87
+      },
+      {
+        "ticker": "AVGO",
+        "stances": {
+          "neutral": 5,
+          "for": 2,
+          "against": 4
+        },
+        "entropy_bits": 1.49
+      },
+      {
+        "ticker": "LITE",
+        "stances": {
+          "against": 4,
+          "neutral": 3,
+          "for": 2,
+          "none": 2
+        },
+        "entropy_bits": 1.94
+      },
+      {
+        "ticker": "NBIS",
+        "stances": {
+          "against": 7,
+          "neutral": 2,
+          "for": 2
+        },
+        "entropy_bits": 1.31
+      },
+      {
+        "ticker": "TSLA",
+        "stances": {
+          "against": 6,
+          "neutral": 2,
+          "for": 3
+        },
+        "entropy_bits": 1.44
+      },
+      {
+        "ticker": "NVDA",
+        "stances": {
+          "for": 4,
+          "neutral": 3,
+          "against": 3,
+          "none": 1
+        },
+        "entropy_bits": 1.87
+      },
+      {
+        "ticker": "BAC",
+        "stances": {
+          "for": 8,
+          "neutral": 2,
+          "against": 1
+        },
+        "entropy_bits": 1.1
+      },
+      {
+        "ticker": "SNDK",
+        "stances": {
+          "neutral": 3,
+          "against": 6,
+          "for": 2
+        },
+        "entropy_bits": 1.44
+      },
+      {
+        "ticker": "KTOS",
+        "stances": {
+          "against": 6,
+          "neutral": 3,
+          "for": 2
+        },
+        "entropy_bits": 1.44
+      },
+      {
+        "ticker": "SNOA",
+        "stances": {
+          "for": 4,
+          "against": 6,
+          "neutral": 1
+        },
+        "entropy_bits": 1.32
+      }
+    ]
+  }
+}
