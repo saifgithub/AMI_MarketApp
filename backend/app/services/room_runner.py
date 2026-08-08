@@ -36,7 +36,7 @@ import asyncio
 import random
 import re
 import zlib
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
@@ -1342,35 +1342,163 @@ def _reference_close(profile: dict[str, Any]) -> float | None:
         return None
 
 
+# How a matched level is named back to the user. Being able to say WHICH level
+# the instruction referred to is the point of matching against the run's own
+# numbers rather than against any figure in the sentence — the annotation stops
+# being "some price you wrote" and becomes "the 50-day range low we handed you".
+_STRUCTURED_LEVEL_LABELS: dict[str, str] = {
+    "support": "the 50-day range low",
+    "breakout": "the 50-day range high",
+    "low": "the 52-week low",
+    "high": "the 52-week high",
+    "entry": "this verdict's entry",
+    "stop": "this verdict's stop",
+    "target": "this verdict's target",
+}
+
+# A quoted level is the same level when it agrees to within this much. The PM
+# quotes off the fact sheet, so most matches are exact; the band exists for the
+# rounding it does when it writes `$998.2` or `$1,212` for `$1212.21`. It is
+# deliberately far too tight to let a different level of the same run stand in,
+# and far too tight for a round number the PM invented ($100 against a support
+# of $104) to pass as a quote of one.
+_STRUCTURED_LEVEL_MATCH_PCT = 0.5
+
+
+def _structured_levels(
+    profile: dict[str, Any], verdict: Verdict
+) -> list[tuple[str, float]]:
+    """Every price level THIS run actually holds, as a (name, value) list.
+
+    DEF231's own row specified the fix this way and it was not built that way:
+    *"the referenced level is already a structured number the verdict carries…
+    so a comparison is available without parsing free text"*. What shipped
+    instead compared the close against ANY `$` figure a directional verb
+    governed, and that extra generality turned out to be the entire defect
+    surface — all three audit MAJORs and DEF234 are cases where the captured
+    number was not a level of this run at all (`we'd pay $52.30`, a second
+    sentence's level, `$1.00` truncated out of `$1,073.46`). A figure that has
+    to match one of these cannot be any of them.
+
+    Each source is gated on the provenance that was recorded when it was
+    fetched (CR104), so a level AMI never actually held is never a candidate:
+
+      * `support`/`breakout` need `field_state["technicals"] == live` — the
+        same gate `_reference_close` uses, since they come from one OHLCV pull.
+      * `low`/`high` need `field_state["week52"] == live`. That key is
+        deliberately separate: `fetch_live_fundamentals` substitutes a ±5%
+        placeholder off price when the real `fiftyTwoWeek*` fields are absent,
+        and a placeholder is a derived guess, not a level anyone was shown.
+      * `entry`/`stop`/`target` exist only on an APPROVE, and one whose
+        `level_provenance` says `ami_default` is dropped: AMI minted that
+        number after the PM had finished writing, so the PM cannot have been
+        quoting it, and leaving it in would let a coincidence read as a quote.
+
+    `last_close` is not a candidate. It is the reference the comparison is
+    made against; a level equal to it is 0% away and the tolerance below
+    discards it anyway.
+    """
+    state = profile.get("field_state") or {}
+    out: list[tuple[str, float]] = []
+
+    def _add(name: str, raw: Any) -> None:
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            return
+        if value > 0:
+            out.append((name, value))
+
+    if state.get("technicals") == LiveDataState.LIVE.value:
+        _add("support", profile.get("support"))
+        _add("breakout", profile.get("breakout"))
+    if state.get("week52") == LiveDataState.LIVE.value:
+        _add("low", profile.get("low"))
+        _add("high", profile.get("high"))
+    if verdict.action == VerdictAction.APPROVE:
+        provenance = verdict.level_provenance or {}
+        for name in ("entry", "stop", "target"):
+            if provenance.get(name) == "ami_default":
+                continue
+            _add(name, getattr(verdict, name, None))
+    return out
+
+
+def _match_structured_level(
+    quoted: float, levels: Sequence[tuple[str, float]]
+) -> tuple[str, float] | None:
+    """The run's own level the sentence quoted, or None if it quoted no level
+    of this run. On several near matches the closest wins — they are within
+    half a percent of each other by construction, so they are on the same side
+    of the close and the choice only affects which name is printed."""
+    best: tuple[str, float] | None = None
+    best_rel = _STRUCTURED_LEVEL_MATCH_PCT
+    for name, value in levels:
+        rel = 100.0 * abs(quoted - value) / value
+        if rel <= best_rel:
+            best, best_rel = (name, value), rel
+    return best
+
+
 def _direction_contradictions(
-    text: str, close: float | None
+    text: str, close: float | None, levels: Sequence[tuple[str, float]]
 ) -> list[dict[str, Any]]:
-    """Every directional instruction in `text` whose named level sits on the
-    side of `close` that makes the move already-made. Empty when the text
-    states none, when no reference close is available, or when every named
-    level is on the coherent side."""
-    if not text or close is None or close <= 0:
+    """Every directional instruction in `text` that names one of this run's own
+    levels and puts it on the side of `close` that makes the move already-made.
+    Empty when the text states none, when no reference close is available, when
+    the run holds no structured level to check against, or when every named
+    level is on the coherent side.
+
+    Two independent gates have to agree before anything is said, and they fail
+    in opposite directions, which is why both are kept (P16). The grammar
+    decides whether the figure is the verb's own object — it is what stops
+    *"recover to the prior high, above the recent low of $52.30"* attributing
+    the second level's price to the first level's verb, and no amount of
+    matching would catch that, because $52.30 there IS a real level. The
+    structured-level match decides whether the figure is a level of this run at
+    all — it is what stops *"we'd pay $52.30"* and DEF234's truncated `$1.00`,
+    and no amount of grammar would catch those, because both are grammatical.
+    """
+    if not text or close is None or close <= 0 or not levels:
         return []
     out: list[dict[str, Any]] = []
     for pattern, required_side in _DIRECTIONAL_CLAIM_RES:
         for m in pattern.finditer(text):
             try:
-                level = float(m.group(1).replace(",", ""))
+                quoted = float(m.group(1).replace(",", ""))
             except (TypeError, ValueError):
                 continue
-            if level <= 0:
+            if quoted <= 0:
                 continue
+            matched = _match_structured_level(quoted, levels)
+            if matched is None:
+                # The designed miss. The sentence gave an instruction about a
+                # number this run does not hold, so AMI has nothing to compare
+                # it against and says nothing — silence, not a guess.
+                logger.info(
+                    "room_pm_direction_unmatched_level",
+                    claim=m.group(0).strip()[:120], quoted=quoted,
+                    levels={k: v for k, v in levels},
+                )
+                continue
+            name, level = matched
+            # The RUN's number, not the sentence's, from here on: the PM may
+            # have rounded when it quoted, and the arithmetic the user reads
+            # should be AMI's own figure to the cent.
             gap_pct = 100.0 * (close - level) / level
             if abs(gap_pct) < _DIRECTION_TOLERANCE_PCT:
                 continue
             if abs(gap_pct) > _DIRECTION_MAX_PLAUSIBLE_GAP_PCT:
                 # DEF234: not an incoherent instruction — a mis-parse. Loud, so
                 # the next one is found by reading logs rather than by a user
-                # reading nonsense on the Verdict Board.
+                # reading nonsense on the Verdict Board. Reaching this now means
+                # a level of the run is itself absurd against its own close,
+                # which is a different bug again; still refuse, still loudly.
                 logger.warning(
                     "room_pm_direction_implausible_gap",
                     claim=m.group(0).strip()[:120],
-                    level=level, close=close, gap_pct=round(gap_pct, 1),
+                    level=level, level_name=name, close=close,
+                    gap_pct=round(gap_pct, 1),
                 )
                 continue
             actual_side = "above" if gap_pct > 0 else "below"
@@ -1379,6 +1507,8 @@ def _direction_contradictions(
             out.append({
                 "claim": m.group(0).strip(),
                 "level": level,
+                "level_name": name,
+                "quoted": quoted,
                 "close": close,
                 "gap_pct": round(gap_pct, 1),
                 "price_is": actual_side,
@@ -1387,7 +1517,7 @@ def _direction_contradictions(
 
 
 def _annotate_direction_against_price(
-    text: str, close: float | None
+    text: str, close: float | None, levels: Sequence[tuple[str, float]]
 ) -> tuple[str, list[dict[str, Any]]]:
     """Append AMI's reading of the price against any level the text tells the
     user to wait for from the wrong side. Returns (annotated_text, signals);
@@ -1400,20 +1530,22 @@ def _annotate_direction_against_price(
     so the correction states the numbers and leaves the sentence standing —
     the user can see both and judge.
     """
-    signals = _direction_contradictions(text, close)
+    signals = _direction_contradictions(text, close, levels)
     if not signals:
         return text, []
     first = signals[0]
+    named = _STRUCTURED_LEVEL_LABELS.get(first["level_name"], "that level")
+    where = f"{named} (${first['level']:.2f})"
     if first["price_is"] == "above":
         detail = (
             f"the last close ${first['close']:.2f} is already "
-            f"{abs(first['gap_pct']):.1f}% ABOVE ${first['level']:.2f}, so that "
+            f"{abs(first['gap_pct']):.1f}% ABOVE {where}, so that "
             f"level is not something the price has yet to win back"
         )
     else:
         detail = (
             f"the last close ${first['close']:.2f} is already "
-            f"{abs(first['gap_pct']):.1f}% BELOW ${first['level']:.2f}, so that "
+            f"{abs(first['gap_pct']):.1f}% BELOW {where}, so that "
             f"level is not something the price has yet to give up"
         )
     return (
@@ -3008,7 +3140,9 @@ class RoomRunner:
                     # renders as the justification and is what both instances
                     # landed in.
                     _reason, _dir_signals = _annotate_direction_against_price(
-                        verdict.reason, _reference_close(profile)
+                        verdict.reason,
+                        _reference_close(profile),
+                        _structured_levels(profile, verdict),
                     )
                     if _dir_signals:
                         logger.warning(
