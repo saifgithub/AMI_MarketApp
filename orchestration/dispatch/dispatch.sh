@@ -311,8 +311,17 @@ orphan_unanswered_verdict() {  # echoes "ITEM STATE" per self-executed lane awai
     sr=$(last_round "$f" 'SUBMITTED: *round *[0-9]+'); sr=${sr:-0}
     v_kw=$(last_kw "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES)')
     v_round=$(last_round "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES) *\(round *[0-9]+'); v_round=${v_round:-0}
-    # An uncommitted verdict has not been delivered and cannot be owed yet.
-    [ -n "$(undelivered "$u")" ] && continue
+    # A verdict the auditor has written but not committed is the FRESHEST one there
+    # is, and skipping it blinds this check at exactly the moment it matters most —
+    # found within minutes of shipping the first version, when a CR124 round-4
+    # COMPLETE sat uncommitted in the working tree and `inbox` reported clear.
+    # Same treatment the assigned-lane machine already gives it: UNCOMMITTED is hot,
+    # "chase, then merge". Verdict-bearing only; an uncommitted file with no VERDICT
+    # line is someone mid-write, not a verdict owed.
+    if [ -n "$(undelivered "$u")" ]; then
+      [ -n "$v_kw" ] && echo "$it UNCOMMITTED"
+      continue
+    fi
     if [ "$v_round" -gt "$sr" ]; then echo "$it BAD_ROUND"
     elif [ "$v_round" -eq "$sr" ] && [ "$v_round" -gt 0 ] && [ "$v_kw" = "AWAITING_FIXES" ]; then
       echo "$it AUDIT_RETURNED"
@@ -495,7 +504,7 @@ EOF
     while read -r uit ust; do
       [ -n "$uit" ] || continue
       hot=$((hot+1))
-      row=$(printf '  %-14s %-13s %-16s verdict=%s' "$uit" "$ust" "(self-executed)" "AWAITING_FIXES")
+      row=$(printf '  %-14s %-13s %-16s verdict=%s' "$uit" "$ust" "(self-executed)" "see lane file")
       hot_rows="${hot_rows}${row}
 "
     done <<EOF
