@@ -1324,7 +1324,42 @@ _DIRECTIONAL_CLAIMS: tuple[tuple[str, str], ...] = (
     # "until price clears the $23.67 breakout resistance". Third-person and
     # gerund only: bare "clear" is more often an adjective ("a clear $50
     # discount") and carries no direction.
-    (r"clear(?:s|ing)", "below"),
+    #
+    # Round-6 audit MAJOR — and the SUBJECT is the fix, not the gap. Every other
+    # verb here is unambiguously about price movement; `clear` is not. It is
+    # ambiguous between "the price moves past a level" and "an entity EARNS a
+    # figure", the second carries no direction at all, and the gap grammar
+    # cannot tell them apart because both go straight from the verb to `$`:
+    #
+    #     "The company clears $52.30 million in annual free cash flow"
+    #     "Net of fees the trader clears $52.30 on this position."
+    #
+    # Both fired. If that dollar figure lands within `_DIRECTION_TOLERANCE_PCT`
+    # of any level the run holds, the Verdict Board renders a confident
+    # directional note about a number that was never a price claim — the exact
+    # failure this check exists to prevent, reached through the family added to
+    # reduce misses. A suffix gate (`million|per share|in <noun>`) kills three
+    # of the five and leaves "clears $52.30 on this position" standing, so it
+    # is not the fix either.
+    #
+    # What separates the two senses is what is DOING the clearing, and the
+    # corpus is unambiguous about it: of the 12 real matches in the 811-row
+    # fixture, 11 read `price clears` / `price action clears` / `the stock
+    # clears` / `a confirmed breakout clears` (the 12th is "RSI clearing 50",
+    # no `$`). Every false positive has an AGENT subject — company, management,
+    # fund manager, position, trader. So the verb takes a required price-sense
+    # subject, and the vocabulary is exactly what the corpus attests: `prices`
+    # and `shares` are NOT here, because widening a pattern past its evidence
+    # is the P16 mistake this lane has now made twice.
+    #
+    # Measured: 365 → 364 extractions over all 811 rows. The single loss is
+    # `"until price corrects toward the $50.00 support level or clears the
+    # $57.67 breakout"` — a coordinated clause whose subject sits six words
+    # back. Admitting a bare `or clears` to recover it would re-open the whole
+    # agent-subject class ("the company earns X and clears $52.30 million"), so
+    # it stays a miss. A miss costs nothing; a fabricated directional note on
+    # the Verdict Board costs the surface its credibility.
+    (r"(?:price(?:\s+action)?|stock|breakout)\s+clear(?:s|ing)", "below"),
 )
 
 # The verb, then the level it names: "reclaim the 50-day range low of $998.19".

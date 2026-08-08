@@ -576,6 +576,53 @@ def test_bare_clear_is_an_adjective_and_is_not_a_verb_here():
     ) != []
 
 
+# Round-6 audit MAJOR. `clear` is the only verb in the family that is ambiguous
+# about WHETHER a price claim is being made at all — "the company clears $X in
+# FCF" is about profit, not direction. The gap grammar cannot separate the two
+# senses (both run straight from verb to `$`), so the discriminator is the
+# subject. Each case below fired before the fix and rendered a confident
+# directional note on the Verdict Board about a number that was never a price.
+@pytest.mark.parametrize("text", [
+    # The auditor's five, verbatim.
+    "The company clears $52.30 million in annual free cash flow, well above peers.",
+    "Management clears $52.30 per share in normalized earnings this year.",
+    "The fund manager clears $52.30 billion in assets under management.",
+    "The position clears $52.30 in unrealized profit at current levels.",
+    "Net of fees the trader clears $52.30 on this position.",
+    # Mine, to show the class is closed by the subject and not by a suffix gate:
+    # none of these carries `million`/`per share`/`in <noun>` after the figure.
+    "The trader's position clears $52.30 net of fees.",
+    "Free cash flow clears $52.30 per share.",
+])
+def test_clear_does_not_fire_on_the_earnings_sense_of_the_verb(text):
+    assert _direction_contradictions(text, 60.00, _lv(52.30)) == []
+
+
+@pytest.mark.parametrize("text", [
+    # Every price-sense subject the 811-row corpus actually attests.
+    "no entry until price clears the $52.30 breakout resistance",
+    "we hold until price action clears the $52.30 level",
+    "capital preserved until the stock clears the $52.30 breakout level",
+    "we wait for a confirmed breakout clears the $52.30 level",
+])
+def test_clear_still_fires_on_the_price_sense(text):
+    assert _direction_contradictions(text, 60.00, _lv(52.30)) != []
+
+
+def test_clear_with_an_elided_subject_is_a_deliberate_miss():
+    """The one extraction the round-6 fix gives up, recorded so it cannot be
+    "fixed" by accident. The subject is `price`, six words back across a
+    coordinating conjunction. Admitting a bare `or clears` to recover it would
+    re-open the entire agent-subject class ("the company earns X and clears
+    $52.30 million"), which is the defect this test file's parametrized case
+    above exists to hold closed. A miss costs nothing here."""
+    assert _direction_contradictions(
+        "We adhere to WAIT until price corrects toward the $50.00 support level "
+        "or clears the $52.30 breakout.",
+        60.00, _lv(52.30),
+    ) == []
+
+
 # ── which levels a run holds ──────────────────────────────────────────────────
 
 

@@ -57,15 +57,60 @@ _CORPUS = Path(__file__).parent / "fixtures" / "pm_verdict_corpus.txt"
 #
 #   121  round-4 MINOR fix (`4b7faee8`), fixture = 603 verb-stem-selected rows
 #   365  the offline LLM verb-gap sweep (AT:R66), fixture = 811 `$`-carrying rows
+#   364  round-6 MAJOR fix (AT:R66), `clear` gains a required price-sense subject
 #
-# The jump is two changes at once and they are separable. Re-selecting the
-# fixture on `$` alone added 208 rows; the three verb families the sweep found
-# — `breakout above|to` (159 extractions), `close above|below` (73), `clears`
-# (12) — account for the rest. `breakout` alone yields more than the entire
-# previous verb set did, because "wait for a confirmed breakout above $X" is the
-# PM's single most common way of stating a level, and every one of those 365 was
-# read before this number was changed.
-_EXPECTED_EXTRACTIONS = 365
+# The 121 → 365 jump is two changes at once and they are separable. Re-selecting
+# the fixture on `$` alone added 208 rows; the three verb families the sweep
+# found — `breakout above|to` (159 extractions), `close above|below` (73),
+# `clears` (12) — account for the rest. `breakout` alone yields more than the
+# entire previous verb set did, because "wait for a confirmed breakout above $X"
+# is the PM's single most common way of stating a level, and every one of those
+# 365 was read before this number was changed.
+#
+# 365 → 364 is ONE row, hand-read, and it is a deliberate miss. The round-6
+# auditor showed `clear(?:s|ing)` fires on the earnings sense of the verb — "the
+# company clears $52.30 million in FCF" — which carries no direction at all, so
+# the verb now requires a price-sense subject (`room_runner._DIRECTIONAL_CLAIMS`
+# carries the full reasoning). 11 of the 12 real matches keep firing. The one
+# lost is:
+#
+#     "…until price corrects toward the $50.00 support level or clears the
+#      $57.67 breakout…"
+#
+# a coordinated clause whose subject sits six words back. Recovering it needs a
+# bare `or clears`, which re-opens the entire agent-subject class. Left as a
+# miss on purpose.
+_EXPECTED_EXTRACTIONS = 364
+
+
+def test_every_clear_subject_is_attested_by_the_corpus():
+    """Round-6 MAJOR, second half. The fix gave `clear` a required price-sense
+    subject, and the extraction count alone does NOT hold that vocabulary shut:
+    adding `shares|prices` leaves all 364 extractions and every behavioural test
+    green, because the corpus contains no instance either way. That mutation
+    SURVIVED the first pass, and a whitelist nothing constrains is how a pattern
+    drifts back past its evidence — P16, which this file exists to enforce.
+
+    So each subject alternative must be a phrase the corpus actually uses. A new
+    one is not forbidden; it has to arrive with a row that motivates it.
+    """
+    from app.services.room_runner import _DIRECTIONAL_CLAIMS
+
+    verb = next(v for v, _ in _DIRECTIONAL_CLAIMS if "clear" in v)
+    subject_src = verb.split(r"\s+clear")[0]
+    subjects = [w for w in re.findall(r"[a-z]+", subject_src) if w not in {"s", "ing"}]
+    assert subjects, "the clear verb lost its subject requirement entirely"
+
+    corpus = _CORPUS.read_text(encoding="utf-8")
+    unattested = [
+        w for w in subjects
+        if not re.search(rf"\b{w}\b[\w\s]{{0,12}}?clear(?:s|ing)\b", corpus, re.IGNORECASE)
+    ]
+    assert not unattested, (
+        f"subject(s) {unattested} appear in the `clear` pattern but in no corpus row. "
+        "Widening a prose pattern past its evidence is the P16 defect class; add the "
+        "row that motivates it to the fixture, or drop the alternative."
+    )
 
 # Levels the corpus is known to contain that have historically been mis-parsed.
 # Each is a defect that reached (or nearly reached) users.
