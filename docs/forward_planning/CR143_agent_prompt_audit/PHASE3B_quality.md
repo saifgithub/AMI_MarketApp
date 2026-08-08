@@ -55,9 +55,18 @@ were hand-read, not counted. A representative sample:
 
 **The CR037/CR038 fabrication class does not reproduce on this epoch.** That is the guard
 `failure_patterns` P2 has recorded as missing since 2026-07; this sweep is the measurement, and it
-comes back clean. Caveat: 18 convenes, and the two agents whose feeds are dead (News, Social —
-DEF063) state 0.0% novel numbers, which likely means they state almost no numbers at all rather than
-that they are especially disciplined.
+comes back clean. Caveat: 18 convenes.
+
+**Correction (2026-08-08).** An earlier draft explained the News and Social Analysts' 0.0% novel-number
+rate by saying their feeds were dead. That was wrong, and checking it against the real prompts is what
+caught it: across all 216 epoch prompts the social block is **LIVE in 216/216** (served by **Adanos** —
+`ADANOS_API_KEY` *is* forwarded to melehost — e.g. `Retail sentiment: bullish (+0.04 (live Reddit
+sentiment, Adanos))`) and the news block is **LIVE in 216/216**. Both agents state 0.0% novel numbers
+because they are grounded in real data, which is the good outcome, not the suspicious one. What *is*
+absent is narrower than DEF063 implies: **0 of 216** catalyst lines carry an Alpha Vantage per-article
+sentiment tag, because `ALPHA_VANTAGE_API_KEY` is set on the Mac but not on melehost. DEF063 is
+therefore half-resolved — the Adanos/social half works, the Alpha Vantage half never reaches Alpha —
+and its row should be re-scoped rather than left as filed.
 
 ### M4 — the metric died, and the autopsy is the finding
 
@@ -100,7 +109,7 @@ The failures that remain in this epoch are **not** the model failing to follow i
 | DEF235 — 63× drawdown figure | **our parser**, not the model. The agent's prose was correct English. |
 | DEF232 — 19-char APPROVE reason | model-side, 1/18, still open |
 | Aggressive citing caps its prompt contradicts (KTOS, SNDK) | model-side, 2 instances — the DEF231 class on the mandate rather than the price |
-| News/Social state no numbers | **data supply** (DEF063), not the prompt |
+| Alpha Vantage sentiment tags absent, 0/216 | **data supply** — key not forwarded to melehost. The DEF063 residue |
 
 Three of four are ours. A better model fixes at most one of them, and DEF235 — the only one that put
 a wrong number in front of a user — would be **unaffected by any model change whatsoever**.

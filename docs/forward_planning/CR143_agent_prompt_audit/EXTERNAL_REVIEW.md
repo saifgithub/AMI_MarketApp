@@ -77,6 +77,40 @@ which is where `"size entry at $188.62"` becomes ordinary English and the patter
 | The overlay asks for *"balance sheet strength, capital allocation"* while the base prompt says full financial statements and buyback/M&A history are unavailable | verified in the assembled prompt |
 | `net cash` claimed in the input list; `Net debt $21945M` delivered | verified |
 
+## From the final four reviews
+
+`market_analyst`, `social_media_analyst`, `bear_researcher` and `neutral_debator` completed on the
+retry. Two additions worth carrying into Phase 2:
+
+**The Market Analyst is asked to read a chart it is never shown.** Its base prompt opens *"You read
+charts and technical signals"* and lists *"Daily price history (yfinance OHLCV)"* as an input; the
+assembled prompt contains no OHLCV series, only four computed readings (RSI, trend word, 50-day range,
+volume-vs-average). It is then told to *"Provide specific levels: entry, target, stop-loss"* and a
+*"Risk-reward ratio (e.g., '3:1 R:R')"*, and its voice section illustrates with *"breakout from a
+3-month base"* and *"RSI clearing 70 off an oversold base"* — neither derivable from what it is given,
+both forbidden by the grounding directive. This is the **P5 class** (an LLM asked to compute a number
+it presents as fact) sitting upstream of DEF231/DEF234, which are about exactly these invented levels
+reaching the verdict.
+
+**The Social Analyst's fallback branch instructs it to use context it is simultaneously forbidden to
+see.** `social_media_analyst.md` says that when no real data is injected, *"reason qualitatively and
+illustratively instead, using whatever real price/fundamentals/news context is available from the
+other analysts and the debate transcript"* — while CR077's parallel-phase line in the same assembled
+prompt says *"You are speaking AT THE SAME TIME as the other analysts and cannot see their
+contributions — the transcript above is empty by design. Do not reference, defer to, or assume another
+analyst's read."* Both strings verified present in the same file. The saving grace is that the branch
+is currently unreachable: the social feed is **LIVE in 216 of 216** real prompts (see the correction
+below), so the fallback never fires on Alpha today. It is a trap waiting on an Adanos outage.
+
+**A correction this review forced.** An earlier draft of the Phase 1 supplier map recorded the Social
+Analyst's feed as dead on Alpha and attributed it to DEF063. Checking it against the real prompts
+showed the opposite: the social block is **LIVE in 216/216**, served by **Adanos** (`ADANOS_API_KEY`
+*is* forwarded to melehost) — `Retail sentiment: bullish (+0.04 (live Reddit sentiment, Adanos))` —
+and the news block is LIVE in 216/216 too. What is genuinely absent is narrower: **0 of 216** catalyst
+lines carry an Alpha Vantage per-article sentiment tag, because `ALPHA_VANTAGE_API_KEY` is set on the
+Mac but not on melehost. **DEF063 is half-resolved** and its row should be re-scoped to the Alpha
+Vantage half alone.
+
 ## Rejected
 
 - **"There is no external checker; the model is being asked to simulate a deterministic gate."**

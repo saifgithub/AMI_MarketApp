@@ -106,8 +106,8 @@ Per-field provenance measured live for AAPL, 2026-08-08 (`assembled/_profile.jso
 | Market Analyst | RSI(14), 20/50-day MA trend, volume vs 20-day, 50-day range + position in it, last close | `technicals.py` → `_format_profile` | `live`; DEF227/228 fixed trend direction + current price |
 | Market Analyst | "No MACD, MA-crossover, Bollinger — do not cite them"; "no intraday" | — | true negative; `twelve_agents.md` still contradicts it (CR105 item 5) |
 | News Analyst | headlines, publisher, recency | `news_context.py` (yfinance) | `live` |
-| News Analyst | Alpha Vantage per-article sentiment tag, *"where configured"* | `news_context.py:168` gated on `settings.alpha_vantage_api_key` | **key absent from melehost `.env`** — the conditional is permanently false on Alpha |
-| Social Analyst | Reddit aggregate sentiment, *"where configured"* | `social_context.py` | `field_state.social = unavailable`; no Reddit keys in melehost `.env`. **DEF063, open** |
+| News Analyst | Alpha Vantage per-article sentiment tag, *"where configured"* | `news_context.py:168` gated on `settings.alpha_vantage_api_key` | **key absent from melehost `.env`** — 0 of 216 real prompts carry a sentiment tag. The conditional is permanently false on Alpha |
+| Social Analyst | Reddit aggregate sentiment, *"where configured"* | `social_context.py`, served by **Adanos** (`ADANOS_API_KEY`, which *is* forwarded) | **LIVE in 216 of 216 real prompts** — e.g. `Retail sentiment: bullish (+0.04 (live Reddit sentiment, Adanos))` |
 | Bull / Bear | Decision Journal history for this ticker | `build_journal_context_block(user_id, ticker, plan)`, Room `journal_note` (`room_prompts.py:381-385`) | supplied, Bull/Bear only, plan-gated |
 | Bull / Bear / Research Mgr | — | `researcher_cap_note` injects the enforced single-name cap (CR055) | supplied |
 | Trader | RM synthesis, risk debators, portfolio, remaining drawdown capacity | transcript + `_drawdown_snapshot_line` + holdings block | supplied |
