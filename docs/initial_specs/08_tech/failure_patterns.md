@@ -829,6 +829,57 @@ a wrong conclusion is the same failure as the defect being measured.
 "what else would my pattern accept?". Three different questions, three different instruments — and
 the third one only an adversary asks.*
 
+**Amendment 1 (AT:R66) — the generality law, and why it is the root cause here.** DEF231's row had
+specified the correct design in the sentence that justified filing it: the level is *"already a
+structured number the verdict carries… so a comparison is available without parsing free text"*. A
+general prose parser was built instead, and every defect that followed came from the gap:
+
+| finding | captured figure | a structured level of that run? |
+|---|---|---|
+| r1 MAJOR | `we'd pay $52.30` | no |
+| r2 MAJOR | a second sentence's level | yes — but not the verb's |
+| **DEF234 — reached live Alpha** | `$1.00` truncated out of `$1,073.46` | no |
+| r4 MINOR | `break above near the recent low of $X` | no |
+
+*A prose pattern's false-positive surface is proportional to how much wider than the structured
+answer it is.* Three of the four become unreachable once the figure must match a level the run
+holds; the fourth genuinely needs grammar, which is the point — **both halves are usually needed,
+and the prose half must cover only what the structured half cannot.** Building the prose half first
+means it covers everything. **DEF235** is the same shape one function over (`\bsize\b` + a number
+matched *"a MEDIUM size entry at $188.62"* and published a 63×-overstated drawdown contribution),
+and **CR106 B1** is this lesson learned once already and not generalised. Now a convention rule:
+[`coding_conventions.md` § "Reading a claim out of agent prose"](coding_conventions.md) (CR144).
+
+Measured, so the trade is not theoretical: narrowing DEF231's check to the run's own levels and then
+spending the safety it bought on recall (an offline LLM sweep that found three whole verb families)
+took the corpus from **121 figures extracted** to **365 extracted, 246–277 of them matched to a
+structured level and actually checked**. Narrowing did not cost coverage; it is what made tripling
+coverage affordable, because adding three verb families to the general check would have tripled its
+false-positive surface too.
+
+**Amendment 2 (AT:R66) — never select the guard's corpus with the thing it guards.** The P16 fixture
+originally selected verdicts carrying a `$` **and a directional verb stem**. That made the guard's
+own population a function of the pattern under test: broadening the verb set moved the count for two
+reasons at once, so the diff was unreadable — and far worse, a **narrowing** would have shrunk the
+population in lockstep and **hidden its own coverage loss**, which is the single failure the fixture
+exists to prevent. Selection must depend only on the raw property that makes a row *capable* of
+exercising the pattern (here: it contains a `$`). Fixed at 811 rows.
+
+**Amendment 3 (AT:R66) — two more harness bugs, and how they were caught.** Measuring the narrowing's
+coverage cost needed each run's own levels reconstructed from history. Two errors, both of which
+would have produced a confident wrong number:
+
+1. `auto_adjust=False` against an app that calls `.history()` with yfinance's default (`True`).
+   Every dividend payer's reconstructed low sat above the level the run held, which read as coverage
+   loss.
+2. The 52-week range omitted from the reconstruction entirely — **understated retention by 26
+   points**, and it is the level the PM quotes most.
+
+Neither was caught by a number looking wrong. Both were caught by the **shape of the unmatched
+list** — the misses clustered just under the reconstructed support, and a systematic offset is a
+harness signature, not a finding. Read the rejects, not just the count; that is where the harness
+confesses.
+
 ---
 
 ## Adding an entry

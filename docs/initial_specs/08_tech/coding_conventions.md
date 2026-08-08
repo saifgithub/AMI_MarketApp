@@ -25,6 +25,45 @@ every session); everything else lives here.
 - **TradingAgents integration**: wrap their `TradingAgentsGraph` in our own service layer (`agents/service.py`) that applies the mandate overlay before propagation.
 - **No secrets in code.** Use GCP Secret Manager via env vars.
 
+### Reading a claim out of agent prose (CR144)
+
+Any regex or parser that reads a value or a claim out of LLM-authored text must
+carry a comment at its definition site naming **the structured field that was
+considered instead, and why it lost**. If no such field exists, say that — and
+say whether making one is cheaper than the parser.
+
+*Why.* Every prose checker we have written is a missing field until proven
+otherwise, and the proof is cheap only before the parser exists:
+
+- **DEF231** — six audit rounds and one live defect for a check that compares
+  two numbers. Its own filing row specified the fix as a comparison against
+  *"a structured number the verdict carries… without parsing free text"*; a
+  general prose parser was built instead, and **all four of its defects were
+  figures that were not levels of the run at all** (`we'd pay $52.30`; a second
+  sentence's level; `$1.00` truncated out of `$1,073.46`, which shipped).
+- **DEF235** — the same shape one function over. `\bsize\b` followed by a
+  number matched *"a MEDIUM size entry at $188.62"*, and AMI published a
+  drawdown contribution **63× too large** under the words "These are the figures
+  of record."
+- **CR106 B1** — the lesson learned once already and not generalised: level
+  provenance was disclosed by appending a sentence to `reason`; the fix was to
+  move it into a typed field.
+
+*The law behind the rule.* A prose pattern's false-positive surface is
+proportional to how much **wider than the structured answer** it is. So build
+the structured half first and let the prose half cover only what the structured
+half genuinely cannot reach — usually grammar, which no field can supply. Both
+halves are often needed; the order is what is not optional.
+
+*Why a comment and not a lint rule.* The failure is never that someone wrote a
+pattern — it is that nobody asked the question. A comment forces it at the one
+moment the answer is cheap, and it is reviewable: an auditor can ask "is that
+really why it lost?" and the answer is in front of both of you. A lint rule
+would be satisfied by boilerplate.
+
+Then ship it under **failure pattern P16** — corpus sweep *and* adversarial
+construction, both, plus the extraction-set diff.
+
 ---
 
 ## Naming

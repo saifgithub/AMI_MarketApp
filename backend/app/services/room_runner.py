@@ -1115,6 +1115,30 @@ def _pm_rr_coherence_signal(
 # "Target: $33.50 then $95+", "Size: 10% of portfolio". The label must be a whole
 # word (so "entering"/"below entry)" don't false-match) and the price must follow
 # within a short, digit-free gap so a distant number isn't captured.
+#
+# CR144 — WHAT STRUCTURED FIELD COULD THIS HAVE READ INSTEAD? Recorded as an
+# open question, not an answer, because **DEF235 is open and owned elsewhere**
+# (the CR143 track filed it; its fix direction is in its row). Stating the
+# question here is the convention's requirement; answering it is that defect's
+# job, and this comment must not be mistaken for the fix.
+#
+# The question is sharp for this pattern. `ctx.trader_entry/stop/target` already
+# exist as floats on the run, and `_risk_tier_size_ceiling(mandate)` already
+# holds the size cap — so there IS a structured answer for at least the size
+# label, and the parser is reading prose to recover a number the run computed.
+# What it costs: `_LEVEL_PATTERNS["size"]` matches `\bsize\b` then any number in
+# a 15-char digit-free gap, so *"a MEDIUM size entry at $188.62"* yields a size
+# of 188.62, `drawdown_contribution` was fed it, and AMI published a figure 63×
+# too large under the words "These are the figures of record" (DEF235). A hand
+# read of the epoch found 7 of 11 size matches wrong.
+#
+# And the deeper reason, also DEF235's: this pattern was written against
+# `trader.md`'s ticket block, where each label sits alone on its own line inside
+# a code fence and collision is impossible — but `_PROSE_FORMAT` then tells the
+# same agent "no headings, no tables, no code fences". **The parser depends on a
+# format a later prompt layer forbids** (69% of Trader turns state levels inline
+# in running prose). That is what "why did the field lose?" is supposed to
+# surface before the parser is written, not eighteen months after.
 _LEVEL_PATTERNS: dict[str, re.Pattern[str]] = {
     "entry": re.compile(r"\bentry\b[^\n$0-9]{0,15}\$?\s*(\d+(?:\.\d+)?)", re.IGNORECASE),
     "stop": re.compile(r"\bstop(?:[\s-]*loss)?\b[^\n$0-9]{0,15}\$?\s*(\d+(?:\.\d+)?)", re.IGNORECASE),
@@ -1226,6 +1250,20 @@ def _annotate_rr_against_levels(
 # credibility.
 #
 # Flag-and-annotate, never veto (DEF059 — the safety floor is the sole vetoer).
+#
+# CR144 — WHAT STRUCTURED FIELD COULD THIS HAVE READ INSTEAD? Both of the two
+# numbers this check compares: the price is `profile["last_close"]` and the
+# level is one of `_structured_levels()`. Neither is parsed. What the prose
+# pattern below supplies is the one thing no field can — **which level the
+# sentence is making a claim about, and in which direction**. Grammar is not
+# recoverable from a number.
+#
+# That division was learned the expensive way. The first build had no structured
+# half at all and matched any `$` figure a directional verb governed; all four of
+# its defects, including one that reached live Alpha, were figures that were not
+# levels of the run (see the row). The pattern is deliberately kept no wider than
+# the residual: an unrecognised word ends the match, and a figure that matches no
+# level of the run is refused and logged.
 _DIRECTIONAL_CLAIMS: tuple[tuple[str, str], ...] = (
     # (verb phrase, the side of the level the price must be on for the
     #  instruction to describe a move that is still ahead of it)
