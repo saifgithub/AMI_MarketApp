@@ -748,3 +748,96 @@ def test_room_runner_live_pm_enforce_safety_floor_rejects_sector_breach():
         )
     finally:
         salloc.reset_sector_map_provider(None)
+
+
+# ── DEF238: the PM prompt's sector line, on the LIVE path ─────────────────────
+
+
+class _CapturingSectorPmGateway(_SectorPmGateway):
+    """`_SectorPmGateway`, but it keeps every system prompt it was handed."""
+
+    def __init__(self) -> None:
+        self.prompts: list[str] = []
+
+    async def stream_chat(self, *, system_prompt, messages, model_tier,
+                          locale="en", max_tokens=1024, **_audit):
+        self.prompts.append(system_prompt)
+        async for chunk in super().stream_chat(
+            system_prompt=system_prompt, messages=messages, model_tier=model_tier,
+            locale=locale, max_tokens=max_tokens, **_audit,
+        ):
+            yield chunk
+
+
+def test_def238_live_pm_prompt_carries_the_real_sector_allocation():
+    """DEF238 — CR026's sector line never reached the PM in production, for the
+    entire life of the feature.
+
+    The line renders ONLY for the PORTFOLIO_MANAGER (`room_prompts.py`), and
+    `_stream_pm_response` — the one call site that builds a live PM prompt —
+    omitted `sector_weights`. The sibling prose call site passed it, where the
+    PM-only gate made it a no-op. So `_format_sector_allocation(None)` took its
+    empty branch and told the concentration-reasoning agent "no open positions
+    yet (0% in every sector)" in 18 of 18 real Alpha prompts, 8 of which listed
+    live holdings a few lines above.
+
+    Why nothing caught it: `test_pm_prompt_context_contains_real_sector_weights`
+    above — and `backend/scripts/dump_assembled_prompts.py` — both call
+    `build_room_messages` DIRECTLY and pass the argument themselves. They prove
+    the builder works and say nothing about the caller. This test drives the real
+    `RoomRunner.run()` instead, and asserts the allocation is REAL rather than
+    merely that a kwarg was forwarded: a wiring fix would still ship the empty
+    line if `_build_room_sector_context` returned `{}`.
+
+    RED before the fix: the PM prompt contains "no open positions yet".
+    """
+    from app.services.room_runner import RoomRunner
+
+    now = datetime(2026, 7, 25, 12, 0, tzinfo=timezone.utc)
+    with get_session() as s:
+        cu.write_snapshot(
+            s, classified=set(_SECTORS), fossil=set(), sin=set(), defense=set(),
+            fetched_at=now, sectors=dict(_SECTORS),
+        )
+    salloc.reset_sector_map_provider(None)
+    try:
+        sim = get_sim_engine()
+        user_id = uuid4()
+        mandate = hydrate_coach_mandate(
+            {"plan": "trader", "risk_score": 3, "single_name_cap_pct": 100.0}
+        )
+        for ticker, target_value in (("AAPL", 3000.0), ("XOM", 2000.0)):
+            price = sim.current_price(ticker)
+            r = sim.submit(
+                user_id=user_id, ticker=ticker, side=Side.BUY,
+                quantity=target_value / price, mandate=mandate,
+            )
+            assert r.accepted, r.compliance.violations
+
+        gw = _CapturingSectorPmGateway()
+        _collect(RoomRunner(llm=gw).run(  # type: ignore[arg-type]
+            user_id=user_id, ticker="MSFT", mandate=mandate,
+            portfolio_value=sim.total_value(user_id),
+            char_delay_min=0.0, char_delay_max=0.0,
+        ))
+
+        pm_prompts = [p for p in gw.prompts
+                      if "speak as the portfolio manager" in p.lower()]
+        assert pm_prompts, "the live PM prompt was never built"
+        pm = pm_prompts[-1]
+
+        assert "no open positions yet" not in pm.lower(), (
+            "the PM was told it holds nothing while holding AAPL and XOM"
+        )
+        assert "current sector allocation (of invested value)" in pm.lower()
+        # The book really is Tech + Energy + cash, and the line must name them.
+        assert "Technology" in pm and "Energy" in pm
+
+        # And the non-PM agents still get no sector line at all — the PM-only
+        # gate is what makes this data PM-only, and the fix must not widen it.
+        others = [p for p in gw.prompts
+                  if "speak as the portfolio manager" not in p.lower()]
+        assert others, "no prose-agent prompt was captured"
+        assert not any("sector allocation" in p.lower() for p in others)
+    finally:
+        salloc.reset_sector_map_provider(None)

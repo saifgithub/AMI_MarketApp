@@ -3740,6 +3740,19 @@ async def _stream_pm_response(
         # CR069 — see the sibling call site: the PM narrates the same sourced verdict
         # its own safety floor enforces.
         halal_universe=ctx.halal_universe,
+        # DEF238: this argument was missing for the entire life of CR026, and the
+        # feature was PM-only, so it never worked ONCE in production. The line is
+        # rendered only for the PORTFOLIO_MANAGER (`room_prompts.py`), and this is
+        # the only call site that builds a live PM prompt — the sibling prose call
+        # site passes it, where the PM-only gate makes it a no-op. So
+        # `_format_sector_allocation(None)` took its empty branch and told the
+        # concentration-reasoning agent "no open positions yet (0% in every
+        # sector)" in 18 of 18 epoch prompts, 8 of which listed real holdings a
+        # few lines above (up to `GME ×500`, 95.8% of portfolio). Not a silent
+        # gap — a confident false statement, the CR040 class after DEF038/DEF063.
+        # The floor was never affected: its sector cap reads
+        # `ctx.sector_holdings/marks/map` directly, not this string.
+        sector_weights=ctx.sector_weights,
     )
     # DEF125 item 4: the PM's own budget was a separate hard-coded 600, one
     # line from the flat 400 — and DEF058 (verdict fails to parse in ~22% of
