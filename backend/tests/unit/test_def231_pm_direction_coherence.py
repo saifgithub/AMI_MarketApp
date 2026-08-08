@@ -452,6 +452,77 @@ def test_the_closest_level_wins_when_two_are_within_the_band():
     ) == ("stop", 100.20)
 
 
+# ── the verb families the offline LLM sweep found (AT:R66) ───────────────────
+#
+# The bake-off in this defect's audit lane disqualified the LLM at RUNTIME —
+# regex 10/10 to its 8/10 on constructed cases, failing on exactly the two audit
+# MAJORs, and mostly fabricating on real verdicts. Its one advantage was RECALL,
+# so it was run offline over the 692 verdicts carrying a `$` from which the
+# pattern extracted nothing, purely as a lead generator. 373 claimed leads,
+# clustered by shape and hand-read; three families survived.
+#
+# Every case below is a real corpus sentence, trimmed. `breakout above` alone
+# contributes 159 of the fixture's 365 extractions — more than the entire
+# previous verb set — because it is how the PM most often states a level.
+
+@pytest.mark.parametrize("text,close,level,fires", [
+    # "breakout" as a noun. The pre-existing rule matches "break out above" but
+    # a \b after `break` stops one letter short of the one-word form.
+    ("wait for a confirmed breakout above $236.26 on rising volume", 250.00, 236.26, True),
+    ("wait for a confirmed breakout above $236.26 on rising volume", 200.00, 236.26, False),
+    ("waiting for the $94.43 support retest or a breakout to $135.16", 150.00, 135.16, True),
+    # "close above" / "close below".
+    ("we hold cash until a decisive close above $244.07 validates it", 260.00, 244.07, True),
+    ("we hold cash until a decisive close above $244.07 validates it", 230.00, 244.07, False),
+    ("I will only reconsider this trade if price closes above $25.67", 30.00, 25.67, True),
+    ("a daily close below $12.10 invalidates the thesis", 11.00, 12.10, True),
+    # "clears".
+    ("no entry until price clears the $23.67 breakout resistance", 26.00, 23.67, True),
+    ("we will re-evaluate only if price clears $236.26 with volume", 200.00, 236.26, False),
+])
+def test_the_families_the_offline_sweep_found(text, close, level, fires):
+    signals = _direction_contradictions(text, close, _lv(level))
+    assert bool(signals) is fires
+    if fires:
+        assert signals[0]["level"] == level
+
+
+@pytest.mark.parametrize("text", [
+    # Stop placements. A stop is where the trade exits, not somewhere the price
+    # is being told to go — and the PM writes these constantly.
+    "a hard stop at $52.30 protects the position",
+    "the stop loss is widened to $52.30 to survive the print",
+    "tightening the stop to $52.30 after the run",
+    # Entry statements. Same reasoning: a price you would transact at is not a
+    # directional claim about where the price must travel.
+    "entering at $52.30 risks immediate multiple compression",
+    "raise the entry trigger to $52.30",
+    "a limit entry at $52.30 keeps the risk defined",
+    # The GRAB shape, still deliberately out (a retest is awaited from either
+    # side), and still asserted now that the verb set has grown.
+    "wait for a retest of $52.30 support",
+    # Past tense: a claim about history, not an unmet condition. Comparing it to
+    # the LAST close would frame "it closed above $X in June" as an instruction.
+    "the stock closed above $52.30 in June before fading",
+])
+def test_what_the_sweep_proposed_and_was_rejected_on_reading(text):
+    """The leads the LLM produced that did NOT become verbs, pinned so a later
+    pass cannot quietly adopt them. An unread lead list would have encoded every
+    one of these — which is the whole reason the LLM is a lead generator here
+    and not an answer."""
+    assert _direction_contradictions(text, 60.00, _lv(52.30)) == []
+    assert _direction_contradictions(text, 45.00, _lv(52.30)) == []
+
+
+def test_bare_clear_is_an_adjective_and_is_not_a_verb_here():
+    assert _direction_contradictions(
+        "a clear $52.30 discount to peers", 60.00, _lv(52.30)
+    ) == []
+    assert _direction_contradictions(
+        "until price clears $52.30", 60.00, _lv(52.30)
+    ) != []
+
+
 # ── which levels a run holds ──────────────────────────────────────────────────
 
 

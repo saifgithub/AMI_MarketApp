@@ -24,12 +24,22 @@ What it does and does NOT prove:
     complementary and neither substitutes for the other; that is the whole
     point of P16 and this file only implements half of it.
 
-The fixture is the subset of real `room_runs.verdict->>'reason'` strings on
-Alpha (2026-08-08, 949 non-fail-safe verdicts) that carry both a `$` figure and
-a directional verb stem — i.e. every row that could ever exercise a level
-pattern. Simulation-only content, model-authored, no user text and no
-identifiers. Refreshing it is a deliberate act: re-export, re-read the diff,
-and update `_EXPECTED` in the same commit.
+The fixture is every real `room_runs.verdict->>'reason'` string on Alpha
+(2026-08-08) that carries a `$` figure — 811 rows, deduplicated. Simulation-only
+content, model-authored, no user text and no identifiers. Refreshing it is a
+deliberate act: re-export, re-read the diff, and update `_EXPECTED` in the same
+commit.
+
+**The selection criterion is deliberately independent of the verb set.** The
+first version of this fixture selected rows carrying a `$` figure AND a
+directional verb stem, which quietly made the guard's own population a function
+of the thing it guards: broadening the verb set would have pulled in rows the
+fixture did not contain, so the count would have moved for two reasons at once
+and the diff would have been unreadable. Worse, a *narrowing* of the verb set
+would have shrunk the population in lockstep and hidden its own coverage loss —
+the exact failure this file exists to make impossible. A `$` is the only
+property a row needs to be capable of exercising a level pattern, so that is
+the whole criterion now.
 """
 
 from __future__ import annotations
@@ -42,10 +52,20 @@ from app.services.room_runner import _DIRECTIONAL_CLAIM_RES
 
 _CORPUS = Path(__file__).parent / "fixtures" / "pm_verdict_corpus.txt"
 
-# The extraction set as of `4b7faee8` + the round-4 MINOR fix, read in full and
-# confirmed by the auditor independently. A change to this number is not a
-# failure — it is a REVIEW PROMPT. Update it only with the diff in front of you.
-_EXPECTED_EXTRACTIONS = 121
+# A change to this number is not a failure — it is a REVIEW PROMPT. Update it
+# only with the diff in front of you.
+#
+#   121  round-4 MINOR fix (`4b7faee8`), fixture = 603 verb-stem-selected rows
+#   365  the offline LLM verb-gap sweep (AT:R66), fixture = 811 `$`-carrying rows
+#
+# The jump is two changes at once and they are separable. Re-selecting the
+# fixture on `$` alone added 208 rows; the three verb families the sweep found
+# — `breakout above|to` (159 extractions), `close above|below` (73), `clears`
+# (12) — account for the rest. `breakout` alone yields more than the entire
+# previous verb set did, because "wait for a confirmed breakout above $X" is the
+# PM's single most common way of stating a level, and every one of those 365 was
+# read before this number was changed.
+_EXPECTED_EXTRACTIONS = 365
 
 # Levels the corpus is known to contain that have historically been mis-parsed.
 # Each is a defect that reached (or nearly reached) users.

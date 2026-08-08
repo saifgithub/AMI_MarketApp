@@ -1238,6 +1238,40 @@ _DIRECTIONAL_CLAIMS: tuple[tuple[str, str], ...] = (
     (r"(?:fall|falls|falling|fell|drop|drops|dropping|decline[sd]?|slip[sp]*(?:ed|ing)?)"
      r"\s+(?:back\s+)?(?:to|below)", "above"),
     (r"pull(?:s|ing)?\s*back\s+(?:to|toward|towards)", "above"),
+    # ── added by the offline LLM sweep (AT:R66) ──────────────────────────────
+    #
+    # The bake-off recorded in this defect's audit lane disqualified the LLM at
+    # RUNTIME — on constructed cases the regex scored 10/10 to its 8/10, failing
+    # on exactly the two audit MAJORs, and on real verdicts it fired where the
+    # regex was silent and mostly fabricated. What it did have was better
+    # RECALL. So it was run offline over the 692 verdicts that carry a `$` and
+    # from which this pattern extracted nothing, purely as a lead generator; the
+    # 373 leads it claimed were clustered by shape and hand-read. Three families
+    # survived that reading, and between them they are the largest single block
+    # of real directional instructions the verb set was blind to.
+    #
+    # Everything else the LLM proposed was rejected on reading, and the rejects
+    # are worth naming because they are what an unread lead list would have
+    # encoded: stop placements ("a hard stop at $X", "the stop loss is widened
+    # to $X"), entry statements ("entering at $X", "raise the entry trigger to
+    # $X") and retests. None of those instructs the price to go anywhere.
+    #
+    # `breakout` as a NOUN — "wait for a confirmed breakout above $236.26" — is
+    # the single most common miss (~70 of the leads). The existing rule above
+    # matches "break out above" but a `\b` after `break` stops it one letter
+    # short of the one-word form the PM actually writes.
+    (r"breakout\s+(?:above|to)", "below"),
+    # "a decisive close above $244.07", "we await a close above $19.62". Present
+    # tense and gerund only: `closed above $X` is a claim about the past, and
+    # comparing it to the LAST close would frame a historical statement as an
+    # unmet condition. `close(?:s|ing)?` cannot match `closed` — the optional
+    # group does not admit `d` — so the exclusion is structural, not a promise.
+    (r"clos(?:e|es|ing)\s+above", "below"),
+    (r"clos(?:e|es|ing)\s+below", "above"),
+    # "until price clears the $23.67 breakout resistance". Third-person and
+    # gerund only: bare "clear" is more often an adjective ("a clear $50
+    # discount") and carries no direction.
+    (r"clear(?:s|ing)", "below"),
 )
 
 # The verb, then the level it names: "reclaim the 50-day range low of $998.19".
