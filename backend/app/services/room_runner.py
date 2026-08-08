@@ -672,6 +672,54 @@ _DEBATOR_SIZE_ATTR: dict[AgentId, str] = {
 }
 
 
+# DEF240 — above this share of the portfolio in ONE name, AMI states the
+# concentration in plain words instead of letting it pass as an ordinary number.
+#
+# Saiful's ruling, 2026-08-08, asked as a product question after three per-agent
+# reviews found the same thing independently: *"Keep it, but make AMI say the
+# number out loud."* Nothing here is broken — `day_trader_preset.py` really does
+# set `single_name_cap_pct: 100.0`, 7 of 18 epoch convenes ran under it, and
+# `resolved_single_name_cap_pct` is the same resolver the safety floor clamps to,
+# so shown == enforced. The agents were behaving correctly when the Bull argued
+# 50% of portfolio in one name and the Aggressive argued 100% into a book already
+# 95.8% GME.
+#
+# The defect is DISCLOSURE, not enforcement. A simulator whose purpose is teaching
+# let a user watch a 12-analyst team argue for a half-portfolio single-name
+# position while every rendered figure stayed neutral about what that means. CR040
+# inverted: if this ships constantly and quietly, what does the user end up
+# believing?
+#
+# Explicitly NOT a cap on the rendered number — a ceiling on a *reported* figure is
+# exactly how DEF235 shipped a wrong one. Loud and correct beats quiet.
+#
+# 25% is a disclosure threshold, not a risk limit: four equal names is the point
+# past which one company's outcome, rather than a portfolio's, is what the book
+# tracks. It gates a sentence, never a decision — the safety floor remains the
+# sole vetoer (DEF059).
+_LOUD_CONCENTRATION_PCT = 25.0
+
+
+def _concentration_note(size_pct: float | None, cap_pct: float | None) -> str:
+    """DEF240 — the plain-words concentration statement, or "" below the threshold.
+
+    Factual only: the share, the cap, and the fact that the floor permits it. No
+    recommendation and no adjective — AMI is simulation-only and does not advise,
+    and a warning the user did not ask for would be exactly that.
+    """
+    if size_pct is None or size_pct <= _LOUD_CONCENTRATION_PCT:
+        return ""
+    cap = (
+        f" Your mandate's single-name cap is {cap_pct:.1f}%, so the safety floor "
+        f"permits it."
+        if cap_pct is not None else ""
+    )
+    return (
+        f" (Concentration: this is {size_pct:.1f}% of the portfolio in one name."
+        f"{cap})"
+    )
+
+
 def _risk_tier_size_ceiling(mandate: Mandate) -> float:
     """Max position size (%) for a mandate's risk tier — a ceiling the PM's
     LLM-decided size gets clamped to (DEF056), and the default cosmetic size
@@ -1033,6 +1081,10 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
             f" ({'/'.join(_unavailable)} not stated by the PM, and no entry "
             f"price was available to derive a protective level from.)"
         )
+    # DEF240: last, and on the APPROVED size — after the risk-tier clamp above, so
+    # the number stated is the position the user actually gets, never the one the
+    # PM asked for.
+    reason += _concentration_note(size_pct, ceiling)
 
     # CR106 B1 — the same facts the sentence above states in prose, in a shape
     # a graphic can be gated on. The sentence STAYS: the board clamps `reason`
@@ -1236,6 +1288,12 @@ def _annotate_rr_against_levels(
             f"drawdown contribution ≈ {dd.contribution_pts:.2f} pt "
             f"at the mandate's {size:.1f}% single-name cap"
         )
+        # DEF240: the same figure, said in words, once it is large enough that the
+        # percentage alone under-reads. The cap IS the size here (DEF235), so a
+        # permissive mandate makes this fire on the annotation the user watches
+        # stream — which is the point.
+        if size > _LOUD_CONCENTRATION_PCT:
+            parts.append(f"that cap is {size:.1f}% of the portfolio in one name")
     tail = (
         "the proposal stated no R:R, so AMI rendered it"
         if stated is None
