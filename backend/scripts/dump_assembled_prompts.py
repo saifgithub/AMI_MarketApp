@@ -76,10 +76,25 @@ DEFAULT_OUT = REPO_ROOT / "docs/forward_planning/CR143_agent_prompt_audit/assemb
 # always a difference in the CODE, never in the user.
 _MANDATE_UUID = UUID("00000000-0000-4000-8000-000000000143")
 
-# The RISK/VERDICT phases are the only ones handed a concrete proposal (DEF066);
-# entry 100 / stop 81 / size 5% is the AMD case from the CR035 report, reused here
-# so the dumped drawdown line matches the one test_room_prompts.py already pins.
-_PROPOSAL = {"size_pct": 5.0, "entry": 100.0, "stop": 81.0, "target": 130.0}
+def _proposal(mandate: Mandate) -> dict[str, float]:
+    """The reference proposal the RISK/VERDICT phases are handed (DEF066).
+
+    `size_pct` is DERIVED from the same resolver production uses
+    (`_risk_tier_size_ceiling` → `resolved_single_name_cap_pct`), never hardcoded.
+    The first dump pinned it at 5.0 to match `test_room_prompts.py`'s fixture while
+    the mandate's enforced cap is 3.0, so the PM prompt carried two different
+    "ceilings" — which an external reviewer duly flagged as a CR046 shown-vs-enforced
+    incoherence. It is not: 72 of 72 real Alpha prompts carrying both numbers agree.
+    Deriving it here keeps the corpus honest about that.
+
+    entry 100 / stop 81 is the AMD geometry from the CR035 report.
+    """
+    from app.services.room_runner import _risk_tier_size_ceiling
+
+    return {
+        "size_pct": _risk_tier_size_ceiling(mandate),
+        "entry": 100.0, "stop": 81.0, "target": 130.0,
+    }
 
 _PARALLEL_PHASE_AGENTS = frozenset(
     a for a, phase in _PHASE_FOR_AGENT.items() if phase == "ANALYSTS"
@@ -127,16 +142,27 @@ def _portfolio_snapshot(ticker: str) -> str:
     """
     from app.services.room_runner import _SIM_PORTFOLIO_HEADER
 
+    # The arithmetic must close and must not contradict the "you hold 0% of
+    # <TICKER>" line: an independent review of the first dump (Kimi, 2026-08-08)
+    # spent three of its eight findings on a fixture that listed the convene's own
+    # ticker as held AND claimed a 0% position in it, with percentages that did not
+    # sum. Held names are therefore deliberately NOT the audited ticker.
+    #   cash 42,150 + MSFT 40 x 402.10 (16,084) + NVDA 20 x 170.00 (3,400) = 61,634
     return (
         f"{_SIM_PORTFOLIO_HEADER}\n"
-        "Cash: $42,150.00 | Portfolio value: $108,238.00\n"
+        "Cash: $42,150.00 | Portfolio value: $61,634.00\n"
         "Open positions:\n"
-        "  AAPL ×120 (21.4% of portfolio, unrealised +15,440.00)\n"
-        "  MSFT ×40 (15.6% of portfolio, unrealised +796.00)\n"
+        "  MSFT ×40 (26.1% of portfolio, unrealised +796.00)\n"
+        "  NVDA ×20 (5.5% of portfolio, unrealised +310.00)\n"
         f"You hold 0% of {ticker.upper()} — no open position in it. "
         "Any BUY here opens a NEW position.\n"
         "───"
     )
+
+
+# `allocate_by_sector` returns weights as FRACTIONS (0.0-1.0); `_format_sector_allocation`
+# multiplies by 100. The first dump passed percentages here and rendered "Cash 5180%".
+_SECTOR_WEIGHTS = {"Cash": 42150 / 61634, "Technology": 19484 / 61634}
 
 
 def _locate_layers(assembled: str, layers: list[tuple[str, str]]) -> list[dict[str, Any]]:
@@ -187,9 +213,9 @@ def _room_prompt(agent_id: AgentId, mandate: Mandate, ticker: str, profile: dict
         transcript=[],
         portfolio_snapshot=_portfolio_snapshot(ticker),
         plan=Plan.TRADER,
-        trade_proposal=_PROPOSAL if phase in ("RISK", "VERDICT") else None,
+        trade_proposal=_proposal(mandate) if phase in ("RISK", "VERDICT") else None,
         parallel_phase=agent_id in _PARALLEL_PHASE_AGENTS,
-        sector_weights={"Technology": 37.0, "Healthcare": 11.2, "Cash": 51.8},
+        sector_weights=_SECTOR_WEIGHTS,
     )
     return prepend_grounding_directive(system_prompt)
 

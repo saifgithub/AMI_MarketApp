@@ -35,6 +35,25 @@ sheet → mandate → transcript → verdict format), and the 8.8k–11.6k char 
 entirely to the transcript the dump deliberately leaves empty. Unattributed residual: **−26 to −31
 chars** against a ±64 tolerance.
 
+**Correction (2026-08-08, after external review).** The first committed dump carried **three bugs in
+the fixture**, all in `_portfolio_snapshot` / `sector_weights`, all found by an independent model
+reading the corpus (`external_review/`), none found by me:
+
+- the holdings block listed the convened ticker (AAPL) as held *and* asserted `You hold 0% of AAPL`
+- the cash and position percentages did not sum to the stated portfolio value
+- sector weights were passed as percentages into `_format_sector_allocation`, which multiplies by
+  100 — the PM prompt rendered **`Cash 5180%, Technology 3700%`**
+
+`allocate_by_sector` returns fractions (0.0–1.0), so production is correct and only the fixture was
+wrong. Fixed and re-dumped; the sector line now reads `Cash 68%, Technology 32%`.
+
+**The important part is that `--verify` passed all three.** It compares layer *order* and segment
+*sizes* against real `llm_audit` rows — nothing about whether the content is coherent. A
+reconstruction can be structurally faithful and still be nonsense, and three of the external
+reviewer's eight PM "contradictions" were spent on my fixture rather than on the product. Any future
+reader of `assembled/` should treat the fixture values as illustrative and the *structure* as the
+verified artifact.
+
 Two things worth recording from the dump itself:
 
 - **The Room prompt is ~12.8k chars before a single word of debate.** By the time the PM speaks it is

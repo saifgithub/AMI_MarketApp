@@ -25,7 +25,7 @@
     "social": "unavailable"
   },
   "run_date": "2026-08-08",
-  "catalyst": "\"Apple (AAPL) Q3 2026 Earnings Call Transcript\" (Motley Fool, 6h ago)",
+  "catalyst": "\"Dan Ives Says We're in the \"3rd Inning\" of the AI Revolution. Is Nvidia Stock Still a Buy After the Pullback?\" (Motley Fool, 1h ago)",
   "forward_catalyst": "FOMC decision in 39 days",
   "sentiment_tone": "moderately bullish",
   "sentiment_score": "typical intensity (illustrative)",
@@ -43,7 +43,7 @@
   "downside": 18,
   "synth_lean": "constructive bull",
   "base_price": 313.33,
-  "pe": "35.9",
+  "pe": "36.0",
   "rev_growth": 16,
   "profit_margin": 28,
   "net_cash": -21945,
@@ -55,7 +55,7 @@
   "peg_ratio": "2.46",
   "peg_basis": "trailing",
   "fcf_yield": 2.4,
-  "dividend_yield": 0.35,
+  "dividend_yield": 0.34,
   "sector": "Technology",
   "industry": "Consumer Electronics",
   "analyst_target_price": 322.82,
@@ -73,10 +73,10 @@
   "next_earnings_eps_estimate": 1.97643,
   "news_headlines": [
     [
-      "Apple (AAPL) Q3 2026 Earnings Call Transcript",
-      "https://finance.yahoo.com/markets/stocks/articles/apple-aapl-q3-2026-earnings-013018032.html",
+      "Dan Ives Says We're in the \"3rd Inning\" of the AI Revolution. Is Nvidia Stock Still a Buy After the Pullback?",
+      "https://finance.yahoo.com/technology/ai/articles/dan-ives-says-were-3rd-090400850.html",
       "Motley Fool",
-      1786152618,
+      1786179840,
       null,
       "yfinance"
     ],

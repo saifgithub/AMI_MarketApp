@@ -68,10 +68,10 @@ You argue for capital preservation. Given this mandate:
 - 30% portfolio drawdown is the ceiling (a position adds size% × stop-distance% to it); argue toward comfortable distance below it.
 
 ─── YOUR SIMULATED PORTFOLIO (AMI's portfolio of record — simulation-only) ───
-Cash: $42,150.00 | Portfolio value: $108,238.00
+Cash: $42,150.00 | Portfolio value: $61,634.00
 Open positions:
-  AAPL ×120 (21.4% of portfolio, unrealised +15,440.00)
-  MSFT ×40 (15.6% of portfolio, unrealised +796.00)
+  MSFT ×40 (26.1% of portfolio, unrealised +796.00)
+  NVDA ×20 (5.5% of portfolio, unrealised +310.00)
 You hold 0% of AAPL — no open position in it. Any BUY here opens a NEW position.
 ───
 
@@ -86,25 +86,25 @@ Data source disclosure — every fact below is tagged with where it came from. A
 - Forward catalyst: the FOMC decision countdown below is REAL, from the Fed's published calendar.
 
 Reference price: $313.33
-P/E: 35.9 trailing (measured — last 12 months of reported earnings) · 32.9 forward (CONSENSUS ESTIMATE of the next 12 months — analysts' forecast, not a measurement). Say which basis you mean whenever you cite a P/E.
+P/E: 36.0 trailing (measured — last 12 months of reported earnings) · 32.9 forward (CONSENSUS ESTIMATE of the next 12 months — analysts' forecast, not a measurement). Say which basis you mean whenever you cite a P/E.
 TTM revenue growth: 16%, profit margin: 28%
 Net debt $21945M
 RSI: 41 (neither overbought nor oversold), trend: consolidating
 50-day range: $273.75–$344.57, last close $313.33 (56% of that range)
 Volume: in-line with 20-day average
 52-week range: $223.78–$344.57
-Catalysts — recent: "Apple (AAPL) Q3 2026 Earnings Call Transcript" (Motley Fool, 6h ago); other recent coverage: "OpenAI developing $300+ AI speaker to challenge Amazon Alexa" (Yahoo Finance Video, 11h ago); "What we know about OpenAI's upcoming handheld device: Bloomberg" (Yahoo Finance Video, 17h ago); forward (REAL, Fed's published calendar): FOMC decision in 39 days
+Catalysts — recent: "Dan Ives Says We're in the "3rd Inning" of the AI Revolution. Is Nvidia Stock Still a Buy After the Pullback?" (Motley Fool, 1h ago); other recent coverage: "OpenAI developing $300+ AI speaker to challenge Amazon Alexa" (Yahoo Finance Video, 14h ago); "What we know about OpenAI's upcoming handheld device: Bloomberg" (Yahoo Finance Video, 20h ago); forward (REAL, Fed's published calendar): FOMC decision in 39 days
 Retail sentiment: moderately bullish (typical intensity (illustrative))
 Valuation (LIVE): P/S 9.8x, EV/EBITDA 27.4x, PEG 2.46 (trailing basis), FCF yield 2.4%
 Sector/industry (LIVE): Technology / Consumer Electronics
-Dividend yield (LIVE): 0.35% (buybacks/M&A: not available, not claimed)
+Dividend yield (LIVE): 0.34% (buybacks/M&A: not available, not claimed)
 Analyst consensus (LIVE, Street view — NOT company guidance): buy, target $322.82
 Next earnings (LIVE): 2026-10-29 (Q4) — in 82 days, consensus EPS est. $1.97643
 
 User mandate snapshot:
 - risk_score: 3 (1=most conservative, 5=most aggressive)
 - max_drawdown_pct: 30 — PORTFOLIO-level cap on total drawdown, NOT a per-trade stop budget. A position of size P% with a stop S% below entry contributes about P×S/100 percentage points to portfolio drawdown.
-  Reference position (risk-tier ceiling 5.0% size, entry 100.00, stop 81.00) → stop 19.0% below entry → portfolio-drawdown contribution ≈ 0.95 pt of the 30 pt cap (~3% of it). Size the actual trade against THIS figure, not the raw stop distance.
+  Reference position (risk-tier ceiling 3.0% size, entry 100.00, stop 81.00) → stop 19.0% below entry → portfolio-drawdown contribution ≈ 0.57 pt of the 30 pt cap (~2% of it). Size the actual trade against THIS figure, not the raw stop distance.
 - long_only: long-only = no short/negative positions. It does NOT forbid buying, adding to, or holding a name.
 - locale: en
 

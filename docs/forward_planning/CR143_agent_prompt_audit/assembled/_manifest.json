@@ -2,7 +2,7 @@
   "cr": "CR143",
   "generated_for_ticker": "AAPL",
   "live_market_data": true,
-  "git_rev": "fc00d39a",
+  "git_rev": "53ef3e59",
   "mandate": {
     "risk_score": 3,
     "max_drawdown_pct": 30,
@@ -19,7 +19,7 @@
     "room": {
       "fundamentals_analyst": {
         "phase": "ANALYSTS",
-        "chars": 10224,
+        "chars": 10282,
         "lines": 141,
         "layers": [
           {
@@ -34,14 +34,14 @@
             "found": true,
             "offset": 384,
             "chars": 2772,
-            "pct_of_prompt": 27.1
+            "pct_of_prompt": 27.0
           },
           {
             "layer": "mandate_overlay",
             "found": true,
             "offset": 3158,
             "chars": 1894,
-            "pct_of_prompt": 18.5
+            "pct_of_prompt": 18.4
           },
           {
             "layer": "user_overlay",
@@ -53,8 +53,8 @@
             "layer": "portfolio_snapshot",
             "found": true,
             "offset": 5054,
-            "chars": 335,
-            "pct_of_prompt": 3.3
+            "chars": 329,
+            "pct_of_prompt": 3.2
           },
           {
             "layer": "safety_floor",
@@ -63,11 +63,11 @@
             "reason": "empty"
           }
         ],
-        "unattributed_chars": 4841
+        "unattributed_chars": 4905
       },
       "market_analyst": {
         "phase": "ANALYSTS",
-        "chars": 9440,
+        "chars": 9498,
         "lines": 134,
         "layers": [
           {
@@ -82,14 +82,14 @@
             "found": true,
             "offset": 384,
             "chars": 1950,
-            "pct_of_prompt": 20.7
+            "pct_of_prompt": 20.5
           },
           {
             "layer": "mandate_overlay",
             "found": true,
             "offset": 2336,
             "chars": 1938,
-            "pct_of_prompt": 20.5
+            "pct_of_prompt": 20.4
           },
           {
             "layer": "user_overlay",
@@ -101,7 +101,7 @@
             "layer": "portfolio_snapshot",
             "found": true,
             "offset": 4276,
-            "chars": 335,
+            "chars": 329,
             "pct_of_prompt": 3.5
           },
           {
@@ -111,11 +111,11 @@
             "reason": "empty"
           }
         ],
-        "unattributed_chars": 4835
+        "unattributed_chars": 4899
       },
       "news_analyst": {
         "phase": "ANALYSTS",
-        "chars": 9692,
+        "chars": 9750,
         "lines": 126,
         "layers": [
           {
@@ -130,14 +130,14 @@
             "found": true,
             "offset": 384,
             "chars": 1919,
-            "pct_of_prompt": 19.8
+            "pct_of_prompt": 19.7
           },
           {
             "layer": "mandate_overlay",
             "found": true,
             "offset": 2305,
             "chars": 2223,
-            "pct_of_prompt": 22.9
+            "pct_of_prompt": 22.8
           },
           {
             "layer": "user_overlay",
@@ -149,8 +149,8 @@
             "layer": "portfolio_snapshot",
             "found": true,
             "offset": 4530,
-            "chars": 335,
-            "pct_of_prompt": 3.5
+            "chars": 329,
+            "pct_of_prompt": 3.4
           },
           {
             "layer": "safety_floor",
@@ -159,11 +159,11 @@
             "reason": "empty"
           }
         ],
-        "unattributed_chars": 4833
+        "unattributed_chars": 4897
       },
       "social_media_analyst": {
         "phase": "ANALYSTS",
-        "chars": 10513,
+        "chars": 10571,
         "lines": 125,
         "layers": [
           {
@@ -178,14 +178,14 @@
             "found": true,
             "offset": 384,
             "chars": 2468,
-            "pct_of_prompt": 23.5
+            "pct_of_prompt": 23.3
           },
           {
             "layer": "mandate_overlay",
             "found": true,
             "offset": 2854,
             "chars": 2487,
-            "pct_of_prompt": 23.7
+            "pct_of_prompt": 23.5
           },
           {
             "layer": "user_overlay",
@@ -197,8 +197,8 @@
             "layer": "portfolio_snapshot",
             "found": true,
             "offset": 5343,
-            "chars": 335,
-            "pct_of_prompt": 3.2
+            "chars": 329,
+            "pct_of_prompt": 3.1
           },
           {
             "layer": "safety_floor",
@@ -207,11 +207,11 @@
             "reason": "empty"
           }
         ],
-        "unattributed_chars": 4841
+        "unattributed_chars": 4905
       },
       "bull_researcher": {
         "phase": "RESEARCHERS",
-        "chars": 9251,
+        "chars": 9309,
         "lines": 132,
         "layers": [
           {
@@ -226,14 +226,14 @@
             "found": true,
             "offset": 384,
             "chars": 1641,
-            "pct_of_prompt": 17.7
+            "pct_of_prompt": 17.6
           },
           {
             "layer": "mandate_overlay",
             "found": true,
             "offset": 2027,
             "chars": 2095,
-            "pct_of_prompt": 22.6
+            "pct_of_prompt": 22.5
           },
           {
             "layer": "user_overlay",
@@ -245,8 +245,8 @@
             "layer": "portfolio_snapshot",
             "found": true,
             "offset": 4124,
-            "chars": 335,
-            "pct_of_prompt": 3.6
+            "chars": 329,
+            "pct_of_prompt": 3.5
           },
           {
             "layer": "safety_floor",
@@ -255,11 +255,11 @@
             "reason": "empty"
           }
         ],
-        "unattributed_chars": 4798
+        "unattributed_chars": 4862
       },
       "bear_researcher": {
         "phase": "RESEARCHERS",
-        "chars": 9143,
+        "chars": 9201,
         "lines": 129,
         "layers": [
           {
@@ -274,14 +274,14 @@
             "found": true,
             "offset": 384,
             "chars": 1646,
-            "pct_of_prompt": 18.0
+            "pct_of_prompt": 17.9
           },
           {
             "layer": "mandate_overlay",
             "found": true,
             "offset": 2032,
             "chars": 1976,
-            "pct_of_prompt": 21.6
+            "pct_of_prompt": 21.5
           },
           {
             "layer": "user_overlay",
@@ -293,8 +293,8 @@
             "layer": "portfolio_snapshot",
             "found": true,
             "offset": 4010,
-            "chars": 335,
-            "pct_of_prompt": 3.7
+            "chars": 329,
+            "pct_of_prompt": 3.6
           },
           {
             "layer": "safety_floor",
@@ -303,11 +303,11 @@
             "reason": "empty"
           }
         ],
-        "unattributed_chars": 4804
+        "unattributed_chars": 4868
       },
       "research_manager": {
         "phase": "SYNTHESIS",
-        "chars": 9047,
+        "chars": 9105,
         "lines": 127,
         "layers": [
           {
@@ -322,14 +322,14 @@
             "found": true,
             "offset": 384,
             "chars": 1431,
-            "pct_of_prompt": 15.8
+            "pct_of_prompt": 15.7
           },
           {
             "layer": "mandate_overlay",
             "found": true,
             "offset": 1817,
             "chars": 2088,
-            "pct_of_prompt": 23.1
+            "pct_of_prompt": 22.9
           },
           {
             "layer": "user_overlay",
@@ -341,8 +341,8 @@
             "layer": "portfolio_snapshot",
             "found": true,
             "offset": 3907,
-            "chars": 335,
-            "pct_of_prompt": 3.7
+            "chars": 329,
+            "pct_of_prompt": 3.6
           },
           {
             "layer": "safety_floor",
@@ -351,11 +351,11 @@
             "reason": "empty"
           }
         ],
-        "unattributed_chars": 4811
+        "unattributed_chars": 4875
       },
       "trader": {
         "phase": "EXECUTION",
-        "chars": 8894,
+        "chars": 8952,
         "lines": 135,
         "layers": [
           {
@@ -370,14 +370,14 @@
             "found": true,
             "offset": 384,
             "chars": 1476,
-            "pct_of_prompt": 16.6
+            "pct_of_prompt": 16.5
           },
           {
             "layer": "mandate_overlay",
             "found": true,
             "offset": 1862,
             "chars": 2128,
-            "pct_of_prompt": 23.9
+            "pct_of_prompt": 23.8
           },
           {
             "layer": "user_overlay",
@@ -389,8 +389,8 @@
             "layer": "portfolio_snapshot",
             "found": true,
             "offset": 3992,
-            "chars": 335,
-            "pct_of_prompt": 3.8
+            "chars": 329,
+            "pct_of_prompt": 3.7
           },
           {
             "layer": "safety_floor",
@@ -399,11 +399,11 @@
             "reason": "empty"
           }
         ],
-        "unattributed_chars": 4573
+        "unattributed_chars": 4637
       },
       "aggressive_debator": {
         "phase": "RISK",
-        "chars": 8892,
+        "chars": 8950,
         "lines": 124,
         "layers": [
           {
@@ -418,14 +418,14 @@
             "found": true,
             "offset": 384,
             "chars": 1386,
-            "pct_of_prompt": 15.6
+            "pct_of_prompt": 15.5
           },
           {
             "layer": "mandate_overlay",
             "found": true,
             "offset": 1772,
             "chars": 1996,
-            "pct_of_prompt": 22.4
+            "pct_of_prompt": 22.3
           },
           {
             "layer": "user_overlay",
@@ -437,8 +437,8 @@
             "layer": "portfolio_snapshot",
             "found": true,
             "offset": 3770,
-            "chars": 335,
-            "pct_of_prompt": 3.8
+            "chars": 329,
+            "pct_of_prompt": 3.7
           },
           {
             "layer": "safety_floor",
@@ -447,11 +447,11 @@
             "reason": "empty"
           }
         ],
-        "unattributed_chars": 4793
+        "unattributed_chars": 4857
       },
       "conservative_debator": {
         "phase": "RISK",
-        "chars": 8773,
+        "chars": 8831,
         "lines": 124,
         "layers": [
           {
@@ -459,21 +459,21 @@
             "found": true,
             "offset": 0,
             "chars": 382,
-            "pct_of_prompt": 4.4
+            "pct_of_prompt": 4.3
           },
           {
             "layer": "base_prompt",
             "found": true,
             "offset": 384,
             "chars": 1268,
-            "pct_of_prompt": 14.5
+            "pct_of_prompt": 14.4
           },
           {
             "layer": "mandate_overlay",
             "found": true,
             "offset": 1654,
             "chars": 1994,
-            "pct_of_prompt": 22.7
+            "pct_of_prompt": 22.6
           },
           {
             "layer": "user_overlay",
@@ -485,8 +485,8 @@
             "layer": "portfolio_snapshot",
             "found": true,
             "offset": 3650,
-            "chars": 335,
-            "pct_of_prompt": 3.8
+            "chars": 329,
+            "pct_of_prompt": 3.7
           },
           {
             "layer": "safety_floor",
@@ -495,11 +495,11 @@
             "reason": "empty"
           }
         ],
-        "unattributed_chars": 4794
+        "unattributed_chars": 4858
       },
       "neutral_debator": {
         "phase": "RISK",
-        "chars": 8792,
+        "chars": 8850,
         "lines": 125,
         "layers": [
           {
@@ -514,14 +514,14 @@
             "found": true,
             "offset": 384,
             "chars": 1189,
-            "pct_of_prompt": 13.5
+            "pct_of_prompt": 13.4
           },
           {
             "layer": "mandate_overlay",
             "found": true,
             "offset": 1575,
             "chars": 2094,
-            "pct_of_prompt": 23.8
+            "pct_of_prompt": 23.7
           },
           {
             "layer": "user_overlay",
@@ -533,8 +533,8 @@
             "layer": "portfolio_snapshot",
             "found": true,
             "offset": 3671,
-            "chars": 335,
-            "pct_of_prompt": 3.8
+            "chars": 329,
+            "pct_of_prompt": 3.7
           },
           {
             "layer": "safety_floor",
@@ -543,11 +543,11 @@
             "reason": "empty"
           }
         ],
-        "unattributed_chars": 4792
+        "unattributed_chars": 4856
       },
       "portfolio_manager": {
         "phase": "VERDICT",
-        "chars": 12759,
+        "chars": 12795,
         "lines": 202,
         "layers": [
           {
@@ -562,7 +562,7 @@
             "found": true,
             "offset": 384,
             "chars": 2332,
-            "pct_of_prompt": 18.3
+            "pct_of_prompt": 18.2
           },
           {
             "layer": "mandate_overlay",
@@ -581,18 +581,18 @@
             "layer": "portfolio_snapshot",
             "found": true,
             "offset": 5301,
-            "chars": 335,
+            "chars": 329,
             "pct_of_prompt": 2.6
           },
           {
             "layer": "safety_floor",
             "found": true,
-            "offset": 5638,
+            "offset": 5632,
             "chars": 1401,
-            "pct_of_prompt": 11.0
+            "pct_of_prompt": 10.9
           }
         ],
-        "unattributed_chars": 5728
+        "unattributed_chars": 5770
       }
     },
     "one_on_one": {
@@ -614,11 +614,11 @@
         "live_blocks_empty": []
       },
       "news_analyst": {
-        "chars": 5907,
+        "chars": 5971,
         "lines": 91,
         "live_blocks": {
           "live_data": 860,
-          "news_context": 515
+          "news_context": 579
         },
         "live_blocks_empty": []
       },

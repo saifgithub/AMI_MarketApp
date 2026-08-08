@@ -69,13 +69,13 @@ You argue for capital preservation. Given this mandate:
 
 ─── LIVE MARKET DATA — AAPL — as of 2026-08-08 (UTC) ───
 Price: $313.33
-P/E: 35.9 trailing (measured — last 12 months of reported earnings) · 32.9 forward (CONSENSUS ESTIMATE of the next 12 months — analysts' forecast, not a measurement). Say which basis you mean whenever you cite a P/E.
+P/E: 36.0 trailing (measured — last 12 months of reported earnings) · 32.9 forward (CONSENSUS ESTIMATE of the next 12 months — analysts' forecast, not a measurement). Say which basis you mean whenever you cite a P/E.
 TTM revenue growth: 16%
 Profit margin: 28%
 Net debt $21945M
 52-week range: $223.78–$344.57
 Valuation: P/S 9.8x, EV/EBITDA 27.4x, PEG 2.46 (trailing basis), FCF yield 2.4%
-Dividend yield: 0.35%
+Dividend yield: 0.34%
 Sector/industry: Technology / Consumer Electronics
 Analyst consensus: buy, target $322.82 (Street view, not company guidance)
 Next earnings (LIVE): 2026-10-29 (Q4) — in 82 days, consensus EPS est. $1.97643
