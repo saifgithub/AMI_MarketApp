@@ -689,10 +689,13 @@ _SCHD_TRADER_REPLY = (
 )
 
 
-def _run_schd_capturing_prompts():
+def _run_schd_capturing_prompts(risk_score: int = 3):
     """Run a live Room on SCHD where the Trader narrates R:R 2.5:1 on levels that
     imply 0.2:1, capturing every downstream agent's system prompt. Returns
-    (runner, run_id, captured_prompts)."""
+    (runner, run_id, captured_prompts).
+
+    `risk_score` varies the mandate's single-name cap (3 → 3.0%, 5 → 4.5%) so a test
+    can prove the runner READS that cap rather than hardcoding one value (DEF235)."""
     captured: list[str] = []
 
     class _CaptureGateway(_FakeGateway):
@@ -712,7 +715,7 @@ def _run_schd_capturing_prompts():
         "portfolio_manager": '{"action": "PASS", "narration": "Asymmetry too thin — hold."}',
     })
     runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
-    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": risk_score})
     events = _collect(runner.run(
         user_id=uuid4(), ticker="SCHD", mandate=mandate,
         char_delay_min=0.0, char_delay_max=0.0,
@@ -765,20 +768,85 @@ def test_def095_verify_and_annotate_geometry_unit():
     triple isn't a level claim and is untouched (no false correction on debators)."""
     from app.services.room_runner import _verify_and_annotate_geometry
 
-    annotated, sig = _verify_and_annotate_geometry(_SCHD_TRADER_REPLY)
+    annotated, sig = _verify_and_annotate_geometry(_SCHD_TRADER_REPLY, size_pct=3.0)
     assert sig is not None and sig["implied_rr"] == 0.2 and sig["stated_rr"] == 2.5
     assert "0.2:1" in annotated and "2.5:1" not in annotated and "AMI verified" in annotated
-    # drawdown contribution rendered from the Trader's own size/entry/stop (10% × 9.6%).
-    assert "drawdown contribution" in annotated
+    # DEF235: the drawdown contribution is computed from the MANDATE's cap (passed in
+    # by the run), never from a size scraped out of the prose. Assert the value, not
+    # just the label — a substring assertion is what let 11.32 pt ship for 0.18 pt.
+    # 3.0% size × 9.618% stop distance (32.75 → 29.60) / 100 = 0.2885 → "0.29 pt".
+    assert "drawdown contribution ≈ 0.29 pt at the mandate's 3.0% single-name cap" in annotated
+
+    # No size supplied → no drawdown figure at all. The honest degradation: without a
+    # mandate cap there is no such number, and recovering one from the text is DEF235.
+    _ann_nosize, _ = _verify_and_annotate_geometry(_SCHD_TRADER_REPLY)
+    assert "AMI verified" in _ann_nosize and "drawdown contribution" not in _ann_nosize
 
     # Coherent: 100/94/113 imply ~2.2:1; a narrated 2:1 is within tolerance → no flag.
     _ann2, sig2 = _verify_and_annotate_geometry(
-        "Entry: $100\nTarget: $113\nStop: $94\nSize: 3%\nR:R: 2:1"
+        "Entry: $100\nTarget: $113\nStop: $94\nSize: 3%\nR:R: 2:1", size_pct=3.0
     )
     assert sig2 is None
 
     # No full level triple → not a level claim → passed through untouched.
     assert _verify_and_annotate_geometry("Push size to 4.5%.") == ("Push size to 4.5%.", None)
+
+
+def test_def235_size_is_never_scraped_from_prose():
+    """DEF235 regression, verbatim from live Alpha. The ANET Neutral Debator wrote
+    *"a MEDIUM size entry at $188.62"* — the old `_LEVEL_PATTERNS["size"]` matched
+    `\\bsize\\b` then the next number within 15 digit-free chars, which was the ENTRY.
+    `drawdown_contribution(188.62, 188.62, 177.30)` = 11.32 pt shipped to the user
+    under "These are the figures of record", against a true 0.18 pt — 63× too large,
+    on a 30 pt portfolio cap.
+
+    RED before the fix: `"11.32 pt"` was in the annotation.
+    """
+    from app.services.room_runner import _LEVEL_PATTERNS, _verify_and_annotate_geometry
+
+    anet = (
+        "a **MEDIUM** size entry at **$188.62** with a tight **6.0%** stop at "
+        "**$177.30**, target **$238.63**"
+    )
+    annotated, _ = _verify_and_annotate_geometry(anet, size_pct=3.0)
+    assert "11.32" not in annotated, "the entry price was read as a position size"
+    assert "drawdown contribution ≈ 0.18 pt at the mandate's 3.0% single-name cap" in annotated
+
+    # The pattern that made it possible is gone, not merely unused — a future caller
+    # cannot reintroduce the misparse by reaching for it.
+    assert "size" not in _LEVEL_PATTERNS
+
+
+def test_def235_call_site_passes_the_mandate_cap_end_to_end():
+    """DEF235, the other half: the unit above proves the FUNCTION is safe, this proves
+    the RUNNER actually hands it the mandate's cap. Without this, `size_pct=None` at
+    the call site silently drops the drawdown figure from every annotation and every
+    unit test still passes.
+
+    The SCHD Trader narrates *"Size: 10% of portfolio"* against a risk_score-3 mandate
+    whose single-name cap is 3.0%. Old behaviour reported the drawdown of a position
+    the safety floor would never have let through (10% × 9.618% = 0.96 pt); the
+    enforced size is 3.0% → 0.29 pt. Shown == enforced.
+    """
+    runner, run_id, _captured = _run_schd_capturing_prompts()
+    trader_msg = next(
+        m for m in runner.get_run(run_id).transcript if m.agent_id == AgentId.TRADER.value
+    )
+    assert "drawdown contribution ≈ 0.29 pt at the mandate's 3.0% single-name cap" in (
+        trader_msg.content
+    )
+    assert "0.96" not in trader_msg.content, "narrated 10% size was used instead of the cap"
+
+    # Same Trader text, a different mandate: risk_score 5 resolves to a 4.5% cap, so
+    # the figure MUST move (4.5% × 9.618% = 0.43 pt). Without this second case a
+    # hardcoded `size_pct=3.0` at the call site passes every other assertion here.
+    runner5, run5, _ = _run_schd_capturing_prompts(risk_score=5)
+    trader5 = next(
+        m for m in runner5.get_run(run5).transcript if m.agent_id == AgentId.TRADER.value
+    )
+    assert "drawdown contribution ≈ 0.43 pt at the mandate's 4.5% single-name cap" in (
+        trader5.content
+    )
 
 
 def test_profile_falls_back_to_synthetic_when_yfinance_fails(monkeypatch):

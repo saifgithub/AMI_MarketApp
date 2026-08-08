@@ -1116,34 +1116,42 @@ def _pm_rr_coherence_signal(
 # word (so "entering"/"below entry)" don't false-match) and the price must follow
 # within a short, digit-free gap so a distant number isn't captured.
 #
-# CR144 — WHAT STRUCTURED FIELD COULD THIS HAVE READ INSTEAD? Recorded as an
-# open question, not an answer, because **DEF235 is open and owned elsewhere**
-# (the CR143 track filed it; its fix direction is in its row). Stating the
-# question here is the convention's requirement; answering it is that defect's
-# job, and this comment must not be mistaken for the fix.
+# CR144 — WHAT STRUCTURED FIELD COULD THIS HAVE READ INSTEAD? For `size`, the
+# answer was "one that already existed", and DEF235 is the bill for not asking.
 #
-# The question is sharp for this pattern. `ctx.trader_entry/stop/target` already
-# exist as floats on the run, and `_risk_tier_size_ceiling(mandate)` already
-# holds the size cap — so there IS a structured answer for at least the size
-# label, and the parser is reading prose to recover a number the run computed.
-# What it costs: `_LEVEL_PATTERNS["size"]` matches `\bsize\b` then any number in
-# a 15-char digit-free gap, so *"a MEDIUM size entry at $188.62"* yields a size
-# of 188.62, `drawdown_contribution` was fed it, and AMI published a figure 63×
-# too large under the words "These are the figures of record" (DEF235). A hand
-# read of the epoch found 7 of 11 size matches wrong.
+# There used to be a fourth pattern here:
 #
-# And the deeper reason, also DEF235's: this pattern was written against
-# `trader.md`'s ticket block, where each label sits alone on its own line inside
-# a code fence and collision is impossible — but `_PROSE_FORMAT` then tells the
-# same agent "no headings, no tables, no code fences". **The parser depends on a
-# format a later prompt layer forbids** (69% of Trader turns state levels inline
-# in running prose). That is what "why did the field lose?" is supposed to
-# surface before the parser is written, not eighteen months after.
+#     "size": r"\bsize\b[^\n$0-9]{0,15}\$?\s*(\d+(?:\.\d+)?)\s*%?"
+#
+# `\bsize\b` then any number within a 15-char digit-free gap. In *"a MEDIUM size
+# entry at $188.62"* the very next words are the entry, so `size` and `entry`
+# both returned 188.62; `drawdown_contribution` was handed a share price where a
+# percentage belongs and AMI published 11.32 pt against a true 0.18 pt — 63×
+# too large, under the words "These are the figures of record". A hand read of
+# the epoch found 7 of 11 size matches wrong (stop distances, upside
+# percentages, raw prices). It is gone: `size` is now passed in from
+# `ctx.trader_size_pct`, which `_risk_tier_size_ceiling(mandate)` sets once per
+# run from the mandate's own cap — the SAME number the safety floor clamps to
+# and the Trader's prompt narrates, so shown == enforced == annotated.
+#
+# The three that remain are irreducibly prose: entry/stop/target are the agent's
+# OWN proposal, and there is no structured field carrying what THIS turn claimed
+# (`ctx.trader_*` holds the Trader's, not the speaker's). They keep the label
+# anchor — a whole word, price within a short digit-free gap — and, unlike
+# `size`, a mis-parse cannot silently rescale a figure by 63×: the triple has to
+# form a valid long setup before anything is rendered at all.
+#
+# The deeper cause of DEF235, which removing one pattern does NOT fix: this
+# family was written against `trader.md`'s ticket block, where each label sits
+# alone on its own line inside a code fence and collision is impossible — but
+# `_PROSE_FORMAT` then tells the same agent "no headings, no tables, no code
+# fences". **The parser depends on a format a later prompt layer forbids** (69%
+# of Trader turns state levels inline in running prose). That conflict is
+# DEF236's, and it is still open.
 _LEVEL_PATTERNS: dict[str, re.Pattern[str]] = {
     "entry": re.compile(r"\bentry\b[^\n$0-9]{0,15}\$?\s*(\d+(?:\.\d+)?)", re.IGNORECASE),
     "stop": re.compile(r"\bstop(?:[\s-]*loss)?\b[^\n$0-9]{0,15}\$?\s*(\d+(?:\.\d+)?)", re.IGNORECASE),
     "target": re.compile(r"\btarget\b[^\n$0-9]{0,15}\$?\s*(\d+(?:\.\d+)?)", re.IGNORECASE),
-    "size": re.compile(r"\bsize\b[^\n$0-9]{0,15}\$?\s*(\d+(?:\.\d+)?)\s*%?", re.IGNORECASE),
 }
 
 # The keyword-then-ratio span of a narrated R:R, split so the ratio can be
@@ -1206,9 +1214,16 @@ def _annotate_rr_against_levels(
     asym = trade_asymmetry(entry, stop, target)
     if asym is not None:
         parts.append(f"{asym.upside_pct:.1f}% upside vs {asym.downside_pct:.1f}% downside")
+    # DEF235: `size` is the mandate's own single-name cap, passed in from the run —
+    # never read out of the prose. Say so in the annotation: entry/stop/target are
+    # the agent's stated levels, the size is not, and a figure of record that hides
+    # where its inputs came from is how 11.32 pt shipped for a true 0.18 pt.
     dd = drawdown_contribution(size, entry, stop) if size is not None else None
     if dd is not None:
-        parts.append(f"drawdown contribution ≈ {dd.contribution_pts:.2f} pt")
+        parts.append(
+            f"drawdown contribution ≈ {dd.contribution_pts:.2f} pt "
+            f"at the mandate's {size:.1f}% single-name cap"
+        )
     tail = (
         "the proposal stated no R:R, so AMI rendered it"
         if stated is None
@@ -1833,12 +1848,20 @@ def _mark_if_truncated(
     return text + _TRUNCATION_MARK
 
 
-def _verify_and_annotate_geometry(text: str) -> tuple[str, dict[str, Any] | None]:
+def _verify_and_annotate_geometry(
+    text: str, *, size_pct: float | None = None
+) -> tuple[str, dict[str, Any] | None]:
     """Verify a level-proposing agent's OWN narrated derived figures against AMI's
     trading_math (DEF095). An agent has "proposed levels" only when it states a full
     long-setup triple (entry + stop + target); anything less isn't a level claim and
     passes through untouched. Generalises the PM-only coherence check to any agent —
-    principally the Trader, whose narrated ratio drives the whole downstream debate."""
+    principally the Trader, whose narrated ratio drives the whole downstream debate.
+
+    `size_pct` is the run's mandate cap (`ctx.trader_size_pct`), NOT parsed from the
+    text — DEF235. Callers that omit it get the R:R and asymmetry but no drawdown
+    contribution, which is the honest degradation: without a size there is no such
+    figure, and inventing one out of the prose is the defect.
+    """
     if not text:
         return text, None
     entry = _match_level(text, "entry")
@@ -1846,8 +1869,7 @@ def _verify_and_annotate_geometry(text: str) -> tuple[str, dict[str, Any] | None
     target = _match_level(text, "target")
     if entry is None or stop is None or target is None:
         return text, None
-    size = _match_level(text, "size")
-    return _annotate_rr_against_levels(text, entry, stop, target, size)
+    return _annotate_rr_against_levels(text, entry, stop, target, size_pct)
 
 
 # CR098 Amendment 2 — fixed, ticker-slot-only PM copy for a Market-withheld
@@ -3466,7 +3488,7 @@ async def _compute_agent_text(
     # downstream agent read AMI's figure, not the narration. Only a full level triple
     # triggers it; all other agents pass through untouched. Flag-only — never a veto
     # (DEF059 — the safety floor stays the sole vetoer).
-    text, geom_sig = _verify_and_annotate_geometry(text)
+    text, geom_sig = _verify_and_annotate_geometry(text, size_pct=ctx.trader_size_pct)
     return text, geom_sig, envelope
 
 
