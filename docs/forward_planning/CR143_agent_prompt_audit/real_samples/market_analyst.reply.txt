@@ -1,0 +1,7 @@
+[STANCE: neutral | CONVICTION: medium | HEADLINE: RSI 49 at $494.31]
+
+The daily chart shows **RSI** at **49**, sitting in the middle of the **424.03–584.73** range, indicating no immediate momentum or trend confirmation.
+
+*   Price is **trading** within the recent range with volume **in-line with 20-day average**, suggesting a lack of institutional conviction at this moment.
+*   The 52-week high of **584.73** remains the key resistance, while **424.03** provides the floor for mean reversion plays.
+*   With no clear breakout or breakdown signal, the setup is neutral; waiting for a daily close above resistance or below support is required.

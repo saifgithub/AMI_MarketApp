@@ -1,0 +1,18 @@
+[STANCE: neutral | CONVICTION: medium | HEADLINE: Symmetric standoff at $494.31]
+
+Wait. The Research Manager’s synthesis correctly identifies that the current **$494.31** reference price sits exactly halfway between the **$424.03** support floor and the **$608.23** consensus target, creating a **0.00:1.00** or perfectly symmetric risk-reward profile that offers no edge for a **long_horizon** mandate.
+
+*   Initiating a new **10.0%** position now violates the discipline of waiting for a breakout above **$584.73** or a pullback to the lower range, as the **RSI 49** and in-line volume signal neither momentum nor distribution.
+*   The **126.4** P/E and **88 days** until Q4 earnings on **2026-11-03** introduce excessive binary risk given the **EV/EBITDA 82.6x** valuation, where any growth deceleration from **50%** TTM revenue growth could trigger the violent multiple compression the Bear warns of.
+*   With NVDA already occupying **9.4%** of the portfolio and hitting the **10.0%** single-name cap, adding AMD at this midpoint merely increases sector concentration in Semiconductors without improving the portfolio's risk-adjusted profile.
+
+Instrument:     AMD
+Side:           WAIT
+Size:           0% of portfolio
+Entry:          N/A
+Target:         N/A
+Stop:           N/A
+Time horizon:   Until break of $584.73 or $424.03
+R:R:            N/A
+
+Rationale: The trade lacks a directional catalyst; capital is preserved by avoiding the symmetric risk at the current midpoint. Execute only upon confirmation of a trend break beyond the established **$424.03–$584.73** range to secure a favorable risk-reward asymmetry.

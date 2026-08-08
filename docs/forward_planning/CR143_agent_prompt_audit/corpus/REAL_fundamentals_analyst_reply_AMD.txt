@@ -1,0 +1,7 @@
+[STANCE: for | CONVICTION: medium | HEADLINE: 126.4 P/E & 50% Growth]
+
+AMD trades at a **126.4** P/E with a **P/S** of **19.5x**, pricing in significant near-term execution risk against a backdrop of **50%** TTM revenue growth and **16%** profit margin.
+
+*   Balance sheet strength is evident with **$8,835M** in net cash, providing ample runway for continued R&D and acquisitions like the recent Taalas deal, which underscores an aggressive capital allocation strategy despite the lack of buyback visibility.
+*   Valuation multiples including an **EV/EBITDA** of **82.6x** and **FCF yield** of **1.1%** suggest a premium valuation that requires sustained high growth to justify, whereas the **PEG** ratio of **1.12** offers a more balanced view of growth-at-a-reasonable-price dynamics.
+*   With a **52-week range** of **$149.22–$584.73** and current price near the upper end at **$494.31**, the stock is testing momentum against a **strong buy** consensus target of **$608.23**, but technical neutrality via a **49** RSI and in-line volume suggests the market is waiting for the next catalyst on **2026-11-03** where consensus EPS estimates sit at **$1.92529**.

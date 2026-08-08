@@ -1,0 +1,4 @@
+[STANCE: neutral | CONVICTION: medium | HEADLINE: 73 buzz]
+Social sentiment shows a **73/100 buzz score** with a **32%** bullish vs **19%** bearish split, indicating strong but fractured retail interest.
+Rising mention volume over **7 days** in **r/wallstreetbets** suggests potential coordination or meme-driven volatility.
+High valuation metrics (**P/E 126.4**) combined with extreme retail enthusiasm signal reversion risk for long-term holders.

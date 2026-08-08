@@ -1,0 +1,7 @@
+Splitting the difference, I'd propose a conditional **5.0%** position with a hard stop at **$464.65** (-6.0%), sized to contribute only **0.30%** to the portfolio drawdown cap.
+
+[STANCE: for | CONVICTION: medium | HEADLINE: 5.0% entry at $494.31]
+
+*   **Agreed** with Aggressive on the **50%** TTM revenue growth and **$8,835M** net cash providing a fundamental floor that supports a long-term view, but **agreed** with Conservative that the **126.4** P/E and **82.6x** EV/EBITDA require a tight risk control.
+*   The consensus target of **$608.23** offers **22.9%** upside, but waiting for a confirmed break of **$584.73** or **$424.03** is too binary given the **88 days** to earnings; instead, enter now at **$494.31** to capture the **32%** bullish Reddit sentiment while limiting downside exposure.
+*   This **5.0%** size respects the **10.0%** single-name cap and keeps total open risk within the **60.0%** limit, hedging against the **14.2%** drawdown risk the Bear highlights without fully sitting out the **$608.23** target.
