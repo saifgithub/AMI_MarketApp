@@ -660,6 +660,18 @@ def _profile_for_ticker(
 # ── Verdict assembly ──────────────────────────────────────────────────────
 
 
+# DEF241 — which run-context size each RISK debator is arguing for. Only the three
+# debators have a size of their own; every other agent gets `None` and sees the
+# reference-position figure alone, unchanged. A table rather than an if-chain so a
+# fourth voice added later is a visibly missing key rather than a silent fall-through
+# to "no figure" — which is exactly the shape DEF238 cost us on the sector line.
+_DEBATOR_SIZE_ATTR: dict[AgentId, str] = {
+    AgentId.AGGRESSIVE_DEBATOR: "aggressive_size_pct",
+    AgentId.CONSERVATIVE_DEBATOR: "conservative_size_pct",
+    AgentId.NEUTRAL_DEBATOR: "neutral_size_pct",
+}
+
+
 def _risk_tier_size_ceiling(mandate: Mandate) -> float:
     """Max position size (%) for a mandate's risk tier — a ceiling the PM's
     LLM-decided size gets clamped to (DEF056), and the default cosmetic size
@@ -3540,6 +3552,16 @@ async def _compute_agent_text(
             parallel_phase=parallel_phase,
             # CR026: the PM sees the real sector allocation it gatekeeps against.
             sector_weights=ctx.sector_weights,
+            # DEF241: the size THIS debator's role argues for, so it is handed the
+            # drawdown contribution of its own position instead of deriving it.
+            # `risk_debator_sizes` already computed these once per run for the
+            # scripted templates; until now they never reached an LLM prompt, so
+            # every debator was told to argue a size it was never given and then
+            # asked to quantify the result.
+            agent_size_pct=(
+                getattr(ctx, _DEBATOR_SIZE_ATTR[agent_id])
+                if agent_id in _DEBATOR_SIZE_ATTR else None
+            ),
         )
         # DEF125: the provider reports its terminal stop reason here.
         stream_meta: dict[str, Any] = {}

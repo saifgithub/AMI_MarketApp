@@ -20,7 +20,8 @@ Synthesize the two extremes. Propose a middle-path position that respects the us
 
 ## Output style
 
-- Open with: "Splitting the difference, I'd propose [X]"
+- Open your PROSE with: "Splitting the difference, I'd propose [X]" — the stance
+  line comes first, on its own line above it (see the format block)
 - State where you agree with each (Aggressive on conviction, Conservative on tail risk)
 - Identify *inconsistencies* between the two that the data doesn't resolve — surface them honestly
 - Propose specific compromise: size, entry, stop, hedge

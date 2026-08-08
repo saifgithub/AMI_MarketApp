@@ -277,7 +277,11 @@ _STANCE_FORMAT = (
 )
 
 
-def _drawdown_snapshot_line(mandate: Mandate, trade_proposal: dict[str, Any] | None) -> str:
+def _drawdown_snapshot_line(
+    mandate: Mandate,
+    trade_proposal: dict[str, Any] | None,
+    agent_size_pct: float | None = None,
+) -> str:
     """The mandate-snapshot drawdown line (DEF066).
 
     Always states that the cap is portfolio-level, not a per-trade stop budget.
@@ -315,6 +319,33 @@ def _drawdown_snapshot_line(mandate: Mandate, trade_proposal: dict[str, Any] | N
             f"cap (~{pct_of_cap:.0f}% of it). Size the actual trade against THIS "
             f"figure, not the raw stop distance."
         )
+        # DEF241 — the reference figure above is for the risk-tier CEILING, and a
+        # debator argues for its OWN size, so it was still doing the arithmetic
+        # itself. Measured over the epoch: the Conservative states a numeric
+        # cap-consumption figure in 9 of 18 turns and 4 are WRONG, one of them
+        # reproducing DEF066's exact error with DEF066's own warning rendered in
+        # the same prompt; the Bull put 33 pt where the truth was 48.3 of a 50 pt
+        # cap and closed with "stays within the safety floor". Nothing checks any
+        # of it — `_verify_and_annotate_geometry` needs a full level triple and
+        # fires 0/18 on these agents. So hand each one the figure for the size it
+        # is actually arguing, and say the number is AMI's.
+        #
+        # This is P5 ("an LLM asked to compute a number it presents as fact") and
+        # the THIRD appearance of DEF066: DEF066 was the formula, DEF235 was the
+        # parser feeding it a wrong input, this is the agent doing it in prose.
+        # Saiful's ruling, 2026-08-08: "File a DEF, fix in code."
+        if agent_size_pct is not None and agent_size_pct > 0:
+            own = drawdown_contribution(agent_size_pct, entry, stop)
+            if own and abs(agent_size_pct - size) > 0.01:
+                own_pct_of_cap = own.contribution_pts / cap * 100 if cap else 0
+                line += (
+                    f"\n  YOUR position — the size YOUR role argues for "
+                    f"({agent_size_pct:.1f}%) at that same stop → portfolio-drawdown "
+                    f"contribution ≈ {own.contribution_pts:.2f} pt of the {cap:.0f} pt "
+                    f"cap (~{own_pct_of_cap:.0f}% of it). AMI computed this. Quote it; "
+                    f"do not recompute it, and do not compare the raw stop distance "
+                    f"against the cap."
+                )
     return line
 
 
@@ -332,6 +363,7 @@ def build_room_messages(
     halal_universe: Any = None,
     parallel_phase: bool = False,
     sector_weights: dict[str, float] | None = None,
+    agent_size_pct: float | None = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [user_message]) for one agent's Room turn.
 
@@ -398,7 +430,12 @@ def build_room_messages(
     # VERDICT) get the derived contribution figure; earlier phases have no
     # proposal yet, so they see the portfolio-cap clarification only.
     proposal = trade_proposal if phase in ("RISK", "VERDICT") else None
-    drawdown_line = _drawdown_snapshot_line(mandate, proposal)
+    # DEF241: `agent_size_pct` is the size THIS agent's role argues for, supplied
+    # by the caller from `risk_debator_sizes` — never parsed back out of prose,
+    # which is the surface DEF235 closed.
+    drawdown_line = _drawdown_snapshot_line(
+        mandate, proposal, agent_size_pct if proposal else None
+    )
 
     # CR055: long_only, said plainly. The bare compliance flag was misread by a Trader
     # as forbidding a second entry in a name already held — long_only only bars shorts.
