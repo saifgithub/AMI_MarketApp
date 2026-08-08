@@ -12,7 +12,8 @@ Generated 2026-08-08 at `3f4d33d2`. Corpus artifacts in [`assembled/`](assembled
 ## 1a. The assembled corpus — and the proof it is faithful
 
 `backend/scripts/dump_assembled_prompts.py` calls the production builders and writes what they
-return. 50 prompts across 4 surfaces:
+return. **38 prompts** — 13 agents across the surfaces each one actually has (the Concierge has no
+Room or 1-on-1 surface, which is why those two are 12 and not 13):
 
 | Surface | Prompts | Total chars | Largest |
 |---|---:|---:|---|
@@ -20,6 +21,7 @@ return. 50 prompts across 4 surfaces:
 | 1-on-1 | 12 | 64,339 | portfolio_manager, 7,564 |
 | Concierge | 1 | 60,415 | — (348-lesson catalogue) |
 | Brief Your Agent | 13 | 39,162 | concierge, 4,076 |
+| **Total** | **38** | **279,336** | |
 
 **Faithfulness — the CR143 acceptance gate — PASSES.** `--verify` diffs the reconstruction against
 the 5 most recent real `room_pm` prompts in melehost's `llm_audit`:
