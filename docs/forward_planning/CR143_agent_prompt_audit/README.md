@@ -55,13 +55,24 @@ KIMI_API_KEY=$(ssh melehost "grep '^KIMI_API_KEY=' ~/ami_trade/.env | cut -d= -f
 .venv/bin/python -m scripts.prompt_quality_sweep --corpus <dir> --out quality.json
 ```
 
-### The raw corpus is deliberately NOT committed
+### The raw corpus IS committed, under `corpus/`
 
-The quality sweep runs over real Alpha traffic, and **all 216 of those prompts embed a real user's
-holdings block** — cash, positions, unrealised P/L. That does not belong in a repo that pushes to
-GitHub. Only the computed metrics are stored here.
+Saved in full — Saiful's call, 2026-08-08: *"There is no real user data. we are in alpha still. save
+it all otherwise it will be a waste."* Alpha traffic is his own test and benchmark users, so the
+holdings blocks embedded in these prompts are synthetic portfolios, not anyone's finances. Revisit
+this before Beta, when the same query would return actual customers.
 
-To regenerate it into a scratch directory (never into the repo):
+| File | What it is |
+|---|---|
+| `corpus/llm_audit_2026-08-07-epoch.json` | 216 agent turns — the full prompt each one got and the reply it gave. 3.4 MB |
+| `corpus/room_runs_2026-08-07-epoch.json` | 18 convenes — verdict, transcript, stances, status |
+| `corpus/sample_real_alpha_pm_prompt.txt` | One untouched PM prompt straight out of `llm_audit`, used to prove the reconstruction faithful |
+| `corpus/kimi_first_pass_pm_review.md` | Kimi's very first review — the one that caught four bugs in the dump fixture |
+
+This is what makes every number in `PHASE3B_quality.md` re-checkable by hand rather than taken on
+trust, which is the whole point of P16.
+
+To regenerate it (e.g. for a later epoch):
 
 ```bash
 # corpus.json — one row per agent turn, with the prompt it got and the reply it gave
