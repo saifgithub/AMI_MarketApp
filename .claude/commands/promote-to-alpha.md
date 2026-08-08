@@ -39,11 +39,36 @@ if [ -n "$HOLDS" ]; then
   exit 1
 fi
 
+# AUDIT-LANE GATE (AT:R66) — runs SECOND, before the suite, because a green
+# suite says nothing about whether an auditor has already told you this code is
+# broken. `inbox` exits 1 on a verdict awaiting integration or a submission of
+# yours that never reached the auditor. Fails CLOSED if the script is missing.
+if [ -x orchestration/dispatch/dispatch.sh ]; then
+  if ! orchestration/dispatch/dispatch.sh inbox; then
+    echo "AUDIT LANE NOT CLEAR — aborting. Read the verdict above before promoting."
+    exit 1
+  fi
+else
+  echo "dispatch.sh missing or not executable — cannot verify the audit lane. Aborting."
+  exit 1
+fi
+
 git status --short
 git log --oneline -1
 pytest backend/tests/unit/ -q
 flutter analyze --no-fatal-infos
 ```
+
+**The audit-lane gate is not advisory either, and it exists because of a
+specific failure (AT:R66, 2026-08-08).** A DEF231 round-2 audit returned a
+MAJOR **13 minutes** after the submission was pushed. The architect never read
+it — promoted straight off the submission, discovered the *round-1* verdict by
+accident during this preflight, and left a reproducible false annotation on the
+live Verdict Board for **7 hours**. Every input to that mistake was available:
+the verdict was committed, it was on origin, and `dispatch.sh inbox` would have
+exited non-zero. Nothing mechanical checked. Now something does. If it fires,
+read the verdict — an AWAITING_FIXES on the code you are about to ship is
+exactly the case where "the tests are green" is the wrong question.
 
 **The hold gate is not advisory.** `infra/PROMOTION_HOLD.md` exists for the case where `main` is
 green, audited, and still must not ship — typically a backend change whose *client* half is on `main`

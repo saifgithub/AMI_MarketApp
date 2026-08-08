@@ -1289,8 +1289,26 @@ _LEVEL_GAP = (
 # corpus check that should have preceded the original fix, not followed it.
 _LEVEL_NUMBER = r"(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
 
+# Round-4 audit MINOR: most verb phrases END in their own preposition
+# ("break above", "pull back to"). Handing those a second, independent
+# preposition slot lets two compose — `break above near the recent low of $X`
+# — which is not grammatical English but did fire. The two never legitimately
+# compose, so a verb that already carries its preposition does not get the slot.
+_VERB_ENDS_IN_PREPOSITION = re.compile(
+    r"(?:to|toward|towards|above|below|over|under|near|around|at)\)?$"
+)
+_LEVEL_GAP_NO_PREP = rf"(?:[\s,–—-]+{_LEVEL_NOUN}\b)*[\s,]*[*_(]*"
+
 _DIRECTIONAL_CLAIM_RES: tuple[tuple[re.Pattern[str], str], ...] = tuple(
-    (re.compile(rf"\b(?:{verb})\b{_LEVEL_GAP}\$\s*{_LEVEL_NUMBER}", re.IGNORECASE), side)
+    (
+        re.compile(
+            rf"\b(?:{verb})\b"
+            rf"{_LEVEL_GAP_NO_PREP if _VERB_ENDS_IN_PREPOSITION.search(verb) else _LEVEL_GAP}"
+            rf"\$\s*{_LEVEL_NUMBER}",
+            re.IGNORECASE,
+        ),
+        side,
+    )
     for verb, side in _DIRECTIONAL_CLAIMS
 )
 

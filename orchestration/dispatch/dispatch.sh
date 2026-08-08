@@ -286,6 +286,40 @@ orphan_undelivered() {  # echoes "ITEM STATE" per undelivered orphan; nothing fo
   done
 }
 
+# The mirror of the above, and the one it left open (AT:R66, 2026-08-08).
+#
+# orphan_undelivered() asks "did MY submission reach the auditor?". Nothing asked the converse —
+# "did the auditor answer, and have I acted on it?" — for a self-executed lane. Measured cost: a
+# DEF231 round-2 verdict returned a MAJOR thirteen minutes after the submission was pushed; the
+# architect promoted off the submission without reading it and left a reproducible false annotation
+# on the live Verdict Board for seven hours. `inbox` was run and said "clear", because this lane has
+# no *.assign.md and so never entered the state machine that would have called it AUDIT_RETURNED.
+#
+# Scoped to AWAITING_FIXES at the CURRENT submitted round, which is the only state that means
+# "somebody is waiting on you and nothing else will move until you answer". Deliberately NOT
+# COMPLETE: a passed lane is finished business, and surfacing it here would resurrect every
+# long-closed self-executed item and desensitise the whole board — the concern the comment above
+# already names. A verdict at an OLDER round has been superseded by a newer submission and is not
+# owed. A verdict at a NEWER round is BAD_ROUND, which nobody can act on and which must be loud.
+orphan_unanswered_verdict() {  # echoes "ITEM STATE" per self-executed lane awaiting the architect
+  for f in "$AUDIT_DIR"/*.architect.md; do
+    [ -f "$f" ] || continue
+    it=$(basename "$f" .architect.md)
+    [ -f "$LANE_DIR/$it.assign.md" ] && continue
+    u="$AUDIT_DIR/$it.auditor.md"
+    [ -f "$u" ] || continue
+    sr=$(last_round "$f" 'SUBMITTED: *round *[0-9]+'); sr=${sr:-0}
+    v_kw=$(last_kw "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES)')
+    v_round=$(last_round "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES) *\(round *[0-9]+'); v_round=${v_round:-0}
+    # An uncommitted verdict has not been delivered and cannot be owed yet.
+    [ -n "$(undelivered "$u")" ] && continue
+    if [ "$v_round" -gt "$sr" ]; then echo "$it BAD_ROUND"
+    elif [ "$v_round" -eq "$sr" ] && [ "$v_round" -gt 0 ] && [ "$v_kw" = "AWAITING_FIXES" ]; then
+      echo "$it AUDIT_RETURNED"
+    fi
+  done
+}
+
 # DEF175 — a finished lane and an invisible lane look identical from `main`.
 #
 # Every state above is derived from files in THIS checkout. A coder works in its own worktree on
@@ -451,6 +485,21 @@ print_inbox() {
 "
     done <<EOF
 $orph
+EOF
+  fi
+  # AT:R66 — a self-executed lane whose auditor answered and whose architect has not. Same
+  # heredoc-not-pipe reason as above: increments on the right of a pipe run in a subshell and are
+  # discarded, which would print the rows and still exit 0 — the silent pass this guard removes.
+  unanswered=$(orphan_unanswered_verdict)
+  if [ -n "$unanswered" ]; then
+    while read -r uit ust; do
+      [ -n "$uit" ] || continue
+      hot=$((hot+1))
+      row=$(printf '  %-14s %-13s %-16s verdict=%s' "$uit" "$ust" "(self-executed)" "AWAITING_FIXES")
+      hot_rows="${hot_rows}${row}
+"
+    done <<EOF
+$unanswered
 EOF
   fi
   # DEF175 — work that exists only on a lane branch. Same heredoc-not-pipe reason as above: a
