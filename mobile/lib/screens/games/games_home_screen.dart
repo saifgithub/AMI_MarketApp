@@ -25,6 +25,7 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/games.dart';
 import 'package:ami_trade/screens/games/games_entry_sheet.dart';
+import 'package:ami_trade/screens/games/games_record_screen.dart';
 import 'package:ami_trade/screens/games/games_trade_ticket_screen.dart';
 import 'package:ami_trade/state/games_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -44,7 +45,22 @@ class GamesHomeScreen extends ConsumerWidget {
     final runsAsync = ref.watch(gamesRunsProvider);
     return Scaffold(
       backgroundColor: AmiColors.slate900,
-      appBar: AppBar(title: Text(l.gamesHomeTitle)),
+      appBar: AppBar(
+        title: Text(l.gamesHomeTitle),
+        // CR109 slice 3 — the Record's only entry point this slice
+        // (games_record_screen.dart's docstring). Internal navigation
+        // inside the already-gated `/games` subtree, not a new top-level
+        // entry point.
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.military_tech_outlined),
+            tooltip: l.gamesRecordCta,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const GamesRecordScreen()),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: runsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),

@@ -1,4 +1,4 @@
-"""CR109 slice 2 — "the run": the game's backend API.
+"""CR109 slices 2+3 — "the run" and "the close": the game's backend API.
 
 GET  /v1/games/cadences                  next field, entry state, queue count + deadline
 POST /v1/games/enter                     enter the current weekly field (free, 409 if already held)
@@ -7,6 +7,9 @@ GET  /v1/games/runs/{run_id}             detail + NAV series for the curve
 POST /v1/games/runs/{run_id}/trade       the game trade path (no mandate; market-hours queue)
 POST /v1/games/runs/{run_id}/trade/quote pre-confirm card: shares, est. fee, book-percentage
 POST /v1/games/runs/{run_id}/restart     forfeit preview + commit
+GET  /v1/games/runs/{run_id}/close       the Close payload — three beats + the debrief panel
+GET  /v1/games/record                    career points (signed net), forfeit count, run history
+GET  /v1/games/record/prs                the PR board — self-competition, works at n=1
 
 **THE DARK-LAUNCH REQUIREMENT.** This router is registered in `main.py`
 with `include_in_schema=False` — `test_cr109_games_dark_launch.py` asserts
@@ -35,15 +38,16 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict
 
 from app.api.dependencies import get_current_user
+from app.db import get_session
 from app.db.models import User
 from app.schemas.trade import OrderType, Side
+from app.services import games_record_service as record_service
 from app.services import games_service as games
 from app.services.ticker_reference import (
     TickerNotFoundError,
     require_ticker_exists,
     ticker_not_found_detail,
 )
-from app.db import get_session
 
 router = APIRouter(prefix="/v1/games", tags=["games"], include_in_schema=False)
 
@@ -69,6 +73,14 @@ def _translate(exc: games.GamesServiceError) -> HTTPException:
         return HTTPException(status.HTTP_409_CONFLICT, str(exc))
     if isinstance(exc, games.UnsupportedCadenceError):
         return HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
+    return HTTPException(status.HTTP_400_BAD_REQUEST, str(exc))  # pragma: no cover
+
+
+def _translate_record(exc: record_service.RecordServiceError) -> HTTPException:
+    if isinstance(exc, record_service.RunNotFoundError):
+        return HTTPException(status.HTTP_404_NOT_FOUND, str(exc))
+    if isinstance(exc, record_service.RunNotClosedError):
+        return HTTPException(status.HTTP_409_CONFLICT, str(exc))
     return HTTPException(status.HTTP_400_BAD_REQUEST, str(exc))  # pragma: no cover
 
 
@@ -196,3 +208,31 @@ async def restart(
         return await asyncio.to_thread(games.preview_restart, current_user.id, run_id)
     except games.GamesServiceError as exc:
         raise _translate(exc) from exc
+
+
+@router.get("/runs/{run_id}/close")
+async def run_close(
+    run_id: UUID, current_user: User = Depends(get_current_user),
+) -> dict:
+    """The Close payload — COMPLETE without an entitlement (implementation_
+    plan.md §6): rank, delta, curve, both counterfactual lines, markers and
+    the re-entry CTA, for every plan. The paid post-mortem is a later
+    slice and is not built here."""
+    try:
+        return await asyncio.to_thread(
+            record_service.get_close_payload, current_user.id, run_id,
+        )
+    except record_service.RecordServiceError as exc:
+        raise _translate_record(exc) from exc
+
+
+@router.get("/record")
+async def record(current_user: User = Depends(get_current_user)) -> dict:
+    return await asyncio.to_thread(record_service.get_record, current_user.id)
+
+
+@router.get("/record/prs")
+async def record_prs(current_user: User = Depends(get_current_user)) -> dict:
+    """The PR board — self-competition, the only competitive surface that
+    works at n=1 (implementation_plan.md §4.4.2 / §8.4 of the design)."""
+    return await asyncio.to_thread(record_service.get_personal_records, current_user.id)

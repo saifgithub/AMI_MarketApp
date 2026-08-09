@@ -421,6 +421,179 @@ class AppLocalizationsMs extends AppLocalizations {
   String get gamesTicketFilledNote => 'Filled.';
 
   @override
+  String get gamesCloseAppBarTitle => 'THE CLOSE';
+
+  @override
+  String get gamesCloseLoadError => 'Couldn\'t load this run\'s close.';
+
+  @override
+  String get gamesCloseTitleFinished => 'RUN CLOSED';
+
+  @override
+  String get gamesCloseTitleForfeit => 'CHAPTER CLOSED';
+
+  @override
+  String get gamesCloseVoidChip => 'VOID';
+
+  @override
+  String get gamesCloseVoidHeading => 'THIS RUN DIDN\'T SCORE';
+
+  @override
+  String get gamesCloseVoidReasonUnknown =>
+      'The pricing feed didn\'t produce a valid day for this field.';
+
+  @override
+  String gamesCloseStipendNote(int points) {
+    return '+$points pts · finish stipend';
+  }
+
+  @override
+  String gamesCloseBasisThinField(int count) {
+    return 'Field of $count. Scored against the S&P 500, not against the field.';
+  }
+
+  @override
+  String gamesCloseBasisRanked(int rank, int count) {
+    return 'Ranked $rank of $count in your field.';
+  }
+
+  @override
+  String get gamesCloseCareerPointsLabel => 'CAREER POINTS · THIS RUN';
+
+  @override
+  String get gamesCloseInsightVoidNote =>
+      'Nothing to compare — this run wasn\'t scored.';
+
+  @override
+  String gamesCloseNearMissLine(String gap, String label) {
+    return 'You were $gap% off $label.';
+  }
+
+  @override
+  String get gamesCloseInsightIndexBeat =>
+      'The index pays no fees. You beat it anyway.';
+
+  @override
+  String gamesCloseInsightIndexNeutral(String pct) {
+    return 'The S&P returned $pct over the same window.';
+  }
+
+  @override
+  String gamesCloseCounterfactualFirstPicks(String pct) {
+    return 'If you\'d held your first picks untouched: $pct';
+  }
+
+  @override
+  String gamesCloseCounterfactualIndex(String pct) {
+    return 'If you\'d just held the S&P: $pct';
+  }
+
+  @override
+  String get gamesCloseDebriefCta => 'full debrief';
+
+  @override
+  String get gamesCloseReentryHeading => 'THE NEXT ONE\'S OPEN';
+
+  @override
+  String get gamesCloseReentryCta => 'enter the next field';
+
+  @override
+  String get gamesDebriefHeading => 'FULL DEBRIEF';
+
+  @override
+  String get gamesDebriefBasisLabel => 'BASIS';
+
+  @override
+  String get gamesDebriefAlphaScoredLabel => 'SCORED · NET OF ENTRY FEE';
+
+  @override
+  String get gamesDebriefAlphaDisplayLabel => 'VS COSTLESS INDEX';
+
+  @override
+  String get gamesDebriefIntentLabel => 'YOU SAID';
+
+  @override
+  String get gamesDebriefWildnessLabel => 'WILDNESS INDEX';
+
+  @override
+  String get gamesDebriefFeesLabel => 'TRADING COSTS PAID';
+
+  @override
+  String get gamesDebriefTradeCountLabel => 'TRADES THIS RUN';
+
+  @override
+  String get gamesDebriefForfeitNote =>
+      'This run was forfeited — capital was rescued, and the record still shows it.';
+
+  @override
+  String get gamesDebriefVoidExplainer =>
+      'A VOID run never pays a placement or alpha score. Any finish stipend still applies — the feed failed, not you.';
+
+  @override
+  String get gamesIntentWild => 'WILD';
+
+  @override
+  String get gamesIntentThesis => 'TESTING A THESIS';
+
+  @override
+  String get gamesIntentDisciplined => 'DISCIPLINED';
+
+  @override
+  String get gamesRecordCta => 'your record';
+
+  @override
+  String get gamesRecordTitle => 'YOUR RECORD';
+
+  @override
+  String get gamesRecordLoadError => 'Couldn\'t load your record.';
+
+  @override
+  String get gamesRecordIdentityHeading => 'IDENTITY';
+
+  @override
+  String get gamesRecordMovementHeading => 'MOVEMENT';
+
+  @override
+  String get gamesRecordHistoryHeading => 'HISTORY';
+
+  @override
+  String get gamesRecordCareerPointsLabel => 'CAREER POINTS';
+
+  @override
+  String get gamesRecordEnteredLabel => 'ENTERED';
+
+  @override
+  String get gamesRecordFinishedLabel => 'FINISHED';
+
+  @override
+  String get gamesRecordForfeitedLabel => 'FORFEITED';
+
+  @override
+  String get gamesRecordHistoryEmpty =>
+      'No runs yet — your first close will land here.';
+
+  @override
+  String get gamesRecordPrHeading => 'PERSONAL RECORDS';
+
+  @override
+  String get gamesRecordPrEmpty => 'Finish a run to set your first PR.';
+
+  @override
+  String get gamesPrBestReturn => 'BEST WEEKLY RETURN';
+
+  @override
+  String get gamesPrBestAlpha => 'BEST ALPHA VS S&P';
+
+  @override
+  String get gamesPrBestDrawdown => 'BEST DRAWDOWN CONTROL';
+
+  @override
+  String get gamesPrLongestHold => 'LONGEST HOLD';
+
+  @override
+  String get gamesPrLongestStreak => 'LONGEST FINISH STREAK';
+
+  @override
   String get tickerDetailValue => 'NILAI';
 
   @override

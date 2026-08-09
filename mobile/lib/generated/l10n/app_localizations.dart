@@ -814,6 +814,312 @@ abstract class AppLocalizations {
   /// **'Filled.'**
   String get gamesTicketFilledNote;
 
+  /// CR109 slice 3. App-bar chrome title on the Close screen — stays constant across finished/forfeit/void states; the state-specific language lives in the beat-1 heading instead (gamesCloseTitleFinished / gamesCloseTitleForfeit / gamesCloseVoidHeading). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'THE CLOSE'**
+  String get gamesCloseAppBarTitle;
+
+  /// CR109 slice 3. Shown instead of the Close screen's content when GET /v1/games/runs/{run_id}/close fails; paired with a retry CTA (reuses gamesRetry). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this run\'s close.'**
+  String get gamesCloseLoadError;
+
+  /// CR109 slice 3. Beat-1 heading on the Close for a normally-finished run (design §10.2). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RUN CLOSED'**
+  String get gamesCloseTitleFinished;
+
+  /// CR109 slice 3. Beat-1 heading for a forfeited run — the Wind-Up's dignified framing (design §10, §6.7: 'losing must be a chapter, not an ending'). Deliberately NOT 'run lost' or similar fail-screen language. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CHAPTER CLOSED'**
+  String get gamesCloseTitleForfeit;
+
+  /// CR109 slice 3. Small status chip on a VOID run's Close (implementation_plan.md §6.6 'degrade loudly' — a VOID run never shows a score that looks real). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'VOID'**
+  String get gamesCloseVoidChip;
+
+  /// CR109 slice 3. Beat-1 heading for a VOID run, shown instead of any rank/points number. The server's own void_reason renders underneath verbatim (not localized client-side — it is server-authored text). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'THIS RUN DIDN\'T SCORE'**
+  String get gamesCloseVoidHeading;
+
+  /// CR109 slice 3. Fallback body text on a VOID Close when the server sends no void_reason string — should be rare (the contract requires one), but the screen must never show a blank body. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The pricing feed didn\'t produce a valid day for this field.'**
+  String get gamesCloseVoidReasonUnknown;
+
+  /// CR109 slice 3. Shown on a VOID run's Close when the finish stipend still paid (design §6.5's fourth guard: 'a VOID run still claims it — the feed failed, not the player'). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'+{points} pts · finish stipend'**
+  String gamesCloseStipendNote(int points);
+
+  /// CR109 slice 3. The thin-field basis disclosure, quoted near-verbatim from CR109.md §6.6's own example — shown on beat 1 whenever scoring_basis is 'benchmark' (implementation_plan.md: 'a thin-field run states its basis (field size + benchmark) on the board and in the Close'). Do not paraphrase; this is the CR040 degrade-loudly line. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Field of {count}. Scored against the S&P 500, not against the field.'**
+  String gamesCloseBasisThinField(int count);
+
+  /// CR109 slice 3. Beat-1 basis line for a placement-scored (not thin-field) run. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Ranked {rank} of {count} in your field.'**
+  String gamesCloseBasisRanked(int rank, int count);
+
+  /// CR109 slice 3. Label under beat 1's big signed career-point delta figure. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CAREER POINTS · THIS RUN'**
+  String get gamesCloseCareerPointsLabel;
+
+  /// CR109 slice 3. Beat 2's content for a VOID run — there is no insight to prioritise (no near-miss, no counterfactual) because nothing was scored. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to compare — this run wasn\'t scored.'**
+  String get gamesCloseInsightVoidNote;
+
+  /// CR109 slice 3. Beat 2's headline when the server supplies a near-miss (design §10.1's fence: 'near-miss framing points UP only, never at a loss' — [label] and [gap] are server-authored and pre-vetted to point up, e.g. '2nd place' / '0.3'; this client never invents or computes a near-miss itself). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You were {gap}% off {label}.'**
+  String gamesCloseNearMissLine(String gap, String label);
+
+  /// CR109 slice 3. Beat 2's headline when there is no near-miss and alpha_display is >= 0 — CR109.md §6.6.2's own line, quoted verbatim ('the industry's own lesson, embedded'). Do not paraphrase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The index pays no fees. You beat it anyway.'**
+  String get gamesCloseInsightIndexBeat;
+
+  /// CR109 slice 3. Beat 2's headline when alpha_display is negative — a neutral measurement, never a scold (design §10.4: 'the counterfactual never scolds... a number, not a judgment'). [pct] arrives pre-formatted with sign, e.g. '+0.60%'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The S&P returned {pct} over the same window.'**
+  String gamesCloseInsightIndexNeutral(String pct);
+
+  /// CR109 slice 3. One of the Close's two counterfactual lines (design §10.4), quoted near-verbatim from CR109.md. Renders unconditionally in beat 2 whenever the server sends counterfactual_first_picks_pct — the free Close is complete (implementation_plan.md acceptance: 'a free user's Close contains rank, delta, curve and both counterfactual lines'). [pct] arrives pre-formatted with sign. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'If you\'d held your first picks untouched: {pct}'**
+  String gamesCloseCounterfactualFirstPicks(String pct);
+
+  /// CR109 slice 3. The second counterfactual line (design §10.4) — the index-fund lesson at peak attention. Renders unconditionally alongside gamesCloseCounterfactualFirstPicks. [pct] arrives pre-formatted with sign. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'If you\'d just held the S&P: {pct}'**
+  String gamesCloseCounterfactualIndex(String pct);
+
+  /// CR109 slice 3. Text button between beat 2 and beat 3 opening GamesCloseDebriefSheet — 'one tap deeper' per design §10.2. Rendered upper-cased by the caller. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'full debrief'**
+  String get gamesCloseDebriefCta;
+
+  /// CR109 slice 3. Beat 3's heading — the re-entry CTA, always the FINAL beat, win/lose/void alike (design §10.3: 'the arrow that is the whole game'). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'THE NEXT ONE\'S OPEN'**
+  String get gamesCloseReentryHeading;
+
+  /// CR109 slice 3. Beat 3's CTA button, opens the entry confirm sheet for the same cadence (games_entry_sheet.dart). Rendered upper-cased by the caller. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'enter the next field'**
+  String get gamesCloseReentryCta;
+
+  /// CR109 slice 3. Heading at the top of GamesCloseDebriefSheet — everything the three-beat budget has no room for (design §10.2). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'FULL DEBRIEF'**
+  String get gamesDebriefHeading;
+
+  /// CR109 slice 3. Row label in the debrief panel above the scoring-basis sentence (reuses gamesCloseBasisThinField / gamesCloseBasisRanked). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'BASIS'**
+  String get gamesDebriefBasisLabel;
+
+  /// CR109 slice 3. Row label for alpha_scored in the debrief panel — CR109.md §6.6.2: the number the score is actually based on, net of the one entry fee. NEVER derived from alpha_display on this client; both render from their own wire fields. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SCORED · NET OF ENTRY FEE'**
+  String get gamesDebriefAlphaScoredLabel;
+
+  /// CR109 slice 3. Row label for alpha_display in the debrief panel — the gross boast number vs. the costless index. NEVER derived from alpha_scored on this client. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'VS COSTLESS INDEX'**
+  String get gamesDebriefAlphaDisplayLabel;
+
+  /// CR109 slice 3. Row label for the intent-tag mirror (design §10.4) — what the player declared at entry (gamesIntentWild / gamesIntentThesis / gamesIntentDisciplined). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'YOU SAID'**
+  String get gamesDebriefIntentLabel;
+
+  /// CR109 slice 3. Row label for the wildness-index mirror (design §10.4). A measurement row, colour-neutral (CR134 §21: no amber on this line). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'WILDNESS INDEX'**
+  String get gamesDebriefWildnessLabel;
+
+  /// CR109 slice 3. Row label for the run's total trading cost (fees_paid) in the debrief panel — the cost line, colour-neutral by design rule (CR134 §21: 'no amber warning colours on... the cost line'). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'TRADING COSTS PAID'**
+  String get gamesDebriefFeesLabel;
+
+  /// CR109 slice 3. Row label for the run's total executed-trade count in the debrief panel. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'TRADES THIS RUN'**
+  String get gamesDebriefTradeCountLabel;
+
+  /// CR109 slice 3. Explanatory note in the debrief panel for a forfeited (Wind-Up) run (design §6.7: restart rescues capital, never the record). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'This run was forfeited — capital was rescued, and the record still shows it.'**
+  String get gamesDebriefForfeitNote;
+
+  /// CR109 slice 3. Fuller explanation in the debrief panel for a VOID run (design §6.5's fourth guard + §6.6's degrade-loudly rule). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'A VOID run never pays a placement or alpha score. Any finish stipend still applies — the feed failed, not you.'**
+  String get gamesDebriefVoidExplainer;
+
+  /// CR109 slice 3. Debrief-panel label for the 'wild' intent tag (design §10.4: 'going wild · testing a thesis · playing it disciplined' — one enum on game_entries, set at entry in a later slice's entry flow; this slice only renders it if the server sends one). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'WILD'**
+  String get gamesIntentWild;
+
+  /// CR109 slice 3. Debrief-panel label for the 'thesis' intent tag. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'TESTING A THESIS'**
+  String get gamesIntentThesis;
+
+  /// CR109 slice 3. Debrief-panel label for the 'disciplined' intent tag. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'DISCIPLINED'**
+  String get gamesIntentDisciplined;
+
+  /// CR109 slice 3. Tooltip/label on the Record surface's entry point — an app-bar action on GamesHomeScreen (design §13.3: 'The Record is the product's second surface'; there is no dedicated nav destination yet, CR133's call). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'your record'**
+  String get gamesRecordCta;
+
+  /// CR109 slice 3. App-bar title on GamesRecordScreen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR RECORD'**
+  String get gamesRecordTitle;
+
+  /// CR109 slice 3. Shown instead of the Record screen's content when GET /v1/games/record (or /v1/games/record/prs) fails; paired with a retry CTA (reuses gamesRetry). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your record.'**
+  String get gamesRecordLoadError;
+
+  /// CR109 slice 3. First of the Record's three sections (design §13.3: 'identity / movement / history'). Only rendered when the server sends a title string — titles are DARK this slice (implementation_plan.md §2 slice-3 DARK list), so this section is present-when-available rather than a placeholder. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'IDENTITY'**
+  String get gamesRecordIdentityHeading;
+
+  /// CR109 slice 3. Second of the Record's three sections — career points and the PR board this slice. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'MOVEMENT'**
+  String get gamesRecordMovementHeading;
+
+  /// CR109 slice 3. Third of the Record's three sections — entered/finished/forfeited counts and run history. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'HISTORY'**
+  String get gamesRecordHistoryHeading;
+
+  /// CR109 slice 3. Label under the Record's big career-points figure — SUM(delta) straight from the ledger, rendered exactly as received (implementation_plan.md §4.5: the ledger clamps at write time, never on read/display). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CAREER POINTS'**
+  String get gamesRecordCareerPointsLabel;
+
+  /// CR109 slice 3. Count-stat label in the Record's HISTORY section. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'ENTERED'**
+  String get gamesRecordEnteredLabel;
+
+  /// CR109 slice 3. Count-stat label in the Record's HISTORY section. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'FINISHED'**
+  String get gamesRecordFinishedLabel;
+
+  /// CR109 slice 3. Count-stat label in the Record's HISTORY section (design §6.7: 'forfeits counted visibly on the Record'). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'FORFEITED'**
+  String get gamesRecordForfeitedLabel;
+
+  /// CR109 slice 3. Shown in place of the run-history list for a user with zero entries. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No runs yet — your first close will land here.'**
+  String get gamesRecordHistoryEmpty;
+
+  /// CR109 slice 3. Heading above the PR board (GET /v1/games/record/prs) — the only competitive surface that works at n = 1 (implementation_plan.md §4.4.2). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'PERSONAL RECORDS'**
+  String get gamesRecordPrHeading;
+
+  /// CR109 slice 3. Shown in place of the PR list for a user with zero finished runs. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Finish a run to set your first PR.'**
+  String get gamesRecordPrEmpty;
+
+  /// CR109 slice 3. PR-board category label for kind='best_weekly_twr' (design §4.4.2 / §10.4). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'BEST WEEKLY RETURN'**
+  String get gamesPrBestReturn;
+
+  /// CR109 slice 3. PR-board category label for kind='best_alpha'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'BEST ALPHA VS S&P'**
+  String get gamesPrBestAlpha;
+
+  /// CR109 slice 3. PR-board category label for kind='best_drawdown_control'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'BEST DRAWDOWN CONTROL'**
+  String get gamesPrBestDrawdown;
+
+  /// CR109 slice 3. PR-board category label for kind='longest_hold'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'LONGEST HOLD'**
+  String get gamesPrLongestHold;
+
+  /// CR109 slice 3. PR-board category label for kind='longest_finish_streak'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'LONGEST FINISH STREAK'**
+  String get gamesPrLongestStreak;
+
   /// Label above the big position value on the Ticker Detail screen (Position card variant — user holds this ticker).
   ///
   /// In en, this message translates to:

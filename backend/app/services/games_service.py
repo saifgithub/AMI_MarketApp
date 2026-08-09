@@ -375,10 +375,49 @@ def enter_field(
     # GET /v1/games/runs/{run_id} works immediately after entry.
     get_sim_engine().ensure_portfolio(user_id, kind="game", run_id=run_id)
 
+    _log_close_to_reentry_if_any(user_id, entry_id, now=now)
+
     with get_session() as s:
         return s.execute(
             select(GameEntryRow).where(GameEntryRow.id == entry_id)
         ).scalar_one()
+
+
+def _log_close_to_reentry_if_any(user_id: UUID, new_entry_id, *, now: datetime) -> None:
+    """CR109 slice 3 — `close -> re-entry` is one of the two numbers Gate 1
+    runs on (implementation_plan.md §9 / design §10.3), instrumented from
+    day one via a structured log line rather than a new table — the same
+    footprint `sim_trade_filled` / `account_merge_executed` already use
+    elsewhere in this codebase. A no-op (logs nothing) the first time a
+    user ever enters, since there is no prior close to measure a gap from.
+    """
+    with get_session() as s:
+        prior = s.execute(
+            select(GameEntryRow)
+            .where(
+                GameEntryRow.user_id == user_id,
+                GameEntryRow.state.in_(("finished", "void")),
+                GameEntryRow.scored_at.isnot(None),
+            )
+            .order_by(GameEntryRow.scored_at.desc())
+            .limit(1)
+        ).scalar_one_or_none()
+        if prior is None:
+            return
+        prior_entry_id, prior_scored_at, prior_run_id = (
+            prior.id, prior.scored_at, prior.run_id,
+        )
+    # SQLite round-trips DateTime(timezone=True) as naive — the same
+    # normalisation `portfolio_nav_daily.py`'s `_as_utc` already applies.
+    if prior_scored_at.tzinfo is None:
+        prior_scored_at = prior_scored_at.replace(tzinfo=timezone.utc)
+    gap = (now - prior_scored_at).total_seconds()
+    logger.info(
+        "game_close_to_reentry",
+        user_id=str(user_id), new_entry_id=str(new_entry_id),
+        prior_entry_id=str(prior_entry_id), prior_run_id=str(prior_run_id),
+        reentry_gap_seconds=gap,
+    )
 
 
 # ── The trade path's orchestration ──────────────────────────────────────

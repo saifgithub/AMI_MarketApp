@@ -34,6 +34,29 @@ final gamesRunDetailProvider =
   return api.gamesRunDetail(runId);
 });
 
+// ── The Close and the Record (CR109 slice 3) ────────────────────────────
+
+/// `GET /v1/games/runs/{run_id}/close` — read once per Close screen visit;
+/// `.autoDispose` so a stale ceremony payload never survives past the
+/// screen that showed it.
+final gamesCloseProvider =
+    FutureProvider.autoDispose.family<GameCloseResult, String>((ref, runId) async {
+  final api = ref.watch(apiClientProvider);
+  return api.gamesClose(runId);
+});
+
+final gamesRecordProvider =
+    FutureProvider.autoDispose<GameRecord>((ref) async {
+  final api = ref.watch(apiClientProvider);
+  return api.gamesRecord();
+});
+
+final gamesRecordPrsProvider =
+    FutureProvider.autoDispose<List<GamePersonalRecord>>((ref) async {
+  final api = ref.watch(apiClientProvider);
+  return api.gamesRecordPrs();
+});
+
 // ── The no-rules disclosure's "seen" flag (§7, §13.3) ───────────────────
 //
 // Full text on first entry, a compressed chip on every entry after. Same

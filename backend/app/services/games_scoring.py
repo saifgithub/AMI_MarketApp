@@ -1,20 +1,28 @@
-"""CR109 slice 2 — the game's tunable constants and their pure functions.
+"""CR109 slices 2+3 — the game's tunable constants and their pure functions.
 
-implementation_plan.md §5: this module is meant to own EVERY tunable
-constant the game economy needs, each documented with why that number and
-nothing anywhere else hand-copies it — later slices generate §18 of the
-design from this module rather than five documents agreeing by hand.
+implementation_plan.md §5: this module owns EVERY tunable constant the game
+economy needs, each documented with why that number — nothing anywhere else
+hand-copies it — and §18 of the design is meant to be generated from here
+rather than five documents agreeing by hand.
 
-Slice 2 needs exactly one family: the trading cost. Slice 3 adds the
-finish stipend, the alpha-to-points curve and the achievable-benchmark
-discount — landing here only once there is a scoring pass to test them
-against (implementation_plan.md §1: "building them first means building
-machinery that cannot run").
+Slice 2 shipped one family: the trading cost. Slice 3 (this file) adds the
+finish stipend, the alpha->points curve, the achievable-benchmark discount,
+cadence weighting, and the pure math behind the two private mirrors
+(wildness index, the "held your first picks" counterfactual) — everything
+the SETTLING -> CLOSED scoring pass (`games_scoring_pass.py`) needs that has
+no business touching the DB itself.
 
-Pure — no DB, no network — matching `trading_math/twr.py`'s contract.
+Pure — no DB, no network — matching `trading_math/twr.py`'s contract. Every
+TWR/alpha value in and out of this module is a FRACTION (0.02, not 2.0 or
+"2%"); callers convert to a percent only at the point they store or render
+one, matching `trading_math/twr.time_weighted_return`'s own convention.
 """
 
 from __future__ import annotations
+
+import statistics
+from datetime import date
+from typing import Mapping, NamedTuple, Sequence
 
 # ── Trading cost (Amendment D) ──────────────────────────────────────────
 #
@@ -40,3 +48,199 @@ def trade_fee(notional: float) -> float:
     """
     bps_fee = abs(notional) * (FEE_BPS / 10_000.0)
     return round(max(bps_fee, FEE_MIN), 2)
+
+
+# ── Cadence weighting (§6.3) — slice 3 only ever exercises "week" (=1.0 both
+# directions), but alpha scoring is specified to apply cadence weight
+# "unchanged" (design §6.6.1), so the wiring is real even though it is a
+# no-op today. Extending to month/quarter/half/year is a slice-4+ table
+# edit, not a formula change.
+CADENCE_GAIN_WEIGHT: dict[str, float] = {"week": 1.0}
+CADENCE_LOSS_WEIGHT: dict[str, float] = {"week": 1.0}
+
+
+def cadence_weight(cadence: str, *, negative: bool) -> float:
+    """The §6.3 asymmetric cadence multiplier — gains scale with committed
+    time, losses with its square root. Unknown cadences default to 1.0
+    rather than raising: this is a scoring detail, not a validation gate,
+    and slice 3 only ever calls it with "week"."""
+    table = CADENCE_LOSS_WEIGHT if negative else CADENCE_GAIN_WEIGHT
+    return float(table.get(cadence, 1.0))
+
+
+def cadence_period_key(cadence: str, starts_on: date) -> str:
+    """The finish-stipend's "once per cadence PERIOD, not once per entry"
+    guard (design §6.5's fourth condition) needs a key that is the SAME for
+    every field of one cadence covering the same calendar period, and
+    DIFFERENT across periods. ISO year+week is exact for "week"; slice 3
+    never calls this with anything else, but the shape generalises (a
+    month/quarter/etc cadence would key off its own period boundary, not
+    ISO week — a slice-4+ addition, not a rewrite of this one)."""
+    iso_year, iso_week, _ = starts_on.isocalendar()
+    return f"{cadence}:{iso_year}-W{iso_week:02d}"
+
+
+# ── The finish stipend (§6.5) — ships WITH the fee, never without. ~5 per
+# weekly finish; scaled by the SAME cadence weight the fee's pair (alpha)
+# uses, so a longer cadence's stipend scales the same way its points do.
+FINISH_STIPEND = 5
+
+
+def finish_stipend(cadence: str) -> int:
+    """Fixed career-point award for FINISHING a run. The four eligibility
+    guards (entered, >= 1 executed trade, not forfeited, held to close) and
+    the fifth (once per cadence period) are the CALLER's job
+    (`games_scoring_pass.py` / `career_ledger.post_career_event`) — this
+    function only answers "how much", never "is this run eligible"."""
+    return round(FINISH_STIPEND * cadence_weight(cadence, negative=False))
+
+
+# ── The achievable benchmark (§6.6.2) — correcting the fee's hidden tax.
+# Holding the index INSIDE the game costs exactly one fill (runs end
+# marked, not liquidated — §5.2), so the fair SCORING yardstick is the
+# benchmark bearing that same one-fill cost. Reuses FEE_BPS rather than a
+# second constant: at the fixed $10,000 stake every run opens with, 10bps
+# of notional is $10.00 — comfortably clear of FEE_MIN's $1 floor — so the
+# haircut is exactly FEE_BPS expressed as a fraction, independent of the
+# benchmark's own return. The Close DISPLAYS the gross comparison — see
+# `alpha_display_pct` in `games_scoring_pass.py` — this function is the
+# SCORING leg only.
+def achievable_benchmark(benchmark_twr: float) -> float:
+    """The benchmark's TWR net of the one entry fee a player pays to hold
+    it. `benchmark_twr` and the return are both FRACTIONS."""
+    return benchmark_twr - (FEE_BPS / 10_000.0)
+
+
+# ── The alpha -> points formula (§6.6.1). Same 2.5:1 asymmetry as
+# placement (never built this slice — see the `n < 8` fence in
+# implementation_plan.md §7.2), same convex-top/shallow-linear shape,
+# clamped at +/-1 so no alpha outcome ever pays more than winning a field
+# outright (placement's own base tops out at +100 for p=1.0).
+#
+# ALPHA_FULL is the alpha that pays a FULL win (a=1.0, base=100) — sized so
+# a "typical good week" (design's own phrase, ~+1-2% excess) pays in the
+# placement table's "good finish" range rather than either trivially or
+# maximally: at ALPHA_FULL=0.03, +1% excess -> a=0.333 -> base ~= 19.2
+# (between placement's rank-15 and rank-10 rows); +2% excess -> a=0.667 ->
+# base ~= 54.4 (matches placement's rank-6 row, +53). Retuning this one
+# constant is the ENTIRE mechanism for shifting that calibration.
+ALPHA_FULL = 0.03
+
+
+def alpha_to_points(alpha: float) -> float:
+    """Alpha (a FRACTION, e.g. 0.02 for +2% excess) -> base career points,
+    BEFORE cadence weight, the negative-TWR partial-credit multiplier, and
+    title multiplier (title multiplier is 1.0 through slice 4 — titles
+    don't exist yet)."""
+    if ALPHA_FULL <= 0:
+        return 0.0
+    a = max(-1.0, min(1.0, alpha / ALPHA_FULL))
+    if a >= 0:
+        return 100.0 * (a ** 1.5)
+    return -40.0 * abs(a)
+
+
+# ── §6.5's ×0.5 partial-credit rule: top of the field in a bear run still
+# scores, at half — progression never stalls through a downturn, but
+# losing money never pays like winning. Gated on the RUN's own absolute
+# TWR, independent of alpha's sign (a run can beat the benchmark while
+# still being underwater).
+NEGATIVE_TWR_PARTIAL_CREDIT = 0.5
+
+
+def apply_negative_twr_partial_credit(points: float, run_twr: float) -> float:
+    """`run_twr` is a FRACTION. Halves `points` (whatever its sign) when the
+    run's own absolute TWR is negative; a no-op otherwise."""
+    return points * NEGATIVE_TWR_PARTIAL_CREDIT if run_twr < 0 else points
+
+
+# ── The wildness index (design §10.4) — a PRIVATE mirror, never scored,
+# never rendered on a board. Four normalised [0, 1] components, averaged:
+#   concentration  — HHI over ending-position weights (all-in one name = 1)
+#   narrowness     — 1 minus the (capped) effective position count; an
+#                     all-cash book (no holdings) contributes 0, not 1 — an
+#                     empty book isn't concentrated risk, it's no risk
+#   turnover       — total notional traded vs starting capital, capped
+#   volatility     — stdev of the run's own daily returns, capped
+# All four caps are named constants so a retune is one line, same
+# discipline as the fee/stipend/alpha family above.
+WILDNESS_TURNOVER_CAP = 5.0        # 5x starting capital traded = max turnover contribution
+WILDNESS_VOL_CAP = 0.05            # 5% daily stdev = max volatility contribution
+WILDNESS_WIDE_POSITION_COUNT = 5.0  # 5+ effective positions = zero narrowness contribution
+
+
+def wildness_index(
+    *,
+    holding_weights: Sequence[float],
+    total_notional_traded: float,
+    starting_capital: float,
+    daily_returns: Sequence[float],
+) -> float:
+    """A 0.0-1.0 composite, higher = wilder. `holding_weights` are ending
+    position values as a fraction of total run value (cash excluded, so
+    they need not sum to 1); `daily_returns` are the run's own per-day
+    FRACTION returns (from consecutive NAV points)."""
+    if holding_weights:
+        hhi = sum(w * w for w in holding_weights)
+        effective_count = (1.0 / hhi) if hhi > 0 else 0.0
+        narrowness = 1.0 - min(effective_count / WILDNESS_WIDE_POSITION_COUNT, 1.0)
+    else:
+        hhi = 0.0
+        narrowness = 0.0
+
+    turnover = 0.0
+    if starting_capital > 0:
+        capped = min(total_notional_traded / starting_capital, WILDNESS_TURNOVER_CAP)
+        turnover = capped / WILDNESS_TURNOVER_CAP
+
+    vol = statistics.pstdev(daily_returns) if len(daily_returns) >= 2 else 0.0
+    vol_component = min(vol / WILDNESS_VOL_CAP, 1.0)
+
+    return round((hhi + narrowness + turnover + vol_component) / 4.0, 4)
+
+
+class TradeLeg(NamedTuple):
+    """One fill, reduced to what the "first picks" counterfactual needs.
+    `opened_at` is a plain `date` (the caller collapses the fill's
+    timestamp) — grouping is by TRADING DAY, not by instant."""
+
+    ticker: str
+    side: str  # "buy" / "sell"
+    quantity: float
+    price: float
+    opened_at: date
+
+
+def counterfactual_hold_first_picks_pct(
+    trades: Sequence[TradeLeg],
+    final_marks: Mapping[str, float],
+    starting_capital: float,
+) -> float | None:
+    """"If you'd held your first picks untouched" (design §10.4) — the
+    position(s) bought on the run's FIRST trading day, held unchanged (no
+    later buys/sells/rebalancing) to the final marks. `None` when there
+    were no trades at all — there is nothing to have held.
+
+    Pays the same entry fee those first-day fills actually paid (a real,
+    unavoidable cost of establishing the position) but no fee thereafter —
+    the counterfactual is "never traded again", not "never paid to enter".
+    """
+    buys = [t for t in trades if t.side == "buy"]
+    if not buys or starting_capital <= 0:
+        return None
+
+    first_day = min(t.opened_at for t in buys)
+    first_day_buys = [t for t in buys if t.opened_at == first_day]
+
+    spent = 0.0
+    qty_by_ticker: dict[str, float] = {}
+    for t in first_day_buys:
+        notional = t.quantity * t.price
+        spent += notional + trade_fee(notional)
+        qty_by_ticker[t.ticker] = qty_by_ticker.get(t.ticker, 0.0) + t.quantity
+
+    leftover_cash = starting_capital - spent
+    value_at_close = leftover_cash + sum(
+        qty * final_marks.get(ticker, 0.0) for ticker, qty in qty_by_ticker.items()
+    )
+    return round((value_at_close / starting_capital - 1.0) * 100, 2)

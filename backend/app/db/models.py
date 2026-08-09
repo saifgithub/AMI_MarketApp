@@ -1403,6 +1403,35 @@ class GameEntryRow(Base):
     wildness_index: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
     fees_paid: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     trade_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # CR109 slice 3 — written once by the scoring pass (`games_scoring_pass.py`).
+    # `void_reason` states loudly WHY a run is VOID (mock-priced day(s), named)
+    # rather than leaving the client to infer it from the absence of a score
+    # (CR040). `alpha_scored_pct` is what the ledger paid on (net of the one
+    # entry fee — implementation_plan.md §6.6.2's achievable benchmark);
+    # `alpha_display_pct` is the gross comparison the Close prints ("the index
+    # pays no fees. You beat it anyway.") — stored SEPARATELY, never derived by
+    # a client, because the whole point is that the two differ.
+    void_reason: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    alpha_scored_pct: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    alpha_display_pct: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    # The two private mirrors (design §10.4) — computed once in the scoring
+    # pass, from data it already walks. FENCE: neither may ever appear in a
+    # board or opponent-facing payload — see `games_record_service.py`'s
+    # public/private serializer split and its enforcing test.
+    counterfactual_hold_index_pct: Mapped[Optional[float]] = mapped_column(
+        Numeric(12, 4), nullable=True,
+    )
+    counterfactual_hold_first_picks_pct: Mapped[Optional[float]] = mapped_column(
+        Numeric(12, 4), nullable=True,
+    )
+    # The amount OF `career_points_delta` (below) that came from the finish
+    # stipend specifically — 0 when this entry didn't claim it (zero trades,
+    # forfeited, or another entry already claimed the cadence period).
+    # `career_points_delta` itself is the TOTAL this entry netted (run_close/
+    # void delta + stipend_points), so the Close can show one number without
+    # a second query while the ledger (`career_events`) still holds the
+    # granular, audit-grade breakdown.
+    stipend_points: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
@@ -1446,3 +1475,68 @@ class GameQueuedOrderRow(Base):
     filled_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     filled_trade_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
     cancel_reason: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+
+class CareerEventRow(Base):
+    """Append-only career-points ledger — CR109 slice 3
+    (implementation_plan.md §4.5, Amendment D's clamp-at-write correction).
+
+    Never a mutable running total anywhere: `SUM(delta)` for a user IS the
+    displayed number, with NO clamp on read anywhere (`career_ledger.py`).
+    `delta` is the amount actually APPLIED — clamped so the running sum can
+    never go below zero on a debit, never clamped on a credit (there is no
+    floor on the way up). `delta_uncapped` keeps the raw computed value for
+    the audit trail (the Record's "given-back" total).
+
+    `UniqueConstraint(entry_id, reason)` is the DEF039/DEF049 dedup shape —
+    a re-run of the scoring pass cannot double-post the SAME entry's SAME
+    reason. The partial unique index on `(user_id, period_key)` WHERE
+    `reason = 'finish_stipend'` is the SEPARATE "once per cadence period,
+    not once per entry" guard (design §6.5's fourth stipend condition) — it
+    catches a second claim from a DIFFERENT entry in the same period, which
+    the entry-scoped constraint above cannot see on its own.
+
+    Amendment F (mandatory, CR109): `field_id`/`entry_id` are NOT NULL —
+    a `career_events` row may never be written without both, because
+    `field_id` is the only handle that makes cleaning dark-phase data
+    possible later. `career_ledger.post_career_event` enforces this in code
+    too (raises before ever building the row); this column constraint is
+    the structural backstop that survives a caller forgetting to check.
+
+    Both FKs are safe: neither `game_fields` nor `game_entries` rows are
+    ever hard-deleted (implementation_plan.md §4.3/§4.4 — fields go
+    `closed -> archived`, entries go `finished`/`forfeit`/`void`, never
+    dropped).
+    """
+
+    __tablename__ = "career_events"
+    __table_args__ = (
+        UniqueConstraint("entry_id", "reason", name="uq_career_event_entry_reason"),
+        Index(
+            "uq_career_event_stipend_period",
+            "user_id", "period_key",
+            unique=True,
+            postgresql_where=text("reason = 'finish_stipend'"),
+            sqlite_where=text("reason = 'finish_stipend'"),
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    delta: Mapped[int] = mapped_column(Integer, nullable=False)
+    delta_uncapped: Mapped[int] = mapped_column(Integer, nullable=False)
+    # run_close / forfeit / forfeit_minimum / finish_stipend / duel
+    # (implementation_plan.md §4.5) — slice 3 writes only the first and the
+    # fourth; the rest are slice 3b/4 concerns and unreachable from this CR.
+    reason: Mapped[str] = mapped_column(String, nullable=False)
+    field_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("game_fields.id"), nullable=False, index=True,
+    )
+    entry_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("game_entries.id"), nullable=False, index=True,
+    )
+    # Only set on reason='finish_stipend' rows — see the partial index above.
+    period_key: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )

@@ -328,3 +328,323 @@ class GameRestartPreview {
         committed: j['committed'] as bool? ?? false,
       );
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// CR109 slice 3 — the Close and the Record.
+// ─────────────────────────────────────────────────────────────────────────
+
+/// `GET /v1/games/runs/{run_id}/close` — the Close's full payload (design
+/// §10.2, implementation_plan.md §6). Screens read a SUBSET of this for the
+/// three-beat ceremony (`screens/games/games_close_screen.dart`); the rest
+/// backs the debrief panel one tap deeper.
+///
+/// **There is no entitlement field anywhere on this model, on purpose.**
+/// implementation_plan.md §6: "the Close payload is complete without an
+/// entitlement... a free user's response carries rank, delta, curve, both
+/// counterfactual lines, markers and the re-entry CTA." The paid agent
+/// post-mortem is a later slice and is deliberately not modeled here — see
+/// `games_close_screen.dart`'s file docstring.
+///
+/// [alphaScored] and [alphaDisplay] are two SEPARATE wire fields
+/// (implementation_plan.md §6.6.2 / §6): net-of-fee (what the score is
+/// based on) and gross-vs-costless-index (what the boast shows). Neither is
+/// ever computed from the other on this client.
+class GameCloseResult {
+  const GameCloseResult({
+    required this.runId,
+    required this.fieldId,
+    required this.cadence,
+    this.state = 'finished',
+    this.scoringBasis = 'placement',
+    this.entrantCount = 0,
+    this.rank,
+    this.voidReason,
+    this.careerPointsDelta = 0,
+    this.finalTwrPct,
+    this.alphaScored,
+    this.alphaDisplay,
+    this.counterfactualFirstPicksPct,
+    this.counterfactualIndexPct,
+    this.navSeries = const [],
+    this.intent,
+    this.wildnessIndex,
+    this.feesPaid,
+    this.tradeCount = 0,
+    this.stipendAwarded = false,
+    this.stipendPoints,
+    this.nearMissLabel,
+    this.nearMissGapPct,
+  });
+
+  final String runId;
+  final String fieldId;
+  final String cadence;
+
+  /// 'finished' | 'forfeit' | 'void' — a closed `game_entries` state.
+  final String state;
+
+  /// 'placement' | 'benchmark' — resolved at close, then frozen
+  /// (implementation_plan.md §4.3).
+  final String scoringBasis;
+  final int entrantCount;
+  final int? rank;
+  final String? voidReason;
+  final int careerPointsDelta;
+  final double? finalTwrPct;
+
+  /// Net of the one entry fee — what the score is based on
+  /// (implementation_plan.md §6.6.2). NEVER derive from [alphaDisplay].
+  final double? alphaScored;
+
+  /// Gross vs the costless index — what the boast shows. NEVER derive from
+  /// [alphaScored]. The whole point of shipping both is that they differ.
+  final double? alphaDisplay;
+
+  /// "If you'd held your first picks untouched: +X%" (design §10.4).
+  final double? counterfactualFirstPicksPct;
+
+  /// "If you'd just held the S&P: +Y%" (design §10.4).
+  final double? counterfactualIndexPct;
+
+  final List<GameNavPoint> navSeries;
+
+  /// 'wild' | 'thesis' | 'disciplined' — the intent tag declared at entry
+  /// (design §10.4), null until a later slice's entry flow sets one.
+  final String? intent;
+  final double? wildnessIndex;
+  final double? feesPaid;
+  final int tradeCount;
+
+  /// Whether the finish stipend paid on this entry (design §6.5). A VOID
+  /// run can still be true here — "the feed failed, not the player."
+  /// Derived from [stipendPoints] when the server sends only that.
+  final bool stipendAwarded;
+
+  /// The stipend's own point value, when the server sends one separately
+  /// from [careerPointsDelta] (`stipend_points` on the wire) — kept
+  /// distinct so the debrief can show "showed up" points apart from
+  /// "performed" points, per implementation_plan.md §4.5's reasoning for
+  /// keeping the two as separate ledger rows.
+  final int? stipendPoints;
+
+  /// Server-authored, pre-vetted to point UP only (design §10.1's fence:
+  /// "near-miss framing points up only, never at a loss"). Null when no
+  /// near-miss applies; this client never computes one itself.
+  final String? nearMissLabel;
+  final double? nearMissGapPct;
+
+  bool get isVoid => state == 'void';
+
+  /// Defensive/forward-compatible only: the live `games_record_service.py`
+  /// (`get_close_payload`) 404/409s a forfeited run before this model ever
+  /// sees one — "a forfeit has no Close," by that module's own docstring.
+  /// A `state == 'forfeit'` payload is therefore not reachable through
+  /// today's `/close` endpoint; kept so this model degrades correctly
+  /// rather than crashing if that ever changes. The reachable dignified
+  /// treatment for a forfeited run today lives on
+  /// `GamesRecordScreen`'s history row instead — see that file.
+  bool get isForfeit => state == 'forfeit';
+  bool get isThinField => scoringBasis == 'benchmark';
+  bool get hasNearMiss => nearMissLabel != null && nearMissGapPct != null;
+
+  /// Wire keys are read with fallbacks across the plan-doc's prose names
+  /// AND the shipped `games_record_service.py` names where they differ
+  /// (e.g. `alpha_scored` vs. the actual `alpha_scored_pct`) — both lanes
+  /// build from the same implementation plan in parallel, so this stays
+  /// correct against either.
+  factory GameCloseResult.fromJson(Map<String, dynamic> j) => GameCloseResult(
+        runId: (j['run_id'] ?? j['id']) as String? ?? '',
+        fieldId: j['field_id'] as String? ?? '',
+        cadence: j['cadence'] as String? ?? 'week',
+        state: j['state'] as String? ?? 'finished',
+        scoringBasis: j['scoring_basis'] as String? ?? 'placement',
+        entrantCount: (j['entrant_count'] as num?)?.toInt() ?? 0,
+        rank: ((j['final_rank'] ?? j['rank']) as num?)?.toInt(),
+        voidReason: j['void_reason'] as String?,
+        careerPointsDelta:
+            ((j['career_points_delta'] ?? j['career_point_delta']) as num?)
+                    ?.toInt() ??
+                0,
+        finalTwrPct: ((j['final_twr_pct'] ?? j['twr_pct']) as num?)
+            ?.toDouble(),
+        alphaScored:
+            ((j['alpha_scored_pct'] ?? j['alpha_scored']) as num?)
+                ?.toDouble(),
+        alphaDisplay:
+            ((j['alpha_display_pct'] ?? j['alpha_display']) as num?)
+                ?.toDouble(),
+        counterfactualFirstPicksPct: ((j['counterfactual_hold_first_picks_pct'] ??
+                j['counterfactual_first_picks_pct'] ??
+                j['counterfactual_buy_hold_pct']) as num?)
+            ?.toDouble(),
+        counterfactualIndexPct: ((j['counterfactual_hold_index_pct'] ??
+                j['counterfactual_index_pct'] ??
+                j['counterfactual_benchmark_pct']) as num?)
+            ?.toDouble(),
+        navSeries: ((j['curve'] ?? j['nav_series'] ?? j['points']) as List? ??
+                const [])
+            .map((p) => GameNavPoint.fromJson(p as Map<String, dynamic>))
+            .toList(),
+        intent: j['intent'] as String?,
+        wildnessIndex: (j['wildness_index'] as num?)?.toDouble(),
+        feesPaid: (j['fees_paid'] as num?)?.toDouble(),
+        tradeCount: (j['trade_count'] as num?)?.toInt() ?? 0,
+        stipendAwarded: j['stipend_awarded'] as bool? ??
+            (((j['stipend_points'] as num?)?.toInt() ?? 0) > 0),
+        stipendPoints: (j['stipend_points'] as num?)?.toInt(),
+        nearMissLabel: j['near_miss_label'] as String?,
+        nearMissGapPct: (j['near_miss_gap_pct'] as num?)?.toDouble(),
+      );
+}
+
+/// `GET /v1/games/record` — the Record's "identity / movement / history"
+/// surface (design §13.3, implementation_plan.md §6).
+///
+/// [careerPoints] is `SUM(delta)` straight from the append-only ledger. The
+/// ledger clamps AT WRITE TIME (implementation_plan.md §4.5's Amendment-D
+/// correction — "the ledger clamps, not the display"), so this number must
+/// be rendered EXACTLY as received by every caller — never re-clamped,
+/// never `math.max(0, ...)`'d, on this client.
+class GameRecord {
+  const GameRecord({
+    this.careerPoints = 0,
+    this.enteredCount = 0,
+    this.finishedCount = 0,
+    this.forfeitCount = 0,
+    this.voidCount = 0,
+    this.title,
+    this.runHistory = const [],
+  });
+
+  final int careerPoints;
+  final int enteredCount;
+  final int finishedCount;
+  final int forfeitCount;
+  final int voidCount;
+
+  /// Present only once a title system ships (slice 4 — DARK this slice per
+  /// implementation_plan.md §2). Parsed defensively for forward-compat;
+  /// the Record's IDENTITY section renders only when this is non-null.
+  final String? title;
+
+  final List<GameRecordRunHistoryEntry> runHistory;
+
+  /// Same dual-fallback posture as [GameCloseResult.fromJson] — the shipped
+  /// `games_record_service.py.get_record` names the ledger total
+  /// `career_points_net` and the total-entries count `run_count`, both read
+  /// here alongside the plan-doc's prose names.
+  factory GameRecord.fromJson(Map<String, dynamic> j) => GameRecord(
+        careerPoints: ((j['career_points_net'] ??
+                    j['career_points'] ??
+                    j['career_points_total']) as num?)
+                ?.toInt() ??
+            0,
+        enteredCount:
+            ((j['run_count'] ?? j['entered_count']) as num?)?.toInt() ?? 0,
+        finishedCount: (j['finished_count'] as num?)?.toInt() ?? 0,
+        forfeitCount: (j['forfeit_count'] as num?)?.toInt() ?? 0,
+        voidCount: (j['void_count'] as num?)?.toInt() ?? 0,
+        title: j['title'] as String?,
+        runHistory: ((j['run_history'] ?? j['runs']) as List? ?? const [])
+            .map((e) => GameRecordRunHistoryEntry.fromJson(
+                e as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
+/// One row of the Record's run-history list.
+class GameRecordRunHistoryEntry {
+  const GameRecordRunHistoryEntry({
+    required this.entryId,
+    required this.cadence,
+    this.runId,
+    this.state = 'finished',
+    this.closedAt,
+    this.rank,
+    this.entrantCount,
+    this.careerPointsDelta = 0,
+    this.finalTwrPct,
+  });
+
+  final String entryId;
+
+  /// The run this entry scored — when present, the row can open
+  /// [GameCloseResult] for it (`GamesCloseScreen`); null degrades to a
+  /// non-tappable row rather than a broken link.
+  final String? runId;
+  final String cadence;
+
+  /// 'entered' | 'active' | 'finished' | 'forfeit' | 'void'.
+  final String state;
+  final DateTime? closedAt;
+  final int? rank;
+  final int? entrantCount;
+  final int careerPointsDelta;
+  final double? finalTwrPct;
+
+  /// `games_record_service.py.get_record`'s `run_history` rows carry no
+  /// `entry_id` at all (only `run_id`) and no `closed_at`/`scored_at` —
+  /// [entryId] degrades to `''` (still safe: nothing keys off it) and
+  /// [closedAt] falls back to the field's `ends_on`, which is the closest
+  /// available date to "when this entry's Close happened."
+  factory GameRecordRunHistoryEntry.fromJson(Map<String, dynamic> j) =>
+      GameRecordRunHistoryEntry(
+        entryId: (j['entry_id'] ?? j['id']) as String? ?? '',
+        runId: j['run_id'] as String?,
+        cadence: j['cadence'] as String? ?? 'week',
+        state: j['state'] as String? ?? 'finished',
+        closedAt: _parseDate(j['closed_at'] ?? j['scored_at'] ?? j['ends_on']),
+        rank: ((j['final_rank'] ?? j['rank']) as num?)?.toInt(),
+        entrantCount: (j['entrant_count'] as num?)?.toInt(),
+        careerPointsDelta: (j['career_points_delta'] as num?)?.toInt() ?? 0,
+        finalTwrPct: ((j['final_twr_pct'] ?? j['twr_pct']) as num?)
+            ?.toDouble(),
+      );
+}
+
+/// `GET /v1/games/record/prs` — the PR board; a max-query over
+/// `portfolio_nav_daily` + `game_entries`, no new table
+/// (implementation_plan.md §4.4.2). "The only competitive surface that
+/// works at n = 1."
+class GamePersonalRecord {
+  const GamePersonalRecord({
+    required this.kind,
+    required this.entryId,
+    this.value,
+    this.cadence,
+    this.achievedAt,
+  });
+
+  /// Server-defined category key — design §4.4.2 lists the categories
+  /// (best weekly TWR, best alpha, best drawdown control, longest hold,
+  /// longest streak of finishes); the exact key strings are the backend
+  /// lane's to define. An unrecognised [kind] degrades to [fallbackLabel]
+  /// rather than being dropped — a new server-side category must never
+  /// disappear on an un-updated client.
+  final String kind;
+
+  /// The `game_entries` id that SET this record — implementation_plan.md
+  /// §4.4.2: "each carrying the entry_id that set it," required so a PR at
+  /// n = 1 still reads as a real, attributable result rather than a bare
+  /// number.
+  final String entryId;
+  final double? value;
+  final String? cadence;
+  final DateTime? achievedAt;
+
+  /// Title-cased fallback for a [kind] this client's label map doesn't
+  /// recognise yet.
+  String get fallbackLabel => kind
+      .split('_')
+      .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+      .join(' ');
+
+  factory GamePersonalRecord.fromJson(Map<String, dynamic> j) =>
+      GamePersonalRecord(
+        kind: j['kind'] as String? ?? 'unknown',
+        entryId: (j['entry_id'] ?? j['id']) as String? ?? '',
+        value: (j['value'] as num?)?.toDouble(),
+        cadence: j['cadence'] as String?,
+        achievedAt: _parseDate(j['achieved_at'] ?? j['closed_at']),
+      );
+}

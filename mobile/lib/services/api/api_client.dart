@@ -1666,4 +1666,74 @@ class ApiClient {
     );
     return GameRestartPreview.fromJson(r.data!);
   }
+
+  // ── Games — the Close and the Record (CR109 slice 3) ────────────────────
+  //
+  // Same unconditional-surface note as the slice-2 block above: the server
+  // route is never gated, only the client's own reachability is
+  // (`features/games/games_gate.dart`).
+
+  /// The Close's full payload (design §10.2) — three beats plus the debrief
+  /// block. Carries no entitlement field; see `models/games.dart`'s
+  /// `GameCloseResult` docstring for why.
+  Future<GameCloseResult> gamesClose(String runId) async {
+    final r =
+        await _dio.get<Map<String, dynamic>>('/v1/games/runs/$runId/close');
+    return GameCloseResult.fromJson(r.data!);
+  }
+
+  /// Career points, forfeit count and run history — the Record's
+  /// "identity / movement / history" surface (design §13.3).
+  Future<GameRecord> gamesRecord() async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/games/record');
+    return GameRecord.fromJson(r.data!);
+  }
+
+  /// The shipped `games_record_service.py.get_personal_records` response is
+  /// an OBJECT keyed by category — `{best_weekly_twr: {...}|null,
+  /// best_alpha: {...}|null, best_drawdown_control: {...}|null,
+  /// longest_hold_days: {...}|null, longest_finish_streak: {...}|null}` —
+  /// not a list, and each category's own value lives under a DIFFERENT key
+  /// (`final_twr_pct` / `alpha_scored_pct` / `max_drawdown_pct` / `days` /
+  /// `count`). This is the wire-shape adapter into
+  /// [GamePersonalRecord]'s generic `{kind, entry_id, value}` shape — a
+  /// category also carrying a fallback flat `prs` list (an older/plan-doc
+  /// shape) is read first if present, so this stays correct against
+  /// either.
+  static const _prCategoryValueKeys = <String, String>{
+    'best_weekly_twr': 'final_twr_pct',
+    'best_alpha': 'alpha_scored_pct',
+    'best_drawdown_control': 'max_drawdown_pct',
+    'longest_hold_days': 'days',
+    'longest_finish_streak': 'count',
+  };
+
+  /// The PR board — works at n = 1 (implementation_plan.md §4.4.2).
+  Future<List<GamePersonalRecord>> gamesRecordPrs() async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/games/record/prs');
+    final data = r.data ?? const <String, dynamic>{};
+
+    final flatList = data['prs'];
+    if (flatList is List) {
+      return flatList
+          .map((e) => GamePersonalRecord.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
+    final out = <GamePersonalRecord>[];
+    for (final category in _prCategoryValueKeys.entries) {
+      final raw = data[category.key];
+      if (raw is! Map<String, dynamic>) continue;
+      // 'longest_hold_days' is the wire category key; 'longest_hold' is
+      // this client's `kind` constant (matches GamePersonalRecord's own
+      // category labels in games_record_screen.dart).
+      final kind = category.key == 'longest_hold_days' ? 'longest_hold' : category.key;
+      out.add(GamePersonalRecord.fromJson({
+        'kind': kind,
+        'entry_id': raw['entry_id'],
+        'value': raw[category.value],
+      }));
+    }
+    return out;
+  }
 }

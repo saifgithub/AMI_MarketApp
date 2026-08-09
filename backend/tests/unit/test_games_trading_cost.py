@@ -165,16 +165,22 @@ def test_fee_is_burned_total_system_value_shrinks_by_exactly_the_fee():
 
 def test_no_table_or_field_total_ever_accumulates_fees():
     """No table, counter or aggregate anywhere sums the fee — structural
-    assertion over the schema itself, not just one run's arithmetic."""
+    assertion over the schema itself, not just one run's arithmetic.
+
+    CR109 slice 3 adds `career_events` — a per-user, append-only POINTS
+    ledger (implementation_plan.md §4.5), not a fee pool. It is fine for it
+    to exist; what must stay true is that it carries no fee-summing column
+    at all, same as `game_fields`."""
     table_names = set(Base.metadata.tables.keys())
     assert "fee_pool" not in table_names
     assert "trading_fees" not in table_names
-    assert "career_events" not in table_names  # slice 3 — doesn't exist yet
     # game_fields carries no fee-related column at all — fees live ONLY on
     # the per-user, per-entry `game_entries.fees_paid` (a personal record,
     # never summed across entrants).
     field_columns = {c.name for c in GameFieldRow.__table__.columns}
     assert not any("fee" in name for name in field_columns)
+    career_event_columns = {c.name for c in Base.metadata.tables["career_events"].columns}
+    assert not any("fee" in name for name in career_event_columns)
 
 
 def test_fee_is_not_a_capital_event_and_does_not_split_the_twr_chain():

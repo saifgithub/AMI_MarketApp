@@ -91,6 +91,7 @@ _PRICE_ALERT_EVAL_INTERVAL_SECONDS = 5 * 60  # CR027
 _PORTFOLIO_NAV_SNAPSHOT_INTERVAL_SECONDS = 24 * 60 * 60  # daily — CR109 slice 1
 _GAME_NAV_SNAPSHOT_INTERVAL_SECONDS = 24 * 60 * 60  # daily — CR109 slice 2
 _GAME_QUEUE_FILL_INTERVAL_SECONDS = 5 * 60  # CR109 slice 2 — matches CR027's cadence
+_GAME_SCORING_PASS_INTERVAL_SECONDS = 30 * 60  # CR109 slice 3 — idempotent, like the league roll
 
 
 async def _nightly_audit_trim() -> None:
@@ -224,6 +225,24 @@ async def _game_queue_fill_tick() -> None:
         await asyncio.sleep(_GAME_QUEUE_FILL_INTERVAL_SECONDS)
 
 
+async def _game_scoring_pass_tick() -> None:
+    """Background task: the SETTLING -> CLOSED scoring pass (CR109 slice 3),
+    every 30 min. Idempotent like `_league_roll_tick` — `game_entries.
+    scored_at` is the guard, so a tick that finds nothing left to score for
+    an already-closed field does nothing, and a container restart mid-pass
+    cannot double-post a career-points event (see `games_scoring_pass.py`'s
+    own docstring for the two-phase read/write split this relies on)."""
+    from app.services.games_scoring_pass import run_scoring_pass
+
+    while True:
+        try:
+            stats = await asyncio.to_thread(run_scoring_pass)
+            logger.info("game_scoring_pass_tick_complete", **stats)
+        except Exception:
+            logger.exception("game_scoring_pass_tick_failed")
+        await asyncio.sleep(_GAME_SCORING_PASS_INTERVAL_SECONDS)
+
+
 async def _ticker_reference_refresh() -> None:
     """Background task: fetch NASDAQ Trader's listed-securities files once a day
     and upsert the ticker reference table (CR128). Idempotent like
@@ -326,6 +345,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_portfolio_nav_snapshot_tick()),
         asyncio.create_task(_game_nav_snapshot_tick()),
         asyncio.create_task(_game_queue_fill_tick()),
+        asyncio.create_task(_game_scoring_pass_tick()),
     ]
     try:
         yield
