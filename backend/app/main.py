@@ -247,6 +247,17 @@ async def lifespan(app: FastAPI):
     except Exception:
         logger.exception("prefix_cache_startup_check_failed")
 
+    # CR158 — compute each agent's prompt version now, off the request path. The
+    # lazy fallback would pay ~200 ms of assembly inside `stream_chat`, which runs
+    # on the event loop; DEF136 is the measurement of what blocking the loop costs
+    # every other Room stream on the worker.
+    try:
+        from app.services.prompt_version import warm_cache
+
+        await warm_cache()
+    except Exception:
+        logger.exception("prompt_version_warm_failed")
+
     tasks = [
         asyncio.create_task(_nightly_audit_trim()),
         asyncio.create_task(_league_roll_tick()),

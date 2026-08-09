@@ -178,7 +178,7 @@ def test_the_reference_inputs_are_constants_not_live_data():
     would be noise. Pinned so that change has to be argued for."""
     assert pv._REFERENCE_TICKER == "MSFT"
     assert pv._REFERENCE_PROFILE == {"base_price": 100.0}
-    assert pv._REFERENCE_MANDATE_SPEC == {
+    assert pv._BASE_SPEC == {
         "plan": "trader", "risk_score": 3, "single_name_cap_pct": 3.0,
     }
 
@@ -300,3 +300,127 @@ def test_the_gateway_stamps_NULL_for_a_flow_with_no_agent(monkeypatch):
 
     asyncio.run(_run())
     assert captured["prompt_version"] is None
+
+
+# ── round-1 audit MAJOR: the mandate matrix, and proof it is complete ─────────
+
+
+def test_a_change_behind_a_risk_score_branch_moves_the_version(monkeypatch):
+    """The auditor's exact attack, reproduced as a permanent regression.
+
+    The first version hashed one reference at `risk_score: 3`. Editing text inside
+    `_aggressive_block`'s `if m.risk_score <= 2:` branch — real copy a low-risk
+    user's Aggressive Debator receives — left the version identical
+    (`86c3b410b5c0` before and after). A prompt change would have shipped while
+    the column reported "nothing changed", for exactly the population it changed
+    for: CR143's silent mis-partitioning, one axis over.
+    """
+    from app.agents import overlay_generator as og
+
+    original = og._ROLE_BUILDERS[AgentId.AGGRESSIVE_DEBATOR]
+
+    def _patched(m):
+        out = original(m)
+        if m.risk_score <= 2:
+            out += "\n- A different low-risk-score instruction."
+        return out
+
+    before = pv.prompt_version(AgentId.AGGRESSIVE_DEBATOR)
+    pv.reset_cache()
+    registry = dict(og._ROLE_BUILDERS)
+    registry[AgentId.AGGRESSIVE_DEBATOR] = _patched
+    monkeypatch.setattr(og, "_ROLE_BUILDERS", registry)
+    assert pv.prompt_version(AgentId.AGGRESSIVE_DEBATOR) != before
+
+
+@pytest.mark.parametrize("axis,patch", [
+    ("halal", lambda out, m: out + "\n- halal-only line." if m.compliance.halal else out),
+    ("long_only", lambda out, m: out + "\n- long-only line." if m.compliance.long_only else out),
+    ("blocklist", lambda out, m: out + "\n- blocklist line." if m.compliance.ticker_blocklist else out),
+    ("high_risk", lambda out, m: out + "\n- high-risk line." if m.risk_score >= 4 else out),
+])
+def test_every_mandate_axis_is_visible_to_the_version(monkeypatch, axis, patch):
+    """Not just `risk_score <= 2`. Each axis the assembly branches on must be
+    inside the hash, or a prompt edit scoped to that axis ships unversioned."""
+    from app.agents import overlay_generator as og
+
+    original = og._ROLE_BUILDERS[AgentId.CONSERVATIVE_DEBATOR]
+    before = pv.prompt_version(AgentId.CONSERVATIVE_DEBATOR)
+    pv.reset_cache()
+    registry = dict(og._ROLE_BUILDERS)
+    registry[AgentId.CONSERVATIVE_DEBATOR] = lambda m: patch(original(m), m)
+    monkeypatch.setattr(og, "_ROLE_BUILDERS", registry)
+    assert pv.prompt_version(AgentId.CONSERVATIVE_DEBATOR) != before, (
+        f"a change behind the {axis!r} branch is invisible to the version"
+    )
+
+
+def test_the_matrix_executes_every_line_of_every_role_block():
+    """The completeness proof, and the reason this is not just "I added the branch
+    the auditor found".
+
+    A matrix chosen by reading the code is only as complete as the reading. This
+    TRACES the assembly and asserts that every executable line of every role-block
+    function actually ran. A branch added later — on an axis nobody enumerated —
+    makes this test red instead of silently shipping unversioned.
+    """
+    import sys
+
+    from app.agents import overlay_generator as og
+
+    targets = dict(og._ROLE_BUILDERS)
+    wanted: dict[str, set[int]] = {}
+    for agent, fn in targets.items():
+        lines = {ln for _s, _e, ln in fn.__code__.co_lines() if ln is not None}
+        wanted[agent.value] = lines
+
+    seen: set[int] = set()
+    og_file = og.__file__
+
+    def _tracer(frame, event, arg):
+        # Both events: `sys.settrace` reports a function's `def` line on `call`,
+        # never on `line`, so a line-only tracer reports every role block's
+        # signature as uncovered and buries the one real gap in twelve false ones.
+        if event in ("call", "line") and frame.f_code.co_filename == og_file:
+            seen.add(frame.f_lineno)
+        return _tracer
+
+    pv.reset_cache()
+    sys.settrace(_tracer)
+    try:
+        for agent in targets:
+            pv.prompt_version(agent)
+    finally:
+        sys.settrace(None)
+
+    uncovered = {a: sorted(ls - seen) for a, ls in wanted.items() if ls - seen}
+    assert not uncovered, (
+        "the reference matrix never executes these role-block lines, so a prompt "
+        f"edit there would ship with an unchanged version: {uncovered}"
+    )
+
+
+def test_the_reference_matrix_is_constant_and_covers_both_sides_of_each_flag():
+    """Pinned so widening or narrowing the matrix has to be argued for — it
+    renumbers every agent without any prompt having changed."""
+    specs = pv._REFERENCE_MANDATES
+    assert len(specs) == 3
+    assert {s["risk_score"] for s in specs} == {1, 3, 5}
+    for flag in ("halal", "long_only"):
+        assert {s[flag] for s in specs} == {True, False}, f"{flag} is never seen both ways"
+    assert any(s["blocklist"] for s in specs) and any(not s["blocklist"] for s in specs)
+    assert {s["path"] for s in specs} == {"active", "long_horizon", "both"}
+    # The horizon axis exists because the coverage guard found it — `_fundamentals_block`
+    # branches on it and every mandate was LONG until that test went red.
+    assert {s["horizon"] for s in specs} == {"long", "very_long", "short"}
+
+
+def test_the_matrix_is_built_by_model_copy_not_by_the_hydrator():
+    """`hydrate_coach_mandate` ignores `halal` / `long_only` / `ticker_blocklist`
+    from a spec dict. Driving the axes through it would silently yield three
+    identical mandates and re-open the blind spot while looking fixed."""
+    mandates = pv._reference_mandates()
+    assert {m.risk_score for m in mandates} == {1, 3, 5}
+    assert {m.compliance.halal for m in mandates} == {True, False}
+    assert {m.compliance.long_only for m in mandates} == {True, False}
+    assert any(m.compliance.ticker_blocklist for m in mandates)
