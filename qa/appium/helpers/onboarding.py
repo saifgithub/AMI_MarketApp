@@ -37,7 +37,6 @@ from selenium.common.exceptions import NoSuchElementException
 from config.locales import LOCALES
 from helpers.gestures import tap_element
 from helpers.locators import (
-    element_description,
     exists_text,
     interactive_elements,
     is_text_input,
@@ -71,14 +70,9 @@ def _live_chip(driver, candidates):
     - They are the bottom-most such control, because the transcript grows
       downward and the active chip row sits directly above the input.
     """
-    labelled = [
-        element
-        for element in candidates
-        if element_description(driver, element) != "<unlabeled>"
-    ]
-    if not labelled:
-        return candidates[0]
-    return max(labelled, key=lambda element: element.rect["y"])
+    if not candidates:
+        raise NoSuchElementException("no tappable candidate on this screen")
+    return max(candidates, key=lambda element: element.rect["y"])
 
 
 def ensure_onboarded(
@@ -124,7 +118,7 @@ def ensure_onboarded(
         except NoSuchElementException:
             pass
 
-        if exists_text(driver, _BACKEND_ERROR_TITLE):
+        if exists_text(driver, _BACKEND_ERROR_TITLE, retry=False):
             backend_error_retries += 1
             if backend_error_retries > _MAX_BACKEND_RETRIES:
                 raise TimeoutError(
@@ -135,21 +129,25 @@ def ensure_onboarded(
             time.sleep(2)
             continue
 
-        if exists_text(driver, _SKIP_FOR_NOW):
+        if exists_text(driver, _SKIP_FOR_NOW, retry=False):
             wait_visible_text(driver, _SKIP_FOR_NOW, timeout_s=3).click()
             time.sleep(1.5)
             continue
 
-        if exists_text(driver, _LOOKS_RIGHT_CONTINUE):
+        if exists_text(driver, _LOOKS_RIGHT_CONTINUE, retry=False):
             wait_visible_text(driver, _LOOKS_RIGHT_CONTINUE, timeout_s=3).click()
             time.sleep(1.5)
             continue
 
-        candidates = [
-            element
-            for element in interactive_elements(driver)
-            if not is_text_input(driver, element)
-        ]
+        # labelled_only filters server-side: the send-arrow button has no
+        # label, and this avoids one WebDriverAgent attribute read per candidate.
+        candidates = interactive_elements(driver, labelled_only=True)
+        if not candidates:
+            candidates = [
+                element
+                for element in interactive_elements(driver)
+                if not is_text_input(driver, element)
+            ]
         if not candidates:
             time.sleep(1.0)
             continue

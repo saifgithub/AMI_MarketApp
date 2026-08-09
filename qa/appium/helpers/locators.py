@@ -50,9 +50,17 @@ def _predicate_literal(value: str) -> str:
     return f'"{escaped}"'
 
 
-def _find_all_with_retry(driver: WebDriver, by: str, value: str) -> list[WebElement]:
+def _find_all_with_retry(
+    driver: WebDriver, by: str, value: str, *, retry: bool = True
+) -> list[WebElement]:
+    """`retry=False` skips the ~5.4s backoff. Use it for probes that live inside
+    a loop which is ALREADY retrying — otherwise every miss is paid twice, once
+    here and once by the caller. The onboarding walk hit this hard: three
+    negative probes per turn made an 11-turn interview cost ~440s on iOS, where
+    each WebDriverAgent round trip is far slower than UiAutomator2's."""
+    delays = (0.0, *_RETRY_DELAYS) if retry else (0.0,)
     last: list[WebElement] = []
-    for delay in (0.0, *_RETRY_DELAYS):
+    for delay in delays:
         if delay:
             time.sleep(delay)
         last = driver.find_elements(by, value)
@@ -113,6 +121,20 @@ def wait_visible_id(driver: WebDriver, identifier: str, *, timeout_s: float = 8.
 # --------------------------------------------------------------------------
 
 
+def _all_by_text(driver: WebDriver, text: str, *, retry: bool = True) -> list[WebElement]:
+    if is_ios(driver):
+        lit = _predicate_literal(text)
+        return _find_all_with_retry(
+            driver,
+            AppiumBy.IOS_PREDICATE,
+            f"label == {lit} OR name == {lit} OR value == {lit}",
+            retry=retry,
+        )
+    return _find_all_with_retry(
+        driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(f'text("{text}")'), retry=retry
+    )
+
+
 def all_by_text(driver: WebDriver, text: str) -> list[WebElement]:
     """Every element with this exact text, not just the first — needed where
     the same string can legitimately appear twice (e.g. Arabic has no case
@@ -120,16 +142,7 @@ def all_by_text(driver: WebDriver, text: str) -> list[WebElement]:
     on an identical string where their English/Malay equivalents differ only
     by case). Callers disambiguate by position (see helpers/locale_switch.py
     and tests/test_locale_matrix.py)."""
-    if is_ios(driver):
-        lit = _predicate_literal(text)
-        return _find_all_with_retry(
-            driver,
-            AppiumBy.IOS_PREDICATE,
-            f"label == {lit} OR name == {lit} OR value == {lit}",
-        )
-    return _find_all_with_retry(
-        driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(f'text("{text}")')
-    )
+    return _all_by_text(driver, text)
 
 
 def by_text(driver: WebDriver, text: str) -> WebElement:
@@ -173,20 +186,23 @@ def by_content_desc(driver: WebDriver, desc: str) -> WebElement:
     return elements[0]
 
 
-def exists_text(driver: WebDriver, text: str) -> bool:
-    try:
-        by_text(driver, text)
-        return True
-    except NoSuchElementException:
-        return False
+def exists_text(driver: WebDriver, text: str, *, retry: bool = True) -> bool:
+    return bool(_all_by_text(driver, text, retry=retry))
 
 
-def exists_text_contains(driver: WebDriver, fragment: str) -> bool:
-    try:
-        by_text_contains(driver, fragment)
-        return True
-    except NoSuchElementException:
-        return False
+def exists_text_contains(driver: WebDriver, fragment: str, *, retry: bool = True) -> bool:
+    if is_ios(driver):
+        lit = _predicate_literal(fragment)
+        return bool(_find_all_with_retry(
+            driver,
+            AppiumBy.IOS_PREDICATE,
+            f"label CONTAINS {lit} OR name CONTAINS {lit} OR value CONTAINS {lit}",
+            retry=retry,
+        ))
+    return bool(_find_all_with_retry(
+        driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(f'textContains("{fragment}")'),
+        retry=retry,
+    ))
 
 
 def wait_visible_text(driver: WebDriver, text: str, *, timeout_s: float = 8.0) -> WebElement:
@@ -214,21 +230,28 @@ _IOS_INTERACTIVE_TYPES = (
 )
 
 
-def interactive_elements(driver: WebDriver) -> list[WebElement]:
+def interactive_elements(driver: WebDriver, *, labelled_only: bool = False) -> list[WebElement]:
     """Every tappable node in the current hierarchy — the pool the nav-bar /
     bottom-inset and scroll-overflow checks scan for offending bounds.
 
     Android has a single `clickable` flag. iOS has no equivalent, so this
     approximates it by element type: Flutter semantics nodes carrying
     `button: true` surface as XCUIElementTypeButton, text fields as
-    XCUIElementTypeTextField, and so on."""
+    XCUIElementTypeTextField, and so on.
+
+    `labelled_only` filters to elements that carry a label. On iOS that happens
+    inside the predicate — one round trip instead of one per candidate, which
+    matters because WebDriverAgent attribute reads dominate the onboarding
+    walk's runtime."""
     if is_ios(driver):
         types = " OR ".join(f'type == "{t}"' for t in _IOS_INTERACTIVE_TYPES)
-        return _find_all_with_retry(
-            driver, AppiumBy.IOS_PREDICATE, f"({types}) AND visible == 1"
-        )
+        predicate = f"({types}) AND visible == 1"
+        if labelled_only:
+            predicate += ' AND label != "" AND label != nil'
+        return _find_all_with_retry(driver, AppiumBy.IOS_PREDICATE, predicate)
+    selector = "clickable(true)"
     return _find_all_with_retry(
-        driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector("clickable(true)")
+        driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(selector)
     )
 
 
