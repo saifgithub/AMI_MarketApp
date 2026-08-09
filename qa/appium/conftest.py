@@ -29,6 +29,21 @@ from helpers.driver_factory import new_driver
 from helpers.gestures import screen_scale
 from helpers.onboarding import ensure_onboarded
 from helpers.report import FlagCollector, write_summary_json
+from tools import harness_manifest
+
+
+def pytest_sessionstart(session):
+    """Refuse to run an in-place-edited copy of this harness (CR162, closing
+    CR080's flagged-but-unguarded second occurrence).
+
+    Hooked at session start rather than offered as a fixture so it cannot be
+    skipped by test selection — the two real incidents both produced *reports*,
+    and a guard that only runs when someone remembers to request it would not
+    have caught either. See tools/harness_manifest.py for the full history."""
+    ok, message = harness_manifest.verify()
+    if not ok:
+        raise pytest.UsageError(f"HARNESS INTEGRITY: {message}")
+    print(f"harness integrity: {message}")
 
 
 def pytest_addoption(parser):

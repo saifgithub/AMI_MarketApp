@@ -1,0 +1,121 @@
+# CR162 — run the tests that already exist.
+#
+# Before this, `mobile/test/` held ~70 files and ~620 cases that ran only when
+# a human remembered to run them: deploy-beta.yml is `workflow_dispatch`-only
+# and runs backend pytest alone, so nothing on any push executed a single
+# Flutter test. This closes that.
+#
+# Deliberately `ubuntu-latest`, NOT macOS. GitHub bills macOS runners at
+# $0.062/min against a 10x minute multiplier versus $0.006/min on Linux, and
+# nothing here needs a Mac: `flutter analyze` and `flutter test` run headless on
+# the Dart VM. The tests that DO need real hardware — qa/appium's device suites —
+# stay on melehost and the Mac, where the devices actually are. Putting them in
+# CI would mean either a device farm or a self-hosted runner, both of which
+# CR162 explicitly deferred.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A second push while the first run is still going makes the first one
+# pointless — cancel it rather than paying for both.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mobile:
+    name: Flutter (analyze + test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          # Pinned to the version the Mac builds with, so CI cannot go green on
+          # a Flutter that nobody ships from. Bump this in the same commit as
+          # any local Flutter upgrade.
+          flutter-version: "3.41.9"
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        working-directory: mobile
+        run: flutter pub get
+
+      # --no-fatal-infos matches the promotion protocol's own gate
+      # (docs/initial_specs/10_delivery/promotion_protocol.md). The repo carries
+      # pre-existing infos; failing on them here would mean this workflow was
+      # red on the day it landed, which is how a required check gets ignored.
+      - name: Analyze
+        working-directory: mobile
+        run: flutter analyze lib/ --no-fatal-infos
+
+      - name: Test
+        working-directory: mobile
+        run: flutter test --reporter github
+
+  qa-harness:
+    name: UAT harness (offline guards)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install harness deps
+        working-directory: qa/appium
+        run: pip install --no-cache-dir -r requirements.txt
+
+      # Only tests_offline/ — everything under tests/ needs a real device.
+      # These guard the CR162 platform dispatch, where being wrong is silent:
+      # ACCESSIBILITY_ID is correct for Flutter's Semantics(identifier:) on iOS
+      # and wrong on Android, and the failure looks exactly like "the element
+      # isn't on screen".
+      - name: Offline dispatch guards
+        working-directory: qa/appium
+        run: python -m pytest tests_offline/ -v
+
+      # MANIFEST.sha256 is what stops melehost running a hand-edited copy of the
+      # harness (CR080's twice-repeated incident). It is only protective while
+      # it matches the code, and regenerating it is a step a human forgets — so
+      # a stale manifest fails here rather than on the rig, where it would read
+      # as "the harness is broken" the morning someone needs a report.
+      - name: Harness manifest is current
+        working-directory: qa/appium
+        run: |
+          python tools/harness_manifest.py write
+          git diff --exit-code -- MANIFEST.sha256 || {
+            echo "::error::MANIFEST.sha256 is stale. Run: python qa/appium/tools/harness_manifest.py write"
+            exit 1
+          }
+
+      # The registers are generated artifacts; a hand-edit to the table silently
+      # loses on the next regenerate (CR081). This is the same check
+      # backend/tests/unit/test_registers_no_drift.py runs, hoisted to CI so a
+      # drifted table cannot sit unnoticed on main.
+      - name: Registers have not drifted
+        run: |
+          python scripts/registers/gen_registers.py verify def
+          python scripts/registers/gen_registers.py verify cr
+
+  backend:
+    name: Backend unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install backend deps
+        working-directory: backend
+        run: |
+          pip install --no-cache-dir uv
+          uv pip install --system -e ".[dev]"
+      - name: Run backend unit tests
+        working-directory: backend
+        run: pytest tests/unit/ -q
