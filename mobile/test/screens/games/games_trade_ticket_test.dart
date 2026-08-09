@@ -160,4 +160,42 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets(
+    'a failed quote offers a RETRY, never a spinner that never stops',
+    (tester) async {
+      // Saiful hit this for real: the Cloudflare tunnel dropped all four edge
+      // connectors for ~70 seconds, his phone got a 502, and the confirm card
+      // sat there turning a progress indicator underneath the error message
+      // for as long as the sheet stayed open. Nothing was in flight. The app
+      // was showing work it was not doing, and the only way out was to go back
+      // and re-pick a size.
+      final api = FakeGamesApiClient(quoteError: Exception('502'));
+      await _pump(tester, api);
+
+      await tester.enterText(find.byType(TextField), 'AMD');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(HexChip, '25%'));
+      await tester.pumpAndSettle();
+
+      expect(api.quoteCallsSeen, hasLength(1));
+      expect(
+        find.byType(CircularProgressIndicator),
+        findsNothing,
+        reason: 'nothing is in flight — a spinner here is a lie about state',
+      );
+      expect(find.text('RETRY'), findsOneWidget);
+
+      // And the retry actually re-quotes.
+      api.quoteError = null;
+      await tester.ensureVisible(find.text('RETRY'));
+      await tester.tap(find.text('RETRY'));
+      await tester.pumpAndSettle();
+
+      expect(api.quoteCallsSeen, hasLength(2));
+      expect(find.text('RETRY'), findsNothing);
+      expect(find.text('PLACE ORDER'), findsOneWidget);
+    },
+  );
 }

@@ -407,10 +407,39 @@ class _ConfirmCardState extends ConsumerState<_ConfirmCard> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final t = widget.ticket;
-    if (t.quoting || t.quote == null) {
+    if (t.quoting) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: AmiSpacing.m),
         child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+    if (t.quote == null) {
+      // No quote and nothing in flight. This used to fall into the spinner
+      // above, so a FAILED quote left a progress indicator turning under the
+      // error message for as long as the sheet stayed open — the app showing
+      // work it was not doing, with no way to try again short of re-picking a
+      // size. Saiful hit it when the Cloudflare tunnel dropped all four edge
+      // connectors for ~70s and his phone got a 502.
+      //
+      // An error gets a retry. No error yet means the first fetch has not
+      // reached its microtask, which is genuinely a moment of loading.
+      if (t.error == null) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: AmiSpacing.m),
+          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        );
+      }
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s),
+        child: SizedBox(
+          width: double.infinity,
+          child: HexButton(
+            label: l.gamesRetry.toUpperCase(),
+            color: AmiColors.hexGreen,
+            onPressed: () => widget.notifier
+                .fetchQuote(cashAvailable: widget.cashAvailable),
+          ),
+        ),
       );
     }
     final q = t.quote!;

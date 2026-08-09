@@ -15,7 +15,13 @@ class FakeGamesApiClient extends ApiClient {
     this.tradeResult,
     this.queuedOrders = const [],
     this.cancelSucceeds = true,
+    this.quoteError,
   }) : super(baseUrl: 'test://localhost');
+
+  /// When set, [gamesTradeQuote] throws it instead of answering — models a
+  /// transport failure (Saiful hit a real one when the Cloudflare tunnel
+  /// dropped every edge connector for ~70s and his phone got a 502).
+  Object? quoteError;
 
   /// Canned response for [gamesQueuedOrders].
   List<GameQueuedOrder> queuedOrders;
@@ -91,6 +97,7 @@ class FakeGamesApiClient extends ApiClient {
     required double notional,
   }) async {
     quoteCallsSeen.add((ticker: ticker, side: side, notional: notional));
+    if (quoteError != null) throw quoteError!;
     return tradeQuote ??
         GameTradeQuote(
           ticker: ticker,
