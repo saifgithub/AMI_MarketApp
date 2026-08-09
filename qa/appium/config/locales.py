@@ -41,11 +41,11 @@ LOCALES: dict[str, LocaleProfile] = {
         switcher_native_name="English",
         rtl=False,
         tab_labels={
-            "Floor": "Floor",
-            "Portfolio": "Portfolio",
-            "Journal": "Journal",
-            "Lessons": "Lessons",
-            "Settings": "Settings",
+            "Floor": "FLOOR",
+            "Portfolio": "PORTFOLIO",
+            "Journal": "JOURNAL",
+            "Lessons": "LESSONS",
+            "Settings": "SETTINGS",
         },
         strings={
             "floor_concierge_heading": "AMI CONCIERGE",
@@ -66,7 +66,7 @@ LOCALES: dict[str, LocaleProfile] = {
         switcher_native_name="العربية",
         rtl=True,
         tab_labels={
-            "Floor": "Floor",
+            "Floor": "القاعة",
             "Portfolio": "المحفظة",
             "Journal": "السجل",
             "Lessons": "الدروس",
@@ -91,11 +91,11 @@ LOCALES: dict[str, LocaleProfile] = {
         switcher_native_name="Bahasa Melayu",
         rtl=False,
         tab_labels={
-            "Floor": "Floor",
-            "Portfolio": "Portfolio",
-            "Journal": "Jurnal",
-            "Lessons": "Pengajian",
-            "Settings": "Tetapan",
+            "Floor": "LANTAI",
+            "Portfolio": "PORTFOLIO",
+            "Journal": "JURNAL",
+            "Lessons": "PELAJARAN",
+            "Settings": "TETAPAN",
         },
         strings={
             "floor_concierge_heading": "AMI CONCIERGE",
