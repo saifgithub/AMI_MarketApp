@@ -232,23 +232,50 @@ def interactive_elements(driver: WebDriver) -> list[WebElement]:
     )
 
 
+def element_description(driver: WebDriver, element: WebElement) -> str:
+    """A human-readable handle for an element, for report output.
+
+    The attribute names are NOT shared: asking XCUITest for `content-desc`
+    returns HTTP 500 from WebDriverAgent (it validates against a fixed
+    attribute list) rather than an empty string, so this cannot be one call
+    with a fallback — it has to dispatch."""
+    text = (element.text or "").strip()
+    if text:
+        return text
+    attribute = "label" if is_ios(driver) else "content-desc"
+    return (element.get_attribute(attribute) or "").strip() or "<unlabeled>"
+
+
+def is_text_input(driver: WebDriver, element: WebElement) -> bool:
+    """Same story as element_description: `class` is an Android attribute,
+    `type` is the iOS one."""
+    if is_ios(driver):
+        kind = element.get_attribute("type") or ""
+        return kind in ("XCUIElementTypeTextField", "XCUIElementTypeSecureTextField")
+    return "EditText" in (element.get_attribute("class") or "")
+
+
 def scrollable_exists(driver: WebDriver) -> bool | None:
     """Does a scrollable container exist in the current hierarchy?
 
     Returns True/False on Android, where `UiSelector().scrollable(true)` is
     authoritative.
 
-    On iOS returns True or **None** — never False. Flutter's iOS accessibility
-    bridge does not reliably surface a scrollable container as
-    XCUIElementTypeScrollView, so "found none" does not license the conclusion
-    "nothing here scrolls". `None` means *undetermined*, and
-    helpers/layout.py records that in the finding rather than treating it as a
-    negative — a False here would manufacture scroll-overflow findings on
+    On iOS returns True or **None** — never False. `None` means *undetermined*,
+    and helpers/layout.py records that in the finding rather than treating it as
+    a negative. A False here would manufacture scroll-overflow findings on
     screens that scroll perfectly well, which is exactly the kind of confident
     wrong answer this project's degrade-loudly rule exists to prevent.
 
-    Tighten this to a real True/False once a live simulator run shows what the
-    bridge actually emits — with evidence, not by assuming.
+    **Evidence so far (2026-08-10, first live Simulator run):** Flutter *does*
+    emit `XCUIElementTypeScrollView` — the Concierge interview screen showed 4
+    of them, for its transcript list and horizontal chip row. So the positive
+    signal is real and `True` is trustworthy.
+
+    What is still unproven is the negative: one screen showing scroll views does
+    not establish that *every* scrollable surfaces as one, and that is the claim
+    a `False` would rest on. Tighten this only after a run across several known-
+    scrolling screens shows the mapping holds — with evidence, not by assuming.
     """
     if is_ios(driver):
         found = _find_all_with_retry(

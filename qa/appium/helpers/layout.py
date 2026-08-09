@@ -35,7 +35,7 @@ import numpy as np
 from PIL import Image
 
 from helpers.gestures import Band, screenshot_png, swipe_up
-from helpers.locators import interactive_elements, scrollable_exists
+from helpers.locators import element_description, interactive_elements, scrollable_exists
 
 
 def bounds(element) -> tuple[int, int, int, int]:
@@ -45,12 +45,11 @@ def bounds(element) -> tuple[int, int, int, int]:
     return x1, y1, x2, y2
 
 
-def label(element) -> str:
-    text = (element.text or "").strip()
-    if text:
-        return text
-    desc = element.get_attribute("content-desc") or ""
-    return desc.strip() or "<unlabeled>"
+def label(driver, element) -> str:
+    """Kept as a thin alias so call sites read naturally; the platform
+    dispatch lives in helpers/locators.element_description (asking XCUITest for
+    `content-desc` is a WebDriverAgent 500, not an empty string)."""
+    return element_description(driver, element)
 
 
 def find_navbar_overlaps(driver, navbar_top_y: int, *, tol: int = 2, screen: str = "") -> list[dict]:
@@ -66,7 +65,7 @@ def find_navbar_overlaps(driver, navbar_top_y: int, *, tol: int = 2, screen: str
             {
                 "check": "navbar_overlap",
                 "screen": screen,
-                "element_label": label(element),
+                "element_label": label(driver, element),
                 "bounds": [x1, y1, x2, y2],
                 "navbar_top_y": navbar_top_y,
                 "overlap_px": overlap,

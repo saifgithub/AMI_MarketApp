@@ -24,7 +24,8 @@ class ChipRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m),
         itemCount: chips.length,
         separatorBuilder: (_, __) => const SizedBox(width: AmiSpacing.s),
-        itemBuilder: (context, i) => _Chip(label: chips[i], onTap: () => onSelected(chips[i])),
+        itemBuilder: (context, i) =>
+            _Chip(label: chips[i], onTap: () => onSelected(chips[i])),
       ),
     );
   }
@@ -37,23 +38,34 @@ class _Chip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipPath(
-        clipper: const CutCornerOctagonClipper(cornerCut: 8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            border: Border.all(color: AmiColors.hexBlue, width: 1),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: AmiTypography.body.copyWith(
-              color: AmiColors.hexBlue,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+    // DEF249: without `button: true` this is announced as static text, so a
+    // VoiceOver user on the very first onboarding question gets no signal that
+    // the chips are tappable at all. Android's bridge marks any tappable node
+    // `clickable` regardless, which is why this went unnoticed until the app
+    // was driven on iOS, where a node is a button only if Flutter says so.
+    // No `label:` here — the child Text already supplies one, and setting both
+    // concatenates them, so VoiceOver announces the chip twice.
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: ClipPath(
+          clipper: const CutCornerOctagonClipper(cornerCut: 8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AmiSpacing.m, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              border: Border.all(color: AmiColors.hexBlue, width: 1),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: AmiTypography.body.copyWith(
+                color: AmiColors.hexBlue,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ),

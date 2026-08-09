@@ -34,8 +34,16 @@ import time
 
 from selenium.common.exceptions import NoSuchElementException
 
+from config.locales import LOCALES
 from helpers.gestures import tap_element
-from helpers.locators import exists_text, interactive_elements, wait_visible_text
+from helpers.locators import (
+    element_description,
+    exists_text,
+    interactive_elements,
+    is_text_input,
+    wait_visible_text,
+)
+from helpers.platform import is_ios
 
 _SKIP_FOR_NOW = "SKIP FOR NOW"
 _LOOKS_RIGHT_CONTINUE = "LOOKS RIGHT — CONTINUE"
@@ -44,7 +52,60 @@ _TRY_AGAIN = "TRY AGAIN"
 _MAX_BACKEND_RETRIES = 2
 
 
-def ensure_onboarded(driver, *, floor_label: str = "Floor", timeout_s: float = 120.0) -> None:
+def _live_chip(driver, candidates):
+    """Pick the chip belonging to the CURRENT turn.
+
+    The interview is a chat transcript: answered turns stay on screen and
+    scroll up, and their chips stay in the accessibility tree. "First
+    interactive element" therefore means "a chip from a turn already answered",
+    which submits nothing — the walk taps it forever and times out with the app
+    visibly parked on the same question. That is exactly how the first iOS run
+    failed, twice, at 120s and then at 300s.
+
+    Two signals identify the live chips, and both are structural rather than
+    string-matched (the interview's prose is backend-owned and must not be
+    hardcoded here):
+
+    - They carry a label. The send-arrow button beside the text field has none,
+      and tapping it with an empty field does nothing.
+    - They are the bottom-most such control, because the transcript grows
+      downward and the active chip row sits directly above the input.
+    """
+    labelled = [
+        element
+        for element in candidates
+        if element_description(driver, element) != "<unlabeled>"
+    ]
+    if not labelled:
+        return candidates[0]
+    return max(labelled, key=lambda element: element.rect["y"])
+
+
+def ensure_onboarded(
+    driver, *, floor_label: str | None = None, timeout_s: float | None = None
+) -> None:
+    """Walk the Concierge interview until the app lands on the shell.
+
+    CR162 fixed two things here:
+
+    - `floor_label` defaulted to the literal `"Floor"`, which is the harness's
+      locale-independent *key*, not the rendered string. The tab renders
+      `l.floorTabUpper` — "FLOOR" — so the exact-text probe could never match
+      and this function could only ever fall through to the walk. It now takes
+      the string from the same locale table everything else uses.
+    - The budget is platform-aware. WebDriverAgent element queries are markedly
+      slower than UiAutomator2's, and each miss in this loop pays the locator
+      retry backoff (~5.4s), so an 11-turn interview does not fit in the
+      Android-sized 120s. Measured, not guessed: the walk completed the full
+      11-turn interview and reached Floor at just over 300s, so 480s is the
+      budget with headroom. This is a one-time cost per fresh install —
+      `noReset=True` means every later session takes the ~5s early return.
+    """
+    if floor_label is None:
+        floor_label = LOCALES["en"].tab_labels["Floor"]
+    if timeout_s is None:
+        timeout_s = 480.0 if is_ios(driver) else 120.0
+
     try:
         wait_visible_text(driver, floor_label, timeout_s=5)
         return  # already onboarded from a previous noReset session — the common case
@@ -87,12 +148,12 @@ def ensure_onboarded(driver, *, floor_label: str = "Floor", timeout_s: float = 1
         candidates = [
             element
             for element in interactive_elements(driver)
-            if "EditText" not in (element.get_attribute("class") or "")
+            if not is_text_input(driver, element)
         ]
         if not candidates:
             time.sleep(1.0)
             continue
-        tap_element(driver, candidates[0])
+        tap_element(driver, _live_chip(driver, candidates))
         time.sleep(1.5)
 
     raise TimeoutError(f"onboarding did not reach Floor within {timeout_s}s")

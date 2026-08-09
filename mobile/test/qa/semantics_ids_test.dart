@@ -81,6 +81,26 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('a destination is announced once, not twice', (t) async {
+    // DEF249: `Semantics(label: x, child: Text(x))` concatenates — iOS reported
+    // label="FLOOR\nFLOOR", so VoiceOver said every tab twice and an exact-text
+    // locator could never match. Invisible on Android, where the Text keeps its
+    // own node, and invisible to a tap test. Only a label assertion catches it.
+    final semantics = t.ensureSemantics();
+    await _pump(t, const [
+      HexNavItem(
+          icon: Icons.grid_view_rounded, label: 'FLOOR', id: NavIds.floor),
+    ]);
+
+    final node = t.getSemantics(find.bySemanticsIdentifier(NavIds.floor));
+    expect(node.label, 'FLOOR',
+        reason: 'DEF249: a duplicated label means the Semantics wrapper is '
+            'setting `label:` as well as wrapping a Text that already '
+            'provides one');
+
+    semantics.dispose();
+  });
+
   test('NavIds.all covers every declared destination', () {
     // A new destination added to the class but forgotten in `all` would be
     // invisible to the harness's GO/NO-GO gate, which asserts against `all`.

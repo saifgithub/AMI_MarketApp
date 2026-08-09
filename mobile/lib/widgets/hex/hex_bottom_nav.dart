@@ -115,10 +115,14 @@ class _Cell extends StatelessWidget {
       ],
     );
 
+    // No `label:` — the child Text already supplies one, and setting both
+    // concatenates them: iOS reported label="FLOOR\nFLOOR", so VoiceOver
+    // announced every destination twice and an exact-text locator could never
+    // match. DEF249; the duplication predates CR162 and was invisible on
+    // Android, where the Text keeps its own separate node.
     return Semantics(
       button: true,
       selected: active,
-      label: item.label,
       identifier: item.id,
       child: GestureDetector(
         onTap: onTap,
