@@ -2,16 +2,24 @@
 /// to the right index (Material semantics preserved through the visual swap).
 library;
 
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/widgets/hex/hex_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _items = <HexNavItem>[
-  HexNavItem(icon: Icons.grid_view_rounded, label: 'FLOOR'),
-  HexNavItem(icon: Icons.account_balance_wallet_outlined, label: 'PORTFOLIO'),
-  HexNavItem(icon: Icons.menu_book_outlined, label: 'JOURNAL'),
-  HexNavItem(icon: Icons.school_outlined, label: 'LESSONS'),
-  HexNavItem(icon: Icons.settings_outlined, label: 'SETTINGS'),
+  HexNavItem(
+      icon: Icons.grid_view_rounded, label: 'FLOOR', id: NavIds.floor),
+  HexNavItem(
+      icon: Icons.account_balance_wallet_outlined,
+      label: 'PORTFOLIO',
+      id: NavIds.portfolio),
+  HexNavItem(
+      icon: Icons.menu_book_outlined, label: 'JOURNAL', id: NavIds.journal),
+  HexNavItem(
+      icon: Icons.school_outlined, label: 'LESSONS', id: NavIds.lessons),
+  HexNavItem(
+      icon: Icons.settings_outlined, label: 'SETTINGS', id: NavIds.settings),
 ];
 
 Future<void> _pump(WidgetTester t, int index, void Function(int) onTap) {

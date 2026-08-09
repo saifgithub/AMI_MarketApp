@@ -5,6 +5,7 @@ library;
 
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/screens/floor/floor_screen.dart';
 import 'package:ami_trade/screens/journal/journal_screen.dart';
 import 'package:ami_trade/screens/lessons/lessons_screen.dart';
@@ -74,16 +75,25 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                 },
                 items: [
                   HexNavItem(
-                      icon: Icons.grid_view_rounded, label: l.floorTabUpper),
+                      icon: Icons.grid_view_rounded,
+                      label: l.floorTabUpper,
+                      id: NavIds.floor),
                   HexNavItem(
                       icon: Icons.account_balance_wallet_outlined,
-                      label: l.portfolioTabUpper),
+                      label: l.portfolioTabUpper,
+                      id: NavIds.portfolio),
                   HexNavItem(
-                      icon: Icons.menu_book_outlined, label: l.journalTabUpper),
+                      icon: Icons.menu_book_outlined,
+                      label: l.journalTabUpper,
+                      id: NavIds.journal),
                   HexNavItem(
-                      icon: Icons.school_outlined, label: l.lessonsTabUpper),
+                      icon: Icons.school_outlined,
+                      label: l.lessonsTabUpper,
+                      id: NavIds.lessons),
                   HexNavItem(
-                      icon: Icons.settings_outlined, label: l.settingsTabUpper),
+                      icon: Icons.settings_outlined,
+                      label: l.settingsTabUpper,
+                      id: NavIds.settings),
                 ],
               ),
             ),

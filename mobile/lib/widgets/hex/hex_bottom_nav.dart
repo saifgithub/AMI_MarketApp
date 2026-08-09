@@ -17,9 +17,20 @@ import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 
 class HexNavItem {
-  const HexNavItem({required this.icon, required this.label});
+  const HexNavItem({
+    required this.icon,
+    required this.label,
+    required this.id,
+  });
   final IconData icon;
+
+  /// The *translated* on-screen string — changes with locale.
   final String label;
+
+  /// CR162: locale-independent automation handle (see `qa/semantics_ids.dart`).
+  /// Required, not optional, so a new destination cannot be added without one —
+  /// the harness navigates by this, and a missing ID is a silent test break.
+  final String id;
 }
 
 class HexBottomNav extends StatelessWidget {
@@ -108,6 +119,7 @@ class _Cell extends StatelessWidget {
       button: true,
       selected: active,
       label: item.label,
+      identifier: item.id,
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,

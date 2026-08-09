@@ -4,6 +4,10 @@
 /// via `--dart-define=SENTRY_DSN=...`. No DSN → no init, no network,
 /// no PII leaving the device. Set env via `--dart-define=AMI_ENV=prod`
 /// (default `local`).
+///
+/// `--dart-define=AMI_QA_SEMANTICS=1` (CR162) forces the accessibility
+/// semantics tree on for the UAT harness. Off by default, so shipping
+/// TestFlight/Play builds behave exactly as before — see `_qaSemantics`.
 library;
 
 import 'package:ami_trade/app.dart';
@@ -12,6 +16,7 @@ import 'package:ami_trade/state/notification_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -20,8 +25,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
 const _amiEnv = String.fromEnvironment('AMI_ENV', defaultValue: 'local');
 
+/// CR162: black-box UI automation reads the platform accessibility tree,
+/// and Flutter paints to a canvas rather than emitting native widgets — so
+/// that tree is the *only* thing Appium/XCUITest can see. Android builds it
+/// as soon as an accessibility client interrogates the window, which is why
+/// the Android harness (CR080) needed no app change. iOS does not: the engine
+/// gates it on `UIAccessibilityIsVoiceOverRunning() ||
+/// UIAccessibilityIsSwitchControlRunning()`, so on a real iPhone with no
+/// VoiceOver the whole app reads as one opaque FlutterView with an empty page
+/// source (flutter#25485, open since 2018).
+///
+/// `ensureSemantics()` registers us as an interested client, forcing the tree
+/// to be collected regardless of assistive tech. Gated so it is never on in a
+/// build a user receives — the handle is intentionally never disposed, because
+/// the QA build wants semantics up for its whole lifetime.
+const _qaSemantics = bool.fromEnvironment('AMI_QA_SEMANTICS');
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (_qaSemantics) {
+    SemanticsBinding.instance.ensureSemantics();
+  }
 
   // Lock to portrait for the alpha — horizontal layouts come later
   await SystemChrome.setPreferredOrientations([
