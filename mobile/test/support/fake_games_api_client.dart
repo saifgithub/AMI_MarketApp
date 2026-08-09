@@ -13,7 +13,19 @@ class FakeGamesApiClient extends ApiClient {
   FakeGamesApiClient({
     this.tradeQuote,
     this.tradeResult,
+    this.queuedOrders = const [],
+    this.cancelSucceeds = true,
   }) : super(baseUrl: 'test://localhost');
+
+  /// Canned response for [gamesQueuedOrders].
+  List<GameQueuedOrder> queuedOrders;
+
+  /// What the SERVER reports for a cancel. `false` models the real race —
+  /// the order filled between the list being drawn and the tap — which the
+  /// UI must report as "too late", never as a cancellation.
+  bool cancelSucceeds;
+
+  final List<({String runId, String orderId})> cancelCallsSeen = [];
 
   /// Canned response for [gamesTradeQuote]; a sensible default when the
   /// caller doesn't need to control the numbers.
@@ -57,6 +69,19 @@ class FakeGamesApiClient extends ApiClient {
         stake: 10000,
         cash: 10000,
       );
+
+  @override
+  Future<List<GameQueuedOrder>> gamesQueuedOrders(String runId) async =>
+      queuedOrders;
+
+  @override
+  Future<bool> gamesCancelQueuedOrder({
+    required String runId,
+    required String orderId,
+  }) async {
+    cancelCallsSeen.add((runId: runId, orderId: orderId));
+    return cancelSucceeds;
+  }
 
   @override
   Future<GameTradeQuote> gamesTradeQuote({

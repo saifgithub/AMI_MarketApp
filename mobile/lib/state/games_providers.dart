@@ -34,6 +34,41 @@ final gamesRunDetailProvider =
   return api.gamesRunDetail(runId);
 });
 
+/// §13.3's Queued-orders surface. Separate from [gamesRunDetailProvider]
+/// rather than folded into it: the run detail is read by the ticket on every
+/// size drag, and the orders list is a heavier call (it quotes every open
+/// order). Both are invalidated together after a trade or a cancel.
+final gamesQueuedOrdersProvider = FutureProvider.autoDispose
+    .family<List<GameQueuedOrder>, String>((ref, runId) async {
+  final api = ref.watch(apiClientProvider);
+  return api.gamesQueuedOrders(runId);
+});
+
+/// Cancels one queued order and refreshes everything its cash touched.
+///
+/// Returns the SERVER's verdict, not "the call succeeded". An order that
+/// filled between the list render and the tap comes back `cancelled: false`,
+/// and the caller must be able to tell the player that rather than showing a
+/// cancellation that did not happen.
+Future<bool> cancelGamesQueuedOrder(
+  WidgetRef ref, {
+  required String runId,
+  required String orderId,
+}) async {
+  final api = ref.read(apiClientProvider);
+  final cancelled = await api.gamesCancelQueuedOrder(
+    runId: runId,
+    orderId: orderId,
+  );
+  ref.invalidate(gamesQueuedOrdersProvider(runId));
+  // The run detail carries `cash_committed`/`cash_available`, so a cancel
+  // changes what the ticket may size against — refresh it either way, since
+  // a `cancelled: false` means the order FILLED, which moves cash too.
+  ref.invalidate(gamesRunDetailProvider(runId));
+  ref.invalidate(gamesRunsProvider);
+  return cancelled;
+}
+
 // ── The Close and the Record (CR109 slice 3) ────────────────────────────
 
 /// `GET /v1/games/runs/{run_id}/close` — read once per Close screen visit;
@@ -213,6 +248,11 @@ class GamesTicketNotifier extends StateNotifier<GamesTicketState> {
       state = state.copyWith(submitting: false, result: result);
       _ref.invalidate(gamesRunDetailProvider(runId));
       _ref.invalidate(gamesRunsProvider);
+      // Most orders from this audience QUEUE rather than fill (§5.1), so the
+      // orders list is the surface that just changed — refreshing only the
+      // run detail would leave the player's new order invisible on the very
+      // screen built to show it.
+      _ref.invalidate(gamesQueuedOrdersProvider(runId));
       return result;
     } catch (e) {
       state = state.copyWith(

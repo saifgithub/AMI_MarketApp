@@ -1675,6 +1675,36 @@ class ApiClient {
     return GameTradeResult.fromJson(r.data!);
   }
 
+  /// Every order still waiting on the next US open, priced at read time.
+  /// Returns a BARE JSON array (`list[dict]` from the router), same as
+  /// `/cadences` and `/runs` — `_listBody` accepts either shape so a later
+  /// envelope cannot break this the way it broke `gamesRuns`.
+  Future<List<GameQueuedOrder>> gamesQueuedOrders(String runId) async {
+    final r = await _dio.get<dynamic>('/v1/games/runs/$runId/orders');
+    return _listBody(r.data, 'orders')
+        .map((e) => GameQueuedOrder.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Cancels a queued order. The ticket has promised "free to cancel any
+  /// time before it fills" (§5.1) since slice 2 shipped; this is what lets
+  /// the app keep it.
+  ///
+  /// Returns the server's own `cancelled` boolean rather than "it did not
+  /// throw". An order that filled between the list and the tap comes back
+  /// `{"cancelled": false, "state": "filled"}` with a 200 — reporting that
+  /// as a cancellation would be the same class of lie as the `status ??
+  /// 'filled'` default this file's models were built to stop.
+  Future<bool> gamesCancelQueuedOrder({
+    required String runId,
+    required String orderId,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/games/runs/$runId/orders/$orderId/cancel',
+    );
+    return r.data?['cancelled'] == true;
+  }
+
   /// §6.7 — restart is preview-then-commit over one endpoint: called with
   /// `confirm: false` (the default) it returns the forfeit cost without
   /// acting; `confirm: true` commits it.

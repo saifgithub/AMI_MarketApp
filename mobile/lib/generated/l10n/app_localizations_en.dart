@@ -419,6 +419,124 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String gamesTicketCashCommitted(String amount, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queued orders',
+      one: '1 queued order',
+    );
+    return '$amount committed to $_temp0';
+  }
+
+  @override
+  String get gamesRunTitle => 'My run';
+
+  @override
+  String get gamesRunBookValue => 'BOOK VALUE';
+
+  @override
+  String get gamesRunCashLabel => 'Cash';
+
+  @override
+  String get gamesRunCommittedLabel => 'Committed to queued orders';
+
+  @override
+  String get gamesRunAvailableLabel => 'Available to deploy';
+
+  @override
+  String get gamesRunInvestedLabel => 'Invested';
+
+  @override
+  String get gamesRunHeatHeading => 'BOOK HEAT';
+
+  @override
+  String gamesRunHeatConcentration(String pct, String ticker) {
+    return '$pct% in $ticker';
+  }
+
+  @override
+  String get gamesRunHeatAllCash => 'All cash. Nothing at risk yet.';
+
+  @override
+  String get gamesRunPositionsHeading => 'POSITIONS';
+
+  @override
+  String gamesRunPositionSub(String qty, String avg) {
+    return '$qty @ $avg avg';
+  }
+
+  @override
+  String get gamesRunQueuedHeading => 'WAITING FOR THE OPEN';
+
+  @override
+  String gamesRunQueuedSub(String qty, String total) {
+    return '$qty shares · est. $total';
+  }
+
+  @override
+  String get gamesRunQueuedEstimateNote =>
+      'Estimated at the current price. It fills at the next open\'s price, which will differ.';
+
+  @override
+  String get gamesRunQueuedStaleNote =>
+      'Prices unavailable — these estimates are simulated, not live.';
+
+  @override
+  String get gamesRunCancelCta => 'Cancel';
+
+  @override
+  String get gamesRunCancelConfirmTitle => 'Cancel this order?';
+
+  @override
+  String gamesRunCancelConfirmBody(String side, String qty, String ticker) {
+    return '$side $qty $ticker will not be placed at the next open. Nothing is charged either way.';
+  }
+
+  @override
+  String get gamesRunCancelKeep => 'Keep it';
+
+  @override
+  String get gamesRunCancelledToast => 'Order cancelled.';
+
+  @override
+  String get gamesRunCancelRaceToast => 'Too late — that order already filled.';
+
+  @override
+  String get gamesRunEmptyBookHeading => 'Nothing on the book yet';
+
+  @override
+  String gamesRunEmptyBookBody(String amount, String days) {
+    return '$amount AMI Cash, $days to deploy it. There is no rule about how — one name or twenty, all of it or none. The clock is the only thing that is fixed.';
+  }
+
+  @override
+  String gamesRunDaysToDeploy(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get gamesRunMarksStaleNote =>
+      'Prices unavailable — this book is marked with simulated prices.';
+
+  @override
+  String gamesRunFeesPaid(String amount, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trades',
+      one: '1 trade',
+    );
+    return '$amount paid in trading costs · $_temp0';
+  }
+
+  @override
   String get gamesTicketPlacing => 'placing…';
 
   @override

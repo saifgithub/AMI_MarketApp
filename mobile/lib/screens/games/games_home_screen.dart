@@ -26,6 +26,7 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/games.dart';
 import 'package:ami_trade/screens/games/games_entry_sheet.dart';
 import 'package:ami_trade/screens/games/games_record_screen.dart';
+import 'package:ami_trade/screens/games/games_run_screen.dart';
 import 'package:ami_trade/screens/games/games_trade_ticket_screen.dart';
 import 'package:ami_trade/state/games_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -169,16 +170,33 @@ class _StateBLiveRun extends StatelessWidget {
                 const SizedBox(height: AmiSpacing.m),
                 const GamesQueueNote(),
                 const SizedBox(height: AmiSpacing.m),
-                SizedBox(
-                  width: double.infinity,
-                  child: HexButton(
-                    label: l.gamesTradeCta.toUpperCase(),
-                    color: AmiColors.hexGreen,
-                    onPressed: () => GamesTradeTicketScreen.show(
-                      context,
-                      runId: run.runId,
+                Row(
+                  children: [
+                    // "My run" leads. The card shows a return percentage and
+                    // nothing about the book behind it — cash, positions and
+                    // the orders waiting on the open all live one tap in
+                    // (§13.3), and until this button existed there was no
+                    // tap that reached them.
+                    Expanded(
+                      child: HexButton(
+                        label: l.gamesRunTitle.toUpperCase(),
+                        color: AmiColors.hexCyan,
+                        onPressed: () =>
+                            GamesRunScreen.push(context, runId: run.runId),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: AmiSpacing.s),
+                    Expanded(
+                      child: HexButton(
+                        label: l.gamesTradeCta.toUpperCase(),
+                        color: AmiColors.hexGreen,
+                        onPressed: () => GamesTradeTicketScreen.show(
+                          context,
+                          runId: run.runId,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

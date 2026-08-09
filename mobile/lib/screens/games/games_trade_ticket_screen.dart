@@ -96,7 +96,7 @@ class _GamesTradeTicketScreenState
             // figure used to appear only on the step-3 confirm card, so a
             // player had to commit to a percentage to discover what the
             // percentage was of.
-            _CashHeader(cash: runDetail.asData?.value.cash),
+            _CashHeader(detail: runDetail.asData?.value),
             const SizedBox(height: AmiSpacing.l),
 
             // TAP 1 — ticker.
@@ -149,7 +149,7 @@ class _GamesTradeTicketScreenState
               const SizedBox(height: AmiSpacing.xs),
               _SizePicker(
                 sizePct: ticket.sizePct ?? kGamesTicketDefaultSizePct,
-                cashAvailable: runDetail.asData?.value.cash ?? 0,
+                cashAvailable: runDetail.asData?.value.cashAvailable ?? 0,
                 onChanged: notifier.pickSize,
               ),
             ],
@@ -162,7 +162,7 @@ class _GamesTradeTicketScreenState
               _ConfirmCard(
                 ticket: ticket,
                 notifier: notifier,
-                cashAvailable: runDetail.asData?.value.cash ?? 0,
+                cashAvailable: runDetail.asData?.value.cashAvailable ?? 0,
               ),
             ],
 
@@ -204,29 +204,52 @@ Widget _pickerChip({
   );
 }
 
-/// The run's uninvested AMI Cash, at the TOP of the ticket.
+/// What this ticket may actually spend, at the TOP of the ticket.
 ///
-/// Saiful, on build 71: *"I have no idea how much funds i have."* The figure
-/// existed only on the step-3 confirm card, so you had to commit to a size
-/// before you could see what you were sizing against — and when `cash`
-/// silently read 0.0 (see `GameRunDetail.fromJson`), nothing on screen said so.
+/// Two defects landed here in two builds. On build 71 the figure existed
+/// only on the step-3 confirm card, so you had to commit to a size before
+/// you could see what you were sizing against — Saiful: *"I have no idea how
+/// much funds i have."* On build 74 the figure was there but it was
+/// `current_cash`, which queued orders never touch, so a second order was
+/// still offered the whole 10,000 the first one had already spoken for.
+///
+/// It now shows `cash_available` — cash minus everything committed to orders
+/// waiting on the open — and, when they differ, says why in the line below.
+/// Both numbers, or the difference is just an unexplained shortfall.
 class _CashHeader extends StatelessWidget {
-  const _CashHeader({required this.cash});
+  const _CashHeader({required this.detail});
 
-  final double? cash;
+  final GameRunDetail? detail;
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.end,
+    final l = AppLocalizations.of(context);
+    final d = detail;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l.gamesTicketCashAvailable, style: AmiTypography.caption),
-        Text(
-          cash == null ? '—' : _money(cash!),
-          style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(l.gamesTicketCashAvailable, style: AmiTypography.caption),
+            Text(
+              d == null ? '—' : _money(d.cashAvailable),
+              style:
+                  AmiTypography.labelMono.copyWith(color: AmiColors.textHigh),
+            ),
+          ],
         ),
+        if (d != null && d.cashCommitted > 0) ...[
+          const SizedBox(height: 2),
+          Text(
+            l.gamesTicketCashCommitted(
+              _money(d.cashCommitted),
+              d.queuedOrderCount,
+            ),
+            style: AmiTypography.caption.copyWith(color: AmiColors.hexAmber),
+          ),
+        ],
       ],
     );
   }
@@ -275,7 +298,7 @@ class _SizePickerState extends State<_SizePicker> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
+    final l = AppLocalizations.of(context);
     final pct = _dragging ?? widget.sizePct;
     final amount = widget.cashAvailable * (pct / 100.0);
 
@@ -407,7 +430,7 @@ class _ConfirmCardState extends ConsumerState<_ConfirmCard> {
           _row(l.gamesTicketShares, q.shares.toStringAsFixed(4)),
           _row(l.gamesTicketEstFee, '\$${q.estFee.toStringAsFixed(2)}'),
           _row(l.gamesTicketBookPct, '${q.bookPercentage.toStringAsFixed(1)}%'),
-          if (q.willQueue) ...[
+          if (q.mayQueue) ...[
             const SizedBox(height: AmiSpacing.s),
             const GamesQueueNote(),
           ],

@@ -251,5 +251,19 @@ void main() {
       expect(q.price, closeTo(483.36, 0.01));
       expect(q.bookPercentage, 25.0);
     });
+
+    test('the queue flag is derived from market_open, which is what is sent', () {
+      final q = GameTradeQuote.fromJson(_liveQuote);
+      expect(
+        q.willQueue,
+        isTrue,
+        reason: 'the seventh instance of this file\'s own bug class: there is '
+            'no `will_queue` key on the wire at all — the backend sends '
+            '`market_open`, its inverse — so the client defaulted to false '
+            'and the confirm card silently dropped the queue note on the '
+            'path §5.1 calls NORMAL for this audience',
+      );
+      expect(q.mayQueue, isTrue);
+    });
   });
 }

@@ -179,11 +179,36 @@ void main() {
       expect(q.estFee, 2.5);
       expect(q.bookPercentage, 25.0);
       expect(q.willQueue, isFalse);
+      expect(q.mayQueue, isFalse);
     });
 
-    test('will_queue defaults to false when absent', () {
-      final q = GameTradeQuote.fromJson({'ticker': 'AAPL', 'side': 'buy'});
+    test('market_open false means it will queue', () {
+      // What the backend ACTUALLY sends. It has no `will_queue` key at all —
+      // it reports `market_open`, the inverse. Reading only `will_queue`
+      // defaulted every quote to "fills now" and hid the queue note on the
+      // path §5.1 calls the normal one for this audience.
+      final q = GameTradeQuote.fromJson(
+        {'ticker': 'AAPL', 'side': 'buy', 'market_open': false},
+      );
+      expect(q.willQueue, isTrue);
+      expect(q.mayQueue, isTrue);
+    });
+
+    test('market_open true means it fills now', () {
+      final q = GameTradeQuote.fromJson(
+        {'ticker': 'AAPL', 'side': 'buy', 'market_open': true},
+      );
       expect(q.willQueue, isFalse);
+      expect(q.mayQueue, isFalse);
+    });
+
+    test('neither key present is UNKNOWN, and unknown still warns', () {
+      final q = GameTradeQuote.fromJson({'ticker': 'AAPL', 'side': 'buy'});
+      expect(q.willQueue, isNull,
+          reason: 'absent information is not the same as "it fills now"');
+      expect(q.mayQueue, isTrue,
+          reason: 'an unnecessary caveat costs a line; a missing one costs a '
+              'player believing they hold something they do not');
     });
   });
 

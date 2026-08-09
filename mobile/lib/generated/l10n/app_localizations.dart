@@ -808,6 +808,168 @@ abstract class AppLocalizations {
   /// **'{pct}% · {amount} AMI Cash'**
   String gamesTicketSizeAmount(String pct, String amount);
 
+  /// CR109. Under the ticket's available-cash figure: how much AMI Cash is already spoken for by orders waiting on the next US open, and how many. Explains why the available figure is lower than the book. Saiful on build 74: 'This was the second order placed. But it is still showing I have 10K.' NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} committed to {count, plural, =1{1 queued order} other{{count} queued orders}}'**
+  String gamesTicketCashCommitted(String amount, int count);
+
+  /// CR109. App-bar title of the run detail screen — the player's own book, positions, queued orders and equity curve for one live run. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'My run'**
+  String get gamesRunTitle;
+
+  /// CR109. Label above the run's total value (cash plus the marked value of every holding). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'BOOK VALUE'**
+  String get gamesRunBookValue;
+
+  /// CR109. Row label on the run screen for uninvested AMI Cash. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get gamesRunCashLabel;
+
+  /// CR109. Row label on the run screen for AMI Cash already spoken for by orders waiting on the next open. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Committed to queued orders'**
+  String get gamesRunCommittedLabel;
+
+  /// CR109. Row label on the run screen for cash minus committed — what a new order may actually size against. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Available to deploy'**
+  String get gamesRunAvailableLabel;
+
+  /// CR109. Row label on the run screen for the marked value of open positions. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Invested'**
+  String get gamesRunInvestedLabel;
+
+  /// CR109 design §10.4. Heading of the book-heat gauge: how much of the book sits in its single largest position. A measurement, never a scold — the game has no diversification rule. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'BOOK HEAT'**
+  String get gamesRunHeatHeading;
+
+  /// CR109 design §10.4. The book-heat readout: the share of the book held in its single largest position. Stated as fact, with no advice attached. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{pct}% in {ticker}'**
+  String gamesRunHeatConcentration(String pct, String ticker);
+
+  /// CR109 design §10.4. Book-heat readout when there are no positions. Flat statement, not encouragement to trade. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'All cash. Nothing at risk yet.'**
+  String get gamesRunHeatAllCash;
+
+  /// CR109. Heading of the open-positions list on the run screen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'POSITIONS'**
+  String get gamesRunPositionsHeading;
+
+  /// CR109. Second line of a position row: share count and average cost. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{qty} @ {avg} avg'**
+  String gamesRunPositionSub(String qty, String avg);
+
+  /// CR109 design §13.3. Heading of the queued-orders list — the surface the design calls 'the most-seen state in the product' for players in the Gulf and South-East Asia, whose orders are placed while the US market is shut. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'WAITING FOR THE OPEN'**
+  String get gamesRunQueuedHeading;
+
+  /// CR109. Second line of a queued-order row: the exact share count that will fill, and the estimated total cost at the CURRENT price. The fill happens at the next open's price, which is why this is labelled an estimate. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{qty} shares · est. {total}'**
+  String gamesRunQueuedSub(String qty, String total);
+
+  /// CR109 CR040. Provenance line under the queued-orders list. The costs shown are recomputed estimates, never the price the order will actually get — saying so is what stops the estimate reading as a promise. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated at the current price. It fills at the next open\'s price, which will differ.'**
+  String get gamesRunQueuedEstimateNote;
+
+  /// CR109 CR040. Replaces the ordinary estimate note when the price feed fell through to the mock walk. The rule is degrade loudly: an estimate drawn from simulated prices must never be presented as a live one. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Prices unavailable — these estimates are simulated, not live.'**
+  String get gamesRunQueuedStaleNote;
+
+  /// CR109 §5.1. Action on a queued-order row. The ticket has always promised 'free to cancel any time before it fills'; this is the control that keeps the promise. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get gamesRunCancelCta;
+
+  /// CR109. Title of the confirmation dialog before cancelling a queued order. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel this order?'**
+  String get gamesRunCancelConfirmTitle;
+
+  /// CR109. Body of the cancel-confirmation dialog. States plainly that cancelling costs nothing — there is no fee on an order that never filled. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{side} {qty} {ticker} will not be placed at the next open. Nothing is charged either way.'**
+  String gamesRunCancelConfirmBody(String side, String qty, String ticker);
+
+  /// CR109. Dismiss action on the cancel-confirmation dialog — leaves the queued order in place. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it'**
+  String get gamesRunCancelKeep;
+
+  /// CR109. Confirmation shown after a queued order is successfully cancelled. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Order cancelled.'**
+  String get gamesRunCancelledToast;
+
+  /// CR109. Shown when the server reports the order was NOT cancelled because it filled between the list being drawn and the tap. Reporting a cancellation that did not happen is the exact class of error CR040 exists to stop. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Too late — that order already filled.'**
+  String get gamesRunCancelRaceToast;
+
+  /// CR109 design §13.3. Heading of the empty-book state, which that section calls 'the highest-anxiety moment in the product' and says explicitly must not be a blank list. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing on the book yet'**
+  String get gamesRunEmptyBookHeading;
+
+  /// CR109 design §13.3. Body of the empty-book state: the clock, and the honest note that nothing stops the player putting the whole stake in one name. States the absence of rules as fact; never advises. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} AMI Cash, {days} to deploy it. There is no rule about how — one name or twenty, all of it or none. The clock is the only thing that is fixed.'**
+  String gamesRunEmptyBookBody(String amount, String days);
+
+  /// CR109. Duration fragment used inside the empty-book body — how long is left in the run. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String gamesRunDaysToDeploy(int count);
+
+  /// CR109 CR040. Shown on the run screen when the marks behind the book value came from the mock walk rather than the live feed. Degrade loudly: a simulated valuation must never render as a real one. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Prices unavailable — this book is marked with simulated prices.'**
+  String get gamesRunMarksStaleNote;
+
+  /// CR109 §6. The run's cumulative trading cost and trade count — a mirror surface (CR134 §21): a measurement shown without comment, never a scold. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} paid in trading costs · {count, plural, =1{1 trade} other{{count} trades}}'**
+  String gamesRunFeesPaid(String amount, int count);
+
   /// CR109 slice 2. Busy-state label on the trade ticket's confirm button while the trade request is in flight. Rendered upper-cased by the caller. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

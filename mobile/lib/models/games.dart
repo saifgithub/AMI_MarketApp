@@ -215,12 +215,19 @@ class GameRunDetail {
     required this.state,
     required this.stake,
     required this.cash,
+    this.cashCommitted = 0,
+    double? cashAvailable,
+    this.queuedOrderCount = 0,
     this.twrPct,
     this.daysLeft,
     this.startsOn,
     this.endsOn,
     this.navSeries = const [],
-  });
+    this.holdings = const [],
+    this.priceSource = 'live',
+    this.feesPaid = 0,
+    this.tradeCount = 0,
+  }) : _cashAvailable = cashAvailable;
 
   final String runId;
   final String fieldId;
@@ -228,11 +235,49 @@ class GameRunDetail {
   final String state;
   final double stake;
   final double cash;
+
+  /// AMI Cash already spoken for by orders waiting on the next open —
+  /// estimated at read time, never stored (see `_queued_orders_priced` in
+  /// `games_service.py` for why that does not breach the stale-price fence).
+  final double cashCommitted;
+
+  final double? _cashAvailable;
+
+  /// What the trade ticket must size against. Queued orders commit no cash
+  /// until they fill, so [cash] alone told a player with two orders already
+  /// queued that the whole stake was still theirs to spend — Saiful, on
+  /// build 74: *"This was the second order placed. But it is still showing I
+  /// have 10K."* Falls back to `cash − committed`, and never below zero.
+  double get cashAvailable {
+    final v = _cashAvailable ?? (cash - cashCommitted);
+    return v < 0 ? 0 : v;
+  }
+
+  final int queuedOrderCount;
   final double? twrPct;
   final int? daysLeft;
   final DateTime? startsOn;
   final DateTime? endsOn;
   final List<GameNavPoint> navSeries;
+  final List<GameHolding> holdings;
+
+  /// Provenance of the marks behind [stake] — 'live' | 'cash' | 'mock' |
+  /// 'stale' | a raw provider name. Only [marksAreLive] may be drawn as fact.
+  final String priceSource;
+  final double feesPaid;
+  final int tradeCount;
+
+  /// The book is empty AND nothing is waiting to fill it — §13.3's
+  /// "highest-anxiety moment in the product", which must not render as a
+  /// blank list. A player with queued orders is NOT in this state: they have
+  /// acted, and the queued-orders surface is what they need to see.
+  bool get isEmptyBook => holdings.isEmpty && queuedOrderCount == 0;
+
+  /// `mock_walk` (the fallback provider) and `stale` are the two values that
+  /// must carry a caveat. `cash` is exact, not estimated — a book with no
+  /// holdings has a NAV of pure cash. Same rule as [GameNavPoint.isLive].
+  bool get marksAreLive =>
+      !priceSource.startsWith('mock') && priceSource != 'stale';
 
   /// The backend names these `current_cash` and `total_value`. Reading only
   /// `cash`/`stake` did not throw — `cash` fell back to 0.0, so the ticket
@@ -247,6 +292,9 @@ class GameRunDetail {
         state: j['state'] as String? ?? 'active',
         stake: ((j['stake'] ?? j['total_value']) as num?)?.toDouble() ?? 10000.0,
         cash: ((j['cash'] ?? j['current_cash']) as num?)?.toDouble() ?? 0.0,
+        cashCommitted: (j['cash_committed'] as num?)?.toDouble() ?? 0.0,
+        cashAvailable: (j['cash_available'] as num?)?.toDouble(),
+        queuedOrderCount: (j['queued_order_count'] as num?)?.toInt() ?? 0,
         twrPct: (j['twr_pct'] as num?)?.toDouble(),
         daysLeft: (j['days_left'] as num?)?.toInt(),
         startsOn: _parseDate(j['starts_on']),
@@ -254,7 +302,108 @@ class GameRunDetail {
         navSeries: ((j['nav_series'] ?? j['points']) as List? ?? const [])
             .map((p) => GameNavPoint.fromJson(p as Map<String, dynamic>))
             .toList(),
+        holdings: ((j['holdings'] ?? j['positions']) as List? ?? const [])
+            .map((h) => GameHolding.fromJson(h as Map<String, dynamic>))
+            .toList(),
+        priceSource: j['price_source'] as String? ?? 'live',
+        feesPaid: (j['fees_paid'] as num?)?.toDouble() ?? 0.0,
+        tradeCount: (j['trade_count'] as num?)?.toInt() ?? 0,
       );
+}
+
+/// One open position inside a run — `holdings[]` on the run-detail payload.
+///
+/// [mark] is the backend's current price for the name; on an empty or
+/// unpriceable book `games_service` sends `avg_cost` back as the mark, which
+/// shows a flat position rather than a fabricated move.
+class GameHolding {
+  const GameHolding({
+    required this.ticker,
+    required this.quantity,
+    required this.avgCost,
+    required this.mark,
+  });
+
+  final String ticker;
+  final double quantity;
+  final double avgCost;
+  final double mark;
+
+  double get marketValue => quantity * mark;
+  double get costBasis => quantity * avgCost;
+  double get unrealisedPnl => marketValue - costBasis;
+  double get unrealisedPct =>
+      costBasis == 0 ? 0 : (unrealisedPnl / costBasis) * 100;
+
+  factory GameHolding.fromJson(Map<String, dynamic> j) {
+    final avg = (j['avg_cost'] as num?)?.toDouble() ?? 0;
+    return GameHolding(
+      ticker: j['ticker'] as String? ?? '',
+      quantity: (j['quantity'] as num?)?.toDouble() ?? 0,
+      avgCost: avg,
+      mark: (j['mark'] as num?)?.toDouble() ?? avg,
+    );
+  }
+}
+
+/// One order waiting on the next US open — `GET /v1/games/runs/{id}/orders`.
+///
+/// §13.3 calls this "the most-seen state in the product" for GCC/SEA
+/// players, because US market hours are their evening and past-midnight.
+/// The app shipped the ticket's promise — *"free to cancel any time before
+/// it fills"* — for a week with no surface that could show an order, let
+/// alone cancel one.
+///
+/// Every money field here is an ESTIMATE recomputed on each read at the
+/// current quote; the fill happens at the next open's price. [priceSource]
+/// rides along for the same CR040 reason it rides a NAV point: an estimate
+/// drawn from `mock_walk` must not be presented as a live one.
+class GameQueuedOrder {
+  const GameQueuedOrder({
+    required this.orderId,
+    required this.ticker,
+    required this.side,
+    required this.quantity,
+    this.queuedAt,
+    this.estPrice = 0,
+    this.estNotional = 0,
+    this.estFee = 0,
+    this.estTotal = 0,
+    this.priceSource = 'live',
+  });
+
+  final String orderId;
+  final String ticker;
+  /// 'buy' | 'sell'.
+  final String side;
+  final double quantity;
+  final DateTime? queuedAt;
+  final double estPrice;
+  final double estNotional;
+  final double estFee;
+  final double estTotal;
+  final String priceSource;
+
+  bool get isBuy => side == 'buy';
+  bool get estimateIsLive =>
+      !priceSource.startsWith('mock') && priceSource != 'stale';
+
+  factory GameQueuedOrder.fromJson(Map<String, dynamic> j) {
+    final notional = (j['est_notional'] as num?)?.toDouble() ?? 0;
+    final fee = (j['est_fee'] as num?)?.toDouble() ?? 0;
+    return GameQueuedOrder(
+      orderId: (j['id'] ?? j['order_id']) as String? ?? '',
+      ticker: j['ticker'] as String? ?? '',
+      side: j['side'] as String? ?? 'buy',
+      quantity: (j['quantity'] as num?)?.toDouble() ?? 0,
+      queuedAt: _parseDate(j['queued_at']),
+      estPrice: (j['est_price'] as num?)?.toDouble() ?? 0,
+      estNotional: notional,
+      estFee: fee,
+      estTotal: (j['est_total'] as num?)?.toDouble() ?? (notional + fee),
+      priceSource: j['price_source'] as String? ?? 'live',
+    );
+  }
 }
 
 /// `POST /v1/games/runs/{run_id}/trade/quote` — the ticket's TAP-3 confirm
@@ -271,7 +420,7 @@ class GameTradeQuote {
     required this.estFee,
     required this.bookPercentage,
     this.priceSource = 'live',
-    this.willQueue = false,
+    this.willQueue,
   });
 
   final String ticker;
@@ -283,7 +432,15 @@ class GameTradeQuote {
   final double estFee;
   final double bookPercentage;
   final String priceSource;
-  final bool willQueue;
+
+  /// True = queues until the next open, false = fills now, **null = the
+  /// server said neither**. Nullable on purpose; see [_willQueue].
+  final bool? willQueue;
+
+  /// Whether the ticket must show the queue caveat. Unknown counts as yes —
+  /// the cost of an unnecessary caveat is a redundant line, the cost of a
+  /// missing one is a player believing they hold something they do not.
+  bool get mayQueue => willQueue != false;
 
   factory GameTradeQuote.fromJson(Map<String, dynamic> j) => GameTradeQuote(
         ticker: j['ticker'] as String? ?? '',
@@ -298,8 +455,25 @@ class GameTradeQuote {
         estFee: ((j['est_fee'] ?? j['estimated_fee']) as num?)?.toDouble() ?? 0,
         bookPercentage: (j['book_percentage'] as num?)?.toDouble() ?? 0,
         priceSource: j['price_source'] as String? ?? 'live',
-        willQueue: j['will_queue'] as bool? ?? false,
+        willQueue: _willQueue(j),
       );
+
+  /// The backend does not send `will_queue`. It sends **`market_open`** —
+  /// the inverse — so this read defaulted to `false` on every quote and the
+  /// confirm card never showed the queue note, on the path §5.1 calls the
+  /// NORMAL one for GCC/SEA players. The seventh instance of the same class
+  /// as the six in this file's other fallbacks.
+  ///
+  /// Null means neither key arrived, which is not the same as "it will
+  /// fill." Absent information must never render as the affirmative claim
+  /// (see [GameTradeResult.fromJson]) — here the affirmative claim is
+  /// "this executes now," so unknown surfaces the queue caveat too.
+  static bool? _willQueue(Map<String, dynamic> j) {
+    final explicit = j['will_queue'] as bool?;
+    if (explicit != null) return explicit;
+    final open = j['market_open'] as bool?;
+    return open == null ? null : !open;
+  }
 }
 
 /// `POST /v1/games/runs/{run_id}/trade` — the placed or queued order.
