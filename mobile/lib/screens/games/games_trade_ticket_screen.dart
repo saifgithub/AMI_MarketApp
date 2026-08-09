@@ -92,6 +92,13 @@ class _GamesTradeTicketScreenState
             const GamesQueueNote(),
             const SizedBox(height: AmiSpacing.l),
 
+            // What you are sizing AGAINST, before you size anything. This
+            // figure used to appear only on the step-3 confirm card, so a
+            // player had to commit to a percentage to discover what the
+            // percentage was of.
+            _CashHeader(cash: runDetail.asData?.value.cash),
+            const SizedBox(height: AmiSpacing.l),
+
             // TAP 1 — ticker.
             Text(l.gamesTicketStepTicker, style: AmiTypography.caption),
             const SizedBox(height: AmiSpacing.xs),
@@ -134,23 +141,16 @@ class _GamesTradeTicketScreenState
             if (ticket.ticker != null) ...[
               const SizedBox(height: AmiSpacing.l),
               // TAP 2 — size, % of current cash (§5.4: priced locally,
-              // zero round trips).
+              // zero round trips). The chips are quick presets; the slider
+              // is the real control, because 10/25/50/100 could not express
+              // "a bit" — the smallest possible order was a tenth of the
+              // book.
               Text(l.gamesTicketStepSize, style: AmiTypography.caption),
               const SizedBox(height: AmiSpacing.xs),
-              Wrap(
-                spacing: AmiSpacing.s,
-                children: [
-                  for (final pct in kGamesTicketSizeChipPcts)
-                    _pickerChip(
-                      label: pct == 100
-                          ? l.gamesTicketSizeAllIn
-                          : '${pct.toInt()}%',
-                      selected:
-                          (ticket.sizePct ?? kGamesTicketDefaultSizePct) ==
-                              pct,
-                      onTap: () => notifier.pickSize(pct),
-                    ),
-                ],
+              _SizePicker(
+                sizePct: ticket.sizePct ?? kGamesTicketDefaultSizePct,
+                cashAvailable: runDetail.asData?.value.cash ?? 0,
+                onChanged: notifier.pickSize,
               ),
             ],
 
@@ -185,18 +185,149 @@ class _GamesTradeTicketScreenState
     );
   }
 
-  Widget _pickerChip({
-    required String label,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: HexChip(
-        label: label,
-        color: selected ? AmiColors.hexGreen : AmiColors.slate600,
-        variant: selected ? HexChipVariant.filled : HexChipVariant.outlined,
-      ),
+}
+
+/// Shared by the ticker row and the size presets — both are the same
+/// hex-chip affordance, and CR134 requires hex geometry for controls.
+Widget _pickerChip({
+  required String label,
+  required bool selected,
+  required VoidCallback onTap,
+}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: HexChip(
+      label: label,
+      color: selected ? AmiColors.hexGreen : AmiColors.slate600,
+      variant: selected ? HexChipVariant.filled : HexChipVariant.outlined,
+    ),
+  );
+}
+
+/// The run's uninvested AMI Cash, at the TOP of the ticket.
+///
+/// Saiful, on build 71: *"I have no idea how much funds i have."* The figure
+/// existed only on the step-3 confirm card, so you had to commit to a size
+/// before you could see what you were sizing against — and when `cash`
+/// silently read 0.0 (see `GameRunDetail.fromJson`), nothing on screen said so.
+class _CashHeader extends StatelessWidget {
+  const _CashHeader({required this.cash});
+
+  final double? cash;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(l.gamesTicketCashAvailable, style: AmiTypography.caption),
+        Text(
+          cash == null ? '—' : _money(cash!),
+          style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh),
+        ),
+      ],
+    );
+  }
+}
+
+String _money(double v) {
+  final fixed = v.toStringAsFixed(2);
+  final parts = fixed.split('.');
+  final digits = parts[0];
+  final buf = StringBuffer();
+  for (var i = 0; i < digits.length; i++) {
+    if (i > 0 && (digits.length - i) % 3 == 0) buf.write(',');
+    buf.write(digits[i]);
+  }
+  return '${buf.toString()}.${parts[1]}';
+}
+
+/// TAP 2 — position size.
+///
+/// A slider from 1% to 100%, plus the original chips as quick presets.
+/// Saiful, on build 71: *"I can't buy less then 10%"* and *"The steps are too
+/// large."* The four chips (10/25/50/ALL-IN) made a tenth of the book the
+/// SMALLEST expressible order, which is a large first position and no way to
+/// dip a toe.
+///
+/// The percentage is applied to cash locally, with no round trip (§5.4), so
+/// the money readout tracks the drag immediately. The quote is only fetched
+/// once the drag ENDS — dragging would otherwise fire a request per frame.
+class _SizePicker extends StatefulWidget {
+  const _SizePicker({
+    required this.sizePct,
+    required this.cashAvailable,
+    required this.onChanged,
+  });
+
+  final double sizePct;
+  final double cashAvailable;
+  final ValueChanged<double> onChanged;
+
+  @override
+  State<_SizePicker> createState() => _SizePickerState();
+}
+
+class _SizePickerState extends State<_SizePicker> {
+  double? _dragging;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final pct = _dragging ?? widget.sizePct;
+    final amount = widget.cashAvailable * (pct / 100.0);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: AmiSpacing.s,
+          children: [
+            for (final preset in kGamesTicketSizeChipPcts)
+              _pickerChip(
+                label: preset == 100
+                    ? l.gamesTicketSizeAllIn
+                    : '${preset.toInt()}%',
+                selected: pct == preset,
+                onTap: () {
+                  setState(() => _dragging = null);
+                  widget.onChanged(preset);
+                },
+              ),
+          ],
+        ),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: AmiColors.hexGreen,
+            inactiveTrackColor: AmiColors.slate600,
+            thumbColor: AmiColors.hexGreen,
+            overlayColor: AmiColors.hexGreen.withValues(alpha: 0.15),
+            valueIndicatorColor: AmiColors.slate600,
+          ),
+          child: Slider(
+            value: pct.clamp(1, 100),
+            min: 1,
+            max: 100,
+            // 1% granularity: 99 steps between 1 and 100.
+            divisions: 99,
+            label: '${pct.round()}%',
+            onChanged: (v) => setState(() => _dragging = v),
+            onChangeEnd: (v) {
+              setState(() => _dragging = null);
+              widget.onChanged(v.roundToDouble());
+            },
+          ),
+        ),
+        Text(
+          l.gamesTicketSizeAmount(
+            pct.round().toString(),
+            _money(amount),
+          ),
+          style: AmiTypography.caption.copyWith(color: AmiColors.textHigh),
+        ),
+      ],
     );
   }
 }

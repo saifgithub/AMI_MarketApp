@@ -408,6 +408,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get gamesTicketBookPct => '% OF YOUR BOOK';
 
   @override
+  String get gamesTicketCashAvailable => 'AVAILABLE TO DEPLOY';
+
+  @override
+  String gamesTicketSizeAmount(String pct, String amount) {
+    return '$pct% · $amount AMI Cash';
+  }
+
+  @override
   String get gamesTicketPlacing => 'placing…';
 
   @override

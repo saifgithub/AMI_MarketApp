@@ -234,13 +234,19 @@ class GameRunDetail {
   final DateTime? endsOn;
   final List<GameNavPoint> navSeries;
 
+  /// The backend names these `current_cash` and `total_value`. Reading only
+  /// `cash`/`stake` did not throw — `cash` fell back to 0.0, so the ticket
+  /// sized every order as a percentage of ZERO: the confirm card showed
+  /// "0.0000 shares", "0.0% of your book" and a $1.00 fee (the minimum-fee
+  /// floor applied to a zero notional). It also meant the player could never
+  /// see what they had. Both spellings accepted.
   factory GameRunDetail.fromJson(Map<String, dynamic> j) => GameRunDetail(
         runId: (j['run_id'] ?? j['id']) as String? ?? '',
         fieldId: j['field_id'] as String? ?? '',
         cadence: j['cadence'] as String? ?? 'week',
         state: j['state'] as String? ?? 'active',
-        stake: (j['stake'] as num?)?.toDouble() ?? 10000.0,
-        cash: (j['cash'] as num?)?.toDouble() ?? 0.0,
+        stake: ((j['stake'] ?? j['total_value']) as num?)?.toDouble() ?? 10000.0,
+        cash: ((j['cash'] ?? j['current_cash']) as num?)?.toDouble() ?? 0.0,
         twrPct: (j['twr_pct'] as num?)?.toDouble(),
         daysLeft: (j['days_left'] as num?)?.toInt(),
         startsOn: _parseDate(j['starts_on']),

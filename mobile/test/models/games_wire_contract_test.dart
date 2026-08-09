@@ -54,6 +54,46 @@ const _liveRun = <String, dynamic>{
   'trade_count': 0,
 };
 
+/// Verbatim from `GET /v1/games/runs/{run_id}` on Alpha, 2026-08-09.
+const _liveRunDetail = <String, dynamic>{
+  'run_id': '58219342-7206-42e7-9140-7712f0f85726',
+  'cadence': 'week',
+  'state': 'entered',
+  'intent': 'thesis',
+  'starts_on': '2026-08-10',
+  'ends_on': '2026-08-14',
+  'current_cash': 10000.0,
+  'total_value': 10000.0,
+  'price_source': 'mock_walk',
+  'fees_paid': 0.0,
+  'trade_count': 0,
+  'twr_pct': null,
+  'nav_series': [
+    {
+      'as_of_date': '2026-08-07',
+      'nav': 10000.0,
+      'cash': 10000.0,
+      'price_source': 'cash',
+      'capital_event': 'open',
+    }
+  ],
+  'holdings': <dynamic>[],
+};
+
+/// Verbatim from `POST /v1/games/runs/{run_id}/trade/quote` on Alpha.
+const _liveQuote = <String, dynamic>{
+  'ticker': 'AMD',
+  'side': 'buy',
+  'quantity': 5.1721,
+  'price': 483.3599853515625,
+  'price_source': 'yfinance',
+  'notional': 2499.99,
+  'estimated_fee': 2.5,
+  'estimated_total': 2502.49,
+  'book_percentage': 25.0,
+  'market_open': false,
+};
+
 void main() {
   group('cadence payload — the flat shape the backend really sends', () {
     test('resolves the next field even though it is not nested', () {
@@ -106,6 +146,62 @@ void main() {
       expect(r.cadence, 'week');
       expect(r.daysLeft, 5);
       expect(r.twrPct, isNull, reason: 'no NAV history yet — null, not 0.0');
+    });
+  });
+
+  group('run DETAIL payload — the one that sized every order to zero', () {
+    test('cash comes through, under the name the backend actually sends', () {
+      final d = GameRunDetail.fromJson(_liveRunDetail);
+      expect(
+        d.cash,
+        10000.0,
+        reason: 'read as `cash` while the backend sends `current_cash`, this '
+            'defaulted to 0.0 — so the ticket sized every order as a '
+            'percentage of ZERO and the confirm card showed 0.0000 shares, '
+            '0.0% of book and the 1.00 minimum-fee floor',
+      );
+      expect(d.stake, 10000.0, reason: 'sent as `total_value`');
+    });
+
+    test('the NAV series parses, and a cash day is not a caveat', () {
+      final d = GameRunDetail.fromJson(_liveRunDetail);
+      expect(d.navSeries, hasLength(1));
+      expect(
+        d.navSeries.single.isLive,
+        isTrue,
+        reason: '`cash` means NAV was known exactly, not estimated — it must '
+            'not be dashed on the curve like a simulated price',
+      );
+    });
+
+    test('no field silently defaults away', () {
+      final d = GameRunDetail.fromJson(_liveRunDetail);
+      expect(d.runId, isNotEmpty);
+      expect(d.cadence, 'week');
+      expect(d.state, 'entered');
+      expect(d.startsOn, DateTime.parse('2026-08-10'));
+      expect(d.endsOn, DateTime.parse('2026-08-14'));
+    });
+  });
+
+  group('quote payload', () {
+    test('shares and fee read under the backend\'s names', () {
+      final q = GameTradeQuote.fromJson(_liveQuote);
+      expect(
+        q.shares,
+        5.1721,
+        reason: 'sent as `quantity`; reading only `shares` showed 0.0000 on '
+            'the confirm card for a real order',
+      );
+      expect(
+        q.estFee,
+        2.5,
+        reason: 'sent as `estimated_fee`; reading only `est_fee` showed a '
+            'zero trading cost, which is the one number the ticket exists to '
+            'disclose',
+      );
+      expect(q.price, closeTo(483.36, 0.01));
+      expect(q.bookPercentage, 25.0);
     });
   });
 }

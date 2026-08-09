@@ -790,6 +790,18 @@ abstract class AppLocalizations {
   /// **'% OF YOUR BOOK'**
   String get gamesTicketBookPct;
 
+  /// CR109. Label above the run's uninvested AMI Cash, shown at the TOP of the trade ticket. Saiful on the first build: 'I have no idea how much funds i have' — the figure existed only on the step-3 confirm card, so you had to commit to a size before you could see what you were sizing against. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AVAILABLE TO DEPLOY'**
+  String get gamesTicketCashAvailable;
+
+  /// CR109. Live readout under the size slider on the trade ticket: the chosen percentage and the AMI Cash it deploys, updated as the slider moves and BEFORE any network round trip. Answers 'what does 37% actually mean in money'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{pct}% · {amount} AMI Cash'**
+  String gamesTicketSizeAmount(String pct, String amount);
+
   /// CR109 slice 2. Busy-state label on the trade ticket's confirm button while the trade request is in flight. Rendered upper-cased by the caller. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

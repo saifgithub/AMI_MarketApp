@@ -110,6 +110,8 @@
     "gamesTicketShares": "SHARES",
     "gamesTicketEstFee": "EST. TRADING COST (MODELED)",
     "gamesTicketBookPct": "% OF YOUR BOOK",
+    "gamesTicketCashAvailable": "AVAILABLE TO DEPLOY",
+    "gamesTicketSizeAmount": "{pct}% \u00b7 {amount} AMI Cash",
     "gamesTicketPlacing": "placing…",
     "gamesTicketConfirmCta": "place order",
     "gamesTicketQueuedNote": "Queued — fills at the next US market open. Free to cancel any time before then.",

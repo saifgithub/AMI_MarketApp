@@ -145,6 +145,11 @@ void main() {
           "confirm card's when will_queue is true — both present",
     );
 
+    // The ticket grew a cash header and a 1–100% size slider, so the button
+    // now sits below an 800x600 test surface. Scroll to it rather than
+    // shrinking the UI to fit the test.
+    await tester.ensureVisible(find.text('PLACE ORDER'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('PLACE ORDER'));
     await tester.pumpAndSettle();
 
