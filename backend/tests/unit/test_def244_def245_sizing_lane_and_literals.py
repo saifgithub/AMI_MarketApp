@@ -57,51 +57,61 @@ def test_the_bull_is_told_where_sizing_actually_belongs():
         assert owner in text, f"the replacement does not name the {owner}"
 
 
-def test_no_researcher_is_asked_for_a_position_size():
-    """The scope, asserted rather than assumed. Sizing belongs to EXECUTION, RISK
-    and VERDICT phases; a RESEARCHERS-phase agent sizing a trade that does not yet
-    exist is the defect. If either researcher regrows the demand, this is red."""
-    # A line that hands sizing to another agent by name is a DEFERRAL, not a
-    # demand, and cannot be an offender however many demand-words it contains.
-    # (My own replacement text — "no trade has been proposed to size" — tripped
-    # the first version of this check, which is a fair warning about heuristics
-    # that read words instead of meaning.)
-    # ROUND-1 AUDIT MAJOR — the verb list is GONE. It required one of
-    # suggest|propose|recommend|"output specific", and the auditor defeated it
-    # with four ordinary bullets that reintroduce the defect exactly:
-    #   "Quantify your ideal position size given conviction."
-    #   "State the position size you would take."
-    #   "Give a specific sizing figure based on conviction."
-    #   "End with a sizing conclusion."
-    # A synonym list cannot enumerate English. The structural rule is simpler and
-    # strictly stronger: a RESEARCHERS-phase prompt has no business mentioning
-    # position size AT ALL unless it is handing it to the agent that owns it, so
-    # any "siz" that does not name an owner is a finding regardless of the verb.
-    OWNERS = ("trader", "portfolio manager", "risk debators")
+def test_the_researchers_output_style_is_pinned_to_a_reviewed_snapshot():
+    """DEF244's guard, round 3 — and the reason this one converges.
 
-    def _bullets(text: str) -> list[str]:
-        """Group wrapped continuation lines back into their bullet. Scanning raw
-        lines splits a multi-line instruction and strips the context that makes
-        it a deferral — which is exactly how the first version of this check
-        flagged the fix as the defect."""
-        out: list[str] = []
-        for line in text.splitlines():
-            if line.lstrip().startswith(("-", "*")) or not out:
-                out.append(line.strip())
-            else:
-                out[-1] += " " + line.strip()
-        return out
+    Rounds 1 and 2 both matched a PATTERN and both fell to ordinary paraphrase:
+    first a verb list (`suggest|propose|recommend`), then a lexical root (`siz`),
+    which the auditor defeated with *"Recommend an allocation percentage"*,
+    *"State how many shares to buy"*, *"End with a portfolio weight"*,
+    *"Conclude with an exposure level"*. A third pattern would fall the same way —
+    "position size" has unbounded synonyms and no lexical anchor.
 
-    offenders = []
-    for name in ("bull_researcher.md", "bear_researcher.md"):
-        for bullet in _bullets((_CONTENT / name).read_text(encoding="utf-8")):
-            low = bullet.lower()
-            if "siz" not in low:
+    So this stops matching and starts ENUMERATING. The two researchers' output
+    style is ten bullets; it is pinned verbatim. **Any** edit fails, including
+    every paraphrase above, because the check no longer cares what the words mean.
+
+    A change here is not a defect — it is a REVIEW PROMPT, the same device
+    `_EXPECTED_EXTRACTIONS` uses in `test_p16_prose_pattern_corpus_parity.py`.
+    Update the snapshot in the same commit, and answer one question while you do:
+    **does this bullet ask a RESEARCHERS-phase agent to output a position size?**
+    Sizing is the Trader's proposal, the Risk Debators' argument, the PM's
+    decision and the safety floor's clamp — four stages, all after this one.
+
+    What this does NOT do: understand English. It cannot tell a sizing demand
+    from a typo fix. It guarantees only that no edit to these bullets reaches
+    `main` unread, which is precisely how DEF244 got in.
+    """
+    import hashlib
+
+    expected = {
+        "bull_researcher.md": "923a5c0c7124",
+        "bear_researcher.md": "efd014741751",
+    }
+    actual = {}
+    for name in expected:
+        section = []
+        inside = False
+        for line in (_CONTENT / name).read_text(encoding="utf-8").splitlines():
+            if line.startswith("## Output style"):
+                inside = True
                 continue
-            if any(o in low for o in OWNERS):
-                continue
-            offenders.append(f"{name}: {bullet}")
-    assert not offenders, offenders
+            if inside and line.startswith("## "):
+                break
+            if inside and line.strip():
+                section.append(line.rstrip())
+        assert section, f"{name} has no '## Output style' section"
+        actual[name] = hashlib.sha256(
+            "\n".join(section).encode("utf-8")
+        ).hexdigest()[:12]
+
+    assert actual == expected, (
+        "A researcher's output-style bullets changed. This is a REVIEW PROMPT, "
+        "not a failure — read the diff and answer: does any bullet ask a "
+        "RESEARCHERS-phase agent to output a position size? Sizing belongs to the "
+        f"Trader, the Risk Debators, the PM and the floor (DEF244). Then update "
+        f"the snapshot in this commit. expected={expected} actual={actual}"
+    )
 
 
 def test_the_bears_dead_short_clause_is_gone():
@@ -139,44 +149,46 @@ def test_the_bear_carries_no_literal_downside_percentage():
 
 
 @pytest.mark.parametrize("filename", sorted(p.name for p in _CONTENT.glob("*.md")))
-def test_no_agent_prompt_quotes_an_example_containing_a_literal_percentage(filename):
-    """The class, tested STRUCTURALLY — round-1 audit MAJOR.
+def test_no_agent_prompt_contains_a_literal_percentage_anywhere(filename):
+    """DEF245's guard, round 3 — complete, because it enumerates rather than matches.
 
-    The first version required a noun from `downside|drawdown|loss|fall|drop`
-    near the number. The auditor defeated it with ordinary synonyms —
-    *correction, decline, retracement, pullback, slump, plunge, haircut* — and,
-    decisively, with **the original defect text minus the word "downside"**:
+    Round 1 required a downside NOUN near the number and fell to *correction,
+    decline, retracement, pullback, slump, plunge, haircut*. Round 2 required the
+    number to sit inside ASCII double quotes and fell to an unquoted worked
+    example, single quotes, and curly quotes. Each time the anchor was a surface
+    feature, and each time ordinary English walked around it.
 
-        "if X happens, we're looking at -25%, and that is more likely than
-         consensus thinks"
+    There is no anchor here. **After DEF245, the twelve prompts contain ZERO
+    literal percentages** — measured, not assumed — so the invariant is simply
+    that it stays zero. Every bypass the auditor built contains a `%` and is
+    caught, whatever surrounds it, because nothing about the surroundings is
+    consulted.
 
-    which is the DEF245 bullet almost verbatim and does not match. A word list
-    cannot enumerate the ways English says "it goes down".
+    Legitimate percentages do not live in these files: mandate values (caps,
+    ceilings, drawdown limits) are injected at runtime by `overlay_generator`,
+    and length guides are counts of sentences. Placeholders like `N%` and `X%`
+    pass — they carry no figure for a model to reuse, which is the entire point.
 
-    So the rule stops describing the number and describes **where it sits**: a
-    literal percentage inside a QUOTED example. That is what makes an example
-    leakable — the model is being shown a finished utterance with a figure in it,
-    and CR149 measured that it reuses exactly those figures (`-25%` reached 22 of
-    811 real verdicts and became the most frequent downside magnitude in the
-    corpus). Percentages OUTSIDE quotes are mandate values and length guides —
-    configuration, not modelled speech — and are untouched.
-
-    Four prompts had to change to satisfy this, one of them a line added by
-    DEF244's own fix an hour earlier (`"the Bull's 44%"`). That is the argument
-    for the structural form: the vocabulary guard passed all four.
+    If a real one is ever needed, add it to `_ALLOWED` with a reason. That is a
+    deliberate, reviewed act; today the list is empty and should stay that way.
     """
     if filename == "README.md":
         pytest.skip("documentation, not a prompt")
     import re
 
+    _ALLOWED: set[str] = set()
+
     hits = [
-        m.group(0)
+        m.group(0).strip()
         for m in re.finditer(
-            r'"[^"\n]*?\d+(?:\.\d+)?%[^"\n]*?"',
+            r"[^\n]{0,40}\d+(?:\.\d+)?%[^\n]{0,25}",
             (_CONTENT / filename).read_text(encoding="utf-8"),
         )
+        if m.group(0).strip() not in _ALLOWED
     ]
     assert not hits, (
-        f"{filename} quotes an example containing a literal percentage; the model "
-        f"reuses the figure as a fact (DEF245): {hits}"
+        f"{filename} contains a literal percentage. A model reuses the figures it "
+        f"is shown — `-25%` reached 22 of 811 real verdicts and became the most "
+        f"common downside magnitude AMI produced (DEF245). Use a placeholder (N%, "
+        f"X%) or take the number from the fact sheet at runtime: {hits}"
     )
