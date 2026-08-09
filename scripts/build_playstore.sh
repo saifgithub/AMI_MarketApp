@@ -239,6 +239,45 @@ fi
 size_mb=$(du -m "$aab" | cut -f1)
 echo "▶ built $(basename "$aab") (${size_mb} MB, build ${semver}+${build_num})"
 
+# CR109 — prove the AMI_GAMES define took, don't trust the flag.
+#
+# `bool.fromEnvironment` accepts ONLY the literal "true"/"false"; anything
+# else silently compiles to the default. `AMI_GAMES=1` once produced a
+# perfectly good, game-less APK while every step printed success (AT:R66).
+# Same check install_android.sh runs, on the path that reaches a real tester.
+#
+# Checked against a CONTROL string present in every build, so an empty result
+# means the game is absent, not that the snapshot is unsearchable.
+_games_in_aab() {
+  local tmp; tmp=$(mktemp -d)
+  unzip -q -o "$aab" -d "$tmp" 2>/dev/null || { rm -rf "$tmp"; return 1; }
+  local so; so=$(find "$tmp" -name libapp.so -path "*arm64*" | head -1)
+  [[ -n "$so" && -f "$so" ]] || { rm -rf "$tmp"; return 1; }
+  local hits control
+  hits=$(strings "$so" | grep -ic "NO ARENA RULES" || true)
+  control=$(strings "$so" | grep -ic "EDUCATIONAL SIMULATION" || true)
+  rm -rf "$tmp"
+  [[ "$control" -gt 0 ]] || { echo "control-missing"; return 0; }
+  [[ "$hits" -gt 0 ]] && echo "present" || echo "absent"
+}
+
+case "$(_games_in_aab || echo unreadable)" in
+  present) echo "▶ AMI_GAMES verified present in the AAB" ;;
+  absent)
+    echo "✗ AMI_GAMES did NOT take — this AAB has no game in it." >&2
+    echo "  bool.fromEnvironment accepts only \"true\"/\"false\"; any other" >&2
+    echo "  value silently compiles to the default, false." >&2
+    echo "  Refusing to publish a build that does not carry what it claims." >&2
+    exit 1
+    ;;
+  control-missing)
+    echo "⚠ games-string check inconclusive — the CONTROL string was also" >&2
+    echo "  absent, so the search method no longer holds for this build." >&2
+    echo "  Not blocking, but the gate is UNVERIFIED." >&2
+    ;;
+  *) echo "⚠ could not read the AAB to verify AMI_GAMES — gate UNVERIFIED." >&2 ;;
+esac
+
 echo ""
 echo "✓ AAB ready: ${aab}"
 echo ""
