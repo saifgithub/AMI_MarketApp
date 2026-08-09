@@ -1233,3 +1233,59 @@ class PriceHistoryDailyRow(Base):
     fetched_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
+
+
+class PortfolioNavDailyRow(Base):
+    """One NAV snapshot per (user, run, US market day) — CR109 slice 1.
+
+    Append-only, like `ShariaUniverseSnapshotRow`: a daily background tick
+    writes one row per user per US market date and the read path resolves the
+    whole stored series, never re-deriving history from `sim_trades`. It is
+    the table the entire CR109 design rests on — the app's equity curve, and
+    later the game's scored run, both read from here.
+
+    `run_id` is NULL for the TRAINING portfolio, which is the only surface
+    this slice writes. A real run UUID is a slice-2+ concern (a game run) —
+    one table serves both without a schema change.
+
+    FENCE — deliberately NOT foreign-keyed to `sim_portfolios`.
+    `SimEngine.reset_portfolio()` hard-deletes the portfolio row and every
+    `SimTradeRow`, and the replacement gets a brand-new UUID (destroy-and-
+    recreate — the same shape `PortfolioValueSnapshotRow` already uses for
+    CR136's Tier-2 history, and the reason THAT table is keyed to
+    `portfolio_id` rather than `user_id`). A FK here would CASCADE the whole
+    NAV history away on the player's first restart, which is the opposite of
+    what a training or career record needs. Keyed on `user_id` + `run_id`
+    instead — the same reset-immune shape `ReputationEventRow` already
+    proves: a reset can empty the portfolio without erasing what it once did.
+
+    `price_source` is `live` / `mock` / `stale`, carried from the mark that
+    produced `nav` — CR040 degrade-loudly: a mock-priced day is WRITTEN and
+    flagged, never silently absorbed into a curve that would then read as
+    fact.
+
+    `capital_event` (`open` / `restart` / `topup`, nullable) marks a row
+    where NAV moved for a reason other than market performance.
+    `trading_math/twr.py` splits the time-weighted-return chain at every such
+    row, so a big loss followed by a reset reads as the loss it was rather
+    than washing out against the fresh stake.
+    """
+
+    __tablename__ = "portfolio_nav_daily"
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "run_id", "as_of_date", name="uq_nav_user_run_date",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    run_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), index=True, nullable=True)
+    as_of_date: Mapped[date] = mapped_column(Date, nullable=False)
+    nav: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    cash: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    price_source: Mapped[str] = mapped_column(String, nullable=False)
+    capital_event: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )

@@ -156,3 +156,14 @@ final sectorAllocationProvider =
   final userId = await DeviceUser.getOrCreate();
   return api.sectorAllocation(userId);
 });
+
+/// CR109 slice 1 — equity-curve feed for the Portfolio screen's training
+/// portfolio. Own provider (not folded into SimState) for the same reason as
+/// [sectorAllocationProvider]: a distinct read-only endpoint the holdings
+/// list doesn't otherwise need.
+final portfolioHistoryProvider =
+    FutureProvider.autoDispose<SimPortfolioHistory>((ref) async {
+  final api = ref.watch(apiClientProvider);
+  final userId = await DeviceUser.getOrCreate();
+  return api.simPortfolioHistory(userId);
+});

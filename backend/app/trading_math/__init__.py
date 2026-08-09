@@ -28,10 +28,12 @@ sample-convention/rounding/None-returning contract is the opposite), `returns`
 (Sharpe/max-drawdown/CAGR, M12, hand-rolled stdlib — the wider family Sortino/
 Calmar/vol stays on the D1 `empyrical-reloaded` backlog, a dep that needs
 sign-off), `screening` (opened for CR058 — Sharia debt/liquidity/income
-ratios + purification, M13), and `cost_basis` (opened for CR029-MATH — FIFO
-lot matching for the per-lot cost-basis / realised-P&L display). The indicator
-family stays hand-rolled because our RSI is Cutler's, not Wilder's (Decision
-D1, library_survey.md).
+ratios + purification, M13), `cost_basis` (opened for CR029-MATH — FIFO
+lot matching for the per-lot cost-basis / realised-P&L display), and `twr`
+(opened for CR109 slice 1 — GIPS time-weighted return, chain-linked across
+capital events, behind the equity curve). The indicator family stays
+hand-rolled because our RSI is Cutler's, not Wilder's (Decision D1,
+library_survey.md).
 """
 
 from .bond import bond_price, bond_ytm, macaulay_duration, modified_duration
@@ -90,6 +92,7 @@ from .sizing import (
     risk_tier_cap,
 )
 from .trade import TradeAsymmetry, risk_reward, rr_is_coherent, trade_asymmetry
+from .twr import NavPoint, alpha_vs_benchmark, sub_period_returns, time_weighted_return
 from .valuation import (
     dividend_yield_pct,
     fcf_yield_pct,
@@ -182,4 +185,9 @@ __all__ = [
     "LotClose",
     "OpenLot",
     "fifo_sell",
+    # time-weighted return (CR109 slice 1)
+    "NavPoint",
+    "alpha_vs_benchmark",
+    "sub_period_returns",
+    "time_weighted_return",
 ]

@@ -1105,6 +1105,15 @@ class ApiClient {
     return SimHistory.fromJson(r.data!);
   }
 
+  /// Portfolio equity-curve feed for the Portfolio screen (CR109 slice 1).
+  /// `price_source` rides per point so the client can mark a non-live day
+  /// rather than draw it as fact (CR040).
+  Future<SimPortfolioHistory> simPortfolioHistory(String userId) async {
+    final r = await _dio
+        .get<Map<String, dynamic>>('/v1/sim/portfolio/$userId/history');
+    return SimPortfolioHistory.fromJson(r.data!);
+  }
+
   /// Recent news articles for the TickerDetail news section. Server caches 5 min.
   Future<SimNews> simNews(String ticker) async {
     final r = await _dio.get<Map<String, dynamic>>('/v1/sim/news/$ticker');

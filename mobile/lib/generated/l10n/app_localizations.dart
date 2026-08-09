@@ -598,6 +598,30 @@ abstract class AppLocalizations {
   /// **'No open positions'**
   String get portfolioNoOpenPositions;
 
+  /// CR109 slice 1: heading above the NAV-over-time chart on the Portfolio screen (Positions tab). Training portfolio only — not game copy. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'EQUITY CURVE'**
+  String get portfolioEquityCurveHeading;
+
+  /// CR109 slice 1: label before the time-weighted return (twr_pct) figure shown next to the equity-curve heading. The number itself is formatted client-side as a signed percentage, same pattern as portfolioCash/portfolioTotalValue. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'WINDOW RETURN'**
+  String get portfolioEquityCurveWindowReturn;
+
+  /// CR109 slice 1: shown instead of the curve when the portfolio has fewer than two NAV snapshots — never a blank frame, never a flat zero line. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Your history starts building from today.'**
+  String get portfolioEquityCurveEmpty;
+
+  /// CR109 slice 1 / CR040 / CR134: shown under the equity curve only when at least one plotted point's price_source is not 'live'. Explains the dashed-segment + tick-marker encoding — provenance is never conveyed by dimming opacity or saturation (CR134: 'a dimmed mark reads as absent, not small'). NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Dashed segments used simulated pricing, not a live quote.'**
+  String get portfolioEquityCurveSimulatedNote;
+
   /// Label above the big position value on the Ticker Detail screen (Position card variant — user holds this ticker).
   ///
   /// In en, this message translates to:

@@ -1,6 +1,7 @@
 """Sim Trading endpoints.
 
 GET  /v1/sim/portfolio/{user_id}             Snapshot (cash + holdings + marks + P&L)
+GET  /v1/sim/portfolio/{user_id}/history     Daily NAV series + window TWR (CR109 slice 1)
 POST /v1/sim/portfolio/{user_id}/reset       Wipe and restart with $10k
 POST /v1/sim/preview                         Dry-run a trade (compliance + cash check, no persist) — BL9
 POST /v1/sim/submit                          Submit a trade (PM safety floor runs)
@@ -19,10 +20,10 @@ from __future__ import annotations
 
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 
@@ -33,6 +34,7 @@ from app.schemas.trade import OrderType, Side
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import resolve_mandate
 from app.services.market_data import VALID_PERIODS
+from app.services.portfolio_nav_daily import nav_history, twr_pct_for_window
 from app.services.reputation_service import get_reputation_service
 from app.services.classification_universe import default_classification_universe_async
 from app.services.sharia_universe import default_halal_universe_async
@@ -104,6 +106,26 @@ class PortfolioSnapshot(BaseModel):
     price_source: str = "mock_walk"
 
 
+class NavPointOut(BaseModel):
+    """One `portfolio_nav_daily` row. `price_source` rides on every point
+    (CR040) — a mock-priced day must be visible to the client, never smoothed
+    into a curve that reads as fact."""
+
+    as_of_date: date
+    nav: float
+    cash: float
+    price_source: str
+    capital_event: str | None = None
+
+
+class PortfolioHistoryResponse(BaseModel):
+    user_id: UUID
+    points: list[NavPointOut]
+    # Chain-linked TWR over `points`, percent, 2dp. None below two points —
+    # see `trading_math.twr.time_weighted_return`.
+    twr_pct: float | None = None
+
+
 class TradeListResponse(BaseModel):
     trades: list[dict]
 
@@ -167,6 +189,40 @@ async def get_portfolio(
         total_value=total_value,
         drawdown_pct=drawdown_pct,
         price_source=price_source,
+    )
+
+
+@router.get("/portfolio/{user_id}/history", response_model=PortfolioHistoryResponse)
+async def get_portfolio_history(
+    user_id: UUID,
+    # Bounded, not bare: a negative `limit` is a silent no-op in SQLite (the
+    # test fixture) and an error in Postgres (Alpha), so an unvalidated one
+    # is a defect the unit suite structurally cannot see.
+    limit: int = Query(365, ge=1, le=3650),
+    current_user: User = Depends(get_current_user),
+) -> PortfolioHistoryResponse:
+    """CR109 slice 1 — the training portfolio's NAV series + its window TWR.
+
+    `run_id` stays NULL: this endpoint only ever reads the TRAINING
+    portfolio (see `PortfolioNavDailyRow`'s docstring) — a game run's history
+    is a slice-2+ surface, on the same table. Pure DB read, no quote fetch,
+    so unlike the handlers above this stays sync (matches `list_trades`).
+    """
+    _own(current_user, user_id)
+    rows = nav_history(user_id, run_id=None, limit=limit)
+    return PortfolioHistoryResponse(
+        user_id=user_id,
+        points=[
+            NavPointOut(
+                as_of_date=r.as_of_date,
+                nav=float(r.nav),
+                cash=float(r.cash),
+                price_source=r.price_source,
+                capital_event=r.capital_event,
+            )
+            for r in rows
+        ],
+        twr_pct=twr_pct_for_window(rows),
     )
 
 

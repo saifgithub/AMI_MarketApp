@@ -44,6 +44,7 @@ import 'package:ami_trade/theme/hex_clipper.dart';
 import 'package:ami_trade/widgets/empty_state.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:ami_trade/widgets/hex/hex_toast.dart';
+import 'package:ami_trade/widgets/portfolio_equity_chart.dart';
 import 'package:ami_trade/widgets/portfolio_health/health_card.dart';
 import 'package:ami_trade/widgets/ticker_not_found_panel.dart';
 import 'package:ami_trade/widgets/trade_row.dart';
@@ -678,6 +679,9 @@ class _PositionsTab extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // CR109 slice 1 — the equity curve. Training-portfolio only,
+                // additive: no game surface, no new nav destination.
+                const PortfolioEquityChart(),
                 const _SectorAllocationSection(),
                 const PortfolioHealthCard(),
                 if (holdings.isEmpty && openTrades.isEmpty)

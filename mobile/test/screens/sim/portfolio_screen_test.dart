@@ -138,6 +138,25 @@ SimState _heavySimState() {
 WatchlistState _heavyWatchlistState() =>
     WatchlistState(items: List.generate(40, _watchlistEntry));
 
+/// CR109 slice 1 — the equity-curve card is a real, permanent occupant of
+/// the Positions tab now, same reasoning as the Health-card fixture below:
+/// the scroll budget has to measure its POPULATED state (a live curve, no
+/// caveat line), not the error notice an unmocked network call would
+/// produce.
+SimPortfolioHistory _equityHistoryFixture() => SimPortfolioHistory(
+      points: List.generate(
+        30,
+        (i) => SimPortfolioHistoryPoint(
+          asOfDate: DateTime(2026, 7, 1).add(Duration(days: i)),
+          nav: 250000.0 + i * 200,
+          cash: 30000,
+          priceSource: 'live',
+          capitalEvent: i == 0 ? 'open' : null,
+        ),
+      ),
+      twrPct: 2.34,
+    );
+
 Future<void> _pump(
   WidgetTester tester, {
   required SimState sim,
@@ -177,6 +196,8 @@ Future<void> _pump(
                 maxSector: 0, maxAllowed: 0.4, compliant: true,
               ),
             )),
+        portfolioHistoryProvider
+            .overrideWith((ref) async => _equityHistoryFixture()),
       ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -226,15 +247,23 @@ void main() {
     // which is why the breakdown ships collapsed at all — Saiful's call,
     // 2026-08-03). The tab now measures 3.71 screens.
     //
+    // CR109 slice 1 adds the equity-curve card (`PortfolioEquityChart`) above
+    // Sector Allocation — a THIRD deliberate new occupant, and the argument
+    // the CR136 comment above asked for: the app could not draw a portfolio's
+    // history before this, which is the CR's own justification for landing it
+    // on this tab rather than gating it behind a new surface. Measured 3.93
+    // screens at the heavy profile (30-point fixture, live throughout, no
+    // caveat line); budget raised to 4.0.
+    //
     // The number moves because the content moved; the guard stays real. Anyone
-    // adding a THIRD card here has to make the same argument out loud rather
+    // adding a FOURTH card here has to make the same argument out loud rather
     // than discovering the cap had quietly become decorative.
-    testWidgets('Positions tab is <= 3.75 screens, measured from ScrollPosition',
+    testWidgets('Positions tab is <= 4.0 screens, measured from ScrollPosition',
         (tester) async {
       await _pump(tester, sim: _heavySimState(), watchlist: _heavyWatchlistState());
 
       final screens = _screensOfScroll(tester, 'portfolioPositionsScroll');
-      expect(screens, lessThanOrEqualTo(3.75),
+      expect(screens, lessThanOrEqualTo(4.0),
           reason: 'measured ${screens.toStringAsFixed(2)} screens at the '
               'heavy profile (12 held, 5 open, 195 closed, 40 watch)');
       expect(tester.takeException(), isNull);
@@ -418,6 +447,8 @@ void main() {
                       maxSector: 0, maxAllowed: 0.4, compliant: true,
                     ),
                   )),
+              portfolioHistoryProvider
+                  .overrideWith((ref) async => _equityHistoryFixture()),
             ],
             child: MediaQuery(
               data: MediaQueryData(textScaler: TextScaler.linear(scale)),
@@ -480,6 +511,8 @@ void main() {
                     maxSector: 0, maxAllowed: 0.4, compliant: true,
                   ),
                 )),
+            portfolioHistoryProvider
+                .overrideWith((ref) async => _equityHistoryFixture()),
           ],
           child: MediaQuery(
             data: const MediaQueryData(textScaler: TextScaler.linear(1.15)),

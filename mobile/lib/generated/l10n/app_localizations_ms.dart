@@ -290,6 +290,20 @@ class AppLocalizationsMs extends AppLocalizations {
   String get portfolioNoOpenPositions => 'No open positions';
 
   @override
+  String get portfolioEquityCurveHeading => 'EQUITY CURVE';
+
+  @override
+  String get portfolioEquityCurveWindowReturn => 'WINDOW RETURN';
+
+  @override
+  String get portfolioEquityCurveEmpty =>
+      'Your history starts building from today.';
+
+  @override
+  String get portfolioEquityCurveSimulatedNote =>
+      'Dashed segments used simulated pricing, not a live quote.';
+
+  @override
   String get tickerDetailValue => 'NILAI';
 
   @override

@@ -204,6 +204,67 @@ class SimHistory {
       );
 }
 
+/// One daily NAV snapshot from `GET /v1/sim/portfolio/{user_id}/history`
+/// (CR109 slice 1). `priceSource` rides per point — not just once for the
+/// whole series — because a series can cross from live pricing into a mock
+/// or stale day and back; CR040 requires the client be able to mark that
+/// exact day, not the series as a whole.
+class SimPortfolioHistoryPoint {
+  const SimPortfolioHistoryPoint({
+    required this.asOfDate,
+    required this.nav,
+    required this.cash,
+    required this.priceSource,
+    this.capitalEvent,
+  });
+
+  final DateTime asOfDate;
+  final double nav;
+  final double cash;
+  /// 'live' | 'mock' | 'stale'. Only 'live' may be drawn as fact — anything
+  /// else must be visibly marked on the curve (CR040 / CR134).
+  final String priceSource;
+  /// 'open' | 'restart' | 'topup' | null — a day capital moved outside of
+  /// trading P&L (a fresh account, a reset, a top-up).
+  final String? capitalEvent;
+
+  bool get isLive => priceSource == 'live';
+
+  factory SimPortfolioHistoryPoint.fromJson(Map<String, dynamic> j) =>
+      SimPortfolioHistoryPoint(
+        asOfDate: DateTime.parse(j['as_of_date'] as String),
+        nav: (j['nav'] as num).toDouble(),
+        cash: (j['cash'] as num).toDouble(),
+        priceSource: j['price_source'] as String? ?? 'mock',
+        capitalEvent: j['capital_event'] as String?,
+      );
+}
+
+/// Portfolio equity-curve payload: `GET /v1/sim/portfolio/{user_id}/history`
+/// (CR109 slice 1, `PortfolioHistoryResponse` in `backend/app/api/sim.py`).
+/// `twrPct` is the time-weighted return over the whole window, chain-linked
+/// across any capital events in [points] — computed server-side, never
+/// re-derived client-side from raw NAV deltas. The backend sends `null` for
+/// `twr_pct` only when `points` has fewer than two entries (nothing to
+/// compound); the client never renders it in that case either, so the
+/// `?? 0.0` fallback below is never reached with a value a user could read.
+class SimPortfolioHistory {
+  const SimPortfolioHistory({required this.points, required this.twrPct});
+
+  final List<SimPortfolioHistoryPoint> points;
+  final double twrPct;
+
+  factory SimPortfolioHistory.fromJson(Map<String, dynamic> j) {
+    return SimPortfolioHistory(
+      points: ((j['points'] as List?) ?? const [])
+          .map((p) =>
+              SimPortfolioHistoryPoint.fromJson(p as Map<String, dynamic>))
+          .toList(),
+      twrPct: (j['twr_pct'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
 class SimSubmitResult {
   const SimSubmitResult({
     required this.ok,

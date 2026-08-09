@@ -87,6 +87,7 @@ _SHARIA_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — SPUS publishes dail
 _CLASSIFICATION_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — sectors drift slowly
 _TICKER_REFERENCE_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — CR128
 _PRICE_ALERT_EVAL_INTERVAL_SECONDS = 5 * 60  # CR027
+_PORTFOLIO_NAV_SNAPSHOT_INTERVAL_SECONDS = 24 * 60 * 60  # daily — CR109 slice 1
 
 
 async def _nightly_audit_trim() -> None:
@@ -166,6 +167,23 @@ async def _portfolio_snapshot_tick() -> None:
         except Exception:
             logger.exception("portfolio_snapshot_tick_failed")
         await asyncio.sleep(settings.portfolio_snapshot_interval_seconds)
+
+
+async def _portfolio_nav_snapshot_tick() -> None:
+    """Background task: one `portfolio_nav_daily` row per user per US market
+    day (CR109 slice 1 — the equity-curve spine). Idempotent like
+    `_sharia_universe_refresh` — a tick that finds today's row already
+    stored does nothing, so a restart cannot miss a boundary. The quote
+    fan-out and the DB writes both run off the event loop (`to_thread`)."""
+    from app.services.portfolio_nav_daily import run_portfolio_nav_snapshot_tick
+
+    while True:
+        try:
+            stats = await asyncio.to_thread(run_portfolio_nav_snapshot_tick)
+            logger.info("portfolio_nav_snapshot_tick_complete", **stats)
+        except Exception:
+            logger.exception("portfolio_nav_snapshot_tick_failed")
+        await asyncio.sleep(_PORTFOLIO_NAV_SNAPSHOT_INTERVAL_SECONDS)
 
 
 async def _ticker_reference_refresh() -> None:
@@ -267,6 +285,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_price_alert_evaluation_tick()),
         asyncio.create_task(_portfolio_snapshot_tick()),
         asyncio.create_task(_daily_reminder_tick()),
+        asyncio.create_task(_portfolio_nav_snapshot_tick()),
     ]
     try:
         yield
