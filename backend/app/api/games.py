@@ -236,6 +236,35 @@ async def trade(
         raise _translate(exc) from exc
 
 
+@router.get("/runs/{run_id}/orders")
+async def queued_orders(
+    run_id: UUID, current_user: User = Depends(get_current_user),
+) -> list[dict]:
+    """§13.3's Queued-orders surface — "the most-seen state in the product"
+    for GCC/SEA players, who place most orders outside US market hours.
+    Every estimate carries `price_source` (CR040 on the wire)."""
+    try:
+        return await asyncio.to_thread(
+            games.list_queued_orders, current_user.id, run_id,
+        )
+    except games.GamesServiceError as exc:
+        raise _translate(exc) from exc
+
+
+@router.post("/runs/{run_id}/orders/{order_id}/cancel")
+async def cancel_queued_order(
+    run_id: UUID, order_id: UUID, current_user: User = Depends(get_current_user),
+) -> dict:
+    """The ticket promises "free to cancel any time before it fills" (§5.1).
+    This is what lets the app keep that promise."""
+    try:
+        return await asyncio.to_thread(
+            games.cancel_queued_order, current_user.id, run_id, order_id,
+        )
+    except games.GamesServiceError as exc:
+        raise _translate(exc) from exc
+
+
 @router.post("/runs/{run_id}/restart")
 async def restart(
     run_id: UUID,

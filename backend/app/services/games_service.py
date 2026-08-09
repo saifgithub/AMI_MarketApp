@@ -268,6 +268,7 @@ def get_run_detail(user_id: UUID, run_id: UUID) -> dict | None:
     portfolio, marks, total_value, _drawdown_pct, source = (
         get_sim_engine().portfolio_marks_snapshot(user_id, kind="game", run_id=run_id)
     )
+    _queued, _committed = _queued_orders_priced(user_id, run_id)
     return {
         "run_id": str(run_id),
         "cadence": cadence,
@@ -276,6 +277,13 @@ def get_run_detail(user_id: UUID, run_id: UUID) -> dict | None:
         "starts_on": starts_on.isoformat(),
         "ends_on": ends_on.isoformat(),
         "current_cash": float(portfolio.current_cash),
+        # §13.3's Queued-orders surface requires `cash committed`. Without
+        # it the ticket offered the whole stake no matter how much was
+        # already queued against it, so a player could commit several times
+        # their book. `cash_available` is what the ticket must size against.
+        "cash_committed": _committed,
+        "cash_available": round(float(portfolio.current_cash) - _committed, 2),
+        "queued_order_count": len(_queued),
         "total_value": round(float(total_value), 2),
         "price_source": source,
         "fees_paid": fees_paid,
@@ -451,6 +459,103 @@ def _record_fill(user_id: UUID, run_id: UUID, *, fee: float) -> None:
         entry.trade_count = (entry.trade_count or 0) + 1
         if entry.state == "entered":
             entry.state = "active"
+
+
+def _queued_orders_priced(
+    user_id: UUID, run_id: UUID,
+) -> tuple[list[dict], float]:
+    """Every still-queued order for a run, priced AT READ TIME, plus the total
+    AMI Cash they commit.
+
+    Pricing here does not breach the market-hours fence. That fence exists so
+    a queued order never FILLS at a stale price (§5.1's hindsight exploit);
+    this is a display estimate, recomputed on every read and never written
+    anywhere, and the fill still happens at the next open's price. The queue
+    path itself is untouched and still stores no price at all.
+
+    Why this exists: without it the ticket showed the full stake as
+    "available" no matter how many orders were already queued against it, so
+    a player could commit 250% of their book and the app would keep offering
+    them 100%. Saiful, on build 74: *"This was the second order placed. But it
+    is still showing I have 10K."* §13.3's Queued-orders surface names
+    `cash committed` as a required field.
+    """
+    sim = get_sim_engine()
+    rows_out: list[dict] = []
+    committed = 0.0
+    with get_session() as s:
+        rows = s.execute(
+            select(GameQueuedOrderRow).where(
+                GameQueuedOrderRow.run_id == run_id,
+                GameQueuedOrderRow.user_id == user_id,
+                GameQueuedOrderRow.state == "queued",
+            ).order_by(GameQueuedOrderRow.queued_at.desc())
+        ).scalars().all()
+        specs = [
+            {
+                "id": str(r.id),
+                "ticker": r.ticker,
+                "side": r.side,
+                "quantity": float(r.quantity),
+                "queued_at": r.queued_at.isoformat(),
+            }
+            for r in rows
+        ]
+    for spec in specs:
+        quote = sim.current_quote(spec["ticker"])
+        est_notional = round(quote.price * spec["quantity"], 2)
+        est_fee = round(trade_fee(est_notional), 2)
+        # A SELL releases cash rather than committing it; only a BUY ties up
+        # the stake. The fee is owed either way.
+        commits = (
+            est_notional + est_fee if spec["side"] == "buy" else est_fee
+        )
+        committed += commits
+        rows_out.append({
+            **spec,
+            "est_price": quote.price,
+            "price_source": quote.source,
+            "est_notional": est_notional,
+            "est_fee": est_fee,
+            "est_total": round(est_notional + est_fee, 2),
+        })
+    return rows_out, round(committed, 2)
+
+
+def list_queued_orders(user_id: UUID, run_id: UUID) -> list[dict]:
+    """`GET /v1/games/runs/{run_id}/orders` — §13.3's Queued-orders surface,
+    which that table calls "the most-seen state in the product" for GCC/SEA
+    players. Every estimate carries `price_source` (CR040 on the wire)."""
+    _require_live_entry(user_id, run_id)
+    orders, _committed = _queued_orders_priced(user_id, run_id)
+    return orders
+
+
+def cancel_queued_order(user_id: UUID, run_id: UUID, order_id: UUID) -> dict:
+    """`POST /v1/games/runs/{run_id}/orders/{order_id}/cancel`.
+
+    The ticket's own copy promises "free to cancel any time before it fills"
+    (§5.1). Until this existed the app made that promise and had no way to
+    keep it.
+    """
+    _require_live_entry(user_id, run_id)
+    with get_session() as s:
+        row = s.execute(
+            select(GameQueuedOrderRow).where(
+                GameQueuedOrderRow.id == order_id,
+                GameQueuedOrderRow.run_id == run_id,
+                GameQueuedOrderRow.user_id == user_id,
+            )
+        ).scalar_one_or_none()
+        if row is None:
+            raise RunNotFoundError(f"no queued order {order_id} on run {run_id}")
+        if row.state != "queued":
+            # Already filled or already cancelled. Not an error to the player,
+            # but never report it as a cancellation that happened.
+            return {"cancelled": False, "state": row.state, "order_id": str(order_id)}
+        row.state = "cancelled"
+        s.add(row)
+    return {"cancelled": True, "state": "cancelled", "order_id": str(order_id)}
 
 
 def quote_trade(
