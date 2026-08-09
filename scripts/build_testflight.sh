@@ -207,9 +207,26 @@ fi
 
 echo "▶ flutter build ios  (release, no-codesign — framework only)"
 cd "$MOBILE_DIR"
+cat <<'BANNER'
+┌──────────────────────────────────────────────────────────────────┐
+│  THIS BUILD CARRIES THE CR109 EASTER EGG (AMI_GAMES=true).       │
+│                                                                  │
+│  The game is reachable by long-pressing the Floor footer. That   │
+│  is a HIDDEN FEATURE, which App Review guideline 2.3.1 names     │
+│  explicitly. It is fine here because a test_… RevenueCat key     │
+│  forces --internal-only, and TestFlight INTERNAL groups skip     │
+│  Beta App Review.                                                │
+│                                                                  │
+│  DO NOT promote this build to an external group or the App       │
+│  Store. Rebuild without AMI_GAMES first. Saiful's call, AT:R66:  │
+│  "if anyone finds it, it will be an easter egg for them."        │
+└──────────────────────────────────────────────────────────────────┘
+BANNER
+
 flutter build ios --release --no-codesign \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
   --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
+  --dart-define=AMI_GAMES=true \
   --dart-define=REVENUECAT_IOS_SDK_KEY="${REVENUECAT_IOS_SDK_KEY}"
 
 echo "▶ xcodebuild archive  (signs + auto-refreshes provisioning profile)"

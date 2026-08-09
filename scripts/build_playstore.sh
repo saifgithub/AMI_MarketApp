@@ -207,11 +207,28 @@ fi
 
 echo "▶ flutter build appbundle  (release, signed if keystore present)"
 cd "$MOBILE_DIR"
+cat <<'BANNER'
+┌──────────────────────────────────────────────────────────────────┐
+│  THIS BUILD CARRIES THE CR109 EASTER EGG (AMI_GAMES=true).       │
+│                                                                  │
+│  The game is reachable by long-pressing the Floor footer. It is  │
+│  fine here because publish_playstore.sh is pinned to the Play    │
+│  INTERNAL testing track, which is unreviewed and team-only.      │
+│                                                                  │
+│  DO NOT promote this release to closed/open testing or           │
+│  production from the Play Console — Play lets you promote an     │
+│  internal build straight to production, and this one must not    │
+│  go. Rebuild without AMI_GAMES first. Saiful's call, AT:R66:     │
+│  "if anyone finds it, it will be an easter egg for them."        │
+└──────────────────────────────────────────────────────────────────┘
+BANNER
+
 flutter build appbundle --release \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
   --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
   --dart-define=GOOGLE_OAUTH_WEB_CLIENT_ID="${GOOGLE_OAUTH_WEB_CLIENT_ID}" \
   --dart-define=SENTRY_DSN="${SENTRY_DSN}" \
+  --dart-define=AMI_GAMES=true \
   --dart-define=REVENUECAT_ANDROID_SDK_KEY="${REVENUECAT_ANDROID_SDK_KEY}"
 
 aab="${MOBILE_DIR}/build/app/outputs/bundle/release/app-release.aab"
