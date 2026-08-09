@@ -220,12 +220,29 @@ tappable node `clickable` regardless of semantics, and the child `Text` keeps it
 there) and invisible to widget tests, which see Flutter's tree rather than the platform's.
 The very first iOS run paying for itself twice over is the strongest argument for the CR.
 
+### The gate is green
+
+```
+tests/test_00_smoke_hierarchy.py::test_semantics_identifiers_resolve   PASSED
+tests/test_00_smoke_hierarchy.py::test_hierarchy_is_not_one_opaque_view PASSED
+tests/test_00_smoke_hierarchy.py::test_bottom_nav_text_resolves        PASSED
+tests/test_00_smoke_hierarchy.py::test_bottom_band_is_plausible        PASSED
+tests/test_00_smoke_hierarchy.py::test_scale_is_plausible              PASSED
+tests/test_00_smoke_hierarchy.py::test_floor_tab_is_default_landing    PASSED
+============================== 6 passed in 4.81s ===============================
+```
+
+**4.81 seconds.** Worth stating plainly, because the bring-up runs took eight minutes each
+and invited the wrong conclusion: iOS is *not* an order of magnitude slower than Android in
+steady state. All of that time was the one-off Concierge walk plus first-session
+WebDriverAgent startup. With `noReset=True` the interview is walked once per fresh install
+and every later session takes the ~5s early return. Budget the iOS suite like the Android
+one; budget the *first* run after a wipe at ~10 minutes.
+
 ### Known-open, stated rather than quietly dropped
 
-- The full 6-test gate has not yet been observed green end to end in one run; the evidence
-  above is from direct page-source capture plus per-assertion checks. The remaining work is
-  runtime, not mechanism — first-session WebDriverAgent startup runs to minutes and a
-  killed run leaves the server needing a restart.
+- Only the smoke gate has been run on iOS. `-m phase1` (the five tab smokes), the nav-bar
+  and scroll-overflow checks, and the locale matrix are ported but unrun on this platform.
 - `scrollable_exists()` still returns `None` (undetermined) on iOS. The positive signal is
   now confirmed real — the Concierge screen emitted 4 `XCUIElementTypeScrollView` — but one
   screen does not establish that *every* scrollable surfaces as one, which is the claim a
