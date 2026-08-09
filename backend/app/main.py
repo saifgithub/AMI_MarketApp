@@ -17,6 +17,7 @@ from app.api.feedback import router as feedback_router
 from app.api.brief import router as brief_router
 from app.api.coach import router as coach_router  # deprecated /v1/coach/* shim
 from app.api.daily_challenge import router as daily_challenge_router
+from app.api.games import router as games_router  # CR109 slice 2 — dark-launched
 from app.api.glossary import router as glossary_router
 from app.api.journal import router as journal_router
 from app.api.league import router as league_router
@@ -88,6 +89,8 @@ _CLASSIFICATION_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — sectors dri
 _TICKER_REFERENCE_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — CR128
 _PRICE_ALERT_EVAL_INTERVAL_SECONDS = 5 * 60  # CR027
 _PORTFOLIO_NAV_SNAPSHOT_INTERVAL_SECONDS = 24 * 60 * 60  # daily — CR109 slice 1
+_GAME_NAV_SNAPSHOT_INTERVAL_SECONDS = 24 * 60 * 60  # daily — CR109 slice 2
+_GAME_QUEUE_FILL_INTERVAL_SECONDS = 5 * 60  # CR109 slice 2 — matches CR027's cadence
 
 
 async def _nightly_audit_trim() -> None:
@@ -184,6 +187,41 @@ async def _portfolio_nav_snapshot_tick() -> None:
         except Exception:
             logger.exception("portfolio_nav_snapshot_tick_failed")
         await asyncio.sleep(_PORTFOLIO_NAV_SNAPSHOT_INTERVAL_SECONDS)
+
+
+async def _game_nav_snapshot_tick() -> None:
+    """Background task: one `portfolio_nav_daily` row per GAME run per US
+    market day (CR109 slice 2 — the sibling of `_portfolio_nav_snapshot_tick`
+    for `kind="game"` portfolios). Idempotent for the same reason as that
+    tick: a tick that finds today's row already stored for a run does
+    nothing, so a restart cannot miss a boundary."""
+    from app.services.portfolio_nav_daily import run_game_nav_snapshot_tick
+
+    while True:
+        try:
+            stats = await asyncio.to_thread(run_game_nav_snapshot_tick)
+            logger.info("game_nav_snapshot_tick_complete", **stats)
+        except Exception:
+            logger.exception("game_nav_snapshot_tick_failed")
+        await asyncio.sleep(_GAME_NAV_SNAPSHOT_INTERVAL_SECONDS)
+
+
+async def _game_queue_fill_tick() -> None:
+    """Background task: drain `game_queued_orders` every 5 min (CR109
+    slice 2's market-hours rule — an out-of-hours order queues to the next
+    open). A no-op outside market hours; when the market IS open, fetches
+    a FRESH price for each still-queued order at drain time — never the
+    price that was on screen when the order was placed (see
+    `games_service.process_queued_orders`'s docstring)."""
+    from app.services.games_service import process_queued_orders
+
+    while True:
+        try:
+            stats = await asyncio.to_thread(process_queued_orders)
+            logger.info("game_queue_fill_tick_complete", **stats)
+        except Exception:
+            logger.exception("game_queue_fill_tick_failed")
+        await asyncio.sleep(_GAME_QUEUE_FILL_INTERVAL_SECONDS)
 
 
 async def _ticker_reference_refresh() -> None:
@@ -286,6 +324,8 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_portfolio_snapshot_tick()),
         asyncio.create_task(_daily_reminder_tick()),
         asyncio.create_task(_portfolio_nav_snapshot_tick()),
+        asyncio.create_task(_game_nav_snapshot_tick()),
+        asyncio.create_task(_game_queue_fill_tick()),
     ]
     try:
         yield
@@ -336,6 +376,7 @@ app.include_router(one_on_one_router)
 app.include_router(brief_router)
 app.include_router(coach_router)  # legacy /v1/coach/* — deprecated AT:R27
 app.include_router(daily_challenge_router)
+app.include_router(games_router)  # CR109 slice 2 — dark-launched, include_in_schema=False
 app.include_router(glossary_router)
 app.include_router(journal_router)
 app.include_router(league_router)

@@ -96,6 +96,7 @@ echo "▶ flutter build ios --release"
 flutter build ios --release \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
   --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
+  --dart-define=AMI_GAMES=1 \
   2> >(_quiet >&2)
 
 echo "▶ flutter install -d ${DEVICE_ID} (${TARGET_NAME})"

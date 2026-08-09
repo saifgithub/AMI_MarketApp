@@ -622,6 +622,198 @@ abstract class AppLocalizations {
   /// **'Dashed segments used simulated pricing, not a live quote.'**
   String get portfolioEquityCurveSimulatedNote;
 
+  /// CR109 slice 2 (dark-launched behind AMI_GAMES — this screen is unreachable in any store build). AppBar title on the game's landing screen. 'The Game' is CR109.md's own working name, not a settled product name (naming is explicitly open per CR109.md §18 item 1) — an internal label until Saiful names it. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'THE GAME'**
+  String get gamesHomeTitle;
+
+  /// CR109 slice 2. Shown instead of the landing screen's content when GET /v1/games/runs fails; paired with a retry CTA (gamesRetry). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your game runs.'**
+  String get gamesLoadError;
+
+  /// CR109 slice 2. Retry CTA under a load-error message on the game's landing screen. Rendered upper-cased by the caller, same pattern as every other HexButton label in this file. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'retry'**
+  String get gamesRetry;
+
+  /// CR109 slice 2. Days remaining in a live run, shown on the State-B run card and on each compressed 'other live runs' line. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day left} other{{count} days left}}'**
+  String gamesDaysLeft(int count);
+
+  /// CR109 slice 2. Label under the big time-weighted-return figure on the State-B run card. This is raw layer-1/2 NAV math (design §6.1), never a placement score — slice 2 ships no scoring. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RETURN THIS RUN'**
+  String get gamesTwrLabel;
+
+  /// CR109 slice 2. Primary CTA on the State-B run card; opens the 3-tap trade ticket (games_trade_ticket_screen.dart). Rendered upper-cased by the caller. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'trade'**
+  String get gamesTradeCta;
+
+  /// CR109 slice 2. Heading above the compressed one-line-per-run list when a player holds more than one live run at once (design §4.1 allows up to one of each cadence). Slice 2 only rolls the weekly cadence, so this rarely renders yet — kept for when duels/private fields (slice 3b/3c) add a second concurrent run. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'OTHER LIVE RUNS'**
+  String get gamesOtherRunsHeading;
+
+  /// CR109 slice 2. Heading on the landing screen's fallback card — shown for BOTH state A (never entered) and state C (between runs) until slice 3 (a close to return from) and slice 3c (the first-run duel) exist to tell them apart (implementation_plan.md §8.2). 'Field' is CR109.md's own schema/design term (game_fields), not a marketing name. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the next weekly field'**
+  String get gamesFallbackHeading;
+
+  /// CR109 slice 2. One-line body under gamesFallbackHeading. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'A fresh 10,000 AMI Cash book, five trading days, no mandate.'**
+  String get gamesFallbackBody;
+
+  /// CR109 slice 2. Shown on the fallback card when the next field's entrant_count is known and greater than zero. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 trader already in} other{{count} traders already in}}'**
+  String gamesFieldEntrantCount(int count);
+
+  /// CR109 slice 2. CTA on the fallback card; opens the entry confirm sheet (games_entry_sheet.dart). Disabled when the cadence's already_holds is true. Rendered upper-cased by the caller. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'enter this week\'s field'**
+  String get gamesEnterCta;
+
+  /// CR109 slice 2. Small mono label above the no-rules disclosure's full text (design §7 / §7.1). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NO ARENA RULES'**
+  String get gamesDisclosureHeading;
+
+  /// CR109 slice 2. The disclosure sentence for CR109.md §7.1 — the game trade path runs with no mandate, no position/sector/drawdown cap and no halal/locale screen; CR040 requires this stated plainly, not silently absent. NAMES THE HALAL SCREEN EXPLICITLY: CR109 accepts the risk that a halal-only user trades unscreened on a scored path, and disclosure is the obligation that replaces the gate — so the earlier wording 'no screens' was corrected, because a halal-observant reader would not understand it to mean Sharia screening is off, which is the single fact this sentence exists to convey. Shown full-text on a player's first entry (widgets/games/no_rules_disclosure.dart's NoRulesDisclosurePanel). Do not paraphrase and do not soften — this is a compliance-reviewed sentence (design §7, §15). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No mandate, no position or sector limits, and no halal screening — names blocked on the training floor can be traded here. Real market frictions still apply: trading costs, and fills only during market hours.'**
+  String get gamesDisclosureBody;
+
+  /// CR109 slice 2. Compressed form of gamesDisclosureBody shown on every entry after the first (design §13.3's fence); tapping it re-opens the full text (NoRulesDisclosureChip), so the disclosure compresses rather than disappears. Carries the halal fact rather than the generic 'NO CAPS', because that is the one omission a user could not otherwise infer and the one with a real-world consequence for them. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NO MANDATE · NO HALAL SCREEN'**
+  String get gamesDisclosureChip;
+
+  /// CR109 slice 2. Heading on the entry confirm bottom sheet (games_entry_sheet.dart). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Enter this field'**
+  String get gamesEntrySheetHeading;
+
+  /// CR109 slice 2. Stake + no-cost line on the entry confirm sheet (design §4.2: entry has no cost — a legal load-bearing choice, not a generosity one, since an entry fee is 'consideration', one leg of the gambling test in §15). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'10,000 AMI Cash, fresh for this run. Free to enter, always.'**
+  String get gamesEntryStakeLine;
+
+  /// CR109 slice 2. Confirm CTA on the entry sheet; calls POST /v1/games/enter. Rendered upper-cased by the caller. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'enter this field'**
+  String get gamesEntryConfirmCta;
+
+  /// CR109 slice 2. Busy-state label on the entry sheet's confirm button while the enter request is in flight. Rendered upper-cased by the caller. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'entering…'**
+  String get gamesEntryConfirming;
+
+  /// CR109 slice 2 / Amendment D 'TKT' — the queue-first framing (design §5.1). US regular market hours are evening in the Gulf and past midnight in Malaysia, so an out-of-hours order is the NORMAL path for AMI Trade's target markets, not an edge case; this note is shown on the run card, the trade ticket and reused wherever that framing applies, and must never read as a warning (colour-neutral in widgets/games/games_queue_note.dart). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Plan tonight, fills at the open. An order placed outside US market hours queues for the next open — free to cancel any time before it fills.'**
+  String get gamesQueueFirstNote;
+
+  /// CR109 slice 2. Small mono heading at the top of the 3-tap trade ticket sheet (design §5.4). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'TRADE TICKET'**
+  String get gamesTicketHeading;
+
+  /// CR109 slice 2. TAP 1 label on the trade ticket — a row of ticker chips (watchlist first) plus a manual-entry field. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'1 · PICK A TICKER'**
+  String get gamesTicketStepTicker;
+
+  /// CR109 slice 2. TAP 2 label on the trade ticket — the 10%/25%/50%/All-in size chips, priced against the run's current cash with zero round trips (design §5.4). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'2 · PICK A SIZE'**
+  String get gamesTicketStepSize;
+
+  /// CR109 slice 2. TAP 3 label on the trade ticket — the confirm card (shares, est. fee, book-percentage). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'3 · CONFIRM'**
+  String get gamesTicketStepConfirm;
+
+  /// CR109 slice 2. Hint text in the trade ticket's manual ticker-entry field, alongside the watchlist chips. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'or type one'**
+  String get gamesTicketTickerHint;
+
+  /// CR109 slice 2. Label on the trade ticket's 100% size chip (design §5.4's '10% · 25% · 50% · All-in' row). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'ALL-IN'**
+  String get gamesTicketSizeAllIn;
+
+  /// CR109 slice 2. Row label on the trade ticket's confirm card. A colour-neutral measurement row (CR134 §21), never styled as a warning. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SHARES'**
+  String get gamesTicketShares;
+
+  /// CR109 slice 2. Row label for the modeled trading-cost figure on the trade ticket's confirm card (design §5.3: 'Est. trading cost: 1.24 (modeled)' — labelled 'modeled' honestly because fills are at last price, so this approximates spread/impact rather than simulating a book). A mirror surface (CR134 §21): colour-neutral, never amber. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'EST. TRADING COST (MODELED)'**
+  String get gamesTicketEstFee;
+
+  /// CR109 slice 2. Row label for the book-percentage figure on the trade ticket's confirm card (design §5.4: 'this is 42% of your book' — the sizing lesson on the same card as the cost disclosure). Colour-neutral mirror surface. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'% OF YOUR BOOK'**
+  String get gamesTicketBookPct;
+
+  /// CR109 slice 2. Busy-state label on the trade ticket's confirm button while the trade request is in flight. Rendered upper-cased by the caller. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'placing…'**
+  String get gamesTicketPlacing;
+
+  /// CR109 slice 2. TAP 3's submit CTA on the trade ticket's confirm card. Rendered upper-cased by the caller. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'place order'**
+  String get gamesTicketConfirmCta;
+
+  /// CR109 slice 2 / design §5.1. Result banner shown when the placed order queued rather than filled immediately — this is the NORMAL outcome for most of the target audience (Gulf/SEA hours), so it renders identically to a fill (hexGreen), never as a warning. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Queued — fills at the next US market open. Free to cancel any time before then.'**
+  String get gamesTicketQueuedNote;
+
+  /// CR109 slice 2. Result banner shown when the placed order filled immediately (i.e. during US market hours). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Filled.'**
+  String get gamesTicketFilledNote;
+
   /// Label above the big position value on the Ticker Detail screen (Position card variant — user holds this ticker).
   ///
   /// In en, this message translates to:

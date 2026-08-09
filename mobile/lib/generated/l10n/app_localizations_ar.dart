@@ -304,6 +304,123 @@ class AppLocalizationsAr extends AppLocalizations {
       'Dashed segments used simulated pricing, not a live quote.';
 
   @override
+  String get gamesHomeTitle => 'THE GAME';
+
+  @override
+  String get gamesLoadError => 'Couldn\'t load your game runs.';
+
+  @override
+  String get gamesRetry => 'retry';
+
+  @override
+  String gamesDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days left',
+      one: '1 day left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get gamesTwrLabel => 'RETURN THIS RUN';
+
+  @override
+  String get gamesTradeCta => 'trade';
+
+  @override
+  String get gamesOtherRunsHeading => 'OTHER LIVE RUNS';
+
+  @override
+  String get gamesFallbackHeading => 'Enter the next weekly field';
+
+  @override
+  String get gamesFallbackBody =>
+      'A fresh 10,000 AMI Cash book, five trading days, no mandate.';
+
+  @override
+  String gamesFieldEntrantCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count traders already in',
+      one: '1 trader already in',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get gamesEnterCta => 'enter this week\'s field';
+
+  @override
+  String get gamesDisclosureHeading => 'NO ARENA RULES';
+
+  @override
+  String get gamesDisclosureBody =>
+      'No mandate, no position or sector limits, and no halal screening — names blocked on the training floor can be traded here. Real market frictions still apply: trading costs, and fills only during market hours.';
+
+  @override
+  String get gamesDisclosureChip => 'NO MANDATE · NO HALAL SCREEN';
+
+  @override
+  String get gamesEntrySheetHeading => 'Enter this field';
+
+  @override
+  String get gamesEntryStakeLine =>
+      '10,000 AMI Cash, fresh for this run. Free to enter, always.';
+
+  @override
+  String get gamesEntryConfirmCta => 'enter this field';
+
+  @override
+  String get gamesEntryConfirming => 'entering…';
+
+  @override
+  String get gamesQueueFirstNote =>
+      'Plan tonight, fills at the open. An order placed outside US market hours queues for the next open — free to cancel any time before it fills.';
+
+  @override
+  String get gamesTicketHeading => 'TRADE TICKET';
+
+  @override
+  String get gamesTicketStepTicker => '1 · PICK A TICKER';
+
+  @override
+  String get gamesTicketStepSize => '2 · PICK A SIZE';
+
+  @override
+  String get gamesTicketStepConfirm => '3 · CONFIRM';
+
+  @override
+  String get gamesTicketTickerHint => 'or type one';
+
+  @override
+  String get gamesTicketSizeAllIn => 'ALL-IN';
+
+  @override
+  String get gamesTicketShares => 'SHARES';
+
+  @override
+  String get gamesTicketEstFee => 'EST. TRADING COST (MODELED)';
+
+  @override
+  String get gamesTicketBookPct => '% OF YOUR BOOK';
+
+  @override
+  String get gamesTicketPlacing => 'placing…';
+
+  @override
+  String get gamesTicketConfirmCta => 'place order';
+
+  @override
+  String get gamesTicketQueuedNote =>
+      'Queued — fills at the next US market open. Free to cancel any time before then.';
+
+  @override
+  String get gamesTicketFilledNote => 'Filled.';
+
+  @override
   String get tickerDetailValue => 'القيمة';
 
   @override

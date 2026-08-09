@@ -58,12 +58,15 @@ from app.db.models import (
     AgentActivationRow,
     BugReportRow,
     DailyChallengeAttemptRow,
+    GameEntryRow,
+    GameQueuedOrderRow,
     JournalEntryRow,
     LeagueMemberRow,
     LessonProgressRow,
     MandateRow,
     OneOnOneMessageRow,
     OverlayEditCounter,
+    PortfolioNavDailyRow,
     ReputationEventRow,
     RevenueCatEventRow,
     RoomRunRow,
@@ -172,12 +175,26 @@ class MergeService:
             else:
                 mandate_kept = "neither"
 
-            # ── Sim portfolio + trades ───────────────────────────────
+            # ── Sim portfolio (TRAINING) + trades ────────────────────
+            # CR109 slice 2: `sim_portfolios` now also holds GAME rows
+            # (`kind="game"`, one per run) — scoped to `kind="training"`
+            # here so this block keeps doing exactly what it always did;
+            # game portfolios/trades are handled in their own block below,
+            # because "keep adopter's, drop orphan's" (the training
+            # conflict rule) does not apply to them — a user can hold many
+            # game portfolios at once, keyed by run_id, so there is no
+            # singleton to pick a winner between.
             target_portfolio = s.execute(
-                select(SimPortfolioRow).where(SimPortfolioRow.user_id == to_user_id)
+                select(SimPortfolioRow).where(
+                    SimPortfolioRow.user_id == to_user_id,
+                    SimPortfolioRow.kind == "training",
+                )
             ).scalar_one_or_none()
             source_portfolio = s.execute(
-                select(SimPortfolioRow).where(SimPortfolioRow.user_id == from_user_id)
+                select(SimPortfolioRow).where(
+                    SimPortfolioRow.user_id == from_user_id,
+                    SimPortfolioRow.kind == "training",
+                )
             ).scalar_one_or_none()
             sim_trades_moved = 0
             sim_holdings_moved = 0
@@ -190,7 +207,7 @@ class MergeService:
                 )
                 trades_moved = s.execute(
                     update(SimTradeRow)
-                    .where(SimTradeRow.user_id == from_user_id)
+                    .where(SimTradeRow.portfolio_id == source_portfolio.id)
                     .values(user_id=to_user_id)
                 )
                 sim_trades_moved = int(trades_moved.rowcount or 0)
@@ -203,9 +220,15 @@ class MergeService:
                 # Both have portfolios — keep adopter's. Re-key only the
                 # trades into the adopter's portfolio. Holdings get dropped
                 # along with the orphan portfolio cascade.
+                #
+                # Scoped to `SimTradeRow.portfolio_id == source_portfolio.id`
+                # rather than `user_id == from_user_id` (the pre-CR109-slice-2
+                # shape) — the orphan may ALSO hold game trades under this
+                # same user_id now, and those belong to the game-portfolio
+                # block below, not here.
                 trades_moved = s.execute(
                     update(SimTradeRow)
-                    .where(SimTradeRow.user_id == from_user_id)
+                    .where(SimTradeRow.portfolio_id == source_portfolio.id)
                     .values(user_id=to_user_id, portfolio_id=target_portfolio.id)
                 )
                 sim_trades_moved = int(trades_moved.rowcount or 0)
@@ -217,6 +240,54 @@ class MergeService:
                 )
             counts["sim_trades"] = sim_trades_moved
             counts["sim_holdings"] = sim_holdings_moved
+
+            # ── Game portfolios + trades (CR109 slice 2) ─────────────
+            # Every game portfolio is its own row keyed by run_id — unlike
+            # the training portfolio there is no "one per user" conflict
+            # to resolve, so each orphan game-portfolio row (and its own
+            # trades) simply moves wholesale. Holdings need no re-key:
+            # `SimHoldingRow` has no `user_id` column, it follows
+            # `portfolio_id`, which is unchanged here — this is what keeps
+            # "a claimed account keeps its runs" true for game runs too.
+            game_portfolios = s.execute(
+                select(SimPortfolioRow).where(
+                    SimPortfolioRow.user_id == from_user_id,
+                    SimPortfolioRow.kind == "game",
+                )
+            ).scalars().all()
+            game_portfolios_moved = 0
+            game_trades_moved = 0
+            for gp in game_portfolios:
+                trades_moved = s.execute(
+                    update(SimTradeRow)
+                    .where(SimTradeRow.portfolio_id == gp.id)
+                    .values(user_id=to_user_id)
+                )
+                game_trades_moved += int(trades_moved.rowcount or 0)
+                gp.user_id = to_user_id
+                game_portfolios_moved += 1
+            counts["game_portfolios"] = game_portfolios_moved
+            counts["game_trades"] = game_trades_moved
+
+            # ── game_entries (UNIQUE on field_id+user_id) ────────────
+            # A conflict is only possible if BOTH accounts already hold an
+            # entry in the exact same field — rare, but possible (both an
+            # anon session and the account it's about to be adopted into
+            # separately entered the same weekly field). Same skip-on-
+            # conflict shape as the other UNIQUE(user_id, ...) tables above.
+            counts["game_entries"] = _rekey_skipping_conflicts(
+                s, GameEntryRow,
+                from_user_id, to_user_id,
+                conflict_col=GameEntryRow.field_id,
+            )
+
+            # ── game_queued_orders — no uniqueness to conflict on ────
+            counts["game_queued_orders"] = _rekey_all(
+                s, GameQueuedOrderRow, from_user_id, to_user_id,
+            )
+
+            # ── portfolio_nav_daily (UNIQUE on user_id+run_id+as_of_date) ─
+            counts["portfolio_nav_daily"] = _rekey_nav_rows(s, from_user_id, to_user_id)
 
             # ── Sim watchlist (UNIQUE on user_id+ticker) ────────────
             counts["sim_watchlists"] = _rekey_skipping_conflicts(
@@ -451,6 +522,61 @@ def _rekey_skipping_conflicts(
             ))
         )
     return int(moved.rowcount or 0)
+
+
+def _rekey_nav_rows(s, from_user_id: UUID, to_user_id: UUID) -> int:
+    """Re-key `portfolio_nav_daily` orphan -> adopter (CR109 slice 2 —
+    not FK'd to `sim_portfolios` by design, so it needs its own re-key
+    like every other user_id-keyed table here).
+
+    GAME rows (`run_id` set) move wholesale: each `run_id` belongs to
+    exactly one user by construction (`games_service.enter_field` mints a
+    fresh UUID per entry), so no conflict is possible.
+
+    TRAINING rows (`run_id IS NULL`) CAN collide on `as_of_date` — both an
+    anonymous session and the account it's about to be adopted into get a
+    daily training snapshot, so a same-date row can already exist on both
+    sides. `_rekey_skipping_conflicts` doesn't fit directly here: its
+    conflict column can't be `run_id` (NULL on both sides can't serve as
+    the discriminator), so this reimplements the same skip-on-conflict
+    shape keyed on `as_of_date` for the `run_id IS NULL` slice only.
+    """
+    game_moved = s.execute(
+        update(PortfolioNavDailyRow)
+        .where(
+            PortfolioNavDailyRow.user_id == from_user_id,
+            PortfolioNavDailyRow.run_id.isnot(None),
+        )
+        .values(user_id=to_user_id)
+    )
+    moved = int(game_moved.rowcount or 0)
+
+    target_dates = set(s.execute(
+        select(PortfolioNavDailyRow.as_of_date).where(
+            PortfolioNavDailyRow.user_id == to_user_id,
+            PortfolioNavDailyRow.run_id.is_(None),
+        )
+    ).scalars().all())
+    training_moved = s.execute(
+        update(PortfolioNavDailyRow)
+        .where(and_(
+            PortfolioNavDailyRow.user_id == from_user_id,
+            PortfolioNavDailyRow.run_id.is_(None),
+            (
+                PortfolioNavDailyRow.as_of_date.notin_(target_dates)
+                if target_dates else True
+            ),
+        ))
+        .values(user_id=to_user_id)
+    )
+    moved += int(training_moved.rowcount or 0)
+    if target_dates:
+        s.execute(delete(PortfolioNavDailyRow).where(and_(
+            PortfolioNavDailyRow.user_id == from_user_id,
+            PortfolioNavDailyRow.run_id.is_(None),
+            PortfolioNavDailyRow.as_of_date.in_(target_dates),
+        )))
+    return moved
 
 
 def _merge_overlay_counts(s, from_user_id: UUID, to_user_id: UUID) -> int:

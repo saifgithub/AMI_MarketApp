@@ -88,7 +88,8 @@ flutter build apk --release \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
   --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
   --dart-define=GOOGLE_OAUTH_WEB_CLIENT_ID="${GOOGLE_OAUTH_WEB_CLIENT_ID}" \
-  --dart-define=SENTRY_DSN="${SENTRY_DSN}"
+  --dart-define=SENTRY_DSN="${SENTRY_DSN}" \
+  --dart-define=AMI_GAMES=1
 
 APK="${MOBILE_DIR}/build/app/outputs/flutter-apk/app-release.apk"
 

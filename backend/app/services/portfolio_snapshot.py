@@ -133,7 +133,16 @@ def run_portfolio_snapshot_tick(
 
     sim = get_sim_engine()
     with get_session() as session:
-        portfolio_rows = session.execute(select(SimPortfolioRow)).scalars().all()
+        # CR109 slice 2: `sim_portfolios` now also holds GAME portfolios.
+        # Portfolio Health (CR136) is a TRAINING-portfolio feature — scoped
+        # here so a game run neither gets a (meaningless) Health snapshot
+        # nor — the real bug this guards — gets one MIS-attributed from
+        # `sim.portfolio_marks_snapshot(user_id)` always resolving that
+        # call's TRAINING portfolio regardless of which row's `id` this
+        # loop is iterating.
+        portfolio_rows = session.execute(
+            select(SimPortfolioRow).where(SimPortfolioRow.kind == "training")
+        ).scalars().all()
         targets = [(row.id, row.user_id) for row in portfolio_rows]
 
     written = 0

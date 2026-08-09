@@ -173,6 +173,38 @@ class SubmitResult:
 
 
 @dataclass
+class GameSubmitResult:
+    """Result of a GAME-path trade attempt (CR109 slice 2).
+
+    Deliberately NOT `SubmitResult`: that type carries `compliance`, which
+    is meaningless here — the game path never runs
+    `check_mandate_compliance` (§7.1) — and reusing it would tempt a caller
+    into reading a game result's non-existent compliance verdict. `fee` is
+    the Amendment-D trading cost actually charged (0.0 on a rejection —
+    nothing was charged); `reason` carries a rejection's plain-English
+    cause (insufficient cash, no shares held, ...).
+    """
+
+    accepted: bool
+    trade: SimTrade | None
+    fee: float
+    reason: str | None = None
+    portfolio_snapshot: Portfolio | None = None
+
+
+@dataclass
+class SplitAdjustment:
+    """Result of `SimEngine.apply_split` — the post-adjustment holding
+    state, extracted inside the DB session (the ORM row itself doesn't
+    survive the session closing on exit)."""
+
+    ticker: str
+    quantity: float
+    avg_cost: float
+    split_adjusted_at: datetime
+
+
+@dataclass
 class PreviewResult:
     """Pre-flight preview of a sim trade — same mandate + cash/holdings checks
     as submit(), but never persists. Returned to the client so the trade
@@ -355,10 +387,23 @@ class SimEngine:
 
     # ── Portfolio ──────────────────────────────────────────────────────
 
-    def _load_portfolio_row(self, s, user_id: UUID) -> SimPortfolioRow | None:
-        return s.execute(
-            select(SimPortfolioRow).where(SimPortfolioRow.user_id == user_id)
-        ).scalar_one_or_none()
+    def _load_portfolio_row(
+        self, s, user_id: UUID, *, kind: str = "training", run_id: UUID | None = None,
+    ) -> SimPortfolioRow | None:
+        """CR109 slice 2: `kind`/`run_id` default to the TRAINING portfolio
+        (`kind="training"`, `run_id=None`) so every existing caller —
+        `reset_portfolio`, `evaluate_outcomes`, `manual_close`, `submit`,
+        all of them — keeps its current behaviour untouched. Only the game
+        trade path passes `kind="game"` + a real `run_id`."""
+        stmt = select(SimPortfolioRow).where(
+            SimPortfolioRow.user_id == user_id,
+            SimPortfolioRow.kind == kind,
+        )
+        stmt = stmt.where(
+            SimPortfolioRow.run_id.is_(None) if run_id is None
+            else SimPortfolioRow.run_id == run_id
+        )
+        return s.execute(stmt).scalar_one_or_none()
 
     def _existing_trade_for_verdict(
         self, user_id: UUID, verdict_ref: UUID
@@ -380,14 +425,23 @@ class SimEngine:
             ).scalar_one_or_none()
             return row
 
-    def ensure_portfolio(self, user_id: UUID) -> Portfolio:
+    def ensure_portfolio(
+        self, user_id: UUID, *, kind: str = "training", run_id: UUID | None = None,
+    ) -> Portfolio:
+        """CR109 slice 2: defaulted `kind`/`run_id` — see
+        `_load_portfolio_row`'s docstring. `ensure_portfolio(user_id,
+        kind="game", run_id=<run>)` lazy-creates that run's own $10k
+        AMI Cash game portfolio the first time it's touched, exactly like
+        the training portfolio always has."""
         with get_session() as s:
-            row = self._load_portfolio_row(s, user_id)
+            row = self._load_portfolio_row(s, user_id, kind=kind, run_id=run_id)
             if row is None:
                 row = SimPortfolioRow(
                     id=uuid4(),
                     user_id=user_id,
-                    name="Main",
+                    kind=kind,
+                    run_id=run_id,
+                    name="Main" if kind == "training" else "Game Run",
                     starting_capital=_STARTING_CAPITAL,
                     current_cash=_STARTING_CAPITAL,
                     created_at=datetime.now(timezone.utc),
@@ -427,7 +481,7 @@ class SimEngine:
         return p.total_drawdown_pct(marks)
 
     def portfolio_marks_snapshot(
-        self, user_id: UUID,
+        self, user_id: UUID, *, kind: str = "training", run_id: UUID | None = None,
     ) -> tuple[Portfolio, dict[str, float], float, float, str]:
         """One-fetch snapshot: (portfolio, marks, total_value, drawdown_pct, price_source).
 
@@ -440,8 +494,13 @@ class SimEngine:
         derives every downstream value from it. Also used by
         `mandate.audit_holdings` and `portfolio.sector_allocation`, which
         had the same N-then-3N shape.
+
+        CR109 slice 2: `kind`/`run_id` default to the TRAINING portfolio —
+        every existing caller is unaffected. The game NAV tick
+        (`portfolio_nav_daily.run_game_nav_snapshot_tick`) passes
+        `kind="game"` + a run's own `run_id`.
         """
-        p = self.ensure_portfolio(user_id)
+        p = self.ensure_portfolio(user_id, kind=kind, run_id=run_id)
         tickers = [h.ticker for h in p.holdings]
         quotes = self._marks_with_quotes(tickers)
         marks = {t: q.price for t, q in quotes.items()}
@@ -653,13 +712,71 @@ class SimEngine:
                 compliance=compliance, portfolio_snapshot=portfolio,
             )
 
+        return self._execute_fill(
+            user_id=user_id,
+            portfolio=portfolio,
+            ticker=ticker,
+            side=side,
+            quantity=quantity,
+            fill_price=fill_price,
+            compliance=compliance,
+            stop=stop,
+            target=target,
+            horizon_days=horizon_days,
+            verdict_ref=verdict_ref,
+        )
+
+    def _execute_fill(
+        self,
+        *,
+        user_id: UUID,
+        portfolio: Portfolio,
+        ticker: str,
+        side: Side,
+        quantity: float,
+        fill_price: float,
+        compliance: ComplianceResult,
+        stop: float | None = None,
+        target: float | None = None,
+        horizon_days: int | None = None,
+        verdict_ref: UUID | None = None,
+        kind: str = "training",
+        run_id: UUID | None = None,
+        fee: float = 0.0,
+    ) -> SubmitResult:
+        """The mechanics shared by every fill path: cash/holdings check, the
+        fill, the holding update and the trade row.
+
+        CR109 §7.1 — this exists so the game's trade path can reuse the
+        mechanics WITHOUT reusing the safety floor. **It deliberately takes no
+        `skip_compliance` flag.** A boolean that switches the floor off is one
+        wrong argument away from disabling it on the training path; instead
+        this helper never runs compliance at all, and *deciding* compliance is
+        the caller's job. `submit()` runs `check_mandate_compliance` and passes
+        its verdict in; the game path (slice 2) will run its own market-hours
+        rule and pass a clean result. The difference is then structural rather
+        than conditional, which is what CR040 asks for.
+
+        `compliance` is echoed onto the returned `SubmitResult` rather than
+        consulted — a caller that has already decided to fill is telling this
+        helper what to report, not asking it to re-check.
+
+        CR109 slice 2 additions — `kind`/`run_id` select which portfolio
+        row the fill lands on (default TRAINING; `submit()` never passes
+        them, so it is unaffected). `fee` is Amendment D's trading cost:
+        defaults to 0.0, so the training path moves exactly the cash it
+        always did; only `submit_game_trade()` ever passes a non-zero fee,
+        burned on both a buy and a sell (subtracted from cash, credited to
+        nothing — `games_scoring.trade_fee`).
+        """
         notional = fill_price * quantity
         if side == Side.BUY:
-            if notional > portfolio.current_cash + 1e-6:
+            total_cost = notional + fee
+            if total_cost > portfolio.current_cash + 1e-6:
                 fail = ComplianceResult(
                     passed=False,
                     violations=[
-                        f"insufficient cash: need ${notional:.2f}, "
+                        f"insufficient cash: need ${total_cost:.2f}, "
                         f"have ${portfolio.current_cash:.2f}"
                     ],
                     blocked_by=None,
@@ -687,12 +804,19 @@ class SimEngine:
         trade_id = uuid4()
         opened_at = datetime.now(timezone.utc)
         with get_session() as s:
-            p_row = self._load_portfolio_row(s, user_id)
+            p_row = self._load_portfolio_row(s, user_id, kind=kind, run_id=run_id)
             assert p_row is not None  # ensure_portfolio ran above
             if side == Side.BUY:
                 self._apply_buy_row(s, p_row, ticker, quantity, fill_price, opened_at)
             else:
                 self._apply_sell_row(s, p_row, ticker, quantity, fill_price)
+            if fee:
+                # Amendment D — BURNED: subtracted from this fill's own
+                # portfolio and credited to nothing (no table, counter or
+                # aggregate anywhere accumulates it). Applied on BOTH a buy
+                # (on top of the notional already deducted above) and a
+                # sell (on top of the proceeds already credited above).
+                p_row.current_cash = round(float(p_row.current_cash) - fee, 2)
             # DEF166/DEF110: a SELL trade row is created "open" and NEVER
             # transitions — only `evaluate_outcomes` closes trades, and it
             # only watches BUY rows against stop/target. This permanent-open
@@ -747,6 +871,141 @@ class SimEngine:
             accepted=True, trade=trade,
             compliance=compliance, portfolio_snapshot=portfolio,
         )
+
+    # ── Game trade path (CR109 slice 2, §7.1) ─────────────────────────────
+
+    def submit_game_trade(
+        self,
+        *,
+        user_id: UUID,
+        run_id: UUID,
+        ticker: str,
+        side: Side,
+        quantity: float,
+        order_type: OrderType = OrderType.MARKET,
+        limit_price: float | None = None,
+        stop: float | None = None,
+        target: float | None = None,
+        horizon_days: int | None = None,
+    ) -> GameSubmitResult:
+        """CR109 slice 2, §7.1 — the game trade path's second public entry
+        point, structurally distinct from `submit()`: it never calls
+        `check_mandate_compliance` — not "skipped", simply absent from this
+        function's body, the same way `_execute_fill` never contains it
+        (see `test_cr109_trade_path_split.py`). No mandate is resolved, no
+        `ProposedTrade`/compliance context is built — there is nothing here
+        for a floor to run against.
+
+        Always fills IMMEDIATELY at the CURRENT price — this method has no
+        concept of "queued". Deciding whether to call it at all (the
+        market-hours rule) is `games_service.py`'s job: an out-of-hours
+        order never reaches here until the queue-drain sweep calls it,
+        which is what fetches a FRESH price rather than the one on screen
+        when the order was placed.
+
+        Charges Amendment D's trading cost via `_execute_fill`'s `fee`
+        parameter — the ONLY call site in the codebase that ever passes a
+        non-zero one. `games_scoring.trade_fee` is computed off the ACTUAL
+        fill price (not an estimate), so the fee is exact, never rounded
+        from a quote shown earlier.
+        """
+        from app.services.games_scoring import trade_fee as _trade_fee
+
+        ticker = ticker.upper().strip()
+        portfolio = self.ensure_portfolio(user_id, kind="game", run_id=run_id)
+        mark = self.current_price(ticker)
+        fill_price = mark if order_type == OrderType.MARKET else (limit_price or mark)
+        fee = _trade_fee(fill_price * quantity)
+
+        result = self._execute_fill(
+            user_id=user_id,
+            portfolio=portfolio,
+            ticker=ticker,
+            side=side,
+            quantity=quantity,
+            fill_price=fill_price,
+            # No mandate exists on this path — a clean, unconsulted
+            # ComplianceResult (see `_execute_fill`'s own docstring: it
+            # never reads `compliance`, only echoes it onto the result).
+            compliance=ComplianceResult(passed=True, violations=[], blocked_by=None),
+            stop=stop,
+            target=target,
+            horizon_days=horizon_days,
+            kind="game",
+            run_id=run_id,
+            fee=fee,
+        )
+        if not result.accepted:
+            return GameSubmitResult(
+                accepted=False, trade=None, fee=0.0,
+                reason=(
+                    result.compliance.violations[0]
+                    if result.compliance.violations else "rejected"
+                ),
+                portfolio_snapshot=result.portfolio_snapshot,
+            )
+        logger.info(
+            "game_trade_filled",
+            user_id=str(user_id), run_id=str(run_id), ticker=ticker,
+            side=side.value if hasattr(side, "value") else str(side),
+            qty=quantity, fill=fill_price, fee=fee,
+        )
+        return GameSubmitResult(
+            accepted=True, trade=result.trade, fee=fee,
+            portfolio_snapshot=result.portfolio_snapshot,
+        )
+
+    def apply_split(
+        self,
+        user_id: UUID,
+        ticker: str,
+        ratio: float,
+        *,
+        kind: str = "game",
+        run_id: UUID | None = None,
+    ) -> SplitAdjustment | None:
+        """CR109 slice 2 (G2) — adjust a held position for a corporate
+        split IN PLACE: `quantity *= ratio`, `avg_cost /= ratio`, so
+        `quantity * avg_cost` (the position's cost basis) is unchanged and
+        NAV stays continuous once the market price divides by the same
+        ratio. Flags the row (`SimHoldingRow.split_adjusted_at`) rather
+        than writing a `portfolio_nav_daily.capital_event` — a split
+        leaves economic value unchanged, so (design §12) it must NOT split
+        the TWR chain, and only `capital_event` does that.
+
+        GAME-portfolio-only by convention (`kind` defaults to `"game"`):
+        design §12.1 G2 — "training absorbs it with a free reset" — so
+        nothing calls this against a training holding. Returns `None` if
+        the ticker isn't held (a split notice for a ticker nobody holds is
+        a no-op, not an error) or the portfolio doesn't exist.
+
+        Detecting WHEN a split happened is intentionally not this
+        function's job — this is the mechanical "apply" step only,
+        exercised by its test with a known ratio; wiring it to a real
+        split calendar is a follow-up, matching G3's "measure first before
+        building detection machinery" posture in the design.
+        """
+        if ratio <= 0:
+            raise ValueError(f"split ratio must be positive, got {ratio}")
+        ticker = ticker.upper().strip()
+        now = datetime.now(timezone.utc)
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id, kind=kind, run_id=run_id)
+            if p_row is None:
+                return None
+            holding = next((h for h in p_row.holdings if h.ticker == ticker), None)
+            if holding is None:
+                return None
+            holding.quantity = float(holding.quantity) * ratio
+            holding.avg_cost = float(holding.avg_cost) / ratio
+            holding.split_adjusted_at = now
+            s.flush()
+            return SplitAdjustment(
+                ticker=ticker,
+                quantity=float(holding.quantity),
+                avg_cost=float(holding.avg_cost),
+                split_adjusted_at=now,
+            )
 
     def preview(
         self,

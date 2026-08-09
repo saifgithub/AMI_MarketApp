@@ -1,0 +1,101 @@
+/// CR109 slice 2 — a canned `ApiClient` for game-surface widget tests.
+///
+/// Shared by the entry-sheet and trade-ticket tests so both exercise the
+/// real `GamesEntrySheet` / `GamesTicketNotifier` logic against
+/// deterministic responses, never a rewritten stand-in — same shape as
+/// `journal_plan_trust_boundary_test.dart`'s `_RecordingApiClient`.
+library;
+
+import 'package:ami_trade/models/games.dart';
+import 'package:ami_trade/services/api/api_client.dart';
+
+class FakeGamesApiClient extends ApiClient {
+  FakeGamesApiClient({
+    this.tradeQuote,
+    this.tradeResult,
+  }) : super(baseUrl: 'test://localhost');
+
+  /// Canned response for [gamesTradeQuote]; a sensible default when the
+  /// caller doesn't need to control the numbers.
+  GameTradeQuote? tradeQuote;
+
+  /// Canned response for [gamesTrade].
+  GameTradeResult? tradeResult;
+
+  final List<String> enterCadencesSeen = [];
+  final List<({String ticker, String side, double notional})> quoteCallsSeen =
+      [];
+  final List<({String ticker, String side, double notional})> tradeCallsSeen =
+      [];
+
+  @override
+  Future<GameEntry> gamesEnter({required String cadence}) async {
+    enterCadencesSeen.add(cadence);
+    return GameEntry(
+      entryId: 'entry-1',
+      fieldId: 'field-1',
+      runId: 'run-1',
+      cadence: cadence,
+      state: 'entered',
+    );
+  }
+
+  @override
+  Future<List<GameCadenceInfo>> gamesCadences() async => const [
+        GameCadenceInfo(cadence: 'week'),
+      ];
+
+  @override
+  Future<List<GameRunSummary>> gamesRuns() async => const [];
+
+  @override
+  Future<GameRunDetail> gamesRunDetail(String runId) async => GameRunDetail(
+        runId: runId,
+        fieldId: 'field-1',
+        cadence: 'week',
+        state: 'active',
+        stake: 10000,
+        cash: 10000,
+      );
+
+  @override
+  Future<GameTradeQuote> gamesTradeQuote({
+    required String runId,
+    required String ticker,
+    required String side,
+    required double notional,
+  }) async {
+    quoteCallsSeen.add((ticker: ticker, side: side, notional: notional));
+    return tradeQuote ??
+        GameTradeQuote(
+          ticker: ticker,
+          side: side,
+          shares: notional / 180.0,
+          price: 180.0,
+          notional: notional,
+          estFee: notional * 0.001 < 1.0 ? 1.0 : notional * 0.001,
+          bookPercentage: (notional / 10000) * 100,
+          priceSource: 'live',
+          willQueue: false,
+        );
+  }
+
+  @override
+  Future<GameTradeResult> gamesTrade({
+    required String runId,
+    required String ticker,
+    required String side,
+    required double notional,
+  }) async {
+    tradeCallsSeen.add((ticker: ticker, side: side, notional: notional));
+    return tradeResult ??
+        GameTradeResult(
+          status: 'filled',
+          ticker: ticker,
+          side: side,
+          shares: notional / 180.0,
+          price: 180.0,
+          fee: 1.0,
+        );
+  }
+}

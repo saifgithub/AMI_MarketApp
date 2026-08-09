@@ -12,10 +12,12 @@
 /// API calls before the Dio interceptor has a token attached.
 library;
 
+import 'package:ami_trade/features/games/games_gate.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/screens/dev_preview_screen.dart';
 import 'package:ami_trade/screens/feedback/bug_resolution_toasts.dart';
+import 'package:ami_trade/screens/games/games_home_screen.dart';
 import 'package:ami_trade/screens/home_shell.dart';
 import 'package:ami_trade/screens/notifications/push_notification_listener.dart';
 import 'package:ami_trade/screens/onboarding/onboarding_screen.dart';
@@ -58,6 +60,14 @@ class AmiTradeApp extends ConsumerWidget {
         '/onboarding': (_) => const OnboardingScreen(),
         '/floor': (_) => const HomeShell(),
         '/dev-preview': (_) => const DevPreviewScreen(),
+        // CR109 Amendment F — the dark-launch gate. `kGamesEnabled` is a
+        // const bool.fromEnvironment, so with the AMI_GAMES dart-define off
+        // the compiler const-folds this whole entry out of the map — no
+        // store binary contains a reachable '/games' route, and the games
+        // screen tree-shakes out with it. NO other entry point exists: no
+        // tab, no card, no settings row, no tap gesture reaches this route
+        // in any build. See features/games/games_gate.dart.
+        if (kGamesEnabled) '/games': (_) => const GamesHomeScreen(),
       },
     );
   }

@@ -416,10 +416,35 @@ class AgentActivationRow(Base):
 
 
 class SimPortfolioRow(Base):
+    """A portfolio — TRAINING (`kind="training"`, `run_id` NULL, the
+    original one-per-user shape) or GAME (`kind="game"`, one row per game
+    run — CR109 slice 2, implementation_plan.md §4.2).
+
+    `user_id` used to be UNIQUE on its own, which is what made "the
+    portfolio" a safe singular lookup everywhere. Widening it to
+    `UniqueConstraint(user_id, kind, run_id)` means a user can now hold
+    MANY rows (one training + one per live/past game run) — every call
+    site that queried this table directly with `.scalar_one_or_none()` or
+    assumed "one row = one user" had to be re-scoped to `kind="training"`
+    alongside this change (`api/sim.py`'s reset route, `portfolio_snapshot.py`
+    M03's tick, `day_trader_outcomes.py`'s `_starting_capital`,
+    `merge_service.py`) or it now raises `MultipleResultsFound` the moment a
+    user has both. `SimEngine._load_portfolio_row` / `ensure_portfolio` take
+    a defaulted `kind="training"` so the ~18 existing callers through those
+    two functions are unaffected.
+    """
+
     __tablename__ = "sim_portfolios"
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "kind", "run_id", name="uq_portfolio_user_kind_run",
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
-    user_id: Mapped[UUID] = mapped_column(Uuid(), unique=True, index=True, nullable=False)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    kind: Mapped[str] = mapped_column(String, default="training", nullable=False)
+    run_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), index=True, nullable=True)
     name: Mapped[str] = mapped_column(String, default="Main", nullable=False)
     starting_capital: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     current_cash: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
@@ -447,6 +472,19 @@ class SimHoldingRow(Base):
     avg_cost: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
     opened_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    # CR109 slice 2 (G2) — a corporate split adjusts `quantity` / `avg_cost`
+    # IN PLACE (quantity *= ratio, avg_cost /= ratio — cost basis unchanged,
+    # so NAV stays continuous once the market price divides by the same
+    # ratio) and flags the row here rather than writing a
+    # `portfolio_nav_daily.capital_event`: a split leaves economic value
+    # unchanged, so — unlike a reset or a top-up — it must NOT split the TWR
+    # chain, and only `capital_event` does that. NULL on every row this CR
+    # doesn't touch, including every TRAINING holding (§12 of the design:
+    # "training absorbs it with a free reset" — split handling is a GAME-
+    # portfolio-only concern; see `SimEngine.apply_split`).
+    split_adjusted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
     )
 
     portfolio: Mapped[SimPortfolioRow] = relationship(back_populates="holdings")
@@ -1289,3 +1327,122 @@ class PortfolioNavDailyRow(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
+
+
+class GameFieldRow(Base):
+    """A scheduled competitive window for the game — CR109 slice 2
+    (implementation_plan.md §4.3 + §4.4.1 Amendment D). Columns and their
+    meanings are specified verbatim there; not re-derived here.
+
+    State machine: `announced -> entry_open -> locked -> live -> settling ->
+    closed -> archived`, plus `abandoned` for a demand-gated field that
+    never fills. **Slice 2 only ever writes `announced` / `entry_open` /
+    `locked` / `live`** — settling/closing/archiving is slice 3, so this
+    table's rows never advance past `live` yet. `scoring_basis` is resolved
+    at CLOSE and frozen (slice 3); stays NULL through slice 2.
+
+    No FK target from `sim_portfolios` or `portfolio_nav_daily` — only
+    `game_entries` points here, and fields are never hard-deleted (§4.4),
+    so that FK is safe.
+    """
+
+    __tablename__ = "game_fields"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    cadence: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    state: Mapped[str] = mapped_column(String, nullable=False, default="announced")
+    entry_opens_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    locks_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    starts_on: Mapped[date] = mapped_column(Date, nullable=False)
+    ends_on: Mapped[date] = mapped_column(Date, nullable=False)
+    min_entrants: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    max_wait_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    scoring_basis: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    benchmark_ticker: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    entrant_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # Amendment D (§4.4.1)
+    kind: Mapped[str] = mapped_column(String, nullable=False, default="open")
+    join_code: Mapped[Optional[str]] = mapped_column(String, nullable=True, unique=True)
+    owner_user_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
+    points_policy: Mapped[str] = mapped_column(String, nullable=False, default="full")
+    theme: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
+class GameEntryRow(Base):
+    """One user's entry into one `game_fields` row — CR109 slice 2
+    (implementation_plan.md §4.4). Columns specified verbatim there.
+
+    `run_id` joins to `portfolio_nav_daily` (NOT a FK — see that table's
+    FENCE) and identifies the `SimPortfolioRow(kind="game")` this entry
+    trades through. `UniqueConstraint(field_id, user_id)` is the DB-level
+    backstop for "one entry per field per user"; combined with "at most one
+    field is ever `entry_open` per cadence" (the weekly roll in
+    `games_service.py`), that is also the one-live-run-per-cadence guard.
+    """
+
+    __tablename__ = "game_entries"
+    __table_args__ = (
+        UniqueConstraint("field_id", "user_id", name="uq_entry_field_user"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    field_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("game_fields.id"), nullable=False, index=True,
+    )
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    run_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    state: Mapped[str] = mapped_column(String, nullable=False, default="entered")
+    final_twr_pct: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    final_rank: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    career_points_delta: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    scored_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    intent: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    wildness_index: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    fees_paid: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    trade_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
+class GameQueuedOrderRow(Base):
+    """A game order placed outside US market hours — CR109 slice 2's
+    queue-first path (design §5.1: "the primary flow, not the fallback").
+
+    Not part of the plan's §4 schema — that section specifies `game_fields`
+    / `game_entries` verbatim and is deliberately not re-derived here; this
+    table fills a genuine gap the plan leaves open ("queued-order
+    visibility" is listed under implementation_plan.md §10's still-open
+    items, and the design's own G3/§5.1 assume queued orders exist without
+    naming a table for them).
+
+    Holds the order SPEC ONLY — never a captured price. The fill price is
+    fetched fresh at drain time (`games_service.process_queued_orders`),
+    which is what keeps a queued order from ever filling on a stale quote
+    (implementation_plan.md §2 slice-2 acceptance).
+    """
+
+    __tablename__ = "game_queued_orders"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    run_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    ticker: Mapped[str] = mapped_column(String, nullable=False)
+    side: Mapped[str] = mapped_column(String, nullable=False)
+    quantity: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+    order_type: Mapped[str] = mapped_column(String, nullable=False, default="market")
+    limit_price: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    stop: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    target: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    horizon_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    # queued / filled / cancelled
+    state: Mapped[str] = mapped_column(String, nullable=False, default="queued")
+    queued_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    filled_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    filled_trade_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
+    cancel_reason: Mapped[Optional[str]] = mapped_column(String, nullable=True)

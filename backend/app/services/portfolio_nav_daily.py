@@ -107,9 +107,17 @@ def run_portfolio_nav_snapshot_tick(
 
     sim = get_sim_engine()
     with get_session() as session:
+        # CR109 slice 2: `sim_portfolios` now also holds GAME portfolios
+        # (`kind="game"`, one row per run). Scoped to `kind="training"` so
+        # this tick keeps writing exactly the training curve it always
+        # has — a game user's OWN nav rows come from
+        # `run_game_nav_snapshot_tick` below, keyed by their run_id, never
+        # by folding into the training (`run_id=None`) series.
         user_ids = [
             row.user_id
-            for row in session.execute(select(SimPortfolioRow)).scalars().all()
+            for row in session.execute(
+                select(SimPortfolioRow).where(SimPortfolioRow.kind == "training")
+            ).scalars().all()
         ]
 
     written = 0
@@ -185,6 +193,112 @@ def run_portfolio_nav_snapshot_tick(
     return {
         "as_of": as_of.isoformat(),
         "users": len(user_ids),
+        "written": written,
+        "skipped_existing": skipped,
+    }
+
+
+def run_game_nav_snapshot_tick(
+    *,
+    now: datetime | None = None,
+    trading_day: Callable[[], date | None] | None = None,
+) -> dict[str, object]:
+    """CR109 slice 2 — the sibling of `run_portfolio_nav_snapshot_tick` for
+    GAME portfolios (`kind="game"`). One `portfolio_nav_daily` row per
+    (user, run, trading day), `run_id` = the game run's own id — the run's
+    NAV curve (`GET /v1/games/runs/{run_id}`) reads straight off these
+    rows, same as the training curve reads off the `run_id IS NULL` rows.
+
+    Idempotent for the same reason as the training tick: a tick that finds
+    today's row already stored for a run does nothing.
+
+    A queued (not yet filled) `GameQueuedOrderRow` never appears here — this
+    only ever reads the actual portfolio row's holdings/cash via
+    `portfolio_marks_snapshot(kind="game", run_id=...)`, and a queued order
+    hasn't touched either yet. That is what keeps a queued order out of a
+    NAV snapshot before it fills, structurally rather than by a special
+    case here.
+
+    `capital_event` is never set to anything but `None` on this path in
+    slice 2 — a game run's ONLY capital event is its own entry (there is no
+    reset/restart-in-place for a game run; forfeiting ends it, see
+    `games_service.py`), and Amendment D's trading fee is explicitly NOT a
+    capital event (design §12), so it never appears here either.
+    """
+    now = now or datetime.now(timezone.utc)
+    resolve_day = trading_day or _default_trading_day
+
+    as_of = resolve_day()
+    if as_of is None:
+        logger.warn(
+            "game_nav_snapshot_no_trading_day",
+            reason="no SPY rows in price_history_daily — cold start or mock-only.",
+        )
+        return {"as_of": "none", "runs": 0, "written": 0, "skipped_existing": 0}
+
+    from app.services.sim_engine import get_sim_engine
+
+    sim = get_sim_engine()
+    with get_session() as session:
+        targets = [
+            (row.user_id, row.run_id)
+            for row in session.execute(
+                select(SimPortfolioRow).where(SimPortfolioRow.kind == "game")
+            ).scalars().all()
+            if row.run_id is not None
+        ]
+
+    written = 0
+    skipped = 0
+    for user_id, run_id in targets:
+        try:
+            with get_session() as session:
+                exists_today = session.execute(
+                    select(PortfolioNavDailyRow.id).where(
+                        PortfolioNavDailyRow.user_id == user_id,
+                        PortfolioNavDailyRow.run_id == run_id,
+                        PortfolioNavDailyRow.as_of_date == as_of,
+                    )
+                ).first()
+                if exists_today is not None:
+                    skipped += 1
+                    continue
+                first_row = session.execute(
+                    select(PortfolioNavDailyRow.id).where(
+                        PortfolioNavDailyRow.user_id == user_id,
+                        PortfolioNavDailyRow.run_id == run_id,
+                    )
+                    .limit(1)
+                ).first()
+
+            portfolio, _marks, total_value, _drawdown_pct, source = (
+                sim.portfolio_marks_snapshot(user_id, kind="game", run_id=run_id)
+            )
+            capital_event = "open" if first_row is None else None
+
+            try:
+                with get_session() as session:
+                    session.add(PortfolioNavDailyRow(
+                        user_id=user_id,
+                        run_id=run_id,
+                        as_of_date=as_of,
+                        nav=round(float(total_value), 2),
+                        cash=round(float(portfolio.current_cash), 2),
+                        price_source=_normalize_price_source(source),
+                        capital_event=capital_event,
+                        created_at=now,
+                    ))
+                written += 1
+            except IntegrityError:
+                skipped += 1
+        except Exception:
+            logger.exception(
+                "game_nav_snapshot_run_failed", user_id=str(user_id), run_id=str(run_id),
+            )
+
+    return {
+        "as_of": as_of.isoformat(),
+        "runs": len(targets),
         "written": written,
         "skipped_existing": skipped,
     }

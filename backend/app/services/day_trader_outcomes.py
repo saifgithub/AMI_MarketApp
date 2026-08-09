@@ -227,9 +227,16 @@ def _load_all_trades(user_id: UUID) -> list[_Trade]:
 
 
 def _starting_capital(user_id: UUID) -> float:
+    # CR109 slice 2: scoped to kind="training" — day-trader-preset outcomes
+    # are a training-portfolio concept, and a user may now also hold GAME
+    # portfolio rows for the same user_id, which would otherwise make this
+    # `.scalar_one_or_none()` raise MultipleResultsFound.
     with get_session() as s:
         row = s.execute(
-            select(SimPortfolioRow).where(SimPortfolioRow.user_id == user_id)
+            select(SimPortfolioRow).where(
+                SimPortfolioRow.user_id == user_id,
+                SimPortfolioRow.kind == "training",
+            )
         ).scalar_one_or_none()
         return float(row.starting_capital) if row is not None else _DEFAULT_STARTING_CAPITAL
 

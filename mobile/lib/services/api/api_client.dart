@@ -21,6 +21,7 @@ import 'package:ami_trade/models/billing_identity.dart';
 import 'package:ami_trade/models/brief.dart';
 import 'package:ami_trade/models/daily_challenge.dart';
 import 'package:ami_trade/models/feedback.dart';
+import 'package:ami_trade/models/games.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/models/league.dart';
 import 'package:ami_trade/models/lessons.dart';
@@ -1575,5 +1576,94 @@ class ApiClient {
         .cast<Map<String, dynamic>>()
         .map(AlpacaPosition.fromJson)
         .toList();
+  }
+
+  // ── Games (CR109 slice 2 — dark-launched behind AMI_GAMES) ─────────────
+  //
+  // The API surface itself is NOT gated: Amendment F's gate is client-route
+  // -only (`/v1/games/*` registers server-side with `include_in_schema=False`,
+  // never behind a runtime flag — see `features/games/games_gate.dart`). So
+  // these methods are ordinary and unconditional; nothing calls them unless
+  // a gated build's `/games` route is reached, and no store binary reaches it.
+  // No `{user_id}` in any path — like `/v1/league/me`, the caller is derived
+  // from the Bearer token `_AuthInterceptor` already attaches.
+
+  Future<List<GameCadenceInfo>> gamesCadences() async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/games/cadences');
+    final list = (r.data?['cadences'] as List?) ?? const [];
+    return list
+        .map((e) => GameCadenceInfo.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// 409 if the caller already holds this cadence (§4.1's one-live-run-
+  /// per-cadence guard) — propagates as an ordinary `DioException`, same
+  /// shape as every other refused write in this client.
+  Future<GameEntry> gamesEnter({required String cadence}) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/games/enter',
+      data: {'cadence': cadence},
+    );
+    return GameEntry.fromJson(r.data!);
+  }
+
+  Future<List<GameRunSummary>> gamesRuns() async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/games/runs');
+    final list = (r.data?['runs'] as List?) ?? const [];
+    return list
+        .map((e) => GameRunSummary.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<GameRunDetail> gamesRunDetail(String runId) async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/games/runs/$runId');
+    return GameRunDetail.fromJson(r.data!);
+  }
+
+  /// The ticket's TAP-3 pre-confirm — shares, est. fee, book-percentage
+  /// (§5.4). [notional] is client-computed (a size chip's % × the run's
+  /// current cash), per the design's "zero round trips" rule for the size
+  /// chips themselves — this is the ticket's ONE network call before submit.
+  Future<GameTradeQuote> gamesTradeQuote({
+    required String runId,
+    required String ticker,
+    required String side,
+    required double notional,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/games/runs/$runId/trade/quote',
+      data: {'ticker': ticker, 'side': side, 'notional': notional},
+    );
+    return GameTradeQuote.fromJson(r.data!);
+  }
+
+  /// Places or queues the order the ticket just quoted. §5.1: outside US
+  /// market hours this queues rather than filling at a stale price — the
+  /// server decides and the response's `status` says which happened.
+  Future<GameTradeResult> gamesTrade({
+    required String runId,
+    required String ticker,
+    required String side,
+    required double notional,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/games/runs/$runId/trade',
+      data: {'ticker': ticker, 'side': side, 'notional': notional},
+    );
+    return GameTradeResult.fromJson(r.data!);
+  }
+
+  /// §6.7 — restart is preview-then-commit over one endpoint: called with
+  /// `confirm: false` (the default) it returns the forfeit cost without
+  /// acting; `confirm: true` commits it.
+  Future<GameRestartPreview> gamesRestart({
+    required String runId,
+    bool confirm = false,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/games/runs/$runId/restart',
+      data: {'confirm': confirm},
+    );
+    return GameRestartPreview.fromJson(r.data!);
   }
 }

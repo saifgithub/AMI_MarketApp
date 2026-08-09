@@ -235,9 +235,17 @@ async def reset_portfolio(
     _own(current_user, user_id)
     # CR004: 24h cooldown. Reset recreates the portfolio, so its
     # created_at IS the last-reset time — no extra column needed.
+    # CR109 slice 2: scoped to kind="training" — a user can now also hold
+    # GAME portfolio rows, and `reset_portfolio()`/this cooldown are a
+    # training-only concept (`reset_portfolio()` itself is untouched by
+    # this CR). Without this scope, a user holding both would make this
+    # query raise MultipleResultsFound the moment they also had a game run.
     with get_session() as s:
         row = s.execute(
-            select(SimPortfolioRow).where(SimPortfolioRow.user_id == user_id)
+            select(SimPortfolioRow).where(
+                SimPortfolioRow.user_id == user_id,
+                SimPortfolioRow.kind == "training",
+            )
         ).scalar_one_or_none()
         if row is not None:
             created_at = row.created_at

@@ -611,6 +611,11 @@ _SIM_ENGINE_SYNC_SAFE_METHODS = {
     "preview",
     "evaluate_outcomes",
     "manual_close",
+    # CR109 slice 2: reached only from `games_service.submit_trade` /
+    # `games_service.process_queued_orders`, both of which are themselves
+    # always called from `api/games.py` / `main.py`'s queue-fill tick via
+    # `await asyncio.to_thread(...)` — same shape as `submit` above.
+    "submit_game_trade",
 }
 
 
