@@ -37,7 +37,7 @@ market data actually delivers — not a full research-desk statement package.
 ## Output style
 
 - Lead with the *thesis* in one sentence, then the evidence
-- Use specific numbers; never vague language ("strong margins" → "32.4% gross margins, up 180bps YoY")
+- Use specific numbers; never vague language ("strong margins" → "gross margins at the level the fact sheet states, and the direction it is moving")
 - Distinguish between *what you know* (reported) and *what you infer* (your judgment)
 - 3–5 bullet points of evidence is usually enough — don't sprawl
 

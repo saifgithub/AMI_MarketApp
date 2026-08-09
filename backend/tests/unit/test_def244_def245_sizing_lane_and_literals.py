@@ -66,8 +66,18 @@ def test_no_researcher_is_asked_for_a_position_size():
     # (My own replacement text — "no trade has been proposed to size" — tripped
     # the first version of this check, which is a fair warning about heuristics
     # that read words instead of meaning.)
+    # ROUND-1 AUDIT MAJOR — the verb list is GONE. It required one of
+    # suggest|propose|recommend|"output specific", and the auditor defeated it
+    # with four ordinary bullets that reintroduce the defect exactly:
+    #   "Quantify your ideal position size given conviction."
+    #   "State the position size you would take."
+    #   "Give a specific sizing figure based on conviction."
+    #   "End with a sizing conclusion."
+    # A synonym list cannot enumerate English. The structural rule is simpler and
+    # strictly stronger: a RESEARCHERS-phase prompt has no business mentioning
+    # position size AT ALL unless it is handing it to the agent that owns it, so
+    # any "siz" that does not name an owner is a finding regardless of the verb.
     OWNERS = ("trader", "portfolio manager", "risk debators")
-    DEMANDS = ("suggest", "propose", "recommend", "output specific")
 
     def _bullets(text: str) -> list[str]:
         """Group wrapped continuation lines back into their bullet. Scanning raw
@@ -86,7 +96,7 @@ def test_no_researcher_is_asked_for_a_position_size():
     for name in ("bull_researcher.md", "bear_researcher.md"):
         for bullet in _bullets((_CONTENT / name).read_text(encoding="utf-8")):
             low = bullet.lower()
-            if "siz" not in low or not any(v in low for v in DEMANDS):
+            if "siz" not in low:
                 continue
             if any(o in low for o in OWNERS):
                 continue
@@ -129,33 +139,44 @@ def test_the_bear_carries_no_literal_downside_percentage():
 
 
 @pytest.mark.parametrize("filename", sorted(p.name for p in _CONTENT.glob("*.md")))
-def test_no_agent_prompt_models_a_downside_with_a_literal_percentage(filename):
-    """The class, not the instance. A worked example carrying a number teaches the
-    model that number for the slot it cannot otherwise fill — so no prompt may
-    pair a loss/downside/drawdown word with a hard percentage.
+def test_no_agent_prompt_quotes_an_example_containing_a_literal_percentage(filename):
+    """The class, tested STRUCTURALLY — round-1 audit MAJOR.
 
-    `README.md` is excluded: it documents the prompts rather than being one.
+    The first version required a noun from `downside|drawdown|loss|fall|drop`
+    near the number. The auditor defeated it with ordinary synonyms —
+    *correction, decline, retracement, pullback, slump, plunge, haircut* — and,
+    decisively, with **the original defect text minus the word "downside"**:
+
+        "if X happens, we're looking at -25%, and that is more likely than
+         consensus thinks"
+
+    which is the DEF245 bullet almost verbatim and does not match. A word list
+    cannot enumerate the ways English says "it goes down".
+
+    So the rule stops describing the number and describes **where it sits**: a
+    literal percentage inside a QUOTED example. That is what makes an example
+    leakable — the model is being shown a finished utterance with a figure in it,
+    and CR149 measured that it reuses exactly those figures (`-25%` reached 22 of
+    811 real verdicts and became the most frequent downside magnitude in the
+    corpus). Percentages OUTSIDE quotes are mandate values and length guides —
+    configuration, not modelled speech — and are untouched.
+
+    Four prompts had to change to satisfy this, one of them a line added by
+    DEF244's own fix an hour earlier (`"the Bull's 44%"`). That is the argument
+    for the structural form: the vocabulary guard passed all four.
     """
     if filename == "README.md":
         pytest.skip("documentation, not a prompt")
     import re
 
-    text = (_CONTENT / filename).read_text(encoding="utf-8")
-    # BOTH orders. The first version only matched "drawdown … 30%" and a mutation
-    # adding "a 30% drawdown is survivable" walked straight through it — the
-    # percentage precedes the noun at least as often as it follows.
-    _NOUN = r"(?:down\s?side|drawdown|loss|fall|drop)"
-    _PCT = r"-?\d+(?:\.\d+)?%"
     hits = [
         m.group(0)
         for m in re.finditer(
-            rf"[^\n]{{0,60}}(?:{_NOUN}[^\n]{{0,40}}?{_PCT}|{_PCT}[^\n]{{0,20}}?{_NOUN})[^\n]{{0,20}}",
-            text, re.IGNORECASE,
+            r'"[^"\n]*?\d+(?:\.\d+)?%[^"\n]*?"',
+            (_CONTENT / filename).read_text(encoding="utf-8"),
         )
-        # A cap or a threshold is a mandate value, not a modelled outcome.
-        if not re.search(r"\bcap\b|\bceiling\b|\bmax\b|\blimit\b|P×S|size%", m.group(0), re.I)
     ]
     assert not hits, (
-        f"{filename} models a downside with a literal percentage; the model will "
-        f"reuse it as a fact: {hits}"
+        f"{filename} quotes an example containing a literal percentage; the model "
+        f"reuses the figure as a fact (DEF245): {hits}"
     )

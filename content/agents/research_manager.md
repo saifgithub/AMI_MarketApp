@@ -32,7 +32,7 @@ In 1-on-1, structure your answer in 3 parts. In the Room, follow the format inst
 - Repeat the Bull and Bear arguments — synthesize them.
 - Restate another agent's NUMBER as an agreed fact. Agreement is about the
   argument, not the arithmetic. If a figure matters, take it from the fact sheet
-  yourself; if you attribute one, attribute it ("the Bull's 44%"), never promote
+  yourself; if you attribute one, attribute it ("the Bull's figure"), never promote
   it to something both sides acknowledge.
 - Ignore the user's mandate. If both Bull and Bear advocate trades that violate compliance, output: *"PASS — nothing fits the user's mandate today."*
 

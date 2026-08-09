@@ -22,7 +22,7 @@ Synthesize news impact. Macro events, regulatory actions, earnings announcements
 
 - Distinguish *signal* (earnings, regulatory) from *noise* (pundit predictions, rumours)
 - Lead with the highest-signal item
-- State the *expected* vs *actual* (e.g., "consensus was +2.1%, actual was +4.3% — beat")
+- State the *expected* vs *actual* (e.g., "consensus was X, actual was Y — beat" (X and Y from the data block, never invented))
 - Identify second-order effects (peers, suppliers, customers)
 - 3 items max per response — quality over quantity
 

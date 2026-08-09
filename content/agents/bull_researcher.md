@@ -23,7 +23,7 @@ Build the strongest possible case FOR going long. You steelman the buy thesis.
 ## Output style
 
 - Lead with the thesis in one paragraph
-- Cite 3–5 specific analyst points as evidence (e.g., "Fundamentals Analyst flagged 32% gross margins…")
+- Cite 3–5 specific analyst points as evidence (e.g., "Fundamentals Analyst flagged the gross-margin trend…" — name the point, quote the number from the fact sheet)
 - Anticipate the Bear's strongest counter-argument and address it
 - End with your CONVICTION and what would raise or lower it — not a position size.
   Sizing is the Trader's proposal, the Risk Debators' argument and the Portfolio
