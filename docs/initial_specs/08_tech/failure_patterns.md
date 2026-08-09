@@ -882,6 +882,43 @@ confesses.
 
 ---
 
+## P17 — A read-sounding command that writes tracked files
+
+**Instances.** (1) `scripts/i18n_coverage_report.py` — a command named `..._report.py` rewrote 8
+tracked content files on every run, stripping `ar`/`ms` from 7 lessons' `locale_versions`. Run as a
+throwaway diagnostic during an unrelated CR (AT:R66, 2026-08-09), it dirtied another track's domain
+on the shared checkout and **blocked `/promote-to-alpha`**, whose preflight requires a clean tree —
+correctly, because the rsync ships the whole worktree, so the stray edits would have deployed.
+(2) `scripts/i18n_verify_lesson_translation.py` — same shape, writes the tracked
+`content/i18n/lesson_confidence_log.json`. Lower blast radius only because it makes LLM calls, so
+nobody runs it casually.
+
+**Why the previous guard failed.** There *was* one, and it was prose. The module docstring opened
+with *"Read-only reporting except for one deliberate side effect."* The footgun was accurately
+documented and completely unenforced — the reader has to notice the caveat *before* running the
+thing, which is precisely backwards. This is CR040's rule applied to tooling rather than to agents:
+**prose is not a control.** The name is what an operator acts on, and the name said `report`.
+
+The shared-checkout era makes the cost asymmetric. A stray write is no longer just noise in your own
+diff — it lands in a lane you do not own, under a tag that is not yours, and the promotion gate that
+catches it fires far from the cause.
+
+**The guard.** Any script whose name reads as observational (`*_report`, `*_check`, `*_verify`,
+`*_status`, `*_coverage`) must be **read-only by default** and mutate only behind an explicit
+`--write` / `--apply` flag, printing what *would* change otherwise. Fixed for instance 1: bare
+`python scripts/i18n_coverage_report.py` now writes nothing and ends with
+`[read-only] … Nothing was modified.`; `--write` restores the old behaviour for the i18n lane.
+
+**Executable check.** No repo-wide test yet — the honest statement is what would make one possible:
+a test that, for each script matching those name patterns, runs it bare in a temp clone and asserts
+`git status --porcelain` is unchanged. That is cheap for the pure-Python ones and impossible for the
+LLM-calling ones without a stub, which is why instance 2 is flagged rather than fixed here.
+
+**Corollary for agents.** Do not run another lane's tooling to "just check" something. Read the file
+instead — a script may write, and the name will not tell you.
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.

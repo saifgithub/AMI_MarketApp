@@ -1,9 +1,25 @@
 #!/usr/bin/env python3
 """Generate content/i18n/coverage_status.md — per-tier/per-locale AR+MS
-translation completion (CR083). Read-only reporting except for one
-deliberate side effect: it syncs each EN lesson's `locale_versions`
-frontmatter array from which translated sibling files actually exist on
-disk.
+translation completion (CR083).
+
+**READ-ONLY BY DEFAULT. Pass `--write` to modify anything.**
+
+This script has one side effect beyond writing the report: it syncs each EN
+lesson's `locale_versions` frontmatter array from which translated sibling
+files actually exist on disk.
+
+That side effect used to fire unconditionally, on a command named
+`..._report.py`. On 2026-08-09 a session ran it as a diagnostic while
+verifying an unrelated CR, and it silently rewrote 8 tracked content files —
+stripping `ar`/`ms` from 7 lessons' `locale_versions`. Nothing was wrong with
+the edit; the problem is that a *report* mutated source content owned by a
+different track, on a shared checkout, with no flag and no prompt. It then
+blocked a promotion, because `/promote-to-alpha` requires a clean tree and
+rsyncs the whole worktree.
+
+The old docstring said "read-only reporting except for one deliberate side
+effect" — which documents the footgun without preventing it. Prose is not a
+control (CR040). The flag is.
 
 Why the sync is needed: translate_lessons_lan.py writes `locale_versions`
 only into the *translated* file's own frontmatter (<id>.ar.mdx /
@@ -13,11 +29,21 @@ EN file to decide whether a lesson appears in the ar/ms catalogue.
 Without this sync, translated lessons would sit on disk invisible to
 the app. This is content-metadata bookkeeping, not application logic.
 
-Run: backend/.venv/bin/python scripts/i18n_coverage_report.py
+Why the sync is needed: translate_lessons_lan.py writes `locale_versions`
+only into the *translated* file's own frontmatter (<id>.ar.mdx /
+<id>.ms.mdx), never back into the source <id>.en.mdx. But
+lessons_service.py's catalogue() reads `locale_versions` only from the
+EN file to decide whether a lesson appears in the ar/ms catalogue.
+Without this sync, translated lessons would sit on disk invisible to
+the app. This is content-metadata bookkeeping, not application logic.
+
+Run (report only):  backend/.venv/bin/python scripts/i18n_coverage_report.py
+Run (apply):        backend/.venv/bin/python scripts/i18n_coverage_report.py --write
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import sys
@@ -91,9 +117,14 @@ def _subdir_json_coverage(subdir: str) -> dict:
 
 # ---------- Tier 3: lessons (+ locale_versions sync) ---------------------
 
-def _sync_lesson_locale_versions() -> list[str]:
-    """Rewrite each EN lesson's locale_versions to match which translated
-    sibling files exist on disk. Returns list of lesson ids changed."""
+def _sync_lesson_locale_versions(*, write: bool) -> list[str]:
+    """Compare each EN lesson's `locale_versions` against which translated
+    sibling files actually exist on disk. Returns the lesson ids that differ.
+
+    **Only rewrites them when `write=True`.** This function used to rewrite
+    unconditionally, which made a command named `..._report.py` silently
+    mutate tracked source content — see the module docstring.
+    """
     changed = []
     for en_path in sorted(LESSONS_DIR.glob("*.en.mdx")):
         lesson_id = en_path.name[: -len(".en.mdx")]
@@ -116,8 +147,9 @@ def _sync_lesson_locale_versions() -> list[str]:
             if lv_match
             else fm + f"\nlocale_versions: {json.dumps(present)}"
         )
-        new_text = text[: m.start(1)] + new_fm + text[m.end(1):]
-        en_path.write_text(new_text, encoding="utf-8")
+        if write:
+            new_text = text[: m.start(1)] + new_fm + text[m.end(1):]
+            en_path.write_text(new_text, encoding="utf-8")
         changed.append(lesson_id)
     return changed
 
@@ -145,11 +177,28 @@ def _fmt_tier(name: str, cov: dict, extra: str = "") -> str:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Report i18n coverage. READ-ONLY by default — pass --write to "
+            "update content/i18n/coverage_status.md and sync each lesson's "
+            "locale_versions frontmatter."
+        )
+    )
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help=(
+            "Actually write coverage_status.md and rewrite lesson frontmatter. "
+            "Without this the script only reports what WOULD change."
+        ),
+    )
+    args = parser.parse_args()
+
     arb = _arb_coverage()
     glossary = _glossary_coverage()
     ai_coach = _subdir_json_coverage("ai_coach")
     daily_challenges = _subdir_json_coverage("daily_challenges")
-    changed = _sync_lesson_locale_versions()
+    changed = _sync_lesson_locale_versions(write=args.write)
     lessons = _lessons_coverage()
 
     report = [
@@ -176,6 +225,19 @@ def main() -> int:
     report.append("")
 
     out_path = I18N_DIR / "coverage_status.md"
+
+    if not args.write:
+        print("\n".join(report))
+        print(f"\n[read-only] {out_path.relative_to(REPO_ROOT)} NOT written.")
+        if changed:
+            print(
+                f"[read-only] {len(changed)} lesson(s) have locale_versions that "
+                f"disagree with what is on disk: {', '.join(changed[:10])}"
+                + (f" (+{len(changed) - 10} more)" if len(changed) > 10 else "")
+            )
+        print("[read-only] Re-run with --write to apply. Nothing was modified.")
+        return 0
+
     out_path.write_text("\n".join(report), encoding="utf-8")
     print(f"Wrote {out_path.relative_to(REPO_ROOT)}")
     if changed:
