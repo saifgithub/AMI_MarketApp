@@ -96,7 +96,7 @@ echo "▶ flutter build ios --release"
 flutter build ios --release \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
   --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
-  --dart-define=AMI_GAMES=1 \
+  --dart-define=AMI_GAMES=true \
   2> >(_quiet >&2)
 
 echo "▶ flutter install -d ${DEVICE_ID} (${TARGET_NAME})"
@@ -106,8 +106,15 @@ echo "▶ flutter install -d ${DEVICE_ID} (${TARGET_NAME})"
 # script then printed "✓ installed" for a build that never reached the
 # device (AT:R66). Check the output too, and fail loudly.
 _INSTALL_LOG=$(mktemp)
+# `set -euo pipefail` is on. Without suspending errexit here, a failing
+# `flutter install` aborts the script AT THIS LINE and the diagnosis below
+# never prints — which is how the first cut of this fix behaved: it exited
+# non-zero (an improvement on the old silent success) but still told the
+# operator nothing about why.
+set +e
 flutter install -d "${DEVICE_ID}" 2>&1 | tee "$_INSTALL_LOG"
 _INSTALL_RC=${PIPESTATUS[0]}
+set -e
 
 if [ "$_INSTALL_RC" -ne 0 ] || grep -qiE 'no target device found|no devices found|installation failed' "$_INSTALL_LOG"; then
   echo ""

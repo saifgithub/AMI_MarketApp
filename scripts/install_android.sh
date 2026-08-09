@@ -89,7 +89,7 @@ flutter build apk --release \
   --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
   --dart-define=GOOGLE_OAUTH_WEB_CLIENT_ID="${GOOGLE_OAUTH_WEB_CLIENT_ID}" \
   --dart-define=SENTRY_DSN="${SENTRY_DSN}" \
-  --dart-define=AMI_GAMES=1
+  --dart-define=AMI_GAMES=true
 
 APK="${MOBILE_DIR}/build/app/outputs/flutter-apk/app-release.apk"
 
@@ -97,6 +97,48 @@ if [[ ! -f "$APK" ]]; then
   echo "✗ no APK at $APK — flutter build apk failed?" >&2
   exit 1
 fi
+
+# CR109 — prove the AMI_GAMES define actually took, don't assume it.
+#
+# `bool.fromEnvironment` accepts ONLY the literal strings "true"/"false";
+# anything else silently falls back to the default. Passing AMI_GAMES=1 built
+# and installed a perfectly good APK with the game stripped out, and every
+# step reported success (AT:R66). A flag that fails silently is worse than one
+# that fails loudly, so verify the artefact rather than trusting the flag.
+#
+# Method: a games-only string must be present in the AOT snapshot. Verified
+# against a control (strings that exist in every build are findable this way),
+# so an empty result means absent, not unsearchable.
+_games_in_apk() {
+  local tmp; tmp=$(mktemp -d)
+  unzip -q -o "$APK" "lib/arm64-v8a/libapp.so" -d "$tmp" 2>/dev/null || { rm -rf "$tmp"; return 1; }
+  local so="$tmp/lib/arm64-v8a/libapp.so"
+  [[ -f "$so" ]] || { rm -rf "$tmp"; return 1; }
+  local hits control
+  hits=$(strings "$so" | grep -ic "NO ARENA RULES" || true)
+  control=$(strings "$so" | grep -ic "EDUCATIONAL SIMULATION" || true)
+  rm -rf "$tmp"
+  [[ "$control" -gt 0 ]] || { echo "control-missing"; return 0; }
+  [[ "$hits" -gt 0 ]] && echo "present" || echo "absent"
+}
+
+GAMES_CHECK=$(_games_in_apk || echo "unreadable")
+case "$GAMES_CHECK" in
+  present) echo "▶ AMI_GAMES verified present in the APK" ;;
+  absent)
+    echo "✗ AMI_GAMES did NOT take — the APK has no game in it." >&2
+    echo "  bool.fromEnvironment accepts only \"true\"/\"false\"; any other" >&2
+    echo "  value (e.g. =1) silently compiles to the default, false." >&2
+    echo "  Check the --dart-define=AMI_GAMES=true line above." >&2
+    exit 1
+    ;;
+  control-missing)
+    echo "⚠ games-string check inconclusive — the control string was also" >&2
+    echo "  absent, so the search method is no longer valid for this build." >&2
+    echo "  Not failing the install, but the gate is UNVERIFIED." >&2
+    ;;
+  *) echo "⚠ could not read the APK to verify AMI_GAMES — gate UNVERIFIED." >&2 ;;
+esac
 
 # CR079 (supersedes CR078's inline copy) — refresh the automated tester's APK on
 # melehost. The scp lives in one place, scripts/share_apk_to_tester.sh, shared
