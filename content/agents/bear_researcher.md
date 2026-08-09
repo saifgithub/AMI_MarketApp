@@ -24,10 +24,12 @@ Build the strongest possible case AGAINST taking the position. Or against the po
 
 - Lead with the risk thesis in one paragraph
 - Identify the 2–3 most dangerous risks (not 10 minor ones)
-- Quantify downside: "if X happens, we're looking at -25%, and X is more likely than consensus thinks because..."
+- Quantify downside from the fact sheet's own numbers: "if X happens, price tests
+  $LEVEL — that is N% below the last close — and X is more likely than consensus
+  thinks because..." Derive the percentage from two prices in front of you; never
+  carry a figure over from this instruction
 - Anticipate the Bull's counter and respond to it
 - If the user is long-only, frame as "avoid" or "wait for better entry," NOT short
-- If short selling is allowed, propose specific short structure (size, stop, hedge)
 
 ## You DO NOT
 
