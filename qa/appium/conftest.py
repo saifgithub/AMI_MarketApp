@@ -1,10 +1,20 @@
 """Session-wide fixtures. Mirrors backend/tests/conftest.py's autouse-fixture
 style (fresh state per scope, no global mutable singletons) but scoped for
-Appium: a session-scoped device profile (the nav-bar read is one dumpsys call,
-do it once) and a module-scoped driver (one Appium session per test file,
-balancing speed against isolation) that completes the Concierge onboarding
-interview once per fresh install (see helpers/onboarding.py) before yielding,
-so every test file starts from the same landed-on-Floor precondition."""
+Appium: a session-scoped device *profile* and a module-scoped driver (one Appium
+session per test file, balancing speed against isolation) that completes the
+Concierge onboarding interview once per fresh install (see helpers/onboarding.py)
+before yielding, so every test file starts from the same landed-on-Floor
+precondition.
+
+CR162 split the old session-scoped `device` fixture in two. Geometry on iOS can
+only come from the live driver session — `element.rect` speaks points while
+screenshots speak pixels, and only the running session knows the ratio — so the
+profile (which the driver needs in order to exist) had to separate from the
+measurements (which need the driver to exist). `device` is therefore
+module-scoped now; its dict keys are unchanged, so no test needed rewriting.
+
+Platform selection: `--platform=ios` or `AMI_PLATFORM=ios`, default `android`.
+"""
 
 from __future__ import annotations
 
@@ -13,11 +23,22 @@ from pathlib import Path
 
 import pytest
 
-from config.devices import DEFAULT_DEVICE
+from config.devices import ANDROID, IOS, PROFILES
 from helpers import device as device_helpers
 from helpers.driver_factory import new_driver
+from helpers.gestures import screen_scale
 from helpers.onboarding import ensure_onboarded
 from helpers.report import FlagCollector, write_summary_json
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--platform",
+        action="store",
+        default=os.environ.get("AMI_PLATFORM", ANDROID),
+        choices=[ANDROID, IOS],
+        help="which platform to drive (default android, or $AMI_PLATFORM)",
+    )
 
 
 def _report_dir() -> Path:
@@ -31,6 +52,11 @@ def _report_dir() -> Path:
 
 
 @pytest.fixture(scope="session")
+def platform(pytestconfig) -> str:
+    return pytestconfig.getoption("--platform")
+
+
+@pytest.fixture(scope="session")
 def run_dir() -> Path:
     d = _report_dir()
     (d / "screenshots").mkdir(parents=True, exist_ok=True)
@@ -39,46 +65,40 @@ def run_dir() -> Path:
 
 
 @pytest.fixture(scope="session")
-def device():
-    serial = os.environ.get("AMI_SERIAL", DEFAULT_DEVICE.serial)
-    profile = DEFAULT_DEVICE if serial == DEFAULT_DEVICE.serial else DEFAULT_DEVICE.__class__(
-        name=serial, serial=serial
-    )
-    width, height = device_helpers.display_size(serial)
-    navbar_y = device_helpers.navbar_top_y(
-        serial, display_height=height, fallback_height_px=profile.navbar_height_px_fallback
-    )
-    if navbar_y == height - profile.navbar_height_px_fallback:
-        print(f"NOTE: nav-bar band read via fallback constant for {serial} — dumpsys parse may be stale.")
-    version = device_helpers.app_version(serial, profile.app_package)
-    return {
-        "profile": profile,
-        "serial": serial,
-        "display": (width, height),
-        "navbar_top_y": navbar_y,
-        "app_version": version,
-    }
+def device_profile(platform):
+    """The static description of what we are driving. No live session needed,
+    because the driver cannot be built without it."""
+    profile = PROFILES[platform]
+    serial = os.environ.get("AMI_SERIAL", "")
+
+    if platform == IOS:
+        if not serial:
+            # A simulator UDID is machine-specific and must never be committed,
+            # so it is resolved by name at run time.
+            serial = device_helpers.resolve_ios_udid(
+                os.environ.get("AMI_IOS_SIM_NAME", "iPhone 17")
+            )
+        device_helpers.boot_ios(serial)
+    elif not serial:
+        serial = profile.serial
+
+    return profile.__class__(**{**profile.__dict__, "serial": serial})
 
 
 @pytest.fixture(scope="session")
-def flags(run_dir, device) -> FlagCollector:
-    """Findings collector for the whole session. Written out to
-    summary.json on teardown (i.e. once, after every test has run) rather
-    than per-test, so a mechanical check can *record* a finding without
-    failing the test it runs in. Pass/fail counts live in report.html
-    (pytest-html) — this file's job is the findings list, not the tally."""
+def flags(run_dir) -> FlagCollector:
+    """Findings collector for the whole session. Written out to summary.json on
+    teardown (i.e. once, after every test has run) rather than per-test, so a
+    mechanical check can *record* a finding without failing the test it runs in.
+    Pass/fail counts live in report.html (pytest-html) — this file's job is the
+    findings list, not the tally."""
     collector = FlagCollector()
     yield collector
     write_summary_json(
         run_dir / "summary.json",
         run_id=run_dir.name,
-        device_meta={
-            "name": device["profile"].name,
-            "serial": device["serial"],
-            "display": device["display"],
-            "navbar_top_y": device["navbar_top_y"],
-        },
-        app_version=device["app_version"],
+        device_meta=collector.device_meta,
+        app_version=collector.app_version,
         findings=collector.findings,
         passes=0,
         skips=0,
@@ -86,8 +106,8 @@ def flags(run_dir, device) -> FlagCollector:
 
 
 @pytest.fixture(scope="module")
-def driver(device):
-    drv = new_driver(device["profile"])
+def driver(device_profile):
+    drv = new_driver(device_profile)
     # Every Phase 1 test assumes a landed-on-shell session (see
     # test_00_smoke_hierarchy.py's test_floor_tab_is_default_landing docstring) —
     # a fresh install starts on the Concierge interview instead, so make that
@@ -96,6 +116,56 @@ def driver(device):
     ensure_onboarded(drv)
     yield drv
     drv.quit()
+
+
+@pytest.fixture(scope="module")
+def device(driver, device_profile, flags):
+    """Live geometry. Keys unchanged from the pre-CR162 session fixture, plus
+    `scale` (device pixels per driver coordinate unit — 1.0 on Android, ~3 on a
+    Retina iPhone; see helpers/layout.py on why conflating the two silently
+    diffs the wrong region)."""
+    profile = device_profile
+
+    if profile.platform == IOS:
+        window = driver.get_window_size()
+        width, height = int(window["width"]), int(window["height"])
+    else:
+        width, height = device_helpers.display_size(profile)
+
+    bottom_y, measured = device_helpers.obstructed_bottom_y(profile, display_height=height)
+    if not measured:
+        print(
+            f"NOTE: bottom-obstruction band for {profile.name} is the platform "
+            f"CONSTANT ({height - bottom_y}px/pt), not a live read. On Android "
+            f"that means the dumpsys parse failed and may be stale; on iOS no "
+            f"such query exists."
+        )
+
+    meta = {
+        "platform": profile.platform,
+        "profile": profile,
+        "serial": profile.serial,
+        "display": (width, height),
+        "navbar_top_y": bottom_y,
+        "navbar_top_y_measured": measured,
+        "scale": screen_scale(driver),
+        "app_version": device_helpers.app_version(profile),
+    }
+
+    # The summary is written at session teardown, after this module fixture is
+    # gone — hand the collector a JSON-safe copy now rather than a dataclass it
+    # cannot serialise.
+    flags.device_meta = {
+        "name": profile.name,
+        "platform": profile.platform,
+        "serial": profile.serial,
+        "display": meta["display"],
+        "navbar_top_y": meta["navbar_top_y"],
+        "navbar_top_y_measured": measured,
+        "scale": meta["scale"],
+    }
+    flags.app_version = meta["app_version"]
+    return meta
 
 
 def snap(driver, run_dir: Path, screen: str, state: str) -> Path:

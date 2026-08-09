@@ -10,4 +10,6 @@ markers = [
     "phase2: needs seeded backend state, Alpaca/sign-in credentials, or long LLM-stream waits",
     "phase3: full sweep / device matrix / visual-regression / language matrix (standing track)",
     "locale: multi-language (EN/AR/MS) content + RTL + mechanical-check matrix",
+    "ios: runs against iOS (Simulator on the Mac); select with --platform=ios",
+    "android: Android-only, e.g. system-nav-bar specifics with no iOS analogue",
 ]

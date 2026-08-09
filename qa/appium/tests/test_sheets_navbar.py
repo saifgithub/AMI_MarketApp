@@ -28,7 +28,7 @@ from pages.base_page import open_tab
 pytestmark = [pytest.mark.navbar, pytest.mark.phase1]
 
 
-def _record_and_assert_soft(flags, findings, run_dir, sheet_name, driver, navbar_top_y):
+def _record_and_assert_soft(flags, findings, run_dir, sheet_name, driver, navbar_top_y, scale=1.0):
     """Mechanical nav-bar findings are recorded, not hard-failed — a UAT pass
     wants the complete report, not a stop at the first flagged sheet. High-
     severity findings (button center literally under the nav bar) still fail
@@ -42,6 +42,7 @@ def _record_and_assert_soft(flags, findings, run_dir, sheet_name, driver, navbar
             run_dir / "screenshots" / f"{sheet_name}__navbar_overlap.png",
             navbar_top_y=navbar_top_y,
             boxes=[tuple(f["bounds"]) for f in findings],
+            scale=scale,
         )
     assert not high, f"{sheet_name}: {len(high)} element(s) with center under the nav bar: {high}"
 
@@ -54,7 +55,10 @@ def test_convene_sheet_navbar(driver, device, run_dir, flags):
     snap(driver, run_dir, "convene_sheet", "open")
     findings = find_navbar_overlaps(driver, device["navbar_top_y"], screen="convene_sheet")
     driver.back()  # close the sheet so later tests start clean
-    _record_and_assert_soft(flags, findings, run_dir, "convene_sheet", driver, device["navbar_top_y"])
+    _record_and_assert_soft(
+        flags, findings, run_dir, "convene_sheet", driver,
+        device["navbar_top_y"], device["scale"],
+    )
 
 
 def test_trade_ticket_sheet_navbar(driver, device, run_dir, flags):
@@ -65,7 +69,10 @@ def test_trade_ticket_sheet_navbar(driver, device, run_dir, flags):
     snap(driver, run_dir, "trade_ticket_sheet", "open")
     findings = find_navbar_overlaps(driver, device["navbar_top_y"], screen="trade_ticket_sheet")
     driver.back()
-    _record_and_assert_soft(flags, findings, run_dir, "trade_ticket_sheet", driver, device["navbar_top_y"])
+    _record_and_assert_soft(
+        flags, findings, run_dir, "trade_ticket_sheet", driver,
+        device["navbar_top_y"], device["scale"],
+    )
 
 
 def test_bug_report_sheet_navbar(driver, device, run_dir, flags):
@@ -76,4 +83,7 @@ def test_bug_report_sheet_navbar(driver, device, run_dir, flags):
     findings = find_navbar_overlaps(driver, device["navbar_top_y"], screen="bug_report_sheet")
     hide_keyboard_if_shown(driver)
     driver.back()
-    _record_and_assert_soft(flags, findings, run_dir, "bug_report_sheet", driver, device["navbar_top_y"])
+    _record_and_assert_soft(
+        flags, findings, run_dir, "bug_report_sheet", driver,
+        device["navbar_top_y"], device["scale"],
+    )

@@ -15,5 +15,8 @@ APPIUM_SERVER_URL = os.environ.get("AMI_APPIUM_SERVER", "http://127.0.0.1:4723")
 def new_driver(device: DeviceProfile, *, no_reset: bool = True) -> webdriver.Remote:
     options = build_capabilities(device, no_reset=no_reset)
     driver = webdriver.Remote(APPIUM_SERVER_URL, options=options)
-    driver.update_settings(POST_CONNECT_SETTINGS)
+    # CR162: settings are per-platform now (Android's waitForIdleTimeout has no
+    # iOS equivalent, and vice versa). Pushing an unknown setting is harmless,
+    # but pushing the *wrong* platform's is how the TickerTape stall comes back.
+    driver.update_settings(POST_CONNECT_SETTINGS.get(device.platform, {}))
     return driver

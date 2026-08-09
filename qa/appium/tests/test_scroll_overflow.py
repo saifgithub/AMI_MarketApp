@@ -34,7 +34,9 @@ pytestmark = [pytest.mark.scroll, pytest.mark.phase1]
 
 def _check_and_record(driver, device, run_dir, flags, screen_name):
     band = content_band(device)
-    findings = find_scroll_overflow(driver, band, device["navbar_top_y"], screen=screen_name)
+    findings = find_scroll_overflow(
+        driver, band, device["navbar_top_y"], screen=screen_name, scale=device["scale"]
+    )
     for finding in findings:
         flags.add(finding)
     if findings:
@@ -42,6 +44,7 @@ def _check_and_record(driver, device, run_dir, flags, screen_name):
             screenshot_png(driver),
             run_dir / "screenshots" / f"{screen_name}__scroll_overflow.png",
             navbar_top_y=device["navbar_top_y"],
+            scale=device["scale"],
         )
     return findings
 

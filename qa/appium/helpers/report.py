@@ -19,6 +19,12 @@ class FlagCollector:
     def __init__(self) -> None:
         self.findings: list[dict] = []
         self._next_id = 1
+        # CR162: geometry is measured by the module-scoped `device` fixture,
+        # which is long gone by the time this session-scoped collector writes
+        # summary.json — so it deposits a JSON-safe copy here on the way past.
+        # Defaults say "never recorded" rather than inventing a device.
+        self.device_meta: dict = {}
+        self.app_version: str = "unknown"
 
     def add(self, finding: dict) -> dict:
         finding = {"id": f"F{self._next_id:03d}", **finding}
@@ -33,14 +39,23 @@ def annotate_png(
     *,
     navbar_top_y: int | None = None,
     boxes: list[tuple[int, int, int, int]] | None = None,
+    scale: float = 1.0,
 ) -> None:
+    """`navbar_top_y` and `boxes` arrive in the DRIVER's coordinate space; the
+    PNG is in device pixels. `scale` bridges them (1.0 on Android, ~3 on a
+    Retina iPhone). Without it the annotation lands in the top third of an iOS
+    screenshot and every reviewer reads the evidence as a false positive."""
     image = Image.open(io.BytesIO(png_bytes)).convert("RGB")
     draw = ImageDraw.Draw(image, "RGBA")
     width, _height = image.size
     if navbar_top_y is not None:
-        draw.rectangle([0, navbar_top_y, width, image.size[1]], fill=(255, 0, 0, 60))
+        draw.rectangle([0, navbar_top_y * scale, width, image.size[1]], fill=(255, 0, 0, 60))
     for x1, y1, x2, y2 in boxes or []:
-        draw.rectangle([x1, y1, x2, y2], outline=(255, 0, 0, 255), width=4)
+        draw.rectangle(
+            [x1 * scale, y1 * scale, x2 * scale, y2 * scale],
+            outline=(255, 0, 0, 255),
+            width=4,
+        )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     image.save(out_path)
 

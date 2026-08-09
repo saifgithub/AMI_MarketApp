@@ -1,17 +1,26 @@
-"""Locator strategy for a plain-release Flutter app under UiAutomator2.
+"""Locator strategy for a plain-release Flutter app, on Android and iOS.
 
-No enableFlutterDriverExtension() anywhere in AMI Trade — there is no
-semantics/driver-extension build to lean on, so this harness locates elements
-the same way any black-box native-Android test would: by their rendered
-text first (Flutter exposes Text/RichText content to the Android
-accessibility tree once an accessibility client interrogates the window —
-UiAutomator2's own server is such a client), then content-desc, then
-"some clickable thing in this region" as a last resort.
+There is still no `enableFlutterDriverExtension()` anywhere in AMI Trade — this
+harness locates elements the way any black-box native test would, against the
+same release artifact users get. CR162 added two things to that:
 
-Known gotcha: the *first* hierarchy dump right after a screen transition can
-come back before Flutter has finished building its semantics tree. Every
-lookup here retries with a short backoff rather than failing on one empty
-dump.
+**Identifiers.** The app now sets `Semantics(identifier: …)` on its navigation
+surfaces (`mobile/lib/qa/semantics_ids.dart`). Flutter maps that to
+`resource-id` on Android and `accessibilityIdentifier` on iOS. Those are
+*different Appium strategies*, not one — `AppiumBy.ACCESSIBILITY_ID` means
+`content-desc` on Android, so using it there would silently match nothing. Hence
+`by_id()` dispatches: `UiSelector().resourceId(...)` on Android,
+`ACCESSIBILITY_ID` on iOS.
+
+**Text, still.** Kept because the locale matrix legitimately asserts on rendered
+text — that IS the thing under test there. But navigation moved to identifiers,
+because text locators coupled navigation to translation: `config/locales.py` had
+to carry every EN/AR/MS string verbatim just to tap a tab.
+
+Known gotcha, both platforms: the *first* hierarchy dump right after a screen
+transition can come back before Flutter has finished building its semantics
+tree. Every lookup here retries with a short backoff rather than failing on one
+empty dump.
 """
 
 from __future__ import annotations
@@ -23,6 +32,8 @@ from appium.webdriver.webdriver import WebDriver
 from appium.webdriver.webelement import WebElement
 from selenium.common.exceptions import NoSuchElementException
 
+from helpers.platform import is_ios
+
 _RETRY_DELAYS = (0.3, 0.6, 1.0, 1.5, 2.0)  # ~5.4s total, matches waitForSelectorTimeout
 
 
@@ -30,36 +41,76 @@ def _uiselector(expr: str) -> str:
     return f"new UiSelector().{expr}"
 
 
-def _find_all_with_retry(driver: WebDriver, expr: str) -> list[WebElement]:
+def _predicate_literal(value: str) -> str:
+    """Quote a string for an NSPredicate. Backslash and double-quote both need
+    escaping, and the app's own copy contains neither today — but a translated
+    string one day will, and a locator that breaks on a punctuation mark is the
+    kind of failure that gets blamed on the app."""
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
+
+
+def _find_all_with_retry(driver: WebDriver, by: str, value: str) -> list[WebElement]:
     last: list[WebElement] = []
     for delay in (0.0, *_RETRY_DELAYS):
         if delay:
             time.sleep(delay)
-        last = driver.find_elements(AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(expr))
+        last = driver.find_elements(by, value)
         if last:
             return last
     return last
 
 
-def by_text(driver: WebDriver, text: str) -> WebElement:
-    elements = _find_all_with_retry(driver, f'text("{text}")')
+# --------------------------------------------------------------------------
+# By identifier — the cross-platform strategy. Prefer this for navigation.
+# --------------------------------------------------------------------------
+
+
+def all_by_id(driver: WebDriver, identifier: str) -> list[WebElement]:
+    if is_ios(driver):
+        return _find_all_with_retry(driver, AppiumBy.ACCESSIBILITY_ID, identifier)
+    # Android: Flutter calls AccessibilityNodeInfo.setViewIdResourceName() with
+    # the raw identifier — no `package:id/` prefix — so match it exactly via
+    # UiSelector rather than AppiumBy.ID, whose prefixing behaviour varies by
+    # driver build.
+    return _find_all_with_retry(
+        driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(f'resourceId("{identifier}")')
+    )
+
+
+def by_id(driver: WebDriver, identifier: str) -> WebElement:
+    elements = all_by_id(driver, identifier)
     if not elements:
-        raise NoSuchElementException(f"no element with exact text {text!r}")
+        raise NoSuchElementException(
+            f"no element with semantics identifier {identifier!r}. If NOTHING "
+            f"resolves by id on this run, the build is probably missing "
+            f"--dart-define=AMI_QA_SEMANTICS=1 (CR162) rather than missing this "
+            f"one element — see tests/test_00_smoke_hierarchy.py."
+        )
     return elements[0]
 
 
-def by_text_contains(driver: WebDriver, fragment: str) -> WebElement:
-    elements = _find_all_with_retry(driver, f'textContains("{fragment}")')
-    if not elements:
-        raise NoSuchElementException(f"no element containing text {fragment!r}")
-    return elements[0]
+def exists_id(driver: WebDriver, identifier: str) -> bool:
+    return bool(all_by_id(driver, identifier))
 
 
-def by_content_desc(driver: WebDriver, desc: str) -> WebElement:
-    elements = _find_all_with_retry(driver, f'descriptionContains("{desc}")')
-    if not elements:
-        raise NoSuchElementException(f"no element with content-desc containing {desc!r}")
-    return elements[0]
+def wait_visible_id(driver: WebDriver, identifier: str, *, timeout_s: float = 8.0) -> WebElement:
+    deadline = time.monotonic() + timeout_s
+    last_error: Exception | None = None
+    while time.monotonic() < deadline:
+        try:
+            return by_id(driver, identifier)
+        except NoSuchElementException as exc:
+            last_error = exc
+            time.sleep(0.4)
+    raise NoSuchElementException(
+        f"identifier {identifier!r} never appeared within {timeout_s}s"
+    ) from last_error
+
+
+# --------------------------------------------------------------------------
+# By rendered text — for assertions about copy, not for navigation.
+# --------------------------------------------------------------------------
 
 
 def all_by_text(driver: WebDriver, text: str) -> list[WebElement]:
@@ -69,7 +120,57 @@ def all_by_text(driver: WebDriver, text: str) -> list[WebElement]:
     on an identical string where their English/Malay equivalents differ only
     by case). Callers disambiguate by position (see helpers/locale_switch.py
     and tests/test_locale_matrix.py)."""
-    return _find_all_with_retry(driver, f'text("{text}")')
+    if is_ios(driver):
+        lit = _predicate_literal(text)
+        return _find_all_with_retry(
+            driver,
+            AppiumBy.IOS_PREDICATE,
+            f"label == {lit} OR name == {lit} OR value == {lit}",
+        )
+    return _find_all_with_retry(
+        driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(f'text("{text}")')
+    )
+
+
+def by_text(driver: WebDriver, text: str) -> WebElement:
+    elements = all_by_text(driver, text)
+    if not elements:
+        raise NoSuchElementException(f"no element with exact text {text!r}")
+    return elements[0]
+
+
+def by_text_contains(driver: WebDriver, fragment: str) -> WebElement:
+    if is_ios(driver):
+        lit = _predicate_literal(fragment)
+        elements = _find_all_with_retry(
+            driver,
+            AppiumBy.IOS_PREDICATE,
+            f"label CONTAINS {lit} OR name CONTAINS {lit} OR value CONTAINS {lit}",
+        )
+    else:
+        elements = _find_all_with_retry(
+            driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(f'textContains("{fragment}")')
+        )
+    if not elements:
+        raise NoSuchElementException(f"no element containing text {fragment!r}")
+    return elements[0]
+
+
+def by_content_desc(driver: WebDriver, desc: str) -> WebElement:
+    """Android content-desc / iOS accessibility label. Note this is NOT the
+    identifier — see by_id()."""
+    if is_ios(driver):
+        lit = _predicate_literal(desc)
+        elements = _find_all_with_retry(
+            driver, AppiumBy.IOS_PREDICATE, f"label CONTAINS {lit}"
+        )
+    else:
+        elements = _find_all_with_retry(
+            driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(f'descriptionContains("{desc}")')
+        )
+    if not elements:
+        raise NoSuchElementException(f"no element with content-desc containing {desc!r}")
+    return elements[0]
 
 
 def exists_text(driver: WebDriver, text: str) -> bool:
@@ -100,11 +201,62 @@ def wait_visible_text(driver: WebDriver, text: str, *, timeout_s: float = 8.0) -
     raise NoSuchElementException(f"text {text!r} never appeared within {timeout_s}s") from last_error
 
 
+# --------------------------------------------------------------------------
+# Structural queries, used by the two mechanical checks in helpers/layout.py
+# --------------------------------------------------------------------------
+
+_IOS_INTERACTIVE_TYPES = (
+    "XCUIElementTypeButton",
+    "XCUIElementTypeLink",
+    "XCUIElementTypeTextField",
+    "XCUIElementTypeSecureTextField",
+    "XCUIElementTypeSwitch",
+)
+
+
 def interactive_elements(driver: WebDriver) -> list[WebElement]:
-    """Every clickable node in the current hierarchy — the pool nav-bar-overlap
-    and scroll-overflow checks scan for offending bounds."""
-    return _find_all_with_retry(driver, "clickable(true)")
+    """Every tappable node in the current hierarchy — the pool the nav-bar /
+    bottom-inset and scroll-overflow checks scan for offending bounds.
+
+    Android has a single `clickable` flag. iOS has no equivalent, so this
+    approximates it by element type: Flutter semantics nodes carrying
+    `button: true` surface as XCUIElementTypeButton, text fields as
+    XCUIElementTypeTextField, and so on."""
+    if is_ios(driver):
+        types = " OR ".join(f'type == "{t}"' for t in _IOS_INTERACTIVE_TYPES)
+        return _find_all_with_retry(
+            driver, AppiumBy.IOS_PREDICATE, f"({types}) AND visible == 1"
+        )
+    return _find_all_with_retry(
+        driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector("clickable(true)")
+    )
 
 
-def scrollable_exists(driver: WebDriver) -> bool:
-    return bool(_find_all_with_retry(driver, "scrollable(true)"))
+def scrollable_exists(driver: WebDriver) -> bool | None:
+    """Does a scrollable container exist in the current hierarchy?
+
+    Returns True/False on Android, where `UiSelector().scrollable(true)` is
+    authoritative.
+
+    On iOS returns True or **None** — never False. Flutter's iOS accessibility
+    bridge does not reliably surface a scrollable container as
+    XCUIElementTypeScrollView, so "found none" does not license the conclusion
+    "nothing here scrolls". `None` means *undetermined*, and
+    helpers/layout.py records that in the finding rather than treating it as a
+    negative — a False here would manufacture scroll-overflow findings on
+    screens that scroll perfectly well, which is exactly the kind of confident
+    wrong answer this project's degrade-loudly rule exists to prevent.
+
+    Tighten this to a real True/False once a live simulator run shows what the
+    bridge actually emits — with evidence, not by assuming.
+    """
+    if is_ios(driver):
+        found = _find_all_with_retry(
+            driver, AppiumBy.IOS_PREDICATE, 'type == "XCUIElementTypeScrollView"'
+        )
+        return True if found else None
+    return bool(
+        _find_all_with_retry(
+            driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector("scrollable(true)")
+        )
+    )

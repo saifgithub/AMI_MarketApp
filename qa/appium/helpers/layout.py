@@ -12,6 +12,19 @@ list is a clean screen) shaped to drop straight into helpers.report's
 summary.json, using docs/defect/def_list.md's existing category vocabulary
 as `suggested_category` so a human reviewing the report can promote a
 confirmed finding into that register with no translation step.
+
+CR162 — two platform notes:
+
+- `navbar_top_y` keeps its name, and the check keeps the id `navbar_overlap`,
+  so historical reports stay comparable. On iOS it means the top of the
+  home-indicator / bottom-safe-area band. Same defect class, different
+  furniture.
+- Coordinates and screenshots are NOT the same unit on iOS. `element.rect` and
+  gesture coordinates are in points; `get_screenshot_as_png` returns device
+  pixels (3× on these iPhones). Android has no such split. Every band here is
+  in the *driver's* coordinate space, and `_pixels()` scales it at the moment
+  it crops. Getting this wrong does not error — it silently diffs the wrong
+  third of the screen, which is why it is stated rather than assumed.
 """
 
 from __future__ import annotations
@@ -70,20 +83,29 @@ def find_navbar_overlaps(driver, navbar_top_y: int, *, tol: int = 2, screen: str
     return findings
 
 
-def _pixels(png_bytes: bytes, band: Band) -> np.ndarray:
+def _pixels(png_bytes: bytes, band: Band, scale: float = 1.0) -> np.ndarray:
+    """Crop `band` — expressed in the driver's coordinate space — out of a
+    screenshot, which is in device pixels. `scale` is pixels-per-point: 1.0 on
+    Android, ~3.0 on a Retina iPhone. See the module docstring."""
     left, top, width, height = band
     image = Image.open(io.BytesIO(png_bytes)).convert("RGB")
-    return np.asarray(image.crop((left, top, left + width, top + height)))
+    box = (
+        int(left * scale),
+        int(top * scale),
+        int((left + width) * scale),
+        int((top + height) * scale),
+    )
+    return np.asarray(image.crop(box))
 
 
-def swipe_moved(driver, band: Band, *, diff_threshold: float = 0.005) -> bool:
+def swipe_moved(driver, band: Band, *, diff_threshold: float = 0.005, scale: float = 1.0) -> bool:
     """True if a swipe over `band` visibly changed its pixels — i.e. the
     screen actually scrolled. `band` must already exclude any always-animating
     chrome (home_shell.dart's TickerTape, in particular) or it will read as
     false movement on every screen, masking real findings."""
-    before = _pixels(screenshot_png(driver), band)
+    before = _pixels(screenshot_png(driver), band, scale)
     swipe_up(driver, band, percent=0.75)
-    after = _pixels(screenshot_png(driver), band)
+    after = _pixels(screenshot_png(driver), band, scale)
     if before.shape != after.shape:
         return True  # shape changed (e.g. a sheet closed/opened) — not a "didn't scroll" case
     differing = np.mean(np.any(np.abs(before.astype(int) - after.astype(int)) > 15, axis=-1))
@@ -97,11 +119,17 @@ def find_scroll_overflow(
     *,
     safe_margin: int = 24,
     screen: str = "",
+    scale: float = 1.0,
 ) -> list[dict]:
-    if swipe_moved(driver, band):
+    if swipe_moved(driver, band, scale=scale):
         return []  # something responded to the swipe — has a working scroller (or closed/changed)
 
-    if scrollable_exists(driver):
+    # Tri-state on purpose (CR162): True = a scrollable container is present,
+    # None = this platform cannot tell us. Only a definite True suppresses the
+    # finding. Treating None as False would manufacture findings on iOS screens
+    # that scroll fine; treating it as True would suppress every real one.
+    scrollable = scrollable_exists(driver)
+    if scrollable is True:
         return []  # a scrollable ancestor exists even if this particular swipe didn't move it
 
     bottoms = [bounds(element)[3] for element in interactive_elements(driver)]
@@ -110,14 +138,23 @@ def find_scroll_overflow(
     if not reaches_fold:
         return []  # short screen, legitimately doesn't need to scroll
 
+    corroborated = scrollable is False
     return [
         {
             "check": "scroll_overflow",
             "screen": screen,
-            "severity": "medium",
+            "severity": "medium" if corroborated else "low",
             "last_element_bottom": last_bottom,
             "navbar_top_y": navbar_top_y,
+            "scrollable_check": "absent" if corroborated else "undetermined",
             "suggested_category": "ux",
-            "note": "static screen: content reaches the fold, no scrollable ancestor, swipe produced no visible movement",
+            "note": (
+                "static screen: content reaches the fold, no scrollable ancestor, "
+                "swipe produced no visible movement"
+                if corroborated
+                else "content reaches the fold and a swipe produced no visible movement, "
+                "but this platform cannot confirm the absence of a scrollable "
+                "container — verify by hand before filing"
+            ),
         }
     ]

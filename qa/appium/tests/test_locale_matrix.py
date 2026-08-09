@@ -101,7 +101,10 @@ def test_tab_content_and_scroll_per_locale(driver, device, run_dir, flags, local
             )
         snap(driver, run_dir, f"tab_{tab_key.lower()}", locale)
 
-        findings = find_scroll_overflow(driver, band, device["navbar_top_y"], screen=f"tab_{tab_key.lower()} [{locale}]")
+        findings = find_scroll_overflow(
+            driver, band, device["navbar_top_y"],
+            screen=f"tab_{tab_key.lower()} [{locale}]", scale=device["scale"],
+        )
         for finding in findings:
             flags.add(finding)
         if findings:
@@ -109,6 +112,7 @@ def test_tab_content_and_scroll_per_locale(driver, device, run_dir, flags, local
                 screenshot_png(driver),
                 run_dir / "screenshots" / f"tab_{tab_key.lower()}__{locale}__scroll_overflow.png",
                 navbar_top_y=device["navbar_top_y"],
+                scale=device["scale"],
             )
 
 
@@ -142,7 +146,8 @@ def test_convene_sheet_per_locale(driver, device, run_dir, flags, locale):
 
     navbar_findings = find_navbar_overlaps(driver, device["navbar_top_y"], screen=f"convene_sheet [{locale}]")
     scroll_findings = find_scroll_overflow(
-        driver, content_band(device), device["navbar_top_y"], screen=f"convene_sheet [{locale}]"
+        driver, content_band(device), device["navbar_top_y"],
+        screen=f"convene_sheet [{locale}]", scale=device["scale"],
     )
     for finding in navbar_findings + scroll_findings:
         flags.add(finding)
@@ -152,6 +157,7 @@ def test_convene_sheet_per_locale(driver, device, run_dir, flags, locale):
             run_dir / "screenshots" / f"convene_sheet__{locale}__navbar_overlap.png",
             navbar_top_y=device["navbar_top_y"],
             boxes=[tuple(f["bounds"]) for f in navbar_findings],
+            scale=device["scale"],
         )
     driver.back()
 
