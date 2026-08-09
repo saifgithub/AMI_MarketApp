@@ -282,10 +282,14 @@ class GameTradeQuote {
   factory GameTradeQuote.fromJson(Map<String, dynamic> j) => GameTradeQuote(
         ticker: j['ticker'] as String? ?? '',
         side: j['side'] as String? ?? 'buy',
-        shares: (j['shares'] as num?)?.toDouble() ?? 0,
+        // The backend names these `quantity` and `estimated_fee`. Reading
+        // only `shares`/`est_fee` did not throw — both defaulted to 0, so the
+        // confirm card would have shown "0 shares" and a zero trading cost
+        // on a real order. Accept both spellings.
+        shares: ((j['shares'] ?? j['quantity']) as num?)?.toDouble() ?? 0,
         price: (j['price'] as num?)?.toDouble() ?? 0,
         notional: (j['notional'] as num?)?.toDouble() ?? 0,
-        estFee: (j['est_fee'] as num?)?.toDouble() ?? 0,
+        estFee: ((j['est_fee'] ?? j['estimated_fee']) as num?)?.toDouble() ?? 0,
         bookPercentage: (j['book_percentage'] as num?)?.toDouble() ?? 0,
         priceSource: j['price_source'] as String? ?? 'live',
         willQueue: j['will_queue'] as bool? ?? false,

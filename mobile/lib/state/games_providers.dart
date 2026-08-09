@@ -191,7 +191,12 @@ class GamesTicketNotifier extends StateNotifier<GamesTicketState> {
   }
 
   /// TAP 3's submit. Places (or, out of market hours, queues — §5.1) the
-  /// exact notional the confirm card showed.
+  /// exact SHARE COUNT the confirm card showed.
+  ///
+  /// Shares, not the notional: the backend refuses to price a queued order,
+  /// so it cannot convert dollars for us, and the quote already did that
+  /// conversion at a price the player saw. Sending `quote.quantity` means the
+  /// order placed is exactly the one on the card.
   Future<GameTradeResult?> confirm() async {
     final ticker = state.ticker;
     final quote = state.quote;
@@ -203,7 +208,7 @@ class GamesTicketNotifier extends StateNotifier<GamesTicketState> {
         runId: runId,
         ticker: ticker,
         side: state.side,
-        notional: quote.notional,
+        quantity: quote.shares,
       );
       state = state.copyWith(submitting: false, result: result);
       _ref.invalidate(gamesRunDetailProvider(runId));

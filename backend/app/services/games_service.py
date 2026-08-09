@@ -459,15 +459,34 @@ def quote_trade(
     *,
     ticker: str,
     side: Side,
-    quantity: float,
+    quantity: float | None = None,
+    notional: float | None = None,
 ) -> dict:
     """`POST /v1/games/runs/{run_id}/trade/quote` — the ticket's pre-
     confirm card. Rides the market-data provider's own 60s cache; no
-    separate TTL of its own."""
+    separate TTL of its own.
+
+    Sized by SHARES or by DOLLARS, exactly one. The 3-tap ticket sizes by
+    percentage of book, which is a notional, and only this side has the price
+    to turn that into a share count — so `notional` resolves here and the
+    returned `quantity` is what the client then sends to `/trade`. That
+    round-trip is deliberate: it keeps `submit_trade`'s queue path free of any
+    price fetch, which is the stale-price fence.
+    """
+    if (quantity is None) == (notional is None):
+        raise ValueError(
+            "quote_trade needs exactly one of quantity or notional"
+        )
     _require_live_entry(user_id, run_id)
     sim = get_sim_engine()
     ticker = ticker.upper().strip()
     quote = sim.current_quote(ticker)
+    if quantity is None:
+        if quote.price <= 0:
+            raise ValueError(f"cannot size {ticker} by notional: no usable price")
+        # 4dp matches `game_queued_orders.quantity`'s Numeric(12, 4), so the
+        # number quoted is exactly the number that can be stored and filled.
+        quantity = round(notional / quote.price, 4)
     notional = quote.price * quantity
     fee = trade_fee(notional)
     _portfolio, _marks, total_value, _drawdown_pct, _source = (

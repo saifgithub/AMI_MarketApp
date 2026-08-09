@@ -1654,15 +1654,23 @@ class ApiClient {
   /// Places or queues the order the ticket just quoted. §5.1: outside US
   /// market hours this queues rather than filling at a stale price — the
   /// server decides and the response's `status` says which happened.
+  /// Takes SHARES, not dollars. The ticket sizes in dollars, so the caller
+  /// passes the `quantity` the quote just returned.
+  ///
+  /// That is not an accident of the API: outside market hours this order
+  /// queues, and the backend never prices a queued order — pricing it at
+  /// queue time is the stale-price hindsight exploit the market-hours rule
+  /// exists to prevent. Sending dollars would force a conversion, and the
+  /// conversion needs a price.
   Future<GameTradeResult> gamesTrade({
     required String runId,
     required String ticker,
     required String side,
-    required double notional,
+    required double quantity,
   }) async {
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/games/runs/$runId/trade',
-      data: {'ticker': ticker, 'side': side, 'notional': notional},
+      data: {'ticker': ticker, 'side': side, 'quantity': quantity},
     );
     return GameTradeResult.fromJson(r.data!);
   }

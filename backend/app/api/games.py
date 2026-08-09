@@ -35,7 +35,7 @@ import asyncio
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from app.api.dependencies import get_current_user
 from app.db import get_session
@@ -94,6 +94,19 @@ class EnterGameRequest(BaseModel):
 
 
 class GameTradeRequest(BaseModel):
+    """Shares only — deliberately NOT notional.
+
+    Outside US market hours this order QUEUES, and `games_service.submit_trade`
+    never touches `current_price` on that path: pricing a queued order at
+    queue time is precisely the stale-price hindsight exploit §5.1 exists to
+    prevent. Accepting dollars here would force a price fetch to convert, and
+    the fence would be gone.
+
+    The ticket sizes in dollars, so the client quotes first (which may size by
+    notional) and sends the share count the quote returned. The order is then
+    filled at the NEXT OPEN's price, which is the honest one.
+    """
+
     model_config = ConfigDict(use_enum_values=True)
 
     ticker: str
@@ -107,11 +120,33 @@ class GameTradeRequest(BaseModel):
 
 
 class GameQuoteRequest(BaseModel):
+    """Size a quote by SHARES or by DOLLARS — exactly one.
+
+    The 3-tap ticket sizes by percentage of book (Amendment D), which is
+    inherently a notional amount, and the client cannot convert it to shares
+    without a price it does not have. So the quote accepts `notional` and
+    resolves the share count here, where the price already is.
+
+    Pricing here is safe: a quote is a preview, and it already calls
+    `current_quote`. `GameTradeRequest` deliberately does NOT accept notional —
+    see its docstring.
+    """
+
     model_config = ConfigDict(use_enum_values=True)
 
     ticker: str
     side: Side = Side.BUY
-    quantity: float
+    quantity: float | None = None
+    notional: float | None = None
+
+    @model_validator(mode="after")
+    def _exactly_one_size(self) -> "GameQuoteRequest":
+        if (self.quantity is None) == (self.notional is None):
+            raise ValueError(
+                "provide exactly one of `quantity` (shares) or `notional` "
+                "(AMI Cash to deploy)"
+            )
+        return self
 
 
 @router.get("/cadences")
@@ -165,7 +200,8 @@ async def trade_quote(
         return await asyncio.to_thread(
             games.quote_trade,
             current_user.id, run_id,
-            ticker=req.ticker, side=side, quantity=req.quantity,
+            ticker=req.ticker, side=side,
+            quantity=req.quantity, notional=req.notional,
         )
     except games.GamesServiceError as exc:
         raise _translate(exc) from exc

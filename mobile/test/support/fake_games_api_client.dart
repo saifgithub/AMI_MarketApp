@@ -25,7 +25,7 @@ class FakeGamesApiClient extends ApiClient {
   final List<String> enterCadencesSeen = [];
   final List<({String ticker, String side, double notional})> quoteCallsSeen =
       [];
-  final List<({String ticker, String side, double notional})> tradeCallsSeen =
+  final List<({String ticker, String side, double quantity})> tradeCallsSeen =
       [];
 
   @override
@@ -85,15 +85,15 @@ class FakeGamesApiClient extends ApiClient {
     required String runId,
     required String ticker,
     required String side,
-    required double notional,
+    required double quantity,
   }) async {
-    tradeCallsSeen.add((ticker: ticker, side: side, notional: notional));
+    tradeCallsSeen.add((ticker: ticker, side: side, quantity: quantity));
     return tradeResult ??
         GameTradeResult(
           status: 'filled',
           ticker: ticker,
           side: side,
-          shares: notional / 180.0,
+          shares: quantity,
           price: 180.0,
           fee: 1.0,
         );
