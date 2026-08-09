@@ -31,8 +31,13 @@ future game surface is **CR133**, not this lane.
   add a light variant.**
 
 **2. Degrade loudly** (CR040) — the reason `price_source` is on the wire:
-- A point whose `price_source` is **not** `live` must be **visibly marked** — a dashed segment, a
-  muted colour, or a flagged tick, your call, but it must not render identically to a real mark.
+- A point whose `price_source` is **not** `live` must be **visibly marked**, and it must not render
+  identically to a real mark.
+- **Encode provenance with FILL or DASH — a dashed segment, or a distinctly flagged tick.
+  NEVER with opacity or saturation dimming.** This is CR134's correction, pasted in here per the
+  flag in `CR109.md` §0 Amendment E: the design system rules the dim out by name, because
+  *"a dimmed mark reads as absent, not small."* An earlier revision of this line offered "a muted
+  colour" as an option — **it is ruled out.**
 - A day the simulated feed produced is not a fact, and a chart that draws it as one is the exact
   silent-fallback failure CR040 exists to prevent.
 - **Empty state:** a portfolio with fewer than two snapshots draws no curve and says why in one
