@@ -62,3 +62,25 @@ def test_trade_still_requires_shares_and_rejects_notional() -> None:
     req = GameTradeRequest(ticker="AMD", quantity=5.1721)
     assert req.quantity == 5.1721
     assert not hasattr(req, "notional") or getattr(req, "notional", None) is None
+
+
+def test_a_zero_share_order_is_refused() -> None:
+    """The guard that would have caught the cash bug on the first tap.
+
+    When the client's cash silently read 0.0, every percentage sized to zero
+    and this endpoint accepted it: five orders sat queued for 0.0000 shares,
+    each reported to the player as placed. Nothing would ever have filled.
+    A 422 at the boundary turns that silent no-op into an immediate, visible
+    failure.
+    """
+    for bad in (0.0, -1.0):
+        with pytest.raises(ValueError):
+            GameTradeRequest(ticker="AMD", quantity=bad)
+
+
+def test_a_zero_size_quote_is_refused() -> None:
+    for bad in (0.0, -5.0):
+        with pytest.raises(ValueError):
+            GameQuoteRequest(ticker="AMD", quantity=bad)
+        with pytest.raises(ValueError):
+            GameQuoteRequest(ticker="AMD", notional=bad)

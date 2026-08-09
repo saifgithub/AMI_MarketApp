@@ -35,7 +35,7 @@ import asyncio
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.api.dependencies import get_current_user
 from app.db import get_session
@@ -111,7 +111,14 @@ class GameTradeRequest(BaseModel):
 
     ticker: str
     side: Side = Side.BUY
-    quantity: float
+    # STRICTLY POSITIVE. A zero-share order is not an order — and it is what
+    # a sizing bug produces. When the client's cash read 0.0 (it looked for
+    # `cash`, the wire says `current_cash`), every percentage sized to zero
+    # and this endpoint accepted all of them: five orders sat queued for
+    # 0.0000 shares, each reported to the player as placed. Refusing the
+    # number here turns a silent no-op into a visible 422 at the moment the
+    # arithmetic goes wrong.
+    quantity: float = Field(gt=0)
     order_type: OrderType = OrderType.MARKET
     limit_price: float | None = None
     stop: float | None = None
@@ -136,8 +143,8 @@ class GameQuoteRequest(BaseModel):
 
     ticker: str
     side: Side = Side.BUY
-    quantity: float | None = None
-    notional: float | None = None
+    quantity: float | None = Field(default=None, gt=0)
+    notional: float | None = Field(default=None, gt=0)
 
     @model_validator(mode="after")
     def _exactly_one_size(self) -> "GameQuoteRequest":

@@ -321,6 +321,10 @@
     "@gamesTicketBookPct": {
         "description": "CR109 slice 2. Row label for the book-percentage figure on the trade ticket's confirm card (design §5.4: 'this is 42% of your book' — the sizing lesson on the same card as the cost disclosure). Colour-neutral mirror surface. NEW key. retranslate:[ar,ms]"
     },
+    "gamesTicketUnknownNote": "Order sent, but AMI could not confirm what happened to it. Check your run before placing another.",
+    "@gamesTicketUnknownNote": {
+        "description": "CR109. Shown when the trade response says neither queued nor filled. The banner used to be binary (queued ? queued : filled), so an unrecognised response rendered as 'Filled.' — a positive claim about a position in a scored contest, made with no evidence. This third state exists so the app can say it does not know. NEW key. retranslate:[ar,ms]"
+    },
     "gamesTicketCashAvailable": "AVAILABLE TO DEPLOY",
     "@gamesTicketCashAvailable": {
         "description": "CR109. Label above the run's uninvested AMI Cash, shown at the TOP of the trade ticket. Saiful on the first build: 'I have no idea how much funds i have' — the figure existed only on the step-3 confirm card, so you had to commit to a size before you could see what you were sizing against. NEW key. retranslate:[ar,ms]"

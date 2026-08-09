@@ -790,6 +790,12 @@ abstract class AppLocalizations {
   /// **'% OF YOUR BOOK'**
   String get gamesTicketBookPct;
 
+  /// CR109. Shown when the trade response says neither queued nor filled. The banner used to be binary (queued ? queued : filled), so an unrecognised response rendered as 'Filled.' — a positive claim about a position in a scored contest, made with no evidence. This third state exists so the app can say it does not know. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Order sent, but AMI could not confirm what happened to it. Check your run before placing another.'**
+  String get gamesTicketUnknownNote;
+
   /// CR109. Label above the run's uninvested AMI Cash, shown at the TOP of the trade ticket. Saiful on the first build: 'I have no idea how much funds i have' — the figure existed only on the step-3 confirm card, so you had to commit to a size before you could see what you were sizing against. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

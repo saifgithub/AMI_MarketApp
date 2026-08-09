@@ -408,6 +408,10 @@ class AppLocalizationsMs extends AppLocalizations {
   String get gamesTicketBookPct => '% OF YOUR BOOK';
 
   @override
+  String get gamesTicketUnknownNote =>
+      'Order sent, but AMI could not confirm what happened to it. Check your run before placing another.';
+
+  @override
   String get gamesTicketCashAvailable => 'AVAILABLE TO DEPLOY';
 
   @override

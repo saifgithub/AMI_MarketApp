@@ -241,6 +241,7 @@
     "gamesTicketShares": "SHARES",
     "gamesTicketEstFee": "EST. TRADING COST (MODELED)",
     "gamesTicketBookPct": "% OF YOUR BOOK",
+    "gamesTicketUnknownNote": "Order sent, but AMI could not confirm what happened to it. Check your run before placing another.",
     "gamesTicketCashAvailable": "AVAILABLE TO DEPLOY",
     "gamesTicketSizeAmount": "{pct}% \u00b7 {amount} AMI Cash",
     "gamesTicketPlacing": "placing…",

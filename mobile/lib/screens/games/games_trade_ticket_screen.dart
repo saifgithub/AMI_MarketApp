@@ -456,16 +456,29 @@ class _ResultBanner extends StatelessWidget {
     final l = AppLocalizations.of(context);
     // Queued is the NORMAL outcome for most of the target audience (§5.1) —
     // styled identically to a fill, never as a warning.
+    //
+    // THREE states, not two. This read `isQueued ? queued : filled`, so an
+    // outcome the client could not identify rendered as "Filled." — a
+    // positive claim about a position in a scored contest, asserted with no
+    // evidence. An unknown outcome now says so, and says it in amber rather
+    // than the confident green, because it is the one case where the player
+    // must go and look.
+    final unknown = !result.isQueued && !result.isFilled;
+    final accent = unknown ? AmiColors.hexAmber : AmiColors.hexGreen;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AmiSpacing.s),
       decoration: BoxDecoration(
-        color: AmiColors.hexGreen.withValues(alpha: 0.1),
+        color: accent.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AmiRadii.card),
-        border: Border.all(color: AmiColors.hexGreen.withValues(alpha: 0.5)),
+        border: Border.all(color: accent.withValues(alpha: 0.5)),
       ),
       child: Text(
-        result.isQueued ? l.gamesTicketQueuedNote : l.gamesTicketFilledNote,
+        unknown
+            ? l.gamesTicketUnknownNote
+            : result.isQueued
+                ? l.gamesTicketQueuedNote
+                : l.gamesTicketFilledNote,
         style: AmiTypography.body,
       ),
     );

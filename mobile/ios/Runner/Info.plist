@@ -8,6 +8,19 @@
 	<false/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>AMI Trade does not use the microphone.</string>
+	<!-- ITMS-90683, 2026-08-09. Required not by us but by the OneSignal push
+	     SDK: its default `OneSignalComplete` subspec pulls in
+	     `OneSignalLocation`, which references CoreLocation. AMI Trade never
+	     requests location and never enables OneSignal's location features, so
+	     this prompt can never actually appear — but App Store Connect refuses
+	     the binary without the key. Wording follows the microphone precedent
+	     above rather than inventing a purpose we do not have.
+	     The better fix is to drop to the `OneSignal` subspec (which excludes
+	     Location) — filed separately, because it risks push and push is live. -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>AMI Trade does not use your location.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>AMI Trade does not use your location.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Attach a photo to your in-app bug report.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

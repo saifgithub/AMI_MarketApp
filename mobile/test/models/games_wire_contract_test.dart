@@ -184,6 +184,54 @@ void main() {
     });
   });
 
+  group('trade result — the payload that claimed a fill that never happened', () {
+    /// Verbatim from `POST /v1/games/runs/{run_id}/trade` on Alpha, outside
+    /// market hours. Note there is no `status` key at all.
+    const liveQueued = <String, dynamic>{
+      'queued': true,
+      'filled': false,
+      'fee': null,
+      'next_open_at': '2026-08-10T13:30:00+00:00',
+    };
+
+    test('a queued order reports QUEUED, not filled', () {
+      final r = GameTradeResult.fromJson(liveQueued);
+      expect(
+        r.isQueued,
+        isTrue,
+        reason: 'the client read j["status"] and defaulted to "filled" — so '
+            'every out-of-hours order told the player it had EXECUTED. The '
+            'market was shut and nothing had happened',
+      );
+      expect(r.isFilled, isFalse);
+      expect(r.queuedFor, isNotNull, reason: 'sent as next_open_at');
+    });
+
+    test('a real fill still reports filled', () {
+      final r = GameTradeResult.fromJson({
+        'queued': false,
+        'filled': true,
+        'fee': 2.5,
+        'quantity': 5.1721,
+        'price': 483.36,
+      });
+      expect(r.isFilled, isTrue);
+      expect(r.isQueued, isFalse);
+      expect(r.shares, 5.1721);
+      expect(r.fee, 2.5);
+    });
+
+    test('an unrecognised payload claims NEITHER', () {
+      // The important one. With no information the old default asserted a
+      // fill; absent information must never become a positive claim about a
+      // position in a scored contest.
+      final r = GameTradeResult.fromJson(<String, dynamic>{});
+      expect(r.isFilled, isFalse);
+      expect(r.isQueued, isFalse);
+      expect(r.status, 'unknown');
+    });
+  });
+
   group('quote payload', () {
     test('shares and fee read under the backend\'s names', () {
       final q = GameTradeQuote.fromJson(_liveQuote);

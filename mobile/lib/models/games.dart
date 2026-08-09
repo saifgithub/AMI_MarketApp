@@ -325,15 +325,43 @@ class GameTradeResult {
 
   bool get isQueued => status == 'queued';
 
-  factory GameTradeResult.fromJson(Map<String, dynamic> j) => GameTradeResult(
-        status: j['status'] as String? ?? 'filled',
-        ticker: j['ticker'] as String? ?? '',
-        side: j['side'] as String? ?? 'buy',
-        shares: (j['shares'] as num?)?.toDouble(),
-        price: (j['price'] as num?)?.toDouble(),
-        fee: (j['fee'] as num?)?.toDouble(),
-        queuedFor: _parseDate(j['queued_for']),
-      );
+  /// True only when the order actually executed. Deliberately NOT
+  /// `!isQueued` — "not queued" also covers "we do not know", and the one
+  /// thing this class must never do is imply a fill it cannot evidence.
+  bool get isFilled => status == 'filled';
+
+  /// The backend reports the outcome as two BOOLEANS — `{"queued": true,
+  /// "filled": false, "next_open_at": …}` — and sends no `status` key at all.
+  ///
+  /// This read `j['status']` and defaulted to **`'filled'`**, so every order
+  /// placed outside market hours told the player it had EXECUTED when it had
+  /// only been queued. Saiful caught it: *"It says filled. I don't think it
+  /// was."* He was right — the market was shut.
+  ///
+  /// That default is the CR040 failure in its purest form: absent
+  /// information, the app asserted the affirmative, and did so about a
+  /// position in a scored contest. A player would believe they held AMD when
+  /// they held nothing until the next open. The fallback is now `unknown`,
+  /// which the UI must render as uncertainty rather than as a fill.
+  factory GameTradeResult.fromJson(Map<String, dynamic> j) {
+    final queued = j['queued'] == true;
+    final filled = j['filled'] == true;
+    final status = (j['status'] as String?) ??
+        (queued
+            ? 'queued'
+            : filled
+                ? 'filled'
+                : 'unknown');
+    return GameTradeResult(
+      status: status,
+      ticker: j['ticker'] as String? ?? '',
+      side: j['side'] as String? ?? 'buy',
+      shares: ((j['shares'] ?? j['quantity']) as num?)?.toDouble(),
+      price: (j['price'] as num?)?.toDouble(),
+      fee: (j['fee'] as num?)?.toDouble(),
+      queuedFor: _parseDate(j['queued_for'] ?? j['next_open_at']),
+    );
+  }
 }
 
 /// `POST /v1/games/runs/{run_id}/restart` — §6.7's forfeit preview-then-commit.
