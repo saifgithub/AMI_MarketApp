@@ -100,7 +100,30 @@ flutter build ios --release \
   2> >(_quiet >&2)
 
 echo "▶ flutter install -d ${DEVICE_ID} (${TARGET_NAME})"
-flutter install -d "${DEVICE_ID}" 2> >(_quiet >&2)
+# Do NOT trust the exit code alone. `flutter install` has been observed to
+# exit 0 while printing "No target device found" — e.g. when the phone has
+# Developer Mode off, which is exactly when you most need to be told. This
+# script then printed "✓ installed" for a build that never reached the
+# device (AT:R66). Check the output too, and fail loudly.
+_INSTALL_LOG=$(mktemp)
+flutter install -d "${DEVICE_ID}" 2>&1 | tee "$_INSTALL_LOG"
+_INSTALL_RC=${PIPESTATUS[0]}
+
+if [ "$_INSTALL_RC" -ne 0 ] || grep -qiE 'no target device found|no devices found|installation failed' "$_INSTALL_LOG"; then
+  echo ""
+  echo "✗ INSTALL FAILED — the app was built but is NOT on ${TARGET_NAME}."
+  if grep -qi 'developer mode' "$_INSTALL_LOG"; then
+    echo "  Cause: Developer Mode is off on the device."
+    echo "  Fix:   Settings → Privacy & Security → Developer Mode → on, reboot,"
+    echo "         then re-run this script."
+  else
+    echo "  See the output above. The build artefact is still at"
+    echo "  build/ios/iphoneos/Runner.app — only the install step failed."
+  fi
+  rm -f "$_INSTALL_LOG"
+  exit 1
+fi
+rm -f "$_INSTALL_LOG"
 
 echo ""
 echo "✓ installed on ${TARGET_NAME}. Launch the app from the home screen."

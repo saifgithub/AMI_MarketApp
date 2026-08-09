@@ -3,6 +3,7 @@
 /// earn-path progress. The Concierge is always unlocked.
 library;
 
+import 'package:ami_trade/features/games/games_gate.dart';
 import 'package:ami_trade/features/tour/floor_tour.dart';
 import 'package:ami_trade/features/tour/tour_intro_sheet.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
@@ -466,10 +467,33 @@ class _FloorScreenState
                     ),
                   ),
                   const SizedBox(height: AmiSpacing.m),
-                  Text(
-                    l.floorFooter,
-                    style: AmiTypography.caption,
-                  ),
+                  // CR109 Amendment F — the ONLY way into the dark-launched
+                  // game, and it exists in no shipped build.
+                  //
+                  // `kGamesEnabled` is a const `bool.fromEnvironment`, so with
+                  // the AMI_GAMES define off the compiler folds this whole
+                  // branch away: a store binary has neither the gesture nor
+                  // the '/games' route it targets. Deliberately a long-press
+                  // on the footer rather than a button, chip or tab — the game
+                  // must not be discoverable, only reachable by someone who
+                  // already knows it is there.
+                  //
+                  // Delete this when the game ships for real; CR133 gives it a
+                  // proper home in the nav.
+                  if (kGamesEnabled)
+                    GestureDetector(
+                      onLongPress: () =>
+                          Navigator.of(context).pushNamed('/games'),
+                      child: Text(
+                        l.floorFooter,
+                        style: AmiTypography.caption,
+                      ),
+                    )
+                  else
+                    Text(
+                      l.floorFooter,
+                      style: AmiTypography.caption,
+                    ),
                   const SizedBox(height: AmiSpacing.l),
                 ],
               ),
