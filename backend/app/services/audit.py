@@ -91,6 +91,7 @@ def record_llm_call(
     output_tokens: Optional[int] = None,
     cache_read_tokens: Optional[int] = None,
     cache_write_tokens: Optional[int] = None,
+    prompt_version: Optional[str] = None,
 ) -> None:
     """Persist one LLM gateway call. Safe to call from any code path.
 
@@ -99,6 +100,9 @@ def record_llm_call(
     a provider that didn't report a given field) records NULL, not a
     fabricated zero. See the LLMAuditRow docstring for why that distinction
     matters (CR040 acceptance 2).
+
+    CR158: `prompt_version` is the same shape of contract — passed through
+    verbatim, NULL when the caller could not determine it, never a placeholder.
     """
     try:
         with get_session() as session:
@@ -118,6 +122,9 @@ def record_llm_call(
                 output_tokens=output_tokens,
                 cache_read_tokens=cache_read_tokens,
                 cache_write_tokens=cache_write_tokens,
+                # CR158: None is a real value here — "which prompt generation" is
+                # unknown for a non-agent flow and for an assembly failure alike.
+                prompt_version=prompt_version,
             )
             session.add(row)
             session.commit()

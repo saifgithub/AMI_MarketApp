@@ -54,7 +54,22 @@ that already produced one wrong number here.
 
 ## Scope
 
-### 1. `prompt_version` in the frontmatter — derived, never hand-maintained
+> **DEVIATION FROM THIS SCOPE, recorded rather than quietly taken (2026-08-09).**
+> Item 1 below says the version goes *in each agent file's frontmatter*, and it
+> does not. The two halves of that sentence contradict each other: a value that is
+> "derived, never hand-maintained" cannot also live in a hand-edited content file
+> unless something writes it there — and a generation step that rewrites
+> `content/agents/*.md` is a **new drift surface**, the precise failure this CR
+> exists to prevent. Someone edits a prompt, forgets to regenerate, and the
+> frontmatter now asserts a version that is false. Worse than none, by this CR's
+> own argument.
+>
+> So the version is computed from the assembly and never stored in the content.
+> The frontmatter keeps its four identity keys. Everything else in item 1 —
+> derived, covering all layers, impossible to forget in a commit — is delivered,
+> and is delivered *more* strongly by not writing it down.
+
+### 1. `prompt_version` — derived from the assembly, never hand-maintained, never stored in content
 
 A short content hash, computed at import over the **six assembly layers**, not
 over the base file alone: `GROUNDING_DIRECTIVE`, the base `.md`, the mandate

@@ -873,6 +873,9 @@ class LLMGateway:
     ) -> AsyncIterator[str]:
         import time
         from app.services.audit import record_llm_call
+        # CR158 — local, like the import above: prompt_version imports the
+        # prompt builders, which import this module's GROUNDING_DIRECTIVE.
+        from app.services.prompt_version import prompt_version_for
 
         provider = self._pick_provider(locale, model_tier, plan=plan, agent_id=agent_id)
         # CR056: every call gets the no-assumed-data directive prepended, so it is
@@ -933,6 +936,11 @@ class LLMGateway:
             # provider that reported some fields but not others records NULL
             # only for the ones it omitted (CR141 acceptance 2 + 3).
             usage = call_meta.get("usage") or {}
+            # CR158: stamp which prompt generation this call used, so a later
+            # measurement can partition by it instead of reconstructing epoch
+            # boundaries from git SHAs by hand — the manual step that put a
+            # wrong reformatter rate into CR143. Cached per agent; None for a
+            # non-agent flow (Concierge, the reformatter) and on any failure.
             record_llm_call(
                 user_id=audit_user_id if audit_user_id else None,
                 agent_id=audit_agent_id,
@@ -941,6 +949,7 @@ class LLMGateway:
                 provider=provider.name,
                 locale=locale,
                 system_prompt=effective_system_prompt,
+                prompt_version=prompt_version_for(audit_agent_id),
                 messages=[{"role": m.role, "content": m.content} for m in messages],
                 response_text="".join(buf) if buf else None,
                 latency_ms=latency_ms,

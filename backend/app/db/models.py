@@ -761,6 +761,18 @@ class LLMAuditRow(Base):
     output_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     cache_read_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     cache_write_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    # CR158 — which prompt generation produced this row. A short hash of the fully
+    # assembled prompt for a fixed reference mandate (see
+    # `app/services/prompt_version.py`), so it changes when any assembly layer
+    # changes and not when a user's mandate does.
+    #
+    # NULLABLE and permanently so. Every row written before this column existed is
+    # NULL, and NULL means "unversioned", never "version zero" — the same CR040
+    # distinction the `*_tokens` columns above draw. It is also what a row gets when
+    # assembly fails: an honest unknown beats a fabricated generation, since the
+    # entire point of the column is that a measurement can trust which prompt it is
+    # measuring.
+    prompt_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
 
 class HTTPAuditRow(Base):
