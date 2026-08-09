@@ -94,6 +94,6 @@ This is the metric that captures the unique product behaviour. Lessons can be le
 | **Real money** | No, ever — simulation + advisory only |
 | **Markets** | US equities at MVP; GCC/Tadawul + Bursa later |
 | **Real-time data** | 15-min delayed at MVP — it's a sim, real-time isn't material |
-| **B2B / institutional sales** | Out of scope — we are a consumer product |
+| **B2B / white-label to brokerages** | In scope as a second motion ([D-069](../11_decisions/decision_log.md#d-069--brokerages-become-customers-white-label-b2b2c--partial-amendment-of-d-004), 2026-08-09). A brokerage is a customer; the product stays simulation-only under whatever brand it wears. Consumer remains the primary motion. |
 | **Crypto / forex / derivatives** | Out of scope at MVP, may revisit |
-| **Real-money brokerage integration** | Never — regulatory firewall |
+| **Real-money brokerage integration** | Never — regulatory firewall. Unchanged by D-069: selling *to* a broker is not connecting *to* their order flow. |

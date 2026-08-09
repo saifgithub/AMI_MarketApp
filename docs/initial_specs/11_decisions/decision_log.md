@@ -36,6 +36,7 @@ deprecated.
 - **Decided**: AMI is a training simulator, not an investment-advice service. No brokerage integration ever. Pure educational simulation; outputs are training artifacts, not investment advice.
 - **Source**: Saiful — "I don't want to get sued"
 - **Rationale**: Regulatory firewall. AMI is not licensed to provide investment advice. Avoids licensing complexity entirely. Aligns with educational positioning.
+- **Partially amended by [D-069](#d-069--brokerages-become-customers-white-label-b2b2c--partial-amendment-of-d-004)** (2026-08-09): a brokerage may be a *customer*. "No brokerage integration ever" is unchanged and still controls — it forbids routing orders, not selling to a broker.
 
 ### D-005 — US equities at MVP
 - **Decided**: US equities only at MVP. GCC/Tadawul + Bursa Malaysia in Phase 2.
@@ -431,6 +432,41 @@ deprecated.
   positions are unchanged and still control — D-063 itself is **not** marked as fully
   superseded.
 - **Affects**: [`legal/policies/terms_of_service.md`](../../../legal/policies/terms_of_service.md) §16, `website/terms/`, [`docs/initial_specs/09_compliance/legal_plan_ami_trade.md`](../09_compliance/legal_plan_ami_trade.md) (governing-law checklist item reopened and re-resolved), [`website/sitemap.xml`](../../../website/sitemap.xml). Filed as [CR076](../../forward_planning/CR076_governing_law_malaysia/CR076_governing_law_malaysia.md).
+
+---
+
+## Business model
+
+### D-069 — Brokerages become customers: white-label B2B2C — partial amendment of D-004
+
+- **Decided** (2026-08-09): AMI Trade may be licensed to brokerage houses as a white-label
+  education/simulation layer. A brokerage can be a **customer**. What does not change: the
+  product stays simulation-only under every brand it wears, and **we never route an order,
+  never connect to an execution venue, and never integrate with a broker's order flow** — for
+  a white-label tenant exactly as for our own users. The simulation-only floor is the product
+  being sold, not a limitation of it.
+- **Source**: Saiful, 2026-08-09: *"mean to use the skill to plan our GTM activity as a white
+  label app, offering to other brokerage houses."*
+- **Rationale**: Resolves the monetisation trap our own competitive analysis names. From
+  [`docs/external/anthropic_financial_services_comparison.md`](../../external/anthropic_financial_services_comparison.md):
+  *"The obvious business model for a consumer trading app is to become a brokerage, and we
+  have locked ourselves out of that by decision. That is simultaneously our moat and our
+  monetisation constraint."* Selling **to** brokers monetises the moat without crossing the
+  line. That doc's quadrant 3 (broker-attached consumer AI — Robinhood Cortex, Webull Vega,
+  Moomoo) is precisely the capability every *other* retail broker wants and cannot build; we
+  already have it, plus halal screening and AR/MS that none of the incumbents carry.
+- **Supersedes (partial)**: [D-004](#d-004--training-simulator-simulation-only-forever)'s
+  implied "brokerages are not part of our world" reading only. D-004's actual prohibition —
+  no brokerage *integration* — is unchanged and still controls. D-004 is **not** marked fully
+  superseded.
+- **Expected question, pre-answered**: every broker we pitch will ask "can you connect this to
+  our order flow?" The answer is no, it is decided here in advance, and it is not negotiable
+  per deal. Anyone fielding that question cites this entry.
+- **Affects**: [`docs/initial_specs/00_overview/vision_and_positioning.md`](../00_overview/vision_and_positioning.md)
+  (the "B2B / institutional sales — out of scope" line is rewritten by this decision),
+  [`docs/forward_planning/CR036_go_to_market_plan/`](../../forward_planning/CR036_go_to_market_plan/CR036_go_to_market_plan.md)
+  (consumer GTM gains a B2B sibling motion, and is not replaced by it). Filed as
+  [CR161](../../forward_planning/CR161_white_label_brokerage_programme/CR161_white_label_brokerage_programme.md).
 
 ---
 
