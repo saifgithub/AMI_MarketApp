@@ -223,6 +223,29 @@ cat <<'BANNER'
 └──────────────────────────────────────────────────────────────────┘
 BANNER
 
+# A release archive must not inherit another build's native assets.
+#
+# Flutter writes them to ONE path per OS — `build/native_assets/ios/` — with
+# no device/simulator split, so an iOS *simulator* build (the QA lane runs
+# them) leaves a simulator-platform framework there and the next device
+# archive copies it straight into Runner.app. App Store Connect then refuses
+# the upload: "references an unsupported platform in the x86_64 slice", after
+# a twelve-minute build (AT:R66, 0.1.0+76).
+#
+# `.dart_tool/hooks_runner` is the load-bearing one. Clearing the output
+# directory alone leaves the build system believing native assets are already
+# built, and every rebuild then dies on a manifest pointing at a directory
+# that no longer has the framework in it.
+#
+# All four paths are pure build output; the next build regenerates them. On a
+# shared checkout with several lanes live, "the last build here was mine" is
+# not an assumption a release script may make.
+echo "▶ clearing native-asset caches (a simulator build must not leak into a release archive)"
+rm -rf "${MOBILE_DIR}/build/native_assets" \
+       "${MOBILE_DIR}/build/ios/Release-iphoneos" \
+       "${MOBILE_DIR}/build/ios/iphoneos" \
+       "${MOBILE_DIR}/.dart_tool/hooks_runner"
+
 flutter build ios --release --no-codesign \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
   --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
