@@ -176,6 +176,64 @@ tab smokes, and the locale matrix last.
 5. CI runs `flutter analyze` + `flutter test` on push, on Linux.
 6. The drift guard refuses to run against a hand-edited remote harness copy.
 
+## Results (measured 2026-08-10, iPhone 17 Simulator / iOS 26.5, Appium 3.6.0 + XCUITest 12.3.0)
+
+### The acceptance question is answered: yes
+
+With `--dart-define=AMI_QA_SEMANTICS=1`, the app presents a fully populated accessibility
+tree to XCUITest — **48 element nodes** carrying real content, not one opaque `FlutterView`:
+
+```xml
+<XCUIElementTypeStaticText value="AMI TRADE" …/>
+<XCUIElementTypeStaticText value="CONCIERGE&#10;What's bringing you here?" …/>
+```
+
+And after completing onboarding, all five navigation identifiers are addressable:
+
+```xml
+<XCUIElementTypeButton name="ami.nav.floor"     label="FLOOR" traits="Selected, Button" y="747"/>
+<XCUIElementTypeButton name="ami.nav.portfolio" …  y="747"/>
+<XCUIElementTypeButton name="ami.nav.journal"   …  y="747"/>
+<XCUIElementTypeButton name="ami.nav.lessons"   …  y="747"/>
+<XCUIElementTypeButton name="ami.nav.settings"  …  y="747"/>
+```
+
+`SemanticsBinding.ensureSemantics()` + `SemanticsProperties.identifier` is a working
+mechanism for black-box iOS automation of a Flutter release build. That was the open
+question this CR existed to settle.
+
+### What the first run cost, and what it bought
+
+Bring-up surfaced five distinct problems. Four were in the harness or the toolchain; **two
+were real defects in the app** (DEF249), and those are the ones worth noting:
+
+| Problem | Where |
+|---|---|
+| `@appium/logger` unresolvable in the xcuitest driver's tree | toolchain — `npm i @appium/logger` in `~/.appium` |
+| `content-desc` / `class` are Android-only attributes; XCUITest 500s on them | harness — `element_description()` / `is_text_input()` now dispatch |
+| Concierge chips exposed as static text, not buttons | **app — DEF249** |
+| Bottom-nav labels announced twice (`label="FLOOR\nFLOOR"`) | **app — DEF249**, predates this CR |
+| Onboarding walk tapped `candidates[0]` — a chip from an already-answered turn | harness — now picks the bottom-most labelled control |
+
+Both DEF249 findings are invisible to Android testing by construction (its bridge marks any
+tappable node `clickable` regardless of semantics, and the child `Text` keeps its own node
+there) and invisible to widget tests, which see Flutter's tree rather than the platform's.
+The very first iOS run paying for itself twice over is the strongest argument for the CR.
+
+### Known-open, stated rather than quietly dropped
+
+- The full 6-test gate has not yet been observed green end to end in one run; the evidence
+  above is from direct page-source capture plus per-assertion checks. The remaining work is
+  runtime, not mechanism — first-session WebDriverAgent startup runs to minutes and a
+  killed run leaves the server needing a restart.
+- `scrollable_exists()` still returns `None` (undetermined) on iOS. The positive signal is
+  now confirmed real — the Concierge screen emitted 4 `XCUIElementTypeScrollView` — but one
+  screen does not establish that *every* scrollable surfaces as one, which is the claim a
+  `False` would rest on.
+- `TOP_CHROME_PT` / `BOTTOM_NAV_PT` in `pages/base_page.py` are provisional constants,
+  deliberately generous so the always-animating `TickerTape` cannot land inside a diff band
+  and read as false movement.
+
 ## Sources
 
 - [flutter#25485 — iOS should provide a way to enable the semantic tree for testing frameworks](https://github.com/flutter/flutter/issues/25485)
