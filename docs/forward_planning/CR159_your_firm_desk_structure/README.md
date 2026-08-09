@@ -81,7 +81,7 @@ become two independent arrangements of the same roster. Mitigation: the band/clu
 shared widget consuming `kAllAgents` plus the grouping field, and a parity test in the shape
 of `test_cr106_board_parity` asserts Floor and comb agree on membership.
 
-**T-SEQUENCE — do the rename first.** CR158 edits `displayName`/`abbreviation` in
+**T-SEQUENCE — do the rename first.** CR160 edits `displayName`/`abbreviation` in
 `mobile/lib/models/agent.dart` and its backend mirror `backend/app/schemas/agents.py`. CR159
 edits the same file to add the grouping field. Landing CR159 first means redoing the band
 labels.
@@ -124,7 +124,7 @@ changing it is *safe* — but there is no reason to make one field mean two thin
 - Per-agent standing / track record — separate CR, this one only reserves the slot.
 - View B (the pipeline) — separate CR; `kAgentPhase` already holds the data.
 - Any change to `agent_id`, which is a DB key across five tables.
-- The rename itself — that is **CR158**, which must land first.
+- The rename itself — that is **CR160**, which must land first.
 
 ## Verification
 

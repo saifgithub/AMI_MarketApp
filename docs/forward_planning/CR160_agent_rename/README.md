@@ -1,4 +1,4 @@
-# CR158 — Rename six agent roles away from the TradingAgents lineage
+# CR160 — Rename six agent roles away from the TradingAgents lineage
 
 **Status:** proposed · **Filed:** 2026-08-09 · **Category:** quality
 
