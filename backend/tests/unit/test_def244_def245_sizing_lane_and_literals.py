@@ -84,26 +84,20 @@ def test_the_researchers_output_style_is_pinned_to_a_reviewed_snapshot():
     """
     import hashlib
 
+    # ROUND-3 MINOR 1 — the pin covered "## Output style" only, and the auditor
+    # put "Always close by recommending an allocation percentage" in "## Role"
+    # instead. Invisible. Sectioning was a leftover from the pattern-matching
+    # mindset: it assumed the defect knows where to live. The set is the FILE.
     expected = {
-        "bull_researcher.md": "923a5c0c7124",
-        "bear_researcher.md": "efd014741751",
+        "bull_researcher.md": "63deed87ac60",
+        "bear_researcher.md": "1eef572f0cdc",
     }
-    actual = {}
-    for name in expected:
-        section = []
-        inside = False
-        for line in (_CONTENT / name).read_text(encoding="utf-8").splitlines():
-            if line.startswith("## Output style"):
-                inside = True
-                continue
-            if inside and line.startswith("## "):
-                break
-            if inside and line.strip():
-                section.append(line.rstrip())
-        assert section, f"{name} has no '## Output style' section"
-        actual[name] = hashlib.sha256(
-            "\n".join(section).encode("utf-8")
+    actual = {
+        name: hashlib.sha256(
+            (_CONTENT / name).read_bytes()
         ).hexdigest()[:12]
+        for name in expected
+    }
 
     assert actual == expected, (
         "A researcher's output-style bullets changed. This is a REVIEW PROMPT, "
@@ -178,11 +172,24 @@ def test_no_agent_prompt_contains_a_literal_percentage_anywhere(filename):
 
     _ALLOWED: set[str] = set()
 
+    # ROUND-3 MINOR 2 — `\d+` misses "twenty-five percent". Adding number WORDS is
+    # not a return to the word lists that failed twice: English number words are a
+    # CLOSED set (one…twenty, the tens, hundred), so enumerating them is complete
+    # in a way that enumerating synonyms for "decline" never was. Bare "percent"
+    # is deliberately allowed — `bear_researcher.md` says "derive the percentage
+    # from two prices", which is the instruction, not a figure.
+    _NUM_WORD = (
+        r"(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|"
+        r"thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|"
+        r"thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)"
+    )
+    text = (_CONTENT / filename).read_text(encoding="utf-8")
     hits = [
         m.group(0).strip()
         for m in re.finditer(
-            r"[^\n]{0,40}\d+(?:\.\d+)?%[^\n]{0,25}",
-            (_CONTENT / filename).read_text(encoding="utf-8"),
+            rf"[^\n]{{0,40}}(?:\d+(?:\.\d+)?%|{_NUM_WORD}(?:[\s-]+{_NUM_WORD})*"
+            rf"[\s-]+per\s?cent)[^\n]{{0,25}}",
+            text, re.IGNORECASE,
         )
         if m.group(0).strip() not in _ALLOWED
     ]
