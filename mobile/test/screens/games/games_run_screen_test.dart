@@ -317,9 +317,34 @@ void main() {
     });
   });
 
-  testWidgets('mock-walk marks are disclosed on the book value',
-      (tester) async {
-    await _pump(tester, detail: _detail(priceSource: 'mock_walk'));
-    expect(find.textContaining('marked with simulated prices'), findsOneWidget);
+  group('provenance on the book value', () {
+    testWidgets('mock-walk marks on a real book are disclosed', (tester) async {
+      await _pump(
+        tester,
+        detail: _detail(
+          cash: 5000,
+          stake: 10000,
+          priceSource: 'mock_walk',
+          holdings: const [
+            GameHolding(ticker: 'NVDA', quantity: 10, avgCost: 500, mark: 500),
+          ],
+        ),
+      );
+      expect(
+        find.textContaining('marked with simulated prices'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('an all-cash book is not caveated, whatever the provider says',
+        (tester) async {
+      // Live Alpha reports `mock_walk` on a book with no holdings — the
+      // snapshot echoes the provider regardless of whether a mark was used.
+      // Nothing here was priced: the value IS the cash. A caveat on a number
+      // no price touched is noise, and noise is how a player learns to skip
+      // the caveat that matters.
+      await _pump(tester, detail: _detail(priceSource: 'mock_walk'));
+      expect(find.textContaining('marked with simulated prices'), findsNothing);
+    });
   });
 }

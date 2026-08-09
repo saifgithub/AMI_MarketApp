@@ -219,7 +219,7 @@ class GameRunDetail {
     double? cashAvailable,
     this.queuedOrderCount = 0,
     this.twrPct,
-    this.daysLeft,
+    int? daysLeft,
     this.startsOn,
     this.endsOn,
     this.navSeries = const [],
@@ -227,7 +227,8 @@ class GameRunDetail {
     this.priceSource = 'live',
     this.feesPaid = 0,
     this.tradeCount = 0,
-  }) : _cashAvailable = cashAvailable;
+  })  : _cashAvailable = cashAvailable,
+        _daysLeft = daysLeft;
 
   final String runId;
   final String fieldId;
@@ -255,7 +256,30 @@ class GameRunDetail {
 
   final int queuedOrderCount;
   final double? twrPct;
-  final int? daysLeft;
+  final int? _daysLeft;
+
+  /// Days remaining in the run.
+  ///
+  /// The run-detail payload does **not** carry `days_left` — only the run
+  /// SUMMARY does. Reading it here returned null, which the empty-book copy
+  /// rendered as "0 days to deploy it" on a run with five days to go: a
+  /// wrong number, stated confidently, in the one place §13.3 says the clock
+  /// must appear.
+  ///
+  /// Derived from `ends_on`, which the payload does send. That is arithmetic
+  /// on what the server gave us, not an invention — and it is null, not
+  /// zero, when there is nothing to derive from.
+  int? get daysLeft {
+    if (_daysLeft != null) return _daysLeft;
+    final end = endsOn;
+    if (end == null) return null;
+    final now = DateTime.now();
+    final days = DateTime(end.year, end.month, end.day)
+        .difference(DateTime(now.year, now.month, now.day))
+        .inDays;
+    return days < 0 ? 0 : days;
+  }
+
   final DateTime? startsOn;
   final DateTime? endsOn;
   final List<GameNavPoint> navSeries;
@@ -276,8 +300,16 @@ class GameRunDetail {
   /// `mock_walk` (the fallback provider) and `stale` are the two values that
   /// must carry a caveat. `cash` is exact, not estimated — a book with no
   /// holdings has a NAV of pure cash. Same rule as [GameNavPoint.isLive].
+  ///
+  /// An EMPTY book is live by definition: its value IS the cash balance, and
+  /// no mark was consulted to arrive at it. The snapshot still reports
+  /// whatever the price provider last said — live Alpha sends `mock_walk`
+  /// here on a book with no holdings — and caveating a number that no price
+  /// ever touched trains the player to ignore the caveat on the day it
+  /// means something.
   bool get marksAreLive =>
-      !priceSource.startsWith('mock') && priceSource != 'stale';
+      holdings.isEmpty ||
+      (!priceSource.startsWith('mock') && priceSource != 'stale');
 
   /// The backend names these `current_cash` and `total_value`. Reading only
   /// `cash`/`stake` did not throw — `cash` fell back to 0.0, so the ticket
