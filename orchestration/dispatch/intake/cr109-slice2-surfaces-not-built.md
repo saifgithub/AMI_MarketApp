@@ -50,12 +50,39 @@ He is right, and these are not gaps in the spec — they are requirements in
 - `GET /v1/games/runs/{run_id}/orders`, `POST /v1/games/runs/{run_id}/orders/{id}/cancel`
 - Run detail now returns `cash_committed`, `cash_available`, `queued_order_count`.
 
+## Closed 2026-08-10 (mobile) — `3cf13082`, `ef37b50c`, shipped as `0.1.0+75`
+
+| Specified surface | Now |
+|---|---|
+| Queued orders — pending fills, est. costs, cash committed, cancel | **Built.** `screens/games/games_run_screen.dart`; cancel reports the SERVER's `cancelled` boolean, so an order that filled mid-tap says "too late", never "cancelled" |
+| The empty book | **Built.** Heading, the clock, and §13.3's honest note that nothing stops the whole stake going into one name. States the absence of rules; adds no nudge |
+| My run — stake, TWR, curve, days left, heat gauge | **Built**, curve reuses `GamesCloseCurve`. Missing only the final-stretch line |
+| Holdings list inside a run | **Built**, with unrealised P&L per position |
+| Trade ticket sizes against `cash_available` | **Fixed**, and shows what is committed and to how many orders when the two differ |
+
+Two more wire drifts surfaced by curling Alpha before writing the client — the
+practice the earlier six bought:
+
+- **`will_queue` does not exist.** The backend sends `market_open`, the inverse,
+  so the confirm card's queue note was silently off on the path §5.1 calls the
+  NORMAL one for this audience. Now nullable: unknown still warns.
+- **`days_left` is not on the run DETAIL**, only the summary. `?? 0` rendered
+  "0 days to deploy it" in the exact place §13.3 requires the clock. Derived
+  from `ends_on`, which the payload does carry.
+
+And one caveat pointed the wrong way: live Alpha reports `price_source:
+mock_walk` on a book with **no holdings**, so the run screen would have called
+a pure-cash balance "marked with simulated prices." A caveat where none is due
+is not free — it teaches the player to skip the one that matters.
+
 ## Still to do
 
-- The **mobile** queued-orders surface (list, est. cost + `price_source`, committed
-  cash, cancel), and the ticket sizing against `cash_available` rather than
-  `current_cash`.
-- The empty book, the holdings list, the heat gauge, stop/target presets, the lobby.
+- **Stop/target presets** (§5.4) — deliberately NOT built. The backend accepts
+  them and nothing honours them, and the code that would has a cross-book
+  leak: `orchestration/dispatch/intake/games-stops-would-liquidate-the-training-book.md`.
+- The five-cadence **lobby** — correctly deferred; `games_service` only rolls
+  `week` this slice (implementation_plan.md §2).
+- The **final-stretch line** on the run card.
 
 ## The pattern worth recording separately
 
