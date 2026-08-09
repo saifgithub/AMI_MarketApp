@@ -50,7 +50,14 @@ def test_history_returns_the_stored_series_with_basis_and_twr(client: TestClient
     assert point["as_of_date"] == "2026-08-03"
     assert point["nav"] == pytest.approx(10_000.0)
     assert point["cash"] == pytest.approx(10_000.0)
-    assert point["price_source"] == "mock"
+    # `cash`, not `mock`. This portfolio holds nothing — nav == cash — so no
+    # price was fetched and none could be simulated. It previously read `mock`
+    # because `aggregate_source([])` answers `mock_walk` for an empty ticker
+    # list, which is right for the LIVE pill and wrong as a scoring input:
+    # `games_scoring_pass` VOIDs any run containing a `mock` day, so every run
+    # whose first order queued overnight was void before it began. See
+    # test_cr109_empty_book_not_void.py. Do not flip this back to `mock`.
+    assert point["price_source"] == "cash"
     assert point["capital_event"] == "open"
     assert body["twr_pct"] is None, "one point — nothing to compound yet"
 

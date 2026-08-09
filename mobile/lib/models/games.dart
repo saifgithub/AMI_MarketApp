@@ -170,10 +170,15 @@ class GameNavPoint {
   final DateTime asOfDate;
   final double nav;
   final double cash;
-  /// 'live' | 'mock' | 'stale'.
+  /// 'live' | 'cash' | 'mock' | 'stale'.
   final String priceSource;
 
-  bool get isLive => priceSource == 'live';
+  /// True when the point needs no provenance caveat drawn on it.
+  ///
+  /// `cash` counts as exact, not estimated: a day with no holdings has a NAV
+  /// of pure cash, which is known rather than priced. Dashing it would tell
+  /// the user a real number was simulated. Only `mock`/`stale` are caveated.
+  bool get isLive => priceSource == 'live' || priceSource == 'cash';
 
   factory GameNavPoint.fromJson(Map<String, dynamic> j) => GameNavPoint(
         asOfDate: DateTime.parse(j['as_of_date'] as String),

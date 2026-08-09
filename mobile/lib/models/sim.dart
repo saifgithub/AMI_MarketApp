@@ -228,7 +228,12 @@ class SimPortfolioHistoryPoint {
   /// trading P&L (a fresh account, a reset, a top-up).
   final String? capitalEvent;
 
-  bool get isLive => priceSource == 'live';
+  /// True when the point needs no provenance caveat drawn on it.
+  ///
+  /// `cash` counts as exact, not estimated: a day with no holdings has a NAV
+  /// of pure cash, which is known rather than priced. Dashing it would tell
+  /// the user a real number was simulated. Only `mock`/`stale` are caveated.
+  bool get isLive => priceSource == 'live' || priceSource == 'cash';
 
   factory SimPortfolioHistoryPoint.fromJson(Map<String, dynamic> j) =>
       SimPortfolioHistoryPoint(

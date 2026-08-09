@@ -42,6 +42,32 @@ from app.trading_math.twr import NavPoint, time_weighted_return
 _MOCK_MARKER = "mock"
 
 
+def _price_source_for_snapshot(raw: str, *, holding_count: int) -> str:
+    """`_normalize_price_source`, except a book with NO holdings reads `cash`.
+
+    A zero-holding day needs no price at all: NAV is cash, and cash is exactly
+    known. But `SimEngine.aggregate_source` returns `mock_walk` for an empty
+    ticker list — correct for its own purpose (the LIVE pill must not light up
+    when nothing has been priced), and wrong as an input to scoring, because
+    `games_scoring_pass` VOIDs any run whose NAV series contains a `mock` day.
+
+    Chained together those two correct-in-isolation rules VOIDED essentially
+    every run. Queue-first is the PRIMARY designed flow — US hours are evening
+    in the Gulf and past midnight in Malaysia — so a player enters, queues an
+    order that night, and fills at the next open. The day in between has no
+    holdings, so it was recorded `mock`, so the run was void before it began.
+    The player did everything right and got no score.
+
+    Found on live Alpha during the CR109 end-to-end check, not by the unit
+    suite: every scoring fixture already had holdings, so nothing exercised the
+    empty book. `cash` states what actually happened, which is what CR040 asks
+    for — the day is not a fabricated price and must not be scored as one.
+    """
+    if holding_count == 0:
+        return "cash"
+    return _normalize_price_source(raw)
+
+
 def _normalize_price_source(raw: str) -> str:
     """Collapse the provider stack's leaf source strings ("yahoo",
     "mock_walk", "unavailable", ...) onto the three-value vocabulary
@@ -175,7 +201,9 @@ def run_portfolio_nav_snapshot_tick(
                         as_of_date=as_of,
                         nav=round(float(total_value), 2),
                         cash=round(float(portfolio.current_cash), 2),
-                        price_source=_normalize_price_source(source),
+                        price_source=_price_source_for_snapshot(
+                            source, holding_count=len(portfolio.holdings),
+                        ),
                         capital_event=capital_event,
                         created_at=now,
                     ))
@@ -284,7 +312,9 @@ def run_game_nav_snapshot_tick(
                         as_of_date=as_of,
                         nav=round(float(total_value), 2),
                         cash=round(float(portfolio.current_cash), 2),
-                        price_source=_normalize_price_source(source),
+                        price_source=_price_source_for_snapshot(
+                            source, holding_count=len(portfolio.holdings),
+                        ),
                         capital_event=capital_event,
                         created_at=now,
                     ))
