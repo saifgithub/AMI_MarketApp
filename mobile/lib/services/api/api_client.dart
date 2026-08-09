@@ -1588,10 +1588,25 @@ class ApiClient {
   // No `{user_id}` in any path — like `/v1/league/me`, the caller is derived
   // from the Bearer token `_AuthInterceptor` already attaches.
 
+  /// CR109. `/v1/games/cadences` and `/v1/games/runs` return a BARE JSON
+  /// ARRAY, not an enveloped object. Asking Dio for `Map<String, dynamic>`
+  /// makes it throw on the cast, which surfaced in the app as
+  /// "Couldn't load your game runs" on top of a perfectly good HTTP 200 —
+  /// the network log said success while the screen said failure.
+  ///
+  /// `_listBody` accepts either shape so the client cannot break again if an
+  /// envelope is added later, and so neither side has to guess.
+  static List<dynamic> _listBody(dynamic data, String envelopeKey) {
+    if (data is List) return data;
+    if (data is Map && data[envelopeKey] is List) {
+      return data[envelopeKey] as List;
+    }
+    return const [];
+  }
+
   Future<List<GameCadenceInfo>> gamesCadences() async {
-    final r = await _dio.get<Map<String, dynamic>>('/v1/games/cadences');
-    final list = (r.data?['cadences'] as List?) ?? const [];
-    return list
+    final r = await _dio.get<dynamic>('/v1/games/cadences');
+    return _listBody(r.data, 'cadences')
         .map((e) => GameCadenceInfo.fromJson(e as Map<String, dynamic>))
         .toList();
   }
@@ -1608,9 +1623,8 @@ class ApiClient {
   }
 
   Future<List<GameRunSummary>> gamesRuns() async {
-    final r = await _dio.get<Map<String, dynamic>>('/v1/games/runs');
-    final list = (r.data?['runs'] as List?) ?? const [];
-    return list
+    final r = await _dio.get<dynamic>('/v1/games/runs');
+    return _listBody(r.data, 'runs')
         .map((e) => GameRunSummary.fromJson(e as Map<String, dynamic>))
         .toList();
   }

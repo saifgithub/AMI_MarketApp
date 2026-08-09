@@ -44,16 +44,32 @@ class GameCadenceInfo {
 
   bool get isWeekly => cadence == 'week';
 
-  factory GameCadenceInfo.fromJson(Map<String, dynamic> j) => GameCadenceInfo(
-        cadence: j['cadence'] as String? ?? 'week',
-        nextField: j['next_field'] is Map<String, dynamic>
-            ? GameFieldSummary.fromJson(j['next_field'] as Map<String, dynamic>)
-            : null,
-        entryState: j['entry_state'] as String?,
-        queueCount: (j['queue_count'] as num?)?.toInt() ?? 0,
-        queueDeadline: _parseDate(j['queue_deadline']),
-        alreadyHolds: j['already_holds'] as bool? ?? false,
-      );
+  /// The backend sends the next field's data FLAT on the cadence object
+  /// (`field_id`, `state`, `starts_on`, `locks_at`, …) rather than nested
+  /// under `next_field`, and names three keys differently: `state` (not
+  /// `entry_state`), `deadline` (not `queue_deadline`) and `already_held`
+  /// (not `already_holds`).
+  ///
+  /// Every read here is null-safe, so the original nested-only version did
+  /// not throw — it silently produced a cadence with no field, no deadline
+  /// and `alreadyHolds: false`, which renders as an entry card that cannot
+  /// tell you when entry closes or that you are already in. A quiet wrong
+  /// answer, which is worse than the parse error next door. Both shapes are
+  /// accepted so neither side can drift again.
+  factory GameCadenceInfo.fromJson(Map<String, dynamic> j) {
+    final nested = j['next_field'];
+    return GameCadenceInfo(
+      cadence: j['cadence'] as String? ?? 'week',
+      nextField: nested is Map<String, dynamic>
+          ? GameFieldSummary.fromJson(nested)
+          : (j['field_id'] != null ? GameFieldSummary.fromJson(j) : null),
+      entryState: (j['entry_state'] ?? j['state']) as String?,
+      queueCount: (j['queue_count'] as num?)?.toInt() ?? 0,
+      queueDeadline: _parseDate(j['queue_deadline'] ?? j['deadline']),
+      alreadyHolds:
+          (j['already_holds'] ?? j['already_held']) as bool? ?? false,
+    );
+  }
 }
 
 /// The `game_fields` row a cadence's next field points at
