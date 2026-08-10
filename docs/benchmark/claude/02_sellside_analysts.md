@@ -16,7 +16,14 @@ Same task, same deliverable, same horizon. This is where we should aim.
 ## M1 · Hit rate vs index
 
 **Barber, Lehavy, McNichols & Trueman (2001), *Can Investors Profit from the
-Prophets?*** — 1985–1996, the full I/B/E/S consensus **[P-abstract]**:
+Prophets?*** — **1986–1996**, consensus built from **Zacks Investment Research**
+(~360k observations, ~3,600 companies, 4,300+ analysts) **[P — CFA Digest summary
+read direct]**:
+
+> ⚠️ Corrected 2026-08-10. This entry previously read "1985–1996, the full I/B/E/S
+> consensus." Both were wrong: the sample is 1986–1996 and the data is Zacks, not
+> I/B/E/S — I had conflated it with Loh & Stulz, who do use I/B/E/S. Verified from
+> the CFA Digest summary of the paper.
 
 | Portfolio | Annualised geometric mean return |
 |---|---|
