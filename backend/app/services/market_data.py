@@ -55,6 +55,7 @@ import httpx
 
 from app.core.config import settings
 from app.core.logging import logger
+from app.services.asof_context import current_asof
 
 
 # ── Interface ────────────────────────────────────────────────────────────
@@ -744,6 +745,98 @@ def history_with_source(
     return provider.history(ticker, period), getattr(provider, "name", "unknown")
 
 
+# ── As-of store-backed provider (CR164) ──────────────────────────────────
+
+
+class AsOfStoreProvider:
+    """The SAME provider protocol, served from `price_history_daily` with a
+    hard `date <= as_of` cutoff (CR164).
+
+    Returned by `get_market_data_provider()` whenever an `AsOfContext` is
+    active, so every consumer — `compute_technicals` first among them — sees
+    as-of-correct data with zero changes of its own. A PURE reader: nothing
+    here fetches, and a window the store cannot serve honestly comes back as
+    None (→ the CR104 UNAVAILABLE rendering), never as a partial or mock
+    substitute.
+
+    Daily-bar periods only. The store holds daily OHLCV; `1y` is resampled
+    week-ends-from-daily, and the intraday/monthly periods (`1d`/`1w`/`5y`)
+    are refused loudly — no Room-path consumer asks for them, and serving a
+    fake resolution would be fabrication with a provenance stamp.
+    """
+
+    name = "asof_store"
+
+    _DAILY_BARS = {"1m": 22, "3m": 65, "2y": 504}
+
+    def __init__(self, as_of: "datetime.date") -> None:
+        self._as_of = as_of
+
+    def _rows(self, ticker: str, max_rows: int) -> list[tuple]:
+        from app.services.price_history import get_asof_daily_rows  # lazy: avoids cycle
+
+        return get_asof_daily_rows(ticker, self._as_of, max_rows=max_rows)
+
+    def quote(self, ticker: str) -> Quote | None:
+        rows = self._rows(ticker, 2)
+        if not rows:
+            logger.warn("asof_store_no_quote", ticker=ticker, as_of=self._as_of.isoformat())
+            return None
+        price = rows[-1][5]
+        change = (price / rows[-2][5] - 1.0) * 100.0 if len(rows) > 1 else 0.0
+        return Quote(price=price, source=self.name, change_pct=change, market_state="CLOSED")
+
+    def get_price(self, ticker: str) -> float | None:
+        q = self.quote(ticker)
+        return q.price if q else None
+
+    def history(self, ticker: str, period: str) -> list[Candle] | None:
+        if period == "1y":
+            rows = self._rows(ticker, 370)
+            rows = [r for i, r in enumerate(rows)
+                    if i + 1 == len(rows) or rows[i + 1][0].isocalendar()[:2] != r[0].isocalendar()[:2]]
+            rows = rows[-52:]
+        elif period in self._DAILY_BARS:
+            rows = self._rows(ticker, self._DAILY_BARS[period])
+        else:
+            logger.warn(
+                "asof_store_period_unservable",
+                ticker=ticker, period=period, as_of=self._as_of.isoformat(),
+            )
+            return None
+        if not rows:
+            logger.warn(
+                "asof_store_no_history",
+                ticker=ticker, period=period, as_of=self._as_of.isoformat(),
+            )
+            return None
+        incomplete = sum(1 for r in rows if r[1] is None or r[2] is None or r[3] is None or r[6] is None)
+        if incomplete:
+            # A half-real OHLCV window would feed technicals a fabricated
+            # volume baseline — refuse the whole window instead (CR040).
+            logger.warn(
+                "asof_store_ohlcv_incomplete",
+                ticker=ticker, period=period, as_of=self._as_of.isoformat(),
+                incomplete=incomplete, rows=len(rows),
+            )
+            return None
+        return [
+            Candle(
+                t=int(datetime.datetime.combine(
+                    r[0], datetime.time.min, tzinfo=datetime.timezone.utc,
+                ).timestamp()),
+                o=r[1], h=r[2], low=r[3], c=r[5], v=float(r[6]),
+            )
+            for r in rows
+        ]
+
+    def news(self, ticker: str, limit: int = 5) -> list[NewsItem] | None:
+        return None  # v1: News analyst runs ablated; `news_archive` is the later hook
+
+    def earnings(self, ticker: str) -> EarningsInfo | None:
+        return None  # a forward calendar is not PIT-reconstructable from free sources
+
+
 # ── Singleton factory ────────────────────────────────────────────────────
 
 
@@ -752,6 +845,10 @@ _provider: MarketDataProvider | None = None
 
 def get_market_data_provider() -> MarketDataProvider:
     """Returns the configured provider stack.
+
+    CR164: when an `AsOfContext` is active (backtest Room runs only), the
+    store-backed as-of provider is returned instead — request-scoped, so live
+    traffic on the same process is untouched.
 
     Honours `settings.use_real_market_data`. Switching env requires a
     backend restart (singleton). Tests can call `set_market_data_provider()`
@@ -762,6 +859,9 @@ def get_market_data_provider() -> MarketDataProvider:
     couldn't, so the secondary is rarely needed in practice — but it's
     a guaranteed never-fail floor for the quote-on-demand UX.
     """
+    ctx = current_asof()
+    if ctx is not None:
+        return AsOfStoreProvider(ctx.as_of)
     global _provider
     if _provider is None:
         if settings.use_real_market_data:

@@ -47,6 +47,7 @@ from app.core.config import settings
 from app.core.logging import logger
 from app.db import get_session
 from app.db.models import PriceHistoryDailyRow
+from app.services.asof_context import assert_dates_within
 from app.services.market_data import (
     Candle,
     MarketDataProvider,
@@ -208,7 +209,7 @@ def _load_rows(session, ticker: str, *, real_mode: bool) -> list[PriceHistoryDai
 def upsert_daily_bars(
     session,
     ticker: str,
-    bars: list[tuple[date, float]],
+    bars: list[tuple],
     *,
     source: str,
     now: datetime,
@@ -217,6 +218,12 @@ def upsert_daily_bars(
     """Insert-or-update `(ticker, date)` rows.
 
     Returns `{"inserted", "updated", "skipped"}`.
+
+    Each bar is `(date, close)` or, since CR164, `(date, close, open, high,
+    low, volume)` — the long form carries full OHLCV (same adjusted basis as
+    the close; any of the four may be None when the provider's bar was
+    partial). Short-form bars leave the OHLCV columns untouched, so a
+    close-only writer can never NULL-out columns a fuller writer stored.
 
     Existing rows are UPDATED, never skipped: a dividend or split rewrites the
     whole trailing adjusted series at the provider, so skip-if-exists would
@@ -233,9 +240,11 @@ def upsert_daily_bars(
     no dialect-specific ON CONFLICT.
     """
     t = ticker.upper().strip()
-    by_date: dict[date, float] = {}
-    for bar_date, price in bars:
-        by_date[bar_date] = float(price)
+    by_date: dict[date, tuple] = {}
+    for bar in bars:
+        bar_date, price = bar[0], float(bar[1])
+        ohlcv = tuple(bar[2:6]) if len(bar) >= 6 else None
+        by_date[bar_date] = (price, ohlcv)
     if not by_date:
         return {"inserted": 0, "updated": 0, "skipped": 0}
 
@@ -249,17 +258,33 @@ def upsert_daily_bars(
         ).scalars()
     }
 
+    def _apply_ohlcv(row: PriceHistoryDailyRow, ohlcv: tuple | None) -> None:
+        if ohlcv is None:
+            return
+        o, h, low, v = ohlcv
+        row.open = float(o) if o is not None else None
+        row.high = float(h) if h is not None else None
+        row.low = float(low) if low is not None else None
+        row.volume = int(v) if v is not None else None
+
     inserted = 0
     updated = 0
     skipped = 0
-    for bar_date, price in by_date.items():
+    for bar_date, (price, ohlcv) in by_date.items():
         row = existing.get(bar_date)
         if row is None:
+            o, h, low, v = ohlcv if ohlcv is not None else (None, None, None, None)
+            # Kept as a literal `session.add(Model(...))` — the P15 guard's AST
+            # scanner recognises the site by exactly this shape.
             session.add(PriceHistoryDailyRow(
                 ticker=t,
                 date=bar_date,
                 close=price,
                 adj_close=price,
+                open=float(o) if o is not None else None,
+                high=float(h) if h is not None else None,
+                low=float(low) if low is not None else None,
+                volume=int(v) if v is not None else None,
                 source=source,
                 fetched_at=now,
             ))
@@ -269,6 +294,7 @@ def upsert_daily_bars(
         else:
             row.close = price
             row.adj_close = price
+            _apply_ohlcv(row, ohlcv)
             row.source = source
             row.fetched_at = now
             updated += 1
@@ -286,8 +312,9 @@ def upsert_daily_bars(
 
 def _candles_to_bars(
     candles: Sequence[Candle], *, ticker: str,
-) -> tuple[list[tuple[date, float]], int]:
-    """(trading date + close per candle, rejected count), later bars winning a duplicate date.
+) -> tuple[list[tuple], int]:
+    """(full bars `(date, close, open, high, low, volume)` per candle, rejected
+    count), later bars winning a duplicate date.
 
     The rejected count is RETURNED, not just logged (M01 A1 / attack 3). It is
     the datum that separates "the provider served garbage" from "this security
@@ -306,7 +333,15 @@ def _candles_to_bars(
     either fails the whole call with a DB error or, worse, lands in the table
     and turns every covariance built from that ticker into NaN.
     """
-    by_date: dict[date, float] = {}
+    def _clean(value: float) -> float | None:
+        # CR164 — OHLCV sidecar fields ride the same NaN guard as the close,
+        # but per-field: a bar with a NaN high still has a real close, and
+        # NULLing just the bad field keeps the row usable for close-readers
+        # while the as-of path's completeness check sees the hole honestly.
+        v = float(value)
+        return v if math.isfinite(v) and v > 0.0 else None
+
+    by_date: dict[date, tuple] = {}
     rejected = 0
     for candle in candles:
         close = float(candle.c)
@@ -314,7 +349,14 @@ def _candles_to_bars(
             rejected += 1
             continue
         bar_date = datetime.fromtimestamp(candle.t, timezone.utc).date()
-        by_date[bar_date] = close
+        vol = float(candle.v)
+        by_date[bar_date] = (
+            close,
+            _clean(candle.o),
+            _clean(candle.h),
+            _clean(candle.low),
+            int(vol) if math.isfinite(vol) and vol >= 0.0 else None,
+        )
     if rejected:
         logger.warn(
             "price_history_rejected_unusable_close",
@@ -322,7 +364,10 @@ def _candles_to_bars(
             rejected=rejected,
             served=len(candles),
         )
-    return sorted(by_date.items()), rejected
+    return (
+        [(d, c, o, h, low, v) for d, (c, o, h, low, v) in sorted(by_date.items())],
+        rejected,
+    )
 
 
 def _build_series(
@@ -556,6 +601,54 @@ def _replace_fetch_failed(series: DailySeries, ticker: str) -> DailySeries:
         fetched_at=series.fetched_at,
         fetch_failed=True,
     )
+
+
+def get_asof_daily_rows(
+    ticker: str,
+    as_of: date,
+    *,
+    max_rows: int = HISTORY_MAX_ROWS,
+) -> list[tuple[date, float | None, float | None, float | None, float, float, int | None]]:
+    """CR164 — the as-of read path: trailing stored bars `date <= as_of`,
+    ascending, as `(date, open, high, low, close, adj_close, volume)` tuples.
+
+    A PURE read. It never fetches, never touches the throttle state, and never
+    writes — an as-of Room run must be deterministic given the store, and a
+    read-through here would mint rows stamped with today's provenance mid-run.
+    Missing data is an honest short/empty result (the caller renders
+    UNAVAILABLE); the backfill script is the only thing that fills gaps.
+
+    Mock rows are excluded unconditionally — a backtest scores as evidence, so
+    fabricated bars are refused even in a mock-mode dev environment (stricter
+    than the live path's real-mode-only exclusion, deliberately).
+
+    Every served date is re-asserted `<= as_of` after the query
+    (`AsOfLeakageError` on violation) — the CR164 guard-(a) contract.
+    """
+    t = ticker.upper().strip()
+    stmt = (
+        select(PriceHistoryDailyRow)
+        .where(PriceHistoryDailyRow.ticker == t)
+        .where(PriceHistoryDailyRow.date <= as_of)
+        .where(PriceHistoryDailyRow.source != _MOCK_SOURCE)
+        .order_by(PriceHistoryDailyRow.date.desc())
+        .limit(max_rows)
+    )
+    with get_session() as session:
+        rows = list(reversed(session.execute(stmt).scalars().all()))
+    assert_dates_within([r.date for r in rows], as_of, origin="price_history.get_asof_daily_rows")
+    return [
+        (
+            r.date,
+            float(r.open) if r.open is not None else None,
+            float(r.high) if r.high is not None else None,
+            float(r.low) if r.low is not None else None,
+            float(r.close),
+            float(r.adj_close),
+            int(r.volume) if r.volume is not None else None,
+        )
+        for r in rows
+    ]
 
 
 def get_benchmark_series(

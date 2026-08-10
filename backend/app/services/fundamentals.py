@@ -113,6 +113,28 @@ def extract_tickers(text: str) -> list[str]:
     return out
 
 
+def fetch_fundamentals(ticker: str, as_of: date | None = None) -> dict[str, Any] | None:
+    """One fundamentals fetch, two temporal modes (CR164).
+
+    `as_of=None` → the live yfinance `.info` path below — byte-identical
+    behaviour to every pre-CR164 caller. `as_of=date` → point-in-time EDGAR
+    resolution (`edgar_pit.fetch_pit_fundamentals`): same dict shape, same
+    formatting helpers, only facts `filed <= as_of`. Consensus-derived fields
+    (forward_pe, peg, analyst target/rating) simply never appear in the PIT
+    dict — their absence flows to the CR104 UNAVAILABLE rendering, which is
+    the ablation mechanism, not prompt text.
+
+    One module owns the shape so a future fact-sheet field lands here once
+    and both the live Room and the backtest harness exercise it — the CR164
+    same-infrastructure rule.
+    """
+    if as_of is None:
+        return fetch_live_fundamentals(ticker)
+    from app.services.edgar_pit import fetch_pit_fundamentals  # lazy: avoids cycle
+
+    return fetch_pit_fundamentals(ticker, as_of)
+
+
 def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
     """Fetch real fundamentals via yfinance. Returns None on any error.
 

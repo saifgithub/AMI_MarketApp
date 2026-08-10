@@ -53,13 +53,14 @@ from app.core.config import settings
 from app.core.logging import logger
 from app.core.time import relative_day_phrase
 from app.db import get_session, init_schema
-from app.db.models import RoomRunRow
+from app.db.models import BacktestRunIndexRow, RoomRunRow
+from app.services.asof_context import AsOfContext, asof_scope
 from app.schemas import AgentId, AgentMessage, Mandate
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.mandate import Plan
 from app.schemas.room import RoomRun, RoomStatus, Verdict, VerdictAction
 from app.schemas.trade import OrderType, ProposedTrade, Side
-from app.services.fundamentals import fetch_live_fundamentals
+from app.services.fundamentals import fetch_fundamentals, fetch_live_fundamentals
 from app.services.journal_store import get_journal_store
 from app.services.market_data import get_market_data_provider
 from app.services.sharia_universe import default_halal_universe_async  # CR069 (import for the :1293 rewire)
@@ -375,6 +376,7 @@ def _profile_for_ticker(
     news_feed: NewsFeed | None = None,
     social_feed: SocialFeed | None = None,
     withheld: frozenset[AgentId] = frozenset(),
+    as_of: date | None = None,
 ) -> dict[str, Any]:
     """Ticker-flavoured profile for the Room.
 
@@ -413,7 +415,10 @@ def _profile_for_ticker(
     # other mid-render (D4 — UTC calendar date is the stated basis for all
     # three; a market date computed in local time would be off-by-one for
     # part of the trading day).
-    today = datetime.now(timezone.utc).date()
+    # CR164: an as-of Room run substitutes its historical date HERE, at the
+    # single anchor everything else hangs off — the fact sheet then states
+    # "as of {as_of}" and every relative-day phrase computes from it.
+    today = as_of or datetime.now(timezone.utc).date()
     # Per-field provenance (CR104/D1/D4): every numeric fact below is either
     # overlaid from a live source with its state recorded here as LIVE, or
     # left unset with its state recorded as UNAVAILABLE/WITHHELD_* —
@@ -467,7 +472,16 @@ def _profile_for_ticker(
     # keys yfinance actually supplied (fundamentals.py); a key it omitted
     # (e.g. no trailingPE for a loss-making name) now stays fully absent
     # from `profile` instead of surfacing the old rng value.
-    live = fetch_live_fundamentals(ticker) if settings.use_real_market_data else None
+    # CR164: the as-of branch goes through the dispatcher (EDGAR PIT path);
+    # the live branch keeps calling `fetch_live_fundamentals` BY NAME — it is
+    # a monkeypatch seam for a dozen test files, and the dispatcher would put
+    # a layer between the seam and the call.
+    if as_of is not None:
+        live = fetch_fundamentals(ticker, as_of)
+    elif settings.use_real_market_data:
+        live = fetch_live_fundamentals(ticker)
+    else:
+        live = None
     for f in _FUNDAMENTALS_NUMERIC_FIELDS:
         if live and f in live:
             profile[f] = live[f]
@@ -2789,8 +2803,20 @@ class RoomRunner:
         char_delay_max: float = _CHAR_DELAY_MAX,
         agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
         on_complete: Callable[[UUID], Awaitable[None]] | None = None,
+        backtest: AsOfContext | None = None,
     ) -> UUID:
         """Start a room run as a detached background task. Returns run_id immediately.
+
+        CR164 `backtest`: an as-of context puts the ENTIRE run into historical
+        mode — the data layer serves only facts knowable on `backtest.as_of`
+        (ContextVar, set around the pump task), the news/social probes are
+        skipped (UNAVAILABLE feeds, honest absence), and both dedup tiers are
+        bypassed (they exist to stop mobile-retry double-billing; a sweep
+        legitimately convenes one ticker at many dates). Idempotency moves to
+        `backtest_run_index`'s UNIQUE(batch_id, ticker, as_of) — a duplicate
+        (batch, ticker, as_of) raises here, loudly, BEFORE anything is charged.
+        Only the admin backtest endpoint constructs an AsOfContext; the public
+        Room API cannot reach this parameter.
 
         The run executes in a background asyncio.Task independent of the SSE
         connection — a client disconnect does not cancel the run. Events flow
@@ -2807,6 +2833,75 @@ class RoomRunner:
         the client was still connected.
         """
         key = (user_id, ticker.upper())
+
+        if backtest is not None:
+            run_id = uuid4()
+            # Idempotency gate FIRST — a driver retry of a completed
+            # (batch, ticker, as_of) pair must die here, before any charge.
+            # IntegrityError propagates loudly; the sweep driver skips on it.
+            with get_session() as session:
+                session.add(BacktestRunIndexRow(
+                    room_run_id=run_id,
+                    batch_id=backtest.batch_id,
+                    arm=backtest.arm,
+                    ticker=ticker.upper(),
+                    as_of=backtest.as_of,
+                ))
+            # Base charge through the real spend path (CR039 metering stays
+            # exercised); no live-data surcharge — both feeds are ablated.
+            _, charged_total = spend(user_id, None, reason=f"room:{ticker.upper()}:backtest")
+            news_feed = NewsFeed(LiveDataState.UNAVAILABLE, ())
+            social_feed = SocialFeed(LiveDataState.UNAVAILABLE, None)
+            roster = resolve_roster_for_user(user_id)
+            logger.info(
+                "backtest_run_starting",
+                run_id=str(run_id),
+                ticker=ticker,
+                as_of=backtest.as_of.isoformat(),
+                batch_id=backtest.batch_id,
+                dedup_bypassed=True,
+                feeds_ablated=True,
+            )
+            q: asyncio.Queue[RoomEvent | None] = asyncio.Queue()
+            self._active_queues[run_id] = q
+
+            async def _pump_backtest() -> None:
+                try:
+                    with asof_scope(backtest):
+                        async for ev in self.run(
+                            run_id=run_id,
+                            user_id=user_id,
+                            ticker=ticker,
+                            mandate=mandate,
+                            portfolio_value=portfolio_value,
+                            current_drawdown_pct=current_drawdown_pct,
+                            char_delay_min=char_delay_min,
+                            char_delay_max=char_delay_max,
+                            agent_timeout_s=agent_timeout_s,
+                            news_feed=news_feed,
+                            social_feed=social_feed,
+                            credit_cost=charged_total,
+                            roster=roster,
+                            backtest=backtest,
+                        ):
+                            await q.put(ev)
+                except Exception as exc:
+                    await q.put(RoomEvent(kind="error", run_id=run_id, text=str(exc)[:300]))
+                finally:
+                    await q.put(None)
+                    self._active_queues.pop(run_id, None)
+                    if on_complete is not None:
+                        try:
+                            await on_complete(run_id)
+                        except Exception as exc:
+                            logger.warning(
+                                "room_on_complete_failed",
+                                run_id=str(run_id),
+                                error=str(exc)[:200],
+                            )
+
+            asyncio.create_task(_pump_backtest())
+            return run_id
 
         # Dedup tier 1 — in-flight run (in-memory first, DB fallback).
         # In-memory catches the create_task → first INSERT race; DB fallback
@@ -2952,6 +3047,7 @@ class RoomRunner:
         social_feed: SocialFeed | None = None,
         credit_cost: int | None = None,
         roster: AnalystRoster | None = None,
+        backtest: AsOfContext | None = None,
     ) -> AsyncIterator[RoomEvent]:
         """Run a Room session, yielding events as agents speak.
 
@@ -3121,6 +3217,10 @@ class RoomRunner:
             news_feed=news_feed,
             social_feed=social_feed,
             withheld=frozenset(roster.withheld),
+            # CR164 — explicit beside the ContextVar (belt and braces): the
+            # date anchor and the PIT fundamentals fetch take the parameter;
+            # provider reads under this call ride the inherited context.
+            as_of=backtest.as_of if backtest is not None else None,
         )
         ctx = _RoomContext(
             ticker=ticker.upper(),

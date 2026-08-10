@@ -21,6 +21,7 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Date,
     DateTime,
@@ -1267,6 +1268,17 @@ class PriceHistoryDailyRow(Base):
     date: Mapped[date] = mapped_column(Date, nullable=False)
     close: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
     adj_close: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+    # CR164 — full OHLCV on the same adjusted basis as `adj_close` (the
+    # provider serves auto_adjust=True bars, so o/h/l are adjusted too).
+    # Nullable: pre-CR164 rows carry closes only. The as-of provider treats a
+    # window containing any NULL-volume row as OHLCV-incomplete and serves
+    # nothing rather than a half-real technicals input; target/stop-hit
+    # scoring needs the daily high/low, backfilled by
+    # `scripts/backfill_price_history.py`.
+    open: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    high: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    low: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    volume: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
     source: Mapped[str] = mapped_column(String, nullable=False)
     fetched_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
@@ -1538,5 +1550,130 @@ class CareerEventRow(Base):
     # Only set on reason='finish_stipend' rows — see the partial index above.
     period_key: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
+class EdgarFactRow(Base):
+    """One point-in-time XBRL fact from SEC EDGAR companyfacts (CR164).
+
+    Production infrastructure, not a backtest-prefixed side table: this is the
+    app's only filed-date-keyed fundamentals source, usable wherever a
+    "knowable on date D" guarantee matters. `filed` is the leakage key — an
+    as-of resolver may only read facts `filed <= as_of`; `period_end` says
+    what period the value describes. Amendments (10-K/A) arrive as later
+    `filed` rows for the same period and win by filed-ordering, never by
+    overwrite — the table is append-only per accession.
+    """
+
+    __tablename__ = "edgar_facts"
+    __table_args__ = (
+        UniqueConstraint(
+            "cik", "taxonomy", "tag", "unit", "period_end", "filed", "accession_no",
+            name="uq_edgar_fact_identity",
+        ),
+        Index("ix_edgar_facts_ticker_tag_filed", "ticker", "tag", "filed"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    cik: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    ticker: Mapped[str] = mapped_column(String, nullable=False)
+    taxonomy: Mapped[str] = mapped_column(String, nullable=False)  # us-gaap | dei
+    tag: Mapped[str] = mapped_column(String, nullable=False)
+    unit: Mapped[str] = mapped_column(String, nullable=False)  # USD | shares | USD/shares
+    value: Mapped[float] = mapped_column(Numeric(20, 4), nullable=False)
+    period_start: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    period_end: Mapped[date] = mapped_column(Date, nullable=False)
+    fy: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    fp: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # FY | Q1..Q4
+    form: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    filed: Mapped[date] = mapped_column(Date, nullable=False)
+    accession_no: Mapped[str] = mapped_column(String, nullable=False)
+    ingested_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
+class NewsArchiveRow(Base):
+    """Reserved store for point-in-time news (CR164) — EMPTY in v1.
+
+    Created with the CR164 schema so a later historical-news arm (Alpha
+    Vantage NEWS_SENTIMENT `time_from`/`time_to`, GDELT) ingests without a
+    migration. `published_at` is the as-of cutoff key. No production code
+    reads this table yet; the v1 backtest runs the News analyst ablated.
+    """
+
+    __tablename__ = "news_archive"
+    __table_args__ = (
+        UniqueConstraint(
+            "ticker", "source", "url", "published_at", name="uq_news_archive_item",
+        ),
+        Index("ix_news_archive_ticker_pub", "ticker", "published_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    ticker: Mapped[str] = mapped_column(String, nullable=False)
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    source: Mapped[str] = mapped_column(String, nullable=False)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    publisher: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    summary: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    sentiment_score: Mapped[Optional[float]] = mapped_column(Numeric(6, 4), nullable=True)
+    raw: Mapped[Optional[dict]] = mapped_column(JsonB(), nullable=True)
+    ingested_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
+class BacktestRunIndexRow(Base):
+    """Harness bookkeeping: one row per backtest Room run (CR164).
+
+    Joins `room_runs.id` (no FK, per `portfolio_nav_daily` precedent — the
+    index must survive a room_runs archive/prune). The unique constraint IS
+    the sweep's idempotency mechanism: the runner's dedup tiers are bypassed
+    under an as-of context (they exist to stop mobile-retry double-billing),
+    so a driver retry of a completed (batch, ticker, as_of) pair fails here
+    loudly and the driver skips. Scoring joins through this table, and
+    real-user analytics exclude anything present in it.
+    """
+
+    __tablename__ = "backtest_run_index"
+    __table_args__ = (
+        UniqueConstraint("batch_id", "ticker", "as_of", name="uq_backtest_run"),
+        Index("ix_backtest_run_batch", "batch_id"),
+    )
+
+    room_run_id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True)
+    batch_id: Mapped[str] = mapped_column(String, nullable=False)
+    arm: Mapped[str] = mapped_column(String, nullable=False)
+    ticker: Mapped[str] = mapped_column(String, nullable=False)
+    as_of: Mapped[date] = mapped_column(Date, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
+class BacktestUniverseMembershipRow(Base):
+    """The survivorship audit (CR164): per (universe, ticker), when the name
+    was actually tradeable in the backtest window and why it is excluded when
+    it is. `tickers_150.txt` was screened 2026-07 from live names — using it
+    at earlier as-of dates embeds survivorship unless membership is audited
+    and the exclusion counts are published verbatim with every report.
+    """
+
+    __tablename__ = "backtest_universe_membership"
+    __table_args__ = (
+        UniqueConstraint("universe_id", "ticker", name="uq_backtest_universe"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    universe_id: Mapped[str] = mapped_column(String, nullable=False)
+    ticker: Mapped[str] = mapped_column(String, nullable=False)
+    eligible_from: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    eligible_to: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    # listed_after_asof | delisted_in_window | insufficient_candles | NULL (clean)
+    exclusion_reason: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    noted_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
