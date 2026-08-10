@@ -142,6 +142,45 @@ def test_resolve_instant_refuses_stale_balance() -> None:
     ) is None
 
 
+def test_quarterly_series_differences_cumulative_ytd_facts() -> None:
+    """The shape most filers actually use: one fiscal-year start, four
+    cumulative period_ends (91/183/273/364 days). Keeping only quarter-length
+    spans found ONE quarter per year and zeroed every TTM-derived field on the
+    CR164 pilot — so consecutive YTD facts must be differenced."""
+    facts = [
+        _q(date(2025, 7, 1), date(2025, 9, 30), 21.0, date(2025, 10, 24)),   # Q1
+        _q(date(2025, 7, 1), date(2025, 12, 31), 44.0, date(2026, 1, 23)),   # H1
+        _q(date(2025, 7, 1), date(2026, 3, 31), 66.0, date(2026, 4, 24)),    # 9M
+        _q(date(2025, 7, 1), date(2026, 6, 30), 90.0, date(2026, 8, 4)),     # FY
+    ]
+    series = edgar_pit.quarterly_series(facts, ("Revenues",))
+    assert [round(v, 2) for _, _, v in series] == [21.0, 23.0, 22.0, 24.0]
+    assert [e for _, e, _ in series] == [
+        date(2025, 9, 30), date(2025, 12, 31), date(2026, 3, 31), date(2026, 6, 30),
+    ]
+    assert edgar_pit.ttm(series, date(2026, 8, 15)) == pytest.approx(90.0)
+
+
+def test_quarterly_series_drops_a_gap_rather_than_calling_it_a_quarter() -> None:
+    # Q1 then 9M with H1 missing: the difference spans ~182 days and must not
+    # be passed off as a quarter.
+    facts = [
+        _q(date(2025, 7, 1), date(2025, 9, 30), 21.0, date(2025, 10, 24)),
+        _q(date(2025, 7, 1), date(2026, 3, 31), 66.0, date(2026, 4, 24)),
+    ]
+    series = edgar_pit.quarterly_series(facts, ("Revenues",))
+    assert [round(v, 2) for _, _, v in series] == [21.0]
+
+
+def test_quarterly_series_keeps_genuinely_discrete_quarters() -> None:
+    facts = [
+        _q(date(2025, 1, 1), date(2025, 3, 31), 10.0, date(2025, 5, 1)),
+        _q(date(2025, 4, 1), date(2025, 6, 30), 11.0, date(2025, 8, 1)),
+    ]
+    series = edgar_pit.quarterly_series(facts, ("Revenues",))
+    assert [round(v, 2) for _, _, v in series] == [10.0, 11.0]
+
+
 def test_quarterly_series_derives_q4_from_fy() -> None:
     facts = [
         _q(date(2024, 1, 1), date(2024, 3, 31), 10.0, date(2024, 5, 1)),

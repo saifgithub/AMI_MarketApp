@@ -111,54 +111,78 @@ def resolve_instant(
 def quarterly_series(
     facts: Sequence[_FactView], tags: Sequence[str],
 ) -> list[tuple[date, date, float]]:
-    """Deduped quarterly duration facts for the first tag with any, ascending
-    by period_end. Per (period_start, period_end), the latest-filed value wins.
+    """Discrete quarters for the first tag that has any, ascending by period_end.
 
-    Where a fiscal year has an annual duration fact and exactly three known
-    quarters inside it, the missing quarter is DERIVED as FY − (Q1+Q2+Q3) —
-    the standard companyfacts gap (many filers tag Q4 only inside the 10-K's
-    annual figure).
+    **Most filers do not report discrete quarters.** They report CUMULATIVE
+    year-to-date durations sharing one fiscal-year start: P&G's `Revenues`
+    arrives as (2025-07-01 → 09-30) 91d, (→ 12-31) 183d, (→ 03-31) 273d,
+    (→ 06-30) 364d. Measured on the CR164 pilot corpus, keeping only
+    quarter-length spans found exactly ONE quarter per fiscal year, so every
+    TTM failed and P/E, P/S, FCF yield, EV/EBITDA and dividend yield resolved
+    at 0% across 25 tickers.
+
+    So: bucket the facts by `period_start`, sort each bucket by `period_end`,
+    and difference consecutive entries — the first entry of a bucket is
+    already discrete, each later one becomes (previous end + 1 day → its own
+    end) with value `v_n − v_{n-1}`. That subsumes the old FY − (Q1+Q2+Q3)
+    Q4 derivation and also handles filers who genuinely report discrete
+    quarters (each lands in its own single-entry bucket).
+
+    Only quarter-length results survive: a gap in the YTD chain produces a
+    half-year-long difference, which is dropped rather than passed off as a
+    quarter. Per (period_start, period_end) the latest-filed value wins, so a
+    10-K/A restatement supersedes the original before any differencing.
     """
     tag = next((t for t in tags if any(f.tag == t for f in facts)), None)
     if tag is None:
         return []
-    mine = [f for f in facts if f.tag == tag and f.period_start is not None]
-
-    def _span(f: _FactView) -> int:
-        return (f.period_end - f.period_start).days
 
     by_period: dict[tuple[date, date], _FactView] = {}
-    for f in mine:
-        if not (_QUARTER_SPAN[0] <= _span(f) <= _QUARTER_SPAN[1]):
+    for f in facts:
+        if f.tag != tag or f.period_start is None:
             continue
         key = (f.period_start, f.period_end)
         if key not in by_period or f.filed > by_period[key].filed:
             by_period[key] = f
-    quarters = {k: v.value for k, v in by_period.items()}
 
-    annuals: dict[tuple[date, date], _FactView] = {}
-    for f in mine:
-        if not (_ANNUAL_SPAN[0] <= _span(f) <= _ANNUAL_SPAN[1]):
+    buckets: dict[date, list[_FactView]] = {}
+    for f in by_period.values():
+        buckets.setdefault(f.period_start, []).append(f)
+
+    quarters: dict[tuple[date, date], float] = {}
+    for start, group in buckets.items():
+        group.sort(key=lambda f: f.period_end)
+        prev_end, prev_value = None, 0.0
+        for f in group:
+            q_start = start if prev_end is None else prev_end + timedelta(days=1)
+            q_value = f.value - prev_value
+            span = (f.period_end - q_start).days
+            if _QUARTER_SPAN[0] <= span <= _QUARTER_SPAN[1]:
+                quarters[(q_start, f.period_end)] = q_value
+            prev_end, prev_value = f.period_end, f.value
+
+    # The other real shape: three DISCRETE quarters (each with its own start,
+    # so each sits in its own bucket and differencing has nothing to chain)
+    # plus a fiscal-year total. Q4 = FY − (Q1+Q2+Q3). Skipped automatically
+    # when differencing already produced the tail quarter, since `inside`
+    # then holds four.
+    for f in by_period.values():
+        fy_span = (f.period_end - f.period_start).days
+        if not (_ANNUAL_SPAN[0] <= fy_span <= _ANNUAL_SPAN[1]):
             continue
-        key = (f.period_start, f.period_end)
-        if key not in annuals or f.filed > annuals[key].filed:
-            annuals[key] = f
-
-    for (fy_start, fy_end), fy_fact in annuals.items():
         inside = {
             (s, e): v for (s, e), v in quarters.items()
-            if s >= fy_start - timedelta(days=10) and e <= fy_end + timedelta(days=10)
+            if s >= f.period_start - timedelta(days=10)
+            and e <= f.period_end + timedelta(days=10)
         }
         if len(inside) != 3:
             continue
         covered_ends = sorted(e for (_, e) in inside)
-        if any(abs((e - fy_end).days) <= 10 for e in covered_ends):
-            # The missing quarter is not the last one — deriving a mid-year
-            # quarter from FY − 3 others is the same arithmetic but a rarer
-            # gap shape; keep v1 to the standard Q4 case.
-            continue
-        derived_start = max(covered_ends) + timedelta(days=1)
-        quarters[(derived_start, fy_end)] = fy_fact.value - sum(inside.values())
+        if any(abs((e - f.period_end).days) <= 10 for e in covered_ends):
+            continue  # the gap is mid-year, a rarer shape than v1 handles
+        quarters[(max(covered_ends) + timedelta(days=1), f.period_end)] = (
+            f.value - sum(inside.values())
+        )
 
     return sorted(
         [(s, e, v) for (s, e), v in quarters.items()], key=lambda item: item[1]
@@ -275,7 +299,21 @@ def fetch_pit_fundamentals(ticker: str, as_of: date) -> dict[str, Any] | None:
     ttm_ni = ttm(ni_series, as_of)
     ttm_rev = ttm(rev_series, as_of)
 
+    # Share count for the market-cap basis. The dei cover-page fact is
+    # preferred (a point-in-time count), but it does not resolve for every
+    # filer at every as-of date — 3 of 27 pilot pairs, and each miss zeroes
+    # FIVE downstream fields at once (P/E, P/S, FCF yield, EV/EBITDA,
+    # dividend yield). The us-gaap weighted-average diluted count is the
+    # honest fallback: a period average rather than a point count, so it is
+    # tried second, never blended.
     shares = resolve_instant(facts, edgar_tags.SHARES_OUTSTANDING_DEI, as_of)
+    shares_basis = "dei_cover_page"
+    if not shares or shares <= 0:
+        diluted = quarterly_series(facts, edgar_tags.DILUTED_SHARES)
+        eligible = [v for _, e, v in diluted if e <= as_of]
+        if eligible:
+            shares = eligible[-1]
+            shares_basis = "weighted_average_diluted"
     market_cap = price * shares if shares and shares > 0 else None
 
     if ttm_ni is not None and ttm_ni > 0 and shares and shares > 0:
@@ -331,5 +369,6 @@ def fetch_pit_fundamentals(ticker: str, as_of: date) -> dict[str, Any] | None:
         as_of=as_of.isoformat(),
         fields=sorted(k for k in out if k not in ("support", "breakout", "week52_range_live")),
         facts_loaded=len(facts),
+        shares_basis=shares_basis if market_cap is not None else "unresolved",
     )
     return out

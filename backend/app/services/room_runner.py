@@ -42,7 +42,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from app.agents.safety_floor import (
     CONTEXT_NOT_SUPPLIED,
@@ -2849,7 +2849,27 @@ class RoomRunner:
                 ))
             # Base charge through the real spend path (CR039 metering stays
             # exercised); no live-data surcharge — both feeds are ablated.
-            _, charged_total = spend(user_id, None, reason=f"room:{ticker.upper()}:backtest")
+            #
+            # A failed charge must UNDO the index row. The gate is written
+            # first so a duplicate pair dies before spending anything, but
+            # that ordering means a 402 would otherwise leave the pair
+            # indexed-but-never-run: the sweep tops up credits, retries, and
+            # gets 409 from its own orphan — the pair is silently lost for
+            # the life of the batch. Observed once in the CR164 pilot
+            # (PLD@2025-12-05), which is exactly one convene of evidence that
+            # this is not theoretical.
+            try:
+                _, charged_total = spend(
+                    user_id, None, reason=f"room:{ticker.upper()}:backtest",
+                )
+            except Exception:
+                with get_session() as session:
+                    session.execute(
+                        delete(BacktestRunIndexRow).where(
+                            BacktestRunIndexRow.room_run_id == run_id
+                        )
+                    )
+                raise
             news_feed = NewsFeed(LiveDataState.UNAVAILABLE, ())
             social_feed = SocialFeed(LiveDataState.UNAVAILABLE, None)
             roster = resolve_roster_for_user(user_id)

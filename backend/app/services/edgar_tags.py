@@ -28,6 +28,11 @@ OPERATING_INCOME = ("OperatingIncomeLoss",)
 DEPRECIATION_AMORTIZATION = (
     "DepreciationDepletionAndAmortization",
     "DepreciationAndAmortization",
+    # Measured on the CR164 pilot corpus: 7 of 18 EV/EBITDA gaps were a D&A
+    # tag variant, not a missing disclosure.
+    "DepreciationAmortizationAndAccretionNet",
+    "DepreciationDepletionAndAmortizationIncludingDiscontinuedOperations",
+    "DepreciationNonproduction",
 )
 DIVIDENDS_PAID_COMMON = (
     "PaymentsOfDividendsCommonStock",
