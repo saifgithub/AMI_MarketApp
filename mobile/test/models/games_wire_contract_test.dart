@@ -112,6 +112,23 @@ const _liveQueuedOrder = <String, dynamic>{
   'est_notional': 500.01,
   'est_fee': 1.0,
   'est_total': 501.01,
+  // Added 2026-08-10 when the list started carrying refusals too. Explicit
+  // on every row so the client never has to infer which kind it is holding.
+  'state': 'queued',
+};
+
+/// Verbatim shape of a REFUSED row from the same endpoint — an order the
+/// open would not take. Before this, `list_queued_orders` filtered to
+/// `state == "queued"` and the row simply vanished overnight: some orders
+/// filled, some gone, and nothing anywhere saying which or why.
+const _liveRefusedOrder = <String, dynamic>{
+  'id': '9f1a0c33-1111-4444-8888-aaaabbbbcccc',
+  'ticker': 'BAC',
+  'side': 'buy',
+  'quantity': 7.5323,
+  'queued_at': '2026-08-10T02:11:04.120031+00:00',
+  'state': 'refused',
+  'cancel_reason': r'insufficient cash: need $476.82, have $12.00',
 };
 
 /// Verbatim from `GET /v1/games/runs/{run_id}` on Alpha, 2026-08-10, with
@@ -163,6 +180,25 @@ void main() {
       expect(o.estTotal, 501.01);
       expect(o.estFee, 1.0);
       expect(o.estimateIsLive, isTrue);
+    });
+
+    test('a queued row declares its state rather than implying it', () {
+      final o = GameQueuedOrder.fromJson(_liveQueuedOrder);
+      expect(o.state, 'queued');
+      expect(o.isRefused, isFalse);
+    });
+
+    test('a refused row carries WHY, and is not mistaken for pending', () {
+      final o = GameQueuedOrder.fromJson(_liveRefusedOrder);
+      expect(o.isRefused, isTrue);
+      expect(
+        o.cancelReason,
+        contains('insufficient cash'),
+        reason: 'the server already knows exactly why; dropping the reason is '
+            'what turned a refusal into a disappearance',
+      );
+      expect(o.ticker, 'BAC');
+      expect(o.quantity, 7.5323);
     });
 
     test('a mock_walk estimate is not live', () {
