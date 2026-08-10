@@ -25,8 +25,10 @@ The average household lagged by ~1.5 points; the most active traders lagged by
 trace the bulk of the shortfall to transaction costs, and the *cause* of the
 transaction costs to overconfidence — a behavioural finding, not a skill finding.
 
-The critical decomposition: their gross stock selection was roughly a wash. **The
-losses came from trading, not from picking.**
+The critical decomposition, confirmed directly in the club paper's Figure 1
+(M4 below): **individual investors' gross return was 18.7% against the index
+fund's 18.0%.** Their selection was fine — better than the index. **The losses came
+entirely from trading, not from picking.**
 
 **Barber, Lee, Liu & Odean (2009), *Just How Much Do Individual Investors Lose by
 Trading?*** — the complete trading history of every investor in Taiwan
@@ -93,17 +95,35 @@ belief-updating**, which is arguably more useful for an education product:
 ## M4 · Process quality — **the finding that interrogates our premise**
 
 **Barber & Odean, *Too Many Cooks Spoil the Profits: The Performance of Investment
-Clubs*** (Financial Analysts Journal) **[P-abstract]** — 166 investment clubs at
-the same discount broker, 1991–1997:
+Clubs*** (Financial Analysts Journal) **[P — read direct]** — 166 investment clubs
+at the same discount broker, **February 1991 – January 1997**. Figure 1,
+annualised geometric mean:
 
-| Group | Annualised geometric mean return |
-|---|---|
-| Market index | **17.9%** |
-| Average *individual* investor | **16.4%** |
-| **Average investment club** | **14.1%** |
+| Group | Gross | Net |
+|---|---|---|
+| Index fund (S&P 500) | 18.0% | **17.8%** |
+| Average *individual* investor | **18.7%** | **16.4%** |
+| **Average investment club** | 17.0% | **14.1%** |
 
-**60% of clubs underperformed the index.** And the club average came in *below* the
-individual average.
+*(A value-weighted NYSE/Amex/Nasdaq index returned **17.9%** over the same period —
+that is the "market 17.9%" figure used throughout this study.)*
+
+**60% of clubs underperformed the index**, and the club average came in *below* the
+individual average. Clubs turned over 65% of their portfolio annually.
+
+The gross/net split is where the real story is, and it points two different ways:
+
+- **Individual investors' gross selection *beat* the index fund** — 18.7% against
+  18.0%. They picked well. They lost all of it, and then some, to costs.
+- **Clubs, unlike individuals, genuinely picked badly.** Their own-benchmark gross
+  abnormal return is **−0.106 pps/month, significant at the 5% level** (Table 2A) —
+  Barber & Odean's reading is that "the stocks clubs choose to buy perform worse
+  than the stocks they choose to sell." Net, clubs underperformed their own
+  beginning-of-year portfolio by **3.5 pps/year**, with Jensen's alpha at −4.8 pps
+  and the Fama-French intercept at −4.4 pps.
+
+**So the group didn't just trade more than the lone individual — it also selected
+worse.** Adding people degraded both halves of the job.
 
 Read that again in product terms. **A team of amateurs did worse than a lone
 amateur.** The very structure AMI Trade sells — "you now have a team of twelve
@@ -156,7 +176,8 @@ failure modes rather than cancelling them:
    measurable margin.** Retail loses by 1.5–6.5 points a year; day traders lose
    ~99% of the time. There is real room above that floor.
 2. **The gap is behavioural, not analytical.** Retail's stock selection is roughly
-   a wash; the losses come from overtrading, bad order placement, and the
+   *better than the index fund* (18.7% vs 18.0% gross); the losses come
+   entirely from overtrading, bad order placement, and the
    disposition effect. **The Room's plausible edge is in suppressing action, not in
    improving picks** — and note that a PASS-heavy Room (CR035: 37% APPROVE vs
    Street 63%) is *already* the behaviour this literature rewards.

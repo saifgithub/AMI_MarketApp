@@ -151,12 +151,20 @@ and label it accurately.
 
 ### 3a. Price targets — the head-to-head
 
+Sell-side baselines below are Bradshaw, Brown & Huang (2013), sample **2000–2009**.
+
 | Measure | Sell-side baseline | Par | Good | Exceptional | Room |
 |---|---|---|---|---|---|
-| 12-mo target met **at horizon end** | **38%** **[P]** | 33–43% | **≥48%** | ≥53% | *(empty)* |
-| 12-mo target met **at any point during** | **64%** **[P]** | 59–69% | **≥74%** | ≥79% | *(empty)* |
-| Mean absolute target error | **~45%** **[P]** | 40–50% | ≤35% | ≤25% | *(empty)* |
-| Target return vs actual (optimism bias) | **+15%** **[P]** | ±15% | ≤+8% | ≈0 | *(empty)* |
+| 12-mo target met **at horizon end** | **38%** **[S]** | 33–43% | **≥48%** | ≥53% | *(empty)* |
+| 12-mo target met **at any point during** | **64%** **[S]** | 59–69% | **≥74%** | ≥79% | *(empty)* |
+| Mean absolute target error | **~45%** **[S]** | 40–50% | ≤35% | ≤25% | *(empty)* |
+| Target return vs actual (optimism bias) | **+15%** **[S]** | ±15% | ≤+8% | ≈0 | *(empty)* |
+
+⚠️ **All four are [S] — secondary-sourced.** The published paper is auth-gated. The
+readable 2005 working paper reports **24–45%** met for its own sample, which
+contains 38% but is not the same claim. These are the numbers `06` tells you to aim
+at, so they are the ones most worth re-verifying by hand. See
+[`VERIFICATION.md`](VERIFICATION.md) §C1.
 
 Observations required:
 

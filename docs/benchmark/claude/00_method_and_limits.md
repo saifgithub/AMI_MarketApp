@@ -66,9 +66,10 @@ changes the whole study. C3 carries it, for three reasons:
    a hunch. That is the baseline we displace. C1 and C2 are reference points for how
    good this work *can* get; only C3 is what happens *without us*.
 2. **The gap is behavioural, not analytical** — and this is the substantive part.
-   Barber & Odean found retail's *gross stock selection is roughly a wash*. They
-   don't pick badly; they lose 1.5 points a year on average (6.5 in the most active
-   quintile) through overtrading, bad order placement and holding losers. **So the
+   Barber & Odean found individual investors' *gross* return was **18.7% against
+   the index fund's 18.0%** — their selection actually beat the index. They lose
+   1.5 points a year on average (6.5 in the most active quintile) through
+   overtrading, bad order placement and holding losers. **So the
    Room can beat this comparator with zero stock-picking edge**, purely by
    suppressing action — and CR035's 37% APPROVE rate against the Street's 63% is
    already the behaviour this literature rewards.

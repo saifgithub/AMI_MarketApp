@@ -56,7 +56,8 @@ copy it.
 
 **6. The honest comparator is not Wall Street. It's our users.** Retail investors
 lose 1.5 points a year on average, 6.5 for the most active — and they lose it
-through **overtrading, not bad picking**. Their gross selection is roughly a wash.
+through **overtrading, not bad picking** — their gross return actually beat the
+index fund, 18.7% to 18.0%, before costs ate it.
 **A Room that improves picking by zero and suppresses impulse trading would beat
 this comparator outright.** That is measurable, plausible, and requires no
 stock-picking edge at all.
@@ -95,6 +96,7 @@ does to everybody.
 | [`08_what_we_can_and_cannot_claim.md`](08_what_we_can_and_cannot_claim.md) | 🟢 safe externally / 🟡 teaching-only / 🔴 never. And the claim we *should* make. |
 | [`09_rejected_approaches.md`](09_rejected_approaches.md) | **Read before proposing a better benchmark.** Seven approaches evaluated and killed, with the pre-condition that would re-open each. R1 (risk-adjusted return via a portfolio-level Room) is the one most likely to be re-proposed. |
 | [`sources.md`](sources.md) | Every figure, with URL, marked **[P]** primary or **[S]** secondary. |
+| [`VERIFICATION.md`](VERIFICATION.md) | **What was actually read.** Audit of which findings were proved, which rest on secondary sources, and the one citation that was wrong. |
 
 ---
 
@@ -129,8 +131,12 @@ with [`07`](07_how_we_would_know.md) attached — not to mint a new CR.
   the Room will score. The only Room numbers quoted are CR035's and CR143's
   measured ones.
 - Figures marked **[S]** in `sources.md` come from multiple independent secondary
-  reports because several S&P PDFs return HTTP 403 to automated fetching.
+  reports because several source PDFs return HTTP 403 or are auth-gated.
   **Re-verify any [S] figure by hand before external use.**
+- **Two of the headline numbers are [S].** The SPIVA 10y/15y/20y figures, and the
+  38%/64% target-hit benchmark that `06` tells you to aim at. Both are consistently
+  reported across independent sources; neither was read from the primary document.
+  [`VERIFICATION.md`](VERIFICATION.md) records exactly what was and wasn't opened.
 - CR035's headline agreement numbers were measured on a Room with two since-fixed
   defects live. The corrected re-run is cited where it exists; the ablation arms
   were never re-run, which is why that is item 1 above.

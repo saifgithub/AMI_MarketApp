@@ -76,7 +76,8 @@ This is the section that justifies the whole document.
 ### Price targets
 
 **Bradshaw, Brown & Huang (2013), *Do sell-side analysts exhibit differential
-target price forecasting ability?*** (Review of Accounting Studies) **[P-abstract]**:
+target price forecasting ability?*** (Review of Accounting Studies 18(4)), sample
+**2000–2009** — **[S]**, see the caveat below:
 
 | Measure | Sell-side result |
 |---|---|
@@ -84,6 +85,16 @@ target price forecasting ability?*** (Review of Accounting Studies) **[P-abstrac
 | 12-month targets met **at some point during** the horizon | **64%** |
 | Mean absolute target price forecast error | **~45%** |
 | Implied target return vs actual return | targets exceed actuals by **~15%** on average |
+
+⚠️ **Source caveat — this is the study's most consequential number and its
+least-verified one.** The published paper is auth-gated; these figures are
+consistently reported across independent secondary sources but I have not read it.
+The **2005 preliminary working paper** (Bradshaw & Brown, two authors) *is* readable
+and reports something different for its own sample: *"On average, **24-45 percent**
+of analysts' target prices are met."* 38% sits inside that range, so the two are
+not in conflict — but do not cite the working paper as the source of 38%/64%.
+Full detail in [`VERIFICATION.md`](VERIFICATION.md) §C1. **Re-verify against the
+published paper before any external use.**
 
 Their explanation is incentive-structural and worth carrying: earnings-forecast
 accuracy is tracked by the market and feeds analyst compensation; **target price
