@@ -10,7 +10,7 @@
 #
 # (flutter#25485, open since 2018). Without VoiceOver actually running, the whole
 # app presents as one opaque FlutterView with an empty page source. So this build
-# passes --dart-define=AMI_QA_SEMANTICS=1, which makes main.dart call
+# passes --dart-define=AMI_QA_SEMANTICS=true, which makes main.dart call
 # SemanticsBinding.instance.ensureSemantics() and force the tree on.
 #
 # Android needs none of this — its accessibility tree is built as soon as a
@@ -66,12 +66,12 @@ APP_PATH="${MOBILE_DIR}/build/ios/iphonesimulator/Runner.app"
 echo "▶ QA iOS Simulator build (CR162)"
 echo "  simulator:  ${SIM_NAME}"
 echo "  alpha URL:  ${AMI_API_URL_ALPHA}"
-echo "  semantics:  AMI_QA_SEMANTICS=1  ← the whole point of this script"
+echo "  semantics:  AMI_QA_SEMANTICS=true  ← the whole point of this script"
 echo ""
 
 cd "${MOBILE_DIR}"
 flutter build ios --simulator --debug \
-  --dart-define=AMI_QA_SEMANTICS=1 \
+  --dart-define=AMI_QA_SEMANTICS=true \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
   --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
   --dart-define=AMI_API_URL_BETA="${AMI_API_URL_BETA}" \
@@ -91,17 +91,7 @@ if (( ! DO_INSTALL )); then
   exit 0
 fi
 
-UDID="$(xcrun simctl list devices available --json \
-  | python3 -c "
-import json,sys
-name=sys.argv[1]
-data=json.load(sys.stdin)['devices']
-hits=[d for ds in data.values() for d in ds if name.lower() in d['name'].lower()]
-if not hits:
-    sys.exit('no available simulator matching %r' % name)
-booted=[d for d in hits if d['state']=='Booted']
-print((booted or hits)[0]['udid'])
-" "${SIM_NAME}")"
+UDID="$("${PROJECT_ROOT}/scripts/resolve_sim_udid.py" "${SIM_NAME}")"
 
 echo "▶ simulator UDID: ${UDID}"
 xcrun simctl boot "${UDID}" 2>/dev/null || true   # already-booted exits non-zero

@@ -1,0 +1,11 @@
+{
+  "8b45935d4c23abcf": {
+    "detail": "A RenderFlex overflowed by 14 pixels on the right.",
+    "note": "",
+    "rule": "render_overflow",
+    "screen": "",
+    "status": "new",
+    "summary": "content is being clipped \u2014 the classic small-screen / long-translation defect",
+    "times_seen": 1
+  }
+}

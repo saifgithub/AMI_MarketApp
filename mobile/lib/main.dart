@@ -5,12 +5,15 @@
 /// no PII leaving the device. Set env via `--dart-define=AMI_ENV=prod`
 /// (default `local`).
 ///
-/// `--dart-define=AMI_QA_SEMANTICS=1` (CR162) forces the accessibility
-/// semantics tree on for the UAT harness. Off by default, so shipping
-/// TestFlight/Play builds behave exactly as before — see `_qaSemantics`.
+/// `--dart-define=AMI_QA_SEMANTICS=1` is the QA-build flag. It forces the
+/// accessibility semantics tree on for the UAT harness (CR162) and installs
+/// `QaErrorSink` so the autonomous crawler can read this run's Flutter errors
+/// (CR163). Off by default, so shipping TestFlight/Play builds behave exactly
+/// as before — see `_qaSemantics`.
 library;
 
 import 'package:ami_trade/app.dart';
+import 'package:ami_trade/qa/error_sink.dart';
 import 'package:ami_trade/services/notifications/onesignal_notification_service.dart';
 import 'package:ami_trade/state/notification_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -39,13 +42,26 @@ const _amiEnv = String.fromEnvironment('AMI_ENV', defaultValue: 'local');
 /// to be collected regardless of assistive tech. Gated so it is never on in a
 /// build a user receives — the handle is intentionally never disposed, because
 /// the QA build wants semantics up for its whole lifetime.
-const _qaSemantics = bool.fromEnvironment('AMI_QA_SEMANTICS');
+///
+/// Read as a STRING, not via `bool.fromEnvironment`. That constructor accepts
+/// only the exact literals 'true'/'false' — `--dart-define=AMI_QA_SEMANTICS=1`
+/// silently evaluates to **false**, which is precisely what happened: the flag
+/// was dead in every build for a day, and nothing said so because the iOS
+/// Simulator happens to expose the semantics tree anyway. A flag whose failure
+/// mode is "silently off" has no business being spelled the strict way.
+const _qaFlag = String.fromEnvironment('AMI_QA_SEMANTICS');
+const _qaSemantics =
+    _qaFlag == '1' || _qaFlag == 'true' || _qaFlag == 'yes' || _qaFlag == 'on';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (_qaSemantics) {
     SemanticsBinding.instance.ensureSemantics();
+    // CR163: record this run's Flutter errors where the crawler can read them.
+    // Installed BEFORE SentryFlutter.init below so Sentry's own handler chains
+    // to it rather than replacing it. Both observe; neither swallows.
+    await QaErrorSink.instance.install();
   }
 
   // Lock to portrait for the alpha — horizontal layouts come later

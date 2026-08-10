@@ -72,11 +72,14 @@ jobs:
         run: pip install --no-cache-dir -r requirements.txt
 
       # Only tests_offline/ — everything under tests/ needs a real device.
-      # These guard the CR162 platform dispatch, where being wrong is silent:
-      # ACCESSIBILITY_ID is correct for Flutter's Semantics(identifier:) on iOS
+      # Covers the CR162 locator dispatch, where being wrong is SILENT
+      # (ACCESSIBILITY_ID is right for Flutter's Semantics(identifier:) on iOS
       # and wrong on Android, and the failure looks exactly like "the element
-      # isn't on screen".
-      - name: Offline dispatch guards
+      # isn't on screen"); the locale table vs the live ARB (DEF250); and the
+      # crawler's pure logic (CR163) — including the destructive-control
+      # deny-list, which is all that stands between an autonomous crawler and
+      # tapping "delete" on a real Alpha account.
+      - name: Offline guards (dispatch, locales, crawler)
         working-directory: qa/appium
         run: python -m pytest tests_offline/ -v
 

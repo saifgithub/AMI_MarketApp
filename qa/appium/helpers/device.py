@@ -65,23 +65,38 @@ def resolve_ios_udid(name_fragment: str) -> str:
     except json.JSONDecodeError as exc:
         raise RuntimeError(f"could not parse `simctl list devices --json`: {raw[:200]!r}") from exc
 
-    candidates = [
+    everything = [
         device
         for devices in payload.get("devices", {}).values()
         for device in devices
-        if name_fragment.lower() in device.get("name", "").lower()
     ]
-    if not candidates:
-        available = sorted(
-            d.get("name", "?")
-            for devices in payload.get("devices", {}).values()
-            for d in devices
-        )
+    wanted = name_fragment.strip().lower()
+
+    # EXACT match first. Substring matching alone is ambiguous in a way that
+    # bites silently: "iPhone 17" is a substring of "iPhone 17 Pro" and
+    # "iPhone 17 Pro Max", so a plain `in` test picks a different device
+    # depending on which happens to be booted or listed first. A crawl then
+    # runs against a screen size the geometry constants were not calibrated
+    # for, and nothing says so.
+    exact = [d for d in everything if d.get("name", "").strip().lower() == wanted]
+    if exact:
+        booted = [d for d in exact if d.get("state") == "Booted"]
+        return (booted or exact)[0]["udid"]
+
+    partial = [d for d in everything if wanted in d.get("name", "").lower()]
+    if len(partial) == 1:
+        return partial[0]["udid"]
+    if len(partial) > 1:
         raise RuntimeError(
-            f"no available simulator matching {name_fragment!r}. Available: {available}"
+            f"{name_fragment!r} is ambiguous — it matches "
+            f"{sorted(d['name'] for d in partial)}. Name the device exactly "
+            f"(AMI_IOS_SIM_NAME / --sim) so runs are reproducible."
         )
-    booted = [d for d in candidates if d.get("state") == "Booted"]
-    return (booted or candidates)[0]["udid"]
+
+    raise RuntimeError(
+        f"no available simulator matching {name_fragment!r}. Available: "
+        f"{sorted(d.get('name', '?') for d in everything)}"
+    )
 
 
 def boot_ios(udid: str) -> None:

@@ -120,3 +120,4 @@ docs/forward_planning/*/prototype/.fonts/
 
 # audit watcher liveness stamps (runtime state, never committed)
 orchestration/audit/cr/.watch-*.hb
+qa/appium/_runs/

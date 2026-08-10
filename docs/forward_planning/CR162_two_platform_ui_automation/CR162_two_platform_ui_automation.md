@@ -184,7 +184,38 @@ tab smokes, and the locale matrix last.
 
 ## Results (measured 2026-08-10, iPhone 17 Simulator / iOS 26.5, Appium 3.6.0 + XCUITest 12.3.0)
 
-### The acceptance question is answered: yes
+### CORRECTION (2026-08-10, found during CR163) — what was actually proven
+
+This section originally claimed `ensureSemantics()` was proven to work. **It was not.**
+
+`--dart-define=AMI_QA_SEMANTICS=1` was read with `bool.fromEnvironment`, which accepts only
+the exact literals `'true'` / `'false'`. **`1` evaluates to `false`** (verified directly with
+`dart run --define`). So the gate was dead in every build made that day and
+`ensureSemantics()` never ran.
+
+Everything below still happened — the tree was populated, the identifiers resolved, the gate
+went green. But the cause was the **iOS Simulator**, which exposes the semantics tree without
+VoiceOver. flutter#25485 says as much in its own report: the problem reproduces on physical
+devices, not simulators.
+
+What that changes, precisely:
+
+- **The Simulator suite is unaffected and remains valid.** Identifiers resolve there with or
+  without the flag, so the green gate, the 4.81s runtime and the DEF249 findings all stand.
+- **`ensureSemantics()` is untested.** It is retained because it is correct in principle and
+  costs nothing, but nothing here demonstrates it works. Since real-device iOS is out of
+  scope (store-only distribution), there is no longer a path on which to test it.
+- **The flag is now load-bearing for a different reason** — CR163's error sink genuinely
+  depends on it, which is what surfaced this: a missing sink file is a hard failure, whereas
+  a dead semantics flag produced no symptom at all.
+- **The parse is fixed** (`main.dart` reads it as a string and accepts `1`/`true`/`yes`/`on`)
+  and pinned by `mobile/test/qa/qa_flag_parsing_test.dart`.
+
+The lesson is the reusable part: a flag whose failure mode is *silently off* was spelled the
+strict way, and the feature that depended on it happened to work anyway. It took a second
+feature depending on the same flag — one that failed loudly — to reveal it.
+
+### The gate passes, and identifiers resolve on iOS
 
 With `--dart-define=AMI_QA_SEMANTICS=1`, the app presents a fully populated accessibility
 tree to XCUITest — **48 element nodes** carrying real content, not one opaque `FlutterView`:
