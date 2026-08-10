@@ -474,6 +474,12 @@ class GameTradeQuote {
   /// missing one is a player believing they hold something they do not.
   bool get mayQueue => willQueue != false;
 
+  /// Whether [price] came from the live feed rather than the fallback walk.
+  /// Same rule as [GameNavPoint.isLive] and [GameRunDetail.marksAreLive] —
+  /// a simulated price may never be drawn as a real one (CR040).
+  bool get priceIsLive =>
+      !priceSource.startsWith('mock') && priceSource != 'stale';
+
   factory GameTradeQuote.fromJson(Map<String, dynamic> j) => GameTradeQuote(
         ticker: j['ticker'] as String? ?? '',
         side: j['side'] as String? ?? 'buy',

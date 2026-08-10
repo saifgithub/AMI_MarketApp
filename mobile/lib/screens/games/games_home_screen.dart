@@ -166,9 +166,16 @@ class _StateBLiveRun extends StatelessWidget {
                   '$sign${twr.toStringAsFixed(2)}%',
                   style: AmiTypography.statBig.copyWith(color: twrColor),
                 ),
-                Text(l.gamesTwrLabel, style: AmiTypography.caption),
-                const SizedBox(height: AmiSpacing.m),
-                const GamesQueueNote(),
+                Row(
+                  children: [
+                    Text(l.gamesTwrLabel, style: AmiTypography.caption),
+                    const SizedBox(width: AmiSpacing.xs),
+                    // Behind the ⓘ here too. This card is seen on every visit
+                    // to the game, so a paragraph that never changes is the
+                    // definition of copy that stops being read.
+                    const GamesQueueInfoIcon(),
+                  ],
+                ),
                 const SizedBox(height: AmiSpacing.m),
                 Row(
                   children: [

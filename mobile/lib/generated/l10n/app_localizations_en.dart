@@ -537,6 +537,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get gamesQueueInfoTitle => 'When does this fill?';
+
+  @override
+  String get gamesQueueInfoTooltip => 'When does this fill?';
+
+  @override
+  String get gamesQueueInfoDismiss => 'Got it';
+
+  @override
+  String get gamesTicketPricePerShare => 'PRICE PER SHARE';
+
+  @override
+  String get gamesTicketPriceAsOfLive =>
+      'Last live price. Fills at the next open, which will differ.';
+
+  @override
+  String get gamesTicketPriceSimulated =>
+      'Simulated price — the live feed is unavailable.';
+
+  @override
   String get gamesTicketPlacing => 'placing…';
 
   @override

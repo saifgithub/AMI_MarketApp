@@ -136,14 +136,33 @@ void main() {
     await tester.tap(find.text('25%'));
     await tester.pumpAndSettle();
 
-    // The confirm card itself surfaces the queue-first note because the
-    // quote says will_queue.
+    // The queue-first rule is no longer standing copy. It printed as a
+    // three-line paragraph at the top of the sheet AND again on the confirm
+    // card — twice on one ticket, unchanged every time, which is how a rule
+    // becomes wallpaper. Saiful, on build 76: "does not need to be displayed
+    // all the time." It now lives behind a ⓘ, one tap away, same string.
     expect(
       find.textContaining('queues for the next open'),
-      findsWidgets,
-      reason: 'the queue-first note is the top-of-ticket copy AND the '
-          "confirm card's when will_queue is true — both present",
+      findsNothing,
+      reason: 'standing copy, not a state — it belongs behind the info icon',
     );
+    expect(find.byIcon(Icons.info_outline), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.info_outline));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('queues for the next open'),
+      findsOneWidget,
+      reason: 'hidden by default is not the same as deleted — for a first-'
+          'time player this is the single most surprising thing the game does',
+    );
+    await tester.tap(find.text('Got it'));
+    await tester.pumpAndSettle();
+
+    // And the per-share price is on the card, because a share count and a
+    // total with nothing to check them against is not a quote.
+    expect(find.text('PRICE PER SHARE'), findsOneWidget);
+    expect(find.text('\$180.00'), findsOneWidget);
 
     // The ticket grew a cash header and a 1–100% size slider, so the button
     // now sits below an 800x600 test surface. Scroll to it rather than

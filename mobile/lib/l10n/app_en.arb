@@ -477,6 +477,30 @@
             "count": {"type": "int", "example": "3"}
         }
     },
+    "gamesQueueInfoTitle": "When does this fill?",
+    "@gamesQueueInfoTitle": {
+        "description": "CR109. Title of the dialog behind the ⓘ icon on the trade ticket, which explains the queue-first rule. Phrased as the question the player is actually asking. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesQueueInfoTooltip": "When does this fill?",
+    "@gamesQueueInfoTooltip": {
+        "description": "CR109 a11y. Screen-reader label for the ⓘ icon that opens the queue-first explanation. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesQueueInfoDismiss": "Got it",
+    "@gamesQueueInfoDismiss": {
+        "description": "CR109. Dismiss action on the queue-first explanation dialog. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesTicketPricePerShare": "PRICE PER SHARE",
+    "@gamesTicketPricePerShare": {
+        "description": "CR109. Label on the confirm card for the per-share price the quote came back with. Saiful, on build 76: 'We need the price per unit.' Without it the card showed a share count and a total with no way to check either — the one number a trader reads first. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesTicketPriceAsOfLive": "Last live price. Fills at the next open, which will differ.",
+    "@gamesTicketPriceAsOfLive": {
+        "description": "CR109 CR040. Under the per-share price on the confirm card when the order will QUEUE: the price shown is the last live one, not the price the order gets. Saying so is what stops the quote reading as a promise. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesTicketPriceSimulated": "Simulated price — the live feed is unavailable.",
+    "@gamesTicketPriceSimulated": {
+        "description": "CR109 CR040. Replaces the price provenance line when the quote came from the mock walk rather than the live feed. Degrade loudly: a simulated price must never be presented as a real one. NEW key. retranslate:[ar,ms]"
+    },
     "gamesTicketPlacing": "placing…",
     "@gamesTicketPlacing": {
         "description": "CR109 slice 2. Busy-state label on the trade ticket's confirm button while the trade request is in flight. Rendered upper-cased by the caller. NEW key. retranslate:[ar,ms]"

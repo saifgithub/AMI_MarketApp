@@ -970,6 +970,42 @@ abstract class AppLocalizations {
   /// **'{amount} paid in trading costs · {count, plural, =1{1 trade} other{{count} trades}}'**
   String gamesRunFeesPaid(String amount, int count);
 
+  /// CR109. Title of the dialog behind the ⓘ icon on the trade ticket, which explains the queue-first rule. Phrased as the question the player is actually asking. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'When does this fill?'**
+  String get gamesQueueInfoTitle;
+
+  /// CR109 a11y. Screen-reader label for the ⓘ icon that opens the queue-first explanation. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'When does this fill?'**
+  String get gamesQueueInfoTooltip;
+
+  /// CR109. Dismiss action on the queue-first explanation dialog. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get gamesQueueInfoDismiss;
+
+  /// CR109. Label on the confirm card for the per-share price the quote came back with. Saiful, on build 76: 'We need the price per unit.' Without it the card showed a share count and a total with no way to check either — the one number a trader reads first. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'PRICE PER SHARE'**
+  String get gamesTicketPricePerShare;
+
+  /// CR109 CR040. Under the per-share price on the confirm card when the order will QUEUE: the price shown is the last live one, not the price the order gets. Saying so is what stops the quote reading as a promise. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Last live price. Fills at the next open, which will differ.'**
+  String get gamesTicketPriceAsOfLive;
+
+  /// CR109 CR040. Replaces the price provenance line when the quote came from the mock walk rather than the live feed. Degrade loudly: a simulated price must never be presented as a real one. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Simulated price — the live feed is unavailable.'**
+  String get gamesTicketPriceSimulated;
+
   /// CR109 slice 2. Busy-state label on the trade ticket's confirm button while the trade request is in flight. Rendered upper-cased by the caller. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

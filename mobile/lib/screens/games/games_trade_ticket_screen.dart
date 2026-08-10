@@ -83,13 +83,23 @@ class _GamesTradeTicketScreenState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              l.gamesTicketHeading,
-              style: AmiTypography.labelMono
-                  .copyWith(color: AmiColors.hexGreen),
+            // The queue-first rule used to print as a three-line paragraph
+            // here AND again on the confirm card — twice on one ticket.
+            // Standing copy that never changes stops being read, so it is now
+            // one tap away behind the ⓘ rather than permanently occupying the
+            // top of the sheet. Same string, same widget file: one source of
+            // copy, two presentations, so they cannot drift.
+            Row(
+              children: [
+                Text(
+                  l.gamesTicketHeading,
+                  style: AmiTypography.labelMono
+                      .copyWith(color: AmiColors.hexGreen),
+                ),
+                const SizedBox(width: AmiSpacing.xs),
+                const GamesQueueInfoIcon(),
+              ],
             ),
-            const SizedBox(height: AmiSpacing.m),
-            const GamesQueueNote(),
             const SizedBox(height: AmiSpacing.l),
 
             // What you are sizing AGAINST, before you size anything. This
@@ -456,12 +466,30 @@ class _ConfirmCardState extends ConsumerState<_ConfirmCard> {
         children: [
           // A modeled-cost / book-% mirror surface (CR134 §21): colour-
           // neutral, no amber — measurement, never a scold.
+          // Price per share leads. Saiful, on build 76: *"We need the price
+          // per unit."* The card showed a share count and a total cost with
+          // nothing to check either against — and it is the first number a
+          // trader reads, because it is the only one that says whether the
+          // trade is a good idea.
+          _row(l.gamesTicketPricePerShare, '\$${_money(q.price)}'),
           _row(l.gamesTicketShares, q.shares.toStringAsFixed(4)),
           _row(l.gamesTicketEstFee, '\$${q.estFee.toStringAsFixed(2)}'),
           _row(l.gamesTicketBookPct, '${q.bookPercentage.toStringAsFixed(1)}%'),
-          if (q.mayQueue) ...[
-            const SizedBox(height: AmiSpacing.s),
-            const GamesQueueNote(),
+          // What that price IS. A quote on a queued order is the last live
+          // price, not the price the order will get — and if the feed fell
+          // through to the mock walk it is not even that. One line, and only
+          // when there is something to say: a price that will fill at itself,
+          // from a live feed, needs no caveat.
+          if (!q.priceIsLive || q.mayQueue) ...[
+            const SizedBox(height: AmiSpacing.xs),
+            Text(
+              q.priceIsLive
+                  ? l.gamesTicketPriceAsOfLive
+                  : l.gamesTicketPriceSimulated,
+              style: AmiTypography.caption.copyWith(
+                color: q.priceIsLive ? AmiColors.textLow : AmiColors.hexAmber,
+              ),
+            ),
           ],
           const SizedBox(height: AmiSpacing.m),
           SizedBox(
