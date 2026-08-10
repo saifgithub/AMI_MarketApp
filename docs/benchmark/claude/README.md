@@ -93,6 +93,7 @@ does to everybody.
 | [`06_expectation_bands.md`](06_expectation_bands.md) | **The deliverable.** Per metric × horizon: human baseline, par/good/exceptional, n required. |
 | [`07_how_we_would_know.md`](07_how_we_would_know.md) | Measurement notes → input to CR157. Controls, estimators, the power gate, sequencing. |
 | [`08_what_we_can_and_cannot_claim.md`](08_what_we_can_and_cannot_claim.md) | 🟢 safe externally / 🟡 teaching-only / 🔴 never. And the claim we *should* make. |
+| [`09_rejected_approaches.md`](09_rejected_approaches.md) | **Read before proposing a better benchmark.** Seven approaches evaluated and killed, with the pre-condition that would re-open each. R1 (risk-adjusted return via a portfolio-level Room) is the one most likely to be re-proposed. |
 | [`sources.md`](sources.md) | Every figure, with URL, marked **[P]** primary or **[S]** secondary. |
 
 ---

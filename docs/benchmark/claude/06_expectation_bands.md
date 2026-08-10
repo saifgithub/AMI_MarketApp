@@ -120,6 +120,13 @@ Room's risk-adjusted return is distinguishable from zero would take **15 to 40
 years of uninterrupted track record** — on a fixed prompt generation, which per
 `07` §1 we do not hold stable for even a quarter.
 
+⚠️ Those years are **computed here from Lo's standard-error formula, not quoted
+from the paper**, and cross-checked against its exact monthly-frequency form
+(t = 1.95 for SR = 0.5 over 15.37 years). The approximation assumes **IID
+returns**, which real strategies violate — serial correlation and fat tails both
+inflate the true standard error. **So the table is optimistic**; the real
+requirement is longer, not shorter.
+
 **2. We would be measuring our own design choices.** Once the universe, weights and
 rebalance rule are fixed, those decisions drive most of the realized risk-adjusted
 return; security selection is the smaller term. We would build the whole apparatus

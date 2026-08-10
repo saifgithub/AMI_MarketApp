@@ -45,12 +45,37 @@ claim lives.
 
 ## 3. The four comparators
 
-| # | Population | Why it's here | Outcome data |
+**They are not four attempts at the same question.** Each answers a different one,
+and conflating their roles is how "benchmark the Room against humans" turns into an
+unfalsifiable argument.
+
+| # | Population | **Its job** | Outcome data |
 |---|---|---|---|
-| C1 | **Active fund managers** | The professional ceiling. If they can't, nobody can. | Excellent (SPIVA, CRSP) |
-| C2 | **Sell-side research teams** | Structurally closest to the Room: a team, one ticker, a rating + a target. | Excellent (I/B/E/S) |
-| C3 | **Retail investors & investment clubs** | Who our users actually are. The load-bearing comparator. | Good (Barber & Odean) |
-| C4 | **Student / CFA competition teams** | Who our users are *becoming*. | Almost none — process only |
+| C1 | **Active fund managers** | The **ceiling** — proves "beat the market" is unreachable, so we stop aiming there | Excellent (SPIVA, CRSP) |
+| C2 | **Sell-side research teams** | The **task match** — same deliverable (rating + target on one ticker), so the only real head-to-head | Excellent (I/B/E/S) |
+| C3 | **Retail investors & clubs** | The **counterfactual** — what the user does *instead of* using us | Good (Barber & Odean) |
+| C4 | **Student / CFA teams** | The **rubric** — how the profession grades work it can't wait a decade to judge | Almost none — process only |
+
+### Why C3 is the load-bearing one
+
+"Benchmark against a team of humans" leaves *which* humans open, and the answer
+changes the whole study. C3 carries it, for three reasons:
+
+1. **It is the actual alternative.** A user who doesn't open AMI Trade does not go
+   hire a semiconductor research desk. They buy something on their phone, alone, on
+   a hunch. That is the baseline we displace. C1 and C2 are reference points for how
+   good this work *can* get; only C3 is what happens *without us*.
+2. **The gap is behavioural, not analytical** — and this is the substantive part.
+   Barber & Odean found retail's *gross stock selection is roughly a wash*. They
+   don't pick badly; they lose 1.5 points a year on average (6.5 in the most active
+   quintile) through overtrading, bad order placement and holding losers. **So the
+   Room can beat this comparator with zero stock-picking edge**, purely by
+   suppressing action — and CR035's 37% APPROVE rate against the Street's 63% is
+   already the behaviour this literature rewards.
+3. **A large gap needs a small sample.** Retail's deficit is measurable at feasible
+   n. The sell-side's net edge is ≈ zero (`02`), so "beats Wall Street" is
+   unmeasurable at any sample size we will ever hold — quite apart from being
+   unsayable (`08`).
 
 Each of `01`–`04` takes one population and works all four metrics through it.
 
