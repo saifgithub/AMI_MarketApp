@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse
 
 from app.api.admin import router as admin_router
 from app.api.alpaca import router as alpaca_router
+from app.api.backtest_admin import router as backtest_admin_router
 from app.api.ai_coach import router as ai_coach_router
 from app.api.auth import router as auth_router
 from app.api.billing import router as billing_router
@@ -387,6 +388,7 @@ app.add_middleware(
 
 # Routers
 app.include_router(admin_router)
+app.include_router(backtest_admin_router)  # CR164 — admin-only as-of Room runs
 app.include_router(alpaca_router)
 app.include_router(ai_coach_router)
 app.include_router(auth_router)
