@@ -391,13 +391,37 @@ def test_an_envelope_at_both_ends_is_stripped_at_both_ends():
     assert "STANCE" not in body
 
 
-def test_a_stance_line_mid_argument_is_prose_not_the_machine_channel():
-    """The search stays bounded to the first and last non-blank lines. An agent
-    quoting the format mid-paragraph is writing prose about it."""
+def test_a_stance_line_mid_argument_is_the_machine_channel_after_all():
+    """REVERSED by DEF247, and the reversal is the finding.
+
+    This test used to assert the opposite — that the search stays bounded to the
+    first and last non-blank lines, because "an agent quoting the format
+    mid-paragraph is writing prose about it". That was a hypothesis, and the
+    corpus does not support it. Of 11,057 stored agent turns, 57 carry a
+    line-anchored `STANCE:` past the first line; 15 of those sit genuinely
+    mid-turn, and **all 15 are the machine channel**, every one of them preceded
+    by exactly one conversational opener the model wrote despite the prompt:
+
+        I'd argue for wait
+        [STANCE: against | CONVICTION: high | HEADLINE: 0% profit margin]
+
+    Not one is an agent discussing the format. So the bound was protecting a
+    shape that has never occurred while leaking a shape that occurs at a
+    measurable rate — 3 of 9 debator turns on the 2026-08-09 batch, and
+    instances back to 2026-07-29, well before DEF243 touched these prompts.
+
+    The concern the old test encoded is real and is not dropped: prose must not
+    be eaten. It is now carried by the fixture that actually exercises it —
+    `test_only_a_trailing_envelope_is_read` above, and DEF247's own
+    `test_a_bracketed_aside_inside_a_sentence_is_still_prose` — because an aside
+    inside a sentence is not a line that opens with `STANCE:`, and it is
+    `_STANCE_LINE_RE`'s anchor, not the position bound, that always kept it out.
+    """
     text = "First.\n[STANCE: for | CONVICTION: high | HEADLINE: quoted]\nLast."
     body, env = parse_stance_envelope(text)
-    assert env.stance is None
-    assert body == text
+    assert env.stance == "for"
+    assert "STANCE" not in body
+    assert body == "First.\nLast."
 
 
 def test_the_prompt_asks_for_the_envelope_first_not_last():

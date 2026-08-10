@@ -1894,6 +1894,9 @@ def _annotate_direction_against_price(
 # accepted on read, because the model drifts and a tail we refuse to recognise
 # is a leak by construction; it is simply no longer what the prompt asks for.
 # When both positions carry one, the front wins — that is the instructed slot.
+# DEF247: and the strip is not positional at all. Position was the last thing
+# still coupling STRIP to PARSE, and a single opener line ahead of the envelope
+# was enough to defeat both at once. Where it sits is now only a log line.
 #
 # Precision-biased throughout, unchanged: every unrecognised token yields
 # `None`, and `None` reaches the pixel as "did not state a view". Nothing here
@@ -1951,25 +1954,50 @@ def parse_stance_envelope(text: str) -> tuple[str, _StanceEnvelope]:
     if not filled:
         return text, _StanceEnvelope()
 
-    # Only the first and last non-blank lines are candidates. The envelope is
-    # never mid-turn, and bounding the search is what keeps a bracketed aside
-    # in the middle of an argument from being eaten as a machine channel.
-    found: list[int] = []
-    for i in (filled[0], filled[-1]):
-        if i not in found and _STANCE_LINE_RE.match(lines[i]):
-            found.append(i)
+    # DEF247: every line the locator matches is a candidate, wherever it sits.
+    # This bound used to be the first and last non-blank lines, on the premise
+    # that the envelope is never mid-turn. It is: the model writes a one-line
+    # conversational opener ahead of it — "I'd argue for smaller sizing" — which
+    # displaces the envelope off the front while real prose runs past it off the
+    # back, so neither end matched, `_STANCE_TAIL_RE` is `\Z`-anchored and did
+    # not either, and the turn came back untouched. 3 of 9 debator turns on the
+    # 2026-08-09 post-promotion batch: raw machine syntax on the user's screen
+    # AND a null stance — the exact pair DEF147 split these two jobs to prevent,
+    # re-coupled through position rather than through a shared regex.
+    #
+    # Nothing is lost by widening it. The bracketed aside the old bound was
+    # protecting is protected by `_STANCE_LINE_RE` itself, which is anchored at
+    # the start of a line: an aside inside a sentence is not a line that opens
+    # with `STANCE:`, so it was never a candidate at any position.
+    found = [i for i in filled if _STANCE_LINE_RE.match(lines[i])]
 
     if found:
+        # Front wins, unchanged — that is the slot the prompt names (DEF147).
         envelope = lines[found[0]]
         body = "\n".join(line for i, line in enumerate(lines) if i not in found)
-        if len(found) > 1 and lines[found[0]].strip() != lines[found[-1]].strip():
-            # Both ends carry one and they disagree. Both are stripped either
-            # way; this says which the user is being shown, and is the signal
-            # that the prompt's position instruction is not landing.
+        # Removing an interior line leaves the blank lines that flanked it back
+        # to back; the user reads that as a hole in the argument.
+        body = re.sub(r"\n{3,}", "\n\n", body)
+        if len({lines[i].strip() for i in found}) > 1:
+            # More than one, and they disagree. All are stripped either way;
+            # this says which the user is being shown, and is the signal that
+            # the prompt's position instruction is not landing.
             logger.warning(
                 "room_stance_envelope_conflict",
                 front=lines[found[0]].strip()[:120],
                 tail=lines[found[-1]].strip()[:120],
+            )
+        if found[0] != filled[0]:
+            # Its own key, deliberately. The fix above makes this shape harmless
+            # to the user, and a harmless failure that stops being counted is how
+            # a 30% instruction-following rate becomes invisible — the reason
+            # DEF147 decoupled these jobs rather than papering over one with the
+            # other. This is the emission rate, still measurable after the leak
+            # is closed, and it is evidence for CR143's model arm.
+            logger.warning(
+                "room_stance_envelope_displaced",
+                opener=lines[filled[0]].strip()[:120],
+                envelope=lines[found[0]].strip()[:120],
             )
     else:
         match = _STANCE_TAIL_RE.search(text)
