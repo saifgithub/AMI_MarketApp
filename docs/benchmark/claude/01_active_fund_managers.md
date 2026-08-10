@@ -111,10 +111,44 @@ close to absent: among top-quartile domestic equity funds as of December 2020,
 editions found **zero** large-, mid- or multi-cap funds holding top-quartile status
 across five years **[S]**.
 
-That is worse than chance would predict. Random reshuffling of quartiles would
-leave 0.25⁴ ≈ **0.4%** of funds top-quartile four years running — a small number,
-but not zero. Observed persistence undershooting the random baseline is consistent
-with mean-reversion plus fee drag plus the size penalty from Berk-Green.
+> ⚠️ **Corrected 2026-08-10 — this passage previously claimed the result was "worse
+> than chance would predict." That was a statistical error.** Random reshuffling
+> leaves 0.25⁴ ≈ **0.39%** of funds top-quartile four years running — about **one
+> fund in a cohort of 250**. Observing zero is therefore *consistent with* chance,
+> not below it. P(zero survivors) under pure chance is **0.38 at N=250** and **0.14
+> at N=500**; a cohort would need to exceed **766** funds before zero was surprising
+> at p<.05. The cohort size is not stated in the source, so the comparison cannot be
+> made at all.
+>
+> **The defensible claim** is the weaker and more useful one: *past quartile rank
+> carries no detectable information about future quartile rank.* Do not say
+> "worse than chance."
+
+### The strongest counter-argument — and it is serious
+
+**Berk & van Binsbergen (2015), *Measuring Skill in the Mutual Fund Industry***,
+JFE 118(1) **[P — abstract + intro read direct]**, argue the whole net-alpha framing
+measures the wrong quantity. Per Berk-Green, net alpha is set in equilibrium by
+*competition between investors* chasing a good manager, not by the manager's
+ability — so net alpha near zero is what you expect **whether or not skill exists**.
+
+Measuring instead the dollars a fund extracts from markets, they find the average
+fund adds about **$3.2M/year**, and that cross-sectional differences in value added
+**persist for as long as 10 years**. Their words: they "find it hard to reconcile
+[the] findings with anything other than the existence of money management skill."
+
+**This does not contradict SPIVA — it answers a different question.** SPIVA asks
+*did the investor beat the index after fees* (overwhelmingly no). Berk & van
+Binsbergen ask *did the manager extract value from the market* (often yes,
+persistently). Held together they say something sharper than either alone:
+**skill is real and is captured by the manager and the fund rather than delivered
+to the client** — which is exactly the Fama-French/Berk-Green synthesis two
+paragraphs above, now with a persistence result attached.
+
+**Consequence for this study:** the persistence finding above is narrower than it
+first reads. *Net-return quartile rank* does not persist. *Dollar value added*, on
+this evidence, does. Any claim we make about "persistence is absent in this
+population" must specify which measure.
 
 > **Expectation this sets.** *"Was good last period"* has close to zero predictive
 > value for *"will be good next period"* in this population. Applied to us: a good
