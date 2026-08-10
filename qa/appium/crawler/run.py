@@ -121,13 +121,27 @@ def main(argv: list[str]) -> int:
     driver = new_driver(profile)
     findings: list[dict] = []
     result = CrawlResult()
+    onboarding_gap: str | None = None
     try:
         # A fresh install lands on the Concierge interview, where the bottom nav
         # does not exist yet — so every root identifier fails to resolve and the
         # crawl explores exactly nothing. The first real run did precisely that
-        # and reported "screens 0", correctly but uselessly. Cheap no-op once
-        # onboarding has completed, thanks to noReset=True.
-        ensure_onboarded(driver)
+        # and reported "screens 0", correctly but uselessly.
+        #
+        # A FAILED walk must not abort the crawl, though. The interview is
+        # itself app surface worth exploring, and on a fresh install it is the
+        # ONLY surface a user sees first — aborting here would mean the one
+        # screen every user hits is the one screen never crawled. Record the
+        # gap, then crawl whatever is actually on screen.
+        try:
+            ensure_onboarded(driver)
+        except Exception as exc:
+            onboarding_gap = str(exc)
+            result.errors.append(
+                f"could not reach the shell ({exc}) — crawling from wherever the "
+                f"app is instead. Tab roots will not resolve, so this run covers "
+                f"the pre-shell surface only."
+            )
 
         window = driver.get_window_size()
         bottom_y, _measured = device_helpers.obstructed_bottom_y(
@@ -150,7 +164,8 @@ def main(argv: list[str]) -> int:
                 findings.append(f)
 
         explorer = Explorer(driver, budget_s=args.budget, max_depth=args.depth, on_screen=on_screen)
-        result = explorer.crawl(roots=list(NAV_IDS.values()))
+        roots = [] if onboarding_gap else list(NAV_IDS.values())
+        result = explorer.crawl(roots=roots)
     finally:
         # Always quit: a leaked session wedges the next run, which is how three
         # runs in a row got attributed to the app rather than to the harness.

@@ -129,9 +129,14 @@ class Explorer:
 
     # -- navigation -------------------------------------------------------
 
-    def _replay(self, root: str, path: list[str]) -> bool:
+    def _replay(self, root: str | None, path: list[str]) -> bool:
         """Return to a screen by walking to it again. False if the path no
         longer resolves — that branch is then abandoned, not retried."""
+        if root is None:
+            # No navigable root — we are crawling in place. Nothing to replay,
+            # and claiming success is correct: we ARE on the only screen we can
+            # be on.
+            return True
         try:
             by_id(self.driver, root).click()
             time.sleep(self.settle_s)
@@ -159,8 +164,13 @@ class Explorer:
         """
         deadline = time.monotonic() + self.budget_s
 
-        # (root identifier, path of labels from that root)
-        frontier: list[tuple[str, list[str]]] = [(root, []) for root in roots]
+        # (root identifier, path of labels from that root). An empty `roots`
+        # means the shell was never reached (fresh install parked on onboarding):
+        # crawl the current screen in place, with `None` as the root so _replay
+        # knows there is nowhere to navigate back to.
+        frontier: list[tuple[str, list[str]]] = (
+            [(root, []) for root in roots] if roots else [(None, [])]
+        )
         tapped: dict[str, set[str]] = {}
 
         depth = 0
