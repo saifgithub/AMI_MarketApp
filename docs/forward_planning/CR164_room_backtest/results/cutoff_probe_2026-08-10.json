@@ -1,0 +1,2243 @@
+{
+  "probed_at": "2026-08-10",
+  "model": "ami-llm",
+  "vllm_base_url": "http://192.168.20.74:8000",
+  "criteria": {
+    "err_threshold": 0.1,
+    "refusal_threshold": 0.5,
+    "margin_days": 56
+  },
+  "collapse_month": "2024-08",
+  "baseline_event_recall": 1.0,
+  "last_known_event": "2025-01",
+  "window_start": "2025-02-28",
+  "per_month": [
+    {
+      "month": "2023-09",
+      "median_rel_err": 0.0267,
+      "refusal_rate": 0.0,
+      "n": 6,
+      "failing": false
+    },
+    {
+      "month": "2023-10",
+      "median_rel_err": 0.1037,
+      "refusal_rate": 0.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2023-11",
+      "median_rel_err": 0.0024,
+      "refusal_rate": 0.0,
+      "n": 6,
+      "failing": false
+    },
+    {
+      "month": "2023-12",
+      "median_rel_err": 0.0018,
+      "refusal_rate": 0.0,
+      "n": 6,
+      "failing": false
+    },
+    {
+      "month": "2024-01",
+      "median_rel_err": 0.0235,
+      "refusal_rate": 0.0,
+      "n": 6,
+      "failing": false
+    },
+    {
+      "month": "2024-02",
+      "median_rel_err": 0.0171,
+      "refusal_rate": 0.17,
+      "n": 6,
+      "failing": false
+    },
+    {
+      "month": "2024-03",
+      "median_rel_err": 0.012,
+      "refusal_rate": 0.0,
+      "n": 6,
+      "failing": false
+    },
+    {
+      "month": "2024-04",
+      "median_rel_err": 0.1287,
+      "refusal_rate": 0.17,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2024-05",
+      "median_rel_err": 0.0423,
+      "refusal_rate": 0.17,
+      "n": 6,
+      "failing": false
+    },
+    {
+      "month": "2024-06",
+      "median_rel_err": 0.0152,
+      "refusal_rate": 0.5,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2024-07",
+      "median_rel_err": 0.0313,
+      "refusal_rate": 0.33,
+      "n": 6,
+      "failing": false
+    },
+    {
+      "month": "2024-08",
+      "median_rel_err": 0.0069,
+      "refusal_rate": 0.67,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2024-09",
+      "median_rel_err": 0.0214,
+      "refusal_rate": 0.83,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2024-10",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2024-11",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2024-12",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2025-01",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2025-02",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2025-03",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2025-04",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2025-05",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2025-06",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2025-07",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2025-08",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2025-09",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2025-10",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2025-11",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2025-12",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2026-01",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2026-02",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2026-03",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2026-04",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2026-05",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2026-06",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    },
+    {
+      "month": "2026-07",
+      "median_rel_err": null,
+      "refusal_rate": 1.0,
+      "n": 6,
+      "failing": true
+    }
+  ],
+  "events": [
+    {
+      "key": "svb_collapse",
+      "category": "baseline",
+      "truth": "2023-03",
+      "answered": "2023-03",
+      "correct": true,
+      "raw": "2023-03"
+    },
+    {
+      "key": "btc_etf",
+      "category": "baseline",
+      "truth": "2024-01",
+      "answered": "2024-01",
+      "correct": true,
+      "raw": "2024-01"
+    },
+    {
+      "key": "nvda_split",
+      "category": "baseline",
+      "truth": "2024-06",
+      "answered": "2024-06",
+      "correct": true,
+      "raw": "2024-06"
+    },
+    {
+      "key": "crowdstrike",
+      "category": "baseline",
+      "truth": "2024-07",
+      "answered": "2024-07",
+      "correct": true,
+      "raw": "2024-07"
+    },
+    {
+      "key": "fed_sep24_cut",
+      "category": "boundary",
+      "truth": "2024-09",
+      "answered": null,
+      "correct": false,
+      "raw": "UNKNOWN"
+    },
+    {
+      "key": "us_election_winner",
+      "category": "boundary",
+      "truth": "2024-11",
+      "answered": "2024-11",
+      "correct": true,
+      "raw": "2024-11"
+    },
+    {
+      "key": "fed_dec24_cut",
+      "category": "boundary",
+      "truth": "2024-12",
+      "answered": null,
+      "correct": false,
+      "raw": "UNKNOWN"
+    },
+    {
+      "key": "deepseek_r1",
+      "category": "boundary",
+      "truth": "2025-01",
+      "answered": "2025-01",
+      "correct": true,
+      "raw": "2025-01"
+    },
+    {
+      "key": "liberation_day",
+      "category": "boundary",
+      "truth": "2025-04",
+      "answered": null,
+      "correct": false,
+      "raw": "UNKNOWN"
+    },
+    {
+      "key": "circle_ipo",
+      "category": "boundary",
+      "truth": "2025-06",
+      "answered": null,
+      "correct": false,
+      "raw": "UNKNOWN"
+    },
+    {
+      "key": "figma_ipo",
+      "category": "boundary",
+      "truth": "2025-07",
+      "answered": null,
+      "correct": false,
+      "raw": "UNKNOWN"
+    }
+  ],
+  "records": [
+    {
+      "ticker": "SPY",
+      "year": 2023,
+      "month": 9,
+      "actual": 427.48,
+      "estimate": 428.5,
+      "rel_err": 0.0024,
+      "raw": "428.50"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2023,
+      "month": 9,
+      "actual": 358.27,
+      "estimate": 385.0,
+      "rel_err": 0.0746,
+      "raw": "385.00"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2023,
+      "month": 9,
+      "actual": 171.21,
+      "estimate": 171.5,
+      "rel_err": 0.0017,
+      "raw": "171.5"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2023,
+      "month": 9,
+      "actual": 43.5,
+      "estimate": 467.2,
+      "rel_err": 9.7405,
+      "raw": "467.2"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2023,
+      "month": 9,
+      "actual": 315.75,
+      "estimate": 315.74,
+      "rel_err": 0.0,
+      "raw": "315.74"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2023,
+      "month": 9,
+      "actual": 250.22,
+      "estimate": 237.49,
+      "rel_err": 0.0509,
+      "raw": "237.49"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2023,
+      "month": 10,
+      "actual": 418.2,
+      "estimate": 433.5,
+      "rel_err": 0.0366,
+      "raw": "433.50"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2023,
+      "month": 10,
+      "actual": 350.87,
+      "estimate": 388.5,
+      "rel_err": 0.1072,
+      "raw": "388.50"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2023,
+      "month": 10,
+      "actual": 170.77,
+      "estimate": 170.77,
+      "rel_err": 0.0,
+      "raw": "170.77"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2023,
+      "month": 10,
+      "actual": 40.78,
+      "estimate": 467.2,
+      "rel_err": 10.4566,
+      "raw": "467.20"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2023,
+      "month": 10,
+      "actual": 338.11,
+      "estimate": 372.0,
+      "rel_err": 0.1002,
+      "raw": "372.00"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2023,
+      "month": 10,
+      "actual": 200.84,
+      "estimate": 242.68,
+      "rel_err": 0.2083,
+      "raw": "242.68"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2023,
+      "month": 11,
+      "actual": 456.4,
+      "estimate": 455.73,
+      "rel_err": 0.0015,
+      "raw": "455.73"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2023,
+      "month": 11,
+      "actual": 388.83,
+      "estimate": 387.5,
+      "rel_err": 0.0034,
+      "raw": "387.50"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2023,
+      "month": 11,
+      "actual": 189.95,
+      "estimate": 189.95,
+      "rel_err": 0.0,
+      "raw": "189.95"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2023,
+      "month": 11,
+      "actual": 46.77,
+      "estimate": 467.2,
+      "rel_err": 8.9893,
+      "raw": "467.2"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2023,
+      "month": 11,
+      "actual": 378.91,
+      "estimate": 369.67,
+      "rel_err": 0.0244,
+      "raw": "369.67"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2023,
+      "month": 11,
+      "actual": 240.08,
+      "estimate": 239.74,
+      "rel_err": 0.0014,
+      "raw": "239.74"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2023,
+      "month": 12,
+      "actual": 475.31,
+      "estimate": 473.65,
+      "rel_err": 0.0035,
+      "raw": "473.65"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2023,
+      "month": 12,
+      "actual": 409.52,
+      "estimate": 375.0,
+      "rel_err": 0.0843,
+      "raw": "375.00"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2023,
+      "month": 12,
+      "actual": 192.53,
+      "estimate": 192.53,
+      "rel_err": 0.0,
+      "raw": "192.53"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2023,
+      "month": 12,
+      "actual": 49.52,
+      "estimate": 492.22,
+      "rel_err": 8.9394,
+      "raw": "492.22"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2023,
+      "month": 12,
+      "actual": 376.04,
+      "estimate": 376.04,
+      "rel_err": 0.0,
+      "raw": "376.04"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2023,
+      "month": 12,
+      "actual": 248.48,
+      "estimate": 248.48,
+      "rel_err": 0.0,
+      "raw": "248.48"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2024,
+      "month": 1,
+      "actual": 482.88,
+      "estimate": 575.28,
+      "rel_err": 0.1914,
+      "raw": "575.28"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2024,
+      "month": 1,
+      "actual": 416.97,
+      "estimate": 491.88,
+      "rel_err": 0.1797,
+      "raw": "491.88"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2024,
+      "month": 1,
+      "actual": 184.4,
+      "estimate": 185.59,
+      "rel_err": 0.0065,
+      "raw": "185.59"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2024,
+      "month": 1,
+      "actual": 61.53,
+      "estimate": 61.12,
+      "rel_err": 0.0066,
+      "raw": "61.12"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2024,
+      "month": 1,
+      "actual": 397.58,
+      "estimate": 413.63,
+      "rel_err": 0.0404,
+      "raw": "413.63"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2024,
+      "month": 1,
+      "actual": 187.29,
+      "estimate": 188.14,
+      "rel_err": 0.0045,
+      "raw": "188.14"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2024,
+      "month": 2,
+      "actual": 508.08,
+      "estimate": 510.5,
+      "rel_err": 0.0048,
+      "raw": "510.50"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2024,
+      "month": 2,
+      "actual": 439.0,
+      "estimate": 405.5,
+      "rel_err": 0.0763,
+      "raw": "405.50"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2024,
+      "month": 2,
+      "actual": 180.75,
+      "estimate": 180.75,
+      "rel_err": 0.0,
+      "raw": "180.75"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2024,
+      "month": 2,
+      "actual": 79.11,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2024,
+      "month": 2,
+      "actual": 413.64,
+      "estimate": 420.72,
+      "rel_err": 0.0171,
+      "raw": "420.72"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2024,
+      "month": 2,
+      "actual": 201.88,
+      "estimate": 175.79,
+      "rel_err": 0.1292,
+      "raw": "175.79"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2024,
+      "month": 3,
+      "actual": 523.07,
+      "estimate": 515.5,
+      "rel_err": 0.0145,
+      "raw": "515.50"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2024,
+      "month": 3,
+      "actual": 444.01,
+      "estimate": 496.5,
+      "rel_err": 0.1182,
+      "raw": "496.5"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2024,
+      "month": 3,
+      "actual": 171.48,
+      "estimate": 171.48,
+      "rel_err": 0.0,
+      "raw": "171.48"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2024,
+      "month": 3,
+      "actual": 90.36,
+      "estimate": 137.13,
+      "rel_err": 0.5177,
+      "raw": "137.13"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2024,
+      "month": 3,
+      "actual": 420.72,
+      "estimate": 420.72,
+      "rel_err": 0.0,
+      "raw": "420.72"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2024,
+      "month": 3,
+      "actual": 175.79,
+      "estimate": 177.48,
+      "rel_err": 0.0096,
+      "raw": "177.48"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2024,
+      "month": 4,
+      "actual": 501.98,
+      "estimate": 515.5,
+      "rel_err": 0.0269,
+      "raw": "515.50"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2024,
+      "month": 4,
+      "actual": 424.59,
+      "estimate": 498.5,
+      "rel_err": 0.1741,
+      "raw": "498.50"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2024,
+      "month": 4,
+      "actual": 170.33,
+      "estimate": 192.25,
+      "rel_err": 0.1287,
+      "raw": "192.25"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2024,
+      "month": 4,
+      "actual": 86.4,
+      "estimate": 137.36,
+      "rel_err": 0.5898,
+      "raw": "137.36"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2024,
+      "month": 4,
+      "actual": 389.33,
+      "estimate": 420.72,
+      "rel_err": 0.0806,
+      "raw": "420.72"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2024,
+      "month": 4,
+      "actual": 183.28,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2024,
+      "month": 5,
+      "actual": 527.37,
+      "estimate": 530.0,
+      "rel_err": 0.005,
+      "raw": "530.00"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2024,
+      "month": 5,
+      "actual": 450.71,
+      "estimate": 498.5,
+      "rel_err": 0.106,
+      "raw": "498.50"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2024,
+      "month": 5,
+      "actual": 192.25,
+      "estimate": 192.25,
+      "rel_err": 0.0,
+      "raw": "192.25"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2024,
+      "month": 5,
+      "actual": 109.63,
+      "estimate": 120.65,
+      "rel_err": 0.1005,
+      "raw": "120.65"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2024,
+      "month": 5,
+      "actual": 415.13,
+      "estimate": 432.68,
+      "rel_err": 0.0423,
+      "raw": "432.68"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2024,
+      "month": 5,
+      "actual": 178.08,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2024,
+      "month": 6,
+      "actual": 544.22,
+      "estimate": 552.5,
+      "rel_err": 0.0152,
+      "raw": "552.50"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2024,
+      "month": 6,
+      "actual": 479.11,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2024,
+      "month": 6,
+      "actual": 210.62,
+      "estimate": 213.25,
+      "rel_err": 0.0125,
+      "raw": "213.25"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2024,
+      "month": 6,
+      "actual": 123.54,
+      "estimate": 120.65,
+      "rel_err": 0.0234,
+      "raw": "120.65"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2024,
+      "month": 6,
+      "actual": 446.95,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2024,
+      "month": 6,
+      "actual": 197.88,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2024,
+      "month": 7,
+      "actual": 550.81,
+      "estimate": 550.0,
+      "rel_err": 0.0015,
+      "raw": "550.00"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2024,
+      "month": 7,
+      "actual": 471.07,
+      "estimate": 498.5,
+      "rel_err": 0.0582,
+      "raw": "498.50"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2024,
+      "month": 7,
+      "actual": 222.08,
+      "estimate": 228.48,
+      "rel_err": 0.0288,
+      "raw": "228.48"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2024,
+      "month": 7,
+      "actual": 117.02,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2024,
+      "month": 7,
+      "actual": 418.35,
+      "estimate": 432.5,
+      "rel_err": 0.0338,
+      "raw": "432.50"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2024,
+      "month": 7,
+      "actual": 232.07,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2024,
+      "month": 8,
+      "actual": 563.68,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2024,
+      "month": 8,
+      "actual": 476.27,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2024,
+      "month": 8,
+      "actual": 229.0,
+      "estimate": 228.03,
+      "rel_err": 0.0042,
+      "raw": "228.03"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2024,
+      "month": 8,
+      "actual": 119.37,
+      "estimate": 120.5,
+      "rel_err": 0.0095,
+      "raw": "120.50"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2024,
+      "month": 8,
+      "actual": 417.14,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2024,
+      "month": 8,
+      "actual": 214.11,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2024,
+      "month": 9,
+      "actual": 573.76,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2024,
+      "month": 9,
+      "actual": 488.07,
+      "estimate": 498.5,
+      "rel_err": 0.0214,
+      "raw": "498.50"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2024,
+      "month": 9,
+      "actual": 233.0,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2024,
+      "month": 9,
+      "actual": 121.44,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2024,
+      "month": 9,
+      "actual": 430.3,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2024,
+      "month": 9,
+      "actual": 261.63,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2024,
+      "month": 10,
+      "actual": 568.64,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2024,
+      "month": 10,
+      "actual": 483.85,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2024,
+      "month": 10,
+      "actual": 225.91,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2024,
+      "month": 10,
+      "actual": 132.76,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2024,
+      "month": 10,
+      "actual": 406.35,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2024,
+      "month": 10,
+      "actual": 249.85,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2024,
+      "month": 11,
+      "actual": 602.55,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2024,
+      "month": 11,
+      "actual": 509.74,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2024,
+      "month": 11,
+      "actual": 237.33,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2024,
+      "month": 11,
+      "actual": 138.25,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2024,
+      "month": 11,
+      "actual": 423.46,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2024,
+      "month": 11,
+      "actual": 345.16,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2024,
+      "month": 12,
+      "actual": 586.08,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2024,
+      "month": 12,
+      "actual": 511.23,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2024,
+      "month": 12,
+      "actual": 250.42,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2024,
+      "month": 12,
+      "actual": 134.29,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2024,
+      "month": 12,
+      "actual": 421.5,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2024,
+      "month": 12,
+      "actual": 403.84,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2025,
+      "month": 1,
+      "actual": 601.82,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2025,
+      "month": 1,
+      "actual": 522.29,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2025,
+      "month": 1,
+      "actual": 236.0,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2025,
+      "month": 1,
+      "actual": 120.07,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2025,
+      "month": 1,
+      "actual": 415.06,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2025,
+      "month": 1,
+      "actual": 404.6,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2025,
+      "month": 2,
+      "actual": 594.18,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2025,
+      "month": 2,
+      "actual": 508.17,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2025,
+      "month": 2,
+      "actual": 241.84,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2025,
+      "month": 2,
+      "actual": 124.92,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2025,
+      "month": 2,
+      "actual": 396.99,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2025,
+      "month": 2,
+      "actual": 292.98,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2025,
+      "month": 3,
+      "actual": 559.39,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2025,
+      "month": 3,
+      "actual": 468.92,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2025,
+      "month": 3,
+      "actual": 222.13,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2025,
+      "month": 3,
+      "actual": 108.38,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2025,
+      "month": 3,
+      "actual": 375.39,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2025,
+      "month": 3,
+      "actual": 259.16,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2025,
+      "month": 4,
+      "actual": 554.54,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2025,
+      "month": 4,
+      "actual": 475.47,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2025,
+      "month": 4,
+      "actual": 212.5,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2025,
+      "month": 4,
+      "actual": 108.92,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2025,
+      "month": 4,
+      "actual": 395.26,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2025,
+      "month": 4,
+      "actual": 282.16,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2025,
+      "month": 5,
+      "actual": 589.39,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2025,
+      "month": 5,
+      "actual": 519.11,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2025,
+      "month": 5,
+      "actual": 200.85,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2025,
+      "month": 5,
+      "actual": 135.13,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2025,
+      "month": 5,
+      "actual": 460.36,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2025,
+      "month": 5,
+      "actual": 346.46,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2025,
+      "month": 6,
+      "actual": 617.85,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2025,
+      "month": 6,
+      "actual": 551.64,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2025,
+      "month": 6,
+      "actual": 205.17,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2025,
+      "month": 6,
+      "actual": 157.99,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2025,
+      "month": 6,
+      "actual": 497.41,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2025,
+      "month": 6,
+      "actual": 317.66,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2025,
+      "month": 7,
+      "actual": 632.08,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2025,
+      "month": 7,
+      "actual": 565.01,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2025,
+      "month": 7,
+      "actual": 207.57,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2025,
+      "month": 7,
+      "actual": 177.87,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2025,
+      "month": 7,
+      "actual": 533.5,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2025,
+      "month": 7,
+      "actual": 308.27,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2025,
+      "month": 8,
+      "actual": 645.05,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2025,
+      "month": 8,
+      "actual": 570.4,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2025,
+      "month": 8,
+      "actual": 232.14,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2025,
+      "month": 8,
+      "actual": 174.18,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2025,
+      "month": 8,
+      "actual": 506.69,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2025,
+      "month": 8,
+      "actual": 333.87,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2025,
+      "month": 9,
+      "actual": 666.18,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2025,
+      "month": 9,
+      "actual": 600.37,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2025,
+      "month": 9,
+      "actual": 254.63,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2025,
+      "month": 9,
+      "actual": 186.58,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2025,
+      "month": 9,
+      "actual": 517.95,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2025,
+      "month": 9,
+      "actual": 444.72,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2025,
+      "month": 10,
+      "actual": 682.06,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2025,
+      "month": 10,
+      "actual": 629.07,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2025,
+      "month": 10,
+      "actual": 270.37,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2025,
+      "month": 10,
+      "actual": 202.49,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2025,
+      "month": 10,
+      "actual": 517.81,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2025,
+      "month": 10,
+      "actual": 456.56,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2025,
+      "month": 11,
+      "actual": 683.39,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2025,
+      "month": 11,
+      "actual": 619.25,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2025,
+      "month": 11,
+      "actual": 278.85,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2025,
+      "month": 11,
+      "actual": 177.0,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2025,
+      "month": 11,
+      "actual": 492.01,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2025,
+      "month": 11,
+      "actual": 430.17,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2025,
+      "month": 12,
+      "actual": 681.92,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2025,
+      "month": 12,
+      "actual": 614.31,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2025,
+      "month": 12,
+      "actual": 271.86,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2025,
+      "month": 12,
+      "actual": 186.5,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2025,
+      "month": 12,
+      "actual": 483.62,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2025,
+      "month": 12,
+      "actual": 449.72,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2026,
+      "month": 1,
+      "actual": 691.97,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2026,
+      "month": 1,
+      "actual": 621.87,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2026,
+      "month": 1,
+      "actual": 259.48,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2026,
+      "month": 1,
+      "actual": 191.13,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2026,
+      "month": 1,
+      "actual": 430.29,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2026,
+      "month": 1,
+      "actual": 430.41,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2026,
+      "month": 2,
+      "actual": 685.99,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2026,
+      "month": 2,
+      "actual": 607.29,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2026,
+      "month": 2,
+      "actual": 264.18,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2026,
+      "month": 2,
+      "actual": 177.19,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2026,
+      "month": 2,
+      "actual": 392.74,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2026,
+      "month": 2,
+      "actual": 402.51,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2026,
+      "month": 3,
+      "actual": 650.34,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2026,
+      "month": 3,
+      "actual": 577.18,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2026,
+      "month": 3,
+      "actual": 253.79,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2026,
+      "month": 3,
+      "actual": 174.4,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2026,
+      "month": 3,
+      "actual": 370.17,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2026,
+      "month": 3,
+      "actual": 371.75,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2026,
+      "month": 4,
+      "actual": 718.66,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2026,
+      "month": 4,
+      "actual": 667.74,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2026,
+      "month": 4,
+      "actual": 271.35,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2026,
+      "month": 4,
+      "actual": 199.57,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2026,
+      "month": 4,
+      "actual": 407.78,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2026,
+      "month": 4,
+      "actual": 381.63,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2026,
+      "month": 5,
+      "actual": 756.48,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2026,
+      "month": 5,
+      "actual": 738.31,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2026,
+      "month": 5,
+      "actual": 312.06,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2026,
+      "month": 5,
+      "actual": 211.14,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2026,
+      "month": 5,
+      "actual": 450.24,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2026,
+      "month": 5,
+      "actual": 435.79,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2026,
+      "month": 6,
+      "actual": 746.77,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2026,
+      "month": 6,
+      "actual": 736.4,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2026,
+      "month": 6,
+      "actual": 289.36,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2026,
+      "month": 6,
+      "actual": 200.09,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2026,
+      "month": 6,
+      "actual": 373.02,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2026,
+      "month": 6,
+      "actual": 420.6,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "SPY",
+      "year": 2026,
+      "month": 7,
+      "actual": 747.03,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "QQQ",
+      "year": 2026,
+      "month": 7,
+      "actual": 687.99,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "AAPL",
+      "year": 2026,
+      "month": 7,
+      "actual": 308.91,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "NVDA",
+      "year": 2026,
+      "month": 7,
+      "actual": 200.75,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "MSFT",
+      "year": 2026,
+      "month": 7,
+      "actual": 464.72,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    },
+    {
+      "ticker": "TSLA",
+      "year": 2026,
+      "month": 7,
+      "actual": 311.21,
+      "estimate": null,
+      "rel_err": null,
+      "raw": "UNKNOWN"
+    }
+  ]
+}
