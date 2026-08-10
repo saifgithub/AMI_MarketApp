@@ -98,6 +98,46 @@ vs SPY over the same window — median, quartiles, and both tails. This is not
 risk-adjusted alpha and must never be labelled as such. Per `00` §5 it is reported
 **alongside every M1 hit rate**, never instead of one.
 
+### Would a portfolio-level Room unlock M2? No — and it is worth knowing why
+
+The obvious repair is to have the Room drive a defined simulated portfolio: fixed
+universe, assigned weights, a rebalance cadence, an exit rule. That would create an
+entity with a genuine return series, so alpha and Sharpe would at least be
+*defined*. They would still be unobtainable, for four independent reasons.
+
+**1. The time arithmetic doesn't end.** A Sharpe ratio's t-statistic is
+approximately `SR × √years` (Lo 2002), so clearing t = 1.96 requires:
+
+| True annualized Sharpe | Years of track record required |
+|---|---|
+| 1.0 | 3.8 |
+| **0.5** | **15.4** |
+| **0.3** | **42.7** |
+| 0.2 | 96.0 |
+
+A good-but-not-legendary active manager runs 0.3–0.5. So establishing that the
+Room's risk-adjusted return is distinguishable from zero would take **15 to 40
+years of uninterrupted track record** — on a fixed prompt generation, which per
+`07` §1 we do not hold stable for even a quarter.
+
+**2. We would be measuring our own design choices.** Once the universe, weights and
+rebalance rule are fixed, those decisions drive most of the realized risk-adjusted
+return; security selection is the smaller term. We would build the whole apparatus
+and then be unable to attribute the result to the agents.
+
+**3. The exit rule would have to be invented.** The Room has no SELL verdict, so
+exits would run on stop/target — and per M3a a substantial share of those levels
+are minted constants (`entry × 0.94`, `entry × 1.13`). The resulting Sharpe would
+be materially a property of two hardcoded numbers.
+
+**4. It crosses the line in `08`.** A weighted portfolio with a rebalance schedule
+and a published track record is exactly the artifact that reads as a performance
+claim, on licensing, app-store-review, and plain-truthfulness grounds.
+
+**So M2 is closed in principle, not merely closed today.** No product change opens
+it. Stop looking for the unlock; report the per-verdict excess-return distribution
+and label it accurately.
+
 ---
 
 ## M3 · Forecast accuracy — the primary outcome instrument
