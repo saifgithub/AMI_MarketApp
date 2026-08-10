@@ -306,4 +306,75 @@ void main() {
       );
     },
   );
+
+  testWidgets(
+    'zero available cash refuses, it does not spin',
+    (tester) async {
+      // Saiful, build 78: "I was trying to add a trade when I have no funds
+      // left. I was waiting with a spinner for a while." He had 10,003.29
+      // committed to 8 queued orders and 0.00 available.
+      //
+      // The spinner came from the fix one commit earlier, which taught
+      // fetchQuote to WAIT rather than send a request that must 422. Right
+      // while cash is arriving; wrong once it has arrived and is zero. A
+      // function receiving only a double cannot tell those apart, so the
+      // screen decides and the notifier now takes a nullable value.
+      final api = FakeGamesApiClient();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            apiClientProvider.overrideWithValue(api),
+            watchlistNotifierProvider
+                .overrideWith((ref) => WatchlistNotifier(ref)),
+            gamesRunDetailProvider('run-1').overrideWith(
+              (ref) async => const GameRunDetail(
+                runId: 'run-1',
+                fieldId: 'f1',
+                cadence: 'week',
+                state: 'active',
+                stake: 10000,
+                cash: 10000,
+                cashCommitted: 10003.29,
+                cashAvailable: 0,
+                queuedOrderCount: 8,
+              ),
+            ),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () =>
+                      GamesTradeTicketScreen.show(context, runId: 'run-1'),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nothing left to deploy'), findsOneWidget);
+      expect(
+        find.textContaining('10,003.29 is committed to 8 orders'),
+        findsOneWidget,
+        reason: 'say WHERE the money went, not just that there is none',
+      );
+      expect(
+        find.byType(CircularProgressIndicator),
+        findsNothing,
+        reason: 'a zero balance is an answer, not something to wait for',
+      );
+      expect(
+        find.text('2 · PICK A SIZE'),
+        findsNothing,
+        reason: 'there is nothing to size',
+      );
+      expect(api.quoteCallsSeen, isEmpty);
+    },
+  );
 }

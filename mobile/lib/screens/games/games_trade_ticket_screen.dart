@@ -159,7 +159,23 @@ class _GamesTradeTicketScreenState
               ],
             ),
 
-            if (ticket.ticker != null) ...[
+            // NOTHING LEFT TO DEPLOY. Distinct from "cash is still loading":
+            // `runDetail` is non-null here, so this figure is known, and it is
+            // zero. Every step past ticker-picking is meaningless — there is
+            // no size to pick and no quote to fetch.
+            //
+            // Saiful hit the earlier version of this: he had 10,003.29
+            // committed to 8 queued orders, 0.00 available, and the confirm
+            // card sat spinning. That spinner came from THIS MORNING's fix,
+            // which taught `fetchQuote` to stay in the loading state rather
+            // than fire a request that must 422 — correct while cash is
+            // ARRIVING, and a lie once it has arrived and is zero. The two
+            // cases look identical to a function that only receives a double,
+            // which is why the screen now decides and the notifier takes a
+            // nullable value.
+            if (runDetail != null && runDetail.cashAvailable <= 0)
+              _NoCashPanel(detail: runDetail)
+            else if (ticket.ticker != null) ...[
               const SizedBox(height: AmiSpacing.l),
               // TAP 2 — size, % of current cash (§5.4: priced locally,
               // zero round trips). The chips are quick presets; the slider
@@ -183,7 +199,7 @@ class _GamesTradeTicketScreenState
               _ConfirmCard(
                 ticket: ticket,
                 notifier: notifier,
-                cashAvailable: runDetail?.cashAvailable ?? 0,
+                cashAvailable: runDetail?.cashAvailable,
               ),
             ],
 
@@ -385,7 +401,9 @@ class _ConfirmCard extends ConsumerStatefulWidget {
 
   final GamesTicketState ticket;
   final GamesTicketNotifier notifier;
-  final double cashAvailable;
+  /// Null means the run detail has not arrived yet — NOT that cash is zero.
+  /// The difference decides between a spinner and a refusal.
+  final double? cashAvailable;
 
   @override
   ConsumerState<_ConfirmCard> createState() => _ConfirmCardState();
@@ -427,8 +445,8 @@ class _ConfirmCardState extends ConsumerState<_ConfirmCard> {
     // `fetchQuote` refuses to quote against zero rather than sending a request
     // the API must reject. Nothing is in flight in that state, so this is what
     // starts the real one.
-    if (old.cashAvailable <= 0 &&
-        widget.cashAvailable > 0 &&
+    if ((old.cashAvailable ?? 0) <= 0 &&
+        (widget.cashAvailable ?? 0) > 0 &&
         widget.ticket.quote == null) {
       Future.microtask(
         () => widget.notifier.fetchQuote(cashAvailable: widget.cashAvailable),
@@ -583,6 +601,59 @@ class _ResultBanner extends StatelessWidget {
                 ? l.gamesTicketQueuedNote
                 : l.gamesTicketFilledNote,
         style: AmiTypography.body,
+      ),
+    );
+  }
+}
+
+/// Every AMI Cash unit is spoken for. Not a loading state, not an error —
+/// a fact about the book, with the one action that changes it.
+///
+/// Saiful, on build 78: *"I was trying to add a trade when I have no funds
+/// left. I was waiting with a spinner for a while. I think this is an
+/// unhandled error."* It was: the ticket could not tell "cash has not
+/// arrived" from "cash is zero", so it waited for a number that had already
+/// come. A zero balance is not a thing to wait for.
+class _NoCashPanel extends StatelessWidget {
+  const _NoCashPanel({required this.detail});
+
+  final GameRunDetail detail;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AmiSpacing.m),
+      decoration: BoxDecoration(
+        color: AmiColors.slate900,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.hexAmber.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.gamesTicketNoCashHeading, style: AmiTypography.h4),
+          const SizedBox(height: AmiSpacing.xs),
+          Text(
+            l.gamesTicketNoCashBody(
+              _money(detail.cashCommitted),
+              detail.queuedOrderCount,
+            ),
+            style: AmiTypography.body.copyWith(color: AmiColors.textLow),
+          ),
+          const SizedBox(height: AmiSpacing.m),
+          SizedBox(
+            width: double.infinity,
+            child: HexButton(
+              label: l.gamesTicketNoCashCta.toUpperCase(),
+              color: AmiColors.hexAmber,
+              // The queued-order list with its Cancel actions is the screen
+              // underneath this sheet, so closing IS the navigation.
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+        ],
       ),
     );
   }

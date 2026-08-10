@@ -202,7 +202,7 @@ class GamesTicketNotifier extends StateNotifier<GamesTicketState> {
   /// screen supplies it from [gamesRunDetailProvider] so this notifier
   /// stays a pure request/response shape with no cached copy of the run to
   /// go stale.
-  Future<void> fetchQuote({required double cashAvailable}) async {
+  Future<void> fetchQuote({required double? cashAvailable}) async {
     final ticker = state.ticker;
     final pct = state.sizePct;
     if (ticker == null || pct == null) return;
@@ -221,8 +221,26 @@ class GamesTicketNotifier extends StateNotifier<GamesTicketState> {
     // what a future caller passes in. Staying in `quoting` is the honest
     // state: cash is genuinely still arriving, and the confirm card renders
     // that as the loading it is.
-    if (cashAvailable <= 0) {
+    // NULL means "the run detail has not arrived", which is genuinely
+    // something to wait for. Staying in `quoting` renders as the loading it
+    // is, and the confirm card re-fires when the value lands.
+    if (cashAvailable == null) {
       state = state.copyWith(quoting: true, clearQuote: true, clearError: true);
+      return;
+    }
+
+    // ZERO is not something to wait for — it is an answer. The first version
+    // of this guard treated the two the same, so a player whose cash was
+    // fully committed to queued orders watched a spinner turn forever
+    // (Saiful, build 78). The screen refuses to render the confirm step at
+    // all in that case; this is the backstop for any other caller, and it
+    // must end in a state the UI can draw, never in perpetual loading.
+    if (cashAvailable <= 0) {
+      state = state.copyWith(
+        quoting: false,
+        clearQuote: true,
+        error: 'No AMI Cash available to deploy.',
+      );
       return;
     }
 
