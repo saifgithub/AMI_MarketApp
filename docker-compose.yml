@@ -359,6 +359,12 @@ services:
       # (pydantic-settings isn't on melehost's bare python3, confirmed 2026-07-30,
       # so it must run inside this container, not on the host).
       - ./backend/scripts:/app/scripts:ro
+      # CR164: the backtest harness is a STANDING regression instrument — it
+      # re-runs after any infra change — so its batch JSONLs need a path that
+      # survives a container recreate. Everything else here is read-only and
+      # container /tmp is wiped on every `up --build`, which cost one pilot's
+      # records already. Host-side dir, writable, harness output only.
+      - ./backtest_results:/backtest_results:rw
       # Lessons + glossary + ai_coach + daily_challenges all live under
       # /content and are read at boot by LessonsService (and the soon-to-
       # exist GlossaryService etc). lessons_service.py resolves the path
