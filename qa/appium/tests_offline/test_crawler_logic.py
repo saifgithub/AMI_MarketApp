@@ -18,6 +18,7 @@ import pytest
 
 from crawler.errorsink import SinkUnavailable, parse_sink, read_sink
 from crawler.explorer import is_safe_to_tap, screen_fingerprint
+from crawler.oracles import _is_system_keyboard
 from crawler.ledger import FALSE_POSITIVE, FILED, NEW, Ledger, fingerprint
 
 
@@ -172,3 +173,28 @@ def test_a_missing_sink_is_an_error_not_an_empty_result(tmp_path):
     degradation this project's conventions forbid."""
     with pytest.raises(SinkUnavailable, match="AMI_QA_SEMANTICS"):
         read_sink(tmp_path / "does_not_exist.jsonl")
+
+
+# -- the system keyboard ---------------------------------------------------
+
+@pytest.mark.parametrize("label", [
+    "Dictate", "English (UK)", "العربية", "shift", "delete", "return",
+    "space", "Next keyboard", "more, numbers",
+])
+def test_system_keyboard_controls_are_not_app_defects(label):
+    """The first live crawl produced 8 findings, 4 of them iOS keyboard keys
+    reported as high-severity nav-bar intrusions — the keyboard sits over the
+    home-indicator band, so every key looks like a clipped control. At a >50%
+    false-positive rate on the harness's flagship check, and with a fixer agent
+    consuming the queue, that is not noise: it is fixes written against Apple's
+    keyboard."""
+    assert _is_system_keyboard(label)
+
+
+@pytest.mark.parametrize("label", [
+    "CONVENE THE ROOM", "PORTFOLIO", "Save for retirement", "SKIP FOR NOW",
+])
+def test_app_controls_are_not_mistaken_for_the_keyboard(label):
+    """The filter must not swallow real findings — an over-broad exclusion here
+    is worse than the false positives it removes, because it is silent."""
+    assert not _is_system_keyboard(label)

@@ -36,6 +36,7 @@ import hashlib
 import time
 from dataclasses import dataclass, field
 
+from helpers.gestures import hide_keyboard_if_shown
 from helpers.locators import by_id, by_text, element_description, interactive_elements
 from selenium.common.exceptions import WebDriverException
 
@@ -108,7 +109,18 @@ class Explorer:
         """One accessibility round trip per element, once per observation.
         The oracles are handed this list rather than re-walking the tree —
         on iOS each attribute read is a WebDriverAgent round trip and they
-        dominate crawl time."""
+        dominate crawl time.
+
+        The keyboard is dismissed first, and that is not tidiness. The system
+        keyboard is reported as ordinary interactive elements sitting at the
+        bottom of the screen, so every one of its keys reads as intruding on
+        the home-indicator band. The first live crawl produced 8 findings of
+        which 4 were keyboard keys — "English (UK)", "Dictate", "العربية" —
+        a >50% false-positive rate on the exact check the harness exists for.
+        With a fixer agent consuming this queue, that is not noise, it is fixes
+        written for defects in Apple's keyboard.
+        """
+        hide_keyboard_if_shown(self.driver)
         return [element_description(self.driver, el) for el in interactive_elements(self.driver)]
 
     def _observe(self, depth: int, path: list[str]) -> tuple[str, list[str]]:

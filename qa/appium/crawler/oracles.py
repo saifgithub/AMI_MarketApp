@@ -24,6 +24,22 @@ from __future__ import annotations
 from helpers.layout import find_navbar_overlaps, find_scroll_overflow
 from pages.base_page import content_band
 
+# Controls belonging to the SYSTEM keyboard, not the app. Dismissal is attempted
+# first (see explorer._labels), but a keyboard that refuses to go must not turn
+# into filed defects: the first live crawl reported "English (UK)", "Dictate"
+# and "العربية" as high-severity nav-bar intrusions. Matched case-insensitively
+# against the element label.
+_SYSTEM_KEYBOARD = (
+    "dictate", "shift", "delete", "return", "space", "emoji",
+    "english (uk)", "english (us)", "العربية", "next keyboard",
+    "more, numbers", "more, letters", "keyboard",
+)
+
+
+def _is_system_keyboard(label: str) -> bool:
+    low = (label or "").strip().lower()
+    return any(k in low for k in _SYSTEM_KEYBOARD)
+
 # A screen with almost nothing addressable is usually a failed load, an error
 # state with no copy, or a spinner that never resolved. Occasionally it is a
 # legitimately sparse screen, which is why this is `low` and carries the count.
@@ -91,7 +107,10 @@ def screen_oracles(screen: str, labels: list[str], driver, geom: dict) -> list[d
     checks = [
         ("sparse_screen", lambda: _sparse_screen(screen, labels)),
         ("unlabelled_control", lambda: _unlabelled_controls(screen, labels)),
-        ("navbar_overlap", lambda: find_navbar_overlaps(driver, bottom_y, screen=screen)),
+        ("navbar_overlap", lambda: [
+            f for f in find_navbar_overlaps(driver, bottom_y, screen=screen)
+            if not _is_system_keyboard(f.get("element_label", ""))
+        ]),
         # MUST STAY LAST — this one swipes.
         ("scroll_overflow", lambda: find_scroll_overflow(
             driver, content_band(geom), bottom_y, screen=screen, scale=geom["scale"],
