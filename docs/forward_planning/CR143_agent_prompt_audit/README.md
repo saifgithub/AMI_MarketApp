@@ -10,6 +10,7 @@ Everything from the audit of the 13 agent prompts. Start with whichever question
 | [PHASE1_ground_truth.md](PHASE1_ground_truth.md) | What the model is actually sent; what reads its reply; what backs each claim in each prompt |
 | [PHASE3B_quality.md](PHASE3B_quality.md) | **Are the prompts any good at their job?** The measurements — role separation, analyst differentiation, number grounding, disagreement |
 | [EXTERNAL_REVIEW.md](EXTERNAL_REVIEW.md) | What an outside model (Kimi) found reading our prompts cold, and which of its claims survived checking |
+| [PHASE5_feasibility_verdict.md](PHASE5_feasibility_verdict.md) | **Which of the proposed accuracy fixes are actually buildable.** Each of `research/accuracy_improvements.md`'s eight levers checked against the code, what to build in what order, and the five findings dropped with reasons |
 
 ## The evidence
 
