@@ -155,10 +155,16 @@ tab smokes, and the locale matrix last.
 
 ## Out of scope (stated, not silently dropped)
 
-- **Real iPhone 17 via WebDriverAgent** — needs WDA signed against Saiful's Apple developer
-  account plus Developer Mode on the device. This is the next step once the simulator suite
-  is green; the harness will already support it, since it is a device profile plus signing
-  capabilities, not new code.
+- **Real iPhone via WebDriverAgent — NOT PLANNED (decided 2026-08-10).** Saiful: *"we will
+  only use test flight and play bstore from now. dogfood eating."* Cable install is retired
+  as a path to his devices, so the only iOS builds that exist are store builds — and a store
+  build cannot carry `--dart-define=AMI_QA_SEMANTICS=1`, because that flag forces the
+  semantics tree on permanently and has no business in a build real testers receive.
+  **iOS automation is therefore simulator-only by construction, not by sequencing.** That is
+  a sufficient answer rather than a compromise: the Simulator needs no WDA signing, no
+  Developer Mode, and no device kept unlocked, and the gate runs there in 4.81s.
+  `IPHONE_17` stays in `config/devices.py` in case the constraint changes; nothing else
+  depends on it.
 - Patrol, cloud device farms, iOS golden/screenshot regression.
 - Appium Phase 2 flows still blocked on credentials (`qa/appium/test_data/README.md`).
 
