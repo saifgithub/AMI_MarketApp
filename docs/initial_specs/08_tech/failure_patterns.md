@@ -880,6 +880,38 @@ list** — the misses clustered just under the reconstructed support, and a syst
 harness signature, not a finding. Read the rejects, not just the count; that is where the harness
 confesses.
 
+**Amendment 4 (AT:R66, DEF244/DEF245) — when the guard is over prose *we* author, stop matching and
+enumerate.** Three audit rounds, each defeated by ordinary synonyms: a **vocabulary list** (verbs,
+then nouns) fell in round 1; **structural rules** (quoted-`%`, the lexical root `siz`) fell in round
+2 to an unquoted percentage and to sizing bullets containing no `siz` substring. The round-3 fix was
+not a better pattern — it was **abandoning matching**. The 12 agent prompts contain *zero* literal
+percentages after the fix, so the invariant became "stays zero": no anchor, nothing to walk around.
+The two researcher prompts are additionally pinned by a whole-file SHA-256, so an edit is a review
+prompt rather than something silently accepted. 21 of 21 auditor constructions caught.
+
+The distinction that makes this a rule rather than a mood: **enumerating a closed class is complete;
+enumerating an open one never is.** English number words (one…twenty, the tens, hundred) are closed,
+so adding them was not a return to the lists that failed twice. Synonyms for "decline" are open, so
+listing them can only ever be theatre. And a MINOR from the same round: the first pin covered one
+`## Output style` section, and the auditor simply moved the offending line to `## Role`. **The set is
+the file.**
+
+**Amendment 5 (AT:R66, DEF247) — a test that encodes an unmeasured hypothesis becomes a lock on the
+fix.** P16's root cause is negative cases invented by the pattern's author from their own mental
+model. DEF147 did exactly that in a *test*: `test_a_stance_line_mid_argument_is_prose_not_the_machine_channel`
+asserted that a whole line opening with `STANCE:` mid-turn is "an agent quoting the format", so the
+strip stayed bounded to the first and last non-blank lines. Measured three weeks later across all
+**11,057** stored agent turns: 15 such lines exist mid-turn and **all 15 are the machine channel,
+zero are a quote** — each preceded by one conversational opener the model writes despite the prompt.
+The invented negative case had never occurred; the shape it excluded had been leaking raw machine
+syntax to users since 2026-07-29, and fixing it required *reversing an existing green test*, which is
+the shape of a bad change and cost an extra round of scrutiny to justify.
+
+So: an assertion about **what a model will or will not emit** is a measurement, not a premise. Either
+cite the corpus in the test's docstring, or write the test against the mechanism (here: the regex
+anchor that actually excluded mid-sentence asides at every position) rather than against the
+behaviour you are guessing at.
+
 ---
 
 ## P17 — A read-sounding command that writes tracked files
@@ -916,6 +948,55 @@ LLM-calling ones without a stub, which is why instance 2 is flagged rather than 
 
 **Corollary for agents.** Do not run another lane's tooling to "just check" something. Read the file
 instead — a script may write, and the name will not tell you.
+
+---
+
+## P18 — A feature proven on the builder, never on the caller that must feed it
+
+**Symptom.** A function takes the datum as a parameter and does the right thing with it. Its tests
+call that function directly and pass the parameter themselves. Every one is green, and the feature
+has never worked in production, because the one call site that matters never passes the argument —
+or passes it only on some of the paths that need it. The test suite proves the *builder*, and says
+nothing about the *call graph*.
+
+**Instances (both AT:R66, 2026-08-08/09, both surfaced by reading real assembled prompts).**
+
+| | Proven | Never exercised | What the user got |
+|---|---|---|---|
+| **DEF238** | `build_room_messages(sector_weights=…)` renders CR026's PM-only sector-allocation line correctly; tested that way for its whole life | `_stream_pm_response` never passed `sector_weights` | **18 of 18** epoch PM prompts read *"sector allocation: no open positions yet (0% in every sector)"* while **8 of 18** listed real holdings in the same prompt. The feature was dark from the day it shipped |
+| **DEF241** | the per-debator computed drawdown figure, tested against `build_room_messages` with `agent_size_pct` passed by hand | `build_room_messages` gates the whole reference-position block on `phase in ("RISK", "VERDICT")` | shipped `fixed` while reaching **3 of the 5 agents named in its own evidence table** — Bull Researcher (RESEARCHERS) and Research Manager (SYNTHESIS) were byte-identical before and after. Caught by the independent auditor, not by the suite; the remainder became DEF244 |
+
+**Why the previous guard failed.** Not "we forgot a test" — there were tests, and they were the
+*right* tests for the unit. The structural reason is that a keyword argument with a default is a
+**silent contract**. `sector_weights=None` and `agent_size_pct=None` are legal, produce sane-looking
+output, and are indistinguishable from "this user genuinely has no positions". So the failure mode of
+a caller that forgets is not an exception, a log line, or a red test — it is a **plausible sentence
+in a prompt**, which is exactly the shape nothing downstream can catch. This is P2's silent-confident-
+degradation applied to an internal call boundary rather than to a provider.
+
+DEF241 shows the second half of the class, which is worse: the caller *was* updated, so the naive
+"does the runner pass it?" check would have passed. What was never surveyed was **which callers
+exist** — the phase gate meant two of the five target agents could not receive the datum on any code
+path. Proving one caller is not proving the call graph.
+
+**The guard.** Any change that adds a datum to an assembled prompt (or to any string a model reads)
+owes **one test that drives the real entry point** — `RoomRunner.run()`, not `build_room_messages` —
+captures the prompt the gateway actually received, and asserts the datum is in it **for every agent
+that is supposed to have it**. Enumerate the intended recipients explicitly and assert the count; a
+test that checks "the PM got it" cannot notice that four others were supposed to.
+
+Corollary, from DEF241: when a fix names N agents in its own evidence, the acceptance test asserts N,
+not "at least one".
+
+**Executable check.** `backend/tests/unit/test_def241_def243_debator_arithmetic_and_stance.py::
+test_def241_the_runner_actually_hands_each_debator_its_own_size` — stands up a capturing gateway,
+drives the real `RoomRunner.run()`, and asserts the three debators receive three *different* figures.
+Its docstring names DEF238 as the reason it exists. Verified RED without the runner change (no
+debator prompt contains *"the size YOUR role argues for"* at all).
+
+**Rule for new code.** A default-valued kwarg on a prompt builder is a place a feature can go dark
+without anything turning red. Adding one ⇒ add the end-to-end test in the same commit, or give the
+parameter no default so the compiler finds the callers for you.
 
 ---
 
