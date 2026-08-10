@@ -402,6 +402,8 @@ class GameQueuedOrder {
     this.estFee = 0,
     this.estTotal = 0,
     this.priceSource = 'live',
+    this.state = 'queued',
+    this.cancelReason,
   });
 
   final String orderId;
@@ -415,6 +417,20 @@ class GameQueuedOrder {
   final double estFee;
   final double estTotal;
   final String priceSource;
+
+  /// 'queued' — waiting on the next open — or 'refused', an order the open
+  /// would not take.
+  final String state;
+
+  /// Why the open refused it, server-authored (*"insufficient cash: need
+  /// $500.00, have $12.00"*). Null on a live queued order.
+  final String? cancelReason;
+
+  /// An order that will not happen. It stays on the list precisely because
+  /// it will not: it used to be filtered out server-side, so a refused order
+  /// simply vanished overnight and the player found some orders filled, some
+  /// gone, and nothing anywhere saying which or why.
+  bool get isRefused => state == 'refused';
 
   bool get isBuy => side == 'buy';
   bool get estimateIsLive =>
@@ -434,6 +450,8 @@ class GameQueuedOrder {
       estFee: fee,
       estTotal: (j['est_total'] as num?)?.toDouble() ?? (notional + fee),
       priceSource: j['price_source'] as String? ?? 'live',
+      state: j['state'] as String? ?? 'queued',
+      cancelReason: j['cancel_reason'] as String?,
     );
   }
 }

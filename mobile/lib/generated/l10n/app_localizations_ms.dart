@@ -558,6 +558,30 @@ class AppLocalizationsMs extends AppLocalizations {
       'Simulated price — the live feed is unavailable.';
 
   @override
+  String get gamesTicketNoCashHeading => 'Nothing left to deploy';
+
+  @override
+  String gamesTicketNoCashBody(String amount, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count orders',
+      one: '1 order',
+    );
+    return '$amount is committed to $_temp0 waiting on the next open. Cancel one to free up cash.';
+  }
+
+  @override
+  String get gamesTicketNoCashCta => 'See queued orders';
+
+  @override
+  String get gamesRunRefusedHeading => 'NOT PLACED AT THE OPEN';
+
+  @override
+  String get gamesRunRefusedNote =>
+      'Queued orders fill oldest first. When they add up to more than your cash, the later ones are refused whole — never shrunk to fit.';
+
+  @override
   String get gamesTicketPlacing => 'placing…';
 
   @override

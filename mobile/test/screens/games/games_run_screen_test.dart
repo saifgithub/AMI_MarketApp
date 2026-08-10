@@ -347,4 +347,81 @@ void main() {
       expect(find.textContaining('marked with simulated prices'), findsNothing);
     });
   });
+
+  group('an order the open refused', () {
+    testWidgets('is shown with its reason, not silently dropped',
+        (tester) async {
+      // Saiful: "I have committed more than the 10K allocated AMI Cash...
+      // what will happen when we trade for real?" At the open, orders that
+      // no longer fit are refused WHOLE — never shrunk — and the row carries
+      // the server's reason. The orders list used to filter to state ==
+      // "queued", so those rows just vanished: some orders filled, some
+      // gone, nothing anywhere saying which or why.
+      await _pump(
+        tester,
+        detail: _detail(),
+        orders: [
+          const GameQueuedOrder(
+            orderId: 'o9',
+            ticker: 'BAC',
+            side: 'buy',
+            quantity: 7.5323,
+            state: 'refused',
+            cancelReason: 'insufficient cash: need \$476.82, have \$12.00',
+          ),
+        ],
+      );
+
+      expect(find.text('NOT PLACED AT THE OPEN'), findsOneWidget);
+      expect(find.textContaining('insufficient cash'), findsOneWidget);
+      expect(
+        find.text('Cancel'),
+        findsNothing,
+        reason: 'nothing left to cancel — an action that cannot act is worse '
+            'than no action',
+      );
+    });
+
+    testWidgets('states the rule, so it can be planned around', (tester) async {
+      await _pump(
+        tester,
+        detail: _detail(),
+        orders: [
+          const GameQueuedOrder(
+            orderId: 'o9',
+            ticker: 'BAC',
+            side: 'buy',
+            quantity: 7.5323,
+            state: 'refused',
+            cancelReason: 'insufficient cash',
+          ),
+        ],
+      );
+      expect(find.textContaining('oldest first'), findsOneWidget);
+      expect(
+        find.textContaining('never shrunk to fit'),
+        findsOneWidget,
+        reason: 'no partial fills — a shrunk order is a position the player '
+            'did not choose',
+      );
+    });
+
+    testWidgets('a refused order is not counted as pending', (tester) async {
+      await _pump(
+        tester,
+        detail: _detail(),
+        orders: [
+          const GameQueuedOrder(
+            orderId: 'o9',
+            ticker: 'BAC',
+            side: 'buy',
+            quantity: 7.5323,
+            state: 'refused',
+            cancelReason: 'insufficient cash',
+          ),
+        ],
+      );
+      expect(find.text('WAITING FOR THE OPEN'), findsNothing);
+    });
+  });
 }

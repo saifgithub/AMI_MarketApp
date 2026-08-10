@@ -1006,6 +1006,36 @@ abstract class AppLocalizations {
   /// **'Simulated price — the live feed is unavailable.'**
   String get gamesTicketPriceSimulated;
 
+  /// CR109. Heading shown on the trade ticket when available cash is zero because every AMI Cash unit is already committed to queued orders. Replaces the size and confirm steps entirely — there is nothing to size. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing left to deploy'**
+  String get gamesTicketNoCashHeading;
+
+  /// CR109. Body of the no-cash state on the trade ticket: says WHERE the money went and what to do about it, rather than leaving the player looking at a zero. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} is committed to {count, plural, =1{1 order} other{{count} orders}} waiting on the next open. Cancel one to free up cash.'**
+  String gamesTicketNoCashBody(String amount, int count);
+
+  /// CR109. Action on the no-cash state — closes the ticket and returns to the run screen, where queued orders can be cancelled. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'See queued orders'**
+  String get gamesTicketNoCashCta;
+
+  /// CR109. Heading of the list of orders the market open refused — almost always because the queued orders together cost more than the cash behind them. These used to disappear silently overnight. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NOT PLACED AT THE OPEN'**
+  String get gamesRunRefusedHeading;
+
+  /// CR109. Explains the refusal rule under the refused-orders list: FIFO, and no partial fills. Says the rule plainly so a player can plan around it rather than discovering it. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Queued orders fill oldest first. When they add up to more than your cash, the later ones are refused whole — never shrunk to fit.'**
+  String get gamesRunRefusedNote;
+
   /// CR109 slice 2. Busy-state label on the trade ticket's confirm button while the trade request is in flight. Rendered upper-cased by the caller. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

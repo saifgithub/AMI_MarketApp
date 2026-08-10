@@ -446,26 +446,46 @@ class _QueuedOrders extends ConsumerWidget {
       error: (_, __) => _Retry(
         onRetry: () => ref.invalidate(gamesQueuedOrdersProvider(runId)),
       ),
-      data: (orders) {
-        if (orders.isEmpty) return const SizedBox.shrink();
+      data: (all) {
+        if (all.isEmpty) return const SizedBox.shrink();
+        final orders = all.where((o) => !o.isRefused).toList();
+        // Orders the OPEN would not take. They live in the same payload
+        // because they are the same objects at a later moment, but they are
+        // a different kind of news — nothing is pending, nothing can be
+        // cancelled, and the only useful thing is why.
+        final refused = all.where((o) => o.isRefused).toList();
         final anyStale = orders.any((o) => !o.estimateIsLive);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              l.gamesRunQueuedHeading,
-              style:
-                  AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber),
-            ),
-            const SizedBox(height: AmiSpacing.s),
-            for (final o in orders)
-              _QueuedOrderRow(runId: runId, order: o),
-            const SizedBox(height: AmiSpacing.xs),
-            _Caveat(
-              text: anyStale
-                  ? l.gamesRunQueuedStaleNote
-                  : l.gamesRunQueuedEstimateNote,
-            ),
+            if (orders.isNotEmpty) ...[
+              Text(
+                l.gamesRunQueuedHeading,
+                style:
+                    AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber),
+              ),
+              const SizedBox(height: AmiSpacing.s),
+              for (final o in orders)
+                _QueuedOrderRow(runId: runId, order: o),
+              const SizedBox(height: AmiSpacing.xs),
+              _Caveat(
+                text: anyStale
+                    ? l.gamesRunQueuedStaleNote
+                    : l.gamesRunQueuedEstimateNote,
+              ),
+            ],
+            if (refused.isNotEmpty) ...[
+              const SizedBox(height: AmiSpacing.l),
+              Text(
+                l.gamesRunRefusedHeading,
+                style:
+                    AmiTypography.labelMono.copyWith(color: AmiColors.hexRed),
+              ),
+              const SizedBox(height: AmiSpacing.s),
+              for (final o in refused) _RefusedOrderRow(order: o),
+              const SizedBox(height: AmiSpacing.xs),
+              Text(l.gamesRunRefusedNote, style: AmiTypography.caption),
+            ],
           ],
         );
       },
@@ -608,6 +628,52 @@ class _Caveat extends StatelessWidget {
     return Text(
       text,
       style: AmiTypography.caption.copyWith(color: AmiColors.hexAmber),
+    );
+  }
+}
+
+
+/// An order the open would not take.
+///
+/// It is on this list precisely BECAUSE it will not happen. The refusal
+/// carries a perfectly good server-authored reason — *"insufficient cash:
+/// need $500.00, have $12.00"* — and the orders list used to filter these
+/// out, so the order simply vanished overnight: some filled, some gone,
+/// nothing anywhere saying which or why. A thing that fails has to say so.
+///
+/// No Cancel action, deliberately. There is nothing left to cancel, and an
+/// action that cannot act is worse than none.
+class _RefusedOrderRow extends StatelessWidget {
+  const _RefusedOrderRow({required this.order});
+
+  final GameQueuedOrder order;
+
+  @override
+  Widget build(BuildContext context) {
+    final o = order;
+    return Container(
+      margin: const EdgeInsets.only(bottom: AmiSpacing.s),
+      padding: const EdgeInsets.all(AmiSpacing.s),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.hexRed.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${o.side.toUpperCase()} ${o.ticker} · '
+            '${o.quantity.toStringAsFixed(4)}',
+            style: AmiTypography.dataMd,
+          ),
+          if (o.cancelReason != null)
+            Text(
+              o.cancelReason!,
+              style: AmiTypography.caption.copyWith(color: AmiColors.hexRed),
+            ),
+        ],
+      ),
     );
   }
 }

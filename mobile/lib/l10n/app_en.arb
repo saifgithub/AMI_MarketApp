@@ -501,6 +501,30 @@
     "@gamesTicketPriceSimulated": {
         "description": "CR109 CR040. Replaces the price provenance line when the quote came from the mock walk rather than the live feed. Degrade loudly: a simulated price must never be presented as a real one. NEW key. retranslate:[ar,ms]"
     },
+    "gamesTicketNoCashHeading": "Nothing left to deploy",
+    "@gamesTicketNoCashHeading": {
+        "description": "CR109. Heading shown on the trade ticket when available cash is zero because every AMI Cash unit is already committed to queued orders. Replaces the size and confirm steps entirely \u2014 there is nothing to size. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesTicketNoCashBody": "{amount} is committed to {count, plural, =1{1 order} other{{count} orders}} waiting on the next open. Cancel one to free up cash.",
+    "@gamesTicketNoCashBody": {
+        "description": "CR109. Body of the no-cash state on the trade ticket: says WHERE the money went and what to do about it, rather than leaving the player looking at a zero. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "amount": {"type": "String", "example": "10,003.29"},
+            "count": {"type": "int", "example": "8"}
+        }
+    },
+    "gamesTicketNoCashCta": "See queued orders",
+    "@gamesTicketNoCashCta": {
+        "description": "CR109. Action on the no-cash state \u2014 closes the ticket and returns to the run screen, where queued orders can be cancelled. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesRunRefusedHeading": "NOT PLACED AT THE OPEN",
+    "@gamesRunRefusedHeading": {
+        "description": "CR109. Heading of the list of orders the market open refused \u2014 almost always because the queued orders together cost more than the cash behind them. These used to disappear silently overnight. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesRunRefusedNote": "Queued orders fill oldest first. When they add up to more than your cash, the later ones are refused whole \u2014 never shrunk to fit.",
+    "@gamesRunRefusedNote": {
+        "description": "CR109. Explains the refusal rule under the refused-orders list: FIFO, and no partial fills. Says the rule plainly so a player can plan around it rather than discovering it. NEW key. retranslate:[ar,ms]"
+    },
     "gamesTicketPlacing": "placing…",
     "@gamesTicketPlacing": {
         "description": "CR109 slice 2. Busy-state label on the trade ticket's confirm button while the trade request is in flight. Rendered upper-cased by the caller. NEW key. retranslate:[ar,ms]"

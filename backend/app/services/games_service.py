@@ -513,6 +513,9 @@ def _queued_orders_priced(
         committed += commits
         rows_out.append({
             **spec,
+            # Explicit, because this list now carries refused orders too and
+            # the client must never have to infer which is which.
+            "state": "queued",
             "est_price": quote.price,
             "price_source": quote.source,
             "est_notional": est_notional,
@@ -525,9 +528,48 @@ def _queued_orders_priced(
 def list_queued_orders(user_id: UUID, run_id: UUID) -> list[dict]:
     """`GET /v1/games/runs/{run_id}/orders` — §13.3's Queued-orders surface,
     which that table calls "the most-seen state in the product" for GCC/SEA
-    players. Every estimate carries `price_source` (CR040 on the wire)."""
+    players. Every estimate carries `price_source` (CR040 on the wire).
+
+    Returns still-queued orders AND any order the open REFUSED in the last
+    24h, each carrying `state` and `cancel_reason`.
+
+    The refusals are the point. A queued order that cannot be afforded at the
+    open is cancelled with a perfectly good reason — "insufficient cash: need
+    $X, have $Y" — and this list used to filter to `state == "queued"`, so
+    from the player's side the order simply VANISHED overnight. They would
+    find some orders filled, some gone, and nothing anywhere saying which or
+    why. Silence is not a result; CR040 asks that a thing which fails says so.
+
+    24h because that is one open. Older refusals belong to a settled day and
+    would just accumulate.
+    """
     _require_live_entry(user_id, run_id)
     orders, _committed = _queued_orders_priced(user_id, run_id)
+
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    with get_session() as s:
+        refused = s.execute(
+            select(GameQueuedOrderRow).where(
+                GameQueuedOrderRow.run_id == run_id,
+                GameQueuedOrderRow.user_id == user_id,
+                GameQueuedOrderRow.state == "cancelled",
+                GameQueuedOrderRow.cancel_reason.is_not(None),
+                GameQueuedOrderRow.queued_at >= cutoff,
+            ).order_by(GameQueuedOrderRow.queued_at.desc())
+        ).scalars().all()
+        # A player's own cancel writes no reason (see `cancel_queued_order`),
+        # so `cancel_reason IS NOT NULL` is exactly "the system refused this" —
+        # the only kind worth reporting back. Nobody needs telling about the
+        # order they cancelled themselves.
+        orders.extend({
+            "id": str(r.id),
+            "ticker": r.ticker,
+            "side": r.side,
+            "quantity": float(r.quantity),
+            "queued_at": r.queued_at.isoformat(),
+            "state": "refused",
+            "cancel_reason": r.cancel_reason,
+        } for r in refused)
     return orders
 
 
@@ -704,7 +746,21 @@ def process_queued_orders(*, now: datetime | None = None) -> dict:
 
     with get_session() as s:
         queued = s.execute(
-            select(GameQueuedOrderRow).where(GameQueuedOrderRow.state == "queued")
+            # FIFO — oldest first, explicitly.
+            #
+            # This had no ORDER BY, so when a run's queued orders cost more
+            # than its cash (routine: prices move overnight, and nothing stops
+            # a player queueing past their balance), WHICH orders filled and
+            # which were refused came down to whatever order Postgres happened
+            # to return rows in. Undefined behaviour deciding a scored result.
+            #
+            # Oldest first is the only rule a player can reason about while
+            # placing the orders: the ones you committed to first are the ones
+            # that survive. It is also the rule every real venue uses, and the
+            # only one that does not reward re-queueing.
+            select(GameQueuedOrderRow)
+            .where(GameQueuedOrderRow.state == "queued")
+            .order_by(GameQueuedOrderRow.queued_at.asc())
         ).scalars().all()
         targets = [
             {
