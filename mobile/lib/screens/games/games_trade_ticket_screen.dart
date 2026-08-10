@@ -68,7 +68,18 @@ class _GamesTradeTicketScreenState
     final l = AppLocalizations.of(context);
     final ticket = ref.watch(gamesTicketProvider(widget.runId));
     final notifier = ref.read(gamesTicketProvider(widget.runId).notifier);
-    final runDetail = ref.watch(gamesRunDetailProvider(widget.runId));
+    // `.valueOrNull`, NOT `.asData?.value`. Every placed order and every
+    // cancel calls `ref.invalidate(gamesRunDetailProvider)`, and during the
+    // refetch that follows, an `AsyncLoading` carrying the previous value
+    // still answers `asData` with NULL. The `?? 0` below then sized the next
+    // order against zero cash and the API — correctly — refused it with a
+    // 422, which the player read as "suddenly this does not work". It worked
+    // until the first order, then broke for every one after it.
+    //
+    // `valueOrNull` returns the value a refresh is carrying forward, so the
+    // ticket keeps showing the cash it last knew about instead of pretending
+    // there is none.
+    final runDetail = ref.watch(gamesRunDetailProvider(widget.runId)).valueOrNull;
     final watchlist = ref.watch(watchlistNotifierProvider).items;
 
     return Padding(
@@ -106,7 +117,7 @@ class _GamesTradeTicketScreenState
             // figure used to appear only on the step-3 confirm card, so a
             // player had to commit to a percentage to discover what the
             // percentage was of.
-            _CashHeader(detail: runDetail.asData?.value),
+            _CashHeader(detail: runDetail),
             const SizedBox(height: AmiSpacing.l),
 
             // TAP 1 — ticker.
@@ -159,7 +170,7 @@ class _GamesTradeTicketScreenState
               const SizedBox(height: AmiSpacing.xs),
               _SizePicker(
                 sizePct: ticket.sizePct ?? kGamesTicketDefaultSizePct,
-                cashAvailable: runDetail.asData?.value.cashAvailable ?? 0,
+                cashAvailable: runDetail?.cashAvailable ?? 0,
                 onChanged: notifier.pickSize,
               ),
             ],
@@ -172,7 +183,7 @@ class _GamesTradeTicketScreenState
               _ConfirmCard(
                 ticket: ticket,
                 notifier: notifier,
-                cashAvailable: runDetail.asData?.value.cashAvailable ?? 0,
+                cashAvailable: runDetail?.cashAvailable ?? 0,
               ),
             ],
 
@@ -407,6 +418,18 @@ class _ConfirmCardState extends ConsumerState<_ConfirmCard> {
         widget.ticket.sizePct != null &&
         widget.ticket.quote == null &&
         !widget.ticket.quoting) {
+      Future.microtask(
+        () => widget.notifier.fetchQuote(cashAvailable: widget.cashAvailable),
+      );
+    }
+    // Cash has ARRIVED. The card can mount before the run detail resolves —
+    // routinely so, because placing an order invalidates that provider — and
+    // `fetchQuote` refuses to quote against zero rather than sending a request
+    // the API must reject. Nothing is in flight in that state, so this is what
+    // starts the real one.
+    if (old.cashAvailable <= 0 &&
+        widget.cashAvailable > 0 &&
+        widget.ticket.quote == null) {
       Future.microtask(
         () => widget.notifier.fetchQuote(cashAvailable: widget.cashAvailable),
       );

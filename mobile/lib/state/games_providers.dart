@@ -206,6 +206,26 @@ class GamesTicketNotifier extends StateNotifier<GamesTicketState> {
     final ticker = state.ticker;
     final pct = state.sizePct;
     if (ticker == null || pct == null) return;
+
+    // Refuse to ask for a quote on nothing.
+    //
+    // The screen's cash read used to collapse to 0 while the run detail was
+    // refetching (see the `valueOrNull` note in the ticket screen), and this
+    // dutifully sent `notional: 0`. The API refused it with a 422 — correctly,
+    // that guard exists because zero-share orders once queued silently — and
+    // the player saw "that request wasn't accepted. Check the details",
+    // pointing them at a ticker and a size that were both fine.
+    //
+    // Both halves are worth keeping. The screen no longer loses the value,
+    // and this can no longer send a request that cannot succeed no matter
+    // what a future caller passes in. Staying in `quoting` is the honest
+    // state: cash is genuinely still arriving, and the confirm card renders
+    // that as the loading it is.
+    if (cashAvailable <= 0) {
+      state = state.copyWith(quoting: true, clearQuote: true, clearError: true);
+      return;
+    }
+
     state = state.copyWith(quoting: true, clearError: true);
     try {
       final api = _ref.read(apiClientProvider);

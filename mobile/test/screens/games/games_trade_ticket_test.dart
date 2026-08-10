@@ -5,9 +5,12 @@
 /// the queue-first framing (§5.1) reads as the normal path, not a warning.
 library;
 
+import 'dart:async';
+
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/games.dart';
 import 'package:ami_trade/screens/games/games_trade_ticket_screen.dart';
+import 'package:ami_trade/state/games_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -215,6 +218,92 @@ void main() {
       expect(api.quoteCallsSeen, hasLength(2));
       expect(find.text('RETRY'), findsNothing);
       expect(find.text('PLACE ORDER'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'a refreshing run detail never sizes the next order against zero',
+    (tester) async {
+      // THE ONE THAT BROKE THE SECOND ORDER. Placing an order invalidates
+      // gamesRunDetailProvider, and during the refetch Riverpod's
+      // AsyncLoading — even carrying the previous value — answers `asData`
+      // with null. The ticket's `?? 0` then quoted against zero cash, the API
+      // refused it (422, notional must be > 0), and the player got "that
+      // request wasn't accepted. Check the details" while the header on the
+      // same screen showed the correct 4,758.13.
+      //
+      // Saiful: "Suddenly this does not work." It worked until his first
+      // order and failed for every one after it.
+      final api = FakeGamesApiClient();
+      final completer = Completer<GameRunDetail>();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            apiClientProvider.overrideWithValue(api),
+            watchlistNotifierProvider
+                .overrideWith((ref) => WatchlistNotifier(ref)),
+            // Still in flight — exactly the window a placed order opens.
+            gamesRunDetailProvider('run-1').overrideWith((ref) => completer.future),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () =>
+                      GamesTradeTicketScreen.show(context, runId: 'run-1'),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'BAC');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(HexChip, '25%'));
+      // Not pumpAndSettle: the card is legitimately in its loading state and
+      // a CircularProgressIndicator animates forever, so settling never
+      // happens. That the spinner IS showing is the point — cash really is
+      // still arriving.
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      expect(
+        api.quoteCallsSeen,
+        isEmpty,
+        reason: 'a quote against zero cash cannot succeed — do not send it',
+      );
+      expect(find.textContaining("wasn't accepted"), findsNothing);
+
+      // Cash lands. The real quote goes out, against the real number.
+      completer.complete(const GameRunDetail(
+        runId: 'run-1',
+        fieldId: 'f1',
+        cadence: 'week',
+        state: 'active',
+        stake: 10000,
+        cash: 10000,
+        cashCommitted: 5241.87,
+        cashAvailable: 4758.13,
+        queuedOrderCount: 5,
+      ));
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(api.quoteCallsSeen, hasLength(1));
+      expect(
+        api.quoteCallsSeen.single.notional,
+        closeTo(4758.13 * 0.25, 0.01),
+        reason: 'sized against cash_available, not against zero',
+      );
     },
   );
 }
