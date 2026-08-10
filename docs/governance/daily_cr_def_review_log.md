@@ -581,3 +581,22 @@ CR124/125-open (governance action); CR140 shape = rolling 30 days, but its
 FM-vs-Trader question reopened into a **credit-metered access model** ("We should
 be using the credits") — needs a redraft pass before it's buildable, not resolved
 today.
+
+## 2026-08-10
+
+Ran in-session (backtest-CR session; first session on/after 13:00 that day — triggered
+at 20:48). `verify all` clean at start: 251 DEF rows / 158 CR rows, no drift. Scope:
+full — 24 open Defects + 26 proposed CRs. Skipped per rule: CR022 (standing defer to
+pre-release, 2026-07-31), CR122 (row self-instructs not to re-ask), CR134 (08-07 ruling
+"fold into CR109's build" is visibly happening — 995a3008 pasted CR134's correction into
+the CR109 slice-1 draft — logged as closed-by-action, row flip owed by its owner).
+
+- **DEF100** (open since 07-24, RevenueCat/store billing, Saiful-liaison) — nagged, 12 days on → Saiful: "Still working on it"
+- **DEF104** (open since 07-22, plaintext IMAP/SMTP credential) — re-asked (4th) → Saiful: "Keep deferring" (credential stays live)
+- **DEF144** (open since 07-28, translation code-switching; 07-28 review said fix shipped) — asked flip-vs-keep → Saiful: "Still broken — keep open" (code-switching still seen since e294ed6/179ae1d; genuinely open, not a stale row)
+- **CR017** (proposed since 07-10, multi-provider LLM routing) — 08-07 "start now" never executed; re-asked → Saiful: "Deprioritized again" (back to deferred)
+
+Run interrupted by Saiful after batch 1 (batch 2 declined) — 4 of ~44 asked. Remaining
+items (20 open DEFs incl. DEF178/DEF182 security pair, DEF230 no-APPROVE drought,
+DEF251; proposed CR102/103/107/133/135/140, CR145–CR157, CR159–CR161) roll to the next
+run's list untouched.
