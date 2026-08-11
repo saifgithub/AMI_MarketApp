@@ -291,8 +291,18 @@ ask the user whether to roll back or fix forward.
 # Health endpoint
 curl -fsS https://api-alpha.agenticmarketintel.ai/v1/health
 
-# LLM provider — should be vllm with has_real_provider=true
-curl -fsS https://api-alpha.agenticmarketintel.ai/v1/llm/status
+# LLM provider — should be vllm with has_real_provider=true.
+# The WHOLE /v1/llm router is admin-gated — `APIRouter(..., dependencies=[
+# Depends(get_admin)])` at api/llm.py:27 — which is CR123's C2 fix (an
+# unauthenticated LLM proxy was reachable from the internet). This step used to
+# curl it bare and could therefore NEVER pass: it returns 403, every time, on a
+# perfectly healthy deploy. A smoke check that always fails teaches the operator
+# to scroll past a failing smoke check, which is the same "reason your way past
+# a gate" habit the hold gate above exists to break. Corrected AT:R66 while
+# promoting DEF252.
+ADMIN_SECRET=$(grep -E '^ADMIN_SECRET=' infra/alpha.env | cut -d= -f2-)
+curl -fsS -H "Authorization: Bearer ${ADMIN_SECRET}" \
+  https://api-alpha.agenticmarketintel.ai/v1/llm/status
 
 # Real market data — source is the LEAF that actually served the price:
 #   "yfinance"  the current provider (market_data.py:490)
