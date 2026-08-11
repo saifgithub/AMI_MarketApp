@@ -1243,14 +1243,33 @@ def _pm_rr_coherence_signal(
 # The deeper cause of DEF235, which removing one pattern does NOT fix: this
 # family was written against `trader.md`'s ticket block, where each label sits
 # alone on its own line inside a code fence and collision is impossible — but
-# `_PROSE_FORMAT` then tells the same agent "no headings, no tables, no code
-# fences". **The parser depends on a format a later prompt layer forbids** (69%
-# of Trader turns state levels inline in running prose). That conflict is
-# DEF236's, and it is still open.
+# `_PROSE_FORMAT` then told the same agent "no headings, no tables, no code
+# fences". **The parser depended on a format a later prompt layer forbade** (69%
+# of Trader turns state levels inline in running prose). That conflict was
+# DEF236's; it was resolved on 2026-08-11 in the parser's favour — the no-fence
+# clause is no longer asserted at the Trader — so the block and this family
+# agree again. Whether the block is the right contract at all is CR152 Tier A.4.
+
+# DEF234 — the level, WITH its thousands separators. `(\d+(?:\.\d+)?)` stops at
+# the comma, so *"break above $1,073.46"* parses as a level of **$1.00** and the
+# check then announces the close is "107900.0% ABOVE $1.00". Found by sweeping
+# the pattern over all 946 real PM verdict reasons on Alpha — the corpus check
+# that should have preceded the original fix, not followed it.
+#
+# DEF242 — defined HERE, above `_LEVEL_PATTERNS`, because that family had the
+# identical bug and did not get this group: *"Entry: $1,507.00"* parsed as an
+# entry of **1.0**, which is not a silent miss but a fabricated level that flows
+# into `_annotate_rr_against_levels` and prints under "These are the figures of
+# record". One definition serves both families, so the next widening cannot
+# reach one and miss the other — which is exactly how these two drifted apart.
+_LEVEL_NUMBER = r"(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
+
 _LEVEL_PATTERNS: dict[str, re.Pattern[str]] = {
-    "entry": re.compile(r"\bentry\b[^\n$0-9]{0,15}\$?\s*(\d+(?:\.\d+)?)", re.IGNORECASE),
-    "stop": re.compile(r"\bstop(?:[\s-]*loss)?\b[^\n$0-9]{0,15}\$?\s*(\d+(?:\.\d+)?)", re.IGNORECASE),
-    "target": re.compile(r"\btarget\b[^\n$0-9]{0,15}\$?\s*(\d+(?:\.\d+)?)", re.IGNORECASE),
+    "entry": re.compile(rf"\bentry\b[^\n$0-9]{{0,15}}\$?\s*{_LEVEL_NUMBER}", re.IGNORECASE),
+    "stop": re.compile(
+        rf"\bstop(?:[\s-]*loss)?\b[^\n$0-9]{{0,15}}\$?\s*{_LEVEL_NUMBER}", re.IGNORECASE
+    ),
+    "target": re.compile(rf"\btarget\b[^\n$0-9]{{0,15}}\$?\s*{_LEVEL_NUMBER}", re.IGNORECASE),
 }
 
 # The keyword-then-ratio span of a narrated R:R, split so the ratio can be
@@ -1270,7 +1289,11 @@ def _match_level(text: str, kind: str) -> float | None:
     if m is None:
         return None
     try:
-        return float(m.group(1))
+        # DEF242 — the separators come back in the match now, and `float()` does
+        # not take them. Stripping is what turns the widened group into a
+        # correct VALUE rather than merely a longer match; asserting on the
+        # match alone would have passed while `1,507.00` still read as 1.0.
+        return float(m.group(1).replace(",", ""))
     except (TypeError, ValueError):
         return None
 
@@ -1281,23 +1304,38 @@ def _annotate_rr_against_levels(
     stop: float | None,
     target: float | None,
     size: float | None,
+    *,
+    levels_trusted: bool = True,
 ) -> tuple[str, dict[str, Any] | None]:
     """Rewrite any narrated R:R in `text` to the one `entry/stop/target` imply, and —
     on a genuine discrepancy or a ratio the levels imply but the agent omitted —
     append a loud AMI verification note carrying the computed R:R / asymmetry /
     drawdown contribution. Returns (annotated_text, signal); `signal` is a telemetry
     payload when the narration contradicted the levels (or none was rendered though
-    the levels imply one), else None. Flag-only (DEF059)."""
-    implied = risk_reward(entry, stop, target)
+    the levels imply one), else None. Flag-only (DEF059).
+
+    `levels_trusted=False` (DEF237) says the caller has already judged one of the
+    levels a mis-parse. AMI then renders NO computed figure — that is the whole
+    point of the gate — but the refusal still travels: a narrated ratio is struck
+    as unverifiable exactly as it is for a setup that does not form. Silence
+    would leave the agent's own claim standing unmarked, which is the CR040
+    failure this check exists to avoid, one level up."""
+    implied = None if not levels_trusted else risk_reward(entry, stop, target)
     stated = _extract_stated_rr(text)
     if implied is None:
-        # The levels form no valid long setup — AMI can't render a ratio. If the
-        # agent narrated one regardless, strike it loudly rather than let an
-        # unverifiable figure enter the transcript unmarked.
+        # The levels form no valid long setup, or one of them is not a level at
+        # all — either way AMI can't render a ratio. If the agent narrated one
+        # regardless, strike it loudly rather than let an unverifiable figure
+        # enter the transcript unmarked.
         if stated is None:
             return text, None
+        reason = (
+            "the stated levels form no valid long setup"
+            if levels_trusted
+            else "AMI could not read a price level out of this proposal"
+        )
         annotated = _RR_CLAIM_RE.sub(
-            lambda m: f"{m.group(1)}[AMI: unverifiable — the stated levels form no valid long setup]",
+            lambda m: f"{m.group(1)}[AMI: unverifiable — {reason}]",
             text,
         )
         return annotated, {"stated_rr": stated, "implied_rr": -1.0}
@@ -1527,12 +1565,8 @@ _LEVEL_GAP = (
     rf"(?:\s+{_LEVEL_PREPOSITION}\b)?(?:[\s,–—-]+{_LEVEL_NOUN}\b)*[\s,]*[*_(]*"
 )
 
-# DEF234 — the level, WITH its thousands separators. `(\d+(?:\.\d+)?)` stopped
-# at the comma, so *"break above $1,073.46"* parsed as a level of **$1.00** and
-# the check then announced the close was "107900.0% ABOVE $1.00". Found by
-# sweeping the pattern over all 946 real PM verdict reasons on Alpha — the
-# corpus check that should have preceded the original fix, not followed it.
-_LEVEL_NUMBER = r"(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
+# `_LEVEL_NUMBER` (DEF234, and DEF242's reuse of it) is defined once, above
+# `_LEVEL_PATTERNS` — a second copy here is what let the two families drift.
 
 # Round-7 audit MAJOR — and it is the SUBJECT gate that failed, not just one
 # word in it. Round 6 fixed `clear` firing on the earnings sense by requiring a
@@ -1640,7 +1674,43 @@ _DIRECTION_TOLERANCE_PCT = 1.0
 # "107900.0% ABOVE" confidently is the failure mode it must never have. The
 # comma bug above is fixed at source — this is the backstop for the NEXT parse
 # defect in the same class, and it is loud rather than silent.
+#
+# Superseded by `_MAX_PLAUSIBLE_LEVEL_RATIO` below (DEF237) and kept only as the
+# derivation of it — 400% gap IS 5× ratio. Nothing reads this constant.
 _DIRECTION_MAX_PLAUSIBLE_GAP_PCT = 400.0
+
+# DEF237 — the SAME threshold, said symmetrically, because said as a signed
+# percentage gap it only ever guarded one direction.
+#
+#     gap_pct = 100 × (close − level) / level  =  100 × (close/level − 1)
+#
+# so |gap| > 400 resolves to `close > 5 × level` and to nothing else: the other
+# branch needs close/level < −3, which no pair of positive prices reaches. A
+# level far BELOW the close (DEF234's comma bug: $1,073.46 → 1.0) trips it at
+# 107900%; a level far ABOVE the close never trips it at all. A level 13.8× the
+# close evaluates to −92.8% and sails through a 400% bound.
+#
+# That asymmetry is the whole of DEF237's exposure on this check, and DEF242
+# widens the number group, which makes more prose numerals candidate levels.
+# 5.0 is therefore DERIVED, not chosen — it is 400% restated so that the caught
+# side keeps exactly its current behaviour and only the uncaught side gains it.
+# It is deliberately not tuned against the corpus: 216 turns hold 5 full level
+# triples, which cannot validate a threshold (P16), and a number fitted to five
+# examples would read as evidence-backed while being nothing of the sort.
+_MAX_PLAUSIBLE_LEVEL_RATIO = 5.0
+
+
+def _level_is_implausible(level: float | None, close: float | None) -> bool:
+    """True when `level` and `close` are too far apart to be a price and a level
+    of the same instrument — i.e. when the likeliest explanation is a mis-parse.
+
+    Symmetric by construction: the ratio is taken the larger way round, so a
+    level 5× the close and a close 5× the level are judged identically. Returns
+    False when either number is missing or non-positive, because the caller then
+    has nothing to compare and silence is the designed miss (DEF234)."""
+    if not level or not close or level <= 0 or close <= 0:
+        return False
+    return max(level / close, close / level) > _MAX_PLAUSIBLE_LEVEL_RATIO
 
 
 def _reference_close(profile: dict[str, Any]) -> float | None:
@@ -1814,12 +1884,17 @@ def _direction_contradictions(
             gap_pct = 100.0 * (close - level) / level
             if abs(gap_pct) < _DIRECTION_TOLERANCE_PCT:
                 continue
-            if abs(gap_pct) > _DIRECTION_MAX_PLAUSIBLE_GAP_PCT:
+            if _level_is_implausible(level, close):
                 # DEF234: not an incoherent instruction — a mis-parse. Loud, so
                 # the next one is found by reading logs rather than by a user
                 # reading nonsense on the Verdict Board. Reaching this now means
                 # a level of the run is itself absurd against its own close,
                 # which is a different bug again; still refuse, still loudly.
+                #
+                # DEF237 made the comparison symmetric. It read `abs(gap_pct) >
+                # 400`, which caught a level far below the close and nothing far
+                # above it — see `_MAX_PLAUSIBLE_LEVEL_RATIO`. Same threshold,
+                # both directions.
                 logger.warning(
                     "room_pm_direction_implausible_gap",
                     claim=m.group(0).strip()[:120],
@@ -2088,7 +2163,10 @@ def _mark_if_truncated(
 
 
 def _verify_and_annotate_geometry(
-    text: str, *, size_pct: float | None = None
+    text: str,
+    *,
+    size_pct: float | None = None,
+    reference_close: float | None = None,
 ) -> tuple[str, dict[str, Any] | None]:
     """Verify a level-proposing agent's OWN narrated derived figures against AMI's
     trading_math (DEF095). An agent has "proposed levels" only when it states a full
@@ -2100,6 +2178,19 @@ def _verify_and_annotate_geometry(
     text — DEF235. Callers that omit it get the R:R and asymmetry but no drawdown
     contribution, which is the honest degradation: without a size there is no such
     figure, and inventing one out of the prose is the defect.
+
+    `reference_close` is the run's own last close (`_reference_close(ctx.profile)`,
+    which yields None unless the technicals are LIVE). DEF237: without it this
+    function had no plausibility gate of any kind, so a single mis-parsed level
+    produced a fabricated downside and printed it under *"These are the figures of
+    record"* — the one phrase in the transcript that tells the user a number was
+    checked. Three levels all pass through `_match_level`, and DEF242 has just
+    widened its number group, which makes more prose numerals candidates.
+
+    A triple containing an implausible level is refused ENTIRELY rather than
+    partially annotated: the levels are only meaningful together (`risk_reward`
+    needs all three), so salvaging two of them would compute a ratio from a set
+    AMI has already decided it does not believe.
     """
     if not text:
         return text, None
@@ -2108,6 +2199,27 @@ def _verify_and_annotate_geometry(
     target = _match_level(text, "target")
     if entry is None or stop is None or target is None:
         return text, None
+    implausible = {
+        name: value
+        for name, value in (("entry", entry), ("stop", stop), ("target", target))
+        if _level_is_implausible(value, reference_close)
+    }
+    if implausible:
+        # Loud, and a REFUSAL rather than a guess — the same shape as the DEF231
+        # direction check. Computing a figure from a mis-parse puts an invented
+        # number in front of the user with AMI's name on it, and every
+        # downstream agent then reasons from it. But the refusal is not silence:
+        # a ratio the agent narrated is still struck, or the gate would trade a
+        # fabricated AMI figure for an unmarked agent one.
+        logger.warning(
+            "room_geometry_implausible_level",
+            levels=implausible,
+            reference_close=reference_close,
+            max_ratio=_MAX_PLAUSIBLE_LEVEL_RATIO,
+        )
+        return _annotate_rr_against_levels(
+            text, entry, stop, target, size_pct, levels_trusted=False
+        )
     return _annotate_rr_against_levels(text, entry, stop, target, size_pct)
 
 
@@ -3843,7 +3955,16 @@ async def _compute_agent_text(
     # downstream agent read AMI's figure, not the narration. Only a full level triple
     # triggers it; all other agents pass through untouched. Flag-only — never a veto
     # (DEF059 — the safety floor stays the sole vetoer).
-    text, geom_sig = _verify_and_annotate_geometry(text, size_pct=ctx.trader_size_pct)
+    # DEF237: the run's own close is what makes a mis-parsed level detectable.
+    # `_reference_close` is gated on `field_state["technicals"] == LIVE`, so a
+    # run with no recorded technicals provenance passes None and the geometry
+    # check degrades to its pre-DEF237 behaviour rather than comparing against a
+    # number of unknown origin (CR104).
+    text, geom_sig = _verify_and_annotate_geometry(
+        text,
+        size_pct=ctx.trader_size_pct,
+        reference_close=_reference_close(ctx.profile),
+    )
     return text, geom_sig, envelope
 
 
