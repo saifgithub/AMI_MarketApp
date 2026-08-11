@@ -104,3 +104,21 @@ See the approved plan (kept in Saiful's plan archive) — summary:
 
 Land under `results/` in this folder: batch JSONLs, cutoff-probe report, universe
 audit, pilot gate report, final scored report.
+
+---
+
+## Three look-ahead traps upstream already hit (CR167, 2026-08-11)
+
+From the TradingAgents drift review — as-of mode walks into all three, and each cost them a separate fix:
+
+| SHA | What broke |
+|---|---|
+| `3570f2e` | Alpha Vantage fundamentals served with no look-ahead filter |
+| `0c1231a` | Future-dated **and undated** news leaked into historical windows — the undated half is the easy one to miss |
+| `40774ca` | The Yahoo news window was neither UTC nor end-exclusive |
+
+Also relevant to scoring: `9fd54f8` rejects stale yfinance OHLCV rather than reporting wrong prices, and
+`1ff3f07` makes an unrecognised symbol return a verbatim "data unavailable" instead of *"a value the
+model fills in"* — both failure modes that a backtest silently absorbs as signal.
+
+Detail: [../CR167_tradingagents_upstream_drift/](../CR167_tradingagents_upstream_drift/) §6.2, §6.4.

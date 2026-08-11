@@ -1,0 +1,1044 @@
+diff --git a/tradingagents/agents/utils/agent_states.py b/tradingagents/agents/utils/agent_states.py
+index 6151a38..82504ca 100644
+--- a/tradingagents/agents/utils/agent_states.py
++++ b/tradingagents/agents/utils/agent_states.py
+@@ -1,6 +1,7 @@
+ from typing import Annotated
+-from typing_extensions import TypedDict
++
+ from langgraph.graph import MessagesState
++from typing_extensions import TypedDict
+ 
+ 
+ # Researcher team state
+@@ -45,13 +46,15 @@ class RiskDebateState(TypedDict):
+ 
+ class AgentState(MessagesState):
+     company_of_interest: Annotated[str, "Company that we are interested in trading"]
++    asset_type: Annotated[str, "Asset type under analysis such as stock or crypto"]
++    instrument_context: Annotated[str, "Deterministic ticker identity resolved at run start"]
+     trade_date: Annotated[str, "What date we are trading at"]
+ 
+     sender: Annotated[str, "Agent that sent this message"]
+ 
+     # research step
+     market_report: Annotated[str, "Report from the Market Analyst"]
+-    sentiment_report: Annotated[str, "Report from the Social Media Analyst"]
++    sentiment_report: Annotated[str, "Report from the Sentiment Analyst"]
+     news_report: Annotated[
+         str, "Report from the News Researcher of current world affairs"
+     ]
+diff --git a/tradingagents/graph/__init__.py b/tradingagents/graph/__init__.py
+index 80982c1..901eddd 100644
+--- a/tradingagents/graph/__init__.py
++++ b/tradingagents/graph/__init__.py
+@@ -1,11 +1,11 @@
+ # TradingAgents/graph/__init__.py
+ 
+-from .trading_graph import TradingAgentsGraph
+ from .conditional_logic import ConditionalLogic
+-from .setup import GraphSetup
+ from .propagation import Propagator
+ from .reflection import Reflector
++from .setup import GraphSetup
+ from .signal_processing import SignalProcessor
++from .trading_graph import TradingAgentsGraph
+ 
+ __all__ = [
+     "TradingAgentsGraph",
+diff --git a/tradingagents/graph/analyst_execution.py b/tradingagents/graph/analyst_execution.py
+new file mode 100644
+index 0000000..0e65374
+--- /dev/null
++++ b/tradingagents/graph/analyst_execution.py
+@@ -0,0 +1,135 @@
++from collections.abc import Iterable
++from dataclasses import dataclass
++from time import monotonic
++
++
++@dataclass(frozen=True)
++class AnalystNodeSpec:
++    key: str
++    agent_node: str
++    clear_node: str
++    tool_node: str
++    report_key: str
++
++
++@dataclass(frozen=True)
++class AnalystExecutionPlan:
++    specs: list[AnalystNodeSpec]
++
++
++ANALYST_NODE_SPECS: dict[str, AnalystNodeSpec] = {
++    "market": AnalystNodeSpec(
++        key="market",
++        agent_node="Market Analyst",
++        clear_node="Msg Clear Market",
++        tool_node="tools_market",
++        report_key="market_report",
++    ),
++    "social": AnalystNodeSpec(
++        # Wire key stays "social" for saved-config back-compat; the
++        # user-facing label is "Sentiment Analyst" to match the rename
++        # that landed in v0.2.5 (sentiment_analyst now ingests news +
++        # StockTwits + Reddit, not just social media).
++        key="social",
++        agent_node="Sentiment Analyst",
++        clear_node="Msg Clear Sentiment",
++        tool_node="tools_social",
++        report_key="sentiment_report",
++    ),
++    "news": AnalystNodeSpec(
++        key="news",
++        agent_node="News Analyst",
++        clear_node="Msg Clear News",
++        tool_node="tools_news",
++        report_key="news_report",
++    ),
++    "fundamentals": AnalystNodeSpec(
++        key="fundamentals",
++        agent_node="Fundamentals Analyst",
++        clear_node="Msg Clear Fundamentals",
++        tool_node="tools_fundamentals",
++        report_key="fundamentals_report",
++    ),
++}
++
++
++def build_analyst_execution_plan(
++    selected_analysts: Iterable[str],
++) -> AnalystExecutionPlan:
++    specs: list[AnalystNodeSpec] = []
++    for analyst_key in selected_analysts:
++        spec = ANALYST_NODE_SPECS.get(analyst_key)
++        if spec is None:
++            raise ValueError(f"unknown analyst key: {analyst_key}")
++        specs.append(spec)
++
++    if not specs:
++        raise ValueError("at least one analyst must be selected")
++
++    return AnalystExecutionPlan(specs=specs)
++
++
++def get_initial_analyst_node(plan: AnalystExecutionPlan) -> str:
++    return plan.specs[0].agent_node
++
++
++class AnalystWallTimeTracker:
++    def __init__(self, plan: AnalystExecutionPlan):
++        self.plan = plan
++        self._started_at: dict[str, float] = {}
++        self._wall_times: dict[str, float] = {}
++
++    def mark_started(self, analyst_key: str, started_at: float | None = None) -> None:
++        if analyst_key not in ANALYST_NODE_SPECS:
++            raise ValueError(f"unknown analyst key: {analyst_key}")
++        self._started_at.setdefault(analyst_key, monotonic() if started_at is None else started_at)
++
++    def mark_completed(
++        self,
++        analyst_key: str,
++        completed_at: float | None = None,
++    ) -> None:
++        if analyst_key not in ANALYST_NODE_SPECS:
++            raise ValueError(f"unknown analyst key: {analyst_key}")
++        if analyst_key in self._wall_times:
++            return
++        started_at = self._started_at.get(analyst_key)
++        if started_at is None:
++            return
++        finished_at = monotonic() if completed_at is None else completed_at
++        self._wall_times[analyst_key] = max(0.0, finished_at - started_at)
++
++    def get_wall_times(self) -> dict[str, float]:
++        return dict(self._wall_times)
++
++    def format_summary(self) -> str:
++        parts = []
++        for spec in self.plan.specs:
++            duration = self._wall_times.get(spec.key)
++            if duration is not None:
++                label = spec.agent_node.removesuffix(" Analyst")
++                parts.append(f"{label} {duration:.2f}s")
++        if not parts:
++            return "Analyst wall time: pending"
++        return "Analyst wall time: " + " | ".join(parts)
++
++
++def sync_analyst_tracker_from_chunk(
++    tracker: AnalystWallTimeTracker,
++    chunk: dict[str, str],
++    now: float | None = None,
++) -> None:
++    current_time = monotonic() if now is None else now
++    active_found = False
++
++    for spec in tracker.plan.specs:
++        has_report = bool(chunk.get(spec.report_key))
++
++        if has_report:
++            tracker.mark_started(spec.key, started_at=current_time)
++            tracker.mark_completed(spec.key, completed_at=current_time)
++            continue
++
++        if not active_found:
++            tracker.mark_started(spec.key, started_at=current_time)
++            active_found = True
+diff --git a/tradingagents/graph/checkpointer.py b/tradingagents/graph/checkpointer.py
+index 3ba1972..750d8d1 100644
+--- a/tradingagents/graph/checkpointer.py
++++ b/tradingagents/graph/checkpointer.py
+@@ -7,9 +7,9 @@ from __future__ import annotations
+ 
+ import hashlib
+ import sqlite3
++from collections.abc import Generator
+ from contextlib import contextmanager
+ from pathlib import Path
+-from typing import Generator
+ 
+ from langgraph.checkpoint.sqlite import SqliteSaver
+ 
+@@ -25,9 +25,17 @@ def _db_path(data_dir: str | Path, ticker: str) -> Path:
+     return p / f"{safe}.db"
+ 
+ 
+-def thread_id(ticker: str, date: str) -> str:
+-    """Deterministic thread ID for a ticker+date pair."""
+-    return hashlib.sha256(f"{ticker.upper()}:{date}".encode()).hexdigest()[:16]
++def thread_id(ticker: str, date: str, signature: str = "") -> str:
++    """Deterministic thread ID for a ticker+date pair.
++
++    ``signature`` folds in graph-shape-affecting run choices so a resume under a
++    different graph can't reuse this checkpoint (#1089); omitting it keeps the
++    legacy ID.
++    """
++    base = f"{ticker.upper()}:{date}"
++    if signature:
++        base = f"{base}:{signature}"
++    return hashlib.sha256(base.encode()).hexdigest()[:16]
+ 
+ 
+ @contextmanager
+@@ -43,17 +51,17 @@ def get_checkpointer(data_dir: str | Path, ticker: str) -> Generator[SqliteSaver
+         conn.close()
+ 
+ 
+-def has_checkpoint(data_dir: str | Path, ticker: str, date: str) -> bool:
++def has_checkpoint(data_dir: str | Path, ticker: str, date: str, signature: str = "") -> bool:
+     """Check whether a resumable checkpoint exists for ticker+date."""
+-    return checkpoint_step(data_dir, ticker, date) is not None
++    return checkpoint_step(data_dir, ticker, date, signature) is not None
+ 
+ 
+-def checkpoint_step(data_dir: str | Path, ticker: str, date: str) -> int | None:
++def checkpoint_step(data_dir: str | Path, ticker: str, date: str, signature: str = "") -> int | None:
+     """Return the step number of the latest checkpoint, or None if none exists."""
+     db = _db_path(data_dir, ticker)
+     if not db.exists():
+         return None
+-    tid = thread_id(ticker, date)
++    tid = thread_id(ticker, date, signature)
+     with get_checkpointer(data_dir, ticker) as saver:
+         config = {"configurable": {"thread_id": tid}}
+         cp = saver.get_tuple(config)
+@@ -73,12 +81,12 @@ def clear_all_checkpoints(data_dir: str | Path) -> int:
+     return len(dbs)
+ 
+ 
+-def clear_checkpoint(data_dir: str | Path, ticker: str, date: str) -> None:
++def clear_checkpoint(data_dir: str | Path, ticker: str, date: str, signature: str = "") -> None:
+     """Remove checkpoint for a specific ticker+date by deleting the thread's rows."""
+     db = _db_path(data_dir, ticker)
+     if not db.exists():
+         return
+-    tid = thread_id(ticker, date)
++    tid = thread_id(ticker, date, signature)
+     conn = sqlite3.connect(str(db))
+     try:
+         for table in ("writes", "checkpoints"):
+diff --git a/tradingagents/graph/conditional_logic.py b/tradingagents/graph/conditional_logic.py
+index 4837179..b032735 100644
+--- a/tradingagents/graph/conditional_logic.py
++++ b/tradingagents/graph/conditional_logic.py
+@@ -20,12 +20,18 @@ class ConditionalLogic:
+         return "Msg Clear Market"
+ 
+     def should_continue_social(self, state: AgentState):
+-        """Determine if social media analysis should continue."""
++        """Determine if sentiment-analyst tool round should continue.
++
++        Method name keeps the legacy ``social`` suffix to match the
++        ``AnalystType.SOCIAL = "social"`` wire value (saved-config
++        back-compat); the returned ``clear_node`` label uses the v0.2.5
++        rename so it matches the node registered by the execution plan.
++        """
+         messages = state["messages"]
+         last_message = messages[-1]
+         if last_message.tool_calls:
+             return "tools_social"
+-        return "Msg Clear Social"
++        return "Msg Clear Sentiment"
+ 
+     def should_continue_news(self, state: AgentState):
+         """Determine if news analysis should continue."""
+diff --git a/tradingagents/graph/propagation.py b/tradingagents/graph/propagation.py
+index 2a5efb1..2a6aedd 100644
+--- a/tradingagents/graph/propagation.py
++++ b/tradingagents/graph/propagation.py
+@@ -1,8 +1,8 @@
+ # TradingAgents/graph/propagation.py
+ 
+-from typing import Dict, Any, List, Optional
++from typing import Any
++
+ from tradingagents.agents.utils.agent_states import (
+-    AgentState,
+     InvestDebateState,
+     RiskDebateState,
+ )
+@@ -16,12 +16,26 @@ class Propagator:
+         self.max_recur_limit = max_recur_limit
+ 
+     def create_initial_state(
+-        self, company_name: str, trade_date: str, past_context: str = ""
+-    ) -> Dict[str, Any]:
+-        """Create the initial state for the agent graph."""
++        self,
++        company_name: str,
++        trade_date: str,
++        asset_type: str = "stock",
++        past_context: str = "",
++        instrument_context: str = "",
++    ) -> dict[str, Any]:
++        """Create the initial state for the agent graph.
++
++        ``instrument_context`` is the deterministic ticker-identity string
++        resolved once at run start (see
++        ``TradingAgentsGraph.resolve_instrument_context``). When empty, agents
++        fall back to ticker-only context via
++        ``get_instrument_context_from_state``.
++        """
+         return {
+             "messages": [("human", company_name)],
+             "company_of_interest": company_name,
++            "asset_type": asset_type,
++            "instrument_context": instrument_context,
+             "trade_date": str(trade_date),
+             "past_context": past_context,
+             "investment_debate_state": InvestDebateState(
+@@ -54,7 +68,7 @@ class Propagator:
+             "news_report": "",
+         }
+ 
+-    def get_graph_args(self, callbacks: Optional[List] = None) -> Dict[str, Any]:
++    def get_graph_args(self, callbacks: list | None = None) -> dict[str, Any]:
+         """Get arguments for the graph invocation.
+ 
+         Args:
+diff --git a/tradingagents/graph/reflection.py b/tradingagents/graph/reflection.py
+index 8131144..0685941 100644
+--- a/tradingagents/graph/reflection.py
++++ b/tradingagents/graph/reflection.py
+@@ -33,11 +33,15 @@ class Reflector:
+         final_decision: str,
+         raw_return: float,
+         alpha_return: float,
++        benchmark_name: str = "SPY",
+     ) -> str:
+         """Single reflection call on the final trade decision with outcome context.
+ 
+         Used by Phase B deferred reflection. The final_trade_decision already
+         synthesises all analyst insights, so no separate market context is needed.
++        ``benchmark_name`` is the label used for the alpha line (e.g. ``"SPY"``
++        for US tickers, ``"^N225"`` for ``.T`` listings); defaults to SPY for
++        callers that haven't been updated to thread the benchmark through.
+         """
+         messages = [
+             ("system", self.log_reflection_prompt),
+@@ -45,7 +49,7 @@ class Reflector:
+                 "human",
+                 (
+                     f"Raw return: {raw_return:+.1%}\n"
+-                    f"Alpha vs SPY: {alpha_return:+.1%}\n\n"
++                    f"Alpha vs {benchmark_name}: {alpha_return:+.1%}\n\n"
+                     f"Final Decision:\n{final_decision}"
+                 ),
+             ),
+diff --git a/tradingagents/graph/setup.py b/tradingagents/graph/setup.py
+index 45d6bfd..171b656 100644
+--- a/tradingagents/graph/setup.py
++++ b/tradingagents/graph/setup.py
+@@ -1,14 +1,46 @@
+ # TradingAgents/graph/setup.py
+ 
+-from typing import Any, Dict
++from typing import Any
++
+ from langgraph.graph import END, START, StateGraph
+ from langgraph.prebuilt import ToolNode
+ 
+-from tradingagents.agents import *
++from tradingagents.agents import (
++    create_aggressive_debator,
++    create_bear_researcher,
++    create_bull_researcher,
++    create_conservative_debator,
++    create_fundamentals_analyst,
++    create_market_analyst,
++    create_msg_delete,
++    create_neutral_debator,
++    create_news_analyst,
++    create_portfolio_manager,
++    create_research_manager,
++    create_sentiment_analyst,
++    create_trader,
++)
+ from tradingagents.agents.utils.agent_states import AgentState
+ 
++from .analyst_execution import build_analyst_execution_plan
+ from .conditional_logic import ConditionalLogic
+ 
++# Every target a shared conditional router can return. Each edge driven by the
++# router maps all of them, so a fall-through return (e.g. under prompt/i18n/
++# refactor drift in the speaker labels) can never hit a missing path_map entry
++# and crash LangGraph mid-run (#1088).
++DEBATE_PATH_MAP = {
++    "Bull Researcher": "Bull Researcher",
++    "Bear Researcher": "Bear Researcher",
++    "Research Manager": "Research Manager",
++}
++RISK_ANALYSIS_PATH_MAP = {
++    "Aggressive Analyst": "Aggressive Analyst",
++    "Conservative Analyst": "Conservative Analyst",
++    "Neutral Analyst": "Neutral Analyst",
++    "Portfolio Manager": "Portfolio Manager",
++}
++
+ 
+ class GraphSetup:
+     """Handles the setup and configuration of the agent graph."""
+@@ -17,7 +49,7 @@ class GraphSetup:
+         self,
+         quick_thinking_llm: Any,
+         deep_thinking_llm: Any,
+-        tool_nodes: Dict[str, ToolNode],
++        tool_nodes: dict[str, ToolNode],
+         conditional_logic: ConditionalLogic,
+     ):
+         """Initialize with required components."""
+@@ -27,7 +59,7 @@ class GraphSetup:
+         self.conditional_logic = conditional_logic
+ 
+     def setup_graph(
+-        self, selected_analysts=["market", "social", "news", "fundamentals"]
++        self, selected_analysts=("market", "social", "news", "fundamentals")
+     ):
+         """Set up and compile the agent workflow graph.
+ 
+@@ -38,41 +70,14 @@ class GraphSetup:
+                 - "news": News analyst
+                 - "fundamentals": Fundamentals analyst
+         """
+-        if len(selected_analysts) == 0:
+-            raise ValueError("Trading Agents Graph Setup Error: no analysts selected!")
+-
+-        # Create analyst nodes
+-        analyst_nodes = {}
+-        delete_nodes = {}
+-        tool_nodes = {}
+-
+-        if "market" in selected_analysts:
+-            analyst_nodes["market"] = create_market_analyst(
+-                self.quick_thinking_llm
+-            )
+-            delete_nodes["market"] = create_msg_delete()
+-            tool_nodes["market"] = self.tool_nodes["market"]
+-
+-        if "social" in selected_analysts:
+-            analyst_nodes["social"] = create_social_media_analyst(
+-                self.quick_thinking_llm
+-            )
+-            delete_nodes["social"] = create_msg_delete()
+-            tool_nodes["social"] = self.tool_nodes["social"]
++        plan = build_analyst_execution_plan(selected_analysts)
+ 
+-        if "news" in selected_analysts:
+-            analyst_nodes["news"] = create_news_analyst(
+-                self.quick_thinking_llm
+-            )
+-            delete_nodes["news"] = create_msg_delete()
+-            tool_nodes["news"] = self.tool_nodes["news"]
+-
+-        if "fundamentals" in selected_analysts:
+-            analyst_nodes["fundamentals"] = create_fundamentals_analyst(
+-                self.quick_thinking_llm
+-            )
+-            delete_nodes["fundamentals"] = create_msg_delete()
+-            tool_nodes["fundamentals"] = self.tool_nodes["fundamentals"]
++        analyst_factories = {
++            "market": lambda: create_market_analyst(self.quick_thinking_llm),
++            "social": lambda: create_sentiment_analyst(self.quick_thinking_llm),
++            "news": lambda: create_news_analyst(self.quick_thinking_llm),
++            "fundamentals": lambda: create_fundamentals_analyst(self.quick_thinking_llm),
++        }
+ 
+         # Create researcher and manager nodes
+         bull_researcher_node = create_bull_researcher(self.quick_thinking_llm)
+@@ -90,12 +95,10 @@ class GraphSetup:
+         workflow = StateGraph(AgentState)
+ 
+         # Add analyst nodes to the graph
+-        for analyst_type, node in analyst_nodes.items():
+-            workflow.add_node(f"{analyst_type.capitalize()} Analyst", node)
+-            workflow.add_node(
+-                f"Msg Clear {analyst_type.capitalize()}", delete_nodes[analyst_type]
+-            )
+-            workflow.add_node(f"tools_{analyst_type}", tool_nodes[analyst_type])
++        for spec in plan.specs:
++            workflow.add_node(spec.agent_node, analyst_factories[spec.key]())
++            workflow.add_node(spec.clear_node, create_msg_delete())
++            workflow.add_node(spec.tool_node, self.tool_nodes[spec.key])
+ 
+         # Add other nodes
+         workflow.add_node("Bull Researcher", bull_researcher_node)
+@@ -109,73 +112,44 @@ class GraphSetup:
+ 
+         # Define edges
+         # Start with the first analyst
+-        first_analyst = selected_analysts[0]
+-        workflow.add_edge(START, f"{first_analyst.capitalize()} Analyst")
++        workflow.add_edge(START, plan.specs[0].agent_node)
+ 
+         # Connect analysts in sequence
+-        for i, analyst_type in enumerate(selected_analysts):
+-            current_analyst = f"{analyst_type.capitalize()} Analyst"
+-            current_tools = f"tools_{analyst_type}"
+-            current_clear = f"Msg Clear {analyst_type.capitalize()}"
++        for i, spec in enumerate(plan.specs):
++            current_analyst = spec.agent_node
++            current_tools = spec.tool_node
++            current_clear = spec.clear_node
+ 
+             # Add conditional edges for current analyst
+             workflow.add_conditional_edges(
+                 current_analyst,
+-                getattr(self.conditional_logic, f"should_continue_{analyst_type}"),
++                getattr(self.conditional_logic, f"should_continue_{spec.key}"),
+                 [current_tools, current_clear],
+             )
+             workflow.add_edge(current_tools, current_analyst)
+ 
+             # Connect to next analyst or to Bull Researcher if this is the last analyst
+-            if i < len(selected_analysts) - 1:
+-                next_analyst = f"{selected_analysts[i+1].capitalize()} Analyst"
+-                workflow.add_edge(current_clear, next_analyst)
++            if i < len(plan.specs) - 1:
++                workflow.add_edge(current_clear, plan.specs[i + 1].agent_node)
+             else:
+                 workflow.add_edge(current_clear, "Bull Researcher")
+ 
+-        # Add remaining edges
+-        workflow.add_conditional_edges(
+-            "Bull Researcher",
+-            self.conditional_logic.should_continue_debate,
+-            {
+-                "Bear Researcher": "Bear Researcher",
+-                "Research Manager": "Research Manager",
+-            },
+-        )
+-        workflow.add_conditional_edges(
+-            "Bear Researcher",
+-            self.conditional_logic.should_continue_debate,
+-            {
+-                "Bull Researcher": "Bull Researcher",
+-                "Research Manager": "Research Manager",
+-            },
+-        )
++        # Both research-debate edges share the complete DEBATE_PATH_MAP (#1088).
++        for debate_node in ("Bull Researcher", "Bear Researcher"):
++            workflow.add_conditional_edges(
++                debate_node,
++                self.conditional_logic.should_continue_debate,
++                DEBATE_PATH_MAP,
++            )
+         workflow.add_edge("Research Manager", "Trader")
+         workflow.add_edge("Trader", "Aggressive Analyst")
+-        workflow.add_conditional_edges(
+-            "Aggressive Analyst",
+-            self.conditional_logic.should_continue_risk_analysis,
+-            {
+-                "Conservative Analyst": "Conservative Analyst",
+-                "Portfolio Manager": "Portfolio Manager",
+-            },
+-        )
+-        workflow.add_conditional_edges(
+-            "Conservative Analyst",
+-            self.conditional_logic.should_continue_risk_analysis,
+-            {
+-                "Neutral Analyst": "Neutral Analyst",
+-                "Portfolio Manager": "Portfolio Manager",
+-            },
+-        )
+-        workflow.add_conditional_edges(
+-            "Neutral Analyst",
+-            self.conditional_logic.should_continue_risk_analysis,
+-            {
+-                "Aggressive Analyst": "Aggressive Analyst",
+-                "Portfolio Manager": "Portfolio Manager",
+-            },
+-        )
++        # All three risk edges share the complete RISK_ANALYSIS_PATH_MAP (#1088).
++        for risk_node in ("Aggressive Analyst", "Conservative Analyst", "Neutral Analyst"):
++            workflow.add_conditional_edges(
++                risk_node,
++                self.conditional_logic.should_continue_risk_analysis,
++                RISK_ANALYSIS_PATH_MAP,
++            )
+ 
+         workflow.add_edge("Portfolio Manager", END)
+ 
+diff --git a/tradingagents/graph/trading_graph.py b/tradingagents/graph/trading_graph.py
+index d7e8b57..a190217 100644
+--- a/tradingagents/graph/trading_graph.py
++++ b/tradingagents/graph/trading_graph.py
+@@ -1,61 +1,76 @@
+ # TradingAgents/graph/trading_graph.py
+ 
++import json
+ import logging
+ import os
+-from pathlib import Path
+-import json
+ from datetime import datetime, timedelta
+-from typing import Dict, Any, Tuple, List, Optional
++from pathlib import Path
++from typing import Any
+ 
+ import yfinance as yf
+-
+-logger = logging.getLogger(__name__)
+-
+ from langgraph.prebuilt import ToolNode
+ 
+-from tradingagents.llm_clients import create_llm_client
+-
+-from tradingagents.agents import *
+-from tradingagents.default_config import DEFAULT_CONFIG
+-from tradingagents.agents.utils.memory import TradingMemoryLog
+-from tradingagents.dataflows.utils import safe_ticker_component
+-from tradingagents.agents.utils.agent_states import (
+-    AgentState,
+-    InvestDebateState,
+-    RiskDebateState,
+-)
+-from tradingagents.dataflows.config import set_config
+-
+-# Import the new abstract tool methods from agent_utils
++# Import the abstract tool methods from agent_utils
+ from tradingagents.agents.utils.agent_utils import (
+-    get_stock_data,
+-    get_indicators,
+-    get_fundamentals,
++    build_instrument_context,
+     get_balance_sheet,
+     get_cashflow,
++    get_fundamentals,
++    get_global_news,
+     get_income_statement,
+-    get_news,
++    get_indicators,
+     get_insider_transactions,
+-    get_global_news
++    get_macro_indicators,
++    get_news,
++    get_prediction_markets,
++    get_stock_data,
++    get_verified_market_snapshot,
++    resolve_instrument_identity,
+ )
++from tradingagents.agents.utils.memory import TradingMemoryLog
++from tradingagents.dataflows.config import set_config
++from tradingagents.dataflows.utils import safe_ticker_component
++from tradingagents.default_config import DEFAULT_CONFIG
++from tradingagents.llm_clients import create_llm_client
++from tradingagents.reporting import write_report_tree
+ 
+ from .checkpointer import checkpoint_step, clear_checkpoint, get_checkpointer, thread_id
+ from .conditional_logic import ConditionalLogic
+-from .setup import GraphSetup
+ from .propagation import Propagator
+ from .reflection import Reflector
++from .setup import GraphSetup
+ from .signal_processing import SignalProcessor
+ 
++logger = logging.getLogger(__name__)
++
++
++def _coerce_max_retries(value):
++    """Validate an ``llm_max_retries`` value to a non-negative int.
++
++    Accepts an int or a numeric string (env vars arrive as strings). Rejects
++    booleans and negatives loudly so a misconfiguration fails at startup rather
++    than silently disabling retries.
++    """
++    if isinstance(value, bool):
++        raise ValueError(f"llm_max_retries must be an integer, not a boolean: {value!r}")
++    try:
++        n = int(value)
++    except (TypeError, ValueError) as exc:
++        raise ValueError(f"llm_max_retries must be an integer, got {value!r}") from exc
++    if n < 0:
++        raise ValueError(f"llm_max_retries must be >= 0, got {n}")
++    return n
++
+ 
+ class TradingAgentsGraph:
+     """Main class that orchestrates the trading agents framework."""
+ 
+     def __init__(
+         self,
+-        selected_analysts=["market", "social", "news", "fundamentals"],
++        selected_analysts=("market", "social", "news", "fundamentals"),
+         debug=False,
+-        config: Dict[str, Any] = None,
+-        callbacks: Optional[List] = None,
++        config: dict[str, Any] = None,
++        callbacks: list | None = None,
+     ):
+         """Initialize the trading agents graph and components.
+ 
+@@ -98,7 +113,7 @@ class TradingAgentsGraph:
+ 
+         self.deep_thinking_llm = deep_client.get_llm()
+         self.quick_thinking_llm = quick_client.get_llm()
+-        
++
+         self.memory_log = TradingMemoryLog(self.config)
+ 
+         # Create tool nodes
+@@ -116,7 +131,9 @@ class TradingAgentsGraph:
+             self.conditional_logic,
+         )
+ 
+-        self.propagator = Propagator()
++        self.propagator = Propagator(
++            max_recur_limit=self.config.get("max_recur_limit", 100),
++        )
+         self.reflector = Reflector(self.quick_thinking_llm)
+         self.signal_processor = SignalProcessor(self.quick_thinking_llm)
+ 
+@@ -125,12 +142,15 @@ class TradingAgentsGraph:
+         self.ticker = None
+         self.log_states_dict = {}  # date to full state dict
+ 
++        # Graph-shape-affecting run choices, kept for the checkpoint signature.
++        self.selected_analysts = tuple(selected_analysts)
++
+         # Set up the graph: keep the workflow for recompilation with a checkpointer.
+         self.workflow = self.graph_setup.setup_graph(selected_analysts)
+         self.graph = self.workflow.compile()
+         self._checkpointer_ctx = None
+ 
+-    def _get_provider_kwargs(self) -> Dict[str, Any]:
++    def _get_provider_kwargs(self) -> dict[str, Any]:
+         """Get provider-specific kwargs for LLM client creation."""
+         kwargs = {}
+         provider = self.config.get("llm_provider", "").lower()
+@@ -150,9 +170,22 @@ class TradingAgentsGraph:
+             if effort:
+                 kwargs["effort"] = effort
+ 
++        # Sampling temperature is cross-provider: forward it whenever set.
++        # float() here so a value coming from a TRADINGAGENTS_TEMPERATURE env
++        # string ("0.2") works the same as a programmatic float.
++        temperature = self.config.get("temperature")
++        if temperature is not None and temperature != "":
++            kwargs["temperature"] = float(temperature)
++
++        # SDK retry budget is cross-provider. Forward it only when explicitly set
++        # so each provider keeps its own default (usually 2) otherwise (#1091).
++        max_retries = self.config.get("llm_max_retries")
++        if max_retries is not None and max_retries != "":
++            kwargs["max_retries"] = _coerce_max_retries(max_retries)
++
+         return kwargs
+ 
+-    def _create_tool_nodes(self) -> Dict[str, ToolNode]:
++    def _create_tool_nodes(self) -> dict[str, ToolNode]:
+         """Create tool nodes for different data sources using abstract methods."""
+         return {
+             "market": ToolNode(
+@@ -161,6 +194,10 @@ class TradingAgentsGraph:
+                     get_stock_data,
+                     # Technical indicators
+                     get_indicators,
++                    # Deterministic verification snapshot (bound to the analyst
++                    # LLM and required by its prompt; must be executable here or
++                    # the call fails and the model reports it "unavailable").
++                    get_verified_market_snapshot,
+                 ]
+             ),
+             "social": ToolNode(
+@@ -175,6 +212,8 @@ class TradingAgentsGraph:
+                     get_news,
+                     get_global_news,
+                     get_insider_transactions,
++                    get_macro_indicators,
++                    get_prediction_markets,
+                 ]
+             ),
+             "fundamentals": ToolNode(
+@@ -188,41 +227,69 @@ class TradingAgentsGraph:
+             ),
+         }
+ 
++    def _resolve_benchmark(self, ticker: str) -> str:
++        """Pick the benchmark ticker for alpha calculation against ``ticker``.
++
++        ``config["benchmark_ticker"]`` overrides everything when set; otherwise
++        the suffix map matches the ticker's exchange suffix (e.g. ``.T`` for
++        Tokyo). US-listed tickers without a dotted suffix fall through to the
++        empty-suffix entry (SPY by default). Unrecognised suffixes (including
++        US tickers with dots like ``BRK.B``) also fall back to the empty-suffix
++        entry, which is the right default because the alpha calculation works
++        in USD.
++        """
++        explicit = self.config.get("benchmark_ticker")
++        if explicit:
++            return explicit
++        benchmark_map = self.config.get("benchmark_map", {})
++        ticker_upper = ticker.upper()
++        for suffix, benchmark in benchmark_map.items():
++            if suffix and ticker_upper.endswith(suffix.upper()):
++                return benchmark
++        return benchmark_map.get("", "SPY")
++
+     def _fetch_returns(
+-        self, ticker: str, trade_date: str, holding_days: int = 5
+-    ) -> Tuple[Optional[float], Optional[float], Optional[int]]:
++        self, ticker: str, trade_date: str, holding_days: int = 5,
++        benchmark: str = "SPY",
++    ) -> tuple[float | None, float | None, int | None]:
+         """Fetch raw and alpha return for ticker over holding_days from trade_date.
+ 
+-        Returns (raw_return, alpha_return, actual_holding_days) or
+-        (None, None, None) if price data is unavailable (too recent, delisted,
+-        or network error).
++        ``benchmark`` is the index used as the alpha baseline (resolved by the
++        caller via ``_resolve_benchmark``). Returns ``(raw_return, alpha_return,
++        actual_holding_days)`` or ``(None, None, None)`` if price data is
++        unavailable (too recent, delisted, or network error).
+         """
++        from tradingagents.dataflows.symbol_utils import normalize_symbol
++
+         try:
+             start = datetime.strptime(trade_date, "%Y-%m-%d")
+             end = start + timedelta(days=holding_days + 7)  # buffer for weekends/holidays
+             end_str = end.strftime("%Y-%m-%d")
+ 
+-            stock = yf.Ticker(ticker).history(start=trade_date, end=end_str)
+-            spy = yf.Ticker("SPY").history(start=trade_date, end=end_str)
++            # Normalize so the realized-return lookup hits the same instrument
++            # the analysis priced (e.g. XAUUSD -> GC=F) (#984). The benchmark is
++            # already a canonical Yahoo symbol from ``_resolve_benchmark``.
++            stock = yf.Ticker(normalize_symbol(ticker)).history(start=trade_date, end=end_str)
++            bench = yf.Ticker(benchmark).history(start=trade_date, end=end_str)
+ 
+-            if len(stock) < 2 or len(spy) < 2:
++            if len(stock) < 2 or len(bench) < 2:
+                 return None, None, None
+ 
+-            actual_days = min(holding_days, len(stock) - 1, len(spy) - 1)
++            actual_days = min(holding_days, len(stock) - 1, len(bench) - 1)
+             raw = float(
+                 (stock["Close"].iloc[actual_days] - stock["Close"].iloc[0])
+                 / stock["Close"].iloc[0]
+             )
+-            spy_ret = float(
+-                (spy["Close"].iloc[actual_days] - spy["Close"].iloc[0])
+-                / spy["Close"].iloc[0]
++            bench_ret = float(
++                (bench["Close"].iloc[actual_days] - bench["Close"].iloc[0])
++                / bench["Close"].iloc[0]
+             )
+-            alpha = raw - spy_ret
++            alpha = raw - bench_ret
+             return raw, alpha, actual_days
+         except Exception as e:
+             logger.warning(
+-                "Could not resolve outcome for %s on %s (will retry next run): %s",
+-                ticker, trade_date, e,
++                "Could not resolve outcome for %s on %s vs %s (will retry next run): %s",
++                ticker, trade_date, benchmark, e,
+             )
+             return None, None, None
+ 
+@@ -240,15 +307,19 @@ class TradingAgentsGraph:
+         if not pending:
+             return
+ 
++        benchmark = self._resolve_benchmark(ticker)
+         updates = []
+         for entry in pending:
+-            raw, alpha, days = self._fetch_returns(ticker, entry["date"])
++            raw, alpha, days = self._fetch_returns(
++                ticker, entry["date"], benchmark=benchmark,
++            )
+             if raw is None:
+                 continue  # price not available yet — try again next run
+             reflection = self.reflector.reflect_on_final_decision(
+                 final_decision=entry.get("decision", ""),
+                 raw_return=raw,
+                 alpha_return=alpha,
++                benchmark_name=benchmark,
+             )
+             updates.append({
+                 "ticker": ticker,
+@@ -262,11 +333,40 @@ class TradingAgentsGraph:
+         if updates:
+             self.memory_log.batch_update_with_outcomes(updates)
+ 
+-    def propagate(self, company_name, trade_date):
++    def resolve_instrument_context(self, ticker: str, asset_type: str = "stock") -> str:
++        """Resolve ticker identity once and return the full instrument context.
++
++        Deterministic yfinance lookup (cached, fail-open) injected into a
++        context string so every agent anchors to the real company instead of
++        hallucinating one from the price chart (#814). Both the propagate()
++        path and the CLI call this so the resolved identity reaches the whole
++        graph regardless of entry point.
++        """
++        identity = resolve_instrument_identity(ticker)
++        return build_instrument_context(ticker, asset_type, identity)
++
++    def _run_signature(self, asset_type: str) -> str:
++        """Graph-shape inputs that must invalidate a checkpoint if changed.
++
++        Keyed into the checkpoint thread ID so a resume under a different analyst
++        selection, debate/risk depth, or asset mode starts fresh instead of
++        silently continuing the previous graph (#1089).
++        """
++        return "|".join([
++            "analysts=" + ",".join(self.selected_analysts),
++            f"debate={self.config['max_debate_rounds']}",
++            f"risk={self.config['max_risk_discuss_rounds']}",
++            f"asset={asset_type}",
++        ])
++
++    def propagate(self, company_name, trade_date, asset_type: str = "stock"):
+         """Run the trading agents graph for a company on a specific date.
+ 
+-        When ``checkpoint_enabled`` is set in config, the graph is recompiled
+-        with a per-ticker SqliteSaver so a crashed run can resume from the last
++        ``asset_type`` selects between the stock pipeline (default) and the
++        crypto pipeline (``"crypto"``) shipped in #567 — the CLI auto-detects
++        from the ticker; programmatic callers pass it explicitly. When
++        ``checkpoint_enabled`` is set in config, the graph is recompiled with
++        a per-ticker SqliteSaver so a crashed run can resume from the last
+         successful node on a subsequent invocation with the same ticker+date.
+         """
+         self.ticker = company_name
+@@ -283,7 +383,8 @@ class TradingAgentsGraph:
+             self.graph = self.workflow.compile(checkpointer=saver)
+ 
+             step = checkpoint_step(
+-                self.config["data_cache_dir"], company_name, str(trade_date)
++                self.config["data_cache_dir"], company_name, str(trade_date),
++                self._run_signature(asset_type),
+             )
+             if step is not None:
+                 logger.info(
+@@ -293,36 +394,68 @@ class TradingAgentsGraph:
+                 logger.info("Starting fresh for %s on %s", company_name, trade_date)
+ 
+         try:
+-            return self._run_graph(company_name, trade_date)
++            return self._run_graph(company_name, trade_date, asset_type=asset_type)
+         finally:
+             if self._checkpointer_ctx is not None:
+                 self._checkpointer_ctx.__exit__(None, None, None)
+                 self._checkpointer_ctx = None
+                 self.graph = self.workflow.compile()
+ 
+-    def _run_graph(self, company_name, trade_date):
++    def save_reports(self, final_state, ticker, save_path=None) -> Path:
++        """Write the markdown report tree for a completed run, like the CLI does.
++
++        Programmatic callers get the same on-disk reports the CLI produces. Pass
++        an explicit ``save_path`` or let it default under ``results_dir``.
++        """
++        if save_path is None:
++            stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
++            save_path = (
++                Path(self.config["results_dir"])
++                / "reports"
++                / f"{safe_ticker_component(ticker)}_{stamp}"
++            )
++        return write_report_tree(final_state, ticker, save_path)
++
++    def _run_graph(self, company_name, trade_date, asset_type: str = "stock"):
+         """Execute the graph and write the resulting state to disk and memory log."""
+-        # Initialize state — inject memory log context for PM.
++        # Initialize state — inject memory log context for PM and the
++        # deterministically resolved instrument identity for all agents.
+         past_context = self.memory_log.get_past_context(company_name)
++        instrument_context = self.resolve_instrument_context(company_name, asset_type)
+         init_agent_state = self.propagator.create_initial_state(
+-            company_name, trade_date, past_context=past_context
++            company_name,
++            trade_date,
++            asset_type=asset_type,
++            past_context=past_context,
++            instrument_context=instrument_context,
+         )
+         args = self.propagator.get_graph_args()
+ 
+-        # Inject thread_id so same ticker+date resumes, different date starts fresh.
++        # Inject thread_id so same ticker+date+graph-shape resumes; a different
++        # date or graph shape starts fresh (#1089).
+         if self.config.get("checkpoint_enabled"):
+-            tid = thread_id(company_name, str(trade_date))
++            tid = thread_id(company_name, str(trade_date), self._run_signature(asset_type))
+             args.setdefault("config", {}).setdefault("configurable", {})["thread_id"] = tid
+ 
+         if self.debug:
+             trace = []
++            last_printed = None
+             for chunk in self.graph.stream(init_agent_state, **args):
+-                if len(chunk["messages"]) == 0:
+-                    pass
+-                else:
+-                    chunk["messages"][-1].pretty_print()
++                if chunk["messages"]:
++                    msg = chunk["messages"][-1]
++                    # Nodes after the trader don't append to messages, so the
++                    # same trailing message repeats across chunks. Print it only
++                    # when it changes (#1027); the trace/state merge is unchanged.
++                    signature = (type(msg).__name__, getattr(msg, "content", None))
++                    if signature != last_printed:
++                        msg.pretty_print()
++                        last_printed = signature
+                     trace.append(chunk)
+-            final_state = trace[-1]
++            # Streamed chunks are per-node deltas. Merge them so the returned
++            # state matches what graph.invoke() yields in the non-debug path.
++            final_state = {}
++            for chunk in trace:
++                final_state.update(chunk)
+         else:
+             final_state = self.graph.invoke(init_agent_state, **args)
+ 
+@@ -342,7 +475,8 @@ class TradingAgentsGraph:
+         # Clear checkpoint on successful completion to avoid stale state.
+         if self.config.get("checkpoint_enabled"):
+             clear_checkpoint(
+-                self.config["data_cache_dir"], company_name, str(trade_date)
++                self.config["data_cache_dir"], company_name, str(trade_date),
++                self._run_signature(asset_type),
+             )
+ 
+         return final_state, self.process_signal(final_state["final_trade_decision"])

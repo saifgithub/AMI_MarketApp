@@ -11,6 +11,7 @@ Everything from the audit of the 13 agent prompts. Start with whichever question
 | [PHASE3B_quality.md](PHASE3B_quality.md) | **Are the prompts any good at their job?** The measurements — role separation, analyst differentiation, number grounding, disagreement |
 | [EXTERNAL_REVIEW.md](EXTERNAL_REVIEW.md) | What an outside model (Kimi) found reading our prompts cold, and which of its claims survived checking |
 | [PHASE5_feasibility_verdict.md](PHASE5_feasibility_verdict.md) | **Which of the proposed accuracy fixes are actually buildable.** Each of `research/accuracy_improvements.md`'s eight levers checked against the code, what to build in what order, and the five findings dropped with reasons |
+| [../CR167_tradingagents_upstream_drift/](../CR167_tradingagents_upstream_drift/) | **What the repo we forked from learned in the 106 commits since our snapshot.** They hit our DEF063 (a prompt demanding data no tool could supply) and our P1 degrade-loudly class independently. Two gaps filed as CR168/CR169; two of §8's traps answered for free by their `517eeaf` — vLLM rejects the object-form `tool_choice`, and a thinking model can return no parsed result. §4's numeral-sweep rejection is reinforced there, not reopened |
 
 ## The evidence
 

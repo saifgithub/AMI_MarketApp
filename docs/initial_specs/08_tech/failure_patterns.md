@@ -32,6 +32,7 @@ indistinguishable from a deliberate opt-out.
 |---|---|---|---|
 | **DEF038** | `APPLE_AUDIENCES` / `GOOGLE_AUDIENCES` — OIDC tokens verified against an empty audience list | unknown | auth audit |
 | **DEF063** | `ADANOS_API_KEY` (CR024 social feed), `ALPHA_VANTAGE_API_KEY` (CR023 news sentiment merge) | entire life of both CRs | CR035 benchmark, then Saiful challenging a wrong premise |
+| *external* — TradingAgents `47cbb32` → `4e7821d` | `get_verified_market_snapshot`: the market-analyst prompt ordered the call and the tool was never registered in the ToolNode, so the model reported it *"unavailable"* and skipped verification | 14 days | upstream, on the very feature meant to stop fabrication. Not ours to fix — recorded because it shows the class is structural, not an AMI-specific sloppiness, and their fix was an executor-registration regression guard of the same shape as `test_config_compose_parity.py`. See [CR167](../../forward_planning/CR167_tradingagents_upstream_drift/CR167_tradingagents_upstream_drift.md) §3.2. |
 
 **Why the previous guard failed.** After DEF038 a comment was written *in the compose block
 itself*:

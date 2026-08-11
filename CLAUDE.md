@@ -31,9 +31,12 @@ Full split: [`docs/initial_specs/10_delivery/you_do_i_do.md`](docs/initial_specs
 | Mount | Purpose |
 |---|---|
 | `/Volumes/Extreme Pro/AMI AI Design System/` | AMI hex design system. Tokens, fonts, components. |
-| `/Volumes/Extreme Pro/TradingAgent/` | TradingAgents multi-agent framework. The 12 agents wire through this. |
+| `/Volumes/Extreme Pro/TradingAgent/` | TradingAgents multi-agent framework — **the fork basis. Frozen at `7e9e7b8` (2026-05-01). Never fetch, never pull.** It answers "what did we fork from", and that answer must not move. |
+| `/Volumes/Extreme Pro/TradingAgent_upstream/` | The same repo **tracking upstream `main`** (CR167). Refresh with `git -C … pull --ff-only`. Use this one for any "what changed upstream" question — `7e9e7b8` is an ancestor of `main`, so it produces every fork-basis→HEAD diff on its own. |
 
-Read-only — integrate against them, don't modify.
+Read-only — integrate against them, don't modify. We are **not** a code dependency on TradingAgents
+(`backend/pyproject.toml:39` has the install commented out); our prompts are ours. Latest drift review:
+[`docs/forward_planning/CR167_tradingagents_upstream_drift/`](docs/forward_planning/CR167_tradingagents_upstream_drift/).
 
 ---
 

@@ -117,3 +117,22 @@ v1.0. Every touched content `id` must carry `retranslate:[ar,ms]`.
 - `pytest backend/tests/unit/ -q` and `flutter test` both green.
 - Release build to device: the Floor, the Verdict Board comb, and one Room run all render the
   new labels with no truncation at 390pt.
+
+---
+
+## Upstream did the same rename, for a different reason (CR167, 2026-08-11)
+
+TradingAgents renamed `social_media_analyst` → `sentiment_analyst` in `0fcf136` — not for
+distinctiveness but because the old name described a job the runtime could not do: the prompt demanded
+social-media analysis with only a Yahoo news tool behind it, and models *"fabricate Reddit/X/StockTwits
+content under prompt pressure (verified live)"*. That is our own DEF063/CR024, reached independently.
+Our `content/agents/social_media_analyst.md` still carries the old name, so this CR's rename and that
+observation land on the same file.
+
+Second item for this CR's i18n half: upstream **widened** `get_language_instruction()` from
+analysts-and-PM to *every* agent whose output reaches the saved report — reversing their earlier
+position that internal debate agents should stay English "for reasoning quality" — because a non-English
+run otherwise *"produces a fully localized report rather than a mix of languages"*. AR + MS at v1.0 face
+that same tradeoff, and it should be decided deliberately rather than inherited.
+
+Detail: [../CR167_tradingagents_upstream_drift/](../CR167_tradingagents_upstream_drift/) §3.1, §6.3.

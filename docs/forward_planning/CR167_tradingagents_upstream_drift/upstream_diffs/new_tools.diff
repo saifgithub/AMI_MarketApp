@@ -1,0 +1,108 @@
+diff --git a/tradingagents/agents/utils/macro_data_tools.py b/tradingagents/agents/utils/macro_data_tools.py
+new file mode 100644
+index 0000000..3d56754
+--- /dev/null
++++ b/tradingagents/agents/utils/macro_data_tools.py
+@@ -0,0 +1,36 @@
++from typing import Annotated
++
++from langchain_core.tools import tool
++
++from tradingagents.dataflows.interface import route_to_vendor
++
++
++@tool
++def get_macro_indicators(
++    indicator: Annotated[
++        str,
++        "Macro indicator: a friendly alias such as 'cpi', 'core_pce', "
++        "'unemployment', 'fed_funds_rate', '10y_treasury', 'yield_curve', "
++        "'real_gdp', 'vix', or a raw FRED series ID such as 'CPIAUCSL'.",
++    ],
++    curr_date: Annotated[str, "Current date in yyyy-mm-dd format; the end of the window"],
++    look_back_days: Annotated[
++        int | None, "Trailing window length in days; omit for a 1-year window"
++    ] = None,
++) -> str:
++    """
++    Retrieve a macroeconomic indicator time series from FRED (Federal Reserve
++    Economic Data): policy rates, Treasury yields, inflation, labor, and growth.
++    Returns the series title, units, frequency, the latest value, the change
++    over the window, and a recent observation table. Uses the configured
++    macro_data vendor.
++
++    Args:
++        indicator (str): Friendly alias or raw FRED series ID
++        curr_date (str): Current date in yyyy-mm-dd format
++        look_back_days (int): Trailing window length; omit for a 1-year window
++
++    Returns:
++        str: A formatted markdown report of the macro series
++    """
++    return route_to_vendor("get_macro_indicators", indicator, curr_date, look_back_days)
+diff --git a/tradingagents/agents/utils/market_data_validation_tools.py b/tradingagents/agents/utils/market_data_validation_tools.py
+new file mode 100644
+index 0000000..356a4ac
+--- /dev/null
++++ b/tradingagents/agents/utils/market_data_validation_tools.py
+@@ -0,0 +1,23 @@
++from typing import Annotated
++
++from langchain_core.tools import tool
++
++from tradingagents.dataflows.market_data_validator import build_verified_market_snapshot
++
++
++@tool
++def get_verified_market_snapshot(
++    symbol: Annotated[str, "ticker symbol of the company"],
++    curr_date: Annotated[str, "the current trading date, YYYY-mm-dd"],
++    look_back_days: Annotated[
++        int, "number of recent trading rows to include for sanity-checking"
++    ] = 30,
++) -> str:
++    """Deterministic verification snapshot for exact market-data claims.
++
++    Returns the latest OHLCV row on or before curr_date, common technical
++    indicators, and recent closes. Call this before making exact claims about
++    price levels, Bollinger bands, RSI, MACD, moving averages, support /
++    resistance, or historical comparisons, and treat it as the source of truth.
++    """
++    return build_verified_market_snapshot(symbol, curr_date, look_back_days)
+diff --git a/tradingagents/agents/utils/prediction_markets_tools.py b/tradingagents/agents/utils/prediction_markets_tools.py
+new file mode 100644
+index 0000000..843c9a4
+--- /dev/null
++++ b/tradingagents/agents/utils/prediction_markets_tools.py
+@@ -0,0 +1,31 @@
++from typing import Annotated
++
++from langchain_core.tools import tool
++
++from tradingagents.dataflows.interface import route_to_vendor
++
++
++@tool
++def get_prediction_markets(
++    topic: Annotated[
++        str,
++        "Event topic/keyword, e.g. 'Fed rate cut', 'recession 2026', "
++        "'US election', or a sector/company event.",
++    ],
++    limit: Annotated[int | None, "Max markets to return; omit for a default of 6"] = None,
++) -> str:
++    """
++    Retrieve live, market-implied probabilities for forward-looking events from
++    prediction markets (Polymarket): Fed decisions, recession, elections,
++    geopolitics, crypto. Returns the most-traded open markets matching the
++    topic, each with its implied probability, traded volume, resolution date,
++    and recent move. Uses the configured prediction_markets vendor.
++
++    Args:
++        topic (str): Event keyword(s) to search
++        limit (int): Max markets to return; omit for a default of 6
++
++    Returns:
++        str: A formatted markdown report of matching prediction markets
++    """
++    return route_to_vendor("get_prediction_markets", topic, limit)
