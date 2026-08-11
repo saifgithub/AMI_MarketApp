@@ -805,6 +805,70 @@ class GameRestartPreview {
 /// (implementation_plan.md §6.6.2 / §6): net-of-fee (what the score is
 /// based on) and gross-vs-costless-index (what the boast shows). Neither is
 /// ever computed from the other on this client.
+/// The duel verdict as beat 2 of the Close — CR109 slice 3b.
+///
+/// Thinner than [GameDuel] on purpose: once the result exists, the run
+/// screen's live-gap machinery (points at stake, days left, the
+/// unmeasured-gap caption) is noise. What survives is who, what happened,
+/// by how much, and what it was worth.
+class GameCloseDuel {
+  const GameCloseDuel({
+    required this.outcome,
+    required this.opponentHandle,
+    this.duelKind = 'auto',
+    this.opponentIsDesk = false,
+    this.opponentDeskRule,
+    this.myTwrPct,
+    this.opponentTwrPct,
+    this.marginPct,
+    this.pointsDelta = 0,
+  });
+
+  /// 'won' | 'lost' | 'draw'. A void duel never reaches beat 2 at all.
+  final String outcome;
+  final String opponentHandle;
+
+  /// 'auto' | 'first_run'. Named `duel_kind` on the wire, NOT `kind` — the
+  /// beat envelope uses `kind` as its own discriminator ('duel' vs
+  /// 'counterfactual'), and a duel spread into it under the same key
+  /// silently overwrote that.
+  final String duelKind;
+  final bool opponentIsDesk;
+  final String? opponentDeskRule;
+  final double? myTwrPct;
+  final double? opponentTwrPct;
+
+  /// Signed from this player's side, computed by the server. Positive on a
+  /// win. Null only if a side was never measured, which beat 2 filters out.
+  final double? marginPct;
+  final int pointsDelta;
+
+  bool get isFirstRun => duelKind == 'first_run';
+
+  factory GameCloseDuel.fromJson(Map<String, dynamic> j) => GameCloseDuel(
+        outcome: j['outcome'] as String? ?? 'draw',
+        opponentHandle: j['opponent_handle'] as String? ?? 'Unnamed',
+        duelKind: j['duel_kind'] as String? ?? 'auto',
+        opponentIsDesk: j['opponent_is_desk'] as bool? ?? false,
+        opponentDeskRule: j['opponent_desk_rule'] as String?,
+        myTwrPct: (j['my_twr_pct'] as num?)?.toDouble(),
+        opponentTwrPct: (j['opponent_twr_pct'] as num?)?.toDouble(),
+        marginPct: (j['margin_pct'] as num?)?.toDouble(),
+        pointsDelta: (j['points_delta'] as num?)?.toInt() ?? 0,
+      );
+}
+
+/// Reads beat 2 ONLY when the server labelled it a duel. A payload whose
+/// insight is the counterfactual yields null here, so the two can never both
+/// render — the three-beat budget is the whole point of the surface.
+GameCloseDuel? _duelVerdictFrom(Map<String, dynamic> j) {
+  final beats = j['beats'];
+  if (beats is! Map) return null;
+  final insight = beats['insight'];
+  if (insight is! Map || insight['kind'] != 'duel') return null;
+  return GameCloseDuel.fromJson(Map<String, dynamic>.from(insight));
+}
+
 class GameCloseResult {
   const GameCloseResult({
     required this.runId,
@@ -830,6 +894,7 @@ class GameCloseResult {
     this.stipendPoints,
     this.nearMissLabel,
     this.nearMissGapPct,
+    this.duelVerdict,
   });
 
   final String runId;
@@ -888,6 +953,18 @@ class GameCloseResult {
   /// near-miss applies; this client never computes one itself.
   final String? nearMissLabel;
   final double? nearMissGapPct;
+
+  /// The settled duel, when the server chose it for beat 2 — CR109 slice 3b,
+  /// §10.2's priority order (*the duel verdict on a first run · the
+  /// post-mortem on a blowup · the near-miss · otherwise the
+  /// counterfactual*).
+  ///
+  /// **The server picks the beat, not the client.** The Close has a
+  /// three-beat budget precisely because it had become "a report with
+  /// confetti", and a client that decided its own priority would drift from
+  /// the one place the rule is written down. Null means the server chose
+  /// something else — including for a VOID duel, which has nothing to say.
+  final GameCloseDuel? duelVerdict;
 
   bool get isVoid => state == 'void';
 
@@ -948,6 +1025,7 @@ class GameCloseResult {
         stipendAwarded: j['stipend_awarded'] as bool? ??
             (((j['stipend_points'] as num?)?.toInt() ?? 0) > 0),
         stipendPoints: (j['stipend_points'] as num?)?.toInt(),
+        duelVerdict: _duelVerdictFrom(j),
         nearMissLabel: j['near_miss_label'] as String?,
         nearMissGapPct: (j['near_miss_gap_pct'] as num?)?.toDouble(),
       );

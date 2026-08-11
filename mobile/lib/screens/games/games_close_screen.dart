@@ -326,6 +326,20 @@ class _BeatInsight extends StatelessWidget {
       );
     }
 
+    // §10.2's priority order, chosen SERVER-SIDE and merely obeyed here: a
+    // settled duel is a result against a named opponent, where the
+    // counterfactual is an analysis of a road not taken. On a first run it
+    // is the entire narrative — you beat the market, or the market beat you.
+    //
+    // The two never both render. That is the three-beat budget, which exists
+    // because the Close had become "a report with confetti": eleven blocks
+    // on a screen whose entire job is one emotional payoff. The
+    // counterfactual is still in the debrief, one tap deeper.
+    final duel = result.duelVerdict;
+    if (duel != null) {
+      return _DuelVerdict(duel: duel);
+    }
+
     final headline = result.hasNearMiss
         ? l.gamesCloseNearMissLine(
             result.nearMissGapPct!.toStringAsFixed(1), result.nearMissLabel!)
@@ -364,6 +378,82 @@ class _BeatInsight extends StatelessWidget {
                   _isolateNumeric(_pct(result.counterfactualIndexPct!))),
               style: AmiTypography.caption,
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Beat 2, when the server chose the duel — CR109 slice 3b.
+///
+/// One sentence of result, one of margin, one of what it was worth. The
+/// margin is read from the server's signed `margin_pct` rather than
+/// subtracted from the two TWRs on the card: a client that got the sign
+/// backwards would tell a beaten player they had won, on the one screen
+/// built to be remembered.
+class _DuelVerdict extends StatelessWidget {
+  const _DuelVerdict({required this.duel});
+  final GameCloseDuel duel;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final won = duel.outcome == 'won';
+    final drew = duel.outcome == 'draw';
+    final accent = drew
+        ? AmiColors.textLow
+        : (won ? AmiColors.hexGreen : AmiColors.hexRed);
+
+    final headline = switch (duel.outcome) {
+      // The first-run framing is deliberately different: a beginner has no
+      // duel history to read "you beat VECTOR_11" against, but "you beat the
+      // market" needs no tutorial at all.
+      'won' => duel.isFirstRun
+          ? l.gamesCloseDuelBeatTheMarket
+          : l.gamesCloseDuelWon(duel.opponentHandle),
+      'lost' => duel.isFirstRun
+          ? l.gamesCloseDuelMarketWon
+          : l.gamesCloseDuelLost(duel.opponentHandle),
+      _ => l.gamesCloseDuelDrew(duel.opponentHandle),
+    };
+
+    return Container(
+      key: const Key('games_close_beat_insight'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(AmiSpacing.m),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: accent.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(headline,
+              style: AmiTypography.body.copyWith(color: AmiColors.textHigh)),
+          if (duel.marginPct != null) ...[
+            const SizedBox(height: AmiSpacing.s),
+            Text(
+              l.gamesCloseDuelMargin(
+                  _isolateNumeric(_pct(duel.marginPct!.abs()))),
+              style: AmiTypography.caption.copyWith(color: accent),
+            ),
+          ],
+          // The desk's published rule, so "beat the market" is a claim the
+          // player can check rather than one they have to take on trust.
+          if (duel.opponentIsDesk && duel.opponentDeskRule != null) ...[
+            const SizedBox(height: AmiSpacing.xs),
+            Text(duel.opponentDeskRule!, style: AmiTypography.caption),
+          ],
+          if (duel.pointsDelta > 0) ...[
+            const SizedBox(height: AmiSpacing.xs),
+            Text(
+              won
+                  ? l.gamesCloseDuelPointsWon(duel.pointsDelta)
+                  : l.gamesCloseDuelPointsLost(duel.pointsDelta),
+              style: AmiTypography.caption,
+            ),
+          ],
         ],
       ),
     );

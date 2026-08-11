@@ -5232,6 +5232,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Void — one side’s run could not be measured. No points either way.'**
   String get gamesDuelVoid;
+
+  /// CR109 slice 3b. Beat 2 of the Close on a FIRST run won against the Index Desk. Deliberately not 'you beat INDEX_DESK' — a beginner has no duel history to read a handle against, and 'beat the market' needs no tutorial. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You beat the market.'**
+  String get gamesCloseDuelBeatTheMarket;
+
+  /// CR109 slice 3b. The mirror. Stated plainly — both outcomes are stories, and softening the loss would make the win mean less. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The market beat you.'**
+  String get gamesCloseDuelMarketWon;
+
+  /// CR109 slice 3b. Beat 2 on a won duel against a named human opponent. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You beat {handle}.'**
+  String gamesCloseDuelWon(String handle);
+
+  /// CR109 slice 3b. Beat 2 on a lost duel. The opponent is the subject — they did something, rather than the player having failed at something. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{handle} beat you.'**
+  String gamesCloseDuelLost(String handle);
+
+  /// CR109 slice 3b. Both returns equal to four decimal places. A real outcome, reported as one. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Dead level with {handle}.'**
+  String gamesCloseDuelDrew(String handle);
+
+  /// CR109 slice 3b. The margin, in percentage points of time-weighted return. Magnitude only — the sign is already carried by the headline above, and repeating it would read as a double negative on a loss. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'By {pct}.'**
+  String gamesCloseDuelMargin(String pct);
+
+  /// CR109 slice 3b. What the duel win was worth. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'+{points} career points.'**
+  String gamesCloseDuelPointsWon(int points);
+
+  /// CR109 slice 3b. What the duel loss cost. MINUS SIGN (U+2212), not a hyphen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'−{points} career points.'**
+  String gamesCloseDuelPointsLost(int points);
 }
 
 class _AppLocalizationsDelegate

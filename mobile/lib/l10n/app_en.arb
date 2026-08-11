@@ -2385,5 +2385,21 @@
     "gamesDuelDraw": "A draw. No points either way.",
     "@gamesDuelDraw": {"description": "CR109 slice 3b. Both returns equal to four decimal places. A real outcome, reported as one. NEW key. retranslate:[ar,ms]"},
     "gamesDuelVoid": "Void \u2014 one side\u2019s run could not be measured. No points either way.",
-    "@gamesDuelVoid": {"description": "CR109 slice 3b. A duel with a voided side. Stated, never silently drawn as a draw \u2014 unmeasurable is a different thing from tied, and CR040 requires the difference be visible. NEW key. retranslate:[ar,ms]"}
+    "@gamesDuelVoid": {"description": "CR109 slice 3b. A duel with a voided side. Stated, never silently drawn as a draw \u2014 unmeasurable is a different thing from tied, and CR040 requires the difference be visible. NEW key. retranslate:[ar,ms]"},
+    "gamesCloseDuelBeatTheMarket": "You beat the market.",
+    "@gamesCloseDuelBeatTheMarket": {"description": "CR109 slice 3b. Beat 2 of the Close on a FIRST run won against the Index Desk. Deliberately not 'you beat INDEX_DESK' \u2014 a beginner has no duel history to read a handle against, and 'beat the market' needs no tutorial. NEW key. retranslate:[ar,ms]"},
+    "gamesCloseDuelMarketWon": "The market beat you.",
+    "@gamesCloseDuelMarketWon": {"description": "CR109 slice 3b. The mirror. Stated plainly \u2014 both outcomes are stories, and softening the loss would make the win mean less. NEW key. retranslate:[ar,ms]"},
+    "gamesCloseDuelWon": "You beat {handle}.",
+    "@gamesCloseDuelWon": {"description": "CR109 slice 3b. Beat 2 on a won duel against a named human opponent. NEW key. retranslate:[ar,ms]", "placeholders": {"handle": {"type": "String", "example": "VECTOR_11"}}},
+    "gamesCloseDuelLost": "{handle} beat you.",
+    "@gamesCloseDuelLost": {"description": "CR109 slice 3b. Beat 2 on a lost duel. The opponent is the subject \u2014 they did something, rather than the player having failed at something. NEW key. retranslate:[ar,ms]", "placeholders": {"handle": {"type": "String", "example": "VECTOR_11"}}},
+    "gamesCloseDuelDrew": "Dead level with {handle}.",
+    "@gamesCloseDuelDrew": {"description": "CR109 slice 3b. Both returns equal to four decimal places. A real outcome, reported as one. NEW key. retranslate:[ar,ms]", "placeholders": {"handle": {"type": "String", "example": "VECTOR_11"}}},
+    "gamesCloseDuelMargin": "By {pct}.",
+    "@gamesCloseDuelMargin": {"description": "CR109 slice 3b. The margin, in percentage points of time-weighted return. Magnitude only \u2014 the sign is already carried by the headline above, and repeating it would read as a double negative on a loss. NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "3.0%"}}},
+    "gamesCloseDuelPointsWon": "+{points} career points.",
+    "@gamesCloseDuelPointsWon": {"description": "CR109 slice 3b. What the duel win was worth. NEW key. retranslate:[ar,ms]", "placeholders": {"points": {"type": "int", "example": "10"}}},
+    "gamesCloseDuelPointsLost": "\u2212{points} career points.",
+    "@gamesCloseDuelPointsLost": {"description": "CR109 slice 3b. What the duel loss cost. MINUS SIGN (U+2212), not a hyphen. NEW key. retranslate:[ar,ms]", "placeholders": {"points": {"type": "int", "example": "10"}}}
 }

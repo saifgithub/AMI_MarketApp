@@ -3097,4 +3097,40 @@ class AppLocalizationsMs extends AppLocalizations {
   @override
   String get gamesDuelVoid =>
       'Void — one side’s run could not be measured. No points either way.';
+
+  @override
+  String get gamesCloseDuelBeatTheMarket => 'You beat the market.';
+
+  @override
+  String get gamesCloseDuelMarketWon => 'The market beat you.';
+
+  @override
+  String gamesCloseDuelWon(String handle) {
+    return 'You beat $handle.';
+  }
+
+  @override
+  String gamesCloseDuelLost(String handle) {
+    return '$handle beat you.';
+  }
+
+  @override
+  String gamesCloseDuelDrew(String handle) {
+    return 'Dead level with $handle.';
+  }
+
+  @override
+  String gamesCloseDuelMargin(String pct) {
+    return 'By $pct.';
+  }
+
+  @override
+  String gamesCloseDuelPointsWon(int points) {
+    return '+$points career points.';
+  }
+
+  @override
+  String gamesCloseDuelPointsLost(int points) {
+    return '−$points career points.';
+  }
 }
