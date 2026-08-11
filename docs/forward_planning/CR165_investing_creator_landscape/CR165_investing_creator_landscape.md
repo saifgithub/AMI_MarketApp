@@ -9,6 +9,22 @@ themselves as teaching investing or trading — URL, subscriber count, strategy
 classification, and what each sells. Deliverable:
 [`creator_landscape_us_en.md`](creator_landscape_us_en.md).
 
+**Related, from a different session:** a secondary literature review on measured
+forecasting-accuracy across professional managers, sell-side analysts, individual
+investors and investment clubs — [*"If we can predict the weather, why can't we predict
+the market?"*](https://claude.ai/code/artifact/2c894193-21b8-42c6-8c32-e00d85cc2431).
+2026-08-11: its Evidence 03 already carried the day-trader profitability base rate
+(<1%, Taiwan Stock Exchange 1992–2006, Barber/Lee/Liu/Odean) that motivated this CR's
+"what's driving the flock" follow-up discussion. That discussion's finding — the FTC's
+own conclusion that Warrior Trading's accurate disclaimer ("most day traders are NOT
+profitable") did not neutralise the vivid claims sitting next to it — has been folded
+into that paper as a new **Evidence 08** section, since it answers a question the paper
+raises but doesn't itself address: not *is the record poor*, but *does disclosing the
+poor record change what people buy*. The two documents stay separate (this one dispassionate
+and catalogue-form per Saiful's instruction; that one an interpretive literature review)
+but are now cross-linked in both directions — CR165 here, the artifact's own References
+list carries the FTC case.
+
 ## Why
 
 Saiful's request, 2026-08-11: *"research the popolar internet and youtube channels that
