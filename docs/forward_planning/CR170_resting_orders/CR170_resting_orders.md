@@ -165,7 +165,7 @@ what this user's order will do, not an explanation of how the simulator works.
 of weight:
 
 1. **The DEF110 formula.** `sim_engine.py:820-828` documents that a SELL trade row is created `open`
-   and *never transitions*, because `scripts/def110_backfill.py::expected()` subtracts `Σ quantity`
+   and *never transitions*, because `backend/scripts/def110_backfill.py::expected()` subtracts `Σ quantity`
    over `status='open'` SELL rows to derive what a portfolio's holdings should be — its phantom-share
    detector. A **working** (unfilled) resting sell in `sim_trades` would start subtracting shares that
    never moved, and the detector would report false positives across every user. This alone rules out
