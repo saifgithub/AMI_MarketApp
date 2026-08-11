@@ -37,10 +37,12 @@ from app.core.logging import logger
 from app.db import get_session
 from app.db.models import GameEntryRow, GameFieldRow, GameQueuedOrderRow, User
 from app.schemas.trade import OrderType, Side
-from app.services.games_scoring import trade_fee
+from app.services.games_scoring import short_open_fee, trade_fee
 from app.services.portfolio_nav_daily import nav_history, twr_pct_for_window
 from app.services.sim_engine import get_sim_engine
 from app.trading_math.market_hours import is_us_market_open, next_us_market_open
+from app.trading_math.shorts import short_cover_proceeds as _short_cover_proceeds
+from app.trading_math.shorts import short_unrealised_pnl as _short_unrealised_pnl
 
 WEEKLY_CADENCE = "week"
 MONTHLY_CADENCE = "month"
@@ -427,6 +429,31 @@ def get_run_detail(user_id: UUID, run_id: UUID) -> dict | None:
             }
             for h in portfolio.holdings
         ],
+        # CR109 Amendment G. A separate list, not a holding with a negative
+        # quantity: the client renders the two differently (a short's P&L
+        # runs the other way and its loss is unbounded), and a sign flip
+        # buried inside a shared row is exactly the thing a reader misses.
+        # `unrealised_pnl` is signed and POSITIVE when the mark is below
+        # entry — sent computed rather than left to the client, so the run
+        # screen and the score cannot disagree about which way a short is.
+        "shorts": [
+            {
+                "id": str(sp.id),
+                "ticker": sp.ticker,
+                "quantity": sp.quantity,
+                "entry_price": sp.entry_price,
+                "cash_posted": sp.cash_posted,
+                "mark": marks.get(sp.ticker, sp.entry_price),
+                "unrealised_pnl": round(
+                    _short_unrealised_pnl(
+                        sp.quantity, sp.entry_price,
+                        marks.get(sp.ticker, sp.entry_price),
+                    ),
+                    2,
+                ),
+            }
+            for sp in portfolio.shorts
+        ],
     }
 
 
@@ -672,14 +699,37 @@ def _queued_orders_priced(
             }
             for r in rows
         ]
+    # CR109 Amendment G — which queued sells are SHORTS matters here, not
+    # just at the fill. A short ties up its full notional exactly as a buy
+    # does (no leverage), so treating every queued sell as cash-releasing
+    # would let a player queue shorts all night against a balance the app
+    # keeps reporting as untouched — the same over-commitment §13.3's
+    # `cash_committed` was added to stop, reintroduced through the one side
+    # it did not have to consider before.
+    portfolio = sim.ensure_portfolio(user_id, kind="game", run_id=run_id)
+    held_by_ticker = {h.ticker: h.quantity for h in portfolio.holdings}
+    shorted = {sp.ticker for sp in portfolio.shorts}
+
     for spec in specs:
         quote = sim.current_quote(spec["ticker"])
         est_notional = round(quote.price * spec["quantity"], 2)
-        est_fee = round(trade_fee(est_notional), 2)
-        # A SELL releases cash rather than committing it; only a BUY ties up
-        # the stake. The fee is owed either way.
+        opens_short = (
+            spec["side"] == "sell"
+            and spec["ticker"] not in shorted
+            and held_by_ticker.get(spec["ticker"], 0.0) <= 1e-6
+        )
+        est_fee = round(
+            short_open_fee(est_notional) if opens_short
+            else trade_fee(est_notional),
+            2,
+        )
+        # A sell that CLOSES releases cash rather than committing it; a buy
+        # and a sell that OPENS a short both tie up the stake. The fee is
+        # owed either way.
         commits = (
-            est_notional + est_fee if spec["side"] == "buy" else est_fee
+            est_notional + est_fee
+            if (spec["side"] == "buy" or opens_short)
+            else est_fee
         )
         committed += commits
         rows_out.append({
@@ -806,12 +856,50 @@ def quote_trade(
         # number quoted is exactly the number that can be stored and filled.
         quantity = round(notional / quote.price, 4)
     notional = quote.price * quantity
-    fee = trade_fee(notional)
-    _portfolio, _marks, total_value, _drawdown_pct, _source = (
+    portfolio, _marks, total_value, _drawdown_pct, _source = (
         sim.portfolio_marks_snapshot(user_id, kind="game", run_id=run_id)
     )
     book_pct = round((notional / total_value) * 100, 2) if total_value > 0 else 0.0
     side_str = side.value if hasattr(side, "value") else str(side)
+
+    # CR109 Amendment G — the ticket has to know WHICH leg this is before
+    # the player confirms, because a short open costs 0.3% and everything
+    # else costs 0.1%, and because the confirm button says a different word.
+    # The inference repeats `SimEngine._route_game_short`'s rules rather than
+    # calling it, since that one commits; what matters is that both read the
+    # same two facts — held quantity and standing short — so they cannot
+    # disagree about what the order is.
+    held = next((h for h in portfolio.holdings if h.ticker == ticker), None)
+    held_qty = float(held.quantity) if held is not None else 0.0
+    standing = next((s for s in portfolio.shorts if s.ticker == ticker), None)
+    opens_short = (
+        side_str == "sell" and standing is None and held_qty <= 1e-6
+    )
+    covers_short = side_str == "buy" and standing is not None
+
+    fee = short_open_fee(notional) if opens_short else trade_fee(notional)
+    # What the CASH line will actually do. A short OPEN ties up cash exactly
+    # as a buy does (no leverage — see `trading_math/shorts.py`), so it is a
+    # debit; showing it as a credit would tell the player they are being PAID
+    # to open a short, which is what the real mechanic looks like and what
+    # this design deliberately does not do. A COVER is the mirror: the posted
+    # cash comes back adjusted for the move, so it is a credit even though
+    # the side is `buy` — which is why this cannot be derived from the side
+    # alone.
+    if opens_short:
+        estimated_total = round(notional + fee, 2)
+    elif covers_short:
+        estimated_total = round(
+            _short_cover_proceeds(
+                standing.cash_posted, standing.quantity,
+                standing.entry_price, quote.price,
+            ) - fee,
+            2,
+        )
+    elif side_str == "buy":
+        estimated_total = round(notional + fee, 2)
+    else:
+        estimated_total = round(notional - fee, 2)
     return {
         "ticker": ticker,
         "side": side_str,
@@ -820,11 +908,12 @@ def quote_trade(
         "price_source": quote.source,
         "notional": round(notional, 2),
         "estimated_fee": fee,
-        "estimated_total": round(
-            notional + fee if side_str == "buy" else notional - fee, 2,
-        ),
+        "estimated_total": estimated_total,
         "book_percentage": book_pct,
         "market_open": is_us_market_open(datetime.now(timezone.utc)),
+        "opens_short": opens_short,
+        "covers_short": covers_short,
+        "short_quantity_held": standing.quantity if standing is not None else None,
     }
 
 
@@ -898,6 +987,15 @@ def submit_trade(
         "trade": result.trade.to_json() if result.trade else None,
         "fee": result.fee if result.accepted else None,
         "reason": result.reason,
+        # CR109 Amendment G — a short open/cover writes no `sim_trades` row,
+        # so `trade` is null on those. Without this the client would see
+        # `filled: true, trade: null` and have nothing to show for it, which
+        # is the "the order simply VANISHED" shape §13.3 already had to fix
+        # once. Null on an ordinary long fill.
+        "short_action": result.short_action,
+        "short_ticker": result.short_ticker,
+        "short_quantity": result.short_quantity,
+        "short_realised_pnl": result.short_realised_pnl,
     }
 
 

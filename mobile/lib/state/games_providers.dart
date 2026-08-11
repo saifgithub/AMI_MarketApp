@@ -147,7 +147,7 @@ Future<void> markGamesDisclosureSeen() async {
 class GamesTicketState {
   const GamesTicketState({
     this.ticker,
-    this.side = 'buy',
+    this.mode = 'buy',
     this.sizePct,
     this.quote,
     this.quoting = false,
@@ -157,9 +157,28 @@ class GamesTicketState {
   });
 
   final String? ticker;
-  /// 'buy' | 'sell'.
-  final String side;
-  /// 10 | 25 | 50 | 100 — a percentage of the run's current cash.
+
+  /// What the player is doing — 'buy' | 'short' | 'sell' | 'cover'.
+  ///
+  /// The source of truth, with [side] derived from it. The wire has only two
+  /// sides, and two DIFFERENT actions map to each: a buy opens a long or
+  /// covers a short, a sell closes a long or opens one. Those pairs size
+  /// against different denominators — cash for the opening actions, the
+  /// position for the closing ones — so a ticket that knew only the side had
+  /// to guess the denominator from context, and guessing wrong is how "25%"
+  /// comes to mean two different quantities on one screen.
+  final String mode;
+
+  /// The wire value the API takes. Derived, never stored: a stored copy is
+  /// one more thing that can disagree with [mode].
+  String get side => (mode == 'buy' || mode == 'cover') ? 'buy' : 'sell';
+
+  /// True when the size chips mean "percent of the POSITION" rather than
+  /// "percent of available cash".
+  bool get sizesAgainstPosition => mode == 'sell';
+
+  /// 10 | 25 | 50 | 100 — a percentage of cash, or of the position when
+  /// [sizesAgainstPosition].
   final double? sizePct;
   final GameTradeQuote? quote;
   final bool quoting;
@@ -171,13 +190,17 @@ class GamesTicketState {
   /// tap the ticket screen renders.
   int get step {
     if (ticker == null || ticker!.isEmpty) return 1;
+    // A cover has no size step: the backend accepts the whole position or
+    // nothing, so offering a percentage would be offering a choice the
+    // server will refuse.
+    if (mode == 'cover') return 3;
     if (sizePct == null) return 2;
     return 3;
   }
 
   GamesTicketState copyWith({
     String? ticker,
-    String? side,
+    String? mode,
     double? sizePct,
     GameTradeQuote? quote,
     bool? quoting,
@@ -189,7 +212,7 @@ class GamesTicketState {
   }) {
     return GamesTicketState(
       ticker: ticker ?? this.ticker,
-      side: side ?? this.side,
+      mode: mode ?? this.mode,
       sizePct: sizePct ?? this.sizePct,
       quote: clearQuote ? null : (quote ?? this.quote),
       quoting: quoting ?? this.quoting,
@@ -211,16 +234,22 @@ class GamesTicketNotifier extends StateNotifier<GamesTicketState> {
   /// ticker change.
   void pickTicker(String ticker) {
     final t = ticker.trim().toUpperCase();
-    state = GamesTicketState(ticker: t.isEmpty ? null : t, side: state.side);
+    state = GamesTicketState(ticker: t.isEmpty ? null : t, mode: state.mode);
   }
 
-  /// Switching side clears the size and the quote — a size chip means
-  /// "percent of cash" on a buy and "percent of the position" on a sell, so
-  /// carrying one across would silently change what the number means, and a
-  /// quote priced for the other direction is worse than none.
-  void pickSide(String side) {
-    state = GamesTicketState(ticker: state.ticker, side: side);
+  /// Switching what you are doing clears the size and the quote — a size
+  /// chip means "percent of cash" when opening and "percent of the position"
+  /// when closing, so carrying one across would silently change what the
+  /// number means, and a quote priced for the other direction is worse than
+  /// none.
+  void pickMode(String mode) {
+    state = GamesTicketState(ticker: state.ticker, mode: mode);
   }
+
+  /// Back-compat entry point taking a WIRE side. 'sell' means closing a long
+  /// here, which is what every existing caller means by it — a short is
+  /// opened through [pickMode]('short'), never by passing a bare side.
+  void pickSide(String side) => pickMode(side == 'sell' ? 'sell' : 'buy');
 
   /// TAP 2 — instant, no network call (the size chips are pre-computed
   /// against a cash figure the screen already has).
@@ -249,9 +278,34 @@ class GamesTicketNotifier extends StateNotifier<GamesTicketState> {
   }) async {
     final ticker = state.ticker;
     final pct = state.sizePct;
-    if (ticker == null || pct == null) return;
+    if (ticker == null) return;
+    if (pct == null && state.mode != 'cover') return;
 
-    if (state.side == 'sell') {
+    if (state.mode == 'cover') {
+      // A cover buys the WHOLE short back — the backend refuses a partial,
+      // so there is no percentage to apply and nothing to size. The share
+      // count comes from the position itself.
+      if (heldQuantity == null || heldQuantity <= 0) {
+        state = state.copyWith(quoting: true, clearQuote: true, clearError: true);
+        return;
+      }
+      state = state.copyWith(quoting: true, clearError: true);
+      try {
+        final api = _ref.read(apiClientProvider);
+        final quote = await api.gamesTradeQuote(
+          runId: runId, ticker: ticker, side: 'buy', quantity: heldQuantity,
+        );
+        state = state.copyWith(quote: quote, quoting: false);
+      } catch (e) {
+        state = state.copyWith(
+          quoting: false,
+          error: friendlyError(e, action: 'price that trade'),
+        );
+      }
+      return;
+    }
+
+    if (state.sizesAgainstPosition) {
       // NULL means the holdings have not arrived; 0 means there is nothing to
       // sell. Same null-vs-zero split as the cash guard below, for the same
       // reason — one is something to wait for, the other is an answer.
@@ -269,7 +323,7 @@ class GamesTicketNotifier extends StateNotifier<GamesTicketState> {
       }
       // 4dp matches `game_queued_orders.quantity`'s Numeric(12, 4), so the
       // number quoted is exactly the number that can be stored and filled.
-      final shares = double.parse((heldQuantity * (pct / 100)).toStringAsFixed(4));
+      final shares = double.parse((heldQuantity * (pct! / 100)).toStringAsFixed(4));
       state = state.copyWith(quoting: true, clearError: true);
       try {
         final api = _ref.read(apiClientProvider);
@@ -326,7 +380,7 @@ class GamesTicketNotifier extends StateNotifier<GamesTicketState> {
     state = state.copyWith(quoting: true, clearError: true);
     try {
       final api = _ref.read(apiClientProvider);
-      final notional = cashAvailable * (pct / 100);
+      final notional = cashAvailable * (pct! / 100);
       final quote = await api.gamesTradeQuote(
         runId: runId,
         ticker: ticker,

@@ -1697,3 +1697,68 @@ class BacktestUniverseMembershipRow(Base):
     noted_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
+
+
+class GameShortPositionRow(Base):
+    """An open (or settled) SHORT position in a GAME run — CR109
+    Amendment G. The game is the only lane that has these; the training
+    portfolio never writes a row here.
+
+    **Why a table and not a negative `sim_holdings.quantity`.** Three
+    consumers of that column assume it is non-negative and would fail
+    SILENTLY rather than loudly: `scripts/def110_backfill.py::expected()`
+    derives what a portfolio's holdings should be by subtracting Σ quantity
+    over open SELL trade rows, so a negative holding makes every real
+    phantom share look accounted for; `compute_lots_fifo` cannot walk a
+    negative lot at all; and sector concentration would net a short against
+    a long in the same name and report the pair as no exposure. A separate
+    table leaves all three reading exactly what they read today.
+
+    **The cash model — no leverage, symmetric with a long.** CR109 §5.1's
+    "Leverage / margin: None, ever" is not suspended by shorting, it is
+    what fixes shorting's one free parameter. A real short posts ~50% of
+    notional and is therefore 2:1 leveraged; here a short of $5,000 ties up
+    $5,000 of the stake, exactly as buying $5,000 would, so a player's gross
+    exposure can never exceed the stake and a 10% move pays the same 10%
+    whichever way it was taken.
+
+        open  q at p:  cash_posted = p*q ; current_cash -= (cash_posted + fee)
+        while open:    value contribution = cash_posted + (p - mark)*q
+        cover at c:    current_cash += cash_posted + (p - c)*q - fee
+
+    `cash_posted` is stored rather than recomputed from `entry_price *
+    quantity` because it is the number that actually left cash, and it is
+    what must come back on the cover — deriving it later from a rounded
+    price is how a portfolio drifts by cents per trade.
+
+    **`realised_pnl` is signed and set once, at cover.** It excludes the
+    fees, which are burned (Amendment D) and already reported on the entry's
+    `fees_paid`; a Close that added them back would double-count the cost.
+    """
+
+    __tablename__ = "game_short_positions"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    run_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    portfolio_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("sim_portfolios.id", ondelete="CASCADE"),
+        index=True, nullable=False,
+    )
+    ticker: Mapped[str] = mapped_column(String, nullable=False)
+    quantity: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+    entry_price: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+    cash_posted: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    fee_paid: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    opened_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    # open | closed
+    state: Mapped[str] = mapped_column(String, default="open", nullable=False, index=True)
+    closed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    close_price: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    # user | run_end
+    close_reason: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    realised_pnl: Mapped[Optional[float]] = mapped_column(Numeric(12, 2), nullable=True)

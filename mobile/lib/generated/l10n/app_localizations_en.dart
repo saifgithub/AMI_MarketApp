@@ -2989,4 +2989,53 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get gamesNoShortingNote =>
       'Long only — a sell closes what you hold, it never opens a short.';
+
+  @override
+  String get gamesSellClosesOnlyNote =>
+      'A sell closes what you hold. To open a short, start a new trade and pick SHORT.';
+
+  @override
+  String get gamesTicketStepDirection => 'DIRECTION';
+
+  @override
+  String get gamesDirectionLong => 'LONG';
+
+  @override
+  String get gamesDirectionShort => 'SHORT';
+
+  @override
+  String get gamesShortFeeNote =>
+      'Shorting costs 0.3% to open — three times the usual 0.1%.';
+
+  @override
+  String get gamesShortRiskNote =>
+      'A short can lose more than it ties up. There is no floor.';
+
+  @override
+  String get gamesShortBadge => 'SHORT';
+
+  @override
+  String get gamesRunShortsHeading => 'SHORTS';
+
+  @override
+  String gamesRunShortSub(String shares, String price) {
+    return '$shares shares shorted at $price';
+  }
+
+  @override
+  String get gamesCoverCta => 'COVER';
+
+  @override
+  String gamesCoverTitle(String ticker) {
+    return 'Cover $ticker';
+  }
+
+  @override
+  String gamesCoverShortOf(String shares) {
+    return 'You are short $shares shares';
+  }
+
+  @override
+  String get gamesCoverWholeOnlyNote =>
+      'A cover buys the whole position back. There is no partial cover.';
 }

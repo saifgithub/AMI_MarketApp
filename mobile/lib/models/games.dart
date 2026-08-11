@@ -224,6 +224,7 @@ class GameRunDetail {
     this.endsOn,
     this.navSeries = const [],
     this.holdings = const [],
+    this.shorts = const [],
     this.priceSource = 'live',
     this.feesPaid = 0,
     this.tradeCount = 0,
@@ -285,6 +286,12 @@ class GameRunDetail {
   final List<GameNavPoint> navSeries;
   final List<GameHolding> holdings;
 
+  /// Open SHORT positions — CR109 Amendment G. A separate list, never a
+  /// holding with a negative quantity: a short's P&L runs the other way and
+  /// its loss is unbounded, so it is drawn as its own kind of row rather
+  /// than as a long with a sign flip a reader can miss.
+  final List<GameShort> shorts;
+
   /// Provenance of the marks behind [stake] — 'live' | 'cash' | 'mock' |
   /// 'stale' | a raw provider name. Only [marksAreLive] may be drawn as fact.
   final String priceSource;
@@ -295,7 +302,8 @@ class GameRunDetail {
   /// "highest-anxiety moment in the product", which must not render as a
   /// blank list. A player with queued orders is NOT in this state: they have
   /// acted, and the queued-orders surface is what they need to see.
-  bool get isEmptyBook => holdings.isEmpty && queuedOrderCount == 0;
+  bool get isEmptyBook =>
+      holdings.isEmpty && shorts.isEmpty && queuedOrderCount == 0;
 
   /// `mock_walk` (the fallback provider) and `stale` are the two values that
   /// must carry a caveat. `cash` is exact, not estimated — a book with no
@@ -308,7 +316,7 @@ class GameRunDetail {
   /// ever touched trains the player to ignore the caveat on the day it
   /// means something.
   bool get marksAreLive =>
-      holdings.isEmpty ||
+      (holdings.isEmpty && shorts.isEmpty) ||
       (!priceSource.startsWith('mock') && priceSource != 'stale');
 
   /// The backend names these `current_cash` and `total_value`. Reading only
@@ -336,6 +344,9 @@ class GameRunDetail {
             .toList(),
         holdings: ((j['holdings'] ?? j['positions']) as List? ?? const [])
             .map((h) => GameHolding.fromJson(h as Map<String, dynamic>))
+            .toList(),
+        shorts: ((j['shorts'] as List?) ?? const [])
+            .map((h) => GameShort.fromJson(h as Map<String, dynamic>))
             .toList(),
         priceSource: j['price_source'] as String? ?? 'live',
         feesPaid: (j['fees_paid'] as num?)?.toDouble() ?? 0.0,
@@ -374,6 +385,66 @@ class GameHolding {
       quantity: (j['quantity'] as num?)?.toDouble() ?? 0,
       avgCost: avg,
       mark: (j['mark'] as num?)?.toDouble() ?? avg,
+    );
+  }
+}
+
+/// One OPEN short position in a run — CR109 Amendment G.
+///
+/// [unrealisedPnl] arrives computed from the server rather than derived
+/// here. The sign convention on a short is the opposite of a long's, and a
+/// client that got it backwards would draw a losing position in green on the
+/// one position type whose loss is unbounded. The server already computes it
+/// for the score; this reads the same number.
+class GameShort {
+  const GameShort({
+    required this.id,
+    required this.ticker,
+    required this.quantity,
+    required this.entryPrice,
+    required this.cashPosted,
+    required this.mark,
+    required this.unrealisedPnl,
+  });
+
+  final String id;
+  final String ticker;
+  final double quantity;
+  final double entryPrice;
+
+  /// The AMI Cash tied up at open — the FULL notional, not a margin
+  /// fraction. The game runs no leverage, so shorting 5,000 of AMI Cash
+  /// costs 5,000 of the stake, exactly as buying 5,000 would.
+  final double cashPosted;
+  final double mark;
+
+  /// Positive when the mark is BELOW entry.
+  final double unrealisedPnl;
+
+  double get unrealisedPct =>
+      cashPosted == 0 ? 0 : (unrealisedPnl / cashPosted) * 100;
+
+  /// What the position is worth to the book right now: the posted cash back,
+  /// adjusted for the move. Can go negative — see the backend's
+  /// `trading_math/shorts.py`.
+  double get value => cashPosted + unrealisedPnl;
+
+  factory GameShort.fromJson(Map<String, dynamic> j) {
+    final entry = (j['entry_price'] as num?)?.toDouble() ?? 0;
+    final qty = (j['quantity'] as num?)?.toDouble() ?? 0;
+    final mark = (j['mark'] as num?)?.toDouble() ?? entry;
+    return GameShort(
+      id: j['id'] as String? ?? '',
+      ticker: j['ticker'] as String? ?? '',
+      quantity: qty,
+      entryPrice: entry,
+      cashPosted: (j['cash_posted'] as num?)?.toDouble() ?? entry * qty,
+      mark: mark,
+      // Derived only as a fallback for a payload that predates the field —
+      // the server's own number wins whenever it is present, so the two can
+      // never disagree about which way a short is.
+      unrealisedPnl:
+          (j['unrealised_pnl'] as num?)?.toDouble() ?? (entry - mark) * qty,
     );
   }
 }

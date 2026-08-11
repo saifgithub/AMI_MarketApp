@@ -52,7 +52,12 @@ from sqlalchemy import select
 
 from app.core.logging import logger
 from app.db import get_session
-from app.db.models import GameEntryRow, GameFieldRow, SimTradeRow
+from app.db.models import (
+    GameEntryRow,
+    GameFieldRow,
+    GameShortPositionRow,
+    SimTradeRow,
+)
 from app.services import career_ledger
 from app.services.games_scoring import (
     TradeLeg,
@@ -307,9 +312,19 @@ def _score_one_entry(
         entry.user_id, kind="game", run_id=entry.run_id,
     )
     trade_legs, notional_traded = _trade_legs_for_run(portfolio.id)
+    # CR109 Amendment G — concentration is GROSS. A short's exposure is its
+    # notional at the mark, counted as a positive weight alongside the longs:
+    # a player holding $5k of a name and short $5k of another is running two
+    # positions and two ways to be wrong, not a flat book. Netting them would
+    # let a wild book score as a calm one, which is the one thing the
+    # wildness index exists to stop.
     holding_weights = [
         (h.quantity * marks.get(h.ticker, h.avg_cost)) / total_value
         for h in portfolio.holdings
+        if total_value > 0
+    ] + [
+        abs(sp.quantity * marks.get(sp.ticker, sp.entry_price)) / total_value
+        for sp in portfolio.shorts
         if total_value > 0
     ]
     daily_returns = [
@@ -355,6 +370,34 @@ def _trade_legs_for_run(portfolio_id: UUID) -> tuple[list[TradeLeg], float]:
             for r in rows
         ]
         notional_traded = sum(float(r.quantity) * float(r.entry_price) for r in rows)
+
+        # CR109 Amendment G — shorts deliberately write NO `sim_trades` row
+        # (that is what keeps `def110_backfill.py`'s phantom-share formula
+        # reading what it always read), so without this they would be
+        # invisible to turnover and to the first-picks counterfactual: a
+        # player who spent the week shorting would score as though they had
+        # never traded. Each open contributes its sell leg and each cover its
+        # buy leg, which is exactly what the two fills were.
+        shorts = s.execute(
+            select(GameShortPositionRow)
+            .where(GameShortPositionRow.portfolio_id == portfolio_id)
+            .order_by(GameShortPositionRow.opened_at.asc())
+        ).scalars().all()
+        for sp in shorts:
+            qty, entry = float(sp.quantity), float(sp.entry_price)
+            legs.append(TradeLeg(
+                ticker=sp.ticker, side="sell", quantity=qty,
+                price=entry, opened_at=sp.opened_at.date(),
+            ))
+            notional_traded += qty * entry
+            if sp.state == "closed" and sp.close_price is not None and sp.closed_at:
+                close = float(sp.close_price)
+                legs.append(TradeLeg(
+                    ticker=sp.ticker, side="buy", quantity=qty,
+                    price=close, opened_at=sp.closed_at.date(),
+                ))
+                notional_traded += qty * close
+        legs.sort(key=lambda leg: leg.opened_at)
     return legs, notional_traded
 
 

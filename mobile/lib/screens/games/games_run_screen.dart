@@ -339,15 +339,108 @@ class _Positions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    if (detail.holdings.isEmpty) return const SizedBox.shrink();
+    if (detail.holdings.isEmpty && detail.shorts.isEmpty) {
+      return const SizedBox.shrink();
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l.gamesRunPositionsHeading,
-            style: AmiTypography.labelMono.copyWith(color: AmiColors.textLow)),
-        const SizedBox(height: AmiSpacing.s),
-        for (final h in detail.holdings) _PositionRow(holding: h, runId: runId),
+        if (detail.holdings.isNotEmpty) ...[
+          Text(l.gamesRunPositionsHeading,
+              style: AmiTypography.labelMono.copyWith(color: AmiColors.textLow)),
+          const SizedBox(height: AmiSpacing.s),
+          for (final h in detail.holdings)
+            _PositionRow(holding: h, runId: runId),
+        ],
+        // Shorts sit under their own heading rather than mixed into the
+        // list. They are a different instrument in the way that matters to
+        // a player reading quickly: the P&L runs the other way, and the loss
+        // has no floor. A row that looked like the ones above but behaved
+        // backwards is exactly the misread this separation prevents.
+        if (detail.shorts.isNotEmpty) ...[
+          if (detail.holdings.isNotEmpty) const SizedBox(height: AmiSpacing.m),
+          Text(l.gamesRunShortsHeading,
+              style: AmiTypography.labelMono.copyWith(color: AmiColors.textLow)),
+          const SizedBox(height: AmiSpacing.s),
+          for (final s in detail.shorts) _ShortRow(short: s, runId: runId),
+        ],
       ],
+    );
+  }
+}
+
+/// One open SHORT — CR109 Amendment G, and the only way out of one.
+///
+/// COVER buys the whole position back; there is no partial. The backend
+/// refuses a partial cover for the same reason it refuses a sell that
+/// crosses zero (one action, one cost basis), so the button offers what the
+/// server will actually accept rather than letting the player discover the
+/// rule as a rejected order.
+class _ShortRow extends StatelessWidget {
+  const _ShortRow({required this.short, required this.runId});
+  final GameShort short;
+  final String runId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final pnl = short.unrealisedPnl;
+    final color = pnl >= 0 ? AmiColors.hexGreen : AmiColors.hexRed;
+    final sign = pnl >= 0 ? '+' : '−';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AmiSpacing.xs),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(short.ticker, style: AmiTypography.dataMd),
+                    const SizedBox(width: AmiSpacing.xs),
+                    // Labelled on the row itself, not only under the
+                    // heading — a player scrolling past the heading must
+                    // still be able to tell which way this position points.
+                    Text(l.gamesShortBadge,
+                        style: AmiTypography.caption
+                            .copyWith(color: AmiColors.hexRed)),
+                  ],
+                ),
+                Text(
+                  l.gamesRunShortSub(
+                    short.quantity.toStringAsFixed(4),
+                    _money.format(short.entryPrice),
+                  ),
+                  style: AmiTypography.caption,
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(_money.format(short.value), style: AmiTypography.dataMd),
+              Text(
+                '$sign${_money.format(pnl.abs())} '
+                '(${short.unrealisedPct.toStringAsFixed(1)}%)',
+                style: AmiTypography.caption.copyWith(color: color),
+              ),
+            ],
+          ),
+          const SizedBox(width: AmiSpacing.s),
+          HexButton(
+            label: l.gamesCoverCta,
+            variant: HexButtonVariant.outlined,
+            onPressed: () => GamesTradeTicketScreen.show(
+              context,
+              runId: runId,
+              coverTicker: short.ticker,
+              coverQuantity: short.quantity,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

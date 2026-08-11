@@ -62,6 +62,7 @@ from sqlalchemy import select
 from app.db import get_session
 from app.db.models import JournalEntryRow, SimPortfolioRow, SimTradeRow
 from app.schemas.journal import EntryType
+from app.services.sim_engine import training_trade_scope
 
 
 # ── Cohort marker ───────────────────────────────────────────────────────
@@ -206,7 +207,12 @@ def _load_all_trades(user_id: UUID) -> list[_Trade]:
         rows = (
             s.execute(
                 select(SimTradeRow)
-                .where(SimTradeRow.user_id == user_id)
+                # DEF267 — the TRAINING ledger only. Day-trader outcomes are
+                # a lesson about the user's own practice account; counting
+                # their game-contest fills would tell them they day-trade
+                # more than they do, off a portfolio that is scored on a
+                # different clock entirely.
+                .where(training_trade_scope(user_id))
                 .order_by(SimTradeRow.opened_at.asc())
             )
             .scalars()

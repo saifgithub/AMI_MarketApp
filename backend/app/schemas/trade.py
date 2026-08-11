@@ -11,6 +11,7 @@ from app.schemas.classification import ClassificationVerdict
 from app.schemas.sharia import ShariaVerdict
 from app.trading_math.portfolio import drawdown_pct as _drawdown_pct
 from app.trading_math.portfolio import total_value as _total_value
+from app.trading_math.shorts import short_legs_value as _short_legs_value
 
 
 class Side(str, Enum):
@@ -30,6 +31,26 @@ class Holding(BaseModel):
     opened_at: datetime
 
 
+class ShortLeg(BaseModel):
+    """An OPEN short position on a portfolio — CR109 Amendment G, game lane
+    only. The training portfolio's list is always empty, so every existing
+    caller of `total_value` is arithmetically unchanged.
+
+    Carried on `Portfolio` rather than fetched by whichever surface happens
+    to need it, because value, drawdown, the daily NAV snapshot and the TWR
+    chain the Close scores on all derive from this one object. A short the
+    portfolio object does not know about is a short the score does not know
+    about.
+    """
+
+    id: UUID
+    ticker: str
+    quantity: float
+    entry_price: float
+    cash_posted: float
+    opened_at: datetime
+
+
 class Portfolio(BaseModel):
     """Sim portfolio snapshot."""
 
@@ -41,16 +62,26 @@ class Portfolio(BaseModel):
     starting_capital: float = 10_000.0
     current_cash: float
     holdings: list[Holding] = Field(default_factory=list)
+    shorts: list[ShortLeg] = Field(default_factory=list)
     created_at: datetime
 
     def total_value(self, marks: dict[str, float] | None = None) -> float:
-        """Sum cash + (quantity * price) for each holding. marks: ticker→price.
+        """Sum cash + (quantity * price) for each holding, plus the short leg.
 
-        Arithmetic lives in app.trading_math.portfolio (CR046 M05)."""
+        marks: ticker→price. Arithmetic lives in app.trading_math.portfolio
+        (CR046 M05) and app.trading_math.shorts (CR109 Amendment G).
+
+        `shorts` is empty on every training portfolio, so this returns
+        exactly what it always returned there — the second term is 0.0 and
+        not merely negligible."""
         marks = marks or {}
-        return _total_value(
+        long_side = _total_value(
             self.current_cash,
             ((h.quantity, marks.get(h.ticker, h.avg_cost)) for h in self.holdings),
+        )
+        return long_side + _short_legs_value(
+            (s.cash_posted, s.quantity, s.entry_price, marks.get(s.ticker, s.entry_price))
+            for s in self.shorts
         )
 
     def total_drawdown_pct(self, marks: dict[str, float] | None = None) -> float:

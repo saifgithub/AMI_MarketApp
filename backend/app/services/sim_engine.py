@@ -50,6 +50,7 @@ from app.agents.safety_floor import check_mandate_compliance
 from app.core.logging import logger
 from app.db import get_session, init_schema
 from app.db.models import (
+    GameShortPositionRow,
     PortfolioValueSnapshotRow,
     SimHoldingRow,
     SimPortfolioRow,
@@ -190,6 +191,13 @@ class GameSubmitResult:
     fee: float
     reason: str | None = None
     portfolio_snapshot: Portfolio | None = None
+    # CR109 Amendment G — a short open/cover writes no `sim_trades` row (see
+    # `_open_game_short`), so `trade` is None on those and this carries what
+    # happened instead. "short_open" | "short_cover" | None (an ordinary fill).
+    short_action: str | None = None
+    short_ticker: str | None = None
+    short_quantity: float | None = None
+    short_realised_pnl: float | None = None
 
 
 @dataclass
@@ -236,6 +244,19 @@ _STARTING_CAPITAL = 10_000.0
 
 
 def _portfolio_from_row(row: SimPortfolioRow) -> Portfolio:
+    # CR109 Amendment G — shorts exist only in the game lane, so the query
+    # is skipped entirely on a training portfolio rather than run and found
+    # empty: `_portfolio_from_row` is on the hot path of every portfolio
+    # read in the app.
+    shorts = []
+    if row.kind == "game":
+        from sqlalchemy.orm import object_session
+
+        from app.services.games_shorts import open_shorts_for_portfolio
+
+        session = object_session(row)
+        if session is not None:
+            shorts = open_shorts_for_portfolio(session, row.id)
     return Portfolio(
         id=row.id,
         user_id=row.user_id,
@@ -251,7 +272,40 @@ def _portfolio_from_row(row: SimPortfolioRow) -> Portfolio:
             )
             for h in row.holdings
         ],
+        shorts=shorts,
         created_at=row.created_at,
+    )
+
+
+def training_trade_scope(user_id: UUID):
+    """A WHERE clause pinning a `sim_trades` query to a user's TRAINING
+    ledger — DEF267.
+
+    `sim_trades` has been a per-USER table since long before it was a
+    per-portfolio one. CR109 slice 2 gave a user many portfolios (one
+    training + one per game run) and routed game fills through the same
+    `_execute_fill`, so game rows land in `sim_trades` carrying the same
+    `user_id` and a different `portfolio_id` — and every reader still
+    filtering on `user_id` alone silently widened from "this user's training
+    trades" to "this user's trades anywhere". The tester-visible half was
+    game trades listed in the training portfolio's open trades. The
+    dangerous half was `evaluate_outcomes`, which selected those same rows
+    and then sold them against the TRAINING portfolio row.
+
+    Scoping by `portfolio_id` rather than by a `kind` column on the trade
+    itself is deliberate: the portfolio row already knows which lane it is,
+    so there is nothing to keep in sync and no way to write a trade whose
+    own lane label disagrees with the portfolio it belongs to.
+
+    Returns no rows when the user has no training portfolio, which is the
+    correct answer (they have no training trades) rather than a crash or a
+    silent fall-through to everything.
+    """
+    return SimTradeRow.portfolio_id.in_(
+        select(SimPortfolioRow.id).where(
+            SimPortfolioRow.user_id == user_id,
+            SimPortfolioRow.kind == "training",
+        )
     )
 
 
@@ -418,7 +472,7 @@ class SimEngine:
         with get_session() as s:
             row = s.execute(
                 select(SimTradeRow.id)
-                .where(SimTradeRow.user_id == user_id)
+                .where(training_trade_scope(user_id))
                 .where(SimTradeRow.verdict_ref == verdict_ref)
                 .order_by(SimTradeRow.opened_at.asc())
                 .limit(1)
@@ -501,7 +555,12 @@ class SimEngine:
         `kind="game"` + a run's own `run_id`.
         """
         p = self.ensure_portfolio(user_id, kind=kind, run_id=run_id)
-        tickers = [h.ticker for h in p.holdings]
+        # CR109 Amendment G — a short's ticker must be marked too, or its leg
+        # falls back to `entry_price` and the position reads as permanently
+        # flat: no P&L on the run screen, none in the daily NAV row, and a
+        # TWR chain that never learns the trade happened. `p.shorts` is empty
+        # on every training portfolio, so this is a no-op there.
+        tickers = [h.ticker for h in p.holdings] + [s.ticker for s in p.shorts]
         quotes = self._marks_with_quotes(tickers)
         marks = {t: q.price for t, q in quotes.items()}
         return (
@@ -521,7 +580,7 @@ class SimEngine:
 
     def list_trades(self, user_id: UUID, *, status: TradeStatus | None = None) -> list[SimTrade]:
         with get_session() as s:
-            stmt = select(SimTradeRow).where(SimTradeRow.user_id == user_id)
+            stmt = select(SimTradeRow).where(training_trade_scope(user_id))
             if status is not None:
                 stmt = stmt.where(SimTradeRow.status == status)
             stmt = stmt.order_by(SimTradeRow.opened_at.desc())
@@ -597,7 +656,7 @@ class SimEngine:
         with get_session() as s:
             rows = s.execute(
                 select(SimTradeRow)
-                .where(SimTradeRow.user_id == user_id)
+                .where(training_trade_scope(user_id))
                 .where(SimTradeRow.ticker == ticker)
                 .order_by(SimTradeRow.opened_at.asc())
             ).scalars().all()
@@ -917,6 +976,15 @@ class SimEngine:
         fill_price = mark if order_type == OrderType.MARKET else (limit_price or mark)
         fee = _trade_fee(fill_price * quantity)
 
+        # CR109 Amendment G — route the two legs that are NOT ordinary fills
+        # before touching `_execute_fill`, which knows only about longs.
+        routed = self._route_game_short(
+            user_id=user_id, run_id=run_id, portfolio=portfolio,
+            ticker=ticker, side=side, quantity=quantity, fill_price=fill_price,
+        )
+        if routed is not None:
+            return routed
+
         result = self._execute_fill(
             user_id=user_id,
             portfolio=portfolio,
@@ -953,6 +1021,129 @@ class SimEngine:
         return GameSubmitResult(
             accepted=True, trade=result.trade, fee=fee,
             portfolio_snapshot=result.portfolio_snapshot,
+        )
+
+    # ── Short legs of the game trade path (CR109 Amendment G) ─────────────
+
+    def _route_game_short(
+        self,
+        *,
+        user_id: UUID,
+        run_id: UUID,
+        portfolio: Portfolio,
+        ticker: str,
+        side: Side,
+        quantity: float,
+        fill_price: float,
+    ) -> GameSubmitResult | None:
+        """Decide whether this game fill is a short open, a short cover, a
+        refusal, or an ordinary long fill.
+
+        Returns `None` for "ordinary long fill — carry on"; anything else is
+        the final result. Keeping the decision in ONE function is the point:
+        the sell-never-crosses-zero rule and its buy-side mirror are two
+        halves of one invariant, and splitting them across the two branches
+        of `_execute_fill` is how they would drift apart.
+
+            SELL, h >= q, no short   ordinary close        -> None
+            SELL, 0 < h < q          REFUSED (both numbers)
+            SELL, h == 0, no short   sell to open a short
+            SELL, short already open REFUSED (no extending)
+            BUY,  no short           ordinary buy          -> None
+            BUY,  short open, q == short.q   cover in full
+            BUY,  short open, q != short.q   REFUSED (both numbers)
+        """
+        from app.services.games_scoring import short_open_fee as _short_open_fee
+        from app.services.games_scoring import trade_fee as _trade_fee
+        from app.services.games_shorts import cover_short, find_open_short, open_short
+
+        held = next((h for h in portfolio.holdings if h.ticker == ticker), None)
+        held_qty = float(held.quantity) if held is not None else 0.0
+        standing = next((s for s in portfolio.shorts if s.ticker == ticker), None)
+
+        def refuse(reason: str) -> GameSubmitResult:
+            return GameSubmitResult(
+                accepted=False, trade=None, fee=0.0, reason=reason,
+                portfolio_snapshot=portfolio,
+            )
+
+        if side == Side.SELL:
+            if standing is not None:
+                return refuse(
+                    f"already short {standing.quantity:g} {ticker} — cover that "
+                    f"position before selling more"
+                )
+            if held_qty >= quantity - 1e-6:
+                return None  # ordinary close (or partial close) of a long
+            if held_qty > 1e-6:
+                return refuse(
+                    f"cannot sell {quantity:g} {ticker}: you hold "
+                    f"{held_qty:g}. Close the {held_qty:g} you hold, then "
+                    f"short separately — one order cannot do both"
+                )
+            # h == 0: sell to open.
+            notional = fill_price * quantity
+            fee = _short_open_fee(notional)
+            posted = round(notional, 2)
+            if posted + fee > portfolio.current_cash + 1e-6:
+                return refuse(
+                    f"insufficient cash to short: need ${posted + fee:.2f}, "
+                    f"have ${portfolio.current_cash:.2f}"
+                )
+            with get_session() as s:
+                p_row = self._load_portfolio_row(s, user_id, kind="game", run_id=run_id)
+                assert p_row is not None
+                open_short(
+                    s, portfolio_row=p_row, user_id=user_id, run_id=run_id,
+                    ticker=ticker, quantity=quantity, fill_price=fill_price, fee=fee,
+                )
+                s.flush()
+                snapshot = _portfolio_from_row(p_row)
+            logger.info(
+                "game_short_opened",
+                user_id=str(user_id), run_id=str(run_id), ticker=ticker,
+                qty=quantity, fill=fill_price, fee=fee, posted=posted,
+            )
+            return GameSubmitResult(
+                accepted=True, trade=None, fee=fee, portfolio_snapshot=snapshot,
+                short_action="short_open", short_ticker=ticker,
+                short_quantity=quantity,
+            )
+
+        if standing is None:
+            return None  # ordinary buy
+
+        # BUY with a short standing — a cover, in full or not at all.
+        if abs(quantity - standing.quantity) > 1e-6:
+            return refuse(
+                f"you are short {standing.quantity:g} {ticker} — a cover buys "
+                f"back the whole position, not {quantity:g}"
+            )
+        fee = _trade_fee(fill_price * quantity)
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id, kind="game", run_id=run_id)
+            assert p_row is not None
+            short_row = find_open_short(s, p_row.id, ticker)
+            if short_row is None:
+                # Covered between the snapshot and this transaction. Nothing
+                # is owed and nothing should be charged — reporting a fill
+                # that did not happen is worse than reporting nothing.
+                return refuse(f"no open short in {ticker} to cover")
+            realised = cover_short(
+                s, portfolio_row=p_row, short_row=short_row,
+                close_price=fill_price, fee=fee, reason="user",
+            )
+            s.flush()
+            snapshot = _portfolio_from_row(p_row)
+        logger.info(
+            "game_short_covered",
+            user_id=str(user_id), run_id=str(run_id), ticker=ticker,
+            qty=quantity, fill=fill_price, fee=fee, realised=realised,
+        )
+        return GameSubmitResult(
+            accepted=True, trade=None, fee=fee, portfolio_snapshot=snapshot,
+            short_action="short_cover", short_ticker=ticker,
+            short_quantity=quantity, short_realised_pnl=realised,
         )
 
     def apply_split(
@@ -993,8 +1184,36 @@ class SimEngine:
             p_row = self._load_portfolio_row(s, user_id, kind=kind, run_id=run_id)
             if p_row is None:
                 return None
+            # CR109 Amendment G — a SHORT in the splitting name divides the
+            # same way, and for a sharper reason than the long does. The
+            # market price halves on a 2:1; a short whose quantity and entry
+            # price were left alone would mark at half its entry and show a
+            # 50% gain that is pure arithmetic — a fabricated profit, on a
+            # scored contest, from a corporate action that changed nothing.
+            # `cash_posted` is deliberately NOT adjusted: it is already
+            # `old_entry * old_quantity`, which equals
+            # `(entry/ratio) * (quantity*ratio)`. Unchanged is correct.
+            short = next(
+                (
+                    sp for sp in s.execute(
+                        select(GameShortPositionRow).where(
+                            GameShortPositionRow.portfolio_id == p_row.id,
+                            GameShortPositionRow.ticker == ticker,
+                            GameShortPositionRow.state == "open",
+                        )
+                    ).scalars().all()
+                ),
+                None,
+            )
+            if short is not None:
+                short.quantity = float(short.quantity) * ratio
+                short.entry_price = float(short.entry_price) / ratio
+                s.add(short)
+
             holding = next((h for h in p_row.holdings if h.ticker == ticker), None)
             if holding is None:
+                if short is not None:
+                    s.flush()
                 return None
             holding.quantity = float(holding.quantity) * ratio
             holding.avg_cost = float(holding.avg_cost) / ratio
@@ -1203,7 +1422,7 @@ class SimEngine:
         with get_session() as s:
             rows = s.execute(
                 select(SimTradeRow).where(
-                    SimTradeRow.user_id == user_id,
+                    training_trade_scope(user_id),
                     SimTradeRow.status == "open",
                 )
             ).scalars().all()
@@ -1244,7 +1463,7 @@ class SimEngine:
         with get_session() as s:
             row = s.execute(
                 select(SimTradeRow).where(
-                    SimTradeRow.user_id == user_id,
+                    training_trade_scope(user_id),
                     SimTradeRow.id == trade_id,
                     SimTradeRow.status == "open",
                 )

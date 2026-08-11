@@ -37,6 +37,8 @@ class GamesTradeTicketScreen extends ConsumerStatefulWidget {
     required this.runId,
     this.sellTicker,
     this.heldQuantity,
+    this.coverTicker,
+    this.coverQuantity,
   });
 
   final String runId;
@@ -51,11 +53,22 @@ class GamesTradeTicketScreen extends ConsumerStatefulWidget {
   /// against cash: "50%" means half the shares, and 100% closes the position.
   final double? heldQuantity;
 
+  /// Non-null opens the ticket straight into COVER mode on an open short —
+  /// CR109 Amendment G. There is no size step: the backend accepts a cover
+  /// of the whole position or nothing, so a percentage here would be a
+  /// choice the server refuses.
+  final String? coverTicker;
+
+  /// Shares short in [coverTicker] — the exact quantity the cover buys back.
+  final double? coverQuantity;
+
   static Future<void> show(
     BuildContext context, {
     required String runId,
     String? sellTicker,
     double? heldQuantity,
+    String? coverTicker,
+    double? coverQuantity,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -68,6 +81,8 @@ class GamesTradeTicketScreen extends ConsumerStatefulWidget {
         runId: runId,
         sellTicker: sellTicker,
         heldQuantity: heldQuantity,
+        coverTicker: coverTicker,
+        coverQuantity: coverQuantity,
       ),
     );
   }
@@ -82,12 +97,19 @@ class _GamesTradeTicketScreenState
   final _manualTicker = TextEditingController();
 
   bool get _isSell => widget.sellTicker != null;
+  bool get _isCover => widget.coverTicker != null;
+
+  /// The share count the size picker divides. Null in the opening modes,
+  /// where the denominator is cash rather than a position.
+  double? get _positionQuantity =>
+      _isCover ? widget.coverQuantity : widget.heldQuantity;
 
   @override
   void initState() {
     super.initState();
-    final target = widget.sellTicker;
+    final target = widget.coverTicker ?? widget.sellTicker;
     if (target == null) return;
+    final mode = _isCover ? 'cover' : 'sell';
     // Same Riverpod constraint the confirm card documents: a provider's state
     // cannot be written synchronously inside a life-cycle method. Side FIRST,
     // then ticker — `pickSide` rebuilds the state keeping the ticker and
@@ -97,7 +119,7 @@ class _GamesTradeTicketScreenState
     Future.microtask(() {
       if (!mounted) return;
       final notifier = ref.read(gamesTicketProvider(widget.runId).notifier);
-      notifier.pickSide('sell');
+      notifier.pickMode(mode);
       notifier.pickTicker(target);
     });
   }
@@ -161,16 +183,36 @@ class _GamesTradeTicketScreenState
                   style: AmiTypography.caption,
                 ),
               const SizedBox(height: AmiSpacing.xs),
-              // Stated here rather than discovered as a rejected order. The
-              // shared fill path refuses a sell beyond the held quantity, so
-              // a player expecting to short finds out at the fill otherwise.
-              Text(l.gamesNoShortingNote, style: AmiTypography.caption),
+              // Stated here rather than discovered as a rejected order: the
+              // fill path refuses a sell beyond the held quantity, so one
+              // order can never close this and open a short in its place.
+              // Since Amendment F shorting DOES exist — the note now points
+              // at how to do it instead of saying it cannot be done.
+              Text(l.gamesSellClosesOnlyNote, style: AmiTypography.caption),
+              const SizedBox(height: AmiSpacing.s),
+            ],
+            if (_isCover) ...[
+              Text(
+                l.gamesCoverTitle(widget.coverTicker!),
+                style: AmiTypography.h4.copyWith(color: AmiColors.textHigh),
+              ),
+              const SizedBox(height: AmiSpacing.xs),
+              if (widget.coverQuantity != null)
+                Text(
+                  l.gamesCoverShortOf(
+                      widget.coverQuantity!.toStringAsFixed(4)),
+                  style: AmiTypography.caption,
+                ),
+              const SizedBox(height: AmiSpacing.xs),
+              // Why there is no size picker below. Without this the missing
+              // step reads as a bug rather than as the rule it is.
+              Text(l.gamesCoverWholeOnlyNote, style: AmiTypography.caption),
               const SizedBox(height: AmiSpacing.s),
             ],
             Row(
               children: [
                 Text(
-                  _isSell ? '' : l.gamesTicketHeading,
+                  (_isSell || _isCover) ? '' : l.gamesTicketHeading,
                   style: AmiTypography.labelMono
                       .copyWith(color: AmiColors.hexGreen),
                 ),
@@ -186,6 +228,48 @@ class _GamesTradeTicketScreenState
             // percentage was of.
             _CashHeader(detail: runDetail),
             const SizedBox(height: AmiSpacing.l),
+
+            // TAP 0 — direction. Not a step in the §5.4 sense (it has a
+            // default and never blocks progress), but it must sit ABOVE the
+            // ticker: which way you are going changes what the size chips
+            // mean, and a control that retroactively reinterprets a number
+            // the player already chose is the defect this ordering avoids.
+            if (!_isSell && !_isCover) ...[
+              Text(l.gamesTicketStepDirection, style: AmiTypography.caption),
+              const SizedBox(height: AmiSpacing.xs),
+              Row(
+                children: [
+                  _pickerChip(
+                    label: l.gamesDirectionLong,
+                    selected: ticket.mode == 'buy',
+                    onTap: () => notifier.pickMode('buy'),
+                  ),
+                  const SizedBox(width: AmiSpacing.s),
+                  _pickerChip(
+                    label: l.gamesDirectionShort,
+                    selected: ticket.mode == 'short',
+                    onTap: () => notifier.pickMode('short'),
+                  ),
+                ],
+              ),
+              if (ticket.mode == 'short') ...[
+                const SizedBox(height: AmiSpacing.xs),
+                // The cost, before the size is picked rather than on the
+                // confirm card alone. 0.3% is three times the ordinary fee,
+                // and a player who discovers that at the confirm step has
+                // already decided.
+                Text(l.gamesShortFeeNote, style: AmiTypography.caption),
+                const SizedBox(height: AmiSpacing.xs),
+                // The one thing about a short that is not true of anything
+                // else in this app. Said plainly, once.
+                Text(
+                  l.gamesShortRiskNote,
+                  style: AmiTypography.caption
+                      .copyWith(color: AmiColors.hexRed),
+                ),
+              ],
+              const SizedBox(height: AmiSpacing.l),
+            ],
 
             // TAP 1 — ticker.
             Text(l.gamesTicketStepTicker, style: AmiTypography.caption),
@@ -243,8 +327,21 @@ class _GamesTradeTicketScreenState
             // A SELL is never blocked by an empty cash balance — that is
             // precisely the state a player most needs to close a position
             // from, and gating it behind cash is what made the book one-way.
-            if (!_isSell && runDetail != null && runDetail.cashAvailable <= 0)
+            //
+            // A SHORT is gated the same way a buy is: it ties up the full
+            // notional (no leverage — see the backend's
+            // `trading_math/shorts.py`), so an empty balance means it cannot
+            // be opened either. A COVER never is, for the same reason a sell
+            // never is: the cash to buy back was posted when the short was
+            // opened, and a player with an unbounded-loss position open must
+            // always be able to close it.
+            if (!_isSell &&
+                !_isCover &&
+                runDetail != null &&
+                runDetail.cashAvailable <= 0)
               _NoCashPanel(detail: runDetail)
+            else if (_isCover)
+              const SizedBox.shrink()
             else if (ticket.ticker != null) ...[
               const SizedBox(height: AmiSpacing.l),
               // TAP 2 — size, % of current cash (§5.4: priced locally,
@@ -260,7 +357,10 @@ class _GamesTradeTicketScreenState
               _SizePicker(
                 sizePct: ticket.sizePct ?? kGamesTicketDefaultSizePct,
                 cashAvailable: runDetail?.cashAvailable ?? 0,
-                heldQuantity: widget.heldQuantity,
+                // Only a SELL divides a position. A short divides cash, like
+                // a buy — passing the held quantity here would size it
+                // against a position that does not exist yet.
+                heldQuantity: _isSell ? widget.heldQuantity : null,
                 onChanged: notifier.pickSize,
               ),
             ],
@@ -274,7 +374,7 @@ class _GamesTradeTicketScreenState
                 ticket: ticket,
                 notifier: notifier,
                 cashAvailable: runDetail?.cashAvailable,
-                heldQuantity: widget.heldQuantity,
+                heldQuantity: _positionQuantity,
               ),
             ],
 

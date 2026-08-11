@@ -50,6 +50,42 @@ def trade_fee(notional: float) -> float:
     return round(max(bps_fee, FEE_MIN), 2)
 
 
+# ── Short-selling cost (Amendment G) ────────────────────────────────────
+#
+# 30 bps — Saiful, 2026-08-11: *"we will need to add a 'fee' for short
+# selling. lets set it at 0.3% for now."* Charged ONCE, on the leg that
+# OPENS the short, and REPLACING the ordinary `FEE_BPS` on that leg rather
+# than stacking on top of it: a short's open pays 0.3%, not 0.4%.
+#
+# Why a one-time charge and not a daily borrow accrual. In the real market
+# this cost is a rate per year on stock that must be located and lent, and
+# there is no free source that publishes a per-ticker number — inventing
+# one would be exactly the fabrication CR040 exists to prevent. A flat
+# charge at open is the honest version: it is not pretending to be a
+# measured borrow rate, and over a one-week run a rate-based accrual on a
+# liquid name would round to pennies anyway. The number that matters to a
+# player is that shorting costs THREE TIMES what going long costs, and
+# they see it on the ticket before they confirm.
+#
+# BURNED, exactly like `trade_fee` — see that constant's fence.
+#
+# The COVER pays the ordinary `FEE_BPS`: closing a short is economically an
+# ordinary fill, and charging the short premium twice would make the round
+# trip cost 0.6% for no stated reason.
+SHORT_FEE_BPS = 30.0
+
+
+def short_open_fee(notional: float) -> float:
+    """SHORT_FEE_BPS of `notional`, floored at FEE_MIN, rounded to cents.
+
+    Shares `trade_fee`'s floor deliberately — the $1 minimum is a
+    per-fill cost floor, not a property of going long, so a tiny short
+    does not become the cheapest way to trade.
+    """
+    bps_fee = abs(notional) * (SHORT_FEE_BPS / 10_000.0)
+    return round(max(bps_fee, FEE_MIN), 2)
+
+
 # ── Cadence weighting (§6.3) ────────────────────────────────────────────────
 #
 # Gains scale with committed time; losses with its SQUARE ROOT. The asymmetry

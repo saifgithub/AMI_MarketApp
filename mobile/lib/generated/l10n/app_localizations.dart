@@ -5071,11 +5071,89 @@ abstract class AppLocalizations {
   /// **'You hold {shares} shares'**
   String gamesSellHeld(String shares);
 
-  /// CR109. Stated once on the sell ticket. The engine refuses a sell beyond the held quantity, so a player expecting to short would otherwise discover the rule as a rejected order. NEW key. retranslate:[ar,ms]
+  /// CR109. RETIRED by Amendment G — shorting now exists in the game, so this sentence is no longer true. Superseded by gamesSellClosesOnlyNote. Kept only so a stale build's lookup does not throw; delete once no shipped build references it. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
   /// **'Long only — a sell closes what you hold, it never opens a short.'**
   String get gamesNoShortingNote;
+
+  /// CR109 Amendment G. Replaces gamesNoShortingNote on the sell ticket. One order can never close a long AND open a short — the engine refuses a sell beyond the held quantity — so this points at the way to do it rather than saying it cannot be done. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'A sell closes what you hold. To open a short, start a new trade and pick SHORT.'**
+  String get gamesSellClosesOnlyNote;
+
+  /// CR109 Amendment G. Label above the long/short toggle on the trade ticket. Sits ABOVE the ticker because it changes what the size chips mean. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'DIRECTION'**
+  String get gamesTicketStepDirection;
+
+  /// CR109 Amendment G. The buy side of the direction toggle. 'LONG' rather than 'BUY' so it reads as the opposite of SHORT. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'LONG'**
+  String get gamesDirectionLong;
+
+  /// CR109 Amendment G. The sell-to-open side of the direction toggle. Market term — keep the English word where the local market uses it. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SHORT'**
+  String get gamesDirectionShort;
+
+  /// CR109 Amendment G. The short-open fee, stated before the size is picked rather than on the confirm card alone. Rate set by Saiful 2026-08-11. If SHORT_FEE_BPS or FEE_BPS is retuned in games_scoring.py, THIS STRING MUST CHANGE TOO. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Shorting costs 0.3% to open — three times the usual 0.1%.'**
+  String get gamesShortFeeNote;
+
+  /// CR109 Amendment G. The one thing about a short that is not true of any other position in the app. Stated plainly, once, on the ticket. A statement of the mechanic, not advice. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'A short can lose more than it ties up. There is no floor.'**
+  String get gamesShortRiskNote;
+
+  /// CR109 Amendment G. Marker on a short position row, so a player scrolling past the section heading can still tell which way the position points. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SHORT'**
+  String get gamesShortBadge;
+
+  /// CR109 Amendment G. Heading of the short-positions section on the run screen, separate from POSITIONS because the P&L runs the other way. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SHORTS'**
+  String get gamesRunShortsHeading;
+
+  /// CR109 Amendment G. Sub-line on a short position row — the size and the price it was sold at. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{shares} shares shorted at {price}'**
+  String gamesRunShortSub(String shares, String price);
+
+  /// CR109 Amendment G. Action on a short position row that opens the ticket in cover mode. The market term for buying a short back. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'COVER'**
+  String get gamesCoverCta;
+
+  /// CR109 Amendment G. Header of the ticket when it opens in cover mode. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Cover {ticker}'**
+  String gamesCoverTitle(String ticker);
+
+  /// CR109 Amendment G. The position being covered, shown above the confirm card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You are short {shares} shares'**
+  String gamesCoverShortOf(String shares);
+
+  /// CR109 Amendment G. Why the cover ticket has no size step. Without it the missing step reads as a bug rather than as the rule it is. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'A cover buys the whole position back. There is no partial cover.'**
+  String get gamesCoverWholeOnlyNote;
 }
 
 class _AppLocalizationsDelegate
