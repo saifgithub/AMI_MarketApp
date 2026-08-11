@@ -225,6 +225,7 @@ class GameRunDetail {
     this.navSeries = const [],
     this.holdings = const [],
     this.shorts = const [],
+    this.duel,
     this.priceSource = 'live',
     this.feesPaid = 0,
     this.tradeCount = 0,
@@ -292,6 +293,12 @@ class GameRunDetail {
   /// than as a long with a sign flip a reader can miss.
   final List<GameShort> shorts;
 
+  /// The live head-to-head, or null when this run has no opponent this
+  /// period — CR109 slice 3b. Null is an ORDINARY state, not a degraded one:
+  /// an odd player out simply is not paired, and the screen shows the open
+  /// field instead. It must never render as a duel against nobody.
+  final GameDuel? duel;
+
   /// Provenance of the marks behind [stake] — 'live' | 'cash' | 'mock' |
   /// 'stale' | a raw provider name. Only [marksAreLive] may be drawn as fact.
   final String priceSource;
@@ -348,6 +355,9 @@ class GameRunDetail {
         shorts: ((j['shorts'] as List?) ?? const [])
             .map((h) => GameShort.fromJson(h as Map<String, dynamic>))
             .toList(),
+        duel: j['duel'] == null
+            ? null
+            : GameDuel.fromJson(j['duel'] as Map<String, dynamic>),
         priceSource: j['price_source'] as String? ?? 'live',
         feesPaid: (j['fees_paid'] as num?)?.toDouble() ?? 0.0,
         tradeCount: (j['trade_count'] as num?)?.toInt() ?? 0,
@@ -385,6 +395,92 @@ class GameHolding {
       quantity: (j['quantity'] as num?)?.toDouble() ?? 0,
       avgCost: avg,
       mark: (j['mark'] as num?)?.toDouble() ?? avg,
+    );
+  }
+}
+
+/// The live head-to-head — CR109 slice 3b, design §11.1.
+///
+/// A duel needs n=2, which is the only competitive format that works at
+/// alpha field sizes: *"You vs VECTOR_11. 3 days left. They're 1.1% ahead"*
+/// beats *"1st of 3, scored against the S&P"* by a wide margin.
+///
+/// [leadPct] arrives SIGNED from the server, from this player's side. Both
+/// TWRs are on the wire so a client could subtract them — and one that got
+/// the sign backwards would tell a losing player they were ahead. One
+/// subtraction, one place. Null means the gap is not known yet (either side
+/// unmeasured), which is not the same as level.
+class GameDuel {
+  const GameDuel({
+    required this.kind,
+    required this.cadence,
+    required this.state,
+    required this.opponentHandle,
+    this.opponentIsDesk = false,
+    this.opponentDeskRule,
+    this.opponentTwrPct,
+    this.myTwrPct,
+    this.leadPct,
+    this.outcome,
+    this.pointsDelta = 0,
+    this.pointsAtStake,
+  });
+
+  /// 'auto' | 'first_run'. A first run is always against the Index Desk —
+  /// the one opponent that is guaranteed to exist and cannot embarrass a
+  /// beginner, because it holds the benchmark.
+  final String kind;
+  final String cadence;
+
+  /// 'live' | 'settled' | 'void'.
+  final String state;
+
+  final String opponentHandle;
+  final bool opponentIsDesk;
+
+  /// The desk's PUBLISHED rule. Shown, not hidden: the first-run duel is
+  /// "beat the Index Desk", and a player who did not know their opponent was
+  /// the benchmark would be reading a different result than the one they got.
+  final String? opponentDeskRule;
+  final double? opponentTwrPct;
+  final double? myTwrPct;
+
+  /// Positive when this player is ahead. Null while either side is
+  /// unmeasured — a duel that has not started has an UNKNOWN gap, not a
+  /// level one, and 0.0 would draw a dead heat that is not happening.
+  final double? leadPct;
+
+  /// 'won' | 'lost' | 'draw' | 'void', or null while live.
+  final String? outcome;
+
+  /// What the settled result was worth. 0 on a draw or a void.
+  final int pointsDelta;
+
+  /// What a live duel is playing for. Null once settled.
+  final int? pointsAtStake;
+
+  bool get isLive => state == 'live';
+  bool get isFirstRun => kind == 'first_run';
+
+  /// True only when the gap is KNOWN and this player is ahead. Deliberately
+  /// not `leadPct >= 0` — an unknown gap must not read as a lead.
+  bool get isAhead => leadPct != null && leadPct! > 0;
+
+  factory GameDuel.fromJson(Map<String, dynamic> j) {
+    final opp = (j['opponent'] as Map<String, dynamic>?) ?? const {};
+    return GameDuel(
+      kind: j['kind'] as String? ?? 'auto',
+      cadence: j['cadence'] as String? ?? 'week',
+      state: j['state'] as String? ?? 'live',
+      opponentHandle: opp['handle'] as String? ?? 'Unnamed',
+      opponentIsDesk: opp['is_desk'] as bool? ?? false,
+      opponentDeskRule: opp['desk_rule'] as String?,
+      opponentTwrPct: (opp['twr_pct'] as num?)?.toDouble(),
+      myTwrPct: (j['my_twr_pct'] as num?)?.toDouble(),
+      leadPct: (j['lead_pct'] as num?)?.toDouble(),
+      outcome: j['outcome'] as String?,
+      pointsDelta: (j['points_delta'] as num?)?.toInt() ?? 0,
+      pointsAtStake: (j['points_at_stake'] as num?)?.toInt(),
     );
   }
 }

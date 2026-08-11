@@ -36,7 +36,7 @@ from sqlalchemy import select
 
 from app.db import get_session
 from app.db.models import GameEntryRow, GameFieldRow
-from app.services import career_ledger
+from app.services import career_ledger, games_duels
 from app.services import games_service as games
 from app.services.portfolio_nav_daily import nav_history
 from app.trading_math.returns import max_drawdown_pct
@@ -159,18 +159,39 @@ def get_close_payload(user_id: UUID, run_id: UUID, *, now: datetime | None = Non
         "career_points_delta": payload_entry["career_points_delta"],
         "final_twr_pct": payload_entry["final_twr_pct"],
     }
-    # Beat 2 — one insight. Slice 3 has no duel verdict, no paid post-mortem
-    # and no board (so no near-miss line) — the counterfactual is the ONLY
-    # candidate this slice ever has, per §10.2's own priority order.
-    beat_insight = {
-        "kind": "counterfactual",
-        "hold_first_picks_pct": payload_entry["counterfactual_hold_first_picks_pct"],
-        "hold_index_pct": payload_entry["counterfactual_hold_index_pct"],
-        "beat_index_gross": (
-            payload_entry["alpha_display_pct"] is not None
-            and payload_entry["alpha_display_pct"] > 0
-        ),
-    }
+    # Beat 2 — ONE insight, chosen by §10.2's priority order:
+    #
+    #     the duel verdict on a first run · the post-mortem on a blowup ·
+    #     the near-miss when it applies · otherwise the counterfactual
+    #
+    # The budget of three beats is the point of the whole surface: the Close
+    # had become *"a report with confetti"*, and the peak-end rule that
+    # justified it forbids exactly that. So this picks ONE and the rest goes
+    # into the debrief panel — never two insights stacked.
+    #
+    # Slice 3b fills the first slot. A settled duel outranks the
+    # counterfactual because it is a RESULT against a named opponent rather
+    # than an analysis of a road not taken, and on a first run it is the
+    # whole narrative: *you beat the market* or *the market beat you*. Both
+    # are stories; the counterfactual is a footnote by comparison.
+    #
+    # A VOID duel deliberately does not take the slot. It has nothing to say
+    # — one side was unmeasurable — so the counterfactual, which is still
+    # true, is the better use of the one insight the player gets.
+    beat_insight = None
+    duel = games_duels.close_verdict_for_run(user_id, run_id)
+    if duel is not None and duel["state"] == "settled":
+        beat_insight = {"kind": "duel", **duel}
+    if beat_insight is None:
+        beat_insight = {
+            "kind": "counterfactual",
+            "hold_first_picks_pct": payload_entry["counterfactual_hold_first_picks_pct"],
+            "hold_index_pct": payload_entry["counterfactual_hold_index_pct"],
+            "beat_index_gross": (
+                payload_entry["alpha_display_pct"] is not None
+                and payload_entry["alpha_display_pct"] > 0
+            ),
+        }
     beat_reentry = _reentry_cta(user_id, cadence, now=now)
 
     return {
@@ -216,6 +237,7 @@ def get_record(user_id: UUID) -> dict:
     with get_session() as s:
         net = career_ledger.career_points_total(s, user_id)
         forfeits = career_ledger.forfeit_count(s, user_id)
+        duel_record = games_duels.duel_record(s, user_id)
         rows = s.execute(
             select(GameEntryRow, GameFieldRow)
             .join(GameFieldRow, GameEntryRow.field_id == GameFieldRow.id)
@@ -249,6 +271,11 @@ def get_record(user_id: UUID) -> dict:
         "void_count": void_count,
         "run_count": len(rows),
         "run_history": history,
+        # §11.1's duel record. Sent as its own object rather than folded into
+        # the run counts because a duel is not a run — a player can hold a
+        # duel and an open-field run in the same cadence at once (§12.2 case
+        # 1), so adding W and L to `run_count` would double-count the week.
+        "duel_record": duel_record,
     }
 
 

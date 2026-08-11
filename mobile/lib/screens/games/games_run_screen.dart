@@ -81,6 +81,14 @@ class GamesRunScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(AmiSpacing.m),
               children: [
                 _Header(detail: detail),
+                // Directly under the header, above the cash panel: at alpha
+                // field sizes the duel IS the competition (§11.1), and
+                // burying the only opponent the player has below their own
+                // balance would make the screen about accounting again.
+                if (detail.duel != null) ...[
+                  const SizedBox(height: AmiSpacing.m),
+                  _DuelCard(duel: detail.duel!, daysLeft: detail.daysLeft),
+                ],
                 const SizedBox(height: AmiSpacing.m),
                 _CashPanel(detail: detail),
                 if (detail.navSeries.length >= 2) ...[
@@ -224,6 +232,105 @@ class _Header extends StatelessWidget {
 /// Cash, committed, available, invested — four numbers that must reconcile
 /// on screen, because the first version of this screen showed one of them
 /// and let the player infer the rest wrongly.
+/// The head-to-head — CR109 slice 3b, §11.1's *"You vs VECTOR_11. 3 days
+/// left. They're 1.1% ahead"*.
+///
+/// Every number here is a PERCENTAGE. §6.1's invariant is that no entrant's
+/// AMI Cash is ever rendered for anyone else, and a duel is the surface
+/// where the temptation is strongest — it is the only place two books are
+/// deliberately put side by side.
+///
+/// The lead is read from the server's signed [GameDuel.leadPct] rather than
+/// subtracted here. A client that got the sign backwards would tell a losing
+/// player they were ahead, which is a worse failure than showing nothing.
+class _DuelCard extends StatelessWidget {
+  const _DuelCard({required this.duel, this.daysLeft});
+  final GameDuel duel;
+  final int? daysLeft;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final lead = duel.leadPct;
+    // Three states, not two. An UNKNOWN gap is drawn neutrally — never as
+    // level, and never in the colour of a lead nobody has yet.
+    final Color accent;
+    final String line;
+    if (lead == null) {
+      accent = AmiColors.textLow;
+      line = l.gamesDuelNotStarted;
+    } else if (lead > 0) {
+      accent = AmiColors.hexGreen;
+      line = l.gamesDuelAhead(lead.abs().toStringAsFixed(2));
+    } else if (lead < 0) {
+      accent = AmiColors.hexRed;
+      line = l.gamesDuelBehind(lead.abs().toStringAsFixed(2));
+    } else {
+      accent = AmiColors.textLow;
+      line = l.gamesDuelLevel;
+    }
+
+    return GlassPanel(
+      accentColor: accent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                duel.isFirstRun
+                    ? l.gamesDuelFirstRunHeading
+                    : l.gamesDuelHeading,
+                style: AmiTypography.labelMono
+                    .copyWith(color: AmiColors.textLow),
+              ),
+              const Spacer(),
+              if (duel.pointsAtStake != null)
+                Text(
+                  l.gamesDuelAtStake(duel.pointsAtStake!),
+                  style: AmiTypography.caption,
+                ),
+            ],
+          ),
+          const SizedBox(height: AmiSpacing.xs),
+          Text(
+            l.gamesDuelVersus(duel.opponentHandle),
+            style: AmiTypography.h4.copyWith(color: AmiColors.textHigh),
+          ),
+          // The desk's published rule, shown rather than hidden. The
+          // first-run duel is "beat the Index Desk", and a player who did not
+          // know their opponent was the benchmark would be reading a
+          // different result than the one they got.
+          if (duel.opponentIsDesk && duel.opponentDeskRule != null) ...[
+            const SizedBox(height: AmiSpacing.xs),
+            Text(duel.opponentDeskRule!, style: AmiTypography.caption),
+          ],
+          const SizedBox(height: AmiSpacing.s),
+          Text(line, style: AmiTypography.body.copyWith(color: accent)),
+          if (duel.isLive && daysLeft != null) ...[
+            const SizedBox(height: AmiSpacing.xs),
+            Text(l.gamesDuelDaysLeft(daysLeft!), style: AmiTypography.caption),
+          ],
+          if (!duel.isLive && duel.outcome != null) ...[
+            const SizedBox(height: AmiSpacing.xs),
+            Text(
+              switch (duel.outcome!) {
+                'won' => l.gamesDuelWon(duel.pointsDelta),
+                'lost' => l.gamesDuelLost(duel.pointsDelta),
+                'draw' => l.gamesDuelDraw,
+                // A void is stated, never silently drawn as a draw — the run
+                // was not measurable, which is a different thing from a tie.
+                _ => l.gamesDuelVoid,
+              },
+              style: AmiTypography.caption,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _CashPanel extends StatelessWidget {
   const _CashPanel({required this.detail});
   final GameRunDetail detail;

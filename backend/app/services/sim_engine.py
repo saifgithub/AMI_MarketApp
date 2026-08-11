@@ -279,7 +279,7 @@ def _portfolio_from_row(row: SimPortfolioRow) -> Portfolio:
 
 def training_trade_scope(user_id: UUID):
     """A WHERE clause pinning a `sim_trades` query to a user's TRAINING
-    ledger — DEF267.
+    ledger — DEF269.
 
     `sim_trades` has been a per-USER table since long before it was a
     per-portfolio one. CR109 slice 2 gave a user many portfolios (one

@@ -3039,4 +3039,59 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get gamesCoverWholeOnlyNote =>
       'A cover buys the whole position back. There is no partial cover.';
+
+  @override
+  String get gamesDuelHeading => 'DUEL';
+
+  @override
+  String get gamesDuelFirstRunHeading => 'YOUR FIRST RUN';
+
+  @override
+  String gamesDuelVersus(String handle) {
+    return 'You vs $handle';
+  }
+
+  @override
+  String gamesDuelAhead(String pct) {
+    return 'You are $pct% ahead';
+  }
+
+  @override
+  String gamesDuelBehind(String pct) {
+    return 'You are $pct% behind';
+  }
+
+  @override
+  String get gamesDuelLevel => 'Dead level';
+
+  @override
+  String get gamesDuelNotStarted =>
+      'No closes yet — the gap is not measurable until both books have a close.';
+
+  @override
+  String gamesDuelAtStake(int points) {
+    return '$points pts';
+  }
+
+  @override
+  String gamesDuelDaysLeft(int days) {
+    return '$days days left';
+  }
+
+  @override
+  String gamesDuelWon(int points) {
+    return 'You won. +$points career points.';
+  }
+
+  @override
+  String gamesDuelLost(int points) {
+    return 'You lost. −$points career points.';
+  }
+
+  @override
+  String get gamesDuelDraw => 'A draw. No points either way.';
+
+  @override
+  String get gamesDuelVoid =>
+      'Void — one side’s run could not be measured. No points either way.';
 }

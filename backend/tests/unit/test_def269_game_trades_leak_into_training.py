@@ -1,4 +1,4 @@
-"""DEF267 — game fills leaked into every TRAINING read of `sim_trades`.
+"""DEF269 — game fills leaked into every TRAINING read of `sim_trades`.
 
 Reported by a tester on the shipped build: *"game trades are appearing in
 portfolio open trades."*

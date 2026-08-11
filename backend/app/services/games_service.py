@@ -35,8 +35,16 @@ from sqlalchemy.exc import IntegrityError
 
 from app.core.logging import logger
 from app.db import get_session
-from app.db.models import GameEntryRow, GameFieldRow, GameQueuedOrderRow, User
+from app.db.models import (
+    GameEntryRow,
+    GameFieldRow,
+    GameQueuedOrderRow,
+    GameShortPositionRow,
+    SimPortfolioRow,
+    User,
+)
 from app.schemas.trade import OrderType, Side
+from app.services import games_duels
 from app.services.games_scoring import short_open_fee, trade_fee
 from app.services.portfolio_nav_daily import nav_history, twr_pct_for_window
 from app.services.sim_engine import get_sim_engine
@@ -429,6 +437,9 @@ def get_run_detail(user_id: UUID, run_id: UUID) -> dict | None:
             }
             for h in portfolio.holdings
         ],
+        # CR109 slice 3b — the live duel, or null when this run has no
+        # opponent this period (an ordinary state, not a degraded one).
+        "duel": games_duels.duel_view_for_run(user_id, run_id),
         # CR109 Amendment G. A separate list, not a holding with a negative
         # quantity: the client renders the two differently (a short's P&L
         # runs the other way and its loss is unbounded), and a sign flip
@@ -559,6 +570,7 @@ def enter_field(
                 intent=intent,
                 fees_paid=0,
                 trade_count=0,
+                entered_at=now,
             )
             s.add(entry)
             field.entrant_count = (field.entrant_count or 0) + 1
@@ -706,9 +718,30 @@ def _queued_orders_priced(
     # keeps reporting as untouched — the same over-commitment §13.3's
     # `cash_committed` was added to stop, reintroduced through the one side
     # it did not have to consider before.
-    portfolio = sim.ensure_portfolio(user_id, kind="game", run_id=run_id)
-    held_by_ticker = {h.ticker: h.quantity for h in portfolio.holdings}
-    shorted = {sp.ticker for sp in portfolio.shorts}
+    # Read straight from the tables rather than through the engine: this
+    # needs two ticker sets and nothing else, and going through
+    # `ensure_portfolio` would both create a row this read has no business
+    # creating and drag the whole market-data fan-out in behind it.
+    held_by_ticker: dict[str, float] = {}
+    shorted: set[str] = set()
+    with get_session() as s:
+        p_row = s.execute(
+            select(SimPortfolioRow).where(
+                SimPortfolioRow.user_id == user_id,
+                SimPortfolioRow.kind == "game",
+                SimPortfolioRow.run_id == run_id,
+            )
+        ).scalars().first()
+        if p_row is not None:
+            held_by_ticker = {h.ticker: float(h.quantity) for h in p_row.holdings}
+            shorted = {
+                t for (t,) in s.execute(
+                    select(GameShortPositionRow.ticker).where(
+                        GameShortPositionRow.portfolio_id == p_row.id,
+                        GameShortPositionRow.state == "open",
+                    )
+                ).all()
+            }
 
     for spec in specs:
         quote = sim.current_quote(spec["ticker"])

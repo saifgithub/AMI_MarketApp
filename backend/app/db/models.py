@@ -1435,6 +1435,17 @@ class GameEntryRow(Base):
     wildness_index: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
     fees_paid: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     trade_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # CR109 slice 3b. The table had no timestamp at all, which meant there
+    # was no order to pair duels in except whatever order Postgres happened
+    # to return rows in — the same undefined-behaviour-decides-a-result
+    # problem the queue drain had before it got an explicit ORDER BY.
+    # Backfilled rows all share the migration's timestamp, so ordering falls
+    # back to `id` for them; that is honest (they entered before this was
+    # recorded) rather than a fabricated sequence.
+    entered_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+        server_default=func.now(),
+    )
     # CR109 slice 3 — written once by the scoring pass (`games_scoring_pass.py`).
     # `void_reason` states loudly WHY a run is VOID (mock-priced day(s), named)
     # rather than leaving the client to infer it from the absence of a score
@@ -1762,3 +1773,100 @@ class GameShortPositionRow(Base):
     # user | run_end
     close_reason: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     realised_pnl: Mapped[Optional[float]] = mapped_column(Numeric(12, 2), nullable=True)
+
+
+class GameDuelRow(Base):
+    """One head-to-head pairing inside a field — CR109 slice 3b, design §11.1.
+
+    **Why duels exist at all.** §6.6 established that the open board needs
+    `n >= 8` before placement means anything, and §16.4 concedes that at
+    alpha every field is below that — so the flagship competitive surface is
+    inert exactly when the product most needs a player to feel something. A
+    duel needs `n = 2`. It is the only competitive format that works at
+    alpha field sizes.
+
+    **Scoring is carved out of §6.2 explicitly and must never route through
+    the placement formula.** At `n = 2`, placement `p` is exactly 1.0 or 0.0,
+    so it would pay the winner the maximum in the game and debit the loser
+    the maximum. Nor does it route to §6.6's benchmark path: there, `n = 2`
+    is a SHORTFALL; here it is the intended field size. Higher TWR wins, and
+    the delta is a modest fixed number scaled by cadence.
+
+    **The delta is symmetric** (`+X` / `−X`), and that is load-bearing rather
+    than aesthetic: §4.1's one-live-run-per-cadence rule exists to close the
+    parallel-entry farm, and that farm is created by the `+100 / −40`
+    ASYMMETRY — parallel entries are +EV only because a win pays 2.5× what a
+    loss costs. A symmetric delta is zero-sum, so a duel running alongside an
+    open-field run of the same cadence is exactly EV-neutral and there is
+    nothing to farm.
+
+    **`kind` distinguishes the two ways a pairing is made**, and it is a
+    column rather than an inference because the two settle identically but
+    are *narrated* differently and are matched at different times:
+
+      auto        two humans paired by the lock-window sweep
+      first_run   a player's first run ever, paired against the Index Desk
+
+    Auto-matched ONLY — there is no challenge-by-handle, and that is the
+    load-bearing MVP constraint rather than a missing feature. Onboarding is
+    anonymous-first, so a second account is nearly free; direct challenge
+    plus cheap accounts is a trivial farm (make an alt, throw the duel, bank
+    the win). Removing the ability to choose your opponent closes it
+    structurally instead of by detection.
+
+    `pairing_key` is written but not yet READ. Auto-matching pairs whoever is
+    waiting, which is right at alpha; at scale, repeated blowout mismatches
+    demotivate both sides, so pairing should move to skill proximity when the
+    pool allows. Recorded now so the schema does not preclude it.
+
+    A duel with no winner is not a failure state: `winner_user_id` is NULL on
+    a genuine tie AND on a void, and `state` is what tells them apart. Both
+    settle at `points_delta = 0`.
+    """
+
+    __tablename__ = "game_duels"
+    __table_args__ = (
+        # **Side A is always the human**, and a human run may be in at most
+        # one duel per field. That is a plain unique constraint.
+        UniqueConstraint("field_id", "run_a_id", name="uq_duel_field_run_a"),
+        # Side B cannot be, and the asymmetry is the design rather than an
+        # oversight: on a `first_run` duel side B is the Index Desk, and one
+        # desk is the opponent of EVERY beginner in the field at once — that
+        # is what "a guaranteed opponent at n=1 real players" means. So the
+        # uniqueness that must hold on side B is scoped to `auto` duels,
+        # where both sides are human. A partial unique index says exactly
+        # that; a plain one would cap the field at a single beginner.
+        Index(
+            "uq_duel_field_run_b_auto",
+            "field_id", "run_b_id",
+            unique=True,
+            sqlite_where=text("kind = 'auto'"),
+            postgresql_where=text("kind = 'auto'"),
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    field_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    cadence: Mapped[str] = mapped_column(String, nullable=False)
+    # auto | first_run
+    kind: Mapped[str] = mapped_column(String, default="auto", nullable=False)
+
+    user_a_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    run_a_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    user_b_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    run_b_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+
+    # live | settled | void
+    state: Mapped[str] = mapped_column(String, default="live", nullable=False, index=True)
+    pairing_key: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    settled_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    # NULL on a tie and on a void — `state` distinguishes them.
+    winner_user_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
+    twr_a_pct: Mapped[Optional[float]] = mapped_column(Numeric(10, 4), nullable=True)
+    twr_b_pct: Mapped[Optional[float]] = mapped_column(Numeric(10, 4), nullable=True)
+    points_delta: Mapped[int] = mapped_column(Integer, default=0, nullable=False)

@@ -58,7 +58,7 @@ from app.db.models import (
     GameShortPositionRow,
     SimTradeRow,
 )
-from app.services import career_ledger
+from app.services import career_ledger, games_duels
 from app.services.games_scoring import (
     TradeLeg,
     achievable_benchmark,
@@ -227,6 +227,13 @@ def _close_field(field_id: UUID, *, sim: SimEngine, now: datetime) -> dict[str, 
                 scored += 1
             if stipend_paid:
                 stipends += 1
+
+        # ── Phase 3: duels (slice 3b), after EVERY entry in the field has
+        # its final TWR. A duel needs both sides' numbers, and `_apply_score`
+        # runs per entry — settling inside that loop would decide half the
+        # duels against an opponent whose result did not exist yet.
+        duel_stats = games_duels.settle_field_duels(s, field_id, now=now)
+
         field_row.scoring_basis = "benchmark"
         field_row.state = "closed"
 
@@ -234,8 +241,12 @@ def _close_field(field_id: UUID, *, sim: SimEngine, now: datetime) -> dict[str, 
         "game_field_closed",
         field_id=str(field_id), cadence=field.cadence,
         scored=scored, voided=voided, stipends=stipends,
+        duels_settled=duel_stats["settled"], duels_void=duel_stats["void"],
     )
-    return {"scored": scored, "voided": voided, "stipends": stipends}
+    return {
+        "scored": scored, "voided": voided, "stipends": stipends,
+        "duels": duel_stats,
+    }
 
 
 # ── Benchmark series ─────────────────────────────────────────────────────

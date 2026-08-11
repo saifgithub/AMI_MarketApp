@@ -5154,6 +5154,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A cover buys the whole position back. There is no partial cover.'**
   String get gamesCoverWholeOnlyNote;
+
+  /// CR109 slice 3b. Heading of the head-to-head card on the run screen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'DUEL'**
+  String get gamesDuelHeading;
+
+  /// CR109 slice 3b. Heading when the duel is the first-run pairing against the Index Desk — the framing is 'you versus the market', not 'a duel', because the player has no duel history to frame it against yet. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR FIRST RUN'**
+  String get gamesDuelFirstRunHeading;
+
+  /// CR109 slice 3b. Names the opponent. §11.1: naming one opponent is what makes a thin field feel like a contest. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You vs {handle}'**
+  String gamesDuelVersus(String handle);
+
+  /// CR109 slice 3b. The gap, in percentage points of time-weighted return — never AMI Cash (§6.1 forbids rendering another entrant's currency). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You are {pct}% ahead'**
+  String gamesDuelAhead(String pct);
+
+  /// CR109 slice 3b. The mirror of gamesDuelAhead. Stated plainly — no softening, no encouragement; the brand voice is analyst-to-analyst. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You are {pct}% behind'**
+  String gamesDuelBehind(String pct);
+
+  /// CR109 slice 3b. Both sides measured and equal. DISTINCT from gamesDuelNotStarted — a known tie is not the same as an unknown gap. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Dead level'**
+  String get gamesDuelLevel;
+
+  /// CR109 slice 3b. Either side unmeasured. Says the gap is UNKNOWN rather than drawing it as level, which is the null-vs-zero rule this feature keeps producing instances of. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No closes yet — the gap is not measurable until both books have a close.'**
+  String get gamesDuelNotStarted;
+
+  /// CR109 slice 3b. What a live duel is playing for. Symmetric — the winner gains what the loser is debited — so one number serves both sides. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{points} pts'**
+  String gamesDuelAtStake(int points);
+
+  /// CR109 slice 3b. The clock, on the duel card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days left'**
+  String gamesDuelDaysLeft(int days);
+
+  /// CR109 slice 3b. Settled duel, this player won. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You won. +{points} career points.'**
+  String gamesDuelWon(int points);
+
+  /// CR109 slice 3b. Settled duel, this player lost. Uses a MINUS SIGN (U+2212), not a hyphen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You lost. −{points} career points.'**
+  String gamesDuelLost(int points);
+
+  /// CR109 slice 3b. Both returns equal to four decimal places. A real outcome, reported as one. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'A draw. No points either way.'**
+  String get gamesDuelDraw;
+
+  /// CR109 slice 3b. A duel with a voided side. Stated, never silently drawn as a draw — unmeasurable is a different thing from tied, and CR040 requires the difference be visible. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Void — one side’s run could not be measured. No points either way.'**
+  String get gamesDuelVoid;
 }
 
 class _AppLocalizationsDelegate

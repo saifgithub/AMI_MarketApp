@@ -116,6 +116,46 @@ def cadence_weight(cadence: str, *, negative: bool) -> float:
     return float(table.get(cadence, 1.0))
 
 
+# ── Duel deltas (§11.1, slice 3b) ───────────────────────────────────────
+#
+# §21's "numbers still to set" list carries *"Duel career-point deltas by
+# cadence"* — the design deliberately left the magnitude open. These are the
+# first values, and the shape matters more than the numbers:
+#
+# **Symmetric.** The winner gains exactly what the loser loses. §4.1's
+# one-live-run-per-cadence rule exists to close the parallel-entry farm, and
+# that farm is created by placement's `+100 / −40` ASYMMETRY — parallel
+# entries are +EV only because a win pays 2.5× what a loss costs. A
+# zero-sum delta makes a parallel duel exactly EV-neutral, which is what
+# lets a duel run ALONGSIDE an open-field run instead of consuming its slot.
+# Any future retune must keep win and loss equal, or that argument fails and
+# the one-per-cadence cap becomes load-bearing for integrity rather than for
+# attention.
+#
+# **Modest, and far below placement.** A weekly duel pays 10 against
+# placement's ~100 ceiling. The duel is the format that WORKS at alpha field
+# sizes (§11.1), which means most early points would come from it — and a
+# format that pays more than the open board would teach players to avoid the
+# board this game is actually about.
+#
+# **Monotonic in committed time, and MUCH flatter than the gain row above.**
+# `CADENCE_GAIN_WEIGHT` runs 1 -> 52; applying that here would pay 520 for
+# one annual duel, five times the maximum in the game. A duel is one
+# comparison against one opponent no matter how long it ran, so its value
+# grows with commitment but nothing like linearly.
+DUEL_POINTS: dict[str, int] = {
+    "week": 10, "month": 20, "quarter": 30, "half": 40, "year": 50,
+}
+
+
+def duel_points(cadence: str) -> int:
+    """The symmetric delta for one settled duel. Unknown cadences fall to the
+    weekly value rather than raising — same posture as `cadence_weight`, and
+    a duel that scored zero because of an unrecognised string would be a
+    silent no-op on a result the player watched happen."""
+    return int(DUEL_POINTS.get(cadence, DUEL_POINTS["week"]))
+
+
 def cadence_period_key(cadence: str, starts_on: date) -> str:
     """The finish-stipend's "once per cadence PERIOD, not once per entry"
     guard (design §6.5's fourth condition) needs a key that is the SAME for

@@ -258,11 +258,21 @@ async def _game_desk_fill_tick() -> None:
     does. Idempotent: the guard is "which desks are already entered in this
     field", so a restart mid-fill resumes rather than double-entering."""
     from app.services.games_desks import run_desk_fill_tick
+    from app.services.games_duels import run_duel_pairing_tick
 
     while True:
         try:
             stats = await asyncio.to_thread(run_desk_fill_tick)
             logger.info("game_desk_fill_tick_complete", **stats)
+            # Duels pair in the SAME tick, immediately after, and never in a
+            # tick of their own: a first-run player must have an Index Desk
+            # in the field to be paired against, and the desk only arrives in
+            # the line above. Two independent tasks would race that ordering
+            # every lock window, and the failure would be silent — a beginner
+            # simply gets no duel, which looks like "no opponent was
+            # available" rather than like a bug (CR109 slice 3b, §11.1).
+            duels = await asyncio.to_thread(run_duel_pairing_tick)
+            logger.info("game_duel_pairing_tick_complete", **duels)
         except Exception:
             logger.exception("game_desk_fill_tick_failed")
         await asyncio.sleep(_GAME_DESK_FILL_INTERVAL_SECONDS)
