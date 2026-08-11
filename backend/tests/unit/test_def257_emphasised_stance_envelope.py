@@ -146,6 +146,31 @@ def test_the_decoration_boundary_is_a_decision():
         assert env.stance is None, line
 
 
+@pytest.mark.parametrize("n,stripped", [(1, True), (2, True), (3, True), (4, True), (5, False)])
+def test_the_repetition_bound_is_a_decision_too(n, stripped):
+    """The round-1 MINOR, pinned rather than just corrected in prose.
+
+    `_EMPHASIS` is `[*_]{0,2}` and appears TWICE in the assembled pattern — once
+    either side of the optional bracket — so the effective cap on consecutive
+    emphasis characters is 4, not the "one or two" the comment claimed. The
+    auditor found this by building the mutation my table *described* (unbounded
+    repetition) rather than the one I ran, and it survived: nothing anywhere
+    exercised 3+ repeated characters.
+
+    It matters because `***STANCE: …***` — bold+italic — is standard markdown and
+    arguably the more natural next drift for a model reaching for emphasis than
+    plain bold was. It works today by accident of the pattern appearing twice.
+    Accidents that happen to be right are still accidents, which is the entire
+    argument of `test_the_decoration_boundary_is_a_decision` one level down.
+    """
+    mark = "*" * n
+    body, env = parse_stance_envelope(
+        f"{mark}STANCE: for | CONVICTION: high | HEADLINE: x{mark}\n\nprose"
+    )
+    assert ("STANCE" not in body) is stripped, f"{n} asterisks"
+    assert (env.stance == "for") is stripped, f"{n} asterisks"
+
+
 def test_a_bracketed_aside_inside_a_sentence_is_still_prose():
     """DEF247's load-bearing claim, re-asserted here because DEF257 loosens the
     very regex that was holding it: the anchor is what keeps a mid-sentence aside
