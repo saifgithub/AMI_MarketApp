@@ -5280,6 +5280,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'−{points} career points.'**
   String gamesCloseDuelPointsLost(int points);
+
+  /// CR109 board redesign. The gap to the place immediately above, under the player's own standing. "3rd of 6" is a fact; this is a reason to open the app tomorrow. Percentage points of time-weighted return — never AMI Cash (§6.1). Null-safe: omitted entirely when either side is unmeasured. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{pct}% off {rank}ᵗʰ place'**
+  String gamesBoardChase(String pct, int rank);
+
+  /// CR109 board redesign. Shown instead of gamesBoardChase when the player is 1st — the interesting number is the cushion, not a gap that does not exist. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Leading by {pct}%'**
+  String gamesBoardLeadBy(String pct);
 }
 
 class _AppLocalizationsDelegate

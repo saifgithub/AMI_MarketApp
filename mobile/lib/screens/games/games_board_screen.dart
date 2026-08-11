@@ -31,6 +31,7 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/games.dart';
 import 'package:ami_trade/state/games_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/games/games_field_strip.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:flutter/material.dart';
@@ -82,6 +83,11 @@ class GamesBoardScreen extends ConsumerWidget {
               children: [
                 _YourStanding(board: board),
                 const SizedBox(height: AmiSpacing.m),
+                // The race, before the table. A list can only say WHO is
+                // ahead; this says BY HOW MUCH, which is the question a
+                // player actually has and the one the old screen answered
+                // nowhere.
+                GamesFieldStrip(rows: board.rows),
                 _FieldSummary(board: board),
                 const SizedBox(height: AmiSpacing.m),
                 if (board.rows.isEmpty)
@@ -108,11 +114,41 @@ class _YourStanding extends StatelessWidget {
   const _YourStanding({required this.board});
   final GameBoard board;
 
+  /// "0.42% off 2nd", or — when you lead — how much of a cushion you hold.
+  ///
+  /// Computed from the row immediately above (or below, when leading) rather
+  /// than from `yourRank` arithmetic, so a tie renders as the tie it is
+  /// instead of an invented gap. Null whenever either side is unmeasured:
+  /// an unknown gap is not a zero one, which is the same rule the duel card
+  /// follows and the ninth-instance bug class this feature keeps producing.
+  String? _chaseLine(AppLocalizations l) {
+    final ranked = board.rows.where((r) => r.rank != null && r.twrPct != null)
+        .toList()
+      ..sort((a, b) => a.rank!.compareTo(b.rank!));
+    final meIdx = ranked.indexWhere((r) => r.isYou);
+    if (meIdx < 0) return null;
+    final me = ranked[meIdx];
+
+    if (meIdx > 0) {
+      final above = ranked[meIdx - 1];
+      final gap = above.twrPct! - me.twrPct!;
+      if (gap <= 0) return null; // a tie — the rank already says it
+      return l.gamesBoardChase(gap.toStringAsFixed(2), above.rank!);
+    }
+    // You lead. The interesting number is the cushion, not the gap.
+    if (ranked.length < 2) return null;
+    final below = ranked[1];
+    final lead = me.twrPct! - below.twrPct!;
+    if (lead <= 0) return null;
+    return l.gamesBoardLeadBy(lead.toStringAsFixed(2));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final rank = board.yourRank;
     final twr = board.yourTwrPct;
+    final chase = _chaseLine(l);
 
     // `rank == null` means no completed close, NOT last place. Two different
     // facts, and the one this renders must be the true one.
@@ -152,6 +188,13 @@ class _YourStanding extends StatelessWidget {
                 Text(l.gamesTwrLabel, style: AmiTypography.caption),
               ],
             ),
+          ],
+          // The single most actionable line on the screen, and it was
+          // missing: how far off the place above. "3rd of 6" is a fact;
+          // "0.42% off 2nd" is a reason to open the app tomorrow.
+          if (chase != null) ...[
+            const SizedBox(height: AmiSpacing.xs),
+            Text(chase, style: AmiTypography.caption),
           ],
         ],
       ),

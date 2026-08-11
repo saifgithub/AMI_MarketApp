@@ -74,6 +74,7 @@ DO_COMMIT=1
 DO_BILLING=1
 DO_PRODUCTION=0
 DO_INTERNAL_ONLY=0
+DO_GAMES=1
 for arg in "$@"; do
   case "$arg" in
     --no-bump)    DO_BUMP=0 ;;
@@ -82,6 +83,7 @@ for arg in "$@"; do
     --no-billing) DO_BILLING=0 ;;
     --production) DO_PRODUCTION=1 ;;
     --internal-only) DO_INTERNAL_ONLY=1 ;;
+    --no-games)   DO_GAMES=0 ;;
     -h|--help)
       sed -n '2,/^$/p' "$0"
       exit 0
@@ -137,6 +139,24 @@ ipa_dir="${MOBILE_DIR}/build/ios/ipa"
 # top-up all run for real, but no money moves and no store product is needed.
 # That is exactly what alpha wants. It is also a giveaway if it ever reaches
 # real users, so it is banner-loud here and hard-blocked from production.
+# GAMES + PRODUCTION = refuse. Structural, not advisory.
+#
+# Until --no-games existed, this hole was masked rather than closed: a test_…
+# RevenueCat key forced --internal-only, so a games build could not reach an
+# external group by accident. But the key is the thing a public rollout
+# CHANGES — swap in a real appl_… key and nothing here would have stopped
+# `--production` shipping a binary with an unreachable-by-design game route
+# compiled into it, which is precisely what App Review guideline 2.3.1 names.
+# The banner said "do not"; a banner is not a control (CR040).
+if [[ "$DO_GAMES" -eq 1 && ( "${RELEASE_CHANNEL:-}" == "production" || "$DO_PRODUCTION" -eq 1 ) ]]; then
+  echo "✗ This is a PRODUCTION build and AMI_GAMES is on." >&2
+  echo "  A hidden feature in a store binary is App Review guideline 2.3.1." >&2
+  echo "  Rebuild with --no-games:" >&2
+  echo "" >&2
+  echo "      scripts/build_testflight.sh --production --no-games" >&2
+  exit 1
+fi
+
 if [[ "$REVENUECAT_IOS_SDK_KEY" == test_* ]]; then
   if [[ "${RELEASE_CHANNEL:-}" == "production" || "$DO_PRODUCTION" -eq 1 ]]; then
     echo "✗ REVENUECAT_IOS_SDK_KEY is a Test Store key (test_…) and this is a PRODUCTION build." >&2
@@ -207,6 +227,7 @@ fi
 
 echo "▶ flutter build ios  (release, no-codesign — framework only)"
 cd "$MOBILE_DIR"
+if [[ "$DO_GAMES" -eq 1 ]]; then
 cat <<'BANNER'
 ┌──────────────────────────────────────────────────────────────────┐
 │  THIS BUILD CARRIES THE CR109 EASTER EGG (AMI_GAMES=true).       │
@@ -222,6 +243,19 @@ cat <<'BANNER'
 │  "if anyone finds it, it will be an easter egg for them."        │
 └──────────────────────────────────────────────────────────────────┘
 BANNER
+else
+cat <<'BANNER'
+┌──────────────────────────────────────────────────────────────────┐
+│  --no-games: AMI_GAMES=false. No games route is compiled in, so  │
+│  there is nothing for App Review guideline 2.3.1 to find. This   │
+│  is the build shape a PUBLIC release needs.                      │
+│                                                                  │
+│  Verified below against the IPA itself, not against this flag —  │
+│  the check inverts, and a games string FOUND here is a hard      │
+│  failure rather than a warning.                                  │
+└──────────────────────────────────────────────────────────────────┘
+BANNER
+fi
 
 # A release archive must not inherit another build's native assets.
 #
@@ -255,7 +289,7 @@ rm -rf "${MOBILE_DIR}/build/native_assets" \
 flutter build ios --release --no-codesign \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
   --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
-  --dart-define=AMI_GAMES=true \
+  --dart-define=AMI_GAMES="$([[ "$DO_GAMES" -eq 1 ]] && echo true || echo false)" \
   --dart-define=REVENUECAT_IOS_SDK_KEY="${REVENUECAT_IOS_SDK_KEY}"
 
 echo "▶ xcodebuild archive  (signs + auto-refreshes provisioning profile)"
@@ -317,14 +351,34 @@ _games_in_ipa() {
   [[ "$hits" -gt 0 ]] && echo "present" || echo "absent"
 }
 
+# The check runs in BOTH directions, and the failing direction is the one
+# that matters in each case. With games ON, "absent" means the define did not
+# take. With --no-games, "present" means a hidden feature is about to reach
+# App Review — the more expensive mistake of the two, and the whole reason
+# the flag exists.
+_want=$([[ "$DO_GAMES" -eq 1 ]] && echo present || echo absent)
 case "$(_games_in_ipa || echo unreadable)" in
-  present) echo "▶ AMI_GAMES verified present in the IPA" ;;
+  present)
+    if [[ "$_want" == "present" ]]; then
+      echo "▶ AMI_GAMES verified present in the IPA"
+    else
+      echo "✗ --no-games was passed and the game is STILL in this IPA." >&2
+      echo "  A hidden, unreachable-by-design feature in a store binary is" >&2
+      echo "  exactly what App Review guideline 2.3.1 names. Refusing." >&2
+      echo "  Most likely cause: a stale build/ directory — clean and retry." >&2
+      exit 1
+    fi
+    ;;
   absent)
-    echo "✗ AMI_GAMES did NOT take — this IPA has no game in it." >&2
-    echo "  bool.fromEnvironment accepts only \"true\"/\"false\"; any other" >&2
-    echo "  value silently compiles to the default, false." >&2
-    echo "  Refusing to upload a build that does not carry what it claims." >&2
-    exit 1
+    if [[ "$_want" == "absent" ]]; then
+      echo "▶ --no-games verified: no game in the IPA"
+    else
+      echo "✗ AMI_GAMES did NOT take — this IPA has no game in it." >&2
+      echo "  bool.fromEnvironment accepts only \"true\"/\"false\"; any other" >&2
+      echo "  value silently compiles to the default, false." >&2
+      echo "  Refusing to upload a build that does not carry what it claims." >&2
+      exit 1
+    fi
     ;;
   control-missing)
     echo "⚠ games-string check inconclusive — the CONTROL string was also" >&2

@@ -3130,4 +3130,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String gamesCloseDuelPointsLost(int points) {
     return '−$points career points.';
   }
+
+  @override
+  String gamesBoardChase(String pct, int rank) {
+    return '$pct% off $rankᵗʰ place';
+  }
+
+  @override
+  String gamesBoardLeadBy(String pct) {
+    return 'Leading by $pct%';
+  }
 }

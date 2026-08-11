@@ -81,6 +81,7 @@ DO_COMMIT=1
 DO_BILLING=1
 DO_PRODUCTION=0
 DO_INTERNAL_ONLY=0
+DO_GAMES=1
 for arg in "$@"; do
   case "$arg" in
     --no-bump)    DO_BUMP=0 ;;
@@ -88,6 +89,7 @@ for arg in "$@"; do
     --no-billing) DO_BILLING=0 ;;
     --production) DO_PRODUCTION=1 ;;
     --internal-only) DO_INTERNAL_ONLY=1 ;;
+    --no-games)   DO_GAMES=0 ;;
     -h|--help)
       sed -n '2,/^$/p' "$0"
       exit 0
@@ -139,6 +141,22 @@ fi
 # RevenueCat: paywall, webhook, entitlement grant and credit top-up all run for
 # real, but no money moves and no store product is needed. Right for alpha; a
 # giveaway if it reaches real users, so: banner-loud here, blocked in production.
+# GAMES + PRODUCTION = refuse. Structural, not advisory.
+#
+# Play makes this sharper than iOS: the Console lets you promote an INTERNAL
+# build straight to production in two clicks, so the only thing standing
+# between a games binary and the store was a banner asking nicely. A banner
+# is not a control (CR040).
+if [[ "$DO_GAMES" -eq 1 && ( "${RELEASE_CHANNEL:-}" == "production" || "$DO_PRODUCTION" -eq 1 ) ]]; then
+  echo "✗ This is a PRODUCTION build and AMI_GAMES is on." >&2
+  echo "  A hidden feature in a store binary is App Review guideline 2.3.1," >&2
+  echo "  and Play's own policy on undisclosed functionality says the same." >&2
+  echo "  Rebuild with --no-games:" >&2
+  echo "" >&2
+  echo "      scripts/build_playstore.sh --production --no-games" >&2
+  exit 1
+fi
+
 if [[ "$REVENUECAT_ANDROID_SDK_KEY" == test_* ]]; then
   if [[ "${RELEASE_CHANNEL:-}" == "production" || "$DO_PRODUCTION" -eq 1 ]]; then
     echo "✗ REVENUECAT_ANDROID_SDK_KEY is a Test Store key (test_…) and this is a PRODUCTION build." >&2
@@ -207,6 +225,7 @@ fi
 
 echo "▶ flutter build appbundle  (release, signed if keystore present)"
 cd "$MOBILE_DIR"
+if [[ "$DO_GAMES" -eq 1 ]]; then
 cat <<'BANNER'
 ┌──────────────────────────────────────────────────────────────────┐
 │  THIS BUILD CARRIES THE CR109 EASTER EGG (AMI_GAMES=true).       │
@@ -222,6 +241,19 @@ cat <<'BANNER'
 │  "if anyone finds it, it will be an easter egg for them."        │
 └──────────────────────────────────────────────────────────────────┘
 BANNER
+else
+cat <<'BANNER'
+┌──────────────────────────────────────────────────────────────────┐
+│  --no-games: AMI_GAMES=false. No games route is compiled in, so  │
+│  an accidental Console promotion to production carries nothing   │
+│  undisclosed. This is the build shape a PUBLIC release needs.    │
+│                                                                  │
+│  Verified below against the AAB itself, not against this flag —  │
+│  the check inverts, and a games string FOUND here is a hard      │
+│  failure rather than a warning.                                  │
+└──────────────────────────────────────────────────────────────────┘
+BANNER
+fi
 
 # A release build must not compile against another build's generated code.
 #
@@ -250,7 +282,7 @@ flutter build appbundle --release \
   --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
   --dart-define=GOOGLE_OAUTH_WEB_CLIENT_ID="${GOOGLE_OAUTH_WEB_CLIENT_ID}" \
   --dart-define=SENTRY_DSN="${SENTRY_DSN}" \
-  --dart-define=AMI_GAMES=true \
+  --dart-define=AMI_GAMES="$([[ "$DO_GAMES" -eq 1 ]] && echo true || echo false)" \
   --dart-define=REVENUECAT_ANDROID_SDK_KEY="${REVENUECAT_ANDROID_SDK_KEY}"
 
 aab="${MOBILE_DIR}/build/app/outputs/bundle/release/app-release.aab"
@@ -283,14 +315,32 @@ _games_in_aab() {
   [[ "$hits" -gt 0 ]] && echo "present" || echo "absent"
 }
 
+# Runs in BOTH directions; the failing direction differs. With games ON,
+# "absent" means the define did not take. With --no-games, "present" means an
+# undisclosed feature is one Console click from production.
+_want=$([[ "$DO_GAMES" -eq 1 ]] && echo present || echo absent)
 case "$(_games_in_aab || echo unreadable)" in
-  present) echo "▶ AMI_GAMES verified present in the AAB" ;;
+  present)
+    if [[ "$_want" == "present" ]]; then
+      echo "▶ AMI_GAMES verified present in the AAB"
+    else
+      echo "✗ --no-games was passed and the game is STILL in this AAB." >&2
+      echo "  Play lets an internal build be promoted straight to production," >&2
+      echo "  so this cannot be allowed to leave the machine. Refusing." >&2
+      echo "  Most likely cause: a stale build/ directory — clean and retry." >&2
+      exit 1
+    fi
+    ;;
   absent)
-    echo "✗ AMI_GAMES did NOT take — this AAB has no game in it." >&2
-    echo "  bool.fromEnvironment accepts only \"true\"/\"false\"; any other" >&2
-    echo "  value silently compiles to the default, false." >&2
-    echo "  Refusing to publish a build that does not carry what it claims." >&2
-    exit 1
+    if [[ "$_want" == "absent" ]]; then
+      echo "▶ --no-games verified: no game in the AAB"
+    else
+      echo "✗ AMI_GAMES did NOT take — this AAB has no game in it." >&2
+      echo "  bool.fromEnvironment accepts only \"true\"/\"false\"; any other" >&2
+      echo "  value silently compiles to the default, false." >&2
+      echo "  Refusing to publish a build that does not carry what it claims." >&2
+      exit 1
+    fi
     ;;
   control-missing)
     echo "⚠ games-string check inconclusive — the CONTROL string was also" >&2

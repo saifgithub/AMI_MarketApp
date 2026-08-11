@@ -2401,5 +2401,9 @@
     "gamesCloseDuelPointsWon": "+{points} career points.",
     "@gamesCloseDuelPointsWon": {"description": "CR109 slice 3b. What the duel win was worth. NEW key. retranslate:[ar,ms]", "placeholders": {"points": {"type": "int", "example": "10"}}},
     "gamesCloseDuelPointsLost": "\u2212{points} career points.",
-    "@gamesCloseDuelPointsLost": {"description": "CR109 slice 3b. What the duel loss cost. MINUS SIGN (U+2212), not a hyphen. NEW key. retranslate:[ar,ms]", "placeholders": {"points": {"type": "int", "example": "10"}}}
+    "@gamesCloseDuelPointsLost": {"description": "CR109 slice 3b. What the duel loss cost. MINUS SIGN (U+2212), not a hyphen. NEW key. retranslate:[ar,ms]", "placeholders": {"points": {"type": "int", "example": "10"}}},
+    "gamesBoardChase": "{pct}% off {rank}\u1d57\u02b0 place",
+    "@gamesBoardChase": {"description": "CR109 board redesign. The gap to the place immediately above, under the player's own standing. \"3rd of 6\" is a fact; this is a reason to open the app tomorrow. Percentage points of time-weighted return \u2014 never AMI Cash (\u00a76.1). Null-safe: omitted entirely when either side is unmeasured. NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "0.42"}, "rank": {"type": "int", "example": "2"}}},
+    "gamesBoardLeadBy": "Leading by {pct}%",
+    "@gamesBoardLeadBy": {"description": "CR109 board redesign. Shown instead of gamesBoardChase when the player is 1st \u2014 the interesting number is the cushion, not a gap that does not exist. NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "1.10"}}}
 }
