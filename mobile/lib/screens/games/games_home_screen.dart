@@ -25,6 +25,7 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/games.dart';
 import 'package:ami_trade/screens/games/games_entry_sheet.dart';
+import 'package:ami_trade/screens/games/games_lobby_screen.dart';
 import 'package:ami_trade/screens/games/games_record_screen.dart';
 import 'package:ami_trade/screens/games/games_run_screen.dart';
 import 'package:ami_trade/screens/games/games_trade_ticket_screen.dart';
@@ -315,6 +316,18 @@ class _NextFieldFallback extends ConsumerWidget {
                     onPressed: weekly.alreadyHolds
                         ? null
                         : () => GamesEntrySheet.show(context, cadence: 'week'),
+                  ),
+                ),
+                const SizedBox(height: AmiSpacing.s),
+                // Weekly keeps its one-tap entry above; the other four
+                // cadences (slice 6) live one tap deeper so the first-entry
+                // screen stays the single uncluttered choice §13.3 fences.
+                SizedBox(
+                  width: double.infinity,
+                  child: HexButton(
+                    label: l.gamesLobbyCta,
+                    variant: HexButtonVariant.outlined,
+                    onPressed: () => GamesLobbyScreen.push(context),
                   ),
                 ),
               ],

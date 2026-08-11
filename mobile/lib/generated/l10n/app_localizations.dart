@@ -4956,6 +4956,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{Selects from 1 published name} other{Selects from {count} published names}}'**
   String gamesDeskUniverse(int count);
+
+  /// CR109 slice 6. App-bar title of the cadence lobby — the five games (weekly, monthly, quarterly, half-year, annual) a player can enter. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a game'**
+  String get gamesLobbyTitle;
+
+  /// CR109 slice 6. Button opening the cadence lobby from the games home screen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'ALL GAMES'**
+  String get gamesLobbyCta;
+
+  /// CR109 §4.1. States the one-live-run-per-cadence rule at the point of choice. It is an anti-farm rule (parallel entries in one cadence are strictly +EV), not a UI limit, but the player only needs the rule. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'One run of each at a time — five books, never two of a kind.'**
+  String get gamesLobbyIntro;
+
+  /// CR109. Name of the weekly cadence. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get gamesCadenceWeek;
+
+  /// CR109 slice 6. Name of the monthly cadence. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get gamesCadenceMonth;
+
+  /// CR109 slice 6. Name of the quarterly cadence. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Quarterly'**
+  String get gamesCadenceQuarter;
+
+  /// CR109 slice 6. Name of the six-month cadence. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Half-year'**
+  String get gamesCadenceHalf;
+
+  /// CR109 slice 6. Name of the annual cadence. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Annual'**
+  String get gamesCadenceYear;
+
+  /// CR109. The dates one cadence's next field runs between. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{start} → {end}'**
+  String gamesCadenceRuns(String start, String end);
+
+  /// CR109 §4.1. Shown in place of the ENTER action when the player already holds a live run of that cadence. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re in'**
+  String get gamesCadenceYoureIn;
+
+  /// CR109. Shown when a cadence's field has locked, so the player must wait for the following period. Says WHEN the next chance comes rather than only that this one is gone. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Entry closed — next one opens when this run starts'**
+  String get gamesCadenceEntryClosed;
+
+  /// CR109 §6.3. How much a longer cadence pays relative to a week, so the player can see the tradeoff before committing. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Worth {gain}× a weekly win'**
+  String gamesCadenceWeightNote(String gain);
+
+  /// CR109 slice 6. Entry action on a cadence row in the lobby. Cadence-NEUTRAL on purpose: `gamesEnterCta` reads "enter this week's field", which is wrong copy on a Monthly or Quarterly row. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'ENTER THIS FIELD'**
+  String get gamesLobbyEnterCta;
 }
 
 class _AppLocalizationsDelegate

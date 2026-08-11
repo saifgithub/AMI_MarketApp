@@ -2920,4 +2920,49 @@ class AppLocalizationsMs extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get gamesLobbyTitle => 'Choose a game';
+
+  @override
+  String get gamesLobbyCta => 'ALL GAMES';
+
+  @override
+  String get gamesLobbyIntro =>
+      'One run of each at a time — five books, never two of a kind.';
+
+  @override
+  String get gamesCadenceWeek => 'Weekly';
+
+  @override
+  String get gamesCadenceMonth => 'Monthly';
+
+  @override
+  String get gamesCadenceQuarter => 'Quarterly';
+
+  @override
+  String get gamesCadenceHalf => 'Half-year';
+
+  @override
+  String get gamesCadenceYear => 'Annual';
+
+  @override
+  String gamesCadenceRuns(String start, String end) {
+    return '$start → $end';
+  }
+
+  @override
+  String get gamesCadenceYoureIn => 'You\'re in';
+
+  @override
+  String get gamesCadenceEntryClosed =>
+      'Entry closed — next one opens when this run starts';
+
+  @override
+  String gamesCadenceWeightNote(String gain) {
+    return 'Worth $gain× a weekly win';
+  }
+
+  @override
+  String get gamesLobbyEnterCta => 'ENTER THIS FIELD';
 }
