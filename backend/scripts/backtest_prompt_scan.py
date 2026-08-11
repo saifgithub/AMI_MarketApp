@@ -223,6 +223,28 @@ def main() -> int:
                 .order_by(LLMAuditRow.created_at)
             ).scalars().all()
 
+            # Time alone mis-attributes. A sweep uses ONE batch user and spaces
+            # runs 15s apart, while this window reaches 60s past a finish — so
+            # the tail swallowed the NEXT run's early rows and every one of
+            # them "leaked", being a different ticker anchored to its own later
+            # as_of. That produced 447 phantom hard fails on pit-pilot-2 while
+            # the batch was in fact clean (126/126 prompts correctly anchored).
+            # Every Room prompt names its own ticker in the fact-sheet header,
+            # so attribute by CONTENT and keep only rows that are actually this
+            # run's. Rows carrying no header (a reformat retry) stay in — they
+            # are this user's and inside the window, and dropping them silently
+            # would shrink the scanned surface.
+            header = re.compile(
+                rf"Ticker:\s*{re.escape(idx.ticker)}\b.*?Fact sheet as of", re.S
+            )
+            other_header = re.compile(r"Ticker:\s*[A-Z.]+\b.*?Fact sheet as of", re.S)
+            kept = []
+            for row in audit_rows:
+                text_blob = (row.system_prompt or "")
+                if header.search(text_blob) or not other_header.search(text_blob):
+                    kept.append(row)
+            audit_rows = kept
+
             if not audit_rows:
                 print(f"WARNING: {label} run {run.id}: ZERO llm_audit rows in "
                       f"[{lo}, {hi}] for user {run.user_id} — the prompt this run "
