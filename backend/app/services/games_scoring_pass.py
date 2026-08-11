@@ -70,7 +70,25 @@ from app.services.sim_engine import SimEngine, get_sim_engine
 from app.trading_math.twr import NavPoint, time_weighted_return
 
 _ET = ZoneInfo("America/New_York")
-_BENCHMARK_PERIOD_BY_CADENCE: dict[str, str] = {"week": "1w"}
+# The history window fetched for the benchmark, per cadence. Each must be a
+# period from `market_data.VALID_PERIODS` — the app's OWN vocabulary
+# (`1d/1w/1m/3m/1y/2y/5y`), which is not yfinance's. A string outside it makes
+# `history()` return None, which this module turns into a benchmark TWR of
+# 0.0: every long run would then be scored against a FLAT index and read as
+# enormous alpha. `test_cr109_cadences.py` asserts the whole table against
+# VALID_PERIODS for exactly that reason.
+#
+# Each entry is the shortest valid period that CONTAINS its run, because the
+# candles are filtered to the field's own [starts_on, ends_on] window
+# afterwards — over-fetching costs one call, under-fetching scores the
+# benchmark over a shorter window than the player's book.
+_BENCHMARK_PERIOD_BY_CADENCE: dict[str, str] = {
+    "week": "1w",     # 5 sessions of 30m bars — unchanged from slice 3
+    "month": "3m",    # ~65 daily bars
+    "quarter": "2y",  # 504 daily bars — daily resolution across the window
+    "half": "2y",
+    "year": "2y",
+}
 _DEFAULT_BENCHMARK_PERIOD = "1w"
 
 

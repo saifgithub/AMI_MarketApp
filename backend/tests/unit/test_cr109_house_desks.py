@@ -469,3 +469,66 @@ def test_the_concentrated_desk_supplies_the_tail():
     assert widths["concentrated"] == 2
     assert widths["equal_weight"] >= 8
     assert widths["concentrated"] < widths["momentum"] < widths["equal_weight"]
+
+
+# ══ Desks across cadences (slice 6) ═════════════════════════════════════════
+
+
+def test_a_desk_enters_the_field_under_that_field_s_own_cadence():
+    """`enter_field`'s `cadence` argument drives the one-live-run-per-cadence
+    check. Filling a monthly field while passing the default "week" would
+    check the wrong ledger: a desk could then hold two monthly runs, or be
+    refused a monthly entry because it already holds a weekly one."""
+    _use_real_data()
+    with get_session() as s:
+        monthly = games.ensure_field(s, "month", now=_ENTRY_OPEN)
+        monthly_id, monthly_cadence = monthly.id, monthly.cadence
+    assert monthly_cadence == "month"
+
+    stats = desks.fill_field_with_desks(monthly_id, now=_ENTRY_OPEN)
+    assert stats["entered"] > 0
+
+    with get_session() as s:
+        cadences = set(s.execute(
+            select(GameFieldRow.cadence)
+            .join(GameEntryRow, GameEntryRow.field_id == GameFieldRow.id)
+            .join(User, User.id == GameEntryRow.user_id)
+            .where(User.is_desk.is_(True))
+        ).scalars().all())
+    assert cadences == {"month"}
+
+
+def test_one_desk_can_hold_a_run_in_every_cadence_at_once():
+    """Five books per desk, one per cadence — the same §4.1 rule a human gets,
+    and the reason the cadence has to be passed through correctly."""
+    _use_real_data()
+    for cadence in ("week", "month", "quarter", "half", "year"):
+        with get_session() as s:
+            field_id = games.ensure_field(s, cadence, now=_ENTRY_OPEN).id
+        desks.fill_field_with_desks(field_id, now=_ENTRY_OPEN)
+
+    with get_session() as s:
+        rows = s.execute(
+            select(User.desk_key, GameFieldRow.cadence)
+            .join(GameEntryRow, GameEntryRow.user_id == User.id)
+            .join(GameFieldRow, GameFieldRow.id == GameEntryRow.field_id)
+            .where(User.is_desk.is_(True))
+        ).all()
+    per_desk: dict[str, set[str]] = {}
+    for desk_key, cadence in rows:
+        per_desk.setdefault(desk_key, set()).add(cadence)
+    assert per_desk, "at least one desk should have entered"
+    for desk_key, cadences in per_desk.items():
+        assert len(cadences) == 5, (desk_key, cadences)
+    # And never two of a kind: one entry per (desk, cadence).
+    assert len(rows) == len(set(rows))
+
+
+def test_the_tick_rolls_every_cadence_not_only_weekly():
+    import inspect
+
+    src = inspect.getsource(desks.run_desk_fill_tick)
+    assert "_SUPPORTED_CADENCES" in src, (
+        "a monthly or quarterly field that was never created has no lock "
+        "window for the desks to fill"
+    )

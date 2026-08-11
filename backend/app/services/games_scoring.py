@@ -50,13 +50,25 @@ def trade_fee(notional: float) -> float:
     return round(max(bps_fee, FEE_MIN), 2)
 
 
-# ── Cadence weighting (§6.3) — slice 3 only ever exercises "week" (=1.0 both
-# directions), but alpha scoring is specified to apply cadence weight
-# "unchanged" (design §6.6.1), so the wiring is real even though it is a
-# no-op today. Extending to month/quarter/half/year is a slice-4+ table
-# edit, not a formula change.
-CADENCE_GAIN_WEIGHT: dict[str, float] = {"week": 1.0}
-CADENCE_LOSS_WEIGHT: dict[str, float] = {"week": 1.0}
+# ── Cadence weighting (§6.3) ────────────────────────────────────────────────
+#
+# Gains scale with committed time; losses with its SQUARE ROOT. The asymmetry
+# is the design's, and it is deliberate in both directions: a long *bad* run is
+# mostly market conditions, a long *good* run is hard to fake, and a player
+# should not be crushed for having stayed invested through a bear half-year.
+#
+# The loss row is sqrt of the gain row — sqrt(52) ~ 7.2 — so it is one number
+# retunable from real data without touching anything else.
+#
+# Balance check from §6.3, which is what stops either cadence becoming a farm:
+#   win the year at Analyst  = 100 x 52 x 1.4 = +7,280
+#   win 52 weeks at Analyst  = 100 x  1 x 1.4 x 52 = +7,280
+CADENCE_GAIN_WEIGHT: dict[str, float] = {
+    "week": 1.0, "month": 4.0, "quarter": 13.0, "half": 26.0, "year": 52.0,
+}
+CADENCE_LOSS_WEIGHT: dict[str, float] = {
+    "week": 1.0, "month": 2.0, "quarter": 3.6, "half": 5.1, "year": 7.2,
+}
 
 
 def cadence_weight(cadence: str, *, negative: bool) -> float:
@@ -72,10 +84,21 @@ def cadence_period_key(cadence: str, starts_on: date) -> str:
     """The finish-stipend's "once per cadence PERIOD, not once per entry"
     guard (design §6.5's fourth condition) needs a key that is the SAME for
     every field of one cadence covering the same calendar period, and
-    DIFFERENT across periods. ISO year+week is exact for "week"; slice 3
-    never calls this with anything else, but the shape generalises (a
-    month/quarter/etc cadence would key off its own period boundary, not
-    ISO week — a slice-4+ addition, not a rewrite of this one)."""
+    DIFFERENT across periods.
+
+    Each cadence keys off its OWN period boundary. Using ISO week for
+    everything would collapse twelve monthly periods a year into fifty-two
+    keys — the stipend would then be claimable weekly on a monthly run, which
+    is exactly the farm this guard exists to close.
+    """
+    if cadence == "month":
+        return f"{cadence}:{starts_on.year}-{starts_on.month:02d}"
+    if cadence == "quarter":
+        return f"{cadence}:{starts_on.year}-Q{(starts_on.month - 1) // 3 + 1}"
+    if cadence == "half":
+        return f"{cadence}:{starts_on.year}-H{1 if starts_on.month <= 6 else 2}"
+    if cadence == "year":
+        return f"{cadence}:{starts_on.year}"
     iso_year, iso_week, _ = starts_on.isocalendar()
     return f"{cadence}:{iso_year}-W{iso_week:02d}"
 

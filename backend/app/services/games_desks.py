@@ -416,6 +416,18 @@ def entrant_identity(user_id: UUID) -> dict:
 # ── Filling a field ──────────────────────────────────────────────────────────
 
 
+def _field_cadence(field_id: UUID) -> str:
+    """The field's OWN cadence. `enter_field`'s `cadence` argument drives the
+    one-live-run-per-cadence check, so passing the default "week" while
+    entering a monthly field would check the wrong ledger — a desk could then
+    hold two monthly runs, or be refused a monthly entry because it already
+    holds a weekly one."""
+    with get_session() as s:
+        return s.execute(
+            select(GameFieldRow.cadence).where(GameFieldRow.id == field_id)
+        ).scalar_one()
+
+
 def _desks_already_in(field_id: UUID) -> set[str]:
     with get_session() as s:
         rows = s.execute(
@@ -510,6 +522,7 @@ def fill_field_with_desks(
         return {"entered": 0, "skipped": 0, "humans": humans, "desks_present": len(already)}
 
     ids = ensure_desk_users()
+    cadence = _field_cadence(field_id)
     view = view or _MarketView()
     entered = 0
     skipped = 0
@@ -530,7 +543,7 @@ def fill_field_with_desks(
         user_id = ids[desk.key]
         try:
             entry = games_service.enter_field(
-                user_id, now=now, as_desk=True, field_id=field_id,
+                user_id, cadence=cadence, now=now, as_desk=True, field_id=field_id,
             )
         except games_service.GamesServiceError as exc:
             logger.warning("desk_entry_failed", desk_key=desk.key, reason=str(exc))
@@ -584,14 +597,17 @@ def run_desk_fill_tick(*, now: datetime | None = None) -> dict:
     honest, whereas a desk that started trading after the market moved is not
     the same contest the humans entered.
     """
-    from app.services.games_service import ensure_weekly_field
+    from app.services.games_service import _SUPPORTED_CADENCES, ensure_field
 
     now = now or datetime.now(timezone.utc)
     if not settings.games_desks_enabled:
         return {"fields": 0, "entered": 0}
 
+    # Roll every cadence, not just weekly — a monthly or quarterly field that
+    # was never created has no lock window for the desks to fill.
     with get_session() as s:
-        ensure_weekly_field(s, now=now)
+        for cadence in _SUPPORTED_CADENCES:
+            ensure_field(s, cadence, now=now)
 
     locked = fields_in_lock_window(now)
     entered = 0

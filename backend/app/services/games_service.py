@@ -43,7 +43,24 @@ from app.services.sim_engine import get_sim_engine
 from app.trading_math.market_hours import is_us_market_open, next_us_market_open
 
 WEEKLY_CADENCE = "week"
-_SUPPORTED_CADENCES = (WEEKLY_CADENCE,)
+MONTHLY_CADENCE = "month"
+QUARTERLY_CADENCE = "quarter"
+HALF_CADENCE = "half"
+ANNUAL_CADENCE = "year"
+
+# CR109 slice 6. Saiful, playing the shipped build: *"How do I join the
+# monthly, quarterly, etc games?"* — the answer was that you couldn't, because
+# this tuple held one entry.
+#
+# All five are CALENDAR-ANCHORED: a period's field starts on the first day of
+# that period and everyone in it starts the same day, which is the property
+# §6.2 chose placement scoring for. Demand-gated ROLLING starts for the long
+# cadences (so a new player never waits three months to begin a quarterly run)
+# are a different feature and belong to slice 4 — they need the thin-field
+# thresholds set against a measured entry rate, which does not exist yet.
+_SUPPORTED_CADENCES = (
+    WEEKLY_CADENCE, MONTHLY_CADENCE, QUARTERLY_CADENCE, HALF_CADENCE, ANNUAL_CADENCE,
+)
 INTENTS = ("wild", "thesis", "disciplined")
 
 _ET = ZoneInfo("America/New_York")
@@ -92,18 +109,86 @@ def _market_open_et(d: date) -> datetime:
     return datetime.combine(d, _MARKET_OPEN, tzinfo=_ET)
 
 
-def _weekly_window(monday: date) -> tuple[datetime, datetime, datetime, date]:
-    """(entry_opens_at, locks_at, market_open, ends_on) for the weekly
-    field starting `monday`. `entry_opens_at` is set to exactly when the
-    PRIOR week's field locks, so the entry-accepting window for one field
-    starts the instant the previous one's ends — there is never a gap
-    (nor an overlap) between two weekly fields' entry windows.
+def _add_months(d: date, months: int) -> date:
+    """Month arithmetic on the FIRST of a month — every cadence longer than a
+    week anchors there, so there is no end-of-month clamping to get wrong."""
+    total = (d.year * 12 + d.month - 1) + months
+    return date(total // 12, total % 12 + 1, 1)
+
+
+def period_start(cadence: str, d: date) -> date:
+    """The first day of the `cadence` period containing `d`.
+
+    Calendar-anchored on purpose: everyone in a field starts the same day, so
+    everyone in it faced the same market — the property §6.2 chose placement
+    scoring for, and the one thing merging cohorts across start dates would
+    destroy.
     """
-    ends_on = monday + timedelta(days=_RUN_DAYS)
-    market_open = _market_open_et(monday)
+    if cadence == WEEKLY_CADENCE:
+        return _week_monday(d)
+    if cadence == MONTHLY_CADENCE:
+        return date(d.year, d.month, 1)
+    if cadence == QUARTERLY_CADENCE:
+        return date(d.year, ((d.month - 1) // 3) * 3 + 1, 1)
+    if cadence == HALF_CADENCE:
+        return date(d.year, 1 if d.month <= 6 else 7, 1)
+    if cadence == ANNUAL_CADENCE:
+        return date(d.year, 1, 1)
+    raise UnsupportedCadenceError(f"unknown cadence {cadence!r}")
+
+
+def next_period_start(cadence: str, start: date) -> date:
+    if cadence == WEEKLY_CADENCE:
+        return start + timedelta(days=7)
+    return _add_months(start, {
+        MONTHLY_CADENCE: 1, QUARTERLY_CADENCE: 3, HALF_CADENCE: 6, ANNUAL_CADENCE: 12,
+    }[cadence])
+
+
+def previous_period_start(cadence: str, start: date) -> date:
+    if cadence == WEEKLY_CADENCE:
+        return start - timedelta(days=7)
+    return _add_months(start, -{
+        MONTHLY_CADENCE: 1, QUARTERLY_CADENCE: 3, HALF_CADENCE: 6, ANNUAL_CADENCE: 12,
+    }[cadence])
+
+
+def period_end(cadence: str, start: date) -> date:
+    """The run's last day.
+
+    Weekly ends on the Friday — `_RUN_DAYS` after the Monday — rather than on
+    the Sunday, because a run that "ends" on a day the market never opened has
+    two dead days at the end of it. Every longer cadence ends on the last
+    calendar day of its period, which is the last day the NAV tick can write.
+    """
+    if cadence == WEEKLY_CADENCE:
+        return start + timedelta(days=_RUN_DAYS)
+    return next_period_start(cadence, start) - timedelta(days=1)
+
+
+def _cadence_window(
+    cadence: str, start: date,
+) -> tuple[datetime, datetime, datetime, date]:
+    """(entry_opens_at, locks_at, market_open, ends_on) for the `cadence`
+    field starting on `start`.
+
+    `entry_opens_at` is exactly when the PRIOR period's field locks, so one
+    field's entry window opens the instant the previous one's closes — never a
+    gap, never an overlap. That invariant is what makes "at any time there is
+    exactly one entry-accepting field per cadence" true, which is in turn what
+    `enter_field`'s one-live-run-per-cadence check relies on.
+    """
+    market_open = _market_open_et(start)
     locks_at = market_open - _LOCK_BUFFER
-    entry_opens_at = _market_open_et(monday - timedelta(days=7)) - _LOCK_BUFFER
-    return entry_opens_at, locks_at, market_open, ends_on
+    entry_opens_at = (
+        _market_open_et(previous_period_start(cadence, start)) - _LOCK_BUFFER
+    )
+    return entry_opens_at, locks_at, market_open, period_end(cadence, start)
+
+
+def _weekly_window(monday: date) -> tuple[datetime, datetime, datetime, date]:
+    """Back-compat shim for slice 2's callers and tests."""
+    return _cadence_window(WEEKLY_CADENCE, monday)
 
 
 def _as_utc(value: datetime) -> datetime:
@@ -130,37 +215,47 @@ def _resolve_state(
 # ── Field roll ───────────────────────────────────────────────────────────
 
 
-def ensure_weekly_field(session, *, now: datetime | None = None) -> GameFieldRow:
-    """Idempotent create-or-fetch of the weekly `open` field currently
-    accepting entries (or, if none is entry-accepting at this instant —
-    e.g. queried mid-week after this week's field already locked — the
-    NEXT one). Updates `state` in place on every call so a field's state
-    column never drifts stale between rolls.
+def ensure_field(
+    session, cadence: str = WEEKLY_CADENCE, *, now: datetime | None = None,
+) -> GameFieldRow:
+    """Idempotent create-or-fetch of the `open` field of `cadence` currently
+    accepting entries (or, if none is entry-accepting at this instant — e.g.
+    queried mid-period after this period's field already locked — the NEXT
+    one). Updates `state` in place on every call so a field's state column
+    never drifts stale between rolls.
+
+    NOTE for callers outside the entry path: the state refresh applies to the
+    field this call TARGETS, which mid-period is the next one. A field that is
+    currently locked or live can therefore hold a stale `state`, so anything
+    that needs to find such a field must derive its state from the row's own
+    timestamps (see `games_desks.fields_in_lock_window`).
     """
     now = now or datetime.now(timezone.utc)
     now_et = now.astimezone(_ET)
-    this_monday = _week_monday(now_et.date())
-    _, this_locks_at, _, _ = _weekly_window(this_monday)
-    target_monday = (
-        this_monday if now < this_locks_at else this_monday + timedelta(days=7)
+    this_start = period_start(cadence, now_et.date())
+    _, this_locks_at, _, _ = _cadence_window(cadence, this_start)
+    target_start = (
+        this_start if now < this_locks_at else next_period_start(cadence, this_start)
     )
 
-    entry_opens_at, locks_at, market_open, ends_on = _weekly_window(target_monday)
+    entry_opens_at, locks_at, market_open, ends_on = _cadence_window(
+        cadence, target_start,
+    )
     row = session.execute(
         select(GameFieldRow).where(
-            GameFieldRow.cadence == WEEKLY_CADENCE,
+            GameFieldRow.cadence == cadence,
             GameFieldRow.kind == "open",
-            GameFieldRow.starts_on == target_monday,
+            GameFieldRow.starts_on == target_start,
         )
     ).scalar_one_or_none()
     new_state = _resolve_state(now, entry_opens_at, locks_at, market_open)
     if row is None:
         row = GameFieldRow(
-            cadence=WEEKLY_CADENCE,
+            cadence=cadence,
             state=new_state,
             entry_opens_at=entry_opens_at,
             locks_at=locks_at,
-            starts_on=target_monday,
+            starts_on=target_start,
             ends_on=ends_on,
             min_entrants=None,
             max_wait_days=None,
@@ -178,40 +273,56 @@ def ensure_weekly_field(session, *, now: datetime | None = None) -> GameFieldRow
     return row
 
 
+def ensure_weekly_field(session, *, now: datetime | None = None) -> GameFieldRow:
+    """Back-compat shim — slice 2 shipped this name and several callers and
+    tests use it. Weekly is just one cadence now."""
+    return ensure_field(session, WEEKLY_CADENCE, now=now)
+
+
 # ── Reads ────────────────────────────────────────────────────────────────
 
 
 def list_cadences(user_id: UUID, *, now: datetime | None = None) -> list[dict]:
-    """`GET /v1/games/cadences` — slice 2 has exactly one cadence (weekly).
+    """`GET /v1/games/cadences` — one entry per cadence the game supports.
+
     Every number carries what produced it (CR040): `queue_count` is the
     field's own denormalised `entrant_count`, `deadline` is `locks_at`.
+
+    `already_held` is per-cadence, which is the whole point of §4.1: a player
+    may hold one Weekly AND one Monthly AND one Quarterly AND one Half AND one
+    Annual — five books — but never two of a kind. Two of a kind is a farm:
+    career points pay +100 for a win and only −40 for a loss, so parallel
+    entries in the SAME cadence are strictly +EV.
     """
     now = now or datetime.now(timezone.utc)
+    out: list[dict] = []
     with get_session() as s:
-        field = ensure_weekly_field(s, now=now)
-        held = s.execute(
-            select(GameEntryRow.id)
-            .join(GameFieldRow, GameEntryRow.field_id == GameFieldRow.id)
-            .where(
-                GameFieldRow.kind == "open",
-                GameFieldRow.cadence == WEEKLY_CADENCE,
-                GameEntryRow.user_id == user_id,
-                GameEntryRow.state.in_(("entered", "active")),
-            )
-            .limit(1)
-        ).first() is not None
-        return [{
-            "cadence": WEEKLY_CADENCE,
-            "field_id": str(field.id),
-            "state": field.state,
-            "entry_opens_at": field.entry_opens_at.isoformat(),
-            "locks_at": field.locks_at.isoformat(),
-            "starts_on": field.starts_on.isoformat(),
-            "ends_on": field.ends_on.isoformat(),
-            "queue_count": field.entrant_count,
-            "deadline": field.locks_at.isoformat(),
-            "already_held": held,
-        }]
+        for cadence in _SUPPORTED_CADENCES:
+            field = ensure_field(s, cadence, now=now)
+            held = s.execute(
+                select(GameEntryRow.id)
+                .join(GameFieldRow, GameEntryRow.field_id == GameFieldRow.id)
+                .where(
+                    GameFieldRow.kind == "open",
+                    GameFieldRow.cadence == cadence,
+                    GameEntryRow.user_id == user_id,
+                    GameEntryRow.state.in_(("entered", "active")),
+                )
+                .limit(1)
+            ).first() is not None
+            out.append({
+                "cadence": cadence,
+                "field_id": str(field.id),
+                "state": field.state,
+                "entry_opens_at": field.entry_opens_at.isoformat(),
+                "locks_at": field.locks_at.isoformat(),
+                "starts_on": field.starts_on.isoformat(),
+                "ends_on": field.ends_on.isoformat(),
+                "queue_count": field.entrant_count,
+                "deadline": field.locks_at.isoformat(),
+                "already_held": held,
+            })
+    return out
 
 
 def list_live_runs(user_id: UUID) -> list[dict]:
@@ -355,7 +466,7 @@ def enter_field(
     """
     if cadence not in _SUPPORTED_CADENCES:
         raise UnsupportedCadenceError(
-            f"only {_SUPPORTED_CADENCES} supported in slice 2, got {cadence!r}"
+            f"cadence must be one of {_SUPPORTED_CADENCES}, got {cadence!r}"
         )
     if intent is not None and intent not in INTENTS:
         raise ValueError(f"intent must be one of {INTENTS}, got {intent!r}")
@@ -376,7 +487,7 @@ def enter_field(
     try:
         with get_session() as s:
             if field_id is None:
-                field = ensure_weekly_field(s, now=now)
+                field = ensure_field(s, cadence, now=now)
             else:
                 field = s.execute(
                     select(GameFieldRow).where(GameFieldRow.id == field_id)
