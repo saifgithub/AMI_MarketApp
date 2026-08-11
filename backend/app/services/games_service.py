@@ -35,7 +35,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.core.logging import logger
 from app.db import get_session
-from app.db.models import GameEntryRow, GameFieldRow, GameQueuedOrderRow
+from app.db.models import GameEntryRow, GameFieldRow, GameQueuedOrderRow, User
 from app.schemas.trade import OrderType, Side
 from app.services.games_scoring import trade_fee
 from app.services.portfolio_nav_daily import nav_history, twr_pct_for_window
@@ -104,6 +104,14 @@ def _weekly_window(monday: date) -> tuple[datetime, datetime, datetime, date]:
     locks_at = market_open - _LOCK_BUFFER
     entry_opens_at = _market_open_et(monday - timedelta(days=7)) - _LOCK_BUFFER
     return entry_opens_at, locks_at, market_open, ends_on
+
+
+def _as_utc(value: datetime) -> datetime:
+    """SQLite round-trips `DateTime(timezone=True)` as NAIVE, so a stored
+    `locks_at` compares as tz-naive against a tz-aware `now` and raises. Same
+    normalisation `portfolio_nav_daily._as_utc` already applies for the same
+    reason."""
+    return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
 
 
 def _resolve_state(
@@ -320,11 +328,30 @@ def enter_field(
     cadence: str = WEEKLY_CADENCE,
     intent: str | None = None,
     now: datetime | None = None,
+    as_desk: bool = False,
+    field_id: UUID | None = None,
 ) -> GameEntryRow:
     """`POST /v1/games/enter`. Entry is FREE — never charge here; an entry
     fee is legal consideration and would break CR109 §15 (design doc).
     Raises `AlreadyEnteredError` (-> 409) if the user already holds a live
     run for this cadence.
+
+    `as_desk` widens the accepted field states by exactly one — `locked` —
+    because a house desk (CR109 slice 3c) enters AFTER human entries close,
+    which is what lets it taper against the final human count (design §11.2
+    "fill to a target field size, never a fixed count"). It is not a
+    skip-the-check flag: it is verified against `users.is_desk` below, so a
+    human user id passed with `as_desk=True` is refused. That verification is
+    the difference between a widened rule and a bypass — CLAUDE.md's
+    "prompt instructions are not controls" applied to our own code.
+
+    `field_id` targets ONE field explicitly instead of asking
+    `ensure_weekly_field` which field is currently accepting entries. The two
+    answers differ precisely in the desk-fill window: past this Monday's
+    `locks_at`, `ensure_weekly_field` correctly rolls forward to NEXT Monday's
+    field, so a desk filling *this* week's locked field would otherwise have
+    entered next week's — sized against a taper computed for a different
+    field. Humans never pass it; the roll is the right answer for them.
     """
     if cadence not in _SUPPORTED_CADENCES:
         raise UnsupportedCadenceError(
@@ -334,10 +361,38 @@ def enter_field(
         raise ValueError(f"intent must be one of {INTENTS}, got {intent!r}")
     now = now or datetime.now(timezone.utc)
 
+    accepted_states = ("announced", "entry_open")
+    if as_desk:
+        with get_session() as s:
+            really_a_desk = s.execute(
+                select(User.is_desk).where(User.id == user_id)
+            ).scalar_one_or_none()
+        if not really_a_desk:
+            raise FieldNotOpenError(
+                f"user {user_id} is not a house desk; as_desk entry refused"
+            )
+        accepted_states = ("announced", "entry_open", "locked")
+
     try:
         with get_session() as s:
-            field = ensure_weekly_field(s, now=now)
-            if field.state not in ("announced", "entry_open"):
+            if field_id is None:
+                field = ensure_weekly_field(s, now=now)
+            else:
+                field = s.execute(
+                    select(GameFieldRow).where(GameFieldRow.id == field_id)
+                ).scalar_one_or_none()
+                if field is None:
+                    raise FieldNotOpenError(f"no field {field_id}")
+                # Resolve from the row's OWN timestamps. `state` is only
+                # refreshed on the field `ensure_weekly_field` happens to
+                # target, so a field outside that roll can hold a stale value.
+                field.state = _resolve_state(
+                    now,
+                    _as_utc(field.entry_opens_at),
+                    _as_utc(field.locks_at),
+                    _market_open_et(field.starts_on),
+                )
+            if field.state not in accepted_states:
                 raise FieldNotOpenError(
                     f"field {field.id} is {field.state}, not accepting entries"
                 )
@@ -383,7 +438,12 @@ def enter_field(
     # GET /v1/games/runs/{run_id} works immediately after entry.
     get_sim_engine().ensure_portfolio(user_id, kind="game", run_id=run_id)
 
-    _log_close_to_reentry_if_any(user_id, entry_id, now=now)
+    # A desk re-enters every single week by construction, so letting it emit
+    # `game_close_to_reentry` would make Gate 1's re-entry rate a measure of
+    # the cron rather than of players (§11.2: a desk must never inflate a
+    # number Saiful makes decisions on).
+    if not as_desk:
+        _log_close_to_reentry_if_any(user_id, entry_id, now=now)
 
     with get_session() as s:
         return s.execute(

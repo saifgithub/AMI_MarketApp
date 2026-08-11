@@ -178,6 +178,26 @@ class User(Base):
         Boolean, default=False, server_default="false", nullable=False,
     )
 
+    # CR109 slice 3c — house strategy desks (design §11.2). A desk is a real
+    # user row with a real portfolio and a real NAV series: it enters fields,
+    # trades through the same game path, and pays the same fee, so its return
+    # is produced by the market rather than sampled to look plausible. The
+    # flag exists so a desk can be (a) disclosed on every entrant-rendering
+    # surface — §11.2's disclosure decision is Saiful's and it is load-bearing:
+    # a user copying an undisclosed desk believes they are copying a person —
+    # and (b) subtracted from every real-user metric, so the house never
+    # inflates a number Saiful makes decisions on.
+    #
+    # `desk_key` names WHICH strategy (`index`, `momentum`, …) and is unique,
+    # which is also the idempotency key for `ensure_desk_users()`: a second
+    # container starting up cannot mint a second Momentum Desk.
+    is_desk: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False, index=True,
+    )
+    desk_key: Mapped[Optional[str]] = mapped_column(
+        String, unique=True, nullable=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, server_default=func.now(), nullable=False,
     )

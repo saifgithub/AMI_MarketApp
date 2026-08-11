@@ -41,6 +41,7 @@ from app.api.dependencies import get_current_user
 from app.db import get_session
 from app.db.models import User
 from app.schemas.trade import OrderType, Side
+from app.services import games_board, games_desks
 from app.services import games_record_service as record_service
 from app.services import games_service as games
 from app.services.ticker_reference import (
@@ -296,6 +297,31 @@ async def run_close(
         )
     except record_service.RecordServiceError as exc:
         raise _translate_record(exc) from exc
+
+
+@router.get("/runs/{run_id}/board")
+async def run_board(
+    run_id: UUID, current_user: User = Depends(get_current_user),
+) -> dict:
+    """Where you stand against the rest of the field — Saiful's *"How do I see
+    my current standing against the rest of the field?"*
+
+    Ranks on % TWR only (design §6.1's written-down invariant: a board that
+    ranks money makes capital tier pay-to-win), moves once per close rather
+    than per tick (§10), and carries no mirror and no currency amount for any
+    entrant including the caller."""
+    try:
+        return await asyncio.to_thread(games_board.board_for_run, current_user.id, run_id)
+    except games_board.BoardNotAvailable as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/desks")
+async def desks(current_user: User = Depends(get_current_user)) -> list[dict]:
+    """The house desks' published rules (design §11.2). Disclosure is the
+    feature — a player must be able to reproduce any desk's basket by hand,
+    which is what makes studying a desk education rather than signal-chasing."""
+    return games_desks.published_roster()
 
 
 @router.get("/record")

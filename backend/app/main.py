@@ -93,6 +93,10 @@ _PORTFOLIO_NAV_SNAPSHOT_INTERVAL_SECONDS = 24 * 60 * 60  # daily — CR109 slice
 _GAME_NAV_SNAPSHOT_INTERVAL_SECONDS = 24 * 60 * 60  # daily — CR109 slice 2
 _GAME_QUEUE_FILL_INTERVAL_SECONDS = 5 * 60  # CR109 slice 2 — matches CR027's cadence
 _GAME_SCORING_PASS_INTERVAL_SECONDS = 30 * 60  # CR109 slice 3 — idempotent, like the league roll
+# CR109 slice 3c — desks fill a field during its 30-minute `locked` window, so
+# this must divide that window several times over: a single missed tick would
+# cost a whole field its opponents.
+_GAME_DESK_FILL_INTERVAL_SECONDS = 5 * 60
 
 
 async def _nightly_audit_trim() -> None:
@@ -244,6 +248,26 @@ async def _game_scoring_pass_tick() -> None:
         await asyncio.sleep(_GAME_SCORING_PASS_INTERVAL_SECONDS)
 
 
+async def _game_desk_fill_tick() -> None:
+    """Background task: enter the house strategy desks into any `locked` field
+    that is short of the target size (CR109 slice 3c, design §11.2).
+
+    Runs in the field's `locked` window — after entries close, so the taper is
+    computed against the FINAL human count, and before the market opens, so
+    every desk order queues and fills at the same open a human's weekend order
+    does. Idempotent: the guard is "which desks are already entered in this
+    field", so a restart mid-fill resumes rather than double-entering."""
+    from app.services.games_desks import run_desk_fill_tick
+
+    while True:
+        try:
+            stats = await asyncio.to_thread(run_desk_fill_tick)
+            logger.info("game_desk_fill_tick_complete", **stats)
+        except Exception:
+            logger.exception("game_desk_fill_tick_failed")
+        await asyncio.sleep(_GAME_DESK_FILL_INTERVAL_SECONDS)
+
+
 async def _ticker_reference_refresh() -> None:
     """Background task: fetch NASDAQ Trader's listed-securities files once a day
     and upsert the ticker reference table (CR128). Idempotent like
@@ -347,6 +371,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_game_nav_snapshot_tick()),
         asyncio.create_task(_game_queue_fill_tick()),
         asyncio.create_task(_game_scoring_pass_tick()),
+        asyncio.create_task(_game_desk_fill_tick()),
     ]
     try:
         yield

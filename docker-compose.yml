@@ -173,6 +173,11 @@ services:
       # CR136 M06 — whether the Portfolio Health Finding may be narrated by the
       # LLM. False ships the deterministic rendering, which is a complete report.
       PORTFOLIO_HEALTH_LLM_ENABLED: ${PORTFOLIO_HEALTH_LLM_ENABLED:-true}
+      # CR109 slice 3c — the house strategy desks. The kill switch removes them
+      # from all FUTURE fields; the target size is what they fill TO, so they
+      # taper automatically as real entrants arrive.
+      GAMES_DESKS_ENABLED: ${GAMES_DESKS_ENABLED:-true}
+      GAMES_DESK_TARGET_FIELD_SIZE: ${GAMES_DESK_TARGET_FIELD_SIZE:-8}
       # LLM keys — copy from .env file (don't bake into image)
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}

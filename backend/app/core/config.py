@@ -179,6 +179,19 @@ class Settings(BaseSettings):
     # double-send.
     daily_reminder_tick_interval_seconds: int = 900
 
+    # CR109 slice 3c — the house strategy desks' kill switch (design §11.2
+    # "scaling and control"). Off removes desks from all FUTURE fields
+    # without disturbing a field they are already settled in; a locked field
+    # they already entered plays out, because retracting a live entrant
+    # mid-week would rewrite a contest a human is currently in.
+    games_desks_enabled: bool = True
+    # Fill TO this field size, never a fixed desk count — desks taper as real
+    # entrants arrive and stop appearing once a field clears it on its own.
+    # 8 is slice 4's placement threshold: below it the board falls back to the
+    # benchmark path, so this is the smallest number that makes a field score
+    # as a field.
+    games_desk_target_field_size: int = 8
+
     # CR035: hide the Street's analyst rating/target from the agents'
     # fundamentals context. Benchmark-only toggle — measures whether the
     # Room's verdict is its own or parrots the consensus it is fed. Must
