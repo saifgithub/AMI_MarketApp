@@ -1994,7 +1994,34 @@ def _annotate_direction_against_price(
 
 # The locator. Bracket optional, terminator absent by design: this must match
 # every tail the model has actually produced, not the one the prompt asked for.
-_STANCE_LINE_RE = re.compile(r"^\s*\[?\s*STANCE\s*:", re.IGNORECASE)
+# DEF257: markdown emphasis is part of the shape now. The model started writing
+# `**STANCE: for | CONVICTION: medium | HEADLINE: $1231.94 entry**` — bold, and
+# often instead of the brackets — which this locator did not accept, so the line
+# was neither stripped nor read and went to the user as raw syntax. Zero such
+# turns in the first 2,974 stored; 5 since 2026-08-10. The prompt has always
+# shown the envelope in a bare code-ish form and says nothing about emphasis, so
+# nothing changed to invite it: the model's formatting habits simply drift, which
+# is the whole reason FIND is deliberately loose and PARSE is strict.
+#
+# Bounded to what has actually been observed plus its trivial neighbours: one or
+# two `*`/`_`, either side of the optional bracket. The bound is conservatism,
+# not protection — a mutation widening it to `-`, `>` and `#` breaks no test and
+# no realistic input, because everything it newly matches (`- STANCE: …`,
+# `> STANCE: …`) would arguably be the machine channel too. It stays narrow
+# because inventing shapes nobody has emitted is the P16 mistake, and the cost of
+# being wrong here is one round of measurement, not a defect. If a list-marker or
+# blockquote envelope shows up in the corpus, widen it THEN — and
+# `test_the_decoration_boundary_is_a_decision` pins where the line currently sits
+# so that widening is deliberate rather than incidental.
+_EMPHASIS = r"[*_]{0,2}\s*"
+_STANCE_LINE_RE = re.compile(
+    rf"^\s*{_EMPHASIS}\[?\s*{_EMPHASIS}STANCE\s*:", re.IGNORECASE
+)
+
+# Emphasis also has to come off before the FIELDS are read, or the headline keeps
+# its trailing `**` and the comb renders "$1231.94 entry**". Leading/trailing
+# runs only — an inner `_` belongs to whatever the agent was naming.
+_ENVELOPE_TRIM_RE = re.compile(r"^[\s*_]+|[\s*_]+$")
 
 # The legacy inline form — an envelope sharing its line with the prose that
 # precedes it, at the very end of the turn. Kept strict and end-anchored so a
@@ -2095,6 +2122,9 @@ def parse_stance_envelope(text: str) -> tuple[str, _StanceEnvelope]:
         envelope = match.group(0)
         body = text[: match.start()]
 
+    # DEF257: strip the emphasis the locator now tolerates, so the last field
+    # does not carry a trailing `**` onto the pixel.
+    envelope = _ENVELOPE_TRIM_RE.sub("", envelope)
     stance = (_stance_field(_STANCE_FIELD_RE, envelope) or "").lower()
     conviction = (_stance_field(_CONVICTION_FIELD_RE, envelope) or "").lower()
     headline = _stance_field(_HEADLINE_FIELD_RE, envelope)
