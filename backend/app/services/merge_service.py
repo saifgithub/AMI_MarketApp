@@ -57,9 +57,12 @@ from app.db import get_session
 from app.db.models import (
     AgentActivationRow,
     BugReportRow,
+    CareerEventRow,
     DailyChallengeAttemptRow,
+    GameDuelRow,
     GameEntryRow,
     GameQueuedOrderRow,
+    GameShortPositionRow,
     JournalEntryRow,
     LeagueMemberRow,
     LessonProgressRow,
@@ -286,6 +289,42 @@ class MergeService:
                 s, GameQueuedOrderRow, from_user_id, to_user_id,
             )
 
+            # ── career_events — the ledger IS the career ─────────────
+            #
+            # `career_points_total` is SUM(delta) over this table for a
+            # user_id, so leaving these behind does not merely lose a
+            # history: the adopted account's career-point total silently
+            # becomes zero, and every title and rung with it. An anonymous
+            # player who played a week and then claimed their account would
+            # watch their score vanish at the moment of signing up — the
+            # exact moment the product asks them to commit.
+            counts["career_events"] = _rekey_career_events(
+                s, from_user_id, to_user_id,
+            )
+
+            # ── game_duels — TWO user columns, not one ───────────────
+            #
+            # `_rekey_all` cannot serve here: a duel names a user on each
+            # side, and the orphan may be either. Leaving them behind loses
+            # the W-L record, and worse, `opponent_of()` decides which side
+            # is "you" by comparing `user_a_id == user_id` — against a stale
+            # id it returns the WRONG side, so a claimed account's duel card
+            # would show the player their own book as the opponent.
+            counts["game_duels"] = _rekey_game_duels(
+                s, from_user_id, to_user_id,
+            )
+
+            # ── game_short_positions — plain user_id, no uniqueness ──
+            #
+            # The position itself keeps working either way (every read is by
+            # `portfolio_id`, and the portfolio moved above), which is
+            # exactly why this would have gone unnoticed — the row would
+            # simply carry a dead owner until some future user-scoped query
+            # needed it.
+            counts["game_short_positions"] = _rekey_all(
+                s, GameShortPositionRow, from_user_id, to_user_id,
+            )
+
             # ── portfolio_nav_daily (UNIQUE on user_id+run_id+as_of_date) ─
             counts["portfolio_nav_daily"] = _rekey_nav_rows(s, from_user_id, to_user_id)
 
@@ -479,6 +518,77 @@ def _has_mandate(s, user_id: UUID) -> bool:
     return s.execute(
         select(MandateRow.id).where(MandateRow.user_id == user_id).limit(1)
     ).scalar_one_or_none() is not None
+
+
+def _rekey_career_events(s, from_user_id: UUID, to_user_id: UUID) -> int:
+    """Move the orphan's career-point ledger to the adopter.
+
+    `UniqueConstraint(entry_id, reason)` is not user-scoped, so it cannot
+    collide on a re-key. The partial index `uq_career_event_stipend_period`
+    — UNIQUE(user_id, period_key) WHERE reason = 'finish_stipend' — can:
+    both accounts may have claimed a finish stipend in the same cadence
+    period. The adopter's claim wins and the orphan's is dropped, matching
+    every other conflict on this path.
+
+    Written as its own helper rather than reusing
+    `_rekey_skipping_conflicts(conflict_col=period_key)` because that would
+    be silently wrong here: `period_key` is NULL on every non-stipend row,
+    and `NULL NOT IN (...)` evaluates to NULL — falsy — so every
+    `run_close` and `duel_result` row would have been left behind. The bug
+    would have looked like a partial fix and reported a non-zero count.
+    """
+    claimed = set(s.execute(
+        select(CareerEventRow.period_key).where(
+            CareerEventRow.user_id == to_user_id,
+            CareerEventRow.reason == "finish_stipend",
+            CareerEventRow.period_key.is_not(None),
+        )
+    ).scalars().all())
+
+    conflicting = and_(
+        CareerEventRow.reason == "finish_stipend",
+        CareerEventRow.period_key.is_not(None),
+        CareerEventRow.period_key.in_(claimed),
+    ) if claimed else None
+
+    if conflicting is not None:
+        s.execute(
+            delete(CareerEventRow).where(
+                CareerEventRow.user_id == from_user_id, conflicting,
+            )
+        )
+    moved = s.execute(
+        update(CareerEventRow)
+        .where(CareerEventRow.user_id == from_user_id)
+        .values(user_id=to_user_id)
+    )
+    return int(moved.rowcount or 0)
+
+
+def _rekey_game_duels(s, from_user_id: UUID, to_user_id: UUID) -> int:
+    """Re-key every user reference in every duel the orphan is in, and
+    return how many duels moved.
+
+    THREE columns, not two. `user_a_id` and `user_b_id` say who played;
+    `winner_user_id` says who won, and it is a SEPARATE pointer. Moving the
+    sides while leaving the winner behind is worse than losing the row
+    outright: the adopted account ends up in a duel it did not win, which
+    reads as a settled loss.
+    """
+    moved = 0
+    for col in (GameDuelRow.user_a_id, GameDuelRow.user_b_id):
+        result = s.execute(
+            update(GameDuelRow)
+            .where(col == from_user_id)
+            .values({col.key: to_user_id})
+        )
+        moved += int(result.rowcount or 0)
+    s.execute(
+        update(GameDuelRow)
+        .where(GameDuelRow.winner_user_id == from_user_id)
+        .values(winner_user_id=to_user_id)
+    )
+    return moved
 
 
 def _rekey_all(s, model, from_user_id: UUID, to_user_id: UUID) -> int:
