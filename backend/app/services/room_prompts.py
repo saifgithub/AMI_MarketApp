@@ -481,7 +481,7 @@ def build_room_messages(
     phase = _PHASE_FOR_AGENT[agent_id]
     length = _LENGTH_GUIDE[agent_id]
     transcript_text = _format_transcript(transcript)
-    profile_block = _format_profile(profile)
+    profile_block = _format_profile(profile, agent_id)
 
     journal_note = ""
     if agent_id in (AgentId.BULL_RESEARCHER, AgentId.BEAR_RESEARCHER):
@@ -612,8 +612,79 @@ def _format_sector_allocation(sector_weights: dict[str, float] | None) -> str:
     return f"- current sector allocation (of invested value): {parts}."
 
 
-def _format_profile(profile: dict[str, Any]) -> str:
+# CR145 Tier C — the lane matrix. `_format_profile` used to take no `agent_id`
+# at all, so all twelve agents received a BYTE-IDENTICAL fact sheet carrying
+# every domain's numbers. Measured over 18 convenes / 72 analyst turns, they
+# used them: news_analyst cited valuation 16/18 and technicals 13/18,
+# social_media_analyst cited technicals 13/18, fundamentals_analyst cited
+# technicals 8/18. The four-analyst separation exists to produce four
+# INDEPENDENT lenses; that is the product's core claim, and it was leaking.
+#
+# The matrix Saiful chose (2026-08-11) is DEFAULT-OPEN: only the four upstream
+# analysts are firewalled. Bull, Bear, Research Manager, Trader, PM and the
+# three Risk Debators keep the full sheet, because their job IS the cross-lane
+# join — a Bull that cannot see technicals cannot weigh a thesis against them.
+# An agent absent from this dict sees everything, so adding an agent fails open
+# rather than silently starving it.
+#
+# CR143 Phase 3b rejected this concern using the M2b differentiation result (the
+# four analysts were the least-similar pairing at 0.128). That was the wrong
+# instrument and CR145 says so: agents can differ sharply in vocabulary while
+# still borrowing each other's facts. Differentiation is not lane discipline.
+_ALL_DOMAINS = frozenset({"fundamentals", "technicals", "news", "social"})
+
+_AGENT_LANES: dict[AgentId, frozenset[str]] = {
+    AgentId.FUNDAMENTALS_ANALYST: frozenset({"fundamentals"}),
+    AgentId.MARKET_ANALYST: frozenset({"technicals"}),
+    # `next_earnings` rides the news lane as well as the fundamentals one: a
+    # scheduled earnings date IS a forward catalyst, which is the News Analyst's
+    # own job description, not another desk's number.
+    AgentId.NEWS_ANALYST: frozenset({"news"}),
+    AgentId.SOCIAL_MEDIA_ANALYST: frozenset({"social"}),
+}
+
+_DOMAIN_LABELS = {
+    "fundamentals": "company fundamentals and valuation",
+    "technicals": "market technicals (RSI, trend, ranges, volume)",
+    "news": "news and catalysts",
+    "social": "retail sentiment and community activity",
+}
+
+
+def _lane_for(agent_id: AgentId | None) -> frozenset[str]:
+    if agent_id is None:
+        return _ALL_DOMAINS
+    return _AGENT_LANES.get(agent_id, _ALL_DOMAINS)
+
+
+def _out_of_lane_line(lane: frozenset[str]) -> str | None:
+    """CR040 — a withheld lane announces itself, and says WHO has it.
+
+    Silently omitting technicals from the News Analyst's sheet would leave it to
+    conclude no technicals exist, and the next honest thing it does is tell the
+    Room they are unavailable. That is a fabrication in the other direction: the
+    data is live, it is simply another analyst's to speak to. This line is the
+    difference between a firewall and a data gap.
+    """
+    missing = [_DOMAIN_LABELS[d] for d in ("fundamentals", "technicals", "news", "social")
+               if d not in lane]
+    if not missing:
+        return None
+    return (
+        "Not in your lane this call: " + "; ".join(missing) + ". Another analyst "
+        "on this desk holds each of those and will speak to it — this is a "
+        "division of labour, NOT missing data. Do not estimate or infer them, "
+        "do not ask for them, and do not tell the Room they are unavailable."
+    )
+
+
+def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) -> str:
     """A compact ticker fact-sheet the agent can quote from.
+
+    `agent_id=None` renders the FULL sheet and is the default: non-Room callers
+    and `test_prompt_data_parity.py` ask "is this computed field rendered
+    anywhere at all", which the lane split must not change the answer to. The
+    Room always passes a real agent id (CR145 Tier C).
 
     CR104 (closes DEF123) — provenance is PER FIELD, not per block, and this
     is the ONLY provenance mechanism in the renderer: `profile["field_state"]`
@@ -641,6 +712,10 @@ def _format_profile(profile: dict[str, Any]) -> str:
     forward catalyst remains.
     """
     field_state: dict[str, Any] = profile.get("field_state") or {}
+    lane = _lane_for(agent_id)
+
+    def _in_lane(domain: str) -> bool:
+        return domain in lane
 
     def _is(key: str, state: str) -> bool:
         return field_state.get(key) == state
@@ -690,7 +765,9 @@ def _format_profile(profile: dict[str, Any]) -> str:
         "below, never silently filled in — do NOT estimate, recall from "
         "training memory, or invent a number for it:"
     )
-    if fundamentals_any_live:
+    if not _in_lane("fundamentals"):
+        pass  # out of lane — named in the lane line below, not disclosed as absent
+    elif fundamentals_any_live:
         header_lines.append(
             "- Numeric fundamentals (price, P/E, growth, margin, net cash, "
             "52-week range): each field below is tagged individually — a "
@@ -704,7 +781,9 @@ def _format_profile(profile: dict[str, Any]) -> str:
             "none available live this call — every such field below is "
             "marked not available."
         )
-    if market_withheld:
+    if not _in_lane("technicals"):
+        pass  # out of lane — named in the lane line below, not disclosed as absent
+    elif market_withheld:
         pass  # stripped below; no scaffolding line to contradict it with
     elif technicals_live:
         header_lines.append(
@@ -718,7 +797,9 @@ def _format_profile(profile: dict[str, Any]) -> str:
             "- RSI, trend, volume, 50-day range: not available this "
             "call — do not compute or estimate them yourself."
         )
-    if news_withheld_tenure:
+    if not _in_lane("news"):
+        pass  # out of lane — named in the lane line below, not disclosed as absent
+    elif news_withheld_tenure:
         pass  # stripped below; no scaffolding line to contradict it with
     elif news_live:
         header_lines.append(
@@ -740,7 +821,9 @@ def _format_profile(profile: dict[str, Any]) -> str:
             "- Recent catalyst/headline: alpha simulation scaffolding — NOT "
             "a live news feed."
         )
-    if social_withheld_tenure:
+    if not _in_lane("social"):
+        pass  # out of lane — named in the lane line below, not disclosed as absent
+    elif social_withheld_tenure:
         pass  # stripped below; no scaffolding line to contradict it with
     elif social_live:
         header_lines.append(
@@ -766,6 +849,9 @@ def _format_profile(profile: dict[str, Any]) -> str:
         "- Forward catalyst: the FOMC decision countdown below is REAL, "
         "from the Fed's published calendar."
     )
+    lane_line = _out_of_lane_line(lane)
+    if lane_line:
+        header_lines.append(lane_line)
     header = "\n".join(header_lines)
 
     # CR098 Amendment 1 — a roster-withheld domain's fact-sheet lines are
@@ -783,23 +869,26 @@ def _format_profile(profile: dict[str, Any]) -> str:
         f"Reference price: ${profile.get('base_price')}" if _is("base_price", "live")
         else "Reference price: not available"
     )
-    # DEF233: both bases, each gated on its own `field_state` entry — a
-    # provider gap on one is stated, never papered over with the other.
-    lines.append(
-        pe_line(
-            profile.get("pe") if _is("pe", "live") else None,
-            profile.get("forward_pe") if _is("forward_pe", "live") else None,
+    if _in_lane("fundamentals"):
+        # DEF233: both bases, each gated on its own `field_state` entry — a
+        # provider gap on one is stated, never papered over with the other.
+        lines.append(
+            pe_line(
+                profile.get("pe") if _is("pe", "live") else None,
+                profile.get("forward_pe") if _is("forward_pe", "live") else None,
+            )
         )
-    )
-    lines.append(
-        (f"TTM revenue growth: {profile.get('rev_growth')}%" if _is("rev_growth", "live")
-         else "TTM revenue growth: not available")
-        + ", "
-        + (f"profit margin: {profile.get('profit_margin')}%" if _is("profit_margin", "live")
-           else "profit margin: not available")
-    )
-    lines.append(_net_position_line(profile))
-    if market_withheld:
+        lines.append(
+            (f"TTM revenue growth: {profile.get('rev_growth')}%" if _is("rev_growth", "live")
+             else "TTM revenue growth: not available")
+            + ", "
+            + (f"profit margin: {profile.get('profit_margin')}%" if _is("profit_margin", "live")
+               else "profit margin: not available")
+        )
+        lines.append(_net_position_line(profile))
+    if not _in_lane("technicals"):
+        pass
+    elif market_withheld:
         lines.append(
             "Market technicals: not included in this session."
         )
@@ -826,15 +915,25 @@ def _format_profile(profile: dict[str, Any]) -> str:
     # fiftyTwoWeekLow/High fields were used, never for the ±5%-of-price
     # placeholder it falls back to internally (that placeholder is a derived
     # guess, not a measurement, so it earns no "52-week" label here).
-    if _is("week52", "live"):
+    # Dual-lane, on DOMAIN rather than provenance: `week52` arrives from
+    # `fetch_live_fundamentals`, but a 52-week high/low is a PRICE RANGE, which
+    # is the Market Analyst's subject by any reading — and it already receives
+    # the 50-day range. Gating it out would leave the range desk reasoning about
+    # ranges with less context than the sheet holds, which is not lane
+    # discipline, just an accident of which fetcher happened to return it.
+    if (_in_lane("fundamentals") or _in_lane("technicals")) and _is("week52", "live"):
         lines.append(f"52-week range: ${profile.get('low')}–${profile.get('high')}")
-    if news_withheld_tenure:
+    if not _in_lane("news"):
+        pass
+    elif news_withheld_tenure:
         lines.append(
             "Recent catalyst/headline: not included in this session."
         )
     else:
         lines.append(_catalyst_line(profile))
-    if social_withheld_tenure:
+    if not _in_lane("social"):
+        pass
+    elif social_withheld_tenure:
         lines.append(
             "Retail sentiment: not included in this session."
         )
@@ -843,12 +942,26 @@ def _format_profile(profile: dict[str, Any]) -> str:
             f"Retail sentiment: {profile.get('sentiment_tone')} ({profile.get('sentiment_score')})"
         )
         lines += _social_detail_lines(profile)
-    for extra in (_valuation_line(profile), _sector_line(profile),
-                  _capital_allocation_line(profile), _analyst_line(profile)):
-        if extra:
-            lines.append(extra)
+    if _in_lane("fundamentals"):
+        for extra in (_valuation_line(profile), _sector_line(profile),
+                      _capital_allocation_line(profile), _analyst_line(profile)):
+            if extra:
+                lines.append(extra)
+    # CR151 Tier A — the asymmetry, from two numbers already on the sheet.
+    # Rendered for the FULL-SHEET agents only, which is the reconciliation
+    # CR151 asked for explicitly ("say so in CR145 Tier C's matrix rather than
+    # letting the two decisions drift"): the line is a cross-lane JOIN, so
+    # rendering it to a firewalled analyst would hand back the very numbers the
+    # firewall removes. CR151's own rationale for not gating it to SYNTHESIS is
+    # that the errors originate upstream at the Bull and Bear — and Bull, Bear
+    # and the Research Manager all keep the full sheet, so they still get it.
+    if lane == _ALL_DOMAINS:
+        asymmetry = _asymmetry_line(profile)
+        if asymmetry:
+            lines.append(asymmetry)
     if (
-        profile.get("next_earnings_date")
+        (_in_lane("fundamentals") or _in_lane("news"))
+        and profile.get("next_earnings_date")
         and _is("next_earnings", "live")
         and profile.get("next_earnings_interval")
     ):
@@ -981,6 +1094,71 @@ def _analyst_line(profile: dict[str, Any]) -> str | None:
         f"Analyst consensus (LIVE, Street view — NOT company guidance): "
         f"{profile.get('analyst_rating', '—')}, target ${profile.get('analyst_target_price', '—')}"
     )
+
+
+def _asymmetry_line(profile: dict[str, Any]) -> str | None:
+    """CR151 Tier A — the up/down asymmetry, computed rather than left to be
+    joined wrong.
+
+    No new provider, no new fetch, no new field: the anchor price, the Street's
+    consensus target and the 50-day range low are all already rendered and
+    already labelled `(LIVE)`. The precedent is exact — DEF228 added the
+    range-position figure on the reasoning *"this is arithmetic on two numbers
+    already on the sheet — it asserts nothing new"*, for the same reason: an
+    agent joined two rendered numbers wrongly and the whole Room adopted it.
+    Not to be confused with `trading_math.trade.trade_asymmetry`, which measures
+    a PROPOSED TRADE's geometry (entry/stop/target) and is read by two post-hoc
+    call sites only (`room_runner.py:1380`, `:3461`) — it is rendered into no
+    prompt, so no agent has ever seen an asymmetry figure of any kind. This line
+    is the market's asymmetry around a price, computed before a trade exists,
+    which is what the researchers argue over.
+
+    **One anchor, named in the line.** The sheet carries two prices —
+    `Reference price` (fundamentals) and `last close` (technicals) — and
+    deriving one half from each is precisely how DEF228 happened. `last_close`
+    is used when technicals are live, `base_price` otherwise, and the line says
+    which. Each half is independently gated (CR104): a missing target drops the
+    upside clause, not the line.
+    """
+    technicals_live = _field_is_live(profile, "technicals")
+    if technicals_live and profile.get("last_close"):
+        anchor, anchor_name = _safe_num(profile.get("last_close")), "the last close"
+    elif _field_is_live(profile, "base_price") and profile.get("base_price"):
+        anchor, anchor_name = _safe_num(profile.get("base_price")), "the reference price"
+    else:
+        return None
+    if not anchor or anchor <= 0:
+        return None
+
+    target = (
+        _safe_num(profile.get("analyst_target_price"))
+        if _field_is_live(profile, "analyst_target_price") else None
+    )
+    support = _safe_num(profile.get("support")) if technicals_live else None
+
+    clauses = []
+    if target and target > 0:
+        clauses.append(
+            f"**{(target - anchor) / anchor * 100:+.1f}%** to the consensus target ${target}"
+        )
+    if support and support > 0:
+        clauses.append(
+            f"**{(support - anchor) / anchor * 100:+.1f}%** to the 50-day range low ${support}"
+        )
+    if not clauses:
+        return None
+    return (
+        f"Asymmetry from {anchor_name} ${anchor}: " + ", ".join(clauses) + ". "
+        "AMI's arithmetic on the two lines above — the Street's target is not a "
+        "trade target and the range low is not a stop."
+    )
+
+
+def _safe_num(value: Any) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def _catalyst_line(profile: dict[str, Any]) -> str:
