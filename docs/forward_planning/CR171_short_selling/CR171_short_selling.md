@@ -145,18 +145,10 @@ Alembic revision off the verified head at write time. Add the explicit `delete()
 `reset_portfolio` and `clear()`, for the sqlite-doesn't-enforce-CASCADE reason documented at
 `sim_engine.py:453`.
 
-### 4. Borrow cost — flat, because we cannot measure the real one
+### 4. Borrow cost — a tiered rate off sourced data, with a layered provider
 
 Mechanically this is the easy part: the fee pattern already exists in `games_scoring.trade_fee`
 (10bps, $1 minimum, burned to nothing).
-
-The honest constraint is **data**. Nothing in our stack exposes a stock-loan rate — yfinance does not,
-and no other provider we run does. Real borrow ranges from roughly 0.25%/yr on liquid large-caps to
-over 100%/yr on hard-to-borrow squeeze names: a 400× spread we have no way to observe. Inventing a
-per-ticker rate would be a fabrication of exactly the class CR040 and DEF252 exist to prevent.
-
-So: **one flat published rate**, `short_borrow_rate_annual_pct` in config (default **3.0**), accrued
-daily on the position's mark value:
 
 ```
 daily_fee = mark × quantity × (rate / 365)
@@ -164,15 +156,84 @@ daily_fee = mark × quantity × (rate / 365)
 
 Charged by a daily pass in CR170's sweep, guarded by `last_borrow_accrual_date` so a restart cannot
 double-charge (the same idempotency shape as `portfolio_nav_daily`). Deducted from `current_cash`,
-burned — credited to nothing.
+burned. Per Saiful's standing call, the rate is **not explained in the app** — it is charged and
+shown as a line on the position, nothing more.
 
-Per Saiful's standing call, the rate is **not explained in the app**; it is simply charged and
-visible as a line on the position.
+The hard part is **where `rate` comes from**. No free source publishes a numeric stock-loan rate; real
+borrow spans roughly 0.25%/yr on liquid large-caps to over 100%/yr on hard-to-borrow squeeze names, a
+400× range. Inventing a per-ticker number would be the fabrication CR040 and DEF252 exist to prevent.
+What we *can* do is derive a coarse rate from inputs we actually observe.
 
-**Must be forwarded in `docker-compose.yml`'s `api-alpha` block** or `test_config_compose_parity.py`
+**Resolve through a layered provider, mirroring `market_data.py`'s `FallbackProvider` shape.**
+
+**Layer 1 — Alpaca asset flags (preferred, needs a house key we do not have yet).**
+`GET /v2/assets/{symbol}` carries `easy_to_borrow`, `shortable`, and
+`maintenance_margin_requirement`. `easy_to_borrow` is the single best signal available to us: it is
+**live**, and it is binary in exactly the dimension that drives cost. It also fixes Layer 2's worst
+failure (below). `maintenance_margin_requirement` is a direct, per-asset input to §7's threshold,
+replacing the hard-coded 1.30.
+
+- Blocked on credentials. `grep -iE '^ALPACA' .env` and melehost's `~/ami_trade/.env` both return
+  **nothing** (verified 2026-08-11; ssh reached the host, so this is a measured absence). The whole
+  Alpaca integration is dark in every environment. `/v2/assets` returns **401** unauthenticated.
+- **Must be a house API key, not the per-user OAuth token we store today.** Pricing a global model off
+  one user's session couples it to that session and breaks when they disconnect.
+  `alpaca_service._paper_get` already supports `auth_mode="apikey"` (`:107`), so this is a config
+  item, not a code change. A free Alpaca paper account provides the pair — a **"you do" item**.
+- **This is not brokerage integration and D-004 is not in play.** We read an asset attribute; we route
+  no order and connect to no execution venue, matching D-069's *"we never route an order, never
+  connect to an execution venue, never integrate with a broker's order flow."* Stated here so it is
+  not re-litigated at build time.
+- Field shapes above are from Alpaca's API documentation and are **unverified against a live
+  response** — we hold no key to test with. Confirm before building.
+
+**Layer 2 — yfinance short interest (available today, already fetched).**
+`yf.Ticker(t).info` carries `shortPercentOfFloat`, `shortRatio`, `sharesShort`, `floatShares`,
+`sharesShortPriorMonth` and `dateShortInterest`. Measured 2026-08-11:
+
+| | `shortPercentOfFloat` | `shortRatio` |
+|---|---|---|
+| AAPL | 1.0% | 2.28 |
+| TSLA | 2.0% | 1.63 |
+| GME | 13.5% | 12.78 |
+
+A 13× spread on exactly the axis borrow cost runs along — scarcity of lendable float. And
+`classification_universe.py:271` **already calls `.info` daily for the ~503 S&P parents**, so these
+fields cost no new socket, no new schedule and no new failure mode; add them to that stored snapshot.
+
+Tier coarsely, never with a formula — AAPL's value returns as `0.01`, two decimals, so anywhere from
+0.5% to 1.5%. The input's precision does not justify a precise output.
+
+| `shortPercentOfFloat` | Rate | Lands on |
+|---|---|---|
+| < 2.5% | 0.5%/yr | AAPL, TSLA |
+| 2.5–10% | 3%/yr | |
+| 10–20% | 12%/yr | GME |
+| > 20% | 30%/yr | |
+
+**Layer 2's known failure, and why Layer 1 matters.** `dateShortInterest` measured **2026-07-15 —
+27 days stale**, updating monthly. For an ordinary name that is fine; borrow on liquid stock barely
+moves. But the case where borrow cost *matters* — a name going from 5%/yr to 80%/yr in a week — is
+exactly where a month-old figure is not merely stale but **anti-informative**: we would price cheapest
+precisely when reality is most expensive. Alpaca's live `easy_to_borrow` is the fix.
+
+**Layer 3 — flat default.** `short_borrow_default_rate_annual_pct`, default **3.0**, when neither
+layer resolves. Reached for any ticker outside the S&P snapshot until that fetch is widened.
+
+**Resolve once, at open, and store it on the row.** `borrow_rate_pct`, plus the input and as-of date
+that justified it (`shortPercentOfFloat` + `dateShortInterest`, or `easy_to_borrow` + fetch time), and
+which layer answered. Do **not** re-resolve daily: a monthly-updating input re-read every day
+manufactures the appearance of a live rate. Same posture as the stored Sharia (CR075) and
+classification snapshots, and the same provenance discipline as CR170's `last_price_source`.
+
+A missing field falls to the next layer **and logs at warning** — never silently assume cheap. The
+layer that answered is on the row, so "why was this position charged 3%?" is answerable from the DB.
+
+**Config forwarded in `docker-compose.yml`'s `api-alpha` block** or `test_config_compose_parity.py`
 fails the build.
 
-That a real hard-to-borrow name would cost 30× this is a known simplification, recorded here.
+That a genuinely hard-to-borrow name can cost several times even the top tier is a known
+simplification, recorded here rather than discovered.
 
 ### 5. The bracket inverts
 
