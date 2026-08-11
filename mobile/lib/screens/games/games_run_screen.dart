@@ -93,7 +93,7 @@ class GamesRunScreen extends ConsumerWidget {
                 if (detail.isEmptyBook)
                   _EmptyBook(detail: detail)
                 else
-                  _Positions(detail: detail),
+                  _Positions(detail: detail, runId: runId),
                 const SizedBox(height: AmiSpacing.l),
                 _QueuedOrders(runId: runId),
                 if (detail.tradeCount > 0) ...[
@@ -332,8 +332,9 @@ class _BookHeat extends StatelessWidget {
 }
 
 class _Positions extends StatelessWidget {
-  const _Positions({required this.detail});
+  const _Positions({required this.detail, required this.runId});
   final GameRunDetail detail;
+  final String runId;
 
   @override
   Widget build(BuildContext context) {
@@ -345,15 +346,23 @@ class _Positions extends StatelessWidget {
         Text(l.gamesRunPositionsHeading,
             style: AmiTypography.labelMono.copyWith(color: AmiColors.textLow)),
         const SizedBox(height: AmiSpacing.s),
-        for (final h in detail.holdings) _PositionRow(holding: h),
+        for (final h in detail.holdings) _PositionRow(holding: h, runId: runId),
       ],
     );
   }
 }
 
+/// One held position — and, since DEF259, the only way to get out of one.
+///
+/// The row shipped read-only for as long as the game has existed: the ticket
+/// hard-coded `side: 'buy'` and nothing anywhere called the notifier's
+/// `pickSide`, so a position could be opened and never closed. In a contest
+/// scored on P&L that is not a missing convenience, it is a missing half of
+/// the game — the only exit was the run ending.
 class _PositionRow extends StatelessWidget {
-  const _PositionRow({required this.holding});
+  const _PositionRow({required this.holding, required this.runId});
   final GameHolding holding;
+  final String runId;
 
   @override
   Widget build(BuildContext context) {
@@ -391,6 +400,20 @@ class _PositionRow extends StatelessWidget {
                 style: AmiTypography.caption.copyWith(color: color),
               ),
             ],
+          ),
+          const SizedBox(width: AmiSpacing.s),
+          // Per row, not one SELL button at the bottom: the thing being sold
+          // is a specific position, and a ticket that opened without knowing
+          // which would have to ask again.
+          HexButton(
+            label: l.gamesSellCta,
+            variant: HexButtonVariant.outlined,
+            onPressed: () => GamesTradeTicketScreen.show(
+              context,
+              runId: runId,
+              sellTicker: holding.ticker,
+              heldQuantity: holding.quantity,
+            ),
           ),
         ],
       ),

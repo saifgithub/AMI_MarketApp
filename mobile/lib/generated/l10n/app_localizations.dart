@@ -5034,6 +5034,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ENTER THIS FIELD'**
   String get gamesLobbyEnterCta;
+
+  /// CR109 DEF259. Step-2 label when the ticket is selling. The percentage divides the POSITION, not the cash — a different denominator from the buy step, so it gets its own label rather than reusing gamesTicketStepSize. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'HOW MUCH OF THE POSITION'**
+  String get gamesTicketStepSizeSell;
+
+  /// CR109 DEF259. Size readout on a SELL: shares, not AMI Cash. A dollar figure here would be misleading — the proceeds depend on the fill price, which for a queued order is not known until the next US open. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{pct}% · {shares} shares'**
+  String gamesTicketSizeShares(String pct, String shares);
+
+  /// CR109 DEF259. The 100% chip on a SELL — says what it does (closes the position) rather than reusing the buy side's 'all in', which means the opposite thing. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Close it'**
+  String get gamesTicketSizeCloseAll;
+
+  /// CR109 DEF259. Action on a position row that opens the ticket in sell mode. Until this shipped there was no way to close a game position at all — the only exit was the run ending. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SELL'**
+  String get gamesSellCta;
+
+  /// CR109 DEF259. Header of the ticket when it opens in sell mode on a named position. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Sell {ticker}'**
+  String gamesSellTitle(String ticker);
+
+  /// CR109 DEF259. The position being sold from, shown above the size step so the percentage has a visible denominator. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You hold {shares} shares'**
+  String gamesSellHeld(String shares);
+
+  /// CR109. Stated once on the sell ticket. The engine refuses a sell beyond the held quantity, so a player expecting to short would otherwise discover the rule as a rejected order. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Long only — a sell closes what you hold, it never opens a short.'**
+  String get gamesNoShortingNote;
 }
 
 class _AppLocalizationsDelegate

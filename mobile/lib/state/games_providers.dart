@@ -214,6 +214,10 @@ class GamesTicketNotifier extends StateNotifier<GamesTicketState> {
     state = GamesTicketState(ticker: t.isEmpty ? null : t, side: state.side);
   }
 
+  /// Switching side clears the size and the quote — a size chip means
+  /// "percent of cash" on a buy and "percent of the position" on a sell, so
+  /// carrying one across would silently change what the number means, and a
+  /// quote priced for the other direction is worse than none.
   void pickSide(String side) {
     state = GamesTicketState(ticker: state.ticker, side: side);
   }
@@ -228,10 +232,59 @@ class GamesTicketNotifier extends StateNotifier<GamesTicketState> {
   /// screen supplies it from [gamesRunDetailProvider] so this notifier
   /// stays a pure request/response shape with no cached copy of the run to
   /// go stale.
-  Future<void> fetchQuote({required double? cashAvailable}) async {
+  /// [heldQuantity] is the shares currently held of [state.ticker] — required
+  /// on the SELL side, ignored on the buy side.
+  ///
+  /// The two sides divide up different things, and conflating them is what
+  /// made selling impossible for as long as it was. A buy divides CASH: 25%
+  /// means a quarter of what is available to deploy. A sell divides the
+  /// POSITION: 25% means a quarter of the shares held, and 100% means close
+  /// it. Sizing a sell against cash would be nonsense in the ordinary case
+  /// and impossible in the important one — a player whose cash is fully
+  /// committed has exactly 0 to size against, and closing a position is the
+  /// one action they most need.
+  Future<void> fetchQuote({
+    required double? cashAvailable,
+    double? heldQuantity,
+  }) async {
     final ticker = state.ticker;
     final pct = state.sizePct;
     if (ticker == null || pct == null) return;
+
+    if (state.side == 'sell') {
+      // NULL means the holdings have not arrived; 0 means there is nothing to
+      // sell. Same null-vs-zero split as the cash guard below, for the same
+      // reason — one is something to wait for, the other is an answer.
+      if (heldQuantity == null) {
+        state = state.copyWith(quoting: true, clearQuote: true, clearError: true);
+        return;
+      }
+      if (heldQuantity <= 0) {
+        state = state.copyWith(
+          quoting: false,
+          clearQuote: true,
+          error: 'You hold none of $ticker to sell.',
+        );
+        return;
+      }
+      // 4dp matches `game_queued_orders.quantity`'s Numeric(12, 4), so the
+      // number quoted is exactly the number that can be stored and filled.
+      final shares = double.parse((heldQuantity * (pct / 100)).toStringAsFixed(4));
+      state = state.copyWith(quoting: true, clearError: true);
+      try {
+        final api = _ref.read(apiClientProvider);
+        final quote = await api.gamesTradeQuote(
+          runId: runId, ticker: ticker, side: 'sell', quantity: shares,
+        );
+        state = state.copyWith(quote: quote, quoting: false);
+      } catch (e) {
+        state = state.copyWith(
+          quoting: false,
+          error: friendlyError(e, action: 'price that trade'),
+        );
+      }
+      return;
+    }
 
     // Refuse to ask for a quote on nothing.
     //

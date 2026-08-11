@@ -2961,4 +2961,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gamesLobbyEnterCta => 'ENTER THIS FIELD';
+
+  @override
+  String get gamesTicketStepSizeSell => 'HOW MUCH OF THE POSITION';
+
+  @override
+  String gamesTicketSizeShares(String pct, String shares) {
+    return '$pct% · $shares shares';
+  }
+
+  @override
+  String get gamesTicketSizeCloseAll => 'Close it';
+
+  @override
+  String get gamesSellCta => 'SELL';
+
+  @override
+  String gamesSellTitle(String ticker) {
+    return 'Sell $ticker';
+  }
+
+  @override
+  String gamesSellHeld(String shares) {
+    return 'You hold $shares shares';
+  }
+
+  @override
+  String get gamesNoShortingNote =>
+      'Long only — a sell closes what you hold, it never opens a short.';
 }

@@ -32,11 +32,31 @@ const List<double> kGamesTicketSizeChipPcts = [10, 25, 50, 100];
 const double kGamesTicketDefaultSizePct = 25;
 
 class GamesTradeTicketScreen extends ConsumerStatefulWidget {
-  const GamesTradeTicketScreen({super.key, required this.runId});
+  const GamesTradeTicketScreen({
+    super.key,
+    required this.runId,
+    this.sellTicker,
+    this.heldQuantity,
+  });
 
   final String runId;
 
-  static Future<void> show(BuildContext context, {required String runId}) {
+  /// Non-null opens the ticket straight into SELL mode on that position:
+  /// ticker pre-picked, size chips meaning "percent of the position", and no
+  /// ticker input at all — you cannot sell something you do not hold, so
+  /// offering a free-text field there would only be a way to get an error.
+  final String? sellTicker;
+
+  /// Shares currently held of [sellTicker]. The sell sizes against this, not
+  /// against cash: "50%" means half the shares, and 100% closes the position.
+  final double? heldQuantity;
+
+  static Future<void> show(
+    BuildContext context, {
+    required String runId,
+    String? sellTicker,
+    double? heldQuantity,
+  }) {
     return showModalBottomSheet<void>(
       context: context,
       backgroundColor: AmiColors.slate800,
@@ -44,7 +64,11 @@ class GamesTradeTicketScreen extends ConsumerStatefulWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => GamesTradeTicketScreen(runId: runId),
+      builder: (_) => GamesTradeTicketScreen(
+        runId: runId,
+        sellTicker: sellTicker,
+        heldQuantity: heldQuantity,
+      ),
     );
   }
 
@@ -56,6 +80,27 @@ class GamesTradeTicketScreen extends ConsumerStatefulWidget {
 class _GamesTradeTicketScreenState
     extends ConsumerState<GamesTradeTicketScreen> {
   final _manualTicker = TextEditingController();
+
+  bool get _isSell => widget.sellTicker != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final target = widget.sellTicker;
+    if (target == null) return;
+    // Same Riverpod constraint the confirm card documents: a provider's state
+    // cannot be written synchronously inside a life-cycle method. Side FIRST,
+    // then ticker — `pickSide` rebuilds the state keeping the ticker and
+    // `pickTicker` rebuilds it keeping the side, so the other order would
+    // work too, but this one reads as what it is: choose the direction, then
+    // name the instrument.
+    Future.microtask(() {
+      if (!mounted) return;
+      final notifier = ref.read(gamesTicketProvider(widget.runId).notifier);
+      notifier.pickSide('sell');
+      notifier.pickTicker(target);
+    });
+  }
 
   @override
   void dispose() {
@@ -100,10 +145,32 @@ class _GamesTradeTicketScreenState
             // one tap away behind the ⓘ rather than permanently occupying the
             // top of the sheet. Same string, same widget file: one source of
             // copy, two presentations, so they cannot drift.
+            if (_isSell) ...[
+              Text(
+                l.gamesSellTitle(widget.sellTicker!),
+                style: AmiTypography.h4.copyWith(color: AmiColors.textHigh),
+              ),
+              const SizedBox(height: AmiSpacing.xs),
+              if (widget.heldQuantity != null)
+                // The denominator, made visible. A percentage with no stated
+                // base is the same defect as the slider that said 25% while
+                // the confirm card said 11.9% — two numbers, two bases, one
+                // screen.
+                Text(
+                  l.gamesSellHeld(widget.heldQuantity!.toStringAsFixed(4)),
+                  style: AmiTypography.caption,
+                ),
+              const SizedBox(height: AmiSpacing.xs),
+              // Stated here rather than discovered as a rejected order. The
+              // shared fill path refuses a sell beyond the held quantity, so
+              // a player expecting to short finds out at the fill otherwise.
+              Text(l.gamesNoShortingNote, style: AmiTypography.caption),
+              const SizedBox(height: AmiSpacing.s),
+            ],
             Row(
               children: [
                 Text(
-                  l.gamesTicketHeading,
+                  _isSell ? '' : l.gamesTicketHeading,
                   style: AmiTypography.labelMono
                       .copyWith(color: AmiColors.hexGreen),
                 ),
@@ -173,7 +240,10 @@ class _GamesTradeTicketScreenState
             // cases look identical to a function that only receives a double,
             // which is why the screen now decides and the notifier takes a
             // nullable value.
-            if (runDetail != null && runDetail.cashAvailable <= 0)
+            // A SELL is never blocked by an empty cash balance — that is
+            // precisely the state a player most needs to close a position
+            // from, and gating it behind cash is what made the book one-way.
+            if (!_isSell && runDetail != null && runDetail.cashAvailable <= 0)
               _NoCashPanel(detail: runDetail)
             else if (ticket.ticker != null) ...[
               const SizedBox(height: AmiSpacing.l),
@@ -182,11 +252,15 @@ class _GamesTradeTicketScreenState
               // is the real control, because 10/25/50/100 could not express
               // "a bit" — the smallest possible order was a tenth of the
               // book.
-              Text(l.gamesTicketStepSize, style: AmiTypography.caption),
+              Text(
+                _isSell ? l.gamesTicketStepSizeSell : l.gamesTicketStepSize,
+                style: AmiTypography.caption,
+              ),
               const SizedBox(height: AmiSpacing.xs),
               _SizePicker(
                 sizePct: ticket.sizePct ?? kGamesTicketDefaultSizePct,
                 cashAvailable: runDetail?.cashAvailable ?? 0,
+                heldQuantity: widget.heldQuantity,
                 onChanged: notifier.pickSize,
               ),
             ],
@@ -200,6 +274,7 @@ class _GamesTradeTicketScreenState
                 ticket: ticket,
                 notifier: notifier,
                 cashAvailable: runDetail?.cashAvailable,
+                heldQuantity: widget.heldQuantity,
               ),
             ],
 
@@ -320,10 +395,17 @@ class _SizePicker extends StatefulWidget {
     required this.sizePct,
     required this.cashAvailable,
     required this.onChanged,
+    this.heldQuantity,
   });
 
   final double sizePct;
   final double cashAvailable;
+  /// Non-null puts the picker in SELL mode: the percentage divides the
+  /// POSITION rather than the cash, and the readout is shares rather than
+  /// AMI Cash. Showing a dollar figure here would be actively misleading —
+  /// the proceeds depend on the fill price, which for a queued order is not
+  /// known until the next open.
+  final double? heldQuantity;
   final ValueChanged<double> onChanged;
 
   @override
@@ -337,7 +419,9 @@ class _SizePickerState extends State<_SizePicker> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final pct = _dragging ?? widget.sizePct;
+    final held = widget.heldQuantity;
     final amount = widget.cashAvailable * (pct / 100.0);
+    final shares = held == null ? null : held * (pct / 100.0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,7 +432,9 @@ class _SizePickerState extends State<_SizePicker> {
             for (final preset in kGamesTicketSizeChipPcts)
               _pickerChip(
                 label: preset == 100
-                    ? l.gamesTicketSizeAllIn
+                    ? (held == null
+                        ? l.gamesTicketSizeAllIn
+                        : l.gamesTicketSizeCloseAll)
                     : '${preset.toInt()}%',
                 selected: pct == preset,
                 onTap: () {
@@ -381,10 +467,12 @@ class _SizePickerState extends State<_SizePicker> {
           ),
         ),
         Text(
-          l.gamesTicketSizeAmount(
-            pct.round().toString(),
-            _money(amount),
-          ),
+          shares == null
+              ? l.gamesTicketSizeAmount(pct.round().toString(), _money(amount))
+              : l.gamesTicketSizeShares(
+                  pct.round().toString(),
+                  shares.toStringAsFixed(4),
+                ),
           style: AmiTypography.caption.copyWith(color: AmiColors.textHigh),
         ),
       ],
@@ -397,10 +485,13 @@ class _ConfirmCard extends ConsumerStatefulWidget {
     required this.ticket,
     required this.notifier,
     required this.cashAvailable,
+    this.heldQuantity,
   });
 
   final GamesTicketState ticket;
   final GamesTicketNotifier notifier;
+  /// Shares held, on a sell. The notifier sizes the order from this.
+  final double? heldQuantity;
   /// Null means the run detail has not arrived yet — NOT that cash is zero.
   /// The difference decides between a spinner and a refusal.
   final double? cashAvailable;
@@ -421,7 +512,10 @@ class _ConfirmCardState extends ConsumerState<_ConfirmCard> {
       // defers it to after the frame finishes building, per Riverpod's own
       // fix for this exact error.
       Future.microtask(
-        () => widget.notifier.fetchQuote(cashAvailable: widget.cashAvailable),
+        () => widget.notifier.fetchQuote(
+          cashAvailable: widget.cashAvailable,
+          heldQuantity: widget.heldQuantity,
+        ),
       );
     }
   }
@@ -437,7 +531,10 @@ class _ConfirmCardState extends ConsumerState<_ConfirmCard> {
         widget.ticket.quote == null &&
         !widget.ticket.quoting) {
       Future.microtask(
-        () => widget.notifier.fetchQuote(cashAvailable: widget.cashAvailable),
+        () => widget.notifier.fetchQuote(
+          cashAvailable: widget.cashAvailable,
+          heldQuantity: widget.heldQuantity,
+        ),
       );
     }
     // Cash has ARRIVED. The card can mount before the run detail resolves —
@@ -445,11 +542,15 @@ class _ConfirmCardState extends ConsumerState<_ConfirmCard> {
     // `fetchQuote` refuses to quote against zero rather than sending a request
     // the API must reject. Nothing is in flight in that state, so this is what
     // starts the real one.
-    if ((old.cashAvailable ?? 0) <= 0 &&
+    if (widget.heldQuantity == null &&
+        (old.cashAvailable ?? 0) <= 0 &&
         (widget.cashAvailable ?? 0) > 0 &&
         widget.ticket.quote == null) {
       Future.microtask(
-        () => widget.notifier.fetchQuote(cashAvailable: widget.cashAvailable),
+        () => widget.notifier.fetchQuote(
+          cashAvailable: widget.cashAvailable,
+          heldQuantity: widget.heldQuantity,
+        ),
       );
     }
   }

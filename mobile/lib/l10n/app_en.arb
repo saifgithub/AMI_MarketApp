@@ -2319,5 +2319,19 @@
     "gamesCadenceWeightNote": "Worth {gain}\u00d7 a weekly win",
     "@gamesCadenceWeightNote": {"description": "CR109 \u00a76.3. How much a longer cadence pays relative to a week, so the player can see the tradeoff before committing. NEW key. retranslate:[ar,ms]", "placeholders": {"gain": {"type": "String", "example": "13"}}},
     "gamesLobbyEnterCta": "ENTER THIS FIELD",
-    "@gamesLobbyEnterCta": {"description": "CR109 slice 6. Entry action on a cadence row in the lobby. Cadence-NEUTRAL on purpose: `gamesEnterCta` reads \"enter this week's field\", which is wrong copy on a Monthly or Quarterly row. NEW key. retranslate:[ar,ms]"}
+    "@gamesLobbyEnterCta": {"description": "CR109 slice 6. Entry action on a cadence row in the lobby. Cadence-NEUTRAL on purpose: `gamesEnterCta` reads \"enter this week's field\", which is wrong copy on a Monthly or Quarterly row. NEW key. retranslate:[ar,ms]"},
+    "gamesTicketStepSizeSell": "HOW MUCH OF THE POSITION",
+    "@gamesTicketStepSizeSell": {"description": "CR109 DEF259. Step-2 label when the ticket is selling. The percentage divides the POSITION, not the cash \u2014 a different denominator from the buy step, so it gets its own label rather than reusing gamesTicketStepSize. NEW key. retranslate:[ar,ms]"},
+    "gamesTicketSizeShares": "{pct}% \u00b7 {shares} shares",
+    "@gamesTicketSizeShares": {"description": "CR109 DEF259. Size readout on a SELL: shares, not AMI Cash. A dollar figure here would be misleading \u2014 the proceeds depend on the fill price, which for a queued order is not known until the next US open. NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "50"}, "shares": {"type": "String", "example": "1.5958"}}},
+    "gamesTicketSizeCloseAll": "Close it",
+    "@gamesTicketSizeCloseAll": {"description": "CR109 DEF259. The 100% chip on a SELL \u2014 says what it does (closes the position) rather than reusing the buy side's 'all in', which means the opposite thing. NEW key. retranslate:[ar,ms]"},
+    "gamesSellCta": "SELL",
+    "@gamesSellCta": {"description": "CR109 DEF259. Action on a position row that opens the ticket in sell mode. Until this shipped there was no way to close a game position at all \u2014 the only exit was the run ending. NEW key. retranslate:[ar,ms]"},
+    "gamesSellTitle": "Sell {ticker}",
+    "@gamesSellTitle": {"description": "CR109 DEF259. Header of the ticket when it opens in sell mode on a named position. NEW key. retranslate:[ar,ms]", "placeholders": {"ticker": {"type": "String", "example": "AAPL"}}},
+    "gamesSellHeld": "You hold {shares} shares",
+    "@gamesSellHeld": {"description": "CR109 DEF259. The position being sold from, shown above the size step so the percentage has a visible denominator. NEW key. retranslate:[ar,ms]", "placeholders": {"shares": {"type": "String", "example": "3.1916"}}},
+    "gamesNoShortingNote": "Long only \u2014 a sell closes what you hold, it never opens a short.",
+    "@gamesNoShortingNote": {"description": "CR109. Stated once on the sell ticket. The engine refuses a sell beyond the held quantity, so a player expecting to short would otherwise discover the rule as a rejected order. NEW key. retranslate:[ar,ms]"}
 }

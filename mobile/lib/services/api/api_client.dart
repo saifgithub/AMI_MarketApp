@@ -1638,15 +1638,38 @@ class ApiClient {
   /// (§5.4). [notional] is client-computed (a size chip's % × the run's
   /// current cash), per the design's "zero round trips" rule for the size
   /// chips themselves — this is the ticket's ONE network call before submit.
+  /// Sized by DOLLARS or by SHARES — exactly one, which is what the endpoint's
+  /// own validator enforces.
+  ///
+  /// A BUY sizes in dollars: the ticket picks a percentage of the book, which
+  /// is inherently a notional, and only the server has the price to turn that
+  /// into a share count.
+  ///
+  /// A SELL sizes in SHARES, because the thing being divided up is the
+  /// position, not the cash. "Sell 50%" means half the shares you hold — a
+  /// number the client already knows exactly — and routing it through a
+  /// dollar amount would re-derive it from a price and land a few thousandths
+  /// off, which at 100% is the difference between closing a position and
+  /// leaving a dust holding behind.
   Future<GameTradeQuote> gamesTradeQuote({
     required String runId,
     required String ticker,
     required String side,
-    required double notional,
+    double? notional,
+    double? quantity,
   }) async {
+    assert(
+      (notional == null) != (quantity == null),
+      'exactly one of notional or quantity',
+    );
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/games/runs/$runId/trade/quote',
-      data: {'ticker': ticker, 'side': side, 'notional': notional},
+      data: {
+        'ticker': ticker,
+        'side': side,
+        if (notional != null) 'notional': notional,
+        if (quantity != null) 'quantity': quantity,
+      },
     );
     return GameTradeQuote.fromJson(r.data!);
   }

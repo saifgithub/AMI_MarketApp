@@ -51,6 +51,10 @@ class FakeGamesApiClient extends ApiClient {
   final List<String> enterCadencesSeen = [];
   final List<({String ticker, String side, double notional})> quoteCallsSeen =
       [];
+
+  /// The `quantity` argument of each quote call — non-null exactly when the
+  /// caller sized in SHARES, which is the sell path.
+  final List<double?> quantityQuoteCallsSeen = [];
   final List<({String ticker, String side, double quantity})> tradeCallsSeen =
       [];
 
@@ -110,19 +114,25 @@ class FakeGamesApiClient extends ApiClient {
     required String runId,
     required String ticker,
     required String side,
-    required double notional,
+    double? notional,
+    double? quantity,
   }) async {
-    quoteCallsSeen.add((ticker: ticker, side: side, notional: notional));
+    // A SELL sizes in shares, a BUY in dollars — the fake resolves whichever
+    // it was given at the same fixed 180.00 so a test can assert on either.
+    final resolvedNotional = notional ?? (quantity! * 180.0);
+    quoteCallsSeen
+        .add((ticker: ticker, side: side, notional: resolvedNotional));
+    quantityQuoteCallsSeen.add(quantity);
     if (quoteError != null) throw quoteError!;
     return tradeQuote ??
         GameTradeQuote(
           ticker: ticker,
           side: side,
-          shares: notional / 180.0,
+          shares: quantity ?? resolvedNotional / 180.0,
           price: 180.0,
-          notional: notional,
-          estFee: notional * 0.001 < 1.0 ? 1.0 : notional * 0.001,
-          bookPercentage: (notional / 10000) * 100,
+          notional: resolvedNotional,
+          estFee: resolvedNotional * 0.001 < 1.0 ? 1.0 : resolvedNotional * 0.001,
+          bookPercentage: (resolvedNotional / 10000) * 100,
           priceSource: 'live',
           willQueue: false,
         );
