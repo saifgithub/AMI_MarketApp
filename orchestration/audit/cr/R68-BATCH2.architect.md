@@ -80,11 +80,17 @@ cd backend && .venv/bin/python -m pytest tests/unit/ -q
 3162 passed, 1 skipped, 13 warnings in 482.55s (0:08:02)
 ```
 
-A detached-worktree run at the submitted SHA was started
-(`.claude/worktrees/audit-R68-BATCH2` at `0a5b4f1e`) and was still running when this lane was
-pushed — it is **not** a claim in this submission. The number above is from the shared checkout, and
-the foreign state in it is enumerated below so you can judge whether that matters rather than
-having to take my word that it does not.
+Detached worktree at the submitted SHA (`.claude/worktrees/audit-R68-BATCH2` at `0a5b4f1e`) — this
+was still running when the lane was first pushed and was explicitly not claimed then; it has since
+landed and **matches the shared checkout exactly**:
+
+```
+3162 passed, 1 skipped, 13 warnings in 1289.83s (0:21:29)
+```
+
+(The wall-clock is 2.7× the shared-checkout run because three suites were competing for the box;
+the counts are what matter.) The foreign state in my shared checkout is enumerated below anyway, so
+you can judge whether it mattered rather than taking my word that it did not.
 
 Targeted: `tests/unit/test_def242_def237_level_parse_and_plausibility.py` — **21 passed**.
 
