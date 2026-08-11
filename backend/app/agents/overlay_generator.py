@@ -142,6 +142,15 @@ def _compliance_block(
         flags.append(f"- Liquid only. Avoid microcaps (< ${_MICROCAP_FLOOR_USD_M}M market cap) and illiquid names.")
     if c.ticker_blocklist:
         flags.append(f"- Ticker blocklist (NEVER advocate): {', '.join(c.ticker_blocklist)}")
+    else:
+        # CR149 Tier A.4 — state the empty case rather than omitting the line.
+        # `_bull_block` tells 18/18 Bull prompts to "Respect ticker_blocklist
+        # absolutely" while this branch rendered nothing when the list was empty,
+        # and 0 of 216 epoch prompts carried one — so the agent could not tell
+        # "there is no blocklist" from "the blocklist was not attached". Absence
+        # rendered as silence is the CR040 shape; measured consequence 0/18, so
+        # this is cheap correctness, not a fix for an observed failure.
+        flags.append("- Ticker blocklist: (none declared)")
     if c.ticker_allowlist is not None:
         flags.append(
             f"- Ticker allowlist (ONLY consider these): {', '.join(c.ticker_allowlist) or '(empty)'}"
@@ -277,15 +286,33 @@ def _market_analyst_block(m: Mandate) -> str:
         "## Role guidance — Market Analyst",
         "You read charts and technical signals. Given this mandate:",
     ]
+    # CR146 Tier A — four demands deleted here, each because the system cannot
+    # honour it. Every one measured 0/18 or 1/18 on the 2026-08-07 epoch, so the
+    # acceptance is that nothing else moves.
+    #
+    # 1. The ACTIVE branch asked for "short-timeframe signals (1H–weekly)" and
+    #    "entry/exit/stop levels" six lines under a base prompt that says "No
+    #    intraday (1H) timeframe — only the daily bars actually fetched", and
+    #    `_HISTORY_PERIOD = "3m"` fetches daily bars only. Unexercised on that
+    #    epoch (0/18 prompts — all 18 users were long_horizon), so this is a
+    #    code-read finding, not a measured failure. Deleted anyway: it is a
+    #    contradiction waiting for the first active-path user.
+    # 2/3. The risk-tier R:R floors (0/18 and 1/18) go with the R:R demand
+    #    itself, which Tier A removes from `market_analyst.md` — a floor on a
+    #    ratio the agent is no longer asked to produce is orphaned instruction.
+    # 4. The leverage line appeared in 18/18 prompts and **the simulator has no
+    #    leverage or margin concept at all** — no match for leverage/margin/borrow
+    #    in `sim_engine.py` or the models. An instruction about a capability the
+    #    product does not have is prompt weight with a hallucination surface
+    #    attached, and P2 applies with nothing to control.
     if m.path == Path.ACTIVE:
-        parts.append("- Emphasise short-timeframe signals (1H–weekly). Specify entry/exit/stop levels.")
+        parts.append("- Emphasise the shortest trend the daily bars can carry. Skip longer-horizon structure.")
     else:
         parts.append("- Emphasise monthly/quarterly trend. Skip noise-level intraday signals.")
     if m.risk_score <= 2:
-        parts.append("- Prefer mean-reversion setups, clear levels, R:R ≥ 3:1.")
+        parts.append("- Prefer mean-reversion setups and clearly stated levels.")
     elif m.risk_score >= 4:
-        parts.append("- Breakout/breakdown setups acceptable. R:R ≥ 2:1 OK.")
-    parts.append(f"- Never recommend leverage above what {m.max_drawdown_pct}% drawdown can absorb.")
+        parts.append("- Breakout/breakdown setups acceptable.")
     return "\n".join(parts)
 
 
@@ -293,7 +320,10 @@ def _news_block(m: Mandate) -> str:
     parts = [
         "## Role guidance — News Analyst",
         "You synthesise news impact. Given this mandate:",
-        "- Filter headlines to user's holdings + watchlist relevance.",
+        # CR147 Tier A.4 — the watchlist half is deleted, not softened: no
+        # watchlist is injected into any prompt, so "filter to it" named a list
+        # the agent has never been shown. Wiring it is Tier B.
+        "- Filter headlines to the user's holdings, which are in the portfolio block above.",
         "- Distinguish noise (pundit predictions) from signal (earnings, regulatory, M&A). Lead with signal.",
         "- You have no live macro-indicator calendar or regulatory-filings feed; "
         "reason about macro backdrop illustratively unless real headline data "
@@ -304,7 +334,17 @@ def _news_block(m: Mandate) -> str:
             "- Flag news of subsidiary acquisitions or business-line changes that may affect Sharia compliance."
         )
     if m.path == Path.LONG_HORIZON:
-        parts.append("- Weight macro structural news (Fed cycle, fiscal policy) higher than single events.")
+        # CR147 Tier A.5 — softened to the macro that actually exists. This asked
+        # the agent to WEIGHT the Fed cycle and fiscal policy against single
+        # events, while the only forward macro datum in the whole prompt is an
+        # FOMC countdown in days. Weighting something you were not given is an
+        # invitation to supply it from training memory, three lines under a
+        # notice that there is no macro feed.
+        parts.append(
+            "- Prefer structural reads over single events. The only forward macro "
+            "datum you are given is the FOMC countdown; anything else about the "
+            "cycle is your framing, not data, and must be said as such."
+        )
     else:
         parts.append("- Short-term catalyst news is primary.")
     return "\n".join(parts)

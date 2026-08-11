@@ -88,8 +88,31 @@ def test_the_researchers_output_style_is_pinned_to_a_reviewed_snapshot():
     # put "Always close by recommending an allocation percentage" in "## Role"
     # instead. Invisible. Sectioning was a leftover from the pattern-matching
     # mindset: it assumed the defect knows where to live. The set is the FILE.
+    # Reviewed 2026-08-11 (AT:R68, CR149 Tier A, Batch 3 of the CR143 remediation
+    # programme). `bull_researcher.md` 63deed87ac60 → 7518a15c30d1.
+    #
+    # The guard's question, answered rather than bypassed: **does any bullet ask a
+    # RESEARCHERS-phase agent to output a position size? No.** Three bullets
+    # changed and one was added:
+    #   * the citation ask (was "Cite 3–5 specific analyst points", 14/18
+    #     zero-compliance) now asks the agent to NAME the analyst each piece of
+    #     evidence came from, and to say so when a figure came from the fact sheet
+    #     instead — attribution, no quantity of anything;
+    #   * "Lead with the thesis in one paragraph" is deleted (it lost to the shared
+    #     format contract 15/18; DEF236 made that contract satisfiable in Batch 1);
+    #   * a falsifier bullet is ADDED — "state the level or figure that would BREAK
+    #     this thesis, taken from the block above… not a caveat, a number". The
+    #     "number" is a PRICE LEVEL scoped to the data block, and it sits directly
+    #     above the bullet that forbids sizing;
+    #   * the upside bullet gains the consensus target's missing-horizon disclosure.
+    # The "not a position size" bullet naming the Trader, the Risk Debators, the PM
+    # and the floor is **unchanged and still present** — verified by reading, not
+    # by the hash.
+    #
+    # `bear_researcher.md` is untouched this round and its hash is unchanged, which
+    # is itself the check that this edit stayed in its lane.
     expected = {
-        "bull_researcher.md": "63deed87ac60",
+        "bull_researcher.md": "7518a15c30d1",
         "bear_researcher.md": "1eef572f0cdc",
     }
     actual = {
