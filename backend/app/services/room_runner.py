@@ -2327,7 +2327,13 @@ def _annotate_direction_against_price(
 # is the whole reason FIND is deliberately loose and PARSE is strict.
 #
 # Bounded to what has actually been observed plus its trivial neighbours: one or
-# two `*`/`_`, either side of the optional bracket. The bound is conservatism,
+# two `*`/`_`, either side of the optional bracket — so the effective cap on a
+# consecutive run is FOUR, not two, because `_EMPHASIS` appears twice below.
+# `***STANCE: …***` (bold+italic, and the more plausible next drift than plain
+# bold was) therefore already works; 5+ leaks. That held by accident of the
+# pattern appearing twice until the DEF257 round-1 auditor built the mutation
+# this file's own table DESCRIBED rather than the one that was run — it survived,
+# and `test_the_repetition_bound_is_a_decision_too` now pins it. The bound is conservatism,
 # not protection — a mutation widening it to `-`, `>` and `#` breaks no test and
 # no realistic input, because everything it newly matches (`- STANCE: …`,
 # `> STANCE: …`) would arguably be the machine channel too. It stays narrow
