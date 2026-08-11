@@ -57,6 +57,16 @@ class Technicals(NamedTuple):
     support: float
     breakout: float
     price: float
+    # CR150 A2-family / CR145 Tier A — computed here since DEF227 and then
+    # DISCARDED. `trend` is derived from the two moving averages and `volume_tone`
+    # from the ratio, so every one of these numbers already exists at the moment
+    # the label is chosen; only the label shipped. An agent told "uptrend" and
+    # "above 20-day average" cannot say by how much, cannot see whether price is
+    # 0.4% or 14% above the 50-day, and reaches for training memory to fill the
+    # gap — which is the exact behaviour the grounding directive forbids.
+    sma_short: float
+    sma_long: float
+    volume_ratio: float
 
 
 def range_position_pct(price: float, support: float, breakout: float) -> int | None:
@@ -134,6 +144,10 @@ def compute_technicals(ticker: str) -> Technicals | None:
 
         recent_vol = sum(volumes[-_RECENT_VOLUME_WINDOW:]) / _RECENT_VOLUME_WINDOW
         baseline_vol = sum(volumes[-_VOLUME_BASELINE_WINDOW:]) / _VOLUME_BASELINE_WINDOW
+        # The ratio the tone is a bucketing of. 1.0 when the baseline is zero —
+        # the same case the tone calls "in-line", kept consistent so the number
+        # and the label can never disagree.
+        volume_ratio = round(recent_vol / baseline_vol, 2) if baseline_vol > 0 else 1.0
         if baseline_vol <= 0:
             volume_tone = "in-line with 20-day average"
         elif recent_vol > baseline_vol * 1.1:
@@ -156,6 +170,9 @@ def compute_technicals(ticker: str) -> Technicals | None:
             support=round(support, 2),
             breakout=round(breakout, 2),
             price=round(price, 2),
+            sma_short=round(sma_short, 2),
+            sma_long=round(sma_long, 2),
+            volume_ratio=volume_ratio,
         )
     except Exception as exc:
         logger.warn("technicals_compute_error", ticker=ticker, error=str(exc)[:200])
@@ -186,7 +203,14 @@ def build_technicals_context_block(ticker: str) -> str | None:
         f"─── LIVE TECHNICALS — {sym} ───\n"
         f"RSI(14): {t.rsi} ({t.rsi_tone})\n"
         f"Trend: {t.trend} (price vs. 20/50-day moving averages)\n"
-        f"Volume: {t.volume_tone}\n"
+        # CR146 Tier B — the numbers the two labels above are bucketings of.
+        # Both surfaces render them, so the Room and 1-on-1 cannot disagree
+        # about what "uptrend" or "above average" meant on the same day.
+        f"20-day SMA: ${t.sma_short}, 50-day SMA: ${t.sma_long}"
+        + (f" — last close is {(t.price - t.sma_long) / t.sma_long * 100:+.1f}% "
+           "vs the 50-day\n" if t.sma_long > 0 else "\n")
+        + f"Volume: {t.volume_tone} ({t.volume_ratio:.2f}× the 20-day average, "
+        f"5-day mean)\n"
         f"50-day range — low: ${t.support}, high: ${t.breakout}{position}\n"
         f"(Real yfinance OHLCV for {sym}, computed this call. Use these "
         f"numbers when discussing {sym}'s technicals. Do NOT claim MACD, a "

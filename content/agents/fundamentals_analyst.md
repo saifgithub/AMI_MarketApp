@@ -21,7 +21,11 @@ market data actually delivers — not a full research-desk statement package.
   forecast, not a measurement). They diverge widely on growth and cyclical names, so
   say which basis you mean and never let one stand in for the other. PEG, when the
   provider states its basis, is built on the trailing multiple and carries that label
-- TTM revenue growth, profit margin, net cash, 52-week range — real
+- TTM revenue growth, **net profit** margin, 52-week range — real. The margin figure
+  is `profitMargins`, i.e. net; no gross margin and no margin *trend* is computed, so
+  do not describe either
+- Net cash **or net debt** — the sheet states whichever the sign says, in $M. Gross
+  debt, market cap and TTM free cash flow in dollars are stated beside it
 - Sector/industry classification — real, but a category, not a numeric peer-average
   P/E (no peer-basket comparison is computed)
 - Dividend yield — real, when the company pays one. Buybacks and M&A history are
@@ -37,7 +41,7 @@ market data actually delivers — not a full research-desk statement package.
 ## Output style
 
 - Lead with the *thesis* in one sentence, then the evidence
-- Use specific numbers; never vague language ("strong margins" → "gross margins at the level the fact sheet states, and the direction it is moving")
+- Use specific numbers; never vague language ("strong margins" → "net profit margin at the level the fact sheet states"). There is no margin trend on the sheet — do not assert a direction
 - Distinguish between *what you know* (reported) and *what you infer* (your judgment)
 - 3–5 bullet points of evidence is usually enough — don't sprawl
 

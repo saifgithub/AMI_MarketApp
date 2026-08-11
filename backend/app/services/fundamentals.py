@@ -242,6 +242,11 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
     total_debt = _num("totalDebt")
     if total_cash is not None and total_debt is not None:
         out["net_cash"] = net_cash_millions(total_cash, total_debt)
+    # CR145 Tier A — GROSS debt beside the net figure. A netted number hides
+    # leverage: $40B cash against $45B debt and $1B against $6B both render as
+    # "net debt $5,000M", and they are not the same balance sheet.
+    if total_debt is not None:
+        out["total_debt"] = round(total_debt / 1_000_000)
 
     # Real valuation multiples beyond P/E (DEF053) — closes the "P/S,
     # EV/EBITDA, FCF yield" overclaim without a second provider.
@@ -271,6 +276,22 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
     fcf_yield = fcf_yield_pct(free_cash_flow, market_cap)
     if fcf_yield is not None:
         out["fcf_yield"] = fcf_yield
+    # CR145 Tier A / CR150 A2 — both of these were fetched only to be consumed
+    # as the numerator and denominator of the yield above, then discarded.
+    #
+    # Market cap is the one that matters most: the mandate carries "Liquid only.
+    # Avoid microcaps (< $500M market cap)" as a HARD constraint in 17 of 18
+    # prompts, while 0 of 18 fact sheets stated a market cap and the same prompt
+    # forbids recalling one from training memory. The rule was unfollowable by
+    # construction. Rendering this makes it checkable for the first time.
+    #
+    # FCF in dollars because a yield alone cannot distinguish a company earning
+    # $200M on a $5B cap from one earning $2B on a $50B cap, and "FCF
+    # consistency" is in the Fundamentals Analyst's own job description.
+    if market_cap is not None:
+        out["market_cap"] = round(market_cap / 1_000_000)
+    if free_cash_flow is not None:
+        out["free_cash_flow"] = round(free_cash_flow / 1_000_000)
 
     # Real capital allocation (dividends only — buybacks/M&A have no
     # yfinance field and stay undisclosed rather than fabricated).
@@ -411,6 +432,17 @@ def build_live_data_block(ticker: str) -> str | None:
     if "net_cash" in data:
         phrase = net_position_phrase(data["net_cash"])  # "net cash $X M" / "net debt $Y M"
         lines.append(phrase[:1].upper() + phrase[1:])
+    # CR145 Tier A — same three fields the Room renders, on the same line shape,
+    # so the two surfaces cannot state a different size for the same company.
+    size_parts = []
+    if "market_cap" in data:
+        size_parts.append(f"market cap ${data['market_cap']:,}M")
+    if "free_cash_flow" in data:
+        size_parts.append(f"FCF ${data['free_cash_flow']:,}M (TTM)")
+    if "total_debt" in data:
+        size_parts.append(f"gross debt ${data['total_debt']:,}M")
+    if size_parts:
+        lines.append("Company size: " + ", ".join(size_parts))
     if "low" in data and "high" in data:
         if data.get("week52_range_live"):
             lines.append(f"52-week range: ${data['low']}–${data['high']}")

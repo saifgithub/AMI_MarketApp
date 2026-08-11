@@ -865,10 +865,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
     # scaffolding line too (MINOR 3).
 
     lines = [header, ""]
-    lines.append(
-        f"Reference price: ${profile.get('base_price')}" if _is("base_price", "live")
-        else "Reference price: not available"
-    )
+    lines.append(_reference_price_line(profile, technicals_live))
     if _in_lane("fundamentals"):
         # DEF233: both bases, each gated on its own `field_state` entry — a
         # provider gap on one is stated, never papered over with the other.
@@ -886,6 +883,9 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                else "profit margin: not available")
         )
         lines.append(_net_position_line(profile))
+        size_line = _company_size_line(profile)
+        if size_line:
+            lines.append(size_line)
     if not _in_lane("technicals"):
         pass
     elif market_withheld:
@@ -907,7 +907,8 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         # is arithmetic on two numbers already on the sheet — it asserts
         # nothing new. DEF229(b): "breakout" is a 50-day high, named as one.
         lines.append(_range_line(profile))
-        lines.append(f"Volume: {profile.get('volume_tone')}")
+        lines.append(_moving_average_line(profile))
+        lines.append(_volume_line(profile))
     else:
         lines.append("Market technicals: not available this call.")
     # 52-week range is a fundamentals field, independent of technicals —
@@ -922,7 +923,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
     # ranges with less context than the sheet holds, which is not lane
     # discipline, just an accident of which fetcher happened to return it.
     if (_in_lane("fundamentals") or _in_lane("technicals")) and _is("week52", "live"):
-        lines.append(f"52-week range: ${profile.get('low')}–${profile.get('high')}")
+        lines.append(_week52_line(profile))
     if not _in_lane("news"):
         pass
     elif news_withheld_tenure:
@@ -1096,6 +1097,137 @@ def _analyst_line(profile: dict[str, Any]) -> str | None:
     )
 
 
+def _reference_price_line(profile: dict[str, Any], technicals_live: bool) -> str:
+    """CR146 Tier B — the sheet carried TWO prices for the same thing.
+
+    `Reference price` is the quote; `last close` is the final candle of the
+    3-month history. They diverge in **7 of 16** post-fix prompts — small (max
+    0.27%, NBIS $189.22 vs $189.31) but real, and one turn read them as two
+    facts: *"Price at $189.31 … and the final close $189.22 firmly inside this
+    wide band"*. Two prices on a sheet read by the agent whose entire job is
+    price.
+
+    Neither is deleted — they are genuinely different measurements from
+    different sources, and dropping one would hide a real provider disagreement.
+    They are RECONCILED: when both are live and they differ, one line says what
+    each is and that they are the same instrument. When they agree, or only one
+    exists, there is nothing to reconcile and the extra words would be noise.
+    """
+    if not _field_is_live(profile, "base_price"):
+        return "Reference price: not available"
+    base = profile.get("base_price")
+    line = f"Reference price: ${base}"
+    last_close = profile.get("last_close")
+    if not technicals_live or last_close is None:
+        return line
+    b, lc = _safe_num(base), _safe_num(last_close)
+    if b is None or lc is None or b == lc:
+        return line
+    return (
+        f"{line} (the live quote) and ${last_close} (the last close, final "
+        "candle of the 3-month history) — the SAME instrument measured by two "
+        "sources, not two facts. Use the last close for anything you compute."
+    )
+
+
+def _company_size_line(profile: dict[str, Any]) -> str | None:
+    """CR145 Tier A / CR150 A2 — market cap, FCF in dollars, gross debt.
+
+    All three were fetched and discarded: market cap and FCF were consumed as
+    the denominator and numerator of `fcf_yield`, gross debt inside `net_cash`.
+
+    Market cap is the one that changes what an agent can do. The mandate carries
+    *"Liquid only. Avoid microcaps (< $500M market cap)"* as a HARD constraint in
+    **17 of 18** prompts, **0 of 18** fact sheets stated a market cap, and the
+    same prompt forbids recalling one from training memory. The rule was
+    unfollowable by construction; this is what makes it checkable.
+
+    Each part is independently `field_state`-gated (CR104), and the line is
+    absent rather than labelled when nothing is live (DEF053).
+    """
+    parts = []
+    if profile.get("market_cap") is not None and _field_is_live(profile, "market_cap"):
+        parts.append(f"market cap ${profile['market_cap']:,}M")
+    if profile.get("free_cash_flow") is not None and _field_is_live(profile, "free_cash_flow"):
+        parts.append(f"FCF ${profile['free_cash_flow']:,}M (TTM)")
+    if profile.get("total_debt") is not None and _field_is_live(profile, "total_debt"):
+        # Gross, beside the netted figure on the line above. A netted number
+        # hides leverage: $40B cash against $45B debt and $1B against $6B both
+        # render as "net debt $5,000M", and they are not the same balance sheet.
+        parts.append(f"gross debt ${profile['total_debt']:,}M")
+    if not parts:
+        return None
+    return "Company size (LIVE): " + ", ".join(parts)
+
+
+def _week52_line(profile: dict[str, Any]) -> str:
+    """CR150 A3 — the 52-week range with where price sits against BOTH ends.
+
+    Arithmetic on numbers already on the sheet, same justification as DEF228 and
+    `_asymmetry_line`. This is specifically the figure the Bear reaches for and
+    gets wrong: on SNDK it wrote **83%** for an actual **−48.0%** below the high,
+    and that became the stance headline the comb rendered.
+
+    Anchored on the same price `_asymmetry_line` uses and named the same way, so
+    the two derived lines can never disagree about what "price" meant.
+    """
+    low, high = profile.get("low"), profile.get("high")
+    base = f"52-week range: ${low}–${high}"
+    anchor, anchor_name = _price_anchor(profile)
+    lo, hi = _safe_num(low), _safe_num(high)
+    if anchor is None or lo is None or hi is None or lo <= 0 or hi <= 0:
+        return base
+    return (
+        f"{base}; from {anchor_name} ${anchor}: "
+        f"{(anchor - hi) / hi * 100:+.1f}% vs the high, "
+        f"{(anchor - lo) / lo * 100:+.1f}% vs the low"
+    )
+
+
+def _moving_average_line(profile: dict[str, Any]) -> str:
+    """CR146 Tier B — the two averages `trend` is a bucketing of.
+
+    `compute_technicals` derives `trend` from `price > sma_short > sma_long` and
+    then throws both away, so an agent told *"uptrend"* cannot say whether price
+    is 0.4% or 14% above the 50-day. They ride `field_state["technicals"]` with
+    the rest of the block, so this is only called when that is live.
+    """
+    short, long = _safe_num(profile.get("sma_short")), _safe_num(profile.get("sma_long"))
+    if short is None or long is None:
+        return f"Trend: {profile.get('trend')} (20/50-day moving averages not available)"
+    line = f"20-day SMA: ${short}, 50-day SMA: ${long}"
+    anchor, _name = _price_anchor(profile)
+    if anchor is not None and long > 0:
+        line += f" — last close is {(anchor - long) / long * 100:+.1f}% vs the 50-day"
+    return line
+
+
+def _volume_line(profile: dict[str, Any]) -> str:
+    """The volume ratio the tone is a bucketing of (>1.1 / <0.9 / else). Same
+    reason as `_moving_average_line`: "above 20-day average" is true at 1.11×
+    and at 9×, and those are not the same tape."""
+    ratio = _safe_num(profile.get("volume_ratio"))
+    tone = profile.get("volume_tone")
+    if ratio is None:
+        return f"Volume: {tone}"
+    return f"Volume: {tone} ({ratio:.2f}× the 20-day average, 5-day mean)"
+
+
+def _price_anchor(profile: dict[str, Any]) -> tuple[float | None, str]:
+    """The ONE price every derived line measures from, and its name.
+
+    DEF228 happened because the fact sheet carries two prices — `Reference
+    price` (fundamentals) and `last close` (technicals) — and a derived figure
+    took one half from each. Every derived line routes through here so they
+    cannot disagree, and each one prints the name so the reader knows which.
+    """
+    if _field_is_live(profile, "technicals") and profile.get("last_close"):
+        return _safe_num(profile.get("last_close")), "the last close"
+    if _field_is_live(profile, "base_price") and profile.get("base_price"):
+        return _safe_num(profile.get("base_price")), "the reference price"
+    return None, ""
+
+
 def _asymmetry_line(profile: dict[str, Any]) -> str | None:
     """CR151 Tier A — the up/down asymmetry, computed rather than left to be
     joined wrong.
@@ -1121,12 +1253,10 @@ def _asymmetry_line(profile: dict[str, Any]) -> str | None:
     upside clause, not the line.
     """
     technicals_live = _field_is_live(profile, "technicals")
-    if technicals_live and profile.get("last_close"):
-        anchor, anchor_name = _safe_num(profile.get("last_close")), "the last close"
-    elif _field_is_live(profile, "base_price") and profile.get("base_price"):
-        anchor, anchor_name = _safe_num(profile.get("base_price")), "the reference price"
-    else:
-        return None
+    # CR146 Tier B: `_price_anchor` is the single source of truth for which of
+    # the sheet's two prices a derived line measured from — shared with
+    # `_week52_line` and `_moving_average_line` so they cannot disagree.
+    anchor, anchor_name = _price_anchor(profile)
     if not anchor or anchor <= 0:
         return None
 

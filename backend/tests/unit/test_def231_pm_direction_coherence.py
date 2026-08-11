@@ -882,6 +882,7 @@ def live_technicals(monkeypatch):
     monkeypatch.setattr(room_runner, "compute_technicals", lambda t: Technicals(
         rsi=44, rsi_tone="neutral", trend="consolidating", volume_tone="average",
         support=_SNDK_RANGE_LOW, breakout=_SNDK_RANGE_HIGH, price=_SNDK_CLOSE,
+        sma_short=1230.0, sma_long=1195.0, volume_ratio=1.02,  # consolidating
     ))
     monkeypatch.setattr(room_runner, "fetch_live_news", lambda t: [])
     monkeypatch.setattr(room_runner, "fetch_live_sentiment", lambda t: None)

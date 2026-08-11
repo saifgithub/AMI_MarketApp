@@ -88,6 +88,11 @@ _FUND_SENTINEL: dict = {
     "industry": "DRILLSENT",
     "analyst_target_price": 488.12,
     "analyst_rating": "STRONGSENT",
+    # CR145 Tier A — fetched since DEF053, consumed only inside fcf_yield and
+    # net_cash, rendered from AT:R68.
+    "market_cap": 1234567,
+    "free_cash_flow": 45678,
+    "total_debt": 8901,
 }
 
 _TECH_SENTINEL = Technicals(
@@ -98,6 +103,10 @@ _TECH_SENTINEL = Technicals(
     support=333.11,
     breakout=888.99,
     price=444.22,
+    # CR146 Tier B — the numbers `trend` and `volume_tone` are bucketings OF.
+    sma_short=411.77,
+    sma_long=422.88,
+    volume_ratio=1.47,
 )
 
 _SOCIAL_SENTINEL = SocialSentiment(
@@ -394,6 +403,11 @@ def env(monkeypatch):
             "profit_margin": "41.29", "net_cash": "944M", "low": "155.4",
             "high": "402.9", "price_to_sales": "7.31x", "ev_to_ebitda": "19.42x",
             "peg_ratio": "PEG 2.15", "fcf_yield": "3.87", "dividend_yield": "1.63",
+            # CR145 Tier A — thousands-separated $M, which is also what makes
+            # the mandate's "< $500M market cap" rule checkable at all.
+            "market_cap": "market cap $1,234,567M",
+            "free_cash_flow": "FCF $45,678M",
+            "total_debt": "gross debt $8,901M",
             # DEF233 — both P/E bases render on both surfaces, and the PEG
             # carries the denominator label the fetcher supplied.
             "forward_pe": "12.34 forward", "peg_basis": "(PEGBASISSENT basis)",
@@ -406,6 +420,9 @@ def env(monkeypatch):
             # DEF228: the last close, rendered on both surfaces as the range's
             # position anchor (`last close $444.22`).
             "price": "444.22",
+            # CR146 Tier B: computed since DEF227, discarded until AT:R68.
+            "sma_short": "411.77", "sma_long": "422.88",
+            "volume_ratio": "1.47",
         },
         "social": {
             "buzz_score": "buzz score 88", "sentiment_score": "+0.42",

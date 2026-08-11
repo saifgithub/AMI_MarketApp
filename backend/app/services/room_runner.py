@@ -352,6 +352,11 @@ _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
     "forward_pe", "price_to_sales", "ev_to_ebitda", "peg_ratio", "peg_basis",
     "fcf_yield", "dividend_yield", "sector", "industry",
     "analyst_target_price", "analyst_rating",
+    # CR145 Tier A — fetched since DEF053 and consumed only as the FCF-yield
+    # numerator/denominator and inside `net_cash`, never rendered. Optional
+    # rather than core: yfinance omits any of the three for some names, and an
+    # absence there is normal, not a provider outage.
+    "market_cap", "free_cash_flow", "total_debt",
 )
 
 
@@ -533,6 +538,13 @@ def _profile_for_ticker(
                 # range instead of making the agent join to a separately-
                 # sourced quote several lines up.
                 profile["last_close"] = technicals.price
+                # CR150 A2-family: the numbers `trend` and `volume_tone` are
+                # bucketings OF. They ride `field_state["technicals"]` with the
+                # rest of the block — yfinance cannot return an SMA without the
+                # closes the trend read is derived from.
+                profile["sma_short"] = technicals.sma_short
+                profile["sma_long"] = technicals.sma_long
+                profile["volume_ratio"] = technicals.volume_ratio
                 field_state["technicals"] = LiveDataState.LIVE.value
             else:
                 field_state["technicals"] = LiveDataState.UNAVAILABLE.value

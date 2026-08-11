@@ -52,6 +52,10 @@ _TECHNICALS = Technicals(
     rsi=67, rsi_tone="neither overbought nor oversold", trend="uptrend",
     volume_tone="above 20-day average", support=90.0, breakout=110.0,
     price=105.0,
+    # CR146 Tier B — kept coherent with the labels above: price > 20d > 50d is
+    # what "uptrend" means, and 1.35 is what "above 20-day average" is a
+    # bucketing of. A fixture whose number and label disagree would test nothing.
+    sma_short=102.0, sma_long=98.0, volume_ratio=1.35,
 )
 
 

@@ -1177,6 +1177,7 @@ def test_profile_overlays_live_technicals_when_enabled(monkeypatch):
         rsi=67, rsi_tone="neither overbought nor oversold", trend="uptrend",
         volume_tone="above 20-day average", support=90.0, breakout=110.0,
         price=105.0,
+        sma_short=102.0, sma_long=98.0, volume_ratio=1.35,  # price > 20d > 50d
     )
     monkeypatch.setattr(room_runner, "compute_technicals", lambda t: real)
 
@@ -1242,6 +1243,7 @@ def test_profile_technicals_independent_of_fundamentals_overlay(monkeypatch):
         rsi=50, rsi_tone="neither overbought nor oversold", trend="consolidating",
         volume_tone="in-line with 20-day average", support=90.0, breakout=110.0,
         price=100.0,
+        sma_short=100.5, sma_long=99.5, volume_ratio=1.0,  # no alignment either way
     )
     monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
     monkeypatch.setattr(room_runner, "compute_technicals", lambda t: real)

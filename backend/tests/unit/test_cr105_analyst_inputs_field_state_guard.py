@@ -66,10 +66,26 @@ _CLAIMED_REAL_INPUTS = [
     # so both must resolve to a field_state key `_format_profile` can source.
     ("fundamentals_analyst", "P/E arrives on **two bases**", "forward_pe"),
     ("fundamentals_analyst", "is built on the trailing multiple and carries that label", "peg_basis"),
-    ("fundamentals_analyst", "TTM revenue growth, profit margin, net cash, 52-week range", "rev_growth"),
-    ("fundamentals_analyst", "TTM revenue growth, profit margin, net cash, 52-week range", "profit_margin"),
-    ("fundamentals_analyst", "TTM revenue growth, profit margin, net cash, 52-week range", "net_cash"),
-    ("fundamentals_analyst", "TTM revenue growth, profit margin, net cash, 52-week range", "week52"),
+    # CR145 Tier A (AT:R68) split this one bullet in two and corrected two
+    # claims inside it, so the mapping follows the wording — the guard did its
+    # job by refusing to let the .md drift away from it silently.
+    #
+    # The margin claim was WRONG before, not merely reworded: the .md said
+    # "profit margin" while the output-style bullet asked for "gross margins …
+    # and the direction it is moving", and `fundamentals.py` renders
+    # `profitMargins` (NET) with no trend of any kind. It now says "net profit"
+    # and states that no direction is available.
+    ("fundamentals_analyst", "TTM revenue growth, **net profit** margin, 52-week range", "rev_growth"),
+    ("fundamentals_analyst", "TTM revenue growth, **net profit** margin, 52-week range", "profit_margin"),
+    ("fundamentals_analyst", "TTM revenue growth, **net profit** margin, 52-week range", "week52"),
+    # "net cash" alone was also wrong: `_net_position_line` emits net cash OR
+    # net debt from the sign, and the analyst was told only one of the two.
+    ("fundamentals_analyst", "Net cash **or net debt**", "net_cash"),
+    # CR145 Tier A — fetched since DEF053, rendered from AT:R68. Claimed in the
+    # .md, so each must resolve to a field_state key `_format_profile` sources.
+    ("fundamentals_analyst", "Gross\n  debt, market cap and TTM free cash flow in dollars", "market_cap"),
+    ("fundamentals_analyst", "Gross\n  debt, market cap and TTM free cash flow in dollars", "free_cash_flow"),
+    ("fundamentals_analyst", "Gross\n  debt, market cap and TTM free cash flow in dollars", "total_debt"),
     ("fundamentals_analyst", "Sector/industry classification", "sector"),
     ("fundamentals_analyst", "Sector/industry classification", "industry"),
     ("fundamentals_analyst", "Dividend yield", "dividend_yield"),
