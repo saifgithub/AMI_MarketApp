@@ -4860,6 +4860,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Still on the old version, or AMI couldn\'t be reached. Try again in a moment.'**
   String get versionGateOfflineRetryHint;
+
+  /// CR109 slice 3c/4. App-bar title of the field board — where you stand against every other entrant in your run. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Standings'**
+  String get gamesBoardTitle;
+
+  /// CR109. Button on the run screen that opens the field board. Upper-case in EN by HexButton convention; translators should use their language's natural emphasis rather than forcing caps. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SEE THE FIELD'**
+  String get gamesBoardCta;
+
+  /// CR109 §6.1. The player's own standing, shown at the top of the board. Rank is on percentage return only, never on money. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re #{rank} of {count}'**
+  String gamesBoardYouAre(int rank, int count);
+
+  /// CR109. Shown instead of a position when the player's run has no completed US close, so there is nothing to rank. Deliberately not '0%' and not 'last' — unmeasured is a different fact from flat. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Not ranked yet'**
+  String get gamesBoardNotRankedYet;
+
+  /// CR109 §10. Empty-state line for a field where no entrant has a completed close yet. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Standings open after the first US close.'**
+  String get gamesBoardStandingsClosed;
+
+  /// CR109 §10. Said out loud so a player watching an unchanged number all afternoon does not conclude the board is broken (CR040 degrade-loudly applies to staleness too). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Standings move once per US close — not tick by tick.'**
+  String get gamesBoardUpdatesNote;
+
+  /// CR109 §11.2. Chip marking an entrant as an AMI-run strategy desk rather than a person. Disclosure is mandatory on every surface that renders an entrant. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'DESK'**
+  String get gamesBoardDeskChip;
+
+  /// CR109. Chip marking the player's own row on the board. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'YOU'**
+  String get gamesBoardYouChip;
+
+  /// CR109. Sub-label on an entrant row whose run has not been measured — shown in place of a return percentage. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No close yet'**
+  String get gamesBoardNoCloseYet;
+
+  /// CR109. Entrant count for the field, shown under the board title. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 entrant} other{{count} entrants}}'**
+  String gamesBoardEntrants(int count);
+
+  /// CR109 §11.2. How many of the entrants are AMI-run strategy desks. Disclosed at field level as well as per row. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{including 1 house desk} other{including {count} house desks}}'**
+  String gamesBoardDeskCount(int count);
+
+  /// CR109. Board empty state. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No one has entered this field yet.'**
+  String get gamesBoardEmpty;
+
+  /// CR109 §11.2. Title of the sheet listing every AMI-run strategy desk and its published rule. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'House desks'**
+  String get gamesDesksTitle;
+
+  /// CR109 §11.2. Disclosure copy for the house desks. Must never imply a desk is a person, and must say the performance is real rather than generated to look plausible. Say AMI, never 'the AI'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Desks are AMI-run strategies, not people. Every desk\'s rule is published, and it trades real prices and pays the same costs you do.'**
+  String get gamesDesksIntro;
+
+  /// CR109 §11.2. Header above one desk's published selection rule. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'How this desk trades'**
+  String get gamesDeskRuleTitle;
+
+  /// CR109 §11.2. The size of the published universe a desk selects from — part of making a desk reproducible by hand. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Selects from 1 published name} other{Selects from {count} published names}}'**
+  String gamesDeskUniverse(int count);
 }
 
 class _AppLocalizationsDelegate

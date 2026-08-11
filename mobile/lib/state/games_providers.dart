@@ -69,6 +69,32 @@ Future<bool> cancelGamesQueuedOrder(
   return cancelled;
 }
 
+/// The field board — `GET /v1/games/runs/{run_id}/board`.
+///
+/// Deliberately NOT folded into [gamesRunDetailProvider]: the board reads
+/// every entrant's NAV series, so it is the heaviest games call there is, and
+/// the run detail is re-read on every size drag of the ticket.
+///
+/// `.autoDispose` and no polling. The standings move once per US close (design
+/// §10 — one rank beat per close, never per tick), so a timer here would spend
+/// battery re-fetching a number that cannot have changed, and would make a
+/// contest feel like a slot machine besides.
+final gamesBoardProvider =
+    FutureProvider.autoDispose.family<GameBoard, String>((ref, runId) async {
+  final api = ref.watch(apiClientProvider);
+  return api.gamesBoard(runId);
+});
+
+/// The house desks' published rules — `GET /v1/games/desks`.
+///
+/// Not `.autoDispose`: the roster changes only when we ship a new desk, and
+/// the rules sheet is opened from several places (board row, entry screen,
+/// Close). Keeping it alive means the second open is instant.
+final gamesDesksProvider = FutureProvider<List<GameDeskProfile>>((ref) async {
+  final api = ref.watch(apiClientProvider);
+  return api.gamesDesks();
+});
+
 // ── The Close and the Record (CR109 slice 3) ────────────────────────────
 
 /// `GET /v1/games/runs/{run_id}/close` — read once per Close screen visit;

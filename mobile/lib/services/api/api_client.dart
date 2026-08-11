@@ -1734,6 +1734,28 @@ class ApiClient {
     return GameCloseResult.fromJson(r.data!);
   }
 
+  /// The field board — where you stand against everyone else in the run.
+  ///
+  /// Ranks on % TWR only (design §6.1's written-down invariant), moves once
+  /// per US close rather than per tick (§10), and carries no currency amount
+  /// for any entrant including you.
+  Future<GameBoard> gamesBoard(String runId) async {
+    final r =
+        await _dio.get<Map<String, dynamic>>('/v1/games/runs/$runId/board');
+    return GameBoard.fromJson(r.data!);
+  }
+
+  /// The house desks' published rules (design §11.2). The rule text comes
+  /// from the server, not from app copy — a rule that lived in the client
+  /// would drift from the code that actually picks the names, and a stale
+  /// published rule is worse than none.
+  Future<List<GameDeskProfile>> gamesDesks() async {
+    final r = await _dio.get<dynamic>('/v1/games/desks');
+    return _listBody(r.data, 'desks')
+        .map((e) => GameDeskProfile.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   /// Career points, forfeit count and run history — the Record's
   /// "identity / movement / history" surface (design §13.3).
   Future<GameRecord> gamesRecord() async {

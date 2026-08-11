@@ -165,6 +165,79 @@ const _liveRunDetail = <String, dynamic>{
   'holdings': <dynamic>[],
 };
 
+
+/// Verbatim from the `board_for_run` serializer, captured 2026-08-11 with a
+/// four-entrant field: two house desks, the player, and one entrant with no
+/// completed close. Pinned before the route shipped to Alpha, from the same
+/// Python that will serve it — re-pin from a live curl after the promote.
+const _liveBoard = <String, dynamic>{
+  'field_id': '898ff080-c83c-4cd6-9925-f39b86c168cf',
+  'cadence': 'week',
+  'state': 'entry_open',
+  'starts_on': '2026-08-10',
+  'ends_on': '2026-08-14',
+  'benchmark_ticker': 'SPY',
+  'entrant_count': 4,
+  'desk_count': 2,
+  'standings_open': true,
+  'your_rank': 2,
+  'your_twr_pct': 2.0,
+  'rows': [
+    {
+      'handle': 'Momentum Desk',
+      'is_desk': true,
+      'desk_key': 'momentum',
+      'desk_rule': 'Equal-weights the 5 names in the published universe with '
+          'the highest trailing 12-month price return, measured at the open.',
+      'twr_pct': 4.5,
+      'closes_counted': 1,
+      'is_you': false,
+      'rank': 1,
+    },
+    {
+      'handle': 'careful-vector',
+      'is_desk': false,
+      'desk_key': null,
+      'desk_rule': null,
+      'twr_pct': 2.0,
+      'closes_counted': 1,
+      'is_you': true,
+      'rank': 2,
+    },
+    {
+      'handle': 'Index Desk',
+      'is_desk': true,
+      'desk_key': 'index',
+      'desk_rule': 'Holds the benchmark (SPY) for the whole run. Never trades again.',
+      'twr_pct': -0.2,
+      'closes_counted': 1,
+      'is_you': false,
+      'rank': 3,
+    },
+    {
+      'handle': 'brand-new',
+      'is_desk': false,
+      'desk_key': null,
+      'desk_rule': null,
+      'twr_pct': null,
+      'closes_counted': 0,
+      'is_you': false,
+      'rank': null,
+    },
+  ],
+  'as_of': '2026-08-11T13:17:01.269620+00:00',
+  'updates': 'daily_close',
+};
+
+/// Verbatim from `GET /v1/games/desks` (first entry, universe truncated for
+/// readability — the length assertion below is what matters).
+const _liveDesk = <String, dynamic>{
+  'key': 'index',
+  'name': 'Index Desk',
+  'rule': 'Holds the benchmark (SPY) for the whole run. Never trades again.',
+  'universe': ['AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL'],
+};
+
 void main() {
   group('queued-order payload', () {
     test('reads the id under `id`, which is what the router returns', () {
@@ -441,6 +514,71 @@ void main() {
             'path §5.1 calls NORMAL for this audience',
       );
       expect(q.mayQueue, isTrue);
+    });
+  });
+
+  group('the field board — GET /v1/games/runs/{id}/board', () {
+    test('parses the live envelope', () {
+      final board = GameBoard.fromJson(_liveBoard);
+      expect(board.fieldId, '898ff080-c83c-4cd6-9925-f39b86c168cf');
+      expect(board.cadence, 'week');
+      expect(board.entrantCount, 4);
+      expect(board.deskCount, 2);
+      expect(board.humanCount, 2);
+      expect(board.standingsOpen, isTrue);
+      expect(board.yourRank, 2);
+      expect(board.yourTwrPct, 2.0);
+      expect(board.rows, hasLength(4));
+      expect(board.measuredCount, 3);
+      expect(board.updates, 'daily_close');
+      expect(board.benchmarkTicker, 'SPY');
+      expect(board.endsOn, DateTime.parse('2026-08-14'));
+    });
+
+    test('a null twr_pct stays null — it is not a 0.00% run', () {
+      final board = GameBoard.fromJson(_liveBoard);
+      final fresh = board.rows.firstWhere((r) => r.handle == 'brand-new');
+      expect(fresh.twrPct, isNull);
+      expect(fresh.rank, isNull);
+      expect(fresh.isMeasured, isFalse);
+      expect(fresh.closesCounted, 0);
+    });
+
+    test('a desk arrives marked, with the rule the server published', () {
+      final board = GameBoard.fromJson(_liveBoard);
+      final desk = board.rows.firstWhere((r) => r.handle == 'Momentum Desk');
+      expect(desk.isDesk, isTrue);
+      expect(desk.deskKey, 'momentum');
+      expect(desk.deskRule, contains('trailing 12-month'));
+
+      final human = board.rows.firstWhere((r) => r.handle == 'careful-vector');
+      expect(human.isDesk, isFalse);
+      expect(human.deskRule, isNull);
+      expect(human.isYou, isTrue);
+    });
+
+    test('the wire carries no currency field for any entrant (§6.1)', () {
+      for (final row in _liveBoard['rows'] as List) {
+        for (final key in (row as Map).keys) {
+          expect(
+            RegExp(r'cash|nav|value|balance|capital').hasMatch(key as String),
+            isFalse,
+            reason: 'board rows rank on % TWR only, never money: $key',
+          );
+        }
+      }
+    });
+
+    test('no mirror is on the wire (§10.4 is private measurement)', () {
+      expect(_liveBoard.toString(), isNot(contains('counterfactual')));
+    });
+
+    test('a desk profile parses with its rule and universe', () {
+      final desk = GameDeskProfile.fromJson(_liveDesk);
+      expect(desk.key, 'index');
+      expect(desk.name, 'Index Desk');
+      expect(desk.rule, contains('benchmark'));
+      expect(desk.universe, contains('AAPL'));
     });
   });
 }

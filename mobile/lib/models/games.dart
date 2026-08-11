@@ -937,3 +937,158 @@ class GamePersonalRecord {
         achievedAt: _parseDate(j['achieved_at'] ?? j['closed_at']),
       );
 }
+
+/// One row on the field board — `GET /v1/games/runs/{id}/board`.
+///
+/// **[twrPct] and [rank] are nullable and must stay that way.** An entrant
+/// whose run has no completed close yet has not been measured; that is a
+/// different fact from being exactly flat, and from being last. Defaulting
+/// either to a number is the `?? 0` class that has now cost this feature nine
+/// separate defects — the queue note that never rendered because `will_queue`
+/// defaulted false, the "0 days to deploy it" from an absent `days_left`, the
+/// second order that sized against zero cash mid-refresh. Same shape, one
+/// level down each time. A dash is the honest render.
+///
+/// [isDesk] is not decoration. Design §11.2 makes disclosure a hard
+/// requirement: a player who copies an undisclosed house account believes they
+/// are copying a person, and once a screenshot leaves the app there is no
+/// disclosure surface left. The server sends the desk's published rule with
+/// every row so the board can show it in place.
+class GameBoardRow {
+  const GameBoardRow({
+    required this.handle,
+    required this.isDesk,
+    this.deskKey,
+    this.deskRule,
+    this.twrPct,
+    this.rank,
+    this.closesCounted = 0,
+    this.isYou = false,
+  });
+
+  final String handle;
+  final bool isDesk;
+  final String? deskKey;
+  final String? deskRule;
+
+  /// `null` = not measured yet. NEVER coerce to 0.
+  final double? twrPct;
+
+  /// `null` = unranked (no close yet). NEVER coerce to `entrantCount`.
+  final int? rank;
+
+  final int closesCounted;
+  final bool isYou;
+
+  bool get isMeasured => twrPct != null;
+
+  factory GameBoardRow.fromJson(Map<String, dynamic> j) => GameBoardRow(
+        handle: j['handle'] as String? ?? '—',
+        isDesk: j['is_desk'] == true,
+        deskKey: j['desk_key'] as String?,
+        deskRule: j['desk_rule'] as String?,
+        twrPct: (j['twr_pct'] as num?)?.toDouble(),
+        rank: (j['rank'] as num?)?.toInt(),
+        closesCounted: (j['closes_counted'] as num?)?.toInt() ?? 0,
+        isYou: j['is_you'] == true,
+      );
+}
+
+/// The field board — the answer to *"How do I see my current standing against
+/// the rest of the field?"*
+///
+/// Ranks on % TWR only. Design §6.1 writes that down as an invariant because
+/// a board that ranks absolute AMI Cash makes capital tier pay-to-win, so
+/// this model carries no currency field at all — there is nothing here to
+/// render money from even by accident.
+///
+/// [updates] is `daily_close`: the standings move once per US close, never per
+/// tick (§10). The screen says so, because a player watching an unchanged
+/// number all afternoon otherwise concludes the feature is broken.
+class GameBoard {
+  const GameBoard({
+    required this.fieldId,
+    required this.cadence,
+    required this.rows,
+    this.state = 'live',
+    this.startsOn,
+    this.endsOn,
+    this.benchmarkTicker = 'SPY',
+    this.entrantCount = 0,
+    this.deskCount = 0,
+    this.standingsOpen = false,
+    this.yourRank,
+    this.yourTwrPct,
+    this.updates = 'daily_close',
+  });
+
+  final String fieldId;
+  final String cadence;
+  final String state;
+  final DateTime? startsOn;
+  final DateTime? endsOn;
+  final String benchmarkTicker;
+  final int entrantCount;
+  final int deskCount;
+
+  /// False until at least one entrant has a completed close. The screen must
+  /// render "standings open after the first close" rather than a field of
+  /// zeroes that reads as everyone tied and flat.
+  final bool standingsOpen;
+
+  final int? yourRank;
+  final double? yourTwrPct;
+  final List<GameBoardRow> rows;
+  final String updates;
+
+  int get humanCount => entrantCount - deskCount;
+  int get measuredCount => rows.where((r) => r.isMeasured).length;
+
+  factory GameBoard.fromJson(Map<String, dynamic> j) => GameBoard(
+        fieldId: j['field_id'] as String? ?? '',
+        cadence: j['cadence'] as String? ?? 'week',
+        state: j['state'] as String? ?? 'live',
+        startsOn: _parseDate(j['starts_on']),
+        endsOn: _parseDate(j['ends_on']),
+        benchmarkTicker: j['benchmark_ticker'] as String? ?? 'SPY',
+        entrantCount: (j['entrant_count'] as num?)?.toInt() ?? 0,
+        deskCount: (j['desk_count'] as num?)?.toInt() ?? 0,
+        standingsOpen: j['standings_open'] == true,
+        yourRank: (j['your_rank'] as num?)?.toInt(),
+        yourTwrPct: (j['your_twr_pct'] as num?)?.toDouble(),
+        rows: ((j['rows'] as List?) ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map(GameBoardRow.fromJson)
+            .toList(),
+        updates: j['updates'] as String? ?? 'daily_close',
+      );
+}
+
+/// One house desk's published rule — `GET /v1/games/desks`.
+///
+/// Disclosure is the feature (§11.2), so the rule and the universe are wire
+/// fields rather than app copy: a player must be able to reproduce any desk's
+/// basket by hand, and a rule that lives only in the client would drift from
+/// the code that actually selects the names.
+class GameDeskProfile {
+  const GameDeskProfile({
+    required this.key,
+    required this.name,
+    required this.rule,
+    this.universe = const [],
+  });
+
+  final String key;
+  final String name;
+  final String rule;
+  final List<String> universe;
+
+  factory GameDeskProfile.fromJson(Map<String, dynamic> j) => GameDeskProfile(
+        key: j['key'] as String? ?? '',
+        name: j['name'] as String? ?? '',
+        rule: j['rule'] as String? ?? '',
+        universe: ((j['universe'] as List?) ?? const [])
+            .whereType<String>()
+            .toList(),
+      );
+}

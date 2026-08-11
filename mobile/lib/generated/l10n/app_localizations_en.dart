@@ -2839,4 +2839,81 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get versionGateOfflineRetryHint =>
       'Still on the old version, or AMI couldn\'t be reached. Try again in a moment.';
+
+  @override
+  String get gamesBoardTitle => 'Standings';
+
+  @override
+  String get gamesBoardCta => 'SEE THE FIELD';
+
+  @override
+  String gamesBoardYouAre(int rank, int count) {
+    return 'You\'re #$rank of $count';
+  }
+
+  @override
+  String get gamesBoardNotRankedYet => 'Not ranked yet';
+
+  @override
+  String get gamesBoardStandingsClosed =>
+      'Standings open after the first US close.';
+
+  @override
+  String get gamesBoardUpdatesNote =>
+      'Standings move once per US close — not tick by tick.';
+
+  @override
+  String get gamesBoardDeskChip => 'DESK';
+
+  @override
+  String get gamesBoardYouChip => 'YOU';
+
+  @override
+  String get gamesBoardNoCloseYet => 'No close yet';
+
+  @override
+  String gamesBoardEntrants(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entrants',
+      one: '1 entrant',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String gamesBoardDeskCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'including $count house desks',
+      one: 'including 1 house desk',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get gamesBoardEmpty => 'No one has entered this field yet.';
+
+  @override
+  String get gamesDesksTitle => 'House desks';
+
+  @override
+  String get gamesDesksIntro =>
+      'Desks are AMI-run strategies, not people. Every desk\'s rule is published, and it trades real prices and pays the same costs you do.';
+
+  @override
+  String get gamesDeskRuleTitle => 'How this desk trades';
+
+  @override
+  String gamesDeskUniverse(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Selects from $count published names',
+      one: 'Selects from 1 published name',
+    );
+    return '$_temp0';
+  }
 }

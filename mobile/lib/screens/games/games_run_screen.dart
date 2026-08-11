@@ -33,6 +33,7 @@ library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/games.dart';
+import 'package:ami_trade/screens/games/games_board_screen.dart';
 import 'package:ami_trade/screens/games/games_trade_ticket_screen.dart';
 import 'package:ami_trade/state/games_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -113,6 +114,19 @@ class GamesRunScreen extends ConsumerWidget {
                     color: AmiColors.hexGreen,
                     onPressed: () =>
                         GamesTradeTicketScreen.show(context, runId: runId),
+                  ),
+                ),
+                const SizedBox(height: AmiSpacing.s),
+                // The board is a separate screen rather than a section here:
+                // it reads every entrant's NAV series, and this screen is
+                // re-read on every size drag of the ticket.
+                SizedBox(
+                  width: double.infinity,
+                  child: HexButton(
+                    label: l.gamesBoardCta,
+                    variant: HexButtonVariant.outlined,
+                    onPressed: () =>
+                        GamesBoardScreen.push(context, runId: runId),
                   ),
                 ),
                 const SizedBox(height: AmiSpacing.l),

@@ -16,6 +16,8 @@ class FakeGamesApiClient extends ApiClient {
     this.queuedOrders = const [],
     this.cancelSucceeds = true,
     this.quoteError,
+    this.board,
+    this.desks = const [],
   }) : super(baseUrl: 'test://localhost');
 
   /// When set, [gamesTradeQuote] throws it instead of answering — models a
@@ -25,6 +27,12 @@ class FakeGamesApiClient extends ApiClient {
 
   /// Canned response for [gamesQueuedOrders].
   List<GameQueuedOrder> queuedOrders;
+
+  /// Canned response for [gamesBoard] — the field standings.
+  GameBoard? board;
+
+  /// Canned response for [gamesDesks] — the house desks' published rules.
+  List<GameDeskProfile> desks = const [];
 
   /// What the SERVER reports for a cancel. `false` models the real race —
   /// the order filled between the list being drawn and the tap — which the
@@ -79,6 +87,14 @@ class FakeGamesApiClient extends ApiClient {
   @override
   Future<List<GameQueuedOrder>> gamesQueuedOrders(String runId) async =>
       queuedOrders;
+
+  @override
+  Future<GameBoard> gamesBoard(String runId) async =>
+      board ??
+      GameBoard(fieldId: 'field-1', cadence: 'week', rows: const []);
+
+  @override
+  Future<List<GameDeskProfile>> gamesDesks() async => desks;
 
   @override
   Future<bool> gamesCancelQueuedOrder({
