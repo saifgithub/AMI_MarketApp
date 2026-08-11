@@ -200,6 +200,18 @@ class Settings(BaseSettings):
     # convention as alpha_vantage_api_key above. Free tier is 250 calls/month
     # (plus a 100-call burst window), so results are cached in Postgres.
     adanos_api_key: str = ""
+    # DEF063 (second instance, found by CR148 Tier B) — a SECOND live Adanos key
+    # has sat in `infra/alpha.env` with no Settings field and no compose forward,
+    # so no code path could ever see it: 250 paid calls/month idle, while CR148
+    # Tier B was being asked to make a TTL-shortening decision under exactly that
+    # quota ceiling (30-day TTL ≈ 250 distinct tickers/month vs 7-day ≈ 58).
+    #
+    # This is the shape `test_config_compose_parity.py` structurally could not
+    # catch: it walked `Settings.model_fields → compose`, so a key present in the
+    # env file but ABSENT from Settings was invisible in both directions. Adding
+    # the field is what makes it visible; the test now also walks env-file →
+    # Settings so the next one cannot hide the same way.
+    adanos_api_key_secondary: str = ""
     # CR041: how long a cached Adanos row stays usable. The cache is durable
     # (social_sentiment_cache table) precisely so the monthly budget survives
     # container restarts. Readers compare fetched_at against this, so changing

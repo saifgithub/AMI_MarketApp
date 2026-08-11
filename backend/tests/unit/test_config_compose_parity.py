@@ -111,3 +111,94 @@ def test_not_forwarded_entries_all_carry_a_reason():
     assert not stale, (
         f"_NOT_FORWARDED names fields that no longer exist in Settings: {stale}"
     )
+
+
+# ── The other direction: env file → Settings (DEF063, second instance) ────────
+#
+# Everything above walks `Settings.model_fields → compose`. That direction has a
+# blind spot the size of the bug it was written for: a key that exists in
+# `infra/alpha.env` but has **no Settings field at all** is invisible to it in
+# BOTH directions — there is no field to iterate, so nothing is ever checked.
+#
+# `ADANOS_API_KEY_SECONDARY` lived in that blind spot from 2026-07-21 until
+# 2026-08-11: a live, paid key, 250 calls/month, that no code path could read,
+# while CR148 Tier B was being asked to make a TTL-shortening decision under
+# exactly that quota ceiling. The parity test was green the whole time and was
+# right to be — it simply could not see the key.
+#
+# So this walks the env file and asserts every key either maps to a Settings
+# field or is named here as deliberate non-app wiring.
+
+# Keys that are legitimately NOT app config. Each says what consumes it instead;
+# an unexplained entry is the same hiding place `_NOT_FORWARDED` warns about.
+_ENV_KEYS_WITHOUT_SETTINGS: dict[str, str] = {
+    "AMI_ENV": "compose-level: forwarded INTO the container as ENV (see _NOT_FORWARDED['env'])",
+    "CF_TUNNEL_TOKEN": "consumed by the cloudflared service, not the api container",
+    "POSTGRES_PASSWORD": "consumed by the ami_postgres service; the api reaches it via DATABASE_URL",
+    "REDIS_PASSWORD": "consumed by the ami_redis service; the api reaches it via REDIS_URL",
+    "REVENUECAT_IOS_SDK_KEY": "client-side SDK key — shipped in the Flutter build, never read by the backend",
+    "REVENUECAT_ANDROID_SDK_KEY": "client-side SDK key — shipped in the Flutter build, never read by the backend",
+    "REVENUECAT_PUBLIC_SDK_API_KEY": "client-side SDK key — shipped in the Flutter build, never read by the backend",
+    "WEBSITE_DB_PASSWORD": "the marketing site's own DB, deployed to cPanel — not this backend",
+    "WEBSITE_NOTIFY_EMAIL": "the marketing site's contact-form recipient — not this backend",
+}
+
+
+def _alpha_env_path() -> Path:
+    return _REPO_ROOT / "infra" / "alpha.env"
+
+
+def test_every_env_file_key_maps_to_a_settings_field_or_is_declared_non_app():
+    """DEF063's second instance, and the direction that could not see it.
+
+    Skipped when `infra/alpha.env` is absent, because it is gitignored and lives
+    only in the main worktree — a clean checkout and CI have nothing to check.
+    The skip names what went unchecked rather than passing quietly, since a
+    guard that reports success on no evidence is the failure mode this whole
+    module exists to prevent.
+    """
+    env_path = _alpha_env_path()
+    if not env_path.exists():
+        import pytest
+
+        pytest.skip(
+            f"{env_path} not present (gitignored; main worktree only) — the "
+            "env-file → Settings direction was NOT checked in this run"
+        )
+
+    # Uncommented assignments only. A parked key is deliberately dark and is the
+    # operator's decision (ALPHA_VANTAGE_API_KEY was parked this way for weeks);
+    # this guard is about keys that are LIVE and unreachable.
+    keys = set(re.findall(r"^([A-Z][A-Z0-9_]*)=", env_path.read_text(), re.M))
+    fields = {f.upper() for f in Settings.model_fields}
+
+    orphans = sorted(k for k in keys if k not in fields and k not in _ENV_KEYS_WITHOUT_SETTINGS)
+    assert not orphans, (
+        "These keys are SET in infra/alpha.env but have no Settings field, so no "
+        "code path can ever read them and the Settings→compose check above cannot "
+        f"see them either — the DEF063 blind spot: {orphans}\n"
+        "Fix: add the field to Settings and forward it in docker-compose.yml, or "
+        "add it to _ENV_KEYS_WITHOUT_SETTINGS naming what does consume it."
+    )
+
+
+def test_the_adanos_secondary_key_is_reachable():
+    """The specific key that proved the blind spot. Pinned by name so the fix
+    cannot be reverted without a test saying so."""
+    assert "adanos_api_key_secondary" in Settings.model_fields, (
+        "the secondary Adanos key has no Settings field — 250 paid calls/month "
+        "unreadable, and invisible to every other check in this module"
+    )
+    block = _api_alpha_env_block()
+    assert re.search(r"^\s+ADANOS_API_KEY_SECONDARY:", block, re.M), (
+        "ADANOS_API_KEY_SECONDARY is not forwarded to api-alpha"
+    )
+
+
+def test_the_non_app_env_allowlist_carries_reasons():
+    """Same rule as _NOT_FORWARDED: an allow-list is safe only while every entry
+    explains itself."""
+    unexplained = [k for k, why in _ENV_KEYS_WITHOUT_SETTINGS.items() if not why.strip()]
+    assert not unexplained, (
+        f"_ENV_KEYS_WITHOUT_SETTINGS entries need a reason: {unexplained}"
+    )
