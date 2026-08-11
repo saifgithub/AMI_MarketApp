@@ -49,13 +49,14 @@ import random
 import time
 from dataclasses import dataclass, field
 from threading import RLock
-from typing import NamedTuple, Protocol
+from typing import Any, NamedTuple, Protocol
 
 import httpx
 
 from app.core.config import settings
 from app.core.logging import logger
 from app.services.asof_context import current_asof
+from app.trading_math.market_hours import is_us_market_open
 
 
 # ── Interface ────────────────────────────────────────────────────────────
@@ -500,6 +501,29 @@ class CachingProvider:
 # ── yfinance (preferred over raw Yahoo HTTP) ─────────────────────────────
 
 
+def _previous_close(fast_info: Any) -> float | None:
+    """The reference close a session's change is measured against (DEF252).
+
+    Two keys, in this order on purpose. `regular_market_previous_close` is what
+    Yahoo's own `regularMarketChangePercent` divides by, and the two genuinely
+    disagree — 313.33 against 313.25 on AAPL, 2026-08-10. Matching Yahoo matters
+    more than picking the fresher-looking figure, because this number is rendered
+    beside a price the user can check against Yahoo in another tab.
+
+    `fast_info` raises rather than returning None for an absent key, and which
+    keys a ticker carries varies by quote type, so both lookups are guarded and
+    the caller is told when neither answered.
+    """
+    for key in ("regular_market_previous_close", "previous_close"):
+        try:
+            value = fast_info[key]
+        except Exception:
+            continue
+        if value:
+            return float(value)
+    return None
+
+
 class YfinanceProvider:
     """Quotes via the `yfinance` Python lib.
 
@@ -535,7 +559,36 @@ class YfinanceProvider:
             return None
         if price is None or price <= 0:
             return None
-        return Quote(price=float(price), source=self.name)
+        # DEF252: this used to return the price alone, so `change_pct` and
+        # `market_state` fell through to their NamedTuple defaults — 0.0 and
+        # "CLOSED" — and the app rendered both as fact. Every quote on Alpha read
+        # a dead-flat closed market, including 14:37 ET on a -2% session.
+        #
+        # Both come from data already in hand. The previous close is on the SAME
+        # `fast_info` object, so there is no second round-trip; `market_state` is
+        # NOT on it (KeyError, verified) and lives only on the heavy `.info` call
+        # CR145 flags as the uncached hot-path hazard — so it is derived from the
+        # pure no-network session calendar CR109 already built instead of bought.
+        prev = _previous_close(info)
+        if prev:
+            change_pct = round((float(price) - prev) / prev * 100.0, 2)
+        else:
+            # Loud, not silent (CR040). 0.0 is indistinguishable from "flat" on
+            # the pixel, so the one case that still asserts a number it does not
+            # have says so in the logs. A nullable `change_pct` end-to-end is the
+            # real answer and needs the Flutter half — recorded on DEF252's row.
+            logger.warn("yfinance_quote_no_previous_close", ticker=t)
+            change_pct = 0.0
+        return Quote(
+            price=float(price),
+            source=self.name,
+            change_pct=change_pct,
+            market_state=(
+                "REGULAR"
+                if is_us_market_open(datetime.datetime.now(datetime.timezone.utc))
+                else "CLOSED"
+            ),
+        )
 
     def get_price(self, ticker: str) -> float | None:
         q = self.quote(ticker)
