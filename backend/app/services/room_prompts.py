@@ -64,19 +64,65 @@ _PHASE_FOR_AGENT: dict[AgentId, str] = {
 # Soft length budgets per phase (kept short — Matrix Console UI is
 # token-paced and the user reads each agent's full contribution before
 # the next speaks).
+#
+# DEF236 — stated in BULLETS, because bullets are what the agent is asked to
+# write. Until 2026-08-11 this counted SENTENCES while `_PROSE_FORMAT`, five
+# lines below, asked for "a one-sentence thesis, then short bullet points":
+# two instructions in two different units, both live in the same assembled
+# string, and a stance envelope plus a thesis plus bullet *points* does not fit
+# in the two sentences the Aggressive Debator was told to write. Measured on the
+# 2026-08-07 epoch (n=198): the model obeyed the bullets and discarded the
+# count — neutral_debator median 5 sentences against a guide of 2 (100% over,
+# 94% using bullets), research_manager median 9 against 4–6 (61% over).
+#
+# That mattered beyond tidiness: `_AGENT_MAX_TOKENS` below was sized by DEF125
+# to fit THIS dict, so every decode budget in the Room was calibrated against a
+# target the model was structurally unable to meet.
+#
+# Counting the unit the structure is already written in makes the ask
+# satisfiable. It is not a relaxation — for the researchers and the Research
+# Manager it asks for materially LESS than the medians above, which is the
+# point: the Research Manager's turn is the single input the EXECUTION and RISK
+# phases reason from (DEF095), and its verbosity is inherited by every prompt
+# downstream of it.
 _LENGTH_GUIDE: dict[AgentId, str] = {
-    AgentId.FUNDAMENTALS_ANALYST: "2–4 sentences",
-    AgentId.MARKET_ANALYST: "2–4 sentences",
-    AgentId.NEWS_ANALYST: "2–3 sentences",
-    AgentId.SOCIAL_MEDIA_ANALYST: "2–3 sentences",
-    AgentId.BULL_RESEARCHER: "3–5 sentences (thesis + evidence + falsifier)",
-    AgentId.BEAR_RESEARCHER: "3–5 sentences (risk + quantification + invalidator)",
-    AgentId.RESEARCH_MANAGER: "4–6 sentences (asymmetry numbers + lean + size implication)",
-    AgentId.TRADER: "3–4 sentences (instrument + side + size + entry + stop + target + horizon)",
-    AgentId.AGGRESSIVE_DEBATOR: "2 sentences (size push + one-line reason)",
-    AgentId.CONSERVATIVE_DEBATOR: "2 sentences (size cap + one-line reason)",
-    AgentId.NEUTRAL_DEBATOR: "2 sentences (middle size + one-line reason)",
-    AgentId.PORTFOLIO_MANAGER: "3–4 sentences inside your JSON verdict's narration field — see the format instruction below",
+    AgentId.FUNDAMENTALS_ANALYST: "one thesis sentence, then up to 3 short bullets",
+    AgentId.MARKET_ANALYST: "one thesis sentence, then up to 3 short bullets",
+    AgentId.NEWS_ANALYST: "one thesis sentence, then up to 3 short bullets",
+    AgentId.SOCIAL_MEDIA_ANALYST: "one thesis sentence, then up to 3 short bullets",
+    AgentId.BULL_RESEARCHER: (
+        "one thesis sentence, then up to 4 short bullets — evidence first, "
+        "your falsifier last"
+    ),
+    AgentId.BEAR_RESEARCHER: (
+        "one thesis sentence, then up to 4 short bullets — risk and its "
+        "quantification first, your invalidator last"
+    ),
+    AgentId.RESEARCH_MANAGER: (
+        "one thesis sentence, then up to 4 short bullets — asymmetry numbers, "
+        "lean, size implication"
+    ),
+    # The Trader's labelled block IS its structure (see `_NO_FENCE_CLAUSE`).
+    AgentId.TRADER: (
+        "your labelled output block — instrument, side, size, entry, stop, "
+        "target, horizon — then up to 3 short bullets of rationale"
+    ),
+    AgentId.AGGRESSIVE_DEBATOR: (
+        "one thesis sentence, then up to 3 short bullets (the size push and "
+        "what pays for it)"
+    ),
+    AgentId.CONSERVATIVE_DEBATOR: (
+        "one thesis sentence, then up to 3 short bullets (the size cap and "
+        "what it protects against)"
+    ),
+    AgentId.NEUTRAL_DEBATOR: (
+        "one thesis sentence, then up to 3 short bullets (the middle size and "
+        "what each side gives up)"
+    ),
+    AgentId.PORTFOLIO_MANAGER: (
+        "one decision sentence, then up to 6 short bullets, all inside your "
+        "JSON verdict's narration field — see the format instruction below"
+    ),
 }
 
 
@@ -153,7 +199,17 @@ _AGENT_MAX_TOKENS: dict[AgentId, int] = {
     # The PM emits a JSON envelope, not prose, and DEF058 (verdict fails to
     # parse in ~22% of runs) suspected its own 600-token cap clipping the JSON
     # one line from the end. Same family, one line apart in the source.
-    AgentId.PORTFOLIO_MANAGER: 900,
+    #
+    # DEF236 raised this one from 900. It is the only budget the batch moved,
+    # and the only one whose ASK grew: the narration went from "3–4 sentences"
+    # to a decision sentence plus up to 6 bullets. Derived from the new ask, not
+    # measured — the post-promotion re-measurement is the acceptance. Raising it
+    # is nearly free (DEF125 measured this host's `num_preemptions_total` at 0
+    # and `max_tokens` is a ceiling, not an allocation) and being short here is
+    # uniquely expensive: a clipped JSON envelope is unparseable rather than
+    # merely incomplete, and `_parse_pm_verdict` fails safe to PASS, so the cost
+    # of twenty tokens too few is a discarded APPROVE.
+    AgentId.PORTFOLIO_MANAGER: 1100,
 }
 
 
@@ -193,7 +249,11 @@ _PM_VERDICT_FORMAT = (
     ' "stop": <number, required if APPROVE>,\n'
     ' "target": <number, required if APPROVE>,\n'
     ' "horizon_days": <integer, required if APPROVE>,\n'
-    ' "narration": "<3-4 sentences, your rationale, written for the user>"}\n'
+    ' "narration": "<one decision sentence, then up to 6 short bullets — your '
+    'rationale, written for the user>"}\n'
+    "Write any line break inside narration as the two characters \\n, never as a "
+    "real line break — a raw newline inside a JSON string is what makes a whole "
+    "verdict unparseable.\n"
     "There are exactly two action values: APPROVE and PASS. A modification IS "
     "an approval — if you want to cut the Trader's size, tighten the stop, or "
     "shift the entry, use action APPROVE with your revised numbers in "
@@ -207,12 +267,25 @@ _PM_VERDICT_FORMAT = (
     "if it detects a violation, output PASS and name the rule in narration."
 )
 
+# DEF236 — STYLE only. The shape (a thesis sentence, then how many bullets) is
+# stated once, in `_LENGTH_GUIDE`, and no longer restated here in a different
+# unit. See that dict for what the contradiction cost.
 _PROSE_FORMAT = (
-    "\nFormat: lead with a one-sentence thesis, then short bullet "
-    "points for supporting evidence. Use **bold** for key metrics "
-    "(numbers, levels, deadlines). Plain text otherwise — no headings, "
-    "no tables, no code fences. The Markdown is rendered live in the app."
+    "\nFormat: use **bold** for key metrics (numbers, levels, deadlines). "
+    "Plain text otherwise — no headings, no tables. The Markdown is "
+    "rendered live in the app."
 )
+
+# Appended for every prose agent EXCEPT the Trader, whose own profile specifies
+# a labelled block as its output structure and whose levels `_LEVEL_PATTERNS`
+# reads back out of it. Telling that agent "no code fences" while its profile
+# demands one is the same DEF236 contradiction a layer up, and the resolution
+# runs the other way here: the block is load-bearing, so the blanket ban stops
+# being asserted at the Trader rather than the block being dropped. Whether the
+# block survives at all is CR152 Tier A.4's call, and that is gated on parser
+# hardening (DEF242/DEF237) which has not shipped — deleting it first takes the
+# full level triple from 2/18 to 0/18.
+_NO_FENCE_CLAUSE = " Do not wrap your reply in a code fence."
 
 
 # CR106 B2 — the per-agent stance envelope, as a TRAILING LINE rather than a
@@ -420,11 +493,13 @@ def build_room_messages(
     # deliberately excluded — it is not one of the eleven voices in the comb
     # (its position IS the hero tile), and its output is a JSON verdict that a
     # trailing line would corrupt.
-    format_instruction = (
-        _PM_VERDICT_FORMAT
-        if agent_id == AgentId.PORTFOLIO_MANAGER
-        else _PROSE_FORMAT + _STANCE_FORMAT
-    )
+    if agent_id == AgentId.PORTFOLIO_MANAGER:
+        format_instruction = _PM_VERDICT_FORMAT
+    else:
+        prose_format = _PROSE_FORMAT
+        if agent_id != AgentId.TRADER:
+            prose_format += _NO_FENCE_CLAUSE
+        format_instruction = prose_format + _STANCE_FORMAT
 
     # DEF066: only agents that judge the proposed trade (RISK debators, the PM's
     # VERDICT) get the derived contribution figure; earlier phases have no

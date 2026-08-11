@@ -121,18 +121,37 @@ def test_def241_no_debator_prompt_still_hands_out_the_formula(_a, filename):
 
 
 @pytest.mark.parametrize("_a,filename", _DEBATORS)
-def test_def243_no_debator_claims_the_first_line_for_prose(_a, filename):
-    """`_STANCE_FORMAT` owns line 1. A bare "Open with:" competes for it, and the
-    model resolves the tie by obeying both — which puts the envelope on line 2,
-    where the parser neither reads nor strips it.
+def test_def251_no_debator_dictates_its_own_first_line(_a, filename):
+    """`_STANCE_FORMAT` owns line 1, and nothing in the base prompt may compete
+    for it — including an instruction that competes while POINTING OUT that it
+    competes.
 
-    RED before: each file contained `- Open with: "…"`.
+    This assertion used to require the opposite. DEF243 rewrote `- Open with:`
+    into `- Open your PROSE with: "…" — the stance line comes first, on its own
+    line above it (see the format block)`, on the theory that naming the
+    precedence resolves the tie, and this test pinned that wording in place.
+    DEF251 then measured the theory on the next epoch: displacement went 28.9%
+    → 33.3%, and 20% of debator turns emitted no envelope at all — a class the
+    DEF247 parser fix cannot recover, because there is nothing to strip. That is
+    `failure_patterns` P2 in one line: the instruction was never a control.
+
+    So the bullet is deleted rather than reworded a second time, the role
+    framing it carried moves into a plain "make the case" bullet that says
+    nothing about line 1, and what owns the slot is stated where the file states
+    its other prohibitions.
+
+    RED before: each file contained `- Open your PROSE with: "…"`.
     """
     text = (_CONTENT / filename).read_text(encoding="utf-8")
     assert "- Open with:" not in text, (
         "this instruction competes with _STANCE_FORMAT for the first line"
     )
-    assert "Open your PROSE with:" in text
+    assert "Open your PROSE with:" not in text, (
+        "DEF243's rewording — measured ineffective by DEF251, deleted not reworded"
+    )
+    assert "Write anything above the stance line" in text, (
+        "deleting the opener without naming what owns the slot leaves it unclaimed"
+    )
 
 
 @pytest.mark.parametrize("agent_id,_f", _DEBATORS)
@@ -151,7 +170,13 @@ def test_def243_is_scoped_to_the_three_agents_that_had_the_conflict():
     one, it inherits the defect silently — so the scope is asserted, not assumed."""
     offenders = sorted(
         p.name for p in _CONTENT.glob("*.md")
-        if "- Open with:" in p.read_text(encoding="utf-8")
+        if any(
+            marker in p.read_text(encoding="utf-8")
+            # Both spellings: the original, and DEF243's rewrite of it. A file
+            # that grows either one inherits the defect, and DEF251 proved the
+            # second spelling is not the safer of the two.
+            for marker in ("- Open with:", "Open your PROSE with:")
+        )
     )
     assert offenders == [], (
         f"{offenders} compete with _STANCE_FORMAT for the first line — see DEF243"

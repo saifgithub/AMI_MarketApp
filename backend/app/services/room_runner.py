@@ -4062,7 +4062,13 @@ _PM_REFORMAT_SYSTEM = (
     ' "stop": <number or null>,\n'
     ' "target": <number or null>,\n'
     ' "horizon_days": <integer or null>,\n'
-    ' "narration": "<3-4 sentences, faithful summary of the rationale>"}\n'
+    # DEF236 — "3-4 sentences, faithful summary" until 2026-08-11, which stopped
+    # being faithful the moment the PM's own contract asked for a decision
+    # sentence plus up to 6 bullets: a summary at the old length silently
+    # RESHAPES a user-visible narration on the one path the user cannot see.
+    # This is a formatter, so the rationale is carried, not re-authored.
+    ' "narration": "<the rationale, carried across verbatim — do not shorten, '
+    'summarise or re-shape it>"}\n'
     "There are exactly two action values: APPROVE and PASS. A modification is "
     "an approval — if the verdict enters or approves a position (including "
     "'MODIFY-AND-APPROVE', 'approve with a smaller size', or any affirmative "

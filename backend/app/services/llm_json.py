@@ -26,6 +26,19 @@ def extract_json_object(text: str) -> dict | None:
             return None
         candidate = candidate[first : last + 1]
     try:
-        return json.loads(candidate)
+        # DEF256 — `strict=False` permits raw control characters INSIDE strings.
+        # Nothing else is relaxed: trailing commas, single quotes and unquoted
+        # keys still fail, so a genuinely malformed object is still rejected.
+        #
+        # Under the default `strict=True`, a model that writes a real line break
+        # inside a string value instead of the two characters \n makes the WHOLE
+        # object unparseable — and for the PM verdict that is not a degraded
+        # read, it is a discarded decision: `_parse_pm_verdict` returns no
+        # verdict and the caller fails safe to PASS (DEF059), so a real APPROVE
+        # is lost over a whitespace character. DEF236 made this reachable by
+        # design when it asked the PM for bullets inside `narration`; the prompt
+        # also asks for \n, but P2 is explicit that a prompt instruction is not
+        # a control, so this is the control.
+        return json.loads(candidate, strict=False)
     except json.JSONDecodeError:
         return None
