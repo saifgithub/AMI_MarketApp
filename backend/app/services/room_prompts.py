@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.agents.safety_floor import CONTEXT_NOT_SUPPLIED
 from app.schemas import AgentId, AgentMessage, Mandate
 from app.schemas.mandate import Plan
 from app.services.agent_prompts import build_agent_prompt
@@ -236,9 +237,20 @@ _PM_VERDICT_FORMAT = (
     "analyst, the Bull/Bear debate, the Trader's proposal, and the three "
     "Risk Debators — then decide for yourself. Do not just restate the "
     "Trader's numbers; agree or disagree based on the whole debate.\n"
-    "This output format REPLACES the 'Verdict:' / 'Output format' block "
-    "described earlier in your profile. In the Room you answer here, and only "
-    "here.\n"
+    # CR156 B — the REPLACES sentence covered the OUTPUT BLOCK only, so the
+    # 'Decision sequence' three lines above it still said REJECT, in two layers,
+    # against this format's "exactly two action values". The parser survived it
+    # (`_normalize_pm_action` maps REJECT→PASS); the USER did not — the wire
+    # action colours the card and the prose is what they read, so a card marked
+    # PASS carried a narration opening "REJECT:". Measured 4 of 14 on the
+    # 2026-08-11 post-promotion batch, against the 6/18 CR156 was filed on.
+    # Both layers now say PASS, and this sentence names the decision sequence so
+    # a future edit to either one cannot quietly reopen the gap.
+    "This output format and its two action values REPLACE **both** the "
+    "'Verdict:' / 'Output format' block AND the 'Decision sequence' described "
+    "earlier in your profile and mandate overlay. Wherever those say REJECT, "
+    "the action you emit here is PASS — name the rule that failed in your "
+    "narration. In the Room you answer here, and only here.\n"
     "Your ENTIRE reply must be one single JSON object — begin with '{' and "
     "end with '}'. Do not write any prose outside the JSON (your reasoning "
     "belongs inside the narration field); anything outside it is discarded "
@@ -248,7 +260,16 @@ _PM_VERDICT_FORMAT = (
     ' "entry": <number, required if APPROVE>,\n'
     ' "stop": <number, required if APPROVE>,\n'
     ' "target": <number, required if APPROVE>,\n'
-    ' "horizon_days": <integer, required if APPROVE>,\n'
+    # DEF255 — `horizon_days` is the THESIS horizon: how long this specific
+    # trade needs to work. It is NOT the mandate's investment horizon. The PM
+    # emitted 1095 (the `Horizon.LONG` label restated as a number) in 4 of 13
+    # approvals while the code's own fallback is 42 days — a 26× disagreement on
+    # the same field, and the number the stop is judged against.
+    ' "horizon_days": <integer, required if APPROVE — how long THIS trade needs '
+    "to work out, not the user's investment horizon. Anchor it to the evidence "
+    "you were actually given: 3 months of price history, TTM fundamentals and a "
+    "52-week range support a thesis measured in weeks to a few months. A "
+    "multi-year number is not supported by anything on your fact sheet>,\n"
     ' "narration": "<one decision sentence, then up to 6 short bullets — your '
     'rationale, written for the user>"}\n'
     "Write any line break inside narration as the two characters \\n, never as a "
@@ -350,6 +371,85 @@ _STANCE_FORMAT = (
 )
 
 
+def _risk_state_block(
+    mandate: Mandate,
+    current_drawdown_pct: float | None,
+    existing_open_risk_pct: Any,
+    last_loss_closed_at: Any,
+    trade_open_timestamps: Any,
+) -> str:
+    """Where the user's risk budget ACTUALLY stands, right now.
+
+    The deduped tier of CR153 B ≡ CR154 B ≡ CR155 C ≡ CR156 C — four CRs filed
+    the same finding against four different agents, and CR156 states the dedupe
+    rule: thread it into the shared mandate snapshot ONCE rather than four times.
+
+    Until now the snapshot carried only the *limits* (`max_drawdown_pct: 20`) and
+    never the *consumption*. Every agent argued about how much risk to add while
+    blind to how much was already spent, which makes "sized against the cap"
+    unanswerable: 3% more is prudent at 2% drawdown and reckless at 19%.
+
+    Three distinct absences, kept distinct (CR040 / DEF059):
+
+    - `CONTEXT_NOT_SUPPLIED` — the computation FAILED. Says so, and says the
+      floor is blocking on it. A real "no prior loss" and an outage computing
+      one must never render identically; that is the whole reason the sentinel
+      exists rather than `None`.
+    - `None` — not supplied by this caller (non-Room surfaces, older tests).
+      Renders nothing rather than claiming zero.
+    - a real `0.0` — genuinely no open risk. Stated as a fact.
+
+    Open risk is labelled *"across open positions carrying a stop"* because that
+    is what `_risk_limit_context` actually sums: a position with no stop
+    contributes nothing to the figure, so an unqualified "open risk 4.2%" would
+    read as complete when the book may hold unstopped positions the number
+    cannot see. The holdings block names those positions individually.
+    """
+    lines: list[str] = []
+
+    if current_drawdown_pct is not None:
+        cap = mandate.max_drawdown_pct
+        headroom = cap - current_drawdown_pct
+        lines.append(
+            f"- Drawdown USED: {current_drawdown_pct:.1f} pt of the {cap:.0f} pt cap "
+            f"— {headroom:.1f} pt of headroom remains. Size against the headroom, "
+            f"not against the cap."
+        )
+
+    if existing_open_risk_pct is CONTEXT_NOT_SUPPLIED:
+        lines.append(
+            "- Open risk: COULD NOT BE COMPUTED this run. Treat it as unknown, not "
+            "as zero — the safety floor is blocking on this, and you should not "
+            "argue for added size as if the book were flat."
+        )
+    elif existing_open_risk_pct is not None:
+        lines.append(
+            f"- Open risk already committed: {float(existing_open_risk_pct):.1f}% "
+            f"across open positions carrying a stop. Positions with no stop "
+            f"recorded are NOT in this figure — see the portfolio block."
+        )
+
+    if last_loss_closed_at is CONTEXT_NOT_SUPPLIED:
+        lines.append(
+            "- Last stop-out: COULD NOT BE COMPUTED this run — unknown, not "
+            "'none'. Any cooldown limit is being enforced blind."
+        )
+    elif last_loss_closed_at is not None:
+        lines.append(f"- Last losing trade closed: {last_loss_closed_at}.")
+
+    if isinstance(trade_open_timestamps, list):
+        lines.append(
+            f"- Trades opened in the recent window: {len(trade_open_timestamps)} "
+            f"(the pace an over-trading limit counts)."
+        )
+
+    if not lines:
+        return ""
+    return (
+        "\nLive risk state — what the budget has ALREADY spent:\n" + "\n".join(lines) + "\n"
+    )
+
+
 def _drawdown_snapshot_line(
     mandate: Mandate,
     trade_proposal: dict[str, Any] | None,
@@ -437,6 +537,10 @@ def build_room_messages(
     parallel_phase: bool = False,
     sector_weights: dict[str, float] | None = None,
     agent_size_pct: float | None = None,
+    current_drawdown_pct: float | None = None,
+    existing_open_risk_pct: Any = None,
+    last_loss_closed_at: Any = None,
+    trade_open_timestamps: Any = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [user_message]) for one agent's Room turn.
 
@@ -504,12 +608,42 @@ def build_room_messages(
     # DEF066: only agents that judge the proposed trade (RISK debators, the PM's
     # VERDICT) get the derived contribution figure; earlier phases have no
     # proposal yet, so they see the portfolio-cap clarification only.
+    # DEF241 RESIDUE — DEFERRED DELIBERATELY, not overlooked (AT:R68, Batch 7).
+    #
+    # This gate is why `bull_researcher` (RESEARCHERS) and `research_manager`
+    # (SYNTHESIS) are still byte-identical to pre-DEF241: they get the raw
+    # `P×S/100` formula and no worked figure. Batch 7 considered widening it and
+    # did not, because CR151 already adjudicated exactly this and rejected it:
+    # extending the deterministic reference position to SYNTHESIS "would hand the
+    # RM a drawdown-contribution figure derived from a −6% stop nobody proposed,
+    # labelled as a reference and read as a measurement."
+    #
+    # The reason is structural, not stylistic: at RESEARCHERS and SYNTHESIS the
+    # Trader has not spoken, so there IS no proposal — any figure here would be
+    # minted from an invented stop, which is the DEF235 class this programme
+    # keeps closing. What those two phases actually lacked was the risk budget's
+    # consumption, and `_risk_state_block` above gives them that at every phase,
+    # ungated. That is the half that is real.
+    #
+    # So DEF241 does NOT close on this batch. Its row records the residue as
+    # open with this reasoning, rather than letting a re-scope pass as a fix.
     proposal = trade_proposal if phase in ("RISK", "VERDICT") else None
     # DEF241: `agent_size_pct` is the size THIS agent's role argues for, supplied
     # by the caller from `risk_debator_sizes` — never parsed back out of prose,
     # which is the surface DEF235 closed.
     drawdown_line = _drawdown_snapshot_line(
         mandate, proposal, agent_size_pct if proposal else None
+    )
+    # The deduped risk-state tier. Deliberately NOT gated on phase: the
+    # consumption figures are real at every phase (unlike `proposal`, which does
+    # not exist before EXECUTION), so every agent that argues about size gets
+    # them — which is the finding all four of CR153/154/155/156 filed.
+    risk_state_block = _risk_state_block(
+        mandate,
+        current_drawdown_pct,
+        existing_open_risk_pct,
+        last_loss_closed_at,
+        trade_open_timestamps,
     )
 
     # CR055: long_only, said plainly. The bare compliance flag was misread by a Trader
@@ -576,6 +710,7 @@ def build_room_messages(
         f"{drawdown_line}\n"
         f"{long_only_line}"
         f"- locale: {mandate.locale}\n"
+        f"{risk_state_block}"
         f"{sector_line}"
         f"{researcher_cap_note}"
         f"\n"
@@ -590,6 +725,17 @@ def build_room_messages(
         f"{format_instruction}"
     )
 
+    # CR156 D — `base` already ends with `append_safety_floor(...)`, so on THIS
+    # surface the floor sits in the MIDDLE of the prompt: everything above is
+    # appended after it. `safety_floor.md` used to claim the floor is last and
+    # therefore dominant; that is true on the 1-on-1 path and false here, on the
+    # one surface where a verdict is parsed and acted on. Both the doc and this
+    # line now say so.
+    #
+    # Not reordered: putting the JSON output contract before the transcript it
+    # must summarise would be worse, and ordering was never the control —
+    # `enforce_safety_floor()` is. CR038 measured prompt-level instructions at
+    # ~30%, so "it is last, therefore it wins" is exactly the belief P2 forbids.
     system_prompt = base + room_addition
     user_message = ChatMessage(role="user", content=f"Convene on {ticker}.")
     return system_prompt, [user_message]

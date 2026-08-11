@@ -78,7 +78,12 @@ CR101-BE1, with the unset-case fallback changed from a flat 50% to the
 risk-tier preset by CR129; this doc shows the placeholder rather than a
 baked-in number for exactly that reason.
 
-**Why this works at the prompt level.** Modern LLMs respect instructions ordering: later instructions override earlier ones. By placing the safety floor *last*, we make it the dominant instruction. Plus, the floor block uses explicit "DO NOT IGNORE PRIOR INSTRUCTIONS" language, which is the standard prompt-engineering pattern for non-overridable directives.
+**Why this works at the prompt level — and where the ordering claim is FALSE (CR156 D, corrected AT:R68).** The floor block uses explicit "DO NOT IGNORE PRIOR INSTRUCTIONS" language, the standard pattern for non-overridable directives. The *ordering* half of the argument, however, holds on only one of the two surfaces:
+
+- **1-on-1:** true. `build_agent_prompt` ends with `append_safety_floor(...)`, so the floor really is the last thing the model reads.
+- **The Room: false.** `room_prompts.py` composes `system_prompt = base + room_addition`, and `base` is what already had the floor appended. The entire CONVENE THE ROOM block — fact sheet, mandate snapshot, transcript, `_PM_VERDICT_FORMAT` and the turn instruction — is therefore rendered **after** the floor. On the surface where a verdict is actually parsed and acted on, the floor is in the middle of the prompt, not at the end.
+
+This is documented rather than "fixed" by reordering, because reordering would put the JSON output contract before the transcript it must summarise, and because **the ordering was never the real control** — `enforce_safety_floor()` is (Layer 2 below). CR038 measured prompt-level instructions at ~30% effectiveness, so a claim that ordering makes an instruction "dominant" is the class of belief this codebase treats as unsafe. Stating the enforcement point plainly is the correction; the deterministic check is what holds.
 
 **Two mandatory clauses.** The floor carries (1) mandate enforcement and (2) the classroom/worked-example framing. The framing is regulatory: financial advice cannot be delegated to an LLM, so every PM verdict is framed as a simulation-only classroom exercise, ends with a fixed "Worked example — classroom simulation, not financial advice." tag, and real-money advice requests are deflected. Both clauses sit inside the uncoachable block for the same reason: a user brief must not be able to coach either away. The base prompt (`content/agents/portfolio_manager.md`) and the PM overlay echo the framing for primacy, but the floor is the enforcement point.
 

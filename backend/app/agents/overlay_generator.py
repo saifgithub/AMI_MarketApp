@@ -520,11 +520,11 @@ INPUTS:
 
 DECISION SEQUENCE:
 1. Run the deterministic compliance check (see safety floor below).
-2. If any compliance violation: REJECT with explanation.
+2. If any compliance violation: PASS, and name the rule that failed.
 3. If passes compliance:
    - Weigh the debate
    - Consider risk_score={m.risk_score} and current drawdown
-   - Issue: APPROVE / REJECT / MODIFY-AND-APPROVE
+   - Issue: APPROVE / PASS / MODIFY-AND-APPROVE
 4. Log verdict + full reasoning.
 5. If MODIFY: propose specific size/timing adjustment.
 

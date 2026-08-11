@@ -786,6 +786,35 @@ _SIM_PORTFOLIO_HEADER = (
 )
 
 
+def _stop_clause(
+    sym: str, stops: dict[str, set[float]], unstopped: dict[str, int]
+) -> str:
+    """The per-position stop, or a LOUD statement that there isn't one.
+
+    CR040 — an unstopped position must never render as silence. Before this, the
+    holdings block stated size and unrealised P&L and said nothing about
+    protection, so a Room reasoning about "existing open risk" could not tell a
+    fully-stopped book from a naked one. "no stop recorded" is the whole point:
+    it is the position the risk figures cannot account for.
+
+    One name can hold several lots at different stops. They are listed rather
+    than averaged — a mean of two stops is a level nobody set, and minting one
+    here is exactly the class of invented number DEF235 closed.
+    """
+    have = sorted(stops.get(sym, ()))
+    missing = unstopped.get(sym, 0)
+    if have and not missing:
+        levels = ", ".join(f"${s:g}" for s in have)
+        return f" — stop {levels}" if len(have) == 1 else f" — stops {levels}"
+    if have and missing:
+        levels = ", ".join(f"${s:g}" for s in have)
+        return (
+            f" — stops {levels}, and {missing} lot{'s' if missing > 1 else ''} "
+            f"with NO stop recorded"
+        )
+    return " — NO stop recorded (this position is unprotected)"
+
+
 def _build_sim_holdings_block(user_id: UUID | None, ticker: str) -> str:
     """The user's REAL simulated holdings, rendered for EVERY Room agent (CR055).
 
@@ -820,11 +849,22 @@ def _build_sim_holdings_block(user_id: UUID | None, ticker: str) -> str:
         open_trades = sim.list_trades(user_id, status="open")
         # Aggregate open trades per name (a name may have more than one open lot).
         agg: dict[str, list[float]] = {}
+        # CR153/154/155/156 (deduped) — the per-lot stop, so the Room can see
+        # what each open position actually risks. Collected as a set per name
+        # because one name can hold several lots at different stops, and
+        # collapsing them to one number would invent a stop nobody set.
+        stops: dict[str, set[float]] = {}
+        unstopped: dict[str, int] = {}
         for t in open_trades:
             sym = t.ticker.upper()
             row = agg.setdefault(sym, [0.0, 0.0])  # [qty, cost_basis]
             row[0] += t.quantity
             row[1] += t.quantity * t.entry_price
+            stop = getattr(t, "stop", None)
+            if stop:
+                stops.setdefault(sym, set()).add(float(stop))
+            else:
+                unstopped[sym] = unstopped.get(sym, 0) + 1
         marks = sim.current_marks(list(agg)) if agg else {}
     except Exception as exc:  # noqa: BLE001 — degrade loudly, never silence
         logger.warning(
@@ -858,7 +898,7 @@ def _build_sim_holdings_block(user_id: UUID | None, ticker: str) -> str:
             unrealised = mkt_value - cost_basis
             lines.append(
                 f"  {sym} ×{qty:g} ({weight:.1f}% of portfolio, "
-                f"unrealised {unrealised:+,.2f})"
+                f"unrealised {unrealised:+,.2f}){_stop_clause(sym, stops, unstopped)}"
             )
         if ticker_u in agg:
             held_qty, _ = agg[ticker_u]
@@ -1061,6 +1101,77 @@ _PM_TRUNCATED_NARRATION = (
 )
 
 
+# DEF239 (≡ CR156 A2) — the PM writes its rationale under a key that is not
+# always `narration`, and reading one key alone published "it wrote no rationale"
+# over real prose.
+#
+# An EXPLICIT allowlist, deliberately not a free-text scrape of the object. The
+# `_PM_NO_RATIONALE` disclosure exists for genuinely unexplained decisions
+# (DEF232) and scraping any string field would destroy it — a verdict whose only
+# prose is `{"ticker": "AAPL"}` would start rendering "AAPL" as a defence.
+#
+# `narrational` is not hypothetical: it is what the model actually emitted on
+# live Alpha, SLB, 2026-08-11 11:27:36Z, in the same verdict that exposed
+# DEF258. Ordered by precedence — `narration` is what the contract asks for, so
+# it wins when more than one key carries prose.
+_PM_NARRATION_KEYS = (
+    "narration", "narrational", "rationale", "reasoning", "reason", "explanation",
+)
+
+
+# DEF255 — the boundary above which a stated horizon is not supported by any
+# evidence the PM was given. `_HISTORY_PERIOD` is 3 months, fundamentals are
+# TTM, and the widest window on the fact sheet is the 52-week range. 365 days is
+# that widest window, so a thesis beyond it is being asserted from nothing on
+# the sheet. Derived from the inputs, not chosen — and stated as a boundary the
+# evidence supports, never as a rule about how long anyone should hold.
+_MAX_EVIDENCED_HORIZON_DAYS = 365
+
+
+def _horizon_coherence_note(
+    horizon_days: int | None, entry: float | None, stop: float | None
+) -> str:
+    """Flag a horizon the stop cannot be serving.
+
+    Measured on the epoch: the PM emits `1095` — the `Horizon.LONG` label
+    restated as a number — in 4 of 13 approvals, while the code's own fallback
+    for the same field is 42 days. A 26× disagreement inside one field.
+
+    It matters because the two numbers describe one trade. A 6%-below-entry stop
+    is a weeks-to-months instrument: over three years, ordinary volatility takes
+    almost any name through it, so the pairing guarantees the stop fires on noise
+    long before the thesis is testable. Naming that is the whole check.
+
+    Flag only, never a veto — the safety floor is the sole vetoer (DEF059), and
+    an incoherent horizon is a reasoning flaw to disclose, not a rule breach.
+    """
+    if not horizon_days or horizon_days <= _MAX_EVIDENCED_HORIZON_DAYS:
+        return ""
+    note = (
+        f" (AMI: the stated horizon of {horizon_days} days reaches beyond every "
+        f"input this decision had — 3 months of price history, TTM fundamentals "
+        f"and a 52-week range. Nothing on the fact sheet supports a thesis that "
+        f"long.)"
+    )
+    if entry and stop and entry > 0 and stop > 0 and stop < entry:
+        stop_pct = (entry - stop) / entry * 100
+        note = note[:-2] + (
+            f", and the {stop_pct:.1f}%-below-entry stop is a weeks-to-months "
+            f"instrument — over that horizon ordinary volatility would take the "
+            f"position out long before the thesis could be judged.)"
+        )
+    return note
+
+
+def _pm_narration(parsed: dict[str, Any]) -> str:
+    """The PM's rationale, from whichever contracted key carries it."""
+    for key in _PM_NARRATION_KEYS:
+        value = parsed.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""
+
+
 def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None]:
     """Extract the PM's display narration + intended decision from its raw
     LLM response (DEF056). Returns (display_text, llm_verdict); llm_verdict
@@ -1086,7 +1197,7 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     if parsed is None:
         return text.strip(), None
 
-    narration = str(parsed.get("narration") or "").strip()
+    narration = _pm_narration(parsed)
     if truncated and narration:
         narration += _PM_TRUNCATED_NARRATION
     action = _normalize_pm_action(parsed.get("action"))
@@ -1136,6 +1247,7 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
         horizon_days = int(parsed.get("horizon_days"))
     except (TypeError, ValueError):
         horizon_days = ctx.trader_horizon_weeks * 7
+    horizon_note = _horizon_coherence_note(horizon_days, entry, stop)
 
     ceiling = _risk_tier_size_ceiling(ctx.mandate)
     if not narration:
@@ -1161,6 +1273,11 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     # the number stated is the position the user actually gets, never the one the
     # PM asked for.
     reason += _concentration_note(size_pct, ceiling)
+    # DEF255 — the stop and the horizon must be the same trade. Appended beside
+    # the other geometry annotations, and DELIBERATELY not a veto: the safety
+    # floor is the sole vetoer (DEF059) and an incoherent horizon is a reasoning
+    # flaw to disclose, not a mandate violation to block on.
+    reason += horizon_note
 
     # CR106 B1 — the same facts the sentence above states in prose, in a shape
     # a graphic can be gated on. The sentence STAYS: the board clamps `reason`
@@ -3972,6 +4089,15 @@ async def _compute_agent_text(
                 getattr(ctx, _DEBATOR_SIZE_ATTR[agent_id])
                 if agent_id in _DEBATOR_SIZE_ATTR else None
             ),
+            # CR153 B ≡ CR154 B ≡ CR155 C ≡ CR156 C (deduped per CR156's rule) —
+            # the risk budget's CONSUMPTION, not just its limits. Threaded from
+            # ctx so the prompt and the safety floor read the same values; the
+            # CONTEXT_NOT_SUPPLIED sentinel survives the trip, because "could not
+            # compute" and "zero" must not render identically (CR040).
+            current_drawdown_pct=ctx.current_drawdown_pct,
+            existing_open_risk_pct=ctx.risk_existing_open_risk_pct,
+            last_loss_closed_at=ctx.risk_last_loss_closed_at,
+            trade_open_timestamps=ctx.risk_trade_open_timestamps,
         )
         # DEF125: the provider reports its terminal stop reason here.
         stream_meta: dict[str, Any] = {}
@@ -4194,6 +4320,15 @@ async def _stream_pm_response(
         # The floor was never affected: its sector cap reads
         # `ctx.sector_holdings/marks/map` directly, not this string.
         sector_weights=ctx.sector_weights,
+        # CR153 B ≡ CR154 B ≡ CR155 C ≡ CR156 C (deduped per CR156's rule) —
+        # the risk budget's CONSUMPTION, not just its limits. Threaded from
+        # ctx so the prompt and the safety floor read the same values; the
+        # CONTEXT_NOT_SUPPLIED sentinel survives the trip, because "could not
+        # compute" and "zero" must not render identically (CR040).
+        current_drawdown_pct=ctx.current_drawdown_pct,
+        existing_open_risk_pct=ctx.risk_existing_open_risk_pct,
+        last_loss_closed_at=ctx.risk_last_loss_closed_at,
+        trade_open_timestamps=ctx.risk_trade_open_timestamps,
     )
     # DEF125 item 4: the PM's own budget was a separate hard-coded 600, one
     # line from the flat 400 — and DEF058 (verdict fails to parse in ~22% of
