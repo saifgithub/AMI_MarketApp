@@ -61,6 +61,7 @@ class GamesFieldStrip extends StatelessWidget {
     if (measured.length < 2) return const SizedBox.shrink();
 
     return SizedBox(
+      key: const Key('games_field_strip'),
       height: height,
       child: CustomPaint(
         painter: _FieldStripPainter(measured: measured),

@@ -275,7 +275,18 @@ fi
 # output is regenerated; deleting it costs nothing and removes the only way
 # this can fail.
 echo "▶ clearing the generated plugin registrant (a debug build must not leak into a release)"
-rm -f "${MOBILE_DIR}/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java"
+# Deleting the registrant is NOT enough, which cost a failed Play publish
+# (0.1.0+85). The registrant is GENERATED FROM `.flutter-plugins-dependencies`,
+# so a stale resolution simply regenerates the same broken file: that cache
+# was 12 days old and still listed `integration_test` under `android`, and the
+# fresh registrant duly imported it again. Clearing the resolution too forces
+# Flutter to re-evaluate which plugins the RELEASE variant actually has —
+# same shape as build_testflight.sh's `.dart_tool` clears, and for the same
+# reason: removing an output while leaving the state that produced it just
+# reproduces the output.
+rm -f "${MOBILE_DIR}/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java" \
+      "${MOBILE_DIR}/.flutter-plugins-dependencies"
+rm -rf "${MOBILE_DIR}/.dart_tool/flutter_build"
 
 flutter build appbundle --release \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
