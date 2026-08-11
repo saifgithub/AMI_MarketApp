@@ -7,8 +7,10 @@ GATE: none was used while building. Batch 9 of the CR143 prompt + data-feed reme
 
 # R68-BATCH9 — audit lane (CR148 A + B · CR147 B.1 · the DEF063 residue)
 
-**SHA:** `3e08d23e` (`main`, pushed to origin)
-**SCOPE:** chunk — the two paid feeds. CR147 and CR148 both go `in_progress`; no Defect closes here.
+**SHA:** `3e08d23e`, **plus `e53b714a`** (DEF260 — see below). Both on `main`, pushed to origin.
+**SCOPE:** chunk — the two paid feeds, plus one defect the promotion itself uncovered. CR147 and
+CR148 both go `in_progress`; **DEF260 closes**.
+**PROMOTED:** `alpha-2026-08-11-8`, verified in-container (see "Live verification" below).
 **depends-on:** R68-BATCH4 (`6b5fe052`, awaiting) — Batch 4 wired the Adanos secondary key into
 config and compose, and this batch is what makes the fetch path actually send it.
 
@@ -146,9 +148,61 @@ not shown"* — the claim the filter actually enforces.
 - `subreddit_stats` persists as **dicts, never bare NamedTuple arrays** — read back positionally, a
   future field reorder would silently transpose mentions and buzz.
 
+## DEF260 — found by promoting this batch, and it made half of Tier B a no-op
+
+Commit `e53b714a`. **This is not a tidy-up; without it CR148 Tier B did not work on Alpha.**
+
+The TTL change was committed, the suite was green, the promotion reported success, every smoke check
+passed and `/v1/admin/config-check` was clean — and an in-container read of
+`settings.social_cache_ttl_days` returned **30**. `docker-compose.yml` **always sets** the variable,
+so `${SOCIAL_CACHE_TTL_DAYS:-30}` is what the container runs and `config.py`'s value is dead code.
+
+**The DEF038/DEF063 family one layer further out.** Those were an *absent* key degrading a feature
+silently. This is a *present* key carrying a **stale second copy of the number** — and the existing
+parity guard could not see it, because both of its directions ask whether a field is **reachable**
+and neither asks whether the value that arrives is the one the code declares. It is the worse
+failure mode of the two: a dark feature at least looks suspicious when you go looking, whereas here
+the setting reads `configured: true`, the value is present, and it is simply wrong.
+
+**Measured, not estimated.** 88 self-named inline defaults in the `api-alpha` block; **81 already
+agreed**; 7 did not. Two are real — this one, and `PORTFOLIO_HEALTH_TRIAL_FINDINGS` at compose `7`
+vs Settings `3`, meaning **7 is what the CR136 portfolio-health feature runs today** and the declared
+3 is dead. One is deliberate (`SECRET_KEY` empty in compose so an unset key fails the boot check
+rather than inheriting the in-code dev placeholder). Four have no scalar default to compare.
+
+**A third parity direction, not a comment.** Every `${KEY:-X}` must equal its `Settings` default or
+carry an `_INLINE_DEFAULT_EXEMPT` entry saying why compose is right. **Verified red against the exact
+pre-fix state before green** — restoring `:-30` fails both new tests and leaves the seven
+pre-existing ones passing, which is itself the proof of the blind spot.
+
+**`PORTFOLIO_HEALTH_TRIAL_FINDINGS` is recorded, NOT changed.** It belongs to the CR136 lane, and
+picking a number for it here would alter another lane's shipped feature on a promotion that has
+nothing to do with it. Its exemption entry names the owner and the live value; that entry **is** the
+flag. **Auditor: this is a judgement call and worth challenging** — the alternative reading is that
+leaving a known-wrong declared default in place is itself a defect.
+
+## Live verification (post-promotion, in-container on Alpha)
+
+Not claimed from unit tests — read out of the running container at `alpha-2026-08-11-8`:
+
+- `settings.social_cache_ttl_days` → **7** (was 30 before DEF260, on the same code).
+- `fetch_live_sentiment('NVDA')` → 2,865 mentions; **854 positive / 552 negative / 1,459 neutral**
+  (neutral **51%**); 552 distinct posts, 12,894 upvotes; `subreddit_count` **49** with three
+  `SubredditStat` rows carrying real per-community sentiment and buzz; `fetched_at` rendering
+  *"fetched 2026-08-11 (1m ago)"*.
+- `fetch_live_news` → NVDA 3 kept at 5m/1h/1h; **SNOA 3 kept at 4d/5d/5d**.
+- **The SNOA result is stated against my own expectation, not for it**: CR147 measured its newest
+  article at 354 days, and today its coverage is inside the floor. The floor therefore did **not**
+  fire on the one ticker that motivated it. That is a real change in the supplier, not evidence the
+  fix works — the fix's evidence is the unit tests, and this line exists so the auditor does not
+  find the discrepancy first.
+- The primary Adanos key logged `monthly_remaining=49`. The failover shipped here is about to carry
+  real traffic rather than sit idle — worth knowing when reading the quota reasoning above.
+
 ## Verification
 
 - `backend/tests/unit/test_cr148_cr147_feed_depth.py` — **36 tests**.
+- `backend/tests/unit/test_config_compose_parity.py` — 3 new tests (DEF260), red-before-green.
 - **`test_prompt_data_parity.py` bit exactly as CR148 predicted it would**, and was answered with
   renders rather than with `INTENTIONALLY_OMITTED` entries: all eight new `SocialSentiment` fields
   are rendered-or-declared on **both** the `room` and `one_on_one` surfaces. The `fetched_at`
@@ -158,7 +212,7 @@ not shown"* — the claim the filter actually enforces.
 - **The call site, not just the builder.** `test_the_room_fact_sheet_actually_carries_the_new_social_depth`
   drives the real `_format_profile` render — the DEF238 blind spot, where a PM-only feature never
   worked once in production while its tests passed for the feature's entire life.
-- Full shared-checkout suite at `3e08d23e`: **3445 passed, 1 skipped**, 437.85s.
+- Full shared-checkout suite at `3e08d23e`: **3445 passed, 1 skipped**, 437.85s; at `e53b714a` (with DEF260): **3448 passed, 1 skipped**, 435.76s.
 
 ## What is NOT claimed
 
