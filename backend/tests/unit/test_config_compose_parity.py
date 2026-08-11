@@ -19,6 +19,8 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from pydantic_core import PydanticUndefined
+
 from app.core.config import Settings
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -201,4 +203,98 @@ def test_the_non_app_env_allowlist_carries_reasons():
     unexplained = [k for k, why in _ENV_KEYS_WITHOUT_SETTINGS.items() if not why.strip()]
     assert not unexplained, (
         f"_ENV_KEYS_WITHOUT_SETTINGS entries need a reason: {unexplained}"
+    )
+
+
+# ── The third direction: compose inline defaults vs Settings (DEF260) ─────────
+#
+# The two directions above ask whether a field is *reachable*. Neither asks
+# whether the value that reaches it is the one the code declares — and for any
+# key written `${VAR:-X}`, compose ALWAYS sets the variable, so `X` is what the
+# container runs and the `Settings` default is dead code.
+#
+# Found live: CR148 Tier B changed `social_cache_ttl_days` 30 → 7, the promotion
+# reported success, every unit test stayed green, and
+# `printenv SOCIAL_CACHE_TTL_DAYS` in the running container returned **30**. The
+# edit was dark on Alpha in exactly the way DEF038 and DEF063 were, one layer
+# further out: not an absent key this time, but a present key carrying a stale
+# copy of the number.
+#
+# 88 inline defaults were measured when this guard was written; 81 already
+# agreed. The point of the guard is that the number stays 81-of-81 without
+# anyone re-running that script.
+
+# Known, DELIBERATE disagreements. Each states why compose's value is right and
+# the Settings default is not simply out of date.
+_INLINE_DEFAULT_EXEMPT: dict[str, str] = {
+    # Deliberately EMPTY in compose so an unset SECRET_KEY reaches the boot
+    # check as empty and fails loudly, instead of silently booting on the
+    # in-code dev placeholder (app/main.py's AMI_ENV=staging assertion).
+    "SECRET_KEY": "empty on purpose — an unset key must fail the boot check, not inherit the dev default",
+    # NOT ours (CR136 / portfolio-health lane). compose 7 vs Settings 3, so the
+    # LIVE value is 7 and the Settings default is dead. Recorded rather than
+    # changed: picking a number here would change another lane's shipped feature
+    # behaviour on a promotion that has nothing to do with it. Flagged to that
+    # lane to reconcile — this entry is the flag.
+    "PORTFOLIO_HEALTH_TRIAL_FINDINGS": (
+        "CR136 lane owns this; compose 7 wins over Settings 3 today — reconcile there, not here"
+    ),
+}
+
+
+def _inline_compose_defaults() -> dict[str, str]:
+    """`KEY: ${KEY:-value}` pairs in the api-alpha block. Only self-named keys —
+    a forward under a different name (ENV: ${AMI_ENV:?}) is a different
+    question, already covered by _NOT_FORWARDED."""
+    out: dict[str, str] = {}
+    for key, var, inline in re.findall(
+        r"^\s+([A-Z][A-Z0-9_]*):\s*\$\{([A-Z][A-Z0-9_]*):-(.*?)\}\s*$",
+        _api_alpha_env_block(), re.M,
+    ):
+        if key == var:
+            out[key] = inline.strip()
+    return out
+
+
+def test_inline_compose_defaults_match_settings():
+    """A compose inline default that disagrees with its Settings default is a
+    value the code declares and the container never uses."""
+    fields = Settings.model_fields
+    mismatched: list[str] = []
+    for key, inline in _inline_compose_defaults().items():
+        if key in _INLINE_DEFAULT_EXEMPT:
+            continue
+        field = fields.get(key.lower())
+        if field is None or field.default is PydanticUndefined:
+            # No field, or no scalar default to compare against — the other two
+            # directions own those cases.
+            continue
+        declared = field.default
+        actual = (
+            inline.lower() == str(declared).lower()
+            if isinstance(declared, bool)
+            else inline == str(declared)
+        )
+        if not actual:
+            mismatched.append(f"{key}: compose={inline!r} vs Settings={declared!r}")
+    assert not mismatched, (
+        "compose inline defaults override Settings defaults in the running "
+        f"container, so these values are dark (DEF260): {mismatched}. "
+        "Change the compose default to match, or add an _INLINE_DEFAULT_EXEMPT "
+        "entry saying why compose is right."
+    )
+
+
+def test_the_social_ttl_specifically_is_not_dark():
+    """The key that proved the blind spot. Pinned by name and by VALUE so the
+    CR148 Tier B decision (Saiful, 2026-08-11: 30 → 7) cannot be silently
+    reverted by a compose edit that no other test in this file can see."""
+    assert Settings.model_fields["social_cache_ttl_days"].default == 7
+    assert _inline_compose_defaults().get("SOCIAL_CACHE_TTL_DAYS") == "7"
+
+
+def test_the_inline_default_exemptions_carry_reasons():
+    unexplained = [k for k, why in _INLINE_DEFAULT_EXEMPT.items() if not why.strip()]
+    assert not unexplained, (
+        f"_INLINE_DEFAULT_EXEMPT entries need a reason: {unexplained}"
     )

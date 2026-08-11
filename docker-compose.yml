@@ -269,7 +269,12 @@ services:
       ADANOS_API_KEY_SECONDARY: ${ADANOS_API_KEY_SECONDARY:-}
       # CR041: durable-cache staleness. 30d keeps a 150-ticker benchmark
       # re-runnable at zero quota cost against the 250/month free tier.
-      SOCIAL_CACHE_TTL_DAYS: ${SOCIAL_CACHE_TTL_DAYS:-30}
+      # DEF260: this inline default is a SECOND copy of the value and it is the
+      # one that wins — the var is always set in the container, so `config.py`'s
+      # default is dead code here. CR148 Tier B changed the Settings default to
+      # 7 and the container went on serving 30. Kept in sync by
+      # `test_config_compose_parity.py::test_inline_compose_defaults_match_settings`.
+      SOCIAL_CACHE_TTL_DAYS: ${SOCIAL_CACHE_TTL_DAYS:-7}
       # Concierge lesson-retrieval mode (CR021): saver | full_context | embedding.
       CONCIERGE_CONTEXT_MODE: ${CONCIERGE_CONTEXT_MODE:-full_context}
       # CR069 Sharia indicator for the `halal` flag. OFF by default → the flag
