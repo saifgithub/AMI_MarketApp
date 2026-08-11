@@ -11,9 +11,85 @@ import json
 import re
 
 
-def extract_json_object(text: str) -> dict | None:
+def _close_truncated_object(candidate: str) -> str | None:
+    """Rebuild a syntactically complete object from one the decoder ran out of.
+
+    DEF258 — the PM's decode budget is a ceiling, and when it is reached the
+    JSON stops mid-token: no closing quote, no closing brace. Every field is
+    intact up to that point, so the DECISION (`action`, `size_pct`, the levels)
+    is present and only the tail of the long trailing string is lost. Discarding
+    it costs the whole verdict; closing it costs the tail of one sentence.
+
+    Walks the string once tracking quote/escape state and brace depth, drops any
+    trailing partial token, then closes the open string and the open containers.
+    Returns None when the object was not in fact truncated (balanced already) or
+    when nothing survives the trim — a genuinely malformed object must still be
+    rejected, not guessed at.
+    """
+    in_string = False
+    escaped = False
+    stack: list[str] = []
+    # The last prefix known to end on a COMPLETE member, with the container
+    # stack as it stood there. Only commas and closers qualify: a bare `"` is
+    # ambiguous — it closes keys as well as values, and cutting on a key's quote
+    # yields `{"size_pct"}`, which is not JSON.
+    safe: tuple[int, tuple[str, ...]] | None = None
+    for i, ch in enumerate(candidate):
+        if escaped:
+            escaped = False
+            continue
+        if ch == "\\":
+            escaped = True
+            continue
+        if in_string:
+            if ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+        elif ch in "{[":
+            stack.append(ch)
+        elif ch in "}]":
+            if stack:
+                stack.pop()
+            safe = (i + 1, tuple(stack))
+        elif ch == ",":
+            safe = (i, tuple(stack))
+    if not stack and not in_string and not escaped:
+        return None
+
+    if escaped:
+        # A dangling backslash would escape the quote appended below.
+        candidate = candidate[:-1]
+        in_string = True
+
+    if in_string:
+        # Mid-sentence inside a string value — the common case, and the only one
+        # where the clipped content is worth keeping: close the quote in place.
+        repaired = candidate + '"'
+        open_containers = stack
+    else:
+        # Outside a string the tail is a partial number, keyword or valueless
+        # key (`2.`, `tru`, `"narration":`). Fall back to the last complete
+        # member and drop everything after it.
+        if safe is None:
+            return None
+        cut, open_containers = safe[0], list(safe[1])
+        repaired = candidate[:cut]
+
+    for opener in reversed(open_containers):
+        repaired += "}" if opener == "{" else "]"
+    return repaired
+
+
+def extract_json_object(text: str, *, repair_truncated: bool = False) -> dict | None:
     """Extract the first JSON object found in `text`, tolerating ```json
-    fences and surrounding prose. Returns None if nothing parses."""
+    fences and surrounding prose. Returns None if nothing parses.
+
+    `repair_truncated` is opt-in (DEF258): only the PM verdict path asks for it,
+    and only after a strict read has already failed, because a repaired object
+    is a partial read and the caller must disclose it as one.
+    """
     if not text:
         return None
     cleaned = text.strip()
@@ -22,9 +98,16 @@ def extract_json_object(text: str) -> dict | None:
     if not candidate.startswith("{"):
         first = candidate.find("{")
         last = candidate.rfind("}")
-        if first == -1 or last == -1 or last <= first:
+        if first == -1:
             return None
-        candidate = candidate[first : last + 1]
+        if last == -1 or last <= first:
+            # DEF258: an object that opened and never closed. Without the repair
+            # pass there is nothing to salvage, so keep the original rejection.
+            if not repair_truncated:
+                return None
+            candidate = candidate[first:]
+        else:
+            candidate = candidate[first : last + 1]
     try:
         # DEF256 — `strict=False` permits raw control characters INSIDE strings.
         # Nothing else is relaxed: trailing commas, single quotes and unquoted
@@ -41,4 +124,14 @@ def extract_json_object(text: str) -> dict | None:
         # a control, so this is the control.
         return json.loads(candidate, strict=False)
     except json.JSONDecodeError:
+        pass
+    if not repair_truncated:
         return None
+    closed = _close_truncated_object(candidate)
+    if closed is None:
+        return None
+    try:
+        result = json.loads(closed, strict=False)
+    except json.JSONDecodeError:
+        return None
+    return result if isinstance(result, dict) else None

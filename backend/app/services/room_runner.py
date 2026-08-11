@@ -1036,6 +1036,18 @@ _PM_NO_RATIONALE = (
     "reasoned one.]"
 )
 
+# DEF258 — a repaired object is a PARTIAL read, and CR040 says a partial read
+# announces itself. The decision fields survive a clip intact (`action`,
+# `size_pct` and the levels are all emitted before the long trailing narration),
+# so the verdict is honest; the rationale is the half that was lost, and saying
+# so is the difference between a short explanation and a truncated one. Same
+# `[AMI …]` voice the client amber-marks (CR106 §3.3).
+_PM_TRUNCATED_NARRATION = (
+    " [AMI: the Portfolio Manager hit its length limit mid-sentence. The "
+    "decision and its numbers above are complete; this explanation is cut "
+    "short.]"
+)
+
 
 def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None]:
     """Extract the PM's display narration + intended decision from its raw
@@ -1044,10 +1056,27 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     caller fails safe to PASS in that case rather than fabricating APPROVE.
     """
     parsed = extract_json_object(text)
+    truncated = False
+    if parsed is None:
+        # DEF258 — the decode budget is a ceiling, and the PM reaches it: 2 of
+        # 14 verdicts in the 2026-08-11 post-promotion batch stopped mid-string
+        # at exactly `max_tokens`. Strict parsing then returns None, the caller
+        # fails safe to PASS (DEF059), and the raw half-written JSON is what
+        # reaches the transcript as the PM's turn — the user reads
+        # `{ "action": "PASS", "narrational": "REJECT: …` cut off mid-word.
+        # Repair is tried ONLY here, ONLY after a strict read has already
+        # failed, and its result is disclosed below. Raising the budget was the
+        # other option and was rejected: the two clipped samples are censored,
+        # so they cannot size a cap (P16), and 12 of 14 finished under 425
+        # tokens against a 1100 ceiling — the tail is not a budget problem.
+        parsed = extract_json_object(text, repair_truncated=True)
+        truncated = parsed is not None
     if parsed is None:
         return text.strip(), None
 
     narration = str(parsed.get("narration") or "").strip()
+    if truncated and narration:
+        narration += _PM_TRUNCATED_NARRATION
     action = _normalize_pm_action(parsed.get("action"))
     if action is None:
         return narration or text.strip(), None
