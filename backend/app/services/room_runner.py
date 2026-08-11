@@ -78,10 +78,15 @@ from app.services.social_context import (
     SocialFeed,
     fetch_live_sentiment,  # re-exported: prompt-parity guard patches it here
     format_community_read,
+    format_engagement,
+    format_fetched_age,
     format_mention_trend,
     format_pattern,
+    format_sample_size_caveat,
     format_sentiment_score,
+    format_sentiment_split,
     format_sentiment_tone,
+    format_subreddit_split,
     resolve_social_feed,
 )
 from app.services.llm_gateway import ChatMessage, LLMGateway, get_llm_gateway
@@ -635,6 +640,24 @@ def _profile_for_ticker(
         profile["mention_trend"] = format_mention_trend(sentiment)
         profile["influencer_take"] = format_community_read(sentiment)
         profile["pattern"] = format_pattern(sentiment)
+        # CR148 Tier A/B — dimensions fetched on this same call since CR024 and
+        # dropped on the floor here until AT:R68. Pre-formatted upstream by the
+        # Adanos formatters and rendered verbatim (never recomputed in the
+        # prompt layer), same contract as the three above. Empty strings/tuples
+        # are left out entirely rather than stored, so `_social_detail_lines`
+        # never has to distinguish "no engagement data" from "engagement of
+        # zero" — the falsy-collapse trap Batch 7 had to design around.
+        for key, value in (
+            ("sentiment_split", format_sentiment_split(sentiment)),
+            ("social_engagement", format_engagement(sentiment)),
+            ("social_sample_caveat", format_sample_size_caveat(sentiment)),
+            ("social_fetched_age", format_fetched_age(sentiment)),
+        ):
+            if value:
+                profile[key] = value
+        community_lines = format_subreddit_split(sentiment)
+        if community_lines:
+            profile["subreddit_split"] = list(community_lines)
     field_state["social"] = sf.state.value
 
     # Derive narrative strings (the `_TEMPLATES` scripted-demo fallback used

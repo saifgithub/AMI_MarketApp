@@ -949,9 +949,16 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         pass  # stripped below; no scaffolding line to contradict it with
     elif news_live:
         header_lines.append(
-            "- Recent catalyst/headline: LIVE, real news as of this call "
-            "(publisher + recency shown below). Some headlines may carry a "
-            "sentiment tag; treat it as one input, not a verdict."
+            # CR147 Tier B.1 — "as of this call" was the fetch's timing, never
+            # the article's. SNOA's newest headline was 354 days old under this
+            # exact line. `fetch_live_news` now drops anything past a 7-day
+            # floor, so the claim the header makes is the one the filter
+            # enforces; if nothing survives, this branch is not taken at all
+            # and the synthetic-catalyst disclosure below runs instead.
+            "- Recent catalyst/headline: LIVE, real news published within the "
+            "last 7 days (publisher + per-item age shown below; anything older "
+            "was dropped, not shown). Some headlines may carry a sentiment tag; "
+            "treat it as one input, not a verdict."
         )
     elif news_withheld:
         header_lines.append(
@@ -973,9 +980,16 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         pass  # stripped below; no scaffolding line to contradict it with
     elif social_live:
         header_lines.append(
+            # CR148 Tier B — "as of this call" was false for most turns: the
+            # cache served rows averaging 20.2 days old (93% over a week) under
+            # this sentence. The snapshot's real date is now rendered in the
+            # detail block, so the header points at it instead of asserting a
+            # freshness it never checked.
             "- Retail sentiment/mention/community fields: LIVE, real Reddit "
-            "aggregate data as of this call (Reddit only — no Twitter/X, "
-            "StockTwits, Google Trends, or Discord data exists)."
+            "aggregate data — a point-in-time snapshot whose fetch date is "
+            "shown with it below; read it as of THAT date, not as of now "
+            "(Reddit only — no Twitter/X, StockTwits, Google Trends, or "
+            "Discord data exists)."
         )
     elif social_withheld:
         header_lines.append(
@@ -1143,16 +1157,40 @@ def _social_detail_lines(profile: dict[str, Any]) -> list[str]:
     data-source disclosure header already declares social live/not-live, so no
     fabricated social numbers leak; CR040). These are pre-formatted upstream by the
     Adanos formatters (format_mention_trend / format_pattern / format_community_read) —
-    rendered verbatim as indented detail under 'Retail sentiment:', never recomputed."""
+    rendered verbatim as indented detail under 'Retail sentiment:', never recomputed.
+
+    CR148 Tier A/B extends the same treatment to the rest of the payload, which
+    arrived on the identical API call and was discarded: the classified split
+    (whose neutral residue is the majority class and ran 42–71% unstated), the
+    engagement dimension, the per-community breakdown, the small-sample caveat,
+    and the snapshot's real age. Ordering is deliberate — the freshness label
+    goes FIRST, because everything under it is only as true as its date."""
     if (profile.get("field_state") or {}).get("social") != "live":
         return []
     out: list[str] = []
+    if profile.get("social_fetched_age"):
+        out.append(f"  Snapshot: {profile['social_fetched_age']}")
     if profile.get("mention_trend"):
         out.append(f"  Mentions: {profile['mention_trend']}")
     if profile.get("pattern"):
         out.append(f"  {profile['pattern']}")
+    if profile.get("sentiment_split"):
+        out.append(f"  Classified: {profile['sentiment_split']}")
+    if profile.get("social_engagement"):
+        out.append(f"  Engagement: {profile['social_engagement']}")
     if profile.get("influencer_take"):
         out.append(f"  Communities: {profile['influencer_take']}")
+    for line in (profile.get("subreddit_split") or ()):
+        out.append(f"    {line}")
+    if profile.get("subreddit_split"):
+        # The prohibition sits WITH the data rather than in the agent profile,
+        # where the same rule already exists and was broken in 9 of 18 turns.
+        # The load-bearing half is the data above it; this line only names the
+        # boundary of what was supplied (P2 — the sentence is not the control).
+        out.append("    (No other community's numbers were supplied. Do not "
+                   "attribute a figure, tone or trend to one that is not listed.)")
+    if profile.get("social_sample_caveat"):
+        out.append(f"  {profile['social_sample_caveat']}")
     return out
 
 

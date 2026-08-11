@@ -232,7 +232,13 @@ class Settings(BaseSettings):
     # NOTE: 30d is a benchmark-reproducibility figure. Sentiment a month stale
     # presented to a user as current is CR038's failure mode with real numbers
     # — shorten it, or render the age, before this fronts live users.
-    social_cache_ttl_days: int = 30
+    # CR148 Tier B — 30 → 7, Saiful's call 2026-08-11. At 30 days the live cache
+    # measured mean age 20.2d with 162 of 175 rows (93%) older than a week, all
+    # rendered under "as of this call". 7 days costs ~4.3 calls per distinct
+    # ticker/month against a 500-call budget (two keys, failover wired in
+    # `social_context._get_with_failover`) — a ~116 distinct-ticker/month ceiling
+    # that Alpha, at 175 cached tickers over its entire life, is nowhere near.
+    social_cache_ttl_days: int = 7
 
     # Room dedup windows (see app/services/room_runner.py::start_run).
     # Same user+ticker submitted while a run is in flight always returns the

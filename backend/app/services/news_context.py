@@ -234,11 +234,50 @@ def set_alpha_vantage_source(source: NewsSource | None) -> None:
     _alpha_vantage_source = source
 
 
+# CR147 Tier B.1 — the recency floor. NOT a chosen number: CR147's own
+# acceptance criterion is *"re-run the age parse over a fresh epoch: >7d must be
+# 0, or the run must be UNAVAILABLE"*, so 7 days is the threshold the CR was
+# accepted against.
+#
+# What it fixes is a label, not a shortage. Probed live across 8 tickers,
+# yfinance returned 10 articles for 7 of them; SNOA got 3, and its NEWEST was
+# **354 days old** — rendered under a header that says the catalyst is real "as
+# of this call". More headlines was never the fix; refusing to call a year-old
+# article recent is.
+_NEWS_RECENCY_FLOOR_DAYS = 7
+
+
+def _within_recency_floor(item: LiveHeadline, *, now: float) -> bool:
+    """An item counts as recent only when its age is KNOWN and inside the floor.
+
+    `published_at == 0` means the source gave no date (`_relative_age` renders
+    it "date unknown"). An item whose age cannot be established cannot be
+    certified recent, so it is dropped rather than passed through — the
+    alternative is exactly the thing the floor exists to stop, a headline of
+    unknown vintage under a live-as-of-this-call header (CR040).
+    """
+    if not item.published_at:
+        return False
+    return (now - item.published_at) <= _NEWS_RECENCY_FLOOR_DAYS * 86400
+
+
 def fetch_live_news(ticker: str, limit: int = DEFAULT_HEADLINE_LIMIT) -> list[LiveHeadline] | None:
     """Real recent headlines, combining sources when more than one is
     configured. Never raises. Yahoo is always tried; Alpha Vantage is tried
     too when `alpha_vantage_api_key` is set — either can fail independently
     without taking the other down.
+
+    Items older than `_NEWS_RECENCY_FLOOR_DAYS` (or of unknown date) are dropped
+    here, at the one choke point BOTH surfaces share — the Room's
+    `resolve_news_feed` and the 1-on-1 `build_news_context_block`. Filtering in
+    the resolver instead would have left the 1-on-1 block rendering year-old
+    headlines under the same live header.
+
+    Returning None when nothing survives is what makes the disclosure honest for
+    free: `resolve_news_feed` classifies an empty feed as UNAVAILABLE, the Room
+    renders its existing synthetic-catalyst disclosure, and `n_available` in
+    `_resolve_and_charge_feeds` stops counting news — so the 2-credit live-data
+    surcharge is no longer charged for a feed we just refused to trust.
     """
     try:
         yahoo_items = _YfinanceSource().fetch(ticker, limit) or []
@@ -255,7 +294,20 @@ def fetch_live_news(ticker: str, limit: int = DEFAULT_HEADLINE_LIMIT) -> list[Li
             av_items = []
 
     merged = _merge_headlines(av_items, yahoo_items, limit=limit)
-    return merged or None
+    now = datetime.now(timezone.utc).timestamp()
+    recent = [item for item in merged if _within_recency_floor(item, now=now)]
+    if len(recent) < len(merged):
+        # Loud, not silent (CR040): if this fires on every ticker the feed is
+        # not "working with a filter", it is dead, and the count is the only
+        # thing that says so before the disclosure quietly flips to synthetic.
+        logger.info(
+            "news_context_recency_floor_dropped",
+            ticker=ticker,
+            dropped=len(merged) - len(recent),
+            kept=len(recent),
+            floor_days=_NEWS_RECENCY_FLOOR_DAYS,
+        )
+    return recent or None
 
 
 class NewsFeed(NamedTuple):

@@ -53,7 +53,7 @@ from app.services.journal_context import build_journal_context_block
 from app.services.market_data import EarningsInfo
 from app.services.news_context import LiveHeadline
 from app.services.room_prompts import _format_profile
-from app.services.social_context import SocialSentiment
+from app.services.social_context import SocialSentiment, SubredditStat
 from app.services.technicals import Technicals
 
 # The single ticker every surface is rendered for. Distinct-looking so an
@@ -109,6 +109,15 @@ _TECH_SENTINEL = Technicals(
     volume_ratio=1.47,
 )
 
+# CR148 Tier B — the snapshot's age renders as a date + a relative age, so its
+# fingerprint is the date, derived here independently of the formatter under
+# test (the news `published_at` entry below takes the other route and calls the
+# formatter; doing that for both would leave neither non-vacuous).
+_SOCIAL_FETCHED_AT = int(datetime.now(timezone.utc).timestamp()) - (3 * 86400)
+_SOCIAL_FETCHED_DATE = datetime.fromtimestamp(
+    _SOCIAL_FETCHED_AT, tz=timezone.utc
+).strftime("%Y-%m-%d")
+
 _SOCIAL_SENTINEL = SocialSentiment(
     ticker="TKFIELDSENT",     # distinct from the block arg so we can prove the
     buzz_score=88.0,          # field itself is not what renders the symbol
@@ -120,6 +129,16 @@ _SOCIAL_SENTINEL = SocialSentiment(
     period_days=33,
     top_subreddits=("SUBSENT",),
     sample_snippets=("SNIPPETSENT",),
+    # CR148 Tier A — six dimensions that arrived on every Adanos call since
+    # CR024 and were dropped before they reached any prompt.
+    positive_count=4471,
+    negative_count=2119,
+    neutral_count=6971,
+    total_upvotes=98765,
+    unique_posts=1234,
+    subreddit_count=44,
+    subreddit_stats=(SubredditStat("SPLITSENT", 5150, -0.37, 66.0),),
+    fetched_at=_SOCIAL_FETCHED_AT,
 )
 
 _EARNINGS_SENTINEL = EarningsInfo(
@@ -430,6 +449,22 @@ def env(monkeypatch):
             "bearish_pct": "bearish 29%", "trend": "SOCTRENDSENT",
             "period_days": "over 33d", "top_subreddits": "SUBSENT",
             "sample_snippets": "SNIPPETSENT",
+            # CR148 Tier A — the classified split, whose NEUTRAL residue is the
+            # majority class and was never stated (42–71% of the sample,
+            # median 52.5%, noticed in 2 of 18 turns).
+            "positive_count": "4,471 positive",
+            "negative_count": "2,119 negative",
+            "neutral_count": "6,971 neutral",
+            # Engagement intensity — what buzz_score compresses away.
+            "total_upvotes": "98,765 total upvotes",
+            "unique_posts": "1,234 distinct posts",
+            # Breadth: naming 3 communities out of 44 read as the whole sample.
+            "subreddit_count": "of 44 subreddits",
+            # The per-community split — the evidence that leaves the 9/18
+            # fabricated attributions nothing to invent.
+            "subreddit_stats": "SPLITSENT",
+            # CR148 Tier B — the freshness claim, replaced by the fetch date.
+            "fetched_at": _SOCIAL_FETCHED_DATE,
         },
         "news": {
             "title": "HEADLINESENT", "publisher": "PUBSENT",
