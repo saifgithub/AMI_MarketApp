@@ -133,4 +133,52 @@ is the enforcement point and both the doc and the code now say so.
 
 ---
 
-**SUBMITTED: round 1**
+---
+
+## ROUND 2 — response to the round-1 verdict (`a982f4a2`, AWAITING_FIXES, 2 MAJOR)
+
+**Fix SHA:** `b6b17044`. **Both accepted.**
+
+**The advice question was the right one to ask and the answer is NO.** This lane asked the auditor
+to judge whether DEF255's note crosses into investment advice — a genuine BLOCKER class for a
+simulation-only product not licensed to advise. It read the rendered text against the banned-phrase
+lists the codebase already uses for this class (`test_def240_loud_concentration.py:57-64`), found
+**zero hits**, and confirmed `_MAX_EVIDENCED_HORIZON_DAYS = 365` is genuinely derived from
+`_HISTORY_PERIOD = "3m"`, TTM fundamentals and the 52-week range. Recording that explicitly because a
+negative finding on a safety question is worth as much as a positive one.
+
+**MAJOR 1 — the clause predicted an outcome it had no input for and no bound on.** *"A
+weeks-to-months instrument — ordinary volatility would take the position out"* fired on any
+`stop < entry` with **no bound on the distance**, so the identical prediction was made for a 1.9%
+stop and a 90% one. Live: **7 of 25 approvals (28%)** over 365 days, stops spanning 1.9%–15.8%. And
+nothing tied the sentence to the number it printed — MUT-5 hardcoded the distance to 6.0 and left
+**142 tests green**.
+
+**It could not be fixed by bounding it**, because the stack renders no volatility at all — CR146
+Tier A deleted the ATR and stdev demands precisely because nothing supplies them. So *"ordinary
+volatility would take this out"* is a claim AMI has no input for: the same defect that CR deleted,
+arriving from the other direction. Rewritten to the standard the sibling annotator's docstring
+records after DEF240's round-1 audit — **state what happened, never an evaluative outcome** — and
+parametrised across the live 1.9%–15.8% spread, so a hardcoded distance now fails four tests.
+
+**MAJOR 2 — my retraction missed a copy.** `agent_prompts.py:77-78` still carried the exact sentence
+CR156 D retracts, **in the docstring of the function that appends the floor, citing the doc that now
+contradicts it.** This lane claimed *"both the doc and the code now say so"* while the pin only read
+the doc; the programme's own plan named that file and I half-did it. Corrected, with the Room
+composition stated where the claim used to be, and pinned by a test that reads the source.
+
+Filed as **DEF267**.
+
+**Accepted, not fixed, and recorded:** `safety_floor.py:129` still opens *"YOU MUST REJECT any trade
+that:"*, so CR156 B's REJECT sweep is not exhaustive; and the 1-on-1 PM still offers
+`APPROVE | REJECT | MODIFY-AND-APPROVE` unreconciled. Both are real; both are CR156 Tier B scope
+rather than round-2 scope, and CR156 stays `in_progress`.
+
+**The auditor's recommendation is adopted**: it could not tell whether the one post-deploy
+`_PM_NO_RATIONALE` hid prose under a seventh key, because the raw object is not persisted, and
+suggested logging the parsed key set. **DEF264 does exactly that** — and it was that missing log line
+that made the 21% `narr` rate cost a 26-convene sweep to find.
+
+---
+
+**SUBMITTED: round 2**

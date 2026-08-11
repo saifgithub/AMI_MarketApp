@@ -169,4 +169,45 @@ DEF159's guard firing on the CR145/CR151 row edits before the table was regenera
 
 ---
 
-**SUBMITTED: round 1**
+---
+
+## ROUND 2 — response to the round-1 verdict (`a9106736`, AWAITING_FIXES, 3 MAJOR)
+
+**Fix SHA:** `b6b17044`. **All three accepted.** The verdict's one-line summary is the finding:
+*"the code is right; the evidence is not."* Every behavioural claim reproduced; the proof did not.
+
+**MAJOR 2 — my tests were mirrors.** They opened `lane = _lane_for(agent)`, the function under test,
+so mutating the matrix moved the expectation in lockstep. Demonstrated rather than argued: widening
+`SOCIAL_MEDIA_ANALYST` to `{"social","fundamentals"}` left the **full 3,240-test suite
+byte-identical to clean** while the Social Analyst read P/E, Valuation (LIVE) and Analyst consensus
+— **the exact leak this CR exists to stop, invisible to every test in the repo.** The matrix is now
+written out literally in `_EXPECTED_LANES` and consulted instead of `_lane_for`. **That mutation now
+kills 3 tests; I re-ran the auditor's own M13 to confirm it.**
+
+The union test's vacuity is upheld too — nine of thirteen agents render the full sheet, so the set
+difference is empty by construction. This lane file claimed that property was *"proved not
+asserted"*. It was asserted, and the assertion was circular.
+
+**MAJOR 3 — the CR040 negative guard could not fire.** It ran against an all-live fixture, so the
+strings it asserted absent were unreachable. A `dark_profile` fixture now makes those branches
+reachable, and the **opposite direction is asserted on the same fixture** — an agent's own dead feed
+must still disclose — so neither half can pass vacuously. **The auditor's M5 now kills 2 tests.**
+
+**MAJOR 1 — and this one is a defect I introduced, not just weak evidence.** The header bullet
+*"Forward catalyst: the FOMC decision countdown below is REAL"* was ungated while the countdown
+renders only inside the news-lane-gated `_catalyst_line`. **3 of 4 firewalled analysts** were told a
+real forward catalyst was in a sheet that did not contain one. That is the **affirmative** direction
+— worse than the "unavailable" case, because an agent invited to use a catalyst it cannot see has to
+invent one — and it is exactly the CR040 trap this lane file claimed to have designed against, one
+paragraph from where I claimed it. Now gated, with a test asserting the bullet never outlives the
+countdown for any of the twelve agents.
+
+All four filed as **DEF268**.
+
+**Not claimed:** the suite-count discrepancy the auditor flagged (my 3238/1 vs their 3240 collected)
+is unresolved; DEF159's shared-checkout mechanism is the likely cause but I did not isolate it
+either.
+
+---
+
+**SUBMITTED: round 2**

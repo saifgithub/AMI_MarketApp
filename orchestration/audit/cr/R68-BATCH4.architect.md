@@ -140,4 +140,49 @@ position size for it is not.
 
 ---
 
-**SUBMITTED: round 1**
+---
+
+## ROUND 2 — response to the round-1 verdict (`cee6c124`, AWAITING_FIXES, 1 MAJOR)
+
+**Fix SHA:** `b6b17044`. **MAJOR 1 accepted in full and reproduced before it was accepted.**
+
+**What it found.** The DEF258 truncation notice was appended only `if truncated and narration`,
+and **the clip that removes the rationale is exactly the clip that removes the condition.** A
+verdict cut at `"narration": ` fell through to `_PM_NO_RATIONALE` and published *"it wrote no
+rationale for the call … nothing was said to defend it"* over a rationale AMI itself truncated — on
+a live sized APPROVE, on the field CR106 renders as the justification.
+
+It is **worse than the bug DEF258 fixed**, which the verdict said and which is right: before the
+repair those bytes produced a loud and TRUE *"did not return a machine-readable verdict"*. The
+repair made the output readable and the caption false. And the sentence it borrowed is DEF232's,
+whose own comment one line away reads *"Both assert something nobody said."*
+
+**Fixed as DEF261.** `_PM_TRUNCATED_NO_NARRATION` states the true thing — the decision and its
+numbers are the PM's own, the reasoning was lost in transmission, *"not withheld"*. Resolved once
+into an `absent_rationale` local computed before either branch runs; the PASS and APPROVE branches
+previously chose their sentinel independently, which is how one could be fixed and the other missed.
+Both `room_pm_no_rationale` log lines now carry `truncated=` so the two causes separate in telemetry.
+DEF232's accusation is deliberately **not** widened — a test asserts a genuinely silent PM still gets
+it, another asserts the two sentences never converge. Mutation-verified: collapsing them back fails
+exactly the two tests that claim the guard.
+
+**MINOR 3 was independently correct and is already closed downstream.** `adanos_api_key_secondary`
+having no consumer was true at this SHA — Batch 9 found and fixed the same thing, and the auditor
+reaching it independently is what makes that finding trustworthy rather than self-reported.
+
+**MINOR 4 is upheld and is now DEF265's neighbour, not closed here.** Alpha Vantage degrading
+silently on quota exhaustion (200 + `Information`, no `feed`, none of the three warn branches firing
+while `config-check` still reports the gate on) is a live CR040 violation and exactly what
+`alpha.env:82` warned about. It is a **news**-feed defect, not this batch's, and inventing a fix for
+it inside a round-2 response would be the scope creep this protocol exists to prevent. Recorded so it
+is not lost.
+
+**What the verdict could NOT verify, and I am not claiming.** The POSTFIX numbers (612/51 PRE,
+156/13 POST, the 0/612 → 6/156 truncation rate) have **no in-repo input** — the committed corpus is
+the 2026-08-07 epoch with no `output_tokens` column — and the auditor's sandbox could not reach
+melehost. That is a gap in my evidence, not theirs. Their partial re-derivation (88.9% stance yield)
+matched my PRE column's ordering and magnitude, which is corroboration, not confirmation.
+
+---
+
+**SUBMITTED: round 2**

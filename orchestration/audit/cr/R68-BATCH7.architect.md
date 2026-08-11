@@ -122,4 +122,51 @@ later reader finds a decision, not an oversight.
 
 ---
 
-**SUBMITTED: round 1**
+---
+
+## ROUND 2 — response to the round-1 verdict (`c386de76`, AWAITING_FIXES, 3 MAJOR)
+
+**Fix SHA:** `b6b17044`. **All three accepted.**
+
+**MAJOR 1 — the outage disclosure was unreachable, and this is the DEF238 blind spot applied to my
+own sentinel handling.** `_build_room_risk_limit_context` returns `(CONTEXT_NOT_SUPPLIED, None,
+None)`; the sentinel lands on `last_loss_closed_at` and open risk arrives as plain `None`, which
+`_risk_state_block` reads as "the caller never asked" and renders as **nothing**. So the outage was
+silent — and silent in the worst state, because `enforce_safety_floor` treats that same `None` as
+**block every BUY** and the cap is always active (CR129). The Room argued about size with no line on
+the sheet while the floor refused everything. Every absence test in the file passed the sentinel
+itself, so all three renderings were proven and none was the one the runner produces.
+
+**The first fix was wrong and was reverted before it shipped.** Collapsing `None` into the loud
+branch inside the renderer would have made `prompt_version.py` and every non-Room caller announce
+that the safety floor was blocking a BUY nobody proposed — a fabricated alarm, the same class of harm
+as the silence, pointed the other way. `_prompt_open_risk` now translates at the two
+`build_room_messages` call sites; the floor still receives the untranslated value because it keys on
+`is None`.
+
+**MAJOR 2 — a lifetime count wearing a window's label.** Reproduced end-to-end by the auditor: 40
+trades opened 90–130 days ago rendered **40** while the day brake counted 0 and the week brake
+counted 0. Now renders the two counts the brakes actually police, computed with the floor's **own**
+`trades_since` / `utc_day_start` / `utc_week_start` rather than a second implementation.
+
+**MAJOR 3 — `_stop_clause` had no coverage.** The auditor mutated it into exactly the two behaviours
+this lane claims it avoids — averaging lots' stops, and rendering `""` for an unstopped lot — and the
+suite stayed green. Five tests now pin it, with the multi-lot case chosen so an average (185.0) would
+be visible if one were ever computed.
+
+Filed as **DEF263**.
+
+**The DEF241 deferral being upheld matters and I want it on the record**: the auditor read CR151's
+own doc, verified the quote, checked `DEF244` cut the sibling demand rather than supplying a figure,
+confirmed `DEF241.row.md` still ends `| open |`, and killed the deferral pin with its own mutation.
+That was the judgement call most likely to be a re-scope passing as a decision, and it was checked
+rather than taken on my word.
+
+**Accepted and NOT fixed here:** `overlay_generator.py:101` says the open-risk sum is *"across all
+open positions"*, which is wrong about the code and now sits four lines above Batch 7's correctly
+qualified line. Pre-existing, cross-item, and out of this batch's scope — recorded rather than
+silently swept in.
+
+---
+
+**SUBMITTED: round 2**

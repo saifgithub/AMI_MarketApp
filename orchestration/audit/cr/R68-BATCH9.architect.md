@@ -234,4 +234,64 @@ Not claimed from unit tests — read out of the running container at `alpha-2026
 
 ---
 
-**SUBMITTED: round 1**
+---
+
+## ROUND 2 — response to the round-1 verdict (`696e0e17`, AWAITING_FIXES, 4 MAJOR)
+
+**Fix SHA:** `b6b17044`. **All four accepted, including the one this lane asked to be challenged on
+— the challenge was right and my original reasoning was wrong.**
+
+**MAJOR-3 — DEF219's fix was dark on Alpha for five days, and I exempted the field that proved it.**
+This lane recorded `PORTFOLIO_HEALTH_TRIAL_FINDINGS` as another lane's business and invited the
+auditor to push back. It did, correctly. My reasoning — *do not invent a value for a lane you do not
+own* — was right about not inventing and **wrong about what was in front of me**: DEF219 had already
+**decided** 3, with Saiful's sign-off, and compose was carrying the 7 that decision replaced. Compose
+was not a competing opinion; it was a stale copy, and correcting it implements a recorded decision
+rather than making a new one. `_INLINE_DEFAULT_EXEMPT` is for **deliberate** disagreements; parking a
+known-wrong value beside the genuinely deliberate `SECRET_KEY` entry is how a defect becomes
+furniture. Compose now reads `:-3`, the exemption is gone, and DEF219's dark period is recorded.
+
+**MAJOR-4 — a guard that skips reads as coverage.** The new parity direction `continue`d past
+factory-default fields and DEF260's row called them "the other two directions' problem" — but both of
+those test **reachability only**, so four fields were checked by nothing at all, two of them
+**DEF038's own audiences family**. They are judgeable via `Settings._csv_or_json_list` in the same
+module. All four are now judged, and anything still uncomparable **fails a named assertion** rather
+than being dropped. The counts are corrected too: **84** self-named inline defaults, not 88; the
+originally-reported 88/81/7 double-counted.
+
+**MAJOR-2 — the failover could only lose.** A `200` with `remaining=0` means the payload is already
+in hand; discarding it to retry ends UNAVAILABLE if the secondary is down, and buys nothing because no
+exhaustion state survives to the next call. A **burst** 429 is not a monthly one. Fixed: a 200 is
+always returned, only a 429 with the monthly counter agreeing falls through. **The test that asserted
+the old behaviour is rewritten, and the assertion was the bug.** Live primary was at
+`monthly_remaining=48`, so this was days from firing.
+
+**MAJOR-1 — "adds prompt bytes to the social lane only" is false.** `_AGENT_LANES` firewalls four
+analysts; the other **nine of twelve** get `_ALL_DOMAINS` and therefore the full social depth —
+**+505 chars (+27.8%)**, including the four agents DEF258 measured clipping. That is more than the
+~430 chars for which this same batch deferred CR147 B.2 pending DEF258 sizing, so my own deferral
+reasoning was inconsistent with what I shipped. The claim is withdrawn; the deferral of B.2 stands,
+now on consistent grounds.
+
+**MINOR upheld — the `_MIN_MENTIONS = 100` derivation was mathematically wrong.** It used the
+standard error of a **single** proportion (5.0pp at n=100) where `format_sentiment_tone` thresholds a
+**difference** of two proportions from one multinomial sample, whose SE is sqrt((p1+p2−(p1−p2)²)/n) —
+6.5pp on the measured split, 10.0pp worst case. The threshold admitted exactly the readings it was
+written to exclude. Re-derived to **200** (n for SE=5pp on the even-quarter case, which is the epoch's
+median 52.5% neutral residue). This roughly doubles how often the caveat fires — the arithmetic's
+consequence, not a tuning knob.
+
+Filed as **DEF265** (failover) and **DEF266** (dark fix + guard skips + counts); the threshold
+correction ships with CR148.
+
+**Confirmed by the auditor and worth recording**, since these were the batch's load-bearing claims:
+DEF260 red-before-green reproduced exactly; TTL=7 in-container; the floor drops a 400-day *and* an
+undated item and returns UNAVAILABLE; a real pre-CR148 `BAER` row loads in-container and renders its
+age **from the ROW**; `subreddit_stats` stored as JSONB objects; the cache premise re-measured at
+183 rows / 22.0d / 162; `_NEWS_RECENCY_FLOOR_DAYS = 7` genuinely is CR147's acceptance line; all four
+parity-render mutations turn the guard red by field name; and the SNOA disclosure is accurate and does
+not undercut the batch.
+
+---
+
+**SUBMITTED: round 2**

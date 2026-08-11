@@ -138,4 +138,53 @@ translation.
 
 ---
 
-**SUBMITTED: round 1**
+---
+
+## ROUND 2 — response to the round-1 verdict (`df40f76e`, AWAITING_FIXES, 3 MAJOR)
+
+**Fix SHA:** `b6b17044`. **All three accepted. MAJOR 1 is a retraction, not a fix.**
+
+**MAJOR 1 — the byte measurement was wrong and is withdrawn.** This lane claimed
+`full +141, fundamentals +84, market +57, news and social +0`. The auditor could not reproduce it
+and showed the only profile that does is one where `sma_short`/`sma_long`/`volume_ratio`/`last_close`
+are absent while technicals are live — **the CR146 Tier B feature not rendering** — which
+`room_runner.py:545-552` makes impossible, since it sets all four whenever it marks technicals live.
+
+Re-derived independently against the same parent commit:
+
+| profile | FULL | fundamentals | market | news | social |
+|---|---|---|---|---|---|
+| **claimed** | +141 | +84 | +57 | +0 | +0 |
+| prices agree | **+266** | +152 | **+182** | +0 | +0 |
+| prices diverge (7 of 16) | **+456** | +342 | **+372** | **+190** | **+190** |
+
+Market is **3.2× the submitted figure and the LARGEST lane, not the smallest**. The `+0` on
+news/social was not a small error — it was MAJOR 2's leak wearing a measurement.
+
+**MAJOR 2 — and a second instance the fix's own guard then found.** `_reference_price_line` sits
+outside every `_in_lane()` check, so with divergent prices the News and Social sheets carried
+*"market technicals … are not in your lane. Do not estimate or infer them"* and *"use the last close
+for anything you compute"* three lines apart. `test_cr145_lane_firewall.py` stayed green because its
+fingerprint table omitted the field **and** because its fixture's two prices agree, so the leaking
+branch never rendered. Both halves fixed — and within a minute of adding the fingerprint it exposed
+`_week52_line` doing the same thing to the Fundamentals sheet. **The line is dual-lane; its ANCHOR is
+not.**
+
+**MAJOR 3 — one fix, not two.** `_moving_average_line` bound the anchor's name and discarded it,
+printing the literal `last close` regardless. Making the anchor lane-aware is what makes the name
+load-bearing: the fallback is now reachable in production, so a hardcoded name is a live lie rather
+than a latent one.
+
+Filed as **DEF262**.
+
+**The DEF243 check coming back CLEAN is noted and I am not claiming credit for it** — the auditor
+verified the `.md` edit corrected a real requirement (`grep` for `grossMargin` → zero hits) rather
+than weakening one to make a test pass. That was the highest-risk thing in the batch and it is the
+auditor's finding that it held, not mine.
+
+**Not claimed:** the historical corpus counts (17/18, 0/18, the 7/16 divergence rate) remain
+un-re-derivable on this Mac, and the 7/16 figure is load-bearing for the corrected arithmetic above.
+
+---
+
+**SUBMITTED: round 2**
