@@ -34,6 +34,7 @@ is a post-promotion re-measurement (CR105 Amendment 1), and it is owed, not clai
 | *"Never recommend leverage above what X% drawdown can absorb"* | `overlay_generator._market_analyst_block` | **18/18 prompts** | **The simulator has no leverage, margin or borrow concept at all** — no match in `sim_engine.py` or the models. P2 with nothing to control. |
 | `Path.ACTIVE`'s *"1H–weekly. Specify entry/exit/stop levels"* | same | **0/18 (unexercised)** | Contradicts the base prompt's *"No intraday (1H) timeframe"* six lines up; `_HISTORY_PERIOD="3m"` fetches daily bars only. **A code-read finding, not a measured failure** — stated as such, fixed anyway. |
 | *"Risk Debators' arguments (Aggressive, Conservative, Neutral)"* as an Input | `trader.md` | 18/18 promised, 0/18 delivered | They speak AFTER the Trader. |
+| *"+ remaining drawdown capacity"* as an Input | `trader.md` | 18/18 promised, **0/18 delivered** | **Added in round 1 — MINOR 1, upheld.** CR152 A.1 scopes it (*"drop it or let Tier C deliver it; today it is a promise the assembler never keeps"*) and it shipped in the same line-edit as the Debators clause, but it was not itemised here or in the commit body. The auditor's own check is the right one and is recorded rather than restated: `grep -rn current_drawdown_pct room_prompts.py overlay_generator.py` → **zero matches in either**. The figure is threaded as an internal parameter for the PM's deterministic safety-floor check and was never rendered into any agent's prompt text, so the removal is correct — the disclosure was the gap, in a batch whose whole premise is that every removal is accounted for. |
 | `SELL` in the Side vocabulary | `trader.md` | **0/18 proposed a short** | No meaning under `long_only`, which the same prompt states twice. **Coherence, not a live defect — not priced as one.** |
 | *"State the expected vs actual"* | `news_analyst.md` | — | The only line modelling a number shape the stack cannot produce, inside a grounding directive forbidding invention. Consensus estimates are Tier C, not shipping here. |
 | *"Identify second-order effects (peers, suppliers, customers)"* | `news_analyst.md` | — | No entity data exists and none is planned. |
@@ -130,4 +131,14 @@ this batch and only the one CR149 scopes moved.
 
 ---
 
-**SUBMITTED: round 1**
+**SUBMITTED: round 1** — **COMPLETE (round 1)**, 0 BLOCKER 0 MAJOR, 2 MINOR.
+
+**MINOR 1 closed above** (the `remaining drawdown capacity` row, added to the "What went" table with
+the auditor's own zero-matches check recorded). The change was correct; the disclosure was the gap,
+which in a batch premised on every removal being accounted for is exactly the right thing to have
+been caught. No code change — the fix is the itemisation.
+
+**MINOR 2 needs no action here** by the auditor's own framing: the `bull_researcher.md` 14/18
+citation-attribution figure is a response-side measurement inherited from the CR, not a claim this
+batch produced, and DEF231–233's nine rounds already established that lexical measurement of
+generated prose is noisier than a prompt-side grep.
