@@ -111,12 +111,51 @@ def test_a_horizon_beyond_every_input_is_flagged():
     note = _horizon_coherence_note(1095, entry=100.0, stop=94.0)
     assert "1095 days reaches beyond every input" in note
     assert "3 months of price history, TTM fundamentals and a 52-week range" in note
-    assert "6.0%-below-entry stop" in note
-    assert "weeks-to-months instrument" in note
+    assert "6.0% below entry" in note
     # The two clauses join cleanly — the stop clause replaces the first
     # sentence's terminator rather than following it.
     assert "long., and" not in note
-    assert "that long, and the 6.0%" in note
+    assert "that long, and the exit" in note
+
+
+def test_the_stop_clause_states_the_pairing_and_predicts_nothing():
+    """DEF267 — it used to assert the OUTCOME: "a weeks-to-months instrument —
+    over that horizon ordinary volatility would take the position out". That
+    fired on any stop below entry with no bound on the distance, so the same
+    prediction was made for a 1.9% stop and a 90% one, and the stack renders no
+    volatility at all (CR146 Tier A deleted the ATR/stdev demands because
+    nothing supplies them). The repo's standard for this class is the sibling
+    annotator's, recorded after DEF240's round-1 audit: state what happened,
+    never an evaluative outcome."""
+    note = _horizon_coherence_note(900, entry=46.13, stop=45.26)
+    for banned in (
+        "weeks-to-months instrument",
+        "ordinary volatility",
+        "would take the position out",
+        "long before the thesis could be judged",
+    ):
+        assert banned not in note, f"still predicting an outcome: {banned!r}"
+    assert "1.9% below entry" in note
+    assert "closes on a 1.9% move against it" in note
+
+
+@pytest.mark.parametrize(
+    "entry,stop,expected",
+    [
+        (46.13, 45.26, "1.9%"),   # the live minimum the auditor measured
+        (100.0, 94.0, "6.0%"),
+        (100.0, 84.2, "15.8%"),   # the live maximum
+        (100.0, 10.0, "90.0%"),
+    ],
+)
+def test_the_printed_distance_is_the_real_one(entry, stop, expected):
+    """MUT-5 survived the first cut: hardcoding the distance to 6.0 left 142
+    tests green, because nothing tied the printed figure to the actual stop.
+    The live spread was 1.9%–15.8% across 7 of 25 approvals, so a single fixture
+    could never have caught it."""
+    note = _horizon_coherence_note(900, entry=entry, stop=stop)
+    assert f"{expected} below entry" in note
+    assert f"closes on a {expected} move against it" in note
 
 
 def test_a_horizon_inside_the_evidence_is_not_flagged():
@@ -223,3 +262,112 @@ def test_the_docs_no_longer_claim_the_floor_is_last_in_the_room():
     assert "By placing the safety floor *last*, we make it the dominant instruction" not in doc
     assert "**The Room: false.**" in doc
     assert "the floor is in the middle of the prompt, not at the end" in doc
+
+
+# ── DEF264 — the allowlist was the wrong shape, measured ────────────────────
+#
+# DEF239 replaced a single `parsed["narration"]` read with an allowlist after
+# the model emitted `narrational` once. The 26-convene post-promotion sweep
+# (`r68-postbatch9`, 2026-08-11) found it emitting **`narr`** in 6 of 28
+# verdicts — 21%, not an edge case, and not a synonym but an ABBREVIATION that
+# no amount of enumerating rationale/reasoning/explanation would have reached.
+# All six published "it wrote no rationale for the call" over three or four
+# paragraphs of real analysis.
+#
+# Measured cause, not assumed: max PM output that sweep was 466 tokens against
+# an 1100 ceiling and 0 of 30 turns hit the cap, so truncation (DEF258/DEF261)
+# is ruled out — the responses were complete, well-formed JSON under a key we
+# did not read.
+
+_REAL_NARR = (
+    "Verdict: PASS — No position is warranted because the fundamental "
+    "asymmetry violates the long-term wealth mandate. The -1% net profit "
+    "margin and $11,430M net debt confirm structural impairment."
+)
+
+
+def test_the_live_narr_abbreviation_is_read():
+    """The 6-of-28 key, verbatim from the sweep."""
+    assert _pm_narration({"action": "PASS", "narr": _REAL_NARR}) == _REAL_NARR
+
+
+def test_a_contracted_key_still_outranks_an_unrecognised_one():
+    """The allowlist keeps its job — precedence. `narration` is what the
+    contract asks for, so it wins when several keys carry prose."""
+    assert _pm_narration(
+        {"narr": "abbreviated", "narration": _REAL_NARR, "commentary": "x" * 90}
+    ) == _REAL_NARR
+
+
+def test_an_unknown_key_carrying_real_prose_is_recovered():
+    """The point of the shape test: the next unknown key costs nothing."""
+    assert _pm_narration({"action": "PASS", "commentary": _REAL_NARR}) == _REAL_NARR
+
+
+def test_def239s_objection_still_holds_and_is_the_reason_this_is_not_a_scrape():
+    """`{"ticker": "AAPL"}` must never render as a defence — that would destroy
+    the one signal telling a user the decision was never explained (DEF232).
+    Asserted with a LONG value too, so the guard is by key name and not merely
+    an accident of length."""
+    assert _pm_narration({"action": "PASS", "ticker": "AAPL"}) == ""
+    assert _pm_narration({"action": "PASS", "ticker": _REAL_NARR}) == ""
+    assert _pm_narration({"action": "PASS", "decision": _REAL_NARR}) == ""
+
+
+def test_a_short_string_under_an_unknown_key_is_metadata_not_a_rationale():
+    """The stated trade. DEF232 characterised a non-explanation at this same
+    boundary — 'exactly 1 verdict carries a reason under 40 characters' across
+    1,016 stored verdicts — so the number is borrowed, not invented. A short
+    CONTRACTED key is unaffected, which is where a genuinely terse rationale
+    would arrive."""
+    from app.services.room_runner import _PM_MIN_PROSE_CHARS
+
+    assert _PM_MIN_PROSE_CHARS == 40
+    assert _pm_narration({"action": "PASS", "note": "no"}) == ""
+    assert _pm_narration({"action": "PASS", "reason": "no"}) == "no"
+
+
+def test_the_longest_candidate_wins_when_several_unknown_keys_carry_prose():
+    short_prose = "A shorter but still perfectly valid explanation here."
+    got = _pm_narration({"action": "PASS", "note": short_prose, "commentary": _REAL_NARR})
+    assert got == _REAL_NARR
+
+
+def test_the_fallback_announces_itself(monkeypatch):
+    """CR040 — the ONLY reason this took a 26-convene sweep to surface is that
+    nothing said the PM was using an unknown key. Now it does, by name, so the
+    next one is a log line rather than an hour of forensics."""
+    from app.services import room_runner as rr
+
+    seen: list[tuple[str, dict]] = []
+    monkeypatch.setattr(
+        rr.logger, "warning", lambda event, **kw: seen.append((event, kw))
+    )
+    _pm_narration({"action": "PASS", "narr": _REAL_NARR})
+    assert [e for e, _ in seen] == ["room_pm_narration_from_unknown_key"]
+    assert seen[0][1]["key"] == "narr"
+
+
+def test_a_contracted_key_does_not_trip_the_warning(monkeypatch):
+    """It must stay quiet on the contracted path, or it is noise nobody reads
+    and the signal is gone again."""
+    from app.services import room_runner as rr
+
+    seen: list[str] = []
+    monkeypatch.setattr(rr.logger, "warning", lambda event, **kw: seen.append(event))
+    _pm_narration({"action": "PASS", "narration": _REAL_NARR})
+    assert seen == []
+
+
+def test_no_code_docstring_still_claims_the_floor_dominates_by_position():
+    """DEF267 — CR156 D retracted this in `safety_floor.md` and left the same
+    sentence in `agent_prompts.py`'s docstring: in the function that appends the
+    floor, citing the doc that now contradicts it. The Batch 8 lane claimed
+    "both the doc and the code now say so" while the pin only read the doc."""
+    from pathlib import Path
+
+    src = (
+        Path(__file__).resolve().parents[2] / "app/services/agent_prompts.py"
+    ).read_text()
+    assert "appended LAST so it always dominates" not in src
+    assert "does NOT follow that it dominates" in src

@@ -74,8 +74,22 @@ def build_agent_prompt(
     halal_universe + ticker are handed straight to the overlay so a halal mandate's
     agents receive the sourced Sharia verdict with its provenance (CR069) rather than
     a bare flag. Omitting them on a halal mandate makes the overlay say so out loud.
-    The safety floor is appended LAST so it always dominates instruction
-    ordering for the PM (see docs/initial_specs/02_agents/safety_floor.md).
+    The safety floor is appended LAST here, on the 1-on-1 path.
+
+    **DEF267 — it does NOT follow that it dominates, and this docstring said so
+    for the PM specifically, which is the one agent where it is false.** CR156 D
+    retracted that claim in `docs/initial_specs/02_agents/safety_floor.md` and
+    missed this copy of it, in the docstring of the very function that appends
+    the floor, citing the doc that now contradicts it. In the Room,
+    `room_prompts.py` composes `system_prompt = base + room_addition`, so the
+    entire CONVENE block — fact sheet, mandate snapshot, transcript, the verdict
+    format, the turn instruction — renders AFTER the floor. On the one surface
+    where a verdict is parsed and acted on, the floor sits in the middle.
+
+    Ordering was never the control in any case: CR038 measured prompt-level
+    instructions at ~30% compliance, so "it is last, therefore it wins" is
+    exactly the belief failure-pattern P2 forbids. `enforce_safety_floor()` is
+    the enforcement point.
     """
     base = load_base_prompt(agent_id)
     overlay = generate_overlay(

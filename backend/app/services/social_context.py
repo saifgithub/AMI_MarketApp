@@ -61,18 +61,34 @@ _TOP_SUBREDDIT_LIMIT = 3
 
 # CR148 Tier A — below this many mentions a percentage is not a percentage.
 #
-# DERIVED, not chosen, from this module's own classifier: `format_sentiment_tone`
-# calls a tone on a **5-point** bull/bear gap. The standard error of a
-# proportion is sqrt(p(1-p)/n), which at p≈0.5 is 5.0pp exactly when n = 100.
-# So at n < 100 the gap the classifier uses to decide "bullish" is inside one
-# standard error of the sample — the label is noise dressed as a reading.
+# DERIVED from this module's own classifier: `format_sentiment_tone` calls a
+# tone on a **5-point** bull/bear gap, so the question is how large n must be
+# before a 5pp gap clears its own sampling error.
+#
+# **The first derivation was wrong and gave 100** (R68-BATCH9 audit, MINOR). It
+# used the standard error of a SINGLE proportion, sqrt(p(1-p)/n) = 5.0pp at
+# n=100. But the classifier thresholds a **difference** of two proportions drawn
+# from one multinomial sample (bullish / bearish / neutral), whose standard
+# error is sqrt((p1 + p2 - (p1-p2)^2)/n) — larger, because two estimates each
+# carry error. At n=100 that is **6.5pp** on the measured split and 10.0pp in
+# the worst case, so the original threshold admitted exactly the readings it was
+# written to exclude.
+#
+# Re-derived: n for SE(difference) = 5pp is **168** on an AAPL-like split
+# (22/20/58), **200** on an even quarter, 400 with no neutral class at all. The
+# epoch's median neutral residue is 52.5%, leaving ~47.5% split between bull and
+# bear — the even-quarter case — so **200**.
 #
 # Measured: mention counts across the epoch ran **10 to 3,990**, 5 of 18 turns
 # below 52, and `format_pattern` rendered n=10 in the byte-identical shape it
 # uses at n=3,990. At GRAB's n=10 "bullish 30% / bearish 10%" is 3 posts against
 # 1. Four of the six small-n turns did not flag it; SNOA (n=12) produced
 # "signaling organic momentum" and "extreme euphoria often precedes volatility".
-_MIN_MENTIONS_FOR_A_PERCENTAGE = 100
+#
+# The correction roughly doubles how often the caveat fires. That is the honest
+# consequence of the arithmetic, not a tuning knob.
+#
+_MIN_MENTIONS_FOR_A_PERCENTAGE = 200
 
 
 class SubredditStat(NamedTuple):
@@ -203,20 +219,38 @@ def _cache_write(sym: str, sentiment: SocialSentiment | None) -> None:
         logger.warn("social_cache_write_failed", ticker=sym, error=str(exc)[:200])
 
 
-def _quota_spent(resp: httpx.Response) -> bool:
-    """True when this key's monthly budget is gone — a 429, or a response whose
-    remaining-monthly header has reached zero. Anything else (including a
-    missing or unparseable header) is NOT quota exhaustion: guessing would burn
-    the second key's budget on the first key's unrelated outage."""
-    if resp.status_code == 429:
-        return True
-    remaining = resp.headers.get("x-ratelimit-remaining-monthly")
-    if remaining is None:
-        return False
+def _header_int(resp: httpx.Response, name: str) -> int | None:
+    raw = resp.headers.get(name)
+    if raw is None:
+        return None
     try:
-        return int(remaining) <= 0
+        return int(raw)
     except ValueError:
+        return None
+
+
+def _monthly_quota_exhausted(resp: httpx.Response) -> bool:
+    """True only when this key's MONTHLY budget is gone AND there is no body to
+    lose by trying the other one.
+
+    DEF265 — three things this deliberately does not treat as exhaustion:
+
+    - **A 200 with `remaining=0`.** The payload is in hand; Adanos answers the
+      call that spends the last unit. Discarding a good response to retry is a
+      trade that can only lose, and it buys nothing because no exhaustion state
+      survives to the next call.
+    - **A burst 429.** `x-ratelimit-remaining-burst` sits beside the monthly
+      counter in the live response. Spending a reserve-key call because we went
+      too fast for a moment, with 200 monthly calls still available, is the same
+      waste in the other direction. A 429 counts only when the monthly counter
+      agrees, or is absent (nothing to contradict it).
+    - **A missing or unparseable header on a non-429.** Guessing would burn the
+      reserve on the first key's unrelated outage.
+    """
+    if resp.status_code != 429:
         return False
+    monthly = _header_int(resp, "x-ratelimit-remaining-monthly")
+    return monthly is None or monthly <= 0
 
 
 class _AdanosSource:
@@ -237,9 +271,29 @@ class _AdanosSource:
         still dark. It is also the arithmetic the 7-day TTL decision was taken
         against (2026-08-11), so it has to be true and not merely wired.
 
-        Failover fires on quota exhaustion ONLY — a 429, or a 200 whose
-        remaining-monthly header has hit zero. A network error is not retried on
-        the second key, because a second key does not fix a network.
+        **DEF265 — failover happens only when there is nothing to lose.** The
+        first cut retried whenever the monthly budget was spent, including on a
+        `200` whose remaining-monthly header had reached zero. But a 200 means
+        **the payload is already in hand**: Adanos answers the call that
+        exhausts the budget. Retrying then threw a good response away, and if
+        the secondary was down or erroring the turn ended UNAVAILABLE with real
+        data discarded — a retry that can only lose. It also bought nothing,
+        because no exhaustion state is carried between calls, so the next convene
+        starts on the primary regardless.
+
+        So: a **200 is always returned**, and its zero-remaining header is a
+        WARNING for the next call rather than a reason to discard this one. Only
+        a `429` — no body, nothing to lose — falls through to the secondary.
+
+        A **burst** 429 is not a monthly one. The live response carries
+        `x-ratelimit-remaining-burst` alongside the monthly counter, and spending
+        a reserve-key call because we momentarily went too fast (with 200 monthly
+        calls still available) is the same waste pointed the other way. A 429 is
+        treated as monthly exhaustion only when the monthly counter agrees or is
+        absent.
+
+        A network error is never retried on the second key, because a second key
+        does not fix a network.
         """
         keys = [k for k in (settings.adanos_api_key, settings.adanos_api_key_secondary) if k]
         resp: httpx.Response | None = None
@@ -255,14 +309,15 @@ class _AdanosSource:
                 )
                 return None
             self._log_budget(sym, resp, key_index=index)
-            if not _quota_spent(resp) or index == len(keys) - 1:
+            if not _monthly_quota_exhausted(resp) or index == len(keys) - 1:
                 return resp
             logger.warn(
                 "social_context_adanos_key_failover",
                 ticker=sym,
                 from_key_index=index,
                 status=resp.status_code,
-                note="primary monthly budget spent — retrying on the secondary key",
+                note="primary monthly budget spent and it returned no body — "
+                     "retrying on the secondary key",
             )
         return resp
 

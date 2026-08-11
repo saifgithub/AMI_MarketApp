@@ -18,6 +18,7 @@ demo working when the LAN vLLM box is unreachable.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
 
 from app.agents.safety_floor import CONTEXT_NOT_SUPPLIED
@@ -29,6 +30,9 @@ from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
 from app.services.technicals import range_position_pct
 from app.trading_math.risk import drawdown_contribution
+# DEF263 — the SAME window helpers `enforce_safety_floor` counts with. A second
+# implementation of "today" is how the prompt and the brake come to disagree.
+from app.trading_math.risk_limits import trades_since, utc_day_start, utc_week_start
 from app.trading_math.sizing import resolved_single_name_cap_pct
 from app.trading_math.valuation import net_position_phrase
 
@@ -416,6 +420,21 @@ def _risk_state_block(
             f"not against the cap."
         )
 
+    # DEF263 — this branch was UNREACHABLE from the Room and the outage rendered
+    # as silence. The bug was NOT here: the three-way distinction below is right
+    # for a renderer, which genuinely cannot tell an outage from a caller that
+    # never asked. It was at the call site — `_build_room_risk_limit_context`
+    # returns `(CONTEXT_NOT_SUPPLIED, None, None)`, so open risk reached the
+    # prompt as a plain `None` that means "computation failed" while looking
+    # identical to "not supplied". The runner now translates its own `None` into
+    # the sentinel before calling here (see `_prompt_open_risk`), because the
+    # runner is the only layer that knows which of the two it meant.
+    #
+    # Collapsing `None` into this branch HERE was the wrong fix and was tried
+    # first: `prompt_version.py` and any non-Room caller omit these kwargs
+    # entirely, so it would have had them announce that the safety floor is
+    # blocking a BUY nobody proposed — a fabricated alarm, which is the same
+    # class of harm as the silence it replaced, pointed the other way.
     if existing_open_risk_pct is CONTEXT_NOT_SUPPLIED:
         lines.append(
             "- Open risk: COULD NOT BE COMPUTED this run. Treat it as unknown, not "
@@ -438,9 +457,26 @@ def _risk_state_block(
         lines.append(f"- Last losing trade closed: {last_loss_closed_at}.")
 
     if isinstance(trade_open_timestamps, list):
+        # DEF263 — this printed `len()` of the WHOLE list under the label "in the
+        # recent window". `_risk_limit_context` builds it as `list_trades(user_id)`
+        # with no date filter, so it is a LIFETIME count and the floor windows it
+        # itself. Measured end-to-end: a book of 40 trades all opened 90–130 days
+        # ago rendered "40" while the day brake counted 0 and the week brake
+        # counted 0. A number labelled as the thing a limit counts, that the limit
+        # does not count — the DEF235 class, in the block whose sibling line was
+        # carefully qualified.
+        #
+        # Windowed with the floor's OWN helpers rather than a second
+        # implementation, against the same UTC day boundary and Monday-00:00-UTC
+        # ISO week the brakes use, so the two can never disagree about what
+        # "today" means.
+        now = datetime.now(timezone.utc)
+        today = trades_since(trade_open_timestamps, utc_day_start(now))
+        this_week = trades_since(trade_open_timestamps, utc_week_start(now))
         lines.append(
-            f"- Trades opened in the recent window: {len(trade_open_timestamps)} "
-            f"(the pace an over-trading limit counts)."
+            f"- Trades opened today: {today}; this ISO week (from Monday 00:00 "
+            f"UTC): {this_week}. These are the two counts an over-trading limit "
+            f"actually brakes on."
         )
 
     if not lines:
@@ -1005,10 +1041,20 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
             "- Retail sentiment/mention/influencer fields: alpha simulation "
             "scaffolding — NOT a live social feed."
         )
-    header_lines.append(
-        "- Forward catalyst: the FOMC decision countdown below is REAL, "
-        "from the Fed's published calendar."
-    )
+    # DEF268 — gated on the NEWS lane, because the countdown it promises renders
+    # only inside `_catalyst_line`, which is news-lane-gated. Ungated, this
+    # bullet told the Fundamentals, Market and Social analysts that a real
+    # forward catalyst was in their sheet when the lane split had removed it —
+    # an affirmative-direction fabrication prompt, and worse than the
+    # "unavailable" case this function's own CR098 comment designs against,
+    # because an agent invited to use a catalyst it cannot see has to invent one.
+    # Introduced by the lane split itself: before CR145 Tier C the bullet and the
+    # body were both present for everyone.
+    if _in_lane("news"):
+        header_lines.append(
+            "- Forward catalyst: the FOMC decision countdown below is REAL, "
+            "from the Fed's published calendar."
+        )
     lane_line = _out_of_lane_line(lane)
     if lane_line:
         header_lines.append(lane_line)
@@ -1025,7 +1071,17 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
     # scaffolding line too (MINOR 3).
 
     lines = [header, ""]
-    lines.append(_reference_price_line(profile, technicals_live))
+    # DEF262 — the reconciliation clause is TECHNICALS data and must obey the
+    # lane, not just `field_state`. `last_close` is the final candle of the
+    # 3-month price history; handing it to the News or Social Analyst put the
+    # sheet in direct self-contradiction — *"market technicals … are not in your
+    # lane this call. Do not estimate or infer them"* three lines above *"use
+    # the last close for anything you compute."* The live quote itself stays
+    # unconditional: a price is shared core every agent needs to read the
+    # portfolio block, and it is not what the firewall withholds.
+    lines.append(
+        _reference_price_line(profile, technicals_live and _in_lane("technicals"))
+    )
     if _in_lane("fundamentals"):
         # DEF233: both bases, each gated on its own `field_state` entry — a
         # provider gap on one is stated, never papered over with the other.
@@ -1083,7 +1139,12 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
     # ranges with less context than the sheet holds, which is not lane
     # discipline, just an accident of which fetcher happened to return it.
     if (_in_lane("fundamentals") or _in_lane("technicals")) and _is("week52", "live"):
-        lines.append(_week52_line(profile))
+        # DEF262 — the LINE is dual-lane; its ANCHOR is not. On the Fundamentals
+        # sheet this rendered "from the last close $268.4: -33.4% vs the high",
+        # handing a technicals number to a desk firewalled out of technicals
+        # inside a line that legitimately belongs to it. The percentages now
+        # measure from the reference price there, and say so.
+        lines.append(_week52_line(profile, technicals_in_lane=_in_lane("technicals")))
     if not _in_lane("news"):
         pass
     elif news_withheld_tenure:
@@ -1344,7 +1405,7 @@ def _company_size_line(profile: dict[str, Any]) -> str | None:
     return "Company size (LIVE): " + ", ".join(parts)
 
 
-def _week52_line(profile: dict[str, Any]) -> str:
+def _week52_line(profile: dict[str, Any], *, technicals_in_lane: bool = True) -> str:
     """CR150 A3 — the 52-week range with where price sits against BOTH ends.
 
     Arithmetic on numbers already on the sheet, same justification as DEF228 and
@@ -1357,7 +1418,7 @@ def _week52_line(profile: dict[str, Any]) -> str:
     """
     low, high = profile.get("low"), profile.get("high")
     base = f"52-week range: ${low}–${high}"
-    anchor, anchor_name = _price_anchor(profile)
+    anchor, anchor_name = _price_anchor(profile, technicals_in_lane=technicals_in_lane)
     lo, hi = _safe_num(low), _safe_num(high)
     if anchor is None or lo is None or hi is None or lo <= 0 or hi <= 0:
         return base
@@ -1380,9 +1441,15 @@ def _moving_average_line(profile: dict[str, Any]) -> str:
     if short is None or long is None:
         return f"Trend: {profile.get('trend')} (20/50-day moving averages not available)"
     line = f"20-day SMA: ${short}, 50-day SMA: ${long}"
-    anchor, _name = _price_anchor(profile)
+    anchor, name = _price_anchor(profile)
     if anchor is not None and long > 0:
-        line += f" — last close is {(anchor - long) / long * 100:+.1f}% vs the 50-day"
+        # DEF262 — PRINT the anchor's name, never the literal "last close".
+        # This line bound the name and discarded it, so on a sheet where the
+        # anchor had fallen back to the reference price it announced a
+        # comparison against a "last close" the sheet never stated — the exact
+        # DEF228 shape `_price_anchor` exists to prevent, reintroduced by the
+        # commit that introduced `_price_anchor`.
+        line += f" — {name} is {(anchor - long) / long * 100:+.1f}% vs the 50-day"
     return line
 
 
@@ -1397,15 +1464,34 @@ def _volume_line(profile: dict[str, Any]) -> str:
     return f"Volume: {tone} ({ratio:.2f}× the 20-day average, 5-day mean)"
 
 
-def _price_anchor(profile: dict[str, Any]) -> tuple[float | None, str]:
+def _price_anchor(
+    profile: dict[str, Any], *, technicals_in_lane: bool = True
+) -> tuple[float | None, str]:
     """The ONE price every derived line measures from, and its name.
 
     DEF228 happened because the fact sheet carries two prices — `Reference
     price` (fundamentals) and `last close` (technicals) — and a derived figure
     took one half from each. Every derived line routes through here so they
     cannot disagree, and each one prints the name so the reader knows which.
+
+    **DEF262 — the anchor obeys the lane.** The last close is the final candle
+    of the 3-month price history, so it is technicals data, and an agent
+    firewalled out of technicals must not receive it through the back door of a
+    derived line. `_week52_line` is the case that proved this: the 52-week range
+    is DUAL-lane (a price range the Market Analyst needs, a valuation bound the
+    Fundamentals Analyst needs), so it renders on the fundamentals sheet — and it
+    anchored on the last close, quietly handing that desk a technicals number
+    inside a legitimately-in-lane line. The line stays; only its anchor moves.
+
+    The name is not decoration. It is what makes the fallback legible: a reader
+    told *"-33.4% vs the high"* cannot tell which of two prices that came from,
+    and printing the wrong name is the DEF228 failure with extra steps.
     """
-    if _field_is_live(profile, "technicals") and profile.get("last_close"):
+    if (
+        technicals_in_lane
+        and _field_is_live(profile, "technicals")
+        and profile.get("last_close")
+    ):
         return _safe_num(profile.get("last_close")), "the last close"
     if _field_is_live(profile, "base_price") and profile.get("base_price"):
         return _safe_num(profile.get("base_price")), "the reference price"

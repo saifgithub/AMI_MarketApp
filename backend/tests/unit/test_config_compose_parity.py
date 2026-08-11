@@ -231,15 +231,16 @@ _INLINE_DEFAULT_EXEMPT: dict[str, str] = {
     # check as empty and fails loudly, instead of silently booting on the
     # in-code dev placeholder (app/main.py's AMI_ENV=staging assertion).
     "SECRET_KEY": "empty on purpose — an unset key must fail the boot check, not inherit the dev default",
-    # NOT ours (CR136 / portfolio-health lane). compose 7 vs Settings 3, so the
-    # LIVE value is 7 and the Settings default is dead. Recorded rather than
-    # changed: picking a number here would change another lane's shipped feature
-    # behaviour on a promotion that has nothing to do with it. Flagged to that
-    # lane to reconcile — this entry is the flag.
-    "PORTFOLIO_HEALTH_TRIAL_FINDINGS": (
-        "CR136 lane owns this; compose 7 wins over Settings 3 today — reconcile there, not here"
-    ),
 }
+# `PORTFOLIO_HEALTH_TRIAL_FINDINGS` was exempted here and should not have been
+# (DEF266, R68-BATCH9 audit MAJOR-3). The reasoning at the time — "another lane
+# owns the number, do not pick one for them" — was right about not INVENTING a
+# value and wrong about what was in front of me: DEF219 had already DECIDED 3,
+# with Saiful's sign-off, and compose was carrying the 7 that decision replaced.
+# So compose was not a competing opinion, it was a stale copy, and correcting it
+# implements a recorded decision rather than making a new one. The exemption list
+# is for disagreements that are DELIBERATE; parking a known-wrong value next to
+# the genuinely deliberate `SECRET_KEY` entry is how a defect becomes furniture.
 
 
 def _inline_compose_defaults() -> dict[str, str]:
@@ -261,15 +262,37 @@ def test_inline_compose_defaults_match_settings():
     value the code declares and the container never uses."""
     fields = Settings.model_fields
     mismatched: list[str] = []
+    skipped: list[str] = []
     for key, inline in _inline_compose_defaults().items():
         if key in _INLINE_DEFAULT_EXEMPT:
             continue
         field = fields.get(key.lower())
-        if field is None or field.default is PydanticUndefined:
-            # No field, or no scalar default to compare against — the other two
-            # directions own those cases.
+        if field is None:
             continue
         declared = field.default
+        if declared is PydanticUndefined:
+            # DEF266 — these are NOT unjudgeable, and calling them "the other two
+            # directions' problem" was wrong: both of those test reachability
+            # only, so a list field's default drift was checked by nothing at
+            # all. Four of them are DEF038's own field family (`APPLE_AUDIENCES`,
+            # `GOOGLE_AUDIENCES`), which is exactly the wrong place to have a
+            # blind spot. A `default_factory` field is comparable — call the
+            # factory and compare against the parsed compose value.
+            factory = getattr(field, "default_factory", None)
+            if factory is None:
+                skipped.append(key)
+                continue
+            try:
+                declared = factory()
+            except TypeError:
+                skipped.append(key)
+                continue
+            parsed_inline = Settings._csv_or_json_list(inline) if inline else []
+            if list(parsed_inline) != list(declared):
+                mismatched.append(
+                    f"{key}: compose={parsed_inline!r} vs Settings default={declared!r}"
+                )
+            continue
         actual = (
             inline.lower() == str(declared).lower()
             if isinstance(declared, bool)
@@ -282,6 +305,14 @@ def test_inline_compose_defaults_match_settings():
         f"container, so these values are dark (DEF260): {mismatched}. "
         "Change the compose default to match, or add an _INLINE_DEFAULT_EXEMPT "
         "entry saying why compose is right."
+    )
+    # DEF266 — a guard that skips is worse than no guard, because it reads as
+    # coverage. Whatever this check cannot judge is named out loud rather than
+    # dropped, so the blind spot is a visible list instead of a silent one.
+    assert not skipped, (
+        "these compose defaults could not be compared to a Settings default and "
+        f"are therefore unchecked: {skipped}. Give the field a comparable "
+        "default, or exempt it explicitly with a reason."
     )
 
 

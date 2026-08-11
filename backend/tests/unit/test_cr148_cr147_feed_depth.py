@@ -182,14 +182,33 @@ def test_engagement_separates_intensity_from_reach():
 
 
 def test_the_small_sample_threshold_is_derived_from_this_modules_own_classifier():
-    """NOT a chosen number. `format_sentiment_tone` calls a tone on a 5-point
-    bull/bear gap; the standard error of a proportion at p≈0.5 is 5.0pp exactly
-    when n = 100. Below that, the gap the classifier uses is inside one standard
-    error of the sample."""
-    assert _MIN_MENTIONS_FOR_A_PERCENTAGE == 100
-    se_at_threshold = (0.5 * 0.5 / _MIN_MENTIONS_FOR_A_PERCENTAGE) ** 0.5 * 100
-    assert se_at_threshold == pytest.approx(5.0, abs=0.01)
-    # And 5 is really the gap the classifier uses, not a coincidence.
+    """`format_sentiment_tone` calls a tone on a 5-point bull/bear gap, so the
+    threshold is the n at which a 5pp gap clears its own sampling error.
+
+    **The first derivation was wrong and gave 100** (R68-BATCH9 audit). It used
+    the standard error of a SINGLE proportion — sqrt(p(1-p)/n) = 5.0pp at n=100
+    — but the classifier thresholds a **difference** of two proportions drawn
+    from one multinomial sample (bullish/bearish/neutral), whose standard error
+    is sqrt((p1 + p2 - (p1-p2)^2)/n). That is strictly larger, because two
+    estimates each carry error, so the original threshold admitted exactly the
+    readings it was written to exclude.
+    """
+    import math
+
+    def se_diff(p1, p2, n):
+        return math.sqrt((p1 + p2 - (p1 - p2) ** 2) / n) * 100
+
+    # The old derivation, and why it was too permissive: at n=100 the gap the
+    # classifier uses sits INSIDE one standard error.
+    assert se_diff(0.22, 0.20, 100) > 5.0
+    assert se_diff(0.25, 0.25, 100) > 5.0
+
+    # The epoch's median neutral residue is 52.5%, leaving ~47.5% split between
+    # bull and bear — the even-quarter case, which needs n = 200.
+    assert _MIN_MENTIONS_FOR_A_PERCENTAGE == 200
+    assert se_diff(0.25, 0.25, _MIN_MENTIONS_FOR_A_PERCENTAGE) == pytest.approx(5.0, abs=0.01)
+
+    # And 5 really is the gap the classifier uses, not a coincidence.
     assert format_sentiment_tone(_sentiment(bullish_pct=30, bearish_pct=25)) == "mixed"
     assert format_sentiment_tone(_sentiment(bullish_pct=31, bearish_pct=25)) == "bullish"
 
@@ -206,9 +225,15 @@ def test_the_caveat_restates_the_percentages_as_the_post_counts_they_are():
 
 
 def test_the_caveat_is_silent_on_a_sample_that_can_carry_a_percentage():
+    """The boundary moved 100 → 200 with the corrected derivation, which roughly
+    doubles how often the caveat fires. That is the arithmetic's consequence,
+    not a tuning knob — a sample of 150 was always inside the classifier's own
+    noise, and the old threshold called it readable."""
     assert format_sample_size_caveat(_sentiment(mentions=1993)) == ""
-    assert format_sample_size_caveat(_sentiment(mentions=100)) == ""
-    assert format_sample_size_caveat(_sentiment(mentions=99)) != ""
+    assert format_sample_size_caveat(_sentiment(mentions=200)) == ""
+    assert format_sample_size_caveat(_sentiment(mentions=199)) != ""
+    # The band the wrong derivation used to wave through.
+    assert format_sample_size_caveat(_sentiment(mentions=150)) != ""
     # Zero mentions is not a small sample, it is no sample — the mention line
     # already says so and a "~0 against ~0" caveat would add nothing.
     assert format_sample_size_caveat(_sentiment(mentions=0)) == ""
@@ -342,13 +367,36 @@ def test_a_429_on_the_primary_retries_on_the_secondary(monkeypatch):
     assert resp.status_code == 200
 
 
-def test_a_spent_monthly_budget_retries_even_on_a_200(monkeypatch):
-    """Adanos answers the call that exhausts the budget; the NEXT one 429s. The
-    header is the earlier signal and the one that avoids a wasted round trip."""
-    src, client = _source_with([_FakeResponse(remaining="0"), _FakeResponse(remaining="250")],
-                               monkeypatch)
+def test_a_200_is_never_discarded_even_when_it_spends_the_last_call(monkeypatch):
+    """DEF265 — this test previously asserted the OPPOSITE, and the assertion
+    was the bug.
+
+    A 200 means the payload is already in hand: Adanos answers the call that
+    exhausts the budget. Retrying then throws a good response away, and if the
+    secondary is down the turn ends UNAVAILABLE with real data discarded — a
+    retry that can only lose. It also buys nothing, because no exhaustion state
+    survives to the next call, so the next convene starts on the primary anyway.
+    The zero-remaining header is a warning for the NEXT call, not a reason to
+    discard THIS one.
+    """
+    src, client = _source_with(
+        [_FakeResponse(remaining="0"), _FakeResponse(remaining="250")], monkeypatch
+    )
+    resp = src._get_with_failover("AAPL")
+    assert client.keys_used == ["KEY1"], "spent a reserve call to re-fetch data we had"
+    assert resp.status_code == 200
+    assert resp.json() == REAL_AAPL
+
+
+def test_a_burst_429_does_not_spend_the_reserve_key(monkeypatch):
+    """A burst limit is not a monthly one. The live response carries
+    `x-ratelimit-remaining-burst` beside the monthly counter, and burning a
+    reserve-key call because we went too fast for a moment — with 200 monthly
+    calls still available — is the same waste pointed the other way."""
+    burst = _FakeResponse(429, remaining="200")
+    src, client = _source_with([burst, _FakeResponse(remaining="250")], monkeypatch)
     src._get_with_failover("AAPL")
-    assert client.keys_used == ["KEY1", "KEY2"]
+    assert client.keys_used == ["KEY1"]
 
 
 def test_a_network_error_is_not_retried_on_the_second_key():

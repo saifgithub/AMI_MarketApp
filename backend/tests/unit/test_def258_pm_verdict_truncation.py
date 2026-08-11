@@ -35,6 +35,8 @@ amber-marks, rather than reading as a decision the PM explained briefly.
 
 from __future__ import annotations
 
+import pytest
+
 from app.schemas.mandate import Mandate
 from app.schemas.room import VerdictAction
 from app.services.coach_engine import hydrate_coach_mandate
@@ -210,3 +212,124 @@ def test_an_approve_clipped_before_its_size_is_not_promoted_to_a_sized_trade():
     clipped_early = '{"action": "APPROVE", "narration": "Approving because'
     _display, verdict = _parse_pm_verdict(clipped_early, _ctx())
     assert verdict is None
+
+
+# ── DEF261 — the disclosure the clip itself removed ──────────────────────────
+#
+# Found by the R68-BATCH4 auditor (round 1, MAJOR 1). DEF258 appended its
+# truncation notice only `if truncated and narration`, which reads as harmless
+# and is not: the clip that removes the rationale is exactly the clip that
+# removes the condition. A verdict cut at `"narration": ` fell through to
+# `_PM_NO_RATIONALE` and published "it wrote no rationale for the call …
+# nothing was said to defend it" over a decision whose rationale WE truncated.
+#
+# Worse than the bug it replaced: before DEF258's repair those same bytes
+# produced a loud and TRUE "did not return a machine-readable verdict". The
+# repair made the output readable and the caption false.
+
+
+def _ctx_def261():
+    from app.services.coach_engine import hydrate_coach_mandate
+    from app.services.room_runner import _RoomContext
+
+    return _RoomContext(
+        ticker="SLB",
+        mandate=hydrate_coach_mandate({"plan": "trader", "risk_score": 3}),
+        portfolio_value=10_000.0,
+        current_drawdown_pct=0.0,
+        halal_universe=None,
+        classification_universe=None,
+        locale_allowed_universe=None,
+    )
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        # The clip lands after the key and before its value.
+        '{"action": "APPROVE", "size_pct": 2.5, "entry": 100.0, "stop": 94.0, "narration": ',
+        # The clip lands inside the key itself, so not even the key survives.
+        '{"action": "PASS", "size_pct": null, "narr',
+        # A PASS whose whole tail is gone.
+        '{"action": "PASS", "narration": ',
+    ],
+)
+def test_a_clip_that_takes_the_whole_rationale_is_never_called_a_missing_one(raw):
+    """The accusation and the transmission failure are different facts about
+    different actors, and only one of them is the user's business to judge the
+    PM on."""
+    from app.services.room_runner import (
+        _PM_NO_RATIONALE,
+        _PM_TRUNCATED_NO_NARRATION,
+        _parse_pm_verdict,
+    )
+
+    display, verdict = _parse_pm_verdict(raw, _ctx_def261())
+    if verdict is None:
+        # No readable action — the raw text path, which never claimed anything
+        # about the PM's conduct in the first place.
+        assert _PM_NO_RATIONALE not in display
+        return
+    assert _PM_NO_RATIONALE not in display, (
+        "published 'it wrote no rationale' over a rationale WE cut off"
+    )
+    assert _PM_TRUNCATED_NO_NARRATION in display
+    # The Verdict Board reason CONTAINS the disclosure rather than equalling it:
+    # an APPROVE legitimately appends its own provenance notes (the audit-F6
+    # defaulted-stop/target line, the risk-tier sizing note). What must hold is
+    # that the false accusation never reaches the field CR106 renders as the
+    # justification.
+    assert _PM_TRUNCATED_NO_NARRATION in verdict.reason
+    assert _PM_NO_RATIONALE not in verdict.reason
+
+
+def test_the_two_absence_sentences_blame_different_actors():
+    """If these ever converge the distinction is gone and this file is
+    decoration. `_PM_NO_RATIONALE` is a statement about the PM's conduct;
+    `_PM_TRUNCATED_NO_NARRATION` is a statement about ours."""
+    from app.services.room_runner import _PM_NO_RATIONALE, _PM_TRUNCATED_NO_NARRATION
+
+    assert _PM_NO_RATIONALE != _PM_TRUNCATED_NO_NARRATION
+    assert "it wrote no rationale" in _PM_NO_RATIONALE
+    assert "not withheld" in _PM_TRUNCATED_NO_NARRATION
+    # Both stay in the [AMI …] voice the client amber-marks (CR106 §3.3).
+    assert _PM_TRUNCATED_NO_NARRATION.startswith("[AMI")
+
+
+def test_an_untruncated_silent_pm_still_gets_the_real_accusation():
+    """DEF232's disclosure must survive. A PM that had the room to explain and
+    did not use it is exactly what `_PM_NO_RATIONALE` is for, and widening the
+    truncation sentence to cover it would destroy the signal."""
+    from app.services.room_runner import (
+        _PM_NO_RATIONALE,
+        _PM_TRUNCATED_NO_NARRATION,
+        _parse_pm_verdict,
+    )
+
+    for raw in (
+        '{"action": "PASS", "ticker": "SLB"}',
+        '{"action": "APPROVE", "size_pct": 2.0, "entry": 100.0, "ticker": "SLB"}',
+    ):
+        display, verdict = _parse_pm_verdict(raw, _ctx_def261())
+        assert verdict is not None
+        assert _PM_NO_RATIONALE in display
+        assert _PM_TRUNCATED_NO_NARRATION not in display
+
+
+def test_a_surviving_rationale_still_gets_the_cut_short_suffix_not_the_replacement():
+    """The two truncation paths must not collapse into each other either: prose
+    that partly arrived is appended to, prose that never arrived is replaced."""
+    from app.services.room_runner import (
+        _PM_TRUNCATED_NARRATION,
+        _PM_TRUNCATED_NO_NARRATION,
+        _parse_pm_verdict,
+    )
+
+    display, verdict = _parse_pm_verdict(
+        '{"action": "APPROVE", "size_pct": 2.5, "narration": "The synthesis holds at redu',
+        _ctx_def261(),
+    )
+    assert verdict is not None
+    assert "The synthesis holds at redu" in display
+    assert _PM_TRUNCATED_NARRATION.strip() in display
+    assert _PM_TRUNCATED_NO_NARRATION not in display

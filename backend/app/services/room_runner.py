@@ -809,6 +809,31 @@ _SIM_PORTFOLIO_HEADER = (
 )
 
 
+def _prompt_open_risk(value: object) -> object:
+    """DEF263 — translate the Room's `None` into the sentinel, for the PROMPT only.
+
+    `_build_room_risk_limit_context` returns `(CONTEXT_NOT_SUPPLIED, None, None)`
+    on every failure path, so open risk reaches the prompt as a plain `None`
+    that MEANS "could not compute" while being indistinguishable from "the
+    caller never asked". `_risk_state_block` renders the second case as nothing,
+    so the outage was silent — and silent in the worst possible state, because
+    `enforce_safety_floor` treats `existing_open_risk_pct is None` as **block
+    every BUY** (the open-risk cap is always active; CR129 resolves an unset one
+    from `max_drawdown_pct`). The Room therefore argued about size, with no line
+    on the sheet, while the floor was refusing everything.
+
+    Translated HERE and not in the renderer: the renderer genuinely cannot tell
+    an outage from a caller that never asked, and collapsing the two there would
+    make `prompt_version.py` and every non-Room caller announce that the floor is
+    blocking a BUY nobody proposed. The runner is the only layer that knows which
+    of the two its own `None` meant.
+
+    The FLOOR still receives the untranslated `ctx` value — it keys on `is None`,
+    and handing it a sentinel would fall through to `float()` on an `object`.
+    """
+    return CONTEXT_NOT_SUPPLIED if value is None else value
+
+
 def _stop_clause(
     sym: str, stops: dict[str, set[float]], unstopped: dict[str, int]
 ) -> str:
@@ -1123,6 +1148,30 @@ _PM_TRUNCATED_NARRATION = (
     "short.]"
 )
 
+# DEF261 — the same disclosure for the case where the clip landed BEFORE the
+# narration value, so NO prose survived at all.
+#
+# The first cut appended `_PM_TRUNCATED_NARRATION` only `if truncated and
+# narration`, which reads as harmless and is not: the clip that removes the
+# rationale is exactly the clip that removes the condition. A verdict cut at
+# `"narration": ` fell straight through to `_PM_NO_RATIONALE` and published
+# *"it wrote no rationale for the call … nothing was said to defend it"* over a
+# decision whose rationale WE truncated. That is the DEF232 sentence pointed at
+# the wrong cause, and DEF232's own comment names the sin — "Both assert
+# something nobody said". Before DEF258's repair those bytes produced a loud,
+# TRUE "did not return a machine-readable verdict"; the repair made the output
+# readable and the caption false, which is a strictly worse trade.
+#
+# The distinction is the whole point: "the PM chose not to explain" and "we cut
+# the PM off" are different facts about different actors, and only one of them
+# is the user's business to judge the PM on.
+_PM_TRUNCATED_NO_NARRATION = (
+    "[AMI: the Portfolio Manager hit its length limit before its explanation "
+    "reached us. The decision and its numbers above are complete and are the "
+    "PM's own; the reasoning was cut off in transmission, not withheld. Treat "
+    "this as an explanation we lost, not one the PM declined to give.]"
+)
+
 
 # DEF239 (≡ CR156 A2) — the PM writes its rationale under a key that is not
 # always `narration`, and reading one key alone published "it wrote no rationale"
@@ -1160,10 +1209,28 @@ def _horizon_coherence_note(
     restated as a number — in 4 of 13 approvals, while the code's own fallback
     for the same field is 42 days. A 26× disagreement inside one field.
 
-    It matters because the two numbers describe one trade. A 6%-below-entry stop
-    is a weeks-to-months instrument: over three years, ordinary volatility takes
-    almost any name through it, so the pairing guarantees the stop fires on noise
-    long before the thesis is testable. Naming that is the whole check.
+    It matters because the two numbers describe one trade, and a tight stop
+    paired with a multi-year horizon is a thesis the stop will not survive to
+    test.
+
+    **DEF267 — the clause states the pairing and stops there.** The first cut
+    asserted the OUTCOME: *"a weeks-to-months instrument — over that horizon
+    ordinary volatility would take the position out long before the thesis could
+    be judged."* That sentence fired on any stop below entry with **no bound on
+    the distance**, so the identical prediction was made for a 1.9% stop and a
+    90% one. Those are live numbers, not hypotheticals: the R68-BATCH8 auditor
+    found 7 of 25 approvals (28%) carrying a horizon over 365 days with stops
+    from 1.9% to 15.8%. And nothing tied the prediction to the figure it printed
+    — hardcoding the distance to 6.0 left 142 tests green.
+
+    It could not be made true by bounding it either, because **the stack renders
+    no volatility at all**: CR146 Tier A deleted the Market Analyst's ATR and
+    stdev demands precisely because nothing supplies them, so "ordinary
+    volatility would take this out" is a claim AMI has no input for. The repo's
+    own standard for this class is the sibling annotator's, recorded in its
+    docstring after DEF240's round-1 audit: **state what happened, never an
+    evaluative outcome.** So the note now names both numbers and the tension
+    between them, and leaves the judgement to the reader who has it to make.
 
     Flag only, never a veto — the safety floor is the sole vetoer (DEF059), and
     an incoherent horizon is a reasoning flaw to disclose, not a rule breach.
@@ -1179,20 +1246,81 @@ def _horizon_coherence_note(
     if entry and stop and entry > 0 and stop > 0 and stop < entry:
         stop_pct = (entry - stop) / entry * 100
         note = note[:-2] + (
-            f", and the {stop_pct:.1f}%-below-entry stop is a weeks-to-months "
-            f"instrument — over that horizon ordinary volatility would take the "
-            f"position out long before the thesis could be judged.)"
+            f", and the exit is set {stop_pct:.1f}% below entry — the position "
+            f"closes on a {stop_pct:.1f}% move against it, whenever that comes, "
+            f"so the {horizon_days}-day thesis is only testable if the price "
+            f"never travels that far the wrong way in the meantime.)"
         )
     return note
 
 
+# DEF264 — keys that are definitionally NOT prose, excluded from the fallback
+# below by name rather than by shape. `ticker` is the one DEF239 named as the
+# reason a general scrape is unsafe: rendering `{"ticker": "AAPL"}` as a defence
+# would destroy the one signal telling a user a decision was never explained.
+_PM_NON_PROSE_KEYS = frozenset({"ticker", "action", "symbol", "decision"})
+
+# The length below which an UNKNOWN key's string is treated as metadata rather
+# than a rationale. Not invented here: DEF232 characterised a non-explanation by
+# this same boundary when it measured "exactly 1 verdict carries a reason under
+# 40 characters" across 1,016 stored verdicts. Contracted keys are exempt — a
+# short `narration` is still the PM's narration — so this only decides what an
+# unrecognised key has to clear.
+_PM_MIN_PROSE_CHARS = 40
+
+
 def _pm_narration(parsed: dict[str, Any]) -> str:
-    """The PM's rationale, from whichever contracted key carries it."""
+    """The PM's rationale, from whichever key carries it.
+
+    DEF239 replaced a single `parsed["narration"]` read with an allowlist, after
+    the model emitted `narrational` once on live Alpha. **DEF264 is the same
+    defect again, and it is why an allowlist alone was the wrong shape.** The
+    26-convene post-promotion sweep found the PM emitting **`narr`** in 6 of 28
+    verdicts (21%) — not a synonym, an ABBREVIATION, which no amount of
+    enumerating `rationale`/`reasoning`/`explanation` was ever going to reach.
+    All six published *"it wrote no rationale for the call"* over three or four
+    paragraphs of real analysis, on the field CR106 renders as the decision's
+    justification.
+
+    So the allowlist keeps its job — **precedence**, so `narration` wins when
+    several keys carry prose — and a shape test picks up the rest. The shape
+    test is deliberately narrow, because DEF239's objection to a general scrape
+    stands: a value must be long enough to be an explanation and must not sit
+    under a key that is definitionally an identifier. `{"ticker": "AAPL"}` fails
+    both, which is the case that mattered.
+
+    The trade is stated rather than hidden: a genuine rationale shorter than
+    `_PM_MIN_PROSE_CHARS` under an UNRECOGNISED key is still read as absent. A
+    short rationale under a CONTRACTED key is unaffected. That is the direction
+    to err — DEF232's disclosure exists for decisions nobody explained, and
+    weakening it to catch a 39-character stray would cost more than it saves.
+    """
     for key in _PM_NARRATION_KEYS:
         value = parsed.get(key)
         if isinstance(value, str) and value.strip():
             return value.strip()
-    return ""
+
+    # Fallback: the longest prose-shaped value under any other key.
+    best_key, best = "", ""
+    for key, value in parsed.items():
+        if key in _PM_NARRATION_KEYS or key in _PM_NON_PROSE_KEYS:
+            continue
+        if not isinstance(value, str):
+            continue
+        candidate = value.strip()
+        if len(candidate) >= _PM_MIN_PROSE_CHARS and len(candidate) > len(best):
+            best_key, best = key, candidate
+    if best:
+        # CR040 — the fallback firing means the PM used a key we do not know
+        # about, and the ONLY reason DEF264 took a 26-convene sweep to surface
+        # is that nothing said so. Now it does, by name, every time.
+        logger.warning(
+            "room_pm_narration_from_unknown_key",
+            key=best_key,
+            note="rationale recovered by shape, not by contract — add it to "
+                 "_PM_NARRATION_KEYS if it recurs",
+        )
+    return best
 
 
 def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None]:
@@ -1223,15 +1351,26 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     narration = _pm_narration(parsed)
     if truncated and narration:
         narration += _PM_TRUNCATED_NARRATION
+    # DEF261 — pick the absence sentence from the CAUSE, not from the emptiness.
+    # `_PM_NO_RATIONALE` is a statement about the PM's conduct and is only true
+    # when the PM had the room to explain and did not use it. On a truncated
+    # read the emptiness is ours, so the same sentence becomes a false
+    # accusation on the one surface CR106 renders as the decision's
+    # justification. Resolved once, here, so neither the PASS branch below nor
+    # the APPROVE branch further down can pick the wrong one independently.
+    absent_rationale = _PM_TRUNCATED_NO_NARRATION if truncated else _PM_NO_RATIONALE
     action = _normalize_pm_action(parsed.get("action"))
     if action is None:
         return narration or text.strip(), None
 
     if action == "PASS":
         if not narration:
-            logger.warning("room_pm_no_rationale", action="PASS", ticker=ctx.ticker)
-            return _PM_NO_RATIONALE, Verdict(
-                action=VerdictAction.PASS, reason=_PM_NO_RATIONALE
+            logger.warning(
+                "room_pm_no_rationale",
+                action="PASS", ticker=ctx.ticker, truncated=truncated,
+            )
+            return absent_rationale, Verdict(
+                action=VerdictAction.PASS, reason=absent_rationale
             )
         return narration, Verdict(action=VerdictAction.PASS, reason=narration)
 
@@ -1274,8 +1413,11 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
 
     ceiling = _risk_tier_size_ceiling(ctx.mandate)
     if not narration:
-        logger.warning("room_pm_no_rationale", action="APPROVE", ticker=ctx.ticker)
-    display = narration or _PM_NO_RATIONALE
+        logger.warning(
+            "room_pm_no_rationale",
+            action="APPROVE", ticker=ctx.ticker, truncated=truncated,
+        )
+    display = narration or absent_rationale
     reason = display
     if size_pct > ceiling:
         size_pct = ceiling
@@ -4118,7 +4260,7 @@ async def _compute_agent_text(
             # CONTEXT_NOT_SUPPLIED sentinel survives the trip, because "could not
             # compute" and "zero" must not render identically (CR040).
             current_drawdown_pct=ctx.current_drawdown_pct,
-            existing_open_risk_pct=ctx.risk_existing_open_risk_pct,
+            existing_open_risk_pct=_prompt_open_risk(ctx.risk_existing_open_risk_pct),
             last_loss_closed_at=ctx.risk_last_loss_closed_at,
             trade_open_timestamps=ctx.risk_trade_open_timestamps,
         )
@@ -4349,7 +4491,7 @@ async def _stream_pm_response(
         # CONTEXT_NOT_SUPPLIED sentinel survives the trip, because "could not
         # compute" and "zero" must not render identically (CR040).
         current_drawdown_pct=ctx.current_drawdown_pct,
-        existing_open_risk_pct=ctx.risk_existing_open_risk_pct,
+        existing_open_risk_pct=_prompt_open_risk(ctx.risk_existing_open_risk_pct),
         last_loss_closed_at=ctx.risk_last_loss_closed_at,
         trade_open_timestamps=ctx.risk_trade_open_timestamps,
     )

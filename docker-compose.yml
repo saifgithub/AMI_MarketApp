@@ -338,7 +338,12 @@ services:
       # pure env change plus a container recreate; no code path differs.
       PORTFOLIO_HEALTH_GATE_MODE: ${PORTFOLIO_HEALTH_GATE_MODE:-trial}
       PORTFOLIO_HEALTH_TRIAL_DAYS: ${PORTFOLIO_HEALTH_TRIAL_DAYS:-14}
-      PORTFOLIO_HEALTH_TRIAL_FINDINGS: ${PORTFOLIO_HEALTH_TRIAL_FINDINGS:-7}
+      # DEF266: was `:-7`, the value DEF219 REPLACED. `config.py` and
+      # `portfolio_health_constants.TRIAL_FINDINGS_DEFAULT` both say 3 (Saiful's
+      # call, 2026-08-06: count the trial in Findings, not days), and compose's
+      # stale copy is what the container actually ran — so that decision was
+      # dark on Alpha from the day it shipped. Corrected to the decided value.
+      PORTFOLIO_HEALTH_TRIAL_FINDINGS: ${PORTFOLIO_HEALTH_TRIAL_FINDINGS:-3}
       PORTFOLIO_HEALTH_DAILY_CAP: ${PORTFOLIO_HEALTH_DAILY_CAP:-2}
       PORTFOLIO_HEALTH_PLANS: ${PORTFOLIO_HEALTH_PLANS:-trader,floor_manager}
       CORS_ORIGINS: '["https://api-alpha.agenticmarketintel.ai","http://localhost:3000","http://localhost:8000"]'

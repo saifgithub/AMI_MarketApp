@@ -206,3 +206,149 @@ def test_the_runner_actually_threads_the_risk_state():
     )
     # The PM is the agent whose verdict the floor vetoes — it must be covered.
     assert "portfolio_manager" in captured
+
+
+# ── DEF263 — the three findings the R68-BATCH7 auditor returned ──────────────
+
+
+def test_the_outage_the_runner_actually_produces_is_loud():
+    """The `CONTEXT_NOT_SUPPLIED` branch for open risk was UNREACHABLE from the
+    Room, and this test drives the translation that makes it reachable.
+
+    `_build_room_risk_limit_context` returns `(CONTEXT_NOT_SUPPLIED, None, None)`
+    on every failure path — the sentinel lands on `last_loss_closed_at` and open
+    risk arrives as a plain `None` MEANING "could not compute". The renderer
+    reads that as "the caller never asked" and prints nothing, so on a real
+    outage the line was silent — while `enforce_safety_floor` was blocking every
+    BUY on that same `None`. The sentence written for exactly that state was
+    dead code.
+
+    Every other absence test in this file passes the sentinel itself, which is
+    the DEF238 blind spot applied to this batch's own sentinel handling. This
+    one starts from the runner's real failure value.
+    """
+    from app.services.room_runner import _prompt_open_risk
+
+    runner_value_on_failure = None
+    sp = _prompt(existing_open_risk_pct=_prompt_open_risk(runner_value_on_failure))
+    assert "Open risk: COULD NOT BE COMPUTED" in sp
+    assert "the safety floor is blocking on this" in sp
+
+
+def test_the_translation_never_rewrites_a_real_figure():
+    """Only the ambiguous `None` moves. A real 0.0 is a fact and must survive as
+    one — collapsing it would be the fabricated-flat-book direction the whole
+    absence design exists to prevent."""
+    from app.agents.safety_floor import CONTEXT_NOT_SUPPLIED
+    from app.services.room_runner import _prompt_open_risk
+
+    assert _prompt_open_risk(None) is CONTEXT_NOT_SUPPLIED
+    assert _prompt_open_risk(0.0) == 0.0
+    assert _prompt_open_risk(4.2) == 4.2
+    assert _prompt_open_risk(CONTEXT_NOT_SUPPLIED) is CONTEXT_NOT_SUPPLIED
+    assert "Open risk already committed: 0.0%" in _prompt(
+        existing_open_risk_pct=_prompt_open_risk(0.0)
+    )
+
+
+def test_the_renderer_still_says_nothing_to_a_caller_that_never_asked():
+    """The fix is deliberately NOT in the renderer. `prompt_version.py` and every
+    non-Room caller omit these kwargs, and collapsing `None` into the loud branch
+    there would have them announce that the safety floor is blocking a BUY nobody
+    proposed — a fabricated alarm, the same class of harm as the silence it
+    replaced, pointed the other way."""
+    assert "Open risk" not in _prompt()
+
+
+def test_the_trade_pace_counts_the_windows_the_brake_counts():
+    """It printed `len()` of the whole list under the label "in the recent
+    window". `_risk_limit_context` builds it as `list_trades(user_id)` with no
+    date filter, so it was a LIFETIME count: 40 trades opened 90–130 days ago
+    rendered "40" while both brakes counted 0."""
+    from datetime import datetime, timedelta, timezone
+
+    now = datetime.now(timezone.utc)
+    stale = [now - timedelta(days=d) for d in (90, 100, 110, 120, 130)]
+    sp = _prompt(trade_open_timestamps=stale)
+    assert "Trades opened today: 0" in sp
+    assert "this ISO week (from Monday 00:00 UTC): 0" in sp
+    assert "Trades opened in the recent window: 5" not in sp
+
+
+def test_the_trade_pace_agrees_with_the_floors_own_counters():
+    """Computed with the floor's OWN helpers, against the same UTC day boundary
+    and Monday-00:00-UTC ISO week — a second implementation of "today" is how
+    the prompt and the brake come to disagree."""
+    from datetime import datetime, timedelta, timezone
+
+    from app.trading_math.risk_limits import (
+        trades_since, utc_day_start, utc_week_start,
+    )
+
+    now = datetime.now(timezone.utc)
+    stamps = [now - timedelta(hours=h) for h in (1, 3, 30, 100, 400)]
+    sp = _prompt(trade_open_timestamps=stamps)
+    assert f"Trades opened today: {trades_since(stamps, utc_day_start(now))}" in sp
+    assert (
+        f"this ISO week (from Monday 00:00 UTC): "
+        f"{trades_since(stamps, utc_week_start(now))}" in sp
+    )
+
+
+# ── DEF263 — `_stop_clause` had no regression protection at all ──────────────
+#
+# The auditor mutated it into exactly the two behaviours the batch claims it
+# avoids — averaging the stops, and rendering "" for an unstopped lot — and the
+# whole suite stayed green. The behaviour was correct; nothing held it there.
+
+
+def test_a_single_stop_renders_its_own_level():
+    from app.services.room_runner import _stop_clause
+
+    assert _stop_clause("AAPL", {"AAPL": {188.5}}, {}) == " — stop $188.5"
+
+
+def test_multiple_lots_list_their_stops_and_never_average_them():
+    """A mean of two stops is a level nobody set. Minting one here is the
+    DEF235 class, and the numbers are chosen so an average (185.0) would be
+    visible if it were ever computed."""
+    from app.services.room_runner import _stop_clause
+
+    clause = _stop_clause("AAPL", {"AAPL": {180.0, 190.0}}, {})
+    assert clause == " — stops $180, $190"
+    assert "185" not in clause
+
+
+def test_an_unstopped_lot_is_loud_and_never_silent():
+    """CR040. Before this the holdings block stated size and unrealised P&L and
+    said nothing about protection, so a Room reasoning about open risk could not
+    tell a fully-stopped book from a naked one."""
+    from app.services.room_runner import _stop_clause
+
+    clause = _stop_clause("AAPL", {}, {"AAPL": 2})
+    assert clause != ""
+    assert "NO stop recorded" in clause
+
+
+def test_a_partly_stopped_name_names_both_halves():
+    """The dangerous render is the one that shows the stops and stays quiet
+    about the naked lots — it reads as a fully protected position."""
+    from app.services.room_runner import _stop_clause
+
+    clause = _stop_clause("AAPL", {"AAPL": {180.0}}, {"AAPL": 3})
+    assert "$180" in clause
+    assert "3 lots with NO stop recorded" in clause
+
+
+def test_the_fallthrough_is_loud_rather_than_silent():
+    """A name in neither dict cannot occur today — both are built from the same
+    lot iteration, so every held name lands in one of them. The branch is
+    defensive, and it defends in the CR040 direction: if the two dicts ever come
+    to be built differently, a held position renders as unprotected rather than
+    as nothing. Silence is the failure mode this whole clause exists to remove,
+    so it must not be what the unreachable path returns."""
+    from app.services.room_runner import _stop_clause
+
+    assert _stop_clause("MSFT", {"AAPL": {180.0}}, {"AAPL": 1}) == (
+        " — NO stop recorded (this position is unprotected)"
+    )
