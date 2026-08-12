@@ -10,8 +10,9 @@ round: two inputs (ticker + ask AMI) read as still cluttered → merged into one
 (§9.3).
 
 Mockup: frame **A′** in `prototype/concepts.html` (revision of concept A, same DOM-read stat
-strip). Persona renames from the same review, applied to `08`: **P1 — The Curious User**,
-**P4 — The Learner**.
+strip); flow walked five frames deep in `prototype/flows.html` (A1 landing → A2 firm →
+A3 ask → A4 calls history → A5 challenge sheet). Persona renames from the same review,
+applied to `08`: **P1 — The Curious User**, **P4 — The Learner**.
 
 ## 9.1 The league question is already answered — by Saiful, in CR109
 
@@ -144,3 +145,38 @@ P4 gets one card grammar to translate instead of a roster.
   name) and #3 (E's default) unchanged.
 - **Unchanged by this revision:** concept E (the Room's live phase) and the step-0 funnel
   instrumentation from `08` §8.4 — the interview leak is upstream of any header.
+
+## 9.6 Capability map — everything downstream of A′
+
+Every capability the shipped Floor carries (or advertises), and where it lives after A′.
+Flow frames refer to `prototype/flows.html`. **New build** marks the only pieces that don't
+exist today; everything else is re-mounted, not rebuilt. All new pieces are client-side —
+zero new LLM or backend surface except where flagged.
+
+| Capability | In A′ | Backing | Status |
+|---|---|---|---|
+| Convene the Room (core loop) | omnibox ticker → CONVENE hero → Room | shipped loop; E re-presents the live phase | shipped; E is the CR |
+| Live Room, 12-seat view | WATCH THE FLOOR toggle (E1/E2) | third `RoomViewMode` value, persisted | shipped view; toggle is E's CR |
+| Verdict Board + transcript | end of every run (E3) | CR106, untouched | shipped |
+| Ask AMI / product help (D-014/015) | omnibox non-ticker → Concierge chat (A3), question carries over | shipped Concierge 1-on-1 | shipped; routing is **new build** (client-side, deterministic) |
+| Portfolio value, positions, P&L | carousel card 1 + PORTFOLIO tab | client state | card is **new build** (widget only) |
+| Verdict history / accountability | carousel card 2 → calls list (A4) → that run's Verdict Board | same `room_runs` rows the Decision Journal reads | A4 list is **new build**; Journal itself lives inside YOU per CR133 |
+| Decision Journal | YOU tab, JOURNAL segment | CR133 phase 1 (Journal moved, not dropped) | CR133's scope, not this CR's |
+| Sector news | carousel card 3 | needs a feed; cheap = yfinance headlines | phase 2 — the only card with a dependency |
+| Daily Challenge (2nd hero) | challenge card → sheet (A5) | shipped; server-truth attempts (CR010); always free (D-024) | shipped |
+| Streak | chip, top row | shipped; attempt-counts-not-correctness design | shipped; CR109 re-homes onto runs later |
+| Weekly League | **removed** | CR109 Amendment A (its removal scope covers card + screen + roll) | decided; D-060 needs a log amendment at un-dark |
+| The Game (CR109) | not on the Floor yet; future carousel card + CR133 phase-2 GAME tab | dark behind `kGamesEnabled`; slices 1–3 built | arrives on its own schedule |
+| 1-on-1 with trading agents | firm row → desk bands (A2) → agent sheet | shipped sheet, unchanged tap behaviour | shipped; A2 mount = decision #4 (CR159 re-scope) |
+| Brief Your Agent + safety floor | agent sheet, BRIEF — locked block visible | D-024, unchanged | shipped (0% used — the map keeps it reachable, not promoted) |
+| Hiring / locked-seat earn paths | A2 open seats ("tap for earn path") | CR159's spec | CR159's scope |
+| Lessons | LESSONS tab; continue-lesson is a later card candidate | shipped | shipped |
+| First-run tour | rebuilt to 3 stops: carousel, omnibox, firm row | T-TOUR trap (was 5 stops, 3 on faces) | **new build** (rework, small) |
+| Restart onboarding | moves to YOU with the rest of Settings | CR133 makes Settings a pushed route under YOU | relocation; confirm at build |
+| Ticker tape + bottom nav | unchanged chrome | CR133 4-tab | CR133's scope |
+
+The reading that matters: **A′ adds three widgets, one list screen, one router, and one
+smaller tour — and deletes one card.** Everything else on this map already exists and only
+changes its mount point. The moat features the data says nobody uses yet (1-on-1 3%, Brief
+0%) stay exactly one tap deeper than the surface, where the P3-bound users who want them
+will find them — and where they no longer tax everyone else's first screen.

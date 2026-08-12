@@ -28,7 +28,7 @@ found neither is listed under "corrections".
 | C: 1 · 10 · CTA 0.16 folds | 04, 05 | **PROVEN** — frame `C-tasks` |
 | D: 1 · 11 · CTA 0.83 folds | 04, 05 | **PROVEN** — frame `D-collapsed` |
 | E: live marks 12 → 2 · 6 taps | 04, 05 | **PROVEN** — frame `E-room` vs shipped roster count |
-| Flows: A2 9 marks · A3 2 · E2 4 · E3 12 | flows page | **PROVEN** — stat strips |
+| Flows: A2 9 marks · A3 2 · E2 4 · E3 12 | flows page | **PROVEN** — stat strips. Superseded for A3 by the 09 flows rewrite (below): the greeting bubble was cut when the omnibox carry-over replaced it, so A3 now reads 1 mark |
 | Built pages contain no external references | 00 method | **PROVEN** — `grep http` over both built files: only `data:font` URIs |
 
 ## External-quote claims
@@ -74,6 +74,10 @@ Perplexity/Inc/Columbia pages: **NOT VERIFIED**, not cited (recorded in `sources
 | CR109 Amendment A removes the league (incl. the Floor's league card); slices 1–3 dark behind `kGamesEnabled`; no D-060 amendment exists | 09 §9.1 | **PROVEN** — spec sweep this session read `CR109.md` (Amendments A/F, removal scope), `games_gate.dart:33-36`, `decision_log.md` D-060; league removal is Saiful's recorded instruction, not this lane's proposal |
 | No league-usage number was ever measured (`league_members` never queried in research) | 09 §9.1 | **ASSERTED (bounded)** — negative claim from a corpus search; a measurement outside `docs/` could exist |
 | "$100,000 ready to deploy" day-0 card copy | 09 §9.3, frame A′ note | **ASSERTED** — illustrative; the actual sim starting stake must be read from code before any build copies it |
+| Flows rewrite: A1 (A′) 1 mark · 12 taps · CTA 0.47 folds · 632px — identical to the concepts-board A′ strip; A3 1 mark · 3 taps; A4 0 marks · 6 taps; A5 0 marks · 4 taps | flows page, 09 §9.6 | **PROVEN** — stat strips re-read after the A1/A3/A4/A5 rewrite, headless Chrome this session |
+| CR133 phase 1 = four tabs with the Journal moved inside YOU (a JOURNAL segment), phase 2 gives GAME the old Journal slot and its pointers | 09 §9.6, flows A4 note | **PROVEN** — `CR133.md` read this session (tab tables, "The Journal is not missing — it moved inside YOU", inheritance table) |
+| A4's calls list is backed by existing `room_runs` rows | 09 §9.6 | **ASSERTED** — run history is stored server-side and the Journal reads it; the exact list query for "delta since verdict" needs a price lookup at read time, not verified as an existing endpoint |
+| "Restart onboarding moves to YOU" | 09 §9.6 | **ASSERTED** — CR133 moves Settings under YOU; the restart link's exact new home is a build-time confirmation |
 
 ## Corrections made during audit
 

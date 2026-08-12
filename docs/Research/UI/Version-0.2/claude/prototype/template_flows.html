@@ -292,6 +292,54 @@ code {
 .firmrow .sp { flex: 1; }
 .firmrow .arr { color: var(--text-low); font-size: 14px; }
 
+/* ── A′ header: carousel + omnibox + hero (09 revision) ───── */
+.caro {
+  display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory;
+  margin: 0 -16px; padding: 0 16px 2px;
+}
+.caro::-webkit-scrollbar { height: 0; }
+.scard {
+  flex: none; width: 318px; scroll-snap-align: start;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--r-sheet); padding: 13px 16px; cursor: pointer;
+}
+.scard .bignum {
+  font-family: 'AMI Mono', monospace; font-size: 26px; font-weight: 700;
+  letter-spacing: -0.01em; margin-top: 4px; font-variant-numeric: tabular-nums;
+}
+.dots { display: flex; gap: 5px; justify-content: center; margin-top: 8px; }
+.dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--border); }
+.dots i.on { background: var(--cyan); }
+.tickin {
+  display: flex; align-items: center; gap: 8px; margin-top: 14px;
+  background: var(--card-alt); border: 1px solid var(--border);
+  border-radius: 8px; padding: 11px 14px; color: var(--text-low);
+  font-family: 'AMI Mono', monospace; font-size: 12px; cursor: text;
+}
+.cta {
+  margin: 10px auto 0; display: block; width: 100%;
+  clip-path: var(--clip-cut-octagon);
+  background: var(--green); color: #0f172a;
+  font-family: 'AMI Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.14em;
+  padding: 15px 0; text-align: center; border: 0; cursor: pointer;
+}
+.ctacap { font-size: 10px; color: var(--text-low); text-align: center; margin: 6px 0 0; }
+.posrow { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
+.posrow .tk { font-family: 'AMI Mono', monospace; font-size: 12px; font-weight: 700; }
+.posrow .vd { font-family: 'AMI Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; padding: 1px 6px; border-radius: 3px; }
+.posrow .vd.buy  { color: var(--green-ink); border: 1px solid var(--green-ink); }
+.posrow .vd.hold { color: var(--amber-ink); border: 1px solid var(--amber-ink); }
+.posrow .vd.sell { color: var(--red-ink); border: 1px solid var(--red-ink); }
+.posrow .d { font-family: 'AMI Mono', monospace; font-size: 12px; }
+.posrow .d.up { color: var(--green-ink); } .posrow .d.dn { color: var(--red-ink); }
+.posrow .sub { font-size: 10px; color: var(--text-low); margin-left: auto; }
+.opt {
+  display: block; width: 100%; text-align: left;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--r-card); padding: 12px 14px; margin-top: 10px;
+  font-size: 13px; color: var(--text-high); cursor: pointer;
+}
+
 /* ── desk bands (A2) ──────────────────────────────────────── */
 .youline { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 8px; }
 .youline .ylbl { font-family: 'AMI Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.2em; color: var(--text-low); }
@@ -388,20 +436,25 @@ code {
   <span class="lbl">UI RESEARCH · VERSION 0.2 · CLAUDE LANE</span>
   <h1>Two flows, walked</h1>
   <p class="lede">
-    The concept board (<code>concepts.html</code>) picks A and E. This page walks each one three
-    frames deep to prove the disclosure ladder holds: simplicity at rest, the full firm within
-    two taps, and nothing hidden that D-024 says must stay visible. CR160 names throughout —
-    a dependency, not a given.
+    The concept board (<code>concepts.html</code>) picks A and E; the 09 review settled A's
+    header as frame A′ (answer-card carousel, one omnibox, no league). This page walks flow A
+    five frames deep and flow E three, to prove the disclosure ladder holds — simplicity at
+    rest, the full firm within two taps, nothing hidden that D-024 says must stay visible —
+    and that <strong>every capability the old Floor carried still has a home</strong>
+    (<code>09_floor_header.md</code> §9.6). CR160 names throughout — a dependency, not a given.
   </p>
 
   <!-- ═══════════════ FLOW A ═══════════════ -->
   <section class="sec">
     <div class="sec-head">
-      <span class="lbl" style="color:var(--green-ink)">FLOW A · CONCIERGE-FRONTED HOME</span>
-      <h2>Land → open the firm → ask AMI</h2>
-      <p>Frame A1 is the landing surface. A2 is what the YOUR FIRM row opens — CR159's desk
-      bands, re-scoped from the landing screen to the depth layer. A3 is the ask affordance
-      expanded: the Concierge answers as staff, and routes analysis to the team (D-015).</p>
+      <span class="lbl" style="color:var(--green-ink)">FLOW A · CONCIERGE-FRONTED HOME (A′, 09 REVISION)</span>
+      <h2>Land → open the firm → ask AMI → open the cards</h2>
+      <p>Frame A1 is the settled landing surface (A′): answer-card carousel, one omnibox — a
+      ticker arms CONVENE, anything else goes to AMI — then the two heroes. A2 is what the
+      YOUR FIRM row opens: CR159's desk bands, re-scoped to the depth layer. A3 is the
+      omnibox's non-ticker path — the Concierge answers as staff and routes analysis to the
+      team (D-015). A4 is carousel card 2 opened: the team's calls with their aging, each row
+      reopening its Verdict Board. A5 is the second hero opened: the Daily Challenge sheet.</p>
     </div>
     <div class="stage">
       <div class="slot">
@@ -413,22 +466,34 @@ code {
                 <div class="sp"></div>
                 <button class="streak" data-obj>6-DAY STREAK</button>
               </div>
-              <div class="ccard">
-                <div class="who">
-                  <div class="hx s56 c-pink" data-obj data-idmark><div class="fill"></div><span>CNC</span></div>
-                  <div>
-                    <div class="wlbl">AMI · YOUR CONCIERGE</div>
-                    <div class="wsub">reports to you</div>
-                  </div>
+              <div class="caro">
+                <div class="scard" data-obj>
+                  <div class="clbl" style="color:var(--green-ink)">SIM PORTFOLIO</div>
+                  <div class="bignum num">$104,820</div>
+                  <div class="csub"><span class="num">+4.8%</span> all-time · $<span class="num">38,400</span> cash · <span class="num">3</span> positions</div>
                 </div>
-                <div class="say">Morning, CEO. NVDA is <span class="num">+2.1%</span> since your team's
-                BUY call on Monday. The Daily Challenge closes in <span class="num">14</span>h.</div>
-                <div class="ask" data-obj>Ask AMI anything…</div>
-                <div class="chips">
-                  <button class="chip pri" data-obj data-cta>CONVENE THE ROOM</button>
-                  <button class="chip" data-obj>DAILY CHALLENGE</button>
-                  <button class="chip" data-obj>LESSON F-04</button>
+                <div class="scard" data-obj>
+                  <div class="clbl" style="color:var(--cyan-ink)">YOUR TEAM'S CALLS</div>
+                  <div class="posrow" style="margin-top:6px"><span class="tk">NVDA</span><span class="d up num">+2.1%</span><span class="sub">BUY · Mon</span></div>
+                  <div class="posrow"><span class="tk">AAPL</span><span class="d dn num">−0.4%</span><span class="sub">HOLD · Jul 30</span></div>
                 </div>
+                <div class="scard" data-obj>
+                  <div class="clbl" style="color:var(--amber-ink)">SECTOR WATCH</div>
+                  <div class="ctitle" style="margin-top:6px">Semis <span class="num">+1.8%</span> — NVDA leads. Fed minutes at 14:00 ET.</div>
+                  <div class="csub">From the sectors you follow</div>
+                </div>
+              </div>
+              <div class="dots"><i class="on"></i><i></i><i></i></div>
+              <div class="tickin" data-obj>
+                <div class="hx s28 c-pink" data-idmark style="margin-right:2px"><div class="fill"></div><span>CNC</span></div>
+                Type a ticker — or ask AMI anything…
+              </div>
+              <button class="cta" data-obj data-cta>CONVENE THE ROOM</button>
+              <div class="ctacap">A ticker convenes your team. Anything else, AMI answers.</div>
+              <div class="card" data-obj>
+                <div class="clbl" style="color:var(--amber-ink)">DAILY CHALLENGE</div>
+                <div class="ctitle">A company's P/E drops from 31 to 19 with flat earnings. What happened to the price?</div>
+                <div class="csub">Answer before midnight to keep your streak · <span class="num">14</span>h left</div>
               </div>
               <div class="firmrow" data-obj>
                 <div class="cluster">
@@ -443,17 +508,6 @@ code {
                 <div class="sp"></div>
                 <div class="arr">▸</div>
               </div>
-              <div class="card" data-obj>
-                <div class="clbl" style="color:var(--amber-ink)">DAILY CHALLENGE</div>
-                <div class="ctitle">A company's P/E drops from 31 to 19 with flat earnings. What happened to the price?</div>
-                <div class="csub">Answer before midnight to keep your streak · <span class="num">14</span>h left</div>
-              </div>
-              <div class="card" data-obj>
-                <div class="clbl" style="color:var(--purple-ink)">WEEKLY LEAGUE</div>
-                <div class="ctitle">Division III · Rank <span class="num">14</span>/<span class="num">50</span></div>
-                <div class="bar"><i></i></div>
-                <div class="csub">Top <span class="num">10</span> promote on Sunday</div>
-              </div>
               <div class="foot"><div class="mk"></div> AMI TRADE · EDUCATIONAL SIMULATION · NOT ADVICE</div>
             </div>
             <div class="navbar">
@@ -465,7 +519,7 @@ code {
             <div class="tape"><span>NVDA <b class="up">+2.1%</b> · AAPL <b class="dn">−0.4%</b> · MSFT <b class="up">+0.9%</b> · SPY <b class="up">+0.3%</b></span></div>
           </div>
         </div>
-        <div class="cap"><b>A1 — LANDING</b> · ONE FACE, CTA ON SCREEN 1</div>
+        <div class="cap"><b>A1 — LANDING (A′)</b> · CAROUSEL · ONE OMNIBOX · ONE FOLD</div>
         <div class="stats" data-stats="A1-home">measuring…</div>
       </div>
 
@@ -538,10 +592,6 @@ code {
             </div>
             <div class="fbody">
               <div class="chatcol">
-                <div class="bub">
-                  <div class="bwho"><div class="hx s20 c-pink" data-idmark><div class="fill"></div><span></span></div><span class="wl">AMI</span></div>
-                  Morning, CEO. What do you need?
-                </div>
                 <div class="bub user">Should I buy NVDA?</div>
                 <div class="bub">
                   <div class="bwho"><div class="hx s20 c-pink" data-idmark><div class="fill"></div><span></span></div><span class="wl">AMI</span></div>
@@ -554,21 +604,93 @@ code {
                 <button class="chip pri" data-obj data-cta>CONVENE ON NVDA</button>
                 <button class="chip" data-obj>NOT NOW</button>
               </div>
-              <div class="d015">D-015 holds: the Concierge never gives analysis — she routes it
-              to the firm. Trading agents never give product help. The line between the two is
-              the feature.</div>
+              <div class="d015">Reached by typing a non-ticker into the omnibox — the question
+              carries over as the first message. D-015 holds: the Concierge never gives
+              analysis — she routes it to the firm. Trading agents never give product help.
+              The line between the two is the feature.</div>
             </div>
           </div>
         </div>
-        <div class="cap"><b>A3 — ASK AMI</b> · ANALYSIS ROUTED TO THE FIRM, IN ROLE</div>
+        <div class="cap"><b>A3 — ASK AMI</b> · OMNIBOX NON-TICKER PATH, ROUTED IN ROLE</div>
         <div class="stats" data-stats="A3-ask">measuring…</div>
+      </div>
+
+      <div class="slot">
+        <div class="device" data-frame="A4-calls">
+          <div class="screen">
+            <div class="hdr">
+              <span class="back" data-obj>←</span>
+              <span class="ttl">YOUR TEAM'S CALLS</span>
+              <span class="sp"></span>
+              <span class="lbl num" style="color:var(--text-low)">12 RUNS</span>
+            </div>
+            <div class="fbody">
+              <div class="card" data-obj style="margin-top:0">
+                <div class="posrow" style="margin-top:0"><span class="tk">NVDA</span><span class="vd buy">BUY</span><span class="d up num">+2.1%</span><span class="sub">Mon · call ahead</span></div>
+              </div>
+              <div class="card" data-obj>
+                <div class="posrow" style="margin-top:0"><span class="tk">AAPL</span><span class="vd hold">HOLD</span><span class="d dn num">−0.4%</span><span class="sub">Jul 30 · flat</span></div>
+              </div>
+              <div class="card" data-obj>
+                <div class="posrow" style="margin-top:0"><span class="tk">MSFT</span><span class="vd buy">BUY</span><span class="d up num">+3.4%</span><span class="sub">Jul 22 · call ahead</span></div>
+              </div>
+              <div class="card" data-obj>
+                <div class="posrow" style="margin-top:0"><span class="tk">TSLA</span><span class="vd sell">SELL</span><span class="d dn num">−6.2%</span><span class="sub">Jul 15 · call ahead</span></div>
+              </div>
+              <div class="card" data-obj>
+                <div class="posrow" style="margin-top:0"><span class="tk">AMD</span><span class="vd buy">BUY</span><span class="d dn num">−1.1%</span><span class="sub">Jul 08 · call behind</span></div>
+              </div>
+              <div class="bandcap">Backed by the same <span class="mono">room_runs</span> rows the
+              Decision Journal reads (CR133 moves the Journal inside YOU). Tap a call to reopen
+              its settled Verdict Board — frame E3. Deltas are price-since-verdict, honestly
+              signed: a SELL that fell is a call <em>ahead</em>.</div>
+            </div>
+          </div>
+        </div>
+        <div class="cap"><b>A4 — CARD 2 OPENED</b> · CALLS HISTORY → VERDICT BOARD</div>
+        <div class="stats" data-stats="A4-calls">measuring…</div>
+      </div>
+
+      <div class="slot">
+        <div class="device" data-frame="A5-challenge">
+          <div class="screen">
+            <div class="hdr">
+              <span class="back" data-obj>←</span>
+              <span class="ttl" style="color:var(--amber-ink)">DAILY CHALLENGE</span>
+              <span class="sp"></span>
+              <span class="lbl num" style="color:var(--text-low)">14H LEFT</span>
+            </div>
+            <div class="fbody">
+              <div class="card" style="margin-top:0; cursor:default">
+                <div class="clbl" style="color:var(--amber-ink)">VALUATION · DAY <span class="num">7</span></div>
+                <div class="ctitle">A company's P/E drops from 31 to 19 with flat earnings. What happened to the price?</div>
+              </div>
+              <button class="opt" data-obj>It fell — same earnings at a lower multiple means a lower price.</button>
+              <button class="opt" data-obj>It rose — a lower P/E always attracts buyers.</button>
+              <button class="opt" data-obj>Unchanged — P/E and price move independently.</button>
+              <div class="bandcap">Attempting keeps your streak — right, close, or wrong. Skipping
+              is the only break (the anti-gambling design: trying counts, being right is a bonus).
+              Under CR109 the reputation points this used to feed are retired; the streak
+              re-homes onto game runs when the game un-darks.</div>
+            </div>
+          </div>
+        </div>
+        <div class="cap"><b>A5 — HERO 2 OPENED</b> · CHALLENGE SHEET, ALWAYS FREE (D-024)</div>
+        <div class="stats" data-stats="A5-challenge">measuring…</div>
       </div>
     </div>
     <div class="note good">
-      <p><strong>The ladder:</strong> Concierge card → firm row (count) → desk bands → agent sheet
-      (1-ON-1 / BRIEF, safety floor visible) → Room transcript. Five levels, every one optional,
-      none load-bearing for the core loop. The twelve agents are intact (D-012) — they just
-      stopped standing in the doorway.</p>
+      <p><strong>The ladder:</strong> carousel card / omnibox → firm row (count) → desk bands →
+      agent sheet (1-ON-1 / BRIEF, safety floor visible) → Room transcript. Five levels, every
+      one optional, none load-bearing for the core loop. The twelve agents are intact (D-012) —
+      they just stopped standing in the doorway.</p>
+      <p><strong>Nothing orphaned:</strong> every capability the old Floor carried keeps a
+      home — portfolio → card 1 and the PORTFOLIO tab; verdict history → card 2 → A4 → E3;
+      challenge → hero 2 → A5; 1-on-1 and Brief Your Agent → firm row → A2 → agent sheet;
+      product help → omnibox → A3; lessons → LESSONS tab; league → removed by CR109, whose
+      game arrives as its own surface; streak chip → stays until CR109 re-homes it; restart
+      onboarding → moves to YOU with the rest of Settings (CR133). Full map with status per
+      capability: <code>09_floor_header.md</code> §9.6.</p>
     </div>
   </section>
 
