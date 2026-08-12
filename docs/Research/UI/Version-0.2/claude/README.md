@@ -31,6 +31,14 @@ see (`06_answering_cr004.md`).
 stat strips) and `prototype/flows.html` (A and E walked three frames deep). Regenerate with
 `python3 prototype/build.py`.
 
+**Persona addendum (post-review):** the original pass skipped personas; `08_personas.md`
+fixes that with four personas built from the specs and real alpha behaviour. The data is
+blunt — of 172 real users, 73% take no core action, ≤6% ever touch an individual agent,
+Brief Your Agent sits at 0% — so the landing surface was optimised for the smallest
+measured persona. A+E survives the re-run and gains a step 0: post-DEF060-fix, only 21% of
+fresh installs finish the onboarding interview, so instrument where the interview leaks
+before (or with) any home CR — the bigger funnel loss is upstream of the Floor.
+
 ## Reading order
 
 | File | What it holds |
@@ -43,6 +51,7 @@ stat strips) and `prototype/flows.html` (A and E walked three frames deep). Rege
 | `05_recommendations.md` | A + E: argument, costs, CR sequencing (CR160 → CR159 re-scoped → home → room) |
 | `06_answering_cr004.md` | The tap-count concession and what it can't measure |
 | `07_open_decisions.md` | Five calls for Saiful (tab name, card voice, E's default, CR159 re-scope, status-line source) |
+| `08_personas.md` | Addendum after review: four personas from specs + real alpha behaviour (172 users; 73% no core action, depth features ≤6%, Brief 0%, interview completion 21% post-fix); recommendation survives, funnel instrumentation promoted to step 0 |
 | `sources.md` | Primary/secondary, code lines, fetch-failures recorded |
 | `VERIFICATION.md` | Every number traced: PROVEN vs ASSERTED, corrections during audit |
 | `prototype/` | `build.py` + two self-contained templates → `concepts.html`, `flows.html` |

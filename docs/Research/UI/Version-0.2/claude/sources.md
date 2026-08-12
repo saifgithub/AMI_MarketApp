@@ -33,6 +33,23 @@ unless flagged.
 | `docs/forward_planning/CR004_release_readiness/plan_b_playability_ux.md` | The claim §06 engages |
 | `docs/forward_planning/CR043_bug_feedback_loop/CR043_bug_feedback_loop.md` | Why the complaint had no capture path |
 
+## Internal — alpha behavioural data (primary, added with 08)
+
+`ami_trade` Postgres on melehost (`ssh melehost "docker exec ami_postgres psql -U postgres
+-d ami_trade …"`), queried 2026-08-12. Tables: `users`, `room_runs`,
+`one_on_one_messages`, `overlay_edit_counts`, `lessons_progress`, `sim_trades`,
+`daily_challenge_attempts`, `mandates`. Real-human filter per
+`memory/feedback_user_report_exclusions.md` (CR035 synthetics by `last_app_version`,
+2026-05-24 seed burst by shape, CR125/DEF227-229 probes by id). Aggregation: one
+`WITH real_users … agg` query counting per-user rooms / 1-on-1 messages (role='user') /
+distinct non-Concierge agents chatted / brief-edit sums / lessons / trades / challenges,
+then `count(*) FILTER` per segment; a second query for mandate existence and tenure split.
+
+Persona framing sources: `docs/initial_specs/00_overview/vision_and_positioning.md`
+(audience, north-star metric, moats), `docs/initial_specs/06_monetization/tiers_and_pricing.md`
+(tier ladder + persona narratives), `docs/defect/_registry/DEF060.row.md` (mandate-discard
+defect, **fixed** AT:R59 — pre-fix cohort's mandate counts unreliable, post-fix cohort clean).
+
 ## Internal — measurements (primary)
 
 `prototype/concepts.html` + `prototype/flows.html`, stat strips DOM-read (headless Chrome,

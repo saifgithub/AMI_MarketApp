@@ -34,10 +34,17 @@ works (E). The settled Room already lives by this rule (CR106); A and E finish t
 
 ## Sequencing (when Saiful greenlights a build)
 
-1. **CR160 first** — renames; same registry file as everything downstream (T-SEQUENCE).
+0. **Interview-abandonment instrumentation first** — the persona pass (`08_personas.md`)
+   found the bigger funnel loss is upstream of the Floor: post-DEF060-fix, only 21% of
+   fresh installs (18/84, last 14 days) finish the onboarding interview. Which question
+   loses them is unmeasured. A home redesign polishes the second door while four of five
+   users leave at the first; instrument the leak before (or with) any home CR.
+1. **CR160** — renames; same registry file as everything downstream (T-SEQUENCE).
 2. **CR159, re-scoped** — desk bands built as the "Your Firm" screen (pushed route), not the
    Floor body. Confirms open decision #4 (`07_open_decisions.md`). Traps T-TOUR / T-SLICE /
-   T-TWICE inherited as written.
+   T-TWICE inherited as written. The persona pass promotes two mitigations to acceptance
+   criteria: the firm-row seat count and the persisted WATCH THE FLOOR toggle
+   (`08_personas.md` §8.4).
 3. **Home CR (concept A)** — new Floor body: Concierge card + firm row + existing cards.
    Tour rebuilt (3 stops). `_agentKey0/_agentKey4` anchors die with the Wrap (T-TOUR).
 4. **Room CR (concept E)** — third `RoomViewMode` value + stage-row widget + parity test.

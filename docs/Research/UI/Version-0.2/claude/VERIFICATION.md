@@ -39,6 +39,18 @@ with one honesty note: extraction ran through an automated fetch pipeline — be
 any line in *user-facing product copy* (not this research), re-check against the live page.
 Perplexity/Inc/Columbia pages: **NOT VERIFIED**, not cited (recorded in `sources.md`).
 
+## Alpha-data claims (added with 08; queried live 2026-08-12)
+
+| Claim | Status |
+|---|---|
+| 172 real users after the standing exclusion filter | **PROVEN** — query run this session on melehost |
+| 125/172 (73%) no core action; 32 convened; 9 convened 3+; 11 used 1-on-1; 5 reached a trading agent; 9 messaged Concierge; 30 did lessons; 8 traded; 4 did challenges | **PROVEN** — same aggregate query |
+| 0 Brief Your Agent edits | **PROVEN** — `sum(overlay_edit_counts.count)` = 0 across real users |
+| 28 mandates persisted; 84/172 accounts <14 days old; range 2026-05-13→08-12 | **PROVEN** — second query |
+| Post-DEF060-fix cohort: 18/84 mandates (21%), 7/84 convened (8%) in last 14 days | **PROVEN** — third query. DEF060 confirmed **fixed** (AT:R59) in `docs/defect/_registry/DEF060.row.md` before this was framed — an earlier draft of 08 wrongly treated it as open; corrected same session |
+| The four personas (P1–P4) | **ASSERTED** — evidence-weighted synthesis of specs + segments; not interviewed humans (08 §8.5) |
+| "Counts include founder test devices" | **PROVEN in kind** (exclusion memo documents iPhone18,1/emulator rows) — exact split not derived |
+
 ## Asserted (not independently executed)
 
 - "Rewrite of `floor_screen.dart` body" as A's main cost, and "extend enum + provider +

@@ -61,6 +61,16 @@ The numbers quoted in `01`/`05`/`06` were extracted from the built pages rendere
    Flow & Positioning, Risk Officer ×3, Execution Desk). CR160 is *proposed*, not landed —
    the frames treat it as a dependency and say so. The baseline frame uses shipped names.
 
+## Persona addendum data (added post-review)
+
+`08_personas.md` adds a third kind of number: **behavioural counts from the live alpha
+database** (`ami_trade` on melehost, queried 2026-08-12 over SSH), filtered by the standing
+real-human exclusion list (CR035 synthetics, seed fixtures, promotion/verification probes).
+Limits specific to it: counts include founder test devices; 84 of 172 accounts are under
+14 days old; lifetime mandate counts mix pre- and post-DEF060-fix cohorts (the last-14-days
+cohort is the clean read); inactivity is observed, its cause is not. SQL shape in
+`sources.md`.
+
 ## Blind-lane note
 
 `docs/Research/UI/Version-0.2/` carries sibling lanes (a `kimi/` folder exists). Per the
