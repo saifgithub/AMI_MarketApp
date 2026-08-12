@@ -87,6 +87,26 @@ moves.
 At n=26 the result sits exactly in the gap between those, which is the worst
 possible place for it to land and is not something to round in either direction.
 
+**The replay is also blind to two of the nine fixes it is being asked to judge**
+(added 2026-08-12, while reviewing CR167 §6.2's look-ahead traps against this
+harness). `AsOfContext` **skips the news and social feed probes entirely** —
+they render UNAVAILABLE, an honest absence, by design
+([`asof_context.py:9`](../../../backend/app/services/asof_context.py)). So every
+row in the table above was produced by a Room that saw **no news and no social
+data at all**.
+
+That is good news for validity — the Batch 9 news recency floor and the Batch 4
+Alpha Vantage key cannot contaminate a historical replay, and upstream's
+`3570f2e`/`0c1231a`/`40774ca` traps have no purchase here because we serve
+neither feed in as-of mode. It is bad news for coverage: **Batch 9 was entirely
+about news and social feed depth**, so this instrument cannot detect its effect
+even in principle, and DEF262/DEF263's fact-sheet changes are only partially
+exercised. The replay measures the *prompt*, not the *feeds*. Any effect of the
+feed work has to be measured on live Alpha traffic, where those probes actually
+run — which is the human arm, and the human arm is the one confounded by tier
+mix. Neither arm covers the feed changes cleanly, and no arithmetic here fixes
+that.
+
 ## 4. What would close DEF230
 
 1. **Re-run the pinned replay at `--n-pairs 40`** (~1.6 h unattended, same
