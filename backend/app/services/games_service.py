@@ -25,6 +25,7 @@ SAME transaction, so a forfeit cannot be recorded without its cost.
 
 from __future__ import annotations
 
+from calendar import monthrange as _monthrange_full
 from datetime import date, datetime, time as dt_time, timedelta, timezone
 from typing import Optional
 from uuid import UUID, uuid4
@@ -46,7 +47,12 @@ from app.db.models import (
 )
 from app.schemas.trade import OrderType, Side
 from app.services import career_ledger, games_duels
-from app.services.games_scoring import forfeit_debit, short_open_fee, trade_fee
+from app.services.games_scoring import (
+    PLACEMENT_MIN_FIELD,
+    forfeit_debit,
+    short_open_fee,
+    trade_fee,
+)
 from app.services.portfolio_nav_daily import nav_history, twr_pct_for_window
 from app.services.sim_engine import get_sim_engine
 from app.trading_math.market_hours import is_us_market_open, next_us_market_open
@@ -204,6 +210,107 @@ def _weekly_window(monday: date) -> tuple[datetime, datetime, datetime, date]:
     return _cadence_window(WEEKLY_CADENCE, monday)
 
 
+# ── Demand-gated rolling starts (§6.6, slice 4) ──────────────────────────
+#
+# Saiful named the hole: *"on a popular platform, this is great. but on a new
+# platform, we may find a month with a single player!"* Calendar anchoring
+# answers it badly in the other direction — a player who discovers the game on
+# 2 October waits until 1 January to start an annual run, and until then the
+# quarterly board is a page telling them to come back in three months.
+#
+# A rolling field opens at a minimum entrant count OR a maximum wait,
+# whichever comes first. Self-scaling with no tuning: frequent starts on a
+# busy platform, one-per-period on a new one. **Everyone in a field still
+# starts the same day**, which is the property §6.2 chose placement scoring
+# for and the reason thin fields cannot instead be fixed by merging cohorts
+# across start dates.
+#
+# WEEKLY and MONTHLY are deliberately absent. §6.6: "the problem is confined
+# to the long cadences; weekly and monthly are calendar-driven, so thinness
+# means a small field, never a stale one." A weekly lobby has nothing to
+# gate — the next one is never more than days away.
+_ROLLING_CADENCES = (QUARTERLY_CADENCE, HALF_CADENCE, ANNUAL_CADENCE)
+
+# First cut, from §6.6's own threshold list. `ROLLING_MIN_ENTRANTS` is
+# PLACEMENT_MIN_FIELD rather than a second constant, because the number it
+# is trying to reach IS the placement threshold — a lobby that opened at a
+# different count would be optimising for a field size nothing scores on.
+ROLLING_MIN_ENTRANTS = PLACEMENT_MIN_FIELD
+ROLLING_MAX_WAIT_DAYS = 30
+
+# Below this, a lobby that ran out its wait is ABANDONED rather than started.
+# §12: "field never fills -> ABANDONED; entrants roll into the next field of
+# that cadence; no forfeit, no debit, no record."
+#
+# Two is the floor because one is not a contest, and because a lone entrant
+# is the exact case §6.6 problem 2 is about — first of one paying the largest
+# prize in the game for beating nobody. §12's separate ruling that a field of
+# 1-2 "scores benchmark-relative" governs a field that STARTED with a contest
+# and lost people to deletion or forfeit, and the calendar cadences, which are
+# never demand-gated; it is not a licence to start a lobby of one.
+ROLLING_MIN_TO_START = 2
+
+
+def _add_months_exact(d: date, months: int) -> date:
+    """Month arithmetic that KEEPS the day of the month, clamping to the last
+    valid day (31 Jan + 1 month = 28/29 Feb).
+
+    `_add_months` above deliberately snaps to the 1st, because every
+    calendar-anchored cadence starts there and snapping removes a whole class
+    of end-of-month bug. A rolling field starts on whatever day it filled, so
+    it needs the other behaviour: without this, a quarterly run beginning
+    20 August would end 31 October — 72 days, sold as a quarter.
+    """
+    total = (d.year * 12 + d.month - 1) + months
+    year, month = total // 12, total % 12 + 1
+    last = _monthrange_full(year, month)[1]
+    return date(year, month, min(d.day, last))
+
+
+_ROLLING_MONTHS = {QUARTERLY_CADENCE: 3, HALF_CADENCE: 6, ANNUAL_CADENCE: 12}
+
+
+def rolling_end(cadence: str, start: date) -> date:
+    """The last day of a rolling run that began on `start` — a full period
+    from that day, not the remainder of the calendar period it landed in."""
+    return _add_months_exact(start, _ROLLING_MONTHS[cadence]) - timedelta(days=1)
+
+
+def rolling_decision(
+    *, entrants: int, lobby_age_days: float,
+    min_entrants: int = ROLLING_MIN_ENTRANTS,
+    max_wait_days: int = ROLLING_MAX_WAIT_DAYS,
+) -> str:
+    """`"start_now"` | `"abandon"` | `"wait"` for one rolling lobby. Pure, so
+    the rule is readable and testable without a field row.
+
+    Four branches, each with its own reason:
+
+    - **Filled** (`entrants >= min_entrants`) -> start. This is the rolling
+      half: on a busy platform a quarterly field starts as soon as a real
+      field exists, instead of once a quarter.
+    - **Waited out, and a contest** (`age >= max_wait`, 2+ entrants) -> start.
+      Two people who each waited a month should play, not wait for a calendar
+      boundary neither of them chose.
+    - **Waited out, not a contest** (`age >= max_wait`, exactly 1) ->
+      **abandon**. §12: entrants roll into the next field of that cadence, no
+      forfeit, no debit, no record. Starting instead would hand first-of-one
+      the largest prize in the game for beating nobody (§6.6 problem 2).
+    - **An EMPTY lobby waits.** It is never abandoned, because there is
+      nobody in it to be kept waiting and nothing to roll forward — churning
+      an empty row every 30 days would be motion with no purpose. It rides
+      its calendar anchor, which is exactly the "quarterly on a new platform"
+      behaviour §6.6 describes.
+    """
+    if entrants >= min_entrants:
+        return "start_now"
+    if lobby_age_days >= max_wait_days and entrants >= ROLLING_MIN_TO_START:
+        return "start_now"
+    if lobby_age_days >= max_wait_days and entrants >= 1:
+        return "abandon"
+    return "wait"
+
+
 def _as_utc(value: datetime) -> datetime:
     """SQLite round-trips `DateTime(timezone=True)` as NAIVE, so a stored
     `locks_at` compares as tz-naive against a tz-aware `now` and raises. Same
@@ -254,30 +361,76 @@ def ensure_field(
     entry_opens_at, locks_at, market_open, ends_on = _cadence_window(
         cadence, target_start,
     )
+    row = None
+    if cadence in _ROLLING_CADENCES:
+        # A rolling lobby is found by whether it is still ACCEPTING, never by
+        # its `starts_on` — the tick moves that date the moment the lobby
+        # fills, and a lookup keyed on it would then miss the live lobby and
+        # create a duplicate beside it. Two entry-accepting fields of one
+        # cadence would break `enter_field`'s one-live-run-per-cadence check,
+        # which assumes exactly one.
+        #
+        # The candidate's state is re-derived from its OWN timestamps before
+        # it is accepted, because the column goes stale exactly here: nothing
+        # refreshes a scheduled lobby between the tick that dated it and the
+        # lock it then passes. Returning it anyway would hand `enter_field` a
+        # locked field and reject a player who is entitled to the NEXT one.
+        candidate = session.execute(
+            select(GameFieldRow).where(
+                GameFieldRow.cadence == cadence,
+                GameFieldRow.kind == "open",
+                GameFieldRow.state.in_(("announced", "entry_open")),
+            ).order_by(GameFieldRow.starts_on.asc())
+        ).scalars().first()
+        if candidate is not None:
+            candidate_state = _resolve_state(
+                now,
+                _as_utc(candidate.entry_opens_at),
+                _as_utc(candidate.locks_at),
+                _market_open_et(candidate.starts_on),
+            )
+            if candidate_state in ("announced", "entry_open"):
+                if candidate.state != candidate_state:
+                    candidate.state = candidate_state
+                    session.flush()
+                return candidate
+            candidate.state = candidate_state
+            session.flush()
     row = session.execute(
         select(GameFieldRow).where(
             GameFieldRow.cadence == cadence,
             GameFieldRow.kind == "open",
             GameFieldRow.starts_on == target_start,
+            GameFieldRow.state != "abandoned",
         )
-    ).scalar_one_or_none()
+    ).scalars().first()
     new_state = _resolve_state(now, entry_opens_at, locks_at, market_open)
     if row is None:
+        rolling = cadence in _ROLLING_CADENCES
         row = GameFieldRow(
             cadence=cadence,
             state=new_state,
-            entry_opens_at=entry_opens_at,
+            # A rolling lobby accepts entries the moment it exists. The
+            # calendar `entry_opens_at` would leave a quarterly lobby
+            # `announced` — visible and unjoinable — for most of a quarter,
+            # which is the wait §6.6 exists to remove.
+            entry_opens_at=now if rolling else entry_opens_at,
             locks_at=locks_at,
             starts_on=target_start,
             ends_on=ends_on,
-            min_entrants=None,
-            max_wait_days=None,
+            # Populated only where they mean something. On a calendar
+            # cadence these two columns have no reading: a weekly field
+            # starts on Monday whoever turned up.
+            min_entrants=ROLLING_MIN_ENTRANTS if rolling else None,
+            max_wait_days=ROLLING_MAX_WAIT_DAYS if rolling else None,
             scoring_basis=None,
             benchmark_ticker="SPY",
             entrant_count=0,
             kind="open",
             points_policy="full",
         )
+        if rolling:
+            row.state = _resolve_state(now, row.entry_opens_at, locks_at, market_open)
         session.add(row)
         session.flush()
     elif row.state != new_state:
@@ -290,6 +443,103 @@ def ensure_weekly_field(session, *, now: datetime | None = None) -> GameFieldRow
     """Back-compat shim — slice 2 shipped this name and several callers and
     tests use it. Weekly is just one cadence now."""
     return ensure_field(session, WEEKLY_CADENCE, now=now)
+
+
+def _start_rolling_field(session, field: GameFieldRow, *, now: datetime) -> None:
+    """Pull a filled lobby's start forward to the next market open, and give
+    it a FULL period from that day (`rolling_end`) rather than the remainder
+    of the calendar period it happens to sit in.
+
+    Entry closes `_LOCK_BUFFER` before that open, exactly as on a calendar
+    field — the lock window is what `games_desks.fields_in_lock_window` uses
+    to fill the field with desks, so a rolling start that skipped it would
+    silently ship opponent-less fields.
+    """
+    market_open = next_us_market_open(now + _LOCK_BUFFER)
+    starts_on = market_open.astimezone(_ET).date()
+    field.starts_on = starts_on
+    field.ends_on = rolling_end(field.cadence, starts_on)
+    field.locks_at = market_open - _LOCK_BUFFER
+    field.starts_decided_at = now
+    field.state = _resolve_state(
+        now, _as_utc(field.entry_opens_at), field.locks_at, market_open,
+    )
+
+
+def run_rolling_start_tick(*, now: datetime | None = None) -> dict:
+    """Decide every open rolling lobby: start it, abandon it, or leave it.
+
+    Background entry point (`main.py`), idempotent — a lobby that has already
+    been started is no longer `announced`/`entry_open` and is not a candidate
+    on the next pass.
+    """
+    now = now or datetime.now(timezone.utc)
+    started = abandoned = rolled = 0
+    with get_session() as s:
+        for cadence in _ROLLING_CADENCES:
+            field = ensure_field(s, cadence, now=now)
+            if field.state not in ("announced", "entry_open"):
+                continue
+            if field.starts_decided_at is not None:
+                # Already scheduled. It keeps accepting entries until its
+                # lock — that window is where the desks fill it — but its
+                # start date is settled and re-deciding it would slide the
+                # date out from under the players already waiting on it.
+                continue
+            age_days = (now - _as_utc(field.entry_opens_at)).total_seconds() / 86_400.0
+            decision = rolling_decision(
+                entrants=field.entrant_count or 0,
+                lobby_age_days=age_days,
+                min_entrants=field.min_entrants or ROLLING_MIN_ENTRANTS,
+                max_wait_days=field.max_wait_days or ROLLING_MAX_WAIT_DAYS,
+            )
+            if decision == "start_now":
+                _start_rolling_field(s, field, now=now)
+                started += 1
+                logger.info(
+                    "game_rolling_field_started",
+                    field_id=str(field.id), cadence=cadence,
+                    entrants=field.entrant_count, starts_on=field.starts_on.isoformat(),
+                    waited_days=round(age_days, 1),
+                )
+            elif decision == "abandon":
+                rolled += _abandon_and_roll_forward(s, field, now=now)
+                abandoned += 1
+    return {"started": started, "abandoned": abandoned, "entrants_rolled": rolled}
+
+
+def _abandon_and_roll_forward(session, field: GameFieldRow, *, now: datetime) -> int:
+    """§12: the field never filled, so its entrants roll into the next field
+    of that cadence — *"no forfeit, no debit, no record."*
+
+    Each entry is RE-POINTED at the fresh lobby rather than closed and
+    recreated. That is what makes all three of those true at once: the same
+    `run_id` and the same game portfolio carry over, so nothing has to be
+    migrated, no `forfeit` state is ever written, no ledger row is posted,
+    and the player's Record gains no entry for a field that never ran.
+    """
+    field.state = "abandoned"
+    session.flush()
+
+    # After the flush, the abandoned row is no longer `announced`/`entry_open`,
+    # so this call creates the NEXT lobby rather than returning the dead one.
+    successor = ensure_field(session, field.cadence, now=now)
+    entries = session.execute(
+        select(GameEntryRow).where(
+            GameEntryRow.field_id == field.id,
+            GameEntryRow.state.in_(("entered", "active")),
+        )
+    ).scalars().all()
+    for entry in entries:
+        entry.field_id = successor.id
+    successor.entrant_count = (successor.entrant_count or 0) + len(entries)
+    field.entrant_count = 0
+    logger.info(
+        "game_field_abandoned",
+        field_id=str(field.id), cadence=field.cadence,
+        successor_field_id=str(successor.id), entrants_rolled=len(entries),
+    )
+    return len(entries)
 
 
 # ── Reads ────────────────────────────────────────────────────────────────

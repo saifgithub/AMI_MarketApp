@@ -16,6 +16,15 @@ usable. Both are kept because they answer different questions, and deriving
 either from the other is wrong in exactly the case that matters: a field with
 voids in it.
 
+`game_fields.starts_decided_at` is slice 4's other half — the demand-gated
+rolling start (§6.6). A Q/H/Y lobby's start date is provisional until the gate
+trips, and once it trips it must never move again: a lobby that kept filling
+would otherwise slide its own start forward on every tick, and the entrants
+already in it would be waiting on a date that receded as the field grew. The
+`state` column cannot carry this, because a scheduled lobby is still
+`entry_open` — entries stay open until the lock, which is the window the house
+desks fill in.
+
 Revision ID: c109g000007a
 Revises: b109f000006e
 Create Date: 2026-08-12
@@ -41,8 +50,13 @@ def upgrade() -> None:
         "game_entries",
         sa.Column("scored_entrant_count", sa.Integer(), nullable=True),
     )
+    op.add_column(
+        "game_fields",
+        sa.Column("starts_decided_at", sa.DateTime(timezone=True), nullable=True),
+    )
 
 
 def downgrade() -> None:
+    op.drop_column("game_fields", "starts_decided_at")
     op.drop_column("game_entries", "scored_entrant_count")
     op.drop_column("game_entries", "title_multiplier")

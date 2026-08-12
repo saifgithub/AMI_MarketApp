@@ -273,9 +273,21 @@ async def _game_desk_fill_tick() -> None:
     field", so a restart mid-fill resumes rather than double-entering."""
     from app.services.games_desks import run_desk_fill_tick
     from app.services.games_duels import run_duel_pairing_tick
+    from app.services.games_service import run_rolling_start_tick
 
     while True:
         try:
+            # CR109 slice 4 — decide the rolling Q/H/Y lobbies FIRST, in this
+            # same tick. A lobby that fills is given a start date and a lock
+            # window by that call, and `run_desk_fill_tick` below fills fields
+            # by lock window: running the two independently would let a
+            # rolling field open with no desks in it whenever the ordering
+            # happened to invert, which reads as "no opponents were
+            # available" rather than as a bug. Same reasoning as the duel
+            # pairing already folded into this tick.
+            rolling = await asyncio.to_thread(run_rolling_start_tick)
+            if any(rolling.values()):
+                logger.info("game_rolling_start_tick_complete", **rolling)
             stats = await asyncio.to_thread(run_desk_fill_tick)
             logger.info("game_desk_fill_tick_complete", **stats)
             # Duels pair in the SAME tick, immediately after, and never in a

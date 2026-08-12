@@ -1398,6 +1398,17 @@ class GameFieldRow(Base):
     owner_user_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
     points_policy: Mapped[str] = mapped_column(String, nullable=False, default="full")
     theme: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # CR109 slice 4 §6.6 — set once, when a demand-gated Q/H/Y lobby's start
+    # date stops being provisional. It must never move afterwards: a lobby
+    # that kept filling would otherwise slide its own start forward on every
+    # tick, so the entrants already in it would be waiting on a date that
+    # receded as the field grew. `state` cannot carry this — a scheduled
+    # lobby is still `entry_open`, because entries stay open until the lock,
+    # which is the window the house desks fill in. NULL on every calendar
+    # cadence, where the start was never in question.
+    starts_decided_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
