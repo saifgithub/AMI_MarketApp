@@ -117,8 +117,9 @@ class _RecordBody extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // IDENTITY — present-when-available only; titles are DARK this
-          // slice (see this file's top docstring).
+          // IDENTITY — present-when-available only. Slice 4 lights this up;
+          // a backend that predates it simply omits `title` and the section
+          // stays absent rather than rendering an empty rung.
           if (record.title != null) ...[
             _SectionHeading(l.gamesRecordIdentityHeading),
             const SizedBox(height: AmiSpacing.s),
@@ -127,6 +128,26 @@ class _RecordBody extends StatelessWidget {
               color: AmiColors.hexPurple,
               variant: HexChipVariant.tinted,
             ),
+            // The rung above, and the distance to it. Amendment D
+            // correction 3's finding was that the median player — netting
+            // ~0 per run by construction — can see NO progression at all;
+            // a total that moves on placement noise does not tell them
+            // where it is going. Stated as a measurement, never as a nudge.
+            if (record.nextTitle != null) ...[
+              const SizedBox(height: AmiSpacing.s),
+              Text(
+                record.nextTitle!.isMilestone
+                    ? l.gamesRecordNextTitleRuns(
+                        record.nextTitle!.remaining,
+                        record.nextTitle!.title.toUpperCase(),
+                      )
+                    : l.gamesRecordNextTitlePoints(
+                        record.nextTitle!.remaining,
+                        record.nextTitle!.title.toUpperCase(),
+                      ),
+                style: AmiTypography.caption,
+              ),
+            ],
             const SizedBox(height: AmiSpacing.l),
           ],
 

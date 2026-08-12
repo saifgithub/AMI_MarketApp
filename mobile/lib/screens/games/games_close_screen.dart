@@ -245,7 +245,7 @@ class _BeatResult extends StatelessWidget {
                 if (result.isThinField)
                   Flexible(
                     child: Text(
-                      l.gamesCloseBasisThinField(result.entrantCount),
+                      l.gamesCloseBasisThinField(result.rankedFieldSize),
                       style: AmiTypography.caption,
                       textAlign: TextAlign.end,
                     ),
@@ -253,7 +253,7 @@ class _BeatResult extends StatelessWidget {
                 else if (result.rank != null)
                   Flexible(
                     child: Text(
-                      l.gamesCloseBasisRanked(result.rank!, result.entrantCount),
+                      l.gamesCloseBasisRanked(result.rank!, result.rankedFieldSize),
                       style: AmiTypography.caption,
                       textAlign: TextAlign.end,
                     ),
@@ -580,11 +580,11 @@ class GamesCloseDebriefSheet extends StatelessWidget {
 
             if (result.isThinField)
               _row(l.gamesDebriefBasisLabel,
-                  l.gamesCloseBasisThinField(result.entrantCount))
+                  l.gamesCloseBasisThinField(result.rankedFieldSize))
             else if (result.rank != null)
               _row(
                 l.gamesDebriefBasisLabel,
-                l.gamesCloseBasisRanked(result.rank!, result.entrantCount),
+                l.gamesCloseBasisRanked(result.rank!, result.rankedFieldSize),
               ),
 
             if (!result.isVoid &&

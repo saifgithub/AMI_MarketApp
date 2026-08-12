@@ -877,6 +877,7 @@ class GameCloseResult {
     this.state = 'finished',
     this.scoringBasis = 'placement',
     this.entrantCount = 0,
+    this.scoredEntrantCount,
     this.rank,
     this.voidReason,
     this.careerPointsDelta = 0,
@@ -908,6 +909,14 @@ class GameCloseResult {
   /// (implementation_plan.md §4.3).
   final String scoringBasis;
   final int entrantCount;
+
+  /// The `n` the rank was actually divided by — the entries with a
+  /// comparable result. Deliberately NOT [entrantCount], which counts
+  /// everyone who entered including VOID runs whose numbers were never
+  /// usable: "3rd of 9" in a field where two runs voided is a sentence
+  /// about a contest that did not happen. Null on a run scored before
+  /// slice 4, where [rankedFieldSize] falls back.
+  final int? scoredEntrantCount;
   final int? rank;
   final String? voidReason;
   final int careerPointsDelta;
@@ -978,6 +987,15 @@ class GameCloseResult {
   /// `GamesRecordScreen`'s history row instead — see that file.
   bool get isForfeit => state == 'forfeit';
   bool get isThinField => scoringBasis == 'benchmark';
+
+  /// What a rank should be shown OUT OF. Prefers the scored count and
+  /// falls back to the field's own total for pre-slice-4 rows — never to
+  /// zero, because "1st of 0" is the one rendering that is worse than
+  /// showing the wider number.
+  int get rankedFieldSize =>
+      (scoredEntrantCount != null && scoredEntrantCount! > 0)
+          ? scoredEntrantCount!
+          : entrantCount;
   bool get hasNearMiss => nearMissLabel != null && nearMissGapPct != null;
 
   /// Wire keys are read with fallbacks across the plan-doc's prose names
@@ -992,6 +1010,7 @@ class GameCloseResult {
         state: j['state'] as String? ?? 'finished',
         scoringBasis: j['scoring_basis'] as String? ?? 'placement',
         entrantCount: (j['entrant_count'] as num?)?.toInt() ?? 0,
+        scoredEntrantCount: (j['scored_entrant_count'] as num?)?.toInt(),
         rank: ((j['final_rank'] ?? j['rank']) as num?)?.toInt(),
         voidReason: j['void_reason'] as String?,
         careerPointsDelta:
@@ -1047,6 +1066,7 @@ class GameRecord {
     this.forfeitCount = 0,
     this.voidCount = 0,
     this.title,
+    this.nextTitle,
     this.runHistory = const [],
   });
 
@@ -1056,10 +1076,22 @@ class GameRecord {
   final int forfeitCount;
   final int voidCount;
 
-  /// Present only once a title system ships (slice 4 — DARK this slice per
-  /// implementation_plan.md §2). Parsed defensively for forward-compat;
-  /// the Record's IDENTITY section renders only when this is non-null.
+  /// The title held right now — §6.4 thresholds, recomputed on read rather
+  /// than stored as a promotion, so there is nothing here that can fall out
+  /// of sync with [careerPoints] beside it. Still nullable: a backend that
+  /// predates slice 4 simply omits it, and the IDENTITY section renders
+  /// only when it is present.
   final String? title;
+
+  /// The rung above, and what still stands between the player and it.
+  ///
+  /// This is the surface Amendment D correction 3 actually asked for. The
+  /// finding was never that progression is slow — it is that the median
+  /// player, oscillating around `p = 0.5`, nets roughly zero per run and so
+  /// can SEE no progression at all. A total that moves on placement noise
+  /// says nothing about where it is going; this says what the target is and
+  /// how far away it is, in the unit that closes it.
+  final GameTitleGoal? nextTitle;
 
   final List<GameRecordRunHistoryEntry> runHistory;
 
@@ -1079,10 +1111,39 @@ class GameRecord {
         forfeitCount: (j['forfeit_count'] as num?)?.toInt() ?? 0,
         voidCount: (j['void_count'] as num?)?.toInt() ?? 0,
         title: j['title'] as String?,
+        nextTitle: j['next_title'] == null
+            ? null
+            : GameTitleGoal.fromJson(j['next_title'] as Map<String, dynamic>),
         runHistory: ((j['run_history'] ?? j['runs']) as List? ?? const [])
             .map((e) => GameRecordRunHistoryEntry.fromJson(
                 e as Map<String, dynamic>))
             .toList(),
+      );
+}
+
+/// The next rung on the title ladder and the distance to it.
+///
+/// `requirement` is `finished_runs` for the milestone rung and
+/// `career_points` for every rung above it — the two are not
+/// interchangeable, and a client that rendered "3 more points" for a
+/// milestone would be describing a threshold that does not exist.
+class GameTitleGoal {
+  const GameTitleGoal({
+    required this.title,
+    required this.requirement,
+    required this.remaining,
+  });
+
+  final String title;
+  final String requirement;
+  final int remaining;
+
+  bool get isMilestone => requirement == 'finished_runs';
+
+  factory GameTitleGoal.fromJson(Map<String, dynamic> j) => GameTitleGoal(
+        title: j['title'] as String? ?? '',
+        requirement: j['requirement'] as String? ?? 'career_points',
+        remaining: (j['remaining'] as num?)?.toInt() ?? 0,
       );
 }
 

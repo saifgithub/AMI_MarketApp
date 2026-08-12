@@ -243,7 +243,7 @@
     "gamesTicketBookPct": "% OF YOUR BOOK",
     "gamesTicketUnknownNote": "Order sent, but AMI could not confirm what happened to it. Check your run before placing another.",
     "gamesTicketCashAvailable": "AVAILABLE TO DEPLOY",
-    "gamesTicketSizeAmount": "{pct}% \u00b7 {amount} AMI Cash",
+    "gamesTicketSizeAmount": "{pct}% · {amount} AMI Cash",
     "gamesTicketCashCommitted": "{amount} committed to {count, plural, =1{1 queued order} other{{count} queued orders}}",
     "gamesRunTitle": "My run",
     "gamesRunBookValue": "BOOK VALUE",
@@ -795,166 +795,548 @@
     "findingSectionF4": "F4 · CONCLUSION",
     "findingSectionF5": "F5 · WHAT THE NUMBERS POINT TO",
     "findingUnavailableBody": "AMI cannot generate a Finding right now — live market data is off.",
-
     "versionGateScreenTitle": "Update Required",
     "versionGateUpdateCta": "Update Now",
     "versionGateNagDismissCta": "Later",
     "versionGateRetryCta": "I've updated — check again",
     "versionGateOfflineRetryHint": "Still on the old version, or AMI couldn't be reached. Try again in a moment.",
     "gamesBoardTitle": "Standings",
-    "@gamesBoardTitle": {"description": "CR109 slice 3c/4. App-bar title of the field board \u2014 where you stand against every other entrant in your run. NEW key. retranslate:[ar,ms]"},
+    "@gamesBoardTitle": {
+        "description": "CR109 slice 3c/4. App-bar title of the field board — where you stand against every other entrant in your run. NEW key. retranslate:[ar,ms]"
+    },
     "gamesBoardCta": "SEE THE FIELD",
-    "@gamesBoardCta": {"description": "CR109. Button on the run screen that opens the field board. Upper-case in EN by HexButton convention; translators should use their language's natural emphasis rather than forcing caps. NEW key. retranslate:[ar,ms]"},
+    "@gamesBoardCta": {
+        "description": "CR109. Button on the run screen that opens the field board. Upper-case in EN by HexButton convention; translators should use their language's natural emphasis rather than forcing caps. NEW key. retranslate:[ar,ms]"
+    },
     "gamesBoardYouAre": "You're #{rank} of {count}",
-    "@gamesBoardYouAre": {"description": "CR109 \u00a76.1. The player's own standing, shown at the top of the board. Rank is on percentage return only, never on money. NEW key. retranslate:[ar,ms]", "placeholders": {"rank": {"type": "int", "example": "2"}, "count": {"type": "int", "example": "7"}}},
+    "@gamesBoardYouAre": {
+        "description": "CR109 §6.1. The player's own standing, shown at the top of the board. Rank is on percentage return only, never on money. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "rank": {
+                "type": "int",
+                "example": "2"
+            },
+            "count": {
+                "type": "int",
+                "example": "7"
+            }
+        }
+    },
     "gamesBoardNotRankedYet": "Not ranked yet",
-    "@gamesBoardNotRankedYet": {"description": "CR109. Shown instead of a position when the player's run has no completed US close, so there is nothing to rank. Deliberately not '0%' and not 'last' \u2014 unmeasured is a different fact from flat. NEW key. retranslate:[ar,ms]"},
+    "@gamesBoardNotRankedYet": {
+        "description": "CR109. Shown instead of a position when the player's run has no completed US close, so there is nothing to rank. Deliberately not '0%' and not 'last' — unmeasured is a different fact from flat. NEW key. retranslate:[ar,ms]"
+    },
     "gamesBoardStandingsClosed": "Standings open after the first US close.",
-    "@gamesBoardStandingsClosed": {"description": "CR109 \u00a710. Empty-state line for a field where no entrant has a completed close yet. NEW key. retranslate:[ar,ms]"},
-    "gamesBoardUpdatesNote": "Standings move once per US close \u2014 not tick by tick.",
-    "@gamesBoardUpdatesNote": {"description": "CR109 \u00a710. Said out loud so a player watching an unchanged number all afternoon does not conclude the board is broken (CR040 degrade-loudly applies to staleness too). NEW key. retranslate:[ar,ms]"},
+    "@gamesBoardStandingsClosed": {
+        "description": "CR109 §10. Empty-state line for a field where no entrant has a completed close yet. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesBoardUpdatesNote": "Standings move once per US close — not tick by tick.",
+    "@gamesBoardUpdatesNote": {
+        "description": "CR109 §10. Said out loud so a player watching an unchanged number all afternoon does not conclude the board is broken (CR040 degrade-loudly applies to staleness too). NEW key. retranslate:[ar,ms]"
+    },
     "gamesBoardDeskChip": "DESK",
-    "@gamesBoardDeskChip": {"description": "CR109 \u00a711.2. Chip marking an entrant as an AMI-run strategy desk rather than a person. Disclosure is mandatory on every surface that renders an entrant. NEW key. retranslate:[ar,ms]"},
+    "@gamesBoardDeskChip": {
+        "description": "CR109 §11.2. Chip marking an entrant as an AMI-run strategy desk rather than a person. Disclosure is mandatory on every surface that renders an entrant. NEW key. retranslate:[ar,ms]"
+    },
     "gamesBoardYouChip": "YOU",
-    "@gamesBoardYouChip": {"description": "CR109. Chip marking the player's own row on the board. NEW key. retranslate:[ar,ms]"},
+    "@gamesBoardYouChip": {
+        "description": "CR109. Chip marking the player's own row on the board. NEW key. retranslate:[ar,ms]"
+    },
     "gamesBoardNoCloseYet": "No close yet",
-    "@gamesBoardNoCloseYet": {"description": "CR109. Sub-label on an entrant row whose run has not been measured \u2014 shown in place of a return percentage. NEW key. retranslate:[ar,ms]"},
+    "@gamesBoardNoCloseYet": {
+        "description": "CR109. Sub-label on an entrant row whose run has not been measured — shown in place of a return percentage. NEW key. retranslate:[ar,ms]"
+    },
     "gamesBoardEntrants": "{count, plural, =1{1 entrant} other{{count} entrants}}",
-    "@gamesBoardEntrants": {"description": "CR109. Entrant count for the field, shown under the board title. NEW key. retranslate:[ar,ms]", "placeholders": {"count": {"type": "int", "example": "7"}}},
+    "@gamesBoardEntrants": {
+        "description": "CR109. Entrant count for the field, shown under the board title. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "example": "7"
+            }
+        }
+    },
     "gamesBoardDeskCount": "{count, plural, =1{including 1 house desk} other{including {count} house desks}}",
-    "@gamesBoardDeskCount": {"description": "CR109 \u00a711.2. How many of the entrants are AMI-run strategy desks. Disclosed at field level as well as per row. NEW key. retranslate:[ar,ms]", "placeholders": {"count": {"type": "int", "example": "5"}}},
+    "@gamesBoardDeskCount": {
+        "description": "CR109 §11.2. How many of the entrants are AMI-run strategy desks. Disclosed at field level as well as per row. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "example": "5"
+            }
+        }
+    },
     "gamesBoardEmpty": "No one has entered this field yet.",
-    "@gamesBoardEmpty": {"description": "CR109. Board empty state. NEW key. retranslate:[ar,ms]"},
+    "@gamesBoardEmpty": {
+        "description": "CR109. Board empty state. NEW key. retranslate:[ar,ms]"
+    },
     "gamesDesksTitle": "House desks",
-    "@gamesDesksTitle": {"description": "CR109 \u00a711.2. Title of the sheet listing every AMI-run strategy desk and its published rule. NEW key. retranslate:[ar,ms]"},
+    "@gamesDesksTitle": {
+        "description": "CR109 §11.2. Title of the sheet listing every AMI-run strategy desk and its published rule. NEW key. retranslate:[ar,ms]"
+    },
     "gamesDesksIntro": "Desks are AMI-run strategies, not people. Every desk's rule is published, and it trades real prices and pays the same costs you do.",
-    "@gamesDesksIntro": {"description": "CR109 \u00a711.2. Disclosure copy for the house desks. Must never imply a desk is a person, and must say the performance is real rather than generated to look plausible. Say AMI, never 'the AI'. NEW key. retranslate:[ar,ms]"},
+    "@gamesDesksIntro": {
+        "description": "CR109 §11.2. Disclosure copy for the house desks. Must never imply a desk is a person, and must say the performance is real rather than generated to look plausible. Say AMI, never 'the AI'. NEW key. retranslate:[ar,ms]"
+    },
     "gamesDeskRuleTitle": "How this desk trades",
-    "@gamesDeskRuleTitle": {"description": "CR109 \u00a711.2. Header above one desk's published selection rule. NEW key. retranslate:[ar,ms]"},
+    "@gamesDeskRuleTitle": {
+        "description": "CR109 §11.2. Header above one desk's published selection rule. NEW key. retranslate:[ar,ms]"
+    },
     "gamesDeskUniverse": "{count, plural, =1{Selects from 1 published name} other{Selects from {count} published names}}",
-    "@gamesDeskUniverse": {"description": "CR109 \u00a711.2. The size of the published universe a desk selects from \u2014 part of making a desk reproducible by hand. NEW key. retranslate:[ar,ms]", "placeholders": {"count": {"type": "int", "example": "48"}}},
+    "@gamesDeskUniverse": {
+        "description": "CR109 §11.2. The size of the published universe a desk selects from — part of making a desk reproducible by hand. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "example": "48"
+            }
+        }
+    },
     "gamesLobbyTitle": "Choose a game",
-    "@gamesLobbyTitle": {"description": "CR109 slice 6. App-bar title of the cadence lobby \u2014 the five games (weekly, monthly, quarterly, half-year, annual) a player can enter. NEW key. retranslate:[ar,ms]"},
+    "@gamesLobbyTitle": {
+        "description": "CR109 slice 6. App-bar title of the cadence lobby — the five games (weekly, monthly, quarterly, half-year, annual) a player can enter. NEW key. retranslate:[ar,ms]"
+    },
     "gamesLobbyCta": "ALL GAMES",
-    "@gamesLobbyCta": {"description": "CR109 slice 6. Button opening the cadence lobby from the games home screen. NEW key. retranslate:[ar,ms]"},
-    "gamesLobbyIntro": "One run of each at a time \u2014 five books, never two of a kind.",
-    "@gamesLobbyIntro": {"description": "CR109 \u00a74.1. States the one-live-run-per-cadence rule at the point of choice. It is an anti-farm rule (parallel entries in one cadence are strictly +EV), not a UI limit, but the player only needs the rule. NEW key. retranslate:[ar,ms]"},
+    "@gamesLobbyCta": {
+        "description": "CR109 slice 6. Button opening the cadence lobby from the games home screen. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesLobbyIntro": "One run of each at a time — five books, never two of a kind.",
+    "@gamesLobbyIntro": {
+        "description": "CR109 §4.1. States the one-live-run-per-cadence rule at the point of choice. It is an anti-farm rule (parallel entries in one cadence are strictly +EV), not a UI limit, but the player only needs the rule. NEW key. retranslate:[ar,ms]"
+    },
     "gamesCadenceWeek": "Weekly",
-    "@gamesCadenceWeek": {"description": "CR109. Name of the weekly cadence. NEW key. retranslate:[ar,ms]"},
+    "@gamesCadenceWeek": {
+        "description": "CR109. Name of the weekly cadence. NEW key. retranslate:[ar,ms]"
+    },
     "gamesCadenceMonth": "Monthly",
-    "@gamesCadenceMonth": {"description": "CR109 slice 6. Name of the monthly cadence. NEW key. retranslate:[ar,ms]"},
+    "@gamesCadenceMonth": {
+        "description": "CR109 slice 6. Name of the monthly cadence. NEW key. retranslate:[ar,ms]"
+    },
     "gamesCadenceQuarter": "Quarterly",
-    "@gamesCadenceQuarter": {"description": "CR109 slice 6. Name of the quarterly cadence. NEW key. retranslate:[ar,ms]"},
+    "@gamesCadenceQuarter": {
+        "description": "CR109 slice 6. Name of the quarterly cadence. NEW key. retranslate:[ar,ms]"
+    },
     "gamesCadenceHalf": "Half-year",
-    "@gamesCadenceHalf": {"description": "CR109 slice 6. Name of the six-month cadence. NEW key. retranslate:[ar,ms]"},
+    "@gamesCadenceHalf": {
+        "description": "CR109 slice 6. Name of the six-month cadence. NEW key. retranslate:[ar,ms]"
+    },
     "gamesCadenceYear": "Annual",
-    "@gamesCadenceYear": {"description": "CR109 slice 6. Name of the annual cadence. NEW key. retranslate:[ar,ms]"},
-    "gamesCadenceRuns": "{start} \u2192 {end}",
-    "@gamesCadenceRuns": {"description": "CR109. The dates one cadence's next field runs between. NEW key. retranslate:[ar,ms]", "placeholders": {"start": {"type": "String", "example": "17 Aug"}, "end": {"type": "String", "example": "21 Aug"}}},
+    "@gamesCadenceYear": {
+        "description": "CR109 slice 6. Name of the annual cadence. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesCadenceRuns": "{start} → {end}",
+    "@gamesCadenceRuns": {
+        "description": "CR109. The dates one cadence's next field runs between. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "start": {
+                "type": "String",
+                "example": "17 Aug"
+            },
+            "end": {
+                "type": "String",
+                "example": "21 Aug"
+            }
+        }
+    },
     "gamesCadenceYoureIn": "You're in",
-    "@gamesCadenceYoureIn": {"description": "CR109 \u00a74.1. Shown in place of the ENTER action when the player already holds a live run of that cadence. NEW key. retranslate:[ar,ms]"},
-    "gamesCadenceEntryClosed": "Entry closed \u2014 next one opens when this run starts",
-    "@gamesCadenceEntryClosed": {"description": "CR109. Shown when a cadence's field has locked, so the player must wait for the following period. Says WHEN the next chance comes rather than only that this one is gone. NEW key. retranslate:[ar,ms]"},
-    "gamesCadenceWeightNote": "Worth {gain}\u00d7 a weekly win",
-    "@gamesCadenceWeightNote": {"description": "CR109 \u00a76.3. How much a longer cadence pays relative to a week, so the player can see the tradeoff before committing. NEW key. retranslate:[ar,ms]", "placeholders": {"gain": {"type": "String", "example": "13"}}},
+    "@gamesCadenceYoureIn": {
+        "description": "CR109 §4.1. Shown in place of the ENTER action when the player already holds a live run of that cadence. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesCadenceEntryClosed": "Entry closed — next one opens when this run starts",
+    "@gamesCadenceEntryClosed": {
+        "description": "CR109. Shown when a cadence's field has locked, so the player must wait for the following period. Says WHEN the next chance comes rather than only that this one is gone. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesCadenceWeightNote": "Worth {gain}× a weekly win",
+    "@gamesCadenceWeightNote": {
+        "description": "CR109 §6.3. How much a longer cadence pays relative to a week, so the player can see the tradeoff before committing. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "gain": {
+                "type": "String",
+                "example": "13"
+            }
+        }
+    },
     "gamesLobbyEnterCta": "ENTER THIS FIELD",
-    "@gamesLobbyEnterCta": {"description": "CR109 slice 6. Entry action on a cadence row in the lobby. Cadence-NEUTRAL on purpose: `gamesEnterCta` reads \"enter this week's field\", which is wrong copy on a Monthly or Quarterly row. NEW key. retranslate:[ar,ms]"},
+    "@gamesLobbyEnterCta": {
+        "description": "CR109 slice 6. Entry action on a cadence row in the lobby. Cadence-NEUTRAL on purpose: `gamesEnterCta` reads \"enter this week's field\", which is wrong copy on a Monthly or Quarterly row. NEW key. retranslate:[ar,ms]"
+    },
     "gamesTicketStepSizeSell": "HOW MUCH OF THE POSITION",
-    "@gamesTicketStepSizeSell": {"description": "CR109 DEF259. Step-2 label when the ticket is selling. The percentage divides the POSITION, not the cash \u2014 a different denominator from the buy step, so it gets its own label rather than reusing gamesTicketStepSize. NEW key. retranslate:[ar,ms]"},
-    "gamesTicketSizeShares": "{pct}% \u00b7 {shares} shares",
-    "@gamesTicketSizeShares": {"description": "CR109 DEF259. Size readout on a SELL: shares, not AMI Cash. A dollar figure here would be misleading \u2014 the proceeds depend on the fill price, which for a queued order is not known until the next US open. NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "50"}, "shares": {"type": "String", "example": "1.5958"}}},
+    "@gamesTicketStepSizeSell": {
+        "description": "CR109 DEF259. Step-2 label when the ticket is selling. The percentage divides the POSITION, not the cash — a different denominator from the buy step, so it gets its own label rather than reusing gamesTicketStepSize. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesTicketSizeShares": "{pct}% · {shares} shares",
+    "@gamesTicketSizeShares": {
+        "description": "CR109 DEF259. Size readout on a SELL: shares, not AMI Cash. A dollar figure here would be misleading — the proceeds depend on the fill price, which for a queued order is not known until the next US open. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "pct": {
+                "type": "String",
+                "example": "50"
+            },
+            "shares": {
+                "type": "String",
+                "example": "1.5958"
+            }
+        }
+    },
     "gamesTicketSizeCloseAll": "Close it",
-    "@gamesTicketSizeCloseAll": {"description": "CR109 DEF259. The 100% chip on a SELL \u2014 says what it does (closes the position) rather than reusing the buy side's 'all in', which means the opposite thing. NEW key. retranslate:[ar,ms]"},
+    "@gamesTicketSizeCloseAll": {
+        "description": "CR109 DEF259. The 100% chip on a SELL — says what it does (closes the position) rather than reusing the buy side's 'all in', which means the opposite thing. NEW key. retranslate:[ar,ms]"
+    },
     "gamesSellCta": "SELL",
-    "@gamesSellCta": {"description": "CR109 DEF259. Action on a position row that opens the ticket in sell mode. Until this shipped there was no way to close a game position at all \u2014 the only exit was the run ending. NEW key. retranslate:[ar,ms]"},
+    "@gamesSellCta": {
+        "description": "CR109 DEF259. Action on a position row that opens the ticket in sell mode. Until this shipped there was no way to close a game position at all — the only exit was the run ending. NEW key. retranslate:[ar,ms]"
+    },
     "gamesSellTitle": "Sell {ticker}",
-    "@gamesSellTitle": {"description": "CR109 DEF259. Header of the ticket when it opens in sell mode on a named position. NEW key. retranslate:[ar,ms]", "placeholders": {"ticker": {"type": "String", "example": "AAPL"}}},
+    "@gamesSellTitle": {
+        "description": "CR109 DEF259. Header of the ticket when it opens in sell mode on a named position. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "ticker": {
+                "type": "String",
+                "example": "AAPL"
+            }
+        }
+    },
     "gamesSellHeld": "You hold {shares} shares",
-    "@gamesSellHeld": {"description": "CR109 DEF259. The position being sold from, shown above the size step so the percentage has a visible denominator. NEW key. retranslate:[ar,ms]", "placeholders": {"shares": {"type": "String", "example": "3.1916"}}},
-    "gamesNoShortingNote": "Long only \u2014 a sell closes what you hold, it never opens a short.",
-    "@gamesNoShortingNote": {"description": "CR109. RETIRED by Amendment G \u2014 shorting now exists in the game, so this sentence is no longer true. Superseded by gamesSellClosesOnlyNote. Kept only so a stale build's lookup does not throw; delete once no shipped build references it. retranslate:[ar,ms]"},
+    "@gamesSellHeld": {
+        "description": "CR109 DEF259. The position being sold from, shown above the size step so the percentage has a visible denominator. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "shares": {
+                "type": "String",
+                "example": "3.1916"
+            }
+        }
+    },
+    "gamesNoShortingNote": "Long only — a sell closes what you hold, it never opens a short.",
+    "@gamesNoShortingNote": {
+        "description": "CR109. RETIRED by Amendment G — shorting now exists in the game, so this sentence is no longer true. Superseded by gamesSellClosesOnlyNote. Kept only so a stale build's lookup does not throw; delete once no shipped build references it. retranslate:[ar,ms]"
+    },
     "gamesSellClosesOnlyNote": "A sell closes what you hold. To open a short, start a new trade and pick SHORT.",
-    "@gamesSellClosesOnlyNote": {"description": "CR109 Amendment G. Replaces gamesNoShortingNote on the sell ticket. One order can never close a long AND open a short \u2014 the engine refuses a sell beyond the held quantity \u2014 so this points at the way to do it rather than saying it cannot be done. NEW key. retranslate:[ar,ms]"},
+    "@gamesSellClosesOnlyNote": {
+        "description": "CR109 Amendment G. Replaces gamesNoShortingNote on the sell ticket. One order can never close a long AND open a short — the engine refuses a sell beyond the held quantity — so this points at the way to do it rather than saying it cannot be done. NEW key. retranslate:[ar,ms]"
+    },
     "gamesTicketStepDirection": "DIRECTION",
-    "@gamesTicketStepDirection": {"description": "CR109 Amendment G. Label above the long/short toggle on the trade ticket. Sits ABOVE the ticker because it changes what the size chips mean. NEW key. retranslate:[ar,ms]"},
+    "@gamesTicketStepDirection": {
+        "description": "CR109 Amendment G. Label above the long/short toggle on the trade ticket. Sits ABOVE the ticker because it changes what the size chips mean. NEW key. retranslate:[ar,ms]"
+    },
     "gamesDirectionLong": "LONG",
-    "@gamesDirectionLong": {"description": "CR109 Amendment G. The buy side of the direction toggle. 'LONG' rather than 'BUY' so it reads as the opposite of SHORT. NEW key. retranslate:[ar,ms]"},
+    "@gamesDirectionLong": {
+        "description": "CR109 Amendment G. The buy side of the direction toggle. 'LONG' rather than 'BUY' so it reads as the opposite of SHORT. NEW key. retranslate:[ar,ms]"
+    },
     "gamesDirectionShort": "SHORT",
-    "@gamesDirectionShort": {"description": "CR109 Amendment G. The sell-to-open side of the direction toggle. Market term \u2014 keep the English word where the local market uses it. NEW key. retranslate:[ar,ms]"},
-    "gamesShortFeeNote": "Shorting costs 0.3% to open \u2014 three times the usual 0.1%.",
-    "@gamesShortFeeNote": {"description": "CR109 Amendment G. The short-open fee, stated before the size is picked rather than on the confirm card alone. Rate set by Saiful 2026-08-11. If SHORT_FEE_BPS or FEE_BPS is retuned in games_scoring.py, THIS STRING MUST CHANGE TOO. NEW key. retranslate:[ar,ms]"},
-    "gamesShortRiskNote": "A short is bought back for you if the name climbs 90% \u2014 so you can lose everything you tie up, but normally no more. A price gap can jump that, and ends the run at zero.",
-    "@gamesShortRiskNote": {"description": "CR109 Amendment I. REPLACES the Amendment G wording \"A short can lose more than it ties up. There is no floor.\", which the forced buy-in made FALSE the day it shipped \u2014 the same trap gamesNoShortingNote fell into. States the floor AND the gap that can still jump it; must not promise a hard cap the mechanism does not give. If MAINTENANCE_FLOOR_PCT changes in trading_math/shorts.py, the 90% here MUST change too. retranslate:[ar,ms]"},
+    "@gamesDirectionShort": {
+        "description": "CR109 Amendment G. The sell-to-open side of the direction toggle. Market term — keep the English word where the local market uses it. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesShortFeeNote": "Shorting costs 0.3% to open — three times the usual 0.1%.",
+    "@gamesShortFeeNote": {
+        "description": "CR109 Amendment G. The short-open fee, stated before the size is picked rather than on the confirm card alone. Rate set by Saiful 2026-08-11. If SHORT_FEE_BPS or FEE_BPS is retuned in games_scoring.py, THIS STRING MUST CHANGE TOO. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesShortRiskNote": "A short is bought back for you if the name climbs 90% — so you can lose everything you tie up, but normally no more. A price gap can jump that, and ends the run at zero.",
+    "@gamesShortRiskNote": {
+        "description": "CR109 Amendment I. REPLACES the Amendment G wording \"A short can lose more than it ties up. There is no floor.\", which the forced buy-in made FALSE the day it shipped — the same trap gamesNoShortingNote fell into. States the floor AND the gap that can still jump it; must not promise a hard cap the mechanism does not give. If MAINTENANCE_FLOOR_PCT changes in trading_math/shorts.py, the 90% here MUST change too. retranslate:[ar,ms]"
+    },
     "gamesShortBadge": "SHORT",
-    "@gamesShortBadge": {"description": "CR109 Amendment G. Marker on a short position row, so a player scrolling past the section heading can still tell which way the position points. NEW key. retranslate:[ar,ms]"},
+    "@gamesShortBadge": {
+        "description": "CR109 Amendment G. Marker on a short position row, so a player scrolling past the section heading can still tell which way the position points. NEW key. retranslate:[ar,ms]"
+    },
     "gamesRunShortsHeading": "SHORTS",
-    "@gamesRunShortsHeading": {"description": "CR109 Amendment G. Heading of the short-positions section on the run screen, separate from POSITIONS because the P&L runs the other way. NEW key. retranslate:[ar,ms]"},
+    "@gamesRunShortsHeading": {
+        "description": "CR109 Amendment G. Heading of the short-positions section on the run screen, separate from POSITIONS because the P&L runs the other way. NEW key. retranslate:[ar,ms]"
+    },
     "gamesRunShortSub": "{shares} shares shorted at {price}",
-    "@gamesRunShortSub": {"description": "CR109 Amendment G. Sub-line on a short position row \u2014 the size and the price it was sold at. NEW key. retranslate:[ar,ms]", "placeholders": {"shares": {"type": "String", "example": "10.0000"}, "price": {"type": "String", "example": "212.44"}}},
+    "@gamesRunShortSub": {
+        "description": "CR109 Amendment G. Sub-line on a short position row — the size and the price it was sold at. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "shares": {
+                "type": "String",
+                "example": "10.0000"
+            },
+            "price": {
+                "type": "String",
+                "example": "212.44"
+            }
+        }
+    },
     "gamesCoverCta": "COVER",
-    "@gamesCoverCta": {"description": "CR109 Amendment G. Action on a short position row that opens the ticket in cover mode. The market term for buying a short back. NEW key. retranslate:[ar,ms]"},
+    "@gamesCoverCta": {
+        "description": "CR109 Amendment G. Action on a short position row that opens the ticket in cover mode. The market term for buying a short back. NEW key. retranslate:[ar,ms]"
+    },
     "gamesCoverTitle": "Cover {ticker}",
-    "@gamesCoverTitle": {"description": "CR109 Amendment G. Header of the ticket when it opens in cover mode. NEW key. retranslate:[ar,ms]", "placeholders": {"ticker": {"type": "String", "example": "AAPL"}}},
+    "@gamesCoverTitle": {
+        "description": "CR109 Amendment G. Header of the ticket when it opens in cover mode. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "ticker": {
+                "type": "String",
+                "example": "AAPL"
+            }
+        }
+    },
     "gamesCoverShortOf": "You are short {shares} shares",
-    "@gamesCoverShortOf": {"description": "CR109 Amendment G. The position being covered, shown above the confirm card. NEW key. retranslate:[ar,ms]", "placeholders": {"shares": {"type": "String", "example": "10.0000"}}},
+    "@gamesCoverShortOf": {
+        "description": "CR109 Amendment G. The position being covered, shown above the confirm card. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "shares": {
+                "type": "String",
+                "example": "10.0000"
+            }
+        }
+    },
     "gamesCoverWholeOnlyNote": "A cover buys the whole position back. There is no partial cover.",
-    "@gamesCoverWholeOnlyNote": {"description": "CR109 Amendment G. Why the cover ticket has no size step. Without it the missing step reads as a bug rather than as the rule it is. NEW key. retranslate:[ar,ms]"},
+    "@gamesCoverWholeOnlyNote": {
+        "description": "CR109 Amendment G. Why the cover ticket has no size step. Without it the missing step reads as a bug rather than as the rule it is. NEW key. retranslate:[ar,ms]"
+    },
     "gamesDuelHeading": "DUEL",
-    "@gamesDuelHeading": {"description": "CR109 slice 3b. Heading of the head-to-head card on the run screen. NEW key. retranslate:[ar,ms]"},
+    "@gamesDuelHeading": {
+        "description": "CR109 slice 3b. Heading of the head-to-head card on the run screen. NEW key. retranslate:[ar,ms]"
+    },
     "gamesDuelFirstRunHeading": "YOUR FIRST RUN",
-    "@gamesDuelFirstRunHeading": {"description": "CR109 slice 3b. Heading when the duel is the first-run pairing against the Index Desk \u2014 the framing is 'you versus the market', not 'a duel', because the player has no duel history to frame it against yet. NEW key. retranslate:[ar,ms]"},
+    "@gamesDuelFirstRunHeading": {
+        "description": "CR109 slice 3b. Heading when the duel is the first-run pairing against the Index Desk — the framing is 'you versus the market', not 'a duel', because the player has no duel history to frame it against yet. NEW key. retranslate:[ar,ms]"
+    },
     "gamesDuelVersus": "You vs {handle}",
-    "@gamesDuelVersus": {"description": "CR109 slice 3b. Names the opponent. \u00a711.1: naming one opponent is what makes a thin field feel like a contest. NEW key. retranslate:[ar,ms]", "placeholders": {"handle": {"type": "String", "example": "VECTOR_11"}}},
+    "@gamesDuelVersus": {
+        "description": "CR109 slice 3b. Names the opponent. §11.1: naming one opponent is what makes a thin field feel like a contest. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "handle": {
+                "type": "String",
+                "example": "VECTOR_11"
+            }
+        }
+    },
     "gamesDuelAhead": "You are {pct}% ahead",
-    "@gamesDuelAhead": {"description": "CR109 slice 3b. The gap, in percentage points of time-weighted return \u2014 never AMI Cash (\u00a76.1 forbids rendering another entrant's currency). NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "1.10"}}},
+    "@gamesDuelAhead": {
+        "description": "CR109 slice 3b. The gap, in percentage points of time-weighted return — never AMI Cash (§6.1 forbids rendering another entrant's currency). NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "pct": {
+                "type": "String",
+                "example": "1.10"
+            }
+        }
+    },
     "gamesDuelBehind": "You are {pct}% behind",
-    "@gamesDuelBehind": {"description": "CR109 slice 3b. The mirror of gamesDuelAhead. Stated plainly \u2014 no softening, no encouragement; the brand voice is analyst-to-analyst. NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "1.10"}}},
+    "@gamesDuelBehind": {
+        "description": "CR109 slice 3b. The mirror of gamesDuelAhead. Stated plainly — no softening, no encouragement; the brand voice is analyst-to-analyst. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "pct": {
+                "type": "String",
+                "example": "1.10"
+            }
+        }
+    },
     "gamesDuelLevel": "Dead level",
-    "@gamesDuelLevel": {"description": "CR109 slice 3b. Both sides measured and equal. DISTINCT from gamesDuelNotStarted \u2014 a known tie is not the same as an unknown gap. NEW key. retranslate:[ar,ms]"},
-    "gamesDuelNotStarted": "No closes yet \u2014 the gap is not measurable until both books have a close.",
-    "@gamesDuelNotStarted": {"description": "CR109 slice 3b. Either side unmeasured. Says the gap is UNKNOWN rather than drawing it as level, which is the null-vs-zero rule this feature keeps producing instances of. NEW key. retranslate:[ar,ms]"},
+    "@gamesDuelLevel": {
+        "description": "CR109 slice 3b. Both sides measured and equal. DISTINCT from gamesDuelNotStarted — a known tie is not the same as an unknown gap. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesDuelNotStarted": "No closes yet — the gap is not measurable until both books have a close.",
+    "@gamesDuelNotStarted": {
+        "description": "CR109 slice 3b. Either side unmeasured. Says the gap is UNKNOWN rather than drawing it as level, which is the null-vs-zero rule this feature keeps producing instances of. NEW key. retranslate:[ar,ms]"
+    },
     "gamesDuelAtStake": "{points} pts",
-    "@gamesDuelAtStake": {"description": "CR109 slice 3b. What a live duel is playing for. Symmetric \u2014 the winner gains what the loser is debited \u2014 so one number serves both sides. NEW key. retranslate:[ar,ms]", "placeholders": {"points": {"type": "int", "example": "10"}}},
+    "@gamesDuelAtStake": {
+        "description": "CR109 slice 3b. What a live duel is playing for. Symmetric — the winner gains what the loser is debited — so one number serves both sides. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "points": {
+                "type": "int",
+                "example": "10"
+            }
+        }
+    },
     "gamesDuelDaysLeft": "{days} days left",
-    "@gamesDuelDaysLeft": {"description": "CR109 slice 3b. The clock, on the duel card. NEW key. retranslate:[ar,ms]", "placeholders": {"days": {"type": "int", "example": "3"}}},
+    "@gamesDuelDaysLeft": {
+        "description": "CR109 slice 3b. The clock, on the duel card. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "days": {
+                "type": "int",
+                "example": "3"
+            }
+        }
+    },
     "gamesDuelWon": "You won. +{points} career points.",
-    "@gamesDuelWon": {"description": "CR109 slice 3b. Settled duel, this player won. NEW key. retranslate:[ar,ms]", "placeholders": {"points": {"type": "int", "example": "10"}}},
-    "gamesDuelLost": "You lost. \u2212{points} career points.",
-    "@gamesDuelLost": {"description": "CR109 slice 3b. Settled duel, this player lost. Uses a MINUS SIGN (U+2212), not a hyphen. NEW key. retranslate:[ar,ms]", "placeholders": {"points": {"type": "int", "example": "10"}}},
+    "@gamesDuelWon": {
+        "description": "CR109 slice 3b. Settled duel, this player won. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "points": {
+                "type": "int",
+                "example": "10"
+            }
+        }
+    },
+    "gamesDuelLost": "You lost. −{points} career points.",
+    "@gamesDuelLost": {
+        "description": "CR109 slice 3b. Settled duel, this player lost. Uses a MINUS SIGN (U+2212), not a hyphen. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "points": {
+                "type": "int",
+                "example": "10"
+            }
+        }
+    },
     "gamesDuelDraw": "A draw. No points either way.",
-    "@gamesDuelDraw": {"description": "CR109 slice 3b. Both returns equal to four decimal places. A real outcome, reported as one. NEW key. retranslate:[ar,ms]"},
-    "gamesDuelVoid": "Void \u2014 one side\u2019s run could not be measured. No points either way.",
-    "@gamesDuelVoid": {"description": "CR109 slice 3b. A duel with a voided side. Stated, never silently drawn as a draw \u2014 unmeasurable is a different thing from tied, and CR040 requires the difference be visible. NEW key. retranslate:[ar,ms]"},
+    "@gamesDuelDraw": {
+        "description": "CR109 slice 3b. Both returns equal to four decimal places. A real outcome, reported as one. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesDuelVoid": "Void — one side’s run could not be measured. No points either way.",
+    "@gamesDuelVoid": {
+        "description": "CR109 slice 3b. A duel with a voided side. Stated, never silently drawn as a draw — unmeasurable is a different thing from tied, and CR040 requires the difference be visible. NEW key. retranslate:[ar,ms]"
+    },
     "gamesCloseDuelBeatTheMarket": "You beat the market.",
-    "@gamesCloseDuelBeatTheMarket": {"description": "CR109 slice 3b. Beat 2 of the Close on a FIRST run won against the Index Desk. Deliberately not 'you beat INDEX_DESK' \u2014 a beginner has no duel history to read a handle against, and 'beat the market' needs no tutorial. NEW key. retranslate:[ar,ms]"},
+    "@gamesCloseDuelBeatTheMarket": {
+        "description": "CR109 slice 3b. Beat 2 of the Close on a FIRST run won against the Index Desk. Deliberately not 'you beat INDEX_DESK' — a beginner has no duel history to read a handle against, and 'beat the market' needs no tutorial. NEW key. retranslate:[ar,ms]"
+    },
     "gamesCloseDuelMarketWon": "The market beat you.",
-    "@gamesCloseDuelMarketWon": {"description": "CR109 slice 3b. The mirror. Stated plainly \u2014 both outcomes are stories, and softening the loss would make the win mean less. NEW key. retranslate:[ar,ms]"},
+    "@gamesCloseDuelMarketWon": {
+        "description": "CR109 slice 3b. The mirror. Stated plainly — both outcomes are stories, and softening the loss would make the win mean less. NEW key. retranslate:[ar,ms]"
+    },
     "gamesCloseDuelWon": "You beat {handle}.",
-    "@gamesCloseDuelWon": {"description": "CR109 slice 3b. Beat 2 on a won duel against a named human opponent. NEW key. retranslate:[ar,ms]", "placeholders": {"handle": {"type": "String", "example": "VECTOR_11"}}},
+    "@gamesCloseDuelWon": {
+        "description": "CR109 slice 3b. Beat 2 on a won duel against a named human opponent. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "handle": {
+                "type": "String",
+                "example": "VECTOR_11"
+            }
+        }
+    },
     "gamesCloseDuelLost": "{handle} beat you.",
-    "@gamesCloseDuelLost": {"description": "CR109 slice 3b. Beat 2 on a lost duel. The opponent is the subject \u2014 they did something, rather than the player having failed at something. NEW key. retranslate:[ar,ms]", "placeholders": {"handle": {"type": "String", "example": "VECTOR_11"}}},
+    "@gamesCloseDuelLost": {
+        "description": "CR109 slice 3b. Beat 2 on a lost duel. The opponent is the subject — they did something, rather than the player having failed at something. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "handle": {
+                "type": "String",
+                "example": "VECTOR_11"
+            }
+        }
+    },
     "gamesCloseDuelDrew": "Dead level with {handle}.",
-    "@gamesCloseDuelDrew": {"description": "CR109 slice 3b. Both returns equal to four decimal places. A real outcome, reported as one. NEW key. retranslate:[ar,ms]", "placeholders": {"handle": {"type": "String", "example": "VECTOR_11"}}},
+    "@gamesCloseDuelDrew": {
+        "description": "CR109 slice 3b. Both returns equal to four decimal places. A real outcome, reported as one. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "handle": {
+                "type": "String",
+                "example": "VECTOR_11"
+            }
+        }
+    },
     "gamesCloseDuelMargin": "By {pct}.",
-    "@gamesCloseDuelMargin": {"description": "CR109 slice 3b. The margin, in percentage points of time-weighted return. Magnitude only \u2014 the sign is already carried by the headline above, and repeating it would read as a double negative on a loss. NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "3.0%"}}},
+    "@gamesCloseDuelMargin": {
+        "description": "CR109 slice 3b. The margin, in percentage points of time-weighted return. Magnitude only — the sign is already carried by the headline above, and repeating it would read as a double negative on a loss. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "pct": {
+                "type": "String",
+                "example": "3.0%"
+            }
+        }
+    },
     "gamesCloseDuelPointsWon": "+{points} career points.",
-    "@gamesCloseDuelPointsWon": {"description": "CR109 slice 3b. What the duel win was worth. NEW key. retranslate:[ar,ms]", "placeholders": {"points": {"type": "int", "example": "10"}}},
-    "gamesCloseDuelPointsLost": "\u2212{points} career points.",
-    "@gamesCloseDuelPointsLost": {"description": "CR109 slice 3b. What the duel loss cost. MINUS SIGN (U+2212), not a hyphen. NEW key. retranslate:[ar,ms]", "placeholders": {"points": {"type": "int", "example": "10"}}},
-    "gamesBoardChase": "{pct}% off {rank}\u1d57\u02b0 place",
-    "@gamesBoardChase": {"description": "CR109 board redesign. The gap to the place immediately above, under the player's own standing. \"3rd of 6\" is a fact; this is a reason to open the app tomorrow. Percentage points of time-weighted return \u2014 never AMI Cash (\u00a76.1). Null-safe: omitted entirely when either side is unmeasured. NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "0.42"}, "rank": {"type": "int", "example": "2"}}},
+    "@gamesCloseDuelPointsWon": {
+        "description": "CR109 slice 3b. What the duel win was worth. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "points": {
+                "type": "int",
+                "example": "10"
+            }
+        }
+    },
+    "gamesCloseDuelPointsLost": "−{points} career points.",
+    "@gamesCloseDuelPointsLost": {
+        "description": "CR109 slice 3b. What the duel loss cost. MINUS SIGN (U+2212), not a hyphen. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "points": {
+                "type": "int",
+                "example": "10"
+            }
+        }
+    },
+    "gamesBoardChase": "{pct}% off {rank}ᵗʰ place",
+    "@gamesBoardChase": {
+        "description": "CR109 board redesign. The gap to the place immediately above, under the player's own standing. \"3rd of 6\" is a fact; this is a reason to open the app tomorrow. Percentage points of time-weighted return — never AMI Cash (§6.1). Null-safe: omitted entirely when either side is unmeasured. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "pct": {
+                "type": "String",
+                "example": "0.42"
+            },
+            "rank": {
+                "type": "int",
+                "example": "2"
+            }
+        }
+    },
     "gamesBoardLeadBy": "Leading by {pct}%",
-    "@gamesBoardLeadBy": {"description": "CR109 board redesign. Shown instead of gamesBoardChase when the player is 1st \u2014 the interesting number is the cushion, not a gap that does not exist. NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "1.10"}}},
-    "gamesTicketNoCashInPositionsBody": "Every AMI Cash unit is in open positions. A short posts its full value as collateral \u2014 there is no leverage in this game \u2014 so close a position to free some up.",
-    "@gamesTicketNoCashInPositionsBody": {"description": "CR109 DEF272. The no-cash state when the money went into POSITIONS rather than queued orders. Saiful hit the old copy with 4.09 free, a full book and zero queued orders: it said \"0.00 is committed to 0 orders. Cancel one to free up cash\" \u2014 a false statement pointing at an empty list. Names the no-leverage rule, because that is WHY a short is refused here. NEW key. retranslate:[ar,ms]"},
+    "@gamesBoardLeadBy": {
+        "description": "CR109 board redesign. Shown instead of gamesBoardChase when the player is 1st — the interesting number is the cushion, not a gap that does not exist. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "pct": {
+                "type": "String",
+                "example": "1.10"
+            }
+        }
+    },
+    "gamesTicketNoCashInPositionsBody": "Every AMI Cash unit is in open positions. A short posts its full value as collateral — there is no leverage in this game — so close a position to free some up.",
+    "@gamesTicketNoCashInPositionsBody": {
+        "description": "CR109 DEF272. The no-cash state when the money went into POSITIONS rather than queued orders. Saiful hit the old copy with 4.09 free, a full book and zero queued orders: it said \"0.00 is committed to 0 orders. Cancel one to free up cash\" — a false statement pointing at an empty list. Names the no-leverage rule, because that is WHY a short is refused here. NEW key. retranslate:[ar,ms]"
+    },
     "gamesTicketNoCashPositionsCta": "See positions",
-    "@gamesTicketNoCashPositionsCta": {"description": "CR109 DEF272. Action on the in-positions variant of the no-cash state \u2014 closes the ticket and returns to the run screen, where a position can be closed. NEW key. retranslate:[ar,ms]"},
-    "gamesShortCollateralNote": "A short posts its full value as collateral, exactly like a buy \u2014 no leverage. It comes back when you cover.",
-    "@gamesShortCollateralNote": {"description": "CR109 DEF272. Why the size slider divides CASH on a short, which Saiful read as the ticket \"behaving as if I am buying\". It is the no-leverage rule (Amendment G ruling 2) and it was nowhere on the screen. NEW key. retranslate:[ar,ms]"},
-    "gamesTicketStepSizeShort": "2 \u00b7 HOW MUCH TO SHORT",
-    "@gamesTicketStepSizeShort": {"description": "CR109 DEF272. The size step heading in SHORT mode. The generic \"PICK A SIZE\" gave no hint that the percentage divides cash-as-collateral rather than a position. NEW key. retranslate:[ar,ms]"},
-    "gamesTicketSizeCollateral": "{pct}% \u00b7 {amount} posted as collateral",
-    "@gamesTicketSizeCollateral": {"description": "CR109 DEF272. Live readout under the size slider in SHORT mode. Same number as gamesTicketSizeAmount and a different noun for it: nothing is spent on a short, it is posted and returns on the cover. NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "25"}, "amount": {"type": "String", "example": "2,500.00"}}},
-    "gamesTicketFeeDrag": "That fee is {pct}% of this order \u2014 the $1.00 minimum, not the 0.1% rate.",
-    "@gamesTicketFeeDrag": {"description": "CR109 DEF274. Shown on the confirm card only when the fee is >=1% of the order's own notional, i.e. when FEE_MIN's floor rather than the headline rate is what the player is paying. Saiful's run held 4.09 against a 10,000 book and the ticket priced the trade at 'est. fee $1.00' \u2014 true, unremarkable, and 24% of the trade. STATED, never blocked: \u00a77.1's frictions doctrine says nothing caps what a player may do, and Saiful chose the price-shaped escalator over a prohibition. If FEE_MIN or FEE_BPS is retuned in games_scoring.py, THIS STRING MUST CHANGE TOO. NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "24.4"}}}
+    "@gamesTicketNoCashPositionsCta": {
+        "description": "CR109 DEF272. Action on the in-positions variant of the no-cash state — closes the ticket and returns to the run screen, where a position can be closed. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesShortCollateralNote": "A short posts its full value as collateral, exactly like a buy — no leverage. It comes back when you cover.",
+    "@gamesShortCollateralNote": {
+        "description": "CR109 DEF272. Why the size slider divides CASH on a short, which Saiful read as the ticket \"behaving as if I am buying\". It is the no-leverage rule (Amendment G ruling 2) and it was nowhere on the screen. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesTicketStepSizeShort": "2 · HOW MUCH TO SHORT",
+    "@gamesTicketStepSizeShort": {
+        "description": "CR109 DEF272. The size step heading in SHORT mode. The generic \"PICK A SIZE\" gave no hint that the percentage divides cash-as-collateral rather than a position. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesTicketSizeCollateral": "{pct}% · {amount} posted as collateral",
+    "@gamesTicketSizeCollateral": {
+        "description": "CR109 DEF272. Live readout under the size slider in SHORT mode. Same number as gamesTicketSizeAmount and a different noun for it: nothing is spent on a short, it is posted and returns on the cover. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "pct": {
+                "type": "String",
+                "example": "25"
+            },
+            "amount": {
+                "type": "String",
+                "example": "2,500.00"
+            }
+        }
+    },
+    "gamesTicketFeeDrag": "That fee is {pct}% of this order — the $1.00 minimum, not the 0.1% rate.",
+    "@gamesTicketFeeDrag": {
+        "description": "CR109 DEF274. Shown on the confirm card only when the fee is >=1% of the order's own notional, i.e. when FEE_MIN's floor rather than the headline rate is what the player is paying. Saiful's run held 4.09 against a 10,000 book and the ticket priced the trade at 'est. fee $1.00' — true, unremarkable, and 24% of the trade. STATED, never blocked: §7.1's frictions doctrine says nothing caps what a player may do, and Saiful chose the price-shaped escalator over a prohibition. If FEE_MIN or FEE_BPS is retuned in games_scoring.py, THIS STRING MUST CHANGE TOO. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "pct": {
+                "type": "String",
+                "example": "24.4"
+            }
+        }
+    },
+    "gamesRecordNextTitleRuns": "{count, plural, =1{1 more finished run to {title}} other{{count} more finished runs to {title}}}",
+    "@gamesRecordNextTitleRuns": {
+        "description": "CR109 slice 4 (§6.4 / Amendment D correction 3). The goal line under the Record's title chip when the next rung is the MILESTONE — three finished runs, none forfeited. Stated as a measurement, never as a nudge: the median player nets ~0 career points per run by construction, so a running total alone shows them no progression at all. {count} is how many finished runs remain, {title} is the rung's name in caps. The two next-title keys are NOT interchangeable — the milestone counts runs, every rung above it counts points, and rendering the wrong unit describes a threshold that does not exist. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "example": "2"
+            },
+            "title": {
+                "type": "String",
+                "example": "ASSOCIATE"
+            }
+        }
+    },
+    "gamesRecordNextTitlePoints": "{points} career points to {title}",
+    "@gamesRecordNextTitlePoints": {
+        "description": "CR109 slice 4 (§6.4). The goal line under the Record's title chip when the next rung is a POINTS threshold (analyst 500, trader 2,500, senior 10,000, floor_veteran 30,000). {points} is the shortfall, {title} the rung's name in caps. Retuning any threshold in `games_scoring.py::TITLE_POINT_THRESHOLDS` changes what this line says but not its wording. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "points": {
+                "type": "int",
+                "format": "decimalPattern",
+                "example": "120"
+            },
+            "title": {
+                "type": "String",
+                "example": "ANALYST"
+            }
+        }
+    }
 }
