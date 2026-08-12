@@ -89,6 +89,7 @@ class GamesBoardScreen extends ConsumerWidget {
                 // nowhere.
                 GamesFieldStrip(rows: board.rows),
                 _FieldSummary(board: board),
+                _ChampionLine(board: board),
                 const SizedBox(height: AmiSpacing.m),
                 if (board.rows.isEmpty)
                   Text(l.gamesBoardEmpty, style: AmiTypography.body)
@@ -229,6 +230,50 @@ class _FieldSummary extends StatelessWidget {
   }
 }
 
+/// CR109 slice 8 (§8.5) — who holds the field's title, once it has closed.
+///
+/// The displaced case is the one the design cares about: the board leader
+/// could not hold the title, so it passed down, and saying that plainly is
+/// the whole point. §8.5: *"A board that quietly promotes second place looks
+/// like a bug; one that explains itself looks like a rule."*
+class _ChampionLine extends StatelessWidget {
+  const _ChampionLine({required this.board});
+  final GameBoard board;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    if (board.state != 'closed') return const SizedBox.shrink();
+    final champion = board.champion;
+    // No champion on a closed field means nobody in it was eligible — a
+    // leader with no title-holder. Stated, never filled in with the leader.
+    if (champion == null) {
+      return Text(l.gamesBoardNoChampion, style: AmiTypography.caption);
+    }
+    return Text(
+      champion.displaced
+          ? l.gamesBoardChampionDisplaced(
+              champion.handle, _ordinal(champion.rank))
+          : l.gamesBoardChampionTitle(champion.handle),
+      style: AmiTypography.body.copyWith(color: AmiColors.hexAmber),
+    );
+  }
+
+  static String _ordinal(int rank) {
+    if (rank % 100 >= 11 && rank % 100 <= 13) return '${rank}th';
+    switch (rank % 10) {
+      case 1:
+        return '${rank}st';
+      case 2:
+        return '${rank}nd';
+      case 3:
+        return '${rank}rd';
+      default:
+        return '${rank}th';
+    }
+  }
+}
+
 class _BoardRow extends StatelessWidget {
   const _BoardRow({required this.row});
   final GameBoardRow row;
@@ -305,6 +350,14 @@ class _BoardRow extends StatelessWidget {
                       ),
                       if (twr == null)
                         Text(l.gamesBoardNoCloseYet,
+                            style: AmiTypography.caption),
+                      // CR109 slice 8 (§8.5) — published, not hidden.
+                      // "Ineligible does not mean invisible": the entrant
+                      // ranks, the board shows what happened, and the row
+                      // says out loud that this one cannot hold the title.
+                      // A silent exclusion is the tell §11.2 avoids.
+                      if (row.titleIneligibleReason != null)
+                        Text(l.gamesBoardIneligibleNote,
                             style: AmiTypography.caption),
                     ],
                   ),

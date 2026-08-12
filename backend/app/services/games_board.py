@@ -44,6 +44,7 @@ from sqlalchemy import select
 
 from app.db import get_session
 from app.db.models import GameEntryRow, GameFieldRow, User
+from app.services import games_eligibility
 from app.services.games_desks import DESKS_BY_KEY
 from app.services.portfolio_nav_daily import nav_history, twr_pct_for_window
 
@@ -65,16 +66,24 @@ def _entrant_row(user_id: UUID, run_id: UUID) -> dict:
     rows = nav_history(user_id, run_id=run_id)
     twr = twr_pct_for_window(rows)
     with get_session() as s:
-        handle, display_name, is_desk, desk_key = s.execute(
-            select(User.handle, User.display_name, User.is_desk, User.desk_key)
+        handle, display_name, is_desk, desk_key, title_ineligible = s.execute(
+            select(User.handle, User.display_name, User.is_desk, User.desk_key,
+                   User.title_ineligible)
             .where(User.id == user_id)
-        ).first() or (None, None, False, None)
+        ).first() or (None, None, False, None, False)
     desk = DESKS_BY_KEY.get(desk_key or "")
     return {
         "handle": handle or display_name or "Unnamed",
         "is_desk": bool(is_desk),
         "desk_key": desk_key,
         "desk_rule": desk.rule if desk else None,
+        # CR109 slice 8 §8.5 — published, not hidden. *"Ineligible does not
+        # mean invisible"*: the entrant ranks, the board shows what actually
+        # happened, and the row says out loud that this one cannot hold the
+        # title. A silent exclusion is the tell §11.2 exists to avoid.
+        "title_ineligible_reason": games_eligibility.ineligibility_reason(
+            is_desk=bool(is_desk), title_ineligible=bool(title_ineligible),
+        ),
         # None means "not measured yet", NOT "flat". The client renders a dash.
         "twr_pct": twr,
         "closes_counted": max(0, len(rows) - 1),
@@ -105,6 +114,27 @@ def _rank(rows: list[dict]) -> list[dict]:
     return out
 
 
+def _champion_view(entry_id: UUID | None, rank: int | None) -> dict | None:
+    """The field's title-holder, resolved to a handle. Carries `displaced` so
+    a client can say *"Title: SLATE_07 (2nd overall)"* — §8.5's own example —
+    instead of printing a 2 where a 1 is expected and looking like a bug."""
+    if entry_id is None or rank is None:
+        return None
+    with get_session() as s:
+        row = s.execute(
+            select(User.handle, User.display_name)
+            .join(GameEntryRow, GameEntryRow.user_id == User.id)
+            .where(GameEntryRow.id == entry_id)
+        ).first()
+    if row is None:
+        return None
+    return {
+        "handle": row[0] or row[1] or "Unnamed",
+        "rank": rank,
+        "displaced": rank > 1,
+    }
+
+
 def board_for_run(user_id: UUID, run_id: UUID) -> dict:
     """`GET /v1/games/runs/{run_id}/board`.
 
@@ -125,6 +155,7 @@ def board_for_run(user_id: UUID, run_id: UUID) -> dict:
             select(
                 GameFieldRow.cadence, GameFieldRow.state, GameFieldRow.starts_on,
                 GameFieldRow.ends_on, GameFieldRow.benchmark_ticker,
+                GameFieldRow.champion_entry_id, GameFieldRow.champion_rank,
             ).where(GameFieldRow.id == field_id)
         ).first()
 
@@ -136,7 +167,7 @@ def board_for_run(user_id: UUID, run_id: UUID) -> dict:
             )
         ).all()
 
-    cadence, state, starts_on, ends_on, benchmark = field
+    cadence, state, starts_on, ends_on, benchmark, champion_entry_id, champion_rank = field
 
     # Marked by run_id, not by name: two entrants can share a display name and
     # the "(you)" marker has to be right regardless.
@@ -164,6 +195,13 @@ def board_for_run(user_id: UUID, run_id: UUID) -> dict:
         "standings_open": bool(measured),
         "your_rank": your_row["rank"] if your_row else None,
         "your_twr_pct": your_row["twr_pct"] if your_row else None,
+        # CR109 slice 8 §8.5. Present only on a CLOSED field. `rank > 1` is
+        # the case the design cares about: the leader could not hold the
+        # title, so it passed down, and the board must say so rather than
+        # renumber. `None` on an all-desk field — a leader with no champion
+        # is a fact, and inventing one would be the silent promotion §8.5
+        # names as the failure to avoid.
+        "champion": _champion_view(champion_entry_id, champion_rank),
         "rows": rows,
         "as_of": datetime.now(timezone.utc).isoformat(),
         # Said out loud: this board moves once per close, not per tick. Without

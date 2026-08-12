@@ -65,6 +65,7 @@ import 'package:ami_trade/screens/games/games_entry_sheet.dart';
 import 'package:ami_trade/state/games_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/games/games_close_curve.dart';
+import 'package:ami_trade/widgets/games/games_marker_line.dart';
 import 'package:ami_trade/widgets/hex/glass_panel.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
@@ -710,6 +711,23 @@ class GamesCloseDebriefSheet extends StatelessWidget {
             _row(l.gamesDebriefFeesLabel,
                 '\$${(result.feesPaid ?? 0).toStringAsFixed(2)}'),
             _row(l.gamesDebriefTradeCountLabel, '${result.tradeCount}'),
+
+            // CR109 slice 8 (§8.4) — the progress marker. In the debrief
+            // rather than in the three beats: §10.2 names "a progress
+            // marker" among the eleven blocks that were turning the Close
+            // into "a report with confetti". Its permanent home is the
+            // Record, which is where §8.4's "from a moment to a monument"
+            // actually lands.
+            if (result.marker != null) ...[
+              const Divider(color: AmiColors.slate700, height: AmiSpacing.l),
+              Text(l.gamesMarkerHeading, style: AmiTypography.caption),
+              const SizedBox(height: AmiSpacing.xs),
+              Text(
+                markerLine(l, result.marker!),
+                style: AmiTypography.body
+                    .copyWith(color: AmiColors.hexGreen),
+              ),
+            ],
 
             if (result.isForfeit) ...[
               const SizedBox(height: AmiSpacing.m),

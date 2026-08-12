@@ -36,7 +36,7 @@ from sqlalchemy import select
 
 from app.db import get_session
 from app.db.models import GameEntryRow, GameFieldRow
-from app.services import career_ledger, games_duels, games_scoring
+from app.services import career_ledger, games_duels, games_markers, games_scoring
 from app.services import games_service as games
 from app.services.portfolio_nav_daily import nav_history
 from app.trading_math.returns import max_drawdown_pct
@@ -229,6 +229,12 @@ def get_close_payload(user_id: UUID, run_id: UUID, *, now: datetime | None = Non
             "insight": beat_insight,
             "re_entry": beat_reentry,
         },
+        # CR109 slice 8 §8.4 — the progress marker, in the DEBRIEF rather
+        # than in the three beats. §10.2 names "a progress marker" among the
+        # eleven blocks that were turning the Close into "a report with
+        # confetti"; it is permanent on the Record, which is where §8.4's
+        # *"extends §8.4 from a moment to a monument"* actually lands.
+        "marker": games_markers.marker_for_close(user_id, run_id),
         "debrief": {
             "intent": payload_entry["intent"],
             "wildness_index": payload_entry["wildness_index"],

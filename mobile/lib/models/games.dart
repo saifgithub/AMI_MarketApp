@@ -911,6 +911,7 @@ class GameCloseResult {
     this.nearMissGapPct,
     this.duelVerdict,
     this.windUp,
+    this.marker,
   });
 
   final String runId;
@@ -998,6 +999,12 @@ class GameCloseResult {
 
   bool get isWindUp => windUp != null;
 
+  /// CR109 slice 8 (§8.4) — the one progress marker this close earned, or
+  /// null when it earned none. Null is a real and frequent answer: a marker
+  /// invented for every close is the participation trophy §8.4 opens by
+  /// excluding.
+  final GameMarker? marker;
+
   bool get isVoid => state == 'void';
 
   /// Defensive/forward-compatible only: the live `games_record_service.py`
@@ -1073,6 +1080,32 @@ class GameCloseResult {
         windUp: j['wind_up'] is Map<String, dynamic>
             ? GameWindUp.fromJson(j['wind_up'] as Map<String, dynamic>)
             : null,
+        marker: j['marker'] is Map<String, dynamic>
+            ? GameMarker.fromJson(j['marker'] as Map<String, dynamic>)
+            : null,
+      );
+}
+
+/// One progress marker — CR109 slice 8, design §8.4.
+///
+/// *"If one player in 26 receives something, twenty-five received nothing,
+/// and that is the churn."* Every marker is a THRESHOLD CROSSED rather than
+/// a thing that happens for showing up — the finish stipend already pays for
+/// showing up, and §8.4 is explicit that the two are one ethos said twice.
+class GameMarker {
+  const GameMarker({required this.kind, this.value});
+
+  /// 'first_finish' | 'first_positive' | 'first_podium' |
+  /// 'personal_best_twr' | 'clean_streak'.
+  final String kind;
+
+  /// The number the marker is about — a return, a rank, a count — or null
+  /// for a marker that is purely an event (a first finish).
+  final num? value;
+
+  factory GameMarker.fromJson(Map<String, dynamic> j) => GameMarker(
+        kind: j['kind'] as String? ?? '',
+        value: j['value'] as num?,
       );
 }
 
@@ -1296,12 +1329,21 @@ class GameBoardRow {
     this.rank,
     this.closesCounted = 0,
     this.isYou = false,
+    this.titleIneligibleReason,
   });
 
   final String handle;
   final bool isDesk;
   final String? deskKey;
   final String? deskRule;
+
+  /// CR109 slice 8 (§8.5) — 'house_desk' | 'affiliated' | null.
+  ///
+  /// Published, not hidden: *"Ineligible does not mean invisible"*. The
+  /// entrant ranks, the board shows what actually happened, and the row says
+  /// out loud that this one cannot hold the title. A silent exclusion is the
+  /// tell §11.2 exists to avoid.
+  final String? titleIneligibleReason;
 
   /// `null` = not measured yet. NEVER coerce to 0.
   final double? twrPct;
@@ -1323,6 +1365,7 @@ class GameBoardRow {
         rank: (j['rank'] as num?)?.toInt(),
         closesCounted: (j['closes_counted'] as num?)?.toInt() ?? 0,
         isYou: j['is_you'] == true,
+        titleIneligibleReason: j['title_ineligible_reason'] as String?,
       );
 }
 
@@ -1352,6 +1395,7 @@ class GameBoard {
     this.yourRank,
     this.yourTwrPct,
     this.updates = 'daily_close',
+    this.champion,
   });
 
   final String fieldId;
@@ -1373,6 +1417,12 @@ class GameBoard {
   final List<GameBoardRow> rows;
   final String updates;
 
+  /// CR109 slice 8 (§8.5) — who holds the field's title, present only once
+  /// the field has closed. Null on an all-desk field: a leader with no
+  /// champion is a fact, and inventing one would be the silent promotion
+  /// §8.5 names as the failure to avoid.
+  final GameChampion? champion;
+
   int get humanCount => entrantCount - deskCount;
   int get measuredCount => rows.where((r) => r.isMeasured).length;
 
@@ -1393,6 +1443,34 @@ class GameBoard {
             .map(GameBoardRow.fromJson)
             .toList(),
         updates: j['updates'] as String? ?? 'daily_close',
+        champion: j['champion'] is Map<String, dynamic>
+            ? GameChampion.fromJson(j['champion'] as Map<String, dynamic>)
+            : null,
+      );
+}
+
+/// The holder of a closed field's title — CR109 slice 8, design §8.5.
+///
+/// [displaced] is the case the design cares about: the board leader could
+/// not hold the title, so it passed down. §8.5: *"When an ineligible entrant
+/// places first, say so plainly — 'Title: SLATE_07 (2nd overall)' — rather
+/// than silently renumbering. A board that quietly promotes second place
+/// looks like a bug; one that explains itself looks like a rule."*
+class GameChampion {
+  const GameChampion({
+    required this.handle,
+    required this.rank,
+    this.displaced = false,
+  });
+
+  final String handle;
+  final int rank;
+  final bool displaced;
+
+  factory GameChampion.fromJson(Map<String, dynamic> j) => GameChampion(
+        handle: j['handle'] as String? ?? '—',
+        rank: (j['rank'] as num?)?.toInt() ?? 1,
+        displaced: j['displaced'] == true,
       );
 }
 

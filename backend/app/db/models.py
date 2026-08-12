@@ -197,6 +197,22 @@ class User(Base):
     desk_key: Mapped[Optional[str]] = mapped_column(
         String, unique=True, nullable=True,
     )
+    # CR109 slice 8 — design §8.5, stated as ONE principle rather than a list:
+    # *"Anything operated by, employed by, or affiliated with AMI Trading may
+    # rank, but may not hold a title, a champion reward, or permanent flair."*
+    #
+    # One boolean rather than a column per category (staff, family, UAT, seed,
+    # demo, contractor) because §8.5's whole point is that a LIST has to be
+    # reopened for every case nobody has thought of yet. A house desk is
+    # ineligible from `is_desk` instead of from this flag — see
+    # `games_eligibility.ineligibility_reason` for why deriving it matters.
+    #
+    # Scope is narrow on purpose: this gates TITLES, champion rewards and
+    # permanent flair only. Career points still accrue, so Saiful can dogfood
+    # progression and the desks populate a meaningful spread.
+    title_ineligible: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False,
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, server_default=func.now(), nullable=False,
@@ -1409,6 +1425,21 @@ class GameFieldRow(Base):
     starts_decided_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True,
     )
+    # CR109 slice 8 — §8.5's champion, resolved at close and frozen.
+    #
+    # The highest-ranked ELIGIBLE entry, which is not always rank 1: house
+    # desks fill every field to the target size, so at alpha field sizes the
+    # likeliest winner of a field is the house. `champion_entry_id` is who
+    # holds the title; `champion_rank` is where they actually placed, and the
+    # pair is what lets a surface say *"Title: SLATE_07 (2nd overall)"*
+    # rather than silently renumbering. §8.5 is explicit that the difference
+    # matters: *"A board that quietly promotes second place looks like a bug;
+    # one that explains itself looks like a rule."*
+    #
+    # NULL when no entry was eligible — an all-desk field has a leader and no
+    # champion, which is a fact rather than a hole to fill.
+    champion_entry_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
+    champion_rank: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )

@@ -3268,4 +3268,47 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get gamesWindUpNextChapter => 'Next chapter';
+
+  @override
+  String get gamesMarkerFirstFinish => 'First run finished.';
+
+  @override
+  String gamesMarkerFirstPositive(String twr) {
+    return 'First run in the green — $twr.';
+  }
+
+  @override
+  String gamesMarkerFirstPodium(String rank) {
+    return 'First podium — $rank.';
+  }
+
+  @override
+  String gamesMarkerPersonalBest(String twr) {
+    return 'Personal best — $twr.';
+  }
+
+  @override
+  String gamesMarkerCleanStreak(int count) {
+    return '$count finishes, no forfeits.';
+  }
+
+  @override
+  String get gamesMarkerHeading => 'PROGRESS';
+
+  @override
+  String gamesBoardChampionTitle(String handle) {
+    return 'Title: $handle';
+  }
+
+  @override
+  String gamesBoardChampionDisplaced(String handle, String rank) {
+    return 'Title: $handle ($rank overall)';
+  }
+
+  @override
+  String get gamesBoardNoChampion =>
+      'No title this period — every entrant ranks for AMI.';
+
+  @override
+  String get gamesBoardIneligibleNote => 'Ranks, but does not hold titles.';
 }

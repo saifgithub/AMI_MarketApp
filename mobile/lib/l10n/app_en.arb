@@ -3903,5 +3903,85 @@
     "gamesWindUpNextChapter": "Next chapter",
     "@gamesWindUpNextChapter": {
         "description": "CR109 slice 5 (§10.3). The Wind-Up's re-entry CTA label. The loop-back is the whole point — a loss screen without it is the fail screen the design forbids. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesMarkerFirstFinish": "First run finished.",
+    "@gamesMarkerFirstFinish": {
+        "description": "CR109 slice 8 (§8.4). Progress marker: the player held a run to its close for the first time. Evidence of movement, never a participation trophy — this fires once, ever. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesMarkerFirstPositive": "First run in the green — {twr}.",
+    "@gamesMarkerFirstPositive": {
+        "description": "CR109 slice 8 (§8.4). Progress marker: the player's first profitable run. {twr} is a signed, client-formatted percentage. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "twr": {
+                "type": "String",
+                "example": "+4.10%"
+            }
+        }
+    },
+    "gamesMarkerFirstPodium": "First podium — {rank}.",
+    "@gamesMarkerFirstPodium": {
+        "description": "CR109 slice 8 (§8.4). Progress marker: the player's first top-three finish in a field big enough for a placing to mean something. {rank} is a client-formatted ordinal. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "rank": {
+                "type": "String",
+                "example": "2nd"
+            }
+        }
+    },
+    "gamesMarkerPersonalBest": "Personal best — {twr}.",
+    "@gamesMarkerPersonalBest": {
+        "description": "CR109 slice 8 (§8.4). Progress marker: this run beat every run the player has closed before it. {twr} is a signed, client-formatted percentage. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "twr": {
+                "type": "String",
+                "example": "+6.80%"
+            }
+        }
+    },
+    "gamesMarkerCleanStreak": "{count} finishes, no forfeits.",
+    "@gamesMarkerCleanStreak": {
+        "description": "CR109 slice 8 (§8.4). Progress marker: the player crossed the clean-streak threshold. Fires ON the crossing only — a marker that repeats every close afterwards stops being evidence of movement. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "example": "5"
+            }
+        }
+    },
+    "gamesMarkerHeading": "PROGRESS",
+    "@gamesMarkerHeading": {
+        "description": "CR109 slice 8 (§8.4). Section heading above the progress marker in the Close's debrief panel. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesBoardChampionTitle": "Title: {handle}",
+    "@gamesBoardChampionTitle": {
+        "description": "CR109 slice 8 (§8.5). Names the holder of a closed field's title. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "handle": {
+                "type": "String",
+                "example": "SLATE_07"
+            }
+        }
+    },
+    "gamesBoardChampionDisplaced": "Title: {handle} ({rank} overall)",
+    "@gamesBoardChampionDisplaced": {
+        "description": "CR109 slice 8 (§8.5). Used when the board LEADER could not hold the title, so it passed down — the design's own example is 'Title: SLATE_07 (2nd overall)'. Saying it plainly is the point: a board that quietly promotes second place looks like a bug; one that explains itself looks like a rule. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "handle": {
+                "type": "String",
+                "example": "SLATE_07"
+            },
+            "rank": {
+                "type": "String",
+                "example": "2nd"
+            }
+        }
+    },
+    "gamesBoardNoChampion": "No title this period — every entrant ranks for AMI.",
+    "@gamesBoardNoChampion": {
+        "description": "CR109 slice 8 (§8.5). Shown when no entrant in a closed field was eligible to hold the title (an all-desk field). A leader with no champion is a fact; inventing one would be the silent promotion the design forbids. NEW key. retranslate:[ar,ms]"
+    },
+    "gamesBoardIneligibleNote": "Ranks, but does not hold titles.",
+    "@gamesBoardIneligibleNote": {
+        "description": "CR109 slice 8 (§8.5). Row note on an entrant that AMI operates, employs or is affiliated with — house desks, the operator, test accounts. Published rather than hidden: ineligible does not mean invisible, and a silent exclusion is the tell the disclosure rule exists to avoid. NEW key. retranslate:[ar,ms]"
     }
 }

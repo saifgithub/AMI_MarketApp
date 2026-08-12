@@ -58,7 +58,7 @@ from app.db.models import (
     GameShortPositionRow,
     SimTradeRow,
 )
-from app.services import career_ledger, games_duels
+from app.services import career_ledger, games_duels, games_eligibility
 from app.services.games_scoring import (
     PLACEMENT_MIN_FIELD,
     TradeLeg,
@@ -284,6 +284,16 @@ def _close_field(field_id: UUID, *, sim: SimEngine, now: datetime) -> dict[str, 
         duel_stats = games_duels.settle_field_duels(s, field_id, now=now)
 
         field_row.scoring_basis = basis
+        # ── CR109 slice 8 — §8.5's champion, decided after every entry has
+        # its final rank. NOT rank 1: house desks fill every field to the
+        # target size, so at alpha the likeliest leader of a field is the
+        # house, and *"anything operated by AMI Trading may rank, but may not
+        # hold a title"*. Recorded as a pair (who, and where they placed) so
+        # a surface can say "Title: SLATE_07 (2nd overall)" — §8.5: a board
+        # that quietly promotes second place looks like a bug.
+        champion = _champion_for_field(scored_entries, pending)
+        if champion is not None:
+            field_row.champion_entry_id, field_row.champion_rank = champion
         field_row.state = "closed"
 
     # ── Phase 4: settlement (Amendment I). Saiful: *"when the game ends, all
@@ -390,6 +400,34 @@ def _rank_and_maybe_place(
             * title_multiplier_value(multiplier_by_entry.get(se.entry_id))
         ))
     return "placement"
+
+
+def _champion_for_field(
+    scored_entries: list[_ScoredEntry], pending: list[_EntrySnap],
+) -> tuple[UUID, int] | None:
+    """`(entry_id, rank)` of the highest-ranked ELIGIBLE entry, or `None` when
+    no entrant could hold the title (§8.5).
+
+    `None` on an all-desk field is the honest answer, not a hole: the field
+    has a leader, the board shows it, and nobody holds the title. Inventing a
+    champion there would be the silent renumbering §8.5 names as the failure
+    to avoid.
+
+    Ties keep standard competition ranking's answer — two entrants can share
+    rank 1, and this returns whichever the sort put first. That is a real
+    ambiguity in the design rather than a bug here, and it is worth stating
+    plainly rather than inventing a tiebreak the design does not have.
+    """
+    user_by_entry = {p.id: p.user_id for p in pending}
+    ranked = sorted(
+        (se for se in scored_entries if se.final_rank is not None),
+        key=lambda se: se.final_rank or 0,
+    )
+    for se in ranked:
+        user_id = user_by_entry.get(se.entry_id)
+        if user_id is not None and games_eligibility.title_eligible(user_id):
+            return se.entry_id, int(se.final_rank or 0)
+    return None
 
 
 def title_multiplier_value(stored: float | None) -> float:

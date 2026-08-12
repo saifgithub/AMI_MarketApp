@@ -5454,6 +5454,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next chapter'**
   String get gamesWindUpNextChapter;
+
+  /// CR109 slice 8 (§8.4). Progress marker: the player held a run to its close for the first time. Evidence of movement, never a participation trophy — this fires once, ever. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'First run finished.'**
+  String get gamesMarkerFirstFinish;
+
+  /// CR109 slice 8 (§8.4). Progress marker: the player's first profitable run. {twr} is a signed, client-formatted percentage. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'First run in the green — {twr}.'**
+  String gamesMarkerFirstPositive(String twr);
+
+  /// CR109 slice 8 (§8.4). Progress marker: the player's first top-three finish in a field big enough for a placing to mean something. {rank} is a client-formatted ordinal. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'First podium — {rank}.'**
+  String gamesMarkerFirstPodium(String rank);
+
+  /// CR109 slice 8 (§8.4). Progress marker: this run beat every run the player has closed before it. {twr} is a signed, client-formatted percentage. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Personal best — {twr}.'**
+  String gamesMarkerPersonalBest(String twr);
+
+  /// CR109 slice 8 (§8.4). Progress marker: the player crossed the clean-streak threshold. Fires ON the crossing only — a marker that repeats every close afterwards stops being evidence of movement. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count} finishes, no forfeits.'**
+  String gamesMarkerCleanStreak(int count);
+
+  /// CR109 slice 8 (§8.4). Section heading above the progress marker in the Close's debrief panel. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'PROGRESS'**
+  String get gamesMarkerHeading;
+
+  /// CR109 slice 8 (§8.5). Names the holder of a closed field's title. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Title: {handle}'**
+  String gamesBoardChampionTitle(String handle);
+
+  /// CR109 slice 8 (§8.5). Used when the board LEADER could not hold the title, so it passed down — the design's own example is 'Title: SLATE_07 (2nd overall)'. Saying it plainly is the point: a board that quietly promotes second place looks like a bug; one that explains itself looks like a rule. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Title: {handle} ({rank} overall)'**
+  String gamesBoardChampionDisplaced(String handle, String rank);
+
+  /// CR109 slice 8 (§8.5). Shown when no entrant in a closed field was eligible to hold the title (an all-desk field). A leader with no champion is a fact; inventing one would be the silent promotion the design forbids. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No title this period — every entrant ranks for AMI.'**
+  String get gamesBoardNoChampion;
+
+  /// CR109 slice 8 (§8.5). Row note on an entrant that AMI operates, employs or is affiliated with — house desks, the operator, test accounts. Published rather than hidden: ineligible does not mean invisible, and a silent exclusion is the tell the disclosure rule exists to avoid. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Ranks, but does not hold titles.'**
+  String get gamesBoardIneligibleNote;
 }
 
 class _AppLocalizationsDelegate
