@@ -39,15 +39,32 @@ if [ -n "$HOLDS" ]; then
   exit 1
 fi
 
-# AUDIT-LANE GATE (AT:R66) — runs SECOND, before the suite, because a green
-# suite says nothing about whether an auditor has already told you this code is
-# broken. `inbox` exits 1 on a verdict awaiting integration or a submission of
-# yours that never reached the auditor. Fails CLOSED if the script is missing.
+# AUDIT-LANE GATE (AT:R66, exit codes split AT:R68 DEF277) — runs SECOND,
+# before the suite, because a green suite says nothing about whether an auditor
+# has already told you this code is broken. Fails CLOSED if the script is
+# missing.
+#
+# Two distinct non-zero codes, because they are two different facts:
+#   1 — a verdict awaits integration, or a submission of yours never reached the
+#       auditor. ABORT: your code may already be known-broken.
+#   2 — no watcher is serving the queue. WARN, do not abort: an idle audit fleet
+#       is the normal state whenever nobody is running an audit, and it says
+#       nothing about the code being promoted. It IS a reason not to submit.
+#
+# DEF277: those shared `return 1`, so this gate aborted on an idle fleet while
+# printing "inbox clear — no verdict awaiting integration" on the same run. A
+# gate that fires when nothing is wrong teaches the operator that firing does
+# not mean stop, and on 2026-08-13 that is exactly what it taught —
+# `alpha-2026-08-13-1` shipped past it. Same failure shape as the tree gate
+# below and as step 7's `/v1/llm/status` 403.
 if [ -x orchestration/dispatch/dispatch.sh ]; then
-  if ! orchestration/dispatch/dispatch.sh inbox; then
-    echo "AUDIT LANE NOT CLEAR — aborting. Read the verdict above before promoting."
-    exit 1
-  fi
+  orchestration/dispatch/dispatch.sh inbox
+  case $? in
+    0) : ;;
+    2) echo "AUDIT WATCHER DOWN — not a promotion blocker, but do not SUBMIT until it is back." ;;
+    *) echo "AUDIT LANE NOT CLEAR — aborting. Read the verdict above before promoting."
+       exit 1 ;;
+  esac
 else
   echo "dispatch.sh missing or not executable — cannot verify the audit lane. Aborting."
   exit 1

@@ -260,3 +260,53 @@ def test_tree_check_excludes_match_the_promotion_command() -> None:
             f"{host_generated} missing from the promotion's rsync excludes — "
             "rsync --delete would destroy it on the box (DEF081/DEF276)"
         )
+
+
+# ── the pairing that had no guard (R68-CR175 audit MAJOR-1) ───────────────────
+
+def test_manual_gate_wording_is_not_duplicated() -> None:
+    """DEF275's own drift class, recurring inside the round that fixed it.
+
+    `ce6bae87` rewrote `promotion_protocol.md` to match `/promote-to-alpha`
+    "step for step", and at that moment it did. 38 minutes later `c539af12`
+    fixed F8 — the manual gate asking about a local backend the Mac does not
+    have — **in the command only**. The doc kept asking the unanswerable
+    question, which is precisely the state DEF275 exists to prevent.
+
+    The auditor caught it; nothing mechanical did. `test_tree_check_excludes_
+    match_the_promotion_command` guards the rsync-exclude pairing the same way,
+    and this pairing had no sibling.
+
+    The fix is a pointer, not a synchronised copy: two restatements of one
+    question drift, and asserting they stay byte-equal would just relocate the
+    maintenance. So this asserts the doc does NOT restate the question at all.
+    """
+    root = Path(__file__).resolve().parents[3]
+    doc = (root / "docs" / "initial_specs" / "10_delivery"
+           / "promotion_protocol.md").read_text()
+    cmd = (root / ".claude" / "commands" / "promote-to-alpha.md").read_text()
+
+    # The command owns the question and must keep asking one.
+    assert "(y/n)" in cmd, "the command lost its manual gate entirely"
+
+    # The dead premise must not reappear in either file as a live question.
+    # CLAUDE.md and promotion_protocol.md's own "Canonical vs derivative"
+    # section both state the Mac runs no backend.
+    assert "onboarding on the local backend? (y/n)" not in doc, (
+        "promotion_protocol.md is asking the operator to smoke-test a local "
+        "backend the Mac does not run — F8, reintroduced. The doc should point "
+        "at /promote-to-alpha step 1, not restate its question."
+    )
+    assert "onboarding on the local backend? (y/n)" not in cmd
+
+    # And the doc must point at the command rather than carry its own copy.
+    manual_section = doc.split("**Manual smoke confirmation.**", 1)
+    assert len(manual_section) == 2, "the doc lost its manual-gate item"
+    body = manual_section[1].split("\n---", 1)[0]
+    assert "/promote-to-alpha" in body, (
+        "the doc's manual-gate item must point at the command that owns the "
+        "wording — a restated copy is a copy that goes stale"
+    )
+    assert "(y/n)?" not in body and "?\" " not in body, (
+        "the doc is restating the question again; that pairing has drifted once"
+    )

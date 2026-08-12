@@ -136,10 +136,21 @@ suite cannot.
    returns exit 0. (The pre-existing `assets/icons/ does not exist`
    warning is acceptable until that gets fixed; the script
    tolerates it explicitly.)
-7. **Manual smoke confirmation.** The script prompts: "Did you click
-   through onboarding on the local backend? (y/n)". `n` aborts. This
-   is the only manual gate — keeps the operator honest without
-   forcing CI we don't need yet.
+7. **Manual smoke confirmation.** `n` aborts. This is the only manual gate —
+   it keeps the operator honest without forcing CI we don't need yet.
+
+   **The question itself is NOT restated here.** `/promote-to-alpha` step 1
+   holds the wording, and this file points at it deliberately: the two copies
+   drifted the first time within 38 minutes of each other. DEF275 rewrote this
+   section to match the command; F8 then corrected the question in the command
+   alone (`c539af12`), leaving this file asking the operator whether they had
+   *"clicked through onboarding on the local backend"* — a machine CLAUDE.md
+   and §"Canonical vs derivative" above both say does not exist. A restated
+   copy is a copy that goes stale; a pointer cannot.
+
+   *(That drift was caught by the R68-CR175 audit, not by us — MAJOR-1, round 1.
+   `test_cr175_postflight.py::test_manual_gate_wording_is_not_duplicated` now
+   fails if this section starts restating the question again.)*
 
 ---
 

@@ -546,8 +546,26 @@ EOF
     echo "inbox clear — no verdict awaiting integration, no submission of yours undelivered."
   fi
   [ "$other" -gt 0 ] && echo "(also owing you: $other lane(s) UNASSIGNED/BLOCKED/NEEDS-INFO/IN_REVIEW/UNGATED — full board: dispatch.sh state)"
+  # DEF277 — two different failures, two different exit codes.
+  #
+  # `hot` and `dead` used to share `return 1`, so a promotion gate reading only
+  # "did inbox succeed" aborted on an IDLE AUDIT FLEET. That is the normal state
+  # whenever nobody is running an audit, and a gate that fires when nothing is
+  # wrong teaches the operator that firing does not mean stop — which is exactly
+  # what happened: `alpha-2026-08-13-1` shipped past this gate on 2026-08-13
+  # with `hot=0` and this function printing "inbox clear" on the same run.
+  #
+  #   1 — a verdict awaits integration, or a submission of yours never reached
+  #       the auditor. Your code may already be known-broken. STOP.
+  #   2 — no watcher is serving the queue. Do not SUBMIT (it would sit unread);
+  #       shipping already-audited code is unaffected.
+  #
+  # Callers that must refuse both keep testing `if ! dispatch.sh inbox`, which is
+  # unchanged for them — every non-zero still means something. Only a caller that
+  # cares about the difference has to look, and `/promote-to-alpha` is the one
+  # that does.
   [ "$hot" -gt 0 ] && return 1
-  [ "$dead" -gt 0 ] && return 1
+  [ "$dead" -gt 0 ] && return 2
   return 0
 }
 
