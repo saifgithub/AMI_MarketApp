@@ -45,6 +45,14 @@ _NOT_FORWARDED: dict[str, str] = {
     # Bound by uvicorn from the compose command/port mapping (8000:8000), not
     # read from the container's env.
     "port": "compose maps 8000:8000; uvicorn binds it via the service command",
+    # CR175 F2 — deploy identity. These reach the container as Dockerfile ENV
+    # baked from build args, NOT from the api-alpha environment block, and that
+    # is deliberate rather than an oversight: a runtime env line would let a
+    # restart hand the container a different commit than the one it was built
+    # from, and an identity you can edit is not an identity. Compose passes them
+    # under `build.args`, which this test does not walk.
+    "git_sha": "baked into the image as a build arg (backend/Dockerfile)",
+    "alpha_tag": "baked into the image as a build arg (backend/Dockerfile)",
     # Voice/TTS + SMS are unshipped surfaces (A13/A14/A17, CR031 pending).
     "twilio_account_sid": "SMS not shipped",
     "twilio_auth_token": "SMS not shipped",

@@ -49,6 +49,21 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://localhost:6379/0"
 
+    # Deploy identity (CR175 F2). Nothing recorded which commit was running, so
+    # after any incident there was no query that answered "is what is running
+    # what I shipped?" — every diagnosis to date began by assuming it was.
+    #
+    # These are BUILD ARGS baked into the image (see backend/Dockerfile), not
+    # runtime env. That distinction is the point: a runtime value could be
+    # changed by a restart, so a container could claim a commit it was not
+    # built from. `test_config_compose_parity.py` excuses them for exactly that
+    # reason rather than because they were forgotten.
+    #
+    # `unset` rather than `""` so an unstamped container is visibly unstamped in
+    # every readout instead of rendering as a blank field.
+    git_sha: str = "unset"
+    alpha_tag: str = "unset"
+
     # LLM providers
     openrouter_api_key: str = ""
     anthropic_api_key: str = ""

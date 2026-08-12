@@ -1,10 +1,11 @@
 """FastAPI entry point for the AMI Trade backend."""
 
 import asyncio
+import hmac
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Header, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
@@ -44,6 +45,7 @@ from app.middleware.version_gate import VersionGateMiddleware
 from app.schemas.client_release_floor import ReleaseFloorResponse
 from app.services.audit import trim_audit_tables
 from app.services.client_release_floor import build_release_floor_response
+from app.services.readiness import readiness_report
 from app.services.room_runner import get_room_runner
 
 configure_logging()
@@ -464,7 +466,68 @@ app.include_router(webhooks_router)
 
 @app.get("/v1/health")
 async def health() -> dict[str, str]:
-    return {"status": "ok", "version": "0.1.0", "env": settings.env}
+    """LIVENESS ONLY — this endpoint deliberately checks nothing.
+
+    It is the container's healthcheck (`docker-compose.yml`), and that is the
+    reason it stays dependency-free: a healthcheck that fails on a transient
+    Postgres blip has Docker restart-loop a container that was serving fine.
+    Read it as "uvicorn is accepting connections" and nothing more.
+
+    **Use `/v1/ready` to decide whether a deploy worked.** CR175 F1: this
+    endpoint used to be `/promote-to-alpha`'s primary smoke check as well, which
+    meant every promotion's success signal was a hardcoded literal — DEF215's
+    outage state is a state this returns 200 for.
+
+    The `version` field used to be the constant `"0.1.0"`, which had never moved
+    and sat exactly where an operator looks for a deploy identity. It now
+    reports the build stamp, or `unset` when the image was not built through the
+    promotion path.
+    """
+    return {
+        "status": "ok",
+        "version": settings.git_sha,
+        "alpha_tag": settings.alpha_tag,
+        "env": settings.env,
+    }
+
+
+@app.get("/v1/ready")
+async def ready(
+    response: Response, authorization: str | None = Header(default=None),
+) -> dict[str, object]:
+    """READINESS — probes every dependency a promotion actually cares about.
+
+    Returns **503** when any gating probe fails, so a promotion gates on a
+    status code instead of on an operator reading a JSON body.
+
+    **Two disclosure levels, on purpose.** Unauthenticated callers get the
+    verdict and the failing probe *names* — enough for a load balancer or a
+    Cloud Run readiness probe at Beta, and nothing an attacker can use. The
+    revision ids, the build stamp and the provider name are operational
+    disclosure of exactly the kind CR123 C2 closed on `/v1/llm/status`, so they
+    require the admin bearer. `postflight.py` has it.
+
+    Unauthenticated remains the *default* rather than the endpoint being fully
+    gated, because a readiness check a platform cannot call is not a readiness
+    check — that is how `/v1/health` ended up carrying a job it could not do.
+    """
+    report = readiness_report()
+    if not report["ready"]:
+        response.status_code = 503
+
+    token = ""
+    if authorization and authorization.lower().startswith("bearer "):
+        token = authorization.split(" ", 1)[1]
+    privileged = bool(settings.admin_secret) and hmac.compare_digest(
+        token.encode(), settings.admin_secret.encode()
+    )
+    if privileged:
+        return report
+    return {
+        "ready": report["ready"],
+        "env": report["env"],
+        "failed_probes": report["failed_probes"],
+    }
 
 
 @app.get("/v1/client/release-floor", response_model=ReleaseFloorResponse)

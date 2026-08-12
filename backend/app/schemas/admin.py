@@ -129,10 +129,36 @@ class FeatureGate(BaseModel):
     effect_when_unconfigured: str
 
 
+class SettingsFieldState(BaseModel):
+    """One `Settings` field and whether this container actually has it — for
+    EVERY field, not the hand-picked few (CR175 F3).
+
+    `gates` above is a curated list that must be extended by hand, and measured
+    2026-08-12 it covered 9 of 98 fields. The miss that proves the shape:
+    `adanos_api_key_secondary` was wired the same week *because* it had sat idle
+    undetected, reached compose and `Settings`, and was still invisible to the
+    check whose entire job is catching that. Nothing failed, because nothing
+    fails when a hand-maintained list is incomplete.
+
+    Derived from `Settings.model_fields`, so a field added tomorrow is covered
+    the day it is added. `configured` is a boolean — never the value (CR040).
+    """
+
+    setting: str
+    configured: bool
+    annotated: bool
+
+
 class AdminConfigCheckResponse(BaseModel):
     env: str
     gates: list[FeatureGate]
     dark_count: int
+    # CR175 F3 — the complete field-level map. `gates` stays the curated,
+    # human-annotated view (and `dark_count` keeps meaning what it meant);
+    # this is what `scripts/promotion/postflight.py` diffs infra/alpha.env
+    # against, because a set-diff needs the whole set.
+    settings_coverage: list[SettingsFieldState] = []
+    settings_total: int = 0
     # DEF113 — the configured 1-on-1 credit price. Not a FeatureGate (those
     # are booleans, "is X configured"); this is a tunable price, so "what are
     # we charging in production" is one curl instead of a code read.

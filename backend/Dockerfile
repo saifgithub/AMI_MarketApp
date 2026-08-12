@@ -67,6 +67,26 @@ RUN groupadd --system --gid 1001 ami \
 ENV HOME=/data
 USER ami
 
+# CR175 F2 — deploy identity. Nothing recorded which commit was running, so no
+# query could answer "is what is running what I shipped?".
+#
+# Deliberately the LAST layers before EXPOSE: the SHA changes on every commit,
+# so anywhere earlier would invalidate the uv-sync layer and turn every
+# promotion into a full dependency rebuild.
+#
+# A BUILD arg, not runtime env, because the value must describe the image. A
+# runtime var can be changed by a restart, which would let a container claim a
+# commit it was not built from — an identity you can edit is not an identity.
+#
+# Default `unset` (not empty) so an unstamped container reads as unstamped
+# rather than blank. `/promote-to-alpha` passes the real values;
+# `scripts/promotion/postflight.py` fails the promotion when they do not match
+# what it just promoted.
+ARG GIT_SHA=unset
+ARG ALPHA_TAG=unset
+ENV GIT_SHA=$GIT_SHA
+ENV ALPHA_TAG=$ALPHA_TAG
+
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

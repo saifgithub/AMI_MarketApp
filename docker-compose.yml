@@ -89,6 +89,20 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      # CR175 F2 — deploy identity, passed as build args so the value describes
+      # the image rather than the restart. `/promote-to-alpha` exports both
+      # before `docker compose build`.
+      #
+      # `:-unset` is an empty-ish default and NOT the DEF260 shape it resembles:
+      # DEF260 was a compose inline default silently supplying a *plausible*
+      # value (`${VAR:-30}`) that overrode what the code believed it had set.
+      # `unset` is not plausible — it is the sentinel that makes an unstamped
+      # container visibly unstamped, and postflight fails on it. A `:?` here
+      # would be louder still but compose interpolates the whole file on every
+      # command, so it would break `docker compose ps` on melehost.
+      args:
+        GIT_SHA: ${GIT_SHA:-unset}
+        ALPHA_TAG: ${ALPHA_TAG:-unset}
     container_name: ami_api_alpha
     depends_on:
       postgres:

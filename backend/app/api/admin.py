@@ -25,7 +25,7 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import func, select
 
-from app.core.config import settings
+from app.core.config import Settings, settings
 from app.db import get_session
 from app.db.models import SubscriptionEventRow, User, UserDeviceRow
 from app.schemas.client_release_floor import (
@@ -50,6 +50,7 @@ from app.schemas.admin import (
     AdminUserDevice,
     AdminUserSummary,
     FeatureGate,
+    SettingsFieldState,
     SubscriptionEventOut,
 )
 
@@ -228,6 +229,39 @@ _FEATURE_GATES: list[tuple[str, str, str]] = [
 ]
 
 
+def _settings_coverage() -> list[SettingsFieldState]:
+    """Every `Settings` field, configured-or-not, derived not listed (CR175 F3).
+
+    `_FEATURE_GATES` above is the right shape for a human reading the output
+    and the wrong shape for a guard: it is hand-maintained, and nothing fails
+    when it is incomplete. Measured 2026-08-12 it covered **9 of 98 fields** —
+    including, notably, not `adanos_api_key_secondary`, which had been wired
+    that same week precisely because 250 paid calls/month sat idle undetected.
+    The check built to catch silently-absent keys could not see the newest
+    silently-absent key.
+
+    Deriving from `Settings.model_fields` is what makes the coverage
+    self-maintaining. `test_cr175_config_coverage.py` fails when a field is
+    neither annotated above nor excused there, so the annotation stays a
+    deliberate act rather than something that rots quietly.
+
+    Booleans only. `bool(value)` on a str/int/list is a presence test; `bool`
+    fields are passed through so `USE_REAL_MARKET_DATA=false` reports False
+    rather than the truthiness of the string.
+    """
+    annotated = {attr for attr, _name, _effect in _FEATURE_GATES}
+    out: list[SettingsFieldState] = []
+    for attr in sorted(Settings.model_fields):
+        value = getattr(settings, attr, None)
+        configured = value if isinstance(value, bool) else bool(value)
+        out.append(SettingsFieldState(
+            setting=attr.upper(),
+            configured=configured,
+            annotated=attr in annotated,
+        ))
+    return out
+
+
 @router.get("/config-check", response_model=AdminConfigCheckResponse)
 def config_check(_: None = Depends(get_admin)) -> AdminConfigCheckResponse:
     """Report which config-gated features are live in THIS container (CR040).
@@ -256,10 +290,13 @@ def config_check(_: None = Depends(get_admin)) -> AdminConfigCheckResponse:
     with get_session() as session:
         active_floor = get_active_floor(session)
 
+    coverage = _settings_coverage()
     return AdminConfigCheckResponse(
         env=settings.env,
         gates=gates,
         dark_count=sum(1 for g in gates if not g.configured),
+        settings_coverage=coverage,
+        settings_total=len(coverage),
         one_on_one_credit_cost=settings.one_on_one_credit_cost,
         portfolio_health_gate_mode=settings.portfolio_health_gate_mode,
         client_release_floor_configured=active_floor is not None,
