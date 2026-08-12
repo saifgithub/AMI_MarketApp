@@ -69,25 +69,64 @@ measurement and no conclusion is drawn from it.
 
 ## 3. The controlled replay — the instrument DEF230 actually asked for
 
-Fixed ticker set, same seed (`164`), same universe file, same synthetic mandate,
-26 pairs. This is the only comparison where the prompt is the *only* thing that
-moves.
+Same universe file, same synthetic mandate, same `--seed 164`, same as-of window.
+This is the only comparison where the prompt is the *only* thing that moves.
 
-| batch | build | n | APPROVE | rate |
-|---|---|---|---|---|
-| `pit-pilot-2` | pre-programme | 126 | 13 | 10.3% |
-| `r68-postbatch9` | Batches 4–9 | 25 | 3 | 12.0% |
-| `r68-postfix` | + DEF260–268 | 26 | 0 | **0.0%** |
+| batch | build | n | APPROVE | rate | 95% CI |
+|---|---|---|---|---|---|
+| `pit-pilot-2` | pre-programme | 126 | 13 | 10.3% | [6.1%, 16.9%] |
+| `r68-postbatch9` | Batches 4–9 | 25 | 3 | 12.0% | — |
+| `r68-postfix` | + DEF260–268 | 26 | 0 | 0.0% | — |
+| **`r68-def230-n40`** | + DEF260–268 | **40** | **3** | **7.5%** | **[2.6%, 19.9%]** |
+| post-fix pooled | + DEF260–268 | 66 | 3 | 4.5% | [1.6%, 12.5%] |
 
-**Not significant.** Fisher's exact on 3/25 vs 0/26 gives **p = 0.110**. And
-`P(0 approves | true rate 10.3%, n=26) = 5.9%` — just above the 5% line.
+### 3.1 The decisive run landed — and it went the other way
 
-**The replay is 2–4 runs short of being able to answer.** At a 10.3% true rate,
-`n = 28` makes a zero-approve result significant at 5%; at 12%, `n = 24` does.
-At n=26 the result sits exactly in the gap between those, which is the worst
-possible place for it to land and is not something to round in either direction.
+**RESOLVED 2026-08-12.** §4.1 pre-registered the test: *"Zero approves at n=40 is
+p≈0.013 against the 10.3% prior — decisive. Any approves at all, and the drought
+is over on the controlled instrument too."*
 
-**The replay is also blind to two of the nine fixes it is being asked to judge**
+`r68-def230-n40` completed **40/40, zero errors**, and returned **3 APPROVEs**
+(M @2025-09-26, MA @2025-11-28, WYNN @2025-10-24). The zero-approve branch did
+not occur. `P(0 | 10.3%, n=40) = 0.0128` was the bar; we are nowhere near it.
+
+**So `r68-postfix`'s 0/26 was sampling noise, exactly as p = 0.110 said it was.**
+The prior session declined to round that into a verdict; that restraint was
+correct, and this is the run that shows it.
+
+**Against the pre-programme baseline the post-fix build is indistinguishable:**
+
+| comparison | Fisher two-sided |
+|---|---|
+| `r68-def230-n40` 3/40 vs baseline 13/126 | **p = 0.764** |
+| post-fix pooled 3/66 vs baseline 13/126 | **p = 0.271** |
+
+The two post-fix batches are **independent draws, not replicates** — verified,
+not assumed: their `(ticker, as_of)` pair sets are **disjoint** (overlap = 0),
+because `generate_pairs` re-consumes the RNG differently at n=26 and n=40 even
+under the same `--seed 164`. That makes pooling legitimate and a *paired*
+comparison impossible. It also means **`--seed` does not pin the pair set across
+different `--n-pairs`**, which is worth knowing before anyone cites "same seed"
+as reproducibility.
+
+**On the controlled instrument, the CR143 prompt programme did not suppress
+approvals.** Every interval above overlaps the baseline.
+
+**What this does not license.** Non-significance is not proof of no effect. At
+n=66 post-fix the data exclude a *collapse* — a true rate near zero — and do not
+exclude a modest drift; the pooled CI still spans 1.6%–12.5%. And per §3.2 below,
+none of it speaks to the feed half of the programme at all.
+
+> **Superseded, kept for the record.** Before `r68-def230-n40` ran, this section
+> read: *"The replay is 2–4 runs short of being able to answer. At a 10.3% true
+> rate, n = 28 makes a zero-approve result significant at 5%; at 12%, n = 24
+> does. At n=26 the result sits exactly in the gap between those."* That was the
+> correct call on the evidence then available, and naming the required n is what
+> made the follow-up run answerable rather than another judgement call.
+
+### 3.2 The replay is blind to the feed half of the programme
+
+**It is blind to two of the nine fixes it is being asked to judge**
 (added 2026-08-12, while reviewing CR167 §6.2's look-ahead traps against this
 harness). `AsOfContext` **skips the news and social feed probes entirely** —
 they render UNAVAILABLE, an honest absence, by design
@@ -109,25 +148,35 @@ that.
 
 ## 4. What would close DEF230
 
-1. **Re-run the pinned replay at `--n-pairs 40`** (~1.6 h unattended, same
-   recipe otherwise). Zero approves at n=40 is p≈0.013 against the 10.3% prior —
-   decisive. Any approves at all, and the drought is over on the controlled
-   instrument too.
-2. **Human traffic, tier-stratified, to n≈30 per tier.** Not something to
-   manufacture; it accrues as real users convene Rooms. Until then the human arm
-   cannot distinguish a prompt effect from the tier mix.
+1. ~~**Re-run the pinned replay at `--n-pairs 40`.**~~ **DONE 2026-08-12** —
+   40/40 completed, 0 errors, **3 APPROVEs (7.5%)**, `p = 0.764` against the
+   pre-programme baseline. The controlled arm is **closed**: on the only
+   instrument that isolates the prompt, the CR143 programme did not suppress
+   approvals, and the drought is over here too.
+2. **Human traffic, tier-stratified, to n≈30 per tier.** Still outstanding. Not
+   something to manufacture; it accrues as real users convene Rooms. Until then
+   the human arm cannot distinguish a prompt effect from the tier mix.
 3. **Do not pool the tiers again.** The pooled number has now been misleading
    twice — once via benchmark contamination (AT:R66) and once via tier mix
    (here).
+4. **New, from §3.2:** the feed half of the programme (Batch 9, and the feed
+   portions of DEF262/DEF263) **cannot be measured on this instrument at all**,
+   because as-of mode serves neither news nor social. If that work needs a
+   verdict it needs a live-traffic measurement designed for it — not this replay
+   at any n.
 
 ## 5. What is NOT claimed
 
-- That the nine DEF260–268 fixes changed the approve rate in either direction.
-  The replay moved 12% → 0% on n=26 and that is inside noise.
+- **That the programme had no effect.** Non-significance is not proof of
+  absence. `p = 0.764` at n=40 and `p = 0.271` pooled exclude a *collapse* to
+  near-zero; the pooled 95% CI still spans **1.6%–12.5%**, so a modest drift in
+  either direction remains live.
 - That the prompt-constraint thickening (CR055/CR026/CR101) is or is not the
-  cause. This measurement was specified to isolate it and is underpowered to do
-  so; DEF230's confound (5) — the dominant user changing his own mandate
-  mid-window — is also untouched here.
+  cause of the *human* drought. The controlled arm now says the current prompt
+  does not suppress approvals; it does not reconstruct what the July prompt did
+  to July users. DEF230's confound (5) — the dominant user changing his own
+  mandate mid-window — is untouched here.
+- That the feed work helped or hurt. §3.2: this instrument is blind to it.
 - `prompt_version` partitioning, which DEF230 asks for, **cannot be applied to
   the baseline at all**: `llm_audit.prompt_version` is populated only from
   2026-08-09 (CR158), and it is a **per-agent** hash — twelve values per epoch,
@@ -135,5 +184,7 @@ that.
   partition the row specifies is not executable on the July data it wants
   compared. Stated rather than approximated by date, which the row forbids.
 
-**DEF230 stays `open`.** The measurement it named has been run and reported; the
-question it asks is still unanswered, and the row now carries the n required.
+**DEF230 stays `open`, on one arm only.** The controlled arm is answered and
+closed. What remains is the human arm, which needs traffic rather than work —
+n≈30 per tier, accruing on its own. Nothing further is buildable against it
+today, and the row should not be closed by declaring the unanswerable answered.
