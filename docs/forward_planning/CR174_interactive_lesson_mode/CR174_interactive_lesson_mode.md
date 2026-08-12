@@ -161,6 +161,67 @@ ruin math (**new** streak-bar primitive), and the Sharia ratio screen (**new** c
 primitive, **toggle** — one balance sheet passes DJIM 33/33/5 and fails AAOIFI 30/30/5). Footer word
 counts are DOM-read, so the density claim verifies itself.
 
+**An EN/AR switch covers the whole page** (126 string pairs, `dir=rtl` on toggle). Book-mode prose,
+both quiz stems, their options, "Try it" and the takeaway are lifted **verbatim from the shipped
+`014_position_sizing_basics.ar.mdx`**, so the Arabic column is what a user reads today — including
+two defects in that file, reproduced deliberately rather than cleaned up (the English word
+"whatever" left untranslated in `## الفخ`, and a takeaway that renders the in/out idiom as literal
+spatial in/out while the body two paragraphs earlier says it correctly as المدخل/المخرج). Those are
+content defects for the education + i18n lanes, not CR174 scope. Interactive-mode beat copy in Arabic
+is prototype-only and labelled as such.
+
+Regenerate with `python3 docs/Research/UI/Learn/prototype/build.py`; the build asserts an exact
+occurrence count per translated string and only rewrites markup between `</style>` and `<script>`, so
+a reworded template fails loudly instead of shipping half a translation.
+
+## Out of scope
+
+Named so the lanes do not drift into it: this CR does **not** touch the daily-challenge, AI-Coach,
+glossary or support-KB surfaces (they have their own delivery and their own defects — DEF115/DEF117);
+does **not** build D-030's LLM wrapper; does **not** restructure the 348-lesson corpus (only the
+6-lesson pilot); does **not** change quiz grading semantics or the CR087 locale-parity gate; and does
+**not** alter book mode's rendered output. Corpus-wide roll-out is a separate CR, gated on the pilot's
+instrumented numbers.
+
+## Critical files
+
+| File | Role |
+|---|---|
+| `backend/app/schemas/lessons.py` | `LessonBlock.kind` extensions (scope 1). Also carries a stale docstring calling `animation_name` a Lottie key — contradicts D-061 |
+| `backend/app/services/lessons_service.py` | MDX parse → blocks; new tags parse here. No LLM coupling today (D-030 unbuilt) |
+| `mobile/lib/screens/lessons/lesson_reader_screen.dart` | `switch (block.kind)` at :307 is the extension point; `quizOnly` (A19) is the mode precedent |
+| `mobile/lib/widgets/lessons/animation_registry.dart` | Where a visual becomes data; gains bound-parameter + range declarations (scope 4) |
+| `mobile/lib/widgets/lessons/anim/*.dart` | The 7 painters to bind sliders to, plus ~3 new primitives (scope 6) |
+| `backend/app/schemas/mandate.py` + `backend/app/trading_math/sizing.py` | `learning_style` (scope 2) and the CR101 user-settable caps the model should read (scope 7) |
+| `content/lessons/013_…` → `018_…`, each in `.en` / `.ar` / `.ms` | The pilot cohort — 18 files, all three locales present (verified) |
+| `content/_authoring/lesson_authoring_prompt.md` | v4 addendum (scope 8) |
+| `docs/Research/UI/Learn/prototype/` | The reviewed prototype + its build |
+
+## RTL + Arabic — three requirements the prototype evidenced
+
+AR/MS ship at v1.0 and P4 "The Learner" is the growth market, so interactive mode has to be built
+RTL-correct rather than retrofitted. Building the Arabic view of the prototype surfaced three things
+that are cheap now and expensive later:
+
+1. **A control and the visual it drives must share a direction — this is a real bug, not a nicety.**
+   Under `dir="rtl"` an `<input type=range>` mirrors automatically. A financial chart does **not**
+   mirror (time axes are conventionally left-to-right in Arabic practice, which is why the prototype
+   pins canvases LTR). Ship both defaults and the gesture inverts: dragging toward the "tighter stop"
+   side moves the stop the wrong way, silently, only in Arabic. Every parameter-bound visual must pin
+   its control to the visual's direction, and a widget test must assert it.
+2. **Numeric readouts stay LTR inside RTL prose.** Prices, ratios, share counts and quiz keys are
+   Latin-numeral runs; they need `direction: ltr` isolation (the prototype's `.ltr` helper and the
+   `readout` / `metrics` overrides) or bidi reordering mangles things like `$480 − $459 = $21`.
+3. **Arabic glyph coverage is an open dependency, not a solved one.** Measured: the app bundles only
+   `Inter` and `JetBrainsMono` (`mobile/assets/fonts/`), and `AmiTypography` is
+   `GoogleFonts.ibmPlexSans()` with `fontFamilyFallback: [Inter]` — **neither face covers Arabic
+   script**, though `app_ar.arb` and `supportedLocales` are wired. So Arabic renders today via
+   platform fallback, in a face the design system never selected. Interactive mode multiplies this
+   exposure (labels inside visuals, tight card typography where fallback metrics differ most).
+   A house-consistent answer already exists: the website ships **IBM Plex Sans Arabic** subsets
+   (`website/assets/fonts/ibm-plex-sans-arabic-*`), the Arabic companion to the app's own IBM Plex —
+   which is exactly what the prototype inlines. Decide whether to bundle it; do not leave it implicit.
+
 ## Translation
 
 Every EN card change invalidates its AR/MS sibling per-`id`
@@ -259,6 +320,13 @@ land, per Saiful's call. Content-quality first, then delivery.
 7. **Instrumentation before scale-out:** interactive-mode entry + per-card completion logged on the
    pilot. The daily-challenge 2% discovery number is the warning; do not re-author ~300 lessons
    before the pilot's numbers are in.
+8. **RTL is a gate, not a follow-up.** A widget test asserts that for every parameter-bound visual,
+   increasing the control's value moves the visual the same way under `ar` as under `en` — the
+   inverted-drag bug in full. Numeric readouts assert LTR isolation inside RTL prose. The pilot is
+   reviewed on device in Arabic as well as English, since AR/MS ship at v1.0.
+9. **Every acceptance number is compared against the recorded baseline in this CR**, not against
+   impression — the 620-word median, the 50% first-interaction mark and the 0-images figure are the
+   before-state and are reproducible from `content/lessons/*.en.mdx`.
 
 ## Open decisions
 
@@ -266,5 +334,10 @@ land, per Saiful's call. Content-quality first, then delivery.
    `learning_style`, toggle always visible, persisted.)
 2. Does **D-030's LLM wrapper** enter scope, or is v1 fully static blocks? (Recommend: static.)
 3. Pilot to **TestFlight** for tester judgement, or Saiful's device first?
-4. Housekeeping: `backend/app/schemas/lessons.py` still documents `animation_name` as looking up
+4. **Bundle IBM Plex Sans Arabic?** Neither `GoogleFonts.ibmPlexSans()` nor the bundled `Inter`
+   covers Arabic, so AR text resolves through platform fallback today. The website already ships the
+   subsets. Bundle them (one pubspec entry + `fontFamilyFallback`) or accept platform fallback as
+   policy — but decide, because interactive mode's tight card typography is where fallback metrics
+   diverge most.
+5. Housekeeping: `backend/app/schemas/lessons.py` still documents `animation_name` as looking up
    "a Lottie asset" — contradicts D-061 and the shipped registry. One-line docstring fix.
