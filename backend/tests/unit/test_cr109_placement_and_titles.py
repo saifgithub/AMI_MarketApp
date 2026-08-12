@@ -19,6 +19,7 @@ from app.services.games_scoring import (
     TITLE_MULTIPLIER,
     cadence_weight,
     forfeit_debit,
+    next_title_goal,
     placement_p,
     placement_to_points,
     title_for,
@@ -236,3 +237,44 @@ def test_the_floor_is_positive_and_the_caller_owns_the_sign():
     # add a debit by forgetting to negate one of the two.
     assert forfeit_debit("week") > 0
     assert forfeit_debit("month") > 0
+
+
+# ── The next rung, stated (Amendment D correction 3's actual finding) ────
+
+
+def test_a_new_player_is_pointed_at_the_milestone_not_at_500_points():
+    # The finding was never "progression is slow" — it was that the median
+    # player cannot SEE one. 500 points is not a goal a new player can hold
+    # in their head; three finished runs is.
+    goal = next_title_goal(career_points=0, finished_runs=0, forfeits=0)
+    assert goal == {
+        "title": "associate", "requirement": "finished_runs", "remaining": 3,
+    }
+
+
+def test_the_milestone_goal_counts_down():
+    goal = next_title_goal(career_points=0, finished_runs=2, forfeits=0)
+    assert goal["remaining"] == 1
+
+
+def test_a_player_who_forfeited_is_pointed_at_the_points_rung_instead():
+    # The milestone is closed to them for good — pointing at a target they
+    # can no longer reach would be the goal gradient lying.
+    goal = next_title_goal(career_points=0, finished_runs=9, forfeits=1)
+    assert goal["title"] == "analyst"
+    assert goal["requirement"] == "career_points"
+    assert goal["remaining"] == 500
+
+
+def test_the_goal_advances_up_the_ladder_with_the_total():
+    goal = next_title_goal(
+        career_points=600, finished_runs=3, forfeits=0, qualifying_finishes=1,
+    )
+    assert goal["title"] == "trader"
+    assert goal["remaining"] == 1_900
+
+
+def test_the_top_of_the_ladder_has_nothing_above_it():
+    assert next_title_goal(
+        career_points=30_000, finished_runs=50, forfeits=0, qualifying_finishes=1,
+    ) is None

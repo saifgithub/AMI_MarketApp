@@ -36,7 +36,7 @@ from sqlalchemy import select
 
 from app.db import get_session
 from app.db.models import GameEntryRow, GameFieldRow
-from app.services import career_ledger, games_duels
+from app.services import career_ledger, games_duels, games_scoring
 from app.services import games_service as games
 from app.services.portfolio_nav_daily import nav_history
 from app.trading_math.returns import max_drawdown_pct
@@ -88,7 +88,7 @@ def _entry_public_fields(entry: GameEntryRow, field: GameFieldRow) -> dict:
     rather than reinventing the exclusion list."""
     return {
         "entry_id": str(entry.id),
-        "rank": entry.final_rank,  # always None through slice 4 — no placement
+        "rank": entry.final_rank,
         "final_twr_pct": (
             float(entry.final_twr_pct) if entry.final_twr_pct is not None else None
         ),
@@ -97,6 +97,12 @@ def _entry_public_fields(entry: GameEntryRow, field: GameFieldRow) -> dict:
         ),
         "scoring_basis": field.scoring_basis,
         "entrant_count": field.entrant_count,
+        # Slice 4. Sent WITH the rank, always, because a rank without the
+        # number it was taken over is the sentence §6.6 requires be avoidable
+        # — "1st" reads as a win until you know it was 1st of 1. `entrant_count`
+        # above cannot stand in for it: that counts everyone who entered,
+        # including VOID runs whose numbers were never comparable.
+        "scored_entrant_count": entry.scored_entrant_count,
     }
 
 
@@ -237,6 +243,13 @@ def get_record(user_id: UUID) -> dict:
     with get_session() as s:
         net = career_ledger.career_points_total(s, user_id)
         forfeits = career_ledger.forfeit_count(s, user_id)
+        finished = career_ledger.finished_count(s, user_id)
+        witnessed = career_ledger.qualifying_finish_count(s, user_id)
+        title = career_ledger.current_title(s, user_id)
+        next_title = games_scoring.next_title_goal(
+            career_points=net, finished_runs=finished, forfeits=forfeits,
+            qualifying_finishes=witnessed,
+        )
         duel_record = games_duels.duel_record(s, user_id)
         rows = s.execute(
             select(GameEntryRow, GameFieldRow)
@@ -266,6 +279,13 @@ def get_record(user_id: UUID) -> dict:
 
     return {
         "career_points_net": net,
+        # Slice 4 §6.4. Recomputed on read from the same totals in this
+        # payload rather than stored, which is the whole point of thresholds
+        # over promotions: there is no roll to run and nothing that can fall
+        # out of sync with the number beside it.
+        "title": title,
+        "title_multiplier": games_scoring.title_multiplier(title),
+        "next_title": next_title,
         "forfeit_count": forfeits,
         "finished_count": finished_count,
         "void_count": void_count,

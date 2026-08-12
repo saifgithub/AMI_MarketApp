@@ -402,6 +402,43 @@ def title_for(
     return TITLE_APPRENTICE
 
 
+def next_title_goal(
+    *,
+    career_points: int,
+    finished_runs: int,
+    forfeits: int,
+    qualifying_finishes: int = 0,
+) -> dict | None:
+    """The rung above the one currently held and what it still needs, or
+    `None` at the top of the ladder.
+
+    Exists because of Amendment D correction 3's actual finding: the problem
+    was never that progression was slow, it was that the median player could
+    not SEE one. A running total that moves on placement noise tells them
+    nothing about where they are going; this states the target and the
+    distance in the unit that closes it.
+    """
+    held = title_for(
+        career_points=career_points, finished_runs=finished_runs,
+        forfeits=forfeits, qualifying_finishes=qualifying_finishes,
+    )
+    if held == TITLE_APPRENTICE and forfeits == 0:
+        return {
+            "title": TITLE_RUNG_TWO,
+            "requirement": "finished_runs",
+            "remaining": max(0, MILESTONE_FINISHED_RUNS - finished_runs),
+        }
+    ladder = sorted(TITLE_POINT_THRESHOLDS)  # ascending by threshold
+    for threshold, title in ladder:
+        if career_points < threshold:
+            return {
+                "title": title,
+                "requirement": "career_points",
+                "remaining": threshold - career_points,
+            }
+    return None
+
+
 def title_multiplier(title: str | None) -> float:
     """Unknown or missing title -> 1.0, the apprentice value. A run whose
     stored multiplier could not be resolved must score as though it had no
