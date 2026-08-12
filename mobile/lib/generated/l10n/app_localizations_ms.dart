@@ -3167,4 +3167,24 @@ class AppLocalizationsMs extends AppLocalizations {
   String gamesTicketFeeDrag(String pct) {
     return 'That fee is $pct% of this order — the \$1.00 minimum, not the 0.1% rate.';
   }
+
+  @override
+  String gamesRecordNextTitleRuns(int count, String title) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more finished runs to $title',
+      one: '1 more finished run to $title',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String gamesRecordNextTitlePoints(int points, String title) {
+    final intl.NumberFormat pointsNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String pointsString = pointsNumberFormat.format(points);
+
+    return '$pointsString career points to $title';
+  }
 }

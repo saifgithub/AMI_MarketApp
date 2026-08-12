@@ -5328,6 +5328,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That fee is {pct}% of this order — the \$1.00 minimum, not the 0.1% rate.'**
   String gamesTicketFeeDrag(String pct);
+
+  /// CR109 slice 4 (§6.4 / Amendment D correction 3). The goal line under the Record's title chip when the next rung is the MILESTONE — three finished runs, none forfeited. Stated as a measurement, never as a nudge: the median player nets ~0 career points per run by construction, so a running total alone shows them no progression at all. {count} is how many finished runs remain, {title} is the rung's name in caps. The two next-title keys are NOT interchangeable — the milestone counts runs, every rung above it counts points, and rendering the wrong unit describes a threshold that does not exist. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 more finished run to {title}} other{{count} more finished runs to {title}}}'**
+  String gamesRecordNextTitleRuns(int count, String title);
+
+  /// CR109 slice 4 (§6.4). The goal line under the Record's title chip when the next rung is a POINTS threshold (analyst 500, trader 2,500, senior 10,000, floor_veteran 30,000). {points} is the shortfall, {title} the rung's name in caps. Retuning any threshold in `games_scoring.py::TITLE_POINT_THRESHOLDS` changes what this line says but not its wording. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{points} career points to {title}'**
+  String gamesRecordNextTitlePoints(int points, String title);
 }
 
 class _AppLocalizationsDelegate
