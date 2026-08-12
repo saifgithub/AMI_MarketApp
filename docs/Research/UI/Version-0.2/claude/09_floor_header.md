@@ -5,7 +5,9 @@ on the Floor; **the Room is the hero, the Daily Challenge the second hero**; the
 should answer the questions on the user's mind immediately — value of holdings, how the last
 Room calls are doing, maybe sector news — **as a carousel with a nice big display**; the
 Weekly League may be unnecessary "since we will have the full game"; and *"I am not sure if
-the carousel will make the page feel cluttered. This is where you do the research."*
+the carousel will make the page feel cluttered. This is where you do the research."* Second
+round: two inputs (ticker + ask AMI) read as still cluttered → merged into one omnibox
+(§9.3).
 
 Mockup: frame **A′** in `prototype/concepts.html` (revision of concept A, same DOM-read stat
 strip). Persona renames from the same review, applied to `08`: **P1 — The Curious User**,
@@ -87,14 +89,27 @@ Same method as `04` (390×720 frame, fold 632px, DOM-read):
 |---|---|---|---|---|
 | 0 — shipped Floor | 13 (10 above fold) | 23 | 1.63 folds | 1178px |
 | A — as parked | 1 | 13 | 0.43 folds | 717px |
-| **A′ — carousel header** | **1** | **13** | **0.46 folds** | **655px** |
+| **A′ — carousel header + omnibox** | **1** | **12** | **0.47 folds** | **632px** |
 
-The carousel costs 21px of CTA height against A (0.43 → 0.46 folds — still screen one) and
-*shortens* the column 62px because the league card is gone. The at-rest surface is: one
-answer card (+ peek), ticker-in, CONVENE, ask AMI, the challenge, the firm row. **Honesty
-note:** the DOM counter checks vertical position only, so the two off-canvas carousel cards
-count among the 13 taps; visually at rest the user faces 11 targets and *one* card. Clutter
-verdict: A′ is A with a better-informed header, not a regression toward the baseline.
+The carousel costs 25px of CTA height against A (0.43 → 0.47 folds — still screen one), and
+the column lands at **exactly one fold (632px)**: the entire Floor fits one screen with zero
+scroll, which neither the baseline (1178px) nor parked A (717px) achieved. The at-rest
+surface is: one answer card (+ peek), one omnibox, CONVENE, the challenge, the firm row.
+**Honesty note:** the DOM counter checks vertical position only, so the two off-canvas
+carousel cards count among the 12 taps; visually at rest the user faces 10 targets and *one*
+card. Clutter verdict: A′ is A with a better-informed header, not a regression toward the
+baseline.
+
+**One input, two intents (review round 2).** The first A′ draft had two fields — a ticker
+input and an "Ask AMI" pill — and Saiful read it as still cluttered. Original concept A had
+only ever had one input: the ask pill inside the Concierge card, with CONVENE as a chip.
+A′ keeps that one-input rule but gives it both jobs: a single omnibox where text that parses
+as a ticker arms CONVENE THE ROOM and anything else opens the AMI chat. The routing is
+**deterministic and client-side** (symbol-shape match against the instrument list) — not an
+LLM classification, per the house rule that prompt instructions are not controls (CR038) —
+so it costs nothing and cannot misroute a mandate-relevant action. The pink CNC mark lives
+inside the field, which keeps the Concierge as the surface's one identity and the field
+honest about who answers.
 
 Day-0 state (the P1 majority): card 1 is never empty — the sim stake reads *"$100,000 ready
 to deploy"* — and cards 2–3 collapse until they have data, with their empty states pointing

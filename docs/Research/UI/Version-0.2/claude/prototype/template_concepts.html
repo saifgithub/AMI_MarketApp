@@ -643,10 +643,11 @@ tr.hot td { color: var(--text-high); font-weight: 600; }
       <h2>A′ — Answer-card carousel + convene hero</h2>
       <p>Concept A revised in review: the composed status line becomes a swipeable header of
       answer cards — portfolio value, the team's recent calls, sector watch — one visible at a
-      time with a peek of the next. Below it the two heroes: ticker-in, CONVENE THE ROOM, ask
-      AMI; then the Daily Challenge. The Weekly League card is gone — CR109's game replaces
-      that whole surface (Amendment A). Firm row unchanged as the depth layer. No auto-rotation;
-      the carousel moves only under the thumb.</p>
+      time with a peek of the next. Below it <strong>one omnibox</strong> (a ticker arms
+      CONVENE; anything else opens the AMI chat — routed client-side, deterministically), the
+      CONVENE hero, then the Daily Challenge. The Weekly League card is gone — CR109's game
+      replaces that whole surface (Amendment A). Firm row unchanged as the depth layer. No
+      auto-rotation; the carousel moves only under the thumb.</p>
     </div>
     <div class="stage">
       <div class="slot">
@@ -676,13 +677,12 @@ tr.hot td { color: var(--text-high); font-weight: 600; }
                 </div>
               </div>
               <div class="dots"><i class="on"></i><i></i><i></i></div>
-              <div class="tickin" data-obj>Enter a ticker — NVDA, AAPL…</div>
-              <button class="cta" data-obj data-cta style="margin-top:10px">CONVENE THE ROOM</button>
-              <div class="ctacap">Your team debates it. You get one verdict.</div>
-              <div class="ask" data-obj style="margin-top:10px">
-                <div class="hx s28 c-pink" data-idmark style="margin-right:8px"><div class="fill"></div><span>CNC</span></div>
-                Ask AMI anything…
+              <div class="tickin" data-obj>
+                <div class="hx s28 c-pink" data-idmark style="margin-right:2px"><div class="fill"></div><span>CNC</span></div>
+                Type a ticker — or ask AMI anything…
               </div>
+              <button class="cta" data-obj data-cta style="margin-top:10px">CONVENE THE ROOM</button>
+              <div class="ctacap">A ticker convenes your team. Anything else, AMI answers.</div>
               <div class="card" data-obj>
                 <div class="clbl" style="color:var(--amber-ink)">DAILY CHALLENGE</div>
                 <div class="ctitle">A company's P/E drops from 31 to 19 with flat earnings. What happened to the price?</div>

@@ -68,7 +68,7 @@ Perplexity/Inc/Columbia pages: **NOT VERIFIED**, not cited (recorded in `sources
 
 | Claim | Where used | Status |
 |---|---|---|
-| A′: 1 mark · 13 taps · CTA 290px = 0.46 folds · column 655px | 09 §9.3 | **PROVEN** — frame `A-rev-carousel` stat strip, headless Chrome this session. Honesty note stated in 09: the counter checks vertical position only, so the 2 off-canvas carousel cards count among the 13 taps; visually at rest = 11 targets, 1 card |
+| A′: 1 mark · 12 taps · CTA 294px = 0.47 folds · column 632px (= exactly one fold) | 09 §9.3 | **PROVEN** — frame `A-rev-carousel` stat strip, headless Chrome this session, re-read after the omnibox merge (review round 2 replaced the two inputs with one; an earlier draft measured 13 taps · 0.46 · 655px with separate ticker + ask fields). Honesty note stated in 09: the counter checks vertical position only, so the 2 off-canvas carousel cards count among the 12 taps; visually at rest = 10 targets, 1 card |
 | Runyon: 1.07% of 3.76M interacted; 89.1% of clicks on slide 1; slide-1 share 55–89% across 5 sites | 09 §9.2 | **PROVEN at fetch-level** — primary page fetched this session (#17) |
 | NN/g / Baymard / Friedman carousel quotes | 09 §9.2 | **PROVEN at fetch-level** — #14/#15/#16 fetched this session; same re-check caveat as the other external quotes |
 | CR109 Amendment A removes the league (incl. the Floor's league card); slices 1–3 dark behind `kGamesEnabled`; no D-060 amendment exists | 09 §9.1 | **PROVEN** — spec sweep this session read `CR109.md` (Amendments A/F, removal scope), `games_gate.dart:33-36`, `decision_log.md` D-060; league removal is Saiful's recorded instruction, not this lane's proposal |
