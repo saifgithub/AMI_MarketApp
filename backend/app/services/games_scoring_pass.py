@@ -230,6 +230,7 @@ def _close_field(field_id: UUID, *, sim: SimEngine, now: datetime) -> dict[str, 
 
     # ── Phase 2: apply every entry's score + ledger posts, then close. ────
     scored = voided = stipends = 0
+    to_settle: list[tuple[UUID, UUID]] = []
     with get_session() as s:
         field_row = s.execute(
             select(GameFieldRow).where(GameFieldRow.id == field_id)
@@ -241,6 +242,10 @@ def _close_field(field_id: UUID, *, sim: SimEngine, now: datetime) -> dict[str, 
             if entry is None or entry.state not in _SCORABLE_STATES or entry.scored_at is not None:
                 continue  # raced with something else since phase 1 — skip, next pass retries
             stipend_paid = _apply_score(s, entry, field_row, scored_entry, now=now)
+            # Amendment I phase 4 settles exactly the entries this pass
+            # actually scored — never one that raced and was skipped above,
+            # whose book belongs to whichever pass does score it.
+            to_settle.append((entry.user_id, entry.run_id))
             if scored_entry.is_void:
                 voided += 1
             else:
@@ -257,11 +262,38 @@ def _close_field(field_id: UUID, *, sim: SimEngine, now: datetime) -> dict[str, 
         field_row.scoring_basis = "benchmark"
         field_row.state = "closed"
 
+    # ── Phase 4: settlement (Amendment I). Saiful: *"when the game ends, all
+    # positions must be closed."*
+    #
+    # AFTER the score, and that ordering is load-bearing rather than tidy.
+    # `_score_one_entry` reads the book's holdings for the wildness index's
+    # concentration weights and its trade ledger for the turnover term, so a
+    # settlement that ran first would score every entrant on an empty book —
+    # and one that merely wrote its rows first would inflate turnover for a
+    # liquidation the player did not choose. Phase 1 took its read snapshot
+    # before any of this, which is what makes settlement unable to move a
+    # number; this ordering keeps that true for the write side too.
+    #
+    # Outside the phase-2 session on purpose: settlement fills through the
+    # engine, which opens its own sessions, and the module's own rule is that
+    # nested `get_session()` calls cannot see each other's uncommitted state.
+    from app.services.games_service import settle_run_positions
+
+    settled = 0
+    for user_id, run_id in to_settle:
+        try:
+            settled += settle_run_positions(
+                user_id, run_id, sim=sim, now=now,
+            )["positions_closed"]
+        except Exception:
+            logger.exception("game_settlement_failed", run_id=str(run_id))
+
     logger.info(
         "game_field_closed",
         field_id=str(field_id), cadence=field.cadence,
         scored=scored, voided=voided, stipends=stipends,
         duels_settled=duel_stats["settled"], duels_void=duel_stats["void"],
+        positions_settled=settled,
     )
     return {
         "scored": scored, "voided": voided, "stipends": stipends,

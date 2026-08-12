@@ -405,6 +405,7 @@ def test_the_nav_tick_writes_zero_and_busts_the_run_when_the_book_is_underwater(
     stats = run_game_nav_snapshot_tick(
         now=datetime(2026, 8, 12, 22, 0, tzinfo=timezone.utc),
         trading_day=lambda: datetime(2026, 8, 12).date(),
+        sim=sim,
     )
     assert stats["written"] == 1
 
@@ -436,6 +437,7 @@ def test_the_nav_tick_leaves_a_solvent_run_alone():
     stats = run_game_nav_snapshot_tick(
         now=datetime(2026, 8, 12, 22, 0, tzinfo=timezone.utc),
         trading_day=lambda: datetime(2026, 8, 12).date(),
+        sim=sim,
     )
     assert stats["written"] >= 1
 

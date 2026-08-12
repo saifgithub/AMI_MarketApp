@@ -41,6 +41,7 @@ from app.db.models import (
     GameQueuedOrderRow,
     GameShortPositionRow,
     SimPortfolioRow,
+    SimTradeRow,
     User,
 )
 from app.schemas.trade import OrderType, Side
@@ -1250,6 +1251,111 @@ def sweep_forced_buyins(*, now: datetime | None = None, sim=None) -> dict:
             )
 
     return {"checked": len(targets), "bought_in": bought_in}
+
+
+# ── Amendment I — settlement: a closed run holds nothing ─────────────────
+
+
+def settle_run_positions(
+    user_id: UUID, run_id: UUID, *, sim=None, now: datetime | None = None,
+) -> dict:
+    """Close every position a finished run still holds — CR109 Amendment I.
+
+    Saiful: *"when the game ends, all positions must be closed."* This
+    reverses Amendment G's *"no forced cover at the close"* and narrows §5.2's
+    mark-don't-liquidate rule to the DAILY mark, which is what it was always
+    about; the run boundary now settles.
+
+    **Free, and that is a decision rather than an omission.** An exit fee here
+    would move the score for the act of the run ending — a charge for a
+    non-decision — which is Amendment G ruling 3's objection ("a position that
+    books a profit for the act of being entered scores the contest on an
+    artefact") pointed the other way. Nothing about a settlement was chosen by
+    the player, so nothing about it may cost them.
+
+    **Not a trade, either.** `_record_fill` is deliberately NOT called: a
+    settlement must not bump `trade_count` (which gates the finish stipend on
+    ">= 1 executed trade" — a player who never traded must not be handed one
+    by the close itself) and must not add to `fees_paid`.
+
+    **It does write an ordinary sell row, and that is also deliberate.**
+    `scripts/def110_backfill.py` walks EVERY portfolio and rebuilds holdings
+    from `Σ open buys − Σ open sells`; a settlement that deleted holdings
+    silently would leave that formula expecting shares nobody holds, and the
+    repair script — running with every good intention — would recreate the
+    positions this function just closed. Writing the sell keeps its invariant
+    exactly true with no change to it. The turnover that row would add is
+    harmless because phase 4 runs AFTER scoring: `wildness_index` was computed
+    from a phase-1 read snapshot taken before this row existed.
+
+    **The price.** The current mark, fetched fresh. `run_scoring_pass` fires
+    once `ends_on < today_et`, i.e. from midnight ET on the day after the run
+    ends, on a 30-minute tick — so in the ordinary case the "current" mark IS
+    the run's final close, and the settled cash agrees with the final NAV. A
+    settlement delayed past the next open uses that day's price instead, which
+    is honest (it is when the book actually converted) and cannot disturb the
+    SCORE either way, since the score is read from the NAV series and was
+    already written in phase 2.
+
+    Idempotent: a run with nothing open settles nothing and reports zero.
+    """
+    from app.services.games_shorts import cover_short, find_open_short
+
+    now = now or datetime.now(timezone.utc)
+    sim = sim or get_sim_engine()
+
+    portfolio = sim.ensure_portfolio(user_id, kind="game", run_id=run_id)
+    longs = [(h.ticker, float(h.quantity)) for h in portfolio.holdings]
+    shorts = [(s.ticker, float(s.quantity)) for s in portfolio.shorts]
+    if not longs and not shorts:
+        return {"positions_closed": 0, "shorts_covered": 0}
+
+    closed = covered = 0
+    with get_session() as s:
+        p_row = sim._load_portfolio_row(s, user_id, kind="game", run_id=run_id)
+        if p_row is None:
+            return {"positions_closed": 0, "shorts_covered": 0}
+
+        for ticker, qty in longs:
+            mark = float(sim.current_price(ticker))
+            sold = sim._apply_sell_row(s, p_row, ticker, qty, mark)
+            if sold <= 0:
+                continue
+            s.add(SimTradeRow(
+                id=uuid4(),
+                user_id=user_id,
+                portfolio_id=p_row.id,
+                ticker=ticker,
+                side="sell",
+                quantity=sold,
+                entry_price=mark,
+                opened_at=now,
+                # 'open' like every other sell row — DEF166/DEF110 make that
+                # permanent-open state load-bearing for the backfill formula
+                # this row exists to satisfy.
+                status="open",
+                realised_pnl=0,
+            ))
+            closed += 1
+
+        for ticker, qty in shorts:
+            mark = float(sim.current_price(ticker))
+            short_row = find_open_short(s, p_row.id, ticker)
+            if short_row is None:
+                continue
+            cover_short(
+                s, portfolio_row=p_row, short_row=short_row,
+                close_price=mark, fee=0.0, reason="settlement", now=now,
+            )
+            covered += 1
+            closed += 1
+
+    logger.info(
+        "game_run_settled",
+        user_id=str(user_id), run_id=str(run_id),
+        positions_closed=closed, shorts_covered=covered,
+    )
+    return {"positions_closed": closed, "shorts_covered": covered}
 
 
 # ── Restart / forfeit ────────────────────────────────────────────────────

@@ -271,6 +271,7 @@ def run_game_nav_snapshot_tick(
     *,
     now: datetime | None = None,
     trading_day: Callable[[], date | None] | None = None,
+    sim=None,
 ) -> dict[str, object]:
     """CR109 slice 2 — the sibling of `run_portfolio_nav_snapshot_tick` for
     GAME portfolios (`kind="game"`). One `portfolio_nav_daily` row per
@@ -307,7 +308,12 @@ def run_game_nav_snapshot_tick(
 
     from app.services.sim_engine import get_sim_engine
 
-    sim = get_sim_engine()
+    # Injectable for the same reason `run_scoring_pass`'s is: the marks come
+    # from a provider that is a singleton in production, so a test that cannot
+    # set the price cannot exercise this tick's arithmetic — and one that
+    # relies on having constructed the singleton last is order-dependent,
+    # which is how it passes alone and fails in a full run.
+    sim = sim or get_sim_engine()
     with get_session() as session:
         targets = [
             (row.user_id, row.run_id)
