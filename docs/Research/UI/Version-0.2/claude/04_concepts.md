@@ -35,6 +35,11 @@ speaks *as staff reporting up*, never as the product talking down. D-018 — the
 affordance must not re-run the interview; chips accelerate, they don't interrogate. T-TOUR —
 the 5-stop tour is rebuilt as 3 stops (card, firm row, chips).
 
+**Revised in review (2026-08-12):** the composed status line becomes an answer-card
+carousel, the two heroes become CONVENE (ticker-in + ask AMI) then Daily Challenge, and the
+league card is removed (CR109 Amendment A). Frame A′ in `prototype/concepts.html`; evidence
+and measurements in `09_floor_header.md`.
+
 ---
 
 ## B — Briefing-first "Today" home — explored, folded into A

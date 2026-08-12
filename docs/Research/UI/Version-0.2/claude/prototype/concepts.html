@@ -343,6 +343,31 @@ code {
 .firmrow .sp { flex: 1; }
 .firmrow .arr { color: var(--text-low); font-size: 14px; }
 
+/* ── header carousel (frame A′, 2026-08-12 revision) ──────── */
+.caro {
+  display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory;
+  margin: 0 -16px; padding: 0 16px 2px;
+}
+.caro::-webkit-scrollbar { height: 0; }
+.scard {
+  flex: none; width: 318px; scroll-snap-align: start;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--r-sheet); padding: 13px 16px; cursor: pointer;
+}
+.scard .bignum {
+  font-family: 'AMI Mono', monospace; font-size: 26px; font-weight: 700;
+  letter-spacing: -0.01em; margin-top: 4px; font-variant-numeric: tabular-nums;
+}
+.dots { display: flex; gap: 5px; justify-content: center; margin-top: 8px; }
+.dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--border); }
+.dots i.on { background: var(--cyan); }
+.tickin {
+  display: flex; align-items: center; gap: 8px; margin-top: 14px;
+  background: var(--card-alt); border: 1px solid var(--border);
+  border-radius: 8px; padding: 11px 14px; color: var(--text-low);
+  font-family: 'AMI Mono', monospace; font-size: 12px; cursor: text;
+}
+
 /* ── briefing (concept B) ─────────────────────────────────── */
 .dateline { font-family: 'AMI Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; color: var(--text-low); margin-bottom: 12px; }
 .byline { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
@@ -444,9 +469,10 @@ tr.hot td { color: var(--text-high); font-weight: 600; }
     Alpha users read the Floor as <em>"walking into a meeting with 12 staff waiting for you."</em>
     Frame&nbsp;0 reproduces the shipped Floor as the measured baseline. Frames A–F are six ways to
     hide the twelve-agent complexity behind a simple surface while keeping every agent one tap
-    away. Two are recommended; the stat strip under every frame is read live from this page's
-    DOM — nothing is estimated. Companion flows in <code>flows.html</code>; the argument lives in
-    <code>04_concepts.md</code> and <code>05_recommendations.md</code>.
+    away. Two are recommended; frame A′ revises A per Saiful's review (answer-card carousel, two
+    heroes, no league — <code>09_floor_header.md</code>). The stat strip under every frame is read
+    live from this page's DOM — nothing is estimated. Companion flows in <code>flows.html</code>;
+    the argument lives in <code>04_concepts.md</code> and <code>05_recommendations.md</code>.
   </p>
 
   <!-- ═══════════════ BASELINE ═══════════════ -->
@@ -611,6 +637,96 @@ tr.hot td { color: var(--text-high); font-weight: 600; }
       always-free 13th agent who fronts the product. One face greets the CEO; twelve stay one tap
       away behind a live seat count. The CTA is on screen one. The tour shrinks to three stops:
       the card, the firm row, the chips.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════ FRAME A′ — HEADER REVISION ═══════════════ -->
+  <section class="sec">
+    <div class="sec-head">
+      <span class="lbl" style="color:var(--green-ink)">FRAME A′ · REVISION OF A — SAIFUL'S HEADER BRIEF (2026-08-12)</span>
+      <h2>A′ — Answer-card carousel + convene hero</h2>
+      <p>Concept A revised in review: the composed status line becomes a swipeable header of
+      answer cards — portfolio value, the team's recent calls, sector watch — one visible at a
+      time with a peek of the next. Below it the two heroes: ticker-in, CONVENE THE ROOM, ask
+      AMI; then the Daily Challenge. The Weekly League card is gone — CR109's game replaces
+      that whole surface (Amendment A). Firm row unchanged as the depth layer. No auto-rotation;
+      the carousel moves only under the thumb.</p>
+    </div>
+    <div class="stage">
+      <div class="slot">
+        <div class="device" data-frame="A-rev-carousel">
+          <div class="screen">
+            <div class="fbody">
+              <div class="toprow">
+                <div class="logo"><div class="mark"></div><span class="word">AMI</span></div>
+                <div class="sp"></div>
+                <button class="streak" data-obj>6-DAY STREAK</button>
+              </div>
+              <div class="caro">
+                <div class="scard" data-obj>
+                  <div class="clbl" style="color:var(--green-ink)">SIM PORTFOLIO</div>
+                  <div class="bignum num">$104,820</div>
+                  <div class="csub"><span class="num">+4.8%</span> all-time · $<span class="num">38,400</span> cash · <span class="num">3</span> positions</div>
+                </div>
+                <div class="scard" data-obj>
+                  <div class="clbl" style="color:var(--cyan-ink)">YOUR TEAM'S CALLS</div>
+                  <div class="posrow" style="margin-top:6px"><span class="tk">NVDA</span><span class="d up num">+2.1%</span><span class="sub">BUY · Mon</span></div>
+                  <div class="posrow"><span class="tk">AAPL</span><span class="d dn num">−0.4%</span><span class="sub">HOLD · Jul 30</span></div>
+                </div>
+                <div class="scard" data-obj>
+                  <div class="clbl" style="color:var(--amber-ink)">SECTOR WATCH</div>
+                  <div class="ctitle" style="margin-top:6px">Semis <span class="num">+1.8%</span> — NVDA leads. Fed minutes at 14:00 ET.</div>
+                  <div class="csub">From the sectors you follow</div>
+                </div>
+              </div>
+              <div class="dots"><i class="on"></i><i></i><i></i></div>
+              <div class="tickin" data-obj>Enter a ticker — NVDA, AAPL…</div>
+              <button class="cta" data-obj data-cta style="margin-top:10px">CONVENE THE ROOM</button>
+              <div class="ctacap">Your team debates it. You get one verdict.</div>
+              <div class="ask" data-obj style="margin-top:10px">
+                <div class="hx s28 c-pink" data-idmark style="margin-right:8px"><div class="fill"></div><span>CNC</span></div>
+                Ask AMI anything…
+              </div>
+              <div class="card" data-obj>
+                <div class="clbl" style="color:var(--amber-ink)">DAILY CHALLENGE</div>
+                <div class="ctitle">A company's P/E drops from 31 to 19 with flat earnings. What happened to the price?</div>
+                <div class="csub">Answer before midnight to keep your streak · <span class="num">14</span>h left</div>
+              </div>
+              <div class="firmrow" data-obj>
+                <div class="cluster">
+                  <div class="hx s28 c-cyan"><div class="fill"></div><span></span></div>
+                  <div class="hx s28 c-purple"><div class="fill"></div><span></span></div>
+                  <div class="hx s28 c-amber"><div class="fill"></div><span></span></div>
+                </div>
+                <div>
+                  <div class="flbl">YOUR FIRM</div>
+                  <div class="fsub"><span class="num">8</span>/<span class="num">12</span> seats filled · 3 open on the risk desk</div>
+                </div>
+                <div class="sp"></div>
+                <div class="arr">▸</div>
+              </div>
+              <div class="foot"><div class="mk"></div> AMI TRADE · EDUCATIONAL SIMULATION · NOT ADVICE</div>
+            </div>
+            <div class="navbar">
+              <div class="cell on" data-obj><div class="nic"></div><span class="nlbl">FLOOR</span></div>
+              <div class="cell" data-obj><div class="nic sq"></div><span class="nlbl">PORTFOLIO</span></div>
+              <div class="cell" data-obj><div class="nic gr"></div><span class="nlbl">LESSONS</span></div>
+              <div class="cell" data-obj><div class="nic sq"></div><span class="nlbl">YOU</span></div>
+            </div>
+            <div class="tape"><span>NVDA <b class="up">+2.1%</b> · AAPL <b class="dn">−0.4%</b> · MSFT <b class="up">+0.9%</b> · SPY <b class="up">+0.3%</b> · TSLA <b class="dn">−1.2%</b></span></div>
+          </div>
+        </div>
+        <div class="cap"><b>FRAME A′ — REVISION UNDER REVIEW</b> · CAROUSEL HEADER · NO LEAGUE (CR109)</div>
+        <div class="stats" data-stats="A-rev-carousel">measuring…</div>
+      </div>
+    </div>
+    <div class="note good">
+      <p><strong>The carousel is a disclosure mechanism, not a broadcast.</strong> One answer card
+      is visible at rest; the peek slice says more exist. The evidence rules it must obey
+      (<code>09_floor_header.md</code>): never auto-rotate on mobile, order = priority because
+      most users never leave card 1, nothing load-bearing beyond card 1, five cards max, dots
+      inside the surface. Day-0 state: card 1 reads "$100,000 ready to deploy" — the sim stake
+      makes the empty state a prompt, and cards 2–3 collapse until they have data.</p>
     </div>
   </section>
 

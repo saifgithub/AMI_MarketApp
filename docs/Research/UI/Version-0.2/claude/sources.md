@@ -74,6 +74,23 @@ prototype/build.py`, open either page, read the strips.
 | 12 | Robinhood Newsroom, *The top secret Robinhood design story*, 2021 — https://robinhood.com/newsroom/the-top-secret-robinhood-design-story/ | Primary (vendor self-description — weight accordingly) |
 | 13 | Citron, *Try Deep Research… in Gemini*, Google Dec 2024 — https://blog.google/products/gemini/google-gemini-deep-research/ | Primary (first-party) |
 
+## External — carousel evidence (verified by fetch 2026-08-12, added with 09)
+
+| # | Source | Label |
+|---|---|---|
+| 14 | Pernice, *Carousel Usability: Designing an Effective UI for Websites with Content Overload*, NN/g 2013 (reviewed Aug 2026) — https://www.nngroup.com/articles/designing-effective-carousels/ | Primary |
+| 15 | Scott, *10 UX Requirements… Homepage Carousel Design*, Baymard 2019 (updated Apr 2025) — https://baymard.com/blog/homepage-carousel | Primary (their own usability testing) |
+| 16 | Friedman, *Usability Guidelines For Better Carousels UX*, Smashing Magazine Apr 2022 — https://www.smashingmagazine.com/2022/04/designing-better-carousel-ux/ | Secondary (practitioner synthesis) |
+| 17 | Runyon, *Carousel Interaction Stats*, Jun 2013 — https://erikrunyon.com/2013/07/carousel-interaction-stats/ | Primary (first-party analytics, ND.edu + 4 sites, Jan–Jun 2013) |
+
+## Internal — CR109 (primary, added with 09)
+
+`docs/forward_planning/CR109_pnl_game_ami_cash/CR109.md` — Amendment A (league removal,
+Saiful verbatim), Amendment F (build approval 2026-08-09), removal scope, three-layer model;
+`mobile/lib/features/games/games_gate.dart` (`kGamesEnabled` dark-launch gate);
+`backend/app/services/league_service.py` + `mobile/lib/screens/league/league_screen.dart`
+(the surfaces being removed). Located via a spec sweep this session (league/challenge/game).
+
 ## Not cited — fetch failed (recorded so nobody re-tries blind)
 
 - Perplexity Deep Research blog + help-center pages — HTTP 403. Search snippets describe a
@@ -81,3 +98,6 @@ prototype/build.py`, open either page, read the strips.
   pattern.
 - Inc.com on Cleo's comedy-writer persona — HTTP 403; TechCrunch (#10) suffices.
 - Columbia Business School's jam-study page — 403; the JPSP full text (#4) is better anyway.
+- Material 3 carousel guidance (m3.material.io/components/carousel) — page renders
+  client-side, fetch returned title only (added with 09). NN/g (#14) + Baymard (#15) carry
+  the same rules from measured testing, so nothing rests on it.

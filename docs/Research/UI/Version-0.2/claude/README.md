@@ -38,6 +38,15 @@ Brief Your Agent sits at 0% — so the landing surface was optimised for the sma
 measured persona. A+E survives the re-run and gains a step 0: post-DEF060-fix, only 21% of
 fresh installs finish the onboarding interview, so instrument where the interview leaks
 before (or with) any home CR — the bigger funnel loss is upstream of the Floor.
+(Renamed in review: P1 **The Curious User**, P4 **The Learner**.)
+
+**Header revision (Saiful's review, 2026-08-12):** concept A's status line becomes an
+answer-card **carousel** (portfolio value · the team's calls · sector watch), the heroes
+become CONVENE (ticker-in + ask AMI) then the Daily Challenge, and the league card is gone —
+CR109's game already deletes it (Amendment A). The carousel evidence cuts in its favour once
+it obeys five rules (no auto-rotate, priority order, peek, ≤5 cards, dots) — measured as
+frame A′: still 1 identity mark, CTA at 0.46 folds, column shorter than A. See
+`09_floor_header.md`.
 
 ## Reading order
 
@@ -52,6 +61,7 @@ before (or with) any home CR — the bigger funnel loss is upstream of the Floor
 | `06_answering_cr004.md` | The tap-count concession and what it can't measure |
 | `07_open_decisions.md` | Five calls for Saiful (tab name, card voice, E's default, CR159 re-scope, status-line source) |
 | `08_personas.md` | Addendum after review: four personas from specs + real alpha behaviour (172 users; 73% no core action, depth features ≤6%, Brief 0%, interview completion 21% post-fix); recommendation survives, funnel instrumentation promoted to step 0 |
+| `09_floor_header.md` | Second review addendum: answer-card carousel header (evidence + five rules), CONVENE + challenge as the two heroes, league removed per CR109, frame A′ measured |
 | `sources.md` | Primary/secondary, code lines, fetch-failures recorded |
 | `VERIFICATION.md` | Every number traced: PROVEN vs ASSERTED, corrections during audit |
 | `prototype/` | `build.py` + two self-contained templates → `concepts.html`, `flows.html` |
@@ -59,4 +69,5 @@ before (or with) any home CR — the bigger funnel loss is upstream of the Floor
 ## Status
 
 Research only — no code changed, no CR minted. A build starts at `05_recommendations.md`'s
-sequencing after Saiful answers `07_open_decisions.md` #2 and #4.
+sequencing after Saiful answers `07_open_decisions.md` #2 and #4 (#5 was settled
+client-composed by the 09 review; #1 defaults to FLOOR if silent).

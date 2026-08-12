@@ -29,6 +29,9 @@ Five calls only you can make. None block reading the research; #2 and #4 block a
    per-user spend under CR057, stale on closed-market days).
    *Recommendation: client-composed now; a digest can upgrade the same card later without
    layout change.*
+   **SETTLED (2026-08-12 review):** the status surface became the answer-card carousel,
+   client-composed — `09_floor_header.md`. Only sector-news (card 3) has any feed
+   dependency, and it ships later or cheap (yfinance headlines).
 
 One process note, not a decision: user feedback like "the UI is too much" currently has no
 capture path (CR043's loop is open at both ends). If a home CR ships from this research, its

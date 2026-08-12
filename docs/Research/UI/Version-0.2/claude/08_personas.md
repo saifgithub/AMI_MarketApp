@@ -57,9 +57,11 @@ Three readings that matter for this research:
 
 Synthesised from: the vision doc's audience ("knows *about* trading, has no scaffolding for
 *deciding*"), the tier ladder, the v1.0 market commitments (AR/MS, halal-first), and the
-behavioural segments above. Names are working labels for this lane.
+behavioural segments above. Names were set by Saiful in review (2026-08-12): P1 renamed from
+"Curious Beginner", P4 from "Halal-first Learner" (the halal-first traits stay in the body —
+the label broadened, the persona didn't change).
 
-### P1 — The Curious Beginner (largest today; Floor Pass)
+### P1 — The Curious User (largest today; Floor Pass)
 Downloaded from a store listing about "learning to invest with an AI team." Knows a P/E
 from a podcast. No existing relationship to any of the twelve job titles — *Bull Researcher
 vs Aggressive Debator* is noise on day one. Wants: one clear thing to do, quick wins,
@@ -84,7 +86,7 @@ as a P3; P2s grow into P3 after trust forms.
 **Floor today:** correct for them — and they are the one persona progressive disclosure
 cannot hurt, because depth-seeking is the defining trait.
 
-### P4 — The Halal-first Learner (v1.0 commitment; AR/MS)
+### P4 — The Learner (v1.0 commitment; AR/MS, halal-first)
 Sharia screening as first-class mandate flag, Arabic/Malay UI, possibly RTL. Everything P1
 is, plus: twelve English finance job titles at once is a *translation* problem as much as a
 cognitive one (CR160 already fights this fight), and trust routes through the mandate
@@ -96,7 +98,7 @@ locked as a market by the decision log.
 
 ✓ serves · △ neutral/mitigated · ✗ harms
 
-| | P1 Beginner | P2 Verdict Seeker | P3 Team Manager | P4 Halal-first |
+| | P1 Curious User | P2 Verdict Seeker | P3 Team Manager | P4 Learner |
 |---|---|---|---|---|
 | Baseline Floor | ✗ 13 strangers first | ✗ CTA below roster | ✓ built for them | ✗ jargon wall |
 | A Concierge home | ✓ one face, one ask | ✓ CONVENE on screen 1 | △ one tap deeper; seat-count row + A2 bands arguably *better* for management | ✓ one voice to translate; mandate-aware status line |
