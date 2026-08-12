@@ -49,6 +49,8 @@ GameRunDetail _detail({
   double cash = 5000,
   List<GameHolding> holdings = const [_held],
   List<GameShort> shorts = const [_short],
+  double cashCommitted = 0,
+  int queuedOrders = 0,
 }) =>
     GameRunDetail(
       runId: _runId,
@@ -57,6 +59,8 @@ GameRunDetail _detail({
       state: 'active',
       stake: 10000,
       cash: cash,
+      cashCommitted: cashCommitted,
+      queuedOrderCount: queuedOrders,
       holdings: holdings,
       shorts: shorts,
       priceSource: 'yfinance',
@@ -167,13 +171,86 @@ void main() {
       expect(find.text('SHORT'), findsOneWidget);
     });
 
-    testWidgets('picking SHORT states the fee and the unbounded loss',
+    testWidgets('picking SHORT states the fee, the collateral and the floor',
         (tester) async {
+      // REWRITTEN for CR109 Amendment I. This used to assert the words "no
+      // floor", from Amendment G's *"A short can lose more than it ties up.
+      // There is no floor."* The forced buy-in made that false, so the test
+      // asserting it had to go with it — a green test pinning a retired rule
+      // is worse than no test, because it argues for keeping the rule.
       await _pumpTicket(tester);
       await tester.tap(find.text('SHORT'));
       await tester.pump();
       expect(find.textContaining('0.3%'), findsOneWidget);
-      expect(find.textContaining('no floor'), findsOneWidget);
+      // DEF272 — why the size slider divides cash on a short. Its absence is
+      // what made the ticket read as "behaving as if I am buying".
+      expect(find.textContaining('no leverage'), findsOneWidget);
+      // The floor, and the gap that can still jump it. BOTH: a hard cap we
+      // do not have would be the worse of the two errors to ship.
+      expect(find.textContaining('climbs 90%'), findsOneWidget);
+      expect(find.textContaining('gap'), findsOneWidget);
+    });
+
+    testWidgets('the retired "no floor" claim is gone from the ticket',
+        (tester) async {
+      // The mutation guard for the rewrite above: re-adding the old string
+      // alongside the new one would pass every assertion in it.
+      await _pumpTicket(tester);
+      await tester.tap(find.text('SHORT'));
+      await tester.pump();
+      expect(find.textContaining('no floor'), findsNothing);
+    });
+
+    testWidgets('the size readout calls a short\'s cash COLLATERAL, not spend',
+        (tester) async {
+      // DEF272. Same number as a buy's — a short posts its full notional, so
+      // the arithmetic is identical — and the wrong noun for it. "2,500.00
+      // AMI Cash" reads as money gone; it comes back on the cover.
+      await _pumpTicket(tester);
+      await tester.tap(find.text('SHORT'));
+      await tester.pump();
+      // No watchlist chips in this fixture — type + submit, same as
+      // games_trade_ticket_test.dart's TAP 1.
+      await tester.enterText(find.byType(TextField), 'TSLA');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      expect(find.text('2 · HOW MUCH TO SHORT'), findsOneWidget);
+      expect(find.textContaining('posted as collateral'), findsOneWidget);
+      // And never the buy's noun for the same number.
+      expect(find.textContaining('AMI Cash'), findsNothing);
+    });
+  });
+
+  group('DEF272 — the dead end when every unit is deployed', () {
+    testWidgets('cash in POSITIONS names the no-leverage rule, not phantom orders',
+        (tester) async {
+      // A fully-deployed book with ZERO queued orders — the shape of
+      // Saiful's run (4.09 free against 10,000, every other unit in
+      // positions). The old panel said "0.00 is committed to 0 orders
+      // waiting on the next open. Cancel one to free up cash" — a false
+      // sentence pointing at an empty list, on the screen that had just
+      // refused him.
+      await _pumpTicket(
+        tester,
+        detail: _detail(cash: 0),
+      );
+      expect(find.textContaining('in open positions'), findsOneWidget);
+      expect(find.textContaining('no leverage'), findsOneWidget);
+      expect(find.textContaining('waiting on the next open'), findsNothing);
+      expect(find.text('SEE POSITIONS'), findsOneWidget);
+    });
+
+    testWidgets('cash in QUEUED ORDERS still says so, and offers the cancel',
+        (tester) async {
+      // The mutation guard: a panel rewritten to always blame positions
+      // would pass the test above and break the case it was built for.
+      await _pumpTicket(
+        tester,
+        detail: _detail(cash: 9995.91, cashCommitted: 9995.91, queuedOrders: 3),
+      );
+      expect(find.textContaining('waiting on the next open'), findsOneWidget);
+      expect(find.textContaining('in open positions'), findsNothing);
+      expect(find.text('SEE QUEUED ORDERS'), findsOneWidget);
     });
 
     test('a short quotes on the SELL side, sized in AMI Cash', () async {

@@ -260,8 +260,24 @@ class _GamesTradeTicketScreenState
                 // already decided.
                 Text(l.gamesShortFeeNote, style: AmiTypography.caption),
                 const SizedBox(height: AmiSpacing.xs),
+                // A short posts its FULL value — the sentence that explains
+                // why the slider below divides cash exactly as a buy's does,
+                // which is the thing Saiful read as the ticket behaving "as
+                // if I am buying" (DEF272). It is not a bug, it is the
+                // no-leverage rule, and it was nowhere on this screen.
+                Text(l.gamesShortCollateralNote, style: AmiTypography.caption),
+                const SizedBox(height: AmiSpacing.xs),
                 // The one thing about a short that is not true of anything
                 // else in this app. Said plainly, once.
+                //
+                // REWRITTEN for Amendment I. It used to read "A short can
+                // lose more than it ties up. There is no floor." — which the
+                // forced buy-in made FALSE the day it shipped. That is the
+                // same trap `gamesNoShortingNote` fell into: copy asserting a
+                // rule as a fact, left behind by the amendment that changed
+                // the rule. There is a floor now; it is stated with the gap
+                // that can still jump it, because promising a hard cap we do
+                // not have would be the worse error of the two.
                 Text(
                   l.gamesShortRiskNote,
                   style: AmiTypography.caption
@@ -350,7 +366,11 @@ class _GamesTradeTicketScreenState
               // "a bit" — the smallest possible order was a tenth of the
               // book.
               Text(
-                _isSell ? l.gamesTicketStepSizeSell : l.gamesTicketStepSize,
+                _isSell
+                    ? l.gamesTicketStepSizeSell
+                    : (ticket.mode == 'short'
+                        ? l.gamesTicketStepSizeShort
+                        : l.gamesTicketStepSize),
                 style: AmiTypography.caption,
               ),
               const SizedBox(height: AmiSpacing.xs),
@@ -361,6 +381,11 @@ class _GamesTradeTicketScreenState
                 // a buy — passing the held quantity here would size it
                 // against a position that does not exist yet.
                 heldQuantity: _isSell ? widget.heldQuantity : null,
+                // DEF272 — the readout said "{pct}% · {amount} AMI Cash" for
+                // a short, which reads as money SPENT. Nothing is spent: the
+                // amount is posted as collateral and comes back on the cover.
+                // Same number, and the wrong noun for it.
+                isShort: ticket.mode == 'short',
                 onChanged: notifier.pickSize,
               ),
             ],
@@ -496,10 +521,18 @@ class _SizePicker extends StatefulWidget {
     required this.cashAvailable,
     required this.onChanged,
     this.heldQuantity,
+    this.isShort = false,
   });
 
   final double sizePct;
   final double cashAvailable;
+
+  /// Changes the READOUT only, never the arithmetic. A short divides cash
+  /// exactly as a buy does (no leverage — it posts its full notional), so
+  /// the number is identical; what differs is that the cash is posted as
+  /// collateral rather than spent, and calling it the same thing as a buy is
+  /// what made the ticket read as "behaving as if I am buying" (DEF272).
+  final bool isShort;
   /// Non-null puts the picker in SELL mode: the percentage divides the
   /// POSITION rather than the cash, and the readout is shares rather than
   /// AMI Cash. Showing a dollar figure here would be actively misleading —
@@ -567,12 +600,16 @@ class _SizePickerState extends State<_SizePicker> {
           ),
         ),
         Text(
-          shares == null
-              ? l.gamesTicketSizeAmount(pct.round().toString(), _money(amount))
-              : l.gamesTicketSizeShares(
+          shares != null
+              ? l.gamesTicketSizeShares(
                   pct.round().toString(),
                   shares.toStringAsFixed(4),
-                ),
+                )
+              : (widget.isShort
+                  ? l.gamesTicketSizeCollateral(
+                      pct.round().toString(), _money(amount))
+                  : l.gamesTicketSizeAmount(
+                      pct.round().toString(), _money(amount))),
           style: AmiTypography.caption.copyWith(color: AmiColors.textHigh),
         ),
       ],
@@ -836,21 +873,36 @@ class _NoCashPanel extends StatelessWidget {
         children: [
           Text(l.gamesTicketNoCashHeading, style: AmiTypography.h4),
           const SizedBox(height: AmiSpacing.xs),
+          // DEF272 — WHERE the money went is a question with two answers, and
+          // this panel only ever gave one of them.
+          //
+          // Saiful hit the other: 4.09 free against a 10,000 book, every unit
+          // of it in POSITIONS and not one queued order outstanding. The old
+          // copy told him "0.00 is committed to 0 orders waiting on the next
+          // open. Cancel one to free up cash" — a false statement pointing at
+          // an empty list, on the screen where he had just been refused. The
+          // count decides which sentence is true, so the count picks it.
           Text(
-            l.gamesTicketNoCashBody(
-              _money(detail.cashCommitted),
-              detail.queuedOrderCount,
-            ),
+            detail.queuedOrderCount > 0
+                ? l.gamesTicketNoCashBody(
+                    _money(detail.cashCommitted),
+                    detail.queuedOrderCount,
+                  )
+                : l.gamesTicketNoCashInPositionsBody,
             style: AmiTypography.body.copyWith(color: AmiColors.textLow),
           ),
           const SizedBox(height: AmiSpacing.m),
           SizedBox(
             width: double.infinity,
             child: HexButton(
-              label: l.gamesTicketNoCashCta.toUpperCase(),
+              label: (detail.queuedOrderCount > 0
+                      ? l.gamesTicketNoCashCta
+                      : l.gamesTicketNoCashPositionsCta)
+                  .toUpperCase(),
               color: AmiColors.hexAmber,
-              // The queued-order list with its Cancel actions is the screen
-              // underneath this sheet, so closing IS the navigation.
+              // Both routes are the same gesture: the run screen underneath
+              // carries the queued-order list AND the holdings, each with its
+              // own close action. Closing IS the navigation.
               onPressed: () => Navigator.of(context).pop(),
             ),
           ),

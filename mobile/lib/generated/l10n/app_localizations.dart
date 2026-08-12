@@ -5107,10 +5107,10 @@ abstract class AppLocalizations {
   /// **'Shorting costs 0.3% to open — three times the usual 0.1%.'**
   String get gamesShortFeeNote;
 
-  /// CR109 Amendment G. The one thing about a short that is not true of any other position in the app. Stated plainly, once, on the ticket. A statement of the mechanic, not advice. NEW key. retranslate:[ar,ms]
+  /// CR109 Amendment I. REPLACES the Amendment G wording "A short can lose more than it ties up. There is no floor.", which the forced buy-in made FALSE the day it shipped — the same trap gamesNoShortingNote fell into. States the floor AND the gap that can still jump it; must not promise a hard cap the mechanism does not give. If MAINTENANCE_FLOOR_PCT changes in trading_math/shorts.py, the 90% here MUST change too. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'A short can lose more than it ties up. There is no floor.'**
+  /// **'A short is bought back for you if the name climbs 90% — so you can lose everything you tie up, but normally no more. A price gap can jump that, and ends the run at zero.'**
   String get gamesShortRiskNote;
 
   /// CR109 Amendment G. Marker on a short position row, so a player scrolling past the section heading can still tell which way the position points. NEW key. retranslate:[ar,ms]
@@ -5292,6 +5292,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leading by {pct}%'**
   String gamesBoardLeadBy(String pct);
+
+  /// CR109 DEF272. The no-cash state when the money went into POSITIONS rather than queued orders. Saiful hit the old copy with 4.09 free, a full book and zero queued orders: it said "0.00 is committed to 0 orders. Cancel one to free up cash" — a false statement pointing at an empty list. Names the no-leverage rule, because that is WHY a short is refused here. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Every AMI Cash unit is in open positions. A short posts its full value as collateral — there is no leverage in this game — so close a position to free some up.'**
+  String get gamesTicketNoCashInPositionsBody;
+
+  /// CR109 DEF272. Action on the in-positions variant of the no-cash state — closes the ticket and returns to the run screen, where a position can be closed. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'See positions'**
+  String get gamesTicketNoCashPositionsCta;
+
+  /// CR109 DEF272. Why the size slider divides CASH on a short, which Saiful read as the ticket "behaving as if I am buying". It is the no-leverage rule (Amendment G ruling 2) and it was nowhere on the screen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'A short posts its full value as collateral, exactly like a buy — no leverage. It comes back when you cover.'**
+  String get gamesShortCollateralNote;
+
+  /// CR109 DEF272. The size step heading in SHORT mode. The generic "PICK A SIZE" gave no hint that the percentage divides cash-as-collateral rather than a position. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'2 · HOW MUCH TO SHORT'**
+  String get gamesTicketStepSizeShort;
+
+  /// CR109 DEF272. Live readout under the size slider in SHORT mode. Same number as gamesTicketSizeAmount and a different noun for it: nothing is spent on a short, it is posted and returns on the cover. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{pct}% · {amount} posted as collateral'**
+  String gamesTicketSizeCollateral(String pct, String amount);
 }
 
 class _AppLocalizationsDelegate

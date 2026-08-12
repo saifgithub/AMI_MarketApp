@@ -2344,8 +2344,8 @@
     "@gamesDirectionShort": {"description": "CR109 Amendment G. The sell-to-open side of the direction toggle. Market term \u2014 keep the English word where the local market uses it. NEW key. retranslate:[ar,ms]"},
     "gamesShortFeeNote": "Shorting costs 0.3% to open \u2014 three times the usual 0.1%.",
     "@gamesShortFeeNote": {"description": "CR109 Amendment G. The short-open fee, stated before the size is picked rather than on the confirm card alone. Rate set by Saiful 2026-08-11. If SHORT_FEE_BPS or FEE_BPS is retuned in games_scoring.py, THIS STRING MUST CHANGE TOO. NEW key. retranslate:[ar,ms]"},
-    "gamesShortRiskNote": "A short can lose more than it ties up. There is no floor.",
-    "@gamesShortRiskNote": {"description": "CR109 Amendment G. The one thing about a short that is not true of any other position in the app. Stated plainly, once, on the ticket. A statement of the mechanic, not advice. NEW key. retranslate:[ar,ms]"},
+    "gamesShortRiskNote": "A short is bought back for you if the name climbs 90% \u2014 so you can lose everything you tie up, but normally no more. A price gap can jump that, and ends the run at zero.",
+    "@gamesShortRiskNote": {"description": "CR109 Amendment I. REPLACES the Amendment G wording \"A short can lose more than it ties up. There is no floor.\", which the forced buy-in made FALSE the day it shipped \u2014 the same trap gamesNoShortingNote fell into. States the floor AND the gap that can still jump it; must not promise a hard cap the mechanism does not give. If MAINTENANCE_FLOOR_PCT changes in trading_math/shorts.py, the 90% here MUST change too. retranslate:[ar,ms]"},
     "gamesShortBadge": "SHORT",
     "@gamesShortBadge": {"description": "CR109 Amendment G. Marker on a short position row, so a player scrolling past the section heading can still tell which way the position points. NEW key. retranslate:[ar,ms]"},
     "gamesRunShortsHeading": "SHORTS",
@@ -2405,5 +2405,15 @@
     "gamesBoardChase": "{pct}% off {rank}\u1d57\u02b0 place",
     "@gamesBoardChase": {"description": "CR109 board redesign. The gap to the place immediately above, under the player's own standing. \"3rd of 6\" is a fact; this is a reason to open the app tomorrow. Percentage points of time-weighted return \u2014 never AMI Cash (\u00a76.1). Null-safe: omitted entirely when either side is unmeasured. NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "0.42"}, "rank": {"type": "int", "example": "2"}}},
     "gamesBoardLeadBy": "Leading by {pct}%",
-    "@gamesBoardLeadBy": {"description": "CR109 board redesign. Shown instead of gamesBoardChase when the player is 1st \u2014 the interesting number is the cushion, not a gap that does not exist. NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "1.10"}}}
+    "@gamesBoardLeadBy": {"description": "CR109 board redesign. Shown instead of gamesBoardChase when the player is 1st \u2014 the interesting number is the cushion, not a gap that does not exist. NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "1.10"}}},
+    "gamesTicketNoCashInPositionsBody": "Every AMI Cash unit is in open positions. A short posts its full value as collateral \u2014 there is no leverage in this game \u2014 so close a position to free some up.",
+    "@gamesTicketNoCashInPositionsBody": {"description": "CR109 DEF272. The no-cash state when the money went into POSITIONS rather than queued orders. Saiful hit the old copy with 4.09 free, a full book and zero queued orders: it said \"0.00 is committed to 0 orders. Cancel one to free up cash\" \u2014 a false statement pointing at an empty list. Names the no-leverage rule, because that is WHY a short is refused here. NEW key. retranslate:[ar,ms]"},
+    "gamesTicketNoCashPositionsCta": "See positions",
+    "@gamesTicketNoCashPositionsCta": {"description": "CR109 DEF272. Action on the in-positions variant of the no-cash state \u2014 closes the ticket and returns to the run screen, where a position can be closed. NEW key. retranslate:[ar,ms]"},
+    "gamesShortCollateralNote": "A short posts its full value as collateral, exactly like a buy \u2014 no leverage. It comes back when you cover.",
+    "@gamesShortCollateralNote": {"description": "CR109 DEF272. Why the size slider divides CASH on a short, which Saiful read as the ticket \"behaving as if I am buying\". It is the no-leverage rule (Amendment G ruling 2) and it was nowhere on the screen. NEW key. retranslate:[ar,ms]"},
+    "gamesTicketStepSizeShort": "2 \u00b7 HOW MUCH TO SHORT",
+    "@gamesTicketStepSizeShort": {"description": "CR109 DEF272. The size step heading in SHORT mode. The generic \"PICK A SIZE\" gave no hint that the percentage divides cash-as-collateral rather than a position. NEW key. retranslate:[ar,ms]"},
+    "gamesTicketSizeCollateral": "{pct}% \u00b7 {amount} posted as collateral",
+    "@gamesTicketSizeCollateral": {"description": "CR109 DEF272. Live readout under the size slider in SHORT mode. Same number as gamesTicketSizeAmount and a different noun for it: nothing is spent on a short, it is posted and returns on the cover. NEW key. retranslate:[ar,ms]", "placeholders": {"pct": {"type": "String", "example": "25"}, "amount": {"type": "String", "example": "2,500.00"}}}
 }

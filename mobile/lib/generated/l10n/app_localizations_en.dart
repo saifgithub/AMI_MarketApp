@@ -3009,7 +3009,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gamesShortRiskNote =>
-      'A short can lose more than it ties up. There is no floor.';
+      'A short is bought back for you if the name climbs 90% — so you can lose everything you tie up, but normally no more. A price gap can jump that, and ends the run at zero.';
 
   @override
   String get gamesShortBadge => 'SHORT';
@@ -3138,5 +3138,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String gamesBoardLeadBy(String pct) {
     return 'Leading by $pct%';
+  }
+
+  @override
+  String get gamesTicketNoCashInPositionsBody =>
+      'Every AMI Cash unit is in open positions. A short posts its full value as collateral — there is no leverage in this game — so close a position to free some up.';
+
+  @override
+  String get gamesTicketNoCashPositionsCta => 'See positions';
+
+  @override
+  String get gamesShortCollateralNote =>
+      'A short posts its full value as collateral, exactly like a buy — no leverage. It comes back when you cover.';
+
+  @override
+  String get gamesTicketStepSizeShort => '2 · HOW MUCH TO SHORT';
+
+  @override
+  String gamesTicketSizeCollateral(String pct, String amount) {
+    return '$pct% · $amount posted as collateral';
   }
 }
