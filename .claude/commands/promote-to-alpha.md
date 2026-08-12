@@ -53,6 +53,20 @@ else
   exit 1
 fi
 
+# TREE GATE (AT:R68 CR175 Tier D) — runs THIRD. `git status --short` used to be
+# printed here for the operator to judge, with no exit code behind it. On this
+# shared checkout that prints ~20 lines routinely from other lanes (measured
+# 2026-08-12: 21, none the promoter's), so its failing state WAS its normal
+# state and it was read as noise. This classifies instead of blanket-failing:
+# BLOCKING = paths that reach the running container (derived from
+# docker-compose.yml's api-alpha build context + bind mounts), SHIPPED = rsync
+# copies it but the container never reads it, NOT SHIPPED = excluded.
+# Fails closed only on BLOCKING.
+python3 scripts/promotion/preflight_tree.py || {
+  echo "TREE GATE — uncommitted code would ship under a tag that does not describe it. Aborting."
+  exit 1
+}
+
 git status --short
 git log --oneline -1
 pytest backend/tests/unit/ -q
@@ -77,9 +91,13 @@ those are days apart. If a hold is listed, **stop and surface it to the user** �
 way past it, and do not promote "just the other files" (the rsync ships the whole tree). Only the
 user clears a hold, and only against the precondition the hold names.
 
-- `git status --short` must print nothing (no modified, no untracked).
-  - Exception: `.claude/worktrees/` is fine. Treat any other output as
-    a blocker; surface it to the user and stop.
+- The **tree gate** is the enforced half; `git status --short` below it is
+  context for the operator, not the check. The gate blocks only on paths that
+  reach the container — `backend/`, `content/`, `docker-compose.yml`, `infra/` —
+  because those are bind-mounted or built in, so an rsync ships them live under
+  a tag that does not describe them. Everything else it prints as *recorded*.
+  If it blocks: commit, stash, or promote from a clean checkout. Do not
+  `--force` past it; there is deliberately no such flag.
 - `git log` — capture the short hash + commit subject. You'll need it
   for the summary at the end.
 - pytest must exit 0. Surface the failure summary if not.
@@ -109,6 +127,12 @@ the per-day sequence in Saiful's local timezone (`Asia/Kuala_Lumpur`).
 
 ```bash
 git tag alpha-${TODAY}-${N}
+
+# CR175 F2 — the deploy identity. EXPORT these; steps 5 and 7c both read them.
+# Until this existed nothing recorded which commit was running, so every
+# incident diagnosis began by assuming it was the one you meant to ship.
+export ALPHA_TAG="alpha-${TODAY}-${N}"
+export GIT_SHA="$(git rev-parse HEAD)"
 ```
 
 The tag is local by default. A GitHub remote (`origin`) exists now, so
@@ -140,15 +164,27 @@ rsync -az --delete \
   --exclude='website/' \
   --exclude='audit/' \
   --exclude='reports/' \
+  --exclude='backtest_results/' \
   ./ \
   melehost:~/ami_trade/
 ```
 
-**`audit/` and `reports/` MUST be excluded (DEF081).** They are **melehost-generated
+**`audit/`, `reports/` and `backtest_results/` MUST be excluded (DEF081, DEF276).** They are **melehost-generated
 runtime data not present in the Mac source** — `reports/` is the CR051 daily-usage
 analytics output, `audit/handshake/runs/*` are audit run histories. Without these two
 excludes, `--delete` wipes them off the host (134 files in the AT:R64 promote). They are
 not backend runtime; the container never reads them. Never let `--delete` destroy them.
+
+**`backtest_results/` is DEF276 — the same class, found three weeks later.** It arrived with
+CR164's harness and inherited none of DEF081's reasoning, because that fix was a *list*, not a
+rule. `docker-compose.yml` bind-mounts `./backtest_results:/backtest_results:rw`, the container
+writes sweep results there as uid 1001, and the Mac has no such directory — so `--delete` flagged
+all of it, including the 40-pair replay that closed DEF230's controlled arm.
+
+**The rule, so the next one does not need its own defect:** *any path bind-mounted `rw` into a
+container is host-generated and must be excluded from `--delete`.* That is derivable from
+`docker-compose.yml` rather than from memory. Today `backtest_results` is the only `rw` bind mount;
+named volumes (`bug_attachments`) live outside the rsync path and are unaffected.
 
 **`.env` MUST be excluded from rsync.** rsync has no default dotfile
 exclusion. Without `--exclude='.env'`, the rsync would overwrite the
@@ -218,7 +254,11 @@ image, run the chain against the live DB in a throwaway container, and
 only start the real one once it reports head:
 
 ```bash
-ssh melehost "cd ~/ami_trade && docker compose --profile tunnel build api-alpha"
+# GIT_SHA/ALPHA_TAG must reach the REMOTE shell — they were exported on the Mac
+# in step 2, and ssh does not carry them. Without them compose falls back to
+# `unset`, the container ships unstamped, and step 7c's identity check fails
+# loudly rather than the stamp silently meaning nothing.
+ssh melehost "cd ~/ami_trade && GIT_SHA='${GIT_SHA}' ALPHA_TAG='${ALPHA_TAG}' docker compose --profile tunnel build api-alpha"
 ssh melehost "cd ~/ami_trade && docker compose run --rm --no-deps api-alpha alembic upgrade head"
 ```
 
@@ -231,7 +271,9 @@ code does not match.
 Then swap:
 
 ```bash
-ssh melehost "cd ~/ami_trade && docker compose --profile tunnel up -d --build api-alpha"
+# GIT_SHA/ALPHA_TAG again — `--build` rebuilds here too, and a rebuild without
+# them re-bakes `unset` over the stamp step 5's build just applied.
+ssh melehost "cd ~/ami_trade && GIT_SHA='${GIT_SHA}' ALPHA_TAG='${ALPHA_TAG}' docker compose --profile tunnel up -d --build api-alpha"
 ```
 
 The `--profile tunnel` keeps the cloudflared service running.
@@ -357,6 +399,55 @@ Note the commit-time guard already ran in step 1: `pytest` includes
 neither forwarded nor explicitly excused. This step catches what the
 static test can't — the deployed container's actual state.
 
+### 7c. Postflight — the checks that end in an exit code (CR175 Tier C)
+
+Steps 7 and 7b above end in *"compare this against intent"*. Six of the eight
+steps in this command used to end in operator judgement, and 7b in particular
+asked a human to set-diff ~40 keys in a gitignored file against a JSON response,
+by eye, after a deploy. Measured 2026-08-12: nobody had ever noticed that the
+response covered **9 of 98** `Settings` fields (CR175 F3). That is not an
+attention failure — it is a check whose correct execution was never mechanically
+possible.
+
+```bash
+python3 scripts/promotion/postflight.py \
+  --expect-sha "${GIT_SHA}" --expect-tag "${ALPHA_TAG}"
+```
+
+Five checks, one exit code:
+
+| check | what it answers | why it exists |
+|---|---|---|
+| `identity` | is the container running the commit + tag you just promoted? | CR175 F2 — nothing recorded this, so every diagnosis began by assuming it |
+| `tree` | does melehost hold what this worktree holds? (`rsync --dry-run`) | the stamp describes the **image**; `./backend/app` and `./content` are bind-mounted, so the running Python is the host filesystem. Only this catches a partial rsync |
+| `readiness` | `/v1/ready`: DB, schema at head, LLM resolved | DEF215's outage state is one `/v1/health` returns 200 for |
+| `config` | every populated key in `infra/alpha.env` reads `configured: true` | DEF038, DEF063 — the set-diff no human performs reliably |
+| `market` | quote source is not `mock_walk` | a silent fall-through to a random walk |
+
+**Exit codes are three, not two, and the distinction is load-bearing:**
+
+- `0` — every check passed.
+- `1` — a check **failed**. The promotion completed and something is wrong with
+  it. Fix forward or `/rollback-alpha`.
+- `2` — a check **could not run** (network, missing file, an endpoint the
+  container does not have). **This is not a pass.** "The promotion is broken"
+  and "I could not tell" must never look the same to whoever reads the output —
+  that conflation is most of this CR's incident record.
+
+Two operational facts it encodes, both measured rather than assumed:
+
+- **Cloudflare 403s the `Python-urllib` User-Agent at the edge**, before the
+  request reaches the tunnel. The same URL returns 200 under `curl` and 403
+  under stock urllib, with `server: cloudflare` on the failure. Any Python
+  tooling hitting the public hostname needs its own UA; this script sends
+  `ami-postflight/1.0 (CR175)`.
+- The CF edge blips. A transient 502 while the backend is demonstrably serving
+  (checked against `docker logs` — live client traffic still 200) reports as
+  `COULD NOT RUN`, not as a failed promotion.
+
+**Do not treat a green step 7/7b as a substitute for this.** They report; this
+decides.
+
 ### 8. Report the outcome
 
 Print a short summary like:
@@ -368,8 +459,14 @@ Promoted to Alpha — alpha-2026-05-12-3 (a1b2c3d — "fix(compose): pass vLLM e
   • build + recreate: 47s
   • migrations: no changes
   • smoke: /v1/health 200 · /v1/llm/status vllm · /v1/sim/quote AAPL $221.27 (source=yahoo)
+  • postflight: PASSED (identity · tree · readiness · config · market)
+  • tree at promote time: 0 blocking, 25 shipped-not-runtime (recorded)
 Total elapsed: 1m 23s
 ```
+
+**Record the tree line even when it is zero.** F5 was that the tag names a
+commit while the rsync ships a worktree; saying which is which in the summary is
+what stops the deployment log from implying a cleanliness nothing verified.
 
 ## What NOT to do
 
