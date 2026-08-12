@@ -46,21 +46,66 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 _ALPHA_ENV = _REPO_ROOT / "infra" / "alpha.env"
 _DEFAULT_BASE = "https://api-alpha.agenticmarketintel.ai"
 
-# Keys that live in the env file but are not `Settings` fields — compose-level
-# wiring and host-side plumbing. Each states why, so an unexplained entry reads
-# as the bug it would be.
-_NOT_SETTINGS_FIELDS: dict[str, str] = {
-    "AMI_ENV": "forwarded to the container as ENV",
-    "POSTGRES_PASSWORD": "compose-level: postgres service credential",
-    "POSTGRES_USER": "compose-level: postgres service credential",
-    "POSTGRES_DB": "compose-level: postgres service credential",
-    "REDIS_PASSWORD": "compose-level: redis service credential",
-    "CF_TUNNEL_TOKEN": "cloudflared service, not the api container",
+# Keys that live in the env file and are legitimately NOT `Settings` fields.
+#
+# **Imported, never re-listed.** `backend/tests/unit/test_config_compose_parity.py`
+# already owns this table as `_ENV_KEYS_WITHOUT_SETTINGS`, with a stated reason
+# per key, and it already asserts at preflight that every env key either maps to
+# a Settings field or appears there. Keeping a second copy here is precisely the
+# hand-maintained-list failure CR175 F3 is about — the two would drift, and the
+# drift would surface as a permanent false positive that trains the operator to
+# ignore this check.
+_LOCAL_ONLY: dict[str, str] = {
     "GIT_SHA": "build arg (CR175 F2), not a runtime env var",
     "ALPHA_TAG": "build arg (CR175 F2), not a runtime env var",
+    "POSTGRES_USER": "compose-level: postgres service credential",
+    "POSTGRES_DB": "compose-level: postgres service credential",
 }
 
+
+def _keys_without_settings() -> dict[str, str]:
+    import importlib.util
+
+    path = (_REPO_ROOT / "backend" / "tests" / "unit"
+            / "test_config_compose_parity.py")
+    spec = importlib.util.spec_from_file_location("_parity", path)
+    if spec is None or spec.loader is None:
+        raise CannotRun(f"cannot import the excuse table from {path}")
+    mod = importlib.util.module_from_spec(spec)
+    # That module imports `app.core.config`, so `backend/` has to be importable.
+    # This script runs under the system python (no backend venv), which is fine:
+    # pydantic-settings is the only thing `config.py` needs and the import is
+    # for a dict literal, not for running anything.
+    backend = str(_REPO_ROOT / "backend")
+    added = backend not in sys.path
+    if added:
+        sys.path.insert(0, backend)
+    try:
+        spec.loader.exec_module(mod)
+    except ImportError as exc:
+        raise CannotRun(
+            f"cannot import the excuse table ({exc}). Run with the backend "
+            f"venv: {_REPO_ROOT}/backend/.venv/bin/python "
+            "scripts/promotion/postflight.py …"
+        ) from exc
+    finally:
+        if added:
+            sys.path.remove(backend)
+    return {**mod._ENV_KEYS_WITHOUT_SETTINGS, **_LOCAL_ONLY}
+
+
 _ENV_LINE = re.compile(r"^([A-Z][A-Z0-9_]*)=(.*)$")
+
+# A `bool` Settings field set to a falsey literal is a deliberate off-switch, not
+# a missing compose line. `SUPPRESS_ANALYST_CONSENSUS=false` is populated in the
+# env file and correctly reports `configured: false` from the container, because
+# for a bool `configured` means "the feature is on", not "the key is present".
+#
+# This cost a false positive on the very first live postflight run. Left in, the
+# check would have failed on a non-problem every single promotion — which is
+# exactly the F5 pathology (a check whose failing state is its normal state) that
+# this tool exists to remove, reproduced by the tool itself.
+_FALSEY_LITERALS = {"false", "0", "no", "off"}
 
 
 class CheckFailed(Exception):
@@ -90,8 +135,9 @@ def _populated_keys(env_path: Path) -> dict[str, str]:
         if not m:
             continue
         key, value = m.group(1), m.group(2).strip().strip("'\"")
-        if value:
-            out[key] = "<set>"
+        if not value or value.lower() in _FALSEY_LITERALS:
+            continue
+        out[key] = "<set>"
     return out
 
 
@@ -207,8 +253,16 @@ def check_tree(host: str, remote: str, timeout: int) -> list[str]:
     drift = [ln for ln in proc.stdout.splitlines() if ln.strip()]
     if not drift:
         return []
-    problems = [f"{len(drift)} path(s) differ between this worktree and "
-                f"{host}:{remote} — the box is not running what you shipped"]
+    problems = [
+        f"{len(drift)} path(s) differ between this worktree and "
+        f"{host}:{remote} — the box is not running what this worktree holds.",
+        "  Run immediately after the rsync, this means the promotion did not "
+        "land cleanly.",
+        "  Run later on a shared checkout, it may just be another lane's "
+        "commits arriving after you promoted — compare against "
+        "`git diff --stat <your-alpha-tag>..HEAD` before treating it as a "
+        "promotion failure.",
+    ]
     problems += [f"  {ln}" for ln in drift[:15]]
     if len(drift) > 15:
         problems.append(f"  … and {len(drift) - 15} more")
@@ -241,6 +295,15 @@ def check_config_parity(base: str, secret: str, env_path: Path,
     Direction that matters: a key POPULATED on the Mac and absent in the
     container. The reverse (configured in the container, not in the env file)
     is legitimate — a `Settings` default, or compose setting it literally.
+
+    Deliberately narrow. *"Is this key a `Settings` field at all"* is already
+    answered statically at preflight by
+    `test_config_compose_parity.py::test_every_env_file_key_maps_to_a_settings_field_or_is_declared_non_app`,
+    which is where that direction belongs — a static fact does not need a live
+    container to check it. Re-asserting it here would only produce a second
+    verdict on the same question, and the two would eventually disagree. So an
+    unrecognised key is reported as a **note**, not a failure, naming the test
+    that owns it.
     """
     status, body = _get(f"{base}/v1/admin/config-check", secret, timeout)
     if status != 200:
@@ -254,22 +317,25 @@ def check_config_parity(base: str, secret: str, env_path: Path,
         )
     container = {row["setting"]: row["configured"] for row in coverage}
 
+    excused = _keys_without_settings()
     problems: list[str] = []
+    unrecognised: list[str] = []
     for key in sorted(_populated_keys(env_path)):
-        if key in _NOT_SETTINGS_FIELDS:
+        if key in excused:
             continue
         if key not in container:
-            problems.append(
-                f"{key}: populated in infra/alpha.env, not a Settings field — "
-                "either add the field or record it in _NOT_SETTINGS_FIELDS "
-                "with a reason"
-            )
+            unrecognised.append(key)
         elif not container[key]:
             problems.append(
                 f"{key}: populated in infra/alpha.env, configured=false in the "
                 f"container — add `{key}: ${{{key}}}` to docker-compose.yml's "
                 "api-alpha environment block (this is the DEF038/DEF063 bug)"
             )
+    if unrecognised:
+        print(f"      note: {len(unrecognised)} env key(s) neither map to a "
+              f"Settings field nor are excused — {', '.join(unrecognised)}. "
+              "test_config_compose_parity.py owns that direction and runs at "
+              "preflight, so it is not re-failed here.")
     return problems
 
 
@@ -326,6 +392,16 @@ def main() -> int:
             problems = run()
         except CannotRun as exc:
             print(f"  [?] {name:10s} COULD NOT RUN — {exc}")
+            unable = True
+            continue
+        except Exception as exc:
+            # An unhandled exception in one check must not take the other four
+            # down with it — this script crashed on exactly that during its own
+            # first live run, which would have left three checks unreported
+            # behind a traceback. Reported as COULD NOT RUN (exit 2), never
+            # swallowed into a pass.
+            print(f"  [?] {name:10s} COULD NOT RUN — unhandled "
+                  f"{type(exc).__name__}: {exc}")
             unable = True
             continue
         if problems:

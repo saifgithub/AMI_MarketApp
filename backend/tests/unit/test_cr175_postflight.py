@@ -108,20 +108,67 @@ def test_commented_and_empty_keys_are_not_gaps(
     assert pf.check_config_parity("http://x", "s3cret", env, 5) == []
 
 
-def test_compose_level_keys_are_excused_by_name(
+def test_compose_level_keys_are_excused_from_the_shared_table(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """`POSTGRES_PASSWORD` and friends are service credentials, never Settings
-    fields. They must be excused with a stated reason rather than producing a
-    permanent false positive."""
+    fields — excused with a stated reason rather than producing a permanent
+    false positive.
+
+    The excuse table is **imported** from `test_config_compose_parity.py`, not
+    re-listed: a second hand-maintained copy is the exact CR175 F3 failure, and
+    its drift would surface as a permanent false positive. This asserts the
+    import path works, so a rename over there fails here instead of silently
+    reverting postflight to a shorter list.
+    """
     env = _env_file(tmp_path, "POSTGRES_PASSWORD=p\nCF_TUNNEL_TOKEN=t\n"
                               "AMI_ENV=staging\nADMIN_SECRET=s3cret\n")
     monkeypatch.setattr(pf, "_get", _stub_get({
         "settings_coverage": [{"setting": "ADMIN_SECRET", "configured": True}],
     }))
     assert pf.check_config_parity("http://x", "s3cret", env, 5) == []
-    for key in ("POSTGRES_PASSWORD", "CF_TUNNEL_TOKEN", "AMI_ENV"):
-        assert pf._NOT_SETTINGS_FIELDS[key]
+
+    excused = pf._keys_without_settings()
+    for key in ("POSTGRES_PASSWORD", "CF_TUNNEL_TOKEN", "AMI_ENV",
+                "REVENUECAT_IOS_SDK_KEY", "WEBSITE_DB_PASSWORD"):
+        assert excused[key], f"{key} lost its stated reason"
+
+
+def test_a_bool_set_to_false_is_an_off_switch_not_a_missing_compose_line(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The false positive the first live postflight run produced.
+
+    `SUPPRESS_ANALYST_CONSENSUS=false` is populated in `infra/alpha.env` and
+    correctly reports `configured: false` from the container, because for a
+    `bool` field `configured` means *the feature is on*, not *the key exists*.
+    Flagging it would have failed every promotion on a non-problem — a check
+    whose failing state is its normal state, which is the F5 pathology this
+    tool exists to remove, reproduced by the tool itself.
+    """
+    env = _env_file(tmp_path,
+                    "SUPPRESS_ANALYST_CONSENSUS=false\n"
+                    "USE_REAL_MARKET_DATA=true\n"
+                    "ADMIN_SECRET=s3cret\n")
+    monkeypatch.setattr(pf, "_get", _stub_get({
+        "settings_coverage": [
+            {"setting": "SUPPRESS_ANALYST_CONSENSUS", "configured": False},
+            {"setting": "USE_REAL_MARKET_DATA", "configured": True},
+            {"setting": "ADMIN_SECRET", "configured": True},
+        ],
+    }))
+    assert pf.check_config_parity("http://x", "s3cret", env, 5) == []
+
+    # …but a bool set TRUE and dark in the container is still the real bug.
+    monkeypatch.setattr(pf, "_get", _stub_get({
+        "settings_coverage": [
+            {"setting": "SUPPRESS_ANALYST_CONSENSUS", "configured": False},
+            {"setting": "USE_REAL_MARKET_DATA", "configured": False},
+            {"setting": "ADMIN_SECRET", "configured": True},
+        ],
+    }))
+    problems = pf.check_config_parity("http://x", "s3cret", env, 5)
+    assert len(problems) == 1 and "USE_REAL_MARKET_DATA" in problems[0]
 
 
 def test_a_container_without_settings_coverage_cannot_run_rather_than_pass(
