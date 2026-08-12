@@ -28,6 +28,12 @@ bad direction and a computable null baseline. Six metrics:
                               verdict it exists to inform.
   M6 stance entropy         — for/against/neutral per convene. Near zero is a
                               room with no friction.
+  M7 date accuracy          — CR169's gate. Every reply that states BOTH a date
+                              and a distance to it ("by 2026-11-03 (88 days)")
+                              is self-checking against the fact sheet's as-of
+                              anchor. Deterministic, so unlike M1-M6 it can gate
+                              a commit — the CR143 §7 gap an LLM judge cannot
+                              fill.
 
 P16 compliance: every extraction prints samples of what it matched AND what it
 did not, for hand-reading. A count nobody read is not a measurement.
@@ -48,6 +54,7 @@ import math
 import re
 import sys
 from collections import Counter, defaultdict
+from datetime import date
 from itertools import combinations
 from pathlib import Path
 from typing import Any
@@ -257,6 +264,13 @@ def m3_number_provenance(turns: list[dict]) -> dict[str, Any]:
     }
 
 
+# Verbatim the expression DEF235 (e319ba49) removed from `_LEVEL_PATTERNS`. See
+# m4_risk_spread's docstring for why measuring the prose is still legitimate
+# after production stopped trusting it.
+_PROPOSED_SIZE = re.compile(
+    r"\bsize\b[^\n$0-9]{0,15}\$?\s*(\d+(?:\.\d+)?)\s*%?", re.IGNORECASE)
+
+
 def _context(text: str, token: str, width: int = 60) -> str:
     i = text.find(token)
     if i < 0:
@@ -266,31 +280,53 @@ def _context(text: str, token: str, width: int = 60) -> str:
 
 
 def m4_risk_spread(runs: list[dict]) -> dict[str, Any]:
-    """Do the three risk personas propose three different sizes?"""
-    rows, collapsed = [], 0
+    """Do the three risk personas propose three different sizes? UNRELIABLE — read on.
+
+    DEF271. This metric imported `_LEVEL_PATTERNS["size"]`, which DEF235 deleted
+    from production on 2026-08-08 for cause: reading a position size out of prose
+    is how an entry price got spent as a size. The import kept the whole sweep
+    crashing on `KeyError: 'size'` from that day until 2026-08-12, which is how a
+    dead instrument goes unnoticed — nobody ran it.
+
+    Restoring the pattern makes the script run and does NOT make the metric true.
+    Hand-read, all 11 matches on the 2026-08-07 epoch: **3 correct, 8 wrong** —
+    two of the eight are literal entry prices ($188.62, $1212.21), DEF235's exact
+    defect reproduced verbatim; the rest are stop percentages and upside targets
+    sitting near the word "size". Precision 27%.
+
+    Two alternatives were measured and both fail. The CR106 stance envelope
+    carries a size in **1 of 54** risk turns (2%), so the contracted surface is
+    empty. No structured size field exists on the transcript entry at all.
+
+    So this returns the extractions for hand-reading and refuses to compute the
+    summary statistic. `mean_spread_pts` is deliberately None: a 46.83 built from
+    27%-precision inputs is worse than no number, because it reads as a finding.
+    Restoring it requires the agents to declare size in the envelope — a prompt
+    change, not a parser change.
+    """
+    rows = []
     for run in runs:
         sizes = {}
         for entry in run.get("transcript") or []:
             aid = entry.get("agent_id")
             if aid in _RISK:
-                m = _LEVEL_PATTERNS["size"].search(entry.get("content") or "")
+                m = _PROPOSED_SIZE.search(entry.get("content") or "")
                 if m:
                     try:
                         sizes[aid] = float(m.group(1))
                     except ValueError:
                         pass
         if len(sizes) >= 2:
-            spread = max(sizes.values()) - min(sizes.values())
-            collapsed += spread == 0.0
             rows.append({"ticker": run.get("ticker"), "sizes": sizes,
-                         "spread_pts": round(spread, 2)})
-    spreads = [r["spread_pts"] for r in rows]
+                         "spread_pts": round(max(sizes.values()) - min(sizes.values()), 2)})
     return {
+        "status": "UNRELIABLE — extractions are 27% precise (3/11 hand-read, "
+                  "2026-08-07 epoch). Do not cite spread figures. See DEF271.",
         "convenes_with_2plus_sizes": len(rows),
         "convenes_total": len(runs),
-        "mean_spread_pts": round(sum(spreads) / len(spreads), 2) if spreads else None,
-        "zero_spread_convenes": collapsed,
-        "rows": rows,
+        "mean_spread_pts": None,
+        "zero_spread_convenes": None,
+        "rows_for_hand_reading": rows,
     }
 
 
@@ -348,6 +384,149 @@ def m6_stance_entropy(runs: list[dict]) -> dict[str, Any]:
     }
 
 
+_ASOF_RE = re.compile(r"Fact sheet as of (\d{4}-\d{2}-\d{2})")
+_ISO_DATE = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
+# "in 88 days", "88 days", "(88 days)", "88-day" — the horizon forms the corpus
+# actually uses. Deliberately NOT matching "50-day low"/"20-day SMA": those are
+# indicator window names, not offsets from the as-of date, and counting them as
+# date claims would swamp the metric with false positives.
+_DAYCOUNT = re.compile(
+    r"(?<![\w-])(?:in\s+|within\s+|over\s+the\s+next\s+|~)?(\d{1,4})[\s-]*(?:calendar\s+)?days?\b",
+    re.IGNORECASE)
+_INDICATOR_WINDOW = re.compile(
+    r"\b\d{1,4}[\s-]*day\s+(?:sma|ema|ma|moving|average|low|high|rsi|atr|vol|volume|range)",
+    re.IGNORECASE)
+# A date and a day-count only describe the SAME event if no clause boundary sits
+# between them. Without this the scorer paired an earnings date with an FOMC
+# countdown 60 characters later and called a correct reply wrong — the only
+# "mismatch" in the whole 2026-08-07 baseline, and it was the instrument's error.
+# Sentence end or line end only. An earlier draft also treated "* " as a bullet
+# marker, which matched the trailing asterisk of every markdown **bold** span and
+# silently cut the scored population from 29 pairs to 3 — a guard that looked
+# like precision and was actually blindness.
+_CLAUSE_BREAK = re.compile(r"[.;:]\s|\n")
+_EMPHASIS = re.compile(r"\*\*|__")
+
+
+def _as_of(prompt: str) -> date | None:
+    m = _ASOF_RE.search(prompt or "")
+    return date.fromisoformat(m.group(1)) if m else None
+
+
+def _iso_dates(text: str) -> list[tuple[str, date, int]]:
+    """(raw, parsed, char offset) for every well-formed ISO date in `text`."""
+    out = []
+    for m in _ISO_DATE.finditer(text or ""):
+        try:
+            out.append((m.group(0), date.fromisoformat(m.group(0)), m.start()))
+        except ValueError:
+            continue
+    return out
+
+
+def m7_date_accuracy(turns: list[dict], window: int = 90,
+                     tolerance: int = 1) -> dict[str, Any]:
+    """CR169's gate: are stated dates and day-counts arithmetically right?
+
+    Deterministic by construction — no LLM judge — so it can gate a commit, which
+    is the CR143 §7 gap M1–M6 cannot fill (a judge cannot sit in CI).
+
+    Scores ONE construct, the pairing CR169 quotes: an ISO date and a day-count
+    within `window` characters of each other. That pair is self-checking — the
+    reply states both the destination and the distance, so the as-of date decides
+    whether they agree, and no interpretation is needed. `tolerance` absorbs the
+    inclusive/exclusive off-by-one that both conventions license.
+
+    Unpaired dates and unpaired day-counts are counted and sampled but NOT
+    scored: a bare date has no claim to check, and a bare day-count usually
+    refers to an indicator window rather than an offset from now. P16 — the
+    unscored population is printed so the gap is read, not assumed.
+    """
+    scored = ok = bad = 0
+    lone_dates = lone_counts = 0
+    no_asof = 0
+    failures: list[dict] = []
+    samples: list[dict] = []
+    unscored: list[dict] = []
+
+    for t in turns:
+        as_of = _as_of(t.get("system_prompt") or "")
+        if as_of is None:
+            no_asof += 1
+            continue
+        # Emphasis markers are stripped BEFORE any matching. The agents write
+        # "**88** days" and "**20-day** average", and the `**` between the number
+        # and its unit defeated both the day-count matcher and the
+        # indicator-window mask — so real pairs went unscored while "20-day
+        # average" leaked into the unscored pile looking like a date claim.
+        # Replaced with spaces, not deleted, so every offset stays valid.
+        reply = _EMPHASIS.sub(lambda m: " " * len(m.group(0)),
+                              t.get("response_text") or "")
+        masked = _INDICATOR_WINDOW.sub(lambda m: "#" * len(m.group(0)), reply)
+
+        dates = _iso_dates(masked)
+        counts = [(m.group(1), int(m.group(1)), m.start())
+                  for m in _DAYCOUNT.finditer(masked)]
+        used_counts: set[int] = set()
+
+        for raw_d, parsed, pos in dates:
+            near = [(c, n, cp) for c, n, cp in counts
+                    if abs(cp - pos) <= window and cp not in used_counts
+                    and not _CLAUSE_BREAK.search(
+                        masked[min(cp, pos):max(cp, pos)])]
+            if not near:
+                lone_dates += 1
+                if len(unscored) < 30:
+                    unscored.append({
+                        "kind": "lone_date", "agent_id": t.get("agent_id"),
+                        "as_of": as_of.isoformat(), "date": raw_d,
+                        "days_from_asof": (parsed - as_of).days,
+                        "quote": masked[max(0, pos - 70):pos + 70].replace("\n", " ")})
+                continue
+            c_raw, stated, cpos = min(near, key=lambda x: abs(x[2] - pos))
+            used_counts.add(cpos)
+            actual = (parsed - as_of).days
+            scored += 1
+            row = {"agent_id": t.get("agent_id"), "as_of": as_of.isoformat(),
+                   "date": raw_d, "stated_days": stated, "actual_days": actual,
+                   "delta": actual - stated,
+                   "quote": masked[max(0, min(pos, cpos) - 40):
+                                   max(pos, cpos) + 60].replace("\n", " ")}
+            if abs(actual - stated) <= tolerance:
+                ok += 1
+                if len(samples) < 8:
+                    samples.append(row)
+            else:
+                bad += 1
+                failures.append(row)
+
+        for c_raw, stated, cp in counts:
+            if cp in used_counts:
+                continue
+            lone_counts += 1
+            if len(unscored) < 60:
+                unscored.append({
+                    "kind": "lone_daycount", "agent_id": t.get("agent_id"),
+                    "as_of": as_of.isoformat(), "stated_days": stated,
+                    "quote": masked[max(0, cp - 70):cp + 70].replace("\n", " ")})
+
+    return {
+        "turns_scored": len(turns) - no_asof,
+        "turns_without_asof_anchor": no_asof,
+        "pairs_scored": scored,
+        "pairs_consistent": ok,
+        "pairs_mismatched": bad,
+        "mismatch_rate_pct": round(100 * bad / scored, 1) if scored else None,
+        "tolerance_days": tolerance,
+        "pair_window_chars": window,
+        "unscored_lone_dates": lone_dates,
+        "unscored_lone_daycounts": lone_counts,
+        "mismatches": failures[:40],
+        "consistent_samples": samples,
+        "unscored_samples": unscored,
+    }
+
+
 # ── driver ──────────────────────────────────────────────────────────────────
 
 def run(corpus_dir: Path) -> dict[str, Any]:
@@ -374,6 +553,7 @@ def run(corpus_dir: Path) -> dict[str, Any]:
         "m4_risk_spread": m4_risk_spread(runs),
         "m5_pm_groundedness": m5_pm_groundedness(runs),
         "m6_stance_entropy": m6_stance_entropy(runs),
+        "m7_date_accuracy": m7_date_accuracy(turns),
     }
 
 

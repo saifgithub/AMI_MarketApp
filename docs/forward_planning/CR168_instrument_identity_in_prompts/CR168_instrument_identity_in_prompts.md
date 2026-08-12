@@ -1,6 +1,15 @@
 # CR168 — Name the company in the prompt
 
-**Status:** proposed · **Filed:** 2026-08-11 · **Category:** quality · **Parent:** [CR167](../CR167_tradingagents_upstream_drift/CR167_tradingagents_upstream_drift.md) §4.1
+**Status:** proposed (Step 0 gate run 2026-08-12 — **prophylactic**) · **Filed:** 2026-08-11 ·
+**Category:** quality · **Parent:** [CR167](../CR167_tradingagents_upstream_drift/CR167_tradingagents_upstream_drift.md) §4.1
+
+> **Gate result — and a correction to this document.** 0 wrong-company instances in 216 real turns,
+> so per the fork table below this is prophylactic and priced as a render line.
+> **The "zero prompts name the company" figure in §Why is wrong**: it was measured on `assembled/`,
+> a synthetic single-ticker reconstruction. In the 216 real production prompts a company name reaches
+> the model in **72.2%** of turns (66.7% after Batch 9's news recency floor) — via news headlines, never
+> as identity — and is **never** supplied for AMD, AVGO or KTOS. The real case for this CR is
+> *reliability*, not absence. Full result: [GATE_RESULT_2026-08-12.md](GATE_RESULT_2026-08-12.md).
 
 ---
 

@@ -1,6 +1,14 @@
 # CR169 — Put the as-of date at the head of the prompt
 
-**Status:** proposed · **Filed:** 2026-08-11 · **Category:** quality · **Parent:** [CR167](../CR167_tradingagents_upstream_drift/CR167_tradingagents_upstream_drift.md) §4.2
+**Status:** **dropped** (2026-08-12, by this CR's own pre-registered gate) · **Filed:** 2026-08-11 ·
+**Category:** quality · **Parent:** [CR167](../CR167_tradingagents_upstream_drift/CR167_tradingagents_upstream_drift.md) §4.2
+
+> **Outcome.** M7 was built and run against the frozen 2026-08-07 epoch:
+> **0 / 30 date claims mismatched = 0.0%** (95% upper bound 9.5%). Per the fork table in
+> "The evidence gate" below, that is the `dropped` branch. **M7 stays** — it is a CR143 §7 gap and
+> outlives this CR. Full result, including three self-corrections to the scorer and the hand-read of
+> the unscored population: [M7_BASELINE_2026-08-12.md](M7_BASELINE_2026-08-12.md).
+> The reorder is byte-neutral, so re-open cheaply if M7 ever moves off zero.
 
 ---
 
