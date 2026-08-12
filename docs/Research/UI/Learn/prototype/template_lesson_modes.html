@@ -35,8 +35,11 @@
   --red:    #ef4444;
   --purple: #8b5cf6;
 
-  --sans: 'AMI Sans', ui-sans-serif, system-ui, sans-serif;
-  --mono: 'AMI Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  /* 'AMI Arabic' (IBM Plex Sans Arabic) carries Arabic glyphs; Latin + digits
+     fall through to AMI Sans / AMI Mono per-glyph, so figures stay tabular in
+     both languages. IBM Plex is the app's own primary family. */
+  --sans: 'AMI Arabic', 'AMI Sans', ui-sans-serif, system-ui, sans-serif;
+  --mono: 'AMI Mono', 'AMI Arabic', ui-monospace, 'SF Mono', Menlo, monospace;
 
   --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
   --s5: 24px; --s6: 32px; --s7: 48px;
@@ -44,6 +47,62 @@
 }
 
 * { box-sizing: border-box; }
+
+/* ── language switch ────────────────────────────────────────
+   Both languages sit in the DOM; CSS picks one. `dir` flips on <html>
+   so layout mirrors, but two things deliberately stay LTR:
+     · canvases — financial time axes are not mirrored in Arabic practice
+     · range inputs — a flipped slider against an unflipped chart inverts
+       the gesture, which is a real RTL bug this prototype exists to catch
+   ───────────────────────────────────────────────────────── */
+/* Arabic hidden by DEFAULT, not only under [data-lang=en] — the artifact host
+   owns <html>, so `data-lang` can only be set once JS runs; without this the
+   page would paint both languages for a frame. */
+.ar { display: none; }
+:root[data-lang="ar"] .ar { display: revert; }
+:root[data-lang="ar"] .en { display: none; }
+/* No --sans override in AR: the base stack already leads with AMI Arabic and
+   falls through to AMI Sans per-glyph, which is what keeps the digits identical
+   in both languages. Overriding here would drop Inter and change every figure. */
+:root[data-lang="ar"] body { line-height: 1.85; }
+:root[data-lang="ar"] .bk p { font-size: 14px; line-height: 1.9; }
+:root[data-lang="ar"] .card h3 { line-height: 1.45; }
+:root[data-lang="ar"] canvas,
+:root[data-lang="ar"] input[type=range] { direction: ltr; }
+:root[data-lang="ar"] .readout,
+:root[data-lang="ar"] .metrics,
+:root[data-lang="ar"] .strip { direction: ltr; }
+:root[data-lang="ar"] .pull { border-left: none; border-right: 3px solid var(--amber);
+  border-radius: var(--r-card) 0 0 var(--r-card); }
+:root[data-lang="ar"] .opt-btn { text-align: right; }
+:root[data-lang="ar"] td:first-child,
+:root[data-lang="ar"] .calc { direction: ltr; text-align: right; }
+/* mono labels and codes read LTR even inside Arabic prose */
+.ltr { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+
+.langbar {
+  display: flex;
+  gap: var(--s2);
+  align-items: center;
+  margin-bottom: var(--s5);
+  flex-wrap: wrap;
+}
+.langbar .seglang { display: flex; gap: 4px; }
+.langbar button {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-med);
+}
+.langbar button[aria-pressed="true"] { background: var(--cyan); color: #04222a; border-color: var(--cyan); }
+.langbar button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.langbar .note { font-family: var(--mono); font-size: 10.5px; color: var(--text-low); }
 
 body {
   margin: 0;
@@ -600,13 +659,28 @@ footer {
 
 <div class="wrap">
 
+  <div class="langbar">
+    <div class="seglang" id="segLang" role="group" aria-label="Language">
+      <button data-lang="en" aria-pressed="true">ENGLISH</button>
+      <button data-lang="ar" aria-pressed="false">العربية · RTL</button>
+    </div>
+    <span class="note en">Arabic copy is the shipped <code>014_position_sizing_basics.ar.mdx</code>, not a fresh translation</span>
+    <span class="note ar">النص العربي مأخوذ من ملف الدرس المنشور <code class="ltr">014_position_sizing_basics.ar.mdx</code></span>
+  </div>
+
   <p class="eyebrow">Learn-surface research · worked on RISK 2</p>
   <h1>The lesson already asks you to move the stop. Let it.</h1>
-  <p class="standfirst">
+  <p class="standfirst en">
     Two deliveries of the same lesson — <strong>014 Position sizing basics</strong>, one of the fifteen
     lessons that already has an animation. Left is what ships today. Right is the same content as a
     beat deck, where the figure the prose asks you to imagine becomes a control you drag.
     <strong>Both are the same source file.</strong>
+  </p>
+  <p class="standfirst ar">
+    تسليمان لنفس الدرس — <strong>014 أساسيات تحديد حجم المركز</strong>، وهو أحد الدروس الخمسة عشر
+    التي تحتوي رسمًا بالفعل. اليسار هو ما يُنشر اليوم. واليمين هو نفس المحتوى في هيئة مشاهد، حيث
+    يتحول الرقم الذي يطلب النص تخيّله إلى عنصر تحكّم تسحبه.
+    <strong>وكلاهما من نفس الملف المصدر.</strong>
   </p>
 
   <div class="metrics">
@@ -999,6 +1073,82 @@ footer {
 (function () {
   'use strict';
 
+  /* ── language ───────────────────────────────────────────── */
+  var LANG = 'en';
+  var T = {
+    en: {
+      beat: function (i, n) { return 'beat ' + i + ' of ' + n; },
+      next: 'NEXT BEAT →', finish: 'FINISH ✓', back: '← BACK',
+      hintDefault: function (b) { return 'Drag the stop up — the share count climbs while your loss stays at $' + b + '. Push far enough and the PM floor stops you.'; },
+      hintWide: function (s, b) { return 'Wide stop, ' + s + ' shares. Your max loss is still $' + b + ' — the stop did that.'; },
+      hintBlocked: function (p, b) { return 'BLOCKED — ' + p + '% of your account in one name. The PM floor caps a single position at 50%. Your risk is still $' + b + ', but the position is too concentrated to pass.'; },
+      correct: 'Correct', notQuite: 'Not quite',
+      commitOk: 'Per-share risk falls $21 → $10, so the same $200 buys about 20 shares. The loss you accept never moved.',
+      commitNo: 'Per-share risk falls $21 → $10 when the stop rises to $470 — so the same $200 budget buys <b>more</b> shares, about 20. Tighter stop, bigger position, identical risk.',
+      quizOk: '1% of $10,000 = $100. Per-share risk $200 − $195 = $5. $100 ÷ $5 = 20 shares.',
+      quizNo: 'Dividing the account by the share price gives 50 — that sizes to your whole account, not to your risk. Risk budget $100 ÷ $5 per share = <b>20 shares</b>.',
+      stopOut: function (p) { return '<b class="r">Stopped out</b> at -' + p + '% — then it recovered to +2.8% without you.'; },
+      stopHeld: '<b class="g">Held.</b> Closed +2.8%. A wider stop survives noise, but costs more when the thesis is genuinely wrong.',
+      dd: function (d, n, cls) { return 'Lose <b class="r">' + d + '%</b>, then you need <b class="' + cls + '">+' + n + '%</b> just to get back to even.'; },
+      ddHalf: ' Losing half means doubling from here.',
+      candleFound: function (nm, d) { return '<b class="c">' + nm + '</b> — ' + d; },
+      candleDup: function (nm) { return '<b class="c">' + nm + '</b> — already found'; },
+      candleCount: function (n, cls) { return '<br><b class="' + cls + '">' + n + ' of 4</b>' + (n === 4 ? ' — all four. That is retrieval, not a labelled diagram.' : ' found'); },
+      rsi: function (n) { return '<b class="a">' + n + '</b> overbought signal' + (n === 1 ? '' : 's') + ' on the same 20 bars. '; },
+      rsiLow: 'Nine signals from one series — drop the line and you manufacture them. That is curve-fitting, not edge.',
+      rsiHigh: 'Almost nothing fires. The level is a choice you make, not a fact the market supplies.',
+      rsiMid: 'The standard 70 is a convention, not a law — and it decides how often you trade.',
+      ruin: function (l, g, cls) { return 'Ten straight losses leaves <b class="' + cls + '">' + l + '%</b> of the account. Recovering needs <b>+' + g + '%</b>.'; },
+      ruinBad: ' A streak of ten is normal. This is ruin.',
+      shFail: function (s, n) { return '<b class="r">FAILS</b> under ' + s + ' — ' + n + ' of 3 ratios over cap.'; },
+      shPass: function (s) { return '<b class="g">PASSES</b> under ' + s + ' — all three inside cap.'; },
+      shFlip: '<br>Same company passes DJIM and fails AAOIFI. The standard, not the balance sheet, decided.',
+      cRisk: 'RISK', cSize: 'SIZE', cEntry: 'ENTRY', cStop: 'STOP', cShares: 'SHARES',
+      cCap: 'CAP 50%', cMaxLoss: function (v) { return 'max loss $' + v; }, cBreakeven: 'BREAKEVEN',
+      cOB: function (l) { return 'OB ' + l; }, cTap: 'tap a part', cTenLosses: '10 losses →',
+      cUpper: 'UPPER WICK', cClose: 'CLOSE', cOpen: 'OPEN', cLower: 'LOWER WICK',
+      dUpper: 'high above the close', dClose: 'top of a green body',
+      dOpen: 'bottom of a green body', dLower: 'low below the open',
+      rn: ['debt / mkt cap', 'cash+interest / mkt cap', 'impure income / rev']
+    },
+    ar: {
+      beat: function (i, n) { return 'المشهد ' + i + ' من ' + n; },
+      next: 'المشهد التالي →', finish: 'إنهاء ✓', back: '← رجوع',
+      hintDefault: function (b) { return 'اسحب وقف الخسارة للأعلى — يرتفع عدد الأسهم بينما تبقى خسارتك ' + b + ' دولار. تابع السحب وسيمنعك حد مدير المحفظة.'; },
+      hintWide: function (s, b) { return 'وقف واسع، ' + s + ' سهمًا. أقصى خسارتك ما زالت ' + b + ' دولار — وقف الخسارة هو الذي فعل ذلك.'; },
+      hintBlocked: function (p, b) { return 'ممنوع — ' + p + '% من حسابك في سهم واحد. حد مدير المحفظة يقيّد المركز الواحد بـ 50%. مخاطرتك ما زالت ' + b + ' دولار، لكن المركز مركّز أكثر من المسموح.'; },
+      correct: 'صحيح', notQuite: 'ليس تمامًا',
+      commitOk: 'تنخفض مخاطرة السهم الواحد من 21 إلى 10 دولار، فيشتري نفس المبلغ (200 دولار) نحو 20 سهمًا. الخسارة التي تقبلها لم تتغير.',
+      commitNo: 'عند رفع الوقف إلى 470 دولار تنخفض مخاطرة السهم من 21 إلى 10 دولار — فيشتري نفس المبلغ <b>عددًا أكبر</b> من الأسهم، نحو 20. وقف أضيق، مركز أكبر، ونفس المخاطرة.',
+      quizOk: '1% من 10,000 دولار = 100 دولار. مخاطرة السهم الواحد 200 − 195 = 5 دولارات. 100 ÷ 5 = 20 سهمًا.',
+      quizNo: 'قسمة الحساب على سعر السهم تعطي 50 — وهذا يحدد الحجم بناءً على حسابك بالكامل، لا على مخاطرتك. ميزانية المخاطرة 100 ÷ 5 للسهم = <b>20 سهمًا</b>.',
+      stopOut: function (p) { return '<b class="r">خرجت بوقف الخسارة</b> عند -' + p + '% — ثم تعافى السهم إلى +2.8% بدونك.'; },
+      stopHeld: '<b class="g">صمد.</b> أغلق على +2.8%. الوقف الأوسع ينجو من التقلبات الطبيعية، لكنه يكلّف أكثر عندما تكون الفرضية خاطئة فعلًا.',
+      dd: function (d, n, cls) { return 'اخسر <b class="r">' + d + '%</b>، ثم تحتاج <b class="' + cls + '">+' + n + '%</b> فقط للعودة إلى نقطة التعادل.'; },
+      ddHalf: ' خسارة النصف تعني مضاعفة ما بقي.',
+      candleFound: function (nm, d) { return '<b class="c">' + nm + '</b> — ' + d; },
+      candleDup: function (nm) { return '<b class="c">' + nm + '</b> — تم إيجاده سابقًا'; },
+      candleCount: function (n, cls) { return '<br><b class="' + cls + '">' + n + ' من 4</b>' + (n === 4 ? ' — الأربعة كلها. هذا استرجاع، لا رسم موسوم.' : ' تم إيجاده'); },
+      rsi: function (n) { return '<b class="a">' + n + '</b> إشارة تشبّع شرائي على نفس الشموع العشرين. '; },
+      rsiLow: 'تسع إشارات من سلسلة واحدة — أنزل الخط وستصنعها بنفسك. هذا تطويع للمنحنى، لا ميزة.',
+      rsiHigh: 'لا يكاد شيء يظهر. المستوى اختيار تتخذه، وليس حقيقة يقدمها السوق.',
+      rsiMid: 'المستوى 70 عُرف شائع لا قانون — وهو الذي يحدد كم مرة تتداول.',
+      ruin: function (l, g, cls) { return 'عشر خسائر متتالية تُبقي <b class="' + cls + '">' + l + '%</b> من الحساب. والتعافي يحتاج <b>+' + g + '%</b>.'; },
+      ruinBad: ' سلسلة من عشر خسائر أمر طبيعي. هذا خراب.',
+      shFail: function (s, n) { return '<b class="r">يفشل</b> وفق ' + s + ' — ' + n + ' من 3 نسب فوق الحد.'; },
+      shPass: function (s) { return '<b class="g">يجتاز</b> وفق ' + s + ' — النسب الثلاث داخل الحد.'; },
+      shFlip: '<br>الشركة نفسها تجتاز معيار DJIM وتفشل في معيار AAOIFI. المعيار هو الذي حكم، لا الميزانية.',
+      cRisk: 'مخاطرة', cSize: 'حجم', cEntry: 'دخول', cStop: 'وقف', cShares: 'أسهم',
+      cCap: 'الحد 50%', cMaxLoss: function (v) { return 'أقصى خسارة ' + v + '$'; }, cBreakeven: 'تعادل',
+      cOB: function (l) { return 'تشبّع ' + l; }, cTap: 'انقر على جزء', cTenLosses: '10 خسائر →',
+      cUpper: 'الظل الأعلى', cClose: 'الإغلاق', cOpen: 'الافتتاح', cLower: 'الظل الأسفل',
+      dUpper: 'أعلى سعر فوق الإغلاق', dClose: 'أعلى الجسم في الشمعة الخضراء',
+      dOpen: 'أسفل الجسم في الشمعة الخضراء', dLower: 'أدنى سعر تحت الافتتاح',
+      rn: ['الدين / القيمة السوقية', 'النقد+الفوائد / القيمة السوقية', 'الإيراد غير المتوافق']
+    }
+  };
+  function L() { return T[LANG]; }
+
   /* ── canvas helper: crisp on retina ─────────────────────── */
   function fit(cv) {
     var r = window.devicePixelRatio || 1,
@@ -1020,7 +1170,7 @@ footer {
     c.strokeStyle = tok('--text-low'); c.lineWidth = 1.5;
     c.beginPath(); c.moveTo(cx, beamY); c.lineTo(cx, h - 10); c.stroke();
     c.beginPath(); c.moveTo(cx - arm, beamY); c.lineTo(cx + arm, beamY); c.stroke();
-    [[-1, 'RISK', tok('--red')], [1, 'SIZE', tok('--cyan')]].forEach(function (p) {
+    [[-1, L().cRisk, tok('--red')], [1, L().cSize, tok('--cyan')]].forEach(function (p) {
       var x = cx + arm * p[0];
       c.beginPath(); c.moveTo(x, beamY); c.lineTo(x, beamY + 15); c.stroke();
       c.fillStyle = p[2];
@@ -1088,8 +1238,8 @@ footer {
       c.font = '700 9px ' + tok('--mono');
       c.fillText(lbl, axisX + 4, yy - 5);
     }
-    line(yE, tok('--cyan'), 'ENTRY', '$' + ENTRY, false);
-    line(yS, tok('--red'), 'STOP', '$' + s.stop, true);
+    line(yE, tok('--cyan'), L().cEntry, '$' + ENTRY, false);
+    line(yS, tok('--red'), L().cStop, '$' + s.stop, true);
 
     // per-share risk bracket
     c.fillStyle = tok('--red');
@@ -1127,7 +1277,7 @@ footer {
     c.fillStyle = over ? tok('--red') : tok('--text-low');
     c.font = '700 8px ' + tok('--mono');
     c.textAlign = 'right';
-    c.fillText('CAP ' + CAP_PCT + '%', w - 2, capY - 4);
+    c.fillText(L().cCap, w - 2, capY - 4);
 
     c.fillStyle = over ? tok('--red') : tok('--green');
     c.font = '700 13px ' + tok('--mono');
@@ -1135,13 +1285,13 @@ footer {
     c.fillText(s.shares, barX + stackW / 2, Math.max(top - 6, 11));
     c.fillStyle = tok('--text-low');
     c.font = '9px ' + tok('--mono');
-    c.fillText('SHARES', barX + stackW / 2, h - padB + 14);
+    c.fillText(L().cShares, barX + stackW / 2, h - padB + 14);
 
     // loss stays fixed — the point of the whole lesson
     c.fillStyle = tok('--text-low');
     c.font = '9px ' + tok('--mono');
     c.textAlign = 'left';
-    c.fillText('max loss $' + Math.round(s.budget), axisX + 4, h - padB + 14);
+    c.fillText(L().cMaxLoss(Math.round(s.budget)), axisX + 4, h - padB + 14);
   }
 
   function sync() {
@@ -1158,15 +1308,11 @@ footer {
     var hint = document.getElementById('modelHint');
     hint.classList.toggle('blocked', notPct > CAP_PCT);
     if (notPct > CAP_PCT) {
-      hint.textContent = 'BLOCKED — ' + notPct.toFixed(0) + '% of your account in one name. ' +
-        'The PM floor caps a single position at ' + CAP_PCT + '%. Your risk is still $' +
-        Math.round(s.budget) + ', but the position is too concentrated to pass.';
+      hint.textContent = L().hintBlocked(notPct.toFixed(0), Math.round(s.budget));
     } else if (s.stop <= 448) {
-      hint.textContent = 'Wide stop, ' + s.shares +
-        ' shares. Your max loss is still $' + Math.round(s.budget) + ' — the stop did that.';
+      hint.textContent = L().hintWide(s.shares, Math.round(s.budget));
     } else {
-      hint.textContent = 'Drag the stop up — the share count climbs while your loss stays at $' +
-        Math.round(s.budget) + '. Push far enough and the PM floor stops you.';
+      hint.textContent = L().hintDefault(Math.round(s.budget));
     }
     drawModel();
   }
@@ -1188,16 +1334,12 @@ footer {
         else if (b === btn) b.classList.add('wrong');
       });
       fb.className = 'feedback show ' + (right ? 'ok' : 'no');
-      fb.innerHTML = '<span class="h">' + (right ? 'Correct' : 'Not quite') + '</span>' +
-                     (right ? okTxt : noTxt);
+      fb.innerHTML = '<span class="h">' + (right ? L().correct : L().notQuite) + '</span>' +
+                     L()[right ? okTxt : noTxt];
     });
   }
-  wire('commitOpts', 'commitFb', 1,
-    'Per-share risk falls $21 → $10, so the same $200 buys about 20 shares. The loss you accept never moved.',
-    'Per-share risk falls $21 → $10 when the stop rises to $470 — so the same $200 budget buys <b>more</b> shares, about 20. Tighter stop, bigger position, identical risk.');
-  wire('quizOpts', 'quizFb', 0,
-    '1% of $10,000 = $100. Per-share risk $200 − $195 = $5. $100 ÷ $5 = 20 shares.',
-    'Dividing the account by the share price gives 50 — that sizes to your whole account, not to your risk. Risk budget $100 ÷ $5 per share = <b>20 shares</b>.');
+  wire('commitOpts', 'commitFb', 1, 'commitOk', 'commitNo');
+  wire('quizOpts', 'quizFb', 0, 'quizOk', 'quizNo');
 
   /* ── deck navigation ────────────────────────────────────── */
   var cards = Array.prototype.slice.call(document.querySelectorAll('#cards .card'));
@@ -1214,9 +1356,10 @@ footer {
       p.className = 'pip' + (n < at ? ' done' : n === at ? ' at' : '');
     });
     prev.disabled = at === 0;
-    next.textContent = at === cards.length - 1 ? 'FINISH ✓' : 'NEXT BEAT →';
+    next.textContent = at === cards.length - 1 ? L().finish : L().next;
     document.getElementById('navCount').textContent = (at + 1) + '/' + cards.length;
-    document.getElementById('deckMeta').textContent = 'beat ' + (at + 1) + ' of ' + cards.length;
+    document.getElementById('deckMeta').textContent = L().beat(at + 1, cards.length);
+    prev.textContent = L().back;
     if (at === 1) requestAnimationFrame(sync);
   }
   next.addEventListener('click', function () {
@@ -1281,7 +1424,7 @@ footer {
     var X = function (i) { return padL + i / (PATH.length - 1) * (w - padL - padR); };
     var Y = function (v) { return padV + (hi - v) / (hi - lo) * (h - padV * 2); };
 
-    dash(c, padL, Y(0), w - padR, tok('--text-low'), 'ENTRY');
+    dash(c, padL, Y(0), w - padR, tok('--text-low'), L().cEntry);
     var hit = -1;
     for (var i = 0; i < PATH.length; i++) { if (PATH[i] <= -pct) { hit = i; break; } }
     var pts = PATH.map(function (v, i) { return [X(i), Y(v)]; });
@@ -1295,12 +1438,10 @@ footer {
       c.fillStyle = tok('--green');
       c.beginPath(); c.arc(X(PATH.length - 1), Y(PATH[PATH.length - 1]), 4, 0, 6.3); c.fill();
     }
-    dash(c, padL, Y(-pct), w - padR, tok(hit >= 0 ? '--red' : '--cyan'), 'STOP -' + pct.toFixed(1) + '%');
+    dash(c, padL, Y(-pct), w - padR, tok(hit >= 0 ? '--red' : '--cyan'), L().cStop + ' -' + pct.toFixed(1) + '%');
 
     el('sStopV').textContent = '-' + pct.toFixed(1) + '%';
-    el('oStop').innerHTML = hit >= 0
-      ? '<b class="r">Stopped out</b> at -' + pct.toFixed(1) + '% — then it recovered to +2.8% without you.'
-      : '<b class="g">Held.</b> Closed +2.8%. A wider stop survives noise, but costs more when the thesis is genuinely wrong.';
+    el('oStop').innerHTML = hit >= 0 ? L().stopOut(pct.toFixed(1)) : L().stopHeld;
   }
   on('sStop', drawStop);
 
@@ -1314,7 +1455,7 @@ footer {
     var Y = function (eq) { return padV + (1.05 - eq) / (1.05 - 0.2) * (h - padV * 2); };
     var floorEq = 1 - dd / 100;
 
-    dash(c, padL, Y(1), w - padR, tok('--text-low'), 'BREAKEVEN');
+    dash(c, padL, Y(1), w - padR, tok('--text-low'), L().cBreakeven);
     var mid = padL + (w - padL - padR) * 0.42, end = w - padR;
     var pts = [];
     for (var i = 0; i <= 20; i++) {
@@ -1334,18 +1475,14 @@ footer {
 
     el('sDDV').textContent = '-' + dd + '%';
     var cls = need < 25 ? 'a' : need < 60 ? 'a' : 'r';
-    el('oDD').innerHTML = 'Lose <b class="r">' + dd + '%</b>, then you need <b class="' + cls + '">+' +
-      need.toFixed(0) + '%</b> just to get back to even.' +
-      (dd >= 50 ? ' Losing half means doubling from here.' : '');
+    el('oDD').innerHTML = L().dd(dd, need.toFixed(0), cls) + (dd >= 50 ? L().ddHalf : '');
   }
   on('sDD', drawDD);
 
   /* 3 · candle anatomy — tap to identify */
   var CANDLE = [
-    { k: 'upper', n: 'UPPER WICK', d: 'high above the close' },
-    { k: 'close', n: 'CLOSE', d: 'top of a green body' },
-    { k: 'open',  n: 'OPEN',  d: 'bottom of a green body' },
-    { k: 'lower', n: 'LOWER WICK', d: 'low below the open' }
+    { k: 'upper', n: 'cUpper', d: 'dUpper' }, { k: 'close', n: 'cClose', d: 'dClose' },
+    { k: 'open',  n: 'cOpen',  d: 'dOpen'  }, { k: 'lower', n: 'cLower', d: 'dLower' }
   ];
   var found = {};
   function candleGeom(w, h) {
@@ -1373,12 +1510,12 @@ footer {
       c.beginPath(); c.moveTo(m.cx + m.bw / 2 + 2, y); c.lineTo(w - 78, y); c.stroke();
       c.setLineDash([]);
       c.fillStyle = tok('--cyan'); c.textAlign = 'left';
-      c.fillText(part.n, w - 74, y + 3);
+      c.fillText(L()[part.n], w - 74, y + 3);
     });
     var n = Object.keys(found).length;
     if (!n) {
       c.fillStyle = tok('--text-low'); c.font = '9.5px ' + tok('--mono');
-      c.textAlign = 'center'; c.fillText('tap a part', m.cx, h - 4);
+      c.textAlign = 'center'; c.fillText(L().cTap, m.cx, h - 4);
     }
   }
   var cvC = el('vzCandle');
@@ -1393,10 +1530,9 @@ footer {
       found[k] = true;
       drawCandle();
       var n = Object.keys(found).length;
-      el('oCandle').innerHTML = (fresh ? '<b class="c">' + part.n + '</b> — ' + part.d
-                                       : '<b class="c">' + part.n + '</b> — already found')
-        + '<br><b class="' + (n === 4 ? 'g' : 'a') + '">' + n + ' of 4</b>'
-        + (n === 4 ? ' — all four. That is retrieval, not a labelled diagram.' : ' found');
+      el('oCandle').innerHTML =
+        (fresh ? L().candleFound(L()[part.n], L()[part.d]) : L().candleDup(L()[part.n]))
+        + L().candleCount(n, n === 4 ? 'g' : 'a');
     });
   }
 
@@ -1423,14 +1559,11 @@ footer {
         c.beginPath(); c.arc(X(i), Y(RSI[i]), 3.5, 0, 6.3); c.fill();
       }
     }
-    dash(c, padL, Y(lvl), w - padR, tok('--amber'), 'OB ' + lvl);
+    dash(c, padL, Y(lvl), w - padR, tok('--amber'), L().cOB(lvl));
 
     el('sRsiV').textContent = lvl;
-    el('oRsi').innerHTML = '<b class="a">' + sig + '</b> overbought signal' + (sig === 1 ? '' : 's') +
-      ' on the same 20 bars. ' + (lvl <= 62
-        ? 'Nine signals from one series — drop the line and you manufacture them. That is curve-fitting, not edge.'
-        : lvl >= 82 ? 'Almost nothing fires. The level is a choice you make, not a fact the market supplies.'
-        : 'The standard 70 is a convention, not a law — and it decides how often you trade.');
+    el('oRsi').innerHTML = L().rsi(sig) +
+      (lvl <= 62 ? L().rsiLow : lvl >= 82 ? L().rsiHigh : L().rsiMid);
   }
   on('sRsi', drawRsi);
 
@@ -1453,14 +1586,12 @@ footer {
     dash(c, padL, padV, w - padR, tok('--text-low'), '100%');
     var left = Math.pow(1 - r, N);
     c.fillStyle = tok('--text-low'); c.font = '8.5px ' + tok('--mono');
-    c.textAlign = 'left'; c.fillText('10 losses →', padL, h - 2);
+    c.textAlign = 'left'; c.fillText(L().cTenLosses, padL, h - 2);
 
     el('sRuinV').textContent = (r * 100).toFixed(0) + '%';
     var cls = left > 0.7 ? 'g' : left > 0.4 ? 'a' : 'r';
-    el('oRuin').innerHTML = 'Ten straight losses leaves <b class="' + cls + '">' +
-      (left * 100).toFixed(1) + '%</b> of the account. Recovering needs <b>+' +
-      ((1 / left - 1) * 100).toFixed(0) + '%</b>.' +
-      (r >= 0.2 ? ' A streak of ten is normal. This is ruin.' : '');
+    el('oRuin').innerHTML = L().ruin((left * 100).toFixed(1), ((1 / left - 1) * 100).toFixed(0), cls) +
+      (r >= 0.2 ? L().ruinBad : '');
   }
   on('sRuin', drawRuin);
 
@@ -1473,7 +1604,7 @@ footer {
     { n: 'AAOIFI Std 21', caps: [30, 30, 5] },
     { n: 'DJIM',          caps: [33, 33, 5] }
   ];
-  var RN = ['debt / mkt cap', 'cash+interest / mkt cap', 'impure income / rev'];
+
   var coI = 0, stdI = 0;
   function drawSharia() {
     var cv = el('vzSharia'); if (!cv) return;
@@ -1500,17 +1631,13 @@ footer {
       c.beginPath(); c.moveTo(cx, y - 3); c.lineTo(cx, y + bh + 3); c.stroke();
       // labels
       c.fillStyle = tok('--text-low'); c.font = '7.5px ' + tok('--mono');
-      c.textAlign = 'left'; c.fillText(RN[i], padL + 1, y - 4);
+      c.textAlign = 'left'; c.fillText(L().rn[i], padL + 1, y - 4);
       c.fillStyle = over ? tok('--red') : tok('--green');
       c.font = '700 9.5px ' + tok('--mono'); c.textAlign = 'right';
       c.fillText((val > 99 ? val.toFixed(0) : val.toFixed(1)) + '%', w - 4, y + bh - 1);
     }
-    el('oSharia').innerHTML = fails
-      ? '<b class="r">FAILS</b> under ' + std.n + ' — ' + fails + ' of 3 ratios over cap.'
-      : '<b class="g">PASSES</b> under ' + std.n + ' — all three inside cap.';
-    if (coI === 0) {
-      el('oSharia').innerHTML += '<br>Same company passes DJIM and fails AAOIFI. The standard, not the balance sheet, decided.';
-    }
+    el('oSharia').innerHTML = fails ? L().shFail(std.n, fails) : L().shPass(std.n);
+    if (coI === 0) { el('oSharia').innerHTML += L().shFlip; }
   }
   function segWire(id, attr, set) {
     var box = el(id); if (!box) return;
@@ -1530,8 +1657,35 @@ footer {
     drawStop(); drawDD(); drawCandle(); drawRsi(); drawRuin(); drawSharia();
   }
 
+  /* ── language toggle ────────────────────────────────────── */
+  var segLang = el('segLang');
+  if (segLang) {
+    segLang.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      LANG = b.dataset.lang;
+      Array.prototype.forEach.call(segLang.querySelectorAll('button'), function (x) {
+        x.setAttribute('aria-pressed', String(x === b));
+      });
+      var r = document.documentElement;
+      r.setAttribute('data-lang', LANG);
+      r.setAttribute('lang', LANG);
+      r.setAttribute('dir', LANG === 'ar' ? 'rtl' : 'ltr');
+      // re-render everything that JS writes (canvas labels + live copy)
+      show(at);
+      paint();
+      // any answered card keeps its state but restates its feedback in the new language
+      ['commitFb', 'quizFb'].forEach(function (id) {
+        var f = el(id); if (f && f.classList.contains('show')) { f.className = 'feedback'; }
+      });
+      var oc = el('oCandle'); if (oc) { oc.innerHTML = ''; found = {}; drawCandle(); }
+    });
+  }
+
   /* ── init ───────────────────────────────────────────────── */
   function paint() { drawDeco(); if (stopEl) sync(); drawGallery(); }
+  document.documentElement.setAttribute('data-lang', 'en');
+  document.documentElement.setAttribute('lang', 'en');
+  document.documentElement.setAttribute('dir', 'ltr');
   paint();
   show(0);
   var t; window.addEventListener('resize', function () {

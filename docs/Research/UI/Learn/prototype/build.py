@@ -47,6 +47,17 @@ FACES = [
     ("JetBrainsMono/JetBrainsMono-Bold", "AMI Mono", 700, "normal"),
 ]
 
+# Arabic glyphs — IBM Plex Sans Arabic, the Arabic companion to the app's own
+# IBM Plex Sans. Already-subsetted woff2 seeded from website/assets/fonts (the
+# site ships them), so `pyftsubset` is never needed for these. Latin + digits
+# are NOT in these subsets and fall through per-glyph to AMI Sans / AMI Mono,
+# which is what keeps figures tabular in the Arabic view.
+ARABIC_FACES = [
+    ("PlexArabic-Regular", "AMI Arabic", 400, "normal"),
+    ("PlexArabic-SemiBold", "AMI Arabic", 600, "normal"),
+    ("PlexArabic-Bold", "AMI Arabic", 700, "normal"),
+]
+
 PAGES = [
     ("template_lesson_modes.html", "lesson_modes.html"),
 ]
@@ -76,6 +87,38 @@ def subset(rel: str) -> Path:
     return out
 
 
+def bilingual(html: str) -> str:
+    """Wrap each English string from ar_strings.PAIRS with its Arabic sibling.
+
+    `<span class="en">EN</span><span class="ar">AR</span>` — CSS shows one. Each
+    pair asserts its occurrence count, so rewording the template fails the build
+    loudly instead of silently shipping a half-translated page.
+    """
+    from ar_strings import PAIRS, RAW
+
+    # Only the markup between </style> and <script> is touched, so a label that
+    # also appears in the CSS or the JS is never rewritten.
+    a, b = html.index("</style>"), html.index("<script>")
+    head, body, tail = html[:a], html[a:b], html[b:]
+
+    def apply(pairs, wrap):
+        nonlocal body
+        for en, ar, want in pairs:
+            got = body.count(en)
+            if got != want:
+                sys.exit(
+                    f"ar_strings: expected {want}x but found {got}x for:\n  {en[:110]!r}\n"
+                    "  (template wording changed — update ar_strings.py)"
+                )
+            rep = f'<span class="en">{en}</span><span class="ar">{ar}</span>' if wrap else ar
+            body = body.replace(en, rep, want)
+
+    apply(PAIRS, True)   # unique prose — auto-wrapped
+    apply(RAW, False)    # ambiguous labels — explicit element duplication
+    print(f"  bilingual: {len(PAIRS)} wrapped + {len(RAW)} element pairs")
+    return head + body + tail
+
+
 def main() -> None:
     blocks = []
     total = 0
@@ -88,16 +131,33 @@ def main() -> None:
             f"@font-face{{font-family:'{family}';font-style:{style};font-weight:{weight};"
             f"font-display:swap;src:url(data:font/woff2;base64,{b64}) format('woff2');}}"
         )
+    for name, family, weight, style in ARABIC_FACES:
+        path = CACHE / f"{name}.woff2"
+        if not path.exists():
+            sys.exit(
+                f"missing Arabic face: {path}\n"
+                "  seed it: cp website/assets/fonts/ibm-plex-sans-arabic-<w>-arabic.woff2 "
+                f"{CACHE}/{name}.woff2"
+            )
+        raw = path.read_bytes()
+        total += len(raw)
+        b64 = base64.b64encode(raw).decode("ascii")
+        blocks.append(
+            f"@font-face{{font-family:'{family}';font-style:{style};font-weight:{weight};"
+            f"font-display:swap;unicode-range:U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,"
+            f"U+FE70-FEFF,U+200F,U+061F,U+060C;"
+            f"src:url(data:font/woff2;base64,{b64}) format('woff2');}}"
+        )
     fonts = "\n".join(blocks)
 
     for tpl_name, out_name in PAGES:
         template = (HERE / tpl_name).read_text(encoding="utf-8")
         if "/*@FONTS@*/" not in template:
             sys.exit(f"{tpl_name} has no /*@FONTS@*/ placeholder")
-        out = template.replace("/*@FONTS@*/", fonts)
+        out = bilingual(template).replace("/*@FONTS@*/", fonts)
         (HERE / out_name).write_text(out, encoding="utf-8")
         print(f"{out_name} written — {len(out) / 1024:.0f} KB "
-              f"({total / 1024:.0f} KB of subsetted faces)")
+              f"({total / 1024:.0f} KB of subsetted faces incl. Arabic)")
 
 
 if __name__ == "__main__":
