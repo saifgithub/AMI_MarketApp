@@ -124,3 +124,70 @@ Then the three queries — stance yield, bullet/length, and cap-hit — against 
 and `llm_audit`, splitting on that timestamp. `llm_audit` has **no `finish_reason` column**;
 truncation is detected as `output_tokens >= _AGENT_MAX_TOKENS[agent]`, which is exact because
 `max_tokens` is a hard ceiling.
+
+---
+
+## Post-fix sweep — `r68-postfix`, 2026-08-12 (AT:R68)
+
+26 convenes on `alpha-2026-08-12-3`, the build carrying DEF260–DEF268. Same pinned
+recipe as `r68-postbatch9` (`--n-pairs 26 --repeat-pairs 0 --seed 164`), so the two
+are comparable turn-for-turn. 338 agent turns.
+
+### DEF264 — the false accusation is gone
+
+| batch | n | `_PM_NO_RATIONALE` |
+|---|---|---|
+| `pit-pilot-2` (pre-Batch-4) | 126 | 0 (0.0%) |
+| `r68-postbatch9` (pre-fix) | 25 | **6 (24.0%)** |
+| `r68-postfix` | 26 | **0 (0.0%)** |
+
+The rate the sweep found, closed by the fix the sweep motivated. No verdict in
+this batch published *"it wrote no rationale"* over prose the PM had written.
+
+### DEF263 — the suspicion I had, and the measurement that killed it
+
+26 of 26 verdicts came back PASS, against 13/126 (10.3%) and 3/25 (12%) before.
+The specific worry was that DEF263's fix had made an open-risk outage render
+*"the safety floor is blocking on this … do not argue for added size"* on every
+convene, which would be an anti-approval instruction added to the whole Room.
+
+**Measured directly: 0 of 338 prompts carried the outage line; 338 of 338 carried
+the real figure**, along with the corrected `Trades opened today:` pace line. The
+mechanism is ruled out.
+
+What remains is a distribution question with no answer at this n. P(0 of 26) at an
+11% base rate is ~4.8%; against the immediately preceding batch (3/25 vs 0/26)
+Fisher's exact is ~0.11. **Not significant, not dismissed** — it wants a larger
+sample before anyone calls it a change, and it is recorded here so the next sweep
+has something to compare against rather than rediscovering it.
+
+### DEF258's cap-hit rate, re-measured per agent — the number Batch 7 owed
+
+Batch 7 added ~+467 chars to all twelve agents and Batch 9 added +505 to nine of
+them, and both lanes stated the cap-hit rate had to be re-checked. It has been.
+
+**8 of 338 turns (2.4%)** finished at their own `_AGENT_MAX_TOKENS` ceiling:
+
+| agent | cap | at cap |
+|---|---|---|
+| `neutral_debator` | 600 | 3 / 29 (10.3%) |
+| `bear_researcher` | 800 | 2 / 28 (7.1%) |
+| `aggressive_debator` | 600 | 2 / 28 (7.1%) |
+| `bull_researcher` | 800 | 1 / 28 (3.6%) |
+| **`portfolio_manager`** | 1100 | **0 / 26** |
+
+Against DEF258's 6/156 (3.8%) on the pre-fix build, so the rate did **not** rise
+with the added bytes — but it is **not zero**, and the honest reading is that
+truncation is a standing property of this prompt/budget pair rather than an
+incident that was fixed.
+
+**The PM at 0 is the part that matters.** A clipped prose agent loses the tail of
+a sentence; a clipped PM loses a decision, which is the whole of DEF258 and
+DEF261. Every remaining cap-hit is on an agent whose output is prose, not parsed
+JSON, so none of them can reach the Verdict Board.
+
+**A wrong first cut, recorded because the number was nearly published:** the first
+query counted `output_tokens >= 1100` for every agent — the PM's cap applied to
+the whole roster — and returned a clean zero. Nine of twelve agents cap at 600 and
+two at 800, so that query could only ever have found PM clipping. The per-agent
+join above is the real measurement.
