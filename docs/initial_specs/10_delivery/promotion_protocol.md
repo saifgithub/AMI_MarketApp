@@ -98,21 +98,45 @@ commands are the canonical interface and CI can call them.
 
 ## What must be true before a promotion is allowed
 
-Each promotion script runs these blocking checks. Any failure
-aborts before any deployment side-effect runs.
+Each promotion script runs these blocking checks **in this order**. Any
+failure aborts before any deployment side-effect runs. The order is
+load-bearing: the first two are cheap and answer questions a green test
+suite cannot.
 
-1. **Working tree clean.** `git status` shows nothing modified or
-   untracked (excluding directories listed in `.gitignore`).
-2. **On `main` or an `alpha-*`-prefixed tag.** Promotions to Beta /
+1. **No active promotion hold.** `infra/PROMOTION_HOLD.md`'s
+   `## ACTIVE HOLDS` section must be empty. Added AT:R65 for the case
+   where `main` is green, audited, and still must not ship — typically a
+   backend change whose client half is on `main` but not on any device.
+   **Fails closed**: an unreadable file or a missing section heading
+   aborts. Only Saiful clears a hold, and only against the precondition
+   the hold names. Do not promote "just the other files" — the rsync
+   ships the whole tree.
+2. **Audit lane clear.** `orchestration/dispatch/dispatch.sh inbox`
+   must exit 0 — no verdict awaiting integration, no submission of yours
+   that never reached the auditor. **Fails closed** if the script is
+   missing. Added AT:R66 after a DEF231 round-2 MAJOR landed 13 minutes
+   after submission, was never read, the flagged code shipped anyway,
+   and a false Verdict Board annotation stayed live 7 hours. Every input
+   to that mistake was available and nothing mechanical checked.
+   A green suite says nothing about whether an auditor has already told
+   you this code is broken.
+3. **Working tree clean.** `git status --short` shows nothing modified or
+   untracked (excluding `.gitignore`d paths and `.claude/worktrees/`).
+   **This one is currently printed for the operator to judge rather than
+   enforced** — see CR175 Tier D, which scopes it to what actually ships
+   and makes it fail closed. Until then, read it: rsync ships the
+   *worktree*, so anything listed here ships regardless of what the tag
+   says.
+4. **On `main` or an `alpha-*`-prefixed tag.** Promotions to Beta /
    Prod require an existing tag for the lower environment.
-3. **Backend test suite green.** `pytest backend/tests/unit/ -q`
-   returns exit 0. Currently 152 tests; the count moves as features
-   land.
-4. **Flutter analyzer clean.** `flutter analyze --no-fatal-infos`
+5. **Backend test suite green.** `pytest backend/tests/unit/ -q`
+   returns exit 0. (No count is stated here on purpose — a pinned number
+   goes stale silently and this doc has been wrong about it before.)
+6. **Flutter analyzer clean.** `flutter analyze --no-fatal-infos`
    returns exit 0. (The pre-existing `assets/icons/ does not exist`
    warning is acceptable until that gets fixed; the script
    tolerates it explicitly.)
-5. **Manual smoke confirmation.** The script prompts: "Did you click
+7. **Manual smoke confirmation.** The script prompts: "Did you click
    through onboarding on the local backend? (y/n)". `n` aborts. This
    is the only manual gate — keeps the operator honest without
    forcing CI we don't need yet.
@@ -121,29 +145,101 @@ aborts before any deployment side-effect runs.
 
 ## What a promotion to Alpha actually does
 
-1. Run the blocking checks above. Abort on any failure.
+1. Run the blocking checks above, in order. Abort on any failure.
 2. Compute the next tag — e.g. `alpha-2026-05-12-3` if `-1` and `-2`
    already exist for today.
 3. `git tag <tag>` on `main` (or the target ref).
-4. `rsync` the worktree to `melehost:~/ami_trade/` with the
-   `infra/local/README.md` exclusion list (`.venv`, `__pycache__`,
-   `.dart_tool`, `*.egg-info`, `mobile/`, `.claude/`, `.git`).
-5. `scp` the current `.env` (just in case slots were added — rsync
-   excludes dotfiles by default).
-6. `ssh melehost "cd ~/ami_trade && docker compose --profile tunnel up -d --build api-alpha"` — rebuild and recreate the
-   backend container. The tunnel container is unaffected; the new
-   container's healthcheck must pass before traffic flows.
-7. Run any pending migrations:
-   `docker compose exec api-alpha alembic upgrade head`.
-   Migration failure aborts the promotion **after** the new
-   container is up — operator decides whether to rollback.
-8. Smoke check from the Mac:
-   - `curl https://api-alpha.agenticmarketintel.ai/v1/health` → 200
-   - `curl https://api-alpha.agenticmarketintel.ai/v1/llm/status` → vLLM active
-9. Report: tag name, commit short hash, smoke-check status, duration.
+4. `rsync -az --delete` the worktree to `melehost:~/ami_trade/`.
+   The exclusion list is in `/promote-to-alpha` and is load-bearing in
+   two directions: `.env` **must** be excluded (rsync has no default
+   dotfile exclusion, and step 5 is the canonical env mechanism), and
+   `audit/` + `reports/` **must** be excluded because they are
+   melehost-generated runtime data absent from the Mac source —
+   without those two, `--delete` wipes them off the host (DEF081,
+   134 files in the AT:R64 promote).
+5. `scp infra/alpha.env melehost:~/ami_trade/.env` — the canonical
+   mechanism for moving env values, which is why step 4 excludes
+   `.env`. Then verify the critical keys landed by **name only**
+   (`sed 's/=.*/=<set>/'`); never echo a value. `infra/alpha.env` is
+   gitignored, so a promotion run from a worktree auto-sources it from
+   the main worktree. Never hand-edit melehost's `.env` — the next
+   promotion overwrites it.
+6. **Build the image, then run migrations against the live DB while
+   the OLD container is still serving:**
+
+   ```bash
+   docker compose --profile tunnel build api-alpha
+   docker compose run --rm --no-deps api-alpha alembic upgrade head
+   ```
+
+   A failure here **stops the promotion with the old container still
+   up and serving the schema it was built for** — which is the entire
+   point of this order. Surface the error; the operator chooses
+   fix-forward or abandon. Never start the new container on a schema
+   its code does not match.
+
+   > **Why this order (DEF215, 2026-08-04).** Migrations used to run
+   > *after* the new container was already serving. `init_schema()`
+   > fired on the first request, `create_all()` built the new CR's
+   > tables behind Alembic's back without stamping, and
+   > `alembic upgrade head` then died on `DuplicateTable`. Alembic
+   > aborts the whole chain, so two later migrations that only ALTER
+   > `journal_entries` never ran, and **every journal read on live
+   > Alpha failed** — an outage in an already-shipped feature, caused
+   > by a migration for a different one. Both halves are fixed:
+   > `init_schema()` creates nothing on a database that already has
+   > `alembic_version`, and migrations run before the swap.
+
+7. Swap: `ssh melehost "cd ~/ami_trade && docker compose --profile tunnel up -d --build api-alpha"`.
+   The `--profile tunnel` keeps cloudflared running, so the public
+   hostname stays live across the swap. Only `api-alpha` is recreated.
+   Block until `docker inspect ami_api_alpha --format '{{.State.Health.Status}}'`
+   returns `healthy`.
+
+   > **What "healthy" does and does not mean (CR175 F1).** The
+   > container healthcheck curls `/v1/health`, which today returns a
+   > hardcoded literal and touches no dependency. `healthy` therefore
+   > means *uvicorn is accepting connections* — a container with an
+   > unreachable Postgres, a dead Redis, a down vLLM, or a schema
+   > behind head reports healthy. Do not read this signal as more than
+   > it is; steps 8 and 8b are what actually check the deploy.
+   > CR175 Tier A adds `/v1/ready` for the real probe.
+
+8. Verify the schema is at head — `docker compose exec -T api-alpha
+   alembic current` should print `<revision> (head)`. Migrations
+   already ran in step 6; this only confirms. Anything else means the
+   running code and the schema disagree, and the container's own logs
+   carry a `db_schema_behind_head` ERROR naming both revisions.
+9. Smoke check from the Mac:
+   - `curl -fsS .../v1/health` → 200 (liveness only — see step 7)
+   - `curl -fsS -H "Authorization: Bearer $ADMIN_SECRET" .../v1/llm/status`
+     → `vllm`, `has_real_provider=true`. **The whole `/v1/llm` router is
+     admin-gated** (CR123 C2 closed an unauthenticated LLM proxy
+     reachable from the internet), so a bare curl returns 403 on a
+     perfectly healthy deploy. This step used to omit the header and
+     could therefore never pass — corrected AT:R66.
+   - `curl -fsS .../v1/sim/quote/AAPL` → `source` is the leaf that
+     served the price: `yfinance` or `yahoo` both read as LIVE; only
+     `mock_walk` means the live feed failed through.
+10. **Config-gate check (CR040):** `GET /v1/admin/config-check` with the
+    admin bearer. Booleans only, never secret values. Every key
+    populated in `infra/alpha.env` must read `configured: true`; a key
+    set on the Mac and `false` in the container is the DEF038/DEF063
+    bug — its `${VAR}` line is missing from the `api-alpha` environment
+    block. `dark_count` is informational, not a failure. **Known limit
+    (CR175 F3):** this reports a hand-written list of 9 gates against a
+    `Settings` of 98 fields, so a key absent from that list is invisible
+    here. CR175 Tier B derives the set instead.
+11. Report: tag name, commit short hash, smoke-check status, duration.
 
 The state on melehost survives the promotion — Postgres + Redis
 volumes are not touched. Only the API container is rebuilt.
+
+**What this sequence still does not verify**, stated here rather than
+left to be rediscovered: nothing records which commit is running, so
+after the fact there is no query that answers *"is what is running what I
+shipped?"*; and rsync ships the *worktree*, so an untracked or modified
+file ships regardless of what the tag says. Both are CR175's scope.
 
 ---
 
@@ -169,9 +265,14 @@ volumes are not touched. Only the API container is rebuilt.
 
 ## DB migration policy
 
-- Forward migrations are run **inline** with every promotion.
-- A migration that errors halts the promotion (the new container
-  doesn't get added to the tunnel's healthy pool).
+- Forward migrations are run **inline** with every promotion, and
+  **before the swap** — against the live DB, in a throwaway container
+  built from the new image, while the old container is still serving
+  (step 6 above; DEF215).
+- A migration that errors halts the promotion **with the old container
+  still up**. Nothing is swapped, so the failure mode is "the promotion
+  did not happen", not "the new code is live against a schema it does
+  not match".
 - Migrations should be **forward-compatible** with the previous code
   version where reasonably possible (e.g., add column, deploy code
   that reads it, then later deploy code that requires it). This
