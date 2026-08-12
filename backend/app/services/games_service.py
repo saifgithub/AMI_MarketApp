@@ -996,6 +996,11 @@ def submit_trade(
     order_type_str = order_type.value if hasattr(order_type, "value") else str(order_type)
 
     if not is_us_market_open(now):
+        refusal = _refuse_overcommitted_queue(
+            user_id, run_id, ticker=ticker, side_str=side_str, quantity=quantity,
+        )
+        if refusal is not None:
+            return refusal
         with get_session() as s:
             s.add(GameQueuedOrderRow(
                 run_id=run_id,
@@ -1251,6 +1256,91 @@ def sweep_forced_buyins(*, now: datetime | None = None, sim=None) -> dict:
             )
 
     return {"checked": len(targets), "bought_in": bought_in}
+
+
+def _refuse_overcommitted_queue(
+    user_id: UUID, run_id: UUID, *, ticker: str, side_str: str, quantity: float,
+) -> dict | None:
+    """Refuse a queued order the run cannot pay for — at QUEUE time.
+
+    Until now the queue accepted anything. A player could queue eight orders
+    against a book that covered three, and the first they heard of it was the
+    drain cancelling five with `rejected at fill time` — hours later, on a
+    screen they were not looking at. Saiful hit exactly this: *"I have
+    10,003.29 committed to 8 queued orders, 0.00 available."* The FIFO drain
+    (DEF-era fix) decided WHICH survived; nothing told him some would not.
+
+    **Only cash-consuming orders are checked.** A sell closes a long and a
+    cover closes a short — both RETURN cash, and both are the orders a player
+    most needs to place from an empty balance. Refusing either is the one-way
+    book DEF259 already had to fix, and Amendment G ruling 5 makes the cover
+    case explicit.
+
+    **Pricing here does not breach the market-hours fence**, on exactly the
+    grounds `_queued_orders_priced` already states: the fence exists so an
+    order never FILLS at a stale price. This is an estimate used to REFUSE,
+    never to fill — the order still fills at the next open's price, and
+    nothing about the estimate is stored. An estimate can be wrong by a
+    weekend's drift, which is why the refusal names both numbers and why the
+    drain keeps its own check: this makes the common case honest, it does not
+    replace the authority at fill time.
+    """
+    if side_str not in ("buy",):
+        return None
+
+    sim = get_sim_engine()
+    portfolio = sim.ensure_portfolio(user_id, kind="game", run_id=run_id)
+
+    # A buy on a name already shorted is a COVER — it returns cash. Same
+    # exemption as the sell above, decided by the same fact the fill path
+    # uses so the two cannot disagree about what this order is.
+    if any(sp.ticker == ticker for sp in portfolio.shorts):
+        return None
+
+    _queued, committed = _queued_orders_priced(user_id, run_id)
+    available = round(float(portfolio.current_cash) - committed, 2)
+    try:
+        price = float(sim.current_quote(ticker).price)
+    except Exception:
+        price = 0.0
+    if price <= 0:
+        # No usable price, no honest estimate — and a refusal built on a
+        # number we could not obtain is the CR040 fabrication class. Stand
+        # down loudly and leave the drain as the authority it already was.
+        # Same "no usable price" condition `quote_trade` already refuses on,
+        # so the two cannot disagree about what an unpriceable ticker is.
+        logger.warn(
+            "game_queue_affordability_unpriced",
+            run_id=str(run_id), ticker=ticker,
+            reason="no usable price for the estimate; queue-time check skipped",
+        )
+        return None
+    estimate = price * quantity
+    estimate = round(estimate + trade_fee(estimate), 2)
+
+    if estimate <= available + 1e-6:
+        return None
+
+    logger.info(
+        "game_queue_refused_overcommitted",
+        user_id=str(user_id), run_id=str(run_id), ticker=ticker,
+        estimate=estimate, available=available, committed=committed,
+    )
+    return {
+        "queued": False,
+        "filled": False,
+        "fee": None,
+        "reason": (
+            f"that order needs about ${estimate:,.2f} and this run has "
+            f"${available:,.2f} left to commit"
+            + (
+                f" — ${committed:,.2f} is already committed to orders waiting "
+                f"on the next open"
+                if committed > 0
+                else ""
+            )
+        ),
+    }
 
 
 # ── Amendment I — settlement: a closed run holds nothing ─────────────────
