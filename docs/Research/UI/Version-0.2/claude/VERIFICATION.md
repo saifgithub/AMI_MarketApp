@@ -1,0 +1,61 @@
+# VERIFICATION — claim audit
+
+Every load-bearing quantitative claim, traced. PROVEN = read from code, register, or the
+rendered DOM this session. ASSERTED = reasoned but not independently executed. Anything
+found neither is listed under "corrections".
+
+## Code-derived claims
+
+| Claim | Where used | Status |
+|---|---|---|
+| Floor renders 13 identity marks at rest (Concierge + 12) | 01 §1, 04 | **PROVEN** — `kAllAgents` (13 entries, `agent.dart:45-159`); all rendered `floor_screen.dart:383-429` |
+| Wrap lays out 3 tiles/row → 4 rows at 390pt | 01 §1 | **PROVEN** — tile 88pt + 16pt spacing in 358pt content (`_AgentTile:522`, padding `:357`); confirmed visually in baseline frame render |
+| Tour = 5 stops, 3 introduce agents | 01 §1 | **PROVEN** — 5 GlobalKeys `floor_screen.dart:49-53` (concierge, agent0, agent4, challenge, convene) |
+| Live Room pins 12 seats from first frame | 01 §2, 04 E | **PROVEN** — `room_screen.dart:399` `kAllAgents.sublist(0, 12)`; CR112 comment `:382-388` |
+| Four live seat states | 03 §3.4 | **PROVEN** — `room_screen.dart:408-421` |
+| CR106 board default persisted, single writer | 03 §3.1 | **PROVEN** — `room_view_mode_provider.dart:20-57` |
+| Six phases exist client-side (`kAgentPhase`) | 03 §3.4, 04 E | **PROVEN** — `agent.dart:173-188` |
+| Baseline frame copy is the shipped copy | prototypes | **PROVEN** — `app_en.arb` `floor*` keys, quoted verbatim |
+| `floor_screen.dart` is 541 lines | 05 table | **PROVEN** — file read this session ends at line 565 total incl. `_AgentTile`; the 541 figure is CR159's count of the file at filing. Kept with CR159 attribution. |
+
+## DOM-read claims (headless Chrome 2026-08-12; regenerable via `prototype/build.py` + opening the pages)
+
+| Claim | Where used | Status |
+|---|---|---|
+| Baseline: 13 marks (10 above fold) · 23 taps (16 above) · CTA 1027px = 1.63 folds · column 1178px | 01, 04, 06 | **PROVEN** — frame `0-baseline` stat strip |
+| A: 1 mark · 13 taps · CTA 269px = 0.43 folds · column 717px | 04, 05 | **PROVEN** — frame `A-concierge` |
+| B: 1 · 10 · CTA 0.59 folds | 04 | **PROVEN** — frame `B-briefing` |
+| C: 1 · 10 · CTA 0.16 folds | 04, 05 | **PROVEN** — frame `C-tasks` |
+| D: 1 · 11 · CTA 0.83 folds | 04, 05 | **PROVEN** — frame `D-collapsed` |
+| E: live marks 12 → 2 · 6 taps | 04, 05 | **PROVEN** — frame `E-room` vs shipped roster count |
+| Flows: A2 9 marks · A3 2 · E2 4 · E3 12 | flows page | **PROVEN** — stat strips |
+| Built pages contain no external references | 00 method | **PROVEN** — `grep http` over both built files: only `data:font` URIs |
+
+## External-quote claims
+
+All 13 cited sources fetched live this session by the research pass; each quote in
+`02_external_patterns.md` was extracted from fetched page text. **PROVEN at fetch-level**,
+with one honesty note: extraction ran through an automated fetch pipeline — before quoting
+any line in *user-facing product copy* (not this research), re-check against the live page.
+Perplexity/Inc/Columbia pages: **NOT VERIFIED**, not cited (recorded in `sources.md`).
+
+## Asserted (not independently executed)
+
+- "Rewrite of `floor_screen.dart` body" as A's main cost, and "extend enum + provider +
+  stage widget" as E's (05) — engineering judgement from reading the files; no build was
+  attempted. **ASSERTED.**
+- Zero-LLM-cost status line (A) — composition from streak/verdict/challenge state the
+  client already holds; claim is about *possibility*, not an implementation. **ASSERTED.**
+- "No prior written record of the complaint" (01 §4) — negative claim from a docs-tree
+  grep for overwhelm-class terms; a differently-worded record could exist. **ASSERTED
+  (bounded).**
+- The choice-overload analogy (12 seats ≈ the jam study's extensive array) — an analogy,
+  not a measurement on this app. Labelled as such where used. **ASSERTED.**
+
+## Corrections made during audit
+
+- Concept E frames initially marked desk-stage rows as non-interactive; they are tap
+  targets ("tap a desk"). Fixed before measurement — E's taps read 6, not 2. (This is why
+  honesty rules want the count read from the artifact, not typed.)
+- `build.py` REPO path was one level shallow on first run; failed loudly (degrade-loudly
+  compliant) and was fixed before any output existed.
