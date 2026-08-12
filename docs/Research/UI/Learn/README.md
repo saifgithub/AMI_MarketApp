@@ -94,12 +94,30 @@ the "not enough pictures" complaint.
 
 ## Prototype
 
-`prototype/lesson_modes.html` — lesson 014 delivered both ways, side by side, with a **working**
-sizing model: drag the stop, watch per-share risk, share count and notional recompute. It reproduces
-the lesson's own figures exactly ($21/9 shares/21.6% at $459; $10/20 shares at $470) and enforces the
-real `SINGLE_NAME_ABSOLUTE_CAP_PCT = 50.0` from `backend/app/trading_math/sizing.py`, so pushing the
-stop past ~$471 visibly hits the PM floor. Word counts in the footer are DOM-read, so the density
-claim verifies itself.
+`prototype/lesson_modes.html` — two parts, all live.
+
+**Part 1 — lesson 014 delivered both ways, side by side.** A working sizing model: drag the stop,
+watch per-share risk, share count and notional recompute. It reproduces the lesson's own figures
+exactly ($21/9 shares/21.6% at $459; $10/20 shares at $470) and enforces the real
+`SINGLE_NAME_ABSOLUTE_CAP_PCT = 50.0` from `backend/app/trading_math/sizing.py`, so pushing the stop
+past ~$471 visibly hits the PM floor. Word counts in the footer are DOM-read, so the density claim
+verifies itself.
+
+**Part 2 — six more beats, six interaction types**, to show breadth beyond one lesson and beyond
+sliders. Four reuse shipped painters; two need a new primitive, which is the honest cost of covering
+the rest of the corpus.
+
+| Sample | Primitive | Interaction | What it teaches |
+|---|---|---|---|
+| RISK 3 · stop loss | ThresholdTrigger | drag | a tight stop is taken out by noise, then misses the recovery |
+| RISK 6 · drawdown | CurveDraw | drag | −50% needs +100%; −75% needs +300% |
+| TECH 1 · candle anatomy | CandleAnatomy | **tap to identify** | names the 4 parts by retrieval, not a labelled diagram |
+| TECH 8 · RSI | Oscillator | drag | same 20 bars yield 9 signals at 55 and 1 at 85 — the level is a choice |
+| RISK 1 · why risk matters | **new** (streak bars) | drag | 10 straight losses at 25%/trade leaves 5.6% |
+| SHARIA 3 · ratio screen | **new** (comparison bars) | toggle | one company passes DJIM 33/33/5 and fails AAOIFI 30/30/5 |
+
+The Sharia sample doubles as a check on the DEF117/DEF118 work: it shows the same balance sheet
+flipping verdict on the standard alone, which is lesson 350's topic.
 
 Source of truth is `prototype/template_lesson_modes.html`; regenerate with
 `python3 docs/Research/UI/Learn/prototype/build.py` (never hand-edit the output).

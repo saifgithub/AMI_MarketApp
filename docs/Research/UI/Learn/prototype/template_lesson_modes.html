@@ -512,6 +512,81 @@ td:first-child { font-family: var(--mono); font-size: 12px; color: var(--text-hi
 tr:last-child td { border-bottom: none; }
 td .w { font-family: var(--mono); font-size: 11px; color: var(--amber); font-variant-numeric: tabular-nums; }
 
+/* ── sample gallery ─────────────────────────────────────── */
+.gallery { margin-top: var(--s7); }
+.gallery > h2 { font-size: 22px; margin: 0 0 var(--s2); font-weight: 700; letter-spacing: -0.015em; }
+.gallery > p { color: var(--text-med); font-size: 14px; max-width: 65ch; margin: 0 0 var(--s5); }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(296px, 1fr));
+  gap: var(--s4);
+}
+.demo {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  padding: var(--s4);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.demo-head { margin-bottom: var(--s3); }
+.demo-head .row { display: flex; align-items: center; gap: var(--s2); margin-bottom: 5px; flex-wrap: wrap; }
+.chip {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(59,130,246,0.14);
+  color: var(--blue);
+  border: 1px solid rgba(59,130,246,0.4);
+  white-space: nowrap;
+}
+.chip.prim { background: rgba(139,92,246,0.14); color: var(--purple); border-color: rgba(139,92,246,0.4); }
+.chip.newp { background: rgba(236,72,153,0.14); color: var(--pink); border-color: rgba(236,72,153,0.42); }
+.chip.act  { background: rgba(6,182,212,0.13);  color: var(--cyan);   border-color: rgba(6,182,212,0.4); }
+.demo-head h3 { font-size: 15.5px; margin: 0; font-weight: 600; line-height: 1.3; }
+.demo canvas.viz { width: 100%; height: 132px; display: block; background: var(--card); border: 1px solid var(--border-light); border-radius: 9px; }
+.demo canvas.viz.tap { cursor: pointer; }
+.demo .out {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-med);
+  margin-top: var(--s2);
+  min-height: 32px;
+  line-height: 1.45;
+}
+.demo .out b { font-size: 14px; }
+.demo .out b.g { color: var(--green); }
+.demo .out b.r { color: var(--red); }
+.demo .out b.a { color: var(--amber); }
+.demo .out b.c { color: var(--cyan); }
+.demo .lesson-said {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-low);
+  border-top: 1px solid var(--border-subtle);
+  margin-top: var(--s3);
+  padding-top: var(--s2);
+  line-height: 1.45;
+}
+.seg { display: flex; gap: 5px; margin-top: var(--s2); flex-wrap: wrap; }
+.seg button {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-med);
+}
+.seg button[aria-pressed="true"] { background: var(--cyan); color: #04222a; border-color: var(--cyan); }
+.seg button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
 footer {
   margin-top: var(--s6);
   padding-top: var(--s4);
@@ -787,6 +862,131 @@ footer {
     </div>
   </div>
 
+  <div class="gallery">
+    <h2>Six more beats, six different interactions</h2>
+    <p>One lesson does not prove breadth. These are live — drag, tap, toggle. Four reuse painters that
+    already ship; two need a new primitive, which is the honest cost of covering the rest of the
+    corpus. Every figure comes from the lesson it belongs to.</p>
+
+    <div class="grid">
+
+      <!-- 1 · stop loss — ThresholdTrigger, drag -->
+      <div class="demo">
+        <div class="demo-head">
+          <div class="row">
+            <span class="chip">RISK 3</span>
+            <span class="chip prim">ThresholdTrigger</span>
+            <span class="chip act">drag</span>
+          </div>
+          <h3>Where you put the stop decides if noise takes you out</h3>
+        </div>
+        <canvas class="viz" id="vzStop" aria-label="Price path against a movable stop level"></canvas>
+        <div class="slider-row" style="margin-top:12px">
+          <div class="lbl"><label for="sStop">Stop distance</label><b id="sStopV">-4.0%</b></div>
+          <input type="range" id="sStop" min="10" max="90" step="1" value="40">
+        </div>
+        <div class="out" id="oStop"></div>
+        <div class="lesson-said">015_stop_loss_basics · the path is fixed; only your stop moves</div>
+      </div>
+
+      <!-- 2 · drawdown — CurveDraw, drag -->
+      <div class="demo">
+        <div class="demo-head">
+          <div class="row">
+            <span class="chip">RISK 6</span>
+            <span class="chip prim">CurveDraw</span>
+            <span class="chip act">drag</span>
+          </div>
+          <h3>A 50% loss needs a 100% gain to get back</h3>
+        </div>
+        <canvas class="viz" id="vzDD" aria-label="Equity falling by a drawdown and the climb back to breakeven"></canvas>
+        <div class="slider-row" style="margin-top:12px">
+          <div class="lbl"><label for="sDD">Drawdown</label><b id="sDDV">-50%</b></div>
+          <input type="range" id="sDD" min="5" max="75" step="1" value="50">
+        </div>
+        <div class="out" id="oDD"></div>
+        <div class="lesson-said">018_drawdown_management · the asymmetry is the whole lesson</div>
+      </div>
+
+      <!-- 3 · candle anatomy — CandleAnatomy, tap to identify -->
+      <div class="demo">
+        <div class="demo-head">
+          <div class="row">
+            <span class="chip">TECH 1</span>
+            <span class="chip prim">CandleAnatomy</span>
+            <span class="chip act">tap to identify</span>
+          </div>
+          <h3>Name the four parts of this candle</h3>
+        </div>
+        <canvas class="viz tap" id="vzCandle" aria-label="A bullish candle; tap its parts to name them"></canvas>
+        <div class="out" id="oCandle"></div>
+        <div class="lesson-said">020_candlesticks_anatomy_of_a_bar · retrieval, not a labelled diagram</div>
+      </div>
+
+      <!-- 4 · RSI — Oscillator, drag -->
+      <div class="demo">
+        <div class="demo-head">
+          <div class="row">
+            <span class="chip">TECH 8</span>
+            <span class="chip prim">Oscillator</span>
+            <span class="chip act">drag</span>
+          </div>
+          <h3>Move the overbought line and count your signals</h3>
+        </div>
+        <canvas class="viz" id="vzRsi" aria-label="RSI series against a movable overbought threshold"></canvas>
+        <div class="slider-row" style="margin-top:12px">
+          <div class="lbl"><label for="sRsi">Overbought level</label><b id="sRsiV">70</b></div>
+          <input type="range" id="sRsi" min="55" max="88" step="1" value="70">
+        </div>
+        <div class="out" id="oRsi"></div>
+        <div class="lesson-said">027_rsi_momentum_oscillator · loosen the line, invent more signals</div>
+      </div>
+
+      <!-- 5 · ruin math — NEW primitive, drag -->
+      <div class="demo">
+        <div class="demo-head">
+          <div class="row">
+            <span class="chip">RISK 1</span>
+            <span class="chip newp">new primitive</span>
+            <span class="chip act">drag</span>
+          </div>
+          <h3>Ten losses in a row. What's left?</h3>
+        </div>
+        <canvas class="viz" id="vzRuin" aria-label="Account equity after each of ten consecutive losses"></canvas>
+        <div class="slider-row" style="margin-top:12px">
+          <div class="lbl"><label for="sRuin">Risk per trade</label><b id="sRuinV">1%</b></div>
+          <input type="range" id="sRuin" min="1" max="25" step="1" value="1">
+        </div>
+        <div class="out" id="oRuin"></div>
+        <div class="lesson-said">013_why_risk_matters_more_than_profit · has no animation today</div>
+      </div>
+
+      <!-- 6 · sharia ratio screen — NEW primitive, toggle -->
+      <div class="demo">
+        <div class="demo-head">
+          <div class="row">
+            <span class="chip">SHARIA 3</span>
+            <span class="chip newp">new primitive</span>
+            <span class="chip act">toggle</span>
+          </div>
+          <h3>The same company flips when the standard changes</h3>
+        </div>
+        <canvas class="viz" id="vzSharia" aria-label="Three screening ratios against their caps"></canvas>
+        <div class="seg" id="segCo" role="group" aria-label="Company">
+          <button data-co="0" aria-pressed="true">Borderline co.</button>
+          <button data-co="1" aria-pressed="false">Levered telecom</button>
+        </div>
+        <div class="seg" id="segStd" role="group" aria-label="Standard">
+          <button data-std="0" aria-pressed="true">AAOIFI 30/30/5</button>
+          <button data-std="1" aria-pressed="false">DJIM 33/33/5</button>
+        </div>
+        <div class="out" id="oSharia"></div>
+        <div class="lesson-said">349_the_three_financial_ratio_screens · the flip is lesson 350's topic</div>
+      </div>
+
+    </div>
+  </div>
+
   <footer>
     Prototype · Learn-surface research · lesson 014_position_sizing_basics (RISK 2, module 3)<br>
     Tokens mirror <code>mobile/lib/theme/ami_theme.dart</code>. The balance scale on the left is drawn
@@ -1051,8 +1251,287 @@ footer {
   document.getElementById('cDeck').textContent = d;
   document.getElementById('cPer').textContent = Math.round(d / cards.length);
 
+  /* ═══ SAMPLE GALLERY ═════════════════════════════════════ */
+  function el(id) { return document.getElementById(id); }
+  function on(id, fn) { var e = el(id); if (e) e.addEventListener('input', fn); }
+  function poly(c, pts, col, wid) {
+    c.strokeStyle = col; c.lineWidth = wid || 1.8;
+    c.lineJoin = 'round';
+    c.beginPath();
+    pts.forEach(function (p, i) { i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]); });
+    c.stroke();
+  }
+  function dash(c, x1, y, x2, col, lbl) {
+    c.strokeStyle = col; c.lineWidth = 1; c.setLineDash([4, 3]);
+    c.beginPath(); c.moveTo(x1, y); c.lineTo(x2, y); c.stroke();
+    c.setLineDash([]);
+    if (lbl) {
+      c.fillStyle = col; c.font = '700 8.5px ' + tok('--mono');
+      c.textAlign = 'left'; c.fillText(lbl, x1 + 3, y - 4);
+    }
+  }
+
+  /* 1 · stop loss — fixed path, movable stop */
+  var PATH = [0, -1.2, -2.4, -1.8, -3.6, -2.1, -0.9, 1.4, 2.8];
+  function drawStop() {
+    var cv = el('vzStop'); if (!cv) return;
+    var g = fit(cv), c = g.c, w = g.w, h = g.h;
+    var pct = +el('sStop').value / 10;
+    var lo = -6, hi = 4, padL = 30, padR = 8, padV = 14;
+    var X = function (i) { return padL + i / (PATH.length - 1) * (w - padL - padR); };
+    var Y = function (v) { return padV + (hi - v) / (hi - lo) * (h - padV * 2); };
+
+    dash(c, padL, Y(0), w - padR, tok('--text-low'), 'ENTRY');
+    var hit = -1;
+    for (var i = 0; i < PATH.length; i++) { if (PATH[i] <= -pct) { hit = i; break; } }
+    var pts = PATH.map(function (v, i) { return [X(i), Y(v)]; });
+    if (hit >= 0) {
+      poly(c, pts.slice(0, hit + 1), tok('--red'));
+      poly(c, pts.slice(hit), 'rgba(100,116,139,0.35)', 1.2);
+      c.fillStyle = tok('--red');
+      c.beginPath(); c.arc(X(hit), Y(-pct), 4, 0, 6.3); c.fill();
+    } else {
+      poly(c, pts, tok('--green'));
+      c.fillStyle = tok('--green');
+      c.beginPath(); c.arc(X(PATH.length - 1), Y(PATH[PATH.length - 1]), 4, 0, 6.3); c.fill();
+    }
+    dash(c, padL, Y(-pct), w - padR, tok(hit >= 0 ? '--red' : '--cyan'), 'STOP -' + pct.toFixed(1) + '%');
+
+    el('sStopV').textContent = '-' + pct.toFixed(1) + '%';
+    el('oStop').innerHTML = hit >= 0
+      ? '<b class="r">Stopped out</b> at -' + pct.toFixed(1) + '% — then it recovered to +2.8% without you.'
+      : '<b class="g">Held.</b> Closed +2.8%. A wider stop survives noise, but costs more when the thesis is genuinely wrong.';
+  }
+  on('sStop', drawStop);
+
+  /* 2 · drawdown asymmetry */
+  function drawDD() {
+    var cv = el('vzDD'); if (!cv) return;
+    var g = fit(cv), c = g.c, w = g.w, h = g.h;
+    var dd = +el('sDD').value;
+    var need = dd / (100 - dd) * 100;
+    var padL = 30, padR = 8, padV = 14;
+    var Y = function (eq) { return padV + (1.05 - eq) / (1.05 - 0.2) * (h - padV * 2); };
+    var floorEq = 1 - dd / 100;
+
+    dash(c, padL, Y(1), w - padR, tok('--text-low'), 'BREAKEVEN');
+    var mid = padL + (w - padL - padR) * 0.42, end = w - padR;
+    var pts = [];
+    for (var i = 0; i <= 20; i++) {
+      var t = i / 20;
+      pts.push([padL + (mid - padL) * t, Y(1 - (1 - floorEq) * Math.pow(t, 1.5))]);
+    }
+    poly(c, pts, tok('--red'));
+    var up = [];
+    for (var j = 0; j <= 20; j++) {
+      var u = j / 20;
+      up.push([mid + (end - mid) * u, Y(floorEq + (1 - floorEq) * Math.pow(u, 0.75))]);
+    }
+    poly(c, up, tok('--green'));
+    c.fillStyle = tok('--red');
+    c.font = '700 9px ' + tok('--mono'); c.textAlign = 'center';
+    c.fillText('-' + dd + '%', mid, Math.min(Y(floorEq) + 13, h - 5));
+
+    el('sDDV').textContent = '-' + dd + '%';
+    var cls = need < 25 ? 'a' : need < 60 ? 'a' : 'r';
+    el('oDD').innerHTML = 'Lose <b class="r">' + dd + '%</b>, then you need <b class="' + cls + '">+' +
+      need.toFixed(0) + '%</b> just to get back to even.' +
+      (dd >= 50 ? ' Losing half means doubling from here.' : '');
+  }
+  on('sDD', drawDD);
+
+  /* 3 · candle anatomy — tap to identify */
+  var CANDLE = [
+    { k: 'upper', n: 'UPPER WICK', d: 'high above the close' },
+    { k: 'close', n: 'CLOSE', d: 'top of a green body' },
+    { k: 'open',  n: 'OPEN',  d: 'bottom of a green body' },
+    { k: 'lower', n: 'LOWER WICK', d: 'low below the open' }
+  ];
+  var found = {};
+  function candleGeom(w, h) {
+    var cx = w / 2, bw = 34, pad = 16;
+    var yHigh = pad, yClose = h * 0.32, yOpen = h * 0.68, yLow = h - pad;
+    return { cx: cx, bw: bw, yHigh: yHigh, yClose: yClose, yOpen: yOpen, yLow: yLow };
+  }
+  function drawCandle() {
+    var cv = el('vzCandle'); if (!cv) return;
+    var g = fit(cv), c = g.c, w = g.w, h = g.h, m = candleGeom(w, h);
+    c.strokeStyle = tok('--green'); c.lineWidth = 1.6;
+    c.beginPath(); c.moveTo(m.cx, m.yHigh); c.lineTo(m.cx, m.yLow); c.stroke();
+    c.fillStyle = 'rgba(16,185,129,0.55)';
+    c.fillRect(m.cx - m.bw / 2, m.yClose, m.bw, m.yOpen - m.yClose);
+    c.strokeRect(m.cx - m.bw / 2 + 0.5, m.yClose + 0.5, m.bw - 1, m.yOpen - m.yClose - 1);
+
+    c.font = '700 9px ' + tok('--mono');
+    CANDLE.forEach(function (part) {
+      if (!found[part.k]) return;
+      var y = part.k === 'upper' ? (m.yHigh + m.yClose) / 2
+            : part.k === 'close' ? m.yClose
+            : part.k === 'open' ? m.yOpen
+            : (m.yOpen + m.yLow) / 2;
+      c.strokeStyle = tok('--cyan'); c.lineWidth = 1; c.setLineDash([3, 2]);
+      c.beginPath(); c.moveTo(m.cx + m.bw / 2 + 2, y); c.lineTo(w - 78, y); c.stroke();
+      c.setLineDash([]);
+      c.fillStyle = tok('--cyan'); c.textAlign = 'left';
+      c.fillText(part.n, w - 74, y + 3);
+    });
+    var n = Object.keys(found).length;
+    if (!n) {
+      c.fillStyle = tok('--text-low'); c.font = '9.5px ' + tok('--mono');
+      c.textAlign = 'center'; c.fillText('tap a part', m.cx, h - 4);
+    }
+  }
+  var cvC = el('vzCandle');
+  if (cvC) {
+    cvC.addEventListener('click', function (ev) {
+      var r = cvC.getBoundingClientRect();
+      var y = ev.clientY - r.top, h = r.height, m = candleGeom(r.width, h);
+      var k = y < m.yClose ? 'upper' : y > m.yOpen ? 'lower'
+            : y < (m.yClose + m.yOpen) / 2 ? 'close' : 'open';
+      var part = CANDLE.filter(function (p) { return p.k === k; })[0];
+      var fresh = !found[k];
+      found[k] = true;
+      drawCandle();
+      var n = Object.keys(found).length;
+      el('oCandle').innerHTML = (fresh ? '<b class="c">' + part.n + '</b> — ' + part.d
+                                       : '<b class="c">' + part.n + '</b> — already found')
+        + '<br><b class="' + (n === 4 ? 'g' : 'a') + '">' + n + ' of 4</b>'
+        + (n === 4 ? ' — all four. That is retrieval, not a labelled diagram.' : ' found');
+    });
+  }
+
+  /* 4 · RSI threshold → signal count */
+  var RSI = [40,59,42,66,44,73,45,79,46,84,47,90,48,70,43,62,41,56,40,52];
+  function drawRsi() {
+    var cv = el('vzRsi'); if (!cv) return;
+    var g = fit(cv), c = g.c, w = g.w, h = g.h;
+    var lvl = +el('sRsi').value;
+    var padL = 26, padR = 8, padV = 12;
+    var X = function (i) { return padL + i / (RSI.length - 1) * (w - padL - padR); };
+    var Y = function (v) { return padV + (100 - v) / 100 * (h - padV * 2); };
+
+    c.fillStyle = 'rgba(139,92,246,0.10)';
+    c.fillRect(padL, Y(100), w - padL - padR, Y(lvl) - Y(100));
+    dash(c, padL, Y(30), w - padR, tok('--text-low'), '30');
+    poly(c, RSI.map(function (v, i) { return [X(i), Y(v)]; }), tok('--purple'));
+
+    var sig = 0;
+    for (var i = 1; i < RSI.length; i++) {
+      if (RSI[i - 1] < lvl && RSI[i] >= lvl) {
+        sig++;
+        c.fillStyle = tok('--amber');
+        c.beginPath(); c.arc(X(i), Y(RSI[i]), 3.5, 0, 6.3); c.fill();
+      }
+    }
+    dash(c, padL, Y(lvl), w - padR, tok('--amber'), 'OB ' + lvl);
+
+    el('sRsiV').textContent = lvl;
+    el('oRsi').innerHTML = '<b class="a">' + sig + '</b> overbought signal' + (sig === 1 ? '' : 's') +
+      ' on the same 20 bars. ' + (lvl <= 62
+        ? 'Nine signals from one series — drop the line and you manufacture them. That is curve-fitting, not edge.'
+        : lvl >= 82 ? 'Almost nothing fires. The level is a choice you make, not a fact the market supplies.'
+        : 'The standard 70 is a convention, not a law — and it decides how often you trade.');
+  }
+  on('sRsi', drawRsi);
+
+  /* 5 · ruin math — NEW primitive (streak bars) */
+  function drawRuin() {
+    var cv = el('vzRuin'); if (!cv) return;
+    var g = fit(cv), c = g.c, w = g.w, h = g.h;
+    var r = +el('sRuin').value / 100;
+    var N = 10, padL = 30, padR = 8, padV = 12, gap = 3;
+    var bw = (w - padL - padR - gap * (N - 1)) / N;
+    var base = h - padV;
+    for (var i = 0; i < N; i++) {
+      var eq = Math.pow(1 - r, i + 1);
+      var bh = Math.max(1.5, eq * (h - padV * 2));
+      var x = padL + i * (bw + gap);
+      var col = eq > 0.7 ? '16,185,129' : eq > 0.4 ? '245,158,11' : '239,68,68';
+      c.fillStyle = 'rgba(' + col + ',0.75)';
+      c.fillRect(x, base - bh, bw, bh);
+    }
+    dash(c, padL, padV, w - padR, tok('--text-low'), '100%');
+    var left = Math.pow(1 - r, N);
+    c.fillStyle = tok('--text-low'); c.font = '8.5px ' + tok('--mono');
+    c.textAlign = 'left'; c.fillText('10 losses →', padL, h - 2);
+
+    el('sRuinV').textContent = (r * 100).toFixed(0) + '%';
+    var cls = left > 0.7 ? 'g' : left > 0.4 ? 'a' : 'r';
+    el('oRuin').innerHTML = 'Ten straight losses leaves <b class="' + cls + '">' +
+      (left * 100).toFixed(1) + '%</b> of the account. Recovering needs <b>+' +
+      ((1 / left - 1) * 100).toFixed(0) + '%</b>.' +
+      (r >= 0.2 ? ' A streak of ten is normal. This is ruin.' : '');
+  }
+  on('sRuin', drawRuin);
+
+  /* 6 · sharia ratio screen — NEW primitive (comparison bars) */
+  var COS = [
+    { n: 'Borderline co.', v: [31.5, 28.4, 4.1] },
+    { n: 'Levered telecom', v: [107.8, 3.3, 0.7] }
+  ];
+  var STDS = [
+    { n: 'AAOIFI Std 21', caps: [30, 30, 5] },
+    { n: 'DJIM',          caps: [33, 33, 5] }
+  ];
+  var RN = ['debt / mkt cap', 'cash+interest / mkt cap', 'impure income / rev'];
+  var coI = 0, stdI = 0;
+  function drawSharia() {
+    var cv = el('vzSharia'); if (!cv) return;
+    var g = fit(cv), c = g.c, w = g.w, h = g.h;
+    var co = COS[coI], std = STDS[stdI];
+    var padL = 8, padR = 46, padT = 10, rowH = (h - padT * 2) / 3;
+    var scale = 40;                        // % at full width (values clamp)
+    var fails = 0;
+
+    for (var i = 0; i < 3; i++) {
+      var y = padT + i * rowH + rowH * 0.28, bh = rowH * 0.34;
+      var val = co.v[i], cap = std.caps[i];
+      var over = val > cap;
+      if (over) fails++;
+      var track = w - padL - padR;
+      var frac = Math.min(1, val / scale);
+      c.fillStyle = 'rgba(255,255,255,0.05)';
+      c.fillRect(padL, y, track, bh);
+      c.fillStyle = over ? 'rgba(239,68,68,0.65)' : 'rgba(16,185,129,0.6)';
+      c.fillRect(padL, y, track * frac, bh);
+      // cap marker
+      var cx = padL + track * Math.min(1, cap / scale);
+      c.strokeStyle = tok('--amber'); c.lineWidth = 1.5;
+      c.beginPath(); c.moveTo(cx, y - 3); c.lineTo(cx, y + bh + 3); c.stroke();
+      // labels
+      c.fillStyle = tok('--text-low'); c.font = '7.5px ' + tok('--mono');
+      c.textAlign = 'left'; c.fillText(RN[i], padL + 1, y - 4);
+      c.fillStyle = over ? tok('--red') : tok('--green');
+      c.font = '700 9.5px ' + tok('--mono'); c.textAlign = 'right';
+      c.fillText((val > 99 ? val.toFixed(0) : val.toFixed(1)) + '%', w - 4, y + bh - 1);
+    }
+    el('oSharia').innerHTML = fails
+      ? '<b class="r">FAILS</b> under ' + std.n + ' — ' + fails + ' of 3 ratios over cap.'
+      : '<b class="g">PASSES</b> under ' + std.n + ' — all three inside cap.';
+    if (coI === 0) {
+      el('oSharia').innerHTML += '<br>Same company passes DJIM and fails AAOIFI. The standard, not the balance sheet, decided.';
+    }
+  }
+  function segWire(id, attr, set) {
+    var box = el(id); if (!box) return;
+    box.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      Array.prototype.forEach.call(box.querySelectorAll('button'), function (x) {
+        x.setAttribute('aria-pressed', String(x === b));
+      });
+      set(+b.dataset[attr]);
+      drawSharia();
+    });
+  }
+  segWire('segCo', 'co', function (v) { coI = v; });
+  segWire('segStd', 'std', function (v) { stdI = v; });
+
+  function drawGallery() {
+    drawStop(); drawDD(); drawCandle(); drawRsi(); drawRuin(); drawSharia();
+  }
+
   /* ── init ───────────────────────────────────────────────── */
-  function paint() { drawDeco(); if (stopEl) sync(); }
+  function paint() { drawDeco(); if (stopEl) sync(); drawGallery(); }
   paint();
   show(0);
   var t; window.addEventListener('resize', function () {
