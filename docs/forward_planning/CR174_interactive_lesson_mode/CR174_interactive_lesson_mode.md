@@ -182,6 +182,53 @@ corpus while interactive content lands. `locale_staleness_check.py` already flag
   **Recommend keeping it out of v1** — prove the format on static blocks before adding per-load LLM
   cost. Scope item 7 delivers the mandate-personalisation half of D-030 for free.
 
+## Risks
+
+**R1 — "A mode switch is the design refusing to decide." This CR must answer its own house
+precedent.** The sibling research (CR173) *rejected* a dual-mode concept — F, the global depth dial —
+in these words: *"every surface ships twice — built, tested, translated (EN/AR/MS), forever. The dial
+needs a home the app doesn't have … And the default is a fork: default Simple and Simple is the app;
+default Full and nothing changed. A mode switch here is the design refusing to decide."* That
+objection is correct about F and must not be waved away here. Three distinctions carry CR174, and one
+concession is owed:
+
+- **F duplicated every surface; CR174 duplicates one body renderer.** Both modes render from the
+  **same `LessonBlock` list**, so content is authored once, not twice, and translation stays per-`id`
+  on one source — not two corpora. F's "ships twice, translated, forever" cost is not this cost.
+- **F had no home for its dial; the lesson reader already has one.** Per-lesson chrome exists, and
+  `quizOnly` (A19) already enters a filtered mode from context — no Settings burial, which was the
+  specific mechanism that would have hidden F from the user it existed for.
+- **CR174 does decide.** Interactive is the default (derived from `learning_style`); book is the
+  fallback. This is CR106 `RoomViewMode` — verdict-first default, prose one toggle away — which was
+  *accepted*, not F's novice/pro fork with no default.
+- **The concession:** book mode's long-term justification is exactly three things — linear/screen-reader
+  reading, the AR/MS fallback while translation lags, and 219k words of already-verified content that
+  must stay readable. If interactive mode wins on the pilot, we should be willing to let book mode
+  narrow to those three jobs, and **retire it rather than maintain two experiences forever.** Anything
+  less and F's critique lands on us too.
+
+**R2 — the new format could also be rejected.** We would have spent the pilot to find out. Mitigated
+by scoping the pilot to 6 lessons and judging on device before any scale-out; not mitigated by
+argument.
+
+**R3 — discovery. The 2% precedent is the warning.** Daily challenges are shipped, graded and
+interactive, and 4 of 172 users found them. An interactive mode behind a buried toggle earns the same
+number. This is why the default must be derived rather than opt-in-only, and why acceptance criterion
+7 gates scale-out on instrumented entry + per-card completion.
+
+**R4 — authoring cost is real even though painter code is free.** A new visual is a registry entry,
+but that entry is *hand-authored per lesson* (bound parameter, range, the lesson's own figures). 348
+lessons is a large content lane. The pilot's job is to produce a per-lesson time estimate before
+anyone commits to the corpus.
+
+**R5 — translation churn.** Every EN card edit invalidates its AR/MS sibling per-`id`. Cards carry
+less text per unit than 620-word prose so the steady state is cheaper, but the *transition* is a burst
+of re-translation. Sequence it behind the DEF105 cohort rather than on top of it.
+
+**R6 — D-030 scope creep.** The LLM wrapper is decided and unbuilt, and it is tempting to fold in
+here. It adds per-load cost, latency and a nondeterministic surface to a format we have not yet
+proven. Held out of v1 on purpose; scope item 7 takes the personalisation win without the LLM.
+
 ## Lane split
 
 - `CR174-BE` (`coder.api`) — the `LessonBlock` kind extensions and any parse/serve changes.
