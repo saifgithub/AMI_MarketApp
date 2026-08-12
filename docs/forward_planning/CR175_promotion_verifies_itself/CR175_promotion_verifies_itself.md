@@ -140,6 +140,101 @@ now**, routinely, none of them mine. A gate whose failing state is the normal st
 it is training to scroll past a failing check, which is the precise habit the command's own hold-gate
 comment says it exists to break.
 
+### F6 — The stamp describes the image; the running code is the bind mount
+
+Found while building Tier C, and it changes what Tier A can honestly claim.
+
+`docker-compose.yml`'s `api-alpha` service mounts:
+
+```yaml
+volumes:
+  - ./backend/app:/app/app:ro
+  - ./backend/tests:/app/tests:ro
+  - ./backend/scripts:/app/scripts:ro
+  - ./content:/content:ro
+```
+
+So **the Python uvicorn imports is the rsync'd host filesystem, not the image
+contents.** `GIT_SHA` is baked at build time and answers *"which commit was this
+image built from"* — it can never answer *"which bytes is the process running"*,
+because the image's `app/` is shadowed by the mount. A partial rsync would leave
+a stale mount under a current stamp, and the stamp would report it as fine.
+
+This is not a reason to drop the stamp — without it there is no identity at all.
+It is the reason Tier C carries a **`tree`** check: an `rsync --dry-run
+--itemize-changes` against melehost, which answers the second question directly
+and is the only check that catches a partial sync. The two together are what F2
+actually needs; either alone overclaims.
+
+It is also what makes Tier D's BLOCKING set *derivable* rather than guessed — a
+change under `backend/app` or `content/` is live on the box the moment the rsync
+lands, with no rebuild involved at all.
+
+### F7 — The audit-lane gate conflates two different failures
+
+Measured while running this CR's own preflight, 2026-08-12:
+
+```
+$ orchestration/dispatch/dispatch.sh inbox
+!! NO AUDITOR WATCHER — last poll 43265s ago (limit 90s), never exited cleanly.
+inbox clear — no verdict awaiting integration, no submission of yours undelivered.
+$ echo $?
+1
+```
+
+Read `dispatch.sh` and the two conditions are explicitly separate — `hot` counts
+verdicts and undelivered submissions, `dead` counts stale watcher heartbeats,
+and **either** returns 1:
+
+```sh
+[ "$hot" -gt 0 ] && return 1
+[ "$dead" -gt 0 ] && return 1
+```
+
+Here `hot=0`. The gate fired entirely on `dead`, i.e. on *"no auditor process
+has polled for 12 hours"* — and `dispatch.sh`'s own comment says what that
+condition is for: *"Restart it before you **submit** anything else."* It is a
+warning about work that would sit unserved, not a statement about the code being
+promoted.
+
+The gate the promotion protocol wanted (AT:R66) is *"has an auditor already told
+you this code is broken?"*, and that answer is **no**. The gate it got also
+blocks on the audit fleet being idle, which is the normal state whenever nobody
+is running an audit.
+
+**This is F5's shape again, one layer up**: a gate that fires for a reason other
+than the one it was built to catch teaches the operator that firing does not
+mean stop. Left alone it will be reasoned past, exactly once, on the day it
+matters.
+
+**Not fixed unilaterally.** Loosening a safety gate is Saiful's call, not a
+side-effect of another CR, and this CR is specifically about not reasoning past
+gates. Recommended fix, for his decision: split the exit codes — `1` for a
+verdict or an undelivered submission (abort the promotion), `2` for a dead
+watcher (warn, and abort only a *submission*). The promotion gate would then
+test for `1`.
+
+### F8 — The one manual gate asks about a machine that does not exist
+
+`/promote-to-alpha` step 1 ends by asking the operator:
+
+> "Did you click through onboarding on **the local backend** just now, end to
+> end? (y/n)"
+
+`n` aborts; it is described as *"the only manual gate — keeps the operator
+honest."* But `promotion_protocol.md` and `CLAUDE.md` both state, emphatically,
+that **the Mac runs no backend, no database, no services** — that is a deliberate
+architectural decision, not an accident of setup. There has been no local backend
+to click through since well before this session.
+
+So the question cannot be answered truthfully by anyone. Whoever answers `y` is
+answering some other question they substituted for it, which is the worst
+possible state for the single gate that exists to keep the operator honest.
+
+Fixed here, because it is one sentence and reversible: the question now asks
+what is actually available to check — that the change was exercised end-to-end
+against Alpha, or that it is backend-only with no client-visible surface.
+
 ---
 
 ## The through-line

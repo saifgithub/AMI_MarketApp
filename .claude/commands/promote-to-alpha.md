@@ -108,11 +108,21 @@ user clears a hold, and only against the precondition the hold names.
 
 Then **ask the user one yes/no question** (don't auto-confirm):
 
-> "Did you click through onboarding on the local backend just now,
->  end to end? (y/n)"
+> "Has this change been exercised end to end — against Alpha, or on a
+>  device — or is it backend-only with no client-visible surface? (y/n)"
 
 `n` aborts the promotion. `y` means the operator is taking
 responsibility for the smoke test.
+
+**The wording changed at AT:R68 (CR175 F8) and the reason matters.** It used to
+ask *"Did you click through onboarding on **the local backend** just now?"* —
+and `promotion_protocol.md` and `CLAUDE.md` both state, emphatically, that the
+Mac runs **no backend, no database, no services**. There has been no local
+backend to click through for a long time, so the question could not be answered
+truthfully by anyone: whoever answered `y` was answering some other question they
+had quietly substituted for it. That is the worst possible state for the one
+gate whose entire job is keeping the operator honest. It now asks something that
+is actually available to check.
 
 ### 2. Compute the next tag
 
