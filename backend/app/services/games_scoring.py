@@ -253,6 +253,167 @@ def apply_negative_twr_partial_credit(points: float, run_twr: float) -> float:
     return points * NEGATIVE_TWR_PARTIAL_CREDIT if run_twr < 0 else points
 
 
+# ── Placement (§6.2, slice 4) — the scoring basis the whole design was
+# built around, and the one the alpha path above stands in for until a
+# field is big enough to carry it.
+#
+# `p = (n - rank) / (n - 1)`, over the WHOLE open field. 1.0 = first,
+# 0.0 = last. Points off placement rather than off the percentage because
+# placement cancels the market out for free: everyone in a field faced the
+# same one, so the Record stores skill instead of *when you happened to
+# play* (§6.2's "load-bearing choice").
+#
+# The two thresholds below are the design's own first cut (§6.6), and they
+# are FENCES, not preferences:
+#
+# `PLACEMENT_MIN_FIELD = 8` — §6.6 problem 1 is that the formula is
+# UNDEFINED at n=1 (division by zero) and degenerate at n=2, where it is
+# exactly 1.0 or 0.0: maximum payout or maximum debit on a coin flip. And
+# problem 2 is that first-of-one pays the largest prize in the game for
+# beating nobody. `placement_p` refuses below the threshold rather than
+# returning a number, because every caller that could ask is a caller that
+# would otherwise write that number into a permanent Record.
+#
+# `TITLE_MIN_FIELD = 20` — "prestige needs witnesses" (§6.6). A thin field
+# still SCORES (via the alpha path); it just cannot advance a title.
+PLACEMENT_MIN_FIELD = 8
+TITLE_MIN_FIELD = 20
+
+
+def placement_p(rank: int, n: int) -> float:
+    """Position in the field as a [0, 1] fraction — 1.0 first, 0.0 last.
+
+    Raises below `PLACEMENT_MIN_FIELD` rather than degrading. This is the
+    one function in the module that refuses instead of falling back, and
+    deliberately so: `cadence_weight` and `duel_points` default on an
+    unknown *string* (a scoring detail), whereas an out-of-range `n` here
+    is the design's own named hole. A silent fallback would put a maximum
+    win on a field of one — the exact farm §6.6 exists to close — and it
+    would do it invisibly, which is the CR040 class.
+    """
+    if n < PLACEMENT_MIN_FIELD:
+        raise ValueError(
+            f"placement needs n >= {PLACEMENT_MIN_FIELD}, got {n} — "
+            "thin fields score on the benchmark path (§6.6)"
+        )
+    if not 1 <= rank <= n:
+        raise ValueError(f"rank {rank} outside a field of {n}")
+    return (n - rank) / (n - 1)
+
+
+def placement_to_points(p: float) -> float:
+    """`p` -> base career points, BEFORE cadence weight, the ×0.5
+    partial-credit rule and the title multiplier.
+
+        p >= 0.5   +100 x ((p - 0.5) x 2) ^ 1.5     convex — the very top
+                                                     is worth a lot
+        p <  0.5   - 40 x ((0.5 - p) x 2)           linear and shallow
+
+    Winning is worth 2.5x what losing costs, and the damping lives in the
+    curve rather than being bolted on afterwards. Same shape and same
+    2.5:1 asymmetry as `alpha_to_points`, which is what makes the two
+    bases comparable when a player's history crosses the `n >= 8`
+    threshold mid-career.
+    """
+    p = max(0.0, min(1.0, p))
+    if p >= 0.5:
+        return 100.0 * (((p - 0.5) * 2.0) ** 1.5)
+    return -40.0 * ((0.5 - p) * 2.0)
+
+
+# ── Titles (§6.4) — thresholds on the RUNNING career-point total, never a
+# promotion event. Saiful spotted why: with rolling starts there is no
+# synchronized boundary to promote on, which is precisely what the shipped
+# `league_service.weekly_roll()` relied upon. Relegation is just the total
+# falling back through a threshold — no roll, no cohort assembly, no event.
+#
+# Rung 2 is a MILESTONE, not a number (Amendment D correction 3): three
+# finished runs, none forfeited. The review found the goal gradient never
+# engages otherwise — a consistently-75th-percentile player needs ~14 weeks
+# to reach Analyst and the median player never arrives at all — and its own
+# proposed 100-point rung would have been twenty finishes at the stipend's
+# sizing. Lowering the gate beats raising the stipend, which would break the
+# anti-farm guard. It fires once, so it cannot be farmed.
+#
+# NAMING: the design leaves rung 2 deliberately unnamed (§6.4's table reads
+# *"(new rung — unnamed, §18.1)"*). `associate` is this build's placeholder,
+# chosen to sit in the same desk register as the five inherited names —
+# flagged to Saiful as a one-word call, and the ONLY thing here that is a
+# preference rather than a derivation.
+TITLE_APPRENTICE = "apprentice"
+TITLE_RUNG_TWO = "associate"
+
+TITLE_MULTIPLIER: dict[str, float] = {
+    "apprentice": 1.0,
+    "associate": 1.2,
+    "analyst": 1.4,
+    "trader": 1.6,
+    "senior": 1.8,
+    "floor_veteran": 2.0,
+}
+
+# Points thresholds for rungs 3+. Rung 2 is absent on purpose — it is the
+# milestone above, and putting a number here would let it be reached two
+# different ways.
+TITLE_POINT_THRESHOLDS: list[tuple[int, str]] = [
+    (30_000, "floor_veteran"),
+    (10_000, "senior"),
+    (2_500, "trader"),
+    (500, "analyst"),
+]
+
+MILESTONE_FINISHED_RUNS = 3
+
+
+def title_for(*, career_points: int, finished_runs: int, forfeits: int) -> str:
+    """The title a player holds RIGHT NOW, derived from their totals — never
+    stored as a promotion, so there is nothing to roll and nothing to keep
+    in sync.
+
+    Points thresholds win over the milestone when both are met, because the
+    ladder must be monotonic in points: a player at 600 who happens to have
+    forfeited once is an Analyst, and demoting them to Apprentice for it
+    would make the ×1.4 multiplier depend on a fact the points already
+    priced.
+    """
+    for threshold, title in TITLE_POINT_THRESHOLDS:
+        if career_points >= threshold:
+            return title
+    if finished_runs >= MILESTONE_FINISHED_RUNS and forfeits == 0:
+        return TITLE_RUNG_TWO
+    return TITLE_APPRENTICE
+
+
+def title_multiplier(title: str | None) -> float:
+    """Unknown or missing title -> 1.0, the apprentice value. A run whose
+    stored multiplier could not be resolved must score as though it had no
+    title, never as zero: zeroing it would silently delete a real result."""
+    return float(TITLE_MULTIPLIER.get(title or "", 1.0))
+
+
+# ── The minimum forfeit debit (§18's churn hole) ──────────────────────────
+#
+# The debit for forfeiting is placement-based, so forfeiting from mid-field
+# (`p ~= 0.5`) costs approximately NOTHING — and with rolling starts there
+# is always another field to join. The zero floor makes it worse for exactly
+# the players most likely to churn: at 0 points there is nothing to debit.
+#
+# Sized against §6.2's own table so that "one forfeit stays cheaper than a
+# genuinely bad finish" — the mercy rule has to stay merciful. A last-place
+# weekly finish is -40; this is -10, a quarter of it. Scaled by the LOSS
+# cadence weight (not the gain row), so an annual forfeit costs 7.2x a
+# weekly one rather than 52x — a player abandoning a year is not 52 times
+# worse than one abandoning a week, and the sqrt row is the design's own
+# answer to that asymmetry everywhere else it appears.
+MIN_FORFEIT_DEBIT = 10
+
+
+def forfeit_debit(cadence: str) -> int:
+    """The floor a forfeit costs regardless of standing. Returned POSITIVE;
+    the caller applies the sign, the same convention `finish_stipend` uses."""
+    return round(MIN_FORFEIT_DEBIT * cadence_weight(cadence, negative=True))
+
+
 # ── The wildness index (design §10.4) — a PRIVATE mirror, never scored,
 # never rendered on a board. Four normalised [0, 1] components, averaged:
 #   concentration  — HHI over ending-position weights (all-in one name = 1)
