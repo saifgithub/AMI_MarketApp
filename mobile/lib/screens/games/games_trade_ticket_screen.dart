@@ -424,6 +424,23 @@ class _GamesTradeTicketScreenState
 
 }
 
+/// The fee as a percentage of this order's own notional, or null when it is
+/// close enough to the headline rate to be unremarkable — DEF274.
+///
+/// The threshold is **1%**, ten times the ordinary 0.1%. Below it the fee is
+/// behaving like the rate the ticket already states and a second line saying
+/// so is noise; at or above it, `FEE_MIN`'s floor is what the player is
+/// actually paying and the stated rate has stopped describing their trade.
+///
+/// Null-safe on a zero notional: a quote that priced nothing has no drag to
+/// report, and 0/0 would render as `NaN%` — a number that means nothing on a
+/// card whose whole job is to be checkable.
+double? _feeDragPct(GameTradeQuote q) {
+  if (q.notional <= 0) return null;
+  final pct = (q.estFee / q.notional) * 100;
+  return pct >= 1.0 ? pct : null;
+}
+
 /// Shared by the ticker row and the size presets — both are the same
 /// hex-chip affordance, and CR134 requires hex geometry for controls.
 Widget _pickerChip({
@@ -754,6 +771,28 @@ class _ConfirmCardState extends ConsumerState<_ConfirmCard> {
           _row(l.gamesTicketShares, q.shares.toStringAsFixed(4)),
           _row(l.gamesTicketEstFee, '\$${q.estFee.toStringAsFixed(2)}'),
           _row(l.gamesTicketBookPct, '${q.bookPercentage.toStringAsFixed(1)}%'),
+          // DEF274 — what the fee actually costs THIS order, when the
+          // minimum is doing the work.
+          //
+          // Saiful's run held 4.09 against a 10,000 book. The slider happily
+          // offered 100% of it, and the ticket priced the trade at "est. fee
+          // $1.00" — true, unremarkable next to a 10bps rate, and in fact
+          // **24% of the trade**. `FEE_MIN` is a floor, so the smaller the
+          // order the larger the bite, and the one number that says so was
+          // the one number not on the card.
+          //
+          // Stated, NOT blocked. §7.1's frictions doctrine is explicit that
+          // "nothing caps what a player may do" and Saiful took the
+          // price-shaped escalator over a prohibition when he was asked
+          // (Amendment D). A cap here would be the rule he rejected; this is
+          // the price, made legible.
+          if (_feeDragPct(q) != null) ...[
+            const SizedBox(height: AmiSpacing.xs),
+            Text(
+              l.gamesTicketFeeDrag(_feeDragPct(q)!.toStringAsFixed(1)),
+              style: AmiTypography.caption.copyWith(color: AmiColors.hexAmber),
+            ),
+          ],
           // What that price IS. A quote on a queued order is the last live
           // price, not the price the order will get — and if the feed fell
           // through to the mock walk it is not even that. One line, and only

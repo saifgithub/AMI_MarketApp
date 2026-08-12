@@ -3162,4 +3162,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String gamesTicketSizeCollateral(String pct, String amount) {
     return '$pct% · $amount posted as collateral';
   }
+
+  @override
+  String gamesTicketFeeDrag(String pct) {
+    return 'That fee is $pct% of this order — the \$1.00 minimum, not the 0.1% rate.';
+  }
 }

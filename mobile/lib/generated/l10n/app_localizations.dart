@@ -5322,6 +5322,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{pct}% · {amount} posted as collateral'**
   String gamesTicketSizeCollateral(String pct, String amount);
+
+  /// CR109 DEF274. Shown on the confirm card only when the fee is >=1% of the order's own notional, i.e. when FEE_MIN's floor rather than the headline rate is what the player is paying. Saiful's run held 4.09 against a 10,000 book and the ticket priced the trade at 'est. fee $1.00' — true, unremarkable, and 24% of the trade. STATED, never blocked: §7.1's frictions doctrine says nothing caps what a player may do, and Saiful chose the price-shaped escalator over a prohibition. If FEE_MIN or FEE_BPS is retuned in games_scoring.py, THIS STRING MUST CHANGE TOO. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'That fee is {pct}% of this order — the \$1.00 minimum, not the 0.1% rate.'**
+  String gamesTicketFeeDrag(String pct);
 }
 
 class _AppLocalizationsDelegate
