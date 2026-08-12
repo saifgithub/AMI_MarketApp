@@ -561,3 +561,114 @@ def counterfactual_hold_first_picks_pct(
         qty * final_marks.get(ticker, 0.0) for ticker, qty in qty_by_ticker.items()
     )
     return round((value_at_close / starting_capital - 1.0) * 100, 2)
+
+
+# ── The Wind-Up (§10 — the LOSS ceremony) ───────────────────────────────
+#
+# *"A blowup gets a dignified post-mortem with real numbers and immediate
+# re-entry — never a fail screen. Losing must be a chapter, not an ending."*
+#
+# §10 names the trigger only as "a blowup", so the magnitude below is a
+# READING, not a quotation. Two things are certainly blowups: a busted run
+# (Amendment I — the book went below zero and was stopped), and a run that
+# lost a double-digit share of its stake. A first cut against a platform with
+# single-digit entrants, one constant, retuned against a measured loss
+# distribution rather than argued about now — the same posture as
+# `MIN_FORFEIT_DEBIT` and the two rolling thresholds.
+#
+# The threshold is deliberately NOT "finished last". Placing last in a strong
+# field with a positive return is not a blowup, and dressing it as one would
+# be the scold §10.4 forbids; losing 20% while placing 3rd of 8 IS one, and
+# is exactly the run that needs the ceremony.
+WIND_UP_LOSS_PCT = -15.0
+
+
+def is_wind_up(*, busted: bool, final_twr_pct: float | None) -> bool:
+    """Whether the Close renders as the Wind-Up rather than the ordinary
+    ceremony. An unmeasured run (`None`) is never a Wind-Up — a VOID run has
+    no result to hold a post-mortem over."""
+    if busted:
+        return True
+    return final_twr_pct is not None and final_twr_pct <= WIND_UP_LOSS_PCT
+
+
+# ── Attribution (§10, the daily beat: "NVDA drove +1.9% of your +2.3%") ──
+#
+# Per-ticker contribution to the run's return, in PERCENTAGE POINTS of the
+# opening stake. Realised and unrealised in one number, fees included.
+#
+# Why it sums to the headline: a game run has exactly one capital event —
+# its own open (`portfolio_nav_daily.capital_event == "open"`, and
+# `run_game_nav_snapshot_tick` never writes another). With no later capital
+# event, TWR collapses to the simple return, so
+# `sum(contributions) + cash_drag == (nav / stake - 1) * 100` exactly. That
+# identity is the module's own check that attribution is measuring the run
+# rather than narrating it, and it is asserted in the tests.
+#
+# Fees land inside the ticker that paid them rather than in a line of their
+# own. §1.1 calls the fee the lab's price signal, and a price signal that is
+# reported away from the decision it priced teaches nothing: the player must
+# see that the name they churned is the name that cost them.
+
+
+class TickerContribution(NamedTuple):
+    """One ticker's contribution to the run. `pnl` is currency (never shown
+    on a board — §6.1 bans absolute AMI Cash on any public surface, and this
+    is a private mirror); `pct_points` is what the beat renders."""
+
+    ticker: str
+    pnl: float
+    pct_points: float
+    open_quantity: float
+
+
+def contribution_by_ticker(
+    trades: Sequence[TradeLeg],
+    marks: Mapping[str, float],
+    starting_capital: float,
+) -> list[TickerContribution]:
+    """Every ticker the run touched, largest absolute contribution first.
+
+    A ticker with no mark and an open position is valued at its own cost
+    basis — contribution 0, not a wipeout. A missing mark means "we could
+    not price this", and pricing it at zero would report a total loss the
+    player did not take. Same `?? 0` refusal the rest of this feature makes.
+
+    Empty when there were no fills: a run that never traded has nothing to
+    attribute, which is different from a run that attributed to nothing.
+    """
+    if starting_capital <= 0 or not trades:
+        return []
+
+    cash_flow: dict[str, float] = {}
+    open_qty: dict[str, float] = {}
+    buy_notional: dict[str, float] = {}
+    buy_qty: dict[str, float] = {}
+    for t in trades:
+        notional = t.quantity * t.price
+        fee = trade_fee(notional)
+        if t.side == "buy":
+            cash_flow[t.ticker] = cash_flow.get(t.ticker, 0.0) - notional - fee
+            open_qty[t.ticker] = open_qty.get(t.ticker, 0.0) + t.quantity
+            buy_notional[t.ticker] = buy_notional.get(t.ticker, 0.0) + notional
+            buy_qty[t.ticker] = buy_qty.get(t.ticker, 0.0) + t.quantity
+        else:
+            cash_flow[t.ticker] = cash_flow.get(t.ticker, 0.0) + notional - fee
+            open_qty[t.ticker] = open_qty.get(t.ticker, 0.0) - t.quantity
+
+    out: list[TickerContribution] = []
+    for ticker, flow in cash_flow.items():
+        qty = open_qty.get(ticker, 0.0)
+        mark = marks.get(ticker)
+        if mark is None:
+            bought = buy_qty.get(ticker, 0.0)
+            mark = (buy_notional.get(ticker, 0.0) / bought) if bought > 0 else 0.0
+        pnl = flow + qty * mark
+        out.append(TickerContribution(
+            ticker=ticker,
+            pnl=round(pnl, 2),
+            pct_points=round(pnl / starting_capital * 100, 2),
+            open_quantity=round(qty, 4),
+        ))
+    out.sort(key=lambda c: (-abs(c.pct_points), c.ticker))
+    return out

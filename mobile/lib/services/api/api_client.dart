@@ -1768,6 +1768,18 @@ class ApiClient {
     return GameBoard.fromJson(r.data!);
   }
 
+  /// The period arc's live beat (CR109 slice 5, design §10) — the entry
+  /// countdown, the bell, the daily standing, the final stretch.
+  ///
+  /// Separate from [gamesRunDetail] for the same reason [gamesBoard] is: it
+  /// ranks the whole field, and the run detail is re-read on every size drag
+  /// of the ticket. Standings inside it move once per US close; the
+  /// attribution line is live.
+  Future<GameArc> gamesArc(String runId) async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/games/runs/$runId/arc');
+    return GameArc.fromJson(r.data!);
+  }
+
   /// The house desks' published rules (design §11.2). The rule text comes
   /// from the server, not from app copy — a rule that lived in the client
   /// would drift from the code that actually picks the names, and a stale

@@ -67,6 +67,7 @@ from app.services.games_scoring import (
     apply_negative_twr_partial_credit,
     cadence_period_key,
     cadence_weight,
+    contribution_by_ticker,
     counterfactual_hold_first_picks_pct,
     finish_stipend,
     placement_p,
@@ -161,6 +162,11 @@ class _ScoredEntry:
     # basis, but a void entrant inside it was placed on neither.
     final_rank: Optional[int] = None
     scored_entrant_count: Optional[int] = None
+    # Slice 5 — per-ticker contribution, frozen here because these are the
+    # marks that produced the result. `None` on a VOID run: a run whose
+    # prices were never usable has no attribution worth stating, and giving
+    # it one would dress a refused measurement as an explanation.
+    attribution: Optional[list] = None
 
 
 def run_scoring_pass(
@@ -475,7 +481,7 @@ def _score_one_entry(
     portfolio, marks, total_value, _dd, _source = sim.portfolio_marks_snapshot(
         entry.user_id, kind="game", run_id=entry.run_id,
     )
-    trade_legs, notional_traded = _trade_legs_for_run(portfolio.id)
+    trade_legs, notional_traded = trade_legs_for_run(portfolio.id)
     # CR109 Amendment G — concentration is GROSS. A short's exposure is its
     # notional at the mark, counted as a positive weight alongside the longs:
     # a player holding $5k of a name and short $5k of another is running two
@@ -516,10 +522,23 @@ def _score_one_entry(
         wildness_index=wildness,
         run_close_points=run_close_points,
         stipend_eligible_precheck=entry.trade_count >= 1 and not entry.busted,
+        # Slice 5 — the same legs and the same marks the lines above scored
+        # on, split by ticker. Computed here rather than on read so the
+        # Wind-Up's *"real numbers"* are the closing numbers forever.
+        attribution=[
+            {"ticker": c.ticker, "pct_points": c.pct_points}
+            for c in contribution_by_ticker(
+                trade_legs, marks, float(portfolio.starting_capital),
+            )
+        ] or None,
     )
 
 
-def _trade_legs_for_run(portfolio_id: UUID) -> tuple[list[TradeLeg], float]:
+def trade_legs_for_run(portfolio_id: UUID) -> tuple[list[TradeLeg], float]:
+    """Public (CR109 slice 5): `games_arc` attributes a LIVE run's P&L by
+    ticker off the same legs the close scores on. Two walks of `sim_trades`
+    that disagreed about what a short is would put the beat and the Close in
+    conflict on the one screen where a player can see both."""
     with get_session() as s:
         rows = s.execute(
             select(SimTradeRow)
@@ -593,6 +612,7 @@ def _apply_score(
     entry.wildness_index = scored.wildness_index
     entry.final_rank = scored.final_rank
     entry.scored_entrant_count = scored.scored_entrant_count
+    entry.attribution = scored.attribution
     entry.scored_at = now
 
     total_delta = 0

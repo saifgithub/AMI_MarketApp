@@ -1524,6 +1524,21 @@ class GameEntryRow(Base):
     scored_entrant_count: Mapped[Optional[int]] = mapped_column(
         Integer, nullable=True,
     )
+    # CR109 slice 5 — per-ticker attribution, FROZEN AT CLOSE.
+    #
+    # `[{"ticker": …, "pct_points": …}]`, largest absolute mover first: what
+    # actually drove the run, which is the Wind-Up's whole content (§10 — *"a
+    # blowup gets a dignified post-mortem with real numbers"*) and the daily
+    # beat's (*"NVDA drove +1.9% of your +2.3%"*).
+    #
+    # Stored rather than recomputed for the same reason `final_twr_pct` is:
+    # attribution needs MARKS, and the marks that produced this result are the
+    # ones at the close. Recomputing on read would price a run that ended last
+    # Friday at today's prices, so the Record's account of a run would drift
+    # every day it was reread — and the number the ceremony showed would stop
+    # matching the number the ledger paid on. The live beat computes its own
+    # from current marks and says so; this one never moves again.
+    attribution: Mapped[Optional[list]] = mapped_column(JsonB(), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )

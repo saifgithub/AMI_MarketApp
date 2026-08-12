@@ -37,6 +37,7 @@ import 'package:ami_trade/screens/games/games_board_screen.dart';
 import 'package:ami_trade/screens/games/games_trade_ticket_screen.dart';
 import 'package:ami_trade/state/games_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/games/games_arc_beat.dart';
 import 'package:ami_trade/widgets/games/games_close_curve.dart';
 import 'package:ami_trade/widgets/hex/glass_panel.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
@@ -81,6 +82,13 @@ class GamesRunScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(AmiSpacing.m),
               children: [
                 _Header(detail: detail),
+                // CR109 slice 5 — the period arc's beat (design §10), above
+                // everything the player owns. The screen's other cards are
+                // all accounting; this is the only one that says something
+                // is ABOUT to happen, which is the whole reason a player
+                // comes back before the close.
+                const SizedBox(height: AmiSpacing.m),
+                GamesArcBeat(runId: runId),
                 // Directly under the header, above the cash panel: at alpha
                 // field sizes the duel IS the competition (§11.1), and
                 // burying the only opponent the player has below their own

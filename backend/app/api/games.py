@@ -8,6 +8,7 @@ POST /v1/games/runs/{run_id}/trade       the game trade path (no mandate; market
 POST /v1/games/runs/{run_id}/trade/quote pre-confirm card: shares, est. fee, book-percentage
 POST /v1/games/runs/{run_id}/restart     forfeit preview + commit
 GET  /v1/games/runs/{run_id}/close       the Close payload — three beats + the debrief panel
+GET  /v1/games/runs/{run_id}/arc         the period arc's live beat (slice 5, design §10)
 GET  /v1/games/record                    career points (signed net), forfeit count, run history
 GET  /v1/games/record/prs                the PR board — self-competition, works at n=1
 
@@ -41,7 +42,7 @@ from app.api.dependencies import get_current_user
 from app.db import get_session
 from app.db.models import User
 from app.schemas.trade import OrderType, Side
-from app.services import games_board, games_desks
+from app.services import games_arc, games_board, games_desks
 from app.services import games_record_service as record_service
 from app.services import games_service as games
 from app.services.ticker_reference import (
@@ -313,6 +314,24 @@ async def run_board(
     try:
         return await asyncio.to_thread(games_board.board_for_run, current_user.id, run_id)
     except games_board.BoardNotAvailable as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/runs/{run_id}/arc")
+async def run_arc(
+    run_id: UUID, current_user: User = Depends(get_current_user),
+) -> dict:
+    """CR109 slice 5 — which beat of the period arc this run is in (design
+    §10): the entry countdown, the bell, the daily standing, the final
+    stretch, the settlement freeze.
+
+    Separate from `GET /runs/{run_id}` on purpose: the run detail is polled
+    while the screen is open, and this walks every entrant's NAV series to
+    rank the field. Standings move once per close; the attribution line is
+    live — `games_arc`'s docstring carries the reasoning for the split."""
+    try:
+        return await asyncio.to_thread(games_arc.arc_for_run, current_user.id, run_id)
+    except games_arc.ArcNotAvailable as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 

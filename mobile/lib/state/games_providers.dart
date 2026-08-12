@@ -85,6 +85,20 @@ final gamesBoardProvider =
   return api.gamesBoard(runId);
 });
 
+/// The period arc's live beat — `GET /v1/games/runs/{run_id}/arc`
+/// (CR109 slice 5, design §10).
+///
+/// `.autoDispose` and no polling, for the same reason [gamesBoardProvider]
+/// has none: the standings inside it move once per US close, and a timer
+/// would spend battery re-fetching a number that cannot have changed while
+/// making a contest feel like a slot machine. The countdown the card renders
+/// ticks locally off [GameArc.locksAt] — a clock is a client concern.
+final gamesArcProvider =
+    FutureProvider.autoDispose.family<GameArc, String>((ref, runId) async {
+  final api = ref.watch(apiClientProvider);
+  return api.gamesArc(runId);
+});
+
 /// The house desks' published rules — `GET /v1/games/desks`.
 ///
 /// Not `.autoDispose`: the roster changes only when we ship a new desk, and

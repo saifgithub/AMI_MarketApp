@@ -17,6 +17,7 @@ class FakeGamesApiClient extends ApiClient {
     this.cancelSucceeds = true,
     this.quoteError,
     this.board,
+    this.arc,
     this.desks = const [],
   }) : super(baseUrl: 'test://localhost');
 
@@ -30,6 +31,13 @@ class FakeGamesApiClient extends ApiClient {
 
   /// Canned response for [gamesBoard] — the field standings.
   GameBoard? board;
+
+  /// Canned response for [gamesArc] — the period arc's live beat (CR109
+  /// slice 5). Answered by default rather than left to fall through to the
+  /// real `ApiClient`: the run screen mounts the beat card unconditionally,
+  /// so an un-overridden method here throws a transport error inside a
+  /// FutureProvider and the test framework fails the whole file on it.
+  GameArc? arc;
 
   /// Canned response for [gamesDesks] — the house desks' published rules.
   List<GameDeskProfile> desks = const [];
@@ -96,6 +104,17 @@ class FakeGamesApiClient extends ApiClient {
   Future<GameBoard> gamesBoard(String runId) async =>
       board ??
       GameBoard(fieldId: 'field-1', cadence: 'week', rows: const []);
+
+  @override
+  Future<GameArc> gamesArc(String runId) async =>
+      arc ??
+      GameArc(
+        runId: runId,
+        cadence: 'week',
+        phase: GameArcPhase.live,
+        daysLeft: 3,
+        entrantCount: 1,
+      );
 
   @override
   Future<List<GameDeskProfile>> gamesDesks() async => desks;

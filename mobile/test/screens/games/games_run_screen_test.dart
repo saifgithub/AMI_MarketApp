@@ -65,6 +65,18 @@ Future<FakeGamesApiClient> _pump(
     queuedOrders: orders,
     cancelSucceeds: cancelSucceeds,
   );
+  // A tall surface, because this screen is a scrolling ListView and these
+  // tests tap things near the bottom of it (the queued-order Cancel, the
+  // trade CTA). On the default 800px test window those taps land on whatever
+  // the default viewport happens to cut at, so ADDING a card anywhere above
+  // them breaks tests that have nothing to do with the card — which is
+  // exactly what CR109 slice 5's arc beat did. Sizing the window past the
+  // screen's full height makes these assertions about the screen rather
+  // than about where the fold happens to fall.
+  tester.view.physicalSize = const Size(1200, 4000);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [

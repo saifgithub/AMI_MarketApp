@@ -3184,4 +3184,88 @@ class AppLocalizationsAr extends AppLocalizations {
 
     return '$pointsString career points to $title';
   }
+
+  @override
+  String get gamesArcEntryOpenTitle => 'Entries close soon';
+
+  @override
+  String gamesArcEntryClosesIn(String countdown) {
+    return 'Entries close in $countdown';
+  }
+
+  @override
+  String get gamesArcBellTitle => 'THE BELL';
+
+  @override
+  String gamesArcBellBody(int count) {
+    return 'The field is set: $count entrants. Trading starts at the open.';
+  }
+
+  @override
+  String get gamesArcFinalStretchTitle => 'FINAL STRETCH';
+
+  @override
+  String gamesArcDaysLeft(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days left',
+      one: '1 day left',
+      zero: 'Last day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String gamesArcStandingLine(String rank, int count) {
+    return 'You\'re $rank of $count.';
+  }
+
+  @override
+  String gamesArcGapLine(String rank, String gap) {
+    return '$rank is $gap% ahead.';
+  }
+
+  @override
+  String get gamesArcStandingsClosed => 'Standings open after the first close.';
+
+  @override
+  String get gamesArcSettlingTitle => 'SETTLING';
+
+  @override
+  String get gamesArcSettlingBody =>
+      'The period is over. Positions are locked and results are being scored.';
+
+  @override
+  String gamesArcAttributionLine(String ticker, String points, String total) {
+    return '$ticker drove $points of your $total.';
+  }
+
+  @override
+  String gamesArcAttributionNoTotal(String ticker, String points) {
+    return '$ticker is your biggest mover at $points.';
+  }
+
+  @override
+  String get gamesWindUpTitle => 'THE WIND-UP';
+
+  @override
+  String get gamesWindUpBust =>
+      'The book went below zero and the run was stopped.';
+
+  @override
+  String get gamesWindUpHeavyLoss => 'A hard run. Here is what happened.';
+
+  @override
+  String gamesWindUpShortfall(String amount) {
+    return 'The book was $amount short of zero when it stopped.';
+  }
+
+  @override
+  String gamesWindUpWorst(String ticker, String points) {
+    return '$ticker cost you $points.';
+  }
+
+  @override
+  String get gamesWindUpNextChapter => 'Next chapter';
 }

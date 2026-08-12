@@ -5340,6 +5340,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{points} career points to {title}'**
   String gamesRecordNextTitlePoints(int points, String title);
+
+  /// CR109 slice 5 (§10). Header of the period-arc beat card while entries are still open — the last-call moment. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Entries close soon'**
+  String get gamesArcEntryOpenTitle;
+
+  /// CR109 slice 5 (§10). Countdown line under the entry-open beat. {countdown} is a client-formatted duration such as '2h 14m' or '3d'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Entries close in {countdown}'**
+  String gamesArcEntryClosesIn(String countdown);
+
+  /// CR109 slice 5 (§10). Header of the beat shown once entries lock and the field is revealed. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'THE BELL'**
+  String get gamesArcBellTitle;
+
+  /// CR109 slice 5 (§10). The bell beat — the field is revealed once entries lock. {count} is the entrant count including house desks. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The field is set: {count} entrants. Trading starts at the open.'**
+  String gamesArcBellBody(int count);
+
+  /// CR109 slice 5 (§10). Header of the last-days beat — the anticipation engine. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'FINAL STRETCH'**
+  String get gamesArcFinalStretchTitle;
+
+  /// CR109 slice 5 (§10). Days remaining in the run, shown on the arc beat card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =0{Last day} =1{1 day left} other{{days} days left}}'**
+  String gamesArcDaysLeft(int days);
+
+  /// CR109 slice 5 (§10). The daily standing beat. {rank} is an ordinal already formatted by the client ('4th'); {count} is the ranked field size. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re {rank} of {count}.'**
+  String gamesArcStandingLine(String rank, int count);
+
+  /// CR109 slice 5 (§10). The near-miss line, which points UP only — the design forbids the downward twin, and the server never sends the number one would need to write it. {rank} is an ordinal ('2nd'), {gap} the TWR gap. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{rank} is {gap}% ahead.'**
+  String gamesArcGapLine(String rank, String gap);
+
+  /// CR109 slice 5 (§10). Shown on day one, before any entrant has a completed close. Never a field of zeroes — an unmeasured run and a flat run are different facts. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Standings open after the first close.'**
+  String get gamesArcStandingsClosed;
+
+  /// CR109 slice 5 (§10). Header of the settlement-freeze beat. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SETTLING'**
+  String get gamesArcSettlingTitle;
+
+  /// CR109 slice 5 (§10). The settlement-freeze beat — results withheld until the scoring pass closes the field. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The period is over. Positions are locked and results are being scored.'**
+  String get gamesArcSettlingBody;
+
+  /// CR109 slice 5 (§10.4). Attribution on the beat card — restores perceived contingency, which is what stops a no-rules arena reading as pure luck. {points} and {total} are signed, client-formatted strings ('+1.9pp', '+2.3%'). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{ticker} drove {points} of your {total}.'**
+  String gamesArcAttributionLine(String ticker, String points, String total);
+
+  /// CR109 slice 5 (§10.4). Attribution before the first close, when there is no measured run total to state it against. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{ticker} is your biggest mover at {points}.'**
+  String gamesArcAttributionNoTotal(String ticker, String points);
+
+  /// CR109 slice 5 (§10). Header of the loss ceremony that replaces the ordinary Close framing on a blowup. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'THE WIND-UP'**
+  String get gamesWindUpTitle;
+
+  /// CR109 slice 5 (§10). The Wind-Up header line for a BUSTED run (Amendment I). Dignified and factual — never a fail screen, never a scold. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The book went below zero and the run was stopped.'**
+  String get gamesWindUpBust;
+
+  /// CR109 slice 5 (§10). The Wind-Up header line for a heavy loss that did not bust. 'Losing must be a chapter, not an ending.' NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'A hard run. Here is what happened.'**
+  String get gamesWindUpHeavyLoss;
+
+  /// CR109 slice 5 (Amendment I). The floored NAV hides how far past zero the book actually went; the ceremony says it. {amount} is a client-formatted AMI Cash amount. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The book was {amount} short of zero when it stopped.'**
+  String gamesWindUpShortfall(String amount);
+
+  /// CR109 slice 5 (§10). Names the position that drove the loss, with the number frozen at close. A statement, not a judgement — the counterfactual never scolds. {points} is a signed percentage-point string. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{ticker} cost you {points}.'**
+  String gamesWindUpWorst(String ticker, String points);
+
+  /// CR109 slice 5 (§10.3). The Wind-Up's re-entry CTA label. The loop-back is the whole point — a loss screen without it is the fail screen the design forbids. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Next chapter'**
+  String get gamesWindUpNextChapter;
 }
 
 class _AppLocalizationsDelegate

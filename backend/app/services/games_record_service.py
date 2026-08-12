@@ -150,6 +150,13 @@ def get_close_payload(user_id: UUID, run_id: UUID, *, now: datetime | None = Non
             **private,
         }
         cadence = field.cadence
+        # CR109 slice 5 — the Wind-Up (§10). Resolved here, from stored
+        # columns, so the client never decides whether a run was a blowup:
+        # a threshold duplicated on both sides is a threshold that will
+        # eventually disagree with itself, and this one governs the TONE of
+        # the highest-attention screen in the product.
+        wind_up = _wind_up_block(entry)
+        entry_attribution = entry.attribution
 
     curve = [
         {
@@ -184,10 +191,19 @@ def get_close_payload(user_id: UUID, run_id: UUID, *, now: datetime | None = Non
     # A VOID duel deliberately does not take the slot. It has nothing to say
     # — one side was unmeasurable — so the counterfactual, which is still
     # true, is the better use of the one insight the player gets.
+    #
+    # Slice 5 fills the second slot: the post-mortem on a blowup. It sits
+    # BELOW the duel because §10.2 puts it there — a settled duel against a
+    # named opponent is still the stronger story, even on a run that blew up
+    # — and ABOVE the near-miss and the counterfactual, which the client
+    # resolves inside the `counterfactual` kind. A player whose run went to
+    # zero must not be handed "if you'd held the index" as their one insight.
     beat_insight = None
     duel = games_duels.close_verdict_for_run(user_id, run_id)
     if duel is not None and duel["state"] == "settled":
         beat_insight = {"kind": "duel", **duel}
+    if beat_insight is None and wind_up is not None:
+        beat_insight = {"kind": "post_mortem", **wind_up}
     if beat_insight is None:
         beat_insight = {
             "kind": "counterfactual",
@@ -203,6 +219,11 @@ def get_close_payload(user_id: UUID, run_id: UUID, *, now: datetime | None = Non
     return {
         **payload_entry,
         "curve": curve,
+        # Slice 5. `None` on an ordinary close — its presence IS the switch
+        # between the two ceremonies, so a client cannot render the Wind-Up's
+        # framing on a run that merely lost a little.
+        "wind_up": wind_up,
+        "attribution": entry_attribution,
         "beats": {
             "result": beat_result,
             "insight": beat_insight,
@@ -219,6 +240,49 @@ def get_close_payload(user_id: UUID, run_id: UUID, *, now: datetime | None = Non
             "trade_count": payload_entry["trade_count"],
             "stipend_points": payload_entry["stipend_points"],
         },
+    }
+
+
+def _wind_up_block(entry: GameEntryRow) -> dict | None:
+    """CR109 slice 5 — the loss ceremony's payload, or `None` for an ordinary
+    close (design §10: *"never a fail screen. Losing must be a chapter, not
+    an ending."*).
+
+    Numbers only. Every word the player reads is an ARB string on the client,
+    because the dignity rule is a copy rule and copy that ships from the
+    server cannot be reviewed by a translator or held to §10.4's *"the
+    counterfactual never scolds"*.
+
+    `worst` is the biggest negative contributor, and it is read from the
+    attribution frozen at close rather than recomputed — the post-mortem's
+    *"real numbers"* have to be the numbers the result was scored on. A run
+    that closed before slice 4/5 shipped carries no attribution and gets a
+    Wind-Up with no `worst` line, which is an honest gap rather than a
+    reconstruction from today's prices.
+    """
+    if entry.state == "void":
+        return None
+    final_twr = float(entry.final_twr_pct) if entry.final_twr_pct is not None else None
+    busted = entry.busted_at is not None
+    if not games_scoring.is_wind_up(busted=busted, final_twr_pct=final_twr):
+        return None
+
+    worst = None
+    for row in entry.attribution or []:
+        pct = row.get("pct_points")
+        if pct is not None and pct < 0 and (worst is None or pct < worst["pct_points"]):
+            worst = {"ticker": row["ticker"], "pct_points": pct}
+
+    return {
+        "reason": "busted" if busted else "heavy_loss",
+        "final_twr_pct": final_twr,
+        # Amendment I — how far past zero the book actually went, which the
+        # floored NAV hides. Said in the ceremony rather than swallowed.
+        "nav_shortfall": (
+            float(entry.nav_shortfall) if entry.nav_shortfall is not None else None
+        ),
+        "worst": worst,
+        "trade_count": entry.trade_count,
     }
 
 

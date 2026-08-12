@@ -31,6 +31,7 @@ import 'package:ami_trade/screens/games/games_run_screen.dart';
 import 'package:ami_trade/screens/games/games_trade_ticket_screen.dart';
 import 'package:ami_trade/state/games_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/games/games_arc_beat.dart';
 import 'package:ami_trade/widgets/games/games_queue_note.dart';
 import 'package:ami_trade/widgets/hex/glass_panel.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
@@ -155,7 +156,32 @@ class _StateBLiveRun extends StatelessWidget {
                       variant: HexChipVariant.tinted,
                     ),
                     const Spacer(),
-                    if (run.daysLeft != null)
+                    // CR109 slice 5 — the period arc's beat, on the card the
+                    // player sees on every visit (design §10). Two of the
+                    // six phases are the ones worth interrupting for: entries
+                    // about to close, and the final stretch. The rest fall
+                    // through to the plain days-left line, because a chip
+                    // that is always lit stops being read.
+                    if (run.phase == GameArcPhase.entryOpen &&
+                        run.locksAt != null)
+                      Text(
+                        l.gamesArcEntryClosesIn(
+                          formatCountdown(
+                            run.locksAt!.difference(DateTime.now()),
+                          ),
+                        ),
+                        style: AmiTypography.caption
+                            .copyWith(color: AmiColors.hexAmber),
+                      )
+                    else if (run.phase == GameArcPhase.finalStretch &&
+                        run.daysLeft != null)
+                      Text(
+                        '${l.gamesArcFinalStretchTitle} · '
+                        '${l.gamesArcDaysLeft(run.daysLeft!)}',
+                        style: AmiTypography.caption
+                            .copyWith(color: AmiColors.hexAmber),
+                      )
+                    else if (run.daysLeft != null)
                       Text(
                         l.gamesDaysLeft(run.daysLeft!),
                         style: AmiTypography.caption,

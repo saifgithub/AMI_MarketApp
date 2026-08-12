@@ -590,6 +590,8 @@ def list_cadences(user_id: UUID, *, now: datetime | None = None) -> list[dict]:
 
 def list_live_runs(user_id: UUID) -> list[dict]:
     """`GET /v1/games/runs` — the caller's OWN live runs only."""
+    from app.services.games_arc import phase_for
+
     today = datetime.now(timezone.utc).date()
     with get_session() as s:
         rows = s.execute(
@@ -603,6 +605,7 @@ def list_live_runs(user_id: UUID) -> list[dict]:
     out = []
     for entry, field in rows:
         nav_rows = nav_history(user_id, run_id=entry.run_id)
+        days_left = max((field.ends_on - today).days, 0)
         out.append({
             "run_id": str(entry.run_id),
             "field_id": str(field.id),
@@ -610,7 +613,13 @@ def list_live_runs(user_id: UUID) -> list[dict]:
             "state": entry.state,
             "intent": entry.intent,
             "twr_pct": twr_pct_for_window(nav_rows),
-            "days_left": max((field.ends_on - today).days, 0),
+            "days_left": days_left,
+            # CR109 slice 5 — which beat of the period arc (design §10) this
+            # run is in, so the home card can say "entries close in 2h" or
+            # "final stretch" without a round trip per row. Derived from
+            # state already in hand; no board scan, no second query.
+            "phase": phase_for(field.state, entry.state, field.cadence, days_left),
+            "locks_at": field.locks_at.isoformat(),
             "starts_on": field.starts_on.isoformat(),
             "ends_on": field.ends_on.isoformat(),
             "fees_paid": float(entry.fees_paid),

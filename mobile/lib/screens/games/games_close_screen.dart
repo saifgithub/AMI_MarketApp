@@ -72,6 +72,7 @@ import 'package:ami_trade/widgets/hex/hex_mark.dart';
 import 'package:ami_trade/widgets/sheet_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 /// CR106 T-BIDI: isolate signed/numeric runs so RTL layout cannot scramble
 /// sign/digits. Per-file copy, matching this codebase's existing
@@ -79,6 +80,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 String _isolateNumeric(String s) => '\u2066$s\u2069';
 
 String _pct(double v) => '${v >= 0 ? '+' : ''}${v.toStringAsFixed(2)}%';
+
+/// AMI Cash, same grouping as the run screen's. Used only by the Wind-Up's
+/// shortfall line — every other number on this screen is a percentage,
+/// because §6.1 keeps currency off any surface that compares players.
+final _money = NumberFormat('#,##0.00');
 
 class GamesCloseScreen extends ConsumerWidget {
   const GamesCloseScreen({super.key, required this.runId});
@@ -214,7 +220,16 @@ class _BeatResult extends StatelessWidget {
       );
     }
 
-    final isWindUp = result.isForfeit;
+    // CR109 slice 5 — the Wind-Up is now DECIDED BY THE SERVER
+    // (`wind_up` on the payload) rather than inferred from the entry state.
+    // The forfeit branch stays because it is a different route into the same
+    // dignity (see this file's docstring); what changes is that a run that
+    // finished, and merely finished badly, now reaches the loss ceremony
+    // too — which is the case §10 was actually written for. The threshold
+    // lives in `games_scoring.py::WIND_UP_LOSS_PCT` and nowhere here: a
+    // number duplicated on both sides eventually disagrees with itself, and
+    // this one decides whether a wipeout gets confetti.
+    final isWindUp = result.isWindUp || result.isForfeit;
     // Wind-Up: a dignified, warm accent — never red doom, never amber
     // warning. The normal Close reads as an analyst measurement (cyan).
     final accent = isWindUp ? AmiColors.hexBlue : AmiColors.hexCyan;
@@ -277,9 +292,14 @@ class _BeatResult extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isWindUp
-                            ? l.gamesCloseTitleForfeit
-                            : l.gamesCloseTitleFinished,
+                        result.isWindUp
+                            // A run that FINISHED badly is not a forfeit,
+                            // and calling it one would be the first thing on
+                            // this screen the player knows to be untrue.
+                            ? l.gamesWindUpTitle
+                            : (isWindUp
+                                ? l.gamesCloseTitleForfeit
+                                : l.gamesCloseTitleFinished),
                         style: AmiTypography.h4,
                       ),
                       Text(
@@ -340,6 +360,15 @@ class _BeatInsight extends StatelessWidget {
       return _DuelVerdict(duel: duel);
     }
 
+    // CR109 slice 5 — the post-mortem takes the slot on a blowup, BELOW the
+    // duel (§10.2 puts it there) and ABOVE the near-miss and the
+    // counterfactual below. A player whose book went to zero must not be
+    // handed "if you'd held the index" as their one insight.
+    final windUp = result.windUp;
+    if (windUp != null) {
+      return _WindUpPostMortem(windUp: windUp);
+    }
+
     final headline = result.hasNearMiss
         ? l.gamesCloseNearMissLine(
             result.nearMissGapPct!.toStringAsFixed(1), result.nearMissLabel!)
@@ -378,6 +407,69 @@ class _BeatInsight extends StatelessWidget {
                   _isolateNumeric(_pct(result.counterfactualIndexPct!))),
               style: AmiTypography.caption,
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Beat 2, when the server chose the post-mortem — CR109 slice 5, the
+/// Wind-Up (design §10).
+///
+/// *"A blowup gets a dignified post-mortem with real numbers."* Three
+/// sentences at most: what happened, how far it went, and which position did
+/// it. Every number arrives frozen at close, so this card says the same
+/// thing forever — a post-mortem that drifted with the market would be
+/// re-litigating a run the player has already closed the book on.
+///
+/// No red. §10's dignity rule is the whole point of the card, and painting a
+/// blowup in alarm colour turns a chapter into a fail screen.
+class _WindUpPostMortem extends StatelessWidget {
+  const _WindUpPostMortem({required this.windUp});
+  final GameWindUp windUp;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      key: const Key('games_close_beat_insight'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(AmiSpacing.m),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.hexBlue.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            windUp.isBust ? l.gamesWindUpBust : l.gamesWindUpHeavyLoss,
+            style: AmiTypography.body.copyWith(color: AmiColors.textHigh),
+          ),
+          // Amendment I — the floored NAV hides how far past zero the book
+          // went. The ceremony is where that gets said, not swallowed.
+          if (windUp.navShortfall != null) ...[
+            const SizedBox(height: AmiSpacing.xs),
+            Text(
+              l.gamesWindUpShortfall(
+                _isolateNumeric(_money.format(windUp.navShortfall!)),
+              ),
+              style: AmiTypography.caption,
+            ),
+          ],
+          if (windUp.hasWorst) ...[
+            const SizedBox(height: AmiSpacing.s),
+            Text(
+              l.gamesWindUpWorst(
+                windUp.worstTicker!,
+                _isolateNumeric(
+                  '${windUp.worstPctPoints!.toStringAsFixed(1)}pp',
+                ),
+              ),
+              style: AmiTypography.body,
+            ),
+          ],
         ],
       ),
     );

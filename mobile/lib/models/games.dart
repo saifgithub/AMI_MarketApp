@@ -142,6 +142,8 @@ class GameRunSummary {
     this.daysLeft,
     this.endsOn,
     this.state = 'active',
+    this.phase,
+    this.locksAt,
   });
 
   final String runId;
@@ -152,6 +154,16 @@ class GameRunSummary {
   final DateTime? endsOn;
   /// 'entered' | 'active' | 'finished' | 'forfeit' | 'void'.
   final String state;
+
+  /// CR109 slice 5 — which beat of the period arc (design §10) this run is
+  /// in, so the home card can say "entries close in 2h" or "final stretch"
+  /// without a second call. Null on a backend that predates the slice; the
+  /// card falls back to the plain days-left line rather than guessing.
+  final String? phase;
+
+  /// When entries close for this run's field — the countdown target for
+  /// [GameArcPhase.entryOpen].
+  final DateTime? locksAt;
 
   /// Whether this run still belongs on the State-B landing card — a
   /// finished/forfeit/void entry has left the "live" set even though the
@@ -166,6 +178,8 @@ class GameRunSummary {
         daysLeft: (j['days_left'] as num?)?.toInt(),
         endsOn: _parseDate(j['ends_on']),
         state: j['state'] as String? ?? 'active',
+        phase: j['phase'] as String?,
+        locksAt: _parseDate(j['locks_at']),
       );
 }
 
@@ -896,6 +910,7 @@ class GameCloseResult {
     this.nearMissLabel,
     this.nearMissGapPct,
     this.duelVerdict,
+    this.windUp,
   });
 
   final String runId;
@@ -975,6 +990,14 @@ class GameCloseResult {
   /// something else — including for a VOID duel, which has nothing to say.
   final GameCloseDuel? duelVerdict;
 
+  /// CR109 slice 5 — the Wind-Up (design §10). Non-null ONLY when the run
+  /// was a blowup; the server decides, because this governs the tone of the
+  /// screen and a threshold duplicated on both sides will eventually
+  /// disagree with itself and put confetti over a wipeout.
+  final GameWindUp? windUp;
+
+  bool get isWindUp => windUp != null;
+
   bool get isVoid => state == 'void';
 
   /// Defensive/forward-compatible only: the live `games_record_service.py`
@@ -1047,6 +1070,9 @@ class GameCloseResult {
         duelVerdict: _duelVerdictFrom(j),
         nearMissLabel: j['near_miss_label'] as String?,
         nearMissGapPct: (j['near_miss_gap_pct'] as num?)?.toDouble(),
+        windUp: j['wind_up'] is Map<String, dynamic>
+            ? GameWindUp.fromJson(j['wind_up'] as Map<String, dynamic>)
+            : null,
       );
 }
 
@@ -1397,4 +1423,175 @@ class GameDeskProfile {
             .whereType<String>()
             .toList(),
       );
+}
+
+// ── The period arc (CR109 slice 5, design §10) ──────────────────────────
+
+/// Which beat of the period arc a run is in. String constants rather than an
+/// enum because the server is the authority — an unknown value must render
+/// as the plain live state, not throw.
+abstract final class GameArcPhase {
+  static const entryOpen = 'entry_open';
+  static const bell = 'bell';
+  static const live = 'live';
+  static const finalStretch = 'final_stretch';
+  static const settling = 'settling';
+  static const closed = 'closed';
+}
+
+/// The biggest mover in a run — design §10's *"NVDA drove +1.9% of your
+/// +2.3%"*. `pctPoints` is in percentage points of the opening stake and is
+/// signed: the name that drove a loss is the one a losing run needs named.
+class GameAttribution {
+  const GameAttribution({
+    required this.ticker,
+    required this.pctPoints,
+    this.stillHeld = false,
+    this.priceSource,
+  });
+
+  final String ticker;
+  final double pctPoints;
+  final bool stillHeld;
+
+  /// CR040 — which prices produced this line. A mock-priced attribution that
+  /// renders as fact is the shape of DEF059.
+  final String? priceSource;
+
+  bool get isLivePriced => priceSource == null || priceSource == 'live';
+
+  factory GameAttribution.fromJson(Map<String, dynamic> j) => GameAttribution(
+        ticker: j['ticker'] as String? ?? '',
+        pctPoints: (j['pct_points'] as num?)?.toDouble() ?? 0,
+        stillHeld: j['still_held'] as bool? ?? false,
+        priceSource: j['price_source'] as String?,
+      );
+}
+
+/// `GET /v1/games/runs/{run_id}/arc` — the live half of the period arc.
+///
+/// **Two clocks, and the difference is deliberate.** [yourRank] and
+/// [gapToNextPct] move once per US close ([standingsUpdate] says so out
+/// loud); [attribution] is live, because it is your own book rather than
+/// other people's. The server's `games_arc.py` docstring carries the full
+/// reasoning.
+///
+/// **There is no downward gap, by construction.** Design §10 permits *"2nd
+/// is 1.1% ahead"* and forbids the slot-machine twin that points at a loss.
+/// The number a copywriter would need to cross that line is not in this
+/// payload, so it cannot be crossed here.
+class GameArc {
+  const GameArc({
+    required this.runId,
+    required this.cadence,
+    required this.phase,
+    required this.daysLeft,
+    required this.entrantCount,
+    this.locksAt,
+    this.endsOn,
+    this.standingsOpen = false,
+    this.yourRank,
+    this.yourTwrPct,
+    this.gapToNextPct,
+    this.gapToNextRank,
+    this.attribution,
+    this.deskCount = 0,
+    this.standingsUpdate = 'daily_close',
+  });
+
+  final String runId;
+  final String cadence;
+  final String phase;
+  final int daysLeft;
+  final int entrantCount;
+  final DateTime? locksAt;
+  final DateTime? endsOn;
+
+  /// False until at least one entrant has a completed close. Renders as
+  /// "standings open after the first close", never as a field of zeroes —
+  /// a run that has not been measured and a run that is exactly flat are
+  /// different facts.
+  final bool standingsOpen;
+  final int? yourRank;
+  final double? yourTwrPct;
+
+  /// How far ahead the entrant immediately above you is. Null when you lead,
+  /// when nothing has been measured yet, or when there is nobody above —
+  /// three different facts, none of which may render as 0.0.
+  final double? gapToNextPct;
+  final int? gapToNextRank;
+  final GameAttribution? attribution;
+  final int deskCount;
+  final String standingsUpdate;
+
+  bool get isFinalStretch => phase == GameArcPhase.finalStretch;
+  bool get isEntryOpen => phase == GameArcPhase.entryOpen;
+  bool get hasGap => gapToNextPct != null && gapToNextRank != null;
+
+  factory GameArc.fromJson(Map<String, dynamic> j) => GameArc(
+        runId: j['run_id'] as String? ?? '',
+        cadence: j['cadence'] as String? ?? 'week',
+        phase: j['phase'] as String? ?? GameArcPhase.live,
+        daysLeft: (j['days_left'] as num?)?.toInt() ?? 0,
+        entrantCount: (j['entrant_count'] as num?)?.toInt() ?? 0,
+        locksAt: _parseDate(j['locks_at']),
+        endsOn: _parseDate(j['ends_on']),
+        standingsOpen: j['standings_open'] as bool? ?? false,
+        yourRank: (j['your_rank'] as num?)?.toInt(),
+        yourTwrPct: (j['your_twr_pct'] as num?)?.toDouble(),
+        gapToNextPct: (j['gap_to_next_pct'] as num?)?.toDouble(),
+        gapToNextRank: (j['gap_to_next_rank'] as num?)?.toInt(),
+        attribution: j['attribution'] is Map<String, dynamic>
+            ? GameAttribution.fromJson(j['attribution'] as Map<String, dynamic>)
+            : null,
+        deskCount: (j['desk_count'] as num?)?.toInt() ?? 0,
+        standingsUpdate: j['standings_update'] as String? ?? 'daily_close',
+      );
+}
+
+/// The Wind-Up — design §10's LOSS ceremony. Present on the Close payload
+/// only when the run was a blowup; its presence IS the switch between the
+/// two ceremonies, decided server-side so the threshold cannot drift.
+///
+/// *"A blowup gets a dignified post-mortem with real numbers and immediate
+/// re-entry — never a fail screen. Losing must be a chapter, not an
+/// ending."* Every word rendered around these numbers is an ARB string held
+/// to that rule.
+class GameWindUp {
+  const GameWindUp({
+    required this.reason,
+    this.finalTwrPct,
+    this.navShortfall,
+    this.worstTicker,
+    this.worstPctPoints,
+    this.tradeCount = 0,
+  });
+
+  /// 'busted' (the book went below zero — Amendment I) | 'heavy_loss'.
+  final String reason;
+  final double? finalTwrPct;
+
+  /// How far past zero the book actually went, which the floored NAV hides.
+  /// Stated in the ceremony rather than swallowed.
+  final double? navShortfall;
+  final String? worstTicker;
+  final double? worstPctPoints;
+  final int tradeCount;
+
+  bool get isBust => reason == 'busted';
+  bool get hasWorst => worstTicker != null && worstPctPoints != null;
+
+  factory GameWindUp.fromJson(Map<String, dynamic> j) {
+    final worst = j['worst'];
+    return GameWindUp(
+      reason: j['reason'] as String? ?? 'heavy_loss',
+      finalTwrPct: (j['final_twr_pct'] as num?)?.toDouble(),
+      navShortfall: (j['nav_shortfall'] as num?)?.toDouble(),
+      worstTicker: worst is Map<String, dynamic> ? worst['ticker'] as String? : null,
+      worstPctPoints: worst is Map<String, dynamic>
+          ? (worst['pct_points'] as num?)?.toDouble()
+          : null,
+      tradeCount: (j['trade_count'] as num?)?.toInt() ?? 0,
+    );
+  }
 }
