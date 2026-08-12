@@ -109,31 +109,6 @@ if [[ ! -f "$export_options" ]]; then
   exit 1
 fi
 
-pubspec="${MOBILE_DIR}/pubspec.yaml"
-current_line=$(grep -E "^version:" "$pubspec")
-current_version=$(echo "$current_line" | sed -E 's/version:[[:space:]]*//')
-semver="${current_version%+*}"
-build_num="${current_version#*+}"
-
-if [[ "$DO_BUMP" == "1" ]]; then
-  new_build=$((build_num + 1))
-  new_version="${semver}+${new_build}"
-  echo "▶ bumping pubspec: ${current_version} → ${new_version}"
-  # Portable in-place sed (BSD on macOS needs '' arg).
-  sed -i '' "s/^version: ${current_version}$/version: ${new_version}/" "$pubspec"
-  build_num="$new_build"
-  if [[ "$DO_COMMIT" == "1" ]]; then
-    (cd "$PROJECT_ROOT" && git add mobile/pubspec.yaml && \
-      git commit -m "chore(mobile): bump build ${semver}+$((build_num - 1)) → ${semver}+${build_num} for TestFlight" \
-      > /dev/null && echo "▶ committed bump")
-  fi
-else
-  echo "▶ using existing version ${semver}+${build_num} (--no-bump)"
-fi
-
-archive_path="${MOBILE_DIR}/build/Runner.xcarchive"
-ipa_dir="${MOBILE_DIR}/build/ios/ipa"
-
 # CR084 — RevenueCat Test Store key (`test_…`). Purchases are SIMULATED by
 # RevenueCat: the paywall, the webhook, the entitlement grant and the credit
 # top-up all run for real, but no money moves and no store product is needed.
@@ -196,6 +171,41 @@ EOF
 │  with an appl_… key for anything beyond internal testers.        │
 └──────────────────────────────────────────────────────────────────┘
 EOF
+fi
+
+archive_path="${MOBILE_DIR}/build/Runner.xcarchive"
+ipa_dir="${MOBILE_DIR}/build/ios/ipa"
+
+# ORDER IS LOAD-BEARING (DEF279): every refusal above runs BEFORE the
+# pubspec bump below. It used to run after, so a refused build had
+# already bumped and COMMITTED a build number that was never uploaded —
+# Apple and Google both reject a re-upload at the same +N, so the number
+# was spent, and the next real build skipped it. This bit us twice: the
+# 0.1.0+85/+86 double-burn (reverted in b27a08e4) and again on the first
+# +86 attempt, where the Test-Store-key gate fired one line after the
+# commit. A gate that costs something when it fires teaches the operator
+# to route around it.
+
+pubspec="${MOBILE_DIR}/pubspec.yaml"
+current_line=$(grep -E "^version:" "$pubspec")
+current_version=$(echo "$current_line" | sed -E 's/version:[[:space:]]*//')
+semver="${current_version%+*}"
+build_num="${current_version#*+}"
+
+if [[ "$DO_BUMP" == "1" ]]; then
+  new_build=$((build_num + 1))
+  new_version="${semver}+${new_build}"
+  echo "▶ bumping pubspec: ${current_version} → ${new_version}"
+  # Portable in-place sed (BSD on macOS needs '' arg).
+  sed -i '' "s/^version: ${current_version}$/version: ${new_version}/" "$pubspec"
+  build_num="$new_build"
+  if [[ "$DO_COMMIT" == "1" ]]; then
+    (cd "$PROJECT_ROOT" && git add mobile/pubspec.yaml && \
+      git commit -m "chore(mobile): bump build ${semver}+$((build_num - 1)) → ${semver}+${build_num} for TestFlight" \
+      > /dev/null && echo "▶ committed bump")
+  fi
+else
+  echo "▶ using existing version ${semver}+${build_num} (--no-bump)"
 fi
 
 # CR084 billing gate — fail loudly rather than ship a paywall that cannot charge.
