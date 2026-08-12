@@ -153,8 +153,8 @@ def test_each_threshold_fires_on_its_own_boundary(points, expected):
 def test_the_second_rung_is_a_milestone_not_a_number():
     # Amendment D correction 3: three finished runs, none forfeited —
     # reachable in three weeks, fires once, cannot be farmed.
-    assert title_for(career_points=0, finished_runs=3, forfeits=0) == "associate"
-    assert title_multiplier("associate") == pytest.approx(1.2)
+    assert title_for(career_points=0, finished_runs=3, forfeits=0) == "runner"
+    assert title_multiplier("runner") == pytest.approx(1.2)
 
 
 def test_two_finishes_is_not_yet_the_milestone():
@@ -196,7 +196,7 @@ def test_the_milestone_rung_is_exempt_from_the_witness_requirement():
     # the design reading that most needs to be visible if it is wrong.
     assert title_for(
         career_points=0, finished_runs=3, forfeits=0, qualifying_finishes=0,
-    ) == "associate"
+    ) == "runner"
 
 
 def test_an_unknown_or_missing_title_scores_as_apprentice_never_as_zero():
@@ -208,7 +208,7 @@ def test_an_unknown_or_missing_title_scores_as_apprentice_never_as_zero():
 
 
 def test_every_title_in_the_ladder_has_a_multiplier():
-    for title in ("apprentice", "associate", "analyst", "trader", "senior",
+    for title in ("apprentice", "runner", "analyst", "trader", "senior",
                   "floor_veteran"):
         assert title in TITLE_MULTIPLIER
 
@@ -248,7 +248,7 @@ def test_a_new_player_is_pointed_at_the_milestone_not_at_500_points():
     # in their head; three finished runs is.
     goal = next_title_goal(career_points=0, finished_runs=0, forfeits=0)
     assert goal == {
-        "title": "associate", "requirement": "finished_runs", "remaining": 3,
+        "title": "runner", "requirement": "finished_runs", "remaining": 3,
     }
 
 

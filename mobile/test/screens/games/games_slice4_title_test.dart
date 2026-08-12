@@ -50,7 +50,7 @@ void main() {
           finishedCount: 1,
           title: 'apprentice',
           nextTitle: GameTitleGoal(
-            title: 'associate',
+            title: 'runner',
             requirement: 'finished_runs',
             remaining: 2,
           ),
@@ -59,7 +59,7 @@ void main() {
 
       expect(find.text('APPRENTICE'), findsOneWidget);
       expect(find.textContaining('2 more finished runs'), findsOneWidget);
-      expect(find.textContaining('ASSOCIATE'), findsOneWidget);
+      expect(find.textContaining('RUNNER'), findsOneWidget);
     });
 
     testWidgets('a points rung is stated in points, not in runs',
@@ -72,7 +72,7 @@ void main() {
         const GameRecord(
           careerPoints: 380,
           finishedCount: 9,
-          title: 'associate',
+          title: 'runner',
           nextTitle: GameTitleGoal(
             title: 'analyst',
             requirement: 'career_points',
@@ -81,7 +81,7 @@ void main() {
         ),
       );
 
-      expect(find.text('ASSOCIATE'), findsOneWidget);
+      expect(find.text('RUNNER'), findsOneWidget);
       expect(find.textContaining('120 career points'), findsOneWidget);
       expect(find.textContaining('finished runs'), findsNothing);
     });

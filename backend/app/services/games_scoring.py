@@ -335,17 +335,19 @@ def placement_to_points(p: float) -> float:
 # sizing. Lowering the gate beats raising the stipend, which would break the
 # anti-farm guard. It fires once, so it cannot be farmed.
 #
-# NAMING: the design leaves rung 2 deliberately unnamed (§6.4's table reads
-# *"(new rung — unnamed, §18.1)"*). `associate` is this build's placeholder,
-# chosen to sit in the same desk register as the five inherited names —
-# flagged to Saiful as a one-word call, and the ONLY thing here that is a
-# preference rather than a derivation.
+# NAMING: the design left rung 2 deliberately unnamed (§6.4's table reads
+# *"(new rung — unnamed, §18.1)"*). Saiful named it **`runner`**, 2026-08-12,
+# choosing it over `associate` and `junior` — both of which name a seniority
+# step. `runner` names the BEHAVIOUR the rung actually rewards: finishing
+# what you start. It is the one rung on the ladder that is not a rank, and
+# the only one earned by a milestone rather than a number, so breaking the
+# desk register here is the point rather than a cost.
 TITLE_APPRENTICE = "apprentice"
-TITLE_RUNG_TWO = "associate"
+TITLE_RUNG_TWO = "runner"
 
 TITLE_MULTIPLIER: dict[str, float] = {
     "apprentice": 1.0,
-    "associate": 1.2,
+    "runner": 1.2,
     "analyst": 1.4,
     "trader": 1.6,
     "senior": 1.8,
