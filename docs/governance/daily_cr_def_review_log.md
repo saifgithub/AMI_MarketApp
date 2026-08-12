@@ -600,3 +600,66 @@ Run interrupted by Saiful after batch 1 (batch 2 declined) — 4 of ~44 asked. R
 items (20 open DEFs incl. DEF178/DEF182 security pair, DEF230 no-APPROVE drought,
 DEF251; proposed CR102/103/107/133/135/140, CR145–CR157, CR159–CR161) roll to the next
 run's list untouched.
+
+## 2026-08-12
+
+Ran manually mid-session (Saiful: "lets go to the daily GTM list" — clarified via
+AskUserQuestion to mean this routine after pointing at the command file). `verify all`
+clean at start: 270 DEF rows / 166 CR rows, no drift. Scope: full — 20 open Defects +
+21 proposed CRs. Skipped per rule: CR022 (standing defer to pre-release, 2026-07-31,
+unchanged), CR122 (row self-instructs not to re-ask, unchanged), CR134 (08-10 already
+logged closed-by-action — 995a3008 folded the correction into CR109's draft, row flip
+still owed by CR109's owner; not re-asked).
+
+- **DEF100** (open since 07-24, RevenueCat/store billing config, Saiful-liaison, 19 days) —
+  re-asked → Saiful: "I am not sure I understand the problem, which is why i have not
+  handled it. what is it that I needed to do?" — answered inline from the row: (1)
+  RevenueCat dashboard — public SDK keys (iOS+Android) + webhook auth secret
+  (`REVENUECAT_WEBHOOK_SECRET` in melehost `.env`); (2) 7 store products in App Store
+  Connect + Play Console mapped to RC offerings/entitlements (`trader`/`floor_manager`
+  subs + 3 credit consumables, exact SKUs/prices in the row); (3) Apple + Google paid-app
+  agreements + banking. Code side (CR084) is done; this is store-identity/money setup
+  only Saiful can do. Still open, unresolved this run — re-ask next time with this
+  context already given.
+- **DEF104** (open since 07-22, plaintext IMAP/SMTP credential, live) — re-asked (5th),
+  flagged DEF204's new finding (a second divergent copy on melehost actively processing
+  real customer email today, different hardcoded credential, trigger unidentified) →
+  Saiful: "Keep deferring" (credential stays live; DEF204 asked separately below).
+- **DEF144** (open since 07-28, translation code-switching) — re-asked (3rd) → Saiful:
+  "Still broken, keep open" (unchanged from 08-10).
+- **CR017** (proposed since 07-10, multi-provider LLM routing + caching) — re-asked after
+  its 08-10 reversal → Saiful: "Start now, commit this time" — needs an actual lane this
+  time, not another reversal.
+- **CR102** (proposed since 07-27, in-app messaging to beta testers) — re-asked, row
+  never flipped since the 08-07 "Drop it" ruling → Saiful: "drop it, and dont ask me
+  again" — treating as a standing decision going forward (flagged for row flip below).
+- **CR103** (proposed since 07-27, admin compose-tab UI for CR102) — re-asked → Saiful:
+  "Yes, CR103 absorbs it" — confirms 08-07's reading, still owed a scope-merge + row
+  flip by the owner.
+- **CR107** (proposed since 07-28, agent icons vs letters, held since 07-29 pending
+  DEF154) — re-asked → Saiful: "fire off a design research agent with the assignment
+  to find the icons for each" — new instruction, not a hold/start answer; launched a
+  background research agent (icon concepts per the 13-agent roster, checks DEF154's
+  actual status) rather than logging a hold/start verdict.
+- **CR133** (proposed since 07-30, bottom-nav restructure) — re-asked → Saiful: "Keep
+  deferring" (unchanged from 08-07; CR109/CR135 stay queued behind it).
+- **CR140** (proposed since 08-06, Portfolio Health cadence) — asked whether to draft
+  the credit-metered redraft now → Saiful: "Keep holding" (no redraft yet).
+- **DEF145** (open since 07-29, low severity, sim stop/target doesn't propagate to a
+  linked Alpaca account, 0 users affected) — first ask, needs a design ruling (should
+  AMI ever write to a linked external Alpaca account) → Saiful: "Keep deferring."
+- **DEF178** (open since 07-30, SECURITY — live Adanos API key in git history on
+  origin/main, quota-valid) — first ask, offered rotate-now/full-remediation/defer →
+  Saiful: "Keep deferring" (live exposure stays live).
+- **CR133** (proposed since 07-30, bottom-nav restructure + full YOU tab build) — re-asked
+  3x with escalating clarification (asked which CR133 depends on — answer: none, it's
+  the root, CR109/CR135 depend on it; confirmed full scope bundles Mandate/Journal/
+  Insights, not just nav reorder; confirmed prototype exists — clickable prototype
+  delivered, no Flutter written; explained why CR135 waits on it — needs a stable nav
+  shell for the bell/badge, CR027 cut it live rather than build throwaway chrome) →
+  Saiful: "Keep deferring. I am considering releasing 'game' as a separate app
+  altogether." — new strategic consideration, not actioned, noted for future sessions.
+- **CR135** (proposed since 07-31, in-app notification centre) — re-asked alongside
+  CR133 per Saiful's request to see both together → follows CR133's "keep deferring"
+  (stays queued; CR027's plumbing already shipped, only the browse/manage screen +
+  bell/badge remain, waiting on a stable nav home).
