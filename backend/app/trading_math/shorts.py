@@ -72,3 +72,89 @@ def short_cover_proceeds(
     total is continuous across the cover.
     """
     return short_leg(cash_posted, quantity, entry_price, close_price)
+
+
+# ── CR109 Amendment I — the account may not go negative ────────────────────
+#
+# Saiful, 2026-08-12, on being told a short posts its full notional:
+# *"keep no leverage, but when the game ends, all positions must be closed.
+# how do we keep the account from going negative?"*
+#
+# Amendment G left the leg unbounded below on purpose — *"the one position in
+# the game whose loss is not bounded by what you put in"* — and said the run's
+# own clock was the containment. It is not. A run's NAV feeds the TWR chain,
+# and TWR is **undefined across a sign change**: one negative link makes every
+# link after it arithmetic about nothing. So the containment has to be a real
+# mechanism, and it is two of them.
+#
+# **Where the account actually breaks, in closed form.** `cash_posted` is the
+# full notional, so `cash_posted = entry*q` and
+#
+#     leg = cash_posted + (entry - mark)*q = q*(2*entry - mark)
+#
+# which is zero at exactly `mark == 2*entry` and negative above it. A short
+# therefore cannot take an account under until the name has DOUBLED. That is
+# the whole trigger — no maintenance-margin table, no borrow rate, no
+# per-ticker data we would have to invent (the CR040 fabrication CR171 §4
+# spends a page avoiding).
+
+MAINTENANCE_FLOOR_PCT = 0.10
+"""Fraction of the posted collateral at which a short is bought in.
+
+Not zero, because the cover has to be PAID for out of the leg. At exactly
+`leg == 0` the cover fee (0.1% of a notional that has by then doubled) would
+come out of the player's other positions — so a forced buy-in at the true
+zero still leaks past it, in the one case built to prevent leaking. Ten
+percent of the collateral is ~100x the cover fee at the trigger, which
+absorbs the fee and an ordinary intraday move against the fill.
+"""
+
+
+def short_maintenance_floor(cash_posted: float) -> float:
+    """Leg value at which `short_needs_buyin` fires."""
+    return cash_posted * MAINTENANCE_FLOOR_PCT
+
+
+def short_buyin_trigger_price(entry_price: float) -> float:
+    """The mark that trips the buy-in — derived, never a second constant.
+
+    Solving `q*(2*entry - mark) == MAINTENANCE_FLOOR_PCT * entry*q` for the
+    mark gives `entry * (2 - MAINTENANCE_FLOOR_PCT)`; the quantity cancels,
+    so the trigger is a pure multiple of the entry price and the ticket can
+    show it before the player commits.
+    """
+    return entry_price * (2.0 - MAINTENANCE_FLOOR_PCT)
+
+
+def short_needs_buyin(
+    cash_posted: float, quantity: float, entry_price: float, mark: float,
+) -> bool:
+    """True when this short has eaten through all but the floor of its collateral."""
+    return short_leg(cash_posted, quantity, entry_price, mark) <= short_maintenance_floor(
+        cash_posted
+    )
+
+
+def nav_floor(total_value: float) -> tuple[float, float]:
+    """`(nav, shortfall)` — a run's NAV never goes below zero.
+
+    The buy-in above bounds an ORDERLY move; it cannot bound a GAP. A name
+    that closes at 1.8x entry and opens at 3x fills the forced cover at 3x,
+    and the account is already negative when the mechanism gets to run. That
+    residual is real and is not designable away — a real short has it too,
+    and it is why a real broker can hand you a bill.
+
+    So the run floors at zero and busts. The excess is returned as
+    `shortfall` rather than discarded, because the two numbers answer
+    different questions: the NAV keeps the scoring chain defined (a wipeout
+    is -100%, which is exactly what a wipeout is), and the shortfall is the
+    honest extra fact — what a real broker would have billed — which the
+    Close states in words instead of smuggling into a return.
+
+    Flooring is NOT the `?? 0` class this feature keeps producing: nothing is
+    being guessed or defaulted here. Both halves of the true value survive,
+    in the two fields the two consumers need.
+    """
+    if total_value >= 0:
+        return total_value, 0.0
+    return 0.0, -total_value

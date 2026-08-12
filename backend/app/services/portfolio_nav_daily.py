@@ -36,7 +36,8 @@ from sqlalchemy.exc import IntegrityError
 
 from app.core.logging import logger
 from app.db import get_session
-from app.db.models import PortfolioNavDailyRow, SimPortfolioRow
+from app.db.models import GameEntryRow, PortfolioNavDailyRow, SimPortfolioRow
+from app.trading_math.shorts import nav_floor
 from app.trading_math.twr import NavPoint, time_weighted_return
 
 _MOCK_MARKER = "mock"
@@ -226,6 +227,46 @@ def run_portfolio_nav_snapshot_tick(
     }
 
 
+def _mark_run_bust(
+    user_id: UUID, run_id: UUID, *, shortfall: float, now: datetime,
+) -> bool:
+    """End a run whose book went past zero — CR109 Amendment I.
+
+    Idempotent on `busted_at`: the NAV tick runs daily and a busted run is
+    still a row in `sim_portfolios`, so without this the shortfall would be
+    rewritten (and the log line re-emitted) every day until the field closes.
+    The FIRST measurement is the true one — it is the day the account
+    actually broke — and a later one taken after the positions have drifted
+    is a different, wrong number.
+
+    Only ever moves a run that is still being played. A `finished`, `void` or
+    `forfeit` entry has already been scored, and re-stating it as `bust`
+    would change a settled result.
+    """
+    with get_session() as session:
+        entry = session.execute(
+            select(GameEntryRow).where(
+                GameEntryRow.user_id == user_id, GameEntryRow.run_id == run_id,
+            )
+        ).scalar_one_or_none()
+        if entry is None or entry.busted_at is not None:
+            return False
+        if entry.state not in ("entered", "active"):
+            return False
+        entry.state = "bust"
+        entry.busted_at = now
+        entry.nav_shortfall = round(shortfall, 2)
+    logger.warn(
+        "game_run_bust",
+        user_id=str(user_id), run_id=str(run_id), shortfall=round(shortfall, 2),
+        reason=(
+            "book value went below zero — a short gapped through its "
+            "maintenance floor before the forced buy-in could fill"
+        ),
+    )
+    return True
+
+
 def run_game_nav_snapshot_tick(
     *,
     now: datetime | None = None,
@@ -304,13 +345,25 @@ def run_game_nav_snapshot_tick(
             )
             capital_event = "open" if first_row is None else None
 
+            # CR109 Amendment I — a run's NAV never goes below zero.
+            #
+            # This is the row the TWR chain links across, so it is the exact
+            # place the floor has to be applied: TWR is undefined across a
+            # sign change, and one negative NAV row would make every link
+            # after it arithmetic about nothing — the Close, the board, the
+            # drawdown denominator and the career-point delta all read off
+            # this series. A wipeout is -100%, which is what a wipeout is.
+            nav, shortfall = nav_floor(float(total_value))
+            if shortfall > 0:
+                _mark_run_bust(user_id, run_id, shortfall=shortfall, now=now)
+
             try:
                 with get_session() as session:
                     session.add(PortfolioNavDailyRow(
                         user_id=user_id,
                         run_id=run_id,
                         as_of_date=as_of,
-                        nav=round(float(total_value), 2),
+                        nav=round(nav, 2),
                         cash=round(float(portfolio.current_cash), 2),
                         price_source=_price_source_for_snapshot(
                             source, holding_count=len(portfolio.holdings),

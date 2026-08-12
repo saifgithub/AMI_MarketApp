@@ -109,12 +109,29 @@ class _FieldSnap:
     benchmark_ticker: str
 
 
+_SCORABLE_STATES = ("entered", "active", "bust")
+"""Entry states the close still owes a score to.
+
+`bust` is here because CR109 Amendment I ends a run the moment its book goes
+below zero, and a run that ended is still a RESULT — leaving it out would
+have silently dropped the worst outcome in the game out of the field, which
+is both a scoring hole and a farm (blow up, pay nothing). `forfeit`, `void`
+and `finished` are absent on purpose: each has already been settled, and
+re-scoring one would change a result the player has been shown.
+"""
+
+
 @dataclass
 class _EntrySnap:
     id: UUID
     user_id: UUID
     run_id: UUID
     trade_count: int
+    # CR109 Amendment I. A busted run IS scored — it is a measured result,
+    # and the worst one available — but it is not a FINISHED one: its book
+    # was liquidated at zero before the field's close, so it never held to
+    # the end and does not claim the finish stipend.
+    busted: bool = False
 
 
 @dataclass
@@ -198,11 +215,14 @@ def _close_field(field_id: UUID, *, sim: SimEngine, now: datetime) -> dict[str, 
             benchmark_ticker=field_row.benchmark_ticker or "SPY",
         )
         pending = [
-            _EntrySnap(id=e.id, user_id=e.user_id, run_id=e.run_id, trade_count=e.trade_count)
+            _EntrySnap(
+                id=e.id, user_id=e.user_id, run_id=e.run_id,
+                trade_count=e.trade_count, busted=e.busted_at is not None,
+            )
             for e in s.execute(
                 select(GameEntryRow).where(GameEntryRow.field_id == field_id)
             ).scalars().all()
-            if e.state in ("entered", "active") and e.scored_at is None
+            if e.state in _SCORABLE_STATES and e.scored_at is None
         ]
 
     benchmark_twr = _benchmark_twr_for_field(sim, field)
@@ -218,7 +238,7 @@ def _close_field(field_id: UUID, *, sim: SimEngine, now: datetime) -> dict[str, 
             entry = s.execute(
                 select(GameEntryRow).where(GameEntryRow.id == scored_entry.entry_id)
             ).scalar_one_or_none()
-            if entry is None or entry.state not in ("entered", "active") or entry.scored_at is not None:
+            if entry is None or entry.state not in _SCORABLE_STATES or entry.scored_at is not None:
                 continue  # raced with something else since phase 1 — skip, next pass retries
             stipend_paid = _apply_score(s, entry, field_row, scored_entry, now=now)
             if scored_entry.is_void:
@@ -307,7 +327,7 @@ def _score_one_entry(
             run_twr_pct=run_twr_pct, alpha_scored_pct=None, alpha_display_pct=None,
             counterfactual_hold_index_pct=None, counterfactual_hold_first_picks_pct=None,
             wildness_index=None, run_close_points=0,
-            stipend_eligible_precheck=entry.trade_count >= 1,
+            stipend_eligible_precheck=entry.trade_count >= 1 and not entry.busted,
         )
 
     achievable = achievable_benchmark(benchmark_twr)
@@ -362,7 +382,7 @@ def _score_one_entry(
         counterfactual_hold_first_picks_pct=first_picks_pct,
         wildness_index=wildness,
         run_close_points=run_close_points,
-        stipend_eligible_precheck=entry.trade_count >= 1,
+        stipend_eligible_precheck=entry.trade_count >= 1 and not entry.busted,
     )
 
 

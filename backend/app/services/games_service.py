@@ -49,7 +49,9 @@ from app.services.games_scoring import short_open_fee, trade_fee
 from app.services.portfolio_nav_daily import nav_history, twr_pct_for_window
 from app.services.sim_engine import get_sim_engine
 from app.trading_math.market_hours import is_us_market_open, next_us_market_open
+from app.trading_math.shorts import nav_floor, short_buyin_trigger_price
 from app.trading_math.shorts import short_cover_proceeds as _short_cover_proceeds
+from app.trading_math.shorts import short_needs_buyin
 from app.trading_math.shorts import short_unrealised_pnl as _short_unrealised_pnl
 
 WEEKLY_CADENCE = "week"
@@ -398,6 +400,11 @@ def get_run_detail(user_id: UUID, run_id: UUID) -> dict | None:
         get_sim_engine().portfolio_marks_snapshot(user_id, kind="game", run_id=run_id)
     )
     _queued, _committed = _queued_orders_priced(user_id, run_id)
+    # CR109 Amendment I — the same floor the NAV row is written under, so the
+    # live screen and the stored series cannot disagree about whether a book
+    # is worth less than nothing. `nav_shortfall` carries the part the floor
+    # hides; the Close is where it gets said in words.
+    floored_value, live_shortfall = nav_floor(float(total_value))
     return {
         "run_id": str(run_id),
         "cadence": cadence,
@@ -413,7 +420,8 @@ def get_run_detail(user_id: UUID, run_id: UUID) -> dict | None:
         "cash_committed": _committed,
         "cash_available": round(float(portfolio.current_cash) - _committed, 2),
         "queued_order_count": len(_queued),
-        "total_value": round(float(total_value), 2),
+        "total_value": round(floored_value, 2),
+        "nav_shortfall": round(live_shortfall, 2) if live_shortfall > 0 else None,
         "price_source": source,
         "fees_paid": fees_paid,
         "trade_count": trade_count,
@@ -947,6 +955,15 @@ def quote_trade(
         "opens_short": opens_short,
         "covers_short": covers_short,
         "short_quantity_held": standing.quantity if standing is not None else None,
+        # CR109 Amendment I — the price at which this short would be bought
+        # in, sent from the server rather than re-derived on the client.
+        # Amendment G's ticket copy asserted "there is no floor", which this
+        # amendment made false; a client that computed 1.9x itself would be a
+        # second copy of the constant, free to drift from the one the sweep
+        # actually fires on. Null unless this quote opens a short.
+        "buyin_trigger_price": (
+            round(short_buyin_trigger_price(quote.price), 2) if opens_short else None
+        ),
     }
 
 
@@ -1127,6 +1144,112 @@ def process_queued_orders(*, now: datetime | None = None) -> dict:
             logger.exception("game_queue_fill_failed", order_id=str(t["id"]))
 
     return {"checked": len(targets), "filled": filled, "cancelled": cancelled}
+
+
+# ── Amendment I — forced buy-in, so an account cannot go negative ─────────
+
+
+def sweep_forced_buyins(*, now: datetime | None = None, sim=None) -> dict:
+    """Buy in every short that has eaten through all but the maintenance
+    floor of its collateral (CR109 Amendment I).
+
+    Saiful: *"how do we keep the account from going negative?"* This is the
+    first of the two answers — the orderly one. `short_needs_buyin` fires at
+    `leg <= 10% of collateral` (equivalently `mark >= 1.9x entry`), which
+    caps a short's loss at the collateral posted and so makes its worst case
+    equal to a long's. The second answer, for gaps this cannot catch, is the
+    NAV floor in `trading_math/shorts.nav_floor`.
+
+    **Runs on the queue-drain tick, immediately AFTER the drain, never as an
+    independent task.** Same reasoning Amendment H used for duel pairing: a
+    queued sell can OPEN a short in this very tick, and two tasks would race
+    that ordering every five minutes with a silent failure mode (a position
+    that should have been bought in simply is not, and nothing says so).
+
+    **A no-op outside market hours, deliberately.** A forced cover needs a
+    real price, and filling one at the last close is precisely the stale-fill
+    §5.1 forbids for user orders — a rule the house must not exempt itself
+    from. Waiting for the open is where the gap risk lives, and the gap risk
+    is what `nav_floor` exists for.
+
+    `sim` is injectable for the same reason `run_scoring_pass`'s is: the
+    marks come from a provider that is a singleton in production, and a test
+    that cannot move the price cannot exercise the trigger at all.
+    """
+    now = now or datetime.now(timezone.utc)
+    if not is_us_market_open(now):
+        return {"checked": 0, "bought_in": 0}
+
+    sim = sim or get_sim_engine()
+    with get_session() as s:
+        # Only shorts on runs still being played. A settled run's shorts are
+        # closed by settlement, and buying one in here would move a NAV the
+        # Close has already scored.
+        rows = s.execute(
+            select(GameShortPositionRow)
+            .join(
+                GameEntryRow,
+                GameEntryRow.run_id == GameShortPositionRow.run_id,
+            )
+            .where(
+                GameShortPositionRow.state == "open",
+                GameEntryRow.state.in_(("entered", "active")),
+            )
+        ).scalars().all()
+        targets = [
+            {
+                "user_id": r.user_id,
+                "run_id": r.run_id,
+                "ticker": r.ticker,
+                "quantity": float(r.quantity),
+                "entry_price": float(r.entry_price),
+                "cash_posted": float(r.cash_posted),
+            }
+            for r in rows
+        ]
+
+    bought_in = 0
+    for t in targets:
+        try:
+            quote = sim.current_quote(t["ticker"])
+            mark = float(quote.price)
+            if not short_needs_buyin(
+                t["cash_posted"], t["quantity"], t["entry_price"], mark,
+            ):
+                continue
+            # Routed through the ordinary cover path, at the ordinary fee.
+            # A house-exempt fill is a tuned result by the back door — the
+            # same objection slice 3c makes about fee-exempt desks.
+            result = sim.submit_game_trade(
+                user_id=t["user_id"],
+                run_id=t["run_id"],
+                ticker=t["ticker"],
+                side=Side.BUY,
+                quantity=t["quantity"],
+            )
+            if not result.accepted:
+                logger.warn(
+                    "game_short_buyin_refused",
+                    user_id=str(t["user_id"]), run_id=str(t["run_id"]),
+                    ticker=t["ticker"], reason=result.reason,
+                )
+                continue
+            _record_fill(t["user_id"], t["run_id"], fee=result.fee)
+            bought_in += 1
+            logger.info(
+                "game_short_bought_in",
+                user_id=str(t["user_id"]), run_id=str(t["run_id"]),
+                ticker=t["ticker"], qty=t["quantity"],
+                entry=t["entry_price"], mark=mark,
+                trigger=short_buyin_trigger_price(t["entry_price"]),
+            )
+        except Exception:
+            logger.exception(
+                "game_short_buyin_failed",
+                run_id=str(t["run_id"]), ticker=t["ticker"],
+            )
+
+    return {"checked": len(targets), "bought_in": bought_in}
 
 
 # ── Restart / forfeit ────────────────────────────────────────────────────

@@ -218,8 +218,15 @@ async def _game_queue_fill_tick() -> None:
     open). A no-op outside market hours; when the market IS open, fetches
     a FRESH price for each still-queued order at drain time — never the
     price that was on screen when the order was placed (see
-    `games_service.process_queued_orders`'s docstring)."""
-    from app.services.games_service import process_queued_orders
+    `games_service.process_queued_orders`'s docstring).
+
+    Then, in the SAME tick and immediately after the drain, the CR109
+    Amendment I forced buy-in sweep. Not an independent task, for the reason
+    Amendment H gives about duel pairing: a queued sell can OPEN a short in
+    this very drain, and two tasks would race that ordering every five
+    minutes with a silent failure mode — a position that should have been
+    bought in simply is not, and nothing says so."""
+    from app.services.games_service import process_queued_orders, sweep_forced_buyins
 
     while True:
         try:
@@ -227,6 +234,11 @@ async def _game_queue_fill_tick() -> None:
             logger.info("game_queue_fill_tick_complete", **stats)
         except Exception:
             logger.exception("game_queue_fill_tick_failed")
+        try:
+            buyin_stats = await asyncio.to_thread(sweep_forced_buyins)
+            logger.info("game_short_buyin_sweep_complete", **buyin_stats)
+        except Exception:
+            logger.exception("game_short_buyin_sweep_failed")
         await asyncio.sleep(_GAME_QUEUE_FILL_INTERVAL_SECONDS)
 
 

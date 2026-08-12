@@ -1475,6 +1475,21 @@ class GameEntryRow(Base):
     # a second query while the ledger (`career_events`) still holds the
     # granular, audit-grade breakdown.
     stipend_points: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # CR109 Amendment I — the wipeout. Saiful: *"how do we keep the account
+    # from going negative?"* A forced buy-in bounds an orderly move; a GAP can
+    # still take the book below zero, and a negative NAV makes the TWR chain
+    # undefined from that link onward. So the run floors at zero and stops.
+    #
+    # Two columns because the floor must not DESTROY the fact it hides:
+    # `nav_shortfall` is how far past zero it actually went — what a real
+    # broker would have billed — which the Close states in words. Storing only
+    # the floored NAV would be the `?? 0` class this feature keeps producing.
+    busted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    nav_shortfall: Mapped[Optional[float]] = mapped_column(
+        Numeric(12, 2), nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
