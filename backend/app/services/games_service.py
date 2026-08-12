@@ -19,8 +19,8 @@ past `live` — settling/closing is slice 3).
 
 Entry is FREE, always — an entry fee is legal consideration and would
 break CR109 §15's simulation-only legal position (design doc). Restart
-sets the entry to `forfeit`; there is no career-points ledger yet (slice
-3), so there is nothing to debit.
+sets the entry to `forfeit` and posts the slice-4 minimum debit in the
+SAME transaction, so a forfeit cannot be recorded without its cost.
 """
 
 from __future__ import annotations
@@ -45,8 +45,8 @@ from app.db.models import (
     User,
 )
 from app.schemas.trade import OrderType, Side
-from app.services import games_duels
-from app.services.games_scoring import short_open_fee, trade_fee
+from app.services import career_ledger, games_duels
+from app.services.games_scoring import forfeit_debit, short_open_fee, trade_fee
 from app.services.portfolio_nav_daily import nav_history, twr_pct_for_window
 from app.services.sim_engine import get_sim_engine
 from app.trading_math.market_hours import is_us_market_open, next_us_market_open
@@ -571,6 +571,13 @@ def enter_field(
                 )
 
             run_id = uuid4()
+            # CR109 slice 4 §6.4 — "the multiplier is FIXED AT RUN OPEN so it
+            # cannot drift mid-run." Resolved here and stored, rather than
+            # read from the user at close: a player who crosses a threshold
+            # in week 3 would otherwise have weeks 1 and 2 repriced by an
+            # event that had not happened yet, and one who fell back through
+            # a threshold would be retro-cut the same way. Neither is
+            # something they did during the run being scored.
             entry = GameEntryRow(
                 field_id=field.id,
                 user_id=user_id,
@@ -580,6 +587,7 @@ def enter_field(
                 fees_paid=0,
                 trade_count=0,
                 entered_at=now,
+                title_multiplier=career_ledger.title_multiplier_now(s, user_id),
             )
             s.add(entry)
             field.entrant_count = (field.entrant_count or 0) + 1
@@ -1451,20 +1459,45 @@ def settle_run_positions(
 # ── Restart / forfeit ────────────────────────────────────────────────────
 
 
+def _forfeit_debit_for(entry: GameEntryRow) -> int:
+    """The career-point cost of abandoning this run, POSITIVE.
+
+    §18's churn hole: the design's debit is placement-based, so forfeiting
+    from mid-field (`p ~= 0.5`) costs approximately nothing, and with rolling
+    starts there is always another field to join. The floor is what closes
+    that — a fixed cost per cadence *regardless of standing*, because the
+    players most likely to churn are exactly the ones a standing-based debit
+    cannot touch.
+
+    The ledger's own clamp still applies at write: a player at zero pays what
+    they have, which is nothing. That is Amendment D's mercy rule and this
+    floor deliberately does not override it — the floor exists to stop a
+    player with points from churning for free, not to invent a debt.
+    """
+    with get_session() as s:
+        field = s.execute(
+            select(GameFieldRow).where(GameFieldRow.id == entry.field_id)
+        ).scalar_one_or_none()
+    return forfeit_debit(field.cadence if field else "week")
+
+
 def preview_restart(user_id: UUID, run_id: UUID) -> dict:
-    """`POST /v1/games/runs/{run_id}/restart` preview half — no career-
-    points ledger exists yet (slice 3), so there is nothing to debit."""
+    """`POST /v1/games/runs/{run_id}/restart` preview half — states the debit
+    BEFORE the player commits to it. §21's restart-flow rule: *"must show what
+    forfeits and what it costs"*."""
     entry = _find_entry(user_id, run_id)
     if entry is None:
         raise RunNotFoundError(f"no run {run_id} for user {user_id}")
     if entry.state not in ("entered", "active"):
         raise RunNotLiveError(f"run {run_id} is {entry.state}, cannot restart")
+    debit = _forfeit_debit_for(entry)
     return {
         "run_id": str(run_id),
-        "career_points_debit": 0,
+        "career_points_debit": debit,
         "reason": (
-            "no career-points ledger exists yet (slice 3) — forfeiting "
-            "this run costs nothing today"
+            f"forfeiting costs {debit} career points — the minimum, charged "
+            "regardless of where you stand in the field. Re-entry is "
+            "immediate; the debit is the price."
         ),
     }
 
@@ -1484,6 +1517,9 @@ def commit_restart(user_id: UUID, run_id: UUID, *, now: datetime | None = None) 
             raise RunNotFoundError(f"no run {run_id} for user {user_id}")
         if entry.state not in ("entered", "active"):
             raise RunNotLiveError(f"run {run_id} is {entry.state}, cannot restart")
+        field = s.execute(
+            select(GameFieldRow).where(GameFieldRow.id == entry.field_id)
+        ).scalar_one_or_none()
         entry.state = "forfeit"
         result = s.execute(
             update(GameQueuedOrderRow)
@@ -1494,9 +1530,27 @@ def commit_restart(user_id: UUID, run_id: UUID, *, now: datetime | None = None) 
             .values(state="cancelled", cancel_reason="run forfeited")
         )
         cancelled_count = int(result.rowcount or 0)
+
+        # Posted in the SAME transaction as the state change, so a forfeit
+        # can never be recorded without its debit — the (entry_id, reason)
+        # unique constraint makes a repeat call idempotent rather than
+        # charging twice for one abandonment.
+        debit = forfeit_debit(field.cadence if field else "week")
+        row = career_ledger.post_career_event(
+            s,
+            user_id=user_id, delta_uncapped=-debit, reason="forfeit_debit",
+            field_id=entry.field_id, entry_id=entry.id,
+        )
+        charged = int(row.delta) if row is not None else 0
+        entry.career_points_delta = charged
     return {
         "run_id": str(run_id),
         "state": "forfeit",
-        "career_points_debit": 0,
+        # What the ledger ACTUALLY took, not what the floor asked for. A
+        # player at zero pays nothing (the clamp), and reporting the floor
+        # there would tell them they had been charged something they had
+        # not — the same class of lie as the display-only clamp Amendment D
+        # threw out.
+        "career_points_debit": abs(charged),
         "queued_orders_cancelled": cancelled_count,
     }

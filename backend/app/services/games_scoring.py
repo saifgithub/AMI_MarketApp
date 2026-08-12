@@ -365,7 +365,13 @@ TITLE_POINT_THRESHOLDS: list[tuple[int, str]] = [
 MILESTONE_FINISHED_RUNS = 3
 
 
-def title_for(*, career_points: int, finished_runs: int, forfeits: int) -> str:
+def title_for(
+    *,
+    career_points: int,
+    finished_runs: int,
+    forfeits: int,
+    qualifying_finishes: int = 0,
+) -> str:
     """The title a player holds RIGHT NOW, derived from their totals — never
     stored as a promotion, so there is nothing to roll and nothing to keep
     in sync.
@@ -375,10 +381,22 @@ def title_for(*, career_points: int, finished_runs: int, forfeits: int) -> str:
     forfeited once is an Analyst, and demoting them to Apprentice for it
     would make the ×1.4 multiplier depend on a fact the points already
     priced.
+
+    `qualifying_finishes` is the count of finished runs in fields that
+    cleared `TITLE_MIN_FIELD` — §6.6's *"a thin field can score, but a title
+    needs a minimum field. Prestige needs witnesses."* The NAMED rungs
+    require one; **the milestone rung does not**, and that exemption is a
+    reading rather than a quotation, so it is stated here rather than
+    buried: Amendment D created rung 2 specifically for the early player in
+    a thin field, whose goal gradient never engages otherwise. Gating it on
+    a 20-entrant field would freeze every alpha player at apprentice — the
+    exact outcome the rung was added to prevent — while gating the named
+    rungs is what §6.6's sentence is actually about.
     """
-    for threshold, title in TITLE_POINT_THRESHOLDS:
-        if career_points >= threshold:
-            return title
+    if qualifying_finishes >= 1:
+        for threshold, title in TITLE_POINT_THRESHOLDS:
+            if career_points >= threshold:
+                return title
     if finished_runs >= MILESTONE_FINISHED_RUNS and forfeits == 0:
         return TITLE_RUNG_TWO
     return TITLE_APPRENTICE

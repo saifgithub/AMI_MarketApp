@@ -65,7 +65,10 @@ def test_free_users_close_contains_rank_delta_curve_and_both_counterfactuals():
     # No entitlement anywhere in this call — implementation_plan.md §6: the
     # free Close is complete on its own.
     assert "rank" in payload
-    assert payload["rank"] is None  # no placement, ever, in slice 3
+    # Slice 4: the field is ranked even when it is too thin to be PLACED —
+    # "1st of 1" is a fact, and `entrant_count` travels with it so the Close
+    # can name the basis (§6.6's "Field of 3. Scored against the S&P 500").
+    assert payload["rank"] == 1
     assert "career_points_delta" in payload
     assert payload["career_points_delta"] is not None
     assert isinstance(payload["curve"], list)
@@ -73,7 +76,7 @@ def test_free_users_close_contains_rank_delta_curve_and_both_counterfactuals():
     assert payload["counterfactual_hold_index_pct"] is not None
     # First-picks counterfactual: present because a real trade was made.
     assert payload["counterfactual_hold_first_picks_pct"] is not None
-    assert payload["beats"]["result"]["rank"] is None
+    assert payload["beats"]["result"]["rank"] == 1
     assert payload["beats"]["insight"]["kind"] == "counterfactual"
     assert payload["beats"]["re_entry"] is not None
     assert payload["beats"]["re_entry"]["cadence"] == "week"

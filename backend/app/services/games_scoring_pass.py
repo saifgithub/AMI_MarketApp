@@ -60,6 +60,7 @@ from app.db.models import (
 )
 from app.services import career_ledger, games_duels
 from app.services.games_scoring import (
+    PLACEMENT_MIN_FIELD,
     TradeLeg,
     achievable_benchmark,
     alpha_to_points,
@@ -68,6 +69,8 @@ from app.services.games_scoring import (
     cadence_weight,
     counterfactual_hold_first_picks_pct,
     finish_stipend,
+    placement_p,
+    placement_to_points,
     wildness_index,
 )
 from app.services.portfolio_nav_daily import nav_history
@@ -132,6 +135,11 @@ class _EntrySnap:
     # was liquidated at zero before the field's close, so it never held to
     # the end and does not claim the finish stipend.
     busted: bool = False
+    # CR109 slice 4 §6.4 — frozen at run open, read here rather than
+    # recomputed, so a threshold crossed mid-run cannot reprice the run.
+    # `None` on every entry written before slice 4 shipped; `title_multiplier`
+    # resolves that to 1.0 (apprentice), never to zero.
+    title_multiplier: Optional[float] = None
 
 
 @dataclass
@@ -147,6 +155,12 @@ class _ScoredEntry:
     wildness_index: Optional[float]
     run_close_points: int  # 0 when void — no run_close event posted
     stipend_eligible_precheck: bool  # entered + >=1 trade — period-claim resolved at write time
+    # Slice 4. Both stay None on the benchmark path and on a VOID run, which
+    # is what makes "was this run placed?" answerable from the row itself
+    # rather than inferred from the field's basis — a field closes on ONE
+    # basis, but a void entrant inside it was placed on neither.
+    final_rank: Optional[int] = None
+    scored_entrant_count: Optional[int] = None
 
 
 def run_scoring_pass(
@@ -218,6 +232,9 @@ def _close_field(field_id: UUID, *, sim: SimEngine, now: datetime) -> dict[str, 
             _EntrySnap(
                 id=e.id, user_id=e.user_id, run_id=e.run_id,
                 trade_count=e.trade_count, busted=e.busted_at is not None,
+                title_multiplier=(
+                    float(e.title_multiplier) if e.title_multiplier is not None else None
+                ),
             )
             for e in s.execute(
                 select(GameEntryRow).where(GameEntryRow.field_id == field_id)
@@ -227,6 +244,7 @@ def _close_field(field_id: UUID, *, sim: SimEngine, now: datetime) -> dict[str, 
 
     benchmark_twr = _benchmark_twr_for_field(sim, field)
     scored_entries = [_score_one_entry(sim, e, field, benchmark_twr) for e in pending]
+    basis = _rank_and_maybe_place(scored_entries, pending, field)
 
     # ── Phase 2: apply every entry's score + ledger posts, then close. ────
     scored = voided = stipends = 0
@@ -259,7 +277,7 @@ def _close_field(field_id: UUID, *, sim: SimEngine, now: datetime) -> dict[str, 
         # duels against an opponent whose result did not exist yet.
         duel_stats = games_duels.settle_field_duels(s, field_id, now=now)
 
-        field_row.scoring_basis = "benchmark"
+        field_row.scoring_basis = basis
         field_row.state = "closed"
 
     # ── Phase 4: settlement (Amendment I). Saiful: *"when the game ends, all
@@ -299,6 +317,80 @@ def _close_field(field_id: UUID, *, sim: SimEngine, now: datetime) -> dict[str, 
         "scored": scored, "voided": voided, "stipends": stipends,
         "duels": duel_stats,
     }
+
+
+# ── Slice 4: rank the field, and place it when it is big enough ──────────
+
+
+def _rank_and_maybe_place(
+    scored_entries: list[_ScoredEntry],
+    pending: list[_EntrySnap],
+    field: _FieldSnap,
+) -> str:
+    """Assign `final_rank` to every entry with a comparable result, and — only
+    when the field clears `PLACEMENT_MIN_FIELD` — REPLACE the benchmark-path
+    points with placement points. Returns the basis to freeze on the field.
+
+    Mutates `scored_entries` in place, before the write phase opens its
+    session, keeping the module's read-then-write split intact.
+
+    **Rank is assigned on both paths; only SCORING is gated.** A field of
+    four still has an ordering, and "3rd of 4" is a fact the Close and the
+    board can state honestly — what a thin field cannot support is the
+    placement CURVE, because `p` is undefined at n=1 and a coin flip at n=2.
+    Conflating the two would have cost every alpha-sized field its rank
+    display for a reason that only applies to the points.
+
+    **VOID entries are excluded from `n` and never ranked.** Their numbers
+    came off mock-priced days, so including one would divide real players'
+    placement by a result that was never measured, and rank them against it.
+    """
+    ranked = [
+        se for se in scored_entries
+        if not se.is_void and se.run_twr_pct is not None
+    ]
+    n = len(ranked)
+    if n == 0:
+        return "benchmark"
+
+    # Descending TWR, with STANDARD COMPETITION RANKING on ties (1, 1, 3):
+    # two identical measured returns are the same result, and breaking that
+    # tie on row order would let an arbitrary insert sequence decide which
+    # of two indistinguishable players got paid more.
+    ranked.sort(key=lambda se: float(se.run_twr_pct or 0.0), reverse=True)
+    ranks: list[int] = []
+    for i, se in enumerate(ranked):
+        if i and float(se.run_twr_pct or 0.0) == float(ranked[i - 1].run_twr_pct or 0.0):
+            ranks.append(ranks[-1])
+        else:
+            ranks.append(i + 1)
+
+    multiplier_by_entry = {p.id: p.title_multiplier for p in pending}
+    for se, rank in zip(ranked, ranks):
+        se.final_rank = rank
+        se.scored_entrant_count = n
+
+    if n < PLACEMENT_MIN_FIELD:
+        return "benchmark"
+
+    for se in ranked:
+        base = placement_to_points(placement_p(se.final_rank or 1, n))
+        base = apply_negative_twr_partial_credit(
+            base, float(se.run_twr_pct or 0.0) / 100.0,
+        )
+        se.run_close_points = int(round(
+            base
+            * cadence_weight(field.cadence, negative=(base < 0))
+            * title_multiplier_value(multiplier_by_entry.get(se.entry_id))
+        ))
+    return "placement"
+
+
+def title_multiplier_value(stored: float | None) -> float:
+    """The multiplier frozen onto an entry at run open, or 1.0 when the entry
+    predates slice 4. Never zero — an unresolvable title must score the run
+    as untitled, not delete it."""
+    return 1.0 if stored is None else float(stored)
 
 
 # ── Benchmark series ─────────────────────────────────────────────────────
@@ -368,7 +460,16 @@ def _score_one_entry(
 
     base = alpha_to_points(alpha_scored)
     base = apply_negative_twr_partial_credit(base, run_twr)
-    weighted = base * cadence_weight(field.cadence, negative=(base < 0))
+    # Slice 4 — the title multiplier applies on BOTH scoring paths. §6.2's
+    # formula is `base x cadence_weight x title_multiplier`, and the alpha
+    # path is a substitute for `base`, not an exemption from the rest of it:
+    # applying it only under placement would silently cut a titled player's
+    # points for the crime of playing in a small field.
+    weighted = (
+        base
+        * cadence_weight(field.cadence, negative=(base < 0))
+        * title_multiplier_value(entry.title_multiplier)
+    )
     run_close_points = int(round(weighted))
 
     portfolio, marks, total_value, _dd, _source = sim.portfolio_marks_snapshot(
@@ -490,6 +591,8 @@ def _apply_score(
     entry.counterfactual_hold_index_pct = scored.counterfactual_hold_index_pct
     entry.counterfactual_hold_first_picks_pct = scored.counterfactual_hold_first_picks_pct
     entry.wildness_index = scored.wildness_index
+    entry.final_rank = scored.final_rank
+    entry.scored_entrant_count = scored.scored_entrant_count
     entry.scored_at = now
 
     total_delta = 0

@@ -129,7 +129,7 @@ def test_a_long_bad_run_is_damped_by_the_square_root_row():
 
 def test_the_ladder_is_monotonic_in_points():
     seen = [
-        title_for(career_points=pts, finished_runs=0, forfeits=0)
+        title_for(career_points=pts, finished_runs=0, forfeits=0, qualifying_finishes=1)
         for pts in (0, 499, 500, 2_500, 10_000, 30_000, 1_000_000)
     ]
     multipliers = [title_multiplier(t) for t in seen]
@@ -144,7 +144,9 @@ def test_the_ladder_is_monotonic_in_points():
      (2_500, "trader"), (10_000, "senior"), (30_000, "floor_veteran")],
 )
 def test_each_threshold_fires_on_its_own_boundary(points, expected):
-    assert title_for(career_points=points, finished_runs=0, forfeits=0) == expected
+    assert title_for(
+        career_points=points, finished_runs=0, forfeits=0, qualifying_finishes=1,
+    ) == expected
 
 
 def test_the_second_rung_is_a_milestone_not_a_number():
@@ -169,7 +171,31 @@ def test_points_outrank_the_milestone_when_both_could_apply():
     # would make the x1.4 multiplier depend on a fact the points already
     # priced — and would break monotonicity in points, which the multiplier
     # being a MULTIPLIER on those same points cannot survive.
-    assert title_for(career_points=600, finished_runs=9, forfeits=4) == "analyst"
+    assert title_for(
+        career_points=600, finished_runs=9, forfeits=4, qualifying_finishes=1,
+    ) == "analyst"
+
+
+def test_a_named_rung_needs_a_witnessed_field():
+    # §6.6: "a thin field can score, but a title needs a minimum field.
+    # Prestige needs witnesses." 30,000 points earned entirely in thin
+    # fields buys the points, not the name.
+    assert title_for(
+        career_points=30_000, finished_runs=0, forfeits=0, qualifying_finishes=0,
+    ) == "apprentice"
+    assert title_for(
+        career_points=30_000, finished_runs=0, forfeits=0, qualifying_finishes=1,
+    ) == "floor_veteran"
+
+
+def test_the_milestone_rung_is_exempt_from_the_witness_requirement():
+    # Amendment D built rung 2 FOR the early player in a thin field. Gating
+    # it on 20 entrants would freeze every alpha player at apprentice —
+    # exactly the frozen goal gradient the rung was added to fix. This is
+    # the design reading that most needs to be visible if it is wrong.
+    assert title_for(
+        career_points=0, finished_runs=3, forfeits=0, qualifying_finishes=0,
+    ) == "associate"
 
 
 def test_an_unknown_or_missing_title_scores_as_apprentice_never_as_zero():

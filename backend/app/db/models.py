@@ -1490,6 +1490,29 @@ class GameEntryRow(Base):
     nav_shortfall: Mapped[Optional[float]] = mapped_column(
         Numeric(12, 2), nullable=True,
     )
+    # CR109 slice 4 — the field.
+    #
+    # `title_multiplier` is FIXED AT RUN OPEN (§6.4's own words) and stored
+    # per entry rather than read from the user at close. A player who crosses
+    # a threshold mid-run would otherwise have their whole run repriced by an
+    # event that happened after most of it was traded, and a player who fell
+    # back through one would be retro-punished the same way. Stored, not
+    # derived, because the fact it records is "what this player held WHEN
+    # they entered" — which nothing else in the schema remembers.
+    #
+    # `scored_entrant_count` is the `n` the rank was actually taken over: the
+    # entries with a comparable result, which is NOT `game_fields.entrant_count`
+    # (that counts everyone who entered, including VOID runs whose numbers were
+    # never usable). Both are kept because they answer different questions —
+    # "how big was the field" and "how many results did the placement divide" —
+    # and deriving either from the other would be wrong in exactly the case
+    # that matters, a field with voids in it.
+    title_multiplier: Mapped[Optional[float]] = mapped_column(
+        Numeric(4, 2), nullable=True,
+    )
+    scored_entrant_count: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )

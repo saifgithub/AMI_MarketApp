@@ -160,3 +160,65 @@ def forfeit_count(session, user_id: UUID) -> int:
             )
         ).scalar_one()
     )
+
+
+def finished_count(session, user_id: UUID) -> int:
+    """Finished runs. `void` is deliberately NOT counted: a VOID run is one
+    the feed broke, and §12.2 case 4 already rules that the player is not
+    charged for it — but it is equally not a finish they can bank toward the
+    milestone rung, because nothing about it was measured."""
+    from app.db.models import GameEntryRow
+
+    return int(
+        session.execute(
+            select(func.count()).select_from(GameEntryRow).where(
+                GameEntryRow.user_id == user_id, GameEntryRow.state == "finished",
+            )
+        ).scalar_one()
+    )
+
+
+def qualifying_finish_count(session, user_id: UUID) -> int:
+    """Finished runs in fields that cleared `TITLE_MIN_FIELD` — §6.6's
+    "prestige needs witnesses".
+
+    Counts on `game_entries.scored_entrant_count` (the `n` the placement was
+    actually divided by) rather than `game_fields.entrant_count`, which
+    includes VOID entrants whose numbers were never usable. Using the field
+    column would let a field of 20 in which 14 runs voided confer a title
+    earned against five real opponents.
+    """
+    from app.db.models import GameEntryRow
+    from app.services.games_scoring import TITLE_MIN_FIELD
+
+    return int(
+        session.execute(
+            select(func.count()).select_from(GameEntryRow).where(
+                GameEntryRow.user_id == user_id,
+                GameEntryRow.state == "finished",
+                GameEntryRow.scored_entrant_count >= TITLE_MIN_FIELD,
+            )
+        ).scalar_one()
+    )
+
+
+def current_title(session, user_id: UUID) -> str:
+    """The user's title as of RIGHT NOW, recomputed from their totals. §6.4:
+    thresholds, never a promotion event — so there is no roll to run and
+    nothing that can fall out of sync, which is precisely what rolling
+    starts broke about `league_service.weekly_roll()`."""
+    from app.services.games_scoring import title_for
+
+    return title_for(
+        career_points=career_points_total(session, user_id),
+        finished_runs=finished_count(session, user_id),
+        forfeits=forfeit_count(session, user_id),
+        qualifying_finishes=qualifying_finish_count(session, user_id),
+    )
+
+
+def title_multiplier_now(session, user_id: UUID) -> float:
+    """The multiplier to FREEZE onto a run being opened right now (§6.4)."""
+    from app.services.games_scoring import title_multiplier
+
+    return title_multiplier(current_title(session, user_id))

@@ -104,7 +104,13 @@ def test_field_of_one_scores_without_crashing_and_pays_no_placement_win():
     assert field.scoring_basis == "benchmark"
     assert entry_row.state == "finished"
     assert entry_row.scored_at is not None
-    assert entry_row.final_rank is None  # no placement, ever, in slice 3
+    # Slice 4 separates the two things slice 3 had no reason to distinguish:
+    # the field is RANKED (1 of 1 — a fact, and the count travels with it so
+    # the Close can state the basis loudly per §6.6) but it is not PLACED.
+    # The property this test exists for is the second one, asserted below on
+    # the points; a rank of 1 in a field of 1 pays nothing extra.
+    assert entry_row.final_rank == 1
+    assert entry_row.scored_entrant_count == 1
     # No "win" is reachable — placement's own max base is +100; nothing in
     # this pass can exceed alpha_to_points' own +/-1 clamp (see
     # test_games_scoring_slice3.py's dedicated clamp test), so a lone
