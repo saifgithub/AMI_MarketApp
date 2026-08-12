@@ -180,3 +180,46 @@ smaller tour — and deletes one card.** Everything else on this map already exi
 changes its mount point. The moat features the data says nobody uses yet (1-on-1 3%, Brief
 0%) stay exactly one tap deeper than the surface, where the P3-bound users who want them
 will find them — and where they no longer tax everyone else's first screen.
+
+## 9.7 Round 3 — reality corrections + the KIMI cross-read
+
+Saiful's third review caught three places the mockups had drifted from the shipped app.
+All are fixed in both prototype pages; the principle stands: **a placeholder must still be
+based on reality.**
+
+1. **Bottom nav.** Frames A′/A1 assumed CR133's future 4-tab bar. Corrected to the current
+   five tabs (FLOOR · PORTFOLIO · JOURNAL · LESSONS · SETTINGS, `home_shell.dart`). CR133
+   stays a future CR, not a mockup assumption. Measured cost: one tap target (12 → 13);
+   fold and column unchanged.
+2. **Agents.** A2/E frames used CR160's renamed roster (CIO, Technical Strategist, Macro &
+   Events…) — none of which exist yet. Corrected to the shipped 12 (`agent.dart::kAllAgents`)
+   with today's real lock state: 8/12 filled, Research Manager + the three risk debators
+   locked. The verdict seat is the **Portfolio Manager**, not a CIO.
+3. **Verdict vocabulary.** Card 2, A4 and E3 showed BUY/HOLD/SELL — invented. The Room's PM
+   issues **APPROVE or PASS** (`schemas/room.py::VerdictAction`; DEF067 maps stray
+   BUY/HOLD/SELL strings into them; REJECT/MODIFY/NO_VERDICT also exist and the client
+   renders unknown actions neutrally, `room.dart`). All three surfaces corrected; A4's
+   delta column now reads per-verdict — an APPROVE ages by its position, a PASS before a
+   drop aged well.
+
+**KIMI cross-read** (blind-lane rule lifted by Saiful this session;
+`docs/Research/UI/Version-0.2/kimi/`): the sibling lane, blind to ours, converged on the
+same primary shape — Concierge-fronted home, verdict before transcript, the twelve demoted
+to a depth layer surfacing first as *consensus/dissent evidence*, CR106's board promoted.
+Its 4-layer model (L0 brief → L1 verdict → L2 debate → L3 machinery) is our disclosure
+ladder by another name. Independent convergence is the strongest validation either lane
+has. Where KIMI sharpens us:
+
+- **Consensus strip + named dissent** on the verdict surface ("Bear Researcher dissents…")
+  — team-as-evidence, cheaper than any roster. Worth adopting in the home card set / E3.
+- **Typing is the highest-friction mobile input** (their concept-D rejection). Applies to
+  our omnibox: the tap path must be first-class — CONVENE with an empty box opens a ticker
+  picker; typing is the accelerant, never the toll.
+- **One primary CTA discipline**: their L0 carries a single action. A′ carries two heroes
+  by Saiful's direction (Room, then challenge); the discipline survives as "one *primary*
+  — CONVENE is the only green button on the screen."
+
+Where the lanes differ and ours stands: KIMI moves the challenge off the home screen —
+Saiful ruled it the second hero, and CR004 plan_b wants reward surfaces raised, not
+demoted. KIMI's "ticker tape no longer permanent" is worth a future look, not part of
+this revision.

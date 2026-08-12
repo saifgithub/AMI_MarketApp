@@ -79,6 +79,23 @@ Perplexity/Inc/Columbia pages: **NOT VERIFIED**, not cited (recorded in `sources
 | A4's calls list is backed by existing `room_runs` rows | 09 §9.6 | **ASSERTED** — run history is stored server-side and the Journal reads it; the exact list query for "delta since verdict" needs a price lookup at read time, not verified as an existing endpoint |
 | "Restart onboarding moves to YOU" | 09 §9.6 | **ASSERTED** — CR133 moves Settings under YOU; the restart link's exact new home is a build-time confirmation |
 
+## Corrections from Saiful's round-3 review (2026-08-12)
+
+- **Invented verdict vocabulary.** Card 2 / A4 / E3 showed BUY/HOLD/SELL; the Room issues
+  APPROVE/PASS (**PROVEN** — `schemas/room.py::VerdictAction`, DEF067 mapping in
+  `room_runner.py:1054-1081`, `room.dart:42` renders unknown actions neutrally). Saiful
+  caught it ("I saw Buy and Pass only"). All frames corrected.
+- **E3 was NOT "byte-for-byte the shipped design"** as its caption claimed — its hero said
+  BUY. Claim retracted; caption now says "shipped Verdict Board shape."
+- **Future-state assumptions presented as the demo.** A′/A1 used CR133's 4-tab nav and
+  A2/E used CR160's renamed agents; neither CR has shipped. Corrected to the current 5-tab
+  bar (`home_shell.dart`) and the shipped roster + lock state (`agent.dart::kAllAgents`,
+  8/12, PM as the verdict seat). A′/A1 re-measured after: 1 mark · 13 taps · CTA 0.47
+  folds · column 632px (**PROVEN**, stat strips re-read).
+- **Blind-lane rule lifted** for the KIMI lane by Saiful this session; cross-read recorded
+  in 09 §9.7. The two lanes converged independently on the Concierge-fronted, verdict-first
+  shape.
+
 ## Corrections made during audit
 
 - Concept E frames initially marked desk-stage rows as non-interactive; they are tap

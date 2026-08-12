@@ -374,6 +374,9 @@ code {
 .byline .bn { font-family: 'AMI Mono', monospace; font-size: 8.5px; letter-spacing: 0.1em; color: var(--text-low); }
 .posrow { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
 .posrow .tk { font-family: 'AMI Mono', monospace; font-size: 12px; font-weight: 700; }
+.posrow .vd { font-family: 'AMI Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; padding: 1px 6px; border-radius: 3px; }
+.posrow .vd.ok { color: var(--green-ink); border: 1px solid var(--green-ink); }
+.posrow .vd.ps { color: var(--text-med); border: 1px solid var(--border); }
 .posrow .d { font-family: 'AMI Mono', monospace; font-size: 12px; }
 .posrow .d.up { color: var(--green-ink); } .posrow .d.dn { color: var(--red-ink); }
 .posrow .sub { font-size: 10px; color: var(--text-low); margin-left: auto; }
@@ -651,7 +654,10 @@ tr.hot td { color: var(--text-high); font-weight: 600; }
       CONVENE; anything else opens the AMI chat — routed client-side, deterministically), the
       CONVENE hero, then the Daily Challenge. The Weekly League card is gone — CR109's game
       replaces that whole surface (Amendment A). Firm row unchanged as the depth layer. No
-      auto-rotation; the carousel moves only under the thumb.</p>
+      auto-rotation; the carousel moves only under the thumb. Unlike frames A–F, this frame
+      uses <strong>today's shipped reality</strong>: the current 5-tab nav (CR133 not assumed)
+      and the Room's real verdict vocabulary — the PM issues APPROVE or PASS, never
+      BUY/HOLD/SELL (`schemas/room.py`, DEF067).</p>
     </div>
     <div class="stage">
       <div class="slot">
@@ -671,8 +677,8 @@ tr.hot td { color: var(--text-high); font-weight: 600; }
                 </div>
                 <div class="scard" data-obj>
                   <div class="clbl" style="color:var(--cyan-ink)">YOUR TEAM'S CALLS</div>
-                  <div class="posrow" style="margin-top:6px"><span class="tk">NVDA</span><span class="d up num">+2.1%</span><span class="sub">BUY · Mon</span></div>
-                  <div class="posrow"><span class="tk">AAPL</span><span class="d dn num">−0.4%</span><span class="sub">HOLD · Jul 30</span></div>
+                  <div class="posrow" style="margin-top:6px"><span class="tk">NVDA</span><span class="vd ok">APPROVE</span><span class="d up num">+2.1%</span><span class="sub">Mon</span></div>
+                  <div class="posrow"><span class="tk">AAPL</span><span class="vd ps">PASS</span><span class="d num" style="color:var(--text-low)">—</span><span class="sub">Jul 30</span></div>
                 </div>
                 <div class="scard" data-obj>
                   <div class="clbl" style="color:var(--amber-ink)">SECTOR WATCH</div>
@@ -710,13 +716,14 @@ tr.hot td { color: var(--text-high); font-weight: 600; }
             <div class="navbar">
               <div class="cell on" data-obj><div class="nic"></div><span class="nlbl">FLOOR</span></div>
               <div class="cell" data-obj><div class="nic sq"></div><span class="nlbl">PORTFOLIO</span></div>
+              <div class="cell" data-obj><div class="nic bk"></div><span class="nlbl">JOURNAL</span></div>
               <div class="cell" data-obj><div class="nic gr"></div><span class="nlbl">LESSONS</span></div>
-              <div class="cell" data-obj><div class="nic sq"></div><span class="nlbl">YOU</span></div>
+              <div class="cell" data-obj><div class="nic sq"></div><span class="nlbl">SETTINGS</span></div>
             </div>
             <div class="tape"><span>NVDA <b class="up">+2.1%</b> · AAPL <b class="dn">−0.4%</b> · MSFT <b class="up">+0.9%</b> · SPY <b class="up">+0.3%</b> · TSLA <b class="dn">−1.2%</b></span></div>
           </div>
         </div>
-        <div class="cap"><b>FRAME A′ — REVISION UNDER REVIEW</b> · CAROUSEL HEADER · NO LEAGUE (CR109)</div>
+        <div class="cap"><b>FRAME A′ — REVISION UNDER REVIEW</b> · CURRENT 5-TAB NAV · NO LEAGUE (CR109)</div>
         <div class="stats" data-stats="A-rev-carousel">measuring…</div>
       </div>
     </div>
@@ -979,7 +986,7 @@ tr.hot td { color: var(--text-high); font-weight: 600; }
                   <div class="sn">ANALYST DESK · <span class="num">2</span>/<span class="num">4</span> REPORTED</div>
                   <div class="feed">
                     <div class="feedln"><span class="ok">✓</span><div class="hx s20 c-cyan" data-idmark><div class="fill"></div><span></span></div><span><b>FUND</b> — margins expanding, guidance intact</span></div>
-                    <div class="feedln"><span class="thinking"></span><div class="hx s20 c-cyan" data-idmark><div class="fill"></div><span></span></div><span><b>TECH</b> is reading the chart…</span></div>
+                    <div class="feedln"><span class="thinking"></span><div class="hx s20 c-cyan" data-idmark><div class="fill"></div><span></span></div><span><b>MKT</b> is reading the chart…</span></div>
                   </div>
                 </div>
               </div>
@@ -994,13 +1001,13 @@ tr.hot td { color: var(--text-high); font-weight: 600; }
                 <div class="dot"></div>
                 <div class="st">
                   <div class="sn">RISK REVIEW</div>
-                  <div class="ss">Three risk officers stress the idea from both sides.</div>
+                  <div class="ss">Aggressive, Conservative and Neutral stress the idea from both sides.</div>
                 </div>
               </div>
               <div class="stageit" data-obj>
                 <div class="dot"></div>
                 <div class="st">
-                  <div class="sn">CIO VERDICT</div>
+                  <div class="sn">PM VERDICT</div>
                   <div class="ss">One call, checked against your mandate.</div>
                 </div>
               </div>
