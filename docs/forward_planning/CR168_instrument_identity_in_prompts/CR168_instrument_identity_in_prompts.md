@@ -1,7 +1,17 @@
 # CR168 — Name the company in the prompt
 
-**Status:** proposed (Step 0 gate run 2026-08-12 — **prophylactic**) · **Filed:** 2026-08-11 ·
-**Category:** quality · **Parent:** [CR167](../CR167_tradingagents_upstream_drift/CR167_tradingagents_upstream_drift.md) §4.1
+**Status:** **dropped as a standalone item — folded into [CR166](../CR166_fact_sheet_supply_census/)**
+(2026-08-12) · **Filed:** 2026-08-11 · **Category:** quality ·
+**Parent:** [CR167](../CR167_tradingagents_upstream_drift/CR167_tradingagents_upstream_drift.md) §4.1
+
+> **Disposition.** The Step 0 gate ran and returned **prophylactic** — 0 wrong-company instances in
+> 216 real turns. What survives is a two-string-field render on the **same `yf.Ticker().info` dict,
+> the same fetch and the same `_format_profile`** that CR166 is already building — which §Coordination
+> below anticipated (*"whichever ships first should render both"*). Deciding the same DEF236 byte
+> budget and the same lane assignment twice is the per-field rediscovery CR166 exists to stop, so the
+> whole of this CR — every measurement, all three amendments, and the `NBIS` fixture — now lives in
+> **CR166's row**, and nothing is carried only by a dropped item.
+> **Reopen as standalone only if CR166 is itself dropped.**
 
 > **Gate result — and a correction to this document.** 0 wrong-company instances in 216 real turns,
 > so per the fork table below this is prophylactic and priced as a render line.
