@@ -138,6 +138,114 @@ def _numbers(text: str) -> list[tuple[str, str]]:
     return out
 
 
+# ── M8 domain vocabulary ────────────────────────────────────────────────────
+# CR179 Leg 0. The lane matrix is IMPORTED, not retyped, on the same rule as
+# `_LEVEL_PATTERNS` above: if someone re-lanes an agent, this metric changes its
+# number instead of quietly measuring the old matrix.
+#
+# PRECISION OVER RECALL, deliberately. DEF279 is the standing warning — M7's
+# first form reported a 13.4% error rate on a corpus whose true rate was 0%,
+# because a plausible-looking pattern matched three things it had no business
+# matching. A cross-lane metric has the same failure mode and a worse
+# consequence: it is the acceptance gate for the lane firewall, so a false
+# positive argues for tightening a firewall that is already working.
+#
+# The known collisions, each one a term that belongs to two desks depending on
+# what it is attached to. These are not hypothetical: CR145's original filing
+# put `social_media_analyst` at "technicals 13/18", and the re-derivation found
+# 6 of those were "mention volume" — the Social Analyst's OWN input, counted
+# against it because "volume" reads as technicals in isolation.
+_M8_COLLISIONS = (
+    # "volume" is technicals; "mention volume" / "volume of mentions" is social.
+    (re.compile(r"\b(?:mention|post|comment|chatter)\s+volume\b", re.I), "social"),
+    (re.compile(r"\bvolume\s+of\s+(?:mentions|posts|comments|chatter)\b", re.I), "social"),
+    # "trend" is technicals; "sentiment trend" is social.
+    (re.compile(r"\bsentiment\s+trend\b", re.I), "social"),
+    # An earnings DATE rides the news lane and the fundamentals lane both
+    # (`room_prompts.py` renders `next_earnings` into either), so neither desk
+    # is trespassing by naming it. Only earnings as a FIGURE is fundamentals.
+    (re.compile(r"\bearnings\s+(?:date|day|call|is\s+on|on\s+\d)", re.I), None),
+    (re.compile(r"\bnext\s+earnings\b", re.I), None),
+)
+
+_M8_DOMAIN_TERMS: dict[str, re.Pattern] = {
+    "fundamentals": re.compile(
+        r"\b(?:P/E|PE\s+ratio|forward\s+P/E|EV/EBITDA|P/S|price[- ]to[- ]sales|PEG|"
+        # `margin` is qualified: the Social Analyst's "inside the sampling error
+        # margin" is a statistics word, not a profit margin, and bare `margin`
+        # scored it as trespass.
+        r"valuation|multiple[sd]?\b|(?:profit|gross|operating|net|EBITDA)\s+margin[s]?|"
+        r"margin[s]?\s+of\s+\d|revenue|EPS|earnings\s+per\s+share|"
+        r"free\s+cash\s+flow|FCF|cash\s+flow|balance\s+sheet|net\s+(?:cash|debt)|"
+        r"total\s+debt|debt[- ]to[- ]equity|market\s+cap|ROE|ROA|return\s+on\s+"
+        r"(?:equity|assets)|current\s+ratio|quick\s+ratio|dividend|payout|"
+        r"analyst\s+(?:target|consensus|rating)|book\s+value|profitab)\b",
+        re.I,
+    ),
+    # `support`, `momentum` and `chart` are QUALIFIED here, not bare, and the
+    # qualification was earned by hand-reading — bare forms produced 100% false
+    # positives on the 2026-08-13 epoch:
+    #   * "support" was the VERB in every single hit: "a 122.6x P/E supported by
+    #     a 16% profit margin", "cash to support the dividend yield", "analyst
+    #     support for the business model". Not one was a price level.
+    #   * "momentum" was "top-line momentum … TTM revenue growth" (fundamentals)
+    #     and "broad sector momentum" describing a headline cluster (news).
+    #   * "chart" caught the News Analyst writing "No trade ideas or chart
+    #     analysis are provided" — being scored as trespassing for COMPLYING
+    #     with the firewall, which would have argued for tightening a control
+    #     that was working.
+    # Recall is spent to buy that precision, and the cost is stated in the
+    # result rather than hidden: see `overall_rate_pct` history in the CR.
+    "technicals": re.compile(
+        r"\b(?:RSI|SMA|EMA|moving\s+average|50-day|20-day|200-day|52-week|"
+        r"support\s+(?:level|zone|line|at\b)|support/resistance|"
+        r"resistance\s+(?:level|zone|line|at\b)|"
+        r"breakout|oversold|overbought|price\s+momentum|chart\s+pattern|"
+        r"downtrend|uptrend|volume\s+ratio|relative\s+volume|range\s+(?:low|high)|"
+        r"technical\s+(?:setup|picture|analysis|indicator)|price\s+action)\b",
+        re.I,
+    ),
+    "news": re.compile(
+        r"\b(?:headline[s]?|catalyst[s]?|press\s+release|announced|announcement|"
+        r"reported\s+(?:that|on)|news\s+flow|FOMC|Fed\s+(?:meeting|decision)|"
+        # An ANALYST upgrade is news; an EARNINGS upgrade is a fundamentals
+        # revision. Bare `upgrades` scored the Fundamentals Analyst's
+        # "implies significant earnings upgrades via consensus EPS est." as
+        # trespass into news.
+        r"guidance\s+(?:cut|raise)|(?:analyst|rating|broker)\s+(?:down|up)grade[ds]?|"
+        r"(?:down|up)graded\s+(?:to|by)\b)",
+        re.I,
+    ),
+    "social": re.compile(
+        r"\b(?:Reddit|r/[A-Za-z]+|subreddit|wallstreetbets|retail\s+(?:sentiment|"
+        r"investor|chatter|crowd)|social\s+sentiment|buzz|upvote[s]?|meme|"
+        r"community\s+(?:sentiment|read)|mentions?\b)\b",
+        re.I,
+    ),
+}
+
+
+def _m8_domains_cited(text: str) -> dict[str, list[str]]:
+    """Which desks' subject matter this turn speaks to, and the phrase that says so.
+
+    Collisions are resolved FIRST and their spans masked, so a term that has
+    already been claimed by the phrase it sits in cannot be double-counted by
+    the generic vocabulary. A `None` owner means the phrase is legitimately
+    shared and belongs to nobody's trespass count.
+    """
+    hits: dict[str, list[str]] = defaultdict(list)
+    masked = text or ""
+    for pattern, owner in _M8_COLLISIONS:
+        for m in pattern.finditer(masked):
+            if owner is not None:
+                hits[owner].append(m.group(0))
+        masked = pattern.sub(lambda m: " " * len(m.group(0)), masked)
+    for domain, pattern in _M8_DOMAIN_TERMS.items():
+        for m in pattern.finditer(masked):
+            hits[domain].append(m.group(0))
+    return dict(hits)
+
+
 def _section(prompt: str, start: str, end: str) -> str:
     i = prompt.find(start)
     j = prompt.find(end, i + 1) if i >= 0 else -1
@@ -613,6 +721,164 @@ def m7_date_accuracy(turns: list[dict], window: int = 90,
     }
 
 
+def m8_cross_lane_citation(turns: list[dict]) -> dict[str, Any]:
+    """CR145 Tier C's acceptance, which has never had an instrument.
+
+    The lane firewall (Batch 5) stopped SUPPLYING each analyst its neighbours'
+    data. Whether that stopped them SPEAKING to it is a different question, and
+    the only number anyone has for it is the pre-firewall filing — news
+    valuation 18/18, fundamentals technicals 11/18, social 11/18, market 5/18.
+    `POSTBATCH9_REMEASUREMENT` states the gap plainly: *"needs a per-turn
+    domain-citation count, which no current metric computes."* This is it.
+
+    Scored ONLY for the four laned analysts. The eight full-sheet agents hold
+    every domain by design, so "cross-lane" is meaningless for them — counting
+    them would produce a large, meaningless denominator and make the metric
+    look precise while measuring nothing.
+
+    M1 is NOT a substitute, and the memo says so: role-identifiability rose to
+    97.5%, but an agent can be perfectly identifiable by vocabulary while still
+    borrowing another desk's facts. Distinguishability is not lane discipline.
+
+    TRESPASS IS JUDGED AGAINST THE FACT SHEET, NOT THE VOCABULARY, AND NOT THE
+    PROMPT. Two earlier forms of this metric were wrong, both caught by
+    hand-reading the matches before reporting a rate (P16, and DEF279's whole
+    lesson):
+
+      1. *Vocabulary alone.* `52-week` swamped the Fundamentals Analyst's count
+         — but `week52` is DUAL-LANE (`room_prompts.py` renders it into the
+         fundamentals lane as well as technicals), so citing it is quoting
+         supplied data, not trespass. 15 of that agent's 19 flagged turns were
+         this one false class.
+      2. *Presence in the system prompt.* `EPS`, `P/E` and `catalyst` appear in
+         ALL FOUR analysts' prompts on 40/40 turns — as the anti-fabrication
+         INSTRUCTION and the out-of-lane notice, not as data. The firewall's own
+         design guarantees this: `_out_of_lane_line` names every withheld domain
+         by label, so the words are present precisely BECAUSE the data is not.
+
+    So the test is the same slice M3 grounds numbers against — the rendered fact
+    sheet between "Fact sheet as of" and "Transcript so far". A phrase found
+    there was supplied to this agent and is dropped from the trespass count;
+    those drops are reported in `supplied_not_trespass` so the exclusion is
+    auditable rather than silent.
+
+    MEASURED BASELINE, both epochs, this instrument (CR179 Leg 0):
+
+        agent                  08-07 (pre-firewall)   08-13 (post)
+        fundamentals_analyst        0/18   0.0%        0/40   0.0%
+        market_analyst              0/18   0.0%        0/40   0.0%
+        news_analyst                3/18  16.7%        3/40   7.5%
+        social_media_analyst        0/18   0.0%        1/40   2.5%
+        OVERALL                     3/72   4.2%        4/160  2.5%
+
+    **THIS DOES NOT CONFIRM THE FIREWALL WORKED, and must not be quoted as if it
+    did.** Three events against four is no movement at these n. By this measure
+    there was little trespass to remove even before the firewall shipped.
+
+    That is not a contradiction of CR145's filing (news valuation 18/18) — it is
+    a different question. CR145 counted turns MENTIONING a valuation term; this
+    counts turns citing one their own fact sheet did not supply. Re-derived on
+    the 08-13 corpus, 27 of 40 news turns mention a fundamentals word and only
+    **4 phrases in 3 turns** are unsupplied: the rest are consensus EPS (the
+    next-earnings line rides the news lane), or the word sitting inside a
+    headline the sheet quoted. Both counts are honest; only one of them is
+    evidence about the firewall.
+
+    So M8's value is forward, as the regression guard on any batch that widens a
+    lane — CR179 Legs 1 and 3 add fields, and re-supplying a desk with its
+    neighbour's data is exactly how trespass would return.
+
+    What this does NOT measure: whether the citation was CORRECT. A News Analyst
+    naming a P/E it was never given is out of lane whether the P/E is right or
+    wrong. Nor can it separate an agent reasoning from training memory from one
+    reading the transcript — the four analysts run in parallel with an empty
+    transcript, so for THEM the distinction collapses, which is why only they
+    are scored. One known residual false positive is kept rather than patched
+    away: an analyst writing "no estimates for revenue are provided in the
+    current snapshot" is naming an absence, not trespassing — it is a real
+    violation of `_out_of_lane_line` ("do not tell the Room they are
+    unavailable") but not of the lane, and 1 of the 4 hits is this shape.
+    """
+    from app.services.room_prompts import _AGENT_LANES
+
+    lanes = {a.value: set(d) for a, d in _AGENT_LANES.items()}
+    per_agent: dict[str, dict[str, Any]] = {}
+    samples: list[dict[str, Any]] = []
+    clean_samples: list[dict[str, Any]] = []
+    supplied_drops: list[dict[str, Any]] = []
+
+    for agent, lane in sorted(lanes.items()):
+        rows = [t for t in turns if t["agent_id"] == agent]
+        out_of_lane_turns = 0
+        domain_counts: Counter = Counter()
+        for t in rows:
+            prompt = t["system_prompt"] or ""
+            # The FACT SHEET, not the prompt — the same slice M3 grounds numbers
+            # against. See the docstring: prompt-presence is not supply.
+            facts = _section(prompt, "Fact sheet as of", "Transcript so far")
+            text = _strip_envelope(t["response_text"] or "")
+            cited = _m8_domains_cited(text)
+            foreign, supplied = {}, {}
+            for d, phrases in cited.items():
+                if d in lane:
+                    continue
+                unsupplied = [p for p in phrases if p.lower() not in facts.lower()]
+                if unsupplied:
+                    foreign[d] = unsupplied
+                if len(unsupplied) < len(phrases):
+                    supplied[d] = [p for p in phrases if p.lower() in facts.lower()]
+            if supplied and len(supplied_drops) < 15:
+                supplied_drops.append({
+                    "agent": agent, "ticker": _ticker_of(prompt), "supplied": supplied,
+                })
+            if foreign:
+                out_of_lane_turns += 1
+                for d in foreign:
+                    domain_counts[d] += 1
+                if len(samples) < 30:
+                    samples.append({
+                        "agent": agent, "ticker": _ticker_of(prompt),
+                        "foreign": {d: ph[:4] for d, ph in foreign.items()},
+                    })
+            elif len(clean_samples) < 10:
+                clean_samples.append({
+                    "agent": agent, "ticker": _ticker_of(prompt),
+                    "in_lane_hits": {d: ph[:4] for d, ph in cited.items()},
+                    "excerpt": text[:180],
+                })
+        per_agent[agent] = {
+            "lane": sorted(lane),
+            "turns": len(rows),
+            "turns_citing_another_lane": out_of_lane_turns,
+            "rate_pct": round(100 * out_of_lane_turns / len(rows), 1) if rows else None,
+            "by_foreign_domain": dict(domain_counts.most_common()),
+        }
+
+    scored = sum(v["turns"] for v in per_agent.values())
+    trespassing = sum(v["turns_citing_another_lane"] for v in per_agent.values())
+    return {
+        "scored_agents": sorted(lanes),
+        "note": (
+            "laned analysts only; the 8 full-sheet agents hold every domain by "
+            "design and are not scored. Rate is turns citing >=1 foreign domain."
+        ),
+        "turns_scored": scored,
+        "turns_citing_another_lane": trespassing,
+        "overall_rate_pct": round(100 * trespassing / scored, 1) if scored else None,
+        "per_agent": per_agent,
+        # P16 — the matches AND the non-matches, both hand-readable. A rate with
+        # no readable population is the shape DEF279 shipped in.
+        "trespass_samples": samples,
+        "in_lane_samples": clean_samples,
+        # The exclusions, shown rather than assumed. Every entry is a phrase from
+        # another desk's domain that this agent's OWN fact sheet supplied — a
+        # dual-lane field, almost always `52-week`. If this list ever grows a
+        # class that is not genuinely on the sheet, the metric is over-forgiving
+        # and the lane matrix is what to check first.
+        "supplied_not_trespass": supplied_drops,
+    }
+
+
 # ── driver ──────────────────────────────────────────────────────────────────
 
 def run(corpus_dir: Path) -> dict[str, Any]:
@@ -640,6 +906,7 @@ def run(corpus_dir: Path) -> dict[str, Any]:
         "m5_pm_groundedness": m5_pm_groundedness(runs),
         "m6_stance_entropy": m6_stance_entropy(runs),
         "m7_date_accuracy": m7_date_accuracy(turns),
+        "m8_cross_lane_citation": m8_cross_lane_citation(turns),
     }
 
 
