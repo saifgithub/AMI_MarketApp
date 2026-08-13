@@ -61,9 +61,17 @@ _FIREWALLED_AGENTS = [
 # One fingerprint per domain — a string that appears on the full sheet and can
 # only have come from that domain's renderer.
 _DOMAIN_FINGERPRINTS = {
+    # CR166 Tier B — `Dividend yield (LIVE)` became `Dividend (LIVE): yield …`
+    # when the line grew the cover and ex-date halves, and five groups joined
+    # the lane. Each new entry is a LABEL that only this domain's renderer can
+    # emit, on the same rule as the rest of the table: a fingerprint table that
+    # omits a field cannot police it (DEF262).
     "fundamentals": ["P/E", "TTM revenue growth", "Valuation (LIVE)",
-                     "Sector/industry (LIVE)", "Dividend yield (LIVE)",
-                     "Analyst consensus (LIVE"],
+                     "Sector/industry (LIVE)", "Dividend (LIVE)",
+                     "Analyst consensus (LIVE",
+                     "Margin structure (LIVE)", "Earnings power (LIVE)",
+                     "Returns (LIVE)", "Balance sheet (LIVE)",
+                     "Ownership (LIVE)"],
     # DEF262 — "the last close" belongs here. It is the final candle of the
     # 3-month price history, and its absence from this list is what let Batch 6
     # render it onto the News and Social sheets while the firewall test stayed
@@ -124,6 +132,27 @@ def profile() -> dict:
         "next_earnings_date": "2026-09-24",
         "next_earnings_quarter": "Q4",
         "next_earnings_interval": "in 44 days",
+        # CR168 (folded into CR166) — identity is deliberately NOT lane-gated,
+        # so it is here to prove the firewall tolerates an ungated line rather
+        # than to be policed by one.
+        "long_name": "Fixture Semiconductors, Inc.",
+        "exchange_name": "NASDAQ",
+        # CR166 Tier B — the fundamentals lane's new groups. Present so the
+        # per-domain fingerprints above have something to find; a fingerprint
+        # table that omits a field cannot police it, and a fixture that omits
+        # one makes the table's entry vacuous (the same DEF262 failure, one
+        # layer down).
+        "gross_margin": 63, "operating_margin": 52,
+        "trailing_eps": 7.77, "revenue_ttm": 98765, "revenue_per_share": 66.44,
+        "return_on_equity": 31, "return_on_assets": 17,
+        "current_ratio": 3.19, "quick_ratio": 2.71, "debt_to_equity": 1.47,
+        "payout_ratio": 27, "dividend_rate": 2.04,
+        "ex_dividend_date": "2026-09-02",
+        "analyst_opinion_count": 37, "analyst_rating_score": 3.7,
+        "analyst_target_high": 611.25, "analyst_target_low": 122.75,
+        "analyst_target_median": 355.75,
+        "held_pct_institutions": 72.19, "held_pct_insiders": 4.31,
+        "shares_outstanding": 8642, "float_shares": 7531,
         "field_state": {
             "run_date": "live", "base_price": "live", "pe": "live",
             "forward_pe": "live", "rev_growth": "live", "profit_margin": "live",
@@ -133,6 +162,18 @@ def profile() -> dict:
             "fcf_yield": "live", "sector": "live", "dividend_yield": "live",
             "analyst_target_price": "live", "analyst_rating": "live",
             "next_earnings": "live",
+            "long_name": "live", "exchange_name": "live",
+            "gross_margin": "live", "operating_margin": "live",
+            "trailing_eps": "live", "revenue_ttm": "live",
+            "revenue_per_share": "live", "return_on_equity": "live",
+            "return_on_assets": "live", "current_ratio": "live",
+            "quick_ratio": "live", "debt_to_equity": "live",
+            "payout_ratio": "live", "dividend_rate": "live",
+            "ex_dividend_date": "live", "analyst_opinion_count": "live",
+            "analyst_rating_score": "live", "analyst_target_high": "live",
+            "analyst_target_low": "live", "analyst_target_median": "live",
+            "held_pct_institutions": "live", "held_pct_insiders": "live",
+            "shares_outstanding": "live", "float_shares": "live",
         },
     }
 

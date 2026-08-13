@@ -369,7 +369,9 @@ def test_build_block_includes_valuation_sector_dividend_and_analyst_lines(monkey
     assert "EV/EBITDA 29.1x" in block
     assert "PEG 2.55" in block
     assert "FCF yield 2.2%" in block
-    assert "Dividend yield: 0.34%" in block
+    # CR166 Tier B — the yield keeps its basis label now that an indicated RATE
+    # can sit beside it on the same line (DEF233's two-bases rule).
+    assert "Dividend: yield 0.34% (trailing)" in block
     assert "Technology / Consumer Electronics" in block
     assert "strong buy" in block
     assert "$315.57" in block

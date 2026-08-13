@@ -1016,8 +1016,13 @@ def test_format_profile_includes_dividend_line_and_disclaims_buybacks():
         "data_source": "synthetic", "dividend_yield": 0.34,
         "field_state": {"dividend_yield": "live"},
     })
-    assert "Dividend yield (LIVE): 0.34%" in block
+    # CR166 Tier B — the line grew the cover and ex-date halves, so the yield
+    # now carries its basis. A payer with ONLY a yield live still renders, and
+    # the parts with no provenance stay off it entirely (DEF053).
+    assert "Dividend (LIVE): yield 0.34% (trailing)" in block
     assert "buybacks/M&A: not available" in block
+    assert "payout" not in block
+    assert "ex-date" not in block
 
 
 def test_format_profile_omits_dividend_line_when_present_but_not_live():
@@ -1026,7 +1031,22 @@ def test_format_profile_omits_dividend_line_when_present_but_not_live():
     block = _format_profile({
         "data_source": "synthetic", "dividend_yield": 0.34, "field_state": {},
     })
-    assert "Dividend yield (LIVE)" not in block
+    assert "Dividend (LIVE)" not in block
+
+
+def test_format_profile_omits_dividend_line_for_a_non_payer_with_a_zero_payout():
+    """CR166 Tier B — `payoutRatio` is 0.0 for a company that pays nothing, so
+    gating the line on "any part present" rendered `Dividend: payout 0% of
+    earnings` for NBIS and RIVN: a header over an absence, which is the shape
+    DEF053 exists to prevent. The yield or the rate is what makes this a
+    dividend; the payout ratio only qualifies one."""
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "payout_ratio": 0,
+        "field_state": {"payout_ratio": "live"},
+    })
+    assert "Dividend" not in block
 
 
 def test_format_profile_includes_analyst_line_labeled_not_guidance():

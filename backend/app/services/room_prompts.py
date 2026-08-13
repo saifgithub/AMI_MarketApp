@@ -18,14 +18,25 @@ demo working when the LAN vLLM box is unreachable.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any
 
 from app.agents.safety_floor import CONTEXT_NOT_SUPPLIED
 from app.schemas import AgentId, AgentMessage, Mandate
 from app.schemas.mandate import Plan
 from app.services.agent_prompts import build_agent_prompt
-from app.services.fundamentals import pe_line, peg_part
+from app.services.fundamentals import (
+    analyst_consensus_line,
+    balance_sheet_line,
+    dividend_line,
+    earnings_power_line,
+    identity_line,
+    margin_structure_line,
+    ownership_line,
+    pe_line,
+    peg_part,
+    returns_line,
+)
 from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
 from app.services.technicals import range_position_pct
@@ -543,9 +554,26 @@ def _drawdown_snapshot_line(
         # the THIRD appearance of DEF066: DEF066 was the formula, DEF235 was the
         # parser feeding it a wrong input, this is the agent doing it in prose.
         # Saiful's ruling, 2026-08-08: "File a DEF, fix in code."
+        # CR166 Tier D — DEF066's class, a FOURTH time, and it slipped the guard
+        # directly above. That guard appended the "AMI computed this" line only
+        # when the agent's size DIFFERED from the reference ceiling, on the
+        # reasoning that an agent arguing the ceiling already has its figure on
+        # the reference line. It does — and it still got it wrong: on the AAPL
+        # run of 2026-08-11 10:46 UTC the Aggressive debator argued the 3.0%
+        # ceiling with a 6.0% stop and stated "0.30 pt" where the reference line
+        # in its own prompt said 0.18, while the Conservative (1.5%, off-ceiling,
+        # so it received the YOUR-position line) and the Neutral both quoted
+        # 0.18 correctly. Reading a figure off a line addressed to "the reference
+        # position" is not the same act as reading one addressed to YOU.
+        #
+        # So the equality carve-out goes: every debator with a size gets the
+        # line naming its own number. The cost is one redundant line for the
+        # ceiling-arguing agent; the benefit is that no agent is left to infer
+        # that the reference figure is also its own. Per DEF243, DEF241's guard
+        # is NOT edited to accommodate this — a case is added beside it.
         if agent_size_pct is not None and agent_size_pct > 0:
             own = drawdown_contribution(agent_size_pct, entry, stop)
-            if own and abs(agent_size_pct - size) > 0.01:
+            if own:
                 own_pct_of_cap = own.contribution_pts / cap * 100 if cap else 0
                 line += (
                     f"\n  YOUR position — the size YOUR role argues for "
@@ -1071,6 +1099,18 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
     # scaffolding line too (MINOR 3).
 
     lines = [header, ""]
+    # CR168 (folded into CR166) — WHICH instrument this sheet describes.
+    # Deliberately NOT lane-gated: identity is the subject of the run, not one
+    # desk's data, and an agent that cannot name the company it is analysing is
+    # not firewalled, it is lost. It is also the reason the union-of-lanes test
+    # still passes with it — a line every agent gets reaches every agent.
+    lines.append(
+        identity_line(
+            profile.get("long_name") if _is("long_name", "live") else None,
+            profile.get("ticker", ""),
+            profile.get("exchange_name") if _is("exchange_name", "live") else None,
+        )
+    )
     # DEF262 — the reconciliation clause is TECHNICALS data and must obey the
     # lane, not just `field_state`. `last_close` is the final candle of the
     # 3-month price history; handing it to the News or Social Analyst put the
@@ -1091,17 +1131,52 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 profile.get("forward_pe") if _is("forward_pe", "live") else None,
             )
         )
+        # CR166 Tier B — the net margin moved OFF this line and onto
+        # `Margin structure` below, which states it as the third term of
+        # gross → operating → net. Stating one figure twice is the defect
+        # `_reference_price_line` exists to reconcile for price; growth keeps
+        # its own line because it has no structure to belong to.
         lines.append(
-            (f"TTM revenue growth: {profile.get('rev_growth')}%" if _is("rev_growth", "live")
-             else "TTM revenue growth: not available")
-            + ", "
-            + (f"profit margin: {profile.get('profit_margin')}%" if _is("profit_margin", "live")
-               else "profit margin: not available")
+            f"TTM revenue growth: {profile.get('rev_growth')}%" if _is("rev_growth", "live")
+            else "TTM revenue growth: not available"
         )
         lines.append(_net_position_line(profile))
         size_line = _company_size_line(profile)
         if size_line:
             lines.append(size_line)
+        # CR166 Tier B — five groups, all from the same `.info` call that already
+        # served every line above, all discarded at this render site until now.
+        # Each is `field_state`-gated per field (CR104) and absent rather than
+        # labelled when nothing in the group is live (DEF053).
+        for extra in (
+            margin_structure_line(
+                profile.get("gross_margin") if _is("gross_margin", "live") else None,
+                profile.get("operating_margin") if _is("operating_margin", "live") else None,
+                profile.get("profit_margin") if _is("profit_margin", "live") else None,
+            ),
+            earnings_power_line(
+                profile.get("trailing_eps") if _is("trailing_eps", "live") else None,
+                profile.get("revenue_ttm") if _is("revenue_ttm", "live") else None,
+                profile.get("revenue_per_share") if _is("revenue_per_share", "live") else None,
+            ),
+            returns_line(
+                profile.get("return_on_equity") if _is("return_on_equity", "live") else None,
+                profile.get("return_on_assets") if _is("return_on_assets", "live") else None,
+            ),
+            balance_sheet_line(
+                profile.get("current_ratio") if _is("current_ratio", "live") else None,
+                profile.get("quick_ratio") if _is("quick_ratio", "live") else None,
+                profile.get("debt_to_equity") if _is("debt_to_equity", "live") else None,
+            ),
+            ownership_line(
+                profile.get("held_pct_institutions") if _is("held_pct_institutions", "live") else None,
+                profile.get("held_pct_insiders") if _is("held_pct_insiders", "live") else None,
+                profile.get("shares_outstanding") if _is("shares_outstanding", "live") else None,
+                profile.get("float_shares") if _is("float_shares", "live") else None,
+            ),
+        ):
+            if extra:
+                lines.append(extra)
     if not _in_lane("technicals"):
         pass
     elif market_withheld:
@@ -1318,12 +1393,22 @@ def _sector_line(profile: dict[str, Any]) -> str | None:
 
 
 def _capital_allocation_line(profile: dict[str, Any]) -> str | None:
-    """Real dividend yield only (DEF053) — buybacks/M&A have no yfinance
-    field and stay undisclosed rather than fabricated. CR104/D8: gated on
-    `field_state`, not presence alone."""
-    if profile.get("dividend_yield") is None or not _field_is_live(profile, "dividend_yield"):
-        return None
-    return f"Dividend yield (LIVE): {profile['dividend_yield']}% (buybacks/M&A: not available, not claimed)"
+    """Dividend yield, rate, cover and ex-date (DEF053, extended by CR166 Tier B).
+
+    Buybacks/M&A still have no yfinance field and stay undisclosed rather than
+    fabricated — CR145 Tier D owns the `.cashflow` call that would change that.
+    What CR166 adds is the half that makes the yield mean something: the payout
+    ratio (can it keep paying?) and the ex-date, both already fetched — the
+    latter on the `EarningsInfo` object this sheet's next-earnings line comes
+    off (CR030). CR104/D8: every part gated on `field_state`, not presence.
+    """
+    return dividend_line(
+        profile.get("dividend_yield") if _field_is_live(profile, "dividend_yield") else None,
+        profile.get("dividend_rate") if _field_is_live(profile, "dividend_rate") else None,
+        profile.get("payout_ratio") if _field_is_live(profile, "payout_ratio") else None,
+        profile.get("ex_dividend_date") if _field_is_live(profile, "ex_dividend_date") else None,
+        today=_run_date(profile),
+    )
 
 
 def _analyst_line(profile: dict[str, Any]) -> str | None:
@@ -1331,15 +1416,44 @@ def _analyst_line(profile: dict[str, Any]) -> str | None:
     'forward guidance' available. Explicitly labeled as the Street's view,
     not the company's own guidance (which yfinance doesn't expose). CR104/D8:
     gated on `field_state` — target price and rating are fetched together, so
-    either one's provenance recorded live is sufficient to label the line."""
+    either one's provenance recorded live is sufficient to label the line.
+
+    CR166 Tier B adds the DISPERSION. *"buy, target $322.82"* reads as a
+    precision the consensus does not have: the same consensus is 41 analysts
+    spanning $215–$400 with the mean below the median. All five figures were in
+    the dict already fetched, and all five ride CR035's suppression flag with
+    the mean — an ablation arm that stripped the target but left the range
+    standing would leak the figure it exists to remove.
+    """
     has_target = profile.get("analyst_target_price") and _field_is_live(profile, "analyst_target_price")
     has_rating = profile.get("analyst_rating") and _field_is_live(profile, "analyst_rating")
     if not has_target and not has_rating:
         return None
-    return (
-        f"Analyst consensus (LIVE, Street view — NOT company guidance): "
-        f"{profile.get('analyst_rating', '—')}, target ${profile.get('analyst_target_price', '—')}"
+    return analyst_consensus_line(
+        profile.get("analyst_rating") if has_rating else None,
+        profile.get("analyst_target_price") if has_target else None,
+        profile.get("analyst_opinion_count") if _field_is_live(profile, "analyst_opinion_count") else None,
+        profile.get("analyst_target_high") if _field_is_live(profile, "analyst_target_high") else None,
+        profile.get("analyst_target_low") if _field_is_live(profile, "analyst_target_low") else None,
+        profile.get("analyst_target_median") if _field_is_live(profile, "analyst_target_median") else None,
+        profile.get("analyst_rating_score") if _field_is_live(profile, "analyst_rating_score") else None,
     )
+
+
+def _run_date(profile: dict[str, Any]) -> date | None:
+    """The sheet's own run-date anchor as a `date`, or None if it isn't live.
+
+    DEF124/D2 made `run_date` the single anchor every other absolute date on the
+    sheet is measured from; this is the accessor for the render sites that need
+    to compute an interval rather than print one.
+    """
+    raw = profile.get("run_date")
+    if not raw or not _field_is_live(profile, "run_date"):
+        return None
+    try:
+        return date.fromisoformat(str(raw))
+    except ValueError:
+        return None
 
 
 def _reference_price_line(profile: dict[str, Any], technicals_live: bool) -> str:

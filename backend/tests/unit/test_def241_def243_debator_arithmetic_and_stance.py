@@ -82,15 +82,39 @@ def test_def241_the_figure_tracks_the_size_it_is_given():
     assert "contribution ≈ 0.30 pt" in _prompt(AgentId.AGGRESSIVE_DEBATOR, size=5.0)
 
 
-def test_def241_no_own_figure_when_the_size_equals_the_reference():
-    """The reference position already states 3.0%; repeating it as "YOUR position"
-    is noise, and noise in a mandate snapshot is how agents learn to skim it."""
+def test_cr166_own_figure_is_given_even_when_the_size_equals_the_reference():
+    """CR166 Tier D — RETIRES the DEF241 carve-out this test used to assert.
+
+    The original assertion, and its reasoning, kept verbatim because the
+    tradeoff it names is real and a future reader may want to reverse this:
+
+        "The reference position already states 3.0%; repeating it as 'YOUR
+        position' is noise, and noise in a mandate snapshot is how agents learn
+        to skim it."
+
+    What killed it was evidence, not taste. On the AAPL run of 2026-08-11 10:46
+    UTC the Aggressive debator argued the 3.0% ceiling with a 6.0% stop and
+    stated a "0.30 pt" drawdown contribution; the reference line in its own
+    prompt said 0.18, and the Conservative (1.5%, off-ceiling, so it DID get the
+    YOUR-position line) and the Neutral both quoted 0.18 correctly. That is
+    DEF066's class a fourth time — DEF066 the formula, DEF235 the parser feeding
+    it, DEF241 the agent doing it in prose, this the agent the DEF241 guard
+    deliberately skipped.
+
+    Reading a figure off a line addressed to "the reference position" is not the
+    same act as reading one addressed to YOU. The cost is one redundant line for
+    whichever agent sits at the ceiling; the benefit is that no agent is left to
+    infer that the reference figure is also its own.
+    """
     prompt = _prompt(AgentId.NEUTRAL_DEBATOR, size=3.0)
     # Match the rendered SNAPSHOT line, not the phrase — the role-guidance block
     # legitimately says "YOUR position" too, and asserting the bare phrase would
     # pass or fail for the wrong reason.
-    assert "the size YOUR role argues for" not in prompt
+    assert "the size YOUR role argues for (3.0%)" in prompt
     assert "Reference position" in prompt
+    # And it must carry AMI's own figure with the quote-don't-recompute
+    # instruction — the half that makes the line different from the reference.
+    assert "AMI computed this. Quote it" in prompt
 
 
 def test_def241_a_non_debator_is_unaffected():
@@ -238,13 +262,15 @@ def test_def241_the_runner_actually_hands_each_debator_its_own_size():
         if marker in prompt:
             figures[agent_id] = prompt.split(marker, 1)[1].split(")", 1)[0]
 
-    # The neutral debator's size IS the risk-tier ceiling, so its own-figure line
-    # is correctly suppressed as a duplicate of the reference — that is asserted
-    # by `test_def241_no_own_figure_when_the_size_equals_the_reference`. The other
-    # two must each carry a figure, and the two must differ.
-    assert set(figures) == {"aggressive_debator", "conservative_debator"}, (
-        f"the runner did not hand the debators their own sizes: {figures}"
-    )
+    # CR166 Tier D — ALL THREE now carry their own figure. This used to expect
+    # only two: the neutral debator's size is the risk-tier ceiling here, and
+    # DEF241 suppressed its line as a duplicate of the reference. That carve-out
+    # is what the Aggressive debator fell through on the AAPL run of 2026-08-11
+    # (stated 0.30 pt against a supplied 0.18) — see
+    # `test_cr166_own_figure_is_given_even_when_the_size_equals_the_reference`.
+    assert set(figures) == {
+        "aggressive_debator", "conservative_debator", "neutral_debator"
+    }, f"the runner did not hand every debator its own size: {figures}"
     assert figures["aggressive_debator"] != figures["conservative_debator"], (
         f"both debators got the same size — the per-agent table is not "
         f"discriminating: {figures}"

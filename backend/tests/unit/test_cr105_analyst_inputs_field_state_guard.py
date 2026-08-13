@@ -34,6 +34,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from app.services.room_runner import (
+    _EARNINGS_DIVIDEND_FIELDS,
     _FUNDAMENTALS_NUMERIC_FIELDS,
     _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS,
 )
@@ -44,11 +45,17 @@ _AGENTS_DIR = _REPO_ROOT / "content" / "agents"
 # The ONLY provenance keys `_format_profile` ever reads off `profile["field_state"]`
 # (CR104) — the "week52"/"technicals"/"next_earnings"/"news"/"social" domain
 # keys are set directly by string literal in room_runner.py (not drawn from a
-# tuple), so they're listed here rather than imported; the two fundamentals
-# tuples ARE imported so a rename there breaks this test, not silently no-ops.
+# tuple), so they're listed here rather than imported; the fundamentals tuples
+# ARE imported so a rename there breaks this test, not silently no-ops.
+#
+# CR166 Tier B — `_EARNINGS_DIVIDEND_FIELDS` is imported for the same reason.
+# It is a THIRD source: those two fields arrive on `EarningsInfo` (CR030), not
+# from `fetch_live_fundamentals`, so they live in their own tuple rather than
+# being smuggled into a roster that is iterated against the fundamentals fetch.
 _FIELD_STATE_KEY_UNIVERSE = (
     set(_FUNDAMENTALS_NUMERIC_FIELDS)
     | set(_FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS)
+    | set(_EARNINGS_DIVIDEND_FIELDS)
     | {"week52", "technicals", "next_earnings", "news", "social"}
 )
 
@@ -75,9 +82,29 @@ _CLAIMED_REAL_INPUTS = [
     # and the direction it is moving", and `fundamentals.py` renders
     # `profitMargins` (NET) with no trend of any kind. It now says "net profit"
     # and states that no direction is available.
-    ("fundamentals_analyst", "TTM revenue growth, **net profit** margin, 52-week range", "rev_growth"),
-    ("fundamentals_analyst", "TTM revenue growth, **net profit** margin, 52-week range", "profit_margin"),
-    ("fundamentals_analyst", "TTM revenue growth, **net profit** margin, 52-week range", "week52"),
+    #
+    # CR166 Tier B — the claim changed AGAIN, and again because the underlying
+    # data did: `grossMargins` and `operatingMargins` were in the same `.info`
+    # dict all along, so the .md now claims the full gross → operating → net
+    # STRUCTURE. Note what did NOT change: no margin *trend* is available, the
+    # .md still says so, and the output-style bullet still forbids a direction.
+    ("fundamentals_analyst", "the **margin structure** (gross → operating → net)", "rev_growth"),
+    ("fundamentals_analyst", "the **margin structure** (gross → operating → net)", "profit_margin"),
+    ("fundamentals_analyst", "the **margin structure** (gross → operating → net)", "week52"),
+    ("fundamentals_analyst", "the **margin structure** (gross → operating → net)", "gross_margin"),
+    ("fundamentals_analyst", "the **margin structure** (gross → operating → net)", "operating_margin"),
+    ("fundamentals_analyst", "**Earnings power**", "trailing_eps"),
+    ("fundamentals_analyst", "**Earnings power**", "revenue_ttm"),
+    ("fundamentals_analyst", "**Earnings power**", "revenue_per_share"),
+    ("fundamentals_analyst", "**Returns and balance sheet**", "return_on_equity"),
+    ("fundamentals_analyst", "**Returns and balance sheet**", "return_on_assets"),
+    ("fundamentals_analyst", "**Returns and balance sheet**", "current_ratio"),
+    ("fundamentals_analyst", "**Returns and balance sheet**", "quick_ratio"),
+    ("fundamentals_analyst", "**Returns and balance sheet**", "debt_to_equity"),
+    ("fundamentals_analyst", "**Ownership**", "held_pct_institutions"),
+    ("fundamentals_analyst", "**Ownership**", "held_pct_insiders"),
+    ("fundamentals_analyst", "**Ownership**", "shares_outstanding"),
+    ("fundamentals_analyst", "**Ownership**", "float_shares"),
     # "net cash" alone was also wrong: `_net_position_line` emits net cash OR
     # net debt from the sign, and the analyst was told only one of the two.
     ("fundamentals_analyst", "Net cash **or net debt**", "net_cash"),
@@ -88,9 +115,19 @@ _CLAIMED_REAL_INPUTS = [
     ("fundamentals_analyst", "Gross\n  debt, market cap and TTM free cash flow in dollars", "total_debt"),
     ("fundamentals_analyst", "Sector/industry classification", "sector"),
     ("fundamentals_analyst", "Sector/industry classification", "industry"),
-    ("fundamentals_analyst", "Dividend yield", "dividend_yield"),
-    ("fundamentals_analyst", "Analyst consensus (rating + target price)", "analyst_rating"),
-    ("fundamentals_analyst", "Analyst consensus (rating + target price)", "analyst_target_price"),
+    # CR166 Tier B — the dividend claim grew the half that makes a yield mean
+    # something (cover + ex-date), and the consensus claim grew its dispersion.
+    ("fundamentals_analyst", "**Dividend** — yield (trailing)", "dividend_yield"),
+    ("fundamentals_analyst", "**Dividend** — yield (trailing)", "payout_ratio"),
+    ("fundamentals_analyst", "**Dividend** — yield (trailing)", "dividend_rate"),
+    ("fundamentals_analyst", "**Dividend** — yield (trailing)", "ex_dividend_date"),
+    ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_rating"),
+    ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_target_price"),
+    ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_opinion_count"),
+    ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_rating_score"),
+    ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_target_high"),
+    ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_target_low"),
+    ("fundamentals_analyst", "Analyst consensus — the rating", "analyst_target_median"),
     ("fundamentals_analyst", "Consensus EPS estimate for the next reporting date", "next_earnings"),
     (
         "market_analyst",

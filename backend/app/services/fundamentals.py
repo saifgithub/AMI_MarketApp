@@ -54,6 +54,25 @@ _TICKER_BLOCKLIST: frozenset[str] = frozenset({
 
 _TICKER_RE = re.compile(r"\$?([A-Z]{1,5})\b")
 
+# CR168 (folded into CR166) — yfinance's `exchange` is a venue CODE, not a name:
+# AAPL returns "NMS", not "NASDAQ". `Exchange: NMS` is jargon to the model, so an
+# unmapped code is DROPPED rather than rendered — the same "absent beats
+# meaningless" rule DEF053 applies to numerics. Adding a venue here is the only
+# way to make it reachable, which keeps the mapping auditable instead of letting
+# an unrecognised code leak through as fact.
+_EXCHANGE_NAMES: dict[str, str] = {
+    "NMS": "NASDAQ",   # Global Select
+    "NGM": "NASDAQ",   # Global Market
+    "NCM": "NASDAQ",   # Capital Market
+    "NAS": "NASDAQ",
+    "NYQ": "NYSE",
+    "NYS": "NYSE",
+    "ASE": "NYSE American",
+    "AMX": "NYSE American",
+    "PCX": "NYSE Arca",
+    "BTS": "Cboe BZX",
+}
+
 _yf_convention_checked = False
 
 
@@ -143,7 +162,14 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
       base_price, pe, forward_pe, rev_growth, profit_margin, net_cash, low,
       high, week52_range_live, support, breakout, price_to_sales,
       ev_to_ebitda, peg_ratio, peg_basis, fcf_yield, dividend_yield, sector,
-      industry, analyst_target_price, analyst_rating
+      industry, analyst_target_price, analyst_rating,
+      long_name, exchange_name,
+      gross_margin, operating_margin, trailing_eps,
+      revenue_ttm, revenue_per_share, return_on_equity, return_on_assets,
+      current_ratio, quick_ratio, debt_to_equity, payout_ratio,
+      analyst_opinion_count, analyst_target_high, analyst_target_low,
+      analyst_target_median, analyst_rating_score, held_pct_institutions,
+      held_pct_insiders, shares_outstanding, float_shares
 
     Only numeric fields the LLM is likely to misremember. Narrative
     fields stay synthetic at the call site so yfinance gaps don't
@@ -310,12 +336,120 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
     if industry:
         out["industry"] = str(industry)
 
+    # CR168 (folded into CR166) — resolved instrument identity, from this same
+    # dict at zero additional cost. A company NAME reached the model in only
+    # 156/216 = 72.2% of production prompts (66.7% after Batch 9's recency
+    # floor, and 0% for AMD/AVGO/KTOS), and always incidentally, via the
+    # `Catalysts —` headline line rather than as identity: the AAPL corpus
+    # names Nvidia, Amazon and OpenAI, and never Apple. Prophylactic rather
+    # than a correctness fix — the gate found 0 wrong-company instances in 216
+    # turns — so it is rendered as identity and nothing is claimed for it.
+    long_name = info.get("longName")
+    if long_name:
+        out["long_name"] = str(long_name)
+    exchange_name = _EXCHANGE_NAMES.get(str(info.get("exchange") or "").upper())
+    if exchange_name:
+        out["exchange_name"] = exchange_name
+
+    # CR166 Tier B — the margin STRUCTURE. `profitMargins` (net) alone cannot
+    # say whether a thin net margin is a pricing problem or a cost problem, and
+    # the role brief asks the agent to "prioritise durable margins". All three
+    # sit in the dict already fetched. Whole percents to match the net figure
+    # already on the sheet — mixed precision across one comparison line reads
+    # as a difference in confidence that isn't there.
+    gross_margin = _num("grossMargins")
+    if gross_margin is not None:
+        out["gross_margin"] = ratio_to_pct(gross_margin)
+    operating_margin = _num("operatingMargins")
+    if operating_margin is not None:
+        out["operating_margin"] = ratio_to_pct(operating_margin)
+    # `ebitdaMargins` is deliberately NOT fetched. It sits in the same dict, but
+    # gross → operating → net is the progression the question is asked in, and
+    # EBITDA slots between gross and operating in a way that reads as a fourth
+    # step rather than the add-back it is. EV/EBITDA already carries the metric
+    # where it earns its place. Fetching a field we would not render is the
+    # exact behaviour this CR exists to stop — it would have been number 113.
+
+    # CR166 Tier B — earnings power. The sheet renders a P/E on two bases with
+    # no earnings behind either, so nothing lets the agent sanity-check the
+    # multiple it is quoting; and it renders revenue GROWTH with no revenue, so
+    # "16%" has no base. Revenue in $M, matching net_cash / market_cap / FCF.
+    trailing_eps = _num("trailingEps")
+    if trailing_eps is not None:
+        out["trailing_eps"] = round(trailing_eps, 2)
+    revenue_ttm = _num("totalRevenue")
+    if revenue_ttm is not None:
+        out["revenue_ttm"] = round(revenue_ttm / 1_000_000)
+    revenue_per_share = _num("revenuePerShare")
+    if revenue_per_share is not None:
+        out["revenue_per_share"] = round(revenue_per_share, 2)
+
+    # CR166 Tier B — returns and balance-sheet quality. The role brief asks for
+    # "balance sheet strength", served today by two debt figures and nothing on
+    # what the business earns against the capital it employs.
+    return_on_equity = _num("returnOnEquity")
+    if return_on_equity is not None:
+        out["return_on_equity"] = ratio_to_pct(return_on_equity)
+    return_on_assets = _num("returnOnAssets")
+    if return_on_assets is not None:
+        out["return_on_assets"] = ratio_to_pct(return_on_assets)
+    current_ratio = _num("currentRatio")
+    if current_ratio is not None:
+        out["current_ratio"] = round(current_ratio, 2)
+    quick_ratio = _num("quickRatio")
+    if quick_ratio is not None:
+        out["quick_ratio"] = round(quick_ratio, 2)
+    # yfinance reports debtToEquity as a PERCENT (AAPL: 78.445), not the ratio
+    # the name implies — 78.445 is 0.78x, and rendering the raw figure as "78x
+    # debt/equity" would describe a solvency crisis at a company with $84B of
+    # debt against $107B of equity. Converted here, once, at the fetch site.
+    debt_to_equity = _num("debtToEquity")
+    if debt_to_equity is not None:
+        out["debt_to_equity"] = round(debt_to_equity / 100, 2)
+
+    # CR166 Tier B — dividend COVER. A yield says what the payer yields; the
+    # payout ratio says whether it can keep paying it, which is the half
+    # "capital allocation" actually turns on.
+    payout_ratio = _num("payoutRatio")
+    if payout_ratio is not None:
+        out["payout_ratio"] = ratio_to_pct(payout_ratio)
+    # NOTE — no dividend RATE is fetched here on purpose. CR030 already pulls
+    # `dividendRate` onto `EarningsInfo` for the mobile dividend chip, and the
+    # Room renders its next-earnings line off that same object; adding a second
+    # rate key would put TWO annual dividend rates in the profile on two
+    # different bases (`dividendRate` is the forward indicated figure, 1.08 for
+    # AAPL; `trailingAnnualDividendRate` is 1.05). One concept, one source — the
+    # duplication this census exists to stop. The render site labels the basis,
+    # DEF233-style, because the yield beside it is the trailing figure.
+
+    # CR166 Tier B — the ownership base. Market cap (CR145 Tier A) only half
+    # serves the mandate's liquidity rule: a large cap with a small float is
+    # not liquid, and the float is what a position is actually filled against.
+    held_pct_institutions = _num("heldPercentInstitutions")
+    if held_pct_institutions is not None:
+        out["held_pct_institutions"] = ratio_to_pct(held_pct_institutions, 1)
+    held_pct_insiders = _num("heldPercentInsiders")
+    if held_pct_insiders is not None:
+        out["held_pct_insiders"] = ratio_to_pct(held_pct_insiders, 1)
+    shares_outstanding = _num("sharesOutstanding")
+    if shares_outstanding is not None:
+        out["shares_outstanding"] = round(shares_outstanding / 1_000_000)
+    float_shares = _num("floatShares")
+    if float_shares is not None:
+        out["float_shares"] = round(float_shares / 1_000_000)
+
     # Real analyst consensus — the closest honest proxy for "forward
     # guidance" available (a company's own guidance figures aren't
     # exposed by yfinance; this is the Street's view, labeled as such).
     # CR035: suppressible for ablation benchmarks — omitting the keys here
     # drops the consensus line from both the Room profile and the 1-on-1
     # data block (_analyst_line returns None when the keys are absent).
+    #
+    # CR166 Tier B — the DISPERSION rides the same suppression flag as the mean,
+    # because it is the same consensus: an ablation arm that stripped the target
+    # but left the high/low/median standing would leak the figure it exists to
+    # remove. "buy, target $322.82" reads as precision; 41 analysts spanning
+    # $215–$400 is the same consensus with its disagreement left in.
     if not settings.suppress_analyst_consensus:
         analyst_target = _num("targetMeanPrice")
         if analyst_target is not None:
@@ -323,6 +457,24 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
         rating = info.get("recommendationKey")
         if rating and rating != "none":
             out["analyst_rating"] = str(rating).replace("_", " ")
+        opinion_count = _num("numberOfAnalystOpinions")
+        if opinion_count is not None:
+            out["analyst_opinion_count"] = int(opinion_count)
+        target_high = _num("targetHighPrice")
+        if target_high is not None:
+            out["analyst_target_high"] = round(target_high, 2)
+        target_low = _num("targetLowPrice")
+        if target_low is not None:
+            out["analyst_target_low"] = round(target_low, 2)
+        target_median = _num("targetMedianPrice")
+        if target_median is not None:
+            out["analyst_target_median"] = round(target_median, 2)
+        # 1 = strong buy … 5 = sell. Carried as the number with its scale named
+        # at the render site; `recommendationKey` is a bucketing of this, and a
+        # 2.1 and a 2.9 both render as "buy".
+        rating_score = _num("recommendationMean")
+        if rating_score is not None:
+            out["analyst_rating_score"] = round(rating_score, 1)
 
     return out
 
@@ -357,6 +509,261 @@ def pe_line(trailing: str | None, forward: str | None) -> str:
     if not trailing and not forward:
         return "P/E: not available"
     return f"P/E: {trailing_part} · {forward_part}. Say which basis you mean whenever you cite a P/E."
+
+
+# ── CR166 Tier B shared fact-sheet lines ────────────────────────────────────
+#
+# Same home and same reason as `pe_line` / `peg_part` above: the Room
+# (`room_prompts._format_profile`) and 1-on-1 (`build_live_data_block`) render
+# the same figures and drifted apart once already. Each builder owns the wording
+# and the units; the caller owns PROVENANCE and passes a value only once it has
+# established one — the Room gates on `field_state` (CR104), 1-on-1 on the
+# fetcher having supplied the key. `live` controls only the liveness marker, so
+# neither surface can label a figure the other calls unlabelled.
+#
+# Every one returns None when it has nothing to say, so an absent group is an
+# absent LINE rather than a header over "not available" (DEF053).
+
+
+def _labelled(name: str, live: bool, parts: list[str]) -> str | None:
+    if not parts:
+        return None
+    marker = " (LIVE)" if live else ""
+    return f"{name}{marker}: " + ", ".join(parts)
+
+
+def margin_structure_line(
+    gross: float | None, operating: float | None, net: float | None, *, live: bool = True
+) -> str | None:
+    """Gross → operating → net, the shape a margin question is actually asked in.
+
+    The sheet carried only `profitMargins` (net), so an agent could not say
+    whether a thin net margin was a pricing problem or a cost problem — and
+    `fundamentals_analyst.md` was edited to forbid the gross-margin discussion
+    (CR145 Batch 6) on the grounds the figure was not computed. It was in the
+    dict all along; CR166's census is what found it.
+    """
+    parts = []
+    if gross is not None:
+        parts.append(f"gross {gross}%")
+    if operating is not None:
+        parts.append(f"operating {operating}%")
+    if net is not None:
+        parts.append(f"net {net}%")
+    return _labelled("Margin structure", live, parts)
+
+
+def earnings_power_line(
+    eps: float | None,
+    revenue_ttm: float | None,
+    revenue_per_share: float | None,
+    *,
+    live: bool = True,
+) -> str | None:
+    """Trailing EPS and the revenue base the growth figure is a percentage OF.
+
+    The sheet states a P/E on two bases with no earnings behind either, and a
+    TTM revenue growth percent with no revenue. Neither figure could be
+    sanity-checked from the sheet that carried it.
+    """
+    parts = []
+    if eps is not None:
+        parts.append(f"EPS ${eps} trailing (measured, last 12 months)")
+    if revenue_ttm is not None:
+        parts.append(f"revenue ${revenue_ttm:,}M TTM")
+    if revenue_per_share is not None:
+        parts.append(f"revenue/share ${revenue_per_share}")
+    return _labelled("Earnings power", live, parts)
+
+
+def returns_line(
+    roe: float | None, roa: float | None, *, live: bool = True
+) -> str | None:
+    """What the business earns on the capital it employs.
+
+    The role brief asks for "balance sheet strength", which the sheet served
+    with two debt figures and nothing on returns. ROE is reported against book
+    equity, which buybacks shrink — so a high figure is not automatically a
+    quality signal, and the label says "on book equity" rather than leaving the
+    denominator implied.
+    """
+    parts = []
+    if roe is not None:
+        parts.append(f"ROE {roe}% (on book equity)")
+    if roa is not None:
+        parts.append(f"ROA {roa}%")
+    return _labelled("Returns", live, parts)
+
+
+def balance_sheet_line(
+    current_ratio: float | None,
+    quick_ratio: float | None,
+    debt_to_equity: float | None,
+    *,
+    live: bool = True,
+) -> str | None:
+    """Liquidity and leverage, beside the net/gross debt figures already shown.
+
+    `debt_to_equity` arrives here as a RATIO — the fetcher divides yfinance's
+    percent-scaled `debtToEquity` by 100 — so it renders as "0.78x", not "78x".
+    """
+    parts = []
+    if current_ratio is not None:
+        parts.append(f"current ratio {current_ratio:.2f}")
+    if quick_ratio is not None:
+        parts.append(f"quick ratio {quick_ratio:.2f}")
+    if debt_to_equity is not None:
+        parts.append(f"debt/equity {debt_to_equity:.2f}x")
+    return _labelled("Balance sheet", live, parts)
+
+
+def ownership_line(
+    institutions: float | None,
+    insiders: float | None,
+    shares_outstanding: float | None,
+    float_shares: float | None,
+    *,
+    live: bool = True,
+) -> str | None:
+    """The ownership base behind the mandate's liquidity rule.
+
+    Market cap (CR145 Tier A) only half-serves it: a large cap with a small
+    float is not liquid, and the float is what a position actually fills
+    against. Insider percentage is carried because a 34.6% insider holding
+    (RIVN) and a 1.6% one (AAPL) are different instruments to size in.
+    """
+    parts = []
+    if institutions is not None:
+        parts.append(f"institutions {institutions}%")
+    if insiders is not None:
+        parts.append(f"insiders {insiders}%")
+    if shares_outstanding is not None:
+        parts.append(f"{shares_outstanding:,}M shares out")
+    if float_shares is not None:
+        parts.append(f"{float_shares:,}M float")
+    return _labelled("Ownership", live, parts)
+
+
+def dividend_line(
+    dividend_yield: float | None,
+    dividend_rate: float | None,
+    payout_ratio: float | None,
+    ex_dividend_date: str | None,
+    *,
+    today: date | None = None,
+    live: bool = True,
+) -> str | None:
+    """Yield, rate, cover and the next ex-date — "capital allocation" in full.
+
+    A yield says what a payer yields; the PAYOUT RATIO says whether it can keep
+    paying it, and that is the half the role brief's "capital allocation" turns
+    on. The two figures sit on different bases and say so: the yield is
+    yfinance's trailing number, the rate is its forward indicated one (AAPL:
+    0.34% trailing against $1.08 indicated). Merging them would be DEF233's
+    defect one field over, so both are labelled and neither is derived from the
+    other. Buybacks and M&A stay absent and stay disclaimed — no yfinance field
+    backs them, and CR145 Tier D owns the `.cashflow` call that would.
+
+    A NON-PAYER gets no line at all. `payoutRatio` is 0.0 for companies that pay
+    nothing, so gating on "any part present" rendered *"Dividend: payout 0% of
+    earnings"* for NBIS and RIVN — a header over an absence, which is the shape
+    DEF053 exists to prevent. The yield or the rate is what makes this a
+    dividend; the payout ratio only qualifies one.
+    """
+    if dividend_yield is None and dividend_rate is None:
+        return None
+    parts = []
+    if dividend_yield is not None:
+        parts.append(f"yield {dividend_yield}% (trailing)")
+    if dividend_rate is not None:
+        parts.append(f"${dividend_rate}/share indicated annual")
+    if payout_ratio is not None:
+        parts.append(f"payout {payout_ratio}% of earnings")
+    if ex_dividend_date:
+        # DEF124 — the interval beside the date, computed here rather than left
+        # for the model to subtract. yfinance's `exDividendDate` is the most
+        # recently DECLARED ex-date, which is routinely in the past, and a bare
+        # date reads as upcoming.
+        stamp = f"ex-date {ex_dividend_date}"
+        if today is not None:
+            try:
+                stamp += f" ({relative_day_phrase(date.fromisoformat(ex_dividend_date), today)})"
+            except ValueError:
+                pass
+        parts.append(stamp)
+    line = _labelled("Dividend", live, parts)
+    if line is None:
+        return None
+    return f"{line} (buybacks/M&A: not available, not claimed)"
+
+
+def analyst_consensus_line(
+    rating: str | None,
+    target_mean: float | None,
+    opinion_count: int | None,
+    target_high: float | None,
+    target_low: float | None,
+    target_median: float | None,
+    rating_score: float | None,
+    *,
+    live: bool = True,
+) -> str | None:
+    """The Street's view WITH its disagreement left in.
+
+    "buy, target $322.82" reads as a precision the consensus does not have: the
+    same consensus is 41 analysts spanning $215–$400, and the mean sits below
+    the median. `recommendationKey` is a bucketing of `recommendationMean`, so a
+    2.1 and a 2.9 both render as "buy" — the score is carried with its scale
+    named rather than left to be inferred from a word.
+
+    Still explicitly the Street's view and NOT company guidance, which yfinance
+    does not expose. The whole line is suppressed with the mean under CR035's
+    ablation flag, at the fetch site: an arm that stripped the target but left
+    the high/low standing would leak the figure it exists to remove.
+    """
+    if not rating and target_mean is None:
+        return None
+    head = f"{rating or '—'}"
+    if rating_score is not None:
+        head += f" (mean score {rating_score} on 1=strong buy … 5=sell)"
+    if opinion_count is not None:
+        head += f", {opinion_count} analysts"
+    targets = []
+    if target_mean is not None:
+        targets.append(f"${target_mean:.2f} mean")
+    if target_median is not None:
+        targets.append(f"${target_median:.2f} median")
+    if target_low is not None and target_high is not None:
+        targets.append(f"${target_low:.2f}–${target_high:.2f} range")
+    marker = " (LIVE, Street view — NOT company guidance)" if live else " (Street view, not company guidance)"
+    line = f"Analyst consensus{marker}: {head}"
+    if targets:
+        line += ", target " + " / ".join(targets)
+    return line
+
+
+def identity_line(
+    long_name: str | None, ticker: str, exchange_name: str | None
+) -> str:
+    """Which instrument this whole sheet is about (CR168, folded into CR166).
+
+    A company NAME reached the model in 156/216 = 72.2% of production prompts
+    and never as identity — always incidentally, through a news headline that
+    happened to spell it out. It fell to 66.7% under Batch 9's recency floor and
+    to 0% for AMD, AVGO and KTOS; in the AAPL corpus the prompt names Nvidia,
+    Amazon and OpenAI, and never Apple. Prophylactic rather than a fix (0
+    wrong-company instances in 216 turns), so nothing is claimed for it.
+
+    NOT domain-gated: this is the SUBJECT of the run, not one desk's data, and
+    an agent that cannot name the company it is analysing is not firewalled,
+    it is lost. An absent name renders as the ticker alone — NBIS returns
+    `longName: null` with a live exchange, and that half-populated identity is
+    the acceptance fixture.
+    """
+    head = f"{long_name} ({ticker})" if long_name else ticker
+    if exchange_name:
+        return f"Instrument: {head} — {exchange_name}"
+    return f"Instrument: {head}"
 
 
 def peg_part(peg_ratio: str | None, peg_basis: str | None) -> str | None:
@@ -421,14 +828,16 @@ def build_live_data_block(ticker: str) -> str | None:
     lines = [
         f"─── LIVE MARKET DATA — {sym} — as of {today.isoformat()} (UTC) ───"
     ]
+    lines.append(identity_line(data.get("long_name"), sym, data.get("exchange_name")))
     if "base_price" in data:
         lines.append(f"Price: ${data['base_price']}")
     if "pe" in data or "forward_pe" in data:
         lines.append(pe_line(data.get("pe"), data.get("forward_pe")))
     if "rev_growth" in data:
         lines.append(f"TTM revenue growth: {data['rev_growth']}%")
-    if "profit_margin" in data:
-        lines.append(f"Profit margin: {data['profit_margin']}%")
+    # Net margin is no longer stated here — it is the third term of the
+    # `Margin structure` line below (CR166 Tier B). Two statements of one figure
+    # is the defect `_reference_price_line` had to reconcile for price.
     if "net_cash" in data:
         phrase = net_position_phrase(data["net_cash"])  # "net cash $X M" / "net debt $Y M"
         lines.append(phrase[:1].upper() + phrase[1:])
@@ -443,6 +852,28 @@ def build_live_data_block(ticker: str) -> str | None:
         size_parts.append(f"gross debt ${data['total_debt']:,}M")
     if size_parts:
         lines.append("Company size: " + ", ".join(size_parts))
+    # CR166 Tier B — same builders, same order, same wording as the Room sheet.
+    for builder in (
+        margin_structure_line(
+            data.get("gross_margin"), data.get("operating_margin"),
+            data.get("profit_margin"), live=False,
+        ),
+        earnings_power_line(
+            data.get("trailing_eps"), data.get("revenue_ttm"),
+            data.get("revenue_per_share"), live=False,
+        ),
+        returns_line(data.get("return_on_equity"), data.get("return_on_assets"), live=False),
+        balance_sheet_line(
+            data.get("current_ratio"), data.get("quick_ratio"),
+            data.get("debt_to_equity"), live=False,
+        ),
+        ownership_line(
+            data.get("held_pct_institutions"), data.get("held_pct_insiders"),
+            data.get("shares_outstanding"), data.get("float_shares"), live=False,
+        ),
+    ):
+        if builder:
+            lines.append(builder)
     if "low" in data and "high" in data:
         if data.get("week52_range_live"):
             lines.append(f"52-week range: ${data['low']}–${data['high']}")
@@ -463,20 +894,37 @@ def build_live_data_block(ticker: str) -> str | None:
         multiples.append(f"FCF yield {data['fcf_yield']}%")
     if multiples:
         lines.append("Valuation: " + ", ".join(multiples))
-    if "dividend_yield" in data:
-        lines.append(f"Dividend yield: {data['dividend_yield']}%")
+    # Fetched BEFORE the dividend line rather than after it (CR166 Tier B): the
+    # ex-date and the indicated rate ride this same object (CR030), so the
+    # dividend line cannot be composed until it has been called.
+    earnings = fetch_next_earnings(ticker)
+    dividend = dividend_line(
+        data.get("dividend_yield"),
+        earnings.dividend_rate if earnings else None,
+        data.get("payout_ratio"),
+        earnings.ex_dividend_date if earnings else None,
+        today=today,
+        live=False,
+    )
+    if dividend:
+        lines.append(dividend)
     if "sector" in data or "industry" in data:
         lines.append(f"Sector/industry: {data.get('sector', '—')} / {data.get('industry', '—')}")
-    if "analyst_target_price" in data or "analyst_rating" in data:
-        lines.append(
-            f"Analyst consensus: {data.get('analyst_rating', '—')}, "
-            f"target ${data.get('analyst_target_price', '—')} "
-            f"(Street view, not company guidance)"
-        )
+    consensus = analyst_consensus_line(
+        data.get("analyst_rating"),
+        data.get("analyst_target_price"),
+        data.get("analyst_opinion_count"),
+        data.get("analyst_target_high"),
+        data.get("analyst_target_low"),
+        data.get("analyst_target_median"),
+        data.get("analyst_rating_score"),
+        live=False,
+    )
+    if consensus:
+        lines.append(consensus)
     # Real next-earnings window (DEF098) — date + quarter + consensus EPS, so the
     # 1-on-1 fundamentals block reaches parity with the Room's `_format_profile`,
     # which has surfaced this since DEF053. Same wording as the Room line.
-    earnings = fetch_next_earnings(ticker)
     if earnings and earnings.earnings_date:
         # DEF124/D1: interval alongside the date, same pattern (and same
         # shared helper) as the Room line — never asked of the model.

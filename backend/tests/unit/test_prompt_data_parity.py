@@ -93,6 +93,33 @@ _FUND_SENTINEL: dict = {
     "market_cap": 1234567,
     "free_cash_flow": 45678,
     "total_debt": 8901,
+    # CR168 (folded into CR166) — resolved instrument identity. Strings, so they
+    # carry ALL-CAPS fingerprints like sector/industry above.
+    "long_name": "LONGNAMESENT",
+    "exchange_name": "EXCHNAMESENT",
+    # CR166 Tier B — the fields fetched inside the same `.info` call and
+    # discarded at the render site until AT:R68. Fingerprints picked so each
+    # rendered form is a unique substring of the sheet.
+    "gross_margin": 63.71,
+    "operating_margin": 52.83,
+    "trailing_eps": 7.7701,
+    "revenue_ttm": 98765,
+    "revenue_per_share": 66.4401,
+    "return_on_equity": 31.55,
+    "return_on_assets": 17.22,
+    "current_ratio": 3.19,
+    "quick_ratio": 2.71,
+    "debt_to_equity": 1.47,
+    "payout_ratio": 27.33,
+    "analyst_opinion_count": 37,
+    "analyst_target_high": 611.25,
+    "analyst_target_low": 122.75,
+    "analyst_target_median": 355.75,
+    "analyst_rating_score": 3.7,
+    "held_pct_institutions": 72.19,
+    "held_pct_insiders": 4.31,
+    "shares_outstanding": 8642,
+    "float_shares": 7531,
 }
 
 _TECH_SENTINEL = Technicals(
@@ -330,9 +357,19 @@ class _AllKeysInfo(dict):
     """A yfinance `info` stand-in that returns a distinct numeric for ANY key, so
     every branch of `fetch_live_fundamentals` fires and every possible output key
     is produced — the produced-field set is then read from the real fetcher's
-    output, not hand-listed (guard-on-the-guard for the dict-shaped source)."""
+    output, not hand-listed (guard-on-the-guard for the dict-shaped source).
+
+    CR168 — `exchange` is the first key whose VALUE must come from a known set:
+    the fetcher maps a venue code to a name and drops anything unmapped, so a
+    numeric here would silently stop `exchange_name` being produced and the
+    guard would go quietly blind to it. Answered with a real code so the branch
+    fires. The fixture's premise ("every branch fires") is preserved rather than
+    weakened; any future value-constrained key needs the same treatment.
+    """
 
     def get(self, key, default=None):
+        if key == "exchange":
+            return "NMS"
         return 1000.0 + (zlib.crc32(key.encode()) % 9000)
 
     def __bool__(self) -> bool:
@@ -432,6 +469,32 @@ def env(monkeypatch):
             "forward_pe": "12.34 forward", "peg_basis": "(PEGBASISSENT basis)",
             "sector": "ENERGYSENT", "industry": "DRILLSENT",
             "analyst_target_price": "488.12", "analyst_rating": "STRONGSENT",
+            # CR168 (folded into CR166) — resolved instrument identity.
+            "long_name": "LONGNAMESENT", "exchange_name": "EXCHNAMESENT",
+            # CR166 Tier B — fetched inside the same `.info` call as everything
+            # above and discarded at the render site until AT:R68. Each
+            # fingerprint is the field's rendered form INCLUDING its label, so a
+            # bare number colliding with another field's value cannot pass this.
+            "gross_margin": "gross 63.71%",
+            "operating_margin": "operating 52.83%",
+            "trailing_eps": "EPS $7.7701",
+            "revenue_ttm": "revenue $98,765M TTM",
+            "revenue_per_share": "revenue/share $66.4401",
+            "return_on_equity": "ROE 31.55%",
+            "return_on_assets": "ROA 17.22%",
+            "current_ratio": "current ratio 3.19",
+            "quick_ratio": "quick ratio 2.71",
+            "debt_to_equity": "debt/equity 1.47x",
+            "payout_ratio": "payout 27.33%",
+            "analyst_opinion_count": "37 analysts",
+            "analyst_target_high": "$611.25 range",
+            "analyst_target_low": "$122.75–",
+            "analyst_target_median": "$355.75 median",
+            "analyst_rating_score": "mean score 3.7",
+            "held_pct_institutions": "institutions 72.19%",
+            "held_pct_insiders": "insiders 4.31%",
+            "shares_outstanding": "8,642M shares out",
+            "float_shares": "7,531M float",
         },
         "technicals": {
             "rsi": "57", "rsi_tone": "TONESENT", "trend": "TRENDSENT",

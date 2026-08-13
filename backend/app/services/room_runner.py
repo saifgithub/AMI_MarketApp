@@ -362,7 +362,36 @@ _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
     # rather than core: yfinance omits any of the three for some names, and an
     # absence there is normal, not a provider outage.
     "market_cap", "free_cash_flow", "total_debt",
+    # CR168 (folded into CR166) — resolved instrument identity. Strings, so they
+    # never reach M3's numeric provenance count, but they ride the same per-field
+    # `field_state` scheme as everything else: an unmapped exchange code and an
+    # absent `longName` (NBIS) render as absent, never as a guess.
+    "long_name", "exchange_name",
+    # CR166 Tier B — all fetched inside the SAME `yf.Ticker(t).info` call that
+    # already serves every field above, then discarded at the render site. The
+    # census that found them counted 180 keys returned, 23 read, 112 numeric
+    # fields never passed to any agent. Optional-live-only for the same reason
+    # as CR145 Tier A: yfinance omits any of these for some names (SNDK has no
+    # debtToEquity, a non-payer has no dividend rate) and that absence is
+    # normal, not an outage.
+    "gross_margin", "operating_margin",
+    "trailing_eps", "revenue_ttm", "revenue_per_share",
+    "return_on_equity", "return_on_assets",
+    "current_ratio", "quick_ratio", "debt_to_equity", "payout_ratio",
+    "analyst_opinion_count", "analyst_target_high", "analyst_target_low",
+    "analyst_target_median", "analyst_rating_score",
+    "held_pct_institutions", "held_pct_insiders",
+    "shares_outstanding", "float_shares",
 )
+
+# CR166 Tier B — the dividend fields CR030 already fetches onto `EarningsInfo`
+# for the mobile dividend chip, which the Room then dropped at the render site
+# even though its next-earnings line comes off that same object. NOT in the
+# tuple above: that one is iterated against `fetch_live_fundamentals`' return,
+# and these arrive from `get_market_data_provider().earnings()`. Their
+# provenance is recorded where that call is handled, on the same per-field
+# scheme (CR104) as everything else.
+_EARNINGS_DIVIDEND_FIELDS = ("ex_dividend_date", "dividend_rate")
 
 
 def _forward_pe_clause(profile: dict[str, Any]) -> str:
@@ -584,6 +613,26 @@ def _profile_for_ticker(
             # backward-looking rev_growth/profit_margin fields above.
             if earnings.eps_estimate is not None:
                 profile["next_earnings_eps_estimate"] = earnings.eps_estimate
+        # CR166 Tier B — the CR030 dividend fields off the SAME object, gated on
+        # `earnings` alone rather than on `earnings_date`. A dividend payer with
+        # no report inside the 90-day window still has an ex-date and a rate, and
+        # nesting these under the earnings-date branch would drop them for
+        # exactly the names whose next cash event IS the dividend.
+        #
+        # `as_of is None` because this provider call is LIVE and knows nothing
+        # about the backtest clock: in as-of mode it would state today's ex-date
+        # on a sheet dated months earlier. NOTE — the `next_earnings` block above
+        # has the same exposure and is NOT guarded, so CR164's harness is already
+        # reading a live earnings calendar into a point-in-time run. That is a
+        # pre-existing defect, filed separately rather than silently widened
+        # here; this CR declines to add two more fields to it.
+        if earnings and as_of is None:
+            if earnings.ex_dividend_date:
+                profile["ex_dividend_date"] = earnings.ex_dividend_date
+                field_state["ex_dividend_date"] = LiveDataState.LIVE.value
+            if earnings.dividend_rate is not None:
+                profile["dividend_rate"] = earnings.dividend_rate
+                field_state["dividend_rate"] = LiveDataState.LIVE.value
 
     # CR090 — News/Social liveness is decided by the pre-resolved feeds priced
     # in start_run (D4: charge == render), NOT a second fetch here. A second
