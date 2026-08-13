@@ -5820,6 +5820,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ranks, but does not hold titles.'**
   String get gamesBoardIneligibleNote;
+
+  /// CR173 slice 1. Left segment of the LIVE Room's toggle: the four-stage narrative (ANALYST DESK / RESEARCH DEBATE / RISK REVIEW / PM VERDICT). Shares a ~152pt control with roomLiveModeFloor, so keep it short. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'BRIEFING'**
+  String get roomLiveModeBriefing;
+
+  /// CR173 slice 1. Right segment of the LIVE Room's toggle: restores the shipped 12-seat roster. 'The floor' is the trading-floor sense — the room full of people — not a lower bound. Mono uppercase; shares a ~152pt control with roomLiveModeBriefing. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'WATCH THE FLOOR'**
+  String get roomLiveModeFloor;
+
+  /// CR173 slice 1. Stage 1 of 4 in the live Room narrative: the four analysts (fundamentals, market, news, social). A 'desk' is the trading-floor term for a team covering one specialism. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'ANALYST DESK'**
+  String get roomStageAnalystDesk;
+
+  /// CR173 slice 1. Stage 2 of 4: Bull Researcher, Bear Researcher and the Research Manager. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RESEARCH DEBATE'**
+  String get roomStageResearchDebate;
+
+  /// CR173 slice 1. Stage 3 of 4: the Trader plus the three risk debators. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RISK REVIEW'**
+  String get roomStageRiskReview;
+
+  /// CR173 slice 1. Stage 4 of 4: the Portfolio Manager's single call. 'PM' is the Portfolio Manager abbreviation used across the app. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'PM VERDICT'**
+  String get roomStagePmVerdict;
+
+  /// CR173 slice 1. One-line description of the ANALYST DESK stage, shown on the row before that desk has started. Sentence case. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Four independent reads on the same company — fundamentals, the chart, the news, the crowd.'**
+  String get roomStageAnalystDeskSubtitle;
+
+  /// CR173 slice 1. One-line description of the RESEARCH DEBATE stage. 'Bull' and 'Bear' are the agent names (Bull Researcher / Bear Researcher). Sentence case. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Bull and Bear argue it out. The Research Manager adjudicates.'**
+  String get roomStageResearchDebateSubtitle;
+
+  /// CR173 slice 1. One-line description of the RISK REVIEW stage. Trader, Aggressive Debator, Conservative Debator and Neutral Debator are agent names. A 'ticket' is a proposed trade order. Sentence case. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The Trader drafts a ticket. Aggressive, Conservative and Neutral stress it from both sides.'**
+  String get roomStageRiskReviewSubtitle;
+
+  /// CR173 slice 1. One-line description of the PM VERDICT stage. 'Mandate' is the user's standing instruction to the firm, a term used throughout the app. Sentence case. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'One call, checked against your mandate.'**
+  String get roomStagePmVerdictSubtitle;
+
+  /// CR173 slice 1. Desk count on a stage row: how many of that desk's members have reported. The denominator counts only members that can still report — an analyst withheld on account tenure (CR098) is excluded, so the row can always reach its total. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{reported}/{total} REPORTED'**
+  String roomStageReported(int reported, int total);
+
+  /// CR173 slice 1. The live line for the member currently speaking, on the active stage row. {agent} is the agent's display name (e.g. 'Market Analyst'). Deliberately generic: the app does not know what the agent is doing, only that it is its turn. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} is working…'**
+  String roomStageWorking(String agent);
+
+  /// CR173 slice 1. Caption under the four stage rows in the live Room. Says both what is coming (a single verdict) and that the twelve are one tap away. Sentence case. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll get one verdict. Tap a desk to see who\'s on it.'**
+  String get roomBriefingCaption;
+
+  /// CR173 slice 1, DEF174. Screen-reader label for a stage row, so its state reaches a non-sighted user as text rather than only as a filled or empty marker. {stage} is the stage name, {status} is one of the existing roomStandingBy / roomAgentThinking / roomAgentResponded / roomAgentInterrupted strings. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{stage}, {status}'**
+  String roomStageStatusSemantic(String stage, String status);
 }
 
 class _AppLocalizationsDelegate

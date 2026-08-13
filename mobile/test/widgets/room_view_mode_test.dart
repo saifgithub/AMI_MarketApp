@@ -125,4 +125,52 @@ void main() {
     expect(await _stored(), isNull);
     expect(container.read(roomViewModeProvider), RoomViewMode.board);
   });
+
+  group('CR173 — the third value', () {
+    test('floor round-trips through the stored string', () async {
+      SharedPreferences.setMockInitialValues({});
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      await container
+          .read(roomViewModeProvider.notifier)
+          .setMode(RoomViewMode.floor);
+      expect(await _stored(), 'floor');
+
+      // A fresh container reads it back — the persistence §5.7 calls
+      // load-bearing is a round trip, not a write.
+      final reopened = ProviderContainer();
+      addTearDown(reopened.dispose);
+      reopened.read(roomViewModeProvider);
+      await Future<void>.delayed(Duration.zero);
+      expect(reopened.read(roomViewModeProvider), RoomViewMode.floor);
+    });
+
+    test('each surface reads the one dial its own way', () {
+      // Amendment B. The two readings live on the enum so a caller cannot
+      // invent a third interpretation — `mode == RoomViewMode.board` was a
+      // correct settled test while there were two values and silently became
+      // a wrong one when there were three.
+      expect(RoomViewMode.board.showsLiveFloor, isFalse);
+      expect(RoomViewMode.transcript.showsLiveFloor, isFalse);
+      expect(RoomViewMode.floor.showsLiveFloor, isTrue);
+
+      expect(RoomViewMode.board.showsTranscript, isFalse);
+      expect(RoomViewMode.transcript.showsTranscript, isTrue);
+      expect(RoomViewMode.floor.showsTranscript, isFalse,
+          reason: 'a floor user settles to the Board — one tap on WATCH THE '
+              'FLOOR must not replace the settled screen they have always seen');
+    });
+
+    test('a value written by a newer build does not become transcript',
+        () async {
+      // DEF210 — the stored string outlives the build that wrote it. An
+      // unrecognised value must land on the shipped default, visibly, rather
+      // than in whichever bucket the comparison happens to fall through to.
+      SharedPreferences.setMockInitialValues({roomViewModePrefsKey: 'comb'});
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      await Future<void>.delayed(Duration.zero);
+      expect(container.read(roomViewModeProvider), RoomViewMode.board);
+    });
+  });
 }

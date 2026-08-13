@@ -31,6 +31,7 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/state/room_providers.dart';
+import 'package:ami_trade/state/room_view_mode_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -51,6 +52,7 @@ Future<_FixedRoomNotifier> _pump(WidgetTester t, RoomState fixed) async {
   await t.pumpWidget(
     ProviderScope(
       overrides: [
+        _watchTheFloor,
         roomNotifierProvider(ticker).overrideWith((ref) {
           captured = _FixedRoomNotifier(ref, ticker, fixed);
           return captured;
@@ -66,6 +68,17 @@ Future<_FixedRoomNotifier> _pump(WidgetTester t, RoomState fixed) async {
   await t.pump();
   return captured;
 }
+
+/// CR173 slice 1 — the live Room now opens on the four-stage briefing, so the
+/// 12-seat roster these tests are about is no longer what a default build
+/// renders while a run streams. It did not go anywhere: it is exactly what
+/// `WATCH THE FLOOR` shows, persisted as the third `RoomViewMode` value. The
+/// harness selects it explicitly rather than riding a default that moved —
+/// every acceptance below is still an acceptance, on the surface that now owns
+/// it. (`withoutHydration` skips the async SharedPreferences read, which would
+/// otherwise settle back to the stored value mid-test.)
+final _watchTheFloor = roomViewModeProvider.overrideWith(
+    (ref) => RoomViewModeNotifier.withoutHydration(RoomViewMode.floor));
 
 void main() {
   const proseThatMustNeverRenderLive =

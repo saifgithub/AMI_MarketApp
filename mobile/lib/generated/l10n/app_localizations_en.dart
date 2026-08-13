@@ -3520,4 +3520,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gamesBoardIneligibleNote => 'Ranks, but does not hold titles.';
+
+  @override
+  String get roomLiveModeBriefing => 'BRIEFING';
+
+  @override
+  String get roomLiveModeFloor => 'WATCH THE FLOOR';
+
+  @override
+  String get roomStageAnalystDesk => 'ANALYST DESK';
+
+  @override
+  String get roomStageResearchDebate => 'RESEARCH DEBATE';
+
+  @override
+  String get roomStageRiskReview => 'RISK REVIEW';
+
+  @override
+  String get roomStagePmVerdict => 'PM VERDICT';
+
+  @override
+  String get roomStageAnalystDeskSubtitle =>
+      'Four independent reads on the same company — fundamentals, the chart, the news, the crowd.';
+
+  @override
+  String get roomStageResearchDebateSubtitle =>
+      'Bull and Bear argue it out. The Research Manager adjudicates.';
+
+  @override
+  String get roomStageRiskReviewSubtitle =>
+      'The Trader drafts a ticket. Aggressive, Conservative and Neutral stress it from both sides.';
+
+  @override
+  String get roomStagePmVerdictSubtitle =>
+      'One call, checked against your mandate.';
+
+  @override
+  String roomStageReported(int reported, int total) {
+    return '$reported/$total REPORTED';
+  }
+
+  @override
+  String roomStageWorking(String agent) {
+    return '$agent is working…';
+  }
+
+  @override
+  String get roomBriefingCaption =>
+      'You\'ll get one verdict. Tap a desk to see who\'s on it.';
+
+  @override
+  String roomStageStatusSemantic(String stage, String status) {
+    return '$stage, $status';
+  }
 }

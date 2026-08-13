@@ -1,5 +1,6 @@
 /// CR106 — the 44pt sub-header strip: run metadata on the left, the
-/// BOARD | TRANSCRIPT control on the right.
+/// BOARD | TRANSCRIPT control on the right. CR173 adds the live pair,
+/// BRIEFING | WATCH THE FLOOR, to the same strip.
 ///
 /// Not folded into the existing 88pt `_Header`: the back button plus
 /// `THE ROOM · NVDA` already consume ~140pt there, and the toggle needs ~152pt
@@ -33,7 +34,24 @@ class RoomSubHeader extends StatelessWidget {
     required this.mode,
     required this.onModeChanged,
     this.showToggle = true,
-  });
+  }) : live = false;
+
+  /// CR173 slice 1 — the same strip, during the run: `BRIEFING | WATCH THE
+  /// FLOOR`.
+  ///
+  /// A named constructor rather than a second widget, because the two toggles
+  /// are one control in two states and the geometry is the load-bearing part
+  /// (DEF146: one clip, a 1pt divider, no per-segment outline). A copy would
+  /// carry that fix by hand, which is how DEF146 came to exist. `meta` is null
+  /// throughout: `duration_ms` and `credit_cost` are not known until the run
+  /// lands, and a substitute measure in that slot is what CR111 ruled out.
+  const RoomSubHeader.live({
+    super.key,
+    required this.mode,
+    required this.onModeChanged,
+  })  : meta = null,
+        showToggle = true,
+        live = true;
 
   /// Already-resolved text, or **null for no strip at all** (CR111).
   ///
@@ -53,10 +71,15 @@ class RoomSubHeader extends StatelessWidget {
   /// stored preference (T-MODESIDE).
   final ValueChanged<RoomViewMode> onModeChanged;
 
-  /// The toggle appears only once a verdict exists. While the run is streaming
-  /// the screen is always in transcript mode — a comb filling in live reads as
-  /// a running vote count (T-LIVE).
+  /// On a settled run this is CR106's original gate: the toggle appears only
+  /// once a verdict exists, because a comb filling in live reads as a running
+  /// vote count (T-LIVE). The live variant sets it true — its two segments
+  /// choose between two *live* views, and neither of them is the Board.
   final bool showToggle;
+
+  /// Which pair of labels the control carries. The live pair chooses the
+  /// briefing or the twelve; the settled pair chooses the Board or the prose.
+  final bool live;
 
   @override
   Widget build(BuildContext context) {
@@ -99,17 +122,24 @@ class RoomSubHeader extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _Segment(
-                    label: l.roomViewModeBoard,
-                    active: mode == RoomViewMode.board,
+                    label: live ? l.roomLiveModeBriefing : l.roomViewModeBoard,
+                    // CR173 Amendment B — each surface asks the one dial its
+                    // own question, and asks it through the extension so the
+                    // two readings cannot drift. `mode == RoomViewMode.board`
+                    // was right while the enum had two values; with three it
+                    // leaves BOTH settled segments unselected for a `floor`
+                    // user.
+                    active: live ? !mode.showsLiveFloor : !mode.showsTranscript,
                     onTap: () => onModeChanged(RoomViewMode.board),
                   ),
                   // The Designer's straight vertical divider. Not a gap: a gap
                   // re-creates two objects, which is the defect in disguise.
                   Container(width: 1, height: 32, color: AmiColors.slate700),
                   _Segment(
-                    label: l.roomViewModeTranscript,
-                    active: mode == RoomViewMode.transcript,
-                    onTap: () => onModeChanged(RoomViewMode.transcript),
+                    label: live ? l.roomLiveModeFloor : l.roomViewModeTranscript,
+                    active: live ? mode.showsLiveFloor : mode.showsTranscript,
+                    onTap: () => onModeChanged(
+                        live ? RoomViewMode.floor : RoomViewMode.transcript),
                   ),
                 ],
               ),

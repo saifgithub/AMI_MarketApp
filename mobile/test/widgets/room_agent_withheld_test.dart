@@ -23,6 +23,7 @@ import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/room_providers.dart';
+import 'package:ami_trade/state/room_view_mode_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -123,6 +124,22 @@ class _BreakThenRecoverApiClient extends ApiClient {
     );
   }
 }
+
+/// CR173 slice 1 — the live Room now opens on the four-stage briefing, so the
+/// 12-seat roster the D3/D4 tests below are about is no longer what a default
+/// build renders while a run streams. It did not go anywhere: it is exactly
+/// what `WATCH THE FLOOR` shows, persisted as the third `RoomViewMode` value.
+/// `pumpFixed` selects it explicitly rather than riding a default that moved.
+///
+/// **Only `pumpFixed`.** The recovery test further up renders a *settled* run,
+/// and its chair is the collapsed transcript's, not the roster's — forcing
+/// `floor` there would send the settled screen to the Board instead
+/// (Amendment B: `floor` settles to the Board), which is a different surface
+/// with a different, also-correct rendering of the same absence.
+/// (`withoutHydration` skips the async SharedPreferences read, which would
+/// otherwise settle back to the stored value mid-test.)
+final _watchTheFloor = roomViewModeProvider.overrideWith(
+    (ref) => RoomViewModeNotifier.withoutHydration(RoomViewMode.floor));
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -379,6 +396,7 @@ void main() {
     return t.pumpWidget(
       ProviderScope(
         overrides: [
+          _watchTheFloor,
           roomNotifierProvider(ticker)
               .overrideWith((ref) => _FixedRoomNotifier(ref, ticker, fixed)),
         ],

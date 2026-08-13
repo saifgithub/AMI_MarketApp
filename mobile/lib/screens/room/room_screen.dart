@@ -1,9 +1,14 @@
-/// Convene the Room — the Matrix-style streaming console.
+/// Convene the Room — the streaming console.
 ///
-/// All 12 agents speak in phases on a single ticker. The current phase
-/// banner highlights at the top; each agent's contribution streams in
-/// a typewriter feed below, role-colour-coded and tagged with the agent's
-/// abbreviation. The final Verdict card lands at the bottom.
+/// **CR173 slice 1 changed what a live run looks like by default.** It used to
+/// pin all 12 seats from the first frame; it now opens on a four-stage briefing
+/// (`room_briefing.dart`) — analyst desk, research debate, risk review, PM
+/// verdict — with desk counts on each row and the desk's members one tap away.
+/// The shipped roster is not gone: `WATCH THE FLOOR` restores it, and that
+/// choice persists as the third value of CR106's `RoomViewMode`, written
+/// through the same single writer.
+///
+/// The settled screen is untouched — this CR ends exactly where CR106 begins.
 library;
 
 import 'dart:async';
@@ -13,6 +18,7 @@ import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/room_board.dart';
 import 'package:ami_trade/models/room_board_mappers.dart';
+import 'package:ami_trade/models/room_stage.dart';
 import 'package:ami_trade/screens/lessons/lessons_screen.dart';
 import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
@@ -28,6 +34,7 @@ import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
 import 'package:ami_trade/widgets/room/room_board.dart';
+import 'package:ami_trade/widgets/room/room_briefing.dart';
 import 'package:ami_trade/widgets/room/room_transcript_rows.dart';
 import 'package:ami_trade/widgets/room/room_view_mode_toggle.dart';
 import 'package:flutter/material.dart';
@@ -94,7 +101,7 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
     final settled = state.done || state.verdict != null;
     final storedMode = ref.watch(roomViewModeProvider);
     final mode = _sessionMode ?? storedMode;
-    final showBoard = settled && mode == RoomViewMode.board;
+    final showBoard = settled && !mode.showsTranscript;
 
     return Scaffold(
       backgroundColor: AmiColors.slate900,
@@ -107,11 +114,14 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                 meta: _stripMeta(context, state),
                 mode: mode,
                 // The ONLY caller of setMode in the feature (T-MODESIDE).
-                onModeChanged: (m) {
-                  setState(() => _sessionMode = null);
-                  ref.read(roomViewModeProvider.notifier).setMode(m);
-                },
-              ),
+                onModeChanged: _setMode,
+              )
+            else
+              // CR173 — the same strip, the same writer, a different pair of
+              // labels. T-MODESIDE extends to the third value unchanged: this
+              // control and the settled one above are the only two things that
+              // write the preference.
+              RoomSubHeader.live(mode: mode, onModeChanged: _setMode),
             Expanded(
               child: SingleChildScrollView(
                 controller: _scrollCtrl,
@@ -172,8 +182,20 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                               e.key: _WithheldAgentChair(info: e.value),
                           },
                         )
+                      else if (mode.showsLiveFloor)
+                        _RoomLiveRoster(state: state)
                       else
-                        _RoomLiveRoster(state: state),
+                        // CR173 slice 1 — the default. Four desks instead of
+                        // twelve seats, and the locked chairs are handed in
+                        // rather than re-described, so an absent analyst reads
+                        // identically on both live views.
+                        RoomBriefing(
+                          state: state,
+                          withheldDetail: {
+                            for (final e in state.withheldAgents.entries)
+                              e.key: _WithheldAgentChair(info: e.value),
+                          },
+                        ),
                       if (settled && state.verdict != null) ...[
                         const SizedBox(height: AmiSpacing.l),
                         _VerdictCard(
@@ -200,6 +222,15 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
         ),
       ),
     );
+  }
+
+  /// The one place `setMode` is called from, shared by the live and the settled
+  /// strip. Clearing `_sessionMode` first is what stops a screen-local override
+  /// (the peek sheet's `READ THE FULL DEBATE`) from outliving the deliberate
+  /// choice that replaces it.
+  void _setMode(RoomViewMode m) {
+    setState(() => _sessionMode = null);
+    ref.read(roomViewModeProvider.notifier).setMode(m);
   }
 
   /// The strip's leading half. `duration_ms` and `credit_cost` live on
@@ -405,20 +436,14 @@ class _RoomLiveRoster extends StatelessWidget {
   }
 }
 
-/// One roster seat. No per-agent status map exists — every state below is
-/// derived from `RoomState` alone:
-///   - `responded`    = `state.agentStances` carries a key for this agent
-///     (set the instant `agent_done` lands, whatever it recorded).
-///   - `thinking`     = not yet responded, the stream is still `streaming`,
-///     and `state.activeAgent == agent.id`.
-///   - `interrupted`  = not yet responded, not thinking, but the agent DID
-///     start (`state.order` contains it) and the run itself has already
-///     stopped (`!state.streaming && !state.reconnecting`) without ever
-///     completing this agent's turn — a stream break or reconnect timeout
-///     catching an agent mid-turn. Must read as neither RESPONDED (a lie)
-///     nor an unending spinner — silence here is exactly the DEF059-class
-///     inversion this state exists to avoid (acceptance 5).
-///   - `waiting`      = none of the above.
+/// One roster seat. No per-agent status map exists — every state is derived
+/// from `RoomState` alone, by [seatStateFor] in `room_stage.dart`.
+///
+/// **The derivation moved out of this widget in CR173 and that is the point.**
+/// The four-stage briefing renders the same twelve states on a different
+/// surface, and §5.9 requires the two to agree exactly. Two copies of this
+/// reasoning agreeing today is not the same as one copy that cannot disagree
+/// (DEF098) — so there is one function, and both surfaces call it.
 class _AgentStatusRow extends StatelessWidget {
   const _AgentStatusRow({
     required this.agent,
@@ -433,18 +458,10 @@ class _AgentStatusRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stance = state.agentStances[agent.id];
-    final responded = stance != null;
-    // Gated on `streaming` too: once the stream itself has stopped, a
-    // lingering `activeAgent` from before the break is not "in progress"
-    // anymore — it is the interrupted case below.
-    final thinking =
-        !responded && state.streaming && state.activeAgent == agent.id;
-    final started = state.order.contains(agent.id);
-    final interrupted = !responded &&
-        !thinking &&
-        started &&
-        !state.streaming &&
-        !state.reconnecting;
+    final seat = seatStateFor(state, agent.id);
+    final responded = seat == RoomSeatState.responded;
+    final thinking = seat == RoomSeatState.thinking;
+    final interrupted = seat == RoomSeatState.interrupted;
     final lit = responded || thinking || interrupted;
     // DEF125: a length-stopped turn is marked `[AMI …]` in the raw text; the
     // settled comb (`room_transcript_rows.dart`) marks it with the same
@@ -550,7 +567,7 @@ class _AgentStatusRow extends StatelessWidget {
               ),
             ],
           ),
-          if (responded && stance.recorded) _headline(stance),
+          if (stance != null && stance.recorded) _headline(stance),
         ],
       ),
     );

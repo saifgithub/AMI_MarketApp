@@ -130,161 +130,161 @@
     },
     "youSegmentInsights": "INSIGHTS",
     "@youSegmentInsights": {
-            "description": "CR178 — third segment of YOU. retranslate:[ar,ms]"
+        "description": "CR178 — third segment of YOU. retranslate:[ar,ms]"
     },
     "insightsWindowCapped": "your last {count} decisions",
     "@insightsWindowCapped": {
-            "description": "CR178 — the window label when the journal read hit its 100-entry cap. Every card states its window: past 100 an unlabelled aggregate would describe the most recent 100 while presenting itself as all-time. retranslate:[ar,ms]",
-            "placeholders": {
-                    "count": {
-                            "type": "int"
-                    }
+        "description": "CR178 — the window label when the journal read hit its 100-entry cap. Every card states its window: past 100 an unlabelled aggregate would describe the most recent 100 while presenting itself as all-time. retranslate:[ar,ms]",
+        "placeholders": {
+            "count": {
+                "type": "int"
             }
+        }
     },
     "insightsWindowAll": "all {count} of your decisions",
     "@insightsWindowAll": {
-            "description": "CR178 — the window label when the user has fewer than 100 entries. Saying 'last 100' to someone with 12 is the same lie pointing the other way. retranslate:[ar,ms]",
-            "placeholders": {
-                    "count": {
-                            "type": "int"
-                    }
+        "description": "CR178 — the window label when the user has fewer than 100 entries. Saying 'last 100' to someone with 12 is the same lie pointing the other way. retranslate:[ar,ms]",
+        "placeholders": {
+            "count": {
+                "type": "int"
             }
+        }
     },
     "insightsEmptyHeading": "NOTHING TO AGGREGATE YET",
     "@insightsEmptyHeading": {
-            "description": "CR178 — empty state. retranslate:[ar,ms]"
+        "description": "CR178 — empty state. retranslate:[ar,ms]"
     },
     "insightsEmptyBody": "Close a trade, run the Room, or take a daily challenge. This fills in from your own decisions — it has nothing to show until you have made some.",
     "@insightsEmptyBody": {
-            "description": "CR178 — empty state. Says what fills it, rather than apologising. retranslate:[ar,ms]"
+        "description": "CR178 — empty state. Says what fills it, rather than apologising. retranslate:[ar,ms]"
     },
     "insightsTradesTitle": "HOW YOUR TRADES ENDED",
     "@insightsTradesTitle": {
-            "description": "CR178 — card 1. retranslate:[ar,ms]"
+        "description": "CR178 — card 1. retranslate:[ar,ms]"
     },
     "insightsTradesWon": "target hit",
     "@insightsTradesWon": {
-            "description": "CR178 — a trade closed by the target being hit. retranslate:[ar,ms]"
+        "description": "CR178 — a trade closed by the target being hit. retranslate:[ar,ms]"
     },
     "insightsTradesLost": "stop hit",
     "@insightsTradesLost": {
-            "description": "CR178 — a trade closed by the stop being hit. retranslate:[ar,ms]"
+        "description": "CR178 — a trade closed by the stop being hit. retranslate:[ar,ms]"
     },
     "insightsTradesManual": "you closed it",
     "@insightsTradesManual": {
-            "description": "CR178 — a trade the user closed by hand. Phrased in the second person because that is the finding: you acted, not the level. Note a manual close AT the target still counts here — correctly. retranslate:[ar,ms]"
+        "description": "CR178 — a trade the user closed by hand. Phrased in the second person because that is the finding: you acted, not the level. Note a manual close AT the target still counts here — correctly. retranslate:[ar,ms]"
     },
     "insightsTradesNote": "Closing by hand before your stop or target means overriding the plan you wrote. That is a habit, and habits are what you are here to change.",
     "@insightsTradesNote": {
-            "description": "CR178 — why this card is the strongest of the five. retranslate:[ar,ms]"
+        "description": "CR178 — why this card is the strongest of the five. retranslate:[ar,ms]"
     },
     "insightsTradesUnclassified": "{count} closed {count, plural, =1{trade} other{trades}} could not be classified and are not in the bars above.",
     "@insightsTradesUnclassified": {
-            "description": "CR178 — closed trades whose tags matched no known ending. Disclosed rather than dropped: silently discarding rows makes every percentage above wrong by an amount nobody can see. retranslate:[ar,ms]",
-            "placeholders": {
-                    "count": {
-                            "type": "int"
-                    }
+        "description": "CR178 — closed trades whose tags matched no known ending. Disclosed rather than dropped: silently discarding rows makes every percentage above wrong by an amount nobody can see. retranslate:[ar,ms]",
+        "placeholders": {
+            "count": {
+                "type": "int"
             }
+        }
     },
     "insightsVerdictTitle": "WHAT YOUR PM DECIDED",
     "@insightsVerdictTitle": {
-            "description": "CR178 — card 2. retranslate:[ar,ms]"
+        "description": "CR178 — card 2. retranslate:[ar,ms]"
     },
     "insightsVerdictApprove": "approved",
     "@insightsVerdictApprove": {
-            "description": "CR178 — PM verdict APPROVE. retranslate:[ar,ms]"
+        "description": "CR178 — PM verdict APPROVE. retranslate:[ar,ms]"
     },
     "insightsVerdictModify": "modified",
     "@insightsVerdictModify": {
-            "description": "CR178 — PM verdict MODIFY. retranslate:[ar,ms]"
+        "description": "CR178 — PM verdict MODIFY. retranslate:[ar,ms]"
     },
     "insightsVerdictReject": "rejected",
     "@insightsVerdictReject": {
-            "description": "CR178 — PM verdict REJECT. retranslate:[ar,ms]"
+        "description": "CR178 — PM verdict REJECT. retranslate:[ar,ms]"
     },
     "insightsVerdictPass": "passed",
     "@insightsVerdictPass": {
-            "description": "CR178 — PM verdict PASS (nothing fits the mandate today). retranslate:[ar,ms]"
+        "description": "CR178 — PM verdict PASS (nothing fits the mandate today). retranslate:[ar,ms]"
     },
     "insightsVerdictNoVerdict": "no verdict",
     "@insightsVerdictNoVerdict": {
-            "description": "CR178 — PM verdict NO_VERDICT (CR098). Its own outcome, never folded into REJECT. retranslate:[ar,ms]"
+        "description": "CR178 — PM verdict NO_VERDICT (CR098). Its own outcome, never folded into REJECT. retranslate:[ar,ms]"
     },
     "insightsVerdictNoVerdictNote": "NO VERDICT is not a rejection. The PM declined to rule because the run had no market read — your idea was never judged.",
     "@insightsVerdictNoVerdictNote": {
-            "description": "CR178 — the disclosure that keeps NO VERDICT from reading as a rejection. Folding it into REJECT tells the user their idea was turned down when it was never judged. retranslate:[ar,ms]"
+        "description": "CR178 — the disclosure that keeps NO VERDICT from reading as a rejection. Folding it into REJECT tells the user their idea was turned down when it was never judged. retranslate:[ar,ms]"
     },
     "insightsVerdictUnrecorded": "{count} {count, plural, =1{run} other{runs}} ended before a verdict was recorded and are not counted.",
     "@insightsVerdictUnrecorded": {
-            "description": "CR178 — Room runs whose payload.verdict is null (failed or cancelled). Excluded from the mix, never counted as PASS, and surfaced so the totals reconcile. retranslate:[ar,ms]",
-            "placeholders": {
-                    "count": {
-                            "type": "int"
-                    }
+        "description": "CR178 — Room runs whose payload.verdict is null (failed or cancelled). Excluded from the mix, never counted as PASS, and surfaced so the totals reconcile. retranslate:[ar,ms]",
+        "placeholders": {
+            "count": {
+                "type": "int"
             }
+        }
     },
     "insightsAnalystsTitle": "ANALYSTS YOU SOUGHT OUT",
     "@insightsAnalystsTitle": {
-            "description": "CR178 — card 3. retranslate:[ar,ms]"
+        "description": "CR178 — card 3. retranslate:[ar,ms]"
     },
     "insightsAnalystsNote": "1-on-1s, briefs and unlocks — who you went to. Not who spoke in the Room: all twelve speak every run.",
     "@insightsAnalystsNote": {
-            "description": "CR178 — states what this is NOT, because the obvious source (ROOM_RUN.agents_involved) would report participation and label it readership. retranslate:[ar,ms]"
+        "description": "CR178 — states what this is NOT, because the obvious source (ROOM_RUN.agents_involved) would report participation and label it readership. retranslate:[ar,ms]"
     },
     "insightsMandateTitle": "HOW YOUR MANDATE HAS MOVED",
     "@insightsMandateTitle": {
-            "description": "CR178 — card 4. retranslate:[ar,ms]"
+        "description": "CR178 — card 4. retranslate:[ar,ms]"
     },
     "insightsMandateEdits": "{count, plural, =1{1 edit} other{{count} edits}}",
     "@insightsMandateEdits": {
-            "description": "CR178 — number of mandate EDITS, not fields changed: the Day Trader preset sets seven limits in one edit and must render as one event. retranslate:[ar,ms]",
-            "placeholders": {
-                    "count": {
-                            "type": "int"
-                    }
+        "description": "CR178 — number of mandate EDITS, not fields changed: the Day Trader preset sets seven limits in one edit and must render as one event. retranslate:[ar,ms]",
+        "placeholders": {
+            "count": {
+                "type": "int"
             }
+        }
     },
     "insightsMandateLoosened": "loosened",
     "@insightsMandateLoosened": {
-            "description": "CR178 — the limit moved in the direction that gives the user more rope. retranslate:[ar,ms]"
+        "description": "CR178 — the limit moved in the direction that gives the user more rope. retranslate:[ar,ms]"
     },
     "insightsMandateTightened": "tightened",
     "@insightsMandateTightened": {
-            "description": "CR178 — the limit moved in the restricting direction. retranslate:[ar,ms]"
+        "description": "CR178 — the limit moved in the restricting direction. retranslate:[ar,ms]"
     },
     "insightsMandateNoMoves": "No limit moved. The edits changed something else.",
     "@insightsMandateNoMoves": {
-            "description": "CR178 — edits happened but no tracked limit moved. Stated rather than left as an empty card. retranslate:[ar,ms]"
+        "description": "CR178 — edits happened but no tracked limit moved. Stated rather than left as an empty card. retranslate:[ar,ms]"
     },
     "insightsChallengeTitle": "DAILY CHALLENGE BY TYPE",
     "@insightsChallengeTitle": {
-            "description": "CR178 — card 5. retranslate:[ar,ms]"
+        "description": "CR178 — card 5. retranslate:[ar,ms]"
     },
     "insightsChallengeRow": "{correct}/{attempts} correct",
     "@insightsChallengeRow": {
-            "description": "CR178 — a challenge type's record. retranslate:[ar,ms]",
-            "placeholders": {
-                    "correct": {
-                            "type": "int"
-                    },
-                    "attempts": {
-                            "type": "int"
-                    }
+        "description": "CR178 — a challenge type's record. retranslate:[ar,ms]",
+        "placeholders": {
+            "correct": {
+                "type": "int"
+            },
+            "attempts": {
+                "type": "int"
             }
+        }
     },
     "insightsChallengeUnweighted": "Not weighted by difficulty — an easy question and a hard one count the same here.",
     "@insightsChallengeUnweighted": {
-            "description": "CR178 — challenge rows carry a difficulty, so an unweighted comparison must say so. retranslate:[ar,ms]"
+        "description": "CR178 — challenge rows carry a difficulty, so an unweighted comparison must say so. retranslate:[ar,ms]"
     },
     "insightsChallengeOmitted": "{count} {count, plural, =1{type has} other{types have}} fewer than 5 attempts and {count, plural, =1{is} other{are}} not shown.",
     "@insightsChallengeOmitted": {
-            "description": "CR178 — types under the 5-attempt threshold are named rather than dropped: a 1/1 bar reading 100% is the failure mode this threshold exists for. retranslate:[ar,ms]",
-            "placeholders": {
-                    "count": {
-                            "type": "int"
-                    }
+        "description": "CR178 — types under the 5-attempt threshold are named rather than dropped: a 1/1 bar reading 100% is the failure mode this threshold exists for. retranslate:[ar,ms]",
+        "placeholders": {
+            "count": {
+                "type": "int"
             }
+        }
     },
     "floorConciergeHeading": "AMI CONCIERGE",
     "floorConciergeTagline": "Your personal assistant — tap to chat",
@@ -4231,5 +4231,82 @@
     "gamesBoardIneligibleNote": "Ranks, but does not hold titles.",
     "@gamesBoardIneligibleNote": {
         "description": "CR109 slice 8 (§8.5). Row note on an entrant that AMI operates, employs or is affiliated with — house desks, the operator, test accounts. Published rather than hidden: ineligible does not mean invisible, and a silent exclusion is the tell the disclosure rule exists to avoid. NEW key. retranslate:[ar,ms]"
+    },
+    "roomLiveModeBriefing": "BRIEFING",
+    "@roomLiveModeBriefing": {
+        "description": "CR173 slice 1. Left segment of the LIVE Room's toggle: the four-stage narrative (ANALYST DESK / RESEARCH DEBATE / RISK REVIEW / PM VERDICT). Shares a ~152pt control with roomLiveModeFloor, so keep it short. Mono uppercase. NEW key. retranslate:[ar,ms]"
+    },
+    "roomLiveModeFloor": "WATCH THE FLOOR",
+    "@roomLiveModeFloor": {
+        "description": "CR173 slice 1. Right segment of the LIVE Room's toggle: restores the shipped 12-seat roster. 'The floor' is the trading-floor sense — the room full of people — not a lower bound. Mono uppercase; shares a ~152pt control with roomLiveModeBriefing. NEW key. retranslate:[ar,ms]"
+    },
+    "roomStageAnalystDesk": "ANALYST DESK",
+    "@roomStageAnalystDesk": {
+        "description": "CR173 slice 1. Stage 1 of 4 in the live Room narrative: the four analysts (fundamentals, market, news, social). A 'desk' is the trading-floor term for a team covering one specialism. Mono uppercase. NEW key. retranslate:[ar,ms]"
+    },
+    "roomStageResearchDebate": "RESEARCH DEBATE",
+    "@roomStageResearchDebate": {
+        "description": "CR173 slice 1. Stage 2 of 4: Bull Researcher, Bear Researcher and the Research Manager. Mono uppercase. NEW key. retranslate:[ar,ms]"
+    },
+    "roomStageRiskReview": "RISK REVIEW",
+    "@roomStageRiskReview": {
+        "description": "CR173 slice 1. Stage 3 of 4: the Trader plus the three risk debators. Mono uppercase. NEW key. retranslate:[ar,ms]"
+    },
+    "roomStagePmVerdict": "PM VERDICT",
+    "@roomStagePmVerdict": {
+        "description": "CR173 slice 1. Stage 4 of 4: the Portfolio Manager's single call. 'PM' is the Portfolio Manager abbreviation used across the app. Mono uppercase. NEW key. retranslate:[ar,ms]"
+    },
+    "roomStageAnalystDeskSubtitle": "Four independent reads on the same company — fundamentals, the chart, the news, the crowd.",
+    "@roomStageAnalystDeskSubtitle": {
+        "description": "CR173 slice 1. One-line description of the ANALYST DESK stage, shown on the row before that desk has started. Sentence case. NEW key. retranslate:[ar,ms]"
+    },
+    "roomStageResearchDebateSubtitle": "Bull and Bear argue it out. The Research Manager adjudicates.",
+    "@roomStageResearchDebateSubtitle": {
+        "description": "CR173 slice 1. One-line description of the RESEARCH DEBATE stage. 'Bull' and 'Bear' are the agent names (Bull Researcher / Bear Researcher). Sentence case. NEW key. retranslate:[ar,ms]"
+    },
+    "roomStageRiskReviewSubtitle": "The Trader drafts a ticket. Aggressive, Conservative and Neutral stress it from both sides.",
+    "@roomStageRiskReviewSubtitle": {
+        "description": "CR173 slice 1. One-line description of the RISK REVIEW stage. Trader, Aggressive Debator, Conservative Debator and Neutral Debator are agent names. A 'ticket' is a proposed trade order. Sentence case. NEW key. retranslate:[ar,ms]"
+    },
+    "roomStagePmVerdictSubtitle": "One call, checked against your mandate.",
+    "@roomStagePmVerdictSubtitle": {
+        "description": "CR173 slice 1. One-line description of the PM VERDICT stage. 'Mandate' is the user's standing instruction to the firm, a term used throughout the app. Sentence case. NEW key. retranslate:[ar,ms]"
+    },
+    "roomStageReported": "{reported}/{total} REPORTED",
+    "@roomStageReported": {
+        "description": "CR173 slice 1. Desk count on a stage row: how many of that desk's members have reported. The denominator counts only members that can still report — an analyst withheld on account tenure (CR098) is excluded, so the row can always reach its total. Mono uppercase. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "reported": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "roomStageWorking": "{agent} is working…",
+    "@roomStageWorking": {
+        "description": "CR173 slice 1. The live line for the member currently speaking, on the active stage row. {agent} is the agent's display name (e.g. 'Market Analyst'). Deliberately generic: the app does not know what the agent is doing, only that it is its turn. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "agent": {
+                "type": "String"
+            }
+        }
+    },
+    "roomBriefingCaption": "You'll get one verdict. Tap a desk to see who's on it.",
+    "@roomBriefingCaption": {
+        "description": "CR173 slice 1. Caption under the four stage rows in the live Room. Says both what is coming (a single verdict) and that the twelve are one tap away. Sentence case. NEW key. retranslate:[ar,ms]"
+    },
+    "roomStageStatusSemantic": "{stage}, {status}",
+    "@roomStageStatusSemantic": {
+        "description": "CR173 slice 1, DEF174. Screen-reader label for a stage row, so its state reaches a non-sighted user as text rather than only as a filled or empty marker. {stage} is the stage name, {status} is one of the existing roomStandingBy / roomAgentThinking / roomAgentResponded / roomAgentInterrupted strings. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "stage": {
+                "type": "String"
+            },
+            "status": {
+                "type": "String"
+            }
+        }
     }
 }
