@@ -41,6 +41,7 @@ import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/theme/hex_clipper.dart';
 import 'package:ami_trade/widgets/empty_state.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
@@ -140,9 +141,20 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _Header(
-                key: _headerKey,
-                onTradeTicket: () => TradeTicketSheet.show(context)),
+            AmiScreenHeader(
+              key: _headerKey,
+              title: AppLocalizations.of(context).portfolioHeading,
+              titleColor: AmiColors.hexCyan,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline,
+                      color: AmiColors.hexCyan),
+                  tooltip:
+                      AppLocalizations.of(context).portfolioNewTradeTooltip,
+                  onPressed: () => TradeTicketSheet.show(context),
+                ),
+              ],
+            ),
             Expanded(child: _body(context, state, watchlist)),
           ],
         ),
@@ -222,37 +234,6 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
                 _HistoryTab(closedTrades: closedTrades),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({super.key, required this.onTradeTicket});
-  final VoidCallback onTradeTicket;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m),
-      decoration: const BoxDecoration(
-        color: AmiColors.glassChrome,
-        border: Border(bottom: BorderSide(color: AmiColors.slate700)),
-      ),
-      child: Row(
-        children: [
-          Text(AppLocalizations.of(context).portfolioHeading,
-              style:
-                  AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
-          const Spacer(),
-          IconButton(
-            icon:
-                const Icon(Icons.add_circle_outline, color: AmiColors.hexCyan),
-            tooltip: AppLocalizations.of(context).portfolioNewTradeTooltip,
-            onPressed: onTradeTicket,
           ),
         ],
       ),

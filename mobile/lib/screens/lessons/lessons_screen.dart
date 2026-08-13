@@ -15,6 +15,7 @@ import 'package:ami_trade/screens/lessons/honeycomb_layout.dart';
 import 'package:ami_trade/screens/lessons/track_lessons_screen.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/theme/hex_clipper.dart';
 import 'package:ami_trade/widgets/hex/hex_toast.dart';
 import 'package:ami_trade/widgets/hex/track_hex_button.dart';
@@ -91,7 +92,12 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _Header(key: _headerKey, showBack: Navigator.of(context).canPop()),
+            AmiScreenHeader(
+              key: _headerKey,
+              title: AppLocalizations.of(context).lessonsHeading,
+              titleColor: AmiColors.hexGreen,
+              showBack: Navigator.of(context).canPop(),
+            ),
             Expanded(child: _body(context, state)),
           ],
         ),
@@ -259,36 +265,4 @@ class _HexCluster extends StatelessWidget {
 }
 
 // ─── chrome ──────────────────────────────────────────────────────────────────
-
-class _Header extends StatelessWidget {
-  const _Header({super.key, this.showBack = false});
-
-  final bool showBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m),
-      decoration: const BoxDecoration(
-        color: AmiColors.glassChrome,
-        border: Border(bottom: BorderSide(color: AmiColors.slate700)),
-      ),
-      child: Row(
-        children: [
-          if (showBack) ...[
-            GestureDetector(
-              onTap: () => Navigator.of(context).pop(),
-              child: const Icon(Icons.arrow_back_ios_new,
-                  size: 18, color: AmiColors.textMed),
-            ),
-            const SizedBox(width: AmiSpacing.m),
-          ],
-          Text(AppLocalizations.of(context).lessonsHeading,
-              style: AmiTypography.labelMono.copyWith(color: AmiColors.hexGreen)),
-        ],
-      ),
-    );
-  }
-}
 

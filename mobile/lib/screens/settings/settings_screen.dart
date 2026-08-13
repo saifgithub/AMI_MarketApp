@@ -25,6 +25,7 @@ import 'package:ami_trade/state/league_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -163,11 +164,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _Header(
-              version: m.version,
-              saving: state.saving,
-              dirty: _dirty || _pendingRiskLimits.isNotEmpty,
-              onSave: _save,
+            AmiScreenHeader(
+              title: l.settingsHeading,
+              titleColor: AmiColors.hexBlue,
+              subtitle: l.settingsMandateVersion(m.version),
+              showBack: Navigator.of(context).canPop(),
+              actions: [
+                if (_dirty || _pendingRiskLimits.isNotEmpty)
+                  TextButton(
+                    onPressed: state.saving ? null : _save,
+                    child: Text(state.saving ? l.settingsSaving : l.settingsSave,
+                        style: AmiTypography.labelMono
+                            .copyWith(color: AmiColors.hexBlue)),
+                  ),
+              ],
             ),
             Expanded(
               child: ListView(
@@ -258,48 +268,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 }
 
-
-class _Header extends StatelessWidget {
-  const _Header({
-    required this.version,
-    required this.saving,
-    required this.dirty,
-    required this.onSave,
-  });
-
-  final int version;
-  final bool saving;
-  final bool dirty;
-  final VoidCallback onSave;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return Container(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m),
-      decoration: const BoxDecoration(
-        color: AmiColors.glassChrome,
-        border: Border(bottom: BorderSide(color: AmiColors.slate700)),
-      ),
-      child: Row(
-        children: [
-          Text(l.settingsHeading,
-              style: AmiTypography.labelMono.copyWith(color: AmiColors.hexBlue)),
-          const SizedBox(width: AmiSpacing.s),
-          Text(l.settingsMandateVersion(version), style: AmiTypography.caption),
-          const Spacer(),
-          if (dirty)
-            TextButton(
-              onPressed: saving ? null : onSave,
-              child: Text(saving ? l.settingsSaving : l.settingsSave,
-                  style: AmiTypography.labelMono.copyWith(color: AmiColors.hexBlue)),
-            ),
-        ],
-      ),
-    );
-  }
-}
 
 
 class _Section extends StatelessWidget {
