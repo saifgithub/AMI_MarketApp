@@ -1385,6 +1385,57 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lessonReaderBackToLessons => 'العودة إلى الدروس';
 
   @override
+  String get lessonModeBook => 'BOOK';
+
+  @override
+  String get lessonModeInteractive => 'INTERACTIVE';
+
+  @override
+  String get lessonPlayDragHint => 'DRAG TO EXPLORE';
+
+  @override
+  String get lessonRevealTap => 'TAP TO REVEAL';
+
+  @override
+  String get lessonDeckNext => 'Next card';
+
+  @override
+  String get lessonDeckBack => 'Previous card';
+
+  @override
+  String get lessonDeckCheckHeading => 'CHECK YOUR ANSWERS';
+
+  @override
+  String lessonPlayBreachStreak(int n, int total, int pct) {
+    return 'Loss $n of $total puts you past the $pct% drawdown ceiling on your own mandate.';
+  }
+
+  @override
+  String lessonPlayBreachSingleName(String pct, String cap) {
+    return 'That is $pct of the account in one name — past your $cap single-name cap. The stop got tighter; the risk did not.';
+  }
+
+  @override
+  String lessonPlayBreachStopTooTight(String wick, String close) {
+    return 'The stop now sits above the $wick noise wick, so it fires on a day price closed back at $close — stopped out without the thesis ever failing.';
+  }
+
+  @override
+  String lessonPlayBreachRiskReward(String risk, String reward, String pct) {
+    return 'Risking $risk to make $reward. You now have to be right $pct of the time just to break even.';
+  }
+
+  @override
+  String lessonPlayBreachOpenRisk(int count, String real, String limit) {
+    return '$count names at 1% each is $real of real open risk — past the $limit open-risk limit on your own mandate.';
+  }
+
+  @override
+  String lessonPlayBreachDrawdownCeiling(int cap, int depth, int over) {
+    return 'Your mandate halts new entries at $cap% down. This hole is $depth% — the PM stopped you $over points ago.';
+  }
+
+  @override
   String get settingsHeading => 'الإعدادات';
 
   @override

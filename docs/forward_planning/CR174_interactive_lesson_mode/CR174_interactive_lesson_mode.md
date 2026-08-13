@@ -328,6 +328,128 @@ land, per Saiful's call. Content-quality first, then delivery.
    impression — the 620-word median, the 50% first-interaction mark and the 0-images figure are the
    before-state and are reproducible from `content/lessons/*.en.mdx`.
 
+## Amendments (build-time, 2026-08-13)
+
+Recorded here rather than only in code comments, so a later reader of this doc gets the reasoning
+and not just the register one-liner.
+
+### Amendment A — the front end derives the deck client-side; no `LessonBlock.kind` extension was needed
+
+Scope item 1 assumed the beat deck needed **new server-side block kinds**, and the lane split made
+`CR174-MOBILE` depend on `CR174-BE` for exactly that. Building it showed the dependency is not real
+for this slice. The corpus already carries the structure the deck needs: `lessons_service.py` splits
+the body into contiguous prose blocks at each component, and `## ` headings survive **inside** those
+blocks. So the deck is a **render-time re-cut of the block list already served**
+(`mobile/lib/models/lesson_beats.dart`), and the interactions are client data
+(`widgets/lessons/interactive_registry.dart`), which §4 already said a visual should be.
+
+Three consequences, all good:
+
+- **No backend change ⇒ no promotion.** This ships in a store build with no `/promote-to-alpha`,
+  which also means it was not blocked by the Mac being off the LAN on the day it was built.
+- **Acceptance #1 is satisfied structurally, not by diffing.** Book mode's code path is untouched;
+  the only edit to it is that three widgets moved into `widgets/lessons/` so the deck could reuse
+  them rather than fork them (DEF098).
+- `CR174-BE` is **not cancelled** — it is what a *corpus-wide* roll-out needs, when authored beat
+  copy stops being a slice of the shipped prose. It is no longer a blocker for the pilot.
+
+### Amendment B — interaction anchors are section **indices**, never heading text
+
+`## The trap` is `## الفخ` in Arabic and `## Perangkap` in Malay. A registry keyed on heading text
+would arm every interaction in English and drop it silently in the two locales that ship at v1.0 —
+invisible to an English-speaking reviewer, and only broken for the users the feature exists for.
+Anchors are therefore integers, and a guard measures the premise rather than assuming it: all six
+pilot lessons carry exactly **5 `## ` sections in all three locales** (measured 2026-08-13), and
+`cr174_models_test.dart` re-derives that per registered lesson so the check covers whatever the
+registry names next.
+
+### Amendment C — the pilot's dials, where they differ from the table in §"Pilot"
+
+The §Pilot table named a candidate control per lesson; two moved during the build, for the reason the
+model has to reproduce the lesson's own published figures:
+
+| Lesson | §Pilot said | Shipped | Why |
+|---|---|---|---|
+| 013 | loss-streak depth → survival | **risk per trade → a 10-loss streak** | Depth is the *output* the lesson argues about; size is the input it tells you to control. Streak length fixed at 10 makes the two ends of the dial comparable |
+| 017 | correlation → combined drawdown | **correlation → real open risk + effective bets** | "Combined drawdown" needs a return series the lesson never gives; `n / (1 + (n−1)ρ)` is the lesson's own *"you hold one position three times"*, as a number |
+
+The other four are as specced. Every model is asserted against figures quoted from its own lesson
+body — 014's `$21 / 9 shares / $4,320 / 21.6%`, 016's `R:R 3.1` and `53%` break-even, 018's
+`42.9% / 36 months` and `17.6% / 16 months` — in `test/widgets/lessons/cr174_models_test.dart`.
+
+### Amendment D — acceptance #3's premise is false today, and the front end cannot make it true
+
+Acceptance #3 asks for a test proving *"a scored answer is not present in the client payload
+pre-attempt (DEF042)"*. Measured: `GET /v1/lessons/{id}` returns `answer_index` **and**
+`explanation` on every quiz, pre-attempt, and the shipped reader colours its reveal off them. That
+is a backend schema change, filed as **DEF294**, not half-built here.
+
+What the front end did instead is refuse to deepen the reliance: the deck's instant loop is the
+**formative** half only (the parameter play, the tap-to-reveal), and its quiz cards keep the
+identical batch server submit. So CR174 leaves the leak exactly as it found it and names it.
+
+### Amendment E — the 13 new strings are seeded in English and are invisible to the translator
+
+`translate_arb.py:230` skips any key whose target value is non-empty, while DEF137's parity guard
+requires the key to exist in all three ARBs. English seeded to satisfy the second is skipped by the
+first, permanently. Filed as **DEF295** (measured: 320 AR / 321 MS prose keys already in this state).
+The keys this CR added, for the i18n lane:
+
+`lessonModeBook` · `lessonModeInteractive` · `lessonPlayDragHint` · `lessonRevealTap` ·
+`lessonDeckNext` · `lessonDeckBack` · `lessonDeckCheckHeading` · `lessonPlayBreachStreak` ·
+`lessonPlayBreachSingleName` · `lessonPlayBreachStopTooTight` · `lessonPlayBreachRiskReward` ·
+`lessonPlayBreachOpenRisk` · `lessonPlayBreachDrawdownCeiling`
+
+On-canvas labels and readout tokens (`RISK/SH`, `SHARES`, `R:R`, `GAIN TO FLAT`) are **not**
+translated, matching the seven shipped painters, whose captions and pan labels are English today.
+The CR's own open decision 4 (bundle IBM Plex Sans Arabic) is unchanged and still open.
+
+---
+
+## Delivery — front-end slice (2026-08-13)
+
+Built on Saiful's directive *"build the front end of CR174 first"*. `CR174-BE` and `noncoder.edu`
+are untouched; the CR stays `in_progress`.
+
+| Area | Files |
+|---|---|
+| Mode dial | `mobile/lib/state/lesson_view_mode_provider.dart` (NEW) |
+| The fold | `mobile/lib/models/lesson_beats.dart` (NEW) |
+| Interactions as data | `mobile/lib/widgets/lessons/lesson_play.dart`, `interactive_registry.dart` (NEW) |
+| The deck | `mobile/lib/screens/lessons/lesson_beat_deck.dart` (NEW) |
+| Parameter play | `mobile/lib/widgets/lessons/lesson_parameter_play.dart` (NEW) |
+| New primitives | `anim/streak_bars_painter.dart`, `anim/comparison_bars_painter.dart` (NEW) |
+| Shared out of the reader | `widgets/lessons/lesson_markdown.dart`, `lesson_quiz_card.dart` (MOVED, unchanged) |
+| Reader | `screens/lessons/lesson_reader_screen.dart` (toggle + deck branch) |
+| Strings | 13 keys × 3 ARBs |
+| Tests | `test/models/lesson_beats_test.dart`, `test/widgets/lessons/cr174_models_test.dart`, `test/screens/lessons/cr174_reader_mode_test.dart` |
+
+**Verification.** `flutter analyze` 0 errors (7 pre-existing infos). Mobile suite **942 → 997
+passed**, exit 0. Four mutations applied and confirmed red, then reverted: unpinning the slider's
+direction (the acceptance-#8 inverted-drag bug), making `InteractiveRegistry.has` always true (the
+CR040 gate), rounding share counts up instead of down, and revealing graded answers before the
+server does.
+
+**One test was strengthened after a mutation walked through it** — the RTL check first passed
+against a genuinely inverted slider, because a Material `Slider` jumps to the touch point on
+drag-start and that jump alone raised the value above the card's opening figure. Measuring the delta
+*from the touch point* rather than from the initial value is what makes it bite. Same shape as
+DEF190, and the second time this session's lineage has hit it (CR173's autoplay guard).
+
+### Acceptance, honestly scored
+
+| # | State |
+|---|---|
+| 1 book mode byte-identical | **Met** — untouched code path; three widgets moved verbatim |
+| 2 measured against baseline | **Partly.** First interaction is at **card 1** (was the 50% mark) and every pilot lesson now has ≥1 bound visual (was 0). **Words-per-card is not yet ≤60**: the deck slices the shipped prose at paragraph boundaries (median 65w), so tightening is the education lane's job, not the renderer's |
+| 3 formative vs scored | **Met on the client half** (formative resolves locally, scored round-trips unchanged). The payload half is false today → **DEF294** |
+| 4 derived guard | **Met** — `cr174_models_test.dart` re-derives from `InteractiveRegistry.registeredLessonIds`; a lesson added tomorrow is inside the check |
+| 5 backend suite / CR087 | **Met by construction** — no backend file changed |
+| 6 judged on device | **Not done** — needs a build |
+| 7 instrumentation before scale-out | **Not started.** There is no client event emitter at all (the CR181 finding); this gates *scale-out*, not this slice |
+| 8 RTL gate | **Met** — three widget tests, mutation-verified |
+| 9 numbers vs the recorded baseline | **Met** for #2's first-interaction and visual counts; the words-per-card figure is reported above rather than claimed |
+
 ## Open decisions
 
 1. Interactive as the **default** for new users, or opt-in? (Recommend: default derived from

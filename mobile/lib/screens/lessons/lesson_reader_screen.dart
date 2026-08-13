@@ -1,24 +1,41 @@
-/// Lesson reader — renders markdown blocks, in-line quiz, ChatWith CTA.
+/// Lesson reader — the lesson body, its in-line quiz and the ChatWith CTA, in
+/// whichever of CR174's two modes the learner is in.
 ///
-/// Plain markdown rendering is intentionally lightweight (no third-party
-/// dep). We handle: H1/H2/H3 headings, paragraphs, bullet lists, simple
-/// pipe tables, blockquotes, inline **bold** and *italic*. Anything more
-/// exotic falls back to mono prose. Good enough for the alpha lessons.
+/// **Book mode is the shipped reader, unchanged.** Its block list, its markdown
+/// renderer and its batch submit are all exactly what they were; CR174 moved
+/// three widgets into `widgets/lessons/` so the beat deck could reuse them
+/// rather than fork them, and changed nothing they render.
 ///
-/// Quiz blocks render as multiple-choice cards; the reader collects answers,
-/// submits to /v1/lessons/quiz, and shows a result panel — pass / fail per
-/// question + any newly unlocked agents.
+/// **Interactive mode replaces only the body.** The header, the meta bar, the
+/// prerequisites row and the quiz round trip are shared. The toggle appears
+/// only for a lesson the interactive registry covers — CR040's degrade-loudly
+/// clause says an empty interactive mode is worse than no toggle, and CR038
+/// says an authoring convention would not be a control, so the registry itself
+/// is the gate.
+///
+/// Quiz blocks render as multiple-choice cards in both modes; the reader
+/// collects answers, submits to /v1/lessons/quiz, and shows a result panel —
+/// pass / fail per question + any newly unlocked agents.
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
+import 'package:ami_trade/models/lesson_beats.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
+import 'package:ami_trade/screens/lessons/lesson_beat_deck.dart';
 import 'package:ami_trade/services/celebration.dart';
+import 'package:ami_trade/state/lesson_view_mode_provider.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
+import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/hex/ami_segment_bar.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/lessons/animation_block.dart';
+import 'package:ami_trade/widgets/lessons/interactive_registry.dart';
+import 'package:ami_trade/widgets/lessons/lesson_markdown.dart';
+import 'package:ami_trade/widgets/lessons/lesson_play.dart';
+import 'package:ami_trade/widgets/lessons/lesson_quiz_card.dart';
 import 'package:ami_trade/widgets/lessons/term_block.dart';
 import 'package:ami_trade/widgets/lessons/term_registry.dart';
 import 'package:flutter/material.dart';
@@ -87,10 +104,42 @@ class _LessonReaderScreenState extends ConsumerState<LessonReaderScreen> {
                       : l.lessonReaderLoading),
               suffix: widget.quizOnly ? l.lessonReaderQuizOnlyBadge : null,
             ),
+            if (_offersInteractive(state)) _modeToggle(l),
             Expanded(child: _body(context, ref, state)),
           ],
         ),
       ),
+    );
+  }
+
+  /// The toggle's only gate.
+  ///
+  /// A19's quiz-only entry is excluded deliberately: it is already a filtered
+  /// mode entered from context, and offering a second mode dial inside it would
+  /// stack two answers to "which parts of this lesson am I seeing".
+  bool _offersInteractive(LessonReaderState state) =>
+      !widget.quizOnly &&
+      state.lesson != null &&
+      InteractiveRegistry.has(widget.lessonId);
+
+  LessonViewMode _mode() => resolveLessonViewMode(
+        chosen: ref.watch(lessonViewModeProvider),
+        learningStyle: ref.watch(mandateNotifierProvider).mandate?.learningStyle,
+      );
+
+  Widget _modeToggle(AppLocalizations l) {
+    final mode = _mode();
+    return AmiSegmentBar(
+      segments: [
+        AmiSegment(label: l.lessonModeBook, semanticsId: 'lesson_mode_book'),
+        AmiSegment(
+            label: l.lessonModeInteractive,
+            semanticsId: 'lesson_mode_interactive'),
+      ],
+      selected: mode == LessonViewMode.book ? 0 : 1,
+      onSelect: (i) => ref.read(lessonViewModeProvider.notifier).setMode(
+            i == 0 ? LessonViewMode.book : LessonViewMode.interactive,
+          ),
     );
   }
 
@@ -106,6 +155,29 @@ class _LessonReaderScreenState extends ConsumerState<LessonReaderScreen> {
     }
     final lesson = state.lesson;
     if (lesson == null) return const SizedBox.shrink();
+
+    if (_offersInteractive(state) && _mode() == LessonViewMode.interactive) {
+      final mandate = ref.watch(mandateNotifierProvider).mandate;
+      final notifier = ref.read(lessonReaderProvider(widget.lessonId).notifier);
+      return LessonBeatDeck(
+        cards: cardsFor(lesson, InteractiveRegistry.forLesson(widget.lessonId)),
+        state: state,
+        // Null mandate → `LessonPlayCaps.unknown`, and every model that would
+        // have drawn a ceiling draws none. A cap we cannot read is not a cap we
+        // may invent (CR040).
+        caps: mandate == null
+            ? LessonPlayCaps.unknown
+            : LessonPlayCaps(
+                singleNameCapPct: mandate.singleNameCapPct,
+                maxDrawdownPct: mandate.maxDrawdownPct,
+                maxOpenRiskPct: mandate.maxOpenRiskPct,
+              ),
+        onSelect: notifier.selectAnswer,
+        onSubmit: notifier.submit,
+        onRetry: notifier.retry,
+        onDone: () => Navigator.of(context).pop(),
+      );
+    }
 
     final visibleBlocks = widget.quizOnly
         ? lesson.blocks.where((b) => b.kind == LessonBlockKind.quiz).toList()
@@ -151,7 +223,7 @@ class _LessonReaderScreenState extends ConsumerState<LessonReaderScreen> {
                 : AppLocalizations.of(context).lessonReaderSubmitQuiz),
           )
         else
-          _ResultPanel(
+          LessonResultPanel(
             result: state.result!,
             onRetry: () => ref
                 .read(lessonReaderProvider(widget.lessonId).notifier)
@@ -306,9 +378,9 @@ class _BlockView extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (block.kind) {
       case LessonBlockKind.markdown:
-        return _MarkdownView(text: block.markdown ?? '');
+        return LessonMarkdown(text: block.markdown ?? '');
       case LessonBlockKind.quiz:
-        return _QuizCard(
+        return LessonQuizCard(
           question: block.quiz!,
           selected: state.selectedAnswers[block.quiz!.id],
           locked: state.result != null,
@@ -366,318 +438,6 @@ class _BlockView extends StatelessWidget {
 }
 
 
-/// Lightweight markdown renderer. Handles H1/H2/H3, paragraphs, bullets,
-/// pipe tables (very simply), blockquotes, **bold** and *italic*.
-class _MarkdownView extends StatelessWidget {
-  const _MarkdownView({required this.text});
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final lines = text.split('\n');
-    final widgets = <Widget>[];
-    final paraBuffer = StringBuffer();
-    final listBuffer = <String>[];
-    final tableBuffer = <String>[];
-
-    void flushPara() {
-      if (paraBuffer.isEmpty) return;
-      widgets.add(_inline(paraBuffer.toString().trim(), AmiTypography.body));
-      widgets.add(const SizedBox(height: 10));
-      paraBuffer.clear();
-    }
-
-    void flushList() {
-      if (listBuffer.isEmpty) return;
-      for (final item in listBuffer) {
-        widgets.add(
-          Padding(
-            padding: const EdgeInsetsDirectional.only(start: 8, bottom: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('• ', style: AmiTypography.body.copyWith(color: AmiColors.hexBlue)),
-                Expanded(child: _inline(item, AmiTypography.body)),
-              ],
-            ),
-          ),
-        );
-      }
-      widgets.add(const SizedBox(height: 8));
-      listBuffer.clear();
-    }
-
-    void flushTable() {
-      if (tableBuffer.isEmpty) return;
-      // Strip alignment row (e.g. |---|---|)
-      final rows = tableBuffer
-          .where((r) => !RegExp(r'^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$').hasMatch(r))
-          .toList();
-      if (rows.isEmpty) {
-        tableBuffer.clear();
-        return;
-      }
-      final parsed = rows.map((r) {
-        var s = r.trim();
-        if (s.startsWith('|')) s = s.substring(1);
-        if (s.endsWith('|')) s = s.substring(0, s.length - 1);
-        return s.split('|').map((c) => c.trim()).toList();
-      }).toList();
-      widgets.add(
-        Container(
-          width: double.infinity,
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(AmiSpacing.s),
-          decoration: BoxDecoration(
-            color: AmiColors.slate800,
-            borderRadius: BorderRadius.circular(AmiRadii.card),
-            border: Border.all(color: AmiColors.slate700),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (int i = 0; i < parsed.length; i++)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (final cell in parsed[i])
-                        Expanded(
-                          child: _inline(
-                            cell,
-                            i == 0
-                                ? AmiTypography.labelMono
-                                    .copyWith(color: AmiColors.hexBlue)
-                                : AmiTypography.body,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        ),
-      );
-      tableBuffer.clear();
-    }
-
-    for (final raw in lines) {
-      final l = raw.trimRight();
-      if (l.contains('|') && (l.trim().startsWith('|') || l.contains('| '))) {
-        flushPara();
-        flushList();
-        tableBuffer.add(l);
-        continue;
-      } else if (tableBuffer.isNotEmpty) {
-        flushTable();
-      }
-
-      if (l.startsWith('# ')) {
-        flushPara();
-        flushList();
-        widgets.add(Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 8),
-          child: Text(l.substring(2), style: AmiTypography.h2),
-        ));
-      } else if (l.startsWith('## ')) {
-        flushPara();
-        flushList();
-        widgets.add(Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 6),
-          child: Text(l.substring(3), style: AmiTypography.h3),
-        ));
-      } else if (l.startsWith('### ')) {
-        flushPara();
-        flushList();
-        widgets.add(Padding(
-          padding: const EdgeInsets.only(top: 6, bottom: 4),
-          child: Text(l.substring(4), style: AmiTypography.h4),
-        ));
-      } else if (l.startsWith('- ') || l.startsWith('* ')) {
-        flushPara();
-        listBuffer.add(l.substring(2));
-      } else if (RegExp(r'^\d+\.\s').hasMatch(l)) {
-        flushPara();
-        listBuffer.add(l.replaceFirst(RegExp(r'^\d+\.\s'), ''));
-      } else if (l.startsWith('> ')) {
-        flushPara();
-        flushList();
-        widgets.add(Container(
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: const BoxDecoration(
-            // Directional so the accent bar sits on the reading-start edge
-            // (left in LTR, right in RTL/Arabic) — CR087.
-            border: BorderDirectional(
-              start: BorderSide(color: AmiColors.hexBlue, width: 3),
-            ),
-          ),
-          child: _inline(l.substring(2), AmiTypography.body.copyWith(
-            fontStyle: FontStyle.italic, color: AmiColors.textMed,
-          )),
-        ));
-      } else if (l.trim().isEmpty) {
-        flushPara();
-        flushList();
-      } else {
-        if (paraBuffer.isNotEmpty) paraBuffer.write(' ');
-        paraBuffer.write(l);
-      }
-    }
-    flushPara();
-    flushList();
-    flushTable();
-
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: widgets);
-  }
-
-  /// Tokenise **bold**, *italic*, `code`, `{{term:id}}` and `{{lesson:id}}`
-  /// inline. Term tokens render as a tappable inline chip via WidgetSpan;
-  /// lesson tokens (CR053) do the same, deep-linking to that lesson's reader.
-  Widget _inline(String src, TextStyle base) {
-    final spans = <InlineSpan>[];
-    final pattern = RegExp(
-      r'(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\{\{term:[a-zA-Z0-9_]+\}\}|\{\{lesson:[a-zA-Z0-9_]+\}\})',
-    );
-    int cursor = 0;
-    for (final m in pattern.allMatches(src)) {
-      if (m.start > cursor) {
-        spans.add(TextSpan(text: src.substring(cursor, m.start), style: base));
-      }
-      final tok = m.group(0)!;
-      if (tok.startsWith('{{term:')) {
-        final id = tok.substring(7, tok.length - 2);
-        spans.add(WidgetSpan(
-          alignment: PlaceholderAlignment.middle,
-          child: _InlineTermChip(termId: id, baseStyle: base),
-        ));
-      } else if (tok.startsWith('{{lesson:')) {
-        final id = tok.substring(9, tok.length - 2);
-        spans.add(WidgetSpan(
-          alignment: PlaceholderAlignment.middle,
-          child: _InlineLessonChip(lessonId: id, baseStyle: base),
-        ));
-      } else if (tok.startsWith('**')) {
-        spans.add(TextSpan(
-          text: tok.substring(2, tok.length - 2),
-          style: base.copyWith(fontWeight: FontWeight.w700),
-        ));
-      } else if (tok.startsWith('*')) {
-        spans.add(TextSpan(
-          text: tok.substring(1, tok.length - 1),
-          style: base.copyWith(fontStyle: FontStyle.italic),
-        ));
-      } else if (tok.startsWith('`')) {
-        spans.add(TextSpan(
-          text: tok.substring(1, tok.length - 1),
-          style: base.copyWith(fontFamily: AmiTypography.jetBrains),
-        ));
-      }
-      cursor = m.end;
-    }
-    if (cursor < src.length) {
-      spans.add(TextSpan(text: src.substring(cursor), style: base));
-    }
-    return Text.rich(TextSpan(children: spans));
-  }
-}
-
-
-/// Compact inline term chip — same tap target as TermBlock but sized to
-/// flow inline with surrounding prose (no padding around the chip itself
-/// so line height stays consistent with the paragraph).
-class _InlineTermChip extends StatelessWidget {
-  const _InlineTermChip({required this.termId, required this.baseStyle});
-  final String termId;
-  final TextStyle baseStyle;
-
-  @override
-  Widget build(BuildContext context) {
-    final entry = TermRegistry.instance.get(termId);
-    if (entry == null) {
-      // Unknown id → render the prettified id inline as bold text.
-      return Text(
-        TermBlock.fallbackLabel(termId),
-        style: baseStyle.copyWith(fontWeight: FontWeight.w700),
-      );
-    }
-    return GestureDetector(
-      onTap: () => showTermSheet(context, termId),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: AmiColors.hexBlue, width: 1),
-          ),
-        ),
-        child: Text(
-          entry.term,
-          style: baseStyle.copyWith(
-            color: AmiColors.hexBlue,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-
-/// CR053 — inline chip for a `{{lesson:ID}}` token. Label is the target
-/// lesson's CR044 code (matches the tile/meta-bar badge); tap deep-links into
-/// that lesson's reader. Distinguished from `_InlineTermChip` by color (cyan,
-/// not blue) since it points at a lesson, not a glossary term.
-/// Degrades loudly (CR040): an id absent from the catalogue renders as plain
-/// text, never a dead tap.
-class _InlineLessonChip extends ConsumerWidget {
-  const _InlineLessonChip({required this.lessonId, required this.baseStyle});
-  final String lessonId;
-  final TextStyle baseStyle;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final catalogue = ref.watch(lessonsNotifierProvider).catalogue;
-    final meta = _findLessonMetaById(catalogue, lessonId);
-    if (meta == null) {
-      return Text(lessonId, style: baseStyle);
-    }
-    return GestureDetector(
-      onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => LessonReaderScreen(lessonId: meta.id),
-      )),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-        decoration: const BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: AmiColors.hexCyan, width: 1),
-          ),
-        ),
-        child: Text(
-          meta.codeLabel,
-          style: baseStyle.copyWith(
-            color: AmiColors.hexCyan,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Flat scan of the catalogue's tracks for a lesson id. Small enough
-/// (hundreds of lessons) that a lookup map isn't worth the extra state.
-LessonMeta? _findLessonMetaById(LessonCatalogue? catalogue, String id) {
-  if (catalogue == null) return null;
-  for (final track in catalogue.tracks) {
-    for (final m in track.lessons) {
-      if (m.id == id) return m;
-    }
-  }
-  return null;
-}
-
-
 /// CR053 — the lesson's `prerequisites` (already parsed into `LessonMeta`,
 /// never surfaced before). Renders nothing when the list is empty. Each
 /// prereq is a tappable chip (code + title) that deep-links into that
@@ -710,7 +470,7 @@ class _PrerequisitesRow extends ConsumerWidget {
               for (final id in prerequisites)
                 _PrerequisiteChip(
                   lessonId: id,
-                  meta: _findLessonMetaById(catalogue, id),
+                  meta: findLessonMetaById(catalogue, id),
                 ),
             ],
           ),
@@ -746,216 +506,6 @@ class _PrerequisiteChip extends StatelessWidget {
           '${m.codeLabel} · ${m.title}',
           style: AmiTypography.caption.copyWith(color: AmiColors.hexCyan),
         ),
-      ),
-    );
-  }
-}
-
-
-class _QuizCard extends StatelessWidget {
-  const _QuizCard({
-    required this.question,
-    required this.onSelect,
-    required this.selected,
-    required this.locked,
-    required this.revealResult,
-  });
-
-  final QuizQuestion question;
-  final int? selected;
-  final bool locked;
-  final bool revealResult;
-  final ValueChanged<int> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AmiSpacing.m),
-      decoration: BoxDecoration(
-        color: AmiColors.slate800,
-        borderRadius: BorderRadius.circular(AmiRadii.card),
-        border: Border.all(color: AmiColors.hexGreen),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(AppLocalizations.of(context).lessonReaderQuiz,
-              style: AmiTypography.labelMono.copyWith(color: AmiColors.hexGreen)),
-          const SizedBox(height: AmiSpacing.s),
-          Text(question.question, style: AmiTypography.body),
-          const SizedBox(height: AmiSpacing.s),
-          for (int i = 0; i < question.options.length; i++)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: InkWell(
-                onTap: locked ? null : () => onSelect(i),
-                borderRadius: BorderRadius.circular(AmiRadii.card),
-                child: Container(
-                  padding: const EdgeInsets.all(AmiSpacing.s),
-                  decoration: BoxDecoration(
-                    color: _bg(i),
-                    borderRadius: BorderRadius.circular(AmiRadii.card),
-                    border: Border.all(color: _border(i)),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(_icon(i), color: _border(i), size: 18),
-                      const SizedBox(width: AmiSpacing.s),
-                      Expanded(child: Text(question.options[i],
-                          style: AmiTypography.body)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          if (revealResult && question.explanation != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Container(
-                padding: const EdgeInsets.all(AmiSpacing.s),
-                decoration: BoxDecoration(
-                  color: AmiColors.slate900,
-                  borderRadius: BorderRadius.circular(AmiRadii.card),
-                ),
-                child: Text(question.explanation!, style: AmiTypography.caption),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Color _bg(int i) {
-    if (revealResult) {
-      if (i == question.answerIndex) return AmiColors.hexGreen.withValues(alpha: 0.15);
-      if (i == selected && i != question.answerIndex) {
-        return AmiColors.hexRed.withValues(alpha: 0.15);
-      }
-    }
-    if (selected == i) return AmiColors.slate900;
-    return AmiColors.slate900;
-  }
-
-  Color _border(int i) {
-    if (revealResult) {
-      if (i == question.answerIndex) return AmiColors.hexGreen;
-      if (i == selected && i != question.answerIndex) return AmiColors.hexRed;
-    }
-    if (selected == i) return AmiColors.hexBlue;
-    return AmiColors.slate700;
-  }
-
-  IconData _icon(int i) {
-    if (revealResult) {
-      if (i == question.answerIndex) return Icons.check_circle;
-      if (i == selected && i != question.answerIndex) return Icons.cancel;
-      return Icons.radio_button_unchecked;
-    }
-    return selected == i
-        ? Icons.radio_button_checked
-        : Icons.radio_button_unchecked;
-  }
-}
-
-
-class _ResultPanel extends StatelessWidget {
-  const _ResultPanel({
-    required this.result,
-    required this.onRetry,
-    required this.onDone,
-  });
-
-  final QuizResult result;
-  final VoidCallback onRetry;
-  final VoidCallback onDone;
-
-  @override
-  Widget build(BuildContext context) {
-    final passed = result.passed;
-    final l = AppLocalizations.of(context);
-    return Container(
-      padding: const EdgeInsets.all(AmiSpacing.m),
-      decoration: BoxDecoration(
-        color: AmiColors.slate800,
-        borderRadius: BorderRadius.circular(AmiRadii.card),
-        border: Border.all(
-          color: passed ? AmiColors.hexGreen : AmiColors.hexAmber,
-          width: 1.5,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                passed ? Icons.celebration : Icons.replay,
-                color: passed ? AmiColors.hexGreen : AmiColors.hexAmber,
-                size: 28,
-              ),
-              const SizedBox(width: AmiSpacing.s),
-              Text(passed ? l.lessonReaderPassed : l.lessonReaderNotQuite,
-                  style: AmiTypography.labelMono.copyWith(
-                      color: passed ? AmiColors.hexGreen : AmiColors.hexAmber)),
-            ],
-          ),
-          const SizedBox(height: AmiSpacing.s),
-          Text(l.lessonReaderCorrectOf(result.correct, result.total),
-              style: AmiTypography.statMid),
-          if (result.unlockedAgents.isNotEmpty) ...[
-            const SizedBox(height: AmiSpacing.m),
-            Text(l.lessonReaderAgentUnlocked,
-                style: AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber)),
-            const SizedBox(height: AmiSpacing.s),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final id in result.unlockedAgents)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      HexAvatar(
-                        label: agentById(id).abbreviation,
-                        color: agentById(id).color,
-                        size: 48,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(agentById(id).displayName,
-                          style: AmiTypography.body),
-                    ],
-                  ),
-              ],
-            ),
-          ],
-          const SizedBox(height: AmiSpacing.m),
-          Row(
-            children: [
-              if (!passed)
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AmiColors.hexAmber,
-                      side: const BorderSide(color: AmiColors.hexAmber),
-                    ),
-                    onPressed: onRetry,
-                    child: Text(l.lessonReaderTryAgain),
-                  ),
-                ),
-              if (!passed) const SizedBox(width: AmiSpacing.s),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AmiColors.hexGreen,
-                    foregroundColor: AmiColors.slate900,
-                  ),
-                  onPressed: onDone,
-                  child: Text(passed ? l.lessonReaderDone : l.lessonReaderBackToLessons),
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }

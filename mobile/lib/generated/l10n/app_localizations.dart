@@ -2386,6 +2386,84 @@ abstract class AppLocalizations {
   /// **'BACK TO LESSONS'**
   String get lessonReaderBackToLessons;
 
+  /// CR174 lesson reader mode toggle, left segment: the prose reader we shipped first. Uppercase, mono; keep it to one short word.
+  ///
+  /// In en, this message translates to:
+  /// **'BOOK'**
+  String get lessonModeBook;
+
+  /// CR174 lesson reader mode toggle, right segment: the beat deck with a draggable model. Uppercase, mono; keep it short enough to sit beside BOOK in a two-segment bar.
+  ///
+  /// In en, this message translates to:
+  /// **'INTERACTIVE'**
+  String get lessonModeInteractive;
+
+  /// CR174 label above the slider that drives a lesson's model. Tells the learner the picture responds to them. Uppercase, mono.
+  ///
+  /// In en, this message translates to:
+  /// **'DRAG TO EXPLORE'**
+  String get lessonPlayDragHint;
+
+  /// CR174 prompt on a card whose body is hidden until tapped (used for the lesson section called 'The trap'). Uppercase, mono.
+  ///
+  /// In en, this message translates to:
+  /// **'TAP TO REVEAL'**
+  String get lessonRevealTap;
+
+  /// CR174 accessibility tooltip on the beat deck's forward arrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Next card'**
+  String get lessonDeckNext;
+
+  /// CR174 accessibility tooltip on the beat deck's back arrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous card'**
+  String get lessonDeckBack;
+
+  /// CR174 heading on the beat deck's final card, where the graded quiz answers are submitted to the server together. Uppercase, mono.
+  ///
+  /// In en, this message translates to:
+  /// **'CHECK YOUR ANSWERS'**
+  String get lessonDeckCheckHeading;
+
+  /// CR174 lesson 013. Shown under the losing-streak model when the chosen risk-per-trade would break the learner's own mandated max drawdown. {n} is which loss in the streak first breaches it, {total} the streak length, {pct} their mandated ceiling in percent.
+  ///
+  /// In en, this message translates to:
+  /// **'Loss {n} of {total} puts you past the {pct}% drawdown ceiling on your own mandate.'**
+  String lessonPlayBreachStreak(int n, int total, int pct);
+
+  /// CR174 lesson 014. Shown under the position-sizing model when tightening the stop pushes the position past the learner's single-name concentration cap. {pct} and {cap} arrive pre-formatted with their percent sign.
+  ///
+  /// In en, this message translates to:
+  /// **'That is {pct} of the account in one name — past your {cap} single-name cap. The stop got tighter; the risk did not.'**
+  String lessonPlayBreachSingleName(String pct, String cap);
+
+  /// CR174 lesson 015. Shown under the stop-loss model when the chosen stop is inside the lesson's own intraday noise wick. {wick} and {close} arrive pre-formatted as currency.
+  ///
+  /// In en, this message translates to:
+  /// **'The stop now sits above the {wick} noise wick, so it fires on a day price closed back at {close} — stopped out without the thesis ever failing.'**
+  String lessonPlayBreachStopTooTight(String wick, String close);
+
+  /// CR174 lesson 016. Shown under the risk/reward model when the chosen target makes the reward smaller than the risk. {risk} and {reward} arrive pre-formatted as currency, {pct} with its percent sign.
+  ///
+  /// In en, this message translates to:
+  /// **'Risking {risk} to make {reward}. You now have to be right {pct} of the time just to break even.'**
+  String lessonPlayBreachRiskReward(String risk, String reward, String pct);
+
+  /// CR174 lesson 017. Shown under the correlation model when correlated positions push real open risk past the learner's own max-open-risk limit. {count} is the number of positions in the worked example; {real} and {limit} arrive pre-formatted with their percent sign.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} names at 1% each is {real} of real open risk — past the {limit} open-risk limit on your own mandate.'**
+  String lessonPlayBreachOpenRisk(int count, String real, String limit);
+
+  /// CR174 lesson 018. Shown under the drawdown model when the dragged depth is deeper than the learner's own mandated ceiling. {cap} is their ceiling, {depth} the dragged depth, {over} the difference — all whole percentage points.
+  ///
+  /// In en, this message translates to:
+  /// **'Your mandate halts new entries at {cap}% down. This hole is {depth}% — the PM stopped you {over} points ago.'**
+  String lessonPlayBreachDrawdownCeiling(int cap, int depth, int over);
+
   /// No description provided for @settingsHeading.
   ///
   /// In en, this message translates to:

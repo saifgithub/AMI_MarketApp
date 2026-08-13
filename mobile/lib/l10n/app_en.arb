@@ -1600,6 +1600,86 @@
     "lessonReaderTryAgain": "TRY AGAIN",
     "lessonReaderDone": "DONE",
     "lessonReaderBackToLessons": "BACK TO LESSONS",
+    "lessonModeBook": "BOOK",
+    "@lessonModeBook": {
+        "description": "CR174 lesson reader mode toggle, left segment: the prose reader we shipped first. Uppercase, mono; keep it to one short word."
+    },
+    "lessonModeInteractive": "INTERACTIVE",
+    "@lessonModeInteractive": {
+        "description": "CR174 lesson reader mode toggle, right segment: the beat deck with a draggable model. Uppercase, mono; keep it short enough to sit beside BOOK in a two-segment bar."
+    },
+    "lessonPlayDragHint": "DRAG TO EXPLORE",
+    "@lessonPlayDragHint": {
+        "description": "CR174 label above the slider that drives a lesson's model. Tells the learner the picture responds to them. Uppercase, mono."
+    },
+    "lessonRevealTap": "TAP TO REVEAL",
+    "@lessonRevealTap": {
+        "description": "CR174 prompt on a card whose body is hidden until tapped (used for the lesson section called 'The trap'). Uppercase, mono."
+    },
+    "lessonDeckNext": "Next card",
+    "@lessonDeckNext": {
+        "description": "CR174 accessibility tooltip on the beat deck's forward arrow."
+    },
+    "lessonDeckBack": "Previous card",
+    "@lessonDeckBack": {
+        "description": "CR174 accessibility tooltip on the beat deck's back arrow."
+    },
+    "lessonDeckCheckHeading": "CHECK YOUR ANSWERS",
+    "@lessonDeckCheckHeading": {
+        "description": "CR174 heading on the beat deck's final card, where the graded quiz answers are submitted to the server together. Uppercase, mono."
+    },
+    "lessonPlayBreachStreak": "Loss {n} of {total} puts you past the {pct}% drawdown ceiling on your own mandate.",
+    "@lessonPlayBreachStreak": {
+        "description": "CR174 lesson 013. Shown under the losing-streak model when the chosen risk-per-trade would break the learner's own mandated max drawdown. {n} is which loss in the streak first breaches it, {total} the streak length, {pct} their mandated ceiling in percent.",
+        "placeholders": {
+            "n": { "type": "int" },
+            "total": { "type": "int" },
+            "pct": { "type": "int" }
+        }
+    },
+    "lessonPlayBreachSingleName": "That is {pct} of the account in one name — past your {cap} single-name cap. The stop got tighter; the risk did not.",
+    "@lessonPlayBreachSingleName": {
+        "description": "CR174 lesson 014. Shown under the position-sizing model when tightening the stop pushes the position past the learner's single-name concentration cap. {pct} and {cap} arrive pre-formatted with their percent sign.",
+        "placeholders": {
+            "pct": { "type": "String" },
+            "cap": { "type": "String" }
+        }
+    },
+    "lessonPlayBreachStopTooTight": "The stop now sits above the {wick} noise wick, so it fires on a day price closed back at {close} — stopped out without the thesis ever failing.",
+    "@lessonPlayBreachStopTooTight": {
+        "description": "CR174 lesson 015. Shown under the stop-loss model when the chosen stop is inside the lesson's own intraday noise wick. {wick} and {close} arrive pre-formatted as currency.",
+        "placeholders": {
+            "wick": { "type": "String" },
+            "close": { "type": "String" }
+        }
+    },
+    "lessonPlayBreachRiskReward": "Risking {risk} to make {reward}. You now have to be right {pct} of the time just to break even.",
+    "@lessonPlayBreachRiskReward": {
+        "description": "CR174 lesson 016. Shown under the risk/reward model when the chosen target makes the reward smaller than the risk. {risk} and {reward} arrive pre-formatted as currency, {pct} with its percent sign.",
+        "placeholders": {
+            "risk": { "type": "String" },
+            "reward": { "type": "String" },
+            "pct": { "type": "String" }
+        }
+    },
+    "lessonPlayBreachOpenRisk": "{count} names at 1% each is {real} of real open risk — past the {limit} open-risk limit on your own mandate.",
+    "@lessonPlayBreachOpenRisk": {
+        "description": "CR174 lesson 017. Shown under the correlation model when correlated positions push real open risk past the learner's own max-open-risk limit. {count} is the number of positions in the worked example; {real} and {limit} arrive pre-formatted with their percent sign.",
+        "placeholders": {
+            "count": { "type": "int" },
+            "real": { "type": "String" },
+            "limit": { "type": "String" }
+        }
+    },
+    "lessonPlayBreachDrawdownCeiling": "Your mandate halts new entries at {cap}% down. This hole is {depth}% — the PM stopped you {over} points ago.",
+    "@lessonPlayBreachDrawdownCeiling": {
+        "description": "CR174 lesson 018. Shown under the drawdown model when the dragged depth is deeper than the learner's own mandated ceiling. {cap} is their ceiling, {depth} the dragged depth, {over} the difference — all whole percentage points.",
+        "placeholders": {
+            "cap": { "type": "int" },
+            "depth": { "type": "int" },
+            "over": { "type": "int" }
+        }
+    },
     "settingsHeading": "SETTINGS",
     "settingsMandateVersion": "mandate v{version}",
     "@settingsMandateVersion": {
