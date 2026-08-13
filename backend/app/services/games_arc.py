@@ -56,6 +56,7 @@ from app.db.models import GameEntryRow, GameFieldRow, SimPortfolioRow
 from app.services import games_board
 from app.services.games_scoring import contribution_by_ticker
 from app.services.games_scoring_pass import trade_legs_for_run
+from app.services.games_service import _as_utc
 
 # How many days before the end the run enters its FINAL STRETCH — the beat
 # §10 calls the anticipation engine (*"3 days left. You're 4th. 2nd is 1.1%
@@ -87,24 +88,57 @@ class ArcNotAvailable(Exception):
     else — same posture as `games_board.BoardNotAvailable`."""
 
 
-def phase_for(field_state: str, entry_state: str, cadence: str, days_left: int) -> str:
-    """Which §10 beat a run is in, from state the caller already holds.
+def phase_for(
+    field_state: str,
+    entry_state: str,
+    cadence: str,
+    days_left: int,
+    *,
+    now: datetime | None = None,
+    locks_at: datetime | None = None,
+    starts_on: date | None = None,
+) -> str:
+    """Which §10 beat a run is in.
 
     Public and argument-only so `games_service.list_live_runs` can stamp a
     phase on every live run without a second query or a board scan — the
     home screen renders one line per cadence, and paying for a field rank
     per line to print "3 days left" is the cost `arc_for_run` refuses.
+
+    **DEF281 — the pre-close beats are derived from the CLOCK, not from
+    `game_fields.state`.** That column is refreshed only for the field
+    `ensure_field` is currently targeting, which mid-period is the NEXT
+    period's row; its own docstring warns that a locked or live field can
+    therefore hold a stale state. Measured on Alpha 2026-08-13: the weekly
+    field that locked on 08-10 still read `entry_open` three days into its
+    own run, so this told a player mid-run that entries were closing — on a
+    field that had locked, with a countdown that had run out days earlier.
+
+    The column IS authoritative for the terminal beats, and only those:
+    `settling`, `closed`, `archived` and `abandoned` are written by the
+    scoring pass, which is the one thing that does advance a field. Read the
+    clock for what the clock knows; read the column for what only the pass
+    knows. Timestamps are optional so an older caller degrades to the column
+    rather than raising.
     """
-    if entry_state in ("finished", "void", "forfeited") or field_state in (
-        "closed", "archived",
-    ):
+    if entry_state in ("finished", "void", "forfeited"):
+        return PHASE_CLOSED
+    if field_state in ("closed", "archived", "abandoned"):
         return PHASE_CLOSED
     if field_state == "settling":
         return PHASE_SETTLING
-    if field_state in ("announced", "entry_open"):
-        return PHASE_ENTRY_OPEN
-    if field_state == "locked":
-        return PHASE_BELL
+
+    if now is not None and locks_at is not None:
+        if now < locks_at:
+            return PHASE_ENTRY_OPEN
+        if starts_on is not None and now.astimezone(timezone.utc).date() < starts_on:
+            return PHASE_BELL
+    else:
+        if field_state in ("announced", "entry_open"):
+            return PHASE_ENTRY_OPEN
+        if field_state == "locked":
+            return PHASE_BELL
+
     if days_left <= FINAL_STRETCH_DAYS.get(cadence, 2):
         return PHASE_FINAL_STRETCH
     return PHASE_LIVE
@@ -201,7 +235,10 @@ def arc_for_run(user_id: UUID, run_id: UUID, *, now: datetime | None = None) -> 
     entry_state, field = row
     ends_on: date = field.ends_on
     days_left = max((ends_on - today).days, 0)
-    phase = phase_for(field.state, entry_state, field.cadence, days_left)
+    phase = phase_for(
+        field.state, entry_state, field.cadence, days_left,
+        now=now, locks_at=_as_utc(field.locks_at), starts_on=field.starts_on,
+    )
 
     board = games_board.board_for_run(user_id, run_id)
     gap_pct, gap_rank = _gap_to_next(board["rows"], board["your_rank"])

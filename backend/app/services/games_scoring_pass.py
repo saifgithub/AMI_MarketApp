@@ -186,10 +186,34 @@ def run_scoring_pass(
     today_et = now.astimezone(_ET).date()
 
     with get_session() as s:
+        # DEF281 — due is decided by the CALENDAR, not by the `state` column.
+        #
+        # `ensure_field` only refreshes the state of the field it is currently
+        # TARGETING, which mid-period is next period's row (its own docstring
+        # says so). Nothing else advances a calendar field, so this week's row
+        # sits at `entry_open` for the entire week it is actually live. This
+        # query used to require `state == "live"` and therefore matched it
+        # never — measured on Alpha 2026-08-13: the weekly field that locked
+        # on 08-10 was still `entry_open` with 4 active runs in it, ending
+        # 08-14, on track to be skipped by every pass forever. Silently: no
+        # error, no log, just four runs that never close.
+        #
+        # `games_desks.fields_in_lock_window` already hit this exact wall and
+        # already derives from timestamps, with a docstring saying "filtering
+        # on the stale column would have found nothing, every week, silently."
+        # That fix was applied to one query and not to its sibling.
+        #
+        # The predicate that does not rot: the period is over and the field
+        # was never finished. `abandoned` is excluded because a rolling lobby
+        # that never filled has no result to score (§12) — closing it here
+        # would mint a close for a contest that did not happen.
         due_live_ids = [
             row.id for row in s.execute(
                 select(GameFieldRow.id).where(
-                    GameFieldRow.state == "live", GameFieldRow.ends_on < today_et,
+                    GameFieldRow.ends_on < today_et,
+                    GameFieldRow.state.notin_(
+                        ("closed", "archived", "abandoned", "settling"),
+                    ),
                 )
             ).all()
         ]
@@ -227,7 +251,15 @@ def _close_field(field_id: UUID, *, sim: SimEngine, now: datetime) -> dict[str, 
         field_row = s.execute(
             select(GameFieldRow).where(GameFieldRow.id == field_id)
         ).scalar_one_or_none()
-        if field_row is None or field_row.state not in ("live", "settling"):
+        # DEF281 — the same widening as the candidate query above, and it has
+        # to be the same or the two disagree: a field selected by the caller
+        # and then refused here is a pass that reports zero work done and
+        # gives no reason. `abandoned` stays out (nothing to score), and so do
+        # `closed`/`archived` (already settled — re-scoring would change a
+        # result the player has been shown).
+        if field_row is None or field_row.state in (
+            "closed", "archived", "abandoned",
+        ):
             return None
         field = _FieldSnap(
             id=field_row.id, cadence=field_row.cadence,

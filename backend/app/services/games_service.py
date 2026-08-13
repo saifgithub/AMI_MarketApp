@@ -618,7 +618,11 @@ def list_live_runs(user_id: UUID) -> list[dict]:
             # run is in, so the home card can say "entries close in 2h" or
             # "final stretch" without a round trip per row. Derived from
             # state already in hand; no board scan, no second query.
-            "phase": phase_for(field.state, entry.state, field.cadence, days_left),
+            "phase": phase_for(
+                field.state, entry.state, field.cadence, days_left,
+                now=datetime.now(timezone.utc), locks_at=_as_utc(field.locks_at),
+                starts_on=field.starts_on,
+            ),
             "locks_at": field.locks_at.isoformat(),
             "starts_on": field.starts_on.isoformat(),
             "ends_on": field.ends_on.isoformat(),
