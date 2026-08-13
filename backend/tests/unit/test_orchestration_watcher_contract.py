@@ -153,8 +153,40 @@ def test_stale_heartbeat_turns_the_architect_inbox_red(tmp_path: Path):
     _stamp(cr, "auditor", age_seconds=3600, interval=30)
     after = _run(_DISPATCH, "inbox", env_extra=env)
 
-    assert after.returncode == 1, f"a dead watcher must fail the gate:\n{after.stdout}"
+    # DEF277 split the non-zero codes: 1 = a verdict awaits integration or a
+    # submission of yours never reached the auditor; 2 = no watcher is serving
+    # the queue. The claim this test makes — "a dead watcher must fail the
+    # Architect's per-work-unit gate" — is unchanged and still enforced, since
+    # every `if ! dispatch.sh inbox` caller refuses on both. Only the promotion
+    # gate distinguishes, because an idle audit fleet says nothing about the
+    # code being shipped.
+    #
+    # Asserted as the SPECIFIC code rather than relaxed to `!= 0`: loosening a
+    # guard to accommodate a change is the DEF243 mistake, and pinning 2 here
+    # makes this test encode the split instead of tolerating it.
+    assert after.returncode == 2, (
+        f"a dead watcher must fail the gate, with the code that means "
+        f"'nobody is serving the queue':\n{after.stdout}")
     assert "NO AUDITOR WATCHER" in after.stdout, after.stdout
+
+
+def test_a_returned_verdict_outranks_a_dead_watcher(tmp_path: Path):
+    """DEF277's load-bearing case. The split exists to stop an idle fleet
+    blocking a promotion — never to let a real verdict through. With BOTH
+    conditions true, `hot` must win and the gate must return 1, because that is
+    the code `/promote-to-alpha` aborts on."""
+    cr = _populated_audit_dir(tmp_path)
+    lanes = _lane_dir_for(cr)
+    env = {"DISPATCH_LANE_DIR": str(lanes), "DISPATCH_AUDIT_DIR": str(cr)}
+
+    (cr / "T9.architect.md").write_text("SUBMITTED: round 1\n")
+    (cr / "T9.auditor.md").write_text("VERDICT: AWAITING_FIXES (round 1)\n")
+    _stamp(cr, "auditor", age_seconds=3600, interval=30)
+
+    r = _run(_DISPATCH, "inbox", env_extra=env)
+    assert r.returncode == 1, (
+        "a verdict awaiting integration must outrank a dead watcher — otherwise "
+        f"the AT:R66 guarantee is weakened by DEF277's split:\n{r.stdout}")
 
 
 def test_killed_watcher_leaves_the_stamp_that_makes_it_visible(tmp_path: Path):

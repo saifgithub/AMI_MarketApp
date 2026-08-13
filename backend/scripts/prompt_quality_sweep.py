@@ -407,6 +407,64 @@ _INDICATOR_WINDOW = re.compile(
 _CLAUSE_BREAK = re.compile(r"[.;:]\s|\n")
 _EMPHASIS = re.compile(r"\*\*|__")
 
+# DEF279 — three false-positive classes the 2026-08-07 baseline (n=30) was too
+# small to expose and the 2026-08-13 corpus (n=82) showed at 11/82 = 13.4%. All
+# eleven were hand-read; **none was a model error.** M7 is the only deterministic
+# scorer that could gate a commit, and a gate that is wrong 13.4% of the time
+# blocks correct work — the same "a check whose failing state is its normal
+# state" pathology CR175 F5 is about, arriving in the instrument instead of the
+# pipeline.
+#
+# (a) TWO EVENTS, ONE CLAUSE. "the FOMC decision in 34 days and Q4 earnings on
+#     2026-11-03" — the count belongs to the FOMC, the date to earnings, and
+#     `_CLAUSE_BREAK` cannot see it because "and" is not a clause break. 7 of 11.
+#     Fixed by refusing a pair whose span contains a SECOND event noun: if two
+#     event words sit between the number and the date, they are not one claim.
+_EVENT_NOUN = re.compile(
+    r"\b(fomc|earnings|cpi|ppi|fed|jackson\s+hole|guidance|dividend|ex-div"
+    r"|expiry|expiration|split|ipo|lockup|catalyst)\b", re.IGNORECASE)
+# (b) THE DATE IS THE ANCHOR, NOT THE TARGET. "34 days from the reference date
+#     of 2026-08-13", "2026-08-13 + 34 days", "anchored at 2026-08-13". The
+#     distance is measured FROM the date, so `date - as_of` is 0 by construction
+#     and every such sentence scores as a 34-day error. 3 of 11.
+#     Modifiers stack ("the current anchor date of"), so the qualifier group
+#     repeats — a single optional word missed two of the three real cases.
+#     Handled in BOTH orders: "34 days from <date>" and "<date> + 34 days".
+_ANCHOR_PHRASE = re.compile(
+    r"(?:from|since|relative\s+to|as\s+of|after|before)\s+(?:the\s+)?"
+    r"(?:(?:reference|anchor|current|as[- ]of|fact\s+sheet|sheet|prompt)\s+)*"
+    r"date\s*(?:of\s*)?",
+    re.IGNORECASE)
+#     "<date> + 34 days" reads as arithmetic ON the anchor. Checked in the few
+#     characters immediately before the count rather than anywhere in the span,
+#     so an ordinary hyphen elsewhere in the sentence cannot suppress a real pair.
+_ANCHOR_ARITHMETIC = re.compile(r"[+]|\bplus\b|\bminus\b", re.IGNORECASE)
+# (c) LOOKBACK WINDOW, NOT AN OFFSET. "Reddit snapshot from 2026-08-07 shows 10
+#     mentions over 7 days" — "over N days" is a window, exactly like the
+#     "20-day average" case `_INDICATOR_WINDOW` already masks, but phrased after
+#     the number instead of before it. 1 of 11.
+_LOOKBACK = re.compile(
+    r"\b(?:over|across|during|in\s+the\s+(?:last|past|prior|trailing))\s+(?:the\s+)?"
+    r"(?:last\s+|past\s+|prior\s+|trailing\s+)?\d{1,4}[\s-]*days?\b",
+    re.IGNORECASE)
+
+
+def _nearest_event(text: str, at: int, reach: int = 55) -> str | None:
+    """The event noun a claim at `at` attaches to — nearest within `reach` chars.
+
+    DEF279 (a). Ties go to the LEFT: English puts the event before its timing
+    ("the FOMC decision in 34 days", "Q4 earnings on 2026-11-03"), so when a
+    noun sits equally close on both sides the left one is the referent.
+    """
+    left = _EVENT_NOUN.search(text[max(0, at - reach):at][::-1][::-1])
+    lefts = list(_EVENT_NOUN.finditer(text[max(0, at - reach):at]))
+    rights = list(_EVENT_NOUN.finditer(text[at:at + reach]))
+    l = (at - (max(0, at - reach) + lefts[-1].end()), lefts[-1].group(0).lower()) if lefts else None
+    r = (rights[0].start(), rights[0].group(0).lower()) if rights else None
+    if l and r:
+        return l[1] if l[0] <= r[0] else r[1]
+    return (l or r or (None, None))[1]
+
 
 def _as_of(prompt: str) -> date | None:
     m = _ASOF_RE.search(prompt or "")
@@ -463,6 +521,10 @@ def m7_date_accuracy(turns: list[dict], window: int = 90,
         reply = _EMPHASIS.sub(lambda m: " " * len(m.group(0)),
                               t.get("response_text") or "")
         masked = _INDICATOR_WINDOW.sub(lambda m: "#" * len(m.group(0)), reply)
+        # DEF279 (c): "over 7 days" is a lookback window, same category as the
+        # "20-day average" the mask above already removes — just phrased after
+        # the number rather than before it.
+        masked = _LOOKBACK.sub(lambda m: "#" * len(m.group(0)), masked)
 
         dates = _iso_dates(masked)
         counts = [(m.group(1), int(m.group(1)), m.start())
@@ -470,10 +532,34 @@ def m7_date_accuracy(turns: list[dict], window: int = 90,
         used_counts: set[int] = set()
 
         for raw_d, parsed, pos in dates:
-            near = [(c, n, cp) for c, n, cp in counts
-                    if abs(cp - pos) <= window and cp not in used_counts
-                    and not _CLAUSE_BREAK.search(
-                        masked[min(cp, pos):max(cp, pos)])]
+            near = []
+            for c, n, cp in counts:
+                if abs(cp - pos) > window or cp in used_counts:
+                    continue
+                span = masked[min(cp, pos):max(cp, pos)]
+                if _CLAUSE_BREAK.search(span):
+                    continue
+                # DEF279 (b): the date is the ANCHOR the count is measured
+                # from ("34 days from the current anchor date of 2026-08-13",
+                # "2026-08-13 + 34 days"), so `date - as_of` is 0 by
+                # construction and the pair is vacuous in both orders.
+                between = masked[min(cp, pos):max(cp, pos)]
+                if _ANCHOR_PHRASE.search(between) or (
+                        pos < cp
+                        and _ANCHOR_ARITHMETIC.search(masked[max(0, cp - 8):cp])):
+                    continue
+                # DEF279 (a): a count and a date describe the same event only if
+                # they attach to the SAME event noun. The first cut looked only
+                # BETWEEN them and missed 6 of 7 real cases, because the nouns
+                # sit outside: "FOMC decision in 34 days, aiming to hold through
+                # the 2026-11-03 earnings report" has FOMC before the count and
+                # earnings after the date, with nothing in between. So: find the
+                # nearest event noun to each end, and refuse the pair when they
+                # are different words.
+                if _nearest_event(masked, cp) and _nearest_event(masked, pos) \
+                        and _nearest_event(masked, cp) != _nearest_event(masked, pos):
+                    continue
+                near.append((c, n, cp))
             if not near:
                 lone_dates += 1
                 if len(unscored) < 30:
