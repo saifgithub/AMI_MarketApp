@@ -35,6 +35,7 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/journal/journal_screen.dart';
 import 'package:ami_trade/screens/journal/journal_trash_screen.dart';
 import 'package:ami_trade/screens/settings/settings_screen.dart';
+import 'package:ami_trade/screens/you/insights_section.dart';
 import 'package:ami_trade/screens/you/you_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/theme/hex_clipper.dart';
@@ -52,6 +53,7 @@ class YouScreen extends ConsumerWidget {
   static const _panes = <Widget>[
     SettingsScreen(embedded: true),
     JournalScreen(embedded: true),
+    InsightsSection(),
   ];
 
   Future<void> _select(
@@ -150,6 +152,7 @@ class YouScreen extends ConsumerWidget {
                   trailing: settings.dirty ? const _DirtyPip() : null,
                 ),
                 AmiSegment(label: l.journalTabUpper),
+                AmiSegment(label: l.youSegmentInsights),
               ],
             ),
             Expanded(child: IndexedStack(index: segment.index, children: _panes)),

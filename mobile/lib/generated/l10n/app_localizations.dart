@@ -322,6 +322,186 @@ abstract class AppLocalizations {
   /// **'Report a problem'**
   String get settingsReportProblem;
 
+  /// CR178 — third segment of YOU. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'INSIGHTS'**
+  String get youSegmentInsights;
+
+  /// CR178 — the window label when the journal read hit its 100-entry cap. Every card states its window: past 100 an unlabelled aggregate would describe the most recent 100 while presenting itself as all-time. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'your last {count} decisions'**
+  String insightsWindowCapped(int count);
+
+  /// CR178 — the window label when the user has fewer than 100 entries. Saying 'last 100' to someone with 12 is the same lie pointing the other way. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'all {count} of your decisions'**
+  String insightsWindowAll(int count);
+
+  /// CR178 — empty state. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NOTHING TO AGGREGATE YET'**
+  String get insightsEmptyHeading;
+
+  /// CR178 — empty state. Says what fills it, rather than apologising. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Close a trade, run the Room, or take a daily challenge. This fills in from your own decisions — it has nothing to show until you have made some.'**
+  String get insightsEmptyBody;
+
+  /// CR178 — card 1. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'HOW YOUR TRADES ENDED'**
+  String get insightsTradesTitle;
+
+  /// CR178 — a trade closed by the target being hit. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'target hit'**
+  String get insightsTradesWon;
+
+  /// CR178 — a trade closed by the stop being hit. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'stop hit'**
+  String get insightsTradesLost;
+
+  /// CR178 — a trade the user closed by hand. Phrased in the second person because that is the finding: you acted, not the level. Note a manual close AT the target still counts here — correctly. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'you closed it'**
+  String get insightsTradesManual;
+
+  /// CR178 — why this card is the strongest of the five. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Closing by hand before your stop or target means overriding the plan you wrote. That is a habit, and habits are what you are here to change.'**
+  String get insightsTradesNote;
+
+  /// CR178 — closed trades whose tags matched no known ending. Disclosed rather than dropped: silently discarding rows makes every percentage above wrong by an amount nobody can see. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count} closed {count, plural, =1{trade} other{trades}} could not be classified and are not in the bars above.'**
+  String insightsTradesUnclassified(int count);
+
+  /// CR178 — card 2. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'WHAT YOUR PM DECIDED'**
+  String get insightsVerdictTitle;
+
+  /// CR178 — PM verdict APPROVE. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'approved'**
+  String get insightsVerdictApprove;
+
+  /// CR178 — PM verdict MODIFY. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'modified'**
+  String get insightsVerdictModify;
+
+  /// CR178 — PM verdict REJECT. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'rejected'**
+  String get insightsVerdictReject;
+
+  /// CR178 — PM verdict PASS (nothing fits the mandate today). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'passed'**
+  String get insightsVerdictPass;
+
+  /// CR178 — PM verdict NO_VERDICT (CR098). Its own outcome, never folded into REJECT. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'no verdict'**
+  String get insightsVerdictNoVerdict;
+
+  /// CR178 — the disclosure that keeps NO VERDICT from reading as a rejection. Folding it into REJECT tells the user their idea was turned down when it was never judged. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NO VERDICT is not a rejection. The PM declined to rule because the run had no market read — your idea was never judged.'**
+  String get insightsVerdictNoVerdictNote;
+
+  /// CR178 — Room runs whose payload.verdict is null (failed or cancelled). Excluded from the mix, never counted as PASS, and surfaced so the totals reconcile. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count} {count, plural, =1{run} other{runs}} ended before a verdict was recorded and are not counted.'**
+  String insightsVerdictUnrecorded(int count);
+
+  /// CR178 — card 3. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'ANALYSTS YOU SOUGHT OUT'**
+  String get insightsAnalystsTitle;
+
+  /// CR178 — states what this is NOT, because the obvious source (ROOM_RUN.agents_involved) would report participation and label it readership. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'1-on-1s, briefs and unlocks — who you went to. Not who spoke in the Room: all twelve speak every run.'**
+  String get insightsAnalystsNote;
+
+  /// CR178 — card 4. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'HOW YOUR MANDATE HAS MOVED'**
+  String get insightsMandateTitle;
+
+  /// CR178 — number of mandate EDITS, not fields changed: the Day Trader preset sets seven limits in one edit and must render as one event. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 edit} other{{count} edits}}'**
+  String insightsMandateEdits(int count);
+
+  /// CR178 — the limit moved in the direction that gives the user more rope. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'loosened'**
+  String get insightsMandateLoosened;
+
+  /// CR178 — the limit moved in the restricting direction. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'tightened'**
+  String get insightsMandateTightened;
+
+  /// CR178 — edits happened but no tracked limit moved. Stated rather than left as an empty card. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No limit moved. The edits changed something else.'**
+  String get insightsMandateNoMoves;
+
+  /// CR178 — card 5. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'DAILY CHALLENGE BY TYPE'**
+  String get insightsChallengeTitle;
+
+  /// CR178 — a challenge type's record. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{correct}/{attempts} correct'**
+  String insightsChallengeRow(int correct, int attempts);
+
+  /// CR178 — challenge rows carry a difficulty, so an unweighted comparison must say so. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Not weighted by difficulty — an easy question and a hard one count the same here.'**
+  String get insightsChallengeUnweighted;
+
+  /// CR178 — types under the 5-attempt threshold are named rather than dropped: a 1/1 bar reading 100% is the failure mode this threshold exists for. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count} {count, plural, =1{type has} other{types have}} fewer than 5 attempts and {count, plural, =1{is} other{are}} not shown.'**
+  String insightsChallengeOmitted(int count);
+
   /// No description provided for @floorConciergeHeading.
   ///
   /// In en, this message translates to:

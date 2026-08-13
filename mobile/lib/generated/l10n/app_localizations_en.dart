@@ -128,6 +128,146 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsReportProblem => 'Report a problem';
 
   @override
+  String get youSegmentInsights => 'INSIGHTS';
+
+  @override
+  String insightsWindowCapped(int count) {
+    return 'your last $count decisions';
+  }
+
+  @override
+  String insightsWindowAll(int count) {
+    return 'all $count of your decisions';
+  }
+
+  @override
+  String get insightsEmptyHeading => 'NOTHING TO AGGREGATE YET';
+
+  @override
+  String get insightsEmptyBody =>
+      'Close a trade, run the Room, or take a daily challenge. This fills in from your own decisions — it has nothing to show until you have made some.';
+
+  @override
+  String get insightsTradesTitle => 'HOW YOUR TRADES ENDED';
+
+  @override
+  String get insightsTradesWon => 'target hit';
+
+  @override
+  String get insightsTradesLost => 'stop hit';
+
+  @override
+  String get insightsTradesManual => 'you closed it';
+
+  @override
+  String get insightsTradesNote =>
+      'Closing by hand before your stop or target means overriding the plan you wrote. That is a habit, and habits are what you are here to change.';
+
+  @override
+  String insightsTradesUnclassified(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'trades',
+      one: 'trade',
+    );
+    return '$count closed $_temp0 could not be classified and are not in the bars above.';
+  }
+
+  @override
+  String get insightsVerdictTitle => 'WHAT YOUR PM DECIDED';
+
+  @override
+  String get insightsVerdictApprove => 'approved';
+
+  @override
+  String get insightsVerdictModify => 'modified';
+
+  @override
+  String get insightsVerdictReject => 'rejected';
+
+  @override
+  String get insightsVerdictPass => 'passed';
+
+  @override
+  String get insightsVerdictNoVerdict => 'no verdict';
+
+  @override
+  String get insightsVerdictNoVerdictNote =>
+      'NO VERDICT is not a rejection. The PM declined to rule because the run had no market read — your idea was never judged.';
+
+  @override
+  String insightsVerdictUnrecorded(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'runs',
+      one: 'run',
+    );
+    return '$count $_temp0 ended before a verdict was recorded and are not counted.';
+  }
+
+  @override
+  String get insightsAnalystsTitle => 'ANALYSTS YOU SOUGHT OUT';
+
+  @override
+  String get insightsAnalystsNote =>
+      '1-on-1s, briefs and unlocks — who you went to. Not who spoke in the Room: all twelve speak every run.';
+
+  @override
+  String get insightsMandateTitle => 'HOW YOUR MANDATE HAS MOVED';
+
+  @override
+  String insightsMandateEdits(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count edits',
+      one: '1 edit',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get insightsMandateLoosened => 'loosened';
+
+  @override
+  String get insightsMandateTightened => 'tightened';
+
+  @override
+  String get insightsMandateNoMoves =>
+      'No limit moved. The edits changed something else.';
+
+  @override
+  String get insightsChallengeTitle => 'DAILY CHALLENGE BY TYPE';
+
+  @override
+  String insightsChallengeRow(int correct, int attempts) {
+    return '$correct/$attempts correct';
+  }
+
+  @override
+  String get insightsChallengeUnweighted =>
+      'Not weighted by difficulty — an easy question and a hard one count the same here.';
+
+  @override
+  String insightsChallengeOmitted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'types have',
+      one: 'type has',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'are',
+      one: 'is',
+    );
+    return '$count $_temp0 fewer than 5 attempts and $_temp1 not shown.';
+  }
+
+  @override
   String get floorConciergeHeading => 'AMI CONCIERGE';
 
   @override

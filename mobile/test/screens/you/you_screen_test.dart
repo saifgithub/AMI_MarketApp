@@ -17,6 +17,8 @@ import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/journal/journal_screen.dart';
 import 'package:ami_trade/screens/settings/settings_screen.dart';
+import 'package:ami_trade/screens/you/insights_data.dart';
+import 'package:ami_trade/screens/you/insights_providers.dart';
 import 'package:ami_trade/screens/you/you_providers.dart';
 import 'package:ami_trade/screens/you/you_screen.dart';
 import 'package:ami_trade/state/journal_providers.dart';
@@ -71,6 +73,9 @@ Future<ProviderContainer> _pump(WidgetTester t) async {
         (ref) => _FixedMandateNotifier(ref, MandateState(mandate: _mandate()))),
     journalNotifierProvider.overrideWith(
         (ref) => _FixedJournalNotifier(ref, const JournalState())),
+    // The INSIGHTS pane is built (not painted) by the IndexedStack, so without
+    // this its fetch fires on every pump and leaves a pending timer.
+    insightsProvider.overrideWith((ref) async => const InsightsData(entryCount: 0)),
   ]);
   addTearDown(container.dispose);
 
@@ -99,7 +104,8 @@ void main() {
 
     expect(container.read(youSegmentProvider), YouSegment.settings);
     final bar = t.widget<AmiSegmentBar>(find.byType(AmiSegmentBar));
-    expect(bar.segments.map((s) => s.label).toList(), ['SETTINGS', 'JOURNAL']);
+    expect(bar.segments.map((s) => s.label).toList(),
+        ['SETTINGS', 'JOURNAL', 'INSIGHTS']);
     expect(bar.selected, 0);
   });
 

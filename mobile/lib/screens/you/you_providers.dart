@@ -23,9 +23,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// The segments of `YOU`, in on-screen order.
 ///
-/// CR178 inserts `insights` after `journal`. The bar sizes with `Expanded`, so
-/// that is one line here plus one pane — not a re-layout.
-enum YouSegment { settings, journal }
+/// CR133 shipped this at two and CR178 inserted `insights` — one line here plus
+/// one pane, exactly as designed, because the bar sizes with `Expanded` and was
+/// asserted at three before the third existed.
+enum YouSegment { settings, journal, insights }
 
 final youSegmentProvider =
     StateProvider<YouSegment>((ref) => YouSegment.settings);
