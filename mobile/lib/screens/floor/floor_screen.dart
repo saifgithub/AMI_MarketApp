@@ -6,6 +6,7 @@ library;
 import 'package:ami_trade/features/games/games_gate.dart';
 import 'package:ami_trade/features/tour/floor_tour.dart';
 import 'package:ami_trade/features/tour/tour_intro_sheet.dart';
+import 'package:ami_trade/features/nav/ami_tab.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
@@ -65,7 +66,7 @@ class _FloorScreenState
     if (!mounted) return;
     // Only fire when Floor is the active tab (guards against IndexedStack
     // running initState for all tabs simultaneously on first build).
-    if (ref.read(activeTabIndexProvider) != 0) return;
+    if (ref.read(activeTabProvider) != AmiTab.floor) return;
     final service = ref.read(tourServiceProvider);
     if (await service.hasSeen(TourSection.floor)) return;
     await service.markSeen(TourSection.floor);
@@ -319,8 +320,8 @@ class _FloorScreenState
   @override
   Widget build(BuildContext context) {
     // Listen for Floor becoming the active tab after the user switches away and back.
-    ref.listen<int>(activeTabIndexProvider, (prev, next) async {
-      if (next != 0) return;
+    ref.listen<AmiTab>(activeTabProvider, (prev, next) async {
+      if (next != AmiTab.floor) return;
       final service = ref.read(tourServiceProvider);
       if (await service.hasSeen(TourSection.floor)) return;
       await service.markSeen(TourSection.floor);

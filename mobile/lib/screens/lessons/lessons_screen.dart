@@ -6,6 +6,7 @@
 library;
 
 import 'package:ami_trade/features/tour/lessons_tour.dart';
+import 'package:ami_trade/features/nav/ami_tab.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
@@ -75,8 +76,8 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
   @override
   Widget build(BuildContext context) {
     // Fire tour when Lessons tab (index 3) becomes active for the first time.
-    ref.listen<int>(activeTabIndexProvider, (prev, next) async {
-      if (next != 3) return;
+    ref.listen<AmiTab>(activeTabProvider, (prev, next) async {
+      if (next != AmiTab.lessons) return;
       final service = ref.read(tourServiceProvider);
       if (await service.hasSeen(TourSection.lessons)) return;
       await service.markSeen(TourSection.lessons);

@@ -5,7 +5,7 @@
 /// `JournalScreen` on top of `HomeShell`'s own `Scaffold` — the bottom nav
 /// lives in that Scaffold, below whatever gets pushed on top of it, so it
 /// was covered, not removed, until the user backed out. The fix routes
-/// through `activeTabIndexProvider` instead, which `HomeShell` now listens
+/// through `activeTabProvider` instead, which `HomeShell` now listens
 /// to, so "review in Journal" switches the shell's own tab rather than
 /// pushing a route.
 ///
@@ -28,6 +28,7 @@ import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/widgets/hex/hex_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/features/nav/ami_tab.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _FixedSimNotifier extends SimNotifier {
@@ -126,6 +127,18 @@ Future<void> _settle(WidgetTester t) async {
 }
 
 void main() {
+  /// CR133 §3 — the enum's declaration order IS the bar's left-to-right order,
+  /// and `HomeShell`'s `IndexedStack` indexes its children by `AmiTab.index`.
+  /// Those are one fact held in two places, so it gets asserted rather than
+  /// maintained by hand: a tab added to the enum without a matching child (or
+  /// the reverse) is how a reorder silently points a tab at the wrong screen.
+  test('AmiTab.values and the shell\'s children stay the same length', () {
+    expect(AmiTab.values.length, 5);
+    expect(AmiTab.values.map((t) => t.index).toList(), [0, 1, 2, 3, 4]);
+    expect(AmiTab.floor.index, 0);
+    expect(AmiTab.values.last, AmiTab.settings);
+  });
+
   testWidgets(
       'DEF190: the bottom nav survives "Review in Journal" from '
       "Portfolio's History tab", (t) async {

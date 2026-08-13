@@ -26,6 +26,7 @@ library;
 import 'dart:math' as math;
 
 import 'package:ami_trade/features/tour/portfolio_tour.dart';
+import 'package:ami_trade/features/nav/ami_tab.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
@@ -123,8 +124,8 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
   @override
   Widget build(BuildContext context) {
     // Fire tour when Portfolio tab (index 1) becomes active for the first time.
-    ref.listen<int>(activeTabIndexProvider, (prev, next) async {
-      if (next != 1) return;
+    ref.listen<AmiTab>(activeTabProvider, (prev, next) async {
+      if (next != AmiTab.portfolio) return;
       final service = ref.read(tourServiceProvider);
       if (await service.hasSeen(TourSection.portfolio)) return;
       await service.markSeen(TourSection.portfolio);
@@ -1596,7 +1597,7 @@ class _JournalPointer extends ConsumerWidget {
           // held. Switching HomeShell's own tab is what "review in Journal"
           // should have always meant.
           onTap: () =>
-              ref.read(activeTabIndexProvider.notifier).state = 2, // Journal
+              ref.read(activeTabProvider.notifier).state = AmiTab.journal,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

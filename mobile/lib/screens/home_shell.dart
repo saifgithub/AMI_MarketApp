@@ -3,6 +3,7 @@
 /// behind a drawer if it gets crowded.
 library;
 
+import 'package:ami_trade/features/nav/ami_tab.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/qa/semantics_ids.dart';
@@ -25,7 +26,7 @@ class HomeShell extends ConsumerStatefulWidget {
 }
 
 class _HomeShellState extends ConsumerState<HomeShell> {
-  int _tab = 0;
+  AmiTab _tab = AmiTab.floor;
 
   static const _tabs = <Widget>[
     FloorScreen(),
@@ -48,12 +49,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     // on `next != _tab` so the tap handler's own write (which already set
     // `_tab` directly, synchronously, before this listener next fires) is a
     // no-op here, not a second rebuild.
-    ref.listen<int>(activeTabIndexProvider, (prev, next) {
+    ref.listen<AmiTab>(activeTabProvider, (prev, next) {
       if (next != _tab) setState(() => _tab = next);
     });
     return Scaffold(
       backgroundColor: AmiColors.slate900,
-      body: IndexedStack(index: _tab, children: _tabs),
+      body: IndexedStack(index: _tab.index, children: _tabs),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -68,10 +69,14 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               context: context,
               removeBottom: true,
               child: HexBottomNav(
-                currentIndex: _tab,
+                currentIndex: _tab.index,
                 onTap: (i) {
-                  setState(() => _tab = i);
-                  ref.read(activeTabIndexProvider.notifier).state = i;
+                  // The bar hands back a position; AmiTab.values is the one
+                  // place that position becomes a tab, so the mapping cannot
+                  // drift from the child order below (asserted in the test).
+                  final tab = AmiTab.values[i];
+                  setState(() => _tab = tab);
+                  ref.read(activeTabProvider.notifier).state = tab;
                 },
                 items: [
                   HexNavItem(

@@ -9,6 +9,7 @@ library;
 import 'dart:async';
 
 import 'package:ami_trade/features/tour/journal_tour.dart';
+import 'package:ami_trade/features/nav/ami_tab.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
@@ -93,8 +94,8 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
   @override
   Widget build(BuildContext context) {
     // Fire tour when Journal tab (index 2) becomes active for the first time.
-    ref.listen<int>(activeTabIndexProvider, (prev, next) async {
-      if (next != 2) return;
+    ref.listen<AmiTab>(activeTabProvider, (prev, next) async {
+      if (next != AmiTab.journal) return;
       final service = ref.read(tourServiceProvider);
       if (await service.hasSeen(TourSection.journal)) return;
       await service.markSeen(TourSection.journal);
