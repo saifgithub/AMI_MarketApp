@@ -83,12 +83,20 @@ class Candle(NamedTuple):
 
 
 class NewsItem(NamedTuple):
-    """One news article returned by the news provider."""
+    """One news article returned by the news provider.
+
+    CR147 B.2 / CR179 Leg 3 — `summary` is the provider's own abstract, present
+    on 40 of 40 articles measured across NVDA/GRAB/KTOS/BAC (median 183 chars,
+    max 500). It was parsed past for the entire life of this feed. Defaulted to
+    "" so every other provider and test that builds a NewsItem without it is
+    unaffected.
+    """
 
     title: str
     link: str
     publisher: str
     published_at: int  # Unix epoch seconds
+    summary: str = ""
 
 
 class EarningsInfo(NamedTuple):
@@ -654,7 +662,11 @@ class YfinanceProvider:
                     )
                 else:
                     published_at = int(a.get("providerPublishTime", 0))
-                items.append(NewsItem(title=title, link=link, publisher=publisher, published_at=published_at))
+                summary = str(content.get("summary", "") or a.get("summary", "") or "").strip()
+                items.append(NewsItem(
+                    title=title, link=link, publisher=publisher,
+                    published_at=published_at, summary=summary,
+                ))
             except (KeyError, TypeError, ValueError):
                 continue
         return items or None

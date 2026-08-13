@@ -43,7 +43,27 @@ from app.core.config import settings
 from app.core.logging import logger
 from app.services.market_data import get_market_data_provider
 
-DEFAULT_HEADLINE_LIMIT = 3
+# CR147 B.2 / CR179 Leg 3 — 3 → 5. Three headlines was the News Analyst's
+# ENTIRE payload, and its assembled sheet measured 1,342 chars against ~4,000
+# for any downstream agent: the desk with the thinnest evidence was the one
+# asked to separate signal from noise.
+#
+# Sized against a measurement, not a preference. With summaries now carried
+# (see `format_headline`), the block runs 772–1,130 chars at 3 and 1,203–1,836
+# at 5, across NVDA/BAC/KTOS/GRAB. Input context is not the constraint — the
+# biggest real assembled prompt is ~12% of this model's window.
+#
+# **Why 5 and not 10**, which is what yfinance returns: relevance decays down
+# the feed, and it decays into off-ticker material rather than into noise about
+# the ticker. BAC's list already reaches a CNBC state-economy ranking by the
+# top of the feed; ten would mostly buy articles the analyst has to discard,
+# and every one of those is a chance to reason about the wrong company.
+#
+# Note this bounds the ALPHA VANTAGE call too (a metered API), not just Yahoo.
+# That is currently free of charge because no AV key is configured (DEF063 —
+# the feed is parked pending a metered-tier budget decision); if it is ever
+# turned on, this constant is one of the two knobs that decides its bill.
+DEFAULT_HEADLINE_LIMIT = 5
 _ALPHA_VANTAGE_URL = "https://www.alphavantage.co/query"
 _ALPHA_VANTAGE_CACHE_TTL = 1800.0  # 30 min — billed API, news doesn't stale that fast
 
@@ -113,6 +133,15 @@ class LiveHeadline(NamedTuple):
     published_at: int  # Unix epoch seconds, 0 if unknown
     sentiment: str | None
     source: str  # "yfinance" | "alpha_vantage"
+    # CR147 B.2 — the provider's own abstract. A headline is frequently not
+    # enough to know what happened: BAC's top item reads "New Study Reveals
+    # Strongest State Economies", and only the summary says it is a CNBC
+    # ranking. Measured present on 40/40 articles. NOT truncated: this file
+    # already reasons that "a headline is an ASSERTION, and a truncated
+    # assertion can invert its meaning", which applies at least as strongly to
+    # a summary, and input context is not a constraint (the biggest real prompt
+    # is ~12% of this model's window).
+    summary: str = ""
 
 
 class NewsSource(Protocol):
@@ -136,6 +165,7 @@ class _YfinanceSource:
             LiveHeadline(
                 title=i.title, link=i.link, publisher=i.publisher,
                 published_at=i.published_at, sentiment=None, source="yfinance",
+                summary=getattr(i, "summary", "") or "",
             )
             for i in items
         ]
@@ -203,6 +233,7 @@ class _AlphaVantageSource:
             published_at=_parse_alpha_vantage_time(article.get("time_published")),
             sentiment=sentiment,
             source="alpha_vantage",
+            summary=str(article.get("summary", "") or "").strip(),
         )
 
 
@@ -372,11 +403,35 @@ def _merge_headlines(*groups: list[LiveHeadline], limit: int) -> list[LiveHeadli
 
 def format_headline(item: LiveHeadline) -> str:
     """One headline for prompt injection: "title" (publisher, relative age)
-    [+ sentiment tag when Alpha Vantage supplied one]."""
+    [+ sentiment tag when Alpha Vantage supplied one] [+ the provider's summary].
+
+    CR147 B.2 / CR179 Leg 3 — the summary rides here, in the ONE renderer both
+    surfaces share (`room_runner._build_profile`, `room_prompts`' extra
+    headlines, and the 1-on-1 `build_news_context_block` all call this), so the
+    Room and the 1-on-1 block cannot state a different amount about the same
+    article.
+
+    **Why a headline alone was not enough.** Measured across NVDA/GRAB/KTOS/BAC,
+    all 40 articles carry a summary, and the headline is frequently not a
+    statement of what happened: BAC's top item reads *"New Study Reveals
+    Strongest State Economies, Only 1 State Was Better Than Texas"*, and only
+    the summary reveals it is a CNBC ranking rather than anything about the
+    bank. An agent asked to separate signal from noise on titles like that is
+    being asked to guess.
+
+    NOT truncated. This module already reasons that *"a headline is an
+    ASSERTION, and a truncated assertion can invert its meaning"*; a summary is
+    the same object at greater length. Input context is not the constraint —
+    measured, the biggest real assembled prompt is ~12% of this model's window,
+    and the observed summary maximum is 500 chars.
+    """
     title = (item.title or "").replace("\n", " ").strip()
     line = f"\"{title}\" ({item.publisher or 'unknown publisher'}, {_relative_age(item.published_at)})"
     if item.sentiment:
         line += f" — sentiment: {item.sentiment}"
+    summary = (getattr(item, "summary", "") or "").replace("\n", " ").strip()
+    if summary:
+        line += f" — {summary}"
     return line
 
 

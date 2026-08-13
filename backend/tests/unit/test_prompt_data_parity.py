@@ -245,6 +245,11 @@ def _news_sentinel() -> LiveHeadline:
         published_at=_NEWS_PUBLISHED_AT,
         sentiment="SENTIMENTSENT",
         source="alpha_vantage",
+        # CR147 B.2 — the provider's own abstract, measured present on 40/40
+        # articles and parsed past for the life of this feed. Rendered by
+        # `format_headline`, the ONE renderer both surfaces share, so the Room
+        # and the 1-on-1 block cannot state a different amount about one article.
+        summary="SUMMARYSENT",
     )
 
 
@@ -647,6 +652,7 @@ def env(monkeypatch):
             "title": "HEADLINESENT", "publisher": "PUBSENT",
             "published_at": news_context._relative_age(_NEWS_PUBLISHED_AT),
             "sentiment": "SENTIMENTSENT",
+            "summary": "SUMMARYSENT",
         },
         "earnings": {
             "earnings_date": "2026-09-30", "quarter": "(Q3)", "eps_estimate": "4.44",

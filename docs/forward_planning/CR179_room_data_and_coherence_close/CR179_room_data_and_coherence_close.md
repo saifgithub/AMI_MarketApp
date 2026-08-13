@@ -390,3 +390,43 @@ real builder from `build_room_messages` down, and it was mutation-checked: sever
 line turns it red while the other sixteen stay green. **A test that cannot fail for the reason the
 defect happened is not a guard for that defect**, which is the same lesson as Leg 2's vacuous parity
 pass, arriving from the opposite direction.
+
+---
+
+## Leg 3c — the news feed's own words, and a plan item struck (2026-08-13)
+
+**CR147 B.2 — `summary` reaches the prompt.** Measured present on **40 of 40** articles across
+NVDA/GRAB/KTOS/BAC (median 183 chars, max 500), parsed past for the entire life of the feed. It rides
+in `format_headline`, the **one** renderer all three call sites share, so the Room and the 1-on-1 block
+cannot state a different amount about the same article.
+
+The reason a headline alone was not enough is visible in the data rather than argued: BAC's top item
+reads *"New Study Reveals Strongest State Economies, Only 1 State Was Better Than Texas"*, and only the
+summary reveals it is a CNBC ranking rather than anything about the bank. An agent asked to separate
+signal from noise on titles like that is being asked to guess. **Not truncated** — this module already
+reasons that *"a headline is an ASSERTION, and a truncated assertion can invert its meaning"*, and a
+summary is the same object at greater length.
+
+**`DEFAULT_HEADLINE_LIMIT` 3 → 5.** Three headlines was the News Analyst's entire payload against a
+1,342-char sheet — the desk with the thinnest evidence was the one asked to judge signal. Measured, the
+block runs 772–1,130 chars at 3 and 1,203–1,836 at 5. **Not 10, which is what yfinance returns:**
+relevance decays down the feed and decays into *off-ticker* material, so the tail mostly buys articles
+the analyst must discard, each one a chance to reason about the wrong company.
+
+### D4 (social `sample_snippets`) — STRUCK, after checking the reason
+
+The plan listed this as *"fetched, rendered on the 1-on-1 surface, never stored in the Room profile —
+**while the prompt claims excerpts**"*. Both halves of that premise are now false:
+
+1. **Leg 1 already deleted the excerpt claim** from `social_media_analyst.md`, so the prompt no longer
+   asserts something it does not have. The incoherence was resolved in the other direction.
+2. **The omission has a documented safety reason, and it verifies.** Parity's entry reads: *"raw Reddit
+   post text — deliberately never stored in the Room profile dict, which also feeds the scripted
+   non-LLM fallback shown to users."* Checked rather than taken on trust: `_TEMPLATES` are format
+   strings interpolated with the profile (`**formatter`) and streamed to the user through
+   `_typewriter`, so **the Room profile is a user-visible surface** on that path. Putting raw
+   user-generated Reddit text there would put unmoderated third-party text on a user's screen verbatim.
+
+Shipping D4 would have traded a coherence problem that no longer exists for a content-safety one that
+does. **Third plan item struck after measuring** — the census rewrite and `Quote`-as-parity-source were
+the first two.
