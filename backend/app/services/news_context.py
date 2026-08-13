@@ -31,6 +31,7 @@ Both sources: never raise, return nothing on any failure.
 
 from __future__ import annotations
 
+import re
 import time
 from datetime import datetime, timezone
 from enum import Enum
@@ -433,6 +434,111 @@ def format_headline(item: LiveHeadline) -> str:
     if summary:
         line += f" — {summary}"
     return line
+
+
+# Corporate-form and filler words dropped before matching a company name against
+# a headline. "Corporation" appears in thousands of unrelated articles; the
+# distinctive token is what identifies the issuer.
+_NAME_STOPWORDS: frozenset[str] = frozenset({
+    "inc", "inc.", "corp", "corp.", "corporation", "co", "co.", "company",
+    "ltd", "ltd.", "limited", "plc", "holdings", "holding", "group", "the",
+    "technologies", "technology", "systems", "international", "&", "and",
+    "class", "common", "stock", "n.v.", "s.a.", "ag", "se",
+})
+
+# Leading words that are ordinary nouns before they are company names. A first
+# token from this set identifies an INDUSTRY, not an issuer, and matching on it
+# manufactures the false attribution this module exists to prevent — measured:
+# "Bank" (Bank of America) matched an oil-market article about central banks,
+# and an earlier all-tokens pass matched "Defense" (Kratos Defense & Security)
+# to an article about Ondas. For these the FULL name phrase must appear, or the
+# ticker symbol must.
+_GENERIC_LEAD_WORDS: frozenset[str] = frozenset({
+    "bank", "american", "america", "national", "general", "united", "global",
+    "first", "advanced", "pacific", "standard", "central", "capital", "federal",
+    "western", "eastern", "northern", "southern", "atlantic", "continental",
+    "premier", "superior", "allied", "consolidated", "universal",
+})
+
+
+def _issuer_tokens(ticker: str, long_name: str | None) -> set[str]:
+    """The strings that identify this issuer in a headline: its symbol, and the
+    FIRST distinctive word of its name.
+
+    **Only the first**, and that is the whole design. A first pass took every
+    non-stopword token and produced two false positives immediately, on live
+    data: `Kratos Defense & Security Solutions` matched *"Ondas Wins Israeli
+    Defense Tender"* on the word **Defense** — an article about a different
+    company in the same industry. An industry word is not an issuer, and a
+    defence company's headlines are full of "defense".
+
+    The first distinctive token is how a company is actually referred to in
+    prose — NVIDIA, Grab, Kratos, Micron, Tesla — so it is both the tightest
+    and the most natural match.
+    """
+    tokens = {ticker.upper().strip()}
+    words = [w.strip(",.:;()[]\'\"") for w in (long_name or "").split()]
+    kept = [w for w in words if w and w.lower() not in _NAME_STOPWORDS]
+    if kept:
+        lead = kept[0].lower()
+        if len(lead) > 2 and lead not in _GENERIC_LEAD_WORDS:
+            tokens.add(kept[0].upper())
+        elif len(kept) > 1:
+            # Generic lead: only the full phrase identifies the issuer.
+            tokens.add(" ".join(kept).upper())
+    return {t for t in tokens if t}
+
+
+def headline_is_on_ticker(
+    item: LiveHeadline, ticker: str, long_name: str | None = None
+) -> bool:
+    """Does this article actually mention the company under discussion?
+
+    Matched against the title AND the summary, because the summary is often
+    where the issuer is named — the same reason CR147 B.2 carries it.
+
+    **Word-boundary matched, not substring.** A plain `in` test made `BAC`
+    match the word **back**, which put an oil-market article under Bank of
+    America's catalyst line on live data. A three-letter ticker is a substring
+    of ordinary English often enough that substring matching does not merely
+    add noise — it manufactures the exact false attribution this function
+    exists to prevent.
+    """
+    haystack = f"{item.title or ''} {getattr(item, 'summary', '') or ''}".upper()
+    return any(
+        re.search(rf"\b{re.escape(tok)}\b", haystack)
+        for tok in _issuer_tokens(ticker, long_name)
+    )
+
+
+def pick_catalyst(
+    headlines: list[LiveHeadline], ticker: str, long_name: str | None = None
+) -> tuple[LiveHeadline, bool]:
+    """DEF291 — the headline that becomes `profile["catalyst"]` for all twelve
+    agents, and whether it is actually about this company.
+
+    **The feed has no relevance ranking and `_merge_headlines` sorts by recency
+    alone.** CR147 measured the consequence: 26 of 54 headlines (48%) are
+    on-ticker, and the TOP one — the one that becomes the catalyst — is
+    **off-ticker in 9 of 18 convenes (50%)**. AVGO's Room led with *"The
+    Toughest Questions AMD Faced On Its Latest Call"*, presented to twelve
+    agents under the label *"Recent catalyst/headline"*.
+
+    That label is the defect. An off-ticker article is not noise the agent can
+    route around — it is an ATTRIBUTION, asserting that this is the catalyst for
+    the name under discussion, which is a fabricated fact at the data layer
+    rather than a gap in one.
+
+    Returns the most recent ON-TICKER headline when one exists, else the most
+    recent overall with `False` — the caller labels it rather than suppressing
+    it. Suppression would be worse: a real, recent, sector-relevant article is
+    still worth reading, and dropping the whole feed for an imperfect match
+    would trade a labelling bug for a data one.
+    """
+    for item in headlines:
+        if headline_is_on_ticker(item, ticker, long_name):
+            return item, True
+    return headlines[0], False
 
 
 def _relative_age(published_at: int) -> str:

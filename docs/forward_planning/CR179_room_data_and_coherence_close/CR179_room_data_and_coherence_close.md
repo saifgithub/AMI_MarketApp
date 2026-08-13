@@ -530,3 +530,46 @@ old one being rescued from it.
 Two CR104 degrades, both asserted: no portfolio value → no dollars and no shares; a portfolio value with
 no **live** price anchor → the dollar cap but no share count, because a share count against a price that
 is not live is a fabricated quantity and worse than the abstraction it replaces.
+
+---
+
+## Leg 3g — DEF291, found by reading the item it replaced (2026-08-13)
+
+Leg 3's last listed item was **CR147 B.3, watchlist injection**. Reading that tier's own row to check
+its rationale — the discipline that struck D4 — surfaced something in the same tier that outranked it.
+
+**B.3 is struck.** Its own sizing measurement is *"29 rows / 10 users / mean 2.9 tickers against 58
+distinct Room users, i.e. **17% reach**"*, and the incoherence that motivated it — a prompt line telling
+the agent to *"filter to the watchlist"* it had never been shown — was already resolved by deleting that
+half of the line and repointing it at holdings.
+
+**DEF291 is what was standing beside it.** `profile["catalyst"]` was `news_items[0]`, the most recent
+headline, and the feed has no relevance ranking — `_merge_headlines` sorts by recency alone. CR147's own
+row records the consequence: **the top headline is off-ticker in 9 of 18 convenes (50%)**. AVGO's Room
+led with *"The Toughest Questions AMD Faced On Its Latest Call"*.
+
+That is not feed noise an agent routes around, because **the label does the asserting**: *"Catalysts —
+recent"* states this IS the catalyst for the name under discussion. A fabricated fact at the data layer,
+on the one field that reaches all twelve agents identically. Fixing a 17%-reach nicety while that stood
+in the same tier was the wrong order.
+
+**The error direction is the design.** A false negative labels a real article "not confirmed on-ticker"
+— honest, costs a caveat. A false positive asserts an attribution that is not there, which *is* the
+defect. Both false positives were found by measuring against live feeds rather than by reasoning, and
+both are now regression tests:
+
+1. A first pass took every non-stopword name token, and `Kratos Defense & Security Solutions` matched
+   *"Ondas Wins Israeli Defense Tender"* on **Defense**. An industry word is not an issuer, and a
+   defence company's feed is full of it.
+2. Plain substring matching made `BAC` match the word **back**, putting an oil-market article under Bank
+   of America's catalyst line. A three-letter ticker is a substring of ordinary English often enough
+   that this manufactures the exact attribution the function prevents.
+
+**Measured, with its limits stated.** One live sample of 8 tickers: top-headline on-ticker **3/8**,
+catalyst on-ticker **8/8**. That is a single point on a rotating feed — it visibly changed between two
+calls minutes apart during the measurement itself — **not** a rate, and explicitly not a claim that
+CR147's 9/18 figure is fixed. Re-measuring that is Leg 5's job.
+
+**Known residual, recorded rather than hidden:** abbreviations are missed. *"BofA picks AMD and Nvidia
+as AI chip winners"* is Bank of America and would be labelled unconfirmed. Safe direction, unmeasured
+rate.

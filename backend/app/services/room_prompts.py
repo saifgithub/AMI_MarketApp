@@ -1983,6 +1983,18 @@ def _catalyst_line(profile: dict[str, Any]) -> str:
     from app.services.news_context import format_headline
 
     line = f"Catalysts — recent: {profile.get('catalyst')}"
+    # DEF291 — when nothing in the feed names this company, say so. An
+    # off-ticker article under a "Catalysts — recent" label is not noise the
+    # agent can route around; the label ASSERTS that this is the catalyst for
+    # the name under discussion, which is a fabricated fact rather than a
+    # missing one. `False` only ever comes from a real feed that was searched
+    # and produced no match, so the caveat cannot fire on an absent feed.
+    if profile.get("catalyst_on_ticker") is False:
+        line += (
+            " — NOTE: no headline in this feed names this company, so this item is "
+            "recent market coverage, NOT a catalyst for this ticker. Do not attribute "
+            "it to the company or treat it as company news."
+        )
     extra_headlines = (profile.get("news_headlines") or [])[1:]
     if extra_headlines:
         extra = "; ".join(format_headline(h) for h in extra_headlines)

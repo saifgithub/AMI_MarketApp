@@ -71,6 +71,7 @@ from app.services.news_context import (
     NewsFeed,
     fetch_live_news,  # re-exported: prompt-parity guard patches it here
     format_headline,
+    pick_catalyst,
     resolve_news_feed,
 )
 from app.services.technicals import compute_technicals
@@ -690,8 +691,18 @@ def _profile_for_ticker(
         # real FOMC-date half; CR038 removed the synthetic sector-earnings half)
         # is untouched, since no real earnings-calendar feed exists for it.
         news_items = list(nf.headlines)
-        profile["catalyst"] = format_headline(news_items[0])
-        profile["news_headlines"] = news_items
+        # DEF291 — the catalyst slot is an ATTRIBUTION, not a sort order. The
+        # feed has no relevance ranking (`_merge_headlines` sorts by recency
+        # alone), and CR147 measured the top headline off-ticker in 9 of 18
+        # convenes. `long_name` is already on the profile by this point (CR168,
+        # set in the fundamentals block above), so the issuer's real name is
+        # available to match on, not just its symbol.
+        pick, on_ticker = pick_catalyst(news_items, ticker, profile.get("long_name"))
+        profile["catalyst"] = format_headline(pick)
+        profile["catalyst_on_ticker"] = on_ticker
+        # The chosen item leads; the rest follow in their original recency
+        # order, so nothing is hidden — only the ATTRIBUTED slot is chosen.
+        profile["news_headlines"] = [pick] + [h for h in news_items if h is not pick]
     field_state["news"] = nf.state.value
 
     if social_feed is None:
