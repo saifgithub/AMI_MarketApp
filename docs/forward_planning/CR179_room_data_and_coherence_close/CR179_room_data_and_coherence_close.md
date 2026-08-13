@@ -360,3 +360,33 @@ Still lane-gated to the technicals desk — DOMAIN, not provenance, the same rul
 
 That is two guards built in Leg 0 catching two real problems in Leg 3, which is the argument for having
 built the instruments before the data work rather than alongside it.
+
+---
+
+## Leg 3b — the screen that was enforced and never spoken (2026-08-13)
+
+**CR152 D7.** DEF061 built a four-state resolver (PERMITTED / EXCLUDED / UNKNOWN / UNAVAILABLE) over a
+sourced classification of the parent index. It is fetched on **every** run, it is **enforced** by the
+mandate check, and it reached no agent. `_compliance_block` printed the boolean intent — *"Exclude
+fossil fuels (oil & gas majors, coal)"* — while the identically-shaped halal constraint, **two lines
+above it in the same function**, got a full sourced three-state narration with standard, source and
+as-of date.
+
+That asymmetry is a defect rather than a gap because the enforcement is real. An agent told only the
+rule, with no way to ask what the screen said about *this* name, has two options and both are wrong:
+assume it cleared (DEF084-ROOM's failure exactly, where narration claimed something enforcement never
+decided) or state a verdict it never received. Its silence tracks nothing.
+
+`_exclusion_narration` is single-sourced from the same object the mandate check resolves against, so
+narration and enforcement cannot contradict each other — the constraint `_halal_narration` was written
+to satisfy, now applied to the constraint that had been left out of it. UNKNOWN carries the heaviest
+wording and both halves of its meaning (permitted **and** unreviewed), because an agent handed only one
+will supply the other itself.
+
+**The guard that mattered was the end-to-end one.** The defect was never that the narration was wrong
+— it was that the object never arrived. Sixteen unit tests against `_compliance_block` would all have
+passed with the universe still stranded four call frames away in `room_runner`. So one test drives the
+real builder from `build_room_messages` down, and it was mutation-checked: severing a single threading
+line turns it red while the other sixteen stay green. **A test that cannot fail for the reason the
+defect happened is not a guard for that defect**, which is the same lesson as Leg 2's vacuous parity
+pass, arriving from the opposite direction.

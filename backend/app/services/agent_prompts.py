@@ -55,6 +55,7 @@ def build_agent_prompt(
     alpaca_snapshot: str | None = None,
     halal_universe: Any = None,
     ticker: str | None = None,
+    classification_universe: Any = None,
 ) -> str:
     """Compose the full runtime prompt for an agent.
 
@@ -93,7 +94,8 @@ def build_agent_prompt(
     """
     base = load_base_prompt(agent_id)
     overlay = generate_overlay(
-        agent_id, mandate, halal_universe=halal_universe, ticker=ticker
+        agent_id, mandate, halal_universe=halal_universe, ticker=ticker,
+        classification_universe=classification_universe,
     )
     composed = f"{base}\n\n{overlay}"
 

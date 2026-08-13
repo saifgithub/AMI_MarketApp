@@ -702,6 +702,11 @@ def build_room_messages(
     plan: Any = None,
     trade_proposal: dict[str, Any] | None = None,
     halal_universe: Any = None,
+    # CR179 Leg 3 / CR152 D7 — the sourced sector/industry exclusion universe.
+    # Fetched every run and enforced since DEF061; it reached the mandate CHECK
+    # and never the prompt, so agents were told the exclusion existed and never
+    # what it had decided about this name.
+    classification_universe: Any = None,
     parallel_phase: bool = False,
     sector_weights: dict[str, float] | None = None,
     agent_size_pct: float | None = None,
@@ -749,6 +754,7 @@ def build_room_messages(
         portfolio_snapshot=portfolio_snapshot,
         halal_universe=halal_universe,
         ticker=ticker,
+        classification_universe=classification_universe,
     )
     phase = _PHASE_FOR_AGENT[agent_id]
     length = _LENGTH_GUIDE[agent_id]

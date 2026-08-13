@@ -33,6 +33,7 @@ def generate_overlay(
     *,
     halal_universe: Any = None,
     ticker: str | None = None,
+    classification_universe: Any = None,
 ) -> str:
     """Generate the mandate-overlay markdown for a given agent + mandate.
 
@@ -55,7 +56,10 @@ def generate_overlay(
         # Concierge doesn't get a trading mandate overlay — it gets a product-context overlay
         return _concierge_overlay(mandate)
 
-    base = _mandate_common_block(mandate, halal_universe=halal_universe, ticker=ticker)
+    base = _mandate_common_block(
+        mandate, halal_universe=halal_universe, ticker=ticker,
+        classification_universe=classification_universe,
+    )
     role_specific = _role_specific_block(agent_id, mandate)
     return base + "\n\n" + role_specific
 
@@ -66,7 +70,11 @@ def generate_overlay(
 
 
 def _mandate_common_block(
-    mandate: Mandate, *, halal_universe: Any = None, ticker: str | None = None
+    mandate: Mandate,
+    *,
+    halal_universe: Any = None,
+    ticker: str | None = None,
+    classification_universe: Any = None,
 ) -> str:
     target = mandate.target_outcome
     target_text = (
@@ -102,7 +110,7 @@ tickers held concurrently; adding to an existing holding doesn't count against i
 size % × stop distance %)/100 across all open positions, including this one.
 
 ## Compliance constraints (HARD — cannot violate)
-{_compliance_block(mandate.compliance, halal_universe=halal_universe, ticker=ticker)}
+{_compliance_block(mandate.compliance, halal_universe=halal_universe, ticker=ticker, classification_universe=classification_universe)}
 
 ## Preferences
 - Learning style: {mandate.learning_style}
@@ -125,17 +133,30 @@ _MICROCAP_FLOOR_USD_M = 500
 
 
 def _compliance_block(
-    c: Compliance, *, halal_universe: Any = None, ticker: str | None = None
+    c: Compliance,
+    *,
+    halal_universe: Any = None,
+    ticker: str | None = None,
+    classification_universe: Any = None,
 ) -> str:
     flags: list[str] = []
     if c.halal:
         flags.append(_halal_narration(halal_universe, ticker))
     if c.esg_lite:
-        flags.append("- ESG-lite screen: avoid heavy polluters, controversies, weapons.")
+        flags.append(_exclusion_narration(
+            classification_universe, ticker, "esg_lite",
+            "ESG-lite screen", "a heavy polluter, a controversy name or a weapons maker",
+        ))
     if c.no_tobacco_alcohol_gambling:
-        flags.append("- Exclude tobacco, alcohol, gambling.")
+        flags.append(_exclusion_narration(
+            classification_universe, ticker, "sin",
+            "Exclude tobacco, alcohol, gambling", "a tobacco, alcohol or gambling name",
+        ))
     if c.no_fossil_fuels:
-        flags.append("- Exclude fossil fuels (oil & gas majors, coal).")
+        flags.append(_exclusion_narration(
+            classification_universe, ticker, "fossil_fuels",
+            "Exclude fossil fuels", "an oil & gas major or a coal name",
+        ))
     if c.long_only:
         flags.append("- LONG-ONLY. No short recommendations. Frame negative views as 'avoid' / 'wait'.")
     if c.liquid_only:
@@ -177,6 +198,88 @@ AMI does not know rather than implying it cleared — and equally never imply th
 because of it.
   Never say a name was screened when it was not reviewed, and never quote a ratio, threshold or \
 percentage cutoff for this constraint — AMI computes none; it reads a published list."""
+
+
+def _exclusion_narration(
+    classification_universe: Any,
+    ticker: str | None,
+    kind_value: str,
+    label: str,
+    what_it_catches: str,
+) -> str:
+    """CR179 Leg 3 / CR152 D7 — the sourced sector/industry exclusions, narrated.
+
+    **The largest "we already have it" gap outside the fact sheet.** DEF061 built
+    a four-state resolver (PERMITTED / EXCLUDED / UNKNOWN / UNAVAILABLE) over a
+    sourced classification of the parent index. It is fetched on **every** run
+    (`room_runner.py:3729`), it is **enforced** by the mandate check
+    (`room_runner.py:2708`), and it was narrated to **nobody**: this block
+    printed the boolean INTENT — *"Exclude fossil fuels (oil & gas majors,
+    coal)"* — while the identically-shaped halal constraint two lines up got the
+    full sourced three-state treatment.
+
+    That asymmetry is the CR040 shape, and it bites in the same direction
+    DEF084-ROOM did. An agent told only *"exclude fossil fuels"*, with no way to
+    ask whether THIS name was screened, has two options: assume the screen
+    cleared it (which is DEF084's failure exactly) or state a verdict it never
+    received. Rendering the state removes the guess.
+
+    Single-sourced from the same object the enforcement resolves against, so the
+    narration cannot claim something the deterministic path did not decide —
+    the constraint `_halal_narration` was written to satisfy.
+
+    **UNKNOWN carries the heaviest wording, for the same reason it does there.**
+    A name outside the parent index was never classified; that is not a ruling,
+    not a failure, and not permission dressed up as one.
+    """
+    resolve = getattr(classification_universe, "resolve", None)
+    if not callable(resolve):
+        # Degrade loudly (CR040): silence here is what lets an agent assume a
+        # screen ran. Same failure mode, same answer, as the halal branch.
+        return (
+            f"- {label}: the user's mandate requires this exclusion, but AMI's sourced "
+            f"classification and its provenance were NOT attached to this briefing. Do not tell "
+            f"the user this screen was applied, and do not treat any name as screened or as "
+            f"cleared. Say the filter could not be confirmed for this session."
+        )
+    try:
+        from app.schemas.classification import ClassificationKind, ClassificationStatus
+
+        verdict = resolve(ticker or "", ClassificationKind(kind_value))
+    except Exception:
+        return (
+            f"- {label}: AMI could not resolve this screen for this session. Do not tell the "
+            f"user it was applied, and do not treat any name as screened."
+        )
+
+    as_of = verdict.as_of.isoformat() if getattr(verdict, "as_of", None) else "unknown"
+    provenance = f"(source: {verdict.source}, as of {as_of})"
+    status = verdict.status
+
+    if status is ClassificationStatus.UNAVAILABLE:
+        return (
+            f"- {label} — PAUSED. AMI could not refresh the classification behind this screen "
+            f"(last updated {as_of}). Tell the user this filter is paused; do NOT tell them it "
+            f"was applied, and do not treat any name as screened or as excluded."
+        )
+    if status is ClassificationStatus.EXCLUDED:
+        return (
+            f"- {label} — {ticker or 'this name'} is SCREENED OUT {provenance}. AMI classified it "
+            f"as {what_it_catches}. This mandate will not trade it; say so plainly and do not "
+            f"argue the position."
+        )
+    if status is ClassificationStatus.PERMITTED:
+        return (
+            f"- {label} — {ticker or 'this name'} PASSES this screen {provenance}. It was "
+            f"classified and is not {what_it_catches}."
+        )
+    return (
+        f"- {label} — {ticker or 'this name'} was NOT REVIEWED against this screen: it sits "
+        f"outside the classified parent set {provenance}, so AMI has never looked at it. That is "
+        f"NOT a ruling either way and NOT a failure. It is permitted. Say plainly that AMI does "
+        f"not know rather than implying it cleared — and equally never imply the trade is risky "
+        f"because of it."
+    )
 
 
 def _halal_narration(halal_universe: Any, ticker: str | None) -> str:
