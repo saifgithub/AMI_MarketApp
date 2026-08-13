@@ -159,27 +159,55 @@ void main() {
   });
 
   group('DEF152 — the guard is still wired to the call site', () {
-    final source =
-        File('lib/screens/floor/floor_screen.dart').readAsStringSync();
+    // CR173 slice 2 moved this control off the Floor and into Settings, and
+    // that move is why this group no longer names a file.
+    //
+    // It used to read `lib/screens/floor/floor_screen.dart` by path. When the
+    // call site moved, every assertion here went green against a file that no
+    // longer contained the code — a guard that stops guarding and says
+    // nothing, which is the same shape as the defect it guards. Scanning the
+    // whole tree instead means the next move cannot disarm it either, and
+    // "exactly one" becomes a claim about the APP rather than about one file.
+    final callSites = <String, String>{
+      for (final f in Directory('lib')
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.dart')))
+        f.path: f.readAsStringSync(),
+    }..removeWhere((_, src) => !src.contains('.reset(isRestart:'));
 
-    test('the Floor resets onboarding in exactly one place', () {
-      // DEF160 (mobile half): the call now carries `isRestart: true`, so
-      // this can no longer pin the literal `.reset()` — matches the call
-      // regardless of arguments, still proving there is exactly one.
-      expect(RegExp(r'\.reset\(').allMatches(source).length, 1,
-          reason: 'a second unguarded door is the defect again, elsewhere');
+    test('onboarding is reset in exactly one place, wherever that is', () {
+      expect(callSites.length, 1,
+          reason: 'a second unguarded door is the defect again, elsewhere. '
+              'Found: ${callSites.keys.toList()}');
+      final source = callSites.values.single;
+      expect(RegExp(r'\.reset\(').allMatches(source).length, 1);
     });
 
     test('the confirm gates the reset, and can abort it', () {
+      final source = callSites.values.single;
       final confirm = source.indexOf('confirmRestartOnboarding(context)');
       final reset = source.indexOf('.reset(');
       expect(confirm, greaterThan(-1),
           reason: 'the dialog was removed from the call site');
       expect(confirm, lessThan(reset),
           reason: 'confirming AFTER the wipe is not confirming');
-      expect(source, contains('if (!await confirmRestartOnboarding(context)) return;'),
+      expect(
+          source,
+          contains(
+              'if (!await confirmRestartOnboarding(context)) return;'),
           reason: 'the early return is the whole guard — without it the '
               'dialog is decoration and the reset runs either way');
+    });
+
+    test('the control is reachable — it did not just move out of the app', () {
+      // The Floor rebuild had "delete it" as the easy path: A\u2032 has no footer
+      // link. This asserts the capability survived the move rather than the
+      // string surviving it.
+      final host = callSites.keys.single;
+      expect(host, contains('settings'),
+          reason: 'the capability map puts this with the rest of Settings, '
+              'which since CR133 means inside YOU');
     });
   });
 }

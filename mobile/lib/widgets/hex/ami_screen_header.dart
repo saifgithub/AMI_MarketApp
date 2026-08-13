@@ -81,7 +81,18 @@ class AmiScreenHeader extends StatelessWidget {
               style: AmiTypography.labelMono.copyWith(color: titleColor)),
           if (subtitle != null) ...[
             const SizedBox(width: AmiSpacing.s),
-            Text(subtitle!, style: AmiTypography.caption),
+            // Flexible, because the slot is shared and the only subtitle it
+            // had until CR173 was Settings' `MANDATE v7`. A caller with an
+            // ordinary sentence overflowed the row by 326px — the header did
+            // not constrain what it renders, it was just never given anything
+            // long. One ellipsis is a clipped subtitle; an unbounded Row is a
+            // yellow-striped screen.
+            Flexible(
+              child: Text(subtitle!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AmiTypography.caption),
+            ),
           ],
           const Spacer(),
           ...actions,

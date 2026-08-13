@@ -26,6 +26,7 @@ import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/screens/you/you_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/confirm_restart_onboarding.dart';
 import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
 import 'package:flutter/material.dart';
@@ -1084,8 +1085,50 @@ class _WalkthroughSection extends ConsumerWidget {
             ),
           ),
         ),
+        // CR173 slice 2 — `restart onboarding` moved here from the Floor.
+        //
+        // Frame A′ has no room for it and the capability map puts it "with the
+        // rest of Settings", which since CR133 means inside YOU. It was the
+        // app's ONLY route back into the interview, so leaving it behind on a
+        // rebuilt Floor would have deleted the capability rather than moved it.
+        //
+        // DEF152 still governs the tap: this destroys the most expensive
+        // artefact the user produces, and it used to sit one scroll under the
+        // Convene CTA styled as a caption-sized link, where a tester hit it by
+        // accident. The dialog names what is lost. It sits below the tour reset
+        // deliberately — the destructive one is not the first thing under the
+        // thumb.
+        InkWell(
+          onTap: () => _restartOnboarding(context, ref),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              children: [
+                const Icon(Icons.restart_alt,
+                    color: AmiColors.hexAmber, size: 18),
+                const SizedBox(width: AmiSpacing.s),
+                Expanded(
+                  child: Text(l.floorRestartOnboarding,
+                      style: AmiTypography.body),
+                ),
+                const Icon(Icons.chevron_right,
+                    color: AmiColors.textLow, size: 18),
+              ],
+            ),
+          ),
+        ),
       ],
     );
+  }
+
+  Future<void> _restartOnboarding(BuildContext context, WidgetRef ref) async {
+    if (!await confirmRestartOnboarding(context)) return;
+    if (!context.mounted) return;
+    // DEF160 (mobile half): this IS the restart path — the only place
+    // `isRestart: true` should ever be set. See OnboardingNotifier.reset.
+    await ref.read(onboardingNotifierProvider.notifier).reset(isRestart: true);
+    if (!context.mounted) return;
+    Navigator.of(context).pushReplacementNamed('/onboarding');
   }
 }
 

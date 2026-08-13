@@ -541,16 +541,12 @@
     "tourDone": "Faham",
     "tourSkip": "Langkau lawatan",
     "tourConveneTryNow": "Cuba sekarang →",
-    "tourFloor1Title": "CONCIERGE ANDA",
-    "tourFloor1Body": "Sentiasa tersedia. Tanya apa sahaja — pelajaran, portfolio anda, atau bacaan seterusnya.",
-    "tourFloor2Title": "PASUKAN ANALIS ANDA",
-    "tourFloor2Body": "12 pakar, setiap satu dengan domain tersendiri. Ketik mana-mana yang tidak dikunci untuk memulakan sesi satu-lawan-satu.",
-    "tourFloor3Title": "AGEN TERKUNCI",
-    "tourFloor3Body": "Selesaikan pelajaran berkaitan untuk membuka kunci setiap analis. Ketik mana-mana yang terkunci untuk melihat syaratnya.",
-    "tourFloor4Title": "CABARAN HARIAN",
-    "tourFloor4Body": "Satu cabaran sehari mengasah pertimbangan anda. Mengambil masa kurang 2 minit.",
-    "tourFloor5Title": "CONVENE THE ROOM",
-    "tourFloor5Body": "Alatan paling berkuasa anda. Semua 12 ejen menganalisis saham bersama — kemudian anda buat keputusan.",
+    "tourFloor1Title": "SWIPE THE HEADER",
+    "tourFloor1Body": "Your portfolio sits here, and your team's latest verdicts one card to the right. Swipe across — it never moves on its own.",
+    "tourFloor2Title": "ONE BOX, TWO JOBS",
+    "tourFloor2Body": "Type a ticker and the button convenes your team on it. Type anything else and AMI takes the question. Tap CONVENE with the box empty and you get a ticker picker.",
+    "tourFloor3Title": "TWELVE ANALYSTS, ONE TAP DOWN",
+    "tourFloor3Body": "Your firm is still twelve people. This row says how many seats you have unlocked; tap it to meet them, brief them, or see what a locked one is waiting on.",
     "tourCompletionFloor": "Pergi CONVENE Room pertama anda.",
     "tourPortfolio1Title": "PORTFOLIO SIMULASI",
     "tourPortfolio1Body": "Gunakan butang + untuk OPEN TRADE TICKET. Semua dagangan adalah simulasi — tiada wang sebenar.",
@@ -1698,6 +1694,100 @@
             },
             "status": {
                 "type": "String"
+            }
+        }
+    },
+    "floorCardPortfolio": "SIM PORTFOLIO",
+    "@floorCardPortfolio": {
+        "description": "CR173 slice 2. Label on carousel card 1. 'SIM' because the whole app is a simulation and the card must never read as real money. Mono uppercase, short — it sits on a card ~300pt wide. NEW key. retranslate:[ar,ms]"
+    },
+    "floorCardPortfolioLoading": "Reading your portfolio…",
+    "@floorCardPortfolioLoading": {
+        "description": "CR173 slice 2. Card 1 before the portfolio has loaded. Deliberately not a zero balance: an unmeasured value and a real zero are different facts, and this is the first number a user sees. NEW key. retranslate:[ar,ms]"
+    },
+    "floorCardPortfolioDayZero": "{stake} to start · no positions yet",
+    "@floorCardPortfolioDayZero": {
+        "description": "CR173 slice 2. Card 1 on a brand-new account that has never traded. {stake} is the real configured starting stake read from the server, never a hardcoded figure. There is no '+0.0% all-time' here because no return has been measured. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "stake": {
+                "type": "String"
+            }
+        }
+    },
+    "floorCardPortfolioSummary": "{pnl} all-time · {cash} cash · {positions} positions",
+    "@floorCardPortfolioSummary": {
+        "description": "CR173 slice 2. Card 1's second line once trading has begun. {pnl} arrives already formatted with its sign (e.g. '+4.8%'), {cash} already formatted as currency, {positions} is a count of open holdings. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "pnl": {
+                "type": "String"
+            },
+            "cash": {
+                "type": "String"
+            },
+            "positions": {
+                "type": "int"
+            }
+        }
+    },
+    "floorCardCalls": "YOUR TEAM'S CALLS",
+    "@floorCardCalls": {
+        "description": "CR173 slice 2. Label on carousel card 2 and the title of the screen it opens. 'Calls' in the analyst sense — the verdicts the user's 12-agent firm reached. Mono uppercase. NEW key. retranslate:[ar,ms]"
+    },
+    "floorCardCallsEmpty": "No verdicts yet — convene on your first ticker.",
+    "@floorCardCallsEmpty": {
+        "description": "CR173 slice 2. Card 2 with no room runs behind it. Says what fills the card rather than apologising for it being empty. NEW key. retranslate:[ar,ms]"
+    },
+    "floorCardCallsUnavailable": "Couldn't read your team's calls just now.",
+    "@floorCardCallsUnavailable": {
+        "description": "CR173 slice 2. Card 2 when the journal read failed. Distinct from the empty state on purpose: 'nothing decided yet' and 'we could not look' are different facts and must not render identically. NEW key. retranslate:[ar,ms]"
+    },
+    "floorCallsNoReferencePrice": "No entry level was named, so there is nothing to measure against.",
+    "@floorCallsNoReferencePrice": {
+        "description": "CR173 slice 2. Shown on a call row whose verdict proposed no entry price — a PASS names no level. Explains the dash in the change column instead of leaving it unexplained. NEW key. retranslate:[ar,ms]"
+    },
+    "floorCallsWindow": "Last {count} entries",
+    "@floorCallsWindow": {
+        "description": "CR173 slice 2. Subtitle on the calls screen. Every aggregate names its window: a list capped at {count} that presents itself as complete is wrong by an amount the reader cannot see. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "floorOmniboxHint": "Type a ticker — or ask AMI anything…",
+    "@floorOmniboxHint": {
+        "description": "CR173 slice 2. Placeholder in the Floor's single input. Must convey that ONE box takes both a ticker symbol and a plain question — that duality is the whole point of the control. 'AMI' is the assistant's name, never translate it. NEW key. retranslate:[ar,ms]"
+    },
+    "floorOmniboxCaption": "A ticker convenes your team. Anything else, AMI answers.",
+    "@floorOmniboxCaption": {
+        "description": "CR173 slice 2. Caption under the primary button, explaining the routing. 'Convene' is the app's verb for starting a 12-agent Room run. NEW key. retranslate:[ar,ms]"
+    },
+    "floorConveneOn": "CONVENE THE ROOM · {ticker}",
+    "@floorConveneOn": {
+        "description": "CR173 slice 2. The primary button once the typed text is ticker-shaped, naming the ticker it will run on. Showing the ticker is a safety property, not decoration: the router matches shape, not meaning, so a user who typed a word that looks like a ticker sees the mistake before spending a credit. Mono uppercase. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "ticker": {
+                "type": "String"
+            }
+        }
+    },
+    "floorAskAmi": "ASK AMI",
+    "@floorAskAmi": {
+        "description": "CR173 slice 2. The primary button when the typed text is not ticker-shaped — it will open the AMI Concierge chat carrying that text. 'AMI' is the assistant's name, never translate it. Mono uppercase. NEW key. retranslate:[ar,ms]"
+    },
+    "floorFirmHeading": "YOUR FIRM",
+    "@floorFirmHeading": {
+        "description": "CR173 slice 2. Heading on the Floor row that leads to the 12 agents, and the title of that screen. 'Firm' in the investment-firm sense — the user is the CEO of this one. Mono uppercase. NEW key. retranslate:[ar,ms]"
+    },
+    "floorFirmSeats": "{filled}/{total} seats filled",
+    "@floorFirmSeats": {
+        "description": "CR173 slice 2. The live seat count on the firm row. Load-bearing: it is the one place the Floor says the team is twelve people and that some are still locked. NEW key. retranslate:[ar,ms]",
+        "placeholders": {
+            "filled": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
             }
         }
     }

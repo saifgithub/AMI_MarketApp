@@ -12,9 +12,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class OneOnOneScreen extends ConsumerStatefulWidget {
-  const OneOnOneScreen({super.key, required this.agent});
+  const OneOnOneScreen({super.key, required this.agent, this.initialMessage});
 
   final Agent agent;
+
+  /// CR173 §5 — text the user typed into the Floor's omnibox that was not
+  /// ticker-shaped. It arrives here as their first message rather than as a
+  /// pre-filled box they have to press send on again: the omnibox already WAS
+  /// the send. Sent once the session exists, because a message posted before
+  /// the session lands is dropped by the notifier.
+  final String? initialMessage;
 
   @override
   ConsumerState<OneOnOneScreen> createState() => _OneOnOneScreenState();
@@ -23,6 +30,7 @@ class OneOnOneScreen extends ConsumerStatefulWidget {
 class _OneOnOneScreenState extends ConsumerState<OneOnOneScreen> {
   final _textCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
+  bool _seeded = false;
 
   @override
   void dispose() {
@@ -52,6 +60,17 @@ class _OneOnOneScreenState extends ConsumerState<OneOnOneScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(oneOnOneNotifierProvider(widget.agent.id));
+
+    // The carried-over omnibox text, sent once, after the session exists.
+    final seed = widget.initialMessage;
+    if (!_seeded && seed != null && seed.trim().isNotEmpty &&
+        state.session != null) {
+      _seeded = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(oneOnOneNotifierProvider(widget.agent.id).notifier).send(seed);
+      });
+    }
 
     // Auto-scroll on new content
     ref.listen<int>(

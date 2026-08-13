@@ -2352,39 +2352,25 @@ class AppLocalizationsMs extends AppLocalizations {
   String get tourConveneTryNow => 'Cuba sekarang →';
 
   @override
-  String get tourFloor1Title => 'CONCIERGE ANDA';
+  String get tourFloor1Title => 'SWIPE THE HEADER';
 
   @override
   String get tourFloor1Body =>
-      'Sentiasa tersedia. Tanya apa sahaja — pelajaran, portfolio anda, atau bacaan seterusnya.';
+      'Your portfolio sits here, and your team\'s latest verdicts one card to the right. Swipe across — it never moves on its own.';
 
   @override
-  String get tourFloor2Title => 'PASUKAN ANALIS ANDA';
+  String get tourFloor2Title => 'ONE BOX, TWO JOBS';
 
   @override
   String get tourFloor2Body =>
-      '12 pakar, setiap satu dengan domain tersendiri. Ketik mana-mana yang tidak dikunci untuk memulakan sesi satu-lawan-satu.';
+      'Type a ticker and the button convenes your team on it. Type anything else and AMI takes the question. Tap CONVENE with the box empty and you get a ticker picker.';
 
   @override
-  String get tourFloor3Title => 'AGEN TERKUNCI';
+  String get tourFloor3Title => 'TWELVE ANALYSTS, ONE TAP DOWN';
 
   @override
   String get tourFloor3Body =>
-      'Selesaikan pelajaran berkaitan untuk membuka kunci setiap analis. Ketik mana-mana yang terkunci untuk melihat syaratnya.';
-
-  @override
-  String get tourFloor4Title => 'CABARAN HARIAN';
-
-  @override
-  String get tourFloor4Body =>
-      'Satu cabaran sehari mengasah pertimbangan anda. Mengambil masa kurang 2 minit.';
-
-  @override
-  String get tourFloor5Title => 'CONVENE THE ROOM';
-
-  @override
-  String get tourFloor5Body =>
-      'Alatan paling berkuasa anda. Semua 12 ejen menganalisis saham bersama — kemudian anda buat keputusan.';
+      'Your firm is still twelve people. This row says how many seats you have unlocked; tap it to meet them, brief them, or see what a locked one is waiting on.';
 
   @override
   String get tourCompletionFloor => 'Pergi CONVENE Room pertama anda.';
@@ -3576,5 +3562,64 @@ class AppLocalizationsMs extends AppLocalizations {
   @override
   String roomStageStatusSemantic(String stage, String status) {
     return '$stage, $status';
+  }
+
+  @override
+  String get floorCardPortfolio => 'SIM PORTFOLIO';
+
+  @override
+  String get floorCardPortfolioLoading => 'Reading your portfolio…';
+
+  @override
+  String floorCardPortfolioDayZero(String stake) {
+    return '$stake to start · no positions yet';
+  }
+
+  @override
+  String floorCardPortfolioSummary(String pnl, String cash, int positions) {
+    return '$pnl all-time · $cash cash · $positions positions';
+  }
+
+  @override
+  String get floorCardCalls => 'YOUR TEAM\'S CALLS';
+
+  @override
+  String get floorCardCallsEmpty =>
+      'No verdicts yet — convene on your first ticker.';
+
+  @override
+  String get floorCardCallsUnavailable =>
+      'Couldn\'t read your team\'s calls just now.';
+
+  @override
+  String get floorCallsNoReferencePrice =>
+      'No entry level was named, so there is nothing to measure against.';
+
+  @override
+  String floorCallsWindow(int count) {
+    return 'Last $count entries';
+  }
+
+  @override
+  String get floorOmniboxHint => 'Type a ticker — or ask AMI anything…';
+
+  @override
+  String get floorOmniboxCaption =>
+      'A ticker convenes your team. Anything else, AMI answers.';
+
+  @override
+  String floorConveneOn(String ticker) {
+    return 'CONVENE THE ROOM · $ticker';
+  }
+
+  @override
+  String get floorAskAmi => 'ASK AMI';
+
+  @override
+  String get floorFirmHeading => 'YOUR FIRM';
+
+  @override
+  String floorFirmSeats(int filled, int total) {
+    return '$filled/$total seats filled';
   }
 }

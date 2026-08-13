@@ -2347,39 +2347,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tourConveneTryNow => 'Try it now →';
 
   @override
-  String get tourFloor1Title => 'YOUR CONCIERGE';
+  String get tourFloor1Title => 'SWIPE THE HEADER';
 
   @override
   String get tourFloor1Body =>
-      'Always available. Ask anything — lessons, your portfolio, what to read next.';
+      'Your portfolio sits here, and your team\'s latest verdicts one card to the right. Swipe across — it never moves on its own.';
 
   @override
-  String get tourFloor2Title => 'YOUR ANALYST TEAM';
+  String get tourFloor2Title => 'ONE BOX, TWO JOBS';
 
   @override
   String get tourFloor2Body =>
-      '12 specialists, each with a domain. Tap any unlocked one to start a one-on-one.';
+      'Type a ticker and the button convenes your team on it. Type anything else and AMI takes the question. Tap CONVENE with the box empty and you get a ticker picker.';
 
   @override
-  String get tourFloor3Title => 'LOCKED AGENTS';
+  String get tourFloor3Title => 'TWELVE ANALYSTS, ONE TAP DOWN';
 
   @override
   String get tourFloor3Body =>
-      'Complete the related lessons to unlock each analyst. Tap any locked one to see what you need.';
-
-  @override
-  String get tourFloor4Title => 'DAILY CHALLENGE';
-
-  @override
-  String get tourFloor4Body =>
-      'One challenge a day sharpens your judgement. Takes under 2 minutes.';
-
-  @override
-  String get tourFloor5Title => 'CONVENE THE ROOM';
-
-  @override
-  String get tourFloor5Body =>
-      'Your most powerful tool. All 12 agents analyze a stock together — then you decide.';
+      'Your firm is still twelve people. This row says how many seats you have unlocked; tap it to meet them, brief them, or see what a locked one is waiting on.';
 
   @override
   String get tourCompletionFloor => 'Go convene your first Room.';
@@ -3572,5 +3558,64 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String roomStageStatusSemantic(String stage, String status) {
     return '$stage, $status';
+  }
+
+  @override
+  String get floorCardPortfolio => 'SIM PORTFOLIO';
+
+  @override
+  String get floorCardPortfolioLoading => 'Reading your portfolio…';
+
+  @override
+  String floorCardPortfolioDayZero(String stake) {
+    return '$stake to start · no positions yet';
+  }
+
+  @override
+  String floorCardPortfolioSummary(String pnl, String cash, int positions) {
+    return '$pnl all-time · $cash cash · $positions positions';
+  }
+
+  @override
+  String get floorCardCalls => 'YOUR TEAM\'S CALLS';
+
+  @override
+  String get floorCardCallsEmpty =>
+      'No verdicts yet — convene on your first ticker.';
+
+  @override
+  String get floorCardCallsUnavailable =>
+      'Couldn\'t read your team\'s calls just now.';
+
+  @override
+  String get floorCallsNoReferencePrice =>
+      'No entry level was named, so there is nothing to measure against.';
+
+  @override
+  String floorCallsWindow(int count) {
+    return 'Last $count entries';
+  }
+
+  @override
+  String get floorOmniboxHint => 'Type a ticker — or ask AMI anything…';
+
+  @override
+  String get floorOmniboxCaption =>
+      'A ticker convenes your team. Anything else, AMI answers.';
+
+  @override
+  String floorConveneOn(String ticker) {
+    return 'CONVENE THE ROOM · $ticker';
+  }
+
+  @override
+  String get floorAskAmi => 'ASK AMI';
+
+  @override
+  String get floorFirmHeading => 'YOUR FIRM';
+
+  @override
+  String floorFirmSeats(int filled, int total) {
+    return '$filled/$total seats filled';
   }
 }

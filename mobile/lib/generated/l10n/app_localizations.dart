@@ -3967,65 +3967,41 @@ abstract class AppLocalizations {
   /// **'Try it now →'**
   String get tourConveneTryNow;
 
-  /// Floor tour step 1 — Concierge hex title.
+  /// Floor tour step 1 — Concierge hex title. CR173 §5.10 — RE-CUT for the 3-stop Floor tour (was 5 stops). retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'YOUR CONCIERGE'**
+  /// **'SWIPE THE HEADER'**
   String get tourFloor1Title;
 
-  /// Floor tour step 1 — Concierge hex body.
+  /// Floor tour step 1 — Concierge hex body. CR173 §5.10 — RE-CUT for the 3-stop Floor tour (was 5 stops). retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'Always available. Ask anything — lessons, your portfolio, what to read next.'**
+  /// **'Your portfolio sits here, and your team\'s latest verdicts one card to the right. Swipe across — it never moves on its own.'**
   String get tourFloor1Body;
 
-  /// Floor tour step 2 — agent grid title.
+  /// Floor tour step 2 — agent grid title. CR173 §5.10 — RE-CUT for the 3-stop Floor tour (was 5 stops). retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'YOUR ANALYST TEAM'**
+  /// **'ONE BOX, TWO JOBS'**
   String get tourFloor2Title;
 
-  /// Floor tour step 2 — agent grid body.
+  /// Floor tour step 2 — agent grid body. CR173 §5.10 — RE-CUT for the 3-stop Floor tour (was 5 stops). retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'12 specialists, each with a domain. Tap any unlocked one to start a one-on-one.'**
+  /// **'Type a ticker and the button convenes your team on it. Type anything else and AMI takes the question. Tap CONVENE with the box empty and you get a ticker picker.'**
   String get tourFloor2Body;
 
-  /// Floor tour step 3 — locked agent title.
+  /// Floor tour step 3 — locked agent title. CR173 §5.10 — RE-CUT for the 3-stop Floor tour (was 5 stops). retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'LOCKED AGENTS'**
+  /// **'TWELVE ANALYSTS, ONE TAP DOWN'**
   String get tourFloor3Title;
 
-  /// Floor tour step 3 — locked agent body.
+  /// Floor tour step 3 — locked agent body. CR173 §5.10 — RE-CUT for the 3-stop Floor tour (was 5 stops). retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'Complete the related lessons to unlock each analyst. Tap any locked one to see what you need.'**
+  /// **'Your firm is still twelve people. This row says how many seats you have unlocked; tap it to meet them, brief them, or see what a locked one is waiting on.'**
   String get tourFloor3Body;
-
-  /// Floor tour step 4 — daily challenge card title.
-  ///
-  /// In en, this message translates to:
-  /// **'DAILY CHALLENGE'**
-  String get tourFloor4Title;
-
-  /// Floor tour step 4 — daily challenge card body.
-  ///
-  /// In en, this message translates to:
-  /// **'One challenge a day sharpens your judgement. Takes under 2 minutes.'**
-  String get tourFloor4Body;
-
-  /// Floor tour step 5 — Convene button title.
-  ///
-  /// In en, this message translates to:
-  /// **'CONVENE THE ROOM'**
-  String get tourFloor5Title;
-
-  /// Floor tour step 5 — Convene button body.
-  ///
-  /// In en, this message translates to:
-  /// **'Your most powerful tool. All 12 agents analyze a stock together — then you decide.'**
-  String get tourFloor5Body;
 
   /// Snackbar shown after the Floor coach-mark tour completes.
   ///
@@ -5904,6 +5880,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{stage}, {status}'**
   String roomStageStatusSemantic(String stage, String status);
+
+  /// CR173 slice 2. Label on carousel card 1. 'SIM' because the whole app is a simulation and the card must never read as real money. Mono uppercase, short — it sits on a card ~300pt wide. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SIM PORTFOLIO'**
+  String get floorCardPortfolio;
+
+  /// CR173 slice 2. Card 1 before the portfolio has loaded. Deliberately not a zero balance: an unmeasured value and a real zero are different facts, and this is the first number a user sees. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Reading your portfolio…'**
+  String get floorCardPortfolioLoading;
+
+  /// CR173 slice 2. Card 1 on a brand-new account that has never traded. {stake} is the real configured starting stake read from the server, never a hardcoded figure. There is no '+0.0% all-time' here because no return has been measured. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{stake} to start · no positions yet'**
+  String floorCardPortfolioDayZero(String stake);
+
+  /// CR173 slice 2. Card 1's second line once trading has begun. {pnl} arrives already formatted with its sign (e.g. '+4.8%'), {cash} already formatted as currency, {positions} is a count of open holdings. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{pnl} all-time · {cash} cash · {positions} positions'**
+  String floorCardPortfolioSummary(String pnl, String cash, int positions);
+
+  /// CR173 slice 2. Label on carousel card 2 and the title of the screen it opens. 'Calls' in the analyst sense — the verdicts the user's 12-agent firm reached. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR TEAM\'S CALLS'**
+  String get floorCardCalls;
+
+  /// CR173 slice 2. Card 2 with no room runs behind it. Says what fills the card rather than apologising for it being empty. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No verdicts yet — convene on your first ticker.'**
+  String get floorCardCallsEmpty;
+
+  /// CR173 slice 2. Card 2 when the journal read failed. Distinct from the empty state on purpose: 'nothing decided yet' and 'we could not look' are different facts and must not render identically. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read your team\'s calls just now.'**
+  String get floorCardCallsUnavailable;
+
+  /// CR173 slice 2. Shown on a call row whose verdict proposed no entry price — a PASS names no level. Explains the dash in the change column instead of leaving it unexplained. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No entry level was named, so there is nothing to measure against.'**
+  String get floorCallsNoReferencePrice;
+
+  /// CR173 slice 2. Subtitle on the calls screen. Every aggregate names its window: a list capped at {count} that presents itself as complete is wrong by an amount the reader cannot see. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Last {count} entries'**
+  String floorCallsWindow(int count);
+
+  /// CR173 slice 2. Placeholder in the Floor's single input. Must convey that ONE box takes both a ticker symbol and a plain question — that duality is the whole point of the control. 'AMI' is the assistant's name, never translate it. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Type a ticker — or ask AMI anything…'**
+  String get floorOmniboxHint;
+
+  /// CR173 slice 2. Caption under the primary button, explaining the routing. 'Convene' is the app's verb for starting a 12-agent Room run. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'A ticker convenes your team. Anything else, AMI answers.'**
+  String get floorOmniboxCaption;
+
+  /// CR173 slice 2. The primary button once the typed text is ticker-shaped, naming the ticker it will run on. Showing the ticker is a safety property, not decoration: the router matches shape, not meaning, so a user who typed a word that looks like a ticker sees the mistake before spending a credit. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CONVENE THE ROOM · {ticker}'**
+  String floorConveneOn(String ticker);
+
+  /// CR173 slice 2. The primary button when the typed text is not ticker-shaped — it will open the AMI Concierge chat carrying that text. 'AMI' is the assistant's name, never translate it. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'ASK AMI'**
+  String get floorAskAmi;
+
+  /// CR173 slice 2. Heading on the Floor row that leads to the 12 agents, and the title of that screen. 'Firm' in the investment-firm sense — the user is the CEO of this one. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR FIRM'**
+  String get floorFirmHeading;
+
+  /// CR173 slice 2. The live seat count on the firm row. Load-bearing: it is the one place the Floor says the team is twelve people and that some are still locked. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{filled}/{total} seats filled'**
+  String floorFirmSeats(int filled, int total);
 }
 
 class _AppLocalizationsDelegate
