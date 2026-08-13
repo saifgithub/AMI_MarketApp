@@ -213,10 +213,9 @@ Three things resolve it, and they are conditions of shipping, not mitigations:
 
 **The honest weakness of this CR is that the census measures *supply*, not *demand*.** 112 unused
 fields is a fact about our code, not evidence any agent needs them. Leg 1's residual is the demand
-measurement, and **it has not been run** — the prompt epoch changed today at 12:54 UTC (`19cb0e3c`),
-so no valid corpus exists and `prompt_quality_sweep.py` explicitly refuses pooling across a prompt
-change. Tier B is therefore a **ranked hypothesis set**, not a proven roster. Anyone reading it as
-settled is reading it wrong.
+measurement. ~~It has not been run~~ — **AMENDED 2026-08-13, see below: it has, and it changed this
+CR's own recommendation.** Tier B remains a **ranked hypothesis set**, not a proven roster; Leg 1
+tells us which lane is demanding, never which specific field would satisfy it.
 
 **A second-order risk:** more numbers is not more reasoning. Our AAPL run put twelve agents on roughly
 six shared figures; the failure was information *diversity*, and a wider sheet could as easily produce
@@ -246,16 +245,80 @@ refused to claim response-side effects.
    partially reverted rather than extended. A prompt or data change whose effect is not re-measured is
    the CR105 Amendment-1 trap.
 4. **NOT claimed on merge:** that any agent *uses* a new field, that reasoning quality improved, or
-   that the residual closed. All three are response-side and need the corpus that does not yet exist.
+   that the residual closed. All three are response-side and need a post-promotion corpus.
 
 ---
 
-## Open decisions for Saiful
+## AMENDMENT 1 — 2026-08-13: Leg 1 was already run, and it flipped this CR's recommendation
+
+**Leg 1 did not need commissioning.** The post-Batch-9 re-measurement (`421e0a98`, 2026-08-13) ran 40
+live convenes on the same 13 tickers as the 08-07 epoch and explicitly graded this CR:
+
+> *"M3 is CR166's own acceptance gate and it passed: novel fell."* — 4.3% → **2.7%** (grounded 92.6%
+> → 95.3%).
+
+The corpus is committed at `../CR143_agent_prompt_audit/corpus/*_2026-08-13-epoch.json`, and it is
+valid on the **current** epoch: no commit since has touched `room_prompts.py`, `room_runner.py`,
+`fundamentals.py`, `technicals.py` or `content/agents/`, and Alpha's deployed `room_prompts.py` /
+`room_runner.py` md5s match local HEAD (verified 2026-08-13). So the ~40-convene / ~2 h / ~480-credit
+cost this CR budgeted for Leg 1 is **zero**, and the same-epoch baseline the acceptance gate demands
+already exists.
+
+**It also contradicted this CR's own lane recommendation.** Per-agent M3:
+
+```text
+market_analyst        3.1 → 0.6      research_manager      1.0 → 2.8   ↑
+conservative_debator  5.4 → 1.2      fundamentals_analyst  2.3 → 3.6   ↑
+neutral_debator       5.6 → 1.6      news_analyst          0.0 → 1.1   ↑
+bull_researcher       7.5 → 2.8      trader                6.7 → 4.7
+aggressive_debator    4.9 → 2.7      bear_researcher       6.0 → 4.8
+social_media_analyst  0.0 → 0.0
+```
+
+The original recommendation was **technicals lane first**, on the Leg 3 argument that the 200-day gap
+is the clearest structural hole. The measurement says the technicals lane is now the *cleanest* read
+in the Room (0.6%) — Batch 6 handed the Market Analyst SMA-20/50, the volume ratio and the 52-week
+distances, and *"an agent given the number stops inventing it."* The lane with rising, measured demand
+is **fundamentals** (2.3 → 3.6), and the memo's own second reading explains why: Batch 5 firewalled
+`fundamentals_analyst` **out of** technicals/news/social, so it may be starved in its own lane.
+
+**This does not retire the 200-day argument.** Leg 3 exists precisely because Leg 1 is a lagging
+indicator: an agent never given a 200-day SMA does not write *"200-day unavailable"*, it simply never
+discusses the primary trend, so 0.6% novel is blindness on that field, not sufficiency. Technicals
+moves to a later stage on **relative** return, not because the hole closed.
+
+## Decisions taken — Saiful, 2026-08-13
+
+1. **Tier B ships, staged, lane-assigned — `fundamentals` lane FIRST** (revised from technicals on the
+   Amendment-1 evidence above). Technicals follows after the re-measure.
+2. **Leg 1 before Tier B — satisfied** by the 08-13 corpus; no new run commissioned.
+3. **Gross margin: supply the field and restore the ask.** `grossMargins` / `operatingMargins` /
+   `ebitdaMargins` render; the margin-structure line returns to `fundamentals_analyst.md`. The margin
+   *trend* half of the disclosure stays correct and stays in CR145 Tier D.
+4. **Tier D stays inside CR166** — no separate DEF ID minted for the `aggressive_debator` 0.30-vs-0.18
+   recurrence.
+
+**Stage 1 scope** (this CR's first promotion): Tier A census guard + Tier B fundamentals lane +
+decision 3 + Tier D + **the folded CR168 identity fields** (`longName`, `exchange`). Identity rides
+Stage 1 because it is the same dict, the same fetcher and the same renderer — and because it is
+**string-only**: M3 counts numeric tokens, so it cannot move the novel rate and cannot confound this
+stage's gate. The other four touch **different agents**, so the per-agent M3 re-measure still
+attributes cleanly — deliberately not the bundling the 08-13 memo criticised in its own results.
+
+**Stage 1's specific gate:** `fundamentals_analyst` novel falls from **3.6%**, `aggressive_debator`
+from **2.7%**, both against the 08-13 corpus. If fundamentals does not fall, the memo's *"more supplied
+numbers invite more derived ones"* reading gains support and Tier B is partially reverted rather than
+extended.
+
+---
+
+## Superseded — original open decisions (kept for the record)
 
 1. **Does Tier B ship at all, given CR145 Tier C just cut the sheets in half?** This is the design
    decision, and it is the same shape as the one Saiful took for CR145 Tier C (default-open vs
    firewall). Recommend: yes, but lane-assigned and staged — technicals lane first (it lost the most
-   and the 200-day gap is the clearest single hole).
+   and the 200-day gap is the clearest single hole). — **SUPERSEDED by Amendment 1: fundamentals
+   first.**
 2. **Do we run Leg 1 before or after Tier B?** Running it first makes Tier B evidence-led and costs
    ~40 convenes (~2 h, ~480 credits) plus a frozen prompt epoch. Running it after makes Tier B a
    hypothesis the same measurement then grades. Recommend: **before** — it is the only thing that
