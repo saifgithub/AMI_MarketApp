@@ -9,7 +9,6 @@ library;
 import 'dart:async';
 
 import 'package:ami_trade/features/tour/journal_tour.dart';
-import 'package:ami_trade/features/nav/ami_tab.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
