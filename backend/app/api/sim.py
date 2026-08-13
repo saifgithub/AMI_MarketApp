@@ -35,16 +35,15 @@ from app.services.journal_store import get_journal_store
 from app.services.mandate_store import resolve_mandate
 from app.services.market_data import VALID_PERIODS
 from app.services.portfolio_nav_daily import nav_history, twr_pct_for_window
-from app.services.reputation_service import get_reputation_service
 from app.services.classification_universe import default_classification_universe_async
 from app.services.sharia_universe import default_halal_universe_async
 from app.services.sim_engine import SimEngine, SimTrade, get_sim_engine
+from app.services.sim_trade_effects import apply_post_fill_effects
 from app.services.ticker_reference import (
     TickerNotFoundError,
     require_ticker_exists,
     ticker_not_found_detail,
 )
-from app.services.watchlist_store import get_watchlist_store
 from app.api.dependencies import get_current_user
 from app.db import get_session
 from app.db.models import SimPortfolioRow, User
@@ -380,50 +379,11 @@ async def submit_trade(
     trade = result.trade
     assert trade is not None
 
-    # Auto-add the traded ticker to the user's watchlist so it shows up
-    # in the ticker tape. Idempotent on (user_id, ticker), best-effort.
-    try:
-        get_watchlist_store().add(req.user_id, trade.ticker)
-    except Exception:  # pragma: no cover
-        pass
-
-    # Journal capture — sim_trade entry
-    try:
-        side_label = (
-            trade.side.value if hasattr(trade.side, "value")
-            else str(trade.side)
-        ).upper()
-        stop_str = f"${trade.stop:.2f}" if trade.stop is not None else "—"
-        target_str = f"${trade.target:.2f}" if trade.target is not None else "—"
-        get_journal_store().append(JournalEntryCreate(
-            user_id=req.user_id,
-            entry_type=EntryType.SIM_TRADE,
-            reference_id=trade.id,
-            title=f"{side_label} {trade.quantity:g} {trade.ticker} @ ${trade.entry_price:.2f}",
-            summary=(
-                f"Opened at ${trade.entry_price:.2f}. "
-                f"Stop {stop_str}. Target {target_str}."
-            ),
-            ticker=trade.ticker,
-            tags=["sim_trade"],
-            outcome=Outcome.PENDING,
-            payload={"trade": trade.to_json()},
-        ))
-    except Exception:  # pragma: no cover
-        pass
-
-    # Reputation (CR004): a buy with both stop AND target that cleared the
-    # mandate check is a disciplined trade. Trade-id ref dedup + the ≤3/day
-    # per-type limit keep it un-farmable.
-    if side == Side.BUY and req.stop is not None and req.target is not None:
-        try:
-            with get_session() as s:
-                get_reputation_service().award(
-                    s, user_id=req.user_id,
-                    event_type="trade_disciplined", ref_id=str(trade.id),
-                )
-        except Exception:  # pragma: no cover
-            pass
+    # CR170 §7 — watchlist + journal + reputation. Properties of a FILL, not of
+    # this route: the resting-order sweep reaches the same three effects with no
+    # request in the call stack. Extracted before that second fill site exists,
+    # so the two paths cannot diverge.
+    apply_post_fill_effects(user_id=req.user_id, trade=trade)
 
     return {
         "ok": True,
