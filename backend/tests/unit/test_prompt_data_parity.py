@@ -172,6 +172,15 @@ _EARNINGS_SENTINEL = EarningsInfo(
     earnings_date="2026-09-30",
     quarter="Q3",
     eps_estimate=4.44,
+    # CR179 Leg 0 — these two were left at their None defaults, so their
+    # fingerprints did not exist and every check that walks the fingerprint map
+    # skipped them. That is what let four INTENTIONALLY_OMITTED entries go on
+    # asserting "deliberately not rendered" for a year after CR166 Stage 1
+    # started rendering both: the omission suppressed the parity check, and the
+    # empty sentinel suppressed the guard on the omission. Populated so the
+    # fixture can see them at all.
+    ex_dividend_date="2026-10-17",
+    dividend_rate=2.64,
 )
 
 _JOURNAL_SENTINEL = JournalEntry(
@@ -313,27 +322,22 @@ INTENTIONALLY_OMITTED: dict[tuple[str, str, str], str] = {
     ("journal", "concierge", "created_at"): "routing index, not analysis (DEF098 spec).",
     ("journal", "concierge", "tags"): "routing index, not analysis.",
     ("journal", "concierge", "agents_involved"): "routing index, not analysis.",
-    # ── earnings (CR030 dividend fields — mobile ticker-detail chip only) ──
-    ("earnings", "room", "ex_dividend_date"): (
-        "CR030 mobile ticker-detail dividend chip, not analyst-prompt data; the Room "
-        "already surfaces dividend YIELD via the fundamentals source, and an ex-date is "
-        "calendar noise in the analyst reasoning prompt."
-    ),
-    ("earnings", "one_on_one", "ex_dividend_date"): (
-        "CR030 mobile ticker-detail dividend chip, not analyst-prompt data; the 1-on-1 "
-        "block already surfaces dividend YIELD via fundamentals — an ex-date is calendar "
-        "noise in the analyst prompt."
-    ),
-    ("earnings", "room", "dividend_rate"): (
-        "CR030 mobile ticker-detail dividend chip, not analyst-prompt data; dividend YIELD "
-        "(not the raw per-share rate) is the analyst-relevant figure and is already rendered "
-        "via the fundamentals source."
-    ),
-    ("earnings", "one_on_one", "dividend_rate"): (
-        "CR030 mobile ticker-detail dividend chip, not analyst-prompt data; dividend YIELD "
-        "(not the raw per-share rate) is the analyst-relevant figure and is already rendered "
-        "via the fundamentals source."
-    ),
+    # ── earnings ──
+    # CR179 Leg 0 removed four entries here — ("earnings", {room,one_on_one},
+    # {ex_dividend_date,dividend_rate}) — which read "CR030 mobile ticker-detail
+    # dividend chip, not analyst-prompt data … an ex-date is calendar noise in
+    # the analyst reasoning prompt." That was true when written and false from
+    # CR166 Tier B onward, which renders both on the dividend line on BOTH
+    # surfaces (`_capital_allocation_line`). They are now covered by the ordinary
+    # parity check rather than excused from it.
+    #
+    # Worth keeping the mechanism in view: the stale entries were undetectable by
+    # construction. `_unrendered` short-circuits on `omitted` before testing the
+    # fingerprint, so the omission suppressed the check that would have caught
+    # it — and `_EARNINGS_SENTINEL` left both fields at None, so no fingerprint
+    # existed for any other check to notice either. Two independent silences over
+    # the same fact. `test_no_omission_entry_names_a_field_that_is_actually_
+    # rendered` is the guard that ends it.
 }
 
 # Journal storage/plumbing fields are non-content on BOTH journal surfaces.
@@ -536,6 +540,11 @@ def env(monkeypatch):
         },
         "earnings": {
             "earnings_date": "2026-09-30", "quarter": "(Q3)", "eps_estimate": "4.44",
+            # CR166 Tier B renders both of these on the dividend line, on BOTH
+            # surfaces. They had no fingerprint until CR179 Leg 0, which is why
+            # four INTENTIONALLY_OMITTED entries claiming the opposite survived.
+            "ex_dividend_date": "ex-date 2026-10-17",
+            "dividend_rate": "$2.64/share",
         },
         "journal": {
             "title": "TITLESENT", "outcome": "(win)", "summary": "SUMMARYSENT",
@@ -618,6 +627,36 @@ def test_registry_entries_are_valid(env):
         assert field in env.produced[source], (
             f"stale registry entry: {field!r} is no longer produced by {source!r}"
         )
+
+
+def test_no_omission_entry_names_a_field_that_is_actually_rendered(env):
+    """CR179 Leg 0 — the omission registry could only rot in one direction.
+
+    `test_registry_entries_are_valid` checks a reason is non-empty and the field
+    is still produced. Neither question notices when the field starts being
+    RENDERED and the entry's reason becomes the opposite of the truth — and
+    `_unrendered` short-circuits on `omitted` before testing the fingerprint, so
+    the stale entry silences the very check that would have caught it.
+
+    That is not hypothetical: CR166 Stage 1 began rendering `ex_dividend_date`
+    and `dividend_rate` on both surfaces while four entries here still read
+    *"an ex-date is calendar noise in the analyst reasoning prompt"*. Four
+    permanent lies, invisible to every existing guard.
+
+    An omission entry is a claim that the field is NOT rendered. This checks the
+    claim.
+    """
+    contradicted = []
+    for (source, surface, field) in INTENTIONALLY_OMITTED:
+        fp = env.fingerprints[source].get(field)
+        if fp is not None and fp in env.surfaces[(source, surface)]:
+            contradicted.append((source, surface, field))
+    assert not contradicted, (
+        "these fields ARE rendered but are still listed in INTENTIONALLY_OMITTED, "
+        "so the registry asserts the opposite of what the code does — and the "
+        f"omission suppresses the parity check for them: {sorted(contradicted)}. "
+        "Delete the entry; the field is covered by the normal parity check now."
+    )
 
 
 def test_parity_check_is_non_vacuous(env):

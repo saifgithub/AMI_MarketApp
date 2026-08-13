@@ -1331,8 +1331,19 @@ def _social_detail_lines(profile: dict[str, Any]) -> list[str]:
 
 
 def _net_position_line(profile: dict[str, Any]) -> str:
-    """Balance-sheet line, sign-aware: net cash vs net debt (never 'Net cash: $-42000M')."""
-    phrase = net_position_phrase(profile.get("net_cash"))
+    """Balance-sheet line, sign-aware: net cash vs net debt (never 'Net cash: $-42000M').
+
+    CR179 Leg 0 — this read `net_cash` on presence alone, so a profile carrying
+    `field_state["net_cash"] == "unavailable"` still rendered `Net debt $42000M`
+    as fact, directly beneath a header saying none was available live this call.
+    `_profile_for_ticker` does not currently produce that combination, but this
+    function's contract is that it makes no assumption about its caller, and the
+    runner writes the key on every path (`room_runner.py:524-529`) — an
+    unreachable-today bug guarded by nothing is how CR104's other presence-only
+    residue survived to be found here.
+    """
+    net_cash = profile.get("net_cash") if _field_is_live(profile, "net_cash") else None
+    phrase = net_position_phrase(net_cash)
     if phrase is None:
         return "Balance sheet: net cash not available"
     return phrase[:1].upper() + phrase[1:]
@@ -1386,10 +1397,22 @@ def _sector_line(profile: dict[str, Any]) -> str | None:
     """Real sector/industry classification (DEF053) — replaces the old
     always-fake numeric `sector_pe`; this is a category, not a fabricated
     peer-average P/E (yfinance has no peer-basket P/E to compute one from).
-    CR104/D8: gated on `field_state`, not presence alone."""
+    CR104/D8: gated on `field_state`, not presence alone.
+
+    CR179 Leg 0 — the gate covered `sector` and not `industry`, so a profile
+    whose `field_state["industry"]` said `unavailable` still rendered the value
+    under a `(LIVE)` label: `Sector/industry (LIVE): Technology / GHOST-INDUSTRY`.
+    The runner has always written that key (`room_runner.py:541-545`); nothing
+    read it. Presence-only gating is the exact residue CR104 exists to remove,
+    and a `(LIVE)` label over an unavailable value is worse than no line — it is
+    the fabrication the label was introduced to prevent.
+    """
     if not profile.get("sector") or not _field_is_live(profile, "sector"):
         return None
-    return f"Sector/industry (LIVE): {profile['sector']} / {profile.get('industry', '—')}"
+    industry = (
+        profile.get("industry") if _field_is_live(profile, "industry") else None
+    )
+    return f"Sector/industry (LIVE): {profile['sector']} / {industry or '—'}"
 
 
 def _capital_allocation_line(profile: dict[str, Any]) -> str | None:

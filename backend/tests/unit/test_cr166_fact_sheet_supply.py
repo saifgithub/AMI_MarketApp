@@ -100,6 +100,126 @@ def test_census_goes_red_on_an_unexempted_key(monkeypatch):
     assert census.run_census()["unreachable_provider_keys"] == ["phantomProviderKey"]
 
 
+def test_direction_2_gates_the_exit_code_not_just_a_test(monkeypatch, capsys):
+    """CR179 Leg 0 — `unreachable_computed_fields` was computed, returned, and
+    then read by nobody: `main()` printed only direction 1 and the exit code
+    named only direction 1, so this test file was the entire enforcement.
+
+    A check whose only reader is a test is the shape DEF271 rode in on — the
+    sweep sat crashing on import for four days because nothing an operator ran
+    would have said so. Direction 2 now prints AND gates, and both come from
+    one `_gating_findings()` so the printed verdict and the exit code cannot
+    disagree the way they did here.
+    """
+    import scripts.fact_sheet_census as census
+
+    monkeypatch.delitem(census._COMPUTED_NOT_RENDERED, "change_pct")
+    monkeypatch.setattr(sys, "argv", ["census"])
+
+    rc = census.main()
+    out = capsys.readouterr().out
+
+    assert rc == 1, "a computed field no roster can render must fail the build"
+    assert "COMPUTED-BUT-UNREACHABLE" in out
+    assert "change_pct" in out
+    assert "census clean" not in out, (
+        "the verdict line and the exit code disagreed — the bug this test exists for"
+    )
+
+
+def test_a_dead_exemption_is_reported_but_does_not_gate():
+    """The OTHER way the exemption list rots.
+
+    `stale_exemptions` catches "we exempted it, then started taking it".
+    Nothing caught "we exempted a key the provider no longer sends", which is
+    how `revenueQuarterlyGrowth` sat in the list after yfinance dropped it —
+    a reason describing a codebase that no longer exists.
+
+    Deliberately NON-gating: a dead entry is a docs bug and an unreachable
+    field is a data bug. Failing the build on the first would train the
+    operator to reason past a red census, which is the habit CR175 F5 and
+    DEF277 each had to be repaired for.
+    """
+    import scripts.fact_sheet_census as census
+
+    result = census.run_census(refresh=False)
+    assert result["dead_exemptions"] == [], (
+        "the provider no longer sends these; remove them from "
+        f"INTENTIONALLY_NOT_TAKEN: {result['dead_exemptions']}"
+    )
+    assert "dead_exemptions" not in [
+        k for k in ("unreachable_provider_keys", "unreachable_computed_fields",
+                    "stale_exemptions")
+    ], "sanity: dead exemptions must not be in the gating set"
+
+
+def test_every_consumed_key_actually_influences_the_fetchers_output():
+    """The census's contract is *"we pull it and drop it is not a third option"*,
+    and a regex over source text cannot enforce it — `info.get("x")` looks
+    identical whether the value reaches the returned dict or dies in a local.
+
+    So this asks the question by experiment: perturb one `.info` value, re-run
+    the REAL fetcher, and see whether any returned value moves. A key whose
+    perturbation changes nothing influences no output and is a silent discard.
+
+    THE PERTURBATION IS MULTIPLICATIVE ON PURPOSE. An additive one reported
+    `totalDebt` — a demonstrably returned field — as inert, because several
+    fields render as `round(x / 1_000_000)` and a small delta vanishes in the
+    rounding. A guard that calls a known-good field broken is worse than no
+    guard, so the fixture's magnitude is load-bearing.
+
+    The four expected non-influencers are fallback paths and other-module
+    reads, named rather than silently tolerated: a fifth appearing is a finding.
+    """
+    import zlib
+
+    class _AllKeys(dict):
+        def __init__(self, bump=None):
+            super().__init__()
+            self._bump = bump
+
+        def get(self, key, default=None):
+            if key == "exchange":
+                return "NYQ" if self._bump == "exchange" else "NMS"
+            base = 1000.0 + (zlib.crc32(key.encode()) % 9000)
+            return base * 1_000_000.0 + 12345.0 if key == self._bump else base
+
+        def __bool__(self):
+            return True
+
+    def _fetch(bump):
+        sys.modules["yfinance"] = types.SimpleNamespace(
+            __version__="1.2.3",
+            Ticker=lambda t: types.SimpleNamespace(info=_AllKeys(bump)),
+        )
+        return fetch_live_fundamentals("XXXX") or {}
+
+    #  `pegRatio` / `regularMarketPrice` are FALLBACKS — the all-keys fixture
+    #  always supplies their primary (`trailingPegRatio`, `currentPrice`), so
+    #  their branch never fires here. `dividendRate` / `exDividendDate` are read
+    #  in market_data.py and reach the profile via EarningsInfo, not via this
+    #  fetcher's return value.
+    expected_inert = {"pegRatio", "regularMarketPrice", "dividendRate", "exDividendDate"}
+
+    saved = sys.modules.get("yfinance")
+    try:
+        baseline = _fetch(None)
+        assert baseline, "the all-keys fixture produced nothing — the probe is vacuous"
+        inert = {k for k in _consumed_provider_keys() if _fetch(k) == baseline}
+    finally:
+        if saved is not None:
+            sys.modules["yfinance"] = saved
+        else:
+            sys.modules.pop("yfinance", None)
+
+    assert inert == expected_inert, (
+        "a provider key is read but influences nothing the fetcher returns — it is "
+        "fetched and dropped, which the census counts as 'consumed' and parity "
+        f"cannot see at all. Unexpectedly inert: {sorted(inert - expected_inert)}. "
+        f"No longer inert (update the expectation): {sorted(expected_inert - inert)}"
+    )
+
+
 # ── 2. The shapes that break neighbouring fields ─────────────────────────────
 
 

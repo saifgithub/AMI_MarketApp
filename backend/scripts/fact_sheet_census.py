@@ -9,8 +9,11 @@ reviewing the Trader. Three correct findings, one root cause, rediscovered three
 times — because nobody had looked at the whole supply.
 
 The census that prompted this CR counted the supply once: the single
-`yf.Ticker(t).info` call we already make returned **180 keys, 132 of them
-numeric, of which we read 23**. Market cap is what that costs — the mandate
+`yf.Ticker(t).info` call we already make returned **180 keys, of which we read
+23**. (That is the 2026-08-11 figure, kept because it is the number the CR was
+argued on; the live count is printed on every run and has since moved to **184
+keys, 45 read** — CR179 Leg 0 corrected this paragraph after it spent two days
+asserting the pre-CR166 supply as if it were current.) Market cap is what that costs — the mandate
 carried *"Avoid microcaps (< $500M market cap)"* as a HARD constraint in 17 of
 18 prompts while 0 of 18 fact sheets stated one, and the rule sat unfollowable
 for months because the field was never *missing*: it was fetched and thrown
@@ -147,7 +150,9 @@ INTENTIONALLY_NOT_TAKEN: dict[str, str] = {
     "priceEpsCurrentYear": "CR145 Tier D — forward-estimate family",
     "earningsGrowth": "CR145 Tier D — growth family, no trend without .income_stmt",
     "earningsQuarterlyGrowth": "CR145 Tier D — growth family",
-    "revenueQuarterlyGrowth": "CR145 Tier D — growth family",
+    # `revenueQuarterlyGrowth` was here until CR179 Leg 0. The provider stopped
+    # sending it and nothing noticed, because the only exemption guard asked
+    # "did we start taking this?" and never "does this still exist?".
     "grossProfits": "CR145 Tier D — statement line item",
     "netIncomeToCommon": "CR145 Tier D — statement line item",
     "operatingCashflow": "CR145 Tier D — statement line item",
@@ -325,6 +330,18 @@ def run_census(refresh: bool = False) -> dict[str, Any]:
     # its own right rather than sitting there reading as a decision.
     stale_exemptions = sorted(k for k in INTENTIONALLY_NOT_TAKEN if k in consumed)
 
+    # CR179 Leg 0 — the OTHER way an exemption rots. `stale_exemptions` catches
+    # "we exempted it and then started taking it"; this catches "we exempted a
+    # key the provider no longer sends". Both are the list describing a codebase
+    # that no longer exists, and only one of them was guarded — which is how
+    # `revenueQuarterlyGrowth` sat here after yfinance stopped emitting it. Not
+    # fatal on its own (nothing breaks), so it reports without gating: a dead
+    # entry is a docs bug, an unreachable field is a data bug, and conflating
+    # them would train the operator to skim a red census.
+    dead_exemptions = sorted(
+        k for k in INTENTIONALLY_NOT_TAKEN if k not in provider_keys
+    )
+
     return {
         "source": source,
         "provider_keys": len(provider_keys),
@@ -334,7 +351,22 @@ def run_census(refresh: bool = False) -> dict[str, Any]:
         "unreachable_provider_keys": unreachable_provider,
         "unreachable_computed_fields": unreachable_computed,
         "stale_exemptions": stale_exemptions,
+        "dead_exemptions": dead_exemptions,
     }
+
+
+def _gating_findings(result: dict[str, Any]) -> list[str]:
+    """The findings that fail the build, named in one place.
+
+    Split out so the printed verdict and the exit code cannot disagree — they
+    used to be two separate expressions listing the same keys, which is how
+    `unreachable_computed_fields` ended up in neither.
+    """
+    return (
+        list(result["unreachable_provider_keys"])
+        + list(result["unreachable_computed_fields"])
+        + list(result["stale_exemptions"])
+    )
 
 
 def main() -> int:
@@ -359,6 +391,21 @@ def main() -> int:
             )
             for k in result["unreachable_provider_keys"]:
                 print(f"  - {k}")
+        # CR179 Leg 0 — direction 2 was computed, returned, and then shown to
+        # nobody: `main()` printed only direction 1 and the exit code ignored
+        # this list entirely, so a field computed onto Technicals/Quote/
+        # EarningsInfo that no roster records provenance for could never reach
+        # an operator. One unit test was the whole enforcement, and a check
+        # whose only reader is a test is the shape DEF271 rode in on.
+        if result["unreachable_computed_fields"]:
+            print(
+                f"\nCOMPUTED-BUT-UNREACHABLE ({len(result['unreachable_computed_fields'])}) — "
+                "a field on Technicals/Quote/EarningsInfo that no field_state roster "
+                "records, so `_format_profile` can never render it. Add it to a roster, "
+                "or exempt it in _COMPUTED_NOT_RENDERED with a reason:"
+            )
+            for k in result["unreachable_computed_fields"]:
+                print(f"  - {k}")
         if result["stale_exemptions"]:
             print(
                 f"\nSTALE EXEMPTIONS ({len(result['stale_exemptions'])}) — these are "
@@ -366,9 +413,18 @@ def main() -> int:
             )
             for k in result["stale_exemptions"]:
                 print(f"  - {k}")
-        if not result["unreachable_provider_keys"] and not result["stale_exemptions"]:
-            print("\ncensus clean — every provider key is consumed or exempted with a reason.")
-    return 1 if (result["unreachable_provider_keys"] or result["stale_exemptions"]) else 0
+        if result["dead_exemptions"]:
+            print(
+                f"\nDEAD EXEMPTIONS ({len(result['dead_exemptions'])}) — the provider no "
+                "longer sends these, so the reason describes a codebase that no longer "
+                "exists. Remove them from INTENTIONALLY_NOT_TAKEN (does not gate):"
+            )
+            for k in result["dead_exemptions"]:
+                print(f"  - {k}")
+        if not _gating_findings(result):
+            print("\ncensus clean — every provider key is consumed or exempted with a "
+                  "reason, and every computed field can reach an agent.")
+    return 1 if _gating_findings(result) else 0
 
 
 if __name__ == "__main__":

@@ -985,11 +985,39 @@ def test_format_profile_omits_valuation_line_when_present_but_not_live():
 def test_format_profile_includes_sector_line_when_live():
     from app.services.room_prompts import _format_profile
 
+    # CR179 Leg 0 — the fixture declared only `sector` live and asserted the
+    # INDUSTRY rendered, which is the presence-only behaviour that CR104 exists
+    # to remove; `_sector_line` now gates both halves. The assertion is
+    # unchanged; only the fixture's premise is corrected, because production has
+    # always written this key: `industry` is in
+    # `_FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS` (room_runner.py:358), and all
+    # 351 sector lines in the committed 2026-08-13 epoch carry a real industry,
+    # none an em-dash. Verified before the edit rather than assumed — a gate
+    # that blanks a field on every live prompt would be a regression wearing a
+    # fix's clothes.
+    block = _format_profile({
+        "data_source": "synthetic", "sector": "Technology", "industry": "Consumer Electronics",
+        "field_state": {"sector": "live", "industry": "live"},
+    })
+    assert "Sector/industry (LIVE): Technology / Consumer Electronics" in block
+
+
+def test_format_profile_drops_the_industry_half_when_only_it_is_not_live():
+    """CR179 Leg 0 — the case the fixture above used to cover by accident.
+
+    `sector` live and `industry` not is a real shape: the runner writes each
+    optional key only on presence, so a ticker yfinance classifies by sector but
+    not industry produces exactly this. It must render the em-dash, not the
+    stale value under a (LIVE) label.
+    """
+    from app.services.room_prompts import _format_profile
+
     block = _format_profile({
         "data_source": "synthetic", "sector": "Technology", "industry": "Consumer Electronics",
         "field_state": {"sector": "live"},
     })
-    assert "Sector/industry (LIVE): Technology / Consumer Electronics" in block
+    assert "Sector/industry (LIVE): Technology / —" in block
+    assert "Consumer Electronics" not in block
 
 
 def test_format_profile_omits_sector_line_when_absent():
