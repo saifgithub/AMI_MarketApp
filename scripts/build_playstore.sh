@@ -130,7 +130,19 @@ if [[ "$DO_GAMES" -eq 1 && ( "${RELEASE_CHANNEL:-}" == "production" || "$DO_PROD
   exit 1
 fi
 
-if [[ "$REVENUECAT_ANDROID_SDK_KEY" == test_* ]]; then
+# DEF290 — the containment rule below applies only to a build that can actually
+# transact. DEF282 removed the RevenueCat SDK from the app's code path entirely
+# (`purchase_providers.dart` returns `DisabledPurchaseService`, which does not
+# import `purchases_flutter`, and `BillingConfig.usableKey` blanks any `test_`
+# key in a non-debug build regardless). The gate's own message — "Purchases in
+# this build are SIMULATED" — was false about every build we could produce, and
+# its remedy asked the operator to affirm it to proceed.
+#
+# With `--no-billing` there is no purchase path to contain, and the key is
+# blanked below rather than compiled in, so RevenueCat's rule is satisfied
+# structurally rather than by a promise. The `--production` refusal above is
+# untouched and still absolute.
+if [[ "$DO_BILLING" -eq 1 && "$REVENUECAT_ANDROID_SDK_KEY" == test_* ]]; then
   if [[ "${RELEASE_CHANNEL:-}" == "production" || "$DO_PRODUCTION" -eq 1 ]]; then
     echo "✗ REVENUECAT_ANDROID_SDK_KEY is a Test Store key (test_…) and this is a PRODUCTION build." >&2
     echo "  Every user would receive paid entitlements without paying. Refusing." >&2
