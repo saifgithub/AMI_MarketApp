@@ -249,3 +249,109 @@ def test_without_threading_the_prompt_degrades_loudly_rather_than_silently(base_
     read as 'a screen ran and it passed'."""
     system_prompt = _room_prompt(base_mandate, None)
     assert "NOT attached" in system_prompt
+
+
+# ── CR152 D8 — the locale universe, which can veto a trade in silence ────
+
+
+def _locale_lines(base_mandate, universe):
+    from app.schemas import AgentId
+    from app.services.room_prompts import build_room_messages
+
+    system_prompt, _ = build_room_messages(
+        agent_id=AgentId.PORTFOLIO_MANAGER,
+        mandate=base_mandate,
+        user_id=None,
+        ticker="AAPL",
+        profile={"ticker": "AAPL", "field_state": {}},
+        transcript=[],
+        locale_allowed_universe=universe,
+    )
+    return [ln for ln in system_prompt.splitlines() if "Tradable universe" in ln]
+
+
+def test_a_ticker_outside_the_locale_universe_is_named_as_unpurchasable(base_mandate):
+    """`safety_floor.py:336` blocks the trade with `blocked_by="locale"`.
+
+    Twelve agents could argue a name all the way to a sized APPROVE with no way
+    to know it was not purchasable at all — the same unfollowable-by-
+    construction shape as the microcap rule before CR145 Tier A supplied market
+    cap.
+    """
+    lines = _locale_lines(base_mandate, {"MSFT", "NVDA"})
+    assert lines and "NOT available" in lines[0]
+    assert "BLOCKED" in lines[0]
+
+
+def test_a_ticker_inside_the_locale_universe_says_so(base_mandate):
+    lines = _locale_lines(base_mandate, {"AAPL", "MSFT"})
+    assert lines and "AAPL is one of them" in lines[0]
+    assert "NOT available" not in lines[0]
+
+
+def test_the_empty_case_is_stated_rather_than_omitted(base_mandate):
+    """CR149 A.4's rule. `None` is the alpha default, but an agent reading
+    silence cannot tell "no restriction" from "the restriction was not
+    attached", and those call for different behaviour."""
+    lines = _locale_lines(base_mandate, None)
+    assert lines and "no locale restriction is in force" in lines[0]
+
+
+def test_an_unreadable_locale_universe_degrades_loudly(base_mandate):
+    lines = _locale_lines(base_mandate, 42)
+    assert lines and "could not read it" in lines[0]
+
+
+# ── CR152 D9 — the sector allocation eleven agents never saw ─────────────
+
+
+def _has_sector_line(base_mandate, agent_id):
+    from app.services.room_prompts import build_room_messages
+
+    system_prompt, _ = build_room_messages(
+        agent_id=agent_id,
+        mandate=base_mandate,
+        user_id=None,
+        ticker="AAPL",
+        profile={"ticker": "AAPL", "field_state": {}},
+        transcript=[],
+        sector_weights={"Technology": 0.62, "Financials": 0.38},
+    )
+    return "current sector allocation" in system_prompt
+
+
+def test_every_agent_that_argues_a_size_sees_the_sector_state(base_mandate):
+    """All twelve are told the sector-concentration RULE; eleven were never
+    told the current STATE.
+
+    Worse than a plain gap, because CR055 injects the real holdings into every
+    prompt unconditionally — so an agent could read `GME x500` a few lines up
+    and still not know that is 95% of one sector. It had the evidence and not
+    the aggregate.
+    """
+    from app.schemas import AgentId
+
+    for agent in (
+        AgentId.PORTFOLIO_MANAGER, AgentId.TRADER, AgentId.BULL_RESEARCHER,
+        AgentId.BEAR_RESEARCHER, AgentId.RESEARCH_MANAGER,
+        AgentId.AGGRESSIVE_DEBATOR, AgentId.CONSERVATIVE_DEBATOR,
+        AgentId.NEUTRAL_DEBATOR,
+    ):
+        assert _has_sector_line(base_mandate, agent), (
+            f"{agent.value} argues or vetoes a size and cannot see the sector state"
+        )
+
+
+def test_the_firewalled_analysts_still_do_not_get_it(base_mandate):
+    """Gated on the FULL SHEET, not widened to everyone. The four analysts are
+    not asked for a size, and CR145 Tier C's measured 97.5% role-identifiability
+    is what their firewall bought — this must not quietly reverse it."""
+    from app.schemas import AgentId
+
+    for agent in (
+        AgentId.FUNDAMENTALS_ANALYST, AgentId.MARKET_ANALYST,
+        AgentId.NEWS_ANALYST, AgentId.SOCIAL_MEDIA_ANALYST,
+    ):
+        assert not _has_sector_line(base_mandate, agent), (
+            f"{agent.value} is firewalled and received cross-lane portfolio data"
+        )

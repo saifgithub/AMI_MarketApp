@@ -4318,6 +4318,7 @@ async def _compute_agent_text(
             # narration and the deterministic verdict cannot contradict each other.
             halal_universe=ctx.halal_universe,
             classification_universe=ctx.classification_universe,
+            locale_allowed_universe=ctx.locale_allowed_universe,
             # CR077 §Build 5: a concurrent analyst has no transcript to build on —
             # rescope the "do not repeat" line so it sharpens the own-domain lens
             # instead of pointing at an empty transcript.
@@ -4553,6 +4554,7 @@ async def _stream_pm_response(
         # its own safety floor enforces.
         halal_universe=ctx.halal_universe,
         classification_universe=ctx.classification_universe,
+        locale_allowed_universe=ctx.locale_allowed_universe,
         # DEF238: this argument was missing for the entire life of CR026, and the
         # feature was PM-only, so it never worked ONCE in production. The line is
         # rendered only for the PORTFOLIO_MANAGER (`room_prompts.py`), and this is

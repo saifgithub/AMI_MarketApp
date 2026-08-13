@@ -34,6 +34,7 @@ def generate_overlay(
     halal_universe: Any = None,
     ticker: str | None = None,
     classification_universe: Any = None,
+    locale_allowed_universe: Any = None,
 ) -> str:
     """Generate the mandate-overlay markdown for a given agent + mandate.
 
@@ -59,6 +60,7 @@ def generate_overlay(
     base = _mandate_common_block(
         mandate, halal_universe=halal_universe, ticker=ticker,
         classification_universe=classification_universe,
+        locale_allowed_universe=locale_allowed_universe,
     )
     role_specific = _role_specific_block(agent_id, mandate)
     return base + "\n\n" + role_specific
@@ -75,6 +77,7 @@ def _mandate_common_block(
     halal_universe: Any = None,
     ticker: str | None = None,
     classification_universe: Any = None,
+    locale_allowed_universe: Any = None,
 ) -> str:
     target = mandate.target_outcome
     target_text = (
@@ -110,7 +113,7 @@ tickers held concurrently; adding to an existing holding doesn't count against i
 size % × stop distance %)/100 across all open positions, including this one.
 
 ## Compliance constraints (HARD — cannot violate)
-{_compliance_block(mandate.compliance, halal_universe=halal_universe, ticker=ticker, classification_universe=classification_universe)}
+{_compliance_block(mandate.compliance, halal_universe=halal_universe, ticker=ticker, classification_universe=classification_universe, locale_allowed_universe=locale_allowed_universe, locale=mandate.locale)}
 
 ## Preferences
 - Learning style: {mandate.learning_style}
@@ -138,6 +141,8 @@ def _compliance_block(
     halal_universe: Any = None,
     ticker: str | None = None,
     classification_universe: Any = None,
+    locale_allowed_universe: Any = None,
+    locale: str = "en",
 ) -> str:
     flags: list[str] = []
     if c.halal:
@@ -178,6 +183,7 @@ def _compliance_block(
         )
     for custom in c.custom_constraints:
         flags.append(f"- Custom constraint: {custom}")
+    flags.append(_locale_universe_narration(locale_allowed_universe, ticker, locale))
     return "\n".join(flags) if flags else "(no hard constraints declared)"
 
 
@@ -198,6 +204,53 @@ AMI does not know rather than implying it cleared — and equally never imply th
 because of it.
   Never say a name was screened when it was not reviewed, and never quote a ratio, threshold or \
 percentage cutoff for this constraint — AMI computes none; it reads a published list."""
+
+
+def _locale_universe_narration(
+    locale_allowed_universe: Any, ticker: str | None, locale: str
+) -> str:
+    """CR152 D8 / CR179 Leg 3 — the locale universe, which can veto a trade in
+    silence.
+
+    `safety_floor.py:336` blocks any proposal whose ticker is outside this set
+    with `blocked_by="locale"`. Twelve agents could argue a name to a sized
+    APPROVE with no way to know it was not purchasable at all — the same
+    unfollowable-by-construction shape as the microcap rule before CR145 Tier A
+    supplied market cap.
+
+    **The empty case is stated, not omitted** (CR149 A.4's rule). `None` means
+    no restriction, which is the alpha default — but an agent reading silence
+    cannot tell "no restriction" from "the restriction was not attached", and
+    those call for different behaviour. Saying which costs one line.
+    """
+    if locale_allowed_universe is None:
+        return (
+            "- Tradable universe: no locale restriction is in force this session — "
+            "every name AMI can price is available to this user."
+        )
+    try:
+        allowed = {str(x).upper() for x in locale_allowed_universe}
+    except TypeError:
+        return (
+            "- Tradable universe: a locale restriction applies but AMI could not read it. "
+            "Do not tell the user a name is unavailable, and do not assume one is available."
+        )
+    t = (ticker or "").upper().strip()
+    if t and t not in allowed:
+        return (
+            f"- Tradable universe — {t} is NOT available in this user's locale ({locale}), "
+            f"out of {len(allowed)} names that are. Any trade in it will be BLOCKED before "
+            f"execution. Say so plainly rather than sizing a position that cannot be taken."
+        )
+    if t:
+        return (
+            f"- Tradable universe: restricted to the {len(allowed)} names available in this "
+            f"user's locale ({locale}). {t} is one of them."
+        )
+    return (
+        f"- Tradable universe: restricted to the {len(allowed)} names available in this "
+        f"user's locale ({locale})."
+    )
 
 
 def _exclusion_narration(

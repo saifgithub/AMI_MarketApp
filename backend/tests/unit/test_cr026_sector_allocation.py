@@ -493,19 +493,51 @@ def test_pm_prompt_context_states_empty_portfolio_not_silence(base_mandate: Mand
     assert "no open positions yet" in system_prompt.lower()
 
 
-def test_non_pm_agent_gets_no_sector_line(base_mandate: Mandate):
+def test_a_firewalled_analyst_gets_no_sector_line(base_mandate: Mandate):
+    """The original assertion, kept verbatim so what changed is legible:
+
+        def test_non_pm_agent_gets_no_sector_line(base_mandate):
+            system_prompt, _ = build_room_messages(agent_id=AgentId.TRADER, ...)
+            assert "sector allocation" not in system_prompt.lower()
+
+    CR026 scoped the sector line to the PM because the PM gatekeeps the trade.
+    CR152 D9 / CR179 Leg 3d found the other half of that reasoning: all twelve
+    agents are told the sector-concentration CAP in the mandate block, and only
+    the PM was told the current allocation — so the Trader, who proposes the
+    size that cap vetoes, was reasoning about concentration with the rule and
+    without the state. CR055 had already put the raw holdings in its prompt, so
+    it held the evidence and not the aggregate.
+
+    The Trader therefore now DOES get the line, and the subject of this test
+    moves to the boundary that still holds: cross-lane portfolio data stops at
+    the four firewalled analysts, who are not asked for a size. That boundary is
+    what CR145 Tier C's 97.5% role-identifiability was bought with.
+    """
     from app.services.room_prompts import build_room_messages
 
-    system_prompt, _msgs = build_room_messages(
-        agent_id=AgentId.TRADER,
-        mandate=base_mandate,
-        user_id=None,
-        ticker="MSFT",
-        profile={"base_price": 100.0},
-        transcript=[],
-        sector_weights={"Technology": 0.62},
+    def _prompt(agent_id: AgentId) -> str:
+        system_prompt, _msgs = build_room_messages(
+            agent_id=agent_id,
+            mandate=base_mandate,
+            user_id=None,
+            ticker="MSFT",
+            profile={"base_price": 100.0},
+            transcript=[],
+            sector_weights={"Technology": 0.62},
+        )
+        return system_prompt.lower()
+
+    for analyst in (
+        AgentId.FUNDAMENTALS_ANALYST, AgentId.MARKET_ANALYST,
+        AgentId.NEWS_ANALYST, AgentId.SOCIAL_MEDIA_ANALYST,
+    ):
+        assert "sector allocation" not in _prompt(analyst), (
+            f"{analyst.value} is firewalled to its own lane and received "
+            f"cross-lane portfolio data"
+        )
+    assert "sector allocation" in _prompt(AgentId.TRADER), (
+        "the Trader proposes the size the sector cap vetoes — it must see the state"
     )
-    assert "sector allocation" not in system_prompt.lower()
 
 
 # ── 8. Round-2 audit requirement — structural per-call-site wiring tests ──────
@@ -833,11 +865,43 @@ def test_def238_live_pm_prompt_carries_the_real_sector_allocation():
         # The book really is Tech + Energy + cash, and the line must name them.
         assert "Technology" in pm and "Energy" in pm
 
-        # And the non-PM agents still get no sector line at all — the PM-only
-        # gate is what makes this data PM-only, and the fix must not widen it.
-        others = [p for p in gw.prompts
-                  if "speak as the portfolio manager" not in p.lower()]
-        assert others, "no prose-agent prompt was captured"
-        assert not any("sector allocation" in p.lower() for p in others)
+        # The original assertion, kept verbatim so what changed is legible:
+        #
+        #   # And the non-PM agents still get no sector line at all — the PM-only
+        #   # gate is what makes this data PM-only, and the fix must not widen it.
+        #   others = [p for p in gw.prompts if "portfolio manager" not in p.lower()]
+        #   assert not any("sector allocation" in p.lower() for p in others)
+        #
+        # CR152 D9 / CR179 Leg 3d widened it deliberately, and this test's OWN
+        # subject is untouched — everything above still asserts the live PM
+        # prompt carries the REAL allocation rather than DEF238's empty string.
+        # What changed is only the scope clause, which was never DEF238's
+        # finding: all twelve agents are told the sector-concentration RULE, and
+        # eleven were never told the STATE, while CR055 puts the real holdings
+        # in every prompt regardless. They held the evidence and not the
+        # aggregate.
+        #
+        # The property that replaces it is the one that actually matters here:
+        # the four FIREWALLED analysts must still not receive cross-lane
+        # portfolio data, because CR145 Tier C's measured 97.5% role-
+        # identifiability is what that firewall bought and a widening like this
+        # is exactly how it would quietly reverse.
+        analysts = [p for p in gw.prompts if any(
+            f"speak as the {name}" in p.lower() for name in (
+                "fundamentals analyst", "market analyst",
+                "news analyst", "social media analyst",
+            )
+        )]
+        assert analysts, "no firewalled-analyst prompt was captured"
+        assert not any("sector allocation" in p.lower() for p in analysts), (
+            "a firewalled analyst received the sector allocation — CR145 Tier C's "
+            "lane separation has been widened by accident"
+        )
+        sizers = [p for p in gw.prompts if "speak as the trader" in p.lower()]
+        assert sizers, "no Trader prompt was captured"
+        assert all("sector allocation" in p.lower() for p in sizers), (
+            "the Trader proposes the size the sector cap vetoes and cannot see the "
+            "sector state"
+        )
     finally:
         salloc.reset_sector_map_provider(None)

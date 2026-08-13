@@ -707,6 +707,9 @@ def build_room_messages(
     # and never the prompt, so agents were told the exclusion existed and never
     # what it had decided about this name.
     classification_universe: Any = None,
+    # CR152 D8 — the locale universe, which `safety_floor.py:336` can veto a
+    # trade on with `blocked_by="locale"` while no agent was told it exists.
+    locale_allowed_universe: Any = None,
     parallel_phase: bool = False,
     sector_weights: dict[str, float] | None = None,
     agent_size_pct: float | None = None,
@@ -755,6 +758,7 @@ def build_room_messages(
         halal_universe=halal_universe,
         ticker=ticker,
         classification_universe=classification_universe,
+        locale_allowed_universe=locale_allowed_universe,
     )
     phase = _PHASE_FOR_AGENT[agent_id]
     length = _LENGTH_GUIDE[agent_id]
@@ -869,9 +873,28 @@ def build_room_messages(
         )
     # CR026: the PM gatekeeps the trade, so it sees the REAL sector allocation of the
     # portfolio it approves against — concentration reasoning from data, not a guess.
-    # Gated to the PORTFOLIO_MANAGER (the agent whose verdict the sector cap vetoes).
+    #
+    # CR152 D9 / CR179 Leg 3 — widened from PM-only to every FULL-SHEET agent.
+    # All twelve are told the sector-concentration RULE in the mandate block
+    # (*"the SAME ceiling the safety floor blocks a proposed BUY against"*), and
+    # eleven of them were never told the current STATE — the CR145 Tier A shape
+    # exactly, where a hard constraint was unfollowable because the number it
+    # ranges over was never supplied.
+    #
+    # It is worse than a plain gap here, because CR055 injects the real holdings
+    # into every agent's prompt unconditionally. So an agent could read `GME
+    # x500` a few lines up and still have no way to know that is 95% of one
+    # sector. It had the evidence and not the aggregate.
+    #
+    # Gated on the full sheet rather than named per agent: this is cross-lane
+    # PORTFOLIO context, and the full-sheet set is exactly the set whose job is
+    # the cross-lane join and who propose or veto a size (Bull, Bear, RM,
+    # Trader, PM, the three Risk Debators). The four analysts stay firewalled —
+    # they are not asked for a size, and CR145 Tier C's measured 97.5% is what
+    # that firewall bought. A thirteenth agent added later fails OPEN, the same
+    # direction `_lane_for` already chose.
     sector_line = ""
-    if agent_id == AgentId.PORTFOLIO_MANAGER:
+    if _lane_for(agent_id) == _ALL_DOMAINS:
         sector_line = _format_sector_allocation(sector_weights) + "\n"
 
     room_addition = (

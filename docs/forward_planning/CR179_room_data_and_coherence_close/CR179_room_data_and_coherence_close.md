@@ -430,3 +430,32 @@ The plan listed this as *"fetched, rendered on the 1-on-1 surface, never stored 
 Shipping D4 would have traded a coherence problem that no longer exists for a content-safety one that
 does. **Third plan item struck after measuring** — the census rewrite and `Quote`-as-parity-source were
 the first two.
+
+---
+
+## Leg 3d — the two constraints that could veto in silence (2026-08-13)
+
+**D8 — the locale universe.** `safety_floor.py:336` blocks any proposal whose ticker falls outside
+`locale_allowed_universe` with `blocked_by="locale"`, and no agent was told the set exists. Twelve
+agents could argue a name to a sized APPROVE with no way to know it was not purchasable at all — the
+same unfollowable-by-construction shape as the microcap rule before CR145 Tier A supplied market cap,
+and worse in one respect, because that rule at least appeared in the prompt. The empty case is stated
+rather than omitted (CR149 A.4): `None` is the alpha default, but silence cannot distinguish *no
+restriction* from *the restriction was not attached*.
+
+**D9 — the sector allocation eleven agents never saw.** All twelve are told the sector-concentration
+RULE; only the PM was told the current STATE. Worse than a plain gap, because CR055 injects the real
+holdings into every prompt unconditionally — an agent could read `GME ×500` a few lines above and still
+not know that is 95% of one sector. **It held the evidence and not the aggregate.**
+
+Widened to the **full-sheet set**, gated on `_lane_for(agent_id) == _ALL_DOMAINS` rather than by naming
+agents — cross-lane portfolio context belongs to the agents whose job is the cross-lane join and who
+propose or veto a size, and a thirteenth agent fails OPEN in the direction `_lane_for` already chose.
+The four analysts stay firewalled, with a test that says so, because CR145 Tier C's 97.5% is what that
+firewall bought and a widening like this is exactly how it would quietly reverse.
+
+**DEF238's trap was checked before the gate opened, not after.** That defect was `sector_weights` never
+reaching a call site, so the PM read *"no open positions yet (0% in every sector)"* in 18/18 prompts, 8
+of which listed real holdings a few lines above — a confident false statement, not a silent gap.
+Widening a gate onto an argument that does not arrive would have multiplied it by seven, so both call
+sites were verified to pass `ctx.sector_weights` first.
