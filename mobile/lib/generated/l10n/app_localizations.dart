@@ -5970,6 +5970,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{filled}/{total} seats filled'**
   String floorFirmSeats(int filled, int total);
+
+  /// CR173. Label on the one-line strip above the Verdict Board's 11-hex comb. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CONSENSUS'**
+  String get roomConsensusHeading;
+
+  /// CR173. Appended to the consensus split when some analysts took neither side. Omitted entirely when nobody was neutral. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'· {count} neutral'**
+  String roomConsensusNeutral(int count);
+
+  /// CR173. Names the analyst who argued against the call the Portfolio Manager made; their own one-line headline follows immediately after. {agent} is the agent's display name (e.g. 'Bear Researcher'). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{agent} dissents:'**
+  String roomConsensusDissents(String agent);
+
+  /// CR173. Shown when nobody dissented. A real finding stated plainly — the alternative is a blank line where a name would be, which reads as a rendering fault. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'All {count} who stated a view agreed with the call.'**
+  String roomConsensusUnanimous(int count);
+
+  /// CR173. Shown when the verdict was NO_VERDICT (the PM professionally refused to price a trade) or an action this build does not recognise. Neither is a position, so no analyst can be said to disagree with it. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The PM made no call, so there is nothing to dissent from.'**
+  String get roomConsensusNoCall;
+
+  /// CR173 §5.12. Heading on a one-time card asking the user's reaction to the Floor. Deliberately does NOT say 'the new Floor' — a user who installed today never saw the old one. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'HOW DOES THE FLOOR FEEL?'**
+  String get floorReactionPrompt;
+
+  /// CR173 §5.12. Placeholder in the reaction card's text box. Invites a blunt answer: the complaint that caused this whole redesign reached the founder by word of mouth, in exactly those terms. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Too much? Not enough? Say it plainly.'**
+  String get floorReactionHint;
+
+  /// CR173 §5.12. Submit button on the reaction card. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SEND'**
+  String get floorReactionSend;
+
+  /// CR173 §5.12. Submit button while the reaction is in flight. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SENDING…'**
+  String get floorReactionSending;
+
+  /// CR173 §5.12. Confirmation after a reaction is submitted. True as written: it lands in the same bug-report queue the team triages. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Sent. Thank you — this goes straight to the people building it.'**
+  String get floorReactionThanks;
+
+  /// CR173 §5.12. Shown when the reaction failed to reach the server. Says plainly that the text was lost rather than implying it was received, so the user can decide to say it again elsewhere. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send that just now — it wasn\'t saved.'**
+  String get floorReactionFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -45,6 +45,7 @@ import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/floor/floor_carousel.dart';
 import 'package:ami_trade/widgets/floor/floor_omnibox.dart';
+import 'package:ami_trade/widgets/floor/floor_reaction_card.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_mesh_overlay.dart';
 import 'package:ami_trade/widgets/hex/hex_toast.dart';
@@ -68,12 +69,18 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
   final _omniboxKey = GlobalKey();
   final _firmKey = GlobalKey();
 
+  /// CR173 §5.12 — whether to ask how this surface feels. Resolved once, after
+  /// layout, so it never delays the first frame.
+  bool _askReaction = false;
+
   @override
   void initState() {
     super.initState();
     // Floor is tab 0 — active from the start. Check immediately after layout.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _maybeShowTour();
+      final ask = await registerFloorVisit();
+      if (mounted && ask) setState(() => _askReaction = true);
     });
   }
 
@@ -213,6 +220,12 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                     ],
                   ),
                   const SizedBox(height: AmiSpacing.s),
+
+                  // §5.12 — the interim capture path, above the fold but below
+                  // the chrome, and gone for good once answered or dismissed.
+                  if (_askReaction)
+                    FloorReactionCard(
+                        onDone: () => setState(() => _askReaction = false)),
 
                   // 1 — the answer cards.
                   SizedBox(

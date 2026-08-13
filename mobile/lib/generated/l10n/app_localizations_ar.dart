@@ -3619,4 +3619,46 @@ class AppLocalizationsAr extends AppLocalizations {
   String floorFirmSeats(int filled, int total) {
     return '$filled/$total seats filled';
   }
+
+  @override
+  String get roomConsensusHeading => 'CONSENSUS';
+
+  @override
+  String roomConsensusNeutral(int count) {
+    return '· $count neutral';
+  }
+
+  @override
+  String roomConsensusDissents(String agent) {
+    return '$agent dissents:';
+  }
+
+  @override
+  String roomConsensusUnanimous(int count) {
+    return 'All $count who stated a view agreed with the call.';
+  }
+
+  @override
+  String get roomConsensusNoCall =>
+      'The PM made no call, so there is nothing to dissent from.';
+
+  @override
+  String get floorReactionPrompt => 'HOW DOES THE FLOOR FEEL?';
+
+  @override
+  String get floorReactionHint => 'Too much? Not enough? Say it plainly.';
+
+  @override
+  String get floorReactionSend => 'SEND';
+
+  @override
+  String get floorReactionSending => 'SENDING…';
+
+  @override
+  String get floorReactionThanks =>
+      'Sent. Thank you — this goes straight to the people building it.';
+
+  @override
+  String get floorReactionFailed =>
+      'Couldn\'t send that just now — it wasn\'t saved.';
 }

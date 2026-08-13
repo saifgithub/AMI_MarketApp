@@ -32,6 +32,7 @@ import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/room_board.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/room/room_consensus_strip.dart';
 import 'package:ami_trade/theme/hex_clipper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
@@ -149,6 +150,11 @@ class RoomBoard extends StatelessWidget {
           _TradeGeometry(data: data),
         ],
         const SizedBox(height: AmiSpacing.m),
+        // CR173 — the finding, then the evidence. A user who reads one line of
+        // this board should learn the split and the objection, not have to
+        // count hexes to find them.
+        RoomConsensusStrip(data: data),
+        const SizedBox(height: AmiSpacing.s),
         _ConsensusComb(data: data, onVoiceTap: onVoiceTap),
         if (data.withheldAnalystIds.isNotEmpty) ...[
           const SizedBox(height: AmiSpacing.m),
