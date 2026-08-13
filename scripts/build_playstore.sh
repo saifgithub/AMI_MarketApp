@@ -231,6 +231,14 @@ EOF
 fi
 if [[ "$DO_BILLING" -eq 0 ]]; then
   echo "⚠ --no-billing: shipping WITHOUT in-app purchase (paywall = info state only)"
+  # DEF290, Android half. `:307`'s dart-define is unconditional, so a build that
+  # cannot sell would still compile a `test_…` key into the AAB — "an app
+  # configured with a Test Store API key" by RevenueCat's own wording, which is
+  # the thing their rule forbids shipping. The app already refuses to use it
+  # (`BillingConfig.usableKey` blanks a test_ key in any non-debug build, and
+  # DEF282 removed the SDK from the code path entirely); this makes the binary
+  # not carry it either.
+  REVENUECAT_ANDROID_SDK_KEY=""
 fi
 
 echo "▶ flutter build appbundle  (release, signed if keystore present)"
