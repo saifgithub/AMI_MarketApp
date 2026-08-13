@@ -1,4 +1,10 @@
 <svg width="42" height="36" viewBox="0 0 42 36" xmlns="http://www.w3.org/2000/svg">
+  <!-- AMI hex mark. The letter is "A", per the design system's own brand
+       lockup (`preview/brand-logo.html`: <div class="hex">A</div> beside the
+       word AMI). It read "H" from the May scaffold until DEF299 — an identity
+       mark showing someone else's initial on the app's landing screen. The
+       design-system copy of this file is still the stale "H" version, but that
+       mount is read-only, so the fix lives here. -->
   <defs>
     <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1"></stop>
@@ -6,5 +12,5 @@
     </linearGradient>
   </defs>
   <path d="M10.5 0 L31.5 0 L42 18 L31.5 36 L10.5 36 L0 18 Z" fill="url(#grad1)"></path>
-  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="bold" font-size="14">H</text>
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="bold" font-size="14">A</text>
 </svg>

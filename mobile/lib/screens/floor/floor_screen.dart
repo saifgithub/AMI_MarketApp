@@ -23,7 +23,6 @@
 /// map says it belongs now that CR133 put Settings inside YOU.
 library;
 
-import 'package:ami_trade/features/games/games_gate.dart';
 import 'package:ami_trade/features/nav/ami_tab.dart';
 import 'package:ami_trade/features/tour/floor_tour.dart';
 import 'package:ami_trade/features/tour/tour_intro_sheet.dart';
@@ -42,6 +41,7 @@ import 'package:ami_trade/services/share/share_service.dart';
 import 'package:ami_trade/state/daily_challenge_providers.dart';
 import 'package:ami_trade/state/league_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
+import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/floor/floor_carousel.dart';
 import 'package:ami_trade/widgets/floor/floor_omnibox.dart';
@@ -196,6 +196,12 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
           const Positioned.fill(child: HexMeshOverlay()),
           SafeArea(
             child: SingleChildScrollView(
+              // DEF297 — the second way down for the keyboard, and the one a
+              // thumb reaches for first. `onTapOutside` on the field handles a
+              // tap; this handles the drag, which is what a user does when the
+              // keyboard is covering the thing they wanted to read.
+              keyboardDismissBehavior:
+                  ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.all(AmiSpacing.m),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -255,6 +261,10 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
 
                   // 2 + 3 — one box, one primary.
                   FloorOmnibox(
+                    // DEF298 — the same CR128 gate the Convene sheet and the
+                    // trade ticket use. Third field, one gate.
+                    validate: (t) =>
+                        ref.read(apiClientProvider).validateTicker(t),
                     fieldKey: _omniboxKey,
                     onConvene: _convene,
                     onAsk: _ask,
@@ -277,22 +287,20 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                   ),
 
                   const SizedBox(height: AmiSpacing.l),
-                  // CR109 Amendment F — the long-press into the dark-launched
-                  // game. `kGamesEnabled` is a const `bool.fromEnvironment`, so
-                  // with the define off the compiler folds this branch away and
-                  // a store binary carries neither the gesture nor the route.
-                  if (kGamesEnabled)
-                    GestureDetector(
-                      onLongPress: () =>
-                          Navigator.of(context).pushNamed('/games'),
-                      child: Text(l.floorFooter,
-                          textAlign: TextAlign.center,
-                          style: AmiTypography.caption),
-                    )
-                  else
-                    Text(l.floorFooter,
-                        textAlign: TextAlign.center,
-                        style: AmiTypography.caption),
+                  // CR182 — the CR109 Amendment F long-press into the game is
+                  // GONE. Saiful, 2026-08-14: "Remove the hidden 'long press on
+                  // ami-trade' link to the game. we no longer need it."
+                  //
+                  // Only the gesture is removed. `kGamesEnabled` and the
+                  // `/games` route registration stay exactly as CR109 built
+                  // them, so the compile-time gate is untouched — but with no
+                  // entry point anywhere in the UI the route is now unreachable
+                  // in every build, which also empties DEF296's exposure in
+                  // practice rather than by promise. A future way back into the
+                  // game needs a new door, deliberately.
+                  Text(l.floorFooter,
+                      textAlign: TextAlign.center,
+                      style: AmiTypography.caption),
                   const SizedBox(height: AmiSpacing.l),
                 ],
               ),
@@ -331,7 +339,13 @@ class _FirmRow extends StatelessWidget {
     const faces = ['fundamentals_analyst', 'research_manager', 'neutral_debator'];
     return InkWell(
       onTap: onTap,
-      child: Padding(
+      child: Container(
+        // CR182 — the row was the shortest tappable thing on the Floor and the
+        // only route to the twelve agents the whole product is about. The
+        // footer's hidden long-press is gone, so the space it was conceding is
+        // free; 64pt also clears the 48pt one-handed thumb minimum, which
+        // `vertical: AmiSpacing.s` around a 24pt avatar did not.
+        constraints: const BoxConstraints(minHeight: 64),
         padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s),
         child: Row(
           children: [
@@ -339,17 +353,18 @@ class _FirmRow extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(right: 4),
                 child: HexAvatar(
-                    label: '', color: agentById(id).color, size: 24),
+                    label: '', color: agentById(id).color, size: 30),
               ),
             const SizedBox(width: AmiSpacing.s),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(l.floorFirmHeading,
                       style: AmiTypography.labelMono
                           .copyWith(fontSize: 10, color: AmiColors.hexCyan)),
-                  const SizedBox(height: 1),
+                  const SizedBox(height: 2),
                   Text(l.floorFirmSeats(unlockedCount, _seats),
                       style: AmiTypography.caption
                           .copyWith(color: AmiColors.textMed)),
@@ -357,7 +372,7 @@ class _FirmRow extends StatelessWidget {
               ),
             ),
             const Icon(Icons.chevron_right,
-                color: AmiColors.textLow, size: 18),
+                color: AmiColors.textLow, size: 20),
           ],
         ),
       ),
