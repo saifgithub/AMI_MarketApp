@@ -170,6 +170,10 @@ _TECH_SENTINEL = Technicals(
     sma_short=411.77,
     sma_long=422.88,
     volume_ratio=1.47,
+    # CR146 Tier C — the quarterly trend, from the series that was always
+    # fetched and only ever read one candle deep.
+    return_period_pct=19.83,
+    period_candles=63,
 )
 
 # CR148 Tier B — the snapshot's age renders as a date + a relative age, so its
@@ -624,6 +628,8 @@ def env(monkeypatch):
             # CR146 Tier B: computed since DEF227, discarded until AT:R68.
             "sma_short": "411.77", "sma_long": "422.88",
             "volume_ratio": "1.47",
+            "return_period_pct": "up 19.83%",
+            "period_candles": "63 trading days",
         },
         "social": {
             "buzz_score": "buzz score 88", "sentiment_score": "+0.42",

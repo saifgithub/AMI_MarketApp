@@ -67,6 +67,48 @@ class Technicals(NamedTuple):
     sma_short: float
     sma_long: float
     volume_ratio: float
+    # CR146 Tier C / CR179 Leg 3 — the TREND the overlay asks 18/18 prompts to
+    # "emphasise (monthly/quarterly)", finally derivable. The series was always
+    # here; only the last candle and two averages were ever read from it, so an
+    # agent told to speak to a quarterly trend had a single day's price and two
+    # smoothed levels to do it with.
+    #
+    # Computed from the SAME 3-month fetch rather than the 2-year one CR146 Tier
+    # C proposed. That tier's own cost note was a second `.history()` call per
+    # ticker per convene, and it is no longer needed: the 200-day average, the
+    # 52-week change and the relative strength versus the index all now arrive
+    # from `.info` (CR179 Leg 3a) at zero additional cost, which was most of
+    # what the longer window was wanted for. The quarter is what remained, and
+    # the quarter is exactly what this series already spans.
+    #
+    # Defaulted, following CR030's `EarningsInfo` precedent, so every existing
+    # fixture that builds a Technicals positionally is unaffected. The defaults
+    # are also the honest degrade: `_period_trend_line` treats a zero candle
+    # count as falsy and renders "not available" rather than claiming a flat
+    # quarter across no data.
+    return_period_pct: float = 0.0
+    period_candles: int = 0
+
+
+def window_trend_phrase(return_pct: float, candles: int) -> str:
+    """The window-trend sentence, shared by both surfaces so they cannot word
+    one measurement two ways.
+
+    "flat" rather than "up 0.0%" when it rounds to zero: NVDA measured +0.03%
+    across 64 candles on 2026-08-13, and "up 0.0%" is a sentence that argues
+    with itself. That case is not a rounding curiosity either — it is the whole
+    point of the line. NVDA's 20/50 alignment reads `uptrend` on the same sheet,
+    so an agent had a bullish label for a name that had round-tripped the entire
+    quarter, and no way to see it.
+    """
+    if abs(return_pct) < 0.05:
+        move = "flat"
+    else:
+        move = f"{'up' if return_pct > 0 else 'down'} {abs(return_pct)}%"
+    return (
+        f"{move} across the {candles} trading days of the fetched history "
+        f"(first close to last close — this is the quarter-scale move, not a day move)"
+    )
 
 
 def range_position_pct(price: float, support: float, breakout: float) -> int | None:
@@ -148,6 +190,15 @@ def compute_technicals(ticker: str) -> Technicals | None:
         # the same case the tone calls "in-line", kept consistent so the number
         # and the label can never disagree.
         volume_ratio = round(recent_vol / baseline_vol, 2) if baseline_vol > 0 else 1.0
+        # First close to last close over the fetched window. The candle COUNT
+        # rides beside it because the window is trading days, not calendar
+        # months: a holiday-shortened quarter and a full one both render as "3
+        # months" and are not the same measurement. `_HISTORY_PERIOD` is the
+        # ask; the count is what arrived.
+        first_close = closes[0]
+        return_period_pct = (
+            round((price - first_close) / first_close * 100, 1) if first_close else 0.0
+        )
         if baseline_vol <= 0:
             volume_tone = "in-line with 20-day average"
         elif recent_vol > baseline_vol * 1.1:
@@ -169,6 +220,8 @@ def compute_technicals(ticker: str) -> Technicals | None:
             volume_tone=volume_tone,
             support=round(support, 2),
             breakout=round(breakout, 2),
+            return_period_pct=return_period_pct,
+            period_candles=len(closes),
             price=round(price, 2),
             sma_short=round(sma_short, 2),
             sma_long=round(sma_long, 2),
@@ -209,6 +262,11 @@ def build_technicals_context_block(ticker: str) -> str | None:
         f"20-day SMA: ${t.sma_short}, 50-day SMA: ${t.sma_long}"
         + (f" — last close is {(t.price - t.sma_long) / t.sma_long * 100:+.1f}% "
            "vs the 50-day\n" if t.sma_long > 0 else "\n")
+        # CR146 Tier C — same line, same wording as the Room sheet. The window
+        # is stated in TRADING DAYS because 3 calendar months is not a fixed
+        # number of candles, and a holiday-shortened quarter is not the same
+        # measurement as a full one.
+        + f"Window trend: {window_trend_phrase(t.return_period_pct, t.period_candles)}\n"
         + f"Volume: {t.volume_tone} ({t.volume_ratio:.2f}× the 20-day average, "
         f"5-day mean)\n"
         f"50-day range — low: ${t.support}, high: ${t.breakout}{position}\n"

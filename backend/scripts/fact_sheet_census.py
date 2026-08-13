@@ -240,8 +240,19 @@ INTENTIONALLY_NOT_TAKEN: dict[str, str] = {
 # provider exemptions: a reason, or it is a finding.
 _COMPUTED_NOT_RENDERED: dict[str, str] = {
     "source": "provider identity — a liveness signal, not a fact about the company",
-    "market_state": "CR166 stage 3 — pairs with the day move, technicals lane",
-    "change_pct": "CR166 stage 3 — the day move, technicals lane",
+    # D2/D3 — RESOLVED in CR179 Leg 3a, and not the way the plan proposed.
+    # These are `Quote` fields, and the Room never calls `.quote()` (its price
+    # comes from `.info`), so the plan's fix was to route the quote or lift the
+    # two fields onto the profile. Neither was needed: `.info` carries
+    # `regularMarketChangePercent` and `marketState` in the call the Room
+    # ALREADY makes, and they now render as `day_change_pct` / `market_state`.
+    # Routing `Quote` as well would put a second source behind one fact and
+    # invite the two to disagree — the defect `_reference_price_line` had to be
+    # written to reconcile for price. The FACT reaches the sheet; this NamedTUPLE
+    # field stays unrouted, deliberately.
+    "market_state": "the fact renders from `.info` as `market_state`; routing Quote too "
+                    "would give one fact two sources",
+    "change_pct": "the fact renders from `.info` as `day_change_pct`; same reason",
     "price": "rendered as `last close` via the technicals block",
     "rsi_tone": "rendered inside the RSI line",
     "volume_tone": "rendered inside the volume line",
@@ -252,6 +263,10 @@ _COMPUTED_NOT_RENDERED: dict[str, str] = {
     "sma_long": "rendered on the moving-average line",
     "volume_ratio": "rendered on the volume line",
     "rsi": "rendered on the RSI line",
+    "return_period_pct": "rendered on the window-trend line (CR146 Tier C)",
+    "period_candles": "rendered on the window-trend line — the trading-day count the "
+                      "return is measured over, since 3 calendar months is not a "
+                      "fixed number of candles",
     "earnings_date": "rendered via the `next_earnings` domain key",
     "quarter": "rendered via the `next_earnings` domain key",
     "eps_estimate": "rendered via the `next_earnings` domain key",

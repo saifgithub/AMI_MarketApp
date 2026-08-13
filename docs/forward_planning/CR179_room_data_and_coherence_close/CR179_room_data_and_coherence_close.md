@@ -459,3 +459,45 @@ reaching a call site, so the PM read *"no open positions yet (0% in every sector
 of which listed real holdings a few lines above — a confident false statement, not a silent gap.
 Widening a gate onto an argument that does not arrive would have multiplied it by seven, so both call
 sites were verified to pass `ctx.sector_weights` first.
+
+---
+
+## Leg 3e — CR146 Tier C, without the fetch it was gated on (2026-08-13)
+
+Tier C's cost note was a **second `.history()` call per ticker per convene**, with the cheaper
+alternative being to soften the overlay line to the window that exists. Neither was necessary. Most of
+what the 2-year window was wanted for now arrives from `.info` at zero cost (Leg 3a) — the 200-day
+average and price's distance from it, the 52-week change, relative strength versus the index. What
+remained was the quarter, and **the 3-month series was already being fetched and read exactly one
+candle deep.**
+
+`return_period_pct` is first close to last close over that same series. No new call, no new provider,
+and `compute_technicals`' all-or-nothing UNAVAILABLE contract is untouched. The **candle count** renders
+beside the return rather than the nominal period, because the window is trading days: a
+holiday-shortened quarter and a full one both answer to "3 months" and are not the same measurement.
+Measured, it is 64 candles — not the ~65 `_HISTORY_PERIOD`'s own comment estimates.
+
+**What it closes, shown rather than argued.** `overlay_generator.py:317` asks 18/18 prompts to
+*"Emphasise monthly/quarterly trend"*, against one day's price and two smoothed levels. Live on
+2026-08-13:
+
+| ticker | `trend` (20/50 alignment) | window trend |
+|---|---|---|
+| NVDA | **uptrend** | **flat** (+0.03% over the quarter) |
+| KTOS | **consolidating** | **up 20.0%** |
+
+Both labels are true and both point away from the quarter-scale move. The agent had only the label.
+Rendered *flat* rather than *up 0.0%* — a sentence that argues with itself — via `window_trend_phrase`,
+which **both** surfaces call so one measurement cannot be worded two ways.
+
+**Census direction 2 caught the two new `Technicals` fields the moment they existed** and refused to
+pass until each was registered. That is the gating Leg 0 added, doing the job it was added for — and
+the same run surfaced two neighbouring exemptions (`market_state`, `change_pct`) whose stated reasons
+had gone stale when Leg 3a supplied those facts from `.info`.
+
+**D2/D3 resolved, not the way the plan proposed.** The plan said to route `.quote()` or lift the two
+fields onto the profile, because the Room's price comes from `.info` and it never calls `.quote()`.
+Neither was needed: `.info` carries `regularMarketChangePercent` and `marketState` in the call the Room
+*already makes*. Routing `Quote` as well would put a second source behind one fact and invite the two
+to disagree — the defect `_reference_price_line` exists to reconcile. The fact reaches the sheet; the
+NamedTuple field stays unrouted, deliberately, with that reason recorded in the census.

@@ -1348,6 +1348,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         # nothing new. DEF229(b): "breakout" is a 50-day high, named as one.
         lines.append(_range_line(profile))
         lines.append(_moving_average_line(profile))
+        lines.append(_period_trend_line(profile))
         lines.append(_volume_line(profile))
     else:
         lines.append("Market technicals: not available this call.")
@@ -1763,6 +1764,31 @@ def _week52_line(profile: dict[str, Any], *, technicals_in_lane: bool = True) ->
         f"{(anchor - hi) / hi * 100:+.1f}% vs the high, "
         f"{(anchor - lo) / lo * 100:+.1f}% vs the low"
     )
+
+
+def _period_trend_line(profile: dict[str, Any]) -> str:
+    """CR146 Tier C — the quarterly trend read, from the series already fetched.
+
+    `overlay_generator.py:317` tells 18/18 prompts to *"Emphasise
+    monthly/quarterly trend"*, and until now the sheet carried one day's price
+    and two smoothed levels to do it with. One quarter of candles cannot produce
+    a quarterly trend if only the last one is read.
+
+    **The candle COUNT is stated, not the nominal period.** The window is
+    trading days: a holiday-shortened quarter and a full one both answer to
+    "3 months" and are not the same measurement. `_HISTORY_PERIOD` is the ask;
+    this is what arrived.
+
+    Rides `field_state["technicals"]` with the rest of the block — the series
+    that produces it is the series that produces the RSI.
+    """
+    pct = _safe_num(profile.get("return_period_pct"))
+    candles = profile.get("period_candles")
+    if pct is None or not candles:
+        return "Trend over the fetched window: not available"
+    from app.services.technicals import window_trend_phrase
+
+    return f"Window trend: {window_trend_phrase(pct, candles)}"
 
 
 def _moving_average_line(profile: dict[str, Any]) -> str:

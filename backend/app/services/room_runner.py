@@ -603,6 +603,10 @@ def _profile_for_ticker(
                 profile["sma_short"] = technicals.sma_short
                 profile["sma_long"] = technicals.sma_long
                 profile["volume_ratio"] = technicals.volume_ratio
+                # CR146 Tier C — the quarterly trend the overlay asks 18/18
+                # prompts to emphasise, from the series that was always fetched.
+                profile["return_period_pct"] = technicals.return_period_pct
+                profile["period_candles"] = technicals.period_candles
                 field_state["technicals"] = LiveDataState.LIVE.value
             else:
                 field_state["technicals"] = LiveDataState.UNAVAILABLE.value
