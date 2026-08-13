@@ -458,6 +458,20 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
     # "net debt $5,000M", and they are not the same balance sheet.
     if total_debt is not None:
         out["total_debt"] = round(total_debt / 1_000_000)
+    # CR179 Leg 3 — and gross CASH, which that argument applies to equally and
+    # which was left behind. The asymmetry was invisible to both guards: the
+    # census counts `totalCash` as consumed (it is read, into `net_cash`), and
+    # parity only asks whether a PRODUCED field is rendered — a key read and
+    # dropped inside a helper produces nothing to ask about. It surfaced from
+    # the Leg 0 perturbation probe: moving `totalDebt` moves two output fields,
+    # moving `totalCash` moves one.
+    #
+    # It is the half of the pair that carries the survivability question. The
+    # two balance sheets in the comment above are distinguished by the CASH,
+    # and "how long can this company fund itself" is a different question from
+    # "how levered is it" — the Bear Researcher's, specifically.
+    if total_cash is not None:
+        out["total_cash"] = round(total_cash / 1_000_000)
 
     # Real valuation multiples beyond P/E (DEF053) — closes the "P/S,
     # EV/EBITDA, FCF yield" overclaim without a second provider.
@@ -482,6 +496,99 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
         out["peg_ratio"] = f"{peg_ratio:.2f}"
         if peg_basis is not None:
             out["peg_basis"] = peg_basis
+    # ── CR179 Leg 3 — the technicals-lane keys `.info` has always returned ──
+    #
+    # All fetched inside the SAME `yf.Ticker(t).info` call that already serves
+    # every field above, exempted in the census as "CR166 stage 3" and never
+    # rendered. Measured 6/6 available across NVDA/GRAB/KTOS/SNOA/NBIS/BAC.
+    #
+    # THREE of the tempting ones are deliberately NOT taken, because "more is
+    # better" is bounded by the second half of this build's mandate — a Room
+    # that agrees with itself:
+    #
+    #   - `previousClose` — the sheet already carries a reference price AND a
+    #     last close, and `_reference_price_line` exists because one turn read
+    #     those two as two facts. A third price is that defect again. The day
+    #     MOVE is the actual gap ("the sheet states a price and never says
+    #     whether it moved") and a percentage needs no second price to stand.
+    #   - `fiftyDayAverage` — we already compute and render `sma_long` from the
+    #     history. Two 50-day averages on different bases is the same defect.
+    #     The 200-day has no counterpart, so it is pure gain.
+    #   - a second volume RATIO — `volume_tone`/`volume_ratio` (CR146 Tier B)
+    #     already state the comparison off the history. The absolutes are taken
+    #     because they answer a different question: scale. SNOA trades ~75k
+    #     shares a day and NVDA ~45M, and the mandate's "Liquid only. Avoid
+    #     microcaps" is a sizing constraint that market cap alone cannot settle.
+    day_change_pct = _num("regularMarketChangePercent")
+    if day_change_pct is not None:
+        out["day_change_pct"] = round(day_change_pct, 2)
+    # CR104's provenance question applied to a price: a quote carries a
+    # different authority at 14:00 than at 03:00, and the sheet never said
+    # which. An unrecognised state is dropped rather than passed through, the
+    # same rule `_EXCHANGE_NAMES` applies to a venue code.
+    market_state = info.get("marketState")
+    if market_state in ("REGULAR", "PRE", "POST", "CLOSED", "PREPRE", "POSTPOST"):
+        out["market_state"] = str(market_state)
+    sma_200 = _num("twoHundredDayAverage")
+    if sma_200 is not None:
+        out["sma_200"] = round(sma_200, 2)
+        # Precomputed, per Leg 4's rule: the distance is the figure an agent
+        # reaches for, and handing over two numbers plus an instruction to
+        # divide them is what DEF066 → DEF235 → DEF241 → CR166 Tier D is a
+        # record of.
+        if price is not None and sma_200:
+            out["price_vs_sma_200_pct"] = round((price - sma_200) / sma_200 * 100, 1)
+    volume_today = _num("volume")
+    if volume_today is not None:
+        out["volume_today"] = int(volume_today)
+    volume_avg = _num("averageVolume")
+    if volume_avg is not None:
+        out["volume_avg_3m"] = int(volume_avg)
+
+    # Relative strength. `SandP52WeekChange` is the INDEX's own 52-week change
+    # — measured identical (0.1979) across all six probe tickers, which is what
+    # confirms it is the benchmark and not the ticker. The spread is what the
+    # pair is for, so the spread is what gets computed here rather than left as
+    # two numbers for an agent to subtract.
+    change_52w = _num("52WeekChange")
+    change_52w_sp = _num("SandP52WeekChange")
+    if change_52w is not None:
+        out["change_52w_pct"] = round(change_52w * 100, 1)
+    if change_52w_sp is not None:
+        out["change_52w_sp500_pct"] = round(change_52w_sp * 100, 1)
+    if change_52w is not None and change_52w_sp is not None:
+        out["relative_strength_52w_pct"] = round((change_52w - change_52w_sp) * 100, 1)
+
+    # ── CR150 — the Bear Researcher's quantified downside ──────────────────
+    beta = _num("beta")
+    if beta is not None:
+        out["beta"] = round(beta, 2)
+    # Short interest, with the as-of date CR150's row requires. It is reported
+    # on a lag of roughly two weeks, so an undated short-interest figure
+    # presented beside a live price is a freshness claim we cannot support —
+    # the CR148 Tier B lesson, on a different feed.
+    short_pct_float = _num("shortPercentOfFloat")
+    short_ratio = _num("shortRatio")
+    short_date = _num("dateShortInterest")
+    # A literal ZERO is treated as absent, not as a fact. Measured: BAC comes
+    # back with `sharesShort` 3,122 against billions of shares outstanding and
+    # `shortPercentOfFloat` 0.0 — which would render as "0.0% of float", i.e. a
+    # confident claim that nobody is short a mega-cap bank. That is not a tuned
+    # threshold, it is the boundary of the domain: a listed equity does not have
+    # zero short interest, so a zero is the provider telling us it does not
+    # know. DEF053 — absent beats meaningless.
+    if short_pct_float:
+        out["short_pct_float"] = round(short_pct_float * 100, 2)
+        if short_ratio:
+            out["short_days_to_cover"] = round(short_ratio, 1)
+        if short_date:
+            try:
+                out["short_interest_date"] = datetime.fromtimestamp(
+                    short_date, tz=timezone.utc
+                ).date().isoformat()
+            except (OverflowError, OSError, ValueError):
+                pass
+
     free_cash_flow = _num("freeCashflow")
     market_cap = _num("marketCap")
     fcf_yield = fcf_yield_pct(free_cash_flow, market_cap)
@@ -822,6 +929,139 @@ def buyback_line(
     return _labelled("Buybacks", live, [part])
 
 
+def day_move_line(
+    change_pct: float | None, market_state: str | None, *, live: bool = True
+) -> str | None:
+    """CR179 Leg 3 — the sheet stated a price and never said whether it moved.
+
+    The market state rides on the same line because the two are one fact: a
+    +0.2% day move means something different mid-session than it does after the
+    close, and an agent given the number without the state has to guess which
+    it is holding. No second price is introduced — see the fetcher's note on
+    why `previousClose` is refused.
+    """
+    if change_pct is None:
+        return None
+    state = {
+        "REGULAR": "market open",
+        "PRE": "pre-market",
+        "PREPRE": "pre-market",
+        "POST": "after hours",
+        "POSTPOST": "after hours",
+        "CLOSED": "market closed",
+    }.get(market_state or "")
+    part = f"{change_pct:+.2f}% today"
+    if state:
+        part += f" ({state})"
+    return _labelled("Day move", live, [part])
+
+
+def primary_trend_line(
+    sma_200: float | None, distance_pct: float | None, *, live: bool = True
+) -> str | None:
+    """CR179 Leg 3 — the 200-day average, and where price sits against it.
+
+    **"200-day" had zero hits anywhere in either register.** No agent could
+    discuss the primary trend, and `compute_technicals` cannot derive one:
+    `_HISTORY_PERIOD = "3m"` is ~65 bars. The value was in the `.info` dict the
+    whole time, exempted as "CR166 stage 3".
+
+    The distance is precomputed and the raw average is carried beside it, since
+    a level is what a stop or an invalidation is written against while the
+    percentage is what the trend argument is made from.
+    """
+    if sma_200 is None:
+        return None
+    part = f"200-day average ${sma_200:,}"
+    if distance_pct is not None:
+        side = "above" if distance_pct >= 0 else "below"
+        part += f", price {abs(distance_pct)}% {side} it"
+    return _labelled("Primary trend", live, [part])
+
+
+def relative_strength_line(
+    ticker_pct: float | None,
+    index_pct: float | None,
+    spread_pct: float | None,
+    *,
+    live: bool = True,
+) -> str | None:
+    """CR179 Leg 3 — 52-week performance against the index, free from `.info`.
+
+    Both legs are rendered as well as the spread, because "up 23%" in a year
+    the index rose 20% and "up 23%" in a year it fell 20% are opposite facts,
+    and an agent handed only the spread cannot tell whether the name rose or
+    the market fell.
+    """
+    if ticker_pct is None or index_pct is None or spread_pct is None:
+        return None
+    verb = "ahead of" if spread_pct >= 0 else "behind"
+    return _labelled(
+        "Relative strength, 52w", live,
+        [f"{ticker_pct:+.1f}% vs S&P 500 {index_pct:+.1f}% — "
+         f"{abs(spread_pct)}pp {verb} the index"],
+    )
+
+
+def liquidity_line(
+    volume_today: int | None, volume_avg_3m: int | None, *, live: bool = True
+) -> str | None:
+    """CR179 Leg 3 — the OTHER half of the mandate's liquidity constraint.
+
+    *"Liquid only. Avoid microcaps"* was unfollowable until CR145 Tier A
+    supplied market cap. Cap alone still cannot settle it: a name can be large
+    and barely traded. These are absolutes, not a ratio — `volume_tone` already
+    states the comparison off the history, and a second ratio on a second basis
+    is the defect this build is closing, not opening.
+    """
+    parts = []
+    if volume_today is not None:
+        parts.append(f"{volume_today:,} shares today")
+    if volume_avg_3m is not None:
+        parts.append(f"{volume_avg_3m:,} 3-month average")
+    return _labelled("Volume", live, parts)
+
+
+def short_interest_line(
+    pct_float: float | None,
+    days_to_cover: float | None,
+    as_of: str | None,
+    *,
+    live: bool = True,
+) -> str | None:
+    """CR150 — short interest, with the as-of date its row requires.
+
+    Short interest is reported on roughly a two-week lag. Presented undated
+    beside a live price it becomes a freshness claim we cannot support, which
+    is what CR148 Tier B had to fix on the social feed — same mistake, different
+    provider. So the date is part of the fact, not a footnote, and the line is
+    written so the lag is visible rather than inferable.
+    """
+    if pct_float is None:
+        return None
+    parts = [f"{pct_float}% of float short"]
+    if days_to_cover is not None:
+        parts.append(f"{days_to_cover} days to cover")
+    line = _labelled("Short interest", live, parts)
+    if as_of:
+        line += f" — as reported {as_of}, NOT a live figure"
+    return line
+
+
+def risk_profile_line(beta: float | None, *, live: bool = True) -> str | None:
+    """CR150 — beta, the Bear Researcher's quantified downside.
+
+    Named at the render site rather than left bare: `beta` is one of the most
+    over-loaded words in finance, and the sheet says which one this is so the
+    agent is not choosing between three definitions.
+    """
+    if beta is None:
+        return None
+    return _labelled(
+        "Beta", live, [f"{beta} vs the market (5-year monthly, per the provider)"]
+    )
+
+
 def earnings_power_line(
     eps: float | None,
     revenue_ttm: float | None,
@@ -1119,6 +1359,8 @@ def build_live_data_block(ticker: str) -> str | None:
         size_parts.append(f"FCF ${data['free_cash_flow']:,}M (TTM)")
     if "total_debt" in data:
         size_parts.append(f"gross debt ${data['total_debt']:,}M")
+    if "total_cash" in data:
+        size_parts.append(f"gross cash ${data['total_cash']:,}M")
     if size_parts:
         lines.append("Company size: " + ", ".join(size_parts))
     # CR166 Tier B — same builders, same order, same wording as the Room sheet.
@@ -1135,6 +1377,27 @@ def build_live_data_block(ticker: str) -> str | None:
         ),
         buyback_line(
             data.get("buyback_ttm"), data.get("buyback_yield"), live=False,
+        ),
+        # CR179 Leg 3 — same builders, same order, same wording as the Room
+        # sheet. The Room lane-gates these to the technicals desk; the 1-on-1
+        # surface has no lane firewall (one analyst, no division of labour to
+        # protect), so the parity rule applies unmodified: the same analyst must
+        # not see a poorer sheet here than in the Room.
+        day_move_line(data.get("day_change_pct"), data.get("market_state"), live=False),
+        primary_trend_line(
+            data.get("sma_200"), data.get("price_vs_sma_200_pct"), live=False,
+        ),
+        relative_strength_line(
+            data.get("change_52w_pct"), data.get("change_52w_sp500_pct"),
+            data.get("relative_strength_52w_pct"), live=False,
+        ),
+        liquidity_line(
+            data.get("volume_today"), data.get("volume_avg_3m"), live=False,
+        ),
+        risk_profile_line(data.get("beta"), live=False),
+        short_interest_line(
+            data.get("short_pct_float"), data.get("short_days_to_cover"),
+            data.get("short_interest_date"), live=False,
         ),
         earnings_power_line(
             data.get("trailing_eps"), data.get("revenue_ttm"),

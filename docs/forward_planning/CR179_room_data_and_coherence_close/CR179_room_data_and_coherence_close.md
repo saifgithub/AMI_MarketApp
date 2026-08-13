@@ -309,3 +309,54 @@ and only the second is ours to make, so an absent row renders nothing rather tha
   `_PERIOD_MAP["2y"]` already exists — but it is a *technicals-lane* fill, which is Leg 3's job. The
   incoherence it closes is live and unchanged: `overlay_generator.py:317` still asks 18/18 prompts to
   *"Emphasise monthly/quarterly trend"* against `_HISTORY_PERIOD = "3m"` ≈ 65 candles.
+
+---
+
+## Leg 3a — the `.info` keys nobody read (2026-08-13)
+
+Fourteen fields, all from the `yf.Ticker(t).info` call the fetcher already makes, all measured **6/6
+available** across NVDA/GRAB/KTOS/SNOA/NBIS/BAC before any code was written.
+
+**Technicals lane** — `day_change_pct` + `market_state`, `sma_200` + `price_vs_sma_200_pct`,
+`volume_today` + `volume_avg_3m`, and the 52-week relative-strength triple. *"200-day"* had **zero hits
+anywhere in either register**: no agent could discuss the primary trend, and `compute_technicals`
+cannot derive one from a 65-bar window. **Bear/Trader** — `beta`, `short_pct_float`,
+`short_days_to_cover`, `short_interest_date` (CR150). **Fundamentals** — `total_cash`.
+
+**"More is better" is bounded by the second half of the mandate, and three keys were refused on that
+ground** — each recorded in the census with its reason, so the refusal is auditable rather than a gap:
+
+- **`previousClose`** — the sheet already carries a reference price *and* a last close, and
+  `_reference_price_line` exists because one live turn read those two as two facts. A third price is
+  that defect again. The day **move** is the actual gap, and a percentage closes it without a second
+  price.
+- **`fiftyDayAverage`** — we already compute and render `sma_long` from the history. Two 50-day
+  averages on two bases is the same defect. The 200-day has no counterpart, so it is pure gain.
+- **a second volume ratio** — `volume_tone` already states the comparison off the history. The
+  absolutes are taken because they answer a different question (scale: SNOA trades ~75k shares/day,
+  NVDA ~45M) and the mandate's *"Liquid only. Avoid microcaps"* is a sizing constraint market cap alone
+  cannot settle.
+
+**A zero short interest is treated as absent.** BAC returns `sharesShort` 3,122 against billions of
+shares outstanding with `shortPercentOfFloat` 0.0 — which would have rendered *"0.0% of float short"*, a
+confident claim that nobody is short a mega-cap bank. Not a tuned threshold (that would be P16); the
+boundary of the domain, since a listed equity does not have zero short interest.
+
+**These render independently of `field_state["technicals"]`, deliberately.** That state is
+all-or-nothing because `compute_technicals` cannot return "RSI but not trend". These arrive from a
+different endpoint, so an OHLCV outage must not also hide a 200-day average that is genuinely live.
+Still lane-gated to the technicals desk — DOMAIN, not provenance, the same rule `week52` is placed by.
+
+### Both Leg 0 guards fired, on their first real exercise
+
+- **The stale-exemption guard caught all 11** keys whose census exemptions had become lies about the
+  code, and refused to pass until each was removed or rewritten.
+- **The perturbation guard caught `marketState` as inert** — correctly. It is value-constrained
+  (unrecognised session states are dropped), so the multiplicative numeric perturbation never fired its
+  branch. Fixed in the FIXTURE, not the expectation: the perturbation for a constrained key has to be a
+  different *valid* value. `exchange` was the first such key (CR168); this is the second, and the
+  fixture's own docstring had predicted it — *"any future value-constrained key needs the same
+  treatment."*
+
+That is two guards built in Leg 0 catching two real problems in Leg 3, which is the argument for having
+built the instruments before the data work rather than alongside it.

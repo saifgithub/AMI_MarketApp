@@ -98,44 +98,56 @@ INTENTIONALLY_NOT_TAKEN: dict[str, str] = {
     # CLAIMED BY ANOTHER CR — listed so the census does not re-raise them every
     # run as if they were undiscovered. Removing an entry here is how the field
     # comes back into scope when that CR ships.
-    "beta": "CR150 — Bear Researcher's quantified downside",
-    "sharesShort": "CR150 — short interest, needs a reported-as-of label",
-    "sharesShortPriorMonth": "CR150 — short interest",
-    "sharesShortPreviousMonthDate": "CR150 — short interest",
-    "shortRatio": "CR150 — short interest",
-    "shortPercentOfFloat": "CR150 — short interest",
-    "sharesPercentSharesOut": "CR150 — short interest",
-    "dateShortInterest": "CR150 — short interest as-of date",
-    "twoHundredDayAverage": "CR166 stage 3 — technicals lane",
-    "twoHundredDayAverageChange": "CR166 stage 3 — technicals lane",
-    "twoHundredDayAverageChangePercent": "CR166 stage 3 — technicals lane",
-    "fiftyDayAverage": "CR166 stage 3 — technicals lane",
-    "fiftyDayAverageChange": "CR166 stage 3 — technicals lane",
-    "fiftyDayAverageChangePercent": "CR166 stage 3 — technicals lane",
-    "previousClose": "CR166 stage 3 — technicals lane (day move)",
-    "regularMarketPreviousClose": "CR166 stage 3 — technicals lane",
-    "regularMarketChange": "CR166 stage 3 — technicals lane",
-    "regularMarketChangePercent": "CR166 stage 3 — technicals lane",
-    "regularMarketDayHigh": "CR166 stage 3 — technicals lane",
-    "regularMarketDayLow": "CR166 stage 3 — technicals lane",
-    "regularMarketOpen": "CR166 stage 3 — technicals lane",
-    "regularMarketVolume": "CR166 stage 3 — technicals lane",
-    "dayHigh": "CR166 stage 3 — technicals lane",
-    "dayLow": "CR166 stage 3 — technicals lane",
-    "open": "CR166 stage 3 — technicals lane",
-    "volume": "CR166 stage 3 — technicals lane",
-    "averageVolume": "CR166 stage 3 — technicals lane",
-    "averageVolume10days": "CR166 stage 3 — technicals lane",
-    "averageDailyVolume10Day": "CR166 stage 3 — technicals lane",
-    "averageDailyVolume3Month": "CR166 stage 3 — technicals lane",
-    "52WeekChange": "CR166 stage 3 — relative strength",
-    "SandP52WeekChange": "CR166 stage 3 — relative strength vs the index",
-    "fiftyTwoWeekChangePercent": "CR166 stage 3 — technicals lane",
+    # CR150 — the short-interest block, PARTIALLY taken in CR179 Leg 3.
+    # `shortPercentOfFloat`, `shortRatio` and `dateShortInterest` now render as
+    # `short_interest_line`. The four below stay out: they are the same fact in
+    # units an agent cannot use without a share count to divide by
+    # (`sharesShort` is an absolute), or the prior month's copy of it. One
+    # statement of one fact — the rule `_reference_price_line` had to be written
+    # to restore after two prices reached one sheet.
+    "sharesShort": "CR179 Leg 3 — absolute count; % of float is what renders",
+    "sharesShortPriorMonth": "CR179 Leg 3 — prior month's copy of the same fact",
+    "sharesShortPreviousMonthDate": "CR179 Leg 3 — dates the prior-month copy",
+    "sharesPercentSharesOut": "CR179 Leg 3 — % of SHARES OUT; we render % of FLOAT, "
+                              "the tighter and more commonly quoted denominator",
+    # CR166 stage 3 — the technicals lane. CR179 Leg 3 took the six that add a
+    # fact no other line carries. Everything still listed here is refused for a
+    # stated reason, not merely unclaimed.
+    "twoHundredDayAverageChange": "derived from `twoHundredDayAverage` + price, "
+                                  "which we render as `price_vs_sma_200_pct`",
+    "twoHundredDayAverageChangePercent": "we compute this ourselves off the price "
+                                         "actually on the sheet, so the two cannot disagree",
+    "fiftyDayAverage": "CR179 Leg 3 — we already compute and render `sma_long` from "
+                       "the history; two 50-day averages on different bases is the "
+                       "two-prices defect `_reference_price_line` exists to fix",
+    "fiftyDayAverageChange": "same — `_moving_average_line` owns the 50-day read",
+    "fiftyDayAverageChangePercent": "same — `_moving_average_line` owns the 50-day read",
+    "previousClose": "CR179 Leg 3 — REFUSED. The sheet already carries a reference "
+                     "price and a last close and needed a line to reconcile them; a "
+                     "third price is that defect again. The day MOVE is the gap, and "
+                     "`day_change_pct` closes it without a second price.",
+    "regularMarketPreviousClose": "same as `previousClose` — a third price",
+    "regularMarketChange": "absolute move; `regularMarketChangePercent` is the "
+                           "comparable figure and is taken",
+    "regularMarketDayHigh": "intraday range — the base prompt forbids intraday "
+                            "timeframes (DEF052/CR146 Tier A)",
+    "regularMarketDayLow": "intraday range — see `regularMarketDayHigh`",
+    "regularMarketOpen": "intraday — see `regularMarketDayHigh`",
+    "regularMarketVolume": "duplicate of `volume`, which is taken",
+    "dayHigh": "duplicate of `regularMarketDayHigh`",
+    "dayLow": "duplicate of `regularMarketDayLow`",
+    "open": "duplicate of `regularMarketOpen`",
+    "averageVolume10days": "we take the 3-month average; a 10-day average of a "
+                           "10-day-old shock is a different question nobody asks",
+    "averageDailyVolume10Day": "duplicate of `averageVolume10days`",
+    "averageDailyVolume3Month": "duplicate of `averageVolume`, which is taken",
+    "fiftyTwoWeekChangePercent": "duplicate of `52WeekChange`, which is taken",
     "fiftyTwoWeekHighChange": "CR166 stage 3 — already derived on the 52w line",
     "fiftyTwoWeekHighChangePercent": "CR166 stage 3 — already derived",
     "fiftyTwoWeekLowChange": "CR166 stage 3 — already derived",
     "fiftyTwoWeekLowChangePercent": "CR166 stage 3 — already derived",
-    "allTimeHigh": "CR166 stage 3 — technicals lane",
+    "allTimeHigh": "rejected outright in CR166's row — an all-time high invites a "
+                   "drawdown-from-peak argument over a horizon the sim does not model",
     # Redundant with a field we already take, on a different basis or unit.
     "trailingAnnualDividendRate": "we take `dividendRate` (CR030) — one rate, one source",
     "trailingAnnualDividendYield": "we take `dividendYield`",
@@ -195,7 +207,6 @@ INTENTIONALLY_NOT_TAKEN: dict[str, str] = {
     "exchangeTimezoneName": "plumbing", "exchangeTimezoneShortName": "plumbing",
     "fullExchangeName": "provider's venue string ('NasdaqGS'); we map the `exchange` CODE to a clean name instead",
     "language": "plumbing", "market": "plumbing", "region": "plumbing",
-    "marketState": "session state, not a company fact",
     "quoteSourceName": "plumbing", "quoteType": "plumbing", "typeDisp": "plumbing",
     "tradeable": "plumbing", "triggerable": "plumbing",
     "cryptoTradeable": "out of universe — US equities only at MVP",

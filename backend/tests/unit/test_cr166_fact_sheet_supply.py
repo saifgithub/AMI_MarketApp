@@ -179,8 +179,17 @@ def test_every_consumed_key_actually_influences_the_fetchers_output():
             self._bump = bump
 
         def get(self, key, default=None):
+            # Value-constrained keys: the fetcher maps each to a known set and
+            # DROPS anything unrecognised, so a numeric here means the branch
+            # never fires and the key reads as inert — a false finding. The
+            # perturbation for these has to be a different VALID value, not a
+            # bigger number. `exchange` was the first (CR168); `marketState` is
+            # the second (CR179 Leg 3), and it arrived as a red build here
+            # rather than as a silent gap, which is this guard working.
             if key == "exchange":
                 return "NYQ" if self._bump == "exchange" else "NMS"
+            if key == "marketState":
+                return "CLOSED" if self._bump == "marketState" else "REGULAR"
             base = 1000.0 + (zlib.crc32(key.encode()) % 9000)
             return base * 1_000_000.0 + 12345.0 if key == self._bump else base
 

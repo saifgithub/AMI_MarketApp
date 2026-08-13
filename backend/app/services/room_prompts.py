@@ -32,8 +32,14 @@ from app.services.fundamentals import (
     earnings_power_line,
     identity_line,
     buyback_line,
+    day_move_line,
+    liquidity_line,
     margin_structure_line,
     margin_trend_line,
+    primary_trend_line,
+    relative_strength_line,
+    risk_profile_line,
+    short_interest_line,
     ownership_line,
     pe_line,
     peg_part,
@@ -1316,6 +1322,47 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         lines.append(_volume_line(profile))
     else:
         lines.append("Market technicals: not available this call.")
+    # CR179 Leg 3 — the `.info`-sourced technicals, OUTSIDE the branch above on
+    # purpose. `field_state["technicals"]` is all-or-nothing because
+    # `compute_technicals` cannot return "RSI but not trend"; these arrive from
+    # a different endpoint entirely, so an OHLCV outage that blanks the block
+    # above must not also hide a 200-day average that is genuinely live. Each is
+    # independently CR104-gated. Still lane-gated: this is the technicals desk's
+    # subject matter, whatever fetcher happened to return it — the same DOMAIN-
+    # not-provenance rule `week52` is placed by, a few lines down.
+    if _in_lane("technicals") and not market_withheld:
+        for extra in (
+            day_move_line(
+                profile.get("day_change_pct") if _is("day_change_pct", "live") else None,
+                profile.get("market_state") if _is("market_state", "live") else None,
+            ),
+            primary_trend_line(
+                profile.get("sma_200") if _is("sma_200", "live") else None,
+                profile.get("price_vs_sma_200_pct")
+                if _is("price_vs_sma_200_pct", "live") else None,
+            ),
+            relative_strength_line(
+                profile.get("change_52w_pct") if _is("change_52w_pct", "live") else None,
+                profile.get("change_52w_sp500_pct")
+                if _is("change_52w_sp500_pct", "live") else None,
+                profile.get("relative_strength_52w_pct")
+                if _is("relative_strength_52w_pct", "live") else None,
+            ),
+            liquidity_line(
+                profile.get("volume_today") if _is("volume_today", "live") else None,
+                profile.get("volume_avg_3m") if _is("volume_avg_3m", "live") else None,
+            ),
+            risk_profile_line(profile.get("beta") if _is("beta", "live") else None),
+            short_interest_line(
+                profile.get("short_pct_float") if _is("short_pct_float", "live") else None,
+                profile.get("short_days_to_cover")
+                if _is("short_days_to_cover", "live") else None,
+                profile.get("short_interest_date")
+                if _is("short_interest_date", "live") else None,
+            ),
+        ):
+            if extra:
+                lines.append(extra)
     # 52-week range is a fundamentals field, independent of technicals —
     # `fetch_live_fundamentals` only sets `week52` LIVE when yfinance's real
     # fiftyTwoWeekLow/High fields were used, never for the ±5%-of-price
@@ -1651,6 +1698,15 @@ def _company_size_line(profile: dict[str, Any]) -> str | None:
         # hides leverage: $40B cash against $45B debt and $1B against $6B both
         # render as "net debt $5,000M", and they are not the same balance sheet.
         parts.append(f"gross debt ${profile['total_debt']:,}M")
+    if profile.get("total_cash") is not None and _field_is_live(profile, "total_cash"):
+        # CR179 Leg 3 — and the other half of that same argument, which shipped
+        # without it. The two balance sheets the comment above distinguishes are
+        # distinguished by the CASH; "how long can this fund itself" is a
+        # different question from "how levered is it", and only one of them was
+        # answerable. Invisible to both guards until Leg 0's perturbation probe:
+        # the census counts `totalCash` as consumed because it IS read (into
+        # `net_cash`), and parity can only ask about a field that is produced.
+        parts.append(f"gross cash ${profile['total_cash']:,}M")
     if not parts:
         return None
     return "Company size (LIVE): " + ", ".join(parts)

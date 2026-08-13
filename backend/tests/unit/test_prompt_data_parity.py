@@ -133,6 +133,29 @@ _FUND_SENTINEL: dict = {
     "margin_trend_basis": "TRENDBASISSENT vs TRENDPRIORSENT",
     "buyback_ttm": 7654,
     "buyback_yield": 8.9,
+    # CR179 Leg 3 — gross cash, the half of CR145 Tier A's argument that shipped
+    # without it. Neither guard could see the gap: the census counts `totalCash`
+    # as consumed (it IS read, into `net_cash`) and parity can only ask about a
+    # field that is produced, so a key read and dropped inside a helper is
+    # invisible to both. Leg 0's perturbation probe is what found it.
+    "total_cash": 55221,
+    # CR179 Leg 3 — the technicals-lane keys `.info` always returned. They are
+    # lane-gated to the technicals desk in the Room and ungated on the 1-on-1
+    # surface, which has no firewall to protect.
+    "day_change_pct": -1.77,
+    "market_state": "REGULAR",
+    "sma_200": 188.44,
+    "price_vs_sma_200_pct": 12.6,
+    "volume_today": 44556677,
+    "volume_avg_3m": 88776655,
+    "change_52w_pct": 27.4,
+    "change_52w_sp500_pct": 11.9,
+    "relative_strength_52w_pct": 15.5,
+    # CR150 — the Bear Researcher's quantified downside.
+    "beta": 1.93,
+    "short_pct_float": 6.28,
+    "short_days_to_cover": 4.7,
+    "short_interest_date": "2026-07-15",
 }
 
 _TECH_SENTINEL = Technicals(
@@ -382,11 +405,18 @@ class _AllKeysInfo(dict):
     guard would go quietly blind to it. Answered with a real code so the branch
     fires. The fixture's premise ("every branch fires") is preserved rather than
     weakened; any future value-constrained key needs the same treatment.
+
+    CR179 Leg 3 — `marketState` is the second such key, and it needed exactly
+    that treatment: the fetcher drops any session state outside a known set, so
+    a numeric here would have produced no `market_state` and left the day-move
+    line's session half unguarded.
     """
 
+    _CONSTRAINED = {"exchange": "NMS", "marketState": "REGULAR"}
+
     def get(self, key, default=None):
-        if key == "exchange":
-            return "NMS"
+        if key in self._CONSTRAINED:
+            return self._CONSTRAINED[key]
         return 1000.0 + (zlib.crc32(key.encode()) % 9000)
 
     def __bool__(self) -> bool:
@@ -564,6 +594,21 @@ def env(monkeypatch):
             "margin_trend_basis": "TRENDBASISSENT",
             "buyback_ttm": "$7,654M repurchased",
             "buyback_yield": "8.9% of market cap",
+            # CR179 Leg 3.
+            "total_cash": "gross cash $55,221M",
+            "day_change_pct": "-1.77% today",
+            "market_state": "(market open)",
+            "sma_200": "200-day average $188.44",
+            "price_vs_sma_200_pct": "12.6% above it",
+            "volume_today": "44,556,677 shares today",
+            "volume_avg_3m": "88,776,655 3-month average",
+            "change_52w_pct": "+27.4% vs S&P 500",
+            "change_52w_sp500_pct": "S&P 500 +11.9%",
+            "relative_strength_52w_pct": "15.5pp ahead",
+            "beta": "1.93 vs the market",
+            "short_pct_float": "6.28% of float short",
+            "short_days_to_cover": "4.7 days to cover",
+            "short_interest_date": "as reported 2026-07-15",
         },
         "technicals": {
             "rsi": "57", "rsi_tone": "TONESENT", "trend": "TRENDSENT",

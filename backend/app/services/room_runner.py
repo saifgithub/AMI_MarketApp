@@ -392,6 +392,20 @@ _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
     "gross_margin_trend_bps", "operating_margin_trend_bps",
     "net_margin_trend_bps", "margin_trend_basis",
     "buyback_ttm", "buyback_yield",
+    # CR179 Leg 3 — gross cash, the half of CR145 Tier A's own argument that
+    # shipped without it (gross debt renders, gross cash did not).
+    "total_cash",
+    # CR179 Leg 3 — the technicals-lane keys `.info` has always returned, held
+    # under a "CR166 stage 3" census exemption and rendered by nobody. They
+    # arrive from `.info` rather than from `compute_technicals`, so each carries
+    # its OWN provenance and renders independently of `field_state["technicals"]`
+    # — an OHLCV outage must not hide a 200-day average that is genuinely live.
+    "day_change_pct", "market_state",
+    "sma_200", "price_vs_sma_200_pct",
+    "volume_today", "volume_avg_3m",
+    "change_52w_pct", "change_52w_sp500_pct", "relative_strength_52w_pct",
+    # CR150 — the Bear Researcher's quantified downside.
+    "beta", "short_pct_float", "short_days_to_cover", "short_interest_date",
 )
 
 # CR166 Tier B — the dividend fields CR030 already fetches onto `EarningsInfo`
