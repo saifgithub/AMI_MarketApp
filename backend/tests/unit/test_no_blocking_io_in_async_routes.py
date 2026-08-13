@@ -616,6 +616,17 @@ _SIM_ENGINE_SYNC_SAFE_METHODS = {
     # always called from `api/games.py` / `main.py`'s queue-fill tick via
     # `await asyncio.to_thread(...)` — same shape as `submit` above.
     "submit_game_trade",
+    # CR170: the compliance-input bundle `submit`, `preview` and
+    # `fill_resting_order` each hand to `check_mandate_compliance`. Reaches the
+    # network through `total_value` / `current_marks` / `current_drawdown_pct`,
+    # all already in this set. Private, and no route calls it — the three
+    # methods that do are themselves wrapped at every site.
+    "_compliance_context",
+    # CR170 §4: the resting book's fill entry point. Reached only from
+    # `sim_resting_orders.sweep_resting_orders`, which is `to_thread`-wrapped at
+    # both of its call sites — `main.py::_sim_resting_order_tick` and
+    # `api/sim.py::evaluate_trades`. Same shape as `submit_game_trade` above.
+    "fill_resting_order",
 }
 
 

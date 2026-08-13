@@ -39,7 +39,7 @@ from __future__ import annotations
 import math
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from threading import RLock
 from typing import Literal
 from uuid import UUID, uuid4
@@ -54,6 +54,7 @@ from app.db.models import (
     PortfolioValueSnapshotRow,
     SimHoldingRow,
     SimPortfolioRow,
+    SimRestingOrderRow,
     SimTradeRow,
 )
 from app.services.cost_basis_lots import Lot, compute_lots_fifo
@@ -78,6 +79,13 @@ from app.services.market_data import (
 from app.services.classification_universe import default_classification_universe
 from app.services.sector_allocation import default_sector_map
 from app.services.sharia_universe import default_halal_universe
+from app.trading_math.market_hours import session_close_on_or_after
+from app.trading_math.order_pricing import (
+    can_rest,
+    fill_price_for,
+    is_triggered,
+    named_price_for,
+)
 from app.trading_math.portfolio import position_pct as _position_pct
 from app.trading_math.risk_limits import position_risk_contribution as _position_risk_contribution
 
@@ -162,7 +170,176 @@ class SimTrade:
         }
 
 
+# ── Resting order (CR170) ──────────────────────────────────────────────────
+
+
+RestingOrderState = Literal[
+    "working", "triggered", "filling", "filled", "cancelled", "expired", "rejected"
+]
+
+#: The two states a sweep may claim, and the only two a user may cancel.
+LIVE_RESTING_STATES: tuple[str, ...] = ("working", "triggered")
+
+#: Wire value → calendar days to add before finding the session close.
+#: DAY is 0 — the close of the session that applies at placement.
+RESTING_ORDER_TIFS: dict[str, int] = {"day": 0, "gtd_30": 30, "gtd_90": 90}
+
+
+def resting_order_expiry(tif: str, placed_at: datetime) -> datetime:
+    """CR170 §2 — when this order dies, anchored to a **session** close.
+
+    An unknown TIF collapses to DAY rather than to the longest one: guessing
+    wrong in the permissive direction leaves an order the user never asked for
+    resting against their cash for ninety days (DEF210's shape — an unknown
+    value must never resolve to the most powerful option).
+    """
+    days = RESTING_ORDER_TIFS.get(tif, 0)
+    return session_close_on_or_after(placed_at + timedelta(days=days))
+
+
+@dataclass
+class SimRestingOrder:
+    """In-Python mirror of `SimRestingOrderRow`, the way `SimTrade` mirrors
+    `SimTradeRow`. `mobile/lib/models/sim_resting_order.dart` is a near-copy of
+    `to_json()`'s shape."""
+
+    id: UUID
+    user_id: UUID
+    portfolio_id: UUID
+    ticker: str
+    side: Side
+    quantity: float
+    order_type: OrderType
+    state: RestingOrderState
+    tif: str
+    expires_at: datetime
+    placed_at: datetime
+    trigger_price: float | None = None
+    limit_price: float | None = None
+    stop: float | None = None
+    target: float | None = None
+    horizon_days: int | None = None
+    verdict_ref: UUID | None = None
+    triggered_at: datetime | None = None
+    claimed_at: datetime | None = None
+    filled_at: datetime | None = None
+    fill_price: float | None = None
+    filled_trade_id: UUID | None = None
+    cancel_reason: str | None = None
+    last_checked_at: datetime | None = None
+    last_seen_price: float | None = None
+    last_price_source: str | None = None
+
+    @property
+    def named_price(self) -> float | None:
+        return named_price_for(
+            self.order_type,
+            trigger_price=self.trigger_price,
+            limit_price=self.limit_price,
+        )
+
+    @property
+    def distance_pct(self) -> float | None:
+        """How far the last observed mark sits from the price the order names.
+
+        Signed toward the trigger: negative means the market still has to move
+        against the sign to reach it. Null before the first sweep, which the
+        client renders as "waiting for the first check" — never as a zero, which
+        would read as "about to fill".
+        """
+        named = self.named_price
+        if named is None or not named or self.last_seen_price is None:
+            return None
+        return (self.last_seen_price - named) / named * 100.0
+
+    @classmethod
+    def from_row(cls, row: SimRestingOrderRow) -> "SimRestingOrder":
+        def _f(v) -> float | None:
+            return float(v) if v is not None else None
+
+        return cls(
+            id=row.id,
+            user_id=row.user_id,
+            portfolio_id=row.portfolio_id,
+            ticker=row.ticker,
+            side=Side(row.side) if not isinstance(row.side, Side) else row.side,
+            quantity=float(row.quantity),
+            order_type=(
+                row.order_type if isinstance(row.order_type, OrderType)
+                else OrderType(row.order_type)
+            ),
+            state=row.state,  # type: ignore[arg-type]
+            tif=row.tif,
+            expires_at=row.expires_at,
+            placed_at=row.placed_at,
+            trigger_price=_f(row.trigger_price),
+            limit_price=_f(row.limit_price),
+            stop=_f(row.stop),
+            target=_f(row.target),
+            horizon_days=row.horizon_days,
+            verdict_ref=row.verdict_ref,
+            triggered_at=row.triggered_at,
+            claimed_at=row.claimed_at,
+            filled_at=row.filled_at,
+            fill_price=_f(row.fill_price),
+            filled_trade_id=row.filled_trade_id,
+            cancel_reason=row.cancel_reason,
+            last_checked_at=row.last_checked_at,
+            last_seen_price=_f(row.last_seen_price),
+            last_price_source=row.last_price_source,
+        )
+
+    def to_json(self) -> dict:
+        def _iso(d: datetime | None) -> str | None:
+            return d.isoformat() if d is not None else None
+
+        return {
+            "id": str(self.id),
+            "user_id": str(self.user_id),
+            "portfolio_id": str(self.portfolio_id),
+            "ticker": self.ticker,
+            "side": self.side.value if hasattr(self.side, "value") else str(self.side),
+            "quantity": self.quantity,
+            "order_type": (
+                self.order_type.value if hasattr(self.order_type, "value")
+                else str(self.order_type)
+            ),
+            "state": self.state,
+            "tif": self.tif,
+            "trigger_price": self.trigger_price,
+            "limit_price": self.limit_price,
+            "stop": self.stop,
+            "target": self.target,
+            "horizon_days": self.horizon_days,
+            "expires_at": _iso(self.expires_at),
+            "placed_at": _iso(self.placed_at),
+            "triggered_at": _iso(self.triggered_at),
+            "filled_at": _iso(self.filled_at),
+            "fill_price": self.fill_price,
+            "filled_trade_id": (
+                str(self.filled_trade_id) if self.filled_trade_id else None
+            ),
+            "cancel_reason": self.cancel_reason,
+            "last_checked_at": _iso(self.last_checked_at),
+            "last_seen_price": self.last_seen_price,
+            "distance_pct": self.distance_pct,
+        }
+
+
 # ── Result types ───────────────────────────────────────────────────────────
+
+
+@dataclass
+class ComplianceContext:
+    """The six values every `check_mandate_compliance` call site needs.
+    Assembled by `SimEngine._compliance_context`; see its docstring."""
+
+    portfolio_value: float
+    quotes: dict[str, float]
+    drawdown_pct: float
+    last_loss_closed_at: datetime | None
+    trade_open_timestamps: list[datetime]
+    existing_open_risk_pct: float
 
 
 @dataclass
@@ -171,6 +348,12 @@ class SubmitResult:
     trade: SimTrade | None
     compliance: ComplianceResult
     portfolio_snapshot: Portfolio | None = None
+    # CR170 §8 — carried EXPLICITLY on every branch, never inferred from which
+    # of `trade`/`resting_order` is null. The games lane learned this twice, and
+    # the client (`SimSubmitResult.fromJson`) reads this field rather than
+    # deriving it.
+    resting: bool = False
+    resting_order: SimRestingOrder | None = None
 
 
 @dataclass
@@ -520,6 +703,16 @@ class SimEngine:
                         PortfolioValueSnapshotRow.portfolio_id == existing.id
                     )
                 )
+                # CR170 §1 — the third explicit delete, for the same CR136-M03
+                # reason as the second. Miss it and a resting order survives a
+                # reset and later fills into a portfolio UUID that no longer
+                # exists — **on Alpha only**, because sqlite's unenforced FK
+                # pragmas mean the unit suite would never see it.
+                s.execute(
+                    delete(SimRestingOrderRow).where(
+                        SimRestingOrderRow.portfolio_id == existing.id
+                    )
+                )
                 s.delete(existing)
                 s.flush()
         return self.ensure_portfolio(user_id)
@@ -643,6 +836,38 @@ class SimEngine:
         )
         return risk_pct
 
+    def _compliance_context(
+        self, user_id: UUID, portfolio: Portfolio, ticker: str,
+    ) -> "ComplianceContext":
+        """CR170 §4 — the six values `check_mandate_compliance` needs, assembled
+        once.
+
+        `submit()` and `preview()` each built this inline, identically. CR170
+        makes `fill_resting_order()` the third, and the CR is explicit about
+        the sequencing: *"hoist before the third arrives, not after."* Three
+        copies of an assembly is how one of them quietly stops matching — which
+        is exactly what DEF149 was, a compliance input that went missing on one
+        path and nowhere else.
+
+        The proposed ticker is priced alongside the holdings (DEF149) so the
+        sector cap can value a first-time buy of a name not already held.
+        """
+        portfolio_value = self.total_value(user_id)
+        quotes = self.current_marks([h.ticker for h in portfolio.holdings] + [ticker])
+        last_loss_closed_at, trade_open_timestamps, existing_open_risk = (
+            self._risk_limit_context(
+                user_id, portfolio_value=portfolio_value, quotes=quotes,
+            )
+        )
+        return ComplianceContext(
+            portfolio_value=portfolio_value,
+            quotes=quotes,
+            drawdown_pct=self.current_drawdown_pct(user_id),
+            last_loss_closed_at=last_loss_closed_at,
+            trade_open_timestamps=trade_open_timestamps,
+            existing_open_risk_pct=existing_open_risk,
+        )
+
     def holding_lots(
         self, user_id: UUID, ticker: str, *, current_price: float | None = None,
     ) -> list[Lot]:
@@ -675,6 +900,8 @@ class SimEngine:
         mandate: Mandate,
         order_type: OrderType = OrderType.MARKET,
         limit_price: float | None = None,
+        trigger_price: float | None = None,
+        tif: str = "day",
         stop: float | None = None,
         target: float | None = None,
         horizon_days: int | None = None,
@@ -714,7 +941,13 @@ class SimEngine:
                 )
 
         mark = self.current_price(ticker)
-        fill_price = mark if order_type == OrderType.MARKET else (limit_price or mark)
+        # CR170 §3 — the P10/DEF153 ternary is GONE. It read
+        # `mark if order_type == MARKET else (limit_price or mark)`, which made
+        # `order_type` decide a price: a "limit order" filled instantly at
+        # whatever the caller named. `order_type` now decides exactly one thing,
+        # and it is not a price — see the branch below. Two duties, two
+        # constructs.
+        fill_price = mark
         proposed = ProposedTrade(
             ticker=ticker,
             side=side,
@@ -723,23 +956,12 @@ class SimEngine:
             limit_price=limit_price,
         )
 
-        submit_portfolio_value = self.total_value(user_id)
-        submit_quotes = self.current_marks(
-            [h.ticker for h in portfolio.holdings] + [ticker]
-        )
-        # CR101-BE2: cooldown / over-trading / open-risk all read this user's
-        # real trade history — computed here (sim_engine owns the DB access;
-        # the floor stays pure) and handed to the floor as plain data.
-        last_loss_closed_at, trade_open_timestamps, existing_open_risk_pct = (
-            self._risk_limit_context(
-                user_id, portfolio_value=submit_portfolio_value, quotes=submit_quotes,
-            )
-        )
+        ctx = self._compliance_context(user_id, portfolio, ticker)
 
         compliance = check_mandate_compliance(
             proposed,
-            portfolio_value=submit_portfolio_value,
-            current_drawdown_pct=self.current_drawdown_pct(user_id),
+            portfolio_value=ctx.portfolio_value,
+            current_drawdown_pct=ctx.drawdown_pct,
             mandate=mandate,
             halal_universe=halal_universe or default_halal_universe(),
             classification_universe=(
@@ -751,11 +973,11 @@ class SimEngine:
             holdings=portfolio.holdings,
             # DEF149: the proposed ticker must be priced too, or the sector cap
             # cannot value a first-time buy of a name not already held.
-            quotes=submit_quotes,
+            quotes=ctx.quotes,
             sector_map=default_sector_map(),
-            last_loss_closed_at=last_loss_closed_at,
-            trade_open_timestamps=trade_open_timestamps,
-            existing_open_risk_pct=existing_open_risk_pct,
+            last_loss_closed_at=ctx.last_loss_closed_at,
+            trade_open_timestamps=ctx.trade_open_timestamps,
+            existing_open_risk_pct=ctx.existing_open_risk_pct,
             proposed_stop=stop,
         )
 
@@ -769,6 +991,42 @@ class SimEngine:
             return SubmitResult(
                 accepted=False, trade=None,
                 compliance=compliance, portfolio_snapshot=portfolio,
+            )
+
+        # CR170 §3 — rest or fill, decided by a BRANCH on the trigger rule.
+        #
+        # A **marketable** order — a buy limit at or above the market, a sell
+        # limit at or below it — is already through the market, so it falls
+        # through to the same `_execute_fill` at the same `mark` as a market
+        # order would. That is acceptance 1, and it strengthens the DEF153
+        # invariant: "identical economics get identical rulings" held only
+        # inside `safety_floor` before; now it holds in `sim_engine` too, which
+        # is where the defect actually lived.
+        named = named_price_for(
+            order_type, trigger_price=trigger_price, limit_price=limit_price,
+        )
+        if (
+            can_rest(order_type)
+            and named is not None
+            and not is_triggered(
+                side=side, order_type=order_type, named=named, mark=mark,
+            )
+        ):
+            return self._rest_order(
+                user_id=user_id,
+                portfolio=portfolio,
+                ticker=ticker,
+                side=side,
+                quantity=quantity,
+                order_type=order_type,
+                trigger_price=trigger_price,
+                limit_price=limit_price,
+                tif=tif,
+                stop=stop,
+                target=target,
+                horizon_days=horizon_days,
+                verdict_ref=verdict_ref,
+                compliance=compliance,
             )
 
         return self._execute_fill(
@@ -931,6 +1189,235 @@ class SimEngine:
             compliance=compliance, portfolio_snapshot=portfolio,
         )
 
+    # ── Resting-order book (CR170) ────────────────────────────────────────
+
+    def _rest_order(
+        self,
+        *,
+        user_id: UUID,
+        portfolio: Portfolio,
+        ticker: str,
+        side: Side,
+        quantity: float,
+        order_type: OrderType,
+        trigger_price: float | None,
+        limit_price: float | None,
+        tif: str,
+        stop: float | None,
+        target: float | None,
+        horizon_days: int | None,
+        verdict_ref: UUID | None,
+        compliance: ComplianceResult,
+    ) -> SubmitResult:
+        """Park an order in the book. **No `_execute_fill`, no cash movement.**
+
+        Cash is computed at read time and never reserved (§6). Reserving would
+        redefine `current_cash` — the number `total_value`, `total_drawdown_pct`,
+        `portfolio_nav_daily`, the TWR chain and `_risk_limit_context` all read —
+        and a reserved-cash debit is indistinguishable from a loss in the NAV
+        series unless every one of those learns about it. It would also need a
+        compensating credit on five terminal paths (cancel, expire, reject,
+        reset, reap); every missed one leaks a user's money permanently. Read-time
+        computation has no compensating write, so there is nothing to leak.
+        """
+        placed_at = datetime.now(timezone.utc)
+        expires_at = resting_order_expiry(tif, placed_at)
+        order_id = uuid4()
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id)
+            assert p_row is not None
+            row = SimRestingOrderRow(
+                id=order_id,
+                user_id=user_id,
+                portfolio_id=p_row.id,
+                ticker=ticker,
+                side=side.value if hasattr(side, "value") else str(side),
+                quantity=quantity,
+                order_type=(
+                    order_type.value if hasattr(order_type, "value")
+                    else str(order_type)
+                ),
+                trigger_price=trigger_price,
+                limit_price=limit_price,
+                stop=stop,
+                target=target,
+                horizon_days=horizon_days,
+                verdict_ref=verdict_ref,
+                tif=tif,
+                expires_at=expires_at,
+                state="working",
+                placed_at=placed_at,
+            )
+            s.add(row)
+            s.flush()
+            order = SimRestingOrder.from_row(row)
+
+        logger.info(
+            "sim_order_rested",
+            user_id=str(user_id),
+            order_id=str(order_id),
+            ticker=ticker,
+            order_type=order.order_type.value,
+            named=order.named_price,
+            tif=tif,
+            expires_at=expires_at.isoformat(),
+        )
+        return SubmitResult(
+            accepted=True,
+            trade=None,
+            compliance=compliance,
+            portfolio_snapshot=portfolio,
+            resting=True,
+            resting_order=order,
+        )
+
+    def fill_resting_order(
+        self,
+        *,
+        order: SimRestingOrder,
+        mark: float,
+        mandate: Mandate,
+        halal_universe: set[str] | None = None,
+        classification_universe: object | None = None,
+        locale_allowed_universe: set[str] | None = None,
+    ) -> SubmitResult:
+        """CR170 — the resting book's own entry point.
+
+        Structurally distinct from `submit()` the way `submit_game_trade()` is,
+        and for the **opposite** reason: this one DOES run
+        `check_mandate_compliance`, because a resting order must never become a
+        time-delayed bypass of the floor. Between placing and filling, the
+        mandate, the drawdown, the sector allocation, the post-loss cooldown and
+        the halal universe can all have changed, and the floor is specified
+        *uncoachable* — a 90-day delay is not a way around it.
+
+        It differs from `submit()` only in the price it books at: **Rule 2**, the
+        worse of (named, observed), not the observed mark. See
+        `trading_math/order_pricing.py` for why the mark would be a systematic,
+        farmable edge here and is not at submit time.
+        """
+        user_id = order.user_id
+        portfolio = self.ensure_portfolio(user_id)
+        proposed = ProposedTrade(
+            ticker=order.ticker,
+            side=order.side,
+            order_type=order.order_type,
+            quantity=order.quantity,
+            limit_price=order.limit_price,
+        )
+        ctx = self._compliance_context(user_id, portfolio, order.ticker)
+        compliance = check_mandate_compliance(
+            proposed,
+            portfolio_value=ctx.portfolio_value,
+            current_drawdown_pct=ctx.drawdown_pct,
+            mandate=mandate,
+            halal_universe=halal_universe or default_halal_universe(),
+            classification_universe=(
+                classification_universe or default_classification_universe()
+            ),
+            locale_allowed_universe=locale_allowed_universe,
+            holdings=portfolio.holdings,
+            quotes=ctx.quotes,
+            sector_map=default_sector_map(),
+            last_loss_closed_at=ctx.last_loss_closed_at,
+            trade_open_timestamps=ctx.trade_open_timestamps,
+            existing_open_risk_pct=ctx.existing_open_risk_pct,
+            proposed_stop=order.stop,
+        )
+        if not compliance.passed:
+            logger.info(
+                "sim_resting_order_refused_at_fill",
+                user_id=str(user_id),
+                order_id=str(order.id),
+                ticker=order.ticker,
+                violations=compliance.violations,
+            )
+            return SubmitResult(
+                accepted=False, trade=None,
+                compliance=compliance, portfolio_snapshot=portfolio,
+            )
+
+        named = order.named_price
+        # A stop-limit that has triggered evaluates as a limit from here on, so
+        # the price it books at is its LIMIT, not the trigger it passed.
+        if order.order_type == OrderType.STOP_LIMIT:
+            named = order.limit_price
+        assert named is not None  # every resting order names a price
+        return self._execute_fill(
+            user_id=user_id,
+            portfolio=portfolio,
+            ticker=order.ticker,
+            side=order.side,
+            quantity=order.quantity,
+            fill_price=fill_price_for(side=order.side, named=named, mark=mark),
+            compliance=compliance,
+            stop=order.stop,
+            target=order.target,
+            horizon_days=order.horizon_days,
+            verdict_ref=order.verdict_ref,
+        )
+
+    def list_resting_orders(
+        self,
+        user_id: UUID,
+        *,
+        terminal_since: datetime | None = None,
+    ) -> list[SimRestingOrder]:
+        """Every live order, plus terminal rows since `terminal_since`.
+
+        A pure DB read — `last_seen_price` and `distance_pct` come off the row
+        the sweep wrote, so listing costs no quote fan-out (strictly better than
+        the games lane's `_queued_orders_priced`, which prices on every call).
+
+        Terminal rows are included by default so a rejected or expired order
+        never silently vanishes overnight. That is the whole reason the games
+        lane's own docstring records *"from the player's side the order simply
+        VANISHED."*
+        """
+        with get_session() as s:
+            rows = s.execute(
+                select(SimRestingOrderRow)
+                .where(SimRestingOrderRow.user_id == user_id)
+                .order_by(SimRestingOrderRow.placed_at.desc())
+            ).scalars().all()
+            orders = [SimRestingOrder.from_row(r) for r in rows]
+        if terminal_since is None:
+            return orders
+        return [
+            o for o in orders
+            if o.state in ("working", "triggered", "filling")
+            or (o.filled_at or o.placed_at) >= terminal_since
+        ]
+
+    def cancel_resting_order(
+        self, user_id: UUID, order_id: UUID,
+    ) -> tuple[bool, SimRestingOrder | None]:
+        """A **user** cancel. Returns (cancelled, order-as-it-now-stands).
+
+        `cancel_reason` is deliberately left NULL — the invariant the client's
+        copy is built on is that a non-null reason means the SYSTEM refused.
+
+        `filling` is not cancellable: the sweep has claimed the order and a
+        cancel would race a money-moving operation whose outcome is already
+        unknown. The caller gets `(False, <order in its real state>)` so the
+        client can show the race rather than a success toast — the games lane
+        shipped `status ?? 'filled'` and had to fix it.
+        """
+        with get_session() as s:
+            row = s.execute(
+                select(SimRestingOrderRow).where(
+                    SimRestingOrderRow.id == order_id,
+                    SimRestingOrderRow.user_id == user_id,
+                )
+            ).scalar_one_or_none()
+            if row is None:
+                return False, None
+            if row.state not in LIVE_RESTING_STATES:
+                return False, SimRestingOrder.from_row(row)
+            row.state = "cancelled"
+            s.flush()
+            return True, SimRestingOrder.from_row(row)
+
     # ── Game trade path (CR109 slice 2, §7.1) ─────────────────────────────
 
     def submit_game_trade(
@@ -973,7 +1460,12 @@ class SimEngine:
         ticker = ticker.upper().strip()
         portfolio = self.ensure_portfolio(user_id, kind="game", run_id=run_id)
         mark = self.current_price(ticker)
-        fill_price = mark if order_type == OrderType.MARKET else (limit_price or mark)
+        # CR170 §3 — the same P10 ternary, hoisted here too, with **no routing**.
+        # The games lane has no resting book and this call site is inert in
+        # practice (nothing has ever sent a non-market order_type here). It moves
+        # anyway, because P11's lesson is that fixing one instance is not fixing
+        # the class — and a copy left behind is where the class comes back.
+        fill_price = mark
         fee = _trade_fee(fill_price * quantity)
 
         # CR109 Amendment G — route the two legs that are NOT ordinary fills
@@ -1272,7 +1764,12 @@ class SimEngine:
 
         quote = self.current_quote(ticker)
         mark = quote.price
-        fill_price = mark if order_type == OrderType.MARKET else (limit_price or mark)
+        # CR170 §3 — the third and last copy of the P10 ternary. Preview reports
+        # what a fill WOULD cost, and after this CR a non-marketable order does
+        # not fill at all, so naming the user's own limit as the price was the
+        # one answer that could never be right. The mark is the price a fill
+        # would book at right now; whether it fills is `submit()`'s branch.
+        fill_price = mark
         proposed = ProposedTrade(
             ticker=ticker,
             side=side,
@@ -1281,23 +1778,15 @@ class SimEngine:
             limit_price=limit_price,
         )
 
-        preview_portfolio_value = self.total_value(user_id)
-        preview_quotes = self.current_marks(
-            [h.ticker for h in portfolio.holdings] + [ticker]
-        )
         # CR101-BE2: same trade-history context as submit() (no `stop` param on
         # preview(), so the proposed trade's own open-risk contribution can't be
         # priced here — an ALREADY-breached existing_open_risk_pct still blocks).
-        last_loss_closed_at, trade_open_timestamps, existing_open_risk_pct = (
-            self._risk_limit_context(
-                user_id, portfolio_value=preview_portfolio_value, quotes=preview_quotes,
-            )
-        )
+        ctx = self._compliance_context(user_id, portfolio, ticker)
 
         compliance = check_mandate_compliance(
             proposed,
-            portfolio_value=preview_portfolio_value,
-            current_drawdown_pct=self.current_drawdown_pct(user_id),
+            portfolio_value=ctx.portfolio_value,
+            current_drawdown_pct=ctx.drawdown_pct,
             mandate=mandate,
             halal_universe=halal_universe or default_halal_universe(),
             classification_universe=(
@@ -1309,11 +1798,11 @@ class SimEngine:
             holdings=portfolio.holdings,
             # DEF149: the proposed ticker must be priced too, or the sector cap
             # cannot value a first-time buy of a name not already held.
-            quotes=preview_quotes,
+            quotes=ctx.quotes,
             sector_map=default_sector_map(),
-            last_loss_closed_at=last_loss_closed_at,
-            trade_open_timestamps=trade_open_timestamps,
-            existing_open_risk_pct=existing_open_risk_pct,
+            last_loss_closed_at=ctx.last_loss_closed_at,
+            trade_open_timestamps=ctx.trade_open_timestamps,
+            existing_open_risk_pct=ctx.existing_open_risk_pct,
         )
 
         notional = fill_price * quantity
@@ -1490,6 +1979,7 @@ class SimEngine:
     def clear(self) -> None:
         with get_session() as s:
             s.execute(delete(PortfolioValueSnapshotRow))
+            s.execute(delete(SimRestingOrderRow))
             s.execute(delete(SimTradeRow))
             s.execute(delete(SimHoldingRow))
             s.execute(delete(SimPortfolioRow))

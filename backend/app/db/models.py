@@ -1965,3 +1965,118 @@ class GameDuelRow(Base):
     twr_a_pct: Mapped[Optional[float]] = mapped_column(Numeric(10, 4), nullable=True)
     twr_b_pct: Mapped[Optional[float]] = mapped_column(Numeric(10, 4), nullable=True)
     points_delta: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+
+class SimRestingOrderRow(Base):
+    """CR170 §1 — the training path's resting-order book.
+
+    **Its own table, and the cheap alternative is actively wrong.** Adding a
+    `pending` status to `SimTradeRow` is the obvious move and would corrupt the
+    phantom-share detector: `scripts/def110_backfill.py::expected()` derives
+    what a portfolio's holdings *should* be by subtracting `Σ quantity` over
+    `status='open'` SELL rows, which is only sound because a SELL row is created
+    open and never transitions (`sim_engine._execute_fill`'s DEF166/DEF110
+    comment). A working — unfilled — resting sell living in `sim_trades` would
+    start subtracting shares that never moved, and the detector would report
+    false positives across every user.
+
+    Nor `game_queued_orders`, which holds a **time-deferred market order**
+    (fills at the next open, price fetched fresh at drain time — CR109's
+    anti-hindsight fence). This is a **price-conditional** order. One drain loop
+    serving both predicates is failure pattern P10 at the money-moving site.
+
+    It does steal the games lane's *vocabulary* wherever the meaning is the
+    same, so a later convergence is mechanical rather than a translation.
+
+    **Seven states against the games lane's three**, because two of the extras
+    are ones games retro-fitted behind `cancel_reason IS NOT NULL` after its own
+    `list_queued_orders` docstring recorded the cost — *"from the player's side
+    the order simply VANISHED overnight."*
+
+      working    resting, not triggered
+      triggered  a stop-limit whose trigger fired; now evaluating as a limit
+      filling    claimed by a sweep, fill in flight — deliberately CRASH-VISIBLE
+      filled     `filled_trade_id`, `fill_price`, `filled_at` set
+      cancelled  **the user** did it; `cancel_reason` stays NULL
+      expired    TIF elapsed untriggered
+      rejected   triggered, then the fill or the fill-time re-check refused it
+
+    **The invariant inherited from games: a non-NULL `cancel_reason` always
+    means the SYSTEM refused.** That is how the client tells "you cancelled
+    this" from "this was taken away from you", and the copy is built on it.
+
+    `expires_at` is NOT NULL for every order, always a **session** close. A
+    nullable "GTC means null" column would be one column meaning two things —
+    P10 again — and reliably produces the forgotten-null bug.
+    """
+
+    __tablename__ = "sim_resting_orders"
+    __table_args__ = (
+        # The sweep's only hot query: every live order, grouped by ticker so one
+        # quote serves them all. Partial so it stays small as terminal rows
+        # accumulate — a 90-day book is mostly history. Same
+        # `postgresql_where`/`sqlite_where` pair as `uq_career_event_stipend_period`.
+        Index(
+            "ix_sim_resting_order_live",
+            "state", "ticker",
+            postgresql_where=text("state IN ('working','triggered')"),
+            sqlite_where=text("state IN ('working','triggered')"),
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    portfolio_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("sim_portfolios.id", ondelete="CASCADE"), nullable=False,
+    )
+    ticker: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    # buy | sell
+    side: Mapped[str] = mapped_column(String, nullable=False)
+    quantity: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+
+    # limit | stop | stop_limit. MARKET never rests, so it never lands here.
+    order_type: Mapped[str] = mapped_column(String, nullable=False)
+    # NULL for a plain limit; NULL for neither on a stop-limit.
+    trigger_price: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    limit_price: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+
+    # Carried from placement and stamped onto the SimTradeRow at fill — a
+    # resting BUY's bracket belongs to the order, not to a request made days
+    # earlier that no longer exists.
+    stop: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    target: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    horizon_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    verdict_ref: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
+
+    # day | gtd_30 | gtd_90
+    tif: Mapped[str] = mapped_column(String, default="day", nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+    )
+
+    state: Mapped[str] = mapped_column(String, default="working", nullable=False, index=True)
+    placed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    triggered_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    # When a sweep claimed it. The stale-claim reaper reads this.
+    claimed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    filled_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    fill_price: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    filled_trade_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
+    # NON-NULL ⇒ the system refused or retired this order. NULL on a user cancel.
+    cancel_reason: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    # What the last sweep saw. NULL before the first sweep, which the client
+    # renders as "waiting for the first check" rather than as a zero.
+    last_checked_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    last_seen_price: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    last_price_source: Mapped[Optional[str]] = mapped_column(String, nullable=True)

@@ -20,8 +20,20 @@ class Side(str, Enum):
 
 
 class OrderType(str, Enum):
+    """CR170 — four types, and only MARKET is guaranteed to fill on submit.
+
+    STOP and STOP_LIMIT arrive with the resting-order book. Before CR170 this
+    enum held two values and LIMIT was a lie: `sim_engine` read it only to
+    decide whether to use `limit_price` as the fill price, which made a "limit
+    order" a price override that filled instantly at whatever the caller named
+    (DEF149/DEF153, failure pattern P10). The value now means what it says —
+    see `trading_math/order_pricing.py` for the trigger rule.
+    """
+
     MARKET = "market"
     LIMIT = "limit"
+    STOP = "stop"
+    STOP_LIMIT = "stop_limit"
 
 
 class Holding(BaseModel):

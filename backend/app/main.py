@@ -94,6 +94,10 @@ _PRICE_ALERT_EVAL_INTERVAL_SECONDS = 5 * 60  # CR027
 _PORTFOLIO_NAV_SNAPSHOT_INTERVAL_SECONDS = 24 * 60 * 60  # daily — CR109 slice 1
 _GAME_NAV_SNAPSHOT_INTERVAL_SECONDS = 24 * 60 * 60  # daily — CR109 slice 2
 _GAME_QUEUE_FILL_INTERVAL_SECONDS = 5 * 60  # CR109 slice 2 — matches CR027's cadence
+# CR170 §5 — the fourth ~5-min loop, deliberately out of phase with the other
+# three so boot does not put four yfinance fan-outs on the same second (the
+# 60s CachingProvider TTL means they would not share a cache across it).
+_SIM_RESTING_ORDER_TICK_OFFSET_SECONDS = 90
 _GAME_SCORING_PASS_INTERVAL_SECONDS = 30 * 60  # CR109 slice 3 — idempotent, like the league roll
 # CR109 slice 3c — desks fill a field during its 30-minute `locked` window, so
 # this must divide that window several times over: a single missed tick would
@@ -246,6 +250,35 @@ async def _game_queue_fill_tick() -> None:
         except Exception:
             logger.exception("game_short_buyin_sweep_failed")
         await asyncio.sleep(_GAME_QUEUE_FILL_INTERVAL_SECONDS)
+
+
+async def _sim_resting_order_tick() -> None:
+    """Background task: sweep the CR170 resting-order book.
+
+    **Work first, then sleep** — a container restart must not push a triggered
+    order back a full interval.
+
+    **Staggered**, and that is not cosmetic. This is the fourth loop on a
+    ~5-minute cadence (CR027 price alerts, CR109's queue drain, CR109's desk
+    fill). All four start at container boot and stay in phase, so every five
+    minutes there would be one synchronised yfinance burst — and
+    `CachingProvider`'s TTL is 60s, so they do not share cache across the
+    boundary. The offset costs nothing and takes this loop out of that burst.
+
+    The sweep itself is idempotent: the claim is a conditional UPDATE, so an
+    overlapping run (a slow tick, or a user hitting `/evaluate` at the same
+    moment) cannot double-fill.
+    """
+    from app.services.sim_resting_orders import sweep_resting_orders
+
+    await asyncio.sleep(_SIM_RESTING_ORDER_TICK_OFFSET_SECONDS)
+    while True:
+        try:
+            stats = await asyncio.to_thread(sweep_resting_orders)
+            logger.info("sim_resting_order_sweep_complete", **stats)
+        except Exception:
+            logger.exception("sim_resting_order_sweep_failed")
+        await asyncio.sleep(settings.sim_resting_order_tick_interval_seconds)
 
 
 async def _game_scoring_pass_tick() -> None:
@@ -430,6 +463,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_portfolio_nav_snapshot_tick()),
         asyncio.create_task(_game_nav_snapshot_tick()),
         asyncio.create_task(_game_queue_fill_tick()),
+        asyncio.create_task(_sim_resting_order_tick()),
         asyncio.create_task(_game_scoring_pass_tick()),
         asyncio.create_task(_game_desk_fill_tick()),
         asyncio.create_task(_game_push_tick()),

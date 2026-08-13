@@ -184,6 +184,11 @@ services:
       # config.py). Idempotent per (user, local day), so shortening it only
       # tightens latency, never causes a double-send.
       DAILY_REMINDER_TICK_INTERVAL_SECONDS: ${DAILY_REMINDER_TICK_INTERVAL_SECONDS:-900}
+      # CR170 §5 — cadence of the resting-order sweep. NOT a latency bound like
+      # the ticks above: it is a sampling interval on a continuous price path,
+      # so widening it means orders that would have filled in reality do not.
+      # Errs conservative (under-fill, never over-fill) by construction.
+      SIM_RESTING_ORDER_TICK_INTERVAL_SECONDS: ${SIM_RESTING_ORDER_TICK_INTERVAL_SECONDS:-300}
       # CR136 M06 — whether the Portfolio Health Finding may be narrated by the
       # LLM. False ships the deterministic rendering, which is a complete report.
       PORTFOLIO_HEALTH_LLM_ENABLED: ${PORTFOLIO_HEALTH_LLM_ENABLED:-true}

@@ -2,13 +2,14 @@
 
 No reliable "is the market open right now" signal exists elsewhere in this
 codebase. `market_data.Quote.market_state` looks like the natural reuse, but
-`price_history.py`'s `_should_fetch` docstring already documents why it
-can't be trusted: "there is no trading calendar to consult, and
-`Quote.market_state` cannot substitute for one (only the legacy-fallback
-`YahooQuoteProvider` ever sets it; the production `YfinanceProvider.quote`
-leaves it at the `CLOSED` default, always)". The game's "did this fill
-happen for real or on hindsight" gate needs an answer that holds on the
-PRODUCTION provider stack, so it is computed from wall-clock time instead.
+cannot substitute for a trading calendar. **The stated reason went stale and
+CR170 §2 corrects it here:** this docstring used to say the production
+`YfinanceProvider.quote` leaves `market_state` at the `CLOSED` default always,
+which DEF252 made false — `market_data.py:586` now derives `market_state` from
+`is_us_market_open()`, i.e. from *this module*. The conclusion is unchanged and
+in fact stronger: reading it back would be circular, not merely uninformative.
+So the gate is computed from wall-clock time here, and everything else derives
+from that one answer.
 
 Pure — no DB, no network — matching `trading_math/twr.py`'s contract.
 
@@ -65,3 +66,33 @@ def next_us_market_open(now_utc: datetime) -> datetime:
             day = day + _ONE_DAY
     open_at = datetime.combine(day, _OPEN, tzinfo=_ET)
     return open_at.astimezone(ZoneInfo("UTC"))
+
+
+def session_close_on_or_after(now_utc: datetime) -> datetime:
+    """CR170 §2 — the 16:00 ET close of the session that applies at `now_utc`.
+
+    Every resting order's `expires_at` is one of these. Saiful's correction is
+    load-bearing: *"our 'day' should be the trading day of the market, not the
+    local time day."* A TIF anchored to a local calendar boundary would expire a
+    Malaysian user's DAY order at a different moment than an American's, for the
+    same order on the same tape.
+
+    One rule — the close of whichever session opens next — and no special cases:
+
+      - Tuesday 11:00 ET, inside a live session → **Tuesday 16:00 ET**
+      - Tuesday 08:00 ET, before the open       → **Tuesday 16:00 ET**
+      - Tuesday 21:00 ET, after the close       → **Wednesday 16:00 ET**
+      - Saturday, any time                      → **Monday 16:00 ET**
+
+    GTD_30 / GTD_90 apply the same function to `placed_at + N days`, which is
+    why "the trading day on or after" needs no separate implementation.
+
+    Inherits this module's deliberate absence of an NYSE holiday calendar, so an
+    expiry can land on a holiday. Accepted and stated (CR170 §2); the
+    alternative is a calendar to maintain, and the cost of being wrong is an
+    order expiring one session early.
+    """
+    open_at = next_us_market_open(now_utc)
+    local_open = open_at.astimezone(_ET)
+    close_at = datetime.combine(local_open.date(), _CLOSE, tzinfo=_ET)
+    return close_at.astimezone(ZoneInfo("UTC"))

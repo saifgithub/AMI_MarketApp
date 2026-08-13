@@ -194,6 +194,23 @@ class Settings(BaseSettings):
     # double-send.
     daily_reminder_tick_interval_seconds: int = 900
 
+    # CR170 §5. Tick cadence for the resting-order sweep.
+    #
+    # A setting rather than a module constant precisely because this tick moves
+    # a real user's ledger, and the interval is the one lever that changes what
+    # the feature *is*: it is a **sampling interval on a continuous price
+    # path**, so it can miss the touch entirely — a buy limit at $190 polled at
+    # 10:00 ($192) and 10:05 ($192) never fills even though the tape printed
+    # $189 at 10:02. The three existing 5-minute ticks (CR027 price alerts,
+    # CR109's queue drain and desk fill) bound *latency*; this one bounds
+    # *detection*, which is a different thing to be able to turn.
+    #
+    # The bias is conservative — we under-fill, never over-fill, the same
+    # direction as Rule 2 — so it is the right way to be wrong. The known
+    # upgrade path is intraday OHLC bars (trigger on `bar.low <= limit`), which
+    # answers "did it touch" exactly rather than sampling; out of scope here.
+    sim_resting_order_tick_interval_seconds: int = 300
+
     # CR109 slice 3c — the house strategy desks' kill switch (design §11.2
     # "scaling and control"). Off removes desks from all FUTURE fields
     # without disturbing a field they are already settled in; a locked field

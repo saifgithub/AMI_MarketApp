@@ -24,7 +24,7 @@ from datetime import date, datetime, timedelta, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import select
 
 from app.schemas.classification import ClassificationVerdict
@@ -37,7 +37,13 @@ from app.services.market_data import VALID_PERIODS
 from app.services.portfolio_nav_daily import nav_history, twr_pct_for_window
 from app.services.classification_universe import default_classification_universe_async
 from app.services.sharia_universe import default_halal_universe_async
-from app.services.sim_engine import SimEngine, SimTrade, get_sim_engine
+from app.services.sim_engine import (
+    RESTING_ORDER_TIFS,
+    SimEngine,
+    SimTrade,
+    get_sim_engine,
+)
+from app.services.sim_resting_orders import sweep_resting_orders
 from app.services.sim_trade_effects import apply_post_fill_effects
 from app.services.ticker_reference import (
     TickerNotFoundError,
@@ -76,14 +82,66 @@ class SubmitTradeRequest(BaseModel):
     user_id: UUID
     ticker: str
     side: Side = Side.BUY
-    quantity: float
+    # CR170 §8 — `Field(gt=0)` was missing here and present at
+    # `api/games.py:120`, whose own defect narrative is about zero-share orders
+    # being accepted and reported as placed. One rule, one site swept — P11.
+    quantity: float = Field(gt=0)
     order_type: OrderType = OrderType.MARKET
     limit_price: float | None = None
+    trigger_price: float | None = None
+    tif: str = "day"
     stop: float | None = None
     target: float | None = None
     horizon_days: int | None = None
     verdict_ref: UUID | None = None
     mandate_override: dict | None = None
+
+    @model_validator(mode="after")
+    def _prices_match_the_order_type(self) -> "SubmitTradeRequest":
+        """CR170 §1 — 422 rather than a resting order that names no price.
+
+        | order_type   | trigger_price | limit_price     |
+        |--------------|---------------|-----------------|
+        | `market`     | —             | —               |
+        | `limit`      | —             | required, > 0   |
+        | `stop`       | required, > 0 | —               |
+        | `stop_limit` | required, > 0 | required, > 0   |
+
+        Structural rather than a default, because the failure it prevents is an
+        order that rests forever against a price nobody set — the shape CR040
+        calls degrading silently.
+        """
+        ot = (
+            self.order_type if isinstance(self.order_type, OrderType)
+            else OrderType(self.order_type)
+        )
+        if ot in (OrderType.STOP, OrderType.STOP_LIMIT):
+            if self.trigger_price is None or self.trigger_price <= 0:
+                raise ValueError(f"{ot.value} order requires a trigger_price > 0")
+        if ot in (OrderType.LIMIT, OrderType.STOP_LIMIT):
+            if self.limit_price is None or self.limit_price <= 0:
+                raise ValueError(f"{ot.value} order requires a limit_price > 0")
+        if ot == OrderType.MARKET and self.tif != "day":
+            raise ValueError("a market order has no time in force — it fills now")
+        if self.tif not in RESTING_ORDER_TIFS:
+            raise ValueError(
+                f"unknown time in force '{self.tif}' — "
+                f"expected one of {sorted(RESTING_ORDER_TIFS)}"
+            )
+        return self
+
+
+class CancelRestingOrderResponse(BaseModel):
+    """The SERVER's verdict, never the client's assumption.
+
+    Carries `cancelled` **and** the resulting state, because a cancel can lose
+    the race with a sweep. The games lane shipped `status ?? 'filled'` in build
+    74 and had to fix it; this one is explicit from the start.
+    """
+
+    cancelled: bool
+    state: str
+    order: dict | None = None
 
 
 class PortfolioSnapshot(BaseModel):
@@ -351,6 +409,8 @@ async def submit_trade(
         mandate=mandate,
         order_type=order_type,
         limit_price=req.limit_price,
+        trigger_price=req.trigger_price,
+        tif=req.tif,
         stop=req.stop,
         target=req.target,
         horizon_days=req.horizon_days,
@@ -361,19 +421,21 @@ async def submit_trade(
     if not result.accepted:
         return {
             "ok": False,
-            "compliance": {
-                "passed": result.compliance.passed,
-                "violations": result.compliance.violations,
-                "blocked_by": result.compliance.blocked_by,
-                "sharia_verdict": (
-                    result.compliance.sharia_verdict.model_dump(mode="json")
-                    if result.compliance.sharia_verdict is not None else None
-                ),
-                "classification_verdicts": [
-                    v.model_dump(mode="json")
-                    for v in result.compliance.classification_verdicts
-                ],
-            },
+            # CR170 §8 — on EVERY branch, including this one. The client must
+            # never have to infer it from which of `trade`/`order` is null.
+            "resting": False,
+            "compliance": _compliance_json(result.compliance),
+        }
+
+    if result.resting:
+        order = result.resting_order
+        assert order is not None
+        return {
+            "ok": True,
+            "resting": True,
+            "trade": None,
+            "order": order.to_json(),
+            "compliance": _compliance_json(result.compliance),
         }
 
     trade = result.trade
@@ -387,20 +449,79 @@ async def submit_trade(
 
     return {
         "ok": True,
+        "resting": False,
         "trade": trade.to_json(),
-        "compliance": {
-            "passed": result.compliance.passed,
-            "violations": result.compliance.violations,
-            "blocked_by": result.compliance.blocked_by,
-            "sharia_verdict": (
-                result.compliance.sharia_verdict.model_dump(mode="json")
-                if result.compliance.sharia_verdict is not None else None
-            ),
-            "classification_verdicts": [
-                v.model_dump(mode="json")
-                for v in result.compliance.classification_verdicts
-            ],
-        },
+        "compliance": _compliance_json(result.compliance),
+    }
+
+
+@router.get("/orders/{user_id}")
+async def list_resting_orders(
+    user_id: UUID,
+    current_user: User = Depends(get_current_user),
+    sim: SimEngine = Depends(get_sim_engine),
+) -> dict:
+    """CR170 §8 — every live order, plus terminal rows from the last 24h.
+
+    Terminal rows are included by default (the games precedent) so a rejected or
+    expired order never silently vanishes overnight — the failure the games
+    lane's own `list_queued_orders` docstring records as *"from the player's
+    side the order simply VANISHED."*
+
+    A pure DB read: `last_seen_price` and `distance_pct` come off the row the
+    sweep wrote, so this costs no quote fan-out.
+
+    **This route's existence is load-bearing on the client.** The Flutter build
+    treats any error here as "this backend has no book" and keeps the order-type
+    picker hidden (`SimState.restingOrdersSupported`), because
+    `POST /v1/sim/submit` accepted `order_type=limit` long before it meant
+    anything. Removing or renaming this route silently re-hides a shipped
+    feature rather than breaking loudly.
+    """
+    _own(current_user, user_id)
+    since = datetime.now(timezone.utc) - timedelta(hours=24)
+    orders = await asyncio.to_thread(
+        sim.list_resting_orders, user_id, terminal_since=since,
+    )
+    return {"orders": [o.to_json() for o in orders]}
+
+
+@router.post("/orders/{user_id}/{order_id}/cancel", response_model=CancelRestingOrderResponse)
+async def cancel_resting_order(
+    user_id: UUID,
+    order_id: UUID,
+    current_user: User = Depends(get_current_user),
+    sim: SimEngine = Depends(get_sim_engine),
+) -> CancelRestingOrderResponse:
+    """CR170 §8 — returns the SERVER's verdict, which may be "no".
+
+    A cancel can lose the race with a sweep that already claimed the order, and
+    `{"cancelled": false, "state": "filled"}` is the honest answer. The client
+    shows the race, not a success toast.
+    """
+    _own(current_user, user_id)
+    cancelled, order = await asyncio.to_thread(
+        sim.cancel_resting_order, user_id, order_id,
+    )
+    if order is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "order not found")
+    return CancelRestingOrderResponse(
+        cancelled=cancelled, state=order.state, order=order.to_json(),
+    )
+
+
+def _compliance_json(compliance) -> dict:
+    return {
+        "passed": compliance.passed,
+        "violations": compliance.violations,
+        "blocked_by": compliance.blocked_by,
+        "sharia_verdict": (
+            compliance.sharia_verdict.model_dump(mode="json")
+            if compliance.sharia_verdict is not None else None
+        ),
+        "classification_verdicts": [
+            v.model_dump(mode="json") for v in compliance.classification_verdicts
+        ],
     }
 
 
@@ -423,7 +544,16 @@ async def evaluate_trades(
     sim: SimEngine = Depends(get_sim_engine),
 ) -> dict:
     _own(current_user, user_id)
+    # CR170 §5 — the sweep's SECOND call site, scoped to this user.
+    # `SimNotifier.refresh()` calls this route on every app open, which is what
+    # makes the resting book feel alive without waiting for the background tick.
+    # One trigger implementation, two call sites; the claim-first guard means an
+    # app open racing a tick cannot double-fill.
+    resting_stats = await asyncio.to_thread(sweep_resting_orders, user_id=user_id)
     # DEF120 D1: evaluate_outcomes() calls current_price per open trade.
+    # Runs unconditionally, including out of hours: the sweep above gates its
+    # own bracket pass on market hours, and this route is also the path a user's
+    # manual refresh takes.
     updates = await asyncio.to_thread(sim.evaluate_outcomes, user_id)
     # For each closed trade, write a journal entry so the user sees the outcome
     if updates:
@@ -461,6 +591,7 @@ async def evaluate_trades(
             }
             for u in updates
         ],
+        "resting": resting_stats,
     }
 
 
