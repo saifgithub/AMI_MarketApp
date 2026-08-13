@@ -573,3 +573,123 @@ CR147's 9/18 figure is fixed. Re-measuring that is Leg 5's job.
 **Known residual, recorded rather than hidden:** abbreviations are missed. *"BofA picks AMD and Nvidia
 as AI chip winners"* is Bank of America and would be labelled unconfirmed. Safe direction, unmeasured
 rate.
+
+---
+
+## Leg 4 — the arithmetic class, measured before it was widened (2026-08-13)
+
+The leg was planned as four fixes. **Three of the four were struck after measuring, and the two
+things actually worth fixing were not on the list.** That ratio is the finding, not an aside: every
+one of the planned items was scoped from an epoch that predates the fixes already shipped in this
+build, and re-deriving each rate against the committed 2026-08-13 corpus is what separated them.
+
+### Struck after measuring
+
+**DEF241's residue.** The plan said to widen the phase gate so the Bull (RESEARCHERS) and Research
+Manager (SYNTHESIS) receive the worked contribution figure. The premise was checked first: **across
+80 bull_researcher and research_manager turns, ZERO state a pt-or-cap-consumption figure of any
+kind.** The evidence that motivated the widening — the Bull writing *33 pt* where the truth was 48.3
+of a 50 pt cap — is 2026-08-07, before `_risk_state_block` shipped. DEF241's own row called that block
+*"the half that is real"*, and it is what closed the residue: given the budget's **consumption** at
+every phase, the two agents stopped minting drawdown arithmetic rather than doing it better. So the
+gate stays, CR151's adjudication stands unreversed, and the test pinning the deferral stays green
+instead of being inverted. Inverting it would have handed both agents a figure derived from a −6%
+stop nobody proposed, to solve prose that no longer exists.
+
+**CR166 Tier D.** Already shipped in `0f8a4113`, with its reasoning recorded in place. Verified two
+ways rather than from the commit message: the `abs(agent_size_pct - size) > 0.01` carve-out is not in
+the file, and on the epoch **every prompt carrying the reference line also carries a YOUR-position
+line**, the Aggressive at 5.0% against a 3.0% ceiling included.
+
+**CR149 Tier C, the upside half.** Its finding was *2 of 11 Bull upside figures wrong* — GRAB's
+**44%** against a true **60.49%**. Re-measured by replaying every Bull and RM turn against **its own
+system prompt**: **22 upside claims, 0 stating a figure absent from the prompt AMI handed it.** The
+agents quote now — *"52.8% upside to consensus"*, *"+26.9% upside vs. −14.3%"* — because
+`_asymmetry_line` shipped on 2026-08-11 and renders that distance as AMI's arithmetic. The test's
+limit is stated rather than hidden: presence-in-prompt is weaker than correctness, and the stronger
+read is Leg 5's judge pass.
+
+### What the class actually became
+
+**The subtraction.** `_risk_state_block` hands every agent the headroom *before* the trade
+(*"Drawdown USED: 0.0 pt of the 30 pt cap — 30.0 pt of headroom remains"*) and
+`_drawdown_snapshot_line` hands it the position's contribution. The figure an agent argues from is the
+difference, and **nothing supplied it**. Of the 92 epoch turns stating a pt-or-cap figure, **7 state
+that subtraction or a rescaling of it**, and one is wrong in a way that shows the shape of the error:
+a Conservative arguing 1.5% wrote *"a **5.0%** size at the proposed 6.0% stop distance; this leaves
+**29.82 pt** of headroom"* — that is `30 − 0.18`, the **reference** line's figure, attached to the
+**Aggressive's** size, while its own line said 0.09. Three numbers in one sentence, each read off a
+line addressed to someone else.
+
+The remainder is now precomputed and handed over, on whichever line describes the position that agent
+is arguing, and on one line only. When `current_drawdown_pct` is not supplied it renders **nothing** —
+assuming a flat book would manufacture the exact reading DEF292 found below.
+
+**DEF292 — the share of the cap.** Both contribution lines rendered `~{share:.0f}% of it`. On a 30 pt
+cap that format has **two reachable outputs**. Over the 240 contribution lines in 160 epoch prompts:
+
+| | measured |
+|---|---|
+| lines stating `(~0% of it)` for a **nonzero** contribution | **40** |
+| prompts printing two **different** pt figures under the **same** `~1%` | **40** (a quarter of those carrying the line) |
+
+The first is DEF053 broken loudly — the Aggressive handed `0.09 pt … (~0% of it)` opened with *"the
+risk budget is effectively empty and ours to fill"*. The second destroys the only thing DEF241's
+second line exists to say: that YOUR position is **not** the reference one. **The fix for DEF241 was
+re-creating DEF241's reading in a quarter of prompts.** Now one decimal with a `<0.1%` floor, rendered
+by one function both lines call.
+
+**DEF288, and DEF293 found underneath it.** Sweeping the production patterns over all 482 turns rather
+than over invented strings: **16 turns narrate a real R:R and 3 bold it** — exactly what
+`_PROSE_FORMAT` asks for — and none was ever rewritten. Two worse things came out of the same sweep.
+
+1. The ratio group ended at a literal `1`, so rewriting `1:1.6` would have produced `2.1:1` plus a
+   stranded `.6` — **`2.1:1.6`, a number neither side computed**. The missing `**` allowance was the
+   only thing preventing a fabrication.
+2. `_PM_RR_KEYWORD` had no word boundary, so the **rr** in *cu**rr**ent*, *co**rr**ectly*, *e**rr**or*
+   and *ove**rr**ide* matched and the next figure became the "narrated" ratio: *"current **122.6x**
+   trailing P/E"* extracted a 122.6 reward multiple. **19 turns across 8 agents**, and **2 of the only
+   3 PM turns** that fed `_pm_rr_coherence_signal` anything — M06 `rr_is_coherent` was two-thirds
+   noise on the only path that reads it.
+
+The comment above that pattern read *"a spurious one would be telemetry noise."* It is kept verbatim
+in the source, because it was true when written and stopped being true when
+`_annotate_rr_against_levels` was built on top of the extractor afterwards. **A function is a control
+because of who calls it, not because of what its docstring says**, and nothing rechecks the docstring
+when a caller arrives. That belongs beside P2.
+
+**The tail now reports rather than asserts.** `_annotate_rr_against_levels` claimed *"a narrated ratio
+that differed has been replaced with AMI's computed figure"* whenever a ratio was **extracted** — and
+the extractor matches phrasings the rewriter deliberately does not. **2 of the 36 turns the annotator
+fires on carried that claim with nothing replaced**, under *"These are the figures of record"*. The
+fix is `rewritten_inline = annotated != text`, not a wider regex: widening is the fix that keeps
+needing to be made again. The refusal branch got the same treatment — an unverifiable ratio the inline
+strike cannot reach is now marked by an appended note instead of standing unmarked, which is what that
+branch's own docstring said it existed to prevent.
+
+**Post-fix on the same corpus:** spurious extractions **19 → 0**; real ratios found **16 → 19** (the
+risk-first `1:X` forms it had been reading as 1.0); turns claiming a replacement that did not happen
+**2 → 0**.
+
+### Verification
+
+35 new guards in `test_cr179_leg4_arithmetic.py`, every one asserting a value or a relationship rather
+than a label. **Five mutations, five kills**: severing `current_drawdown_pct` at its call site,
+restoring the `:.0f` share, dropping the word boundary, dropping the markdown allowance, and replacing
+the `rewritten_inline` check with a constant each turn a guard red. The threading test drives
+`build_room_messages` end to end rather than the helper — Leg 3b's lesson, and DEF238's, is that a
+helper passing says nothing about whether the argument arrives.
+
+**Token budgets, measured rather than waved through.** The remainder clause is **162 chars ≈ 52
+tokens** and the DEF292 rewording is **+1 char per line, two lines**, so the whole leg adds ~164 chars
+to the five agents that carry a proposal — 0.5% of the 31,544-char worst-case prompt. DEF289's caps
+are **output** decode ceilings and this growth is input-side, so no re-derivation is owed by the
+binding rule; the `finish_reason == "length"` re-measure that would actually prove it stays Leg 5's,
+and is named here so it is not mistaken for having been done.
+
+**One note for Leg 5's instrument, recorded now so the re-measure is not wrong in the flattering
+direction.** The "is this figure in the agent's own prompt?" test used throughout this leg is exact
+string presence with digit-boundary lookarounds. The remainder renders at two decimals (`29.70 pt`,
+matching the contribution's precision) and an agent that writes `29.7` would fail that test while
+quoting correctly. Leg 5 must normalise trailing zeros before counting, or it will report a
+regression that is a formatting artefact.

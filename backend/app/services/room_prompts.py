@@ -602,10 +602,73 @@ def _risk_state_block(
     )
 
 
+def _share_of_cap_phrase(contribution_pts: float, cap: float) -> str:
+    """What share of the drawdown cap a contribution consumes, said so that two
+    different contributions cannot read as the same number (DEF292).
+
+    Both contribution lines used to render `~{pts / cap * 100:.0f}% of it`. On a
+    30 pt cap every realistic single-name contribution is under 1 pt, so that
+    format has exactly two reachable outputs: `~0%` and `~1%`. Measured on the
+    committed 2026-08-13 epoch, over the 240 contribution lines in 160 prompts:
+
+    - **40 lines state `(~0% of it)` for a NONZERO contribution.** DEF053's rule
+      is that absent beats meaningless, and a rendered zero is worse than either:
+      the Aggressive debator that read `0.09 pt … (~0% of it)` opened with *"the
+      risk budget is effectively empty and ours to fill"*.
+    - **40 prompts — a quarter of those carrying the line — print the reference
+      position and YOUR position with DIFFERENT pt figures and the SAME `~1%`.**
+      The whole point of DEF241's second line is that the agent's own position is
+      not the reference one; rounding them onto the same percentage says they are.
+
+    One decimal, and an explicit floor below it, so the two lines are computed by
+    ONE function and cannot be worded differently for the same quantity."""
+    if cap <= 0:
+        return ""
+    share = contribution_pts / cap * 100
+    if 0 < share < 0.05:
+        return " (<0.1% of it)"
+    return f" ({share:.1f}% of it)"
+
+
+def _headroom_after_clause(
+    contribution_pts: float, cap: float, current_drawdown_pct: float | None
+) -> str:
+    """The cap that is left AFTER this position — precomputed, not left as a
+    subtraction (CR179 Leg 4).
+
+    `_risk_state_block` hands every agent the headroom BEFORE the trade
+    (*"Drawdown USED: 0.0 pt of the 30 pt cap — 30.0 pt of headroom remains"*)
+    and `_drawdown_snapshot_line` hands it the position's contribution. The
+    figure an agent actually argues from is the difference, and nothing supplied
+    it — so the agent did the subtraction, which is the fifth appearance of the
+    DEF066 → DEF235 → DEF241 → CR166-Tier-D class and the one this leg exists to
+    close. Measured on the committed 2026-08-13 epoch: of 92 turns stating a
+    pt-or-cap figure, **7 state one that appears nowhere in their own prompt**,
+    and every one of the seven is this subtraction or a rescaling of it. At least
+    one is wrong — a Conservative arguing 1.5% wrote *"a 5.0% size at the
+    proposed 6.0% stop distance; this leaves 29.82 pt of headroom"*, which is
+    `30 − 0.18` (the REFERENCE position's figure) attached to the Aggressive's
+    size while its own line said 0.09.
+
+    CR040 / DEF053: when `current_drawdown_pct` is None the caller never supplied
+    what has already been spent, so there is no honest remainder to state and
+    this renders NOTHING. Assuming a flat book would fabricate exactly the
+    "effectively empty" reading DEF292 found."""
+    if cap <= 0 or current_drawdown_pct is None:
+        return ""
+    remaining = cap - float(current_drawdown_pct) - contribution_pts
+    return (
+        f" With {float(current_drawdown_pct):.1f} pt of the cap already spent, "
+        f"that leaves {remaining:.2f} pt of the {cap:.0f} pt cap unused once this "
+        f"position is on. AMI computed this too — do not subtract it yourself."
+    )
+
+
 def _drawdown_snapshot_line(
     mandate: Mandate,
     trade_proposal: dict[str, Any] | None,
     agent_size_pct: float | None = None,
+    current_drawdown_pct: float | None = None,
 ) -> str:
     """The mandate-snapshot drawdown line (DEF066).
 
@@ -636,13 +699,12 @@ def _drawdown_snapshot_line(
     if dc:
         stop_dist = dc.stop_distance_pct
         contrib = dc.contribution_pts
-        pct_of_cap = contrib / cap * 100 if cap else 0
         line += (
             f"\n  Reference position (risk-tier ceiling {size:.1f}% size, entry "
             f"{entry:.2f}, stop {stop:.2f}) → stop {stop_dist:.1f}% below entry → "
             f"portfolio-drawdown contribution ≈ {contrib:.2f} pt of the {cap:.0f} pt "
-            f"cap (~{pct_of_cap:.0f}% of it). Size the actual trade against THIS "
-            f"figure, not the raw stop distance."
+            f"cap{_share_of_cap_phrase(contrib, cap)}. Size the actual trade against "
+            f"THIS figure, not the raw stop distance."
         )
         # DEF241 — the reference figure above is for the risk-tier CEILING, and a
         # debator argues for its OWN size, so it was still doing the arithmetic
@@ -676,18 +738,28 @@ def _drawdown_snapshot_line(
         # ceiling-arguing agent; the benefit is that no agent is left to infer
         # that the reference figure is also its own. Per DEF243, DEF241's guard
         # is NOT edited to accommodate this — a case is added beside it.
-        if agent_size_pct is not None and agent_size_pct > 0:
-            own = drawdown_contribution(agent_size_pct, entry, stop)
-            if own:
-                own_pct_of_cap = own.contribution_pts / cap * 100 if cap else 0
-                line += (
-                    f"\n  YOUR position — the size YOUR role argues for "
-                    f"({agent_size_pct:.1f}%) at that same stop → portfolio-drawdown "
-                    f"contribution ≈ {own.contribution_pts:.2f} pt of the {cap:.0f} pt "
-                    f"cap (~{own_pct_of_cap:.0f}% of it). AMI computed this. Quote it; "
-                    f"do not recompute it, and do not compare the raw stop distance "
-                    f"against the cap."
-                )
+        own = (
+            drawdown_contribution(agent_size_pct, entry, stop)
+            if agent_size_pct is not None and agent_size_pct > 0
+            else None
+        )
+        if own:
+            line += (
+                f"\n  YOUR position — the size YOUR role argues for "
+                f"({agent_size_pct:.1f}%) at that same stop → portfolio-drawdown "
+                f"contribution ≈ {own.contribution_pts:.2f} pt of the {cap:.0f} pt "
+                f"cap{_share_of_cap_phrase(own.contribution_pts, cap)}. AMI computed "
+                f"this. Quote it; do not recompute it, and do not compare the raw "
+                f"stop distance against the cap."
+            )
+        # CR179 Leg 4 — the remainder goes on whichever line describes the
+        # position this agent is arguing, and on ONE of them only. Stating it
+        # twice would put two different remainders in the same prompt (the
+        # reference size and the role's size differ), which is the collision
+        # DEF292 has just closed on the neighbouring clause.
+        line += _headroom_after_clause(
+            own.contribution_pts if own else contrib, cap, current_drawdown_pct
+        )
     return line
 
 
@@ -815,8 +887,18 @@ def build_room_messages(
     # DEF241: `agent_size_pct` is the size THIS agent's role argues for, supplied
     # by the caller from `risk_debator_sizes` — never parsed back out of prose,
     # which is the surface DEF235 closed.
+    # CR179 Leg 4: `current_drawdown_pct` reaches BOTH tiers now. `_risk_state_block`
+    # states the headroom before the trade and this line states the contribution;
+    # the agent was left to subtract one from the other, and 7 of the 92 epoch turns
+    # stating a pt figure state that subtraction, one of them wrong.
     drawdown_line = _drawdown_snapshot_line(
-        mandate, proposal, agent_size_pct if proposal else None
+        mandate,
+        proposal,
+        agent_size_pct if proposal else None,
+        current_drawdown_pct=(
+            current_drawdown_pct
+            if isinstance(current_drawdown_pct, (int, float)) else None
+        ),
     )
     # The deduped risk-state tier. Deliberately NOT gated on phase: the
     # consumption figures are real at every phase (unlike `proposal`, which does

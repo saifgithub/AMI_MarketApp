@@ -1563,28 +1563,83 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
 # A reward-to-risk ratio the PM narrated in prose: "R:R = 3:1", "risk/reward of
 # 2.5:1", "a 3:1 risk-to-reward", "R/R 4x". Two orderings — keyword then N:1, or
 # N:1 then keyword — with a bounded gap so a distant "20:1 earnings multiple"
-# doesn't match. Precision-biased: a missed ratio just means no signal (harmless),
-# a spurious one would be telemetry noise.
-_PM_RR_KEYWORD = r"(?:r[:/\s-]?r|risk[\s/-]*(?:to[\s-]*)?reward|reward[\s/-]*(?:to[\s-]*)?risk)"
-_PM_RR_RATIO = r"(\d+(?:\.\d+)?)\s*(?::\s*1|\s*to\s*1|x)\b"
+# doesn't match.
+#
+# The original comment continued: *"Precision-biased: a missed ratio just means no
+# signal (harmless), a spurious one would be telemetry noise."* Kept verbatim
+# because the reasoning was sound when written, and recorded here because BOTH
+# halves of it turned out to be false (DEF293):
+#
+# - `r[:/\s-]?r` had no word boundary, so the "rr" inside **cu-rr-ent**,
+#   **co-rr-ectly**, **e-rr-or** and **ove-rr-ide** matched, and the bounded gap
+#   then reached the next number. *"current **122.6x** trailing P/E"* extracted a
+#   narrated reward multiple of 122.6. Measured on the committed 2026-08-13
+#   epoch: **19 of 482 turns across 8 agents**, and **2 of the 3 PM turns** that
+#   fed `_pm_rr_coherence_signal` a ratio at all — so CR046's M06
+#   `rr_is_coherent` was two-thirds noise on the only path it reads.
+# - It is not only telemetry. `_annotate_rr_against_levels` was built on top of
+#   this extractor afterwards, and a spurious `stated` there flips the annotation
+#   tail to *"a narrated ratio that differed has been replaced with AMI's
+#   computed figure"* — printed under *"These are the figures of record"*, about
+#   a replacement that did not happen. A comment that says "telemetry only" stops
+#   being true the moment a second caller arrives; the caller is what makes it a
+#   control, not the docstring.
+_PM_RR_KEYWORD = (
+    r"\b(?:r[:/\s-]?r|risk[\s/-]*(?:to[\s-]*)?reward|reward[\s/-]*(?:to[\s-]*)?risk)\b"
+)
+
+
+def _rr_ratio(tag: str) -> str:
+    """The ratio half of a narrated R:R, with BOTH sides captured.
+
+    It used to capture the leading number and require the trailing side to be a
+    literal `1`, which silently assumed reward-first ordering. Traders write
+    risk-first too — *"R:R: 1:1.6"* is a 1.6 reward multiple and was read as
+    1.0 — so both sides are captured and `_reward_multiple` decides. Named per
+    call site because Python forbids duplicate group names in one pattern."""
+    return (
+        rf"(?P<{tag}_lead>\d+(?:\.\d+)?)\s*"
+        rf"(?::\s*(?P<{tag}_tail>\d+(?:\.\d+)?)"
+        rf"|\s*to\s*(?P<{tag}_alt>\d+(?:\.\d+)?)|x)\b"
+    )
+
+
 _PM_STATED_RR_RE = re.compile(
-    rf"(?:{_PM_RR_KEYWORD}[^0-9]{{0,20}}?{_PM_RR_RATIO})|(?:{_PM_RR_RATIO}[^0-9]{{0,6}}?{_PM_RR_KEYWORD})",
+    rf"(?:{_PM_RR_KEYWORD}[^0-9]{{0,20}}?{_rr_ratio('kw')})"
+    rf"|(?:{_rr_ratio('num')}[^0-9]{{0,6}}?{_PM_RR_KEYWORD})",
     re.IGNORECASE,
 )
 
 
+def _reward_multiple(lead: str, tail: str | None) -> float:
+    """The R in "R:1" from a two-sided ratio. `1:X` with X != 1 is risk-first, so
+    the reward multiple is X; everything else is read reward-first, which is what
+    `2.5:1`, `3 to 1`, `4x` and the ambiguous `1:1` all mean."""
+    lead_f = float(lead)
+    if tail is None:
+        return lead_f
+    tail_f = float(tail)
+    return tail_f if lead_f == 1.0 and tail_f != 1.0 else lead_f
+
+
 def _extract_stated_rr(text: str | None) -> float | None:
     """Pull the reward multiple (the R in "R:R = R:1") the PM narrated in prose,
-    or None when it stated no ratio. Best-effort telemetry input — never a control."""
+    or None when it stated no ratio. Feeds `_pm_rr_coherence_signal` (telemetry)
+    AND `_annotate_rr_against_levels` (user-visible) — see DEF293 above."""
     if not text:
         return None
     m = _PM_STATED_RR_RE.search(text)
     if m is None:
         return None
-    try:
-        return float(m.group(1) or m.group(2))
-    except (TypeError, ValueError):
-        return None
+    for tag in ("kw", "num"):
+        lead = m.group(f"{tag}_lead")
+        if lead is None:
+            continue
+        try:
+            return _reward_multiple(lead, m.group(f"{tag}_tail") or m.group(f"{tag}_alt"))
+        except (TypeError, ValueError):
+            return None
+    return None
 
 
 def _pm_rr_coherence_signal(
@@ -1687,9 +1742,28 @@ _LEVEL_PATTERNS: dict[str, re.Pattern[str]] = {
 # rewritten to AMI's computed value while the keyword prefix is preserved:
 # "R:R: 2.5:1" → "R:R: 0.2:1". Number-first phrasings ("2.5:1 R:R") aren't
 # rewritten inline — the appended AMI note still carries the authoritative figure.
+#
+# DEF288 — two fixes, one cause each, both found by running this pattern over the
+# committed 2026-08-13 epoch instead of over invented strings.
+#
+# 1. **Markdown emphasis.** `_PROSE_FORMAT` asks every prose agent to bold its
+#    metrics, and the agents comply, so the Trader writes `**R:R**: 1:1.6`. There
+#    was no allowance for the `**`, so the substitution matched nothing and
+#    quietly did nothing — while the annotation appended below still said *"a
+#    narrated ratio that differed has been replaced with AMI's computed figure"*.
+#    **3 of the 16 real narrated ratios in the epoch are bolded**, and **2 of the
+#    36 turns the geometry annotator fires on** end up carrying that false claim
+#    under *"These are the figures of record"*. A no-op that reports success is
+#    worse than the miss, which is the CR040 shape this whole build is chasing.
+# 2. **The trailing side of the ratio.** The group ended at a literal `1`, so
+#    rewriting `1:1.6` produced `2.1:1` + a stranded `.6` → **`2.1:1.6`**, a
+#    number neither the agent nor AMI ever computed. The ratio is now consumed
+#    whole, so the replacement cannot fuse with its own remainder.
+_MD_EMPH = r"[*_]{0,2}"
 _RR_CLAIM_RE = re.compile(
-    rf"({_PM_RR_KEYWORD}\s*[:=]?\s*(?:of|is|about|approx\.?|~|>|≈)?\s*)"
-    r"(\d+(?:\.\d+)?\s*(?::\s*1|\s*to\s*1|x))",
+    rf"({_PM_RR_KEYWORD}{_MD_EMPH}\s*[:=]?\s*{_MD_EMPH}\s*"
+    rf"(?:of|is|about|approx\.?|~|>|≈)?\s*{_MD_EMPH})"
+    r"(\d+(?:\.\d+)?\s*(?::\s*\d+(?:\.\d+)?|\s*to\s*\d+(?:\.\d+)?|x))",
     re.IGNORECASE,
 )
 
@@ -1749,10 +1823,22 @@ def _annotate_rr_against_levels(
             lambda m: f"{m.group(1)}[AMI: unverifiable — {reason}]",
             text,
         )
+        if annotated == text:
+            # DEF288's second half: the inline strike is best-effort — the
+            # number-first phrasing ("2:1 risk/reward") is matched by the
+            # EXTRACTOR and deliberately not by the REWRITER. When it does not
+            # fire, the agent's unverifiable ratio would otherwise stand in the
+            # transcript with nothing beside it, which is the silence this
+            # branch's own docstring says it exists to avoid.
+            annotated = (
+                f"{text}\n\n[AMI could not verify the reward-to-risk ratio stated "
+                f"above — {reason}. Do not rely on it.]"
+            )
         return annotated, {"stated_rr": stated, "implied_rr": -1.0}
 
     rr_str = f"{implied:.1f}:1"
     annotated = _RR_CLAIM_RE.sub(lambda m: f"{m.group(1)}{rr_str}", text)
+    rewritten_inline = annotated != text
     if stated is not None and abs(implied - stated) <= 0.3:
         # Narration already agreed with the levels; the transcript now carries AMI's
         # figure inline. No correction note — don't add noise on a coherent trade.
@@ -1778,11 +1864,24 @@ def _annotate_rr_against_levels(
         # stream — which is the point.
         if size > _LOUD_CONCENTRATION_PCT:
             parts.append(f"that cap is {size:.1f}% of the portfolio in one name")
-    tail = (
-        "the proposal stated no R:R, so AMI rendered it"
-        if stated is None
-        else "a narrated ratio that differed has been replaced with AMI's computed figure"
-    )
+    # DEF288 — the tail REPORTS what the substitution did instead of asserting
+    # what it was meant to do. It used to claim the narrated ratio "has been
+    # replaced" whenever one was extracted at all, and the extractor matches
+    # phrasings the rewriter does not: on the committed 2026-08-13 epoch that put
+    # the claim on 2 of the 36 annotated turns with nothing actually replaced —
+    # under "These are the figures of record", the one phrase in the transcript
+    # that tells the user a number was checked. Checking the string is the fix;
+    # widening the regex until the two families agree is the fix that keeps
+    # needing to be made again (P2).
+    if stated is None:
+        tail = "the proposal stated no R:R, so AMI rendered it"
+    elif rewritten_inline:
+        tail = "a narrated ratio that differed has been replaced with AMI's computed figure"
+    else:
+        tail = (
+            "the proposal narrated a different ratio in a phrasing AMI does not "
+            "rewrite in place — the figure here is the one of record"
+        )
     annotated += (
         f"\n\n[AMI verified the trade geometry from the stated levels "
         f"(entry ${entry:.2f} / stop ${stop:.2f} / target ${target:.2f}): "
