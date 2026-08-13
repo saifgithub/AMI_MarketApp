@@ -40,6 +40,7 @@ import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
+import 'package:ami_trade/screens/you/you_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/theme/hex_clipper.dart';
@@ -1577,8 +1578,16 @@ class _JournalPointer extends ConsumerWidget {
           // it) and disconnected from whatever state the real Journal tab
           // held. Switching HomeShell's own tab is what "review in Journal"
           // should have always meant.
-          onTap: () =>
-              ref.read(activeTabProvider.notifier).state = AmiTab.journal,
+          // CR133 §3 — a deep link now needs a tab AND a segment: the Journal
+          // is a segment of `YOU`, so setting the tab alone would land on
+          // whichever segment `YOU` happens to be showing and leave the
+          // Journal one invisible tap away. Segment first, then tab, so
+          // `journalVisibleProvider` flips exactly once and the Journal's
+          // coach-mark tour fires on arrival rather than on the way past.
+          onTap: () {
+            ref.read(youSegmentProvider.notifier).state = YouSegment.journal;
+            ref.read(activeTabProvider.notifier).state = AmiTab.you;
+          },
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

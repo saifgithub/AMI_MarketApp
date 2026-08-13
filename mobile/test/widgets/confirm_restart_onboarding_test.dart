@@ -134,9 +134,27 @@ void main() {
                 'change the mechanism first, then this test, then the copy');
       }
 
-      expect(body, contains('settings'),
+      // CR133 §5 — this used to require the copy to NAME the control
+      // ("…change that in Settings → My Mandate"). That was right about the
+      // need and wrong about the remedy: the path it named is one CR133 moves,
+      // so the string would have gone stale for the second time, and the same
+      // metadata already records DEF158 correcting this exact string once.
+      // Saiful's ruling was to stop naming paths at all — "always make it
+      // easier for the user!" — so the dialog now states the outcome and names
+      // nothing. It deliberately gets no button either: it is a two-action
+      // confirm about restarting the interview, and a third action navigating
+      // away mid-decision is worse, not easier.
+      //
+      // What DEF158 was actually protecting survives, and is what is asserted:
+      // having said restart will not replace the mandate, the copy must say
+      // the mandate is still editable rather than leaving the user believing
+      // it is now frozen.
+      expect(body, isNot(contains('→')),
+          reason: 'CR133 §5.1: no shipped string may walk the user along a nav '
+              'path — the path moves and the string does not');
+      expect(body, contains('edit it any time'),
           reason: 'having told the user restart will not change the mandate, '
-              'the copy must name the control that does');
+              'the copy must not leave them thinking it is now unchangeable');
     });
   });
 

@@ -43,9 +43,8 @@ LOCALES: dict[str, LocaleProfile] = {
         tab_labels={
             "Floor": "FLOOR",
             "Portfolio": "PORTFOLIO",
-            "Journal": "JOURNAL",
             "Lessons": "LESSONS",
-            "Settings": "SETTINGS",
+            "You": "YOU",
         },
         strings={
             "floor_concierge_heading": "AMI CONCIERGE",
@@ -68,9 +67,11 @@ LOCALES: dict[str, LocaleProfile] = {
         tab_labels={
             "Floor": "القاعة",
             "Portfolio": "المحفظة",
-            "Journal": "السجل",
             "Lessons": "الدروس",
-            "Settings": "الإعدادات",
+            # youTabUpper is not translated yet — retranslate:[ar,ms] is flagged
+            # on the ARB key. This table asserts what the app RENDERS, so it
+            # must carry the English until the i18n lane lands the translation.
+            "You": "YOU",
         },
         strings={
             "floor_concierge_heading": "AMI CONCIERGE",
@@ -93,9 +94,8 @@ LOCALES: dict[str, LocaleProfile] = {
         tab_labels={
             "Floor": "LANTAI",
             "Portfolio": "PORTFOLIO",
-            "Journal": "JURNAL",
             "Lessons": "PELAJARAN",
-            "Settings": "TETAPAN",
+            "You": "YOU",  # see the AR note above
         },
         strings={
             "floor_concierge_heading": "AMI CONCIERGE",

@@ -15,6 +15,7 @@ import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
+import 'package:ami_trade/screens/settings/settings_screen.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/sharia_verdict_banner.dart';
 import 'package:ami_trade/widgets/sheet_insets.dart';
@@ -438,6 +439,36 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                     Text(
                       l.tradeTicketChangeMandate,
                       style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
+                    ),
+                    // CR133 §5 — this line used to end "…via Settings → My
+                    // Mandate", which fired at the exact moment a compliance
+                    // breach had just blocked the trade and then made the user
+                    // walk the path themselves. CR133 moves that path (the
+                    // mandate now sits YOU → SETTINGS), so the instruction was
+                    // about to be both wrong AND a longer walk. Replaced with
+                    // the control rather than renamed: a rename leaves the same
+                    // trap armed for the next nav change. Same pattern the app
+                    // already ships as `floorLockedGoToLessons` → "GO TO
+                    // LESSONS".
+                    const SizedBox(height: AmiSpacing.s),
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 32),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: () => Navigator.of(context)
+                            .push(MaterialPageRoute<void>(
+                          builder: (_) => const SettingsScreen(),
+                        )),
+                        child: Text(
+                          l.tradeTicketOpenMandate,
+                          style: AmiTypography.labelMono
+                              .copyWith(color: AmiColors.hexBlue),
+                        ),
+                      ),
                     ),
                   ],
                 ),

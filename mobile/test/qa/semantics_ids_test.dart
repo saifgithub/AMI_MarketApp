@@ -14,6 +14,7 @@
 /// coupling CR162 exists to remove).
 library;
 
+import 'package:ami_trade/features/nav/ami_tab.dart';
 import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/widgets/hex/hex_bottom_nav.dart';
 import 'package:flutter/material.dart';
@@ -29,10 +30,9 @@ const _arabicishItems = <HexNavItem>[
       label: 'المحفظة',
       id: NavIds.portfolio),
   HexNavItem(
-      icon: Icons.menu_book_outlined, label: 'السجل', id: NavIds.journal),
+      icon: Icons.emoji_events_outlined, label: 'المسابقة', id: NavIds.game),
   HexNavItem(icon: Icons.school_outlined, label: 'الدروس', id: NavIds.lessons),
-  HexNavItem(
-      icon: Icons.settings_outlined, label: 'الإعدادات', id: NavIds.settings),
+  HexNavItem(icon: Icons.person_outline, label: 'أنت', id: NavIds.you),
 ];
 
 Future<void> _pump(WidgetTester t, List<HexNavItem> items) {
@@ -101,11 +101,17 @@ void main() {
     semantics.dispose();
   });
 
-  test('NavIds.all covers every declared destination', () {
+  test('NavIds.all covers every destination this build renders', () {
     // A new destination added to the class but forgotten in `all` would be
     // invisible to the harness's GO/NO-GO gate, which asserts against `all`.
-    expect(NavIds.all, hasLength(5));
-    expect(NavIds.all.toSet(), hasLength(5), reason: 'identifiers must be unique');
+    //
+    // CR133 — the length is `AmiTab.visible`, not a literal: GAME is behind
+    // the compile-time AMI_GAMES gate, and the harness runs against store
+    // builds, so a hard 5 would demand it find a tab a `--no-games` binary
+    // correctly does not have.
+    expect(NavIds.all, hasLength(AmiTab.visible.length));
+    expect(NavIds.all.toSet(), hasLength(AmiTab.visible.length),
+        reason: 'identifiers must be unique');
     for (final id in NavIds.all) {
       expect(id, startsWith('ami.nav.'),
           reason: 'convention is ami.<area>.<thing> — qa/appium matches on it');

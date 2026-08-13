@@ -99,6 +99,59 @@ void main() {
             'check below cannot see them: $undeclared');
   });
 
+  // ── CR133 §5.1 — no shipped string may walk the user along a nav path ──
+  //
+  // Two strings named a screen by its position in the bar, and one of them
+  // fired at the worst possible moment: `tradeTicketChangeMandate` rendered
+  // *"Change what is enforced via Settings → My Mandate"* on the trade ticket
+  // right after a compliance breach blocked the trade. CR133 moves that path.
+  //
+  // Nothing couples `app_en.arb` to `home_shell.dart` — no test, no type, no
+  // grep — so the next nav change breaks any surviving path silently, and the
+  // AR/MS copies stay wrong longer because the fix flows through the i18n lane
+  // per-`id`. `@floorRestartOnboardingConfirmBody`'s own metadata already
+  // records DEF158 correcting it once, for a different confident claim the code
+  // contradicted. Second occurrence gets a guard.
+  //
+  // **The rule is an arrow allowlist, not the destination-name regex the spec
+  // first proposed.** `(Floor|Portfolio|…)\s*→` reads well and would have
+  // missed the live offender: the Arabic copy of `tradeTicketChangeMandate` is
+  // *"…عبر الإعدادات ← My Mandate"* — a translated screen name and an RTL
+  // arrow, neither of which that pattern matches. Arrows are rare enough (six
+  // keys, all of them CTAs or labels) that requiring a deliberate entry here is
+  // cheaper than a pattern that only works in English.
+  const arrowAllowed = {
+    'tourNext', // "Next →"
+    'tourConveneTryNow', // "Try it now →"
+    'challengeTapToAttempt', // "Tap to attempt →"
+    'roomVerdictIncludeAnalystCta', // "Include the {agent} →"
+    'roomRibbonHeading', // the label "RISK → REWARD"
+    'gamesCadenceRuns', // a date range, "{start} → {end}"
+  };
+
+  for (final file in [File('$_arbDir/$_templateFile'), ...localeFiles]) {
+    final name = file.uri.pathSegments.last;
+    final arb = _load(file);
+    test('$name names no navigation path', () {
+      final offenders = <String>[];
+      for (final key in _messageKeys(arb)) {
+        final value = arb[key];
+        if (value is! String) continue;
+        if (!value.contains('→') && !value.contains('←')) continue;
+        if (arrowAllowed.contains(key)) continue;
+        offenders.add('$key: "$value"');
+      }
+      expect(offenders, isEmpty,
+          reason: 'CR133 §5.1 — a string that walks the user along a nav path '
+              'goes stale the next time the nav changes, silently, and in every '
+              'locale at a different time. Replace the instruction with a '
+              'control (see `tradeTicketOpenMandate` / `floorLockedGoToLessons`), '
+              'or — if this really is a CTA arrow or a label — add the key to '
+              '`arrowAllowed` in this file with the reason.'
+              '\n${offenders.join('\n')}');
+    });
+  }
+
   for (final file in localeFiles) {
     final name = file.uri.pathSegments.last;
     final arb = _load(file);

@@ -27,9 +27,8 @@ from config.locales import LOCALES
 TAB_ARB_KEYS = {
     "Floor": "floorTabUpper",
     "Portfolio": "portfolioTabUpper",
-    "Journal": "journalTabUpper",
     "Lessons": "lessonsTabUpper",
-    "Settings": "settingsTabUpper",
+    "You": "youTabUpper",
 }
 
 _ARB_DIR = Path(__file__).resolve().parents[3] / "mobile" / "lib" / "l10n"

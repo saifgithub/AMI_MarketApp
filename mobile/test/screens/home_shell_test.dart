@@ -28,7 +28,11 @@ import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/widgets/hex/hex_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/features/games/games_gate.dart';
 import 'package:ami_trade/features/nav/ami_tab.dart';
+import 'package:ami_trade/features/tour/tour_providers.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
+import 'package:ami_trade/screens/you/you_providers.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _FixedSimNotifier extends SimNotifier {
@@ -132,11 +136,54 @@ void main() {
   /// Those are one fact held in two places, so it gets asserted rather than
   /// maintained by hand: a tab added to the enum without a matching child (or
   /// the reverse) is how a reorder silently points a tab at the wrong screen.
-  test('AmiTab.values and the shell\'s children stay the same length', () {
-    expect(AmiTab.values.length, 5);
+  test('AmiTab declares the bar in order, GAME at slot 3', () {
+    expect(AmiTab.values,
+        [AmiTab.floor, AmiTab.portfolio, AmiTab.game, AmiTab.lessons, AmiTab.you]);
     expect(AmiTab.values.map((t) => t.index).toList(), [0, 1, 2, 3, 4]);
-    expect(AmiTab.floor.index, 0);
-    expect(AmiTab.values.last, AmiTab.settings);
+  });
+
+  test('a gated-off build drops GAME and leaves no hole', () {
+    // Tests run without --dart-define=AMI_GAMES, i.e. the store-binary shape.
+    expect(kGamesEnabled, isFalse,
+        reason: 'this test suite asserts the DEFAULT build; if AMI_GAMES is on '
+            'here, the assertions below are describing a different binary');
+    expect(AmiTab.visible,
+        [AmiTab.floor, AmiTab.portfolio, AmiTab.lessons, AmiTab.you]);
+    expect(AmiTab.visible.contains(AmiTab.game), isFalse);
+  });
+
+  testWidgets('the bar, the panes and AmiTab.visible are one fact', (t) async {
+    // CR133 §3 — three lists that must stay the same length and the same
+    // order. Held in two places (the enum, and `HomeShell._panes`), so it is
+    // asserted rather than maintained by hand: a tab added without a matching
+    // pane is how a reorder silently points a tab at the wrong screen, and
+    // three of the five old integer literals kept working through exactly
+    // that reorder.
+    await _pumpHome(t);
+    await _settle(t);
+    final nav = t.widget<HexBottomNav>(find.byType(HexBottomNav));
+    expect(nav.items.length, AmiTab.visible.length);
+    expect(nav.items.map((i) => i.id).toList(), NavIds.all);
+
+    final stack = t.widget<IndexedStack>(find.descendant(
+      of: find.byType(HomeShell),
+      matching: find.byType(IndexedStack),
+    ).first);
+    expect(stack.children.length, AmiTab.visible.length,
+        reason: 'a pane per visible tab — any other count means the '
+            'IndexedStack index is addressing the wrong screen');
+  });
+
+  testWidgets('SETTINGS and JOURNAL are no longer bottom-nav destinations',
+      (t) async {
+    // They moved inside YOU (CR133 §4). Asserted because the failure mode of
+    // getting this wrong is not a crash: it is two ways to reach the same
+    // screen, one of which is the one users learned.
+    await _pumpHome(t);
+    await _settle(t);
+    final nav = t.widget<HexBottomNav>(find.byType(HexBottomNav));
+    final labels = nav.items.map((i) => i.label).toList();
+    expect(labels, ['FLOOR', 'PORTFOLIO', 'LESSONS', 'YOU']);
   });
 
   testWidgets(
@@ -178,8 +225,14 @@ void main() {
     expect(find.byType(HexBottomNav), findsOneWidget,
         reason: 'DEF190: the bottom nav bar must survive "Review in '
             'Journal" from Portfolio > History');
-    expect(find.text('JOURNAL'), findsOneWidget,
-        reason: 'the shell switched to its Journal tab, not a pushed route');
+    // CR133 §3 — the Journal is a segment of YOU now, so "landed on the
+    // Journal" means the YOU tab is active AND its JOURNAL segment is
+    // selected. Asserting only the tab would pass while the user stared at
+    // Settings with the entry they asked for one invisible tap away.
+    final container = ProviderScope.containerOf(t.element(find.byType(HomeShell)));
+    expect(container.read(activeTabProvider), AmiTab.you);
+    expect(container.read(youSegmentProvider), YouSegment.journal);
+    expect(container.read(journalVisibleProvider), isTrue);
     expect(t.takeException(), isNull);
   });
 }

@@ -256,7 +256,7 @@ abstract class AppLocalizations {
   /// **'PORTFOLIO'**
   String get portfolioTabUpper;
 
-  /// No description provided for @journalTabUpper.
+  /// Label for the Decision Journal. CR133 moved the Journal out of the bottom nav, so this now labels the JOURNAL segment inside YOU rather than a tab. Value and translations unchanged — only its position moved.
   ///
   /// In en, this message translates to:
   /// **'JOURNAL'**
@@ -268,11 +268,59 @@ abstract class AppLocalizations {
   /// **'LESSONS'**
   String get lessonsTabUpper;
 
-  /// No description provided for @settingsTabUpper.
+  /// Label for Settings. CR133 moved Settings out of the bottom nav, so this now labels the SETTINGS segment inside YOU rather than a tab. Saiful ruled that Settings keeps its name rather than splitting into a MANDATE segment. Value and translations unchanged.
   ///
   /// In en, this message translates to:
   /// **'SETTINGS'**
   String get settingsTabUpper;
+
+  /// Bottom-nav label for THE GAME (CR133 §2). Rendered by HexBottomNav, upper-case, must fit one line in a 5-cell bar. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'GAME'**
+  String get gameTabUpper;
+
+  /// Bottom-nav label for the YOU tab (CR133 §2). Three characters in EN; keep it short — it shares a 5-cell bar. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'YOU'**
+  String get youTabUpper;
+
+  /// CR133 §4.2 — dialog title when the user switches segment with unsaved mandate edits. The mandate has an explicit Save, so a silent switch is data loss; CR040 requires it fail visibly. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'UNSAVED MANDATE EDITS'**
+  String get youUnsavedTitle;
+
+  /// CR133 §4.2 — dialog body. States the consequence rather than asking a yes/no about 'leaving'. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Your mandate has changes you have not saved. Leave this segment and they are discarded.'**
+  String get youUnsavedBody;
+
+  /// CR133 §4.2 — the non-destructive action, listed first. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'keep editing'**
+  String get youUnsavedKeep;
+
+  /// CR133 §4.2 — the destructive action, named for what it destroys. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'discard changes'**
+  String get youUnsavedDiscard;
+
+  /// CR133 §5 — button on the blocked trade ticket that pushes the mandate directly. Replaces the instruction 'Change what is enforced via Settings → My Mandate', which named a nav path that CR133 moves and which fired at the exact moment a compliance breach blocked the trade. Same pattern as floorLockedGoToLessons: a control, not directions. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'OPEN MY MANDATE'**
+  String get tradeTicketOpenMandate;
+
+  /// CR133 §6 — the labelled bug-report entry. Until CR133 the only door was a long-press on an unlabelled grey version string after 13 sections of Settings, while bug_report_sheet.dart documents 'call this from anywhere' and had exactly one caller. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Report a problem'**
+  String get settingsReportProblem;
 
   /// No description provided for @floorConciergeHeading.
   ///
@@ -325,7 +373,7 @@ abstract class AppLocalizations {
   /// DEF152 confirm-dialog body, corrected by DEF158. The original copy claimed restarting 'clears the mandate your interview produced'. It does not, and the claim was false for exactly the users who had a mandate to lose: reset() (onboarding_providers.dart) clears only a SharedPreferences flag and in-memory state with no API call; the sole interview→mandate persist path (_bind_onboarding_session, api/auth.py) deliberately skips when a mandate row already exists; and /onboarding/readback/confirm builds a preview the client never PATCHes. Mandate rows are created only at claim-binding or by a Settings edit — get_or_default() returns a default WITHOUT persisting — so a user who has one keeps it, governed by the old answers, while the dialog promised otherwise. The copy now states the one thing true for both populations (no mandate yet → the retaken interview forms it at claim; mandate already there → untouched) and names the control that does work. 'Portfolio and trades are untouched' is unchanged and still verified. Whether restart SHOULD replace the mandate is a product question tracked separately, not a copy question. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'This runs the whole interview again from the first question. It does not replace a mandate you already have — change that in Settings → My Mandate. Your portfolio and trades are untouched.'**
+  /// **'This runs the whole interview again from the first question. It does not replace a mandate you already have — that stays as it is, and you can edit it any time. Your portfolio and trades are untouched.'**
   String get floorRestartOnboardingConfirmBody;
 
   /// DEF152 destructive CTA on the restart-onboarding confirm dialog. Rendered in hexRed. retranslate:[ar,ms]
@@ -3597,7 +3645,7 @@ abstract class AppLocalizations {
   /// No description provided for @tradeTicketChangeMandate.
   ///
   /// In en, this message translates to:
-  /// **'Change what is enforced via Settings → My Mandate.'**
+  /// **'Change what is enforced.'**
   String get tradeTicketChangeMandate;
 
   /// No description provided for @tradeTicketLabelTicker.

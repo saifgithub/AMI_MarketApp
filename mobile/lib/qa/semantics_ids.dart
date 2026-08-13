@@ -19,20 +19,41 @@
 /// fails if a nav identifier is dropped or renamed.
 library;
 
+import 'package:ami_trade/features/games/games_gate.dart';
+
 /// Bottom-nav destinations. Order matches `home_shell.dart`'s `IndexedStack`.
+///
+/// CR133 restructured the bar: JOURNAL and SETTINGS are no longer destinations
+/// (both moved inside `YOU` as segments), and GAME arrived. The old IDs are
+/// deleted rather than left pointing at nothing — a stale ID the harness can
+/// still ask for is worse than a missing one, because it fails on the device
+/// days later instead of here.
 class NavIds {
   const NavIds._();
 
   static const String floor = 'ami.nav.floor';
   static const String portfolio = 'ami.nav.portfolio';
-  static const String journal = 'ami.nav.journal';
+  static const String game = 'ami.nav.game';
   static const String lessons = 'ami.nav.lessons';
-  static const String settings = 'ami.nav.settings';
+  static const String you = 'ami.nav.you';
 
-  /// Every destination, in on-screen order — the harness asserts this exact
-  /// set is addressable as its GO/NO-GO gate, so a dropped ID fails loudly on
-  /// the Mac rather than as a confusing red device run days later.
-  static const List<String> all = [floor, portfolio, journal, lessons, settings];
+  /// Every destination **this binary renders**, in on-screen order — the
+  /// harness asserts this exact set is addressable as its GO/NO-GO gate, so a
+  /// dropped ID fails loudly on the Mac rather than as a confusing red device
+  /// run days later.
+  ///
+  /// Conditional on the same compile-time gate the tab itself is, because the
+  /// harness runs against store builds: an unconditional list would demand the
+  /// harness find a GAME tab that a `--no-games` binary correctly does not
+  /// have, and a gate that fires when nothing is wrong teaches the operator
+  /// that firing does not mean stop.
+  static const List<String> all = [
+    floor,
+    portfolio,
+    if (kGamesEnabled) game,
+    lessons,
+    you,
+  ];
 }
 
 /// Modal sheets. These are the DEF075 class — interactive elements that can end

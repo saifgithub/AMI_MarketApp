@@ -103,6 +103,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTabUpper => 'SETTINGS';
 
   @override
+  String get gameTabUpper => 'GAME';
+
+  @override
+  String get youTabUpper => 'YOU';
+
+  @override
+  String get youUnsavedTitle => 'UNSAVED MANDATE EDITS';
+
+  @override
+  String get youUnsavedBody =>
+      'Your mandate has changes you have not saved. Leave this segment and they are discarded.';
+
+  @override
+  String get youUnsavedKeep => 'keep editing';
+
+  @override
+  String get youUnsavedDiscard => 'discard changes';
+
+  @override
+  String get tradeTicketOpenMandate => 'OPEN MY MANDATE';
+
+  @override
+  String get settingsReportProblem => 'Report a problem';
+
+  @override
   String get floorConciergeHeading => 'AMI CONCIERGE';
 
   @override
@@ -131,7 +156,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get floorRestartOnboardingConfirmBody =>
-      'This runs the whole interview again from the first question. It does not replace a mandate you already have — change that in Settings → My Mandate. Your portfolio and trades are untouched.';
+      'This runs the whole interview again from the first question. It does not replace a mandate you already have — that stays as it is, and you can edit it any time. Your portfolio and trades are untouched.';
 
   @override
   String get floorRestartOnboardingConfirmCta => 'RESTART';
@@ -2106,8 +2131,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tradeTicketSafetyFloorBlocked => 'SAFETY FLOOR — TRADE BLOCKED';
 
   @override
-  String get tradeTicketChangeMandate =>
-      'Change what is enforced via Settings → My Mandate.';
+  String get tradeTicketChangeMandate => 'Change what is enforced.';
 
   @override
   String get tradeTicketLabelTicker => 'TICKER';

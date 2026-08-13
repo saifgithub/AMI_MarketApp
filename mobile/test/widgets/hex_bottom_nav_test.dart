@@ -15,11 +15,11 @@ const _items = <HexNavItem>[
       label: 'PORTFOLIO',
       id: NavIds.portfolio),
   HexNavItem(
-      icon: Icons.menu_book_outlined, label: 'JOURNAL', id: NavIds.journal),
+      icon: Icons.emoji_events_outlined, label: 'GAME', id: NavIds.game),
   HexNavItem(
       icon: Icons.school_outlined, label: 'LESSONS', id: NavIds.lessons),
   HexNavItem(
-      icon: Icons.settings_outlined, label: 'SETTINGS', id: NavIds.settings),
+      icon: Icons.person_outline, label: 'YOU', id: NavIds.you),
 ];
 
 Future<void> _pump(WidgetTester t, int index, void Function(int) onTap) {
@@ -43,9 +43,9 @@ void main() {
   testWidgets('tapping a destination routes its index', (t) async {
     int? tapped;
     await _pump(t, 0, (i) => tapped = i);
-    await t.tap(find.text('JOURNAL'));
+    await t.tap(find.text('GAME'));
     expect(tapped, 2);
-    await t.tap(find.text('SETTINGS'));
+    await t.tap(find.text('YOU'));
     expect(tapped, 4);
   });
 }

@@ -21,7 +21,7 @@ from helpers.locators import (
 from helpers.platform import IOS
 from selenium.common.exceptions import NoSuchElementException
 
-TAB_LABELS = ("Floor", "Portfolio", "Journal", "Lessons", "Settings")
+TAB_LABELS = ("Floor", "Portfolio", "Lessons", "You")  # CR133 — Journal and Settings are segments of You now
 
 # home_shell.dart mounts an always-animating TickerTape strip under the top
 # app bar on every tab. Excluding a fixed top/bottom margin from any swipe/diff

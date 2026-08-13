@@ -17,6 +17,7 @@ import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/screens/journal/journal_detail_screen.dart';
 import 'package:ami_trade/screens/journal/journal_trash_screen.dart';
+import 'package:ami_trade/screens/you/you_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
@@ -27,7 +28,13 @@ import 'package:intl/intl.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class JournalScreen extends ConsumerStatefulWidget {
-  const JournalScreen({super.key});
+  const JournalScreen({super.key, this.embedded = false});
+
+  /// Rendered as a segment of `YOU` rather than as a screen of its own
+  /// (CR133 §4). Embedded, `YouScreen` owns the `Scaffold`, the `SafeArea` and
+  /// the header — including the trash button, which has to sit next to the
+  /// Save button that SETTINGS contributes to the same header.
+  final bool embedded;
 
   /// Filter chip definitions. Labels are resolved at render time via
   /// AppLocalizations so the row reacts to locale switches.
@@ -94,9 +101,13 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Fire tour when Journal tab (index 2) becomes active for the first time.
-    ref.listen<AmiTab>(activeTabProvider, (prev, next) async {
-      if (next != AmiTab.journal) return;
+    // CR133 §3 — the Journal is no longer a tab, so this used to fire on
+    // `activeTabProvider == journal` and would simply have stopped firing,
+    // silently, forever. It now fires when the JOURNAL segment of `YOU` is
+    // actually the thing on screen: `YouScreen` keeps its panes alive in an
+    // `IndexedStack`, so this `build` runs whether or not the segment shows.
+    ref.listen<bool>(journalVisibleProvider, (prev, next) async {
+      if (!next) return;
       final service = ref.read(tourServiceProvider);
       if (await service.hasSeen(TourSection.journal)) return;
       await service.markSeen(TourSection.journal);
@@ -105,26 +116,24 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     });
 
     final state = ref.watch(journalNotifierProvider);
-    return Scaffold(
-      backgroundColor: AmiColors.slate900,
-      body: SafeArea(
-        child: Column(
+    final body = Column(
           children: [
-            AmiScreenHeader(
-              title: AppLocalizations.of(context).journalHeading,
-              titleColor: AmiColors.hexBlue,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.delete_outline,
-                      color: AmiColors.textMed, size: 22),
-                  tooltip: AppLocalizations.of(context).journalTrashHeading,
-                  onPressed: () =>
-                      Navigator.of(context).push(MaterialPageRoute<void>(
-                    builder: (_) => const JournalTrashScreen(),
-                  )),
-                ),
-              ],
-            ),
+            if (!widget.embedded)
+              AmiScreenHeader(
+                title: AppLocalizations.of(context).journalHeading,
+                titleColor: AmiColors.hexBlue,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline,
+                        color: AmiColors.textMed, size: 22),
+                    tooltip: AppLocalizations.of(context).journalTrashHeading,
+                    onPressed: () =>
+                        Navigator.of(context).push(MaterialPageRoute<void>(
+                      builder: (_) => const JournalTrashScreen(),
+                    )),
+                  ),
+                ],
+              ),
             _FilterRow(key: _filterRowKey, active: state.filterType),
             _SearchBar(key: _searchKey, current: state.searchQuery),
             if (state.retentionDays != null)
@@ -140,9 +149,14 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
               ),
             Expanded(key: _listKey, child: _body(context, state)),
           ],
-        ),
-      ),
-    );
+        );
+
+    return widget.embedded
+        ? body
+        : Scaffold(
+            backgroundColor: AmiColors.slate900,
+            body: SafeArea(child: body),
+          );
   }
 
   Widget _body(BuildContext context, JournalState state) {

@@ -24,6 +24,7 @@ import 'package:ami_trade/state/alpaca_providers.dart';
 import 'package:ami_trade/state/league_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
+import 'package:ami_trade/screens/you/you_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
@@ -32,7 +33,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ami_trade/screens/settings/legal_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.embedded = false});
+
+  /// Rendered as a segment of `YOU` rather than as a screen of its own
+  /// (CR133 §4). Embedded, it draws no `Scaffold`, no `SafeArea` and no header:
+  /// `YouScreen` owns all three, and the header it owns has to carry the Save
+  /// button, so this State publishes what that header needs to
+  /// [settingsHeaderProvider] instead of rendering it.
+  ///
+  /// Kept as a flag rather than a second widget because everything below the
+  /// header — thirteen sections, the mandate editor, the dirty tracking — is
+  /// identical either way, and two copies of that is the DEF098 class.
+  final bool embedded;
 
   @override
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
@@ -147,38 +159,68 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  bool get _hasUnsavedEdits => _dirty || _pendingRiskLimits.isNotEmpty;
+
+  /// Publish what `YOU`'s header renders on this screen's behalf (CR133 §4.2).
+  ///
+  /// Derived in `build` and pushed after the frame rather than written at each
+  /// of the four mutation sites: a mutation site added later cannot forget to
+  /// call this, and forgetting would leave the Save button absent while edits
+  /// were pending — the failure would be invisible until someone lost an edit.
+  void _publishHeaderState(int version, bool saving) {
+    if (!widget.embedded) return;
+    final next = SettingsHeaderState(
+      version: version,
+      dirty: _hasUnsavedEdits,
+      saving: saving,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final notifier = ref.read(settingsHeaderProvider.notifier);
+      if (notifier.state != next) notifier.state = next;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(mandateNotifierProvider);
     final m = state.mandate;
     if (m == null) {
-      return const Scaffold(
-        backgroundColor: AmiColors.slate900,
-        body: Center(child: CircularProgressIndicator()),
-      );
+      const loading = Center(child: CircularProgressIndicator());
+      return widget.embedded
+          ? loading
+          : const Scaffold(
+              backgroundColor: AmiColors.slate900, body: loading);
     }
     _initFrom(m);
+    _publishHeaderState(m.version, state.saving);
+    // `YOU` owns the header while this pane is embedded, so its Save button
+    // asks here rather than holding a closure over this State (CR133 §4.2).
+    if (widget.embedded) {
+      ref.listen<int>(settingsSaveRequestProvider, (_, __) {
+        if (!state.saving) _save();
+      });
+    }
     final l = AppLocalizations.of(context);
-    return Scaffold(
-      backgroundColor: AmiColors.slate900,
-      body: SafeArea(
-        child: Column(
+    final body = Column(
           children: [
-            AmiScreenHeader(
-              title: l.settingsHeading,
-              titleColor: AmiColors.hexBlue,
-              subtitle: l.settingsMandateVersion(m.version),
-              showBack: Navigator.of(context).canPop(),
-              actions: [
-                if (_dirty || _pendingRiskLimits.isNotEmpty)
-                  TextButton(
-                    onPressed: state.saving ? null : _save,
-                    child: Text(state.saving ? l.settingsSaving : l.settingsSave,
-                        style: AmiTypography.labelMono
-                            .copyWith(color: AmiColors.hexBlue)),
-                  ),
-              ],
-            ),
+            if (!widget.embedded)
+              AmiScreenHeader(
+                title: l.settingsHeading,
+                titleColor: AmiColors.hexBlue,
+                subtitle: l.settingsMandateVersion(m.version),
+                showBack: Navigator.of(context).canPop(),
+                actions: [
+                  if (_hasUnsavedEdits)
+                    TextButton(
+                      onPressed: state.saving ? null : _save,
+                      child: Text(
+                          state.saving ? l.settingsSaving : l.settingsSave,
+                          style: AmiTypography.labelMono
+                              .copyWith(color: AmiColors.hexBlue)),
+                    ),
+                ],
+              ),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(AmiSpacing.m),
@@ -262,9 +304,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
+        );
+
+    return widget.embedded
+        ? body
+        : Scaffold(
+            backgroundColor: AmiColors.slate900,
+            body: SafeArea(child: body),
+          );
   }
 }
 
@@ -1043,11 +1090,11 @@ class _WalkthroughSection extends ConsumerWidget {
 }
 
 
-class _HelpSection extends StatelessWidget {
+class _HelpSection extends ConsumerWidget {
   const _HelpSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return _Section(
       title: 'HELP',
       children: [
@@ -1063,6 +1110,34 @@ class _HelpSection extends StatelessWidget {
                 const SizedBox(width: AmiSpacing.s),
                 Expanded(
                   child: Text('AI Coach — Q&A library',
+                      style: AmiTypography.body),
+                ),
+                const Icon(Icons.chevron_right, color: AmiColors.textLow),
+              ],
+            ),
+          ),
+        ),
+        // CR133 §6 — the labelled bug-report door.
+        //
+        // Until this existed the only way to file a report was to scroll past
+        // thirteen sections and **long-press an unlabelled grey version
+        // string**, while `bug_report_sheet.dart` documents "call this from
+        // anywhere" and had exactly one caller. That was already a defect;
+        // CR133 demoting Settings a level deeper made it worse at the exact
+        // moment we are trying to get reports out of alpha testers. The chip's
+        // long-press stays — it costs nothing and some muscle memory exists —
+        // but it is no longer the only door.
+        InkWell(
+          onTap: () => showBugReportSheet(context, ref),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              children: [
+                const Icon(Icons.bug_report_outlined,
+                    color: AmiColors.hexAmber, size: 18),
+                const SizedBox(width: AmiSpacing.s),
+                Expanded(
+                  child: Text(AppLocalizations.of(context).settingsReportProblem,
                       style: AmiTypography.body),
                 ),
                 const Icon(Icons.chevron_right, color: AmiColors.textLow),

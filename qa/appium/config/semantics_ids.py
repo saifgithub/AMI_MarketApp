@@ -23,13 +23,25 @@ from __future__ import annotations
 
 # Bottom-nav destinations, in on-screen order. Keys are the same
 # locale-independent semantic names `pages/base_page.py::TAB_LABELS` uses.
+#
+# CR133 restructured the bar. Journal and Settings are no longer destinations —
+# both are now segments inside YOU — and GAME arrived at slot 3. The retired
+# IDs are deleted rather than left in place: an ID the harness can still ask
+# for, pointing at nothing, fails on the device days later instead of here.
 NAV_IDS: dict[str, str] = {
     "Floor": "ami.nav.floor",
     "Portfolio": "ami.nav.portfolio",
-    "Journal": "ami.nav.journal",
     "Lessons": "ami.nav.lessons",
-    "Settings": "ami.nav.settings",
+    "You": "ami.nav.you",
 }
+
+# GAME is deliberately NOT in NAV_IDS. It sits behind the app's compile-time
+# `AMI_GAMES` gate, and this harness runs against store builds, which are built
+# with the gate off and therefore correctly show four tabs. Putting it in the
+# required set would make the GO/NO-GO gate fail on a perfectly good binary —
+# and a gate that fires when nothing is wrong teaches the operator that firing
+# does not mean stop. Use it explicitly when driving a gated build.
+NAV_ID_GAME = "ami.nav.game"
 
 # Modal sheets — the DEF075 class the nav-bar/bottom-inset check exists for.
 SHEET_CONVENE = "ami.sheet.convene"
