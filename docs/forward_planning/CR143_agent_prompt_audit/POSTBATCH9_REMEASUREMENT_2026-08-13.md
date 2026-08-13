@@ -26,7 +26,7 @@ re-measuring without controlling the mix measures the mix shift, not the prompt.
 | **M6** stance entropy | 1.48 bits | 1.45 bits | 0 unanimous convenes both epochs (max 1.58) |
 | **M7** date accuracy | 0/30 | **0/67** | after DEF279; see below |
 | **M4** risk spread | — | **UNRELIABLE** | DEF271, 27% extraction precision — do not cite |
-| **M5** PM groundedness | *(empty)* | *(empty)* | produced nothing in **either** epoch — flagged, unexplained |
+| **M5** PM groundedness | Trader 9/18 (50%) | Research Manager 19/40 (47.5%) | closest voice flips; see below |
 
 ### M1 is the headline
 
@@ -62,6 +62,37 @@ number stops inventing it.
 `fundamentals_analyst` rose by half while the sheet got *larger* for both. Two candidate readings —
 more supplied numbers inviting more derived ones, or Batch 5's firewall removing an input the
 synthesis roles were leaning on — and this corpus cannot separate them.
+
+### M5: correcting this doc's own error — it was never empty
+
+An earlier version of this table read *"produced nothing in either epoch"* for M5. **That was wrong**
+— a transcription error made while writing this doc, not a finding. Both committed
+`quality_metrics_*-epoch.json` files carry a fully populated `closest_voice_counts` (verified by
+re-reading them directly), and the 08-07 figure matches `PHASE3B_quality.md:22`, written weeks earlier
+against the same baseline: *"Trader 9/18; the other 9 spread over RM (3), Neutral (2), Aggressive,
+Market, Conservative."* M5 was never dead, never DEF271-shaped, and needed no fix — only this doc did.
+
+What the corrected numbers actually show, now that they can be read:
+
+```
+08-07 (n=18)                    08-13 (n=40)
+trader              9  50.0%    research_manager   19  47.5%
+research_manager    3  16.7%    trader             11  27.5%
+neutral_debator     2  11.1%    neutral_debator     7  17.5%
+aggressive_debator  1   5.6%    aggressive_debator  1   2.5%
+market_analyst      1   5.6%    bear_researcher     1   2.5%
+conservative_debator 1  5.6%    bull_researcher     1   2.5%
+<no match>          1   5.6%
+```
+
+The closest voice **flips** — Trader was the PM's dominant echo pre-batch, Research Manager is
+post-batch, with Trader still second and Neutral Debator holding roughly the same share both times.
+`<no match>` (a reason with no `_PROSE_AGENTS` entry crossing the similarity floor) disappears. This
+is the same shape as M3's three risers (`research_manager` up, §M3 above) — one more data point for
+the "Batch 5 firewall changed what synthesis roles lean on" reading, not proof of it; this corpus
+cannot separate that from "the PM's reason got longer/more structured and now resembles the RM's
+prose by construction." Worth a hand-read pass if anyone wants to cite the direction of PM reasoning,
+not just its target.
 
 ---
 
@@ -104,8 +135,9 @@ Still outstanding, and none of them is answered by this corpus:
    domain-citation count, which no current metric computes.
 3. **The 83%-for-−48% arithmetic error class** and **wrong asymmetry 2/6** — both need hand-reading.
 4. **Whether any agent screens on market cap** now that it is rendered.
-5. **M5 produced nothing in either epoch.** Unexplained. A metric returning an empty dict twice is
-   the DEF271 shape — it may have been silently dead for longer than anyone noticed.
+5. **Why M5's closest voice flipped from Trader to Research Manager.** Real movement, not artifact
+   (see §M5 above) — but this corpus can't attribute it to a specific batch, and doesn't establish
+   whether the flip means better or worse-grounded PM reasoning, only a different target.
 
 **Not claimed:** that agent reasoning improved. M1 and M2 measure *distinguishability*; twelve agents
 can be perfectly distinguishable and all wrong. M3 measures where numbers came from, not whether the
