@@ -90,9 +90,32 @@ if [[ "$VALIDATE" == "1" ]]; then
   bundle exec fastlane validate
 else
   echo "▶ fastlane ${PLAY_TRACK} (upload to the Play ${PLAY_TRACK} testing track)"
+  # DEF283 — stamp the wall clock BEFORE fastlane so the report freshness check
+  # below can tell "this run wrote it" from "a previous run left it there".
+  run_started_at="$(date +%s)"
   bundle exec fastlane "${PLAY_TRACK}"
-  echo ""
-  echo "✓ pushed to ${PLAY_TRACK} track — testers get it as a Play Store update."
+
+  # DEF283 — verify the upload from fastlane's own report rather than inferring
+  # it from an exit code. `set -e` means reaching this line implies fastlane
+  # returned 0, which is good evidence and not proof: the release verdict is the
+  # one fact this script exists to establish, so it gets read back from the
+  # artifact fastlane wrote. Twice now (0.1.0+87, 0.1.0+88) the verdict had to be
+  # dug out of report.xml by hand after the fact, which is the tell that the
+  # script was not reporting it.
+  upload_report="${PROJECT_ROOT}/mobile/android/fastlane/report.xml"
+  if [[ ! -f "$upload_report" ]]; then
+    upload_status="UNVERIFIED — fastlane wrote no report.xml"
+  elif [[ "$(stat -f %m "$upload_report")" -lt "$run_started_at" ]]; then
+    # A leftover report from an earlier run must never read as this run's
+    # success — a stale artifact that looks like a pass is DEF280's shape.
+    upload_status="UNVERIFIED — report.xml is stale ($(date -r "$(stat -f %m "$upload_report")" '+%F %T'))"
+  elif grep -q '<failure' "$upload_report"; then
+    upload_status="FAILED — see $upload_report"
+  elif grep -q 'upload_to_play_store' "$upload_report"; then
+    upload_status="OK"
+  else
+    upload_status="UNVERIFIED — no upload_to_play_store step in report.xml"
+  fi
 
   # CR079 — the store release ships an AAB to Play, but our automated tester on
   # melehost consumes an APK. Build + scp it here too so the rig is refreshed on
@@ -101,7 +124,37 @@ else
   # helper's loud STALE warning still fires so a stale rig can't pass unnoticed.
   echo ""
   echo "▶ refreshing the automated-tester APK on melehost (CR079)"
-  if ! "${PROJECT_ROOT}/scripts/share_apk_to_tester.sh"; then
+  if "${PROJECT_ROOT}/scripts/share_apk_to_tester.sh"; then
+    apk_status="refreshed"
+  else
+    apk_status="STALE — see the warning above"
     echo "⚠ Play upload succeeded but the automated-tester APK is STALE — see above." >&2
   fi
+
+  # DEF283 — the verdict is the LAST thing printed, always.
+  #
+  # It used to be printed immediately after the upload, and then the CR079 APK
+  # refresh emitted ~30 lines of pub/gradle output on top of it. Anyone reading
+  # the tail of a release log — which is how a long build is read — saw an APK
+  # line and no upload result, so "did it publish?" had to be answered by
+  # opening report.xml. A release script whose last line is about something
+  # other than the release teaches you to go look somewhere else for the answer.
+  version_line="$(grep -E '^version:' "${PROJECT_ROOT}/mobile/pubspec.yaml" | head -1 | awk '{print $2}')"
+  echo ""
+  echo "────────────────────────────────────────────────────────────────"
+  echo "  PLAY RELEASE SUMMARY — ${version_line}"
+  echo "    track                 : ${PLAY_TRACK}"
+  echo "    upload                : ${upload_status}"
+  echo "    automated-tester APK  : ${apk_status}"
+  echo "────────────────────────────────────────────────────────────────"
+
+  if [[ "$upload_status" != "OK" ]]; then
+    echo "" >&2
+    echo "✗ fastlane exited 0 but its report does not confirm the upload." >&2
+    echo "  Treat this build as NOT published until you have checked the Play" >&2
+    echo "  Console. Do not bump the build number again on top of it." >&2
+    exit 1
+  fi
+  echo ""
+  echo "✓ pushed to ${PLAY_TRACK} track — testers get it as a Play Store update."
 fi
