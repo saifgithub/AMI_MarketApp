@@ -132,7 +132,22 @@ if [[ "$DO_GAMES" -eq 1 && ( "${RELEASE_CHANNEL:-}" == "production" || "$DO_PROD
   exit 1
 fi
 
-if [[ "$REVENUECAT_IOS_SDK_KEY" == test_* ]]; then
+# DEF290 — the containment rule below applies only to a build that can actually
+# transact. DEF282 removed the RevenueCat SDK from the app's code path entirely
+# (`purchase_providers.dart` returns `DisabledPurchaseService`, which does not
+# import `purchases_flutter`, and `BillingConfig.usableKey` blanks any `test_`
+# key in a non-debug build regardless). So the gate's own message — "Purchases
+# in this build are SIMULATED: buying grants Plan + credits for real in our DB"
+# — was false about every build we could produce, and its remedy asked the
+# operator to affirm it to proceed. A gate whose stated reason is untrue is how
+# an operator learns that firing does not mean stop; that is DEF277 again, one
+# script over.
+#
+# With `--no-billing` there is no purchase path to contain, and the key is
+# blanked below rather than compiled in — so RevenueCat's "never submit an app
+# configured with a Test Store API key" is satisfied structurally instead of by
+# a promise.
+if [[ "$DO_BILLING" -eq 1 && "$REVENUECAT_IOS_SDK_KEY" == test_* ]]; then
   if [[ "${RELEASE_CHANNEL:-}" == "production" || "$DO_PRODUCTION" -eq 1 ]]; then
     echo "✗ REVENUECAT_IOS_SDK_KEY is a Test Store key (test_…) and this is a PRODUCTION build." >&2
     echo "  Every user would receive paid entitlements without paying. Refusing." >&2
@@ -233,6 +248,12 @@ EOF
 fi
 if [[ "$DO_BILLING" -eq 0 ]]; then
   echo "⚠ --no-billing: shipping WITHOUT in-app purchase (paywall = info state only)"
+  # DEF290 — blank it rather than merely not using it. Passing a `test_…` key
+  # as a dart-define compiles it into the IPA, so a build that cannot sell
+  # would still be "an app configured with a Test Store API key" by
+  # RevenueCat's own wording. The app already refuses to use it
+  # (`BillingConfig.usableKey`); this makes the binary not carry it.
+  REVENUECAT_IOS_SDK_KEY=""
 fi
 
 echo "▶ flutter build ios  (release, no-codesign — framework only)"
