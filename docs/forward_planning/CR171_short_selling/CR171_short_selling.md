@@ -359,6 +359,49 @@ Rules that matter:
 
 ---
 
+## Delivery — front-end slice (2026-08-13)
+
+Built alongside CR170's front end on Saiful's directive. **Most of this CR's client surface does not
+exist yet and cannot**: a short leg in the portfolio, an accrued borrow cost, a margin-call banner and
+a gross-concentration reading all need rows and rates the backend does not produce, and a client-side
+approximation of any of them would be a number that looks authoritative and is invented — the
+CR040/DEF252 sin the borrow-rate design (§4) is itself built to avoid.
+
+What *is* buildable now is the half that produces a **refusal**, and a refusal is worth moving to the
+client on its own merits: met at the tap it is a sentence the user can act on; met three seconds later
+out of a round trip it reads as the app being broken.
+
+| Area | Files |
+|---|---|
+| §1 and §5, pure | `mobile/lib/features/sim/short_rules.dart` (NEW) |
+| The two refusals | `trade_ticket_sheet.dart` — one `_localRefusal()` read by both the panel and the CTA's enabled state |
+| Strings | 3 keys × 3 ARBs |
+| Tests | `test/features/sim/order_rules_test.dart`, `test/screens/sim/cr170_resting_orders_test.dart` |
+
+**§1 — a sell never crosses zero.** `h >= q` closes (unchanged), `h == 0` opens a short, `0 < h < q`
+is refused with the exact quantity that *would* close offered in the sentence. The client can decide
+this because it already holds `portfolio.holdings`.
+
+**§5 — the bracket inverts.** `stopIsWrongSide` / `targetIsWrongSide` take an `isShort` flag and
+carry both directions, which is the shared direction logic §5 asks for. Only the short branch is
+wired into the ticket today: refusing a long's mis-placed stop would newly reject orders the app
+accepts now, and that is a behaviour change this CR did not ask for.
+
+**One function, not two.** The panel and the CTA's `onPressed` read the same `_localRefusal()`. A
+disabled button with no sentence is a dead control; a sentence over a live button is an instruction
+the user can ignore. The pair only stays consistent if there is nothing to keep consistent (DEF098).
+
+**Not claimed:** none of this makes shorting work. `_execute_fill` still refuses every sell-to-open
+unconditionally with `blocked_by="long_only"` (DEF262), so the inverted-bracket refusal is currently
+unreachable in practice — it is built and tested against the day §6 lands. The cross-zero refusal, by
+contrast, is reachable **today** and improves on the server's existing *"cannot sell 10 AAPL: not
+enough held"* by arriving before the tap.
+
+**Still escalated to Saiful, unchanged:** §6's halal ruling — whether a halal mandate refuses
+sell-to-open outright, independent of `long_only`. Not decided in code, not decided here.
+
+---
+
 ## Not in scope
 
 - **Dividends on shorts.** A short pays the dividend to the lender. We do not model dividends at all,

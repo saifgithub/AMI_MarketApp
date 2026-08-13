@@ -603,6 +603,78 @@ orders being accepted and reported as placed. One rule, the sim site never swept
 
 ---
 
+## Delivery — front-end slice (2026-08-13)
+
+Built on Saiful's directive *"then build the front end of CR170 and CR171"*. §9 in full; every
+backend section (§1–§8) is untouched and the CR stays `in_progress`.
+
+### The one design decision this slice had to make: a capability probe, not an open control
+
+A front end for resting orders is not inert against a backend that lacks the book, and that is the
+whole problem. `POST /v1/sim/submit` already accepts `order_type=limit` today, and §3 records what it
+does with it — `fill_price = mark if order_type == MARKET else (limit_price or mark)` — which rests
+nothing. **It fills, instantly, at whatever price the user typed.** Shipping the order-type picker
+open would therefore not be an unfinished feature; it would be a money-moving control that silently
+does something else, which is precisely what CR040 exists to prevent.
+
+So the controls are gated on **`SimState.restingOrdersSupported`**, raised only by a successful
+`GET /v1/sim/orders/{user_id}`. A compile-time flag (CR109's `AMI_GAMES` shape) was the obvious
+alternative and was rejected: it would need someone to remember to rebuild and re-ship the app on the
+day the backend lands, whereas the probe flips itself on the next refresh.
+
+Two properties of the probe are deliberate and tested:
+
+- **It fails closed on *any* error, not only a 404.** "No route" and "route present but unwell" are
+  genuinely different facts, but the cost of guessing wrong in the permissive direction is the
+  instant-fill above. There is no reading of that trade-off where the optimistic default wins.
+- **It never fails the refresh.** The portfolio, holdings and trades are the screen; losing all of
+  them because an optional book is unreachable would be the worse outcome.
+
+### What landed
+
+| Area | Files |
+|---|---|
+| Rule 1, pure | `mobile/lib/features/sim/order_pricing.dart` (NEW) |
+| The book row | `mobile/lib/models/sim_resting_order.dart` (NEW) |
+| Submit response | `mobile/lib/models/sim.dart` — `resting` + `order`, and the null-cast fix below |
+| Transport | `api_client.dart` — `trigger_price`/`tif` on submit, `simRestingOrders`, `simCancelRestingOrder` |
+| State | `sim_providers.dart` — the book, the probe, `cancelRestingOrder`, and forwarding the fields `submit()` used to drop |
+| Ticket | `trade_ticket_sheet.dart` — `_PillToggle`, order-type + TIF pickers, conditional price fields, the live hint |
+| Portfolio | `widgets/sim/resting_orders_section.dart` (NEW) + the `_NewTraderHint` fix |
+| Strings | 35 keys × 3 ARBs |
+| Tests | `test/features/sim/order_rules_test.dart`, `test/screens/sim/cr170_resting_orders_test.dart` |
+
+### Corrections to §9 found while building it
+
+- **The `trade_ticket_sheet.dart:247` crash is one layer earlier than the CR says.** The sheet's
+  `result.trade!` never runs, because `SimSubmitResult.fromJson` cast `j['trade'] as Map<String,
+  dynamic>` unconditionally and throws on null first. The user-visible symptom is therefore not a
+  crash but a generic *"couldn't place that trade"* over an order the server **accepted** — worse,
+  because it invites a second tap. Both layers are fixed.
+- **`resting` is read, never inferred.** §8 says to carry it explicitly on every branch; the client
+  honours that rather than deriving it from `trade == null`, and a test pins the difference.
+- **The ticket had no rebuild on the fields its hint reads.** The quantity field carries no
+  `onChanged`, so the live hint and CR171's refusals were computed once and never again. Found by a
+  test, not by inspection — a sell of ten against a holding of four typed cleanly and no refusal ever
+  appeared. Now every input the hint reads drives a listener, chosen over per-field `onChanged`
+  because the set will grow and the one that gets forgotten is the one that matters.
+
+### Not built, and why
+
+Everything gated on data the backend does not yet produce: `cash_committed` / `cash_available` /
+`shares_committed` (§6 — `PortfolioSnapshot` has no such fields yet), and the sweep's
+`last_seen_price` / `distance_pct`, which the client renders when present and otherwise reports as
+*"waiting for the first price check"* rather than as a zero.
+
+**Verification:** `flutter analyze` 0 errors. Mutations confirmed red then reverted: the probe
+failing open, `resting` inferred from a null trade, a cross-zero sell split instead of refused, and a
+`filling` order becoming cancellable. **The probe mutation initially survived** — every widget test
+built `SimState` by hand and none ran the probe, so the most load-bearing decision in the slice had no
+test at all. That is the DEF190 shape, and it is the second time in this lineage; the test added for
+it drives `SimNotifier.refresh()` against a fake `ApiClient` that 404s the book.
+
+---
+
 ## Not in scope
 
 - **OCO / bracket linkage** between a resting entry and its exit — registered rejection, 2026-05-23.

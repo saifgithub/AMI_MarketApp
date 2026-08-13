@@ -34,6 +34,7 @@ import 'package:ami_trade/models/price_alert.dart';
 import 'package:ami_trade/models/release_floor.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/sim.dart';
+import 'package:ami_trade/models/sim_resting_order.dart';
 import 'package:ami_trade/models/tickers.dart';
 import 'package:ami_trade/models/watchlist.dart';
 import 'package:ami_trade/services/api/api_exceptions.dart';
@@ -1022,6 +1023,8 @@ class ApiClient {
     required double quantity,
     String orderType = 'market',
     double? limitPrice,
+    double? triggerPrice,
+    String? tif,
     double? stop,
     double? target,
     int? horizonDays,
@@ -1036,6 +1039,8 @@ class ApiClient {
         'quantity': quantity,
         'order_type': orderType,
         if (limitPrice != null) 'limit_price': limitPrice,
+        if (triggerPrice != null) 'trigger_price': triggerPrice,
+        if (tif != null) 'tif': tif,
         if (stop != null) 'stop': stop,
         if (target != null) 'target': target,
         if (horizonDays != null) 'horizon_days': horizonDays,
@@ -1043,6 +1048,36 @@ class ApiClient {
       },
     );
     return SimSubmitResult.fromJson(r.data!);
+  }
+
+  /// CR170 — the resting-order book. Working orders plus terminal rows from the
+  /// last 24h, so a rejected or expired order never silently vanishes
+  /// overnight.
+  ///
+  /// **This is also the capability probe.** A backend without CR170's routes
+  /// answers 404, and [SimNotifier] reads that as "resting orders are not
+  /// available here" and hides the controls — rather than offering an
+  /// order-type picker whose non-market values would be accepted by the old
+  /// `/submit` and filled *instantly at the named price*. That is the failure
+  /// worth designing against: not a missing feature, but a money-moving control
+  /// that silently does something else (CR040). Probing beats a compile-time
+  /// flag because it flips itself the moment the backend ships, with no rebuild.
+  Future<List<SimRestingOrder>> simRestingOrders(String userId) async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/sim/orders/$userId');
+    final list = (r.data?['orders'] as List?) ?? const [];
+    return list
+        .map((o) => SimRestingOrder.fromJson((o as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// Returns the SERVER's verdict, which is not always "cancelled" — a cancel
+  /// can lose a race with the sweep that filled it.
+  Future<RestingOrderCancelResult> simCancelRestingOrder(
+      String userId, String orderId) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/sim/orders/$userId/$orderId/cancel',
+    );
+    return RestingOrderCancelResult.fromJson(r.data!);
   }
 
   Future<List<SimTrade>> simListTrades(String userId, {String? statusFilter}) async {

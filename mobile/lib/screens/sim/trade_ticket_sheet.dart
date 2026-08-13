@@ -10,6 +10,8 @@ import 'dart:async';
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/room.dart';
+import 'package:ami_trade/features/sim/order_pricing.dart';
+import 'package:ami_trade/features/sim/short_rules.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
@@ -68,6 +70,12 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   late final TextEditingController _stop;
   late final TextEditingController _target;
   late final TextEditingController _horizon;
+  // CR170 — the resting-order half. Two more price fields, shown only for the
+  // order types that need them, and only against a backend that has the book.
+  late final TextEditingController _limit;
+  late final TextEditingController _trigger;
+  SimOrderType _orderType = SimOrderType.market;
+  SimOrderTif _tif = SimOrderTif.day;
   String _side = 'buy';
   // Bug d5717660: when a trade has no AI verdict, suggest convening first.
   // The user can dismiss the advisory and proceed — the trade is recorded
@@ -98,6 +106,17 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     _stop = TextEditingController();
     _target = TextEditingController();
     _horizon = TextEditingController();
+    _limit = TextEditingController();
+    _trigger = TextEditingController();
+    // CR170/CR171 — the live hint and the two refusals are computed in `build`
+    // from what is typed, so every field they read has to rebuild the sheet.
+    // Found by a test: the quantity field had no `onChanged`, so a sell of ten
+    // against a holding of four typed cleanly and the refusal never appeared.
+    // Listeners rather than per-field `onChanged` because the set will grow and
+    // the one that gets forgotten is the one that matters.
+    for (final c in [_ticker, _qty, _stop, _target, _limit, _trigger]) {
+      c.addListener(_rebuildOnInput);
+    }
     final v = widget.prefill;
     if (v != null && v.isApprove) {
       if (v.stop != null) _stop.text = v.stop!.toStringAsFixed(2);
@@ -129,10 +148,10 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   void dispose() {
     _validator.dispose();
     _ticker.removeListener(_onTickerChanged);
-    _ticker.dispose();
-    _qty.dispose();
-    _stop.dispose();
-    _target.dispose();
+    for (final c in [_ticker, _qty, _stop, _target, _limit, _trigger]) {
+      c.removeListener(_rebuildOnInput);
+      c.dispose();
+    }
     _horizon.dispose();
     super.dispose();
   }
@@ -206,10 +225,78 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     ));
   }
 
+  void _rebuildOnInput() {
+    if (mounted) setState(() {});
+  }
+
+  /// CR171 §1/§5 — the two refusals the ticket owns, as **one** function that
+  /// both the panel and the CTA's enabled-state read.
+  ///
+  /// One source, not two, on purpose: a disabled button with no sentence is a
+  /// dead control, and a sentence over a live button is an instruction the user
+  /// can ignore. The pair only stays consistent if there is nothing to keep
+  /// consistent (DEF098).
+  ///
+  /// Null means "nothing to refuse", which includes every case where the input
+  /// is too incomplete to judge. An unset field is not a violation, and warning
+  /// about one teaches the user to read past the panel.
+  String? _localRefusal(AppLocalizations l, SimState state) {
+    if (_side != 'sell') return null;
+    final typed = _ticker.text.trim().toUpperCase();
+    final qty = double.tryParse(_qty.text.trim());
+    if (typed.isEmpty || qty == null || qty <= 0) return null;
+
+    final held = state.portfolio?.holdings
+            .where((h) => h.ticker.toUpperCase() == typed)
+            .fold<double>(0, (a, h) => a + h.quantity) ??
+        0;
+
+    final intent = classifySell(held: held, quantity: qty);
+    if (intent == SellIntent.crossesZero) {
+      return l.tradeTicketRefuseCrossZero(
+        closeableQuantity(held).toStringAsFixed(0),
+        typed,
+        qty.toStringAsFixed(0),
+      );
+    }
+    if (intent != SellIntent.opensShort) return null;
+
+    // The price the bracket is measured against: what the user named on a
+    // resting order, otherwise the live mark. Null when neither is known — the
+    // check simply does not run, rather than running against a zero.
+    final entry = namedPriceFor(_orderType,
+            triggerPrice: double.tryParse(_trigger.text.trim()),
+            limitPrice: double.tryParse(_limit.text.trim())) ??
+        _quote?.price;
+    if (stopIsWrongSide(
+            isShort: true,
+            entry: entry,
+            stop: double.tryParse(_stop.text.trim())) ==
+        true) {
+      return l.tradeTicketRefuseShortStop;
+    }
+    if (targetIsWrongSide(
+            isShort: true,
+            entry: entry,
+            target: double.tryParse(_target.text.trim())) ==
+        true) {
+      return l.tradeTicketRefuseShortTarget;
+    }
+    return null;
+  }
+
   Future<void> _submit() async {
     final typed = _ticker.text.trim().toUpperCase();
     final qty = double.tryParse(_qty.text.trim());
     if (typed.isEmpty || qty == null || qty <= 0 || _validator.checking) return;
+    // CR171 — refused here as well as in the disabled CTA, because the sheet
+    // can reach this method from a keyboard submit action that never touches
+    // the button.
+    if (_localRefusal(AppLocalizations.of(context),
+            ref.read(simNotifierProvider)) !=
+        null) {
+      return;
+    }
     // DEF208: no modal here. A failed check leaves the shared panel under
     // the field explaining why, which is the same thing the user has been
     // looking at since they stopped typing.
@@ -219,6 +306,14 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       ticker: typed,
       side: _side,
       quantity: qty,
+      orderType: _orderType,
+      limitPrice: _orderType.needsLimitPrice
+          ? double.tryParse(_limit.text.trim())
+          : null,
+      triggerPrice: _orderType.needsTriggerPrice
+          ? double.tryParse(_trigger.text.trim())
+          : null,
+      tif: _tif,
       stop: double.tryParse(_stop.text.trim()),
       target: double.tryParse(_target.text.trim()),
       horizonDays: int.tryParse(_horizon.text.trim()),
@@ -233,23 +328,39 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       // duration so the success is unambiguous.
       HapticFeedback.mediumImpact();
       Navigator.of(context).pop();
+      final l = AppLocalizations.of(context);
+      // CR170 — two outcomes now, and the copy must not claim the wrong one.
+      // `resting` is read off the response, never inferred from `trade == null`
+      // (§8): the server states it on every branch, and inferring it would be a
+      // second source of truth for a fact we are already told. A filled trade
+      // whose row somehow did not serialise falls back to the resting wording
+      // rather than crashing on `trade!`, which is what the old code did.
+      final filled = result.trade;
+      final resting = result.resting || filled == null;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           duration: const Duration(seconds: 5),
-          backgroundColor: AmiColors.hexGreen,
+          backgroundColor: resting ? AmiColors.hexCyan : AmiColors.hexGreen,
           behavior: SnackBarBehavior.floating,
           content: Row(
             children: [
-              const Icon(Icons.check_circle, color: AmiColors.slate900, size: 24),
+              Icon(resting ? Icons.schedule : Icons.check_circle,
+                  color: AmiColors.slate900, size: 24),
               const SizedBox(width: AmiSpacing.s),
               Expanded(
                 child: Text(
-                  AppLocalizations.of(context).tradeTicketFilled(
-                    result.trade!.side.toUpperCase(),
-                    result.trade!.quantity.toStringAsFixed(0),
-                    result.trade!.ticker,
-                    result.trade!.entryPrice.toStringAsFixed(2),
-                  ),
+                  filled == null
+                      ? l.tradeTicketResting(
+                          _side.toUpperCase(),
+                          typed,
+                          (result.order?.namedPrice ?? 0).toStringAsFixed(2),
+                        )
+                      : l.tradeTicketFilled(
+                          filled.side.toUpperCase(),
+                          filled.quantity.toStringAsFixed(0),
+                          filled.ticker,
+                          filled.entryPrice.toStringAsFixed(2),
+                        ),
                   style: const TextStyle(
                     color: AmiColors.slate900,
                     fontWeight: FontWeight.w600,
@@ -284,6 +395,10 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     final state = ref.watch(simNotifierProvider);
     final refusal = state.lastSubmit != null && !state.lastSubmit!.ok;
     final l = AppLocalizations.of(context);
+    // CR171 — the client-side refusals, distinct from `refusal` above, which is
+    // the server's verdict on the LAST submit. This one is about the order the
+    // user is still typing.
+    final localRefusal = _localRefusal(l, state);
     // CR069 G3: the Sharia disclosure rides on BOTH outcomes. A screened-out
     // ticker is refused and its verdict sits inside the refusal panel below; a
     // pass or an unknown is PERMITTED, so its verdict has no refusal to ride on
@@ -533,6 +648,73 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
               decoration: _decoration(
                   label: l.tradeTicketLabelQuantity, hint: l.tradeTicketHintQty),
             ),
+            // CR170 — the order-type controls appear ONLY when this backend
+            // actually has a resting-order book. Against a pre-CR170 server
+            // `order_type=limit` is accepted and filled instantly at the price
+            // typed, so offering the picker there would be a control that
+            // quietly does something else with the user's money (CR040). See
+            // `SimState.restingOrdersSupported`.
+            if (state.restingOrdersSupported) ...[
+              const SizedBox(height: AmiSpacing.m),
+              _PillToggle<SimOrderType>(
+                label: l.tradeTicketLabelOrderType,
+                value: _orderType,
+                accent: AmiColors.hexCyan,
+                options: [
+                  (SimOrderType.market, l.tradeTicketOrderMarket),
+                  (SimOrderType.limit, l.tradeTicketOrderLimit),
+                  (SimOrderType.stop, l.tradeTicketOrderStop),
+                  (SimOrderType.stopLimit, l.tradeTicketOrderStopLimit),
+                ],
+                onChange: (v) => setState(() => _orderType = v),
+              ),
+              if (_orderType.needsTriggerPrice) ...[
+                const SizedBox(height: AmiSpacing.m),
+                TextField(
+                  controller: _trigger,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  style: AmiTypography.body,
+                  decoration: _decoration(
+                      label: l.tradeTicketLabelTrigger,
+                      hint: l.tradeTicketHintPrice),
+                ),
+              ],
+              if (_orderType.needsLimitPrice) ...[
+                const SizedBox(height: AmiSpacing.m),
+                TextField(
+                  controller: _limit,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  style: AmiTypography.body,
+                  decoration: _decoration(
+                      label: l.tradeTicketLabelLimit,
+                      hint: l.tradeTicketHintPrice),
+                ),
+              ],
+              if (_orderType.canRest) ...[
+                const SizedBox(height: AmiSpacing.m),
+                _PillToggle<SimOrderTif>(
+                  label: l.tradeTicketLabelTif,
+                  value: _tif,
+                  accent: AmiColors.hexAmber,
+                  options: [
+                    (SimOrderTif.day, l.tradeTicketTifDay),
+                    (SimOrderTif.gtd30, l.tradeTicketTif30),
+                    (SimOrderTif.gtd90, l.tradeTicketTif90),
+                  ],
+                  onChange: (v) => setState(() => _tif = v),
+                ),
+              ],
+              _OrderIntentHint(
+                side: _side,
+                ticker: _quoteTicker ?? _ticker.text.trim().toUpperCase(),
+                orderType: _orderType,
+                triggerPrice: double.tryParse(_trigger.text.trim()),
+                limitPrice: double.tryParse(_limit.text.trim()),
+                mark: _quote?.price,
+              ),
+            ],
             const SizedBox(height: AmiSpacing.m),
             Row(
               children: [
@@ -567,6 +749,30 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
               decoration: _decoration(
                   label: l.tradeTicketLabelHorizon, hint: l.tradeTicketHintOptional),
             ),
+            if (localRefusal != null) ...[
+              const SizedBox(height: AmiSpacing.m),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AmiSpacing.m),
+                decoration: BoxDecoration(
+                  color: AmiColors.slate900,
+                  borderRadius: BorderRadius.circular(AmiRadii.card),
+                  border: Border.all(color: AmiColors.hexAmber),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.block, size: 18, color: AmiColors.hexAmber),
+                    const SizedBox(width: AmiSpacing.s),
+                    Expanded(
+                      child: Text(localRefusal,
+                          style: AmiTypography.caption
+                              .copyWith(color: AmiColors.hexAmber)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: AmiSpacing.l),
             SizedBox(
               width: double.infinity,
@@ -587,7 +793,11 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                 label: Text(state.submitting
                     ? l.tradeTicketSubmitting
                     : l.tradeTicketSubmit),
-                onPressed: (state.submitting || _validator.checking) ? null : _submit,
+                onPressed: (state.submitting ||
+                        _validator.checking ||
+                        localRefusal != null)
+                    ? null
+                    : _submit,
               ),
             ),
             const SizedBox(height: AmiSpacing.xs),
@@ -665,6 +875,155 @@ class _SideToggle extends StatelessWidget {
     );
   }
 }
+
+/// CR170 §9 — the generalised pill row `_SideToggle` was the first instance of.
+/// The order-type and time-in-force pickers are the second and third, and three
+/// hand-copies of one control is how a design-system property (DEF146's single
+/// clip, most recently) ends up true of only some of them.
+class _PillToggle<T> extends StatelessWidget {
+  const _PillToggle({
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.accent,
+    required this.onChange,
+  });
+
+  final String label;
+  final T value;
+  final List<(T, String)> options;
+  final Color accent;
+  final ValueChanged<T> onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: AmiTypography.labelMono
+                .copyWith(fontSize: 10, color: AmiColors.textLow)),
+        const SizedBox(height: 6),
+        Container(
+          decoration: BoxDecoration(
+            color: AmiColors.slate900,
+            borderRadius: BorderRadius.circular(AmiRadii.card),
+            border: Border.all(color: AmiColors.slate700),
+          ),
+          child: Row(
+            children: [
+              for (final (v, text) in options)
+                Expanded(
+                  child: InkWell(
+                    onTap: () => onChange(v),
+                    borderRadius: BorderRadius.circular(AmiRadii.card),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: v == value
+                            ? accent.withValues(alpha: 0.2)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(AmiRadii.card),
+                      ),
+                      child: Text(
+                        text,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AmiTypography.labelMono.copyWith(
+                          fontSize: 10,
+                          color: v == value ? accent : AmiColors.textLow,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+
+/// CR170 §9 calls this the highest-value element in the feature, and the reason
+/// is behavioural rather than decorative: without it a resting order reads as a
+/// **broken button**. The user taps BUY, nothing appears in their holdings, and
+/// nothing on the screen said it would not.
+///
+/// It states what *this order* will do — order state — not how the simulator
+/// works. Saiful, 2026-08-11: *"we do not need to explain the simulation rules
+/// to the user. thats our internal decision."* So there is no note about polling
+/// cadence, fill-in-full or the pricing rule here, and there must not be one.
+///
+/// It renders **nothing** until it can say something true: no typed price, no
+/// quote, or an order type this build does not recognise all produce an empty
+/// box rather than a guess.
+class _OrderIntentHint extends StatelessWidget {
+  const _OrderIntentHint({
+    required this.side,
+    required this.ticker,
+    required this.orderType,
+    required this.triggerPrice,
+    required this.limitPrice,
+    required this.mark,
+  });
+
+  final String side;
+  final String ticker;
+  final SimOrderType orderType;
+  final double? triggerPrice;
+  final double? limitPrice;
+  final double? mark;
+
+  @override
+  Widget build(BuildContext context) {
+    if (orderType == SimOrderType.market) return const SizedBox.shrink();
+    final intent = predictIntent(
+      side: side,
+      orderType: orderType,
+      triggerPrice: triggerPrice,
+      limitPrice: limitPrice,
+      mark: mark,
+    );
+    if (intent == null) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context);
+    final named = namedPriceFor(orderType,
+        triggerPrice: triggerPrice, limitPrice: limitPrice)!;
+    final fillsNow = intent == OrderIntent.fillsNow;
+    final accent = fillsNow ? AmiColors.hexGreen : AmiColors.hexCyan;
+    final below = restsBelow(side: side, orderType: orderType);
+    return Padding(
+      padding: const EdgeInsets.only(top: AmiSpacing.s),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(fillsNow ? Icons.bolt : Icons.schedule, size: 16, color: accent),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              fillsNow
+                  ? l.tradeTicketHintFillsNow
+                  : (orderType == SimOrderType.stopLimit
+                      ? l.tradeTicketHintRestsStopLimit(
+                          ticker,
+                          named.toStringAsFixed(2),
+                          (limitPrice ?? 0).toStringAsFixed(2))
+                      : (below
+                          ? l.tradeTicketHintRestsBelow(
+                              ticker, named.toStringAsFixed(2))
+                          : l.tradeTicketHintRestsAbove(
+                              ticker, named.toStringAsFixed(2)))),
+              style: AmiTypography.caption.copyWith(color: accent),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 
 /// Inline chip under the ticker field — shows the live price, day-change
 /// %, and a LIVE / MOCK pill so the user has a price anchor when setting

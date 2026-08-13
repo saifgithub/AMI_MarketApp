@@ -39,6 +39,7 @@ import 'package:ami_trade/state/alpaca_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
+import 'package:ami_trade/widgets/sim/resting_orders_section.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/screens/you/you_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -229,6 +230,10 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
                 _PositionsTab(
                   holdings: p.holdings,
                   openTrades: openTrades,
+                  // CR170 — a user whose only activity is a resting order has
+                  // traded; telling them otherwise is a hint that contradicts
+                  // the section directly above it.
+                  hasRestingOrders: hasAnyRestingOrders(state),
                   onTradeTicket: () => TradeTicketSheet.show(context),
                 ),
                 _WatchlistTab(state: watchlist),
@@ -643,11 +648,13 @@ class _PositionsTab extends StatelessWidget {
   const _PositionsTab({
     required this.holdings,
     required this.openTrades,
+    required this.hasRestingOrders,
     required this.onTradeTicket,
   });
 
   final List<SimHolding> holdings;
   final List<SimTrade> openTrades;
+  final bool hasRestingOrders;
   final VoidCallback onTradeTicket;
 
   @override
@@ -667,7 +674,10 @@ class _PositionsTab extends StatelessWidget {
                 const PortfolioEquityChart(),
                 const _SectorAllocationSection(),
                 const PortfolioHealthCard(),
-                if (holdings.isEmpty && openTrades.isEmpty)
+                // Above holdings: a working order is the most time-sensitive
+                // thing on this screen.
+                const RestingOrdersSection(),
+                if (holdings.isEmpty && openTrades.isEmpty && !hasRestingOrders)
                   _NewTraderHint(onTradeTicket: onTradeTicket)
                 else ...[
                   const SizedBox(height: AmiSpacing.s),

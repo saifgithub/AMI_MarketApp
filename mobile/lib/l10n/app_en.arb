@@ -2506,6 +2506,177 @@
     "tradeTicketSideBuy": "BUY",
     "tradeTicketSideSell": "SELL",
     "tradeTicketFilled": "Filled: {side} {qty} {ticker} @ \\${price}",
+    "tradeTicketResting": "Resting: {side} {ticker} at ${price}",
+    "tradeTicketRefuseCrossZero": "You hold {held} {ticker}. Selling {qty} would close that position and open a short in one action — sell {held} to close, or place the short separately.",
+    "@tradeTicketRefuseCrossZero": {
+        "description": "CR171 refusal shown on the trade ticket when a sell quantity is larger than the holding but the holding is not zero. Splitting one action into a close plus a short makes every realised-P&L figure computed off those rows wrong, so the order is refused rather than split. Offers the exact quantity that would close instead.",
+        "placeholders": {
+            "held": { "type": "String" },
+            "ticker": { "type": "String" },
+            "qty": { "type": "String" }
+        }
+    },
+    "tradeTicketRefuseShortStop": "On a short, the stop belongs above your entry — a rising price is what goes against you.",
+    "@tradeTicketRefuseShortStop": {
+        "description": "CR171 refusal shown when a short entry carries a stop at or below the entry price. Such a stop cannot fire until the position has already gone the whole way against the user, which is the one outcome a stop exists to prevent."
+    },
+    "tradeTicketRefuseShortTarget": "On a short, the target belongs below your entry — you profit as the price falls.",
+    "@tradeTicketRefuseShortTarget": {
+        "description": "CR171 refusal shown when a short entry carries a target at or above the entry price. The mirror of tradeTicketRefuseShortStop."
+    },
+    "@tradeTicketResting": {
+        "description": "CR170 confirmation after placing an order that did NOT fill — it now waits for its price. Deliberately different in wording and colour from tradeTicketFilled: telling a user their order filled when it is still waiting is the failure this whole string exists to prevent. {price} is the price they named.",
+        "placeholders": {
+            "side": { "type": "String" },
+            "ticker": { "type": "String" },
+            "price": { "type": "String" }
+        }
+    },
+    "tradeTicketLabelOrderType": "ORDER TYPE",
+    "@tradeTicketLabelOrderType": {
+        "description": "CR170 trade-ticket field label above the market/limit/stop/stop-limit picker. Uppercase, mono."
+    },
+    "tradeTicketOrderMarket": "MARKET",
+    "@tradeTicketOrderMarket": {
+        "description": "CR170 order type: fills immediately at the current price. Uppercase, mono, must fit a quarter of the ticket width."
+    },
+    "tradeTicketOrderLimit": "LIMIT",
+    "@tradeTicketOrderLimit": {
+        "description": "CR170 order type: waits for the price the user names, or better. Uppercase, mono, must fit a quarter of the ticket width."
+    },
+    "tradeTicketOrderStop": "STOP",
+    "@tradeTicketOrderStop": {
+        "description": "CR170 order type: becomes a market order once the price is reached. Uppercase, mono, must fit a quarter of the ticket width."
+    },
+    "tradeTicketOrderStopLimit": "STOP LIMIT",
+    "@tradeTicketOrderStopLimit": {
+        "description": "CR170 order type: once the trigger is reached it becomes a limit order at a second price. Uppercase, mono, must fit a quarter of the ticket width."
+    },
+    "tradeTicketLabelTrigger": "TRIGGER PRICE",
+    "@tradeTicketLabelTrigger": {
+        "description": "CR170 trade-ticket field label: the price at which a stop or stop-limit order activates."
+    },
+    "tradeTicketLabelLimit": "LIMIT PRICE",
+    "@tradeTicketLabelLimit": {
+        "description": "CR170 trade-ticket field label: the price the user is willing to pay or accept."
+    },
+    "tradeTicketHintPrice": "Price",
+    "@tradeTicketHintPrice": {
+        "description": "CR170 placeholder inside the trigger/limit price fields."
+    },
+    "tradeTicketLabelTif": "GOOD FOR",
+    "@tradeTicketLabelTif": {
+        "description": "CR170 trade-ticket field label above the time-in-force picker — how long the order waits before expiring. Uppercase, mono."
+    },
+    "tradeTicketTifDay": "TODAY",
+    "@tradeTicketTifDay": {
+        "description": "CR170 time in force: expires at the close of the market's trading session, not the user's local calendar day. Uppercase, mono, one third of the ticket width."
+    },
+    "tradeTicketTif30": "30 DAYS",
+    "@tradeTicketTif30": {
+        "description": "CR170 time in force: expires about 30 days out, at a session close. Uppercase, mono, one third of the ticket width."
+    },
+    "tradeTicketTif90": "90 DAYS",
+    "@tradeTicketTif90": {
+        "description": "CR170 time in force: expires about 90 days out, at a session close. Uppercase, mono, one third of the ticket width."
+    },
+    "tradeTicketHintFillsNow": "Fills now — this price is already through the market.",
+    "@tradeTicketHintFillsNow": {
+        "description": "CR170 live hint under the trade ticket when the price the user typed is already reached, so the order will fill immediately rather than wait."
+    },
+    "tradeTicketHintRestsBelow": "Waits until {ticker} falls to ${price}.",
+    "@tradeTicketHintRestsBelow": {
+        "description": "CR170 live hint under the trade ticket for an order that waits for the price to come DOWN (a buy limit, or a sell stop). Says what this order will do — never how the simulator works.",
+        "placeholders": {
+            "ticker": { "type": "String" },
+            "price": { "type": "String" }
+        }
+    },
+    "tradeTicketHintRestsAbove": "Waits until {ticker} reaches ${price}.",
+    "@tradeTicketHintRestsAbove": {
+        "description": "CR170 live hint under the trade ticket for an order that waits for the price to come UP (a sell limit, or a buy stop).",
+        "placeholders": {
+            "ticker": { "type": "String" },
+            "price": { "type": "String" }
+        }
+    },
+    "tradeTicketHintRestsStopLimit": "Waits until {ticker} reaches ${trigger}, then becomes a limit order at ${limit}.",
+    "@tradeTicketHintRestsStopLimit": {
+        "description": "CR170 live hint for a stop-limit order, which is two-phase. Stating both prices matters: if the price gaps past the limit the order can trigger and still never fill, which is the classic stop-limit surprise.",
+        "placeholders": {
+            "ticker": { "type": "String" },
+            "trigger": { "type": "String" },
+            "limit": { "type": "String" }
+        }
+    },
+    "restingOrdersHeading": "WAITING ORDERS",
+    "@restingOrdersHeading": {
+        "description": "CR170 portfolio section heading above orders that have not filled yet. Uppercase, mono."
+    },
+    "restingOrdersRecentHeading": "RECENTLY CLOSED ORDERS",
+    "@restingOrdersRecentHeading": {
+        "description": "CR170 portfolio section heading above orders from the last day that filled, expired, were cancelled or were refused. Uppercase, mono."
+    },
+    "restingOrderWaitingFirstCheck": "Waiting for the first price check",
+    "@restingOrderWaitingFirstCheck": {
+        "description": "CR170 shown on a resting order before any price check has run, in place of the distance-to-trigger figure. Truthful rather than showing a zero."
+    },
+    "restingOrderAway": "{pct}% away",
+    "@restingOrderAway": {
+        "description": "CR170 how far the last observed price sits from the price this order is waiting for.",
+        "placeholders": {
+            "pct": { "type": "String" }
+        }
+    },
+    "restingOrderCancelTitle": "Cancel this order?",
+    "@restingOrderCancelTitle": {
+        "description": "CR170 confirm-dialog title before cancelling a waiting order."
+    },
+    "restingOrderCancelBody": "{side} {qty} {ticker} at ${price} will stop waiting and will not fill.",
+    "@restingOrderCancelBody": {
+        "description": "CR170 confirm-dialog body before cancelling a waiting order. Names the order so the user cannot cancel the wrong one from a list.",
+        "placeholders": {
+            "side": { "type": "String" },
+            "qty": { "type": "String" },
+            "ticker": { "type": "String" },
+            "price": { "type": "String" }
+        }
+    },
+    "restingOrderCancelConfirm": "CANCEL ORDER",
+    "@restingOrderCancelConfirm": {
+        "description": "CR170 confirm-dialog primary action. Uppercase, mono."
+    },
+    "restingOrderKeep": "KEEP WAITING",
+    "@restingOrderKeep": {
+        "description": "CR170 confirm-dialog dismiss action — leaves the order in place. Uppercase, mono."
+    },
+    "restingOrderCancelled": "Order cancelled.",
+    "@restingOrderCancelled": {
+        "description": "CR170 toast after the server confirms a cancel."
+    },
+    "restingOrderCancelRaced": "Too late — that order already {state}.",
+    "@restingOrderCancelRaced": {
+        "description": "CR170 toast when a cancel loses a race with the background sweep, so the server refused it. {state} is the state the order actually ended in (filled, expired, rejected). Reporting a success we did not get is the specific defect this string prevents.",
+        "placeholders": {
+            "state": { "type": "String" }
+        }
+    },
+    "restingOrderStateWorking": "waiting",
+    "@restingOrderStateWorking": { "description": "CR170 resting-order state: resting, its price not yet reached. Lowercase — appears mid-sentence and as a chip." },
+    "restingOrderStateTriggered": "triggered",
+    "@restingOrderStateTriggered": { "description": "CR170 resting-order state: a stop-limit whose trigger fired; now waiting as a limit order. Lowercase." },
+    "restingOrderStateFilling": "filling",
+    "@restingOrderStateFilling": { "description": "CR170 resting-order state: being filled right now. Lowercase." },
+    "restingOrderStateFilled": "filled",
+    "@restingOrderStateFilled": { "description": "CR170 resting-order state: done, a trade exists. Lowercase." },
+    "restingOrderStateCancelled": "cancelled",
+    "@restingOrderStateCancelled": { "description": "CR170 resting-order state: the USER cancelled it. Lowercase." },
+    "restingOrderStateExpired": "expired",
+    "@restingOrderStateExpired": { "description": "CR170 resting-order state: its time in force ran out before the price was reached. Lowercase." },
+    "restingOrderStateRejected": "refused",
+    "@restingOrderStateRejected": { "description": "CR170 resting-order state: the system refused it at fill time — the reason is shown alongside. Lowercase." },
+    "restingOrderStateUnknown": "unrecognised",
+    "@restingOrderStateUnknown": { "description": "CR170 resting-order state this build of the app does not know, from a newer server. Shown as its own thing rather than folded into 'waiting', because an order shown as live after the server retired it is the one error a user cannot recover from. Lowercase." },
     "@tradeTicketFilled": {
         "description": "Snackbar after a trade fills. {side}=BUY/SELL, {qty}=quantity, {ticker}=symbol, {price}=entry price formatted to 2dp.",
         "placeholders": {

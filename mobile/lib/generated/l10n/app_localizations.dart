@@ -3991,6 +3991,236 @@ abstract class AppLocalizations {
   String tradeTicketFilled(
       String side, String qty, String ticker, String price);
 
+  /// CR170 confirmation after placing an order that did NOT fill — it now waits for its price. Deliberately different in wording and colour from tradeTicketFilled: telling a user their order filled when it is still waiting is the failure this whole string exists to prevent. {price} is the price they named.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting: {side} {ticker} at \${price}'**
+  String tradeTicketResting(String side, String ticker, String price);
+
+  /// CR171 refusal shown on the trade ticket when a sell quantity is larger than the holding but the holding is not zero. Splitting one action into a close plus a short makes every realised-P&L figure computed off those rows wrong, so the order is refused rather than split. Offers the exact quantity that would close instead.
+  ///
+  /// In en, this message translates to:
+  /// **'You hold {held} {ticker}. Selling {qty} would close that position and open a short in one action — sell {held} to close, or place the short separately.'**
+  String tradeTicketRefuseCrossZero(String held, String ticker, String qty);
+
+  /// CR171 refusal shown when a short entry carries a stop at or below the entry price. Such a stop cannot fire until the position has already gone the whole way against the user, which is the one outcome a stop exists to prevent.
+  ///
+  /// In en, this message translates to:
+  /// **'On a short, the stop belongs above your entry — a rising price is what goes against you.'**
+  String get tradeTicketRefuseShortStop;
+
+  /// CR171 refusal shown when a short entry carries a target at or above the entry price. The mirror of tradeTicketRefuseShortStop.
+  ///
+  /// In en, this message translates to:
+  /// **'On a short, the target belongs below your entry — you profit as the price falls.'**
+  String get tradeTicketRefuseShortTarget;
+
+  /// CR170 trade-ticket field label above the market/limit/stop/stop-limit picker. Uppercase, mono.
+  ///
+  /// In en, this message translates to:
+  /// **'ORDER TYPE'**
+  String get tradeTicketLabelOrderType;
+
+  /// CR170 order type: fills immediately at the current price. Uppercase, mono, must fit a quarter of the ticket width.
+  ///
+  /// In en, this message translates to:
+  /// **'MARKET'**
+  String get tradeTicketOrderMarket;
+
+  /// CR170 order type: waits for the price the user names, or better. Uppercase, mono, must fit a quarter of the ticket width.
+  ///
+  /// In en, this message translates to:
+  /// **'LIMIT'**
+  String get tradeTicketOrderLimit;
+
+  /// CR170 order type: becomes a market order once the price is reached. Uppercase, mono, must fit a quarter of the ticket width.
+  ///
+  /// In en, this message translates to:
+  /// **'STOP'**
+  String get tradeTicketOrderStop;
+
+  /// CR170 order type: once the trigger is reached it becomes a limit order at a second price. Uppercase, mono, must fit a quarter of the ticket width.
+  ///
+  /// In en, this message translates to:
+  /// **'STOP LIMIT'**
+  String get tradeTicketOrderStopLimit;
+
+  /// CR170 trade-ticket field label: the price at which a stop or stop-limit order activates.
+  ///
+  /// In en, this message translates to:
+  /// **'TRIGGER PRICE'**
+  String get tradeTicketLabelTrigger;
+
+  /// CR170 trade-ticket field label: the price the user is willing to pay or accept.
+  ///
+  /// In en, this message translates to:
+  /// **'LIMIT PRICE'**
+  String get tradeTicketLabelLimit;
+
+  /// CR170 placeholder inside the trigger/limit price fields.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get tradeTicketHintPrice;
+
+  /// CR170 trade-ticket field label above the time-in-force picker — how long the order waits before expiring. Uppercase, mono.
+  ///
+  /// In en, this message translates to:
+  /// **'GOOD FOR'**
+  String get tradeTicketLabelTif;
+
+  /// CR170 time in force: expires at the close of the market's trading session, not the user's local calendar day. Uppercase, mono, one third of the ticket width.
+  ///
+  /// In en, this message translates to:
+  /// **'TODAY'**
+  String get tradeTicketTifDay;
+
+  /// CR170 time in force: expires about 30 days out, at a session close. Uppercase, mono, one third of the ticket width.
+  ///
+  /// In en, this message translates to:
+  /// **'30 DAYS'**
+  String get tradeTicketTif30;
+
+  /// CR170 time in force: expires about 90 days out, at a session close. Uppercase, mono, one third of the ticket width.
+  ///
+  /// In en, this message translates to:
+  /// **'90 DAYS'**
+  String get tradeTicketTif90;
+
+  /// CR170 live hint under the trade ticket when the price the user typed is already reached, so the order will fill immediately rather than wait.
+  ///
+  /// In en, this message translates to:
+  /// **'Fills now — this price is already through the market.'**
+  String get tradeTicketHintFillsNow;
+
+  /// CR170 live hint under the trade ticket for an order that waits for the price to come DOWN (a buy limit, or a sell stop). Says what this order will do — never how the simulator works.
+  ///
+  /// In en, this message translates to:
+  /// **'Waits until {ticker} falls to \${price}.'**
+  String tradeTicketHintRestsBelow(String ticker, String price);
+
+  /// CR170 live hint under the trade ticket for an order that waits for the price to come UP (a sell limit, or a buy stop).
+  ///
+  /// In en, this message translates to:
+  /// **'Waits until {ticker} reaches \${price}.'**
+  String tradeTicketHintRestsAbove(String ticker, String price);
+
+  /// CR170 live hint for a stop-limit order, which is two-phase. Stating both prices matters: if the price gaps past the limit the order can trigger and still never fill, which is the classic stop-limit surprise.
+  ///
+  /// In en, this message translates to:
+  /// **'Waits until {ticker} reaches \${trigger}, then becomes a limit order at \${limit}.'**
+  String tradeTicketHintRestsStopLimit(
+      String ticker, String trigger, String limit);
+
+  /// CR170 portfolio section heading above orders that have not filled yet. Uppercase, mono.
+  ///
+  /// In en, this message translates to:
+  /// **'WAITING ORDERS'**
+  String get restingOrdersHeading;
+
+  /// CR170 portfolio section heading above orders from the last day that filled, expired, were cancelled or were refused. Uppercase, mono.
+  ///
+  /// In en, this message translates to:
+  /// **'RECENTLY CLOSED ORDERS'**
+  String get restingOrdersRecentHeading;
+
+  /// CR170 shown on a resting order before any price check has run, in place of the distance-to-trigger figure. Truthful rather than showing a zero.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the first price check'**
+  String get restingOrderWaitingFirstCheck;
+
+  /// CR170 how far the last observed price sits from the price this order is waiting for.
+  ///
+  /// In en, this message translates to:
+  /// **'{pct}% away'**
+  String restingOrderAway(String pct);
+
+  /// CR170 confirm-dialog title before cancelling a waiting order.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel this order?'**
+  String get restingOrderCancelTitle;
+
+  /// CR170 confirm-dialog body before cancelling a waiting order. Names the order so the user cannot cancel the wrong one from a list.
+  ///
+  /// In en, this message translates to:
+  /// **'{side} {qty} {ticker} at \${price} will stop waiting and will not fill.'**
+  String restingOrderCancelBody(
+      String side, String qty, String ticker, String price);
+
+  /// CR170 confirm-dialog primary action. Uppercase, mono.
+  ///
+  /// In en, this message translates to:
+  /// **'CANCEL ORDER'**
+  String get restingOrderCancelConfirm;
+
+  /// CR170 confirm-dialog dismiss action — leaves the order in place. Uppercase, mono.
+  ///
+  /// In en, this message translates to:
+  /// **'KEEP WAITING'**
+  String get restingOrderKeep;
+
+  /// CR170 toast after the server confirms a cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Order cancelled.'**
+  String get restingOrderCancelled;
+
+  /// CR170 toast when a cancel loses a race with the background sweep, so the server refused it. {state} is the state the order actually ended in (filled, expired, rejected). Reporting a success we did not get is the specific defect this string prevents.
+  ///
+  /// In en, this message translates to:
+  /// **'Too late — that order already {state}.'**
+  String restingOrderCancelRaced(String state);
+
+  /// CR170 resting-order state: resting, its price not yet reached. Lowercase — appears mid-sentence and as a chip.
+  ///
+  /// In en, this message translates to:
+  /// **'waiting'**
+  String get restingOrderStateWorking;
+
+  /// CR170 resting-order state: a stop-limit whose trigger fired; now waiting as a limit order. Lowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'triggered'**
+  String get restingOrderStateTriggered;
+
+  /// CR170 resting-order state: being filled right now. Lowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'filling'**
+  String get restingOrderStateFilling;
+
+  /// CR170 resting-order state: done, a trade exists. Lowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'filled'**
+  String get restingOrderStateFilled;
+
+  /// CR170 resting-order state: the USER cancelled it. Lowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'cancelled'**
+  String get restingOrderStateCancelled;
+
+  /// CR170 resting-order state: its time in force ran out before the price was reached. Lowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'expired'**
+  String get restingOrderStateExpired;
+
+  /// CR170 resting-order state: the system refused it at fill time — the reason is shown alongside. Lowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'refused'**
+  String get restingOrderStateRejected;
+
+  /// CR170 resting-order state this build of the app does not know, from a newer server. Shown as its own thing rather than folded into 'waiting', because an order shown as live after the server retired it is the one error a user cannot recover from. Lowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'unrecognised'**
+  String get restingOrderStateUnknown;
+
   /// Label above a Concierge chat bubble in the conversation surfaces (Onboarding, 1-on-1).
   ///
   /// In en, this message translates to:

@@ -3,6 +3,7 @@
 library;
 
 import 'package:ami_trade/models/sharia.dart';
+import 'package:ami_trade/models/sim_resting_order.dart';
 
 class SimHolding {
   const SimHolding({
@@ -277,12 +278,25 @@ class SimSubmitResult {
     this.violations = const [],
     this.blockedBy,
     this.shariaVerdict,
+    this.resting = false,
+    this.order,
   });
 
   final bool ok;
   final SimTrade? trade;
   final List<String> violations;
   final String? blockedBy;
+
+  /// CR170 — the order rested instead of filling. Read from the response's own
+  /// `resting` field on **every** branch, never inferred from which of
+  /// `trade`/`order` is null: the games lane learned that twice, and an
+  /// inference is a second source of truth for a fact the server already
+  /// states. Defaults false, so a pre-CR170 backend reads exactly as it always
+  /// did.
+  final bool resting;
+
+  /// The book row, when [resting].
+  final SimRestingOrder? order;
 
   /// CR069: the sourced Sharia verdict with its provenance, when the halal
   /// flag is on. Read on BOTH branches — a permitted PASS/UNKNOWN trade carries
@@ -299,9 +313,19 @@ class SimSubmitResult {
     final verdict = ShariaVerdict.fromJson(
         (compliance['sharia_verdict'] as Map?)?.cast<String, dynamic>());
     if ((j['ok'] as bool?) == true) {
+      // CR170 — `trade` is null on a resting response, and the cast below used
+      // to be unconditional: `SimTrade.fromJson(j['trade'] as Map<…>)` throws
+      // on null before the sheet's own `result.trade!` is ever reached. So the
+      // crash the CR locates at `trade_ticket_sheet.dart:247` actually lands
+      // one layer earlier, inside the parser, where it surfaces as a generic
+      // "couldn't place that trade" over an order the server *did* accept.
+      final tradeJson = (j['trade'] as Map?)?.cast<String, dynamic>();
+      final orderJson = (j['order'] as Map?)?.cast<String, dynamic>();
       return SimSubmitResult(
         ok: true,
-        trade: SimTrade.fromJson(j['trade'] as Map<String, dynamic>),
+        trade: tradeJson == null ? null : SimTrade.fromJson(tradeJson),
+        resting: (j['resting'] as bool?) ?? false,
+        order: orderJson == null ? null : SimRestingOrder.fromJson(orderJson),
         shariaVerdict: verdict,
       );
     }

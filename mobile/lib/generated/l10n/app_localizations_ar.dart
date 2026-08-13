@@ -2375,6 +2375,142 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String tradeTicketResting(String side, String ticker, String price) {
+    return 'Resting: $side $ticker at \$$price';
+  }
+
+  @override
+  String tradeTicketRefuseCrossZero(String held, String ticker, String qty) {
+    return 'You hold $held $ticker. Selling $qty would close that position and open a short in one action — sell $held to close, or place the short separately.';
+  }
+
+  @override
+  String get tradeTicketRefuseShortStop =>
+      'On a short, the stop belongs above your entry — a rising price is what goes against you.';
+
+  @override
+  String get tradeTicketRefuseShortTarget =>
+      'On a short, the target belongs below your entry — you profit as the price falls.';
+
+  @override
+  String get tradeTicketLabelOrderType => 'ORDER TYPE';
+
+  @override
+  String get tradeTicketOrderMarket => 'MARKET';
+
+  @override
+  String get tradeTicketOrderLimit => 'LIMIT';
+
+  @override
+  String get tradeTicketOrderStop => 'STOP';
+
+  @override
+  String get tradeTicketOrderStopLimit => 'STOP LIMIT';
+
+  @override
+  String get tradeTicketLabelTrigger => 'TRIGGER PRICE';
+
+  @override
+  String get tradeTicketLabelLimit => 'LIMIT PRICE';
+
+  @override
+  String get tradeTicketHintPrice => 'Price';
+
+  @override
+  String get tradeTicketLabelTif => 'GOOD FOR';
+
+  @override
+  String get tradeTicketTifDay => 'TODAY';
+
+  @override
+  String get tradeTicketTif30 => '30 DAYS';
+
+  @override
+  String get tradeTicketTif90 => '90 DAYS';
+
+  @override
+  String get tradeTicketHintFillsNow =>
+      'Fills now — this price is already through the market.';
+
+  @override
+  String tradeTicketHintRestsBelow(String ticker, String price) {
+    return 'Waits until $ticker falls to \$$price.';
+  }
+
+  @override
+  String tradeTicketHintRestsAbove(String ticker, String price) {
+    return 'Waits until $ticker reaches \$$price.';
+  }
+
+  @override
+  String tradeTicketHintRestsStopLimit(
+      String ticker, String trigger, String limit) {
+    return 'Waits until $ticker reaches \$$trigger, then becomes a limit order at \$$limit.';
+  }
+
+  @override
+  String get restingOrdersHeading => 'WAITING ORDERS';
+
+  @override
+  String get restingOrdersRecentHeading => 'RECENTLY CLOSED ORDERS';
+
+  @override
+  String get restingOrderWaitingFirstCheck =>
+      'Waiting for the first price check';
+
+  @override
+  String restingOrderAway(String pct) {
+    return '$pct% away';
+  }
+
+  @override
+  String get restingOrderCancelTitle => 'Cancel this order?';
+
+  @override
+  String restingOrderCancelBody(
+      String side, String qty, String ticker, String price) {
+    return '$side $qty $ticker at \$$price will stop waiting and will not fill.';
+  }
+
+  @override
+  String get restingOrderCancelConfirm => 'CANCEL ORDER';
+
+  @override
+  String get restingOrderKeep => 'KEEP WAITING';
+
+  @override
+  String get restingOrderCancelled => 'Order cancelled.';
+
+  @override
+  String restingOrderCancelRaced(String state) {
+    return 'Too late — that order already $state.';
+  }
+
+  @override
+  String get restingOrderStateWorking => 'waiting';
+
+  @override
+  String get restingOrderStateTriggered => 'triggered';
+
+  @override
+  String get restingOrderStateFilling => 'filling';
+
+  @override
+  String get restingOrderStateFilled => 'filled';
+
+  @override
+  String get restingOrderStateCancelled => 'cancelled';
+
+  @override
+  String get restingOrderStateExpired => 'expired';
+
+  @override
+  String get restingOrderStateRejected => 'refused';
+
+  @override
+  String get restingOrderStateUnknown => 'unrecognised';
+
+  @override
   String get chatBubbleConcierge => 'الكونسيرج';
 
   @override
