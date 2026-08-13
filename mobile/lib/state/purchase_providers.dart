@@ -11,17 +11,35 @@
 ///     authority, the store result only says "go re-read".
 library;
 
+import 'package:ami_trade/services/billing/disabled_purchase_service.dart';
 import 'package:ami_trade/services/billing/purchase_models.dart';
 import 'package:ami_trade/services/billing/purchase_service.dart';
-import 'package:ami_trade/services/billing/revenuecat_purchase_service.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
-import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+// ─── DEF282 — BILLING IS OFF ON PURPOSE ──────────────────────────────────────
+// RevenueCat calls `fatalError` by design when configured with a Test Store
+// key (`test_…`) in a non-DEBUG build, and both our keys are `test_…` while
+// every build that reaches a device is a release build. The app was killed the
+// first time any paywall opened. See disabled_purchase_service.dart for the
+// vendored source of the crash.
+//
+// TO RE-ENABLE, once a real `appl_…`/`goog_…` key is in `infra/alpha.env`:
+//
+//     import 'package:ami_trade/services/billing/revenuecat_purchase_service.dart';
+//     import 'package:ami_trade/state/onboarding_providers.dart';   // apiClientProvider
+//
+//     final purchaseServiceProvider = Provider<PurchaseService>((ref) {
+//       final api = ref.watch(apiClientProvider);
+//       return RevenueCatPurchaseService(api: api);
+//     });
+//
+// Both imports go with it — nothing else in the billing layer was changed, and
+// revenuecat_purchase_service.dart is left intact rather than deleted.
+// ─────────────────────────────────────────────────────────────────────────────
 final purchaseServiceProvider = Provider<PurchaseService>((ref) {
-  final api = ref.watch(apiClientProvider);
-  return RevenueCatPurchaseService(api: api);
+  return const DisabledPurchaseService();
 });
 
 /// The current live offering. `null` ⇒ not configured yet (no SDK key / no
