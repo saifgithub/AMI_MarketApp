@@ -12,7 +12,6 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/sim_resting_order.dart';
-import 'package:ami_trade/features/sim/order_pricing.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/services/api/api_client.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
