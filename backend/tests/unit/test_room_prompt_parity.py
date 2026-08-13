@@ -63,9 +63,37 @@ def test_pm_prompt_offers_at_least_the_core_actions(base_mandate):
     parity result means 'all understood', never 'found nothing'."""
     tokens = _offered_action_tokens(_pm_system_prompt(base_mandate))
     assert {"APPROVE", "PASS"} <= tokens
-    # The base PM profile still advertises the modify form — the exact token
-    # that broke DEF067. If this ever disappears, revisit the profile too.
-    assert any("MODIFY" in t for t in tokens)
+    # CR179 Leg 1 (CR156) — this canary used to read:
+    #
+    #     # The base PM profile still advertises the modify form — the exact
+    #     # token that broke DEF067. If this ever disappears, revisit the
+    #     # profile too.
+    #     assert any("MODIFY" in t for t in tokens)
+    #
+    # It was a TRIPWIRE, not a requirement: its own comment asked whoever
+    # removed the token to revisit the profile deliberately. That is what
+    # happened. The PM's action vocabulary existed in four mutually
+    # inconsistent forms — portfolio_manager.md:32 (APPROVE/PASS/
+    # MODIFY-AND-APPROVE), :39 (APPROVE|REJECT|MODIFY-AND-APPROVE),
+    # overlay_generator.py (APPROVE/PASS/MODIFY-AND-APPROVE) and
+    # _PM_VERDICT_FORMAT ("there are exactly two") — reconciled by a REPLACES
+    # sentence that only exists in the Room, leaving REJECT operative on the
+    # 1-on-1 surface where nothing parses it. All four now say APPROVE or PASS.
+    #
+    # Inverted rather than deleted, because the absence is the thing worth
+    # guarding now: DEF067's lesson is that an offered token the parser handles
+    # differently than the writer intended is a live defect, and MODIFY is
+    # exactly that — the parser coerces it to APPROVE (verified:
+    # _normalize_pm_action("MODIFY") == "APPROVE"), so a PM meaning "modify"
+    # silently gets an approval at its own numbers.
+    assert not any("MODIFY" in t for t in tokens), (
+        f"the PM prompt offers a modify token again: {sorted(tokens)}. The parser "
+        "coerces it to APPROVE, so it does not mean what the writer thinks."
+    )
+    assert "REJECT" not in tokens, (
+        "REJECT is offered again; the parser maps it to PASS, and the mobile "
+        "Verdict Board paints the two differently"
+    )
 
 
 def test_every_offered_pm_action_is_understood_by_the_parser(base_mandate):

@@ -24,7 +24,9 @@ In 1-on-1, structure your answer in 3 parts. In the Room, follow the format inst
 
 **1. Points of agreement.** What do Bull and Bear actually share?
 **2. Points of dispute.** Where do they diverge, and on what dimension (timeframe, magnitude, probability)?
-**3. Recommended stance.** Lean long / lean short / pass / wait. With reasoning tied to the user's mandate.
+**3. Recommended stance.** Lean long / pass / wait. With reasoning tied to the user's mandate.
+There is no short option: the simulator rejects any sell beyond what is held, and the
+mandate carries long-only. "Avoid" is how a negative view is expressed.
 
 ## You DO NOT
 

@@ -23,7 +23,10 @@ Synthesize the two extremes. Propose a middle-path position that respects the us
 - Land on a specific middle, and name what you are splitting the difference between
 - State where you agree with each (Aggressive on conviction, Conservative on tail risk)
 - Identify *inconsistencies* between the two that the data doesn't resolve — surface them honestly
-- Propose specific compromise: size, entry, stop, hedge
+- Propose a specific compromise in the terms this simulator actually has: size
+  as a % of portfolio, entry, and stop distance. There are no options and no
+  hedging instruments — a "hedge" here means a smaller size or a tighter stop,
+  so say which
 
 ## You DO NOT
 

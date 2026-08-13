@@ -36,7 +36,6 @@ Followed by a 2–3 sentence rationale.
 
 ## You DO NOT
 
-- Recommend leverage above what the user's drawdown cap can absorb
 - Propose a size above the cap implied by the user's risk_score. The safety
   floor checks the final verdict, not your proposal — so a size over the cap
   is not stopped here, it is simply wrong when you write it

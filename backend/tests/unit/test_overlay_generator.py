@@ -34,10 +34,31 @@ def test_long_only_flag_changes_bear_framing(base_mandate: Mandate):
     assert "Do NOT propose shorts" in overlay or "avoid" in overlay.lower()
 
 
-def test_long_only_off_allows_shorts_in_bear(aggressive_mandate: Mandate):
-    # aggressive_mandate has long_only=False
+def test_long_only_off_still_does_not_offer_shorts_in_bear(aggressive_mandate: Mandate):
+    """CR179 Leg 1 (CR150 Tier C) — INVERTED, because the old assertion was
+    false about production.
+
+    It read:
+
+        # aggressive_mandate has long_only=False
+        assert "Explicit short recommendations allowed" in overlay or "shorts" in overlay.lower()
+
+    and passed either way, because the substring "shorts" also appears in the
+    LONG-ONLY branch's own "Do NOT propose shorts" — so it could not have
+    distinguished the two branches even if the copy had been right.
+
+    The copy was not right. `sim_engine`'s SELL path rejects any quantity beyond
+    what is held with `blocked_by="long_only"` and **no reference to
+    `mandate.compliance.long_only`** (app/services/sim_engine.py:848-856,
+    :1346). Shorting is unavailable regardless of the flag. Worse, the branch is
+    reachable by accident: `concierge_engine._parse_constraints` leaves
+    `long_only` False by OMISSION, so a user who never asked to short could be
+    handed a Bear that offers it — advice the engine then refuses, which is
+    CR040's degrade-loudly failure aimed at the user instead of the operator.
+    """
     overlay = generate_overlay(AgentId.BEAR_RESEARCHER, aggressive_mandate)
-    assert "Explicit short recommendations allowed" in overlay or "shorts" in overlay.lower()
+    assert "Shorting is not available in this simulator" in overlay
+    assert "Explicit short recommendations allowed" not in overlay
 
 
 def test_max_drawdown_appears_in_aggressive_overlay(base_mandate: Mandate):

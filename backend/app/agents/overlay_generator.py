@@ -87,8 +87,8 @@ def _mandate_common_block(
 - Max acceptable drawdown: {mandate.max_drawdown_pct}% — a PORTFOLIO-level cap on \
 total drawdown, NOT a per-trade stop budget. A single position of size P% (of \
 portfolio) with a stop S% below entry contributes only about P×S/100 percentage \
-points to portfolio drawdown (e.g. 5% size, 20% stop → 1.0 pt, i.e. 1/30th of a \
-30% cap). Do not compare a stop's distance directly against this cap.
+points to portfolio drawdown (e.g. 5% size, 20% stop → 1.0 pt, i.e. 1/{mandate.max_drawdown_pct} \
+of your {mandate.max_drawdown_pct}% cap). Do not compare a stop's distance directly against this cap.
 - Single-name position-size cap: {_max_position_pct(mandate)}% of portfolio in any \
 one name — the SAME ceiling the Portfolio Manager clamps every trade to (CR101).
 - Sector-concentration cap: {_sector_cap_pct(mandate)}% of portfolio in any one \
@@ -235,7 +235,13 @@ def _horizon_label(h: Horizon) -> str:
 
 def _tone_for_learning_style(style: LearningStyle) -> str:
     return {
-        LearningStyle.QUICK: "terse, tabular, declarative — minimise prose",
+        # CR179 Leg 1 — "tabular" contradicted the Room's own format block
+        # ("Plain text otherwise — no headings, no tables", room_prompts.py:312)
+        # in every Room prompt this tone reached. Every CR145–CR156 row declared
+        # it out of scope as "CR145's", and CR145 Tier B shipped without it, so
+        # it sat live and unowned. The intent — terse, declarative, minimal
+        # prose — survives; only the format instruction the Room forbids is gone.
+        LearningStyle.QUICK: "terse, declarative — short lines, minimise prose",
         LearningStyle.STORY: "narrative, examples, analogies",
         LearningStyle.VISUAL: "describe charts/diagrams that would help; structure outputs for visual scanning",
         LearningStyle.HANDS_ON: "end with a concrete action the user can try",
@@ -409,7 +415,17 @@ def _bear_block(m: Mandate) -> str:
     if m.compliance.long_only:
         parts.append("- LONG-ONLY user — frame as 'avoid' or 'wait for better entry'. Do NOT propose shorts.")
     else:
-        parts.append("- Explicit short recommendations allowed, sized to risk_score.")
+        # CR150 Tier C — `long_only=False` does NOT make shorts executable. The
+        # simulator rejects any sell beyond the held quantity unconditionally
+        # (`sim_engine`, blocked_by="long_only"), and `concierge_engine.
+        # _parse_constraints` leaves this flag false by OMISSION, so the branch
+        # is reachable by a user who never asked to short. Telling the Bear it
+        # may recommend one produces advice the engine will refuse — the
+        # CR040 failure pointed at the user instead of the operator.
+        parts.append(
+            "- Shorting is not available in this simulator regardless of mandate "
+            "flags — frame a negative view as 'avoid' or 'wait for better entry'."
+        )
     parts.append("- Cite specific risk evidence. Steelman the case. Don't FUD. Anticipate the Bull's counter.")
     if m.compliance.halal and not m.compliance.long_only:
         parts.append(
@@ -422,7 +438,16 @@ def _research_manager_block(m: Mandate) -> str:
     parts = [
         "## Role guidance — Research Manager",
         "You adjudicate Bull vs Bear and write the synthesis. Given this mandate:",
-        "- 3-part output: (1) Points of agreement, (2) Points of dispute, (3) Recommended stance.",
+        # CR151 Tier B — this used to be an unconditional imperative sitting
+        # ~50 lines closer to the data than `research_manager.md`'s correct
+        # deferral ("In the Room, follow the format instruction appended at the
+        # end of your prompt instead"). Proximity won: 13 of 18 Room turns came
+        # back three-part, and 11 of 18 carried bold pseudo-headings against a
+        # format block that says "no headings". Both external reviews blamed the
+        # base prompt; cutting only that would have left THIS standing.
+        "- In 1-on-1, use the 3-part output: (1) Points of agreement, "
+        "(2) Points of dispute, (3) Recommended stance. In the Room, the format "
+        "block appended at the end of your prompt replaces this — follow it instead.",
         "- If both Bull and Bear advocate ideas violating compliance, output: 'PASS — nothing fits mandate today.'",
         f"- Match learning_style tone: {_tone_for_learning_style(m.learning_style)}",
     ]
@@ -524,7 +549,8 @@ DECISION SEQUENCE:
 3. If passes compliance:
    - Weigh the debate
    - Consider risk_score={m.risk_score} and current drawdown
-   - Issue: APPROVE / PASS / MODIFY-AND-APPROVE
+   - Issue: APPROVE or PASS — there is no third value. To change the Trader's
+     numbers, APPROVE with your own and say what you changed.
 4. Log verdict + full reasoning.
 5. If MODIFY: propose specific size/timing adjustment.
 
