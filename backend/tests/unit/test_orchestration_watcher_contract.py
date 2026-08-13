@@ -142,7 +142,17 @@ def test_stale_heartbeat_is_loud_on_the_board(tmp_path: Path):
 
 def test_stale_heartbeat_turns_the_architect_inbox_red(tmp_path: Path):
     """`inbox` is the Architect's per-work-unit gate, so this is where a dead watcher has
-    to land: a clean inbox otherwise certifies a queue nobody is serving."""
+    to land: a clean inbox otherwise certifies a queue nobody is serving.
+
+    **It lands as exit 2, not exit 1 (DEF277).** Both are non-zero, so every
+    `if ! dispatch.sh inbox` caller — the Architect's own gate included — still
+    refuses, and the certification this test exists to prevent is still
+    prevented. What changed is that a caller which cares *why* can now tell the
+    difference: `/promote-to-alpha` aborts on 1 (a verdict may already have
+    flagged your code) and warns on 2 (nobody is serving the queue, which says
+    nothing about the code being shipped). `test_a_returned_verdict_outranks_a_
+    dead_watcher` below pins the precedence that keeps the AT:R66 guarantee.
+    """
     cr = _populated_audit_dir(tmp_path)
     lanes = _lane_dir_for(cr)
     env = {"DISPATCH_LANE_DIR": str(lanes), "DISPATCH_AUDIT_DIR": str(cr)}
