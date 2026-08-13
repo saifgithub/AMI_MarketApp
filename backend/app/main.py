@@ -99,6 +99,10 @@ _GAME_SCORING_PASS_INTERVAL_SECONDS = 30 * 60  # CR109 slice 3 — idempotent, l
 # this must divide that window several times over: a single missed tick would
 # cost a whole field its opponents.
 _GAME_DESK_FILL_INTERVAL_SECONDS = 5 * 60
+# CR176 — 15 min. Fast enough that the 2-hour "entries close soon" window is
+# never missed, and that a beat deferred by quiet hours goes out promptly once
+# they end; slow enough that the sweep's per-user cap queries stay cheap.
+_GAME_PUSH_INTERVAL_SECONDS = 15 * 60
 
 
 async def _nightly_audit_trim() -> None:
@@ -262,6 +266,26 @@ async def _game_scoring_pass_tick() -> None:
         await asyncio.sleep(_GAME_SCORING_PASS_INTERVAL_SECONDS)
 
 
+async def _game_push_tick() -> None:
+    """Background task: the period arc's push beats (CR176, design §10.1).
+
+    Idempotent by construction rather than by a guard column — every beat keys
+    on a stable `source_ref` and the `uq_notifications_dedupe` constraint makes
+    "at most once" a property of the data, so overlapping ticks and restarts
+    are both safe. The sweep only ever *sends*; it computes no state and writes
+    nothing else."""
+    from app.services.games_push import run_games_push_tick
+
+    while True:
+        try:
+            stats = await asyncio.to_thread(run_games_push_tick)
+            if stats["total"]:
+                logger.info("game_push_tick_complete", **stats)
+        except Exception:
+            logger.exception("game_push_tick_failed")
+        await asyncio.sleep(_GAME_PUSH_INTERVAL_SECONDS)
+
+
 async def _game_desk_fill_tick() -> None:
     """Background task: enter the house strategy desks into any `locked` field
     that is short of the target size (CR109 slice 3c, design §11.2).
@@ -408,6 +432,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_game_queue_fill_tick()),
         asyncio.create_task(_game_scoring_pass_tick()),
         asyncio.create_task(_game_desk_fill_tick()),
+        asyncio.create_task(_game_push_tick()),
     ]
     try:
         yield
