@@ -15,6 +15,7 @@ library;
 
 import 'package:ami_trade/features/games/games_gate.dart';
 import 'package:ami_trade/features/nav/ami_tab.dart';
+import 'package:ami_trade/features/tour/nav_change_sheet.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/qa/semantics_ids.dart';
@@ -54,6 +55,25 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     LessonsScreen(),
     YouScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // CR180 — tell the people who learned the OLD bar that it moved.
+    //
+    // Every section tour is gated on a `tour_*_seen` flag, so the walkthrough
+    // system is silent for exactly the population whose mental model CR133
+    // just invalidated: they already took every tour. `shouldShowNavChange`
+    // returns false for a brand-new user, so this cannot land on top of the
+    // Floor tour it would otherwise be competing with.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final service = ref.read(tourServiceProvider);
+      if (!await service.shouldShowNavChange()) return;
+      await service.markNavChangeSeen();
+      if (!mounted) return;
+      await NavChangeSheet.show(context);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

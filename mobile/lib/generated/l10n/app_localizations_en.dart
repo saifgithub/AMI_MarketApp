@@ -2460,6 +2460,52 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start with Foundations to unlock your first analyst.';
 
   @override
+  String get navChangeTitle => 'The bar moved.';
+
+  @override
+  String get navChangeBody =>
+      'Two things you know are in a new place, and one thing is new.';
+
+  @override
+  String get navChangeYou =>
+      'Your Journal and Settings moved together into YOU — including your mandate.';
+
+  @override
+  String get navChangeInsights =>
+      'INSIGHTS, in the same tab, shows what your decisions look like in aggregate.';
+
+  @override
+  String get navChangeGame => 'GAME takes the slot in the middle.';
+
+  @override
+  String get navChangeGotIt => 'Got it';
+
+  @override
+  String get tourYou1Title => 'THREE THINGS, ONE TAB';
+
+  @override
+  String get tourYou1Body =>
+      'Settings, your Decision Journal and your Insights. Switch between them here — nothing is more than one tap away.';
+
+  @override
+  String get tourYou2Title => 'YOUR MANDATE LIVES HERE';
+
+  @override
+  String get tourYou2Body =>
+      'Your standing order to the team — risk, limits, what is off-limits. It is the first thing in SETTINGS, and the agents read it on every run.';
+
+  @override
+  String get tourYou3Title => 'WHAT YOUR DECISIONS LOOK LIKE';
+
+  @override
+  String get tourYou3Body =>
+      'How your trades ended, what your PM decided, how your mandate has moved. Your own record, not a score.';
+
+  @override
+  String get tourCompletionYou =>
+      'Your mandate is the one thing worth revisiting.';
+
+  @override
   String get tourSettingsSectionTitle => 'WALKTHROUGH';
 
   @override

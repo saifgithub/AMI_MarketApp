@@ -31,6 +31,7 @@ import 'package:ami_trade/screens/games/games_run_screen.dart';
 import 'package:ami_trade/screens/games/games_trade_ticket_screen.dart';
 import 'package:ami_trade/state/games_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/widgets/games/games_arc_beat.dart';
 import 'package:ami_trade/widgets/games/games_queue_note.dart';
 import 'package:ami_trade/widgets/hex/glass_panel.dart';
@@ -46,47 +47,56 @@ class GamesHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final runsAsync = ref.watch(gamesRunsProvider);
+    // CR180 — `AmiScreenHeader`, not `AppBar`. This screen was a PUSHED route
+    // when it was written; CR133 promoted it to a tab, which left it the only
+    // one of five wearing different chrome (and an unusable back affordance in
+    // a tab position). The header is the shared component the other four use.
     return Scaffold(
       backgroundColor: AmiColors.slate900,
-      appBar: AppBar(
-        title: Text(l.gamesHomeTitle),
-        // CR109 slice 3 — the Record's only entry point this slice
-        // (games_record_screen.dart's docstring). Internal navigation
-        // inside the already-gated `/games` subtree, not a new top-level
-        // entry point.
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.military_tech_outlined),
-            tooltip: l.gamesRecordCta,
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const GamesRecordScreen()),
+      body: SafeArea(
+        child: Column(children: [
+          AmiScreenHeader(
+            title: l.gamesHomeTitle,
+            titleColor: AmiColors.hexGreen,
+            // CR109 slice 3 — the Record's only entry point this slice
+            // (games_record_screen.dart's docstring). Internal navigation
+            // inside the already-gated `/games` subtree, not a new top-level
+            // entry point.
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.military_tech_outlined),
+                tooltip: l.gamesRecordCta,
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const GamesRecordScreen()),
+                ),
+              ),
+            ],
+          ),
+          Expanded(
+            child: runsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) =>
+                  _ErrorState(onRetry: () => ref.invalidate(gamesRunsProvider)),
+              data: (runs) {
+                final live = runs.where((r) => r.isLive).toList()
+                  ..sort(
+                    (a, b) => (a.daysLeft ?? 1 << 30)
+                        .compareTo(b.daysLeft ?? 1 << 30),
+                  );
+                if (live.isNotEmpty) {
+                  return _StateBLiveRun(
+                    run: live.first,
+                    others: live.skip(1).toList(),
+                  );
+                }
+                // State A (never entered) and State C (between runs) share this
+                // fallback until slice 3 (a close to return from) and slice 3c
+                // (the first-run duel) exist — implementation_plan.md §8.2.
+                return const _NextFieldFallback();
+              },
             ),
           ),
-        ],
-      ),
-      body: SafeArea(
-        child: runsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) =>
-              _ErrorState(onRetry: () => ref.invalidate(gamesRunsProvider)),
-          data: (runs) {
-            final live = runs.where((r) => r.isLive).toList()
-              ..sort(
-                (a, b) => (a.daysLeft ?? 1 << 30)
-                    .compareTo(b.daysLeft ?? 1 << 30),
-              );
-            if (live.isNotEmpty) {
-              return _StateBLiveRun(
-                run: live.first,
-                others: live.skip(1).toList(),
-              );
-            }
-            // State A (never entered) and State C (between runs) share this
-            // fallback until slice 3 (a close to return from) and slice 3c
-            // (the first-run duel) exist — implementation_plan.md §8.2.
-            return const _NextFieldFallback();
-          },
-        ),
+        ]),
       ),
     );
   }

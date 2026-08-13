@@ -31,6 +31,10 @@
 /// marker only tells you why.
 library;
 
+import 'package:ami_trade/features/nav/ami_tab.dart';
+import 'package:ami_trade/features/tour/tour_providers.dart';
+import 'package:ami_trade/features/tour/tour_service.dart';
+import 'package:ami_trade/features/tour/you_tour.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/journal/journal_screen.dart';
 import 'package:ami_trade/screens/journal/journal_trash_screen.dart';
@@ -43,9 +47,19 @@ import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/widgets/hex/ami_segment_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-class YouScreen extends ConsumerWidget {
+class YouScreen extends ConsumerStatefulWidget {
   const YouScreen({super.key});
+
+  @override
+  ConsumerState<YouScreen> createState() => _YouScreenState();
+}
+
+class _YouScreenState extends ConsumerState<YouScreen> {
+  final _segmentBarKey = GlobalKey();
+  final _settingsSegmentKey = GlobalKey();
+  final _insightsSegmentKey = GlobalKey();
 
   /// The panes, in [YouSegment] order. Kept alive by `IndexedStack` so
   /// switching back does not reload the journal or drop a half-finished
@@ -55,6 +69,44 @@ class YouScreen extends ConsumerWidget {
     JournalScreen(embedded: true),
     InsightsSection(),
   ];
+
+  /// CR180 — `YOU` is the one tab with nothing behind it the user has seen
+  /// before: its two familiar halves arrived from elsewhere and its third did
+  /// not exist. Fires the first time the tab is actually on screen, once.
+  void _maybeRunTour() {
+    ref.listen<AmiTab>(activeTabProvider, (prev, next) async {
+      if (next != AmiTab.you) return;
+      final service = ref.read(tourServiceProvider);
+      if (await service.hasSeen(TourSection.you)) return;
+      await service.markSeen(TourSection.you);
+      if (!mounted) return;
+      _runTour();
+    });
+  }
+
+  void _runTour() {
+    final l = AppLocalizations.of(context);
+    TutorialCoachMark(
+      targets: buildYouTargets(
+        l: l,
+        segmentBarKey: _segmentBarKey,
+        settingsSegmentKey: _settingsSegmentKey,
+        insightsSegmentKey: _insightsSegmentKey,
+      ),
+      hideSkip: true,
+      colorShadow: Colors.black,
+      opacityShadow: 0.88,
+      pulseEnable: false,
+      onFinish: () {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context).tourCompletionYou),
+          backgroundColor: AmiColors.hexPurple,
+          behavior: SnackBarBehavior.floating,
+        ));
+      },
+    ).show(context: context);
+  }
 
   Future<void> _select(
       BuildContext context, WidgetRef ref, YouSegment next) async {
@@ -98,7 +150,8 @@ class YouScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    _maybeRunTour();
     final l = AppLocalizations.of(context);
     final segment = ref.watch(youSegmentProvider);
     final settings = ref.watch(settingsHeaderProvider);
@@ -142,17 +195,20 @@ class YouScreen extends ConsumerWidget {
               ],
             ),
             AmiSegmentBar(
+              key: _segmentBarKey,
               selected: segment.index,
               onSelect: (i) => _select(context, ref, YouSegment.values[i]),
               segments: [
                 AmiSegment(
+                  key: _settingsSegmentKey,
                   label: l.settingsTabUpper,
                   // Why the pending edit is not lost, shown where the switch
                   // that would lose it is made.
                   trailing: settings.dirty ? const _DirtyPip() : null,
                 ),
                 AmiSegment(label: l.journalTabUpper),
-                AmiSegment(label: l.youSegmentInsights),
+                AmiSegment(
+                    key: _insightsSegmentKey, label: l.youSegmentInsights),
               ],
             ),
             Expanded(child: IndexedStack(index: segment.index, children: _panes)),

@@ -4159,6 +4159,84 @@ abstract class AppLocalizations {
   /// **'Start with Foundations to unlock your first analyst.'**
   String get tourCompletionLessons;
 
+  /// CR180 — one-time notice after CR133's nav restructure. Shown only to users who learned the OLD bar; a new user never sees it. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The bar moved.'**
+  String get navChangeTitle;
+
+  /// CR180 — the notice's lede. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Two things you know are in a new place, and one thing is new.'**
+  String get navChangeBody;
+
+  /// CR180 — names what the user is LOOKING FOR (the Journal, Settings, the mandate) rather than where it went, and says they moved together, so someone hunting for either one learns they are in the same place. Same reasoning as CR133 §5. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Your Journal and Settings moved together into YOU — including your mandate.'**
+  String get navChangeYou;
+
+  /// CR180 — the only genuinely new surface, so it gets a line rather than being left to discovery. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'INSIGHTS, in the same tab, shows what your decisions look like in aggregate.'**
+  String get navChangeInsights;
+
+  /// CR180 — GAME took slot 3, where the Journal used to be, which is why the Journal line comes first. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'GAME takes the slot in the middle.'**
+  String get navChangeGame;
+
+  /// CR180 — dismiss. Single action: this is a notice, not a decision. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get navChangeGotIt;
+
+  /// CR180 — YOU tour step 1: that the tab is segmented at all. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'THREE THINGS, ONE TAB'**
+  String get tourYou1Title;
+
+  /// CR180 — YOU tour step 1. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Settings, your Decision Journal and your Insights. Switch between them here — nothing is more than one tap away.'**
+  String get tourYou1Body;
+
+  /// CR180 — YOU tour step 2: where the mandate went. It sits one level deeper than before CR133, so this is the step that pays for the tour. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR MANDATE LIVES HERE'**
+  String get tourYou2Title;
+
+  /// CR180 — YOU tour step 2. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Your standing order to the team — risk, limits, what is off-limits. It is the first thing in SETTINGS, and the agents read it on every run.'**
+  String get tourYou2Body;
+
+  /// CR180 — YOU tour step 3: INSIGHTS (CR178), the only new surface. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'WHAT YOUR DECISIONS LOOK LIKE'**
+  String get tourYou3Title;
+
+  /// CR180 — YOU tour step 3. Names three of the five cards concretely; 'not a score' because the app deliberately has no streaks or badges (CR109 Amendment A). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'How your trades ended, what your PM decided, how your mandate has moved. Your own record, not a score.'**
+  String get tourYou3Body;
+
+  /// CR180 — snackbar after the YOU tour, matching the other four sections' completion lines. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Your mandate is the one thing worth revisiting.'**
+  String get tourCompletionYou;
+
   /// Settings section title for the tour restart option.
   ///
   /// In en, this message translates to:
