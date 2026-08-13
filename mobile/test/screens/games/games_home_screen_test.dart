@@ -36,6 +36,37 @@ Future<void> _pump(
 }
 
 void main() {
+  group('DEF284 — the lobby door exists in BOTH states', () {
+    /// The CTA used to live in `_NextFieldFallback` only, and `build` renders
+    /// that branch just while you hold no live run — so entering the weekly
+    /// game removed the only route to the other four cadences, at exactly the
+    /// moment you would go looking for it. Saiful, on 0.1.0+88: *"I am in the
+    /// weekly game. How do I join the other available cadence?"*
+    ///
+    /// Both states are asserted rather than only the broken one, because the
+    /// bug was never "the button is missing" — it was "the button is in one
+    /// branch of a two-branch screen."
+    testWidgets('holding a live run still offers ALL GAMES', (tester) async {
+      await _pump(
+        tester,
+        runs: [
+          const GameRunSummary(
+            runId: 'r1', fieldId: 'f1', cadence: 'week',
+            twrPct: 2.35, daysLeft: 3, state: 'active',
+          ),
+        ],
+      );
+
+      expect(find.text('ALL GAMES'), findsOneWidget);
+    });
+
+    testWidgets('holding no run offers ALL GAMES too', (tester) async {
+      await _pump(tester, runs: const []);
+
+      expect(find.text('ALL GAMES'), findsOneWidget);
+    });
+  });
+
   group('state B — a run is live', () {
     testWidgets('shows the run card, not the fallback card', (tester) async {
       await _pump(

@@ -95,6 +95,60 @@ void main() {
     );
   });
 
+  group('DEF285 — an unmeasured alpha is never reported as a win', () {
+    /// `(result.alphaDisplay ?? 0) >= 0` collapsed a NULL alpha to zero, and
+    /// zero satisfies `>= 0` — so a run scored on placement, where
+    /// `alpha_display_pct` is correctly never written, was handed *"The index
+    /// pays no fees. You beat it anyway."* about a comparison nobody computed.
+    /// An unmeasured result and a flat one are different facts.
+    testWidgets('a placement-scored run is not told it beat the index',
+        (tester) async {
+      await _pump(
+        tester,
+        result: const GameCloseResult(
+          runId: _runId, fieldId: 'f1', cadence: 'week', state: 'finished',
+          scoringBasis: 'placement', entrantCount: 12, rank: 3,
+          careerPointsDelta: 53,
+          // alphaDisplay deliberately absent — this is the live shape of a
+          // placement field.
+        ),
+      );
+
+      expect(find.textContaining('You beat it anyway'), findsNothing);
+      expect(find.textContaining('The S&P returned'), findsNothing);
+    });
+
+    testWidgets('a measured positive alpha still gets its line', (tester) async {
+      await _pump(
+        tester,
+        result: const GameCloseResult(
+          runId: _runId, fieldId: 'f1', cadence: 'week', state: 'finished',
+          scoringBasis: 'benchmark', careerPointsDelta: 12,
+          alphaDisplay: 0.8,
+        ),
+      );
+
+      expect(find.textContaining('You beat it anyway'), findsOneWidget);
+    });
+
+    testWidgets('a null index counterfactual is never printed as +0.00%',
+        (tester) async {
+      await _pump(
+        tester,
+        result: const GameCloseResult(
+          runId: _runId, fieldId: 'f1', cadence: 'week', state: 'finished',
+          scoringBasis: 'benchmark', careerPointsDelta: -4,
+          alphaDisplay: -0.9,   // measured, and negative
+          // counterfactualIndexPct absent — the index series is missing.
+        ),
+      );
+
+      expect(find.textContaining('0.00%'), findsNothing,
+          reason: 'inventing the number that makes the sentence work is the '
+              'same fabrication as the alpha default');
+    });
+  });
+
   group('the free Close is complete', () {
     testWidgets('contains both counterfactual lines', (tester) async {
       await _pump(

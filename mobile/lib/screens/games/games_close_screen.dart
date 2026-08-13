@@ -370,13 +370,48 @@ class _BeatInsight extends StatelessWidget {
       return _WindUpPostMortem(windUp: windUp);
     }
 
-    final headline = result.hasNearMiss
-        ? l.gamesCloseNearMissLine(
-            result.nearMissGapPct!.toStringAsFixed(1), result.nearMissLabel!)
-        : ((result.alphaDisplay ?? 0) >= 0
-            ? l.gamesCloseInsightIndexBeat
-            : l.gamesCloseInsightIndexNeutral(
-                _isolateNumeric(_pct(result.counterfactualIndexPct ?? 0))));
+    // DEF285 — an UNMEASURED alpha and a FLAT one are different facts.
+    //
+    // This read `(result.alphaDisplay ?? 0) >= 0`, so a null alpha — a run
+    // scored on placement rather than against the benchmark, where
+    // `alpha_display_pct` is correctly never written — collapsed to 0, and 0
+    // satisfies `>= 0`. The player was then handed *"The index pays no fees.
+    // You beat it anyway"* about a comparison nobody ever computed. The
+    // neutral branch had the same bug one line down: `counterfactualIndexPct
+    // ?? 0` prints "+0.00%" as though the index had been measured and had
+    // returned nothing.
+    //
+    // §10.2 budgets the Close at three beats but does not require this one to
+    // be filled: `null` here simply yields no insight card, which is the
+    // honest answer when there is no measurement to report. Congratulating
+    // someone on an unmeasured result is worse than saying nothing.
+    final String? headline;
+    if (result.hasNearMiss) {
+      headline = l.gamesCloseNearMissLine(
+          result.nearMissGapPct!.toStringAsFixed(1), result.nearMissLabel!);
+    } else if (result.alphaDisplay == null) {
+      headline = null;
+    } else if (result.alphaDisplay! >= 0) {
+      headline = l.gamesCloseInsightIndexBeat;
+    } else if (result.counterfactualIndexPct != null) {
+      headline = l.gamesCloseInsightIndexNeutral(
+          _isolateNumeric(_pct(result.counterfactualIndexPct!)));
+    } else {
+      // Alpha was negative and measured, but the index series itself is
+      // missing — state nothing rather than invent the number that would
+      // make the sentence work.
+      headline = null;
+    }
+    // Only the HEADLINE is withheld when there is nothing measured to claim.
+    // The two counterfactual lines below are unconditional by design (see this
+    // file's top docstring) and are not derived from alpha at all, so a null
+    // alpha must not take them with it. The card disappears only when it would
+    // otherwise be empty.
+    final hasCounterfactual = result.counterfactualFirstPicksPct != null ||
+        result.counterfactualIndexPct != null;
+    if (headline == null && !hasCounterfactual) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       key: const Key('games_close_beat_insight'),
@@ -390,9 +425,11 @@ class _BeatInsight extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(headline,
-              style: AmiTypography.body.copyWith(color: AmiColors.textHigh)),
-          const SizedBox(height: AmiSpacing.s),
+          if (headline != null) ...[
+            Text(headline,
+                style: AmiTypography.body.copyWith(color: AmiColors.textHigh)),
+            const SizedBox(height: AmiSpacing.s),
+          ],
           // Both counterfactual lines, UNCONDITIONALLY — see this file's
           // top docstring. Neither is derived from the other, or from
           // alpha_scored/alpha_display; both render exactly as received.

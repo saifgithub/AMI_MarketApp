@@ -245,6 +245,22 @@ class _StateBLiveRun extends StatelessWidget {
             const SizedBox(height: AmiSpacing.s),
             for (final o in others) _OtherRunLine(run: o),
           ],
+          // DEF284 — the lobby has to be reachable from HERE, not only from
+          // the empty state. This CTA used to live in `_NextFieldFallback`
+          // alone, and `build` renders that branch only while you hold no
+          // live run — so entering the weekly game removed the only door to
+          // the other four cadences, at exactly the moment you would go
+          // looking for it. Saiful, on 0.1.0+88: *"I am in the weekly game.
+          // How do I join the other available cadence?"*
+          const SizedBox(height: AmiSpacing.l),
+          SizedBox(
+            width: double.infinity,
+            child: HexButton(
+              label: l.gamesLobbyCta,
+              variant: HexButtonVariant.outlined,
+              onPressed: () => GamesLobbyScreen.push(context),
+            ),
+          ),
         ],
       ),
     );
