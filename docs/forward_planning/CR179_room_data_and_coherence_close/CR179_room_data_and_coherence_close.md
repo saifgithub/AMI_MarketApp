@@ -501,3 +501,32 @@ Neither was needed: `.info` carries `regularMarketChangePercent` and `marketStat
 *already makes*. Routing `Quote` as well would put a second source behind one fact and invite the two
 to disagree — the defect `_reference_price_line` exists to reconcile. The fact reaches the sheet; the
 NamedTuple field stays unrouted, deliberately, with that reason recorded in the census.
+
+---
+
+## Leg 3f — CR166 Tier C, one item of three already done (2026-08-13)
+
+The tier asked for three derived figures. **The 50-day range HIGH was already rendered** — `_range_line`
+has printed `50-day range: $low–$high` since DEF228 — so a third of the item was stale. Recorded rather
+than re-shipped; that is the fourth plan item struck after checking.
+
+**The 20-day distance.** `_moving_average_line` stated only the distance to the 50-day. The 20-day is
+the one a near-term entry or invalidation is argued against, so leaving it out meant the agent either
+dropped the argument or did the subtraction itself — and doing the subtraction itself is the class Leg 4
+exists to close. Both distances now share **one** naming clause, which is not cosmetic: the anchor is
+the same number for both, and naming it twice invites the reading that they were measured against two
+different prices.
+
+**Position size in dollars and shares.** `shares_for_size` has lived in `trading_math/portfolio.py`
+since CR046 and is called by the mandate **check** only, never by a prompt. So the agent proposing a
+size and the code enforcing it were working in different units, and *a percentage of an unstated base
+is not a quantity*. The sizing ceiling now reads: *"At this portfolio's value that cap is $1,500, about
+6 shares at the last close of $225.64."*
+
+Precomputed rather than handed over as three operands and an instruction to multiply and divide — this
+is a **new** figure being born outside the DEF066 → DEF235 → DEF241 → CR166 Tier D class, rather than an
+old one being rescued from it.
+
+Two CR104 degrades, both asserted: no portfolio value → no dollars and no shares; a portfolio value with
+no **live** price anchor → the dollar cap but no share count, because a share count against a price that
+is not live is a fabricated quantity and worse than the abstraction it replaces.

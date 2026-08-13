@@ -4323,6 +4323,8 @@ async def _compute_agent_text(
             halal_universe=ctx.halal_universe,
             classification_universe=ctx.classification_universe,
             locale_allowed_universe=ctx.locale_allowed_universe,
+            # CR166 Tier C — the base the single-name cap is a percentage OF.
+            portfolio_value=ctx.portfolio_value,
             # CR077 §Build 5: a concurrent analyst has no transcript to build on —
             # rescope the "do not repeat" line so it sharpens the own-domain lens
             # instead of pointing at an empty transcript.
@@ -4559,6 +4561,7 @@ async def _stream_pm_response(
         halal_universe=ctx.halal_universe,
         classification_universe=ctx.classification_universe,
         locale_allowed_universe=ctx.locale_allowed_universe,
+        portfolio_value=ctx.portfolio_value,
         # DEF238: this argument was missing for the entire life of CR026, and the
         # feature was PM-only, so it never worked ONCE in production. The line is
         # rendered only for the PORTFOLIO_MANAGER (`room_prompts.py`), and this is

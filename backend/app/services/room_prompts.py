@@ -48,6 +48,7 @@ from app.services.fundamentals import (
 from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
 from app.services.technicals import range_position_pct
+from app.trading_math.portfolio import shares_for_size
 from app.trading_math.risk import drawdown_contribution
 # DEF263 — the SAME window helpers `enforce_safety_floor` counts with. A second
 # implementation of "today" is how the prompt and the brake come to disagree.
@@ -710,6 +711,11 @@ def build_room_messages(
     # CR152 D8 — the locale universe, which `safety_floor.py:336` can veto a
     # trade on with `blocked_by="locale"` while no agent was told it exists.
     locale_allowed_universe: Any = None,
+    # CR166 Tier C — the portfolio value the single-name cap is a percentage OF.
+    # `shares_for_size` has existed in `trading_math/portfolio.py` since CR046
+    # and is called only by the mandate check, so the conversion an agent needs
+    # to size a trade has never appeared in a prompt.
+    portfolio_value: float | None = None,
     parallel_phase: bool = False,
     sector_weights: dict[str, float] | None = None,
     agent_size_pct: float | None = None,
@@ -848,7 +854,8 @@ def build_room_messages(
             f"\nSizing ceiling: any position size you suggest must respect the enforced "
             f"single-name cap of {cap:.1f}% of portfolio (risk_score={mandate.risk_score}). "
             f"Do NOT propose a larger allocation — the system clamps to this cap, so a "
-            f"bigger number is both wrong and misleading.\n"
+            f"bigger number is both wrong and misleading."
+            f"{_cap_in_shares_clause(cap, portfolio_value, profile)}\n"
         )
 
     # CR077 §Build 5: for a concurrent analyst the transcript is empty (it speaks
@@ -939,6 +946,40 @@ def build_room_messages(
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────
+
+
+def _cap_in_shares_clause(
+    cap_pct: float, portfolio_value: float | None, profile: dict[str, Any]
+) -> str:
+    """CR166 Tier C — what the single-name cap actually BUYS, in dollars and shares.
+
+    The cap is stated as a percentage in every prompt, and a percentage of an
+    unstated base is not a quantity. `shares_for_size` has converted it since
+    CR046 — for the mandate CHECK, never for a prompt — so the agent proposing
+    the size and the code enforcing it were working in different units.
+
+    Precomputed rather than handed over as three operands and an instruction to
+    multiply and divide: that is the class DEF066 -> DEF235 -> DEF241 -> CR166
+    Tier D is a four-instance record of, and this is a new figure being born
+    into it rather than an old one being rescued.
+
+    Renders nothing when either input is missing — a share count against an
+    unknown portfolio value or an unknown price is a fabricated quantity, which
+    is worse than the abstraction it would replace (CR104/DEF053).
+    """
+    if not portfolio_value or portfolio_value <= 0:
+        return ""
+    anchor, anchor_name = _price_anchor(profile)
+    dollars = portfolio_value * cap_pct / 100.0
+    clause = f" At this portfolio's value that cap is ${dollars:,.0f}"
+    if anchor is not None and anchor > 0:
+        # `_price_anchor` returns the name WITH its article ("the last close" /
+        # "the reference price"), so no article is added here.
+        clause += (
+            f", about {shares_for_size(portfolio_value, cap_pct, anchor):,} shares "
+            f"at {anchor_name} of ${anchor}"
+        )
+    return clause + "."
 
 
 def _format_sector_allocation(sector_weights: dict[str, float] | None) -> str:
@@ -1804,14 +1845,29 @@ def _moving_average_line(profile: dict[str, Any]) -> str:
         return f"Trend: {profile.get('trend')} (20/50-day moving averages not available)"
     line = f"20-day SMA: ${short}, 50-day SMA: ${long}"
     anchor, name = _price_anchor(profile)
+    # CR166 Tier C — the distance to the SHORT average too. The line stated one
+    # of the two distances the pair implies, and the 20-day is the one a
+    # near-term entry or invalidation is argued against; leaving it out meant
+    # the agent either dropped the argument or did the subtraction itself, and
+    # doing the subtraction itself is the class Leg 4 exists to close.
+    # DEF262 — PRINT the anchor's name, never the literal "last close". This
+    # line bound the name and discarded it, so on a sheet where the anchor had
+    # fallen back to the reference price it announced a comparison against a
+    # "last close" the sheet never stated — the exact DEF228 shape
+    # `_price_anchor` exists to prevent, reintroduced by the commit that
+    # introduced `_price_anchor`.
+    #
+    # Both distances share ONE naming clause rather than repeating it: the
+    # anchor is the same number for both, and saying so twice invites the
+    # reading that they were measured against two different prices, which is
+    # the two-prices confusion this sheet has already had to reconcile once.
+    parts = []
+    if anchor is not None and short > 0:
+        parts.append(f"{(anchor - short) / short * 100:+.1f}% vs the 20-day")
     if anchor is not None and long > 0:
-        # DEF262 — PRINT the anchor's name, never the literal "last close".
-        # This line bound the name and discarded it, so on a sheet where the
-        # anchor had fallen back to the reference price it announced a
-        # comparison against a "last close" the sheet never stated — the exact
-        # DEF228 shape `_price_anchor` exists to prevent, reintroduced by the
-        # commit that introduced `_price_anchor`.
-        line += f" — {name} is {(anchor - long) / long * 100:+.1f}% vs the 50-day"
+        parts.append(f"{(anchor - long) / long * 100:+.1f}% vs the 50-day")
+    if parts:
+        line += f" — {name} is " + " and ".join(parts)
     return line
 
 

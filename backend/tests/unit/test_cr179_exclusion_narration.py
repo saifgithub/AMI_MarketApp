@@ -355,3 +355,89 @@ def test_the_firewalled_analysts_still_do_not_get_it(base_mandate):
         assert not _has_sector_line(base_mandate, agent), (
             f"{agent.value} is firewalled and received cross-lane portfolio data"
         )
+
+
+# ── CR166 Tier C — the two derived figures an agent was left to compute ──
+
+
+_TECH_PROFILE = {
+    "ticker": "NVDA", "last_close": 225.64, "sma_short": 218.4, "sma_long": 205.1,
+    "rsi": 64, "rsi_tone": "neutral", "trend": "uptrend", "volume_tone": "in-line",
+    "support": 180.0, "breakout": 240.0, "volume_ratio": 1.02,
+    "return_period_pct": 0.0, "period_candles": 64,
+    "field_state": {"technicals": "live", "run_date": "live"},
+}
+
+
+def _tech_prompt(base_mandate, agent_id, **kw):
+    from app.services.room_prompts import build_room_messages
+
+    system_prompt, _ = build_room_messages(
+        agent_id=agent_id, mandate=base_mandate, user_id=None, ticker="NVDA",
+        profile=dict(_TECH_PROFILE), transcript=[], **kw,
+    )
+    return system_prompt
+
+
+def test_the_distance_to_both_moving_averages_is_stated(base_mandate):
+    """The line stated ONE of the two distances the pair implies. The 20-day is
+    the one a near-term entry or invalidation is argued against, so leaving it
+    out meant the agent dropped the argument or did the subtraction itself —
+    and doing the subtraction itself is the class Leg 4 exists to close."""
+    from app.schemas import AgentId
+
+    line = [ln for ln in _tech_prompt(base_mandate, AgentId.MARKET_ANALYST).splitlines()
+            if "20-day SMA" in ln][0]
+    assert "vs the 20-day" in line and "vs the 50-day" in line
+
+
+def test_both_distances_share_one_naming_clause(base_mandate):
+    """The anchor is the SAME number for both distances. Naming it twice invites
+    the reading that they were measured against two different prices, which is
+    the two-prices confusion this sheet has already had to reconcile once."""
+    from app.schemas import AgentId
+
+    line = [ln for ln in _tech_prompt(base_mandate, AgentId.MARKET_ANALYST).splitlines()
+            if "20-day SMA" in ln][0]
+    assert line.count("the last close is") == 1, line
+
+
+def test_the_size_cap_is_stated_in_dollars_and_shares(base_mandate):
+    """`shares_for_size` has converted the cap since CR046 — for the mandate
+    CHECK, never for a prompt. So the agent proposing the size and the code
+    enforcing it were working in different units, and a percentage of an
+    unstated base is not a quantity."""
+    from app.schemas import AgentId
+
+    prompt = _tech_prompt(base_mandate, AgentId.BULL_RESEARCHER, portfolio_value=50000.0)
+    line = [ln for ln in prompt.splitlines() if "Sizing ceiling" in ln][0]
+    assert "$1,500" in line, line
+    assert "shares at the last close" in line, line
+
+
+def test_no_portfolio_value_means_no_fabricated_quantity(base_mandate):
+    """A share count against an unknown portfolio value is a fabricated
+    quantity, which is worse than the abstraction it would replace."""
+    from app.schemas import AgentId
+
+    line = [ln for ln in _tech_prompt(base_mandate, AgentId.BULL_RESEARCHER).splitlines()
+            if "Sizing ceiling" in ln][0]
+    assert "shares" not in line
+    assert "$" not in line.split("cap of")[-1], line
+
+
+def test_no_live_price_anchor_means_dollars_but_no_shares(base_mandate):
+    """CR104, applied to a derived figure: the dollar cap needs only the
+    portfolio value, but the share count needs a PRICE, and a price that is not
+    live must not be invented into a quantity."""
+    from app.schemas import AgentId
+    from app.services.room_prompts import build_room_messages
+
+    system_prompt, _ = build_room_messages(
+        agent_id=AgentId.BULL_RESEARCHER, mandate=base_mandate, user_id=None,
+        ticker="NVDA", profile={"ticker": "NVDA", "field_state": {"run_date": "live"}},
+        transcript=[], portfolio_value=50000.0,
+    )
+    line = [ln for ln in system_prompt.splitlines() if "Sizing ceiling" in ln][0]
+    assert "$1,500" in line
+    assert "shares" not in line, line
