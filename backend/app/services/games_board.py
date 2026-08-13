@@ -43,7 +43,12 @@ from uuid import UUID
 from sqlalchemy import select
 
 from app.db import get_session
-from app.db.models import GameEntryRow, GameFieldRow, User
+from app.db.models import (
+    GameEntryRow,
+    GameFieldRow,
+    PortfolioNavDailyRow,
+    User,
+)
 from app.services import games_eligibility
 from app.services.games_desks import DESKS_BY_KEY
 from app.services.portfolio_nav_daily import nav_history, twr_pct_for_window
@@ -58,12 +63,17 @@ class BoardNotAvailable(Exception):
     """The run has no field, or the caller does not own the run."""
 
 
-def _entrant_row(user_id: UUID, run_id: UUID) -> dict:
+def _entrant_row(user_id: UUID, run_id: UUID, *, as_of: date | None = None) -> dict:
     """One entrant's board row. Built field-by-field from an allowlist — never
     by splatting a DB row — so a column added to `game_entries` later (a
     mirror, a fee total, a cash balance) cannot leak onto a public board just
-    because someone widened a select."""
-    rows = nav_history(user_id, run_id=run_id)
+    because someone widened a select.
+
+    `as_of` ranks off the stored NAV series truncated at that close, which is
+    what makes a *change* in standing observable at all (CR176). Without it the
+    board can say where a player is and never that they moved.
+    """
+    rows = nav_history(user_id, run_id=run_id, as_of=as_of)
     twr = twr_pct_for_window(rows)
     with get_session() as s:
         handle, display_name, is_desk, desk_key, title_ineligible = s.execute(
@@ -135,6 +145,68 @@ def _champion_view(entry_id: UUID | None, rank: int | None) -> dict | None:
     }
 
 
+# `ranked_entrants` pairs each row with its run and its owner under these
+# private keys. Both are stripped before anything is serialised: another
+# entrant's run id and user id are identifiers, and invariant 2 says the
+# allowlist is enforced at the serializer rather than trusted to every caller.
+RUN_KEY = "_run_id"
+USER_KEY = "_user_id"
+_PRIVATE_KEYS = (RUN_KEY, USER_KEY)
+
+
+def close_dates_for_field(field_id: UUID, limit: int = 2) -> list[date]:
+    """The most recent distinct NAV dates on a field, newest first.
+
+    Standings move once per close, so "did this player move" is a question
+    about two consecutive **closes**, not two calendar days. A weekend, a
+    holiday or a missed snapshot would make a date-arithmetic version compare a
+    close against nothing and report a change that never happened.
+    """
+    with get_session() as s:
+        run_ids = s.execute(
+            select(GameEntryRow.run_id).where(
+                GameEntryRow.field_id == field_id,
+                GameEntryRow.state.in_(_RANKABLE_STATES),
+            )
+        ).scalars().all()
+        if not run_ids:
+            return []
+        dates = s.execute(
+            select(PortfolioNavDailyRow.as_of_date)
+            .where(PortfolioNavDailyRow.run_id.in_(run_ids))
+            .distinct()
+            .order_by(PortfolioNavDailyRow.as_of_date.desc())
+            .limit(limit)
+        ).scalars().all()
+    return list(dates)
+
+
+def ranked_entrants(field_id: UUID, *, as_of: date | None = None) -> list[dict]:
+    """Every rankable entrant on a field, ranked, as of a close.
+
+    Shared by the board and by CR176's rank-move beat so the two can never
+    disagree about who is where. The beat computes one board per field per
+    date instead of one per entrant — the per-entrant version is quadratic in
+    NAV queries and a field of 30 would have made a 15-minute tick do 900 of
+    them.
+    """
+    with get_session() as s:
+        entrants = s.execute(
+            select(GameEntryRow.user_id, GameEntryRow.run_id)
+            .where(
+                GameEntryRow.field_id == field_id,
+                GameEntryRow.state.in_(_RANKABLE_STATES),
+            )
+        ).all()
+    built = []
+    for uid, rid in entrants:
+        row = _entrant_row(uid, rid, as_of=as_of)
+        row[RUN_KEY] = rid
+        row[USER_KEY] = uid
+        built.append(row)
+    return _rank(built)
+
+
 def board_for_run(user_id: UUID, run_id: UUID) -> dict:
     """`GET /v1/games/runs/{run_id}/board`.
 
@@ -159,24 +231,18 @@ def board_for_run(user_id: UUID, run_id: UUID) -> dict:
             ).where(GameFieldRow.id == field_id)
         ).first()
 
-        entrants = s.execute(
-            select(GameEntryRow.user_id, GameEntryRow.run_id)
-            .where(
-                GameEntryRow.field_id == field_id,
-                GameEntryRow.state.in_(_RANKABLE_STATES),
-            )
-        ).all()
 
     cadence, state, starts_on, ends_on, benchmark, champion_entry_id, champion_rank = field
 
     # Marked by run_id, not by name: two entrants can share a display name and
-    # the "(you)" marker has to be right regardless.
-    built = []
-    for uid, rid in entrants:
-        row = _entrant_row(uid, rid)
-        row["is_you"] = rid == run_id
-        built.append(row)
-    rows = _rank(built)
+    # the "(you)" marker has to be right regardless. The run id itself is then
+    # dropped — it identifies another player's run and has no business on a
+    # payload that names other entrants.
+    rows = [
+        {k: v for k, v in row.items() if k not in _PRIVATE_KEYS}
+        | {"is_you": row[RUN_KEY] == run_id}
+        for row in ranked_entrants(field_id)
+    ]
 
     your_row = next((r for r in rows if r["is_you"]), None)
     measured = [r for r in rows if r["rank"] is not None]

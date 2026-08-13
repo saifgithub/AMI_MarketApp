@@ -49,16 +49,24 @@ field), and the `(user_id, type, source_ref)` unique constraint is what makes
 "at most once" a property of the data rather than of how many ticks happen to
 overlap. A container restart mid-sweep is safe by construction.
 
-**Not built here, deliberately: the daily rank-move beat.** §10.1 wants *"You
-dropped out of the top 10 — once per run"*, which asserts a **change**.
-`games_board.board_for_run` ranks as of the latest close and takes no as-of
-date, so a single observation can only tell us where a player is now, not that
-they moved. Firing on "currently outside the top 10" would report a drop that
-may never have happened — the same fabrication as the `?? 0` family, where an
-unmeasured value and a real one get collapsed. Doing it honestly means ranking
-the stored daily NAV series as of two consecutive closes, which is a change to
-`games_board`'s signature and belongs in its own pass. Stated rather than
-quietly skipped.
+**The rank-move beat, and what it took to make it honest.** §10.1 wants *"You
+dropped out of the top 10 — once per run"*, which asserts a **change**. The
+first cut of this module did not build it, because `games_board` ranked as of
+the latest close and took no as-of date: a single observation can only say
+where a player is now, never that they moved, and firing on "currently outside
+the top 10" would report a drop that may never have happened — the `?? 0`
+family, where an unmeasured value and a real one get collapsed. It is built
+now, off `games_board.ranked_entrants(field_id, as_of=…)`, comparing two
+**consecutive closes** rather than two calendar days: standings move once per
+close, so a weekend or a missed snapshot would otherwise compare a close
+against nothing.
+
+Three conditions have to hold before it can fire at all, and each rules out a
+different fabrication: the field needs **more than ten measured entrants** (in
+a field of eight nobody can leave a top ten, so the beat is not merely quiet —
+it is inapplicable), the player needs a rank at **both** observations (a rank
+that appeared out of nothing is not a drop), and the drop must cross the
+boundary. It fires at most once per run.
 
 **The Wind-Up has no push and never will** — §10.1: *"a push telling someone
 they are losing is cruel."* There is deliberately no beat for it below, so a
@@ -76,6 +84,7 @@ from sqlalchemy import select
 from app.core.logging import logger
 from app.db import get_session, init_schema
 from app.db.models import GameEntryRow, GameFieldRow, NotificationRow, User
+from app.services import games_board
 from app.services.games_arc import FINAL_STRETCH_DAYS
 from app.services.notification_service import notify
 
@@ -97,6 +106,15 @@ TYPE_ENTRIES_CLOSING = "game_entries_closing"
 TYPE_FINAL_STRETCH = "game_final_stretch"
 TYPE_SETTLED = "game_settled"
 TYPE_DUEL_CHALLENGED = "game_duel_challenged"
+TYPE_RANK_MOVE = "game_rank_move"
+
+# §10.1's "top 10". In a field of eight everybody is inside it by arithmetic —
+# no rank can exceed the field's own size — so the beat is not merely quiet at
+# alpha field sizes, it is inapplicable. That is a property of
+# `dropped_out_of_top`, not of a size check, which is why the size check below
+# is written as an early-out rather than as a control: removing it changes no
+# outcome, only how many boards get computed. Mutation-verified.
+RANK_MOVE_TOP_N = 10
 
 # §10.1: "The Close and a received challenge are exempt from suppression but
 # never duplicated." Exempt from the CAPS; see the module docstring on why
@@ -172,6 +190,7 @@ def _push_counts(session, user_id: UUID, local_now: datetime) -> tuple[int, int]
                     TYPE_FINAL_STRETCH,
                     TYPE_SETTLED,
                     TYPE_DUEL_CHALLENGED,
+                    TYPE_RANK_MOVE,
                 )
             ),
             NotificationRow.created_at >= week_start.astimezone(timezone.utc),
@@ -345,6 +364,90 @@ def _beat_settled(now: datetime) -> int:
     return sent
 
 
+def dropped_out_of_top(
+    previous_rank: int | None, current_rank: int | None, *, top_n: int,
+) -> bool:
+    """Did this player leave the top `top_n` between two closes?
+
+    Pure, because every wrong answer here is a push that describes something
+    that did not happen:
+
+      * a player unranked at the earlier close was not *in* the top ten, so
+        appearing below it now is arriving, not dropping;
+      * a player unranked at the later close has no measured position, and
+        "you dropped out" would be asserting one from its absence.
+    """
+    if previous_rank is None or current_rank is None:
+        return False
+    return previous_rank <= top_n < current_rank
+
+
+def _beat_rank_move(now: datetime) -> int:
+    """*"You dropped out of the top 10."* §10.1's daily beat, and the one that
+    needs two observations rather than one.
+
+    Not exempt from the caps, and deliberately last in the sweep: it is the
+    least urgent of the four, so when the daily cap binds this is the message
+    that yields the slot. A player who is told they slipped but never told
+    their run settled has been served exactly backwards.
+    """
+    sent = 0
+    with get_session() as s:
+        field_ids = s.execute(
+            select(GameFieldRow.id).where(GameFieldRow.state != "closed")
+        ).scalars().all()
+        tz_by_user = dict(
+            s.execute(
+                select(User.id, User.timezone).where(User.is_desk.is_(False))
+            ).all()
+        )
+    for field_id in field_ids:
+        dates = games_board.close_dates_for_field(field_id, limit=2)
+        # A change needs two observations. One close (or none) is not a quiet
+        # day for this beat — it is a question that cannot be asked yet.
+        if len(dates) < 2:
+            continue
+        current = games_board.ranked_entrants(field_id, as_of=dates[0])
+        measured = [r for r in current if r["rank"] is not None]
+        # Early-out, not a control: with this many entrants no rank can exceed
+        # the boundary, so `dropped_out_of_top` would return False for every
+        # row anyway. It saves the second board, which is the expensive half.
+        if len(measured) <= RANK_MOVE_TOP_N:
+            continue
+        previous = games_board.ranked_entrants(field_id, as_of=dates[1])
+        prev_rank_by_run = {
+            r[games_board.RUN_KEY]: r["rank"] for r in previous
+        }
+        for row in current:
+            if row["is_desk"]:
+                continue
+            run_id = row[games_board.RUN_KEY]
+            user_id = row[games_board.USER_KEY]
+            # A desk is excluded above; anyone left who is not in the map is a
+            # desk-flagged user this query did not return. Skipping is right —
+            # nobody is behind a desk to notify.
+            if user_id not in tz_by_user:
+                continue
+            if not dropped_out_of_top(
+                prev_rank_by_run.get(run_id), row["rank"],
+                top_n=RANK_MOVE_TOP_N,
+            ):
+                continue
+            if _send(
+                user_id=user_id, tz_name=tz_by_user[user_id],
+                beat_type=TYPE_RANK_MOVE,
+                title=f"You dropped out of the top {RANK_MOVE_TOP_N}",
+                body=(
+                    f"You are {row['rank']} of {len(measured)}. "
+                    "There is still time in this run."
+                ),
+                deep_link={"screen": "games_board", "run_id": str(run_id)},
+                source_ref=str(run_id), now=now,
+            ):
+                sent += 1
+    return sent
+
+
 def run_games_push_tick(*, now: datetime | None = None) -> dict[str, int]:
     """The sweep. Idempotent by construction — every beat keys on a stable
     `source_ref`, so re-running it sends nothing new.
@@ -352,7 +455,8 @@ def run_games_push_tick(*, now: datetime | None = None) -> dict[str, int]:
     Beats are swept in ascending order of urgency-to-the-player so that when
     the daily cap binds, the message that survives is the one worth the slot:
     settled (exempt) always lands, then the expiring entry beat, then the
-    final stretch.
+    final stretch, then the rank move — a player told they slipped but never
+    told their run settled has been served exactly backwards.
     """
     init_schema()
     now = now or datetime.now(timezone.utc)
@@ -360,6 +464,7 @@ def run_games_push_tick(*, now: datetime | None = None) -> dict[str, int]:
         "settled": _beat_settled(now),
         "entries_closing": _beat_entries_closing(now),
         "final_stretch": _beat_final_stretch(now),
+        "rank_move": _beat_rank_move(now),
     }
     stats["total"] = sum(stats.values())
     return stats

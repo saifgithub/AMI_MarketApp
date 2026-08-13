@@ -398,22 +398,32 @@ def run_game_nav_snapshot_tick(
 
 def nav_history(
     user_id: UUID, *, run_id: UUID | None = None, limit: int = 365,
+    as_of: date | None = None,
 ) -> list[PortfolioNavDailyRow]:
     """The trailing `limit` NAV rows for one (user, run), ascending by date.
 
     `run_id=None` (the default) reads the TRAINING portfolio — the only
     surface CR109 slice 1 writes.
+
+    `as_of` truncates the series at that date inclusive, so a caller can ask
+    what the number WAS rather than only what it is (CR176's rank-move beat).
+    Truncation, never interpolation: a date with no row simply yields the
+    series up to the last real one, because a NAV that was never recorded and
+    a NAV that happened to be flat are different facts.
     """
     run_filter = (
         PortfolioNavDailyRow.run_id.is_(None) if run_id is None
         else PortfolioNavDailyRow.run_id == run_id
     )
     with get_session() as session:
-        rows = session.execute(
+        stmt = (
             select(PortfolioNavDailyRow)
             .where(PortfolioNavDailyRow.user_id == user_id, run_filter)
-            .order_by(PortfolioNavDailyRow.as_of_date.desc())
-            .limit(limit)
+        )
+        if as_of is not None:
+            stmt = stmt.where(PortfolioNavDailyRow.as_of_date <= as_of)
+        rows = session.execute(
+            stmt.order_by(PortfolioNavDailyRow.as_of_date.desc()).limit(limit)
         ).scalars().all()
     return list(reversed(rows))
 

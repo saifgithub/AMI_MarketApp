@@ -297,3 +297,219 @@ def test_entries_closing_skips_a_player_already_in_that_field():
     push.run_games_push_tick(now=locks_at - timedelta(hours=1))
 
     assert _pushes(user.id, push.TYPE_ENTRIES_CLOSING) == []
+
+
+# ── The rank-move beat — the one that needs two observations ────────────────
+#
+# It was deliberately NOT built in CR176's first cut, and the reason is the
+# whole point of these tests: `games_board` ranked as of the latest close and
+# took no as-of date, so a single observation could say where a player is and
+# never that they moved. Firing on "currently outside the top 10" reports a
+# drop that may never have happened — the `?? 0` family, where an unmeasured
+# value and a real one get collapsed.
+
+
+def test_a_player_who_was_never_in_the_top_ten_did_not_drop_out_of_it():
+    """Unranked at the earlier close means not measured, not "below". Treating
+    absence as a position is how a beat invents a fall out of a first
+    appearance."""
+    assert push.dropped_out_of_top(None, 14, top_n=10) is False
+
+
+def test_a_player_with_no_current_rank_is_not_told_they_dropped():
+    """No measured position now — "you dropped out" would be asserting one
+    from its absence."""
+    assert push.dropped_out_of_top(4, None, top_n=10) is False
+
+
+def test_the_boundary_is_the_event_not_the_direction():
+    assert push.dropped_out_of_top(10, 11, top_n=10) is True   # just left it
+    assert push.dropped_out_of_top(9, 10, top_n=10) is False   # still inside
+    assert push.dropped_out_of_top(11, 14, top_n=10) is False  # already out
+    assert push.dropped_out_of_top(14, 3, top_n=10) is False   # climbed in
+
+
+def _nav(user_id, run_id, day: int, nav: float) -> None:
+    from app.db.models import PortfolioNavDailyRow
+
+    with get_session() as s:
+        s.add(PortfolioNavDailyRow(
+            user_id=user_id, run_id=run_id, as_of_date=date(2026, 8, day),
+            nav=nav, cash=nav, price_source="mock",
+        ))
+
+
+def _field_of(n: int, *, now: datetime):
+    """`n` players entered into one field, each with their own run."""
+    players = [_player() for _ in range(n)]
+    entries = [_entry_for(p, now=now) for p in players]
+    return players, entries
+
+
+# The rank-move tests below call `_beat_rank_move` directly rather than the
+# whole sweep, and that is deliberate. A weekly field entered on the 10th ends
+# on the 14th, so any date with two closes behind it is already inside the
+# final stretch — and `run_games_push_tick` would then spend the day's single
+# slot on the final-stretch beat before this one is reached. That interaction
+# is correct and is asserted on its own in
+# `test_the_rank_move_beat_yields_the_daily_slot_to_the_final_stretch`; mixing
+# it into every case would leave these passing for the wrong reason.
+
+
+def test_a_field_of_eight_never_fires_the_beat():
+    """In a field of eight nobody can leave a top ten — no rank can exceed the
+    field's own size. At alpha field sizes that is every field, so the beat is
+    not merely quiet here, it is inapplicable.
+
+    Note what this does and does not pin: it holds because of
+    `dropped_out_of_top`'s boundary, not because of the size check in
+    `_beat_rank_move`. That check is an early-out that saves computing the
+    second board; deleting it leaves every assertion here green (verified by
+    mutation), and calling it a guard would have been calling an optimisation a
+    control."""
+    players, entries = _field_of(8, now=_at(3, day=10))
+    for i, (p, e) in enumerate(zip(players, entries)):
+        _nav(p.id, e.run_id, 11, 10_000)
+        _nav(p.id, e.run_id, 12, 10_000 + i * 100)
+
+    assert push._beat_rank_move(_at(12, day=12)) == 0
+    assert all(not _pushes(p.id, push.TYPE_RANK_MOVE) for p in players)
+    # The reason, stated rather than implied.
+    assert all(
+        push.dropped_out_of_top(r, r, top_n=push.RANK_MOVE_TOP_N) is False
+        for r in range(1, 9)
+    )
+
+
+def test_one_close_is_not_enough_to_claim_a_move():
+    """A change needs two observations. One close is not a quiet day for this
+    beat — it is a question that cannot be asked yet."""
+    players, entries = _field_of(12, now=_at(3, day=10))
+    for i, (p, e) in enumerate(zip(players, entries)):
+        _nav(p.id, e.run_id, 11, 10_000 + i)
+
+    assert push._beat_rank_move(_at(12, day=11)) == 0
+
+
+def test_the_player_who_actually_fell_out_is_the_one_told():
+    """Twelve entrants. One sits 1st at the first close and last at the
+    second; nobody else crosses the boundary."""
+    players, entries = _field_of(12, now=_at(3, day=10))
+    faller, faller_entry = players[0], entries[0]
+
+    # Everyone starts at the same NAV, so the first close ranks on the second
+    # day's move.
+    for p, e in zip(players, entries):
+        _nav(p.id, e.run_id, 11, 10_000)
+
+    # Close 1 — the faller leads, the rest trail in order.
+    _nav(faller.id, faller_entry.run_id, 12, 12_000)
+    for i, (p, e) in enumerate(zip(players[1:], entries[1:])):
+        _nav(p.id, e.run_id, 12, 11_000 - i * 10)
+
+    # Close 2 — the faller gives it all back and lands last.
+    _nav(faller.id, faller_entry.run_id, 13, 8_000)
+    for i, (p, e) in enumerate(zip(players[1:], entries[1:])):
+        _nav(p.id, e.run_id, 13, 11_500 - i * 10)
+
+    assert push._beat_rank_move(_at(12, day=13)) == 1
+    assert len(_pushes(faller.id, push.TYPE_RANK_MOVE)) == 1
+    for p in players[1:]:
+        assert not _pushes(p.id, push.TYPE_RANK_MOVE)
+
+
+def test_the_rank_move_beat_fires_at_most_once_per_run():
+    players, entries = _field_of(12, now=_at(3, day=10))
+    faller, faller_entry = players[0], entries[0]
+    for p, e in zip(players, entries):
+        _nav(p.id, e.run_id, 11, 10_000)
+    _nav(faller.id, faller_entry.run_id, 12, 12_000)
+    for i, (p, e) in enumerate(zip(players[1:], entries[1:])):
+        _nav(p.id, e.run_id, 12, 11_000 - i * 10)
+    _nav(faller.id, faller_entry.run_id, 13, 8_000)
+    for i, (p, e) in enumerate(zip(players[1:], entries[1:])):
+        _nav(p.id, e.run_id, 13, 11_500 - i * 10)
+
+    assert push._beat_rank_move(_at(12, day=13)) == 1
+    assert push._beat_rank_move(_at(13, day=13)) == 0
+    assert len(_pushes(faller.id, push.TYPE_RANK_MOVE)) == 1
+
+
+def test_the_rank_move_beat_yields_the_daily_slot_to_the_final_stretch():
+    """The sweep runs beats in descending order of urgency-to-the-player, and
+    the rank move is last. A player told they slipped but never told their run
+    was ending has been served exactly backwards — so when the single daily
+    slot binds, this is the beat that loses it."""
+    players, entries = _field_of(12, now=_at(3, day=10))
+    faller, faller_entry = players[0], entries[0]
+    for p, e in zip(players, entries):
+        _nav(p.id, e.run_id, 11, 10_000)
+    _nav(faller.id, faller_entry.run_id, 12, 12_000)
+    for i, (p, e) in enumerate(zip(players[1:], entries[1:])):
+        _nav(p.id, e.run_id, 12, 11_000 - i * 10)
+    _nav(faller.id, faller_entry.run_id, 13, 8_000)
+    for i, (p, e) in enumerate(zip(players[1:], entries[1:])):
+        _nav(p.id, e.run_id, 13, 11_500 - i * 10)
+
+    # The 13th is one day before ends_on, so the final stretch is due too.
+    stats = push.run_games_push_tick(now=_at(12, day=13))
+    assert stats["final_stretch"] == 12
+    assert stats["rank_move"] == 0
+    assert not _pushes(faller.id, push.TYPE_RANK_MOVE)
+
+    # It is not lost, only deferred: the next local day, with the
+    # once-per-run final stretch already spent, the slot is free.
+    assert push.run_games_push_tick(now=_at(12, day=14))["rank_move"] == 1
+    assert len(_pushes(faller.id, push.TYPE_RANK_MOVE)) == 1
+
+
+def test_a_board_row_never_carries_another_players_identifiers():
+    """`ranked_entrants` attaches the run and user so the beat can address
+    them; `board_for_run` must strip both. Invariant 2 puts the allowlist at
+    the serializer rather than trusting every caller."""
+    from app.services import games_board
+
+    players, entries = _field_of(3, now=_at(3, day=10))
+    for p, e in zip(players, entries):
+        _nav(p.id, e.run_id, 11, 10_000)
+
+    board = games_board.board_for_run(players[0].id, entries[0].run_id)
+    for row in board["rows"]:
+        assert games_board.RUN_KEY not in row
+        assert games_board.USER_KEY not in row
+    assert any(r["is_you"] for r in board["rows"])
+
+
+def test_ranking_as_of_an_earlier_close_ignores_everything_after_it():
+    """The as-of read truncates the stored series; it never interpolates. A
+    date with no row yields the series up to the last real one, because a NAV
+    that was never recorded and a NAV that happened to be flat are different
+    facts."""
+    from app.services import games_board
+
+    players, entries = _field_of(2, now=_at(3, day=10))
+    a, b = players
+    ea, eb = entries
+    _nav(a.id, ea.run_id, 11, 10_000)
+    _nav(b.id, eb.run_id, 11, 10_000)
+    _nav(a.id, ea.run_id, 12, 11_000)   # A ahead at close 1
+    _nav(b.id, eb.run_id, 12, 10_500)
+    _nav(a.id, ea.run_id, 13, 10_100)   # B ahead at close 2
+    _nav(b.id, eb.run_id, 13, 12_000)
+
+    with get_session() as s:
+        field_id = s.execute(
+            select(GameEntryRow.field_id).where(
+                GameEntryRow.run_id == ea.run_id)
+        ).scalars().first()
+
+    earlier = games_board.ranked_entrants(field_id, as_of=date(2026, 8, 12))
+    later = games_board.ranked_entrants(field_id, as_of=date(2026, 8, 13))
+    rank_of = lambda rows, run: next(  # noqa: E731
+        r["rank"] for r in rows if r[games_board.RUN_KEY] == run)
+
+    assert rank_of(earlier, ea.run_id) == 1
+    assert rank_of(later, ea.run_id) == 2
+    assert games_board.close_dates_for_field(field_id) == [
+        date(2026, 8, 13), date(2026, 8, 12),
+    ]
