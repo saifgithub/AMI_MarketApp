@@ -382,6 +382,16 @@ _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
     "analyst_target_median", "analyst_rating_score",
     "held_pct_institutions", "held_pct_insiders",
     "shares_outstanding", "float_shares",
+    # CR145 Tier D — margin TREND and buybacks, from `.quarterly_income_stmt`
+    # and `.quarterly_cashflow` behind the 6h TTL cache the tier was gated on.
+    # Optional-live-only for a sharper reason than the fields above: absence
+    # here is COMMON and meaningful. A company with fewer than five quarters of
+    # filings has no year-over-year comparison, and one that reports no
+    # repurchase line is not the same as one that repurchased zero — measured,
+    # NBIS and KTOS carry no `Repurchase Of Capital Stock` row while SNOA does.
+    "gross_margin_trend_bps", "operating_margin_trend_bps",
+    "net_margin_trend_bps", "margin_trend_basis",
+    "buyback_ttm", "buyback_yield",
 )
 
 # CR166 Tier B — the dividend fields CR030 already fetches onto `EarningsInfo`

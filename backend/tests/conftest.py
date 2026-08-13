@@ -119,6 +119,13 @@ def _isolated_db(tmp_path: _Path) -> None:
     # clear it so a seeded map from one test doesn't leak into the next.
     from app.services import sector_allocation as _sec
     _sec.reset_sector_map_provider(None)
+    # CR145 Tier D: the quarterly-statements cache is keyed by TICKER and lives
+    # for 6h, so without this the first test to fetch "AAPL" decides what every
+    # later test sees for "AAPL" — including caching a None from a fake yfinance
+    # that has no statement frames. Cleared here rather than per-test so no
+    # future test has to remember, which is the only version of this that holds.
+    from app.services import fundamentals as _fund
+    _fund.clear_statement_cache()
     # Pin tests to the deterministic mock walk regardless of USE_REAL_MARKET_DATA.
     _md.set_market_data_provider(_md.MockWalkProvider())
     _nc.set_alpha_vantage_source(None)

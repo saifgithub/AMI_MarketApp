@@ -120,6 +120,19 @@ _FUND_SENTINEL: dict = {
     "held_pct_insiders": 4.31,
     "shares_outstanding": 8642,
     "float_shares": 7531,
+    # CR145 Tier D — the only fields here that do NOT come from `.info`. They
+    # arrive from `.quarterly_income_stmt` / `.quarterly_cashflow` behind a 6h
+    # TTL cache, which is why `_fake_yfinance_module` had to grow statement
+    # frames: neither census direction can see a field from that endpoint
+    # (direction 1 walks `.info` keys, direction 2 walks the Technicals/Quote/
+    # EarningsInfo NamedTuples), so this parity guard is the ONLY thing
+    # standing between these six and a silent drop at a render site.
+    "gross_margin_trend_bps": 1234,
+    "operating_margin_trend_bps": 2345,
+    "net_margin_trend_bps": 3456,
+    "margin_trend_basis": "TRENDBASISSENT vs TRENDPRIORSENT",
+    "buyback_ttm": 7654,
+    "buyback_yield": 8.9,
 }
 
 _TECH_SENTINEL = Technicals(
@@ -380,10 +393,52 @@ class _AllKeysInfo(dict):
         return True
 
 
+def _fake_statement_frames():
+    """CR145 Tier D — the quarterly statements, so the statements branch of
+    `fetch_live_fundamentals` fires like every other branch.
+
+    Without these the fake Ticker has no `.quarterly_income_stmt`, the fetch
+    raises `AttributeError`, `fetch_statement_facts` swallows it and returns
+    None, and the six margin-trend/buyback fields are simply never produced —
+    so `test_every_produced_field_is_rendered_or_declared` would pass while
+    knowing nothing about them. That is this fixture's stated premise ("every
+    branch fires") failing silently, which is the same shape as the four stale
+    omission entries Leg 0 deleted.
+
+    Five quarterly columns because the YoY delta needs the year-ago quarter at
+    index 4; revenue held flat so each margin delta is a clean, distinct
+    fingerprint rather than an artefact of a moving denominator.
+    """
+    import pandas as pd
+
+    periods = ["2026-04-30", "2026-01-31", "2025-10-31", "2025-07-31", "2025-04-30"]
+    income = pd.DataFrame(
+        [
+            [1000.0, 1000.0, 1000.0, 1000.0, 1000.0],   # Total Revenue
+            [623.4, 600.0, 570.0, 540.0, 500.0],        # Gross Profit    → +1234 bps
+            [734.5, 700.0, 650.0, 600.0, 500.0],        # Operating Income→ +2345 bps
+            [845.6, 800.0, 720.0, 640.0, 500.0],        # Net Income      → +3456 bps
+        ],
+        index=["Total Revenue", "Gross Profit", "Operating Income", "Net Income"],
+        columns=periods,
+    )
+    cashflow = pd.DataFrame(
+        [[-1e9, -2e9, -3e9, -1.654e9, -5e8]],
+        index=["Repurchase Of Capital Stock"],
+        columns=periods,
+    )
+    return income, cashflow
+
+
 def _fake_yfinance_module() -> types.SimpleNamespace:
+    income, cashflow = _fake_statement_frames()
     return types.SimpleNamespace(
         __version__="1.2.3",
-        Ticker=lambda t: types.SimpleNamespace(info=_AllKeysInfo()),
+        Ticker=lambda t: types.SimpleNamespace(
+            info=_AllKeysInfo(),
+            quarterly_income_stmt=income,
+            quarterly_cashflow=cashflow,
+        ),
     )
 
 
@@ -499,6 +554,16 @@ def env(monkeypatch):
             "held_pct_insiders": "insiders 4.31%",
             "shares_outstanding": "8,642M shares out",
             "float_shares": "7,531M float",
+            # CR145 Tier D. `margin_trend_basis` fingerprints on the newer of
+            # its two quarters: the renderer splits the stored `A vs B` into
+            # prose, so matching the whole stored string would assert the
+            # storage format rather than that the basis reached the sheet.
+            "gross_margin_trend_bps": "gross +1234bps",
+            "operating_margin_trend_bps": "operating +2345bps",
+            "net_margin_trend_bps": "net +3456bps",
+            "margin_trend_basis": "TRENDBASISSENT",
+            "buyback_ttm": "$7,654M repurchased",
+            "buyback_yield": "8.9% of market cap",
         },
         "technicals": {
             "rsi": "57", "rsi_tone": "TONESENT", "trend": "TRENDSENT",

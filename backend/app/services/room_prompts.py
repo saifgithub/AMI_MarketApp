@@ -31,7 +31,9 @@ from app.services.fundamentals import (
     dividend_line,
     earnings_power_line,
     identity_line,
+    buyback_line,
     margin_structure_line,
+    margin_trend_line,
     ownership_line,
     pe_line,
     peg_part,
@@ -189,29 +191,120 @@ _LENGTH_GUIDE: dict[AgentId, str] = {
 # That B2 tail is itself new since the 30-day measurement above: every agent's
 # effective budget shrank by ~15-25 tokens the day the envelope shipped, which
 # the original numbers do not account for.
-_DEFAULT_AGENT_MAX_TOKENS = 600
+#
+# ── DEF289 (AT:R68, CR179 Leg 2) — the ratio above is wrong, by ~50% ────────
+#
+# Everything above stands EXCEPT its one unmeasured input. `~1,900 chars ≈ 400
+# tokens` is **4.75 chars per token**, and it was never measured — it is the
+# arithmetic that every budget in this dict was then derived from, so being
+# wrong about it is wrong about all twelve at once.
+#
+# It is measurable from our own data with no tokenizer at all, because a
+# truncated turn is a turn that hit `max_tokens` EXACTLY: its length in chars,
+# divided by that agent's cap, IS the ratio. Over the committed 2026-08-13
+# epoch (`corpus/llm_audit_2026-08-13-epoch.json`, 482 rows, same "ends on an
+# alphanumeric" test as the 30-day measurement above), six turns were cut:
+#
+#   bull_researcher    3,057 chars / 800  = 3.82      bear_researcher 2,705 / 800  = 3.38
+#   bull_researcher    3,220 chars / 800  = 4.03      bear_researcher 2,769 / 800  = 3.46
+#   neutral_debator    2,144 chars / 600  = 3.57      portfolio_mgr   3,456 / 1100 = 3.14
+#
+# **3.14–4.03, mean 3.52 — not 4.75.** A token buys ~34% fewer characters than
+# the comment claims, so every cap here is ~34% short in the only unit that
+# matters. The spread is not noise either: the PM is the low end because it
+# emits JSON, and quotes, braces and field names tokenize worse than prose.
+#
+# The consequence was live and measured, not theoretical: **6/482 = 1.2% of
+# turns were being amputated mid-word** — bull 2/40, bear 2/40, neutral 1/40,
+# PM 1/42 — which is CR106 B2's silent stance loss on the prose agents and, on
+# the PM, DEF258/DEF261's unparseable envelope failing safe to PASS. This is
+# also DEF236's acceptance finally being RUN: it raised the PM to 1100 "derived
+# from the new ask, not measured", and the answer is that 1100 was still short.
+#
+# **The derivation now, stated so the next sheet growth can re-run it.** Caps
+# are `max_observed_chars ÷ 3.14 × factor`, rounded up to the nearest 100:
+#
+#   - **3.14**, the single worst measured ratio across both output shapes, so
+#     no agent is sized on a ratio its own output can beat.
+#   - **factor 1.5 where the agent truncated** — its observed maximum is
+#     CENSORED (the cap itself produced that number), so the true maximum is
+#     unknown and larger; bull, bear, neutral, PM.
+#   - **factor 1.25 where it did not** — the maximum is a real observation, and
+#     40 turns of it; the eight others.
+#
+# Raising remains free on this host for the reason measured above (`max_tokens`
+# is a ceiling, not an allocation; `num_preemptions_total` 0), and the cap was
+# never the verbosity control — `_LENGTH_GUIDE` is, and DEF236 closed it at
+# 7.1% over-guide. A cap that binds does not shorten a turn, it guillotines
+# one. NOT claimed: that truncation reaches 0. That is a post-promotion
+# re-measure on the Leg 5 corpus, and asserting it here is the CR105
+# Amendment-1 trap this build exists to stop repeating.
+#
+# **The floor moves too, and for the same arithmetic.** DEF125 set 600 because
+# it *"clears the 1,531-char (~322-token) worst case those five have ever
+# produced"* by ~75%. 1,531 chars is **488** tokens at the measured ratio, not
+# 322, so the real margin was ~23% and `test_no_agent_is_budgeted_below_the_floor`
+# had been asserting a 1.5× headroom the number could not deliver. 488 × 1.5 =
+# 732 → **800**. The 1,531-char figure is kept rather than replaced by this
+# epoch's 1,289: it comes from ~884 calls per agent against 40 here, and the
+# larger sample is the better worst case.
+_DEFAULT_AGENT_MAX_TOKENS = 800
+
+# The measured worst-case characters-per-token, from the six truncated turns
+# above. Named rather than inlined because `test_cr179_token_budget_derivation`
+# re-runs the whole derivation against it — a future edit to a cap has to move
+# this number or fail.
+_CHARS_PER_TOKEN_WORST_CASE = 3.14
 
 _AGENT_MAX_TOKENS: dict[AgentId, int] = {
-    AgentId.FUNDAMENTALS_ANALYST: 600,
-    AgentId.MARKET_ANALYST: 600,
-    AgentId.NEWS_ANALYST: 600,
-    AgentId.SOCIAL_MEDIA_ANALYST: 600,
+    # The four analysts are the only agents that never approached their cap:
+    # observed maxima 1,112–1,289 chars, i.e. 354–410 tokens. They sit at the
+    # floor, and the floor is what moved.
+    AgentId.FUNDAMENTALS_ANALYST: 800,
+    AgentId.MARKET_ANALYST: 800,
+    AgentId.NEWS_ANALYST: 800,
+    AgentId.SOCIAL_MEDIA_ANALYST: 800,
     # Thesis + evidence + falsifier, in three-to-five sentences, and both
     # researchers write to the same shape — budget them symmetrically so the
     # Bear case is never the shorter one for a reason the reader cannot see.
-    AgentId.BULL_RESEARCHER: 800,
-    AgentId.BEAR_RESEARCHER: 800,
+    #
+    # DEF289: both truncate at 5% (2/40 each). Symmetry is kept as a rule but
+    # it is no longer kept by giving them the SAME number — the Bull's censored
+    # maximum is 3,220 chars against the Bear's 2,769, so an equal cap would
+    # bind the Bull first and reintroduce exactly the invisible asymmetry this
+    # comment exists to prevent. Equal treatment is the same derivation, not
+    # the same integer.
+    AgentId.BULL_RESEARCHER: 1600,
+    AgentId.BEAR_RESEARCHER: 1400,
     # The worst case and the most damaging: the RM's synthesis is the single
     # input EXECUTION and RISK reason from (DEF095 — the transcript is the
     # contagion vector), and it was cut off in two convenes out of three.
-    AgentId.RESEARCH_MANAGER: 900,
+    #
+    # DEF289: 0/40 truncated at 900 — the one agent the previous pass fixed
+    # outright. But its uncensored maximum is 3,114 chars, which needs 992
+    # tokens at the worst ratio: it finished inside the cap on this epoch with
+    # ~0 to spare, and Legs 2–3 grow its sheet.
+    #
+    # Its own derivation lands at 1,300, and it is held at the Bull's 1,600
+    # instead. DEF125 requires the RM to hold the most headroom of the three
+    # because its synthesis is the only input EXECUTION and RISK see, and that
+    # damage argument is untouched by this defect — what changed is only that
+    # the RM is no longer the *most truncated* of the three, which was never
+    # the reason it was ranked first.
+    AgentId.RESEARCH_MANAGER: 1600,
     # Only 2.1%, but a truncated Trader loses the level triple that
     # `_LEVEL_PATTERNS` and the whole downstream geometry depend on — the one
     # agent where a cut tail is unparseable rather than merely incomplete.
-    AgentId.TRADER: 600,
-    AgentId.AGGRESSIVE_DEBATOR: 600,
-    AgentId.CONSERVATIVE_DEBATOR: 600,
-    AgentId.NEUTRAL_DEBATOR: 600,
+    #
+    # DEF289: 0/40 now, but at 1,881 chars observed it sat at 1.05× of 600 —
+    # one long turn from the failure its own comment names.
+    AgentId.TRADER: 800,
+    # DEF289: 0/40 each, and all three sat between 1.05× and 1.20× — the
+    # Neutral is the one that actually crossed (1/40), and it crossed because
+    # it argues the middle and has to restate both sides to do it.
+    AgentId.AGGRESSIVE_DEBATOR: 800,
+    AgentId.CONSERVATIVE_DEBATOR: 800,
+    AgentId.NEUTRAL_DEBATOR: 1100,
     # The PM emits a JSON envelope, not prose, and DEF058 (verdict fails to
     # parse in ~22% of runs) suspected its own 600-token cap clipping the JSON
     # one line from the end. Same family, one line apart in the source.
@@ -225,7 +318,11 @@ _AGENT_MAX_TOKENS: dict[AgentId, int] = {
     # uniquely expensive: a clipped JSON envelope is unparseable rather than
     # merely incomplete, and `_parse_pm_verdict` fails safe to PASS, so the cost
     # of twenty tokens too few is a discarded APPROVE.
-    AgentId.PORTFOLIO_MANAGER: 1100,
+    #
+    # DEF289 ran that acceptance: 1/42 still clipped at 1100, and the PM is the
+    # agent with the worst chars-per-token of the twelve (3.14) precisely
+    # because of the JSON its cost paragraph is about.
+    AgentId.PORTFOLIO_MANAGER: 1700,
 }
 
 
@@ -1154,6 +1251,22 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 profile.get("gross_margin") if _is("gross_margin", "live") else None,
                 profile.get("operating_margin") if _is("operating_margin", "live") else None,
                 profile.get("profit_margin") if _is("profit_margin", "live") else None,
+            ),
+            # CR145 Tier D — the direction, immediately under the levels, so
+            # the two bases are read together rather than a page apart.
+            margin_trend_line(
+                profile.get("gross_margin_trend_bps")
+                if _is("gross_margin_trend_bps", "live") else None,
+                profile.get("operating_margin_trend_bps")
+                if _is("operating_margin_trend_bps", "live") else None,
+                profile.get("net_margin_trend_bps")
+                if _is("net_margin_trend_bps", "live") else None,
+                profile.get("margin_trend_basis")
+                if _is("margin_trend_basis", "live") else None,
+            ),
+            buyback_line(
+                profile.get("buyback_ttm") if _is("buyback_ttm", "live") else None,
+                profile.get("buyback_yield") if _is("buyback_yield", "live") else None,
             ),
             earnings_power_line(
                 profile.get("trailing_eps") if _is("trailing_eps", "live") else None,

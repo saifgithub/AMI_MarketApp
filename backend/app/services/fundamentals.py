@@ -17,7 +17,9 @@ from __future__ import annotations
 
 import math
 import re
+import time
 from datetime import date, datetime, timezone
+from threading import RLock
 from typing import Any
 
 from app.core.config import settings
@@ -74,6 +76,189 @@ _EXCHANGE_NAMES: dict[str, str] = {
 }
 
 _yf_convention_checked = False
+
+
+# ── CR145 Tier D — the quarterly statements, and the cache that pays for them ──
+#
+# Tier D's row makes the cache a precondition rather than a nicety: *"a TTL
+# fundamentals cache ships in this tier or the tier does not ship."* Two things
+# were measured before choosing where to put one.
+#
+# **What is actually expensive.** The Room calls `fetch_live_fundamentals` ONCE
+# per convene (`room_runner.py:521`), so a cache on `.info` saves nothing there;
+# the 1-on-1 path calls it per message, which is real but small. What Tier D
+# ADDS is two more network calls per ticker — `.quarterly_income_stmt` and
+# `.quarterly_cashflow`, measured at 0.27–0.99s each against NVDA/GRAB/SNOA/
+# NBIS/KTOS — and those are the ones worth not repeating.
+#
+# **Why `.info` is deliberately NOT cached here.** It carries a live price:
+# `base_price` comes from `currentPrice`, and `low`/`high`/`support`/`breakout`
+# are derived from it. A long TTL would freeze the Room's reference price while
+# `last_close` (60s TTL, `CachingProvider`) kept moving, and
+# `_reference_price_line` would then narrate a growing divergence between two
+# figures that are supposed to be the same instrument — a fabricated
+# disagreement manufactured by a cache. Caching the slow half and leaving the
+# live half live is the only split that does not trade a real cost for a
+# misleading number.
+#
+# 6 hours, matching `CachingProvider`'s earnings TTL rather than inventing a
+# number. Quarterly statements change when a company files — four times a year
+# — so the TTL is bounded by staleness we could tolerate at 30 days and chosen
+# for consistency with the neighbouring cache instead.
+_STATEMENTS_TTL_S = 21600.0
+
+_statements_cache: dict[str, tuple[dict[str, Any] | None, float]] = {}
+_statements_lock = RLock()
+
+
+def clear_statement_cache() -> None:
+    """Drop every cached statement fact. Test seam, and the operational escape
+    hatch if a filing lands inside the TTL window."""
+    with _statements_lock:
+        _statements_cache.clear()
+
+
+def _stmt_series(frame: Any, *row_names: str) -> list[float | None] | None:
+    """One row of a yfinance statement frame as plain floats, newest first.
+
+    Defensive at every step on purpose: these frames are pandas objects whose
+    row labels are yfinance's own normalisation of a filing, and a label that
+    exists for one company is routinely absent for another — measured, not
+    assumed: NBIS and KTOS carry no `Repurchase Of Capital Stock` row at all
+    while SNOA, a microcap, does. `None` means "this company does not report
+    it", which is what DEF053 says to render as absent rather than as zero.
+    """
+    try:
+        labels = [str(i) for i in frame.index]
+    except Exception:
+        return None
+    for name in row_names:
+        if name not in labels:
+            continue
+        try:
+            raw = list(frame.loc[name].values)
+        except Exception:
+            return None
+        out: list[float | None] = []
+        for v in raw:
+            try:
+                f = float(v)
+            except (TypeError, ValueError):
+                out.append(None)
+                continue
+            out.append(f if math.isfinite(f) else None)
+        return out
+    return None
+
+
+def _margin_bps(num: list[float | None] | None, den: list[float | None] | None,
+                latest: int, prior: int) -> int | None:
+    """Change in a margin between two quarters, in basis points.
+
+    Computed here rather than handed to an agent as two ratios: CR179 Leg 4's
+    rule is that every derived figure is precomputed, because four recurrences
+    (DEF066 → DEF235 → DEF241 → CR166 Tier D) have shown a prompt instruction
+    not to calculate is not a control.
+    """
+    if not num or not den or len(num) <= prior or len(den) <= prior:
+        return None
+    a_n, a_d = num[latest], den[latest]
+    b_n, b_d = num[prior], den[prior]
+    if None in (a_n, a_d, b_n, b_d) or not a_d or not b_d:
+        return None
+    return round(((a_n / a_d) - (b_n / b_d)) * 10_000)
+
+
+def fetch_statement_facts(ticker: str) -> dict[str, Any] | None:
+    """Margin TREND and buyback activity from the quarterly statements.
+
+    Two facts the fact sheet has never carried, both named in the Fundamentals
+    Analyst's own job description (*"durable margins … capital allocation"*)
+    and both previously disclosed as unavailable in this very module.
+
+    - **Margin trend.** The sheet already renders three margin LEVELS from
+      `.info`; what it could not say was which way any of them was moving, so
+      `fundamentals_analyst.md` had to have the ask removed (CR145 Tier A)
+      rather than answered. Year-over-year, latest quarter against the same
+      quarter a year earlier — not quarter-on-quarter, which for any seasonal
+      business measures the season rather than the business.
+    - **Buybacks.** Trailing four quarters of `Repurchase Of Capital Stock`,
+      and the same figure as a percentage of market cap, because the absolute
+      is unreadable without a denominator — $40B is a rounding error at one
+      market cap and a recapitalisation at another.
+
+    Returns None on any error, and omits any individual key the filings do not
+    support. Never raises: a statements outage must degrade the two new lines
+    to CR104 UNAVAILABLE, not take the whole fact sheet down with it.
+    """
+    key = ticker.upper().strip()
+    now = time.time()
+    with _statements_lock:
+        hit = _statements_cache.get(key)
+        if hit is not None and hit[1] > now:
+            return hit[0]
+    out = _fetch_statement_facts_uncached(key)
+    with _statements_lock:
+        # A None result is cached too. A ticker with no filings yfinance can
+        # parse is a stable fact, and re-asking every convene would make the
+        # failure case the expensive one — which is how a degraded provider
+        # turns into a latency incident.
+        _statements_cache[key] = (out, now + _STATEMENTS_TTL_S)
+    return out
+
+
+def _fetch_statement_facts_uncached(ticker: str) -> dict[str, Any] | None:
+    try:
+        import yfinance as yf
+        tk = yf.Ticker(ticker)
+        income = tk.quarterly_income_stmt
+        cashflow = tk.quarterly_cashflow
+    except Exception as exc:
+        logger.warn("yfinance_statements_error", ticker=ticker, error=str(exc)[:200])
+        return None
+
+    out: dict[str, Any] = {}
+
+    # ── Margin trend, YoY ────────────────────────────────────────────────
+    # Columns arrive newest-first, so index 0 is the latest quarter and index
+    # 4 is the same quarter a year ago. Fewer than five columns means the YoY
+    # comparison does not exist for this company; nothing is rendered rather
+    # than falling back to a quarter-on-quarter delta wearing a YoY label.
+    try:
+        periods = [str(c)[:10] for c in income.columns]
+    except Exception:
+        periods = []
+    if len(periods) >= 5:
+        revenue = _stmt_series(income, "Total Revenue")
+        deltas = {
+            "gross_margin_trend_bps": _stmt_series(income, "Gross Profit"),
+            "operating_margin_trend_bps": _stmt_series(
+                income, "Operating Income", "Total Operating Income As Reported"
+            ),
+            "net_margin_trend_bps": _stmt_series(
+                income, "Net Income", "Net Income Common Stockholders"
+            ),
+        }
+        for field, numerator in deltas.items():
+            bps = _margin_bps(numerator, revenue, latest=0, prior=4)
+            if bps is not None:
+                out[field] = bps
+        if any(f in out for f in deltas):
+            out["margin_trend_basis"] = f"{periods[0]} vs {periods[4]}"
+
+    # ── Buybacks, trailing four quarters ─────────────────────────────────
+    # The row is signed as a cash OUTflow, so the reported figure is negative
+    # and the magnitude is what was returned to shareholders. An absent row is
+    # absent, never zero: a company that reports no repurchase line and one
+    # that reports a repurchase of 0.0 are different claims, and only the
+    # second is ours to make.
+    repurchase = _stmt_series(cashflow, "Repurchase Of Capital Stock")
+    if repurchase is not None:
+        recent = [v for v in repurchase[:4] if v is not None]
+        if len(recent) == 4:
+            out["buyback_ttm"] = round(abs(sum(recent)) / 1_000_000)
+
+    return out or None
 
 
 def _yfinance_major(version: str | None) -> int:
@@ -319,11 +504,32 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
     if free_cash_flow is not None:
         out["free_cash_flow"] = round(free_cash_flow / 1_000_000)
 
-    # Real capital allocation (dividends only — buybacks/M&A have no
-    # yfinance field and stay undisclosed rather than fabricated).
+    # Real capital allocation. CR145 Tier D retires half of what this comment
+    # used to say: *"buybacks/M&A have no yfinance field and stay undisclosed
+    # rather than fabricated"*. That was true of `.info`, which is the only
+    # endpoint this module called — buybacks are on `.quarterly_cashflow`, and
+    # the disclosure was really a statement about our own fetch. M&A history
+    # genuinely has no yfinance field and stays undisclosed.
     dividend_yield = _num("dividendYield")
     if dividend_yield is not None:
         out["dividend_yield"] = dividend_yield_pct(dividend_yield)
+
+    # Margin trend + buybacks, from the quarterly statements behind a 6h TTL.
+    # Merged here rather than fetched at either render site so ONE module owns
+    # the fact-sheet shape and both surfaces exercise it — the CR164
+    # same-infrastructure rule `fetch_fundamentals` states. A statements
+    # failure returns None and simply contributes no keys, which is the CR104
+    # UNAVAILABLE path, not a hole in the sheet.
+    statements = fetch_statement_facts(ticker)
+    if statements:
+        out.update(statements)
+        # The buyback needs its denominator to be readable, and Leg 4's rule is
+        # that we hand over the derived figure rather than the two operands and
+        # an instruction. Computed only where market cap is live — a yield
+        # against an absent denominator is the fabrication this avoids.
+        buyback = statements.get("buyback_ttm")
+        if buyback is not None and market_cap:
+            out["buyback_yield"] = round(buyback * 1_000_000 / market_cap * 100, 1)
 
     # Real sector/industry classification replaces the old always-fake
     # numeric `sector_pe` — a category, not a fabricated peer-average P/E
@@ -551,6 +757,69 @@ def margin_structure_line(
     if net is not None:
         parts.append(f"net {net}%")
     return _labelled("Margin structure", live, parts)
+
+
+def margin_trend_line(
+    gross_bps: int | None,
+    operating_bps: int | None,
+    net_bps: int | None,
+    basis: str | None,
+    *,
+    live: bool = True,
+) -> str | None:
+    """CR145 Tier D — which way the margins are moving, not just where they are.
+
+    **The basis is stated in the line itself, deliberately.** The levels on
+    `margin_structure_line` are TTM (that is what yfinance's `.info` margins
+    are); this delta is the latest QUARTER against the same quarter a year
+    earlier, off `.quarterly_income_stmt`. Two different bases for the same
+    word sitting silently on one sheet is precisely the defect
+    `_reference_price_line` had to reconcile for price — one turn read a quote
+    and a last close as two facts. So the comparison names its own two quarters
+    and says it is quarterly, and the reader cannot subtract one line from the
+    other by accident.
+
+    A basis of eight quarters would let this be TTM-vs-TTM and remove the
+    mismatch entirely; yfinance returns five to seven quarterly columns
+    (measured across NVDA/GRAB/KTOS/SNOA/NBIS), so that comparison does not
+    exist for most names and inventing it would mean labelling a quarterly
+    delta as TTM.
+    """
+    parts = []
+    for label, bps in (
+        ("gross", gross_bps), ("operating", operating_bps), ("net", net_bps),
+    ):
+        if bps is not None:
+            # No thousands separator, deliberately. A comma inside a number is
+            # the DEF242 hazard in this codebase — `Entry: $1,507.00` parsed as
+            # `1.0` — and every prose agent's output is walked by regexes that
+            # have been bitten by it twice. A basis-point delta needs no
+            # grouping to be readable, so there is nothing to trade away.
+            parts.append(f"{label} {bps:+d}bps")
+    if not parts or not basis:
+        return None
+    line = _labelled("Margin trend, YoY", live, parts)
+    return f"{line} — quarter ending {basis.replace(' vs ', ' against the quarter ending ')}"
+
+
+def buyback_line(
+    ttm_millions: int | None, yield_pct: float | None, *, live: bool = True
+) -> str | None:
+    """CR145 Tier D — buybacks, the capital-allocation evidence the prompt asked
+    for and this module used to disclose as unavailable.
+
+    The percentage rides beside the absolute because the absolute alone is
+    unreadable: NVDA's $45,303M trailing-four-quarter repurchase is 0.8% of its
+    market cap, and the same dollar figure would be a recapitalisation at a
+    tenth the size. Precomputed rather than left as two operands and an
+    instruction — CR179 Leg 4's rule, applied at the point the field is born.
+    """
+    if ttm_millions is None:
+        return None
+    part = f"${ttm_millions:,}M repurchased (trailing 4 quarters)"
+    if yield_pct is not None:
+        part += f", {yield_pct}% of market cap"
+    return _labelled("Buybacks", live, [part])
 
 
 def earnings_power_line(
@@ -857,6 +1126,15 @@ def build_live_data_block(ticker: str) -> str | None:
         margin_structure_line(
             data.get("gross_margin"), data.get("operating_margin"),
             data.get("profit_margin"), live=False,
+        ),
+        margin_trend_line(
+            data.get("gross_margin_trend_bps"),
+            data.get("operating_margin_trend_bps"),
+            data.get("net_margin_trend_bps"),
+            data.get("margin_trend_basis"), live=False,
+        ),
+        buyback_line(
+            data.get("buyback_ttm"), data.get("buyback_yield"), live=False,
         ),
         earnings_power_line(
             data.get("trailing_eps"), data.get("revenue_ttm"),

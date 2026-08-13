@@ -38,6 +38,7 @@ from app.services.llm_gateway import (
 )
 from app.services.room_prompts import (
     _AGENT_MAX_TOKENS,
+    _CHARS_PER_TOKEN_WORST_CASE,
     _DEFAULT_AGENT_MAX_TOKENS,
     _LENGTH_GUIDE,
     max_tokens_for,
@@ -78,10 +79,26 @@ def test_the_three_measured_truncated_agents_got_more_than_the_flat_cap():
     assert max_tokens_for(AgentId.RESEARCH_MANAGER) >= max_tokens_for(
         AgentId.BULL_RESEARCHER
     )
-    # Symmetric researchers: a Bear budgeted below the Bull would make the
-    # bear case shorter for a reason no reader could see.
-    assert max_tokens_for(AgentId.BULL_RESEARCHER) == max_tokens_for(
-        AgentId.BEAR_RESEARCHER
+    # The original assertion, kept verbatim so what changed is legible:
+    #
+    #   # Symmetric researchers: a Bear budgeted below the Bull would make the
+    #   # bear case shorter for a reason no reader could see.
+    #   assert max_tokens_for(BULL_RESEARCHER) == max_tokens_for(BEAR_RESEARCHER)
+    #
+    # DEF289 inverted it, and the requirement above is the reason. Equality was
+    # a proxy for "neither case is cut while the other runs on", and measured
+    # against the 2026-08-13 epoch the proxy had started producing the opposite
+    # of what it stands for: the Bull's censored maximum is 3,220 chars against
+    # the Bear's 2,769, so an EQUAL budget binds the Bull first and makes the
+    # bull case the invisibly short one. The guard is not relaxed — it is
+    # restated as the property equality was standing in for.
+    bull, bear = (
+        max_tokens_for(AgentId.BULL_RESEARCHER),
+        max_tokens_for(AgentId.BEAR_RESEARCHER),
+    )
+    assert min(bull, bear) / max(bull, bear) >= 0.75, (
+        f"bull {bull} vs bear {bear}: one researcher is budgeted so far below "
+        f"the other that its case is shorter for a reason no reader can see"
     )
 
 
@@ -101,9 +118,18 @@ def test_no_agent_is_budgeted_below_the_floor():
         assert max_tokens_for(agent) >= _DEFAULT_AGENT_MAX_TOKENS, agent.value
 
     # The floor clears the worst output any of the low-truncation agents has
-    # ever produced (1,531 chars ≈ 322 tokens at this model's ~4.75 chars/token)
-    # with real margin, rather than the ~15% that 400 left.
-    worst_observed_tokens = 1531 / 4.75
+    # ever produced (1,531 chars over ~884 calls each) with real margin, rather
+    # than the ~15% that 400 left.
+    #
+    # DEF289: the divisor here used to read 4.75, taken from `room_prompts`'
+    # own "~1,900 chars ≈ 400 tokens" comment, which was asserted and never
+    # measured. The measured worst case is 3.14 chars/token — recovered from
+    # the six turns in the committed 2026-08-13 epoch that hit their cap
+    # exactly, since a truncated turn's length divided by its cap IS the ratio.
+    # At the true ratio the old floor of 600 delivered ~23% margin, not the
+    # 1.5× this line asserts, so the assertion was passing on arithmetic rather
+    # than on the property. The floor moved to 800; the assertion did not.
+    worst_observed_tokens = 1531 / _CHARS_PER_TOKEN_WORST_CASE
     assert _DEFAULT_AGENT_MAX_TOKENS > worst_observed_tokens * 1.5
 
 

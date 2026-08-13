@@ -246,3 +246,66 @@ numbers came from. Twelve agents can be perfectly distinguishable, perfectly gro
 4. **Promotion collisions with the games lane** — it owns migrations and store builds, and DEF278 was caused
    by a promotion landing between two of its migration-editing commits. Check `git log --oneline -5` before
    each promote. File-level collision risk is nil (Saiful stopped the other agents 2026-08-13).
+
+---
+
+## Leg 2 — findings (2026-08-13)
+
+**The cache went where the cost is, not where the row pointed.** CR145 Tier D says *"a TTL fundamentals
+cache ships in this tier or the tier does not ship"*, which reads as *cache `fetch_live_fundamentals`*.
+Measured first: the Room calls it **once per convene** (`room_runner.py:521`), so a cache there saves
+nothing on the surface that matters. What Tier D *adds* is two more network calls per ticker
+(`.quarterly_income_stmt`, `.quarterly_cashflow`, **0.27–0.99s each** live) and those are what the TTL
+is for. `.info` is deliberately left uncached: it carries the live price (`base_price` ←
+`currentPrice`, and `low`/`high`/`support`/`breakout` derive from it), so a long TTL would freeze the
+Room's reference price while `last_close` kept moving on its own 60s TTL — and `_reference_price_line`
+would then narrate a **growing divergence between two figures that are the same instrument**. A
+fabricated disagreement manufactured by a cache is a worse outcome than the fetch it saves.
+
+**DEF289 — the token budgets were derived from an unmeasured constant, and it was wrong by ~34%.**
+`room_prompts.py`'s *"~1,900 chars ≈ 400 tokens"* is 4.75 chars/token and was never measured. It is
+measurable from our own committed data with no tokenizer: a truncated turn hit `max_tokens` exactly, so
+its length ÷ its cap **is** the ratio. Six such turns in the 08-13 epoch give **3.14–4.03, mean 3.52** —
+the PM lowest at 3.14 because it emits JSON. Consequences, all measured rather than inferred:
+
+- 6/482 = **1.2% of turns amputated mid-word** (bull 5%, bear 5%, neutral 2.5%, PM 2.4%).
+- DEF125's floor of 600 claimed *"~75% clear of the 1,531-char worst case"*. At 3.14 that worst case is
+  **488 tokens**, so the real margin was ~23%, and `test_no_agent_is_budgeted_below_the_floor` had been
+  asserting a 1.5× headroom the number could not deliver. Floor → **800**.
+- DEF236's PM raise to 1100 was *"derived from the new ask, not measured"*; the answer is it was still
+  short. PM → **1700**.
+
+Caps are now `max_observed_chars ÷ 3.14 × factor`, factor **1.5 where the agent truncated** (its maximum
+is CENSORED — the cap produced that number) and **1.25 where it did not**. Done FIRST, before any sheet
+growth, so every later leg inherits headroom rather than competing for it.
+
+**Two guards had to invert, both kept verbatim with the evidence that killed them (DEF243's corollary).**
+`BULL == BEAR` was a proxy for *"neither case is cut while the other runs on"*, and the proxy had started
+producing the opposite of what it stood for: the Bull's censored maximum is 3,220 chars against the
+Bear's 2,769, so an **equal** budget binds the Bull first. Restated as the property, not relaxed. And
+DEF125's floor assertion divided by the retired 4.75.
+
+**The census cannot see a statements field, and neither could parity until it was made to.** Direction 1
+walks `.info` keys; direction 2 walks the `Technicals`/`Quote`/`EarningsInfo` NamedTuples. The six new
+fields come from a third endpoint and are on neither, so **`test_prompt_data_parity` is the only guard
+standing between them and a silent drop**. It was passing vacuously — the fake yfinance had no statement
+frames, so the fetch raised `AttributeError`, `fetch_statement_facts` swallowed it, and the fields were
+never produced. Fixture extended, guard confirmed red on all six, then green. Same shape as the four
+stale omission entries Leg 0 deleted, and the second time this build has caught a guard passing on
+absence.
+
+**An absent buyback row is not a zero.** Measured: NBIS and KTOS carry **no** `Repurchase Of Capital
+Stock` row while SNOA, a microcap, does — and GRAB reports a literal `0.0`. Those are different claims
+and only the second is ours to make, so an absent row renders nothing rather than `Buybacks: $0M`.
+
+### Not shipped in Leg 2, and why
+
+- **CR147 Tier C (`.earnings_dates`) is BLOCKED on a new dependency.** It raises
+  `ImportError: Import lxml failed` — `lxml` is neither installed nor declared in
+  `backend/pyproject.toml`. Wiring it anyway would have put the feature behind a `try/except` that
+  swallows the ImportError and runs **silently dark in production**, which is DEF038/DEF063 exactly.
+  Flagged for Saiful rather than added: CLAUDE.md forbids introducing a dependency without flagging.
+- **CR146 Tier C (2-year history window) moves to Leg 3.** It needs no new dependency —
+  `_PERIOD_MAP["2y"]` already exists — but it is a *technicals-lane* fill, which is Leg 3's job. The
+  incoherence it closes is live and unchanged: `overlay_generator.py:317` still asks 18/18 prompts to
+  *"Emphasise monthly/quarterly trend"* against `_HISTORY_PERIOD = "3m"` ≈ 65 candles.
