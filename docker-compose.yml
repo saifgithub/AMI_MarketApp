@@ -189,6 +189,7 @@ services:
       # so widening it means orders that would have filled in reality do not.
       # Errs conservative (under-fill, never over-fill) by construction.
       SIM_RESTING_ORDER_TICK_INTERVAL_SECONDS: ${SIM_RESTING_ORDER_TICK_INTERVAL_SECONDS:-300}
+      SIM_BRACKET_SWEEP_ENABLED: ${SIM_BRACKET_SWEEP_ENABLED:-true}
       # CR171 — short selling. The default borrow rate is Layer 3 of §4's
       # provider and is reached for every ticker outside the S&P snapshot; the
       # two margins ARE §7's containment mechanism (1.50 posted at open, forced

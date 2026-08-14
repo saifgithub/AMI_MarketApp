@@ -303,6 +303,7 @@ def config_check(_: None = Depends(get_admin)) -> AdminConfigCheckResponse:
         client_release_floor_min_build=(
             active_floor.min_build if active_floor is not None else None
         ),
+        sim_bracket_sweep_enabled=settings.sim_bracket_sweep_enabled,
     )
 
 

@@ -61,6 +61,30 @@ class, not the instance that fired:
 look at what it does before designing anything, it is the closest thing to a correct shape in the
 file.
 
+## Before you start — a stop-gap is already live, and it is not the fix
+
+**Automatic position closing is OFF on Alpha.** Shipped `2026-08-14` after the exposure turned out
+to include a real tester (a claimed account on `0.1.0+85` holding a bracketed position while the
+sweep ran every 5 minutes). `settings.sim_bracket_sweep_enabled` — default `True`, set `false` in
+melehost's env — gates **both** automatic paths: `_sweep_position_brackets` + `_sweep_short_positions`
+in the tick, and `SimEngine.evaluate_outcomes` in `POST /v1/sim/trades/{id}/evaluate`, which
+`SimNotifier.refresh()` hits on **every app open**. Guarded by
+`backend/tests/unit/test_def305_bracket_sweep_kill_switch.py`, mutation-proved 3/3.
+
+What this means for you:
+
+- **Stops, targets and margin calls are not firing on Alpha right now.** That is the cost being paid
+  while your lane runs. It is a real cost — treat the lane as time-sensitive.
+- **`bracket_closing_enabled()` stays.** Do not delete it as part of the fix and do not fold it into
+  your guard — they answer different questions (*"is this switch off"* vs *"is this price real"*),
+  and collapsing them is how the operator loses the ability to stop the feature independently.
+- **Turning it back on is part of this lane's completion.** Say so explicitly in your hand-off, with
+  what you verified. **You do not flip it yourself** — the env lives on melehost and that promotion
+  is mine.
+- `manual_close` and `submit` are deliberately **not** gated by the switch: a user tapping *close*
+  or *buy* is asking for a fill now, and silently doing nothing is a different defect. Those sites
+  are yours to guard properly.
+
 ## Fences
 
 - **`backend/app/services/sim_engine.py`, `sim_resting_orders.py`, `market_data.py` and their tests

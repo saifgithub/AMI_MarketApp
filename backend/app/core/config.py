@@ -211,6 +211,25 @@ class Settings(BaseSettings):
     # answers "did it touch" exactly rather than sampling; out of scope here.
     sim_resting_order_tick_interval_seconds: int = 300
 
+    # DEF305 — the stop-gap kill switch for automatic position closing, while
+    # the real fix (a source check on every money-moving price) is in audit.
+    #
+    # `SimEngine.current_price` returns a float and discards `Quote.source`, so
+    # `evaluate_outcomes` cannot tell a yfinance quote from the mock walk's
+    # `[50, 450]` random draw. On 2026-08-14 three sweeps closed nine positions
+    # across two portfolios at fabricated prices — HPQ, a $30 stock, was booked
+    # out at $334.96 — and credited the proceeds as real cash. A fabricated
+    # fill never comes off the books; a stop that fires late does.
+    #
+    # `True` is the default and the correct long-term value: this suppresses a
+    # SAFETY feature, and leaving it off is its own harm. It is off on Alpha
+    # only until DEF305's guard ships. **Whoever lands that guard turns this
+    # back on** — the switch is not the fix and must not become the fix.
+    # Surfaced in `/v1/admin/config-check` so "is it still off" is one curl
+    # rather than an assumption, and logged loudly on every suppressed pass so
+    # it cannot go dark the way DEF038 and DEF063 did.
+    sim_bracket_sweep_enabled: bool = True
+
     # ── CR171 — short selling, training lane ──────────────────────────────
     #
     # §4's Layer 3. Reached whenever neither Alpaca's `easy_to_borrow` (no

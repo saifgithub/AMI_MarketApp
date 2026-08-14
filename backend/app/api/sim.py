@@ -45,7 +45,11 @@ from app.services.sim_engine import (
     SimTrade,
     get_sim_engine,
 )
-from app.services.sim_resting_orders import commitment_for, sweep_resting_orders
+from app.services.sim_resting_orders import (
+    bracket_closing_enabled,
+    commitment_for,
+    sweep_resting_orders,
+)
 from app.services.sim_trade_effects import apply_post_fill_effects
 from app.services.ticker_reference import (
     TickerNotFoundError,
@@ -741,10 +745,19 @@ async def evaluate_trades(
     # app open racing a tick cannot double-fill.
     resting_stats = await asyncio.to_thread(sweep_resting_orders, user_id=user_id)
     # DEF120 D1: evaluate_outcomes() calls current_price per open trade.
-    # Runs unconditionally, including out of hours: the sweep above gates its
-    # own bracket pass on market hours, and this route is also the path a user's
-    # manual refresh takes.
-    updates = await asyncio.to_thread(sim.evaluate_outcomes, user_id)
+    # Runs out of hours too: the sweep above gates its own bracket pass on
+    # market hours, and this route is also the path a user's manual refresh
+    # takes.
+    #
+    # DEF305 — but not while the kill switch is off. `SimNotifier.refresh()`
+    # hits this on every app open, so gating only the background tick would
+    # leave the app-open path closing positions at fabricated prices — the
+    # guard would be real and simply not on one of the two paths that move the
+    # money, which is the defect itself.
+    updates = (
+        await asyncio.to_thread(sim.evaluate_outcomes, user_id)
+        if bracket_closing_enabled() else []
+    )
     # For each closed trade, write a journal entry so the user sees the outcome
     if updates:
         store = get_journal_store()

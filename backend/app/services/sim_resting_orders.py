@@ -121,6 +121,24 @@ def _quote_is_fillable(q: Quote | None) -> bool:
     return True
 
 
+def bracket_closing_enabled() -> bool:
+    """DEF305 stop-gap — may an automatic pass close a position right now?
+
+    Public and shared, because the two paths that close positions without a
+    user asking do not go through one another: the background tick calls
+    `_sweep_position_brackets` below, and `POST /v1/sim/trades/{id}/evaluate`
+    calls `SimEngine.evaluate_outcomes` directly on every app open. Gating only
+    the tick would leave the app-open path liquidating at fabricated prices,
+    which is the same half-covered shape DEF305 is about.
+
+    This does NOT gate `manual_close` or `submit`. A user tapping *close* or
+    *buy* is asking for a fill now and gets today's answer, right or wrong;
+    silently doing nothing when someone taps a button is a different defect.
+    Those sites are the audited fix's job, not this switch's.
+    """
+    return settings.sim_bracket_sweep_enabled
+
+
 def _live_orders(user_id: UUID | None) -> list[SimRestingOrder]:
     with get_session() as s:
         stmt = (
@@ -531,6 +549,7 @@ def sweep_resting_orders(
         "filled": 0,
         "rejected": 0,
         "brackets_closed": 0,
+        "brackets_suppressed": 0,
         "skipped_closed": 0,
         "aborted": 0,
         "shorts_bracketed": 0,
@@ -550,13 +569,28 @@ def sweep_resting_orders(
         stats["skipped_closed"] = 1
         return stats
 
-    stats["brackets_closed"] = _sweep_position_brackets(engine, user_id)
-    # §7 — hours-gated, and that placement IS the rule: a margin close against
-    # a stale overnight print is CR109 §5.1's time machine in the direction
-    # that costs the user money, which makes it worse than DEF261, not better.
-    stats["shorts_bracketed"], stats["shorts_margined"] = _sweep_short_positions(
-        engine, user_id,
-    )
+    if bracket_closing_enabled():
+        stats["brackets_closed"] = _sweep_position_brackets(engine, user_id)
+        # §7 — hours-gated, and that placement IS the rule: a margin close
+        # against a stale overnight print is CR109 §5.1's time machine in the
+        # direction that costs the user money, which makes it worse than
+        # DEF261, not better.
+        stats["shorts_bracketed"], stats["shorts_margined"] = _sweep_short_positions(
+            engine, user_id,
+        )
+    else:
+        # DEF305 — both legs, because both force-close a position off a price
+        # whose source nobody checked, and the margin leg is the worse of the
+        # two: it closes a short the user never asked to close.
+        stats["brackets_suppressed"] = 1
+        logger.warning(
+            "sim_bracket_sweep_suppressed",
+            reason="DEF305",
+            detail=(
+                "stops, targets and margin calls are NOT firing — "
+                "SIM_BRACKET_SWEEP_ENABLED is false"
+            ),
+        )
 
     orders = _live_orders(user_id)
     if not orders:

@@ -176,3 +176,11 @@ class AdminConfigCheckResponse(BaseModel):
     # independent of whether any individual client's own fetch succeeded.
     client_release_floor_configured: bool
     client_release_floor_min_build: Optional[int] = None
+    # DEF305 — is automatic position closing (stops, targets, margin calls)
+    # actually running in THIS container. Not a FeatureGate: a FeatureGate asks
+    # "is a key present" and counts toward `dark_count`, whereas this is a
+    # deliberately-off safety feature and would read as a misconfiguration
+    # there. It is here because the switch suppresses a control, and a
+    # suppressed control that nobody can see the state of is how a temporary
+    # stop-gap becomes permanent.
+    sim_bracket_sweep_enabled: bool = True
