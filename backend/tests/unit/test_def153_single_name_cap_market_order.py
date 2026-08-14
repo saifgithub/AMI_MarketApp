@@ -63,6 +63,7 @@ def _check(
     quotes: dict[str, float] | None = None,
     sector_map: object | None = None,
     portfolio_value: float = _PORTFOLIO,
+    holdings: list | None = None,
 ):
     proposed = ProposedTrade(
         ticker="AAPL",
@@ -78,7 +79,7 @@ def _check(
         mandate=hydrate_coach_mandate({"plan": "trader"}).model_copy(
             update={"single_name_cap_pct": _CAP}
         ),
-        holdings=[],
+        holdings=[] if holdings is None else holdings,
         quotes={"AAPL": _PRICE} if quotes is None else quotes,
         sector_map=sector_map,
         # CR129: the five BE2 limits are always-active now; this file is
@@ -129,11 +130,41 @@ def test_the_boundary_sits_where_it_did_before():
     assert not _check(quantity=at_cap + 0.01, order_type=OrderType.MARKET).passed
 
 
-def test_a_sell_is_never_size_capped():
-    """The cap is on taking a position, not on leaving one. `is_buy` gated this
-    before the fix and must still gate it after."""
-    result = _check(quantity=90.0, order_type=OrderType.MARKET, side=Side.SELL)
+class _Held:
+    """A holding, duck-typed the way the floor consumes them."""
+
+    def __init__(self, ticker: str, quantity: float, avg_cost: float = _PRICE):
+        self.ticker, self.quantity, self.avg_cost = ticker, quantity, avg_cost
+
+
+def test_a_sell_to_CLOSE_is_never_size_capped():
+    """The cap is on taking a position, not on leaving one.
+
+    **Narrowed by CR171 §6, and the narrowing is the point.** This assertion
+    used to read "a sell is NEVER size capped" and passed `holdings=[]` — which,
+    once a sell against a flat position could OPEN a short, meant it was
+    asserting the new rule away while looking like a regression guard for the
+    old one. DEF153's actual invariant is about leaving a position, so the test
+    now holds one. The sell-to-OPEN half is asserted directly below.
+    """
+    result = _check(
+        quantity=90.0, order_type=OrderType.MARKET, side=Side.SELL,
+        holdings=[_Held("AAPL", 90.0)],
+    )
     assert _size_violations(result) == []
+
+
+def test_a_sell_to_OPEN_is_size_capped_like_any_other_position():
+    """CR171 §6. A sell against a flat position is a SHORT — it takes exposure,
+    it does not leave it, and the `is_buy` gate that was correct for four
+    months would let an unbounded one past a mandate reporting itself as
+    enforced."""
+    result = _check(
+        quantity=90.0, order_type=OrderType.MARKET, side=Side.SELL, holdings=[],
+    )
+    assert _size_violations(result) == [
+        "position size 90.0% exceeds single-name cap 50.0%"
+    ]
 
 
 # ── the structural half: one price, both caps ────────────────────────────────

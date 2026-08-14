@@ -418,14 +418,24 @@ def check_mandate_compliance(
     if (proposed.is_buy or sell_to_open) and proposed_value > 0:
         if portfolio_value > 0:
             cap_single_name = single_name_cap_pct(mandate)
-            # GROSS, never net. Long $5k AAPL and short $5k AAPL is not a flat
-            # position with no risk — it is two positions, two borrow costs and
-            # two ways to be wrong. Netting them would let a user hide unlimited
-            # gross exposure behind a flat net, which is the one thing a
-            # concentration cap exists to prevent.
-            gross_value = proposed_value + _gross_exposure_in(
-                holdings, shorts, t, quotes,
-            )
+            # GROSS, never net, and **only on the sell-to-open path**.
+            #
+            # Long $5k AAPL and short $5k AAPL is not a flat position with no
+            # risk — it is two positions, two borrow costs and two ways to be
+            # wrong. Netting them would let a user hide unlimited gross exposure
+            # behind a flat net, which is the one thing a concentration cap
+            # exists to prevent.
+            #
+            # A BUY keeps measuring the PROPOSAL alone, exactly as it always
+            # has. Adding existing exposure there would newly reject trades the
+            # app accepts today — adding to a held position is the case
+            # `max_open_positions` deliberately permits — and that is a change
+            # to the long path CR171 did not ask for. The asymmetry is real and
+            # is stated rather than smoothed: this CR changed what a SELL can
+            # be, so the sell path is where its rule applies.
+            gross_value = proposed_value
+            if sell_to_open:
+                gross_value += _gross_exposure_in(holdings, shorts, t, quotes)
             position_pct = _position_pct(gross_value, portfolio_value)
             if position_pct > cap_single_name:
                 violations.append(
