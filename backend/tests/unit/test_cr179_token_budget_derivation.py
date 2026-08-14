@@ -365,6 +365,55 @@ def test_the_char_proxy_and_the_token_measurement_disagree_and_the_tokens_win(la
     assert max_tokens_for(AgentId.AGGRESSIVE_DEBATOR) >= token_required
 
 
+def test_the_aggressive_cap_was_not_raised_on_the_proxys_authority(latest):
+    """DEF303's most contestable judgement, given a guard of its own.
+
+    The auditor's MINOR-1 (round 1): the claim that three guards covered this
+    was wrong — the Aggressive mutation killed one of the same two guards the
+    Conservative mutation killed, so deselecting that single shared guard left
+    this decision **entirely uncaught**. The judgement the submission itself
+    nominated as its weakest rested on one assertion shared with a different
+    decision. This is that assertion, standing alone.
+
+    Two-sided on purpose, because only the pair says what was decided:
+
+      - at or above what its OWN measured decode needs (749 → 800), so the
+        agent is not under-capped; and
+      - strictly BELOW what the character proxy demands (942 → 1000), which is
+        what makes "we did not follow the proxy here" a checkable fact rather
+        than a comment.
+
+    Equality to the token requirement is deliberately NOT asserted. Caps are
+    allowed to exceed their derivation — the Bull sits at 1600 against a need
+    near 1000 — so pinning this one to the integer would encode a rule the
+    dict does not follow. The bracket encodes the actual decision.
+    """
+    rows = latest["aggressive_debator"]
+    chars = max(len((r.get("response_text") or "").strip()) for r in rows)
+    tokens = max(int(r["output_tokens"]) for r in rows)
+    proxy_required = int(
+        math.ceil(chars / _CHARS_PER_TOKEN_WORST_CASE * _FACTOR_CLEAN / 100.0) * 100
+    )
+    token_required = int(math.ceil(tokens * _FACTOR_CLEAN / 100.0) * 100)
+    cap = max_tokens_for(AgentId.AGGRESSIVE_DEBATOR)
+
+    assert cap >= token_required, (
+        f"aggressive_debator cap {cap} is below the {token_required} its own "
+        f"measured decode needs ({tokens} tokens observed, clean)"
+    )
+    assert cap < proxy_required, (
+        f"aggressive_debator cap {cap} has been raised to the character proxy's "
+        f"{proxy_required}. That proxy divides by 3.14 chars/token, the GLOBAL "
+        f"worst measured off the Portfolio Manager's JSON envelope, while this "
+        f"agent's own prose runs at {chars / tokens:.2f} — so it over-states this "
+        f"agent's need by ~{proxy_required / token_required:.2f}x. Sizing a prose "
+        f"agent on the JSON agent's ratio is DEF289's retired 4.75 assumption "
+        f"pointed the other way. If the model's output shape actually changed, "
+        f"re-measure _CHARS_PER_TOKEN_WORST_CASE; do not raise this cap to match "
+        f"a bound that is loose for a knowable reason."
+    )
+
+
 def test_no_cap_falls_back_to_the_default(corpus):
     """`max_tokens_for` falls back rather than raising, deliberately. This is
     what stops the fallback becoming permanent for an agent that speaks in the
