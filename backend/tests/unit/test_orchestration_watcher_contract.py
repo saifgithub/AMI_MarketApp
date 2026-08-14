@@ -242,6 +242,85 @@ def test_killed_watcher_leaves_the_stamp_that_makes_it_visible(tmp_path: Path):
     )
 
 
+# --- DEF300: a lane with nothing submitted is not work -------------------------------
+
+
+def test_an_unsubmitted_lane_is_draft_not_awaiting_audit(tmp_path: Path):
+    """The DEF300 case, reproduced exactly: an architect file authored ahead of its
+    evidence, with no `SUBMITTED:` line, and no auditor file yet.
+
+    `R69-FE1.architect.md` was written this way on purpose — its own header said creating
+    that line before the measurement was real *"is the one thing this lane must not do"* —
+    and the watcher called it AWAITING_AUDIT anyway.
+    """
+    cr = tmp_path / "cr"
+    cr.mkdir(parents=True, exist_ok=True)
+    (cr / "T3.architect.md").write_text(
+        "# lane notes, measurement still running — deliberately no SUBMITTED line\n"
+    )
+
+    r = _run(_WATCHER, "state", env_extra={"HANDSHAKE_CR_DIR": str(cr)})
+
+    row = [ln for ln in r.stdout.splitlines() if ln.startswith("T3")]
+    assert row, f"the lane must still appear on the board:\n{r.stdout}"
+    assert "AWAITING_AUDIT" not in row[0], (
+        "a lane with zero submissions was called AWAITING_AUDIT, so an architect file "
+        f"authored ahead of its evidence wakes the auditor for nothing:\n{row[0]}"
+    )
+    assert "DRAFT" in row[0], (
+        f"the state must NAME the real situation, not merely stop lying about it:\n{row[0]}"
+    )
+
+
+def test_an_unsubmitted_lane_with_an_opened_auditor_file_is_also_draft(tmp_path: Path):
+    """The second door into the same state, and the one the false signal actually
+    manufactures: the auditor is woken, opens a file, finds nothing committed, and writes
+    no verdict. Guarding only the no-auditor-file arm would leave the lane re-reporting
+    itself as work forever — which is the loop the R69-FE1 auditor had to babysit."""
+    cr = tmp_path / "cr"
+    cr.mkdir(parents=True, exist_ok=True)
+    (cr / "T4.architect.md").write_text("notes, no SUBMITTED line\n")
+    (cr / "T4.auditor.md").write_text("opened, nothing to audit — no VERDICT line\n")
+
+    r = _run(_WATCHER, "state", env_extra={"HANDSHAKE_CR_DIR": str(cr)})
+
+    row = [ln for ln in r.stdout.splitlines() if ln.startswith("T4")]
+    assert row, f"the lane must still appear on the board:\n{r.stdout}"
+    assert "AWAITING_AUDIT" not in row[0] and "DRAFT" in row[0], row[0]
+
+
+def test_the_auditor_watcher_does_not_wake_for_an_unsubmitted_lane(tmp_path: Path):
+    """The behavioural half — the state string is only interesting because `count_state`
+    reads it. A watcher told to block until there is work must still be blocking, so this
+    asserts the timeout exit (3, no work found) rather than the table's contents."""
+    cr = tmp_path / "cr"
+    cr.mkdir(parents=True, exist_ok=True)
+    (cr / "T5.architect.md").write_text("authored, not submitted\n")
+
+    r = _run(_WATCHER, "auditor", "-i", "1", "-t", "3", env_extra={"HANDSHAKE_CR_DIR": str(cr)})
+
+    assert r.returncode == 3, (
+        "the auditor watcher woke for a lane that has submitted nothing — exit 0 means it "
+        f"found work:\n{r.stdout}"
+    )
+
+
+def test_a_real_submission_still_wakes_the_auditor(tmp_path: Path):
+    """Non-vacuity, and the regression that matters most: the guard must not have bought
+    quiet by breaking the signal. Same fixture as above plus the one line that makes it a
+    submission."""
+    cr = tmp_path / "cr"
+    cr.mkdir(parents=True, exist_ok=True)
+    (cr / "T6.architect.md").write_text("SUBMITTED: round 1\n")
+
+    r = _run(_WATCHER, "auditor", "-i", "1", "-t", "10", env_extra={"HANDSHAKE_CR_DIR": str(cr)})
+
+    assert r.returncode == 0, (
+        f"a genuinely submitted lane no longer wakes the auditor:\n{r.stdout}"
+    )
+    assert "AWAITING_AUDIT" in r.stdout, r.stdout
+
+
 def test_clean_exit_clears_the_stamp(tmp_path: Path):
     """A watcher that finds work and exits 0 must NOT leave a stamp behind — otherwise the
     normal path manufactures false alarms and the signal dies of noise within a day."""

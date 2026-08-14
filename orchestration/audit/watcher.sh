@@ -7,6 +7,8 @@
 #   UNPUSHED_SUBMIT    : the SUBMISSION is committed but not on origin — same, one step on   <-- loud
 #                        These two are the submitter's OWN job to clear, never anyone else's.
 #   AWAITING_AUDIT : architect SUBMITTED round > auditor VERDICT round, or no auditor file yet
+#   DRAFT          : a lane file exists but has emitted NO `SUBMITTED:` round yet — authored, not
+#                    submitted. Not work for anybody, and deliberately not AWAITING_AUDIT (DEF300)
 #   AWAITING_FIXES : auditor's LATEST verdict keyword is AWAITING_FIXES (keyword wins, per protocol note)
 #   COMPLETE       : auditor's latest verdict keyword is COMPLETE and rounds have caught up
 #   BAD_ROUND      : VERDICT round > SUBMITTED round — impossible, so a round was mistyped  <-- loud
@@ -110,7 +112,18 @@ lane_state() {  # $1=item id; echoes "STATE sub vr keyword"
   # verdict-side states below, which mean "chase the other role". Answering the second to the first
   # leaves both sides waiting on each other, which is the whole failure this check exists to name.
   if [ "$sub" -gt 0 ] && [ -n "$(unpushed "$a")" ]; then echo "UNPUSHED_SUBMIT $sub - -"; return; fi
-  if [ ! -f "$u" ]; then echo "AWAITING_AUDIT $sub - -"; return; fi
+  # DEF300 — "no auditor file yet" is only AWAITING_AUDIT once something was actually submitted.
+  # This fired unconditionally, so an architect file authored ahead of its evidence — the normal way
+  # a SHA-pinned lane is written — woke the auditor for a lane with nothing in it. The two checks
+  # directly above already guard on `sub -gt 0`; the omission here was an inconsistency inside one
+  # function, not a considered choice, and the value it needed was computed two lines up and already
+  # printed in the output. The cost is not the wasted poll: a false AWAITING_AUDIT teaches the
+  # auditor that the signal does not mean what it says, which is DEF277/DEF290's failure in the
+  # audit path instead of the promotion path.
+  if [ ! -f "$u" ]; then
+    [ "$sub" -gt 0 ] && echo "AWAITING_AUDIT $sub - -" || echo "DRAFT $sub - -"
+    return
+  fi
   # Same rule on the verdict side, so this table and the dispatch board cannot disagree about
   # whether a gate has been satisfied.
   if [ -n "$(undelivered "$u")" ]; then echo "UNCOMMITTED $sub - -"; return; fi
@@ -126,7 +139,11 @@ lane_state() {  # $1=item id; echoes "STATE sub vr keyword"
   case "${kw:-}" in
     AWAITING_FIXES) echo "AWAITING_FIXES $sub $vr $kw" ;;
     COMPLETE)       echo "COMPLETE $sub $vr $kw" ;;
-    *)              echo "AWAITING_AUDIT $sub $vr -" ;;   # auditor file exists but no verdict yet
+    # DEF300, second door into the same wrong state: an auditor file with no verdict and no
+    # submission behind it. That combination is exactly what the false signal PRODUCES — the auditor
+    # is woken, opens a file, finds nothing committed, and writes no verdict — so leaving this arm
+    # unguarded would let the lane keep re-reporting itself as work forever.
+    *)              [ "$sub" -gt 0 ] && echo "AWAITING_AUDIT $sub $vr -" || echo "DRAFT $sub $vr -" ;;
   esac
 }
 
