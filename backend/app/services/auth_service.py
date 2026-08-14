@@ -38,6 +38,7 @@ from typing import NamedTuple
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
 from app.core.logging import logger
@@ -68,36 +69,75 @@ def _upsert_user_device(
     app_version: str | None,
 ) -> None:
     """BL2: register/touch a device row keyed by `device_install_id`. If the
-    row exists, refresh its owner + context + last_seen_at. If not, create
-    it. UNIQUE on device_install_id keeps this safe under races."""
+    row exists, refresh its owner + context + last_seen_at. If not, create it.
+
+    **DEF220 — chosen outcome on a lost race: RE-READ AND UPDATE, never skip.**
+    The previous docstring claimed *"UNIQUE on device_install_id keeps this safe
+    under races"*, which had it exactly backwards: the constraint is what makes
+    the second inserter RAISE. Two bootstraps from one device (app relaunch
+    while a claim is in flight) both read `None` and both insert.
+
+    Skipping on collision would be wrong here in a way it is not for a badge or
+    a cache, and the else-branch says why: **owner can change on claim
+    adoption**. A loser that drops its write leaves the row pointing at the
+    pre-claim anonymous user, so the device silently belongs to the wrong
+    account until the next bootstrap happens to win. The update is idempotent,
+    so applying it after losing is both safe and the only outcome that
+    preserves the re-key.
+    """
     now = datetime.now(timezone.utc)
+
+    def _touch(row: UserDeviceRow) -> None:
+        # Owner can change here on claim adoption — the next anon-bootstrap
+        # from the device after adoption arrives with a different Bearer
+        # (adopted user) and the row re-keys itself.
+        row.user_id = user_id
+        row.last_seen_at = now
+        if device_model is not None:
+            row.device_model = device_model
+        if os_version is not None:
+            row.os_version = os_version
+        if app_version is not None:
+            row.app_version = app_version
+
     existing = s.execute(
         select(UserDeviceRow).where(
             UserDeviceRow.device_install_id == device_install_id
         )
     ).scalar_one_or_none()
-    if existing is None:
-        s.add(UserDeviceRow(
-            user_id=user_id,
-            device_install_id=device_install_id,
-            device_model=device_model,
-            os_version=os_version,
-            app_version=app_version,
-            first_seen_at=now,
-            last_seen_at=now,
-        ))
-    else:
-        # Owner can change here on claim adoption — the next anon-bootstrap
-        # from the device after adoption arrives with a different Bearer
-        # (adopted user) and the row re-keys itself.
-        existing.user_id = user_id
-        existing.last_seen_at = now
-        if device_model is not None:
-            existing.device_model = device_model
-        if os_version is not None:
-            existing.os_version = os_version
-        if app_version is not None:
-            existing.app_version = app_version
+    if existing is not None:
+        _touch(existing)
+        return
+
+    # SAVEPOINT rather than a bare flush: this runs inside the caller's
+    # `get_session()` transaction, which has already created or mutated the User
+    # row. A plain `flush()` that raises poisons the whole transaction, so the
+    # loser of a device race would roll back a successful sign-in.
+    try:
+        with s.begin_nested():
+            s.add(UserDeviceRow(
+                user_id=user_id,
+                device_install_id=device_install_id,
+                device_model=device_model,
+                os_version=os_version,
+                app_version=app_version,
+                first_seen_at=now,
+                last_seen_at=now,
+            ))
+            s.flush()
+    except IntegrityError:
+        raced = s.execute(
+            select(UserDeviceRow).where(
+                UserDeviceRow.device_install_id == device_install_id
+            )
+        ).scalar_one_or_none()
+        logger.info(
+            "user_device_insert_lost_race",
+            device_install_id=str(device_install_id),
+            recovered=raced is not None,
+        )
+        if raced is not None:
+            _touch(raced)
 
 
 def _log_adoption_event(s, *, from_user_id: UUID, to_user_id: UUID) -> None:

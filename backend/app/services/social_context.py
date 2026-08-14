@@ -39,6 +39,7 @@ from threading import RLock
 from typing import NamedTuple
 
 import httpx
+from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
 from app.core.logging import logger
@@ -207,10 +208,28 @@ def _cache_write(sym: str, sentiment: SocialSentiment | None) -> None:
                     dict(s._asdict()) for s in (payload.get("subreddit_stats") or ())
                 ]
             if row is None:
-                s.add(SocialSentimentCacheRow(
-                    ticker=sym, found=sentiment is not None, payload=payload,
-                    fetched_at=datetime.now(timezone.utc),
-                ))
+                # DEF220 — chosen outcome on a lost race: DROP THE WRITE.
+                # `ticker` is the natural primary key, so two fetches for the
+                # same symbol collide. This is a cache: the winner wrote the
+                # same sentiment we did, one poll apart, and re-reading to apply
+                # an identical update buys nothing.
+                #
+                # The handler is explicit rather than left to the broad `except
+                # Exception` below, and that is the actual fix here — a lost
+                # cache race was already being caught, but logged as
+                # `social_cache_write_failed` at WARN. Nothing failed. A warning
+                # that fires when the system is working correctly is how an
+                # operator learns to scroll past that line, which is exactly the
+                # habit DEF277 and DEF300 exist to break.
+                try:
+                    with s.begin_nested():
+                        s.add(SocialSentimentCacheRow(
+                            ticker=sym, found=sentiment is not None, payload=payload,
+                            fetched_at=datetime.now(timezone.utc),
+                        ))
+                        s.flush()
+                except IntegrityError:
+                    logger.info("social_cache_write_lost_race", ticker=sym)
             else:
                 row.found = sentiment is not None
                 row.payload = payload

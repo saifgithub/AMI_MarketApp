@@ -22,13 +22,25 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
+from sqlalchemy.exc import IntegrityError
 
+from app.core.logging import logger
 from app.db import get_session, init_schema
 from app.db.models import MandateRow
 from app.schemas import Mandate
 from app.schemas.mandate import CLIENT_UNWRITABLE_MANDATE_FIELDS
 from app.services.brief_engine import hydrate_brief_mandate
+
+
+class MandateVersionConflictError(RuntimeError):
+    """A mandate write lost two consecutive version races and was NOT persisted.
+
+    DEF220. Deliberately a distinct type rather than a bare `IntegrityError`:
+    the caller must be able to tell "your edit did not land" apart from any
+    other database error, and a named exception is the only outcome that keeps
+    a discarded user edit from reading like a success one layer up.
+    """
 
 
 def _deep_merge(base: dict[str, Any], updates: dict[str, Any]) -> dict[str, Any]:
@@ -75,6 +87,29 @@ class MandateStore:
         return default.model_copy(update={"user_id": user_id})
 
     def upsert(self, user_id: UUID, mandate: Mandate) -> Mandate:
+        """Write a new current mandate version for the user.
+
+        **DEF220 — chosen outcome on a lost race: RETRY ONCE at the next free
+        version, then RAISE. Never skip.**
+
+        `UniqueConstraint(user_id, version)` means two concurrent saves that both
+        read version N both try to write N+1, and one loses. This is
+        user-authored state, so the two outcomes available to the badge and the
+        cache are both wrong here: skipping silently discards an edit the user
+        believes they made, and that is indistinguishable from a successful save
+        at every layer above.
+
+        A retry is not a fudge — the version is a per-user sequence, not a lock.
+        Landing the loser at N+2 is byte-identical to what would have happened
+        had the two requests arrived a millisecond apart, which is the semantic
+        the endpoint already promises. What must not happen is a THIRD silent
+        outcome, so a second collision raises `MandateVersionConflictError`
+        rather than looping: at that point something is wrong that a retry
+        cannot fix, and saying so is the only honest answer.
+
+        The version is derived from `MAX(version)` rather than from the current
+        row, so the retry is correct after the demote below has already run.
+        """
         with get_session() as s:
             existing = s.execute(
                 select(MandateRow).where(
@@ -83,29 +118,56 @@ class MandateStore:
                 )
             ).scalar_one_or_none()
             now = datetime.now(timezone.utc)
-            new_version = (existing.version + 1) if existing else 1
             created_at = existing.created_at if existing else now
-            updated = mandate.model_copy(update={
-                "user_id": user_id,
-                "version": new_version,
-                "updated_at": now,
-                "created_at": created_at,
-            })
+
             # Demote prior current row(s), then insert the new one.
             s.execute(
                 update(MandateRow)
                 .where(MandateRow.user_id == user_id, MandateRow.is_current.is_(True))
                 .values(is_current=False)
             )
-            s.add(MandateRow(
-                user_id=user_id,
-                version=new_version,
-                is_current=True,
-                snapshot=updated.model_dump(mode="json"),
-                created_at=created_at,
-                updated_at=now,
-            ))
-            return updated
+
+            def _next_version() -> int:
+                highest = s.execute(
+                    select(func.max(MandateRow.version)).where(
+                        MandateRow.user_id == user_id,
+                    )
+                ).scalar()
+                return (highest + 1) if highest else 1
+
+            for attempt in (1, 2):
+                new_version = _next_version()
+                updated = mandate.model_copy(update={
+                    "user_id": user_id,
+                    "version": new_version,
+                    "updated_at": now,
+                    "created_at": created_at,
+                })
+                try:
+                    with s.begin_nested():
+                        s.add(MandateRow(
+                            user_id=user_id,
+                            version=new_version,
+                            is_current=True,
+                            snapshot=updated.model_dump(mode="json"),
+                            created_at=created_at,
+                            updated_at=now,
+                        ))
+                        s.flush()
+                except IntegrityError:
+                    logger.warning(
+                        "mandate_version_lost_race",
+                        user_id=str(user_id),
+                        attempted_version=new_version,
+                        attempt=attempt,
+                    )
+                    continue
+                return updated
+
+            raise MandateVersionConflictError(
+                f"mandate for user {user_id} lost two consecutive version races; "
+                "the write was NOT persisted"
+            )
 
     def patch(self, user_id: UUID, updates: dict[str, Any]) -> Mandate:
         """Recursively merge updates into the current mandate, bump version

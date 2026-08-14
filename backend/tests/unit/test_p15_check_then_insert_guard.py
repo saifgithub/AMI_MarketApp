@@ -62,13 +62,31 @@ _HANDLED_AT_CALLER = {
     ("price_history.py", "upsert_daily_bars", "PriceHistoryDailyRow"),
     ("ticker_reference.py", "upsert_reference", "TickerReferenceRow"),
 }
+#
+# DEF220's original six are GONE from this set because they were fixed, each with
+# its own stated outcome rather than a blanket `except IntegrityError: pass` —
+# retry-and-raise for the two that hold user-authored text (mandate, overlay),
+# re-read-and-update for the two whose loser must still apply its change (device
+# ownership, edit counter), and skip for the two that are idempotent by intent
+# (badge, social cache).
+#
+# What replaced them is DEF308: widening the rule to see `row = Model(...)` then
+# `s.add(row)` surfaced 11 sites the shape rule had never been able to see. They
+# are pinned, not fixed — fixing eleven money-, auth- and progress-adjacent sites
+# blind is precisely what DEF220 refused to do, and the refusal is why its six
+# each got a different answer.
 _UNREVIEWED = {
-    ("auth_service.py", "_upsert_user_device", "UserDeviceRow"),
-    ("lessons_service.py", "_check_agent_unlocks", "AgentActivationRow"),
-    ("mandate_store.py", "upsert", "MandateRow"),
-    ("overlay_store.py", "save_new_version", "OverlayEditCounter"),
-    ("reputation_service.py", "_award_badge", "BadgeRow"),
-    ("social_context.py", "_cache_write", "SocialSentimentCacheRow"),
+    ("auth_service.py", "_claim_or_create", "User"),
+    ("auth_service.py", "ensure_anonymous", "User"),
+    ("auth_service.py", "sign_in_with_apple", "User"),
+    ("auth_service.py", "sign_in_with_google", "User"),
+    ("client_release_floor.py", "create_floor_raise", "ClientReleaseFloorRow"),
+    ("games_desks.py", "ensure_desk_users", "User"),
+    ("games_service.py", "ensure_field", "GameFieldRow"),
+    ("lessons_service.py", "grant_activation", "AgentActivationRow"),
+    ("lessons_service.py", "mark_started", "LessonProgressRow"),
+    ("lessons_service.py", "submit_quiz", "LessonProgressRow"),
+    ("watchlist_store.py", "add", "SimWatchlistRow"),
 }
 _KNOWN = _HANDLED_AT_CALLER | _UNREVIEWED
 
@@ -156,6 +174,26 @@ def _check_then_insert_sites() -> set[tuple[str, str, str]]:
         for fn in ast.walk(tree):
             if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
+            # DEF220 — `row = Model(...)` then `s.add(row)`. The shape rule
+            # replaced a NAME rule after an auditor proved the name rule enforced
+            # a convention rather than the pattern; the shape rule then had its
+            # own blind spot of exactly the same kind, only seeing the model when
+            # it was constructed INLINE inside `add()`. Measured 2026-08-15, that
+            # hid 12 of 20 sites — including `overlay_store.save_new_version`'s
+            # `UserOverlayRow`, which sits in the same function as a counter
+            # insert the rule DID see. Two inserts, one function, one hazard, and
+            # the guard could see one of them.
+            var_model: dict[str, str] = {}
+            for node in ast.walk(fn):
+                if (
+                    isinstance(node, ast.Assign)
+                    and isinstance(node.value, ast.Call)
+                    and isinstance(node.value.func, ast.Name)
+                ):
+                    for target in node.targets:
+                        if isinstance(target, ast.Name):
+                            var_model[target.id] = node.value.func.id
+
             added: dict[str, int] = {}
             read: set[str] = set()
             for node in ast.walk(fn):
@@ -164,6 +202,8 @@ def _check_then_insert_sites() -> set[tuple[str, str, str]]:
                         arg = node.args[0]
                         if isinstance(arg, ast.Call) and isinstance(arg.func, ast.Name):
                             added.setdefault(arg.func.id, node.lineno)
+                        elif isinstance(arg, ast.Name) and arg.id in var_model:
+                            added.setdefault(var_model[arg.id], node.lineno)
                     elif (
                         node.func.attr == "get" and node.args
                         and isinstance(node.args[0], ast.Name)

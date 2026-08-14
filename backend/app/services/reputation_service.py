@@ -434,11 +434,30 @@ class ReputationService:
         ).scalar_one_or_none()
         if already is not None:
             return
-        session.add(BadgeRow(
-            id=uuid4(), user_id=user.id, badge_key=badge_key,
-            ref_type="streak_milestone", ref_id=ref_id,
-            is_permanent_flair=is_permanent_flair, earned_at=_utcnow(),
-        ))
+        # DEF220 — chosen outcome on a lost race: SKIP. This is the clean
+        # idempotent case: a badge awarded twice IS a skip, the docstring above
+        # already says UNIQUE(user_id, badge_key) is defence-in-depth, and the
+        # row's existence is the entire desired end state.
+        #
+        # It is safe to swallow here specifically because the MONETIZED half is
+        # guarded elsewhere and separately: `_grant_milestone` gates the credit
+        # grant on the `reputation_events` ref row via `award(_raise_on_race)`
+        # (DEF049), so swallowing a badge collision cannot double-grant credits.
+        # The SAVEPOINT keeps this rollback off the caller's transaction, which
+        # is carrying that credit grant.
+        try:
+            with session.begin_nested():
+                session.add(BadgeRow(
+                    id=uuid4(), user_id=user.id, badge_key=badge_key,
+                    ref_type="streak_milestone", ref_id=ref_id,
+                    is_permanent_flair=is_permanent_flair, earned_at=_utcnow(),
+                ))
+                session.flush()
+        except IntegrityError:
+            logger.info(
+                "badge_award_lost_race", user_id=str(user.id), badge_key=badge_key,
+            )
+            return
         logger.info("badge_awarded", user_id=str(user.id), badge_key=badge_key)
 
     def _grant_milestone(self, session, *, user: User, milestone: int) -> None:

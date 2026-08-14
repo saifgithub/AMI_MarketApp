@@ -27,6 +27,7 @@ from uuid import UUID
 
 import yaml
 from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
 
 from app.core.logging import logger
 from app.db import get_session, init_schema
@@ -687,12 +688,36 @@ class LessonsService:
                 ).scalars().all()
                 if len(set(passed_rows)) < len(set(required)):
                     continue
-                s.add(AgentActivationRow(
-                    user_id=user_id,
-                    agent_id=agent_id,
-                    activation_method="earn_path",
-                    triggering_lesson_id=just_completed.meta.id,
-                ))
+                # DEF220 — chosen outcome on a lost race: SKIP, and do not
+                # report the agent as newly unlocked.
+                #
+                # Idempotent by intent: UNIQUE(user_id, agent_id) means the
+                # agent IS unlocked either way, so there is nothing to repair.
+                # What the loser must not do is claim the unlock — the return
+                # value drives the client's "you unlocked X" surface, and the
+                # request that won is already reporting it.
+                #
+                # The SAVEPOINT is per-agent and that placement is the point:
+                # this loop adds several activations against ONE session, so a
+                # bare flush that raised on the third agent would roll back the
+                # first two as well, turning one lost race into a silently
+                # dropped unlock the user had genuinely earned.
+                try:
+                    with s.begin_nested():
+                        s.add(AgentActivationRow(
+                            user_id=user_id,
+                            agent_id=agent_id,
+                            activation_method="earn_path",
+                            triggering_lesson_id=just_completed.meta.id,
+                        ))
+                        s.flush()
+                except IntegrityError:
+                    logger.info(
+                        "agent_unlock_lost_race",
+                        user_id=str(user_id),
+                        agent_id=agent_id,
+                    )
+                    continue
                 newly_unlocked.append(agent_id)
                 logger.info(
                     "agent_unlocked_via_earn_path",
