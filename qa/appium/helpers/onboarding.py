@@ -49,6 +49,42 @@ _LOOKS_RIGHT_CONTINUE = "LOOKS RIGHT — CONTINUE"
 _BACKEND_ERROR_TITLE = "CAN'T REACH THE BACKEND"
 _TRY_AGAIN = "TRY AGAIN"
 _MAX_BACKEND_RETRIES = 2
+_MAX_ESCAPES = 3
+
+# Appium's application state enum; 4 is RUNNING_IN_FOREGROUND.
+_FOREGROUND = 4
+
+
+def _app_id(driver) -> str | None:
+    """The package/bundle under test, from the live session's own capabilities
+    rather than a constant — the harness drives two platforms whose ids differ
+    (`…ami_trade` vs `…amiTrade`), and a hardcoded one would silently never
+    match on the other."""
+    caps = driver.capabilities
+    for key in ("appPackage", "bundleId", "appium:appPackage", "appium:bundleId"):
+        if caps.get(key):
+            return caps[key]
+    return None
+
+
+def _is_app_foreground(driver, app_id: str) -> bool:
+    try:
+        return driver.query_app_state(app_id) == _FOREGROUND
+    except Exception:
+        # Cannot tell. Assume we are still home rather than manufacture an
+        # escape — a false escape would relaunch the app mid-interview and
+        # throw away real progress.
+        return True
+
+
+def _foreground_package(driver) -> str | None:
+    """Only for the diagnostic message — Android-only, best effort. Knowing it
+    was the dialer rather than 'not our app' is the difference between a
+    five-minute diagnosis and an hour of one."""
+    try:
+        return driver.current_package
+    except Exception:
+        return None
 
 
 def _live_chip(driver, candidates):
@@ -121,8 +157,42 @@ def ensure_onboarded(
     print("    [onboarding] Floor not reached yet — walking the Concierge interview")
     deadline = time.monotonic() + timeout_s
     backend_error_retries = 0
+    escapes = 0
+    app_id = _app_id(driver)
 
     while time.monotonic() < deadline:
+        # Are we even still in the app? The walk taps whatever the accessibility
+        # tree offers, and the tree is the *foreground app's*, not ours — so one
+        # stray tap that fires an external intent, or a probe that runs before
+        # our first frame paints, hands the rest of the budget to somebody
+        # else's UI. Measured: a run left AMI Trade and spent the full 300s
+        # tapping the Samsung dialer's keypad, then reported "onboarding did not
+        # reach Floor", which reads exactly like the app failing to start.
+        #
+        # Recover rather than fail on the first escape — the walk is exploratory
+        # and a single bounce is survivable — but say so every time, and give up
+        # naming the intruder once it is clearly not converging. Silently
+        # re-entering forever would hide an app that really does launch
+        # something external.
+        if app_id and not _is_app_foreground(driver, app_id):
+            escapes += 1
+            intruder = _foreground_package(driver) or "an unidentified app"
+            print(
+                f"    [onboarding] the walk left {app_id} — {intruder} is in "
+                f"front (escape {escapes}/{_MAX_ESCAPES}). Re-entering."
+            )
+            if escapes > _MAX_ESCAPES:
+                raise TimeoutError(
+                    f"onboarding kept leaving the app under test ({app_id}); "
+                    f"last seen in front: {intruder}. The walk taps what the "
+                    f"foreground app exposes, so it cannot recover on its own. "
+                    f"This is NOT 'the app failed to start' — check whether a "
+                    f"tapped element fires an external intent."
+                )
+            driver.activate_app(app_id)
+            time.sleep(2.0)
+            continue
+
         try:
             wait_visible_text(driver, floor_label, timeout_s=2)
             print("    [onboarding] landed on Floor")

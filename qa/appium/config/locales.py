@@ -47,7 +47,7 @@ LOCALES: dict[str, LocaleProfile] = {
             "You": "YOU",
         },
         strings={
-            "floor_concierge_heading": "AMI CONCIERGE",
+            "floor_omnibox_hint": "Type a ticker — or ask AMI anything…",
             "floor_convene_cta": "CONVENE THE ROOM",
             "convene_confirm": "CONVENE",
             "portfolio_heading": "PORTFOLIO",
@@ -82,7 +82,7 @@ LOCALES: dict[str, LocaleProfile] = {
             "You": "YOU",
         },
         strings={
-            "floor_concierge_heading": "AMI CONCIERGE",
+            "floor_omnibox_hint": "Type a ticker — or ask AMI anything…",
             "floor_convene_cta": "اجتماع",
             "convene_confirm": "اجتماع",
             "portfolio_heading": "المحفظة",
@@ -111,7 +111,7 @@ LOCALES: dict[str, LocaleProfile] = {
             "You": "YOU",  # see the AR note above
         },
         strings={
-            "floor_concierge_heading": "AMI CONCIERGE",
+            "floor_omnibox_hint": "Type a ticker — or ask AMI anything…",
             "floor_convene_cta": "KUMPULKAN",
             "convene_confirm": "CONVENE",
             "portfolio_heading": "PORTFOLIO",
