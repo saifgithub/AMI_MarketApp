@@ -14,10 +14,15 @@ To clear a hold: delete its block, and record in the trail *why* the preconditio
 
 ## ACTIVE HOLDS
 
+*(none — promotion is unblocked)*
+
+---
+
+## CLEARED HOLDS
+
 ### DEF302-REMEASURE — live corpus run in flight on this exact container
 
-**Raised:** 2026-08-14 (AT:R69) · **Blocks:** any Alpha promotion until the DEF302 re-measurement
-corpus is complete and verified from the database.
+**Raised:** 2026-08-14 (AT:R69) · **CLEARED:** 2026-08-14 (AT:R69) · **Blocked:** any Alpha promotion while the DEF302 re-measurement corpus was running
 
 **Why.** A 39-convene epoch is running live against `alpha-2026-08-14-3` / `913f3b59` to test whether
 DEF302's rendering fix changed anything in the agents' prose. The comparison is only meaningful if
@@ -38,9 +43,26 @@ than split.
 below for why) that the epoch is complete, then record the container's `RestartCount` and `version`
 at the first and last convene showing one code state throughout.
 
----
+**Why the precondition is met — measured from the database, not the runner.** 39 convenes, all
+`completed`, **13 tickers × 3** with no ticker at 2 or 4, 468 turns with all twelve agents at exactly
+39. Window `2026-08-14 10:59:01Z → 13:29:20Z`. `ami_api_alpha`: **`RestartCount=0`**, `StartedAt
+2026-08-14T10:22:28Z` — *before* the window opened — `version 913f3b59` / `alpha-2026-08-14-3` and
+`Health=healthy` at the end. **One code state served the entire corpus**, which is exactly what the
+hold was raised for.
 
-## CLEARED HOLDS
+**Two things this hold caught that a file count would not have**, both the same lesson as the
+CR179-LEG5 hold below, and both worth writing down because the hold is only as good as the check that
+clears it:
+
+1. **Two convenes the runner recorded as `script_error` had completed backend-side.** Round 2's ANET
+   and round 3's BAC. Re-running either on the runner's word would have put a **14th convene into a
+   13×3 design** — and it would have looked like diligence.
+2. **A time-windowed export was contaminated.** Querying `room_runs` over the corpus window returned
+   **SCHF and VSS**, neither in the 13-ticker set: other traffic on a live box. The export is
+   filtered by **batch user**, not by time. An epoch carrying tickers outside the held-constant set is
+   DEF230's mix-shift with extra steps, and nothing downstream would have flagged it.
+
+---
 
 ### CR179-LEG5 — live corpus run in flight on this exact container
 
