@@ -867,3 +867,48 @@ hand-read checks over-flagged on their first form — derived-% **26.5% → 12.5
 DEF279 is cited three times in this document and the failure it names still very nearly recurred twice
 in the session that cited it. **A metric's first number is a hypothesis about the metric, not a
 measurement of the corpus.**
+
+---
+
+## Correction to Leg 5's derived-% figures (2026-08-14, same day)
+
+**The derived-percentage rates published above are wrong, and the defect filed off them named the wrong
+agent.** Found while starting DEF302's fix, by reading the Trader turn the defect was built on. Kept
+here in full rather than edited in place, because the sequence is the point.
+
+**What broke.** The checker resolved "N% below entry" against the **last close**. The Trader proposes a
+**limit entry**, which is usually not the close. `Stop: $164.70 (-5% below entry)` sits under
+`Entry: $173.40 (limit buy at 50-day SMA)`, and 164.70/173.40 is **−5.02%** — correct. Leg 4's own
+annotator says so on the same line: *"entry $173.40 / stop $164.70 / target $214.89 … 23.9% upside vs
+5.0% downside."* **The verifier contradicted a verifier this build already shipped, and I believed the
+new one.**
+
+**Corrected by hand-reading every hit in both epochs:**
+
+| | published | corrected |
+|---|---|---|
+| Leg 5 (08-14) | 5/40 = 12.5% | **3/40 = 7.5%** |
+| Baseline (08-13) | 4/29 = 13.8% | **1–2/29** |
+| Trader stop-distance claims wrong | "the defect" | **0 in either epoch** |
+
+Small-n both sides; **no trend is claimed in either direction**, where the earlier text claimed "flat".
+The surviving three are a different class — a *supplied* figure reattached to the wrong referent (AMI's
+6.0% reference stop on a level 23.1% away; the sheet's *"price 70.6% above it"* restated as *"the
+average is 70.6% below the price"*). That is DEF292's shape one layer out, not an unverified Trader.
+DEF302 is rewritten accordingly.
+
+**Does the adjudication above survive this?** Acceptance 5 was kept partly on *"the metric that actually
+tests fabrication is flat."* That sentence is now *"3/40 vs 1–2/29, too few to call."* The other four
+supports are untouched — the hand-read of the novel numbers as correct scenario arithmetic, the three
+plan-named gate lanes all falling, M3's readback docstring, and the matched ticker sets. **The
+conclusion stands on weaker evidence than it was granted on**, and that is worth saying plainly: if the
+derived-% class is the thing that eventually falsifies keeping these lanes, this correction is where the
+warning was.
+
+**The lesson, third occurrence in one session.** DEF279 is cited three times in this document; the
+sentence *"a metric's first number is a hypothesis about the metric"* was written two sections above —
+**and then a defect was filed off a first number anyway.** The rule that would actually have caught it
+is narrower and mechanical: **when a new check contradicts a control this codebase already ships, the
+new check is the suspect.** `_annotate_rr_against_levels` had already computed the correct 5.0% downside
+and printed it in the same prompt the checker was reading. Nothing consulted it. That belongs beside P2
+in `failure_patterns.md`.
