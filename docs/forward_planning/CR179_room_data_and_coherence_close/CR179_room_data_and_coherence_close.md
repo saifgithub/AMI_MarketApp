@@ -961,9 +961,19 @@ window opened). Sweep at `def302_remeasure_sweep.json`.
 
 | | pre-fix | post-fix |
 |---|---|---|
-| `Reference position` lines carrying a bare `X% below entry` | **156 / 156** | **0** |
-| `Primary trend` lines stating one end only | **351 / 351** | **0** |
+| turns rendering a `Reference position` line | 156 | **156** |
+| ...whose stop % is bare (`X% below entry`) | **156** | **0** |
+| ...whose stop % names its pair | 0 | **156** |
+| turns rendering a `Primary trend` line | 351 | **351** |
+| ...stating one end only | **351** | **0** |
+| ...carrying the explicit inverse | 0 | **351** |
 | derived-% inconsistent | 3/40 = 7.5% | **1/29 = 3.4%** |
+
+*(The audit's MAJOR-3: the first published version of this table read 53 and 125 for the two
+post-fix conversions. Those were counts taken while the corpus was still running — turns 165 and 167
+of 468, 41 seconds apart — and not re-taken when it finished. The claim held either way, but the
+printed denominators implied the post-fix epoch had a third as many of these lines. It has exactly
+the same number, 156 and 351 in both, which makes the corrected table the stronger one.)*
 
 **P2 governs the reading.** The supportable claim is *the ambiguity is gone from the input*, 100% of
 the time — not *the model stopped misattributing*. Fisher **p = 0.634**: this epoch cannot detect a
@@ -975,7 +985,9 @@ not match its own level).
 That was **one mismatched pair of 45**; this epoch gives **0 of 46**. Noise.
 
 **M8 rose 2.6% → 5.8% and is reported without attribution.** Concentrated in `news_analyst`
-(7.7 → 17.9), all `price action`. The tempting story — that DEF302's new clause naming "the price"
+(7.7 → 17.9), spread across three domains and five terms — `technicals` ×4 (price action ×3, range
+high), `fundamentals` ×2 (revenue, multiples), `social` ×1 — not the single leaking phrase the first
+write-up called it (the audit's MINOR-3). The tempting story — that DEF302's new clause naming "the price"
 caused it — **is false, and the artefact says so**: the News Analyst's prompt carries no
 `Primary trend` line in *either* epoch (0/39 both), so the clause never reaches it, and its mean
 prompt is *shorter* post-fix. p = 0.257. Watch it next epoch; do not file it today. Stated explicitly
