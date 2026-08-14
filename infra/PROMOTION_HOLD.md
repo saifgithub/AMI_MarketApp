@@ -14,7 +14,41 @@ To clear a hold: delete its block, and record in the trail *why* the preconditio
 
 ## ACTIVE HOLDS
 
-*(none — promotion is unblocked)*
+### DEF294-CLIENT — the quiz reveal would mark correct answers WRONG on every installed build
+
+**Raised:** 2026-08-15 (AT:R70) · **Blocks:** any Alpha promotion at or after `badf6a6f`
+
+**Why.** DEF294 (`badf6a6f`) stops `GET /v1/lessons/{id}` from shipping the quiz answer key, and
+moves the reveal onto the graded submit response. Both halves are on `main`. **Only the backend half
+ships by rsync.** Every device in the field is running a build whose parser is
+`answerIndex: ((j['answer_index'] as num?) ?? 0).toInt()`.
+
+**This is not a degraded reveal, it is an inverted one.** Against the new backend `answer_index` is
+absent, so an old client reads **0** for every question. `LessonQuizCard._icon` then draws
+`check_circle` on option 0 and `cancel` on the user's own selection whenever they picked anything
+else. A user who answers a question correctly with option 2 is shown their answer marked **red** and
+option 0 marked **green**. Grading itself is server-side and stays correct — score, pass and the
+agent unlock are all right — so the app awards the unlock while telling the user they got it wrong.
+Nothing errors and nothing logs.
+
+The explanation disappears at the same time (it was read off the question too), so the reveal loses
+its teaching content on a build whose whole purpose is teaching.
+
+**This is the exact case this file exists for**, and it was created by the fix rather than found by
+it: DEF294's own row records that a server-only ship *"silently degrades to option 0 is always
+correct — a leak closed on one side producing a wrong answer on the other, with nothing failing."*
+Writing the fix and then promoting only the half that fits down the rsync would have shipped that
+sentence.
+
+**Scope note.** `/promote-to-alpha` ships the whole tree, so this blocks **every** lane, including
+DEF300/DEF246/DEF220 in the same batch — none of which have a client dependency. If one of those is
+urgent, the honest options are to cut a client release first, or to revert `badf6a6f`'s two backend
+files and promote the rest. Do not promote past this by reasoning that the other three are safe.
+
+**To clear:** a Flutter release carrying `badf6a6f`'s client half must be **on devices**, not merely
+built — TestFlight/Play rollout complete, or the CR121 client release floor raised to that build so
+older clients cannot reach the lesson reader at all. Record the build number and how it was
+confirmed (store status or a `last_app_version` query), measured rather than assumed.
 
 ---
 
