@@ -37,6 +37,7 @@ from app.services.coach_engine import hydrate_coach_mandate
 from app.services.market_data import Quote
 from app.services.sim_engine import SimEngine
 from app.services.sim_resting_orders import sweep_resting_orders
+from app.trading_math.market_hours import session_close_on_or_after
 
 ET = ZoneInfo("America/New_York")
 
@@ -67,6 +68,19 @@ def _closed_now(order_id) -> datetime:
     """Outside the session, still before expiry. 16:00 ET minus 20 hours is
     20:00 ET the previous day — after that day's close, so always shut."""
     return _expiry(order_id) - timedelta(hours=20)
+
+
+def _a_live_session_time() -> datetime:
+    """`_session_now` without an order to derive from — acceptance 10 sweeps a
+    position bracket, and nothing rests, so there is no `expires_at` to anchor
+    to. Same construction, same guarantee: a 16:00 ET close minus an hour is
+    15:00 ET on a weekday, inside 09:30–16:00 whatever day the suite runs."""
+    return session_close_on_or_after(datetime.now(timezone.utc)) - timedelta(hours=1)
+
+
+def _a_closed_time() -> datetime:
+    """The `_closed_now` counterpart. 20:00 ET is after every close."""
+    return session_close_on_or_after(datetime.now(timezone.utc)) - timedelta(hours=20)
 
 
 class _Pinned:
@@ -375,6 +389,86 @@ def test_a9_the_expiry_pass_still_runs_on_a_closed_sunday():
     row = next(r for r in _rows(user_id) if r.id == order_id)
     assert row.state == "expired"
     assert row.cancel_reason, "the system retired it, so it owes a reason"
+
+
+# ── Acceptance 10 — the SHIPPED bracket, fired without a client ────────────
+
+
+def test_a10_a_stopped_out_position_closes_from_the_tick_with_no_client_call():
+    """*"A stop-loss that only fires when you open the app is not a stop-loss."*
+
+    This is the one acceptance in the CR that is not about the new table at
+    all. `SimTradeRow.stop`/`.target` shipped long before CR170 and were only
+    ever evaluated by `POST /v1/sim/trades/{id}/evaluate`, i.e. on app open —
+    so an audience asleep 22:30–05:00 local held every overnight loss in full.
+
+    The book is deliberately EMPTY here. Nothing rests, so the close can only
+    have come from `_sweep_position_brackets`, and `sweep_resting_orders`
+    returns early on an empty book — which means this also pins that the
+    bracket pass runs BEFORE that early return, not after it.
+    """
+    prov = _Pinned({"AAPL": 100.0})
+    sim = SimEngine(provider=prov)
+    user_id = uuid4()
+    r = sim.submit(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=2,
+        mandate=_mandate(), order_type=OrderType.MARKET, stop=90.0, target=120.0,
+    )
+    assert r.accepted and not r.resting, "precondition: a plain open position"
+    assert _rows(user_id) == [], "precondition: nothing in the resting book"
+
+    prov.set("AAPL", 88.0)
+    stats = sweep_resting_orders(
+        user_id=user_id, now=_a_live_session_time(), engine=sim,
+    )
+
+    assert stats["brackets_closed"] == 1
+    assert stats["checked"] == 0, "no resting order was involved in this close"
+    trade = _trades(user_id)[0]
+    assert trade.status == "lost"
+    assert float(trade.closed_price) == 88.0
+
+
+def test_a10_the_bracket_sweep_is_market_hours_gated_like_everything_else():
+    """Same position, same broken price, a clock outside the session. A stop
+    evaluated against a stale last print is CR109 §5.1's time machine — the
+    overnight gap resolves at the NEXT open, not at 03:00."""
+    prov = _Pinned({"AAPL": 100.0})
+    sim = SimEngine(provider=prov)
+    user_id = uuid4()
+    sim.submit(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=2,
+        mandate=_mandate(), order_type=OrderType.MARKET, stop=90.0, target=120.0,
+    )
+    prov.set("AAPL", 88.0)
+
+    stats = sweep_resting_orders(
+        user_id=user_id, now=_a_closed_time(), engine=sim,
+    )
+
+    assert stats["skipped_closed"] == 1
+    assert stats["brackets_closed"] == 0
+    assert _trades(user_id)[0].status == "open"
+
+
+def test_a10_the_unscoped_tick_reaches_a_user_it_was_not_told_about():
+    """`user_id=None` is how the 5-minute tick calls it, and it is the only
+    call shape that fires while the user is asleep. Scoped sweeps are proven
+    above; this proves the sweep FINDS the user on its own — a
+    `_users_with_open_trades` that returned nothing would leave every test
+    above green and the feature dead in production."""
+    prov = _Pinned({"AAPL": 100.0})
+    sim = SimEngine(provider=prov)
+    user_id = uuid4()
+    sim.submit(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=2,
+        mandate=_mandate(), order_type=OrderType.MARKET, stop=90.0, target=120.0,
+    )
+    prov.set("AAPL", 88.0)
+
+    sweep_resting_orders(user_id=None, now=_a_live_session_time(), engine=sim)
+
+    assert _trades(user_id)[0].status == "lost"
 
 
 # ── Acceptance 11 — post-fill effects reach the sweep's fills ──────────────
