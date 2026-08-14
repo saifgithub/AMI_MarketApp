@@ -14,27 +14,29 @@ To clear a hold: delete its block, and record in the trail *why* the preconditio
 
 ## ACTIVE HOLDS
 
-### CR179-LEG5 — live corpus run in flight on this exact container
-
-**Raised:** 2026-08-14 (AT:R68) · **Blocked:** any Alpha promotion while task `b5s7496db` is running
-
-CR179 Leg 5 is mid-flight: 3 rounds × 13 held-constant tickers (`AMD ANET AVGO BAC GRAB KTOS LITE MU
-NBIS NVDA SNDK SNOA TSLA`), 39 live convenes against `ami_api_alpha` on `c79d873c` /
-`alpha-2026-08-14-1`, ~2h, started 04:45 UTC. Not a file collision — CR170/171-BE touches
-`sim.py`/`sim_engine.py`/`sim_resting_orders.py`/`sim_trade_effects.py`/`order_pricing.py`/
-`market_hours.py`/`db/models.py`/`main.py`/`config.py` + a new migration, zero overlap with
-`room_prompts.py`/`room_runner.py`. The collision is structural: **any** promotion recreates
-`ami_api_alpha`, which would interrupt in-flight convenes and split the 39-run corpus across two
-code states — the exact thing Leg 5's "same 13 tickers held constant" methodology is designed to
-rule out (DEF230's mix-shift warning generalized to a code-version shift).
-
-**Clear this hold when:** the Leg 5 background run completes (`runs_cr179-leg5-r3-20260814.jsonl`
-shows 13/13 completed) — measured, not assumed. The architect running Leg 5 (this session) will
-clear it.
+*(none — promotion is unblocked)*
 
 ---
 
 ## CLEARED HOLDS
+
+### CR179-LEG5 — live corpus run in flight on this exact container
+
+**Raised:** 2026-08-14 (AT:R68) · **CLEARED:** 2026-08-14 (AT:R68) · **Blocked:** any Alpha promotion while CR179 Leg 5's corpus was running
+
+**Why the precondition is met — measured, not assumed.** The run is complete and the corpus is the
+shape the methodology required, verified from the database rather than from the runner's own log:
+**39 convenes, all `completed`, 13 tickers × 3, 468 turns with all twelve agents at exactly 39.**
+`ami_api_alpha` served the entire window on one code state — `RestartCount 0`, `StartedAt
+2026-08-13T23:04:38Z`, `version c79d873c` / `alpha-2026-08-14-1` at both the first and last convene —
+so no promotion split the corpus and the hold did the job it was raised for.
+
+**One thing this hold caught that the file count would not have.** Three convenes recorded
+`script_error` in the runner's JSONL (`ReadTimeout`, `ConnectError [Errno 64] Host is down`,
+`ConnectTimeout`) — Mac→LAN transport blips, not backend faults. Querying `room_runs` showed **two of
+the three had completed backend-side**; only AVGO never reached the API. Re-running all three on the
+JSONL's word would have produced two 24h-dedup **cache hits** counted as fresh convenes. The corpus
+of record is the database, not the runner's bookkeeping.
 
 ### CR124-HARDENING — compose required credentials the host had never been given
 
