@@ -44,6 +44,29 @@ _SCRIPT = _REPO_ROOT / "scripts" / "build_testflight.sh"
 _GAMES_REFUSAL = "AMI_GAMES is on and --internal-only was not passed"
 
 
+_PUBSPEC = _REPO_ROOT / "mobile" / "pubspec.yaml"
+
+#: Passed on EVERY invocation, and the reason is not tidiness.
+#:
+#: Writing this suite cost a spurious commit. The mutation run that re-coupled
+#: the gate to `DO_BILLING` meant `--no-billing` skipped the (broken) gate and
+#: then skipped the billing refusals too — nothing was left to stop it, so it
+#: reached the pubspec bump at `build_testflight.sh:253`, ran
+#: `sed -i` on `mobile/pubspec.yaml`, and `git add && git commit`-ed
+#: `0.1.0+93 → 0.1.0+94` into the repo. It only stopped at `flutter build`
+#: because this fixture's scrubbed PATH has no `flutter`.
+#:
+#: The commit even carried the wrong author, which is the tell: `HOME` points
+#: at a tmp dir here, so git found no `.gitconfig` and fell back to the machine
+#: default. Reverted in the same commit as this hardening.
+#:
+#: A test that drives a real release script must disarm every side effect that
+#: script has, not rely on an early exit landing before them — because the
+#: thing under test IS where the early exits are, and a mutation is exactly the
+#: case where they do not fire.
+_INERT = ("--no-bump", "--no-commit", "--no-upload")
+
+
 @pytest.fixture
 def run(tmp_path):
     """Drive the real script far enough to reach the games gate.
@@ -55,6 +78,11 @@ def run(tmp_path):
     _KEY` is exported so the script does not read `infra/alpha.env`, which is
     gitignored and therefore absent on some machines; without that this suite
     would pass or fail depending on whose checkout it ran in.
+
+    Every run is bracketed by a `pubspec.yaml` snapshot. `_INERT` should make
+    that impossible; the assertion is there because "should" is what produced
+    the commit described above, and a side effect this suite cannot see is one
+    it will reintroduce.
     """
     key_id = "TESTKEY"
     keys = tmp_path / ".appstoreconnect" / "private_keys"
@@ -62,8 +90,9 @@ def run(tmp_path):
     (keys / f"AuthKey_{key_id}.p8").write_text("not a real key")
 
     def _run(*args: str) -> subprocess.CompletedProcess:
-        return subprocess.run(
-            ["bash", str(_SCRIPT), *args],
+        before = _PUBSPEC.read_text()
+        proc = subprocess.run(
+            ["bash", str(_SCRIPT), *_INERT, *args],
             capture_output=True,
             text=True,
             timeout=120,
@@ -75,6 +104,11 @@ def run(tmp_path):
                 "REVENUECAT_IOS_SDK_KEY": "test_stub",
             },
         )
+        assert _PUBSPEC.read_text() == before, (
+            f"running the script with {args} modified mobile/pubspec.yaml — a "
+            "test drove a real release script past its bump. Restore the file "
+            "and disarm the path before re-running.")
+        return proc
 
     return _run
 
