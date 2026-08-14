@@ -1092,3 +1092,48 @@ that search, because they are what makes a dead key look alive.*
 `test_every_string_is_mapped_to_an_arb_key` fails if the map drifts, since an unmapped string is an
 unchecked one, which is this pattern again one level up. Runs offline in milliseconds, on the Mac and
 in CI — no device, so the next instance dies before it ever reaches a phone.
+
+---
+
+## P21 — A check that is present in the source and inert at runtime
+
+**Symptom.** A guard, filter or probe exists, reads correctly, and is called. It does nothing. The
+suite stays green, and the green means only that the check could not fire — which is
+indistinguishable from the check passing.
+
+Three instances, all in `qa/appium/`, all found by the first real Android run of CR162 rather than
+by any test:
+
+| | The inert thing | What it was supposed to catch | How it looked |
+|---|---|---|---|
+| **`labelled_only`** | implemented inside the iOS predicate; the Android branch accepted the keyword and ignored it | the unlabelled send-arrow that the Concierge walk must not tap | the walk tapped send on an empty field for its whole budget |
+| **Android text locators** | queried `text()` only; Flutter puts every user-visible string in `content-desc` | any assertion about rendered copy | `content-desc='FLOOR'` in the tree, `exists_text('FLOOR')` False — since CR080 |
+| **`swipe_up`** | `swipeGesture`/`scrollGesture` drive accessibility scroll actions, which Flutter does not service | `swipe_moved`, the primary signal of the scroll-overflow check | four tabs "passing" a check whose signal was pinned false |
+
+**Why the previous guard failed.** In each case a test existed and asserted the *shape* of the call
+rather than its *effect*. `test_text_lookup_is_platform_specific` asserted that Android dispatches to
+`ANDROID_UIAUTOMATOR` — true, and equally true of the broken version. Nothing asserted that the
+selector matched anything. The offline guards could not have caught these either: they use a fake
+driver, so they verify what we *ask for*, and every one of these bugs is in what the device *does
+with the request*. That is not a flaw in the offline guards; it is their boundary, and the boundary
+has to be staffed by something else.
+
+The third instance adds the sharpest edge: **the driver lied.** `scrollGesture` returned
+`canScrollMore=False` — "you have reached the end" — on a pane sitting at its top with six screens
+below. A caller that trusts a returned status has no way to tell a real answer from a wrong one.
+
+**The invariant.** *A check earns trust from an observed effect, never from a successful call.* For
+anything that acts on a device: assert the state changed. For anything that filters: assert something
+was actually excluded. For any status a driver returns: derive the same fact independently before
+depending on it — `swipe_up` now reports whether the hierarchy changed, not what UiAutomator claimed.
+
+**The operational rule.** *A mechanical check must be shown to fail before its passes mean anything.*
+Every one of these would have been caught in minutes by pointing the check at a screen that should
+trip it. None had ever been.
+
+**Enforcing check.** Partly structural, partly procedural, and the split is honest: `swipe_up` and
+`swipe_down` now measure their own effect, and `tests_offline/test_locator_dispatch.py` pins
+coverage (both `description()` and `text()`) rather than dispatch alone. But no offline test can
+prove a gesture moved a real screen. The standing requirement is that a device-dependent check ships
+with a recorded observation of it *failing* on a screen that should trip it — cite the run in the CR,
+the way `mutation_guard.sh` is cited for the crawler.
