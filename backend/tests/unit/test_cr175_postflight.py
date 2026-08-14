@@ -262,6 +262,63 @@ def test_tree_check_excludes_match_the_promotion_command() -> None:
         )
 
 
+# ── DEF280: a directory mtime is not promotion drift ──────────────────────────
+
+# The three lines the live failure actually produced, promoting
+# alpha-2026-08-13-3. Verbatim, because the fix has to be measured against what
+# the tool really emits and not against a plausible reconstruction of it.
+_LIVE_DEF280_NOISE = (
+    ".d..t.... backend/app/\n"
+    ".d..t.... backend/app/core/\n"
+    ".d..t.... backend/tests/unit/\n"
+)
+
+
+def test_the_promotion_that_landed_perfectly_reports_no_drift() -> None:
+    """The reported case. First postflight run said PASSED, all five green; the
+    second, minutes later against an unchanged deploy, said `tree FAILED — 3
+    path(s) differ`. Nothing had changed but the container starting to write
+    `__pycache__` into the bind-mounted tree."""
+    drift, ignored = pf.split_drift(_LIVE_DEF280_NOISE)
+    assert drift == []
+    assert ignored == 3
+
+
+def test_a_real_content_change_is_still_drift() -> None:
+    """The whole point of the check. If the filter swallowed this it would have
+    turned a cry-wolf gate into a blind one, which is strictly worse."""
+    out = _LIVE_DEF280_NOISE + ">f.st.... backend/app/main.py\n"
+    drift, ignored = pf.split_drift(out)
+    assert drift == [">f.st.... backend/app/main.py"]
+    assert ignored == 3
+
+
+@pytest.mark.parametrize("line", [
+    "cd+++++++++ backend/app/newdir/",   # a directory that does not exist there
+    "*deleting   backend/app/gone.py",   # rsync --delete would remove it
+    ".d...p.... backend/app/",           # permissions moved, not just time
+    ".d....og.. backend/app/",           # owner/group moved
+    ">f+++++++++ content/new.md",        # a new file
+])
+def test_these_are_never_filtered(line: str) -> None:
+    """The filter is narrow on purpose: only `.d` with nothing but `t` set.
+
+    A created directory, a deletion, and a permission or ownership change are
+    all real answers to "is the box running what this worktree holds", and
+    DEF280's evidence supports exactly one exemption — a timestamp.
+    """
+    drift, ignored = pf.split_drift(line + "\n")
+    assert drift == [line]
+    assert ignored == 0
+
+
+def test_the_filter_is_not_vacuous() -> None:
+    """Guard against the filter being written so it matches nothing — which
+    would leave the defect in place while every other test here still passed."""
+    assert pf._is_dir_mtime_only(".d..t.... backend/app/") is True
+    assert pf._is_dir_mtime_only(">f.st.... backend/app/main.py") is False
+
+
 # ── the pairing that had no guard (R68-CR175 audit MAJOR-1) ───────────────────
 
 def test_manual_gate_wording_is_not_duplicated() -> None:

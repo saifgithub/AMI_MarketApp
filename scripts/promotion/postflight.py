@@ -208,6 +208,51 @@ def check_identity(base: str, secret: str, expect_sha: str, expect_tag: str | No
     return problems
 
 
+def _is_dir_mtime_only(line: str) -> bool:
+    """Is this itemized line a directory whose ONLY delta is its mtime?
+
+    DEF280 — this check used to count one as drift, so it failed on a promotion
+    that had landed perfectly, and it failed only on the *second* run. The
+    api-alpha container writes `__pycache__` into the source tree it
+    bind-mounts; `__pycache__` is (correctly) excluded above, so the
+    *containing directory's* mtime diverges the moment the new container starts
+    executing Python. `backend/app/`, `backend/app/core/` and
+    `backend/tests/unit/` came back as `.d..t....` — no content flag set — on a
+    deploy where re-running the same rsync with directory entries filtered
+    returned nothing at all.
+
+    A check guaranteed to start failing a minute after every successful
+    promotion is the exact failure CR175 was written to eliminate, reproduced
+    by CR175's own code, and it is self-defeating in the one case it exists
+    for: a real partial rsync would arrive inside noise the operator had been
+    trained to skip.
+
+    Deliberately narrow. rsync's itemize flags are `YXcstpoguax`: position 0 is
+    the update type, 1 the file type, and 2 onward the attribute deltas. Only
+    `.d` with nothing but `t` set qualifies — a *created* directory is `cd+++++++++`
+    and stays drift, `*deleting` stays drift, and a directory whose permissions
+    or ownership moved stays drift. The claim being made is only the one the
+    evidence supports: a directory whose sole difference is a timestamp is not
+    a difference in what the box is running.
+    """
+    flags = line.split(" ", 1)[0]
+    if len(flags) < 3 or flags[0] != "." or flags[1] != "d":
+        return False
+    return set(flags[2:]) <= {".", "t"}
+
+
+def split_drift(stdout: str) -> tuple[list[str], int]:
+    """Real drift, and how many directory-mtime lines were set aside.
+
+    The count is returned rather than dropped so the failure path can say what
+    it ignored — silently discarding lines is how a filter this cheap turns
+    into the next "the check said nothing was wrong".
+    """
+    lines = [ln for ln in stdout.splitlines() if ln.strip()]
+    drift = [ln for ln in lines if not _is_dir_mtime_only(ln)]
+    return drift, len(lines) - len(drift)
+
+
 def check_tree(host: str, remote: str, timeout: int) -> list[str]:
     """Does the box hold what the Mac holds? — the check the stamp cannot make.
 
@@ -218,10 +263,15 @@ def check_tree(host: str, remote: str, timeout: int) -> list[str]:
     `app/` is shadowed by the mount. The stamp answers "which commit was this
     image built from", never "which bytes is uvicorn importing".
 
-    An rsync dry-run answers the second question directly: any itemized line
-    means the box differs from the Mac, and after a successful promotion there
-    should be none. This is also the only check that would catch a partial
-    rsync, which is precisely the failure the stamp would report as fine.
+    An rsync dry-run answers the second question directly: an itemized line
+    naming a *content* difference means the box differs from the Mac, and after
+    a successful promotion there should be none. This is also the only check
+    that would catch a partial rsync, which is precisely the failure the stamp
+    would report as fine.
+
+    Directory-mtime-only lines are not content differences and are set aside by
+    [split_drift] — see [_is_dir_mtime_only] for why that is a correction and
+    not a loosening (DEF280).
 
     Same exclude list as `/promote-to-alpha` step 3, and it must stay the same:
     `audit/`, `reports/` and `backtest_results/` are melehost-generated and
@@ -250,7 +300,7 @@ def check_tree(host: str, remote: str, timeout: int) -> list[str]:
         raise CannotRun(f"rsync dry-run exited {proc.returncode}: "
                         f"{proc.stderr.strip()[:200]}")
 
-    drift = [ln for ln in proc.stdout.splitlines() if ln.strip()]
+    drift, dir_mtime_only = split_drift(proc.stdout)
     if not drift:
         return []
     problems = [
@@ -266,6 +316,10 @@ def check_tree(host: str, remote: str, timeout: int) -> list[str]:
     problems += [f"  {ln}" for ln in drift[:15]]
     if len(drift) > 15:
         problems.append(f"  … and {len(drift) - 15} more")
+    if dir_mtime_only:
+        problems.append(
+            f"  ({dir_mtime_only} directory-mtime-only line(s) ignored — "
+            "DEF280, the container's __pycache__ writes)")
     return problems
 
 
