@@ -24,11 +24,13 @@ from pathlib import Path
 import pytest
 
 from config.devices import ANDROID, IOS, PROFILES
+from config.locales import LOCALES
 from helpers import device as device_helpers
 from helpers.driver_factory import new_driver
 from helpers.gestures import screen_scale
 from helpers.onboarding import ensure_onboarded
 from helpers.report import FlagCollector, write_summary_json
+from helpers.shell import recover_to_shell, shell_is_up
 from tools import harness_manifest
 
 
@@ -131,6 +133,41 @@ def driver(device_profile):
     ensure_onboarded(drv)
     yield drv
     drv.quit()
+
+
+@pytest.fixture(autouse=True)
+def _shell_precondition(request):
+    """Every test starts from the shell, even after an earlier one died holding
+    a sheet open.
+
+    The `driver` fixture is module-scoped, so a test that fails partway through
+    — before its own `driver.back()` — leaves the Convene sheet or a trade
+    ticket on top for every test after it in that module. Those then fail at
+    `open_tab`, because a modal covers the bottom nav and the tab identifier
+    does not resolve. One real failure became three, and the three looked like
+    independent app defects.
+
+    Worse than the noise: `ensure_onboarded` used to read that same covered nav
+    as "onboarding has not finished" and set its exploratory walk loose, which
+    convened the Room four times against the on-prem LLM. Restoring the
+    precondition per test removes the state that misleads it.
+
+    Announces when it fires rather than silently tidying up — a suite that
+    quietly repairs itself hides the test that is not cleaning up after itself.
+    """
+    if "driver" not in request.fixturenames:
+        yield  # offline test, no device
+        return
+
+    drv = request.getfixturevalue("driver")
+    floor_label = LOCALES["en"].tab_labels["Floor"]
+    if not shell_is_up(drv, floor_label):
+        print(
+            f"    [shell] {request.node.name} did not start on the shell — a "
+            f"previous test left something open. Recovering."
+        )
+        recover_to_shell(drv, floor_label)
+    yield
 
 
 @pytest.fixture(scope="module")

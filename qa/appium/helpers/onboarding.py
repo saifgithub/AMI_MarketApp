@@ -32,17 +32,19 @@ from __future__ import annotations
 
 import time
 
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, WebDriverException
 
 from config.locales import LOCALES
 from helpers.gestures import tap_element
 from helpers.locators import (
+    exists_id,
     exists_text,
     interactive_elements,
     is_text_input,
     wait_visible_text,
 )
 from helpers.platform import is_ios
+from helpers.shell import recover_to_shell, shell_is_up, wait_for_shell
 
 _SKIP_FOR_NOW = "SKIP FOR NOW"
 _LOOKS_RIGHT_CONTINUE = "LOOKS RIGHT — CONTINUE"
@@ -50,6 +52,41 @@ _BACKEND_ERROR_TITLE = "CAN'T REACH THE BACKEND"
 _TRY_AGAIN = "TRY AGAIN"
 _MAX_BACKEND_RETRIES = 2
 _MAX_ESCAPES = 3
+
+# How long to let the shell appear before concluding the app needs onboarding.
+# Generous on purpose: a cold start on the Android rig renders blank for several
+# seconds, and deciding "not onboarded" too early is what set the walk loose on
+# a working app and convened three Rooms. Waiting is cheap — this only elapses
+# in full on a device that genuinely needs the interview, which happens once per
+# install.
+_SHELL_BUDGET_S = 30.0
+
+
+# Controls the walk must never tap, matched case-insensitively as a substring
+# of the element's label.
+#
+# The walk taps things it has not identified — unavoidable for an interview
+# whose chips are generated — so the only defence against it doing something
+# expensive is to name what expensive looks like. CONVENE runs the full
+# 12-agent Room: real credits, minutes of on-prem LLM, and a row in
+# `room_runs`. It got tapped repeatedly across two incidents because it is the
+# bottom-most labelled control on Floor and on the Convene sheet, which is
+# exactly what `_live_chip` reaches for.
+#
+# Nothing in the Concierge interview is named this, so the filter costs the
+# walk nothing on the path it is actually for. Keep this list short and keep it
+# about *spending*, not about tidiness — a long denylist would quietly become a
+# way to make the walk pass by hiding what it cannot handle.
+_NEVER_TAP = ("CONVENE",)
+
+
+def _is_expensive(driver, element) -> bool:
+    try:
+        label = element.get_attribute("content-desc") or element.text or ""
+    except WebDriverException:
+        return False  # stale node; it will not be tapped successfully anyway
+    return any(marker in label.upper() for marker in _NEVER_TAP)
+
 
 # Appium's application state enum; 4 is RUNNING_IN_FOREGROUND.
 _FOREGROUND = 4
@@ -148,13 +185,40 @@ def ensure_onboarded(
     if timeout_s is None:
         timeout_s = 480.0 if is_ios(driver) else 300.0
 
-    try:
-        wait_visible_text(driver, floor_label, timeout_s=5)
-        return  # already onboarded from a previous noReset session — the common case
-    except NoSuchElementException:
-        pass
+    # Is the shell already up? This is the common case by a wide margin —
+    # `noReset=True` means a device onboards once and every later session lands
+    # straight on Floor — and getting it wrong is the most expensive mistake
+    # this module can make, so it is worth a real budget and an exact question.
+    #
+    # It asks for the bottom nav's IDENTIFIER, not the word "FLOOR". The nav
+    # exists only once onboarding has handed over to the shell, so the
+    # identifier is a precise discriminator; the text is not. Text races the
+    # first paint, and it is also a *label on a control the walk might tap*.
+    #
+    # What that cost, measured: a 5s text probe fired during a cold start on the
+    # rig (the app renders blank for several seconds), concluded "not
+    # onboarded", and set the walk loose on a perfectly healthy, fully
+    # onboarded app. `_live_chip` takes the bottom-most labelled control, and on
+    # Floor that is CONVENE THE ROOM — so the walk typed noise into the omnibox
+    # and convened the Room. Three real 12-agent runs against the on-prem LLM
+    # (`BY`, `ANDG`, `BY` — `ANDG` is not a ticker), one of them 199s long, and
+    # the Room is a full-screen route with no bottom nav, so the probe could
+    # never re-match and the walk kept tapping inside it until the budget died.
+    #
+    # The containment check below did not catch that, and correctly so: we never
+    # left the app. We left the *shell*, which is a different question and is
+    # this probe's job to answer.
+    if wait_for_shell(driver, floor_label, timeout_s=_SHELL_BUDGET_S):
+        return
 
-    print("    [onboarding] Floor not reached yet — walking the Concierge interview")
+    # Covered, or absent? A modal sheet or a pushed route left behind by an
+    # earlier test hides the bottom nav just as thoroughly as unfinished
+    # onboarding does, and the right answer to each is the opposite of the
+    # other. Try backing out before assuming the interview is unfinished.
+    if recover_to_shell(driver, floor_label):
+        return
+
+    print("    [onboarding] shell not up — walking the Concierge interview")
     deadline = time.monotonic() + timeout_s
     backend_error_retries = 0
     escapes = 0
@@ -193,12 +257,9 @@ def ensure_onboarded(
             time.sleep(2.0)
             continue
 
-        try:
-            wait_visible_text(driver, floor_label, timeout_s=2)
+        if shell_is_up(driver, floor_label):
             print("    [onboarding] landed on Floor")
             return
-        except NoSuchElementException:
-            pass
 
         if exists_text(driver, _BACKEND_ERROR_TITLE, retry=False):
             backend_error_retries += 1
@@ -230,6 +291,7 @@ def ensure_onboarded(
                 for element in interactive_elements(driver)
                 if not is_text_input(driver, element)
             ]
+        candidates = [c for c in candidates if not _is_expensive(driver, c)]
         if not candidates:
             time.sleep(1.0)
             continue
