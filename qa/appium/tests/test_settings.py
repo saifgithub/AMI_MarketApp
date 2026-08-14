@@ -21,14 +21,27 @@ import pytest
 from conftest import snap
 from helpers.gestures import swipe_up
 from helpers.locators import wait_visible_text
-from pages.base_page import content_band, open_tab, probe_content
+from pages.base_page import content_band, open_you_segment, probe_content
 
 pytestmark = [pytest.mark.phase1]
 
 
 def test_settings_renders_heading(driver, device, run_dir):
-    open_tab(driver, "Settings")
-    wait_visible_text(driver, "SETTINGS", timeout_s=10)
+    # CR133 moved SETTINGS off the bottom nav into a YOU segment. This test kept
+    # calling `open_tab(driver, "Settings")` for months afterwards, which now
+    # asserts out before it touches the device.
+    #
+    # The old `wait_visible_text(driver, "SETTINGS")` cannot come back either,
+    # and it is worth being explicit about why, because it looks like it should
+    # still work: an *embedded* SettingsScreen drops its own AmiScreenHeader
+    # (YOU owns the header), so `settingsHeading` is not rendered at all. The
+    # only "SETTINGS" on screen is the segment button — which is present the
+    # instant YOU paints, so waiting on it asserts nothing about the pane and
+    # races the pane's first frame. `MY MANDATE` is the section at the top of
+    # the pane's own ListView, so it is both the readiness signal and the
+    # assertion.
+    open_you_segment(driver, "Settings")
+    wait_visible_text(driver, "MY MANDATE", timeout_s=10)
     signals = probe_content(driver, "settings", exact=("MY MANDATE",))
     assert signals["MY MANDATE"], "Settings should always show the MY MANDATE section"
     swipe_up(driver, content_band(device), percent=0.5)

@@ -31,10 +31,19 @@ class DeviceProfile:
     app_activity: str = "ai.agenticmarketintel.ami_trade.MainActivity"
     bundle_id: str = "ai.agenticmarketintel.amiTrade"
 
-    # Android: the system nav bar's *height* in px, used only if the dumpsys
-    # parse in helpers/device.py fails outright — see that module for why a live
+    # Android: the system nav bar's height in **dp**, used only if both dumpsys
+    # parses in helpers/device.py fail outright — see that module for why a live
     # read is preferred over trusting this constant.
-    navbar_height_px_fallback: int = 126  # 48dp * ~2.625 density, this device
+    #
+    # It was `navbar_height_px_fallback = 126  # 48dp * ~2.625 density, this
+    # device`, and both halves of that comment were wrong. It is a dataclass
+    # default, so it is not "this device" — every profile, on both platforms,
+    # inherits it. And the rig device measures 320dpi, i.e. density 2.0, where
+    # 48dp is 96px, not 126. A px constant is the wrong unit for a field one
+    # profile can never get right for every device: 48dp is a real Android
+    # platform constant, the density is a live read, and the multiplication
+    # belongs at the point of use.
+    navbar_height_dp_fallback: int = 48
 
     # iOS: the home-indicator / bottom-safe-area height in POINTS. Unlike
     # Android there is no window-manager query to read this from, so it is a

@@ -56,6 +56,31 @@ class NavIds {
   ];
 }
 
+/// The `YOU` tab's three segments (CR133 moved SETTINGS and JOURNAL here from
+/// the bottom nav; INSIGHTS is new).
+///
+/// These need identifiers for the same reason the nav destinations do, and one
+/// more besides. A segment's *rendered label* is a poor handle even in English:
+/// the label sits on the button, so an exact-text wait is satisfied by the
+/// control the moment the tab paints — before the pane behind it has rendered
+/// anything. Waiting on the ID and then asserting on pane-specific content
+/// separates "the segment exists" from "the pane is up", which is the race
+/// `tests/test_portfolio.py` hit on the bottom nav.
+///
+/// Embedded panes drop their own `AmiScreenHeader` (YOU owns the header), so
+/// there is no heading to wait on either — the harness must key off content
+/// like SETTINGS' `MY MANDATE` section or JOURNAL's filter chips.
+class YouIds {
+  const YouIds._();
+
+  static const String settings = 'ami.you.settings';
+  static const String journal = 'ami.you.journal';
+  static const String insights = 'ami.you.insights';
+
+  /// In `YouSegment` order, which is the on-screen order of the segment bar.
+  static const List<String> all = [settings, journal, insights];
+}
+
 /// Modal sheets. These are the DEF075 class — interactive elements that can end
 /// up under the Android system nav bar or the iOS home indicator, which is the
 /// one usability check CR080 was built to catch.

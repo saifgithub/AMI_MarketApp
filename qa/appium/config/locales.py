@@ -58,6 +58,14 @@ LOCALES: dict[str, LocaleProfile] = {
             "lessons_heading": "LESSONS",
             "settings_heading": "SETTINGS",
             "settings_mandate": "MY MANDATE",
+            # YOU's segment bar (CR133). Note these are NOT the *_heading keys
+            # above: the segment renders `settingsTabUpper`/`journalTabUpper`,
+            # so EN says "JOURNAL" here where the retired standalone screen
+            # said "DECISION JOURNAL". Only the identifier fallback in
+            # base_page.open_you_segment reads them.
+            "you_segment_settings": "SETTINGS",
+            "you_segment_journal": "JOURNAL",
+            "you_segment_insights": "INSIGHTS",
         },
     ),
     "ar": LocaleProfile(
@@ -85,6 +93,11 @@ LOCALES: dict[str, LocaleProfile] = {
             "lessons_heading": "الدروس",
             "settings_heading": "الإعدادات",
             "settings_mandate": "التفويض الخاص بي",
+            "you_segment_settings": "الإعدادات",
+            "you_segment_journal": "السجل",
+            # youSegmentInsights is untranslated in AR and MS —
+            # retranslate:[ar,ms]. This table asserts what the app RENDERS.
+            "you_segment_insights": "INSIGHTS",
         },
     ),
     "ms": LocaleProfile(
@@ -109,6 +122,9 @@ LOCALES: dict[str, LocaleProfile] = {
             "lessons_heading": "PELAJARAN",
             "settings_heading": "TETAPAN",
             "settings_mandate": "MANDAT SAYA",
+            "you_segment_settings": "TETAPAN",
+            "you_segment_journal": "JURNAL",
+            "you_segment_insights": "INSIGHTS",  # see the AR note above
         },
     ),
 }

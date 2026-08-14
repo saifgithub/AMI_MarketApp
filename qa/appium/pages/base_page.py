@@ -10,7 +10,7 @@ The old text path is kept as a loud fallback, not as an equal option — see
 from __future__ import annotations
 
 from config.locales import LOCALES
-from config.semantics_ids import NAV_IDS
+from config.semantics_ids import NAV_IDS, YOU_SEGMENT_IDS
 from helpers.gestures import Band, tap_element
 from helpers.locators import (
     exists_text,
@@ -66,6 +66,43 @@ def open_tab(driver, tab_label: str, *, locale: str = "en") -> None:
         f"--dart-define=AMI_QA_SEMANTICS=1. Check the build before trusting this run."
     )
     display_text = LOCALES[locale].tab_labels[tab_label]
+    tap_element(driver, wait_visible_text(driver, display_text))
+
+
+def open_you_segment(driver, segment: str, *, locale: str = "en") -> None:
+    """Open one of the YOU tab's segments — SETTINGS, JOURNAL or INSIGHTS.
+
+    CR133 took Settings and Journal off the bottom nav and made them segments
+    of YOU, so `open_tab(driver, "Settings")` now asserts out. Three tests kept
+    calling it for months after the restructure; this is the replacement path.
+
+    **This gets you to the segment, not to a rendered pane.** It taps and
+    returns. Follow it with a wait on content only that pane has — SETTINGS'
+    `MY MANDATE`, JOURNAL's `ALL` filter chip — never on the segment's own
+    label, which is on the button and therefore already satisfied before
+    anything switched. Embedded panes drop their own `AmiScreenHeader` (YOU
+    owns the header), so the old headings `DECISION JOURNAL` and `SETTINGS`
+    are not rendered here at all.
+
+    Same identifier-first, loud-text-fallback shape as `open_tab` — and the
+    same reason: a build older than the YOU identifiers must say so rather than
+    quietly passing on the fallback.
+    """
+    assert segment in YOU_SEGMENT_IDS, f"{segment!r} is not a YOU segment: {tuple(YOU_SEGMENT_IDS)}"
+    open_tab(driver, "You", locale=locale)
+    try:
+        tap_element(driver, wait_visible_id(driver, YOU_SEGMENT_IDS[segment], timeout_s=4.0))
+        return
+    except NoSuchElementException:
+        pass
+
+    print(
+        f"WARNING: YOU segment {segment!r} did not resolve by semantics identifier "
+        f"({YOU_SEGMENT_IDS[segment]}) — falling back to text. The build under test "
+        f"predates the CR162 YOU-segment identifiers. Check the build before "
+        f"trusting this run."
+    )
+    display_text = LOCALES[locale].strings[f"you_segment_{segment.lower()}"]
     tap_element(driver, wait_visible_text(driver, display_text))
 
 

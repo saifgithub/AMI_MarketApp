@@ -166,7 +166,30 @@ def obstructed_bottom_y(profile: DeviceProfile, *, display_height: int) -> tuple
     if nav_block:
         return int(nav_block.group(2)), True
 
-    return display_height - profile.navbar_height_px_fallback, False
+    # Deepest fallback: the platform's 48dp nav bar, converted with the
+    # device's own density. Both dumpsys parses have already failed here, so
+    # adb itself is known to work and a `wm density` read is safe to depend on.
+    # If even that does not parse, raise: `was_measured=False` already tells the
+    # report this number is weaker, but a *wrong* band is not weaker, it is
+    # silently wrong — the whole point of the nav-bar check is where the
+    # boundary sits.
+    return display_height - _navbar_fallback_px(profile), False
+
+
+def _navbar_fallback_px(profile: DeviceProfile) -> int:
+    out = _adb(profile.serial, "shell", "wm", "density")
+    # `Override density:` wins when set, exactly as in `display_size` — it is
+    # what the app is actually laid out against.
+    match = re.search(r"Override density:\s*(\d+)", out) or re.search(
+        r"Physical density:\s*(\d+)", out
+    )
+    if not match:
+        raise RuntimeError(
+            f"nav-bar geometry is unknown: both dumpsys parses failed AND "
+            f"`wm density` did not parse: {out!r}. Refusing to guess a band — "
+            f"see helpers/device.obstructed_bottom_y."
+        )
+    return round(profile.navbar_height_dp_fallback * int(match.group(1)) / 160)
 
 
 def app_version(profile: DeviceProfile) -> str:

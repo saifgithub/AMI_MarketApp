@@ -94,11 +94,23 @@ def ensure_onboarded(
       11-turn interview and reached Floor at just over 300s, so 480s is the
       budget with headroom. This is a one-time cost per fresh install —
       `noReset=True` means every later session takes the ~5s early return.
+
+    The Android budget went 120s -> 300s, and that number is **not measured** —
+    say so rather than let a round figure read as one. What is measured is iOS:
+    just over 300s for the same 11 turns. Most of that is not query overhead,
+    it is eleven round-trips to the LLM answering as the Concierge, and that
+    cost is identical on both platforms. So the platform difference is the
+    *overhead on top of* a floor both share, and 120s sat below the floor
+    itself. The error directions are not symmetric either: too small
+    manufactures a failure that reads exactly like a broken app (this loop's
+    timeout surfaces as "never reached Floor"), while too large only costs
+    wall-clock on a run that was going to fail anyway. Replace this with a real
+    Android measurement when a device is next on the cable.
     """
     if floor_label is None:
         floor_label = LOCALES["en"].tab_labels["Floor"]
     if timeout_s is None:
-        timeout_s = 480.0 if is_ios(driver) else 120.0
+        timeout_s = 480.0 if is_ios(driver) else 300.0
 
     try:
         wait_visible_text(driver, floor_label, timeout_s=5)

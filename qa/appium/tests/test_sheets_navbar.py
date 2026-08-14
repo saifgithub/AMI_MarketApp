@@ -23,7 +23,7 @@ from helpers.gestures import hide_keyboard_if_shown, long_press_element, screens
 from helpers.layout import find_navbar_overlaps
 from helpers.locators import by_content_desc, by_text_contains, wait_visible_text
 from helpers.report import annotate_png
-from pages.base_page import open_tab
+from pages.base_page import open_tab, open_you_segment
 
 pytestmark = [pytest.mark.navbar, pytest.mark.phase1]
 
@@ -76,7 +76,12 @@ def test_trade_ticket_sheet_navbar(driver, device, run_dir, flags):
 
 
 def test_bug_report_sheet_navbar(driver, device, run_dir, flags):
-    open_tab(driver, "Settings")
+    # CR133 — Settings is a YOU segment now, not a destination. The version
+    # chip lives at the bottom of the Settings pane, so wait for the pane's own
+    # first section before hunting for it: the segment button carries the label
+    # "SETTINGS" and is on screen before the pane has rendered anything.
+    open_you_segment(driver, "Settings")
+    wait_visible_text(driver, "MY MANDATE", timeout_s=10)
     version_chip = by_text_contains(driver, "AMI Trade v")
     long_press_element(driver, version_chip)
     snap(driver, run_dir, "bug_report_sheet", "open")

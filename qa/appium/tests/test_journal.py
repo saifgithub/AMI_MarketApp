@@ -18,7 +18,7 @@ import pytest
 
 from conftest import snap
 from helpers.locators import wait_visible_text
-from pages.base_page import open_tab, probe_content
+from pages.base_page import open_you_segment, probe_content
 
 pytestmark = [pytest.mark.phase1]
 
@@ -26,8 +26,17 @@ _FILTER_CHIPS = ("ALL", "ROOM", "TRADE", "1-ON-1", "BRIEF", "LESSONS", "UNLOCKS"
 
 
 def test_journal_renders_heading(driver, run_dir):
-    open_tab(driver, "Journal")
-    wait_visible_text(driver, "DECISION JOURNAL", timeout_s=10)
+    # CR133 moved JOURNAL off the bottom nav into a YOU segment, so
+    # `open_tab(driver, "Journal")` asserts out before reaching the device.
+    #
+    # `DECISION JOURNAL` cannot be the readiness wait any more either: an
+    # embedded JournalScreen renders its AmiScreenHeader only `if
+    # (!widget.embedded)`, so `journalHeading` is not on screen at all here —
+    # the segment button says `JOURNAL`. The `_FilterRow` is the first thing in
+    # the embedded pane's own Column, so its default `ALL` chip is what tells
+    # us the pane is up.
+    open_you_segment(driver, "Journal")
+    wait_visible_text(driver, "ALL", timeout_s=10)
     signals = probe_content(
         driver,
         "journal",

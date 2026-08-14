@@ -37,6 +37,7 @@ import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/features/tour/you_tour.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/journal/journal_screen.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/screens/journal/journal_trash_screen.dart';
 import 'package:ami_trade/screens/settings/settings_screen.dart';
 import 'package:ami_trade/screens/you/insights_section.dart';
@@ -202,13 +203,17 @@ class _YouScreenState extends ConsumerState<YouScreen> {
                 AmiSegment(
                   key: _settingsSegmentKey,
                   label: l.settingsTabUpper,
+                  semanticsId: YouIds.settings,
                   // Why the pending edit is not lost, shown where the switch
                   // that would lose it is made.
                   trailing: settings.dirty ? const _DirtyPip() : null,
                 ),
-                AmiSegment(label: l.journalTabUpper),
                 AmiSegment(
-                    key: _insightsSegmentKey, label: l.youSegmentInsights),
+                    label: l.journalTabUpper, semanticsId: YouIds.journal),
+                AmiSegment(
+                    key: _insightsSegmentKey,
+                    label: l.youSegmentInsights,
+                    semanticsId: YouIds.insights),
               ],
             ),
             Expanded(child: IndexedStack(index: segment.index, children: _panes)),

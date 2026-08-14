@@ -24,6 +24,7 @@ import 'package:ami_trade/screens/you/you_screen.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/models/mandate.dart';
+import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/widgets/hex/ami_segment_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -107,6 +108,39 @@ void main() {
     expect(bar.segments.map((s) => s.label).toList(),
         ['SETTINGS', 'JOURNAL', 'INSIGHTS']);
     expect(bar.selected, 0);
+  });
+
+  testWidgets('CR162 — each segment is addressable by identifier, and the '
+      'identifier is on the node that actually takes the tap', (t) async {
+    // The UAT harness navigates to SETTINGS and JOURNAL through here, because
+    // CR133 took both off the bottom nav. It cannot key off the rendered label:
+    // an exact-text wait on 'SETTINGS' is satisfied by the segment *button* the
+    // instant YOU paints, before the pane behind it has rendered — and an
+    // embedded pane drops its own AmiScreenHeader, so there is no heading to
+    // wait on instead. The identifier is the handle; the pane's own content
+    // (MY MANDATE, the journal filter chips) is the readiness signal.
+    //
+    // This pumps the real YouScreen rather than a fixture segment bar, so it
+    // guards the call site — the way this breaks is someone editing the
+    // AmiSegment list here, not the shared widget.
+    final semantics = t.ensureSemantics();
+    final container = await _pump(t);
+    await _settle(t);
+
+    for (final id in YouIds.all) {
+      expect(find.bySemanticsIdentifier(id), findsOneWidget,
+          reason: 'CR162: $id is not in the semantics tree. qa/appium '
+              'navigates YOU by these — restore the semanticsId on the '
+              'AmiSegment rather than teaching the harness to tap by text.');
+    }
+
+    await t.tap(find.bySemanticsIdentifier(YouIds.journal));
+    await _settle(t);
+    expect(container.read(youSegmentProvider), YouSegment.journal,
+        reason: 'the identifier must sit on the tappable cell; on a sibling '
+            'node it resolves fine and every tap through it misses');
+
+    semantics.dispose();
   });
 
   testWidgets('both panes stay alive across a switch', (t) async {

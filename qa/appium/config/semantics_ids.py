@@ -43,6 +43,22 @@ NAV_IDS: dict[str, str] = {
 # does not mean stop. Use it explicitly when driving a gated build.
 NAV_ID_GAME = "ami.nav.game"
 
+# The YOU tab's segments. CR133 moved SETTINGS and JOURNAL off the bottom nav
+# and into here, which is why `open_tab(driver, "Settings")` asserts out — it is
+# no longer a destination. Reach them with `pages/base_page.py::open_you_segment`.
+#
+# These carry their own IDs rather than being tapped by label because the label
+# sits on the segment *button*: an exact-text wait on "SETTINGS" is satisfied the
+# instant YOU paints, before the pane behind it has rendered anything. And an
+# embedded pane drops its own header (YOU owns it), so there is no heading to
+# wait on either. Tap the ID, then assert on pane content — "MY MANDATE" for
+# SETTINGS, the filter chips for JOURNAL.
+YOU_SEGMENT_IDS: dict[str, str] = {
+    "Settings": "ami.you.settings",
+    "Journal": "ami.you.journal",
+    "Insights": "ami.you.insights",
+}
+
 # Modal sheets — the DEF075 class the nav-bar/bottom-inset check exists for.
 SHEET_CONVENE = "ami.sheet.convene"
 SHEET_CONVENE_CTA = "ami.sheet.convene.cta"

@@ -31,6 +31,19 @@ TAB_ARB_KEYS = {
     "You": "youTabUpper",
 }
 
+# locales.py `strings` key -> the ARB key YOU's segment bar renders.
+#
+# Deliberately NOT the *Heading keys: `you_screen.dart` builds its AmiSegments
+# from `settingsTabUpper`/`journalTabUpper`, so the EN journal segment says
+# "JOURNAL" where the retired standalone screen said "DECISION JOURNAL". That
+# near-miss is the DEF250 shape exactly — a verbatim copy of a plausible,
+# wrong key — so it gets the same mechanical check.
+YOU_SEGMENT_ARB_KEYS = {
+    "you_segment_settings": "settingsTabUpper",
+    "you_segment_journal": "journalTabUpper",
+    "you_segment_insights": "youSegmentInsights",
+}
+
 _ARB_DIR = Path(__file__).resolve().parents[3] / "mobile" / "lib" / "l10n"
 
 
@@ -59,6 +72,26 @@ def test_tab_labels_match_the_rendered_arb_keys(locale):
         f"home_shell.dart renders the *TabUpper keys. Do not hand-copy these — "
         f"the original defect was a verbatim copy of the WRONG key set "
         f"(tabFloor/tabPortfolio/…, which no screen references)."
+    )
+
+
+@pytest.mark.parametrize("locale", sorted(LOCALES))
+def test_you_segment_labels_match_the_rendered_arb_keys(locale):
+    arb = _arb(locale)
+    profile = LOCALES[locale]
+
+    mismatches = []
+    for key, arb_key in YOU_SEGMENT_ARB_KEYS.items():
+        expected = arb.get(arb_key)
+        actual = profile.strings.get(key)
+        if expected != actual:
+            mismatches.append(f"{key}: app renders {expected!r}, harness expects {actual!r}")
+
+    assert not mismatches, (
+        f"config/locales.py[{locale!r}].strings has drifted from YOU's segment "
+        f"bar:\n  " + "\n  ".join(mismatches) + "\n"
+        f"you_screen.dart builds its AmiSegments from the *TabUpper keys "
+        f"(+ youSegmentInsights), not the *Heading keys."
     )
 
 
