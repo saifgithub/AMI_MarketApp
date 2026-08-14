@@ -132,6 +132,49 @@ if [[ "$DO_GAMES" -eq 1 && ( "${RELEASE_CHANNEL:-}" == "production" || "$DO_PROD
   exit 1
 fi
 
+# DEF296 — the games build's containment, as a control instead of a citation.
+#
+# The banner below used to say a games build was safe "because a test_…
+# RevenueCat key forces --internal-only". That forcing lives in the billing
+# block further down, guarded on `DO_BILLING -eq 1`. `--no-billing` sets
+# DO_BILLING=0 *and* blanks the key (DEF290, correctly), so the gate
+# short-circuits on its first condition, --internal-only is never demanded, and
+# the banner's entire stated basis is absent while the banner still prints.
+#
+# That is not an exotic path. DEF282 removed the purchase SDK from the app's
+# code path entirely and both RevenueCat keys in infra/alpha.env are test_…, so
+# --no-billing is the only honest flag for every build we can currently produce
+# — 0.1.0+90 and +91 both shipped exactly this way.
+#
+# So the demand is attached to what it is actually about. A games build needs
+# --internal-only whatever the billing flags say, because the thing being
+# contained is the game, not the purchase path. Android has had the real
+# version of this all along (publish_playstore.sh:69 refuses a test_ key on any
+# non-internal track, reading the key from infra/alpha.env rather than from the
+# build's own flags); iOS had a banner where Android had a check.
+#
+# What this does NOT claim: that the combination is impossible. Group
+# assignment happens in App Store Connect, after and outside this script, so no
+# build flag can reach it. What it does is make the operator state the intent
+# for the risky combination on every path — which is what the banner was
+# already asserting had happened, and had not.
+if [[ "$DO_GAMES" -eq 1 && "$DO_INTERNAL_ONLY" -ne 1 ]]; then
+  cat >&2 <<'EOF'
+✗ AMI_GAMES is on and --internal-only was not passed.
+
+  This build carries the CR109 games tab. TestFlight INTERNAL groups skip Beta
+  App Review; EXTERNAL groups do not, and an undocumented feature in a
+  store-reviewed binary is App Store Review guideline 2.3.1.
+
+  Nothing downstream of this script can tell the two apart — group assignment
+  is a manual step in App Store Connect — so the intent is stated here.
+
+      scripts/build_testflight.sh --internal-only     (games, internal only)
+      scripts/build_testflight.sh --no-games          (no games route at all)
+EOF
+  exit 1
+fi
+
 # DEF290 — the containment rule below applies only to a build that can actually
 # transact. DEF282 removed the RevenueCat SDK from the app's code path entirely
 # (`purchase_providers.dart` returns `DisabledPurchaseService`, which does not
@@ -261,17 +304,21 @@ cd "$MOBILE_DIR"
 if [[ "$DO_GAMES" -eq 1 ]]; then
 cat <<'BANNER'
 ┌──────────────────────────────────────────────────────────────────┐
-│  THIS BUILD CARRIES THE CR109 EASTER EGG (AMI_GAMES=true).       │
+│  THIS BUILD CARRIES THE CR109 GAME (AMI_GAMES=true).             │
 │                                                                  │
-│  The game is reachable by long-pressing the Floor footer. That   │
-│  is a HIDDEN FEATURE, which App Review guideline 2.3.1 names     │
-│  explicitly. It is fine here because a test_… RevenueCat key     │
-│  forces --internal-only, and TestFlight INTERNAL groups skip     │
-│  Beta App Review.                                                │
+│  It is a VISIBLE FIFTH TAB (AmiTab.visible), reachable by tap    │
+│  from launch — no gesture, nothing hidden about it. It is still  │
+│  undocumented in the store listing, which is what App Review     │
+│  guideline 2.3.1 names.                                          │
+│                                                                  │
+│  The basis for shipping it: --internal-only was passed (DEF296   │
+│  refuses this build without it), and TestFlight INTERNAL groups  │
+│  skip Beta App Review.                                           │
 │                                                                  │
 │  DO NOT promote this build to an external group or the App       │
-│  Store. Rebuild without AMI_GAMES first. Saiful's call, AT:R66:  │
-│  "if anyone finds it, it will be an easter egg for them."        │
+│  Store — that step is in App Store Connect, where nothing here   │
+│  can stop you. Rebuild with --no-games first. Saiful's call,     │
+│  AT:R66: "if anyone finds it, it will be an easter egg for them."│
 └──────────────────────────────────────────────────────────────────┘
 BANNER
 else
