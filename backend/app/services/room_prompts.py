@@ -699,12 +699,24 @@ def _drawdown_snapshot_line(
     if dc:
         stop_dist = dc.stop_distance_pct
         contrib = dc.contribution_pts
+        # DEF302 — the stop distance is bound to the pair it was measured from,
+        # inline. It used to read "→ stop 6.0% below entry →", and on the SNOA
+        # run of 2026-08-14 the Conservative attached that 6.0% to a level of
+        # its own: "a hard stop at the 50-day range low $1.03 (6.0% below
+        # entry)", where $1.03 against the $1.34 close is -23.1%. The same turn
+        # states -23.1% correctly elsewhere, so the agent could compute it — it
+        # simply had a bare percentage in scope and reached for it. A percentage
+        # whose referent is named two clauses upstream is a percentage that can
+        # travel; naming the pair on the same clause is what stops it, and is
+        # DEF292's fix (one function, one referent) applied to the sentence
+        # rather than to the number.
         line += (
             f"\n  Reference position (risk-tier ceiling {size:.1f}% size, entry "
-            f"{entry:.2f}, stop {stop:.2f}) → stop {stop_dist:.1f}% below entry → "
-            f"portfolio-drawdown contribution ≈ {contrib:.2f} pt of the {cap:.0f} pt "
-            f"cap{_share_of_cap_phrase(contrib, cap)}. Size the actual trade against "
-            f"THIS figure, not the raw stop distance."
+            f"{entry:.2f}, stop {stop:.2f}) → stop {stop_dist:.1f}% below THAT "
+            f"entry ({stop:.2f} from {entry:.2f}; this percentage describes that "
+            f"pair only) → portfolio-drawdown contribution ≈ {contrib:.2f} pt of "
+            f"the {cap:.0f} pt cap{_share_of_cap_phrase(contrib, cap)}. Size the "
+            f"actual trade against THIS figure, not the raw stop distance."
         )
         # DEF241 — the reference figure above is for the risk-tier CEILING, and a
         # debator argues for its OWN size, so it was still doing the arithmetic

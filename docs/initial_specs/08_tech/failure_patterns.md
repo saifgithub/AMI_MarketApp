@@ -1008,3 +1008,51 @@ parameter no default so the compiler finds the callers for you.
    the reason; find the structural one.
 3. Name the executable check and where it runs. If none exists, say what would make one possible.
 4. Link the instances in `docs/defect/def_list.md` / `docs/forward_planning/cr_list.md`.
+
+---
+
+## P19 — A new measurement contradicts a control already shipped, and the measurement is believed
+
+**Symptom.** A metric is built to check something, and it fires. The number is alarming, plausible,
+and precisely wrong, because the metric's *own* assumption is broken — not the corpus. The tell was
+available at the time and nothing consulted it: **something this codebase already ships had computed
+the same quantity and disagreed.** The new instrument wins the argument purely because it is the one
+being read.
+
+**Instances (three, two of them in a single session).**
+
+| | The metric said | The truth | The control that already disagreed |
+|---|---|---|---|
+| **DEF279** (AT:R6x) | M7 date accuracy: **13.4%** mismatch | **0%** — all eleven hand-read, none a model error | the fact sheet's own as-of anchor, which the pattern was matching against incorrectly |
+| **DEF302 v1** (CR179 Leg 5) | derived-% inconsistency **26.5%**, then 12.5% after one correction | **7.5%** (3/40) | `_annotate_rr_against_levels` had printed *"entry $173.40 / stop $164.70 … 23.9% upside vs **5.0% downside**"* **in the same prompt the checker was reading**, confirming the −5% the checker called wrong |
+| **CR179 Leg 5 social** | fabricated community attribution **20.5%** | **0%** — every hit describes the supplied Reddit aggregate | the fact sheet's own disclosure line, *"Reddit only — no Twitter/X, StockTwits, Google Trends, or Discord data exists"* |
+
+**Why the previous guard failed.** P16 ("a count nobody read is not a measurement") already required
+hand-reading samples, and in all three cases samples *were* printed. Hand-reading is necessary and it
+is **not sufficient**: it catches a metric that matches obvious nonsense, but not one whose hits are
+individually plausible. Every flagged claim above looked like a real error in isolation — `$164.70` is
+genuinely not 5% below `$203.62`. What distinguishes error from artefact is not the sample, it is the
+**referent**, and a reader checking samples one at a time has no reason to question the reference the
+metric silently chose. DEF302 v1 was filed in the same document that had, two sections earlier, written
+*"a metric's first number is a hypothesis about the metric"* — so awareness of the class does not
+prevent it either. The structural reason is that a new metric and an existing control are never
+compared: they live in different files, run at different times, and nothing joins them.
+
+**The check.** Before any new measurement is published or filed as a defect:
+
+1. **Ask what already computes this.** Search for a shipped control over the same quantity —
+   `_annotate_rr_against_levels`, `_verify_and_annotate_geometry`, `drawdown_contribution`,
+   `_asymmetry_line`, the fact sheet's own tagged fields. If one exists, **run the new metric against
+   the control's output on the same rows.** Disagreement means the new metric is the suspect until
+   proven otherwise — it is the one without a production track record.
+2. **Pin every referent explicitly.** A percentage is meaningless without the pair it was measured
+   from. Where the metric assumes a reference (close, entry, cap, supplied aggregate), assert that
+   assumption against the row rather than defaulting it — `entry` is not `last close` whenever a limit
+   order exists, which is most of the time.
+3. **Publish the excluded count beside the scored count.** All three instances were found by asking
+   what the metric *dropped*, not what it caught.
+
+**Executable form.** `backend/scripts/cr179_leg5_pct_check.py` carries the corrected shape: it prints
+`scored / inconsistent / excluded`, names why each exclusion happened, and its docstring records the
+26.5% → 7.5% correction rather than presenting the final number as if it were the first. Any future
+prose-measurement script belongs beside it and should be read before writing a new one.

@@ -37,7 +37,15 @@ def test_pm_prompt_carries_derived_drawdown_contribution(base_mandate):
     prompt = _pm_prompt(base_mandate, _PROPOSAL)
     # The finished figure, not just the formula.
     assert "0.95 pt" in prompt
-    assert "19.0% below entry" in prompt
+    # DEF302 widened this from `"19.0% below entry"`. The guard's intent is
+    # unchanged and is deliberately not weakened: the stop distance must still
+    # arrive finished, and 19.0 is still the asserted value. What changed is
+    # that the percentage now names the pair it was measured from on its own
+    # clause, because the bare form travelled — a Conservative attached the
+    # reference position's "6.0% below entry" to a level of its own 23.1% away.
+    # Asserted as a regex over the whole clause rather than loosened to a bare
+    # "19.0", so a future edit that drops the binding fails here too.
+    assert re.search(r"19\.0% below THAT entry \([\d.]+ from [\d.]+;", prompt)
     assert re.search(r"contribution\s*≈\s*0\.95\s*pt", prompt)
     # And the anti-conflation instruction.
     assert "not the raw stop distance" in prompt.lower()

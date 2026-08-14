@@ -969,6 +969,16 @@ def primary_trend_line(
     The distance is precomputed and the raw average is carried beside it, since
     a level is what a stop or an invalidation is written against while the
     percentage is what the trend argument is made from.
+
+    DEF302 — the percentage is stated from BOTH ends, because one end was read
+    off and re-attached backwards. On the MU run of 2026-08-14 the Neutral wrote
+    *"The 200-day average at $895.91 is 70.6% below the current $1528.11 price"*
+    against a line that said *"price 70.6% above it"*. The figure was quoted
+    correctly and the referent inverted; the average is 41.4% below the price,
+    not 70.6%, because the two are measured off different bases. Only one of the
+    two readings was ever available to quote, so the other had to be computed,
+    and P5 says that is where the error enters. Both are now supplied, which
+    also makes the asymmetry visible rather than something to be discovered.
     """
     if sma_200 is None:
         return None
@@ -976,6 +986,16 @@ def primary_trend_line(
     if distance_pct is not None:
         side = "above" if distance_pct >= 0 else "below"
         part += f", price {abs(distance_pct)}% {side} it"
+        # The inverse is NOT the same magnitude: +70.6% above maps to -41.4%
+        # below, since each is a fraction of a different denominator.
+        if distance_pct > -100.0:
+            inverse = (100.0 / (1.0 + distance_pct / 100.0)) - 100.0
+            other = "below" if inverse < 0 else "above"
+            part += (
+                f" (equivalently, the average sits {abs(inverse):.1f}% {other} "
+                f"the price — the two differ because each is a share of a "
+                f"different base)"
+            )
     return _labelled("Primary trend", live, [part])
 
 
