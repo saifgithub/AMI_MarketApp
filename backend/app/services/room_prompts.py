@@ -309,8 +309,27 @@ _AGENT_MAX_TOKENS: dict[AgentId, int] = {
     # DEF289: 0/40 each, and all three sat between 1.05× and 1.20× — the
     # Neutral is the one that actually crossed (1/40), and it crossed because
     # it argues the middle and has to restate both sides to do it.
+    #
+    # DEF303 — the Leg 5 acceptance, run on the post-fix epoch DEF289 said would
+    # be the real test. The Conservative is now the ONLY agent whose cap binds:
+    # 1/39 turns finished at exactly 800/800 output tokens, headroom 1.00×,
+    # against 1.34–3.43× for the other eleven. Its observation is therefore
+    # CENSORED and its true maximum is unknown — factor 1.5, not 1.25.
+    #
+    # The two instruments bracket 1200–1300 and the wider is taken. Measured
+    # tokens say 800 × 1.5 = 1200; the codified character rule (2,538 chars ÷
+    # 3.14 × 1.5) says 1300. Applied verbatim rather than re-tuned, per DEF243's
+    # corollary.
+    #
+    # The Aggressive is deliberately NOT raised, and that is the same
+    # measurement disagreeing with itself. The character rule demands 1000 for
+    # it; the tokens say 599 of 800, a clean observation needing 800. The proxy
+    # over-states it because 3.14 is the GLOBAL worst ratio, measured off the
+    # PM's JSON envelope, while this agent's own prose runs at 3.95 chars/token
+    # — sizing a prose agent on the JSON agent's ratio is DEF289's own 4.75
+    # mistake pointed the other way.
     AgentId.AGGRESSIVE_DEBATOR: 800,
-    AgentId.CONSERVATIVE_DEBATOR: 800,
+    AgentId.CONSERVATIVE_DEBATOR: 1300,
     AgentId.NEUTRAL_DEBATOR: 1100,
     # The PM emits a JSON envelope, not prose, and DEF058 (verdict fails to
     # parse in ~22% of runs) suspected its own 600-token cap clipping the JSON

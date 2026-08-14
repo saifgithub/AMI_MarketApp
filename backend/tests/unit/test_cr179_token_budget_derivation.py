@@ -45,11 +45,46 @@ from app.schemas.agents import AgentId
 # backend/tests/unit/<this> → parents[3] is the repo root. parents[2] is
 # `backend/` and silently resolves to a path that does not exist, which reads
 # as "corpus missing" rather than as a bug in the test.
-_CORPUS = (
+_CORPUS_DIR = (
     Path(__file__).resolve().parents[3]
     / "docs/forward_planning/CR143_agent_prompt_audit/corpus"
-    / "llm_audit_2026-08-13-epoch.json"
 )
+_CORPUS = _CORPUS_DIR / "llm_audit_2026-08-13-epoch.json"
+
+# DEF303 — the newest epoch, and the first with `output_tokens` populated.
+#
+# This file re-ran the whole derivation and still missed a cap that binds,
+# because it re-ran it against ONE epoch and that epoch is the pre-fix one.
+# Measured: 482/482 of the 08-13 rows carry a NULL `output_tokens`, 0/468 of
+# the 08-14 rows do. So the character proxy above was not a preference, it was
+# the only instrument available — and on the newer corpus it is no longer the
+# best one.
+#
+# `_LATEST_CORPUS` is checked with MEASURED tokens where the column is
+# populated, which is a strictly better observation than dividing characters by
+# a global worst-case ratio. Both are kept: the proxy still governs any epoch
+# whose tokens are NULL, and deleting it would strand the 08-13 corpus.
+_LATEST_CORPUS = _CORPUS_DIR / "llm_audit_2026-08-14-epoch.json"
+
+# The caps in force when `_LATEST_CORPUS` was recorded — DEF289's raised set,
+# which is what was live on Alpha for that run. Pinned for the same reason as
+# `_CAPS_AT_CORPUS_TIME`: an at-cap turn is only evidence if you know which
+# ceiling it hit, and reading the live dict would make the test agree with
+# whatever the dict currently says.
+_CAPS_AT_LATEST_CORPUS_TIME = {
+    "fundamentals_analyst": 800,
+    "market_analyst": 800,
+    "news_analyst": 800,
+    "social_media_analyst": 800,
+    "bull_researcher": 1600,
+    "bear_researcher": 1400,
+    "research_manager": 1600,
+    "trader": 800,
+    "aggressive_debator": 800,
+    "conservative_debator": 800,
+    "neutral_debator": 1100,
+    "portfolio_manager": 1700,
+}
 
 # The caps in force when the corpus was recorded. A truncated turn is only a
 # ratio measurement if we know which ceiling it hit, so these are pinned here
@@ -210,6 +245,124 @@ def test_the_two_researchers_are_budgeted_by_the_same_rule_not_the_same_number(c
         f"does not hold the larger budget ({cap_bull} vs {cap_bear}) — one case will "
         f"be cut while the other runs on, for a reason the reader cannot see"
     )
+
+
+def _latest_by_agent() -> dict[str, list[dict]]:
+    rows = json.loads(_LATEST_CORPUS.read_text())
+    out: dict[str, list[dict]] = {}
+    for row in rows:
+        if row.get("agent_id"):
+            out.setdefault(row["agent_id"], []).append(row)
+    return out
+
+
+@pytest.fixture(scope="module")
+def latest() -> dict[str, list[dict]]:
+    if not _LATEST_CORPUS.exists():
+        pytest.skip(f"committed corpus not present: {_LATEST_CORPUS}")
+    return _latest_by_agent()
+
+
+def test_the_newest_corpus_is_the_one_that_carries_token_counts(latest):
+    """DEF303's premise, asserted rather than described.
+
+    If a future epoch is committed with the column NULL again, the
+    token-derived checks below would silently degrade to vacuous — every
+    `max(output_tokens)` would be 0 and every cap would clear it comfortably.
+    That is the shape of a guard that keeps passing through the change it
+    exists to catch, so it fails loudly instead.
+    """
+    measured = [
+        r for rows in latest.values() for r in rows if r.get("output_tokens")
+    ]
+    total = sum(len(rows) for rows in latest.values())
+    assert len(measured) == total, (
+        f"{total - len(measured)} of {total} turns carry no output_tokens — the "
+        f"token-derived derivation below cannot see them, and would pass vacuously"
+    )
+
+
+@pytest.mark.parametrize("agent_id", list(AgentId))
+def test_every_cap_clears_its_measured_token_worst_case(agent_id, latest):
+    """The derivation again, on measured tokens instead of the char proxy.
+
+    Same rule, better instrument: worst observed decode × the censoring factor,
+    rounded up to the nearest 100. A turn that finished AT its ceiling is
+    censored — the true maximum is unknown and larger — so it earns 1.5, and a
+    turn that finished under it is a real observation and earns 1.25.
+    """
+    rows = latest.get(agent_id.value)
+    if not rows:
+        pytest.skip(f"{agent_id.value} does not appear in the latest corpus")
+    cap_then = _CAPS_AT_LATEST_CORPUS_TIME[agent_id.value]
+    worst = max(int(r["output_tokens"]) for r in rows)
+    censored = worst >= cap_then
+    factor = _FACTOR_TRUNCATED if censored else _FACTOR_CLEAN
+    required = int(math.ceil(worst * factor / 100.0) * 100)
+    actual = max_tokens_for(agent_id)
+    assert actual >= required, (
+        f"{agent_id.value}: cap {actual} is below the {required} its measured worst "
+        f"case needs ({worst} tokens against the {cap_then} in force when the corpus "
+        f"was recorded, {'censored' if censored else 'clean'} observation). If a "
+        f"sheet grew, re-derive in the same commit — that is CR179's binding rule."
+    )
+
+
+def test_the_conservative_debator_is_the_one_agent_whose_cap_was_binding(latest):
+    """DEF303, named directly, because it is the defect.
+
+    Two properties, and the second is the one that keeps this honest. First:
+    the Conservative did reach its ceiling on this corpus, so the raise has a
+    measurement behind it. Second: it was the ONLY one — a fix that quietly
+    raised every debator would make the first property untestable, and the
+    Aggressive is specifically the agent the character proxy would have had us
+    raise for no reason (599 tokens of 800, a clean observation).
+    """
+    at_cap = {
+        agent
+        for agent, rows in latest.items()
+        if max(int(r["output_tokens"]) for r in rows)
+        >= _CAPS_AT_LATEST_CORPUS_TIME[agent]
+    }
+    assert at_cap == {"conservative_debator"}, (
+        f"the binding set moved: {sorted(at_cap)} — re-derive before changing a cap"
+    )
+    assert max_tokens_for(AgentId.CONSERVATIVE_DEBATOR) > _CAPS_AT_LATEST_CORPUS_TIME[
+        "conservative_debator"
+    ], "the Conservative hit its ceiling on this corpus and its cap did not rise"
+    assert (
+        max_tokens_for(AgentId.AGGRESSIVE_DEBATOR)
+        == _CAPS_AT_LATEST_CORPUS_TIME["aggressive_debator"]
+    ), (
+        "the Aggressive did not reach its ceiling — raising it would be sizing a "
+        "prose agent on the PM's JSON chars-per-token ratio, which is DEF289's own "
+        "retired 4.75 assumption pointed the other way"
+    )
+
+
+def test_the_char_proxy_and_the_token_measurement_disagree_and_the_tokens_win(latest):
+    """The disagreement, pinned so nobody silently 'fixes' it later.
+
+    Applying the character rule to this corpus demands 1000 for the Aggressive;
+    the tokens say 800 is right. The proxy is not broken — it is a worst-case
+    bound built from the Portfolio Manager's JSON, and prose is denser per
+    token. This asserts that the gap is real and in the direction claimed, so
+    that a future reader who re-runs the char rule, sees 1000, and 'corrects'
+    the dict has a test telling them why not.
+    """
+    rows = latest["aggressive_debator"]
+    chars = max(len((r.get("response_text") or "").strip()) for r in rows)
+    tokens = max(int(r["output_tokens"]) for r in rows)
+    proxy_required = int(
+        math.ceil(chars / _CHARS_PER_TOKEN_WORST_CASE * _FACTOR_CLEAN / 100.0) * 100
+    )
+    token_required = int(math.ceil(tokens * _FACTOR_CLEAN / 100.0) * 100)
+    assert proxy_required > token_required, (
+        "the character proxy no longer over-states this agent — if the model's "
+        "output shape changed, the 3.14 constant needs re-measuring, not this test "
+        "deleting"
+    )
+    assert max_tokens_for(AgentId.AGGRESSIVE_DEBATOR) >= token_required
 
 
 def test_no_cap_falls_back_to_the_default(corpus):
