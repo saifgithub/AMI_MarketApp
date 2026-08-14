@@ -75,6 +75,37 @@ def open_shorts_for_portfolio(session, portfolio_id: UUID) -> list[ShortLeg]:
     return [_leg(r) for r in rows]
 
 
+def recently_closed_for_portfolio(
+    session, portfolio_id: UUID, *, since: datetime, limit: int = 20,
+) -> list[SimShortPositionRow]:
+    """Shorts that closed inside the window, newest first.
+
+    This exists so §7's *"the close is reported, never silent"* is true on the
+    **client**, not merely in the container's logs. A forced buy-in that only
+    ever reaches `logger.warning` is the games lane's *"the order simply
+    VANISHED overnight"* defect on a bigger number — the user sees a position
+    they did not close, gone, and a cash balance that moved for no stated
+    reason.
+
+    Windowed and capped rather than unbounded: this rides on the portfolio
+    snapshot, which is polled, so it must stay a small constant. The window is
+    generous enough that a user who opens the app on Monday still learns what
+    happened to them on Friday.
+    """
+    rows = session.execute(
+        select(SimShortPositionRow)
+        .where(
+            SimShortPositionRow.portfolio_id == portfolio_id,
+            SimShortPositionRow.state == "closed",
+            SimShortPositionRow.closed_at.is_not(None),
+            SimShortPositionRow.closed_at >= since,
+        )
+        .order_by(SimShortPositionRow.closed_at.desc())
+        .limit(limit)
+    ).scalars().all()
+    return list(rows)
+
+
 def find_open_short(
     session, portfolio_id: UUID, ticker: str,
 ) -> SimShortPositionRow | None:

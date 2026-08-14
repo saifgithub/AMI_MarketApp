@@ -1146,6 +1146,22 @@ class SimEngine:
         """
         notional = fill_price * quantity
         if side == Side.BUY:
+            # CR171 — a buy against a standing short is a COVER, not a new long.
+            # Without this branch `SimEngine.cover_short` is unreachable from
+            # any client: a short could be opened and then only ever closed by
+            # the margin call or a bracket, which is DEF259's shape (the games
+            # lane shipped a position that could be opened and never closed) on
+            # the one position type whose loss is unbounded. Buying long into a
+            # standing short would also leave the user holding both legs of the
+            # same name — a state the gross concentration rule (§6) measures as
+            # double exposure and `def110_backfill` was never designed to read.
+            covered = self._cover_short_fill(
+                user_id=user_id, portfolio=portfolio, ticker=ticker,
+                quantity=quantity, fill_price=fill_price,
+                compliance=compliance, kind=kind,
+            )
+            if covered is not None:
+                return covered
             total_cost = notional + fee
             if total_cost > portfolio.current_cash + 1e-6:
                 fail = ComplianceResult(
@@ -1940,6 +1956,92 @@ class SimEngine:
             price_source=quote.source,
         )
 
+    def _cover_short_fill(
+        self,
+        *,
+        user_id: UUID,
+        portfolio: Portfolio,
+        ticker: str,
+        quantity: float,
+        fill_price: float,
+        compliance: ComplianceResult,
+        kind: str,
+    ) -> SubmitResult | None:
+        """A buy that closes a standing short. `None` means "ordinary buy".
+
+        **Whole position or nothing**, the mirror of §1's sell-never-crosses-
+        zero: a partial cover blends two exit prices into one realised figure,
+        which is the same attribution problem seen from the other end, and
+        there is no `avg_cost` column here to hold the blend honestly. The
+        refusal names the number that WOULD work, so the sentence is actionable
+        rather than a rejection.
+
+        Same shape as the game lane's `_game_short_fill` cover branch — the two
+        differ only in the fee (none here) and the table.
+        """
+        if kind != "training":
+            return None
+        standing = next((s for s in portfolio.shorts if s.ticker == ticker), None)
+        if standing is None:
+            return None
+
+        def refuse(sentence: str) -> SubmitResult:
+            return SubmitResult(
+                accepted=False, trade=None,
+                compliance=ComplianceResult(
+                    passed=False, violations=[sentence], blocked_by=None,
+                ),
+                portfolio_snapshot=portfolio,
+            )
+
+        if abs(quantity - standing.quantity) > 1e-6:
+            return refuse(
+                f"you are short {standing.quantity:g} {ticker} — a cover buys "
+                f"back the whole position, not {quantity:g}"
+            )
+
+        # Aliased on import, not called as `sim_shorts.cover_short(...)`: D9's
+        # guard resolves calls by BARE NAME across modules, so the unaliased
+        # form collides with `SimEngine.cover_short` — which does reach the
+        # network — and makes this method, and `_execute_fill` above it, read
+        # as network-reaching. The guard's own docstring names that collision
+        # class as the reason it does not attempt httpx detection.
+        from app.services.sim_shorts import cover_short as _cover_short_row
+        from app.services.sim_shorts import find_open_short as _find_open_short
+
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id)
+            if p_row is None:
+                return refuse(f"no open short in {ticker} to cover")
+            short_row = _find_open_short(s, p_row.id, ticker)
+            if short_row is None:
+                # Covered between the snapshot and this transaction — by the
+                # bracket sweep or the margin pass. Reporting a fill that did
+                # not happen is worse than reporting nothing.
+                return refuse(f"no open short in {ticker} to cover")
+            realised = _cover_short_row(
+                s, portfolio_row=p_row, short_row=short_row,
+                close_price=fill_price, reason="user",
+            )
+            s.flush()
+            snapshot = _portfolio_from_row(p_row)
+
+        logger.info(
+            "sim_short_covered",
+            user_id=str(user_id), ticker=ticker, close_price=fill_price,
+            reason="user", realised_pnl=realised,
+        )
+        return SubmitResult(
+            accepted=True,
+            trade=None,
+            compliance=compliance,
+            portfolio_snapshot=snapshot,
+            short_action="short_cover",
+            short_ticker=ticker,
+            short_quantity=quantity,
+            short_realised_pnl=realised,
+        )
+
     def _open_short_fill(
         self,
         *,
@@ -2070,6 +2172,39 @@ class SimEngine:
             for r in rows:
                 s.expunge(r)
             return list(rows)
+
+    def shorts_snapshot(
+        self, user_id: UUID, *, closed_within_days: int = 7,
+    ) -> tuple[list[SimShortPositionRow], list[SimShortPositionRow]]:
+        """`(open, recently closed)`, both detached, in ONE session.
+
+        Two lists out of one hop rather than two calls, because the portfolio
+        route pays a thread hop per synchronous read and these are the same
+        indexed table. No quote fan-out here — the caller already holds marks
+        for every short's ticker (`_marked_tickers`), so pricing this list
+        costs nothing extra.
+        """
+        from app.services import sim_shorts
+
+        since = datetime.now(timezone.utc) - timedelta(days=closed_within_days)
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id)
+            if p_row is None:
+                return [], []
+            open_rows = s.execute(
+                select(SimShortPositionRow)
+                .where(
+                    SimShortPositionRow.portfolio_id == p_row.id,
+                    SimShortPositionRow.state == "open",
+                )
+                .order_by(SimShortPositionRow.opened_at.asc())
+            ).scalars().all()
+            closed_rows = sim_shorts.recently_closed_for_portfolio(
+                s, p_row.id, since=since,
+            )
+            for r in (*open_rows, *closed_rows):
+                s.expunge(r)
+            return list(open_rows), list(closed_rows)
 
     def evaluate_short_brackets(self, user_id: UUID) -> list[str]:
         """§5 — a short's stop is ABOVE entry and its target BELOW.

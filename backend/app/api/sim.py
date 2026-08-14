@@ -19,6 +19,7 @@ GET  /v1/sim/earnings/{ticker}               Upcoming earnings info within 90 da
 from __future__ import annotations
 
 import asyncio
+import math
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timedelta, timezone
 from uuid import UUID
@@ -27,6 +28,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import select
 
+from app.core.config import settings
 from app.schemas.classification import ClassificationVerdict
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.sharia import ShariaVerdict
@@ -144,6 +146,65 @@ class CancelRestingOrderResponse(BaseModel):
     order: dict | None = None
 
 
+class ShortPositionOut(BaseModel):
+    """CR171 — one OPEN training short, priced.
+
+    Typed rather than a hand-built dict (the reasoning `ComplianceBlock` records):
+    an untyped member is a member the generated OpenAPI does not carry, and this
+    schema is the artefact the client mirrors by hand.
+
+    `leg_value` is **not** a market value — a short has none. It is §2's
+    contribution to portfolio value: the cash that left, plus the move.
+    Rendering `quantity × mark` here instead would show a growing number as the
+    position went AGAINST the user.
+
+    `margin_ratio` is `None`, never a sentinel number, when the mark is not
+    positive and the ratio is therefore undefined. `float('inf')` is not JSON,
+    and a stand-in like 999 is a number a client would happily render.
+    """
+
+    id: UUID
+    ticker: str
+    quantity: float
+    entry_price: float
+    mark: float
+    leg_value: float
+    unrealised_pnl: float
+    cash_posted: float
+    collateral_posted: float
+    borrow_rate_pct: float
+    borrow_rate_source: str
+    borrow_accrued_total: float
+    margin_ratio: float | None = None
+    # Shipped alongside the ratio so the client compares against the server's
+    # threshold rather than a second copy of 1.30 that can drift (DEF098).
+    maintenance_margin: float
+    stop: float | None = None
+    target: float | None = None
+    opened_at: datetime
+
+
+class ClosedShortOut(BaseModel):
+    """CR171 §7 — a short that closed inside the reporting window.
+
+    Exists so *"the close is reported, never silent"* holds where the user can
+    read it. `close_reason` is the load-bearing field: `margin` means the
+    account took the decision away, and a position that vanished with no such
+    sentence is indistinguishable from a bug.
+    """
+
+    id: UUID
+    ticker: str
+    quantity: float
+    entry_price: float
+    close_price: float | None = None
+    # user | margin | stop | target
+    close_reason: str | None = None
+    realised_pnl: float | None = None
+    borrow_accrued_total: float
+    closed_at: datetime | None = None
+
+
 class PortfolioSnapshot(BaseModel):
     user_id: UUID
     portfolio_id: UUID
@@ -180,6 +241,18 @@ class PortfolioSnapshot(BaseModel):
     cash_available: float = 0.0
     resting_order_count: int = 0
     shares_committed: dict[str, float] = Field(default_factory=dict)
+
+    # CR171 — the short book. Empty on every portfolio that has never shorted,
+    # which is almost all of them, so this costs a nearly-free `[]` in the
+    # common case and is the only way the client can see a leg that
+    # `total_value` has already been counting since `dd8a4f3f`.
+    #
+    # `closed_shorts` is windowed (7 days, capped) rather than complete: it is
+    # not a trade history, it is §7's report that something closed WITHOUT the
+    # user asking. A permanent record of every cover belongs in the trade
+    # history surface, not on a polled snapshot.
+    shorts: list[ShortPositionOut] = Field(default_factory=list)
+    closed_shorts: list[ClosedShortOut] = Field(default_factory=list)
 
 
 class NavPointOut(BaseModel):
@@ -235,6 +308,60 @@ class PreviewTradeResponse(BaseModel):
     price_source: str
 
 
+def _short_out(row, mark: float | None) -> ShortPositionOut:
+    """One open short, priced off the snapshot's own marks.
+
+    Falls back to `entry_price` when the ticker somehow missed the mark pass,
+    exactly as the holdings branch above falls back to `avg_cost` — an unpriced
+    position reads as flat rather than as a fabricated move. `margin_ratio`
+    then reads 1.50-ish (the initial margin) rather than a breach, which is the
+    safe direction: a client must never draw a margin call out of a missing
+    quote.
+    """
+    from app.services import sim_shorts
+    from app.trading_math.shorts import short_leg
+
+    quantity = float(row.quantity)
+    entry = float(row.entry_price)
+    price = float(mark) if mark is not None else entry
+    ratio = sim_shorts.margin_ratio(row, price)
+    return ShortPositionOut(
+        id=row.id,
+        ticker=row.ticker,
+        quantity=quantity,
+        entry_price=entry,
+        mark=price,
+        leg_value=round(short_leg(float(row.cash_posted), quantity, entry, price), 2),
+        unrealised_pnl=round((entry - price) * quantity, 2),
+        cash_posted=float(row.cash_posted),
+        collateral_posted=float(row.collateral_posted),
+        borrow_rate_pct=float(row.borrow_rate_pct),
+        borrow_rate_source=row.borrow_rate_source,
+        borrow_accrued_total=float(row.borrow_accrued_total or 0.0),
+        margin_ratio=round(ratio, 4) if math.isfinite(ratio) else None,
+        maintenance_margin=float(settings.short_maintenance_margin),
+        stop=float(row.stop) if row.stop is not None else None,
+        target=float(row.target) if row.target is not None else None,
+        opened_at=row.opened_at,
+    )
+
+
+def _closed_short_out(row) -> ClosedShortOut:
+    return ClosedShortOut(
+        id=row.id,
+        ticker=row.ticker,
+        quantity=float(row.quantity),
+        entry_price=float(row.entry_price),
+        close_price=float(row.close_price) if row.close_price is not None else None,
+        close_reason=row.close_reason,
+        realised_pnl=(
+            float(row.realised_pnl) if row.realised_pnl is not None else None
+        ),
+        borrow_accrued_total=float(row.borrow_accrued_total or 0.0),
+        closed_at=row.closed_at,
+    )
+
+
 @router.get("/portfolio/{user_id}", response_model=PortfolioSnapshot)
 async def get_portfolio(
     user_id: UUID,
@@ -253,6 +380,10 @@ async def get_portfolio(
     # request behind it. No quote fan-out here — a resting order names its own
     # price — so this is one indexed SELECT, not a second market-data pass.
     commitment = await asyncio.to_thread(commitment_for, user_id)
+    # CR171 — one more indexed read, on the same no-quote terms: `marks` above
+    # already priced every short's ticker (`SimEngine._marked_tickers`), so
+    # this hop adds a SELECT, not a market-data pass.
+    open_shorts, closed_shorts = await asyncio.to_thread(sim.shorts_snapshot, user_id)
     return PortfolioSnapshot(
         user_id=user_id,
         portfolio_id=p.id,
@@ -279,6 +410,8 @@ async def get_portfolio(
         cash_available=round(p.current_cash - commitment.cash_committed, 2),
         resting_order_count=commitment.resting_order_count,
         shares_committed=commitment.shares_committed,
+        shorts=[_short_out(r, marks.get(r.ticker)) for r in open_shorts],
+        closed_shorts=[_closed_short_out(r) for r in closed_shorts],
     )
 
 

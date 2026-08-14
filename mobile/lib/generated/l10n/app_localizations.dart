@@ -6344,6 +6344,145 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t send that just now — it wasn\'t saved.'**
   String get floorReactionFailed;
+
+  /// CR171 §6. Mono uppercase label on the advisory panel shown after a trade that WENT THROUGH but carries an informational notice — distinct from the amber 'BLOCKED' refusal label. Must not read as a refusal: the trade already executed. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NOTICE'**
+  String get tradeTicketAdvisoryLabel;
+
+  /// CR171 §6. Button that dismisses the advisory panel and closes the trade ticket. The trade has already executed; this only acknowledges the notice. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'GOT IT'**
+  String get tradeTicketAdvisoryAcknowledge;
+
+  /// CR171. Confirmation after a sell that opened a SHORT position rather than closing a holding. Deliberately says 'opened', not 'sold': the user still owes the shares. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SHORT {quantity} {ticker} opened at \${price}'**
+  String tradeTicketShortOpened(String quantity, String ticker, String price);
+
+  /// CR171. Confirmation after a buy that closed a short position. {pnl} arrives already formatted with its sign and currency symbol. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Covered {quantity} {ticker} — realised {pnl}'**
+  String tradeTicketShortCovered(String quantity, String ticker, String pnl);
+
+  /// CR171. Mono uppercase heading above the list of open short positions on the Portfolio screen. Separate from HOLDINGS because a short is not a holding — the user owes the shares rather than owning them. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SHORT POSITIONS'**
+  String get portfolioShortsHeading;
+
+  /// CR171 §7. Mono uppercase heading above shorts that closed in the last few days. Exists so a position that closed without the user asking is reported rather than simply vanishing. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RECENTLY CLOSED SHORTS'**
+  String get portfolioShortsClosedHeading;
+
+  /// CR171. Small red badge on a position row marking it as a short. Sits on the row itself, not only under the heading, so a user scrolling past the heading can still tell which way the position points. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SHORT'**
+  String get shortPositionBadge;
+
+  /// CR171. Subtitle under a short position's ticker, giving the quantity owed and the price it was opened at. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} shorted at \${entry}'**
+  String shortPositionSub(String quantity, String entry);
+
+  /// CR171 §4. What holding this short has cost in borrow fees, and the annual rate it accrues at. Surfaced because the borrow comes out of cash rather than out of the position's own P&L, so without this line a short looks free to hold — which is the single most important thing shorting teaches. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Borrow cost so far \${amount} · {rate}%/yr'**
+  String shortBorrowLine(String amount, String rate);
+
+  /// CR171 §7. The position's current margin ratio and the threshold at which AMI closes it automatically. Both numbers come from the server; the app never carries its own copy of the threshold. The multiplication sign is the mathematical one (U+00D7). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Margin {ratio}× · bought in below {floor}×'**
+  String shortMarginLine(String ratio, String floor);
+
+  /// CR171 §7. Amber warning on a short whose margin ratio is nearing the forced-close threshold. States plainly that AMI will act, because there is no grace period and no notification — the close simply happens. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Close to the buy-in level. If it goes further against you, AMI closes this position for you.'**
+  String get shortMarginWarning;
+
+  /// CR171. Button on a short position row that opens the trade ticket pre-filled to buy the whole position back. Mono uppercase. 'Cover' is the standard term for closing a short. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'COVER'**
+  String get shortCoverCta;
+
+  /// CR171. Note in the trade ticket when it was opened to cover a short, explaining why the quantity is fixed. A partial cover would blend two exit prices into one realised figure. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Covering buys back the whole position — {quantity} {ticker}. AMI does not cover part of a short.'**
+  String shortCoverTicketNote(String quantity, String ticker);
+
+  /// CR171 §7. Reported when a short was force-closed by the margin call. The user did not do this, so the sentence names AMI as the actor. A position that vanished with no explanation reads as a bug. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI bought back {quantity} {ticker} at \${price} — the margin fell below the buy-in level.'**
+  String shortClosedMargin(String quantity, String ticker, String price);
+
+  /// CR171 §5. Reported when a short closed because its stop or target fired. {bracket} is the already-localized word for stop or target. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} {ticker} covered at \${price} — your {bracket} was reached.'**
+  String shortClosedBracket(
+      String quantity, String ticker, String price, String bracket);
+
+  /// CR171. Reported when the user closed the short themselves. Distinct from shortClosedMargin so 'you did this' never reads the same as 'the account did this to you'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You covered {quantity} {ticker} at \${price}.'**
+  String shortClosedByYou(String quantity, String ticker, String price);
+
+  /// CR171. The word 'stop' as substituted into shortClosedBracket. Lowercase, mid-sentence. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'stop'**
+  String get shortClosedStopWord;
+
+  /// CR171. The word 'target' as substituted into shortClosedBracket. Lowercase, mid-sentence. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'target'**
+  String get shortClosedTargetWord;
+
+  /// CR171. The outcome line under a closed short: realised P&L (already formatted with its sign) and the total borrow the position cost while it was open. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Realised {pnl} · borrow \${borrow}'**
+  String shortRealisedLine(String pnl, String borrow);
+
+  /// CR170 §6. Mono uppercase label for cash that resting orders have spoken for but not yet spent. Sits beside CASH on the value card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'COMMITTED'**
+  String get portfolioCashCommitted;
+
+  /// CR170 §6. Mono uppercase label for cash still free to trade — the balance minus what resting orders have committed. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AVAILABLE'**
+  String get portfolioCashAvailable;
+
+  /// CR170 §6. Shown when committed cash exceeds the balance — a real, reachable state, since resting orders commit nothing until they fill. Says exactly what happens rather than hiding the condition behind a zero. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Your resting orders commit \${amount} more than your balance holds. Whichever fills last will be refused.'**
+  String portfolioOverCommitted(String amount);
+
+  /// CR170 §6. Shown under a holding when a resting sell order has already spoken for some of its shares. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} committed to a resting sell'**
+  String portfolioSharesCommitted(String quantity);
 }
 
 class _AppLocalizationsDelegate

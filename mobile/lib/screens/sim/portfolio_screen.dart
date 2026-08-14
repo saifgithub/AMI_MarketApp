@@ -40,6 +40,7 @@ import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/widgets/sim/resting_orders_section.dart';
+import 'package:ami_trade/widgets/sim/short_positions_section.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/screens/you/you_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -234,6 +235,8 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
                   // traded; telling them otherwise is a hint that contradicts
                   // the section directly above it.
                   hasRestingOrders: hasAnyRestingOrders(state),
+                  hasShorts: p.shorts.isNotEmpty,
+                  sharesCommitted: p.sharesCommitted,
                   onTradeTicket: () => TradeTicketSheet.show(context),
                 ),
                 _WatchlistTab(state: watchlist),
@@ -328,6 +331,59 @@ class _ValueCard extends StatelessWidget {
               ),
             ],
           ),
+          // CR170 §6 — cash the resting book has spoken for. Shown only when
+          // there IS a book: on a portfolio with no working orders, COMMITTED
+          // $0 / AVAILABLE $x is two labels restating the cash figure directly
+          // above them.
+          if (portfolio.restingOrderCount > 0) ...[
+            const SizedBox(height: AmiSpacing.xs),
+            Row(
+              children: [
+                Text(AppLocalizations.of(context).portfolioCashCommitted,
+                    style: AmiTypography.labelMono.copyWith(fontSize: 10)),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    '\$${fmt.format(portfolio.cashCommitted)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AmiTypography.caption
+                        .copyWith(color: AmiColors.hexCyan),
+                  ),
+                ),
+                const SizedBox(width: AmiSpacing.s),
+                Text(AppLocalizations.of(context).portfolioCashAvailable,
+                    style: AmiTypography.labelMono.copyWith(fontSize: 10)),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    '\$${fmt.format(portfolio.cashAvailable)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: AmiTypography.caption.copyWith(
+                      color: portfolio.isOverCommitted
+                          ? AmiColors.hexAmber
+                          : AmiColors.textHigh,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // The server deliberately does not floor `cash_available` at zero,
+            // so that this state is reachable and visible rather than hidden
+            // behind a clamp. Saying nothing here would waste that.
+            if (portfolio.isOverCommitted) ...[
+              const SizedBox(height: AmiSpacing.xs),
+              Text(
+                AppLocalizations.of(context).portfolioOverCommitted(
+                  fmt.format(portfolio.cashAvailable.abs()),
+                ),
+                style:
+                    AmiTypography.caption.copyWith(color: AmiColors.hexAmber),
+              ),
+            ],
+          ],
           if (portfolio.drawdownPct > 0) ...[
             const SizedBox(height: AmiSpacing.xs),
             Text(
@@ -544,8 +600,11 @@ class _NewTraderHint extends StatelessWidget {
 }
 
 class _HoldingCard extends StatelessWidget {
-  const _HoldingCard({required this.holding});
+  const _HoldingCard({required this.holding, this.committed = 0});
   final SimHolding holding;
+
+  /// CR170 §6 — shares of this ticker a live resting SELL has spoken for.
+  final double committed;
 
   @override
   Widget build(BuildContext context) {
@@ -590,6 +649,18 @@ class _HoldingCard extends StatelessWidget {
                       '${holding.quantity.toStringAsFixed(0)} @ \$${fmt.format(holding.avgCost)}',
                       style: AmiTypography.caption,
                     ),
+                    // CR170 §6 — shares a resting SELL has already spoken for.
+                    // Without it the quantity above reads as freely sellable
+                    // and the second sell is refused at fill for a reason the
+                    // screen never showed.
+                    if (committed > 0)
+                      Text(
+                        AppLocalizations.of(context).portfolioSharesCommitted(
+                          committed.toStringAsFixed(0),
+                        ),
+                        style: AmiTypography.caption
+                            .copyWith(color: AmiColors.hexCyan),
+                      ),
                   ],
                 ),
               ),
@@ -649,12 +720,24 @@ class _PositionsTab extends StatelessWidget {
     required this.holdings,
     required this.openTrades,
     required this.hasRestingOrders,
+    required this.hasShorts,
+    required this.sharesCommitted,
     required this.onTradeTicket,
   });
 
   final List<SimHolding> holdings;
   final List<SimTrade> openTrades;
   final bool hasRestingOrders;
+
+  /// CR171 — an open short is a position, and it lives in its own table rather
+  /// than in [holdings]. Without this the new-trader hint would tell a user
+  /// with a live short that they have not traded yet.
+  final bool hasShorts;
+
+  /// CR170 §6 — per-ticker shares committed to resting sells, as the server
+  /// computed them. Threaded down rather than watched per row: one read of
+  /// the provider, not one per holding.
+  final Map<String, double> sharesCommitted;
   final VoidCallback onTradeTicket;
 
   @override
@@ -677,7 +760,15 @@ class _PositionsTab extends StatelessWidget {
                 // Above holdings: a working order is the most time-sensitive
                 // thing on this screen.
                 const RestingOrdersSection(),
-                if (holdings.isEmpty && openTrades.isEmpty && !hasRestingOrders)
+                // Below the book, above holdings: a short is a live position
+                // like a holding, but it is not one — the user owes the
+                // shares — so it gets its own group rather than a row inside
+                // HOLDINGS with a badge on it.
+                const ShortPositionsSection(),
+                if (holdings.isEmpty &&
+                    openTrades.isEmpty &&
+                    !hasRestingOrders &&
+                    !hasShorts)
                   _NewTraderHint(onTradeTicket: onTradeTicket)
                 else ...[
                   const SizedBox(height: AmiSpacing.s),
@@ -698,7 +789,11 @@ class _PositionsTab extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m),
             sliver: SliverList.builder(
               itemCount: holdings.length,
-              itemBuilder: (context, i) => _HoldingCard(holding: holdings[i]),
+              itemBuilder: (context, i) => _HoldingCard(
+                holding: holdings[i],
+                committed:
+                    sharesCommitted[holdings[i].ticker.toUpperCase()] ?? 0,
+              ),
             ),
           ),
         if (holdings.isNotEmpty || openTrades.isNotEmpty)

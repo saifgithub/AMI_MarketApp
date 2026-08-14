@@ -418,6 +418,61 @@ sell-to-open outright, independent of `long_only`. Not decided in code, not deci
 
 ---
 
+## Delivery — client slice (2026-08-14)
+
+The half the 08-13 note said *"does not exist yet and cannot"*. It can now: the backend produces
+the rows and rates, so nothing here is approximated client-side.
+
+| Area | Files |
+|---|---|
+| The short leg, borrow, margin, the forced-close report | `widgets/sim/short_positions_section.dart` (NEW) |
+| Models | `models/sim.dart` — `SimShort`, `SimClosedShort`, four CR170 §6 fields, `SimSubmitResult.advisories` + the short branch |
+| The notice, the cover ticket, the fourth outcome | `screens/sim/trade_ticket_sheet.dart` |
+| Committed / available, shares committed | `screens/sim/portfolio_screen.dart` |
+| Strings | 21 keys × 3 ARBs |
+| Tests | `test/screens/sim/cr171_short_surfaces_test.dart` (17), `tests/unit/test_cr171_shorts_on_the_wire.py` (12) |
+
+**The advisory holds the sheet open, and that is the whole feature.** Saiful's ruling is *"we will
+put a flag and notice to inform the user, but we let the trade through"*. The sheet's success path
+pops immediately, so an advisory rendered inline would be drawn onto a widget already leaving the
+tree — on the wire, computed correctly, seen by nobody, which is CR040's failure with an extra step.
+The pop is held until a `GOT IT` acknowledges it, and the submit CTA is disabled underneath, because
+a live submit button under an unread notice is a second trade one tap away. It is amber, never the
+`SAFETY FLOOR BLOCKED` banner: the trade already executed, and reusing the refusal panel would say
+the opposite of what happened.
+
+**A short was being reported as a resting order.** The confirmation read
+`resting = result.resting || trade == null`, and a short writes no trade row by design (§3) — so
+every successful short would have told the user their order was waiting at $0.00. Four outcomes now,
+each off its own field, in one `_showOutcome` the advisory path also calls.
+
+**The portfolio renders the LEG, never `quantity × mark`.** A market-value reading grows as a short
+goes against the user: at a mark 10% above entry the position is down $100 and the number on screen
+would be *larger*. The server sends `leg_value`; the client does not re-derive it.
+
+**Two backend gaps found while building, both small and both fixed here.**
+
+- **`PortfolioSnapshot` carried no shorts at all.** A position that `total_value` counts,
+  `portfolio_nav_daily` records and the margin sweep can close, appearing nowhere a user could look.
+  Added `shorts` (typed `ShortPositionOut`, with `leg_value`, `borrow_accrued_total`, `margin_ratio`
+  and the server's own `maintenance_margin` alongside it so the client never carries a second copy of
+  1.30) and `closed_shorts` (windowed 7 days, capped) — the latter is §7's *"the close is reported,
+  never silent"*, which until now was true only of the container's logs. `margin_ratio` serializes
+  `null`, not `inf`: `inf` is not JSON and would 500 the whole portfolio over one bad quote.
+- **A short could be opened and never closed.** `SimEngine.cover_short` existed and no client could
+  reach it — a buy against a standing short went long instead, leaving both legs of one name, which
+  the gross rule (§6) measures as double exposure and `def110_backfill` was never written to read.
+  `_execute_fill`'s buy branch now routes to a cover, whole position or nothing, mirroring the games
+  lane's identical branch. That is DEF259's shape, on the one position type whose loss is unbounded.
+
+**Verification:** `flutter analyze` 0 errors / 10 info (unchanged baseline); mobile suite
+**1045 → 1062 passed**; backend suite green with 12 new route-level tests. Mutations confirmed red
+then reverted — `leg_value` as `quantity × mark`, `close_reason` collapsed to a constant, the
+closed-shorts window ignored, and the advisory hold removed (which took both advisory widget tests
+with it).
+
+---
+
 ## Not in scope
 
 - **Dividends on shorts.** A short pays the dividend to the lender. We do not model dividends at all,

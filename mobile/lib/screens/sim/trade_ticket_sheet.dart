@@ -32,12 +32,21 @@ class TradeTicketSheet extends ConsumerStatefulWidget {
     this.prefill,
     this.verdictRef,
     this.tickerPrefill,
+    this.coverTicker,
+    this.coverQuantity,
   });
 
   /// Optional Room verdict to pre-fill from.
   final RoomVerdict? prefill;
   final String? verdictRef;
   final String? tickerPrefill;
+
+  /// CR171 — opened to cover a standing short. Fixes the side to BUY and the
+  /// quantity to the whole position, because the server takes a cover whole or
+  /// not at all (§1's sell-never-crosses-zero, seen from the other end). Left
+  /// editable would be a field whose only other value is a refusal.
+  final String? coverTicker;
+  final double? coverQuantity;
 
   @override
   ConsumerState<TradeTicketSheet> createState() => _TradeTicketSheetState();
@@ -47,6 +56,8 @@ class TradeTicketSheet extends ConsumerStatefulWidget {
     RoomVerdict? prefill,
     String? verdictRef,
     String? tickerPrefill,
+    String? coverTicker,
+    double? coverQuantity,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -59,6 +70,8 @@ class TradeTicketSheet extends ConsumerStatefulWidget {
         prefill: prefill,
         verdictRef: verdictRef,
         tickerPrefill: tickerPrefill,
+        coverTicker: coverTicker,
+        coverQuantity: coverQuantity,
       ),
     );
   }
@@ -101,8 +114,12 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   @override
   void initState() {
     super.initState();
-    _ticker = TextEditingController(text: widget.tickerPrefill ?? '');
-    _qty = TextEditingController(text: '1');
+    _ticker =
+        TextEditingController(text: widget.coverTicker ?? widget.tickerPrefill ?? '');
+    _qty = TextEditingController(
+      text: widget.coverQuantity?.toStringAsFixed(0) ?? '1',
+    );
+    if (widget.coverTicker != null) _side = 'buy';
     _stop = TextEditingController();
     _target = TextEditingController();
     _horizon = TextEditingController();
@@ -188,6 +205,12 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         _quoteTicker = ticker;
         _quoteLoading = false;
       });
+      // CR171 — a cover carries no bracket: the server closes the whole
+      // position at the fill and never reads stop/target on that path.
+      // Anchoring them here would put two numbers in front of the user that
+      // do nothing, on the one screen where a number that does nothing reads
+      // as a control.
+      if (_isCover) return;
       // Anchor TP/SL off the live price when the user hasn't set them —
       // matches the Convene the Room trader template (-6% / +13%) so the
       // suggestion is consistent across both flows. User can override.
@@ -228,6 +251,30 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   void _rebuildOnInput() {
     if (mounted) setState(() {});
   }
+
+  bool get _isCover => widget.coverTicker != null;
+
+  /// Close the sheet and give the same confirmation the ordinary path gives.
+  void _acknowledgeAdvisory() {
+    final result = ref.read(simNotifierProvider).lastSubmit;
+    final typed = _ticker.text.trim().toUpperCase();
+    setState(() => _pendingAdvisories = const []);
+    Navigator.of(context).pop();
+    if (result != null && result.ok) _showOutcome(result, typed);
+  }
+
+  /// CR171 §6 — notices from the LAST submit, held so the sheet can show them
+  /// before it closes.
+  ///
+  /// The trade already executed by the time these arrive, and the sheet's
+  /// success path pops immediately — so an advisory rendered inline in `build`
+  /// would be drawn onto a widget that is already leaving the tree. It would
+  /// be on the wire, computed correctly, and seen by nobody, which is the exact
+  /// shape of the failure Saiful's ruling exists to prevent: *"we will put a
+  /// flag and notice to inform the user, but we let the trade through."*
+  /// Holding the pop until the notice is acknowledged is what makes "inform"
+  /// true (CR040).
+  List<String> _pendingAdvisories = const [];
 
   /// CR171 §1/§5 — the two refusals the ticket owns, as **one** function that
   /// both the panel and the CTA's enabled-state read.
@@ -327,51 +374,95 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       // Now: haptic tick, green background, large checkmark, longer
       // duration so the success is unambiguous.
       HapticFeedback.mediumImpact();
+      // CR171 §6 — hold the sheet open on an advisory. The trade is done
+      // either way; this is the only moment at which the notice can be put in
+      // front of the person it is about.
+      if (result.advisories.isNotEmpty) {
+        setState(() => _pendingAdvisories = result.advisories);
+        return;
+      }
       Navigator.of(context).pop();
-      final l = AppLocalizations.of(context);
-      // CR170 — two outcomes now, and the copy must not claim the wrong one.
-      // `resting` is read off the response, never inferred from `trade == null`
-      // (§8): the server states it on every branch, and inferring it would be a
-      // second source of truth for a fact we are already told. A filled trade
-      // whose row somehow did not serialise falls back to the resting wording
-      // rather than crashing on `trade!`, which is what the old code did.
-      final filled = result.trade;
-      final resting = result.resting || filled == null;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          duration: const Duration(seconds: 5),
-          backgroundColor: resting ? AmiColors.hexCyan : AmiColors.hexGreen,
-          behavior: SnackBarBehavior.floating,
-          content: Row(
-            children: [
-              Icon(resting ? Icons.schedule : Icons.check_circle,
-                  color: AmiColors.slate900, size: 24),
-              const SizedBox(width: AmiSpacing.s),
-              Expanded(
-                child: Text(
-                  filled == null
-                      ? l.tradeTicketResting(
-                          _side.toUpperCase(),
-                          typed,
-                          (result.order?.namedPrice ?? 0).toStringAsFixed(2),
-                        )
-                      : l.tradeTicketFilled(
-                          filled.side.toUpperCase(),
-                          filled.quantity.toStringAsFixed(0),
-                          filled.ticker,
-                          filled.entryPrice.toStringAsFixed(2),
-                        ),
-                  style: const TextStyle(
-                    color: AmiColors.slate900,
-                    fontWeight: FontWeight.w600,
-                  ),
+      _showOutcome(result, typed);
+    }
+  }
+
+  /// The one confirmation, whichever of the four things just happened.
+  ///
+  /// Extracted so the advisory path's "GOT IT" reaches exactly the same
+  /// sentence the ordinary path does. A second copy of this would be a second
+  /// place for the short branch to be forgotten (DEF098).
+  void _showOutcome(SimSubmitResult result, String typed) {
+    final l = AppLocalizations.of(context);
+    // CR170/CR171 — FOUR outcomes now, and the copy must not claim the wrong
+    // one. `resting` is read off the response, never inferred from
+    // `trade == null`: the server states it on every branch. That inference
+    // was already wrong once — a short writes no trade row by design (§3), so
+    // `resting = result.resting || trade == null` reported every successful
+    // short as an order waiting at $0.00.
+    final short = result.shortAction;
+    final filled = result.trade;
+    final String message;
+    final IconData icon;
+    final Color background;
+    if (short != null) {
+      final qty = (result.shortQuantity ?? 0).toStringAsFixed(0);
+      final ticker = result.shortTicker ?? typed;
+      if (result.isShortCover) {
+        final pnl = result.shortRealisedPnl ?? 0;
+        message = l.tradeTicketShortCovered(
+          qty,
+          ticker,
+          '${pnl >= 0 ? '+' : '−'}\$${pnl.abs().toStringAsFixed(2)}',
+        );
+        icon = Icons.check_circle;
+        background = pnl >= 0 ? AmiColors.hexGreen : AmiColors.hexAmber;
+      } else {
+        message = l.tradeTicketShortOpened(
+          qty, ticker, (_quote?.price ?? 0).toStringAsFixed(2),
+        );
+        icon = Icons.trending_down;
+        background = AmiColors.hexRed;
+      }
+    } else if (filled == null) {
+      message = l.tradeTicketResting(
+        _side.toUpperCase(),
+        typed,
+        (result.order?.namedPrice ?? 0).toStringAsFixed(2),
+      );
+      icon = Icons.schedule;
+      background = AmiColors.hexCyan;
+    } else {
+      message = l.tradeTicketFilled(
+        filled.side.toUpperCase(),
+        filled.quantity.toStringAsFixed(0),
+        filled.ticker,
+        filled.entryPrice.toStringAsFixed(2),
+      );
+      icon = Icons.check_circle;
+      background = AmiColors.hexGreen;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 5),
+        backgroundColor: background,
+        behavior: SnackBarBehavior.floating,
+        content: Row(
+          children: [
+            Icon(icon, color: AmiColors.slate900, size: 24),
+            const SizedBox(width: AmiSpacing.s),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: AmiColors.slate900,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
-    }
+      ),
+    );
   }
 
   /// Violations minus the backend's English Sharia sentence, when the same
@@ -506,8 +597,83 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
               ),
               const SizedBox(height: AmiSpacing.m),
             ],
+            // CR171 §6 — the notice on a trade that WENT THROUGH. Saiful's
+            // ruling: *"our job is only to inform. The user can continue with
+            // whatever trade they want to do."* So this is amber-bordered but
+            // never says blocked, carries no way to undo, and the only control
+            // on it acknowledges. Rendered ABOVE everything else in the sheet
+            // because the sheet is only still open in order to show it.
+            if (_pendingAdvisories.isNotEmpty) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AmiSpacing.m),
+                decoration: BoxDecoration(
+                  color: AmiColors.hexAmber.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(AmiRadii.card),
+                  border: Border.all(color: AmiColors.hexAmber),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.info_outline,
+                            color: AmiColors.hexAmber, size: 16),
+                        const SizedBox(width: 4),
+                        Text(l.tradeTicketAdvisoryLabel,
+                            style: AmiTypography.labelMono.copyWith(
+                                color: AmiColors.hexAmber, fontSize: 11)),
+                      ],
+                    ),
+                    const SizedBox(height: AmiSpacing.xs),
+                    for (final a in _pendingAdvisories)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(a, style: AmiTypography.body),
+                      ),
+                    const SizedBox(height: AmiSpacing.s),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AmiColors.hexAmber,
+                          foregroundColor: AmiColors.slate900,
+                        ),
+                        onPressed: _acknowledgeAdvisory,
+                        child: Text(l.tradeTicketAdvisoryAcknowledge,
+                            style: AmiTypography.labelMono
+                                .copyWith(color: AmiColors.slate900)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AmiSpacing.m),
+            ],
             if (permittedVerdict != null) ...[
               ShariaVerdictBanner(verdict: permittedVerdict),
+              const SizedBox(height: AmiSpacing.m),
+            ],
+            // CR171 — why the quantity on a cover cannot be edited.
+            if (_isCover) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.swap_vert,
+                      size: 16, color: AmiColors.hexCyan),
+                  const SizedBox(width: AmiSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      l.shortCoverTicketNote(
+                        (widget.coverQuantity ?? 0).toStringAsFixed(0),
+                        widget.coverTicker!,
+                      ),
+                      style: AmiTypography.caption
+                          .copyWith(color: AmiColors.textMed),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: AmiSpacing.m),
             ],
             if (refusal) ...[
@@ -795,7 +961,11 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                     : l.tradeTicketSubmit),
                 onPressed: (state.submitting ||
                         _validator.checking ||
-                        localRefusal != null)
+                        localRefusal != null ||
+                        // The trade this advisory belongs to has already
+                        // executed. A live submit button under an unread
+                        // notice is a second trade one tap away.
+                        _pendingAdvisories.isNotEmpty)
                     ? null
                     : _submit,
               ),

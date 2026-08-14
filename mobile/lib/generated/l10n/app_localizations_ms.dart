@@ -3851,4 +3851,99 @@ class AppLocalizationsMs extends AppLocalizations {
   @override
   String get floorReactionFailed =>
       'Couldn\'t send that just now — it wasn\'t saved.';
+
+  @override
+  String get tradeTicketAdvisoryLabel => 'NOTICE';
+
+  @override
+  String get tradeTicketAdvisoryAcknowledge => 'GOT IT';
+
+  @override
+  String tradeTicketShortOpened(String quantity, String ticker, String price) {
+    return 'SHORT $quantity $ticker opened at \$$price';
+  }
+
+  @override
+  String tradeTicketShortCovered(String quantity, String ticker, String pnl) {
+    return 'Covered $quantity $ticker — realised $pnl';
+  }
+
+  @override
+  String get portfolioShortsHeading => 'SHORT POSITIONS';
+
+  @override
+  String get portfolioShortsClosedHeading => 'RECENTLY CLOSED SHORTS';
+
+  @override
+  String get shortPositionBadge => 'SHORT';
+
+  @override
+  String shortPositionSub(String quantity, String entry) {
+    return '$quantity shorted at \$$entry';
+  }
+
+  @override
+  String shortBorrowLine(String amount, String rate) {
+    return 'Borrow cost so far \$$amount · $rate%/yr';
+  }
+
+  @override
+  String shortMarginLine(String ratio, String floor) {
+    return 'Margin $ratio× · bought in below $floor×';
+  }
+
+  @override
+  String get shortMarginWarning =>
+      'Close to the buy-in level. If it goes further against you, AMI closes this position for you.';
+
+  @override
+  String get shortCoverCta => 'COVER';
+
+  @override
+  String shortCoverTicketNote(String quantity, String ticker) {
+    return 'Covering buys back the whole position — $quantity $ticker. AMI does not cover part of a short.';
+  }
+
+  @override
+  String shortClosedMargin(String quantity, String ticker, String price) {
+    return 'AMI bought back $quantity $ticker at \$$price — the margin fell below the buy-in level.';
+  }
+
+  @override
+  String shortClosedBracket(
+      String quantity, String ticker, String price, String bracket) {
+    return '$quantity $ticker covered at \$$price — your $bracket was reached.';
+  }
+
+  @override
+  String shortClosedByYou(String quantity, String ticker, String price) {
+    return 'You covered $quantity $ticker at \$$price.';
+  }
+
+  @override
+  String get shortClosedStopWord => 'stop';
+
+  @override
+  String get shortClosedTargetWord => 'target';
+
+  @override
+  String shortRealisedLine(String pnl, String borrow) {
+    return 'Realised $pnl · borrow \$$borrow';
+  }
+
+  @override
+  String get portfolioCashCommitted => 'COMMITTED';
+
+  @override
+  String get portfolioCashAvailable => 'AVAILABLE';
+
+  @override
+  String portfolioOverCommitted(String amount) {
+    return 'Your resting orders commit \$$amount more than your balance holds. Whichever fills last will be refused.';
+  }
+
+  @override
+  String portfolioSharesCommitted(String quantity) {
+    return '$quantity committed to a resting sell';
+  }
 }

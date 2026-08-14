@@ -37,6 +37,169 @@ class SimHolding {
   }
 }
 
+/// CR171 — one OPEN short in the training lane. Mirrors `ShortPositionOut`.
+///
+/// Deliberately NOT reusing `GameShort`: the two lanes post different
+/// collateral (the game posts full notional, training posts 1.50× and is
+/// margin-called), so a shared model would have to carry both cash models and
+/// every reader would branch on which one applies. The backend keeps them in
+/// two tables for exactly this reason.
+class SimShort {
+  const SimShort({
+    required this.id,
+    required this.ticker,
+    required this.quantity,
+    required this.entryPrice,
+    required this.mark,
+    required this.legValue,
+    required this.unrealisedPnl,
+    required this.cashPosted,
+    required this.collateralPosted,
+    required this.borrowRatePct,
+    required this.borrowRateSource,
+    required this.borrowAccruedTotal,
+    required this.maintenanceMargin,
+    this.marginRatio,
+    this.stop,
+    this.target,
+    required this.openedAt,
+  });
+
+  final String id;
+  final String ticker;
+  final double quantity;
+  final double entryPrice;
+  final double mark;
+
+  /// What the position contributes to portfolio value: the cash that left,
+  /// plus the move. **Not** a market value — a short has none, and rendering
+  /// `quantity × mark` here would show a number that GROWS as the position
+  /// goes against the user. Sent by the server; never re-derived here.
+  final double legValue;
+
+  /// Positive when the mark is BELOW entry.
+  final double unrealisedPnl;
+
+  /// The cash that actually left the balance at open (0.5 × notional under a
+  /// 1.50 initial margin) — not the collateral, which is [collateralPosted].
+  final double cashPosted;
+  final double collateralPosted;
+
+  final double borrowRatePct;
+
+  /// `alpaca` | `short_interest` | `default` — which layer sourced the rate.
+  final String borrowRateSource;
+
+  /// What holding this position has cost so far. Invisible in
+  /// [unrealisedPnl]: the borrow comes out of cash, not out of the leg.
+  final double borrowAccruedTotal;
+
+  /// Null when the server could not compute it (a non-positive mark). A null
+  /// renders nothing rather than a stand-in number a user would read as real.
+  final double? marginRatio;
+
+  /// The server's own force-close threshold, shipped alongside the ratio. The
+  /// client must never carry a second copy of 1.30 — a threshold in two places
+  /// drifts, and the drift shows up as the app calling a position safe on the
+  /// sweep that closes it (DEF098).
+  final double maintenanceMargin;
+
+  /// INVERTED against a long: the stop is ABOVE entry, the target BELOW.
+  final double? stop;
+  final double? target;
+  final DateTime openedAt;
+
+  double get unrealisedPct =>
+      cashPosted == 0 ? 0 : (unrealisedPnl / cashPosted) * 100;
+
+  /// Within 15% of the force-close threshold. A warning band, not a second
+  /// threshold: the decision itself is always the server's.
+  bool get isNearMargin {
+    final r = marginRatio;
+    return r != null && r < maintenanceMargin * 1.15;
+  }
+
+  factory SimShort.fromJson(Map<String, dynamic> j) {
+    final entry = (j['entry_price'] as num?)?.toDouble() ?? 0;
+    final qty = (j['quantity'] as num?)?.toDouble() ?? 0;
+    final mark = (j['mark'] as num?)?.toDouble() ?? entry;
+    final cashPosted = (j['cash_posted'] as num?)?.toDouble() ?? 0;
+    return SimShort(
+      id: j['id'] as String? ?? '',
+      ticker: j['ticker'] as String? ?? '',
+      quantity: qty,
+      entryPrice: entry,
+      mark: mark,
+      legValue: (j['leg_value'] as num?)?.toDouble() ??
+          cashPosted + (entry - mark) * qty,
+      unrealisedPnl:
+          (j['unrealised_pnl'] as num?)?.toDouble() ?? (entry - mark) * qty,
+      cashPosted: cashPosted,
+      collateralPosted: (j['collateral_posted'] as num?)?.toDouble() ?? 0,
+      borrowRatePct: (j['borrow_rate_pct'] as num?)?.toDouble() ?? 0,
+      borrowRateSource: j['borrow_rate_source'] as String? ?? 'default',
+      borrowAccruedTotal:
+          (j['borrow_accrued_total'] as num?)?.toDouble() ?? 0,
+      marginRatio: (j['margin_ratio'] as num?)?.toDouble(),
+      maintenanceMargin: (j['maintenance_margin'] as num?)?.toDouble() ?? 1.3,
+      stop: (j['stop'] as num?)?.toDouble(),
+      target: (j['target'] as num?)?.toDouble(),
+      openedAt: DateTime.tryParse(j['opened_at'] as String? ?? '') ??
+          DateTime.now().toUtc(),
+    );
+  }
+}
+
+/// CR171 §7 — a short that closed inside the server's reporting window.
+///
+/// [closeReason] is the load-bearing field. `margin` means the account took
+/// the decision away, and a position that vanished with no such sentence is
+/// indistinguishable from a bug — the games lane's *"the order simply
+/// VANISHED"* defect, on a much bigger number.
+class SimClosedShort {
+  const SimClosedShort({
+    required this.id,
+    required this.ticker,
+    required this.quantity,
+    required this.entryPrice,
+    this.closePrice,
+    this.closeReason,
+    this.realisedPnl,
+    required this.borrowAccruedTotal,
+    this.closedAt,
+  });
+
+  final String id;
+  final String ticker;
+  final double quantity;
+  final double entryPrice;
+  final double? closePrice;
+
+  /// `user` | `margin` | `stop` | `target`
+  final String? closeReason;
+  final double? realisedPnl;
+  final double borrowAccruedTotal;
+  final DateTime? closedAt;
+
+  /// The one case the user did not choose.
+  bool get wasForced => closeReason == 'margin';
+
+  factory SimClosedShort.fromJson(Map<String, dynamic> j) {
+    return SimClosedShort(
+      id: j['id'] as String? ?? '',
+      ticker: j['ticker'] as String? ?? '',
+      quantity: (j['quantity'] as num?)?.toDouble() ?? 0,
+      entryPrice: (j['entry_price'] as num?)?.toDouble() ?? 0,
+      closePrice: (j['close_price'] as num?)?.toDouble(),
+      closeReason: j['close_reason'] as String?,
+      realisedPnl: (j['realised_pnl'] as num?)?.toDouble(),
+      borrowAccruedTotal:
+          (j['borrow_accrued_total'] as num?)?.toDouble() ?? 0,
+      closedAt: DateTime.tryParse(j['closed_at'] as String? ?? ''),
+    );
+  }
+}
+
 class SimPortfolio {
   const SimPortfolio({
     required this.userId,
@@ -47,7 +210,13 @@ class SimPortfolio {
     required this.totalValue,
     required this.drawdownPct,
     this.priceSource = 'mock_walk',
-  });
+    this.cashCommitted = 0,
+    double? cashAvailable,
+    this.restingOrderCount = 0,
+    this.sharesCommitted = const {},
+    this.shorts = const [],
+    this.closedShorts = const [],
+  }) : _cashAvailable = cashAvailable;
 
   final String userId;
   final String portfolioId;
@@ -61,6 +230,54 @@ class SimPortfolio {
   // "yfinance" / "yahoo" (live), "mock_walk" (deterministic walk),
   // "unavailable" (defensive floor when every provider failed).
   final String priceSource;
+
+  /// CR170 §6 — cash the live resting book has spoken for. Computed server-side
+  /// at read time, never reserved: a reserved-cash debit is indistinguishable
+  /// from a loss in the NAV series.
+  final double cashCommitted;
+
+  final double? _cashAvailable;
+
+  /// What the ticket must size against.
+  ///
+  /// **Deliberately NOT clamped at zero**, and that is the one place this
+  /// differs from the games lane's identically-named getter. A negative here
+  /// is a real, reachable state — five resting buys against one balance, FIFO,
+  /// the loser refused at fill — and it is precisely the condition the field
+  /// exists to show. The game clamps because a stake cannot go negative; a
+  /// training balance over-committed by its own book can.
+  double get cashAvailable => _cashAvailable ?? (currentCash - cashCommitted);
+
+  /// True when the book has committed more than the balance holds.
+  bool get isOverCommitted => cashAvailable < 0;
+
+  final int restingOrderCount;
+
+  /// Shares per ticker that resting SELL orders have spoken for.
+  final Map<String, double> sharesCommitted;
+
+  /// CR171 — open shorts. Empty on every portfolio that has never shorted.
+  final List<SimShort> shorts;
+
+  /// CR171 §7 — shorts that closed inside the server's window, newest first.
+  final List<SimClosedShort> closedShorts;
+
+  /// Shares of [ticker] a resting sell has already spoken for.
+  double sharesCommittedFor(String ticker) =>
+      sharesCommitted[ticker.toUpperCase()] ?? 0;
+
+  /// The open short on [ticker], or null. At most one can exist per name.
+  SimShort? shortFor(String ticker) {
+    final t = ticker.toUpperCase();
+    for (final s in shorts) {
+      if (s.ticker.toUpperCase() == t) return s;
+    }
+    return null;
+  }
+
+  /// What every open short has cost to hold so far.
+  double get borrowAccruedTotal =>
+      shorts.fold<double>(0, (a, s) => a + s.borrowAccruedTotal);
 
   double get totalPnl => totalValue - startingCapital;
   double get pnlPct =>
@@ -85,6 +302,23 @@ class SimPortfolio {
       totalValue: (j['total_value'] as num).toDouble(),
       drawdownPct: (j['drawdown_pct'] as num).toDouble(),
       priceSource: (j['price_source'] as String?) ?? 'mock_walk',
+      cashCommitted: (j['cash_committed'] as num?)?.toDouble() ?? 0,
+      // Read the server's own figure when present; the fallback exists only
+      // for a backend that predates CR170 §6, where the book is empty anyway.
+      cashAvailable: (j['cash_available'] as num?)?.toDouble(),
+      restingOrderCount: (j['resting_order_count'] as num?)?.toInt() ?? 0,
+      sharesCommitted: ((j['shares_committed'] as Map?) ?? const {}).map(
+        (k, v) => MapEntry(
+          (k as String).toUpperCase(),
+          (v as num).toDouble(),
+        ),
+      ),
+      shorts: ((j['shorts'] as List?) ?? const [])
+          .map((s) => SimShort.fromJson(s as Map<String, dynamic>))
+          .toList(),
+      closedShorts: ((j['closed_shorts'] as List?) ?? const [])
+          .map((s) => SimClosedShort.fromJson(s as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
@@ -276,15 +510,29 @@ class SimSubmitResult {
     required this.ok,
     this.trade,
     this.violations = const [],
+    this.advisories = const [],
     this.blockedBy,
     this.shariaVerdict,
     this.resting = false,
     this.order,
+    this.shortAction,
+    this.shortTicker,
+    this.shortQuantity,
+    this.shortRealisedPnl,
   });
 
   final bool ok;
   final SimTrade? trade;
   final List<String> violations;
+
+  /// CR171 §6 — notices on a trade that **proceeded**. A third state beside
+  /// violations, and it is not decoration: Saiful's halal ruling is *"our job
+  /// is only to inform… we will put a flag and notice to inform the user, but
+  /// we let the trade through"*. An advisory that arrives on the wire and is
+  /// never rendered informs nobody, which is CR040's failure exactly — so
+  /// anything that reads [violations] must also read this.
+  final List<String> advisories;
+
   final String? blockedBy;
 
   /// CR170 — the order rested instead of filling. Read from the response's own
@@ -305,6 +553,27 @@ class SimSubmitResult {
   /// backend that does not yet serialize the field.
   final ShariaVerdict? shariaVerdict;
 
+  /// CR171 — `short_open` | `short_cover`, when the submit moved a short leg.
+  ///
+  /// A short writes **no trade row** by design (§3: a SELL row would make
+  /// every genuine phantom share look accounted for on `def110_backfill`), so
+  /// `trade` is null on this branch and `resting` is false. Without this field
+  /// the ticket's `resting = result.resting || trade == null` reads a
+  /// successful short as a resting order and tells the user it is waiting at
+  /// $0.00.
+  final String? shortAction;
+  final String? shortTicker;
+  final double? shortQuantity;
+
+  /// Set on a cover, null on an open.
+  final double? shortRealisedPnl;
+
+  bool get isShortOpen => shortAction == 'short_open';
+  bool get isShortCover => shortAction == 'short_cover';
+
+  static List<String> _advisories(Map<String, dynamic> compliance) =>
+      ((compliance['advisories'] as List?) ?? const []).cast<String>();
+
   factory SimSubmitResult.fromJson(Map<String, dynamic> j) {
     // Present on both branches: /submit returns {ok, trade} on success and
     // {ok, compliance} on rejection, and the verdict may ride on either.
@@ -321,17 +590,26 @@ class SimSubmitResult {
       // "couldn't place that trade" over an order the server *did* accept.
       final tradeJson = (j['trade'] as Map?)?.cast<String, dynamic>();
       final orderJson = (j['order'] as Map?)?.cast<String, dynamic>();
+      final shortJson = (j['short'] as Map?)?.cast<String, dynamic>();
       return SimSubmitResult(
         ok: true,
         trade: tradeJson == null ? null : SimTrade.fromJson(tradeJson),
         resting: (j['resting'] as bool?) ?? false,
         order: orderJson == null ? null : SimRestingOrder.fromJson(orderJson),
         shariaVerdict: verdict,
+        // Read on the OK branch too, and that is the whole point: an advisory
+        // only ever rides on a trade that went through.
+        advisories: _advisories(compliance),
+        shortAction: shortJson?['action'] as String?,
+        shortTicker: shortJson?['ticker'] as String?,
+        shortQuantity: (shortJson?['quantity'] as num?)?.toDouble(),
+        shortRealisedPnl: (shortJson?['realised_pnl'] as num?)?.toDouble(),
       );
     }
     return SimSubmitResult(
       ok: false,
       violations: ((compliance['violations'] as List?) ?? const []).cast<String>(),
+      advisories: _advisories(compliance),
       blockedBy: compliance['blocked_by'] as String?,
       shariaVerdict: verdict,
     );
