@@ -100,10 +100,16 @@ class HexButton extends StatelessWidget {
       );
     }
 
+    // No `label:` here on purpose. The child is a Text rendering this exact
+    // string, and Semantics merges its own label with the merged descendants'
+    // — so setting it too announces the button twice. Measured on the rig
+    // device: content-desc came back "CONVENE THE ROOM\nCONVENE THE ROOM",
+    // which a screen reader reads out in full and which made every exact-text
+    // locator for the CTA miss. Same defect class as DEF249 (the bottom nav
+    // and the Concierge chips), same fix: let the Text supply the label.
     return Semantics(
       button: true,
       enabled: _isEnabled,
-      label: label,
       child: GestureDetector(
         onTap: onPressed,
         behavior: HitTestBehavior.opaque,
