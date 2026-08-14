@@ -144,6 +144,111 @@ void main() {
     });
   });
 
+  group('DEF253 — only a call that waits on AMI may blame AMI', () {
+    // Saiful, on 4G, healthy backend, AMI not in the call path:
+    // "Couldn't load your portfolio — AMI took too long to answer."
+    // `docker logs` showed no `/v1/sim/portfolio/` request arriving at all, so
+    // the sentence was wrong about which half of the system failed.
+    DioException timeout(DioExceptionType type, {bool waitsOnModel = false}) =>
+        DioException(
+          requestOptions: RequestOptions(
+            path: '/v1/sim/portfolio/u1',
+            extra: waitsOnModel ? Map<String, dynamic>.from(kAmiWaitsOnModel) : {},
+          ),
+          type: type,
+        );
+
+    test('the reported case: a portfolio read never names AMI', () {
+      final msg = friendlyError(timeout(DioExceptionType.receiveTimeout),
+          action: 'load your portfolio');
+      expect(msg.contains('AMI'), isFalse, reason: msg);
+      expect(msg.toLowerCase(), contains('connection'),
+          reason: 'the user is owed the thing they can act on — signal, not a '
+              'claim about the model');
+    });
+
+    test('a call that really does wait on the model may still say so', () {
+      final msg = friendlyError(
+          timeout(DioExceptionType.receiveTimeout, waitsOnModel: true),
+          action: 'get your Finding');
+      expect(msg, contains('AMI took too long to answer'));
+    });
+
+    test('connect and send timeouts never name AMI, marker or not', () {
+      // Nothing was ever asked, so nothing could have been slow to answer.
+      // This is the half that must hold even on a model-backed route, and it
+      // is why the marker is read only on receiveTimeout.
+      for (final type in [
+        DioExceptionType.connectionTimeout,
+        DioExceptionType.sendTimeout,
+      ]) {
+        for (final waits in [false, true]) {
+          final msg = friendlyError(timeout(type, waitsOnModel: waits),
+              action: 'load your portfolio');
+          expect(msg.contains('AMI'), isFalse,
+              reason: '$type (waitsOnModel: $waits) → $msg');
+        }
+      }
+    });
+
+    test('the sibling branch stopped asserting AMI is down', () {
+      for (final type in [
+        DioExceptionType.connectionError,
+        DioExceptionType.unknown,
+      ]) {
+        final msg =
+            friendlyError(timeout(type), action: 'load your portfolio');
+        expect(msg.contains('AMI'), isFalse, reason: '$type → $msg');
+        expect(msg.toLowerCase(), contains('connection'));
+      }
+    });
+
+    test('the marker reaches the two call sites that need it, and no others',
+        () {
+      // The caller-side half. `friendlyError` reading the marker correctly says
+      // nothing about whether any request carries one — DEF190's lesson, and
+      // the reason this asserts the client source rather than a fake options
+      // map. Two routes: `/v1/brief/propose` (`brief_engine.propose` streams
+      // from `self._llm`) and `/v1/portfolio/health/{id}/finding`
+      // (`generate_and_persist_finding(gateway=get_llm_gateway())`). The Room,
+      // Brief-message and 1-on-1 streams are absent because they do not use
+      // Dio at all and can never raise a DioException.
+      final src =
+          File('lib/services/api/api_client.dart').readAsStringSync();
+      expect(src, contains('kAmiWaitsOnModel'),
+          reason: 'the client stopped marking anything — every model-backed '
+              'timeout now under-explains');
+
+      for (final route in const [
+        "'/v1/brief/propose'",
+        r"'/v1/portfolio/health/$userId/finding'",
+      ]) {
+        final i = src.indexOf(route);
+        expect(i, greaterThan(-1), reason: 'route moved or was renamed: $route');
+        final end = i + 500 < src.length ? i + 500 : src.length;
+        expect(src.substring(i, end), contains('kAmiWaitsOnModel'),
+            reason: '$route no longer carries the marker, so a receive '
+                'timeout on it under-explains a genuinely slow model');
+      }
+
+      // Exactly two call sites plus the `show` on the import. A third would
+      // mean something that does not wait on the model is claiming it does,
+      // which is the defect running in the other direction.
+      expect('kAmiWaitsOnModel'.allMatches(src).length, 3,
+          reason: 'the marked set changed — verify server-side that the new '
+              'route awaits the LLM gateway before widening it');
+
+      // The route the defect was actually reported against must stay unmarked.
+      final portfolio = src.indexOf(r"'/v1/sim/portfolio/$userId'");
+      expect(portfolio, greaterThan(-1));
+      final end =
+          portfolio + 300 < src.length ? portfolio + 300 : src.length;
+      expect(src.substring(portfolio, end).contains('kAmiWaitsOnModel'), isFalse,
+          reason: 'the portfolio read is a database call — marking it would '
+              'reinstate DEF253 verbatim');
+    });
+  });
+
   group('DEF148 — the guard: no call site may bypass it', () {
     /// Every file that can put text in front of a user.
     ///

@@ -38,6 +38,7 @@ import 'package:ami_trade/models/sim_resting_order.dart';
 import 'package:ami_trade/models/tickers.dart';
 import 'package:ami_trade/models/watchlist.dart';
 import 'package:ami_trade/services/api/api_exceptions.dart';
+import 'package:ami_trade/services/api/friendly_error.dart' show kAmiWaitsOnModel;
 import 'package:ami_trade/services/yahoo_finance_service.dart';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
@@ -616,6 +617,9 @@ class ApiClient {
         'session_id': sessionId,
         'history': history.map((m) => m.toJson()).toList(),
       },
+      // DEF253 — this one really does wait on the model (`brief_engine.propose`
+      // streams from `self._llm`), so a receive timeout may say so.
+      options: Options(extra: kAmiWaitsOnModel),
     );
     return BriefProposal.fromJson(r.data!);
   }
@@ -1192,8 +1196,14 @@ class ApiClient {
   /// (M07 §3.5 step 6), which is what makes a `FutureProvider` around a POST
   /// safe here.
   Future<HealthFinding> generateHealthFinding(String userId) async {
-    final r = await _dio
-        .post<Map<String, dynamic>>('/v1/portfolio/health/$userId/finding');
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/portfolio/health/$userId/finding',
+      // DEF253 — the one LLM route in `api/portfolio.py`
+      // (`generate_and_persist_finding(gateway=get_llm_gateway())`). Every
+      // other portfolio call the screen makes is a database or quote read, and
+      // marking this one is what keeps them out of the AMI wording.
+      options: Options(extra: kAmiWaitsOnModel),
+    );
     return HealthFinding.fromJson(r.data!);
   }
 

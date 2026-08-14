@@ -37,6 +37,44 @@ import 'package:ami_trade/services/api/api_exceptions.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 
+/// DEF253 — the marker a call site sets when its request genuinely waits on
+/// the model, so a timeout may honestly say AMI was slow.
+///
+/// Attach to the Dio `Options.extra` of such a call:
+/// `_dio.post(..., options: Options(extra: kAmiWaitsOnModel))`.
+///
+/// **The default is the safe direction.** An unmarked call gets connection
+/// copy, so the worst a missing marker can do is under-explain a genuinely
+/// slow model; the worst a path allowlist could do is what DEF253 actually
+/// was — blaming AMI for a database read that never left the phone. This is
+/// carried on the request rather than matched against a route list inside this
+/// file, per the defect's own fix note: a list nothing enforces is how the
+/// string reached a DB read in the first place, and it drifts every time a
+/// route is added.
+///
+/// **Why the marked set is two routes and not twelve.** The Room, the Brief
+/// message stream and the 1-on-1 message stream — the calls that obviously
+/// wait on AMI — do not go through Dio at all. They stream over
+/// `ApiClient._httpClient` (DEF114 D4), so they never raise a [DioException]
+/// and never reach this function. Of what remains, only `/v1/brief/propose`
+/// (`brief_engine.propose` → `self._llm`) and
+/// `/v1/portfolio/health/{id}/finding` (`generate_and_persist_finding`
+/// → `get_llm_gateway()`) await the model; `/brief/start`, `/one_on_one/start`
+/// and the accept/reject/rollback trio are all synchronous server-side.
+const String kAmiWaitsOnModelKey = 'ami_waits_on_model';
+
+/// The value to hand to `Options(extra: …)`. See [kAmiWaitsOnModelKey].
+const Map<String, dynamic> kAmiWaitsOnModel = {kAmiWaitsOnModelKey: true};
+
+bool _waitsOnModel(DioException e) =>
+    e.requestOptions.extra[kAmiWaitsOnModelKey] == true;
+
+/// Copy for a request that never got an answer in time for reasons that are
+/// about the pipe, not the far end. Names the user's own next action, because
+/// a bad signal is something they can do something about.
+const String _slowConnection =
+    'the connection is too slow right now. Try again on a stronger signal.';
+
 /// Turns [error] into a sentence a user can act on.
 ///
 /// [action] names what failed as a verb phrase in the user's terms — lower
@@ -72,14 +110,30 @@ String friendlyError(Object error, {required String action}) {
 
   if (error is DioException) {
     switch (error.type) {
+      // DEF253 — a connect or send timeout means the request never landed, so
+      // nothing on the far end had the chance to be slow. Saying "AMI took too
+      // long to answer" here is not loose phrasing, it is a false statement
+      // about which half of the system failed: Saiful hit it on 4G against a
+      // healthy backend that logged no such request arriving at all.
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
+        return '$lead — $_slowConnection';
+      // The request WAS sent and the answer did not arrive. Only here can the
+      // far end honestly be the slow one, and only for a call that waits on
+      // the model — see [kAmiWaitsOnModelKey].
       case DioExceptionType.receiveTimeout:
-        return '$lead — AMI took too long to answer. Try again.';
+        return _waitsOnModel(error)
+            ? '$lead — AMI took too long to answer. Try again.'
+            : '$lead — $_slowConnection';
+      // DEF253's sibling branch, moved for the same reason. "Unreachable" is
+      // about reachability, which is true of both a dead network and an
+      // unknown transport failure — but it is not evidence that AMI is down,
+      // and on the product whose core claim is a 12-agent room, "the AI is
+      // slow" is the belief this was quietly building.
       case DioExceptionType.connectionError:
       case DioExceptionType.unknown:
-        return '$lead — AMI is unreachable. Check your connection and '
-            'try again.';
+        return "$lead — couldn't reach the server. Check your connection "
+            'and try again.';
       case DioExceptionType.cancel:
         return '$lead — the request was cancelled.';
       case DioExceptionType.badCertificate:
