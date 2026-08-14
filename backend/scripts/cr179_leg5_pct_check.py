@@ -67,7 +67,7 @@ CLOSE = re.compile(r"(?:last close|price)\D{0,40}?\$\s*([\d,]+(?:\.\d+)?)", re.I
 # is the instrument bug that produced the original 12.5%/13.8% and got a defect
 # filed on the one agent it least applies to; see P19.
 ENTRY = re.compile(
-    r"\bentry\b[^\n$]{0,30}\$\s*([\d,]+(?:\.\d+)?)"
+    r"\bentry\b[^\n$]{0,60}\$\s*([\d,]+(?:\.\d+)?)"
     r"|\$\s*([\d,]+(?:\.\d+)?)[^\n]{0,20}\bentry\b", re.I)
 # A claim that names the close/current/spot explicitly can ONLY be scored
 # against the close — the entry alternatives below must not rescue it, or the

@@ -32,6 +32,7 @@ _ROOT = Path(__file__).resolve().parents[3]
 _CORPUS = _ROOT / "docs/forward_planning/CR143_agent_prompt_audit/corpus"
 _LEG5 = _CORPUS / "llm_audit_2026-08-14-epoch.json"
 _BASELINE = _CORPUS / "llm_audit_2026-08-13-epoch.json"
+_POSTFIX = _CORPUS / "llm_audit_2026-08-14b-epoch.json"
 _SCRIPT = _ROOT / "backend/scripts/cr179_leg5_pct_check.py"
 
 
@@ -143,3 +144,34 @@ def test_the_three_survivors_are_still_flagged(checker):
     assert not checker._is_consistent(895.91, 70.6, 1528.11, None, False)
     assert not checker._is_consistent(1.03, 6.0, 1.34, None, True)
     assert not checker._is_consistent(43.09, 53.1, 62.79, None, False)
+
+
+def test_the_postfix_epoch_rate_is_the_one_the_remeasurement_publishes(checker):
+    """The DEF302 re-measurement's own number, pinned like the other two.
+
+    1 of 29, hand-read: the surviving hit is a bear_researcher range whose
+    upper endpoint does not match its own level ($2.95 called −26% against a
+    $3.70 close, truly −20.3%, while the same range's $2.20 ↔ −41% end is
+    right). The second raw hit was a checker artefact — a neutral_debator stop
+    at $1205.31 called "10.0% distance from the entry" where the turn's own
+    `Entry Price: … $1339.23` gives exactly −10.0%; the entry sat 38 characters
+    after the word "entry" and the lookup window was 30, so it was invisible.
+
+    That window was widened to 60 **after** reading the turn, which is an
+    instrument change made in the flattering direction and therefore the one
+    that most needs pinning. It moves neither committed corpus — the two tests
+    above still give 40/3 and 29/2 — so it resolves a referent that was plainly
+    stated rather than reclassifying a judgement.
+
+    NOT asserted: any comparison with the pre-fix 3/40. Fisher exact is
+    p = 0.634; the honest reading is that this epoch cannot detect a change in
+    either direction, and P2 forbids reading a rendering fix as a behaviour fix
+    regardless.
+    """
+    if not _POSTFIX.exists():  # pragma: no cover
+        pytest.skip(f"committed corpus not present: {_POSTFIX}")
+    scored, bad, excluded = _tally(checker, _POSTFIX)
+    assert (scored, bad, excluded) == (29, 1, 66), (
+        f"the post-fix epoch gives {bad}/{scored} (excluded {excluded}); the "
+        f"re-measurement published 1/29 with 66 excluded"
+    )
