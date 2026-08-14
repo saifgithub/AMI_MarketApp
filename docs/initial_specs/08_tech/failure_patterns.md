@@ -1056,3 +1056,39 @@ compared: they live in different files, run at different times, and nothing join
 `scored / inconsistent / excluded`, names why each exclusion happened, and its docstring records the
 26.5% → 7.5% correction rather than presenting the final number as if it were the first. Any future
 prose-measurement script belongs beside it and should be read before writing a new one.
+
+---
+
+## P20 — A test asserts a string the app stopped rendering, and only a device run can tell
+
+**Symptom.** A UI test hard-asserts visible copy. The key it copied that copy from still exists in
+every ARB and still generates into `app_localizations*.dart`, so every static check agrees the string
+is real. No screen references it. The assertion is unsatisfiable, and it fails on the device as
+*"the app is not showing X"* — a sentence that sends the reader to the app.
+
+| | The string | What it actually was | How long |
+|---|---|---|---|
+| **DEF250** | `tabFloor`, `tabPortfolio` | live ARB keys referenced by no screen; the nav renders `floorTabUpper`/… | ~2 weeks |
+| **DEF307's run** | `floorConciergeHeading` = "AMI CONCIERGE" | same; the Floor redesign moved the Concierge access point into `floorOmniboxHint` | unknown — found by the first Android run of CR162 |
+
+**Why the previous guard failed.** DEF250's guard was written to catch DEF250: it compares the four
+tab labels against the four ARB keys the nav renders, and separately pins `tabFloor`/`tabPortfolio` by
+name as known-dead. Both are assertions about *two specific keys*. The class is "any asserted string
+whose key no screen renders", and a check that enumerates yesterday's instances cannot see tomorrow's.
+The second instance was a different key on a different screen, so it walked straight past.
+
+The deeper reason the class is invisible: **existence in the ARB is not the property that matters, and
+it is the only property anything checked.** Flutter's generated localizations define every key by
+construction, so a dead key has a definition, a getter, and three translations — it looks more alive
+than a live one. Grepping "is this string real?" returns yes.
+
+**The invariant.** *A test may only assert copy whose ARB key is referenced by a non-generated file
+under `mobile/lib`. Rendered, not merely defined — and the generated localizations are excluded from
+that search, because they are what makes a dead key look alive.*
+
+**Enforcing check.** `qa/appium/tests_offline/test_locales_match_arb.py` —
+`test_no_string_is_asserted_against_a_key_no_screen_renders` maps every string in
+`config/locales.py` to its ARB key and requires a reference outside `mobile/lib/generated/`;
+`test_every_string_is_mapped_to_an_arb_key` fails if the map drifts, since an unmapped string is an
+unchecked one, which is this pattern again one level up. Runs offline in milliseconds, on the Mac and
+in CI — no device, so the next instance dies before it ever reaches a phone.
