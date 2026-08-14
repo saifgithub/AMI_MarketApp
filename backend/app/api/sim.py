@@ -43,7 +43,7 @@ from app.services.sim_engine import (
     SimTrade,
     get_sim_engine,
 )
-from app.services.sim_resting_orders import sweep_resting_orders
+from app.services.sim_resting_orders import commitment_for, sweep_resting_orders
 from app.services.sim_trade_effects import apply_post_fill_effects
 from app.services.ticker_reference import (
     TickerNotFoundError,
@@ -162,6 +162,25 @@ class PortfolioSnapshot(BaseModel):
     # `SimEngine.aggregate_source`.
     price_source: str = "mock_walk"
 
+    # CR170 §6 — what the live resting book ties up. Computed at read time,
+    # never reserved: a reserved-cash debit is indistinguishable from a loss in
+    # the NAV series. See `sim_resting_orders.RestingCommitment` for why.
+    #
+    # `cash_available` is `current_cash - cash_committed` and is the number a
+    # ticket must size against. It is NOT floored at zero — a negative here
+    # means the book is over-committed, which is a real and reachable state
+    # (five resting buys against one balance, FIFO, the loser refused at fill
+    # with "insufficient cash: need $X, have $Y"). Clamping it to zero would
+    # hide exactly the condition the field exists to show.
+    #
+    # `cash_committed` for a buy STOP is a floor, not an exact figure: Rule 2
+    # fills at the worse of named and observed, so a gap fills above the
+    # trigger and ties up more than this reports.
+    cash_committed: float = 0.0
+    cash_available: float = 0.0
+    resting_order_count: int = 0
+    shares_committed: dict[str, float] = Field(default_factory=dict)
+
 
 class NavPointOut(BaseModel):
     """One `portfolio_nav_daily` row. `price_source` rides on every point
@@ -224,6 +243,11 @@ async def get_portfolio(
     p, marks, total_value, drawdown_pct, price_source = await asyncio.to_thread(
         sim.portfolio_marks_snapshot, user_id,
     )
+    # Its own hop: `commitment_for` is a synchronous DB read, and the D9 guard
+    # exists because a sync session call on the event loop parks every other
+    # request behind it. No quote fan-out here — a resting order names its own
+    # price — so this is one indexed SELECT, not a second market-data pass.
+    commitment = await asyncio.to_thread(commitment_for, user_id)
     return PortfolioSnapshot(
         user_id=user_id,
         portfolio_id=p.id,
@@ -246,6 +270,10 @@ async def get_portfolio(
         total_value=total_value,
         drawdown_pct=drawdown_pct,
         price_source=price_source,
+        cash_committed=commitment.cash_committed,
+        cash_available=round(p.current_cash - commitment.cash_committed, 2),
+        resting_order_count=commitment.resting_order_count,
+        shares_committed=commitment.shares_committed,
     )
 
 

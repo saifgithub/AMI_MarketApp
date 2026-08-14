@@ -35,8 +35,8 @@ from app.db.models import SimRestingOrderRow, SimTradeRow
 from app.schemas.trade import OrderType, Side
 from app.services.coach_engine import hydrate_coach_mandate
 from app.services.market_data import Quote
-from app.services.sim_engine import SimEngine
-from app.services.sim_resting_orders import sweep_resting_orders
+from app.services.sim_engine import SimEngine, get_sim_engine
+from app.services.sim_resting_orders import commitment_for, sweep_resting_orders
 from app.trading_math.market_hours import session_close_on_or_after
 
 ET = ZoneInfo("America/New_York")
@@ -109,6 +109,25 @@ class _Pinned:
 
     def earnings(self, *a, **k):  # pragma: no cover
         return None
+
+
+def _api():
+    """A live sim router, a real user, and their token.
+
+    Anything asserting what a CLIENT sees has to come through here — asserting
+    on `commitment_for` proves the arithmetic and says nothing about whether
+    the handler puts it on the wire, which is the half CR040 is about.
+    """
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app.api.sim import router as sim_router
+    from app.services.auth_service import AuthService
+
+    app = FastAPI()
+    app.include_router(sim_router)
+    user, token, _ = AuthService().ensure_anonymous(device_user_id=None)
+    return TestClient(app, raise_server_exceptions=False), user, token
 
 
 def _mandate(**over):
@@ -389,6 +408,135 @@ def test_a9_the_expiry_pass_still_runs_on_a_closed_sunday():
     row = next(r for r in _rows(user_id) if r.id == order_id)
     assert row.state == "expired"
     assert row.cancel_reason, "the system retired it, so it owes a reason"
+
+
+# ── Acceptance 6 — what the book ties up, computed at read time ────────────
+
+
+def test_a6_a_resting_buy_commits_cash_without_moving_current_cash():
+    """The whole decision in one assertion. `current_cash` MUST NOT move — it
+    is the number `total_value`, `drawdown_pct`, `portfolio_nav_daily` and the
+    TWR chain all read, and a reserved-cash debit is indistinguishable from a
+    loss in that series. `cash_available` is where the commitment shows."""
+    sim = SimEngine(provider=_Pinned({"AAPL": 100.0}))
+    user_id = uuid4()
+    before = sim.ensure_portfolio(user_id).current_cash
+    _rest_a_buy_limit(sim, user_id, limit=90.0)  # 2 @ 90
+
+    c = commitment_for(user_id)
+    assert c.cash_committed == 180.0
+    assert c.resting_order_count == 1
+    assert c.shares_committed == {}
+    assert sim.ensure_portfolio(user_id).current_cash == before, (
+        "read-time computation has no compensating write, so it must not have "
+        "made one"
+    )
+
+
+def test_a6_a_resting_sell_commits_shares_per_ticker_not_cash():
+    """The sell-side twin games never needed. Per ticker, because the fence is
+    per holding — one total would let a sell of AAPL cover a sell of MSFT."""
+    prov = _Pinned({"AAPL": 100.0, "MSFT": 100.0})
+    sim = SimEngine(provider=prov)
+    user_id = uuid4()
+    for t in ("AAPL", "MSFT"):
+        sim.submit(
+            user_id=user_id, ticker=t, side=Side.BUY, quantity=10,
+            mandate=_mandate(), order_type=OrderType.MARKET,
+        )
+    for t, qty in (("AAPL", 4), ("AAPL", 3), ("MSFT", 5)):
+        r = sim.submit(
+            user_id=user_id, ticker=t, side=Side.SELL, quantity=qty,
+            mandate=_mandate(), order_type=OrderType.LIMIT, limit_price=140.0,
+        )
+        assert r.accepted and r.resting
+
+    c = commitment_for(user_id)
+    assert c.shares_committed == {"AAPL": 7.0, "MSFT": 5.0}
+    assert c.cash_committed == 0.0, "a sell commits shares, not cash"
+    assert c.resting_order_count == 3
+
+
+def test_a6_a_terminal_order_stops_committing_anything():
+    """Cancel, expire, fill and reject are four different ways out, and all
+    four must release. This is the leak read-time computation is immune to by
+    construction — pinned so a future `state` addition cannot reintroduce it."""
+    sim = SimEngine(provider=_Pinned({"AAPL": 100.0}))
+    user_id = uuid4()
+    order_id = _rest_a_buy_limit(sim, user_id, limit=90.0)
+    assert commitment_for(user_id).cash_committed == 180.0
+
+    sim.cancel_resting_order(user_id=user_id, order_id=order_id)
+
+    c = commitment_for(user_id)
+    assert c.cash_committed == 0.0
+    assert c.resting_order_count == 0
+
+
+def test_a6_the_snapshot_reports_a_negative_available_when_over_committed():
+    """FIFO drain means a user CAN rest more than they hold cash for; §6 says
+    the loser is refused at fill with the sentence, *visible, not vanished*.
+    So `cash_available` must be allowed to go negative — clamping it at zero
+    would hide the one condition the field exists to show.
+
+    Read through the ROUTE, not through `commitment_for`. The first version of
+    this test recomputed `cash - commitment.cash_committed` itself and stayed
+    green with a `max(0.0, ...)` clamp added to the handler — it was asserting
+    about its own arithmetic, not about what a client receives. Same DEF190
+    shape this file has now hit four times.
+    """
+    client, user, token = _api()
+    sim = get_sim_engine()
+    cash = sim.ensure_portfolio(user.id).current_cash
+    qty = (cash / 50.0) * 0.6  # two orders at 60% of the balance each
+    for _ in range(2):
+        r = sim.submit(
+            user_id=user.id, ticker="AAPL", side=Side.BUY, quantity=qty,
+            mandate=_mandate(), order_type=OrderType.LIMIT, limit_price=50.0,
+        )
+        assert r.accepted and r.resting
+
+    body = client.get(
+        f"/v1/sim/portfolio/{user.id}",
+        headers={"Authorization": f"Bearer {token}"},
+    ).json()
+
+    assert body["cash_available"] < 0, (
+        "an over-committed book is reachable and must read as over-committed"
+    )
+    assert body["current_cash"] == cash, "still no debit, even over-committed"
+
+
+def test_a6_the_portfolio_route_actually_serves_the_four_fields():
+    """CR040 in its plainest form: a commitment computed correctly and never
+    put on the wire is a dark feature. The three tests above prove the
+    arithmetic; this proves a client can see it.
+
+    Driven through the real route with the real engine, because the failure
+    being guarded is a wiring one — a field on the response model that the
+    handler never populates serializes as its default and looks fine.
+    """
+    client, user, token = _api()
+    sim = get_sim_engine()
+    cash = sim.ensure_portfolio(user.id).current_cash
+    r = sim.submit(
+        user_id=user.id, ticker="AAPL", side=Side.BUY, quantity=2,
+        mandate=_mandate(), order_type=OrderType.LIMIT, limit_price=1.0,
+    )
+    assert r.accepted and r.resting, "a $1 limit rests against any real mark"
+
+    body = client.get(
+        f"/v1/sim/portfolio/{user.id}",
+        headers={"Authorization": f"Bearer {token}"},
+    ).json()
+
+    assert body["cash_committed"] == 2.0
+    assert body["cash_available"] == round(cash - 2.0, 2)
+    assert body["resting_order_count"] == 1
+    assert body["shares_committed"] == {}
+    assert body["current_cash"] == cash, (
+        "the whole §6 decision: the book commits cash without debiting it"
+    )
 
 
 # ── Acceptance 10 — the SHIPPED bracket, fired without a client ────────────

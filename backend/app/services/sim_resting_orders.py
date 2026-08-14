@@ -55,6 +55,7 @@ that does not reward re-queueing.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
@@ -73,7 +74,7 @@ from app.services.sim_engine import (
     get_sim_engine,
 )
 from app.services.sim_trade_effects import apply_post_fill_effects
-from app.schemas.trade import OrderType
+from app.schemas.trade import OrderType, Side
 from app.trading_math.market_hours import is_us_market_open
 from app.trading_math.order_pricing import is_triggered
 
@@ -118,6 +119,66 @@ def _live_orders(user_id: UUID | None) -> list[SimRestingOrder]:
         if user_id is not None:
             stmt = stmt.where(SimRestingOrderRow.user_id == user_id)
         return [SimRestingOrder.from_row(r) for r in s.execute(stmt).scalars().all()]
+
+
+@dataclass(frozen=True)
+class RestingCommitment:
+    """§6 — what the live book ties up, computed AT READ TIME and never written.
+
+    Reserving instead would redefine `current_cash`, which `Portfolio.total_value`,
+    `total_drawdown_pct`, `portfolio_nav_daily`, `portfolio_value_snapshots`, the
+    TWR chain and `_risk_limit_context` all read — a reserved-cash debit is
+    indistinguishable from a **loss** in the NAV series unless every one of those
+    sites learns about it. Reservation would also need a compensating credit on
+    five terminal paths (cancel, expire, reject, reset, reap), and every one
+    missed leaks a user's money permanently. Read-time computation has no
+    compensating write, so there is nothing to leak.
+
+    `cash_committed` for a **buy stop is a floor, not an exact figure**: Rule 2
+    fills at the worse of named and observed, so a stop that gaps fills above its
+    trigger and ties up more than this says. Naming it here so the client's copy
+    can be honest about it rather than presenting an estimate as a total.
+    """
+
+    cash_committed: float
+    shares_committed: dict[str, float]
+    resting_order_count: int
+
+
+def commitment_for(user_id: UUID) -> RestingCommitment:
+    """A pure DB read over the live book — no quote fan-out.
+
+    Strictly cheaper than the games precedent it follows (`_queued_orders_priced`
+    prices every queued order at read time) because a resting order already
+    names its own price. The problem is the same one, though, and it is Saiful's
+    on build 74: *"This was the second order placed. But it is still showing I
+    have 10K."* Without this, a user rests five buy limits and the portfolio
+    keeps reporting the whole balance as spendable.
+
+    `shares_committed` is the sell-side twin games never needed, and it is what
+    stops a user resting two sells for shares they hold once. Per ticker, because
+    the fence is per holding — a single total would let a sell of 10 AAPL cover
+    a sell of 10 MSFT.
+    """
+    cash = 0.0
+    shares: dict[str, float] = {}
+    orders = _live_orders(user_id)
+    for order in orders:
+        named = order.named_price
+        if order.side == Side.BUY:
+            # A market order never rests, so `named` is None only for a row
+            # written by something that bypassed the submit validator. Skipping
+            # it under-reports rather than crashing the portfolio read, and the
+            # order itself is already unfillable (`_fill_triggered` skips it).
+            if named is not None:
+                cash += named * order.quantity
+        else:
+            shares[order.ticker] = shares.get(order.ticker, 0.0) + order.quantity
+    return RestingCommitment(
+        cash_committed=round(cash, 2),
+        shares_committed={k: round(v, 4) for k, v in shares.items()},
+        resting_order_count=len(orders),
+    )
 
 
 def _expire_elapsed(now: datetime, user_id: UUID | None) -> int:
