@@ -39,6 +39,25 @@ MOBILE_DIR="${PROJECT_ROOT}/mobile"
 : "${GOOGLE_OAUTH_WEB_CLIENT_ID:=153141744056-03d6sabmvita0a2civs6e0ngjoac54v7.apps.googleusercontent.com}"
 : "${SENTRY_DSN:=}"
 
+# DEF301 — the rig must run the app the release ships, not a near-miss of it.
+#
+# This helper used to build with four dart-defines and no AMI_GAMES, so
+# `bool.fromEnvironment('AMI_GAMES', defaultValue: false)` resolved FALSE and the
+# whole games tree shook out: every `publish_playstore.sh` run produced a 5-tab
+# AAB for Play and a 4-tab APK for melehost, in the same run, under one version
+# string. `strings libapp.so` at 0.1.0+91: AAB 1 hit, IPA 1 hit, APK 0 —
+# control string present in all three, so absent meant absent.
+#
+# Two artifacts with the same version and different features make a bug report
+# untraceable, and the automated tester was exercising a tab users do not have
+# (or rather, missing one they do).
+#
+# Defaults to FALSE, deliberately: run standalone this stays the safe direction,
+# and only a caller that KNOWS the release carries the game turns it on.
+# `publish_playstore.sh` exports its own DO_GAMES choice, so the APK matches the
+# AAB it was built beside rather than guessing.
+: "${AMI_GAMES:=false}"
+
 APK="${1:-}"
 
 if [[ -z "$APK" ]]; then
@@ -48,7 +67,8 @@ if [[ -z "$APK" ]]; then
       --dart-define=ALLOW_BACKEND_SWITCH=true \
       --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
       --dart-define=GOOGLE_OAUTH_WEB_CLIENT_ID="${GOOGLE_OAUTH_WEB_CLIENT_ID}" \
-      --dart-define=SENTRY_DSN="${SENTRY_DSN}" )
+      --dart-define=SENTRY_DSN="${SENTRY_DSN}" \
+      --dart-define=AMI_GAMES="${AMI_GAMES}" )
 fi
 
 if [[ ! -f "$APK" ]]; then

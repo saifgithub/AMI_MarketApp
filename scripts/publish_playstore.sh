@@ -124,7 +124,19 @@ else
   # helper's loud STALE warning still fires so a stale rig can't pass unnoticed.
   echo ""
   echo "▶ refreshing the automated-tester APK on melehost (CR079)"
-  if "${PROJECT_ROOT}/scripts/share_apk_to_tester.sh"; then
+  # DEF301 — hand the helper the SAME games choice this release was built
+  # with. Without it the helper defaults false and the rig runs a 4-tab app
+  # while Play serves a 5-tab one, both stamped with this version number.
+  #
+  # Derived from BUILD_ARGS, NOT from a `DO_GAMES` variable: that one lives
+  # in build_playstore.sh and does not exist in this shell, so reading it
+  # here would abort the release on `set -u` (unbound variable) at the last
+  # step, AFTER the Play upload had already succeeded.
+  _apk_games=true
+  for _a in ${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"}; do
+    [[ "$_a" == "--no-games" ]] && _apk_games=false
+  done
+  if AMI_GAMES="$_apk_games" "${PROJECT_ROOT}/scripts/share_apk_to_tester.sh"; then
     apk_status="refreshed"
   else
     apk_status="STALE — see the warning above"
