@@ -349,7 +349,14 @@ _games_in_aab() {
   local so; so=$(find "$tmp" -name libapp.so -path "*arm64*" | head -1)
   [[ -n "$so" && -f "$so" ]] || { rm -rf "$tmp"; return 1; }
   local hits control
-  hits=$(strings "$so" | grep -ic "NO ARENA RULES" || true)
+  # DEF301 — probe a games-only widget Key, never the disclosure heading.
+  # `NO ARENA RULES` is an ARB *value* (`app_en.arb:509`, gamesDisclosureHeading),
+  # so a copy edit or a re-translation would silently change what this gate
+  # tests while it went on printing success — the same shape as the defect it
+  # sits next to. `games_close_beat_insight` is a const Key reached only from
+  # `games_close_screen.dart`; measured 1 hit in the AAB and the IPA, 0 in a
+  # game-less APK, against the control's 1 in all three.
+  hits=$(strings "$so" | grep -ic "games_close_beat_insight" || true)
   control=$(strings "$so" | grep -ic "EDUCATIONAL SIMULATION" || true)
   rm -rf "$tmp"
   [[ "$control" -gt 0 ]] || { echo "control-missing"; return 0; }

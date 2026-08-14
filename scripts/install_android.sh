@@ -115,7 +115,9 @@ _games_in_apk() {
   local so="$tmp/lib/arm64-v8a/libapp.so"
   [[ -f "$so" ]] || { rm -rf "$tmp"; return 1; }
   local hits control
-  hits=$(strings "$so" | grep -ic "NO ARENA RULES" || true)
+  # DEF301 — a games-only widget Key, not the ARB disclosure heading, which a
+  # copy edit would change without anyone noticing this gate stopped testing.
+  hits=$(strings "$so" | grep -ic "games_close_beat_insight" || true)
   control=$(strings "$so" | grep -ic "EDUCATIONAL SIMULATION" || true)
   rm -rf "$tmp"
   [[ "$control" -gt 0 ]] || { echo "control-missing"; return 0; }
