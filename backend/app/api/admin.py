@@ -225,7 +225,21 @@ _FEATURE_GATES: list[tuple[str, str, str]] = [
     ("resend_api_key", "Transactional email (magic links)",
      "email send is a no-op"),
     ("sentry_dsn", "Sentry error reporting", "errors are local-log only"),
-    ("posthog_api_key", "PostHog analytics", "no product analytics"),
+    # DEF246 — PostHog is NOT listed here, and its absence is the fix rather than an
+    # oversight. There is no client, no `capture()`, no `identify()`, nothing in
+    # `mobile/lib`: the setting is plumbing for a feature with zero call sites. This list
+    # answers "is this feature live in Alpha?", and `configured = bool(value)` means that
+    # the moment `POSTHOG_API_KEY` is set, the register built to catch silently-dark
+    # features would itself assert that a wholly absent feature is live — and `dark_count`
+    # would drop by one to say so. Apply CR040's own question (*if this fires constantly
+    # and silently, what does the user end up believing?*) and the answer is that the
+    # operator believes there is a funnel.
+    #
+    # `POSTHOG_API_KEY` is still reported under `settings_coverage`, which asks the
+    # narrower and truthful question "is this setting populated" — so nothing is hidden,
+    # it just stops claiming to be a feature. Put it back the same day instrumentation
+    # lands (CR036 §3 / M11); `test_def246_posthog_phantom_gate.py` enforces exactly that
+    # coupling in both directions.
 ]
 
 
