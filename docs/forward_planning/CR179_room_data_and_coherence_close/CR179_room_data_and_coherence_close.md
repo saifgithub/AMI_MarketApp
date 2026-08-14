@@ -786,3 +786,48 @@ not be quoted as if they were.
   distinguishable, but a wider shared sheet is the obvious candidate and it is the direction CR145
   Tier C exists to defend.
 - **DEF302**, above.
+
+### Acceptance 5 — adjudicated: lanes kept, and why (Saiful, 2026-08-14)
+
+The gate fired and was **not** obeyed mechanically. Put to Saiful with both readings and the evidence
+for each; his call was **keep the lanes and record the reasoning**. The reasoning, so a later reader
+can overturn it on evidence rather than taste:
+
+1. **The metric that fired cannot tell fabrication from computation.** M3 classes a number by where it
+   came from, never by whether it is right — a fabricated `-94.6%` and a correct one are both `novel`.
+2. **The metric built to ask that question is flat.** Derived-% inconsistency 12.5% (Leg 5) vs 13.8%
+   (baseline), on matched tickers. The widened lanes did not get less correct.
+3. **Hand-reading says the new novel numbers are scenarios, not inventions** — each with its inputs on
+   the page, several riding anchors this build supplied.
+4. **The three lanes the plan itself named as its unrun gates all fell** — fundamentals 3.6 → 3.1,
+   aggressive 2.7 → 2.4, research_manager 2.8 → 1.1. The one prior instance of novel rising *with* a
+   widened sheet reversed once the sheet was completed rather than half-completed.
+5. M3's own docstring: *"grounded-only near 100% is readback, not analysis."*
+
+**The risk this accepts, stated plainly:** M3-novel was the pre-agreed decision procedure and it is
+being overridden by a second measurement built in the same session that read it. If a later epoch
+shows the derived-% class rising on these lanes, that is the evidence this adjudication was wrong,
+and the revert is back on the table.
+
+### The remaining hand-reads — three of four classes are already closed
+
+- **Fabricated per-community attribution (filed 9/18).** **0/39** turns name a venue the sheet does not
+  supply, and **0/40** on the baseline — closed before this build, like several Leg 4 items. A second
+  pass for *unnamed* cohorts ("the crowd", "retail") flags 8/39, and hand-reading all eight shows every
+  one describing the **supplied** Reddit aggregate (`49% neutral`, `buzz 73/100`, `2,357 Reddit
+  mentions in 7 days`), not an invented community. The sheet now states its own boundary — *"Reddit
+  only — no Twitter/X, StockTwits, Google Trends, or Discord data exists"* — which is what makes the
+  claim checkable at all.
+- **Market-cap screening, the plan's open question ("does *any* agent screen on it now it is
+  rendered?").** Yes, and not narrowly: **49/468 turns across 10 of 12 agents**, led by fundamentals
+  (11) and bear (10). Baseline 61/482 — so it was already in use and this build did not increase it.
+- **DEF255's acceptance** (no approval pairing a >365-day horizon with a stop tighter than realised
+  vol): **4 approvals in the epoch, 0 stating a >365-day horizon**, so the pairing cannot arise. Met —
+  but met on n=4, which is too few to call the guard *exercised*. Recorded as satisfied-not-stressed.
+- **Wrong asymmetry (filed 2/6)** is subsumed by the derived-% check above and by Leg 4's upside
+  re-measure (22 upside claims, 0 absent from the prompt). No separate residue.
+
+**What the hand-reads cost in instrument error, worth recording next to DEF279:** two of the four
+checks above over-flagged on their first form (26.5% → 12.5% for derived-%; 20.5% → 0% for community
+attribution). Both times the count was wrong in the *alarming* direction, and both times only reading
+the individual hits found it. A metric's first number is a hypothesis.
