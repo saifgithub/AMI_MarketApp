@@ -86,12 +86,115 @@ def test_text_lookup_is_platform_specific():
     android = FakeDriver("Android")
     locators.all_by_text(android, "FLOOR")
     assert android.queries[0][0] == AppiumBy.ANDROID_UIAUTOMATOR
-    assert 'text("FLOOR")' in android.queries[0][1]
 
     ios = FakeDriver("iOS")
     locators.all_by_text(ios, "FLOOR")
     assert ios.queries[0][0] == AppiumBy.IOS_PREDICATE
     assert '"FLOOR"' in ios.queries[0][1]
+
+
+def test_android_text_lookup_searches_content_desc_not_only_text():
+    """Flutter puts EVERY user-visible string in `content-desc` on Android.
+
+    `Semantics(label:)` maps to `setContentDescription()`, not `setText()`, and
+    a canvas-painting app has no native TextViews — so a `text()`-only selector
+    matches nothing an actual user can read. This shipped: the bottom nav's
+    `content-desc='FLOOR'` was in the tree while `exists_text('FLOOR')`
+    returned False, which made the smoke gate's text assertion and the
+    onboarding early-return probe both unsatisfiable on Android.
+
+    The predecessor of this test asserted only that Android dispatches to
+    ANDROID_UIAUTOMATOR — true, and true of the broken version too. Checking
+    the *strategy* without the *coverage* is why it passed for the bug's whole
+    lifetime."""
+    android = FakeDriver("Android")
+    locators.all_by_text(android, "FLOOR")
+    selectors = [value for _, value in android.queries]
+
+    assert any('description("FLOOR")' in s for s in selectors), (
+        f"content-desc is never searched: {selectors}. Flutter labels live "
+        f"there, so this finds nothing a user can read."
+    )
+    assert any('text("FLOOR")' in s for s in selectors), (
+        f"`text` is never searched: {selectors}. Native (non-Flutter) chrome "
+        f"and the system UI still use it."
+    )
+    assert 'description("FLOOR")' in selectors[0], (
+        "content-desc should be tried FIRST — it is the overwhelmingly common "
+        "case in this app, and ordering it second doubles the hit-path cost."
+    )
+
+
+def test_android_text_contains_also_searches_content_desc():
+    android = FakeDriver("Android")
+    locators.exists_text_contains(android, "FLO")
+    selectors = [value for _, value in android.queries]
+    assert any('descriptionContains("FLO")' in s for s in selectors), selectors
+    assert any('textContains("FLO")' in s for s in selectors), selectors
+
+
+def test_labelled_only_is_honoured_on_android_not_silently_dropped():
+    """`labelled_only` was implemented inside the iOS predicate and ignored on
+    Android, where the keyword was accepted and did nothing (82a54433, CR162).
+
+    The caller that relies on it — `helpers/onboarding.py::_live_chip` — picks
+    the BOTTOM-MOST candidate and documents by name that the unlabelled
+    send-arrow beside the text field is excluded by this filter. On Android it
+    was not, the arrow sits below the chip row, and the Concierge walk spent
+    its entire budget tapping send on an empty field.
+
+    A silently-ignored keyword is worse than an unsupported one: the guard
+    reads as present in the source and is absent at runtime."""
+
+    class FakeElement:
+        def __init__(self, desc, text=""):
+            self._desc, self.text = desc, text
+
+        def get_attribute(self, name):
+            return self._desc if name == "content-desc" else None
+
+    labelled = FakeElement("Save for retirement")
+    send_arrow = FakeElement("")
+
+    class ElementDriver(FakeDriver):
+        def find_elements(self, by, value):
+            super().find_elements(by, value)
+            return [labelled, send_arrow]
+
+    driver = ElementDriver("Android")
+    assert locators.interactive_elements(driver) == [labelled, send_arrow]
+    assert locators.interactive_elements(driver, labelled_only=True) == [labelled], (
+        "labelled_only did not filter on Android — the unlabelled send-arrow "
+        "survived, which is the exact failure it exists to prevent."
+    )
+
+
+def test_waits_do_not_nest_the_retry_backoff(monkeypatch):
+    """`wait_visible_text`/`wait_visible_id` own their deadline, so the lookup
+    underneath must NOT run its own ~5.4s ladder as well.
+
+    When it did, one 'attempt' outlived the entire budget and the caller's
+    timeout became a floor instead of a ceiling: measured on the rig device, a
+    miss took 7.65s against `timeout_s=2`. Asserted as a query count because
+    that is the observable that does not require sleeping."""
+    monkeypatch.setattr(locators, "_RETRY_DELAYS", (0.0, 0.0, 0.0, 0.0, 0.0))
+
+    driver = FakeDriver("Android")
+    with pytest.raises(Exception):
+        locators.wait_visible_text(driver, "FLOOR", timeout_s=0.0)
+    # One attempt = the two Android selectors, NOT the full ladder.
+    assert len(driver.queries) == 2, (
+        f"wait_visible_text issued {len(driver.queries)} queries for a single "
+        f"zero-length budget — the inner backoff is nested inside the wait."
+    )
+
+    driver = FakeDriver("Android")
+    with pytest.raises(Exception):
+        locators.wait_visible_id(driver, "ami.nav.floor", timeout_s=0.0)
+    assert len(driver.queries) == 1, (
+        f"wait_visible_id issued {len(driver.queries)} queries for a single "
+        f"zero-length budget — the inner backoff is nested inside the wait."
+    )
 
 
 def test_predicate_literals_escape_quotes():

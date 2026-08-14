@@ -30,7 +30,7 @@ import time
 from appium.webdriver.common.appiumby import AppiumBy
 from appium.webdriver.webdriver import WebDriver
 from appium.webdriver.webelement import WebElement
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, WebDriverException
 
 from helpers.platform import is_ios
 
@@ -58,15 +58,39 @@ def _find_all_with_retry(
     here and once by the caller. The onboarding walk hit this hard: three
     negative probes per turn made an 11-turn interview cost ~440s on iOS, where
     each WebDriverAgent round trip is far slower than UiAutomator2's."""
+    return _find_any_with_retry(driver, ((by, value),), retry=retry)
+
+
+def _find_any_with_retry(
+    driver: WebDriver, queries: tuple[tuple[str, str], ...], *, retry: bool = True
+) -> list[WebElement]:
+    """First non-empty result across several equivalent queries, sharing ONE
+    backoff ladder between them.
+
+    The sharing is the point. Android needs two selectors to answer "is this
+    string on screen?" (see `_all_by_text`), and running them as two separate
+    `_find_all_with_retry` calls would pay the ~5.4s ladder twice on every
+    miss — turning a fix for one slow path into a slower one."""
     delays = (0.0, *_RETRY_DELAYS) if retry else (0.0,)
-    last: list[WebElement] = []
     for delay in delays:
         if delay:
             time.sleep(delay)
-        last = driver.find_elements(by, value)
-        if last:
-            return last
-    return last
+        for by, value in queries:
+            found = driver.find_elements(by, value)
+            if found:
+                return found
+    return []
+
+
+def _uiselector_literal(value: str) -> str:
+    """Escape a string for embedding in a UiSelector Java-source expression.
+
+    The Android counterpart of `_predicate_literal`, and absent for the same
+    reason it was nearly absent there: none of the app's current copy contains
+    a quote or backslash. A translated string eventually will, and an
+    unescaped one does not raise — it produces a malformed selector that finds
+    nothing, which reads as a missing element."""
+    return value.replace("\\", "\\\\").replace('"', '\\"')
 
 
 # --------------------------------------------------------------------------
@@ -74,20 +98,25 @@ def _find_all_with_retry(
 # --------------------------------------------------------------------------
 
 
-def all_by_id(driver: WebDriver, identifier: str) -> list[WebElement]:
+def all_by_id(driver: WebDriver, identifier: str, *, retry: bool = True) -> list[WebElement]:
     if is_ios(driver):
-        return _find_all_with_retry(driver, AppiumBy.ACCESSIBILITY_ID, identifier)
+        return _find_all_with_retry(
+            driver, AppiumBy.ACCESSIBILITY_ID, identifier, retry=retry
+        )
     # Android: Flutter calls AccessibilityNodeInfo.setViewIdResourceName() with
     # the raw identifier — no `package:id/` prefix — so match it exactly via
     # UiSelector rather than AppiumBy.ID, whose prefixing behaviour varies by
     # driver build.
     return _find_all_with_retry(
-        driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(f'resourceId("{identifier}")')
+        driver,
+        AppiumBy.ANDROID_UIAUTOMATOR,
+        _uiselector(f'resourceId("{_uiselector_literal(identifier)}")'),
+        retry=retry,
     )
 
 
-def by_id(driver: WebDriver, identifier: str) -> WebElement:
-    elements = all_by_id(driver, identifier)
+def by_id(driver: WebDriver, identifier: str, *, retry: bool = True) -> WebElement:
+    elements = all_by_id(driver, identifier, retry=retry)
     if not elements:
         raise NoSuchElementException(
             f"no element with semantics identifier {identifier!r}. If NOTHING "
@@ -103,17 +132,19 @@ def exists_id(driver: WebDriver, identifier: str) -> bool:
 
 
 def wait_visible_id(driver: WebDriver, identifier: str, *, timeout_s: float = 8.0) -> WebElement:
+    """Poll until `identifier` resolves or `timeout_s` elapses. `retry=False`
+    on the inner lookup for the same reason as `wait_visible_text` — this loop
+    owns the deadline, and a nested backoff makes the timeout a floor."""
     deadline = time.monotonic() + timeout_s
-    last_error: Exception | None = None
-    while time.monotonic() < deadline:
-        try:
-            return by_id(driver, identifier)
-        except NoSuchElementException as exc:
-            last_error = exc
-            time.sleep(0.4)
-    raise NoSuchElementException(
-        f"identifier {identifier!r} never appeared within {timeout_s}s"
-    ) from last_error
+    while True:
+        elements = all_by_id(driver, identifier, retry=False)
+        if elements:
+            return elements[0]
+        if time.monotonic() >= deadline:
+            raise NoSuchElementException(
+                f"identifier {identifier!r} never appeared within {timeout_s}s"
+            )
+        time.sleep(0.4)
 
 
 # --------------------------------------------------------------------------
@@ -122,6 +153,22 @@ def wait_visible_id(driver: WebDriver, identifier: str, *, timeout_s: float = 8.
 
 
 def _all_by_text(driver: WebDriver, text: str, *, retry: bool = True) -> list[WebElement]:
+    """Elements whose *user-perceivable* string equals `text`.
+
+    On Android that means BOTH `text` and `content-desc`, and getting this
+    wrong is invisible rather than loud. Flutter's Android engine maps a
+    `Semantics(label:)` onto `AccessibilityNodeInfo.setContentDescription()`,
+    NOT `setText()` — so in an app that paints to a canvas, essentially every
+    string a user reads lives in `content-desc` and a `text()`-only selector
+    matches nothing. Measured on the rig device with the app sitting on Floor:
+    the tree contained `content-desc='FLOOR'`, and `exists_text('FLOOR')`
+    returned False.
+
+    That is what made the smoke gate's `test_bottom_nav_text_resolves` and
+    `ensure_onboarded`'s early-return probe unsatisfiable on Android: the
+    string was on screen, in the tree, and unfindable. Both selectors share one
+    backoff ladder via `_find_any_with_retry`, so a miss costs what it did
+    before rather than double."""
     if is_ios(driver):
         lit = _predicate_literal(text)
         return _find_all_with_retry(
@@ -130,8 +177,16 @@ def _all_by_text(driver: WebDriver, text: str, *, retry: bool = True) -> list[We
             f"label == {lit} OR name == {lit} OR value == {lit}",
             retry=retry,
         )
-    return _find_all_with_retry(
-        driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(f'text("{text}")'), retry=retry
+    lit = _uiselector_literal(text)
+    return _find_any_with_retry(
+        driver,
+        (
+            # description first: in a Flutter app it is the overwhelmingly
+            # common case, so the hit path is one round trip.
+            (AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(f'description("{lit}")')),
+            (AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(f'text("{lit}")')),
+        ),
+        retry=retry,
     )
 
 
@@ -152,18 +207,32 @@ def by_text(driver: WebDriver, text: str) -> WebElement:
     return elements[0]
 
 
-def by_text_contains(driver: WebDriver, fragment: str) -> WebElement:
+def _all_by_text_contains(
+    driver: WebDriver, fragment: str, *, retry: bool = True
+) -> list[WebElement]:
+    """Substring form of `_all_by_text`, and it searches `content-desc` on
+    Android for exactly the same reason — see that function."""
     if is_ios(driver):
         lit = _predicate_literal(fragment)
-        elements = _find_all_with_retry(
+        return _find_all_with_retry(
             driver,
             AppiumBy.IOS_PREDICATE,
             f"label CONTAINS {lit} OR name CONTAINS {lit} OR value CONTAINS {lit}",
+            retry=retry,
         )
-    else:
-        elements = _find_all_with_retry(
-            driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(f'textContains("{fragment}")')
-        )
+    lit = _uiselector_literal(fragment)
+    return _find_any_with_retry(
+        driver,
+        (
+            (AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(f'descriptionContains("{lit}")')),
+            (AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(f'textContains("{lit}")')),
+        ),
+        retry=retry,
+    )
+
+
+def by_text_contains(driver: WebDriver, fragment: str) -> WebElement:
+    elements = _all_by_text_contains(driver, fragment)
     if not elements:
         raise NoSuchElementException(f"no element containing text {fragment!r}")
     return elements[0]
@@ -191,30 +260,28 @@ def exists_text(driver: WebDriver, text: str, *, retry: bool = True) -> bool:
 
 
 def exists_text_contains(driver: WebDriver, fragment: str, *, retry: bool = True) -> bool:
-    if is_ios(driver):
-        lit = _predicate_literal(fragment)
-        return bool(_find_all_with_retry(
-            driver,
-            AppiumBy.IOS_PREDICATE,
-            f"label CONTAINS {lit} OR name CONTAINS {lit} OR value CONTAINS {lit}",
-            retry=retry,
-        ))
-    return bool(_find_all_with_retry(
-        driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(f'textContains("{fragment}")'),
-        retry=retry,
-    ))
+    return bool(_all_by_text_contains(driver, fragment, retry=retry))
 
 
 def wait_visible_text(driver: WebDriver, text: str, *, timeout_s: float = 8.0) -> WebElement:
+    """Poll until `text` appears or `timeout_s` elapses.
+
+    `retry=False` on the inner lookup is load-bearing, not a micro-optimisation.
+    This function OWNS the deadline; letting the lookup run its own ~5.4s
+    backoff as well means one "attempt" outlives the whole budget, so the
+    caller's timeout becomes a floor instead of a ceiling. Measured on the rig
+    device: a miss took 7.65s against `timeout_s=2` (0.37s with retry off), and
+    the onboarding walk paid that on every negative probe of every turn."""
     deadline = time.monotonic() + timeout_s
-    last_error: Exception | None = None
-    while time.monotonic() < deadline:
-        try:
-            return by_text(driver, text)
-        except NoSuchElementException as exc:
-            last_error = exc
-            time.sleep(0.4)
-    raise NoSuchElementException(f"text {text!r} never appeared within {timeout_s}s") from last_error
+    while True:
+        elements = _all_by_text(driver, text, retry=False)
+        if elements:
+            return elements[0]
+        if time.monotonic() >= deadline:
+            raise NoSuchElementException(
+                f"text {text!r} never appeared within {timeout_s}s"
+            )
+        time.sleep(0.4)
 
 
 # --------------------------------------------------------------------------
@@ -239,20 +306,60 @@ def interactive_elements(driver: WebDriver, *, labelled_only: bool = False) -> l
     `button: true` surface as XCUIElementTypeButton, text fields as
     XCUIElementTypeTextField, and so on.
 
-    `labelled_only` filters to elements that carry a label. On iOS that happens
-    inside the predicate — one round trip instead of one per candidate, which
-    matters because WebDriverAgent attribute reads dominate the onboarding
-    walk's runtime."""
+    `labelled_only` filters to elements that carry a label. It is honoured on
+    BOTH platforms, but by different mechanisms, and that asymmetry is the
+    whole point of this docstring:
+
+    - **iOS** filters server-side, inside the predicate — one round trip
+      instead of one per candidate, which matters because WebDriverAgent
+      attribute reads dominate the onboarding walk's runtime.
+    - **Android** filters client-side. UiSelector has no "carries any label"
+      predicate (`descriptionMatches` would miss nodes labelled via `text`
+      instead of `content-desc`, and Flutter emits both depending on the
+      widget), and UiAutomator2 attribute reads are cheap enough that the
+      per-candidate cost which forced the iOS design does not apply here.
+
+    This was added iOS-only and shipped that way (82a54433, CR162). On Android
+    the keyword argument was accepted and silently ignored, so the function
+    returned every clickable node while its caller believed it had received
+    only labelled ones. `helpers/onboarding.py::_live_chip` picks the
+    bottom-most candidate and documents *by name* that the unlabelled
+    send-arrow beside the text field is excluded by this filter — on Android it
+    was not, the arrow sits below the chip row, and the Concierge walk spent
+    its entire 120s budget tapping send on an empty field. Measured on the rig
+    device: 5 candidates returned for both `labelled_only=True` and `False`.
+
+    A silently-ignored keyword argument is worse than an unsupported one — the
+    caller's guard reads as present in the source and is absent at runtime. If
+    a future platform cannot support this, raise rather than degrade."""
     if is_ios(driver):
         types = " OR ".join(f'type == "{t}"' for t in _IOS_INTERACTIVE_TYPES)
         predicate = f"({types}) AND visible == 1"
         if labelled_only:
             predicate += ' AND label != "" AND label != nil'
         return _find_all_with_retry(driver, AppiumBy.IOS_PREDICATE, predicate)
-    selector = "clickable(true)"
-    return _find_all_with_retry(
-        driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector(selector)
+    elements = _find_all_with_retry(
+        driver, AppiumBy.ANDROID_UIAUTOMATOR, _uiselector("clickable(true)")
     )
+    if not labelled_only:
+        return elements
+    return [element for element in elements if _android_label(element)]
+
+
+def _android_label(element: WebElement) -> str:
+    """Whatever text a user would perceive on this node, or "".
+
+    Flutter's Android engine puts a `Semantics(label:)` into `content-desc`,
+    but a plain `Text` inside a tappable renders as the node's `text` instead —
+    so both have to be read, and reading only one is how a labelled chip gets
+    classified as unlabelled chrome."""
+    try:
+        return (element.get_attribute("content-desc") or element.text or "").strip()
+    except WebDriverException:
+        # The node went stale between the query and this read — a transient
+        # mid-animation race, and treating it as unlabelled just drops it from
+        # this pass rather than failing the caller.
+        return ""
 
 
 def element_description(driver: WebDriver, element: WebElement) -> str:
