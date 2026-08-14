@@ -67,11 +67,12 @@ class _ThreadProbe:
         return self.result
 
 
-def _drive(monkeypatch) -> tuple[_ThreadProbe, _ThreadProbe, int, float, float]:
+def _drive(monkeypatch) -> tuple[_ThreadProbe, _ThreadProbe, int, float, float, float]:
     """Run one convene with both builders blocking.
 
-    Returns the two probes, the loop thread id, the **longest gap between
-    consecutive heartbeat ticks**, and the elapsed wall time.
+    Returns the two probes, the loop thread id, a **baseline** longest-gap
+    measured on an idle loop moments earlier, the **longest gap between
+    consecutive heartbeat ticks** during the convene, and the elapsed wall time.
 
     The max-gap metric is the one that matters and it was not obvious. A tick
     *count* over the whole convene looked reasonable and is nearly useless:
@@ -86,6 +87,22 @@ def _drive(monkeypatch) -> tuple[_ThreadProbe, _ThreadProbe, int, float, float]:
     straight to `_BLOCK_S`. Clean it stays at scheduler jitter. That is a
     ~10x separation instead of 13%, and it does not care how fast the machine
     is or how long the convene takes.
+
+    **DEF304 — the baseline window.** The sentence above ends "does not care how
+    fast the machine is", and that was the part that was wrong. The gap the
+    convene produces is `jitter`, and the gap an un-wrapped builder produces is
+    `jitter + _BLOCK_S`; only the SECOND term is a constant. The original
+    threshold compared `jitter` against a constant measured on an idle Mac, so
+    once jitter approached `_BLOCK_S / 2` the guard went red on correct code —
+    measured at 0.273s against a 0.150s threshold, 1 failure in 5 runs at load
+    average 3.0.
+
+    So the reasoning is unchanged and only the reference point moves: measure
+    the idle loop's own worst gap in this same process, moments before the
+    convene, and require the convene's gap to stay under `baseline + _BLOCK_S/2`
+    rather than under a number from another machine on another day. Under load
+    both terms rise together and the separation survives; on an idle box the
+    baseline is ~0.01s and the threshold is what it always was.
     """
     sim_probe = _ThreadProbe("_build_sim_holdings_block", "")
     sector_probe = _ThreadProbe(
@@ -109,6 +126,16 @@ def _drive(monkeypatch) -> tuple[_ThreadProbe, _ThreadProbe, int, float, float]:
                 last = now
 
         hb = asyncio.create_task(heartbeat())
+
+        # DEF304 — what this machine's idle loop is worth RIGHT NOW. Same
+        # process, same scheduler pressure, seconds apart from the measurement
+        # it calibrates. Held for the same wall time the convene's blocking
+        # window occupies, so both samples get a comparable chance to catch a
+        # bad scheduling slice.
+        await asyncio.sleep(2 * _BLOCK_S)
+        baseline_gap = max_gap
+        max_gap = 0.0
+
         runner = RoomRunner(llm=_SilentGateway())  # type: ignore[arg-type]
         mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
 
@@ -122,14 +149,17 @@ def _drive(monkeypatch) -> tuple[_ThreadProbe, _ThreadProbe, int, float, float]:
 
         stop.set()
         await hb
-        return sim_probe, sector_probe, loop_thread_id, max_gap, elapsed
+        return (
+            sim_probe, sector_probe, loop_thread_id,
+            baseline_gap, max_gap, elapsed,
+        )
 
     return asyncio.run(go())
 
 
 def test_both_builders_run_off_the_loop_thread(monkeypatch):
     """The deterministic half. Un-wrap either call site and this goes red."""
-    sim_probe, sector_probe, loop_thread_id, _gap, _elapsed = _drive(monkeypatch)
+    sim_probe, sector_probe, loop_thread_id, _base, _gap, _elapsed = _drive(monkeypatch)
 
     assert sim_probe.thread_ids, "_build_sim_holdings_block was never called"
     assert sector_probe.thread_ids, "_build_room_sector_context was never called"
@@ -152,17 +182,19 @@ def test_the_loop_never_stalls_while_the_builders_block(monkeypatch):
     cannot run at all for that whole window, so the longest gap between ticks
     jumps from scheduler jitter to `_BLOCK_S`.
 
-    Measured on this machine (2 runs each, ±1ms):
+    Measured on an idle machine (2 runs each, ±1ms):
 
         both wrapped (correct)   max gap ~0.01s
         one un-wrapped           max gap ~0.30s
         both un-wrapped          max gap ~0.30s
 
-    The threshold sits at half of `_BLOCK_S` — an order of magnitude above
-    jitter, well below a real stall. Note the metric catches a SINGLE
-    un-wrapped call site, which a tick-count floor did not.
+    The threshold is `baseline + _BLOCK_S / 2` — half a block above whatever
+    this machine's idle loop is managing right now, which is an order of
+    magnitude above jitter and well below a real stall in both conditions. Note
+    the metric catches a SINGLE un-wrapped call site, which a tick-count floor
+    did not. See DEF304 in `_drive` for why the baseline term is not optional.
     """
-    _sim, _sector, _loop_id, max_gap, elapsed = _drive(monkeypatch)
+    _sim, _sector, _loop_id, baseline_gap, max_gap, elapsed = _drive(monkeypatch)
 
     # Guard the guard: if the probes never blocked, everything below is vacuous.
     assert elapsed >= 2 * _BLOCK_S, (
@@ -170,9 +202,23 @@ def test_the_loop_never_stalls_while_the_builders_block(monkeypatch):
         "did not run, so this test proves nothing"
     )
 
-    assert max_gap < _BLOCK_S / 2, (
-        f"the event loop STALLED for {max_gap:.3f}s in a single gap "
-        f"(threshold {_BLOCK_S / 2:.3f}s). A builder is running on the loop "
-        "thread, so its yfinance fan-out freezes every other Room stream, SSE "
-        "heartbeat and request on this worker for its full duration — DEF136."
+    # DEF304 — and guard the baseline too. A baseline at or above _BLOCK_S would
+    # make the threshold below unfalsifiable: an un-wrapped builder adds
+    # _BLOCK_S, so the test can only ever detect it while the idle loop's own
+    # worst gap is comfortably under that. A box that loaded is not one this
+    # measurement can be taken on, and saying so is better than passing.
+    assert baseline_gap < _BLOCK_S / 2, (
+        f"the idle loop's own worst gap is {baseline_gap:.3f}s, at or above the "
+        f"{_BLOCK_S / 2:.3f}s this test needs as headroom. The machine is too "
+        "loaded for the measurement to mean anything — this is not a DEF136 "
+        "regression, and it must not be read as one."
+    )
+
+    assert max_gap < baseline_gap + _BLOCK_S / 2, (
+        f"the event loop STALLED for {max_gap:.3f}s in a single gap (threshold "
+        f"{baseline_gap + _BLOCK_S / 2:.3f}s = this machine's idle baseline "
+        f"{baseline_gap:.3f}s + {_BLOCK_S / 2:.3f}s). A builder is running on "
+        "the loop thread, so its yfinance fan-out freezes every other Room "
+        "stream, SSE heartbeat and request on this worker for its full "
+        "duration — DEF136."
     )
