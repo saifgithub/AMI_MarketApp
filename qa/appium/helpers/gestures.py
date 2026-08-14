@@ -24,6 +24,13 @@ Band = tuple[int, int, int, int]  # left, top, width, height
 # fling's overshoot rather than whether the content scrolls at all.
 _IOS_DRAG_SECONDS = 0.6
 
+# Android drag tuning. The inset keeps the touch-down off the very edge of the
+# band, where a parent (the bottom nav, the ticker) can claim the gesture; the
+# speed is a drag rather than a fling, so the pane lands where it was put
+# instead of coasting past the content a probe is about to look for.
+_DRAG_EDGE_INSET = 8
+_DRAG_SPEED = 1200
+
 
 def _drag_within_band(driver: WebDriver, band: Band, *, percent: float, upward: bool) -> None:
     left, top, width, height = band
@@ -45,26 +52,76 @@ def _drag_within_band(driver: WebDriver, band: Band, *, percent: float, upward: 
     )
 
 
-def swipe_up(driver: WebDriver, band: Band, *, percent: float = 0.75) -> None:
+# `dragGesture` — a real touch-drag. NOT `swipeGesture`, and NOT `scrollGesture`.
+#
+# Measured on the rig against the SETTINGS pane, from a known top position:
+#
+#   swipeGesture   ~14 attempts over three bands  — content never changed
+#   scrollGesture  10 attempts over the pane's own bounds — content never
+#                  changed, and it returned `canScrollMore=False` on the FIRST
+#                  call while the pane was still on its first screen
+#   dragGesture    6 attempts — MY MANDATE → COMPLIANCE → plan → language →
+#                  HELP → WALKTHROUGH, moving every time
+#
+# The likely reason: the first two ask UiAutomator to scroll, which drives the
+# accessibility node's scroll actions. Flutter advertises a scrollable node but
+# does not service those actions the way a native ViewGroup does. A drag sends
+# actual touch events, which Flutter's gesture arena handles like a finger.
+#
+# `scrollGesture`'s `canScrollMore` is worse than useless here: it returned
+# False — "you have reached the end" — on a pane sitting at its top with six
+# more screens below. Trusting it made a scroll loop exit immediately and
+# report the target missing.
+#
+# Why this matters beyond any one test: `helpers/layout.py::swipe_moved` decides
+# "did the screen actually scroll" by diffing pixels either side of this call,
+# and that is the primary signal of the DEF075-class scroll-overflow check. A
+# gesture that never moves anything pins that signal to false, and the check
+# then falls through to "is a scrollable widget present" — a question about the
+# widget tree, not about whether a user can reach the content. It answers "fine"
+# on precisely the screen whose content cannot be scrolled to.
+def _scroll(driver: WebDriver, band: Band, *, percent: float, upward: bool) -> bool:
+    """Drag within `band`. True if the screen actually changed.
+
+    The return value is measured, not assumed — a signature of the hierarchy
+    before and after. Callers need a trustworthy "is there more?" and the
+    driver's own answer was wrong (see above); this one is derived from what
+    the screen actually did.
+    """
+    left, top, width, height = band
+    x = left + width // 2
+    travel = int(height * percent)
+    if upward:  # finger up = reveal content below
+        start_y = top + height - _DRAG_EDGE_INSET
+        end_y = max(top + _DRAG_EDGE_INSET, start_y - travel)
+    else:
+        start_y = top + _DRAG_EDGE_INSET
+        end_y = min(top + height - _DRAG_EDGE_INSET, start_y + travel)
+
+    before = driver.page_source
+    driver.execute_script(
+        "mobile: dragGesture",
+        {"startX": x, "startY": start_y, "endX": x, "endY": end_y, "speed": _DRAG_SPEED},
+    )
+    return driver.page_source != before
+
+
+def swipe_up(driver: WebDriver, band: Band, *, percent: float = 0.75) -> bool:
+    """Reveal content BELOW the current view. Returns whether more remains
+    (Android only; always True on iOS, which cannot report it)."""
     if is_ios(driver):
         _drag_within_band(driver, band, percent=percent, upward=True)
-        return
-    left, top, width, height = band
-    driver.execute_script(
-        "mobile: swipeGesture",
-        {"left": left, "top": top, "width": width, "height": height, "direction": "up", "percent": percent},
-    )
+        return True
+    # A finger swiping up scrolls the viewport DOWN through the content.
+    return _scroll(driver, band, percent=percent, upward=True)
 
 
-def swipe_down(driver: WebDriver, band: Band, *, percent: float = 0.75) -> None:
+def swipe_down(driver: WebDriver, band: Band, *, percent: float = 0.75) -> bool:
+    """Reveal content ABOVE the current view."""
     if is_ios(driver):
         _drag_within_band(driver, band, percent=percent, upward=False)
-        return
-    left, top, width, height = band
-    driver.execute_script(
-        "mobile: swipeGesture",
-        {"left": left, "top": top, "width": width, "height": height, "direction": "down", "percent": percent},
-    )
+        return True
+    return _scroll(driver, band, percent=percent, upward=False)
 
 
 def tap_xy(driver: WebDriver, x: int, y: int) -> None:
@@ -125,3 +182,21 @@ def screen_scale(driver: WebDriver) -> float:
     if not window.get("width"):
         return 1.0
     return png_width / float(window["width"])
+
+
+def scroll_to_top(driver: WebDriver, band: Band, *, max_scrolls: int = 10) -> None:
+    """Put a scrollable back at its start.
+
+    A test asserting on a pane's FIRST section has to own the pane's scroll
+    position rather than inherit it. `noReset=True` keeps the app process alive
+    between Appium sessions, so a Flutter scroll offset survives not just the
+    previous test but the previous *run* — `test_settings_renders_heading`
+    failed on `MY MANDATE` in complete isolation because an earlier diagnostic
+    had left the pane at the bottom, and nothing in between put it back.
+
+    Stops as soon as the scrollable reports it cannot go further, so the common
+    case (already at the top) costs one call.
+    """
+    for _ in range(max_scrolls):
+        if not swipe_down(driver, band, percent=1.0):
+            return

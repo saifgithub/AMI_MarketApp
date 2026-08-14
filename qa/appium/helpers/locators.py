@@ -25,6 +25,7 @@ empty dump.
 
 from __future__ import annotations
 
+import re
 import time
 
 from appium.webdriver.common.appiumby import AppiumBy
@@ -127,8 +128,10 @@ def by_id(driver: WebDriver, identifier: str, *, retry: bool = True) -> WebEleme
     return elements[0]
 
 
-def exists_id(driver: WebDriver, identifier: str) -> bool:
-    return bool(all_by_id(driver, identifier))
+def exists_id(driver: WebDriver, identifier: str, *, retry: bool = True) -> bool:
+    """`retry=False` for callers that own their own polling loop — same reason
+    as `exists_text`'s: a nested backoff turns their timeout into a floor."""
+    return bool(all_by_id(driver, identifier, retry=retry))
 
 
 def wait_visible_id(driver: WebDriver, identifier: str, *, timeout_s: float = 8.0) -> WebElement:
@@ -280,6 +283,64 @@ def wait_visible_text(driver: WebDriver, text: str, *, timeout_s: float = 8.0) -
         if time.monotonic() >= deadline:
             raise NoSuchElementException(
                 f"text {text!r} never appeared within {timeout_s}s"
+            )
+        time.sleep(0.4)
+
+
+def scrollable_bounds(driver: WebDriver) -> tuple[int, int, int, int] | None:
+    """The on-screen box of the first scrollable container, or None.
+
+    Scroll gestures need to be aimed at the thing that scrolls. `content_band`
+    is a *diff* region — it deliberately spans from under the top chrome to
+    above the system nav, which on this app includes the bottom nav bar and the
+    horizontally-scrolling TickerTape. Aiming a scroll there can drive the
+    wrong scrollable or nothing at all.
+
+    Measured on the rig: the SETTINGS pane reports `[0,286][720,1277]`, while
+    `content_band` yields y 220..1400 — 123px of which is other widgets.
+
+    Android only; None on iOS, where callers fall back to the band.
+    """
+    if is_ios(driver):
+        return None
+    match = re.search(
+        r'scrollable="true"[^>]*?bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"',
+        driver.page_source,
+    )
+    if not match:
+        return None
+    x1, y1, x2, y2 = (int(g) for g in match.groups())
+    return (x1, y1, x2 - x1, y2 - y1)
+
+
+def wait_visible_text_contains(
+    driver: WebDriver, fragment: str, *, timeout_s: float = 8.0
+) -> WebElement:
+    """Poll until some node's label CONTAINS `fragment`.
+
+    This is the right wait for a section heading, and exact-match is the wrong
+    one — which is not obvious and cost a debugging round. Flutter merges a
+    section's descendants into one semantics node, so the heading is a
+    *substring* of a label, never a label. Measured on the rig, SETTINGS' first
+    section comes back as one node reading:
+
+        'MY MANDATE\\nRisk score\\n3 / 5\\nBalanced. Standard 3-5% positions.…'
+
+    so `wait_visible_text(driver, "MY MANDATE")` can never match however
+    correctly the screen renders. Same shape on Portfolio
+    ('SIM PORTFOLIO\\n$10,000\\n…') and on the ticker tape.
+
+    Use exact-match for things that are their own node — a button label, a nav
+    tab, a chip. Use this for anything a section wraps.
+    """
+    deadline = time.monotonic() + timeout_s
+    while True:
+        elements = _all_by_text_contains(driver, fragment, retry=False)
+        if elements:
+            return elements[0]
+        if time.monotonic() >= deadline:
+            raise NoSuchElementException(
+                f"no element's text contained {fragment!r} within {timeout_s}s"
             )
         time.sleep(0.4)
 

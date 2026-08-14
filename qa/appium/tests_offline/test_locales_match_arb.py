@@ -49,7 +49,7 @@ YOU_SEGMENT_ARB_KEYS = {
 # unmapped entry is an untested one, and `test_every_string_is_mapped` fails if
 # this drifts from `config/locales.py`.
 STRING_ARB_KEYS = {
-    "floor_omnibox_hint": "floorOmniboxHint",
+    "floor_omnibox_caption": "floorOmniboxCaption",
     "floor_convene_cta": "floorConveneCta",
     "convene_confirm": "conveneCta",
     "portfolio_heading": "portfolioHeading",

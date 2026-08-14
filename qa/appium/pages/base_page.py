@@ -14,6 +14,7 @@ from config.semantics_ids import NAV_IDS, YOU_SEGMENT_IDS
 from helpers.gestures import Band, tap_element
 from helpers.locators import (
     exists_text,
+    scrollable_bounds,
     exists_text_contains,
     wait_visible_id,
     wait_visible_text,
@@ -104,6 +105,18 @@ def open_you_segment(driver, segment: str, *, locale: str = "en") -> None:
     )
     display_text = LOCALES[locale].strings[f"you_segment_{segment.lower()}"]
     tap_element(driver, wait_visible_text(driver, display_text))
+
+
+def scroll_band(driver, device: dict) -> Band:
+    """Where to aim a SCROLL, as opposed to where to diff pixels.
+
+    `content_band` is a diff region: it spans from under the animated top
+    chrome to above the system nav, which on this app also covers the bottom
+    nav bar and the horizontally-scrolling TickerTape. Aiming a scroll there
+    can drive the wrong scrollable. Prefer the scrollable's own reported
+    bounds, and fall back to the band where the platform cannot tell us (iOS).
+    """
+    return scrollable_bounds(driver) or content_band(device)
 
 
 def content_band(device: dict, *, top_px: int | None = None, bottom_px: int | None = None) -> Band:

@@ -4,10 +4,15 @@ confirms the tab's own key content renders — not just the tab loading, but
 the specific things a user would expect to see on it.
 
 Content-depth strings verified against mobile/lib/l10n/app_en.arb:
-  floorOmniboxHint       = "Type a ticker — or ask AMI anything…" — the
-    persistent Concierge access point. It replaced floorConciergeHeading
-    ("AMI CONCIERGE"), which is now a dead key: present in all three ARBs
-    and in the generated localizations, referenced by no screen.
+  floorOmniboxCaption = "A ticker convenes your team. Anything else, AMI
+    answers." — the omnibox's own caption, and the stable proof that the
+    persistent Concierge access point is on screen. It stands in for
+    floorConciergeHeading ("AMI CONCIERGE"), now a dead key: present in all
+    three ARBs and in the generated localizations, referenced by no screen.
+    NOT floorOmniboxHint — that is a TextField placeholder, and Android does
+    not surface hint text in the accessibility tree, so asserting it would be
+    unsatisfiable for a second, subtler reason. Dumped the live tree to pick
+    this rather than guessing again.
   floorConveneCta        = "CONVENE THE ROOM"
 The daily-challenge card's heading isn't a static string — it's a literal
 'Daily · ${date}' built in daily_challenge_card.dart — so that check is
@@ -38,7 +43,7 @@ def test_floor_renders_convene_cta(driver, run_dir):
     # pass no matter how healthy the app was. Caught by a live run, not by a
     # test, which is the DEF250 pattern a second time; the mechanical dead-key
     # check now lives in tests_offline/test_locales_match_arb.py.
-    hint = LOCALES["en"].strings["floor_omnibox_hint"]
-    signals = probe_content(driver, "floor", exact=(hint,), contains=("Daily",))
-    assert signals[hint], "Floor should always show the persistent Concierge access point"
+    caption = LOCALES["en"].strings["floor_omnibox_caption"]
+    signals = probe_content(driver, "floor", exact=(caption,), contains=("Daily",))
+    assert signals[caption], "Floor should always show the persistent Concierge access point"
     snap(driver, run_dir, "floor", "default")

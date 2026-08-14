@@ -52,7 +52,7 @@ _LOCALE_CODES = ("en", "ar", "ms")
 # that tab, structurally guaranteed at the top of the screen with no scroll
 # or data dependency (same split Phase 1's tests/test_*.py already made).
 _TAB_CONTENT_KEYS = {
-    "Floor": ("floor_omnibox_hint",),
+    "Floor": ("floor_omnibox_caption",),
     "Portfolio": ("portfolio_total_value", "portfolio_cash"),
     "Journal": ("journal_filter_all",),
     "Settings": ("settings_mandate",),

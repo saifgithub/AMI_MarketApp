@@ -19,9 +19,9 @@ from __future__ import annotations
 import pytest
 
 from conftest import snap
-from helpers.gestures import swipe_up
-from helpers.locators import wait_visible_text
-from pages.base_page import content_band, open_you_segment, probe_content
+from helpers.gestures import scroll_to_top, swipe_up
+from helpers.locators import wait_visible_text_contains
+from pages.base_page import content_band, open_you_segment, probe_content, scroll_band
 
 pytestmark = [pytest.mark.phase1]
 
@@ -41,10 +41,21 @@ def test_settings_renders_heading(driver, device, run_dir):
     # the pane's own ListView, so it is both the readiness signal and the
     # assertion.
     open_you_segment(driver, "Settings")
-    wait_visible_text(driver, "MY MANDATE", timeout_s=10)
-    signals = probe_content(driver, "settings", exact=("MY MANDATE",))
+    # Own the scroll position rather than inherit it. `noReset=True` keeps the
+    # app process alive between Appium sessions, so a Flutter scroll offset
+    # outlives not just the previous test but the previous RUN — this test
+    # failed on MY MANDATE in complete isolation because something earlier had
+    # left the pane at the bottom.
+    scroll_to_top(driver, scroll_band(driver, device))
+    # CONTAINS, not exact. Flutter merges a section's descendants into one
+    # semantics node, so the heading is a substring of a label rather than a
+    # label: measured on the rig it reads
+    # 'MY MANDATE\nRisk score\n3 / 5\nBalanced. Standard 3-5% positions.…'.
+    # An exact-match wait here fails on a screen that renders perfectly.
+    wait_visible_text_contains(driver, "MY MANDATE", timeout_s=10)
+    signals = probe_content(driver, "settings", contains=("MY MANDATE",))
     assert signals["MY MANDATE"], "Settings should always show the MY MANDATE section"
-    swipe_up(driver, content_band(device), percent=0.5)
+    swipe_up(driver, scroll_band(driver, device), percent=0.5)
     probe_content(driver, "settings (after scroll)", contains=("Risk score", "SIGN IN"))
     snap(driver, run_dir, "settings", "default")
 

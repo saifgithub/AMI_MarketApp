@@ -19,13 +19,28 @@ from __future__ import annotations
 import pytest
 
 from conftest import snap
-from helpers.gestures import hide_keyboard_if_shown, long_press_element, screenshot_png
+from helpers.gestures import (
+    hide_keyboard_if_shown,
+    long_press_element,
+    screenshot_png,
+    scroll_to_top,
+    swipe_up,
+)
 from helpers.layout import find_navbar_overlaps
-from helpers.locators import by_content_desc, by_text_contains, wait_visible_text
+from helpers.locators import (
+    by_content_desc,
+    by_text_contains,
+    exists_text_contains,
+    wait_visible_text,
+    wait_visible_text_contains,
+)
 from helpers.report import annotate_png
-from pages.base_page import open_tab, open_you_segment
+from pages.base_page import open_tab, open_you_segment, scroll_band
 
 pytestmark = [pytest.mark.navbar, pytest.mark.phase1]
+
+# Enough to reach the bottom of the SETTINGS pane, not enough to spin forever.
+_MAX_SETTINGS_SCROLLS = 12
 
 
 def _record_and_assert_soft(flags, findings, run_dir, sheet_name, driver, navbar_top_y, scale=1.0):
@@ -81,8 +96,30 @@ def test_bug_report_sheet_navbar(driver, device, run_dir, flags):
     # first section before hunting for it: the segment button carries the label
     # "SETTINGS" and is on screen before the pane has rendered anything.
     open_you_segment(driver, "Settings")
-    wait_visible_text(driver, "MY MANDATE", timeout_s=10)
-    version_chip = by_text_contains(driver, "AMI Trade v")
+    scroll_to_top(driver, scroll_band(driver, device))
+    wait_visible_text_contains(driver, "MY MANDATE", timeout_s=10)
+
+    # The version chip is the LAST thing in a long ListView
+    # (settings_screen.dart:1238, `'AMI Trade v$version'`), so it has to be
+    # scrolled to — it is not on screen when the pane opens. This did not need
+    # scrolling while SETTINGS was a full tab; inside YOU the pane is shorter by
+    # the header and the segment bar, which is enough to push the chip under the
+    # fold. Bounded rather than while-not-found: an unbounded scroll on a screen
+    # that will never show the target is indistinguishable from a hang.
+    version_chip = None
+    for _ in range(_MAX_SETTINGS_SCROLLS):
+        if exists_text_contains(driver, "AMI Trade v", retry=False):
+            version_chip = by_text_contains(driver, "AMI Trade v")
+            break
+        if not swipe_up(driver, scroll_band(driver, device), percent=1.0):
+            break  # hit the end of the list; one more look below, then fail
+    if version_chip is None and exists_text_contains(driver, "AMI Trade v", retry=False):
+        version_chip = by_text_contains(driver, "AMI Trade v")
+    assert version_chip is not None, (
+        f"the app-version chip never appeared after {_MAX_SETTINGS_SCROLLS} "
+        f"scrolls of the SETTINGS pane. It is the long-press target that opens "
+        f"the bug-report sheet, so without it this check cannot run at all."
+    )
     long_press_element(driver, version_chip)
     snap(driver, run_dir, "bug_report_sheet", "open")
     findings = find_navbar_overlaps(driver, device["navbar_top_y"], screen="bug_report_sheet")
