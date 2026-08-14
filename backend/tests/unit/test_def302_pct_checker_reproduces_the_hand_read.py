@@ -36,19 +36,24 @@ _SCRIPT = _ROOT / "backend/scripts/cr179_leg5_pct_check.py"
 
 
 def _checker():
-    """Import the script without running its `sys.argv` tail.
+    """Import the real module and drive its real scoring loop.
 
-    It is a script, not a module — it ends in three bare `run(...)` calls that
-    read `sys.argv`. Loading it normally would execute those at import time and
-    fail on a missing argv, which is why this goes through a spec and stops at
-    the functions it needs.
+    Round 2's version of this helper read the source, chopped it at
+    `split("rows = run(")` to dodge the script's `sys.argv` tail, and then
+    reimplemented the scoring loop below. The audit's MAJOR-2 showed what that
+    cost: reverting one line *inside* the loop restored the exact 15.0%/13.8%
+    this file exists to prevent, with all seven assertions green. A guard that
+    tests a copy of the thing guards nothing — DEF190, and the same rule Leg 4
+    applied when it drove `build_room_messages` end to end rather than its
+    helper.
+
+    The script now guards its own `__main__` block, so it simply imports.
     """
     if not _SCRIPT.exists():  # pragma: no cover
         pytest.skip(f"checker not present: {_SCRIPT}")
-    src = _SCRIPT.read_text().split("rows = run(")[0]
-    spec = importlib.util.spec_from_loader("_pct_check_v3", loader=None)
+    spec = importlib.util.spec_from_file_location("_pct_check_v3", _SCRIPT)
     mod = importlib.util.module_from_spec(spec)
-    exec(compile(src, str(_SCRIPT), "exec"), mod.__dict__)
+    spec.loader.exec_module(mod)
     return mod
 
 
@@ -60,40 +65,14 @@ def checker():
     return _checker()
 
 
-def _tally(mod, path: Path) -> tuple[int, int]:
-    import collections
-    import json
-
-    corpus = json.loads(path.read_text())
-    scored = 0
-    bad = 0
-    for t in corpus:
-        p = t["system_prompt"] or ""
-        m = mod.CLOSE.search(mod._section(p, "Fact sheet as of", "Transcript so far"))
-        if not m:
-            continue
-        close = mod.f(m.group(1))
-        body = mod._strip_envelope(t["response_text"] or "")
-        for mm in mod.PAIR.finditer(body):
-            tail = body[mm.end():mm.end() + 55]
-            if not mod.REF_CLOSE.search(tail):
-                continue
-            if mod.REF_OTHER.search(body[mm.end():mm.end() + 30]):
-                continue
-            lvl, pct = mod.f(mm.group(1)), float(mm.group(2))
-            if lvl <= 0 or close <= 0:
-                continue
-            entry_ref = bool(mod.REF_ENTRY.search(tail)) and not mod.REF_CLOSE_ONLY.search(tail)
-            entry = mod._entry_in(body, mm.start()) if entry_ref else None
-            scored += 1
-            if not mod._is_consistent(lvl, pct, close, entry, entry_ref):
-                bad += 1
-    assert collections  # keeps the import honest if the body above is edited
-    return scored, bad
+def _tally(mod, path: Path) -> tuple[int, int, int]:
+    """Drive the script's OWN loop. No second copy of it exists here."""
+    scored, bad, excluded, _rows = mod.score_corpus(path)
+    return sum(scored.values()), sum(bad.values()), excluded
 
 
 def test_the_leg5_rate_is_the_one_every_document_quotes(checker):
-    scored, bad = _tally(checker, _LEG5)
+    scored, bad, _exc = _tally(checker, _LEG5)
     assert (scored, bad) == (40, 3), (
         f"Leg 5 gives {bad}/{scored}; the CR doc, DEF302's row and the audit "
         f"verdict all say 3/40. Whichever is wrong, they must not disagree — "
@@ -102,7 +81,7 @@ def test_the_leg5_rate_is_the_one_every_document_quotes(checker):
 
 
 def test_the_baseline_rate_is_the_one_every_document_quotes(checker):
-    scored, bad = _tally(checker, _BASELINE)
+    scored, bad, _exc = _tally(checker, _BASELINE)
     assert (scored, bad) == (29, 2), (
         f"baseline gives {bad}/{scored}; the hand-read reported 1–2 of 29 and "
         f"this instrument resolves it to 2"
@@ -118,8 +97,9 @@ def test_the_fix_changed_the_verdict_and_not_the_scored_population(checker):
     pinned here so any future loosening of the *exclusion* rules shows up as a
     separate failure from a change in the *consistency* rules.
     """
-    assert _tally(checker, _LEG5)[0] == 40
-    assert _tally(checker, _BASELINE)[0] == 29
+    leg5, base = _tally(checker, _LEG5), _tally(checker, _BASELINE)
+    assert (leg5[0], leg5[2]) == (40, 80), "Leg 5 scored/excluded population moved"
+    assert (base[0], base[2]) == (29, 71), "baseline scored/excluded population moved"
 
 
 def test_the_limit_entry_case_is_scored_against_the_entry_it_names(checker):

@@ -122,7 +122,21 @@ def _is_consistent(lvl: float, pct: float, close: float, entry: float | None,
     return False
 
 
-def run(path, label):
+def score_corpus(path):
+    """The scoring loop. ONE definition, and the guard drives THIS.
+
+    Extracted at the R68-CR179 audit's round-2 MAJOR-2. The guard written to
+    stop v2 regressing had reimplemented this loop line for line, calling the
+    module's constants and helpers but never the loop — so reverting one line
+    inside it (`entry_ref = False`) restored 15.0%/13.8%, byte-for-byte the
+    defect the guard was filed about, with all seven assertions green.
+
+    That is the DEF190 shape, and the counter-principle was stated in the same
+    submission that shipped the bug: Leg 4's threading test drives
+    `build_room_messages` end to end *"because a helper passing says nothing
+    about whether the argument arrives"*. Same rule, one level up. The
+    printing lives in `run()`; nothing else may hold a second copy of this.
+    """
     corpus = json.load(open(path))
     scored = collections.Counter(); bad = collections.Counter()
     excluded = 0; rows = []
@@ -151,6 +165,12 @@ def run(path, label):
                 bad[a] += 1
                 rows.append((a, lvl, pct, round(true,1), close,
                              body[max(0,mm.start()-80):mm.end()+55].replace("\n"," ")))
+    return scored, bad, excluded, rows
+
+
+def run(path, label):
+    """Print one corpus's result. Reporting only — the scoring is above."""
+    scored, bad, excluded, rows = score_corpus(path)
     tot, nbad = sum(scored.values()), sum(bad.values())
     print(f"\n########## {label}")
     print(f"scored {tot}  inconsistent {nbad}  = {100.0*nbad/max(tot,1):.1f}%   "
@@ -159,8 +179,13 @@ def run(path, label):
         print(f"   {a:24} {scored[a]:>4} / {bad[a]}")
     return rows
 
-rows = run(sys.argv[1], "LEG 5 (2026-08-14)")
-print("\n--- inconsistent, LEG5 (hand-read) ---")
-for a,lvl,pct,true,close,ctx in rows:
-    print(f"\n[{a}] claims {pct}% | ${lvl} vs close ${close} = {true}%\n    {ctx}")
-run(sys.argv[2], "BASELINE (2026-08-13)")
+
+# Guarded so the module can be IMPORTED by its own test. Round 2's guard had to
+# read the source and `split("rows = run(")` to avoid executing this block,
+# which is what pushed it into reimplementing the loop instead of calling it.
+if __name__ == "__main__":
+    rows = run(sys.argv[1], "LEG 5 (2026-08-14)")
+    print("\n--- inconsistent, LEG5 (hand-read) ---")
+    for a, lvl, pct, true, close, ctx in rows:
+        print(f"\n[{a}] claims {pct}% | ${lvl} vs close ${close} = {true}%\n    {ctx}")
+    run(sys.argv[2], "BASELINE (2026-08-13)")
