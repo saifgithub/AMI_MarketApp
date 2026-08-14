@@ -912,3 +912,101 @@ is narrower and mechanical: **when a new check contradicts a control this codeba
 new check is the suspect.** `_annotate_rr_against_levels` had already computed the correct 5.0% downside
 and printed it in the same prompt the checker was reading. Nothing consulted it. That belongs beside P2
 in `failure_patterns.md`.
+
+---
+
+## The three owed items, closed (2026-08-14, AT:R69)
+
+The agent brief left three things owed out of the freeze. All three are done, and the audit that
+was *"the largest open risk in this area"* ran three rounds to `COMPLETE`.
+
+### 1. The audit — `COMPLETE` round 3, after 1 MAJOR + 2 MINOR + 1 MAJOR
+
+`orchestration/audit/cr/R68-CR179.{architect,auditor}.md`. Tier A, one submission over Legs 0–5 plus
+DEF302, because the six per-leg handshakes the plan required cannot be recovered retroactively — a
+Leg 2 finding would have changed Leg 3's inputs and Leg 3 is built on them.
+
+**The audit reproduced everything it could reach**, most of it to the digit: the 7-rose/3-fell
+acceptance-5 split lane by lane, the corrected 3/40 by hand-reading all six hits independently before
+looking at the split, the novel samples as correct scenario arithmetic (`203.62 × 0.90 = 183.26`
+exact, and four more), and Fisher exact on the rates. Its answer on acceptance 5 is worth carrying:
+**the distinction that matters is who overrode it.** Saiful waiving his own pre-commitment is
+governance; the builder waiving it would be self-certification. The gate fired, forced an explicit
+decision, and was answered on the record — that is a gate working.
+
+**What it caught, and none of it was in the code:**
+
+| | |
+|---|---|
+| **MAJOR-1** | DEF303 declared in scope while the header said everything was contained in `86d9af99`, which does not contain it. Fixed by naming both SHAs, not by narrowing scope. |
+| **MINOR-1** | *"kills a third guard"* was the same guard. Deselect it and the Aggressive mutation went **entirely uncaught** — the judgement the submission called its most contestable had single-guard coverage shared with a different decision. |
+| **MINOR-2** | The committed `%`-checker yielded **6/40 and 4/29** where every document said 3/40 and 1–2/29. The correction lived in an unrecorded hand-read, so the artefact reproduced the wrong number while its docstring called itself PRECISION-corrected. |
+| **MAJOR-2** | The guard written to fix MINOR-2 tested a **copy** of the scoring loop. Reverting one line inside the real loop restored 15.0%/13.8% with all seven assertions green. |
+
+**MAJOR-2 is the one worth remembering.** The submission that shipped it argued the exact
+counter-principle two sections earlier, for Leg 4: *"the threading test drives `build_room_messages`
+end to end rather than the helper, because a helper passing says nothing about whether the argument
+arrives."* Same rule, one level up, broken in the paragraph that cited it. **P2/DEF190's fourth
+appearance in this lineage.**
+
+`cr179_leg5_pct_check.py` is now v3 with `score_corpus()` extracted and the hand-read in code:
+**3/40 and 2/29 on unchanged denominators and unchanged exclusion counts** — the fix judges the pairs
+correctly rather than quietly measuring fewer of them, and that separation is itself asserted.
+
+### 2. DEF302 re-measured — the ambiguity is gone from the input, and that is all that is claimed
+
+New epoch `*_2026-08-14b-epoch.json`: 39 convenes, same 13 tickers × 3, **468 turns, all twelve
+agents at exactly 39**, one code state throughout (`RestartCount=0`, container started before the
+window opened). Sweep at `def302_remeasure_sweep.json`.
+
+| | pre-fix | post-fix |
+|---|---|---|
+| `Reference position` lines carrying a bare `X% below entry` | **156 / 156** | **0** |
+| `Primary trend` lines stating one end only | **351 / 351** | **0** |
+| derived-% inconsistent | 3/40 = 7.5% | **1/29 = 3.4%** |
+
+**P2 governs the reading.** The supportable claim is *the ambiguity is gone from the input*, 100% of
+the time — not *the model stopped misattributing*. Fisher **p = 0.634**: this epoch cannot detect a
+change in the output rate in either direction. What is checkable: **both specific classes DEF302
+addressed are absent**, and the one survivor is a different mode (a range whose upper endpoint does
+not match its own level).
+
+**M7 closes.** It was carried as *"the only metric that moved the wrong way unexplained"* at 2.2%.
+That was **one mismatched pair of 45**; this epoch gives **0 of 46**. Noise.
+
+**M8 rose 2.6% → 5.8% and is reported without attribution.** Concentrated in `news_analyst`
+(7.7 → 17.9), all `price action`. The tempting story — that DEF302's new clause naming "the price"
+caused it — **is false, and the artefact says so**: the News Analyst's prompt carries no
+`Primary trend` line in *either* epoch (0/39 both), so the clause never reaches it, and its mean
+prompt is *shorter* post-fix. p = 0.257. Watch it next epoch; do not file it today. Stated explicitly
+because **P19 cuts the same way when the new measurement would flatter the build's critic rather than
+its author.**
+
+### 3. `conservative_debator` `_AGENT_MAX_TOKENS` — DEF303, and it was bigger than owed
+
+800 → **1300**. It was the only agent whose cap bound: 1/39 turns at exactly 800/800, headroom
+**1.00×**, against 1.34–3.43× for the other eleven.
+
+**The guard re-ran the whole derivation and still missed it**, because it re-ran against one epoch and
+that epoch is the pre-fix one — **482/482** of the 08-13 rows carry a NULL `output_tokens`, **0/468**
+of the 08-14 rows do. It now checks every committed epoch and fails loudly if a future one lands with
+the column empty.
+
+**The Aggressive was deliberately not raised**, though the codified character rule demands 1000 for
+it. Its measured decode is 599 of 800, clean. The 3.14 chars/token constant is the *global* worst,
+taken off the PM's JSON envelope, while that agent's prose runs at **3.95** — sizing a prose agent on
+the JSON agent's ratio is DEF289's retired 4.75 assumption pointed the other way. The auditor probed
+the new guard's bounds at 700/800/941/942/1000 and agreed. Carried forward: **the Aggressive is now
+the tightest remaining headroom of the twelve**, so it is the next cap to bind.
+
+### Found on the way — DEF304
+
+The suite ran twice at the same SHA in the same clean worktree and gave exit 0, then exit 1.
+`test_def136_room_convene_does_not_block_loop` is the **only** test that observes the no-blocking
+property — the AST guard can prove the `to_thread` wrapper is in the source and cannot prove the loop
+is free — and its threshold was a constant measured on an idle Mac. Correct code produces a heartbeat
+gap of `jitter`; an un-wrapped builder produces `jitter + _BLOCK_S`, and only the second term is
+constant. **1 failure in 5 runs on unchanged code at load average 3.0.** It now calibrates against
+the same process's own idle baseline and refuses to render a verdict at all when the machine is too
+loaded to measure. Fourth member in two days of the *"a gate that fires when nothing is wrong"*
+family (DEF277, DEF290, DEF300).
