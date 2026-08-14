@@ -831,3 +831,39 @@ and the revert is back on the table.
 checks above over-flagged on their first form (26.5% → 12.5% for derived-%; 20.5% → 0% for community
 attribution). Both times the count was wrong in the *alarming* direction, and both times only reading
 the individual hits found it. A metric's first number is a hypothesis.
+
+---
+
+## The freeze (2026-08-14)
+
+**`room_prompts.py`, `content/agents/*` and the four fetchers are frozen.** CR143, CR145–CR156, CR166
+and CR179 are `done`. **CR160** (rename 6 agents, 272 files + AR/MS transcreation) is now schedulable —
+it was held behind this build for one reason, that renaming agents while their prompts and data were in
+flight would make every measurement above unreproducible, and that reason has expired.
+
+**Verification quoted, not asserted:** `4093 passed, 2 skipped, 13 warnings in 465.86s` —
+`.venv/bin/python -m pytest tests/unit/ -q`, exit 0, run 2026-08-14 after the last commit of this leg.
+
+**What the freeze does NOT claim.** Per the plan's own "NOT claimed on merge": nothing here says the
+reasoning got better. M1/M2 measure distinguishability, M3 measures where numbers came from, M8
+measures lane discipline. Twelve agents can be perfectly distinguishable, perfectly grounded, perfectly
+laned — and all wrong. What is claimed is narrower and checkable: the Room now has the data its desks
+were asking for, says fewer things that contradict its own sheet, and no longer truncates the agents
+whose turns the rest of the Room reasons from.
+
+**Carried out of the freeze as live work:**
+
+| | |
+|---|---|
+| **DEF302** | stop-distance % unverified and laundered Trader → Neutral. Flat vs baseline, so a standing hole this build neither introduced nor closed. |
+| **M7 0.0% → 2.2%** | one mismatched pair of 45, unexplained. The CR169 gate, and the only metric that moved the wrong way without a hand-read behind it. |
+| **M1 −1.9pt, M2 −0.012** | still 10.5× chance and role still beats ticker, but it is the direction CR145 Tier C exists to defend, and a wider shared sheet is the obvious candidate. |
+| **conservative_debator cap** | the one at-cap turn in 468, headroom 1.00×. Its `_AGENT_MAX_TOKENS` derivation is the one left owed. |
+| **No audit lane** | CR179 ran all five legs without the independent handshake. Not waived — outstanding. |
+
+**The instrument lesson, because it is the most reusable thing this leg produced.** Two of the four
+hand-read checks over-flagged on their first form — derived-% **26.5% → 12.5%**, community attribution
+**20.5% → 0%** — both in the alarming direction, both corrected only by reading the individual hits.
+DEF279 is cited three times in this document and the failure it names still very nearly recurred twice
+in the session that cited it. **A metric's first number is a hypothesis about the metric, not a
+measurement of the corpus.**
