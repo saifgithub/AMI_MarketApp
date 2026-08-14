@@ -258,10 +258,11 @@ cd "$MOBILE_DIR"
 if [[ "$DO_GAMES" -eq 1 ]]; then
 cat <<'BANNER'
 ┌──────────────────────────────────────────────────────────────────┐
-│  THIS BUILD CARRIES THE CR109 EASTER EGG (AMI_GAMES=true).       │
+│  THIS BUILD CARRIES THE CR109 GAME (AMI_GAMES=true).             │
 │                                                                  │
-│  The game is reachable by long-pressing the Floor footer. It is  │
-│  fine here because publish_playstore.sh is pinned to the Play    │
+│  It is a VISIBLE FIFTH TAB (AmiTab.visible), reachable by tap    │
+│  from launch — no gesture, nothing hidden about it. It is fine   │
+│  here because publish_playstore.sh is pinned to the Play         │
 │  INTERNAL testing track, which is unreviewed and team-only.      │
 │                                                                  │
 │  DO NOT promote this release to closed/open testing or           │

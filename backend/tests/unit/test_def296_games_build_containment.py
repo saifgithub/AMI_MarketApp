@@ -162,22 +162,46 @@ def test_the_gate_does_not_depend_on_the_billing_flags() -> None:
         f"the containment is coupled to the billing flags again: {line}")
 
 
-def test_the_banner_states_a_basis_that_is_actually_true() -> None:
-    """A gate whose stated reason is untrue is how an operator learns that
-    firing does not mean stop — DEF277's words, in this script's own comments.
-
-    Two claims had gone false. The RevenueCat key does not force
-    `--internal-only` on the path we build on, and CR182 deleted the
-    Floor-footer long-press: `ami_tab.dart` now puts the game in
-    `AmiTab.visible`, so it is a fifth TAB. The banner is what the operator
-    reads before deciding where a build may go, so both had to move.
-    """
-    src = _SCRIPT.read_text()
+def _games_banner(script: Path) -> str:
+    src = script.read_text()
     banner = src[src.index("THIS BUILD CARRIES THE CR109"):]
-    banner = banner[:banner.index("BANNER")]
+    return banner[:banner.index("BANNER")]
 
+
+@pytest.mark.parametrize("script_name", ["build_testflight.sh", "build_playstore.sh"])
+def test_the_banner_describes_an_entry_point_that_exists(script_name: str) -> None:
+    """Both release scripts, because the false claim was in both.
+
+    DEF296 was filed against the iOS banner and fixed there first. The next
+    Play release printed the identical sentence — *"The game is reachable by
+    long-pressing the Floor footer"* — which CR182 deleted;
+    `ami_tab.dart:54` puts the game in `AmiTab.visible`, so it is a fifth TAB
+    reachable by tap from launch. Caught by watching a real release print it,
+    not by a test, which is why this one is parametrised over both scripts
+    rather than pinned to the one the defect was filed against.
+
+    This is the sentence the whole guideline-2.3.1 argument rests on, and it is
+    what an operator reads before deciding where a build may go.
+    """
+    banner = _games_banner(_REPO_ROOT / "scripts" / script_name)
     assert "long-press" not in banner.lower(), (
-        "the banner still describes the gesture CR182 removed")
+        f"{script_name}'s banner still describes the gesture CR182 removed")
+    assert "easter egg" not in banner.split("\n")[1].lower(), (
+        f"{script_name} still calls a visible tab an easter egg in its "
+        "headline; the closing quote from Saiful may keep the phrase")
+
+
+def test_the_ios_banner_states_a_basis_that_is_actually_true() -> None:
+    """The iOS half, which had a second false claim the Play banner never had.
+
+    Android's stated basis — the Play track is pinned to `internal` — is a real
+    control (`publish_playstore.sh:69` refuses a `test_` key on any other
+    track). iOS cited the RevenueCat key as what forces `--internal-only`, and
+    that was untrue on the flag we build with. A gate whose stated reason is
+    untrue is how an operator learns that firing does not mean stop — DEF277's
+    words, in this script's own comments.
+    """
+    banner = _games_banner(_SCRIPT)
     assert not ("test_" in banner and "forces" in banner), (
         "the banner still cites the RevenueCat key as what forces "
         "--internal-only; that is the claim DEF296 was filed about")
