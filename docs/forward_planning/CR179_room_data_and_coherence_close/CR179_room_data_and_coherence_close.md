@@ -693,3 +693,96 @@ string presence with digit-boundary lookarounds. The remainder renders at two de
 matching the contribution's precision) and an agent that writes `29.7` would fail that test while
 quoting correctly. Leg 5 must normalise trailing zeros before counting, or it will report a
 regression that is a formatting artefact.
+
+---
+
+## Leg 5 — the closing measurement (2026-08-14)
+
+**The corpus is a controlled comparison, which is the only reason any number below means anything.**
+39 convenes on the 13 held-constant tickers (3 each), `room_benchmark.py --fresh-user`, live against
+Alpha at `c79d873c` / `alpha-2026-08-14-1`. **468 turns, all twelve agents at exactly 39** — no
+dropped turn, no partial convene. The committed 08-13 baseline turns out to be the **same 13 tickers,
+3 each** (ANET 4 → 40 convenes) with a near-identical verdict split (31/5/4 vs 30/5/4), so the
+before/after is matched on the one variable DEF230 warns about. Both corpora were re-scored with the
+**current** sweep — the Leg 0 build added M8 and the older published figures came out of older code,
+so quoting them side by side would have compared two instruments, not two epochs.
+
+| | 08-13 baseline | Leg 5 (08-14) |
+|---|---|---|
+| M1 role identifiability | 97.5% | **95.6%** |
+| M2 role signal − ticker signal | +0.163 | **+0.151** (role still wins) |
+| M3 novel numbers, all agents | 2.7% | **3.5%** |
+| M6 stance entropy · unanimous convenes | 1.45 bits · 0 | **1.42 bits · 0** |
+| M7 date mismatch | 0.0% (67 pairs) | **2.2%** (1 of 45) |
+| M8 cross-lane citation | 2.5% | **2.6%** |
+| Truncation | 1.2% (6/482) | **0.2% (1/468)** |
+| Derived-% inconsistency | 13.8% (4/29) | **12.5% (5/40)** |
+| CR156 Tier B conflicting verdict word | 2.5% | **2.6%** (from 6/18 at filing) |
+
+### The gate fired, and reading it correctly is the whole job
+
+Acceptance 5 says a lane whose novel rate rises is **partially reverted rather than extended**. Novel
+rose on **seven** lanes — bear 4.8 → 7.4, conservative 1.2 → 3.8, bull 2.8 → 4.3, social 0.0 → 1.4,
+trader 4.7 → 5.8, neutral 1.6 → 2.3, market 0.6 → 0.7 — and fell on the three the plan named as its
+own unrun gates: **fundamentals 3.6 → 3.1, aggressive 2.7 → 2.4, research_manager 2.8 → 1.1.**
+
+Two artefacts were ruled out before the number was believed. Leg 4's own warning — that the remainder
+renders `29.70` and an agent writing `29.7` would score novel — **does not apply**: the sweep's
+`_norm_num` canonicalises through `%g`, so `29.70` and `29.7` are the same token. And the mix-shift
+confound is excluded by the matched ticker sets above.
+
+**So the rise is real, and hand-reading says it is not the fabrication class.** The Bear's novel
+numbers are downside scenarios with their inputs on the page — `$0.17 trailing EPS × 20 = $3.40, a
+-94.6% downside` off a `$62.79` close, `$203.62 × 0.9 = $183.26`, `548.84/949.83 − 1 = −42.2%` — each
+one correct, each one minted by *reasoning from* an anchor rather than reciting it. Several ride
+anchors this build supplied: the 200-day average (`Primary trend (LIVE): 200-day average $548.84,
+price 73.1% above it`) had **zero mentions in either register** before Leg 3 and is now the reference
+in a dozen turns. M3's own docstring is the tie-breaker: *"grounded-only near 100% is readback, not
+analysis."* A wider sheet gave the prose desks more to reason from, and the ratio moved because the
+numerator is "computed", not "invented".
+
+**The measurement that actually tests fabrication is flat.** M3 cannot distinguish a fabricated −94.6%
+from a correct one — both are `novel` — so the derived-percentage check was built to ask the question
+M3 structurally cannot: recompute every claim whose reference is the close/entry. **12.5% inconsistent
+against the baseline's 13.8%.** Not better, not worse. The lanes that widened did not get less correct.
+
+### DEF279's lesson, re-learned in the same session it was cited
+
+The first form of that check reported **26.5%**. Hand-reading every hit showed most were the
+checker's fault: `$339.96 is 16.4% below the $406.63 200-day average` is *correct* arithmetic against
+a named level, and the checker had scored it against the close. Pinning the reference — and excluding
+80 pairs anchored to an SMA, a 52-week extreme or a consensus target rather than dropping them
+silently — took it to 15.0%, and hand-reading the survivors removed one more (`Stop Distance: $18.99
+(8.4% below entry)` is a *distance*, not a level, and 18.99/225.30 is exactly 8.4%). **26.5% → 12.5%,
+all of it instrument error.** M7's 13.4%-on-a-0%-corpus is the standing precedent and it very nearly
+repeated with a fresh metric in the same document that cites it.
+
+### What the survivors are — DEF302
+
+The five that survive are **risk-critical and they launder**. The Trader renders `Stop: $164.70 (-5%
+below entry)` against a `$203.62` entry — truly **−19.1%** — and the Neutral Debator repeats `-5%`
+verbatim. The Conservative argues a `6.0% below entry` stop that is really **−23.1%**. Leg 4 supplied
+an anchor for the upside half (`_asymmetry_line`) and for the drawdown arithmetic
+(`_drawdown_snapshot_line`, `_share_of_cap_phrase`), and built `_annotate_rr_against_levels` for R:R —
+**but nothing precomputes "N% below entry"**, which is the figure that sets stop distance and therefore
+position size. Filed as **DEF302**, open. It is flat against baseline, so it is a standing hole this
+build did not introduce and did not close.
+
+### Truncation — acceptance 6 met
+
+**1 turn of 468 at or over cap (0.2%)**, against 1.2% before. Every agent gained headroom; the four
+analysts sit at 2.3–2.9×, the researchers at 1.6–2.1×. The single at-cap turn is the
+**conservative_debator at exactly 800**, headroom **1.00×** — the one budget still worth re-deriving.
+**Instrument caveat, stated rather than buried:** `llm_audit` has no `finish_reason` column, so this is
+`output_tokens >= cap` as a proxy. It is sound in the direction that matters (a decode that reaches the
+ceiling stopped for length) but it is not the same instrument that produced 6/482, and the two should
+not be quoted as if they were.
+
+### Still open after this leg
+
+- **M7 went 0.0% → 2.2%** — one mismatched pair of 45. One turn, not a trend, but it is the CR169 gate
+  and it is the only metric that moved in the wrong direction without a hand-read explanation.
+- **M1 −1.9pt and M2 −0.012.** Both still far above chance (M1 lift 10.5×) and the roles remain
+  distinguishable, but a wider shared sheet is the obvious candidate and it is the direction CR145
+  Tier C exists to defend.
+- **DEF302**, above.

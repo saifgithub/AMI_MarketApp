@@ -1,0 +1,16 @@
+# CR179 Leg 5 closing measurement — 13 tickers held constant per DEF230's
+# mix-shift warning. Same universe used for Leg 3a's fetcher walkthrough
+# (NVDA/GRAB/KTOS/SNOA/NBIS/BAC) plus the rest of the fixed set from the plan.
+AMD
+ANET
+AVGO
+BAC
+GRAB
+KTOS
+LITE
+MU
+NBIS
+NVDA
+SNDK
+SNOA
+TSLA
