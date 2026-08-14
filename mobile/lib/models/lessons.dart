@@ -2,28 +2,32 @@
 /// Mirrors backend/app/schemas/lessons.py.
 library;
 
+/// A quiz question as the reader receives it: question, options, and no key.
+///
+/// DEF294 — `answerIndex` and `explanation` are deliberately absent. The server
+/// stopped sending them on `GET /v1/lessons/{id}` because shipping the answer
+/// pre-attempt handed an API-direct caller the agent-unlock gate, and this
+/// mirrors that: the client cannot render an answer it was never given, which is
+/// a structural guarantee rather than a convention someone can drift from.
+///
+/// The reveal reads `QuizResultPerQuestion` off the graded submit response
+/// instead — see [QuizResult.forQuestion].
 class QuizQuestion {
   const QuizQuestion({
     required this.id,
     required this.question,
     required this.options,
-    required this.answerIndex,
-    this.explanation,
   });
 
   final String id;
   final String question;
   final List<String> options;
-  final int answerIndex;
-  final String? explanation;
 
   factory QuizQuestion.fromJson(Map<String, dynamic> j) {
     return QuizQuestion(
       id: j['id'] as String,
       question: j['question'] as String,
       options: ((j['options'] as List?) ?? const []).cast<String>(),
-      answerIndex: ((j['answer_index'] as num?) ?? 0).toInt(),
-      explanation: j['explanation'] as String?,
     );
   }
 }
@@ -265,6 +269,18 @@ class QuizResult {
   final double score;
   final List<QuizResultPerQuestion> perQuestion;
   final List<String> unlockedAgents;
+
+  /// The graded detail for one question, or null if this result does not cover
+  /// it. DEF294 — the single place the reveal's answer key comes from. Both the
+  /// book reader and the beat deck call this rather than each walking
+  /// `perQuestion` themselves, so the two surfaces cannot disagree about which
+  /// option was correct (DEF098's shape).
+  QuizResultPerQuestion? forQuestion(String questionId) {
+    for (final entry in perQuestion) {
+      if (entry.questionId == questionId) return entry;
+    }
+    return null;
+  }
 
   factory QuizResult.fromJson(Map<String, dynamic> j) {
     return QuizResult(

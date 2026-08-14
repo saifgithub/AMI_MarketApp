@@ -26,10 +26,8 @@ const _meta = LessonMeta(
   agentCallouts: [],
 );
 
-const _q1 = QuizQuestion(
-    id: 'q1', question: 'Q one?', options: ['a', 'b'], answerIndex: 0);
-const _q2 = QuizQuestion(
-    id: 'q2', question: 'Q two?', options: ['a', 'b'], answerIndex: 1);
+const _q1 = QuizQuestion(id: 'q1', question: 'Q one?', options: ['a', 'b']);
+const _q2 = QuizQuestion(id: 'q2', question: 'Q two?', options: ['a', 'b']);
 
 /// The shape every pilot lesson actually has, verified against
 /// `content/lessons/014_position_sizing_basics.en.mdx`: an H1 + intro, an

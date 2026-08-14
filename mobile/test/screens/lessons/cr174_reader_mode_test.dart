@@ -40,7 +40,6 @@ const _quiz = QuizQuestion(
   id: 'q1',
   question: 'How many shares?',
   options: ['9 shares', '50 shares'],
-  answerIndex: 0,
 );
 
 LessonMeta _meta(String id) => LessonMeta(

@@ -385,6 +385,9 @@ class _BlockView extends StatelessWidget {
           selected: state.selectedAnswers[block.quiz!.id],
           locked: state.result != null,
           revealResult: state.result != null,
+          // DEF294 — the reveal's answer key comes from the graded response, not
+          // from the question, which no longer carries one.
+          result: state.result?.forQuestion(block.quiz!.id),
           onSelect: (idx) => onSelect(block.quiz!.id, idx),
         );
       case LessonBlockKind.animation:

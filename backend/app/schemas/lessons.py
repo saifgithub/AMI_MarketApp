@@ -129,11 +129,68 @@ class LessonMeta(BaseModel):
 
 
 class Lesson(BaseModel):
-    """Full lesson, ready for the reader UI."""
+    """Full lesson, INTERNAL. Carries the answer key — never a response model.
+
+    DEF294: this is the grading-side shape. `LessonsService.submit_quiz` reads
+    `quizzes[].answer_index` off it, so the field has to exist here. What must
+    not happen is this object reaching a client, which is what `LessonPublic`
+    below is for.
+    """
 
     meta: LessonMeta
     blocks: list[LessonBlock]
     quizzes: list[QuizQuestion]
+
+
+# ── Public read shape (DEF294) ──────────────────────────────────────────
+#
+# `GET /v1/lessons/{id}` used to return `Lesson`, so every `<Quiz>` block
+# arrived with `answer_index` AND `explanation` populated **before the user had
+# answered anything**. That is DEF042's defect on a second surface: that one
+# closed the same leak on `/v1/daily_challenge/*` at AT:R54 and introduced
+# `DailyChallengePublic` for exactly this reason, and lessons were never
+# revisited.
+#
+# What it bought an API-direct caller is not credits — a quiz pass writes only
+# `LessonProgressRow` — but the AGENT-UNLOCK gate, i.e. the app's core
+# progression, readable straight out of the payload without opening the lesson.
+#
+# The answer key still reaches the client, just AFTER grading:
+# `QuizSubmitResponse.per_question` already carries `correct_index` and
+# `explanation` per question, so the reveal has everything it needs and nothing
+# it should not have had first.
+
+
+class LessonQuizPublic(BaseModel):
+    """A quiz question as the reader may see it BEFORE answering: no key."""
+
+    id: str
+    question: str
+    options: list[str]
+
+
+class LessonBlockPublic(BaseModel):
+    """`LessonBlock` with the quiz payload narrowed to its public shape."""
+
+    kind: Literal["markdown", "quiz", "chat_with", "animation", "term"]
+    markdown: str | None = None
+    quiz: LessonQuizPublic | None = None
+    chat_with_agent: str | None = None
+    animation_name: str | None = None
+    term_id: str | None = None
+
+
+class LessonPublic(BaseModel):
+    """What `GET /v1/lessons/{id}` actually returns.
+
+    Declared as the route's `response_model` so the filtering is done by the
+    contract rather than by a hand-written mapper someone can forget to update
+    when a field is added — the same reason `_settings_coverage` is derived.
+    """
+
+    meta: LessonMeta
+    blocks: list[LessonBlockPublic]
+    quizzes: list[LessonQuizPublic]
 
 
 class TrackCatalogue(BaseModel):

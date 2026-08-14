@@ -30,12 +30,21 @@ class LessonQuizCard extends StatelessWidget {
     required this.selected,
     required this.locked,
     required this.revealResult,
+    this.result,
   });
 
   final QuizQuestion question;
   final int? selected;
   final bool locked;
   final bool revealResult;
+
+  /// The server's graded detail for THIS question, once submitted.
+  ///
+  /// DEF294 — the only source of the correct option and the explanation. Both
+  /// used to arrive on the question itself, pre-attempt, which handed an
+  /// API-direct caller the agent-unlock gate for free.
+  final QuizResultPerQuestion? result;
+
   final ValueChanged<int> onSelect;
 
   @override
@@ -79,7 +88,7 @@ class LessonQuizCard extends StatelessWidget {
                 ),
               ),
             ),
-          if (revealResult && question.explanation != null)
+          if (_revealed && result!.explanation != null)
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: Container(
@@ -88,7 +97,7 @@ class LessonQuizCard extends StatelessWidget {
                   color: AmiColors.slate900,
                   borderRadius: BorderRadius.circular(AmiRadii.card),
                 ),
-                child: Text(question.explanation!, style: AmiTypography.caption),
+                child: Text(result!.explanation!, style: AmiTypography.caption),
               ),
             ),
         ],
@@ -96,10 +105,18 @@ class LessonQuizCard extends StatelessWidget {
     );
   }
 
+  /// DEF294 — reveal only when the SERVER has told us the answer. Previously
+  /// `revealResult` was a bare flag and the key came off `question.answerIndex`,
+  /// which the read payload should never have carried. Now the flag and the data
+  /// are the same fact: no graded result, nothing to reveal.
+  bool get _revealed => revealResult && result != null;
+
+  int? get _correctIndex => result?.correctIndex;
+
   Color _bg(int i) {
-    if (revealResult) {
-      if (i == question.answerIndex) return AmiColors.hexGreen.withValues(alpha: 0.15);
-      if (i == selected && i != question.answerIndex) {
+    if (_revealed) {
+      if (i == _correctIndex) return AmiColors.hexGreen.withValues(alpha: 0.15);
+      if (i == selected && i != _correctIndex) {
         return AmiColors.hexRed.withValues(alpha: 0.15);
       }
     }
@@ -108,18 +125,18 @@ class LessonQuizCard extends StatelessWidget {
   }
 
   Color _border(int i) {
-    if (revealResult) {
-      if (i == question.answerIndex) return AmiColors.hexGreen;
-      if (i == selected && i != question.answerIndex) return AmiColors.hexRed;
+    if (_revealed) {
+      if (i == _correctIndex) return AmiColors.hexGreen;
+      if (i == selected && i != _correctIndex) return AmiColors.hexRed;
     }
     if (selected == i) return AmiColors.hexBlue;
     return AmiColors.slate700;
   }
 
   IconData _icon(int i) {
-    if (revealResult) {
-      if (i == question.answerIndex) return Icons.check_circle;
-      if (i == selected && i != question.answerIndex) return Icons.cancel;
+    if (_revealed) {
+      if (i == _correctIndex) return Icons.check_circle;
+      if (i == selected && i != _correctIndex) return Icons.cancel;
       return Icons.radio_button_unchecked;
     }
     return selected == i

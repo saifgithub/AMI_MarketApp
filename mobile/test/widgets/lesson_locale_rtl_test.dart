@@ -27,12 +27,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _arLessonId = '007_support';
 const _enFallbackId = '090_en_only';
 
+// DEF294 — the question no longer carries an answer key; the reveal reads it off
+// the graded submit response instead.
 const _arQuiz = QuizQuestion(
   id: 'q1',
   question: 'ما هو الدعم؟',
   options: ['مستوى سعري', 'مؤشر فني', 'نوع سهم'],
-  answerIndex: 0,
-  explanation: 'الدعم مستوى سعري.',
 );
 
 const _arMeta = LessonMeta(

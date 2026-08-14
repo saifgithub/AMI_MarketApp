@@ -22,6 +22,7 @@ from app.schemas.lessons import (
     AgentUnlockRequirement,
     Lesson,
     LessonCatalogue,
+    LessonPublic,
     LessonStatus,
     ProgressSummary,
     QuizSubmitRequest,
@@ -178,7 +179,11 @@ async def submit_quiz(
     return result
 
 
-@router.get("/{lesson_id}", response_model=Lesson)
+# DEF294 — `LessonPublic`, not `Lesson`. The service still returns the internal
+# shape because grading needs the answer key; the response model is what stops
+# it leaving the process. Changing this back to `Lesson` re-opens the leak, and
+# `test_def294_lesson_quiz_answer_key.py` fails if anyone does.
+@router.get("/{lesson_id}", response_model=LessonPublic)
 async def get_lesson(
     lesson_id: str,
     locale: str = "en",

@@ -213,6 +213,8 @@ class _CardView extends StatelessWidget {
               selected: state.selectedAnswers[card.quiz!.id],
               locked: state.result != null,
               revealResult: state.result != null,
+              // DEF294 — same single source as the book reader's card.
+              result: state.result?.forQuestion(card.quiz!.id),
               onSelect: (i) => onSelect(card.quiz!.id, i),
             ),
           LessonCardKind.chat => _ChatCard(agentId: card.chatWithAgent!),
