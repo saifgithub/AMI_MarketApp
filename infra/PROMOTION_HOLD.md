@@ -14,7 +14,29 @@ To clear a hold: delete its block, and record in the trail *why* the preconditio
 
 ## ACTIVE HOLDS
 
-*(none — promotion is unblocked)*
+### DEF302-REMEASURE — live corpus run in flight on this exact container
+
+**Raised:** 2026-08-14 (AT:R69) · **Blocks:** any Alpha promotion until the DEF302 re-measurement
+corpus is complete and verified from the database.
+
+**Why.** A 39-convene epoch is running live against `alpha-2026-08-14-3` / `913f3b59` to test whether
+DEF302's rendering fix changed anything in the agents' prose. The comparison is only meaningful if
+every convene in it saw the same prompt bytes — that is CR179 Leg 5's whole method and DEF230's
+mix-shift warning applied to code rather than tickers.
+
+**This is not hypothetical right now.** `main` is already ahead of Alpha with **DEF303**
+(`5279c721`), which raises `conservative_debator`'s decode cap 800 → 1300. That is a change to the
+output of one of the twelve agents being measured. An rsync mid-run would put part of the epoch on
+one cap and part on another, and nothing downstream would be able to tell which turns came from
+which — the corpus would silently stop being a controlled comparison while still looking like one.
+
+`/promote-to-alpha` ships the whole tree, so this blocks *every* lane's promotion, not just this
+one. If something urgent needs to ship, say so and the run will be abandoned and restarted rather
+than split.
+
+**To clear:** confirm from `room_runs`/`llm_audit` (not the runner's JSONL — see the CR179-LEG5 hold
+below for why) that the epoch is complete, then record the container's `RestartCount` and `version`
+at the first and last convene showing one code state throughout.
 
 ---
 
