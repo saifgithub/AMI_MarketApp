@@ -180,6 +180,7 @@ def check_mandate_compliance(
     classification_universe: object | None = None,
     locale_allowed_universe: set[str] | None = None,
     holdings: object | None = None,
+    shorts: object | None = None,
     quotes: dict[str, float] | None = None,
     sector_map: object | None = None,
     now: datetime | None = None,
@@ -252,6 +253,7 @@ def check_mandate_compliance(
     """
     violations: list[str] = []
     not_evaluated: list[str] = []
+    advisories: list[str] = []
     blocked_by: str | None = None
     sharia_verdict: ShariaVerdict | None = None
     classification_verdicts: list[ClassificationVerdict] = []
@@ -269,13 +271,59 @@ def check_mandate_compliance(
         violations.append(f"ticker {t} in user blocklist")
         blocked_by = blocked_by or "blocklist"
 
-    # 3) Long-only — sells of holdings the user doesn't own would be shorts
-    if c.long_only and proposed.is_sell:
-        # Note: the caller distinguishes "sell to close" from "sell to open (short)".
-        # This check is the conservative default — the actual short detection
-        # happens in the trade-validation service that calls this function with
-        # full portfolio context.
-        pass  # delegated to trade service
+    # 3) Long-only — a sell of shares you do not hold is a SHORT (CR171 §6).
+    #
+    # This was a bare `pass` with a comment saying the decision was "delegated
+    # to trade service" — DEF262. It was not delegated anywhere that reads
+    # `long_only`: `_execute_fill` refused the sell for lacking shares, with
+    # `blocked_by="long_only"` stamped on a message about holdings, so the flag
+    # named the refusal without ever being consulted. Turning the flag OFF
+    # changed nothing, which is the worse half — a control that does not
+    # respond to its own switch is a control the user cannot learn from.
+    #
+    # `sell_to_open` is derived from `holdings`, which this floor already
+    # receives for the sector cap, rather than taken as a kwarg a caller can
+    # forget. When holdings are absent the decision cannot be made here at all,
+    # and that is recorded in `not_evaluated` rather than passing silently —
+    # CR040, and the exact shape of CR101-BE2's round-1 blocker.
+    sell_to_open: bool | None = None
+    if proposed.is_sell:
+        if holdings is None:
+            not_evaluated.append(
+                "long_only: cannot tell a sell-to-close from a sell-to-open "
+                "without the portfolio's holdings"
+            )
+        else:
+            held = _held_quantity(holdings, t)
+            # §1 — a sell never crosses zero. `0 < held < quantity` is refused
+            # elsewhere (it is a fill-mechanics question, not a mandate one);
+            # here only a sell against a FLAT position opens a short.
+            sell_to_open = held <= 1e-9
+
+    if c.long_only and sell_to_open:
+        violations.append(
+            "your mandate is long-only, and selling "
+            f"{proposed.quantity:g} {t} with none held would open a short"
+        )
+        blocked_by = blocked_by or "long_only"
+
+    # CR171 §6 — HALAL and short selling. Saiful's ruling, 2026-08-13:
+    # *"Our job is only to inform. The user can continue with whatever trade
+    # they want to do. So we will put a flag and notice to inform the user, but
+    # we let the trade through."*
+    #
+    # This SUPERSEDES the CR doc's proposed outright refusal, which was
+    # deliberately escalated rather than settled in code review. An advisory,
+    # not a violation: the trade proceeds. Note it is independent of the
+    # `long_only` block above — a halal user with `long_only` on is refused by
+    # the mandate, not by this, and both may be true at once.
+    if c.halal and sell_to_open:
+        advisories.append(
+            "Short selling is widely held impermissible under Sharia: it sells "
+            "what you do not own and the borrow carries an interest-like cost. "
+            "AMI has no ruling of its own here and is not blocking the trade — "
+            "this is for you to decide."
+        )
 
     # 4) Halal flag — a SOURCED allowlist (AAOIFI via SPUS), NOT a computed ratio
     #    screen (CR069; `sharia_screen()` stays dormant per constraint 4). Three
@@ -362,10 +410,23 @@ def check_mandate_compliance(
             quoted=bool((quotes or {}).get(t)),
         )
 
-    if proposed.is_buy and proposed_value > 0:
+    # CR171 §6 — the caps are long-shaped, and a short is exposure. The gate
+    # was `is_buy` alone, which was right while a sell could only ever REDUCE a
+    # position; a sell-to-open increases it, in the other direction, and an
+    # untested cap is how a user ends up with unlimited short exposure under a
+    # mandate that reports itself as enforced.
+    if (proposed.is_buy or sell_to_open) and proposed_value > 0:
         if portfolio_value > 0:
             cap_single_name = single_name_cap_pct(mandate)
-            position_pct = _position_pct(proposed_value, portfolio_value)
+            # GROSS, never net. Long $5k AAPL and short $5k AAPL is not a flat
+            # position with no risk — it is two positions, two borrow costs and
+            # two ways to be wrong. Netting them would let a user hide unlimited
+            # gross exposure behind a flat net, which is the one thing a
+            # concentration cap exists to prevent.
+            gross_value = proposed_value + _gross_exposure_in(
+                holdings, shorts, t, quotes,
+            )
+            position_pct = _position_pct(gross_value, portfolio_value)
             if position_pct > cap_single_name:
                 violations.append(
                     f"position size {position_pct:.1f}% exceeds single-name cap {cap_single_name}%"
@@ -557,7 +618,46 @@ def check_mandate_compliance(
         sharia_verdict=sharia_verdict,
         classification_verdicts=classification_verdicts,
         not_evaluated=not_evaluated,
+        advisories=advisories,
     )
+
+
+def _gross_exposure_in(
+    holdings: object, shorts: object, ticker: str, quotes: dict[str, float] | None,
+) -> float:
+    """CR171 §6 — `|long| + |short|` in one name, at market.
+
+    Returns 0.0 when nothing is held either way, which keeps every pre-CR171
+    caller arithmetically unchanged: `shorts` is None for all of them, and a
+    proposal in a name the user does not hold adds nothing.
+
+    A short with no live quote falls back to its entry price rather than to
+    zero. Zero would silently shrink measured exposure exactly when pricing is
+    degraded — the direction that lets a trade through, which is the wrong way
+    for a cap to fail.
+    """
+    mark = (quotes or {}).get(ticker)
+    total = 0.0
+    for h in holdings or []:  # type: ignore[union-attr]
+        if str(getattr(h, "ticker", "")).upper().strip() == ticker:
+            price = mark or float(getattr(h, "avg_cost", 0.0) or 0.0)
+            total += abs(float(getattr(h, "quantity", 0.0) or 0.0)) * price
+    for sp in shorts or []:  # type: ignore[union-attr]
+        if str(getattr(sp, "ticker", "")).upper().strip() == ticker:
+            price = mark or float(getattr(sp, "entry_price", 0.0) or 0.0)
+            total += abs(float(getattr(sp, "quantity", 0.0) or 0.0)) * price
+    return total
+
+
+def _held_quantity(holdings: object, ticker: str) -> float:
+    """Duck-typed, matching how `holdings` is already consumed for the sector
+    cap — the floor takes `.ticker`/`.quantity` and never a concrete type, so
+    the Room, the sim and the tests can all pass their own shape."""
+    total = 0.0
+    for h in holdings or []:  # type: ignore[union-attr]
+        if str(getattr(h, "ticker", "")).upper().strip() == ticker:
+            total += float(getattr(h, "quantity", 0.0) or 0.0)
+    return total
 
 
 def check_holdings_against_mandate(

@@ -211,6 +211,28 @@ class Settings(BaseSettings):
     # answers "did it touch" exactly rather than sampling; out of scope here.
     sim_resting_order_tick_interval_seconds: int = 300
 
+    # ── CR171 — short selling, training lane ──────────────────────────────
+    #
+    # §4's Layer 3. Reached whenever neither Alpaca's `easy_to_borrow` (no
+    # house key exists — measured absent in every environment 2026-08-11) nor
+    # yfinance's `shortPercentOfFloat` resolves, which today is every ticker
+    # outside the S&P snapshot. 3.0%/yr sits in the middle of the observed
+    # liquid-name range and is deliberately a FLAT number: real borrow spans
+    # 0.25%/yr to over 100%/yr, a 400x range we cannot observe, and inventing a
+    # per-ticker figure would be the fabrication CR040 and DEF252 exist to
+    # prevent. An honest flat rate beats a precise invented one.
+    short_borrow_default_rate_annual_pct: float = 3.0
+
+    # §7's two thresholds. Settings rather than constants because they are the
+    # levers that decide how a short *feels* in the simulator: 1.50 is how much
+    # cash a short ties up, 1.30 is how far it may run before the account takes
+    # the decision away. Saiful chose forced buy-in over a size cap (a cap
+    # teaches that bounded shorts are safe, which is false) and over negative
+    # equity (which leaves a training account unrecoverable), so these two
+    # numbers ARE the containment mechanism.
+    short_initial_margin: float = 1.50
+    short_maintenance_margin: float = 1.30
+
     # CR109 slice 3c — the house strategy desks' kill switch (design §11.2
     # "scaling and control"). Off removes desks from all FUTURE fields
     # without disturbing a field they are already settled in; a locked field

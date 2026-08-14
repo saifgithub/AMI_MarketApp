@@ -627,6 +627,17 @@ _SIM_ENGINE_SYNC_SAFE_METHODS = {
     # both of its call sites — `main.py::_sim_resting_order_tick` and
     # `api/sim.py::evaluate_trades`. Same shape as `submit_game_trade` above.
     "fill_resting_order",
+    # CR171 §5/§7/§4: the three short passes, reached ONLY from
+    # `sim_resting_orders.sweep_resting_orders` (`_sweep_short_positions` and
+    # `_accrue_borrow`), which is `to_thread`-wrapped at both of its call
+    # sites — `main.py::_sim_resting_order_tick` and `api/sim.py::evaluate_trades`.
+    # Each reaches the network through `current_price`, already in this set.
+    "evaluate_short_brackets",
+    "force_close_breached_shorts",
+    "accrue_short_borrow",
+    # CR171 §1: the user-initiated buy-to-cover. No route calls it directly
+    # today; when one does, it must be wrapped like `submit` is.
+    "cover_short",
 }
 
 

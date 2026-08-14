@@ -149,3 +149,19 @@ class ComplianceResult(BaseModel):
     # never collapse into either "blocked" or a silent "passed"; the caller reads
     # this list to tell "checked and clear" apart from "could not check" (CR040).
     not_evaluated: list[str] = Field(default_factory=list)
+    # CR171 §6 — checks that RAN, found something the user should know, and
+    # deliberately did not block. A third state, and it needs to be one: it is
+    # neither a `violation` (which refuses) nor `not_evaluated` (which could not
+    # check). Folding it into either would be a lie in one direction or the
+    # other — a refusal that isn't, or an unknown that isn't.
+    #
+    # Its first occupant is Saiful's halal ruling on short selling, 2026-08-13:
+    # *"Our job is only to inform. The user can continue with whatever trade
+    # they want to do. So we will put a flag and notice to inform the user, but
+    # we let the trade through."* This SUPERSEDES CR171 §6's proposed outright
+    # refusal, which was escalated rather than decided in code.
+    #
+    # CR040 applies with full force: an advisory that is logged server-side and
+    # never rendered is not informing anyone. It travels on the wire
+    # (`ComplianceBlock.advisories`) for exactly that reason.
+    advisories: list[str] = Field(default_factory=list)

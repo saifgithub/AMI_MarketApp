@@ -156,3 +156,68 @@ def stop_limit_becomes_limit(order_type: OrderType | str) -> bool:
     is in the curriculum. The simulator reproduces it rather than smoothing it.
     """
     return _as_order_type(order_type) == OrderType.STOP_LIMIT
+
+
+# ── CR171 §5 — the bracket inverts on a short ──────────────────────────────
+
+
+def bracket_hit(
+    *, is_short: bool, mark: float,
+    stop: float | None, target: float | None,
+) -> str | None:
+    """Which side of an exit bracket the mark has crossed: "lost", "won", None.
+
+    | | Long | Short |
+    |---|---|---|
+    | Stop fires when | `mark <= stop` | `mark >= stop` |
+    | Target fires when | `mark >= target` | `mark <= target` |
+
+    `evaluate_outcomes` used to gate on `if side_enum == Side.BUY`, which was
+    **correct** — a SELL row there is an exit, so its levels are meaningless —
+    and removing that gate rather than replacing it would have started firing
+    brackets on exits. It becomes a branch on *what the row is*: a long
+    position, or a short one. The comparison lives here, next to the direction
+    logic Rule 1 already needed, so there is one place where "which way does
+    this position want the price to go" is written down.
+
+    Stop is checked first in both directions, matching the long-side order that
+    shipped: when a single sweep observes a mark past both levels the user is
+    given the loss, never the win. A simulator that resolves an ambiguous bar
+    in the user's favour teaches that gaps are free.
+    """
+    if is_short:
+        if stop is not None and mark >= stop:
+            return "lost"
+        if target is not None and mark <= target:
+            return "won"
+        return None
+    if stop is not None and mark <= stop:
+        return "lost"
+    if target is not None and mark >= target:
+        return "won"
+    return None
+
+
+def short_bracket_is_wrong_side(
+    *, entry: float, stop: float | None, target: float | None,
+) -> str | None:
+    """The submit-time refusal §5 asks for, as a reason string or None.
+
+    A short whose stop sits BELOW entry has written a stop that cannot fire
+    until the position has already made money and then given it all back — it
+    is not a stop, it is a second target. Refuse it with a sentence rather than
+    accepting it silently; the client mirrors this in `short_rules.dart`, and
+    the two must agree at the boundary.
+    """
+    if stop is not None and stop <= entry:
+        return (
+            f"a short's stop must be ABOVE the entry price — ${stop:.2f} is at "
+            f"or below ${entry:.2f}, so it could only fire after the position "
+            f"had already lost everything it made"
+        )
+    if target is not None and target >= entry:
+        return (
+            f"a short's target must be BELOW the entry price — ${target:.2f} is "
+            f"at or above ${entry:.2f}, which is where the position loses money"
+        )
+    return None

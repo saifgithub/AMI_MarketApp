@@ -267,11 +267,24 @@ assuming long exposure. A short's contribution is not simply negative:
 - **`long_only` finally becomes load-bearing.** Replace `safety_floor.py:273-278`'s `pass` with a real
   refusal when the flag is on and the trade is a sell-to-open. That single change closes DEF262's
   worst edge even before the rest of this CR lands.
-- **Halal.** Conventional short selling involves selling what you do not own and paying interest-like
-  borrow, which is widely held impermissible. **A halal mandate must refuse sell-to-open outright**,
-  independent of `long_only`. Do not let this be discovered — the halal gate is sourced-allowlist
-  based (CR069) and says nothing about shorting today. Escalate the ruling to Saiful per the standing
-  BOK content-quality rule rather than deciding it in code review.
+- **Halal — RULED 2026-08-13, and this paragraph is the ruling, not the proposal.** Conventional
+  short selling involves selling what you do not own and paying interest-like borrow, which is widely
+  held impermissible. This section originally proposed that *"a halal mandate must refuse sell-to-open
+  outright, independent of `long_only`"* and escalated the call to Saiful rather than settling it in
+  code review. **He ruled the other way**, verbatim: *"for CR171-BE, halal ruling. Our job is only to
+  inform. The user can continue with whatever trade they want to do. So we will put a flag and notice
+  to inform the user, but we let the trade through."*
+
+  So: **a notice, not a refusal.** A halal-mandate user opening a short receives an informational
+  disclosure and the trade **proceeds**. Implemented as `ComplianceResult.advisories` — a third state
+  alongside `violations` (which refuses) and `not_evaluated` (which could not check), because folding
+  it into either would be a lie in one direction or the other. CR040 applies with full force: the
+  notice is serialized on `ComplianceBlock.advisories` and pinned by a route-level test, because an
+  advisory that is logged server-side and never rendered informs nobody.
+
+  **The `long_only` bullet above is UNCHANGED and still hard-refuses.** Only the halal leg became
+  inform-not-block; a halal user who also has `long_only` on is refused by the mandate, and both can
+  be true at once.
 
 ### 7. Forced buy-in — the margin call
 
@@ -354,7 +367,10 @@ Rules that matter:
    submit**, not silently accepted.
 10. Gross concentration counts long and short exposure in the same name additively — a long $5k and
     short $5k of one ticker is measured as $10k of exposure, not $0.
-11. A **halal** mandate refuses sell-to-open regardless of `long_only`.
+11. ~~A **halal** mandate refuses sell-to-open regardless of `long_only`.~~ **SUPERSEDED by Saiful's
+    ruling, 2026-08-13 — see §6.** A halal mandate attaches an **advisory** to a sell-to-open and the
+    trade **proceeds**; the notice is on the wire (`ComplianceBlock.advisories`), not merely logged;
+    it is absent on a sell-to-CLOSE; and `long_only` refuses independently, unchanged.
 12. `test_config_compose_parity` green — the borrow rate and margin thresholds forwarded.
 
 ---

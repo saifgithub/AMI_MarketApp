@@ -7,13 +7,20 @@ Python loop*. The games drain is time-triggered ("is the market open yet?") and
 empties its queue on the first tick after 09:30; this one is price-triggered,
 checks the whole book on every tick, all day, and most orders never fill.
 
-Three sub-passes, and only two are market-hours gated:
+Five sub-passes, and three are market-hours gated:
 
 | sub-pass                  | gated | why                                        |
 |---------------------------|-------|--------------------------------------------|
 | `_expire_elapsed`         | no    | an order expires at a session close whether or not the market is open now; gating it leaves dead orders looking alive all weekend |
+| `_accrue_borrow`          | no    | CR171 §4 — borrow accrues on CALENDAR days; gating it would quietly make the weekend a position is held over free |
 | `_fill_triggered`         | yes   | outside the session a "trigger" is a trigger against a stale last price — CR109 §5.1's time machine |
 | `_sweep_position_brackets`| yes   | drives `evaluate_outcomes` so the SHIPPED stop/target fires overnight, which is Saiful's decision and half the point of this CR |
+| `_sweep_short_positions`  | yes   | CR171 §5/§7 — the inverted bracket, then the margin call. A forced buy-in against a stale overnight print is the time machine in the direction that costs the user money |
+
+The gated/ungated split is not a detail: an ungated pass that should be gated
+books a user's ledger off a price nobody could have traded at, and a gated pass
+that should be ungated hides a cost. Each row above answers which failure the
+placement avoids.
 
 ## The quote-quality problem, which is the highest-severity item in the design
 
@@ -64,7 +71,12 @@ from sqlalchemy import select, update
 from app.core.config import settings
 from app.core.logging import logger
 from app.db import get_session, init_schema
-from app.db.models import SimPortfolioRow, SimRestingOrderRow, SimTradeRow
+from app.db.models import (
+    SimPortfolioRow,
+    SimRestingOrderRow,
+    SimShortPositionRow,
+    SimTradeRow,
+)
 from app.services.market_data import Quote
 from app.services.mandate_store import resolve_mandate
 from app.services.sim_engine import (
@@ -341,6 +353,63 @@ def _sweep_position_brackets(engine: SimEngine, user_id: UUID | None) -> int:
     return closed
 
 
+def _users_with_open_shorts() -> list[UUID]:
+    with get_session() as s:
+        rows = s.execute(
+            select(SimShortPositionRow.user_id)
+            .join(
+                SimPortfolioRow,
+                SimPortfolioRow.id == SimShortPositionRow.portfolio_id,
+            )
+            .where(
+                SimShortPositionRow.state == "open",
+                SimPortfolioRow.kind == "training",
+            )
+            .distinct()
+        ).scalars().all()
+    return list(rows)
+
+
+def _accrue_borrow(engine: SimEngine, user_id: UUID | None, now: datetime) -> float:
+    """CR171 §8's first new pass. **Not** market-hours gated.
+
+    Borrow accrues on calendar days, including the weekend a position is held
+    over — gating it on the session would quietly make weekends free, and the
+    carrying cost of a short over a long weekend is precisely the thing a
+    simulator can teach honestly. Idempotent on `last_borrow_accrual_date`, so
+    running twice in a day charges once.
+    """
+    users = [user_id] if user_id is not None else _users_with_open_shorts()
+    on_date = now.astimezone(timezone.utc).date().isoformat()
+    charged = 0.0
+    for uid in users:
+        try:
+            charged = round(charged + engine.accrue_short_borrow(uid, on_date=on_date), 2)
+        except Exception:  # pragma: no cover — one user must not stop the sweep
+            logger.exception("sim_short_borrow_accrual_failed", user_id=str(uid))
+    return charged
+
+
+def _sweep_short_positions(engine: SimEngine, user_id: UUID | None) -> tuple[int, int]:
+    """§8's second new pass — brackets, then margin. Hours-gated by the caller.
+
+    Returns (bracket_closed, margin_closed). Brackets run FIRST, deliberately: a
+    short that has hit its own stop should be recorded as having hit its stop,
+    not as having been margin-called on the same tick. The user set that level;
+    the margin call is the account overruling them, and reporting the harsher of
+    two simultaneous truths would misdescribe what happened.
+    """
+    users = [user_id] if user_id is not None else _users_with_open_shorts()
+    bracketed = margined = 0
+    for uid in users:
+        try:
+            bracketed += len(engine.evaluate_short_brackets(uid))
+            margined += len(engine.force_close_breached_shorts(uid))
+        except Exception:  # pragma: no cover
+            logger.exception("sim_short_sweep_failed", user_id=str(uid))
+    return bracketed, margined
+
+
 def _fill_triggered(
     engine: SimEngine,
     orders: list[SimRestingOrder],
@@ -464,7 +533,14 @@ def sweep_resting_orders(
         "brackets_closed": 0,
         "skipped_closed": 0,
         "aborted": 0,
+        "shorts_bracketed": 0,
+        "shorts_margined": 0,
     }
+    # CR171 §8 — borrow accrues on CALENDAR days, so it sits above the
+    # market-hours gate alongside the expiry pass, for the same reason: the
+    # charge is a property of holding the position overnight, not of the tape
+    # being open when we notice.
+    stats["borrow_charged_cents"] = int(round(_accrue_borrow(engine, user_id, now) * 100))
 
     if not market_open:
         # CR109 §5.1's time machine: outside the session a "trigger" is a
@@ -475,6 +551,12 @@ def sweep_resting_orders(
         return stats
 
     stats["brackets_closed"] = _sweep_position_brackets(engine, user_id)
+    # §7 — hours-gated, and that placement IS the rule: a margin close against
+    # a stale overnight print is CR109 §5.1's time machine in the direction
+    # that costs the user money, which makes it worse than DEF261, not better.
+    stats["shorts_bracketed"], stats["shorts_margined"] = _sweep_short_positions(
+        engine, user_id,
+    )
 
     orders = _live_orders(user_id)
     if not orders:

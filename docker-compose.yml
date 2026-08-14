@@ -189,6 +189,13 @@ services:
       # so widening it means orders that would have filled in reality do not.
       # Errs conservative (under-fill, never over-fill) by construction.
       SIM_RESTING_ORDER_TICK_INTERVAL_SECONDS: ${SIM_RESTING_ORDER_TICK_INTERVAL_SECONDS:-300}
+      # CR171 — short selling. The default borrow rate is Layer 3 of §4's
+      # provider and is reached for every ticker outside the S&P snapshot; the
+      # two margins ARE §7's containment mechanism (1.50 posted at open, forced
+      # buy-in below 1.30), so all three are levers rather than constants.
+      SHORT_BORROW_DEFAULT_RATE_ANNUAL_PCT: ${SHORT_BORROW_DEFAULT_RATE_ANNUAL_PCT:-3.0}
+      SHORT_INITIAL_MARGIN: ${SHORT_INITIAL_MARGIN:-1.5}
+      SHORT_MAINTENANCE_MARGIN: ${SHORT_MAINTENANCE_MARGIN:-1.3}
       # CR136 M06 — whether the Portfolio Health Finding may be narrated by the
       # LLM. False ships the deterministic rendering, which is a complete report.
       PORTFOLIO_HEALTH_LLM_ENABLED: ${PORTFOLIO_HEALTH_LLM_ENABLED:-true}

@@ -218,6 +218,11 @@ class ComplianceBlock(BaseModel):
     blocked_by: str | None = None
     sharia_verdict: ShariaVerdict | None = None
     classification_verdicts: list[ClassificationVerdict] = Field(default_factory=list)
+    # CR171 §6 — informational notices on a trade that PROCEEDS. Declared here
+    # for the same reason the two verdict fields are: a field that only exists
+    # on the service object is a field the client never receives, and an
+    # advisory nobody renders informs nobody (CR040).
+    advisories: list[str] = Field(default_factory=list)
 
 
 class PreviewTradeResponse(BaseModel):
@@ -466,6 +471,27 @@ async def submit_trade(
             "compliance": _compliance_json(result.compliance),
         }
 
+    # CR171 §1 — a sell-to-open writes NO `sim_trades` row (acceptance 5), so
+    # there is no trade to return and none of the three post-fill effects
+    # applies: there is nothing to add to the watchlist (a short is not a name
+    # you are following), nothing to journal against a trade id, and
+    # `trade_disciplined` is an award for bracketing a LONG. Carried on its own
+    # branch, explicitly, rather than inferred from `trade is None` — that
+    # inference is exactly what `resting` above exists to avoid making.
+    if result.short_action is not None:
+        return {
+            "ok": True,
+            "resting": False,
+            "trade": None,
+            "short": {
+                "action": result.short_action,
+                "ticker": result.short_ticker,
+                "quantity": result.short_quantity,
+                "realised_pnl": result.short_realised_pnl,
+            },
+            "compliance": _compliance_json(result.compliance),
+        }
+
     trade = result.trade
     assert trade is not None
 
@@ -550,6 +576,9 @@ def _compliance_json(compliance) -> dict:
         "classification_verdicts": [
             v.model_dump(mode="json") for v in compliance.classification_verdicts
         ],
+        # CR171 §6. `getattr` because this dict is also built from the games
+        # lane's compliance object, which has no advisories concept.
+        "advisories": list(getattr(compliance, "advisories", []) or []),
     }
 
 

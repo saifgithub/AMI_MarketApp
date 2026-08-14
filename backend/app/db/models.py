@@ -2080,3 +2080,98 @@ class SimRestingOrderRow(Base):
     )
     last_seen_price: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
     last_price_source: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+
+class SimShortPositionRow(Base):
+    """An open (or settled) SHORT in the TRAINING lane — CR171 §3.
+
+    Deliberately a second table alongside `game_short_positions` rather than a
+    `kind` column on it, for the same reason the game lane got its own: the two
+    lanes have **different cash models**, and one table would need a branch on
+    every read to know which arithmetic applies. The game posts full notional
+    (CR109 §5.1, *"Leverage / margin: None, ever"*), because gross exposure
+    must never exceed the stake in a scored contest. Training posts CR171 §7's
+    1.50 initial margin and is force-closed below 1.30 maintenance, because the
+    lesson being taught there is **the margin call** — a mechanic the game has
+    no room for and the simulator exists for.
+
+    **Why not a negative `sim_holdings.quantity`** — unchanged from the game
+    lane's reasoning, and worse here because a training short's SELL row is
+    permanently open by design: `scripts/def110_backfill.py::expected()`
+    subtracts Σ quantity over open SELL rows to find phantom shares, so a
+    negative holding would make every real phantom share look accounted for;
+    `compute_lots_fifo` cannot walk a negative lot; and sector concentration
+    would net a short against a long in the same name and report the pair as no
+    exposure (§6 requires the opposite — gross).
+
+    **`cash_posted` is the cash that actually LEFT, not the collateral.** With
+    §7's 1.50 initial margin that is `0.5 × notional`, and storing it this way
+    is what lets `trading_math.shorts.short_leg` serve both lanes unchanged:
+
+        leg = cash_posted + (entry − mark) × quantity
+
+    is identical to §2's `collateral − quantity × mark` when
+    `collateral = cash_posted + notional`. One function, two lanes, no second
+    derivation to drift (DEF098). `collateral_posted` is stored alongside it
+    because §7's maintenance ratio is defined against the collateral, and
+    re-deriving it from a rounded price is how a portfolio drifts by cents.
+
+    **The borrow rate is resolved ONCE, at open, and stored with its
+    provenance** (§4). `borrow_rate_source` names the layer that answered and
+    `borrow_rate_basis` / `borrow_rate_as_of` carry the input that justified
+    it, so *"why was this position charged 3%?"* is answerable from the DB. Do
+    not re-resolve daily: the Layer-2 input updates monthly, and re-reading it
+    every day manufactures the appearance of a live rate.
+    """
+
+    __tablename__ = "sim_short_positions"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    portfolio_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("sim_portfolios.id", ondelete="CASCADE"),
+        index=True, nullable=False,
+    )
+    ticker: Mapped[str] = mapped_column(String, nullable=False)
+    quantity: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+    entry_price: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+    # The cash that left `current_cash` at open — see the class docstring.
+    cash_posted: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    # notional x INITIAL_MARGIN. §7's maintenance ratio is defined against this.
+    collateral_posted: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+
+    borrow_rate_pct: Mapped[float] = mapped_column(Numeric(6, 3), nullable=False)
+    # alpaca | short_interest | default — which layer answered (§4).
+    borrow_rate_source: Mapped[str] = mapped_column(String, nullable=False)
+    # The observed input that justified the tier, and when it was measured.
+    borrow_rate_basis: Mapped[Optional[float]] = mapped_column(
+        Numeric(8, 4), nullable=True,
+    )
+    borrow_rate_as_of: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    borrow_accrued_total: Mapped[float] = mapped_column(
+        Numeric(12, 2), nullable=False, default=0,
+    )
+    # The idempotency key for the daily charge — an ISO date, so a restart
+    # mid-day cannot double-charge (§4, same shape as `portfolio_nav_daily`).
+    last_borrow_accrual_date: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True,
+    )
+
+    # INVERTED against a long: the stop is ABOVE entry, the target BELOW (§5).
+    stop: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    target: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+
+    opened_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    # open | closed
+    state: Mapped[str] = mapped_column(
+        String, default="open", nullable=False, index=True,
+    )
+    closed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    close_price: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    # user | margin | stop | target
+    close_reason: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    realised_pnl: Mapped[Optional[float]] = mapped_column(Numeric(12, 2), nullable=True)

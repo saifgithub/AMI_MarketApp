@@ -55,6 +55,7 @@ from app.db.models import (
     SimHoldingRow,
     SimPortfolioRow,
     SimRestingOrderRow,
+    SimShortPositionRow,
     SimTradeRow,
 )
 from app.services.cost_basis_lots import Lot, compute_lots_fifo
@@ -81,6 +82,7 @@ from app.services.sector_allocation import default_sector_map
 from app.services.sharia_universe import default_halal_universe
 from app.trading_math.market_hours import session_close_on_or_after
 from app.trading_math.order_pricing import (
+    bracket_hit,
     can_rest,
     fill_price_for,
     is_triggered,
@@ -354,6 +356,18 @@ class SubmitResult:
     # deriving it.
     resting: bool = False
     resting_order: SimRestingOrder | None = None
+    # CR171 — a short open/cover writes NO `sim_trades` row, so `trade` is None
+    # on those and these carry what happened instead. Same shape the game lane
+    # already uses (`GameSubmitResult.short_action`), for the same reason and
+    # then one more: acceptance 5 requires `def110_backfill.expected()` to be
+    # byte-identical before and after opening a short, and that formula
+    # subtracts Σ quantity over open SELL trade rows. A short that wrote one
+    # would make every genuine phantom share look accounted for.
+    # "short_open" | "short_cover" | None (an ordinary fill).
+    short_action: str | None = None
+    short_ticker: str | None = None
+    short_quantity: float | None = None
+    short_realised_pnl: float | None = None
 
 
 @dataclass
@@ -431,15 +445,24 @@ def _portfolio_from_row(row: SimPortfolioRow) -> Portfolio:
     # is skipped entirely on a training portfolio rather than run and found
     # empty: `_portfolio_from_row` is on the hot path of every portfolio
     # read in the app.
+    # CR171 — the training lane has its own short book now, on its own table
+    # with its own cash model (§2/§7). The two resolvers are picked by `kind`
+    # here, once, so no reader downstream has to know which lane it is in.
     shorts = []
-    if row.kind == "game":
-        from sqlalchemy.orm import object_session
+    from sqlalchemy.orm import object_session
 
-        from app.services.games_shorts import open_shorts_for_portfolio
+    session = object_session(row)
+    if session is not None:
+        if row.kind == "game":
+            from app.services.games_shorts import open_shorts_for_portfolio
 
-        session = object_session(row)
-        if session is not None:
             shorts = open_shorts_for_portfolio(session, row.id)
+        else:
+            from app.services.sim_shorts import (
+                open_shorts_for_portfolio as _training_shorts,
+            )
+
+            shorts = _training_shorts(session, row.id)
     return Portfolio(
         id=row.id,
         user_id=row.user_id,
@@ -458,6 +481,26 @@ def _portfolio_from_row(row: SimPortfolioRow) -> Portfolio:
         shorts=shorts,
         created_at=row.created_at,
     )
+
+
+
+def _marked_tickers(p: Portfolio) -> list[str]:
+    """Every ticker whose price affects this portfolio's value — CR171 §2.
+
+    `total_value` and `total_drawdown_pct` used to price `p.holdings` alone.
+    That was complete while a short could only exist in the game lane (whose
+    surfaces build their own marks at line 789), and it silently stopped being
+    complete the moment the training lane got one: `Portfolio.total_value`
+    falls back to `marks.get(s.ticker, s.entry_price)`, so an unpriced short
+    marks at its ENTRY forever. A short that had doubled against the user would
+    have shown as costless in `total_value`, in `total_drawdown_pct`, in
+    `portfolio_nav_daily` and in the TWR chain — the exact invisibility §2's
+    cash design exists to prevent, reintroduced one level up.
+
+    One function, so the next site that needs the full set cannot pick up half
+    of it.
+    """
+    return [h.ticker for h in p.holdings] + [s.ticker for s in p.shorts]
 
 
 def training_trade_scope(user_id: UUID):
@@ -713,19 +756,27 @@ class SimEngine:
                         SimRestingOrderRow.portfolio_id == existing.id
                     )
                 )
+                # CR171 §3 — the FOURTH explicit delete, same CR136-M03 reason.
+                # A short surviving a reset is worse than a resting order
+                # doing so: it keeps accruing borrow against a portfolio UUID
+                # that no longer exists, and the margin sweep would keep
+                # reading it.
+                s.execute(
+                    delete(SimShortPositionRow).where(
+                        SimShortPositionRow.portfolio_id == existing.id
+                    )
+                )
                 s.delete(existing)
                 s.flush()
         return self.ensure_portfolio(user_id)
 
     def total_value(self, user_id: UUID) -> float:
         p = self.ensure_portfolio(user_id)
-        marks = self.current_marks([h.ticker for h in p.holdings])
-        return p.total_value(marks)
+        return p.total_value(self.current_marks(_marked_tickers(p)))
 
     def current_drawdown_pct(self, user_id: UUID) -> float:
         p = self.ensure_portfolio(user_id)
-        marks = self.current_marks([h.ticker for h in p.holdings])
-        return p.total_drawdown_pct(marks)
+        return p.total_drawdown_pct(self.current_marks(_marked_tickers(p)))
 
     def portfolio_marks_snapshot(
         self, user_id: UUID, *, kind: str = "training", run_id: UUID | None = None,
@@ -751,9 +802,10 @@ class SimEngine:
         # CR109 Amendment G — a short's ticker must be marked too, or its leg
         # falls back to `entry_price` and the position reads as permanently
         # flat: no P&L on the run screen, none in the daily NAV row, and a
-        # TWR chain that never learns the trade happened. `p.shorts` is empty
-        # on every training portfolio, so this is a no-op there.
-        tickers = [h.ticker for h in p.holdings] + [s.ticker for s in p.shorts]
+        # TWR chain that never learns the trade happened. CR171: `p.shorts` is
+        # no longer empty on a training portfolio either, which is why the same
+        # set is now `_marked_tickers` rather than three copies of this line.
+        tickers = _marked_tickers(p)
         quotes = self._marks_with_quotes(tickers)
         marks = {t: q.price for t, q in quotes.items()}
         return (
@@ -853,7 +905,10 @@ class SimEngine:
         sector cap can value a first-time buy of a name not already held.
         """
         portfolio_value = self.total_value(user_id)
-        quotes = self.current_marks([h.ticker for h in portfolio.holdings] + [ticker])
+        # CR171 §6 — the SHORT tickers must be priced too, or gross
+        # concentration values an existing short at zero and the cap passes a
+        # position it should refuse.
+        quotes = self.current_marks(_marked_tickers(portfolio) + [ticker])
         last_loss_closed_at, trade_open_timestamps, existing_open_risk = (
             self._risk_limit_context(
                 user_id, portfolio_value=portfolio_value, quotes=quotes,
@@ -971,6 +1026,9 @@ class SimEngine:
             # CR026: sector-concentration cap bites the same gate. Resolver reads the
             # stored snapshot — no request-path socket (CR075/DEF089).
             holdings=portfolio.holdings,
+            # CR171 §6 — gross concentration. Without this the floor sees
+            # the long leg only and reports a hedged pair as no exposure.
+            shorts=portfolio.shorts,
             # DEF149: the proposed ticker must be priced too, or the sector cap
             # cannot value a first-time buy of a name not already held.
             quotes=ctx.quotes,
@@ -1104,12 +1162,43 @@ class SimEngine:
                 )
         else:
             held = next((h for h in portfolio.holdings if h.ticker == ticker), None)
-            if held is None or held.quantity < quantity - 1e-6:
+            held_qty = float(held.quantity) if held is not None else 0.0
+            # CR171 §1 — a sell never crosses zero. Three cases, no ambiguous
+            # middle, which is what makes the rest of this CR tractable:
+            #
+            #   held >= quantity   sell to close   (exactly today's behaviour)
+            #   held == 0          sell to open    (a short)
+            #   0 < held < qty     REFUSED, naming both numbers
+            #
+            # A real broker splits that third case into a close plus a short.
+            # We refuse it: the split is two fills, two trade rows and two cost
+            # bases from one user action, and the P&L attribution that follows
+            # is exactly what DEF166 and DEF110 have already cost us twice.
+            # Refusing is one sentence of copy and removes the whole class.
+            if held_qty <= 1e-9 and kind == "training":
+                return self._open_short_fill(
+                    user_id=user_id,
+                    portfolio=portfolio,
+                    ticker=ticker,
+                    quantity=quantity,
+                    fill_price=fill_price,
+                    compliance=compliance,
+                    stop=stop,
+                    target=target,
+                )
+            if held_qty < quantity - 1e-6:
                 fail = ComplianceResult(
                     passed=False,
-                    violations=[
-                        f"cannot sell {quantity} {ticker}: not enough held"
-                    ],
+                    violations=(
+                        [
+                            f"cannot sell {quantity:g} {ticker}: you hold "
+                            f"{held_qty:g}. Sell {held_qty:g} to close the "
+                            f"position, or sell 0 to open a short — AMI will "
+                            f"not do both in one order"
+                        ]
+                        if held_qty > 1e-9
+                        else [f"cannot sell {quantity} {ticker}: not enough held"]
+                    ),
                     blocked_by="long_only",
                 )
                 return SubmitResult(
@@ -1317,6 +1406,9 @@ class SimEngine:
             ),
             locale_allowed_universe=locale_allowed_universe,
             holdings=portfolio.holdings,
+            # CR171 §6 — gross concentration. Without this the floor sees
+            # the long leg only and reports a hedged pair as no exposure.
+            shorts=portfolio.shorts,
             quotes=ctx.quotes,
             sector_map=default_sector_map(),
             last_loss_closed_at=ctx.last_loss_closed_at,
@@ -1796,6 +1888,9 @@ class SimEngine:
             # CR026: sector-concentration cap bites the preview gate too, so the
             # trade ticket's "would this be allowed?" reflects it. No request socket.
             holdings=portfolio.holdings,
+            # CR171 §6 — gross concentration. Without this the floor sees
+            # the long leg only and reports a hedged pair as no exposure.
+            shorts=portfolio.shorts,
             # DEF149: the proposed ticker must be priced too, or the sector cap
             # cannot value a first-time buy of a name not already held.
             quotes=ctx.quotes,
@@ -1843,6 +1938,331 @@ class SimEngine:
             cash_available=portfolio.current_cash,
             held_quantity=held,
             price_source=quote.source,
+        )
+
+    def _open_short_fill(
+        self,
+        *,
+        user_id: UUID,
+        portfolio: Portfolio,
+        ticker: str,
+        quantity: float,
+        fill_price: float,
+        compliance: ComplianceResult,
+        stop: float | None,
+        target: float | None,
+    ) -> SubmitResult:
+        """CR171 §1 — sell to open, in the TRAINING lane.
+
+        Writes a `sim_short_positions` row and NO `sim_trades` row. That is
+        acceptance 5 and it is not an omission: `def110_backfill.expected()`
+        derives what a portfolio's holdings should be by subtracting Σ quantity
+        over open SELL trade rows, so a short with a trade row would make every
+        genuine phantom share look accounted for — on the one detector we have
+        for the class of bug DEF110 was.
+        """
+        from app.services.short_borrow_rate import resolve_borrow_rate
+        from app.services import sim_shorts
+        from app.trading_math.order_pricing import short_bracket_is_wrong_side
+
+        # §5 — refuse an inverted bracket at SUBMIT, with a sentence. A short
+        # whose stop sits below entry is not a stop, it is a second target, and
+        # it can only fire after the position has given back everything it
+        # made. `short_rules.dart` mirrors this on the client; the two must
+        # agree at the boundary.
+        wrong_side = short_bracket_is_wrong_side(
+            entry=fill_price, stop=stop, target=target,
+        )
+        if wrong_side is not None:
+            return SubmitResult(
+                accepted=False, trade=None,
+                compliance=ComplianceResult(
+                    passed=False, violations=[wrong_side], blocked_by=None,
+                ),
+                portfolio_snapshot=portfolio,
+            )
+
+        notional = fill_price * quantity
+        needed = sim_shorts.cash_required_for(notional)
+        if needed > portfolio.current_cash + 1e-6:
+            return SubmitResult(
+                accepted=False, trade=None,
+                compliance=ComplianceResult(
+                    passed=False,
+                    violations=[
+                        f"insufficient cash to post margin on this short: need "
+                        f"${needed:.2f}, have ${portfolio.current_cash:.2f}"
+                    ],
+                    blocked_by=None,
+                ),
+                portfolio_snapshot=portfolio,
+            )
+
+        # Resolved ONCE, here, and stored with its provenance. Never re-read
+        # daily — §4's input updates monthly, and re-reading it every day
+        # manufactures the appearance of a live rate.
+        borrow = resolve_borrow_rate(ticker)
+
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id)
+            assert p_row is not None
+            if sim_shorts.find_open_short(s, p_row.id, ticker) is not None:
+                return SubmitResult(
+                    accepted=False, trade=None,
+                    compliance=ComplianceResult(
+                        passed=False,
+                        violations=[
+                            f"you already hold a short in {ticker} — close it "
+                            f"before opening another"
+                        ],
+                        blocked_by=None,
+                    ),
+                    portfolio_snapshot=portfolio,
+                )
+            sim_shorts.open_short(
+                s,
+                portfolio_row=p_row,
+                user_id=user_id,
+                ticker=ticker,
+                quantity=quantity,
+                fill_price=fill_price,
+                borrow=borrow,
+                stop=stop,
+                target=target,
+            )
+            s.flush()
+
+        logger.info(
+            "sim_short_opened",
+            user_id=str(user_id),
+            ticker=ticker,
+            quantity=quantity,
+            entry=fill_price,
+            cash_posted=sim_shorts.cash_required_for(notional),
+            borrow_rate_pct=borrow.rate_pct,
+            borrow_rate_source=borrow.source,
+        )
+        return SubmitResult(
+            accepted=True,
+            trade=None,
+            compliance=compliance,
+            portfolio_snapshot=self.ensure_portfolio(user_id),
+            short_action="short_open",
+            short_ticker=ticker,
+            short_quantity=quantity,
+        )
+
+    def open_shorts(self, user_id: UUID) -> list[SimShortPositionRow]:
+        """Every open training short, detached enough to read outside a session
+        — the sweep needs ticker/quantity/rate, never a live ORM handle."""
+        from app.services import sim_shorts  # noqa: F401  (schema registration)
+
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id)
+            if p_row is None:
+                return []
+            rows = s.execute(
+                select(SimShortPositionRow).where(
+                    SimShortPositionRow.portfolio_id == p_row.id,
+                    SimShortPositionRow.state == "open",
+                )
+            ).scalars().all()
+            for r in rows:
+                s.expunge(r)
+            return list(rows)
+
+    def evaluate_short_brackets(self, user_id: UUID) -> list[str]:
+        """§5 — a short's stop is ABOVE entry and its target BELOW.
+
+        Returns the tickers closed. Separate from `evaluate_outcomes` because
+        it reads a different table, but it shares `bracket_hit`, so "which way
+        does this position want the price to go" is written down once.
+        """
+        from app.services import sim_shorts
+
+        closed: list[str] = []
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id)
+            if p_row is None:
+                return closed
+            rows = s.execute(
+                select(SimShortPositionRow).where(
+                    SimShortPositionRow.portfolio_id == p_row.id,
+                    SimShortPositionRow.state == "open",
+                )
+            ).scalars().all()
+            for row in rows:
+                mark = self.current_price(row.ticker)
+                hit = bracket_hit(
+                    is_short=True,
+                    mark=mark,
+                    stop=float(row.stop) if row.stop is not None else None,
+                    target=float(row.target) if row.target is not None else None,
+                )
+                if hit is None:
+                    continue
+                sim_shorts.cover_short(
+                    s,
+                    portfolio_row=p_row,
+                    short_row=row,
+                    close_price=mark,
+                    reason="stop" if hit == "lost" else "target",
+                )
+                closed.append(row.ticker)
+            s.flush()
+        return closed
+
+    def accrue_short_borrow(
+        self, user_id: UUID, *, on_date: str,
+    ) -> float:
+        """§4 — the daily borrow charge. Returns the total charged.
+
+        `on_date` is an ISO date and is the **idempotency key**: a row already
+        stamped with it is skipped, so running the pass twice in one day charges
+        once and a container restart mid-day cannot double-charge. Same shape as
+        `portfolio_nav_daily`'s guard, and it is a stored date rather than an
+        elapsed-time comparison for the same reason — elapsed time is a
+        different value on every restart.
+
+        NOT market-hours gated: borrow accrues on calendar days, including the
+        weekend a position is held over. That is one of the few carrying costs a
+        simulator can teach honestly, and gating it on the session would quietly
+        make weekends free.
+        """
+        from app.services.short_borrow_rate import daily_borrow_fee
+
+        charged = 0.0
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id)
+            if p_row is None:
+                return 0.0
+            rows = s.execute(
+                select(SimShortPositionRow).where(
+                    SimShortPositionRow.portfolio_id == p_row.id,
+                    SimShortPositionRow.state == "open",
+                )
+            ).scalars().all()
+            for row in rows:
+                if row.last_borrow_accrual_date == on_date:
+                    continue
+                fee = daily_borrow_fee(
+                    mark=self.current_price(row.ticker),
+                    quantity=float(row.quantity),
+                    rate_pct=float(row.borrow_rate_pct),
+                )
+                row.borrow_accrued_total = round(
+                    float(row.borrow_accrued_total) + fee, 2,
+                )
+                row.last_borrow_accrual_date = on_date
+                # Burned, like the games fee: deducted from this portfolio and
+                # credited to nothing.
+                p_row.current_cash = round(float(p_row.current_cash) - fee, 2)
+                charged = round(charged + fee, 2)
+            s.flush()
+        return charged
+
+    def force_close_breached_shorts(self, user_id: UUID) -> list[str]:
+        """§7 — the margin call. Returns the tickers force-closed.
+
+        **No warning, no grace period.** A grace period needs a notification
+        channel, a timer and a second state, and a user asleep in Riyadh could
+        not act on it anyway. Close immediately and report it clearly — a
+        position that vanished overnight with no explanation is the games lane's
+        *"the order simply VANISHED"* defect on a much bigger number, which is
+        why the close stamps `close_reason='margin'` rather than looking like
+        any other exit.
+
+        The caller gates this on market hours (§7): a margin close against a
+        stale overnight print is CR109 §5.1's time machine in the direction that
+        costs the user money.
+        """
+        from app.services import sim_shorts
+
+        closed: list[str] = []
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id)
+            if p_row is None:
+                return closed
+            rows = s.execute(
+                select(SimShortPositionRow).where(
+                    SimShortPositionRow.portfolio_id == p_row.id,
+                    SimShortPositionRow.state == "open",
+                )
+            ).scalars().all()
+            for row in rows:
+                mark = self.current_price(row.ticker)
+                if not sim_shorts.is_margin_breached(row, mark):
+                    continue
+                realised = sim_shorts.cover_short(
+                    s,
+                    portfolio_row=p_row,
+                    short_row=row,
+                    close_price=mark,
+                    reason="margin",
+                )
+                closed.append(row.ticker)
+                logger.warning(
+                    "sim_short_margin_closed",
+                    user_id=str(user_id),
+                    ticker=row.ticker,
+                    mark=mark,
+                    ratio=round(sim_shorts.margin_ratio(row, mark), 4),
+                    realised_pnl=realised,
+                )
+            s.flush()
+        return closed
+
+    def cover_short(
+        self,
+        *,
+        user_id: UUID,
+        ticker: str,
+        reason: str = "user",
+        mark: float | None = None,
+    ) -> SubmitResult | None:
+        """Buy to cover, in full. None when no open short exists on the ticker.
+
+        Whole position only — matching §1's sell-never-crosses-zero symmetry.
+        A partial cover would blend two exit prices into one realised figure,
+        the same attribution problem, from the other end.
+        """
+        from app.services import sim_shorts
+
+        close_price = mark if mark is not None else self.current_price(ticker)
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id)
+            if p_row is None:
+                return None
+            row = sim_shorts.find_open_short(s, p_row.id, ticker)
+            if row is None:
+                return None
+            quantity = float(row.quantity)
+            realised = sim_shorts.cover_short(
+                s,
+                portfolio_row=p_row,
+                short_row=row,
+                close_price=close_price,
+                reason=reason,
+            )
+            s.flush()
+
+        logger.info(
+            "sim_short_covered",
+            user_id=str(user_id),
+            ticker=ticker,
+            close_price=close_price,
+            reason=reason,
+            realised_pnl=realised,
+        )
+        return SubmitResult(
+            accepted=True,
+            trade=None,
+            compliance=ComplianceResult(passed=True),
+            portfolio_snapshot=self.ensure_portfolio(user_id),
+            short_action="short_cover",
+            short_ticker=ticker,
+            short_quantity=quantity,
+            short_realised_pnl=realised,
         )
 
     def _apply_buy_row(
@@ -1922,11 +2342,19 @@ class SimEngine:
                 new_status: TradeStatus | None = None
                 side = t.side
                 side_enum = Side(side) if not isinstance(side, Side) else side
+                # CR171 §5 — this gate stays. A SELL row in `sim_trades` is an
+                # EXIT, so its levels are meaningless and firing on them would
+                # close a position twice. Shorts do not live in this table at
+                # all (they are `sim_short_positions`), and their inverted
+                # bracket is evaluated in `evaluate_short_brackets` below,
+                # through the same `bracket_hit` comparison.
                 if side_enum == Side.BUY:
-                    if t.stop is not None and price <= float(t.stop):
-                        new_status = "lost"
-                    elif t.target is not None and price >= float(t.target):
-                        new_status = "won"
+                    new_status = bracket_hit(  # type: ignore[assignment]
+                        is_short=False,
+                        mark=price,
+                        stop=float(t.stop) if t.stop is not None else None,
+                        target=float(t.target) if t.target is not None else None,
+                    )
                 if new_status is None:
                     continue
                 t.status = new_status
@@ -1979,6 +2407,7 @@ class SimEngine:
     def clear(self) -> None:
         with get_session() as s:
             s.execute(delete(PortfolioValueSnapshotRow))
+            s.execute(delete(SimShortPositionRow))
             s.execute(delete(SimRestingOrderRow))
             s.execute(delete(SimTradeRow))
             s.execute(delete(SimHoldingRow))
