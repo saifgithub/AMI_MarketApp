@@ -6603,6 +6603,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{quantity} committed to a resting sell'**
   String portfolioSharesCommitted(String quantity);
+
+  /// CR189 — how far the market is from the position's blended stop or target, shown on the expanded position tile. {pct} arrives preformatted, e.g. '14.9%'.
+  ///
+  /// In en, this message translates to:
+  /// **'{pct} away'**
+  String positionDistanceAway(String pct);
+
+  /// CR188 slice 3 — the SELL action on an expanded position tile. Opens the trade ticket with this holding filled in.
+  ///
+  /// In en, this message translates to:
+  /// **'SELL'**
+  String get positionSell;
+
+  /// CR188 slice 3 — opens the per-lot cost-basis view (CR029) for this position. Shown on the expanded tile.
+  ///
+  /// In en, this message translates to:
+  /// **'PER-LOT DETAIL'**
+  String get positionPerLotDetail;
+
+  /// CR189 — shown on an expanded position tile that has no stop. Neutral statement of fact, never a warning or advice.
+  ///
+  /// In en, this message translates to:
+  /// **'no stop set'**
+  String get positionUnprotected;
+
+  /// CR188 slice 3 — the Portfolio tab holding outstanding resting orders (buys, and sells that would open a short). Replaces WATCHLIST in that slot; the watchlist itself became a section of HISTORY.
+  ///
+  /// In en, this message translates to:
+  /// **'ORDERS'**
+  String get portfolioTabOrders;
 }
 
 class _AppLocalizationsDelegate

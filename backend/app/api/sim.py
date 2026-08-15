@@ -388,6 +388,12 @@ async def get_portfolio(
     # already priced every short's ticker (`SimEngine._marked_tickers`), so
     # this hop adds a SELECT, not a market-data pass.
     open_shorts, closed_shorts = await asyncio.to_thread(sim.shorts_snapshot, user_id)
+    # CR189 — the position's blended stop/target, so the tile draws the level
+    # the sweep actually fires on. One query for every ticker (not per tile),
+    # and off the same `blended_bracket` the sweep uses: a chip showing a level
+    # nothing fires at is the defect this CR exists to remove, so they cannot be
+    # two derivations.
+    brackets = await asyncio.to_thread(sim.position_brackets, user_id)
     return PortfolioSnapshot(
         user_id=user_id,
         portfolio_id=p.id,
@@ -404,6 +410,8 @@ async def get_portfolio(
                     (marks.get(h.ticker, h.avg_cost) - h.avg_cost) * h.quantity, 2,
                 ),
                 "opened_at": h.opened_at.isoformat(),
+                "stop": brackets.get(h.ticker, (None, None))[0],
+                "target": brackets.get(h.ticker, (None, None))[1],
             }
             for h in p.holdings
         ],

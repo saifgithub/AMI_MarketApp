@@ -4028,4 +4028,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String portfolioSharesCommitted(String quantity) {
     return '$quantity committed to a resting sell';
   }
+
+  @override
+  String positionDistanceAway(String pct) {
+    return '$pct away';
+  }
+
+  @override
+  String get positionSell => 'SELL';
+
+  @override
+  String get positionPerLotDetail => 'PER-LOT DETAIL';
+
+  @override
+  String get positionUnprotected => 'no stop set';
+
+  @override
+  String get portfolioTabOrders => 'ORDERS';
 }

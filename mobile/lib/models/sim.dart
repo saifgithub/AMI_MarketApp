@@ -14,6 +14,8 @@ class SimHolding {
     required this.value,
     required this.unrealisedPnl,
     required this.openedAt,
+    this.stop,
+    this.target,
   });
 
   final String ticker;
@@ -24,6 +26,21 @@ class SimHolding {
   final double unrealisedPnl;
   final DateTime openedAt;
 
+  /// CR189 — the POSITION's blended stop/target, weighted by each live lot's
+  /// open shares, not any one trade row's. Server-derived off the same
+  /// `blended_bracket` the sweep fires on, deliberately: a chip showing a level
+  /// nothing acts at is the defect CR189 exists to remove, so the client must
+  /// not compute its own. Null means the position is unprotected on that side,
+  /// which the tile shows by omitting the chip.
+  final double? stop;
+  final double? target;
+
+  bool get isProtected => stop != null || target != null;
+
+  /// Distance from the mark to the stop, as a fraction. Null when unprotected.
+  double? get stopDistancePct =>
+      (stop == null || mark <= 0) ? null : (mark - stop!) / mark;
+
   factory SimHolding.fromJson(Map<String, dynamic> j) {
     return SimHolding(
       ticker: j['ticker'] as String,
@@ -33,6 +50,8 @@ class SimHolding {
       value: (j['value'] as num).toDouble(),
       unrealisedPnl: (j['unrealised_pnl'] as num).toDouble(),
       openedAt: DateTime.parse(j['opened_at'] as String),
+      stop: (j['stop'] as num?)?.toDouble(),
+      target: (j['target'] as num?)?.toDouble(),
     );
   }
 }

@@ -182,8 +182,17 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
     final p = state.portfolio;
     if (p == null) return const SizedBox.shrink();
 
-    final openTrades = state.trades.where((t) => t.isOpen).toList();
-    final closedTrades = state.trades.where((t) => !t.isOpen).toList()
+    // CR188 slice 3 — `status` is NOT a position predicate. It carries "the
+    // ledger still needs this row"; the screen used to read it as "there is a
+    // live position here", and those stopped being the same thing when slice 2
+    // made ticket-sell the only exit. A BUY row deliberately outlives its
+    // shares (closing it would double-subtract the exit — DEF316), and a SELL
+    // row is `open` forever by design (DEF319's premise).
+    //
+    // So Positions renders from HOLDINGS and History is a TRANSACTION LOG —
+    // every fill, buys and sells, because a purchase happened whether or not
+    // the ledger still needs its row. Neither tab consults `status`.
+    final transactions = state.trades.toList()
       ..sort((a, b) =>
           (b.closedAt ?? b.openedAt).compareTo(a.closedAt ?? a.openedAt));
 
@@ -213,10 +222,12 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
             watchlistTabKey: _watchlistTabKey,
             selected: _selectedTab,
             onSelect: (i) => setState(() => _selectedTab = i),
-            positionsCount: p.holdings.length,
-            watchlistCount: watchlist.items.length,
-            historyCount: closedTrades.length,
-            hasOpenTrade: openTrades.isNotEmpty,
+            positionsCount: p.holdings.length + p.shorts.length,
+            watchlistCount: restingOrderCount(state),
+            historyCount: transactions.length,
+            hasOpenTrade: p.holdings.isNotEmpty ||
+                p.shorts.isNotEmpty ||
+                hasAnyRestingOrders(state),
           ),
           Expanded(
             // CR120/D5 — same IndexedStack technique home_shell.dart already
@@ -230,17 +241,16 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
               children: [
                 _PositionsTab(
                   holdings: p.holdings,
-                  openTrades: openTrades,
                   // CR170 — a user whose only activity is a resting order has
                   // traded; telling them otherwise is a hint that contradicts
-                  // the section directly above it.
+                  // the Orders tab beside it.
                   hasRestingOrders: hasAnyRestingOrders(state),
                   hasShorts: p.shorts.isNotEmpty,
                   sharesCommitted: p.sharesCommitted,
                   onTradeTicket: () => TradeTicketSheet.show(context),
                 ),
-                _WatchlistTab(state: watchlist),
-                _HistoryTab(closedTrades: closedTrades),
+                const _OrdersTab(),
+                _HistoryTab(closedTrades: transactions, watchlist: watchlist),
               ],
             ),
           ),
@@ -457,7 +467,7 @@ class _PortfolioTabBar extends StatelessWidget {
             Expanded(
               key: watchlistTabKey,
               child: _TabSegment(
-                label: '${l.portfolioTabWatchlist} $watchlistCount',
+                label: '${l.portfolioTabOrders} $watchlistCount',
                 active: selected == 1,
                 onTap: () => onSelect(1),
               ),
@@ -535,9 +545,13 @@ class _TabSegment extends StatelessWidget {
   }
 }
 
-/// The Positions tab's live indicator — present whenever an open trade
-/// exists, whether or not Positions is the selected segment (§4.1/2b). Cyan,
+/// The Positions tab's live indicator — present whenever the user has money at
+/// risk, whether or not Positions is the selected segment (§4.1/2b). Cyan,
 /// never amber: an open position is a state, not a warning.
+///
+/// CR188 slice 3 — that used to mean "an open trade row exists", which stopped
+/// implying live risk: a BUY row outlives its shares by design and a SELL row
+/// is `open` forever. It now means a holding, a short, or a working order.
 class _LivePip extends StatelessWidget {
   const _LivePip({required this.active});
   final bool active;
@@ -599,7 +613,19 @@ class _NewTraderHint extends StatelessWidget {
   }
 }
 
-class _HoldingCard extends StatelessWidget {
+/// CR188 slice 3 — a position, dense by default and expandable in place.
+///
+/// Saiful: *"Have the tiles small enough to show a lot of tiles, and make them
+/// expandable to see details."* Collapsed is one line so a whole book is
+/// scannable (CR120 acceptance 1 pins this tab at ≤ 4 screens); tapping opens
+/// the numbers underneath rather than navigating away, so comparing two
+/// positions costs no screen transitions.
+///
+/// The **stop chip is the protection indicator** and it carries CR189's
+/// position-level level — blended across live lots, server-derived off the same
+/// `blended_bracket` the sweep fires on. Its absence is information too: a
+/// position with no stop shows no chip, and says so when opened.
+class _HoldingCard extends StatefulWidget {
   const _HoldingCard({required this.holding, this.committed = 0});
   final SimHolding holding;
 
@@ -607,25 +633,28 @@ class _HoldingCard extends StatelessWidget {
   final double committed;
 
   @override
+  State<_HoldingCard> createState() => _HoldingCardState();
+}
+
+class _HoldingCardState extends State<_HoldingCard> {
+  bool _open = false;
+
+  @override
   Widget build(BuildContext context) {
-    final pnl = holding.unrealisedPnl;
-    final pct = holding.avgCost == 0
-        ? 0.0
-        : ((holding.mark - holding.avgCost) / holding.avgCost) * 100;
+    final h = widget.holding;
+    final l = AppLocalizations.of(context);
+    final pnl = h.unrealisedPnl;
+    final pct =
+        h.avgCost == 0 ? 0.0 : ((h.mark - h.avgCost) / h.avgCost) * 100;
     final accent = pnl >= 0 ? AmiColors.hexGreen : AmiColors.hexRed;
     final fmt = NumberFormat('#,##0.00');
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 6),
       child: InkWell(
-        onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-          builder: (_) => TickerDetailScreen(ticker: holding.ticker),
-        )),
+        onTap: () => setState(() => _open = !_open),
         borderRadius: BorderRadius.circular(AmiRadii.card),
         child: Container(
-          // CR120 §9 acceptance 1 — this list is one of three growing lists
-          // the CR exists to keep scannable; a tighter row (vertical s
-          // instead of m) is what buys back screens at the heavy profile
-          // without hiding any content.
           padding: const EdgeInsets.symmetric(
             horizontal: AmiSpacing.m,
             vertical: AmiSpacing.s,
@@ -633,59 +662,154 @@ class _HoldingCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: AmiColors.slate800,
             borderRadius: BorderRadius.circular(AmiRadii.card),
-            border: Border.all(color: AmiColors.slate700),
+            border: Border.all(
+              color: _open ? AmiColors.hexCyan.withValues(alpha: 0.45)
+                           : AmiColors.slate700,
+            ),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(holding.ticker,
+              Row(
+                children: [
+                  SizedBox(
+                    width: 66,
+                    child: Text(h.ticker,
                         style: AmiTypography.statMid
                             .copyWith(color: AmiColors.textHigh)),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${holding.quantity.toStringAsFixed(0)} @ \$${fmt.format(holding.avgCost)}',
+                  ),
+                  Expanded(
+                    child: Text(
+                      '${h.quantity.toStringAsFixed(0)} sh · \$${fmt.format(h.avgCost)}',
                       style: AmiTypography.caption,
                     ),
-                    // CR170 §6 — shares a resting SELL has already spoken for.
-                    // Without it the quantity above reads as freely sellable
-                    // and the second sell is refused at fill for a reason the
-                    // screen never showed.
-                    if (committed > 0)
-                      Text(
-                        AppLocalizations.of(context).portfolioSharesCommitted(
-                          committed.toStringAsFixed(0),
-                        ),
-                        style: AmiTypography.caption
-                            .copyWith(color: AmiColors.hexCyan),
-                      ),
+                  ),
+                  if (h.stop != null) ...[
+                    HexChip(
+                      label:
+                          '${l.tradeTicketLabelStop} \$${fmt.format(h.stop)}',
+                      color: AmiColors.hexAmber,
+                      variant: HexChipVariant.tinted,
+                      fontSize: 10,
+                    ),
+                    const SizedBox(width: AmiSpacing.s),
                   ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('\$${fmt.format(holding.value)}',
-                      style: AmiTypography.statSmall),
-                  const SizedBox(height: 2),
                   Text(
                     _isolateNumeric(
-                      '${pnl >= 0 ? '+' : ''}\$${fmt.format(pnl)} '
-                      '(${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(2)}%)',
+                      '${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(1)}%',
                     ),
                     style: AmiTypography.labelMono
-                        .copyWith(color: accent, fontSize: 11),
+                        .copyWith(color: accent, fontSize: 12),
                   ),
+                  Icon(_open ? Icons.expand_more : Icons.chevron_right,
+                      color: AmiColors.textLow, size: 18),
                 ],
               ),
-              const SizedBox(width: AmiSpacing.s),
-              const Icon(Icons.chevron_right,
-                  color: AmiColors.textLow, size: 18),
+              if (_open) ..._detail(context, h, l, fmt, accent, pnl),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  List<Widget> _detail(
+    BuildContext context,
+    SimHolding h,
+    AppLocalizations l,
+    NumberFormat fmt,
+    Color accent,
+    double pnl,
+  ) {
+    String away(double level) {
+      final d = (h.mark - level).abs() / (h.mark == 0 ? 1 : h.mark) * 100;
+      return l.positionDistanceAway('${d.toStringAsFixed(1)}%');
+    }
+
+    return [
+      const Padding(
+        padding: EdgeInsets.symmetric(vertical: AmiSpacing.s),
+        child: Divider(height: 1, color: AmiColors.slate700),
+      ),
+      Text(
+        _isolateNumeric(
+          '\$${fmt.format(h.mark)} · \$${fmt.format(h.value)} · '
+          '${pnl >= 0 ? '+' : ''}\$${fmt.format(pnl)}',
+        ),
+        style: AmiTypography.labelMono.copyWith(color: accent, fontSize: 12),
+      ),
+      const SizedBox(height: 4),
+      // CR189 — the POSITION's levels, not any one lot's. Distance is the
+      // number a user actually acts on; the price alone does not say how close
+      // they are to losing the position.
+      if (h.stop != null)
+        Text(
+          _isolateNumeric(
+            '${l.tradeTicketLabelStop} \$${fmt.format(h.stop)} — ${away(h.stop!)}',
+          ),
+          style: AmiTypography.caption.copyWith(color: AmiColors.hexAmber),
+        ),
+      if (h.target != null)
+        Text(
+          _isolateNumeric(
+            '${l.tradeTicketLabelTarget} \$${fmt.format(h.target)} — ${away(h.target!)}',
+          ),
+          style: AmiTypography.caption.copyWith(color: AmiColors.hexGreen),
+        ),
+      // Stated, never warned about. A missing stop is a fact about the
+      // position; telling the user what to do about it would be advice, and
+      // this app does not give any.
+      if (!h.isProtected)
+        Text(l.positionUnprotected,
+            style: AmiTypography.caption.copyWith(color: AmiColors.textLow)),
+      if (widget.committed > 0)
+        Text(
+          l.portfolioSharesCommitted(widget.committed.toStringAsFixed(0)),
+          style: AmiTypography.caption.copyWith(color: AmiColors.hexCyan),
+        ),
+      const SizedBox(height: AmiSpacing.s),
+      Row(
+        children: [
+          _TileAction(
+            label: l.positionSell,
+            onTap: () => TradeTicketSheet.show(
+              context,
+              sellTicker: h.ticker,
+              sellQuantity: h.quantity,
+            ),
+          ),
+          const SizedBox(width: AmiSpacing.s),
+          _TileAction(
+            label: l.positionPerLotDetail,
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => TickerDetailScreen(ticker: h.ticker),
+            )),
+          ),
+        ],
+      ),
+    ];
+  }
+}
+
+class _TileAction extends StatelessWidget {
+  const _TileAction({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          border: Border.all(color: AmiColors.hexCyan.withValues(alpha: 0.5)),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(label,
+            style: AmiTypography.labelMono
+                .copyWith(color: AmiColors.hexCyan, fontSize: 11)),
       ),
     );
   }
@@ -718,7 +842,6 @@ class _QuoteSourcePill extends StatelessWidget {
 class _PositionsTab extends StatelessWidget {
   const _PositionsTab({
     required this.holdings,
-    required this.openTrades,
     required this.hasRestingOrders,
     required this.hasShorts,
     required this.sharesCommitted,
@@ -726,7 +849,6 @@ class _PositionsTab extends StatelessWidget {
   });
 
   final List<SimHolding> holdings;
-  final List<SimTrade> openTrades;
   final bool hasRestingOrders;
 
   /// CR171 — an open short is a position, and it lives in its own table rather
@@ -757,18 +879,12 @@ class _PositionsTab extends StatelessWidget {
                 const PortfolioEquityChart(),
                 const _SectorAllocationSection(),
                 const PortfolioHealthCard(),
-                // Above holdings: a working order is the most time-sensitive
-                // thing on this screen.
-                const RestingOrdersSection(),
                 // Below the book, above holdings: a short is a live position
                 // like a holding, but it is not one — the user owes the
                 // shares — so it gets its own group rather than a row inside
                 // HOLDINGS with a badge on it.
                 const ShortPositionsSection(),
-                if (holdings.isEmpty &&
-                    openTrades.isEmpty &&
-                    !hasRestingOrders &&
-                    !hasShorts)
+                if (holdings.isEmpty && !hasRestingOrders && !hasShorts)
                   _NewTraderHint(onTradeTicket: onTradeTicket)
                 else ...[
                   const SizedBox(height: AmiSpacing.s),
@@ -794,36 +910,6 @@ class _PositionsTab extends StatelessWidget {
                 committed:
                     sharesCommitted[holdings[i].ticker.toUpperCase()] ?? 0,
               ),
-            ),
-          ),
-        if (holdings.isNotEmpty || openTrades.isNotEmpty)
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
-              AmiSpacing.m,
-              AmiSpacing.m,
-              AmiSpacing.m,
-              AmiSpacing.s,
-            ),
-            sliver: SliverToBoxAdapter(
-              child:
-                  Text(l.portfolioOpenTrades, style: AmiTypography.labelMono),
-            ),
-          ),
-        if (openTrades.isEmpty && (holdings.isNotEmpty))
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m),
-            sliver: SliverToBoxAdapter(
-              child: Text(l.portfolioNoOpenPositions,
-                  style:
-                      AmiTypography.caption.copyWith(color: AmiColors.textLow)),
-            ),
-          )
-        else if (openTrades.isNotEmpty)
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m),
-            sliver: SliverList.builder(
-              itemCount: openTrades.length,
-              itemBuilder: (context, i) => TradeRow(trade: openTrades[i]),
             ),
           ),
         const SliverPadding(
@@ -1120,16 +1206,51 @@ class _DonutPainter extends CustomPainter {
 
 // ── Watchlist tab (A18) — CR120 §6 defect 6: ticker is the loud element ──
 
-class _WatchlistTab extends ConsumerWidget {
-  const _WatchlistTab({required this.state});
-  final WatchlistState state;
+/// CR188 slice 3 — the ORDERS tab, in the slot the watchlist used to hold.
+///
+/// Saiful: *"Here we have all 'outstanding' trades. Financial items that have
+/// yet to be realized."* Reads `sim_resting_orders` and nothing else, so it
+/// needs no status predicate over `sim_trades` — which is the structural point
+/// of the three-tab split.
+///
+/// A resting SELL against shares the user holds is deliberately **not** here:
+/// it is protection on a position, so it belongs on that position's tile
+/// (Saiful: *"Resting sell - tile only. Keep orders on actual manual request"*).
+/// A sell with nothing behind it would open a short, has no tile to live on,
+/// and does appear here.
+class _OrdersTab extends ConsumerWidget {
+  const _OrdersTab();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l = AppLocalizations.of(context);
     return CustomScrollView(
-      key: const PageStorageKey('portfolioWatchlistScroll'),
-      slivers: [
+      key: const PageStorageKey('portfolioOrdersScroll'),
+      slivers: const [
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
+          sliver: SliverToBoxAdapter(child: RestingOrdersSection()),
+        ),
+      ],
+    );
+  }
+}
+
+/// CR188 slice 3 — the watchlist as SLIVERS, spliced into History.
+///
+/// It stopped being a tab: Saiful's structure puts everything with no live
+/// claim on the book together — *"History + watch list is now just
+/// information, no financial."* The slot it used to occupy is the Orders tab.
+///
+/// Returned as slivers rather than a widget so it composes into History's own
+/// `CustomScrollView` — one scroll, not a nested one, which is what keeps the
+/// SHOW ALL expansion above it behaving.
+List<Widget> _watchlistSlivers(
+  BuildContext context,
+  WidgetRef ref,
+  WatchlistState state,
+) {
+  final l = AppLocalizations.of(context);
+  return [
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             AmiSpacing.m,
@@ -1178,16 +1299,14 @@ class _WatchlistTab extends ConsumerWidget {
             ),
           ),
         const SliverToBoxAdapter(child: SizedBox(height: AmiSpacing.xxl)),
-      ],
-    );
-  }
+  ];
+}
 
-  Future<void> _showAddDialog(BuildContext context, WidgetRef ref) async {
-    await showDialog<void>(
-      context: context,
-      builder: (_) => const _AddWatchlistTickerDialog(),
-    );
-  }
+Future<void> _showAddDialog(BuildContext context, WidgetRef ref) async {
+  await showDialog<void>(
+    context: context,
+    builder: (_) => const _AddWatchlistTickerDialog(),
+  );
 }
 
 /// CR128: existence check before a ticker is added — previously any string
@@ -1419,9 +1538,22 @@ class _WatchlistDeleteBackground extends StatelessWidget {
 
 // ── History tab (closed trades) — CR120 §3, §4.1, D2, D3, D4 ────────────
 
+/// CR188 slice 3 — History is a TRANSACTION LOG plus the watchlist.
+///
+/// Saiful's structure: *"The current watch list gets moved to history. History
+/// + watch list is now just information, no financial."* Positions holds real
+/// money, Orders holds what is outstanding, and everything with no live claim
+/// on the book lands here.
+///
+/// `closedTrades` is now **every** fill, not the `!isOpen` subset the name
+/// implied. A SELL row is permanently `open` by design, so filtering on status
+/// meant a completed sale appeared nowhere in the app — it sat on Positions
+/// forever as an OPEN row against zero shares. A purchase and a sale both
+/// happened; whether the ledger still needs the row is not the user's concern.
 class _HistoryTab extends ConsumerStatefulWidget {
-  const _HistoryTab({required this.closedTrades});
+  const _HistoryTab({required this.closedTrades, required this.watchlist});
   final List<SimTrade> closedTrades;
+  final WatchlistState watchlist;
 
   @override
   ConsumerState<_HistoryTab> createState() => _HistoryTabState();
@@ -1459,10 +1591,17 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
     final capped = closed.length > _closedTradeCap && !_showAll;
     final visible = capped ? closed.take(_closedTradeCap).toList() : closed;
 
-    final won = closed.where((t) => t.realisedPnl > 0).length;
-    final lost = closed.length - won;
-    final hitRate = closed.isEmpty ? 0.0 : won / closed.length * 100;
-    final net = closed.fold<double>(0, (s, t) => s + t.realisedPnl);
+    // CR188 slice 3 — the LIST is every transaction; the SUMMARY is only over
+    // settled ones. They stopped being the same set when History became a
+    // transaction log, and `lost = length - won` would then have counted every
+    // open buy and every SELL row (permanently `open`, realised 0) as a loss.
+    // A sell's P&L is realised on the buy row it closed, so it belongs in the
+    // list and not in the tally.
+    final settled = closed.where((t) => !t.isOpen).toList();
+    final won = settled.where((t) => t.realisedPnl > 0).length;
+    final lost = settled.length - won;
+    final hitRate = settled.isEmpty ? 0.0 : won / settled.length * 100;
+    final net = settled.fold<double>(0, (s, t) => s + t.realisedPnl);
 
     final dateFmt = DateFormat('d MMM');
     final fromDate = (visible.last.closedAt ?? visible.last.openedAt);
@@ -1482,7 +1621,7 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
-                    l.portfolioClosedScope(closed.length),
+                    l.portfolioClosedScope(settled.length),
                     style: AmiTypography.caption
                         .copyWith(color: AmiColors.textLow),
                   ),
@@ -1495,7 +1634,7 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
                           dateFmt.format(fromDate).toUpperCase(),
                           dateFmt.format(toDate).toUpperCase(),
                         )}'
-                      : '${closed.length} ${l.portfolioClosed}',
+                      : '${settled.length} ${l.portfolioClosed}',
                   style: AmiTypography.labelMono,
                 ),
               ],
@@ -1533,9 +1672,14 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
             0,
           ),
           sliver: SliverToBoxAdapter(
-            child: _JournalPointer(journal: journal, closedTrades: closed),
+            child: _JournalPointer(journal: journal, closedTrades: settled),
           ),
         ),
+        // CR188 slice 3 — the watchlist, as a SECTION of History rather than a
+        // tab of its own. Its own heading and its own count: a single
+        // "HISTORY 47" mixing 30 fills with 17 watched tickers is not a number
+        // anyone can act on.
+        ..._watchlistSlivers(context, ref, widget.watchlist),
         const SliverToBoxAdapter(child: SizedBox(height: AmiSpacing.xxl)),
       ],
     );

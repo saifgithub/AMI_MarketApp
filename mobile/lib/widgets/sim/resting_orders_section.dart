@@ -367,3 +367,13 @@ bool hasAnyRestingOrders(SimState state) =>
 /// Re-exported so callers do not have to import `order_pricing.dart` just to
 /// name an order type in a test.
 typedef RestingOrderType = SimOrderType;
+
+/// CR188 slice 3 — how many orders the Orders tab has to show.
+///
+/// Counts only what is still WORKING. A retired order (filled, cancelled,
+/// expired, rejected) has moved to History, and a tab badge that counted it
+/// would tell the user they have orders outstanding when they do not — the
+/// same "POSITIONS 0" invisibility the slice exists to remove, inverted.
+int restingOrderCount(SimState state) => state.restingOrders
+    .where((o) => o.isLive)
+    .length;

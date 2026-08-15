@@ -225,6 +225,27 @@ Future<void> _scrollToEnd(WidgetTester tester, String pageStorageKeyLabel) async
   await tester.pump(const Duration(milliseconds: 300));
 }
 
+/// CR188 slice 3 — scroll a named list until [target] is on screen.
+///
+/// `_scrollToEnd` overshoots on History now: the watchlist became a SECTION of
+/// that tab, so its 40 rows sit BELOW the list footer, and "drag to the bottom"
+/// lands past SHOW ALL and the Journal pointer rather than on them. Driving to
+/// the widget instead of to the end also stops these tests re-breaking the next
+/// time anything is appended underneath.
+Future<void> _scrollUntil(
+  WidgetTester tester,
+  String pageStorageKeyLabel,
+  Finder target,
+) async {
+  final scrollable = find.descendant(
+    of: find.byKey(PageStorageKey<String>(pageStorageKeyLabel)),
+    matching: find.byType(Scrollable),
+  );
+  await tester.scrollUntilVisible(target, 300, scrollable: scrollable);
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 300));
+}
+
 double _screensOfScroll(WidgetTester tester, String pageStorageKeyLabel) {
   final scrollableFinder = find.descendant(
     of: find.byKey(PageStorageKey<String>(pageStorageKeyLabel)),
@@ -270,30 +291,42 @@ void main() {
     });
   });
 
-  group('CR120 §9 acceptance 2 — open trades never hidden', () {
-    testWidgets('open trades render on the landing tab; History excludes them',
+  group('CR120 §9 acceptance 2 — a position is never hidden', () {
+    // CR188 slice 3 changed this acceptance's PREMISE, so it is re-asserted
+    // rather than re-baselined. It used to read "open trades render on the
+    // landing tab; History excludes them". There are no open-trade rows any
+    // more: Positions renders from HOLDINGS, because `sim_trades.status` means
+    // "the ledger still needs this row" and not "there is a live position here"
+    // (DEF316/DEF319). The guarantee the acceptance was protecting — *money at
+    // risk is reachable on the landing tab, and History never becomes the only
+    // place it appears* — is unchanged and asserted below.
+    testWidgets('every holding is reachable on the landing tab', (tester) async {
+      await _pump(tester, sim: _heavySimState(), watchlist: _heavyWatchlistState());
+
+      await _scrollToEnd(tester, 'portfolioPositionsScroll');
+      expect(find.textContaining('H011'), findsOneWidget);
+      expect(find.textContaining('POSITIONS 12'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('History is a transaction log — every fill, open rows included',
         (tester) async {
       await _pump(tester, sim: _heavySimState(), watchlist: _heavyWatchlistState());
 
-      // Open trades sit below 12 holding cards on the Positions tab — off
-      // the initial viewport, same lazy-build reason as the History tests.
-      // Scrolling to reach them (rather than requiring them in the first
-      // screenful) is the acceptance itself: "never hidden" means reachable
-      // on the landing tab, not necessarily above the fold.
-      await _scrollToEnd(tester, 'portfolioPositionsScroll');
-      expect(find.textContaining('O000'), findsOneWidget);
-
-      // History count reads 195 (closed only), not 200.
-      expect(find.textContaining('HISTORY 195'), findsOneWidget);
-      expect(find.textContaining('HISTORY 200'), findsNothing);
+      // 195 settled + 5 open buys. A purchase happened whether or not the
+      // ledger still needs its row, and a SELL row is `open` forever by
+      // design — filtering on status is what made a completed sale appear
+      // nowhere in the app.
+      expect(find.textContaining('HISTORY 200'), findsOneWidget);
+      expect(find.textContaining('HISTORY 195'), findsNothing);
       expect(tester.takeException(), isNull);
     });
 
     testWidgets('Positions tab shows the live pip whether or not selected',
         (tester) async {
       await _pump(tester, sim: _heavySimState(), watchlist: _heavyWatchlistState());
-      // Switch to Watchlist tab.
-      await tester.tap(find.textContaining('WATCHLIST 40'));
+      // Switch off Positions. The watchlist tab is now ORDERS.
+      await tester.tap(find.textContaining('ORDERS 0'));
       await tester.pump();
       // The pip is part of the tab bar itself (always mounted), not tab
       // content, so it must still be findable with Positions unselected.
@@ -307,7 +340,7 @@ void main() {
     testWidgets('History caps at 25 with the span stated, summary reads 195',
         (tester) async {
       await _pump(tester, sim: _heavySimState(), watchlist: _heavyWatchlistState());
-      await tester.tap(find.textContaining('HISTORY 195'));
+      await tester.tap(find.textContaining('HISTORY 200'));
       // HexChip's LIVE/MOCK pip pulses forever (..repeat(reverse: true)),
       // so pumpAndSettle() never returns on this screen — bounded pumps
       // instead, long enough to clear the 200ms tab-fill / scroll physics.
@@ -328,24 +361,26 @@ void main() {
     testWidgets('SHOW ALL reveals every closed trade from Portfolio data',
         (tester) async {
       await _pump(tester, sim: _heavySimState(), watchlist: _heavyWatchlistState());
-      await tester.tap(find.textContaining('HISTORY 195'));
+      await tester.tap(find.textContaining('HISTORY 200'));
       // HexChip's LIVE/MOCK pip pulses forever (..repeat(reverse: true)),
       // so pumpAndSettle() never returns on this screen — bounded pumps
       // instead, long enough to clear the 200ms tab-fill / scroll physics.
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       // The SHOW ALL button sits below the 25 lazily-built rows.
-      await _scrollToEnd(tester, 'portfolioHistoryScroll');
+      await _scrollUntil(
+          tester, 'portfolioHistoryScroll', find.textContaining('SHOW ALL 200'));
 
-      expect(find.textContaining('SHOW ALL 195'), findsOneWidget);
-      await tester.tap(find.textContaining('SHOW ALL 195'));
+      expect(find.textContaining('SHOW ALL 200'), findsOneWidget);
+      await tester.tap(find.textContaining('SHOW ALL 200'));
       await tester.pump();
 
       // The oldest closed trade (C194, closedAt furthest in the past) is
       // now reachable — scroll the History list to the end again to prove
       // it is actually built, not merely counted.
-      await _scrollToEnd(tester, 'portfolioHistoryScroll');
-      expect(find.textContaining('SHOW ALL 195'), findsNothing);
+      await _scrollUntil(tester, 'portfolioHistoryScroll',
+          find.textContaining('REVIEW IN JOURNAL'));
+      expect(find.textContaining('SHOW ALL 200'), findsNothing);
       expect(tester.takeException(), isNull);
     });
   });
@@ -359,13 +394,14 @@ void main() {
         watchlist: _heavyWatchlistState(),
         journalNeverLoads: true,
       );
-      await tester.tap(find.textContaining('HISTORY 195'));
+      await tester.tap(find.textContaining('HISTORY 200'));
       // HexChip's LIVE/MOCK pip pulses forever (..repeat(reverse: true)),
       // so pumpAndSettle() never returns on this screen — bounded pumps
       // instead, long enough to clear the 200ms tab-fill / scroll physics.
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
-      await _scrollToEnd(tester, 'portfolioHistoryScroll');
+      await _scrollUntil(tester, 'portfolioHistoryScroll',
+          find.textContaining('REVIEW IN JOURNAL'));
 
       expect(find.textContaining('may not show all of these'), findsOneWidget);
       // The finite-window and unlimited-specific strings must NOT appear —
@@ -381,13 +417,14 @@ void main() {
         watchlist: _heavyWatchlistState(),
         journal: const JournalState(retentionDays: null, retentionLoaded: true),
       );
-      await tester.tap(find.textContaining('HISTORY 195'));
+      await tester.tap(find.textContaining('HISTORY 200'));
       // HexChip's LIVE/MOCK pip pulses forever (..repeat(reverse: true)),
       // so pumpAndSettle() never returns on this screen — bounded pumps
       // instead, long enough to clear the 200ms tab-fill / scroll physics.
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
-      await _scrollToEnd(tester, 'portfolioHistoryScroll');
+      await _scrollUntil(tester, 'portfolioHistoryScroll',
+          find.textContaining('REVIEW IN JOURNAL'));
 
       expect(find.textContaining('may not show all of these'), findsNothing);
       expect(find.textContaining('shows the last'), findsNothing);
@@ -403,13 +440,14 @@ void main() {
         watchlist: _heavyWatchlistState(),
         journal: const JournalState(retentionDays: 30, retentionLoaded: true),
       );
-      await tester.tap(find.textContaining('HISTORY 195'));
+      await tester.tap(find.textContaining('HISTORY 200'));
       // HexChip's LIVE/MOCK pip pulses forever (..repeat(reverse: true)),
       // so pumpAndSettle() never returns on this screen — bounded pumps
       // instead, long enough to clear the 200ms tab-fill / scroll physics.
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
-      await _scrollToEnd(tester, 'portfolioHistoryScroll');
+      await _scrollUntil(tester, 'portfolioHistoryScroll',
+          find.textContaining('REVIEW IN JOURNAL'));
 
       // Closed trades are dated 0..194 days ago against the fixture's
       // DateTime.now(); the cutoff the app computes is its own (later)
@@ -464,8 +502,8 @@ void main() {
         await tester.pump();
 
         expect(find.textContaining('POSITIONS 12'), findsOneWidget);
-        expect(find.textContaining('WATCHLIST 40'), findsOneWidget);
-        expect(find.textContaining('HISTORY 195'), findsOneWidget);
+        expect(find.textContaining('ORDERS 0'), findsOneWidget);
+        expect(find.textContaining('HISTORY 200'), findsOneWidget);
         // A RenderFlex overflow (the CR108 FittedBox-shrink failure class)
         // throws during layout and surfaces here.
         expect(tester.takeException(), isNull);
@@ -528,9 +566,9 @@ void main() {
       await tester.pump();
       await tester.pump();
       // Exercise all three tabs at the larger scale.
-      await tester.tap(find.textContaining('WATCHLIST 40'));
+      await tester.tap(find.textContaining('ORDERS 0'));
       await tester.pump();
-      await tester.tap(find.textContaining('HISTORY 195'));
+      await tester.tap(find.textContaining('HISTORY 200'));
       await tester.pump();
       expect(tester.takeException(), isNull);
     });
@@ -540,7 +578,7 @@ void main() {
     testWidgets('History rows render through TradeRow, same as open trades',
         (tester) async {
       await _pump(tester, sim: _heavySimState(), watchlist: _heavyWatchlistState());
-      await tester.tap(find.textContaining('HISTORY 195'));
+      await tester.tap(find.textContaining('HISTORY 200'));
       // HexChip's LIVE/MOCK pip pulses forever (..repeat(reverse: true)),
       // so pumpAndSettle() never returns on this screen — bounded pumps
       // instead, long enough to clear the 200ms tab-fill / scroll physics.

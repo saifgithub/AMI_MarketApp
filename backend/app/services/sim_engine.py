@@ -1011,6 +1011,35 @@ class SimEngine:
             existing_open_risk_pct=existing_open_risk,
         )
 
+    def position_brackets(
+        self, user_id: UUID,
+    ) -> dict[str, tuple[float | None, float | None]]:
+        """CR189 — every held ticker's position bracket, in ONE query.
+
+        The plural of `position_bracket`, and the reason it exists rather than
+        the route looping: the Positions tab draws a stop chip per tile, so a
+        per-ticker call is an N+1 against the database on the hottest read in
+        the app. Same derivation (`_lot_brackets` → `blended_bracket`), so the
+        chip and the sweep cannot disagree — which is the whole point of CR189,
+        since a tile showing a level the sweep does not fire on is the defect.
+        """
+        with get_session() as s:
+            rows = s.execute(
+                select(SimTradeRow)
+                .where(training_trade_scope(user_id))
+                .order_by(SimTradeRow.opened_at.asc())
+            ).scalars().all()
+
+        by_ticker: dict[str, list[SimTradeRow]] = defaultdict(list)
+        for r in rows:
+            by_ticker[r.ticker].append(r)
+
+        out: dict[str, tuple[float | None, float | None]] = {}
+        for ticker, trades in by_ticker.items():
+            lot_open = _open_quantity_by_lot(trades)
+            out[ticker] = blended_bracket(_lot_brackets(trades, lot_open))
+        return out
+
     def position_bracket(
         self, user_id: UUID, ticker: str, *, extra: LotBracket | None = None,
     ) -> tuple[float | None, float | None]:
