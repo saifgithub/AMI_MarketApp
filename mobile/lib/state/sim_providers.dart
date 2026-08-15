@@ -1,6 +1,8 @@
 /// Riverpod state for Sim Trading (portfolio + trades + ticker quotes).
 library;
 
+import 'dart:async';
+
 import 'package:ami_trade/features/sim/order_pricing.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/sim_resting_order.dart';
@@ -171,19 +173,41 @@ class SimNotifier extends StateNotifier<SimState> {
         horizonDays: horizonDays,
         verdictRef: verdictRef,
       );
-      state = state.copyWith(submitting: false, lastSubmit: result);
+      state = state.copyWith(lastSubmit: result);
+      // DEF315 — `submitting` stays TRUE across this. It used to go false the
+      // instant the POST returned, and the app then made four more sequential
+      // round trips before the screen reflected the trade: `simEvaluate` (the
+      // whole resting-order sweep, with a quote fan-out), the portfolio, the
+      // trades and the book. For all of that the spinner had stopped, the
+      // portfolio behind the sheet was still the pre-trade one, and — because
+      // the CTA gates on `submitting` and never on `loading` — **the submit
+      // button was live again**.
+      //
+      // Reported by a user as the app looking like it had gone back to the
+      // state just before the order. It is worse than confusing: it invites a
+      // second tap, and a second tap places a second order. The server dedups
+      // only trades carrying a `verdict_ref`; a manual trade has no such guard.
+      //
+      // One flag was carrying two meanings — "the POST is in flight" and "this
+      // order is being placed" — which are the same thing to the user and
+      // diverge by four round trips in the code.
       await refresh();
-      // refresh journal too — new sim_trade entry
-      await _ref.read(journalNotifierProvider.notifier).refresh();
-      // refresh watchlist — backend auto-added the traded ticker so the
-      // ticker tape (which listens on watchlist contents) picks it up.
-      await _ref.read(watchlistNotifierProvider.notifier).refresh();
+      // These two feed the Journal tab and the ticker tape. Neither is on
+      // screen when this sheet closes, so they are deliberately NOT awaited:
+      // the wait that matters is the one that makes the screen the user
+      // returns to correct, and holding the button hostage to the other two
+      // buys nothing.
+      unawaited(_ref.read(journalNotifierProvider.notifier).refresh());
+      unawaited(_ref.read(watchlistNotifierProvider.notifier).refresh());
       return result;
     } catch (e) {
       state = state.copyWith(
-          submitting: false,
           error: friendlyError(e, action: 'place that trade'));
       return null;
+    } finally {
+      // One place, both paths. A throw anywhere above used to leave the flag
+      // set on the error path only by luck of ordering.
+      state = state.copyWith(submitting: false);
     }
   }
 
