@@ -36,6 +36,51 @@ String restingOrderStateLabel(AppLocalizations l, RestingOrderState s) =>
       RestingOrderState.unknown => l.restingOrderStateUnknown,
     };
 
+/// CR186 — what kind of order this is, on the card.
+///
+/// A buy limit at $190 and a buy stop at $190 are opposite orders: one waits for
+/// a fall, the other for a rise. The book used to render them as the identical
+/// card, so the single fact that distinguishes them was stated once in the
+/// ticket at placement and never again.
+String restingOrderTypeLabel(AppLocalizations l, SimOrderType t) => switch (t) {
+      SimOrderType.limit => l.restingOrderTypeLimit,
+      SimOrderType.stop => l.restingOrderTypeStop,
+      SimOrderType.stopLimit => l.restingOrderTypeStopLimit,
+      // MARKET never rests, so it never reaches the book. If one ever does, it
+      // is as unrecognised as a type from a newer server — say nothing specific
+      // rather than name a type the order does not have.
+      _ => l.restingOrderTypeUnknown,
+    };
+
+/// The clause after the type tag: what this order is waiting for, in the
+/// direction it actually waits.
+///
+/// Deliberately does NOT repeat the ticker or the quantity — both are on the
+/// line above — and deliberately reuses `restsBelow`, the same pure predicate
+/// the ticket's live hint runs on, so the book cannot describe an order
+/// differently from the sheet that placed it.
+String? restingOrderIntentLine(AppLocalizations l, SimRestingOrder o) {
+  if (!o.isLive) return null;
+  final named = o.namedPrice;
+  if (named == null) return null;
+
+  // A triggered stop-limit has stopped waiting for its trigger. Describing it
+  // as still waiting for a price it already reached is the one sentence on this
+  // card that would be actively false.
+  if (o.state == RestingOrderState.triggered && o.limitPrice != null) {
+    return l.restingOrderTriggeredNowLimit(o.limitPrice!.toStringAsFixed(2));
+  }
+
+  final waits = restsBelow(side: o.side, orderType: o.orderType)
+      ? l.restingOrderWaitsForFall(named.toStringAsFixed(2))
+      : l.restingOrderWaitsForRise(named.toStringAsFixed(2));
+
+  if (o.orderType == SimOrderType.stopLimit && o.limitPrice != null) {
+    return '$waits, ${l.restingOrderThenLimit(o.limitPrice!.toStringAsFixed(2))}';
+  }
+  return waits;
+}
+
 Color restingOrderStateColor(RestingOrderState s) => switch (s) {
       RestingOrderState.working => AmiColors.hexCyan,
       RestingOrderState.triggered => AmiColors.hexAmber,
@@ -150,6 +195,7 @@ class _RestingOrderCard extends ConsumerWidget {
     final accent = restingOrderStateColor(order.state);
     final buy = order.side == 'buy';
     final named = order.namedPrice;
+    final intent = restingOrderIntentLine(l, order);
 
     return Container(
       margin: const EdgeInsets.only(bottom: AmiSpacing.s),
@@ -193,12 +239,38 @@ class _RestingOrderCard extends ConsumerWidget {
               ),
             ],
           ),
+          // CR186 — the type, and what this order is actually waiting for.
+          // Without the first the book cannot tell a buy limit from a buy stop;
+          // without the second a stop-limit's limit price — the number that
+          // decides whether it ever fills — appears nowhere in the app after
+          // the ticket closes.
+          const SizedBox(height: 6),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                restingOrderTypeLabel(l, order.orderType),
+                style: AmiTypography.labelMono
+                    .copyWith(fontSize: 10, color: AmiColors.textMed),
+              ),
+              if (intent != null) ...[
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    intent,
+                    style: AmiTypography.caption
+                        .copyWith(color: AmiColors.textMed),
+                  ),
+                ),
+              ],
+            ],
+          ),
           const SizedBox(height: 6),
           Row(
             children: [
               Expanded(
                 child: Text(
-                  _subtitle(l),
+                  _subtitle(context, l),
                   style: AmiTypography.caption
                       .copyWith(color: AmiColors.textLow),
                 ),
@@ -230,18 +302,59 @@ class _RestingOrderCard extends ConsumerWidget {
     );
   }
 
-  String _subtitle(AppLocalizations l) {
-    if (order.state == RestingOrderState.filled && order.fillPrice != null) {
-      return '${restingOrderStateLabel(l, order.state)} @ '
-          '\$${order.fillPrice!.toStringAsFixed(2)}';
+  String _subtitle(BuildContext context, AppLocalizations l) {
+    if (!order.isLive) {
+      final head = order.state == RestingOrderState.filled &&
+              order.fillPrice != null
+          ? '${restingOrderStateLabel(l, order.state)} @ '
+              '\$${order.fillPrice!.toStringAsFixed(2)}'
+          : restingOrderStateLabel(l, order.state);
+      // CR186 — when it ended. A closed order with no date is a fact with no
+      // place in time, and this group is headed RECENTLY CLOSED.
+      final ago = _retiredAgo(l);
+      return ago == null ? head : '$head · $ago';
     }
-    if (!order.isLive) return restingOrderStateLabel(l, order.state);
     // Null before the first sweep — say so rather than render a zero distance,
     // which would read as "about to fill".
-    if (order.lastSeenPrice == null || order.distancePct == null) {
-      return l.restingOrderWaitingFirstCheck;
+    final head = order.lastSeenPrice == null || order.distancePct == null
+        ? l.restingOrderWaitingFirstCheck
+        : l.restingOrderAway(order.distancePct!.abs().toStringAsFixed(1));
+    final expiry = _expiry(context, l);
+    return expiry == null ? head : '$head · $expiry';
+  }
+
+  /// CR186 — when this order dies.
+  ///
+  /// `expiresAt` and `tif` were both parsed into the model from the day it
+  /// landed and neither reached a pixel, so a DAY order dying at the next
+  /// session close looked exactly like a 90-day order. The server anchors every
+  /// expiry to a **market session** close, never to local midnight, so the
+  /// same-day case shows the clock time rather than the word "today" alone —
+  /// for a user outside the US the two are routinely different days.
+  String? _expiry(BuildContext context, AppLocalizations l) {
+    final at = order.expiresAt;
+    if (at == null) return null;
+    final left = at.difference(DateTime.now());
+    if (left.isNegative) return null;
+    if (left.inHours < 24) {
+      return l.restingOrderExpiresToday(
+        TimeOfDay.fromDateTime(at).format(context),
+      );
     }
-    return l.restingOrderAway(order.distancePct!.abs().toStringAsFixed(1));
+    return l.restingOrderExpiresInDays('${left.inDays}');
+  }
+
+  /// CR186 — how long ago a closed order left the book, off DEF309's
+  /// `retired_at`. Null on a build talking to a server that predates it, which
+  /// renders as no date rather than as a wrong one.
+  String? _retiredAgo(AppLocalizations l) {
+    final at = order.retiredAt;
+    if (at == null) return null;
+    final d = DateTime.now().difference(at);
+    if (d.isNegative || d.inMinutes < 1) return l.restingOrderRetiredJustNow;
+    if (d.inMinutes < 60) return l.restingOrderRetiredMinutesAgo('${d.inMinutes}');
+    if (d.inHours < 24) return l.restingOrderRetiredHoursAgo('${d.inHours}');
+    return l.restingOrderRetiredDaysAgo('${d.inDays}');
   }
 }
 

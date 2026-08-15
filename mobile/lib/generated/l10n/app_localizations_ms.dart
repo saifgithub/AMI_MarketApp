@@ -2511,6 +2511,66 @@ class AppLocalizationsMs extends AppLocalizations {
   String get restingOrderStateUnknown => 'unrecognised';
 
   @override
+  String get restingOrderTypeLimit => 'LIMIT';
+
+  @override
+  String get restingOrderTypeStop => 'STOP';
+
+  @override
+  String get restingOrderTypeStopLimit => 'STOP-LIMIT';
+
+  @override
+  String get restingOrderTypeUnknown => 'ORDER';
+
+  @override
+  String restingOrderWaitsForFall(String price) {
+    return 'waits for a fall to \$$price';
+  }
+
+  @override
+  String restingOrderWaitsForRise(String price) {
+    return 'waits for a rise to \$$price';
+  }
+
+  @override
+  String restingOrderThenLimit(String price) {
+    return 'then a limit at \$$price';
+  }
+
+  @override
+  String restingOrderTriggeredNowLimit(String price) {
+    return 'triggered — now a limit at \$$price';
+  }
+
+  @override
+  String restingOrderExpiresToday(String time) {
+    return 'expires today $time';
+  }
+
+  @override
+  String restingOrderExpiresInDays(String days) {
+    return 'expires in ${days}d';
+  }
+
+  @override
+  String get restingOrderRetiredJustNow => 'just now';
+
+  @override
+  String restingOrderRetiredMinutesAgo(String minutes) {
+    return '${minutes}m ago';
+  }
+
+  @override
+  String restingOrderRetiredHoursAgo(String hours) {
+    return '${hours}h ago';
+  }
+
+  @override
+  String restingOrderRetiredDaysAgo(String days) {
+    return '${days}d ago';
+  }
+
+  @override
   String get chatBubbleConcierge => 'CONCIERGE';
 
   @override

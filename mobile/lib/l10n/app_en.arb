@@ -2677,6 +2677,61 @@
     "@restingOrderStateRejected": { "description": "CR170 resting-order state: the system refused it at fill time — the reason is shown alongside. Lowercase." },
     "restingOrderStateUnknown": "unrecognised",
     "@restingOrderStateUnknown": { "description": "CR170 resting-order state this build of the app does not know, from a newer server. Shown as its own thing rather than folded into 'waiting', because an order shown as live after the server retired it is the one error a user cannot recover from. Lowercase." },
+    "restingOrderTypeLimit": "LIMIT",
+    "@restingOrderTypeLimit": { "description": "CR186 order-type tag on a waiting-order card. A buy limit and a buy stop at the same price behave OPPOSITELY, so the card must name which one it is. Uppercase, mono." },
+    "restingOrderTypeStop": "STOP",
+    "@restingOrderTypeStop": { "description": "CR186 order-type tag on a waiting-order card. Uppercase, mono." },
+    "restingOrderTypeStopLimit": "STOP-LIMIT",
+    "@restingOrderTypeStopLimit": { "description": "CR186 order-type tag on a waiting-order card. Uppercase, mono." },
+    "restingOrderTypeUnknown": "ORDER",
+    "@restingOrderTypeUnknown": { "description": "CR186 order-type tag for a type this build of the app does not recognise, from a newer server. Deliberately says nothing specific rather than guessing a type the order does not have." },
+    "restingOrderWaitsForFall": "waits for a fall to ${price}",
+    "@restingOrderWaitsForFall": {
+        "description": "CR186 what a waiting order is waiting for, on the order card. Lowercase, follows the order-type tag. Used for a BUY LIMIT and a SELL STOP, which wait on the same comparison.",
+        "placeholders": { "price": { "type": "String" } }
+    },
+    "restingOrderWaitsForRise": "waits for a rise to ${price}",
+    "@restingOrderWaitsForRise": {
+        "description": "CR186 what a waiting order is waiting for, on the order card. Lowercase, follows the order-type tag. Used for a BUY STOP and a SELL LIMIT.",
+        "placeholders": { "price": { "type": "String" } }
+    },
+    "restingOrderThenLimit": "then a limit at ${price}",
+    "@restingOrderThenLimit": {
+        "description": "CR186 the second phase of a stop-limit, appended after the waits-for clause. This price is the one that decides whether the order ever fills, and it was previously invisible everywhere outside the trade ticket.",
+        "placeholders": { "price": { "type": "String" } }
+    },
+    "restingOrderTriggeredNowLimit": "triggered — now a limit at ${price}",
+    "@restingOrderTriggeredNowLimit": {
+        "description": "CR186 a stop-limit whose trigger has fired. It is no longer waiting for the trigger, so the card must stop describing it that way.",
+        "placeholders": { "price": { "type": "String" } }
+    },
+    "restingOrderExpiresToday": "expires today {time}",
+    "@restingOrderExpiresToday": {
+        "description": "CR186 when a waiting order dies. Always a market session close, never local midnight. {time} is a local clock time like '11:00 PM'.",
+        "placeholders": { "time": { "type": "String" } }
+    },
+    "restingOrderExpiresInDays": "expires in {days}d",
+    "@restingOrderExpiresInDays": {
+        "description": "CR186 when a waiting order dies, for orders more than a day out. Short form: 'expires in 87d'.",
+        "placeholders": { "days": { "type": "String" } }
+    },
+    "restingOrderRetiredJustNow": "just now",
+    "@restingOrderRetiredJustNow": { "description": "CR186 how long ago a closed order left the book, under a minute. Follows the state word, e.g. 'refused · just now'." },
+    "restingOrderRetiredMinutesAgo": "{minutes}m ago",
+    "@restingOrderRetiredMinutesAgo": {
+        "description": "CR186 how long ago a closed order left the book. Follows the state word, e.g. 'expired · 14m ago'.",
+        "placeholders": { "minutes": { "type": "String" } }
+    },
+    "restingOrderRetiredHoursAgo": "{hours}h ago",
+    "@restingOrderRetiredHoursAgo": {
+        "description": "CR186 how long ago a closed order left the book.",
+        "placeholders": { "hours": { "type": "String" } }
+    },
+    "restingOrderRetiredDaysAgo": "{days}d ago",
+    "@restingOrderRetiredDaysAgo": {
+        "description": "CR186 how long ago a closed order left the book.",
+        "placeholders": { "days": { "type": "String" } }
+    },
     "@tradeTicketFilled": {
         "description": "Snackbar after a trade fills. {side}=BUY/SELL, {qty}=quantity, {ticker}=symbol, {price}=entry price formatted to 2dp.",
         "placeholders": {

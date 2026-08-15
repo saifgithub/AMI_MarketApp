@@ -80,6 +80,7 @@ class SimRestingOrder {
     this.lastSeenPrice,
     this.lastCheckedAt,
     this.distancePct,
+    this.retiredAt,
   });
 
   final String id;
@@ -112,6 +113,11 @@ class SimRestingOrder {
   final double? lastSeenPrice;
   final DateTime? lastCheckedAt;
   final double? distancePct;
+
+  /// DEF309 — when the order LEFT the book, for any of its four exits. Null on
+  /// a live order, and null from a server that predates the column, which the
+  /// card renders as no date rather than as a wrong one.
+  final DateTime? retiredAt;
 
   /// Still in the book — the user can cancel it, and it can still cost money.
   bool get isLive =>
@@ -155,6 +161,7 @@ class SimRestingOrder {
       lastSeenPrice: (j['last_seen_price'] as num?)?.toDouble(),
       lastCheckedAt: _dt(j['last_checked_at']),
       distancePct: (j['distance_pct'] as num?)?.toDouble(),
+      retiredAt: _dt(j['retired_at']),
     );
   }
 }

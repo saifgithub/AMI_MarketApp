@@ -4221,6 +4221,90 @@ abstract class AppLocalizations {
   /// **'unrecognised'**
   String get restingOrderStateUnknown;
 
+  /// CR186 order-type tag on a waiting-order card. A buy limit and a buy stop at the same price behave OPPOSITELY, so the card must name which one it is. Uppercase, mono.
+  ///
+  /// In en, this message translates to:
+  /// **'LIMIT'**
+  String get restingOrderTypeLimit;
+
+  /// CR186 order-type tag on a waiting-order card. Uppercase, mono.
+  ///
+  /// In en, this message translates to:
+  /// **'STOP'**
+  String get restingOrderTypeStop;
+
+  /// CR186 order-type tag on a waiting-order card. Uppercase, mono.
+  ///
+  /// In en, this message translates to:
+  /// **'STOP-LIMIT'**
+  String get restingOrderTypeStopLimit;
+
+  /// CR186 order-type tag for a type this build of the app does not recognise, from a newer server. Deliberately says nothing specific rather than guessing a type the order does not have.
+  ///
+  /// In en, this message translates to:
+  /// **'ORDER'**
+  String get restingOrderTypeUnknown;
+
+  /// CR186 what a waiting order is waiting for, on the order card. Lowercase, follows the order-type tag. Used for a BUY LIMIT and a SELL STOP, which wait on the same comparison.
+  ///
+  /// In en, this message translates to:
+  /// **'waits for a fall to \${price}'**
+  String restingOrderWaitsForFall(String price);
+
+  /// CR186 what a waiting order is waiting for, on the order card. Lowercase, follows the order-type tag. Used for a BUY STOP and a SELL LIMIT.
+  ///
+  /// In en, this message translates to:
+  /// **'waits for a rise to \${price}'**
+  String restingOrderWaitsForRise(String price);
+
+  /// CR186 the second phase of a stop-limit, appended after the waits-for clause. This price is the one that decides whether the order ever fills, and it was previously invisible everywhere outside the trade ticket.
+  ///
+  /// In en, this message translates to:
+  /// **'then a limit at \${price}'**
+  String restingOrderThenLimit(String price);
+
+  /// CR186 a stop-limit whose trigger has fired. It is no longer waiting for the trigger, so the card must stop describing it that way.
+  ///
+  /// In en, this message translates to:
+  /// **'triggered — now a limit at \${price}'**
+  String restingOrderTriggeredNowLimit(String price);
+
+  /// CR186 when a waiting order dies. Always a market session close, never local midnight. {time} is a local clock time like '11:00 PM'.
+  ///
+  /// In en, this message translates to:
+  /// **'expires today {time}'**
+  String restingOrderExpiresToday(String time);
+
+  /// CR186 when a waiting order dies, for orders more than a day out. Short form: 'expires in 87d'.
+  ///
+  /// In en, this message translates to:
+  /// **'expires in {days}d'**
+  String restingOrderExpiresInDays(String days);
+
+  /// CR186 how long ago a closed order left the book, under a minute. Follows the state word, e.g. 'refused · just now'.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get restingOrderRetiredJustNow;
+
+  /// CR186 how long ago a closed order left the book. Follows the state word, e.g. 'expired · 14m ago'.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m ago'**
+  String restingOrderRetiredMinutesAgo(String minutes);
+
+  /// CR186 how long ago a closed order left the book.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h ago'**
+  String restingOrderRetiredHoursAgo(String hours);
+
+  /// CR186 how long ago a closed order left the book.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d ago'**
+  String restingOrderRetiredDaysAgo(String days);
+
   /// Label above a Concierge chat bubble in the conversation surfaces (Onboarding, 1-on-1).
   ///
   /// In en, this message translates to:
