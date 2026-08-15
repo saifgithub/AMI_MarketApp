@@ -58,9 +58,9 @@ Current totals: **32 collidable models**; **13 sites unguarded in place**; **7 f
 | # | File (`backend/app/services/`) | Function | Model | Constraint | State |
 |---|---|---|---|---|---|
 | 1 | `auth_service.py` | `_claim_or_create` | `User` | `email` unique | **DEF308 — open** |
-| 2 | `auth_service.py` | `ensure_anonymous` | `User` | `email`/`phone`/`device_user_id` unique | **DEF308 — open** |
-| 3 | `auth_service.py` | `sign_in_with_apple` | `User` | `apple_id` unique | **DEF308 — open** |
-| 4 | `auth_service.py` | `sign_in_with_google` | `User` | `google_id` unique | **DEF308 — open** |
+| 2 | `auth_service.py` | `ensure_anonymous` | `User` | `email`/`phone` unique; **`device_user_id` is index-only** | **DEF308 — open** |
+| 3 | `auth_service.py` | `sign_in_with_apple` | `User` | **`apple_id` is NOT unique** (see correction below) | **DEF308 — open** |
+| 4 | `auth_service.py` | `sign_in_with_google` | `User` | **`google_id` is NOT unique** (see correction below) | **DEF308 — open** |
 | 5 | `games_desks.py` | `ensure_desk_users` | `User` | `desk_key` unique | **DEF308 — open** |
 | 6 | `lessons_service.py` | `grant_activation` | `AgentActivationRow` | `uq_activation_user_agent` | **DEF308 — open** |
 | 7 | `lessons_service.py` | `mark_started` | `LessonProgressRow` | `uq_lessons_user_lesson` | **DEF308 — open** |
@@ -80,6 +80,22 @@ Current totals: **32 collidable models**; **13 sites unguarded in place**; **7 f
 
 Note rows **17 and 18**: two collidable inserts **in the same function**. The detector saw one and
 not the other for months.
+
+> **Correction, 2026-08-15 — rows 2, 3 and 4 were wrong, and the error changes the problem.**
+> A contributor checked the inventory against `backend/app/db/models.py:73-76,121` rather than
+> trusting it. `apple_id` and `google_id` are plain nullable columns; `device_user_id` carries
+> `index=True`, not a unique index. Verified: only `email`, `phone`, `desk_key` and `handle` are
+> unique on `users`.
+>
+> **Consequence:** two concurrent first-time Apple (or Google) sign-ins do not raise `IntegrityError`
+> at all — they write two user rows with the same provider id, silently. Same for two concurrent
+> anonymous starts on one `device_user_id`. Those three sites are therefore outside the reach of
+> *any* control built on catching a constraint violation, this project's included, until the
+> constraint exists.
+>
+> This is stated as evidence, not as a solution: the inventory assumed a collision surface that the
+> schema does not have. Anyone reading an earlier copy of this brief should re-derive constraint
+> facts from `models.py` rather than from this table.
 
 ### 3.2 The detector has been wrong three times, the same way each time
 

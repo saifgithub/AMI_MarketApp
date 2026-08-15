@@ -1,0 +1,212 @@
+
+[iss001] observer armed over 32 collidable models (measurement run)
+........................................................................ [  1%]
+........................................................................ [  3%]
+........................................................................ [  5%]
+........................................................................ [  6%]
+........................................................................ [  8%]
+........................................................................ [ 10%]
+........................................................................ [ 11%]
+........................................................................ [ 13%]
+........................................................................ [ 15%]
+........................................................................ [ 17%]
+........................................................................ [ 18%]
+........................................................................ [ 20%]
+........................................................................ [ 22%]
+........................................................................ [ 23%]
+........................................................................ [ 25%]
+........................................................................ [ 27%]
+........................................................................ [ 28%]
+........................................................................ [ 30%]
+........................................................................ [ 32%]
+........................................................................ [ 34%]
+........................................................................ [ 35%]
+........................................................................ [ 37%]
+........................................................................ [ 39%]
+........................................................................ [ 40%]
+........................................................................ [ 42%]
+........................................................................ [ 44%]
+........................................................................ [ 46%]
+........................................................................ [ 47%]
+............................................................s........... [ 49%]
+....s................................................................... [ 51%]
+........................................................................ [ 52%]
+........................................................................ [ 54%]
+........................................................................ [ 56%]
+........................................................................ [ 57%]
+........................................................................ [ 59%]
+........................................................................ [ 61%]
+........................................................................ [ 63%]
+........................................................................ [ 64%]
+........................................................................ [ 66%]
+........................................................................ [ 68%]
+........................................................................ [ 69%]
+.................................................................s...... [ 71%]
+........................................................................ [ 73%]
+........................................................................ [ 74%]
+........................................................................ [ 76%]
+........................................................................ [ 78%]
+........................................................................ [ 80%]
+........................................................................ [ 81%]
+........................................................................ [ 83%]
+........................................................................ [ 85%]
+........................................................................ [ 86%]
+........................................................................ [ 88%]
+........................................................................ [ 90%]
+........................................................................ [ 92%]
+........................................................................ [ 93%]
+........................................................................ [ 95%]
+........................................................................ [ 97%]
+........................................................................ [ 98%]
+..................................................                       [100%]
+[iss001] unmanaged collidable inserts observed (model, origin) -> flushes:
+      7  DailyChallengeAttemptRow         app/api/daily_challenge.py:191 attempt
+     32  RevenueCatEventRow               app/api/webhooks.py:305 revenuecat_webhook
+      5  AgentActivationRow               app/db/session.py:82 get_session
+      2  BacktestRunIndexRow              app/db/session.py:82 get_session
+     13  CareerEventRow                   app/db/session.py:82 get_session
+      2  DailyChallengeAttemptRow         app/db/session.py:82 get_session
+     28  GameDuelRow                      app/db/session.py:82 get_session
+    107  GameEntryRow                     app/db/session.py:82 get_session
+     56  GameFieldRow                     app/db/session.py:82 get_session
+    235  JournalEntryRow                  app/db/session.py:82 get_session
+      8  LeagueMemberRow                  app/db/session.py:82 get_session
+      6  LessonProgressRow                app/db/session.py:82 get_session
+      5  MandateRow                       app/db/session.py:82 get_session
+     73  NotificationRow                  app/db/session.py:82 get_session
+      2  OverlayEditCounter               app/db/session.py:82 get_session
+    699  PortfolioNavDailyRow             app/db/session.py:82 get_session
+     22  PortfolioValueSnapshotRow        app/db/session.py:82 get_session
+      4  PriceHistoryDailyRow             app/db/session.py:82 get_session
+      8  ReputationEventRow               app/db/session.py:82 get_session
+      5  RevenueCatEventRow               app/db/session.py:82 get_session
+      8  SimHoldingRow                    app/db/session.py:82 get_session
+     12  SimPortfolioRow                  app/db/session.py:82 get_session
+      5  SimWatchlistRow                  app/db/session.py:82 get_session
+      1  SocialSentimentCacheRow          app/db/session.py:82 get_session
+   4227  TickerReferenceRow               app/db/session.py:82 get_session
+    222  User                             app/db/session.py:82 get_session
+      1  UserDeviceRow                    app/db/session.py:82 get_session
+      3  UserOverlayRow                   app/db/session.py:82 get_session
+     12  UserDeviceRow                    app/services/auth_service.py:127 _upsert_user_device
+    528  User                             app/services/auth_service.py:461 ensure_anonymous
+     10  User                             app/services/auth_service.py:646 sign_in_with_apple
+      9  User                             app/services/auth_service.py:742 sign_in_with_google
+     10  User                             app/services/auth_service.py:798 _claim_or_create
+    362  CareerEventRow                   app/services/career_ledger.py:129 post_career_event
+      6  ClientReleaseFloorRow            app/services/client_release_floor.py:232 create_floor_raise
+     66  User                             app/services/games_desks.py:381 ensure_desk_users
+    294  GameFieldRow                     app/services/games_service.py:435 ensure_field
+      1  User                             app/services/games_service.py:435 ensure_field
+    436  GameEntryRow                     app/services/games_service.py:857 enter_field
+      6  LeagueMemberRow                  app/services/league_service.py:141 weekly_roll
+      5  LeagueMemberRow                  app/services/league_service.py:211 _assemble_week
+      1  LessonProgressRow                app/services/lessons_service.py:564 mark_started
+     17  LessonProgressRow                app/services/lessons_service.py:624 submit_quiz
+      4  AgentActivationRow               app/services/lessons_service.py:713 _check_agent_unlocks
+      2  AgentActivationRow               app/services/lessons_service.py:830 grant_activation
+     58  MandateRow                       app/services/mandate_store.py:156 upsert
+     37  UserOverlayRow                   app/services/overlay_store.py:193 save_new_version
+     14  OverlayEditCounter               app/services/overlay_store.py:227 save_new_version
+     30  PriceHistoryDailyRow             app/services/price_history.py:301 upsert_daily_bars
+     54  ReputationEventRow               app/services/reputation_service.py:244 award
+      7  StreakFreezeRow                  app/services/reputation_service.py:352 freeze
+     13  BadgeRow                         app/services/reputation_service.py:455 _award_badge
+    331  SimHoldingRow                    app/services/sim_engine.py:1267 _execute_fill
+    739  SimPortfolioRow                  app/services/sim_engine.py:730 ensure_portfolio
+     10  SocialSentimentCacheRow          app/services/social_context.py:230 _cache_write
+      3  TickerReferenceRow               app/services/ticker_reference.py:217 upsert_reference
+     34  SimWatchlistRow                  app/services/watchlist_store.py:71 add
+      1  NotificationRow                  tests/unit/test_audit.py:380 test_trim_audit_tables_ages_out_old_notifications
+      9  GameFieldRow                     tests/unit/test_career_ledger.py:39 _make_field
+      9  GameEntryRow                     tests/unit/test_career_ledger.py:49 _make_entry
+      1  CareerEventRow                   tests/unit/test_career_ledger.py:85 test_career_events_row_can_never_carry_a_null_field_id_or_entry_id_at_the_db
+      2  User                             tests/unit/test_cr095_reminder_hour_omitted_disables_pin.py:56 user
+      1  User                             tests/unit/test_cr095_reminder_preference_route.py:125 test_a_user_can_only_write_their_own_row
+      8  User                             tests/unit/test_cr095_reminder_preference_route.py:39 user
+      2  User                             tests/unit/test_cr095_round2_auditor_adversarial_pin.py:113 user
+      9  GameFieldRow                     tests/unit/test_cr109_amendment_i_solvency.py:198 _seed_live_entry
+      1  User                             tests/unit/test_cr121_highest_observed_scans_both_columns_pin.py:37 test_user_devices_column_alone_can_be_the_max
+      1  UserDeviceRow                    tests/unit/test_cr121_highest_observed_scans_both_columns_pin.py:37 test_user_devices_column_alone_can_be_the_max
+      1  User                             tests/unit/test_cr121_highest_observed_scans_both_columns_pin.py:52 test_users_column_alone_can_be_the_max
+      1  UserDeviceRow                    tests/unit/test_cr121_highest_observed_scans_both_columns_pin.py:52 test_users_column_alone_can_be_the_max
+     23  ClientReleaseFloorRow            tests/unit/test_cr121_release_floor.py:51 _make_floor
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:146 test_the_walk_reproduces_value_cash_and_holdings_day_by_day
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:150 test_the_walk_reproduces_value_cash_and_holdings_day_by_day
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:180 test_a_close_sells_only_what_is_still_held
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:199 test_only_grid_days_get_rows_and_a_missing_bar_carries_forward
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:205 test_only_grid_days_get_rows_and_a_missing_bar_carries_forward
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:239 test_a_second_apply_inserts_nothing_and_never_touches_a_live_row
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:239 test_a_second_apply_inserts_nothing_and_never_touches_a_live_row
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:243 test_a_second_apply_inserts_nothing_and_never_touches_a_live_row
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:274 test_a_reset_destroys_the_history_and_the_new_book_starts_over
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:278 test_a_reset_destroys_the_history_and_the_new_book_starts_over
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:297 test_a_reset_destroys_the_history_and_the_new_book_starts_over
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:301 test_a_reset_destroys_the_history_and_the_new_book_starts_over
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:321 test_a_walk_that_cannot_reproduce_today_writes_nothing_for_that_book
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:325 test_a_walk_that_cannot_reproduce_today_writes_nothing_for_that_book
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:339 test_cash_drift_beyond_the_tolerance_also_fails_the_guard
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:413 test_the_drawdown_column_is_versus_starting_capital_not_peak_to_trough
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:419 test_the_drawdown_column_is_versus_starting_capital_not_peak_to_trough
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:448 test_every_backfilled_row_is_identifiable_forever
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:451 test_every_backfilled_row_is_identifiable_forever
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:469 test_synthetic_users_are_backfilled_and_marked
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:472 test_synthetic_users_are_backfilled_and_marked
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:507 test_a_dry_run_exercises_the_insert_path_and_then_writes_nothing
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:510 test_a_dry_run_exercises_the_insert_path_and_then_writes_nothing
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:524 test_the_spot_check_mode_prints_the_whole_series
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:528 test_the_spot_check_mode_prints_the_whole_series
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:641 test_two_books_sharing_a_ticker_each_get_their_own_early_history
+      2  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:671 test_two_books_sharing_a_ticker_each_get_their_own_early_history
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:752 test_a_book_holding_two_names_at_once_values_both
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:758 test_a_book_holding_two_names_at_once_values_both
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:776 test_today_is_never_written_because_the_live_tick_owns_it
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:783 test_today_is_never_written_because_the_live_tick_owns_it
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:854 test_a_user_filtered_run_prices_from_the_run_global_window
+      1  PortfolioValueSnapshotRow        tests/unit/test_cr136_backfill.py:889 test_a_user_filtered_run_prices_from_the_run_global_window
+      1  SimHoldingRow                    tests/unit/test_cr136_backfill.py:930 test_a_cold_benchmark_with_ledgers_to_value_does_not_exit_clean
+      3  SimHoldingRow                    tests/unit/test_cr136_backfill.py:97 _portfolio
+     23  SimPortfolioRow                  tests/unit/test_cr136_backfill.py:97 _portfolio
+     23  User                             tests/unit/test_cr136_backfill.py:97 _portfolio
+      3  SimPortfolioRow                  tests/unit/test_def120_blocking_io_fix.py:80 _sim_with_holdings
+      1  BadgeRow                         tests/unit/test_def220_check_then_insert_outcomes.py:376 test_a_badge_that_loses_the_race_is_skipped_and_the_caller_survives
+      1  SimPortfolioRow                  tests/unit/test_merge_service.py:258 test_execute_merges_trades_into_existing_target_portfolio
+      1  SimPortfolioRow                  tests/unit/test_merge_service.py:267 test_execute_merges_trades_into_existing_target_portfolio
+      1  LeagueMemberRow                  tests/unit/test_merge_service.py:438 test_execute_recomputes_adopter_current_week_league_points_on_seat_conflict
+      5  JournalEntryRow                  tests/unit/test_merge_service.py:70 _make_orphan_with_everything
+      5  SimPortfolioRow                  tests/unit/test_merge_service.py:70 _make_orphan_with_everything
+      1  SimPortfolioRow                  tests/unit/test_price_alert_store.py:117 test_trade_ref_must_belong_to_same_user
+      1  User                             tests/unit/test_secret_crypto.py:62 test_encrypted_string_column_end_to_end
+[iss001] distinct (model, origin) sites: 117
+
+=============================== warnings summary ===============================
+tests/unit/test_cr084_revenuecat_webhook.py::test_unknown_credit_pack_is_422
+  /Volumes/Extreme Pro/AMI_MarketApp/backend/app/api/webhooks.py:346: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    credits = _pack_credits(product_id)
+
+tests/unit/test_cr084_revenuecat_webhook.py::test_unknown_entitlement_is_422
+  /Volumes/Extreme Pro/AMI_MarketApp/backend/app/api/webhooks.py:327: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    target_plan = _entitlement_plan(event)
+
+tests/unit/test_cr128_ticker_existence_validation.py::test_watchlist_add_rejects_nonexistent_ticker
+tests/unit/test_cr128_ticker_existence_validation.py::test_room_stream_rejects_nonexistent_ticker_before_any_spend
+tests/unit/test_def062_mandate_patch_validation.py::test_patch_endpoint_returns_422_for_out_of_range_max_drawdown_pct
+tests/unit/test_def151_chart_period_contract.py::test_a_genuinely_unknown_period_is_still_refused
+tests/unit/test_def151_chart_period_contract.py::test_a_genuinely_unknown_period_is_still_refused
+tests/unit/test_def151_chart_period_contract.py::test_a_genuinely_unknown_period_is_still_refused
+tests/unit/test_def151_chart_period_contract.py::test_a_genuinely_unknown_period_is_still_refused
+tests/unit/test_price_alert_routes.py::test_create_rejects_unknown_ticker
+tests/unit/test_sim_history.py::test_history_invalid_period_returns_422
+  /Volumes/Extreme Pro/AMI_MarketApp/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py:328: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    return await dependant.call(**values)
+
+tests/unit/test_cr128_ticker_existence_validation.py::test_preview_trade_rejects_nonexistent_ticker
+  /Volumes/Extreme Pro/AMI_MarketApp/backend/app/api/sim.py:506: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    _require_ticker_or_422(req.ticker)
+
+tests/unit/test_cr128_ticker_existence_validation.py::test_submit_trade_rejects_nonexistent_ticker
+  /Volumes/Extreme Pro/AMI_MarketApp/backend/app/api/sim.py:557: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    _require_ticker_or_422(req.ticker)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+4223 passed, 3 skipped, 13 warnings in 493.12s (0:08:13)
