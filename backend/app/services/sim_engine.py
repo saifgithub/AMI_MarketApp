@@ -84,6 +84,8 @@ from app.services.sector_allocation import default_sector_map
 from app.services.sharia_universe import default_halal_universe
 from app.trading_math.market_hours import session_close_on_or_after
 from app.trading_math.order_pricing import (
+    LotBracket,
+    blended_bracket,
     bracket_hit,
     bracket_is_wrong_side,
     can_rest,
@@ -597,6 +599,30 @@ def _open_quantity_by_lot(rows: Iterable[SimTradeRow]) -> dict[str, float]:
     return open_by_lot
 
 
+def _lot_brackets(
+    rows: Iterable[SimTradeRow], lot_open: dict[str, float],
+) -> list[LotBracket]:
+    """CR189 — open BUY rows as `blended_bracket` inputs, one assembly.
+
+    Both readers of the position bracket go through here: the sweep, which
+    already holds the rows, and `position_bracket`, which queries for them. The
+    weighting *rule* lives in `blended_bracket`; if the ASSEMBLY were written
+    twice — which side counts, which status, how a NULL level maps — the two
+    could still disagree while both looked right. That is DEF098's shape, and it
+    is the reason this is a function and not two comprehensions.
+    """
+    return [
+        LotBracket(
+            quantity_open=lot_open.get(str(r.id), 0.0),
+            stop=float(r.stop) if r.stop is not None else None,
+            target=float(r.target) if r.target is not None else None,
+        )
+        for r in rows
+        if r.status == "open"
+        and (r.side.value if hasattr(r.side, "value") else str(r.side)) == "buy"
+    ]
+
+
 class SimEngine:
     def __init__(self, provider: MarketDataProvider | None = None) -> None:
         init_schema()
@@ -985,6 +1011,33 @@ class SimEngine:
             existing_open_risk_pct=existing_open_risk,
         )
 
+    def position_bracket(
+        self, user_id: UUID, ticker: str, *, extra: LotBracket | None = None,
+    ) -> tuple[float | None, float | None]:
+        """CR189 — this ticker's position-level stop/target, weighted by open shares.
+
+        The single derivation. The sweep fires on it, the ticket discloses moves
+        to it, and the tile draws it — three readers of one number, because two
+        derivations of one fact is what DEF098 was.
+
+        `extra` prices a lot that does not exist yet: pass the order being
+        submitted and this returns the bracket the position *would* have, which
+        is what the disclosure names and the wrong-side refusal tests.
+        """
+        ticker = ticker.upper().strip()
+        with get_session() as s:
+            rows = s.execute(
+                select(SimTradeRow)
+                .where(training_trade_scope(user_id))
+                .where(SimTradeRow.ticker == ticker)
+                .order_by(SimTradeRow.opened_at.asc())
+            ).scalars().all()
+        lot_open = _open_quantity_by_lot(rows)
+        lots = _lot_brackets(rows, lot_open)
+        if extra is not None:
+            lots.append(extra)
+        return blended_bracket(lots)
+
     def holding_lots(
         self, user_id: UUID, ticker: str, *, current_price: float | None = None,
     ) -> list[Lot]:
@@ -1231,6 +1284,43 @@ class SimEngine:
                     accepted=False, trade=None,
                     compliance=ComplianceResult(
                         passed=False, violations=[wrong_side], blocked_by=None,
+                    ),
+                    portfolio_snapshot=portfolio,
+                )
+
+        # CR189 acceptance 6 — the order's OWN bracket can be perfectly placed
+        # and the resulting POSITION bracket still be wrong-side, because the
+        # blend moves. Buying into a held name with a high stop drags the
+        # position's stop up; land it at or above the mark and the next sweep
+        # liquidates everything, at market, and trips the post-stop-out cooldown
+        # that blocks the user's next buy. That is DEF312's consequence arriving
+        # by arithmetic instead of by typing, so it is a refusal, not a warning.
+        if side == Side.BUY and kind == "training" and held_now is not None:
+            blend_stop, blend_target = self.position_bracket(
+                user_id, ticker,
+                extra=LotBracket(quantity_open=quantity, stop=stop, target=target),
+            )
+            blend_wrong = bracket_is_wrong_side(
+                is_short=False, entry=fill_price,
+                stop=blend_stop, target=blend_target,
+            )
+            if blend_wrong is not None:
+                held_after = float(held_now.quantity) + quantity
+                level, name = (
+                    (blend_stop, "stop") if blend_stop is not None
+                    and blend_stop >= fill_price else (blend_target, "target")
+                )
+                return SubmitResult(
+                    accepted=False, trade=None,
+                    compliance=ComplianceResult(
+                        passed=False,
+                        violations=[
+                            f"adding these shares would move your {name} for all "
+                            f"{held_after:g} {ticker} to ${level:.2f}, which is on "
+                            f"the wrong side of the ${fill_price:.2f} market — the "
+                            f"position would be closed on the next sweep"
+                        ],
+                        blocked_by=None,
                     ),
                     portfolio_snapshot=portfolio,
                 )
@@ -2676,6 +2766,7 @@ class SimEngine:
             rows = [r for r in all_rows if r.status == "open"]
             # Once, not per trade: N trades must sell against one live row.
             p_row = self._load_portfolio_row(s, user_id)
+            live_lots: dict[str, list[tuple[SimTradeRow, float]]] = defaultdict(list)
             for t in rows:
                 side = t.side
                 side_enum = Side(side) if not isinstance(side, Side) else side
@@ -2720,43 +2811,69 @@ class SimEngine:
                 lot_left = lot_open.get(str(t.id), 0.0)
                 if lot_left <= 1e-6:
                     continue
-                if p_row is not None and self._held_quantity(s, p_row, t.ticker) <= 1e-6:
+                live_lots[t.ticker].append((t, lot_left))
+
+            # CR189 — the bracket is evaluated per POSITION, not per row. Two
+            # lots of the same name have two stops and a tile has room for one,
+            # and a tile showing a blended $97 while the sweep still fires $95
+            # and $99 is lying about a risk control. One level, weighted by
+            # shares still open; the sweep and the screen read the same number.
+            for ticker, entries in live_lots.items():
+                if p_row is not None and self._held_quantity(s, p_row, ticker) <= 1e-6:
                     continue
-                price = self.current_price(t.ticker)
+                stop, target = blended_bracket(
+                    _lot_brackets((t for t, _ in entries), lot_open),
+                )
+                if stop is None and target is None:
+                    continue
+                # After the gates, so an unprotected or fully-exited position
+                # never costs a quote.
+                price = self.current_price(ticker)
                 new_status: TradeStatus | None = bracket_hit(  # type: ignore[assignment]
-                    is_short=False,
-                    mark=price,
-                    stop=float(t.stop) if t.stop is not None else None,
-                    target=float(t.target) if t.target is not None else None,
+                    is_short=False, mark=price, stop=stop, target=target,
                 )
                 if new_status is None:
                     continue
-                t.status = new_status
-                t.closed_at = datetime.now(timezone.utc)
-                t.closed_price = price
-                # DEF166: a clamped close (the holding has fewer shares than
-                # `t.quantity` requests — see `_apply_sell_row`) must stamp
-                # `realised_pnl` on the shares actually sold, or the P&L and
-                # the cash movement disagree about how many shares moved.
-                #
-                # DEF318: capped at the LOT's remaining shares as well, not just
-                # the row's original quantity. A lot half-consumed by an earlier
-                # sell (bought 10, 6 already sold) would otherwise close for 10
-                # and eat 6 shares belonging to a later lot — the same
-                # wrong-shares defect as the gate above, one step further in.
-                sold = (
-                    self._apply_sell_row(
-                        s, p_row, t.ticker, min(float(t.quantity), lot_left), price,
-                    )
-                    if p_row is not None else min(float(t.quantity), lot_left)
-                )
-                t.realised_pnl = round((price - float(t.entry_price)) * sold, 2)
-                updates.append(OutcomeUpdate(
-                    trade_id=t.id, new_status=new_status,
-                    closed_price=price, realised_pnl=float(t.realised_pnl),
-                ))
+                # The trigger is shared; the P&L is not. Every live lot closes,
+                # each realising against its OWN entry price, so a $110 lot and a
+                # $95 lot exiting at $97 record a loss and a gain respectively
+                # while both carry the position's status — the POSITION was
+                # stopped out, which is the fact `won`/`lost` is describing.
+                for t, lot_left in entries:
+                    self._close_lot(s, p_row, t, price, new_status, lot_left, updates)
             s.flush()
         return updates
+
+    def _close_lot(
+        self, s, p_row, t: SimTradeRow, price: float, new_status: str,
+        lot_left: float, updates: list[OutcomeUpdate],
+    ) -> None:
+        """Liquidate one live lot at `price` and record it. CR189 split this out
+        of `evaluate_outcomes` when a single bracket hit began closing N lots."""
+        t.status = new_status
+        t.closed_at = datetime.now(timezone.utc)
+        t.closed_price = price
+        # DEF166: a clamped close (the holding has fewer shares than
+        # `t.quantity` requests — see `_apply_sell_row`) must stamp
+        # `realised_pnl` on the shares actually sold, or the P&L and the cash
+        # movement disagree about how many shares moved.
+        #
+        # DEF318: capped at the LOT's remaining shares as well, not just the
+        # row's original quantity. A lot half-consumed by an earlier sell
+        # (bought 10, 6 already sold) would otherwise close for 10 and eat 6
+        # shares belonging to a later lot — the same wrong-shares defect as the
+        # gate above, one step further in.
+        sold = (
+            self._apply_sell_row(
+                s, p_row, t.ticker, min(float(t.quantity), lot_left), price,
+            )
+            if p_row is not None else min(float(t.quantity), lot_left)
+        )
+        t.realised_pnl = round((price - float(t.entry_price)) * sold, 2)
+        updates.append(OutcomeUpdate(
+            trade_id=t.id, new_status=new_status,  # type: ignore[arg-type]
+            closed_price=price, realised_pnl=float(t.realised_pnl),
+        ))
 
     def manual_close(self, user_id: UUID, trade_id: UUID) -> SimTrade | None:
         with get_session() as s:

@@ -36,6 +36,10 @@ from app.services.auth_service import AuthService
 from app.services.merge_service import MergeError, MergeService
 from app.services.reputation_service import ReputationService, iso_week
 
+# Hand-seeds sim rows past the engine (two trade rows, one holding) because the
+# subject is RE-KEYING rows between users, not bookkeeping. No ledger claim to check.
+pytestmark = pytest.mark.allow_ledger_drift
+
 
 def _make_users() -> tuple[User, User]:
     """Two anonymous users — `orphan` (the pre-claim anon) and `adopter`

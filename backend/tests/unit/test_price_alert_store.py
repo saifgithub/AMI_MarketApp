@@ -13,6 +13,9 @@ from app.services.price_alert_store import (
     get_price_alert_store,
 )
 
+# Seeds a bare portfolio + trade row to test alert ownership; never goes through submit.
+pytestmark = pytest.mark.allow_ledger_drift
+
 
 def _create(store, user_id, ticker="AAPL", threshold_type="stop", price=150.0, trade_ref=None):
     return store.create(

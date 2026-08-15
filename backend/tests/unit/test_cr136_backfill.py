@@ -13,6 +13,8 @@ destroy-and-recreate behaviour is the thing under test.
 
 from __future__ import annotations
 
+import pytest
+
 import sys
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -50,6 +52,11 @@ _GRID = [
     for week in (0, 7)
     for offset in (week + 0, week + 1, week + 2, week + 3, week + 4)
 ]
+
+
+# Constructs phantom shares ON PURPOSE — `_holding(..., qty=11)` against a trade of
+# 10 is this file's subject: proving the NAV walk refuses a book it cannot reproduce.
+pytestmark = pytest.mark.allow_ledger_drift
 
 
 def _ts(day: date, hour: int = 15) -> datetime:

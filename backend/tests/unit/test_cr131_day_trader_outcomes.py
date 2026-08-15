@@ -46,6 +46,11 @@ from app.services.journal_store import get_journal_store
 # ── Fixture helpers ─────────────────────────────────────────────────────
 
 
+# Builds a trade HISTORY by hand to measure behaviour across a preset switch;
+# no holdings are implied by it.
+pytestmark = pytest.mark.allow_ledger_drift
+
+
 def _make_portfolio(user_id: UUID, starting_capital: float = 10_000.0) -> UUID:
     portfolio_id = uuid4()
     with get_session() as s:

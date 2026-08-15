@@ -1191,3 +1191,48 @@ taking the same name. The gate is now per *lot*, off the audited FIFO primitive 
 exactly this (`Lot.quantity_open`, CR029-MATH) rather than a second reconstruction in the engine.
 The general lesson: when binding a trigger back to its object, bind it to the *thing*, not to the
 *name* the thing goes by — a ticker is a name, a lot is the thing.
+
+**Enforcing check for the whole family (DEF320).** Three point tests had not stopped a fourth
+instance, because a point test only ever catches the defect it was written for. The guard is now an
+**autouse ledger invariant** — `backend/tests/conftest.py::_ledger_invariant` — which asserts after
+*every* test that `Σ compute_lots_fifo(...).quantity_open == Σ sim_holdings.quantity`, per portfolio
+per ticker. That makes every existing test touching the sim engine a ledger test. It found DEF319
+within minutes of being switched on, in an audited primitive with three consumers, after four rounds
+of hand-reading had missed it.
+
+---
+
+## P23 — a premise that is true of the whole case and false of the partial one
+
+**Instances.** DEF319 (*"a self-close never produces a sell row"* — true when a position exits
+whole, false when 4 of 10 are sold and the other 6 stop out, so two readers double-counted the sold
+shares and the phantom-share detector reported four shares that did not exist). DEF318 (*"is this
+ticker flat"* — a correct test for a full exit, blind to a re-entry, so a dead lot's stop fired on a
+later lot's shares). DEF316's own first framing (*"the exit is recorded once"* — true of every path
+that existed until CR188 slice 2 made ticket-sell the only exit).
+
+**Why it survives review.** The premise is written down, it is *correct*, and it is correct about
+the case everyone pictures. `cost_basis_lots`' docstring states its disjointness premise plainly and
+then reasons from it; `def110_backfill.py` cites that same premise as its justification. **Two
+readers built on one premise confirm each other** — reading either one made the rule look sound,
+which is exactly what happened here for months. The partial case is not a rare edge: it is the
+ordinary one, reached by selling *some* of a position, and CR188 slice 2 turned it into the common
+path without anyone re-asking the question.
+
+**The tell.** A premise phrased with *never*, *always*, or *whole* about a quantity that can be
+divided. `never produces a sell row`, `is flat`, `is recorded once` — each is a claim about a
+partition, stated as if the partition had one member. CR171 shows the pattern being *dodged* rather
+than hit: it refuses a partial short cover outright ("**whole position or nothing**") precisely
+because a partial blends two exit prices into one realised figure, and there is no column to hold
+the blend honestly. That refusal is the same insight arriving in time.
+
+**The invariant.** *Test the premise on the partial case, because the whole case is the one you
+already thought of.* Concretely, for anything that divides — shares, quantities, time ranges, lists —
+write the half-consumed case before the fully-consumed one, and check whether a record carrying two
+events at two different times (a buy that opened at `opened_at` and closed at `closed_at`) is being
+read as though both happened at once. That last conflation is P10 wearing a timestamp.
+
+**Enforcing check.** `backend/tests/conftest.py::_ledger_invariant` covers the ledger family
+above — and covers it precisely because it sums `quantity_open` rather than re-deriving the premise.
+A third implementation written from the same premise would have agreed with the bug, which is the
+trap this pattern sets for its own fix.

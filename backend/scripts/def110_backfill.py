@@ -17,13 +17,30 @@ Idempotence — why this is a state repair, not a replay:
     on a second run. Instead we compute the drift from the trade ledger's own
     view of what should be held:
 
-        expected(portfolio, ticker) = Σ qty over status='open' buys
-                                    − Σ qty over status='open' sells
+        expected(portfolio, ticker) = Σ quantity_open over that ticker's FIFO lots
 
-    won/lost/closed buys are fully-closed positions contributing nothing —
-    the same rule `cost_basis_lots.py` already applies when reconstructing
-    lots. Anything `sim_holdings` carries above `expected` is phantom. Once
-    repaired the drift is zero, so a second run finds nothing to do.
+    Anything `sim_holdings` carries above `expected` is phantom. Once repaired
+    the drift is zero, so a second run finds nothing to do.
+
+    **DEF319 — this used to be its own formula**, `Σ open buys − Σ open sells`,
+    justified as "the same rule `cost_basis_lots.py` already applies". It was
+    not the same rule, and the gap opened on an ordinary sequence:
+
+        buy 10 @ $100  ·  sell 4 through the ticket  ·  the other 6 stop out
+
+    The stopped-out BUY row leaves the open set carrying all 10, while the SELL
+    row keeps subtracting its 4 — so `expected` reads −4 against a holding of 0
+    and this script reports **4 phantom shares that do not exist**. The premise
+    that made the formula look sound (*"a self-close never produces a sell
+    row"*) is true of whole positions and false of partial ones. Two derivations
+    of one fact, drifting exactly where it mattered — DEF098's shape, in the
+    detector built to catch drift.
+
+    It now sums `compute_lots_fifo`'s `quantity_open`: the audited FIFO
+    primitive (CR029-MATH) is the single derivation of "how much of this lot is
+    still held", shared with `SimEngine`'s bracket gates (DEF318), the
+    position-level bracket (CR189), the per-lot display, and the autouse ledger
+    invariant in `tests/conftest.py`.
 
 Cash is attributed by walking that ticker's won/lost buy trades oldest-close
 first and crediting each consumed chunk at its own `closed_price` — the price
@@ -69,6 +86,7 @@ from sqlalchemy import select
 
 from app.db.models import SimHoldingRow, SimPortfolioRow, SimTradeRow
 from app.db.session import get_sessionmaker
+from app.services.cost_basis_lots import compute_lots_fifo
 from app.services.sim_engine import SimEngine
 
 
@@ -88,15 +106,17 @@ def _plan_and_apply(s, engine: SimEngine) -> tuple[list[str], float, float, int]
             select(SimTradeRow).where(SimTradeRow.portfolio_id == p_row.id)
         ).scalars().all()
 
-        expected: dict[str, float] = defaultdict(float)
+        # DEF319 — one derivation, `compute_lots_fifo`, instead of the parallel
+        # formula this script used to carry. See the module docstring.
+        by_ticker: dict[str, list[SimTradeRow]] = defaultdict(list)
         for t in trades:
-            if t.status != "open":
-                continue
-            side = t.side.value if hasattr(t.side, "value") else str(t.side)
-            if side == "buy":
-                expected[t.ticker] += float(t.quantity)
-            elif side == "sell":
-                expected[t.ticker] -= float(t.quantity)
+            by_ticker[t.ticker].append(t)
+
+        expected: dict[str, float] = defaultdict(float)
+        for ticker, rows in by_ticker.items():
+            expected[ticker] = sum(
+                lot.quantity_open for lot in compute_lots_fifo(rows)
+            )
 
         # Oldest close first, so proceeds are attributed in the order the
         # sales should have happened.

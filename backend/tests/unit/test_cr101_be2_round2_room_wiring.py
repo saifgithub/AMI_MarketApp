@@ -53,6 +53,11 @@ from app.services.sim_engine import get_sim_engine
 _FIXED_NOW = datetime(2026, 7, 30, 12, 0)
 
 
+# Hand-seeds a trade row to drive the over-trading / open-risk guards; the room
+# wiring is the subject, not the holdings ledger.
+pytestmark = pytest.mark.allow_ledger_drift
+
+
 class _FrozenClock(datetime):
     @classmethod
     def now(cls, tz=None):  # noqa: D102 — matches datetime.now's own signature

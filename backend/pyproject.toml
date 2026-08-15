@@ -60,6 +60,9 @@ ignore = ["E501"]  # line length handled by formatter
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "allow_ledger_drift: this test makes no claim about sim bookkeeping — either it constructs drift on purpose (the phantom-share detector and its repair script) or it hand-seeds sim rows past the engine (fixtures building SimTradeRow/SimHoldingRow directly). Exempts it from the autouse ledger-invariant check in conftest.py. State WHY in a comment beside it: on anything that reaches the engine through submit/evaluate_outcomes/manual_close, this marker is silencing the alarm, not scoping it.",
+]
 
 [tool.mypy]
 python_version = "3.13"

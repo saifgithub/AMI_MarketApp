@@ -118,23 +118,48 @@ def test_a_liquidated_position_leaves_the_sector_concentration_view():
     assert sim.total_value(user_id) == 10_050.0  # all cash, nothing marked
 
 
-def test_only_the_hit_trade_liquidates_partial_position_survives():
-    """The live `abc5e232` case: 3 TSLA held, 2 genuinely open, 1 phantom."""
+def test_two_lots_exit_on_the_positions_blended_level_not_their_own():
+    """The live `abc5e232` case, re-asserted under CR189 rather than deleted.
+
+    It used to pin *"only the hit trade liquidates, the sibling's shares
+    survive"* — 1 TSLA with a $110 target and 2 with a $900 target, and at $110
+    exactly one row closed. **CR189 removes per-row exits by design:** a bracket
+    is stored per trade row, a position is per ticker, and a tile showing one
+    blended number while the sweep fires two different ones is lying about a
+    risk control. So the position has one level, weighted by open shares.
+
+    The consequence is real and worth stating where it will be read: **two lots
+    with different exits no longer scale out.** Blended, this book's target is
+    (110×1 + 900×2)/3 = $636.67 and its stop is (90×1 + 50×2)/3 = $63.33 —
+    neither of the levels the user typed. Scaling out is now a resting SELL
+    order (CR170), which is the mechanism actually built for a partial exit at a
+    named price, and which renders on the position's own tile.
+
+    Measured before shipping: **no training position on Alpha has more than one
+    open lot**, so no live user's bracket was moved by this change (the three
+    multi-lot positions are game-lane, carry no brackets, and `evaluate_outcomes`
+    is training-scoped regardless).
+    """
     sim, provider = _engine(100.0)
     user_id = uuid4()
-    _buy(sim, user_id, "TSLA", 1, stop=90.0, target=110.0)   # hits at 110
-    _buy(sim, user_id, "TSLA", 2, stop=50.0, target=900.0)   # stays open
+    _buy(sim, user_id, "TSLA", 1, stop=90.0, target=110.0)
+    _buy(sim, user_id, "TSLA", 2, stop=50.0, target=900.0)
 
     assert sim.ensure_portfolio(user_id).holdings[0].quantity == 3
 
+    # $110 is one lot's own target and nowhere near the position's.
     provider.price = 110.0
+    assert sim.evaluate_outcomes(user_id) == []
+    assert sim.ensure_portfolio(user_id).holdings[0].quantity == 3
+
+    # The blended target. The whole position exits, one lot per update.
+    provider.price = 636.67
     updates = sim.evaluate_outcomes(user_id)
 
-    assert [u.new_status for u in updates] == ["won"]
+    assert sorted(u.new_status for u in updates) == ["won", "won"]
     p = sim.ensure_portfolio(user_id)
-    assert [(h.ticker, h.quantity) for h in p.holdings] == [("TSLA", 2)], \
-        "the untouched trade's shares must survive its sibling's close"
-    assert p.current_cash == 9_810.0  # 9700 + 1 * 110
+    assert not any(h.ticker == "TSLA" for h in p.holdings)
+    assert p.current_cash == round(9_700.0 + 3 * 636.67, 2)
 
 
 def test_two_trades_hitting_together_liquidate_the_whole_holding_once():

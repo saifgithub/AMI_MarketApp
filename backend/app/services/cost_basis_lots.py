@@ -50,6 +50,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import NamedTuple
 
 from app.core.logging import logger
@@ -132,6 +133,62 @@ def _apply_sell(lots: list[_LotAcc], sell_qty: float, sell_price: float) -> None
         )
 
 
+_OPEN, _SELL, _SELF_CLOSE = 0, 1, 2
+
+
+def _ts(value: object) -> datetime:
+    """Sortable UTC timestamp. sqlite hands back naive datetimes and Postgres
+    aware ones, and this now sorts `opened_at` against `closed_at` in one
+    sequence — comparing the two kinds raises."""
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+    return datetime.min.replace(tzinfo=timezone.utc)
+
+
+def _event_stream(trades: Iterable[object]) -> list[tuple[int, datetime, str, object]]:
+    """DEF319 — the order stream as timed EVENTS, not as rows.
+
+    A buy row carries **two** events at two different times: it opens a lot at
+    `opened_at`, and — if it self-closed on a stop/target/manual — it closes the
+    remainder at `closed_at`. Treating the self-close as a *property of the buy*
+    collapses them onto `opened_at`, which erases every sell that landed in
+    between:
+
+        buy 10 @ $100 (Aug 1)  ·  sell 4 @ $103 (Aug 2)  ·  stop out (Aug 3)
+
+    Read as one row, the lot was "fully closed for 10" the moment it opened, the
+    sell had nothing left to draw from (`cost_basis_oversell unmatched=4.0`), and
+    `def110_backfill.py`'s `expected()` reported **4 phantom shares that do not
+    exist** — the buy's 10 left the positive side while the sell's 4 kept
+    subtracting. That is an entirely ordinary sequence: sell part of a position,
+    let the rest stop out. It became the *common* case with CR188 slice 2, which
+    made ticket-sell the only exit.
+
+    The module's stated premise — *"self-closed buys and sell orders are disjoint
+    records"* — is true of whole positions and false of partial ones, which is
+    why it read as sound for so long.
+
+    Rank breaks ties at equal timestamps: a lot must open before it can be sold
+    from, and a same-instant sell draws before the self-close takes the
+    remainder.
+    """
+    events: list[tuple[int, datetime, str, object]] = []
+    for t in trades:
+        tid = str(getattr(t, "id", ""))
+        side = _side_str(getattr(t, "side", ""))
+        if side == "buy":
+            events.append((_OPEN, _ts(getattr(t, "opened_at", None)), tid, t))
+            if _is_self_closed_buy(t):
+                closed_at = getattr(t, "closed_at", None) or getattr(t, "opened_at", None)
+                events.append((_SELF_CLOSE, _ts(closed_at), tid, t))
+        elif side == "sell":
+            events.append((_SELL, _ts(getattr(t, "opened_at", None)), tid, t))
+        else:
+            logger.warn("cost_basis_unknown_side", side=side, trade_id=tid)
+    events.sort(key=lambda e: (e[1], e[0], e[2]))
+    return events
+
+
 def _freeze(acc: _LotAcc, current_price: float | None) -> Lot:
     entry_date = acc.entry_date
     iso = entry_date.isoformat() if hasattr(entry_date, "isoformat") else str(entry_date)
@@ -181,14 +238,10 @@ def compute_lots_fifo(
     educational data point). See the module docstring for how `sell` orders
     and self-closed buys are reconciled.
     """
-    ordered = sorted(
-        trades, key=lambda t: (getattr(t, "opened_at", None), str(getattr(t, "id", "")))
-    )
-
     lots: list[_LotAcc] = []
-    for t in ordered:
-        side = _side_str(getattr(t, "side", ""))
-        if side == "buy":
+    by_id: dict[str, _LotAcc] = {}
+    for kind, _ts, _seq, t in _event_stream(trades):
+        if kind == _OPEN:
             qty = float(t.quantity)
             acc = _LotAcc(
                 entry_trade_id=str(getattr(t, "id", "")),
@@ -199,15 +252,20 @@ def compute_lots_fifo(
                 quantity_closed=0.0,
                 realised_pnl=0.0,
             )
-            if _is_self_closed_buy(t):
-                acc.quantity_open = 0.0
-                acc.quantity_closed = qty
-                acc.realised_pnl = round(float(getattr(t, "realised_pnl", 0.0) or 0.0), 2)
-                acc.self_closed = True
             lots.append(acc)
-        elif side == "sell":
+            by_id[acc.entry_trade_id] = acc
+        elif kind == _SELL:
             _apply_sell(lots, float(t.quantity), float(t.entry_price))
-        else:
-            logger.warn("cost_basis_unknown_side", side=side, trade_id=str(getattr(t, "id", "")))
+        elif kind == _SELF_CLOSE:
+            # DEF319 — the self-close takes what is LEFT of the lot, not the
+            # quantity the buy originally opened. See `_event_stream`.
+            acc = by_id[str(getattr(t, "id", ""))]
+            remaining = max(acc.quantity_open, 0.0)
+            acc.quantity_open = 0.0
+            acc.quantity_closed = round(acc.quantity_closed + remaining, 6)
+            acc.realised_pnl = round(
+                acc.realised_pnl + float(getattr(t, "realised_pnl", 0.0) or 0.0), 2
+            )
+            acc.self_closed = True
 
     return [_freeze(acc, current_price) for acc in lots]

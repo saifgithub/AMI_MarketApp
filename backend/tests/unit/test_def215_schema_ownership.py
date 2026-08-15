@@ -31,6 +31,11 @@ from sqlalchemy import inspect, text
 from app.db import session as db_session
 from app.db.session import get_engine, init_schema, reset_for_tests
 
+# Deliberately stands up databases at OLDER alembic revisions, where
+# `sim_holdings.split_adjusted_at` does not exist yet — the ledger check cannot
+# query a schema this file exists to hold at an earlier point.
+pytestmark = pytest.mark.allow_ledger_drift
+
 _A_TABLE_A_CR_MIGHT_ADD = "price_history_daily"
 
 

@@ -22,6 +22,8 @@ import sys
 from pathlib import Path
 from uuid import uuid4
 
+import pytest
+
 from sqlalchemy import select
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
@@ -188,6 +190,7 @@ def test_backfill_does_nothing_to_a_clean_portfolio():
     assert _portfolio(user_id) == before
 
 
+@pytest.mark.allow_ledger_drift  # constructs a phantom on purpose — that IS the subject
 def test_backfill_refuses_to_price_a_close_with_no_closed_price():
     """Degrade loudly: unattributable drift is left in place and reported."""
     sim = SimEngine(provider=_FixedPrice(100.0))

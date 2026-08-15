@@ -248,3 +248,128 @@ def proposed_buy_nvda() -> ProposedTrade:
 @pytest.fixture
 def all_agents() -> tuple[AgentId, ...]:
     return tuple(a for a in AgentId if a != AgentId.CONCIERGE)
+
+
+# ── The ledger invariant, enforced on every test (CR189 / DEF316 / DEF318) ──
+
+
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
+def pytest_runtest_makereport(item, call):
+    """Record each phase's outcome so the ledger check can skip an already-failed
+    test — an assertion in teardown would otherwise bury the real failure."""
+    outcome = yield
+    setattr(item, f"_rep_{call.when}", outcome.get_result())
+
+
+@pytest.fixture(autouse=True)
+def _ledger_invariant(request, _isolated_db):
+    """`Σ open BUY − Σ open SELL == Σ holdings`, per portfolio, per ticker.
+
+    **Why this is autouse rather than one more test.** Three defects in three
+    days were the same fact going wrong — a trade row and the shares behind it
+    disagreeing — and each was found by hand, days apart, after shipping:
+
+      * DEF311 — a resting sell outlived the shares it was selling, and opened a
+        short when it fired.
+      * DEF316 — a bracket outlived the shares it protected; the exit was then
+        counted twice and `expected()` went negative into false phantom shares.
+      * DEF318 — a dead lot's bracket fired on a later lot's shares.
+
+    A point test per defect only ever catches the defect it was written for.
+    This makes **every existing test that touches the sim engine** a ledger test:
+    whatever a future change breaks, it fails in whatever test happens to
+    exercise it, immediately, instead of being found by reading a table on Alpha
+    weeks later. That is the difference between a guard and a note
+    (`failure_patterns.md`'s house rule: an entry without an enforcing check is
+    not done).
+
+    **This is `def110_backfill.py`'s own derivation**, which is the point. The
+    detector runs offline against production and answers "did we drift"; the
+    same arithmetic here answers "can this code drift" before it ships. It is
+    also why a BUY row deliberately stays `open` after a ticket sell — closing
+    it would subtract the same exit twice — so this fixture pins the reason that
+    design exists, not just its result.
+
+    It sums `compute_lots_fifo`'s `quantity_open` rather than re-deriving
+    `Σ open BUY − Σ open SELL`, and DEF319 is why: those two are NOT the same
+    number once a lot is partially sold and then stops out, and the backfill's
+    original formula was the one that was wrong. Writing the check as a third
+    implementation would have made it agree with the bug.
+
+    **Shorts do not break it**, and that is load-bearing rather than lucky: a
+    short open/cover writes NO `sim_trades` row (CR171 acceptance 5, so
+    `expected()` is byte-identical across opening a short), and its shares live
+    in `sim_short_positions`. If a short ever started writing a sell row this
+    fixture would fail loudly, which is the correct response.
+
+    Opt out with `@pytest.mark.allow_ledger_drift` — only for tests that
+    deliberately construct drift, i.e. the phantom-share detector's own tests and
+    the repair scripts'. Adding it anywhere else is silencing the alarm.
+    """
+    yield
+
+    rep = getattr(request.node, "_rep_call", None)
+    if rep is not None and rep.failed:
+        return  # do not bury the real failure under a consequence of it
+    if request.node.get_closest_marker("allow_ledger_drift"):
+        return
+
+    from collections import defaultdict
+
+    from sqlalchemy import select
+
+    from app.db import get_session
+    from app.db.models import SimHoldingRow, SimTradeRow
+    from app.services.cost_basis_lots import compute_lots_fifo
+
+    with get_session() as s:
+        trades = s.execute(select(SimTradeRow)).scalars().all()
+        holdings = s.execute(select(SimHoldingRow)).scalars().all()
+        grouped: dict[tuple, list] = defaultdict(list)
+        for t in trades:
+            grouped[(t.portfolio_id, t.ticker)].append(t)
+
+        expected: dict[tuple, float] = defaultdict(float)
+        for key, rows in grouped.items():
+            expected[key] = sum(lot.quantity_open for lot in compute_lots_fifo(rows))
+
+        held: dict[tuple, float] = defaultdict(float)
+        # A split is a DECLARED divergence, not drift: `apply_split` multiplies
+        # `quantity` and divides `avg_cost` in place, writing no trade row,
+        # because a split changes the share count without an economic event
+        # (CR109 §12). `split_adjusted_at` is the flag that says so, which is
+        # why this is skipped by rule rather than by exemption. The whole PAIR
+        # drops out, not the holding row — dropping only the holding leaves the
+        # trade side unopposed and reports the same drift with its sign flipped.
+        split_adjusted = {
+            (h.portfolio_id, h.ticker) for h in holdings
+            if getattr(h, "split_adjusted_at", None) is not None
+        }
+        for h in holdings:
+            held[(h.portfolio_id, h.ticker)] += float(h.quantity)
+
+    # Only where the ENGINE wrote the ledger. A (portfolio, ticker) with no
+    # trade rows at all was hand-seeded by a fixture reaching past `submit` —
+    # common, and not a claim about bookkeeping, so there is nothing here to
+    # keep consistent. Scoping this way rather than exempting ~20 test files
+    # keeps the guard's meaning exact: *the engine's ledger explains the
+    # holdings the engine produced.* Every defect in this family (DEF311,
+    # DEF316, DEF318, DEF319) has trade rows on both sides and is still caught.
+    drift = [
+        (key, held.get(key, 0.0), expected.get(key, 0.0))
+        for key in set(expected) | set(held)
+        if key in grouped
+        and key not in split_adjusted
+        and abs(held.get(key, 0.0) - expected.get(key, 0.0)) > 1e-6
+    ]
+    if drift:
+        lines = "\n".join(
+            f"  portfolio {pid} {ticker}: holdings={h:g} expected={e:g} "
+            f"drift={h - e:+g}"
+            for (pid, ticker), h, e in drift
+        )
+        raise AssertionError(
+            "sim ledger and holdings disagree — this is the phantom-share "
+            "condition `def110_backfill.py` detects on production, reached here "
+            "by code rather than by data:\n" + lines
+        )

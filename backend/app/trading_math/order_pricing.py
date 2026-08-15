@@ -67,7 +67,12 @@ mark` unconditionally and lets a *branch* decide rest-vs-fill; only
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+from typing import NamedTuple
+
 from app.schemas.trade import OrderType, Side
+
+_EPS = 1e-9
 
 RESTING_ORDER_TYPES: frozenset[OrderType] = frozenset(
     {OrderType.LIMIT, OrderType.STOP, OrderType.STOP_LIMIT}
@@ -254,3 +259,59 @@ def bracket_is_wrong_side(
             f"the position never made"
         )
     return None
+
+
+class LotBracket(NamedTuple):
+    """One live buy lot's contribution to its position's bracket (CR189)."""
+
+    quantity_open: float
+    stop: float | None
+    target: float | None
+
+
+def blended_bracket(
+    lots: Iterable[LotBracket],
+) -> tuple[float | None, float | None]:
+    """CR189 — a position's single stop/target, weighted by shares still open.
+
+    A bracket is stored per trade row; a position is per ticker. Buy the same
+    name twice and there are two stops, and no honest way to draw one tile —
+    if the screen shows a blended $97 while the sweep still fires $95 and $99,
+    it is lying about a risk control. So the position gets one level and the
+    sweep evaluates it.
+
+    Weighted by `quantity_open` (`cost_basis_lots.Lot`, CR029-MATH), which makes
+    a sold-out lot weigh nothing — DEF318 restated as arithmetic rather than
+    enforced as a second gate.
+
+    **A lot with no stop is EXCLUDED from the stop average, not counted as
+    zero**, and that single choice is the whole special-case handling:
+
+        10 @ $100 stop $95  +  10 @ $110 stop $99   ->  $97.00
+        10 @ $100 stop $95  +  10 @ $110 no stop    ->  $95.00
+        10 @ $100 no stop   +  10 @ $110 no stop    ->  None
+
+    The middle case is the one with no obviously-right answer. Counting the
+    unbracketed lot as zero drags the stop to $47.50, which protects nothing;
+    dropping the stop removes a control the user set by hand. Excluding it
+    carries the existing protection across the whole position, which is the only
+    one of the three a user would recognise as their own intent.
+
+    Stop and target are computed independently — a book where one lot set only a
+    stop and the other only a target yields both, each over its own contributors.
+    """
+    stop_num = stop_den = 0.0
+    target_num = target_den = 0.0
+    for lot in lots:
+        qty = float(lot.quantity_open)
+        if qty <= _EPS:
+            continue
+        if lot.stop is not None:
+            stop_num += float(lot.stop) * qty
+            stop_den += qty
+        if lot.target is not None:
+            target_num += float(lot.target) * qty
+            target_den += qty
+    stop = round(stop_num / stop_den, 2) if stop_den > _EPS else None
+    target = round(target_num / target_den, 2) if target_den > _EPS else None
+    return stop, target

@@ -323,24 +323,36 @@ def test_the_live_lots_own_stop_still_fires_after_a_re_entry():
     assert _row(live.id).realised_pnl == -140.0
 
 
-def test_a_half_consumed_lot_closes_for_its_own_shares_only():
-    """One step further in. Lot 1 bought 10 and 6 have been sold; 4 are behind
-    it. Closing it for the row's original 10 would eat 6 shares belonging to
-    lot 2 — the same wrong-shares defect, inside a single close.
+def test_each_lot_realises_against_its_own_entry_on_a_shared_trigger():
+    """The lot-accounting half, which CR189 does NOT change.
+
+    One trigger closes the whole position (CR189 — the level is per position),
+    but the money is still per lot: lot 1 has 4 shares left behind it after an
+    earlier sell of 6, lot 2 has 10, and they were bought $10 apart. Each must
+    realise on its own share count at its own entry price. Closing lot 1 for the
+    row's original 10 would eat 6 shares belonging to lot 2 (DEF318's second
+    half), and stamping both against one entry would misreport both.
+
+    Only lot 1 carries a stop, so the position's stop is $95.00 — the
+    "protection carried across the whole position" case, and here it is doing
+    exactly that: lot 2 is unprotected on its own and exits with the position.
     """
     prov = _Pinned({"NVDA": 100.0})
     sim = SimEngine(provider=prov)
     user_id = uuid4()
     partial = _buy(sim, user_id, "NVDA", 10, stop=95.0)
-    _sell(sim, user_id, "NVDA", 6)          # FIFO: consumes 6 of lot 1
-    later = _buy(sim, user_id, "NVDA", 10, target=200.0)  # untouched by the stop
+    _sell(sim, user_id, "NVDA", 6)                 # FIFO: consumes 6 of lot 1
+    prov.prices["NVDA"] = 110.0
+    later = _buy(sim, user_id, "NVDA", 10)         # no stop of its own
 
     prov.prices["NVDA"] = 94.0
     sim.evaluate_outcomes(user_id)
 
     assert _row(partial.id).status == "lost"
-    # (94 − 100) × 4, not × 10.
+    assert _row(later.id).status == "lost"
+    # (94 − 100) × 4 — its own 4 remaining shares, not the row's original 10.
     assert _row(partial.id).realised_pnl == -24.0
-    assert _row(later.id).status == "open"
+    # (94 − 110) × 10 — its own entry, $10 above lot 1's.
+    assert _row(later.id).realised_pnl == -160.0
     p = sim.ensure_portfolio(user_id)
-    assert [h.quantity for h in p.holdings] == [10.0], "lot 2's shares were taken"
+    assert not any(h.ticker == "NVDA" for h in p.holdings)

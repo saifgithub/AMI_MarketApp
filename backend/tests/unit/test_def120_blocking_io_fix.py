@@ -33,6 +33,10 @@ from app.services.auth_service import AuthService
 from app.services.market_data import CachingProvider, Quote, set_market_data_provider
 from app.services.sim_engine import SimEngine
 
+# Builds a portfolio + holdings directly to time the quote fan-out; no trades, so
+# there is no ledger claim here either.
+pytestmark = pytest.mark.allow_ledger_drift
+
 
 class _SlowProvider:
     """A quote leaf with a deliberate, measurable delay — no live Yahoo
