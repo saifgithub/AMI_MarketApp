@@ -23,6 +23,10 @@ from __future__ import annotations
 
 from uuid import uuid4
 
+from sqlalchemy import select
+
+from app.db import get_session
+from app.db.models import SimTradeRow
 from app.schemas.trade import OrderType, Side
 from app.services.coach_engine import hydrate_coach_mandate
 from app.services.market_data import Quote
@@ -199,12 +203,27 @@ def test_a_trade_larger_than_its_holding_sells_only_what_is_there():
 
 
 def test_trades_outrunning_the_holding_never_credit_phantom_cash():
-    """Guards `_apply_sell_row`'s already-deleted check.
-
-    Two open buys of 5 against a holding of 5 — reachable when a sell order
-    already drew the position down. The first close empties the holding; the
-    second must find nothing to sell and credit nothing, or the user is paid
+    """Two open buys of 5 against a holding of 5 — reachable when a sell order
+    already drew the position down. The guarantee is that the user is never paid
     for shares that do not exist.
+
+    **DEF316 made the outcome stronger, and this test was rewritten rather than
+    deleted.** It used to assert `["won", "won"]`: the first close emptied the
+    holding and the second transitioned anyway, selling nothing and crediting
+    nothing. The cash was right and the ledger was not — with the sell row still
+    subtracting, `def110_backfill.py`'s `expected()` read 0 − 5 = −5 against a
+    holding of 0, which its own detector reads as **5 phantom shares**. So the
+    second `won` was the defect this test was pinning in place.
+
+    Now the flat position is skipped before the transition: one `won`, the same
+    cash, and `expected()` = 5 − 5 = 0 against a holding of 0. Cash was never the
+    half that was broken, so the cash assertions below are unchanged.
+
+    One consequence, named rather than left to be discovered: `_apply_sell_row`'s
+    `h in s.deleted` check is no longer reachable from here, because
+    `_held_quantity` applies the same exclusion one level up and skips the row
+    first. It stays as a backstop at a helper with three callers — but it is not
+    what prevents phantom cash any more, and should not be read as if it were.
     """
     sim, provider = _engine(100.0)
     user_id = uuid4()
@@ -224,8 +243,25 @@ def test_trades_outrunning_the_holding_never_credit_phantom_cash():
     provider.price = 110.0
     updates = sim.evaluate_outcomes(user_id)
 
-    assert sorted(u.new_status for u in updates) == ["won", "won"]
+    assert sorted(u.new_status for u in updates) == ["won"], \
+        "the second row had no shares left to close — DEF316"
     p = sim.ensure_portfolio(user_id)
     assert p.holdings == []
     assert p.current_cash == cash_before + 5 * 110.0, \
         "cash credited for 10 shares when only 5 were held"
+
+    # The ledger half, which is what DEF316 actually changed: one open buy of 5
+    # still standing against the open sell of 5, so `expected()` is 0 — matching
+    # the holding of 0. Transitioning both rows made it −5.
+    with get_session() as s:
+        open_rows = s.execute(
+            select(SimTradeRow).where(
+                SimTradeRow.user_id == user_id,
+                SimTradeRow.status == "open",
+            )
+        ).scalars().all()
+    expected = sum(
+        float(t.quantity) * (1 if str(getattr(t.side, "value", t.side)) == "buy" else -1)
+        for t in open_rows
+    )
+    assert expected == 0.0

@@ -1137,3 +1137,57 @@ coverage (both `description()` and `text()`) rather than dispatch alone. But no 
 prove a gesture moved a real screen. The standing requirement is that a device-dependent check ships
 with a recorded observation of it *failing* on a screen that should trip it — cite the run in the CR,
 the way `mutation_guard.sh` is cited for the crawler.
+
+---
+
+## P22 — A trigger outlives the thing it was attached to
+
+**Instances.** DEF311 (a resting sell survived the position it protected, and the three-case sell
+rule then read `held == 0` and opened a **short** — unbounded loss in an account the user believed
+was flat). DEF316 (a trade row's own stop/target survived the shares it protected, and the sweep
+"stopped out" a position sold days earlier — the exit recorded twice, `def110_backfill.py`'s
+`expected()` driven negative into false phantom shares, and a LOST outcome shown at $0.00 realised).
+
+**Why the previous guard failed, structurally.** DEF311's fix is *correct and was placed
+deliberately*: `_apply_sell_row` is "the chokepoint every share reduction crosses", so retiring
+orphaned resting sells there covers `manual_close`, `evaluate_outcomes` and `_execute_fill` at once —
+and its docstring says exactly that. It did not generalise because **the second trigger does not
+cross that chokepoint.** A trade row's bracket is not a row in `sim_resting_orders`; it is two
+columns on `sim_trades` swept by a different function. A fix keyed on "every path that reduces a
+holding" cannot reach a trigger that is never consulted on the reduction path. The chokepoint was
+right about the *paths* and silent about the *triggers*.
+
+DEF311's own docstring even names one uncovered mirror ("covering a short by hand leaves a resting
+buy that opens a fresh long"). Naming one exception is not the same as enumerating the set, and the
+one it did not name is the one that bit.
+
+**The invariant.** *Enumerate the triggers, not the paths.* A position can be armed by more than one
+mechanism, and they do not live in one table. Today: `sim_resting_orders` rows (`working`/`triggered`),
+`sim_trades.stop`/`.target` on an open BUY row, and `sim_short_positions`' inverted bracket. When
+shares leave, **every** trigger armed against them must be answered — retired, skipped, or explicitly
+declared still-live with a reason.
+
+**The tell.** A trigger is at risk whenever the thing it fires against is *derived* rather than
+owned. `evaluate_outcomes` fired on `sim_trades.status == 'open'`, which it read as "this position
+exists". It does not mean that — the row is deliberately left open after a sell so `expected()` can
+subtract the sell row against it. One field carrying "the ledger still needs this row" and "there is
+a live position here" is P10's shape underneath P22's.
+
+**Enforcing check.** `backend/tests/unit/test_def316_stale_bracket_on_sold_shares.py` — asserts the
+sweep does not fire on sold shares, that `expected()` stays at zero across a sweep (the ledger half,
+which is the one that goes wrong silently), and, in the same file, that a real stop **still fires**
+and a partially-sold position keeps its bracket live. That last pair is not padding: the natural
+overcorrection here disables every bracket in the app, and the other tests pass while it does — P21
+one step away. Both the resting-order retirement and the bracket gate now ask
+`SimEngine._held_quantity` the same question through the same function, so they cannot answer it
+differently (DEF098's shape).
+
+**Third instance, and the sharpest form (DEF318).** The first fix for DEF316 gated on *"is this
+ticker flat"* — which is correct when the user exited and blind the moment they re-entered. Sell out
+of NVDA, buy back in with a **lower** stop, and the dead lot's stop is live again against the new
+lot's shares: measured firing at $94 against a $90 stop, stamping the loss on the wrong entry price.
+Here the trigger did not merely outlive its object; it was **re-armed** by a later, unrelated object
+taking the same name. The gate is now per *lot*, off the audited FIFO primitive that already meant
+exactly this (`Lot.quantity_open`, CR029-MATH) rather than a second reconstruction in the engine.
+The general lesson: when binding a trigger back to its object, bind it to the *thing*, not to the
+*name* the thing goes by — a ticker is a name, a lot is the thing.

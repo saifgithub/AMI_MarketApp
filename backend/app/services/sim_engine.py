@@ -37,6 +37,8 @@ network errors). DB schema does not change either way.
 from __future__ import annotations
 
 import math
+from collections import defaultdict
+from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -566,6 +568,33 @@ def training_trade_scope(user_id: UUID):
             SimPortfolioRow.kind == "training",
         )
     )
+
+
+def _open_quantity_by_lot(rows: Iterable[SimTradeRow]) -> dict[str, float]:
+    """DEF318 — `{buy trade id: shares of that lot still held}`, FIFO.
+
+    A stop/target belongs to the shares its own buy bought, and after a sell
+    those shares can be gone while the row is still `open` (deliberately — see
+    DEF316). Asking "is this TICKER flat" is right when the user exited and
+    blind when they re-entered: sell out of NVDA at $103 and buy back in with a
+    stop at $90, and the first lot's dead $95 stop is still live against the
+    second lot's shares. Measured: it fires at $94 and stamps −$60.00 against
+    the wrong entry price, stopping the user out at a price they never named.
+
+    Delegates to `compute_lots_fifo` (CR029-MATH, audited) rather than walking
+    the stream here — `Lot.quantity_open` already means exactly this, and a
+    second implementation of FIFO in the engine is the DEF098 shape waiting to
+    happen. Rows are grouped by ticker because lots are per ticker.
+    """
+    by_ticker: dict[str, list[SimTradeRow]] = defaultdict(list)
+    for r in rows:
+        by_ticker[r.ticker].append(r)
+
+    open_by_lot: dict[str, float] = {}
+    for trades in by_ticker.values():
+        for lot in compute_lots_fifo(trades):
+            open_by_lot[lot.entry_trade_id] = lot.quantity_open
+    return open_by_lot
 
 
 class SimEngine:
@@ -2509,6 +2538,14 @@ class SimEngine:
         single pass, and a row already deleted earlier in that pass is still
         present in `p_row.holdings` until the session expires it — selling it
         twice would credit cash for shares that no longer exist.
+
+        DEF316 moved that decision one level up: `evaluate_outcomes` and
+        `manual_close` now ask `_held_quantity` (same `s.deleted` exclusion)
+        before transitioning a row at all, because crediting no cash was only
+        half right — the row still transitioned, and a transitioned buy row
+        drops out of `expected()` while its sell row keeps subtracting. So the
+        `h in s.deleted` skip below is a **backstop** at a helper three paths
+        share, not the live guard against phantom cash. Read it as the former.
         """
         sold = 0.0
         for h in list(p_row.holdings):
@@ -2524,6 +2561,23 @@ class SimEngine:
         p_row.current_cash = round(float(p_row.current_cash) + fill * sold, 2)
         self._retire_orphaned_resting_sells(s, p_row, ticker)
         return sold
+
+    @staticmethod
+    def _held_quantity(s, p_row: SimPortfolioRow, ticker: str) -> float:
+        """Shares of `ticker` still on the books, correct MID-transaction.
+
+        `h not in s.deleted` is the whole reason this is a function rather than
+        a sum written at each call site: `evaluate_outcomes` closes several
+        trades against one holding in a single pass, and a holding deleted
+        earlier in that pass is still present in `p_row.holdings` until the
+        session expires it. Two places now decide "is this position flat" —
+        DEF311's resting-sell retirement and DEF316's bracket gate — and they
+        must not answer it differently (DEF098's shape).
+        """
+        return sum(
+            float(h.quantity) for h in p_row.holdings
+            if h.ticker == ticker and h not in s.deleted
+        )
 
     @staticmethod
     def _retire_orphaned_resting_sells(s, p_row: SimPortfolioRow, ticker: str) -> int:
@@ -2557,10 +2611,7 @@ class SimEngine:
         fresh long. Different path (`cover_short`), and the failure is a position
         the user pays cash for rather than one with unbounded loss.
         """
-        remaining = sum(
-            float(h.quantity) for h in p_row.holdings
-            if h.ticker == ticker and h not in s.deleted
-        )
+        remaining = SimEngine._held_quantity(s, p_row, ticker)
         rows = s.execute(
             select(SimRestingOrderRow).where(
                 SimRestingOrderRow.portfolio_id == p_row.id,
@@ -2611,17 +2662,21 @@ class SimEngine:
         """
         updates: list[OutcomeUpdate] = []
         with get_session() as s:
-            rows = s.execute(
-                select(SimTradeRow).where(
-                    training_trade_scope(user_id),
-                    SimTradeRow.status == "open",
-                )
+            # DEF318 — the FULL ledger, not just the open rows, because a
+            # bracket belongs to the shares its own lot still has behind it and
+            # only the whole order stream can say how many that is. One query,
+            # then the audited FIFO primitive (CR029) decides; this engine does
+            # not grow a second notion of "how much of this lot is left".
+            all_rows = s.execute(
+                select(SimTradeRow)
+                .where(training_trade_scope(user_id))
+                .order_by(SimTradeRow.opened_at.asc())
             ).scalars().all()
+            lot_open = _open_quantity_by_lot(all_rows)
+            rows = [r for r in all_rows if r.status == "open"]
             # Once, not per trade: N trades must sell against one live row.
             p_row = self._load_portfolio_row(s, user_id)
             for t in rows:
-                price = self.current_price(t.ticker)
-                new_status: TradeStatus | None = None
                 side = t.side
                 side_enum = Side(side) if not isinstance(side, Side) else side
                 # CR171 §5 — this gate stays. A SELL row in `sim_trades` is an
@@ -2630,13 +2685,50 @@ class SimEngine:
                 # all (they are `sim_short_positions`), and their inverted
                 # bracket is evaluated in `evaluate_short_brackets` below,
                 # through the same `bracket_hit` comparison.
-                if side_enum == Side.BUY:
-                    new_status = bracket_hit(  # type: ignore[assignment]
-                        is_short=False,
-                        mark=price,
-                        stop=float(t.stop) if t.stop is not None else None,
-                        target=float(t.target) if t.target is not None else None,
-                    )
+                if side_enum != Side.BUY:
+                    continue
+                # DEF316 — a bracket belongs to SHARES, not to the row that
+                # bought them. Selling through the ticket reduces the holding
+                # and writes its own SELL row; it deliberately leaves this BUY
+                # row `open`, because `def110_backfill.py`'s `expected()` is
+                # (Σ open buys − Σ open sells) and closing it here would
+                # subtract the same exit twice. So the row outlives its
+                # position by design — and used to keep its stop/target live,
+                # which meant the sweep would later "stop out" shares that were
+                # already sold: the exit counted twice after all, `expected()`
+                # driven negative, and the user shown a WON/LOST outcome at
+                # $0.00 realised on a position they had exited days earlier
+                # ($0.00 because `_apply_sell_row` clamps to a holding that is
+                # gone). Same shape as DEF311 one layer in — that fix retired
+                # the orphaned RESTING sell at the share-reduction chokepoint
+                # and left the trade row's OWN bracket connected to nothing.
+                #
+                # Checked before `current_price` deliberately: a stale row must
+                # not cost a quote on every sweep, forever.
+                #
+                # DEF318 narrowed this from the TICKER to the LOT. "Is the
+                # ticker flat" is right when the user exited and blind when they
+                # re-entered — a dead lot's stop then fires against the shares a
+                # later lot bought. `lot_open` answers per lot, off the audited
+                # FIFO reconstruction.
+                #
+                # Both gates stay, because they read different sources and
+                # disagreeing is itself the signal: `lot_open` is the trade
+                # LEDGER's view, `_held_quantity` is what `sim_holdings`
+                # actually carries, and a gap between them is the exact
+                # phantom-share condition `def110_backfill.py` exists to find.
+                lot_left = lot_open.get(str(t.id), 0.0)
+                if lot_left <= 1e-6:
+                    continue
+                if p_row is not None and self._held_quantity(s, p_row, t.ticker) <= 1e-6:
+                    continue
+                price = self.current_price(t.ticker)
+                new_status: TradeStatus | None = bracket_hit(  # type: ignore[assignment]
+                    is_short=False,
+                    mark=price,
+                    stop=float(t.stop) if t.stop is not None else None,
+                    target=float(t.target) if t.target is not None else None,
+                )
                 if new_status is None:
                     continue
                 t.status = new_status
@@ -2646,9 +2738,17 @@ class SimEngine:
                 # `t.quantity` requests — see `_apply_sell_row`) must stamp
                 # `realised_pnl` on the shares actually sold, or the P&L and
                 # the cash movement disagree about how many shares moved.
+                #
+                # DEF318: capped at the LOT's remaining shares as well, not just
+                # the row's original quantity. A lot half-consumed by an earlier
+                # sell (bought 10, 6 already sold) would otherwise close for 10
+                # and eat 6 shares belonging to a later lot — the same
+                # wrong-shares defect as the gate above, one step further in.
                 sold = (
-                    self._apply_sell_row(s, p_row, t.ticker, float(t.quantity), price)
-                    if p_row is not None else float(t.quantity)
+                    self._apply_sell_row(
+                        s, p_row, t.ticker, min(float(t.quantity), lot_left), price,
+                    )
+                    if p_row is not None else min(float(t.quantity), lot_left)
                 )
                 t.realised_pnl = round((price - float(t.entry_price)) * sold, 2)
                 updates.append(OutcomeUpdate(
@@ -2669,11 +2769,23 @@ class SimEngine:
             ).scalar_one_or_none()
             if row is None:
                 return None
+            p_row = self._load_portfolio_row(s, user_id)
+            # DEF316 — the same gate as `evaluate_outcomes`, for the same
+            # reason, and this is the path that actually left the residue:
+            # pre-DEF269 this reached across lanes and stamped three GAME buy
+            # rows `closed` against the TRAINING portfolio, which held none of
+            # those tickers. `_apply_sell_row` clamped to zero, so each row
+            # recorded a close that moved no shares and no cash — and 2,317
+            # shares of `expected()` went permanently negative behind them.
+            # Returning None maps onto the route's existing 404 copy ("trade
+            # not found or already closed"), which is the true statement: the
+            # position IS already closed, this row just never recorded it.
+            if p_row is not None and self._held_quantity(s, p_row, row.ticker) <= 1e-6:
+                return None
             price = self.current_price(row.ticker)
             row.status = "closed"
             row.closed_at = datetime.now(timezone.utc)
             row.closed_price = price
-            p_row = self._load_portfolio_row(s, user_id)
             # DEF166: a clamped close (the holding has fewer shares than
             # `row.quantity` requests — see `_apply_sell_row`) must stamp
             # `realised_pnl` on the shares actually sold, or the P&L and

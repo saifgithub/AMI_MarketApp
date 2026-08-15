@@ -58,6 +58,38 @@ not something a position screen should offer as a one-tap action.
 become row attributes; CR186's card becomes the detail view; closed orders move to HISTORY. Not
 started — and deliberately last, because slices 1 and 2 stand on their own.
 
+### Slice 3 is no longer optional in `+97` — what slice 2 changed underneath it (DEF316)
+
+Slice 2 made ticket-sell the **only** training exit, and a ticket sell records the exit
+differently from the two controls it replaced. Both of those closed the BUY row. A ticket sell
+does not: it reduces the holding, writes its **own** SELL row, and leaves the BUY row `open` —
+deliberately, because `def110_backfill.py`'s detector computes
+`expected = Σ open BUY − Σ open SELL` and closing the buy row would subtract the same exit twice.
+
+The ledger half of that is now correct and guarded (**DEF316** — the stale row's stop no longer
+fires on shares already sold). **The display half is not.** `portfolio_screen.dart:185` filters
+`state.trades.where((t) => t.isOpen)` with no side filter, so after selling a position in full the
+user sees **two** OPEN rows — `BUY 10 NVDA @ $100` and `SELL 10 NVDA @ $103` — against **zero**
+holdings, permanently. Neither is a pending order; both say OPEN.
+
+This is the case the slice-3 plan recorded as void. It was void on the measurement available at the
+time — training had never held a SELL row (38 buys, 0 sells; all 31 exits went through the
+buy-row-closing paths) — and slice 2 is precisely what makes it non-void. The measurement was
+right and its shelf life was one slice.
+
+So slice 3 must decide what an open trade row *means* now, not just where it renders:
+
+- **A BUY row whose shares are gone is a ledger artifact, not a position.** It must not appear on
+  Positions. It cannot be closed to make it disappear (that is the double-count), so the merge has
+  to filter on the **holding**, not on `status == 'open'`.
+- **A SELL row is an exit, and exits belong in HISTORY** — which slice 3 already says for closed
+  orders. It is `status='open'` forever by design, so History cannot key off status either.
+- Both rules point the same way: **`status` is not a position predicate.** It carries "the ledger
+  still needs this row", and the screen has been reading it as "there is a live position here" —
+  P10's shape, and the same conflation underneath DEF316.
+
+`+96` is unaffected: it carries slice 1 only, and CLOSE POSITION and the `×` are still present.
+
 ---
 
 ## Slice 1 — what shipped
