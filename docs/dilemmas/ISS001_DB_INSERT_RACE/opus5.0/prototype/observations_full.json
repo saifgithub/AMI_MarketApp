@@ -1,0 +1,781 @@
+{
+  "mode": "observe",
+  "collidable_models": 32,
+  "distinct_sites_executed": 65,
+  "append_only_sites_silent": 17,
+  "check_then_insert_sites": 48,
+  "flagged": 40,
+  "observations": [
+    {
+      "model": "TickerReferenceRow",
+      "site": "unknown",
+      "constraints": [
+        "natural-pk:symbol"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 1,
+      "times_executed": 50713
+    },
+    {
+      "model": "PriceHistoryDailyRow",
+      "site": "app/services/price_history.py:279 in upsert_daily_bars",
+      "constraints": [
+        "uq:ticker,date"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 2770,
+      "times_executed": 2770
+    },
+    {
+      "model": "SimPortfolioRow",
+      "site": "app/services/sim_engine.py:729 in ensure_portfolio",
+      "constraints": [
+        "uq:user_id,kind,run_id"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 739,
+      "times_executed": 739
+    },
+    {
+      "model": "PortfolioNavDailyRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:user_id,run_id,as_of_date"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 89,
+      "times_executed": 687
+    },
+    {
+      "model": "JournalEntryRow",
+      "site": "unknown",
+      "constraints": [
+        "uqidx:user_id,entry_type,dedupe_key"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 8,
+      "times_executed": 616
+    },
+    {
+      "model": "User",
+      "site": "app/services/auth_service.py:460 in ensure_anonymous",
+      "constraints": [
+        "unique:email",
+        "unique:phone",
+        "unique:handle",
+        "unique:desk_key",
+        "uq:email",
+        "uq:desk_key",
+        "uq:phone",
+        "uqidx:handle"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 142,
+      "times_executed": 528
+    },
+    {
+      "model": "GameEntryRow",
+      "site": "app/services/games_service.py:855 in enter_field",
+      "constraints": [
+        "uq:field_id,user_id"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 436,
+      "times_executed": 436
+    },
+    {
+      "model": "CareerEventRow",
+      "site": "app/services/career_ledger.py:128 in post_career_event",
+      "constraints": [
+        "uq:entry_id,reason",
+        "uqidx:user_id,period_key"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": true,
+      "risky_executions": 0,
+      "times_executed": 362
+    },
+    {
+      "model": "SimHoldingRow",
+      "site": "app/services/sim_engine.py:2412 in _apply_buy_row",
+      "constraints": [
+        "uq:portfolio_id,ticker"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 331,
+      "times_executed": 331
+    },
+    {
+      "model": "GameFieldRow",
+      "site": "app/services/games_service.py:434 in ensure_field",
+      "constraints": [
+        "unique:join_code",
+        "uq:join_code"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 294,
+      "times_executed": 294
+    },
+    {
+      "model": "User",
+      "site": "unknown",
+      "constraints": [
+        "unique:email",
+        "unique:phone",
+        "unique:handle",
+        "unique:desk_key",
+        "uq:email",
+        "uq:desk_key",
+        "uq:phone",
+        "uqidx:handle"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 81,
+      "times_executed": 262
+    },
+    {
+      "model": "PortfolioValueSnapshotRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:portfolio_id,as_of"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 147,
+      "times_executed": 153
+    },
+    {
+      "model": "JournalEntryRow",
+      "site": "app/services/journal_store.py:124 in append",
+      "constraints": [
+        "uqidx:user_id,entry_type,dedupe_key"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 32,
+      "times_executed": 133
+    },
+    {
+      "model": "GameEntryRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:field_id,user_id"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 37,
+      "times_executed": 116
+    },
+    {
+      "model": "GameFieldRow",
+      "site": "unknown",
+      "constraints": [
+        "unique:join_code",
+        "uq:join_code"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 2,
+      "times_executed": 74
+    },
+    {
+      "model": "NotificationRow",
+      "site": "app/services/notification_service.py:114 in notify",
+      "constraints": [
+        "uq:user_id,type,source_ref"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 5,
+      "times_executed": 70
+    },
+    {
+      "model": "User",
+      "site": "app/services/games_desks.py:380 in ensure_desk_users",
+      "constraints": [
+        "unique:email",
+        "unique:phone",
+        "unique:handle",
+        "unique:desk_key",
+        "uq:email",
+        "uq:desk_key",
+        "uq:phone",
+        "uqidx:handle"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 66,
+      "times_executed": 66
+    },
+    {
+      "model": "MandateRow",
+      "site": "app/services/mandate_store.py:148 in upsert",
+      "constraints": [
+        "uq:user_id,version"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": true,
+      "risky_executions": 0,
+      "times_executed": 58
+    },
+    {
+      "model": "ReputationEventRow",
+      "site": "app/services/reputation_service.py:221 in award",
+      "constraints": [
+        "uqidx:user_id,event_type,ref_id"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 54,
+      "times_executed": 54
+    },
+    {
+      "model": "SimPortfolioRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:user_id,kind,run_id"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 2,
+      "times_executed": 46
+    },
+    {
+      "model": "SimHoldingRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:portfolio_id,ticker"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 9,
+      "times_executed": 46
+    },
+    {
+      "model": "UserOverlayRow",
+      "site": "app/services/overlay_store.py:192 in save_new_version",
+      "constraints": [
+        "uq:user_id,agent_id,version"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": true,
+      "risky_executions": 0,
+      "times_executed": 37
+    },
+    {
+      "model": "ReputationEventRow",
+      "site": "unknown",
+      "constraints": [
+        "uqidx:user_id,event_type,ref_id"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 35
+    },
+    {
+      "model": "SimWatchlistRow",
+      "site": "app/services/watchlist_store.py:69 in add",
+      "constraints": [
+        "uq:user_id,ticker"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 34,
+      "times_executed": 34
+    },
+    {
+      "model": "RevenueCatEventRow",
+      "site": "app/api/webhooks.py:296 in revenuecat_webhook",
+      "constraints": [
+        "unique:event_id",
+        "uq:event_id"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 32
+    },
+    {
+      "model": "LeagueMemberRow",
+      "site": "app/services/league_service.py:213 in _assemble_week",
+      "constraints": [
+        "uq:user_id,week"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 31,
+      "times_executed": 31
+    },
+    {
+      "model": "LeagueMemberRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:user_id,week"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 27
+    },
+    {
+      "model": "ClientReleaseFloorRow",
+      "site": "unknown",
+      "constraints": [
+        "unique:min_build",
+        "uq:min_build"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 17,
+      "times_executed": 23
+    },
+    {
+      "model": "PortfolioValueSnapshotRow",
+      "site": "app/services/portfolio_snapshot.py:210 in run_portfolio_snapshot_tick",
+      "constraints": [
+        "uq:portfolio_id,as_of"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 1,
+      "times_executed": 19
+    },
+    {
+      "model": "LessonProgressRow",
+      "site": "app/services/lessons_service.py:616 in submit_quiz",
+      "constraints": [
+        "uq:user_id,lesson_id"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 17,
+      "times_executed": 17
+    },
+    {
+      "model": "OverlayEditCounter",
+      "site": "app/services/overlay_store.py:224 in save_new_version",
+      "constraints": [
+        "uq:user_id,agent_id"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": true,
+      "risky_executions": 0,
+      "times_executed": 14
+    },
+    {
+      "model": "CareerEventRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:entry_id,reason",
+        "uqidx:user_id,period_key"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 10,
+      "times_executed": 14
+    },
+    {
+      "model": "GameDuelRow",
+      "site": "app/services/games_duels.py:218 in pair_field",
+      "constraints": [
+        "uq:field_id,run_a_id",
+        "uqidx:field_id,run_b_id"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 13,
+      "times_executed": 13
+    },
+    {
+      "model": "GameDuelRow",
+      "site": "app/services/games_duels.py:229 in pair_field",
+      "constraints": [
+        "uq:field_id,run_a_id",
+        "uqidx:field_id,run_b_id"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 13,
+      "times_executed": 13
+    },
+    {
+      "model": "BadgeRow",
+      "site": "app/services/reputation_service.py:450 in _award_badge",
+      "constraints": [
+        "uq:user_id,badge_key"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": true,
+      "risky_executions": 0,
+      "times_executed": 13
+    },
+    {
+      "model": "LessonProgressRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:user_id,lesson_id"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 13
+    },
+    {
+      "model": "UserDeviceRow",
+      "site": "app/services/auth_service.py:118 in _upsert_user_device",
+      "constraints": [
+        "unique:device_install_id",
+        "uq:device_install_id"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": true,
+      "risky_executions": 0,
+      "times_executed": 12
+    },
+    {
+      "model": "PriceHistoryDailyRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:ticker,date"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 11
+    },
+    {
+      "model": "User",
+      "site": "app/services/auth_service.py:645 in sign_in_with_apple",
+      "constraints": [
+        "unique:email",
+        "unique:phone",
+        "unique:handle",
+        "unique:desk_key",
+        "uq:email",
+        "uq:desk_key",
+        "uq:phone",
+        "uqidx:handle"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 10,
+      "times_executed": 10
+    },
+    {
+      "model": "User",
+      "site": "app/services/auth_service.py:797 in _claim_or_create",
+      "constraints": [
+        "unique:email",
+        "unique:phone",
+        "unique:handle",
+        "unique:desk_key",
+        "uq:email",
+        "uq:desk_key",
+        "uq:phone",
+        "uqidx:handle"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 10,
+      "times_executed": 10
+    },
+    {
+      "model": "PortfolioNavDailyRow",
+      "site": "app/services/portfolio_nav_daily.py:199 in run_portfolio_nav_snapshot_tick",
+      "constraints": [
+        "uq:user_id,run_id,as_of_date"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 10
+    },
+    {
+      "model": "SocialSentimentCacheRow",
+      "site": "app/services/social_context.py:226 in _cache_write",
+      "constraints": [
+        "natural-pk:ticker"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": true,
+      "risky_executions": 0,
+      "times_executed": 10
+    },
+    {
+      "model": "SimWatchlistRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:user_id,ticker"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 10
+    },
+    {
+      "model": "JournalEntryRow",
+      "site": "app/api/portfolio.py:209 in portfolio_health_finding",
+      "constraints": [
+        "uqidx:user_id,entry_type,dedupe_key"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 1,
+      "times_executed": 9
+    },
+    {
+      "model": "User",
+      "site": "app/services/auth_service.py:741 in sign_in_with_google",
+      "constraints": [
+        "unique:email",
+        "unique:phone",
+        "unique:handle",
+        "unique:desk_key",
+        "uq:email",
+        "uq:desk_key",
+        "uq:phone",
+        "uqidx:handle"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 9,
+      "times_executed": 9
+    },
+    {
+      "model": "DailyChallengeAttemptRow",
+      "site": "app/api/daily_challenge.py:184 in attempt",
+      "constraints": [
+        "uq:user_id,challenge_id"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 7,
+      "times_executed": 7
+    },
+    {
+      "model": "PortfolioNavDailyRow",
+      "site": "app/services/portfolio_nav_daily.py:368 in run_game_nav_snapshot_tick",
+      "constraints": [
+        "uq:user_id,run_id,as_of_date"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 1,
+      "times_executed": 7
+    },
+    {
+      "model": "StreakFreezeRow",
+      "site": "app/services/reputation_service.py:347 in freeze",
+      "constraints": [
+        "uq:user_id,frozen_date"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 3,
+      "times_executed": 7
+    },
+    {
+      "model": "MandateRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:user_id,version"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 2,
+      "times_executed": 7
+    },
+    {
+      "model": "ClientReleaseFloorRow",
+      "site": "app/services/client_release_floor.py:231 in create_floor_raise",
+      "constraints": [
+        "unique:min_build",
+        "uq:min_build"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 6,
+      "times_executed": 6
+    },
+    {
+      "model": "TickerReferenceRow",
+      "site": "app/services/ticker_reference.py:203 in upsert_reference",
+      "constraints": [
+        "natural-pk:symbol"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 6,
+      "times_executed": 6
+    },
+    {
+      "model": "NotificationRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:user_id,type,source_ref"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 5
+    },
+    {
+      "model": "RevenueCatEventRow",
+      "site": "unknown",
+      "constraints": [
+        "unique:event_id",
+        "uq:event_id"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 5
+    },
+    {
+      "model": "UserOverlayRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:user_id,agent_id,version"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 5
+    },
+    {
+      "model": "AgentActivationRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:user_id,agent_id"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 5
+    },
+    {
+      "model": "AgentActivationRow",
+      "site": "app/services/lessons_service.py:707 in _check_agent_unlocks",
+      "constraints": [
+        "uq:user_id,agent_id"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": true,
+      "risky_executions": 0,
+      "times_executed": 4
+    },
+    {
+      "model": "OverlayEditCounter",
+      "site": "unknown",
+      "constraints": [
+        "uq:user_id,agent_id"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 4
+    },
+    {
+      "model": "GameDuelRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:field_id,run_a_id",
+        "uqidx:field_id,run_b_id"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 4
+    },
+    {
+      "model": "DailyChallengeAttemptRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:user_id,challenge_id"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 3
+    },
+    {
+      "model": "UserDeviceRow",
+      "site": "unknown",
+      "constraints": [
+        "unique:device_install_id",
+        "uq:device_install_id"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 2,
+      "times_executed": 3
+    },
+    {
+      "model": "AgentActivationRow",
+      "site": "app/services/lessons_service.py:829 in grant_activation",
+      "constraints": [
+        "uq:user_id,agent_id"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 2,
+      "times_executed": 2
+    },
+    {
+      "model": "BacktestRunIndexRow",
+      "site": "unknown",
+      "constraints": [
+        "natural-pk:room_run_id",
+        "uq:batch_id,ticker,as_of"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 2
+    },
+    {
+      "model": "LessonProgressRow",
+      "site": "app/services/lessons_service.py:561 in mark_started",
+      "constraints": [
+        "uq:user_id,lesson_id"
+      ],
+      "check_then_insert": true,
+      "protected_by_savepoint": false,
+      "risky_executions": 1,
+      "times_executed": 1
+    },
+    {
+      "model": "BadgeRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:user_id,badge_key"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 1
+    },
+    {
+      "model": "SocialSentimentCacheRow",
+      "site": "unknown",
+      "constraints": [
+        "natural-pk:ticker"
+      ],
+      "check_then_insert": false,
+      "protected_by_savepoint": false,
+      "risky_executions": 0,
+      "times_executed": 1
+    }
+  ]
+}

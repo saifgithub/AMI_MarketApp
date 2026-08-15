@@ -124,7 +124,8 @@ Behaviour-critical rule that affects every session — **degrade loudly** (CR040
   up believing?* DEF059 (LLM down → confident fake APPROVE) is what that question would have caught.
 - **Prompt instructions are not controls.** Agents ignore even emphatic "never present this as
   real" ~70% of the time (CR038). If it must hold, make it structural.
-- Recurring classes + their enforcing checks: [`docs/initial_specs/08_tech/failure_patterns.md`](docs/initial_specs/08_tech/failure_patterns.md). Second occurrence of anything ⇒ add an entry **with a guard**.
+- Recurring classes + their enforcing checks: [`docs/initial_specs/08_tech/failure_patterns.md`](docs/initial_specs/08_tech/failure_patterns.md). **This is the guards register — there is no second copy.** Second occurrence of anything ⇒ add an entry **with a guard**. House rule: an entry without an enforcing check is not done.
+- **Third time, or a guard that failed twice ⇒ a Dilemma, not another point fix** (CR185): [`docs/dilemmas/DILEMMA_PROTOCOL.md`](docs/dilemmas/DILEMMA_PROTOCOL.md). Several agents solve it independently and blind, in their own subfolders, from a brief that deliberately carries **no** proposed solution. For when the *framing* is suspect, not the effort — a merely large problem is still a CR, a merely risky one is a CR with `GATE: independent`. First instance: [`ISS001_DB_INSERT_RACE`](docs/dilemmas/ISS001_DB_INSERT_RACE/).
 
 Behaviour-critical rule that affects every session — **the AI is named AMI**:
 
