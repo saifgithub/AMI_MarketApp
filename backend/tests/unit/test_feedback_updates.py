@@ -96,7 +96,7 @@ def test_second_ack_is_a_404_not_a_double_delivery(client: TestClient):
 
 
 @pytest.mark.parametrize(
-    "status", ["open", "in_progress", "pending_review", "wont_fix"],
+    "status", ["open", "investigating", "in_progress", "pending_review", "wont_fix"],
 )
 def test_only_resolved_notifies(client: TestClient, status: str):
     """pending_review means committed on a branch, not shipped. Telling the
@@ -166,7 +166,7 @@ def test_updates_are_ordered_oldest_first(client: TestClient):
 
 
 @pytest.mark.parametrize(
-    "status", ["open", "in_progress", "pending_review", "resolved", "wont_fix"],
+    "status", ["open", "investigating", "in_progress", "pending_review", "resolved", "wont_fix"],
 )
 def test_every_canonical_status_serialises(status: str):
     """CR002's minimal half. The old Literal carried triaged/fixed — never

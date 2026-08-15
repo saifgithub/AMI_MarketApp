@@ -3,6 +3,7 @@
     "allow": [
       "WebFetch(domain:finelo.com)",
       "Bash(ssh melehost *)",
+      "Bash(ssh -o ConnectTimeout=10 melehost \"docker exec ami_postgres psql -U postgres -d ami_trade -c \\\\\"UPDATE bug_reports SET status='investigating' WHERE id IN * AND status='open' *)",
       "Bash(git init *)",
       "Bash(git add *)",
       "Bash(curl -s https://api-alpha.agenticmarketintel.ai/v1/health)",
@@ -46,7 +47,10 @@
       "Bash(python3 -c \"import sys; print\\(sys.version\\)\")",
       "Bash(.venv/bin/python -c \"import yfinance, pydantic; print\\('yfinance ok'\\)\")",
       "Bash(.venv/bin/python -m scripts.dump_assembled_prompts --ticker AAPL)",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(curl -sL --compressed -A \"Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/126.0 Safari/537.36\" -H \"Accept-Language: en-US,en;q=0.9\" \"https://www.youtube.com/@GrahamStephan?hl=en&gl=US\" -o gs2.html)",
+      "Bash(chmod +x subs.sh)",
+      "Bash(./subs.sh GrahamStephan AndreiJikh NateOBrien humphreytalks MarkoWhiteBoardFinance MinorityMindset thefinancialdiet RyanScribner CharlieChang erikakullberg yourrichbff FinancialTortoise BaldGuyMoney RoseHan MoneyGuyShow TheRamseyShow GeorgeKamel CalebHammer ramitsethi TwoCentsPBS)"
     ]
   }
 }

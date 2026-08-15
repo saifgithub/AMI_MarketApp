@@ -27,8 +27,12 @@ BugCategory = Literal[
 # of which the Alpha DB held 35 rows. That mismatch was harmless only
 # while this schema was write-only; `GET /updates` serialises resolved
 # rows, so it would have raised ValidationError on every one of them.
+# CR185: `investigating` added for the autonomous bug-report monitor.
+# It is distinct from `in_progress` (which pairs with an active /fix-bugs branch
+# claim); `investigating` means "triaged, filed a DEF, not yet assigned to coding."
 BugStatus = Literal[
     "open",
+    "investigating",
     "in_progress",
     "pending_review",
     "resolved",
