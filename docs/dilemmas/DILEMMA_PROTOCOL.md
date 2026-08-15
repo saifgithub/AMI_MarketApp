@@ -53,11 +53,19 @@ docs/dilemmas/
   ISS###_<SHORT_TOPIC>/
     ISS###_problem_statement.md   ← the shared brief. Symptoms + evidence + analysis. NO solutions.
     INVITE_PROMPT.md              ← the prompt Saiful pastes to invite a contributor
+    ISS###_STATE.md               ← where the exercise stands. Kept current between sessions
     <model-name>/                 ← one folder per contributor, e.g. opus5.0/, gpt5/, kimi-k2/
       SOLUTION.md                 ← required: the proposal, in the shape the brief asks for
       <anything else>             ← prototypes, tests, benchmarks, diagrams — free rein
     VERDICT.md                    ← written last, after judging. Records what won and why
 ```
+
+- **`ISS###_STATE.md` is the resume point**, and it exists because a Dilemma spans sessions by
+  design: contributors arrive days apart, and the judging happens later still. It records who has
+  submitted, what has been independently verified, what is frozen, and what decision is owed — so a
+  cold session can be dropped back in without re-reading four proposals to work out where things
+  stand. It is **not** a `HANDOVER_*` doc (CR097 retired those); it is per-issue state, and it lives
+  with the issue rather than with a session.
 
 - **IDs** are `ISS###`, zero-padded, sequential, never reused. The Architect mints them, same as
   `CR###` / `DEF###`.
