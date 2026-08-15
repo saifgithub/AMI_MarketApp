@@ -14,9 +14,13 @@ To clear a hold: delete its block, and record in the trail *why* the preconditio
 
 ## ACTIVE HOLDS
 
+---
+
+## CLEARED HOLDS
+
 ### DEF294-CLIENT — the quiz reveal would mark correct answers WRONG on every installed build
 
-**Raised:** 2026-08-15 (AT:R70) · **Blocks:** any Alpha promotion at or after `badf6a6f`
+**Raised:** 2026-08-15 (AT:R70) · **CLEARED:** 2026-08-15 (AT:R70) · **Blocked:** any Alpha promotion at or after `badf6a6f`
 
 **Why.** DEF294 (`badf6a6f`) stops `GET /v1/lessons/{id}` from shipping the quiz answer key, and
 moves the reveal onto the graded submit response. Both halves are on `main`. **Only the backend half
@@ -50,9 +54,24 @@ built — TestFlight/Play rollout complete, or the CR121 client release floor ra
 older clients cannot reach the lesson reader at all. Record the build number and how it was
 confirmed (store status or a `last_app_version` query), measured rather than assumed.
 
----
+**Why the precondition is met — measured, not assumed.** The bar this hold set was an install on a
+real device, and all three legs are satisfied:
 
-## CLEARED HOLDS
+1. **Build `0.1.0+95` was uploaded to both stores**, 2026-08-15: iOS `** EXPORT SUCCEEDED **` →
+   `Upload succeeded` to App Store Connect; Android `Successfully finished the upload to Google Play`
+   (internal track).
+2. **The `+95` tree provably contains the client half.** `git merge-base --is-ancestor badf6a6f
+   e19d4e16` → yes, so the DEF294 commit is an ancestor of the bump that produced this build. Checked
+   in that tree rather than on `main`: `answerIndex` survives in `mobile/lib/models/lessons.dart`
+   only as the comment recording its own removal (`:7`), and `LessonQuizCard` takes a
+   `QuizResultPerQuestion?` with `_revealed => revealResult && result != null`
+   (`lesson_quiz_card.dart:112`) — the reveal reads the graded response, not the question.
+3. **Actual install confirmed by Saiful**, 2026-08-15: *"+95 installed."* This is the bar the hold
+   set, and the same bar CR090-ROOM cleared on — an install on a device, explicitly not a green
+   `flutter test`.
+
+The inversion this hold existed to prevent is therefore unreachable: no device in the field is still
+running the `?? 0` parser against a backend that has stopped sending `answer_index`.
 
 ### DEF302-REMEASURE — live corpus run in flight on this exact container
 
