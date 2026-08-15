@@ -86,6 +86,11 @@ from app.services.sim_engine import (
     get_sim_engine,
     retire_values,
 )
+from app.services.sim_order_push import (
+    notify_filled,
+    notify_rejected,
+    notify_triggered,
+)
 from app.services.sim_trade_effects import apply_post_fill_effects
 from app.schemas.trade import OrderType, Side
 from app.trading_math.market_hours import is_us_market_open
@@ -300,9 +305,18 @@ def _stamp_observation(
         )
 
 
-def _stamp_triggered(order_id: UUID, now: datetime) -> None:
+def _stamp_triggered(order_id: UUID, now: datetime) -> bool:
+    """Returns whether THIS call made the transition (CR187).
+
+    `rowcount` is the answer, for the same reason it is in `_claim`: the
+    conditional UPDATE is the duplicate guard, not the loop that selected the
+    row. A sweep re-reads a triggered stop-limit on every tick until it fills or
+    dies, so notifying on "we are past the trigger" rather than on "we just
+    crossed it" would push once every five minutes for as long as the order
+    lives.
+    """
     with get_session() as s:
-        s.execute(
+        res = s.execute(
             update(SimRestingOrderRow)
             .where(
                 SimRestingOrderRow.id == order_id,
@@ -310,6 +324,7 @@ def _stamp_triggered(order_id: UUID, now: datetime) -> None:
             )
             .values(state="triggered", triggered_at=now)
         )
+        return bool(res.rowcount)
 
 
 def _stamp_filled(
@@ -456,12 +471,42 @@ def _fill_triggered(
             continue
 
         mark = quote.price  # type: ignore[union-attr]
-        named = order.named_price
+
+        # DEF310 — a stop-limit is evaluated as whatever PHASE it is in, and the
+        # phase lives in `state`, not in `order_type`.
+        #
+        # This used to read `named = order.named_price` unconditionally, which
+        # returns the TRIGGER for a stop-limit. Correct on the first sweep, when
+        # the order is `working` and the trigger is what it waits for — and
+        # wrong on every sweep after, because the phase-1 block below only runs
+        # `if state == "working"`. So a `triggered` stop-limit fell through to a
+        # trigger comparison, matched, claimed and **filled against its trigger,
+        # with its limit price never consulted at all.**
+        #
+        # The worked example from the CR is exactly the case it broke: sell
+        # stop-limit, trigger $90, limit $88, price gaps to $85. Sweep one
+        # triggers and correctly declines to fill. Sweep two, five minutes
+        # later, fills at $85 — $3 below the floor the user set. That is
+        # acceptance 6 inverted, and it is the classic stop-limit failure the CR
+        # says the type is in the curriculum to teach, so it is the one outcome
+        # that must not be smoothed away.
+        #
+        # It survived because the only test of the two-phase rule was over the
+        # PURE function in `test_cr170_order_pricing.py`. The sweep's own test
+        # file opens by warning about precisely this — *"that file proves the
+        # arithmetic; this one proves the arithmetic is the one that runs"* —
+        # and the stop-limit clause of acceptance 6 was never given a test there.
+        triggered_phase_2 = (
+            order.order_type == OrderType.STOP_LIMIT
+            and order.state == "triggered"
+        )
+        eval_type = OrderType.LIMIT if triggered_phase_2 else order.order_type
+        named = order.limit_price if triggered_phase_2 else order.named_price
         if named is None:
             continue
 
         if not is_triggered(
-            side=order.side, order_type=order.order_type, named=named, mark=mark,
+            side=order.side, order_type=eval_type, named=named, mark=mark,
         ):
             continue
 
@@ -470,7 +515,11 @@ def _fill_triggered(
         # a stop-limit that gaps through its limit is the classic failure and
         # the reason the type is in the curriculum. Reproduced, not smoothed.
         if order.order_type == OrderType.STOP_LIMIT and order.state == "working":
-            _stamp_triggered(order.id, now)
+            if _stamp_triggered(order.id, now) and order.limit_price is not None:
+                notify_triggered(
+                    user_id=order.user_id, order_id=order.id,
+                    ticker=order.ticker, limit_price=order.limit_price,
+                )
             if order.limit_price is None or not is_triggered(
                 side=order.side,
                 order_type=OrderType.LIMIT,
@@ -494,6 +543,11 @@ def _fill_triggered(
                 "sim_resting_order_fill_raised", order_id=str(order.id),
             )
             _stamp_rejected(order.id, f"could not be filled: {exc}", now)
+            notify_rejected(
+                user_id=order.user_id, order_id=order.id, ticker=order.ticker,
+                side=order.side, quantity=order.quantity,
+                reason=f"could not be filled: {exc}",
+            )
             rejected += 1
             continue
 
@@ -504,6 +558,10 @@ def _fill_triggered(
                 else "refused at fill"
             )
             _stamp_rejected(order.id, reason, now)
+            notify_rejected(
+                user_id=order.user_id, order_id=order.id, ticker=order.ticker,
+                side=order.side, quantity=order.quantity, reason=reason,
+            )
             rejected += 1
             continue
 
@@ -516,6 +574,14 @@ def _fill_triggered(
         # The same three effects the ticket's own fill gets (§7). Extracted
         # before this call site existed, precisely so the two cannot diverge.
         apply_post_fill_effects(user_id=order.user_id, trade=result.trade)
+        # CR187 — last, deliberately. Everything above has already moved the
+        # ledger; a notification is the least important thing in this block and
+        # must be the last thing that can go wrong in it.
+        notify_filled(
+            user_id=order.user_id, order_id=order.id, ticker=order.ticker,
+            side=order.side, quantity=order.quantity,
+            fill_price=result.trade.entry_price,
+        )
         filled += 1
         logger.info(
             "sim_resting_order_filled",

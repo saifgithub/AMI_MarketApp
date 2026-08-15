@@ -83,6 +83,7 @@ from app.services.sharia_universe import default_halal_universe
 from app.trading_math.market_hours import session_close_on_or_after
 from app.trading_math.order_pricing import (
     bracket_hit,
+    bracket_is_wrong_side,
     can_rest,
     fill_price_for,
     is_triggered,
@@ -1176,6 +1177,35 @@ class SimEngine:
         burned on both a buy and a sell (subtracted from cash, credited to
         nothing — `games_scoring.trade_fee`).
         """
+        # DEF312 — an inverted bracket is refused HERE, at the one chokepoint
+        # every fill path crosses, and against the price it will actually be
+        # measured from. Not in `submit()`: a resting order's bracket has to be
+        # judged against the price it FILLS at, which Rule 2 puts at the worse
+        # of named and observed, not the price named days earlier.
+        #
+        # `is_short` is the same three-case rule the sell branch below applies:
+        # a sell against zero held opens a short, and a short's bracket inverts.
+        held_now = next(
+            (h for h in portfolio.holdings if h.ticker == ticker), None,
+        )
+        opens_short = (
+            side != Side.BUY
+            and kind == "training"
+            and (held_now is None or float(held_now.quantity) <= 1e-9)
+        )
+        if side == Side.BUY or opens_short:
+            wrong_side = bracket_is_wrong_side(
+                is_short=opens_short, entry=fill_price, stop=stop, target=target,
+            )
+            if wrong_side is not None:
+                return SubmitResult(
+                    accepted=False, trade=None,
+                    compliance=ComplianceResult(
+                        passed=False, violations=[wrong_side], blocked_by=None,
+                    ),
+                    portfolio_snapshot=portfolio,
+                )
+
         notional = fill_price * quantity
         if side == Side.BUY:
             # CR171 — a buy against a standing short is a COVER, not a new long.
@@ -2120,24 +2150,12 @@ class SimEngine:
         """
         from app.services.short_borrow_rate import resolve_borrow_rate
         from app.services import sim_shorts
-        from app.trading_math.order_pricing import short_bracket_is_wrong_side
 
-        # §5 — refuse an inverted bracket at SUBMIT, with a sentence. A short
-        # whose stop sits below entry is not a stop, it is a second target, and
-        # it can only fire after the position has given back everything it
-        # made. `short_rules.dart` mirrors this on the client; the two must
-        # agree at the boundary.
-        wrong_side = short_bracket_is_wrong_side(
-            entry=fill_price, stop=stop, target=target,
-        )
-        if wrong_side is not None:
-            return SubmitResult(
-                accepted=False, trade=None,
-                compliance=ComplianceResult(
-                    passed=False, violations=[wrong_side], blocked_by=None,
-                ),
-                portfolio_snapshot=portfolio,
-            )
+        # §5's inverted-bracket refusal used to live here, short-only. DEF312
+        # moved it up to `_execute_fill`, which every fill path crosses and
+        # which knows the long case too — the reason the long half was missing
+        # for as long as it was is that this function is the only place it was
+        # ever written, and this function is unreachable from a buy.
 
         notional = fill_price * quantity
         needed = sim_shorts.cash_required_for(notional)
@@ -2504,7 +2522,81 @@ class SimEngine:
                 s.delete(h)
             break
         p_row.current_cash = round(float(p_row.current_cash) + fill * sold, 2)
+        self._retire_orphaned_resting_sells(s, p_row, ticker)
         return sold
+
+    @staticmethod
+    def _retire_orphaned_resting_sells(s, p_row: SimPortfolioRow, ticker: str) -> int:
+        """DEF311 — a resting sell must not outlive the shares it was selling.
+
+        **This is where a stop-loss turned into a short.** Nothing connected the
+        two: `SimRestingOrderRow` was touched in five places in this engine —
+        reset, placement, list, cancel, `clear()` — and neither `manual_close`
+        nor this function was one of them. So:
+
+          1. Hold 10 NVDA. Rest a sell stop, 10 @ $90.
+          2. Close the position (or let the bracket close it). Holdings → 0.
+             The order is untouched and still `working`.
+          3. Price reaches $90. The sweep fills it, `_execute_fill` sees
+             `held == 0`, and the three-case rule opens a **short**.
+
+        The user's stop-loss becomes a short position with unbounded loss, in an
+        account they believe is flat, and CR187 pushes them *"Sold 10 NVDA at
+        $90.00"* — which reads exactly like the stop working.
+
+        Retiring at the **chokepoint every share reduction crosses** rather than
+        in `manual_close` is the point: `manual_close`, `evaluate_outcomes` and
+        the sell path of `_execute_fill` all reduce a holding through here, and a
+        fix in any one of them would have left the other two.
+
+        `filling` is deliberately not retired — an order the sweep has claimed is
+        mid-fill and is the very sell that brought us here.
+
+        Not covered, and named rather than left implied: the mirror on the buy
+        side, where covering a short by hand leaves a resting buy that opens a
+        fresh long. Different path (`cover_short`), and the failure is a position
+        the user pays cash for rather than one with unbounded loss.
+        """
+        remaining = sum(
+            float(h.quantity) for h in p_row.holdings
+            if h.ticker == ticker and h not in s.deleted
+        )
+        rows = s.execute(
+            select(SimRestingOrderRow).where(
+                SimRestingOrderRow.portfolio_id == p_row.id,
+                SimRestingOrderRow.ticker == ticker,
+                SimRestingOrderRow.side == "sell",
+                SimRestingOrderRow.state.in_(LIVE_RESTING_STATES),
+            )
+        ).scalars().all()
+
+        retired = 0
+        now = datetime.now(timezone.utc)
+        for row in rows:
+            if float(row.quantity) <= remaining + 1e-9:
+                continue
+            reason = (
+                f"cancelled — you no longer hold enough {ticker} to sell "
+                f"{float(row.quantity):g} (you hold {remaining:g})"
+            )
+            # `cancelled` + a non-NULL reason. The invariant the client's copy is
+            # built on is on the REASON, not the state: non-NULL always means
+            # the system did it. `expired` would claim a TIF elapsed and
+            # `rejected` would claim it triggered and was refused; neither
+            # happened.
+            for k, v in retire_values(
+                "cancelled", now, cancel_reason=reason,
+            ).items():
+                setattr(row, k, v)
+            retired += 1
+
+        if retired:
+            logger.info(
+                "sim_resting_sells_retired",
+                portfolio_id=str(p_row.id), ticker=ticker,
+                remaining=remaining, count=retired,
+            )
+        return retired
 
     # ── Outcomes ───────────────────────────────────────────────────────
 

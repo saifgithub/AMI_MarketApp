@@ -103,7 +103,13 @@ def test_disciplined_buy_awards_points_once(client: TestClient):
     # disciplined-trade behaviour this test actually exercises. Pin it
     # permissive, same fix as test_sim_engine.py's non-concentration tests.
     get_mandate_store().patch(user_id, {"single_name_cap_pct": 100.0})
-    r = _submit(client, user_id, token, stop=90.0, target=200.0)
+    # DEF312: `target=200.0` was BELOW the mock walk's AAPL (measured $273.77),
+    # so this fixture had been buying with a target already through the market —
+    # `bracket_hit` would have booked it as a win on the next sweep. It passed
+    # only because nothing checked the bracket's side and this test never calls
+    # `evaluate_outcomes`. Pinned wide rather than to a number, so the walk
+    # drifting cannot silently invert it again.
+    r = _submit(client, user_id, token, stop=1.0, target=100_000.0)
     assert r.status_code == 200, r.text
     assert r.json()["ok"] is True
     events = _events(user_id, "trade_disciplined")

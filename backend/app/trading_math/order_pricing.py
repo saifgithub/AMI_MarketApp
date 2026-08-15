@@ -198,26 +198,59 @@ def bracket_hit(
     return None
 
 
-def short_bracket_is_wrong_side(
-    *, entry: float, stop: float | None, target: float | None,
+def bracket_is_wrong_side(
+    *, is_short: bool, entry: float, stop: float | None, target: float | None,
 ) -> str | None:
-    """The submit-time refusal §5 asks for, as a reason string or None.
+    """The submit-time refusal, as a reason string or None. Both directions.
 
-    A short whose stop sits BELOW entry has written a stop that cannot fire
-    until the position has already made money and then given it all back — it
-    is not a stop, it is a second target. Refuse it with a sentence rather than
-    accepting it silently; the client mirrors this in `short_rules.dart`, and
-    the two must agree at the boundary.
+    The exact inverse of `bracket_hit` above, and it lives beside it on purpose:
+    the rule for *where a level belongs* and the rule for *when it fires* are one
+    fact, and the way this defect happened was by writing them apart.
+
+    | | Long | Short |
+    |---|---|---|
+    | Stop belongs | below entry | above entry |
+    | Target belongs | above entry | below entry |
+
+    **DEF312 — the long half of this did not exist.** §5 shipped as
+    `short_bracket_is_wrong_side`, called from `_open_short_fill` alone, so a
+    LONG bought with a stop above its entry was accepted by every layer. The
+    consequence is not cosmetic: `bracket_hit` fires on `mark <= stop`, so such a
+    position is liquidated on the **next** market-hours sweep, at market, and
+    recorded as a stop-out — which then trips the post-stop-out cooldown that
+    hard-blocks the user's next BUY. One typo, an instant liquidation and a
+    trading ban, with nothing anywhere saying why.
+
+    The client's `short_rules.dart` had the same shape and the same hole: its
+    `stopIsWrongSide`/`targetIsWrongSide` take `isShort` and handle both cases
+    correctly, and `_localRefusal` returns early on every buy so the long branch
+    is unreachable. That is **P21** — a check present in the source and inert at
+    runtime — on both sides of the wire at once.
     """
-    if stop is not None and stop <= entry:
+    if is_short:
+        if stop is not None and stop <= entry:
+            return (
+                f"a short's stop must be ABOVE the entry price — ${stop:.2f} is "
+                f"at or below ${entry:.2f}, so it could only fire after the "
+                f"position had already lost everything it made"
+            )
+        if target is not None and target >= entry:
+            return (
+                f"a short's target must be BELOW the entry price — ${target:.2f} "
+                f"is at or above ${entry:.2f}, which is where the position loses "
+                f"money"
+            )
+        return None
+    if stop is not None and stop >= entry:
         return (
-            f"a short's stop must be ABOVE the entry price — ${stop:.2f} is at "
-            f"or below ${entry:.2f}, so it could only fire after the position "
-            f"had already lost everything it made"
+            f"a stop must be BELOW the entry price — ${stop:.2f} is at or above "
+            f"${entry:.2f}, so it would fire immediately and close the position "
+            f"you just opened"
         )
-    if target is not None and target >= entry:
+    if target is not None and target <= entry:
         return (
-            f"a short's target must be BELOW the entry price — ${target:.2f} is "
-            f"at or above ${entry:.2f}, which is where the position loses money"
+            f"a target must be ABOVE the entry price — ${target:.2f} is at or "
+            f"below ${entry:.2f}, so it would fire immediately and book a win "
+            f"the position never made"
         )
     return None
