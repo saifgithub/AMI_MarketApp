@@ -211,15 +211,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       // do nothing, on the one screen where a number that does nothing reads
       // as a control.
       if (_isCover) return;
-      // Anchor TP/SL off the live price when the user hasn't set them —
-      // matches the Convene the Room trader template (-6% / +13%) so the
-      // suggestion is consistent across both flows. User can override.
-      if (_stop.text.trim().isEmpty) {
-        _stop.text = (q.price * 0.94).toStringAsFixed(2);
-      }
-      if (_target.text.trim().isEmpty) {
-        _target.text = (q.price * 1.13).toStringAsFixed(2);
-      }
+      _anchorBracket(q.price);
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -360,6 +352,63 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
           : l.tradeTicketRefuseLongTarget(target!.toStringAsFixed(2));
     }
     return null;
+  }
+
+  /// DEF314 — anchor TP/SL off the live price, **pointing the way this order
+  /// actually points**.
+  ///
+  /// This wrote `price × 0.94` / `price × 1.13` unconditionally: a long bracket,
+  /// on every order, including one that opens a SHORT. CR171 then refuses a
+  /// short whose stop sits below entry — so the sheet filled in two numbers the
+  /// user never typed and killed its own submit button over them, with a message
+  /// naming a rule about fields it had just written itself.
+  ///
+  /// **It made shorting impossible through the ticket.** Type a ticker you do
+  /// not hold, pick SELL, let the quote land, and the order is un-submittable
+  /// unless you notice that the fix is to clear two optional fields. Measured on
+  /// 2026-08-15: `sim_short_positions` held **zero rows, ever**, while 30 of 37
+  /// current mandates permitted shorting. That gap was read as "nobody wants to
+  /// short" until this was found.
+  ///
+  /// Reported by Saiful from a device — COST at $961.10 gave 903.43 / 1086.04,
+  /// which is exactly `× 0.94` and `× 1.13`.
+  ///
+  /// A short inverts: the stop goes ABOVE, the target BELOW, at the same
+  /// distances, so the suggestion stays the trader template either way.
+  /// An ordinary sell that CLOSES a long gets nothing — an exit carries no
+  /// bracket of its own, the same reason a cover returns above.
+  void _anchorBracket(double price) {
+    final state = ref.read(simNotifierProvider);
+    if (_side == 'sell' && !_opensShort(state)) return;
+    final short = _side == 'sell';
+    if (_stop.text.trim().isEmpty) {
+      _stop.text = (price * (short ? 1.06 : 0.94)).toStringAsFixed(2);
+    }
+    if (_target.text.trim().isEmpty) {
+      _target.text = (price * (short ? 0.87 : 1.13)).toStringAsFixed(2);
+    }
+  }
+
+  /// DEF314 — the bracket follows the side.
+  ///
+  /// Only ever discards values THIS SHEET wrote: a field the user edited is
+  /// left exactly as typed, and the refusal panel then does its job on it. The
+  /// alternative — leaving our own long bracket in place after a flip to SELL —
+  /// is the dead end itself.
+  void _rebracketForSide() {
+    final q = _quote;
+    if (q == null) return;
+    for (final (c, longMul, shortMul) in [
+      (_stop, 0.94, 1.06),
+      (_target, 1.13, 0.87),
+    ]) {
+      final ours = {
+        (q.price * longMul).toStringAsFixed(2),
+        (q.price * shortMul).toStringAsFixed(2),
+      };
+      if (c.text.trim().isEmpty || ours.contains(c.text.trim())) c.text = '';
+    }
+    _anchorBracket(q.price);
   }
 
   /// CR188 — flipping to SELL fills the quantity with what you actually hold.
@@ -847,6 +896,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                   onChange: (v) => setState(() {
                     _side = v;
                     _prefillSellQuantity(state);
+                    _rebracketForSide();
                   }),
                 ),
               ],

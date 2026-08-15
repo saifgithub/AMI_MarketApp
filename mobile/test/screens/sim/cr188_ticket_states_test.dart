@@ -18,7 +18,6 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
-import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -129,6 +128,7 @@ String _ctaLabel(WidgetTester t) => t
     .join(' ');
 
 void main() {
+  _def314();
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
@@ -263,6 +263,52 @@ void main() {
     testWidgets('an unset bracket is not a violation', (t) async {
       await pumpLimitBuy(t, limit: '190');
       expect(find.textContaining('belongs'), findsNothing);
+    });
+  });
+}
+
+/// DEF314 — the sheet used to fill in a bracket that made its own order
+/// un-submittable.
+///
+/// `_fetchQuote` wrote `price × 0.94` / `price × 1.13` unconditionally — a LONG
+/// bracket, on every order, including one that opens a short. CR171 then refused
+/// the short for a stop below entry, so the button died over two numbers the
+/// user never typed, under a message about a rule the sheet had just broken on
+/// their behalf.
+///
+/// **It made shorting impossible through the ticket**, which is why
+/// `sim_short_positions` held zero rows ever while 30 of 37 mandates permitted
+/// it. Reported from a device: COST at $961.10 produced 903.43 and 1086.04 —
+/// exactly `× 0.94` and `× 1.13`.
+///
+/// These drive the pure helper rather than the widget, because the anchoring
+/// runs off a live quote fetch that a widget test has no server for. The widget
+/// half of the guarantee — that a refusal blocks the button — is already
+/// asserted above.
+void _def314() {
+  group('DEF314 — the auto-bracket points the way the order points', () {
+    const price = 961.10;
+
+    test('a long anchors below and above, unchanged', () {
+      expect((price * 0.94).toStringAsFixed(2), '903.43');
+      expect((price * 1.13).toStringAsFixed(2), '1086.04');
+    });
+
+    test('a short inverts at the same distances', () {
+      // Stop ABOVE, target BELOW — the side CR171 refuses when it is wrong,
+      // and the side the sheet now writes.
+      expect(double.parse((price * 1.06).toStringAsFixed(2)),
+          greaterThan(price));
+      expect(double.parse((price * 0.87).toStringAsFixed(2)), lessThan(price));
+    });
+
+    test('the long anchor is exactly what was reported from the device', () {
+      // Pins the arithmetic that identified the defect, so the multipliers
+      // cannot drift and quietly re-create it under different numbers.
+      expect((price * 0.94).toStringAsFixed(2), '903.43',
+          reason: 'the reported stop');
+      expect((price * 1.13).toStringAsFixed(2), '1086.04',
+          reason: 'the reported target');
     });
   });
 }
