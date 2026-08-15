@@ -182,6 +182,31 @@ RestingOrderState = Literal[
 #: The two states a sweep may claim, and the only two a user may cancel.
 LIVE_RESTING_STATES: tuple[str, ...] = ("working", "triggered")
 
+#: Still in the book. `filling` is not claimable and not cancellable, but the
+#: order has not left — it is mid-fill, and the client shows it as live.
+OPEN_RESTING_STATES: tuple[str, ...] = ("working", "triggered", "filling")
+
+#: The four ways an order leaves the book. Every one of them must stamp
+#: `retired_at` — see `retire_values`.
+TERMINAL_RESTING_STATES: tuple[str, ...] = (
+    "filled", "cancelled", "expired", "rejected",
+)
+
+
+def retire_values(state: str, now: datetime, **extra) -> dict:
+    """The `.values()` payload for a transition OUT of the book (DEF309).
+
+    Five call sites retire an order — filled, user-cancelled, expired, refused
+    at fill, and reaped from a stale claim — and each is a place to forget the
+    timestamp. Routing all five through one function is what makes
+    *terminal ⇒ `retired_at` is set* a property of the code rather than of five
+    people remembering, and `test_def309_retired_at.py` drives all five paths
+    and asserts it rather than reading them.
+    """
+    if state not in TERMINAL_RESTING_STATES:
+        raise ValueError(f"{state!r} is not a terminal resting-order state")
+    return {"state": state, "retired_at": now, **extra}
+
 #: Wire value → calendar days to add before finding the session close.
 #: DAY is 0 — the close of the session that applies at placement.
 RESTING_ORDER_TIFS: dict[str, int] = {"day": 0, "gtd_30": 30, "gtd_90": 90}
@@ -231,6 +256,8 @@ class SimRestingOrder:
     last_checked_at: datetime | None = None
     last_seen_price: float | None = None
     last_price_source: str | None = None
+    #: DEF309 — when the order left the book. NULL ⇔ still live.
+    retired_at: datetime | None = None
 
     @property
     def named_price(self) -> float | None:
@@ -289,6 +316,7 @@ class SimRestingOrder:
             last_checked_at=row.last_checked_at,
             last_seen_price=_f(row.last_seen_price),
             last_price_source=row.last_price_source,
+            retired_at=row.retired_at,
         )
 
     def to_json(self) -> dict:
@@ -325,6 +353,10 @@ class SimRestingOrder:
             "last_checked_at": _iso(self.last_checked_at),
             "last_seen_price": self.last_seen_price,
             "distance_pct": self.distance_pct,
+            # DEF309 — when it left the book, for any of the four exits. The
+            # client dates the RECENTLY CLOSED group off this; `filled_at`
+            # answers it for one exit out of four.
+            "retired_at": _iso(self.retired_at),
         }
 
 
@@ -1481,6 +1513,16 @@ class SimEngine:
         never silently vanishes overnight. That is the whole reason the games
         lane's own docstring records *"from the player's side the order simply
         VANISHED."*
+
+        **The window is measured from `retired_at`, not from `placed_at`
+        (DEF309).** It used to read `(filled_at or placed_at) >= terminal_since`,
+        and `filled_at` is set on exactly one of the four exits — so a cancelled,
+        expired or rejected order fell back to when it was *placed*. A GTD-90
+        order placed last week and refused at fill this morning was therefore
+        filtered out, and the longer an order had rested the more certainly its
+        refusal was hidden. That is the vanishing this window exists to prevent,
+        inverted onto the case that matters most: the compliance sentence the
+        user most needs to read is the one on the order that waited longest.
         """
         with get_session() as s:
             rows = s.execute(
@@ -1491,10 +1533,22 @@ class SimEngine:
             orders = [SimRestingOrder.from_row(r) for r in rows]
         if terminal_since is None:
             return orders
+
+        def _aware(d: datetime) -> datetime:
+            """Postgres hands back tz-aware datetimes for these columns; the
+            unit suite's sqlite tempfile hands back naive ones. Comparing the
+            two raises, so this comparison must not be the first thing that
+            finds out which backend it is running on."""
+            return d if d.tzinfo else d.replace(tzinfo=timezone.utc)
+
         return [
             o for o in orders
-            if o.state in ("working", "triggered", "filling")
-            or (o.filled_at or o.placed_at) >= terminal_since
+            if o.state in OPEN_RESTING_STATES
+            # A terminal row with no `retired_at` predates the DEF309 migration's
+            # backfill; show it rather than hide it. Erring toward visible is the
+            # whole point of the window.
+            or o.retired_at is None
+            or _aware(o.retired_at) >= _aware(terminal_since)
         ]
 
     def cancel_resting_order(
@@ -1522,7 +1576,8 @@ class SimEngine:
                 return False, None
             if row.state not in LIVE_RESTING_STATES:
                 return False, SimRestingOrder.from_row(row)
-            row.state = "cancelled"
+            for k, v in retire_values("cancelled", datetime.now(timezone.utc)).items():
+                setattr(row, k, v)
             s.flush()
             return True, SimRestingOrder.from_row(row)
 

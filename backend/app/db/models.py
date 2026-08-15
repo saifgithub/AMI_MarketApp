@@ -2081,6 +2081,15 @@ class SimRestingOrderRow(Base):
     last_seen_price: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
     last_price_source: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
+    # DEF309 — when this order LEFT the book, whichever of the five ways it
+    # left. NULL ⇔ still live. `filled_at` answers the question for exactly one
+    # of the five, and the recent-history window used to be keyed on it with a
+    # fallback to `placed_at`, which silently hid every rejection of an order
+    # older than the window. See `sim_engine.retire_values`.
+    retired_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True,
+    )
+
 
 class SimShortPositionRow(Base):
     """An open (or settled) SHORT in the TRAINING lane — CR171 §3.

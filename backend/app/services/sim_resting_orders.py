@@ -84,6 +84,7 @@ from app.services.sim_engine import (
     SimEngine,
     SimRestingOrder,
     get_sim_engine,
+    retire_values,
 )
 from app.services.sim_trade_effects import apply_post_fill_effects
 from app.schemas.trade import OrderType, Side
@@ -224,7 +225,10 @@ def _expire_elapsed(now: datetime, user_id: UUID | None) -> int:
                 SimRestingOrderRow.state.in_(LIVE_RESTING_STATES),
                 SimRestingOrderRow.expires_at <= now,
             )
-            .values(state="expired", cancel_reason="expired — time in force elapsed")
+            .values(**retire_values(
+                "expired", now,
+                cancel_reason="expired — time in force elapsed",
+            ))
         )
         if user_id is not None:
             stmt = stmt.where(SimRestingOrderRow.user_id == user_id)
@@ -248,10 +252,10 @@ def _reap_stale_claims(now: datetime, user_id: UUID | None) -> int:
                 SimRestingOrderRow.claimed_at.isnot(None),
                 SimRestingOrderRow.claimed_at <= cutoff,
             )
-            .values(
-                state="rejected",
+            .values(**retire_values(
+                "rejected", now,
                 cancel_reason="interrupted while filling — check your trade list",
-            )
+            ))
         )
         if user_id is not None:
             stmt = stmt.where(SimRestingOrderRow.user_id == user_id)
@@ -315,21 +319,22 @@ def _stamp_filled(
         s.execute(
             update(SimRestingOrderRow)
             .where(SimRestingOrderRow.id == order_id)
-            .values(
-                state="filled",
+            .values(**retire_values(
+                "filled",
+                now,
                 filled_trade_id=trade_id,
                 fill_price=fill_price,
                 filled_at=now,
-            )
+            ))
         )
 
 
-def _stamp_rejected(order_id: UUID, reason: str) -> None:
+def _stamp_rejected(order_id: UUID, reason: str, now: datetime) -> None:
     with get_session() as s:
         s.execute(
             update(SimRestingOrderRow)
             .where(SimRestingOrderRow.id == order_id)
-            .values(state="rejected", cancel_reason=reason)
+            .values(**retire_values("rejected", now, cancel_reason=reason))
         )
 
 
@@ -488,7 +493,7 @@ def _fill_triggered(
             logger.exception(
                 "sim_resting_order_fill_raised", order_id=str(order.id),
             )
-            _stamp_rejected(order.id, f"could not be filled: {exc}")
+            _stamp_rejected(order.id, f"could not be filled: {exc}", now)
             rejected += 1
             continue
 
@@ -498,7 +503,7 @@ def _fill_triggered(
                 if result.compliance.violations
                 else "refused at fill"
             )
-            _stamp_rejected(order.id, reason)
+            _stamp_rejected(order.id, reason, now)
             rejected += 1
             continue
 
