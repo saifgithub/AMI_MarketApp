@@ -1,0 +1,143 @@
+{
+  "mode": "observe",
+  "collidable_models": 32,
+  "distinct_sites_executed": 14,
+  "unprotected_sites": 8,
+  "observations": [
+    {
+      "model": "TickerReferenceRow",
+      "site": "app/db/session.py:82 in get_session",
+      "constraints": [
+        "natural-pk:symbol"
+      ],
+      "protected_by_savepoint": false,
+      "times_executed": 96
+    },
+    {
+      "model": "User",
+      "site": "app/db/session.py:82 in get_session",
+      "constraints": [
+        "unique:email",
+        "unique:phone",
+        "unique:handle",
+        "unique:desk_key",
+        "uq:email",
+        "uq:phone",
+        "uq:desk_key",
+        "uqidx:handle"
+      ],
+      "protected_by_savepoint": false,
+      "times_executed": 7
+    },
+    {
+      "model": "MandateRow",
+      "site": "app/services/mandate_store.py:156 in upsert",
+      "constraints": [
+        "uq:user_id,version"
+      ],
+      "protected_by_savepoint": true,
+      "times_executed": 5
+    },
+    {
+      "model": "UserOverlayRow",
+      "site": "app/services/overlay_store.py:193 in save_new_version",
+      "constraints": [
+        "uq:user_id,agent_id,version"
+      ],
+      "protected_by_savepoint": true,
+      "times_executed": 4
+    },
+    {
+      "model": "MandateRow",
+      "site": "app/db/session.py:82 in get_session",
+      "constraints": [
+        "uq:user_id,version"
+      ],
+      "protected_by_savepoint": false,
+      "times_executed": 2
+    },
+    {
+      "model": "OverlayEditCounter",
+      "site": "app/services/overlay_store.py:227 in save_new_version",
+      "constraints": [
+        "uq:user_id,agent_id"
+      ],
+      "protected_by_savepoint": true,
+      "times_executed": 2
+    },
+    {
+      "model": "UserDeviceRow",
+      "site": "app/db/session.py:82 in get_session",
+      "constraints": [
+        "unique:device_install_id",
+        "uq:device_install_id"
+      ],
+      "protected_by_savepoint": false,
+      "times_executed": 1
+    },
+    {
+      "model": "OverlayEditCounter",
+      "site": "app/db/session.py:82 in get_session",
+      "constraints": [
+        "uq:user_id,agent_id"
+      ],
+      "protected_by_savepoint": false,
+      "times_executed": 1
+    },
+    {
+      "model": "UserOverlayRow",
+      "site": "app/db/session.py:82 in get_session",
+      "constraints": [
+        "uq:user_id,agent_id,version"
+      ],
+      "protected_by_savepoint": false,
+      "times_executed": 1
+    },
+    {
+      "model": "SocialSentimentCacheRow",
+      "site": "app/db/session.py:82 in get_session",
+      "constraints": [
+        "natural-pk:ticker"
+      ],
+      "protected_by_savepoint": false,
+      "times_executed": 1
+    },
+    {
+      "model": "UserDeviceRow",
+      "site": "app/services/auth_service.py:127 in _upsert_user_device",
+      "constraints": [
+        "unique:device_install_id",
+        "uq:device_install_id"
+      ],
+      "protected_by_savepoint": true,
+      "times_executed": 1
+    },
+    {
+      "model": "BadgeRow",
+      "site": "app/services/reputation_service.py:455 in _award_badge",
+      "constraints": [
+        "uq:user_id,badge_key"
+      ],
+      "protected_by_savepoint": true,
+      "times_executed": 1
+    },
+    {
+      "model": "SocialSentimentCacheRow",
+      "site": "app/services/social_context.py:230 in _cache_write",
+      "constraints": [
+        "natural-pk:ticker"
+      ],
+      "protected_by_savepoint": true,
+      "times_executed": 1
+    },
+    {
+      "model": "BadgeRow",
+      "site": "unknown",
+      "constraints": [
+        "uq:user_id,badge_key"
+      ],
+      "protected_by_savepoint": false,
+      "times_executed": 1
+    }
+  ]
+}
