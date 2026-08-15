@@ -130,9 +130,43 @@ def driver(device_profile):
     # a fresh install starts on the Concierge interview instead, so make that
     # precondition true rather than just assumed. Cheap no-op once onboarding
     # has completed once, thanks to noReset=True.
+    _require_unlocked(drv)
     ensure_onboarded(drv)
     yield drv
     drv.quit()
+
+
+def _require_unlocked(drv) -> None:
+    """Refuse to run against a locked device, and say so in those words.
+
+    Measured: a phone left on its lock screen absorbed a full 300s onboarding
+    budget and the suite reported `onboarding did not reach Floor`. That
+    sentence sends the reader to the app, which was never in the foreground —
+    the same misleading shape as the dialer escape and the Convene sheet.
+
+    Tries Appium's own unlock first, which clears a swipe-only lock. A secured
+    lock needs the credential: set AMI_UNLOCK_TYPE (pin|password|pattern) and
+    AMI_UNLOCK_KEY in the environment, never in git.
+    """
+    try:
+        if not drv.is_locked():
+            return
+    except Exception:
+        return  # driver cannot tell us; do not manufacture a failure
+
+    try:
+        drv.unlock()
+    except Exception:
+        pass
+
+    if drv.is_locked():
+        raise pytest.UsageError(
+            "the device is LOCKED — nothing below this point is a test result. "
+            "Appium could not clear it, which means a PIN/pattern/password is "
+            "set. Either unlock the device by hand, disable its screen lock "
+            "(it is an automation rig), or export AMI_UNLOCK_TYPE=pin and "
+            "AMI_UNLOCK_KEY=<code> before running."
+        )
 
 
 @pytest.fixture(autouse=True)

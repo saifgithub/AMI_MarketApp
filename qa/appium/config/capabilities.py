@@ -28,6 +28,8 @@ iOS / XCUITest:
   no provisioning to go wrong. They will need attention for the real device.
 """
 
+import os
+
 from appium.options.android import UiAutomator2Options
 from appium.options.ios import XCUITestOptions
 
@@ -62,6 +64,21 @@ def _build_android(device: DeviceProfile, *, no_reset: bool) -> UiAutomator2Opti
             "appium:settings[waitForSelectorTimeout]": 5000,
         }
     )
+    # A locked device drives nothing, and says so in the least useful way: the
+    # suite spent 300s tapping a Samsung lock screen and reported "onboarding
+    # did not reach Floor" — the app was never even in front. Appium can clear
+    # a swipe-only lock on its own; a PIN/pattern/password needs the credential,
+    # which belongs in the environment and never in git.
+    unlock_type = os.environ.get("AMI_UNLOCK_TYPE")
+    unlock_key = os.environ.get("AMI_UNLOCK_KEY")
+    if unlock_type and unlock_key:
+        options.load_capabilities(
+            {
+                "appium:unlockType": unlock_type,  # pin | password | pattern | fingerprint
+                "appium:unlockKey": unlock_key,
+                "appium:unlockStrategy": "uiautomator",
+            }
+        )
     return options
 
 
