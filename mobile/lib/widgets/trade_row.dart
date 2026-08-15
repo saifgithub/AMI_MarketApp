@@ -5,15 +5,12 @@
 /// Detail screen (filtered to one ticker).
 library;
 
-import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/sim.dart';
-import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-class TradeRow extends ConsumerWidget {
+class TradeRow extends StatelessWidget {
   const TradeRow({super.key, required this.trade});
 
   final SimTrade trade;
@@ -28,7 +25,7 @@ class TradeRow extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final fmt = NumberFormat('#,##0.00');
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
@@ -71,14 +68,13 @@ class TradeRow extends ConsumerWidget {
               ],
             ),
           ),
-          if (trade.isOpen)
-            IconButton(
-              icon: const Icon(Icons.close, size: 16, color: AmiColors.textLow),
-              tooltip: AppLocalizations.of(context).portfolioCloseTooltip,
-              onPressed: () =>
-                  ref.read(simNotifierProvider.notifier).closeTrade(trade.id),
-            )
-          else if (trade.realisedPnl != 0)
+          // CR188 slice 2 — the `x` is gone. It closed a TRADE row at market,
+          // which is a second mechanic for "sell" with a different object under
+          // it and no way to name a price; selling is now one control on the
+          // position, reaching every order type. Removing it is also what stops
+          // a close from silently orphaning a resting sell on those shares
+          // (DEF311's shape, removed rather than guarded against).
+          if (!trade.isOpen && trade.realisedPnl != 0)
             Text(
               '${trade.realisedPnl >= 0 ? '+' : ''}\$${fmt.format(trade.realisedPnl)}',
               style: AmiTypography.labelMono.copyWith(color: _accent),

@@ -108,8 +108,6 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
     final isWatched = watchedEntry != null;
 
     final trades = simState.trades.where((t) => t.ticker == ticker).toList();
-    final hasOpenTrades = trades.any((t) => t.isOpen);
-
     final earningsAsync = ref.watch(tickerEarningsProvider(ticker));
     final newsAsync = ref.watch(tickerNewsProvider(ticker));
 
@@ -161,7 +159,7 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
               _SecondaryActions(
                 ticker: ticker,
                 isWatched: isWatched,
-                hasOpenTrades: hasOpenTrades,
+                heldQuantity: isHeld ? heldHolding.quantity : null,
               ),
               const SizedBox(height: AmiSpacing.l),
               earningsAsync.when(
@@ -448,13 +446,17 @@ class _SecondaryActions extends ConsumerWidget {
   const _SecondaryActions({
     required this.ticker,
     required this.isWatched,
-    required this.hasOpenTrades,
+    required this.heldQuantity,
   });
 
   final String ticker;
   final bool isWatched;
-  final bool hasOpenTrades;
 
+  /// CR188 slice 2 — non-null when the user actually holds this ticker, which
+  /// is the only case SELL is offered in. Selling something you do not hold is
+  /// a short, and a short is deliberately not something a position screen
+  /// offers as a one-tap action.
+  final double? heldQuantity;
   void _ask(BuildContext context) {
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => OneOnOneScreen(agent: agentById('market_analyst')),
@@ -480,40 +482,6 @@ class _SecondaryActions extends ConsumerWidget {
       if (context.mounted) {
         Celebrate.micro(context, accent: AmiColors.hexCyan);
       }
-    }
-  }
-
-  Future<void> _closeAll(BuildContext context, WidgetRef ref) async {
-    final l = AppLocalizations.of(context);
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AmiColors.slate800,
-        title: Text(l.tickerDetailClosePositionConfirmTitle(ticker),
-            style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
-        content: Text(l.tickerDetailClosePositionConfirmBody,
-            style: AmiTypography.body),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l.actionCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(
-              l.tickerDetailClosePositionConfirmCta,
-              style: const TextStyle(color: AmiColors.hexRed),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true) return;
-    final state = ref.read(simNotifierProvider);
-    final openForTicker =
-        state.trades.where((t) => t.ticker == ticker && t.isOpen).toList();
-    for (final t in openForTicker) {
-      await ref.read(simNotifierProvider.notifier).closeTrade(t.id);
     }
   }
 
@@ -548,12 +516,28 @@ class _SecondaryActions extends ConsumerWidget {
           color: AmiColors.hexBlue,
           onTap: () => _setAlert(context),
         ),
-        if (hasOpenTrades)
+        // CR188 slice 2 — THE exit, and the only one.
+        //
+        // This replaces CLOSE POSITION, which looped every open trade on the
+        // ticker through `manual_close`: a market-only close acting on TRADE
+        // rows, with no way to name a price. It opens the one sheet that can
+        // sell, with the ticker and the whole holding already filled in and the
+        // side fixed — so MARKET vs LIMIT vs STOP is a field inside the flow
+        // rather than a different door, and "sell" has one mechanic.
+        //
+        // Collapsing the three also removes DEF311's shape rather than guarding
+        // against it: a close that acted on trade rows could orphan a resting
+        // sell on the shares, and there is no longer such a close.
+        if (heldQuantity != null)
           _Chip(
-            icon: Icons.do_disturb_alt_outlined,
-            label: l.tickerDetailActionClose,
+            icon: Icons.remove_circle_outline,
+            label: l.tickerDetailActionSell,
             color: AmiColors.hexRed,
-            onTap: () => _closeAll(context, ref),
+            onTap: () => TradeTicketSheet.show(
+              context,
+              sellTicker: ticker,
+              sellQuantity: heldQuantity,
+            ),
           ),
       ],
     );

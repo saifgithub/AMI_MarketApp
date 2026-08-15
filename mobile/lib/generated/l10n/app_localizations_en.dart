@@ -998,6 +998,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tickerDetailActionClose => 'CLOSE';
 
   @override
+  String get tickerDetailActionSell => 'SELL';
+
+  @override
   String get tickerDetailActionSetAlert => 'ALERT';
 
   @override

@@ -187,18 +187,12 @@ class SimNotifier extends StateNotifier<SimState> {
     }
   }
 
-  Future<void> closeTrade(String tradeId) async {
-    try {
-      final api = _ref.read(apiClientProvider);
-      final userId = await DeviceUser.getOrCreate();
-      await api.simCloseTrade(userId, tradeId);
-      await refresh();
-      await _ref.read(journalNotifierProvider.notifier).refresh();
-    } catch (e) {
-      state = state.copyWith(
-          error: friendlyError(e, action: 'close that trade'));
-    }
-  }
+  // CR188 slice 2 — `closeTrade` removed. It wrapped
+  // `POST /v1/sim/trades/{user}/close`, the market-only exit behind CLOSE
+  // POSITION and the `x` on a trade row, and both of those are gone: selling is
+  // one control on the position, through the ticket, reaching every order type.
+  // The route still exists server-side; nothing in this app calls it, and a
+  // dormant wrapper here is a second exit one line away from returning.
 
   /// CR170 — pull a resting order, and report **the server's** verdict.
   ///

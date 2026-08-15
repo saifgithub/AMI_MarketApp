@@ -665,6 +665,7 @@
     "tickerDetailActionConvene": "CONVENE",
     "tickerDetailActionWatch": "مراقبة",
     "tickerDetailActionClose": "إغلاق",
+    "tickerDetailActionSell": "SELL",
     "tickerDetailActionSetAlert": "ALERT",
     "priceAlertSheetTitle": "Set price alert — {ticker}",
     "priceAlertSheetThresholdLabel": "Alert type",

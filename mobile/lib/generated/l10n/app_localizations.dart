@@ -1714,6 +1714,12 @@ abstract class AppLocalizations {
   /// **'CLOSE'**
   String get tickerDetailActionClose;
 
+  /// CR188 slice 2 — the one exit. Shown on a ticker the user holds; opens the trade ticket with the ticker and the whole holding filled in and the side fixed to SELL. Replaces CLOSE POSITION, which could only ever place a market order. Uppercase, mono.
+  ///
+  /// In en, this message translates to:
+  /// **'SELL'**
+  String get tickerDetailActionSell;
+
   /// CR027 — secondary chip on Ticker Detail, opens the price-alert creation sheet for this ticker. NEW key, needs ar/ms translation.
   ///
   /// In en, this message translates to:

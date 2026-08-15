@@ -1000,6 +1000,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get tickerDetailActionClose => 'TUTUP';
 
   @override
+  String get tickerDetailActionSell => 'SELL';
+
+  @override
   String get tickerDetailActionSetAlert => 'ALERT';
 
   @override

@@ -34,6 +34,8 @@ class TradeTicketSheet extends ConsumerStatefulWidget {
     this.tickerPrefill,
     this.coverTicker,
     this.coverQuantity,
+    this.sellTicker,
+    this.sellQuantity,
   });
 
   /// Optional Room verdict to pre-fill from.
@@ -48,6 +50,15 @@ class TradeTicketSheet extends ConsumerStatefulWidget {
   final String? coverTicker;
   final double? coverQuantity;
 
+  /// CR188 slice 2 — opened from a position to SELL it. Fixes the side to SELL
+  /// and fills the quantity with the whole holding.
+  ///
+  /// Unlike a cover, the quantity stays **editable**: a partial sell is a legal,
+  /// ordinary thing, and the sheet's own three-case rule already refuses the one
+  /// quantity that is not (a sell larger than the holding but not from zero).
+  final String? sellTicker;
+  final double? sellQuantity;
+
   @override
   ConsumerState<TradeTicketSheet> createState() => _TradeTicketSheetState();
 
@@ -58,6 +69,8 @@ class TradeTicketSheet extends ConsumerStatefulWidget {
     String? tickerPrefill,
     String? coverTicker,
     double? coverQuantity,
+    String? sellTicker,
+    double? sellQuantity,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -72,6 +85,8 @@ class TradeTicketSheet extends ConsumerStatefulWidget {
         tickerPrefill: tickerPrefill,
         coverTicker: coverTicker,
         coverQuantity: coverQuantity,
+        sellTicker: sellTicker,
+        sellQuantity: sellQuantity,
       ),
     );
   }
@@ -114,12 +129,18 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   @override
   void initState() {
     super.initState();
-    _ticker =
-        TextEditingController(text: widget.coverTicker ?? widget.tickerPrefill ?? '');
+    _ticker = TextEditingController(
+      text: widget.coverTicker ?? widget.sellTicker ?? widget.tickerPrefill ?? '',
+    );
     _qty = TextEditingController(
-      text: widget.coverQuantity?.toStringAsFixed(0) ?? '1',
+      text: (widget.coverQuantity ?? widget.sellQuantity)?.toStringAsFixed(0) ?? '1',
     );
     if (widget.coverTicker != null) _side = 'buy';
+    // CR188 slice 2 — the one exit. Everything that used to close a position by
+    // its own route now opens THIS sheet with the side and quantity already
+    // right, so "sell" has one mechanic and choosing MARKET vs LIMIT vs STOP is
+    // a field inside it rather than a different door.
+    if (widget.sellTicker != null) _side = 'sell';
     _stop = TextEditingController();
     _target = TextEditingController();
     _horizon = TextEditingController();

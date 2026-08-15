@@ -1199,6 +1199,10 @@
     "@tickerDetailActionClose": {
         "description": "Destructive secondary chip on Ticker Detail — closes every open trade for this ticker after confirm. Only shown when at least one open trade exists."
     },
+    "tickerDetailActionSell": "SELL",
+    "@tickerDetailActionSell": {
+        "description": "CR188 slice 2 — the one exit. Shown on a ticker the user holds; opens the trade ticket with the ticker and the whole holding filled in and the side fixed to SELL. Replaces CLOSE POSITION, which could only ever place a market order. Uppercase, mono."
+    },
     "tickerDetailActionSetAlert": "ALERT",
     "@tickerDetailActionSetAlert": {
         "description": "CR027 — secondary chip on Ticker Detail, opens the price-alert creation sheet for this ticker. NEW key, needs ar/ms translation."

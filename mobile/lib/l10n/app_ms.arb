@@ -664,6 +664,7 @@
     "tickerDetailActionConvene": "CONVENE",
     "tickerDetailActionWatch": "PANTAU",
     "tickerDetailActionClose": "TUTUP",
+    "tickerDetailActionSell": "SELL",
     "tickerDetailActionSetAlert": "ALERT",
     "priceAlertSheetTitle": "Set price alert — {ticker}",
     "priceAlertSheetThresholdLabel": "Alert type",

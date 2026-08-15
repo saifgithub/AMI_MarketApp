@@ -1,6 +1,6 @@
 # CR188 — one position, one exit
 
-**Filed:** 2026-08-15 (AT:R70) · **Status:** in_progress (slice 1 complete) · **Follows:** CR186, CR187, DEF309–DEF313
+**Filed:** 2026-08-15 (AT:R70) · **Status:** in_progress (slices 1–2 complete) · **Follows:** CR186, CR187, DEF309–DEF313
 
 Saiful, after tracing the sell paths end to end: *"make it less complex for the customer. thats too
 many paths."* Proposal artifact reviewed and approved before any code was written.
@@ -33,8 +33,26 @@ short.
 **Slice 1 — the ticket. COMPLETE.** Self-contained, no screen restructuring, and where a user
 currently loses money to a surprise.
 
-**Slice 2 — one exit.** A SELL action on the position that opens the ticket prefilled; delete CLOSE
-POSITION and the `×`. Three paths become one. Not started.
+**Slice 2 — one exit. COMPLETE.** A **SELL** chip on the position (Ticker Detail) opening the ticket
+with `sellTicker`/`sellQuantity` — side fixed to SELL, the whole holding filled in, quantity left
+**editable** because a partial sell is ordinary and the sheet's three-case rule already refuses the
+one quantity that is not. **CLOSE POSITION and the `×` on every open-trade row are deleted**, and
+with them `SimNotifier.closeTrade`, which had no callers left: a dormant wrapper is a second exit one
+line from returning. The server route survives; nothing in the app calls it.
+
+Two things this removes rather than guards:
+
+- **A second mechanic.** Both deleted controls acted on **trade rows** through `manual_close` and
+  could only ever place a market order. Selling now acts on the shares and reaches every order type.
+- **DEF311's shape.** A close that acted on trade rows could orphan a resting sell on those shares.
+  There is no longer such a close.
+
+**Where the control lives was decided by a failing test, not by taste.** It was first put on the
+holding *row* on the Positions list; that overflowed the row by 16px and pushed the tab past CR120's
+`≤ 4 screens` acceptance (measured 6.48). The row was right and the placement was wrong — the
+approved flow is *"tap the position → SELL"*, which puts it on the position's own screen. **SELL is
+offered only when `heldQuantity != null`**: selling what you do not hold is a short, and a short is
+not something a position screen should offer as a one-tap action.
 
 **Slice 3 — the collapse.** Merge HOLDINGS and OPEN TRADES into one row per ticker; pending orders
 become row attributes; CR186's card becomes the detail view; closed orders move to HISTORY. Not
@@ -104,13 +122,13 @@ reading either side made the rule look covered.
 text and on the **button's own label**, read off the widget tree rather than cast from
 `ElevatedButton.icon`'s private child type.
 
-Full suites: **Flutter 1,098 passed**, `flutter analyze` 0 errors (10 info, baseline).
+Full suites: **Flutter 1,101 passed**, `flutter analyze` 0 errors (10 info, baseline).
 
 ## Translation
 
-5 new keys × 3 locales, `retranslate:[ar,ms]`.
+6 new keys × 3 locales, `retranslate:[ar,ms]`.
 
 ## Not in this slice
 
-- Slices 2 and 3 above.
+- Slice 3 above.
 - Any change to placement, the sweep, the safety floor, or a price.
