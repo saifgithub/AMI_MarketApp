@@ -4015,6 +4015,36 @@ abstract class AppLocalizations {
   /// **'On a short, the target belongs below your entry — you profit as the price falls.'**
   String get tradeTicketRefuseShortTarget;
 
+  /// CR188/DEF312 refusal shown when a BUY carries a stop at or above the entry price. Such a stop is already through the market at purchase, so the bracket sweep liquidates the position on its next pass and the resulting stop-out also trips the post-stop-out cooldown. {stop} is the typed stop, 2dp.
+  ///
+  /// In en, this message translates to:
+  /// **'Your stop belongs below your entry — a falling price is what goes against you. At \${stop} it would fire straight away and close the position you just opened.'**
+  String tradeTicketRefuseLongStop(String stop);
+
+  /// CR188/DEF312 refusal shown when a BUY carries a target at or below the entry price. The mirror of tradeTicketRefuseLongStop. {target} is the typed target, 2dp.
+  ///
+  /// In en, this message translates to:
+  /// **'Your target belongs above your entry — that is where the position makes money. At \${target} it would fire straight away and book a win the trade never made.'**
+  String tradeTicketRefuseLongTarget(String target);
+
+  /// CR188 informational line on the trade ticket when SELL is chosen for a ticker the user holds. Not a refusal — it states what this order does, because the quantity field alone never showed the user what they own.
+  ///
+  /// In en, this message translates to:
+  /// **'You hold {held} {ticker} — selling {qty} closes that much of the position.'**
+  String tradeTicketNoticeHolding(String held, String ticker, String qty);
+
+  /// CR188 informational line on the trade ticket when SELL is chosen for a ticker the user does not hold. Stated BEFORE submit, because the app previously opened a short with no warning until the confirmation snackbar. Copy says AMI, never 'the AI'.
+  ///
+  /// In en, this message translates to:
+  /// **'You hold no {ticker}. This opens a short — you borrow the shares now and buy them back later, and the loss is not capped.'**
+  String tradeTicketNoticeOpensShort(String ticker);
+
+  /// CR188 replaces the SUBMIT TRADE button label when the sell would open a short. A word on the control being pressed is structural; a sentence above it is an instruction, and this project's rule is that instructions are not controls. Uppercase, mono.
+  ///
+  /// In en, this message translates to:
+  /// **'OPEN SHORT'**
+  String get tradeTicketSubmitShort;
+
   /// CR170 trade-ticket field label above the market/limit/stop/stop-limit picker. Uppercase, mono.
   ///
   /// In en, this message translates to:

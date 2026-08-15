@@ -2521,6 +2521,34 @@
         "description": "CR171 refusal shown when a short entry carries a stop at or below the entry price. Such a stop cannot fire until the position has already gone the whole way against the user, which is the one outcome a stop exists to prevent."
     },
     "tradeTicketRefuseShortTarget": "On a short, the target belongs below your entry — you profit as the price falls.",
+    "tradeTicketRefuseLongStop": "Your stop belongs below your entry — a falling price is what goes against you. At ${stop} it would fire straight away and close the position you just opened.",
+    "@tradeTicketRefuseLongStop": {
+        "description": "CR188/DEF312 refusal shown when a BUY carries a stop at or above the entry price. Such a stop is already through the market at purchase, so the bracket sweep liquidates the position on its next pass and the resulting stop-out also trips the post-stop-out cooldown. {stop} is the typed stop, 2dp.",
+        "placeholders": { "stop": { "type": "String" } }
+    },
+    "tradeTicketRefuseLongTarget": "Your target belongs above your entry — that is where the position makes money. At ${target} it would fire straight away and book a win the trade never made.",
+    "@tradeTicketRefuseLongTarget": {
+        "description": "CR188/DEF312 refusal shown when a BUY carries a target at or below the entry price. The mirror of tradeTicketRefuseLongStop. {target} is the typed target, 2dp.",
+        "placeholders": { "target": { "type": "String" } }
+    },
+    "tradeTicketNoticeHolding": "You hold {held} {ticker} — selling {qty} closes that much of the position.",
+    "@tradeTicketNoticeHolding": {
+        "description": "CR188 informational line on the trade ticket when SELL is chosen for a ticker the user holds. Not a refusal — it states what this order does, because the quantity field alone never showed the user what they own.",
+        "placeholders": {
+            "held": { "type": "String" },
+            "ticker": { "type": "String" },
+            "qty": { "type": "String" }
+        }
+    },
+    "tradeTicketNoticeOpensShort": "You hold no {ticker}. This opens a short — you borrow the shares now and buy them back later, and the loss is not capped.",
+    "@tradeTicketNoticeOpensShort": {
+        "description": "CR188 informational line on the trade ticket when SELL is chosen for a ticker the user does not hold. Stated BEFORE submit, because the app previously opened a short with no warning until the confirmation snackbar. Copy says AMI, never 'the AI'.",
+        "placeholders": { "ticker": { "type": "String" } }
+    },
+    "tradeTicketSubmitShort": "OPEN SHORT",
+    "@tradeTicketSubmitShort": {
+        "description": "CR188 replaces the SUBMIT TRADE button label when the sell would open a short. A word on the control being pressed is structural; a sentence above it is an instruction, and this project's rule is that instructions are not controls. Uppercase, mono."
+    },
     "@tradeTicketRefuseShortTarget": {
         "description": "CR171 refusal shown when a short entry carries a target at or above the entry price. The mirror of tradeTicketRefuseShortStop."
     },

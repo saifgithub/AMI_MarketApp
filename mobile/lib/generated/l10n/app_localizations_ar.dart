@@ -2393,6 +2393,29 @@ class AppLocalizationsAr extends AppLocalizations {
       'On a short, the target belongs below your entry — you profit as the price falls.';
 
   @override
+  String tradeTicketRefuseLongStop(String stop) {
+    return 'Your stop belongs below your entry — a falling price is what goes against you. At \$$stop it would fire straight away and close the position you just opened.';
+  }
+
+  @override
+  String tradeTicketRefuseLongTarget(String target) {
+    return 'Your target belongs above your entry — that is where the position makes money. At \$$target it would fire straight away and book a win the trade never made.';
+  }
+
+  @override
+  String tradeTicketNoticeHolding(String held, String ticker, String qty) {
+    return 'You hold $held $ticker — selling $qty closes that much of the position.';
+  }
+
+  @override
+  String tradeTicketNoticeOpensShort(String ticker) {
+    return 'You hold no $ticker. This opens a short — you borrow the shares now and buy them back later, and the loss is not capped.';
+  }
+
+  @override
+  String get tradeTicketSubmitShort => 'OPEN SHORT';
+
+  @override
   String get tradeTicketLabelOrderType => 'ORDER TYPE';
 
   @override

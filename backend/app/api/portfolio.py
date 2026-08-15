@@ -86,14 +86,36 @@ async def sector_allocation(
     # DEF120 D1: single to_thread hop around a one-fetch snapshot (the
     # total_value/drawdown_pct fields it also returns go unused here, but
     # the fetch itself is the same one this route already needed).
-    p, marks, _total_value, _drawdown_pct, _source = await asyncio.to_thread(
+    p, marks, snapshot_total_value, _drawdown_pct, _source = await asyncio.to_thread(
         sim.portfolio_marks_snapshot, user_id,
     )
-    invested = sum(marks.get(h.ticker, 0.0) * h.quantity for h in p.holdings)
     # DEF149: allocation is a fraction of the WHOLE portfolio, cash included, so the
     # donut and the cap agree with the breach copy's own words ("of your portfolio").
-    total_value = round(invested + p.current_cash, 2)
+    #
+    # DEF313 — this used to re-derive `invested + current_cash` under the name
+    # `total_value`, which is a DIFFERENT number from the one the value card
+    # shows: `Portfolio.total_value` carries the short leg and this did not, so
+    # the two disagreed by exactly that leg whenever a short was open. One
+    # derivation now. (Nothing renders this field today — `SectorAllocation
+    # .totalValue` is parsed and unused — so the fix is to the contract before
+    # something starts believing it.)
+    #
+    # Taken off the snapshot rather than recomputed: `portfolio_marks_snapshot`
+    # already derived `p.total_value(marks)` inside the one `to_thread` hop this
+    # route makes, and the route was discarding it as `_total_value`. Calling it
+    # again out here also trips the DEF116/DEF120 guard — `Portfolio.total_value`
+    # and `SimEngine.total_value` are the same name to a static reader, and the
+    # engine's does fan out to the network. The guard is right to be name-based
+    # and the answer is not to waive it, it is to stop making the second call.
+    total_value = round(float(snapshot_total_value), 2)
 
+    # DEF313 — the ring stays LONG-ONLY, deliberately and with a measurement
+    # behind it: `sim_short_positions` has never held a row on Alpha, so making
+    # the ring gross would have meant taking the safety floor's sector cap gross
+    # too (or shipping a gross picture beside a long-only verdict) to fix a
+    # display for a position type with zero instances. The decision and the
+    # arithmetic that settles it are recorded on the DEF313 row; revisit when a
+    # short actually exists.
     allocation = allocate_by_sector(
         p.holdings, marks, cash=p.current_cash, sector_of=sector_map.sector,
     )

@@ -287,27 +287,58 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   /// Null means "nothing to refuse", which includes every case where the input
   /// is too incomplete to judge. An unset field is not a violation, and warning
   /// about one teaches the user to read past the panel.
+  /// Shares of the typed ticker currently held. 0 when nothing is typed yet.
+  double _heldQty(SimState state, String ticker) =>
+      state.portfolio?.holdings
+          .where((h) => h.ticker.toUpperCase() == ticker)
+          .fold<double>(0, (a, h) => a + h.quantity) ??
+      0;
+
+  /// CR188 — does this order OPEN a short? The same three-case rule the server
+  /// applies, read here so the sheet can say so before the tap rather than in
+  /// the snackbar after it.
+  bool _opensShort(SimState state) {
+    if (_side != 'sell') return false;
+    final typed = _ticker.text.trim().toUpperCase();
+    final qty = double.tryParse(_qty.text.trim());
+    if (typed.isEmpty || qty == null || qty <= 0) return false;
+    return classifySell(held: _heldQty(state, typed), quantity: qty) ==
+        SellIntent.opensShort;
+  }
+
   String? _localRefusal(AppLocalizations l, SimState state) {
-    if (_side != 'sell') return null;
     final typed = _ticker.text.trim().toUpperCase();
     final qty = double.tryParse(_qty.text.trim());
     if (typed.isEmpty || qty == null || qty <= 0) return null;
 
-    final held = state.portfolio?.holdings
-            .where((h) => h.ticker.toUpperCase() == typed)
-            .fold<double>(0, (a, h) => a + h.quantity) ??
-        0;
+    final held = _heldQty(state, typed);
+    var isShort = false;
 
-    final intent = classifySell(held: held, quantity: qty);
-    if (intent == SellIntent.crossesZero) {
-      return l.tradeTicketRefuseCrossZero(
-        closeableQuantity(held).toStringAsFixed(0),
-        typed,
-        qty.toStringAsFixed(0),
-      );
+    if (_side == 'sell') {
+      final intent = classifySell(held: held, quantity: qty);
+      if (intent == SellIntent.crossesZero) {
+        return l.tradeTicketRefuseCrossZero(
+          closeableQuantity(held).toStringAsFixed(0),
+          typed,
+          qty.toStringAsFixed(0),
+        );
+      }
+      // A sell that CLOSES a long carries no bracket of its own — its levels
+      // are meaningless, which is why the server does not judge them either.
+      if (intent != SellIntent.opensShort) return null;
+      isShort = true;
     }
-    if (intent != SellIntent.opensShort) return null;
 
+    // CR188/DEF312 — the bracket rule runs for BOTH directions now.
+    //
+    // `stopIsWrongSide`/`targetIsWrongSide` have taken an `isShort` flag and
+    // handled the long case correctly since CR171. They were called behind
+    // `if (intent != SellIntent.opensShort) return null`, after this method had
+    // already returned early on every buy — so the long branch existed, was
+    // right, and was unreachable. That is P21, and the server had the identical
+    // hole (`short_bracket_is_wrong_side` called only from `_open_short_fill`),
+    // which is why reading either side made the rule look covered.
+    //
     // The price the bracket is measured against: what the user named on a
     // resting order, otherwise the live mark. Null when neither is known — the
     // check simply does not run, rather than running against a zero.
@@ -315,21 +346,57 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
             triggerPrice: double.tryParse(_trigger.text.trim()),
             limitPrice: double.tryParse(_limit.text.trim())) ??
         _quote?.price;
-    if (stopIsWrongSide(
-            isShort: true,
-            entry: entry,
-            stop: double.tryParse(_stop.text.trim())) ==
-        true) {
-      return l.tradeTicketRefuseShortStop;
+    final stop = double.tryParse(_stop.text.trim());
+    final target = double.tryParse(_target.text.trim());
+    if (stopIsWrongSide(isShort: isShort, entry: entry, stop: stop) == true) {
+      return isShort
+          ? l.tradeTicketRefuseShortStop
+          : l.tradeTicketRefuseLongStop(stop!.toStringAsFixed(2));
     }
-    if (targetIsWrongSide(
-            isShort: true,
-            entry: entry,
-            target: double.tryParse(_target.text.trim())) ==
+    if (targetIsWrongSide(isShort: isShort, entry: entry, target: target) ==
         true) {
-      return l.tradeTicketRefuseShortTarget;
+      return isShort
+          ? l.tradeTicketRefuseShortTarget
+          : l.tradeTicketRefuseLongTarget(target!.toStringAsFixed(2));
     }
     return null;
+  }
+
+  /// CR188 — flipping to SELL fills the quantity with what you actually hold.
+  ///
+  /// It defaulted to `1`, which is the one quantity that is almost never the
+  /// intent and never tells the user what they own. Only ever fills DOWN from a
+  /// holding — a ticker with nothing held is left alone rather than being
+  /// pre-loaded with a short the user did not ask for, and switching back to BUY
+  /// does not touch the field at all.
+  void _prefillSellQuantity(SimState state) {
+    if (_side != 'sell') return;
+    final typed = _ticker.text.trim().toUpperCase();
+    if (typed.isEmpty) return;
+    final held = _heldQty(state, typed);
+    if (held <= 0) return;
+    _qty.text = held.toStringAsFixed(0);
+  }
+
+  /// CR188 — what this SELL is about to do, stated before the tap.
+  ///
+  /// Informational, never a refusal: it renders alongside a live button. The
+  /// ticket used to say nothing at all here, so a sell did one of three
+  /// different things — reduce, refuse, or open a short with unbounded loss —
+  /// decided by a number that appeared nowhere on the screen.
+  String? _sellNotice(AppLocalizations l, SimState state) {
+    if (_side != 'sell') return null;
+    final typed = _ticker.text.trim().toUpperCase();
+    final qty = double.tryParse(_qty.text.trim());
+    if (typed.isEmpty || qty == null || qty <= 0) return null;
+    final held = _heldQty(state, typed);
+    return switch (classifySell(held: held, quantity: qty)) {
+      SellIntent.closesLong => l.tradeTicketNoticeHolding(
+          held.toStringAsFixed(0), typed, qty.toStringAsFixed(0)),
+      SellIntent.opensShort => l.tradeTicketNoticeOpensShort(typed),
+      // The refusal panel already carries this case, in stronger words.
+      SellIntent.crossesZero => null,
+    };
   }
 
   Future<void> _submit() async {
@@ -490,6 +557,11 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     // the server's verdict on the LAST submit. This one is about the order the
     // user is still typing.
     final localRefusal = _localRefusal(l, state);
+    // CR188 — what this order is about to do, and whether it opens a short.
+    // Both are read once here so the notice, the CTA's label and the CTA's
+    // colour cannot disagree about the same order (DEF098).
+    final sellNotice = localRefusal == null ? _sellNotice(l, state) : null;
+    final opensShort = _opensShort(state);
     // CR069 G3: the Sharia disclosure rides on BOTH outcomes. A screened-out
     // ticker is refused and its verdict sits inside the refusal panel below; a
     // pass or an unknown is PERMITTED, so its verdict has no refusal to ride on
@@ -772,7 +844,10 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                 const SizedBox(width: AmiSpacing.s),
                 _SideToggle(
                   value: _side,
-                  onChange: (v) => setState(() => _side = v),
+                  onChange: (v) => setState(() {
+                    _side = v;
+                    _prefillSellQuantity(state);
+                  }),
                 ),
               ],
             ),
@@ -915,6 +990,33 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
               decoration: _decoration(
                   label: l.tradeTicketLabelHorizon, hint: l.tradeTicketHintOptional),
             ),
+            // CR188 — informational, and deliberately in the refusal's slot
+            // rather than beside it: the two are mutually exclusive, and the
+            // last thing read before the button should be one sentence about
+            // this order, never two competing ones.
+            if (sellNotice != null) ...[
+              const SizedBox(height: AmiSpacing.m),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    opensShort ? Icons.trending_down : Icons.info_outline,
+                    size: 16,
+                    color: opensShort ? AmiColors.hexAmber : AmiColors.textMed,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      sellNotice,
+                      style: AmiTypography.caption.copyWith(
+                        color:
+                            opensShort ? AmiColors.hexAmber : AmiColors.textMed,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             if (localRefusal != null) ...[
               const SizedBox(height: AmiSpacing.m),
               Container(
@@ -944,7 +1046,18 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _side == 'buy' ? AmiColors.hexGreen : AmiColors.hexRed,
+                  // CR188 — a short is neither a buy nor an ordinary sell, and
+                  // the control says so. CR171 already had the words for it and
+                  // fired them AFTER the fill, which is right for the
+                  // borrow-cost advisory and wrong for "this is a different
+                  // kind of position than you think you are opening". A word on
+                  // the control being pressed is structural; a sentence above it
+                  // is an instruction, and instructions are not controls.
+                  backgroundColor: opensShort
+                      ? AmiColors.hexAmber
+                      : (_side == 'buy'
+                          ? AmiColors.hexGreen
+                          : AmiColors.hexRed),
                   foregroundColor: AmiColors.slate900,
                   padding: const EdgeInsets.symmetric(vertical: AmiSpacing.m),
                 ),
@@ -955,10 +1068,19 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                           strokeWidth: 2, color: AmiColors.slate900,
                         ),
                       )
-                    : Icon(_side == 'buy' ? Icons.add : Icons.remove),
+                    : Icon(opensShort
+                        ? Icons.trending_down
+                        : (_side == 'buy' ? Icons.add : Icons.remove)),
+                // CR188 — the LABEL is the structural half, not the colour. A
+                // user who reads nothing on this sheet still reads the word on
+                // the button they are pressing, and "SUBMIT TRADE" over an
+                // order that opens a borrowed position with uncapped loss is
+                // the sheet's last chance to be honest.
                 label: Text(state.submitting
                     ? l.tradeTicketSubmitting
-                    : l.tradeTicketSubmit),
+                    : (opensShort
+                        ? l.tradeTicketSubmitShort
+                        : l.tradeTicketSubmit)),
                 onPressed: (state.submitting ||
                         _validator.checking ||
                         localRefusal != null ||
