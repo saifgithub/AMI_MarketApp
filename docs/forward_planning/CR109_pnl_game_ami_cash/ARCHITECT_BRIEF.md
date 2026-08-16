@@ -102,7 +102,7 @@ commissioned before committing build cost). **Every item in that series has a di
 |---|---|---|
 | **Gate 1 / Gate 2 targets** — activation and close→re-entry rates | funding slice 4 | Must be set **before** the build, or the gate gets argued backwards from whatever the data turns out to be. That is the whole point of a gate. |
 | **Naming** — the game, a run, the boards, the sixth title rung | **slice 2** | Every new string set carries `retranslate:[ar,ms]`. Naming after the strings exist means paying for translation twice. **AMI Cash is settled** as the money. |
-| **The training-milestone gate** — must a player clear training before their first entry? | slice 3c routing | It delays the headline feature either way. Product call. |
+| ~~**The training-milestone gate** — must a player clear training before their first entry?~~ **DECIDED 2026-08-16: yes, gate it.** | slice 3c routing | Resolved — see `playability_review.md` §2. |
 
 **Eight tuning constants are open but block nothing** — first cuts exist for all of them, they all
 live in one module (`games_scoring.py`), and §18 of the design is generated from it. Build against

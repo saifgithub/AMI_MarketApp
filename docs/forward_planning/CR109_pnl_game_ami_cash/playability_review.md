@@ -67,8 +67,8 @@ short lesson block. This does three things at once: the player arrives with a me
 guess, the game becomes something *earned* rather than something defaulted into, and the training
 side gets a reason to exist that isn't homework.
 
-**Status: recommended. Needs Saiful's call** — it deliberately delays access to the headline
-feature, which is a real cost.
+**Status: DECIDED 2026-08-16 (Saiful) — gate it.** First entry gated behind a training milestone.
+It deliberately delays access to the headline feature, which is a real cost he accepted.
 
 ---
 
@@ -195,7 +195,7 @@ through ritual and rivalry rather than to land accidentally below it.
 | 4 | **Re-home the streak onto runs finished / periods entered** | S | Recommended |
 | 5 | **Provisional rank + near-miss lines** | XS | Recommended |
 | 6 | **Pull Rivals (roadmap #2) forward** to just after slice 4 | XS | Recommended |
-| 7 | **Gate first entry behind a training milestone** | S | **Needs Saiful's call** — delays the headline feature |
+| 7 | **Gate first entry behind a training milestone** | S | **DECIDED 2026-08-16 — yes, gate it** |
 | 8 | **Seed or guarantee a minimum first field** | M | Needs a decision alongside the §6.6 thresholds |
 
 Items 1–6 are all small, and together they change the game from *coherent* to *playable*. Item 7 is

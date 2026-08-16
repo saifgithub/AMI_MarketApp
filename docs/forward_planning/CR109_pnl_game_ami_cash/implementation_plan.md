@@ -740,8 +740,8 @@ constants. Restated here only where it changes what a lane can start.
 9. **Gate 1 and Gate 2 targets** (§17.1 of the design) — `first-run activation` and
    `close → re-entry`. Set them first, or the gate gets argued backwards from whatever the data
    turns out to be.
-10. **Whether first entry is gated behind a training milestone** (§16.10) — it delays the headline
-    feature.
+10. ~~Whether first entry is gated behind a training milestone~~ (§16.10) — **DECIDED 2026-08-16:
+    yes, gate first entry behind one completed Room run or a short lesson block.**
 
 **A measurement task, not a decision:** G3 — sample Yahoo's quote lag against a reference on
 melehost during market hours, **before any board is live**. The fee raised the bar on the exploit
