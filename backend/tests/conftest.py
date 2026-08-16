@@ -82,6 +82,11 @@ def _isolated_db(tmp_path: _Path) -> None:
     os.environ["AMI_TEST_DATABASE_URL"] = url
 
     from app.db import reset_for_tests
+    from app.db.session import set_ambient_test_url
+    # DEF324 — record which tempfile THIS test owns before building it, so a
+    # nested fixture's bare `reset_for_tests()` teardown returns here instead of
+    # falling through to the gitignored `backend/.local.db`.
+    set_ambient_test_url(url)
     reset_for_tests(url)
     _seed_common_test_tickers()
 

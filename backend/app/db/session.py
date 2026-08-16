@@ -28,6 +28,9 @@ from app.db.base import Base
 _engine: Engine | None = None
 _SessionLocal: sessionmaker[Session] | None = None
 _schema_checked_for: Engine | None = None
+# DEF324 — the database the SUITE owns, so a nested fixture's bare
+# `reset_for_tests()` returns to it rather than to `.local.db`.
+_ambient_test_url: str | None = None
 _schema_lock = threading.Lock()
 
 
@@ -46,6 +49,29 @@ def _resolve_url() -> str:
     if not url or url == "postgresql+psycopg2://postgres:postgres@localhost:5432/ami_trade":
         # No real DB configured — solo-dev sqlite next to the backend pkg
         local = Path(__file__).resolve().parent.parent.parent / ".local.db"
+        # DEF324 — but NEVER under pytest. `.local.db` is a real, persistent,
+        # gitignored file, and reaching it from a test means the suite left its
+        # per-test tempfile and is now reading (and able to write) a developer's
+        # actual database. That is not hypothetical: this machine's copy was
+        # last written 2026-08-02, stamped four migrations behind head, and
+        # carried five `mandates` rows with a NULL single-name cap — which
+        # resolves to the risk-tier preset and is the 3.0% in DEF321's
+        # `position size 68.8% exceeds single-name cap 3.0%`.
+        #
+        # It is also why a number measured in the shared checkout is not
+        # evidence about the repository (DEF159): the file is gitignored, so a
+        # fresh worktree does not have it and the same commit behaves
+        # differently. Failing loudly here converts "mysteriously ordering- and
+        # tree-dependent" into one sentence naming the cause (CR040 — a silent
+        # fallback that fires constantly teaches the wrong belief).
+        if os.environ.get("PYTEST_CURRENT_TEST"):
+            raise RuntimeError(
+                "refusing the solo-dev sqlite fallback under pytest: "
+                f"AMI_TEST_DATABASE_URL is unset, so this would bind to {local} "
+                "— a real, gitignored database, not a test fixture. Something "
+                "cleared the test URL (a bare reset_for_tests(), a fixture "
+                "teardown) without restoring it. See DEF324."
+            )
         return f"sqlite:///{local}"
     return url
 
@@ -233,6 +259,21 @@ def reset_for_tests(url: str | None = None) -> None:
 
     Pass an explicit `url` (typically `sqlite:///:memory:` or a tempfile) and
     the next `get_session()` will use it.
+
+    **Calling this with no url does NOT mean "go back to the suite's database"
+    — it means "leave test mode entirely" (DEF324).** It clears
+    `AMI_TEST_DATABASE_URL`, and `_resolve_url()`'s last branch then lands on
+    the solo-dev `backend/.local.db`: a real, persistent, gitignored file. A
+    nested fixture doing this in its teardown (`test_def215_schema_ownership.py`
+    was the only one) leaves every later DB read in that test's teardown chain
+    pointed at a developer's actual database — stale rows, an older schema, and
+    behaviour that differs between the shared checkout and a fresh worktree
+    because the file is gitignored.
+
+    So under pytest the bare form now **restores** the ambient test URL rather
+    than deleting it. `_resolve_url()` refuses the fallback outright there as a
+    backstop, because the two read different state and disagreeing is itself the
+    signal — the same reasoning as `evaluate_outcomes`' two gates.
     """
     global _engine, _SessionLocal
     if _engine is not None:
@@ -241,6 +282,19 @@ def reset_for_tests(url: str | None = None) -> None:
     _SessionLocal = None
     if url is not None:
         os.environ["AMI_TEST_DATABASE_URL"] = url
+    elif _ambient_test_url is not None:
+        os.environ["AMI_TEST_DATABASE_URL"] = _ambient_test_url
     elif "AMI_TEST_DATABASE_URL" in os.environ:
         del os.environ["AMI_TEST_DATABASE_URL"]
     init_schema()
+
+
+def set_ambient_test_url(url: str | None) -> None:
+    """DEF324 — record the database the SUITE owns, so a nested fixture's bare
+    `reset_for_tests()` returns to it instead of falling out of test mode.
+
+    Set by the autouse `_isolated_db` fixture, which is the only thing that
+    knows which tempfile this test owns. `None` clears it (nothing under test).
+    """
+    global _ambient_test_url
+    _ambient_test_url = url

@@ -31,10 +31,16 @@ from sqlalchemy import inspect, text
 from app.db import session as db_session
 from app.db.session import get_engine, init_schema, reset_for_tests
 
-# Deliberately stands up databases at OLDER alembic revisions, where
-# `sim_holdings.split_adjusted_at` does not exist yet — the ledger check cannot
-# query a schema this file exists to hold at an earlier point.
-pytestmark = pytest.mark.allow_ledger_drift
+# This file carried `pytestmark = pytest.mark.allow_ledger_drift`, on the stated
+# grounds that it stands up databases at OLDER alembic revisions where
+# `sim_holdings.split_adjusted_at` does not exist, so the ledger invariant could
+# not query them. Removing it really did produce `6 passed, 6 ERRORS` with
+# `no such column: sim_holdings.split_adjusted_at` — but not for that reason.
+# `fresh_db_url`'s bare `reset_for_tests()` teardown was dropping the whole suite
+# onto the gitignored `backend/.local.db`, four migrations stale, and the
+# invariant was querying THAT (DEF324). The R70 auditor could not reproduce it
+# because a fresh worktree has no such file. With DEF324 fixed the exemption is
+# unnecessary here, verified: 6 passed, 0 errors.
 
 _A_TABLE_A_CR_MIGHT_ADD = "price_history_daily"
 
