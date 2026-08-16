@@ -1,6 +1,12 @@
 # CR186 — the waiting-order card says what the order actually is
 
-**Filed:** 2026-08-15 (AT:R70) · **Status:** in_progress · **Follows:** CR170, DEF309
+**Filed:** 2026-08-15 (AT:R70) · **Status:** done · **Follows:** CR170, DEF309
+
+**KEEP ruling, 2026-08-16 (AT:R70).** Built and shipped in `c5975b65`, which is an ancestor of
+`e5cbdcb8` — the commit `0.1.0+97` was built from — so this is already on TestFlight and the Play
+internal track. It sat `in_progress` waiting on one decision, KEEP / AMEND / REVERT on the shipped
+card design, and Saiful ruled **KEEP — as scoped**. Nothing further to build. The only thing still
+owed is the device confirmation that `+97` owes across the board, not a CR186 change.
 
 Saiful, reviewing the resting-order journey end to end: *"How are we recording it, and how are we
 showing it to the user while the user waits for it to be fulfilled. We need to see all these
