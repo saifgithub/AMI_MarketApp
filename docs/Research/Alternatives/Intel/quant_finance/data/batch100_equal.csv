@@ -1,0 +1,101 @@
+ticker,name,sector,industry
+APP,AppLovin,Communication Services,Advertising
+CMCSA,Comcast,Communication Services,Cable & Satellite
+DIS,Walt Disney Company (The),Communication Services,Movies & Entertainment
+GOOG,Alphabet Inc. (Class C),Communication Services,Interactive Media & Services
+GOOGL,Alphabet Inc. (Class A),Communication Services,Interactive Media & Services
+NFLX,Netflix,Communication Services,Movies & Entertainment
+NWSA,News Corp (Class A),Communication Services,Publishing
+VZ,Verizon,Communication Services,Integrated Telecommunication Services
+WBD,Warner Bros. Discovery,Communication Services,Broadcasting
+AMZN,Amazon,Consumer Discretionary,Broadline Retail
+DECK,Deckers Brands,Consumer Discretionary,Footwear
+DHI,D. R. Horton,Consumer Discretionary,Homebuilding
+EXPE,Expedia Group,Consumer Discretionary,"Hotels, Resorts & Cruise Lines"
+HAS,Hasbro,Consumer Discretionary,Leisure Products
+HD,Home Depot (The),Consumer Discretionary,Home Improvement Retail
+LEN,Lennar,Consumer Discretionary,Homebuilding
+ROST,Ross Stores,Consumer Discretionary,Apparel Retail
+TSLA,"Tesla, Inc.",Consumer Discretionary,Automobile Manufacturers
+ADM,Archer Daniels Midland,Consumer Staples,Agricultural Products & Services
+BF-B,Brown–Forman,Consumer Staples,Distillers & Vintners
+CHD,Church & Dwight,Consumer Staples,Household Products
+EL,Estée Lauder Companies (The),Consumer Staples,Personal Care Products
+KHC,Kraft Heinz,Consumer Staples,Packaged Foods & Meats
+KR,Kroger,Consumer Staples,Food Retail
+KVUE,Kenvue,Consumer Staples,Personal Care Products
+STZ,Constellation Brands,Consumer Staples,Distillers & Vintners
+SYY,Sysco,Consumer Staples,Food Distributors
+APA,APA Corporation,Energy,Oil & Gas Exploration & Production
+BKR,Baker Hughes,Energy,Oil & Gas Equipment & Services
+CVX,Chevron Corporation,Energy,Integrated Oil & Gas
+EOG,EOG Resources,Energy,Oil & Gas Exploration & Production
+FANG,Diamondback Energy,Energy,Oil & Gas Exploration & Production
+KMI,Kinder Morgan,Energy,Oil & Gas Storage & Transportation
+OXY,Occidental Petroleum,Energy,Oil & Gas Exploration & Production
+TPL,Texas Pacific Land Corporation,Energy,Oil & Gas Exploration & Production
+VLO,Valero Energy,Energy,Oil & Gas Refining & Marketing
+WMB,Williams Companies,Energy,Oil & Gas Storage & Transportation
+BRK-B,Berkshire Hathaway,Financials,Multi-Sector Holdings
+BRO,Brown & Brown,Financials,Insurance Brokers
+CPAY,Corpay,Financials,Transaction & Payment Processing Services
+GL,Globe Life,Financials,Life & Health Insurance
+IBKR,Interactive Brokers,Financials,Investment Banking & Brokerage
+ICE,Intercontinental Exchange,Financials,Financial Exchanges & Data
+MS,Morgan Stanley,Financials,Investment Banking & Brokerage
+TFC,Truist Financial,Financials,Diversified Banks
+XYZ,"Block, Inc.",Financials,Transaction & Payment Processing Services
+BMY,Bristol Myers Squibb,Health Care,Pharmaceuticals
+CI,Cigna,Health Care,Health Care Services
+CVS,CVS Health,Health Care,Health Care Services
+DXCM,Dexcom,Health Care,Health Care Equipment
+EW,Edwards Lifesciences,Health Care,Health Care Equipment
+ISRG,Intuitive Surgical,Health Care,Health Care Equipment
+LH,Labcorp,Health Care,Health Care Services
+RMD,ResMed|,Health Care,Health Care Equipment
+SOLV,Solventum,Health Care,Health Care Technology
+CAT,Caterpillar Inc.,Industrials,Construction Machinery & Heavy Transportation Equipment
+CSX,CSX Corporation,Industrials,Rail Transportation
+DAL,Delta Air Lines,Industrials,Passenger Airlines
+FAST,Fastenal,Industrials,Trading Companies & Distributors
+FTV,Fortive,Industrials,Industrial Machinery & Supplies & Components
+JBHT,J.B. Hunt,Industrials,Cargo Ground Transportation
+NDSN,Nordson Corporation,Industrials,Industrial Machinery & Supplies & Components
+ROL,"Rollins, Inc.",Industrials,Environmental & Facilities Services
+UBER,Uber,Industrials,Passenger Ground Transportation
+AMD,Advanced Micro Devices,Information Technology,Semiconductors
+CIEN,Ciena,Information Technology,Communications Equipment
+DELL,Dell Technologies,Information Technology,"Technology Hardware, Storage & Peripherals"
+FFIV,"F5, Inc.",Information Technology,Communications Equipment
+LRCX,Lam Research,Information Technology,Semiconductor Materials & Equipment
+ORCL,Oracle Corporation,Information Technology,Application Software
+PLTR,Palantir Technologies,Information Technology,Application Software
+QCOM,Qualcomm,Information Technology,Semiconductors
+WDC,Western Digital,Information Technology,"Technology Hardware, Storage & Peripherals"
+ALB,Albemarle Corporation,Materials,Specialty Chemicals
+AMCR,Amcor,Materials,Paper & Plastic Packaging Products & Materials
+CF,CF Industries,Materials,Fertilizers & Agricultural Chemicals
+ECL,Ecolab,Materials,Specialty Chemicals
+IFF,International Flavors & Fragrances,Materials,Specialty Chemicals
+IP,International Paper,Materials,Paper & Plastic Packaging Products & Materials
+LIN,Linde plc,Materials,Industrial Gases
+MOS,Mosaic Company (The),Materials,Fertilizers & Agricultural Chemicals
+SHW,Sherwin-Williams,Materials,Specialty Chemicals
+AMT,American Tower,Real Estate,Telecom Tower REITs
+AVB,AvalonBay Communities,Real Estate,Multi-Family Residential REITs
+CBRE,CBRE Group,Real Estate,Real Estate Services
+EQIX,Equinix,Real Estate,Data Center REITs
+ESS,Essex Property Trust,Real Estate,Multi-Family Residential REITs
+KIM,Kimco Realty,Real Estate,Retail REITs
+UDR,"UDR, Inc.",Real Estate,Multi-Family Residential REITs
+VICI,Vici Properties,Real Estate,Hotel & Resort REITs
+WY,Weyerhaeuser,Real Estate,Timber REITs
+AEE,Ameren,Utilities,Multi-Utilities
+ATO,Atmos Energy,Utilities,Gas Utilities
+CEG,Constellation Energy,Utilities,Electric Utilities
+DTE,DTE Energy,Utilities,Multi-Utilities
+FE,FirstEnergy,Utilities,Electric Utilities
+LNT,Alliant Energy,Utilities,Electric Utilities
+SRE,Sempra,Utilities,Multi-Utilities
+VST,Vistra Corp.,Utilities,Electric Utilities
+XEL,Xcel Energy,Utilities,Multi-Utilities
