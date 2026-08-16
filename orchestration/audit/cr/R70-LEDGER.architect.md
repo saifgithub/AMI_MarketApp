@@ -11,9 +11,15 @@ in future".
 **SCOPE:** chunk — four defects that are one fact going wrong, plus the guard for the family. Not a
 CR, so the Definition-of-Done table is not owed here.
 
-**SHA:** `e5cbdcb8` on `main`, pushed to `origin/main`. Three commits carry this lane:
-`0c115046` (DEF316 + DEF318), `7556c88a` (DEF319 + DEF320, alongside CR189 — see the note below),
-`e5cbdcb8` (DEF321's register row, docs-only).
+**SHA (round 2):** `e10a112f` on `main`, pushed to `origin/main` — the audit-fix commit, and the one
+to check out. Round 1 was `e5cbdcb8`; the only code between them is this commit. `353cb66a` and
+`0716d098` sit in between and are **register-row-only** (2 insertions each, zero backend and zero
+mobile — `git diff --stat e5cbdcb8..0716d098 -- backend/` is empty, as is the same for
+`0716d098..353cb66a`).
+
+Four commits now carry this lane: `0c115046` (DEF316 + DEF318), `7556c88a` (DEF319 + DEF320,
+alongside CR189 — see the note below), `e5cbdcb8` (DEF321's register row, docs-only), `e10a112f`
+(round 2's tests + the `open_quantity` helper + the marker description).
 
 **`7556c88a` is shared with the R70-CR189 lane and cannot be split.** CR189's blended bracket and
 DEF319's FIFO event ordering both land in `cost_basis_lots` / `sim_engine` and were tested together;
@@ -52,23 +58,43 @@ other. Filed as **P23** in `failure_patterns.md`.
 
 ## Tests — command and observed output
 
-Run SHA-pinned in a detached worktree at `9c200d27`, per BINDINGS' DEF159 rule (the only delta to
-`e5cbdcb8` is DEF321's register row — docs-only, zero backend code):
+Run SHA-pinned in fresh detached worktrees, per BINDINGS' DEF159 rule:
 
 ```
-git worktree add --detach .claude/worktrees/promote-97 9c200d27
-cd .claude/worktrees/promote-97/backend
+git worktree add --detach .claude/worktrees/audit-r70-r2 e10a112f
+cd .claude/worktrees/audit-r70-r2/backend
 "/Volumes/Extreme Pro/AMI_MarketApp/backend/.venv/bin/python" -m pytest tests/unit/ -q
 ```
-```
-4312 passed, 4 skipped, 13 warnings in 517.64s (0:08:37)
-PYTEST_EXIT=0
-```
+
+**Three runs, and the third one is why all three are here.** Reporting only the green would be the
+same class of error this round is about.
+
+| run | commit | result |
+|---|---|---|
+| control | `353cb66a` (parent, no round-2 code) | `4312 passed, 4 skipped` · exit 0 |
+| round 2 | `e10a112f` | **`1 failed, 4318 passed, 4 skipped`** · exit 1 |
+| round 2, again | `e10a112f`, same worktree, only a 3-line assertion-message probe added | `4319 passed, 4 skipped` · exit 0 |
+
+The one failure is `test_sim_reputation.py::test_buy_without_stop_or_target_awards_nothing` —
+**DEF321**, which this lane filed. It is not in any file this round touches, carries no exemption,
+and passes alone (`4 passed`) and alongside every file this round changed (`23 passed`).
+
+**I did not accept that as "the known flake" on the strength of the label.** The control at the
+parent SHA was run precisely because a red at my SHA and a green at round 1's is exactly what a
+regression looks like, and the second `e10a112f` run is what settles it: **the same commit, in the
+same detached worktree, is red then green.** DEF321's own row said it "passes SHA-pinned in a
+detached worktree" — that was one sample read as a property, and the row is corrected in `45dfce17`,
+along with a measured mechanism found while ruling this out: `market_data._walk_for()` seeds the mock
+price walk with `hash(ticker.upper())`, and `PYTHONHASHSEED` is unset repo-wide, so three consecutive
+interpreters gave AAPL a base price of **$108.61 / $186.81 / $432.78**. Every assertion downstream of
+a mock price is run-dependent by construction. Not chased further — that is DEF321's lane, not this
+one — but it is now a measured input rather than an open mystery, and it means the "ordering trigger"
+framing is probably wrong.
 
 **The 4th skip is `test_config_compose_parity.py:174`** — `infra/alpha.env` is gitignored and exists
-only in the main worktree, so the env-file → Settings direction was NOT checked in this run. It was
-checked in the shared-tree run of the same suite (3 skips there) and passed. Stated because a skip
-count that moves between runs is exactly the kind of thing that gets read as noise.
+only in the main worktree, so the env-file → Settings direction was NOT checked in these runs. It was
+checked in the shared-tree run of the same suite (3 skips there). Stated because a skip count that
+moves between runs is exactly the kind of thing that gets read as noise.
 
 New/changed tests: `test_def316_stale_bracket_on_sold_shares.py` (9 → **11**, the two new ones being
 the gate guards above), `test_def319_partial_sell_then_self_close.py` (**4, new this round**),
