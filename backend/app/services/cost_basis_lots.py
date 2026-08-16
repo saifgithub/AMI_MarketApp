@@ -269,3 +269,18 @@ def compute_lots_fifo(
             acc.self_closed = True
 
     return [_freeze(acc, current_price) for acc in lots]
+
+
+def open_quantity(trades: Iterable[object]) -> float:
+    """How many shares of one ticker the trade LEDGER still says are held.
+
+    One line, and it lives here because it had been written twice: in
+    `def110_backfill.py`'s phantom-share detector and again in the autouse
+    ledger invariant that guards it (`tests/conftest.py`). The *rule* was
+    already single-sourced through `compute_lots_fifo` — DEF319 collapsed the
+    backfill's parallel `Σ open buys − Σ open sells` into it — but the summing
+    step was still two copies, in the detector and the guard written to protect
+    the detector. Two readers of one fact is this family's whole failure mode
+    (DEF098), and "it is only a sum" is exactly how the last one looked too.
+    """
+    return sum(lot.quantity_open for lot in compute_lots_fifo(trades))

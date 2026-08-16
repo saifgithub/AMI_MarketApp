@@ -61,7 +61,7 @@ ignore = ["E501"]  # line length handled by formatter
 asyncio_mode = "auto"
 testpaths = ["tests"]
 markers = [
-    "allow_ledger_drift: this test makes no claim about sim bookkeeping — either it constructs drift on purpose (the phantom-share detector and its repair script) or it hand-seeds sim rows past the engine (fixtures building SimTradeRow/SimHoldingRow directly). Exempts it from the autouse ledger-invariant check in conftest.py. State WHY in a comment beside it: on anything that reaches the engine through submit/evaluate_outcomes/manual_close, this marker is silencing the alarm, not scoping it.",
+    "allow_ledger_drift: this test makes no claim about sim bookkeeping. Three admissible reasons, and no fourth: (1) it constructs drift on purpose (the phantom-share detector, its repair script, and DEF316's holdings-vs-ledger gate, whose whole subject is the two sources disagreeing); (2) it hand-seeds sim rows past the engine (fixtures building SimTradeRow/SimHoldingRow directly); (3) it runs against a schema the invariant cannot QUERY — test_def215_schema_ownership.py stands up databases at older alembic revisions where sim_holdings.split_adjusted_at does not exist yet, and without the marker all six of its tests ERROR in teardown on `no such column`. Exempts it from the autouse ledger-invariant check in conftest.py. State WHICH of the three in a comment beside it: on anything that reaches the engine through submit/evaluate_outcomes/manual_close and expects a CLEAN ledger, this marker is silencing the alarm, not scoping it.",
 ]
 
 [tool.mypy]

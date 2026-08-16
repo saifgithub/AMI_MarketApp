@@ -33,9 +33,14 @@ from app.services.auth_service import AuthService
 from app.services.market_data import CachingProvider, Quote, set_market_data_provider
 from app.services.sim_engine import SimEngine
 
-# Builds a portfolio + holdings directly to time the quote fan-out; no trades, so
-# there is no ledger claim here either.
-pytestmark = pytest.mark.allow_ledger_drift
+# This file carried `pytestmark = pytest.mark.allow_ledger_drift`, on the stated
+# grounds that it builds a portfolio + holdings directly and writes no trades. The
+# R70 audit found that false and the exemption unnecessary: the latency tests do
+# hand-seed holdings, but `test_submit_trade_through_real_asgi_app_persists_across_
+# thread_hop` POSTs a real buy through the real ASGI app and `SimEngine.submit`,
+# across an `asyncio.to_thread` hop — which is exactly the write path the ledger
+# invariant exists to watch, and the only test in the suite that crosses a thread
+# boundary to reach it. Removed, and green without it.
 
 
 class _SlowProvider:

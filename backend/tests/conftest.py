@@ -263,7 +263,7 @@ def pytest_runtest_makereport(item, call):
 
 @pytest.fixture(autouse=True)
 def _ledger_invariant(request, _isolated_db):
-    """`Σ open BUY − Σ open SELL == Σ holdings`, per portfolio, per ticker.
+    """`Σ the FIFO lots' quantity_open == Σ holdings`, per portfolio, per ticker.
 
     **Why this is autouse rather than one more test.** Three defects in three
     days were the same fact going wrong — a trade row and the shares behind it
@@ -290,11 +290,14 @@ def _ledger_invariant(request, _isolated_db):
     it would subtract the same exit twice — so this fixture pins the reason that
     design exists, not just its result.
 
-    It sums `compute_lots_fifo`'s `quantity_open` rather than re-deriving
-    `Σ open BUY − Σ open SELL`, and DEF319 is why: those two are NOT the same
-    number once a lot is partially sold and then stops out, and the backfill's
-    original formula was the one that was wrong. Writing the check as a third
-    implementation would have made it agree with the bug.
+    It calls `cost_basis_lots.open_quantity` — which sums `compute_lots_fifo`'s
+    `quantity_open` — rather than re-deriving `Σ open BUY − Σ open SELL`, and
+    DEF319 is why: those two are NOT the same number once a lot is partially
+    sold and then stops out, and the backfill's original formula was the one
+    that was wrong. Writing the check as a third implementation would have made
+    it agree with the bug. That it calls the same *function* as the detector,
+    not merely the same rule, is the R70 audit's MINOR-1: the summing step was
+    two copies, in the detector and in the guard written to protect it.
 
     **Shorts do not break it**, and that is load-bearing rather than lucky: a
     short open/cover writes NO `sim_trades` row (CR171 acceptance 5, so
@@ -320,7 +323,7 @@ def _ledger_invariant(request, _isolated_db):
 
     from app.db import get_session
     from app.db.models import SimHoldingRow, SimTradeRow
-    from app.services.cost_basis_lots import compute_lots_fifo
+    from app.services.cost_basis_lots import open_quantity
 
     with get_session() as s:
         trades = s.execute(select(SimTradeRow)).scalars().all()
@@ -331,7 +334,7 @@ def _ledger_invariant(request, _isolated_db):
 
         expected: dict[tuple, float] = defaultdict(float)
         for key, rows in grouped.items():
-            expected[key] = sum(lot.quantity_open for lot in compute_lots_fifo(rows))
+            expected[key] = open_quantity(rows)
 
         held: dict[tuple, float] = defaultdict(float)
         # A split is a DECLARED divergence, not drift: `apply_split` multiplies

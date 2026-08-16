@@ -70,8 +70,10 @@ only in the main worktree, so the env-file → Settings direction was NOT checke
 checked in the shared-tree run of the same suite (3 skips there) and passed. Stated because a skip
 count that moves between runs is exactly the kind of thing that gets read as noise.
 
-New/changed tests: `test_def316_stale_bracket_on_sold_shares.py` (9), `test_cr189_position_level_brackets.py`
-(15, in the CR189 lane), `tests/conftest.py::_ledger_invariant` (autouse, all ~4,300).
+New/changed tests: `test_def316_stale_bracket_on_sold_shares.py` (9 → **11**, the two new ones being
+the gate guards above), `test_def319_partial_sell_then_self_close.py` (**4, new this round**),
+`test_cr189_position_level_brackets.py` (15, in the CR189 lane), `tests/conftest.py::_ledger_invariant`
+(autouse, all ~4,300).
 
 ## Real measurement
 
@@ -105,16 +107,96 @@ where `fc5b425c` is the DEAD lot.
 **DEF319 reproduced through the new guard**, which is how it was found — `holdings=0 expected=-4` on
 buy 10 · sell 4 · stop-out, within minutes of the invariant being switched on.
 
-## Builder's revert-proof QA
+## Builder's revert-proof QA — **every row below was run, not reasoned**
 
-- **DEF316**: reverting the `_held_quantity` gate turns `test_the_sweep_does_not_stop_out_shares_already_sold` red.
-- **DEF318**: reverting the per-lot gate to the per-ticker one turns `test_a_dead_lots_stop_does_not_fire_on_a_later_lots_shares` red while every other test in that file stays green — which is the point of the two non-vacuity tests beside it (`test_a_real_stop_still_fires`, `test_the_live_lots_own_stop_still_fires_after_a_re_entry`): the natural overcorrection disables every bracket in the app and all the *defect* tests still pass. **P21, one step away.**
-- **DEF319**: `_event_stream` reverted to the old ordering reproduces `cost_basis_oversell unmatched=4.0` and the invariant fails with `expected=-4`.
+Round 1's table was reasoned, and three of its four rows were false. This one is pasted out of
+`pytest`: each mutation applied to real source, the file run, the source restored and `git diff`
+confirmed empty before the next.
+
+| mutation (applied ALONE) | failing test, as the runner named it |
+|---|---|
+| `_held_quantity` gate deleted from the sweep (`sim_engine.py:2851`) | `test_def316…::test_the_sweep_refuses_a_lot_the_holdings_table_no_longer_carries` — **1 failed, 10 passed** |
+| per-lot `lot_left <= 1e-6` skip deleted (`sim_engine.py:2840`) | `::test_a_dead_lot_is_not_swept_along_when_the_live_lot_stops_out` + `::test_the_live_lots_own_stop_still_fires_after_a_re_entry` — **2 failed, 9 passed** |
+| `_event_stream` dates the self-close to `opened_at` (pre-DEF319) | `test_def319…::test_a_sell_between_the_open_and_the_stop_out_is_credited_to_the_lot` + `::test_the_reconstruction_does_not_report_an_oversell_against_itself` — **2 failed, 2 passed** |
+| `def110_backfill.py::expected()` back to `Σ open buys − Σ open sells` | `test_def319…::test_the_detector_finds_no_phantom_after_a_partial_sell_then_a_stop_out` — **1 failed, 39 passed** across the three backfill/DEF319 files |
+
 - **DEF320**: the invariant is *proven to fail* rather than assumed to — it caught DEF319 on first arming, plus 25 further hits across the full suite, of which 24 were legitimate divergences (splits; hand-seeded fixtures) and are now scoped or exempted **with the reason written beside each**.
 
-## Two things the auditor should push on
+## Round 2 — what changed, and the one place I disagree with the verdict
 
-1. **Seven files carry `@pytest.mark.allow_ledger_drift`** — seven places the guard does not look. Each was verified as hand-seeding sim rows past the engine, or (in `test_cr136_backfill.py`) constructing a phantom on purpose as its subject. Worth re-deriving independently: an exemption applied to something that DOES reach `submit`/`evaluate_outcomes`/`manual_close` is silencing the alarm, and the marker description says so.
-2. **The invariant sums `quantity_open` rather than re-deriving `Σ open buys − Σ open sells`.** That choice is load-bearing: a third implementation written from the same premise would have *agreed with the bug*. If the auditor writes an independent pin, it should not re-derive the formula either.
+### MAJOR-1 — accepted in full. Four gates, four tests, each red on its own mutation.
 
-**SUBMITTED: round 1**
+The finding is correct and the diagnosis under it is the useful part: **CR189 made the gates
+redundant with the arithmetic**, so every scenario test was protected twice and none of them could
+go red. A test two mechanisms both satisfy cannot tell you whether either still works.
+
+- **DEF316's `_held_quantity` gate.** Reachable only when the two sources *disagree* — ledger says
+  shares are open, `sim_holdings` has none. That is the phantom condition itself, so the test builds
+  it by hand and carries `@pytest.mark.allow_ledger_drift` for the marker's own first category. It is
+  the only test in the suite that fails on that gate, and it fails on nothing else.
+- **DEF318's per-lot gate.** The dead lot cannot drag the blended stop (zero weight), so the damage
+  it can still do is being *swept along* when someone else's trigger fires: stamped `lost`, sold
+  `min(10, 0)` shares, an exit recorded that moved no shares and no cash, and `expected()` driven to
+  −10. Same book as the reported case, price through the LIVE lot's stop rather than short of it.
+- **DEF319, both halves, separately.** `Σ quantity_open` is 10.0 fixed or broken, exactly as the
+  audit says, so the new tests pin what the aggregate cannot express: the per-lot **realised
+  attribution** (−$24.00 fixed vs −$36.00 broken — the sell's $12 is what the old ordering threw
+  away) and the **absence of the `cost_basis_oversell` warning** the module was logging about its own
+  arithmetic. The detector's half is pinned through `_plan_and_apply` on a book the engine built and
+  that is in fact clean; the old formula reports 4 phantom shares there and, under `--apply`, would
+  delete four real shares and credit their proceeds.
+- A third DEF319 test pins `open_quantity(...) == 10.0` on that sequence **on purpose**, so the next
+  person reaching for the aggregate to guard this fix finds the audit's finding as an assertion
+  rather than as prose.
+- The two scenario tests now say in their own docstrings that they are scenario pins and not guards.
+
+Filed as **P24** in `failure_patterns.md` — *a mutation claim written from reading the code, never
+from running the mutation* — with the enforcing check named.
+
+### MAJOR-2 — half accepted. One marker deleted; the other one is load-bearing.
+
+`test_def120_blocking_io_fix.py`'s marker is **deleted**, and the finding is right about why it
+mattered: its own comment claimed "no trades, so there is no ledger claim here either", and
+`test_submit_trade_through_real_asgi_app_persists_across_thread_hop` POSTs a real buy through the
+real ASGI app and `SimEngine.submit` across a thread hop. That comment is replaced with the history.
+Without the marker: **4 passed.**
+
+`test_def215_schema_ownership.py`'s marker **stays**, and this is the one place I am pushing back —
+with output. The verdict records "6 passed"; the run also produces **6 ERRORs**, in teardown, which
+a tail of the pass line does not show:
+
+```
+$ pytest tests/unit/test_def215_schema_ownership.py -q          # marker removed
+E   sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: sim_holdings.split_adjusted_at
+6 passed, 6 errors in 1.94s
+```
+
+The file's stated reason was exact: it stands up databases at older alembic revisions, and the
+invariant's split-adjusted rule queries a column that does not exist there. Not drift being
+silenced — the guard cannot **run**. So the fix is the marker's *description*, which is what made
+this look wrong: it named two admissible categories and there are three. It now names the third
+explicitly, with this file as its example, so the next auditor checking an exemption against the
+description gets the right answer from the description.
+
+Count corrected: **8 files, not 7** — seven whole-file plus one per-test decorator — and the
+"constructs a phantom on purpose" comment is on `test_def110_backfill.py:193`, not
+`test_cr136_backfill.py`.
+
+**After this round it is still 8**, and stating it as a reduction would be the same kind of
+convenient arithmetic that produced MAJOR-1. One whole-file marker was deleted (def120) and one
+per-test decorator was added (DEF316's holdings-vs-ledger gate, whose subject is the two sources
+disagreeing) — **6 whole-file + 2 per-test**. The exemption moved from a file that reaches the
+engine and expects a clean ledger to a single test that deliberately breaks it, which is the change
+worth having; the count is not.
+
+One trap for whoever re-derives this: `grep -rln allow_ledger_drift tests/` now returns **9** files
+excluding conftest, because `test_def120_blocking_io_fix.py` still names the marker in the comment
+recording why it no longer carries one. Count `^pytestmark =` and `^@pytest.mark.` separately.
+
+### MINOR-1 — accepted. One function, called twice.
+
+`cost_basis_lots.open_quantity(trades) -> float`. The detector and the invariant that guards the
+detector now call it rather than each writing the sum; the docstring says why a one-line function
+earns its own name here.
+
+**SUBMITTED: round 2**

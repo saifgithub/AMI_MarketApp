@@ -64,10 +64,11 @@ from __future__ import annotations
 
 from uuid import uuid4
 
+import pytest
 from sqlalchemy import select
 
 from app.db import get_session
-from app.db.models import SimTradeRow
+from app.db.models import SimHoldingRow, SimPortfolioRow, SimTradeRow
 from app.schemas.trade import OrderType, Side
 from app.services.coach_engine import hydrate_coach_mandate
 from app.services.market_data import Quote
@@ -144,7 +145,18 @@ def _expected(user_id, ticker) -> float:
 
 
 def test_the_sweep_does_not_stop_out_shares_already_sold():
-    """The reported sequence. Before the fix the BUY row transitioned to `lost`."""
+    """The reported sequence. Before the fix the BUY row transitioned to `lost`.
+
+    **Not the regression test for either gate**, and the R70 audit is why this
+    now says so: the auditor applied five mutations to the gates below and this
+    test stayed green through all of them. It cannot go red, because CR189
+    weights the blended bracket by `quantity_open` — a fully-exited lot weighs
+    nothing, so it contributes no level to blend and the sweep finds nothing to
+    fire on with or without a gate. What this pins is the *reported user-facing
+    sequence*, end to end, which is worth keeping and is not a guard. The two
+    gates are guarded by the two tests marked GATE below, each of which fails
+    on its own gate alone.
+    """
     prov = _Pinned({"NVDA": 100.0})
     sim = SimEngine(provider=prov)
     user_id = uuid4()
@@ -273,8 +285,16 @@ def test_a_short_bracket_is_untouched_by_the_gate():
 
 
 def test_a_dead_lots_stop_does_not_fire_on_a_later_lots_shares():
-    """The measured case. DEF316's gate asks "is this ticker flat" — correct
-    when the user exited, blind when they re-entered.
+    """The measured case, as reported. Like the first test in this file it is a
+    scenario pin rather than a guard — the R70 audit measured it green under
+    both faithful reverts of the per-lot gate, for the same reason: the dead
+    lot's zero `quantity_open` gives it zero weight in the blend, so it cannot
+    drag the position's stop even when the gate lets it through. The gate's own
+    guard is `test_a_dead_lot_is_not_swept_along_when_the_live_lot_stops_out`
+    below.
+
+    DEF316's gate asks "is this ticker flat" — correct when the user exited,
+    blind when they re-entered.
 
     Lot 1: 10 NVDA @ $100, stop $95. Sold out in full at $103. Lot 2: 10 NVDA
     @ $103, stop $90 — deliberately BELOW lot 1's. At $94 the position is
@@ -356,3 +376,94 @@ def test_each_lot_realises_against_its_own_entry_on_a_shared_trigger():
     assert _row(later.id).realised_pnl == -160.0
     p = sim.ensure_portfolio(user_id)
     assert not any(h.ticker == "NVDA" for h in p.holdings)
+
+
+# ── GATE tests — each fails on its own gate, reverted alone ─────────────────
+#
+# Written after the R70 audit, which applied five mutations to
+# `evaluate_outcomes`' two gates and found exactly one assertion in this file
+# that noticed any of them. Every scenario test above is protected twice over —
+# once by the gate, once by CR189 weighting a dead lot at zero — and a test that
+# two mechanisms both satisfy cannot tell you whether either still works. That
+# is P21 (a check present in the source and inert at runtime) restated one level
+# up: the *tests* were the inert check.
+#
+# Each of the two below is reachable only through the gate it names.
+
+
+def test_a_dead_lot_is_not_swept_along_when_the_live_lot_stops_out():
+    """GATE: the per-lot `lot_open` skip (DEF318), alone.
+
+    The dead lot cannot drag the blended STOP — zero shares open, zero weight —
+    so the only way it can still do damage is to be standing in `live_lots` when
+    someone else's trigger fires. Then the close loop runs over it too: it is
+    stamped `lost`, `_apply_sell_row` is asked for `min(10, 0)` shares, and it
+    records an exit that moved no shares and no cash.
+
+    That is precisely the DEF316 symptom one lot over — a LOST outcome at
+    **$0.00 realised** — and it drives `expected()` negative behind it, because
+    a transitioned BUY row drops out of the open set while its SELL row keeps
+    subtracting. Here: 10 phantom shares against a holding of zero.
+
+    Same book as the test above; the price is through the LIVE lot's own stop
+    rather than short of it, so the sweep genuinely fires and the dead lot's
+    presence becomes visible.
+    """
+    prov = _Pinned({"NVDA": 100.0})
+    sim = SimEngine(provider=prov)
+    user_id = uuid4()
+    dead = _buy(sim, user_id, "NVDA", 10, stop=95.0)
+
+    prov.prices["NVDA"] = 103.0
+    _sell(sim, user_id, "NVDA", 10)
+    live = _buy(sim, user_id, "NVDA", 10, stop=90.0)
+
+    prov.prices["NVDA"] = 89.0  # through the LIVE lot's own stop
+    updates = sim.evaluate_outcomes(user_id)
+
+    assert [u.trade_id for u in updates] == [live.id], (
+        "the dead lot was closed alongside the live one"
+    )
+    assert _row(dead.id).status == "open"
+    assert _expected(user_id, "NVDA") == 0.0, "the first exit was counted twice"
+
+
+@pytest.mark.allow_ledger_drift  # the drift IS the subject — see the docstring
+def test_the_sweep_refuses_a_lot_the_holdings_table_no_longer_carries():
+    """GATE: the `_held_quantity` check (DEF316), alone.
+
+    The two gates read different sources — `lot_open` is the trade LEDGER's
+    view, `_held_quantity` is what `sim_holdings` actually carries — and the
+    lane's own argument for keeping both is that a disagreement between them IS
+    the phantom-share condition. That argument is also the reason this test has
+    to hand-build the disagreement: in any state the engine can reach on its
+    own, the two agree, the first gate answers first, and the second is never
+    consulted. Constructing drift on purpose is the marker's first admissible
+    category, and this is the test the category was for.
+
+    Ledger says 10 shares open; `sim_holdings` has none. Without the gate the
+    row transitions to `lost` and stamps **$0.00 realised** — `_apply_sell_row`
+    finds no holding, sells nothing, credits nothing — which is the exact
+    symptom Alpha showed: a losing outcome on a position that moved neither
+    shares nor cash, with `expected()` driven negative behind it.
+    """
+    prov = _Pinned({"NVDA": 100.0})
+    sim = SimEngine(provider=prov)
+    user_id = uuid4()
+    trade = _buy(sim, user_id, "NVDA", 10, stop=95.0)
+
+    with get_session() as s:
+        held = s.execute(
+            select(SimHoldingRow)
+            .join(SimPortfolioRow, SimPortfolioRow.id == SimHoldingRow.portfolio_id)
+            .where(SimPortfolioRow.user_id == user_id, SimHoldingRow.ticker == "NVDA")
+        ).scalars().all()
+        assert len(held) == 1, "precondition: the buy must have created a holding"
+        s.delete(held[0])
+
+    prov.prices["NVDA"] = 94.0  # straight through the stop
+    updates = sim.evaluate_outcomes(user_id)
+
+    assert updates == [], "closed a lot whose shares the holdings table does not have"
+    assert _row(trade.id).status == "open"
+    assert _row(trade.id).realised_pnl in (None, 0.0)

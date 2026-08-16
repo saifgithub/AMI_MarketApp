@@ -1236,3 +1236,47 @@ read as though both happened at once. That last conflation is P10 wearing a time
 above — and covers it precisely because it sums `quantity_open` rather than re-deriving the premise.
 A third implementation written from the same premise would have agreed with the bug, which is the
 trap this pattern sets for its own fix.
+
+---
+
+## P24 — a mutation claim written from reading the code, never from running the mutation
+
+**Instances.** R70-LEDGER's revert-proof QA table, 2026-08-16: **three of its four rows did not
+reproduce**, and the auditor found it by doing the one thing the table's author had not — applying
+each mutation to real source, running, and reading the failing test's *name*. DEF316's row named
+`test_the_sweep_does_not_stop_out_shares_already_sold`; that test stayed green under all five
+mutations tried. DEF318's row was exactly inverted — the defect test survived and an incidental
+non-vacuity test was the only assertion in the file that ever fired. DEF319's row attributed to the
+`cost_basis_lots` half a failure signature (`expected=-4`) that belongs to the `def110_backfill.py`
+half, and that neither half can actually produce.
+
+**Why it survives review.** The reasoning is *sound* and the conclusion is false, which is the worst
+combination for review: the code genuinely changed, something in the file genuinely does fail on
+mutation, and the test's own docstring genuinely says it is for that defect. Reading the diff
+confirms all three. Nothing in a read distinguishes "this test would catch that" from "this test
+does catch that" — only the run does. It compounds with P21: when a fix is composed of two
+overlapping gates, or a gate plus arithmetic that makes the gate redundant (CR189 weighting a dead
+lot at zero), the named test is protected twice and can never go red, so the *test* becomes the
+inert check while looking like the guard.
+
+**The tell.** A QA line of the shape *"reverting X turns test Y red"* where Y was chosen because its
+name or docstring matches X, rather than pasted out of a run. Also: a fix whose defect scenario is
+prevented by two independent mechanisms — each mechanism then has no test, because every scenario
+test passes with either one alone.
+
+**The invariant.** *Do not write which test catches a mutation. Run the mutation and paste the name
+the runner printed.* If nothing fails, that is the finding — write the missing test then, not the
+claim. And when a defect's fix has two parts, mutate each **alone**: a two-part mutation that fails
+one test says nothing about which part that test was watching.
+
+**Enforcing check.** `orchestration/audit/PROTOCOL.md`'s handshake — the auditor re-runs every
+revert-proof QA row against real source and returns a MAJOR when a row does not reproduce, which is
+how this was caught. It only covers work that goes through an audit lane, so the second half of the
+check is local and mechanical: each of the four gates in this family now has a test that fails when
+that gate **alone** is reverted, verified by running it —
+`test_def316_stale_bracket_on_sold_shares.py::test_the_sweep_refuses_a_lot_the_holdings_table_no_longer_carries`
+(the `_held_quantity` gate),
+`::test_a_dead_lot_is_not_swept_along_when_the_live_lot_stops_out` (the per-lot `lot_open` gate), and
+`test_def319_partial_sell_then_self_close.py`'s four (the event ordering and the detector's
+formula, separately). The scenario tests beside them now say in their own docstrings that they are
+scenario pins and not guards, so the next reader does not re-derive the same wrong attribution.

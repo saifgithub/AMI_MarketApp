@@ -36,7 +36,8 @@ Idempotence — why this is a state repair, not a replay:
     of one fact, drifting exactly where it mattered — DEF098's shape, in the
     detector built to catch drift.
 
-    It now sums `compute_lots_fifo`'s `quantity_open`: the audited FIFO
+    It now calls `cost_basis_lots.open_quantity`, which sums
+    `compute_lots_fifo`'s `quantity_open`: the audited FIFO
     primitive (CR029-MATH) is the single derivation of "how much of this lot is
     still held", shared with `SimEngine`'s bracket gates (DEF318), the
     position-level bracket (CR189), the per-lot display, and the autouse ledger
@@ -86,7 +87,7 @@ from sqlalchemy import select
 
 from app.db.models import SimHoldingRow, SimPortfolioRow, SimTradeRow
 from app.db.session import get_sessionmaker
-from app.services.cost_basis_lots import compute_lots_fifo
+from app.services.cost_basis_lots import open_quantity
 from app.services.sim_engine import SimEngine
 
 
@@ -106,17 +107,19 @@ def _plan_and_apply(s, engine: SimEngine) -> tuple[list[str], float, float, int]
             select(SimTradeRow).where(SimTradeRow.portfolio_id == p_row.id)
         ).scalars().all()
 
-        # DEF319 — one derivation, `compute_lots_fifo`, instead of the parallel
-        # formula this script used to carry. See the module docstring.
+        # DEF319 — one derivation, `cost_basis_lots.open_quantity`, instead of
+        # the parallel formula this script used to carry. See the module
+        # docstring. The R70 audit's MINOR-1: the *rule* was single-sourced
+        # from the first fix, but the SUMMING step was still written out here
+        # and again in the invariant that guards this script, so it is now one
+        # function both call.
         by_ticker: dict[str, list[SimTradeRow]] = defaultdict(list)
         for t in trades:
             by_ticker[t.ticker].append(t)
 
         expected: dict[str, float] = defaultdict(float)
         for ticker, rows in by_ticker.items():
-            expected[ticker] = sum(
-                lot.quantity_open for lot in compute_lots_fifo(rows)
-            )
+            expected[ticker] = open_quantity(rows)
 
         # Oldest close first, so proceeds are attributed in the order the
         # sales should have happened.
