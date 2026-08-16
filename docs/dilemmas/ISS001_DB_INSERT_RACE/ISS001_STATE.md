@@ -1,6 +1,7 @@
 # ISS001 — state of the exercise
 
-**Last updated:** 2026-08-15 · **Status:** three submissions in, **no verdict written** · **CR185**
+**Last updated:** 2026-08-16 · **Status:** three submissions in, **field kept open for a 4th
+contributor** · **CR185**
 
 This is the resume point. Read it first, then only what it points you at. It exists because ISS001
 spans sessions: contributors arrive days apart and judging happens later still.
@@ -26,7 +27,7 @@ The exercise asks several agents, blind to each other, what would actually stop 
 | Convening agent's own solution (written before anyone was invited) | ✅ `opus5.0/`, `842798eb` |
 | Contributors invited by Saiful | `gemini-3.6-flash`, `kimi-k2` |
 | Submissions landed | **3 of 3** — committed `0d5ff502` |
-| Judging | **not started.** No `VERDICT.md` exists |
+| Judging | **not started — field stays open.** Saiful's call 2026-08-16: wants a 4th contributor before judging opens. No `VERDICT.md` exists |
 | The 11 DEF308 sites | **FROZEN** — Saiful's ruling, 2026-08-15 |
 
 **Nobody has been asked to judge.** The invite deliberately never asks a contributor for a verdict —
@@ -145,7 +146,7 @@ migrations before the auth sites can be fixed at all.
 
 | # | Decision | Why it is his |
 |---|---|---|
-| 1 | Are more contributors coming, or is the field closed at three? | Judging cannot start while submissions are open |
+| 1 | ~~Are more contributors coming, or is the field closed at three?~~ **DECIDED 2026-08-16: field stays open, a 4th contributor comes before judging.** Awaiting Saiful to name/invite them. | Judging cannot start while submissions are open |
 | 2 | Judge it himself, or delegate to an agent? | Protocol step 6 gives him both options |
 | 3 | Keep the AST scanner alongside the runtime control, or retire it? | opus5.0 and kimi-k2 disagree directly; it is a standing-cost call, not a technical one |
 | 4 | Do the three schema migrations (§5) ride the same CR, or become their own defect? | `apple_id`/`google_id` uniqueness is a product-identity decision, not just a constraint |
