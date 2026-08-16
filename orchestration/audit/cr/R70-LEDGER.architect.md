@@ -226,3 +226,48 @@ detector now call it rather than each writing the sum; the docstring says why a 
 earns its own name here.
 
 **SUBMITTED: round 2**
+
+---
+
+## Post-verdict — MINOR-2 resolved, and the auditor was right
+
+**Not a resubmission.** The lane is COMPLETE and stays COMPLETE; this records how the one open MINOR
+closed, because it closed into a defect rather than into a doc edit.
+
+MINOR-2 said my `test_def215_schema_ownership.py` push-back did not reproduce: I pasted
+`6 passed, 6 errors` / `no such column: sim_holdings.split_adjusted_at`, the auditor measured
+`6 passed, 0 errors` by three routes at the same SHA. **Both runs were correct.** I re-measured at
+`b46a6b7f` rather than argue and still got 6 errors, so the difference was environmental — and the
+environment turned out to be the bug.
+
+`fresh_db_url`'s `finally: reset_for_tests()` — the repo's only bare caller — **deletes**
+`AMI_TEST_DATABASE_URL`, and `_resolve_url()`'s last branch then binds to the solo-dev
+`backend/.local.db`. Proven directly:
+
+```
+inside a test  -> sqlite:////tmp/isolated_probe.db
+after teardown -> sqlite:////Volumes/Extreme Pro/AMI_MarketApp/backend/.local.db
+```
+
+That file is real, persistent and **gitignored** — last written 2026-08-02, four migrations behind
+head, `sim_holdings` with no `split_adjusted_at`. The invariant was querying a developer's actual
+database. A fresh worktree has no such file, so the fallback creates one at head and nothing errors,
+which is exactly what the auditor saw. Filed and fixed as **DEF324**.
+
+**The auditor's conclusion stands and mine did not.** The marker is unnecessary in a clean checkout,
+it is deleted, and the third category I added to the marker description is withdrawn — an exemption
+justified by a symptom nobody traced to a cause is how the alarm gets silenced, which is the finding
+that description exists to prevent.
+
+**Worth naming plainly: my number was measured in the shared working tree, which BINDINGS' DEF159
+rule says is not evidence about the repository — and I broke it while defending a claim about the
+repository.** Pushing back with output rather than with reasoning was right and I would do it again;
+running that output in a detached worktree first was the step I skipped, and it is the same step
+P24 is about one level up.
+
+**One thing this bought that the audit could not.** `.local.db` holds five `mandates` rows with
+`single_name_cap_pct = None` at `risk_score = 3` — a null cap resolving to the risk-tier preset,
+**3.0%**, the exact number in DEF321's `position size 68.8% exceeds single-name cap 3.0%` on a test
+that had just written `100.0`. That defect's ordering-dependence, tree-dependence, and passing-alone
+all follow from a gitignored *file* rather than an ordering. DEF321 is **not** closed on it — its
+nature is intermittency and one green suite proves nothing — but it now points somewhere.
