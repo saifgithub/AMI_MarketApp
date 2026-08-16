@@ -39,6 +39,7 @@ The brief changed materially during the session, and that matters for reading th
 | [fundamentals_llm.md](fundamentals_llm.md) | The working pipeline: data sources, dual-model setup, bugs found |
 | [prompts_and_responses.md](prompts_and_responses.md) | **Verbatim** system/user prompts, the full data brief, and both models' complete responses |
 | [batch_and_results.md](batch_and_results.md) | Sector-stratified sampling, measured batch throughput, and the SQLite results store |
+| [vs_ami_fundamentals_analyst.md](vs_ami_fundamentals_analyst.md) | **Added post-archive.** Field-by-field comparison against AMI Trade's own production Fundamentals Analyst |
 
 ## 3. Code
 
