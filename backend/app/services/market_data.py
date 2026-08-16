@@ -47,6 +47,7 @@ import datetime
 import math
 import random
 import time
+import zlib
 from dataclasses import dataclass, field
 from threading import RLock
 from typing import Any, NamedTuple, Protocol
@@ -210,7 +211,11 @@ class MarketDataProvider(Protocol):
 
 @dataclass
 class _PriceWalk:
-    """Per-ticker deterministic random walk seeded by ticker."""
+    """Per-ticker deterministic random walk seeded by ticker.
+
+    Deterministic ACROSS PROCESSES since DEF323 — it was not before, and this
+    docstring said it was. See `_stable_seed`.
+    """
 
     base: float
     drift_per_sec: float
@@ -230,8 +235,27 @@ class _PriceWalk:
         return max(0.01, round(v, 2))
 
 
+def _stable_seed(*parts: object) -> int:
+    """A seed that survives leaving the process. DEF323.
+
+    `hash()` on a str is salted per interpreter (PEP 456) unless
+    `PYTHONHASHSEED` is set, and it is set nowhere in this repo — so seeding a
+    "deterministic" walk with `hash(ticker)` re-rolled every price on every
+    process start. Measured across three consecutive interpreters, AAPL's base
+    came out $108.61, $186.81, $432.78.
+
+    That is not a test-only concern: `USE_REAL_MARKET_DATA=true` resolves to
+    Yahoo falling back to this walk, so a container restart during a Yahoo
+    outage silently re-prices the whole universe while the source string still
+    reads `mock_walk`. `crc32` is stable across processes, versions and
+    platforms, which is the only property being asked of it here — it is a
+    checksum standing in for a hash, not a security choice.
+    """
+    return zlib.crc32("\x00".join(str(p) for p in parts).encode("utf-8"))
+
+
 def _walk_for(ticker: str) -> _PriceWalk:
-    seed = hash(ticker.upper())
+    seed = _stable_seed(ticker.upper())
     rng = random.Random(seed)
     base = 50 + rng.uniform(0, 400)
     drift = rng.uniform(-0.0002, 0.0004)
@@ -295,7 +319,7 @@ class MockWalkProvider:
         for ts in timestamps:
             close = walk.price_at(float(ts))
             open_ = prev_close if prev_close is not None else close
-            jitter = random.Random(hash((t, ts))).uniform(-0.005, 0.005)
+            jitter = random.Random(_stable_seed(t, ts)).uniform(-0.005, 0.005)
             mid = (open_ + close) / 2.0
             high = round(max(open_, close) * (1 + abs(jitter)), 4)
             low = round(min(open_, close) * (1 - abs(jitter)), 4)
