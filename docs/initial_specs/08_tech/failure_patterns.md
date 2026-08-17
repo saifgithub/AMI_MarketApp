@@ -33,6 +33,18 @@ indistinguishable from a deliberate opt-out.
 | **DEF038** | `APPLE_AUDIENCES` / `GOOGLE_AUDIENCES` — OIDC tokens verified against an empty audience list | unknown | auth audit |
 | **DEF063** | `ADANOS_API_KEY` (CR024 social feed), `ALPHA_VANTAGE_API_KEY` (CR023 news sentiment merge) | entire life of both CRs | CR035 benchmark, then Saiful challenging a wrong premise |
 | *external* — TradingAgents `47cbb32` → `4e7821d` | `get_verified_market_snapshot`: the market-analyst prompt ordered the call and the tool was never registered in the ToolNode, so the model reported it *"unavailable"* and skipped verification | 14 days | upstream, on the very feature meant to stop fabrication. Not ours to fix — recorded because it shows the class is structural, not an AMI-specific sloppiness, and their fix was an executor-registration regression guard of the same shape as `test_config_compose_parity.py`. See [CR167](../../forward_planning/CR167_tradingagents_upstream_drift/CR167_tradingagents_upstream_drift.md) §3.2. |
+| **DEF328** | `GOOGLE_API_KEY` — a real, paid Gemini key set under a name nothing reads (`google_ai_api_key` / `GOOGLE_AI_API_KEY` is what config, compose and the gateway all use) | hours; caught before the promotion that would have shipped it | asking what the key would actually do before assuming it worked |
+
+**The third instance is a different link, not a failed guard — which is why it is a point fix and
+not a Dilemma (CR185).** The chain from a value on the Mac to a feature running in Alpha has four
+links, and `test_config_compose_parity.py` only ever guarded the second:
+
+`infra/alpha.env` name → `${VAR}` compose interpolates → `Settings` field → running container
+
+DEF038 and DEF063 both broke link 2. **DEF328 broke link 1**, which had never been guarded at all,
+because `infra/alpha.env` is gitignored and therefore invisible to every check that reads the repo.
+Nothing failed twice and no framing is suspect; a link was simply uncovered. It is covered now, and
+all four links have an enforcing check — see below.
 
 **Why the previous guard failed.** After DEF038 a comment was written *in the compose block
 itself*:
@@ -47,20 +59,42 @@ structural reasons, both worth generalising:
 2. **Nothing executed it.** A comment only fires if a human opens that file at that moment.
    CR024's work lived in `config.py` and `social_context.py` — compose was never opened.
 
-**Enforcing check (CR040).**
+**Enforcing check (CR040), one per link.**
 
-- `backend/tests/unit/test_config_compose_parity.py` — every `Settings` field must be forwarded
+- **Link 1 — the env file's names (DEF328).**
+  `backend/tests/unit/test_def328_alpha_env_names_are_read_by_something.py` — every `NAME=` in
+  `infra/alpha.env` must be either a `Settings` field or a `${VAR}` compose interpolates. Derived
+  from both sources, never listed, per CR175 F3. Client-side keys (RevenueCat's Flutter SDK keys)
+  are excused in `_CLIENT_SIDE` **with a reason that must name a real consumer** — "unused for now"
+  is precisely the state the test exists to surface. Verified red against the real pre-fix file
+  (`['ONESIGNAL_APP_ID_x', 'GOOGLE_API_KEY']` → `[]`); because the env file is gitignored the corpus
+  half skips off the promoting machine, so the DEF328 name pair is *also* asserted on synthetic
+  input against the real compose file, which runs everywhere.
+- **Link 2 — compose forwarding.**
+  `backend/tests/unit/test_config_compose_parity.py` — every `Settings` field must be forwarded
   in compose's `api-alpha` env block or listed in `_NOT_FORWARDED` **with a reason**. Fails at
   commit time, on the Mac, in the normal suite. Verified red against the real DEF063 state before
   the fix landed; it names DEF063's two keys explicitly so that exact regression can't return
   quietly.
-- `GET /v1/admin/config-check` — reports each gate's live state in-container (booleans only,
+- **Link 3 — Settings coverage.** `backend/tests/unit/test_cr175_config_coverage.py` — the
+  config-check report is derived from `Settings.model_fields`, so a field added tomorrow is covered
+  the day it is added rather than when someone remembers.
+- **Link 4 — the running container.**
+  `GET /v1/admin/config-check` — reports each gate's live state in-container (booleans only,
   never secret values). Turns "is Adanos on?" into one curl.
 - `/promote-to-alpha` — calls config-check post-deploy and fails loudly on a key that is
   populated in `infra/alpha.env` but dark in the container.
 
 **Rule for new code.** New env-driven setting ⇒ compose env block + the parity test passes. If
-the container genuinely never needs it, say so in `_NOT_FORWARDED`.
+the container genuinely never needs it, say so in `_NOT_FORWARDED`. New *value* in
+`infra/alpha.env` ⇒ spell the name exactly as `Settings`/compose spell it; the link-1 test tells
+you the same thing in under a second if you don't.
+
+**And the operator-side rule the whole pattern keeps re-teaching.** In all three instances the
+evidence that the feature was live was that someone had provisioned the key. Provisioning is not
+activation. A new integration is not on until a call has been made and a response read (P24) — for
+DEF328 that was a `curl` returning HTTP 200 and a real stream through our own provider class,
+neither of which takes longer than reading the config file you were about to trust.
 
 ---
 
@@ -1121,6 +1155,17 @@ has to be staffed by something else.
 The third instance adds the sharpest edge: **the driver lied.** `scrollGesture` returned
 `canScrollMore=False` — "you have reached the end" — on a pane sitting at its top with six screens
 below. A caller that trusts a returned status has no way to tell a real answer from a wrong one.
+
+**A fourth instance, outside `qa/appium/` — DEF329, the registers.** Two guards ran over a
+`_registry/<ID>.row.md` file that could not render as a table row, and both were green: `verify`
+regenerates from the same broken source and so agrees with itself, and `status_of` splits the whole
+file text on `|` and reads `cells[-4]`, which finds a valid status even in a four-line file. Neither
+check could express the failure, so their passing said nothing about it — and the register rendered
+one row as loose body text for a day, with ~15% of all rows (34/328 DEF, 43/187 CR, measured
+2026-08-17) putting their values under the wrong headings. It is listed here because it shows the
+class is not device-specific: **any check derived from the same artifact it is checking is inert by
+construction.** The fix follows the operational rule below — the new `row_shape_problems()` was run
+against reconstructions of both real historical malformations before its passes were trusted.
 
 **The invariant.** *A check earns trust from an observed effect, never from a successful call.* For
 anything that acts on a device: assert the state changed. For anything that filters: assert something

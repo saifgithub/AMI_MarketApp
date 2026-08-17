@@ -66,3 +66,96 @@ CR017 §5 step 1 is **already complete** and is not re-done here.
    provider is unconfigured, so an unkeyed deployment behaves exactly as it does now.
 5. `dashscope_api_key` is forwarded in `docker-compose.yml`; `test_config_compose_parity.py` green.
 6. Routing is table-driven and unit-tested across every (plan, agent-band) pair.
+
+## Closure — 2026-08-17 (AT:R70), status `done`
+
+All six acceptance criteria were met at AT:R66 and audited COMPLETE (round 1, zero BLOCKER, zero
+MAJOR). **None of them promised wiring into a call site**, and acceptance 4 in fact promises the
+opposite: today's fallback order survives untouched for every input. So this CR closes on what it
+scoped. Wiring is a separate decision, taken below and deferred.
+
+### Gemini exercised for the first time
+
+Saiful added a real Google key to `infra/alpha.env` on 2026-08-17. **It was stored under the wrong
+name** — `GOOGLE_API_KEY=`, which nothing in this repo reads — so the provider would have gone on
+skipping with `reason="no GOOGLE_AI_API_KEY in env"`. Renamed to `GOOGLE_AI_API_KEY=`, and filed as
+**DEF328** with a derived guard, because a key that is present, correct and paid for while reaching
+nothing is DEF038's and DEF063's outcome arrived at by a third route.
+
+With the name fixed, measured rather than assumed (P24):
+
+- Direct `curl` to `generativelanguage.googleapis.com/v1beta/openai/chat/completions` — **HTTP 200**,
+  `gemini-2.5-flash`, 0.94s.
+- A real stream through **our own** `OpenAICompatibleProvider`, unmodified — text returned, and
+  CR141's usage capture populated: `input_tokens=17, output_tokens=1`, both cache fields **None**,
+  not 0, exactly as acceptance 2 requires. httpx resolves our hardcoded `/v1/chat/completions` onto
+  Google's base as `/v1beta/openai/v1/chat/completions`; the doubled segment looks wrong and is
+  tolerated by Google's router — it returns 200 and streams. Noted, not "fixed", because it works
+  and the fix would be untested churn.
+- `_parse_openai_compatible_usage` already reads `prompt_tokens_details.cached_tokens`, which is
+  Gemini's field name, so its implicit cache would be captured if a call ever gets big enough to hit
+  one (Google quotes a ~1–2k-token minimum).
+
+### What wiring would have moved — measured on live Alpha, 14 days to 2026-08-17
+
+Only three providers are keyed on Alpha: **vLLM, Kimi, Gemini**. `anthropic` and `deepseek` are
+absent, so two rows of `_ROUTING_TABLE` would silently fall back to vLLM if wired today.
+
+| plan · tier | calls | input tok | table routes to | actually |
+|---|---|---|---|---|
+| trader · mid | 4,994 | 18.8M | gemini | **gemini** |
+| trader · premium | 462 | 3.0M | gemini | **gemini** |
+| floor_manager · premium | 612 | 2.2M | anthropic | unkeyed → vllm |
+| floor_manager · cheap | 22 | 0 | gemini | **gemini** |
+| floor_manager · mid | 14 | 0.1M | anthropic | unkeyed → vllm |
+| floor_pass · all | 353 | 1.6M | vllm | vllm |
+
+All 6,462 calls ran on vLLM, 1 error, **avg 8,093 ms**, usage captured on 6,292 (97.4%),
+`cache_read_tokens` on **0** of them (that is DEF226/CR192, upstream, not ours). 5,548 of the paid
+calls are `flow=room`, 504 `room_pm` — this is the Room, essentially in full.
+
+So wiring the table as written moves **~85% of Alpha's LLM traffic** onto a metered API. At Google's
+published rate ($0.30/M in, $2.50/M out, $0.03/M cached in — fetched 2026-08-17) the arithmetic on
+those measured token counts is **~$10.50 per 14 days, ≈$23/month** at current volume. That is list
+price × measured tokens, not an observed invoice.
+
+### Two CR017 questions this measurement answers for free
+
+- **§4.2 / §7's capacity-vs-cost inversion** ("route free users to a cheap API and reserve the
+  on-prem GPU for paid users") is close to **moot at current volume**: floor_pass is 353 of 6,462
+  calls, ~5%. The inversion was posed on an assumption of many free users contending for one GPU;
+  Alpha's actual shape is the reverse, so the decision is worth far less than CR017 implies and
+  should be re-derived from traffic if it is ever revisited.
+- **The plan→level mapping (§4.4)** never became load-bearing, because the ruling below means no
+  call site consults it. `_PLAN_TO_LEVEL`'s provisional guess stands, unexercised.
+
+### Saiful's ruling, 2026-08-17: leave it dormant
+
+Asked with the numbers above in hand — benchmark it first / wire the table now / PM-verdict band
+only / leave dormant — he chose **leave dormant**. Gemini stays registered and reachable **only** via
+`LLM_FORCE_PROVIDER=gemini` for manual testing and benchmarking. No automatic traffic, no spend, and
+the fixed `vllm > anthropic > kimi > mock` order continues to serve every call.
+
+That ruling promotes the override from a convenience to **the single path by which any Gemini call
+can happen**, so it stopped being safe to leave it merely readable.
+`test_cr141_provider_registration.py` already asserted the complement — registering Gemini must not
+steal traffic — which on its own is satisfied by a Gemini that is unreachable through *every* path;
+asserting only that half is how a provider ends up nominally available and inert (P21).
+`test_force_provider_reaches_gemini_because_it_is_now_the_only_path` pins the positive half, and is
+mutation-proven: neutering the `forced in self._providers` branch in `_active_provider_name` reds
+that test and only that test. It also pins the degrade — a stale override on a deployment with no
+key must fall back, never error.
+
+So the code state after this CR is exactly the state the audit proved: the routing layer exists,
+is table-driven and tested, and is consulted by nothing. **Wiring it later is a call-site change
+plus a table edit** — `stream_chat` already accepts `plan=`/`agent_id=` and `_pick_provider` already
+consults `provider_policy` when both are supplied, so the remaining work is passing those two kwargs
+in `agent_runner.py` / `room_runner.py` (where `tier_policy.pick_tier` is already threaded) and
+ruling on the mapping. That is a fresh CR when Saiful wants it, deliberately **not** filed as
+`proposed` today — a proposed CR would resurface this question in every daily review after he has
+just answered it.
+
+**Still open, unchanged by this closure:** §5 step 0 (prompt-prefix reordering) remains the
+highest-leverage deferred item, and remains blocked on the same thing — DEF226/CR192, because vLLM
+still reports no cache field, so the reordering's payoff stays unmeasurable on the provider serving
+100% of traffic.

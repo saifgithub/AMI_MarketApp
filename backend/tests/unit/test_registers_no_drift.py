@@ -17,6 +17,7 @@ DRIFT" and send the reader to regenerate a table that is already correct.
 Runs in the promote preflight. Tests our governance invariant, not a framework.
 """
 import importlib.util
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -75,6 +76,66 @@ def test_every_row_status_is_one_of_the_register_vocabulary():
         "vocabulary. A qualifier belongs in the DESCRIPTION column, where nothing "
         "parses it; the status column is read by counters.\n  "
         + "\n  ".join(offenders)
+    )
+
+
+@pytest.mark.skipif(not GEN.exists(), reason="register generator not present in this checkout")
+def test_no_row_file_is_shaped_so_it_cannot_render(tmp_path):
+    """DEF329. A row file must be ONE line carrying its register's column count.
+
+    Neither guard above can see this. `verify` regenerates from the same broken
+    file and finds no drift; `status_of` splits the WHOLE file text on "|" and so
+    reads a valid status straight out of a four-line row. Both states shipped —
+    DEF254 with 7 cells against an 8-column header, DEF326 with four physical
+    lines and a raw `PASS|FAIL` splitting a cell — and the register rendered each
+    one's values under the wrong headings until someone noticed by eye.
+    """
+    gen = _gen_module()
+
+    problems = [p for reg in gen.REGISTERS.values() for p in gen.row_shape_problems(reg)]
+    assert not problems, (
+        "Register row file(s) that cannot render as one table row:\n  "
+        + "\n  ".join(problems)
+    )
+
+    # Non-vacuity, on both shapes that actually occurred. Without this the
+    # assertion above is indistinguishable from a check that matches nothing.
+    reg = gen.REGISTERS["def"]
+    shutil.copy(reg["registry"] / "_preamble.md", tmp_path / "_preamble.md")
+    (tmp_path / "DEF001.row.md").write_text("| DEF001 | d | s | c | one\ntwo | fixed | f | t |\n")
+    (tmp_path / "DEF002.row.md").write_text("| DEF002 | d | s | title | fixed | f | t |\n")
+    (tmp_path / "DEF003.row.md").write_text("| DEF003 | d | s | c | fine | fixed | f | t |\n")
+    caught = gen.row_shape_problems({**reg, "registry": tmp_path})
+    assert len(caught) == 2, caught
+    assert "DEF001" in caught[0] and "ONE line" in caught[0]
+    assert "DEF002" in caught[1] and "7 columns" in caught[1]
+
+
+@pytest.mark.skipif(not GEN.exists(), reason="register generator not present in this checkout")
+def test_the_legacy_width_baseline_only_ever_shrinks():
+    """DEF329's ratchet. The frozen list exists so the guard could ship green on a
+    corpus that was already ~15% non-conforming (34/328 DEF, 43/187 CR, measured
+    2026-08-17) instead of shipping red and being reasoned past — DEF277's shape.
+
+    It is debt, so it must be *falling*. An entry naming a row that no longer
+    exists or no longer needs excusing is the list rotting quietly into a
+    blanket exemption.
+    """
+    gen = _gen_module()
+    stale: list[str] = []
+    for reg in gen.REGISTERS.values():
+        legacy = gen._LEGACY_WRONG_WIDTH.get(reg["prefix"], frozenset())
+        expected = gen.header_cell_count(reg)
+        for rid in sorted(legacy):
+            path = reg["registry"] / f"{rid}.row.md"
+            if not path.exists():
+                stale.append(f"{rid}: excused but the row file is gone")
+                continue
+            row = path.read_text().strip()
+            if "\n" not in row and len(gen._UNESCAPED_PIPE.split(row)) == expected:
+                stale.append(f"{rid}: excused but now conforms — drop it from the list")
+    assert not stale, (
+        "DEF329 baseline entries that no longer describe anything:\n  " + "\n  ".join(stale)
     )
 
 

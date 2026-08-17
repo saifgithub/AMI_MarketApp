@@ -174,7 +174,115 @@ def _rows_sorted(reg: dict) -> list[str]:
     return [p.read_text().rstrip("\n") for p in files]
 
 
+# DEF329 — a row file must be ONE line with the register's own column count.
+#
+# A markdown table row is a line. A row file containing a hard newline therefore
+# emits a row that renders as one truncated row plus loose body text, and a row
+# file with the wrong number of cells emits a row whose columns are shifted.
+# Neither is caught by anything else here, and both are silent:
+#
+#   * `verify` regenerates from the same broken file and finds no drift.
+#   * `status_of` splits the WHOLE file text on "|", so it still reads a valid
+#     status out of a four-line file — DEF203's guard passes on a broken row.
+#
+# Both states shipped. DEF254's row carried 7 cells against an 8-column header
+# (2026-08-17, caught by eye); DEF326's carried four physical lines (found the
+# next session, by a status count that came out one short). Twice is the house
+# rule for adding a guard.
+#
+# The column count is DERIVED from the register's own header row, never
+# hardcoded: DEF has 8 columns and CR has 6, and a literal here would be wrong
+# for one of them the day a column is added (CR175 F3).
+def header_cell_count(reg: dict) -> int:
+    """Number of `|`-split fields in this register's header row."""
+    for line in reversed((reg["registry"] / PREAMBLE).read_text().splitlines()):
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            continue
+        if set(stripped) <= set("|-: "):        # the |---|---| separator
+            continue
+        return len(stripped.split("|"))
+    raise SystemExit(f"[gen] {reg['prefix']}: no header row found in {PREAMBLE}")
+
+
+# The column-count half of the check is a RATCHET, not a clean sweep. Measured
+# 2026-08-17 the moment it could be measured: 34 of 328 DEF rows and 43 of 187 CR
+# rows already carried a count their own header does not declare, so enforcing it
+# outright would have shipped a guard red on ~15% of the corpus — which is the
+# DEF277 shape (a gate whose normal state is failing teaches the operator that
+# firing does not mean stop).
+#
+# So these IDs are frozen as known-bad. Every row NOT on the list must conform,
+# which is what stops the debt growing; the list may shrink and must never gain
+# an entry. Cleaning it up is DEF329's deferred half — it needs a judgement per
+# row (what Category was DEF290 meant to have?) and is not a mechanical edit.
+#
+# The rows are wrong, not the headers: 294/328 DEF rows already sit at 8 columns
+# and 144/187 CR rows at 6, so each header describes its own majority.
+_LEGACY_WRONG_WIDTH: dict[str, frozenset[str]] = {
+    "DEF": frozenset({
+        "DEF079", "DEF083", "DEF102", "DEF181", "DEF191", "DEF193", "DEF203",
+        "DEF212", "DEF224", "DEF230", "DEF231", "DEF235", "DEF236", "DEF237",
+        "DEF238", "DEF239", "DEF240", "DEF241", "DEF243", "DEF244", "DEF245",
+        "DEF246", "DEF247", "DEF251", "DEF253", "DEF255", "DEF256", "DEF257",
+        "DEF258", "DEF259", "DEF279", "DEF290", "DEF300",
+    }),
+    "CR": frozenset({
+        "CR106", "CR109", "CR120", "CR121", "CR123", "CR124", "CR133", "CR138",
+        "CR139", "CR140", "CR141", "CR142", "CR143", "CR144", "CR145", "CR146",
+        "CR147", "CR148", "CR149", "CR150", "CR151", "CR152", "CR153", "CR154",
+        "CR155", "CR156", "CR157", "CR158", "CR159", "CR160", "CR162", "CR164",
+        "CR166", "CR171", "CR175", "CR181", "CR182", "CR183", "CR184", "CR185",
+        "CR190", "CR191",
+    }),
+}
+
+# A raw "|" inside a cell splits that cell; an escaped "\|" renders as a literal
+# pipe and must not be counted. Ten of the 44 first-pass DEF hits were escaped
+# pipes, i.e. the counter's fault rather than the row's.
+_UNESCAPED_PIPE = re.compile(r"(?<!\\)\|")
+
+
+def row_shape_problems(reg: dict) -> list[str]:
+    """Every row file whose shape cannot render as one table row."""
+    prefix = reg["prefix"]
+    expected = header_cell_count(reg)
+    legacy = _LEGACY_WRONG_WIDTH.get(prefix, frozenset())
+    problems: list[str] = []
+    for path in sorted(reg["registry"].glob(f"{prefix}*.row.md")):
+        rid = path.stem.split(".")[0]
+        lines = [ln for ln in path.read_text().splitlines() if ln.strip()]
+        if len(lines) != 1:
+            problems.append(
+                f"{rid}: {len(lines)} non-empty lines — a table row is ONE line. "
+                f"Join them with spaces; a newline inside a row breaks the table."
+            )
+            continue
+        row = lines[0].strip()
+        if not (row.startswith("|") and row.endswith("|")):
+            problems.append(f"{rid}: row must start and end with '|'")
+            continue
+        found = len(_UNESCAPED_PIPE.split(row))
+        if found != expected and rid not in legacy:
+            problems.append(
+                f"{rid}: {found - 2} columns, header has {expected - 2}. "
+                f"A missing cell shifts every column after it, so the rendered "
+                f"table puts each value under the wrong heading. Escape a "
+                f"literal pipe in prose as '\\|'."
+            )
+    return problems
+
+
 def gen(reg: dict) -> str:
+    problems = row_shape_problems(reg)
+    if problems:
+        # Unlike DEF159's untracked-row case below, a malformed row can never be
+        # correct, so this fails rather than warns — there is no legitimate flow
+        # that passes through here with a broken row file (DEF329).
+        print(f"[gen] !! {reg['prefix']}: MALFORMED ROW FILE(S) — refusing to generate:")
+        for p in problems:
+            print(f"[gen]      {p}")
+        raise SystemExit(1)
     preamble = (reg["registry"] / PREAMBLE).read_text().rstrip("\n")
     parts = [preamble, *_rows_sorted(reg)]
     footer = reg["registry"] / FOOTER
@@ -192,6 +300,19 @@ def verify(reg: dict) -> bool:
     src_rows = {p.stem.split(".")[0]: p.read_text().rstrip("\n")
                 for p in reg["registry"].glob(f"{prefix}*.row.md")}
     ok = True
+
+    # DEF329 — shape first. A malformed row makes every check below meaningless:
+    # the drift comparison regenerates the same broken text and agrees with
+    # itself, and `status_of` reads a plausible status straight out of a row
+    # that cannot render.
+    shape = row_shape_problems(reg)
+    if shape:
+        ok = False
+        print(f"[verify] {prefix}: MALFORMED ROW FILE(S) — a row must be one line "
+              f"with the header's column count:")
+        for p in shape:
+            print(f"[verify]   {p}")
+
     missing = set(live_rows) - set(src_rows)
     extra = set(src_rows) - set(live_rows)
     if missing:
