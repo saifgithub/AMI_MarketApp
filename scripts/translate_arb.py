@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import collections
+import hashlib
 import json
 import os
 import re
@@ -63,6 +64,118 @@ def _write_arb(path: Path, data: dict[str, Any]) -> None:
 
 def _is_translatable_key(key: str) -> bool:
     return not key.startswith("@") and key != "appTitle"
+
+
+# ---------------------------------------------------------------------------
+# DEF295 — "translated" is a fact the file records, not one inferred from
+# "the value is non-empty".
+#
+# Two shipped rules used to collide. DEF137's parity guard fails the build if a
+# target ARB is missing any template key, so a new string must be written into
+# all three files at once — in practice, seeded with the English. The skip rule
+# below then treats any non-empty target value as a hand translation and leaves
+# it alone, **forever**. The key is present, the parity guard is green, and the
+# Arabic screen renders English: exactly the silent per-key fallback DEF137 was
+# filed to stop, arriving through its own fix rather than around it. Measured
+# 2026-08-13: 320 prose keys in `app_ar.arb` and 321 in `app_ms.arb` byte-
+# identical to the English.
+#
+# The marker makes the two cases distinguishable. Each target ARB carries one
+# `@@x-ami-seeds` object mapping key → `sha256[:12]` of the value that was
+# seeded into it. A real translation is simply absent from that map.
+# `@@`-prefixed entries are ARB file metadata; DEF137's parity guard already
+# ignores everything `@`-prefixed, and `flutter gen-l10n` ignores it too
+# (verified against both the per-key and the file-level form before choosing).
+#
+# **The marker is self-healing, which is the part that makes it safe.** A key
+# counts as a seed only while its value still hashes to what was seeded. The
+# translator clears the entry when it writes a translation, and a human who
+# edits the value by hand stops being a seed at the moment they save — without
+# knowing this mechanism exists and without having to clear anything. That
+# closes the failure a bare "translated: false" flag would have opened, where
+# forgetting to flip it re-translates over somebody's work — which is the exact
+# thing the skip rule below exists to protect.
+SEEDS_KEY = "@@x-ami-seeds"
+
+
+def seed_hash(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()[:12]
+
+
+def _seeds(target: dict[str, Any]) -> dict[str, str]:
+    seeds = target.get(SEEDS_KEY)
+    return seeds if isinstance(seeds, dict) else {}
+
+
+def is_seed(target: dict[str, Any], key: str) -> bool:
+    """Is `key`'s value in `target` still the untranslated seed it was given?"""
+    recorded = _seeds(target).get(key)
+    if not isinstance(recorded, str):
+        return False
+    value = target.get(key)
+    return isinstance(value, str) and seed_hash(value) == recorded
+
+
+def mark_seed(target: dict[str, Any], key: str, seeded_value: str) -> None:
+    seeds = dict(_seeds(target))
+    seeds[key] = seed_hash(seeded_value)
+    target[SEEDS_KEY] = dict(sorted(seeds.items()))
+
+
+def clear_seed(target: dict[str, Any], key: str) -> None:
+    """Drop the marker now that `key` is translated."""
+    seeds = dict(_seeds(target))
+    if seeds.pop(key, None) is None:
+        return
+    if seeds:
+        target[SEEDS_KEY] = seeds
+    else:
+        target.pop(SEEDS_KEY, None)
+
+
+def pending_keys(
+    target: dict[str, Any],
+    en_strings: dict[str, str],
+    *,
+    overwrite: bool = False,
+) -> list[str]:
+    """Which keys this run should translate.
+
+    Pure, and extracted from `_translate_locale` so the DEF295 guard can assert
+    the rule directly instead of grepping for it.
+    """
+    out: list[str] = []
+    for key in en_strings:
+        if overwrite:
+            out.append(key)
+            continue
+        existing = target.get(key)
+        translated = (
+            isinstance(existing, str)
+            and existing.strip()
+            and key != "appTitle"
+            and not is_seed(target, key)
+        )
+        if not translated:
+            out.append(key)
+    return out
+
+
+def seed_missing(target: dict[str, Any], en_strings: dict[str, str]) -> list[str]:
+    """Fill every key the target is missing with English, MARKED as a seed.
+
+    This is the step DEF137's parity guard forces, done in the one way that
+    does not lie to the translator about what happened.
+    """
+    seeded: list[str] = []
+    for key, en_val in en_strings.items():
+        existing = target.get(key)
+        if isinstance(existing, str) and existing.strip():
+            continue
+        target[key] = en_val
+        mark_seed(target, key, en_val)
+        seeded.append(key)
+    return seeded
 
 
 def _strip_arb_value(value: Any) -> str:
@@ -225,13 +338,14 @@ def translate_one_locale(
     )
     out.setdefault("appTitle", "AMI Trade")
 
-    pending: list[tuple[str, str]] = []
-    for key, val in en_strings.items():
-        if not overwrite:
-            existing_val = out.get(key)
-            if isinstance(existing_val, str) and existing_val.strip() and key != "appTitle":
-                continue
-        pending.append((key, val))
+    # DEF295 — a key seeded with English to satisfy DEF137's parity guard is
+    # pending, not done. `pending_keys` is the single place that decides.
+    pending: list[tuple[str, str]] = [
+        (k, en_strings[k]) for k in pending_keys(out, en_strings, overwrite=overwrite)
+    ]
+    seeds = sum(1 for k, _ in pending if is_seed(out, k))
+    if seeds:
+        print(f"[{locale_code}] {seeds} of those are English seeds (DEF295), not gaps.")
 
     if not pending:
         print(f"[{locale_code}] nothing to do — all {len(en_strings)} keys already filled.")
@@ -269,6 +383,9 @@ def translate_one_locale(
                 failed_batches += 0  # not a batch-level failure, just one key
                 continue
             out[k] = v
+            # DEF295 — the marker is cleared BY the act of translating, so
+            # "no marker" cannot drift away from "actually translated".
+            clear_seed(out, k)
         # Persist after every batch so a partial run is still useful.
         _write_arb(target_path, out)
         print(f"{log_prefix} OK ({time.time() - started:.1f}s elapsed)")
@@ -316,6 +433,21 @@ def main() -> int:
         action="store_true",
         help="Don't call the LLM; only print what would be done.",
     )
+    parser.add_argument(
+        "--seed-missing",
+        action="store_true",
+        help=(
+            "DEF295: fill keys the target ARBs are missing with English, "
+            "MARKED as seeds, and exit. This is the step DEF137's parity "
+            "guard forces after adding a string — run it instead of "
+            "hand-copying, or the key is skipped by the translator forever."
+        ),
+    )
+    parser.add_argument(
+        "--report",
+        action="store_true",
+        help="Print how many keys are seeds vs translated per locale, and exit.",
+    )
     args = parser.parse_args()
 
     if not EN_PATH.exists():
@@ -329,6 +461,33 @@ def main() -> int:
             en_strings[key] = _strip_arb_value(val)
 
     print(f"Source: {EN_PATH.relative_to(REPO_ROOT)} — {len(en_strings)} keys.")
+
+    if args.seed_missing:
+        for code in args.locales:
+            path = ARB_DIR / f"app_{code}.arb"
+            target = _read_json(path) if path.exists() else {"@@locale": code}
+            seeded = seed_missing(target, en_strings)
+            _write_arb(path, target)
+            print(f"[{code}] seeded {len(seeded)} key(s): {seeded[:8]}"
+                  f"{' …' if len(seeded) > 8 else ''}")
+        return 0
+
+    if args.report:
+        for code in args.locales:
+            path = ARB_DIR / f"app_{code}.arb"
+            if not path.exists():
+                print(f"[{code}] no ARB.")
+                continue
+            target = _read_json(path)
+            seeds = [k for k in en_strings if is_seed(target, k)]
+            missing = [k for k in en_strings if not str(target.get(k, "")).strip()]
+            print(
+                f"[{code}] {len(en_strings) - len(seeds) - len(missing)} translated, "
+                f"{len(seeds)} English seed(s) awaiting translation, "
+                f"{len(missing)} missing."
+            )
+        return 0
+
     print(f"Backend: {args.backend_url}")
     if args.dry_run:
         print("DRY RUN — no calls will be made.")

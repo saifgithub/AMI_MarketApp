@@ -1280,3 +1280,43 @@ that gate **alone** is reverted, verified by running it —
 `test_def319_partial_sell_then_self_close.py`'s four (the event ordering and the detector's
 formula, separately). The scenario tests beside them now say in their own docstrings that they are
 scenario pins and not guards, so the next reader does not re-derive the same wrong attribution.
+
+## P25 — satisfying one guard makes another guard's failing state look like its passing state
+
+**Instances.** DEF295, 2026-08-13: DEF137's parity guard fails the build if `app_ar.arb` /
+`app_ms.arb` are missing any template key, so a new string has to be written into all three files at
+once — in practice seeded with the English. `translate_arb.py` then skips any key whose target value
+is a non-empty string, deliberately, so a translator's hand edits are never overwritten. English
+seeded to satisfy the first is byte-indistinguishable from a hand translation under the second, so
+it is skipped **forever**. Measured 2026-08-17: **615 keys in `app_ar.arb` and 630 in `app_ms.arb`**
+were English wearing a translation's clothes — up from the 320/321 counted when DEF295 was filed
+four days earlier, because every CR that adds a string adds to the pile. The silent per-key English
+fallback DEF137 exists to stop, arriving through DEF137's own fix rather than around it. Second
+occurrence in the family: DEF063/DEF038 (P1) is the same shape one layer down — a compose block that
+satisfies "the setting exists" while the container never sees it.
+
+**Why it survives review.** Each rule is individually correct, was individually reviewed, and has
+its own passing test. The collision lives in neither one's diff. Worse, the *first* guard reports
+green **because of** the very act that defeats the second — so the strongest available signal
+(a clean build after adding a string) is affirmative evidence that nothing is wrong.
+
+**The tell.** Two checks whose subjects overlap, where one is satisfied by writing a **placeholder
+value in the format of the real thing**. Ask: after I satisfy guard A the cheap way, can guard B
+still tell the cheap way from the real thing? If the only difference is intent, B is now blind.
+Seeds, stub implementations that return the right type, `TODO` copy that reads as prose, and a
+mocked provider whose output is shaped like a real one all qualify.
+
+**The invariant.** *A placeholder must be recorded as one, in the artifact, by the tool that placed
+it.* Not inferred later from its contents — "the value is non-empty", "the string differs from
+English", "the function returns something" are all inferences, and they fail exactly when the
+placeholder is good. And the record must be **self-healing**: a flag someone has to remember to
+clear becomes the next silent-drift defect (DEF098's shape), so derive it from the artifact — a hash
+of what was placed, which stops matching the moment anyone edits it.
+
+**Enforcing check.** `backend/tests/unit/test_def295_seeded_translations_are_marked.py` — 9 tests,
+two halves. The mechanism half pins `translate_arb.py`'s `pending_keys` / `is_seed` / `clear_seed` /
+`seed_missing`: a marked seed is pending, an unmarked value is left alone, and a hand edit stops
+being a seed **without clearing anything**. The corpus half fails on any English string sitting in a
+target ARB unmarked — count zero, not a ratchet, because `--seed-missing` is the one supported way
+to satisfy DEF137's parity guard. Mutation-verified: reverting the skip rule, removing the hash
+comparison from `is_seed`, and hand-copying one English value each turn a different test red.

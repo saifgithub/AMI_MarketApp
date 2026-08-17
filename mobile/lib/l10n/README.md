@@ -12,17 +12,41 @@ via the on-prem Gemma 4 (vLLM) gateway and committed alongside.
 | `app_ms.arb` | Malay — auto-translated. Manual edits survive re-runs. |
 
 A key missing from a locale file falls back to the English string (Flutter
-gen-l10n behaviour), so the app never shows blanks.
+gen-l10n behaviour) — silently, per key, mid-paragraph. **DEF137 forbids it:**
+`mobile/test/l10n_key_parity_test.dart` fails the build if any locale is
+missing a template key, so every string must exist in all three files.
 
 ## Adding a new string
 
 1. Add `myScreen_shortDescriptor` to `app_en.arb`. Use placeholders for
    anything dynamic: `"foo": "Pick {count} tickers"` with
    `"@foo": { "placeholders": {"count": {"type": "int"}} }`.
-2. Run `flutter gen-l10n` (or `flutter pub get` — pubspec triggers it).
-3. Use it: `AppLocalizations.of(context).myScreen_shortDescriptor`.
-4. Re-translate AR + MS by running `scripts/translate_arb.py` — it will
-   only fill the new key, leaving existing translations alone.
+2. Seed AR + MS so the parity guard passes:
+   `backend/.venv/bin/python scripts/translate_arb.py --seed-missing`.
+   **Do not hand-copy the English across** — see below.
+3. Run `flutter gen-l10n` (or `flutter pub get` — pubspec triggers it).
+4. Use it: `AppLocalizations.of(context).myScreen_shortDescriptor`.
+5. Translate when the i18n lane next runs `scripts/translate_arb.py` — it
+   fills the new key and leaves real translations alone.
+
+### Why seeding has to go through the script (DEF295)
+
+The translator skips any key whose target value is non-empty, so hand
+translations survive re-runs. English hand-copied in to satisfy step 2 is
+indistinguishable from a hand translation under that rule, so it is skipped
+**forever**: the key is present, the parity guard is green, and the Arabic
+screen renders English. 615 AR keys and 630 MS keys were in exactly that
+state on 2026-08-17.
+
+`--seed-missing` records what it seeded in an `@@x-ami-seeds` map (key →
+hash of the seeded value), so the translator can tell a seed from a
+translation. The marker is **self-healing**: a key stops being a seed the
+moment its value changes, so translating by hand needs no knowledge of this
+and clears nothing. `backend/tests/unit/test_def295_seeded_translations_are_
+marked.py` fails on any English that sits in a target file unmarked.
+
+`scripts/translate_arb.py --report` prints translated / seeded / missing per
+locale.
 
 ## Auto-translate pipeline
 
