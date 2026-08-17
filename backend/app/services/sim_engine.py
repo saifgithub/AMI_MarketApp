@@ -1262,6 +1262,7 @@ class SimEngine:
         kind: str = "training",
         run_id: UUID | None = None,
         fee: float = 0.0,
+        now: datetime | None = None,
     ) -> SubmitResult:
         """The mechanics shared by every fill path: cash/holdings check, the
         fill, the holding update and the trade row.
@@ -1434,7 +1435,13 @@ class SimEngine:
 
         # Persist fill + trade in one transaction.
         trade_id = uuid4()
-        opened_at = datetime.now(timezone.utc)
+        # DEF326 — `now` is the caller's clock when it has one. Every game path
+        # already threads a `now` for the market-hours gate and the settlement
+        # sell; this line used to ignore it, so a fill stamped itself with the
+        # wall clock while the sell that closes it carried the injected time.
+        # The FIFO lot reconstruction orders by timestamp, so the sell then
+        # drew before its own lot existed and the ledger read as a phantom.
+        opened_at = now or datetime.now(timezone.utc)
         with get_session() as s:
             p_row = self._load_portfolio_row(s, user_id, kind=kind, run_id=run_id)
             assert p_row is not None  # ensure_portfolio ran above
@@ -1774,6 +1781,7 @@ class SimEngine:
         stop: float | None = None,
         target: float | None = None,
         horizon_days: int | None = None,
+        now: datetime | None = None,
     ) -> GameSubmitResult:
         """CR109 slice 2, §7.1 — the game trade path's second public entry
         point, structurally distinct from `submit()`: it never calls
@@ -1835,6 +1843,7 @@ class SimEngine:
             kind="game",
             run_id=run_id,
             fee=fee,
+            now=now,
         )
         if not result.accepted:
             return GameSubmitResult(

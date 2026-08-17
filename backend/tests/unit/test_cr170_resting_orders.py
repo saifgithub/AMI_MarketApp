@@ -334,7 +334,15 @@ def test_a4_a_stale_claim_is_rejected_and_never_refilled():
     order_id = _rest_a_buy_limit(sim, user_id, limit=90.0)
 
     # Simulate a crash between the fill and the stamp.
-    stale = datetime.now(timezone.utc) - timedelta(minutes=30)
+    #
+    # DEF327 — anchored to the SWEEP's clock, not the wall clock. `_session_now`
+    # is `expires_at - 1h`, so a `claimed_at` taken from `datetime.now()` is
+    # only stale relative to it while the real time is more than 40 minutes
+    # short of the 16:00 ET close (10-minute reap threshold + the 30 below).
+    # Run the suite inside that window and this one test failed — which is
+    # precisely the wall-clock coupling this file's own `_session_now`
+    # docstring was written to remove, left behind on one line.
+    stale = _session_now(order_id) - timedelta(minutes=30)
     with get_session() as s:
         s.execute(update(SimRestingOrderRow)
                   .where(SimRestingOrderRow.id == order_id)

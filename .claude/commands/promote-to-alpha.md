@@ -86,7 +86,24 @@ python3 scripts/promotion/preflight_tree.py || {
 
 git status --short
 git log --oneline -1
-pytest backend/tests/unit/ -q
+
+# SUITE GATE (AT:R70, DEF326) — runs FOURTH. This used to be a bare
+# `pytest backend/tests/unit/ -q` with the prose "pytest must exit 0. Surface
+# the failure summary if not." left to the operator. On 2026-08-15 an autouse
+# ledger invariant started raising in TEARDOWN on 54 CR109 games tests; pytest
+# buckets errors separately from failures, so the last line printed read
+# `4324 passed, 3 skipped, 54 errors` — the word "failed" never appeared — and
+# `alpha-2026-08-17-1` was promoted past this gate two days later by an
+# operator who read the pass count instead of the exit code. Same shape as the
+# tree gate and the audit-lane gate above: a check whose failing state is
+# invisible in the output a human actually reads is not a gate. The script
+# does the reading and ends in a VERDICT line and an exit code; ERRORS count
+# as failure, because they are one.
+scripts/promotion/preflight_suite.sh || {
+  echo "SUITE GATE — the backend suite did not exit 0. Aborting."
+  exit 1
+}
+
 flutter analyze --no-fatal-infos
 ```
 
@@ -117,7 +134,13 @@ user clears a hold, and only against the precondition the hold names.
   `--force` past it; there is deliberately no such flag.
 - `git log` — capture the short hash + commit subject. You'll need it
   for the summary at the end.
-- pytest must exit 0. Surface the failure summary if not.
+- The **suite gate** is enforced now, not narrated (DEF326). Read its
+  `VERDICT:` line and nothing else — **do not** read pytest's own summary line
+  and form a view. That line buckets errors separately from failures, so a
+  suite with 54 erroring teardowns and zero failures prints a sentence
+  containing only the word *passed*, and that is exactly how
+  `alpha-2026-08-17-1` shipped on a red suite. If it prints FAIL it also prints
+  every FAILED and ERROR node id; fix or stop. There is no `--force`.
 - flutter analyze must exit 0. The pre-existing
   `assets/icons/ doesn't exist` warning is OK; only block on real
   issues. (If `flutter` isn't installed or available at the path, ask

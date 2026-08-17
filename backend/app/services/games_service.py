@@ -1305,6 +1305,11 @@ def submit_trade(
         stop=stop,
         target=target,
         horizon_days=horizon_days,
+        # DEF326 — the same `now` that decided the market was open has to stamp
+        # the fill. It used to be honoured by the market-hours gate and the
+        # queue above and dropped here, so a caller with an injected clock got
+        # a BUY at wall-clock time and a settlement SELL in the injected past.
+        now=now,
     )
     if result.accepted:
         _record_fill(user_id, run_id, fee=result.fee)
