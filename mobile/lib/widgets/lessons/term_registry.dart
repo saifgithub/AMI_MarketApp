@@ -15,6 +15,7 @@ library;
 import 'dart:convert';
 
 import 'package:ami_trade/models/glossary.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart' show rootBundle;
 
 class TermRegistry {
@@ -46,7 +47,13 @@ class TermRegistry {
         map[entry.id] = entry;
       }
       _byLocale[locale] = map;
-    } catch (_) {
+    } catch (e) {
+      // DEF325 — the empty map is the right *behaviour* (a lesson must render
+      // with plain-text terms rather than crash) and the wrong *silence*. A
+      // missing or malformed asset turns all 697 `<Term/>` refs across the
+      // corpus into prettified ids, permanently, and nothing anywhere said so.
+      debugPrint('glossary asset assets/glossary/terms.$locale.json '
+          'failed to load — every <Term/> will render as plain text: $e');
       _byLocale[locale] = const {};
     }
   }
