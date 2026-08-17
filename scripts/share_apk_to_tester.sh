@@ -77,6 +77,14 @@ if [[ ! -f "$APK" ]]; then
   exit 1
 fi
 
+# DEF306 — say what this artifact IS, in the run log, every time.
+#
+# The destination filename is deliberately NOT suffixed: the melehost rig reads
+# a fixed path and renaming it would leave the old APK in place beside a new
+# one, which is a worse version of the same confusion. So the identity is
+# stated here instead, and the installed app states its own gates under
+# Settings — the copy that survives being installed.
+echo "▶ artifact feature set: AMI_GAMES=${AMI_GAMES}$([[ "$AMI_GAMES" == "true" ]] || echo '  (no GAME tab in this APK)')"
 echo "▶ publishing APK → ${AMI_APK_SHARE_DEST}"
 if scp -o ConnectTimeout=10 "$APK" "$AMI_APK_SHARE_DEST"; then
   echo "✓ automated-tester APK is current: ${AMI_APK_SHARE_DEST}"

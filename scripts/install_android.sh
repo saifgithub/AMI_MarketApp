@@ -142,6 +142,24 @@ case "$GAMES_CHECK" in
   *) echo "⚠ could not read the APK to verify AMI_GAMES — gate UNVERIFIED." >&2 ;;
 esac
 
+# DEF306 — leave a NAMED copy beside the fixed path.
+#
+# `build/app/outputs/flutter-apk/app-release.apk` is one filename that three
+# producers write and none label: this script (games ON), share_apk_to_tester.sh
+# (games OFF unless the caller says otherwise) and a bare `flutter build apk`
+# (games OFF). The version comes from pubspec.yaml either way, so an APK copied
+# off the Mac carries no record of which one made it — that is what cost an
+# `adb dumpsys` and a `libapp.so` extraction to work out. The installed app now
+# states its own gates under Settings; this is the same fact on the artifact,
+# for the window before it is installed.
+APK_VERSION=$(awk '/^version:/{print $2; exit}' "${MOBILE_DIR}/pubspec.yaml")
+LABELLED_APK="${MOBILE_DIR}/build/app/outputs/flutter-apk/app-release-${APK_VERSION}-games.apk"
+if cp "$APK" "$LABELLED_APK" 2>/dev/null; then
+  echo "▶ labelled copy: $(basename "$LABELLED_APK")"
+else
+  echo "⚠ could not write the labelled copy — the APK at the shared path is unlabelled." >&2
+fi
+
 # CR079 (supersedes CR078's inline copy) — refresh the automated tester's APK on
 # melehost. The scp lives in one place, scripts/share_apk_to_tester.sh, shared
 # with the store-release path so the rig is refreshed on EVERY build. Guarded so

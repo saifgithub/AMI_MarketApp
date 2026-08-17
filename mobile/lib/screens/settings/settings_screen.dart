@@ -6,6 +6,8 @@
 /// agent prompt is composed (1-on-1, Coach, Room, Sim).
 library;
 
+import 'package:ami_trade/features/build_identity.dart';
+import 'package:ami_trade/features/games/games_gate.dart';
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/i18n/locale_provider.dart';
@@ -1235,7 +1237,10 @@ class _AppVersionChip extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: AmiSpacing.xs),
           child: Text(
-            'AMI Trade v$version',
+            // DEF306 — the version alone does not identify the binary: two
+            // artifacts called `0.1.0+94` differed by a whole tab. The gates
+            // ride along so `adb` is never the tool of first resort again.
+            buildIdentityLabel(version, gamesEnabled: kGamesEnabled),
             style: AmiTypography.caption.copyWith(color: AmiColors.slate600),
           ),
         ),
