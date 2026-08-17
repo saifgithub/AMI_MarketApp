@@ -50,6 +50,11 @@ python3 scripts/fundamentals_llm.py AAPL --think      # enable reasoning mode
 Two things from the live test runs are worth recording, because they show the guardrails working:
 
 1. **It caught a real data inconsistency unprompted.** On AAPL it noticed `totalDebt` from the summary endpoint ($84.34B) disagreed with the balance sheet ($98.66B), flagged the discrepancy explicitly, and reasoned about which source to trust — rather than silently picking one. That is the "flag anomalies rather than invent" instruction working as intended.
+
+   > **Correction, 2026-08-17:** this is yfinance's own current-quarter `.info` vs its own annual
+   > `.balance_sheet` — an annual-vs-quarter basis gap, not a genuine inconsistency. Same-period figures
+   > agree. The model's instinct to flag it and reason about trust was sound; "inconsistency" is the wrong
+   > label for the underlying cause. Evidence: [`VERIFICATION.md`](VERIFICATION.md).
 2. **Peer mode produced genuine cross-company reasoning**, not parallel summaries — e.g. surfacing Microsoft's capex jump from $28.11B (2023) to $115.95B, and NVIDIA's implied hyperscaler concentration risk, then ranking the three separately on *quality* vs *growth-adjusted valuation* with the tension between those rankings made explicit.
 
 The system prompt deliberately forbids price prediction and investment advice — it assesses financial condition and business quality only. That is both the honest scope and, per the prediction experiments, the only scope the data actually supports.
@@ -106,6 +111,13 @@ Post-fix, both handle the data correctly, with different characters:
 
 - **Qwen3.6** — faster (84s), more concise. Strong at *internal-consistency adjudication*: it resolved the cash conflict by checking that `$98.66B debt − $35.93B cash = $62.72B` matches the filed net-debt line, concluding OpenBB's cash figure is right and yfinance's `$62.40B` must use a broader definition.
 - **Nemotron 3.5 Lightning** — slower (148s), more thorough and better sourced. It correctly attributed the 148.75% ROE to buyback-driven equity compression, traced equity across all four periods ($62.15B → $56.95B → $73.73B), and explained *why* the sources differ (yfinance aggregates marketable securities with cash; OpenBB follows the filed GAAP taxonomy).
+
+> **Correction, 2026-08-17:** the $98.66B debt figure feeding this calculation is OpenBB's default annual
+> balance sheet (see the debt correction above) — the "$62.40B must use a broader definition" and
+> "sources differ" reasoning is built on a comparison that mixes annual and quarterly figures rather than
+> two disagreeing definitions. Both models' reasoning *process* still held up (internally consistent,
+> correctly traced) — it's the framing of *why* the numbers differed that needs revising. The cash figure
+> itself was not independently re-verified. See [`VERIFICATION.md`](VERIFICATION.md).
 
 **Recommendation:** Qwen for routine/batch runs, Nemotron when the analysis matters, both when you want cross-model agreement as a confidence signal.
 

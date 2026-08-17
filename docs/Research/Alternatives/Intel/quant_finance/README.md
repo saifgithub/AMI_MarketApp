@@ -40,6 +40,7 @@ The brief changed materially during the session, and that matters for reading th
 | [prompts_and_responses.md](prompts_and_responses.md) | **Verbatim** system/user prompts, the full data brief, and both models' complete responses |
 | [batch_and_results.md](batch_and_results.md) | Sector-stratified sampling, measured batch throughput, and the SQLite results store |
 | [vs_ami_fundamentals_analyst.md](vs_ami_fundamentals_analyst.md) | **Added post-archive.** Field-by-field comparison against AMI Trade's own production Fundamentals Analyst |
+| [VERIFICATION.md](VERIFICATION.md) | **Added post-archive.** Corrects the AAPL debt/cash "cross-source conflict" claim — it's an annual-vs-quarter basis artifact, not a data conflict |
 
 ## 3. Code
 
@@ -100,6 +101,11 @@ cross-verification (12 metrics compared across sources)
 ### Data sources — both, not either
 Neither is a superset. yfinance has business summary/sector/beta/FCF; OpenBB has the deep filed statements plus `ebitda_margin`. Using both enables **automatic cross-verification** — on AAPL it flags 2 real conflicts (debt $84.34B vs $98.66B; cash $62.40B vs $35.93B) across 12 checked metrics.
 
+> **Correction, 2026-08-17:** the debt figure is not a cross-source conflict — it's OpenBB's `balance()`
+> defaulting to `period="annual"` (no `period` arg was passed) compared against yfinance's `.info`, which
+> is current-quarter. Same-period figures agree almost exactly. Cash was not independently re-checked.
+> Full evidence: [`VERIFICATION.md`](VERIFICATION.md).
+
 OpenBB's `ratios` endpoint requires an FMP/Intrinio **API key**; `metrics`/`income`/`balance`/`cash`/`profile` all work key-free via the yfinance provider.
 
 ### Models
@@ -131,6 +137,11 @@ Originally I put "do not give investment advice" in the system prompt **without 
 | Driver | 35x P/E, PEG 2.49 unsupported by flat top-line | PEG implies ~14% growth vs 28.7% trailing — expectation gap |
 
 Both cited the **data discrepancy itself** as grounds for caution — cross-verification propagated into the investment call. Nemotron quantified it: the conflict obscures net debt by ~$40B ($21.9B vs $62.7B depending on source).
+
+> **Correction, 2026-08-17:** per the annual-vs-quarter mismatch above, this "discrepancy" the models
+> reasoned about was a basis artifact, not a genuine cross-source disagreement. The caution itself isn't
+> necessarily wrong to have flagged a basis gap — but calling it a data-quality conflict overstates what
+> was actually found. See [`VERIFICATION.md`](VERIFICATION.md).
 
 ---
 

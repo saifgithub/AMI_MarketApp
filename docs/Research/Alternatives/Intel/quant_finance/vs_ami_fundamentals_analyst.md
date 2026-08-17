@@ -11,12 +11,20 @@ Our side — `backend/app/services/fundamentals.py` (`fetch_live_fundamentals`, 
 
 ## Provider reality check
 
-Their script calls OpenBB with **`provider="yfinance"`** on every endpoint (`metrics`/`income`/`balance`/`cash`) —
-it is not an independent vendor, it's a second access path to Yahoo Finance data, layered through OpenBB's
-own parsing/schema. It still produces materially different numbers for nominally the same source: on AAPL,
-`totalDebt` $84.34B (raw `yfinance` `.info`) vs $98.66B (OpenBB's balance sheet), cash $62.40B vs $35.93B.
-That's genuine parsing/schema divergence between two code paths over the same underlying data, not a second
-data vendor in the FMP/Intrinio/Bloomberg sense.
+**Verified 2026-08-17** (challenged, then checked against source and a live test — see
+[`VERIFICATION.md`](VERIFICATION.md) for full evidence). Their script calls OpenBB with
+**`provider="yfinance"`** on every endpoint (`metrics`/`income`/`balance`/`cash`). This is confirmed to
+genuinely be the `yfinance` PyPI package, not an independent vendor: `openbb-yfinance`'s own dependency
+list requires `yfinance`, and every fetcher in `openbb_yfinance/models/*.py` does `from yfinance import
+Ticker` and calls a real `yfinance.Ticker` method — same installed package, same session.
+
+The AAPL numbers originally cited as evidence of "materially different numbers for nominally the same
+source" (`totalDebt` $84.34B vs $98.66B, cash $62.40B vs $35.93B) are **not parsing/schema divergence**.
+The debt figure is an annual-vs-quarter default-period mismatch: their script calls OpenBB's `balance()`
+with no `period` argument, silently defaulting to `period="annual"` (FY2025), while the raw-`yfinance` side
+reads `.info` (current quarter). Live re-test confirmed same-period figures agree almost exactly
+($84.34B/$84.71B on adjacent quarters vs $98.66B annual FY2025 — matching OpenBB's default output). The
+cash figure was not independently re-checked and shouldn't be cited either way without doing so.
 
 Our side is single-source: raw `yfinance` only (`.info` snapshot + `quarterly_income_stmt`/`quarterly_cashflow`).
 No OpenBB, no Alpha Vantage, no internal fundamentals DB in the live path (confirmed in code comment,
@@ -71,10 +79,12 @@ quirk is real, not a one-off parsing bug on either side.
 
 ## Worth considering
 
-1. **Cross-verification has no equivalent here.** CR104's live/not-available gate catches *missing* data,
-   not *disagreeing* data. A second independent read of the same metric (even against OpenBB's yfinance
-   provider, not a paid source) is a different signal — it caught the AAPL debt/cash conflict above, which
-   a single-source pipeline can't see regardless of how well the missing-field gating works.
+1. **Cross-verification has no equivalent here — as a structural point, not because of the AAPL example.**
+   CR104's live/not-available gate catches *missing* data, not *disagreeing* data — that distinction still
+   holds. But the AAPL debt/cash figures don't demonstrate it: per the correction above, that specific case
+   was a period-basis artifact in their own comparison code (annual vs quarter), not a genuine cross-source
+   disagreement a single-source pipeline would miss. A real example of cross-verification catching something
+   ours can't — one where the two sources are on the same basis and still disagree — hasn't been shown yet.
 2. **Full filed statements would close a stated gap.** The Fundamentals Analyst is currently instructed to
    refuse multi-period/line-item questions. OpenBB's `metrics`/`income`/`balance`/`cash` endpoints work
    key-free with the yfinance provider (no FMP/Intrinio key needed) and would answer them.
