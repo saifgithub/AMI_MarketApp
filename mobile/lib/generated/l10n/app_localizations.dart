@@ -6633,6 +6633,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ORDERS'**
   String get portfolioTabOrders;
+
+  /// DEF254 — retry CTA under the Portfolio's load-error message, shown ONLY when the failure is retryable (a timeout, a 5xx, an unreachable network). A rejected request renders the message alone and no button, because re-sending it would fail identically. Rendered as-is, already upper-case, same as onboardingTryAgain and roomRetry. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'TRY AGAIN'**
+  String get portfolioRetry;
 }
 
 class _AppLocalizationsDelegate

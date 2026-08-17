@@ -4049,4 +4049,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get portfolioTabOrders => 'ORDERS';
+
+  @override
+  String get portfolioRetry => 'TRY AGAIN';
 }

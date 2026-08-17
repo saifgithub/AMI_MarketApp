@@ -2125,5 +2125,6 @@
   "positionSell": "SELL",
   "positionPerLotDetail": "PER-LOT DETAIL",
   "positionUnprotected": "no stop set",
-  "portfolioTabOrders": "ORDERS"
+  "portfolioTabOrders": "ORDERS",
+  "portfolioRetry": "TRY AGAIN"
 }

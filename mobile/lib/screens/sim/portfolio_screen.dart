@@ -47,6 +47,7 @@ import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/theme/hex_clipper.dart';
 import 'package:ami_trade/widgets/empty_state.dart';
+import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:ami_trade/widgets/hex/hex_toast.dart';
 import 'package:ami_trade/widgets/portfolio_equity_chart.dart';
@@ -174,9 +175,31 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (state.error != null && state.portfolio == null) {
+      // DEF254 — the copy said "Try again." and there was nothing to tap; the
+      // user's only recourse was to leave the tab and come back. The button
+      // renders only when `errorRetryable` says the same request could
+      // succeed, so the sentence and the affordance are decided by one call
+      // (`isRetryable`, in `SimNotifier.refresh`) rather than two places.
+      final l = AppLocalizations.of(context);
       return Padding(
         padding: const EdgeInsets.all(AmiSpacing.l),
-        child: Center(child: Text(state.error!, style: AmiTypography.body)),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(state.error!,
+                  style: AmiTypography.body, textAlign: TextAlign.center),
+              if (state.errorRetryable) ...[
+                const SizedBox(height: AmiSpacing.l),
+                HexButton(
+                  label: l.portfolioRetry,
+                  onPressed: () =>
+                      ref.read(simNotifierProvider.notifier).refresh(),
+                ),
+              ],
+            ],
+          ),
+        ),
       );
     }
     final p = state.portfolio;

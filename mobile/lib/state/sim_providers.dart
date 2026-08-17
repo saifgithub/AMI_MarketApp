@@ -26,6 +26,7 @@ class SimState {
     this.submitting = false,
     this.lastSubmit,
     this.error,
+    this.errorRetryable = false,
   });
 
   final SimPortfolio? portfolio;
@@ -55,6 +56,22 @@ class SimState {
   final SimSubmitResult? lastSubmit;
   final String? error;
 
+  /// DEF254 — whether [error] is worth offering a retry over.
+  ///
+  /// `friendlyError` and `isRetryable` are two halves of one decision, and this
+  /// state used to keep only the first: the catch below stored copy ending in
+  /// *"Try again."* and the screen had nothing to tap, so the user's only
+  /// recourse was to leave the tab and come back. DEF164 extracted
+  /// `isRetryable` precisely so *"the copy and the retry affordance cannot
+  /// disagree"*; carrying the flag beside the message is what makes that true
+  /// on this path.
+  ///
+  /// **Set from `isRetryable(e)` on reads, and hard-`false` on writes.** A
+  /// timeout on `refresh()` costs a re-read; a timeout on `submit()` may have
+  /// placed the order server-side after the client gave up, and a retry
+  /// control over that is an invitation to double-fill.
+  final bool errorRetryable;
+
   List<SimRestingOrder> get liveRestingOrders =>
       [for (final o in restingOrders) if (o.isLive) o];
 
@@ -70,6 +87,7 @@ class SimState {
     bool? submitting,
     SimSubmitResult? lastSubmit,
     String? error,
+    bool? errorRetryable,
     bool clearLastSubmit = false,
     bool clearError = false,
   }) {
@@ -83,6 +101,11 @@ class SimState {
       submitting: submitting ?? this.submitting,
       lastSubmit: clearLastSubmit ? null : (lastSubmit ?? this.lastSubmit),
       error: clearError ? null : (error ?? this.error),
+      // Clearing the message clears the affordance with it — a retry control
+      // outliving the error it belonged to is the DEF151 shape (a promise the
+      // app cannot keep) in a new place.
+      errorRetryable:
+          clearError ? false : (errorRetryable ?? this.errorRetryable),
     );
   }
 }
@@ -111,9 +134,13 @@ class SimNotifier extends StateNotifier<SimState> {
         loading: false,
       );
     } catch (e) {
+      // DEF254 — the read path, and the only one that offers a retry. Both
+      // halves of the decision are made in this one call, so the sentence and
+      // the button cannot disagree.
       state = state.copyWith(
           loading: false,
-          error: friendlyError(e, action: 'load your portfolio'));
+          error: friendlyError(e, action: 'load your portfolio'),
+          errorRetryable: isRetryable(e));
     }
   }
 
@@ -201,8 +228,13 @@ class SimNotifier extends StateNotifier<SimState> {
       unawaited(_ref.read(watchlistNotifierProvider.notifier).refresh());
       return result;
     } catch (e) {
+      // DEF254 — no retry, deliberately. `receiveTimeout` means the POST *was*
+      // sent; the order may already exist server-side, and a manual trade
+      // carries no `verdict_ref` for the server to dedup on. A retry control
+      // here is a second order.
       state = state.copyWith(
-          error: friendlyError(e, action: 'place that trade'));
+          error: friendlyError(e, action: 'place that trade'),
+          errorRetryable: false);
       return null;
     } finally {
       // One place, both paths. A throw anywhere above used to leave the flag
@@ -232,8 +264,11 @@ class SimNotifier extends StateNotifier<SimState> {
       await refresh();
       return result;
     } catch (e) {
+      // DEF254 — no retry. A cancel that timed out may have landed, and the
+      // book is re-read on the next `refresh()` anyway.
       state = state.copyWith(
-          error: friendlyError(e, action: 'cancel that order'));
+          error: friendlyError(e, action: 'cancel that order'),
+          errorRetryable: false);
       return null;
     }
   }
@@ -245,8 +280,11 @@ class SimNotifier extends StateNotifier<SimState> {
       await api.simResetPortfolio(userId);
       await refresh();
     } catch (e) {
+      // DEF254 — no retry. Resetting wipes the portfolio; re-sending one that
+      // may already have succeeded is the one mutation here with no undo.
       state = state.copyWith(
-          error: friendlyError(e, action: 'reset your portfolio'));
+          error: friendlyError(e, action: 'reset your portfolio'),
+          errorRetryable: false);
     }
   }
 

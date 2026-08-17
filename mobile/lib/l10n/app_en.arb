@@ -5158,5 +5158,9 @@
   "portfolioTabOrders": "ORDERS",
   "@portfolioTabOrders": {
     "description": "CR188 slice 3 — the Portfolio tab holding outstanding resting orders (buys, and sells that would open a short). Replaces WATCHLIST in that slot; the watchlist itself became a section of HISTORY."
+  },
+  "portfolioRetry": "TRY AGAIN",
+  "@portfolioRetry": {
+    "description": "DEF254 — retry CTA under the Portfolio's load-error message, shown ONLY when the failure is retryable (a timeout, a 5xx, an unreachable network). A rejected request renders the message alone and no button, because re-sending it would fail identically. Rendered as-is, already upper-case, same as onboardingTryAgain and roomRetry. NEW key. retranslate:[ar,ms]"
   }
 }
