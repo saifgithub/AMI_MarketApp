@@ -222,7 +222,7 @@ def header_cell_count(reg: dict) -> int:
 _LEGACY_WRONG_WIDTH: dict[str, frozenset[str]] = {
     "DEF": frozenset({
         "DEF079", "DEF083", "DEF102", "DEF181", "DEF191", "DEF193", "DEF203",
-        "DEF212", "DEF224", "DEF230", "DEF231", "DEF235", "DEF236", "DEF237",
+        "DEF212", "DEF224", "DEF231", "DEF235", "DEF236", "DEF237",
         "DEF238", "DEF239", "DEF240", "DEF241", "DEF243", "DEF244", "DEF245",
         "DEF246", "DEF247", "DEF251", "DEF253", "DEF255", "DEF256", "DEF257",
         "DEF258", "DEF259", "DEF279", "DEF290", "DEF300",
