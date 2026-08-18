@@ -337,10 +337,15 @@ services:
       # a bug fix, not a gated feature).
       TICKER_REFERENCE_NASDAQ_LISTED_URL: ${TICKER_REFERENCE_NASDAQ_LISTED_URL:-https://www.nasdaqtrader.com/dynamic/symdir/nasdaqlisted.txt}
       TICKER_REFERENCE_NASDAQ_OTHER_URL: ${TICKER_REFERENCE_NASDAQ_OTHER_URL:-https://www.nasdaqtrader.com/dynamic/symdir/otherlisted.txt}
-      # Alpaca paper-trading (AT:R45, DEF044). Encryption key is optional —
-      # empty derives the cipher from SECRET_KEY, so at-rest encryption stays
-      # on; set it only to rotate independently.
+      # Alpaca paper-trading (AT:R45, DEF044/DEF182). The encryption key is
+      # REQUIRED outside env=local: empty used to derive the cipher from
+      # SECRET_KEY, which meant one secret both signed bearer tokens and
+      # protected broker secrets, and rotating it silently orphaned every
+      # ciphertext row. encrypt_secret now refuses rather than fall back.
       ALPACA_ENCRYPTION_KEY: ${ALPACA_ENCRYPTION_KEY:-}
+      # DEF182 — set ONLY while rotating the key above; reads fall back to
+      # it so a rotation breaks no row mid-swap. Clear it when done.
+      ALPACA_ENCRYPTION_KEY_PREVIOUS: ${ALPACA_ENCRYPTION_KEY_PREVIOUS:-}
       ALPACA_PAPER_BASE_URL: ${ALPACA_PAPER_BASE_URL:-https://paper-api.alpaca.markets}
       ALPACA_OAUTH_TOKEN_URL: ${ALPACA_OAUTH_TOKEN_URL:-https://api.alpaca.markets/oauth/token}
       ALPACA_REDIRECT_URI: ${ALPACA_REDIRECT_URI:-amitrade://alpaca/callback}

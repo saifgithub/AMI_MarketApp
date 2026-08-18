@@ -115,6 +115,7 @@ real thing. The less the system knows, the more assured it sounds.
 | **CR038** | no macro/Fed feed exists | 62/88 macro citations asserted as fact across all 12 agents | none |
 | **DEF123** | yfinance lacks a field (loss-making name, no `trailingPE`) | `_profile_for_ticker` pre-filled an rng-seeded value BEFORE the live fetch; a partial `dict.update` overlay left it in place while `data_source` flipped to `"yfinance_live"` for the whole profile — 178/842 (21.1%, 36 tickers) live-declared Room prompts carried a fabricated P/E, four agents rationalised it as real | the disclosure header itself, which said LIVE |
 | **DEF135** | the background audit watcher process died | the audit queue stopped being served for ~10 h; every board still read healthy, because a dead watcher and an empty queue are byte-identical from outside — the checkpoint memo recorded "queue is EMPTY", true when written and wrong 2 h later, and every later report inherited it | none: no lane, no exit-3 timeout, no error, no non-zero status anyone saw |
+| **DEF182** | `SECRET_KEY` rotated, or `ALPACA_ENCRYPTION_KEY` changed without a rollover | `decrypt_secret` returned the **ciphertext itself** on `InvalidToken` or a missing key, so the Alpaca client sent `gAAAAA…` as an API key; and with the dedicated key unset — the default, and the state Alpha ran in — the cipher key was silently derived from `SECRET_KEY`, so one secret both signed bearer tokens and protected broker secrets | a `warning` log line, and only at the moment of failure; the app then behaved as though the user's credential were simply wrong |
 
 **The invariant.** *Degrade loudly, never confidently.* A degraded path must be visible to
 whoever depends on it — the user (honest copy), the operator (a distinct signal, not a log line
@@ -146,6 +147,18 @@ in a stream nobody tails), or the caller (an explicit status).
   fires on a *stale* stamp, never on an *absent* one, because a per-item spawned auditor never
   watches at all and alarming on that would be permanently red. **A loud signal that is always on
   is the same as no signal** — this pattern's own lesson applied to its own guard.
+- DEF182 → **`backend/tests/unit/test_secret_crypto.py`** (15 tests). The fix is the direction of the
+  fallback, exactly as lesson 2 says: `decrypt_secret` now **raises** rather than returning ciphertext,
+  and `encrypt_secret` **raises** rather than reusing `SECRET_KEY` or storing plaintext. Both are
+  mutation-proven — restoring `return stored` reds four tests, and neutering the strict-env branch reds
+  the fifth. Note where the loudness stops: `EncryptedString.process_result_value` catches the raise and
+  yields `None`, because these columns hang off `User`, which `get_current_user` loads on **every**
+  authenticated request, so a raise reaching the caller would convert one unreadable credential into a
+  total account lockout. `None` is the honest degradation (it is precisely "not linked", which every
+  call site already handles) and the ERROR log carries the diagnosis. *Loud where an operator reads it,
+  safe where a user lives* — the alternative, a 500 on every request, is this pattern's own "a loud
+  signal that is always on is the same as no signal" from the other side.
+
 - CR037 / CR038 → **no guard yet; both undecided.** The measurement that would enforce them
   exists: the CR035 harness transcript audit (unhedged-assertion count over a ≥30-run batch).
 - DEF123 → **`test_no_protected_numeric_field_in_the_unconditional_baseline_dict` +

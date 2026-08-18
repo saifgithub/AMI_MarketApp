@@ -38,7 +38,12 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.secret_crypto import decrypt_secret, encrypt_secret
+from app.core.logging import logger
+from app.core.secret_crypto import (
+    SecretDecryptionError,
+    decrypt_secret,
+    encrypt_secret,
+)
 from app.db.base import Base, JsonB, Uuid
 
 
@@ -63,7 +68,32 @@ class EncryptedString(TypeDecorator):
         return encrypt_secret(value)
 
     def process_result_value(self, value: Optional[str], dialect) -> Optional[str]:
-        return decrypt_secret(value)
+        """DEF182 — undecryptable ciphertext reads as None, loudly, never as
+        itself.
+
+        `decrypt_secret` raises rather than handing back ciphertext dressed as
+        plaintext (which is how `gAAAAA…` ends up being sent to Alpaca as an
+        API key). It is caught *here* rather than allowed to propagate because
+        these columns hang off `User`, which `get_current_user` loads on every
+        authenticated request — so an unopenable credential would otherwise
+        500 the entire app for that user, turning a broken integration into a
+        total account lockout.
+
+        `None` is the honest degradation: it is exactly "not linked", and every
+        call site already handles it — `_require_linked` answers 409
+        `alpaca_not_linked`, and the agent/room prompt builders omit the Alpaca
+        overlay. The ERROR log carries the diagnosis; the product stays up.
+        """
+        try:
+            return decrypt_secret(value)
+        except SecretDecryptionError:
+            logger.error(
+                "encrypted_column_unreadable",
+                detail="stored ciphertext opened by no configured key — the "
+                       "value reads as None (unlinked) until the key is "
+                       "restored via ALPACA_ENCRYPTION_KEY_PREVIOUS (DEF182)",
+            )
+            return None
 
 
 class User(Base):

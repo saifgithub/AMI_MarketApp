@@ -576,10 +576,19 @@ class Settings(BaseSettings):
     # ISO date, e.g. "2027-02-07". Empty = legacy proof refused.
     auth_legacy_rebootstrap_until: str = "2027-02-07"
 
-    # DEF044 — at-rest encryption for Alpaca brokerage creds. Optional: when
-    # empty the cipher key is derived from SECRET_KEY, so encryption is active
-    # out-of-box. Set a dedicated urlsafe secret here to rotate independently.
+    # DEF044/DEF182 — at-rest encryption for Alpaca brokerage creds.
+    # REQUIRED outside env=local: `secret_crypto.encrypt_secret` refuses to
+    # store a credential without it rather than falling back to SECRET_KEY.
+    # That fallback was the defect — one secret signing bearer tokens AND
+    # protecting broker secrets means rotating SECRET_KEY silently orphans
+    # every ciphertext row. Generate: openssl rand -hex 32
     alpaca_encryption_key: str = ""
+
+    # DEF182 — the previous ALPACA_ENCRYPTION_KEY, set ONLY during a rollover.
+    # Reads try the current key first and fall back to this one, so a rotation
+    # does not break rows at the instant of the swap. Clear it once every row
+    # has been re-written under the new key. Empty is the steady state.
+    alpaca_encryption_key_previous: str = ""
 
     # Admin back-office secret (AT:R27). Static bearer for Alpha single-operator
     # access. All /v1/admin/* routes require this. Empty = admin disabled.
