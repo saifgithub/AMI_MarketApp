@@ -21,9 +21,15 @@ compares the client against the schema *in this repo*; DEF195 exists because a
 client can be in parity with `main` and still ahead of what is **deployed** on
 Alpha — that was the `0.1.0+61` near-miss exactly. Only
 `check_release_schema_parity.py --base-url <live host>`, run at release time
-against the actually-promoted backend, closes that. Wiring THAT into
-`scripts/build_*.sh` is still owed (see the DEF195 row) and is blocked on the
-CR084-ALPHA edits to those scripts landing.
+against the actually-promoted backend, closes that.
+
+**That wiring landed 2026-08-18 (AT:R70).** All three release scripts —
+`build_testflight.sh`, `build_playstore.sh`, `publish_playstore.sh` — now call
+the gate against `${AMI_API_URL_ALPHA}`, the URL each one bakes into its own
+binary, as a blocking preflight placed ABOVE the pubspec bump so a refusal
+costs no build number (DEF279). `test_def195_wiring_deferral_expires.py`, the
+expiring signed deferral that stood in for the wiring, was deleted in the same
+commit per its own closing instruction.
 """
 
 from __future__ import annotations
@@ -157,3 +163,56 @@ def test_the_gate_script_is_executable_and_self_documents():
     )
     assert r.returncode == 0
     assert "--openapi-file" in r.stdout
+
+
+# ── 3. DEF330 — the gate must be able to reach the host it is wired against ──
+
+
+def test_the_fetch_sends_an_explicit_user_agent():
+    """DEF330. Alpha's public hostname is behind Cloudflare, which 403s the
+    default `Python-urllib/3.x` UA. The gate was proven against the LAN default
+    (no Cloudflare) and passed; against `AMI_API_URL_ALPHA` — the only host a
+    store build actually points at, and therefore the only host DEF195's wiring
+    can meaningfully check — it returned 403 on every call.
+
+    That is worse than it sounds. Fail-closed means it is a false ALARM, not a
+    false pass, so nothing would have shipped wrongly. But a release gate that
+    fires on *every* release is precisely how an operator learns that firing
+    does not mean stop — DEF277, and the same shape as the `/v1/llm/status`
+    smoke check that returned 403 on every healthy deploy until AT:R66.
+
+    Asserted at the request object rather than over the network, so it holds in
+    CI and offline; the live 200 was measured by hand on 2026-08-18.
+    """
+    import urllib.request as _u
+
+    import check_release_schema_parity as gate
+
+    seen = {}
+
+    class _Resp:
+        status = 200
+        def read(self): return b'{"info":{"version":"0"},"components":{"schemas":{}}}'
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+
+    def _fake_urlopen(req, timeout=None):
+        seen["req"] = req
+        return _Resp()
+
+    original = _u.urlopen
+    _u.urlopen = _fake_urlopen
+    try:
+        gate.load_openapi("https://api-alpha.agenticmarketintel.ai", None)
+    finally:
+        _u.urlopen = original
+
+    req = seen.get("req")
+    assert req is not None, "load_openapi did not call urlopen"
+    ua = req.get_header("User-agent")
+    assert ua, (
+        "the fetch sent no User-Agent, so urllib supplies `Python-urllib/3.x` "
+        "and Cloudflare 403s it — the gate cannot check the public hostname "
+        "that every store build is pointed at (DEF330)"
+    )
+    assert not ua.lower().startswith("python-urllib"), ua

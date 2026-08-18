@@ -187,6 +187,49 @@ if [[ -z "$GOOGLE_OAUTH_WEB_CLIENT_ID" ]]; then
   echo ""
 fi
 
+# DEF195 — RELEASE SCHEMA PARITY. Blocking, and deliberately above the bump.
+#
+# `0.1.0+61` was uploading to TestFlight with a settings screen that PATCHes
+# seven Mandate fields the DEPLOYED backend did not have. Nothing would have
+# crashed: the screen loads, the PATCH returns 200, and pydantic's
+# `extra='ignore'` drops every unknown key — a control that looks authoritative
+# and writes nothing, which is DEF129 exactly, reintroduced by nothing but
+# DEPLOYMENT ORDER. It was caught because someone wrote "nothing promoted yet"
+# into an audit brief and then checked the claim. There was no gate.
+#
+# The rule this makes mechanical instead of remembered (CR038 — a checklist is
+# not a control):
+#
+#     BACKEND PROMOTES FIRST, CLIENT SHIPS SECOND.
+#
+# Checked against ${AMI_API_URL_ALPHA} and nothing else, because that is the URL
+# this very build bakes in via --dart-define below. Not the gate's LAN default,
+# and not whatever `main` defines — the whole defect is that a client can be in
+# parity with `main` and still ahead of what is promoted.
+#
+# It exits 1 when it CANNOT reach the backend, on purpose (CR040): a parity
+# check that passes when it could not check reports safety it never verified.
+echo "▶ release schema parity vs ${AMI_API_URL_ALPHA}  (DEF195)"
+if ! python3 "${PROJECT_ROOT}/scripts/check_release_schema_parity.py" \
+       --base-url "${AMI_API_URL_ALPHA}"; then
+  cat >&2 <<EOF
+
+✗ RELEASE BLOCKED — the deployed backend cannot serve this client (DEF195).
+
+  The keys listed above would be PATCHed by this build and silently dropped by
+  ${AMI_API_URL_ALPHA}. Every write would return 200 and change nothing.
+
+  Backend promotes FIRST, client ships SECOND. Promote, then re-run this build:
+
+      /promote-to-alpha
+
+  If the gate could not REACH the backend, that is also a block, not a skip —
+  fix the host or the URL. There is no flag to pass this; a release gate you
+  can wave through is the checklist it replaced.
+EOF
+  exit 1
+fi
+
 # ORDER IS LOAD-BEARING (DEF279): every refusal above runs BEFORE the
 # pubspec bump below. It used to run after, so a refused build had
 # already bumped and COMMITTED a build number that was never uploaded —

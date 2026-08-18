@@ -80,6 +80,39 @@ if [[ ! -f "$SUPPLY_JSON_KEY" ]]; then
   exit 1
 fi
 
+# DEF195 — RELEASE SCHEMA PARITY, run here as well as inside
+# build_playstore.sh, and the duplication is the point: this is the only script
+# that UPLOADS, and the check costs one HTTP GET against a build that costs
+# several minutes. Failing here means nothing was built, nothing was bumped and
+# no build number was burned (DEF279).
+#
+# `0.1.0+61` nearly shipped a settings screen PATCHing seven Mandate fields the
+# deployed backend did not have — every write would have returned 200 and been
+# silently dropped by pydantic's `extra='ignore'`. The rule, made mechanical:
+#
+#     BACKEND PROMOTES FIRST, CLIENT SHIPS SECOND.
+#
+# Same default as build_playstore.sh, since that is the URL it will bake in.
+: "${AMI_API_URL_ALPHA:=https://api-alpha.agenticmarketintel.ai}"
+export AMI_API_URL_ALPHA
+echo "▶ release schema parity vs ${AMI_API_URL_ALPHA}  (DEF195)"
+if ! python3 "${PROJECT_ROOT}/scripts/check_release_schema_parity.py" \
+       --base-url "${AMI_API_URL_ALPHA}"; then
+  cat >&2 <<EOF
+
+✗ PUBLISH BLOCKED — the deployed backend cannot serve this client (DEF195).
+
+  Nothing was built and no build number was spent. Promote the backend, then
+  re-run:
+
+      /promote-to-alpha
+
+  A gate that could not reach the backend blocks too — that is not a skip
+  (CR040).
+EOF
+  exit 1
+fi
+
 # 1. build the signed AAB (bump + flutter build appbundle)
 "${PROJECT_ROOT}/scripts/build_playstore.sh" "${BUILD_ARGS[@]}"
 

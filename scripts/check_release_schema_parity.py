@@ -54,6 +54,12 @@ REPO = Path(__file__).resolve().parents[1]
 
 DEFAULT_BASE_URL = "http://192.168.20.59:8000"   # melehost over the LAN; the Mac is on it
 
+#: Sent on every fetch. See DEF330 in `load_openapi` — without it Cloudflare
+#: refuses the public hostname and the gate cannot check the host it exists to
+#: check. Identifies the caller in the edge logs rather than pretending to be a
+#: browser.
+_USER_AGENT = "ami-release-schema-parity-gate/1.0 (+DEF195)"
+
 # Where the client's PATCH body is actually built. Each entry is (path, regex, what it captures).
 # Keep this list next to the code it scrapes — if the settings screen moves, this moves with it.
 _CLIENT_SOURCES = [
@@ -118,8 +124,20 @@ def load_openapi(base_url: str | None, openapi_file: str | None) -> dict:
             die(f"--openapi-file not found: {openapi_file}")
         return json.loads(p.read_text(encoding="utf-8"))
     url = f"{base_url.rstrip('/')}/openapi.json"
+    # DEF330 — an EXPLICIT User-Agent, and it is load-bearing, not politeness.
+    # Alpha's public hostname sits behind Cloudflare, which 403s the default
+    # `Python-urllib/3.x` UA as a bot. This gate was proven against the LAN
+    # default (http://192.168.20.59:8000, no Cloudflare in front of it) and so
+    # exited 0; against the ONLY host a store build actually points at
+    # (AMI_API_URL_ALPHA = https://api-alpha.agenticmarketintel.ai) it returned
+    # 403 on every call and could never have passed. Wiring it in that state
+    # would have produced a release gate that fires on every release — which
+    # teaches the operator that firing does not mean stop (DEF277, and the same
+    # shape as /v1/llm/status in the promotion protocol). Measured 2026-08-18:
+    # no UA -> 403, any UA -> 200.
+    req = urllib.request.Request(url, headers={"User-Agent": _USER_AGENT})
     try:
-        with urllib.request.urlopen(url, timeout=15) as r:      # noqa: S310 — our own host
+        with urllib.request.urlopen(req, timeout=15) as r:      # noqa: S310 — our own host
             if r.status != 200:
                 die(f"{url} returned HTTP {r.status} — cannot verify parity, refusing to pass")
             return json.loads(r.read().decode("utf-8"))
