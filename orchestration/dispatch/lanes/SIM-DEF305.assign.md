@@ -180,3 +180,68 @@ This is money math on live ledgers; a confident wrong answer here is worse than 
 
 ASSIGNED: coder.api round 1
 DISPATCH: OPEN
+
+---
+
+## Architect's answers — 2026-08-18 (AT:R70)
+
+Both open questions above are answered here so the lane does not have to stall on them.
+Neither changes the lane's scope: **do not add a migration, do not touch the dependency pin.**
+
+### 6. `price_source` on `sim_trades` — YES, but as its own CR, not here
+
+Filed as **CR194**. The lane still does exactly what §6 says: state the cost in the hand-off,
+build nothing.
+
+The reasoning, because the obvious counter-argument is wrong in an interesting way. Once this
+lane's guard is in, a `mock_walk` price can never book a fill — so a provenance column would
+read `yfinance` on essentially every row forever, and *a column whose value is constant is not
+evidence*. That is the DEF123 lesson (labelling the fabrication does not work) and it is a real
+objection.
+
+It fails for one reason: **the discriminator that actually solved this incident was an accident,
+and it is one edit from disappearing.** The row was diagnosed by eye because `_PriceWalk.price_at`
+does `round(v, 2)` while the column is `Numeric(12,4)`, so every fabricated close stored as
+`.XX00` and every real one filled all four decimals. That is what separated the nine fabricated
+closes from the one legitimate `TSLA` stop. Nobody designed it, nothing tests it, and it breaks
+the day someone changes that rounding or a genuine quote lands on a round cent. Relying on it is
+relying on a coincidence holding.
+
+So the column is not there to catch the fabrication the guard already prevents — it is there so
+that **a future regression of the guard is a one-query answer instead of an eyeball exercise**,
+which is the same argument that makes an audit trail worth keeping after you have fixed the bug.
+
+Shape, when CR194 builds it:
+
+- `sim_trades.price_source` and `.close_price_source`, **no server_default and no backfill** —
+  same rule as CR141's usage columns. A row written by a site that forgot to set it must read
+  NULL, because "we do not know" and "it was a real quote" are different facts and only one of
+  them is a measurement (CR040). Do **not** default it to `'yfinance'`.
+- Existing rows stay NULL. All 111 of them (34 closed) predate the column; a backfill would be
+  inventing provenance for exactly the rows whose provenance is in question.
+- Cost is small and was measured, not estimated: 111 rows, one Alembic revision, two nullable
+  columns, and a write at each site that creates or closes a trade row.
+
+### The yfinance fault — measured, still live, and NOT a pin mismatch
+
+Answered here so the lane does not spend time on it. All figures measured on Alpha 2026-08-18:
+
+- `'PriceHistory' object has no attribute '_dividends'` is **still firing: 23 occurrences in the
+  last 24 h**, all of them that same error. The trigger this defect rides on has not gone away.
+- **Not a pin mismatch.** `backend/pyproject.toml:37` is `yfinance>=1.0` — no upper bound. The
+  container simply built with **1.3.0**; PyPI's latest is **1.6.0**. Nothing pinned us back.
+- Whether 1.6.0 fixes it is **untested and unclaimed.** A dependency bump has its own blast radius
+  (it is the library every quote flows through) and it belongs in its own lane with its own
+  verification. Do not bump it in this one.
+
+The important consequence for scoping: because the fault is live and ongoing, the guard this lane
+adds will **fire in production, repeatedly, from day one**. It is not a defensive check against a
+hypothetical. Design the user-facing message and the log volume for something that happens ~23
+times a day, not for something that never happens.
+
+### Standing state, so nobody has to re-derive it
+
+`SIM_BRACKET_SWEEP_ENABLED=false` on melehost, verified 2026-08-18 — **82 suppressed sweeps in the
+last 24 h.** Stops, targets and margin calls have not fired on Alpha since 2026-08-14. That is the
+correct trade while the fix is pending, and it is a cost that accrues every day this lane sits
+unassigned.
