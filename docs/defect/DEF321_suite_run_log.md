@@ -29,7 +29,14 @@ Read the `VERDICT:` line from `scripts/promotion/preflight_suite.sh`, never pyte
 | 2026-08-17 | PASS | 4352 / 0 / 3 | recorded in that session's checkpoint memo |
 | 2026-08-17 | PASS | 4356 / 0 / 3 | recorded in that session's checkpoint memo |
 | 2026-08-18 | PASS | 4354 / 0 / 3 | AT:R70, at commit `9990289f` (DEF195 + DEF330) |
+| 2026-08-18 | (suite red, **DEF321 test green**) | 4363 / 1 / 3 | the one failure was `test_registers_no_drift::test_registers_match_their_row_files`, collected mid-edit while register rows were being rewritten — my own dirty tree, DEF159's exact point, unrelated to DEF321. Logged rather than dropped: the reputation test *ran and passed*, which is the fact this table tracks. Confirmed green on the committed tree immediately after. |
+| 2026-08-18 | PASS | 4376 / 0 / 3 | AT:R70, committed tree at `0173b43f` |
 
-**Status: 3 recorded runs across 2 distinct days.** The bar is a week. Earliest a close could be
-argued on this evidence is **2026-08-24**, and only if every run in between is green and they are
-genuinely spread across the days rather than clustered in one session.
+**Status: 5 recorded runs across 2 distinct days — and 4 of the 5 are from a single session,**
+which is the weakness in this evidence and is stated rather than averaged away. Clustered runs
+test one process-and-working-tree state repeatedly; the bar is a week because the trigger
+(DEF324: a gitignored `backend/.local.db` reachable only through one teardown window) needs
+different sessions, different orderings and different dirty states to be exercised at all.
+
+Earliest a close could be argued on this evidence is **2026-08-24**, and only if the runs in
+between are genuinely spread across days rather than clustered again.
