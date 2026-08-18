@@ -109,17 +109,28 @@ reference other 2026 papers cite against.
   last tested it:**
   1. Fastino's finance LoRA derivative (§1) gives it real, honestly-reported numbers on FinQA/TAT-QA/
      SEC-Num/FinEntity/BizFinBench/ConvFinQA.
-  2. NVIDIA shipped an **official NVFP4 quantization built specifically for DGX Spark**:
-     `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark` (uploaded 2026-08-05, license
-     `openmdw-1.1`, built via NVIDIA Model Optimizer per arXiv 2607.05147). Confirmed via HF API
-     (cardData + tags: `nvidia, ModelOpt, Nemotron-3.5-Lightning, latent-moe, mtp, DSpark`) — **named and
-     tuned for AMI's exact hardware.** This directly solves the gap that killed the Agents-A1
-     recommendation last week (Agents-A1 has no official NVFP4 release, only unofficial community quants).
+  2. NVIDIA shipped an **official NVFP4 quantization of the full base model**:
+     `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4` — built via NVIDIA Model Optimizer per arXiv
+     2607.05147, `NemotronHForCausalLM` architecture, 52 hidden layers, matching the BF16 base.
+
+> **Correction, 2026-08-18:** this section originally named
+> `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark` (note the `-DSpark` suffix) as "the official
+> NVFP4 quant... named and tuned for AMI's exact hardware." **That was wrong**, caught during a follow-up
+> hands-on pilot attempt: the `-DSpark` repo is not a deployable quantized model at all. Its own config
+> shows `architectures: ["Qwen3DSparkModel"]`, 6 hidden layers, and its actual `model.safetensors` file is
+> 1.35GB (verified via the file's own size header, not just repo metadata) — a small speculative-decoding
+> **draft/assist** checkpoint meant to pair alongside the real model for faster serving, not a replacement
+> for it. Its own README states this plainly: *"intended for DSpark-assisted serving... rather than as a
+> standalone target model checkpoint."* The artifact actually meant here is the sibling repo without
+> `-DSpark` in the name — corrected above. Full writeup, including why this still doesn't close the
+> Agents-A1 gap as cleanly as first claimed (nobody has quantized the *finance-tuned* merged checkpoint
+> yet — that's real open work, not a solved problem): [`05_nemotron_finance_pilot_brief.md`](05_nemotron_finance_pilot_brief.md).
 
 **Bottom line for §4**: no new finance-specific model has emerged that's a *better* self-hostable candidate
-than what's already in AMI's research trail. The real development is that Nemotron-3.5-Lightning now has
-(a) a finance-tuned LoRA with honest frontier-model comparisons and (b) an official DGX-Spark-optimized
-quant — both make it a stronger candidate for a real pilot, not a new competitor to replace it with.
+than what's already in AMI's research trail. Nemotron-3.5-Lightning now has a finance-tuned LoRA (merged,
+BF16 only) with honest frontier-model comparisons, and NVIDIA has an official NVFP4 quant of the base —
+but nobody has combined the two yet. That combination, not either piece alone, is the actual pilot worth
+running — see [05](05_nemotron_finance_pilot_brief.md) for the scoped brief.
 
 ## 5. Training-methodology research (new, even without a shipped model)
 

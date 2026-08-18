@@ -22,6 +22,7 @@ This picks up from two things already on record:
 | [02_fundamentals_and_industry.md](02_fundamentals_and_industry.md) | LLM-based filing/fundamentals analysis research, and industry publications — explicitly tagged real research vs. marketing content |
 | [03_frameworks_and_benchmarks.md](03_frameworks_and_benchmarks.md) | Multi-agent trading frameworks (TradingAgents follow-ups, competitors) and new 2026 tool-use/agentic finance benchmarks |
 | [04_new_models_and_training.md](04_new_models_and_training.md) | New open-weight finance-tuned models, training datasets, training-methodology papers, and what's actually deployable on AMI's own GB10 hardware |
+| [05_nemotron_finance_pilot_brief.md](05_nemotron_finance_pilot_brief.md) | **Added 2026-08-18.** Scoped pilot brief for the LLM team — includes a correction to item 4 below (the "DSpark" quant is a speculative-decoding draft model, not deployable itself) |
 
 ## Headline findings
 
@@ -52,14 +53,15 @@ concrete warning about judge-reward gaming ([04](04_new_models_and_training.md) 
 why AMI's own safety floor is structural rather than prompt-based (`CLAUDE.md`: *"prompt instructions are
 not controls"*).
 
-**4. One genuinely actionable development for AMI's own infra.** NVIDIA shipped an official NVFP4
-quantization built specifically for DGX Spark
-(`nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4-DSpark`, 2026-08-05) for the exact Nemotron model AMI
-already dual-model-tested against Qwen3.6. A third party (Fastino) also shipped a finance-tuned LoRA on the
-same base with honest, frontier-model-compared benchmark numbers (not just finance-baseline comparisons).
-Together these close the gap that made `InternScience/Agents-A1` — evaluated last week — a weak
-recommendation (no official low-bit quant, zero financial-benchmark presence anywhere). See
-[04](04_new_models_and_training.md) §1, §4.
+**4. One genuinely actionable development for AMI's own infra — with a correction.** NVIDIA shipped an
+official NVFP4 quantization of the exact Nemotron base model AMI already dual-model-tested against Qwen3.6
+(`nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4` — **not** the `-DSpark`-suffixed repo originally
+cited here, which turned out to be a 1.35GB speculative-decoding draft model, not a deployable quant; see
+the correction in [04](04_new_models_and_training.md) §4). A third party (Fastino) also shipped a
+finance-tuned LoRA on the same base with honest, frontier-model-compared benchmark numbers — but merged
+onto the *unquantized* BF16 base, not the NVFP4 one. Nobody has combined the two yet, so this isn't a
+solved gap — it's a scoped, real pilot. Brief for the LLM team:
+[05_nemotron_finance_pilot_brief.md](05_nemotron_finance_pilot_brief.md).
 
 **5. Structured data access matters more than model choice for retrieval accuracy** — FinRetrieval found
 Claude Opus swinging from 19.8% (web search) to 90.8% (structured API) on the same retrieval task; a
