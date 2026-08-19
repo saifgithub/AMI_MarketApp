@@ -83,3 +83,28 @@ Saiful's choice above.
   and the eval-script bug above is fixed before any safety-floor claim is trusted.
 - If shelving: this CR + its ported research stands as the record of where the
   initiative left off, so a future resume doesn't start from zero.
+
+---
+
+## Revived and resolved 2026-08-19 (AT:R70) — decision: GO
+
+The shelve condition ("revisit only if paired with dedicated hardware or a maintenance-window
+protocol") is met: Saiful — *the GB10 can be made available for training* (possibly an **offsite**
+unit, in which case ami-host is never occupied at all). This CR closes **done** as the decision
+record; execution lives in [CR196](../CR196_finance_tuned_model_pilot/CR196.md).
+
+What changed since 2026-07-12, measured on ami-host 2026-08-19:
+
+- **Serving co-residency is now routine** on the box (Qwen3.6 `:8000` + BGE-M3 `:8012` today;
+  Falcon-H1 GPTQ ran co-resident earlier per the Manager's `PORT_ALLOCATION.md`). The body's
+  "90GB + 85GB > 128GB" math was about *training* vs serving and still holds for training —
+  it was never a bar on serving a second model. Free memory with production up: 45Gi of 121Gi.
+- **Corrections to the body:** line 19's "`ami-llm` (Gemma 4 31B)" is stale — the slot has served
+  `RedHatAI/Qwen3.6-35B-A3B-NVFP4` since 2026-06-11. The 13-per-agent-LoRA framing is superseded:
+  the revived target is **one finance-tuned model** — LoRA on the Fastino-Nemotron-3.5-Lightning
+  merged BF16 checkpoint (Saiful's base decision, 2026-08-19) — not thirteen adapters.
+- **Still true and carried forward:** the `04_eval/mandate_compliance_eval.py` bug this CR recorded
+  (`ProposedTrade(is_buy=…)` vs the read-only-property schema) remains unfixed; the track is now
+  resuming, so the one-line repair (`side=Side.BUY if is_buy else Side.SELL`) is CR196 Phase 4
+  work, and no safety-floor claim is trusted until it lands. The salvaged `02_data/recipes/` are
+  load-bearing again — CR196 §2 recipe 7 regenerates them against current schemas.
