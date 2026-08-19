@@ -13,6 +13,8 @@ Technical analysis. Patterns, indicators, momentum, volume, support and resistan
 
 ## Inputs
 
+This list is what the sheet *can* carry, not a guarantee of what arrived. The sheet itself states what it holds for this run — where it marks a field not available, or names a set as not reconstructable, that statement wins over this list. Never supply a figure this list promises and the sheet did not.
+
 - Derived scalars computed from daily price history (yfinance OHLCV) when live
   market data is enabled. You do not receive the bars themselves — the history
   is consumed to compute the figures below and is not passed on, so any claim

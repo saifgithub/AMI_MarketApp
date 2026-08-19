@@ -23,7 +23,26 @@ REVENUE = (
 )
 NET_INCOME = ("NetIncomeLoss",)
 OPERATING_CASH_FLOW = ("NetCashProvidedByUsedInOperatingActivities",)
-CAPEX = ("PaymentsToAcquirePropertyPlantAndEquipment",)
+CAPEX = (
+    "PaymentsToAcquirePropertyPlantAndEquipment",
+    # Same tag-variant lesson DEPRECIATION_AMORTIZATION already learned on the
+    # pilot corpus: a concept absent under one spelling is usually present
+    # under another, and every capex miss costs both fcf_yield and free_cash_flow.
+    "PaymentsToAcquireProductiveAssets",
+    "PaymentsToAcquireOtherPropertyPlantAndEquipment",
+)
+GROSS_PROFIT = ("GrossProfit",)
+# Fallback route to gross profit when GrossProfit itself is not tagged:
+# revenue − cost of revenue. Filers vary on which spelling they use.
+COST_OF_REVENUE = (
+    "CostOfGoodsAndServicesSold",
+    "CostOfRevenue",
+    "CostOfGoodsSold",
+)
+BUYBACKS = (
+    "PaymentsForRepurchaseOfCommonStock",
+    "PaymentsForRepurchaseOfEquity",
+)
 OPERATING_INCOME = ("OperatingIncomeLoss",)
 DEPRECIATION_AMORTIZATION = (
     "DepreciationDepletionAndAmortization",
@@ -45,6 +64,18 @@ CASH_ANCHOR = ("CashAndCashEquivalentsAtCarryingValue",)
 CASH_OPTIONAL_ADD = ("ShortTermInvestments",)
 DEBT_ANCHOR = ("LongTermDebtNoncurrent", "LongTermDebt")
 DEBT_OPTIONAL_ADD = ("LongTermDebtCurrent", "DebtCurrent", "ShortTermBorrowings")
+EQUITY = (
+    "StockholdersEquity",
+    "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+)
+ASSETS = ("Assets",)
+# Current assets/liabilities exist only on a CLASSIFIED balance sheet. Banks
+# and insurers do not present one, so these resolve to nothing for them — that
+# is a real absence, not a tag gap, and the ratios must stay absent rather
+# than fall back to something that looks like a number.
+CURRENT_ASSETS = ("AssetsCurrent",)
+CURRENT_LIABILITIES = ("LiabilitiesCurrent",)
+INVENTORY = ("InventoryNet",)
 
 # dei taxonomy — shares outstanding cover-page fact (instant), the market-cap basis.
 SHARES_OUTSTANDING_DEI = ("EntityCommonStockSharesOutstanding",)
@@ -56,6 +87,9 @@ INGEST_TAGS_US_GAAP: frozenset[str] = frozenset(
     + NET_INCOME
     + OPERATING_CASH_FLOW
     + CAPEX
+    + GROSS_PROFIT
+    + COST_OF_REVENUE
+    + BUYBACKS
     + OPERATING_INCOME
     + DEPRECIATION_AMORTIZATION
     + DIVIDENDS_PAID_COMMON
@@ -64,5 +98,10 @@ INGEST_TAGS_US_GAAP: frozenset[str] = frozenset(
     + CASH_OPTIONAL_ADD
     + DEBT_ANCHOR
     + DEBT_OPTIONAL_ADD
+    + EQUITY
+    + ASSETS
+    + CURRENT_ASSETS
+    + CURRENT_LIABILITIES
+    + INVENTORY
 )
 INGEST_TAGS_DEI: frozenset[str] = frozenset(SHARES_OUTSTANDING_DEI)

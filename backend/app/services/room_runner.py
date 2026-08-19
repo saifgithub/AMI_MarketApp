@@ -530,6 +530,11 @@ def _profile_for_ticker(
     # guard (test_cr104_no_fabricated_numeric_reaches_room_prompt.py) sees a
     # real provenance write, not an implicit default.
     field_state["run_date"] = LiveDataState.LIVE.value
+    # CR164 — a render-control flag, not a fact: it carries no number, so it
+    # takes no `field_state` entry (same treatment as `week52_range_live`).
+    # `_historical_mode_line` reads it to declare what a reconstructed sheet
+    # structurally cannot carry, instead of dropping those fields in silence.
+    profile["historical_mode"] = as_of is not None
 
     # Fundamentals: LIVE per-field, or UNAVAILABLE — never a rng fallback
     # (CR104/DEF123). `fetch_live_fundamentals` already only returns the
@@ -614,7 +619,16 @@ def _profile_for_ticker(
     else:
         field_state["technicals"] = LiveDataState.UNAVAILABLE.value
 
-    if settings.use_real_market_data:
+    # DEF334: `as_of is None` gates the FETCH, not just the render. This
+    # provider call is live and knows nothing about the backtest clock — in
+    # as-of mode it would state a calendar months ahead of the sheet's own
+    # date. It used to degrade safely only because `AsOfStoreProvider.earnings()`
+    # returns None, which is the provider declining rather than a guard: any
+    # future provider, and every direct `_profile_for_ticker(as_of=...)` call
+    # that runs without an active AsOfContext, read today's calendar into a
+    # historical sheet. Gating here also drops a pointless round-trip per
+    # backtest convene. The absence is declared by the historical-mode bullet.
+    if settings.use_real_market_data and as_of is None:
         # Real earnings date, when within the 90-day window the provider
         # covers — closes the "earnings calendar" claim with real data
         # instead of just disclaiming it (cheap: fetch/cache already exist
@@ -648,14 +662,9 @@ def _profile_for_ticker(
         # nesting these under the earnings-date branch would drop them for
         # exactly the names whose next cash event IS the dividend.
         #
-        # `as_of is None` because this provider call is LIVE and knows nothing
-        # about the backtest clock: in as-of mode it would state today's ex-date
-        # on a sheet dated months earlier. NOTE — the `next_earnings` block above
-        # has the same exposure and is NOT guarded, so CR164's harness is already
-        # reading a live earnings calendar into a point-in-time run. That is a
-        # pre-existing defect, filed separately rather than silently widened
-        # here; this CR declines to add two more fields to it.
-        if earnings and as_of is None:
+        # The as-of guard that used to live on this branch alone now gates the
+        # whole block (DEF334), so `earnings` is already live-only here.
+        if earnings:
             if earnings.ex_dividend_date:
                 profile["ex_dividend_date"] = earnings.ex_dividend_date
                 field_state["ex_dividend_date"] = LiveDataState.LIVE.value

@@ -1175,6 +1175,72 @@ def _out_of_lane_line(lane: frozenset[str]) -> str | None:
     )
 
 
+# CR164 — what a reconstructed sheet structurally cannot carry, by lane.
+# These are not provider gaps that vary by ticker: they are absent for EVERY
+# ticker on EVERY past date, which is why they are declared once as a set
+# rather than as a "not available" line per field. Each entry says WHY, so the
+# agent can tell an unreconstructable field from an unfetched one.
+_HISTORICAL_MODE_ABSENT: dict[str, tuple[str, ...]] = {
+    "fundamentals": (
+        "analyst consensus — rating, score, analyst count, and the mean, "
+        "median and low-high target range",
+        "forward P/E and PEG, both of which are built on consensus forward "
+        "earnings",
+        "sector and industry classification",
+        "institutional and insider ownership, and free float",
+        "the next scheduled earnings date and its consensus EPS estimate",
+        "the forward indicated dividend rate and the next ex-dividend date "
+        "(the trailing yield and payout ratio ARE stated where available)",
+    ),
+    "technicals": (
+        "beta — the provider's figure is a five-year monthly measure and the "
+        "stored history is shorter; a one-year figure is a different number "
+        "wearing the same name",
+        "short interest — percent of float, and days to cover",
+    ),
+}
+
+
+def _historical_mode_line(profile: dict[str, Any], lane: frozenset[str]) -> str | None:
+    """CR164 — state what a past date cannot carry, instead of omitting it.
+
+    In as-of mode ~20 fields the live sheet carries cannot be reconstructed,
+    and the render path drops an absent optional field silently. Silence reads
+    as "nobody fetched it", which invites the agent to supply the number from
+    training memory — the CR104/DEF123 failure this codebase spent a CR
+    closing everywhere else.
+
+    Lane-filtered, so the Fundamentals Analyst is not told about beta and the
+    Market Analyst is not told about consensus; those are already covered by
+    `_out_of_lane_line`, and repeating them here would have the two lines
+    making different claims about the same field.
+
+    The closing clause deliberately contradicts `_out_of_lane_line`'s "another
+    analyst holds each of those" FOR THIS SET — otherwise the two bullets
+    disagree, and a prompt that disagrees with itself is the P4 class this
+    whole programme exists to remove.
+    """
+    if not profile.get("historical_mode"):
+        return None
+    absent: list[str] = []
+    for domain in ("fundamentals", "technicals"):
+        if domain in lane:
+            absent.extend(_HISTORICAL_MODE_ABSENT[domain])
+    if not absent:
+        return None
+    return (
+        "- HISTORICAL MODE. This sheet is reconstructed as of the run date "
+        "above: from SEC filings whose filed date is on or before it, and from "
+        "price bars up to it. A field marked LIVE means \"measured from what "
+        "was knowable on that date\", not \"as of now\". These are NOT "
+        "reconstructable for a past date and are absent from this sheet: "
+        + "; ".join(absent)
+        + ". No other analyst holds them either — for these, this is not a "
+        "division of labour. Do not estimate them, do not recall them from "
+        "training memory, and do not tell the Room they merely were not fetched."
+    )
+
+
 def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) -> str:
     """A compact ticker fact-sheet the agent can quote from.
 
@@ -1370,6 +1436,9 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
             "- Forward catalyst: the FOMC decision countdown below is REAL, "
             "from the Fed's published calendar."
         )
+    historical_line = _historical_mode_line(profile, lane)
+    if historical_line:
+        header_lines.append(historical_line)
     lane_line = _out_of_lane_line(lane)
     if lane_line:
         header_lines.append(lane_line)

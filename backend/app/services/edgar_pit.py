@@ -211,6 +211,28 @@ def ttm(
     return sum(v for _, _, v in last4)
 
 
+def yoy_quarter_pair(
+    series: list[tuple[date, date, float]], as_of: date,
+    *, max_age_days: int = MAX_QUARTER_AGE_DAYS,
+) -> tuple[tuple[date, date, float], tuple[date, date, float]] | None:
+    """The latest resolvable quarter and the same quarter a year earlier.
+
+    One definition of "the same quarter a year earlier" for every YoY figure
+    on the sheet — growth and each margin trend — so two fields can never
+    disagree about which pair of quarters they compared.
+    """
+    eligible = [item for item in series if item[1] <= as_of]
+    if not eligible:
+        return None
+    latest = eligible[-1]
+    if (as_of - latest[1]).days > max_age_days:
+        return None
+    prior = [item for item in eligible if abs((latest[1] - item[1]).days - 365) <= 20]
+    if not prior:
+        return None
+    return latest, prior[-1]
+
+
 def yoy_quarter_growth(
     series: list[tuple[date, date, float]], as_of: date,
     *, max_age_days: int = MAX_QUARTER_AGE_DAYS,
@@ -218,22 +240,39 @@ def yoy_quarter_growth(
     """Latest quarter vs the same quarter a year earlier, as a decimal ratio
     (0.05 = +5%) — the same definition yfinance's `revenueGrowth` carries, so
     the rendered field means the same thing on both paths."""
-    eligible = [item for item in series if item[1] <= as_of]
-    if not eligible:
+    pair = yoy_quarter_pair(series, as_of, max_age_days=max_age_days)
+    if pair is None:
         return None
-    latest_start, latest_end, latest_value = eligible[-1]
-    if (as_of - latest_end).days > max_age_days:
-        return None
-    prior = [
-        v for s, e, v in eligible
-        if abs((latest_end - e).days - 365) <= 20
-    ]
-    if not prior or prior[-1] == 0:
-        return None
-    base = prior[-1]
+    latest, prior = pair
+    base = prior[2]
     if base <= 0:
         return None
-    return latest_value / base - 1.0
+    return latest[2] / base - 1.0
+
+
+def margin_trend_bps(
+    numerator: list[tuple[date, date, float]],
+    denominator: list[tuple[date, date, float]],
+    as_of: date,
+) -> tuple[int, str] | None:
+    """Change in a quarterly margin, year over year, in basis points — plus
+    the basis string naming the two quarters compared.
+
+    The denominator quarter is matched on an EXACT `period_end`. A near-miss
+    is refused rather than paired: dividing one quarter's income by a
+    slightly different quarter's revenue produces a margin that belongs to
+    neither, and it would look entirely plausible on the sheet.
+    """
+    pair = yoy_quarter_pair(numerator, as_of)
+    if pair is None:
+        return None
+    latest, prior = pair
+    by_end = {end: value for _, end, value in denominator}
+    d_latest, d_prior = by_end.get(latest[1]), by_end.get(prior[1])
+    if not d_latest or not d_prior or d_latest <= 0 or d_prior <= 0:
+        return None
+    bps = round(((latest[2] / d_latest) - (prior[2] / d_prior)) * 10_000)
+    return bps, f"{latest[1].isoformat()} vs {prior[1].isoformat()}"
 
 
 def instant_sum(
@@ -316,6 +355,25 @@ def fetch_pit_fundamentals(ticker: str, as_of: date) -> dict[str, Any] | None:
             shares_basis = "weighted_average_diluted"
     market_cap = price * shares if shares and shares > 0 else None
 
+    if market_cap is not None:
+        out["market_cap"] = round(market_cap / 1_000_000)
+    if shares and shares > 0:
+        out["shares_outstanding"] = round(shares / 1_000_000)
+
+    # EPS and revenue-per-share are derived from the SAME numerator and
+    # denominator that `pe` and `price_to_sales` use, rather than from a
+    # reported per-share tag. That keeps the sheet self-reconciling —
+    # `base_price / trailing_eps` equals the printed `pe`, and
+    # `market_cap / revenue_ttm` equals `price_to_sales`. A separately-based
+    # reported EPS would put two figures on one sheet that do not divide into
+    # each other, which is the class of contradiction DEF302 exists to close.
+    if ttm_ni is not None and shares and shares > 0:
+        out["trailing_eps"] = round(ttm_ni / shares, 2)
+    if ttm_rev is not None and shares and shares > 0:
+        out["revenue_per_share"] = round(ttm_rev / shares, 2)
+    if ttm_rev is not None:
+        out["revenue_ttm"] = round(ttm_rev / 1_000_000)
+
     if ttm_ni is not None and ttm_ni > 0 and shares and shares > 0:
         eps = ttm_ni / shares
         if eps > 0:
@@ -330,6 +388,10 @@ def fetch_pit_fundamentals(ticker: str, as_of: date) -> dict[str, Any] | None:
 
     cash = instant_sum(facts, edgar_tags.CASH_ANCHOR, edgar_tags.CASH_OPTIONAL_ADD, as_of)
     debt = instant_sum(facts, edgar_tags.DEBT_ANCHOR, edgar_tags.DEBT_OPTIONAL_ADD, as_of)
+    if cash is not None:
+        out["total_cash"] = round(cash / 1_000_000)
+    if debt is not None:
+        out["total_debt"] = round(debt / 1_000_000)
     if cash is not None and debt is not None:
         out["net_cash"] = net_cash_millions(cash, debt)
 
@@ -340,6 +402,7 @@ def fetch_pit_fundamentals(ticker: str, as_of: date) -> dict[str, Any] | None:
     ttm_capex = ttm(quarterly_series(facts, edgar_tags.CAPEX), as_of)
     if ttm_ocf is not None and ttm_capex is not None:
         fcf = ttm_ocf - ttm_capex
+        out["free_cash_flow"] = round(fcf / 1_000_000)
         fcf_yield = fcf_yield_pct(fcf, market_cap)
         if fcf_yield is not None:
             out["fcf_yield"] = fcf_yield
@@ -357,11 +420,82 @@ def fetch_pit_fundamentals(ticker: str, as_of: date) -> dict[str, Any] | None:
         if ebitda > 0:
             out["ev_to_ebitda"] = f"{(market_cap + debt - cash) / ebitda:.1f}"
 
+    if ttm_op is not None and ttm_rev is not None and ttm_rev > 0:
+        out["operating_margin"] = ratio_to_pct(ttm_op / ttm_rev)
+
+    # Gross profit, either reported directly or reconstructed as
+    # revenue − cost of revenue. Financials and some REITs report neither,
+    # which is a real absence: they have no cost of goods to speak of.
+    gross_series = quarterly_series(facts, edgar_tags.GROSS_PROFIT)
+    if not gross_series and rev_series:
+        cogs_by_end = {
+            end: value
+            for _, end, value in quarterly_series(facts, edgar_tags.COST_OF_REVENUE)
+        }
+        gross_series = [
+            (start, end, value - cogs_by_end[end])
+            for start, end, value in rev_series
+            if end in cogs_by_end
+        ]
+    ttm_gross = ttm(gross_series, as_of) if gross_series else None
+    if ttm_gross is not None and ttm_rev is not None and ttm_rev > 0:
+        out["gross_margin"] = ratio_to_pct(ttm_gross / ttm_rev)
+
+    # Margin TRENDS, quarter over the same quarter a year earlier, in bps.
+    for key, numerator in (
+        ("net_margin_trend_bps", ni_series),
+        ("operating_margin_trend_bps", quarterly_series(facts, edgar_tags.OPERATING_INCOME)),
+        ("gross_margin_trend_bps", gross_series),
+    ):
+        if not numerator or not rev_series:
+            continue
+        trend = margin_trend_bps(numerator, rev_series, as_of)
+        if trend is not None:
+            out[key], basis = trend
+            out.setdefault("margin_trend_basis", basis)
+
+    equity = resolve_instant(facts, edgar_tags.EQUITY, as_of)
+    assets = resolve_instant(facts, edgar_tags.ASSETS, as_of)
+    if ttm_ni is not None and equity and equity > 0:
+        out["return_on_equity"] = ratio_to_pct(ttm_ni / equity)
+    if ttm_ni is not None and assets and assets > 0:
+        out["return_on_assets"] = ratio_to_pct(ttm_ni / assets)
+    if debt is not None and equity and equity > 0:
+        # Already a ratio. The live path divides yfinance's figure by 100
+        # because that provider reports a percent; that is a provider quirk,
+        # not the definition, so nothing is scaled here.
+        out["debt_to_equity"] = round(debt / equity, 2)
+
+    # Current and quick ratios exist only on a CLASSIFIED balance sheet.
+    # Banks and insurers do not present one, so these stay absent for them
+    # rather than resolving to something that would read as a solvency fact.
+    current_assets = resolve_instant(facts, edgar_tags.CURRENT_ASSETS, as_of)
+    current_liabilities = resolve_instant(facts, edgar_tags.CURRENT_LIABILITIES, as_of)
+    if current_assets is not None and current_liabilities and current_liabilities > 0:
+        out["current_ratio"] = round(current_assets / current_liabilities, 2)
+        inventory = resolve_instant(facts, edgar_tags.INVENTORY, as_of)
+        if inventory is not None:
+            # Absent inventory is not zero inventory — a filer that reports no
+            # inventory line and one that reports 0.0 are different claims.
+            out["quick_ratio"] = round(
+                (current_assets - inventory) / current_liabilities, 2
+            )
+
+    ttm_buybacks = ttm(quarterly_series(facts, edgar_tags.BUYBACKS), as_of)
+    if ttm_buybacks is not None and ttm_buybacks > 0:
+        out["buyback_ttm"] = round(ttm_buybacks / 1_000_000)
+        if market_cap:
+            out["buyback_yield"] = round(ttm_buybacks / market_cap * 100, 1)
+
     ttm_divs = ttm(quarterly_series(facts, edgar_tags.DIVIDENDS_PAID_COMMON), as_of)
+    if ttm_divs is not None and ttm_divs > 0 and ttm_ni and ttm_ni > 0:
+        out["payout_ratio"] = ratio_to_pct(ttm_divs / ttm_ni)
     if ttm_divs is not None and ttm_divs > 0 and market_cap:
         # PaymentsOfDividends* is a cash OUTFLOW (positive in the statement);
         # yield = payments / market cap, rendered percent like the live field.
         out["dividend_yield"] = ratio_to_pct(ttm_divs / market_cap, decimals=2)
+
+    out.update(_price_derived(ticker, as_of, price_rows))
 
     logger.info(
         "pit_fundamentals_resolved",
@@ -369,6 +503,84 @@ def fetch_pit_fundamentals(ticker: str, as_of: date) -> dict[str, Any] | None:
         as_of=as_of.isoformat(),
         fields=sorted(k for k in out if k not in ("support", "breakout", "week52_range_live")),
         facts_loaded=len(facts),
+        price_rows=len(price_rows),
         shares_basis=shares_basis if market_cap is not None else "unresolved",
     )
     return out
+
+
+def _price_derived(
+    ticker: str, as_of: date, price_rows: list[tuple],
+) -> dict[str, Any]:
+    """The fact-sheet fields the live path reads off yfinance `.info` but which
+    are computable from stored bars (CR164).
+
+    Row shape from `get_asof_daily_rows`:
+    `(date, open, high, low, close, adj_close, volume)`.
+
+    Two gates matter. The day-move and today's volume describe *the as-of
+    session*, so they are emitted only when the newest stored bar IS the as-of
+    date — on a market holiday the newest bar is an earlier session and calling
+    its move "today's" would be wrong by a day. The 52-week trio needs a real
+    year of separation present in BOTH this ticker's window and SPY's, checked
+    as a date span rather than a row count, because a row count says nothing
+    about how much calendar it covers.
+    """
+    from app.services.price_history import get_asof_daily_rows
+
+    out: dict[str, Any] = {}
+    closes = [r[5] for r in price_rows]
+    is_as_of_session = price_rows[-1][0] == as_of
+
+    if is_as_of_session and len(closes) >= 2 and closes[-2] > 0:
+        out["day_change_pct"] = round((closes[-1] / closes[-2] - 1.0) * 100, 2)
+        # A stored daily bar is a settled close, which is exactly what the
+        # live field means by CLOSED. Stated, not inferred.
+        out["market_state"] = "CLOSED"
+        if price_rows[-1][6] is not None:
+            out["volume_today"] = int(price_rows[-1][6])
+
+    if len(closes) >= 200:
+        sma_200 = sum(closes[-200:]) / 200
+        out["sma_200"] = round(sma_200, 2)
+        if sma_200 > 0:
+            out["price_vs_sma_200_pct"] = round(
+                (closes[-1] - sma_200) / sma_200 * 100, 1
+            )
+
+    volumes = [r[6] for r in price_rows[-65:]]
+    if len(volumes) == 65 and all(v is not None for v in volumes):
+        out["volume_avg_3m"] = int(sum(volumes) / 65)
+
+    ticker_return = _year_return(price_rows, as_of)
+    if ticker_return is not None:
+        out["change_52w_pct"] = round(ticker_return * 100, 1)
+        spy_rows = get_asof_daily_rows("SPY", as_of, max_rows=252)
+        spy_return = _year_return(spy_rows, as_of) if spy_rows else None
+        if spy_return is not None:
+            out["change_52w_sp500_pct"] = round(spy_return * 100, 1)
+            # Computed from the raw ratios, mirroring the live path, so the
+            # spread is not the difference of two separately-rounded numbers.
+            out["relative_strength_52w_pct"] = round(
+                (ticker_return - spy_return) * 100, 1
+            )
+    return out
+
+
+def _year_return(price_rows: list[tuple], as_of: date) -> float | None:
+    """Total return over the oldest bar that is 340–380 days before `as_of`.
+
+    None when the stored window does not reach back a genuine year — which is
+    the common case at the very start of the backtest window, where the
+    backfill itself is only a year deep. Returning None there is the point:
+    a "52-week change" measured over seven months is a different number
+    wearing the same label.
+    """
+    if not price_rows:
+        return None
+    anchor = next(
+        (r for r in price_rows if 340 <= (as_of - r[0]).days <= 380), None
+    )
+    if anchor is None or anchor[5] <= 0:
+        return None
+    return price_rows[-1][5] / anchor[5] - 1.0

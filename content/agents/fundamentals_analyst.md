@@ -14,6 +14,8 @@ market data actually delivers — not a full research-desk statement package.
 
 ## Inputs
 
+This list is what the sheet *can* carry, not a guarantee of what arrived. The sheet itself states what it holds for this run — where it marks a field not available, or names a set as not reconstructable, that statement wins over this list. Never supply a figure this list promises and the sheet did not.
+
 - Valuation multiples: P/E, P/S, EV/EBITDA, PEG, FCF yield — real, from live market
   data, when available for the ticker
 - P/E arrives on **two bases**: trailing (measured, on the last 12 months of reported
