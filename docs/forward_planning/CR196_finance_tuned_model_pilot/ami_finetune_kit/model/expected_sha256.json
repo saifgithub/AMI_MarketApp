@@ -1,0 +1,26 @@
+{
+  "_comment": "Verified against the ami-host copy's merge-provenance.json (fastino-merged-model-provenance/v2), read 2026-08-19. If the HF pull mismatches ANY shard, STOP and report \u2014 do not train on unverified weights.",
+  "hf_repo": "fastino/Fastino-Nemotron-3.5-Lightning-Finance",
+  "pinned_revision": "e004cdd8a8938a95fe5212418be5671b70a21564",
+  "adapter_name": "combined-finance-e13",
+  "adapter_lora_rank": 32,
+  "base_checkpoint_name": "NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16-07292026",
+  "tensor_count": 6513,
+  "merged_target_count": 101,
+  "weight_shard_sha256": {
+    "model-00001-of-00014.safetensors": "5d581901ab0b37ca730980ce5c9244700b84cd59886178faae0a5c190320bde3",
+    "model-00002-of-00014.safetensors": "dcdd90d11b4c6c9d4e9ba461cb93a1b648daf9c5cc47588b8e48dbbdf61bf90f",
+    "model-00003-of-00014.safetensors": "49246408a50ea27a86fb42c71f14c750eae1143c0dc0a5ef50d99e3bcff10321",
+    "model-00004-of-00014.safetensors": "aecdc70918de02968b60c57cb8d6771ca910b45c81b2ffb03721317833b3fe40",
+    "model-00005-of-00014.safetensors": "44e5dd33a77b7133d861fbc025430bb1956304ce241510aa7c516ce62c0545c6",
+    "model-00006-of-00014.safetensors": "1d6a9fd17766abb3f35e6f27574dfc384a37b04504afa3520ebd620e7ca96094",
+    "model-00007-of-00014.safetensors": "ff461ecee67c4659dea1c70a93bd3c1556d15941410d591461588bae93a2b096",
+    "model-00008-of-00014.safetensors": "d6c0d75ddb6460189c8dd1f52b4a0c29693bbf4dfe58701aa520260f48331cb1",
+    "model-00009-of-00014.safetensors": "0e226f745aff8b6175a273840105fe4ac1745d6db83d19deef09be9705da0e5e",
+    "model-00010-of-00014.safetensors": "2749ba0066b12adb44a7d7213c4f504e52d025072317584f9ace173d7863c5fa",
+    "model-00011-of-00014.safetensors": "8a977a5af1fbad3f15e338b5203e3455bcd4594a1833dd4001b213836c29bd34",
+    "model-00012-of-00014.safetensors": "0a50fbe2c20e4c50bb9b804bcb8d52458e3a3c63d011e5bdee49dcd015c38793",
+    "model-00013-of-00014.safetensors": "ca42cb3b2a7333afc744b81a6b38a996d94a0f5d07e2feaf0678e8fb8f3e084a",
+    "model-00014-of-00014.safetensors": "80c9e147d868540db71340806c0323dcd5fb4ef66d9d693f95a3bb4072fba9dc"
+  }
+}

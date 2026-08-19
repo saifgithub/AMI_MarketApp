@@ -1,0 +1,27 @@
+# CR196 LoRA SFT config — mirrors Fastino's published recipe where known
+# (rank 32, lr 1e-4, 2 epochs, packing disabled), our choices elsewhere.
+model_path: /models/fastino-finance-bf16
+train_jsonl: /kit/data/train.jsonl
+val_jsonl: /kit/data/val.jsonl
+
+lora_rank: 32
+lora_alpha: 64
+lora_dropout: 0.05
+# "all-linear" is the safe default; the smoke test prints the trainable-parameter
+# count — record it in smoke_report.md. (Fastino's merge touched 101 modules;
+# a wildly larger count here is worth flagging, not silently accepting.)
+target_modules: all-linear
+
+batch_size: 1
+grad_accum: 16
+learning_rate: 1.0e-4
+epochs: 2
+lr_scheduler: cosine
+warmup_ratio: 0.03
+cutoff_len: 8192
+
+logging_steps: 10
+save_steps: 200        # ~every 30 min at expected step-times; adjust after smoke
+save_total_limit: 3
+eval_steps: 200
+seed: 42
