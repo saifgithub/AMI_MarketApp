@@ -20,17 +20,17 @@ step strips it.
 | # | Recipe (CR196 §2) | Script | Status |
 |---|---|---|---|
 | 1 | Basis-mismatch fixtures (L2/L3 answers) | `recipe1_basis.py` | **working** — proof-run 2026-08-19 on 8 tickers, incl. the MSFT same-date definitional case |
-| 2 | Ratio computation + interpretation | — | todo |
-| 3 | Trend reasoning (deltas/CAGRs) | — | todo |
-| 4 | Earnings-quality flags | — | todo |
-| 5 | Basis-trap generalization (TTM/FY, EPS bases) | — | todo |
-| 6 | As-of-date discipline | — | todo |
-| 7 | Mandate-overlay compliance | — | todo (regenerates CR032 salvaged recipes) |
-| 8 | Room JSON format | — | todo |
-| 9 | Refusal/abstention | — | todo |
-| — | Tier B fetch + normalize (FinQA/TAT-QA/…) | — | todo |
-| — | SA-FDR feature/mixture optimization | — | todo |
-| — | Mix + QC gate (dedup, decontam re-check, manifest) | — | todo |
+| 2 | Ratio computation + interpretation | `recipe2_ratios.py` | **working** — verified on DE (arithmetic recomputed) |
+| 3 | Trend reasoning (deltas/CAGRs) | `recipe3_trends.py` | **working** |
+| 4 | Earnings-quality flags | `recipe4_earnings_quality.py` | **working** |
+| 5 | Basis-trap generalization (TTM/FY, EPS bases) | `recipe5_basis_traps.py` | **working** |
+| 6 | As-of-date discipline | `recipe6_asof_discipline.py` | **working** |
+| 7 | Mandate-overlay compliance | `recipe7_mandate_compliance.py` | **working** — renders via the REAL `overlay_generator`, PM `Verdict: APPROVE|PASS` contract |
+| 8 | Room JSON format | `recipe8_room_format.py` | **working** — reads `_PM_VERDICT_FORMAT`/stance constants off the live `room_prompts.py`; parsed by `room_runner._parse_pm_verdict` (:1423) |
+| 9 | Refusal/abstention | `recipe9_refusal.py` | **working** — 25% answerable controls |
+| — | Tier B fetch + normalize | `tierb_fetch.py` | **done** — 48,502 rows / 5 sources; ConvFinQA skipped (no license tag), Fin-R1 401 (see `tierb_licenses.md`) |
+| — | SA-FDR feature/mixture optimization | `sa_fdr.py` | module ready (trace(Sw⁻¹Sb) criterion, synthetic-tested); mix probes run on the training box |
+| — | Mix + QC gate | `mix_and_qc.py` | ready — runs once all recipe outputs land |
 
 Output convention: each recipe writes `out/recipeN.jsonl` (git-ignored); the mix step
 produces the kit's `train.jsonl`/`val.jsonl` + `data_manifest.md`.
