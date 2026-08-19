@@ -2426,6 +2426,7 @@
         "insightsWindowAll": "eed217c00a85",
         "insightsWindowCapped": "500f1bcc0033",
         "journalDetailBlockOverlay": "dffe7eb8e62f",
+        "journalEntryTypeBlocked": "a1f4014f85aa",
         "journalEntryTypeBrief": "b1762f76a9b4",
         "journalEntryTypeChallenge": "238903d28ed1",
         "journalEntryTypeDrift": "3470efc4572c",
