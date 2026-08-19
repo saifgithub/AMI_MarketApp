@@ -582,12 +582,18 @@ class Settings(BaseSettings):
     # That fallback was the defect — one secret signing bearer tokens AND
     # protecting broker secrets means rotating SECRET_KEY silently orphans
     # every ciphertext row. Generate: openssl rand -hex 32
+    # It must NOT equal SECRET_KEY. Setting them the same by hand recreates the
+    # defect while labelling the rows enc::v2::, i.e. "independent of
+    # SECRET_KEY" — refused at both the encrypt and decrypt site rather than
+    # validated here, so the check sits next to the marker it defends.
     alpaca_encryption_key: str = ""
 
     # DEF182 — the previous ALPACA_ENCRYPTION_KEY, set ONLY during a rollover.
     # Reads try the current key first and fall back to this one, so a rotation
     # does not break rows at the instant of the swap. Clear it once every row
     # has been re-written under the new key. Empty is the steady state.
+    # Read-side only: setting this while ALPACA_ENCRYPTION_KEY is empty makes
+    # encrypt_secret refuse rather than write fresh rows under a retired key.
     alpaca_encryption_key_previous: str = ""
 
     # Admin back-office secret (AT:R27). Static bearer for Alpha single-operator

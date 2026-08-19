@@ -254,3 +254,81 @@ def test_the_orm_column_is_not_swallowing_everything(monkeypatch):
     monkeypatch.setattr(cfg.settings, "alpaca_encryption_key_previous", "")
     token = encrypt_secret("alpaca-secret")
     assert EncryptedString().process_result_value(token, None) == "alpaca-secret"
+
+
+# ── DEF182 round 2: the marker cannot outlive the property it stands for ───
+#
+# Round 1 removed the *automatic* way `v2` could become a lie (an empty key
+# falling back to SECRET_KEY). An independent audit found the configured one
+# still open: set the two env vars to the same value by hand and the row is
+# stamped `v2` — "independent of SECRET_KEY" — while the SECRET_KEY-derived key
+# opens it. That is strictly worse than the original bug, which at least
+# labelled such rows `v1` honestly. These pin both ends of the fix.
+
+
+def test_a_key_equal_to_secret_key_is_refused_at_the_write_site(monkeypatch):
+    """MAJOR-1, write half."""
+    from app.core import config as cfg
+
+    shared = "one-secret-doing-two-jobs"
+    monkeypatch.setattr(cfg.settings, "secret_key", shared)
+    monkeypatch.setattr(cfg.settings, "alpaca_encryption_key", shared)
+    monkeypatch.setattr(cfg.settings, "alpaca_encryption_key_previous", "")
+    monkeypatch.setattr(cfg.settings, "env", "staging")
+
+    with pytest.raises(SecretEncryptionUnavailable) as exc:
+        encrypt_secret("alpaca-secret")
+
+    # The operator has to be told *which* mistake this is. "not set" would send
+    # them to set it — plausibly to the same value again.
+    assert "same value as SECRET_KEY" in str(exc.value)
+
+
+def test_a_v2_row_written_under_a_reused_key_reads_as_unavailable(monkeypatch):
+    """MAJOR-1, read half. A row from before the check existed must not quietly
+    keep working, because "it opens" is exactly the false reassurance."""
+    from app.core import config as cfg
+    from app.core.secret_crypto import _derive
+
+    shared = "one-secret-doing-two-jobs"
+    monkeypatch.setattr(cfg.settings, "secret_key", shared)
+    row = _PREFIX_V2 + _derive(shared).encrypt(b"alpaca-secret").decode()
+
+    # Non-vacuity: the row is well-formed — the refusal below is the vetting,
+    # not a corrupt token.
+    assert _derive(shared).decrypt(row[len(_PREFIX_V2):].encode()) == b"alpaca-secret"
+
+    monkeypatch.setattr(cfg.settings, "alpaca_encryption_key", shared)
+    monkeypatch.setattr(cfg.settings, "alpaca_encryption_key_previous", "")
+    with pytest.raises(SecretDecryptionError):
+        decrypt_secret(row)
+
+
+def test_writing_under_the_retired_rollover_key_is_refused(monkeypatch):
+    """MINOR-1. `env=local` on purpose: the only thing that can raise here is
+    the _PREVIOUS branch, so this cannot pass by way of the strict-mode refusal."""
+    from app.core import config as cfg
+
+    monkeypatch.setattr(cfg.settings, "alpaca_encryption_key", "")
+    monkeypatch.setattr(cfg.settings, "alpaca_encryption_key_previous", _KEY_A)
+    monkeypatch.setattr(cfg.settings, "env", "local")
+
+    with pytest.raises(SecretEncryptionUnavailable) as exc:
+        encrypt_secret("alpaca-secret")
+    assert "ALPACA_ENCRYPTION_KEY_PREVIOUS" in str(exc.value)
+
+
+def test_a_dedicated_key_that_is_actually_dedicated_still_works(monkeypatch):
+    """Non-vacuity for the three above: the check must reject the reuse and
+    nothing else. A version that refused whenever SECRET_KEY was merely set
+    would pass all of them and break every real deployment."""
+    from app.core import config as cfg
+
+    monkeypatch.setattr(cfg.settings, "secret_key", "a-populated-and-different-secret")
+    monkeypatch.setattr(cfg.settings, "alpaca_encryption_key", _KEY_A)
+    monkeypatch.setattr(cfg.settings, "alpaca_encryption_key_previous", "")
+    monkeypatch.setattr(cfg.settings, "env", "staging")
+
+    token = encrypt_secret("alpaca-secret")
+    assert token.startswith(_PREFIX_V2)
+    assert decrypt_secret(token) == "alpaca-secret"

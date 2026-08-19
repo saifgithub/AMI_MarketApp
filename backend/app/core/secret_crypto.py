@@ -42,6 +42,15 @@ to guess:
 Because v2 is keyed independently, **rotating `SECRET_KEY` no longer touches
 Alpaca ciphertext at all.** That was the trap; the marker is what disarms it.
 
+That sentence is a promise about the data, so something has to enforce it.
+Round 1 of this fix only removed the *automatic* way it could become false (an
+empty key falling back to `SECRET_KEY`); an independent audit pointed out that
+an operator setting the two to the same value by hand produced a `v2` row the
+`SECRET_KEY`-derived key opened, with nothing to notice. `_reuses_secret_key`
+is that check — a dedicated key equal to `SECRET_KEY` is refused at the write
+site and ignored at the read site, so the marker cannot outlive the property
+it stands for.
+
 ROTATING ``ALPACA_ENCRYPTION_KEY`` (dual-key rollover)
 ------------------------------------------------------
 1. Put the current value in ``ALPACA_ENCRYPTION_KEY_PREVIOUS`` and the new one
@@ -55,6 +64,12 @@ ROTATING ``ALPACA_ENCRYPTION_KEY`` (dual-key rollover)
 
 Skipping step 1 does not corrupt anything — it makes every affected row read as
 **unavailable**, loudly, which is the point.
+
+Doing step 3 to the wrong variable — clearing ``ALPACA_ENCRYPTION_KEY`` and
+leaving ``_PREVIOUS`` populated — used to leave writes running under the key the
+rollover exists to retire, stamped ``v2``, with no warning; the next promotion
+that finished the rollover would orphan exactly the rows written in between.
+``encrypt_secret`` now refuses that combination outright.
 
 FAILURE BEHAVIOUR
 -----------------
@@ -124,12 +139,49 @@ def _derive(raw: str) -> Fernet:
     return Fernet(base64.urlsafe_b64encode(hashlib.sha256(raw.encode()).digest()))
 
 
+def _reuses_secret_key(raw: str) -> bool:
+    """True when a configured "dedicated" key is just ``SECRET_KEY`` again.
+
+    DEF182 round 2, MAJOR-1. Round 1 closed the path where an *empty*
+    ``ALPACA_ENCRYPTION_KEY`` fell back to ``SECRET_KEY``. It left open the
+    path where the two are set to the same value **by configuration** — a
+    copy-paste into ``infra/alpha.env``, a rushed rotation. That state is
+    worse than the bug it replaced, not equal to it: the row is stamped
+    ``enc::v2::``, whose entire documented meaning is "rotating SECRET_KEY no
+    longer touches this ciphertext", and the ``SECRET_KEY``-derived legacy key
+    opens it anyway. The old state was at least honestly labelled ``v1``.
+
+    Nothing downstream can notice — the marker is the only signal there is —
+    so the value is refused here, at both the read and the write site.
+    """
+    return bool(raw) and bool(settings.secret_key) and raw == settings.secret_key
+
+
 def _dedicated_keys() -> list[Fernet]:
-    """Current key first, then the previous one if a rollover is in progress."""
+    """Keys that may OPEN a ``v2`` row: current first, then the rollover key.
+
+    A configured value that only repeats ``SECRET_KEY`` is dropped rather than
+    used. Dropping it makes the affected rows read as unavailable, loudly
+    (``SecretDecryptionError`` -> ``None`` -> 409 ``alpaca_not_linked``), which
+    is the CR040 answer: the alternative is a row that opens perfectly well
+    while its marker asserts an independence it does not have.
+    """
     keys = []
-    for raw in (settings.alpaca_encryption_key, settings.alpaca_encryption_key_previous):
-        if raw:
-            keys.append(_derive(raw))
+    for name, raw in (
+        ("ALPACA_ENCRYPTION_KEY", settings.alpaca_encryption_key),
+        ("ALPACA_ENCRYPTION_KEY_PREVIOUS", settings.alpaca_encryption_key_previous),
+    ):
+        if not raw:
+            continue
+        if _reuses_secret_key(raw):
+            logger.error(
+                "secret_crypto_key_reuses_secret_key",
+                setting=name,
+                detail="configured to the same value as SECRET_KEY, so it is "
+                       "not a dedicated key and is being ignored (DEF182)",
+            )
+            continue
+        keys.append(_derive(raw))
     return keys
 
 
@@ -147,9 +199,31 @@ def encrypt_secret(plaintext: str | None) -> str | None:
     if plaintext is None:
         return None
 
-    dedicated = _dedicated_keys()
-    if dedicated:
-        return _PREFIX_V2 + dedicated[0].encrypt(plaintext.encode()).decode()
+    current = settings.alpaca_encryption_key
+
+    if _reuses_secret_key(current):
+        raise SecretEncryptionUnavailable(
+            "ALPACA_ENCRYPTION_KEY is configured to the same value as "
+            "SECRET_KEY, so it is not a dedicated key. The row this would "
+            "write is stamped enc::v2::, which this module defines as "
+            "'rotating SECRET_KEY no longer touches this ciphertext' — and the "
+            "SECRET_KEY-derived key would open it. Refusing to write a marker "
+            "that asserts a property the data does not have (DEF182). Give "
+            "ALPACA_ENCRYPTION_KEY its own value (openssl rand -hex 32) in "
+            "infra/alpha.env and promote."
+        )
+
+    if current:
+        return _PREFIX_V2 + _derive(current).encrypt(plaintext.encode()).decode()
+
+    if settings.alpaca_encryption_key_previous:
+        raise SecretEncryptionUnavailable(
+            "ALPACA_ENCRYPTION_KEY is empty while ALPACA_ENCRYPTION_KEY_PREVIOUS "
+            "is set. The previous key exists to READ rows mid-rollover; writing "
+            "new ciphertext under it would stamp fresh rows with the very key "
+            "step 3 of the rollover then clears, orphaning them (DEF182). Put "
+            "the current key in ALPACA_ENCRYPTION_KEY."
+        )
 
     if _strict():
         raise SecretEncryptionUnavailable(
