@@ -1205,6 +1205,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get journalEntryTypeUnknown => 'UNKNOWN';
 
   @override
+  String get journalEntryTypeBlocked => 'BLOCKED';
+
+  @override
   String get journalDetailHeading => 'BUTIRAN ENTRI';
 
   @override

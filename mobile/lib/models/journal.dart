@@ -12,6 +12,9 @@ enum JournalEntryType {
   agentUnlock,
   dailyChallenge,
   portfolioHealthAnalysis,
+  // CR177 — the safety floor refused a trade. A record of a decision, not a
+  // trade: it must never render as a result (no win/loss, no outcome).
+  complianceBlock,
 }
 
 extension JournalEntryTypeJson on JournalEntryType {
@@ -37,6 +40,8 @@ extension JournalEntryTypeJson on JournalEntryType {
         return 'daily_challenge';
       case JournalEntryType.portfolioHealthAnalysis:
         return 'portfolio_health_analysis';
+      case JournalEntryType.complianceBlock:
+        return 'compliance_block';
     }
   }
 
@@ -62,6 +67,8 @@ extension JournalEntryTypeJson on JournalEntryType {
         return JournalEntryType.dailyChallenge;
       case 'portfolio_health_analysis':
         return JournalEntryType.portfolioHealthAnalysis;
+      case 'compliance_block':
+        return JournalEntryType.complianceBlock;
     }
     return null;
   }

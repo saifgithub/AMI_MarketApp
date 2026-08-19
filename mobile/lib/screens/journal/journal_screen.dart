@@ -449,6 +449,10 @@ class _EntryCard extends StatelessWidget {
         // hexBlue, never amber: M09 §1 pins it app-wide — amber reads as a
         // mandate violation, and a measurement is not a warning.
         return AmiColors.hexBlue;
+      case JournalEntryType.complianceBlock:
+        // hexRed by the same M09 §1 logic run forwards: this one IS a
+        // mandate violation surface — the floor stopped the trade.
+        return AmiColors.hexRed;
       case null:
         return AmiColors.slate600;
     }
@@ -476,6 +480,8 @@ class _EntryCard extends StatelessWidget {
         return l.journalEntryTypeChallenge;
       case JournalEntryType.portfolioHealthAnalysis:
         return l.journalEntryTypeHealth;
+      case JournalEntryType.complianceBlock:
+        return l.journalEntryTypeBlocked;
       case null:
         return l.journalEntryTypeUnknown;
     }

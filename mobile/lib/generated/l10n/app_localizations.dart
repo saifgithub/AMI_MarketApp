@@ -2068,6 +2068,12 @@ abstract class AppLocalizations {
   /// **'UNKNOWN'**
   String get journalEntryTypeUnknown;
 
+  /// CR177 — Journal entry-card badge for a compliance_block entry: the safety floor refused a trade against the user's own mandate. A record of a refused decision, never a trade result. NEW key, needs ar/ms translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'BLOCKED'**
+  String get journalEntryTypeBlocked;
+
   /// No description provided for @journalDetailHeading.
   ///
   /// In en, this message translates to:

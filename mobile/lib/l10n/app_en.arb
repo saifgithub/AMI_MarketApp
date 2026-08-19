@@ -1454,6 +1454,10 @@
   "@journalEntryTypeUnknown": {
     "description": "DEF210 — Journal entry-card badge when the backend sent an entry_type this app build does not recognise. Deliberately honest rather than guessing a type: the previous behaviour silently labelled such entries '1-ON-1'. NEW key, needs ar/ms translation. retranslate:[ar,ms]"
   },
+  "journalEntryTypeBlocked": "BLOCKED",
+  "@journalEntryTypeBlocked": {
+    "description": "CR177 — Journal entry-card badge for a compliance_block entry: the safety floor refused a trade against the user's own mandate. A record of a refused decision, never a trade result. NEW key, needs ar/ms translation. retranslate:[ar,ms]"
+  },
   "journalDetailHeading": "ENTRY DETAIL",
   "journalDetailLoading": "Loading…",
   "journalDetailBlockYou": "YOU",
