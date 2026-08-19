@@ -20,7 +20,7 @@ second and be structurally incapable of gating a free surface.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -36,6 +36,7 @@ from app.services.journal_store import JournalStore, get_journal_store
 
 GATE_CLOSED_CODE = "portfolio_health_gate_closed"
 DAILY_CAP_CODE = "portfolio_health_daily_cap_reached"
+CADENCE_CODE = "portfolio_health_cadence_not_elapsed"
 
 MODE_OPEN = "open"
 MODE_TRIAL = "trial"
@@ -52,6 +53,12 @@ class GateStatus:
     daily_used: int
     daily_cap: int
     plan_has_access: bool
+    # CR140. `next_eligible_at` is an ISO string, never a datetime: this dict
+    # is embedded in HTTPException detail, which Starlette feeds to a plain
+    # JSONResponse — a datetime there is a 500 on the refusal path itself.
+    cadence_days: int
+    cadence_blocked: bool
+    next_eligible_at: str | None
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -130,8 +137,28 @@ def evaluate_gate(
     # is what serves them.
     plan_has_access = effective_plan_for_user(user_id).value in _entitled_plans()
 
+    # CR140 — the rolling cadence, and who it does NOT apply to. A user being
+    # served by the trial BUDGET is exempt (DEF219: the trial is bounded by
+    # budget only — a cadence on a 3-Finding trial would stretch it to 90 days
+    # and re-create the one-snapshot trial DEF219 removed). `open` mode is
+    # exempt because it is an operator override, not a user-facing product
+    # mode. Everyone else — plan-served access in `trial` or `plan` mode —
+    # waits `cadence_days` from their last Finding, counting soft-deleted rows
+    # and counting per USER (see `last_portfolio_health_finding_at`).
+    cadence_days = settings.portfolio_health_cadence_days
+    mode = settings.portfolio_health_gate_mode
+    cadence_exempt = mode == MODE_OPEN or (mode == MODE_TRIAL and trial_active)
+    cadence_blocked = False
+    next_eligible_at: str | None = None
+    if cadence_days > 0 and not cadence_exempt:
+        last_at = store.last_portfolio_health_finding_at(user_id)
+        if last_at is not None:
+            next_eligible = last_at + timedelta(days=cadence_days)
+            next_eligible_at = next_eligible.isoformat()
+            cadence_blocked = now < next_eligible
+
     return GateStatus(
-        mode=settings.portfolio_health_gate_mode,
+        mode=mode,
         trial_active=trial_active,
         trial_findings_used=used,
         trial_findings_budget=budget,
@@ -139,19 +166,34 @@ def evaluate_gate(
         daily_used=daily_used,
         daily_cap=settings.portfolio_health_daily_cap,
         plan_has_access=plan_has_access,
+        cadence_days=cadence_days,
+        cadence_blocked=cadence_blocked,
+        next_eligible_at=next_eligible_at,
     )
 
 
 def enforce_gate(status_: GateStatus) -> None:
-    """402 for "not entitled", 429 for "entitled but spent for today".
+    """402 for "not entitled", 429 for "entitled but not yet".
 
-    Order is load-bearing: a user with no access at all should be told to
-    upgrade, not told to come back tomorrow.
+    Order is load-bearing twice over: a user with no access at all should be
+    told to upgrade, not told to come back tomorrow — and when both time
+    limits would fire, the cadence refusal wins because it is the honest one.
+    "Come back tomorrow" is false when the next reading is 30 days out
+    (CR140 scope item 3: the refusal says WHEN, not just no).
     """
     if not status_.has_access:
         raise HTTPException(
             status.HTTP_402_PAYMENT_REQUIRED,
             detail={"code": GATE_CLOSED_CODE, "gate": status_.as_dict()},
+        )
+    if status_.cadence_blocked:
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "code": CADENCE_CODE,
+                "next_eligible_at": status_.next_eligible_at,
+                "gate": status_.as_dict(),
+            },
         )
     if status_.daily_cap_reached:
         raise HTTPException(

@@ -398,6 +398,26 @@ class JournalStore:
             ).scalar_one_or_none()
             return _row_to_entry(row) if row else None
 
+    def last_portfolio_health_finding_at(self, user_id: UUID) -> datetime | None:
+        """Newest Finding timestamp for this USER, soft-deleted included.
+
+        The CR140 cadence clock. Per user and not per portfolio for the same
+        reason `portfolio_health_stats` counts per user: `reset_portfolio`
+        mints a fresh `uuid4()`, so a per-portfolio clock restarts every time
+        the user resets their book — the exact loophole the daily counter
+        closed (CR136-M07 audit, MINOR m1). Soft-deleted rows count because
+        deleting yesterday's Finding must not bring the next one forward.
+        """
+        with get_session() as s:
+            last_at = s.execute(
+                select(func.max(JournalEntryRow.created_at)).where(
+                    JournalEntryRow.user_id == user_id,
+                    JournalEntryRow.entry_type
+                    == EntryType.PORTFOLIO_HEALTH_ANALYSIS.value,
+                )
+            ).scalar_one()
+            return _as_utc(last_at) if last_at is not None else None
+
     def portfolio_health_stats(
         self, user_id: UUID, portfolio_id: UUID, *, now: datetime,
     ) -> tuple[int, datetime | None, int]:

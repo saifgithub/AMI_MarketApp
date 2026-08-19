@@ -85,6 +85,11 @@ def _clean(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(settings, "portfolio_health_trial_findings", 7)
     monkeypatch.setattr(settings, "portfolio_health_daily_cap", 2)
     monkeypatch.setattr(settings, "portfolio_health_plans", ["trader", "floor_manager"])
+    # CR140 — this file pins the PRE-cadence gate semantics (trial window,
+    # budget, daily cap, modes), and cadence_days=0 is the documented
+    # config-revert to exactly those semantics. The cadence's own behaviour
+    # is pinned in test_cr140_health_cadence.py, not incidentally here.
+    monkeypatch.setattr(settings, "portfolio_health_cadence_days", 0)
     yield
     get_journal_store().clear()
 
@@ -530,11 +535,13 @@ def test_the_hysteresis_state_survives_a_delete(wired) -> None:
 # ── Shapes + limiter + engine refusal ───────────────────────────────────────
 
 
-def test_the_gate_dict_is_exactly_the_eight_pinned_keys(wired) -> None:
+def test_the_gate_dict_is_exactly_the_eleven_pinned_keys(wired) -> None:
     client, user_id, _portfolio_id, _gen = wired
     expected = {
         "mode", "trial_active", "trial_findings_used", "trial_findings_budget",
         "trial_days_left", "daily_used", "daily_cap", "plan_has_access",
+        # CR140
+        "cadence_days", "cadence_blocked", "next_eligible_at",
     }
     tiles = client.get(f"/v1/portfolio/health/{user_id}").json()
     assert set(tiles["gate"]) == expected
@@ -1025,6 +1032,10 @@ def test_a_refused_user_over_the_cap_is_told_to_upgrade_not_to_come_back(
         mode="plan", trial_active=False, trial_findings_used=9,
         trial_findings_budget=7, trial_days_left=0, daily_used=2, daily_cap=2,
         plan_has_access=False,
+        # CR140 fields at their disabled values — this test's subject is the
+        # 402-vs-429 ordering, not the cadence (which has its own ordering
+        # test in test_cr140_health_cadence.py).
+        cadence_days=0, cadence_blocked=False, next_eligible_at=None,
     )
     assert both.has_access is False and both.daily_cap_reached is True
     with pytest.raises(Exception) as exc:

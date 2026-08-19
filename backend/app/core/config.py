@@ -409,10 +409,19 @@ class Settings(BaseSettings):
     portfolio_health_plans: CsvList = Field(
         default_factory=lambda: ["trader", "floor_manager"]
     )
+    # CR140 — the evaluation cadence Saiful ruled monthly (2026-08-05). Rolling
+    # days since the LAST Finding (shape (b) of the CR140 decision table), per
+    # USER for the same reset-loophole reason the daily counter is
+    # (portfolio_health_stats). 0 disables cadence entirely and restores the
+    # pre-CR140 behaviour exactly — the config-revert the CR's acceptance 4
+    # demands. Trial-budget-served users are exempt (DEF219: the trial is
+    # bounded by budget only), as is `open` mode (an operator override, not a
+    # user-facing product mode).
+    portfolio_health_cadence_days: int = 30
 
     @field_validator(
         "portfolio_health_trial_days", "portfolio_health_trial_findings",
-        "portfolio_health_daily_cap",
+        "portfolio_health_daily_cap", "portfolio_health_cadence_days",
     )
     @classmethod
     def _portfolio_health_counters_non_negative(cls, v: int) -> int:

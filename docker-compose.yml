@@ -383,6 +383,7 @@ services:
       PORTFOLIO_HEALTH_TRIAL_FINDINGS: ${PORTFOLIO_HEALTH_TRIAL_FINDINGS:-3}
       PORTFOLIO_HEALTH_DAILY_CAP: ${PORTFOLIO_HEALTH_DAILY_CAP:-2}
       PORTFOLIO_HEALTH_PLANS: ${PORTFOLIO_HEALTH_PLANS:-trader,floor_manager}
+      PORTFOLIO_HEALTH_CADENCE_DAYS: ${PORTFOLIO_HEALTH_CADENCE_DAYS:-30}
       CORS_ORIGINS: '["https://api-alpha.agenticmarketintel.ai","http://localhost:3000","http://localhost:8000"]'
       # Mount point for the bug_attachments named volume.
       BUG_ATTACHMENTS_DIR: /data/bug_attachments
