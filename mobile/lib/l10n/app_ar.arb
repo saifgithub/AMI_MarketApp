@@ -261,6 +261,7 @@
     "journalEntryTypeChallenge": "CHALLENGE",
     "journalEntryTypeHealth": "HEALTH",
     "journalEntryTypeUnknown": "UNKNOWN",
+    "journalEntryTypeBlocked": "BLOCKED",
     "journalDetailHeading": "تفاصيل الإدخال",
     "journalDetailLoading": "جاري التحميل...",
     "journalDetailBlockYou": "أنت",

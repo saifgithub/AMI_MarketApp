@@ -9,6 +9,7 @@
     "journalEntryTypeChallenge": "CHALLENGE",
     "journalEntryTypeHealth": "HEALTH",
     "journalEntryTypeUnknown": "UNKNOWN",
+    "journalEntryTypeBlocked": "BLOCKED",
     "journalDetailHeading": "BUTIRAN ENTRI",
     "journalDetailLoading": "Memuatkan…",
     "journalDetailBlockYou": "ANDA",
