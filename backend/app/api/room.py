@@ -270,6 +270,11 @@ async def stream_room(
                         payload['stance'] = msg.stance
                         payload['conviction'] = msg.conviction
                         payload['headline'] = msg.headline
+                        # CR197 — same key-presence discipline: a run recorded
+                        # before the field existed must not replay as "declared
+                        # nothing" when the truth is "was never asked".
+                        if isinstance(raw, dict) and "argued_size_pct" in raw:
+                            payload['argued_size_pct'] = msg.argued_size_pct
                     yield sse_json("agent_done", json.dumps(payload))
                 if persisted.verdict is not None:
                     yield sse_json("phase", json.dumps({'label': 'VERDICT'}))
@@ -307,6 +312,10 @@ async def stream_room(
                         "stance": ev.stance,
                         "conviction": ev.conviction,
                         "headline": ev.headline,
+                        # CR197 — the RISK debators' declared size; null for the
+                        # nine agents never asked for one. The shipped client
+                        # reads only the keys it knows, so this is additive.
+                        "argued_size_pct": ev.argued_size_pct,
                     })
                     yield sse_json("agent_done", payload)
                 elif ev.kind == "agent_withheld":

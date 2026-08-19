@@ -88,11 +88,13 @@ def test_no_database_is_touched():
 # ── the property the whole CR exists for ─────────────────────────────────────
 
 
-def _version_changes_when(monkeypatch, module, attr, new) -> bool:
-    before = pv.prompt_version(AgentId.CONSERVATIVE_DEBATOR)
+def _version_changes_when(
+    monkeypatch, module, attr, new, agent=AgentId.CONSERVATIVE_DEBATOR
+) -> bool:
+    before = pv.prompt_version(agent)
     pv.reset_cache()
     monkeypatch.setattr(module, attr, new)
-    after = pv.prompt_version(AgentId.CONSERVATIVE_DEBATOR)
+    after = pv.prompt_version(agent)
     return before != after
 
 
@@ -110,12 +112,42 @@ def test_a_format_constant_change_moves_the_version(monkeypatch):
 
 
 def test_a_stance_format_change_moves_the_version(monkeypatch):
+    """CR197 split the envelope contract in two: the three Risk Debators render
+    `_STANCE_FORMAT_RISK` (which carries the SIZE field) and the other eight render
+    `_STANCE_FORMAT`. So this asserts against an agent that actually uses the
+    constant being patched — a debator would now pass this test vacuously, which is
+    precisely the "version that does not move" failure CR158 exists to prevent."""
     from app.services import room_prompts
 
     assert _version_changes_when(
         monkeypatch, room_prompts, "_STANCE_FORMAT",
         room_prompts._STANCE_FORMAT + "\nAnother line.",
+        agent=AgentId.BULL_RESEARCHER,
     )
+
+
+def test_a_risk_stance_format_change_moves_a_debators_version(monkeypatch):
+    """The other half of the split. Without this, `_STANCE_FORMAT_RISK` could be
+    edited freely and every debator would keep serving the old version hash — the
+    same silent-staleness hole, just moved to the new constant."""
+    from app.services import room_prompts
+
+    assert _version_changes_when(
+        monkeypatch, room_prompts, "_STANCE_FORMAT_RISK",
+        room_prompts._STANCE_FORMAT_RISK + "\nAnother line.",
+        agent=AgentId.CONSERVATIVE_DEBATOR,
+    )
+
+
+def test_the_two_envelope_contracts_are_actually_different(monkeypatch):
+    """Guards the split itself. If `_STANCE_FORMAT_RISK` ever collapses back to
+    `_STANCE_FORMAT`, the two tests above both still pass while the SIZE field has
+    silently stopped being asked for."""
+    from app.services import room_prompts
+
+    assert room_prompts._STANCE_FORMAT_RISK != room_prompts._STANCE_FORMAT
+    assert "SIZE:" in room_prompts._STANCE_FORMAT_RISK
+    assert "SIZE:" not in room_prompts._STANCE_FORMAT
 
 
 def test_a_grounding_directive_change_moves_the_version(monkeypatch):

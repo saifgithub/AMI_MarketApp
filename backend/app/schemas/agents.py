@@ -99,3 +99,18 @@ class AgentMessage(BaseModel):
     # Length-capped and nulled server-side when over — never truncated. See
     # `room_prompts.STANCE_HEADLINE_MAX_CHARS`.
     headline: str | None = None
+
+    # CR197 — the position size (% of portfolio) a Risk Debator says it actually
+    # endorses, parsed from the SIZE field its envelope asks for.
+    #
+    # Only the three debators are asked for one, so `None` is the norm across the
+    # other nine agents and across every transcript recorded before this field
+    # existed. It is named `argued_size_pct`, not `size_pct`, because a verdict's
+    # `size_pct` is a decision the simulator acts on and this is an opinion nothing
+    # enforces — the deterministic caps and the safety floor remain the only things
+    # that size a trade.
+    #
+    # It exists to make CR143's M4 answerable: the debate spread itself is computed
+    # in code (`risk_debator_sizes`) and handed to the agents, so the only spread
+    # worth measuring is between what an agent was handed and what it endorses.
+    argued_size_pct: float | None = None

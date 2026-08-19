@@ -646,6 +646,15 @@ def _aggressive_block(m: Mandate) -> str:
         f"the mandate snapshot above, plus existing drawdown, cannot exceed "
         f"{m.max_drawdown_pct}%. Use that figure as written — do not recompute it.",
     ]
+    # CR197: measured over 118 convenes this agent argued "for" 117 times at high
+    # conviction 97 times — both channels near-constant, so its turn carried almost
+    # no information about the ticker. The stance is the brief and stays; conviction
+    # is the channel that is free to vary, and this is what asks it to.
+    parts.append(
+        "- Your stance is settled by your role; your conviction is not. Reserve high "
+        "conviction for evidence that would move a sceptic, and say plainly when you "
+        "are arguing the best version of a weak hand."
+    )
     if m.risk_score <= 2:
         parts.append(
             "- For low-risk-score user: your role is to ensure conservative voice doesn't dominate to inaction. Push, but recognise the user's stated profile."
@@ -666,6 +675,12 @@ def _conservative_block(m: Mandate) -> str:
         f"figure toward comfortable distance below the cap. Do not recompute it, and "
         f"never compare a raw stop distance against the cap.",
     ]
+    # CR197 — see `_aggressive_block`. This agent argued "against" 117 of 118 times.
+    parts.append(
+        "- Your stance is settled by your role; your conviction is not. Reserve high "
+        "conviction for a specific, quantified downside — when all you have is general "
+        "prudence, report that instead of dressing it up."
+    )
     if m.risk_score <= 2:
         parts.append("- Lead the debate. Aggressive voice must justify any deviation toward higher risk.")
     elif m.risk_score >= 4:
@@ -683,7 +698,12 @@ def _neutral_block(m: Mandate) -> str:
         f"portfolio-level max_drawdown_pct={m.max_drawdown_pct}%. The mandate "
         f"snapshot above states YOUR position's contribution to that cap — quote "
         f"it, do not recompute it.\n"
-        "- Note inconsistencies between Aggressive's optimism and Conservative's caution that data doesn't resolve."
+        "- Note inconsistencies between Aggressive's optimism and Conservative's caution that data doesn't resolve.\n"
+        # CR197: the only debator whose stance actually varies, which makes its
+        # conviction the room's read on whether the evidence decides anything.
+        "- Your conviction reports how clearly the evidence separates the two cases: "
+        "high when one side's numbers plainly win, low when both are genuinely still "
+        "standing. Low conviction still states a view — it does not hedge."
     )
 
 

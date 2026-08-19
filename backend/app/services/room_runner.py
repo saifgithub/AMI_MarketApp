@@ -2554,6 +2554,11 @@ _ENVELOPE_TRIM_RE = re.compile(r"^[\s*_]+|[\s*_]+$")
 _STANCE_TAIL_RE = re.compile(
     r"\[\s*STANCE\s*:\s*[A-Za-z]*\s*\|"
     r"\s*CONVICTION\s*:\s*[A-Za-z]*\s*\|"
+    # CR197: the RISK phase's envelope carries a SIZE field between CONVICTION and
+    # HEADLINE. Optional, so the eight agents without it still match — and if the
+    # segment were not tolerated here, a debator's legacy tail-form envelope would
+    # stop being stripped and would render as prose.
+    r"(?:\s*SIZE\s*:[^|\]]*\|)?"
     r"\s*HEADLINE\s*:\s*[^\]]*\]\s*\Z",
     re.IGNORECASE,
 )
@@ -2564,6 +2569,9 @@ _STANCE_TAIL_RE = re.compile(
 _STANCE_FIELD_RE = re.compile(r"STANCE\s*:\s*([^|\]\n]*)", re.IGNORECASE)
 _CONVICTION_FIELD_RE = re.compile(r"CONVICTION\s*:\s*([^|\]\n]*)", re.IGNORECASE)
 _HEADLINE_FIELD_RE = re.compile(r"HEADLINE\s*:\s*([^\]\n]*)", re.IGNORECASE)
+# CR197 — the RISK phase's fourth field. `\b` so a HEADLINE reading
+# "…OVERSIZE: 4%…" cannot be mistaken for the field itself.
+_SIZE_FIELD_RE = re.compile(r"\bSIZE\s*:\s*([^|\]\n]*)", re.IGNORECASE)
 
 _STANCE_VALUES = {"for", "against", "neutral"}
 _CONVICTION_VALUES = {"low", "medium", "high"}
@@ -2574,6 +2582,10 @@ class _StanceEnvelope:
     stance: str | None = None
     conviction: str | None = None
     headline: str | None = None
+    # CR197 — the size the debator says it actually endorses, which may differ from
+    # the reference figure its role was handed. `None` for the eight agents never
+    # asked for one, and for any turn that omitted or mangled it.
+    size_pct: float | None = None
 
 
 def _stance_field(pattern: re.Pattern[str], envelope: str) -> str | None:
@@ -2670,8 +2682,17 @@ def parse_stance_envelope(text: str) -> tuple[str, _StanceEnvelope]:
     if stance is None:
         conviction = None  # type: ignore[assignment]
 
+    # CR197. Deliberately NOT nulled alongside conviction when the stance is
+    # absent: this is a measurement channel, not a rendered one, and a turn that
+    # states a size while fumbling its stance is exactly the case worth keeping.
+    # Bounds are a sanity filter only — anything outside them is a misread field
+    # (a price, a percentage change), not a position size.
+    size_pct = _safe_float((_stance_field(_SIZE_FIELD_RE, envelope) or "").rstrip("%").strip())
+    if size_pct is None or not (0 < size_pct <= 100):
+        size_pct = None
+
     return body.strip(), _StanceEnvelope(
-        stance=stance, conviction=conviction, headline=headline
+        stance=stance, conviction=conviction, headline=headline, size_pct=size_pct
     )
 
 
@@ -2920,6 +2941,9 @@ class RoomEvent:
     stance: str | None = None
     conviction: str | None = None
     headline: str | None = None
+    # CR197 — the RISK debators' declared size, also 'agent_done' only. None for
+    # every other agent, and for a debator that did not state one.
+    argued_size_pct: float | None = None
 
 
 PLAN_TO_TIER: dict[Plan, str] = {
@@ -3106,6 +3130,9 @@ def build_journal_entry_for_run(run: RoomRun, user_id: UUID) -> JournalEntryCrea
                     "stance": m.stance,
                     "conviction": m.conviction,
                     "headline": m.headline,
+                    # CR197 — frozen alongside them so a later audit can compare
+                    # what each debator endorsed against the figure it was handed.
+                    "argued_size_pct": m.argued_size_pct,
                 } for m in run.transcript
             ],
         },
@@ -4577,6 +4604,7 @@ async def _stream_agent_text(
         stance=env.stance,  # type: ignore[arg-type]
         conviction=env.conviction,  # type: ignore[arg-type]
         headline=env.headline,
+        argued_size_pct=env.size_pct,
     ))
     _checkpoint_run(run)  # incremental snapshot — narrows data-loss window to ≤1 agent
     yield RoomEvent(
@@ -4586,6 +4614,7 @@ async def _stream_agent_text(
         stance=env.stance,
         conviction=env.conviction,
         headline=env.headline,
+        argued_size_pct=env.size_pct,
     )
 
 

@@ -494,19 +494,57 @@ truncation over. An over-length headline falls back to the row's other sources
 (the agent's own first **bold** span), which are quotations, and a truncated
 quotation reads as the fragment it is."""
 
-_STANCE_FORMAT = (
-    "\n\nBEFORE the thesis sentence, your VERY FIRST line must be this one line, "
-    "in exactly this shape, with your prose starting on the line after it:\n"
-    "[STANCE: for|against|neutral | CONVICTION: low|medium|high | HEADLINE: <max "
-    f"{STANCE_HEADLINE_MAX_CHARS} characters>]\n"
-    "- STANCE: your view on taking this position now — 'for', 'against', or "
-    "'neutral' if you genuinely land in the middle.\n"
-    "- CONVICTION: how strongly you hold that view.\n"
-    "- HEADLINE: the single number or fact that carries your view, in your own "
-    "words. Not a summary of your whole argument.\n"
-    "- If your role this turn is not to take a side at all, write "
-    "'STANCE: none'. Never guess a side to fill the field.\n"
-    "- Write this line ONCE, at the top only. Do not repeat it at the end."
+def _build_stance_format(*, with_size: bool) -> str:
+    """The machine channel's contract, in one place for both variants.
+
+    CR197 adds a SIZE field for the three Risk Debators only. Both variants are
+    generated from this one body so the shared fields cannot drift apart — the
+    parser reads fields independently, so a wording change on one side that never
+    reached the other would degrade silently rather than fail.
+    """
+    size_slot = "SIZE: <n.n>% | " if with_size else ""
+    size_bullet = (
+        "- SIZE: the position size, as a % of the portfolio, that you actually "
+        "endorse after reading the numbers in front of you. Your role was handed a "
+        "reference figure; this field is where you say what you truly mean, which "
+        "may be that same figure or may not. A number, with a % sign.\n"
+        if with_size
+        else ""
+    )
+    return (
+        "\n\nBEFORE the thesis sentence, your VERY FIRST line must be this one line, "
+        "in exactly this shape, with your prose starting on the line after it:\n"
+        f"[STANCE: for|against|neutral | CONVICTION: low|medium|high | {size_slot}"
+        f"HEADLINE: <max {STANCE_HEADLINE_MAX_CHARS} characters>]\n"
+        "- STANCE: your view on taking this position now — 'for', 'against', or "
+        "'neutral' if you genuinely land in the middle.\n"
+        "- CONVICTION: how strongly you hold that view.\n"
+        f"{size_bullet}"
+        "- HEADLINE: the single number or fact that carries your view, in your own "
+        "words. Not a summary of your whole argument.\n"
+        "- If your role this turn is not to take a side at all, write "
+        "'STANCE: none'. Never guess a side to fill the field.\n"
+        "- Write this line ONCE, at the top only. Do not repeat it at the end."
+    )
+
+
+_STANCE_FORMAT = _build_stance_format(with_size=False)
+
+# CR197 — the RISK phase's variant. The three debators are the only agents whose
+# job is to advocate a SIZE, and until now nothing read one back: the spread they
+# "debate" is computed in code (`risk_debator_sizes`) and handed to them, so the
+# quantity worth capturing is not the spread itself but whether the agent endorses
+# the figure it was given or moves off it. That delta is the signal; the spread
+# alone is a constant and always was.
+#
+# This is a prompt-level instruction, so P2 applies: it is a MEASUREMENT channel,
+# never a control. Compliance is itself a number to report (DEF251 measured 20% of
+# debator turns emitting no envelope at all), and nothing downstream may assume the
+# field is present.
+_STANCE_FORMAT_RISK = _build_stance_format(with_size=True)
+
+_SIZE_DECLARING_AGENTS = frozenset(
+    {AgentId.AGGRESSIVE_DEBATOR, AgentId.CONSERVATIVE_DEBATOR, AgentId.NEUTRAL_DEBATOR}
 )
 
 
@@ -890,7 +928,9 @@ def build_room_messages(
         prose_format = _PROSE_FORMAT
         if agent_id != AgentId.TRADER:
             prose_format += _NO_FENCE_CLAUSE
-        format_instruction = prose_format + _STANCE_FORMAT
+        format_instruction = prose_format + (
+            _STANCE_FORMAT_RISK if agent_id in _SIZE_DECLARING_AGENTS else _STANCE_FORMAT
+        )
 
     # DEF066: only agents that judge the proposed trade (RISK debators, the PM's
     # VERDICT) get the derived contribution figure; earlier phases have no
