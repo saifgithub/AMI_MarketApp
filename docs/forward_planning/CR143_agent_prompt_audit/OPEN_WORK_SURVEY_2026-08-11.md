@@ -264,7 +264,7 @@ Cross-checked `infra/alpha.env` → `docker-compose.yml` api-alpha `environment:
 ### 6.1 `ADANOS_API_KEY_SECONDARY` — a live key that no code path can ever see
 
 ```
-infra/alpha.env:103    ADANOS_API_KEY_SECONDARY=sk_live_9c28873b517ae0261cb0e19de5e6739b
+infra/alpha.env:103    ADANOS_API_KEY_SECONDARY=sk_live_<REDACTED-DEF178>
 docker-compose.yml     grep ADANOS → only line 259 (ADANOS_API_KEY). No SECONDARY.
 config.py              grep adanos → only line 202 (adanos_api_key: str = ""). No secondary field.
 ```
