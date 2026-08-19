@@ -406,34 +406,76 @@ def m4_risk_spread(runs: list[dict]) -> dict[str, Any]:
     carries a size in **1 of 54** risk turns (2%), so the contracted surface is
     empty. No structured size field exists on the transcript entry at all.
 
-    So this returns the extractions for hand-reading and refuses to compute the
-    summary statistic. `mean_spread_pts` is deliberately None: a 46.83 built from
-    27%-precision inputs is worse than no number, because it reads as a finding.
-    Restoring it requires the agents to declare size in the envelope — a prompt
-    change, not a parser change.
+    CR197 built that field. `argued_size_pct` is parsed from a SIZE slot in the
+    RISK phase's stance envelope, so on any epoch recorded after it this metric
+    reads a declared number instead of guessing at prose, and `source` says which.
+
+    What the number means also changed, and this is the more important half. The
+    spread itself was never evidence of anything: `risk_debator_sizes()` computes
+    trader+2 / trader−1.5 / trader in code and HANDS each debator the figure to
+    argue, so a "spread" of 3.5 pt is arithmetic, not debate. A declared spread
+    near 3.5 therefore means the agents recited their brief; what carries
+    information is deviation from it. `declaration_rate` is reported alongside,
+    because this is a prompt-level instruction and P2 forbids assuming compliance.
     """
-    rows = []
+    rows: list[dict] = []
+    declared = structured = prose = 0
+    risk_turns = 0
     for run in runs:
-        sizes = {}
+        sizes: dict[str, float] = {}
+        srcs: dict[str, str] = {}
         for entry in run.get("transcript") or []:
             aid = entry.get("agent_id")
-            if aid in _RISK:
-                m = _PROPOSED_SIZE.search(entry.get("content") or "")
-                if m:
-                    try:
-                        sizes[aid] = float(m.group(1))
-                    except ValueError:
-                        pass
+            if aid not in _RISK:
+                continue
+            risk_turns += 1
+            declared_size = entry.get("argued_size_pct")
+            if isinstance(declared_size, (int, float)):
+                sizes[aid] = float(declared_size)
+                srcs[aid] = "envelope"
+                declared += 1
+                structured += 1
+                continue
+            m = _PROPOSED_SIZE.search(entry.get("content") or "")
+            if m:
+                try:
+                    sizes[aid] = float(m.group(1))
+                    srcs[aid] = "prose (27% precise — DEF271)"
+                    prose += 1
+                except ValueError:
+                    pass
         if len(sizes) >= 2:
-            rows.append({"ticker": run.get("ticker"), "sizes": sizes,
+            rows.append({"ticker": run.get("ticker"), "sizes": sizes, "sources": srcs,
                          "spread_pts": round(max(sizes.values()) - min(sizes.values()), 2)})
+
+    all_structured = prose == 0 and structured > 0
+    spreads = [r["spread_pts"] for r in rows]
     return {
-        "status": "UNRELIABLE — extractions are 27% precise (3/11 hand-read, "
-                  "2026-08-07 epoch). Do not cite spread figures. See DEF271.",
+        "status": (
+            "OK — sizes read from the CR197 envelope field"
+            if all_structured
+            else "UNRELIABLE — one or more sizes came from prose, 27% precise "
+                 "(3/11 hand-read, 2026-08-07 epoch). See DEF271."
+        ),
+        "source": "envelope" if all_structured else ("mixed" if structured else "prose"),
+        "risk_turns": risk_turns,
+        "declaration_rate": round(declared / risk_turns, 3) if risk_turns else None,
         "convenes_with_2plus_sizes": len(rows),
         "convenes_total": len(runs),
-        "mean_spread_pts": None,
-        "zero_spread_convenes": None,
+        # Only computed when nothing was guessed from prose: a mean built from
+        # 27%-precision inputs reads as a finding and is worse than no number.
+        "mean_spread_pts": (
+            round(sum(spreads) / len(spreads), 2) if all_structured and spreads else None
+        ),
+        "zero_spread_convenes": (
+            sum(1 for s in spreads if s == 0) if all_structured else None
+        ),
+        "reference_spread_pts": 3.5,
+        "reference_note": (
+            "The handed spread is 3.5 pt by construction (risk_debator_sizes: "
+            "+2 / -1.5 / +0). A declared spread at 3.5 is the brief recited; "
+            "deviation from it is the only part that carries information."
+        ),
         "rows_for_hand_reading": rows,
     }
 
