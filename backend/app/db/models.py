@@ -2214,3 +2214,45 @@ class SimShortPositionRow(Base):
     # user | margin | stop | target
     close_reason: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     realised_pnl: Mapped[Optional[float]] = mapped_column(Numeric(12, 2), nullable=True)
+
+
+class VllmCacheSampleRow(Base):
+    """One reading of the vLLM host's lifetime prefix-cache counters (CR192).
+
+    WHY A TABLE AND NOT A GAUGE. `usage.prompt_tokens_details.cached_tokens` —
+    the per-call field CR141 wired up — is present in the shape and `None` in
+    value on our vLLM build, an upstream V1-engine bug (issues 44961 / 16162 /
+    18062). So `llm_audit.cache_read_tokens` is NULL on every row the provider
+    serving 100% of Alpha traffic produces, and CR040 forbids inventing a zero
+    to fill it. The rate is still readable, just not per-call: the server
+    publishes it on `/metrics` as two lifetime counters. This is where they land.
+
+    THE COUNTERS ARE STORED RAW, NEVER AS A RATE. They are cumulative since the
+    vLLM process started, so a stored rate can never be windowed afterwards and a
+    stored pair always can. `41.3%` measured on 2026-08-16 was a lifetime figure,
+    as was CR017 §2.4's original `18.5%` — neither is like-for-like with the
+    other, which is the whole reason the window has to be derived at read time.
+
+    AND THE COUNTERS RESET. Measured 2026-08-19: 1,064,911 queries against
+    59,681,175 three days earlier — the vLLM process had restarted, so
+    Δqueries was −58,616,264. A window computed across that boundary is not a
+    window; it is nonsense that looks like a cache collapse. `windowed_rate`
+    detects the descent and reports a reset instead of a number, which is only
+    possible because the raw pair is here. Storing the rate would have hidden it.
+    """
+
+    __tablename__ = "vllm_cache_samples"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    sampled_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False, index=True,
+    )
+    # Which host and model the reading came from. Two vLLM boxes, or a model
+    # swap on one, would otherwise produce one incomparable series.
+    base_url: Mapped[str] = mapped_column(String, nullable=False)
+    model_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # Lifetime-cumulative, exactly as `/metrics` reported them. BigInteger
+    # because the 2026-08-16 reading was already 5.9e7 and these only climb
+    # until the process restarts.
+    queries_total: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    hits_total: Mapped[int] = mapped_column(BigInteger, nullable=False)

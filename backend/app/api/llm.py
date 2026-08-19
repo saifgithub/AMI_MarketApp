@@ -61,3 +61,37 @@ async def llm_translate(req: TranslateRequest) -> TranslateResponse:
         text="".join(chunks),
         provider=str(status.get("active_provider", "")),
     )
+
+
+@router.get("/cache_rate")
+async def llm_cache_rate(limit: int = 2) -> dict[str, object]:
+    """The vLLM prefix-cache hit rate over the most recent window (CR192).
+
+    This lives here rather than beside a per-call figure because there is no
+    per-call figure to sit beside: `usage.prompt_tokens_details.cached_tokens`
+    is None on every vLLM response (upstream V1-engine bug), so
+    `llm_audit.cache_read_tokens` is permanently NULL for the provider serving
+    all of Alpha. The rate exists only as a difference between two readings of
+    the server's own lifetime counters.
+
+    `rate` is null whenever `status` is not `ok`, and the statuses are not
+    interchangeable with zero:
+
+      `reset`                 the counters descended, so vLLM restarted inside
+                              the window. Not a cache collapse — no measurement.
+      `no_queries_in_window`  no traffic. Not a 0% hit rate — nothing was asked.
+      `insufficient_samples`  fewer than two readings stored yet.
+
+    A caller that renders `rate ?? 0` defeats the entire point (CR040).
+    """
+    from app.services.vllm_metrics import windowed_rate
+
+    w = windowed_rate(limit=limit)
+    return {
+        "status": w.status,
+        "rate": w.rate,
+        "queries_delta": w.queries_delta,
+        "hits_delta": w.hits_delta,
+        "window_start": w.window_start.isoformat() if w.window_start else None,
+        "window_end": w.window_end.isoformat() if w.window_end else None,
+    }

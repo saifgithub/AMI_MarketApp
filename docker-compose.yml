@@ -170,6 +170,11 @@ services:
       # compose backend reaches the on-prem LLM server.
       VLLM_BASE_URL: ${VLLM_BASE_URL:-}
       VLLM_MODEL: ${VLLM_MODEL:-ami-llm}
+      # CR192 — prefix-cache counter sampling interval. Forwarded because
+      # test_config_compose_parity.py fails the build otherwise (P1: DEF038
+      # and DEF063 were both a setting that existed locally and never
+      # reached the container).
+      VLLM_METRICS_SAMPLE_INTERVAL_SECONDS: ${VLLM_METRICS_SAMPLE_INTERVAL_SECONDS:-3600}
       VLLM_API_KEY: ${VLLM_API_KEY:-}
       # Yahoo quotes vs the mock walk. Set USE_REAL_MARKET_DATA=true in
       # .env to flip on real prices (with a mock-walk fallback). The

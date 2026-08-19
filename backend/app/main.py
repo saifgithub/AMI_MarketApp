@@ -205,6 +205,37 @@ async def _portfolio_nav_snapshot_tick() -> None:
         await asyncio.sleep(_PORTFOLIO_NAV_SNAPSHOT_INTERVAL_SECONDS)
 
 
+async def _vllm_cache_sample_tick() -> None:
+    """Background task: one `vllm_cache_samples` row per interval, holding the
+    vLLM host's two lifetime prefix-cache counters as reported (CR192).
+
+    Deliberately NOT idempotent-by-date the way the NAV snapshots are. Those
+    want exactly one row per boundary; this wants a series, because a rate can
+    only be derived from two readings and the interval sets the tightest window
+    available. A tick that cannot reach the host writes nothing and leaves a
+    gap — never a zero row, never a repeat of the last (CR040): the first would
+    read as the cache collapsing, the second as the server idling.
+    """
+    from app.services.vllm_metrics import run_vllm_cache_sample_tick
+
+    interval = settings.vllm_metrics_sample_interval_seconds
+    if interval <= 0 or not settings.vllm_base_url:
+        logger.info(
+            "vllm_cache_sample_tick_disabled",
+            interval=interval,
+            has_vllm_base_url=bool(settings.vllm_base_url),
+        )
+        return
+
+    while True:
+        try:
+            stats = await asyncio.to_thread(run_vllm_cache_sample_tick)
+            logger.info("vllm_cache_sample_tick_complete", **stats)
+        except Exception:
+            logger.exception("vllm_cache_sample_tick_failed")
+        await asyncio.sleep(interval)
+
+
 async def _game_nav_snapshot_tick() -> None:
     """Background task: one `portfolio_nav_daily` row per GAME run per US
     market day (CR109 slice 2 — the sibling of `_portfolio_nav_snapshot_tick`
@@ -462,6 +493,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_daily_reminder_tick()),
         asyncio.create_task(_portfolio_nav_snapshot_tick()),
         asyncio.create_task(_game_nav_snapshot_tick()),
+        asyncio.create_task(_vllm_cache_sample_tick()),
         asyncio.create_task(_game_queue_fill_tick()),
         asyncio.create_task(_sim_resting_order_tick()),
         asyncio.create_task(_game_scoring_pass_tick()),

@@ -596,6 +596,12 @@ class Settings(BaseSettings):
     # encrypt_secret refuse rather than write fresh rows under a retired key.
     alpaca_encryption_key_previous: str = ""
 
+    # CR192 — how often to sample the vLLM host's /metrics for the two lifetime
+    # prefix-cache counters. Hourly by default: the counters are cumulative, so
+    # the sample rate sets the tightest window that can be derived, not the
+    # precision of any single reading. 0 disables the tick.
+    vllm_metrics_sample_interval_seconds: int = 3600
+
     # Admin back-office secret (AT:R27). Static bearer for Alpha single-operator
     # access. All /v1/admin/* routes require this. Empty = admin disabled.
     # Generate: openssl rand -hex 32
