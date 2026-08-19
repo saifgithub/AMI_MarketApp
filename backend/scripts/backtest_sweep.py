@@ -149,6 +149,37 @@ def start_backtest_run(
     )
 
 
+def load_pairs(path: str) -> tuple[list[tuple[str, date]], dict[date, int]]:
+    """The (ticker, as_of) pairs a previous batch actually completed.
+
+    Reads a `runs_*.jsonl` and keeps only records that reached a terminal
+    `completed` status — a pair that errored or was never reached is not part
+    of the set being paired against, and silently re-running it would make the
+    two batches different sizes while looking paired.
+
+    Sorted, so the replay is deterministic regardless of the source file's
+    order, and deduplicated, because a batch's repeat arm can name a pair
+    twice.
+    """
+    seen: set[tuple[str, date]] = set()
+    with open(path) as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            rec = json.loads(line)
+            if rec.get("status") != "completed":
+                continue
+            seen.add((rec["ticker"], date.fromisoformat(rec["as_of"])))
+    if not seen:
+        raise SystemExit(f"no completed pairs in {path} — nothing to replay")
+    pairs = sorted(seen, key=lambda p: (p[1], p[0]))
+    quotas: dict[date, int] = {}
+    for _, as_of in pairs:
+        quotas[as_of] = quotas.get(as_of, 0) + 1
+    return pairs, quotas
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="CR164 Room backtest sweep driver.")
     parser.add_argument("--batch-id", required=True)
@@ -177,6 +208,17 @@ def main() -> int:
     parser.add_argument("--poll-interval", type=float, default=20.0)
     parser.add_argument("--run-timeout", type=float, default=1500.0)
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
+    parser.add_argument(
+        "--pairs-file",
+        help=(
+            "Replay the exact (ticker, as_of) pairs from a previous batch's "
+            "runs_*.jsonl instead of generating them. Makes a paired re-run "
+            "explicit and outcome-exact: it replays the pairs that actually "
+            "COMPLETED, not the plan that was drawn. Without it, replay works "
+            "only by seed plus a pinned --window-end, and omitting the latter "
+            "silently shifts the Friday count and changes pairs with no warning."
+        ),
+    )
     parser.add_argument("--plan-only", action="store_true",
                         help="Print the deterministic pair plan and exit; no network.")
     args = parser.parse_args()
@@ -199,7 +241,15 @@ def main() -> int:
         )
 
     rng = random.Random(args.seed)
-    pairs, quotas = generate_pairs(tickers, fridays, args.n_pairs, rng)
+    if args.pairs_file:
+        pairs, quotas = load_pairs(args.pairs_file)
+        print(
+            f"replaying {len(pairs)} pairs from {args.pairs_file} "
+            f"(--n-pairs {args.n_pairs} ignored)",
+            flush=True,
+        )
+    else:
+        pairs, quotas = generate_pairs(tickers, fridays, args.n_pairs, rng)
     if args.repeat_pairs > len(pairs):
         raise SystemExit(
             f"--repeat-pairs {args.repeat_pairs} exceeds the {len(pairs)} planned pairs"
