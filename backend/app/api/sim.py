@@ -50,7 +50,10 @@ from app.services.sim_resting_orders import (
     commitment_for,
     sweep_resting_orders,
 )
-from app.services.sim_trade_effects import apply_post_fill_effects
+from app.services.sim_trade_effects import (
+    apply_post_fill_effects,
+    record_compliance_block,
+)
 from app.services.ticker_reference import (
     TickerNotFoundError,
     require_ticker_exists,
@@ -597,6 +600,23 @@ async def submit_trade(
         classification_universe=classification_universe,
     )
     if not result.accepted:
+        # CR177 — the refusal is a decision and gets a durable record; until
+        # this, the block reached the UI in this response and was then gone,
+        # so a working safety floor and an absent one produced identical
+        # history. Off the event loop like every other sync DB write here
+        # (DEF120/DEF200 seam). The function itself decides whether this
+        # refusal is the floor firing (`blocked_by` non-empty) or a
+        # mechanical refusal that stays unjournaled.
+        await asyncio.to_thread(
+            record_compliance_block,
+            user_id=req.user_id,
+            ticker=req.ticker,
+            side=side,
+            quantity=req.quantity,
+            order_type=order_type,
+            compliance=result.compliance,
+            source="ticket",
+        )
         return {
             "ok": False,
             # CR170 §8 — on EVERY branch, including this one. The client must

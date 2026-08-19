@@ -91,7 +91,10 @@ from app.services.sim_order_push import (
     notify_rejected,
     notify_triggered,
 )
-from app.services.sim_trade_effects import apply_post_fill_effects
+from app.services.sim_trade_effects import (
+    apply_post_fill_effects,
+    record_compliance_block,
+)
 from app.schemas.trade import OrderType, Side
 from app.trading_math.market_hours import is_us_market_open
 from app.trading_math.order_pricing import is_triggered
@@ -556,6 +559,24 @@ def _fill_triggered(
                 result.compliance.violations[0]
                 if result.compliance.violations
                 else "refused at fill"
+            )
+            # CR177 — the sweep is the second place the floor can refuse
+            # (`fill_resting_order` re-runs it so a resting order is not a
+            # time-delayed bypass), and the MORE invisible one: no request in
+            # the call stack, nobody watching. Same recorder as the ticket;
+            # it writes only when `blocked_by` names a rule, so a mechanical
+            # refusal stays a rejected order and nothing more. The rejection
+            # itself is terminal (`_stamp_rejected`), so this is one entry
+            # per refusal, never one per sweep tick.
+            record_compliance_block(
+                user_id=order.user_id,
+                ticker=order.ticker,
+                side=order.side,
+                quantity=order.quantity,
+                order_type=order.order_type,
+                compliance=result.compliance,
+                source="resting_order",
+                reference_id=order.id,
             )
             _stamp_rejected(order.id, reason, now)
             notify_rejected(

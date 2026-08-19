@@ -33,6 +33,13 @@ class EntryType(str, Enum):
     AGENT_UNLOCK = "agent_unlock"
     DAILY_CHALLENGE = "daily_challenge"
     PORTFOLIO_HEALTH_ANALYSIS = "portfolio_health_analysis"
+    # CR177 — the safety floor refused a trade. Deliberately NOT a SIM_TRADE
+    # (nothing filled, no outcome — reusing it would silently inflate the
+    # denominator of CR133's "how your trades ended" card) and deliberately
+    # not the dead DRIFT_ALERT, which names a different event CR133 already
+    # has plans for. Clients that predate this value render it as the DEF210
+    # "unknown type" badge — inert by design.
+    COMPLIANCE_BLOCK = "compliance_block"
 
 
 class Outcome(str, Enum):
