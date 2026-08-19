@@ -1,0 +1,79 @@
+# CR196 frozen EVAL ticker set — NEVER in training data (decontamination rule, CR196 §2).
+# Sources: the 45-ticker basis_ground_truth.csv fixture set (machine-copied from ami-host
+# 2026-08-19; includes AAPL, the captured dual-model case) — 44 rows + AAPL was among them.
+# FinanceBench company tickers are appended by build_universe.py --fetch-financebench at
+# build time (not hand-typed here; no-extrapolated-numbers rule).
+AAPL
+AEE
+AMCR
+AMD
+AMZN
+APA
+ATO
+BKR
+CBRE
+CEG
+CHD
+CMCSA
+CPAY
+CVX
+DECK
+DHI
+DTE
+ECL
+EXPE
+FANG
+FE
+GL
+GOOG
+GOOGL
+HAS
+IBKR
+KIM
+LEN
+MOS
+MS
+OXY
+PLTR
+ROL
+ROST
+SHW
+STZ
+TFC
+TPL
+TSLA
+UBER
+VZ
+WDC
+XEL
+XYZ
+# FinanceBench companies (fetched 2026-08-19):
+ADBE
+AES
+AWK
+AXP
+BA
+BBY
+COST
+CVS
+GIS
+GLW
+JNJ
+JPM
+KHC
+KO
+LMT
+MGM
+MMM
+MSFT
+NFLX
+NKE
+PEP
+PFE
+PYPL
+ULTA
+WMT
+# Unresolved by search (both delisted — Activision Blizzard acquired by Microsoft,
+# Foot Locker acquired 2025). Excluded by their historical tickers, belt-and-braces:
+ATVI
+FL
