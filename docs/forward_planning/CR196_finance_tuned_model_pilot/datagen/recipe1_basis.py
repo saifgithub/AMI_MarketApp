@@ -23,7 +23,7 @@ Labels are computed from the same statements the brief renders — verifiable en
 Usage: python3 recipe1_basis.py --out out/recipe1.jsonl --limit 50 [--workers 6]
 Needs: pip install yfinance pandas
 """
-import argparse, concurrent.futures as cf, json, os, sys
+import argparse, concurrent.futures as cf, json, os, sys, time
 
 import pandas as pd
 import yfinance as yf
@@ -57,12 +57,25 @@ def cell(df, row, col):
         return None
 
 
+def _fetch(tk, attempts=5):
+    """Pull info + both balance sheets with backoff — Yahoo rate-limits burst pulls
+    (758/1437 failed with YFRateLimitError on the first full run, 2026-08-19)."""
+    for i in range(attempts):
+        try:
+            t = yf.Ticker(tk)
+            return t.info, t.quarterly_balance_sheet, t.balance_sheet
+        except Exception as e:
+            if "RateLimit" not in type(e).__name__ or i == attempts - 1:
+                raise
+            time.sleep(30 * (i + 1))
+    raise RuntimeError("unreachable")
+
+
 def classify(tk):
     """Same classification logic as the pilot's ground-truth builder (independent copy —
     the lane's script is not imported or executed)."""
     r = {"ticker": tk}
-    t = yf.Ticker(tk)
-    info, q, a = t.info, t.quarterly_balance_sheet, t.balance_sheet
+    info, q, a = _fetch(tk)
     if q is None or q.empty or a is None or a.empty:
         return {**r, "status": "no_statements"}
     mrq, ann = q.columns[0], a.columns[0]
@@ -238,13 +251,16 @@ def main():
     system_prompt = load_agent_prompt()
     rows, skipped = [], {"no_statements": 0, "missing_fields": 0, "error": 0,
                          "all_no_conflict_kept": 0}
+    errors, failed = {}, []
     with cf.ThreadPoolExecutor(max_workers=args.workers) as ex:
         futs = {ex.submit(classify, t): t for t in tickers}
         for fut in cf.as_completed(futs):
             try:
                 r = fut.result()
-            except Exception:
+            except Exception as e:
                 skipped["error"] += 1
+                errors[type(e).__name__] = errors.get(type(e).__name__, 0) + 1
+                failed.append(futs[fut])
                 continue
             if r.get("status") != "ok":
                 key = r.get("status") if r.get("status") in skipped else "no_statements"
@@ -268,6 +284,13 @@ def main():
     print(f"wrote {n} examples → {args.out}")
     print(f"classes: {json.dumps(classes, indent=2)}")
     print(f"skipped: {skipped}")
+    if errors:
+        print(f"error types: {errors}")
+        fpath = os.path.splitext(args.out)[0] + "_failed.txt"
+        with open(fpath, "w") as f:
+            f.write("\n".join(sorted(failed)) + "\n")
+        print(f"failed tickers → {fpath} (re-run with --tickers $(cat {fpath}) "
+              f"--workers 2 and merge outputs)")
 
 
 if __name__ == "__main__":
