@@ -65,3 +65,18 @@ def write_jsonl(path, rows):
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
     return len(rows)
+
+
+def yf_backoff(fn, *args, attempts=5):
+    """Retry a yfinance-touching callable through rate-limit windows (30s, 60s, ...).
+    Added after 758/1437 tickers failed with YFRateLimitError on recipe1's first
+    full sweep; the retried tail then completed with 0 errors. Non-rate-limit
+    exceptions propagate unchanged."""
+    import time
+    for i in range(attempts):
+        try:
+            return fn(*args)
+        except Exception as e:
+            if "RateLimit" not in type(e).__name__ or i == attempts - 1:
+                raise
+            time.sleep(30 * (i + 1))

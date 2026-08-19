@@ -39,7 +39,7 @@ import pandas as pd
 import yfinance as yf
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import fmt_b, load_agent_prompt, load_train_universe, pick, write_jsonl
+from common import fmt_b, load_agent_prompt, load_train_universe, pick, write_jsonl, yf_backoff
 
 REVENUE = ["Total Revenue"]
 NET_INCOME = ["Net Income", "Net Income Common Stockholders",
@@ -229,7 +229,7 @@ def main():
     rows, skipped = [], {"no_price_history": 0, "no_statements": 0, "no_asof_candidate": 0,
                          "no_price_at_asof": 0, "no_statement_at_asof": 0, "error": 0}
     with cf.ThreadPoolExecutor(max_workers=args.workers) as ex:
-        futs = {ex.submit(compute, t): t for t in tickers}
+        futs = {ex.submit(yf_backoff, compute, t): t for t in tickers}
         for fut in cf.as_completed(futs):
             try:
                 r = fut.result()
