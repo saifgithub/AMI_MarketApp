@@ -126,6 +126,17 @@ class SimNotifier extends StateNotifier<SimState> {
       final portfolio = await api.simPortfolio(userId);
       final trades = await api.simListTrades(userId);
       final book = await _loadRestingOrders(api, userId);
+      // DEF332 — every write below this point happens after an `await`, so the
+      // notifier may already be disposed: `SimNotifier.submit` fans out to the
+      // journal and the watchlist with `unawaited(...)` on purpose (the sheet
+      // closes and neither surface is on screen), which means that work
+      // routinely outlives whatever tore the container down — a user leaving
+      // the screen, or a test's tearDown. Writing `state` then throws
+      // `Bad state: Tried to use <Notifier> after \`dispose\` was called`, which
+      // is what riverpod means by "Consider checking `mounted`". Both the
+      // success and the error path need it: a disposed notifier cannot report
+      // an error either.
+      if (!mounted) return;
       state = state.copyWith(
         portfolio: portfolio,
         trades: trades,
@@ -134,6 +145,7 @@ class SimNotifier extends StateNotifier<SimState> {
         loading: false,
       );
     } catch (e) {
+      if (!mounted) return;
       // DEF254 — the read path, and the only one that offers a retry. Both
       // halves of the decision are made in this one call, so the sentence and
       // the button cannot disagree.
@@ -200,6 +212,7 @@ class SimNotifier extends StateNotifier<SimState> {
         horizonDays: horizonDays,
         verdictRef: verdictRef,
       );
+      if (!mounted) return null;
       state = state.copyWith(lastSubmit: result);
       // DEF315 — `submitting` stays TRUE across this. It used to go false the
       // instant the POST returned, and the app then made four more sequential
@@ -232,6 +245,7 @@ class SimNotifier extends StateNotifier<SimState> {
       // sent; the order may already exist server-side, and a manual trade
       // carries no `verdict_ref` for the server to dedup on. A retry control
       // here is a second order.
+      if (!mounted) return null;
       state = state.copyWith(
           error: friendlyError(e, action: 'place that trade'),
           errorRetryable: false);
@@ -239,7 +253,10 @@ class SimNotifier extends StateNotifier<SimState> {
     } finally {
       // One place, both paths. A throw anywhere above used to leave the flag
       // set on the error path only by luck of ordering.
-      state = state.copyWith(submitting: false);
+      // DEF332 — and `mounted` here too: this `finally` runs even when the
+      // container was disposed mid-submit, which is exactly the window the
+      // unawaited fan-out below opens.
+      if (mounted) state = state.copyWith(submitting: false);
     }
   }
 

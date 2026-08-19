@@ -96,6 +96,11 @@ class JournalNotifier extends StateNotifier<JournalState> {
         entryType: filterType?.wire,
         q: q,
       );
+      // DEF332 — refreshed with `unawaited(...)` from `SimNotifier.submit`, so
+      // this lands after the trade sheet has closed and can outlive whatever
+      // disposed the container. A `state =` on a disposed notifier throws
+      // `Bad state: Tried to use JournalNotifier after `dispose` was called`.
+      if (!mounted) return;
       state = state.copyWith(
         entries: resp.entries,
         loading: false,
@@ -105,6 +110,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
         filterType: filterType,
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
           loading: false,
           error: friendlyError(e, action: 'load your journal'));

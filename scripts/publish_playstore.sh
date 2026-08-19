@@ -113,6 +113,31 @@ EOF
   exit 1
 fi
 
+# CR195 — FLUTTER SUITE, run here as well as inside build_playstore.sh, for the
+# same reason DEF195's parity check is duplicated one block up: this is the only
+# script that UPLOADS, and ~40s of tests is cheap against a build that costs
+# several minutes. Failing here means nothing was built, nothing was bumped and
+# no build number was burned (DEF279).
+#
+# It is NOT left to the child script alone. Relying on the delegation would make
+# this gate vanish the day someone adds a --skip-build path to this script, and
+# a gate that quietly stops running is the whole reason CR195 exists: nothing on
+# the release path ran `flutter test`, so DEF331 rode red through a promotion
+# and a store build while `flutter analyze` returned 0.
+if ! "${PROJECT_ROOT}/scripts/check_release_flutter_suite.sh"; then
+  cat >&2 <<'EOF'
+
+✗ PUBLISH BLOCKED — the Flutter suite did not pass (CR195).
+
+  Nothing was built and no build number was spent. `flutter analyze` passing
+  says nothing about this; they answer different questions.
+
+  Fix the tests, then re-run.
+
+EOF
+  exit 1
+fi
+
 # 1. build the signed AAB (bump + flutter build appbundle)
 "${PROJECT_ROOT}/scripts/build_playstore.sh" "${BUILD_ARGS[@]}"
 

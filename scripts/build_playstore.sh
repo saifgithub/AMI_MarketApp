@@ -230,6 +230,39 @@ EOF
   exit 1
 fi
 
+# CR195 — FLUTTER SUITE. Blocking, and deliberately above the bump.
+#
+# Nothing on the path from a commit to a tester's phone ran `flutter test`.
+# Not `/promote-to-alpha` (backend suite + `flutter analyze`), not this script,
+# not its two siblings. DEF331 sat red from 03992d26 (2026-08-17) until
+# 2026-08-19 — through a backend promotion AND a store build — while
+# `flutter analyze` returned 0 throughout, because the failure was a test
+# assertion and analyze does not run tests. It was caught only because a human
+# ran the suite by hand.
+#
+# Third instance of *a check nothing invokes is not a check* (DEF195: a release
+# gate that existed and was never called; DEF326: a suite whose failing state
+# was invisible in the line an operator reads). The wrapper does the reading and
+# ends in one VERDICT line, so a red suite cannot be scrolled past.
+#
+# Placed AFTER the schema-parity check on purpose: parity is two HTTP calls and
+# this is ~40s, so the cheaper refusal goes first. Both are above the pubspec
+# bump (DEF279) — a block must not spend a build number.
+if ! "${PROJECT_ROOT}/scripts/check_release_flutter_suite.sh"; then
+  cat >&2 <<'EOF'
+
+✗ RELEASE BLOCKED — the Flutter suite did not pass (CR195).
+
+  The Flutter suite is red. `flutter analyze` passing says nothing about this —
+  they answer different questions, and that gap is exactly how DEF331 reached
+  two releases unnoticed (CR195).
+
+  Fix the tests, then re-run. No build number has been spent.
+
+EOF
+  exit 1
+fi
+
 # ORDER IS LOAD-BEARING (DEF279): every refusal above runs BEFORE the
 # pubspec bump below. It used to run after, so a refused build had
 # already bumped and COMMITTED a build number that was never uploaded —

@@ -55,8 +55,20 @@ class WatchlistNotifier extends StateNotifier<WatchlistState> {
       final api = _ref.read(apiClientProvider);
       final userId = await DeviceUser.getOrCreate();
       final items = await api.watchlistList(userId);
+      // DEF332 — every write below this point happens after an `await`, so the
+      // notifier may already be disposed: `SimNotifier.submit` fans out to the
+      // journal and the watchlist with `unawaited(...)` on purpose (the sheet
+      // closes and neither surface is on screen), which means that work
+      // routinely outlives whatever tore the container down — a user leaving
+      // the screen, or a test's tearDown. Writing `state` then throws
+      // `Bad state: Tried to use <Notifier> after \`dispose\` was called`, which
+      // is what riverpod means by "Consider checking `mounted`". Both the
+      // success and the error path need it: a disposed notifier cannot report
+      // an error either.
+      if (!mounted) return;
       state = state.copyWith(items: items, loading: false);
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
           error: friendlyError(e, action: 'load your watchlist'),
           loading: false);
