@@ -33,8 +33,11 @@ MIX_WEIGHTS = {
     "recipe4_earnings_quality": None, "recipe5_basis_traps": None,
     "recipe6_asof_discipline": None, "recipe7_mandate_compliance": None,
     "recipe8_room_format": None, "recipe9_refusal": None,
-    "tierb_finqa": None, "tierb_tatqa": None, "tierb_convfinqa": None,
-    "tierb_finance_instruct": 15000, "tierb_rlvr": None, "tierb_ultrachat": 4000,
+    # Run-1 caps: Tier B raw (48.5k) would swamp Tier A (~8.7k) at 85/15; these
+    # bring the mix to roughly A 33% / B 58% / replay 9%. SA-FDR probes revise them.
+    "tierb_finqa": 3000, "tierb_tatqa": 4000,
+    "tierb_finance_instruct_500k": 4000, "tierb_financial_rlvr": 4000,
+    "tierb_ultrachat": 2500,
 }
 VAL_PCT = 2  # hash buckets of 100
 
@@ -50,7 +53,8 @@ def h(s):
 def source_of(path, ex):
     m = ex.get("_meta", {})
     if m.get("recipe") == "tierb":
-        return f"tierb_{m.get('source', 'unknown')}"
+        # keyed by the output FILE, not _meta.source (which carries the full HF id)
+        return os.path.basename(path).rsplit(".", 1)[0]
     return m.get("recipe") or os.path.basename(path).rsplit(".", 1)[0]
 
 
