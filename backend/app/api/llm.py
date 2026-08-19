@@ -64,7 +64,13 @@ async def llm_translate(req: TranslateRequest) -> TranslateResponse:
 
 
 @router.get("/cache_rate")
-async def llm_cache_rate(limit: int = 2) -> dict[str, object]:
+# Plain `def`, not `async def` (DEF200): `windowed_rate()` is a synchronous DB
+# read and this handler awaits nothing, so declaring it async would run that
+# query ON the event loop — one uvicorn worker serves everything here, so a
+# slow query would freeze every other request and every open SSE stream.
+# Starlette runs a plain `def` in a threadpool. The DEF200 ratchet caught this
+# as written; it is the guard working, not a style preference.
+def llm_cache_rate(limit: int = 2) -> dict[str, object]:
     """The vLLM prefix-cache hit rate over the most recent window (CR192).
 
     This lives here rather than beside a per-call figure because there is no
