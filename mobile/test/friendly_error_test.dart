@@ -285,10 +285,46 @@ void main() {
 
       for (final file in userFacingSources()) {
         final lines = file.readAsLinesSync();
+        // DEF331 — `debugPrint` is exempt because it is a log, not a screen,
+        // but the exemption used to be tested on the same physical line as the
+        // match. A wrapped call puts the interpolation on a CONTINUATION line
+        // that contains no `debugPrint` token, so a correctly-written log was
+        // reported as a leak — `term_registry.dart:56` (DEF325), where the
+        // string simply ran past 80 columns.
+        //
+        // A guard that fires on correct code is the failure this repo has paid
+        // for repeatedly (DEF277; DEF329 was this exact line-vs-statement
+        // mistake in the register generator). So the exemption now tracks the
+        // whole call: once `debugPrint(` opens, every line stays exempt until
+        // its parentheses balance.
+        var debugPrintDepth = 0;
         for (var i = 0; i < lines.length; i++) {
           final line = lines[i];
           if (line.trimLeft().startsWith('//')) continue;
-          if (line.contains('debugPrint')) continue; // logs, not screens
+
+          final wasInsideDebugPrint = debugPrintDepth > 0;
+          if (wasInsideDebugPrint || line.contains('debugPrint(')) {
+            // Start at the '(' itself on the opening line, so the first
+            // character read is the paren that opens the call. Starting at the
+            // 'd' of `debugPrint` and breaking on "depth is 0" exits before
+            // any paren is seen, which is how the first attempt at this fix
+            // still reported term_registry.dart:56.
+            final from = wasInsideDebugPrint
+                ? 0
+                : line.indexOf('debugPrint(') + 'debugPrint'.length;
+            for (var c = from; c < line.length; c++) {
+              if (line[c] == '(') {
+                debugPrintDepth++;
+              } else if (line[c] == ')') {
+                debugPrintDepth--;
+                if (debugPrintDepth <= 0) {
+                  debugPrintDepth = 0;
+                  break;
+                }
+              }
+            }
+            continue; // logs, not screens
+          }
           final leaksInterpolated = _leak.hasMatch(line) || line.contains(r"'$e'");
           // DEF164b: e.toString() passed straight into a value is the same
           // leak with no string interpolation to catch it with — the
@@ -306,6 +342,36 @@ void main() {
               'action: ...) instead of interpolating it. What the user gets '
               'otherwise is a stack trace and an MDN link.\n'
               '${offenders.join('\n')}');
+    });
+
+    test('DEF331 — a wrapped debugPrint is exempt, and only the debugPrint is',
+        () {
+      // The exemption is for logs, not screens. It used to be evaluated per
+      // physical line, so a `debugPrint(` whose string ran onto a second line
+      // left that continuation unexempted and a correct log was reported as a
+      // leak. `term_registry.dart:56` (DEF325) is the real instance.
+      //
+      // This pins BOTH halves, because widening an exemption is the easy way
+      // to make a guard quiet and useless:
+      //   1. the real wrapped debugPrint is not reported;
+      //   2. the leak regex still matches that exact text in isolation — so
+      //      what silences it is the debugPrint exemption, NOT a weakened
+      //      pattern. Without (2) this test would also pass if someone
+      //      "fixed" the guard by making `_leak` match nothing.
+      final registry = File('lib/widgets/lessons/term_registry.dart');
+      expect(registry.existsSync(), isTrue,
+          reason: 'DEF331 was found against this file');
+
+      final continuation = registry
+          .readAsLinesSync()
+          .firstWhere((l) => l.contains(r'render as plain text: $e'),
+              orElse: () => '');
+      expect(continuation, isNotEmpty,
+          reason: 'the wrapped debugPrint this test pins has been rewritten — '
+              're-point it at another multi-line debugPrint, or drop it');
+      expect(_leak.hasMatch(continuation), isTrue,
+          reason: 'the pattern must still MATCH this text; the exemption is '
+              'what makes it acceptable, not a hole in the regex');
     });
 
     test('the leak pattern would actually catch the lines that were there', () {
