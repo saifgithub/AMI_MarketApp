@@ -40,6 +40,13 @@ from app.services.sim_engine import (
     SimEngine,
     get_sim_engine,
 )
+from app.trading_math.risk_limits import (
+    resolved_max_open_positions,
+    resolved_max_open_risk_pct,
+    resolved_max_trades_per_day,
+    resolved_max_trades_per_week,
+    resolved_post_loss_cooldown_hours,
+)
 from app.trading_math.sizing import (
     resolved_sector_cap_pct,
     resolved_single_name_cap_pct,
@@ -82,6 +89,26 @@ def _with_plan_state(mandate: Mandate, user: User) -> Mandate:
         ),
         single_name_cap_pct=resolved_single_name_cap_pct(
             mandate.risk_score, mandate.single_name_cap_pct,
+        ),
+        # CR129 — the five CR101-BE2 limits, with the safety floor's own
+        # arguments (safety_floor.py:500-590), so GET and enforcement can
+        # never disagree — the same DEF193 principle that put the first two
+        # here. This is what unblocks CR129-MOBILE's "Following your risk
+        # profile — <resolved number>" render.
+        max_open_positions=resolved_max_open_positions(
+            mandate.risk_score, mandate.max_open_positions,
+        ),
+        post_loss_cooldown_hours=resolved_post_loss_cooldown_hours(
+            mandate.risk_score, mandate.post_loss_cooldown_hours,
+        ),
+        max_trades_per_day=resolved_max_trades_per_day(
+            mandate.risk_score, mandate.max_trades_per_day,
+        ),
+        max_trades_per_week=resolved_max_trades_per_week(
+            mandate.risk_score, mandate.max_trades_per_week,
+        ),
+        max_open_risk_pct=resolved_max_open_risk_pct(
+            mandate.risk_score, mandate.max_drawdown_pct, mandate.max_open_risk_pct,
         ),
     )
     return mandate.model_copy(update={

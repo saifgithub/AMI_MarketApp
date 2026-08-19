@@ -95,20 +95,30 @@ class RiskComponents(BaseModel):
 
 
 class ResolvedCaps(BaseModel):
-    """DEF193: the ENFORCED value of each preset-backed cap, server-resolved.
+    """DEF193 + CR129: the ENFORCED value of every preset-backed limit,
+    server-resolved.
 
-    `Mandate.sector_cap_pct` / `single_name_cap_pct` are `None` until a user
-    explicitly overrides them, but a real, binding preset still applies —
-    `GET /v1/portfolio/sector-allocation/{id}`'s `max_allowed` has shown that
-    resolved number for months. Stamping the SAME resolution
-    (`app.trading_math.sizing.resolved_sector_cap_pct` /
-    `resolved_single_name_cap_pct` — the one place each cap is computed, per
-    CR046) onto the mandate GET response closes the gap where a client had to
-    choose between fabricating a number or hiding one. Same percentage-point
-    units as the field each resolves; never null."""
+    Each raw `Mandate` field is `None` until a user explicitly overrides it,
+    but a real, binding preset still applies underneath — since CR129, ALL
+    seven risk limits resolve from `risk_score` this way. Stamping the SAME
+    resolution the safety floor enforces (`trading_math.sizing` for the two
+    caps, `trading_math.risk_limits` for the five CR101-BE2 limits — the one
+    place each is computed, per CR046) onto the mandate GET response closes
+    the gap where a client had to choose between fabricating a number or
+    hiding one ("Following your risk profile" with no number is exactly the
+    CR129-MOBILE render this unblocks). Same units as the field each
+    resolves; never null."""
 
     sector_cap_pct: float
     single_name_cap_pct: float
+    # CR129 — the five CR101-BE2 limits, resolved with the safety floor's own
+    # arguments (max_open_risk_pct is a per-user fraction of the user's OWN
+    # max_drawdown_pct, so it needs that second input; see risk_limits.py).
+    max_open_positions: int
+    post_loss_cooldown_hours: float
+    max_trades_per_day: int
+    max_trades_per_week: int
+    max_open_risk_pct: float
 
 
 class Compliance(BaseModel):

@@ -144,3 +144,98 @@ def test_resolved_values_never_computed_client_side_hard_coded(client: TestClien
     assert after["resolved"]["single_name_cap_pct"] == pytest.approx(
         resolved_single_name_cap_pct(1, None)
     )
+
+
+# ── CR129 close-out: ALL seven limits are resolved, not just the two caps ───
+#
+# CR129-BE made every risk limit resolve from `risk_score`, and CR129-MOBILE
+# is specified to render "Following your risk profile — <resolved number>".
+# It was blocked on exactly this gap: `resolved` carried 2 of the 7. These
+# pin the other five, with the same discipline as above — against the SHARED
+# functions the safety floor enforces with (risk_limits.py), never against
+# re-derived constants.
+
+from app.trading_math.risk_limits import (  # noqa: E402
+    resolved_max_open_positions,
+    resolved_max_open_risk_pct,
+    resolved_max_trades_per_day,
+    resolved_max_trades_per_week,
+    resolved_post_loss_cooldown_hours,
+)
+
+_CR129_FIELDS = (
+    "max_open_positions", "post_loss_cooldown_hours",
+    "max_trades_per_day", "max_trades_per_week", "max_open_risk_pct",
+)
+
+
+def test_all_seven_limits_are_resolved_and_never_null(client: TestClient):
+    user_id, headers = _new_user()
+    body = client.get(f"/v1/mandate/{user_id}", headers=headers).json()
+    for field in _CR129_FIELDS:
+        assert body[field] is None, f"raw {field}: no explicit override yet"
+        assert body["resolved"][field] is not None, (
+            f"resolved.{field} must carry the enforced preset — a null here "
+            "is the DEF193 gap again, one field over"
+        )
+
+
+def test_the_five_cr129_limits_match_the_shared_computation(client: TestClient):
+    """The safety floor resolves each limit with these exact arguments
+    (safety_floor.py:500-590); the GET must go through the same functions so
+    the two can never disagree about what is enforced."""
+    user_id, headers = _new_user()
+    body = client.get(f"/v1/mandate/{user_id}", headers=headers).json()
+    score = body["risk_score"]
+    drawdown = body["max_drawdown_pct"]
+
+    resolved = body["resolved"]
+    assert resolved["max_open_positions"] == resolved_max_open_positions(score, None)
+    assert resolved["post_loss_cooldown_hours"] == pytest.approx(
+        resolved_post_loss_cooldown_hours(score, None)
+    )
+    assert resolved["max_trades_per_day"] == resolved_max_trades_per_day(score, None)
+    assert resolved["max_trades_per_week"] == resolved_max_trades_per_week(score, None)
+    assert resolved["max_open_risk_pct"] == pytest.approx(
+        resolved_max_open_risk_pct(score, drawdown, None)
+    )
+
+
+def test_an_explicit_override_wins_in_the_resolved_view(client: TestClient):
+    """Same contract as the sector-cap override test above — and "off stays
+    expressible": an explicit cooldown of 0 resolves to 0, never back to the
+    preset."""
+    user_id, headers = _new_user()
+    client.patch(
+        f"/v1/mandate/{user_id}",
+        json={"max_trades_per_day": 9, "post_loss_cooldown_hours": 0},
+        headers=headers,
+    )
+    body = client.get(f"/v1/mandate/{user_id}", headers=headers).json()
+    assert body["resolved"]["max_trades_per_day"] == 9
+    assert body["resolved"]["post_loss_cooldown_hours"] == 0
+
+
+def test_resolved_open_risk_tracks_the_users_own_drawdown(client: TestClient):
+    """`max_open_risk_pct` is a risk-tier FRACTION of the user's own
+    `max_drawdown_pct` (risk_limits.py), so the resolved number must move
+    when the user moves their drawdown ceiling — stamping it from a constant
+    would freeze exactly the per-user half of the derivation."""
+    user_id, headers = _new_user()
+    before = client.get(f"/v1/mandate/{user_id}", headers=headers).json()
+    # 10 rather than an arithmetic half: `max_drawdown_pct` is a
+    # Literal[10, 20, 30, 50, 100], so anything off the menu 422s and the
+    # test would silently measure an unchanged mandate.
+    r = client.patch(
+        f"/v1/mandate/{user_id}", json={"max_drawdown_pct": 10}, headers=headers,
+    )
+    assert r.status_code == 200, r.text
+    after = client.get(f"/v1/mandate/{user_id}", headers=headers).json()
+    assert before["max_drawdown_pct"] != 10, "precondition: the ceiling moved"
+    assert after["resolved"]["max_open_risk_pct"] == pytest.approx(
+        resolved_max_open_risk_pct(after["risk_score"], 10.0, None)
+    )
+    assert (
+        after["resolved"]["max_open_risk_pct"]
+        != before["resolved"]["max_open_risk_pct"]
+    )
