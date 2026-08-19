@@ -147,7 +147,7 @@ in a stream nobody tails), or the caller (an explicit status).
   fires on a *stale* stamp, never on an *absent* one, because a per-item spawned auditor never
   watches at all and alarming on that would be permanently red. **A loud signal that is always on
   is the same as no signal** — this pattern's own lesson applied to its own guard.
-- DEF182 → **`backend/tests/unit/test_secret_crypto.py`** (15 tests). The fix is the direction of the
+- DEF182 → **`backend/tests/unit/test_secret_crypto.py`** (19 tests). The fix is the direction of the
   fallback, exactly as lesson 2 says: `decrypt_secret` now **raises** rather than returning ciphertext,
   and `encrypt_secret` **raises** rather than reusing `SECRET_KEY` or storing plaintext. Both are
   mutation-proven — restoring `return stored` reds four tests, and neutering the strict-env branch reds
@@ -158,6 +158,18 @@ in a stream nobody tails), or the caller (an explicit status).
   call site already handles) and the ERROR log carries the diagnosis. *Loud where an operator reads it,
   safe where a user lives* — the alternative, a 500 on every request, is this pattern's own "a loud
   signal that is always on is the same as no signal" from the other side.
+  **Round 2 added the half that is easiest to re-break** (audit AT:U66): removing the *automatic*
+  fallback to `SECRET_KEY` did not stop an operator setting `ALPACA_ENCRYPTION_KEY` **equal to** it
+  by hand, and that state is worse than the original bug rather than the same — the row is stamped
+  `enc::v2::`, whose documented meaning is "rotating `SECRET_KEY` no longer touches this ciphertext",
+  and the `SECRET_KEY`-derived key opens it. The pre-fix state at least labelled such rows `v1`
+  honestly. `_reuses_secret_key()` refuses it at the **write** site and drops it at the **read** site,
+  covering `ALPACA_ENCRYPTION_KEY_PREVIOUS` too; `v1` is deliberately left alone, because its marker
+  makes no false claim. **The mutation that matters here is the third one**: a refusal is the one fix
+  shape where *over*-refusing passes every test written for it, so widening the check to "refuse
+  whenever `SECRET_KEY` is set" is mutated toward on purpose and reds
+  `test_a_dedicated_key_that_is_actually_dedicated_still_works`. If you are simplifying this check,
+  that test is the one telling you not to.
 
 - CR037 / CR038 → **no guard yet; both undecided.** The measurement that would enforce them
   exists: the CR035 harness transcript audit (unhedged-assertion count over a ≥30-run batch).
