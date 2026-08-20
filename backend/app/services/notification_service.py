@@ -385,14 +385,24 @@ def set_preferences(
         raise ValueError(f"unknown notification type(s): {', '.join(unknown)}")
     init_schema()
     now = datetime.now(timezone.utc)
-    with get_session() as s:
-        for t, enabled in updates.items():
-            row = s.get(NotificationPreferenceRow, (user_id, t))
-            if row is None:
-                s.add(NotificationPreferenceRow(
-                    user_id=user_id, type=t, enabled=enabled, updated_at=now,
-                ))
-            else:
+    for t, enabled in updates.items():
+        # P15: the get-then-add pair races a concurrent writer on the composite
+        # PK; the loser's INSERT is converted into the UPDATE it meant to be.
+        try:
+            with get_session() as s:
+                row = s.get(NotificationPreferenceRow, (user_id, t))
+                if row is None:
+                    s.add(NotificationPreferenceRow(
+                        user_id=user_id, type=t, enabled=enabled, updated_at=now,
+                    ))
+                else:
+                    row.enabled = enabled
+                    row.updated_at = now
+        except IntegrityError:
+            with get_session() as s:
+                row = s.get(NotificationPreferenceRow, (user_id, t))
+                if row is None:
+                    raise
                 row.enabled = enabled
                 row.updated_at = now
     return get_preferences(user_id)

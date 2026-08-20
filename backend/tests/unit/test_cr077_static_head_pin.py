@@ -51,8 +51,8 @@ def test_head_identical_and_leakfree_across_three_users():
     m3 = _m(UUID(int=3), "Ford Prefect", PrimaryGoal.RETIREMENT, Horizon.MEDIUM,
             Path.LONG_HORIZON, 1, 20, Compliance(long_only=True, liquid_only=False, halal=True), "ms", "Asia/Kuala_Lumpur")
     p1 = _head(m1, "hi", [], set())
-    p2 = _head(m2, "route me", [JournalEntry(user_id=m2.user_id, entry_type=EntryType.SIM_TRADE, title="Bought TSLA", ticker="TSLA")], {"technical_analyst"})
-    p3 = _head(m3, "what next", [JournalEntry(user_id=m3.user_id, entry_type=EntryType.SIM_TRADE, title="Sold AAPL", ticker="AAPL")], {"macro_analyst", "risk_manager"})
+    p2 = _head(m2, "route me", [JournalEntry(user_id=m2.user_id, entry_type=EntryType.SIM_TRADE, title="Bought TSLA", ticker="TSLA")], {"market_analyst"})
+    p3 = _head(m3, "what next", [JournalEntry(user_id=m3.user_id, entry_type=EntryType.SIM_TRADE, title="Sold AAPL", ticker="AAPL")], {"news_analyst", "neutral_debator"})
 
     assert len(p1) >= _HEAD_CHARS
     assert p1[:_HEAD_CHARS] == p2[:_HEAD_CHARS] == p3[:_HEAD_CHARS]

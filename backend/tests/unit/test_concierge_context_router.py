@@ -237,7 +237,7 @@ def test_catalogue_head_byte_identical_across_wildly_different_users(base_mandat
         user_message="something totally different",
         history=[],
         recent_journal=journal_b,
-        unlocked_agents={"technical_analyst", "fundamentals_analyst"},
+        unlocked_agents={"market_analyst", "fundamentals_analyst"},
         available_lessons=lessons,
     )
 

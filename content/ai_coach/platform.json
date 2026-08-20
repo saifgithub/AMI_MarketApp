@@ -176,7 +176,7 @@
     "short_answer": "Depends on the question. Fundamentals for valuation, News for catalysts, Sentiment for crowd mood, Technical for charts, Risk for sizing, PM for the final call.",
     "long_answer": "A rough map: 'Is this company healthy?' -> Fundamentals Analyst. 'Why did it move today?' -> Macro & Events. 'What's the crowd thinking?' -> Flow & Positioning. 'Is this a valid breakout?' -> Technical Strategist. 'How big should my position be?' -> the Risk Officers' debate or the Execution Desk. 'Should I take this trade?' -> Convene the Room, not 1-on-1. The Concierge can route you if you're unsure.",
     "related_lessons": [],
-    "related_agents": ["concierge", "fundamentals_analyst", "news_analyst", "sentiment_analyst", "technical_analyst"],
+    "related_agents": ["concierge", "fundamentals_analyst", "news_analyst", "social_media_analyst", "market_analyst"],
     "tags": ["1on1", "routing"]
   },
   {
