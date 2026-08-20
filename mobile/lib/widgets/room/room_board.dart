@@ -1021,8 +1021,8 @@ String combLabelFor(String agentId) {
   switch (agentId) {
     case 'research_manager':
       return 'RES';
-    case 'trader':
-      return 'TRD';
+    // CR160: trader's abbreviation is EXEC (4 chars) — it fits, so the old
+    // 'TRD' compression would now be a second naming scheme, not a truncation.
     default:
       final abbr = agentById(agentId).abbreviation;
       return abbr.length <= 4 ? abbr : abbr.substring(0, 4);

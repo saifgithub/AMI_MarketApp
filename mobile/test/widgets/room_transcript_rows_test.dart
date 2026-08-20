@@ -131,7 +131,7 @@ void main() {
 
   group('DEF189 — expanded content is carded and attributed', () {
     testWidgets('the expanded PM row wraps content in a Container and names '
-        'the Portfolio Manager', (t) async {
+        'the Chief Investment Officer', (t) async {
       final voice = _pmVoice();
       await _pump(t, voice, expanded: true);
 
@@ -141,8 +141,8 @@ void main() {
       final card = t.widget<Container>(find.byKey(const Key('pmVerdictCard')));
       expect((card.decoration as BoxDecoration).color, AmiColors.slate900);
 
-      expect(find.textContaining('PORTFOLIO MANAGER'), findsOneWidget,
-          reason: 'the card must clearly say this came from the PM agent');
+      expect(find.textContaining('CHIEF INVESTMENT OFFICER'), findsOneWidget,
+          reason: 'the card must clearly say this came from the CIO agent');
     });
 
     testWidgets('a non-PM row is left unstyled (fence: do not restyle the '

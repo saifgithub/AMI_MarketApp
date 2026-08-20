@@ -436,11 +436,11 @@ void main() {
       // Roster-level: names the NEXT step's agent (Social), never claims
       // the withheld chair (Market) itself is the one returning. Matched by
       // the FULL countdown sentence, not just the agent's name — CR112's
-      // fixed 12-seat roster now also renders a plain "Social Media Analyst"
+      // fixed 12-seat roster now also renders a plain "Flow & Positioning"
       // roster row for that agent's own seat, so a bare-name finder would
       // ambiguously match both.
       expect(
-        find.textContaining('Next roster change: Social Media Analyst in 4 days'),
+        find.textContaining('Next roster change: Flow & Positioning in 4 days'),
         findsOneWidget,
       );
       expect(t.takeException(), isNull);
@@ -502,7 +502,7 @@ void main() {
       expect(rowFinder, findsOneWidget);
       // No prose reaches the tree at all during a live run (acceptance 1).
       expect(find.textContaining('balance sheet is solid'), findsNothing);
-      // Fundamentals Analyst sits BEFORE Market Analyst in kAllAgents, so its
+      // Fundamentals Analyst sits BEFORE the Technical Strategist in kAllAgents, so its
       // row renders above the withheld chair — the fixed roster's own order,
       // not the arrival order the two agents happened to speak/withhold in.
       final chairY = t.getTopLeft(chairFinder).dy;

@@ -11,8 +11,8 @@
 /// order is fixed by `room_runner.PHASES`: ANALYSTS → RESEARCHERS → SYNTHESIS →
 /// EXECUTION → RISK → VERDICT. A fold that skipped around it would light a stage
 /// and then un-light it when an earlier one started — a progress bar that runs
-/// backwards. `EXECUTION` (the Trader) joins RISK REVIEW rather than being
-/// dropped: the Trader drafts the ticket the three debators stress, and eleven
+/// backwards. `EXECUTION` (the Execution Desk) joins RISK REVIEW rather than being
+/// dropped: the Execution Desk drafts the ticket the three risk officers stress, and eleven
 /// seats on a surface whose rows carry desk counts is a firm that lost a member.
 ///
 /// **The seat states are the roster's own** — [seatStateFor] is the single

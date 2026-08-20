@@ -120,10 +120,10 @@ void main() {
     await _pump(t);
     // Collapsed, the waiting analysts are not on screen — that is the whole
     // point of the surface.
-    expect(find.textContaining('Social Media Analyst', findRichText: true), findsNothing);
+    expect(find.textContaining('Flow & Positioning', findRichText: true), findsNothing);
     await t.tap(find.textContaining('ANALYST DESK'));
     await t.pump();
-    expect(find.textContaining('Social Media Analyst', findRichText: true), findsOneWidget,
+    expect(find.textContaining('Flow & Positioning', findRichText: true), findsOneWidget,
         reason: 'the twelve are hidden, not gone (D-012)');
     expect(find.textContaining('Fundamentals Analyst', findRichText: true), findsOneWidget);
   });
@@ -134,9 +134,9 @@ void main() {
     await t.pump();
     await t.tap(find.text('RISK REVIEW'));
     await t.pump();
-    expect(find.textContaining('Social Media Analyst', findRichText: true), findsNothing,
+    expect(find.textContaining('Flow & Positioning', findRichText: true), findsNothing,
         reason: 'four rows all open is the twelve-row wall this replaced');
-    expect(find.textContaining('Neutral Debator', findRichText: true), findsOneWidget);
+    expect(find.textContaining('Risk Officer — Balanced', findRichText: true), findsOneWidget);
   });
 
   testWidgets('WATCH THE FLOOR restores the shipped roster and persists',
@@ -149,8 +149,8 @@ void main() {
 
     expect(find.byType(RoomBriefing), findsNothing);
     // All twelve seats, the shipped roster.
-    expect(find.text('Portfolio Manager'), findsOneWidget);
-    expect(find.text('Social Media Analyst'), findsOneWidget);
+    expect(find.text('Chief Investment Officer'), findsOneWidget);
+    expect(find.text('Flow & Positioning'), findsOneWidget);
     expect(container.read(roomViewModeProvider), RoomViewMode.floor);
 
     await t.pump(); // let setMode's SharedPreferences write settle

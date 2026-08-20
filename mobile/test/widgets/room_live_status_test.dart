@@ -384,14 +384,14 @@ void main() {
       );
       // `responded` was an Icon(Icons.check) with no semantic label at all.
       expect(
-        find.bySemanticsLabel('News Analyst: responded'),
+        find.bySemanticsLabel('Macro & Events: responded'),
         findsOneWidget,
       );
       // `waiting` (STANDING BY) is covered too, for a roster seat neither
       // active nor recorded — proving the label tracks every branch, not
       // just the two that were silent before the fix.
       expect(
-        find.bySemanticsLabel('Trader: standing by'),
+        find.bySemanticsLabel('Execution Desk: standing by'),
         findsOneWidget,
       );
       expect(t.takeException(), isNull);

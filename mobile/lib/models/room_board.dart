@@ -51,7 +51,7 @@ enum VerdictOutcome {
   unknown,
 }
 
-/// One of the eleven voices in the consensus comb. The Portfolio Manager is
+/// One of the eleven voices in the consensus comb. The Chief Investment Officer is
 /// **not** among them: its position IS the hero tile, `_parse_pm_verdict` is
 /// the sole decision path, and the safety floor can override even that
 /// (T-VOTE).

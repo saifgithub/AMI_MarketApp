@@ -17,7 +17,7 @@
 ///   2. its first `**bold**` span, verbatim — `_PROSE_FORMAT` instructs agents
 ///      to bold key metrics, so this is the agent's own designated headline
 ///      number, and being a quotation it cannot be wrong;
-///   3. the Trader's level triple, parsed the same way `_LEVEL_PATTERNS` does
+///   3. the Execution Desk's level triple, parsed the same way `_LEVEL_PATTERNS` does
 ///      server-side;
 ///   4. `NO RESPONSE` for an empty contribution — never a blank row;
 ///   5. `NOT HEARD` for a withheld analyst.

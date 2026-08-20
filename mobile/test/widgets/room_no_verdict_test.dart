@@ -223,7 +223,7 @@ void main() {
       await pumpVerdict(t, v);
 
       expect(find.text('Not in the room'), findsOneWidget);
-      expect(find.textContaining('Social'), findsWidgets,
+      expect(find.textContaining('Flow & Positioning'), findsWidgets,
           reason: 'an APPROVE reached without Social must still disclose it');
       // And the APPROVE half of the card is untouched.
       expect(find.byType(ElevatedButton), findsOneWidget);
@@ -300,7 +300,7 @@ void main() {
         (t) async {
       await pumpVerdict(t, RoomVerdict.fromJson(noVerdictPayload()));
 
-      final cta = find.widgetWithText(OutlinedButton, 'Include the Market Analyst →');
+      final cta = find.widgetWithText(OutlinedButton, 'Include the Technical Strategist →');
       expect(cta, findsOneWidget);
 
       // Chrome, not speech: it is a button, and it sits outside the reason

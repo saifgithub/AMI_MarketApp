@@ -49,9 +49,9 @@ class DevPreviewScreen extends StatelessWidget {
                 color: AmiColors.hexCyan,
                 items: [
                   _Item('FUND', HexAvatarStatus.idle),
-                  _Item('MKT', HexAvatarStatus.recentCall),
-                  _Item('NEWS', HexAvatarStatus.idle),
-                  _Item('SOC', HexAvatarStatus.signal),
+                  _Item('TECH', HexAvatarStatus.recentCall),
+                  _Item('MACRO', HexAvatarStatus.idle),
+                  _Item('FLOW', HexAvatarStatus.signal),
                 ],
               ),
               const SizedBox(height: AmiSpacing.m),
@@ -71,7 +71,7 @@ class DevPreviewScreen extends StatelessWidget {
                 items: [
                   _Item('AGG', HexAvatarStatus.idle),
                   _Item('CON', HexAvatarStatus.idle),
-                  _Item('NEU', HexAvatarStatus.locked),
+                  _Item('BAL', HexAvatarStatus.locked),
                 ],
               ),
               const SizedBox(height: AmiSpacing.m),
@@ -79,8 +79,8 @@ class DevPreviewScreen extends StatelessWidget {
                 title: 'EXECUTION + MANAGER',
                 color: AmiColors.hexGreen,
                 items: [
-                  _Item('TRADE', HexAvatarStatus.idle, color: AmiColors.hexGreen),
-                  _Item('PM', HexAvatarStatus.locked, color: AmiColors.hexPurple),
+                  _Item('EXEC', HexAvatarStatus.idle, color: AmiColors.hexGreen),
+                  _Item('CIO', HexAvatarStatus.locked, color: AmiColors.hexPurple),
                 ],
               ),
               const SizedBox(height: AmiSpacing.m),

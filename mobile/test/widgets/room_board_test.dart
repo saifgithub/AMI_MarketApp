@@ -419,12 +419,13 @@ void main() {
         expect(label, isNotEmpty, reason: a.id);
       }
       // Only two differ from the shipped abbreviation — a truncation, not a
-      // second naming scheme to learn.
+      // second naming scheme to learn (CR160: RES-M→RES, MACRO→MACR; EXEC
+      // fits whole, so trader no longer differs).
       final differing = [
         for (final a in kCombVoices)
           if (combLabelFor(a.id) != a.abbreviation) a.id,
       ];
-      expect(differing, ['research_manager', 'trader']);
+      expect(differing, ['news_analyst', 'research_manager']);
     });
   });
 
@@ -459,7 +460,7 @@ void main() {
       await _pump(t, _board(withheld: const ['social_media_analyst']));
       expect(find.text('THE ROSTER GAP'), findsOneWidget);
       expect(find.text('1 NOT HEARD'), findsOneWidget);
-      expect(find.text('• Social Media Analyst'), findsOneWidget);
+      expect(find.text('• Flow & Positioning'), findsOneWidget);
     });
 
     testWidgets('an unresolvable id renders as itself, never as a name',
@@ -484,7 +485,7 @@ void main() {
         ],
       ));
       expect(find.text('THE ROSTER GAP'), findsOneWidget);
-      expect(find.text('• Market Analyst'), findsOneWidget);
+      expect(find.text('• Technical Strategist'), findsOneWidget);
     });
 
     testWidgets('a full roster shows no gap at all', (t) async {

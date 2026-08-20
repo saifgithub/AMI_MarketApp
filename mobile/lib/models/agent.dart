@@ -1,5 +1,6 @@
 /// The 12 trading agents + Concierge — IDs, display names, families, colors.
-/// Mirror of backend's app/schemas/agents.py.
+/// Mirror of backend's app/schemas/agents.py (`AGENT_DISPLAY_NAMES`, CR160 —
+/// a unit test there keeps the two registries in lockstep).
 library;
 
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -30,7 +31,7 @@ class Agent {
   /// Human-readable name (e.g., "Fundamentals Analyst").
   final String displayName;
 
-  /// Short label for the hex avatar (e.g., "FUND", "BEAR", "PM").
+  /// Short label for the hex avatar (e.g., "FUND", "BEAR", "CIO").
   final String abbreviation;
 
   final AgentFamily family;
@@ -54,24 +55,24 @@ const List<Agent> kAllAgents = [
   ),
   Agent(
     id: 'market_analyst',
-    displayName: 'Market Analyst',
-    abbreviation: 'MKT',
+    displayName: 'Technical Strategist',
+    abbreviation: 'TECH',
     family: AgentFamily.analyst,
     color: AmiColors.hexCyan,
     tagline: 'Charts, indicators, patterns, levels',
   ),
   Agent(
     id: 'news_analyst',
-    displayName: 'News Analyst',
-    abbreviation: 'NEWS',
+    displayName: 'Macro & Events',
+    abbreviation: 'MACRO',
     family: AgentFamily.analyst,
     color: AmiColors.hexCyan,
     tagline: 'Macro events, headlines, regulatory news',
   ),
   Agent(
     id: 'social_media_analyst',
-    displayName: 'Social Media Analyst',
-    abbreviation: 'SOC',
+    displayName: 'Flow & Positioning',
+    abbreviation: 'FLOW',
     family: AgentFamily.analyst,
     color: AmiColors.hexCyan,
     tagline: 'Sentiment, crowd mood, retail positioning',
@@ -106,7 +107,7 @@ const List<Agent> kAllAgents = [
   // ── Risk (amber) ────────────────────────────────────────────
   Agent(
     id: 'aggressive_debator',
-    displayName: 'Aggressive Debator',
+    displayName: 'Risk Officer — Aggressive',
     abbreviation: 'AGG',
     family: AgentFamily.risk,
     color: AmiColors.hexAmber,
@@ -114,7 +115,7 @@ const List<Agent> kAllAgents = [
   ),
   Agent(
     id: 'conservative_debator',
-    displayName: 'Conservative Debator',
+    displayName: 'Risk Officer — Conservative',
     abbreviation: 'CON',
     family: AgentFamily.risk,
     color: AmiColors.hexAmber,
@@ -122,8 +123,8 @@ const List<Agent> kAllAgents = [
   ),
   Agent(
     id: 'neutral_debator',
-    displayName: 'Neutral Debator',
-    abbreviation: 'NEU',
+    displayName: 'Risk Officer — Balanced',
+    abbreviation: 'BAL',
     family: AgentFamily.risk,
     color: AmiColors.hexAmber,
     tagline: 'Balances aggressive vs conservative',
@@ -132,16 +133,16 @@ const List<Agent> kAllAgents = [
   // ── Execution + Gatekeeper ──────────────────────────────────
   Agent(
     id: 'trader',
-    displayName: 'Trader',
-    abbreviation: 'TRADE',
+    displayName: 'Execution Desk',
+    abbreviation: 'EXEC',
     family: AgentFamily.execution,
     color: AmiColors.hexGreen,
     tagline: 'Translates synthesis into a trade idea',
   ),
   Agent(
     id: 'portfolio_manager',
-    displayName: 'Portfolio Manager',
-    abbreviation: 'PM',
+    displayName: 'Chief Investment Officer',
+    abbreviation: 'CIO',
     family: AgentFamily.manager,
     color: AmiColors.hexPurple,
     tagline: 'Final call. Approves or rejects against your mandate.',
@@ -188,7 +189,7 @@ const Map<String, RoomPhase> kAgentPhase = {
 };
 
 /// The eleven voices of the consensus comb, in speaking order — every agent
-/// except the Portfolio Manager, whose decision is the hero tile rather than
+/// except the Chief Investment Officer, whose decision is the hero tile rather than
 /// one vote among twelve (CR106 T-VOTE).
 final List<Agent> kCombVoices = kAllAgents
     .where((a) =>
