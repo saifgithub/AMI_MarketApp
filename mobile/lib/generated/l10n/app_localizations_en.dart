@@ -2823,6 +2823,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your standing order to the team — risk, limits, what is off-limits. It is the first thing in SETTINGS, and the agents read it on every run.';
 
   @override
+  String get tourYouJournalTitle => 'THE JOURNAL IS HOW YOU LEARN';
+
+  @override
+  String get tourYouJournalBody =>
+      'Your decisions land here with the reasoning attached. Review the why against the outcome — that is the learning. Your agents brief you; they never hand you signals.';
+
+  @override
   String get tourYou3Title => 'WHAT YOUR DECISIONS LOOK LIKE';
 
   @override

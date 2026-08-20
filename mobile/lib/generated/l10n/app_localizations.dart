@@ -4744,6 +4744,18 @@ abstract class AppLocalizations {
   /// **'Your standing order to the team — risk, limits, what is off-limits. It is the first thing in SETTINGS, and the agents read it on every run.'**
   String get tourYou2Body;
 
+  /// CR190 — YOU tour step 3 (of 4): the JOURNAL segment. Framing is the point (Saiful, bug a345042c): a learning tool for recording reasoning, not a signal feed. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'THE JOURNAL IS HOW YOU LEARN'**
+  String get tourYouJournalTitle;
+
+  /// CR190 — YOU tour step 3. 'Never hand you signals' is the anti-signal-generator line; keep it explicit in translation. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Your decisions land here with the reasoning attached. Review the why against the outcome — that is the learning. Your agents brief you; they never hand you signals.'**
+  String get tourYouJournalBody;
+
   /// CR180 — YOU tour step 3: INSIGHTS (CR178), the only new surface. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

@@ -61,6 +61,7 @@ class YouScreen extends ConsumerStatefulWidget {
 class _YouScreenState extends ConsumerState<YouScreen> {
   final _segmentBarKey = GlobalKey();
   final _settingsSegmentKey = GlobalKey();
+  final _journalSegmentKey = GlobalKey();
   final _insightsSegmentKey = GlobalKey();
 
   /// The panes, in [YouSegment] order. Kept alive by `IndexedStack` so
@@ -93,6 +94,7 @@ class _YouScreenState extends ConsumerState<YouScreen> {
         l: l,
         segmentBarKey: _segmentBarKey,
         settingsSegmentKey: _settingsSegmentKey,
+        journalSegmentKey: _journalSegmentKey,
         insightsSegmentKey: _insightsSegmentKey,
       ),
       hideSkip: true,
@@ -217,7 +219,9 @@ class _YouScreenState extends ConsumerState<YouScreen> {
                   trailing: settings.dirty ? const _DirtyPip() : null,
                 ),
                 AmiSegment(
-                    label: l.journalTabUpper, semanticsId: YouIds.journal),
+                    key: _journalSegmentKey,
+                    label: l.journalTabUpper,
+                    semanticsId: YouIds.journal),
                 AmiSegment(
                     key: _insightsSegmentKey,
                     label: l.youSegmentInsights,

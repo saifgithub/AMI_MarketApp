@@ -108,6 +108,12 @@ void main() {
     expect(bar.segments.map((s) => s.label).toList(),
         ['SETTINGS', 'JOURNAL', 'INSIGHTS']);
     expect(bar.selected, 0);
+
+    // CR190 — every segment cell carries a key because the YOU tour
+    // spotlights each one (JOURNAL included). A keyless segment is a tour
+    // step aimed at nothing: buildYouTargets stays correct while the step
+    // silently never fires.
+    expect(bar.segments.map((s) => s.key), everyElement(isNotNull));
   });
 
   testWidgets('CR162 — each segment is addressable by identifier, and the '

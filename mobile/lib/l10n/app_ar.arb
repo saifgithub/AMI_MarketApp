@@ -2827,6 +2827,8 @@
         "tourYou2Title": "6adebd321aeb",
         "tourYou3Body": "6e7f32f6f81f",
         "tourYou3Title": "657d779f5c8f",
+        "tourYouJournalBody": "6b7fd91bda06",
+        "tourYouJournalTitle": "4ecace4d882f",
         "tradeTicketAdvisoryAcknowledge": "adceabaf6aee",
         "tradeTicketAdvisoryLabel": "dfb14fbb9e7d",
         "tradeTicketChangeMandate": "284b3c05acb5",
@@ -2917,5 +2919,7 @@
     "notifTypeRestingOrderFilled": "Order filled",
     "notifTypeRestingOrderTriggered": "Order triggered",
     "notifTypeRestingOrderRejected": "Order rejected",
-    "tradeTicketNoticeRaisesStop": "This raises your stop on all {qty} {ticker} from ${fromStop} to ${toStop}."
+    "tradeTicketNoticeRaisesStop": "This raises your stop on all {qty} {ticker} from ${fromStop} to ${toStop}.",
+    "tourYouJournalTitle": "THE JOURNAL IS HOW YOU LEARN",
+    "tourYouJournalBody": "Your decisions land here with the reasoning attached. Review the why against the outcome — that is the learning. Your agents brief you; they never hand you signals."
 }
