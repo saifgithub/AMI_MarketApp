@@ -9,6 +9,13 @@ AMENDED 2026-07-30 (AT:R66): alpha now runs on RevenueCat's Test Store, not on r
 App Store Connect / Play Console products. Requirements re-cut into an alpha phase and
 a production phase; CR084-ALPHA added for the two enforcement gaps that switch opened
 (SANDBOX events in prod, and test-keys escaping internal distribution tracks).
+
+AMENDED AGAIN 2026-08-20 (AT:R73): the Test Store route above is DEAD — DEF282 proved
+RevenueCat's SDK fatalErrors on a `test_…` key in any non-DEBUG build, and every build
+we ship is a release build. Provisioning goes straight to real store products; free
+test purchases come from Apple Sandbox testers / Play license testers instead, which
+work in release builds. The live instruction is rc_production_runbook.md. The Test
+Store sections below are kept as the record of why we are not on that route.
 -->
 
 # CR084 — RevenueCat integration (GTM M1, final slice)
@@ -144,7 +151,20 @@ entitlement-refresh endpoint shape before it can verify a real grant).
 
 ---
 
-## Two provisioning phases (amended 2026-07-30, AT:R66)
+## Two provisioning phases (amended 2026-07-30, AT:R66) — **SUPERSEDED 2026-08-20 by DEF282**
+
+> **Do not execute this section.** RevenueCat's SDK calls `fatalError` on a `test_…` key in any
+> non-DEBUG build, on purpose, so a Test Store key can never reach the App Store
+> (`ios/Pods/RevenueCat/Sources/Purchasing/Configuration.swift:517-532`). Every build that reaches a
+> device here is a release build, so the alpha column below describes a binary that cannot run.
+> DEF282 turned billing off at `purchase_providers.dart:42` in response.
+>
+> Provisioning goes **straight to real store products**; free test purchases come from **Apple
+> Sandbox testers / Play license testers**, which work in release builds and exercise real
+> StoreKit 2 / Play Billing. The live instruction is
+> [`rc_production_runbook.md`](rc_production_runbook.md).
+>
+> The rest of this section is kept as the record of *why* we are not on the Test Store route.
 
 The original requirement made **App Store Connect + Play Console products and the Apple/Google
 paid-app agreements a prerequisite for any purchase at all** — which put a months-long liaison
@@ -246,7 +266,14 @@ production half stays open until real money moves.
 - [x] Full backend unit suite green; no room-cluster/forbidden-path edits from either lane.
 - [x] Independent auditor `VERDICT: COMPLETE` on both sub-lanes.
 
-### Alpha acceptance — CR084-ALPHA (Test Store)
+### Alpha acceptance — CR084-ALPHA (Test Store) — **SUPERSEDED 2026-08-20 by DEF282**
+
+> Dead for the same reason as *Two provisioning phases* above: no shippable build can run a `test_…`
+> key. The two **code** halves of CR084-ALPHA did land and stay correct — the SANDBOX-in-prod refusal
+> (`webhooks.py:270-288`) and the build/publish-script containment (later re-cut by DEF290) — and both
+> carry over unchanged to the real-store route, where sandbox and license-tester events arrive with
+> the same `environment: "SANDBOX"` stamp. Only the *dashboard* half is replaced, by
+> [`rc_production_runbook.md`](rc_production_runbook.md).
 
 - [ ] Test Store catalog configured per [`rc_dashboard_config_prompt.md`](rc_dashboard_config_prompt.md):
       products, the two entitlements, one **current** offering, and the webhook. Product/entitlement

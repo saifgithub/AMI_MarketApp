@@ -1,5 +1,13 @@
 # Prompt — RevenueCat dashboard configuration for AMI Trade alpha (CR084 / DEF100)
 
+> **SUPERSEDED 2026-08-20 (AT:R73) by [`rc_production_runbook.md`](rc_production_runbook.md).
+> Do not execute this document.** It configures RevenueCat's **Test Store**, and DEF282 proved that
+> route unusable: the RC SDK calls `fatalError` on a `test_…` key in any non-DEBUG build, on purpose,
+> and every build we ship is a release build. Provisioning goes straight to real App Store Connect /
+> Play Console products; free test purchases come from Apple Sandbox testers and Play license testers,
+> which work in release builds. Kept for the record — the product IDs, entitlements and webhook
+> configuration in it are still correct in substance, only the *store* is wrong.
+
 Hand this to the agent that owns revenue management. It is self-contained: every
 identifier, price and endpoint the task needs is below. The code side is already done and
 verified — this is dashboard configuration only.
