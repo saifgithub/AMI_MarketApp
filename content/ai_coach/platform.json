@@ -134,7 +134,7 @@
     "category": "platform",
     "question": "Why did the agents disagree so much?",
     "short_answer": "By design. The 12-agent room is built for adversarial debate; disagreement is signal that the setup is contested and your conviction should reflect that.",
-    "long_answer": "AMI's room intentionally pits bull vs bear researchers, fast vs slow technical timeframes, and risky vs safe sub-personas in the risk team. When agents agree, the PM returns higher conviction. When they disagree sharply, conviction drops and sizing shrinks — sometimes to PASS. Read the dissent panel under the verdict: it tells you what the other side sees, which is exactly the information confirmation bias would hide from you.",
+    "long_answer": "AMI's room intentionally pits bull vs bear researchers, fast vs slow technical timeframes, and a risk-on and a risk-off reading of the same position size. When agents agree, the PM returns higher conviction. When they disagree sharply, conviction drops and sizing shrinks — sometimes to PASS. Read the dissent panel under the verdict: it tells you what the other side sees, which is exactly the information confirmation bias would hide from you.",
     "related_lessons": [],
     "related_agents": ["bull_researcher", "bear_researcher", "research_manager"],
     "tags": ["convene", "debate", "disagreement"]
