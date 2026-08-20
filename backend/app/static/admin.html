@@ -5,6 +5,9 @@
   Flutter web admin app in Beta. Vanilla HTML + CSS + JS so it has
   no build step and survives without npm. AMI Hex-Reinforced Precision
   palette mirrored from mobile/lib/theme/ami_theme.dart.
+  CR103 added the MESSAGES tab: tester broadcasts + replies, with
+  preview-before-send enforced client-side (the server never orders
+  the preview/send calls — scripts/messages.sh honours the same contract).
 -->
 <html lang="en">
 <head>
@@ -81,6 +84,25 @@
   .iconbtn:hover { color: var(--text-high); border-color: var(--text-low); }
 
   main { padding: 16px; max-width: 720px; margin: 0 auto; }
+
+  /* ── Tabs ───────────────────────────────────────────────── */
+  .tabs {
+    display: flex; gap: 8px;
+    max-width: 720px; margin: 0 auto;
+    padding: 12px 16px 0;
+  }
+  .tab {
+    background: transparent;
+    border: 1px solid var(--border-dim);
+    color: var(--text-med);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+  .tab.active { color: var(--text-high); border-color: var(--blue); background: rgba(59,130,246,0.10); }
 
   /* ── Cards ──────────────────────────────────────────────── */
   .card {
@@ -180,6 +202,8 @@
   .badge.suspended { color: var(--red); border-color: var(--red); background: rgba(239,68,68,0.08); }
   .badge.trial { color: var(--amber); border-color: var(--amber); background: rgba(245,158,11,0.08); }
   .badge.claimed { color: var(--green); border-color: var(--green); background: rgba(16,185,129,0.08); }
+  .badge.pri-high { color: var(--amber); border-color: var(--amber); background: rgba(245,158,11,0.08); }
+  .badge.pri-normal { color: var(--text-med); border-color: var(--border); }
 
   /* ── Stat grid ──────────────────────────────────────────── */
   .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
@@ -288,6 +312,11 @@
   <button class="iconbtn" id="logoutBtn" onclick="logout()" style="display:none">LOGOUT</button>
 </header>
 
+<nav class="tabs" id="tabs" style="display:none">
+  <button class="tab active" id="tabUsers" onclick="showSearch()">USERS</button>
+  <button class="tab" id="tabMessages" onclick="showMessages()">MESSAGES</button>
+</nav>
+
 <main id="main"></main>
 
 <div class="toast" id="toast"></div>
@@ -297,6 +326,9 @@ const PLANS = ['floor_pass', 'trader', 'floor_manager', 'trial_trader'];
 const TOKEN_KEY = 'ami_admin_token';
 const API = ''; // same-origin
 let currentUser = null;
+// SEND is keyed to the exact previewed payload, not a boolean — a stale form can never send.
+let msgPreviewedPayload = null;
+let msgPreviewCount = 0;
 
 // ── token plumbing ────────────────────────────────────────────────────────
 function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
@@ -322,7 +354,9 @@ async function api(method, path, body) {
   let data;
   try { data = text ? JSON.parse(text) : null; } catch { data = text; }
   if (!res.ok) {
-    const msg = (data && data.detail) ? data.detail : (typeof data === 'string' ? data : `HTTP ${res.status}`);
+    let msg = (data && data.detail) ? data.detail : (typeof data === 'string' ? data : `HTTP ${res.status}`);
+    // FastAPI 422 detail is an array of error objects — join it or it renders "[object Object]".
+    if (Array.isArray(msg)) msg = msg.map(d => `${(d.loc || []).join('.')}: ${d.msg}`).join('; ');
     throw new Error(msg);
   }
   return data;
@@ -354,6 +388,11 @@ function fmtRel(iso) {
   return `${-days}d ago`;
 }
 function shortId(uuid) { return uuid ? uuid.substring(0, 8) : ''; }
+// Broadcast titles/bodies and replies are free text (replies are tester-typed) —
+// escape before interpolating into innerHTML.
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
 
 // ── views ─────────────────────────────────────────────────────────────────
 function viewSetup() {
@@ -516,6 +555,98 @@ function renderEvents(events) {
   `).join('');
 }
 
+function viewMessages() {
+  return `
+    <div class="card">
+      <h3><span class="accent">◇</span> COMPOSE</h3>
+      <div class="row">
+        <label class="lbl" for="msgTitle">TITLE</label>
+        <input type="text" id="msgTitle" maxlength="200" placeholder="title" autocomplete="off" oninput="msgInvalidate()">
+      </div>
+      <div class="row">
+        <label class="lbl" for="msgBody">BODY</label>
+        <textarea id="msgBody" maxlength="4000" placeholder="message body" style="min-height:88px" oninput="msgInvalidate()"></textarea>
+      </div>
+      <div class="row cols-2">
+        <div>
+          <label class="lbl" for="msgPriority">PRIORITY</label>
+          <select id="msgPriority" onchange="msgInvalidate()">
+            <option value="normal" selected>normal</option>
+            <option value="high">high</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl" for="audMode">AUDIENCE</label>
+          <select id="audMode" onchange="msgModeChanged()">
+            <option value="all" selected>all testers</option>
+            <option value="build">build older than…</option>
+            <option value="active">active within N days</option>
+            <option value="dormant">dormant beyond N days</option>
+            <option value="user">specific user ids</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" id="audBuild" style="display:none">
+        <label class="lbl" for="audVersion">APP VERSION LT</label>
+        <input type="text" id="audVersion" placeholder="0.1.0+55" autocomplete="off" spellcheck="false" oninput="msgInvalidate()">
+      </div>
+      <div class="row" id="audActivity" style="display:none">
+        <label class="lbl" for="audDays">DAYS</label>
+        <input type="number" id="audDays" min="1" placeholder="e.g. 7" oninput="msgInvalidate()">
+      </div>
+      <div class="row" id="audUser" style="display:none">
+        <label class="lbl" for="audUserIds">USER IDS (whitespace-separated)</label>
+        <textarea id="audUserIds" placeholder="uuid uuid …" spellcheck="false" oninput="msgInvalidate()"></textarea>
+      </div>
+      <div class="row cols-2">
+        <button class="btn ghost" onclick="msgPreview()">PREVIEW</button>
+        <button class="btn" id="msgSendBtn" onclick="msgSend()" disabled>SEND</button>
+      </div>
+      <div class="mono" id="previewResult" style="margin-top:4px;font-size:12px;color:var(--text-med)"></div>
+    </div>
+
+    <div class="card">
+      <h3><span class="accent">◇</span> BROADCASTS</h3>
+      <div class="events" id="broadcastList"></div>
+    </div>
+
+    <div class="card">
+      <h3><span class="accent">◇</span> REPLIES</h3>
+      <div class="row cols-2">
+        <input type="number" id="replyDays" min="1" placeholder="last N days (blank = all)">
+        <button class="btn ghost" onclick="loadReplies()">REFRESH</button>
+      </div>
+      <div class="events" id="replyList"></div>
+    </div>
+  `;
+}
+
+function renderBroadcasts(arr) {
+  if (!arr || arr.length === 0) {
+    return `<div class="empty" style="padding:20px">No broadcasts yet.</div>`;
+  }
+  return arr.map(b => `
+    <div class="ev">
+      <div class="ev-type">${esc(b.title)} <span class="badge pri-${b.priority}">${b.priority}</span></div>
+      <div class="ev-vals">→ ${b.recipient_count} sent · ${b.reply_count} replies</div>
+      <div class="ev-meta">${fmtDate(b.created_at)} · ${shortId(b.id)} · ${esc(JSON.stringify(b.audience))}</div>
+    </div>
+  `).join('');
+}
+
+function renderReplies(arr) {
+  if (!arr || arr.length === 0) {
+    return `<div class="empty" style="padding:20px">No replies.</div>`;
+  }
+  return arr.map(r => `
+    <div class="ev">
+      <div class="ev-type"><a href="#" class="mono" style="color:var(--blue);text-decoration:none" onclick="loadUser('${r.user_id}');return false">${shortId(r.user_id)}</a>${r.broadcast_id ? ` · re ${shortId(r.broadcast_id)}` : ''}</div>
+      <div class="ev-vals" style="white-space:pre-wrap">${esc(r.body)}</div>
+      <div class="ev-meta">${fmtDate(r.created_at)}</div>
+    </div>
+  `).join('');
+}
+
 // ── actions ───────────────────────────────────────────────────────────────
 function saveToken() {
   const v = document.getElementById('tokenInput').value.trim();
@@ -547,6 +678,7 @@ async function loadUser(id) {
   try {
     const u = await api('GET', `/v1/admin/users/${id}`);
     document.getElementById('main').innerHTML = renderUser(u);
+    setTab('users');
     window.scrollTo({ top: 0, behavior: 'instant' });
   } catch (e) { toast(e.message, 'err'); }
 }
@@ -558,7 +690,118 @@ async function refreshCurrent() {
 
 function showSearch() {
   currentUser = null;
+  setTab('users');
   document.getElementById('main').innerHTML = viewSearch();
+}
+
+function setTab(name) {
+  document.getElementById('tabUsers').classList.toggle('active', name === 'users');
+  document.getElementById('tabMessages').classList.toggle('active', name === 'messages');
+}
+
+function showMessages() {
+  currentUser = null;
+  setTab('messages');
+  document.getElementById('main').innerHTML = viewMessages();
+  msgInvalidate();
+  loadBroadcasts();
+  loadReplies();
+}
+
+function msgModeChanged() {
+  const mode = document.getElementById('audMode').value;
+  document.getElementById('audBuild').style.display = mode === 'build' ? '' : 'none';
+  document.getElementById('audActivity').style.display = (mode === 'active' || mode === 'dormant') ? '' : 'none';
+  document.getElementById('audUser').style.display = mode === 'user' ? '' : 'none';
+  msgInvalidate();
+}
+
+// Any edit kills the previewed state — SEND re-arms only after a fresh preview.
+function msgInvalidate() {
+  msgPreviewedPayload = null;
+  msgPreviewCount = 0;
+  document.getElementById('previewResult').textContent = '';
+  document.getElementById('msgSendBtn').disabled = true;
+}
+
+function msgBuildPayload() {
+  const title = document.getElementById('msgTitle').value.trim();
+  const body = document.getElementById('msgBody').value.trim();
+  if (!title) { toast('title?', 'err'); return null; }
+  if (!body) { toast('body?', 'err'); return null; }
+  const priority = document.getElementById('msgPriority').value;
+  const mode = document.getElementById('audMode').value;
+  let audience;
+  if (mode === 'all') {
+    audience = { mode: 'all' };
+  } else if (mode === 'build') {
+    const v = document.getElementById('audVersion').value.trim();
+    if (!/\+\d+$/.test(v)) { toast('version needs a +<build> suffix, e.g. 0.1.0+55', 'err'); return null; }
+    audience = { mode: 'build', app_version_lt: v };
+  } else if (mode === 'active' || mode === 'dormant') {
+    const days = parseInt(document.getElementById('audDays').value, 10);
+    if (!days || days < 1) { toast('days?', 'err'); return null; }
+    audience = mode === 'active'
+      ? { mode: 'activity', active_within_days: days }
+      : { mode: 'activity', dormant_beyond_days: days };
+  } else {
+    const ids = document.getElementById('audUserIds').value.trim().split(/\s+/).filter(Boolean);
+    if (ids.length === 0) { toast('user ids?', 'err'); return null; }
+    audience = { mode: 'user', user_ids: ids };
+  }
+  return { title, body, priority, audience };
+}
+
+async function msgPreview() {
+  const payload = msgBuildPayload();
+  if (!payload) return;
+  try {
+    const r = await api('POST', '/v1/admin/messages/preview', payload);
+    msgPreviewedPayload = JSON.stringify(payload);
+    msgPreviewCount = r.recipient_count;
+    document.getElementById('previewResult').textContent = `→ ${r.recipient_count} recipients`;
+    document.getElementById('msgSendBtn').disabled = r.recipient_count === 0;
+    if (r.recipient_count === 0) toast('0 recipients — excluded/suspended ids preview as 0 by design', 'err');
+  } catch (e) { msgInvalidate(); toast(e.message, 'err'); }
+}
+
+async function msgSend() {
+  const payload = msgBuildPayload();
+  if (!payload) return;
+  // Even if an invalidation event slipped by, a payload that is not
+  // byte-identical to the previewed one never sends.
+  if (!msgPreviewedPayload || msgPreviewCount === 0 || JSON.stringify(payload) !== msgPreviewedPayload) {
+    msgInvalidate();
+    toast('form changed since preview — preview again', 'err');
+    return;
+  }
+  if (!confirm(`Send to ${msgPreviewCount} recipients?`)) return;
+  try {
+    const r = await api('POST', '/v1/admin/messages', payload);
+    toast(`sent ${shortId(r.broadcast_id)} → ${r.recipient_count} recipients`);
+    showMessages();
+  } catch (e) { toast(e.message, 'err'); }
+}
+
+async function loadBroadcasts() {
+  const el = document.getElementById('broadcastList');
+  try {
+    el.innerHTML = renderBroadcasts(await api('GET', '/v1/admin/messages'));
+  } catch (e) {
+    el.innerHTML = `<div class="empty" style="padding:20px;color:var(--red)">Failed to load broadcasts — ${esc(e.message)}</div>`;
+  }
+}
+
+async function loadReplies() {
+  const el = document.getElementById('replyList');
+  const days = parseInt(document.getElementById('replyDays').value, 10);
+  // toISOString() ends in 'Z' — a '+00:00' offset 422s (raw '+' in a query string decodes as a space).
+  const qs = days >= 1 ? '?since=' + new Date(Date.now() - days * 86400000).toISOString() : '';
+  try {
+    el.innerHTML = renderReplies(await api('GET', '/v1/admin/messages/replies' + qs));
+  } catch (e) {
+    el.innerHTML = `<div class="empty" style="padding:20px;color:var(--red)">Failed to load replies — ${esc(e.message)}</div>`;
+  }
 }
 
 async function changePlan() {
@@ -638,6 +881,7 @@ async function bootstrap() {
   const token = getToken();
   if (!token) {
     document.getElementById('logoutBtn').style.display = 'none';
+    document.getElementById('tabs').style.display = 'none';
     document.getElementById('main').innerHTML = viewSetup();
     return;
   }
@@ -645,9 +889,12 @@ async function bootstrap() {
   try {
     await api('GET', '/v1/admin/users?email=__probe__@nope.invalid');
     document.getElementById('logoutBtn').style.display = '';
+    document.getElementById('tabs').style.display = '';
+    setTab('users');
     document.getElementById('main').innerHTML = viewSearch();
   } catch (e) {
     localStorage.removeItem(TOKEN_KEY);
+    document.getElementById('tabs').style.display = 'none';
     document.getElementById('main').innerHTML = viewSetup();
     toast(e.message || 'auth failed', 'err');
   }
