@@ -10,6 +10,8 @@
 /// a banner with the "edit your Mandate" suggestion.
 library;
 
+import 'dart:math' as math;
+
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/brief.dart';
@@ -114,7 +116,14 @@ class _BriefScreenState extends ConsumerState<BriefScreen> {
 
     return Scaffold(
       backgroundColor: AmiColors.slate900,
+      // DEF342 — bottom chrome clearance is owned by _InputBar, not SafeArea.
+      // SafeArea reads MediaQuery.padding, and under Android edge-to-edge that
+      // channel reported zero while the nav bar still overlaid the app — the
+      // proposal's Accept/Reject row sat behind the system nav. _InputBar pads
+      // by viewPadding.bottom instead, which reports the nav-bar inset
+      // regardless (the DEF075 sheet fix, applied to this screen).
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             _Header(agent: widget.agent, onHistory: _openHistory, state: state),
@@ -481,16 +490,23 @@ class _InputBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final mq = MediaQuery.of(context);
     return Container(
       decoration: const BoxDecoration(
         color: AmiColors.slate900,
         border: Border(top: BorderSide(color: AmiColors.slate700)),
       ),
+      // DEF342 — the larger of the keyboard lift (Scaffold already resizes
+      // for the keyboard; /4 is a visual lift, as before) and the nav-bar
+      // inset. viewPadding, not padding: it keeps reporting the nav bar even
+      // when the padding channel is consumed, so the composer and every
+      // bottom-anchored state above it clear the Android system nav.
       padding: EdgeInsets.fromLTRB(
         AmiSpacing.m,
         AmiSpacing.s,
         AmiSpacing.m,
-        AmiSpacing.m + MediaQuery.of(context).viewInsets.bottom / 4,
+        AmiSpacing.m +
+            math.max(mq.viewInsets.bottom / 4, mq.viewPadding.bottom),
       ),
       child: Column(
         children: [
