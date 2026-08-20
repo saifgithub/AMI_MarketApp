@@ -93,3 +93,34 @@ and without a per-row `prompt_version` a weekly score silently pools runs from
 different prompt generations — the exact error that put a wrong 18.4% reformatter
 rate into CR143. The scoring batch should partition by `llm_audit.prompt_version`,
 not by date.
+
+## As-built (v1, 2026-08-20, AT:R73)
+
+Built as `backend/scripts/weekly_room_retro.py` (commit `8b592e0d`), a read-only in-container
+batch mirroring CR164's `backtest_report.py`. Four claims above are stale as specced; recorded
+here rather than rewriting the spec:
+
+1. **No `room_run_conclusions` table was added (§1).** By build time, `room_runs.verdict`
+   already carried structured action/size/levels and `room_runs.transcript` carried per-agent
+   stance/conviction/headline (CR106 B1/B2, live since 2026-07-29). The only missing capture was
+   the convene-time reference price — v1 reconstructs it as adjusted close at the last stored
+   trading date ≤ convene date, CR164's exact entry convention, so live-retro numbers stay
+   directly comparable with backtests. A true captured intraday quote is a v2 schema decision.
+2. **No systemd timer (§2).** `infra/systemd/` holds only the pre-Docker A8 unit; the live
+   scheduling precedent is the melehost host crontab (CR051 daily report, DEF201 janitor). The
+   recommended line (Saturday 09:30 UTC, after Friday's US close is final):
+   `30 9 * * 6 docker exec ami_api_alpha python -m scripts.weekly_room_retro --out /backtest_results/weekly_retro >> /home/saiful/ami_trade/reports/weekly_room_retro.log 2>&1`
+3. **Prices come via `app/services/price_history.py::get_daily_series` (§2)**, the table-backed
+   read-through daily path — not `market_data.py`'s `CachingProvider`, which is the 60s quote
+   path. The bar refresh is the script's only product-table write, skippable via `--no-refresh`,
+   and `test_never_writes_product_tables` pins that nothing else writes.
+4. **Output home is this folder (§3).** Reports land under `--out` (always pass it explicitly —
+   the default `./retro_reports` is not gitignored); the E1–E5 post-mortem labels land in
+   `results/` here, the CR164 pattern — not in the CR143 folder.
+
+Also as decided at build: outage verdicts excluded via `room_runner.is_llm_outage_verdict`
+(DEF336's lesson — a dead-provider PASS is not a scoreable call); synthetic users excluded via
+the CR051 `REAL_PRED` filter; runs `<7` days old and `backtest_run_index` rows excluded; rates
+partitioned by `llm_audit.prompt_version` per the reconstruction note; E1–E5 labeling stays a
+human Claude-session task reading `misses_<ISO-week>.jsonl` — no unattended LLM call ("prompt
+instructions are not controls").
