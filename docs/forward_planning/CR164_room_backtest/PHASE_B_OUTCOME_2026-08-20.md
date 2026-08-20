@@ -57,6 +57,43 @@ The other commit in the gap, DEF336 (`dd72fe90`), renamed the outage sentinel
 into a constant and added a recogniser. It changes no prompt byte and no
 verdict.
 
+## Run interruption, 08:08–11:02 UTC (DEF345)
+
+The sweep stopped dead after 17 of 450 convenes when another lane recreated
+`ami_api_alpha`. `docker compose exec` dies with the container: no traceback,
+no non-zero exit, no final log line — the log simply ends after a normal
+`→ completed action=PASS`. It sat undetected for 2 h 54 m.
+
+**Nothing in the data was wrong, which is why nothing caught it.** All 17
+records are valid and were kept: `overridden_from_llm=false` on every one,
+convene durations 160–310 s, inter-run gaps 16–34 s. The batch was wrong only
+in what was missing, and absence leaves no record. Detection came from
+arithmetic — 17 runs across 4 h 08 m is 877 s each against convene durations
+that averaged 245 s, so ~10 min per run was unaccounted for.
+
+Three things changed as a result, all committed under DEF345 (`8832c450`):
+
+1. **A completion sentinel.** `backtest_sweep.py` writes
+   `complete_<batch-id>.json` (carrying `planned_pairs`, not just `completed`)
+   on the line after the loop ends. A killed process cannot write it.
+   `backtest_report.py` refuses a batch without one (exit 5, before it touches
+   the DB) and stamps **PARTIAL** on any `--allow-partial` report.
+2. **A supervisor.** `backtest_results/_supervise_outcome2.sh` relaunches the
+   resumable sweep across container recreates. DEF336's outage abort (exit 3)
+   is deliberately not retried.
+3. **Staging moved off `/tmp`.** A recreate wipes it — that is how the
+   interruption was found, both the pairs file and the ticker universe were
+   gone.
+
+The sweep resumed at 11:02 UTC and re-indexed the 17 completed pairs as
+`already_indexed` (409, the `uq_backtest_run` gate) rather than re-running
+them, so no convene was paid for twice and no verdict was overwritten.
+
+**This does not compromise the batch.** Resume is by (batch, ticker, as_of)
+identity, the pair plan is pinned and unchanged, and the interruption is
+uncorrelated with anything the Room does — it fell on the 18th pair of the
+first as-of date because that is when another lane happened to promote.
+
 ## Results
 
 _Pending — sweep in flight._
