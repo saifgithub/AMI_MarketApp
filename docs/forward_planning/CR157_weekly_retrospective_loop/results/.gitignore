@@ -1,0 +1,7 @@
+# CR157 weekly Room retrospective — committed per-cycle evidence lives here:
+# the in-session E1–E5 post-mortem of each week's misses digest (CR143
+# taxonomy), plus any scored lines it cites. The raw weekly batch outputs
+# (report_<week>.md / scored_<week>.jsonl / misses_<week>.jsonl) are written
+# by scripts/weekly_room_retro.py on melehost under
+# /backtest_results/weekly_retro/ and stay there — copy in only what a
+# post-mortem needs. Mirrors CR164_room_backtest/results/.
