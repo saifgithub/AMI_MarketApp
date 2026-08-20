@@ -96,10 +96,15 @@ EXTREMES = ("aggressive_debator", "conservative_debator")
 # silently desynchronise a replay from the recording it is being compared against.
 PM_MAX_TOKENS = 1700
 
-VARIANTS = ("v1a", "v1b", "v2", "v3", "v4", "v5")
+VARIANTS = ("v1a", "v1b", "v1c", "v2", "v3", "v4", "v5")
 _VARIANT_STRIP: dict[str, tuple[str, ...]] = {
     "v1a": (),
     "v1b": (),
+    # v1c — a THIRD independent sample of the untouched prompt. v1a/v1b measured
+    # that this model disagrees with itself on 12% of byte-identical prompts; a
+    # third sample is what turns that observation into a testable remedy, since
+    # majority-vote self-consistency needs an odd number to adjudicate.
+    "v1c": (),
     "v2": DEBATORS,
     "v3": EXTREMES,
     # v4 isolates the Neutral. v2 and v3 together implicate it, but not cleanly:
