@@ -227,3 +227,36 @@ class AdminBugClaimRequest(BaseModel):
 class AdminBugResolveRequest(BaseModel):
     # Shown to the reporter verbatim (CR043 toast) — required, never blank.
     note: str = Field(min_length=1, max_length=2000)
+
+
+# ── Push console (CR200) ──────────────────────────────────────────────────────
+
+class AdminPushPreviewRequest(BaseModel):
+    # Exactly one of the two identifies the target; the endpoint 400s on
+    # neither and resolves email → user server-side.
+    user_id: Optional[UUID] = None
+    email: Optional[str] = None
+
+
+class AdminPushPreviewResponse(BaseModel):
+    user: AdminUserSummary
+    devices: list[AdminUserDevice]
+    # False = OneSignal keys absent in THIS container — the send would write
+    # the durable row but push nowhere. Shown before SEND arms (CR040).
+    push_configured: bool
+
+
+class AdminPushSendRequest(BaseModel):
+    user_id: UUID
+    title: str = Field(min_length=1, max_length=200)
+    body: str = Field(min_length=1, max_length=1000)
+    type: str = Field(default="admin_message", max_length=64)
+    route: Optional[str] = None
+    ticker: Optional[str] = None
+    params: Optional[dict[str, str]] = None
+
+
+class AdminPushSendResponse(BaseModel):
+    notification_id: UUID
+    push_status: str
+    push_detail: Optional[str] = None

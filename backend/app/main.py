@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.admin import router as admin_router
 from app.api.admin_bugs import router as admin_bugs_router
 from app.api.admin_overview import router as admin_overview_router
+from app.api.admin_push import router as admin_push_router
 from app.api.alpaca import router as alpaca_router
 from app.api.backtest_admin import router as backtest_admin_router
 from app.api.ai_coach import router as ai_coach_router
@@ -549,6 +550,7 @@ app.add_middleware(
 app.include_router(admin_router)
 app.include_router(admin_bugs_router)  # CR200 — console bug triage
 app.include_router(admin_overview_router)  # CR200 — console health overview
+app.include_router(admin_push_router)  # CR200 — console push sends
 app.include_router(backtest_admin_router)  # CR164 — admin-only as-of Room runs
 app.include_router(alpaca_router)
 app.include_router(ai_coach_router)
