@@ -248,6 +248,41 @@ def parse_pm(text: str) -> tuple[str | None, float | None, bool]:
 # ── statistics ───────────────────────────────────────────────────────────
 
 
+_WORD_RE = __import__("re").compile(r"[a-z][a-z'-]+")
+_STOPWORDS = frozenset(
+    "the a an and or but of to in on at for with from by is are was were be been "
+    "this that these those it its as not no than then so if while which who whose "
+    "i we you they he she them his her their our your my me us do does did have "
+    "has had can could should would will shall may might must about into over "
+    "under above below between within without because since due given".split()
+)
+
+
+def narration_of(text: str) -> str:
+    """The prose the user actually reads, pulled out of the PM's JSON verdict."""
+    parsed = extract_json_object(text) or extract_json_object(text, repair_truncated=True)
+    if not parsed:
+        return ""
+    return str(parsed.get("narration") or "")
+
+
+def content_words(text: str) -> set[str]:
+    return {w for w in _WORD_RE.findall(text.lower()) if w not in _STOPWORDS}
+
+
+def jaccard_distance(a: str, b: str) -> float | None:
+    """1 − Jaccard over content words. None when either side has no prose.
+
+    Deliberately a set measure over content words rather than a sequence one: the
+    question is whether the PM reasoned from different material, not whether it
+    reordered the same sentences.
+    """
+    wa, wb = content_words(a), content_words(b)
+    if not wa or not wb:
+        return None
+    return 1 - len(wa & wb) / len(wa | wb)
+
+
 def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float, float]:
     if n == 0:
         return 0.0, 0.0, 0.0
@@ -523,6 +558,49 @@ def build_report(
         )
     else:
         add("No convene approved under both arms — nothing to compare.\n")
+
+    # ── narration divergence ──
+    #
+    # The verdict is one token; the narration is the product. A debate that never
+    # flips APPROVE/PASS but visibly changes the reasoning the user reads is doing
+    # something a flip-rate cannot see — and on a training simulator that is much of
+    # the point. Measured against the same-prompt floor so resampling noise does not
+    # get read as influence.
+    def divergences(va: str, vb: str) -> list[float]:
+        out: list[float] = []
+        for c in convenes:
+            ra, rb = have(c, va), have(c, vb)
+            if not ra or not rb or ra.get("error") or rb.get("error"):
+                continue
+            d = jaccard_distance(narration_of(ra["response_text"]), narration_of(rb["response_text"]))
+            if d is not None:
+                out.append(d)
+        return out
+
+    noise_div = divergences("v1a", "v1b")
+    abl_div = divergences("v1a", "v2")
+    ext_div = divergences("v1a", "v3")
+    add("## Narration divergence — does the debate change what the user reads?\n")
+    add("| contrast | n | mean Jaccard distance | median |")
+    add("|---|---|---|---|")
+    for label, vals in (
+        ("V1a vs V1b — same prompt (floor)", noise_div),
+        ("V1a vs V2 — debate removed", abl_div),
+        ("V1a vs V3 — extremes removed", ext_div),
+    ):
+        if vals:
+            s = sorted(vals)
+            add(f"| {label} | {len(vals)} | {sum(vals)/len(vals):.3f} | {s[len(s)//2]:.3f} |")
+        else:
+            add(f"| {label} | 0 | — | — |")
+    add("")
+    if noise_div and abl_div:
+        lift = (sum(abl_div) / len(abl_div)) - (sum(noise_div) / len(noise_div))
+        add(
+            f"Excess divergence attributable to removing the debate: **{lift:+.3f}** "
+            "Jaccard distance over the resampling floor. A positive value means the PM "
+            "reasoned from visibly different material, whether or not its verdict moved.\n"
+        )
 
     # ── per-epoch ──
     add("## Per-epoch (primary — pooling across prompt epochs is not defensible)\n")
