@@ -1,11 +1,13 @@
 """Pydantic schemas — domain models. Mirror the database tables."""
 
 from app.schemas.agents import (
+    AGENT_DISPLAY_NAMES,
     AGENT_FAMILIES,
     AGENT_ROLE_COLORS,
     AgentId,
     AgentMessage,
     TWELVE_AGENT_IDS,
+    agent_display_name,
 )
 from app.schemas.brief import (
     BriefHistoryResponse,
@@ -44,6 +46,8 @@ __all__ = [
     "AGENT_FAMILIES",
     "AGENT_ROLE_COLORS",
     "TWELVE_AGENT_IDS",
+    "AGENT_DISPLAY_NAMES",
+    "agent_display_name",
     "AgentId",
     "AgentMessage",
     "BriefHistoryResponse",

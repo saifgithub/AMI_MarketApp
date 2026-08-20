@@ -86,7 +86,7 @@ class _WellFormedApproveGateway:
 
     async def stream_chat(self, *, system_prompt, messages, model_tier,
                           locale="en", max_tokens=1024, **_audit):
-        if "speak as the portfolio manager" in system_prompt.lower():
+        if "speak as the chief investment officer" in system_prompt.lower():
             self.pm_called = True
             text = (
                 '{"action": "APPROVE", "size_pct": 3.0, "entry": 150, "stop": 141, '

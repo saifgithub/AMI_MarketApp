@@ -31,7 +31,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from app.core.logging import logger
-from app.schemas import AgentId, Mandate
+from app.schemas import AgentId, Mandate, agent_display_name
 from app.schemas.brief import (
     BriefMode,
     BriefProposal,
@@ -68,7 +68,7 @@ In this mode you should:
 - Ask clarifying questions when their request is ambiguous.
 - Reflect back what they're asking for, in your own words.
 - If they request something that violates your role, the user's mandate, or
-  (if you are the Portfolio Manager) the safety floor — refuse politely and
+  (if you are the Chief Investment Officer) the safety floor — refuse politely and
   explain why. Suggest the closest acceptable alternative.
 
 You are NOT the proposal generator. The proposal step happens separately
@@ -142,7 +142,7 @@ def heuristic_refusal_check(text: str, agent_id: AgentId, mandate: Mandate) -> B
         if any(w in low for w in ["compliance check", "skip compliance", "always approve", "approve all"]):
             return BriefRefusal(
                 reason="safety_floor",
-                message="The Portfolio Manager's mandate enforcement is uncoachable — proposals can't modify how compliance, drawdown caps, or single-name caps are enforced.",
+                message="The Chief Investment Officer's mandate enforcement is uncoachable — proposals can't modify how compliance, drawdown caps, or single-name caps are enforced.",
                 suggestion="You can shape PM's tone, priorities, and how it explains decisions — but not what it enforces. To change what's enforced, edit your Mandate.",
             )
 
@@ -210,7 +210,7 @@ class BriefEngine:
     def _opening_message(
         self, agent_id: AgentId, mode: BriefMode, active: UserOverlay | None
     ) -> str:
-        agent_name = agent_id.value.replace("_", " ").title()
+        agent_name = agent_display_name(agent_id)
         if mode == BriefMode.FROM_SCRATCH:
             if active is None:
                 return (

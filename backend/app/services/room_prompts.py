@@ -22,7 +22,7 @@ from datetime import date, datetime, timezone
 from typing import Any
 
 from app.agents.safety_floor import CONTEXT_NOT_SUPPLIED
-from app.schemas import AgentId, AgentMessage, Mandate
+from app.schemas import AgentId, AgentMessage, Mandate, agent_display_name
 from app.schemas.mandate import Plan
 from app.services.agent_prompts import build_agent_prompt
 from app.services.fundamentals import (
@@ -45,6 +45,7 @@ from app.services.fundamentals import (
     peg_part,
     returns_line,
 )
+from app.core.config import settings
 from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
 from app.services.technicals import range_position_pct
@@ -373,9 +374,9 @@ def max_tokens_for(agent_id: AgentId) -> int:
 # shape we can actually parse.
 _PM_VERDICT_FORMAT = (
     "\nYou are the final decision-maker. Weigh everything above — every "
-    "analyst, the Bull/Bear debate, the Trader's proposal, and the three "
-    "Risk Debators — then decide for yourself. Do not just restate the "
-    "Trader's numbers; agree or disagree based on the whole debate.\n"
+    "analyst, the Bull/Bear debate, the Execution Desk's proposal, and the three "
+    "Risk Officers — then decide for yourself. Do not just restate the "
+    "Execution Desk's numbers; agree or disagree based on the whole debate.\n"
     # CR156 B — the REPLACES sentence covered the OUTPUT BLOCK only, so the
     # 'Decision sequence' three lines above it still said REJECT, in two layers,
     # against this format's "exactly two action values". The parser survived it
@@ -2319,6 +2320,8 @@ def _format_transcript(transcript: list[AgentMessage]) -> str:
         return "(You are first to speak.)"
     lines: list[str] = []
     for m in transcript:
-        aid = m.agent_id.value if hasattr(m.agent_id, "value") else str(m.agent_id)
-        lines.append(f"[{aid}] {m.content}")
+        # CR160 — label speakers by display name, not wire id: these tags are
+        # how agents cite each other, and citing "[trader]" would resurface the
+        # retired name in generated prose the user reads.
+        lines.append(f"[{agent_display_name(m.agent_id)}] {m.content}")
     return "\n".join(lines)

@@ -60,6 +60,7 @@ from uuid import uuid4
 import pytest
 
 from app.core.config import settings
+from app.schemas import agent_display_name
 from app.schemas.room import Verdict, VerdictAction
 from app.services import room_runner
 from app.services.coach_engine import hydrate_coach_mandate
@@ -861,7 +862,7 @@ class _FakeGateway:
         agent_key = "default"
         lower = system_prompt.lower()
         for k in self._replies:
-            if f"speak as the {k.replace('_', ' ')}" in lower:
+            if f"speak as the {agent_display_name(k).lower()}" in lower:
                 agent_key = k
                 break
         yield self._replies.get(agent_key, "AMI agent live reply.")

@@ -224,7 +224,7 @@ def _user_detail(
 _FEATURE_GATES: list[tuple[str, str, str]] = [
     ("adanos_api_key", "Social Analyst — live Reddit sentiment (CR024)",
      "Social Analyst invents illustrative sentiment (CR037)"),
-    ("alpha_vantage_api_key", "News Analyst — Alpha Vantage sentiment merge (CR023)",
+    ("alpha_vantage_api_key", "Macro & Events — Alpha Vantage sentiment merge (CR023)",
      "Yahoo-only headlines; news_source still reads 'live' so the gap is invisible"),
     ("vllm_base_url", "LLM — on-prem vLLM provider",
      "gateway falls back to anthropic/mock"),

@@ -74,6 +74,35 @@ AGENT_ROLE_COLORS: dict[AgentId, str] = {
 }
 
 
+# CR160 — display labels for the wire IDs above. The IDs are DB/wire keys and
+# never change; every user- or LLM-visible name must come from here (or from a
+# content/agents frontmatter, which a unit test keeps in lockstep with this map)
+# rather than being derived from the id, so a rename is one edit, not a hunt.
+AGENT_DISPLAY_NAMES: dict[AgentId, str] = {
+    AgentId.FUNDAMENTALS_ANALYST: "Fundamentals Analyst",
+    AgentId.MARKET_ANALYST: "Technical Strategist",
+    AgentId.NEWS_ANALYST: "Macro & Events",
+    AgentId.SOCIAL_MEDIA_ANALYST: "Flow & Positioning",
+    AgentId.BULL_RESEARCHER: "Bull Researcher",
+    AgentId.BEAR_RESEARCHER: "Bear Researcher",
+    AgentId.RESEARCH_MANAGER: "Research Manager",
+    AgentId.TRADER: "Execution Desk",
+    AgentId.AGGRESSIVE_DEBATOR: "Risk Officer — Aggressive",
+    AgentId.CONSERVATIVE_DEBATOR: "Risk Officer — Conservative",
+    AgentId.NEUTRAL_DEBATOR: "Risk Officer — Balanced",
+    AgentId.PORTFOLIO_MANAGER: "Chief Investment Officer",
+    AgentId.CONCIERGE: "AMI Concierge",
+}
+
+
+def agent_display_name(agent_id: "AgentId | str") -> str:
+    """Display label for an agent id. Raises (loudly) on an unknown id —
+    an unknown agent is a programming error, not a case to paper over."""
+    if not isinstance(agent_id, AgentId):
+        agent_id = AgentId(agent_id)
+    return AGENT_DISPLAY_NAMES[agent_id]
+
+
 class AgentMessage(BaseModel):
     """A single contribution by an agent during a Room run or 1-on-1."""
 
@@ -100,10 +129,10 @@ class AgentMessage(BaseModel):
     # `room_prompts.STANCE_HEADLINE_MAX_CHARS`.
     headline: str | None = None
 
-    # CR197 — the position size (% of portfolio) a Risk Debator says it actually
+    # CR197 — the position size (% of portfolio) a Risk Officer says it actually
     # endorses, parsed from the SIZE field its envelope asks for.
     #
-    # Only the three debators are asked for one, so `None` is the norm across the
+    # Only the three risk officers are asked for one, so `None` is the norm across the
     # other nine agents and across every transcript recorded before this field
     # existed. It is named `argued_size_pct`, not `size_pct`, because a verdict's
     # `size_pct` is a decision the simulator acts on and this is an opinion nothing

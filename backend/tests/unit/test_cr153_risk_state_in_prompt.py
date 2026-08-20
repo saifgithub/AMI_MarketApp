@@ -185,7 +185,7 @@ def test_the_runner_actually_threads_the_risk_state():
             captured[_audit.get("audit_agent_id") or "?"] = system_prompt
             yield (
                 '{"action": "PASS", "narration": "PM: hold."}'
-                if "speak as the portfolio manager" in system_prompt.lower()
+                if "speak as the chief investment officer" in system_prompt.lower()
                 else "[STANCE: neutral | CONVICTION: low | HEADLINE: x]\nA reply."
             )
 

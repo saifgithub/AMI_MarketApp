@@ -43,7 +43,7 @@ import httpx
 
 from app.core.config import settings
 from app.core.logging import logger
-from app.schemas import AgentId
+from app.schemas import AGENT_DISPLAY_NAMES, AgentId
 from app.schemas.mandate import Plan
 
 
@@ -89,7 +89,7 @@ class ChatMessage:
 #   1. The preamble contains NONE of the agent-id tokens the MockProvider routes
 #      on (it branches on system_prompt.lower(); a stray "trader" / "market
 #      analyst" / … would mis-route the mock to the wrong canned reply).
-#   2. PREPEND only. The Portfolio Manager's safety floor must remain the LAST
+#   2. PREPEND only. The Chief Investment Officer's safety floor must remain the LAST
 #      instruction (recency dominance, safety_floor.py); appending would displace
 #      it. Prepending frames the top and leaves the floor untouched at the tail.
 
@@ -168,7 +168,7 @@ class MockProvider(LLMProvider):
             "Once AMI is back online, I'll do the actual numbers."
         ),
         "market_analyst": (
-            "AMI's Market Analyst, currently offline. The chart would show me trend, "
+            "AMI's Technical Strategist, currently offline. The chart would show me trend, "
             "momentum, and key levels. When live, I'd give you specific entries, "
             "targets, and stops.\n\n"
             "AMI is in fallback mode — check back in a moment."
@@ -186,13 +186,13 @@ class MockProvider(LLMProvider):
             "AMI is in fallback mode."
         ),
         "trader": (
-            "AMI's Trader, currently offline. Once we have live data I'll give you: "
+            "AMI's Execution Desk, currently offline. Once we have live data I'll give you: "
             "instrument, side, size, entry, target, stop, time horizon — all sized to "
             "your mandate.\n\n"
             "AMI is in fallback mode."
         ),
         "portfolio_manager": (
-            "AMI's PM here, offline. My role is to gatekeep — every trade goes through "
+            "AMI's CIO here, offline. My role is to gatekeep — every trade goes through "
             "a compliance check (deterministic) and a judgment review (AMI, once "
             "online).\n\n"
             "AMI is in fallback mode for the judgment side; the compliance check still "
@@ -224,7 +224,8 @@ class MockProvider(LLMProvider):
         text = self._DEFAULT
         sp = system_prompt.lower()
         for key, response in self._CANNED.items():
-            if f"agent_id: {key}" in sp or key.replace("_", " ") in sp:
+            display = AGENT_DISPLAY_NAMES[AgentId(key)].lower()
+            if f"agent_id: {key}" in sp or key.replace("_", " ") in sp or display in sp:
                 text = response
                 break
 

@@ -117,7 +117,7 @@ def _approve(size_pct: float, cap: float) -> str:
 
         async def stream_chat(self, *, system_prompt, messages, model_tier,
                               locale="en", max_tokens=1024, **_audit):
-            if "speak as the portfolio manager" in system_prompt.lower():
+            if "speak as the chief investment officer" in system_prompt.lower():
                 yield json.dumps({
                     "action": "APPROVE", "size_pct": size_pct,
                     "entry": 100.0, "stop": 94.0, "target": 113.0,
@@ -187,7 +187,7 @@ def test_def240_never_changes_the_verdict():
 
         async def stream_chat(self, *, system_prompt, messages, model_tier,
                               locale="en", max_tokens=1024, **_audit):
-            if "speak as the portfolio manager" in system_prompt.lower():
+            if "speak as the chief investment officer" in system_prompt.lower():
                 yield json.dumps({
                     "action": "APPROVE", "size_pct": 80.0, "entry": 100.0,
                     "stop": 94.0, "target": 113.0, "horizon_days": 42,

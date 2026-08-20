@@ -236,7 +236,7 @@ def test_def241_the_runner_actually_hands_each_debator_its_own_size():
             captured[_audit.get("audit_agent_id") or "?"] = system_prompt
             text = (
                 '{"action": "PASS", "narration": "PM: hold."}'
-                if "speak as the portfolio manager" in system_prompt.lower()
+                if "speak as the chief investment officer" in system_prompt.lower()
                 else "[STANCE: neutral | CONVICTION: low | HEADLINE: x]\nA reply."
             )
             yield text

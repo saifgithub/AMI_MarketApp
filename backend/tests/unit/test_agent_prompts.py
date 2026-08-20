@@ -91,7 +91,7 @@ def test_build_agent_prompt_concatenates_layers(base_mandate: Mandate):
 
 def test_portfolio_manager_includes_safety_floor(base_mandate: Mandate):
     full = build_agent_prompt(AgentId.PORTFOLIO_MANAGER, base_mandate)
-    assert "Portfolio Manager" in full
+    assert "Chief Investment Officer" in full
     assert "USER MANDATE" in full
     assert "SAFETY FLOOR" in full
 

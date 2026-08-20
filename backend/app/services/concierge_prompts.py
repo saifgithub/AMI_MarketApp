@@ -28,7 +28,7 @@ from uuid import UUID
 
 from app.core.config import settings
 from app.core.logging import logger
-from app.schemas import AgentId, Mandate
+from app.schemas import AGENT_DISPLAY_NAMES, AgentId, Mandate, agent_display_name
 from app.schemas.journal import JournalEntry
 from app.schemas.lessons import LessonMeta
 from app.services.agent_prompts import build_agent_prompt
@@ -183,7 +183,7 @@ def scripted_reply(
 
     matched_agent = _match_agent_by_name(msg, unlocked_agents)
     if matched_agent is not None:
-        pretty = matched_agent.replace("_", " ").title()
+        pretty = agent_display_name(matched_agent)
         return (
             f"You've unlocked {pretty} — tap them on the Floor to open a 1-on-1. "
             "When AMI is back online I'll be able to brief you on what they're "
@@ -193,7 +193,7 @@ def scripted_reply(
     if _matches(msg, _TRADING_KEYWORDS):
         return (
             "That's a question for your team, not me — I don't speculate on "
-            "tickers. Open the Market Analyst or the Fundamentals Analyst "
+            "tickers. Open the Technical Strategist or the Fundamentals Analyst "
             "from the Floor, or convene the Room if you want all 12 weighing "
             "in. AMI is in fallback mode for analysis right now."
         )
@@ -248,7 +248,7 @@ def _format_journal(entries: list[JournalEntry]) -> str:
 def _format_unlocked(agent_ids: set[str]) -> str:
     if not agent_ids:
         return "(None yet — user is on Floor Pass and hasn't earned any of the 12.)"
-    pretty = sorted(a.replace("_", " ").title() for a in agent_ids)
+    pretty = sorted(agent_display_name(a) for a in agent_ids)
     return ", ".join(pretty)
 
 
@@ -257,7 +257,7 @@ def _format_unlock_paths(requirements: list[Any] | None) -> str:
 
     Without this the Concierge had the lesson catalogue and the unlocked-agent
     set but no mapping between them, so every specific answer to "what do I read
-    to unlock the Trader?" was a guess. Only locked agents are listed: an unlocked
+    to unlock the Execution Desk?" was a guess. Only locked agents are listed: an unlocked
     one has no path left, and spending prompt on it invites the model to tell a
     user to go earn something they already have.
     """
@@ -267,7 +267,7 @@ def _format_unlock_paths(requirements: list[Any] | None) -> str:
     for req in requirements:
         if req.unlocked:
             continue
-        pretty = req.agent_id.replace("_", " ").title()
+        pretty = agent_display_name(req.agent_id)
         done = [l for l in req.required if l.passed]
         todo = [l for l in req.required if not l.passed]
         remaining = ", ".join(f"{l.code} ({l.title})" for l in todo)
@@ -406,7 +406,8 @@ def _match_agent_by_name(message: str, unlocked: set[str]) -> str | None:
         if a == AgentId.CONCIERGE:
             continue
         phrase = a.value.replace("_", " ")
-        if phrase in message and a.value in unlocked:
+        display = AGENT_DISPLAY_NAMES[a].lower()
+        if (phrase in message or display in message) and a.value in unlocked:
             return a.value
     return None
 

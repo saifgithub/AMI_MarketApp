@@ -136,7 +136,7 @@ def test_concierge_prompt_lists_unlocked_agents_for_real_user(base_mandate):
         session=session, history=[], user_message="who can i ask about TSLA?",
     ))
     sp = fake.calls[0]["system_prompt"]
-    assert "Market Analyst" in sp
+    assert "Technical Strategist" in sp
 
 
 # ── Scripted-fallback path ───────────────────────────────────────────────
@@ -190,7 +190,7 @@ def test_scripted_reply_routes_to_unlocked_agent(base_mandate):
         unlocked_agents={"market_analyst"},
         available_lessons=[],
     )
-    assert "Market Analyst" in out
+    assert "Technical Strategist" in out
 
 
 def test_scripted_reply_refuses_trading_advice(base_mandate):
@@ -202,7 +202,7 @@ def test_scripted_reply_refuses_trading_advice(base_mandate):
         available_lessons=[],
     )
     # Routes away — does not speculate
-    assert "Market Analyst" in out or "Convene" in out or "Room" in out
+    assert "Technical Strategist" in out or "Convene" in out or "Room" in out
     assert "buy NVDA" not in out.lower()  # no echo of the request
 
 
@@ -269,7 +269,7 @@ def test_build_concierge_messages_includes_all_context_blocks(base_mandate):
 
     assert "FLOOR CONCIERGE CONTEXT" in system_prompt
     assert "AAPL" in system_prompt
-    assert "Market Analyst" in system_prompt
+    assert "Technical Strategist" in system_prompt
     assert "001_intro" in system_prompt
     assert "Welcome" in system_prompt
     # Concierge's role rules from the base prompt come through too

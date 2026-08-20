@@ -26,7 +26,7 @@ from uuid import uuid4
 
 import pytest
 
-from app.schemas import AgentId
+from app.schemas import AgentId, agent_display_name
 from app.services.coach_engine import hydrate_coach_mandate
 from app.services.room_runner import (
     PHASES,
@@ -141,7 +141,7 @@ class _ConcurrencyProbeGateway:
     def _match(self, system_prompt: str) -> str:
         low = system_prompt.lower()
         for k in _REPLIES:
-            if f"speak as the {k.replace('_', ' ')}" in low:
+            if f"speak as the {agent_display_name(k).lower()}" in low:
                 return k
         return "portfolio_manager" if "single json object" in low else "default"
 

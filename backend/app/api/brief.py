@@ -21,6 +21,7 @@ from fastapi.responses import StreamingResponse
 
 from app.schemas import (
     AgentId,
+    agent_display_name,
     BriefHistoryResponse,
     BriefProposal,
     BriefRefusal,
@@ -189,7 +190,7 @@ async def brief_accept(
             user_id=session.user_id,
             entry_type=EntryType.AGENT_COACH,
             reference_id=result.id,
-            title=f"Briefed {agent_id_str.replace('_', ' ').title()} → v{result.version}",
+            title=f"Briefed {agent_display_name(agent_id_str)} → v{result.version}",
             summary=result.plain_english,
             agents_involved=[agent_id_str],
             payload={

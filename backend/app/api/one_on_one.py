@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 
-from app.schemas import AgentId
+from app.schemas import AgentId, agent_display_name
 from app.schemas.journal import EntryType, JournalEntryCreate
 from app.schemas.mandate import Plan
 from app.schemas.one_on_one import (
@@ -213,7 +213,7 @@ async def send_message(
                         user_id=session.user_id,
                         entry_type=EntryType.ONE_ON_ONE,
                         reference_id=session.id,
-                        title=f"1-on-1 — {agent_id_str.replace('_', ' ').title()}",
+                        title=f"1-on-1 — {agent_display_name(agent_id_str)}",
                         summary=summary or req.user_message[:240],
                         agents_involved=[agent_id_str],
                         payload={

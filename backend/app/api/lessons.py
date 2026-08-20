@@ -16,6 +16,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.schemas import agent_display_name
 from app.schemas.journal import EntryType, JournalEntryCreate
 from app.schemas.lessons import (
     AgentActivationRecord,
@@ -153,7 +154,7 @@ async def submit_quiz(
                 get_journal_store().append(JournalEntryCreate(
                     user_id=req.user_id,
                     entry_type=EntryType.AGENT_UNLOCK,
-                    title=f"Unlocked {agent_id.replace('_', ' ').title()}",
+                    title=f"Unlocked {agent_display_name(agent_id)}",
                     summary=f"Earned via {title}.",
                     agents_involved=[agent_id],
                     tags=["unlock", "earn_path"],

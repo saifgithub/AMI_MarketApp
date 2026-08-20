@@ -53,7 +53,7 @@ def test_the_bull_is_told_where_sizing_actually_belongs():
     """Cutting a demand without naming its owner invites the model to fill the
     gap anyway. The replacement names the four stages that follow."""
     text = (_CONTENT / "bull_researcher.md").read_text(encoding="utf-8")
-    for owner in ("Trader", "Risk Debators", "Portfolio\n  Manager"):
+    for owner in ("Execution Desk", "Risk Officers", "Chief\n  Investment Officer"):
         assert owner in text, f"the replacement does not name the {owner}"
 
 
@@ -75,8 +75,8 @@ def test_the_researchers_output_style_is_pinned_to_a_reviewed_snapshot():
     `_EXPECTED_EXTRACTIONS` uses in `test_p16_prose_pattern_corpus_parity.py`.
     Update the snapshot in the same commit, and answer one question while you do:
     **does this bullet ask a RESEARCHERS-phase agent to output a position size?**
-    Sizing is the Trader's proposal, the Risk Debators' argument, the PM's
-    decision and the safety floor's clamp — four stages, all after this one.
+    Sizing is the Execution Desk's proposal, the Risk Officers' argument, the
+    CIO's decision and the safety floor's clamp — four stages, all after this one.
 
     What this does NOT do: understand English. It cannot tell a sizing demand
     from a typo fix. It guarantees only that no edit to these bullets reaches
@@ -111,9 +111,17 @@ def test_the_researchers_output_style_is_pinned_to_a_reviewed_snapshot():
     #
     # `bear_researcher.md` is untouched this round and its hash is unchanged, which
     # is itself the check that this edit stayed in its lane.
+    # CR160 review (AT:R73, 2026-08-20): the six-agent rename touched three
+    # lines in bull_researcher.md (Trader→Execution Desk twice, Risk Debators/
+    # Portfolio Manager→Risk Officers/Chief Investment Officer once) and zero
+    # bullets' semantics; bear_researcher.md changed one redirect line. The
+    # guard's question, answered by reading the diff: does any bullet ask a
+    # RESEARCHERS-phase agent to output a position size? **No** — labels moved,
+    # demands did not. bull 7518a15c30d1 → 8ae050f9662e, bear 1eef572f0cdc →
+    # aea7af1e0f8e.
     expected = {
-        "bull_researcher.md": "7518a15c30d1",
-        "bear_researcher.md": "1eef572f0cdc",
+        "bull_researcher.md": "8ae050f9662e",
+        "bear_researcher.md": "aea7af1e0f8e",
     }
     actual = {
         name: hashlib.sha256(
@@ -126,7 +134,7 @@ def test_the_researchers_output_style_is_pinned_to_a_reviewed_snapshot():
         "A researcher's output-style bullets changed. This is a REVIEW PROMPT, "
         "not a failure — read the diff and answer: does any bullet ask a "
         "RESEARCHERS-phase agent to output a position size? Sizing belongs to the "
-        f"Trader, the Risk Debators, the PM and the floor (DEF244). Then update "
+        f"Execution Desk, the Risk Officers, the CIO and the floor (DEF244). Then update "
         f"the snapshot in this commit. expected={expected} actual={actual}"
     )
 

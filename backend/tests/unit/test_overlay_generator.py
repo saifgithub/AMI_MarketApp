@@ -133,7 +133,7 @@ def test_social_block_drops_named_platform_and_fake_precision_claims(
 
 def test_social_block_still_produces_role_guidance_header(base_mandate: Mandate):
     overlay = generate_overlay(AgentId.SOCIAL_MEDIA_ANALYST, base_mandate)
-    assert "## Role guidance — Social Media Analyst" in overlay
+    assert "## Role guidance — Flow & Positioning" in overlay
 
 
 def test_news_block_reinforces_no_macro_feed(base_mandate: Mandate):

@@ -9,7 +9,7 @@ on a ticker. The phases:
   Phase 3 — Research Manager synthesises.
   Phase 4 — Trader proposes a specific trade.
   Phase 5 — 3 Risk Debators argue sizing.
-  Phase 6 — Portfolio Manager runs compliance + final verdict.
+  Phase 6 — Chief Investment Officer runs compliance + final verdict.
 
 The runner produces an async iterator of `AgentMessage`s (streamed live)
 followed by a final `Verdict`. The full RoomRun is captured at the end
@@ -36,6 +36,7 @@ import asyncio
 import random
 import re
 import zlib
+from collections import Counter
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
@@ -1253,7 +1254,7 @@ def _safe_float(value: Any) -> float | None:
 # (CR106 §3.3: `content.contains('[AMI')`), on BOTH the verdict reason and the
 # transcript turn — which was otherwise a blank row in the Room.
 _PM_NO_RATIONALE = (
-    "[AMI: the Portfolio Manager returned this decision as data only — it wrote "
+    "[AMI: the Chief Investment Officer returned this decision as data only — it wrote "
     "no rationale for the call. Nothing was said to defend it, so there is "
     "nothing here to weigh. Treat it as an unexplained decision, not a "
     "reasoned one.]"
@@ -1266,7 +1267,7 @@ _PM_NO_RATIONALE = (
 # so is the difference between a short explanation and a truncated one. Same
 # `[AMI …]` voice the client amber-marks (CR106 §3.3).
 _PM_TRUNCATED_NARRATION = (
-    " [AMI: the Portfolio Manager hit its length limit mid-sentence. The "
+    " [AMI: the Chief Investment Officer hit its length limit mid-sentence. The "
     "decision and its numbers above are complete; this explanation is cut "
     "short.]"
 )
@@ -1289,7 +1290,7 @@ _PM_TRUNCATED_NARRATION = (
 # the PM off" are different facts about different actors, and only one of them
 # is the user's business to judge the PM on.
 _PM_TRUNCATED_NO_NARRATION = (
-    "[AMI: the Portfolio Manager hit its length limit before its explanation "
+    "[AMI: the Chief Investment Officer hit its length limit before its explanation "
     "reached us. The decision and its numbers above are complete and are the "
     "PM's own; the reasoning was cut off in transmission, not withheld. Treat "
     "this as an explanation we lost, not one the PM declined to give.]"
@@ -4168,12 +4169,63 @@ class RoomRunner:
                     # vetoes/validates that decision afterward — it never
                     # invents it beforehand. See DEF056.
                     elif live:
-                        raw_text = await _stream_pm_response(
-                            run_id=run_id, ctx=ctx, profile=profile,
-                            formatter=formatter, run=run, gateway=gateway,
-                            agent_timeout_s=agent_timeout_s,
-                        )
-                        if not raw_text:
+                        # CR197 — optional self-consistency. At the default of 1
+                        # this is exactly the single call it has always been; the
+                        # branch below only engages when an operator raises
+                        # PM_SELF_CONSISTENCY_SAMPLES, because each extra sample is
+                        # another premium-tier call on the run's costliest agent.
+                        _pm_samples = max(1, int(settings.pm_self_consistency_samples))
+                        _voted: tuple[str, Verdict, str] | None = None
+                        if _pm_samples > 1:
+                            _raws = [
+                                r for r in await asyncio.gather(*(
+                                    _stream_pm_response(
+                                        run_id=run_id, ctx=ctx, profile=profile,
+                                        formatter=formatter, run=run, gateway=gateway,
+                                        agent_timeout_s=agent_timeout_s,
+                                    )
+                                    for _ in range(_pm_samples)
+                                )) if r
+                            ]
+                            _cands: list[tuple[str, Verdict]] = []
+                            for _rt in _raws:
+                                _n, _v = _parse_pm_verdict(_rt, ctx)
+                                if _v is not None:
+                                    _cands.append((_n, _v))
+                            # Keep one raw reply so an all-unparseable draw still
+                            # reaches DEF058's reformat retry rather than silently
+                            # costing the run its verdict.
+                            raw_text = _raws[0] if _raws else ""
+                            if _cands:
+                                _voted = _vote_pm_samples(_cands)
+                        else:
+                            raw_text = await _stream_pm_response(
+                                run_id=run_id, ctx=ctx, profile=profile,
+                                formatter=formatter, run=run, gateway=gateway,
+                                agent_timeout_s=agent_timeout_s,
+                            )
+                        if _voted is not None:
+                            pm_text, verdict, _agreement = _voted
+                            logger.info(
+                                "room_pm_self_consistency",
+                                run_id=str(run_id),
+                                agreement=_agreement,
+                                samples=_pm_samples,
+                                action=verdict.action.value,
+                            )
+                            if not _agreement.startswith(f"{len(_cands)}/"):
+                                # CR040 — a split team is a real finding about how
+                                # marginal this call is, and hiding it behind
+                                # confident prose is the failure mode the whole CR
+                                # is about. Said in the verdict the user reads.
+                                verdict = verdict.model_copy(update={
+                                    "reason": (
+                                        f"{verdict.reason} (Your team was split on "
+                                        f"this — {_agreement} of the independent "
+                                        f"reads landed here.)"
+                                    )
+                                })
+                        elif not raw_text:
                             # DEF059: LLM unreachable — fail SAFE to PASS.
                             # The scripted _assemble_verdict APPROVE belongs
                             # to the non-live demo path only; an outage must
@@ -4222,7 +4274,7 @@ class RoomRunner:
                                 verdict = Verdict(
                                     action=VerdictAction.PASS,
                                     reason=(
-                                        "Portfolio Manager did not return a "
+                                        "Chief Investment Officer did not return a "
                                         "machine-readable verdict; defaulting "
                                         "to no trade for safety."
                                     ),
@@ -4687,6 +4739,47 @@ async def _speak_one_agent(
         yield ev
 
 
+def _vote_pm_samples(
+    parsed: list[tuple[str, Verdict]],
+) -> tuple[str, Verdict, str]:
+    """Pick one verdict from N independent CIO samples, mechanically.
+
+    CR197. Three byte-identical replays of 136 committed convenes disagreed on 26 of
+    132 (19.7%); a single draw differs from the 3-vote majority 6.6% of the time. The
+    approval RATE was stable across samples while WHICH name got approved was not, so
+    a lone sample is a coin-flip on about one verdict in five — presented to the user
+    as settled analysis.
+
+    `docs/Research/benchmark/kimi/04_academic_forecasts.md` records the ordering this
+    follows: "best structured aggregation of independent forecasts ≥ trained/tracked
+    teams > simple average > average individual > deliberating unstructured group",
+    with the winning recipe conditional on the aggregation being "mechanical rather
+    than consensus-seeking". This is the mechanical half.
+
+    Majority on the action; among the winners, the sample whose size is the MEDIAN,
+    so the narration the user reads belongs to the numbers that ship rather than being
+    stitched from two different answers. Ties go to PASS — the safe side, consistent
+    with DEF059's rule that an uncertain path must never mint a confident buy.
+
+    Returns (narration, verdict, agreement) where agreement reads "2/3".
+    """
+    actions = Counter(v.action for _n, v in parsed)
+    top = actions.most_common()
+    winner = top[0][0]
+    if len(top) > 1 and top[0][1] == top[1][1]:
+        tied = {a for a, n in top if n == top[0][1]}
+        winner = VerdictAction.PASS if VerdictAction.PASS in tied else sorted(
+            tied, key=lambda a: a.value
+        )[0]
+
+    winners = [(n, v) for n, v in parsed if v.action == winner]
+    # Median by size so the chosen narration matches the chosen numbers. A PASS
+    # carries no size, so ordering falls back to the sample order.
+    winners.sort(key=lambda nv: (nv[1].size_pct is None, nv[1].size_pct or 0.0))
+    narration, verdict = winners[len(winners) // 2]
+    return narration, verdict, f"{actions[winner]}/{len(parsed)}"
+
+
 async def _stream_pm_response(
     *,
     run_id: UUID,
@@ -4724,6 +4817,9 @@ async def _stream_pm_response(
             "size_pct": ctx.trader_size_pct,
             "entry": ctx.trader_entry,
             "stop": ctx.trader_stop,
+            # CR197 — the ladder's reward:risk column needs the third level. The
+            # drawdown snapshot ignores this key, so adding it changes nothing else.
+            "target": ctx.trader_target,
         },
         # CR069 — see the sibling call site: the PM narrates the same sourced verdict
         # its own safety floor enforces.
@@ -4803,7 +4899,7 @@ async def _stream_pm_response(
 # refuses APPROVE-without-size on its own).
 _PM_REFORMAT_SYSTEM = (
     "You are a strict formatter for AMI's analyst room. The user message is a "
-    "Portfolio Manager's final verdict. It may be prose, or JSON that uses an "
+    "Chief Investment Officer's final verdict. It may be prose, or JSON that uses an "
     "action value outside the allowed set (e.g. 'MODIFY-AND-APPROVE'). "
     "Re-express it as ONLY a single JSON object, no prose outside it, shaped "
     "exactly like:\n"

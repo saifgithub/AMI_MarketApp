@@ -691,7 +691,7 @@ class _SectorPmGateway:
 
     async def stream_chat(self, *, system_prompt, messages, model_tier,
                            locale="en", max_tokens=1024, **_audit):
-        if "speak as the portfolio manager" in system_prompt.lower():
+        if "speak as the chief investment officer" in system_prompt.lower():
             text = (
                 '{"action": "APPROVE", "size_pct": 20.0, "entry": 100, '
                 '"stop": 94, "target": 113, "horizon_days": 42, '
@@ -854,7 +854,7 @@ def test_def238_live_pm_prompt_carries_the_real_sector_allocation():
         ))
 
         pm_prompts = [p for p in gw.prompts
-                      if "speak as the portfolio manager" in p.lower()]
+                      if "speak as the chief investment officer" in p.lower()]
         assert pm_prompts, "the live PM prompt was never built"
         pm = pm_prompts[-1]
 
@@ -888,8 +888,8 @@ def test_def238_live_pm_prompt_carries_the_real_sector_allocation():
         # is exactly how it would quietly reverse.
         analysts = [p for p in gw.prompts if any(
             f"speak as the {name}" in p.lower() for name in (
-                "fundamentals analyst", "market analyst",
-                "news analyst", "social media analyst",
+                "fundamentals analyst", "technical strategist",
+                "macro & events", "flow & positioning",
             )
         )]
         assert analysts, "no firewalled-analyst prompt was captured"
@@ -897,7 +897,7 @@ def test_def238_live_pm_prompt_carries_the_real_sector_allocation():
             "a firewalled analyst received the sector allocation — CR145 Tier C's "
             "lane separation has been widened by accident"
         )
-        sizers = [p for p in gw.prompts if "speak as the trader" in p.lower()]
+        sizers = [p for p in gw.prompts if "speak as the execution desk" in p.lower()]
         assert sizers, "no Trader prompt was captured"
         assert all("sector allocation" in p.lower() for p in sizers), (
             "the Trader proposes the size the sector cap vetoes and cannot see the "

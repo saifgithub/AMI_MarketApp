@@ -101,7 +101,7 @@ portfolio) with a stop S% below entry contributes only about P×S/100 percentage
 points to portfolio drawdown (e.g. 5% size, 20% stop → 1.0 pt, i.e. 1/{mandate.max_drawdown_pct} \
 of your {mandate.max_drawdown_pct}% cap). Do not compare a stop's distance directly against this cap.
 - Single-name position-size cap: {_max_position_pct(mandate)}% of portfolio in any \
-one name — the SAME ceiling the Portfolio Manager clamps every trade to (CR101).
+one name — the SAME ceiling the Chief Investment Officer clamps every trade to (CR101).
 - Sector-concentration cap: {_sector_cap_pct(mandate)}% of portfolio in any one \
 GICS sector — the SAME ceiling the safety floor blocks a proposed BUY against.
 - Post-loss cooldown: {_cooldown_text(mandate)}
@@ -445,7 +445,7 @@ def _fundamentals_block(m: Mandate) -> str:
 
 def _market_analyst_block(m: Mandate) -> str:
     parts = [
-        "## Role guidance — Market Analyst",
+        "## Role guidance — Technical Strategist",
         "You read charts and technical signals. Given this mandate:",
     ]
     # CR146 Tier A — four demands deleted here, each because the system cannot
@@ -480,7 +480,7 @@ def _market_analyst_block(m: Mandate) -> str:
 
 def _news_block(m: Mandate) -> str:
     parts = [
-        "## Role guidance — News Analyst",
+        "## Role guidance — Macro & Events",
         "You synthesise news impact. Given this mandate:",
         # CR147 Tier A.4 — the watchlist half is deleted, not softened: no
         # watchlist is injected into any prompt, so "filter to it" named a list
@@ -514,7 +514,7 @@ def _news_block(m: Mandate) -> str:
 
 def _social_block(m: Mandate) -> str:
     parts = [
-        "## Role guidance — Social Media Analyst",
+        "## Role guidance — Flow & Positioning",
         "You read social sentiment. Given this mandate:",
         "- You have no live Twitter/X, StockTwits, Google Trends, or Discord "
         "feed — those never existed and still don't. Reddit-only aggregate "
@@ -635,7 +635,7 @@ def _trader_block(m: Mandate) -> str:
 
 def _aggressive_block(m: Mandate) -> str:
     parts = [
-        "## Role guidance — Aggressive Debator",
+        "## Role guidance — Aggressive Risk Officer",
         "You argue for risk-on. Given this mandate:",
         "- Push for full mandate-allowed sizing. Cite opportunity cost of caution.",
         # DEF241: this used to hand over the formula (`size% × stop-distance%`) and
@@ -664,7 +664,7 @@ def _aggressive_block(m: Mandate) -> str:
 
 def _conservative_block(m: Mandate) -> str:
     parts = [
-        "## Role guidance — Conservative Debator",
+        "## Role guidance — Conservative Risk Officer",
         "You argue for capital preservation. Given this mandate:",
         "- Push for smaller sizing, tighter stops, faster exits.",
         # DEF241 — see `_aggressive_block`. Measured over the epoch, this agent
@@ -690,7 +690,7 @@ def _conservative_block(m: Mandate) -> str:
 
 def _neutral_block(m: Mandate) -> str:
     return (
-        "## Role guidance — Neutral Debator\n"
+        "## Role guidance — Balanced Risk Officer\n"
         "You balance Aggressive vs Conservative. Given this mandate:\n"
         "- Synthesise both extremes.\n"
         # DEF241 — see `_aggressive_block`.
@@ -708,14 +708,14 @@ def _neutral_block(m: Mandate) -> str:
 
 
 def _portfolio_manager_block(m: Mandate) -> str:
-    return f"""## Role guidance — Portfolio Manager (GATEKEEPER)
+    return f"""## Role guidance — Chief Investment Officer (GATEKEEPER)
 
 You are the gatekeeper. You approve or reject the proposed trade.
 
 INPUTS:
 - Trader's proposal
 - Research Manager's synthesis
-- 3 Risk Debators' arguments
+- 3 Risk Officers' arguments
 - Current portfolio state
 - Full mandate above
 
@@ -725,7 +725,7 @@ DECISION SEQUENCE:
 3. If passes compliance:
    - Weigh the debate
    - Consider risk_score={m.risk_score} and current drawdown
-   - Issue: APPROVE or PASS — there is no third value. To change the Trader's
+   - Issue: APPROVE or PASS — there is no third value. To change the Execution Desk's
      numbers, APPROVE with your own and say what you changed.
 4. Log verdict + full reasoning.
 5. If MODIFY: propose specific size/timing adjustment.
@@ -765,7 +765,7 @@ You do NOT give trading advice; you route to the 12 trading agents for that.
   no sender, and no such feature anywhere in the backend
 
 If asked for trading advice:
-"That's something for your team. Want me to open the Market Analyst 1-on-1,
+"That's something for your team. Want me to open the Technical Strategist 1-on-1,
 or Convene the Room?"
 ---"""
 
@@ -773,7 +773,7 @@ or Convene the Room?"
 def _max_position_pct(mandate: Mandate) -> float:
     # Canonical resolver lives in app.trading_math.sizing (CR046 M03 / CR101-BE1):
     # the mandate's explicit, settable `single_name_cap_pct` when set, else the
-    # risk-tier preset. Every agent is now told the SAME cap the Portfolio Manager
+    # risk-tier preset. Every agent is now told the SAME cap the Chief Investment Officer
     # (and the deterministic safety floor) actually clamps/enforces to.
     return resolved_single_name_cap_pct(mandate.risk_score, mandate.single_name_cap_pct)
 

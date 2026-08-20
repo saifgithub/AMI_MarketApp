@@ -10,7 +10,7 @@ import pytest
 
 from app.db import get_session
 from app.db.models import User
-from app.schemas import AgentId, Compliance
+from app.schemas import AgentId, Compliance, agent_display_name
 from app.schemas.mandate import Plan
 from app.schemas.room import RoomStatus, VerdictAction
 from app.services.auth_service import AuthService
@@ -186,7 +186,7 @@ class _FakeGateway:
         agent_key = "default"
         prompt_lower = system_prompt.lower()
         for k in self._replies:
-            if f"speak as the {k.replace('_', ' ')}" in prompt_lower:
+            if f"speak as the {agent_display_name(k).lower()}" in prompt_lower:
                 agent_key = k
                 break
         text = self._replies.get(agent_key, "AMI agent live reply.")
@@ -346,7 +346,7 @@ class _PMFailsGateway(_FakeGateway):
 
     async def stream_chat(self, *, system_prompt, messages, model_tier,
                           locale="en", max_tokens=1024, **_audit):
-        if "speak as the portfolio manager" in system_prompt.lower():
+        if "speak as the chief investment officer" in system_prompt.lower():
             raise RuntimeError("connect refused — vLLM down")
         async for chunk in super().stream_chat(
             system_prompt=system_prompt, messages=messages,
@@ -566,9 +566,11 @@ def test_room_transcript_grows_for_subsequent_agents():
     # is unparseable, so a 13th DEF058 reformat call follows the PM's own;
     # index by the PM's prompt, not the last capture.)
     pm_prompt = next(
-        p for p in captured_prompts if "speak as the portfolio manager" in p.lower()
+        p
+        for p in captured_prompts
+        if "speak as the chief investment officer" in p.lower()
     )
-    assert "trader" in pm_prompt.lower()
+    assert "execution desk" in pm_prompt.lower()
     assert "AMI reply." in pm_prompt
 
 
@@ -732,12 +734,14 @@ def test_def095_guard1_downstream_reads_computed_rr_not_trader_narration():
     the PM. RED before the fix: the transcript carried 2.5:1 verbatim and no 0.2:1."""
     _runner, _run_id, captured = _run_schd_capturing_prompts()
 
-    pm_prompt = next(p for p in captured if "speak as the portfolio manager" in p.lower())
+    pm_prompt = next(p for p in captured if "speak as the chief investment officer" in p.lower())
     assert "0.2:1" in pm_prompt, "downstream PM never received AMI's computed R:R"
     assert "2.5:1" not in pm_prompt, "the Trader's wrong narrated R:R reached downstream"
 
     # Belt-and-braces: the first Risk debator (also downstream of the Trader) too.
-    risk_prompt = next(p for p in captured if "speak as the aggressive debator" in p.lower())
+    risk_prompt = next(
+        p for p in captured if "speak as the risk officer — aggressive" in p.lower()
+    )
     assert "0.2:1" in risk_prompt
     assert "2.5:1" not in risk_prompt
 
