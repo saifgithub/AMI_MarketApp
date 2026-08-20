@@ -663,3 +663,34 @@ still owed by CR109's owner; not re-asked).
   CR133 per Saiful's request to see both together → follows CR133's "keep deferring"
   (stays queued; CR027's plumbing already shipped, only the browse/manage screen +
   bell/badge remain, waiting on a stable nav home).
+
+## 2026-08-20
+
+Review happened inline across the whole session rather than as a separate one-by-one pass —
+Saiful was live all day and issued a blanket directive: **"Ok, lets build all the ones where I
+am not the show stopper!"** A 26-CR classification sweep (workflow wf_9e58c791-30a, 5 read-only
+agents, every claim verified in-tree) served as the review body; the specific asks and answers:
+
+- **CR107** (agent icons, HELD) — asked: build the 13-icon program / font-floor-only / keep as-is?
+  → Saiful: *"drop. agents will use english logos even in arabic"* → **dropped**
+- **CR160** (agent rename) — asked: Social Media Analyst label, Flow & Positioning vs Sentiment
+  & Flow? → Saiful: **"Flow & Positioning"** → sweep laned in wave 2
+- **CR172** (options sim, D-register gate) — asked: D3 naked calls, forbid vs Reg-T margin?
+  → Saiful: **"Forbid naked calls"**; other nine leans ratified; CR171 halal inform-not-block
+  extended to sell-to-open → gate cleared, queued wave 3
+- **Promotion operator gate** (alpha-2026-08-20-4) — asked per protocol → Saiful: "Yes, promote"
+
+Dispositions that came out of the classification rather than a question (all row-recorded):
+CR017 + CR188 effectively-done → **closed**; CR187 verified surfaced end-to-end → **closed**;
+CR190 re-scoped (source reports were Floor-v0.2 reaction notes; residue = journal tour coverage)
+→ **in_progress, wave 2**; CR102/CR103/CR120/CR129 built + closed this session; CR185 cycle run
+live (DEF340–344 filed), unattended schedule blocked on the permission model → flagged to Saiful.
+
+Still-blocked set left standing, each with its named blocker: CR004/CR036 (launch chores, Saiful),
+CR022 (deferred-to-GTM ruling), CR024 (LunarCrush paid tier), CR049 (dashboard keys), CR084+CR198
+(RevenueCat provisioning), CR123 (DEF178 vendor rotation), CR126 (GCP/Supabase), CR136 (device
+passes), CR196 (GB10 run), CR159 (CR160 first + Saiful go-ahead), CR191 (horizontal-scale event),
+CR194 (DEF305 lane), CR161 (Tier-1 prospect trigger), CR122+CR172 (queued wave 3, buildable).
+
+Open defects: DEF340–344 filed today (routing recorded in their rows); DEF339 and the rest are
+other tracks' or ride the blockers above. No status changed through this log (rows are the truth).
