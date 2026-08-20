@@ -6,7 +6,7 @@
     "screen": "21ffb63a6c15",
     "status": "new",
     "summary": "interactive elements with no accessibility label: a screen reader announces them as a bare 'button', and the crawler skips them because an unlabelled control cannot be proven safe to tap. Fixing these",
-    "times_seen": 1
+    "times_seen": 2
   },
   "3894e8fdc5bbd1ad": {
     "detail": "1 interactive element(s)",
@@ -69,6 +69,6 @@
     "screen": "f8142122c32e",
     "status": "new",
     "summary": "interactive elements with no accessibility label: a screen reader announces them as a bare 'button', and the crawler skips them because an unlabelled control cannot be proven safe to tap. Fixing these",
-    "times_seen": 1
+    "times_seen": 2
   }
 }
