@@ -21,7 +21,7 @@ router = APIRouter(prefix="/v1/messages", tags=["messages"])
 
 
 @router.get("", response_model=list[InboxMessageOut])
-async def list_inbox(
+def list_inbox(
     current_user: User = Depends(get_current_user),
 ) -> list[InboxMessageOut]:
     """The caller's inbox, newest-first, both directions.
@@ -33,7 +33,7 @@ async def list_inbox(
 
 
 @router.post("/{message_id}/read", status_code=status.HTTP_204_NO_CONTENT)
-async def mark_read(
+def mark_read(
     message_id: UUID,
     current_user: User = Depends(get_current_user),
 ) -> None:
@@ -42,7 +42,7 @@ async def mark_read(
 
 
 @router.post("/{message_id}/reply", response_model=ReplyOut)
-async def reply(
+def reply(
     message_id: UUID,
     req: ReplyRequest,
     current_user: User = Depends(get_current_user),
@@ -54,7 +54,7 @@ async def reply(
 
 
 @router.post("/{message_id}/toasted", status_code=status.HTTP_204_NO_CONTENT)
-async def mark_toasted(
+def mark_toasted(
     message_id: UUID,
     current_user: User = Depends(get_current_user),
 ) -> None:

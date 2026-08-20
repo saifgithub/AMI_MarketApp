@@ -281,6 +281,9 @@ _JOURNAL_PLUMBING_REASONS: dict[str, str] = {
     "mandate_version": "which mandate revision was live — audit metadata, not reasoning.",
     "payload": "full snapshot kept for replay — not distilled prompt content.",
     "deleted_at": "soft-delete marker — lifecycle plumbing, never prompt content.",
+    "actioned": "CR184 UI affordance — whether the user obeyed a call; an agent must "
+    "not condition its reasoning on user compliance, and the flag mutates over time "
+    "so rendering it would make prompts nondeterministic.",
 }
 
 INTENTIONALLY_OMITTED: dict[tuple[str, str, str], str] = {

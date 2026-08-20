@@ -24,7 +24,6 @@ logged warning (`_build_room_sector_context` precedent).
 
 from __future__ import annotations
 
-import asyncio
 from statistics import fmean
 from uuid import UUID
 
@@ -136,14 +135,14 @@ def _compose(user_id: UUID, sim: SimEngine) -> dict:
 
 
 @router.get("/{user_id}")
-async def sector_watch(
+def sector_watch(
     user_id: UUID,
     current_user: User = Depends(get_current_user),
     sim: SimEngine = Depends(get_sim_engine),
 ) -> dict:
     _own(current_user, user_id)
     try:
-        return await asyncio.to_thread(_compose, user_id, sim)
+        return _compose(user_id, sim)
     except Exception as exc:  # noqa: BLE001 — degrade loudly, never 500 the Floor
         logger.warning(
             "sector_watch_failed", user_id=str(user_id), error=str(exc)[:200],
