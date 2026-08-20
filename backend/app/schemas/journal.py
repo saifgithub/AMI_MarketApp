@@ -68,6 +68,12 @@ class JournalEntry(BaseModel):
     payload: dict = Field(default_factory=dict)  # full snapshot for replay
     created_at: datetime = Field(default_factory=_utcnow)
     deleted_at: datetime | None = None  # set on soft-delete; null on live entries
+    # CR184 — did the user execute this Room verdict as a sim trade? Computed
+    # on read (list_for_user) from the sim_trades.verdict_ref join, training
+    # ledger only. Bool for ROOM_RUN entries that carry a verdict; None
+    # everywhere else — None means not-applicable, never False. A manual
+    # same-ticker trade (verdict_ref NULL) does NOT count as actioned.
+    actioned: bool | None = None
 
 
 class JournalListResponse(BaseModel):

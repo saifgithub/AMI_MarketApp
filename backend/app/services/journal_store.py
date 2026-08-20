@@ -92,6 +92,41 @@ def _row_to_entry(row: JournalEntryRow) -> JournalEntry:
     )
 
 
+def _annotate_actioned(s, user_id: UUID, entries: list[JournalEntry]) -> None:
+    """CR184 — stamp `actioned` on ROOM_RUN entries in ONE batch query.
+
+    Actioned means a sim trade exists whose `verdict_ref` equals this entry's
+    `reference_id` (the room-run id), in the user's TRAINING ledger only
+    (`training_trade_scope`, DEF269 — a game fill against the same verdict
+    does not count, and a manual same-ticker trade carries no verdict_ref so
+    it never counts). Bool only for ROOM_RUN entries that carry a verdict in
+    their payload; everything else keeps None — N/A is not False (CR040).
+    """
+    candidates = [
+        e for e in entries
+        if e.entry_type == EntryType.ROOM_RUN
+        and e.reference_id is not None
+        and e.payload.get("verdict") is not None
+    ]
+    if not candidates:
+        return
+    # Lazy import: reuses the canonical DEF269 scope predicate without paying
+    # sim_engine's module-load cost every time journal_store is imported.
+    from app.db.models import SimTradeRow
+    from app.services.sim_engine import training_trade_scope
+
+    refs = {e.reference_id for e in candidates}
+    actioned_refs = set(
+        s.execute(
+            select(SimTradeRow.verdict_ref)
+            .where(training_trade_scope(user_id))
+            .where(SimTradeRow.verdict_ref.in_(refs))
+        ).scalars().all()
+    )
+    for e in candidates:
+        e.actioned = e.reference_id in actioned_refs
+
+
 # Trash retention: how far back the in-app Trash view looks. Soft-deleted
 # rows older than this stay in the DB (recoverable via direct API call or
 # psql) but never appear in `list_deleted` — keeps the Trash list to a
@@ -217,7 +252,9 @@ class JournalStore:
             stmt = stmt.order_by(JournalEntryRow.created_at.desc())
             rows = s.execute(stmt).scalars().all()
             entries = [_row_to_entry(r) for r in rows]
-            return entries[:limit], len(entries), retention
+            page = entries[:limit]
+            _annotate_actioned(s, user_id, page)
+            return page, len(entries), retention
 
     def list_deleted(
         self,
