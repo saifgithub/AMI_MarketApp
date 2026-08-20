@@ -188,7 +188,9 @@ class MandateStore:
         dropped from `updates` before the merge — they are `Mandate` fields
         with no columns behind them (CR039, `_with_plan_state`), and letting
         a PATCH set them was a paywall bypass. Every field the schema still
-        validates types for; only these five never reach the merge.
+        validates types for; only the CLIENT_UNWRITABLE_MANDATE_FIELDS set
+        (entitlement fields plus the CR129 read-path-stamped objects) never
+        reaches the merge.
         """
         updates = {
             k: v for k, v in updates.items()

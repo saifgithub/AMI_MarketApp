@@ -25,10 +25,12 @@ from app.agents.safety_floor import (
 )
 from app.api.dependencies import get_current_user
 from app.db.models import User
-from app.schemas import Compliance, Mandate, ResolvedCaps
+from app.schemas import Compliance, DayTraderPresetInfo, Mandate, ResolvedCaps
 from app.services.credit_service import balance_for, room_cost_for_plan
 from app.services.day_trader_preset import (
+    DAY_TRADER_DISCLOSURE,
     DAY_TRADER_JOURNAL_SUMMARY,
+    DAY_TRADER_PRESET_OVERRIDES,
     is_day_trader_preset,
 )
 from app.services.entitlements import effective_plan_for_user
@@ -120,6 +122,13 @@ def _with_plan_state(mandate: Mandate, user: User) -> Mandate:
         "room_cost": room_cost_for_plan(plan),
         "room_cooldown_until": user.room_cooldown_until,
         "resolved": resolved,
+        # CR129: serve the Day Trader preset from its one module constant so
+        # the client applies it by PATCHing this exact map back — which is
+        # what `is_day_trader_preset()` below recognises (CR131 cohort marker).
+        "day_trader_preset": DayTraderPresetInfo(
+            overrides=dict(DAY_TRADER_PRESET_OVERRIDES),
+            disclosure=DAY_TRADER_DISCLOSURE,
+        ),
     })
 
 

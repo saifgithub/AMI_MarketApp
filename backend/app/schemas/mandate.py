@@ -60,6 +60,13 @@ CLIENT_UNWRITABLE_MANDATE_FIELDS = frozenset({
     "credit_allowance",
     "trial_expires_at",
     "trial_started_at",
+    # CR129: read-path-stamped objects (`_with_plan_state`), same doctrine as
+    # the entitlement fields above. Current reads re-stamp so a PATCHed value
+    # is invisible there, but BL5 historical version reads return RAW stored
+    # snapshots un-restamped — without this line, client junk persists into
+    # those.
+    "resolved",
+    "day_trader_preset",
 })
 
 # DEF191: the marker that makes a Mandate field's enforced-limit status
@@ -119,6 +126,25 @@ class ResolvedCaps(BaseModel):
     max_trades_per_day: int
     max_trades_per_week: int
     max_open_risk_pct: float
+
+
+class DayTraderPresetInfo(BaseModel):
+    """CR129: the Day Trader preset, served on the mandate read path so the
+    client never hard-codes a preset value (the CR129-MOBILE fence:
+    "Do NOT hard-code any preset value or cap — server-sourced only").
+
+    `overrides` is the EXACT PATCH body that applies the preset — key =
+    Mandate field name, value = the permissive setting. PATCHing it back
+    verbatim is what makes `api/mandate.py`'s `is_day_trader_preset()`
+    recognise the switch and journal the CR131 cohort marker, so the served
+    map and the recognised map trace to one constant
+    (`services/day_trader_preset.DAY_TRADER_PRESET_OVERRIDES`), never two
+    copies. `disclosure` is the selection-time text (CR040 loud disclosure;
+    it names what is NOT removed — compliance, locale, halal/allow-blocklist).
+    """
+
+    overrides: dict[str, float | int]
+    disclosure: str
 
 
 class Compliance(BaseModel):
@@ -237,6 +263,11 @@ class Mandate(BaseModel):
     # DEF193: stamped by the mandate API's read path (`_with_plan_state`),
     # same as `plan`/`credit_balance` above — never persisted on the row.
     resolved: ResolvedCaps | None = None
+
+    # CR129: stamped by the read path like `resolved`; client writes are
+    # stripped (CLIENT_UNWRITABLE_MANDATE_FIELDS), so it is never persisted
+    # meaningfully.
+    day_trader_preset: DayTraderPresetInfo | None = None
 
     created_at: datetime
     updated_at: datetime

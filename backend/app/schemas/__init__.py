@@ -26,6 +26,7 @@ CoachSession = BriefSession
 
 from app.schemas.mandate import (
     Compliance,
+    DayTraderPresetInfo,
     Horizon,
     LearningStyle,
     Mandate,
@@ -57,6 +58,7 @@ __all__ = [
     "CoachRefusal",
     "CoachSession",
     "Compliance",
+    "DayTraderPresetInfo",
     "Horizon",
     "LearningStyle",
     "Mandate",
