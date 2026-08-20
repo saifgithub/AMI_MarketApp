@@ -2379,3 +2379,31 @@ class PersonaEventRow(Base):
     count: Mapped[int] = mapped_column(
         Integer, nullable=False, default=1, server_default=text("1"),
     )
+
+
+class AdminAuditRow(Base):
+    """CR200 — one admin write action, attributed to a named operator.
+
+    `operator` is the CF Access email (human), the CF service-token
+    common_name (agent), or the literal "static_bearer" (legacy shared-secret
+    path); `auth_kind` disambiguates. Written best-effort by
+    `services/admin_audit.py` — an audit failure never breaks the admin
+    request. Deliberately excluded from `trim_audit_tables()`: volume is
+    human-scale and the forensic value is permanent.
+    """
+
+    __tablename__ = "admin_audit"
+    __table_args__ = (
+        Index("ix_admin_audit_created_at", "created_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    operator: Mapped[str] = mapped_column(String, nullable=False)
+    auth_kind: Mapped[str] = mapped_column(String(16), nullable=False)
+    action: Mapped[str] = mapped_column(String, nullable=False)
+    target: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    payload: Mapped[Optional[dict]] = mapped_column(JsonB(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, server_default=func.now(),
+        nullable=False,
+    )

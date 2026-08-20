@@ -663,8 +663,20 @@ class Settings(BaseSettings):
     # Admin back-office secret (AT:R27). Static bearer for Alpha single-operator
     # access. All /v1/admin/* routes require this. Empty = admin disabled.
     # Generate: openssl rand -hex 32
-    # Beta: replace with admin_users table + JWT (middleware accepts both).
+    # CR200: kept as the fallback path alongside Cloudflare Access below, so
+    # agent scripts and LAN-direct access keep working; audit rows attribute
+    # this path to the literal operator "static_bearer".
     admin_secret: str = ""
+
+    # CR200 — Cloudflare Access (Zero Trust) in front of the management
+    # console. When BOTH are set, get_admin verifies the Cf-Access-Jwt-
+    # Assertion header against the team's JWKS and audit rows carry the
+    # operator's CF email (human) or service-token name (agent). Half-set is
+    # a config mistake: logged loudly, CF path stays disabled (CR040).
+    #   CF_ACCESS_TEAM_DOMAIN: https://<team>.cloudflareaccess.com
+    #   CF_ACCESS_AUD:         the Access application's Audience (AUD) tag
+    cf_access_team_domain: str = ""
+    cf_access_aud: str = ""
 
     # CR121 — iOS store deep link for the client-version-gate block screen.
     # We do NOT have a numeric App Store ID (no App Store record exists yet —

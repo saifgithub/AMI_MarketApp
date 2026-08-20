@@ -1,7 +1,9 @@
 """Admin back-office API — /v1/admin/* (AT:R27).
 
-All routes require the static ADMIN_SECRET bearer (Alpha). Beta will layer in
-admin_users table + short-lived JWT; the get_admin dependency will accept both.
+All routes require an admin identity (CR200): a Cloudflare Access JWT
+(`Cf-Access-Jwt-Assertion`, when CF_ACCESS_* is configured) or the static
+ADMIN_SECRET bearer fallback. Every write records an `admin_audit` row naming
+the operator (services/admin_audit.py).
 
 Endpoint map:
   GET    /v1/admin/users                       Search by email or device_user_id
@@ -22,7 +24,6 @@ Endpoint map:
 
 from __future__ import annotations
 
-import hmac
 from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid4
 
@@ -49,6 +50,8 @@ from app.services.client_release_floor import (
     create_floor_raise,
     get_active_floor,
 )
+from app.services.admin_audit import record_admin_action
+from app.services.cf_access import AdminIdentity, resolve_admin_identity
 from app.services.inbox_store import get_inbox_store
 from app.schemas.admin import (
     AdminConfigCheckResponse,
@@ -74,18 +77,28 @@ _VALID_PLANS = {"floor_pass", "trader", "floor_manager", "trial_trader"}
 
 # ── Auth dependency ───────────────────────────────────────────────────────────
 
-def get_admin(authorization: str | None = Header(default=None)) -> None:
-    """Verify the static ADMIN_SECRET bearer. Raises 403 on any mismatch."""
-    if not settings.admin_secret:
+def get_admin(
+    authorization: str | None = Header(default=None),
+    cf_access_jwt_assertion: str | None = Header(default=None),
+) -> AdminIdentity:
+    """Resolve the caller to an AdminIdentity (CR200), or raise.
+
+    Order: Cloudflare Access JWT (when CF_ACCESS_* is configured) → static
+    ADMIN_SECRET bearer fallback. 503 when NEITHER auth path is configured,
+    403 when configured but nothing verifies. Existing call sites that do
+    `_: None = Depends(get_admin)` keep working — they just discard the value.
+    """
+    if not settings.admin_secret and not (
+        settings.cf_access_team_domain and settings.cf_access_aud
+    ):
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE,
-            "admin back-office not configured — set ADMIN_SECRET",
+            "admin back-office not configured — set ADMIN_SECRET or CF_ACCESS_*",
         )
-    token = ""
-    if authorization and authorization.lower().startswith("bearer "):
-        token = authorization.split(" ", 1)[1]
-    if not hmac.compare_digest(token.encode(), settings.admin_secret.encode()):
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "invalid admin secret")
+    identity = resolve_admin_identity(cf_access_jwt_assertion, authorization)
+    if identity is None:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "invalid admin credentials")
+    return identity
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -335,7 +348,7 @@ def config_check(_: None = Depends(get_admin)) -> AdminConfigCheckResponse:
 
 @router.post("/release-floor", response_model=AdminReleaseFloorOut)
 def raise_release_floor(
-    req: AdminReleaseFloorRequest, _: None = Depends(get_admin),
+    req: AdminReleaseFloorRequest, admin: AdminIdentity = Depends(get_admin),
 ) -> AdminReleaseFloorOut:
     """CR121 — raise the client version floor. One API call, no deploy, no
     container recreate — the entire point of an append-only DB table over an
@@ -375,6 +388,11 @@ def raise_release_floor(
                     "min_build": exc.min_build,
                 },
             ) from exc
+        record_admin_action(
+            session, admin, "release_floor_raised",
+            payload={"min_build": req.min_build,
+                     "recommended_build": req.recommended_build},
+        )
         return AdminReleaseFloorOut(
             id=row.id,
             min_build=row.min_build,
@@ -435,7 +453,7 @@ def get_user(
 def change_plan(
     user_id: UUID,
     req: AdminPlanChangeRequest,
-    _: None = Depends(get_admin),
+    admin: AdminIdentity = Depends(get_admin),
 ) -> AdminUserDetail:
     if req.plan not in _VALID_PLANS:
         raise HTTPException(
@@ -456,6 +474,10 @@ def change_plan(
             note=req.note,
         )
         s.flush()
+        record_admin_action(
+            s, admin, "plan_changed", target=str(user_id),
+            payload={"from": old_plan, "to": req.plan, "note": req.note},
+        )
         events = (
             s.execute(
                 select(SubscriptionEventRow)
@@ -473,7 +495,7 @@ def change_plan(
 def grant_trial(
     user_id: UUID,
     req: AdminTrialGrantRequest,
-    _: None = Depends(get_admin),
+    admin: AdminIdentity = Depends(get_admin),
 ) -> AdminUserDetail:
     with get_session() as s:
         user = _get_user_or_404(s, user_id)
@@ -492,6 +514,10 @@ def grant_trial(
             note=req.note,
         )
         s.flush()
+        record_admin_action(
+            s, admin, "trial_granted", target=str(user_id),
+            payload={"days": req.days, "note": req.note},
+        )
         events = (
             s.execute(
                 select(SubscriptionEventRow)
@@ -509,7 +535,7 @@ def grant_trial(
 def update_trial(
     user_id: UUID,
     req: AdminTrialUpdateRequest,
-    _: None = Depends(get_admin),
+    admin: AdminIdentity = Depends(get_admin),
 ) -> AdminUserDetail:
     with get_session() as s:
         user = _get_user_or_404(s, user_id)
@@ -550,6 +576,10 @@ def update_trial(
             )
 
         s.flush()
+        record_admin_action(
+            s, admin, f"trial_{req.action}", target=str(user_id),
+            payload={"days": req.days, "note": req.note},
+        )
         events = (
             s.execute(
                 select(SubscriptionEventRow)
@@ -567,7 +597,7 @@ def update_trial(
 def adjust_credits(
     user_id: UUID,
     req: AdminCreditsRequest,
-    _: None = Depends(get_admin),
+    admin: AdminIdentity = Depends(get_admin),
 ) -> AdminUserDetail:
     if req.delta == 0:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "delta must be non-zero")
@@ -587,6 +617,10 @@ def adjust_credits(
             note=req.note,
         )
         s.flush()
+        record_admin_action(
+            s, admin, event_type, target=str(user_id),
+            payload={"delta": req.delta, "balance": new_balance, "note": req.note},
+        )
         events = (
             s.execute(
                 select(SubscriptionEventRow)
@@ -604,7 +638,7 @@ def adjust_credits(
 def suspend_user(
     user_id: UUID,
     req: AdminNoteRequest,
-    _: None = Depends(get_admin),
+    admin: AdminIdentity = Depends(get_admin),
 ) -> AdminUserDetail:
     with get_session() as s:
         user = _get_user_or_404(s, user_id)
@@ -622,6 +656,10 @@ def suspend_user(
             note=req.note,
         )
         s.flush()
+        record_admin_action(
+            s, admin, "user_suspended", target=str(user_id),
+            payload={"note": req.note},
+        )
         events = (
             s.execute(
                 select(SubscriptionEventRow)
@@ -639,7 +677,7 @@ def suspend_user(
 def reinstate_user(
     user_id: UUID,
     req: AdminNoteRequest,
-    _: None = Depends(get_admin),
+    admin: AdminIdentity = Depends(get_admin),
 ) -> AdminUserDetail:
     with get_session() as s:
         user = _get_user_or_404(s, user_id)
@@ -657,6 +695,10 @@ def reinstate_user(
             note=req.note,
         )
         s.flush()
+        record_admin_action(
+            s, admin, "user_reinstated", target=str(user_id),
+            payload={"note": req.note},
+        )
         events = (
             s.execute(
                 select(SubscriptionEventRow)
@@ -716,11 +758,18 @@ def preview_broadcast(
 @router.post("/messages", response_model=SendResponse)
 def send_broadcast(
     req: AdminSendRequest,
-    _: None = Depends(get_admin),
+    admin: AdminIdentity = Depends(get_admin),
 ) -> SendResponse:
     """Resolve, fan out one inbox row per recipient, record the measured
     recipient_count. Late installers never receive this blast."""
-    return get_inbox_store().send(req)
+    resp = get_inbox_store().send(req)
+    with get_session() as s:
+        record_admin_action(
+            s, admin, "broadcast_sent",
+            payload={"title": req.title,
+                     "recipient_count": resp.recipient_count},
+        )
+    return resp
 
 
 @router.get("/messages", response_model=list[BroadcastOut])

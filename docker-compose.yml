@@ -139,6 +139,12 @@ services:
       # require it; empty value returns 503 from those routes (Alpha-only
       # mechanism, replaced by admin_users + JWT in Beta).
       ADMIN_SECRET: ${ADMIN_SECRET:-}
+      # CR200 — Cloudflare Access in front of the management console. Both
+      # set = get_admin verifies Cf-Access-Jwt-Assertion and audit rows name
+      # the CF operator; half-set logs cf_access_half_configured and the CF
+      # path stays off; both empty = bearer-only (pre-CR200 behaviour).
+      CF_ACCESS_TEAM_DOMAIN: ${CF_ACCESS_TEAM_DOMAIN:-}
+      CF_ACCESS_AUD: ${CF_ACCESS_AUD:-}
       # CR121 — iOS TestFlight join link for the client-version-gate block
       # screen (no numeric App Store ID exists yet — same DEF100/CR084
       # provisioning gap). Empty = the endpoint falls back to the generic
