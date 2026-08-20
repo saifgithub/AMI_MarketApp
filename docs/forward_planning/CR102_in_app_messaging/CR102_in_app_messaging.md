@@ -1,6 +1,6 @@
 # CR102 — In-app messaging to beta testers (broadcast + reply)
 
-**Filed:** 2026-07-27 (AT:R65) · **Status:** proposed — **design only, not built**
+**Filed:** 2026-07-27 (AT:R65) · **Status:** in_progress — **backend built (AT:R73, 2026-08-1x), mobile not built.** Register corrected 2026-08-20 (AT:R70) after it was found still reading "proposed" against a shipped backend. `backend/app/api/messages.py`, `services/inbox_store.py` (or equivalent), tables, and admin routes exist and are wired into `main.py`. No mobile client work exists yet — no `inbox_message.dart`, no bell/badge, no inbox screen. Delivery is deliberately cold-start-poll-only per this doc's own scope; it does not use OneSignal/push, so it needs no `android_channel_id` wiring ([DEF333](../../defect/_registry/DEF333.row.md)).
 
 Saiful: *"I need a way to communicate to the beta testers directly on the app. Kind of an
 in-app messaging. I think we have this capability already?"*
