@@ -1,74 +1,74 @@
 {
-  "265e68df56b38709": {
-    "detail": "1 control(s)",
-    "note": "",
-    "rule": "unlabelled_control",
-    "screen": "21ffb63a6c15",
-    "status": "new",
-    "summary": "interactive elements with no accessibility label: a screen reader announces them as a bare 'button', and the crawler skips them because an unlabelled control cannot be proven safe to tap. Fixing these",
-    "times_seen": 2
-  },
-  "3894e8fdc5bbd1ad": {
-    "detail": "1 interactive element(s)",
-    "note": "",
-    "rule": "sparse_screen",
-    "screen": "310ff200149b",
-    "status": "new",
-    "summary": "almost nothing addressable here \u2014 often a failed load, a spinner that never resolved, or an error state with no copy. Check the screenshot before filing; some screens are legitimately sparse.",
-    "times_seen": 1
-  },
-  "598b6fe75305ca63": {
-    "detail": "\u0627\u0644\u0639\u0631\u0628\u064a\u0629",
-    "note": "",
-    "rule": "navbar_overlap",
-    "screen": "f8142122c32e",
-    "status": "new",
-    "summary": "element center falls inside the nav-bar band \u2014 a tap would land on the system nav bar, not the button",
-    "times_seen": 1
-  },
-  "8b45935d4c23abcf": {
-    "detail": "A RenderFlex overflowed by 14 pixels on the right.",
-    "note": "",
-    "rule": "render_overflow",
-    "screen": "",
-    "status": "new",
-    "summary": "content is being clipped \u2014 the classic small-screen / long-translation defect",
-    "times_seen": 2
-  },
-  "ab989a7741c6d5ca": {
-    "detail": "Dictate",
-    "note": "",
-    "rule": "navbar_overlap",
-    "screen": "21ffb63a6c15",
-    "status": "new",
-    "summary": "element center falls inside the nav-bar band \u2014 a tap would land on the system nav bar, not the button",
-    "times_seen": 1
-  },
-  "cc6f1aeb0d05276a": {
-    "detail": "English (UK)",
-    "note": "",
-    "rule": "navbar_overlap",
-    "screen": "21ffb63a6c15",
-    "status": "new",
-    "summary": "element center falls inside the nav-bar band \u2014 a tap would land on the system nav bar, not the button",
-    "times_seen": 1
-  },
-  "cd3df2a9ec60944f": {
-    "detail": "Dictate",
-    "note": "",
-    "rule": "navbar_overlap",
-    "screen": "f8142122c32e",
-    "status": "new",
-    "summary": "element center falls inside the nav-bar band \u2014 a tap would land on the system nav bar, not the button",
-    "times_seen": 1
-  },
-  "fbf08f678422ea67": {
-    "detail": "1 control(s)",
-    "note": "",
-    "rule": "unlabelled_control",
-    "screen": "f8142122c32e",
-    "status": "new",
-    "summary": "interactive elements with no accessibility label: a screen reader announces them as a bare 'button', and the crawler skips them because an unlabelled control cannot be proven safe to tap. Fixing these",
-    "times_seen": 2
-  }
+ "265e68df56b38709": {
+  "detail": "1 control(s)",
+  "note": "Concierge composer send button: IconButton(arrow_upward), no tooltip/Semantics — filed DEF346. Triage AT:R73 2026-08-20.",
+  "rule": "unlabelled_control",
+  "screen": "21ffb63a6c15",
+  "status": "filed",
+  "summary": "interactive elements with no accessibility label: a screen reader announces them as a bare 'button', and the crawler skips them because an unlabelled control cannot be proven safe to tap. Fixing these",
+  "times_seen": 2
+ },
+ "3894e8fdc5bbd1ad": {
+  "detail": "1 interactive element(s)",
+  "note": "Apple 'Siri, Dictation & Privacy' sheet, reached via keyboard Dictate — system UI, not the app. Containment gap noted in CR163 row. Triage AT:R73 2026-08-20.",
+  "rule": "sparse_screen",
+  "screen": "310ff200149b",
+  "status": "false_positive",
+  "summary": "almost nothing addressable here — often a failed load, a spinner that never resolved, or an error state with no copy. Check the screenshot before filing; some screens are legitimately sparse.",
+  "times_seen": 1
+ },
+ "598b6fe75305ca63": {
+  "detail": "العربية",
+  "note": "iOS system-keyboard key (Arabic) — Concierge screen with keyboard open; suppressed by oracles.py _SYSTEM_KEYBOARD since b673dfc0. Triage AT:R73 2026-08-20.",
+  "rule": "navbar_overlap",
+  "screen": "f8142122c32e",
+  "status": "false_positive",
+  "summary": "element center falls inside the nav-bar band — a tap would land on the system nav bar, not the button",
+  "times_seen": 1
+ },
+ "8b45935d4c23abcf": {
+  "detail": "A RenderFlex overflowed by 14 pixels on the right.",
+  "note": "Real candidate, unlocated (empty screen/stack; likely accessibility-XXXL launch overflow 08-10). Needs a --text-size huge crawl at HEAD to locate before filing. Triage AT:R73 2026-08-20.",
+  "rule": "render_overflow",
+  "screen": "",
+  "status": "new",
+  "summary": "content is being clipped — the classic small-screen / long-translation defect",
+  "times_seen": 2
+ },
+ "ab989a7741c6d5ca": {
+  "detail": "Dictate",
+  "note": "iOS system-keyboard Dictate key — same class; filter proven (zero keyboard findings in today's run). Triage AT:R73 2026-08-20.",
+  "rule": "navbar_overlap",
+  "screen": "21ffb63a6c15",
+  "status": "false_positive",
+  "summary": "element center falls inside the nav-bar band — a tap would land on the system nav bar, not the button",
+  "times_seen": 1
+ },
+ "cc6f1aeb0d05276a": {
+  "detail": "English (UK)",
+  "note": "iOS system-keyboard key — Concierge screen with keyboard open; suppressed by oracles.py _SYSTEM_KEYBOARD since b673dfc0. Triage AT:R73 2026-08-20.",
+  "rule": "navbar_overlap",
+  "screen": "21ffb63a6c15",
+  "status": "false_positive",
+  "summary": "element center falls inside the nav-bar band — a tap would land on the system nav bar, not the button",
+  "times_seen": 1
+ },
+ "cd3df2a9ec60944f": {
+  "detail": "Dictate",
+  "note": "iOS system-keyboard key — Concierge screen with keyboard open; suppressed by oracles.py _SYSTEM_KEYBOARD since b673dfc0. Triage AT:R73 2026-08-20.",
+  "rule": "navbar_overlap",
+  "screen": "f8142122c32e",
+  "status": "false_positive",
+  "summary": "element center falls inside the nav-bar band — a tap would land on the system nav bar, not the button",
+  "times_seen": 1
+ },
+ "fbf08f678422ea67": {
+  "detail": "1 control(s)",
+  "note": "Concierge composer send button: IconButton(arrow_upward), no tooltip/Semantics — filed DEF346. Triage AT:R73 2026-08-20.",
+  "rule": "unlabelled_control",
+  "screen": "f8142122c32e",
+  "status": "filed",
+  "summary": "interactive elements with no accessibility label: a screen reader announces them as a bare 'button', and the crawler skips them because an unlabelled control cannot be proven safe to tap. Fixing these",
+  "times_seen": 2
+ }
 }
