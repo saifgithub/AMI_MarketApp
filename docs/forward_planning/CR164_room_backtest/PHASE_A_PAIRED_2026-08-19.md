@@ -85,3 +85,28 @@ running to address.
 Artifacts: `results/runs_r70-paired-1.jsonl`, `report_r70-paired-1.md`,
 `trade_pnl_r70-paired-1.md`, `scored_r70-paired-1.jsonl`,
 `prompt_scan_r70-paired-1.md`.
+
+---
+
+## Phase B (`r70-outcome-1`) is VOID — do not score it
+
+Ran 2026-08-19 20:05 → 2026-08-20 04:57 UTC. **All 450 verdicts are the DEF059
+LLM-outage fail-safe**, not decisions: the on-prem vLLM died in the eleven
+minutes between the paired batch finishing (19:54 UTC) and this one starting
+(20:05 UTC), and stayed down. The host `192.168.20.74` is currently unreachable
+— 100% packet loss, port 8000 closed.
+
+The batch reported "450 completed, 0 failed" because an outage fail-safe IS a
+completed run carrying a PASS verdict. That blind spot is now closed at three
+layers (**DEF336**): the sentinel is a named constant with a recogniser, the
+sweep aborts after 3 consecutive outage verdicts, and the report refuses any
+batch more than 5% outage.
+
+Two cheap tells that would have caught it sooner, worth keeping in mind for
+any future sweep: 0 approvals of 450 against the paired batch's 7.1% is a
+~1e-15 event, and 450 runs in 8.9 h is 71 s each against a measured 155 s —
+a failing convene fails fast.
+
+**The outcome question remains unanswered.** Re-run the same 450-pair plan
+(`pairs_r70-outcome-1.jsonl`, unchanged and still valid) under a fresh
+batch-id once the provider is healthy.
