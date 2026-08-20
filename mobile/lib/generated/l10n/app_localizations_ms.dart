@@ -3908,6 +3908,39 @@ class AppLocalizationsMs extends AppLocalizations {
       'Couldn\'t read your team\'s calls just now.';
 
   @override
+  String get floorCardSector => 'SECTOR WATCH';
+
+  @override
+  String floorCardSectorMove(String sector, String move, String leader) {
+    return '$sector $move — $leader leads.';
+  }
+
+  @override
+  String get floorCardSectorEmpty =>
+      'Follow a ticker or open a position to watch its sector.';
+
+  @override
+  String get floorCardSectorUnavailable =>
+      'Couldn\'t read the sector feed just now.';
+
+  @override
+  String get floorCardUnactioned => 'NOT ACTIONED';
+
+  @override
+  String get floorCardUnactionedUnavailable =>
+      'Couldn\'t read these calls just now.';
+
+  @override
+  String floorCardUnactionedSince(String delta) {
+    return '$delta since the call';
+  }
+
+  @override
+  String floorCardUnactionedPassReference(String delta, String date) {
+    return '$delta vs close on $date';
+  }
+
+  @override
   String get floorCallsNoReferencePrice =>
       'No entry level was named, so there is nothing to measure against.';
 

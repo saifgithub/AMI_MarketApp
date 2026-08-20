@@ -33,6 +33,7 @@ import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
 import 'package:ami_trade/screens/floor/daily_challenge_card.dart';
 import 'package:ami_trade/screens/floor/floor_cards.dart';
+import 'package:ami_trade/screens/floor/floor_providers.dart';
 import 'package:ami_trade/screens/floor/team_calls_screen.dart';
 import 'package:ami_trade/screens/floor/your_firm_screen.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
@@ -188,6 +189,12 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     final todayFilled =
         ref.watch(dailyChallengeTodayProvider).valueOrNull?.myAttempt != null;
     final unlocked = ref.watch(lessonsNotifierProvider).unlockedAgentIds;
+    // CR184 — the NOT ACTIONED card collapses (is omitted, not blanked) when
+    // nothing is outstanding: loading, error and empty all read as "no card",
+    // because acceptance #4 forbids a blank card and "everything actioned"
+    // needs no permanent one.
+    final hasUnactioned =
+        ref.watch(unactionedCallsProvider).valueOrNull?.isNotEmpty ?? false;
 
     return Scaffold(
       backgroundColor: AmiColors.slate900,
@@ -251,9 +258,23 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                             builder: (_) => const TeamCallsScreen(),
                           )),
                         ),
-                        // SECTOR WATCH is card 3 and ships when the News
-                        // analyst's live feed does (§3). Two real cards beat
-                        // three with one empty.
+                        // CR183 — card 3. onTap stays null: the real home is
+                        // the leader's TickerDetail, and the leader is only
+                        // known async, so the tap is wired inside the body.
+                        const FloorCard(
+                            id: 'sector', child: SectorWatchAnswerCard()),
+                        // CR184 — card 4, collapsed when nothing is
+                        // unactioned. Its second home is the calls screen
+                        // (rule 3), same as card 2.
+                        if (hasUnactioned)
+                          FloorCard(
+                            id: 'unactioned',
+                            child: const UnactionedCallsCard(),
+                            onTap: () => Navigator.of(context)
+                                .push(MaterialPageRoute<void>(
+                              builder: (_) => const TeamCallsScreen(),
+                            )),
+                          ),
                       ],
                     ),
                   ),

@@ -20,6 +20,7 @@ library;
 import 'dart:io';
 
 import 'package:ami_trade/features/tour/floor_tour.dart';
+import 'package:ami_trade/models/sector_watch.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/floor/floor_cards.dart';
@@ -66,6 +67,13 @@ Future<void> _pumpFloor(
   WidgetTester t, {
   SimPortfolio? portfolio,
   List<TeamCall> calls = const [],
+  // Day-0 by default: card 3 teaches, so the default carousel is 3 cards.
+  SectorWatch sector = const SectorWatch(state: 'empty'),
+  bool sectorError = false,
+  // Quote / reconstructed-close fixtures for the CR184 delta column. Absent
+  // ticker == the read failed == dash (CR040), same as the live providers.
+  Map<String, double?> prices = const {},
+  ({double close, DateTime date})? conveneClose,
 }) async {
   await t.binding.setSurfaceSize(_reference);
   addTearDown(() => t.binding.setSurfaceSize(null));
@@ -77,6 +85,10 @@ Future<void> _pumpFloor(
       simNotifierProvider.overrideWith(
           (ref) => _FixedSim(ref, SimState(portfolio: portfolio))),
       teamCallsProvider.overrideWith((ref) async => calls),
+      sectorWatchProvider.overrideWith((ref) async =>
+          sectorError ? throw Exception('feed down') : sector),
+      callPriceProvider.overrideWith((ref, ticker) async => prices[ticker]),
+      conveneCloseProvider.overrideWith((ref, k) async => conveneClose),
     ],
     child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -179,9 +191,13 @@ void main() {
     });
 
     testWidgets('dots are inside the surface, one per card', (t) async {
+      // Three cards at rest: portfolio, calls, sector. The NOT ACTIONED card
+      // is collapsed (nothing unactioned in the default fixture) — its dot
+      // must not exist, because a dot for an omitted card is a blank frame.
       await _pumpFloor(t, portfolio: _portfolio());
-      expect(find.bySemanticsLabel('card 1 of 2'), findsOneWidget);
-      expect(find.bySemanticsLabel('card 2 of 2'), findsOneWidget);
+      expect(find.bySemanticsLabel('card 1 of 3'), findsOneWidget);
+      expect(find.bySemanticsLabel('card 3 of 3'), findsOneWidget);
+      expect(find.bySemanticsLabel('card 4 of 4'), findsNothing);
     });
 
     test('rule 5 is a limit, not a convention', () {
@@ -274,6 +290,157 @@ void main() {
       // — worth pinning so the next edit does not take both.
       expect(find.byType(FloorOmnibox), findsOneWidget);
       expect(find.textContaining('Weekly League'), findsNothing);
+    });
+  });
+
+  group('CR183 — SECTOR WATCH is card 3', () {
+    const ok = SectorWatch(
+      state: 'ok',
+      sector: 'Technology',
+      movePct: 2.0,
+      leader: 'NVDA',
+      leaderChangePct: 3.0,
+      tickersConsidered: 3,
+      headline: SectorHeadline(
+          title: 'Blackwell demand outpaces supply', publisher: 'Reuters'),
+      quoteSource: 'yfinance',
+      newsSource: 'yfinance',
+    );
+
+    Future<void> toCard3(WidgetTester t) async {
+      await t.drag(find.byType(PageView), const Offset(-400, 0));
+      await t.pumpAndSettle();
+      await t.drag(find.byType(PageView), const Offset(-400, 0));
+      await t.pumpAndSettle();
+    }
+
+    testWidgets('day-0 teaches what fills the card', (t) async {
+      await _pumpFloor(t, portfolio: _portfolio());
+      await toCard3(t);
+      expect(find.textContaining('Follow a ticker'), findsOneWidget,
+          reason: 'acceptance #4 — cards 2-3 collapse or teach when empty; '
+              'this one teaches');
+    });
+
+    testWidgets('renders the glance line and the leader\'s headline',
+        (t) async {
+      await _pumpFloor(t, portfolio: _portfolio(), sector: ok);
+      await toCard3(t);
+      expect(find.textContaining('Technology +2.0% — NVDA leads.'),
+          findsOneWidget);
+      expect(find.textContaining('Blackwell demand'), findsOneWidget);
+    });
+
+    testWidgets('a feed it cannot read says so — never a flat 0.0%',
+        (t) async {
+      await _pumpFloor(t,
+          portfolio: _portfolio(),
+          sector: const SectorWatch(
+              state: 'unavailable', reason: 'no_live_quotes'));
+      await toCard3(t);
+      expect(find.textContaining('sector feed'), findsOneWidget);
+      expect(find.textContaining('0.0%'), findsNothing,
+          reason: 'CR040 — an unreadable feed rendered as a zero move is a '
+              'fabricated measurement');
+    });
+
+    testWidgets('an unrecognised state renders as unavailable, never as ok',
+        (t) async {
+      await _pumpFloor(t,
+          portfolio: _portfolio(),
+          sector: const SectorWatch(state: 'brand_new_state'));
+      await toCard3(t);
+      expect(find.textContaining('sector feed'), findsOneWidget);
+    });
+
+    testWidgets('the glance is a tap target for the leader (rule 3)',
+        (t) async {
+      await _pumpFloor(t, portfolio: _portfolio(), sector: ok);
+      await toCard3(t);
+      final tap = find.byKey(const Key('sector_watch_tap'));
+      expect(tap, findsOneWidget);
+      expect(t.widget<InkWell>(tap).onTap, isNotNull,
+          reason: 'rule 3 — the card is a glance whose real home is the '
+              'leader\'s TickerDetail screen');
+    });
+  });
+
+  group('CR184 — NOT ACTIONED is card 4, collapsed when empty', () {
+    final approve = TeamCall(
+        ticker: 'NVDA',
+        action: 'APPROVE',
+        at: DateTime(2026, 8, 10),
+        entry: 100.0,
+        actioned: false);
+    final pass = TeamCall(
+        ticker: 'AAPL',
+        action: 'PASS',
+        at: DateTime(2026, 8, 12),
+        actioned: false);
+
+    Future<void> toCard4(WidgetTester t) async {
+      for (var i = 0; i < 3; i++) {
+        await t.drag(find.byType(PageView), const Offset(-400, 0));
+        await t.pumpAndSettle();
+      }
+    }
+
+    testWidgets('collapses entirely when nothing is unactioned — and null '
+        'is N/A, never false', (t) async {
+      await _pumpFloor(t, portfolio: _portfolio(), calls: [
+        TeamCall(
+            ticker: 'MSFT',
+            action: 'APPROVE',
+            at: DateTime(2026, 8, 10),
+            entry: 50.0,
+            actioned: true),
+        TeamCall(
+            ticker: 'TSLA',
+            action: 'PASS',
+            at: DateTime(2026, 8, 11),
+            actioned: null),
+      ]);
+      expect(find.byType(UnactionedCallsCard), findsNothing,
+          reason: 'everything actioned (or N/A) needs no permanent card — '
+              'acceptance #4 says collapse or teach, this card collapses');
+      expect(find.bySemanticsLabel('card 1 of 3'), findsOneWidget);
+    });
+
+    testWidgets('shows an APPROVE and a PASS with measured, framed deltas',
+        (t) async {
+      await _pumpFloor(t,
+          portfolio: _portfolio(),
+          calls: [pass, approve],
+          prices: const {'NVDA': 110.0, 'AAPL': 210.0},
+          conveneClose: (close: 200.0, date: DateTime(2026, 8, 12)));
+      await toCard4(t);
+      expect(find.byType(UnactionedCallsCard), findsOneWidget);
+      // APPROVE: measured against the entry the PM named (100 → 110).
+      expect(find.textContaining('+10.0% since the call'), findsOneWidget);
+      // PASS: measured against the reconstructed convene-day close
+      // (200 → 210), disclosed as such.
+      expect(
+          find.textContaining('+5.0% vs close on Aug 12'), findsOneWidget);
+    });
+
+    testWidgets(
+        'a PASS whose close cannot be honestly read renders a dash, not a '
+        'number', (t) async {
+      await _pumpFloor(t,
+          portfolio: _portfolio(),
+          calls: [pass],
+          prices: const {'AAPL': 210.0},
+          // What conveneDayClose returns for a mock_walk (or unread) history.
+          conveneClose: null);
+      await toCard4(t);
+      expect(
+          find.descendant(
+              of: find.byType(UnactionedCallsCard),
+              matching: find.text('—')),
+          findsOneWidget,
+          reason: 'CR040 — a delta against a fabricated close is a number '
+              'that looks measured and is not');
+      expect(find.textContaining('vs close on'), findsNothing);
     });
   });
 

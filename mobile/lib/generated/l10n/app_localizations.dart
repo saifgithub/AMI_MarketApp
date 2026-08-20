@@ -6429,6 +6429,54 @@ abstract class AppLocalizations {
   /// **'Couldn\'t read your team\'s calls just now.'**
   String get floorCardCallsUnavailable;
 
+  /// CR183. Label on carousel card 3 — the sector-watch glance. Mono uppercase, short — it sits on a card ~300pt wide. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SECTOR WATCH'**
+  String get floorCardSector;
+
+  /// CR183. Card 3's glance line, e.g. 'Technology +2.0% — NVDA leads.'. {sector} is a GICS sector name from the server, {move} arrives already formatted with its sign (e.g. '+2.0%'), {leader} is the ticker symbol leading the move — never translate ticker symbols. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{sector} {move} — {leader} leads.'**
+  String floorCardSectorMove(String sector, String move, String leader);
+
+  /// CR183. Card 3 on day 0, when the user follows no tickers and holds no positions. Teaches what fills the card rather than apologising for it being empty. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Follow a ticker or open a position to watch its sector.'**
+  String get floorCardSectorEmpty;
+
+  /// CR183. Card 3 when the sector feed could not be read honestly (no live quotes, no news for the leader, or the read failed). Distinct from the empty state on purpose: 'nothing followed yet' and 'we could not look' are different facts — and never a 0.0% move rendered as fact (CR040). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read the sector feed just now.'**
+  String get floorCardSectorUnavailable;
+
+  /// CR184. Label on carousel card 4 — the convenes whose verdict the user never executed. Neutral scorecard wording, never a prompt to trade: the app is simulation-only forever. Mono uppercase, short. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NOT ACTIONED'**
+  String get floorCardUnactioned;
+
+  /// CR184. Card 4 when the journal read failed. Mirrors floorCardCallsUnavailable's tone — 'we could not look' is a different fact from 'nothing outstanding'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read these calls just now.'**
+  String get floorCardUnactionedUnavailable;
+
+  /// CR184. Delta framing on a row whose verdict named an entry level (an APPROVE): the move from that level to the price now. {delta} arrives already formatted with its sign (e.g. '+3.1%'). Neutral in both directions — no cost or regret wording; the card is a scorecard of the team's judgement. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{delta} since the call'**
+  String floorCardUnactionedSince(String delta);
+
+  /// CR184. Delta framing on a row with no named entry level (a PASS): measured against the reconstructed close of the convene day and disclosed as such. {delta} arrives formatted with its sign, {date} is the close's own day (e.g. 'Aug 12'), already formatted. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{delta} vs close on {date}'**
+  String floorCardUnactionedPassReference(String delta, String date);
+
   /// CR173 slice 2. Shown on a call row whose verdict proposed no entry price — a PASS names no level. Explains the dash in the change column instead of leaving it unexplained. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

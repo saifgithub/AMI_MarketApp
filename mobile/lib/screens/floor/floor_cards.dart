@@ -1,22 +1,26 @@
 /// CR173 slice 2 — the carousel's cards.
 ///
 /// Each one answers a question the old Floor made you go and look for:
-/// *how am I doing* (card 1) and *what did my team decide* (card 2). SECTOR
-/// WATCH is card 3 and is deliberately absent — §3 parks it behind the News
-/// analyst's live-feed gap, and the carousel ships with two cards rather than a
-/// third one full of nothing.
+/// *how am I doing* (card 1), *what did my team decide* (card 2), *what's
+/// moving where I look* (card 3, SECTOR WATCH — CR183, the cheap
+/// yfinance-headline version §3 always allowed), and *what did my team decide
+/// that I never acted on* (card 4, NOT ACTIONED — CR184, a scorecard of the
+/// team's judgement in both directions, never a prompt to trade).
 ///
 /// **Day-0 is a state, not an edge case** (acceptance #4). Card 1 always
 /// renders, and the number it shows on a brand-new account is the real
 /// configured stake read off the portfolio — never a literal, because the
 /// server's stake is $10,000 and the mock-up's was $100,000, and a hardcoded
 /// figure is wrong the first time either moves. Card 2 teaches instead of
-/// collapsing: "no verdicts yet" says what fills it.
+/// collapsing: "no verdicts yet" says what fills it. Card 3 teaches too.
+/// Card 4 collapses — the screen omits it entirely when every call is
+/// actioned, because "nothing outstanding" needs no permanent card.
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/floor/floor_providers.dart';
 import 'package:ami_trade/screens/floor/team_calls_data.dart';
+import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/floor/floor_carousel.dart';
@@ -119,6 +123,215 @@ class TeamCallsAnswerCard extends ConsumerWidget {
       ],
     );
   }
+}
+
+/// Card 3 — SECTOR WATCH (CR183). "What's moving where I look?": the
+/// top-moving GICS sector among the user's touched tickers, its leader, and
+/// the leader's top headline.
+///
+/// The card is a glance whose real home is the leader's TickerDetail screen
+/// (carousel rule 3) — the tap lives here in the body, not on the FloorCard,
+/// because the leader is only known once the read lands. Three wire states,
+/// three renderings: `empty` teaches (day-0 is a state), `unavailable` — or
+/// any state this build has never seen, or an `ok` missing a fact it promises
+/// — says the feed could not be read. Never a fabricated 0.0% (CR040).
+class SectorWatchAnswerCard extends ConsumerWidget {
+  const SectorWatchAnswerCard({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final async = ref.watch(sectorWatchProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FloorCardLabel(label: l.floorCardSector, color: AmiColors.hexAmber),
+        const SizedBox(height: AmiSpacing.xs),
+        Flexible(
+          child: async.when(
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => Text(l.floorCardSectorUnavailable,
+                style:
+                    AmiTypography.caption.copyWith(color: AmiColors.textLow)),
+            data: (w) {
+              if (w.state == 'empty') {
+                return Text(l.floorCardSectorEmpty,
+                    style: AmiTypography.caption
+                        .copyWith(color: AmiColors.textLow));
+              }
+              final sector = w.sector;
+              final movePct = w.movePct;
+              final leader = w.leader;
+              if (w.state != 'ok' ||
+                  sector == null ||
+                  movePct == null ||
+                  leader == null) {
+                return Text(l.floorCardSectorUnavailable,
+                    style: AmiTypography.caption
+                        .copyWith(color: AmiColors.textLow));
+              }
+              final move =
+                  '${movePct >= 0 ? '+' : ''}${movePct.toStringAsFixed(1)}%';
+              return InkWell(
+                key: const Key('sector_watch_tap'),
+                onTap: () =>
+                    Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder: (_) => TickerDetailScreen(ticker: leader),
+                )),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(l.floorCardSectorMove(sector, move, leader),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AmiTypography.caption
+                            .copyWith(color: AmiColors.textHigh)),
+                    if (w.headline != null) ...[
+                      const SizedBox(height: 2),
+                      Text(w.headline!.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AmiTypography.caption
+                              .copyWith(color: AmiColors.textMed)),
+                    ],
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Card 4 — NOT ACTIONED (CR184). The last two convenes whose verdict the
+/// user never executed, with the move since the call — a scorecard of the
+/// team's judgement, shown in both directions with the same neutral framing
+/// (a PASS that was right is as eligible as an APPROVE that ran away).
+///
+/// The screen collapses this card entirely when the list is empty; the empty
+/// branch here is only the in-flight race before that collapse lands.
+class UnactionedCallsCard extends ConsumerWidget {
+  const UnactionedCallsCard({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final async = ref.watch(unactionedCallsProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FloorCardLabel(label: l.floorCardUnactioned, color: AmiColors.hexPurple),
+        const SizedBox(height: AmiSpacing.xs),
+        Flexible(
+          child: async.when(
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => Text(l.floorCardUnactionedUnavailable,
+                style:
+                    AmiTypography.caption.copyWith(color: AmiColors.textLow)),
+            data: (calls) => calls.isEmpty
+                ? const SizedBox.shrink()
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final call in calls) _UnactionedRow(call: call),
+                    ],
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One unactioned call: ticker, the verdict as itself, the move since the
+/// call, the day. Same skeleton as [TeamCallRow]; the delta column differs
+/// because a PASS here measures against a disclosed reconstructed close
+/// instead of always dashing.
+class _UnactionedRow extends StatelessWidget {
+  const _UnactionedRow({required this.call});
+
+  final TeamCall call;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 1),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 52,
+            child: Text(call.ticker,
+                style: AmiTypography.labelMono
+                    .copyWith(fontSize: 11, color: AmiColors.textHigh)),
+          ),
+          _ActionChip(action: call.action),
+          const SizedBox(width: AmiSpacing.s),
+          Expanded(child: _UnactionedDelta(call: call)),
+          Text(_day.format(call.at),
+              style: AmiTypography.caption
+                  .copyWith(fontSize: 10, color: AmiColors.textLow)),
+        ],
+      ),
+    );
+  }
+}
+
+/// The move since the call, framed neutrally — "{delta} since the call" for
+/// an APPROVE (measured against the entry the PM named), "{delta} vs close on
+/// {date}" for a PASS (measured against the reconstructed convene-day close,
+/// disclosed as such). A dash whenever either side of the measurement is
+/// missing — an unread quote, a mock-walk history, a level nobody named —
+/// because an unmeasured value rendered as 0.0% is a lie (CR040).
+class _UnactionedDelta extends ConsumerWidget {
+  const _UnactionedDelta({required this.call});
+
+  final TeamCall call;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    const dash = Text('—',
+        style: TextStyle(fontSize: 11, color: AmiColors.textLow));
+    final l = AppLocalizations.of(context);
+    final now = ref.watch(callPriceProvider(call.ticker)).valueOrNull;
+
+    if (call.hasReference) {
+      final delta = deltaSinceEntry(entry: call.entry, now: now);
+      if (delta == null) return dash;
+      return _framed(l.floorCardUnactionedSince(_signed(delta)), delta);
+    }
+
+    final reference = ref
+        .watch(conveneCloseProvider((ticker: call.ticker, at: call.at)))
+        .valueOrNull;
+    if (reference == null) return dash;
+    final delta = deltaSinceEntry(entry: reference.close, now: now);
+    if (delta == null) return dash;
+    return _framed(
+        l.floorCardUnactionedPassReference(
+            _signed(delta), _day.format(reference.date)),
+        delta);
+  }
+
+  static String _signed(double delta) =>
+      '${delta >= 0 ? '+' : ''}${delta.toStringAsFixed(1)}%';
+
+  static Widget _framed(String text, double delta) => Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AmiTypography.labelMono.copyWith(
+          fontSize: 10,
+          color: delta >= 0 ? AmiColors.hexGreen : AmiColors.hexRed,
+        ),
+      );
 }
 
 /// One call. Shared by the card and the list screen so the two cannot describe
