@@ -40,9 +40,20 @@ void showWatchlistSheet(
           children: [
             Row(
               children: [
-                Text(
-                  ticker,
-                  style: AmiTypography.h2.copyWith(color: AmiColors.hexCyan),
+                // DEF341 — same one-token rule as the Portfolio watchlist row:
+                // a ticker never wraps or overflows, it scales down beside the
+                // price when space runs out.
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(
+                      ticker,
+                      maxLines: 1,
+                      style:
+                          AmiTypography.h2.copyWith(color: AmiColors.hexCyan),
+                    ),
+                  ),
                 ),
                 const SizedBox(width: AmiSpacing.s),
                 if (price != null)

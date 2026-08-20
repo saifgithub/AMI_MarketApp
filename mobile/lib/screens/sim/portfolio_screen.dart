@@ -1472,11 +1472,19 @@ class _WatchlistRow extends ConsumerWidget {
                 // and the price shouted over it (statMid/24px ticker at
                 // labelMono/12px). Swapped: ticker is now the loud element,
                 // which is how a list scanned by ticker should read.
+                // DEF341 — statMid/24px "GOOGL" is wider than this box and
+                // wrapped mid-symbol ("GOOG"/"L"). A ticker is one token:
+                // scale it down to fit, never break it across lines.
                 SizedBox(
                   width: 72,
-                  child: Text(entry.ticker,
-                      style: AmiTypography.statMid
-                          .copyWith(color: AmiColors.textHigh)),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(entry.ticker,
+                        maxLines: 1,
+                        style: AmiTypography.statMid
+                            .copyWith(color: AmiColors.textHigh)),
+                  ),
                 ),
                 const SizedBox(width: AmiSpacing.s),
                 Expanded(
