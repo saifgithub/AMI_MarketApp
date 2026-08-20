@@ -420,6 +420,49 @@ is fine; "Graham says buy value stocks" is a regulatory violation.
 Not academic footnoting: no page-number pedantry, no multi-source
 bibliographies.
 
+## Interactive-mode beat rules (v4, CR174 — the paragraph is the card)
+
+CR174 renders every lesson from this same MDX source in two modes: **book mode**
+(the prose as written) and **interactive mode**, a beat deck that slices the body
+at `## ` headings and **blank lines** — so every paragraph you write becomes
+exactly one card. These rules make new content born-interactive; the v2 section
+bands above still bind as *section totals*, these bind the slices inside them.
+
+1. **No paragraph over 60 words.** The per-card ceiling, measured after inline
+   `<Term>`/`<Lesson>` tokens collapse to the one word they render as. A
+   100-word paragraph is not "one long card" — it is the wall of text the mode
+   exists to remove. Split at the idea boundary: one claim, one worked step, or
+   one comparison per paragraph. (This effectively tightens the v1 intro band
+   from 50-120 to **50-60 words**.)
+
+2. **The intro is ONE paragraph.** The deck places the lesson's interaction
+   immediately after it (CR174 acceptance: first interaction at <=1 card). A
+   second intro paragraph pushes the interaction later and defeats the
+   placement. Everything the old intros said in sentence four onward belongs in
+   a body section instead.
+
+3. **Every worked figure stays in prose.** An interactive lesson binds a live
+   model to the lesson's own numbers (client-side registry,
+   `mobile/lib/widgets/lessons/interactive_registry.dart`), and the model opens
+   on figures the prose states — picture and paragraph must agree digit for
+   digit or the picture becomes a second source of truth (DEF098). Never delete
+   a worked example's numbers to save words; delete the prose that merely
+   *describes what the visual now shows*.
+
+4. **"The trap" is written commit-then-reveal.** Interactive mode hides the
+   trap section until the reader commits to seeing it. First paragraph: the
+   wrong move and why it feels right at the time. Following paragraph(s): the
+   correct mental model. Each <=60 words — every trap paragraph is its own
+   reveal card.
+
+5. **The section skeleton is locale-locked.** Interactions anchor to section
+   *indices*, never heading text (`## The trap` is `## الفخ` in Arabic). The
+   en/ar/ms siblings of a lesson must carry the SAME number of `## ` sections —
+   `cr174_models_test.dart` fails the mobile build otherwise. Never add or drop
+   a section in one locale. Translations should also keep the paragraph
+   boundaries: each EN paragraph is one card, so merge/split drift silently
+   changes the deck in that locale.
+
 ## MDX components available
 
 - `<Animation name="<catalog_name>" />`

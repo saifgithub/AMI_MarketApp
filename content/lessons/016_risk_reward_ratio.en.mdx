@@ -13,24 +13,30 @@ tags: ["risk", "reward", "expectancy", "math"]
 agent_callouts: ["trader"]
 locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
-updated_at: "2026-05-12"
+updated_at: "2026-08-20"
 ---
 
 # Risk/reward ratio
 
-The risk/reward ratio is the distance from your entry to your target divided by the distance from your entry to your stop. A 1:2 R:R means you stand to make $2 for every $1 you risk if both levels resolve. R:R is not a prediction — it is a filter. With a 1:2 setup you can be wrong on half your trades and still grind out a profit; with a 1:0.8 setup you have to be right about 56% of the time — more than half — just to break even. This lesson teaches how to compute it, what minimum to demand, and how it ties to win rate.
+The risk/reward ratio is the distance from entry to target divided by the distance from entry to stop. R:R is a filter, not a prediction. A 1:2 setup lets you be wrong half the time and still grind out a profit; a 1:0.8 setup needs you right about 56% of the time — more than half — to break even.
 
 <Animation name="risk_reward_scale" />
 
 ## Example
 
-Look at MSFT in a hypothetical setup at $415. The Technical Strategist marks support at $408 (where a chart-based stop belongs, just below at $407) and resistance at $440 (the next clean target zone). Per-share risk = $415 − $407 = $8. Per-share reward = $440 − $415 = $25. R:R = 25 ÷ 8 = 3.1. That is a setup worth taking even if you only hit the target 4 times in 10 — the math: 4 wins × $25 − 6 losses × $8 = $100 − $48 = $52 net per share over ten trades.
+Look at MSFT in a hypothetical setup at $415. The Technical Strategist marks support at $408 (where a chart-based stop belongs, just below at $407) and resistance at $440 (the next clean target zone). Per-share risk = $415 − $407 = $8. Per-share reward = $440 − $415 = $25. R:R = 25 ÷ 8 = 3.1.
 
-Now flip it. Same entry $415, same stop $407, but the target is only $422 because that is the next minor resistance. Reward = $7, risk = $8, R:R = 0.88. You are now risking more than you stand to make. You would need to win 53% of the time just to break even (8 ÷ (7+8)). On Bursa Malaysia the same logic on Petronas Chemicals (PCHEM, 5183): entry RM6.40, stop RM6.20 (risk RM0.20), target RM7.00 (reward RM0.60), R:R = 3.0. Falsification is built in: if the chart's natural target is closer than 1.5× the stop distance, the setup fails the filter before you even price it.
+That is a setup worth taking even if you only hit the target 4 times in 10 — the math: 4 wins × $25 − 6 losses × $8 = $100 − $48 = $52 net per share over ten trades.
+
+Now flip it. Same entry $415, same stop $407, but the target is only $422 because that is the next minor resistance. Reward = $7, risk = $8, R:R = 0.88. You are now risking more than you stand to make. You would need to win 53% of the time just to break even (8 ÷ (7+8)).
+
+On Bursa Malaysia the same logic on Petronas Chemicals (PCHEM, 5183): entry RM6.40, stop RM6.20 (risk RM0.20), target RM7.00 (reward RM0.60), R:R = 3.0. Falsification is built in: if the chart's natural target is closer than 1.5× the stop distance, the setup fails the filter before you even price it.
 
 ## The trap
 
-The trap is moving the target to make the R:R look acceptable. A beginner sees R:R = 0.8 on a setup they want to take, so they "extend the target" to $432 to force R:R up to 2.1, then take the trade. The target is now a number on the ticket, not a level on the chart — there is no reason MSFT should stop at $432, so the trade will either get stopped out at $407 or drift sideways for weeks while the trader stares at unrealised gains they never take. The correct mental model: the chart picks the target the same way it picks the stop. If the math doesn't pass, the trade doesn't take — you skip it and wait for one that does.
+The trap is moving the target to make the R:R look acceptable. A beginner sees R:R = 0.8 on a setup they want to take, so they "extend the target" to $432 to force R:R up to 2.1, then take the trade. The target is now a number on the ticket, not a level on the chart.
+
+There is no reason MSFT should stop at $432, so the trade will either get stopped out at $407 or drift sideways for weeks of unrealised gains never taken. The chart picks the target the same way it picks the stop. If the math doesn't pass, you skip the trade and wait for one that does.
 
 <ChatWith agent="trader" />
 

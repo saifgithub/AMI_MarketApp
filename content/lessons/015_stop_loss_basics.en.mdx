@@ -13,24 +13,32 @@ tags: ["risk", "stop_loss", "execution"]
 agent_callouts: ["trader"]
 locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
-updated_at: "2026-05-12"
+updated_at: "2026-08-20"
 ---
 
 # Stop-loss basics
 
-A stop-loss is the price at which your trade thesis is wrong. Not "wrong enough to feel bad" — wrong, full stop. Set before entry, written into the ticket, and honoured without renegotiation. The point of a stop is not to minimise losses; it is to convert "I was wrong" from an emotional decision you make in the heat of the drawdown into a structural decision you already made when you were calm. This lesson covers where the stop belongs, why most beginners place it wrong, and what makes a stop falsifiable.
+A stop-loss is the price at which your trade thesis is wrong. Not "wrong enough to feel bad" — wrong, full stop. Set before entry, written into the ticket, honoured without renegotiation. A stop is not for minimising losses — it converts "I was wrong" from an emotional mid-drawdown decision into a structural one you made when calm.
 
 <Animation name="stop_loss_trigger" />
 
 ## How this plays out in real markets
 
-TSLA breaks out of a three-week range, closing at $246 on heavy volume. The Technical Strategist flags the prior range high at $238 as the new support floor — that level held twice on the way up and any sustained close back below it kills the breakout thesis. The Execution Desk builds a ticket: entry $246, stop $237.50 (just below $238 to leave room for a noise wick), target $268. Per-share risk = $8.50, reward = $22, R:R = 2.6.
+TSLA breaks out of a three-week range, closing at $246 on heavy volume. The Technical Strategist flags the prior range high at $238 as the new support floor — that level held twice on the way up and any sustained close back below it kills the breakout thesis.
 
-Two days later TSLA dips to $239.10 intraday, then closes at $244. The stop is not hit. The next day TSLA gaps down to $235 and closes at $233.80. Stop hit on the close — the thesis is invalidated by definition: price closed below the level that was supposed to hold. You exit. The trade lost $12.20 per share (slippage on the gap), not the planned $8.50, but the structure held: one trade is roughly 1% of your account, and you live to take the next setup. On Bursa Malaysia the equivalent on TENAGA might be entry RM14.20, stop RM13.85 below a held weekly low — same logic, smaller absolute numbers.
+The Execution Desk builds a ticket: entry $246, stop $237.50 (just below $238 to leave room for a noise wick), target $268. Per-share risk = $8.50, reward = $22, R:R = 2.6.
+
+Two days later TSLA dips to $239.10 intraday, then closes at $244. The stop is not hit. The next day TSLA gaps down to $235 and closes at $233.80. Stop hit on the close — the thesis is invalidated by definition: price closed below the level that was supposed to hold. You exit.
+
+The trade lost $12.20 per share — slippage on the gap — not the planned $8.50. But the structure held: one trade is roughly 1% of your account, and you live to take the next setup.
+
+On Bursa Malaysia the equivalent on TENAGA might be entry RM14.20, stop RM13.85 below a held weekly low — same logic, smaller absolute numbers.
 
 ## The trap
 
-The trap is placing the stop at "the dollar amount I'm willing to lose" instead of at "the price that proves the thesis wrong." Beginners pick a percentage — "I'll exit if it drops 5%" — and slap it on the ticket regardless of where the chart's actual invalidation level sits. This guarantees one of two failures: either the stop is tighter than the stock's normal noise (you get shaken out and the trade then runs in your direction without you), or it is looser than the chart's invalidation (you stay in long after the setup has died, turning a 1% loss into a 3% one). The correct mental model: the chart picks the stop level, the math picks the share count.
+The trap is placing the stop at "the dollar amount I'm willing to lose" instead of at "the price that proves the thesis wrong." Beginners pick a percentage — "I'll exit if it drops 5%" — and slap it on the ticket regardless of where the chart's actual invalidation level sits.
+
+That guarantees one of two failures: a stop tighter than the stock's normal noise (you get shaken out and the trade then runs without you), or looser than the chart's invalidation (you stay in after the setup has died, turning a 1% loss into a 3% one). The chart picks the stop level; the math picks the share count.
 
 <ChatWith agent="trader" />
 

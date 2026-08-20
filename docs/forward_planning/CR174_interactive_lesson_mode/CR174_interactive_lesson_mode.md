@@ -441,7 +441,7 @@ DEF190, and the second time this session's lineage has hit it (CR173's autoplay 
 | # | State |
 |---|---|
 | 1 book mode byte-identical | **Met** — untouched code path; three widgets moved verbatim |
-| 2 measured against baseline | **Partly.** First interaction is at **card 1** (was the 50% mark) and every pilot lesson now has ≥1 bound visual (was 0). **Words-per-card is not yet ≤60**: the deck slices the shipped prose at paragraph boundaries (median 65w), so tightening is the education lane's job, not the renderer's |
+| 2 measured against baseline | **Met** (content slice, 2026-08-20). First interaction at **card 1** (was the 50% mark); every pilot lesson has ≥1 bound visual (was 0); words-per-card now **≤60 on every prose card** — see §Delivery, content slice |
 | 3 formative vs scored | **Met on the client half** (formative resolves locally, scored round-trips unchanged). The payload half is false today → **DEF294** |
 | 4 derived guard | **Met** — `cr174_models_test.dart` re-derives from `InteractiveRegistry.registeredLessonIds`; a lesson added tomorrow is inside the check |
 | 5 backend suite / CR087 | **Met by construction** — no backend file changed |
@@ -449,6 +449,40 @@ DEF190, and the second time this session's lineage has hit it (CR173's autoplay 
 | 7 instrumentation before scale-out | **Not started.** There is no client event emitter at all (the CR181 finding); this gates *scale-out*, not this slice |
 | 8 RTL gate | **Met** — three widget tests, mutation-verified |
 | 9 numbers vs the recorded baseline | **Met** for #2's first-interaction and visual counts; the words-per-card figure is reported above rather than claimed |
+
+## Delivery — content slice (2026-08-13 front end · 2026-08-20 content)
+
+The `noncoder.edu` lane's half, built on the shipped deck (no code changed):
+
+- **Pilot beats re-authored.** All six EN pilot bodies re-cut so every paragraph — every prose card
+  the deck slices — is **≤60 words**. Measured with the deck's own counting rule (`lessonWordCount`:
+  inline `{{term:…}}` tokens collapse to one word), across the six lessons' prose cards:
+  **before** 39 cards, median 84w, max 132w, 27 cards over 60 · **after** 64 cards, median 49.5w,
+  max 60w, **0 over**. Every intro is now a single ≤60w paragraph, so the play stays at card 1.
+- **Facts preserved, not rewritten (CR060).** Every worked figure the registry models reproduce is
+  still stated in prose, verbatim — 014's `$21 / 9 shares / $4,320 / 21.6%` and the `$470 → $10 / 20
+  shares` sentence, 015's ticket and both closes, 016's `3.1` / `0.88` / `53%` / PCHEM, 017's
+  `0.7 to 0.9` / 70%-of-red-days test, 018's `42.9% / 36 months` and `17.6% / 16 months`, 013's
+  `+34%` and the CR060-corrected Trader A/B arithmetic. Quiz blocks are **byte-identical** to the
+  pre-edit files; `<Animation>`/`<ChatWith>` tags untouched; all 18 locale files still carry exactly
+  5 `## ` sections (Amendment B's guard re-verified green).
+- **Registry parameters: no change needed.** The six entries shipped with the front end already
+  match the §Pilot table as amended (Amendment C) — dials, reveal-section anchors (`{1}` = the trap),
+  `afterSection: -1` placement — and the derived corpus gate passes against the re-cut files.
+- **Authoring-prompt v4 addendum** added to `content/_authoring/lesson_authoring_prompt.md`
+  (scope 8): the paragraph-is-the-card rule, the 60-word ceiling, one-paragraph intros,
+  figures-stay-in-prose (DEF098), commit-then-reveal trap structure, locale-locked section skeleton.
+- **Re-translation flagged per-id** in `content/_authoring/cr060_lessons_retranslate.md` — all six
+  ids, `retranslate:[ar,ms]`, with the Amendment B translator constraints. Note:
+  `locale_staleness_check.py`'s anchor heuristic does NOT fire on these (anchors deliberately
+  preserved); the manifest row is the flag. 017's DEF105-cohort hold is released — CR101 landed and
+  its EN is re-settled.
+- **Verification.** `pytest` backend content guards (corpus integrity, CR087 locale gate, lessons
+  service, DEF294, DEF144): 71 passed, exit 0. `flutter test` CR174 guards (models + corpus gate,
+  beats fold, reader mode + RTL): 55 passed, exit 0.
+
+Still owed on this CR: acceptance #6 (judged on device, both modes, EN+AR — needs a release build)
+and the open decisions below; acceptance #7 gates scale-out and waits on CR181's emitter.
 
 ## Open decisions
 

@@ -13,12 +13,12 @@ tags: ["risk", "position_sizing", "mandate", "math"]
 agent_callouts: ["portfolio_manager", "trader"]
 locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
-updated_at: "2026-05-12"
+updated_at: "2026-08-20"
 ---
 
 # Position sizing basics
 
-Position sizing is the single decision that determines whether a string of losing trades ends your account or barely scratches it. The rule is mechanical: decide what percentage of your account you will lose if your stop hits, decide where your stop sits, and let those two numbers tell you how many shares to buy. Anything else — gut feel, "high conviction", round-lot habits — is the path to ruin. This lesson teaches the three-input formula every trade ticket has to pass.
+Position sizing decides whether a string of losing trades ends your account or barely scratches it. The rule is mechanical — a three-input formula: the percentage of your account you will lose if your stop hits, where the stop sits, and your entry. Those numbers tell you how many shares. Anything else is the path to ruin.
 
 <Animation name="position_size_calc" />
 
@@ -30,11 +30,19 @@ Per-share risk = $480 − $459 = $21.
 Shares = $200 ÷ $21 = 9 shares (round down, never up).
 Position notional = 9 × $480 = $4,320, or about 21.6% of your account.
 
-Notice three things. First, the position notional (21.6%) is much larger than the risk (1%) — the gap is your stop's job. Second, if you had set the stop at $470 instead, per-share risk drops to $10 and shares jump to 20 — the tighter the stop, the bigger the position you can carry at the same 1% risk. Third, this is falsifiable: if NVDA closes below $459 the thesis is dead, you exit, and you have lost exactly $189 (9 × $21). On Bursa Malaysia the same formula works in MYR — a RM50,000 account at 1% risk, MAYBANK entry RM10.20, stop RM9.95: per-share risk RM0.25, shares = RM500 ÷ RM0.25 = 2,000.
+Notice first: the position notional (21.6%) is much larger than the risk (1%) — the gap is your stop's job.
+
+Second, the stop is a dial: set it at $470 instead and per-share risk drops to $10, shares jump to 20 — the tighter the stop, the bigger the position you can carry at the same 1% risk.
+
+Third, this is falsifiable: if NVDA closes below $459 the thesis is dead, you exit, and you have lost exactly $189 (9 × $21).
+
+On Bursa Malaysia the same formula works in MYR — a RM50,000 account at 1% risk, MAYBANK entry RM10.20, stop RM9.95: per-share risk RM0.25, shares = RM500 ÷ RM0.25 = 2,000.
 
 ## The trap
 
-The trap is sizing by "what feels like a real position" — buying 50 shares because 9 looks tiny. Beginners pick the share count first, then back into a stop that fits their feelings. The Execution Desk will execute whatever you tell it, but the <Term id="ami_pm_safety_floor" /> exists because this is exactly the mistake that compounds across a streak. The correct mental model: account risk is the input, share count is the output. You never decide how many shares first. The size of the position is whatever the math gives you after the stop is placed where the chart tells you it has to be — even if that means 3 shares, even if that means the trade isn't worth taking at all.
+The trap is sizing by "what feels like a real position" — buying 50 shares because 9 looks tiny. Beginners pick the share count first, then back into a stop that fits their feelings. The Execution Desk will execute whatever you tell it; the <Term id="ami_pm_safety_floor" /> exists because this is exactly the mistake that compounds across a streak.
+
+The correct mental model: account risk is the input, share count is the output. You never decide how many shares first. The position size is whatever the math gives you after the stop is placed where the chart says it has to be — even if that means 3 shares, even if the trade isn't worth taking at all.
 
 <ChatWith agent="portfolio_manager" />
 
@@ -66,7 +74,9 @@ The trap is sizing by "what feels like a real position" — buying 50 shares bec
 
 ## Try it
 
-Open the <Term id="ami_mandate" /> editor and set `risk_score` to 1 — AMI's tightest risk tier, and the closest real control to the 1%-per-trade convention used above. Then open a <Term id="ami_one_on_one" /> with the Execution Desk, paste a ticker from your <Term id="ami_watchlist" /> with a hypothetical entry and a stop, and ask "Given my mandate, how many shares?" Compare its answer to the three-input formula above. If they disagree, ask why.
+Open the <Term id="ami_mandate" /> editor and set `risk_score` to 1 — AMI's tightest risk tier, and the closest real control to the 1%-per-trade convention used above.
+
+Then open a <Term id="ami_one_on_one" /> with the Execution Desk, paste a ticker from your <Term id="ami_watchlist" /> with a hypothetical entry and a stop, and ask "Given my mandate, how many shares?" Compare its answer to the three-input formula above. If they disagree, ask why.
 
 ## Takeaway
 

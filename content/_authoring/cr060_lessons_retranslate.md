@@ -17,3 +17,26 @@ again. Translate 349 now (it is independent of CR101); hold the DEF105 seven unt
 re-settled.
 
 **Guard:** `python3 content/_authoring/locale_staleness_check.py` lists every stale `.ar`/`.ms` sibling.
+
+## CR174 pilot — beat re-authoring, lessons 013–018 (2026-08-20)
+
+The six interactive-pilot EN bodies were re-cut to **≤60 words per paragraph** (CR174 acceptance #2:
+each paragraph is one card in interactive mode). Every worked figure, ticker, cap and quiz block is
+unchanged — quizzes are byte-identical — but paragraph boundaries and connective prose moved in every
+section, so each AR/MS sibling is stale per-`id`. **`locale_staleness_check.py`'s anchor heuristic
+will NOT flag these** (the anchors were deliberately preserved); this manifest is the flag.
+
+| lesson | locales stale | change ref | why | safe to translate now? |
+|---|---|---|---|---|
+| `013_why_risk_matters_more_than_profit` | ar, ms | CR174 | intro/example/trap/try-it re-cut to ≤60w paragraphs; Trader A/B figures unchanged | **YES** — EN is final |
+| `014_position_sizing_basics` | ar, ms | CR174 | same re-cut; "Notice three things" split into four cards | **YES** |
+| `015_stop_loss_basics` | ar, ms | CR174 | same re-cut; intro reworded, TSLA ticket figures unchanged | **YES** |
+| `016_risk_reward_ratio` | ar, ms | CR174 | same re-cut; Example split into four near-verbatim paragraphs | **YES** |
+| `017_portfolio_exposure_and_correlation` | ar, ms | CR174 | same re-cut; AMI-enforcement framing moved from intro to end of section 0 | **YES** — the DEF105-cohort hold above is over for this id: CR101 landed and this EN is re-settled |
+| `018_drawdown_management` | ar, ms | CR174 | same re-cut; recovery math unchanged | **YES** |
+
+**Translator constraints (CR174 Amendment B + authoring-prompt v4):** keep the `## ` section COUNT
+identical to EN (all six have exactly 5) — interactions anchor by section index and
+`cr174_models_test.dart` fails the mobile build on a mismatch. Keep paragraph boundaries aligned
+with EN and each paragraph ≤60 words in the target language's own count: every paragraph is one
+interactive card in that locale.

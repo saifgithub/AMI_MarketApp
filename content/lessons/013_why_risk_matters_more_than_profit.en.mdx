@@ -13,26 +13,28 @@ tags: ["risk", "drawdown", "asymmetry", "mandate", "compounding"]
 agent_callouts: ["portfolio_manager"]
 locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
-updated_at: "2026-05-12"
+updated_at: "2026-08-20"
 ---
 
 # Why risk matters more than profit
 
-Protecting capital comes before making it — not as a slogan, as arithmetic. A 50% drawdown requires a 100% gain to recover. A 20% drawdown requires a 25% gain. A 10% drawdown requires only 11.1%. The math is not symmetric: losses compound against you faster than gains compound for you. Every other lesson in Module 3 — sizing, stops, R/R, exposure, drawdown, survival — is a tool to bend this asymmetry in your favour. This lesson establishes the principle the rest of the module enforces.
+Protecting capital comes before making it — not as a slogan, as arithmetic. A 50% drawdown requires a 100% gain to recover; 20% requires 25%; 10% requires only 11.1%. Losses compound against you faster than gains compound for you. Every lesson in Module 3 is a tool to bend that asymmetry in your favour.
 
 ## How this plays out in real markets
 
 Two simulated traders, both starting 2025 with $100,000, both trading TSLA across the same year.
 
-**Trader A — return-focused.** Sizes aggressively when conviction is high. Q1: rides TSLA from $240 to $310, full-account exposure, +29% portfolio, account at $129,000. Q2: TSLA pulls back to $180 on margin compression; same trader is still 90% allocated, takes a −42% portfolio hit, account at $74,820. Q3: TSLA recovers to $245, trader is now sizing smaller (scared), +18%, account at $88,287. Q4: a clean +22% run, account at $107,710. Year-end: **+7.7%**.
+**Trader A — return-focused.** Sizes on conviction. Q1: rides TSLA from $240 to $310 at full-account exposure — +29%, account $129,000. Q2: TSLA drops to $180 on margin compression; still 90% allocated — −42%, account $74,820. Q3: TSLA recovers to $245; sizing scared now — +18%, $88,287. Q4: a clean +22% run, $107,710. Year-end: **+7.7%.**
 
-**Trader B — risk-focused.** <Term id="ami_mandate" /> caps single-name exposure at 15% of account, 1% max risk per trade. Same TSLA setups, same direction. Q1: position is smaller, captures +29% on 15% of the book — portfolio +4.4%, account at $104,400. Q2: TSLA's pullback hits a $1,000 (~1%) max-risk stop, account at $103,400. Q3: re-entry, another 15% position, +18% leg = +2.7%, account at $106,200. Q4: +22% leg on 15% = +3.3%, account at $109,700. Year-end: **+9.7%**.
+**Trader B — risk-focused.** <Term id="ami_mandate" /> caps single-name exposure at 15%, max risk 1% per trade. Same TSLA setups. Q1: +29% on a 15% position — portfolio +4.4%, $104,400. Q2: pullback hits a $1,000 (~1%) stop — $103,400. Q3: re-entry at 15%, +18% leg = +2.7%, $106,200. Q4: +22% on 15% = +3.3%, $109,700. Year-end: **+9.7%.**
 
 Trader A had the better quarter. Trader B had the better year — and the better account to trade with on day one of 2026. The Q2 drawdown is the entire difference: Trader A needed +34% just to climb back to flat. Trader B needed +1%.
 
 ## The trap
 
-The trap is the inner voice that says *"I'll just size bigger on my best ideas."* It feels rational — high conviction, asymmetric reward, why waste a setup on small size? But conviction is not a hedge. The trade you were certain about is statistically indistinguishable from the trade that takes a 50% hit on a guidance miss. Beginners chase the upside of being right and forget that the downside of being wrong is multiplicative, not additive. The correct frame: position size is not a function of how good you think the trade is. It is a function of how much account you are willing to lose if you are wrong. Conviction earns you the right to take the trade; the mandate decides how much.
+The trap is the inner voice that says *"I'll just size bigger on my best ideas."* It feels rational — high conviction, asymmetric reward, why waste a setup on small size? But conviction is not a hedge. The trade you were certain about is statistically indistinguishable from the trade that takes a 50% hit on a guidance miss.
+
+Beginners chase the upside of being right and forget that the downside of being wrong is multiplicative, not additive. The correct frame: position size is not a function of how good the trade looks — it is a function of how much account you will lose if you are wrong. Conviction earns you the trade; the mandate decides how much.
 
 <ChatWith agent="portfolio_manager" />
 
@@ -64,7 +66,9 @@ The trap is the inner voice that says *"I'll just size bigger on my best ideas."
 
 ## Try it
 
-Open the Mandate editor under Settings. Set `max_drawdown_pct` to 50 and submit a trade ticket that would push the portfolio there. Watch the PM's <Term id="ami_pm_safety_floor" /> message reject the action with the math it used. Now set `max_drawdown_pct` to 20 — closer to where the recovery asymmetry is still survivable — and resubmit. Notice the floor changing shape around your number; this is the rule the rest of Module 3 sizes against.
+Open the Mandate editor under Settings. Set `max_drawdown_pct` to 50 and submit a trade ticket that would push the portfolio there. Watch the PM's <Term id="ami_pm_safety_floor" /> message reject the action with the math it used.
+
+Now set `max_drawdown_pct` to 20 — closer to where the recovery asymmetry is still survivable — and resubmit. Notice the floor changing shape around your number; this is the rule the rest of Module 3 sizes against.
 
 ## Takeaway
 
