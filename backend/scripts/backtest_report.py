@@ -55,7 +55,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from sqlalchemy import select
 
-from app.db import get_session, init_schema
+from app.db import get_session
+from app.services.room_runner import is_llm_outage_verdict, init_schema
 from app.db.models import BacktestRunIndexRow, PriceHistoryDailyRow, RoomRunRow
 from app.services.edgar_pit import fetch_pit_fundamentals
 from app.services.price_history import _MOCK_SOURCE
@@ -252,7 +253,7 @@ def main() -> int:
 
         arms = sorted({r.arm for r in index_rows})
         excluded = {"missing_room_run": 0, "non_completed": 0,
-                    "null_verdict": 0, "other_action": 0}
+                    "null_verdict": 0, "other_action": 0, "llm_outage": 0}
         pairs: list[tuple[BacktestRunIndexRow, RoomRunRow]] = []
         for idx in index_rows:
             run = session.get(RoomRunRow, idx.room_run_id)
@@ -270,7 +271,29 @@ def main() -> int:
             if run.verdict.get("action") not in ACTIONS:
                 excluded["other_action"] += 1
                 continue
+            # DEF336 — the DEF059 outage fail-safe is a completed run with a
+            # PASS verdict. Scoring it counts the provider's downtime as the
+            # Room's conservatism, and it is invisible to every other filter
+            # here because nothing about its shape is wrong.
+            if is_llm_outage_verdict(run.verdict):
+                excluded["llm_outage"] += 1
+                continue
             pairs.append((idx, run))
+
+        # An outage that took a meaningful share of the batch means the batch
+        # measured uptime, not judgement. Refuse rather than report a
+        # PASS-heavy result with a footnote nobody reads.
+        considered = len(pairs) + excluded["llm_outage"]
+        if considered and excluded["llm_outage"] / considered > 0.05:
+            print(
+                f"ERROR: {excluded['llm_outage']} of {considered} verdicts in "
+                f"'{args.batch_id}' are DEF059 LLM-outage fail-safes "
+                f"({excluded['llm_outage'] / considered:.0%}) — the provider "
+                f"was down for this batch and it is NOT scoreable. Re-run "
+                f"under a new --batch-id once the provider is healthy. (exit 4)",
+                flush=True,
+            )
+            return 4
 
         if not pairs:
             print(f"ERROR: no runs for batch '{args.batch_id}' are completed with a "
@@ -515,7 +538,8 @@ def main() -> int:
         f"- Index rows: **{len(index_rows)}**",
         f"- Excluded — missing room_runs row: {excluded['missing_room_run']}, "
         f"not completed: {excluded['non_completed']}, null verdict: "
-        f"{excluded['null_verdict']}, non-bucket action: {excluded['other_action']}",
+        f"{excluded['null_verdict']}, non-bucket action: {excluded['other_action']}, "
+        f"LLM-outage fail-safe: {excluded['llm_outage']}",
         f"- Bucketed (scored population): **{len(scored)}** — "
         + ", ".join(f"{a}: {n_by_action[a]}" for a in ACTIONS),
         f"- Distinct as-of dates: **{len(dates_all)}**",

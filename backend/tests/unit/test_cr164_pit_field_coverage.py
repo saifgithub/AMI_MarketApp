@@ -356,3 +356,50 @@ def test_pit_never_emits_a_key_the_live_path_does_not(seeded) -> None:
     out = fetch_pit_fundamentals(_TICKER, _AS_OF)
     for key in out:
         assert f'"{key}"' in source, f"{key} is emitted by PIT but not by the live path"
+
+
+# ── DEF336: an outage verdict is not a decision ─────────────────────────────
+
+
+def test_the_outage_failsafe_is_recognisable_not_just_readable() -> None:
+    """It used to be an inline literal, so the only way to spot one was to
+    match prose — which is why a 450-run sweep recorded a dead provider as a
+    completed batch of PASSes."""
+    from app.services.room_runner import (
+        PM_LLM_UNAVAILABLE_REASON,
+        is_llm_outage_verdict,
+    )
+
+    assert is_llm_outage_verdict(
+        {"action": "PASS", "overridden_from_llm": True,
+         "reason": PM_LLM_UNAVAILABLE_REASON}
+    )
+    # A safety-floor override is ALSO `overridden_from_llm`, and must not be
+    # mistaken for an outage — it is a real decision the floor rewrote.
+    assert not is_llm_outage_verdict(
+        {"action": "REJECT", "overridden_from_llm": True,
+         "reason": "sized down to 3.0% — mandate risk-tier ceiling."}
+    )
+    # An ordinary reasoned PASS.
+    assert not is_llm_outage_verdict(
+        {"action": "PASS", "reason": "waiting for post-FOMC price discovery"}
+    )
+    assert not is_llm_outage_verdict(None)
+    assert not is_llm_outage_verdict({})
+
+
+def test_the_outage_verdict_the_room_actually_builds_is_detected() -> None:
+    """Pins the constant to the Verdict the runner constructs, so a reword of
+    one without the other cannot silently un-detect the outage."""
+    from app.schemas.room import Verdict, VerdictAction
+    from app.services.room_runner import (
+        PM_LLM_UNAVAILABLE_REASON,
+        is_llm_outage_verdict,
+    )
+
+    built = Verdict(
+        action=VerdictAction.PASS,
+        reason=PM_LLM_UNAVAILABLE_REASON,
+        overridden_from_llm=True,
+    )
+    assert is_llm_outage_verdict(built.model_dump())

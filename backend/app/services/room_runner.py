@@ -434,6 +434,32 @@ def _forward_pe_clause(profile: dict[str, Any]) -> str:
     return f", {forward}x on consensus forward estimates"
 
 
+# DEF336 — the outage verdict's exact text, named so a consumer can tell an
+# outage PASS from a reasoned one. It used to be an inline literal, which meant
+# the only way to detect it was to match prose; a CR164 sweep recorded 450
+# consecutive outage PASSes as a completed batch because nothing could.
+PM_LLM_UNAVAILABLE_REASON = (
+    "AMI's analyst room lost its model connection before the Portfolio "
+    "Manager could rule. No trade — reconvene the room in a little while."
+)
+
+
+def is_llm_outage_verdict(verdict: dict | None) -> bool:
+    """True when this verdict is the DEF059 fail-safe, not a decision.
+
+    An outage PASS is indistinguishable from a reasoned PASS by `action`
+    alone — both are PASS, both are `completed`. Any batch analysis that
+    counts them together is measuring the provider's uptime and calling it
+    the Room's judgement.
+    """
+    if not verdict:
+        return False
+    return (
+        bool(verdict.get("overridden_from_llm"))
+        and (verdict.get("reason") or "").strip() == PM_LLM_UNAVAILABLE_REASON
+    )
+
+
 def _profile_for_ticker(
     ticker: str,
     *,
@@ -4154,12 +4180,7 @@ class RoomRunner:
                             # never mint a confident buy verdict.
                             verdict = Verdict(
                                 action=VerdictAction.PASS,
-                                reason=(
-                                    "AMI's analyst room lost its model "
-                                    "connection before the Portfolio Manager "
-                                    "could rule. No trade — reconvene the "
-                                    "room in a little while."
-                                ),
+                                reason=PM_LLM_UNAVAILABLE_REASON,
                                 overridden_from_llm=True,
                             )
                             logger.error("room_pm_llm_unavailable", run_id=str(run_id))

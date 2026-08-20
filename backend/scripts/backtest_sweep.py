@@ -53,6 +53,8 @@ from pathlib import Path
 
 import httpx
 
+from app.services.room_runner import is_llm_outage_verdict
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.room_benchmark import (  # noqa: E402
@@ -219,6 +221,15 @@ def main() -> int:
             "silently shifts the Friday count and changes pairs with no warning."
         ),
     )
+    parser.add_argument(
+        "--max-consecutive-outages", type=int, default=3,
+        help=(
+            "Abort after this many consecutive runs whose verdict is the "
+            "DEF059 LLM-outage fail-safe. An outage PASS is a completed run "
+            "with a PASS verdict, so without this a dead provider yields a "
+            "full batch of records that look like decisions. 0 disables."
+        ),
+    )
     parser.add_argument("--plan-only", action="store_true",
                         help="Print the deterministic pair plan and exit; no network.")
     args = parser.parse_args()
@@ -315,6 +326,8 @@ def main() -> int:
     ]
     failures: list[str] = []
     done = 0
+    outage_streak = 0
+    outage_total = 0
     try:
         for i, (batch_id, ticker, as_of) in enumerate(work, 1):
             as_of_iso = as_of.isoformat()
@@ -380,12 +393,36 @@ def main() -> int:
             append_jsonl(runs_paths[batch_id], record)
             latest[batch_id][(ticker, as_of_iso)] = record
             verdict = record.get("verdict") or {}
-            print(f"    → {record.get('status')} action={verdict.get('action')}",
+            outage = is_llm_outage_verdict(verdict)
+            print(f"    → {record.get('status')} action={verdict.get('action')}"
+                  + ("  [LLM OUTAGE FAIL-SAFE — not a decision]" if outage else ""),
                   flush=True)
             if record.get("status") == "completed":
                 done += 1
             elif record.get("status") != "already_indexed":
                 failures.append(f"{ticker}@{as_of_iso}")
+
+            # DEF336 — an outage PASS is a COMPLETED run carrying a PASS
+            # verdict, so every counter above reads it as a decision. Left
+            # unguarded, a provider that dies mid-sweep yields a full batch of
+            # records shaped exactly like data: the CR164 r70-outcome-1 batch
+            # recorded 450 of them and reported "450 completed, 0 failed".
+            # Abort on a run of them rather than spend a night manufacturing
+            # a dataset whose only content is the provider's downtime.
+            outage_streak = outage_streak + 1 if outage else 0
+            outage_total += 1 if outage else 0
+            if args.max_consecutive_outages and outage_streak >= args.max_consecutive_outages:
+                print(
+                    f"\nABORTED: {outage_streak} consecutive LLM-outage "
+                    f"fail-safe verdicts — the provider is down, and every "
+                    f"further run would record an outage as a decision.\n"
+                    f"  {outage_total} of {done} completed runs in this batch "
+                    f"are outage fail-safes and MUST NOT be scored.\n"
+                    f"  Check the provider, then re-run under a NEW --batch-id "
+                    f"(this one's pairs are already indexed and will 409).",
+                    flush=True,
+                )
+                return 3
             time.sleep(POST_SPACING_S)
     except KeyboardInterrupt:
         print("\ninterrupted — every finished pair is already on disk.")
@@ -396,6 +433,9 @@ def main() -> int:
 
     print(f"\ndone: {done} completed, {len(failures)} failed "
           f"→ {runs_paths[args.batch_id]}")
+    if outage_total:
+        print(f"WARNING: {outage_total} of {done} completed runs are LLM-outage "
+              f"fail-safes, NOT decisions — this batch is not scoreable as-is.")
     if failures:
         print(f"failures ({len(failures)}): {', '.join(failures)}")
         print("NOTE: a failed pair is already indexed server-side (409 on retry) — "
