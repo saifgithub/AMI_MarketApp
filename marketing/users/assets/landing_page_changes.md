@@ -83,8 +83,8 @@ in real time. You watch the team work. You make the final call.</p>
 <h1 class="hero-h1">Practice the call.<br>Real market data.<br>None of your money.</h1>
 <p class="hero-sub">Pick a stock and <strong>AMI Trade</strong> puts thirteen specialists to
 work on it in front of you — fundamentals, news, sentiment, a bull case, a bear case, three
-risk analysts arguing about size. You read the debate. You make the call. It runs in
-simulation, and it remembers why you did it.</p>
+risk analysts pressing the position size from three directions. You read the debate. You
+make the call. It runs in simulation, and it remembers why you did it.</p>
 ```
 
 Agents arrive in sentence one of the sub-head, as the mechanism. "Applied AI" and "flagship"

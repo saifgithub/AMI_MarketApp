@@ -65,8 +65,9 @@ on real market data, with none of your money at risk.
 
 Pick a stock. A team of thirteen specialists goes to work on it in front of you — fundamentals,
 market technicals, news, social sentiment, someone building the bull case, someone attacking it,
-three risk analysts arguing about position size. You read the debate. You cross-examine anyone
-you disagree with. Then you make the call, and AMI runs it in your simulated portfolio.
+three risk analysts pressing the position size from three directions. You read the debate.
+You cross-examine anyone you disagree with. Then you make the call, and AMI runs it in your
+simulated portfolio.
 
 It's the difference between reading about swimming and getting in the pool — except the pool has
 no sharks.

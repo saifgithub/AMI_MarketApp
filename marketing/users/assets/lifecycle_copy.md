@@ -48,9 +48,9 @@ Trigger: account claimed with an email address.
 You're in.
 
 Your team is thirteen specialists: four analysts on fundamentals, market technicals, news and
-sentiment; a bull researcher and a bear researcher who argue; three risk analysts who fight about
-position size; a trader; a portfolio manager who can refuse your trades; and AMI, who runs the
-place.
+sentiment; a bull researcher and a bear researcher who argue; three risk analysts who each
+take the position size apart differently; a trader; a portfolio manager who can refuse your
+trades; and AMI, who runs the place.
 
 They already know your mandate — the goals, horizon and limits you set during onboarding. So
 when they argue about a stock, they're arguing about your portfolio, not a hypothetical one.
@@ -124,7 +124,7 @@ Lessons teach you concepts. The room teaches you how a decision actually gets ma
 the thing this app exists for.
 
 Pick any stock. Your four analysts report, your bull and bear researchers fight about it, the
-three risk analysts argue about size, and your portfolio manager decides. Two minutes,
+three risk analysts test the size, and your portfolio manager decides. Two minutes,
 start to finish, and you read all of it.
 
 Then you make the call, and AMI keeps the record.
