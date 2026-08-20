@@ -1,7 +1,7 @@
 {
-  "_comment": "Verified against the ami-host copy's merge-provenance.json (fastino-merged-model-provenance/v2), read 2026-08-19. If the HF pull mismatches ANY shard, STOP and report \u2014 do not train on unverified weights.",
+  "_comment": "Verified against the ami-host copy's merge-provenance.json (fastino-merged-model-provenance/v2), read 2026-08-19. If the HF pull mismatches ANY shard, STOP and report \u2014 do not train on unverified weights. CORRECTION 2026-08-20: originally pinned to the provenance's replaced_repo_revision (e004cdd8a893) \u2014 that is the SUPERSEDED revision; the first full download failed verification on all 14 shards exactly as the gate is meant to. Re-pinned to the current main commit, whose LFS oids match this manifest 1:1 (machine-checked).",
   "hf_repo": "fastino/Fastino-Nemotron-3.5-Lightning-Finance",
-  "pinned_revision": "e004cdd8a8938a95fe5212418be5671b70a21564",
+  "pinned_revision": "b7a7d6dbfbb744d5ca3fc1f843fcb5f1258386f2",
   "adapter_name": "combined-finance-e13",
   "adapter_lora_rank": 32,
   "base_checkpoint_name": "NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16-07292026",
