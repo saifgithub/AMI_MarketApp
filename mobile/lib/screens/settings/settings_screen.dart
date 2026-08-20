@@ -21,6 +21,7 @@ import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/state/backend_mode_provider.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/screens/settings/alpaca_connect_screen.dart';
+import 'package:ami_trade/screens/settings/day_trader_disclosure_dialog.dart';
 import 'package:ami_trade/screens/settings/risk_limits_section.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
 import 'package:ami_trade/state/league_providers.dart';
@@ -91,6 +92,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _dirty = true;
       for (final cfg in kRiskLimitFields) {
         _pendingRiskLimits[cfg.key] = null;
+      }
+    });
+  }
+
+  /// CR129 items 2-3: Day Trader is disclosure-gated — the dialog renders the
+  /// SERVER's text and must be confirmed before anything is staged (inform,
+  /// don't block). On confirm the served override values are staged VERBATIM
+  /// into the pending map; the user's existing Save then PATCHes them, which
+  /// is exactly the payload the backend's `is_day_trader_preset()` recognises
+  /// (the CR131 cohort marker keys off that round-trip). Nothing is saved
+  /// here — disclosure therefore provably precedes the save.
+  Future<void> _onDayTraderTapped(UserMandate m) async {
+    final preset = m.dayTraderPreset;
+    if (preset == null) return;
+    final ok = await DayTraderDisclosureDialog.show(context, preset.disclosure);
+    if (ok != true || !mounted) return;
+    setState(() {
+      for (final cfg in kRiskLimitFields) {
+        _pendingRiskLimits[cfg.key] = preset.overrides[cfg.key];
       }
     });
   }
@@ -224,11 +244,50 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       value: _localRiskScore ?? m.riskScore,
                       onChanged: _onRiskScoreChanged,
                     ),
+                    // CR129 item 2: the Day Trader half of the preset picker
+                    // (the slider IS the five-profile half). Offered only
+                    // when the server serves the full preset — an older
+                    // backend simply has no entry, never an approximation.
+                    if (dayTraderPresetOfferable(m)) ...[
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: ChoiceChip(
+                          key: const Key('riskPresetDayTrader'),
+                          label: Text(l.settingsRiskPresetDayTrader),
+                          labelStyle: AmiTypography.labelMono.copyWith(
+                            fontSize: 11,
+                            color: matchesDayTraderPreset(m, _pendingRiskLimits)
+                                ? AmiColors.hexAmber
+                                : AmiColors.textMed,
+                          ),
+                          selected: matchesDayTraderPreset(m, _pendingRiskLimits),
+                          onSelected: (_) => _onDayTraderTapped(m),
+                          selectedColor: AmiColors.hexAmber.withValues(alpha: 0.2),
+                          backgroundColor: AmiColors.slate900,
+                          side: BorderSide(
+                            color: matchesDayTraderPreset(m, _pendingRiskLimits)
+                                ? AmiColors.hexAmber
+                                : AmiColors.slate700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l.settingsRiskPresetDayTraderExplain,
+                        style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
+                      ),
+                    ],
                     const SizedBox(height: 4),
+                    // Three states, checked in this order: Day Trader also
+                    // trips hasExplicitRiskLimitOverride, so it must win
+                    // before the Custom label is considered.
                     Text(
-                      _isCustomRiskProfile(m)
-                          ? l.settingsRiskLimitsProfileCustom
-                          : l.settingsRiskLimitsProfileFollowing,
+                      matchesDayTraderPreset(m, _pendingRiskLimits)
+                          ? l.settingsRiskPresetDayTraderActive
+                          : _isCustomRiskProfile(m)
+                              ? l.settingsRiskLimitsProfileCustom
+                              : l.settingsRiskLimitsProfileFollowing,
                       style: AmiTypography.caption.copyWith(color: AmiColors.hexCyan),
                     ),
                     const SizedBox(height: AmiSpacing.l),

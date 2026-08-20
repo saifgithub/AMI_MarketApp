@@ -2735,6 +2735,9 @@
         "settingsComplianceHalalSubtitle": "3e7e31e6f3e6",
         "settingsComplianceLiquidOnly": "1547fa916d39",
         "settingsComplianceLongOnly": "9e50a88b3536",
+        "settingsDayTraderCancel": "dbc46380cd30",
+        "settingsDayTraderConfirm": "7f4553578056",
+        "settingsDayTraderDisclosureTitle": "6fe72114f3cc",
         "settingsLanguageArabic": "d27415986305",
         "settingsLanguageMalay": "7b6e9ac25cb9",
         "settingsProfileHorizon": "ae8359684edf",
@@ -2770,6 +2773,9 @@
         "settingsRiskLimitsSetByYou": "1392d1fcfb2f",
         "settingsRiskLimitsSingleNameCapExplain": "45c6ca1bf9c6",
         "settingsRiskLimitsSingleNameCapLabel": "34d1209101ff",
+        "settingsRiskPresetDayTrader": "c68a12b59a19",
+        "settingsRiskPresetDayTraderActive": "50be044fb86c",
+        "settingsRiskPresetDayTraderExplain": "9c3c06b0cb9c",
         "settingsRiskScoreValue": "578059fadc45",
         "settingsSectionLeague": "3cd0bba23781",
         "settingsSectionRiskLimits": "80c2a274402b",
@@ -2876,5 +2882,11 @@
     "inboxJustNow": "just now",
     "inboxMinutesAgo": "{minutes}m ago",
     "inboxHoursAgo": "{hours}h ago",
-    "inboxDaysAgo": "{days}d ago"
+    "inboxDaysAgo": "{days}d ago",
+    "settingsRiskPresetDayTrader": "Day Trader",
+    "settingsRiskPresetDayTraderExplain": "Removes every risk limit you control. Compliance, locale and halal rules still apply.",
+    "settingsRiskPresetDayTraderActive": "Day Trader — every risk limit you control is set permissive",
+    "settingsDayTraderDisclosureTitle": "Before you switch",
+    "settingsDayTraderConfirm": "Apply Day Trader preset",
+    "settingsDayTraderCancel": "Keep my limits"
 }

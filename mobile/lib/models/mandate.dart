@@ -232,6 +232,30 @@ class ResolvedCaps {
   }
 }
 
+/// CR129 items 2-3 — the Day Trader preset as the SERVER defines it, stamped
+/// onto GET/PATCH /v1/mandate responses (568bd360). `overrides` is the exact
+/// PATCH body that applies the preset — key = mandate field name, value = the
+/// permissive setting. The picker PATCHes it back VERBATIM: the backend's
+/// `is_day_trader_preset()` recognises that payload and journals the CR131
+/// cohort marker, so the raw decoded nums are kept untouched — never rounded,
+/// never re-typed, and never duplicated as client constants (the CR129-MOBILE
+/// fence: "Do NOT hard-code any preset value or cap — server-sourced only").
+/// `disclosure` is the selection-time dialog body, rendered verbatim.
+class DayTraderPresetInfo {
+  const DayTraderPresetInfo({required this.overrides, required this.disclosure});
+
+  final Map<String, num> overrides;
+  final String disclosure;
+
+  factory DayTraderPresetInfo.fromJson(Map<String, dynamic> j) {
+    return DayTraderPresetInfo(
+      overrides: ((j['overrides'] as Map?) ?? const {})
+          .map((k, v) => MapEntry(k as String, v as num)),
+      disclosure: j['disclosure'] as String? ?? '',
+    );
+  }
+}
+
 class UserMandate {
   const UserMandate({
     required this.userId,
@@ -266,6 +290,7 @@ class UserMandate {
     this.maxTradesPerWeek,
     this.maxOpenRiskPct,
     this.resolved,
+    this.dayTraderPreset,
   });
 
   final String userId;
@@ -297,6 +322,11 @@ class UserMandate {
   // CR129: server-resolved enforced values for the seven limits above.
   // Null when the backend predates DEF193 — unknown, not "off".
   final ResolvedCaps? resolved;
+
+  // CR129 items 2-3: the server-served Day Trader preset. Null when the
+  // backend predates 568bd360 — UNKNOWN, so the Settings picker hides the
+  // Day Trader entry entirely rather than approximating it client-side.
+  final DayTraderPresetInfo? dayTraderPreset;
   final String learningStyle;
   final ComplianceFlags compliance;
   final String plan;
@@ -347,6 +377,11 @@ class UserMandate {
       maxOpenRiskPct: (j['max_open_risk_pct'] as num?)?.toDouble(),
       resolved: j['resolved'] != null
           ? ResolvedCaps.fromJson((j['resolved'] as Map).cast<String, dynamic>())
+          : null,
+      dayTraderPreset: j['day_trader_preset'] != null
+          ? DayTraderPresetInfo.fromJson(
+              (j['day_trader_preset'] as Map).cast<String, dynamic>(),
+            )
           : null,
       learningStyle: j['learning_style'] as String? ?? 'quick',
       compliance: ComplianceFlags.fromJson(

@@ -1821,6 +1821,30 @@
   "@settingsRiskLimitsProfileCustom": {
     "description": "CR101-MOBILE. Shown under the L1 dial once the user has set an explicit sector or single-name cap override in L2 (acceptance 3: any L2 edit to either field moves the dial to Custom). retranslate:[ar,ms]"
   },
+  "settingsRiskPresetDayTrader": "Day Trader",
+  "@settingsRiskPresetDayTrader": {
+    "description": "CR129 item 2. Label of the Day Trader entry in the Settings risk-preset picker (a ChoiceChip beside the five-profile slider). Shown only when the backend serves the preset; deliberately carries no numbers — every value is server-sourced. retranslate:[ar,ms]"
+  },
+  "settingsRiskPresetDayTraderExplain": "Removes every risk limit you control. Compliance, locale and halal rules still apply.",
+  "@settingsRiskPresetDayTraderExplain": {
+    "description": "CR129 item 2. Caption under the Day Trader picker chip. The second sentence is the NOT-removed statement the CR129-MOBILE fence requires in the picker itself (the preset never touches compliance/locale/halal). No numbers — server-sourced only. retranslate:[ar,ms]"
+  },
+  "settingsRiskPresetDayTraderActive": "Day Trader — every risk limit you control is set permissive",
+  "@settingsRiskPresetDayTraderActive": {
+    "description": "CR129 item 2. Third state of the caption under the L1 risk-profile dial (alongside 'Following your risk profile' and 'Custom'): shown when all seven limits' effective values equal the server-served Day Trader preset. retranslate:[ar,ms]"
+  },
+  "settingsDayTraderDisclosureTitle": "Before you switch",
+  "@settingsDayTraderDisclosureTitle": {
+    "description": "CR129 item 3. Title of the Day Trader disclosure dialog. The BODY of that dialog is the server-sent English disclosure text rendered verbatim (DEF158 — no client-side paraphrase of an unverified claim); only this chrome is localized. retranslate:[ar,ms]"
+  },
+  "settingsDayTraderConfirm": "Apply Day Trader preset",
+  "@settingsDayTraderConfirm": {
+    "description": "CR129 item 3. Confirm button of the Day Trader disclosure dialog — stages the server-served overrides for the user's Save; nothing is saved from the dialog itself. retranslate:[ar,ms]"
+  },
+  "settingsDayTraderCancel": "Keep my limits",
+  "@settingsDayTraderCancel": {
+    "description": "CR129 item 3. Cancel button of the Day Trader disclosure dialog — leaves the mandate untouched (inform, don't block: cancelling must always be available). retranslate:[ar,ms]"
+  },
   "settingsRiskLimitsExpand": "Set my own limits",
   "@settingsRiskLimitsExpand": {
     "description": "CR101-MOBILE L2 disclosure toggle — expands the seven per-field editors, each in its own units. retranslate:[ar,ms]"

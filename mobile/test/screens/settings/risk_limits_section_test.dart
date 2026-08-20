@@ -498,16 +498,22 @@ void main() {
     // omitted because it substring-matches version strings in comments
     // ("0.1.0+94") — the cooldown table stays covered by 4.0/2.0/0.5. A
     // client-side copy of the preset TABLES (maps/lists of these values)
-    // cannot avoid the covered tokens.
+    // cannot avoid the covered tokens. CR129 items 2-3 extend the set with
+    // the Day Trader values (backend/app/services/day_trader_preset.py:
+    // 100.0 and 999999); its 0.0 cooldown is omitted like 1.0 (collision
+    // risk with legitimate UI code) — a client-side copy of the 7-key
+    // overrides map cannot avoid 100.0/999999.
     final knownCapLiterals = RegExp(
         r'\b(0\.40|40\.0|50\.0|4\.5|1\.5|3\.0'
         r'|65|35|12'
         r'|65\.0|35\.0|30\.0|20\.0|15\.0'
         r'|4\.0|2\.0|0\.5|0\.25|0\.50'
-        r'|7\.5|9\.0|10\.5|13\.5)\b');
+        r'|7\.5|9\.0|10\.5|13\.5'
+        r'|100\.0|999999)\b');
     final files = [
       File('lib/screens/settings/risk_limits_section.dart'),
       File('lib/screens/settings/settings_screen.dart'),
+      File('lib/screens/settings/day_trader_disclosure_dialog.dart'),
     ];
     for (final f in files) {
       final text = f.readAsStringSync();

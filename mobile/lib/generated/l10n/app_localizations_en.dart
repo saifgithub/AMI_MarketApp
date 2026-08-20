@@ -1558,6 +1558,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsRiskLimitsProfileCustom => 'Custom';
 
   @override
+  String get settingsRiskPresetDayTrader => 'Day Trader';
+
+  @override
+  String get settingsRiskPresetDayTraderExplain =>
+      'Removes every risk limit you control. Compliance, locale and halal rules still apply.';
+
+  @override
+  String get settingsRiskPresetDayTraderActive =>
+      'Day Trader — every risk limit you control is set permissive';
+
+  @override
+  String get settingsDayTraderDisclosureTitle => 'Before you switch';
+
+  @override
+  String get settingsDayTraderConfirm => 'Apply Day Trader preset';
+
+  @override
+  String get settingsDayTraderCancel => 'Keep my limits';
+
+  @override
   String get settingsRiskLimitsExpand => 'Set my own limits';
 
   @override

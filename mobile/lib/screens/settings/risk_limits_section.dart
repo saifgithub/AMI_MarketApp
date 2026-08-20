@@ -141,6 +141,39 @@ bool hasExplicitRiskLimitOverride(UserMandate m, Map<String, dynamic> pending) {
   return false;
 }
 
+/// CR129 item 2: the Day Trader entry exists in the picker ONLY when the
+/// server serves a preset covering every one of the seven limits. Absent
+/// (older backend) or partial data hides the entry — there is nothing to
+/// compute a preset FROM client-side, so the honest render is no entry at
+/// all, never an approximation (same doctrine as item 1's null `resolved`).
+bool dayTraderPresetOfferable(UserMandate m) {
+  final p = m.dayTraderPreset;
+  if (p == null) return false;
+  for (final cfg in kRiskLimitFields) {
+    if (p.overrides[cfg.key] == null) return false;
+  }
+  return true;
+}
+
+/// CR129 item 2: true when every one of the seven limits' EFFECTIVE value
+/// (pending override if touched this session, else the server-persisted
+/// override) equals the server-served Day Trader value. Server-to-server
+/// comparison only — no preset literal ever enters this function, so the
+/// selected state survives a backend retune without a client release.
+bool matchesDayTraderPreset(UserMandate m, Map<String, dynamic> pending) {
+  final p = m.dayTraderPreset;
+  if (p == null) return false;
+  for (final cfg in kRiskLimitFields) {
+    final want = p.overrides[cfg.key];
+    if (want == null) return false;
+    final v = pending.containsKey(cfg.key)
+        ? pending[cfg.key] as num?
+        : riskLimitServerValue(m, cfg.key);
+    if (v != want) return false;
+  }
+  return true;
+}
+
 String? disclosureText(AppLocalizations l, LimitDisclosure d) {
   switch (d) {
     case LimitDisclosure.none:
