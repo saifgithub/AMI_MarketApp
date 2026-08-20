@@ -8,6 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI, Header, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.admin import router as admin_router
 from app.api.alpaca import router as alpaca_router
@@ -673,12 +674,21 @@ async def client_release_floor(
         )
 
 
-# Admin back-office stop-gap UI (AT:R27). The page itself is public; every
-# API call it makes is gated by the ADMIN_SECRET bearer. Will be replaced
-# by a compiled Flutter web bundle in Beta — same URL, same API.
+# Admin console UI (AT:R27, modularized CR200). The page itself is public;
+# every API call it makes is gated by get_admin (CF Access JWT or ADMIN_SECRET
+# bearer). The shell references /admin/static/*.js|css with a ?v=__V__ cache
+# buster replaced with the build's git sha at serve time — a promotion always
+# busts the browser cache, no stale-JS-against-new-API skew.
 _ADMIN_HTML_PATH = Path(__file__).parent / "static" / "admin.html"
+
+app.mount(
+    "/admin/static",
+    StaticFiles(directory=str(Path(__file__).parent / "static" / "admin")),
+    name="admin_static",
+)
 
 
 @app.get("/admin", include_in_schema=False, response_class=HTMLResponse)
 async def admin_ui() -> HTMLResponse:
-    return HTMLResponse(_ADMIN_HTML_PATH.read_text(encoding="utf-8"))
+    html = _ADMIN_HTML_PATH.read_text(encoding="utf-8")
+    return HTMLResponse(html.replace("__V__", settings.git_sha))
