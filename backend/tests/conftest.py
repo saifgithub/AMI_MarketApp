@@ -103,6 +103,7 @@ def _isolated_db(tmp_path: _Path) -> None:
     from app.services import watchlist_store as _ws
     from app.services import price_alert_store as _pas
     from app.services import feedback_store as _fb
+    from app.services import inbox_store as _ib
     from app.services import daily_challenge_service as _dc
     from app.services import ai_coach_service as _ac
     from app.services import reputation_service as _rep
@@ -117,6 +118,7 @@ def _isolated_db(tmp_path: _Path) -> None:
     _ws._store = None
     _pas._store = None
     _fb._store = None
+    _ib._store = None
     _dc._service = None
     _ac._service = None
     _rep._service = None

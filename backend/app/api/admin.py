@@ -14,6 +14,10 @@ Endpoint map:
   POST   /v1/admin/users/{user_id}/reinstate   Lift suspension
   GET    /v1/admin/users/{user_id}/events      Paginated subscription_events
   POST   /v1/admin/release-floor               Raise the client version floor (CR121)
+  POST   /v1/admin/messages/preview            Resolve audience, count only (CR102)
+  POST   /v1/admin/messages                    Send a broadcast (fan-out at send time)
+  GET    /v1/admin/messages                    List broadcasts with reply counts
+  GET    /v1/admin/messages/replies            Inbound tester-reply feed (?since=)
 """
 
 from __future__ import annotations
@@ -32,12 +36,20 @@ from app.schemas.client_release_floor import (
     AdminReleaseFloorOut,
     AdminReleaseFloorRequest,
 )
+from app.schemas.messages import (
+    AdminSendRequest,
+    BroadcastOut,
+    PreviewResponse,
+    ReplyOut,
+    SendResponse,
+)
 from app.services.client_release_floor import (
     ReleaseFloorDuplicateError,
     ReleaseFloorFootgunError,
     create_floor_raise,
     get_active_floor,
 )
+from app.services.inbox_store import get_inbox_store
 from app.schemas.admin import (
     AdminConfigCheckResponse,
     AdminCreditsRequest,
@@ -687,3 +699,38 @@ def list_events(
             limit=limit,
             offset=offset,
         )
+
+
+# ── Tester messaging (CR102) ─────────────────────────────────────────────────
+
+@router.post("/messages/preview", response_model=PreviewResponse)
+def preview_broadcast(
+    req: AdminSendRequest,
+    _: None = Depends(get_admin),
+) -> PreviewResponse:
+    """Resolve the audience and count. Sends NOTHING — the CLI calls this
+    first, always, so a mistargeted blast is caught before it goes out."""
+    return PreviewResponse(recipient_count=get_inbox_store().preview(req.audience))
+
+
+@router.post("/messages", response_model=SendResponse)
+def send_broadcast(
+    req: AdminSendRequest,
+    _: None = Depends(get_admin),
+) -> SendResponse:
+    """Resolve, fan out one inbox row per recipient, record the measured
+    recipient_count. Late installers never receive this blast."""
+    return get_inbox_store().send(req)
+
+
+@router.get("/messages", response_model=list[BroadcastOut])
+def list_broadcasts(_: None = Depends(get_admin)) -> list[BroadcastOut]:
+    return get_inbox_store().list_broadcasts()
+
+
+@router.get("/messages/replies", response_model=list[ReplyOut])
+def list_message_replies(
+    since: datetime | None = Query(default=None),
+    _: None = Depends(get_admin),
+) -> list[ReplyOut]:
+    return get_inbox_store().list_replies(since)

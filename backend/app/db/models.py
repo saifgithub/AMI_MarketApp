@@ -2256,3 +2256,65 @@ class VllmCacheSampleRow(Base):
     # until the process restarts.
     queries_total: Mapped[int] = mapped_column(BigInteger, nullable=False)
     hits_total: Mapped[int] = mapped_column(BigInteger, nullable=False)
+
+
+class BroadcastRow(Base):
+    """CR102 — one authored tester-messaging send (broadcast OR single-user).
+
+    The row is the *send record*: audience spec as submitted, plus
+    `recipient_count` measured at send time. Fan-out happens at send time
+    (one InboxMessageRow per resolved recipient), never as a predicate
+    evaluated at read time — so the count is a fact, replies thread to a
+    concrete delivered row, and a user who installs after the send never
+    receives an old blast.
+    """
+
+    __tablename__ = "broadcasts"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    body: Mapped[str] = mapped_column(String, nullable=False)
+    # Optional translations, e.g. {"ar": "...", "ms": "..."}. NULL = EN only.
+    body_i18n: Mapped[Optional[dict]] = mapped_column(JsonB, nullable=True)
+    priority: Mapped[str] = mapped_column(String, default="normal", nullable=False)
+    # The audience spec exactly as submitted, so "who was this aimed at?"
+    # is answerable later even after users churn in and out of the filter.
+    audience_json: Mapped[dict] = mapped_column(JsonB, nullable=False)
+    created_by: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    recipient_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, server_default=func.now(),
+        nullable=False,
+    )
+
+
+class InboxMessageRow(Base):
+    """CR102 — one per-user inbox row: a delivered broadcast copy OR a reply.
+
+    `direction='out'` rows are the send-time fan-out of a BroadcastRow;
+    `direction='in'` rows are tester replies, threaded via `reply_to_id`
+    (the concrete delivered row being answered) and carrying the parent's
+    `broadcast_id` so the admin reply feed can group by blast. `read_at`
+    and `toasted_at` are server-side stamps — toast-once survives a
+    reinstall precisely because the stamp is not client state.
+    """
+
+    __tablename__ = "inbox_messages"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    broadcast_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
+    direction: Mapped[str] = mapped_column(String, nullable=False)  # 'out' | 'in'
+    title: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    body: Mapped[str] = mapped_column(String, nullable=False)
+    reply_to_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, server_default=func.now(),
+        nullable=False,
+    )
+    read_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    toasted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
