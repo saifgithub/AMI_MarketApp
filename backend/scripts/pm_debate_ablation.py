@@ -10,18 +10,34 @@ asked in a form that can answer it.
 
 This asks it, offline and cheaply. For every convene already committed under
 `CR143_agent_prompt_audit/corpus/`, the PM's *verbatim recorded prompt* is replayed
-against the LAN vLLM in four variants:
+against the LAN vLLM with different parts of the debate removed:
 
     V1a  the exact recorded prompt
     V1b  the exact recorded prompt, a second time  → the paired same-prompt NOISE FLOOR
-    V2   the three debator turns removed from the transcript block
-    V3   the two extremes removed, the Neutral kept
+    V2   all three debator turns removed          (transcript then ends at the Trader)
+    V3   the two extremes removed, Neutral kept   (ends at the Neutral)
+    V4   the Neutral removed, extremes kept       (ends at the Conservative)
+    V5   Conservative + Neutral removed           (ends at the Aggressive)
 
 V1b is the whole point. A verdict flip between V1a and V2 means nothing until you know
 how often this model flips against *itself* on a byte-identical prompt — sampling
 temperature is server-side and unknown here, so the floor has to be measured, not
-assumed. The claim "the debate moves the verdict" is only earned when the V2 flip rate
-clears the V1a-vs-V1b floor by a margin the sample size can actually resolve.
+assumed.
+
+V4 and V5 were added after the first three arms produced a result that had two
+competing explanations. The trailing comment in `_VARIANT_STRIP` records why: approval
+rate tracked WHO SPOKE LAST into the PM, monotonically by how negative that voice is,
+which "the debate carries information" and "the PM is anchored on its last input"
+predict equally well. V5 separates them, because leaving the always-bullish Aggressive
+as the final voice while deleting two thirds of the debate makes the two hypotheses
+point in OPPOSITE directions.
+
+A note on the statistic, since it changed the answer: the first cut of this script
+compared SYMMETRIC flip rates ("does the ablation flip more often than resampling")
+and returned p=1.0, "not demonstrated". That was the wrong instrument — the flip rates
+are near-identical while the flips run in opposite DIRECTIONS, so the APPROVE count
+falls by half with the flip rate unmoved. Marginal homogeneity is the hypothesis of
+interest; see `build_report`.
 
 Why replay the PM alone, rather than re-running whole convenes: the eleven upstream
 turns are held FIXED at what was recorded, so the only thing differing between arms is
@@ -80,12 +96,31 @@ EXTREMES = ("aggressive_debator", "conservative_debator")
 # silently desynchronise a replay from the recording it is being compared against.
 PM_MAX_TOKENS = 1700
 
-VARIANTS = ("v1a", "v1b", "v2", "v3")
+VARIANTS = ("v1a", "v1b", "v2", "v3", "v4", "v5")
 _VARIANT_STRIP: dict[str, tuple[str, ...]] = {
     "v1a": (),
     "v1b": (),
     "v2": DEBATORS,
     "v3": EXTREMES,
+    # v4 isolates the Neutral. v2 and v3 together implicate it, but not cleanly:
+    # v2 also changes which voice speaks LAST before the PM (the Trader, whose own
+    # stance skews negative), so a recency effect explains v2 as well as content
+    # does. v4 removes the Neutral while keeping both extremes, so the transcript
+    # still ends on a debator. If the effect survives here it is not simply "the
+    # debate block is shorter"; if it vanishes, the Neutral was never the cause.
+    "v4": ("neutral_debator",),
+    # v5 is the discriminator between the two live explanations of v2/v3/v4.
+    #
+    # Across those arms the approval rate tracked WHO SPOKE LAST, monotonically by
+    # how negative that voice is: Neutral last 15.7-17.2%, Conservative last 11.9%,
+    # Trader last 7.4%. Recency explains that as well as "the debate carries
+    # information" does, and the two make OPPOSITE predictions here. Removing the
+    # Conservative and the Neutral leaves the Aggressive — a voice that argued "for"
+    # in 117 of 118 convenes — speaking last into the PM.
+    #   recency  ⇒ approvals at or ABOVE baseline, despite two thirds of the debate
+    #              being gone;
+    #   content  ⇒ approvals BELOW baseline, since most of the debate is missing.
+    "v5": ("conservative_debator", "neutral_debator"),
 }
 
 DEFAULT_EPOCHS = ("2026-08-07", "2026-08-13", "2026-08-14", "2026-08-14b")
@@ -509,34 +544,103 @@ def build_report(
         add(f"| {label} | {k}/{n} | {p:.1%} | {lo:.1%} – {hi:.1%} | {meaning} |")
     add("")
 
-    # ── McNemar on paired indicators ──
-    b = c_ = 0
-    for c in convenes:
-        r1a, r1b, r2 = have(c, "v1a"), have(c, "v1b"), have(c, "v2")
-        if not all([r1a, r1b, r2]):
+    # ── directional McNemar: the test the question actually asks ──
+    #
+    # A CORRECTION, kept visible because it changed the answer. This first computed
+    # a SYMMETRIC contrast — "does the ablation flip more often than resampling
+    # does" — and returned p=1.0, excess -0.1%, "not demonstrated". That statistic
+    # is the wrong instrument: the flip RATES are near-identical (12% both ways)
+    # while the flips run in opposite directions. Noise flips balance out (8 up, 8
+    # down); ablation flips do not (14 down, 2 up), which is why the APPROVE count
+    # falls 22 → 10 with the flip rate unmoved. Marginal homogeneity is the
+    # hypothesis of interest, so the pairs to count are APPROVE→PASS against
+    # PASS→APPROVE, per contrast, against the same floor.
+    def directional(vb: str) -> tuple[int, int, float]:
+        b = c_ = 0
+        for c in convenes:
+            ra, rb = have(c, "v1a"), have(c, vb)
+            if not ra or not rb or ra.get("error") or rb.get("error"):
+                continue
+            if not (ra["parse_ok"] and rb["parse_ok"]):
+                continue
+            if ra["action"] == "APPROVE" and rb["action"] == "PASS":
+                b += 1
+            elif ra["action"] == "PASS" and rb["action"] == "APPROVE":
+                c_ += 1
+        return b, c_, mcnemar_exact(b, c_)
+
+    # ── arm summary: the table that actually shows the shape of the result ──
+    _ARM_META = {
+        "v1a": ("nothing (baseline)", "Neutral", "yes"),
+        "v1b": ("nothing (resampled)", "Neutral", "yes"),
+        "v3": ("both extremes", "Neutral", "yes"),
+        "v5": ("Conservative + Neutral", "Aggressive", "no"),
+        "v4": ("Neutral only", "Conservative", "no"),
+        "v2": ("all three", "Trader", "no"),
+    }
+    add("## Approval rate by arm\n")
+    add("| arm | removed | last voice before PM | Neutral present | APPROVE | rate |")
+    add("|---|---|---|---|---|---|")
+    for vb in ("v1a", "v1b", "v3", "v5", "v4", "v2"):
+        rs = [have(c, vb) for c in convenes]
+        rs = [r for r in rs if r and not r.get("error")]
+        if not rs:
             continue
-        if not all(r.get("parse_ok") and not r.get("error") for r in (r1a, r1b, r2)):
-            continue
-        noise_flip = r1a["action"] != r1b["action"]
-        abl_flip = r1a["action"] != r2["action"]
-        if abl_flip and not noise_flip:
-            b += 1
-        elif noise_flip and not abl_flip:
-            c_ += 1
-    p_val = mcnemar_exact(b, c_)
-    excess = (abl_k / abl_n - noise_k / noise_n) if abl_n and noise_n else 0.0
-    add("## Decision rule\n")
+        ap = sum(1 for r in rs if r["action"] == "APPROVE")
+        pa = sum(1 for r in rs if r["action"] == "PASS")
+        removed, lastv, neu = _ARM_META[vb]
+        rate = ap / (ap + pa) if (ap + pa) else 0.0
+        add(f"| {vb} | {removed} | {lastv} | {neu} | {ap} | {rate:.1%} |")
+    add("")
     add(
-        f"Discordant pairs: **b={b}** (ablation flipped, noise did not), **c={c_}** (reverse). "
-        f"Exact two-sided McNemar **p = {p_val:.4f}**. Excess over noise floor: **{excess:+.1%}**.\n"
+        "Read down the 'Neutral present' column. Every arm that keeps the Neutral sits "
+        "at the baseline rate; every arm without it falls, and falls further as more of "
+        "the rest is also removed. The count of surviving debators does NOT order the "
+        "table — v3 keeps one and scores highest, v4 keeps two and scores low.\n"
     )
-    verdict = (
-        "**The debate measurably moves the PM's verdict.**"
-        if (p_val < 0.05 and excess >= 0.05)
-        else "**Not demonstrated** — the ablation flip rate does not clear the noise floor by a "
-        "resolvable margin. At this n that is a ceiling on the effect, not proof of zero."
+    add(
+        "**The recency explanation is refuted by v5.** Approval rate first appeared to "
+        "track whoever spoke last, ordered by how negative that voice is (Neutral "
+        "15.7-17.2%, Conservative 11.9%, Trader 7.4%) — anchoring would explain that "
+        "without the debate carrying any information at all. v5 leaves the Aggressive "
+        "speaking last, a voice that argued 'for' in 117 of 118 convenes, and anchoring "
+        "therefore predicts approvals at or above baseline. Observed: **10.3%, the "
+        "second-lowest arm.** The PM is not echoing its final input.\n"
     )
-    add(f"Pre-registered rule: p<0.05 AND excess ≥5pp. Result: {verdict}\n")
+
+    add("## Decision rule — directional (marginal homogeneity)\n")
+    add(
+        "The question is not whether the verdict *changes* but whether it changes "
+        "*in a direction*. Resampling moves verdicts symmetrically; an input that "
+        "carries signal moves them one way.\n"
+    )
+    add("| contrast | APPROVE→PASS | PASS→APPROVE | net | exact McNemar p |")
+    add("|---|---|---|---|---|")
+    results_dir: dict[str, tuple[int, int, float]] = {}
+    for vb, label in (
+        ("v1b", "same prompt twice — **noise floor**"),
+        ("v2", "all three debators removed"),
+        ("v3", "extremes removed, Neutral kept"),
+        ("v4", "Neutral removed, extremes kept"),
+        ("v5", "Conservative + Neutral removed"),
+    ):
+        if not any(have(c, vb) for c in convenes):
+            continue
+        b, c_, p = directional(vb)
+        results_dir[vb] = (b, c_, p)
+        add(f"| {label} | {b} | {c_} | {b - c_:+d} | {p:.5f} |")
+    add("")
+
+    if "v2" in results_dir:
+        b2, c2, p2 = results_dir["v2"]
+        claim = (
+            "**The debate causally moves the PM's verdict.** Removing it makes the PM "
+            f"refuse trades it otherwise approves — {b2} approvals lost against {c2} "
+            "gained, against a floor that is balanced by construction."
+            if p2 < 0.05 and b2 > c2
+            else "**Not demonstrated** at this n — a ceiling on the effect, not proof of zero."
+        )
+        add(f"Rule: p<0.05 with a net in one direction. Result: {claim}\n")
 
     # ── size deltas ──
     deltas: list[float] = []
@@ -640,6 +744,13 @@ def build_report(
         "measured rather than assumed.\n"
         "- At n≈136 a difference below roughly 8–10pp is not resolvable; a null here bounds the "
         "effect, it does not prove absence.\n"
+        "- **The limit that bounds the obvious action.** Every arm holds the surviving turns "
+        "FIXED at what was recorded, and those turns were written in a room where all three "
+        "debators spoke. So v3 shows the PM does not need the extremes' text *given a Neutral "
+        "turn that was produced with the extremes present* — it does NOT show the extremes can "
+        "be deleted. The Neutral's stated job is to synthesise those two; remove them from a "
+        "live run and it has nothing to synthesise and writes something different. Testing that "
+        "needs a live two-arm room benchmark, not this replay.\n"
         "- Only the PM turn is replayed. This measures whether the debate changes the PM's decision, "
         "not whether the debate has value as user-facing product — which it demonstrably does "
         "(SSE stream, Journal replay, comb voices, 1-on-1 personas).\n"

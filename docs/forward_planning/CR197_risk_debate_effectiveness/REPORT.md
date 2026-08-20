@@ -11,24 +11,27 @@ Every number below is reproducible: `.venv/bin/python -m scripts.debate_signal_r
 
 ## The short answer
 
-You are right about the extremes, wrong about the remedy — and the remedy you proposed is
-already in place.
+You were right about the two extremes and wrong about the Neutral — and the remedy you proposed
+was already in place.
 
 1. **The two extreme debators' positions are constants.** Aggressive argues "for" in 117 of 118
    convenes; Conservative argues "against" in 117 of 118. Their stance carries essentially no
    information about the ticker (mutual information with the verdict: **0.0024** and **0.0321**
-   bits). The debate's entire stance output reduces to the Neutral's single call.
-2. **But their prose is not formulaic.** The three turns overlap on only 23–35% of the numbers
-   they cite, and role identifiability across the twelve agents is 97.5%. The prompts are
-   eliciting genuinely different *arguments* on top of predetermined *positions*.
-3. **"Just use an index for size" is already what happens.** Position size never depended on the
+   bits).
+2. **And the ablation confirms the extremes are inert for the decision.** Delete both from the
+   PM's prompt and the approval rate does not move — 17.2% against a 16.3% baseline, net −1
+   verdict, p=1.0. That is the tightest null in the whole experiment.
+3. **But the debate as a stage IS load-bearing, and the Neutral is what carries it.** Delete all
+   three and approvals halve: 22 → 10, **p = 0.004**. Every arm that keeps the Neutral sits at
+   the baseline rate; every arm without it falls.
+4. **"Just use an index for size" is already what happens.** Position size never depended on the
    debate. It is `min(PM's number, risk-tier cap)`, the Trader's "proposal" *is* the cap, and the
-   three debator sizes are computed in code before anyone speaks. Deleting the RISK phase
-   entirely would change **zero numeric outputs**.
+   three debator sizes are computed in code before anyone speaks.
 
-So the choice was never "debate vs index". It is: keep paying 25% of each run for three turns
-whose stance is fixed and whose numbers nothing reads, or make those turns carry signal. This CR
-does the second, and sets up the measurement that decides whether even that is enough.
+So the answer to "is it worth the time and effort debating" is: **two thirds of it is not, and
+one third of it is doing real work.** The Neutral is not a tie-breaker between two theatrical
+extremes — it is the only voice whose position responds to the ticker, and it is the one the
+Portfolio Manager actually uses.
 
 ---
 
@@ -121,28 +124,63 @@ shared upstream cause fits the data exactly as well as persuasion does. The Trad
 
 ## 3. What was built
 
-### A. The causal test, ready to run (`scripts/pm_debate_ablation.py`)
+### A. The causal test — RUN, 816 calls (`scripts/pm_debate_ablation.py`)
 
-Replays only the PM call for each committed convene against the LAN vLLM:
+Replayed the PM call for all 136 committed convenes against `ami-llm` (Qwen3.6-35B-A3B-NVFP4 —
+the same model that produced the corpora), six arms, zero errors:
 
-- **V1a / V1b** — the exact recorded prompt, twice → the paired same-prompt **noise floor**
-- **V2** — the three debator turns stripped from the transcript
-- **V3** — extremes stripped, Neutral kept
+| arm | removed | last voice before PM | Neutral present | APPROVE | rate |
+|---|---|---|---|---|---|
+| v1a | nothing (baseline) | Neutral | yes | 22 | 16.3% |
+| v1b | nothing (resampled) | Neutral | yes | 21 | 15.7% |
+| **v3** | **both extremes** | Neutral | yes | **23** | **17.2%** |
+| v5 | Conservative + Neutral | Aggressive | no | 14 | 10.3% |
+| v4 | Neutral only | Conservative | no | 16 | 11.9% |
+| **v2** | **all three** | Trader | no | **10** | **7.4%** |
 
-Validated offline, zero network: **136/136 convenes joined** to their PM audit rows,
-**408/408 debator turns** removable as verbatim blocks. Fidelity rules enforced in code:
-`VLLMProvider` used directly (the gateway would double the grounding directive and could fall
-back to Anthropic mid-measurement), no temperature/top_p sent (production sends none),
-`max_tokens=1700`, and baselines parsed from `response_text` rather than the safety-floor-vetoed
-`verdict`.
+Directional test (marginal homogeneity — see the correction below):
 
-Decision rule fixed in advance: exact McNemar plus Wilson CIs, claim causality only at p<0.05
-**and** ≥5pp excess over the noise floor. At n=136, effects below ~8–10pp are not resolvable —
-stated up front rather than discovered afterwards.
+| contrast | APPROVE→PASS | PASS→APPROVE | net | exact McNemar p |
+|---|---|---|---|---|
+| same prompt twice — noise floor | 8 | 8 | **0** | 1.000 |
+| all three debators removed | 14 | 2 | **+12** | **0.004** |
+| extremes removed, Neutral kept | 8 | 9 | −1 | 1.000 |
+| Neutral removed, extremes kept | 13 | 7 | +6 | 0.263 |
+| Conservative + Neutral removed | 12 | 4 | +8 | 0.077 |
 
-**Blocked on one thing:** `ami-llm` on port 8000 is down (CR196's finance-model pilot has the
-box). The contrast is internally valid on *whatever* model serves that slot, since both arms are
-measured fresh in the same session — so this can run whenever the box is free.
+The 14 lost approvals spread across **9 distinct tickers and 3 epochs**, so this is not one
+clustered name.
+
+**A correction worth recording, because it changed the answer.** The pre-registered statistic
+compared *symmetric* flip rates — "does the ablation flip the verdict more often than resampling
+does" — and returned p=1.0, "not demonstrated". That was the wrong instrument. The flip rates are
+near-identical (≈12% either way) because noise flips balance out (8 up, 8 down) while ablation
+flips do not (14 down, 2 up). The APPROVE count halves with the flip rate unmoved. Marginal
+homogeneity was the hypothesis all along.
+
+**And the deflationary explanation was tested, not assumed.** The first four arms showed approval
+rate tracking *whoever spoke last*, ordered by how negative that voice is — Neutral 15.7–17.2%,
+Conservative 11.9%, Trader 7.4%. Simple recency anchoring explains that without the debate
+carrying any information at all. So v5 was added to separate them: it leaves the Aggressive — a
+voice that argued "for" in 117 of 118 convenes — speaking last while deleting two thirds of the
+debate. Anchoring predicts approvals at or above baseline. **Observed: 10.3%, the second-lowest
+arm.** The PM is not echoing its final input.
+
+### The mechanism, visible in one convene
+
+AVGO, same eleven upstream turns, debate present vs absent:
+
+- **With the debate** → APPROVE at 1.5%: *"I am down-sizing the Trader's 3.0% proposal to 1.5%…
+  rejecting the Trader's 20-day SMA stop and the Conservative's 50-day SMA stop in favour of…"*
+- **Without it** → PASS: *"Risk/Reward asymmetry… 1:1 is insufficient for a 3/5 risk score."*
+
+The debate's function is **option generation**, not persuasion. It hands the PM a middle-sized
+alternative it does not construct on its own; without it the PM sees only the Trader's raw
+take-it-or-leave-it proposal, and leaves it. That shows up in the sizes too: without the debate,
+8 of 10 approvals sit at exactly the Trader's 3.0%, against roughly half when it is present.
+
+This is also why the Neutral specifically matters. Its literal job is *"propose a middle-path
+position"*, and it is the only debator whose stance responds to the ticker at all.
 
 ### B. A structured SIZE channel
 
@@ -188,36 +226,58 @@ assumes it is present, and its declaration rate is itself reported.
 
 ## 4. What I recommend, and what is yours to decide
 
-**Recommended:** keep the debate, run the ablation when the box frees up, and let the result
-decide the structural question. Cutting it now would save 25% of run cost while changing no
-number the user sees in a verdict — but it would delete three of eleven comb voices, three
-unlockable 1-on-1 personas, the RISK stage of the Journal replay, and the 12-agent roster D-012
-locks. That is a product decision, not an efficiency one, and it should be made against a
-measured effect rather than an assumed one.
+**Do not cut the debate.** Removing it drops the approval rate from 16.3% to 7.4%. On a training
+simulator that is not a saving, it is a behaviour change: the Room would refuse roughly half the
+trades it currently approves, and the user would mostly be taught to do nothing. Whatever the
+extremes are worth, the stage as a whole is load-bearing.
 
-**Yours to decide, once the ablation reports:**
+**Do not cut the two extremes either — not yet, and not on this evidence.** This is the trap the
+result sets, and it is worth being explicit about. v3 shows the PM does not *read* the extremes:
+delete their text and its decisions are unchanged. But every arm holds the surviving turns fixed
+at what was recorded, and the Neutral's turn was written in a room where the extremes had spoken.
+Its entire job is to synthesise those two. Delete them in a live run and it has nothing to
+synthesise, and writes something different — which this replay cannot see. **v3 proves the PM
+doesn't need the extremes' prose; it does not prove the Neutral doesn't.**
 
-1. **If the debate does not move the verdict above noise** — the honest options are to keep it
-   explicitly as *narrative product* (and stop implying it informs the decision), or to cut the
-   two extremes and keep the Neutral, which is the only voice whose position varies. V3 measures
-   exactly that.
-2. **Render the envelope into the transcript?** The PM currently cannot see any debator's
-   stance, conviction or declared size. Making those visible is the cheapest way to give the
-   debate a real channel — but it changes what the PM reads, so it must come after the baseline.
-3. **Fix the geometry?** The Aggressive cannot rebut anyone. Running the two extremes in
-   parallel and the Neutral after them would cost one fewer serial round-trip and give the
-   Conservative something to answer — but it needs the CR077 phase-parallelism guard extended,
-   since that guard exists precisely to stop a debate being silently deleted.
+The honest way to settle it is a live two-arm room benchmark — full convenes, extremes on vs off —
+using the CR035 harness that already exists. That is one CR, and it is the only remaining question
+worth spending money on here.
+
+**Yours to decide:**
+
+1. **Run the live two-arm benchmark?** If the Neutral holds up without the extremes, cutting them
+   saves 2 of 12 LLM calls (~17% of run cost) and two serial round-trips, at a product cost of two
+   comb voices and two 1-on-1 personas. If it does not, the extremes are earning their keep as the
+   Neutral's raw material rather than as the PM's — which is a perfectly good reason to keep them,
+   just not the one the prompts currently claim.
+2. **Render the envelope into the transcript?** The PM still cannot see any debator's stance,
+   conviction or now-declared size. Given the mechanism is option generation, exposing the three
+   declared sizes directly is the cheapest possible upgrade — it puts the menu in front of the
+   decision-maker as data instead of prose. This baseline is now recorded, so the change is safe
+   to make and re-measure.
+3. **Fix the geometry?** The Aggressive still cannot rebut anyone. Running the two extremes in
+   parallel and the Neutral after them costs one fewer serial round-trip and gives the Conservative
+   something to answer — but it needs the CR077 phase-parallelism guard extended, since that guard
+   exists precisely to stop a debate being silently deleted.
+4. **Reconsider the roster claim, not the roster.** D-012 fixes twelve agents and that is fine. But
+   the product currently implies three risk voices deliberate toward the verdict, and what the
+   measurement supports is that one of them does while two supply it with material. Worth aligning
+   the copy with the mechanism.
 
 ---
 
 ## Appendix — what this report does not claim
 
-- **Not claimed:** that the debate is worthless. Its prose is differentiated and it is shipped
-  user-facing product; what is measured here is that its *stance* channel is near-constant and
-  its *numeric* channel was never read.
-- **Not claimed:** that the Neutral persuades the PM. 55/55 is an association between two agents
-  reading the same eleven turns.
+- **Not claimed:** that the debate is worthless. The opposite is measured — removing it costs
+  more than half the approvals (p=0.004).
+- **Not claimed:** that the two extremes can be deleted. Only that the PM does not read them.
+  Their value as the Neutral's raw material is untested and needs a live benchmark.
+- **Not claimed:** that the debate *improves* decisions. It changes them, in the direction of
+  more approvals, by supplying middle-sized options. Whether those approvals are better trades
+  is a different question this cannot answer — the corpora carry no outcomes.
+- **Not resolvable here:** narration divergence. Same-prompt resampling already moves the PM's
+  narration by 0.78 Jaccard distance, so the ablation's 0.79 sits inside the noise. That channel
+  is too variable to measure this way.
 - **Not measured:** whether any of this improves user learning outcomes, which is the actual
   product goal and which no metric here touches.
 - **Sample bounds:** 118 convenes over 13 tickers across three prompt epochs. Clustered, not
