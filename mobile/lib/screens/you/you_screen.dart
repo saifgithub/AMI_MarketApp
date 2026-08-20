@@ -39,6 +39,7 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/journal/journal_screen.dart';
 import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/screens/journal/journal_trash_screen.dart';
+import 'package:ami_trade/screens/notifications/notification_bell.dart';
 import 'package:ami_trade/screens/settings/settings_screen.dart';
 import 'package:ami_trade/screens/you/insights_section.dart';
 import 'package:ami_trade/screens/you/you_providers.dart';
@@ -193,6 +194,13 @@ class _YouScreenState extends ConsumerState<YouScreen> {
                       builder: (_) => const JournalTrashScreen(),
                     )),
                   ),
+                // CR135 — the notification centre's home (the CR's "likely
+                // home" once CR133 put settings-nature content here). On
+                // every segment: the bell belongs to the tab, not to one
+                // pane. A separate surface from the Floor header's CR102
+                // inbox bell — system/event notifications, not admin
+                // messages.
+                const NotificationBell(),
               ],
             ),
             AmiSegmentBar(

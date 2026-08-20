@@ -6885,6 +6885,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{days}d ago'**
   String inboxDaysAgo(String days);
+
+  /// CR135 — the notification centre screen heading, reached from the YOU-header bell. Already upper-case, rendered as-is. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NOTIFICATIONS'**
+  String get notifCentreTitle;
+
+  /// CR135 — screen-reader label on the YOU-header bell, same shape as inboxBellSemantics. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Notifications} =1{1 unread notification} other{{count} unread notifications}}'**
+  String notifBellSemantics(int count);
+
+  /// CR135 — header action that marks every notification read. Already upper-case, rendered as-is. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'READ ALL'**
+  String get notifMarkAllRead;
+
+  /// CR135 — the centre with nothing in it. MUST stay visually distinct from notifError (CR040): this state never shows a retry button. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet.'**
+  String get notifEmptyTitle;
+
+  /// CR135 — one-liner under notifEmptyTitle explaining what will appear. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Price alerts, game events and order fills land here as they happen.'**
+  String get notifEmptyBody;
+
+  /// CR135 — load-failure state on the centre screen, always paired with the notifRetry button (CR040: error is never dressed as empty). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your notifications.'**
+  String get notifError;
+
+  /// CR135 — retry CTA under notifError and notifPrefsError. Already upper-case, same per-screen convention as inboxRetry. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'TRY AGAIN'**
+  String get notifRetry;
+
+  /// CR135 — the per-type push preferences screen heading, and the tooltip on the tune icon that opens it. Already upper-case. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'PUSH SETTINGS'**
+  String get notifPrefsTitle;
+
+  /// CR135 — intro line above the toggles. Load-bearing honesty: a disabled type is suppressed as a push server-side but its row still lands in the centre, and this line is what says so. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Pushes only. Everything still lands in your notification centre — these switches control what reaches your lock screen.'**
+  String get notifPrefsIntro;
+
+  /// CR135 — load-failure state on the preferences screen, paired with notifRetry (CR040). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your notification settings.'**
+  String get notifPrefsError;
+
+  /// CR135 — banner header when OS-level push permission is denied. Already upper-case. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'PUSH NOTIFICATIONS OFF'**
+  String get notifOffBannerTitle;
+
+  /// CR135 — banner body; tapping routes to OS settings via the permission fallback. Keep the brand name AMI untranslated. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Your device is blocking AMI\'s pushes. Tap here to fix it in system settings.'**
+  String get notifOffBannerBody;
+
+  /// CR135 — toggle label for the 'price_alert' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Price alerts'**
+  String get notifTypePriceAlert;
+
+  /// CR135 — toggle label for the 'daily_reminder' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Daily reminders'**
+  String get notifTypeDailyReminder;
+
+  /// CR135 — toggle label for the 'game_entries_closing' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Game — entries closing'**
+  String get notifTypeGameEntriesClosing;
+
+  /// CR135 — toggle label for the 'game_final_stretch' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Game — final stretch'**
+  String get notifTypeGameFinalStretch;
+
+  /// CR135 — toggle label for the 'game_settled' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Game — results'**
+  String get notifTypeGameSettled;
+
+  /// CR135 — toggle label for the 'game_rank_move' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Game — rank moves'**
+  String get notifTypeGameRankMove;
+
+  /// CR135 — toggle label for the 'resting_order_filled' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Order filled'**
+  String get notifTypeRestingOrderFilled;
+
+  /// CR135 — toggle label for the 'resting_order_triggered' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Order triggered'**
+  String get notifTypeRestingOrderTriggered;
+
+  /// CR135 — toggle label for the 'resting_order_rejected' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Order rejected'**
+  String get notifTypeRestingOrderRejected;
 }
 
 class _AppLocalizationsDelegate

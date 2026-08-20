@@ -5333,7 +5333,7 @@
   "@inboxYou": {
     "description": "CR102 — label over the user's own replies in the message thread. The sender of broadcasts is AMI by name; this marks the other side. NEW key. retranslate:[ar,ms]"
   },
-  "inboxReplyHint": "Write a reply\u2026",
+  "inboxReplyHint": "Write a reply…",
   "@inboxReplyHint": {
     "description": "CR102 — placeholder in the reply composer at the bottom of the message detail screen. NEW key. retranslate:[ar,ms]"
   },
@@ -5375,5 +5375,94 @@
         "type": "String"
       }
     }
+  },
+  "notifCentreTitle": "NOTIFICATIONS",
+  "@notifCentreTitle": {
+    "description": "CR135 — the notification centre screen heading, reached from the YOU-header bell. Already upper-case, rendered as-is. NEW key. retranslate:[ar,ms]"
+  },
+  "notifBellSemantics": "{count, plural, =0{Notifications} =1{1 unread notification} other{{count} unread notifications}}",
+  "@notifBellSemantics": {
+    "description": "CR135 — screen-reader label on the YOU-header bell, same shape as inboxBellSemantics. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifMarkAllRead": "READ ALL",
+  "@notifMarkAllRead": {
+    "description": "CR135 — header action that marks every notification read. Already upper-case, rendered as-is. NEW key. retranslate:[ar,ms]"
+  },
+  "notifEmptyTitle": "No notifications yet.",
+  "@notifEmptyTitle": {
+    "description": "CR135 — the centre with nothing in it. MUST stay visually distinct from notifError (CR040): this state never shows a retry button. NEW key. retranslate:[ar,ms]"
+  },
+  "notifEmptyBody": "Price alerts, game events and order fills land here as they happen.",
+  "@notifEmptyBody": {
+    "description": "CR135 — one-liner under notifEmptyTitle explaining what will appear. NEW key. retranslate:[ar,ms]"
+  },
+  "notifError": "Couldn't load your notifications.",
+  "@notifError": {
+    "description": "CR135 — load-failure state on the centre screen, always paired with the notifRetry button (CR040: error is never dressed as empty). NEW key. retranslate:[ar,ms]"
+  },
+  "notifRetry": "TRY AGAIN",
+  "@notifRetry": {
+    "description": "CR135 — retry CTA under notifError and notifPrefsError. Already upper-case, same per-screen convention as inboxRetry. NEW key. retranslate:[ar,ms]"
+  },
+  "notifPrefsTitle": "PUSH SETTINGS",
+  "@notifPrefsTitle": {
+    "description": "CR135 — the per-type push preferences screen heading, and the tooltip on the tune icon that opens it. Already upper-case. NEW key. retranslate:[ar,ms]"
+  },
+  "notifPrefsIntro": "Pushes only. Everything still lands in your notification centre — these switches control what reaches your lock screen.",
+  "@notifPrefsIntro": {
+    "description": "CR135 — intro line above the toggles. Load-bearing honesty: a disabled type is suppressed as a push server-side but its row still lands in the centre, and this line is what says so. NEW key. retranslate:[ar,ms]"
+  },
+  "notifPrefsError": "Couldn't load your notification settings.",
+  "@notifPrefsError": {
+    "description": "CR135 — load-failure state on the preferences screen, paired with notifRetry (CR040). NEW key. retranslate:[ar,ms]"
+  },
+  "notifOffBannerTitle": "PUSH NOTIFICATIONS OFF",
+  "@notifOffBannerTitle": {
+    "description": "CR135 — banner header when OS-level push permission is denied. Already upper-case. NEW key. retranslate:[ar,ms]"
+  },
+  "notifOffBannerBody": "Your device is blocking AMI's pushes. Tap here to fix it in system settings.",
+  "@notifOffBannerBody": {
+    "description": "CR135 — banner body; tapping routes to OS settings via the permission fallback. Keep the brand name AMI untranslated. NEW key. retranslate:[ar,ms]"
+  },
+  "notifTypePriceAlert": "Price alerts",
+  "@notifTypePriceAlert": {
+    "description": "CR135 — toggle label for the 'price_alert' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]"
+  },
+  "notifTypeDailyReminder": "Daily reminders",
+  "@notifTypeDailyReminder": {
+    "description": "CR135 — toggle label for the 'daily_reminder' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]"
+  },
+  "notifTypeGameEntriesClosing": "Game — entries closing",
+  "@notifTypeGameEntriesClosing": {
+    "description": "CR135 — toggle label for the 'game_entries_closing' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]"
+  },
+  "notifTypeGameFinalStretch": "Game — final stretch",
+  "@notifTypeGameFinalStretch": {
+    "description": "CR135 — toggle label for the 'game_final_stretch' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]"
+  },
+  "notifTypeGameSettled": "Game — results",
+  "@notifTypeGameSettled": {
+    "description": "CR135 — toggle label for the 'game_settled' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]"
+  },
+  "notifTypeGameRankMove": "Game — rank moves",
+  "@notifTypeGameRankMove": {
+    "description": "CR135 — toggle label for the 'game_rank_move' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]"
+  },
+  "notifTypeRestingOrderFilled": "Order filled",
+  "@notifTypeRestingOrderFilled": {
+    "description": "CR135 — toggle label for the 'resting_order_filled' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]"
+  },
+  "notifTypeRestingOrderTriggered": "Order triggered",
+  "@notifTypeRestingOrderTriggered": {
+    "description": "CR135 — toggle label for the 'resting_order_triggered' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]"
+  },
+  "notifTypeRestingOrderRejected": "Order rejected",
+  "@notifTypeRestingOrderRejected": {
+    "description": "CR135 — toggle label for the 'resting_order_rejected' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]"
   }
 }

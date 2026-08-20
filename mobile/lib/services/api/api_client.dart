@@ -15,6 +15,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show debugPrint, visibleForTesting;
 
 import 'package:ami_trade/models/alpaca.dart';
+import 'package:ami_trade/models/app_notification.dart';
 import 'package:ami_trade/models/auth.dart';
 import 'package:ami_trade/models/ai_coach.dart';
 import 'package:ami_trade/models/billing_identity.dart';
@@ -1633,6 +1634,73 @@ class ApiClient {
   /// cold-start toast — survives a reinstall, unlike a local flag.
   Future<void> markMessageToasted(String messageId) async {
     await _dio.post<void>('/v1/messages/$messageId/toasted');
+  }
+
+  // ── CR135 in-app notification centre ───────────────────────────────────
+  //
+  // Unlike `/v1/messages`, these routes carry `{user_id}` in the path
+  // (price_alerts pattern) — the backend 403s a path user that isn't the
+  // token's, and per-row routes 404 identically for foreign and
+  // nonexistent ids.
+
+  /// One page, newest-first. `total` counts the whole history for paging.
+  Future<NotificationPage> notifications(
+    String userId, {
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/notifications/$userId',
+      queryParameters: {'limit': limit, 'offset': offset},
+    );
+    return NotificationPage.fromJson(r.data!);
+  }
+
+  /// Idempotent server-side `read_at` stamp.
+  Future<void> markNotificationRead(String userId, String notificationId) async {
+    await _dio.post<void>('/v1/notifications/$userId/$notificationId/read');
+  }
+
+  /// Stamp every unread row; returns how many were stamped.
+  Future<int> markAllNotificationsRead(String userId) async {
+    final r = await _dio
+        .post<Map<String, dynamic>>('/v1/notifications/$userId/read_all');
+    return ((r.data?['updated'] as num?) ?? 0).toInt();
+  }
+
+  /// Server-counted unread rows — the same `notifications` table the OS
+  /// icon badge reads (CR135 badge-count parity: no second counter).
+  Future<int> notificationUnreadCount(String userId) async {
+    final r = await _dio
+        .get<Map<String, dynamic>>('/v1/notifications/$userId/unread_count');
+    return ((r.data?['unread'] as num?) ?? 0).toInt();
+  }
+
+  /// Every type in the backend vocabulary, defaults filled in (no stored
+  /// row = enabled). The server's list is authoritative — the client
+  /// renders what arrives, so a type this build predates still shows.
+  Future<List<NotificationPreference>> notificationPreferences(
+      String userId) async {
+    final r = await _dio
+        .get<Map<String, dynamic>>('/v1/notifications/$userId/preferences');
+    return ((r.data?['items'] as List?) ?? const [])
+        .map((e) => NotificationPreference.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Partial update — only the named types change. Returns the full
+  /// refreshed set. Unknown types are a 422, surfaced, never swallowed.
+  Future<List<NotificationPreference>> patchNotificationPreferences(
+    String userId,
+    Map<String, bool> updates,
+  ) async {
+    final r = await _dio.patch<Map<String, dynamic>>(
+      '/v1/notifications/$userId/preferences',
+      data: {'updates': updates},
+    );
+    return ((r.data?['items'] as List?) ?? const [])
+        .map((e) => NotificationPreference.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   // ── Alpaca paper trading (AT:R45) ──────────────────────────────────────

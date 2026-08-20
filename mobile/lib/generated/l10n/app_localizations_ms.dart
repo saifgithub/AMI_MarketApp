@@ -4205,4 +4205,79 @@ class AppLocalizationsMs extends AppLocalizations {
   String inboxDaysAgo(String days) {
     return '${days}d ago';
   }
+
+  @override
+  String get notifCentreTitle => 'NOTIFICATIONS';
+
+  @override
+  String notifBellSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count unread notifications',
+      one: '1 unread notification',
+      zero: 'Notifications',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notifMarkAllRead => 'READ ALL';
+
+  @override
+  String get notifEmptyTitle => 'No notifications yet.';
+
+  @override
+  String get notifEmptyBody =>
+      'Price alerts, game events and order fills land here as they happen.';
+
+  @override
+  String get notifError => 'Couldn\'t load your notifications.';
+
+  @override
+  String get notifRetry => 'TRY AGAIN';
+
+  @override
+  String get notifPrefsTitle => 'PUSH SETTINGS';
+
+  @override
+  String get notifPrefsIntro =>
+      'Pushes only. Everything still lands in your notification centre — these switches control what reaches your lock screen.';
+
+  @override
+  String get notifPrefsError => 'Couldn\'t load your notification settings.';
+
+  @override
+  String get notifOffBannerTitle => 'PUSH NOTIFICATIONS OFF';
+
+  @override
+  String get notifOffBannerBody =>
+      'Your device is blocking AMI\'s pushes. Tap here to fix it in system settings.';
+
+  @override
+  String get notifTypePriceAlert => 'Price alerts';
+
+  @override
+  String get notifTypeDailyReminder => 'Daily reminders';
+
+  @override
+  String get notifTypeGameEntriesClosing => 'Game — entries closing';
+
+  @override
+  String get notifTypeGameFinalStretch => 'Game — final stretch';
+
+  @override
+  String get notifTypeGameSettled => 'Game — results';
+
+  @override
+  String get notifTypeGameRankMove => 'Game — rank moves';
+
+  @override
+  String get notifTypeRestingOrderFilled => 'Order filled';
+
+  @override
+  String get notifTypeRestingOrderTriggered => 'Order triggered';
+
+  @override
+  String get notifTypeRestingOrderRejected => 'Order rejected';
 }

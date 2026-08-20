@@ -121,3 +121,44 @@ What landed:
   `notifications` at 90 days — at alpha cadence (a handful of pushes/user/week,
   games policy-capped) a page of 50 never truncates visibly; revisit only if
   the list screen ships infinite scroll past ~500 rows.
+
+---
+
+## Build note — mobile half SHIPPED (2026-08-20, AT:R73)
+
+The §2 mobile surface is built against the shipped backend contract:
+
+- **Bell + badge** — `NotificationBell` in the **YOU header** (every
+  segment), per §2's "likely home". A SEPARATE surface from CR102's
+  Floor-header inbox bell (admin messages vs system/event notifications) —
+  deliberately not merged, no second bell added to the Floor header. The
+  badge reads the server's `unread_count` (the `notifications` table — the
+  same one the OS icon badge reads; no second counter), and is absent while
+  loading/on error: a badge only asserts a number it actually has.
+- **List screen** — `notification_centre_screen.dart`: newest-first as the
+  server orders, unread rows cyan-accented + dotted, tap = idempotent
+  server read-stamp + deep link through the EXISTING `DeepLinkDispatcher`
+  (no second mapping), done-all header action, `AmiEmptyState` empty state,
+  and a distinct error+retry panel (CR040: error ≠ empty).
+- **Preferences** — `notification_preferences_screen.dart` behind the
+  centre's tune icon: one toggle per server-vocabulary type (server's list
+  is authoritative; a type the build predates renders by its raw wire
+  name, DEF210 class). Toggles PATCH and reflect the server's answer; a
+  failed save flips back and says so. The intro line states the honesty
+  boundary: pushes only — rows still land in the centre.
+- **Notifications-off banner** — `sharia_verdict_banner` shape, shown only
+  while OS permission is denied; tap rides OneSignal's
+  `requestPermission(fallbackToSettings: true)` (no new dependency), and
+  the banner re-checks on foreground resume so an OS-Settings fix
+  dismisses it live.
+- **Dart vocabulary mirror** — `NotificationType` in
+  `mobile/lib/models/app_notification.dart`, pinned to
+  `NOTIFICATION_TYPES` by
+  `backend/tests/unit/test_cr135_notification_type_parity.py` (DEF210
+  class, shipped WITH the enum; mutation-proven both directions).
+- **i18n** — 21 new keys in `app_en.arb`, seeded into ar/ms via
+  `translate_arb.py --seed-missing` (DEF137/DEF295 chain), gen-l10n
+  committed.
+- Tests: 24 new Dart tests (model round-trip, centre states + stamps,
+  preferences, bell badge) + 3 pytest parity tests; error-≠-empty,
+  read-stamp, revert-on-failure and banner-gate guards mutation-proven.
