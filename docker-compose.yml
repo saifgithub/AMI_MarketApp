@@ -254,6 +254,9 @@ services:
       # warning) if either is ever unset.
       ONESIGNAL_APP_ID: ${ONESIGNAL_APP_ID:-}
       ONESIGNAL_REST_KEY: ${ONESIGNAL_REST_KEY:-}
+      # DEF333 — dashboard-configured "Urgent" Android Notification Category.
+      # Empty degrades to OneSignal's own DEFAULT-importance fallback channel.
+      ONESIGNAL_ANDROID_CHANNEL_ID: ${ONESIGNAL_ANDROID_CHANNEL_ID:-}
       # OIDC audiences (DEF038: these lived in .env but were never
       # forwarded here, so the container verified Google tokens against
       # an empty audience list). CSV or single bare value — config.py

@@ -184,16 +184,25 @@ def _attempt_push(
         )
         return "not_configured", None
 
+    payload: dict[str, Any] = {
+        "app_id": settings.onesignal_app_id,
+        "include_external_user_ids": [str(user_id)],
+        "headings": {"en": title},
+        "contents": {"en": body},
+        "data": deep_link,
+    }
+    if settings.onesignal_android_channel_id:
+        # DEF333 — without this, OneSignal auto-creates a Android fallback
+        # channel at IMPORTANCE_DEFAULT: no heads-up banner, and OS-level
+        # adaptive notification management (observed on Samsung One UI)
+        # mutes it within minutes. This points at a dashboard-configured
+        # "Urgent" channel instead. No effect on iOS.
+        payload["android_channel_id"] = settings.onesignal_android_channel_id
+
     try:
         resp = httpx.post(
             f"{_ONESIGNAL_API_BASE}/notifications",
-            json={
-                "app_id": settings.onesignal_app_id,
-                "include_external_user_ids": [str(user_id)],
-                "headings": {"en": title},
-                "contents": {"en": body},
-                "data": deep_link,
-            },
+            json=payload,
             headers={
                 "Authorization": f"Key {settings.onesignal_rest_key}",
                 "Content-Type": "application/json",

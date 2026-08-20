@@ -145,6 +145,13 @@ class Settings(BaseSettings):
     twilio_auth_token: str = ""
     onesignal_app_id: str = ""
     onesignal_rest_key: str = ""
+    # DEF333 — OneSignal's auto-created Android fallback channel is
+    # IMPORTANCE_DEFAULT (no heads-up banner, and vulnerable to OS-level
+    # adaptive muting). This points at a dashboard-configured "Urgent"
+    # Android Notification Category instead. Empty is a valid, degrading
+    # state (falls back to OneSignal's own default channel) — not every
+    # environment needs this configured, so no loud-failure guard here.
+    onesignal_android_channel_id: str = ""
 
     # TTS
     azure_speech_key: str = ""
