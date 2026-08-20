@@ -7036,6 +7036,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Order rejected'**
   String get notifTypeRestingOrderRejected;
+
+  /// CR122 — the mandatory ad label on every ad surface (ads.md UX rules), rendered in mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AD'**
+  String get adBadge;
+
+  /// CR122 — alternate ad label for sponsored native cards (ads.md UX rules), mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SPONSORED'**
+  String get adBadgeSponsored;
+
+  /// CR122 — accessibility label for the one-tap X that dismisses a native ad card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss ad'**
+  String get adDismiss;
+
+  /// CR122 — button label on the post-lesson interstitial once the 5-second minimum has elapsed. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get adInterstitialSkip;
+
+  /// CR122 — countdown label on the post-lesson interstitial before skipping unlocks; {seconds} counts 5 down to 1. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Skip in {seconds}s'**
+  String adInterstitialSkipIn(int seconds);
+
+  /// CR122 — house upsell headline when a Floor Pass user has used all free 1-on-1s (copy locked in ads.md house-ad table; keep the price literal). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Get unlimited 1-on-1s with Trader for \$14.99/mo'**
+  String get houseAdOneOnOneHeadline;
+
+  /// CR122 — house upsell body for the out-of-1-on-1s slot. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve used all 5 free 1-on-1s this month.'**
+  String get houseAdOneOnOneBody;
+
+  /// CR122 — house upsell headline when a Floor Pass user has used the free Room (copy locked in ads.md house-ad table). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Want 9 more Rooms a month? Try Trader.'**
+  String get houseAdRoomHeadline;
+
+  /// CR122 — house upsell body for the used-free-Room slot. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Your free Room is used. Trader runs 10 a month.'**
+  String get houseAdRoomBody;
+
+  /// CR122 — house upsell headline when a Trader user is near the monthly credit cap (copy locked in ads.md house-ad table; keep the numbers literal). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Hit your cap? Upgrade to Floor Manager for 500 credits/mo.'**
+  String get houseAdCreditCapHeadline;
+
+  /// CR122 — house upsell body for the near-credit-cap slot. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re close to this month\'s credit limit.'**
+  String get houseAdCreditCapBody;
+
+  /// CR122 — house upsell headline for a halal-mandated Trader user (copy locked in ads.md house-ad table). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Curious about Floor Manager\'s premium AI?'**
+  String get houseAdHalalHeadline;
+
+  /// CR122 — house upsell body for the halal-mandate slot. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'See what Floor Manager adds for halal-mandated floors.'**
+  String get houseAdHalalBody;
+
+  /// CR122 — generic Trader house upsell headline shown to Floor Pass users when no targeted slot fires (keeps unset-AdMob fill at 100% house). Keep the price literal. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Do more with Trader — \$14.99/mo'**
+  String get houseAdGenericHeadline;
+
+  /// CR122 — generic Trader house upsell body. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited 1-on-1s, 10 Rooms a month, and a bigger credit allowance.'**
+  String get houseAdGenericBody;
+
+  /// CR122 — CTA on Trader-targeted house ads; opens the CR084 paywall. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'See Trader plans'**
+  String get houseAdCtaTrader;
+
+  /// CR122 — CTA on Floor-Manager-targeted house ads; opens the CR084 paywall. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'See Floor Manager plans'**
+  String get houseAdCtaFloorManager;
 }
 
 class _AppLocalizationsDelegate

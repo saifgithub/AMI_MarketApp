@@ -13,8 +13,10 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/screens/lessons/honeycomb_layout.dart';
 import 'package:ami_trade/screens/lessons/track_lessons_screen.dart';
+import 'package:ami_trade/services/ads/ads_models.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/ads/ad_slot.dart';
 import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/theme/hex_clipper.dart';
 import 'package:ami_trade/widgets/hex/hex_toast.dart';
@@ -140,6 +142,9 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
                   ),
                 ),
               ),
+              // CR122 — Academy Hub bottom is an approved ad placement
+              // (ads.md:43). Self-gating slot; collapses for paying plans.
+              const AdSlot(placement: AdPlacement.academyHubBottom),
             ],
           ),
         ),

@@ -35,6 +35,7 @@ import 'package:ami_trade/models/watchlist.dart';
 import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/models/alpaca.dart';
+import 'package:ami_trade/services/ads/ads_models.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
@@ -46,6 +47,7 @@ import 'package:ami_trade/screens/you/you_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/theme/hex_clipper.dart';
+import 'package:ami_trade/widgets/ads/ad_slot.dart';
 import 'package:ami_trade/widgets/empty_state.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
@@ -907,9 +909,13 @@ class _PositionsTab extends StatelessWidget {
                 // shares — so it gets its own group rather than a row inside
                 // HOLDINGS with a badge on it.
                 const ShortPositionsSection(),
-                if (holdings.isEmpty && !hasRestingOrders && !hasShorts)
-                  _NewTraderHint(onTradeTicket: onTradeTicket)
-                else ...[
+                if (holdings.isEmpty && !hasRestingOrders && !hasShorts) ...[
+                  _NewTraderHint(onTradeTicket: onTradeTicket),
+                  // CR122 — Sim Portfolio empty state (no positions) is an
+                  // approved ad placement (ads.md:42). Self-gating slot.
+                  const AdSlot(
+                      placement: AdPlacement.simPortfolioEmptyState),
+                ] else ...[
                   const SizedBox(height: AmiSpacing.s),
                   if (holdings.isNotEmpty)
                     Padding(

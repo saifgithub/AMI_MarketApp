@@ -18,6 +18,8 @@
 /// pass / fail per question + any newly unlocked agents.
 library;
 
+import 'dart:async';
+
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/lesson_beats.dart';
@@ -31,6 +33,7 @@ import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/ads/house_ad_interstitial.dart';
 import 'package:ami_trade/widgets/hex/ami_segment_bar.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/lessons/animation_block.dart';
@@ -90,6 +93,11 @@ class _LessonReaderScreenState extends ConsumerState<LessonReaderScreen> {
       } else {
         Celebrate.meso(context, accent: AmiColors.hexGreen);
       }
+      // CR122 — post-lesson interstitial (ads.md:39), the only approved
+      // full-screen placement. The helper advances the 1-per-5-lessons
+      // counter and lets AdGate decide (plan, session/day/10-min caps);
+      // for paying plans and capped sessions nothing is pushed.
+      unawaited(maybeShowPostLessonInterstitial(context, ref));
     });
     final state = ref.watch(lessonReaderProvider(widget.lessonId));
     final l = AppLocalizations.of(context);

@@ -14,6 +14,7 @@ library;
 
 import 'package:ami_trade/app.dart';
 import 'package:ami_trade/qa/error_sink.dart';
+import 'package:ami_trade/services/ads/ad_frequency_caps.dart';
 import 'package:ami_trade/services/notifications/onesignal_notification_service.dart';
 import 'package:ami_trade/state/notification_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -81,6 +82,16 @@ Future<void> main() async {
 
   final prefs = await SharedPreferences.getInstance();
   final startOnFloor = prefs.getBool('ami_onboarding_done') ?? false;
+
+  // CR122-MOBILE-B — roll the persisted ad-session window (resets the
+  // per-session interstitial count only after 30+ quiet minutes, so a
+  // force-quit relaunch cannot launder "max 4 per session"). Never blocks
+  // boot: a failure leaves the cap store unreadable, which BLOCKS ads.
+  try {
+    await AdFrequencyCaps(SharedPreferencesAdCapStore()).startSession();
+  } catch (e) {
+    debugPrint('CR122 ad-cap session start failed (ads stay blocked): $e');
+  }
 
   // CR027: OneSignal.initialize() must run before runApp() — the SDK
   // buffers any notification tap that arrives before a click listener is

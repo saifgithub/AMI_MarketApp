@@ -16,9 +16,11 @@ import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/screens/journal/journal_detail_screen.dart';
 import 'package:ami_trade/screens/journal/journal_trash_screen.dart';
+import 'package:ami_trade/services/ads/ads_models.dart';
 import 'package:ami_trade/screens/you/you_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/ads/ad_slot.dart';
 import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -174,7 +176,24 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
       );
     }
     if (state.entries.isEmpty) {
-      return _EmptyState(isSearching: state.searchQuery.isNotEmpty);
+      // CR122 — Decision Journal empty state is one of the six approved ad
+      // placements (ads.md:41). The slot self-gates (plan, caps) and
+      // collapses to nothing for paying plans.
+      return Column(
+        children: [
+          Expanded(
+            child: _EmptyState(isSearching: state.searchQuery.isNotEmpty),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
+                AmiSpacing.m, 0, AmiSpacing.m, AmiSpacing.m),
+            child: AdSlot(
+              placement: AdPlacement.journalEmptyState,
+              topSpacing: false,
+            ),
+          ),
+        ],
+      );
     }
     return RefreshIndicator(
       onRefresh: () => ref

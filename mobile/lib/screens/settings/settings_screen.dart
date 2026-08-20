@@ -16,6 +16,7 @@ import 'package:ami_trade/screens/auth/sign_in_screen.dart';
 import 'package:ami_trade/screens/coach/ai_coach_screen.dart';
 import 'package:ami_trade/screens/feedback/bug_report_sheet.dart';
 import 'package:ami_trade/state/feedback_providers.dart';
+import 'package:ami_trade/services/ads/ads_models.dart';
 import 'package:ami_trade/services/api/backend_modes.dart';
 import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/state/backend_mode_provider.dart';
@@ -29,6 +30,7 @@ import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/screens/you/you_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/ads/ad_slot.dart';
 import 'package:ami_trade/widgets/confirm_restart_onboarding.dart';
 import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
 import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
@@ -332,6 +334,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ]),
                   const SizedBox(height: AmiSpacing.l),
                   _MembershipSection(mandate: m),
+                  // CR122 — Wallet & Plan is an approved, upsell-only ad
+                  // placement (ads.md:44). Self-gating slot.
+                  const AdSlot(placement: AdPlacement.walletAndPlan),
                   const SizedBox(height: AmiSpacing.l),
                   const _LeagueSection(),
                   const SizedBox(height: AmiSpacing.l),

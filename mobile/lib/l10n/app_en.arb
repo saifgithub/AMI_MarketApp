@@ -5494,5 +5494,78 @@
   "notifTypeRestingOrderRejected": "Order rejected",
   "@notifTypeRestingOrderRejected": {
     "description": "CR135 — toggle label for the 'resting_order_rejected' notification type on the push-preferences screen. NEW key. retranslate:[ar,ms]"
+  },
+  "adBadge": "AD",
+  "@adBadge": {
+    "description": "CR122 — the mandatory ad label on every ad surface (ads.md UX rules), rendered in mono uppercase. NEW key. retranslate:[ar,ms]"
+  },
+  "adBadgeSponsored": "SPONSORED",
+  "@adBadgeSponsored": {
+    "description": "CR122 — alternate ad label for sponsored native cards (ads.md UX rules), mono uppercase. NEW key. retranslate:[ar,ms]"
+  },
+  "adDismiss": "Dismiss ad",
+  "@adDismiss": {
+    "description": "CR122 — accessibility label for the one-tap X that dismisses a native ad card. NEW key. retranslate:[ar,ms]"
+  },
+  "adInterstitialSkip": "Skip",
+  "@adInterstitialSkip": {
+    "description": "CR122 — button label on the post-lesson interstitial once the 5-second minimum has elapsed. NEW key. retranslate:[ar,ms]"
+  },
+  "adInterstitialSkipIn": "Skip in {seconds}s",
+  "@adInterstitialSkipIn": {
+    "description": "CR122 — countdown label on the post-lesson interstitial before skipping unlocks; {seconds} counts 5 down to 1. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "houseAdOneOnOneHeadline": "Get unlimited 1-on-1s with Trader for $14.99/mo",
+  "@houseAdOneOnOneHeadline": {
+    "description": "CR122 — house upsell headline when a Floor Pass user has used all free 1-on-1s (copy locked in ads.md house-ad table; keep the price literal). NEW key. retranslate:[ar,ms]"
+  },
+  "houseAdOneOnOneBody": "You've used all 5 free 1-on-1s this month.",
+  "@houseAdOneOnOneBody": {
+    "description": "CR122 — house upsell body for the out-of-1-on-1s slot. NEW key. retranslate:[ar,ms]"
+  },
+  "houseAdRoomHeadline": "Want 9 more Rooms a month? Try Trader.",
+  "@houseAdRoomHeadline": {
+    "description": "CR122 — house upsell headline when a Floor Pass user has used the free Room (copy locked in ads.md house-ad table). NEW key. retranslate:[ar,ms]"
+  },
+  "houseAdRoomBody": "Your free Room is used. Trader runs 10 a month.",
+  "@houseAdRoomBody": {
+    "description": "CR122 — house upsell body for the used-free-Room slot. NEW key. retranslate:[ar,ms]"
+  },
+  "houseAdCreditCapHeadline": "Hit your cap? Upgrade to Floor Manager for 500 credits/mo.",
+  "@houseAdCreditCapHeadline": {
+    "description": "CR122 — house upsell headline when a Trader user is near the monthly credit cap (copy locked in ads.md house-ad table; keep the numbers literal). NEW key. retranslate:[ar,ms]"
+  },
+  "houseAdCreditCapBody": "You're close to this month's credit limit.",
+  "@houseAdCreditCapBody": {
+    "description": "CR122 — house upsell body for the near-credit-cap slot. NEW key. retranslate:[ar,ms]"
+  },
+  "houseAdHalalHeadline": "Curious about Floor Manager's premium AI?",
+  "@houseAdHalalHeadline": {
+    "description": "CR122 — house upsell headline for a halal-mandated Trader user (copy locked in ads.md house-ad table). NEW key. retranslate:[ar,ms]"
+  },
+  "houseAdHalalBody": "See what Floor Manager adds for halal-mandated floors.",
+  "@houseAdHalalBody": {
+    "description": "CR122 — house upsell body for the halal-mandate slot. NEW key. retranslate:[ar,ms]"
+  },
+  "houseAdGenericHeadline": "Do more with Trader — $14.99/mo",
+  "@houseAdGenericHeadline": {
+    "description": "CR122 — generic Trader house upsell headline shown to Floor Pass users when no targeted slot fires (keeps unset-AdMob fill at 100% house). Keep the price literal. NEW key. retranslate:[ar,ms]"
+  },
+  "houseAdGenericBody": "Unlimited 1-on-1s, 10 Rooms a month, and a bigger credit allowance.",
+  "@houseAdGenericBody": {
+    "description": "CR122 — generic Trader house upsell body. NEW key. retranslate:[ar,ms]"
+  },
+  "houseAdCtaTrader": "See Trader plans",
+  "@houseAdCtaTrader": {
+    "description": "CR122 — CTA on Trader-targeted house ads; opens the CR084 paywall. NEW key. retranslate:[ar,ms]"
+  },
+  "houseAdCtaFloorManager": "See Floor Manager plans",
+  "@houseAdCtaFloorManager": {
+    "description": "CR122 — CTA on Floor-Manager-targeted house ads; opens the CR084 paywall. NEW key. retranslate:[ar,ms]"
   }
 }

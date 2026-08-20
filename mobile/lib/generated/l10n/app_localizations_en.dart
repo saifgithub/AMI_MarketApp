@@ -4292,4 +4292,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifTypeRestingOrderRejected => 'Order rejected';
+
+  @override
+  String get adBadge => 'AD';
+
+  @override
+  String get adBadgeSponsored => 'SPONSORED';
+
+  @override
+  String get adDismiss => 'Dismiss ad';
+
+  @override
+  String get adInterstitialSkip => 'Skip';
+
+  @override
+  String adInterstitialSkipIn(int seconds) {
+    return 'Skip in ${seconds}s';
+  }
+
+  @override
+  String get houseAdOneOnOneHeadline =>
+      'Get unlimited 1-on-1s with Trader for \$14.99/mo';
+
+  @override
+  String get houseAdOneOnOneBody =>
+      'You\'ve used all 5 free 1-on-1s this month.';
+
+  @override
+  String get houseAdRoomHeadline => 'Want 9 more Rooms a month? Try Trader.';
+
+  @override
+  String get houseAdRoomBody =>
+      'Your free Room is used. Trader runs 10 a month.';
+
+  @override
+  String get houseAdCreditCapHeadline =>
+      'Hit your cap? Upgrade to Floor Manager for 500 credits/mo.';
+
+  @override
+  String get houseAdCreditCapBody =>
+      'You\'re close to this month\'s credit limit.';
+
+  @override
+  String get houseAdHalalHeadline =>
+      'Curious about Floor Manager\'s premium AI?';
+
+  @override
+  String get houseAdHalalBody =>
+      'See what Floor Manager adds for halal-mandated floors.';
+
+  @override
+  String get houseAdGenericHeadline => 'Do more with Trader — \$14.99/mo';
+
+  @override
+  String get houseAdGenericBody =>
+      'Unlimited 1-on-1s, 10 Rooms a month, and a bigger credit allowance.';
+
+  @override
+  String get houseAdCtaTrader => 'See Trader plans';
+
+  @override
+  String get houseAdCtaFloorManager => 'See Floor Manager plans';
 }
