@@ -91,6 +91,7 @@ class JournalEntry {
     this.mandateVersion = 1,
     this.payload = const {},
     this.deletedAt,
+    this.actioned,
   });
 
   final String id;
@@ -118,6 +119,15 @@ class JournalEntry {
   // the regular list since live entries always have deleted_at IS NULL.
   final DateTime? deletedAt;
 
+  /// CR184 — whether this ROOM_RUN's verdict was executed in the training
+  /// ledger (server-side `sim_trades.verdict_ref` join). Three values, three
+  /// facts: `true` = a trade exists (any status, closed counts), `false` = a
+  /// verdict the user never executed, `null` = not applicable (not a room
+  /// run, no verdict, or an old backend that predates the field). Null must
+  /// render as N/A — folding it into `false` would put entries on the
+  /// unactioned card that were never actionable.
+  final bool? actioned;
+
   factory JournalEntry.fromJson(Map<String, dynamic> j) {
     return JournalEntry(
       id: j['id'] as String,
@@ -138,6 +148,7 @@ class JournalEntry {
       deletedAt: j['deleted_at'] != null
           ? DateTime.parse(j['deleted_at'] as String)
           : null,
+      actioned: j['actioned'] as bool?,
     );
   }
 }
