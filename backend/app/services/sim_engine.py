@@ -46,7 +46,7 @@ from threading import RLock
 from typing import Literal
 from uuid import UUID, uuid4
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 
 from app.agents.safety_floor import check_mandate_compliance
 from app.core.logging import logger
@@ -911,14 +911,43 @@ class SimEngine:
         _p, _marks, total_value, drawdown_pct, _source = self.portfolio_marks_snapshot(user_id)
         return total_value, drawdown_pct
 
-    def list_trades(self, user_id: UUID, *, status: TradeStatus | None = None) -> list[SimTrade]:
+    def list_trades(
+        self,
+        user_id: UUID,
+        *,
+        status: TradeStatus | None = None,
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> list[SimTrade]:
         with get_session() as s:
             stmt = select(SimTradeRow).where(training_trade_scope(user_id))
             if status is not None:
                 stmt = stmt.where(SimTradeRow.status == status)
-            stmt = stmt.order_by(SimTradeRow.opened_at.desc())
+            # CR120 Phase 3: `id` tiebreaker because `opened_at` defaults to
+            # _utcnow and CAN tie — pagination needs a total order or pages
+            # overlap. UUID4 order is arbitrary but stable, which suffices.
+            stmt = stmt.order_by(SimTradeRow.opened_at.desc(), SimTradeRow.id.desc())
+            if offset:
+                stmt = stmt.offset(offset)
+            if limit is not None:
+                stmt = stmt.limit(limit)
             rows = s.execute(stmt).scalars().all()
             return [SimTrade.from_row(r) for r in rows]
+
+    def count_trades(self, user_id: UUID, *, status: TradeStatus | None = None) -> int:
+        """Ledger size under the exact scope+filter `list_trades` reads —
+        CR120 Phase 3's `total`. Reuses `training_trade_scope` so the count
+        and the list structurally cannot disagree on lane (DEF269: a
+        user_id-only count would let game fills inflate `total`)."""
+        with get_session() as s:
+            stmt = (
+                select(func.count())
+                .select_from(SimTradeRow)
+                .where(training_trade_scope(user_id))
+            )
+            if status is not None:
+                stmt = stmt.where(SimTradeRow.status == status)
+            return int(s.execute(stmt).scalar_one())
 
     def _risk_limit_context(
         self, user_id: UUID, *, portfolio_value: float, quotes: dict[str, float]

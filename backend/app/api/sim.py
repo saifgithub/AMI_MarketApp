@@ -5,7 +5,7 @@ GET  /v1/sim/portfolio/{user_id}/history     Daily NAV series + window TWR (CR10
 POST /v1/sim/portfolio/{user_id}/reset       Wipe and restart with $10k
 POST /v1/sim/preview                         Dry-run a trade (compliance + cash check, no persist) — BL9
 POST /v1/sim/submit                          Submit a trade (PM safety floor runs)
-GET  /v1/sim/trades/{user_id}                List trades (filterable by status)
+GET  /v1/sim/trades/{user_id}                List trades (status filter; opt-in limit/offset + total, CR120)
 POST /v1/sim/trades/{user_id}/evaluate       Sweep open trades for stop/target hits
 POST /v1/sim/trades/{user_id}/close          Manually close an open trade
 GET  /v1/sim/lots/{user_id}/{ticker}         Per-lot cost-basis + FIFO realised/unrealised P&L (CR029)
@@ -283,7 +283,14 @@ class PortfolioHistoryResponse(BaseModel):
 
 
 class TradeListResponse(BaseModel):
+    # CR120 Phase 3: `total` is the ledger count under the same scope +
+    # status filter, PRE-slice — always present so a paginating client can
+    # size its pager without a second request. `limit`/`offset` echo the
+    # request (limit null = unpaginated full ledger, today's default).
     trades: list[dict]
+    total: int
+    limit: int | None = None
+    offset: int = 0
 
 
 class ComplianceBlock(BaseModel):
@@ -751,12 +758,39 @@ def _compliance_json(compliance) -> dict:
 async def list_trades(
     user_id: UUID,
     status_filter: str | None = None,
+    # CR120 Phase 3 — opt-in, bounded like get_portfolio_history's: a negative
+    # limit is a silent no-op in SQLite (the test fixture) and an error in
+    # Postgres (Alpha), so an unvalidated one is a defect the unit suite
+    # structurally cannot see. NO default cap: the shipped client computes its
+    # across-all summary, tab count, and SHOW ALL count from the full list
+    # (portfolio_screen.dart), so a server-side default cap silently corrupts
+    # three shipped numbers (CR040).
+    limit: int | None = Query(None, ge=1, le=500),
+    offset: int = Query(0, ge=0),
     current_user: User = Depends(get_current_user),
     sim: SimEngine = Depends(get_sim_engine),
 ) -> TradeListResponse:
+    """Training-lane trade ledger, newest first.
+
+    Pages are LEDGER order (`opened_at DESC, id DESC`), not the History tab's
+    display order (closedAt ?? openedAt — that gap belongs to a future
+    client-adoption CR). With `limit` omitted the `trades` array is the full
+    ledger, unchanged from pre-CR120 behavior.
+    """
     _own(current_user, user_id)
-    trades = sim.list_trades(user_id, status=status_filter)  # type: ignore[arg-type]
-    return TradeListResponse(trades=[t.to_json() for t in trades])
+    trades = sim.list_trades(
+        user_id, status=status_filter, limit=limit, offset=offset,  # type: ignore[arg-type]
+    )
+    # Unpaginated reads (the app's every-refresh path) already hold the full
+    # ledger — len() keeps that hot path at one query.
+    total = (
+        len(trades)
+        if limit is None and offset == 0
+        else sim.count_trades(user_id, status=status_filter)  # type: ignore[arg-type]
+    )
+    return TradeListResponse(
+        trades=[t.to_json() for t in trades], total=total, limit=limit, offset=offset,
+    )
 
 
 @router.post("/trades/{user_id}/evaluate")
