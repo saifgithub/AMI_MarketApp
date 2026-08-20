@@ -1160,6 +1160,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get journalFilterChallenges => 'CHALLENGES';
 
   @override
+  String get journalFilterBlocked => 'BLOCKED';
+
+  @override
   String journalRetentionWarning(int days) {
     return 'Floor Pass: last $days days only. Upgrade to see everything — nothing is deleted.';
   }
@@ -1206,6 +1209,30 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get journalEntryTypeBlocked => 'BLOCKED';
+
+  @override
+  String get journalBlockedHeading => 'SAFETY FLOOR — TRADE BLOCKED';
+
+  @override
+  String get journalBlockedRuleLabel => 'RULE';
+
+  @override
+  String get journalBlockedSourceLabel => 'REFUSED AT';
+
+  @override
+  String get journalBlockedSourceTicket => 'Trade ticket';
+
+  @override
+  String get journalBlockedSourceResting => 'Resting order — refused at fill';
+
+  @override
+  String get journalBlockedOrderTypeLabel => 'ORDER TYPE';
+
+  @override
+  String get journalBlockedViolationsLabel => 'WHY AMI BLOCKED IT';
+
+  @override
+  String get journalBlockedAdvisoriesLabel => 'NOTICES';
 
   @override
   String get journalDetailHeading => 'BUTIRAN ENTRI';

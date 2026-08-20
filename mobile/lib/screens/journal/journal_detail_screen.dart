@@ -13,6 +13,7 @@ import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/room_view_mode_provider.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/journal/compliance_block_card.dart';
 import 'package:ami_trade/widgets/journal/finding_sections.dart';
 import 'package:ami_trade/widgets/room/room_board.dart';
 import 'package:ami_trade/widgets/room/room_transcript_rows.dart';
@@ -165,6 +166,12 @@ class _JournalDetailScreenState extends ConsumerState<JournalDetailScreen> {
                       outcome: _currentOutcome,
                       onOutcomeChange: (v) => setState(() => _currentOutcome = v),
                       onSave: _save,
+                      // CR177 §4 — a block has no win/loss and must never be
+                      // rendered as either: the backend writes outcome=None on
+                      // purpose, so the editor must not offer to stamp one.
+                      // The note field stays.
+                      showOutcome:
+                          entry.entryType != JournalEntryType.complianceBlock,
                     ),
                     const SizedBox(height: AmiSpacing.xxl),
                   ],
@@ -349,6 +356,13 @@ class _PayloadBlock extends StatelessWidget {
       // raw but visible and honestly labelled, never a disclosure-less Finding
       // and never a blank screen.
       return FindingSections(payload: payload);
+    } else if (entryType == JournalEntryType.complianceBlock &&
+        ComplianceBlockCard.isRenderable(payload)) {
+      // CR177 UI — the safety floor's refusal, rendered typed. A payload
+      // without its load-bearing `blocked_by` deliberately falls through to
+      // the generic dump below (CR040) — raw but visible, never a confident
+      // card missing the rule that refused.
+      return ComplianceBlockCard(payload: payload);
     } else {
       payload.forEach((k, v) {
         children.add(_Block(label: k.toUpperCase(), body: '$v'));
@@ -572,12 +586,18 @@ class _NoteEditor extends StatelessWidget {
     required this.outcome,
     required this.onOutcomeChange,
     required this.onSave,
+    required this.showOutcome,
   });
 
   final TextEditingController controller;
   final String? outcome;
   final ValueChanged<String?> onOutcomeChange;
   final VoidCallback onSave;
+
+  /// False for compliance_block entries only (CR177 §4): a block is a refused
+  /// decision, not a result, and offering WIN/LOSS/PENDING here would let the
+  /// user stamp a result onto the one entry type the backend refuses to.
+  final bool showOutcome;
 
   @override
   Widget build(BuildContext context) {
@@ -615,32 +635,35 @@ class _NoteEditor extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: AmiSpacing.m),
-          Row(
-            children: [
-              Text(l.journalNoteOutcome,
-                  style: AmiTypography.labelMono.copyWith(fontSize: 11)),
-              const SizedBox(width: AmiSpacing.m),
-              for (final v in outcomeOptions)
-                Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: ChoiceChip(
-                    label: Text(v.$2),
-                    labelStyle: AmiTypography.labelMono.copyWith(
-                      fontSize: 10,
-                      color: outcome == v.$1 ? v.$3 : AmiColors.textMed,
-                    ),
-                    selected: outcome == v.$1,
-                    onSelected: (_) => onOutcomeChange(outcome == v.$1 ? null : v.$1),
-                    selectedColor: v.$3.withValues(alpha: 0.2),
-                    backgroundColor: AmiColors.slate900,
-                    side: BorderSide(
-                      color: outcome == v.$1 ? v.$3 : AmiColors.slate700,
+          if (showOutcome) ...[
+            const SizedBox(height: AmiSpacing.m),
+            Row(
+              children: [
+                Text(l.journalNoteOutcome,
+                    style: AmiTypography.labelMono.copyWith(fontSize: 11)),
+                const SizedBox(width: AmiSpacing.m),
+                for (final v in outcomeOptions)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      label: Text(v.$2),
+                      labelStyle: AmiTypography.labelMono.copyWith(
+                        fontSize: 10,
+                        color: outcome == v.$1 ? v.$3 : AmiColors.textMed,
+                      ),
+                      selected: outcome == v.$1,
+                      onSelected: (_) =>
+                          onOutcomeChange(outcome == v.$1 ? null : v.$1),
+                      selectedColor: v.$3.withValues(alpha: 0.2),
+                      backgroundColor: AmiColors.slate900,
+                      side: BorderSide(
+                        color: outcome == v.$1 ? v.$3 : AmiColors.slate700,
+                      ),
                     ),
                   ),
-                ),
-            ],
-          ),
+              ],
+            ),
+          ],
           const SizedBox(height: AmiSpacing.m),
           Align(
             alignment: Alignment.centerRight,

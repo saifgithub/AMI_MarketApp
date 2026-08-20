@@ -1423,6 +1423,10 @@
   "@journalFilterChallenges": {
     "description": "DEF210 — Journal filter chip for daily_challenge entries. NEW key, needs ar/ms translation. retranslate:[ar,ms]"
   },
+  "journalFilterBlocked": "BLOCKED",
+  "@journalFilterBlocked": {
+    "description": "CR177 — Journal filter chip for compliance_block entries (trades the safety floor refused). Pair of the journalEntryTypeBlocked badge key. retranslate:[ar,ms]"
+  },
   "journalRetentionWarning": "Floor Pass: last {days} days only. Upgrade to see everything — nothing is deleted.",
   "@journalRetentionWarning": {
     "description": "DEF155 — amber notice on Journal when the user is on Floor Pass. {days} is the retention window. Was 'Upgrade to keep everything', which asserted a data loss that does not happen: retention is a read-time filter (journal_store.py), not a delete, and entries reappear on upgrade. Fixed to the honest verb (see, not keep) plus an explicit nothing-is-deleted clause.",
@@ -1457,6 +1461,38 @@
   "journalEntryTypeBlocked": "BLOCKED",
   "@journalEntryTypeBlocked": {
     "description": "CR177 — Journal entry-card badge for a compliance_block entry: the safety floor refused a trade against the user's own mandate. A record of a refused decision, never a trade result. NEW key, needs ar/ms translation. retranslate:[ar,ms]"
+  },
+  "journalBlockedHeading": "SAFETY FLOOR — TRADE BLOCKED",
+  "@journalBlockedHeading": {
+    "description": "CR177 — header of the Journal detail card for a compliance_block entry. Same wording as tradeTicketSafetyFloorBlocked today, but a separate key so journal copy can diverge from the ticket's. retranslate:[ar,ms]"
+  },
+  "journalBlockedRuleLabel": "RULE",
+  "@journalBlockedRuleLabel": {
+    "description": "CR177 — KV label for blocked_by on the compliance_block detail card: which mandate rule refused the trade. The value is the raw rule slug, uppercased. retranslate:[ar,ms]"
+  },
+  "journalBlockedSourceLabel": "REFUSED AT",
+  "@journalBlockedSourceLabel": {
+    "description": "CR177 — KV label for payload.source on the compliance_block detail card: which path (trade ticket vs resting-order fill sweep) the refusal happened on. retranslate:[ar,ms]"
+  },
+  "journalBlockedSourceTicket": "Trade ticket",
+  "@journalBlockedSourceTicket": {
+    "description": "CR177 — REFUSED AT value when source='ticket': the block happened on the trade ticket the user was looking at. retranslate:[ar,ms]"
+  },
+  "journalBlockedSourceResting": "Resting order — refused at fill",
+  "@journalBlockedSourceResting": {
+    "description": "CR177 — REFUSED AT value when source='resting_order': a resting order was refused by the fill sweep with no user present — the one refusal the user never saw happen. retranslate:[ar,ms]"
+  },
+  "journalBlockedOrderTypeLabel": "ORDER TYPE",
+  "@journalBlockedOrderTypeLabel": {
+    "description": "CR177 — KV label for request.order_type (market/limit/stop) on the compliance_block detail card. retranslate:[ar,ms]"
+  },
+  "journalBlockedViolationsLabel": "WHY AMI BLOCKED IT",
+  "@journalBlockedViolationsLabel": {
+    "description": "CR177 — section label above the backend-composed violation sentences on the compliance_block detail card. AMI by name, never 'the AI'. retranslate:[ar,ms]"
+  },
+  "journalBlockedAdvisoriesLabel": "NOTICES",
+  "@journalBlockedAdvisoriesLabel": {
+    "description": "CR177 — section label above non-blocking advisory strings on the compliance_block detail card. Plural of tradeTicketAdvisoryLabel 'NOTICE'. retranslate:[ar,ms]"
   },
   "journalDetailHeading": "ENTRY DETAIL",
   "journalDetailLoading": "Loading…",

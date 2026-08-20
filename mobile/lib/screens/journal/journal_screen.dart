@@ -50,6 +50,9 @@ class JournalScreen extends ConsumerStatefulWidget {
       (type: JournalEntryType.lessonComplete, label: l.journalFilterLessons),
       (type: JournalEntryType.agentUnlock, label: l.journalFilterUnlocks),
       (type: JournalEntryType.dailyChallenge, label: l.journalFilterChallenges),
+      // CR177 — appended last: the ROOM/TRADE front placement is pinned by
+      // bug 1e645bca, so new chips join the tail.
+      (type: JournalEntryType.complianceBlock, label: l.journalFilterBlocked),
     ];
   }
 

@@ -1984,6 +1984,12 @@ abstract class AppLocalizations {
   /// **'CHALLENGES'**
   String get journalFilterChallenges;
 
+  /// CR177 — Journal filter chip for compliance_block entries (trades the safety floor refused). Pair of the journalEntryTypeBlocked badge key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'BLOCKED'**
+  String get journalFilterBlocked;
+
   /// DEF155 — amber notice on Journal when the user is on Floor Pass. {days} is the retention window. Was 'Upgrade to keep everything', which asserted a data loss that does not happen: retention is a read-time filter (journal_store.py), not a delete, and entries reappear on upgrade. Fixed to the honest verb (see, not keep) plus an explicit nothing-is-deleted clause.
   ///
   /// In en, this message translates to:
@@ -2073,6 +2079,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'BLOCKED'**
   String get journalEntryTypeBlocked;
+
+  /// CR177 — header of the Journal detail card for a compliance_block entry. Same wording as tradeTicketSafetyFloorBlocked today, but a separate key so journal copy can diverge from the ticket's. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SAFETY FLOOR — TRADE BLOCKED'**
+  String get journalBlockedHeading;
+
+  /// CR177 — KV label for blocked_by on the compliance_block detail card: which mandate rule refused the trade. The value is the raw rule slug, uppercased. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RULE'**
+  String get journalBlockedRuleLabel;
+
+  /// CR177 — KV label for payload.source on the compliance_block detail card: which path (trade ticket vs resting-order fill sweep) the refusal happened on. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'REFUSED AT'**
+  String get journalBlockedSourceLabel;
+
+  /// CR177 — REFUSED AT value when source='ticket': the block happened on the trade ticket the user was looking at. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Trade ticket'**
+  String get journalBlockedSourceTicket;
+
+  /// CR177 — REFUSED AT value when source='resting_order': a resting order was refused by the fill sweep with no user present — the one refusal the user never saw happen. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Resting order — refused at fill'**
+  String get journalBlockedSourceResting;
+
+  /// CR177 — KV label for request.order_type (market/limit/stop) on the compliance_block detail card. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'ORDER TYPE'**
+  String get journalBlockedOrderTypeLabel;
+
+  /// CR177 — section label above the backend-composed violation sentences on the compliance_block detail card. AMI by name, never 'the AI'. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'WHY AMI BLOCKED IT'**
+  String get journalBlockedViolationsLabel;
+
+  /// CR177 — section label above non-blocking advisory strings on the compliance_block detail card. Plural of tradeTicketAdvisoryLabel 'NOTICE'. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NOTICES'**
+  String get journalBlockedAdvisoriesLabel;
 
   /// No description provided for @journalDetailHeading.
   ///
