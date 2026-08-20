@@ -227,6 +227,14 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=164)
     ap.add_argument("--stamp", default=date.today().isoformat(),
                     help="report date (ISO); pin it to reproduce a prior report")
+    ap.add_argument(
+        "--allow-partial", action="store_true",
+        help=(
+            "Score a batch whose sweep never wrote its completion sentinel "
+            "(DEF345). The result is a PARTIAL batch and is labelled as one "
+            "in the report — use only when you know why the sweep stopped."
+        ),
+    )
     args = ap.parse_args()
 
     try:
@@ -235,6 +243,29 @@ def main() -> int:
         raise SystemExit(f"FATAL: --stamp must be an ISO date, got {args.stamp!r}")
     if args.bootstrap < 1:
         raise SystemExit(f"FATAL: --bootstrap must be >= 1, got {args.bootstrap}")
+
+    # DEF345 — the sweep runs as `docker compose exec`, so a container recreate
+    # kills it mid-batch with no traceback and no exit line, leaving a partial
+    # batch that is shaped exactly like a finished one. `r70-outcome-2` lost
+    # 2.5 h that way after 17 of 450 runs, and the only reason anyone noticed
+    # was arithmetic on wall-clock. Nothing IN the records is wrong, so no
+    # per-record filter can catch it — the missing sentinel is the only
+    # evidence, and a process that died cannot have written one.
+    sentinel_path = args.out_dir / f"complete_{args.batch_id}.json"
+    sentinel = None
+    if sentinel_path.exists():
+        sentinel = json.loads(sentinel_path.read_text())
+    elif not args.allow_partial:
+        print(
+            f"ERROR: no completion sentinel at {sentinel_path} — the sweep for "
+            f"'{args.batch_id}' never reached its own end, so this batch is "
+            f"TRUNCATED, not finished, and scoring it would report a partial "
+            f"sample as a whole one. Resume the sweep (completed pairs are "
+            f"skipped), or pass --allow-partial if you know why it stopped. "
+            f"(exit 5)",
+            flush=True,
+        )
+        return 5
 
     init_schema()
     rng = random.Random(args.seed)
@@ -535,6 +566,16 @@ def main() -> int:
         "",
         "## Run accounting",
         "",
+        (
+            f"- Sweep completion: **COMPLETE** — planned "
+            f"{sentinel['planned_pairs']}, completed {sentinel['completed']}, "
+            f"failed {sentinel['failed']}, finished {sentinel['finished_at']}."
+            if sentinel else
+            "- Sweep completion: **PARTIAL — no completion sentinel (DEF345).** "
+            "The sweep never reached its own end, so the population below is a "
+            "truncated sample of the intended batch, not the batch. Read every "
+            "rate here as conditional on however far it got."
+        ),
         f"- Index rows: **{len(index_rows)}**",
         f"- Excluded — missing room_runs row: {excluded['missing_room_run']}, "
         f"not completed: {excluded['non_completed']}, null verdict: "

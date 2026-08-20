@@ -1390,3 +1390,63 @@ being a seed **without clearing anything**. The corpus half fails on any English
 target ARB unmarked — count zero, not a ratchet, because `--seed-missing` is the one supported way
 to satisfy DEF137's parity guard. Mutation-verified: reverting the skip rule, removing the hash
 comparison from `is_seed`, and hand-copying one English value each turn a different test red.
+
+---
+
+## P26 — a run that failed produces a record set shaped exactly like one that succeeded
+
+**Symptom.** A batch job — a sweep, an ingest, a benchmark — reports success and writes a plausible
+dataset. Every record in it is individually valid: right columns, right types, nothing malformed.
+The batch is wrong only in what is *absent*, or in the fact that its content is the failure mode
+rather than the measurement. It gets scored, and the number is believed, because there is nothing to
+look at that looks wrong.
+
+**Mechanism.** The failure removes or substitutes output **without malforming any of it**, so every
+per-record filter downstream is blind by construction. Two shapes, same defect:
+
+- **The producer died and the survivors look complete.** DEF345: the CR164 sweep runs as
+  `docker compose exec`, another lane recreated `ami_api_alpha`, and the process was killed with no
+  traceback, no non-zero exit and no final line — 17 valid records of a planned 450, sitting on disk
+  for 2.5 h. A watchdog grepping the log for error signatures cannot help: silence is what a dead
+  sweep and a healthy between-runs pause both look like.
+- **A dependency died and the fail-safe is a valid record.** DEF336: the on-prem vLLM went down and
+  the DEF059 PM outage fail-safe — correct behaviour, a safe PASS — produced 450 completed runs
+  carrying PASS verdicts. `backtest_report.py` would have scored them as a 0%-approval Room and the
+  result would have read as conservatism. DEF059 itself is the same defect one layer in: an outage
+  minting a confident APPROVE for one user.
+
+**Why the obvious guards fail.** Counting completed records cannot distinguish 17-of-450 from
+17-of-17. Non-zero exit codes assume the process lived long enough to return one. `status ==
+completed` is *true* of an outage fail-safe. And a log watcher's silence is ambiguous in exactly the
+direction that matters. In every case the check has to come from **outside the record set**, because
+inside it there is no evidence.
+
+**What actually works — make absence the signal, and make it unforgeable.** Both fixes have the same
+shape: something the failure mode is structurally incapable of producing.
+
+- A **completion sentinel** written on the line *after* the loop ends. A process that died before
+  reaching it cannot have written it, and it records `planned_pairs`, not just `completed`.
+- A **named sentinel plus a recogniser** for the degraded-but-valid record (`PM_LLM_UNAVAILABLE_REASON`
+  / `is_llm_outage_verdict`), so consumers match a constant rather than a prose fragment.
+  `overridden_from_llm` alone cannot serve — the safety floor sets it too, on verdicts that *are*
+  decisions.
+- Refuse at **the layer that turns records into claims**, not only at the producer. The producer is
+  the thing that died; it cannot be relied on to report its own death.
+
+**Instances.** DEF059 (outage → confident APPROVE, 2026-07). DEF336 (`dd72fe90`, 450 outage PASSes
+scored as a batch). DEF345 (`r70-outcome-2` truncated at 17 of 450). Three occurrences by three
+different mechanisms at the same seam — **flagged as a CR185 Dilemma candidate**: the recurring
+question is not "guard this job" but "what makes a produced dataset trustworthy at all", and it has
+now been answered three times by point fix.
+
+**Enforcing check.**
+
+- `backend/tests/unit/test_def345_sweep_completion_sentinel.py` — 4 tests. Pins that the sentinel
+  carries `planned_pairs`; that `backtest_report.py` exits **5** on a missing sentinel naming
+  `--allow-partial`; that the refusal fires **before `init_schema()`**, so it cannot be starved by a
+  slow or unavailable DB; and that `--allow-partial` gets past the refusal to a different, honest
+  error. A `--allow-partial` report is stamped **PARTIAL** in its own Run accounting section.
+- `is_llm_outage_verdict` is pinned by test to the `Verdict` the runner actually builds, so a reword
+  of one without the other cannot silently un-detect it, and asserted **not** to fire on a
+  safety-floor override. `backtest_sweep.py` aborts after `--max-consecutive-outages` (exit 3);
+  `backtest_report.py` refuses any batch >5% outage fail-safes (exit 4).

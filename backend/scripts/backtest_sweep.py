@@ -182,6 +182,35 @@ def load_pairs(path: str) -> tuple[list[tuple[str, date]], dict[date, int]]:
     return pairs, quotas
 
 
+def write_completion_sentinel(
+    out_dir: Path, batch_id: str, *, planned: int, completed: int,
+    failed: int, outages: int,
+) -> Path:
+    """Record that this sweep reached its own end (DEF345).
+
+    The sweep runs as `docker compose exec`, so any recreate of the container
+    kills it mid-batch — no traceback, no exit line, and a partial batch on
+    disk that is shaped exactly like a finished one. Nothing downstream could
+    tell 17 runs of a planned 450 from a completed 17-pair batch, because a
+    truncated batch has no wrong-looking record in it.
+
+    This file is written only on the line after the loop ends. A killed
+    process cannot write it, which is the whole point: absence is the signal,
+    and it cannot be faked by a process that died before getting here.
+    """
+    path = out_dir / f"complete_{batch_id}.json"
+    path.write_text(json.dumps({
+        "batch_id": batch_id,
+        "planned_pairs": planned,
+        "completed": completed,
+        "failed": failed,
+        "outage_failsafes": outages,
+        "finished_at": _now_iso(),
+    }, indent=2) + "\n")
+    print(f"completion sentinel → {path}")
+    return path
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="CR164 Room backtest sweep driver.")
     parser.add_argument("--batch-id", required=True)
@@ -433,6 +462,12 @@ def main() -> int:
 
     print(f"\ndone: {done} completed, {len(failures)} failed "
           f"→ {runs_paths[args.batch_id]}")
+    write_completion_sentinel(
+        args.out_dir, args.batch_id,
+        planned=len(pairs) + len(repeats), completed=done,
+        failed=len(failures),
+        outages=outage_total,
+    )
     if outage_total:
         print(f"WARNING: {outage_total} of {done} completed runs are LLM-outage "
               f"fail-safes, NOT decisions — this batch is not scoreable as-is.")
