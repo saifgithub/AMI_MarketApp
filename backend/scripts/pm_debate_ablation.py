@@ -96,7 +96,7 @@ EXTREMES = ("aggressive_debator", "conservative_debator")
 # silently desynchronise a replay from the recording it is being compared against.
 PM_MAX_TOKENS = 1700
 
-VARIANTS = ("v1a", "v1b", "v1c", "v2", "v3", "v4", "v5", "v6", "v7")
+VARIANTS = ("v1a", "v1b", "v1c", "v2", "v3", "v4", "v5", "v6", "v7", "v8")
 _VARIANT_STRIP: dict[str, tuple[str, ...]] = {
     "v1a": (),
     "v1b": (),
@@ -146,7 +146,20 @@ _VARIANT_STRIP: dict[str, tuple[str, ...]] = {
     # judgement, the ladder would be trading arithmetic safety for a narrower
     # decision — and that is a regression, not an improvement.
     "v7": (),
+    # v8 is the DESIGNED ALTERNATIVE, not another subtraction. Strip all three role
+    # players and put back ONE structured Risk Officer turn: the deterministic ladder
+    # plus, per rung, an evidence-based case for and against, produced by a single
+    # extra LLM call constrained to a JSON schema it cannot put a computed number in.
+    #
+    # It is the arm that tests the actual proposal. v2 (strip, add nothing) fell to
+    # 7.4% and v6 (strip, add the bare ladder) reached only 11.8% against a 16.3%
+    # baseline — the gap between them being exactly the ticker-specific REASONS the
+    # ladder has no way to supply. If those reasons are what the CIO was using, this
+    # arm should return to baseline or better on one serial step instead of three.
+    "v8": DEBATORS,
 }
+# Arms whose stripped prompt gets a generated structured risk turn (2 LLM calls each).
+_VARIANT_RISK_OFFICER: frozenset[str] = frozenset({"v8"})
 # Arms that additionally receive the computed ladder (after any strip).
 _VARIANT_LADDER: frozenset[str] = frozenset({"v6", "v7"})
 
@@ -333,6 +346,51 @@ def inject_ladder(convene: Convene, prompt: str) -> str:
     return prompt.replace(anchor, f"{block}\n\n{anchor}", 1)
 
 
+_CONVENE_ANCHOR = "─── CONVENE THE ROOM"
+_TURN_ANCHOR = "Your turn. Speak as"
+
+
+def ladder_rows_for(convene: Convene):
+    """The ladder rows for a recorded convene, from figures the run actually used."""
+    from app.trading_math.option_ladder import build_option_ladder
+
+    m = _REF_POS_RE.search(convene.system_prompt)
+    cap_m = _CAP_RE.search(convene.system_prompt)
+    if not m or not cap_m:
+        raise StripError(f"{convene.run_id}: cannot rebuild the ladder inputs")
+    size, entry, stop = (float(g) for g in m.groups())
+    used_m = _USED_RE.search(convene.system_prompt)
+    return build_option_ladder(
+        reference_size_pct=size, entry=entry, stop=stop,
+        cap_pts=float(cap_m.group(1)),
+        current_drawdown_pct=float(used_m.group(1)) if used_m else None,
+    ), float(cap_m.group(1))
+
+
+def risk_officer_prompt(convene: Convene, stripped: str) -> tuple[str, list]:
+    """Build the Risk Officer's own prompt from the SAME evidence the debate saw.
+
+    Takes the CONVENE block out of the (already debator-stripped) CIO prompt — fact
+    sheet, mandate snapshot, risk state, transcript through the Execution Desk — and
+    fronts it with the officer's persona instead of the CIO's, dropping the CIO's
+    verdict contract entirely. Same evidence, different agent: that is what makes the
+    comparison against v1a a comparison of DESIGNS rather than of context.
+    """
+    from app.services.risk_officer import RISK_OFFICER_PERSONA, build_risk_officer_instruction
+
+    i, j = stripped.find(_CONVENE_ANCHOR), stripped.find(_TURN_ANCHOR)
+    if i < 0 or j < 0 or j <= i:
+        raise StripError(f"{convene.run_id}: cannot locate the shared-context block")
+    rows, _cap = ladder_rows_for(convene)
+    from app.services.room_prompts import _render_option_ladder
+    context = stripped[i:j]
+    return (
+        RISK_OFFICER_PERSONA + "\n\n" + context + "\n\n"
+        + _render_option_ladder(rows, _cap)
+        + build_risk_officer_instruction(rows)
+    ), rows
+
+
 def build_variant(convene: Convene, variant: str) -> str:
     prompt = strip_debators(convene, _VARIANT_STRIP[variant])
     if variant in _VARIANT_LADDER:
@@ -445,10 +503,60 @@ class ReplayResult:
     error: str | None = None
 
 
+async def _one_call(provider, system_prompt: str, user: str, max_tokens: int,
+                    sem: asyncio.Semaphore) -> tuple[str, dict]:
+    """One OpenAI-compatible completion, collected. Errors surface as ('', meta)."""
+    from app.services.llm_gateway import ChatMessage
+
+    meta: dict[str, Any] = {}
+    chunks: list[str] = []
+    async with sem:
+        try:
+            async for chunk in provider.stream_chat(
+                system_prompt=system_prompt,
+                messages=[ChatMessage(role="user", content=user)],
+                max_tokens=max_tokens,
+                meta=meta,
+            ):
+                chunks.append(chunk)
+        except Exception as exc:  # noqa: BLE001 - recorded by the caller
+            meta["error"] = f"{type(exc).__name__}: {exc}"
+    return "".join(chunks), meta
+
+
+async def generate_risk_turn(provider, convene: Convene, stripped: str,
+                             sem: asyncio.Semaphore) -> tuple[str, str | None]:
+    """Stage 1 of v8: the structured Risk Officer turn, rendered for the CIO.
+
+    Returns (block, error). A failed or unparseable reply yields an EMPTY block rather
+    than a fallback, so the arm degrades to v6 (ladder only) instead of quietly
+    measuring something in between — a silent substitute is how an ablation ends up
+    reporting a design it never actually ran.
+    """
+    from app.services.risk_officer import render_risk_assessment
+
+    sys_prompt, rows = risk_officer_prompt(convene, stripped)
+    raw, meta = await _one_call(
+        provider, sys_prompt, f"Assess risk on {convene.ticker}.", 1200, sem
+    )
+    if meta.get("error"):
+        return "", meta["error"]
+    payload = extract_json_object(raw) or extract_json_object(raw, repair_truncated=True)
+    if not payload:
+        return "", "risk_officer_unparseable"
+    return render_risk_assessment(payload, rows), None
+
+
 async def replay_one(provider, convene: Convene, variant: str, sem: asyncio.Semaphore) -> ReplayResult:
     from app.services.llm_gateway import ChatMessage
 
     prompt = build_variant(convene, variant)
+    ro_error: str | None = None
+    if variant in _VARIANT_RISK_OFFICER:
+        block, ro_error = await generate_risk_turn(provider, convene, prompt, sem)
+        if block:
+            anchor = "Transcript so far:"
+            prompt = prompt.replace(anchor, f"{block}\n\n{anchor}", 1)
     sha = hashlib.sha256(prompt.encode()).hexdigest()
     meta: dict[str, Any] = {}
     chunks: list[str] = []
@@ -485,7 +593,7 @@ async def replay_one(provider, convene: Convene, variant: str, sem: asyncio.Sema
         parse_ok=ok,
         finish_reason=meta.get("finish_reason"),
         latency_s=round(elapsed, 2),
-        error=err,
+        error=err or (f"stage1:{ro_error}" if ro_error else None),
     )
 
 
@@ -661,11 +769,12 @@ def build_report(
         "v2": ("all three", "Trader", "no"),
         "v6": ("all three, + LADDER", "Trader", "no (ladder)"),
         "v7": ("nothing, + LADDER", "Neutral", "yes (ladder)"),
+        "v8": ("all three → 1 structured officer", "Risk Officer", "replaced"),
     }
     add("## Approval rate by arm\n")
     add("| arm | removed | last voice before PM | Neutral present | APPROVE | rate |")
     add("|---|---|---|---|---|---|")
-    for vb in ("v7", "v1a", "v1b", "v3", "v5", "v4", "v6", "v2"):
+    for vb in ("v7", "v8", "v1a", "v1b", "v3", "v5", "v4", "v6", "v2"):
         rs = [have(c, vb) for c in convenes]
         rs = [r for r in rs if r and not r.get("error")]
         if not rs:
@@ -708,7 +817,8 @@ def build_report(
         ("v4", "Neutral removed, extremes kept"),
         ("v5", "Conservative + Neutral removed"),
         ("v6", "all three removed, ladder injected"),
-        ("v7", "**ladder added to the full prompt** (ships)"),
+        ("v7", "**ladder added to the full prompt**"),
+        ("v8", "**3 officers → 1 structured Risk Officer**"),
     ):
         if not any(have(c, vb) for c in convenes):
             continue

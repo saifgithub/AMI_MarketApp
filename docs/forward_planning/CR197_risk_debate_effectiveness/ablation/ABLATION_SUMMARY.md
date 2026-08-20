@@ -25,6 +25,7 @@ Does removing the three Risk Debators' turns from the Portfolio Manager's prompt
 | arm | removed | last voice before PM | Neutral present | APPROVE | rate |
 |---|---|---|---|---|---|
 | v7 | nothing, + LADDER | Neutral | yes (ladder) | 28 | 21.1% |
+| v8 | all three → 1 structured officer | Risk Officer | replaced | 22 | 16.7% |
 | v1a | nothing (baseline) | Neutral | yes | 22 | 16.3% |
 | v1b | nothing (resampled) | Neutral | yes | 21 | 15.7% |
 | v3 | both extremes | Neutral | yes | 23 | 17.2% |
@@ -49,7 +50,8 @@ The question is not whether the verdict *changes* but whether it changes *in a d
 | Neutral removed, extremes kept | 13 | 7 | +6 | 0.26318 |
 | Conservative + Neutral removed | 12 | 4 | +8 | 0.07681 |
 | all three removed, ladder injected | 12 | 6 | +6 | 0.23788 |
-| **ladder added to the full prompt** (ships) | 8 | 15 | -7 | 0.21004 |
+| **ladder added to the full prompt** | 8 | 15 | -7 | 0.21004 |
+| **3 officers → 1 structured Risk Officer** | 9 | 9 | +0 | 1.00000 |
 
 Rule: p<0.05 with a net in one direction. Result: **The debate causally moves the PM's verdict.** Removing it makes the PM refuse trades it otherwise approves — 14 approvals lost against 2 gained, against a floor that is balanced by construction.
 
