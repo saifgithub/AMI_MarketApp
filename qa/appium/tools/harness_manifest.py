@@ -57,7 +57,9 @@ MANIFEST_PATH = HARNESS_ROOT / "MANIFEST.sha256"
 
 # Runtime/local artefacts that are not part of the delivered harness. Report
 # output and the real .env deliberately never leave the machine they're on.
-_EXCLUDED_DIRS = {".venv", "__pycache__", ".pytest_cache", "_report", ".ruff_cache"}
+_EXCLUDED_DIRS = {".venv", "__pycache__", ".pytest_cache", "_report", ".ruff_cache", "_runs"}
+# "_runs" is gitignored crawl output: a manifest written on a machine holding local
+# runs baked them in, so it could NEVER match CI's clean-checkout regeneration (DEF349).
 _EXCLUDED_NAMES = {"MANIFEST.sha256", ".env"}
 # Code and config only. Note what this EXCLUDES by omission and on purpose:
 # `crawler/known_findings.json` is the triage ledger, which every crawl mutates.
