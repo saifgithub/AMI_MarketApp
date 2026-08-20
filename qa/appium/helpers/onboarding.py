@@ -32,10 +32,14 @@ from __future__ import annotations
 
 import time
 
-from selenium.common.exceptions import NoSuchElementException, WebDriverException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    StaleElementReferenceException,
+    WebDriverException,
+)
 
 from config.locales import LOCALES
-from helpers.gestures import tap_element
+from helpers.gestures import hide_keyboard_if_shown, tap_element
 from helpers.locators import (
     exists_id,
     exists_text,
@@ -75,14 +79,39 @@ _SHELL_BUDGET_S = 30.0
 #
 # Nothing in the Concierge interview is named this, so the filter costs the
 # walk nothing on the path it is actually for. Keep this list short and keep it
-# about *spending*, not about tidiness — a long denylist would quietly become a
-# way to make the walk pass by hiding what it cannot handle.
-_NEVER_TAP = ("CONVENE",)
+# about *spending or destroying account state*, not about tidiness — a long
+# denylist would quietly become a way to make the walk pass by hiding what it
+# cannot handle.
+#
+# RESTART ONBOARDING is the Settings row (`floorRestartOnboarding`) that erases
+# `ami_onboarding_done` and re-runs the whole interview against a REAL account.
+# The walk did exactly that on iOS smoke attempt 3 (DEF348): it wandered into
+# Settings, the flag was gone afterwards, and a new onboarding_session_id
+# existed on the backend. All three rendered locales are listed because the
+# label is what the walk sees, and matching is against `.upper()` — Arabic has
+# no case, so its entry is verbatim.
+_NEVER_TAP = (
+    "CONVENE",
+    "RESTART ONBOARDING",
+    "إعادة تشغيل الجولة التعريفية",
+    "MULAKAN SEMULA ORIENTASI",
+)
 
 
 def _is_expensive(driver, element) -> bool:
+    """Does this element's label name something the walk must never tap?
+
+    The label attribute is platform-dispatched, and that dispatch is
+    load-bearing: asking XCUITest for `content-desc` is not "empty string", it
+    is HTTP 500 from WebDriverAgent (it validates against a fixed attribute
+    list — see locators.element_description). Read that way, the except-arm
+    swallowed the 500 and answered False for EVERY element, so the guard was
+    structurally dead on iOS while its offline tests — which mocked
+    `content-desc` as answerable — stayed green (DEF348, CR040 class).
+    """
+    attribute = "label" if is_ios(driver) else "content-desc"
     try:
-        label = element.get_attribute("content-desc") or element.text or ""
+        label = element.get_attribute(attribute) or element.text or ""
     except WebDriverException:
         return False  # stale node; it will not be tapped successfully anyway
     return any(marker in label.upper() for marker in _NEVER_TAP)
@@ -142,10 +171,27 @@ def _live_chip(driver, candidates):
       and tapping it with an empty field does nothing.
     - They are the bottom-most such control, because the transcript grows
       downward and the active chip row sits directly above the input.
+
+    Each `rect` read is a driver round trip against a node that may no longer
+    exist — the system keyboard's keys vanish the moment it dismisses, and a
+    StaleElementReferenceException out of the bare `max()` key killed iOS smoke
+    attempt 5 on the keyboard's Return key (DEF348). Stale candidates are
+    skipped; if EVERY candidate went stale the screen is mid-transition, and
+    that raises the same "nothing to tap here" the caller already retries on.
     """
     if not candidates:
         raise NoSuchElementException("no tappable candidate on this screen")
-    return max(candidates, key=lambda element: element.rect["y"])
+    readable = []
+    for element in candidates:
+        try:
+            readable.append((element.rect["y"], element))
+        except WebDriverException:
+            continue
+    if not readable:
+        raise NoSuchElementException(
+            "every tappable candidate went stale mid-read — the screen is transitioning"
+        )
+    return max(readable, key=lambda pair: pair[0])[1]
 
 
 def ensure_onboarded(
@@ -282,6 +328,14 @@ def ensure_onboarded(
             time.sleep(1.5)
             continue
 
+        # The system keyboard's keys are ordinary labelled buttons at the
+        # bottom of the screen — exactly what `_live_chip` reaches for. Once a
+        # tap focused the composer TextField, the Dictate/globe keys became the
+        # bottom-most candidates and got tapped forever: three 480s wedges on
+        # iOS (DEF348). Same dismissal, same reason, as crawler/explorer.py's
+        # `_labels`.
+        hide_keyboard_if_shown(driver)
+
         # labelled_only filters server-side: the send-arrow button has no
         # label, and this avoids one WebDriverAgent attribute read per candidate.
         candidates = interactive_elements(driver, labelled_only=True)
@@ -295,7 +349,17 @@ def ensure_onboarded(
         if not candidates:
             time.sleep(1.0)
             continue
-        tap_element(driver, _live_chip(driver, candidates))
+        try:
+            chip = _live_chip(driver, candidates)
+        except NoSuchElementException:
+            # Every candidate went stale mid-read — screen transition; re-observe.
+            time.sleep(1.0)
+            continue
+        try:
+            tap_element(driver, chip)
+        except StaleElementReferenceException:
+            print("    [onboarding] the chosen chip went stale before the tap — re-observing")
+            continue
         time.sleep(1.5)
 
     raise TimeoutError(f"onboarding did not reach Floor within {timeout_s}s")
