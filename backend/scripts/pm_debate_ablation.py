@@ -96,7 +96,7 @@ EXTREMES = ("aggressive_debator", "conservative_debator")
 # silently desynchronise a replay from the recording it is being compared against.
 PM_MAX_TOKENS = 1700
 
-VARIANTS = ("v1a", "v1b", "v1c", "v2", "v3", "v4", "v5")
+VARIANTS = ("v1a", "v1b", "v1c", "v2", "v3", "v4", "v5", "v6", "v7")
 _VARIANT_STRIP: dict[str, tuple[str, ...]] = {
     "v1a": (),
     "v1b": (),
@@ -126,7 +126,29 @@ _VARIANT_STRIP: dict[str, tuple[str, ...]] = {
     #              being gone;
     #   content  ⇒ approvals BELOW baseline, since most of the debate is missing.
     "v5": ("conservative_debator", "neutral_debator"),
+    # v6 is the substitution test, and the one that decides whether CR197's proposal
+    # is worth building: strip the whole debate AND inject the deterministic option
+    # ladder in its place. v2 (same strip, no ladder) fell to 7.4%.
+    #   ladder substitutes ⇒ approvals return to the ~16% baseline with no debator
+    #                        prose in the prompt at all;
+    #   it does not        ⇒ what the debate supplies is argument, not arithmetic,
+    #                        and the ladder is not a replacement for it.
+    "v6": DEBATORS,
+    # v7 is the SHIPPING arm, and the one that must be measured before the ladder
+    # goes near production: the full untouched prompt PLUS the ladder. v6 showed the
+    # ladder is only a partial substitute (11.8% against a 7.4% strip and a 16.3%
+    # baseline), so the ladder is an ADDITION rather than a swap — which makes "does
+    # adding it to the real prompt help, do nothing, or hurt?" the live question.
+    #
+    # There is a specific way it could hurt. Every v6 approval landed exactly on a
+    # rung (3.0 x13, 1.5 x3) where the baseline interpolated in 11 of 43. If a menu
+    # in front of the full debate anchors the CIO onto rungs and suppresses that
+    # judgement, the ladder would be trading arithmetic safety for a narrower
+    # decision — and that is a regression, not an improvement.
+    "v7": (),
 }
+# Arms that additionally receive the computed ladder (after any strip).
+_VARIANT_LADDER: frozenset[str] = frozenset({"v6", "v7"})
 
 DEFAULT_EPOCHS = ("2026-08-07", "2026-08-13", "2026-08-14", "2026-08-14b")
 
@@ -259,8 +281,63 @@ def strip_debators(convene: Convene, agents: Iterable[str]) -> str:
     return prompt
 
 
+_REF_POS_RE = __import__("re").compile(
+    r"Reference position \(risk-tier ceiling ([\d.]+)% size, entry ([\d.]+), stop ([\d.]+)\)"
+)
+_CAP_RE = __import__("re").compile(r"max_drawdown_pct: ([\d.]+)")
+_USED_RE = __import__("re").compile(r"Drawdown USED: ([\d.]+) pt")
+
+
+def inject_ladder(convene: Convene, prompt: str) -> str:
+    """Insert the production option-ladder block ahead of the transcript.
+
+    The inputs are parsed out of the recorded prompt rather than recomputed from the
+    mandate, because the mandate is not in the corpus and a guessed risk_score would
+    silently change the ladder. All three appear verbatim in every recorded PM prompt
+    (verified 136/136), so this reads what the run actually used.
+
+    It calls the SAME `build_option_ladder` / `_render_option_ladder` that production
+    would, so a positive result here is a result about the shippable artifact and not
+    about a mock of it. No target is available in the recorded prompt, so the R:R
+    column is absent — meaning this arm UNDERSTATES what production would supply.
+    """
+    from app.services.room_prompts import _render_option_ladder
+    from app.trading_math.option_ladder import build_option_ladder
+
+    m = _REF_POS_RE.search(convene.system_prompt)
+    if not m:
+        raise StripError(f"{convene.run_id}: no reference-position line to build a ladder from")
+    size, entry, stop = (float(g) for g in m.groups())
+
+    cap_m = _CAP_RE.search(convene.system_prompt)
+    if not cap_m:
+        raise StripError(f"{convene.run_id}: no max_drawdown_pct to size the cap")
+    cap = float(cap_m.group(1))
+
+    used_m = _USED_RE.search(convene.system_prompt)
+    used = float(used_m.group(1)) if used_m else None
+
+    block = _render_option_ladder(
+        build_option_ladder(
+            reference_size_pct=size, entry=entry, stop=stop,
+            cap_pts=cap, current_drawdown_pct=used,
+        ),
+        cap,
+    )
+    if not block:
+        raise StripError(f"{convene.run_id}: ladder rendered empty")
+
+    anchor = "Transcript so far:"
+    if anchor not in prompt:
+        raise StripError(f"{convene.run_id}: no transcript anchor to insert the ladder before")
+    return prompt.replace(anchor, f"{block}\n\n{anchor}", 1)
+
+
 def build_variant(convene: Convene, variant: str) -> str:
-    return strip_debators(convene, _VARIANT_STRIP[variant])
+    prompt = strip_debators(convene, _VARIANT_STRIP[variant])
+    if variant in _VARIANT_LADDER:
+        prompt = inject_ladder(convene, prompt)
+    return prompt
 
 
 # ── parsing ──────────────────────────────────────────────────────────────
@@ -582,11 +659,13 @@ def build_report(
         "v5": ("Conservative + Neutral", "Aggressive", "no"),
         "v4": ("Neutral only", "Conservative", "no"),
         "v2": ("all three", "Trader", "no"),
+        "v6": ("all three, + LADDER", "Trader", "no (ladder)"),
+        "v7": ("nothing, + LADDER", "Neutral", "yes (ladder)"),
     }
     add("## Approval rate by arm\n")
     add("| arm | removed | last voice before PM | Neutral present | APPROVE | rate |")
     add("|---|---|---|---|---|---|")
-    for vb in ("v1a", "v1b", "v3", "v5", "v4", "v2"):
+    for vb in ("v7", "v1a", "v1b", "v3", "v5", "v4", "v6", "v2"):
         rs = [have(c, vb) for c in convenes]
         rs = [r for r in rs if r and not r.get("error")]
         if not rs:
@@ -628,6 +707,8 @@ def build_report(
         ("v3", "extremes removed, Neutral kept"),
         ("v4", "Neutral removed, extremes kept"),
         ("v5", "Conservative + Neutral removed"),
+        ("v6", "all three removed, ladder injected"),
+        ("v7", "**ladder added to the full prompt** (ships)"),
     ):
         if not any(have(c, vb) for c in convenes):
             continue

@@ -1,5 +1,42 @@
 # What to build instead of the debate
 
+> **BUILT AND MEASURED, 2026-08-20 — and the measurement partly falsified this
+> document's central prediction. Read §0 before the rest.**
+
+## §0 — What the build actually found
+
+This doc predicted the deterministic ladder would *replace* the debate: "approvals
+return to ~16% without any debator prose". Two arms were run to check it, and the
+prediction was half right at best.
+
+| arm | prompt | APPROVE | rate | net vs baseline | p |
+|---|---|---|---|---|---|
+| v1a | baseline — debate, no ladder | 22 | 16.3% | — | — |
+| v1b | baseline resampled | 21 | 15.7% | 0 | 1.000 |
+| v2 | debate stripped | 10 | 7.4% | +12 | **0.004** |
+| **v6** | **debate stripped + ladder** | **16** | **11.8%** | +6 | 0.238 |
+| **v7** | **debate + ladder (what ships)** | **28** | **21.1%** | −7 | 0.210 |
+
+1. **The ladder is a partial substitute, not a replacement.** It recovers about half
+   the approvals that removing the debate destroys (10 → 16 against a 22 baseline).
+   The debate supplies something beyond the arithmetic.
+2. **Added to the full prompt it does not merely tidy the numbers — it moves the
+   verdict.** Approvals rise 16.3% → 21.1%. Two readings, and the data cannot
+   separate them: this is exactly what correcting the DEF066 class predicts (that
+   defect overstated risk ~20× and made 16 of 64 benchmark names wrongly un-buyable),
+   and it is also what DEF292's failure mode looks like from the other side (rungs
+   reading "0.3% of the cap" make the budget feel empty and ours to fill).
+3. **It thins judgement.** Interpolation between rungs falls from 32% of approvals
+   (7/22) to 11% (3/28), and to 0% when the ladder is the only input. The CIO anchors
+   on the menu.
+
+**Consequence:** the ladder shipped **gated off** (`PM_OPTION_LADDER_ENABLED=false`).
+It is a behaviour change with a product dimension — "the simulator approves more
+trades" — and that is Saiful's call, not an implementation detail. Everything below
+stands as the reasoning that motivated it; the numbers above are what happened.
+
+---
+
 **Question (Saiful, 2026-08-20):** so what's a better solution than the debate?
 
 **Short answer:** stop using three LLM calls to generate a menu that arithmetic can produce

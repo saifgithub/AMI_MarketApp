@@ -560,6 +560,48 @@ class Settings(BaseSettings):
     # across both surfaces (same underlying LLM compute budget).
     agent_stream_max_concurrent_per_user: int = 2
 
+    # CR197 — how many independent CIO samples to draw before issuing a verdict.
+    #
+    # 1 keeps today's behaviour exactly (one call, one answer) and is the default,
+    # because anything above it multiplies the most expensive call in the run.
+    #
+    # Why the knob exists: replaying 136 committed convenes three times each on
+    # BYTE-IDENTICAL prompts, 26 of 132 (19.7%) did not return a unanimous verdict,
+    # and a single draw disagrees with the 3-vote majority 6.6% of the time. The
+    # approval RATE is stable across samples (22/21/25 of ~135) but WHICH name gets
+    # approved is not — so roughly one verdict in five is settled by the sampler
+    # while the user reads confident prose either way.
+    #
+    # Set to an odd number ≥3 to vote instead: majority on the action, median size
+    # among the winners. Even numbers are allowed but waste a call, since ties fall
+    # back to the safe side.
+    pm_self_consistency_samples: int = Field(default=1, ge=1, le=9)
+
+    # CR197 — hand the CIO a computed ladder of sized options (trim / reference /
+    # press) with each rung's drawdown contribution, remaining headroom and
+    # reward:risk, instead of leaving that arithmetic to the risk officers' prose.
+    #
+    # OFF by default because it is a measured behaviour change, not a pure bug fix.
+    # Replayed over 136 committed convenes against the same model:
+    #   debate only (today)      22 approvals, 16.3%
+    #   debate + ladder          28 approvals, 21.1%   (net -7, p=0.21)
+    #   ladder only, no debate   16 approvals, 11.8%
+    #   neither                  10 approvals,  7.4%   (net +12, p=0.004)
+    #
+    # Two honest readings of the +5pp, and this knob exists because the measurement
+    # cannot separate them. It is what fixing the DEF066 class predicts — that defect
+    # compared a raw stop distance against the portfolio cap, overstating risk ~20x
+    # and making 16 of 64 benchmark names wrongly un-buyable, so correcting the
+    # arithmetic should recover refusals that were artifacts. It is ALSO what
+    # DEF292's failure mode would look like from the other side: rungs that read
+    # "0.3% of the cap" can make the risk budget feel empty and ours to fill.
+    #
+    # Known cost either way: interpolation falls from 32% of approvals (7/22) to 11%
+    # (3/28) — the CIO anchors onto rungs. The rendered block says outright that the
+    # rungs are not the only permitted sizes; that wording is doing real work and
+    # should not be trimmed.
+    pm_option_ladder_enabled: bool = False
+
     # Auth — HMAC key for scaffold tokens. Override in prod/.env.
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"

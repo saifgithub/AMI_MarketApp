@@ -157,6 +157,15 @@ def test_empty_rows_render_nothing():
 # ── scope: only the agent that must choose a size gets the menu ──────────────
 
 
+@pytest.fixture(autouse=True)
+def _ladder_on(monkeypatch):
+    """The ladder ships gated OFF — it is a measured behaviour change (approvals
+    16.3% -> 21.1%), not a pure fix. These tests exercise it enabled; the default
+    itself is pinned by `test_the_ladder_is_off_by_default` below."""
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "pm_option_ladder_enabled", True)
+
+
 def _prompt(agent_id: AgentId, *, proposal=None):
     system, _ = build_room_messages(
         agent_id=agent_id,
@@ -216,3 +225,19 @@ def test_a_malformed_proposal_suppresses_the_ladder_entirely():
         proposal={"size_pct": 3.0, "entry": 100.0, "stop": 120.0},
     )
     assert "## Sized options" not in text
+
+
+def test_the_ladder_is_off_by_default():
+    """A change that moves the approval rate ~5pp and thins interpolation from 32%
+    to 11% of approvals is an operator's call, not a silent upgrade."""
+    from app.core.config import Settings
+
+    assert Settings().pm_option_ladder_enabled is False
+
+
+def test_the_flag_actually_gates_it(monkeypatch):
+    """A gate nothing tests is a gate that quietly stops gating."""
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "pm_option_ladder_enabled", False)
+    assert "## Sized options" not in _prompt(AgentId.PORTFOLIO_MANAGER)

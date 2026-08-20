@@ -364,6 +364,14 @@ services:
       # Concurrent SSE streams one user may hold open across 1-on-1 + Brief
       # combined (DEF201 — the H6 rate limit bounds pace, not concurrency).
       AGENT_STREAM_MAX_CONCURRENT_PER_USER: ${AGENT_STREAM_MAX_CONCURRENT_PER_USER:-2}
+      # CR197 — independent CIO samples per verdict; 1 = today's single call.
+      # Raising it costs that multiple of the run's most expensive call, and buys
+      # back the 19.7% of verdicts measured to be non-unanimous on identical prompts.
+      PM_SELF_CONSISTENCY_SAMPLES: ${PM_SELF_CONSISTENCY_SAMPLES:-1}
+      # CR197 — computed sized-option ladder in the CIO's prompt. Off: it is a
+      # measured behaviour change (approvals 16.3% → 21.1% over 136 replayed
+      # convenes), not a pure fix. See Settings.pm_option_ladder_enabled.
+      PM_OPTION_LADDER_ENABLED: ${PM_OPTION_LADDER_ENABLED:-false}
       # Reputation + weekly leagues (CR004, D-060).
       REPUTATION_DAILY_CAP: ${REPUTATION_DAILY_CAP:-25}
       LEAGUE_COHORT_SIZE: ${LEAGUE_COHORT_SIZE:-30}

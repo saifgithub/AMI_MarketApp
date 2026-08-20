@@ -1030,8 +1030,12 @@ def build_room_messages(
     # their own figure via `agent_size_pct` above, so they do not need the table and
     # handing it to them would replace the judgement their turn exists to exercise.
     # Only the agent that must CHOOSE a size gets the menu.
+    # Gated OFF by default: the ladder measurably shifts the approval rate (16.3% →
+    # 21.1% over 136 replayed convenes) and thins interpolation, so it is an operator
+    # decision rather than a silent upgrade. See `Settings.pm_option_ladder_enabled`
+    # for both readings of that shift.
     option_ladder_block = ""
-    if phase == "VERDICT" and proposal:
+    if settings.pm_option_ladder_enabled and phase == "VERDICT" and proposal:
         _entry = float(proposal.get("entry") or 0)
         _stop = float(proposal.get("stop") or 0)
         _size = float(proposal.get("size_pct") or 0)
