@@ -602,6 +602,25 @@ class Settings(BaseSettings):
     # should not be trimmed.
     pm_option_ladder_enabled: bool = False
 
+    # CR201 — the RISK phase as ONE structured Risk Officer call instead of three
+    # debating ones. The three risk-debator voices still render (transcript, SSE,
+    # comb, Journal) — from the officer's JSON payload, with every figure taken
+    # from the computed ladder and none from the model.
+    #
+    # OFF by default: it is a measured-equivalent behaviour change, staged per
+    # CR201's rollout (re-run ablation arm v8 on the production assembly, then
+    # Alpha, then the 150-ticker benchmark). Measured over 136 replayed convenes
+    # (CR197): v8 22 approvals vs baseline 22 (16.4% vs 16.3%), net 0 verdicts
+    # changed (9↑/9↓), p=1.0 — the same symmetric shape as replaying an identical
+    # prompt. Designed degradation, not an outage: an unparseable or timed-out
+    # officer falls back to the deterministic ladder alone (measured floor 11.8%,
+    # vs 7.4% for no risk input) and the transcript is marked (CR040).
+    #
+    # Do NOT enable in the same window as PM_OPTION_LADDER_ENABLED above — that
+    # flag shifts approvals ~5pp on its own and neither effect would be
+    # attributable. Rollback is this flag; no migration.
+    room_risk_officer_enabled: bool = False
+
     # Auth — HMAC key for scaffold tokens. Override in prod/.env.
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"

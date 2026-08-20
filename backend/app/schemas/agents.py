@@ -22,6 +22,14 @@ class AgentId(str, Enum):
     PORTFOLIO_MANAGER = "portfolio_manager"
     # 13th — distinct from the trading team
     CONCIERGE = "concierge"
+    # 14th — CR201: the structured Risk Officer, an INTERNAL compute identity.
+    # One gated LLM call emits JSON sized options; the three risk-debator
+    # AgentIds above are then RENDERED from that payload with no further LLM
+    # calls. Deliberately outside TWELVE_AGENT_IDS, AGENT_FAMILIES,
+    # AGENT_ROLE_COLORS and AGENT_DISPLAY_NAMES (the CONCIERGE precedent):
+    # D-012's twelve display roles are untouched, and `agent_display_name()`
+    # raising on this id is the guard that keeps it off every user surface.
+    RISK_OFFICER = "risk_officer"
 
 
 TWELVE_AGENT_IDS: tuple[AgentId, ...] = (

@@ -254,7 +254,13 @@ def proposed_buy_nvda() -> ProposedTrade:
 
 @pytest.fixture
 def all_agents() -> tuple[AgentId, ...]:
-    return tuple(a for a in AgentId if a != AgentId.CONCIERGE)
+    """The twelve display agents — the ones with a base prompt and an overlay
+    builder. The internal compute identities are excluded: the Concierge (its
+    own surface) and CR201's RISK_OFFICER (prompt assembled in code by
+    `build_risk_officer_messages`; no content file, no overlay, by design)."""
+    return tuple(
+        a for a in AgentId if a not in (AgentId.CONCIERGE, AgentId.RISK_OFFICER)
+    )
 
 
 # ── The ledger invariant, enforced on every test (CR189 / DEF316 / DEF318) ──

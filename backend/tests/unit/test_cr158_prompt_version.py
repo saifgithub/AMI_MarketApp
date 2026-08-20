@@ -20,7 +20,14 @@ import pytest
 from app.schemas.agents import AgentId
 from app.services import prompt_version as pv
 
-_ROOM_AGENTS = tuple(a for a in AgentId if a is not AgentId.CONCIERGE)
+# The twelve display agents the reference assembly covers. The two internal
+# identities are excluded: the Concierge (no Room phase) and CR201's
+# RISK_OFFICER (prompt assembled in code by `build_risk_officer_messages`, not
+# by the twelve-agent reference assembly) — each pinned as an explicit quiet
+# None below.
+_ROOM_AGENTS = tuple(
+    a for a in AgentId if a not in (AgentId.CONCIERGE, AgentId.RISK_OFFICER)
+)
 
 
 @pytest.fixture(autouse=True)
@@ -55,6 +62,14 @@ def test_the_concierge_is_an_explicit_quiet_none():
     """It has no Room phase and no Room prompt. NULL is accurate; a warning on
     every Concierge call would spend a degrade-loudly signal on a non-event."""
     assert pv.prompt_version(AgentId.CONCIERGE) is None
+
+
+def test_the_risk_officer_is_an_explicit_quiet_none():
+    """CR201 — same treatment as the Concierge, same reasoning: its prompt is
+    assembled in code, not by the reference assembly, so NULL is accurate and
+    the exception path (which warns on every warm_cache) must not be how it
+    gets there."""
+    assert pv.prompt_version(AgentId.RISK_OFFICER) is None
 
 
 def test_an_unknown_agent_string_is_none_not_an_error():

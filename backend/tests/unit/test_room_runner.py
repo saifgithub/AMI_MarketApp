@@ -62,9 +62,13 @@ def test_room_streams_all_phases_and_lands_a_verdict():
     phases = [e.phase for e in events if e.kind == "phase"]
     assert phases == ["ANALYSTS", "RESEARCHERS", "SYNTHESIS", "EXECUTION", "RISK", "VERDICT"]
 
-    # Every one of the 12 agents speaks
+    # Every one of the 12 agents speaks. The two internal identities never do:
+    # the Concierge has no Room phase, and CR201's RISK_OFFICER is a compute
+    # agent whose output renders AS the three debator voices, never as itself.
     spoke = {e.agent_id for e in events if e.kind == "agent_done"}
-    expected = {a for a in AgentId if a != AgentId.CONCIERGE}
+    expected = {
+        a for a in AgentId if a not in (AgentId.CONCIERGE, AgentId.RISK_OFFICER)
+    }
     assert spoke == expected
 
     # Verdict emitted last (or near last)
@@ -130,9 +134,14 @@ def test_run_persists_to_runner_with_transcript():
     run = runner.get_run(run_id)
     assert run is not None
     assert run.status == RoomStatus.COMPLETED.value
-    # All 12 agents are in the transcript
+    # All 12 agents are in the transcript (and neither internal identity is —
+    # same scoping as the agent_done assertion above).
     agents_in_transcript = {m.agent_id for m in run.transcript}
-    expected = {a.value for a in AgentId if a != AgentId.CONCIERGE}
+    expected = {
+        a.value
+        for a in AgentId
+        if a not in (AgentId.CONCIERGE, AgentId.RISK_OFFICER)
+    }
     assert agents_in_transcript == expected
     # Listed by user
     user_runs = runner.list_runs_for_user(user_id)

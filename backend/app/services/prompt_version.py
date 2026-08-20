@@ -198,6 +198,14 @@ def prompt_version(agent_id: AgentId) -> str | None:
         # when it gets its own reference assembly; until then NULL is accurate.
         _cache[agent_id] = None
         return None
+    if agent_id is AgentId.RISK_OFFICER:
+        # CR201 — same treatment, same reasoning: an internal compute agent whose
+        # prompt is assembled by `build_risk_officer_messages` from code constants,
+        # not by the twelve-agent reference assembly this hash covers. Routing it
+        # through the exception path would warn on every warm_cache. NULL until it
+        # earns its own reference assembly.
+        _cache[agent_id] = None
+        return None
     try:
         digest = hashlib.sha256(
             _assemble_reference_prompt(agent_id).encode("utf-8")

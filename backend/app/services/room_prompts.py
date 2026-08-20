@@ -351,6 +351,32 @@ _AGENT_MAX_TOKENS: dict[AgentId, int] = {
     # agent with the worst chars-per-token of the twelve (3.14) precisely
     # because of the JSON its cost paragraph is about.
     AgentId.PORTFOLIO_MANAGER: 1700,
+    # CR201 — the structured Risk Officer (internal compute agent, not one of the
+    # twelve; absent from `_LENGTH_GUIDE` deliberately — its length contract is the
+    # JSON schema in `risk_officer.build_risk_officer_instruction`, not a prose
+    # guide, and the DEF125 roster test pins the guide at exactly twelve).
+    #
+    # Derived by CR179's rule, from the only measured corpus of this agent that
+    # exists: CR197's v8 arm ran this exact contract 136 times on the serving
+    # model under a 1,200-token ceiling
+    # (`docs/forward_planning/CR197_risk_debate_effectiveness/ablation/`), and
+    # 2/136 replies failed to parse. The committed artifact records the PM's
+    # replies, not the officer's, so whether those two failures were ceiling
+    # hits is UNKNOWABLE from it — which makes 1,200 a censored observation by
+    # CR179's own rule (a maximum whose ceiling may have produced it earns 1.5,
+    # not 1.25): 1200 × 1.5 = **1800**.
+    #
+    # Cross-checked against the char proxy on the closest measured JSON shape:
+    # this agent emits a JSON envelope like the PM, whose measured worst ratio
+    # (3.14 chars/token) and censored 3,456-char maximum derived the PM's 1700.
+    # The officer's ask (3 options × two one-sentence cases + a quoted figure,
+    # plus 3 scalar fields) is bounded by the PM's shape, and 1800 clears it.
+    # Raising is free on this host (`max_tokens` is a ceiling, not an
+    # allocation; `num_preemptions_total` 0) and being short is uniquely
+    # expensive here: a clipped JSON reply is unparseable rather than merely
+    # incomplete, and costs the run the whole assessment (fallback floor 11.8%
+    # vs 16.4% — measured, CR197), not one voice's tail.
+    AgentId.RISK_OFFICER: 1800,
 }
 
 
@@ -1190,6 +1216,124 @@ def build_room_messages(
     system_prompt = base + room_addition
     user_message = ChatMessage(role="user", content=f"Convene on {ticker}.")
     return system_prompt, [user_message]
+
+
+def build_risk_officer_messages(
+    *,
+    mandate: Mandate,
+    ticker: str,
+    profile: dict[str, Any],
+    transcript: list[AgentMessage],
+    trade_proposal: dict[str, Any],
+    portfolio_snapshot: str | None = None,
+    sector_weights: dict[str, float] | None = None,
+    current_drawdown_pct: float | None = None,
+    existing_open_risk_pct: Any = None,
+    last_loss_closed_at: Any = None,
+    trade_open_timestamps: Any = None,
+) -> tuple[str, list[ChatMessage], list[LadderOption]]:
+    """CR201 — the structured Risk Officer's one prompt, plus the ladder it fills in.
+
+    Same evidence the three debators saw, different contract: persona fronted
+    instead of a role brief, the computed option ladder rendered in full, and a
+    JSON instruction (`build_risk_officer_instruction`) in place of the prose +
+    stance-envelope format. Deliberately NOT routed through `build_room_messages`:
+    that assembly exists for the twelve display agents (phase framing, length
+    guide, stance envelope, "Speak as the …" turn line), and every one of those
+    parts is wrong for an internal compute agent whose entire reply is parsed.
+
+    The returned `rows` are the SAME `LadderOption` list rendered into the prompt
+    — the caller renders the three display turns from these rows and never from
+    the model's payload, which is what keeps an invented size un-renderable.
+
+    Not included, deliberately: the safety floor (the officer decides nothing —
+    `enforce_safety_floor` stays on the PM, DEF059); Brief overlays (the officer
+    is not a briefable display agent); and the mandate/compliance overlay
+    (`generate_overlay` is built for the twelve display roles — the sourced
+    Sharia/locale verdicts stay in the CIO's prompt and the floor's veto; the
+    officer sizes options, it does not screen instruments). The grounding
+    directive is prepended by the gateway on every call, as for every other
+    agent.
+    """
+    from app.services.risk_officer import (
+        RISK_OFFICER_PERSONA,
+        build_risk_officer_instruction,
+    )
+
+    size = float(trade_proposal.get("size_pct") or 0)
+    entry = float(trade_proposal.get("entry") or 0)
+    stop = float(trade_proposal.get("stop") or 0)
+    target = trade_proposal.get("target")
+    if not (size > 0 and entry > 0 and 0 < stop < entry):
+        # Degrade loudly (CR040): a ladder from an incoherent reference triple
+        # would price nothing real. The caller falls back per its designed path.
+        raise ValueError(
+            f"risk officer needs a coherent reference proposal, got "
+            f"size={size} entry={entry} stop={stop}"
+        )
+    rows = build_option_ladder(
+        reference_size_pct=size,
+        entry=entry,
+        stop=stop,
+        target=float(target) if target not in (None, "") else None,
+        cap_pts=mandate.max_drawdown_pct,
+        current_drawdown_pct=(
+            current_drawdown_pct
+            if isinstance(current_drawdown_pct, (int, float)) else None
+        ),
+    )
+
+    profile_block = _format_profile(profile, AgentId.RISK_OFFICER)
+    drawdown_line = _drawdown_snapshot_line(
+        mandate,
+        trade_proposal,
+        None,
+        current_drawdown_pct=(
+            current_drawdown_pct
+            if isinstance(current_drawdown_pct, (int, float)) else None
+        ),
+    )
+    risk_state_block = _risk_state_block(
+        mandate,
+        current_drawdown_pct,
+        existing_open_risk_pct,
+        last_loss_closed_at,
+        trade_open_timestamps,
+    )
+    long_only_line = ""
+    if mandate.compliance.long_only:
+        long_only_line = (
+            "- long_only: long-only = no short/negative positions. It does NOT forbid "
+            "buying, adding to, or holding a name.\n"
+        )
+    sector_line = _format_sector_allocation(sector_weights) + "\n"
+    portfolio_block = f"{portfolio_snapshot}\n\n" if portfolio_snapshot else ""
+
+    system_prompt = (
+        f"{RISK_OFFICER_PERSONA}\n\n"
+        f"─── CONVENE THE ROOM — RISK PHASE ───\n"
+        f"Ticker: {ticker}\n"
+        f"{profile_block}\n"
+        f"\n"
+        f"{portfolio_block}"
+        f"User mandate snapshot:\n"
+        f"- risk_score: {mandate.risk_score} (1=most conservative, 5=most aggressive)\n"
+        f"{drawdown_line}\n"
+        f"{long_only_line}"
+        f"- locale: {mandate.locale}\n"
+        f"{risk_state_block}"
+        f"{sector_line}"
+        f"\n"
+        f"{_render_option_ladder(rows, mandate.max_drawdown_pct)}\n"
+        f"\n"
+        f"Transcript so far:\n{_format_transcript(transcript)}\n"
+        f"{build_risk_officer_instruction(rows)}"
+    )
+    return (
+        system_prompt,
+        [ChatMessage(role="user", content=f"Assess risk on {ticker}.")],
+        rows,
+    )
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────

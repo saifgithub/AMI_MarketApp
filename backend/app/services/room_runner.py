@@ -93,8 +93,10 @@ from app.services.social_context import (
 )
 from app.services.llm_gateway import ChatMessage, LLMGateway, get_llm_gateway
 from app.services.llm_json import extract_json_object
+from app.services.risk_officer import render_officer_turns
 from app.services.room_prompts import (
     STANCE_HEADLINE_MAX_CHARS,
+    build_risk_officer_messages,
     build_room_messages,
     max_tokens_for,
 )
@@ -4129,6 +4131,29 @@ class RoomRunner:
                                 envelope=envelope,
                             ):
                                 yield ev
+                    elif (
+                        phase.label == "RISK"
+                        and live
+                        and settings.room_risk_officer_enabled
+                    ):
+                        # CR201 — one structured Risk Officer call; the three
+                        # debator voices are rendered from its payload, no
+                        # further LLM calls. Guarded by the flag (default OFF —
+                        # the branch below stays byte-identical to today) and by
+                        # `live` (the scripted demo path keeps its three canned
+                        # turns). The rewritten CR077 guard pins this path's
+                        # invariant: exactly one officer call, before any risk
+                        # turn is appended.
+                        async for ev in _run_risk_officer(
+                            run_id=run_id,
+                            ctx=ctx,
+                            run=run,
+                            gateway=gateway,
+                            char_delay_min=char_delay_min,
+                            char_delay_max=char_delay_max,
+                            agent_timeout_s=agent_timeout_s,
+                        ):
+                            yield ev
                     else:
                         for agent_id in phase_agents:
                             async for ev in _speak_one_agent(
@@ -4737,6 +4762,135 @@ async def _speak_one_agent(
         envelope=envelope,
     ):
         yield ev
+
+
+async def _run_risk_officer(
+    *,
+    run_id: UUID,
+    ctx: _RoomContext,
+    run: RoomRun,
+    gateway: LLMGateway,
+    char_delay_min: float,
+    char_delay_max: float,
+    agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
+) -> AsyncIterator[RoomEvent]:
+    """CR201 — the RISK phase as one compute step, flag-ON path only.
+
+    ONE gated LLM call (`flow="room_risk_officer"`) asks the structured Risk
+    Officer for JSON sized options over the computed ladder; the three risk
+    debator AgentIds are then RENDERED from that payload and streamed with no
+    further LLM calls (precedent: `_assemble_no_verdict` + `_typewriter` on the
+    CR098 withheld-Market path). Measured equivalent of the three-call debate:
+    v8 net 0 verdicts changed, p=1.0, over 136 replayed convenes (CR197).
+
+    Failure degrades to a designed state, not an outage: unparseable / timed-out
+    / errored officer ⇒ the turns render the deterministic ladder alone
+    (measured floor 11.8%, vs 7.4% for no risk input) and each carries an
+    `[AMI …]` mark in the transcript saying so (CR040).
+    """
+    plan = effective_plan_for_user(ctx.user_id)
+    tier = pick_tier(plan, AgentId.RISK_OFFICER)
+
+    payload: dict[str, Any] | None = None
+    fallback_reason: str | None = None
+    rows = None
+    try:
+        system_prompt, messages, rows = build_risk_officer_messages(
+            mandate=ctx.mandate,
+            ticker=ctx.ticker,
+            profile=ctx.profile,
+            transcript=run.transcript,
+            trade_proposal={
+                "size_pct": ctx.trader_size_pct,
+                "entry": ctx.trader_entry,
+                "stop": ctx.trader_stop,
+                "target": ctx.trader_target,
+            },
+            portfolio_snapshot=ctx.portfolio_snapshot,
+            sector_weights=ctx.sector_weights,
+            current_drawdown_pct=ctx.current_drawdown_pct,
+            existing_open_risk_pct=_prompt_open_risk(ctx.risk_existing_open_risk_pct),
+            last_loss_closed_at=ctx.risk_last_loss_closed_at,
+            trade_open_timestamps=ctx.risk_trade_open_timestamps,
+        )
+        stream_meta: dict[str, Any] = {}
+        chunks = await asyncio.wait_for(
+            _collect_agent_stream(gateway.stream_chat(
+                system_prompt=system_prompt,
+                messages=messages,
+                model_tier=tier,  # type: ignore[arg-type]
+                locale=ctx.mandate.locale,
+                max_tokens=max_tokens_for(AgentId.RISK_OFFICER),
+                audit_user_id=ctx.user_id,
+                audit_agent_id=AgentId.RISK_OFFICER.value,
+                audit_flow="room_risk_officer",
+                meta=stream_meta,
+            )),
+            timeout=agent_timeout_s,
+        )
+        raw = "".join(chunks).strip()
+        payload = (
+            extract_json_object(raw)
+            or extract_json_object(raw, repair_truncated=True)
+        )
+        if payload is None:
+            fallback_reason = (
+                "the reply was cut at the token ceiling"
+                if stream_meta.get("finish_reason") == "length"
+                else "the reply could not be parsed"
+            )
+    except asyncio.TimeoutError:
+        fallback_reason = f"no reply within {agent_timeout_s:.0f}s"
+    except Exception as exc:  # noqa: BLE001 — degrade to the ladder, loudly
+        logger.warning(
+            "room_risk_officer_failed",
+            run_id=str(run_id),
+            error=str(exc)[:200],
+        )
+        fallback_reason = "the call failed"
+
+    if rows is None:
+        # The prompt/ladder itself could not be built (incoherent reference
+        # triple). Build the ladder's rungs directly so the three voices still
+        # render their sizes; figures stay None and the mark says why.
+        from app.trading_math.option_ladder import LadderOption as _Opt
+
+        spread = risk_debator_sizes(ctx.trader_size_pct)
+        rows = [
+            _Opt(label="trim", size_pct=spread.conservative),
+            _Opt(label="reference", size_pct=spread.neutral),
+            _Opt(label="press", size_pct=spread.aggressive),
+        ]
+
+    if fallback_reason is not None:
+        logger.warning(
+            "room_risk_officer_degraded",
+            run_id=str(run_id),
+            reason=fallback_reason,
+        )
+
+    for turn in render_officer_turns(
+        payload if fallback_reason is None else None,
+        rows,
+        headline_max_chars=STANCE_HEADLINE_MAX_CHARS,
+        fallback_reason=fallback_reason,
+    ):
+        async for ev in _stream_agent_text(
+            agent_id=turn.agent_id,
+            run_id=run_id,
+            run=run,
+            text=turn.text,
+            geom_sig=None,
+            char_delay_min=char_delay_min,
+            char_delay_max=char_delay_max,
+            envelope=_StanceEnvelope(
+                stance=turn.stance,
+                conviction=turn.conviction,
+                headline=turn.headline,
+                size_pct=turn.argued_size_pct,
+            ),
+        ):
+            yield ev
 
 
 def _vote_pm_samples(

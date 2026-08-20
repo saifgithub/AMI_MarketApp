@@ -26,4 +26,12 @@ def pick_tier(plan: Plan, agent_id: AgentId) -> ModelTier:
         return "mid" if plan == Plan.FLOOR_PASS else "premium"
     if agent_id == AgentId.TRADER:
         return "premium" if plan == Plan.FLOOR_MANAGER else "mid" if plan != Plan.FLOOR_PASS else "cheap"
+    if agent_id == AgentId.RISK_OFFICER:
+        # CR201 — one call doing the work of the three risk debators, and (like
+        # the PM's verdict) output that is PARSED as JSON rather than read as
+        # prose, so it gets the Trader's treatment, stated explicitly rather
+        # than left to the plan default: a bad reply here costs the whole risk
+        # assessment (designed fallback to the ladder alone), not one voice's
+        # phrasing.
+        return "premium" if plan == Plan.FLOOR_MANAGER else "mid" if plan != Plan.FLOOR_PASS else "cheap"
     return _DEFAULT_BY_PLAN[plan]

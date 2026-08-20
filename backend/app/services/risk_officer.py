@@ -40,8 +40,10 @@ bounds the choice, and `enforce_safety_floor` remains the only vetoer (DEF059).
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
+from app.schemas.agents import AgentId
 from app.trading_math.option_ladder import LadderOption
 
 RISK_OFFICER_PERSONA = (
@@ -91,6 +93,22 @@ def build_risk_officer_instruction(rows: list[LadderOption]) -> str:
     )
 
 
+def _options_by_size(payload: dict[str, Any]) -> dict[float, dict[str, Any]]:
+    """The payload's options keyed by their claimed size, one decimal.
+
+    Only sizes that parse as numbers get a key at all; everything else is
+    ignored here and — because every renderer iterates the LADDER's rows, never
+    this dict — an invented or garbled size can never reach a reader.
+    """
+    by_size: dict[float, dict[str, Any]] = {}
+    for opt in payload.get("options") or []:
+        try:
+            by_size[round(float(opt.get("size_pct")), 1)] = opt
+        except (TypeError, ValueError):
+            continue
+    return by_size
+
+
 def render_risk_assessment(payload: dict[str, Any], rows: list[LadderOption]) -> str:
     """The officer's structured output, as the block the CIO reads.
 
@@ -101,12 +119,7 @@ def render_risk_assessment(payload: dict[str, Any], rows: list[LadderOption]) ->
     Sizes come from `rows`, never from the payload: a model that echoed back a size we
     did not offer would otherwise smuggle an unpriced option onto the menu.
     """
-    by_size = {}
-    for opt in payload.get("options") or []:
-        try:
-            by_size[round(float(opt.get("size_pct")), 1)] = opt
-        except (TypeError, ValueError):
-            continue
+    by_size = _options_by_size(payload)
 
     lines = ["## Risk assessment — sized options with the case each way", ""]
     for r in rows:
@@ -150,3 +163,180 @@ def render_risk_assessment(payload: dict[str, Any], rows: list[LadderOption]) ->
         "still bind whatever you choose."
     )
     return "\n".join(lines)
+
+
+# ── CR201: the three display voices, rendered from the one structured reply ──
+#
+# Which rung each voice presents. The mapping preserves what each AgentId has
+# always meant on screen — the Aggressive presents the largest size, the
+# Conservative the smallest, the Balanced the reference — so the comb, the SSE
+# stream and the Journal replay keep their three risk voices while the LLM makes
+# exactly one call. Keyed on the ladder's own labels so a change to the ladder's
+# shape fails loudly here instead of rendering a voice from the wrong rung.
+_VOICE_FOR_RUNG_LABEL: dict[str, AgentId] = {
+    "press": AgentId.AGGRESSIVE_DEBATOR,
+    "trim": AgentId.CONSERVATIVE_DEBATOR,
+    "reference": AgentId.NEUTRAL_DEBATOR,
+}
+
+# Emission order — the same order the RISK phase has always spoken in
+# (`room_runner.PHASES`), so clients see an unchanged stream shape.
+RISK_TURN_ORDER: tuple[AgentId, ...] = (
+    AgentId.AGGRESSIVE_DEBATOR,
+    AgentId.CONSERVATIVE_DEBATOR,
+    AgentId.NEUTRAL_DEBATOR,
+)
+
+_CONFIDENCE_VALUES = frozenset({"low", "medium", "high"})
+
+
+@dataclass(frozen=True)
+class RenderedRiskTurn:
+    """One display turn built in code from the officer's payload + the ladder.
+
+    `stance`/`conviction`/`headline`/`argued_size_pct` are the same channels the
+    parsed stance envelope used to fill — derived now, not parsed, which is what
+    makes the DEF247/DEF251/DEF257 class unreachable on this path.
+    """
+
+    agent_id: AgentId
+    text: str
+    stance: str | None
+    conviction: str | None
+    headline: str | None
+    argued_size_pct: float | None
+
+
+def _rung_head(r: LadderOption) -> str:
+    """The rung's computed figures, in `render_risk_assessment`'s exact shape —
+    ladder values only, so no formatter exists that could render a payload
+    number."""
+    head = f"**{r.size_pct:.1f}%** of portfolio"
+    if r.contribution_pts is not None:
+        head += f" (≈ {r.contribution_pts:.2f} pt of drawdown"
+        if r.headroom_after_pts is not None:
+            head += f", {r.headroom_after_pts:.2f} pt of cap left"
+        head += ")"
+    return head
+
+
+def _capped_headline(candidate: Any, max_chars: int) -> str | None:
+    """Nulled when over, never truncated — the same rule the envelope path
+    applies (`STANCE_HEADLINE_MAX_CHARS`): a cut assertion can invert itself."""
+    text = str(candidate or "").strip()
+    if not text or len(text) > max_chars:
+        return None
+    return text
+
+
+def render_officer_turns(
+    payload: dict[str, Any] | None,
+    rows: list[LadderOption],
+    *,
+    headline_max_chars: int,
+    fallback_reason: str | None = None,
+) -> list[RenderedRiskTurn]:
+    """The three risk-phase display turns, rendered with no LLM involved.
+
+    Every figure comes from `rows` — the same ladder the officer's prompt fixed
+    — never from the payload: a size the model invented has no rung and is
+    dropped, a rung it skipped renders as "did not assess" rather than
+    vanishing, and the recommended size only renders when it matches a rung.
+
+    Interim stance mapping (CR201 §2.3, the measured-as-built schema — the
+    per-option `lean` is deliberately NOT shipped): the voice whose rung equals
+    `recommended` carries the officer's endorsement ("for"), the other assessed
+    voices carry "neutral", a skipped rung carries None (the comb's gutter —
+    None never means neutral), and conviction on assessed voices comes from
+    `confidence`.
+
+    `fallback_reason` set means the officer call failed or did not parse: the
+    turns render the computed ladder alone — the measured 11.8% floor, vs 7.4%
+    for nothing — and each carries an `[AMI …]` mark saying so (CR040: a
+    fallback that fires silently teaches the user the debate happened).
+    """
+    by_size = _options_by_size(payload or {})
+    confidence = str((payload or {}).get("confidence") or "").strip().lower()
+    if confidence not in _CONFIDENCE_VALUES:
+        confidence = ""
+    recommended_rung: LadderOption | None = None
+    try:
+        rec = round(float((payload or {}).get("recommended")), 1)
+        recommended_rung = next(
+            (r for r in rows if round(r.size_pct, 1) == rec), None
+        )
+    except (TypeError, ValueError):
+        recommended_rung = None
+
+    turns: dict[AgentId, RenderedRiskTurn] = {}
+    for r in rows:
+        voice = _VOICE_FOR_RUNG_LABEL[r.label]
+        head = _rung_head(r)
+
+        if fallback_reason is not None:
+            text = (
+                f"[AMI: the Risk Officer's structured assessment was unavailable "
+                f"({fallback_reason}). This sized option is AMI's computed ladder, "
+                f"shown without the officer's reasoning.]\n"
+                f"The {r.label} option: {head}."
+            )
+            turns[voice] = RenderedRiskTurn(voice, text, None, None, None, None)
+            continue
+
+        opt = by_size.get(round(r.size_pct, 1))
+        if not opt:
+            text = (
+                f"From the Risk Officer's structured assessment — the {r.label} "
+                f"option, {head}:\n- the Risk Officer did not assess this size."
+            )
+            turns[voice] = RenderedRiskTurn(voice, text, None, None, None, None)
+            continue
+
+        lines = [
+            f"From the Risk Officer's structured assessment — the {r.label} "
+            f"option, {head}:"
+        ]
+        for label, key in (("Case for", "case_for"), ("Case against", "case_against")):
+            val = str(opt.get(key) or "").strip()
+            if val:
+                lines.append(f"- {label}: {val}")
+        kn = str(opt.get("key_number") or "").strip()
+        if kn:
+            lines.append(f"- Key figure: {kn}")
+
+        is_recommended = recommended_rung is not None and r.label == recommended_rung.label
+        headline_source: Any = opt.get("key_number")
+        if is_recommended:
+            headline_source = (payload or {}).get("decisive_number") or headline_source
+        if voice is AgentId.NEUTRAL_DEBATOR:
+            call = ""
+            if recommended_rung is not None:
+                call = f"\nRisk Officer's call: **{recommended_rung.size_pct:.1f}%**"
+                if confidence:
+                    call += f" · confidence {confidence}"
+                dn = str((payload or {}).get("decisive_number") or "").strip()
+                if dn:
+                    call += f" · decided by {dn}"
+            lines.append(
+                f"{call}\nThese are options, not instructions. The Chief "
+                f"Investment Officer may land between them if the evidence puts "
+                f"them there, and the mandate's ceilings and the safety floor "
+                f"still bind whatever they choose."
+            )
+
+        turns[voice] = RenderedRiskTurn(
+            agent_id=voice,
+            text="\n".join(lines),
+            stance="for" if is_recommended else "neutral",
+            conviction=confidence or None,
+            headline=_capped_headline(headline_source, headline_max_chars),
+            argued_size_pct=r.size_pct,
+        )
+
+    missing = [v.value for v in RISK_TURN_ORDER if v not in turns]
+    if missing:
+        # Degrade loudly (CR040): a ladder that stopped producing all three
+        # labelled rungs is a programming error, not a runtime case to render
+        # around — two voices where clients expect three is DEF084's shape.
+        raise ValueError(f"option ladder did not produce every voice: {missing}")
+    return [turns[v] for v in RISK_TURN_ORDER]

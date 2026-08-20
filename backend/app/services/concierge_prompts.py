@@ -28,7 +28,13 @@ from uuid import UUID
 
 from app.core.config import settings
 from app.core.logging import logger
-from app.schemas import AGENT_DISPLAY_NAMES, AgentId, Mandate, agent_display_name
+from app.schemas import (
+    AGENT_DISPLAY_NAMES,
+    TWELVE_AGENT_IDS,
+    AgentId,
+    Mandate,
+    agent_display_name,
+)
 from app.schemas.journal import JournalEntry
 from app.schemas.lessons import LessonMeta
 from app.services.agent_prompts import build_agent_prompt
@@ -398,13 +404,15 @@ def _matches(message: str, keywords: tuple[str, ...]) -> bool:
 def _match_agent_by_name(message: str, unlocked: set[str]) -> str | None:
     """Look for an agent display-name phrase in the message.
 
-    Matches against every AgentId, not just unlocked ones, so we can tell
+    Matches against every DISPLAY agent, not just unlocked ones, so we can tell
     the user "X is still locked" instead of pretending it doesn't exist.
+    Iterates TWELVE_AGENT_IDS rather than the enum: the enum also carries
+    internal compute identities with no display name (CR201's RISK_OFFICER, the
+    CONCIERGE itself), which are not agents a user can be routed to — and
+    `AGENT_DISPLAY_NAMES[a]` on one of them is a KeyError, by design.
     Returns the agent_id string if mentioned and unlocked; None otherwise.
     """
-    for a in AgentId:
-        if a == AgentId.CONCIERGE:
-            continue
+    for a in TWELVE_AGENT_IDS:
         phrase = a.value.replace("_", " ")
         display = AGENT_DISPLAY_NAMES[a].lower()
         if (phrase in message or display in message) and a.value in unlocked:

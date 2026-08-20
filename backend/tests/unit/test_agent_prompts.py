@@ -23,6 +23,16 @@ from app.services.overlay_store import get_overlay_store
 
 def test_every_agent_has_a_base_prompt():
     for agent_id in AgentId:
+        if agent_id is AgentId.RISK_OFFICER:
+            # CR201 — internal compute identity, deliberately WITHOUT a
+            # content/agents file: its prompt is assembled in code
+            # (`risk_officer.RISK_OFFICER_PERSONA` via
+            # `build_risk_officer_messages`), and a persona file here is what
+            # would surface it as a chattable 1-on-1 agent — the exact leak
+            # `agent_display_name()` raising on it exists to prevent.
+            with pytest.raises(FileNotFoundError):
+                load_base_prompt(agent_id)
+            continue
         text = load_base_prompt(agent_id)
         assert text, f"{agent_id} base prompt empty"
         # Frontmatter should be stripped

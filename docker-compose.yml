@@ -378,6 +378,11 @@ services:
       # measured behaviour change (approvals 16.3% → 21.1% over 136 replayed
       # convenes), not a pure fix. See Settings.pm_option_ladder_enabled.
       PM_OPTION_LADDER_ENABLED: ${PM_OPTION_LADDER_ENABLED:-false}
+      # CR201 — the RISK phase as one structured Risk Officer call (three voices
+      # rendered from its JSON, no further LLM calls). Off until the staged
+      # rollout says otherwise; do NOT enable in the same window as
+      # PM_OPTION_LADDER_ENABLED. See Settings.room_risk_officer_enabled.
+      ROOM_RISK_OFFICER_ENABLED: ${ROOM_RISK_OFFICER_ENABLED:-false}
       # Reputation + weekly leagues (CR004, D-060).
       REPUTATION_DAILY_CAP: ${REPUTATION_DAILY_CAP:-25}
       LEAGUE_COHORT_SIZE: ${LEAGUE_COHORT_SIZE:-30}

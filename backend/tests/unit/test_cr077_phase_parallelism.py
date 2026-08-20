@@ -1,4 +1,5 @@
-"""CR077 Phase 2 — parallelise the ANALYSTS phase of the Room.
+"""CR077 Phase 2 — parallelise the ANALYSTS phase of the Room. CR201 re-authors
+the RISK half of the guard for the officer path.
 
 The spine of this file is the phase-parallelism GUARD (§Guard): the set of
 phases marked `parallel=True` must be EXACTLY the phases whose agents do not
@@ -7,9 +8,26 @@ catch is DEF084's exact shape: someone later marks RISK parallel because it
 *looks* like three independent debators, silently deleting the risk debate
 while every other test passes and the UI still renders three contributions.
 
-The guard is proven non-vacuous by mutating a copy of PHASES to mark a debate
-phase parallel and asserting the invariant then fails (the "proven red before
-the fix" the assign requires).
+That invariant now holds per flag state (CR201):
+
+  * **Flag OFF (`ROOM_RISK_OFFICER_ENABLED=false`, the default)** — unchanged:
+    RISK is a sequential three-call debate, and the static guards below stand
+    exactly as CR077 wrote them.
+  * **Flag ON** — the RISK phase is one compute step, and "don't silently
+    delete the debate" is re-authored to the shape that can now fail silently:
+    **the three risk turns are rendered from EXACTLY ONE officer call, and
+    that call happens BEFORE any of them is appended.** Zero officer calls
+    with three turns still rendering is the new DEF084 shape (the ladder-alone
+    fallback running always, silently — a permanent degrade the UI cannot
+    see); a turn appended before the call is presentation running ahead of the
+    compute it claims to present; per-debator LLM calls reappearing is the old
+    three-call debate quietly resurrected under the flag.
+
+Both halves are proven non-vacuous the same way: mutate (a copy of PHASES /
+a recorded call-commit sequence) into each regression's shape and assert the
+invariant then fails — the "proven red before the fix" the assign requires.
+Fix-until-green is forbidden here per CR201's row: this guard is the one thing
+standing between "the debate exists" and "the UI renders something debate-like".
 
 Beyond the static guard, this verifies against REAL convene output (GATE: D-5):
 the four analyst calls actually run concurrently, and — whichever finishes
@@ -22,6 +40,8 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import json
+import re
 from uuid import uuid4
 
 import pytest
@@ -254,6 +274,172 @@ def test_parallel_phase_rescopes_the_build_on_transcript_line():
     assert "Build on the transcript" not in par_prompt
     assert "AT THE SAME TIME" in par_prompt
     assert "own domain" in par_prompt.lower()
+
+
+# ── CR201: the RISK invariant, re-authored for the flag-ON officer path ──────
+#
+# "Exactly one officer call, before any risk turn is appended." Checked over a
+# recorded sequence of gateway calls and transcript commits, so the invariant is
+# a function of what actually happened — not of code structure that a refactor
+# can hollow out while every test passes.
+
+_RISK_VOICES = ("aggressive_debator", "conservative_debator", "neutral_debator")
+
+
+def _officer_risk_invariant(sequence: list[str]) -> bool:
+    """True iff the sequence shows the CR201 flag-ON contract held.
+
+    `sequence` entries: `"llm:<agent-key>"` when a gateway call starts,
+    `"commit:<agent-id>"` when a turn is committed to the transcript.
+    """
+    officer_calls = [i for i, s in enumerate(sequence) if s == "llm:risk_officer"]
+    debator_calls = [s for s in sequence if s in {f"llm:{v}" for v in _RISK_VOICES}]
+    risk_commits = [
+        i for i, s in enumerate(sequence) if s in {f"commit:{v}" for v in _RISK_VOICES}
+    ]
+    return (
+        len(officer_calls) == 1
+        and not debator_calls
+        and len(risk_commits) == 3
+        and officer_calls[0] < min(risk_commits)
+    )
+
+
+class _OfficerProbeGateway(_ConcurrencyProbeGateway):
+    """The concurrency probe, plus a call/commit sequence log and a structured
+    officer reply whose sizes are read from the officer's own prompt — so the
+    fake echoes exactly the rungs production offered, whatever the mandate."""
+
+    def __init__(self):
+        super().__init__()
+        self.sequence: list[str] = []
+
+    def _match(self, system_prompt: str) -> str:
+        if "one officer, not an advocate" in system_prompt.lower():
+            return "risk_officer"
+        return super()._match(system_prompt)
+
+    async def stream_chat(self, *, system_prompt, messages, model_tier,
+                          locale="en", max_tokens=1024, **_audit):
+        key = self._match(system_prompt)
+        self.sequence.append(f"llm:{key}")
+        if key == "risk_officer":
+            self.prompts[key] = system_prompt
+            sizes = re.search(r"no others: ([0-9., ]+)\.", system_prompt)
+            assert sizes, "officer prompt did not fix the candidate sizes"
+            rungs = [float(s) for s in sizes.group(1).split(",")]
+            reply = json.dumps({
+                "options": [
+                    {"size_pct": s, "case_for": f"for-{s}",
+                     "case_against": f"against-{s}", "key_number": f"kn-{s}"}
+                    for s in rungs
+                ],
+                "recommended": rungs[1],
+                "confidence": "medium",
+                "decisive_number": "RSI 43",
+            })
+            yield reply
+            return
+        async for chunk in super().stream_chat(
+            system_prompt=system_prompt, messages=messages,
+            model_tier=model_tier, locale=locale, max_tokens=max_tokens,
+        ):
+            yield chunk
+
+
+def _run_flag_on(monkeypatch) -> tuple[_OfficerProbeGateway, list]:
+    gw = _OfficerProbeGateway()
+    monkeypatch.setattr(rr_mod.settings, "room_risk_officer_enabled", True)
+    # Commits observed at the one place every turn passes through on its way
+    # into the transcript (`_stream_agent_text` → `_checkpoint_run`).
+    real_checkpoint = rr_mod._checkpoint_run
+
+    def _recording_checkpoint(run):
+        if run.transcript:
+            gw.sequence.append(f"commit:{run.transcript[-1].agent_id.value}")
+        return real_checkpoint(run)
+
+    monkeypatch.setattr(rr_mod, "_checkpoint_run", _recording_checkpoint)
+    runner = RoomRunner(llm=gw)  # type: ignore[arg-type]
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    events = _run(
+        runner, user_id=uuid4(), ticker="AAPL", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+    )
+    return gw, events
+
+
+def test_flag_on_exactly_one_officer_call_before_any_risk_turn(monkeypatch):
+    """The re-authored guard, on real convene output: one `risk_officer` gateway
+    call, zero debator calls, three risk turns committed — and the call strictly
+    precedes the first of them."""
+    gw, events = _run_flag_on(monkeypatch)
+    assert _officer_risk_invariant(gw.sequence), gw.sequence
+
+    # The three voices still reach the stream, in the fixed phase order, and
+    # the internal identity never surfaces as an event.
+    risk_done = [e.agent_id.value for e in events
+                 if e.kind == "agent_done" and e.agent_id.value in _RISK_VOICES]
+    assert risk_done == list(_RISK_VOICES)
+    assert all(
+        e.agent_id is None or e.agent_id.value != "risk_officer" for e in events
+    ), "risk_officer leaked into the event stream"
+
+
+def test_flag_on_guard_is_not_vacuous_each_regression_shape_fails():
+    """Proven-red, same discipline as the static guard above: take the real
+    passing sequence's shape and mutate it into each regression this invariant
+    exists to catch. A detector that stays green through any of these is
+    vacuous, and per CR201's row that is a hard acceptance failure."""
+    good = [
+        "llm:trader", "commit:trader",
+        "llm:risk_officer",
+        "commit:aggressive_debator", "commit:conservative_debator",
+        "commit:neutral_debator",
+    ]
+    assert _officer_risk_invariant(good)
+
+    # (a) Officer call deleted while the turns still render — the fallback
+    # running always and silently; the UI cannot tell (DEF084's shape).
+    no_call = [s for s in good if s != "llm:risk_officer"]
+    assert not _officer_risk_invariant(no_call)
+
+    # (b) A turn appended BEFORE the call — presentation ahead of the compute.
+    early_turn = [
+        "llm:trader", "commit:trader",
+        "commit:aggressive_debator",
+        "llm:risk_officer",
+        "commit:conservative_debator", "commit:neutral_debator",
+    ]
+    assert not _officer_risk_invariant(early_turn)
+
+    # (c) The three-call debate quietly resurrected under the flag.
+    debate_back = good + ["llm:aggressive_debator"]
+    assert not _officer_risk_invariant(debate_back)
+
+    # (d) Two officer calls — "exactly one" is the cost contract.
+    double_call = good + ["llm:risk_officer"]
+    assert not _officer_risk_invariant(double_call)
+
+    # (e) A voice silently dropped — three turns is the display contract.
+    two_turns = [s for s in good if s != "commit:neutral_debator"]
+    assert not _officer_risk_invariant(two_turns)
+
+
+def test_flag_off_risk_phase_is_unchanged_three_debator_calls_no_officer():
+    """The OTHER half of the re-authored guard: with the flag at its default,
+    the debate path must be exactly today's — three sequential debator LLM
+    calls, no officer call, no officer prompt ever built."""
+    gw = _OfficerProbeGateway()
+    runner = RoomRunner(llm=gw)  # type: ignore[arg-type]
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    _run(runner, user_id=uuid4(), ticker="AAPL", mandate=mandate,
+         char_delay_min=0.0, char_delay_max=0.0)
+    llm_calls = [s for s in gw.sequence if s.startswith("llm:")]
+    assert "llm:risk_officer" not in llm_calls
+    assert [s for s in llm_calls if s in {f"llm:{v}" for v in _RISK_VOICES}] == [
+        f"llm:{v}" for v in _RISK_VOICES
+    ]
 
 
 # ── Second guard: prefix-cache observability ───────────────────────────────
