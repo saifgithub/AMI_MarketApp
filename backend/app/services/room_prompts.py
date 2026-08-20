@@ -48,6 +48,7 @@ from app.services.fundamentals import (
 from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
 from app.services.technicals import range_position_pct
+from app.trading_math.option_ladder import LadderOption, build_option_ladder
 from app.trading_math.portfolio import shares_for_size
 from app.trading_math.risk import drawdown_contribution
 # DEF263 — the SAME window helpers `enforce_safety_floor` counts with. A second
@@ -687,6 +688,55 @@ def _share_of_cap_phrase(contribution_pts: float, cap: float) -> str:
     return f" ({share:.1f}% of it)"
 
 
+def _render_option_ladder(rows: list[LadderOption], cap: float) -> str:
+    """CR197 — the sized-option menu the CIO chooses from, as a prompt block.
+
+    Rendered here rather than beside `build_option_ladder` so the share-of-cap
+    wording comes from `_share_of_cap_phrase` above. That function's one-decimal
+    floor is DEF292's fix for a `:.0f` that printed "(~0% of it)" for 40 nonzero
+    contributions, and a second formatter would be a second chance to reintroduce
+    it.
+
+    The closing sentence matters as much as the table. Measured over 43 baseline
+    approvals, 32 land exactly on a computed rung and 11 land between them (2.0,
+    2.5, 4.0 against a 1.5/3.0/5.0 ladder) — so a menu presented as closed would be
+    MORE constraining than the prose it replaces. The job is to supply the
+    arithmetic, not to narrow the choice.
+    """
+    if not rows:
+        return ""
+    lines = [
+        "## Sized options — AMI computed every figure below",
+        (
+            f"Each row is a size you may approve, with what it costs against the "
+            f"{cap:.0f} pt portfolio-drawdown cap. Quote these figures; do not "
+            f"recompute them, and never compare a raw stop distance against the cap."
+        ),
+        "",
+    ]
+    for r in rows:
+        parts = [f"- **{r.label}** — size {r.size_pct:.1f}% of portfolio"]
+        if r.contribution_pts is not None:
+            parts.append(
+                f"drawdown contribution ≈ {r.contribution_pts:.2f} pt of the "
+                f"{cap:.0f} pt cap{_share_of_cap_phrase(r.contribution_pts, cap)}"
+            )
+        if r.headroom_after_pts is not None:
+            parts.append(
+                f"{r.headroom_after_pts:.2f} pt of the cap unused once it is on"
+            )
+        if r.reward_risk is not None:
+            parts.append(f"reward:risk {r.reward_risk:.2f}:1")
+        lines.append(" · ".join(parts))
+    lines.append("")
+    lines.append(
+        "These rungs are reference points, not the only sizes permitted — land "
+        "between them if the evidence puts you there, and say why. Whatever you "
+        "choose remains bound by the mandate's ceilings and the safety floor."
+    )
+    return "\n".join(lines)
+
+
 def _headroom_after_clause(
     contribution_pts: float, cap: float, current_drawdown_pct: float | None
 ) -> str:
@@ -971,6 +1021,39 @@ def build_room_messages(
             if isinstance(current_drawdown_pct, (int, float)) else None
         ),
     )
+    # CR197 — the sized-option ladder, VERDICT phase only.
+    #
+    # Scope is deliberate. The ablation measured that stripping the risk debate costs
+    # the CIO 12 net approvals (p=0.004) because it is left with the Execution Desk's
+    # single size and no computed alternatives; the officers' own turns already carry
+    # their own figure via `agent_size_pct` above, so they do not need the table and
+    # handing it to them would replace the judgement their turn exists to exercise.
+    # Only the agent that must CHOOSE a size gets the menu.
+    option_ladder_block = ""
+    if phase == "VERDICT" and proposal:
+        _entry = float(proposal.get("entry") or 0)
+        _stop = float(proposal.get("stop") or 0)
+        _size = float(proposal.get("size_pct") or 0)
+        if _size > 0 and _entry > 0 and 0 < _stop < _entry:
+            option_ladder_block = _render_option_ladder(
+                build_option_ladder(
+                    reference_size_pct=_size,
+                    entry=_entry,
+                    stop=_stop,
+                    target=(
+                        float(proposal["target"])
+                        if proposal.get("target") not in (None, "")
+                        else None
+                    ),
+                    cap_pts=mandate.max_drawdown_pct,
+                    current_drawdown_pct=(
+                        current_drawdown_pct
+                        if isinstance(current_drawdown_pct, (int, float)) else None
+                    ),
+                ),
+                mandate.max_drawdown_pct,
+            )
+
     # The deduped risk-state tier. Deliberately NOT gated on phase: the
     # consumption figures are real at every phase (unlike `proposal`, which does
     # not exist before EXECUTION), so every agent that argues about size gets
@@ -1071,9 +1154,15 @@ def build_room_messages(
         f"{sector_line}"
         f"{researcher_cap_note}"
         f"\n"
+        # CR197 — before the transcript, not after it. The menu is a fact about the
+        # mandate, of a piece with the snapshot above it; the transcript is opinion.
+        # Putting computed figures after eleven turns of prose also invites the model
+        # to read them as one more voice's claim rather than as AMI's arithmetic.
+        f"{option_ladder_block}"
+        f"{chr(10) if option_ladder_block else ''}"
         f"Transcript so far:\n{transcript_text}\n"
         f"{journal_note}"
-        f"\nYour turn. Speak as the {agent_id.value.replace('_', ' ').title()}. "
+        f"\nYour turn. Speak as the {agent_display_name(agent_id)}. "
         f"Write {length}. Use specific numbers wherever possible — but ONLY "
         f"numbers from the data block above. Do NOT cite figures (P/E, growth, "
         f"price targets, market cap) from training memory; if a number isn't "
