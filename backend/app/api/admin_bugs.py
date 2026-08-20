@@ -39,7 +39,13 @@ from app.services.feedback_store import get_feedback_store
 
 router = APIRouter(prefix="/v1/admin/bugs", tags=["admin"])
 
-_VALID_STATUSES = {"open", "in_progress", "pending_review", "resolved"}
+# The lifecycle's core statuses (fix-bugs.md) — the console renders these
+# first. Deliberately NOT a validation whitelist: live bug_reports already
+# carries statuses written freely by psql lanes ("investigating",
+# "wont_fix", …), and a filter that 400s on a status the data actually
+# holds hides rows instead of showing them. The filter is a plain bound
+# equality — any string is safe.
+_CORE_STATUSES = ("open", "in_progress", "pending_review", "resolved")
 
 
 def _summary(r: BugReportRow) -> AdminBugSummary:
@@ -83,11 +89,6 @@ def list_bugs(
     offset: int = Query(default=0, ge=0),
     _: AdminIdentity = Depends(get_admin),
 ) -> AdminBugListResponse:
-    if status_filter and status_filter not in _VALID_STATUSES:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            f"unknown status '{status_filter}'; valid: {sorted(_VALID_STATUSES)}",
-        )
     rows, total, counts = get_feedback_store().admin_list(
         status=status_filter, limit=limit, offset=offset,
     )

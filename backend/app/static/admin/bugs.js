@@ -21,7 +21,15 @@ function showBugs() {
   loadBugs();
 }
 
+// Core lifecycle statuses render first; anything else the live data holds
+// ("investigating", "wont_fix", … — psql lanes write statuses freely) gets
+// its own chip after them, so no row is ever invisible.
 const BUG_STATUSES = ['open', 'in_progress', 'pending_review', 'resolved'];
+
+function bugChipOrder(counts) {
+  const extras = Object.keys(counts).filter(st => !BUG_STATUSES.includes(st)).sort();
+  return BUG_STATUSES.concat(extras);
+}
 
 function bugChip(st, count, active) {
   const label = st === '' ? 'ALL' : st.toUpperCase();
@@ -39,7 +47,7 @@ async function loadBugs() {
     const qs = bugFilter ? `?status=${bugFilter}&limit=100` : '?limit=100';
     const r = await api('GET', '/v1/admin/bugs' + qs);
     const chips = [bugChip('', r.counts ? Object.values(r.counts).reduce((a, b) => a + b, 0) : undefined, bugFilter === '')]
-      .concat(BUG_STATUSES.map(st => bugChip(st, r.counts[st] || 0, bugFilter === st)));
+      .concat(bugChipOrder(r.counts).map(st => bugChip(st, r.counts[st] || 0, bugFilter === st)));
     document.getElementById('bugChips').innerHTML = chips.join('');
     listEl.innerHTML = renderBugList(r.bugs);
   } catch (e) {

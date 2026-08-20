@@ -78,7 +78,14 @@ def test_list_counts_and_filter(client: TestClient) -> None:
     r = client.get("/v1/admin/bugs?status=open", headers=_HDR)
     assert all(b["status"] == "open" for b in r.json()["bugs"])
     assert a in [b["id"] for b in r.json()["bugs"]]
-    assert client.get("/v1/admin/bugs?status=nope", headers=_HDR).status_code == 400
+    # Non-core statuses are DATA, not a vocabulary (live rows carry
+    # "investigating", "wont_fix", …) — the filter accepts any string and
+    # returns matches, never a 400.
+    w = _make_bug("wont_fix")
+    r = client.get("/v1/admin/bugs?status=wont_fix", headers=_HDR)
+    assert r.status_code == 200
+    assert w in [b["id"] for b in r.json()["bugs"]]
+    assert r.json()["counts"]["wont_fix"] >= 1
 
 
 def test_claim_is_atomic_double_claim_409(client: TestClient) -> None:
