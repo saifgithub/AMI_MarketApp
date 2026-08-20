@@ -4353,4 +4353,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get houseAdCtaFloorManager => 'See Floor Manager plans';
+
+  @override
+  String get settingsSectionAdPrivacy => 'AD PRIVACY';
+
+  @override
+  String get settingsAdsDoNotSell =>
+      'Do Not Sell or Share My Personal Information';
+
+  @override
+  String get settingsAdsDoNotSellSubtitle =>
+      'Ads still show, but every ad request is sent with restricted data processing.';
+
+  @override
+  String get settingsAdsDoNotSellSaveFailed =>
+      'That choice did not save. Try again.';
+
+  @override
+  String get settingsAdsConsentRow => 'Manage ad consent';
+
+  @override
+  String get settingsAdsConsentFailed =>
+      'The consent form could not be opened. Try again later.';
 }

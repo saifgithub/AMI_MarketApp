@@ -16,7 +16,9 @@ import 'package:ami_trade/screens/auth/sign_in_screen.dart';
 import 'package:ami_trade/screens/coach/ai_coach_screen.dart';
 import 'package:ami_trade/screens/feedback/bug_report_sheet.dart';
 import 'package:ami_trade/state/feedback_providers.dart';
+import 'package:ami_trade/services/ads/admob_config.dart';
 import 'package:ami_trade/services/ads/ads_models.dart';
+import 'package:ami_trade/state/ads_providers.dart';
 import 'package:ami_trade/services/api/backend_modes.dart';
 import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/state/backend_mode_provider.dart';
@@ -345,6 +347,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const _ThemeSection(),
                   const SizedBox(height: AmiSpacing.l),
                   const _HelpSection(),
+                  // CR122-COMPLIANCE — ad-privacy controls exist ONLY in an
+                  // AdMob-enabled build; offering a CCPA/consent control for
+                  // an SDK that is not in play would be a false claim (the
+                  // DEF085 class).
+                  if (AdMobConfig.isConfigured) ...[
+                    const SizedBox(height: AmiSpacing.l),
+                    const _AdsPrivacySection(),
+                  ],
                   const SizedBox(height: AmiSpacing.l),
                   const _WalkthroughSection(),
                   const SizedBox(height: AmiSpacing.l),
@@ -555,6 +565,132 @@ const Map<String, _ComplianceExplanation> _complianceExplanations = {
         'names where a market order can move the price against you.',
   ),
 };
+
+
+/// CR122-COMPLIANCE — CCPA "Do Not Sell" toggle (`ads.md:108`) and the UMP
+/// re-consent entry point (`ads.md:107`). Rendered only when AdMob is
+/// configured (see the build-site guard above). The toggle is read per ad
+/// request downstream, so a flip applies to the next ad without a restart;
+/// a failed write reverts the switch and says so — a privacy election is
+/// never silently dropped.
+class _AdsPrivacySection extends ConsumerStatefulWidget {
+  const _AdsPrivacySection();
+
+  @override
+  ConsumerState<_AdsPrivacySection> createState() => _AdsPrivacySectionState();
+}
+
+class _AdsPrivacySectionState extends ConsumerState<_AdsPrivacySection> {
+  bool? _doNotSell;
+  bool _consentRowRequired = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = ref.read(adPrivacyPrefsProvider);
+    final consent = ref.read(adMobUmpConsentProvider);
+    final doNotSell = await prefs.doNotSell();
+    var consentRequired = false;
+    if (consent != null) {
+      try {
+        consentRequired = await consent.isPrivacyOptionsRequired();
+      } catch (e) {
+        debugPrint('CR122 UMP privacy-options requirement check failed — '
+            'hiding the re-consent row: $e');
+      }
+    }
+    if (!mounted) return;
+    setState(() {
+      _doNotSell = doNotSell;
+      _consentRowRequired = consentRequired;
+    });
+  }
+
+  Future<void> _setDoNotSell(bool value) async {
+    final previous = _doNotSell;
+    setState(() => _doNotSell = value);
+    try {
+      await ref.read(adPrivacyPrefsProvider).setDoNotSell(value);
+    } catch (e) {
+      debugPrint('CR122 CCPA toggle write failed — reverting: $e');
+      if (!mounted) return;
+      setState(() => _doNotSell = previous);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              AppLocalizations.of(context).settingsAdsDoNotSellSaveFailed)));
+    }
+  }
+
+  Future<void> _openConsentForm() async {
+    final consent = ref.read(adMobUmpConsentProvider);
+    if (consent == null) return;
+    try {
+      await consent.showPrivacyOptionsForm();
+    } catch (e) {
+      debugPrint('CR122 UMP privacy-options form failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content:
+              Text(AppLocalizations.of(context).settingsAdsConsentFailed)));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return _Section(
+      title: l.settingsSectionAdPrivacy,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l.settingsAdsDoNotSell, style: AmiTypography.body),
+                  const SizedBox(height: 2),
+                  Text(
+                    l.settingsAdsDoNotSellSubtitle,
+                    style:
+                        AmiTypography.caption.copyWith(color: AmiColors.textLow),
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              value: _doNotSell ?? false,
+              onChanged: _doNotSell == null ? null : _setDoNotSell,
+              activeThumbColor: AmiColors.hexGreen,
+              inactiveThumbColor: AmiColors.slate600,
+            ),
+          ],
+        ),
+        if (_consentRowRequired)
+          InkWell(
+            onTap: _openConsentForm,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                children: [
+                  const Icon(Icons.privacy_tip_outlined,
+                      color: AmiColors.hexBlue, size: 18),
+                  const SizedBox(width: AmiSpacing.s),
+                  Expanded(
+                      child:
+                          Text(l.settingsAdsConsentRow, style: AmiTypography.body)),
+                  const Icon(Icons.chevron_right, color: AmiColors.textLow),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
 
 
 class _ComplianceExplanation {

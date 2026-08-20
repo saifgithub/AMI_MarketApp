@@ -2755,6 +2755,11 @@
         "roomStageRiskReviewSubtitle": "430f84c52e63",
         "roomStageStatusSemantic": "6759d1fe2bc3",
         "roomStageWorking": "7e5068cf6602",
+        "settingsAdsConsentFailed": "a34d132db408",
+        "settingsAdsConsentRow": "49814ddfed89",
+        "settingsAdsDoNotSell": "4603e3653d3f",
+        "settingsAdsDoNotSellSaveFailed": "c072cd369a70",
+        "settingsAdsDoNotSellSubtitle": "d13b6a6cf9f2",
         "settingsComplianceEsgLite": "b7a9f56d0bf4",
         "settingsComplianceHalal": "91b330e7077b",
         "settingsComplianceHalalExplainBody": "b9da271eda2a",
@@ -2800,6 +2805,7 @@
         "settingsRiskPresetDayTraderActive": "50be044fb86c",
         "settingsRiskPresetDayTraderExplain": "9c3c06b0cb9c",
         "settingsRiskScoreValue": "578059fadc45",
+        "settingsSectionAdPrivacy": "a7da088de081",
         "settingsSectionLeague": "3cd0bba23781",
         "settingsSectionMembership": "de0799a9c328",
         "settingsSectionRiskLimits": "80c2a274402b",
@@ -2957,5 +2963,11 @@
     "houseAdGenericHeadline": "Do more with Trader — $14.99/mo",
     "houseAdGenericBody": "Unlimited 1-on-1s, 10 Rooms a month, and a bigger credit allowance.",
     "houseAdCtaTrader": "See Trader plans",
-    "houseAdCtaFloorManager": "See Floor Manager plans"
+    "houseAdCtaFloorManager": "See Floor Manager plans",
+    "settingsSectionAdPrivacy": "AD PRIVACY",
+    "settingsAdsDoNotSell": "Do Not Sell or Share My Personal Information",
+    "settingsAdsDoNotSellSubtitle": "Ads still show, but every ad request is sent with restricted data processing.",
+    "settingsAdsDoNotSellSaveFailed": "That choice did not save. Try again.",
+    "settingsAdsConsentRow": "Manage ad consent",
+    "settingsAdsConsentFailed": "The consent form could not be opened. Try again later."
 }

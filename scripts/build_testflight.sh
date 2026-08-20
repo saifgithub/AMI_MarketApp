@@ -40,6 +40,19 @@
 #                            Auto-sourced from infra/alpha.env if not exported.
 #                            Public by design — safe to embed in a shipped client.
 #
+# ADS (CR122-MOBILE-C, all optional — unset keeps the build 100% house fill,
+# byte-identical ad behaviour to a pre-CR122 pipeline):
+#   ADMOB_MODE                    - '' (off, default) | 'test' (Google's
+#                                   RESERVED test unit ids) | 'live' (unit ids
+#                                   from the two vars below — Saiful's AdMob
+#                                   account material, never committed)
+#   ADMOB_INTERSTITIAL_AD_UNIT_ID - live interstitial unit id (mode=live only)
+#   ADMOB_NATIVE_AD_UNIT_ID       - live native unit id (mode=live only)
+#   ADMOB_TEST_DEVICE_IDS         - comma-separated test-device ids (forces
+#                                   test fill on live unit ids)
+#   ADMOB_CONSENT_DEBUG_GEOGRAPHY - '' | 'eea' | 'us_state' | 'other' (UMP
+#                                   debug geography for consent-form testing)
+#
 # BILLING GATE (CR084 / CR040 degrade-loudly): without the SDK key,
 # `BillingConfig.isConfigured` is false and the paywall renders the info state
 # with NO buy button — the app cannot take money. That is the correct fallback
@@ -56,6 +69,30 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MOBILE_DIR="${PROJECT_ROOT}/mobile"
 IOS_DIR="${MOBILE_DIR}/ios"
 
+: "${ADMOB_MODE:=}"
+: "${ADMOB_INTERSTITIAL_AD_UNIT_ID:=}"
+: "${ADMOB_NATIVE_AD_UNIT_ID:=}"
+: "${ADMOB_TEST_DEVICE_IDS:=}"
+: "${ADMOB_CONSENT_DEBUG_GEOGRAPHY:=}"
+
+# ADS POLICY GATE (CR122-COMPLIANCE / DEF085 class): an AdMob-carrying store
+# build shares data with a third-party ad network, and the live privacy
+# policy + store privacy labels say we do not. Those must flip FIRST —
+# docs/forward_planning/CR122_ads_monetization/CR122_admob_compliance_and_liaison.md
+# is the checklist. Per CLAUDE.md a doc is not a control, so the gate is
+# here: pass ADMOB_POLICY_PUBLISHED=1 only after the v2.1 policy and the
+# store privacy labels are actually live.
+if [[ -n "${ADMOB_MODE}" && "${ADMOB_POLICY_PUBLISHED:-}" != "1" ]]; then
+  cat >&2 <<'ADMOB_GATE'
+✗ ADMOB_MODE is set but ADMOB_POLICY_PUBLISHED=1 is not.
+  An AdMob-enabled store build may not ship while the privacy policy and the
+  store privacy labels still say "no third-party ad sharing" (DEF085 class).
+  Complete the compliance checklist first:
+    docs/forward_planning/CR122_ads_monetization/CR122_admob_compliance_and_liaison.md
+  then re-run with ADMOB_POLICY_PUBLISHED=1.
+ADMOB_GATE
+  exit 1
+fi
 : "${APP_STORE_API_KEY_ID:=44VJ5WADL2}"
 : "${APP_STORE_API_ISSUER:=289e6201-8fc9-44a3-abde-59e8e278527c}"
 : "${AMI_API_URL_ALPHA:=https://api-alpha.agenticmarketintel.ai}"
@@ -444,7 +481,12 @@ flutter build ios --release --no-codesign \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
   --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
   --dart-define=AMI_GAMES="$([[ "$DO_GAMES" -eq 1 ]] && echo true || echo false)" \
-  --dart-define=REVENUECAT_IOS_SDK_KEY="${REVENUECAT_IOS_SDK_KEY}"
+  --dart-define=REVENUECAT_IOS_SDK_KEY="${REVENUECAT_IOS_SDK_KEY}" \
+  --dart-define=ADMOB_MODE="${ADMOB_MODE}" \
+  --dart-define=ADMOB_INTERSTITIAL_AD_UNIT_ID="${ADMOB_INTERSTITIAL_AD_UNIT_ID}" \
+  --dart-define=ADMOB_NATIVE_AD_UNIT_ID="${ADMOB_NATIVE_AD_UNIT_ID}" \
+  --dart-define=ADMOB_TEST_DEVICE_IDS="${ADMOB_TEST_DEVICE_IDS}" \
+  --dart-define=ADMOB_CONSENT_DEBUG_GEOGRAPHY="${ADMOB_CONSENT_DEBUG_GEOGRAPHY}"
 
 echo "▶ xcodebuild archive  (signs + auto-refreshes provisioning profile)"
 cd "$IOS_DIR"

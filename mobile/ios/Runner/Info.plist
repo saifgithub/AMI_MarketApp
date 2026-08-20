@@ -25,6 +25,31 @@
 	<string>Attach a photo to your in-app bug report.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Pick a screenshot to attach to your in-app bug report.</string>
+	<!-- CR122-MOBILE-C: Google Mobile Ads. GADApplicationIdentifier is
+	     GOOGLE'S PUBLISHED SAMPLE iOS app id, committed on purpose — the GMA
+	     SDK hard-crashes at launch when the key is absent once the plugin is
+	     linked, and real ids are Saiful's AdMob account material (swap step
+	     in docs/forward_planning/CR122_ads_monetization/
+	     CR122_admob_compliance_and_liaison.md). GADDelayAppMeasurementInit
+	     keeps the native SDK dormant at process launch; measurement starts
+	     only if Dart calls MobileAds.initialize(), which never happens
+	     without the ADMOB_MODE dart-define. The ATT purpose string shows on
+	     the OS tracking prompt the UMP flow triggers (ads.md:106); the
+	     SKAdNetwork ids are Google's published attribution set (primary id —
+	     the full 50-entry list ships with the liaison step, same doc). -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<key>GADDelayAppMeasurementInit</key>
+	<true/>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Allowing tracking lets the ads on the free Floor Pass plan be more relevant. If you decline, you still see ads — just non-personalised.</string>
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>cstr6suwn9.skadnetwork</string>
+		</dict>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

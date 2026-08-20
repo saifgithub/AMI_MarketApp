@@ -7,11 +7,14 @@
 /// the lesson counter first (so the 1-per-5 cap advances even when nothing
 /// shows), then asks [AdGate] — plan gate, session/day/10-minute caps and
 /// the unreadable-store block all apply before a route is ever pushed.
+/// With AdMob filling (CR122-MOBILE-C) the SDK presents its own full-screen
+/// ad through [AdMobInterstitialFill.handle]; this page renders house fill.
 library;
 
 import 'dart:async';
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/services/ads/admob_sdk.dart';
 import 'package:ami_trade/services/ads/ads_models.dart';
 import 'package:ami_trade/state/ads_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -28,6 +31,13 @@ Future<void> maybeShowPostLessonInterstitial(
   await gate.recordLessonCompleted();
   final decision = await gate.request(AdPlacement.postLessonInterstitial);
   final fill = decision.fill;
+  if (fill is AdMobInterstitialFill) {
+    // CR122-MOBILE-C — the SDK presents its own full-screen ad and owns the
+    // close affordance; skippability is verified on-device (test plan #2).
+    await gate.recordShown(AdPlacement.postLessonInterstitial);
+    await fill.handle.show();
+    return;
+  }
   if (fill is! HouseAdFill) return;
   if (!context.mounted) return;
   await gate.recordShown(AdPlacement.postLessonInterstitial);

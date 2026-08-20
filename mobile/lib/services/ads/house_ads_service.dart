@@ -18,11 +18,15 @@ import 'package:flutter/foundation.dart';
 
 class HouseAdsService implements AdsService {
   HouseAdsService() {
-    // CR122: one loud line at init while AdMob (MOBILE-C) is not wired, so a
-    // log reader can see WHY every impression is house (`ads.md` unset-AdMob
-    // rule: 100% house fill, never a blank slot).
+    // CR122: one loud line at init when AdMob (MOBILE-C) is not configured,
+    // so a log reader can see WHY every impression is house (`ads.md`
+    // unset-AdMob rule: 100% house fill, never a blank slot).
     debugPrint('CR122 AdsService=house — AdMob not configured, 100% house fill');
   }
+
+  /// The fallback instance INSIDE [AdMobAdsService] — same inventory, no
+  /// "AdMob not configured" log line, because there it would be a lie.
+  HouseAdsService.asFallback();
 
   @override
   String get network => 'house';

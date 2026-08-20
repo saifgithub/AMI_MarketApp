@@ -20,6 +20,15 @@
 
 set -euo pipefail
 
+# CR122-MOBILE-C — AdMob dart-defines, all default-empty (house fill only).
+# ADMOB_MODE=test uses Google's reserved test unit ids on the cable build —
+# the pre-launch way to see real SDK fill on the iPhone.
+: "${ADMOB_MODE:=}"
+: "${ADMOB_INTERSTITIAL_AD_UNIT_ID:=}"
+: "${ADMOB_NATIVE_AD_UNIT_ID:=}"
+: "${ADMOB_TEST_DEVICE_IDS:=}"
+: "${ADMOB_CONSENT_DEBUG_GEOGRAPHY:=}"
+
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MOBILE_DIR="${PROJECT_ROOT}/mobile"
 
@@ -97,6 +106,11 @@ flutter build ios --release \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
   --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
   --dart-define=AMI_GAMES=true \
+  --dart-define=ADMOB_MODE="${ADMOB_MODE}" \
+  --dart-define=ADMOB_INTERSTITIAL_AD_UNIT_ID="${ADMOB_INTERSTITIAL_AD_UNIT_ID}" \
+  --dart-define=ADMOB_NATIVE_AD_UNIT_ID="${ADMOB_NATIVE_AD_UNIT_ID}" \
+  --dart-define=ADMOB_TEST_DEVICE_IDS="${ADMOB_TEST_DEVICE_IDS}" \
+  --dart-define=ADMOB_CONSENT_DEBUG_GEOGRAPHY="${ADMOB_CONSENT_DEBUG_GEOGRAPHY}" \
   2> >(_quiet >&2)
 
 echo "▶ flutter install -d ${DEVICE_ID} (${TARGET_NAME})"

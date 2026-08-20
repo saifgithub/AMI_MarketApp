@@ -14,10 +14,12 @@ library;
 
 import 'dart:async';
 
+import 'package:ami_trade/services/ads/admob_sdk.dart';
 import 'package:ami_trade/services/ads/ads_models.dart';
 import 'package:ami_trade/state/ads_providers.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/ads/admob_native_card.dart';
 import 'package:ami_trade/widgets/ads/house_ad_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -84,15 +86,23 @@ class _AdSlotState extends ConsumerState<AdSlot> {
       return const SizedBox.shrink();
     }
     final fill = decision.fill;
-    if (fill is! HouseAdFill) {
-      // Only house fill exists in this slice; an unknown fill type renders
-      // nothing rather than guessing (the AdMob lane extends this switch).
+    final Widget card;
+    if (fill is HouseAdFill) {
+      card = HouseAdCard(
+        creative: fill.creative,
+        onDismiss: () => setState(() => _dismissed = true),
+      );
+    } else if (fill is AdMobNativeFill) {
+      // CR122-MOBILE-C — the SDK template inside our own labelled, one-tap
+      // dismissable chrome; the card owns disposal of the platform ad.
+      card = AdMobNativeCard(
+        fill: fill,
+        onDismiss: () => setState(() => _dismissed = true),
+      );
+    } else {
+      // An unknown fill type renders nothing rather than guessing.
       return const SizedBox.shrink();
     }
-    final card = HouseAdCard(
-      creative: fill.creative,
-      onDismiss: () => setState(() => _dismissed = true),
-    );
     if (!widget.topSpacing) return card;
     return Padding(
       padding: const EdgeInsets.only(top: AmiSpacing.m),

@@ -43,6 +43,22 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- CR122-MOBILE-C: Google Mobile Ads. APPLICATION_ID is GOOGLE'S
+             PUBLISHED SAMPLE Android app id, committed on purpose — the GMA
+             SDK crashes the app at launch when the key is absent once the
+             plugin is linked, and real ids are Saiful's AdMob account
+             material (swap step in docs/forward_planning/
+             CR122_ads_monetization/CR122_admob_compliance_and_liaison.md).
+             DELAY_APP_MEASUREMENT_INIT keeps the native SDK dormant at
+             process launch; measurement starts only if Dart calls
+             MobileAds.initialize(), which never happens without the
+             ADMOB_MODE dart-define. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+        <meta-data
+            android:name="com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT"
+            android:value="true" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

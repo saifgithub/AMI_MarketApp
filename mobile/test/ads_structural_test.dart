@@ -4,9 +4,11 @@
 /// denylist and the CR084-style SDK seam are enforced as source-level
 /// invariants, not review conventions:
 ///
-///   1. SDK seam — only `lib/services/ads/` may ever import an ad SDK
-///      (`google_mobile_ads`, `huawei_ads`). Screens and widgets go through
-///      the facade. This is the grep the CR122-MOBILE-C lane inherits.
+///   1. SDK seam — exactly ONE file may import an ad SDK
+///      (`google_mobile_ads`, `huawei_ads`): the CR122-MOBILE-C adapter
+///      `lib/services/ads/admob_real_sdk.dart`. Screens, widgets and every
+///      other service — the facade impls included — see only the
+///      `admob_sdk.dart` seam interfaces.
 ///   2. AdSlot call sites — the EXACT set of files allowed to instantiate
 ///      `AdSlot(` is asserted, so a future screen quietly gaining an ad slot
 ///      fails this suite (the static twin of the UAT regression net).
@@ -23,6 +25,10 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 const _adSdkImports = ['google_mobile_ads', 'huawei_ads'];
+
+/// The single file allowed to import an ad SDK. If the adapter moves, move
+/// this pin with it — the positive assertion below fails on a silent orphan.
+const _adSdkAdapterFile = 'lib/services/ads/admob_real_sdk.dart';
 
 /// The only files allowed to contain an `AdSlot(` instantiation: the widget's
 /// own definition plus the wired approved placements (`ads.md:39-44`).
@@ -75,21 +81,27 @@ void main() {
       .where((f) => f.path.endsWith('.dart'))
       .toList();
 
-  test('only lib/services/ads/ may import an ad SDK', () {
+  test('the ad SDK import is pinned to admob_real_sdk.dart alone', () {
     final offenders = <String>[];
+    var adapterImportsSdk = false;
     for (final f in libFiles) {
-      if (f.path.startsWith('lib/services/ads/')) continue;
       final src = f.readAsStringSync();
-      for (final sdk in _adSdkImports) {
-        if (src.contains("import 'package:$sdk")) {
-          offenders.add('${f.path} imports $sdk');
-        }
+      final importsSdk =
+          _adSdkImports.any((sdk) => src.contains("import 'package:$sdk"));
+      if (f.path == _adSdkAdapterFile) {
+        adapterImportsSdk = importsSdk;
+        continue;
       }
+      if (importsSdk) offenders.add(f.path);
     }
     expect(offenders, isEmpty,
-        reason: 'Ad SDKs live behind the AdsService facade only '
-            '(CR122, mirroring the CR084 purchase seam):\n'
-            '${offenders.join('\n')}');
+        reason: 'Ad SDKs live behind the AdsService facade, imported by the '
+            'single adapter file only (CR122, mirroring the CR084 purchase '
+            'seam):\n${offenders.join('\n')}');
+    expect(adapterImportsSdk, isTrue,
+        reason: '$_adSdkAdapterFile no longer imports the ad SDK — if the '
+            'adapter moved, move this pin with it so the seam stays '
+            'enforced.');
   });
 
   test('AdSlot is instantiated ONLY at the approved placements', () {

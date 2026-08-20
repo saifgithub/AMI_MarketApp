@@ -7138,6 +7138,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'See Floor Manager plans'**
   String get houseAdCtaFloorManager;
+
+  /// CR122-COMPLIANCE — Settings section title for ad privacy controls; shown only in AdMob-enabled builds. UPPERCASE mono like the other section titles. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AD PRIVACY'**
+  String get settingsSectionAdPrivacy;
+
+  /// CR122-COMPLIANCE — CCPA opt-out toggle label (ads.md:108). This is the CCPA statutory phrase; AR/MS should translate the meaning, not invent a different legal term. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Do Not Sell or Share My Personal Information'**
+  String get settingsAdsDoNotSell;
+
+  /// CR122-COMPLIANCE — subtitle under the CCPA toggle explaining the effect (non-personalised ad requests, ads keep showing). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Ads still show, but every ad request is sent with restricted data processing.'**
+  String get settingsAdsDoNotSellSubtitle;
+
+  /// CR122-COMPLIANCE — snackbar when persisting the CCPA toggle fails; the switch reverts so the UI never claims an election that did not stick. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'That choice did not save. Try again.'**
+  String get settingsAdsDoNotSellSaveFailed;
+
+  /// CR122-COMPLIANCE — row that reopens the UMP privacy-options (GDPR consent) form; visible only when the consent SDK says an entry point is required. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Manage ad consent'**
+  String get settingsAdsConsentRow;
+
+  /// CR122-COMPLIANCE — snackbar when the UMP privacy-options form fails to open. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'The consent form could not be opened. Try again later.'**
+  String get settingsAdsConsentFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -13,12 +13,18 @@
 ///      off for the rest of it: an upgrade removes ads immediately
 ///      (`ads.md:113`), a downgrade restores them next session (`ads.md:115`);
 ///   4. frequency caps (MOBILE-B) — persisted; unreadable store BLOCKS;
-///   5. network fill via the [AdsService] facade (house-only in this slice —
-///      the AdMob lane swaps the provider body behind its config flag, with
-///      unset config keeping 100% house fill).
+///   5. network fill via the [AdsService] facade — house by default; with
+///      the CR122-MOBILE-C `ADMOB_MODE` dart-define set, AdMob behind the
+///      same facade (consent-gated, house fallback for every unfilled
+///      request; unset config keeps 100% house fill).
 library;
 
 import 'package:ami_trade/services/ads/ad_frequency_caps.dart';
+import 'package:ami_trade/services/ads/ad_privacy_prefs.dart';
+import 'package:ami_trade/services/ads/admob_ads_service.dart';
+import 'package:ami_trade/services/ads/admob_config.dart';
+import 'package:ami_trade/services/ads/admob_real_sdk.dart';
+import 'package:ami_trade/services/ads/admob_sdk.dart';
 import 'package:ami_trade/services/ads/ads_models.dart';
 import 'package:ami_trade/services/ads/ads_service.dart';
 import 'package:ami_trade/services/ads/house_ads_service.dart';
@@ -31,7 +37,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// decision, everything else refuses.
 const plansWithAds = {'floor_pass'};
 
-final adsServiceProvider = Provider<AdsService>((ref) => HouseAdsService());
+/// CR122-MOBILE-C: the facade impl is chosen by `AdMobConfig` alone. No
+/// `ADMOB_MODE` dart-define → `setup` is null → the MOBILE-A house service,
+/// no SDK object ever constructed, no platform channel ever touched — the
+/// store pipelines behave exactly as before this lane landed.
+final adsServiceProvider = Provider<AdsService>((ref) {
+  final setup = AdMobConfig.setup;
+  if (setup == null) return HouseAdsService();
+  return AdMobAdsService(
+    setup: setup,
+    sdk: RealAdMobSdk(),
+    consent: RealAdMobUmpConsent(),
+    house: HouseAdsService.asFallback(),
+    privacyPrefs: ref.watch(adPrivacyPrefsProvider),
+  );
+});
+
+final adPrivacyPrefsProvider = Provider<AdPrivacyPrefs>(
+    (ref) => AdPrivacyPrefs(SharedPreferencesAdCapStore()));
+
+/// The UMP consent seam for the Settings re-consent entry point — null when
+/// AdMob is off, which is also what hides the Settings section (a consent
+/// control for an SDK that isn't in play would be a false claim, the DEF085
+/// class).
+final adMobUmpConsentProvider = Provider<AdMobUmpConsent?>((ref) =>
+    AdMobConfig.isConfigured ? RealAdMobUmpConsent() : null);
 
 final adCapStoreProvider =
     Provider<AdCapStore>((ref) => SharedPreferencesAdCapStore());

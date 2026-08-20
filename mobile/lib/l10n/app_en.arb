@@ -5567,5 +5567,29 @@
   "houseAdCtaFloorManager": "See Floor Manager plans",
   "@houseAdCtaFloorManager": {
     "description": "CR122 — CTA on Floor-Manager-targeted house ads; opens the CR084 paywall. NEW key. retranslate:[ar,ms]"
+  },
+  "settingsSectionAdPrivacy": "AD PRIVACY",
+  "@settingsSectionAdPrivacy": {
+    "description": "CR122-COMPLIANCE — Settings section title for ad privacy controls; shown only in AdMob-enabled builds. UPPERCASE mono like the other section titles. NEW key. retranslate:[ar,ms]"
+  },
+  "settingsAdsDoNotSell": "Do Not Sell or Share My Personal Information",
+  "@settingsAdsDoNotSell": {
+    "description": "CR122-COMPLIANCE — CCPA opt-out toggle label (ads.md:108). This is the CCPA statutory phrase; AR/MS should translate the meaning, not invent a different legal term. NEW key. retranslate:[ar,ms]"
+  },
+  "settingsAdsDoNotSellSubtitle": "Ads still show, but every ad request is sent with restricted data processing.",
+  "@settingsAdsDoNotSellSubtitle": {
+    "description": "CR122-COMPLIANCE — subtitle under the CCPA toggle explaining the effect (non-personalised ad requests, ads keep showing). NEW key. retranslate:[ar,ms]"
+  },
+  "settingsAdsDoNotSellSaveFailed": "That choice did not save. Try again.",
+  "@settingsAdsDoNotSellSaveFailed": {
+    "description": "CR122-COMPLIANCE — snackbar when persisting the CCPA toggle fails; the switch reverts so the UI never claims an election that did not stick. NEW key. retranslate:[ar,ms]"
+  },
+  "settingsAdsConsentRow": "Manage ad consent",
+  "@settingsAdsConsentRow": {
+    "description": "CR122-COMPLIANCE — row that reopens the UMP privacy-options (GDPR consent) form; visible only when the consent SDK says an entry point is required. NEW key. retranslate:[ar,ms]"
+  },
+  "settingsAdsConsentFailed": "The consent form could not be opened. Try again later.",
+  "@settingsAdsConsentFailed": {
+    "description": "CR122-COMPLIANCE — snackbar when the UMP privacy-options form fails to open. NEW key. retranslate:[ar,ms]"
   }
 }
