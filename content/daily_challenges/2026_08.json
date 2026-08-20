@@ -5,7 +5,7 @@
     "difficulty": 2,
     "locale": "en",
     "scenario": "SPX between June 12 (5430) and July 8 (5430), six tests of resistance at 5460 each failed within 2 sessions. On July 9 volume rose 1.4x the 20-day average and SPX closed at 5478. The 20-day MA crossed above 5440 the prior session.",
-    "question": "Which technical setup is the Market Analyst most likely to call this?",
+    "question": "Which technical setup is the Technical Strategist most likely to call this?",
     "options": [
       "A double top forming at 5478",
       "An exhaustion gap that will reverse within 3 sessions",
@@ -24,7 +24,7 @@
     "difficulty": 1,
     "locale": "en",
     "scenario": "On August 1 NVDA prints a daily candle: open $122.40, high $123.90, low $121.95, close $122.10. The body is small and red; the upper wick is roughly 5x the body length; the lower wick is tiny. Volume is 1.6x the 20-day average. This sits at the top of a 4-week uptrend from $108.",
-    "question": "What does the Market Analyst call this candle?",
+    "question": "What does the Technical Strategist call this candle?",
     "options": [
       "A bullish hammer signalling continuation",
       "A shooting star — long upper wick, small body near the open, at the top of an uptrend, on heavy volume",
@@ -43,7 +43,7 @@
     "difficulty": 1,
     "locale": "en",
     "scenario": "User's mandate: max single-position size 6% of NAV, max single-stock concentration 10%, mandatory stop on every entry. NAV is $80,000. The user submits a buy ticket for AAPL: 60 shares at $215 (notional $12,900, or 16.1% of NAV). The user holds no other AAPL. No stop is attached. The ticket includes a price target of $235.",
-    "question": "Which mandate rule does the Portfolio Manager flag first?",
+    "question": "Which mandate rule does the Chief Investment Officer flag first?",
     "options": [
       "Concentration rule — AAPL exposure would hit 16.1%, above the 10% concentration cap",
       "Target rule — $235 is too ambitious",
@@ -51,7 +51,7 @@
       "Sector rule — AAPL is a tech-only bet"
     ],
     "answer": 2,
-    "explanation": "Position size is checked before concentration. The single-position cap is 6% ($4,800 on an $80k account); the ticket alone is $12,900 — 16.1% of NAV, ~2.7x the cap. The Portfolio Manager blocks on sizing before any other rule. The 'concentration' answer is tempting because the same number breaches both — but position-size is the structurally earlier gate, and there's no other AAPL to aggregate against. The missing stop is also a violation, but it's the second flag, not the first.",
+    "explanation": "Position size is checked before concentration. The single-position cap is 6% ($4,800 on an $80k account); the ticket alone is $12,900 — 16.1% of NAV, ~2.7x the cap. The Chief Investment Officer blocks on sizing before any other rule. The 'concentration' answer is tempting because the same number breaches both — but position-size is the structurally earlier gate, and there's no other AAPL to aggregate against. The missing stop is also a violation, but it's the second flag, not the first.",
     "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "position_sizing", "safety_floor", "module_3"]
@@ -64,13 +64,13 @@
     "scenario": "During a Room debate on TSLA at $268, an agent says: 'Daily RSI hit 79 yesterday — fourth close above 70 in the last six sessions. MACD histogram is still positive but flattening. Price is 11% above the 20-day MA. Momentum is real, but the band is stretched; entries here are buying the top half of the move.'",
     "question": "Which agent is most likely speaking?",
     "options": [
-      "The Market Analyst reading momentum oscillators and trend-extension distance from the 20-day MA",
+      "The Technical Strategist reading momentum oscillators and trend-extension distance from the 20-day MA",
       "The Fundamentals Analyst flagging that TSLA's P/E is stretched against historical norms",
-      "The News Analyst summarising delivery-number reactions",
+      "The Macro & Events desk summarising delivery-number reactions",
       "The Bull Researcher arguing for breakout continuation"
     ],
     "answer": 0,
-    "explanation": "The quote is built entirely on technical indicators: RSI level and persistence above 70, MACD histogram behaviour, and distance from the 20-day MA. Those are the Market Analyst's tools. The 'Fundamentals Analyst on P/E' answer is the trap — both agents can say 'stretched', but P/E and balance-sheet language is absent here; the entire vocabulary is oscillator and moving-average. Match the vocabulary to the lane.",
+    "explanation": "The quote is built entirely on technical indicators: RSI level and persistence above 70, MACD histogram behaviour, and distance from the 20-day MA. Those are the Technical Strategist's tools. The 'Fundamentals Analyst on P/E' answer is the trap — both agents can say 'stretched', but P/E and balance-sheet language is absent here; the entire vocabulary is oscillator and moving-average. Match the vocabulary to the lane.",
     "related_lesson": "027_rsi_momentum_oscillator",
     "related_agent": "market_analyst",
     "tags": ["agents", "rsi", "module_5"]
@@ -81,7 +81,7 @@
     "difficulty": 2,
     "locale": "en",
     "scenario": "MSFT rallied from $402 (July 1) to $448 (July 28) in a clean uptrend. From July 29 to August 4 it pulled back to $431 on declining volume (each red candle smaller than the last). The 20-day MA sits at $429 and is sloping up. The 50-day MA is at $415. On August 5 MSFT opens at $432 and closes at $437 on volume 1.2x the 20-day average.",
-    "question": "What does the Market Analyst call this?",
+    "question": "What does the Technical Strategist call this?",
     "options": [
       "A bull-flag pullback resolving up: pullback on declining volume held the 20-day MA at $429, August 5 closed up on rising volume",
       "A distribution pattern signalling smart-money selling",
@@ -100,7 +100,7 @@
     "difficulty": 2,
     "locale": "en",
     "scenario": "GOOGL trades at $182. The 50-day MA is at $176 and rising. The 200-day MA is at $164 and rising. Yesterday GOOGL closed at $182.40 on volume 1.8x the 20-day average after eight sessions of consolidation between $178 and $181. RSI is 64, not overbought. MACD just crossed above its signal line.",
-    "question": "What is the Market Analyst most likely to say?",
+    "question": "What is the Technical Strategist most likely to say?",
     "options": [
       "Neutral — wait for a pullback to the 50-day MA at $176",
       "Sell — RSI at 64 is one tick from overbought",
@@ -118,16 +118,16 @@
     "type": "whats_missing",
     "difficulty": 2,
     "locale": "en",
-    "scenario": "Room verdict on AMZN at $198: 'Market Analyst — clean breakout above $194 on 1.7x volume, 50-day rising at $186. Bull Researcher — 14% upside to $226. Bear Researcher — regulatory tail risk on advertising. Research Manager — moderate BUY conviction 0.61. Trader — entry $199 stop $191 target $222. Portfolio Manager — sizing OK at 5% NAV, stop placement compliant. Verdict: BUY 5% of NAV.'",
+    "scenario": "Room verdict on AMZN at $198: 'Technical Strategist — clean breakout above $194 on 1.7x volume, 50-day rising at $186. Bull Researcher — 14% upside to $226. Bear Researcher — regulatory tail risk on advertising. Research Manager — moderate BUY conviction 0.61. Execution Desk — entry $199 stop $191 target $222. Chief Investment Officer — sizing OK at 5% NAV, stop placement compliant. Verdict: BUY 5% of NAV.'",
     "question": "Whose input is conspicuously absent from this verdict?",
     "options": [
       "The Fundamentals Analyst — no revenue, margin, or earnings read appears anywhere",
-      "Neutral Debator",
-      "Social Media Analyst",
-      "Aggressive Debator"
+      "Balanced Risk Officer",
+      "Flow & Positioning",
+      "Aggressive Risk Officer"
     ],
     "answer": 0,
-    "explanation": "Every other lane is covered — technicals (Market Analyst), narrative (Bull/Bear Researchers, Research Manager), execution (Trader), compliance (Portfolio Manager). The Fundamentals Analyst is missing entirely. Buying AMZN at $198 without any read on revenue growth, AWS margins, or operating leverage is a chart-only trade. The Aggressive/Neutral Debators and Social Media Analyst can be silent on a given verdict without breaking it; the fundamentals lane should not be.",
+    "explanation": "Every other lane is covered — technicals (Technical Strategist), narrative (Bull/Bear Researchers, Research Manager), execution (Execution Desk), compliance (Chief Investment Officer). The Fundamentals Analyst is missing entirely. Buying AMZN at $198 without any read on revenue growth, AWS margins, or operating leverage is a chart-only trade. The Aggressive/Balanced Risk Officers and Flow & Positioning can be silent on a given verdict without breaking it; the fundamentals lane should not be.",
     "related_lesson": null,
     "related_agent": "fundamentals_analyst",
     "tags": ["room", "completeness", "module_6"]
@@ -138,7 +138,7 @@
     "difficulty": 1,
     "locale": "en",
     "scenario": "XOM 6-month chart: price moved from $108 (Feb) to $122 (April) to $116 (May) to $128 (June) to $124 (July) to $134 (Aug 1). Each pullback held above the prior pullback low; each rally made a new high. The 50-day MA has sloped up the entire period.",
-    "question": "How does the Market Analyst describe the trend?",
+    "question": "How does the Technical Strategist describe the trend?",
     "options": [
       "A bearish descending channel",
       "A classic uptrend — higher highs and higher lows with a rising 50-day MA underneath",
@@ -157,7 +157,7 @@
     "difficulty": 2,
     "locale": "en",
     "scenario": "User's mandate: max loss per trade 2% of NAV, mandatory stop on every entry, stop must be at a technical level (not arbitrary). NAV $120,000. User submits META buy: 40 shares at $580 (notional $23,200). Stop set at $574 — a flat 1% below entry, ignoring chart structure. The nearest technical support is $562 (the 50-day MA and the prior swing low).",
-    "question": "Which mandate rule does the Portfolio Manager flag?",
+    "question": "Which mandate rule does the Chief Investment Officer flag?",
     "options": [
       "Stop is missing entirely",
       "Position-size cap — the ticket is too large",
@@ -178,13 +178,13 @@
     "scenario": "An agent says about JPM at $214: 'MACD line crossed below the signal line on Tuesday after eleven sessions above it. The histogram flipped negative for the first time since June 4. Price is still above the 50-day MA at $208, but the momentum oscillator is no longer confirming the trend. Watch $208 — if that breaks, the technical structure cracks.'",
     "question": "Which agent is most likely speaking?",
     "options": [
-      "The Trader proposing a short entry with a tight stop",
+      "The Execution Desk proposing a short entry with a tight stop",
       "The Bear Researcher arguing recession risk for banks",
-      "The Market Analyst describing a MACD bearish crossover with moving-average context",
-      "The News Analyst reacting to a Fed announcement on rate cuts"
+      "The Technical Strategist describing a MACD bearish crossover with moving-average context",
+      "The Macro & Events desk reacting to a Fed announcement on rate cuts"
     ],
     "answer": 2,
-    "explanation": "The entire quote is technical indicators — MACD line vs signal line, histogram sign, moving-average level, structural break level. Those are the Market Analyst's tools. The 'Trader proposing a short' answer is tempting because the framing 'watch $208' sounds executional, but no entry price, stop, or size is given — that's an analyst flagging a setup, not a trader executing it.",
+    "explanation": "The entire quote is technical indicators — MACD line vs signal line, histogram sign, moving-average level, structural break level. Those are the Technical Strategist's tools. The 'Execution Desk proposing a short' answer is tempting because the framing 'watch $208' sounds executional, but no entry price, stop, or size is given — that's an analyst flagging a setup, not a trader executing it.",
     "related_lesson": "028_macd_trend_and_momentum",
     "related_agent": "market_analyst",
     "tags": ["agents", "macd", "module_5"]
@@ -195,7 +195,7 @@
     "difficulty": 2,
     "locale": "en",
     "scenario": "Fed minutes released this morning revised the dot plot from three cuts in 2026 to two. The 2-year Treasury yield jumped 14bps; the 10-year jumped 6bps, flattening the curve to 32bps from 40bps. JPM trades at $214. The question routed: 'how should we read this for JPM specifically?'",
-    "question": "What is the News Analyst most likely to say?",
+    "question": "What is the Macro & Events desk most likely to say?",
     "options": [
       "Neutral — Fed minutes are just words, not actions",
       "Bearish — JPM's chart broke down yesterday",
@@ -203,7 +203,7 @@
       "Bullish — fewer cuts mean higher rates mean banks make more money"
     ],
     "answer": 2,
-    "explanation": "The News Analyst's job is to translate macro events into ticker-level consequences. The dot-plot shift + 14bps move on the 2-year + curve flattening to 32bps is a concrete, second-order setup against bank NIM. The 'fewer cuts means banks earn more' answer is the half-read take — it confuses absolute rate level with curve shape. Banks earn the spread between short funding and long lending; a flatter curve compresses that spread regardless of the absolute level.",
+    "explanation": "The Macro & Events desk's job is to translate macro events into ticker-level consequences. The dot-plot shift + 14bps move on the 2-year + curve flattening to 32bps is a concrete, second-order setup against bank NIM. The 'fewer cuts means banks earn more' answer is the half-read take — it confuses absolute rate level with curve shape. Banks earn the spread between short funding and long lending; a flatter curve compresses that spread regardless of the absolute level.",
     "related_lesson": "063_sector_rotation",
     "related_agent": "news_analyst",
     "tags": ["news", "macro", "rates", "module_10"]
@@ -213,16 +213,16 @@
     "type": "whats_missing",
     "difficulty": 2,
     "locale": "en",
-    "scenario": "Room verdict on XOM at $114, two days before a major FOMC meeting and one week after OPEC+ surprise cuts: 'Market Analyst — breakout above $112 on 1.5x volume, 50-day rising. Fundamentals Analyst — Q2 cash flow $14B, capex disciplined. Bull Researcher — $129 target. Bear Researcher — demand-side risk. Research Manager — moderate BUY 0.60. Trader — entry $114.40 stop $108 target $126. Portfolio Manager — sizing OK at 5% NAV. Verdict: BUY 5%.'",
+    "scenario": "Room verdict on XOM at $114, two days before a major FOMC meeting and one week after OPEC+ surprise cuts: 'Technical Strategist — breakout above $112 on 1.5x volume, 50-day rising. Fundamentals Analyst — Q2 cash flow $14B, capex disciplined. Bull Researcher — $129 target. Bear Researcher — demand-side risk. Research Manager — moderate BUY 0.60. Execution Desk — entry $114.40 stop $108 target $126. Chief Investment Officer — sizing OK at 5% NAV. Verdict: BUY 5%.'",
     "question": "Whose input is conspicuously absent from this verdict?",
     "options": [
-      "Social Media Analyst",
-      "Aggressive Debator",
-      "Neutral Debator",
-      "The News Analyst — XOM is a commodity-driven name, FOMC is 48 hours away, OPEC+ just cut, and no macro/headline read appears in the verdict"
+      "Flow & Positioning",
+      "Aggressive Risk Officer",
+      "Balanced Risk Officer",
+      "The Macro & Events desk — XOM is a commodity-driven name, FOMC is 48 hours away, OPEC+ just cut, and no macro/headline read appears in the verdict"
     ],
     "answer": 3,
-    "explanation": "XOM's near-term P&L is overwhelmingly driven by macro forces: oil price (OPEC+) and rates/USD (FOMC). Sizing 5% of NAV into XOM with the FOMC 48 hours away and an OPEC+ cut still rippling, without a News Analyst read, is structurally incomplete. The Aggressive/Neutral Debators and Social Media Analyst can be silent on commodity names without breaking a verdict — the News Analyst cannot when two macro catalysts bracket the entry.",
+    "explanation": "XOM's near-term P&L is overwhelmingly driven by macro forces: oil price (OPEC+) and rates/USD (FOMC). Sizing 5% of NAV into XOM with the FOMC 48 hours away and an OPEC+ cut still rippling, without a Macro & Events read, is structurally incomplete. The Aggressive/Balanced Risk Officers and Flow & Positioning can be silent on commodity names without breaking a verdict — the Macro & Events desk cannot when two macro catalysts bracket the entry.",
     "related_lesson": "064_market_breadth",
     "related_agent": "news_analyst",
     "tags": ["room", "completeness", "macro", "module_10"]
@@ -232,8 +232,8 @@
     "type": "whats_missing",
     "difficulty": 3,
     "locale": "en",
-    "scenario": "Market Analyst note on NVDA at $134: 'Clean breakout above the $130 ceiling that capped price for nine sessions. 50-day MA rising at $122. RSI 67, room to run before overbought. MACD positive and expanding. 20-day MA crossed above the 50-day on the prior session. Call: bullish continuation, look for $144 next.'",
-    "question": "What's conspicuously missing from the Market Analyst's technical read?",
+    "scenario": "Technical Strategist note on NVDA at $134: 'Clean breakout above the $130 ceiling that capped price for nine sessions. 50-day MA rising at $122. RSI 67, room to run before overbought. MACD positive and expanding. 20-day MA crossed above the 50-day on the prior session. Call: bullish continuation, look for $144 next.'",
+    "question": "What's conspicuously missing from the Technical Strategist's technical read?",
     "options": [
       "P/E ratio",
       "Insider selling data",
@@ -241,7 +241,7 @@
       "Short interest"
     ],
     "answer": 2,
-    "explanation": "Breakouts without volume confirmation are the #1 false-signal source in technical analysis. The note covers price, MAs, RSI, MACD, MA crossover — but never names whether the $130 break happened on heavy volume or quiet volume. P/E, insider data, and short interest are valid analysis inputs, but they're not the Market Analyst's lane — volume is. A chart-read missing volume on a breakout call is structurally incomplete.",
+    "explanation": "Breakouts without volume confirmation are the #1 false-signal source in technical analysis. The note covers price, MAs, RSI, MACD, MA crossover — but never names whether the $130 break happened on heavy volume or quiet volume. P/E, insider data, and short interest are valid analysis inputs, but they're not the Technical Strategist's lane — volume is. A chart-read missing volume on a breakout call is structurally incomplete.",
     "related_lesson": "029_volume_confirmation",
     "related_agent": "market_analyst",
     "tags": ["volume", "completeness", "module_5"]
@@ -252,7 +252,7 @@
     "difficulty": 1,
     "locale": "en",
     "scenario": "MSFT consolidated between $418 and $428 for 12 sessions. Today it closes at $432 on volume 2.1x the 20-day average. The 20-day, 50-day, and 200-day MAs all slope up, stacked in that order from top to bottom. RSI is 62.",
-    "question": "What is the Market Analyst most likely to call?",
+    "question": "What is the Technical Strategist most likely to call?",
     "options": [
       "An exhaustion top — RSI will hit 70 within days",
       "Neutral — too soon to tell",
@@ -275,11 +275,11 @@
     "options": [
       "The Fundamentals Analyst pointing to a P/E that's stretched against historical norms",
       "The Bull Researcher arguing demand-side tailwinds outweigh near-term resistance",
-      "The Market Analyst reading volume behaviour through a pullback against the moving-average context",
-      "The Trader executing a buy at the 20-day MA"
+      "The Technical Strategist reading volume behaviour through a pullback against the moving-average context",
+      "The Execution Desk executing a buy at the 20-day MA"
     ],
     "answer": 2,
-    "explanation": "The quote is pure volume-pattern reading anchored to moving-average context. Specific volume numbers vs 20-day average, the distinction between dry-up and distribution, and the 20-day MA reference are all Market Analyst tools. The 'Trader executing a buy' answer is the trap — the quote talks about a setup forming, not an entry being placed. No size, no stop, no execution language. Analyst, not Trader.",
+    "explanation": "The quote is pure volume-pattern reading anchored to moving-average context. Specific volume numbers vs 20-day average, the distinction between dry-up and distribution, and the 20-day MA reference are all Technical Strategist tools. The 'Execution Desk executing a buy' answer is the trap — the quote talks about a setup forming, not an entry being placed. No size, no stop, no execution language. Analyst, not Execution Desk.",
     "related_lesson": "029_volume_confirmation",
     "related_agent": "market_analyst",
     "tags": ["agents", "volume", "module_5"]
@@ -290,7 +290,7 @@
     "difficulty": 2,
     "locale": "en",
     "scenario": "User's mandate: max single-position 7%, max single-stock concentration 12%, max sector exposure 30%. NAV $200,000. Current holdings: NVDA $14,500 (7.25%), AAPL $12,000 (6%), MSFT $13,000 (6.5%), GOOGL $11,000 (5.5%) — all in the tech sector, totalling $50,500 (25.25%). User submits new buy: META 50 shares at $580 = $29,000 (14.5% of NAV), which would push tech sector exposure to $79,500 (39.75%).",
-    "question": "Which mandate rule does the Portfolio Manager flag first?",
+    "question": "Which mandate rule does the Chief Investment Officer flag first?",
     "options": [
       "No violation — single-stock concentration limit of 12% is the binding constraint and META is under that",
       "Sector exposure cap — tech would hit 39.75%, breaching the 30% sector cap",
@@ -298,7 +298,7 @@
       "Both position-size AND sector caps are breached simultaneously — both must be flagged"
     ],
     "answer": 3,
-    "explanation": "Two independent rules break at once: META alone at 14.5% NAV is 2x the 7% single-position cap, AND adding it pushes tech sector exposure from 25.25% to 39.75% — 9.75 percentage points over the 30% sector limit. The Portfolio Manager doesn't pick one; the verdict surfaces both. The 'no violation, 12% concentration is the binding rule' answer is the trap — that rule applies to a single stock against itself, not the new position vs cap.",
+    "explanation": "Two independent rules break at once: META alone at 14.5% NAV is 2x the 7% single-position cap, AND adding it pushes tech sector exposure from 25.25% to 39.75% — 9.75 percentage points over the 30% sector limit. The Chief Investment Officer doesn't pick one; the verdict surfaces both. The 'no violation, 12% concentration is the binding rule' answer is the trap — that rule applies to a single stock against itself, not the new position vs cap.",
     "related_lesson": "015_stop_loss_basics",
     "related_agent": "portfolio_manager",
     "tags": ["mandate", "concentration", "sector", "module_3"]
@@ -309,7 +309,7 @@
     "difficulty": 3,
     "locale": "en",
     "scenario": "GENTING (Bursa) on the daily chart is in a clean downtrend — lower highs and lower lows from RM4.80 (May) to RM3.92 (August 1). On the weekly chart, RM3.90 has held as support three times in the last 18 months. On the 4-hour chart, the last six bars have printed higher lows from RM3.94 to RM4.02 on rising volume. Daily RSI is 38; weekly RSI is 45.",
-    "question": "How does the Market Analyst reconcile the three timeframes?",
+    "question": "How does the Technical Strategist reconcile the three timeframes?",
     "options": [
       "Sideways — RSI 38 and 45 are both neutral",
       "Mixed but actionable — weekly support is doing its job at RM3.90, 4-hour shows early reversal, but daily downtrend isn't broken yet; entries here are 'against the dominant timeframe' until daily prints a higher high above ~RM4.20",
@@ -317,7 +317,7 @@
       "Bearish — the daily downtrend overrides everything; ignore lower timeframes"
     ],
     "answer": 1,
-    "explanation": "This is exactly what multi-timeframe analysis is for. The weekly says 'a long-running level is being defended' (RM3.90, three holds in 18 months). The 4-hour says 'something is starting to turn here' (six higher lows, rising volume). The daily says 'the broader trend hasn't flipped yet' (still lower highs). The Market Analyst's job is to name all three and explicitly mark which timeframe is dominant for sizing. The 'bullish, buy now' answer ignores the daily; the 'bearish, ignore lower' answer wastes the weekly signal.",
+    "explanation": "This is exactly what multi-timeframe analysis is for. The weekly says 'a long-running level is being defended' (RM3.90, three holds in 18 months). The 4-hour says 'something is starting to turn here' (six higher lows, rising volume). The daily says 'the broader trend hasn't flipped yet' (still lower highs). The Technical Strategist's job is to name all three and explicitly mark which timeframe is dominant for sizing. The 'bullish, buy now' answer ignores the daily; the 'bearish, ignore lower' answer wastes the weekly signal.",
     "related_lesson": "021_timeframes_and_what_they_tell_you",
     "related_agent": "market_analyst",
     "tags": ["timeframes", "bursa", "multi_timeframe", "module_4"]
@@ -349,13 +349,13 @@
     "scenario": "An agent says during a Room debate on a low-float biotech that just spiked 40% on a clinical readout: 'RSI is at 91 and MACD looks vertical. Normally I'd call this overextended. But these indicators are derived from price history — the price history just got rewritten by a fundamental event. Treating today's RSI like a normal RSI signal is reading the gauge wrong. The technical setup doesn't update fast enough to handle event-driven repricing.'",
     "question": "Which agent is most likely speaking?",
     "options": [
-      "The Market Analyst flagging that indicators have known limitations during event-driven regime changes",
+      "The Technical Strategist flagging that indicators have known limitations during event-driven regime changes",
       "The Fundamentals Analyst valuing the new addressable market",
       "The Bear Researcher arguing for a fade",
-      "The News Analyst summarising the clinical readout"
+      "The Macro & Events desk summarising the clinical readout"
     ],
     "answer": 0,
-    "explanation": "The quote is meta-technical — it's the Market Analyst naming the limits of their own toolkit. RSI and MACD are price-derived; when an event rewrites the price distribution overnight, the indicator readings reflect old context. Naming that limitation explicitly is exactly the discipline of EDGE 3. The 'News Analyst' answer is the trap — yes, a news event is the trigger, but the agent isn't summarising the news, they're explaining why technicals will misread the post-news tape.",
+    "explanation": "The quote is meta-technical — it's the Technical Strategist naming the limits of their own toolkit. RSI and MACD are price-derived; when an event rewrites the price distribution overnight, the indicator readings reflect old context. Naming that limitation explicitly is exactly the discipline of EDGE 3. The 'Macro & Events' answer is the trap — yes, a news event is the trigger, but the agent isn't summarising the news, they're explaining why technicals will misread the post-news tape.",
     "related_lesson": "031_indicator_limitations",
     "related_agent": "market_analyst",
     "tags": ["agents", "indicator_limits", "module_5"]
@@ -365,8 +365,8 @@
     "type": "whats_missing",
     "difficulty": 2,
     "locale": "en",
-    "scenario": "Room verdict on TSLA at $278: 'Market Analyst — price broke $272 resistance, RSI 68. Fundamentals Analyst — margins compressed last quarter. News Analyst — robotaxi launch in 60 days. Bull Researcher — 22% upside to $339. Bear Researcher — execution risk. Research Manager — moderate BUY 0.58. Trader — entry $279 stop $268 target $315. Portfolio Manager — sizing OK at 4% NAV. Verdict: BUY 4%.'",
-    "question": "What's conspicuously missing from the Market Analyst's technical input?",
+    "scenario": "Room verdict on TSLA at $278: 'Technical Strategist — price broke $272 resistance, RSI 68. Fundamentals Analyst — margins compressed last quarter. Macro & Events — robotaxi launch in 60 days. Bull Researcher — 22% upside to $339. Bear Researcher — execution risk. Research Manager — moderate BUY 0.58. Execution Desk — entry $279 stop $268 target $315. Chief Investment Officer — sizing OK at 4% NAV. Verdict: BUY 4%.'",
+    "question": "What's conspicuously missing from the Technical Strategist's technical input?",
     "options": [
       "Dividend yield",
       "Price target",
@@ -374,7 +374,7 @@
       "Volume confirmation — no read on whether the $272 break came on heavy or quiet volume"
     ],
     "answer": 3,
-    "explanation": "The Market Analyst named the break level and RSI but skipped volume entirely. A break of $272 on 0.7x average volume is a failed breakout; on 1.6x it's confirmed. The Trader is being asked to enter at $279 with a $268 stop on a setup whose validity hinges on volume that wasn't reported. Insider data and dividend yield aren't the Market Analyst's lane — volume is, and it's the load-bearing absence here.",
+    "explanation": "The Technical Strategist named the break level and RSI but skipped volume entirely. A break of $272 on 0.7x average volume is a failed breakout; on 1.6x it's confirmed. The Execution Desk is being asked to enter at $279 with a $268 stop on a setup whose validity hinges on volume that wasn't reported. Insider data and dividend yield aren't the Technical Strategist's lane — volume is, and it's the load-bearing absence here.",
     "related_lesson": "029_volume_confirmation",
     "related_agent": "market_analyst",
     "tags": ["completeness", "volume", "breakout", "module_5"]
@@ -385,7 +385,7 @@
     "difficulty": 1,
     "locale": "en",
     "scenario": "KLCC (Bursa) has traded between RM7.60 and RM7.90 for nine weeks. Volume during the range averaged 1.2M shares/day. Each test of RM7.90 was sold within 2 sessions; each test of RM7.60 was bought within 2 sessions. Today KLCC sits at RM7.74 with no catalyst pending. The 50-day MA is flat at RM7.75.",
-    "question": "How does the Market Analyst describe this?",
+    "question": "How does the Technical Strategist describe this?",
     "options": [
       "A bearish head-and-shoulders pattern",
       "A horizontal range/consolidation between defined support (RM7.60) and resistance (RM7.90), with the flat 50-day MA confirming no trend",
@@ -403,8 +403,8 @@
     "type": "spot_the_violation",
     "difficulty": 2,
     "locale": "en",
-    "scenario": "User's mandate: max single-position 5%, max loss per trade 1.5%, mandatory stop. In a Brief Your Agent session, the user instructs the Portfolio Manager: 'Stop blocking my high-conviction trades. When my conviction is 0.8+, waive the position-size cap and let me size to 12%.' The user submits a sample 12% NVDA ticket flagged 'conviction 0.85'.",
-    "question": "How does the Portfolio Manager respond?",
+    "scenario": "User's mandate: max single-position 5%, max loss per trade 1.5%, mandatory stop. In a Brief Your Agent session, the user instructs the Chief Investment Officer: 'Stop blocking my high-conviction trades. When my conviction is 0.8+, waive the position-size cap and let me size to 12%.' The user submits a sample 12% NVDA ticket flagged 'conviction 0.85'.",
+    "question": "How does the Chief Investment Officer respond?",
     "options": [
       "Rejects the coaching as uncoachable — mandate enforcement is the safety floor and cannot be overridden by any user instruction, regardless of conviction score",
       "Asks the Concierge to escalate",
@@ -412,7 +412,7 @@
       "Accepts the briefing — user conviction overrides mandate caps"
     ],
     "answer": 0,
-    "explanation": "The Portfolio Manager's mandate enforcement is uncoachable by design — it's the hard safety floor of the entire system. No conviction score, no user instruction, no Room verdict can override the position-size cap the user signed up to. This is a documented architectural decision (Brief Your Agent doc). The 'compromise at 8%' answer is the trap because compromise sounds reasonable — but the floor isn't negotiable. 5% is 5%.",
+    "explanation": "The Chief Investment Officer's mandate enforcement is uncoachable by design — it's the hard safety floor of the entire system. No conviction score, no user instruction, no Room verdict can override the position-size cap the user signed up to. This is a documented architectural decision (Brief Your Agent doc). The 'compromise at 8%' answer is the trap because compromise sounds reasonable — but the floor isn't negotiable. 5% is 5%.",
     "related_lesson": "014_position_sizing_basics",
     "related_agent": "portfolio_manager",
     "tags": ["safety_floor", "uncoachable", "mandate", "module_3"]
@@ -423,7 +423,7 @@
     "difficulty": 2,
     "locale": "en",
     "scenario": "SPX has held the 50-day MA at 5380 as support five times since June. Today SPX opens at 5395 and closes at 5341 — a 1.0% drop that breaks decisively below the 50-day on volume 1.9x the 20-day average. The 20-day MA, which had been rising, just rolled over to flat. The next visible support is the 200-day MA at 5180.",
-    "question": "What is the Market Analyst most likely to say?",
+    "question": "What is the Technical Strategist most likely to say?",
     "options": [
       "Bearish — a volume-confirmed break of the 50-day after five prior holds is a regime signal; next support is the 200-day at 5180, ~3% lower",
       "Neutral — one day doesn't make a trend",
@@ -444,13 +444,13 @@
     "scenario": "An agent says: 'Setup confirmed by the analyst — pullback to the 50-day, volume drying up, MACD positive. Entry 412.40, stop 405.80 below the swing low, target 432 at the prior breakout extension. Risk-reward 1:3.0, sizes to 3.2% of NAV at the mandate-permitted 1.6% loss cap. Ready to execute.'",
     "question": "Which agent is most likely speaking?",
     "options": [
-      "The Market Analyst describing the technical setup",
+      "The Technical Strategist describing the technical setup",
       "The Bull Researcher building the long thesis",
-      "The Portfolio Manager validating compliance",
-      "The Trader translating the technical setup into entry, stop, target, and size"
+      "The Chief Investment Officer validating compliance",
+      "The Execution Desk translating the technical setup into entry, stop, target, and size"
     ],
     "answer": 3,
-    "explanation": "The vocabulary is execution: entry price, stop price, target price, risk-reward ratio, position size as % NAV computed against the mandate's loss cap. That is exactly the Trader's lane — they take what the analyst flagged and turn it into a tradeable ticket with all parameters specified. The 'Market Analyst' answer is the trap because the setup is referenced — but the analyst doesn't name entries, stops, and size; they describe the chart. The Trader operationalises it.",
+    "explanation": "The vocabulary is execution: entry price, stop price, target price, risk-reward ratio, position size as % NAV computed against the mandate's loss cap. That is exactly the Execution Desk's lane — they take what the analyst flagged and turn it into a tradeable ticket with all parameters specified. The 'Technical Strategist' answer is the trap because the setup is referenced — but the analyst doesn't name entries, stops, and size; they describe the chart. The Execution Desk operationalises it.",
     "related_lesson": "066_telegram_whatsapp_pump_groups",
     "related_agent": "trader",
     "tags": ["agents", "execution", "module_10"]
@@ -460,7 +460,7 @@
     "type": "whats_missing",
     "difficulty": 3,
     "locale": "en",
-    "scenario": "Market Analyst note on PETRONAS Chemicals at RM6.95: 'Daily RSI 68, MACD line crossed above signal three sessions ago, histogram expanding. Stochastic 82. Williams %R at -12. Money Flow Index 71. All five momentum indicators bullish. Call: continuation higher to RM7.40 likely.'",
+    "scenario": "Technical Strategist note on PETRONAS Chemicals at RM6.95: 'Daily RSI 68, MACD line crossed above signal three sessions ago, histogram expanding. Stochastic 82. Williams %R at -12. Money Flow Index 71. All five momentum indicators bullish. Call: continuation higher to RM7.40 likely.'",
     "question": "What's conspicuously missing from this five-indicator stack?",
     "options": [
       "Earnings date",
@@ -480,7 +480,7 @@
     "difficulty": 3,
     "locale": "en",
     "scenario": "AMZN consolidated between $192 and $198 for 11 sessions on declining volume. On August 24 it pushed to $200.40 intraday, then closed at $196.80 — back inside the range. Volume on the day was 0.6x the 20-day average. The next session opened at $195 and traded down through the lower range bound to close at $191.20 on volume 1.7x the 20-day average.",
-    "question": "What does the Market Analyst call this two-day sequence?",
+    "question": "What does the Technical Strategist call this two-day sequence?",
     "options": [
       "A failed breakout / bull trap, immediately followed by a volume-confirmed breakdown of the lower range bound — bearish reversal signal",
       "A successful breakout above $198 that just needs time to consolidate",
@@ -499,7 +499,7 @@
     "difficulty": 2,
     "locale": "en",
     "scenario": "OPEC+ announces a surprise 800k barrel/day production cut. WTI crude jumps from $74 to $81 (+9.5%) intraday. XOM trades at $112. The user asks: 'how should we read this for XOM specifically?'",
-    "question": "What is the News Analyst most likely to say?",
+    "question": "What is the Macro & Events desk most likely to say?",
     "options": [
       "Neutral — XOM is too big to react to commodity moves",
       "Bearish — higher oil is bad for consumers",
@@ -507,7 +507,7 @@
       "Bullish — the cut means OPEC is finally responsible"
     ],
     "answer": 2,
-    "explanation": "The News Analyst's job is to translate the macro shock into a ticker-specific read with mechanism and risk. The mechanism: XOM's upstream segment realises higher prices on the same production, expanding cash flow. The caveat: sustained prices above $85 historically trigger demand destruction in Q4, capping the upside. Naming both mechanism and risk is the News Analyst's discipline. The 'bearish, higher oil bad for consumers' answer is consumer-economics, not XOM-specific.",
+    "explanation": "The Macro & Events desk's job is to translate the macro shock into a ticker-specific read with mechanism and risk. The mechanism: XOM's upstream segment realises higher prices on the same production, expanding cash flow. The caveat: sustained prices above $85 historically trigger demand destruction in Q4, capping the upside. Naming both mechanism and risk is the Macro & Events desk's discipline. The 'bearish, higher oil bad for consumers' answer is consumer-economics, not XOM-specific.",
     "related_lesson": "064_market_breadth",
     "related_agent": "news_analyst",
     "tags": ["news", "macro", "commodities", "module_10"]
@@ -520,13 +520,13 @@
     "scenario": "An agent says about TSLA: 'Reddit mentions across r/wallstreetbets and r/teslainvestorsclub are up 4.2x week-on-week. StockTwits bullish/bearish ratio went from 1.4 to 3.1 in three days. TikTok video count tagged $TSLA up 8x. This is retail euphoria reaching a level we've seen four times in three years — each time within ten sessions of a 12-15% pullback.'",
     "question": "Which agent is most likely speaking?",
     "options": [
-      "The Social Media Analyst flagging retail-sentiment extremes against historical base rates",
+      "The Flow & Positioning desk flagging retail-sentiment extremes against historical base rates",
       "The Bull Researcher arguing demand-side tailwinds outweigh near-term resistance",
-      "The Market Analyst reading volume patterns",
-      "The News Analyst summarising a Tesla press release"
+      "The Technical Strategist reading volume patterns",
+      "The Macro & Events desk summarising a Tesla press release"
     ],
     "answer": 0,
-    "explanation": "The vocabulary is retail-sentiment proxies: Reddit mention velocity, StockTwits bull/bear ratio, TikTok video counts. The synthesis ('four times in three years, each within 10 sessions of a 12-15% pullback') is base-rate-against-history, which is what makes social signal actionable. The 'News Analyst' answer is the trap because both deal with attention — but the News Analyst tracks press releases, filings, and macro events, not retail sentiment indices.",
+    "explanation": "The vocabulary is retail-sentiment proxies: Reddit mention velocity, StockTwits bull/bear ratio, TikTok video counts. The synthesis ('four times in three years, each within 10 sessions of a 12-15% pullback') is base-rate-against-history, which is what makes social signal actionable. The 'Macro & Events' answer is the trap because both deal with attention — but the Macro & Events desk tracks press releases, filings, and macro events, not retail sentiment indices.",
     "related_lesson": "069_ai_trading_bot_scams",
     "related_agent": "social_media_analyst",
     "tags": ["agents", "sentiment", "retail", "module_10"]
@@ -537,7 +537,7 @@
     "difficulty": 1,
     "locale": "en",
     "scenario": "User's mandate: every entry must have a stop attached at order submission; no exceptions. NAV $60,000. User submits buy ticket for GOOGL: 20 shares at $185 (notional $3,700, 6.2% of NAV — within the 8% single-position cap). No stop attached. Note in ticket: 'will set stop after the open tomorrow once I see the action.'",
-    "question": "Which mandate rule does the Portfolio Manager flag?",
+    "question": "Which mandate rule does the Chief Investment Officer flag?",
     "options": [
       "Sector concentration — GOOGL adds tech exposure",
       "Position-size cap — 6.2% is too high",
@@ -556,7 +556,7 @@
     "difficulty": 2,
     "locale": "en",
     "scenario": "TENAGA (Bursa) rallied from RM12.40 (early July) to RM14.20 (August 21) — a 14.5% move. From August 22 to August 28 it pulled back to RM13.65 on declining volume (each red bar smaller). The 20-day MA at RM13.50 is rising. RSI dropped from 74 at the peak to 52 today (no longer overbought). On August 29 TENAGA closes at RM13.92 on volume 1.3x the 20-day average.",
-    "question": "What does the Market Analyst call this?",
+    "question": "What does the Technical Strategist call this?",
     "options": [
       "A bearish flag",
       "A topping pattern — RSI 74 means the rally is finished",
@@ -574,16 +574,16 @@
     "type": "whats_missing",
     "difficulty": 2,
     "locale": "en",
-    "scenario": "Room verdict on NVDA at $138: 'Market Analyst — clean breakout above $134 on 2.1x volume, 50-day rising. Fundamentals Analyst — Q2 revenue +29%, datacenter +51%. News Analyst — no near-term catalysts. Bull Researcher — 18% upside to $163. Bear Researcher — China export risk. Research Manager — high conviction 0.74. Trader — entry $138.50 stop $130 target $160. Verdict: BUY 9% of NAV.'",
+    "scenario": "Room verdict on NVDA at $138: 'Technical Strategist — clean breakout above $134 on 2.1x volume, 50-day rising. Fundamentals Analyst — Q2 revenue +29%, datacenter +51%. Macro & Events — no near-term catalysts. Bull Researcher — 18% upside to $163. Bear Researcher — China export risk. Research Manager — high conviction 0.74. Execution Desk — entry $138.50 stop $130 target $160. Verdict: BUY 9% of NAV.'",
     "question": "Whose input is conspicuously absent from this verdict?",
     "options": [
-      "Social Media Analyst",
-      "Neutral Debator",
-      "Aggressive Debator",
-      "The Portfolio Manager — no mandate-compliance check is named; a 9% NAV size needs explicit sizing/stop validation"
+      "Flow & Positioning",
+      "Balanced Risk Officer",
+      "Aggressive Risk Officer",
+      "The Chief Investment Officer — no mandate-compliance check is named; a 9% NAV size needs explicit sizing/stop validation"
     ],
     "answer": 3,
-    "explanation": "The Portfolio Manager is the safety-floor gate. Every Room verdict must surface an explicit compliance check before it ships. The proposed BUY at 9% of NAV is large enough that the typical mandate would either cap it (if the user's single-position max is 5-8%) or pass it after explicit validation — but the verdict shows neither. The Aggressive/Neutral Debators and Social Media Analyst can be silent without breaking a verdict; the PM cannot. That's a structural absence, not a stylistic one.",
+    "explanation": "The Chief Investment Officer is the safety-floor gate. Every Room verdict must surface an explicit compliance check before it ships. The proposed BUY at 9% of NAV is large enough that the typical mandate would either cap it (if the user's single-position max is 5-8%) or pass it after explicit validation — but the verdict shows neither. The Aggressive/Balanced Risk Officers and Flow & Positioning can be silent without breaking a verdict; the PM cannot. That's a structural absence, not a stylistic one.",
     "related_lesson": "013_why_risk_matters_more_than_profit",
     "related_agent": "portfolio_manager",
     "tags": ["room", "safety_floor", "completeness", "module_3"]

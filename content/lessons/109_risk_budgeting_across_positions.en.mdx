@@ -18,7 +18,7 @@ updated_at: "2026-07-25"
 
 # Risk budgeting across simultaneous positions
 
-This lesson assumes you've completed <Lesson id="014_position_sizing_basics"/> (Position sizing basics) and <Lesson id="017_portfolio_exposure_and_correlation"/> (Portfolio exposure and correlation); here we go deeper on the next layer — how to split a total open-risk budget across multiple positions at once. 1% per trade is the per-position rule; total open risk is the portfolio rule. A reasonable working ceiling is 5% total open risk across all positions, which translates differently depending on whether you hold 3 concentrated bets or 10 small ones, and depending on whether they cluster in one sector. This lesson teaches the layered caps — per-trade, per-sector, per-name. Of these, AMI's safety floor mechanically enforces only the per-trade cap (derived from your `risk_score`) and the account drawdown ceiling; sector concentration, total open risk, and single-name notional concentration are ceilings you set and track yourself, with the Portfolio Manager as your sounding board in <Term id="ami_one_on_one" />.
+This lesson assumes you've completed <Lesson id="014_position_sizing_basics"/> (Position sizing basics) and <Lesson id="017_portfolio_exposure_and_correlation"/> (Portfolio exposure and correlation); here we go deeper on the next layer — how to split a total open-risk budget across multiple positions at once. 1% per trade is the per-position rule; total open risk is the portfolio rule. A reasonable working ceiling is 5% total open risk across all positions, which translates differently depending on whether you hold 3 concentrated bets or 10 small ones, and depending on whether they cluster in one sector. This lesson teaches the layered caps — per-trade, per-sector, per-name. Of these, AMI's safety floor mechanically enforces only the per-trade cap (derived from your `risk_score`) and the account drawdown ceiling; sector concentration, total open risk, and single-name notional concentration are ceilings you set and track yourself, with the Chief Investment Officer as your sounding board in <Term id="ami_one_on_one" />.
 
 ## Example
 
@@ -36,7 +36,7 @@ Now consider a sixth position: TSM at 1.0% risk. Per-trade: passes (1% ≤ 1%, a
 
 ## The trap
 
-The trap is treating each position as an independent 1% decision. The beginner adds positions one at a time, each passing the per-trade check, and discovers at month-end that they have 9% of total open risk across 8 positions, with 5% of it clustered in semis. Per-trade discipline alone does not produce a sensible portfolio. The correct mental model: every new ticket competes for a finite total-risk budget. Before opening a position, ask three questions — does it fit under per-trade (AMI checks this one), does the new total stay under your ceiling, and does the sector cluster stay under its cap (you check these two)? AMI runs the per-trade check automatically; ask the Portfolio Manager in <Term id="ami_one_on_one" /> to walk through the sector and total-open-risk checks before you submit, or work them out yourself in the <Term id="ami_decision_journal" />.
+The trap is treating each position as an independent 1% decision. The beginner adds positions one at a time, each passing the per-trade check, and discovers at month-end that they have 9% of total open risk across 8 positions, with 5% of it clustered in semis. Per-trade discipline alone does not produce a sensible portfolio. The correct mental model: every new ticket competes for a finite total-risk budget. Before opening a position, ask three questions — does it fit under per-trade (AMI checks this one), does the new total stay under your ceiling, and does the sector cluster stay under its cap (you check these two)? AMI runs the per-trade check automatically; ask the Chief Investment Officer in <Term id="ami_one_on_one" /> to walk through the sector and total-open-risk checks before you submit, or work them out yourself in the <Term id="ami_decision_journal" />.
 
 <ChatWith agent="portfolio_manager" />
 
@@ -55,7 +55,7 @@ The trap is treating each position as an independent 1% decision. The beginner a
 />
 
 <Quiz
-  question="You've set yourself a mandate-style budget: 1% per-trade (mechanically enforced, via risk_score), plus self-tracked ceilings of 5% total open risk, 2.5% single-sector, 20% single-name notional concentration. You currently hold AAPL at 22% of notional (a winner that grew past its entry size) with no other tech exposure. The Trader proposes adding MSFT at 1% risk. What's the correct response, and why?"
+  question="You've set yourself a mandate-style budget: 1% per-trade (mechanically enforced, via risk_score), plus self-tracked ceilings of 5% total open risk, 2.5% single-sector, 20% single-name notional concentration. You currently hold AAPL at 22% of notional (a winner that grew past its entry size) with no other tech exposure. The Execution Desk proposes adding MSFT at 1% risk. What's the correct response, and why?"
   options={[
     "Hold off — AAPL and MSFT together exceed the total open risk ceiling regardless of size.",
     "Go ahead — MSFT is a different ticker and tech is broad enough not to cluster.",
@@ -68,7 +68,7 @@ The trap is treating each position as an independent 1% decision. The beginner a
 
 ## Try it
 
-Write down three ceilings for yourself — total open risk 5%, single-sector cap 2.5%, single-name notional concentration 20% (AMI doesn't have fields for these yet). Then open a 1-on-1 with the Portfolio Manager and ask "Walk through my current book against each ceiling." The PM will reason through it with you in conversation, but it won't block a trade that breaches one — naming the breach is on you. That's the next trim, not the next entry.
+Write down three ceilings for yourself — total open risk 5%, single-sector cap 2.5%, single-name notional concentration 20% (AMI doesn't have fields for these yet). Then open a 1-on-1 with the Chief Investment Officer and ask "Walk through my current book against each ceiling." The PM will reason through it with you in conversation, but it won't block a trade that breaches one — naming the breach is on you. That's the next trim, not the next entry.
 
 ## Takeaway
 

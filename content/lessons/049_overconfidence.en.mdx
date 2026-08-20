@@ -28,7 +28,7 @@ The falsifiable pattern: you are overconfident if your average per-trade risk ov
 
 ## The trap
 
-The trap is the belief that confidence is information. It is not. Confidence is a memory of recent outcomes wearing the costume of a forecast. The correct mental model: position size should be a function of *setup quality and account risk*, not of how the last few trades closed. A "high-conviction" trade is not one that *feels* high conviction — it is one whose setup checks more boxes on a pre-written list than the average trade. If you cannot point to the extra checked box, you do not have a high-conviction trade. You have a high-confidence trader, which is a different animal — and a more expensive one. The Conservative Debator's role here is uncomfortable on purpose: it asks you to argue against your own streak.
+The trap is the belief that confidence is information. It is not. Confidence is a memory of recent outcomes wearing the costume of a forecast. The correct mental model: position size should be a function of *setup quality and account risk*, not of how the last few trades closed. A "high-conviction" trade is not one that *feels* high conviction — it is one whose setup checks more boxes on a pre-written list than the average trade. If you cannot point to the extra checked box, you do not have a high-conviction trade. You have a high-confidence trader, which is a different animal — and a more expensive one. The Conservative Risk Officer's role here is uncomfortable on purpose: it asks you to argue against your own streak.
 
 <ChatWith agent="conservative_debator" />
 
@@ -59,20 +59,20 @@ The trap is the belief that confidence is information. It is not. Confidence is 
 />
 
 <Quiz
-  question="You're up 28% YTD against a 20% max-drawdown mandate. The Conservative Debator flags that your last 10 entries averaged 2.4% per-trade risk versus 1.1% across the prior 10. The PM has not breached. Synthesis answer?"
+  question="You're up 28% YTD against a 20% max-drawdown mandate. The Conservative Risk Officer flags that your last 10 entries averaged 2.4% per-trade risk versus 1.1% across the prior 10. The PM has not breached. Synthesis answer?"
   options={[
     "Cut all open positions by half immediately.",
     "Raise the mandate per-trade risk to 2% to match recent behaviour.",
     "Freeze new entries at the original 1% mandate level, journal the size-creep trend, and review whether the setup criteria actually changed before next session.",
-    "Override the Conservative Debator — your equity curve confirms the new sizing is correct."
+    "Override the Conservative Risk Officer — your equity curve confirms the new sizing is correct."
   ]}
   answer={2}
-  explanation="The most tempting wrong answer is the 'raise the mandate to match behaviour' one. It looks like updating the system based on evidence; it is actually rewriting the rules to legalise the breach. 'Cut everything in half' is panic mirrored. 'Override the Conservative Debator' is exactly the move every overconfident trader makes in the month before the drawdown that ends the streak. The disciplined answer freezes the variable in question (size) and re-examines the input that should drive it (setup criteria) before the next decision. Equity curves are outcomes; criteria are inputs. Only inputs justify rule changes."
+  explanation="The most tempting wrong answer is the 'raise the mandate to match behaviour' one. It looks like updating the system based on evidence; it is actually rewriting the rules to legalise the breach. 'Cut everything in half' is panic mirrored. 'Override the Conservative Risk Officer' is exactly the move every overconfident trader makes in the month before the drawdown that ends the streak. The disciplined answer freezes the variable in question (size) and re-examines the input that should drive it (setup criteria) before the next decision. Equity curves are outcomes; criteria are inputs. Only inputs justify rule changes."
 />
 
 ## Try it
 
-Open the <Term id="ami_decision_journal" /> and pull your last 20 closed trades. Note the per-trade risk percentage for each. Compute the average for the most recent 10 versus the prior 10. If the ratio is above 1.5x, take that screen to a <Term id="ami_one_on_one" /> with the Conservative Debator and ask: "What in my written setup criteria has changed to justify this?" If you can't answer in one sentence, set your <Term id="ami_mandate" /> `risk_score` back to the original number before the next session opens.
+Open the <Term id="ami_decision_journal" /> and pull your last 20 closed trades. Note the per-trade risk percentage for each. Compute the average for the most recent 10 versus the prior 10. If the ratio is above 1.5x, take that screen to a <Term id="ami_one_on_one" /> with the Conservative Risk Officer and ask: "What in my written setup criteria has changed to justify this?" If you can't answer in one sentence, set your <Term id="ami_mandate" /> `risk_score` back to the original number before the next session opens.
 
 ## Takeaway
 

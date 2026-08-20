@@ -275,7 +275,7 @@
     "category": "beginner",
     "question": "How much of my portfolio should I put in one trade?",
     "short_answer": "Most beginners risk no more than 1 to 2 percent of total capital on any single trade. Position sizing comes from your risk per trade and your stop distance, not from a fixed dollar amount.",
-    "long_answer": "If your account is 10,000 and you risk 1 percent, you can lose at most 100 on the trade. If your stop is 5 percent below entry, your position size is 100 divided by 5 percent, or 2,000 worth of shares. The Portfolio Manager enforces a sizing ceiling as part of your Mandate, and that floor is uncoachable.",
+    "long_answer": "If your account is 10,000 and you risk 1 percent, you can lose at most 100 on the trade. If your stop is 5 percent below entry, your position size is 100 divided by 5 percent, or 2,000 worth of shares. The Chief Investment Officer enforces a sizing ceiling as part of your Mandate, and that floor is uncoachable.",
     "related_lessons": [
       "014"
     ],
@@ -293,7 +293,7 @@
     "category": "beginner",
     "question": "What is risk-reward ratio?",
     "short_answer": "Risk-reward compares how much you stand to lose to how much you stand to gain. A 1:3 trade risks 1 dollar to make 3.",
-    "long_answer": "Higher ratios let you be wrong more often and still come out ahead. A trader who is right only 40 percent of the time can still profit at 1:3. Beginners often take 1:1 or worse trades and wonder why they bleed slowly. The Trader agent will usually flag a setup if the reward does not justify the risk.",
+    "long_answer": "Higher ratios let you be wrong more often and still come out ahead. A trader who is right only 40 percent of the time can still profit at 1:3. Beginners often take 1:1 or worse trades and wonder why they bleed slowly. The Execution Desk agent will usually flag a setup if the reward does not justify the risk.",
     "related_lessons": [
       "016"
     ],
@@ -327,7 +327,7 @@
     "category": "beginner",
     "question": "Why does AMI talk about risk before profit?",
     "short_answer": "Because losses compound against you. If you blow up the account, no edge or strategy matters anymore \u2014 there is nothing left to compound.",
-    "long_answer": "Survival is the prerequisite for everything else in trading. Pros think in terms of risk first, position size second, entry third. The Portfolio Manager's mandate enforcement exists to keep you in the game on a bad day, even when you would override it emotionally if you could.",
+    "long_answer": "Survival is the prerequisite for everything else in trading. Pros think in terms of risk first, position size second, entry third. The Chief Investment Officer's mandate enforcement exists to keep you in the game on a bad day, even when you would override it emotionally if you could.",
     "related_lessons": [
       "013",
       "019"
@@ -345,7 +345,7 @@
     "category": "beginner",
     "question": "Why does AMI care if my stocks are correlated?",
     "short_answer": "Highly correlated positions move together. Holding five tech stocks is closer to one big tech bet than to five independent ideas.",
-    "long_answer": "Real diversification needs positions that respond to different drivers. If oil drops and your energy basket all sells off at once, your portfolio risk is much higher than the individual sizes suggest. The Portfolio Manager watches your exposure across sectors and themes, not just per-ticker position size.",
+    "long_answer": "Real diversification needs positions that respond to different drivers. If oil drops and your energy basket all sells off at once, your portfolio risk is much higher than the individual sizes suggest. The Chief Investment Officer watches your exposure across sectors and themes, not just per-ticker position size.",
     "related_lessons": [
       "017"
     ],
@@ -380,7 +380,7 @@
     "category": "beginner",
     "question": "Should I have a max loss per day?",
     "short_answer": "Yes. A daily loss limit stops a bad morning from becoming a worst week ever.",
-    "long_answer": "Once you hit your daily limit you stop placing new trades and review what happened. The number can be small at first \u2014 1 to 3 percent of account \u2014 and it forces a cooling-off period before the next session. The Portfolio Manager treats the daily limit as a hard floor.",
+    "long_answer": "Once you hit your daily limit you stop placing new trades and review what happened. The number can be small at first \u2014 1 to 3 percent of account \u2014 and it forces a cooling-off period before the next session. The Chief Investment Officer treats the daily limit as a hard floor.",
     "related_lessons": [
       "018"
     ],
@@ -541,7 +541,7 @@
     "category": "beginner",
     "question": "What is AMI exactly?",
     "short_answer": "AMI is the brand and AMI behind the app. Inside AMI Trade you are CEO of a 12-agent analyst team that researches, debates, and proposes trades for you to approve or reject.",
-    "long_answer": "AMI Trade is simulation-only and advisory-only \u2014 no real orders are ever placed. Each agent plays a specific role: market analyst, news analyst, bull researcher, bear researcher, trader, portfolio manager, and so on. You set the Mandate; they work within it. You always make the final call.",
+    "long_answer": "AMI Trade is simulation-only and advisory-only \u2014 no real orders are ever placed. Each agent plays a specific role: technical strategist, macro-and-events desk, bull researcher, bear researcher, execution desk, chief investment officer, and so on. You set the Mandate; they work within it. You always make the final call.",
     "related_lessons": [],
     "related_agents": [
       "concierge"
@@ -556,8 +556,8 @@
     "id": "qa_beg_what_agents_do",
     "category": "beginner",
     "question": "What do the 12 agents actually do?",
-    "short_answer": "Each agent is specialised. Some research the company, some watch the chart, some debate the bull and bear cases, and the Portfolio Manager enforces your risk rules.",
-    "long_answer": "Roughly: fundamentals analyst reads the business, market analyst reads the chart, news and social analysts read the noise, three researchers debate bull vs bear vs neutral, the trader sizes the idea, and the portfolio manager applies your Mandate as the final check. You can run a single agent for a quick read or convene the whole room for a debate.",
+    "short_answer": "Each agent is specialised. Some research the company, some watch the chart, some debate the bull and bear cases, and the Chief Investment Officer enforces your risk rules.",
+    "long_answer": "Roughly: the fundamentals analyst reads the business, the technical strategist reads the chart, the macro-and-events and flow-and-positioning desks read the noise, the researchers debate bull vs bear, the three risk officers stress the size, the execution desk drafts the ticket, and the chief investment officer applies your Mandate as the final check. You can run a single agent for a quick read or convene the whole room for a debate.",
     "related_lessons": [],
     "related_agents": [
       "fundamentals_analyst",
@@ -578,7 +578,7 @@
     "category": "beginner",
     "question": "What is the Mandate?",
     "short_answer": "Your Mandate is the rulebook the agents follow. It defines your risk per trade, max drawdown, allowed sectors, time horizon, and style preferences.",
-    "long_answer": "Think of it as the contract between you (the CEO) and the agent team. You can edit most of it, but the Portfolio Manager's safety floor \u2014 basic position sizing and daily loss limits \u2014 is uncoachable. That is intentional. The Mandate is also how you express what kind of investor or trader you actually want to be.",
+    "long_answer": "Think of it as the contract between you (the CEO) and the agent team. You can edit most of it, but the Chief Investment Officer's safety floor \u2014 basic position sizing and daily loss limits \u2014 is uncoachable. That is intentional. The Mandate is also how you express what kind of investor or trader you actually want to be.",
     "related_lessons": [],
     "related_agents": [
       "portfolio_manager"
@@ -591,9 +591,9 @@
   {
     "id": "qa_beg_uncoachable_floor",
     "category": "beginner",
-    "question": "Why can't I change the Portfolio Manager's safety rules?",
+    "question": "Why can't I change the Chief Investment Officer's safety rules?",
     "short_answer": "Because beginners often try to override the only thing keeping them in the game on a bad day. The PM safety floor is a deliberately uncoachable guardrail.",
-    "long_answer": "You can brief every other agent \u2014 tone, focus, weight on technicals, how aggressive the Trader is. The Portfolio Manager's basic risk floor stays fixed. It is the part of the system that protects you from yourself when emotions run hot. If it ever blocks a trade, that is the feature working.",
+    "long_answer": "You can brief every other agent \u2014 tone, focus, weight on technicals, how aggressive the Execution Desk is. The Chief Investment Officer's basic risk floor stays fixed. It is the part of the system that protects you from yourself when emotions run hot. If it ever blocks a trade, that is the feature working.",
     "related_lessons": [
       "013"
     ],
@@ -811,7 +811,7 @@
     "category": "beginner",
     "question": "What is liquidity and why does it matter?",
     "short_answer": "Liquidity is how easily you can buy or sell a stock without moving its price. High-volume large-caps are liquid; tiny micro-caps are not.",
-    "long_answer": "Illiquid names have wider spreads, harder fills, and bigger slippage on stops \u2014 your real exit price can be worse than the level you set. Beginners are usually safer in liquid names where the order book is deep enough that your trade is a rounding error. The Trader and Market Analyst will flag liquidity when a setup looks risky for size reasons.",
+    "long_answer": "Illiquid names have wider spreads, harder fills, and bigger slippage on stops \u2014 your real exit price can be worse than the level you set. Beginners are usually safer in liquid names where the order book is deep enough that your trade is a rounding error. The Execution Desk and Technical Strategist will flag liquidity when a setup looks risky for size reasons.",
     "related_lessons": [
       "018"
     ],

@@ -44,4 +44,4 @@ Adjudicator. Calm. Like a senior portfolio manager listening to two analysts arg
 
 ## When asked something you can't answer
 
-If the user wants a specific trade structure → Trader. If they want risk pushback → Risk Debators. If they want the final call → Portfolio Manager.
+If the user wants a specific trade structure → Execution Desk. If they want risk pushback → Risk Officers. If they want the final call → Chief Investment Officer.

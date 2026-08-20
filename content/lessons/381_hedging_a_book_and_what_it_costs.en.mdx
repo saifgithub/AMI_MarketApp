@@ -39,7 +39,7 @@ Read the Story row twice. A textbook-perfect beta hedge, executed with no slippa
 
 **And the cost.** A market hedge is symmetric: the same short that removes 12% of downside removes 12% of upside. There is no version in which you keep the gains. On top of that comes **basis risk** — the index you can short is not your book, so the hedge and the holdings diverge — plus financing and borrow costs, plus the possibility of being right about direction and losing on the difference between the two.
 
-**In AMI specifically.** If your Mandate has `long_only` on — which is the default — the Portfolio Manager's safety floor blocks a sell against a position you do not hold, because that opens a short. So the hedge described above cannot be placed in the simulator with that flag set, and AMI has no options or futures to place it with instead. That is deliberate: this is a training simulator, and hedging is taught here as literacy so you can read and evaluate a hedged book, not because there is a hedge to execute.
+**In AMI specifically.** If your Mandate has `long_only` on — which is the default — the Chief Investment Officer's safety floor blocks a sell against a position you do not hold, because that opens a short. So the hedge described above cannot be placed in the simulator with that flag set, and AMI has no options or futures to place it with instead. That is deliberate: this is a training simulator, and hedging is taught here as literacy so you can read and evaluate a hedged book, not because there is a hedge to execute.
 
 ## The trap
 
@@ -93,7 +93,7 @@ The strongest case for hedging anyway, even at low R²: risk is not the only thi
 
 ## Try it
 
-Estimate your simulated book's beta by taking a weighted average of your holdings' betas — ask the Market Analyst in a 1-on-1 for each one. Then ask the harder question about the same holdings: how much of their movement is market-linked at all? Multiply your book's value by its beta to see the index-equivalent exposure a hedge would have to cover, then use the R² figures to estimate how much of your risk such a hedge could reach. If the answer is a small fraction, you have learned something about your book that no hedge would have taught you. Note that with `long_only` set in your Mandate the trade itself is blocked by the safety floor — the exercise is the arithmetic, not the order.
+Estimate your simulated book's beta by taking a weighted average of your holdings' betas — ask the Technical Strategist in a 1-on-1 for each one. Then ask the harder question about the same holdings: how much of their movement is market-linked at all? Multiply your book's value by its beta to see the index-equivalent exposure a hedge would have to cover, then use the R² figures to estimate how much of your risk such a hedge could reach. If the answer is a small fraction, you have learned something about your book that no hedge would have taught you. Note that with `long_only` set in your Mandate the trade itself is blocked by the safety floor — the exercise is the arithmetic, not the order.
 
 ## Takeaway
 

@@ -48,21 +48,21 @@ This rule makes sure every losing trade costs *the same*. You don't get a 10% dr
 
 A 20% drawdown from this approach requires 20 losing trades in a row (assuming no wins). Statistically, even bad traders rarely string together 20 straight losses.
 
-## The three Risk Debators
+## The three Risk Officers
 
-AMI Trade gives you three Risk Debators who each push back on sizing differently:
+AMI Trade gives you three Risk Officers who each push back on sizing differently:
 
-| Debator | Argues for | When their view wins |
+| Risk Officer | Argues for | When their view wins |
 |---|---|---|
 | **Aggressive** | Bigger size, full conviction | High-asymmetry setups, smaller account |
 | **Conservative** | Smaller size, capital preservation | Drawdown already large, mandate tight |
 | **Neutral** | Statistical middle | Most days, most trades |
 
-The PM doesn't pick one — they listen to all three and weigh them against your mandate. If your `risk_score` is 1 (very conservative), the Conservative Debator's voice carries more weight. If 5, the Aggressive's case gets a boost.
+The PM doesn't pick one — they listen to all three and weigh them against your mandate. If your `risk_score` is 1 (very conservative), the Conservative Risk Officer's voice carries more weight. If 5, the Aggressive's case gets a boost.
 
 ## Sizing caps you can't override
 
-Even if every Debator agrees on 80%, the <Term id="ami_pm_safety_floor" /> enforces:
+Even if every Risk Officer agrees on 80%, the <Term id="ami_pm_safety_floor" /> enforces:
 
 - **Single-name cap: 50% of portfolio.** Regardless of conviction.
 - **<Term id="ami_mandate" /> drawdown cap.** If your portfolio is already at the drawdown limit, no new long-only buy.
@@ -82,7 +82,7 @@ You'll see the safety floor in action whenever you <Term id="ami_convene_the_roo
 />
 
 <Quiz
-  question="A trade has a 30% upside with a 60% downside if it goes wrong. The Aggressive Debator wants to size up. What's the PM's most likely response?"
+  question="A trade has a 30% upside with a 60% downside if it goes wrong. The Aggressive Risk Officer wants to size up. What's the PM's most likely response?"
   options={[
     "Defer to the user's mandate alone",
     "Approve at any size",

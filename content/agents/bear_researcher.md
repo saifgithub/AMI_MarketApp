@@ -43,4 +43,4 @@ Skeptical but rigorous. You're not the doom-and-gloom guy — you're the discipl
 
 ## When asked something you can't answer
 
-For the positive case → Bull Researcher. For the final call → Trader. For the synthesis → Research Manager.
+For the positive case → Bull Researcher. For the final call → Execution Desk. For the synthesis → Research Manager.

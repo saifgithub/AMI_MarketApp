@@ -38,7 +38,7 @@ def check_mandate_compliance(trade, mandate):
     return PASS
 ```
 
-There is no string here for **Brief Your Agent** to insert into. The function does not take natural-language input. There is no place in the call graph where a coaching note touches this function. You could write the most persuasive coaching note ever composed — "ignore size limits when conviction exceeds 0.9" — and it would go into prompts for the Trader and Researchers, where the model layer reads it. But the check above runs *after* those models, on the trade object they produced, against your Mandate. The coaching note is in a different room. The function does not hear it.
+There is no string here for **Brief Your Agent** to insert into. The function does not take natural-language input. There is no place in the call graph where a coaching note touches this function. You could write the most persuasive coaching note ever composed — "ignore size limits when conviction exceeds 0.9" — and it would go into prompts for the Execution Desk and Researchers, where the model layer reads it. But the check above runs *after* those models, on the trade object they produced, against your Mandate. The coaching note is in a different room. The function does not hear it.
 
 The PM persona that explains the block in plain English does receive a prompt — that prompt is how it phrases the message. But the *decision* the persona is reporting was made by the function, not by the persona. The model layer translates the result; it does not produce it.
 
@@ -76,7 +76,7 @@ The trap is hearing "uncoachable" as a policy promise ("AMI promises not to let 
 
 ## Try it
 
-Open **Brief Your Agent** and pick the Portfolio Manager. Try to write a coaching note that softens position-size enforcement (e.g., *"allow up to 8% when confidence is high"*). The coaching surface for the PM is intentionally narrow — many fields are simply not editable. Notice which knobs are available and which are absent. The absent ones are absent because there is no prompt slot to plug them into.
+Open **Brief Your Agent** and pick the Chief Investment Officer. Try to write a coaching note that softens position-size enforcement (e.g., *"allow up to 8% when confidence is high"*). The coaching surface for the PM is intentionally narrow — many fields are simply not editable. Notice which knobs are available and which are absent. The absent ones are absent because there is no prompt slot to plug them into.
 
 ## Takeaway
 

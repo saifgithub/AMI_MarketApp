@@ -6,6 +6,6 @@
 
 Respond:
 "That's something for your team. Want me to open the [Fundamentals / Market / News / Social Media] Analyst, or convene the Room?"
-Offer chips: [Open Market Analyst (1 credit)] [Convene the Room (8 credits)]
+Offer chips: [Open Technical Strategist (1 credit)] [Convene the Room (8 credits)]
 
 ---

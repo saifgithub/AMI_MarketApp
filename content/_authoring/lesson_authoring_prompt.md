@@ -20,7 +20,7 @@ agents are members of AMI.
 
 NAMING RULE (non-negotiable): never write "the AI", "the LLM", "the
 model", or "ChatGPT". Say AMI. Individual agents are referred to by
-their role name (the Bear Researcher, the PM, the Market Analyst).
+their role name (the Bear Researcher, the PM, the Technical Strategist).
 
 ## What AMI Trade is
 
@@ -44,7 +44,7 @@ their role name (the Bear Researcher, the PM, the Market Analyst).
   flags (halal / ESG-lite / no T/A/G / no fossil / long-only). Every
   agent operates within the mandate — this teaches users how a real
   analyst team would be constrained by an investment policy.
-- The Portfolio Manager (PM) enforces a non-coachable safety floor —
+- The Chief Investment Officer (PM) enforces a non-coachable safety floor —
   a deterministic compliance check that runs on every simulated trade
   regardless of what AMI says. The floor models how a real compliance
   function works inside a fund.
@@ -92,9 +92,9 @@ EVERY daily challenge.
 
 Analysts (4): Fundamentals, Market (technical), News, Social Media.
 Researchers (3): Bull, Bear, Research Manager (synthesises the debate).
-Execution (1): Trader.
-Risk Debators (3): Aggressive, Conservative, Neutral.
-Governance (1): Portfolio Manager (the safety-floor enforcer).
+Execution (1): Execution Desk.
+Risk Officers (3): Aggressive, Conservative, Balanced.
+Governance (1): Chief Investment Officer (the safety-floor enforcer).
 Plus Concierge — onboarding + routing, not part of the trading team.
 
 Agent IDs (use verbatim in agent_callouts):
@@ -393,7 +393,7 @@ One concrete thing the reader does inside the AMI Trade app right now.
 Examples:
 - "Open Settings → Mandate, set max_drawdown_pct to 20, and see how
   the PM's safety floor message changes when you submit a 30% position."
-- "In 1-on-1 with the Market Analyst, paste the ticker NVDA and ask
+- "In 1-on-1 with the Technical Strategist, paste the ticker NVDA and ask
   'What's the current setup?'"
 - "Open the Decision Journal and find an old trade. Ask yourself: would
   the lesson you just read have changed how you sized it?"

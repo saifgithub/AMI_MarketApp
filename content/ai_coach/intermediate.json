@@ -22,7 +22,7 @@
     "category": "intermediate",
     "question": "What does a doji candle mean?",
     "short_answer": "A doji is a candle where open and close are nearly identical \u2014 it signals indecision, not a direction.",
-    "long_answer": "A doji on its own is not a trade signal. Its meaning depends on context \u2014 a doji after an extended uptrend at resistance is a different story than a doji mid-range. The Market Analyst will read it against trend, volume, and structure. It becomes actionable only when the next candle confirms by breaking the doji's range. Invalidation: if price keeps drifting sideways, the doji was just noise.",
+    "long_answer": "A doji on its own is not a trade signal. Its meaning depends on context \u2014 a doji after an extended uptrend at resistance is a different story than a doji mid-range. The Technical Strategist will read it against trend, volume, and structure. It becomes actionable only when the next candle confirms by breaking the doji's range. Invalidation: if price keeps drifting sideways, the doji was just noise.",
     "related_lessons": [
       "020",
       "022"
@@ -41,7 +41,7 @@
     "category": "intermediate",
     "question": "Which timeframe should I use to read a chart?",
     "short_answer": "Use at least two: a higher one for trend context and a lower one for entry timing. A swing trader typically pairs daily with 4-hour or 1-hour.",
-    "long_answer": "Single-timeframe reading is a common mistake \u2014 the 5-minute chart looks like a breakout while the daily shows you're inside a multi-month range. The Market Analyst aligns timeframes top-down: weekly for regime, daily for trend, intraday for trigger. If your higher timeframe disagrees with your lower one, the lower one is noise.",
+    "long_answer": "Single-timeframe reading is a common mistake \u2014 the 5-minute chart looks like a breakout while the daily shows you're inside a multi-month range. The Technical Strategist aligns timeframes top-down: weekly for regime, daily for trend, intraday for trigger. If your higher timeframe disagrees with your lower one, the lower one is noise.",
     "related_lessons": [
       "021"
     ],
@@ -59,7 +59,7 @@
     "category": "intermediate",
     "question": "How do I actually define a trend on a chart?",
     "short_answer": "An uptrend is a sequence of higher highs and higher lows; a downtrend is lower highs and lower lows. Anything else is a range.",
-    "long_answer": "Trend is structural, not emotional. The Market Analyst marks swing points and asks: is each pivot higher than the last? The trend is intact until that pattern breaks \u2014 a lower low in an uptrend is the first warning, a confirmed lower high follows. A 200-day moving average rising or falling is a useful overlay but the structure of swings is the primary read.",
+    "long_answer": "Trend is structural, not emotional. The Technical Strategist marks swing points and asks: is each pivot higher than the last? The trend is intact until that pattern breaks \u2014 a lower low in an uptrend is the first warning, a confirmed lower high follows. A 200-day moving average rising or falling is a useful overlay but the structure of swings is the primary read.",
     "related_lessons": [
       "022"
     ],
@@ -95,7 +95,7 @@
     "category": "intermediate",
     "question": "How do I know if a breakout is valid?",
     "short_answer": "A valid breakout closes beyond the level on above-average volume and holds on the next candle. A wick through the level is not a breakout.",
-    "long_answer": "The Market Analyst checks three things: a close beyond the level (not just an intrabar poke), expansion in volume relative to the prior 20 candles, and a follow-through candle that doesn't immediately reclaim the level. Invalidation: if price closes back inside the prior range within 1\u20132 candles, treat it as a failed breakout \u2014 those often reverse harder than they broke out.",
+    "long_answer": "The Technical Strategist checks three things: a close beyond the level (not just an intrabar poke), expansion in volume relative to the prior 20 candles, and a follow-through candle that doesn't immediately reclaim the level. Invalidation: if price closes back inside the prior range within 1\u20132 candles, treat it as a failed breakout \u2014 those often reverse harder than they broke out.",
     "related_lessons": [
       "024",
       "029"
@@ -114,7 +114,7 @@
     "category": "intermediate",
     "question": "What is a false breakout and how do I avoid getting trapped?",
     "short_answer": "A false breakout pierces a level then reverses back inside the range. Wait for a close beyond the level and a holding candle before treating it as real.",
-    "long_answer": "False breakouts are common at obvious levels because stops cluster just beyond them. The Market Analyst calls a breakout only after a confirmed close plus retest hold. If you're chasing the first candle through the line, you're trading the bait. Invalidation rule: any reclaim of the prior range within two candles flips the read \u2014 the failed breakout becomes the new signal.",
+    "long_answer": "False breakouts are common at obvious levels because stops cluster just beyond them. The Technical Strategist calls a breakout only after a confirmed close plus retest hold. If you're chasing the first candle through the line, you're trading the bait. Invalidation rule: any reclaim of the prior range within two candles flips the read \u2014 the failed breakout becomes the new signal.",
     "related_lessons": [
       "024"
     ],
@@ -132,7 +132,7 @@
     "category": "intermediate",
     "question": "How do I tell a pullback from the start of a real reversal?",
     "short_answer": "A pullback respects the prior trend's higher-low structure; a reversal breaks it. Watch the swing low.",
-    "long_answer": "In an uptrend, a healthy pullback retraces to a prior support or moving average, then prints a higher low. A reversal violates the most recent swing low and follows up with a lower high. The Market Analyst tracks structure first, indicators second. RSI dropping back to 50 in an uptrend is normal; structure breaking is not.",
+    "long_answer": "In an uptrend, a healthy pullback retraces to a prior support or moving average, then prints a higher low. A reversal violates the most recent swing low and follows up with a lower high. The Technical Strategist tracks structure first, indicators second. RSI dropping back to 50 in an uptrend is normal; structure breaking is not.",
     "related_lessons": [
       "022",
       "025"
@@ -151,7 +151,7 @@
     "category": "intermediate",
     "question": "Where should I enter on a pullback?",
     "short_answer": "Wait for price to reach a defined level \u2014 prior support, a moving average, or a Fibonacci zone \u2014 and confirm with a reversal candle before entering.",
-    "long_answer": "Entering mid-pullback with no level is just guessing. The Market Analyst marks the level first, then waits for price to react there with a bullish reaction candle in an uptrend (or bearish in a downtrend). Invalidation: a close through the level by more than your noise tolerance kills the setup. The stop sits just beyond the level, not below it by a hopeful margin.",
+    "long_answer": "Entering mid-pullback with no level is just guessing. The Technical Strategist marks the level first, then waits for price to react there with a bullish reaction candle in an uptrend (or bearish in a downtrend). Invalidation: a close through the level by more than your noise tolerance kills the setup. The stop sits just beyond the level, not below it by a hopeful margin.",
     "related_lessons": [
       "025"
     ],
@@ -169,7 +169,7 @@
     "category": "intermediate",
     "question": "What does a volume spike at the top of a move tell me?",
     "short_answer": "It can signal a climax \u2014 the last buyers piling in \u2014 which often precedes exhaustion. It is not a sell signal by itself.",
-    "long_answer": "Extreme volume after an extended uptrend pairs with wide-range candles and often a long upper wick. The Market Analyst treats this as a warning to tighten risk, not a flip-short signal. Invalidation: if the next several sessions hold the high on declining volume, the climax was actually continuation. Volume gives you context for what price did, never a standalone trade.",
+    "long_answer": "Extreme volume after an extended uptrend pairs with wide-range candles and often a long upper wick. The Technical Strategist treats this as a warning to tighten risk, not a flip-short signal. Invalidation: if the next several sessions hold the high on declining volume, the climax was actually continuation. Volume gives you context for what price did, never a standalone trade.",
     "related_lessons": [
       "029"
     ],
@@ -187,7 +187,7 @@
     "category": "intermediate",
     "question": "What's the difference between a breakaway gap and an exhaustion gap?",
     "short_answer": "Breakaway gaps start moves out of consolidation on heavy volume. Exhaustion gaps appear late in a trend and tend to get filled.",
-    "long_answer": "A breakaway gap leaves a base behind and rarely fills quickly. An exhaustion gap is the crowd's final lurch \u2014 it often gets retraced within days. The Market Analyst categorizes by where the gap occurs in the trend and the volume signature. Invalidation: an 'exhaustion' gap that holds and extends on follow-through volume is reclassified as continuation.",
+    "long_answer": "A breakaway gap leaves a base behind and rarely fills quickly. An exhaustion gap is the crowd's final lurch \u2014 it often gets retraced within days. The Technical Strategist categorizes by where the gap occurs in the trend and the volume signature. Invalidation: an 'exhaustion' gap that holds and extends on follow-through volume is reclassified as continuation.",
     "related_lessons": [
       "024",
       "029"
@@ -206,7 +206,7 @@
     "category": "intermediate",
     "question": "Should I use horizontal levels or trendlines?",
     "short_answer": "Horizontal levels are more reliable because more participants see the same price. Trendlines are useful for slope but bend easily to fit bias.",
-    "long_answer": "A horizontal level marks a price every chart shows. A trendline depends on which two swings you anchored it to and how you scaled the chart. The Market Analyst uses both, but treats horizontal levels as primary structure and trendlines as secondary slope guides. If you find yourself redrawing a trendline to keep it intact, the trendline isn't telling you anything anymore.",
+    "long_answer": "A horizontal level marks a price every chart shows. A trendline depends on which two swings you anchored it to and how you scaled the chart. The Technical Strategist uses both, but treats horizontal levels as primary structure and trendlines as secondary slope guides. If you find yourself redrawing a trendline to keep it intact, the trendline isn't telling you anything anymore.",
     "related_lessons": [
       "023"
     ],
@@ -224,7 +224,7 @@
     "category": "intermediate",
     "question": "How do I trade a stock that's been range-bound for weeks?",
     "short_answer": "Either fade the edges with tight stops, or wait for a confirmed breakout. Don't trade the middle.",
-    "long_answer": "Mid-range is low information \u2014 you're equidistant from both decision points. The Market Analyst flags ranges and treats them as 'no trade' until price approaches the boundary. Invalidation for a range-fade is a closing break of the boundary on volume. Invalidation for a breakout play is an immediate return into the range. Pick the side, define the line, and respect it.",
+    "long_answer": "Mid-range is low information \u2014 you're equidistant from both decision points. The Technical Strategist flags ranges and treats them as 'no trade' until price approaches the boundary. Invalidation for a range-fade is a closing break of the boundary on volume. Invalidation for a breakout play is an immediate return into the range. Pick the side, define the line, and respect it.",
     "related_lessons": [
       "023",
       "024"
@@ -243,7 +243,7 @@
     "category": "intermediate",
     "question": "Are chart patterns like head-and-shoulders actually reliable?",
     "short_answer": "Patterns are descriptive, not predictive. They work better when the structure aligns with trend, volume, and a clear invalidation level.",
-    "long_answer": "A head-and-shoulders is a pattern name for a specific lower-high structure with a measurable neckline. It carries weight when volume contracts into the right shoulder and expands on the neckline break. Without those, you've drawn a pattern on noise. The Market Analyst uses pattern names as shorthand for structure, not as standalone signals.",
+    "long_answer": "A head-and-shoulders is a pattern name for a specific lower-high structure with a measurable neckline. It carries weight when volume contracts into the right shoulder and expands on the neckline break. Without those, you've drawn a pattern on noise. The Technical Strategist uses pattern names as shorthand for structure, not as standalone signals.",
     "related_lessons": [
       "022",
       "029"
@@ -262,7 +262,7 @@
     "category": "intermediate",
     "question": "Why do traders care so much about higher lows?",
     "short_answer": "Each higher low confirms that buyers are stepping in earlier \u2014 that's the mechanical definition of an uptrend continuing.",
-    "long_answer": "The first lower low in an uptrend is the leading edge of a possible regime change. Until that happens, structure is intact. The Market Analyst uses the most recent swing low as the line in the sand \u2014 close below it and the trend read flips to neutral or down. Invalidation is built into the structure itself, which is why structure beats indicators for trend bias.",
+    "long_answer": "The first lower low in an uptrend is the leading edge of a possible regime change. Until that happens, structure is intact. The Technical Strategist uses the most recent swing low as the line in the sand \u2014 close below it and the trend read flips to neutral or down. Invalidation is built into the structure itself, which is why structure beats indicators for trend bias.",
     "related_lessons": [
       "022"
     ],
@@ -280,7 +280,7 @@
     "category": "intermediate",
     "question": "Which moving average should I use \u2014 50, 100, 200?",
     "short_answer": "Use the 200 for long-term trend, 50 for intermediate trend, and 20 for short-term momentum. There's no magic number \u2014 pick a set and stay consistent.",
-    "long_answer": "Moving averages smooth price; they don't predict it. The Market Analyst typically watches 20/50/200 on the daily because most participants do \u2014 which makes them self-fulfilling reaction points. Switching MA periods to fit each chart is a form of bias. Invalidation: a clean break and hold beyond a major MA changes regime; a single wick through it does not.",
+    "long_answer": "Moving averages smooth price; they don't predict it. The Technical Strategist typically watches 20/50/200 on the daily because most participants do \u2014 which makes them self-fulfilling reaction points. Switching MA periods to fit each chart is a form of bias. Invalidation: a clean break and hold beyond a major MA changes regime; a single wick through it does not.",
     "related_lessons": [
       "026"
     ],
@@ -298,7 +298,7 @@
     "category": "intermediate",
     "question": "What does a death cross actually mean?",
     "short_answer": "A death cross is when the 50-day moving average crosses below the 200-day. It's a lagging trend signal, not a precise sell trigger.",
-    "long_answer": "By the time a death cross prints, the trend has already weakened \u2014 moving averages confirm what price already did. The Market Analyst uses it as one input on regime, not a standalone signal. The mirror \u2014 a golden cross \u2014 has the same lag. Invalidation: crosses can whipsaw in choppy markets, which is why they pair with structure rather than replacing it.",
+    "long_answer": "By the time a death cross prints, the trend has already weakened \u2014 moving averages confirm what price already did. The Technical Strategist uses it as one input on regime, not a standalone signal. The mirror \u2014 a golden cross \u2014 has the same lag. Invalidation: crosses can whipsaw in choppy markets, which is why they pair with structure rather than replacing it.",
     "related_lessons": [
       "026"
     ],
@@ -316,7 +316,7 @@
     "category": "intermediate",
     "question": "If RSI is below 30, is that automatically a buy signal?",
     "short_answer": "No. RSI below 30 means momentum is stretched, not that price will reverse.",
-    "long_answer": "Oversold is a description of momentum, not a forecast. The Market Analyst pairs RSI with structure \u2014 oversold at a known support level with a reversal candle is a setup; oversold mid-downtrend is just continuation. Invalidation: if price keeps making lower lows while RSI sits under 30, the indicator is confirming weakness, not predicting strength.",
+    "long_answer": "Oversold is a description of momentum, not a forecast. The Technical Strategist pairs RSI with structure \u2014 oversold at a known support level with a reversal candle is a setup; oversold mid-downtrend is just continuation. Invalidation: if price keeps making lower lows while RSI sits under 30, the indicator is confirming weakness, not predicting strength.",
     "related_lessons": [
       "027"
     ],
@@ -334,7 +334,7 @@
     "category": "intermediate",
     "question": "How do I read RSI divergence?",
     "short_answer": "Bearish divergence is price making a higher high while RSI makes a lower high. Bullish is the inverse.",
-    "long_answer": "Divergence is a warning, not a trigger. The Market Analyst waits for price confirmation \u2014 a swing structure break \u2014 before acting on it. Divergences can persist for many bars in a strong trend; that's why standalone divergence trades fail often. Invalidation: when price prints a new high without a corresponding RSI low, the divergence is resolved and no longer a signal.",
+    "long_answer": "Divergence is a warning, not a trigger. The Technical Strategist waits for price confirmation \u2014 a swing structure break \u2014 before acting on it. Divergences can persist for many bars in a strong trend; that's why standalone divergence trades fail often. Invalidation: when price prints a new high without a corresponding RSI low, the divergence is resolved and no longer a signal.",
     "related_lessons": [
       "027"
     ],
@@ -352,7 +352,7 @@
     "category": "intermediate",
     "question": "What is MACD telling me?",
     "short_answer": "MACD shows the relationship between two exponential moving averages. A rising MACD above zero says momentum is up; the histogram shows acceleration.",
-    "long_answer": "MACD has three components: the MACD line, the signal line, and the histogram. The Market Analyst watches zero-line crosses for regime and signal-line crosses for short-term momentum shifts. The histogram peaking and contracting often precedes a slowdown. Invalidation: MACD lags \u2014 by the time it confirms, the move is underway, so it shouldn't be your only input on a fresh entry.",
+    "long_answer": "MACD has three components: the MACD line, the signal line, and the histogram. The Technical Strategist watches zero-line crosses for regime and signal-line crosses for short-term momentum shifts. The histogram peaking and contracting often precedes a slowdown. Invalidation: MACD lags \u2014 by the time it confirms, the move is underway, so it shouldn't be your only input on a fresh entry.",
     "related_lessons": [
       "028"
     ],
@@ -390,7 +390,7 @@
     "category": "intermediate",
     "question": "Why does volume confirm or reject a move?",
     "short_answer": "A move on rising volume reflects broad participation. A move on shrinking volume often lacks conviction and reverses.",
-    "long_answer": "Volume is the receipt that real flow is behind a candle. The Market Analyst expects breakouts on expanding volume and pullbacks on contracting volume. Invalidation for a breakout: if volume comes in below average, treat it as suspect until follow-through arrives. Volume is context for price; it never overrides price.",
+    "long_answer": "Volume is the receipt that real flow is behind a candle. The Technical Strategist expects breakouts on expanding volume and pullbacks on contracting volume. Invalidation for a breakout: if volume comes in below average, treat it as suspect until follow-through arrives. Volume is context for price; it never overrides price.",
     "related_lessons": [
       "029"
     ],
@@ -408,7 +408,7 @@
     "category": "intermediate",
     "question": "How many indicators should I have on my chart?",
     "short_answer": "Two or three at most, each answering a different question \u2014 trend, momentum, volume. More indicators add noise, not edge.",
-    "long_answer": "Stacking five momentum oscillators tells you the same thing five times. The Market Analyst uses one trend tool (moving average), one momentum tool (RSI or MACD), and volume. If the indicators disagree, structure breaks the tie. Indicators are filters on price, never replacements for it.",
+    "long_answer": "Stacking five momentum oscillators tells you the same thing five times. The Technical Strategist uses one trend tool (moving average), one momentum tool (RSI or MACD), and volume. If the indicators disagree, structure breaks the tie. Indicators are filters on price, never replacements for it.",
     "related_lessons": [
       "030",
       "031"
@@ -427,7 +427,7 @@
     "category": "intermediate",
     "question": "Why do my indicators always seem to be late?",
     "short_answer": "Most indicators are mathematical transformations of past prices \u2014 they describe what already happened. That's a feature, not a bug.",
-    "long_answer": "Moving averages, MACD, and RSI all lag because they smooth or compare prior data. The Market Analyst uses them to confirm what structure is already showing, not to predict the future. A 'leading' indicator is usually just a noisier one. Invalidation rule: if your indicator is firing while structure says the opposite, the structure call wins.",
+    "long_answer": "Moving averages, MACD, and RSI all lag because they smooth or compare prior data. The Technical Strategist uses them to confirm what structure is already showing, not to predict the future. A 'leading' indicator is usually just a noisier one. Invalidation rule: if your indicator is firing while structure says the opposite, the structure call wins.",
     "related_lessons": [
       "031"
     ],
@@ -904,7 +904,7 @@
     "category": "intermediate",
     "question": "How should I size a position if I'm only 70% confident in it?",
     "short_answer": "Size to the loss you can take, not the confidence you have. Confidence is qualitative; position size should be a function of stop distance and risk per trade.",
-    "long_answer": "Confidence is a feeling that miscalibrates with outcomes. The Portfolio Manager sizes positions so a stop-out loses a fixed percent of equity (commonly 0.5\u20131%). If you genuinely believe one setup is better than another, the mandate-approved way to express that is a tighter stop or a higher-conviction signal score \u2014 not doubling the size. Confidence is what kills accounts; rules are what preserve them.",
+    "long_answer": "Confidence is a feeling that miscalibrates with outcomes. The Chief Investment Officer sizes positions so a stop-out loses a fixed percent of equity (commonly 0.5\u20131%). If you genuinely believe one setup is better than another, the mandate-approved way to express that is a tighter stop or a higher-conviction signal score \u2014 not doubling the size. Confidence is what kills accounts; rules are what preserve them.",
     "related_lessons": [
       "014"
     ],

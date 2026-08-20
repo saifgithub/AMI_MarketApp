@@ -25,11 +25,11 @@ A check that runs but does not record itself is a check you cannot trust. Every 
 Suppose over six weeks you convene the Room 24 times across AAPL, NVDA, MSFT, AMZN, and JPM. Open the Decision Journal and filter by *PM result*. You see:
 
 - 18 PASS — proposed sizes 2–4%, well inside the 4.5% cap your `risk_score: 4` sets.
-- 4 BLOCK on the risk-tier size cap — Trader proposed 6–7% three times on NVDA and once on TSLA. Each block recorded with timestamp, the Mandate value that was active (`risk_score: 4`, a 4.5% cap), and the proposed size.
+- 4 BLOCK on the risk-tier size cap — the Execution Desk proposed 6–7% three times on NVDA and once on TSLA. Each block recorded with timestamp, the Mandate value that was active (`risk_score: 4`, a 4.5% cap), and the proposed size.
 - 1 BLOCK on `no_fossil` — XOM convened on a day when `no_fossil: true` was active.
 - 1 BLOCK on `long_only` — TOPGLOV short proposal blocked while `long_only: true`.
 
-That trail tells you several things at a glance. Your Mandate's size cap is the binding constraint about 17% of the time — meaningful. NVDA proposals routinely come back oversize relative to your limit, which is either a signal that NVDA's volatility is pulling the Trader toward larger positions or that your `risk_score` is tighter than you intend for high-conviction setups. The exclusion blocks tell you whether your ethical/regional constraints are firing, which can confirm they are still wired the way you want.
+That trail tells you several things at a glance. Your Mandate's size cap is the binding constraint about 17% of the time — meaningful. NVDA proposals routinely come back oversize relative to your limit, which is either a signal that NVDA's volatility is pulling the Execution Desk toward larger positions or that your `risk_score` is tighter than you intend for high-conviction setups. The exclusion blocks tell you whether your ethical/regional constraints are firing, which can confirm they are still wired the way you want.
 
 Critically, the trail records the Mandate values *at the time of the decision*, not the current values. If you edited `risk_score` from 3 to 4 three weeks in, an audit two weeks later still shows the 3-era blocks as 3-era blocks. The trail is immutable history — you cannot retroactively re-grade past decisions by editing today's Mandate.
 
@@ -44,13 +44,13 @@ The trap is using the audit trail to argue with the PM after the fact. *"It bloc
 <Quiz
   question="You scroll your Decision Journal and find five PM blocks on the risk-tier size cap over the last month, all on NVDA. What's the most useful inference?"
   options={[
-    "The Trader keeps proposing oversize positions on NVDA — either NVDA's setups genuinely warrant more size (and you should consider whether your `risk_score` matches your risk appetite) or the Trader is over-enthusiastic; either way the audit trail surfaced a pattern worth thinking about",
+    "The Execution Desk keeps proposing oversize positions on NVDA — either NVDA's setups genuinely warrant more size (and you should consider whether your `risk_score` matches your risk appetite) or the Execution Desk is over-enthusiastic; either way the audit trail surfaced a pattern worth thinking about",
     "The PM is being too strict on NVDA specifically",
     "The blocks should be ignored because NVDA ran higher anyway",
     "AMI dislikes NVDA"
   ]}
   answer={0}
-  explanation="The audit trail is a pattern-recognition tool. Five blocks on the same ticker is signal — either about the asset, your Mandate, or the Trader's calibration. The right move is reflection (and possibly Mandate review), not dismissing the blocks. The tempting wrong answer is the 'ignore the blocks because NVDA ran higher anyway' one — outcome bias retconning the PM as wrong; the PM enforced your stated rules, and outcome on one trade does not validate ignoring them."
+  explanation="The audit trail is a pattern-recognition tool. Five blocks on the same ticker is signal — either about the asset, your Mandate, or the Execution Desk's calibration. The right move is reflection (and possibly Mandate review), not dismissing the blocks. The tempting wrong answer is the 'ignore the blocks because NVDA ran higher anyway' one — outcome bias retconning the PM as wrong; the PM enforced your stated rules, and outcome on one trade does not validate ignoring them."
 />
 
 <Quiz

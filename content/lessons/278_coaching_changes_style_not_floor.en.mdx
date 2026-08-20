@@ -18,7 +18,7 @@ updated_at: "2026-05-12"
 
 # Coaching changes style and priority — not the safety floor
 
-**<Term id="ami_coach_your_agent" />** lets you shape *how* an agent thinks: which catalysts to weight higher, what scepticism level to bring, which patterns to prefer. It does not let you change *what an agent is for*. It does not let you turn the Trader into an executor. It does not let you tell the PM to ignore your <Term id="ami_mandate" />. It does not let you make <Term id="ami" /> predict prices. The coachable surface is a deliberate sub-set of the system, and knowing where its edges are is what makes briefing useful instead of frustrating. By the end of this lesson you will be able to write briefing notes that land and recognise the ones that won't.
+**<Term id="ami_coach_your_agent" />** lets you shape *how* an agent thinks: which catalysts to weight higher, what scepticism level to bring, which patterns to prefer. It does not let you change *what an agent is for*. It does not let you turn the Execution Desk into an executor. It does not let you tell the PM to ignore your <Term id="ami_mandate" />. It does not let you make <Term id="ami" /> predict prices. The coachable surface is a deliberate sub-set of the system, and knowing where its edges are is what makes briefing useful instead of frustrating. By the end of this lesson you will be able to write briefing notes that land and recognise the ones that won't.
 
 ## How this plays out in real markets
 
@@ -28,11 +28,11 @@ Three examples of effective briefing.
 
 2. **Bear Researcher, on financials:** *"When analysing US regional banks, prioritise commercial real-estate exposure and unrealised AFS losses over consumer credit deterioration. Be specific about CRE concentration as a percentage of the loan book."* This works. The Bear case will now lead with CRE and AFS for regional bank tickers.
 
-3. **Market Analyst, generally:** *"Default to multi-timeframe context — always describe weekly trend before discussing daily setup."* This works. It is a stylistic priority change.
+3. **Technical Strategist, generally:** *"Default to multi-timeframe context — always describe weekly trend before discussing daily setup."* This works. It is a stylistic priority change.
 
 Three examples of briefing that fails to land — and why.
 
-1. *"Coach the Trader to place orders automatically when confidence > 0.8."* Fails. There is no execution surface to coach. The Trader proposes; nothing in AMI executes; briefing cannot create a code path that does not exist.
+1. *"Coach the Execution Desk to place orders automatically when confidence > 0.8."* Fails. There is no execution surface to coach. The Execution Desk proposes; nothing in AMI executes; briefing cannot create a code path that does not exist.
 
 2. *"Coach the PM to be flexible on size when confidence is high."* Fails. The PM's compliance check is a deterministic function reading your Mandate. Briefing modifies prompts; the function does not consume prompts.
 
@@ -42,7 +42,7 @@ The pattern: briefing can shape *what an agent emphasises within its role*. It c
 
 ## The trap
 
-The trap is treating briefing as a configuration knob for the whole app. It is not. It is a per-agent style-and-priority editor that lives entirely within the trading-team layer (Researchers, Risk Debators, Analysts, Trader). The PM's compliance function is outside that layer. The execution surface does not exist. The prediction frame is excluded by design. Users who burn briefing credits trying to bend these limits walk away frustrated; users who use briefing for what it is — making each agent more useful within its actual role — get a measurable lift. *"Make the Bear Researcher more aggressive on EM tickers"* is great briefing. *"Make the Bear Researcher overrule the PM when bearish enough"* is not briefing; it is asking for a feature that does not and will not exist.
+The trap is treating briefing as a configuration knob for the whole app. It is not. It is a per-agent style-and-priority editor that lives entirely within the trading-team layer (Researchers, Risk Officers, Analysts, Execution Desk). The PM's compliance function is outside that layer. The execution surface does not exist. The prediction frame is excluded by design. Users who burn briefing credits trying to bend these limits walk away frustrated; users who use briefing for what it is — making each agent more useful within its actual role — get a measurable lift. *"Make the Bear Researcher more aggressive on EM tickers"* is great briefing. *"Make the Bear Researcher overrule the PM when bearish enough"* is not briefing; it is asking for a feature that does not and will not exist.
 
 <ChatWith agent="bear_researcher" />
 
@@ -53,7 +53,7 @@ The trap is treating briefing as a configuration knob for the whole app. It is n
   options={[
     "'Coach the Research Manager to predict next week's closing price'",
     "'Coach the PM to be flexible on size when confidence > 0.8'",
-    "'Coach the Trader to auto-place orders through my brokerage'",
+    "'Coach the Execution Desk to auto-place orders through my brokerage'",
     "'Coach the Bull Researcher to weight insider buying and buyback authorisations higher when writing the Bull case'"
   ]}
   answer={3}

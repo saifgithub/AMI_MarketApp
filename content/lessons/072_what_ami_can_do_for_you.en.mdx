@@ -24,7 +24,7 @@ updated_at: "2026-05-12"
 
 ## How this plays out in real markets
 
-Suppose you watchlist NVDA and tap **<Term id="ami_convene_the_room" />**. Within ~30 seconds, 12 agents stream their work. The Fundamentals Analyst pulls the latest 10-Q: revenue $35.1B, gross margin 74%, forward P/E 32. The Market Analyst reads the chart: NVDA trading at $142, 50-day MA at $135, RSI 68. The News Analyst summarises the last 5 trading days' headlines. The Social Media Analyst flags X sentiment skew. The Bull and Bear Researchers debate; the Research Manager synthesises. The Risk Debators (Aggressive / Conservative / Neutral) argue position size. The Trader proposes entry/stop/target. The PM checks it against your Mandate — say `risk_score: 3, max_drawdown_pct: 20, halal: false` — and issues a final Verdict:
+Suppose you watchlist NVDA and tap **<Term id="ami_convene_the_room" />**. Within ~30 seconds, 12 agents stream their work. The Fundamentals Analyst pulls the latest 10-Q: revenue $35.1B, gross margin 74%, forward P/E 32. The Technical Strategist reads the chart: NVDA trading at $142, 50-day MA at $135, RSI 68. The Macro & Events desk summarises the last 5 trading days' headlines. The Flow & Positioning desk flags X sentiment skew. The Bull and Bear Researchers debate; the Research Manager synthesises. The Risk Officers (Aggressive / Conservative / Balanced) argue position size. The Execution Desk proposes entry/stop/target. The PM checks it against your Mandate — say `risk_score: 3, max_drawdown_pct: 20, halal: false` — and issues a final Verdict:
 
 > **BUY NVDA · size 3% · entry $141.50 · stop $134 (-5.3%) · target $158 (+11.7%) · horizon 4–6 weeks · confidence 0.62**
 
@@ -32,7 +32,7 @@ You see the full debate transcript, every agent's reasoning, and the dissenting 
 
 ## The trap
 
-The common misconception is treating AMI like a signal service: "tell me what to buy". AMI will produce a simulated Verdict, but the Verdict is the *output of a training run you initiated*, not a recommendation to take into your real account. If you skim the debate transcript and read only the headline BUY/SELL, you're throwing away 90% of what the simulator was built to train. The value is in seeing why the Bear Researcher disagreed, what the Conservative Debator wanted to cut position size to, and which mandate clause the PM enforced. AMI is a structured second-opinion training environment at 12-agent depth — not a crystal ball with a confidence number stapled on.
+The common misconception is treating AMI like a signal service: "tell me what to buy". AMI will produce a simulated Verdict, but the Verdict is the *output of a training run you initiated*, not a recommendation to take into your real account. If you skim the debate transcript and read only the headline BUY/SELL, you're throwing away 90% of what the simulator was built to train. The value is in seeing why the Bear Researcher disagreed, what the Conservative Risk Officer wanted to cut position size to, and which mandate clause the PM enforced. AMI is a structured second-opinion training environment at 12-agent depth — not a crystal ball with a confidence number stapled on.
 
 <ChatWith agent="concierge" />
 
@@ -44,7 +44,7 @@ The common misconception is treating AMI like a signal service: "tell me what to
     "Credit cost — you should have used 1-on-1 instead",
     "Nothing — the Verdict is the answer",
     "The reasoning chain — the dissenting case, mandate enforcement, and per-agent confidence that justify the headline",
-    "Speed — Convene the Room is slower than just asking the Trader"
+    "Speed — Convene the Room is slower than just asking the Execution Desk"
   ]}
   answer={2}
   explanation="The headline verdict is the tip of a 12-agent debate. Skipping the transcript means you can't audit why AMI said BUY, what the Bear case was, or which mandate clause the PM enforced. You converted a structured second opinion into a signal — which is exactly what AMI is not."

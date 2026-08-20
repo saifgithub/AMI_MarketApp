@@ -18,15 +18,15 @@ updated_at: "2026-05-12"
 
 # Why the PM is structurally separate from the trading team
 
-A trading desk where the same people pitch the trade *and* approve the trade is a trading desk that blows up. <Term id="ami" />'s <Term id="training_simulator" /> models the Portfolio Manager outside the eleven-agent trading team for the same reason real-world risk officers are organisationally separate from traders — independence is what makes the check meaningful, and the simulator is teaching you to recognise that structure. The PM does not read the Bull case to be persuaded. It does not weight confidence scores. It runs a deterministic compliance check against your <Term id="ami_mandate" /> and returns PASS or BLOCK. By the end of this lesson you will be able to explain why this separation is structural, not stylistic.
+A trading desk where the same people pitch the trade *and* approve the trade is a trading desk that blows up. <Term id="ami" />'s <Term id="training_simulator" /> models the Chief Investment Officer outside the eleven-agent trading team for the same reason real-world risk officers are organisationally separate from traders — independence is what makes the check meaningful, and the simulator is teaching you to recognise that structure. The PM does not read the Bull case to be persuaded. It does not weight confidence scores. It runs a deterministic compliance check against your <Term id="ami_mandate" /> and returns PASS or BLOCK. By the end of this lesson you will be able to explain why this separation is structural, not stylistic.
 
 ## How this plays out in real markets
 
-<Term id="ami_convene_the_room" /> on XOM. The Bull Researcher writes a strong oil-cycle case. The Trader, persuaded by the debate, proposes a 60% position. Confidence comes back 0.74 — high. Everyone in the trading team agrees this is the best trade of the week.
+<Term id="ami_convene_the_room" /> on XOM. The Bull Researcher writes a strong oil-cycle case. The Execution Desk, persuaded by the debate, proposes a 60% position. Confidence comes back 0.74 — high. Everyone in the trading team agrees this is the best trade of the week.
 
 Your Mandate has XOM on `ticker_blocklist`. The PM step runs:
 
-> *Portfolio Manager (compliance check):* Two violations. (1) Ticker XOM is on your `ticker_blocklist`. (2) Proposed size 60% exceeds the absolute single-name cap of 50% — a hard ceiling on every Mandate, regardless of risk tier. Trade BLOCKED. No partial adjustment available — both are binary rules.
+> *Chief Investment Officer (compliance check):* Two violations. (1) Ticker XOM is on your `ticker_blocklist`. (2) Proposed size 60% exceeds the absolute single-name cap of 50% — a hard ceiling on every Mandate, regardless of risk tier. Trade BLOCKED. No partial adjustment available — both are binary rules.
 
 The PM never read the Bull case. The PM never asked what confidence was. The PM compared two pieces of data — *the proposed trade* and *your Mandate fields* — using deterministic functions. If the PM had been the thirteenth voice in the debate, persuasion could have moved it. Because it is structurally outside the debate, persuasion has nowhere to land. The eleven-agent team can argue its head off; the PM gate is a different kind of object entirely. It runs after the debate ends, against rules it did not write, on data you control.
 
@@ -46,7 +46,7 @@ The trap is the assumption that the PM is just another agent with a stricter pro
     "The PM weighs the eleven-agent consensus and decides 60% is too much",
     "The PM compliance check is deterministic and compares the proposed size against the absolute single-name cap independent of the debate — conviction does not enter the function",
     "The PM is just being conservative this time",
-    "The PM is waiting for the Trader to lower the size"
+    "The PM is waiting for the Execution Desk to lower the size"
   ]}
   answer={1}
   explanation="The check is independent of the debate by design. Even unanimous high conviction does not move a deterministic function comparing the proposed size against the 50% absolute single-name cap. The tempting wrong answer is 'PM weighs consensus' — that's exactly what a non-independent check would do, and exactly why AMI's PM is not built that way."
@@ -66,7 +66,7 @@ The trap is the assumption that the PM is just another agent with a stricter pro
 
 ## Try it
 
-Open **Settings → Mandate** and add XOM to your `ticker_blocklist`. Convene the Room on XOM. Watch the Trader propose a position and the PM block on the blocklist hit. Now remove XOM from `ticker_blocklist` and re-run the same ticker. The trading-team debate barely changes; the PM result flips entirely. That is independence in action.
+Open **Settings → Mandate** and add XOM to your `ticker_blocklist`. Convene the Room on XOM. Watch the Execution Desk propose a position and the PM block on the blocklist hit. Now remove XOM from `ticker_blocklist` and re-run the same ticker. The trading-team debate barely changes; the PM result flips entirely. That is independence in action.
 
 ## Takeaway
 

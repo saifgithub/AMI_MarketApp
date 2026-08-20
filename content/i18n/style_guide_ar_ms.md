@@ -10,9 +10,21 @@ this file too — it's documentation, the scripts remain the source of behavior.
 - **"AMI"** — the brand name. Never translated, never transliterated differently.
 - **Ticker symbols** — uppercase Latin (AAPL, MSFT, MAYBANK, NVDA). Stay LTR even inside
   an Arabic RTL sentence (Flutter's bidi algorithm handles this for plain `Text` widgets).
-- **Agent role names** — Bull Researcher, Bear Researcher, Fundamentals Analyst, Portfolio
-  Manager, Market Analyst, News Analyst, Trader, Conservative Debator, Aggressive Debator,
-  Neutral Debator, Research Manager, Social Media Analyst, Concierge. Keep the English label.
+- **Agent role names** (CR160 set) — Bull Researcher, Bear Researcher, Fundamentals Analyst,
+  Chief Investment Officer, Technical Strategist, Macro & Events, Execution Desk,
+  Risk Officer — Conservative, Risk Officer — Aggressive, Risk Officer — Balanced,
+  Research Manager, Flow & Positioning, Concierge. Keep the English label.
+  The pre-CR160 labels (Portfolio Manager, Market Analyst, News Analyst, Trader, the three
+  Debators, Social Media Analyst) are retired — a source string still carrying one is stale EN,
+  not a term to preserve.
+- **Bull / Bear — TRANSCREATE, do not translate (CR160).** Bull/Bear survive in EN because
+  they are market jargon. Rendered literally into Arabic (ثور / دب) or Malay (lembu jantan /
+  beruang) they produce an animal, not a market stance. The AR/MS strings therefore use the
+  **Long-Side / Short-Side** concept instead: Bull Researcher → Long-Side Analyst,
+  Bear Researcher → Short-Side Analyst (in the target language's own words for long/short
+  exposure, consistent with the glossary's long/short terms). This is a DELIBERATE divergence
+  from the EN source — do NOT "correct" it back to the literal animal, and carry this comment
+  into every string file that touches Bull/Bear so the next translator sees it.
 - **Currency + numerics** — `$`, `RM`, `SAR`, digits, percent signs, dates. Stay LTR inside
   Arabic sentences (see `mobile/lib/l10n/README.md`'s RTL notes).
 - **`{placeholder}` tokens** — preserved exactly, including braces.

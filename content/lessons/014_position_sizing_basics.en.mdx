@@ -24,7 +24,7 @@ Position sizing is the single decision that determines whether a string of losin
 
 ## Example
 
-Your simulated account is $20,000. Your mandate says max 1% risk per trade — so the most you will lose on this trade is $200. You like NVDA at $480. The Market Analyst flags strong support at $460; a clean break below invalidates the setup, so your stop sits at $459.
+Your simulated account is $20,000. Your mandate says max 1% risk per trade — so the most you will lose on this trade is $200. You like NVDA at $480. The Technical Strategist flags strong support at $460; a clean break below invalidates the setup, so your stop sits at $459.
 
 Per-share risk = $480 − $459 = $21.
 Shares = $200 ÷ $21 = 9 shares (round down, never up).
@@ -34,7 +34,7 @@ Notice three things. First, the position notional (21.6%) is much larger than th
 
 ## The trap
 
-The trap is sizing by "what feels like a real position" — buying 50 shares because 9 looks tiny. Beginners pick the share count first, then back into a stop that fits their feelings. The Trader will execute whatever you tell it, but the <Term id="ami_pm_safety_floor" /> exists because this is exactly the mistake that compounds across a streak. The correct mental model: account risk is the input, share count is the output. You never decide how many shares first. The size of the position is whatever the math gives you after the stop is placed where the chart tells you it has to be — even if that means 3 shares, even if that means the trade isn't worth taking at all.
+The trap is sizing by "what feels like a real position" — buying 50 shares because 9 looks tiny. Beginners pick the share count first, then back into a stop that fits their feelings. The Execution Desk will execute whatever you tell it, but the <Term id="ami_pm_safety_floor" /> exists because this is exactly the mistake that compounds across a streak. The correct mental model: account risk is the input, share count is the output. You never decide how many shares first. The size of the position is whatever the math gives you after the stop is placed where the chart tells you it has to be — even if that means 3 shares, even if that means the trade isn't worth taking at all.
 
 <ChatWith agent="portfolio_manager" />
 
@@ -66,7 +66,7 @@ The trap is sizing by "what feels like a real position" — buying 50 shares bec
 
 ## Try it
 
-Open the <Term id="ami_mandate" /> editor and set `risk_score` to 1 — AMI's tightest risk tier, and the closest real control to the 1%-per-trade convention used above. Then open a <Term id="ami_one_on_one" /> with the Trader, paste a ticker from your <Term id="ami_watchlist" /> with a hypothetical entry and a stop, and ask "Given my mandate, how many shares?" Compare its answer to the three-input formula above. If they disagree, ask why.
+Open the <Term id="ami_mandate" /> editor and set `risk_score` to 1 — AMI's tightest risk tier, and the closest real control to the 1%-per-trade convention used above. Then open a <Term id="ami_one_on_one" /> with the Execution Desk, paste a ticker from your <Term id="ami_watchlist" /> with a hypothetical entry and a stop, and ask "Given my mandate, how many shares?" Compare its answer to the three-input formula above. If they disagree, ask why.
 
 ## Takeaway
 

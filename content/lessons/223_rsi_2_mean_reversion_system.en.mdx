@@ -47,7 +47,7 @@ The beginner mistake is sizing RSI(2) trades by the same per-trade risk as longe
 />
 
 <Quiz
-  question="You run an RSI(2) system. On a turbulent week, RSI(2) below 5 fires on five tickers simultaneously: AAPL, MSFT, GOOGL, AMZN, META. All are above their 200-day MAs. Your mandate caps per-trade risk at 1% and total drawdown at 20% on a $100,000 account, currently at 5% drawdown YTD. Conservative Debator argues 'these are highly correlated; don't take all five'. Synthesis: what's the right action?"
+  question="You run an RSI(2) system. On a turbulent week, RSI(2) below 5 fires on five tickers simultaneously: AAPL, MSFT, GOOGL, AMZN, META. All are above their 200-day MAs. Your mandate caps per-trade risk at 1% and total drawdown at 20% on a $100,000 account, currently at 5% drawdown YTD. Conservative Risk Officer argues 'these are highly correlated; don't take all five'. Synthesis: what's the right action?"
   options={[
     "Take at most 2-3, sized at half-risk (~0.5% each), to cap simultaneous correlated exposure at 1.5% of account",
     "Take all five but use a wider stop on each to avoid getting shaken out",
@@ -55,12 +55,12 @@ The beginner mistake is sizing RSI(2) trades by the same per-trade risk as longe
     "Take all five at 1% each — each meets the entry rules individually"
   ]}
   answer={0}
-  explanation="The synthesis: RSI(2) trades on US large-cap tech are highly correlated, so 5 'independent' 1% trades behave like a single 5% trade in a market-wide selloff. The Conservative Debator's framing is correct. Half-sizing and capping the basket respects both the strategy's cluster property and the mandate's risk budget. Taking all five at 1% each is the tempting wrong answer because each setup individually checks the rules — but mandate-level risk is portfolio-level, not per-trade-level. Taking all five with wider stops compounds the error by increasing per-trade loss."
+  explanation="The synthesis: RSI(2) trades on US large-cap tech are highly correlated, so 5 'independent' 1% trades behave like a single 5% trade in a market-wide selloff. The Conservative Risk Officer's framing is correct. Half-sizing and capping the basket respects both the strategy's cluster property and the mandate's risk budget. Taking all five at 1% each is the tempting wrong answer because each setup individually checks the rules — but mandate-level risk is portfolio-level, not per-trade-level. Taking all five with wider stops compounds the error by increasing per-trade loss."
 />
 
 ## Try it
 
-In <Term id="ami_one_on_one" /> with the Conservative Debator, paste a <Term id="ami_watchlist" /> that's just sold off and ask: "Which tickers triggered RSI(2) < 5 today with price above the 200-day MA? For each, state the entry, stop, and time-stop date. Identify which trades are correlated and recommend a basket size that caps simultaneous exposure." Then log the basket plan in the <Term id="ami_decision_journal" /> before any entry fires.
+In <Term id="ami_one_on_one" /> with the Conservative Risk Officer, paste a <Term id="ami_watchlist" /> that's just sold off and ask: "Which tickers triggered RSI(2) < 5 today with price above the 200-day MA? For each, state the entry, stop, and time-stop date. Identify which trades are correlated and recommend a basket size that caps simultaneous exposure." Then log the basket plan in the <Term id="ami_decision_journal" /> before any entry fires.
 
 ## Takeaway
 

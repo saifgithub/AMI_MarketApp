@@ -4,7 +4,7 @@
     "category": "ai_meta",
     "question": "What is AMI?",
     "short_answer": "AMI is a training simulator that gives you practice running a 12-agent analyst team as CEO. It researches, debates, and produces a mandate-checked Verdict for you to evaluate — the simulated decision is yours.",
-    "long_answer": "AMI is a simulation-only trading-education app organised around twelve specialist agents: analysts (fundamentals, market, news, social), researchers (bull, bear), a Research Manager, three Risk Debators (aggressive, conservative, neutral), a Trader, and the Portfolio Manager. You set your Mandate; the agents do the legwork; you use the resulting Verdict to practice the skill of evaluating multi-agent analyst output. Nothing AMI produces is investment advice — it's training material for the skill of evaluating advice. AMI never executes trades and never connects to a brokerage.",
+    "long_answer": "AMI is a simulation-only trading-education app organised around twelve specialist agents: analysts (fundamentals, market, news, social), researchers (bull, bear), a Research Manager, three Risk Officers (aggressive, conservative, balanced), an Execution Desk, and the Chief Investment Officer. You set your Mandate; the agents do the legwork; you use the resulting Verdict to practice the skill of evaluating multi-agent analyst output. Nothing AMI produces is investment advice — it's training material for the skill of evaluating advice. AMI never executes trades and never connects to a brokerage.",
     "related_lessons": ["072", "076"],
     "related_agents": ["concierge"],
     "tags": ["definition", "overview", "ceo_framing"]
@@ -64,7 +64,7 @@
     "category": "ai_meta",
     "question": "Can AMI analyse stocks?",
     "short_answer": "Yes — as a training exercise. AMI's simulated analysts cover fundamentals, technicals, news, and sentiment, and the researchers synthesise that into a bull/bear case for you to evaluate.",
-    "long_answer": "Convene the Room on a ticker and the Fundamentals Analyst pulls financials, the Market Analyst reads price action, the News Analyst summarises headlines, and the Social Media Analyst checks sentiment. The Bull and Bear Researchers then debate, the Research Manager weighs the result, and the Trader proposes a setup. You get the full chain, not just the conclusion — and the chain is training material for the skill of evaluating analyst output, not investment advice.",
+    "long_answer": "Convene the Room on a ticker and the Fundamentals Analyst pulls financials, the Technical Strategist reads price action, the Macro & Events desk summarises headlines, and the Flow & Positioning desk checks sentiment. The Bull and Bear Researchers then debate, the Research Manager weighs the result, and the Execution Desk proposes a setup. You get the full chain, not just the conclusion — and the chain is training material for the skill of evaluating analyst output, not investment advice.",
     "related_lessons": ["072"],
     "related_agents": ["research_manager"],
     "tags": ["analysis", "capabilities"]
@@ -73,8 +73,8 @@
     "id": "qa_aim_can_ami_explain_a_chart",
     "category": "ai_meta",
     "question": "Can AMI explain a chart?",
-    "short_answer": "Yes. The Market Analyst describes the current setup — trend, key levels, indicators, what would invalidate the read — without claiming to predict the next bar.",
-    "long_answer": "Ask the Market Analyst in 1-on-1 about any ticker and you will get a description of where price sits relative to moving averages, what RSI or volume is doing, where support and resistance live, and what move would break the current structure. What you will not get is a forecast of where the price closes on a fixed future date — AMI describes setup, not future prints. The description is a training artifact for the skill of reading charts, not investment advice.",
+    "short_answer": "Yes. The Technical Strategist describes the current setup — trend, key levels, indicators, what would invalidate the read — without claiming to predict the next bar.",
+    "long_answer": "Ask the Technical Strategist in 1-on-1 about any ticker and you will get a description of where price sits relative to moving averages, what RSI or volume is doing, where support and resistance live, and what move would break the current structure. What you will not get is a forecast of where the price closes on a fixed future date — AMI describes setup, not future prints. The description is a training artifact for the skill of reading charts, not investment advice.",
     "related_lessons": ["072", "077"],
     "related_agents": ["research_manager"],
     "tags": ["technical_analysis", "market_analyst"]
@@ -93,8 +93,8 @@
     "id": "qa_aim_does_ami_know_news",
     "category": "ai_meta",
     "question": "Does AMI know about news?",
-    "short_answer": "Yes — the News Analyst summarises recent headlines for the ticker you convene the Room on, and the Social Media Analyst flags sentiment skew.",
-    "long_answer": "Coverage is bounded by AMI's data feeds and a recency window. Treat the News Analyst's summary as a training input for the scenario, not a live wire — for breaking events or earnings releases inside the same trading day, confirm against your own news source as part of the evaluation exercise. The summary is training material, not investment advice.",
+    "short_answer": "Yes — the Macro & Events desk summarises recent headlines for the ticker you convene the Room on, and the Flow & Positioning desk flags sentiment skew.",
+    "long_answer": "Coverage is bounded by AMI's data feeds and a recency window. Treat the Macro & Events desk's summary as a training input for the scenario, not a live wire — for breaking events or earnings releases inside the same trading day, confirm against your own news source as part of the evaluation exercise. The summary is training material, not investment advice.",
     "related_lessons": ["072"],
     "related_agents": [],
     "tags": ["news", "data_freshness"]
@@ -144,7 +144,7 @@
     "category": "ai_meta",
     "question": "Will AMI manage my money?",
     "short_answer": "No. AMI is not a portfolio manager, an investment adviser, or a fund. It is a training simulator that gives you practice running a 12-agent analyst team as CEO.",
-    "long_answer": "There is no custody, no rebalancing, no discretionary mandate, and no licence to give investment advice. The Portfolio Manager agent enforces your stated Mandate on simulated Verdicts inside the training environment — it does not manage any real assets or accounts. Nothing AMI produces is investment advice.",
+    "long_answer": "There is no custody, no rebalancing, no discretionary mandate, and no licence to give investment advice. The Chief Investment Officer agent enforces your stated Mandate on simulated Verdicts inside the training environment — it does not manage any real assets or accounts. Nothing AMI produces is investment advice.",
     "related_lessons": ["073", "076"],
     "related_agents": ["portfolio_manager"],
     "tags": ["no_management", "advisory_only"]
@@ -194,7 +194,7 @@
     "category": "ai_meta",
     "question": "Can AMI tell me when to sell?",
     "short_answer": "AMI can describe whether the conditions behind the original simulated Verdict still hold and what would invalidate the thesis — as training material. The sell decision is yours, and AMI is not licensed to advise on it.",
-    "long_answer": "Convene the Room on a name you already hold and the Verdict will reflect the current setup — which may differ from the day you opened the position. The Trader can describe stop, target, and time horizon; the Research Manager can re-run the bull/bear balance. None of that is an instruction to sell or investment advice — it is training material for the skill of evaluating an exit decision you make.",
+    "long_answer": "Convene the Room on a name you already hold and the Verdict will reflect the current setup — which may differ from the day you opened the position. The Execution Desk can describe stop, target, and time horizon; the Research Manager can re-run the bull/bear balance. None of that is an instruction to sell or investment advice — it is training material for the skill of evaluating an exit decision you make.",
     "related_lessons": ["073", "076"],
     "related_agents": ["research_manager", "portfolio_manager"],
     "tags": ["sell_decision", "advisory_only"]
@@ -274,7 +274,7 @@
     "category": "ai_meta",
     "question": "Why did the PM block my trade?",
     "short_answer": "Because the proposed simulated trade failed your Mandate's compliance check — most commonly position size, drawdown floor, or an exclusion (halal, no_fossil, long_only, region).",
-    "long_answer": "The PM runs a deterministic check against the Mandate you set inside the training simulation. If the Trader proposes 7% size when your max_position_pct is 5, the function blocks regardless of how confident any agent sounds. Open the PM's compliance line in the Verdict footer — it names the exact clause that triggered the block. To change the outcome inside the scenario, either reduce the proposed size, modify your Mandate (your call, not the PM's), or reject the simulated trade. The block is training feedback, not investment advice.",
+    "long_answer": "The PM runs a deterministic check against the Mandate you set inside the training simulation. If the Execution Desk proposes 7% size when your max_position_pct is 5, the function blocks regardless of how confident any agent sounds. Open the PM's compliance line in the Verdict footer — it names the exact clause that triggered the block. To change the outcome inside the scenario, either reduce the proposed size, modify your Mandate (your call, not the PM's), or reject the simulated trade. The block is training feedback, not investment advice.",
     "related_lessons": ["074", "013"],
     "related_agents": ["portfolio_manager"],
     "tags": ["pm_block", "mandate", "compliance"]
@@ -293,8 +293,8 @@
     "id": "qa_aim_why_agents_arguing",
     "category": "ai_meta",
     "question": "Why are the agents arguing with each other?",
-    "short_answer": "Because the debate is the training material. The Bull and Bear Researchers — and the three Risk Debators — are meant to disagree so the simulated Verdict reflects pressure-tested reasoning you can practice evaluating, not consensus theatre.",
-    "long_answer": "If every agent agreed instantly, the Verdict would be a single perspective dressed up as twelve and the simulator would be teaching you nothing. The argument is where weaknesses in the thesis surface — and reading them is the skill being trained. The Research Manager synthesises into a position and the PM compliance-checks the Trader's proposal, but the disagreement above that is feature, not bug. Read the dissent before you read the headline.",
+    "short_answer": "Because the debate is the training material. The Bull and Bear Researchers — and the three Risk Officers — are meant to disagree so the simulated Verdict reflects pressure-tested reasoning you can practice evaluating, not consensus theatre.",
+    "long_answer": "If every agent agreed instantly, the Verdict would be a single perspective dressed up as twelve and the simulator would be teaching you nothing. The argument is where weaknesses in the thesis surface — and reading them is the skill being trained. The Research Manager synthesises into a position and the PM compliance-checks the Execution Desk's proposal, but the disagreement above that is feature, not bug. Read the dissent before you read the headline.",
     "related_lessons": ["072"],
     "related_agents": ["research_manager"],
     "tags": ["debate", "agents", "design"]
@@ -304,7 +304,7 @@
     "category": "ai_meta",
     "question": "What does the confidence number on a Verdict mean?",
     "short_answer": "It is the Room's weighted lean toward the verdict — not a calibrated probability of being right.",
-    "long_answer": "A confidence of 0.62 means the bull/bear balance and Risk Debators leaned that way after the simulated debate, not that the trade has a 62% chance of profit. Read it as 'lean, not lock'. Two Verdicts with the same confidence can have very different risk profiles — the number is a training-exercise summary, not investment advice. Always read the transcript and the PM's compliance line alongside the headline number.",
+    "long_answer": "A confidence of 0.62 means the bull/bear balance and Risk Officers leaned that way after the simulated debate, not that the trade has a 62% chance of profit. Read it as 'lean, not lock'. Two Verdicts with the same confidence can have very different risk profiles — the number is a training-exercise summary, not investment advice. Always read the transcript and the PM's compliance line alongside the headline number.",
     "related_lessons": ["077"],
     "related_agents": ["research_manager"],
     "tags": ["confidence", "verdict", "probability"]
@@ -313,7 +313,7 @@
     "id": "qa_aim_target_is_prediction",
     "category": "ai_meta",
     "question": "Is the price target a prediction?",
-    "short_answer": "No. The target is the level where the simulated Trader would lock in profit if the thesis plays out — a training-exercise input, not a forecast that price will reach it.",
+    "short_answer": "No. The target is the level where the simulated Execution Desk would lock in profit if the thesis plays out — a training-exercise input, not a forecast that price will reach it.",
     "long_answer": "Targets, stops, and entries are conditional commitments inside a simulated trade plan: 'if you took this entry, here is your defined downside and the level the trade is meant to express toward'. None of those numbers is a price forecast or investment advice. AMI deliberately ships no point-price predictions — the simulator trains the skill of reasoning under uncertainty, not the illusion of certainty.",
     "related_lessons": ["077"],
     "related_agents": ["research_manager"],
@@ -332,9 +332,9 @@
   {
     "id": "qa_aim_why_three_risk_debators",
     "category": "ai_meta",
-    "question": "Why are there three Risk Debators?",
-    "short_answer": "Because risk is best stress-tested from multiple angles. Aggressive, Conservative, and Neutral push the proposed position size in different directions before the Trader finalises.",
-    "long_answer": "The Aggressive Debator argues for larger positions when the setup is strong; the Conservative Debator pushes for smaller sizing or skipping; the Neutral Debator arbitrates. The simulated debate ends in a sizing output the Trader then proposes — and the PM checks against your Mandate. Three voices keep the sizing question honest as a training exercise.",
+    "question": "Why are there three Risk Officers?",
+    "short_answer": "Because risk is best stress-tested from multiple angles. Aggressive, Conservative, and Balanced push the proposed position size in different directions before the Execution Desk finalises.",
+    "long_answer": "The Aggressive Risk Officer argues for larger positions when the setup is strong; the Conservative Risk Officer pushes for smaller sizing or skipping; the Balanced Risk Officer arbitrates. The simulated debate ends in a sizing output the Execution Desk then proposes — and the PM checks against your Mandate. Three voices keep the sizing question honest as a training exercise.",
     "related_lessons": ["072", "014"],
     "related_agents": [],
     "tags": ["risk_debators", "sizing", "agents"]
@@ -343,8 +343,8 @@
     "id": "qa_aim_who_are_12_agents",
     "category": "ai_meta",
     "question": "Who are the 12 agents?",
-    "short_answer": "Four Analysts (Fundamentals, Market, News, Social), two Researchers (Bull, Bear), the Research Manager, three Risk Debators (Aggressive, Conservative, Neutral), the Trader, and the Portfolio Manager.",
-    "long_answer": "The Concierge sits outside the Room — it greets, routes, and handles onboarding. Inside the simulated Room, the four Analysts gather inputs, the two Researchers debate the case, the Research Manager synthesises, the three Risk Debators stress-test sizing, the Trader assembles a trade plan, and the PM enforces your Mandate. That is the full team — a training simulator that gives you practice working with an analyst desk.",
+    "short_answer": "Four Analysts (Fundamentals, Market, News, Social), two Researchers (Bull, Bear), the Research Manager, three Risk Officers (Aggressive, Conservative, Balanced), the Execution Desk, and the Chief Investment Officer.",
+    "long_answer": "The Concierge sits outside the Room — it greets, routes, and handles onboarding. Inside the simulated Room, the four Analysts gather inputs, the two Researchers debate the case, the Research Manager synthesises, the three Risk Officers stress-test sizing, the Execution Desk assembles a trade plan, and the PM enforces your Mandate. That is the full team — a training simulator that gives you practice working with an analyst desk.",
     "related_lessons": ["072"],
     "related_agents": ["concierge", "research_manager", "portfolio_manager"],
     "tags": ["agents", "roster"]
@@ -352,7 +352,7 @@
   {
     "id": "qa_aim_what_does_pm_do",
     "category": "ai_meta",
-    "question": "What does the Portfolio Manager do?",
+    "question": "What does the Chief Investment Officer do?",
     "short_answer": "The PM enforces your Mandate. It compliance-checks every Verdict against your stated rules — size, drawdown, exclusions — and blocks anything that breaches them.",
     "long_answer": "The PM is your safety floor inside the training simulation. Its check is a deterministic function reading the Mandate fields you set, not a prompt that can be talked around. PASS means the simulated trade fits your floors; BLOCK names the exact clause that failed. The PM does not fact-check the analysts and does not predict outcomes — its job is mandate compliance inside the training exercise, full stop.",
     "related_lessons": ["074", "076", "013"],
@@ -363,7 +363,7 @@
     "id": "qa_aim_research_manager_role",
     "category": "ai_meta",
     "question": "What does the Research Manager do?",
-    "short_answer": "The Research Manager synthesises the Bull vs Bear debate into a position — a weighted conclusion that the Trader and Risk Debators then work from.",
+    "short_answer": "The Research Manager synthesises the Bull vs Bear debate into a position — a weighted conclusion that the Execution Desk and Risk Officers then work from.",
     "long_answer": "Without synthesis you would have two opposing essays. The Research Manager weighs each side, flags any hallucinated numbers against the Analysts' pulled data, and produces a balanced read with a bull-probability lean and named invalidation conditions. It is the synthesis brain of the simulated Room — a training artifact for you to evaluate, not investment advice.",
     "related_lessons": ["072", "077"],
     "related_agents": ["research_manager"],
@@ -382,9 +382,9 @@
   {
     "id": "qa_aim_aggressive_vs_conservative_debator",
     "category": "ai_meta",
-    "question": "What's the difference between the Aggressive and Conservative Debators?",
-    "short_answer": "The Aggressive Debator pushes for larger position sizing when the setup is strong; the Conservative Debator pushes for smaller sizing or skipping. The Neutral Debator arbitrates.",
-    "long_answer": "They both work on the same proposed simulated trade after the Research Manager's synthesis. Their job is to argue position size and risk allocation — not whether the thesis is right, but how much capital the simulated position deserves. The Trader assembles their argument into a concrete proposal which the PM then compliance-checks against your Mandate, all as part of the training exercise.",
+    "question": "What's the difference between the Aggressive and Conservative Risk Officers?",
+    "short_answer": "The Aggressive Risk Officer pushes for larger position sizing when the setup is strong; the Conservative Risk Officer pushes for smaller sizing or skipping. The Balanced Risk Officer arbitrates.",
+    "long_answer": "They both work on the same proposed simulated trade after the Research Manager's synthesis. Their job is to argue position size and risk allocation — not whether the thesis is right, but how much capital the simulated position deserves. The Execution Desk assembles their argument into a concrete proposal which the PM then compliance-checks against your Mandate, all as part of the training exercise.",
     "related_lessons": ["072", "014"],
     "related_agents": [],
     "tags": ["risk_debators", "sizing"]
@@ -392,9 +392,9 @@
   {
     "id": "qa_aim_trader_role",
     "category": "ai_meta",
-    "question": "What does the Trader agent do?",
-    "short_answer": "The Trader assembles the trade plan — entry, stop, target, horizon, size — from the Research Manager's synthesis and the Risk Debators' sizing argument.",
-    "long_answer": "The Trader is the last step before the PM. It takes the weighted thesis and the sizing debate and produces a concrete simulated proposal. That proposal is then compliance-checked by the PM. The Trader does not execute anything — there is no execution surface — and it cannot be coached to auto-execute. The trade-plan output is a training artifact, not investment advice, like the rest of AMI.",
+    "question": "What does the Execution Desk agent do?",
+    "short_answer": "The Execution Desk assembles the trade plan — entry, stop, target, horizon, size — from the Research Manager's synthesis and the Risk Officers' sizing argument.",
+    "long_answer": "The Execution Desk is the last step before the PM. It takes the weighted thesis and the sizing debate and produces a concrete simulated proposal. That proposal is then compliance-checked by the PM. The Execution Desk does not execute anything — there is no execution surface — and it cannot be coached to auto-execute. The trade-plan output is a training artifact, not investment advice, like the rest of AMI.",
     "related_lessons": ["072", "073"],
     "related_agents": [],
     "tags": ["trader", "trade_plan"]
@@ -454,7 +454,7 @@
     "category": "ai_meta",
     "question": "Can I change what the agents say?",
     "short_answer": "Brief Your Agent lets you shape an agent's style, skepticism, and which catalysts it weights — within limits. It does not let you override the PM's safety floor.",
-    "long_answer": "You can brief the Bull Researcher to weight long-term catalysts more, the Market Analyst to focus on weekly timeframes, or the Trader to prefer tighter stops. Those briefing changes are applied as prompt overlays on each simulated run — they shape the training scenario, not real advice. What you cannot coach is the PM's mandate enforcement, execution behaviour (because there is none), or anything that touches the safety floor.",
+    "long_answer": "You can brief the Bull Researcher to weight long-term catalysts more, the Technical Strategist to focus on weekly timeframes, or the Execution Desk to prefer tighter stops. Those briefing changes are applied as prompt overlays on each simulated run — they shape the training scenario, not real advice. What you cannot coach is the PM's mandate enforcement, execution behaviour (because there is none), or anything that touches the safety floor.",
     "related_lessons": ["074", "075"],
     "related_agents": ["portfolio_manager"],
     "tags": ["brief", "briefing", "limits"]
@@ -474,7 +474,7 @@
     "category": "ai_meta",
     "question": "Can I brief an agent to auto-execute trades?",
     "short_answer": "No. There is no execution surface in AMI — nothing to auto-execute, nothing to brief into. The request will be refused.",
-    "long_answer": "Auto-execution is not a coachable parameter because the underlying capability does not exist. AMI is a training simulator, not an execution platform — no brokerage hook, no order placement layer, and no plan to add either. Coaching can shape how the simulated Trader thinks; it cannot create execution out of thin air.",
+    "long_answer": "Auto-execution is not a coachable parameter because the underlying capability does not exist. AMI is a training simulator, not an execution platform — no brokerage hook, no order placement layer, and no plan to add either. Coaching can shape how the simulated Execution Desk thinks; it cannot create execution out of thin air.",
     "related_lessons": ["073", "074"],
     "related_agents": ["portfolio_manager"],
     "tags": ["no_execution", "coach_limits"]
@@ -494,7 +494,7 @@
     "category": "ai_meta",
     "question": "Why 12 agents and not just one?",
     "short_answer": "Because a single voice hides its own blind spots, and the simulator is teaching the skill of seeing those blind spots. Twelve role-specific agents argue from different angles, which is how the weaknesses in any thesis surface in the training exercise.",
-    "long_answer": "One agent answering 'walk me through NVDA' would produce something coherent and confident — and you would have no way to tell where it skipped a question. Splitting the work across Analysts, Researchers, Risk Debators, the Trader, and the PM forces the simulated case to clear multiple bars: data, debate, sizing, compliance. The dissent is the audit trail. The Verdict is the synthesis. You practice reading both — that's the training, not investment advice.",
+    "long_answer": "One agent answering 'walk me through NVDA' would produce something coherent and confident — and you would have no way to tell where it skipped a question. Splitting the work across Analysts, Researchers, Risk Officers, the Execution Desk, and the PM forces the simulated case to clear multiple bars: data, debate, sizing, compliance. The dissent is the audit trail. The Verdict is the synthesis. You practice reading both — that's the training, not investment advice.",
     "related_lessons": ["072", "076"],
     "related_agents": ["research_manager"],
     "tags": ["agents", "design", "debate"]

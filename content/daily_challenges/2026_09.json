@@ -43,7 +43,7 @@
     "difficulty": 2,
     "locale": "en",
     "scenario": "NVDA has been consolidating between $182 and $192 for 18 sessions. Average daily volume during the range was 280M shares. Today NVDA closes at $196.40 on volume of 540M (1.93x range average). The 50-day moving average sits at $174 and is sloping up. RSI(14) is 64 — bullish but not overbought. There is no overhead supply until $215.",
-    "question": "Which technical setup is the Market Analyst most likely to call this?",
+    "question": "Which technical setup is the Technical Strategist most likely to call this?",
     "options": [
       "A bull flag still inside the range",
       "A bearish exhaustion gap — RSI above 60 means a top is forming",
@@ -62,7 +62,7 @@
     "difficulty": 2,
     "locale": "en",
     "scenario": "User's mandate: max single-position 8% of NAV, max sector exposure 30%, stop-loss required on every entry. Account NAV is $120,000. The user already holds AAPL $7,200, MSFT $9,600, GOOGL $8,400, NVDA $10,800, META $7,800 — total tech sector $43,800 (36.5% of NAV). The user now submits a buy for AMZN $6,000 (5% of NAV, single-position OK) with a stop-loss attached.",
-    "question": "Which mandate rule does the Portfolio Manager flag as violated?",
+    "question": "Which mandate rule does the Chief Investment Officer flag as violated?",
     "options": [
       "Stop-loss rule — the stop is not far enough from entry",
       "Single-position cap — 5% is too close to the 8% limit",
@@ -83,13 +83,13 @@
     "scenario": "During a Room debate on V (Visa), an agent says: 'Two-sided network with 4.4B cards on one side and 130M merchants on the other. Switching costs are real for issuers and acquirers. Operating margin has held above 65% for ten consecutive years. Incremental transactions cost essentially nothing — that is durable pricing power. The moat is widening, not narrowing.'",
     "question": "Which of the 12 agents is most likely speaking?",
     "options": [
-      "The News Analyst flagging that interchange-fee regulation may pressure margins next year",
-      "The Trader noting that V has broken out above its 200-day moving average",
+      "The Macro & Events desk flagging that interchange-fee regulation may pressure margins next year",
+      "The Execution Desk noting that V has broken out above its 200-day moving average",
       "The Bear Researcher arguing that fintech disintermediation will erode the network advantage",
       "The Bull Researcher building the long thesis on network effects and durable pricing power"
     ],
     "answer": 3,
-    "explanation": "The quote is a long-thesis construction: network effects, switching costs, ten-year margin stability, and an explicit 'moat is widening' verdict. That is the Bull Researcher's job — assemble the strongest case for owning the name based on durable advantage. The tempting wrong answer 'Fundamentals Analyst' (not offered here) or 'News Analyst' fails because the speaker isn't reporting facts neutrally; they are arguing for a position. Bull/Bear researchers advocate; analysts observe.",
+    "explanation": "The quote is a long-thesis construction: network effects, switching costs, ten-year margin stability, and an explicit 'moat is widening' verdict. That is the Bull Researcher's job — assemble the strongest case for owning the name based on durable advantage. The tempting wrong answer 'Fundamentals Analyst' (not offered here) or 'Macro & Events' fails because the speaker isn't reporting facts neutrally; they are arguing for a position. Bull/Bear researchers advocate; analysts observe.",
     "related_lesson": "036_competitive_advantage_moat",
     "related_agent": "bull_researcher",
     "tags": ["moat", "bull_thesis", "module_6"]
@@ -118,16 +118,16 @@
     "type": "whats_missing",
     "difficulty": 2,
     "locale": "en",
-    "scenario": "Room verdict on XOM: 'Market Analyst — clean uptrend, above 200-day MA. News Analyst — OPEC+ holding cuts through Q4. Bull Researcher — dividend yield 3.6% with 42-year hike streak, FCF covers payout 2.1x. Bear Researcher — energy transition tail risk. Research Manager — moderate BUY conviction 0.58. Trader — entry $118 stop $112 target $134. Portfolio Manager — fits mandate, 5% of NAV. Verdict: BUY 5% of NAV.'",
+    "scenario": "Room verdict on XOM: 'Technical Strategist — clean uptrend, above 200-day MA. Macro & Events — OPEC+ holding cuts through Q4. Bull Researcher — dividend yield 3.6% with 42-year hike streak, FCF covers payout 2.1x. Bear Researcher — energy transition tail risk. Research Manager — moderate BUY conviction 0.58. Execution Desk — entry $118 stop $112 target $134. Chief Investment Officer — fits mandate, 5% of NAV. Verdict: BUY 5% of NAV.'",
     "question": "Whose input is conspicuously absent from this verdict?",
     "options": [
-      "The Aggressive Debator, who should have stress-tested the bull case",
+      "The Aggressive Risk Officer, who should have stress-tested the bull case",
       "The Fundamentals Analyst — no read on revenue, margins, ROE, or balance-sheet quality appears in the verdict",
-      "The Social Media Analyst, since retail sentiment matters for energy names",
-      "The Neutral Debator, who synthesises bull and bear views"
+      "The Flow & Positioning desk, since retail sentiment matters for energy names",
+      "The Balanced Risk Officer, who synthesises bull and bear views"
     ],
     "answer": 1,
-    "explanation": "Every BUY verdict needs a Fundamentals read — the business behind the ticker. The verdict cites dividend cover (a fundamentals-flavoured number) but no revenue trajectory, no operating margin, no ROE, no debt picture. That is conspicuously absent for an oil major where commodity-cycle leverage and balance-sheet strength make or break the thesis. The tempting wrong answer 'Aggressive Debator' fails because debators stress-test an existing thesis; the missing thing here is the thesis foundation itself.",
+    "explanation": "Every BUY verdict needs a Fundamentals read — the business behind the ticker. The verdict cites dividend cover (a fundamentals-flavoured number) but no revenue trajectory, no operating margin, no ROE, no debt picture. That is conspicuously absent for an oil major where commodity-cycle leverage and balance-sheet strength make or break the thesis. The tempting wrong answer 'Aggressive Risk Officer' fails because risk officers stress-test an existing thesis; the missing thing here is the thesis foundation itself.",
     "related_lesson": "032_revenue_the_top_line",
     "related_agent": "fundamentals_analyst",
     "tags": ["room", "fundamentals", "module_6"]
@@ -157,7 +157,7 @@
     "difficulty": 1,
     "locale": "en",
     "scenario": "User's mandate: max single-position 6% of NAV, stop-loss required on every entry within 8% of fill price, no leverage. Account NAV $80,000. The user submits a buy ticket for TSLA: 18 shares at $266.50 (notional $4,797, 6.0% of NAV — right at the cap, not over it). No stop is attached. The user notes in the comment box: 'Conviction trade, holding for two years, don't need a stop.'",
-    "question": "Which mandate rule does the Portfolio Manager flag as violated?",
+    "question": "Which mandate rule does the Chief Investment Officer flag as violated?",
     "options": [
       "Single-position cap — the ticket is right at the limit",
       "Leverage rule — the user is borrowing money",
@@ -179,9 +179,9 @@
     "question": "Which of the 12 agents is most likely speaking?",
     "options": [
       "The Fundamentals Analyst, reporting the numbers without taking a directional view",
-      "The Conservative Debator, recommending a small position with tight stops",
+      "The Conservative Risk Officer, recommending a small position with tight stops",
       "The Bear Researcher, building the short thesis on decelerating growth, regional weakness, and buyback-masked EPS",
-      "The News Analyst, summarising the China weakness in the press"
+      "The Macro & Events desk, summarising the China weakness in the press"
     ],
     "answer": 2,
     "explanation": "The quote ends with 'risk-reward is unfavourable' — an explicit directional verdict. That is advocacy, not observation, and it stitches together three negatives (unit growth, services decel, China) plus a 'buybacks masking EPS' framing that is classic short-thesis construction. That is the Bear Researcher's lane. The tempting wrong answer 'Fundamentals Analyst' fails because the analyst reports; they do not conclude with 'risk-reward unfavourable'. Bull and Bear Researchers advocate; analysts feed them facts.",
@@ -213,7 +213,7 @@
     "type": "whats_missing",
     "difficulty": 3,
     "locale": "en",
-    "scenario": "Room verdict on JPM: 'Market Analyst — consolidating above the 50-day MA. News Analyst — Fed pause priced in. Fundamentals Analyst — revenue $42B, NIM 2.7%, ROE 17%. Bull Researcher — best-in-class deposit franchise. Bear Researcher — credit cycle concerns. Research Manager — moderate BUY. Trader — entry $214 stop $206 target $238. Portfolio Manager — within mandate. Verdict: BUY 6% of NAV.'",
+    "scenario": "Room verdict on JPM: 'Technical Strategist — consolidating above the 50-day MA. Macro & Events — Fed pause priced in. Fundamentals Analyst — revenue $42B, NIM 2.7%, ROE 17%. Bull Researcher — best-in-class deposit franchise. Bear Researcher — credit cycle concerns. Research Manager — moderate BUY. Execution Desk — entry $214 stop $206 target $238. Chief Investment Officer — within mandate. Verdict: BUY 6% of NAV.'",
     "question": "Which specific fundamentals data point is conspicuously missing for a large bank?",
     "options": [
       "Free cash flow conversion ratio for the trailing twelve months",
@@ -255,7 +255,7 @@
     "question": "Which of the 12 agents is most likely speaking?",
     "options": [
       "The Fundamentals Analyst reporting balance-sheet metrics neutrally with a stress-scenario observation",
-      "The Portfolio Manager checking the trade against the mandate",
+      "The Chief Investment Officer checking the trade against the mandate",
       "The Bear Researcher noting that net cash earns no return in a rate-cut environment",
       "The Bull Researcher arguing that the strong balance sheet justifies a premium multiple"
     ],
@@ -271,7 +271,7 @@
     "difficulty": 3,
     "locale": "en",
     "scenario": "User's mandate: max single-position 7% of NAV, no options or derivatives, no margin, daily VaR limit 1.2% of NAV. Account NAV $200,000. The user submits a buy of GOOGL: 70 shares at $198 ($13,860, 6.9% of NAV). Stop attached at $184. Then the user adds a separate ticket: 'Sell 1 GOOGL Oct $210 call against the long, premium $4.20' — i.e. a covered call.",
-    "question": "Which mandate rule does the Portfolio Manager flag as violated by the SECOND ticket?",
+    "question": "Which mandate rule does the Chief Investment Officer flag as violated by the SECOND ticket?",
     "options": [
       "Single-position cap — adding the option pushes exposure above 7%",
       "Margin rule — selling a call requires margin",
@@ -290,7 +290,7 @@
     "difficulty": 2,
     "locale": "en",
     "scenario": "GENTING (Bursa) ran from RM3.40 to RM4.20 over six weeks on rising volume averaging 18M shares/day. Over the last seven sessions it has pulled back to RM3.92 on declining volume (avg 9M shares/day, half the run-up average). The 20-day MA at RM3.95 has acted as support. The 50-day MA at RM3.62 is sloping up. RSI(14) cooled from 78 to 54.",
-    "question": "Which technical setup is the Market Analyst most likely to call this?",
+    "question": "Which technical setup is the Technical Strategist most likely to call this?",
     "options": [
       "A volume-confirmed breakdown below the 20-day MA",
       "A bull trap — the run from RM3.40 to RM4.20 was unsustainable",
@@ -309,7 +309,7 @@
     "difficulty": 2,
     "locale": "en",
     "scenario": "KLCC (Bursa REIT) has traded between RM7.40 and RM7.62 for 22 sessions on average volume of 1.8M shares/day. Today it closes at RM7.45 on volume of 1.6M. The 50-day MA at RM7.48 is flat. The 200-day MA at RM7.30 is gently rising. Distribution yield is 5.2% covered 1.3x. No catalyst is visible on the news tape.",
-    "question": "Which technical read is the Market Analyst most likely to call this?",
+    "question": "Which technical read is the Technical Strategist most likely to call this?",
     "options": [
       "A bullish breakout setup — flat 50-day MA always precedes a breakout",
       "A bearish topping pattern — price has stalled near RM7.62 multiple times",
@@ -317,7 +317,7 @@
       "A volume-confirmed breakdown below the range"
     ],
     "answer": 2,
-    "explanation": "Nothing in this tape gives an edge: price is mid-range, volume is below average (1.6M vs 1.8M), MAs are not signalling, and there is no catalyst. The Market Analyst's honest call is 'no setup' — that is a legitimate output, not a failure. The tempting wrong answer 'bullish breakout setup' over-interprets a flat MA; flat MAs precede *either* direction, not specifically breakouts. Saying 'no setup' is a skill, not a weakness.",
+    "explanation": "Nothing in this tape gives an edge: price is mid-range, volume is below average (1.6M vs 1.8M), MAs are not signalling, and there is no catalyst. The Technical Strategist's honest call is 'no setup' — that is a legitimate output, not a failure. The tempting wrong answer 'bullish breakout setup' over-interprets a flat MA; flat MAs precede *either* direction, not specifically breakouts. Saying 'no setup' is a skill, not a weakness.",
     "related_lesson": "026_moving_averages",
     "related_agent": "market_analyst",
     "tags": ["consolidation", "no_setup", "module_4", "bursa"]
@@ -327,7 +327,7 @@
     "type": "whats_missing",
     "difficulty": 3,
     "locale": "en",
-    "scenario": "Room verdict on PCHEM (Bursa): 'Market Analyst — sideways consolidation near 200-day MA. News Analyst — Naphtha cracks improving. Fundamentals Analyst — revenue RM21.4B (-3% YoY), op margin 9.2%, ROE 8.4%, net cash RM12.8B, EV/EBITDA 6.2x. Bull Researcher — discount to global peers. Bear Researcher — feedstock cost pressure. Research Manager — moderate BUY 0.58. Trader — entry RM5.40 stop RM5.10 target RM6.20. Portfolio Manager — within mandate. Verdict: BUY 4% of NAV.'",
+    "scenario": "Room verdict on PCHEM (Bursa): 'Technical Strategist — sideways consolidation near 200-day MA. Macro & Events — Naphtha cracks improving. Fundamentals Analyst — revenue RM21.4B (-3% YoY), op margin 9.2%, ROE 8.4%, net cash RM12.8B, EV/EBITDA 6.2x. Bull Researcher — discount to global peers. Bear Researcher — feedstock cost pressure. Research Manager — moderate BUY 0.58. Execution Desk — entry RM5.40 stop RM5.10 target RM6.20. Chief Investment Officer — within mandate. Verdict: BUY 4% of NAV.'",
     "question": "Which specific Fundamentals Analyst data point is conspicuously missing for the Bull Researcher's 'discount to peers' thesis to be evaluable?",
     "options": [
       "Quarterly tax rate, since petchem names have variable effective tax",
@@ -349,13 +349,13 @@
     "scenario": "After the Bull and Bear Researchers debate META, an agent says: 'Bull thesis hinges on AI ad-targeting lifting eCPMs through 2027; Bear thesis hinges on regulatory ad-load caps in the EU. The Bull is grounded in measurable Q-over-Q ROAS improvements; the Bear leans on a regulatory event that hasn't been calendared. Conviction skews Bull, but the position should be sized for the regulatory tail. Recommend BUY at 5% of NAV with a tight stop.'",
     "question": "Which of the 12 agents is most likely speaking?",
     "options": [
-      "The Aggressive Debator, pushing for a larger position",
-      "The Neutral Debator, refusing to take a side",
-      "The Portfolio Manager, applying mandate constraints",
+      "The Aggressive Risk Officer, pushing for a larger position",
+      "The Balanced Risk Officer, refusing to take a side",
+      "The Chief Investment Officer, applying mandate constraints",
       "The Research Manager, synthesising Bull vs Bear into a sized, conditional recommendation"
     ],
     "answer": 3,
-    "explanation": "The quote weighs the Bull and Bear theses against each other, judges which is more concretely grounded, and outputs a sized recommendation with a conditional risk overlay. That is exactly the Research Manager's mandate — synthesis with conviction. The tempting wrong answer 'Portfolio Manager' fails because the PM applies the user's mandate to a verdict; they don't generate the verdict. The Research Manager produces the call; the PM checks it against the user's rules.",
+    "explanation": "The quote weighs the Bull and Bear theses against each other, judges which is more concretely grounded, and outputs a sized recommendation with a conditional risk overlay. That is exactly the Research Manager's mandate — synthesis with conviction. The tempting wrong answer 'Chief Investment Officer' fails because the PM applies the user's mandate to a verdict; they don't generate the verdict. The Research Manager produces the call; the PM checks it against the user's rules.",
     "related_lesson": "030_trend_confirmation_across_indicators",
     "related_agent": "research_manager",
     "tags": ["room", "synthesis", "module_5"]
@@ -365,16 +365,16 @@
     "type": "whats_missing",
     "difficulty": 2,
     "locale": "en",
-    "scenario": "Room verdict on AAPL: 'Fundamentals Analyst — revenue +3%, services +11%, FCF $98B. Market Analyst — uptrend intact above $215. News Analyst — iPhone 18 launch on track. Bull Researcher — install base of 2.4B devices is a moat. Research Manager — BUY 0.71 conviction. Trader — entry $228 stop $218 target $252. Portfolio Manager — within mandate. Verdict: BUY 7% of NAV.'",
+    "scenario": "Room verdict on AAPL: 'Fundamentals Analyst — revenue +3%, services +11%, FCF $98B. Technical Strategist — uptrend intact above $215. Macro & Events — iPhone 18 launch on track. Bull Researcher — install base of 2.4B devices is a moat. Research Manager — BUY 0.71 conviction. Execution Desk — entry $228 stop $218 target $252. Chief Investment Officer — within mandate. Verdict: BUY 7% of NAV.'",
     "question": "Whose input is conspicuously absent from this verdict?",
     "options": [
-      "The Social Media Analyst, since Reddit sentiment matters for retail names",
-      "The Conservative Debator, who should have argued for a smaller position",
-      "The Aggressive Debator, who should have pushed for a larger position",
+      "The Flow & Positioning desk, since Reddit sentiment matters for retail names",
+      "The Conservative Risk Officer, who should have argued for a smaller position",
+      "The Aggressive Risk Officer, who should have pushed for a larger position",
       "The Bear Researcher — no short-thesis perspective appears, which means the verdict has not been stress-tested for downside arguments"
     ],
     "answer": 3,
-    "explanation": "Every Room verdict must include both Bull AND Bear Researcher inputs, then synthesise. The verdict above has the Bull case (install base = moat) but no Bear case at all. Without a Bear, the Research Manager's 0.71 conviction is unearned — they have only weighed one side. That is structurally wrong. The tempting wrong answer 'Social Media Analyst' is plausible but not load-bearing; Bull/Bear pairing is structural, social-media input is supplemental.",
+    "explanation": "Every Room verdict must include both Bull AND Bear Researcher inputs, then synthesise. The verdict above has the Bull case (install base = moat) but no Bear case at all. Without a Bear, the Research Manager's 0.71 conviction is unearned — they have only weighed one side. That is structurally wrong. The tempting wrong answer 'Flow & Positioning' is plausible but not load-bearing; Bull/Bear pairing is structural, social-media input is supplemental.",
     "related_lesson": "029_volume_confirmation",
     "related_agent": "bear_researcher",
     "tags": ["room", "bear_thesis", "module_5"]
@@ -404,7 +404,7 @@
     "difficulty": 1,
     "locale": "en",
     "scenario": "User's mandate: max single-position 5% of NAV, max sector exposure 25%, stop required within 10%. NAV $150,000. User holds BRK-B at $7,200 (4.8% of NAV). Submits an add: buy 8 more BRK-B at $462 ($3,696), pushing BRK-B to $10,896 (7.3% of NAV). Stop attached at $418 (9.5% from fill). No other financials/insurance holdings.",
-    "question": "Which mandate rule does the Portfolio Manager flag as violated?",
+    "question": "Which mandate rule does the Chief Investment Officer flag as violated?",
     "options": [
       "Leverage rule — the user is overextended",
       "Single-position cap — the add pushes BRK-B to 7.3% of NAV, breaching the 5% single-position cap",
@@ -423,7 +423,7 @@
     "difficulty": 3,
     "locale": "en",
     "scenario": "TSLA rallied from $220 to $278 in May, sold off to $246, then re-rallied to $276 in late August before fading. Both peaks ($278 and $276) printed within 0.7% of each other on declining relative volume — the second peak was on 40% lower volume than the first. Price now sits at $258. The 50-day MA at $262 has just crossed below the 100-day MA at $264. RSI(14) prints a lower high at the August peak versus the May peak.",
-    "question": "Which technical setup is the Market Analyst most likely to call this?",
+    "question": "Which technical setup is the Technical Strategist most likely to call this?",
     "options": [
       "A double top with bearish divergence — two peaks at $278 / $276 on declining volume, RSI lower-high, and the 50-day MA crossing below the 100-day MA confirming the loss of trend",
       "A volume-confirmed breakout above $276",
@@ -445,12 +445,12 @@
     "question": "Which agent is speaking?",
     "options": [
       "The Concierge, finishing the onboarding interview by proposing a starter mandate",
-      "The Portfolio Manager, applying mandate rules to a trade",
-      "The Trader, sizing an entry",
+      "The Chief Investment Officer, applying mandate rules to a trade",
+      "The Execution Desk, sizing an entry",
       "The Research Manager, recommending a portfolio"
     ],
     "answer": 0,
-    "explanation": "The Concierge is the onboarding agent — they run the conversational interview and propose a starter mandate at the end. The quote shows exactly that: synthesising the interview answers into a draft mandate and offering to explain it. The tempting wrong answer 'Portfolio Manager' fails because the PM enforces an *existing* mandate; they don't create one from a conversation with a brand-new user. Concierge proposes, PM enforces.",
+    "explanation": "The Concierge is the onboarding agent — they run the conversational interview and propose a starter mandate at the end. The quote shows exactly that: synthesising the interview answers into a draft mandate and offering to explain it. The tempting wrong answer 'Chief Investment Officer' fails because the PM enforces an *existing* mandate; they don't create one from a conversation with a brand-new user. Concierge proposes, PM enforces.",
     "related_lesson": null,
     "related_agent": "concierge",
     "tags": ["onboarding", "mandate", "module_1"]
@@ -460,7 +460,7 @@
     "type": "whats_missing",
     "difficulty": 3,
     "locale": "en",
-    "scenario": "Room verdict on NVDA: 'Market Analyst — uptrend intact, breakout confirmed. News Analyst — AI capex from hyperscalers still ramping. Fundamentals Analyst — revenue $54B (+38%), gross margin 75%, op margin 62%. Bull Researcher — TAM expansion to $1T. Bear Researcher — peak hyperscaler capex risk. Research Manager — BUY 0.78. Trader — entry $148 stop $138 target $172. Portfolio Manager — within mandate. Verdict: BUY 6% of NAV.'",
+    "scenario": "Room verdict on NVDA: 'Technical Strategist — uptrend intact, breakout confirmed. Macro & Events — AI capex from hyperscalers still ramping. Fundamentals Analyst — revenue $54B (+38%), gross margin 75%, op margin 62%. Bull Researcher — TAM expansion to $1T. Bear Researcher — peak hyperscaler capex risk. Research Manager — BUY 0.78. Execution Desk — entry $148 stop $138 target $172. Chief Investment Officer — within mandate. Verdict: BUY 6% of NAV.'",
     "question": "Which fundamentals data point is conspicuously missing given the named risk?",
     "options": [
       "Quarterly tax rate, since semiconductor companies have variable tax exposure",
@@ -498,7 +498,7 @@
     "type": "whats_missing",
     "difficulty": 2,
     "locale": "en",
-    "scenario": "Room verdict on XOM: 'Market Analyst — uptrend intact above the 50-day MA. News Analyst — OPEC+ holding cuts. Fundamentals Analyst — revenue $345B, op margin 16%, ROE 14%, total debt $42B, D/E 0.20x, interest coverage 19x. Bull Researcher — capital discipline since 2020 has improved through-cycle returns. Bear Researcher — commodity-price tail risk. Research Manager — moderate BUY 0.62. Trader — entry $118 stop $112 target $134. Portfolio Manager — within mandate. Verdict: BUY 5% of NAV.'",
+    "scenario": "Room verdict on XOM: 'Technical Strategist — uptrend intact above the 50-day MA. Macro & Events — OPEC+ holding cuts. Fundamentals Analyst — revenue $345B, op margin 16%, ROE 14%, total debt $42B, D/E 0.20x, interest coverage 19x. Bull Researcher — capital discipline since 2020 has improved through-cycle returns. Bear Researcher — commodity-price tail risk. Research Manager — moderate BUY 0.62. Execution Desk — entry $118 stop $112 target $134. Chief Investment Officer — within mandate. Verdict: BUY 5% of NAV.'",
     "question": "Which specific Fundamentals data point is conspicuously missing given the Bear's named risk?",
     "options": [
       "Forward P/E ratio, since multiple compression matters",
@@ -518,7 +518,7 @@
     "difficulty": 3,
     "locale": "en",
     "scenario": "User's mandate: max single-position 5%, stop required, daily portfolio VaR cap 1.5% of NAV. NAV $250,000. The user submits a buy of AAPL: 50 shares at $238 ($11,900, 4.76% of NAV), stop at $222 (6.7% from fill). The PM's pre-trade VaR engine reports that AFTER adding this position, expected daily VaR rises from 1.2% to 1.7% because AAPL is highly correlated with existing META, MSFT, GOOGL holdings.",
-    "question": "Which mandate rule does the Portfolio Manager flag as violated?",
+    "question": "Which mandate rule does the Chief Investment Officer flag as violated?",
     "options": [
       "Portfolio VaR cap — adding AAPL pushes daily VaR from 1.2% to 1.7%, breaching the 1.5% portfolio-VaR limit, even though the individual position passes the sizing and stop checks",
       "Stop-loss rule — 6.7% is too wide a stop",
@@ -539,13 +539,13 @@
     "scenario": "After the Research Manager proposes BUY NVDA at 4% of NAV, an agent says: 'Four percent on a 0.78-conviction call where the fundamentals are this clean is leaving alpha on the table. Revenue +38%, op margin 62%, FCF $32B per quarter — when do you size up if not now? At minimum 6%, and given mandate room I'd argue for 7%. Conservative sizing on conviction is the most expensive mistake in the book.'",
     "question": "Which of the 12 agents is most likely speaking?",
     "options": [
-      "The Conservative Debator, urging restraint",
-      "The Neutral Debator, splitting the difference",
-      "The Portfolio Manager, applying mandate caps",
-      "The Aggressive Debator, pushing to size up on high conviction"
+      "The Conservative Risk Officer, urging restraint",
+      "The Balanced Risk Officer, splitting the difference",
+      "The Chief Investment Officer, applying mandate caps",
+      "The Aggressive Risk Officer, pushing to size up on high conviction"
     ],
     "answer": 3,
-    "explanation": "The speaker explicitly argues for a larger position than the Research Manager's recommendation and frames conservative sizing as 'the most expensive mistake'. That is the Aggressive Debator's lane — push the position bigger when conviction and fundamentals align. The tempting wrong answer 'Portfolio Manager' fails because the PM applies the user's mandate caps; they do not advocate for sizing up. The Aggressive Debator wants more; the PM decides whether the user's rules even allow it.",
+    "explanation": "The speaker explicitly argues for a larger position than the Research Manager's recommendation and frames conservative sizing as 'the most expensive mistake'. That is the Aggressive Risk Officer's lane — push the position bigger when conviction and fundamentals align. The tempting wrong answer 'Chief Investment Officer' fails because the PM applies the user's mandate caps; they do not advocate for sizing up. The Aggressive Risk Officer wants more; the PM decides whether the user's rules even allow it.",
     "related_lesson": "028_macd_trend_and_momentum",
     "related_agent": "aggressive_debator",
     "tags": ["debate", "position_sizing", "module_5"]
@@ -555,16 +555,16 @@
     "type": "whats_missing",
     "difficulty": 2,
     "locale": "en",
-    "scenario": "Room verdict on GOOGL: 'Market Analyst — uptrend intact. News Analyst — DOJ ad-tech case overhang priced in. Fundamentals Analyst — revenue $98B (+13%), op margin 32%, FCF $26B, net cash $94B. Bear Researcher — search-share erosion to AI assistants. Research Manager — BUY 0.65 conviction. Trader — entry $198 stop $186 target $228. Portfolio Manager — within mandate. Verdict: BUY 5% of NAV.'",
+    "scenario": "Room verdict on GOOGL: 'Technical Strategist — uptrend intact. Macro & Events — DOJ ad-tech case overhang priced in. Fundamentals Analyst — revenue $98B (+13%), op margin 32%, FCF $26B, net cash $94B. Bear Researcher — search-share erosion to AI assistants. Research Manager — BUY 0.65 conviction. Execution Desk — entry $198 stop $186 target $228. Chief Investment Officer — within mandate. Verdict: BUY 5% of NAV.'",
     "question": "Whose input is conspicuously absent from this verdict?",
     "options": [
       "The Bull Researcher — no long-thesis perspective appears, so the 0.65 conviction is unsupported by a synthesised positive case",
-      "The Aggressive Debator, who should have argued for a larger position",
-      "The Social Media Analyst, since GOOGL has retail-investor following",
-      "The Conservative Debator, who should have argued for a smaller position"
+      "The Aggressive Risk Officer, who should have argued for a larger position",
+      "The Flow & Positioning desk, since GOOGL has retail-investor following",
+      "The Conservative Risk Officer, who should have argued for a smaller position"
     ],
     "answer": 0,
-    "explanation": "Mirror image of the AAPL gap two challenges back: every Room verdict needs BOTH Bull and Bear inputs before the Research Manager synthesises. This verdict has the Bear (search-share erosion to AI) but no Bull at all. Without a Bull thesis, the 0.65 BUY conviction is structurally unsupported — the Research Manager is taking a position without weighing the positive case. The tempting wrong answer 'Aggressive/Conservative Debator' fails because debators stress-test an existing thesis; here the missing piece is one of the two thesis builders themselves.",
+    "explanation": "Mirror image of the AAPL gap two challenges back: every Room verdict needs BOTH Bull and Bear inputs before the Research Manager synthesises. This verdict has the Bear (search-share erosion to AI) but no Bull at all. Without a Bull thesis, the 0.65 BUY conviction is structurally unsupported — the Research Manager is taking a position without weighing the positive case. The tempting wrong answer 'Aggressive/Conservative Risk Officer' fails because risk officers stress-test an existing thesis; here the missing piece is one of the two thesis builders themselves.",
     "related_lesson": "029_volume_confirmation",
     "related_agent": "bull_researcher",
     "tags": ["room", "bull_thesis", "module_5"]

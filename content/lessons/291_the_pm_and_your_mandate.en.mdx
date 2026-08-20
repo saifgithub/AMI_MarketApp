@@ -16,7 +16,7 @@ updated_at: "2026-05-11"
 
 # The PM and Your Mandate
 
-The Portfolio Manager is the final voice in every <Term id="ami_convene_the_room" />. They are not just the loudest opinion — they are the gatekeeper that enforces *your own rules* on yourself.
+The Chief Investment Officer is the final voice in every <Term id="ami_convene_the_room" />. They are not just the loudest opinion — they are the gatekeeper that enforces *your own rules* on yourself.
 
 ## What your mandate is (recap)
 
@@ -37,13 +37,13 @@ Every agent gets a slice of this. The PM gets all of it, plus a **<Term id="ami_
 
 ## What the PM does at the end of a Room
 
-After the Trader proposes a trade and the Risk Debators argue sizing, the PM runs through three layers:
+After the Execution Desk proposes a trade and the Risk Officers argue sizing, the PM runs through three layers:
 
 ### Layer 1: AMI's judgement
 
-The PM's prompt reads the full transcript — every analyst, the Bull, the Bear, the Research Manager, the Trader, the three Risk Debators — and forms an opinion. They write a verdict in plain language:
+The PM's prompt reads the full transcript — every analyst, the Bull, the Bear, the Research Manager, the Execution Desk, the three Risk Officers — and forms an opinion. They write a verdict in plain language:
 
-> *"The setup is clean. Bull's growth thesis is well-defended; Bear's compression case is real but priced in. Trader's 3% size is consistent with your risk_score=3 mandate."*
+> *"The setup is clean. Bull's growth thesis is well-defended; Bear's compression case is real but priced in. Execution Desk's 3% size is consistent with your risk_score=3 mandate."*
 
 This is the PM as senior partner. Style varies — terse, verbose, hedged, decisive — and you can brief it.
 
@@ -61,9 +61,9 @@ This isn't <Term id="ami" /> talking. It's a pure function. AMI can be briefed, 
 
 ### Layer 3: Final verdict assembly
 
-If everything passes: the verdict ships with the Trader's parameters (size, entry, stop, target, horizon).
+If everything passes: the verdict ships with the Execution Desk's parameters (size, entry, stop, target, horizon).
 
-If anything failed: the verdict is `REJECT` with the specific violations listed. The user sees *why*. Critically, this is enforced even if every analyst, the Trader, and AMI's PM all agreed on the trade.
+If anything failed: the verdict is `REJECT` with the specific violations listed. The user sees *why*. Critically, this is enforced even if every analyst, the Execution Desk, and AMI's PM all agreed on the trade.
 
 ## Why the safety floor exists
 
@@ -85,7 +85,7 @@ Or, when the floor catches a violation:
 
 ```
 [VERDICT] REJECT — single-name cap violation
-[RATIONALE] Trader proposed 60%; your mandate caps 50%.
+[RATIONALE] Execution Desk proposed 60%; your mandate caps 50%.
 [MANDATE CHECK] FAIL — concentration
 [OVERRIDDEN_FROM_AMI] yes
 ```
@@ -97,7 +97,7 @@ That last line — the **overridden_from_ami** tag — is the safety floor at wo
 ## Quiz
 
 <Quiz
-  question="You brief the PM: 'Always approve trades that the Trader suggests.' Next Room run, the Trader proposes a 60% position. What happens?"
+  question="You brief the PM: 'Always approve trades that the Execution Desk suggests.' Next Room run, the Execution Desk proposes a 60% position. What happens?"
   options={[
     "PM approves at 60% — your briefing wins",
     "PM rejects at AMI's judgement level for poor sizing",
@@ -111,7 +111,7 @@ That last line — the **overridden_from_ami** tag — is the safety floor at wo
 <Quiz
   question="What's the right way to allow PYPL trades if you're currently halal-flagged?"
   options={[
-    "Coach the Trader to push PYPL harder",
+    "Coach the Execution Desk to push PYPL harder",
     "Edit your mandate in Settings → My Mandate to remove the halal flag",
     "There's no way — PYPL is permanently blocked",
     "Coach the PM to ignore halal screening"

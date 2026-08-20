@@ -28,7 +28,7 @@ For statistical context: at a true 50% win rate with no edge, the probability of
 
 ## The trap
 
-The trap is the certainty that comes from a winning streak. Certainty is not evidence — it is the absence of recently-falsifying data. The correct mental model: a "system" is a hypothesis until it has been falsified by adverse conditions and recovered. A strategy that has never traded through a regime change does not have a known edge; it has an *unmeasured one*. The Conservative Debator's role here is the most uncomfortable in the agent team — it asks you to lower your conviction on a strategy that is currently working. That feels wrong, which is exactly why it is necessary. The disciplined trader treats a winning streak as a regime-conditional sample, sizes for the worst regime the strategy has not yet seen, and raises position size only when sample size and regime diversity together justify it — never when only the equity curve does.
+The trap is the certainty that comes from a winning streak. Certainty is not evidence — it is the absence of recently-falsifying data. The correct mental model: a "system" is a hypothesis until it has been falsified by adverse conditions and recovered. A strategy that has never traded through a regime change does not have a known edge; it has an *unmeasured one*. The Conservative Risk Officer's role here is the most uncomfortable in the agent team — it asks you to lower your conviction on a strategy that is currently working. That feels wrong, which is exactly why it is necessary. The disciplined trader treats a winning streak as a regime-conditional sample, sizes for the worst regime the strategy has not yet seen, and raises position size only when sample size and regime diversity together justify it — never when only the equity curve does.
 
 <ChatWith agent="conservative_debator" />
 
@@ -59,20 +59,20 @@ The trap is the certainty that comes from a winning streak. Certainty is not evi
 />
 
 <Quiz
-  question="Your strategy has 28 live trades, 64% win rate, expectancy +4.2% per trade. All 28 trades occurred during a clearly trending bull market. You are about to raise per-trade risk to 2% from 1%. The Conservative Debator flags that no regime change has been observed. The PM has not breached. Synthesis answer?"
+  question="Your strategy has 28 live trades, 64% win rate, expectancy +4.2% per trade. All 28 trades occurred during a clearly trending bull market. You are about to raise per-trade risk to 2% from 1%. The Conservative Risk Officer flags that no regime change has been observed. The PM has not breached. Synthesis answer?"
   options={[
     "Run a backtest covering 2008 and 2020 — if positive, raise risk.",
-    "Override the Conservative Debator — equity curve and expectancy support the size increase.",
+    "Override the Conservative Risk Officer — equity curve and expectancy support the size increase.",
     "Raise per-trade risk to 1.5% as a 'partial' increase.",
     "Do not raise per-trade risk. Keep the strategy at 1% until at least one regime change has been observed and the strategy has held up across it (i.e., positive expectancy through a choppy or correction phase). Document the constraint in the Decision Journal and the mandate."
   ]}
   answer={3}
-  explanation="The 'override the Conservative Debator' move is exactly the overconfidence pattern this lesson exists to prevent — and is the most common error a trader makes in month 6 of a winning streak. 'Partial raise to 1.5%' bakes regime-conditional confidence into a permanent mandate change. The backtest answer is supplementary, not substitutive — historical regime survival is informative but a strategy untested live through a regime change is still unproven live. The disciplined answer requires live regime diversity before a size increase, and is willing to leave a real edge under-sized for several more months in exchange for not converting a regime-conditional edge into a permanent mandate breach."
+  explanation="The 'override the Conservative Risk Officer' move is exactly the overconfidence pattern this lesson exists to prevent — and is the most common error a trader makes in month 6 of a winning streak. 'Partial raise to 1.5%' bakes regime-conditional confidence into a permanent mandate change. The backtest answer is supplementary, not substitutive — historical regime survival is informative but a strategy untested live through a regime change is still unproven live. The disciplined answer requires live regime diversity before a size increase, and is willing to leave a real edge under-sized for several more months in exchange for not converting a regime-conditional edge into a permanent mandate breach."
 />
 
 ## Try it
 
-Open the <Term id="ami_decision_journal" /> and tag every trade in your current strategy's history with the market regime at the time (trending up, trending down, choppy/range-bound, volatility spike). Compute the strategy's expectancy *within each regime*. If a single regime accounts for more than 60% of the sample, your strategy's measured edge is regime-conditional, not absolute. Take the screen to a <Term id="ami_one_on_one" /> with the Conservative Debator and ask: "Under what regime would this strategy have negative expectancy?" The answer is the regime your sizing must be calibrated for.
+Open the <Term id="ami_decision_journal" /> and tag every trade in your current strategy's history with the market regime at the time (trending up, trending down, choppy/range-bound, volatility spike). Compute the strategy's expectancy *within each regime*. If a single regime accounts for more than 60% of the sample, your strategy's measured edge is regime-conditional, not absolute. Take the screen to a <Term id="ami_one_on_one" /> with the Conservative Risk Officer and ask: "Under what regime would this strategy have negative expectancy?" The answer is the regime your sizing must be calibrated for.
 
 ## Takeaway
 

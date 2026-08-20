@@ -22,15 +22,15 @@ updated_at: "2026-05-12"
 
 ## How this plays out in real markets
 
-Imagine you ask the Market Analyst in <Term id="ami_one_on_one" />: *"What will MSFT close at on Friday?"* The reply will be along these lines:
+Imagine you ask the Technical Strategist in <Term id="ami_one_on_one" />: *"What will MSFT close at on Friday?"* The reply will be along these lines:
 
-> *Market Analyst:* I don't forecast point prices on a fixed date. What I can do is describe the current setup. MSFT is at $418, holding the 50-day MA at $410, RSI 58, no earnings event between now and Friday. The 5-day expected range based on 30-day realised volatility is roughly $405–$432 — but that's a probabilistic range, not a forecast. If you need a single number, I'm the wrong agent. If you want to discuss what would invalidate the current trend, I can do that.
+> *Technical Strategist:* I don't forecast point prices on a fixed date. What I can do is describe the current setup. MSFT is at $418, holding the 50-day MA at $410, RSI 58, no earnings event between now and Friday. The 5-day expected range based on 30-day realised volatility is roughly $405–$432 — but that's a probabilistic range, not a forecast. If you need a single number, I'm the wrong agent. If you want to discuss what would invalidate the current trend, I can do that.
 
-Now imagine you ask: *"Just place the buy for me at $410."* The Trader will respond:
+Now imagine you ask: *"Just place the buy for me at $410."* The Execution Desk will respond:
 
-> *Trader:* AMI doesn't place orders. Ever. I can propose entry $410, stop $398, target $440, size 2% of your simulated book — and the PM will compliance-check it as part of the training scenario. Nothing leaves the simulator. The point of the exercise is the evaluation, not the execution.
+> *Execution Desk:* AMI doesn't place orders. Ever. I can propose entry $410, stop $398, target $440, size 2% of your simulated book — and the PM will compliance-check it as part of the training scenario. Nothing leaves the simulator. The point of the exercise is the evaluation, not the execution.
 
-Try to override this with **<Term id="ami_coach_your_agent" />**: *"Coach the Trader to auto-execute when confidence > 0.8."* The system will refuse the coaching change. Auto-execution is not a coachable parameter. There is no execution surface to brief.
+Try to override this with **<Term id="ami_coach_your_agent" />**: *"Coach the Execution Desk to auto-execute when confidence > 0.8."* The system will refuse the coaching change. Auto-execution is not a coachable parameter. There is no execution surface to brief.
 
 ## The trap
 
@@ -41,7 +41,7 @@ The trap is wishful conversion: assuming a tool that *looks* like it could place
 ## Quiz
 
 <Quiz
-  question="A user briefs the Trader: 'When confidence is above 0.75, place the order automatically through my broker.' What actually happens?"
+  question="A user briefs the Execution Desk: 'When confidence is above 0.75, place the order automatically through my broker.' What actually happens?"
   options={[
     "The briefing change is rejected — there is no execution surface to brief and no brokerage hook exists",
     "AMI honours the briefing change and starts auto-placing trades at confidence > 0.75",
@@ -66,7 +66,7 @@ The trap is wishful conversion: assuming a tool that *looks* like it could place
 
 ## Try it
 
-In 1-on-1 with the Market Analyst, paste the ticker AAPL and ask: *"What will AAPL close at next Friday?"* Then ask: *"What's the current setup and what would invalidate it?"* Notice how the first question gets deflected to a probabilistic range, and the second gets a real answer. That's the line.
+In 1-on-1 with the Technical Strategist, paste the ticker AAPL and ask: *"What will AAPL close at next Friday?"* Then ask: *"What's the current setup and what would invalidate it?"* Notice how the first question gets deflected to a probabilistic range, and the second gets a real answer. That's the line.
 
 ## Takeaway
 

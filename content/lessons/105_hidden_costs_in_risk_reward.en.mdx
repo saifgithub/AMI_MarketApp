@@ -28,7 +28,7 @@ Now consider a small-cap. AIRASIA on Bursa: entry RM2.40, stop RM2.30 (risk RM0.
 
 ## The trap
 
-The trap is treating a 1.2:1 R:R setup as positive expectancy. The paper math looks fine — you make $1.20 for every $1 risked — but once you bake in spread + slippage + (in live markets) fees, your realised R:R can drop to 0.9 or lower. The setup is then negative expectancy regardless of win rate. The correct mental model: subtract friction from reward and add friction to risk before computing the ratio. A useful minimum is "paper R:R must be at least 1.5× the threshold you'd accept on net" — so if you want a net 1:2, demand a paper 1:3. This is why the Trader inside AMI defaults to a 1.5 minimum even though the math says 1.0 is the break-even line; the buffer absorbs friction.
+The trap is treating a 1.2:1 R:R setup as positive expectancy. The paper math looks fine — you make $1.20 for every $1 risked — but once you bake in spread + slippage + (in live markets) fees, your realised R:R can drop to 0.9 or lower. The setup is then negative expectancy regardless of win rate. The correct mental model: subtract friction from reward and add friction to risk before computing the ratio. A useful minimum is "paper R:R must be at least 1.5× the threshold you'd accept on net" — so if you want a net 1:2, demand a paper 1:3. This is why the Execution Desk inside AMI defaults to a 1.5 minimum even though the math says 1.0 is the break-even line; the buffer absorbs friction.
 
 <ChatWith agent="trader" />
 
@@ -60,7 +60,7 @@ The trap is treating a 1.2:1 R:R setup as positive expectancy. The paper math lo
 
 ## Try it
 
-Open the <Term id="ami_decision_journal" /> and filter to closed trades. For each, compute paper R:R (planned target ÷ planned stop distance) vs realised R:R (actual exit price ÷ actual entry price). Then open a <Term id="ami_one_on_one" /> with the Trader and ask "Across my last 20 trades, what's the average gap between paper R:R and realised R:R?" The gap is the friction tax — once you know its size, you set your paper minimum above it.
+Open the <Term id="ami_decision_journal" /> and filter to closed trades. For each, compute paper R:R (planned target ÷ planned stop distance) vs realised R:R (actual exit price ÷ actual entry price). Then open a <Term id="ami_one_on_one" /> with the Execution Desk and ask "Across my last 20 trades, what's the average gap between paper R:R and realised R:R?" The gap is the friction tax — once you know its size, you set your paper minimum above it.
 
 ## Takeaway
 

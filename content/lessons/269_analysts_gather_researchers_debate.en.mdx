@@ -18,7 +18,7 @@ updated_at: "2026-05-12"
 
 # Analysts gather, Researchers debate, PM governs
 
-The <Term id="twelve_agent_team" /> are not equal peers shouting at each other. Inside <Term id="ami" />'s <Term id="training_simulator" /> they are arranged in three tiers with different jobs. Analysts gather and report — they tell you *what is*. Researchers debate and synthesise — they argue *what it means*. The Trader and Risk Debators turn the synthesis into a simulated position. The PM governs against your <Term id="ami_mandate" /> — independent of the rest. Understanding this layering is what turns "the Room" from a noisy chat into an auditable training process — and what gives you something specific to evaluate. By the end of this lesson you will be able to name which agent's job is which, and why mixing them up is a category error.
+The <Term id="twelve_agent_team" /> are not equal peers shouting at each other. Inside <Term id="ami" />'s <Term id="training_simulator" /> they are arranged in three tiers with different jobs. Analysts gather and report — they tell you *what is*. Researchers debate and synthesise — they argue *what it means*. The Execution Desk and Risk Officers turn the synthesis into a simulated position. The PM governs against your <Term id="ami_mandate" /> — independent of the rest. Understanding this layering is what turns "the Room" from a noisy chat into an auditable training process — and what gives you something specific to evaluate. By the end of this lesson you will be able to name which agent's job is which, and why mixing them up is a category error.
 
 ## How this plays out in real markets
 
@@ -26,14 +26,14 @@ The <Term id="twelve_agent_team" /> are not equal peers shouting at each other. 
 
 - **Analysts (the gatherers):** Fundamentals pulls Q4 revenue $43.7B, NII $23.5B, CET1 ratio 15.7%. Market reads $215, above the 50-day MA at $208, RSI 60. News summarises the latest Fed minutes. Social Media reports neutral retail sentiment. These four agents do not argue; they report numbers and observations.
 - **Researchers (the arguers):** Bull writes a long case (rate-cut tailwind, credit normalisation). Bear writes a short case (NII compression, commercial real estate exposure). Research Manager synthesises both into a weighted view: Bull lean ~0.57.
-- **Execution + Risk (the sizers):** The Trader proposes entry $214.50, stop $204, target $232. Aggressive wants 5%, Conservative 2%, Neutral 3%. The Trader settles at 3%.
-- **Governance (the gate):** The Portfolio Manager runs a deterministic compliance check against your Mandate — `risk_score: 3` (3% single-name cap), `max_drawdown_pct: 20`, `halal: false`. PASS at 3%.
+- **Execution + Risk (the sizers):** The Execution Desk proposes entry $214.50, stop $204, target $232. Aggressive wants 5%, Conservative 2%, Balanced 3%. The Execution Desk settles at 3%.
+- **Governance (the gate):** The Chief Investment Officer runs a deterministic compliance check against your Mandate — `risk_score: 3` (3% single-name cap), `max_drawdown_pct: 20`, `halal: false`. PASS at 3%.
 
-Each tier feeds the next. An analyst that started debating Bull vs Bear would corrupt the data layer. A researcher that started picking a position size would conflate analysis with execution. The PM that started taking sides on the thesis would lose its independence as the safety floor. The roles are separable so the *errors* are separable — if the Bull case is wrong, the Analysts' numbers are still intact; if the Trader's sizing is off, the Mandate check still binds.
+Each tier feeds the next. An analyst that started debating Bull vs Bear would corrupt the data layer. A researcher that started picking a position size would conflate analysis with execution. The PM that started taking sides on the thesis would lose its independence as the safety floor. The roles are separable so the *errors* are separable — if the Bull case is wrong, the Analysts' numbers are still intact; if the Execution Desk's sizing is off, the Mandate check still binds.
 
 ## The trap
 
-The trap is treating all twelve agents as interchangeable chat partners. Convene the Room is not interactive — it is a streamed batch readout where every agent reports in turn against its layer's job. For interactive Q&A, you use **1-on-1** (tap an agent on the Floor, pick `1-ON-1`). And there, users new to the team sometimes ask the Fundamentals Analyst *"should I buy?"* — wrong layer. The Fundamentals Analyst tells you what is on the income statement; it does not vote on action. Ask the Bull Researcher *"what's the current P/E?"* and you might get a number, but you are using a debater as a data source — the right route is to ask the Fundamentals Analyst. The mental model for 1-on-1: ask each agent the question its layer can actually answer. Data questions go to Analysts. Thesis questions go to Researchers. Sizing questions go to the Trader or Risk Debators. Compliance questions go to the PM. Routing the question right is half the value.
+The trap is treating all twelve agents as interchangeable chat partners. Convene the Room is not interactive — it is a streamed batch readout where every agent reports in turn against its layer's job. For interactive Q&A, you use **1-on-1** (tap an agent on the Floor, pick `1-ON-1`). And there, users new to the team sometimes ask the Fundamentals Analyst *"should I buy?"* — wrong layer. The Fundamentals Analyst tells you what is on the income statement; it does not vote on action. Ask the Bull Researcher *"what's the current P/E?"* and you might get a number, but you are using a debater as a data source — the right route is to ask the Fundamentals Analyst. The mental model for 1-on-1: ask each agent the question its layer can actually answer. Data questions go to Analysts. Thesis questions go to Researchers. Sizing questions go to the Execution Desk or Risk Officers. Compliance questions go to the PM. Routing the question right is half the value.
 
 <ChatWith agent="research_manager" />
 
@@ -43,12 +43,12 @@ The trap is treating all twelve agents as interchangeable chat partners. Convene
   question="You want to know whether a proposed 6% position on NVDA fits your Mandate. Which agent should you ask in 1-on-1?"
   options={[
     "The Fundamentals Analyst",
-    "The Market Analyst",
+    "The Technical Strategist",
     "The Bull Researcher",
-    "The Portfolio Manager"
+    "The Chief Investment Officer"
   ]}
   answer={3}
-  explanation="Mandate compliance is the PM's surface — it runs the deterministic check against your risk-tier size cap, `max_drawdown_pct` and `compliance` flags. The Fundamentals Analyst reports company data; the Bull Researcher debates the thesis; the Market Analyst reads the chart. Routing the compliance question to any of them is a category error."
+  explanation="Mandate compliance is the PM's surface — it runs the deterministic check against your risk-tier size cap, `max_drawdown_pct` and `compliance` flags. The Fundamentals Analyst reports company data; the Bull Researcher debates the thesis; the Technical Strategist reads the chart. Routing the compliance question to any of them is a category error."
 />
 
 <Quiz
@@ -69,4 +69,4 @@ Open **<Term id="ami_one_on_one" />** and pick the Fundamentals Analyst. Ask *"w
 
 ## Takeaway
 
-Analysts gather, Researchers debate, the Trader sizes, the PM governs. Ask each agent the question its tier can answer or you are misusing the training architecture. AMI is teaching you to evaluate analyst output by tier — not handing you advice to follow.
+Analysts gather, Researchers debate, the Execution Desk sizes, the PM governs. Ask each agent the question its tier can answer or you are misusing the training architecture. AMI is teaching you to evaluate analyst output by tier — not handing you advice to follow.

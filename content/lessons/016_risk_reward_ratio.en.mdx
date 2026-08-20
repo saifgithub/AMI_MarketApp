@@ -24,7 +24,7 @@ The risk/reward ratio is the distance from your entry to your target divided by 
 
 ## Example
 
-Look at MSFT in a hypothetical setup at $415. The Market Analyst marks support at $408 (where a chart-based stop belongs, just below at $407) and resistance at $440 (the next clean target zone). Per-share risk = $415 − $407 = $8. Per-share reward = $440 − $415 = $25. R:R = 25 ÷ 8 = 3.1. That is a setup worth taking even if you only hit the target 4 times in 10 — the math: 4 wins × $25 − 6 losses × $8 = $100 − $48 = $52 net per share over ten trades.
+Look at MSFT in a hypothetical setup at $415. The Technical Strategist marks support at $408 (where a chart-based stop belongs, just below at $407) and resistance at $440 (the next clean target zone). Per-share risk = $415 − $407 = $8. Per-share reward = $440 − $415 = $25. R:R = 25 ÷ 8 = 3.1. That is a setup worth taking even if you only hit the target 4 times in 10 — the math: 4 wins × $25 − 6 losses × $8 = $100 − $48 = $52 net per share over ten trades.
 
 Now flip it. Same entry $415, same stop $407, but the target is only $422 because that is the next minor resistance. Reward = $7, risk = $8, R:R = 0.88. You are now risking more than you stand to make. You would need to win 53% of the time just to break even (8 ÷ (7+8)). On Bursa Malaysia the same logic on Petronas Chemicals (PCHEM, 5183): entry RM6.40, stop RM6.20 (risk RM0.20), target RM7.00 (reward RM0.60), R:R = 3.0. Falsification is built in: if the chart's natural target is closer than 1.5× the stop distance, the setup fails the filter before you even price it.
 
@@ -62,7 +62,7 @@ The trap is moving the target to make the R:R look acceptable. A beginner sees R
 
 ## Try it
 
-Open the <Term id="ami_mandate" /> editor and set `min_risk_reward_ratio` to 1.5. Then open a <Term id="ami_one_on_one" /> with the Trader and ask it to draft a ticket for any ticker on your <Term id="ami_watchlist" />. If the Trader's target is closer than 1.5× the stop distance, the <Term id="ami_pm_safety_floor" /> will refuse the ticket — watch how the rejection message reads.
+Open the <Term id="ami_mandate" /> editor and set `min_risk_reward_ratio` to 1.5. Then open a <Term id="ami_one_on_one" /> with the Execution Desk and ask it to draft a ticket for any ticker on your <Term id="ami_watchlist" />. If the Execution Desk's target is closer than 1.5× the stop distance, the <Term id="ami_pm_safety_floor" /> will refuse the ticket — watch how the rejection message reads.
 
 ## Takeaway
 

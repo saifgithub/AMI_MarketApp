@@ -32,7 +32,7 @@
   {
     "id": "twelve_agent_team",
     "term": "12-agent analyst team",
-    "definition": "The structure of AMI: twelve specialist agents organised as Analysts (Fundamentals, Market, News, Social Media), Researchers (Bull, Bear, Research Manager), Risk Debators (Aggressive, Conservative, Neutral), the Trader, and the Portfolio Manager. The user is the thirteenth seat — the CEO who evaluates the team's output. Twelve agents exist to surface cognitive diversity, not because more agents are always better.",
+    "definition": "The structure of AMI: twelve specialist agents organised as Analysts (Fundamentals, Technical, Macro & Events, Flow & Positioning), Researchers (Bull, Bear, Research Manager), Risk Officers (Aggressive, Conservative, Balanced), the Execution Desk, and the Chief Investment Officer. The user is the thirteenth seat — the CEO who evaluates the team's output. Twelve agents exist to surface cognitive diversity, not because more agents are always better.",
     "category": "platform",
     "see_also": ["ami", "ami_convene_the_room", "ami_verdict"],
     "related_lessons": ["072", "268", "269"],
@@ -1559,7 +1559,7 @@
   {
     "id": "ami_mandate",
     "term": "Mandate",
-    "definition": "The user-set contract with the simulator that encodes risk tolerance, maximum simulated drawdown, position-size caps, and compliance flags. The Portfolio Manager agent enforces it on every simulated trade and cannot bypass it.",
+    "definition": "The user-set contract with the simulator that encodes risk tolerance, maximum simulated drawdown, position-size caps, and compliance flags. The Chief Investment Officer agent enforces it on every simulated trade and cannot bypass it.",
     "category": "platform",
     "see_also": ["ami_pm_safety_floor", "ami_verdict", "ami_coach_your_agent"],
     "related_agents": ["portfolio_manager"],
@@ -1577,7 +1577,7 @@
   {
     "id": "ami_convene_the_room",
     "term": "Convene the Room",
-    "definition": "The simulator workflow that runs the 12-agent debate on a chosen ticker, ending with a Portfolio Manager Verdict. Streams agent reasoning live during the run.",
+    "definition": "The simulator workflow that runs the 12-agent debate on a chosen ticker, ending with a Chief Investment Officer Verdict. Streams agent reasoning live during the run.",
     "category": "platform",
     "see_also": ["ami_verdict", "ami_one_on_one", "ami_mandate"],
     "related_agents": ["portfolio_manager", "trader", "research_manager", "aggressive_debator", "conservative_debator", "neutral_debator"],
@@ -1586,7 +1586,7 @@
   {
     "id": "ami_coach_your_agent",
     "term": "Brief Your Agent",
-    "definition": "A simulator feature that lets the user shape an individual agent's style or analytical priorities through natural-language guidance. Briefing modifies the agent's reasoning surface; it cannot bypass the Portfolio Manager safety floor.",
+    "definition": "A simulator feature that lets the user shape an individual agent's style or analytical priorities through natural-language guidance. Briefing modifies the agent's reasoning surface; it cannot bypass the Chief Investment Officer safety floor.",
     "category": "platform",
     "see_also": ["ami_pm_safety_floor", "ami_mandate"],
     "related_agents": ["portfolio_manager"],
@@ -1603,7 +1603,7 @@
   {
     "id": "ami_pm_safety_floor",
     "term": "PM safety floor",
-    "definition": "A hard, uncoachable enforcement layer in the Portfolio Manager prompt and a deterministic compliance check function. Blocks any agent output that violates the user's Mandate or simulator-wide constraints.",
+    "definition": "A hard, uncoachable enforcement layer in the Chief Investment Officer prompt and a deterministic compliance check function. Blocks any agent output that violates the user's Mandate or simulator-wide constraints.",
     "category": "platform",
     "see_also": ["ami_mandate", "ami_coach_your_agent"],
     "related_agents": ["portfolio_manager"],
@@ -2275,7 +2275,7 @@
   {
     "id": "ami_esg_lite",
     "term": "AMI ESG-lite flag",
-    "definition": "A Mandate compliance flag that has the Portfolio Manager's safety floor refuse a simulated trade in a curated exclusion set: fossil-fuel industries within the Energy sector, plus tobacco, brewers, wineries and distillers, gambling and casinos, plus aerospace and defence. It is an exclusion rule, never a rated score, and every verdict says so. Coverage is the S&P 500 parent set; a ticker outside it returns UNKNOWN, which permits the trade while reporting that it is unclassified.",
+    "definition": "A Mandate compliance flag that has the Chief Investment Officer's safety floor refuse a simulated trade in a curated exclusion set: fossil-fuel industries within the Energy sector, plus tobacco, brewers, wineries and distillers, gambling and casinos, plus aerospace and defence. It is an exclusion rule, never a rated score, and every verdict says so. Coverage is the S&P 500 parent set; a ticker outside it returns UNKNOWN, which permits the trade while reporting that it is unclassified.",
     "category": "esg",
     "see_also": ["negative_screening", "ami_mandate", "ami_pm_safety_floor", "esg_rating"],
     "related_lessons": ["387", "386"],

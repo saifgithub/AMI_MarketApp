@@ -4,7 +4,7 @@
     "category": "platform",
     "question": "How do I edit my mandate?",
     "short_answer": "Open Settings -> Mandate. You can adjust every field there and save to push it live to the agents.",
-    "long_answer": "Your Mandate is the contract between you and the 12 agents. To edit it, tap your profile icon -> Settings -> Mandate. From there you can change risk tolerance, max drawdown, position-size caps, compliance flags, and instrument preferences. When you save, the Portfolio Manager re-reads the mandate on the next Convene the Room run, so changes apply to your next decision, not retroactively.",
+    "long_answer": "Your Mandate is the contract between you and the 12 agents. To edit it, tap your profile icon -> Settings -> Mandate. From there you can change risk tolerance, max drawdown, position-size caps, compliance flags, and instrument preferences. When you save, the Chief Investment Officer re-reads the mandate on the next Convene the Room run, so changes apply to your next decision, not retroactively.",
     "related_lessons": ["012"],
     "related_agents": ["concierge", "portfolio_manager"],
     "tags": ["mandate", "settings", "how-to"]
@@ -24,7 +24,7 @@
     "category": "platform",
     "question": "Is there a halal filter?",
     "short_answer": "Yes. Turn on the Halal flag in Settings -> Mandate -> Compliance. AMI checks the ticker against a sourced, dated Sharia-screened index and the PM blocks any name that comes back screened-out.",
-    "long_answer": "The halal flag does not run a live ratio screen. AMI looks the ticker up in a published, dated AAOIFI-standard index (the S&P 500 Sharia Industry Exclusions Index, tracked by the SPUS ETF) and returns one of four outcomes: PASS (a current member of the compliant set), SCREENED OUT (in the S&P 500 but not the compliant set, so the PM blocks it; a conventional bank is the classic case), UNKNOWN (not in the S&P 500 at all, so the index never ruled on it; permitted, but flagged that no screen covered it), or PAUSED (the source is stale or unavailable, so the flag blocks loudly rather than guess). The Portfolio Manager applies this as a hard floor, after the debate. Because it is a membership lookup against someone else's dated list, a PASS means 'on the compliant list as of a date,' not that AMI recomputed the ratios. Always confirm with your own scholar for high-stakes decisions.",
+    "long_answer": "The halal flag does not run a live ratio screen. AMI looks the ticker up in a published, dated AAOIFI-standard index (the S&P 500 Sharia Industry Exclusions Index, tracked by the SPUS ETF) and returns one of four outcomes: PASS (a current member of the compliant set), SCREENED OUT (in the S&P 500 but not the compliant set, so the PM blocks it; a conventional bank is the classic case), UNKNOWN (not in the S&P 500 at all, so the index never ruled on it; permitted, but flagged that no screen covered it), or PAUSED (the source is stale or unavailable, so the flag blocks loudly rather than guess). The Chief Investment Officer applies this as a hard floor, after the debate. Because it is a membership lookup against someone else's dated list, a PASS means 'on the compliant list as of a date,' not that AMI recomputed the ratios. Always confirm with your own scholar for high-stakes decisions.",
     "related_lessons": [],
     "related_agents": ["portfolio_manager"],
     "tags": ["mandate", "halal", "compliance"]
@@ -34,7 +34,7 @@
     "category": "platform",
     "question": "How does the max drawdown cap work?",
     "short_answer": "It's a hard floor in your mandate. When your sim portfolio hits the cap, the PM will only return HOLD or risk-reduction verdicts until you reset or widen it.",
-    "long_answer": "Max drawdown is the worst peak-to-trough loss you're willing to tolerate, set in Settings -> Mandate -> Risk. If your simulated portfolio breaches it, the Portfolio Manager flips into defensive mode: no new BUY verdicts, sizing is capped, and stop-loss tightening is encouraged. You can widen the cap in Settings, but the system will flag the change in your Decision Journal so you can audit it later.",
+    "long_answer": "Max drawdown is the worst peak-to-trough loss you're willing to tolerate, set in Settings -> Mandate -> Risk. If your simulated portfolio breaches it, the Chief Investment Officer flips into defensive mode: no new BUY verdicts, sizing is capped, and stop-loss tightening is encouraged. You can widen the cap in Settings, but the system will flag the change in your Decision Journal so you can audit it later.",
     "related_lessons": ["018"],
     "related_agents": ["portfolio_manager"],
     "tags": ["mandate", "drawdown", "risk"]
@@ -104,7 +104,7 @@
     "category": "platform",
     "question": "How do I run Convene the Room?",
     "short_answer": "From any ticker page, tap the Convene the Room button. The 12 agents will debate in real time and the PM delivers a verdict in 30-60 seconds.",
-    "long_answer": "Convene the Room is the full-stack analysis: fundamentals, news, sentiment, technical (4 sub-agents), bull/bear researchers, research manager synthesis, trader, risk team, and the Portfolio Manager. Trigger it from any ticker's detail page or from Home -> Quick Convene. You'll see each agent's reasoning stream in as they speak, then the verdict (BUY/SELL/HOLD with size, entry, stop, target, horizon) at the end.",
+    "long_answer": "Convene the Room is the full-stack analysis: fundamentals, news, sentiment, technical (4 sub-agents), bull/bear researchers, research manager synthesis, trader, risk team, and the Chief Investment Officer. Trigger it from any ticker's detail page or from Home -> Quick Convene. You'll see each agent's reasoning stream in as they speak, then the verdict (BUY/SELL/HOLD with size, entry, stop, target, horizon) at the end.",
     "related_lessons": [],
     "related_agents": ["portfolio_manager", "research_manager"],
     "tags": ["convene", "how-to"]
@@ -113,7 +113,7 @@
     "id": "qa_plt_what_is_verdict",
     "category": "platform",
     "question": "What's a Verdict?",
-    "short_answer": "The Portfolio Manager's final decision after the room debates. It includes action, size, entry, stop, target, horizon, and conviction.",
+    "short_answer": "The Chief Investment Officer's final decision after the room debates. It includes action, size, entry, stop, target, horizon, and conviction.",
     "long_answer": "A Verdict is structured, not a paragraph. It always contains: Action (BUY / SELL / HOLD / PASS), Size (% of portfolio, capped by your mandate), Entry (price band), Stop (price), Target (price), Horizon (days/weeks/months), and Conviction (1-5). It also includes a one-line rationale and lists which agents dissented. Every verdict is logged to your Decision Journal whether you accept it or not.",
     "related_lessons": [],
     "related_agents": ["portfolio_manager"],
@@ -174,7 +174,7 @@
     "category": "platform",
     "question": "Which agent should I ask?",
     "short_answer": "Depends on the question. Fundamentals for valuation, News for catalysts, Sentiment for crowd mood, Technical for charts, Risk for sizing, PM for the final call.",
-    "long_answer": "A rough map: 'Is this company healthy?' -> Fundamentals Analyst. 'Why did it move today?' -> News Analyst. 'What's the crowd thinking?' -> Sentiment Analyst. 'Is this a valid breakout?' -> Technical Analyst (or one of the 4 sub-timeframes). 'How big should my position be?' -> Risky/Neutral/Safe debate or Trader. 'Should I take this trade?' -> Convene the Room, not 1-on-1. The Concierge can route you if you're unsure.",
+    "long_answer": "A rough map: 'Is this company healthy?' -> Fundamentals Analyst. 'Why did it move today?' -> Macro & Events. 'What's the crowd thinking?' -> Flow & Positioning. 'Is this a valid breakout?' -> Technical Strategist. 'How big should my position be?' -> the Risk Officers' debate or the Execution Desk. 'Should I take this trade?' -> Convene the Room, not 1-on-1. The Concierge can route you if you're unsure.",
     "related_lessons": [],
     "related_agents": ["concierge", "fundamentals_analyst", "news_analyst", "sentiment_analyst", "technical_analyst"],
     "tags": ["1on1", "routing"]
@@ -184,7 +184,7 @@
     "category": "platform",
     "question": "What is Brief Your Agent?",
     "short_answer": "A way to shape each agent's style — more verbose, more skeptical, more focused on certain data — without changing the safety rules.",
-    "long_answer": "Brief Your Agent lets you nudge an agent's personality and emphasis. You can tell the Fundamentals Analyst to weight cash flow heavier, ask the News Analyst to ignore tweet-level chatter, or tell the Technical Analyst you prefer daily over intraday timeframes. Each change is a diff card that you review and approve. Find it under any agent's profile -> Brief Your Agent.",
+    "long_answer": "Brief Your Agent lets you nudge an agent's personality and emphasis. You can tell the Fundamentals Analyst to weight cash flow heavier, ask the Flow & Positioning desk to discount low-sample chatter, or tell the Technical Strategist to lead with levels rather than indicators. Each change is a diff card that you review and approve. Find it under any agent's profile -> Brief Your Agent.",
     "related_lessons": [],
     "related_agents": ["concierge"],
     "tags": ["coach", "customization"]
@@ -203,7 +203,7 @@
     "id": "qa_plt_coach_cant_customize",
     "category": "platform",
     "question": "What CAN'T I customize with Brief Your Agent?",
-    "short_answer": "The Portfolio Manager's mandate enforcement. Position caps, drawdown limits, compliance flags, and refusal floors are uncoachable.",
+    "short_answer": "The Chief Investment Officer's mandate enforcement. Position caps, drawdown limits, compliance flags, and refusal floors are uncoachable.",
     "long_answer": "The PM is the safety floor and it doesn't take coaching. You cannot tell the PM to ignore your max drawdown, exceed position caps, override your halal flag, or skip the compliance check. You also can't coach any agent to recommend live trading, give specific dollar advice, or claim predictive certainty. These floors are deterministic and hard-coded — they exist so coaching can't turn AMI into a yes-man.",
     "related_lessons": [],
     "related_agents": ["portfolio_manager"],

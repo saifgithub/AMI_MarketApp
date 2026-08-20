@@ -18,7 +18,7 @@ updated_at: "2026-05-12"
 
 # ATR for position sizing and stop placement
 
-<Lesson id="141_atr_as_volatility_gauge"/> framed ATR as a volatility gauge. <Lesson id="101_volatility_adjusted_sizing"/> and <Lesson id="102_atr_based_stops"/> covered the position-sizing and stop mechanics. This lesson stitches them together into the single workflow that the Portfolio Manager's <Term id="ami_pm_safety_floor" /> expects: given a ticker, an account size, a mandate risk cap, and an ATR multiple for the stop, the position size is fully determined arithmetic. No discretion. The discipline is mechanical, and that's the point — sizing decisions made in the heat of the moment are where mandates die.
+<Lesson id="141_atr_as_volatility_gauge"/> framed ATR as a volatility gauge. <Lesson id="101_volatility_adjusted_sizing"/> and <Lesson id="102_atr_based_stops"/> covered the position-sizing and stop mechanics. This lesson stitches them together into the single workflow that the Chief Investment Officer's <Term id="ami_pm_safety_floor" /> expects: given a ticker, an account size, a mandate risk cap, and an ATR multiple for the stop, the position size is fully determined arithmetic. No discretion. The discipline is mechanical, and that's the point — sizing decisions made in the heat of the moment are where mandates die.
 
 ## How this plays out in real markets
 
@@ -40,7 +40,7 @@ On Bursa Malaysia: PETRONAS at RM5.40 with daily ATR around RM0.07 = 1.3% of pri
 
 The trap is using a fixed stop distance across all tickers — "I always use $1 stops" or "I always use 2% stops." Fixed-dollar stops mean low-ATR positions get strangled by noise (the stop is inside daily wiggle, so the trade exits prematurely) and high-ATR positions get wildly over-risked (the stop is outside daily range, so the realised loss when it hits is much larger than the dollar risk budget assumed). Fixed-percent stops are slightly better but still ignore the per-name volatility character.
 
-The correct mental model: ATR is the unit of distance in volatility-space, not dollar-space. A 1.5× ATR stop is comparable across tickers because it adjusts for each stock's typical daily range. The position size adjusts in proportion. Dollar risk stays constant. The Portfolio Manager's safety floor verifies this arithmetic on every trade ticket — if the math doesn't tie out, the trade is blocked. That's the floor doing its job.
+The correct mental model: ATR is the unit of distance in volatility-space, not dollar-space. A 1.5× ATR stop is comparable across tickers because it adjusts for each stock's typical daily range. The position size adjusts in proportion. Dollar risk stays constant. The Chief Investment Officer's safety floor verifies this arithmetic on every trade ticket — if the math doesn't tie out, the trade is blocked. That's the floor doing its job.
 
 <ChatWith agent="portfolio_manager" />
 
@@ -62,7 +62,7 @@ The correct mental model: ATR is the unit of distance in volatility-space, not d
   question="You have $250 of risk budget per trade. NVDA at 140 with ATR(14) = $5.10 sizes to 32 shares ($4,480 capital). AAPL at 230 with ATR(14) = $2.80 sizes to 59 shares ($13,570 capital). Why does the AAPL position deploy three times the capital of the NVDA position when both carry the same $250 dollar risk?"
   options={[
     "It's a mistake — both positions should deploy equal capital",
-    "Lower-ATR stocks have tighter stops, which fits more shares into the same dollar-risk budget. Capital deployed is the byproduct, not the input — dollar risk is the cap, not capital exposure. The Portfolio Manager's safety floor checks risk math, not gross capital.",
+    "Lower-ATR stocks have tighter stops, which fits more shares into the same dollar-risk budget. Capital deployed is the byproduct, not the input — dollar risk is the cap, not capital exposure. The Chief Investment Officer's safety floor checks risk math, not gross capital.",
     "The arithmetic only works for one of the two tickers",
     "AAPL is a bigger company so it deserves more capital"
   ]}

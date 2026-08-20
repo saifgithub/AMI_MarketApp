@@ -8,7 +8,7 @@ At runtime, the full prompt for any agent is composed as:
 agent.final_prompt = base_prompt (this file)
                    + mandate_overlay   ← from app/agents/overlay_generator.py
                    + user_overlay      ← from Brief Your Agent (Postgres user_overlays)
-                   + safety_floor      ← only on Portfolio Manager, uncoachable
+                   + safety_floor      ← only on Chief Investment Officer, uncoachable
 ```
 
 The base prompt is the **only part Saiful + Claude write**. It changes rarely. The other layers are dynamic per-user.
@@ -18,17 +18,17 @@ The base prompt is the **only part Saiful + Claude write**. It changes rarely. T
 | Agent | File | Color |
 |---|---|---|
 | Fundamentals Analyst | [fundamentals_analyst.md](fundamentals_analyst.md) | cyan |
-| Market Analyst | [market_analyst.md](market_analyst.md) | cyan |
-| News Analyst | [news_analyst.md](news_analyst.md) | cyan |
-| Social Media Analyst | [social_media_analyst.md](social_media_analyst.md) | cyan |
+| Technical Strategist | [market_analyst.md](market_analyst.md) | cyan |
+| Macro & Events | [news_analyst.md](news_analyst.md) | cyan |
+| Flow & Positioning | [social_media_analyst.md](social_media_analyst.md) | cyan |
 | Bull Researcher | [bull_researcher.md](bull_researcher.md) | purple |
 | Bear Researcher | [bear_researcher.md](bear_researcher.md) | purple |
 | Research Manager | [research_manager.md](research_manager.md) | purple |
-| Trader | [trader.md](trader.md) | green |
-| Aggressive Debator | [aggressive_debator.md](aggressive_debator.md) | amber |
-| Conservative Debator | [conservative_debator.md](conservative_debator.md) | amber |
-| Neutral Debator | [neutral_debator.md](neutral_debator.md) | amber |
-| Portfolio Manager | [portfolio_manager.md](portfolio_manager.md) | purple |
+| Execution Desk | [trader.md](trader.md) | green |
+| Risk Officer — Aggressive | [aggressive_debator.md](aggressive_debator.md) | amber |
+| Risk Officer — Conservative | [conservative_debator.md](conservative_debator.md) | amber |
+| Risk Officer — Balanced | [neutral_debator.md](neutral_debator.md) | amber |
+| Chief Investment Officer | [portfolio_manager.md](portfolio_manager.md) | purple |
 | **Concierge** (13th) | [concierge.md](concierge.md) | pink |
 
 ## Frontmatter schema

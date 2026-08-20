@@ -47,20 +47,20 @@ The beginner mistake is using the wrong lookback — most commonly the latest 3 
 />
 
 <Quiz
-  question="At a monthly rebalance, the top decile of your universe contains 10 names. NVDA is in there for the 13th consecutive month and is up ~250% over the period. You're tempted to exclude NVDA because 'it's overextended' and replace it with the #11 name. Your mandate caps drawdown at 25% and you're at 8%. Aggressive Debator argues 'hold all 10; the system's edge comes from not overriding'. Conservative Debator argues 'cap any single name at 8% of portfolio'. Synthesis: what's the right action?"
+  question="At a monthly rebalance, the top decile of your universe contains 10 names. NVDA is in there for the 13th consecutive month and is up ~250% over the period. You're tempted to exclude NVDA because 'it's overextended' and replace it with the #11 name. Your mandate caps drawdown at 25% and you're at 8%. Aggressive Risk Officer argues 'hold all 10; the system's edge comes from not overriding'. Conservative Risk Officer argues 'cap any single name at 8% of portfolio'. Synthesis: what's the right action?"
   options={[
-    "Hold all 10 but cap NVDA's weight at 8% (Conservative Debator's framing) and redistribute the excess",
+    "Hold all 10 but cap NVDA's weight at 8% (Conservative Risk Officer's framing) and redistribute the excess",
     "Exclude NVDA — it's been in too long; risk of mean reversion is high",
     "Sell half of NVDA's position only",
     "Hold all 10 equal-weight per the rule"
   ]}
   answer={0}
-  explanation="Synthesis: the system says hold all 10 names, but a name that's been in the top decile for 13 months can grow to dominate the portfolio if equal-weight isn't re-enforced; a single 25% drawdown on one outsized name can hit the mandate cap. The Conservative Debator's cap respects the mandate without violating the rule's exit logic (NVDA still exits when it drops OUT of the top decile, not before). Excluding NVDA by hand is the tempting wrong answer that destroys the strategy's edge through discretion."
+  explanation="Synthesis: the system says hold all 10 names, but a name that's been in the top decile for 13 months can grow to dominate the portfolio if equal-weight isn't re-enforced; a single 25% drawdown on one outsized name can hit the mandate cap. The Conservative Risk Officer's cap respects the mandate without violating the rule's exit logic (NVDA still exits when it drops OUT of the top decile, not before). Excluding NVDA by hand is the tempting wrong answer that destroys the strategy's edge through discretion."
 />
 
 ## Try it
 
-<Term id="ami_convene_the_room" /> on your <Term id="ami_watchlist" /> or the S&P 100 and ask the Trader: "Rank these names by 12-month-minus-1-month total return. List the top 10 for the current month. Identify which would be new entrants vs holdovers from last month's basket." Then use <Term id="ami_coach_your_agent" /> on the Aggressive Debator: "Defend any name that's been in the top decile 6+ consecutive months against the urge to take profits — that's where the strategy's biggest winners come from." Log the basket and any coached rules in the <Term id="ami_decision_journal" />.
+<Term id="ami_convene_the_room" /> on your <Term id="ami_watchlist" /> or the S&P 100 and ask the Execution Desk: "Rank these names by 12-month-minus-1-month total return. List the top 10 for the current month. Identify which would be new entrants vs holdovers from last month's basket." Then use <Term id="ami_coach_your_agent" /> on the Aggressive Risk Officer: "Defend any name that's been in the top decile 6+ consecutive months against the urge to take profits — that's where the strategy's biggest winners come from." Log the basket and any coached rules in the <Term id="ami_decision_journal" />.
 
 ## Takeaway
 

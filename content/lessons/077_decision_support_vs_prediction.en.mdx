@@ -28,11 +28,11 @@ You ask the Research Manager in <Term id="ami_one_on_one" />: *"Where will GOOGL
 
 Notice what the Research Manager actually did: described state, weighted competing cases, expressed a conditional probability, and named the invalidation conditions. That's decision-support. Nowhere is there a sentence like *"GOOGL will be $195 on day 30"*. The same agent asked the same question by a prediction-mode user might be tempted to anchor on a number — but AMI's prompts are written to refuse that frame, and the verdict shape (entry, stop, target, horizon, confidence, invalidation) carries no point-forecast slot.
 
-A second example: the Trader proposes *entry $182, stop $172, target $198, horizon 6 weeks, confidence 0.58*. That is four conditional statements bundled together — *if the entry triggers, here is the risk you're agreeing to and the reward you're hoping for, with a falsification level*. It is not a claim that the stock will reach $198. The confidence 0.58 is the Room's weighted judgment, not a calibrated probability — read it as "lean, not lock".
+A second example: the Execution Desk proposes *entry $182, stop $172, target $198, horizon 6 weeks, confidence 0.58*. That is four conditional statements bundled together — *if the entry triggers, here is the risk you're agreeing to and the reward you're hoping for, with a falsification level*. It is not a claim that the stock will reach $198. The confidence 0.58 is the Room's weighted judgment, not a calibrated probability — read it as "lean, not lock".
 
 ## The trap
 
-The trap is reading a Verdict as a prediction because it contains numbers. Numbers feel like forecasts. A target of $198 reads, in the wrong frame, as "AMI thinks GOOGL will be $198". It doesn't. The target is the level at which the Trader *would* lock in profit *if the thesis plays out inside the scenario*. The stop is the level at which the thesis is wrong. The horizon is the window over which the trade is meant to express. None of these are predictions; all of them are conditional scaffolding for the training scenario. The correct frame: AMI is staging a structured evaluation exercise — entry/stop/target/horizon/confidence are training-scenario constructs, not advice to act on. The price forecast is the part AMI deliberately does not ship.
+The trap is reading a Verdict as a prediction because it contains numbers. Numbers feel like forecasts. A target of $198 reads, in the wrong frame, as "AMI thinks GOOGL will be $198". It doesn't. The target is the level at which the Execution Desk *would* lock in profit *if the thesis plays out inside the scenario*. The stop is the level at which the thesis is wrong. The horizon is the window over which the trade is meant to express. None of these are predictions; all of them are conditional scaffolding for the training scenario. The correct frame: AMI is staging a structured evaluation exercise — entry/stop/target/horizon/confidence are training-scenario constructs, not advice to act on. The price forecast is the part AMI deliberately does not ship.
 
 <ChatWith agent="research_manager" />
 
@@ -51,7 +51,7 @@ The trap is reading a Verdict as a prediction because it contains numbers. Numbe
 />
 
 <Quiz
-  question="A user asks the Market Analyst: 'What will AAPL close at next Friday?' What does AMI actually say?"
+  question="A user asks the Technical Strategist: 'What will AAPL close at next Friday?' What does AMI actually say?"
   options={[
     "Gives a single price with a confidence band",
     "Generates a model output saying 'AAPL Friday close: $237.42'",

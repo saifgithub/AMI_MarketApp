@@ -266,8 +266,8 @@
     "type": "predict_the_call",
     "difficulty": 3,
     "locale": "en",
-    "scenario": "A simulated book holds two sleeves: equities at 18% annualised volatility and bonds at 6%, correlated at 0.10, split 60/40 by value. The user describes it as a balanced portfolio and asks the Portfolio Manager to confirm the split is moderate.",
-    "question": "What will the Portfolio Manager point out about where this book's risk actually sits?",
+    "scenario": "A simulated book holds two sleeves: equities at 18% annualised volatility and bonds at 6%, correlated at 0.10, split 60/40 by value. The user describes it as a balanced portfolio and asks the Chief Investment Officer to confirm the split is moderate.",
+    "question": "What will the Chief Investment Officer point out about where this book's risk actually sits?",
     "options": [
       "That the split is moderate as described, since 60/40 is the conventional balanced allocation",
       "That the bond sleeve is too large, since bonds contribute nothing to portfolio return",
@@ -341,13 +341,13 @@
     "scenario": "A user is handed a pitch for a systematic strategy claiming to target the quality factor, backtested over twenty years on the current constituents of a major index, reporting a return well above its benchmark. They want the claim assessed before deciding anything.",
     "question": "Which agent is the right one to put this to, and what should they be asked?",
     "options": [
-      "The Trader, for an assessment of whether the strategy's entries and exits are executable",
+      "The Execution Desk, for an assessment of whether the strategy's entries and exits are executable",
       "The Research Manager, asked whether the backtest's universe includes delisted names — a test on today's survivors excludes every company that failed, which flatters the result",
-      "The Market Analyst, for a technical read on whether the strategy's holdings are in favourable setups",
-      "The Portfolio Manager, to check whether the strategy would breach the user's Mandate"
+      "The Technical Strategist, for a technical read on whether the strategy's holdings are in favourable setups",
+      "The Chief Investment Officer, to check whether the strategy would breach the user's Mandate"
     ],
     "answer": 1,
-    "explanation": "The Research Manager arbitrates evidence, and survivorship bias is the specific defect this backtest advertises: a twenty-year test on current constituents has quietly removed everything that failed, biasing returns up and drawdowns down. The Trader's execution question, the Market Analyst's setup read and the Portfolio Manager's compliance check are all legitimate questions about other things — none of them tests whether the reported result is real.",
+    "explanation": "The Research Manager arbitrates evidence, and survivorship bias is the specific defect this backtest advertises: a twenty-year test on current constituents has quietly removed everything that failed, biasing returns up and drawdowns down. The Execution Desk's execution question, the Technical Strategist's setup read and the Chief Investment Officer's compliance check are all legitimate questions about other things — none of them tests whether the reported result is real.",
     "related_lesson": "382_reading_a_factor_claim_someone_hands_you",
     "related_agent": "research_manager",
     "tags": [
@@ -386,7 +386,7 @@
     "type": "whats_missing",
     "difficulty": 2,
     "locale": "en",
-    "scenario": "A user's book has moved from 60% equities / 30% defensive / 10% cash to 71/23/6 over six months. No trades were placed in the equity sleeve; the sleeve simply outperformed. The user is comfortable, noting that every individual trade they placed passed the Portfolio Manager's Mandate check.",
+    "scenario": "A user's book has moved from 60% equities / 30% defensive / 10% cash to 71/23/6 over six months. No trades were placed in the equity sleeve; the sleeve simply outperformed. The user is comfortable, noting that every individual trade they placed passed the Chief Investment Officer's Mandate check.",
     "question": "What is missing from this reasoning?",
     "options": [
       "A record of the individual trades, without which the drift cannot be attributed",
@@ -486,13 +486,13 @@
     "scenario": "A user holds only companies listed in their own country and wants to know whether that is a problem. They mention that they understand local businesses far better than foreign ones.",
     "question": "Which agent should they take this to, and what is the substantive point?",
     "options": [
-      "The News Analyst, since the question is really about which country's news flow they can follow",
+      "The Macro & Events desk, since the question is really about which country's news flow they can follow",
       "The Fundamentals Analyst, to compare the local market's valuation with foreign markets before deciding",
       "The Bull Researcher, to make the case for the domestic market so the user can weigh it",
-      "The Portfolio Manager, because familiarity is an argument about information while the position is an argument about risk — knowing a firm well does not decorrelate it from other firms under the same currency and central bank"
+      "The Chief Investment Officer, because familiarity is an argument about information while the position is an argument about risk — knowing a firm well does not decorrelate it from other firms under the same currency and central bank"
     ],
     "answer": 3,
-    "explanation": "This is an allocation question and belongs with the Portfolio Manager. The substantive point is the mismatch: a genuine information advantage does not change the correlation structure that sets portfolio risk, which is why a 100% domestic book is simultaneously a country, currency and often sector bet. News coverage and relative valuation are real considerations but neither addresses the concentration, and asking the Bull Researcher for the case in favour invites an argument rather than a measurement.",
+    "explanation": "This is an allocation question and belongs with the Chief Investment Officer. The substantive point is the mismatch: a genuine information advantage does not change the correlation structure that sets portfolio risk, which is why a 100% domestic book is simultaneously a country, currency and often sector bet. News coverage and relative valuation are real considerations but neither addresses the concentration, and asking the Bull Researcher for the case in favour invites an argument rather than a measurement.",
     "related_lesson": "375_home_country_bias",
     "related_agent": "portfolio_manager",
     "tags": [
