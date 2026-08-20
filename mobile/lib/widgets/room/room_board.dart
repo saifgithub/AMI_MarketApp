@@ -1216,5 +1216,18 @@ MarkdownStyleSheet agentMarkdownStyle(Color color) {
     h1: base.copyWith(fontWeight: FontWeight.w600, fontSize: 16),
     h2: base.copyWith(fontWeight: FontWeight.w600, fontSize: 15),
     h3: base.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+    // DEF340 — a field left unset here is filled by the package's
+    // fromTheme defaults at build time, and its blockquote default is
+    // Colors.blue.shade100: the Health Finding's head disclosure (a
+    // blockquote) rendered muted-on-dark ink on a pale blue panel. Pin the
+    // whole blockquote to the dark token set: same ink as the prose, a
+    // recessed slate panel like §F3's ledger.
+    blockquote: base,
+    blockquotePadding: const EdgeInsets.all(AmiSpacing.s),
+    blockquoteDecoration: BoxDecoration(
+      color: AmiColors.slate900,
+      borderRadius: BorderRadius.circular(AmiRadii.card),
+      border: Border.all(color: AmiColors.slate700),
+    ),
   );
 }

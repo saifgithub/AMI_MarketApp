@@ -1,7 +1,9 @@
 // CR136 M08 — stored Finding renders disclosure FIRST, then §F1–§F5, from payload only.
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/journal/finding_sections.dart';
+import 'package:ami_trade/widgets/room/room_board.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -118,6 +120,56 @@ void main() {
     expect(bodies[3], contains('F4-MARK'));
     expect(bodies[4], contains('F5-MARK'));
     expect(bodies.any((b) => b.contains('F3')), isFalse);
+  });
+
+  group('DEF340 — the head disclosure blockquote wears dark tokens', () {
+    // The head is a markdown blockquote, and MarkdownBody merges any UNSET
+    // styleSheet field from the package's fromTheme defaults — whose
+    // blockquoteDecoration is Colors.blue.shade100. That is the exact
+    // unreadable pale-blue panel from the field screenshot; these pins fail
+    // if the blockquote overrides are ever dropped from agentMarkdownStyle.
+    testWidgets('no fromTheme pale-blue panel; a slate900 panel instead',
+        (tester) async {
+      await tester.pumpWidget(_host(FindingSections(
+        payload: _payload(sections: {
+          'head': '> QUOTE-MARK disclosure',
+          'f1': 'F1-MARK',
+        }),
+      )));
+
+      final decorations = tester
+          .widgetList<DecoratedBox>(find.byType(DecoratedBox))
+          .map((w) => w.decoration)
+          .whereType<BoxDecoration>()
+          .toList();
+      expect(
+        decorations.where((d) => d.color == Colors.blue.shade100),
+        isEmpty,
+        reason: 'the package default blockquote panel leaked through — '
+            'muted-on-dark ink is unreadable on it',
+      );
+
+      final quotePanel = tester.widget<DecoratedBox>(
+        find
+            .ancestor(
+              of: find.textContaining('QUOTE-MARK', findRichText: true),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      final decoration = quotePanel.decoration as BoxDecoration;
+      expect(decoration.color, AmiColors.slate900,
+          reason: 'the disclosure panel surface must come from the dark '
+              'token set, like its sibling cards');
+      expect(decoration.border?.top.color, AmiColors.slate700);
+    });
+
+    test('blockquote ink is the same token as the surrounding prose', () {
+      final sheet = agentMarkdownStyle(AmiColors.textMed);
+      expect(sheet.blockquote?.color, AmiColors.textMed);
+      expect((sheet.blockquoteDecoration as BoxDecoration?)?.color,
+          AmiColors.slate900);
+    });
   });
 
   testWidgets('nothing is recomputed — the exact stored strings are shown',
