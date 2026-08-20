@@ -9,8 +9,10 @@ import 'package:ami_trade/models/sim_resting_order.dart';
 import 'package:ami_trade/services/api/api_client.dart';
 import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
+import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
+import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -193,6 +195,9 @@ class SimNotifier extends StateNotifier<SimState> {
     state = state.copyWith(submitting: true, clearError: true, clearLastSubmit: true);
     try {
       final api = _ref.read(apiClientProvider);
+      // CR181 — captured before the await; `_ref` is unusable if this
+      // notifier is disposed mid-flight, and the trade exists either way.
+      final telemetry = _ref.read(telemetryProvider);
       final userId = await DeviceUser.getOrCreate();
       final result = await api.simSubmit(
         userId: userId,
@@ -212,6 +217,12 @@ class SimNotifier extends StateNotifier<SimState> {
         horizonDays: horizonDays,
         verdictRef: verdictRef,
       );
+      // CR181 — core action: an order that landed (filled or resting), not
+      // a blocked attempt. Before the mounted check on purpose — the trade
+      // exists whether or not this notifier is still on screen.
+      if (result.ok) {
+        telemetry.record(TelemetryEvents.tradePlace);
+      }
       if (!mounted) return null;
       state = state.copyWith(lastSubmit: result);
       // DEF315 — `submitting` stays TRUE across this. It used to go false the

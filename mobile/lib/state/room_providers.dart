@@ -18,7 +18,9 @@ import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
+import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
+import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -186,12 +188,19 @@ class RoomNotifier extends StateNotifier<RoomState> {
     state = const RoomState(streaming: true);
     try {
       final api = _ref.read(apiClientProvider);
+      // CR181 — captured before the stream; `_ref` is unusable if this
+      // notifier is disposed while the run streams on.
+      final telemetry = _ref.read(telemetryProvider);
       final userId = await DeviceUser.getOrCreate();
       final stream = api.streamRoom(userId: userId, ticker: _ticker);
       await for (final ev in stream) {
         switch (ev['kind']) {
           case 'started':
             state = state.copyWith(runId: ev['run_id'] as String?);
+            // CR181 — `started` is "a run actually began" (a 402 credit
+            // wall or connect failure lands before it), so this is the
+            // deterministic convene mark. Fire-and-forget.
+            telemetry.record(TelemetryEvents.roomConvene);
             break;
           case 'phase':
             state = state.copyWith(phase: ev['label'] as String?);

@@ -4,7 +4,9 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/screens/agent/brief_screen.dart';
+import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
 import 'package:ami_trade/state/one_on_one_providers.dart';
+import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/chat/chat_bubble.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
@@ -31,6 +33,14 @@ class _OneOnOneScreenState extends ConsumerState<OneOnOneScreen> {
   final _textCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   bool _seeded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // CR181 — depth segment: opening a 1-on-1 counts on arrival, whether or
+    // not the session behind it manages to start. Fire-and-forget.
+    ref.read(telemetryProvider).record(TelemetryEvents.oneOnOneOpen);
+  }
 
   @override
   void dispose() {

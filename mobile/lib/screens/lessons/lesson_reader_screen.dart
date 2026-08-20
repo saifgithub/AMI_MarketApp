@@ -25,9 +25,11 @@ import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
 import 'package:ami_trade/screens/lessons/lesson_beat_deck.dart';
 import 'package:ami_trade/services/celebration.dart';
+import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
 import 'package:ami_trade/state/lesson_view_mode_provider.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
+import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/ami_segment_bar.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
@@ -66,6 +68,9 @@ class _LessonReaderScreenState extends ConsumerState<LessonReaderScreen> {
   @override
   void initState() {
     super.initState();
+    // CR181 — depth segment: opening the reader counts on arrival, whether
+    // or not the lesson behind it loads. Fire-and-forget.
+    ref.read(telemetryProvider).record(TelemetryEvents.lessonOpen);
     // Kick off the glossary asset load so `<Term/>` chips have data by the
     // time the lesson body finishes streaming in. Idempotent + cached.
     TermRegistry.instance.load().then((_) {

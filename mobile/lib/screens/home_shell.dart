@@ -13,6 +13,8 @@
 /// "Review in Journal" opened the game.
 library;
 
+import 'dart:async' show unawaited;
+
 import 'package:ami_trade/features/games/games_gate.dart';
 import 'package:ami_trade/features/nav/ami_tab.dart';
 import 'package:ami_trade/features/tour/nav_change_sheet.dart';
@@ -24,6 +26,8 @@ import 'package:ami_trade/screens/games/games_home_screen.dart';
 import 'package:ami_trade/screens/lessons/lessons_screen.dart';
 import 'package:ami_trade/screens/sim/portfolio_screen.dart';
 import 'package:ami_trade/screens/you/you_screen.dart';
+import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
+import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_bottom_nav.dart';
 import 'package:ami_trade/widgets/ticker_tape.dart';
@@ -37,8 +41,16 @@ class HomeShell extends ConsumerStatefulWidget {
   ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends ConsumerState<HomeShell> {
+class _HomeShellState extends ConsumerState<HomeShell>
+    with WidgetsBindingObserver {
   AmiTab _tab = AmiTab.floor;
+
+  /// CR181 — dedupe guard for `app_open`. Cold start records in
+  /// [initState]; after that only a genuine return from the background
+  /// (paused/hidden/detached → resumed) counts as a new open, so the
+  /// inactive↔resumed flapping around permission sheets and app-switcher
+  /// peeks never inflates the bounce denominator.
+  AppLifecycleState? _lastLifecycle;
 
   /// One pane per entry of [AmiTab.visible], in the same order.
   ///
@@ -59,6 +71,10 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   @override
   void initState() {
     super.initState();
+    // CR181 — the bounce denominator: reaching the shell IS "opened the
+    // app". Fire-and-forget; the emitter owns batching and failure.
+    WidgetsBinding.instance.addObserver(this);
+    ref.read(telemetryProvider).record(TelemetryEvents.appOpen);
     // CR180 — tell the people who learned the OLD bar that it moved.
     //
     // Every section tour is gated on a `tour_*_seen` flag, so the walkthrough
@@ -73,6 +89,29 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       if (!mounted) return;
       await NavChangeSheet.show(context);
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // CR181 — each return from the background is a fresh open; going to the
+    // background flushes the session's tail past the debounce window.
+    final was = _lastLifecycle;
+    _lastLifecycle = state;
+    final emitter = ref.read(telemetryProvider);
+    if (state == AppLifecycleState.resumed &&
+        (was == AppLifecycleState.paused ||
+            was == AppLifecycleState.hidden ||
+            was == AppLifecycleState.detached)) {
+      emitter.record(TelemetryEvents.appOpen);
+    } else if (state == AppLifecycleState.paused) {
+      unawaited(emitter.flush());
+    }
   }
 
   @override

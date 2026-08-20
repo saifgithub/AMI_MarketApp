@@ -39,11 +39,13 @@ import 'package:ami_trade/screens/floor/your_firm_screen.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/services/share/share_service.dart';
+import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
 import 'package:ami_trade/state/daily_challenge_providers.dart';
 import 'package:ami_trade/state/inbox_providers.dart';
 import 'package:ami_trade/state/league_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
+import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/floor/floor_carousel.dart';
 import 'package:ami_trade/widgets/floor/floor_omnibox.dart';
@@ -306,10 +308,17 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                   _FirmRow(
                     key: _firmKey,
                     unlockedCount: unlocked.length,
-                    onTap: () =>
-                        Navigator.of(context).push(MaterialPageRoute<void>(
-                      builder: (_) => const YourFirmScreen(),
-                    )),
+                    onTap: () {
+                      // CR181 — depth segment. Recorded at the only push
+                      // site the firm screen has (it is a stateless wall);
+                      // one tap = one event. Fire-and-forget.
+                      ref
+                          .read(telemetryProvider)
+                          .record(TelemetryEvents.firmOpen);
+                      Navigator.of(context).push(MaterialPageRoute<void>(
+                        builder: (_) => const YourFirmScreen(),
+                      ));
+                    },
                   ),
 
                   const SizedBox(height: AmiSpacing.l),

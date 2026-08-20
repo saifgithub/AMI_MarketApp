@@ -16,7 +16,9 @@ import 'package:ami_trade/models/brief.dart';
 import 'package:ami_trade/models/one_on_one.dart';
 import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
+import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
+import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -193,11 +195,18 @@ class BriefNotifier extends StateNotifier<BriefState> {
     if (session == null || proposal == null) return;
     try {
       final api = _ref.read(apiClientProvider);
+      // CR181 — captured before the await; `_ref` is unusable if this
+      // notifier is disposed mid-flight, and the accepted brief exists
+      // either way.
+      final telemetry = _ref.read(telemetryProvider);
       final result = await api.acceptBriefProposal(
         sessionId: session.id,
         proposalId: proposal.id,
       );
       if (result['ok'] == true) {
+        // CR181 — core action: an overlay actually saved, not a refused or
+        // abandoned proposal. Fire-and-forget.
+        telemetry.record(TelemetryEvents.briefEdit);
         final saved = UserOverlay.fromJson(result['overlay'] as Map<String, dynamic>);
         state = state.copyWith(
           clearProposal: true,

@@ -1703,6 +1703,26 @@ class ApiClient {
         .toList();
   }
 
+  // ── CR181 persona telemetry ────────────────────────────────────────────
+
+  /// POST /v1/telemetry/events — batched persona-telemetry ingest. The
+  /// backend takes the user from the bearer token; the payload never names
+  /// one. Callers go through `TelemetryEmitter` (fire-and-forget, retries,
+  /// drop accounting) — never call this on a user-visible path.
+  Future<({int accepted, int duplicates})> telemetryEvents(
+    List<Map<String, dynamic>> events,
+  ) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/telemetry/events',
+      data: {'events': events},
+    );
+    final data = r.data!;
+    return (
+      accepted: data['accepted'] as int,
+      duplicates: data['duplicates'] as int,
+    );
+  }
+
   // ── Alpaca paper trading (AT:R45) ──────────────────────────────────────
 
   Future<AlpacaStatus> alpacaStatus() async {

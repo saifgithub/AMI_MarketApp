@@ -13,9 +13,11 @@ import 'package:ami_trade/models/daily_challenge.dart';
 import 'package:ami_trade/models/league.dart';
 import 'package:ami_trade/screens/lessons/lesson_reader_screen.dart';
 import 'package:ami_trade/services/celebration.dart';
+import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
 import 'package:ami_trade/state/daily_challenge_providers.dart';
 import 'package:ami_trade/state/league_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
+import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/agent_action_sheet.dart';
 import 'package:ami_trade/widgets/hex/accent_card.dart';
@@ -220,9 +222,15 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
     final sel = _selected;
     if (sel == null || _submitting) return;
     setState(() => _submitting = true);
+    // CR181 — the emitter is captured BEFORE the await: `ref` is unusable
+    // if this card is disposed mid-flight, and the attempt exists either way.
+    final telemetry = ref.read(telemetryProvider);
     try {
       final result =
           await ref.read(apiClientProvider).dailyChallengeAttempt(ch.id, sel);
+      // CR181 — core action: the attempt was graded server-side. Before the
+      // mounted check on purpose.
+      telemetry.record(TelemetryEvents.challengeAttempt);
       if (!mounted) return;
       setState(() {
         _selected = result.selectedOption; // stored attempt wins
