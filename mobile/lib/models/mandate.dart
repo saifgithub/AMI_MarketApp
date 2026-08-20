@@ -168,6 +168,70 @@ class HoldingsAuditResult {
   }
 }
 
+/// CR129 — the enforced value for each of the seven risk limits, resolved
+/// server-side: the explicit override when one is set, else the risk-profile
+/// preset. Stamped onto GET/PATCH /v1/mandate responses by the backend
+/// (DEF193 + d1d4076d); never persisted, never computed client-side (CR046).
+/// Every field is nullable because an installed build may talk to an older
+/// backend: pre-DEF193 sends no `resolved` at all, and alpha-2026-08-19-2
+/// carries only the two CR101-BE1 caps. A null field means UNKNOWN — the UI
+/// falls back to no-number copy, it never fabricates a preset.
+class ResolvedCaps {
+  const ResolvedCaps({
+    this.sectorCapPct,
+    this.singleNameCapPct,
+    this.maxOpenPositions,
+    this.postLossCooldownHours,
+    this.maxTradesPerDay,
+    this.maxTradesPerWeek,
+    this.maxOpenRiskPct,
+  });
+
+  final double? sectorCapPct;
+  final double? singleNameCapPct;
+  final int? maxOpenPositions;
+  final double? postLossCooldownHours;
+  final int? maxTradesPerDay;
+  final int? maxTradesPerWeek;
+  final double? maxOpenRiskPct;
+
+  factory ResolvedCaps.fromJson(Map<String, dynamic> j) {
+    return ResolvedCaps(
+      sectorCapPct: (j['sector_cap_pct'] as num?)?.toDouble(),
+      singleNameCapPct: (j['single_name_cap_pct'] as num?)?.toDouble(),
+      maxOpenPositions: (j['max_open_positions'] as num?)?.toInt(),
+      postLossCooldownHours:
+          (j['post_loss_cooldown_hours'] as num?)?.toDouble(),
+      maxTradesPerDay: (j['max_trades_per_day'] as num?)?.toInt(),
+      maxTradesPerWeek: (j['max_trades_per_week'] as num?)?.toInt(),
+      maxOpenRiskPct: (j['max_open_risk_pct'] as num?)?.toDouble(),
+    );
+  }
+
+  /// The resolved value keyed by the backend PATCH field name — the Settings
+  /// render path is key-driven (see `kRiskLimitFields`).
+  num? valueFor(String key) {
+    switch (key) {
+      case 'sector_cap_pct':
+        return sectorCapPct;
+      case 'single_name_cap_pct':
+        return singleNameCapPct;
+      case 'max_open_positions':
+        return maxOpenPositions;
+      case 'post_loss_cooldown_hours':
+        return postLossCooldownHours;
+      case 'max_trades_per_day':
+        return maxTradesPerDay;
+      case 'max_trades_per_week':
+        return maxTradesPerWeek;
+      case 'max_open_risk_pct':
+        return maxOpenRiskPct;
+      default:
+        return null;
+    }
+  }
+}
+
 class UserMandate {
   const UserMandate({
     required this.userId,
@@ -201,6 +265,7 @@ class UserMandate {
     this.maxTradesPerDay,
     this.maxTradesPerWeek,
     this.maxOpenRiskPct,
+    this.resolved,
   });
 
   final String userId;
@@ -216,19 +281,22 @@ class UserMandate {
   final RiskComponents riskComponents;
   final List<String> riskQuotes;
   final int maxDrawdownPct;
-  // CR101-BE1: sector-concentration + single-name position caps, percentage
-  // points (40.0 = 40%). `null` = not explicitly set — the server falls back
-  // to a risk-profile preset it does not expose a number for, so `null` here
-  // means "following your risk profile", not "off". See CR101-MOBILE bridge.
+  // The seven settable risk limits (CR101-BE1/BE2, semantics inverted by
+  // CR129): `null` = no explicit override — the server enforces the
+  // risk-profile preset for ALL seven, so `null` means "following your risk
+  // profile", never "off". The number actually enforced arrives in
+  // `resolved` below; it is never computed client-side (CR046).
   final double? sectorCapPct;
   final double? singleNameCapPct;
-  // CR101-BE2: five risk limits with no legacy value and no preset — `null`
-  // means OFF (not enforced at all), a real and common state.
   final double? postLossCooldownHours;
   final int? maxOpenPositions;
   final int? maxTradesPerDay;
   final int? maxTradesPerWeek;
   final double? maxOpenRiskPct;
+
+  // CR129: server-resolved enforced values for the seven limits above.
+  // Null when the backend predates DEF193 — unknown, not "off".
+  final ResolvedCaps? resolved;
   final String learningStyle;
   final ComplianceFlags compliance;
   final String plan;
@@ -277,6 +345,9 @@ class UserMandate {
       maxTradesPerDay: (j['max_trades_per_day'] as num?)?.toInt(),
       maxTradesPerWeek: (j['max_trades_per_week'] as num?)?.toInt(),
       maxOpenRiskPct: (j['max_open_risk_pct'] as num?)?.toDouble(),
+      resolved: j['resolved'] != null
+          ? ResolvedCaps.fromJson((j['resolved'] as Map).cast<String, dynamic>())
+          : null,
       learningStyle: j['learning_style'] as String? ?? 'quick',
       compliance: ComplianceFlags.fromJson(
         (j['compliance'] as Map?)?.cast<String, dynamic>() ?? const {},

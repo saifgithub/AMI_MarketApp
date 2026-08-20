@@ -76,31 +76,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() => _pendingRiskLimits[cfg.key] = value);
   }
 
-  /// Acceptance 3: an explicit override on EITHER CR101-BE1 cap moves the
-  /// dial to Custom — those two are the only fields the backend defines a
-  /// risk-profile preset relationship for (see file header).
-  bool _isCustomRiskProfile(UserMandate m) {
-    final sector = _pendingRiskLimits.containsKey('sector_cap_pct')
-        ? _pendingRiskLimits['sector_cap_pct'] as num?
-        : m.sectorCapPct;
-    final singleName = _pendingRiskLimits.containsKey('single_name_cap_pct')
-        ? _pendingRiskLimits['single_name_cap_pct'] as num?
-        : m.singleNameCapPct;
-    return sector != null || singleName != null;
-  }
+  /// Acceptance 3, post-CR129: the backend derives ALL seven limits from the
+  /// risk profile, so an explicit override on ANY of them reads as Custom.
+  bool _isCustomRiskProfile(UserMandate m) =>
+      hasExplicitRiskLimitOverride(m, _pendingRiskLimits);
 
   /// L1: choosing a risk-profile score re-asserts "follow the profile
-  /// preset" for the two CR101-BE1 caps, so the dial always writes a
-  /// coherent, non-Custom state — matching the assign's "L1 writes all
-  /// caps coherently from a preset". The five CR101-BE2 fields have no
-  /// backend-defined preset relationship to risk_score (disclosed in the
-  /// hand-off), so L1 does not touch them.
+  /// preset" for all seven limits (CR129 — every one of them is
+  /// profile-derived now), so the dial always writes a coherent, non-Custom
+  /// state.
   void _onRiskScoreChanged(int v) {
     setState(() {
       _localRiskScore = v;
       _dirty = true;
-      _pendingRiskLimits['sector_cap_pct'] = null;
-      _pendingRiskLimits['single_name_cap_pct'] = null;
+      for (final cfg in kRiskLimitFields) {
+        _pendingRiskLimits[cfg.key] = null;
+      }
     });
   }
 

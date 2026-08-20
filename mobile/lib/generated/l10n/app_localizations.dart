@@ -2662,11 +2662,23 @@ abstract class AppLocalizations {
   /// **'RISK LIMITS'**
   String get settingsSectionRiskLimits;
 
-  /// CR101-MOBILE. Shown under the L1 risk-profile dial when neither sector_cap_pct nor single_name_cap_pct has an explicit override — those two fields fall back to a server-side preset this API does not expose a number for (CR101-BE1 bridge), so this deliberately does NOT claim a value, and deliberately does NOT say 'OFF' (a cap is still enforced, just not an explicit one). Reused as the OFF-chip label for the same two fields inside the L2 editor. retranslate:[ar,ms]
+  /// CR101-MOBILE, semantics updated by CR129. Shown under the L1 risk-profile dial when no risk limit has an explicit override, and reused inside the L2 editor as the no-number fallback chip label when the backend does not send the mandate's `resolved` object (pre-DEF193 backends). Deliberately claims no value in that state — the resolved number is server-only and never computed client-side — and deliberately does NOT say 'OFF' (a preset is still enforced). When `resolved` IS present, L2 uses settingsRiskLimitsFollowingResolved instead. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
   /// **'Following your risk profile'**
   String get settingsRiskLimitsProfileFollowing;
+
+  /// CR129. L2 chip label for a limit with no explicit override, when the server exposes the enforced value: {value} is that number pre-formatted with its unit by the widget ('40%', '1h', '35'). The number comes verbatim from mandate GET/PATCH `resolved` — it is NEVER computed client-side (CR046 shown-equals-enforced; the preset tables exist only in the backend). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Following your risk profile — {value}'**
+  String settingsRiskLimitsFollowingResolved(String value);
+
+  /// CR129. Provenance caption under a limit carrying an explicit override — in that state the number in the text field IS the enforced value (the server's `resolved` echoes the override). retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Set by you — overrides your risk profile'**
+  String get settingsRiskLimitsSetByYou;
 
   /// CR101-MOBILE. Shown under the L1 dial once the user has set an explicit sector or single-name cap override in L2 (acceptance 3: any L2 edit to either field moves the dial to Custom). retranslate:[ar,ms]
   ///
@@ -2680,7 +2692,7 @@ abstract class AppLocalizations {
   /// **'Set my own limits'**
   String get settingsRiskLimitsExpand;
 
-  /// CR101-MOBILE. OFF-chip label for the five CR101-BE2 fields, where an unset value is genuinely unenforced (not a preset fallback like the two BE1 caps). retranslate:[ar,ms]
+  /// CR101-MOBILE, DORMANT since CR129: all seven limits are now preset-linked server-side, so no field renders OFF any more. Kept (not deleted) to avoid ARB churn; do not reuse for a new meaning. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
   /// **'OFF'**
@@ -2788,11 +2800,17 @@ abstract class AppLocalizations {
   /// **'This allows more risk than your current setting.'**
   String get settingsRiskLimitsDisclosureLooser;
 
-  /// CR101-MOBILE L3 disclosure: shown when clearing a previously-explicit value back to OFF/unset. retranslate:[ar,ms]
+  /// CR101-MOBILE L3 disclosure, DORMANT since CR129: clearing a limit now returns it to the risk-profile preset (settingsRiskLimitsDisclosureBackToProfile), it does not remove enforcement — this string's claim is false for every shipped field. Kept (not deleted) to avoid ARB churn; do not reuse. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
   /// **'This removes the limit entirely — it will not block anything.'**
   String get settingsRiskLimitsDisclosureOff;
+
+  /// CR129 L3 disclosure: shown when clearing an explicit value back to unset. Post-CR129, unset means the risk-profile preset enforces — not OFF. MUST NOT state a number: while an override is set, the server's `resolved` echoes the override, so the preset the limit returns to is unknowable client-side. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'This returns the limit to your risk-profile default, effective immediately.'**
+  String get settingsRiskLimitsDisclosureBackToProfile;
 
   /// CR101-MOBILE L3 disclosure, CR040 'a silent 100% is not allowed': shown whenever a percent field (sector_cap_pct / single_name_cap_pct / max_open_risk_pct) is set to exactly 100, regardless of its prior value — a nominally-set cap that in practice enforces nothing. retranslate:[ar,ms]
   ///

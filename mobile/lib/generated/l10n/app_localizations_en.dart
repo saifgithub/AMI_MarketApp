@@ -1546,6 +1546,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Following your risk profile';
 
   @override
+  String settingsRiskLimitsFollowingResolved(String value) {
+    return 'Following your risk profile — $value';
+  }
+
+  @override
+  String get settingsRiskLimitsSetByYou =>
+      'Set by you — overrides your risk profile';
+
+  @override
   String get settingsRiskLimitsProfileCustom => 'Custom';
 
   @override
@@ -1618,6 +1627,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsRiskLimitsDisclosureOff =>
       'This removes the limit entirely — it will not block anything.';
+
+  @override
+  String get settingsRiskLimitsDisclosureBackToProfile =>
+      'This returns the limit to your risk-profile default, effective immediately.';
 
   @override
   String get settingsRiskLimitsDisclosure100 =>

@@ -228,4 +228,53 @@ void main() {
 
     expect(find.text(l.settingsRiskLimitsProfileCustom), findsOneWidget);
   });
+
+  testWidgets(
+      'CR129 acceptance 3: an explicit L2 edit to any of the five formerly-BE2 '
+      'fields also flips the dial to Custom', (tester) async {
+    final initial = _mandate(riskScore: 3);
+    await _pump(tester, initial);
+    await _expandRiskLimits(tester);
+    final l = await _l(tester);
+
+    expect(find.text(l.settingsRiskLimitsProfileCustom), findsNothing);
+
+    await tester.enterText(
+      find.byKey(const Key('riskLimitField_max_trades_per_day')),
+      '9',
+    );
+    await tester.pump();
+
+    expect(find.text(l.settingsRiskLimitsProfileCustom), findsOneWidget);
+  });
+
+  testWidgets(
+      'CR129 acceptance 3: moving the risk-profile dial clears overrides on '
+      'ALL seven fields — the dial writes a coherent preset state',
+      (tester) async {
+    // Every one of the seven carries an explicit override.
+    final initial = _mandate(
+      riskScore: 3,
+      sectorCapPct: 25.0,
+      singleNameCapPct: 10.0,
+      postLossCooldownHours: 8.0,
+      maxOpenPositions: 5,
+      maxTradesPerDay: 3,
+      maxTradesPerWeek: 11,
+      maxOpenRiskPct: 6.5,
+    );
+    await _pump(tester, initial);
+    final l = await _l(tester);
+
+    expect(find.text(l.settingsRiskLimitsProfileCustom), findsOneWidget);
+
+    final slider = find.byType(Slider).first;
+    await tester.drag(slider, const Offset(200, 0));
+    await tester.pump();
+
+    // Custom is gone only if ALL seven pending overrides were cleared —
+    // a single dangling one keeps hasExplicitRiskLimitOverride true.
+    expect(find.text(l.settingsRiskLimitsProfileCustom), findsNothing);
+    expect(find.text(l.settingsRiskLimitsProfileFollowing), findsWidgets);
+  });
 }

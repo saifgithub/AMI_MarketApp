@@ -2,9 +2,11 @@
 /// Riverpod/SettingsScreen scaffolding needed — it's a plain StatelessWidget
 /// driven entirely by constructor props).
 ///
-/// Acceptance 1: all seven fields visible/settable, each in its own units;
-///   an unset limit renders OFF (BE2 five) or "Following your risk profile"
-///   (BE1 two — see the file header on why those two are NOT "OFF").
+/// Acceptance 1 (as amended by CR129): all seven fields visible/settable,
+///   each in its own units; an unset limit renders "Following your risk
+///   profile — {resolved}" when the server exposes the enforced value, the
+///   no-number fallback when it does not (older backends), and never "OFF" —
+///   post-CR129 every field falls back to a server-side preset.
 /// Acceptance 4: a looser-than-current edit discloses its consequence
 ///   inline, at set-time — before any Save button exists in this tree.
 /// Acceptance 5: the retro-tightening dialog states flag-and-block, never
@@ -31,6 +33,7 @@ UserMandate _mandate({
   int? maxTradesPerDay,
   int? maxTradesPerWeek,
   double? maxOpenRiskPct,
+  ResolvedCaps? resolved,
 }) {
   return UserMandate(
     userId: 'u1',
@@ -53,6 +56,7 @@ UserMandate _mandate({
     maxTradesPerDay: maxTradesPerDay,
     maxTradesPerWeek: maxTradesPerWeek,
     maxOpenRiskPct: maxOpenRiskPct,
+    resolved: resolved,
     learningStyle: 'quick',
     compliance: const ComplianceFlags(),
     plan: 'trial_trader',
@@ -90,19 +94,17 @@ Future<void> _pumpSection(
 }
 
 void main() {
-  testWidgets('acceptance 1: all seven fields render, unset renders OFF / following-profile',
-      (tester) async {
+  testWidgets(
+      'acceptance 1 / CR129: all seven fields render; unset with NO resolved '
+      'data (older backend) falls back to the quiet no-number label for all '
+      'seven — never OFF, never a fabricated number', (tester) async {
     await _pumpSection(tester, mandate: _mandate());
     final ctx = tester.element(find.byType(RiskLimitsSection));
     final l = AppLocalizations.of(ctx);
 
-    // The two CR101-BE1 caps: unset is NOT "OFF" — a preset still enforces.
-    expect(find.text(l.settingsRiskLimitsSectorCapLabel), findsOneWidget);
-    expect(find.text(l.settingsRiskLimitsSingleNameCapLabel), findsOneWidget);
-    expect(find.text(l.settingsRiskLimitsProfileFollowing), findsNWidgets(2));
-
-    // The five CR101-BE2 fields: unset genuinely is OFF.
     for (final label in [
+      l.settingsRiskLimitsSectorCapLabel,
+      l.settingsRiskLimitsSingleNameCapLabel,
       l.settingsRiskLimitsCooldownLabel,
       l.settingsRiskLimitsMaxOpenPositionsLabel,
       l.settingsRiskLimitsMaxTradesPerDayLabel,
@@ -111,7 +113,14 @@ void main() {
     ]) {
       expect(find.text(label), findsOneWidget);
     }
-    expect(find.text(l.settingsRiskLimitsOff), findsNWidgets(5));
+    // Post-CR129 all seven follow the profile when unset — OFF never renders.
+    expect(find.text(l.settingsRiskLimitsProfileFollowing), findsNWidgets(7));
+    expect(find.text(l.settingsRiskLimitsOff), findsNothing);
+    // Anti-fabrication: without server-resolved data, no "— {value}" variant
+    // may appear anywhere (the widget must not compute a preset itself).
+    final resolvedPrefix =
+        l.settingsRiskLimitsFollowingResolved('').trim();
+    expect(find.textContaining(resolvedPrefix), findsNothing);
 
     // No field is silently dropped.
     expect(find.byKey(const Key('riskLimitField_sector_cap_pct')), findsOneWidget);
@@ -121,6 +130,90 @@ void main() {
     expect(find.byKey(const Key('riskLimitField_max_trades_per_day')), findsOneWidget);
     expect(find.byKey(const Key('riskLimitField_max_trades_per_week')), findsOneWidget);
     expect(find.byKey(const Key('riskLimitField_max_open_risk_pct')), findsOneWidget);
+  });
+
+  testWidgets(
+      'CR129 acceptance 1: every one of the seven unset rows renders the '
+      'SERVER-resolved enforced value, with its unit, verbatim', (tester) async {
+    const resolved = ResolvedCaps(
+      sectorCapPct: 40.0,
+      singleNameCapPct: 3.0,
+      maxOpenPositions: 35,
+      postLossCooldownHours: 1.0,
+      maxTradesPerDay: 4,
+      maxTradesPerWeek: 12,
+      maxOpenRiskPct: 10.5,
+    );
+    await _pumpSection(tester, mandate: _mandate(resolved: resolved));
+    final ctx = tester.element(find.byType(RiskLimitsSection));
+    final l = AppLocalizations.of(ctx);
+
+    for (final expected in [
+      l.settingsRiskLimitsFollowingResolved('40%'),
+      l.settingsRiskLimitsFollowingResolved('3%'),
+      l.settingsRiskLimitsFollowingResolved('35'),
+      l.settingsRiskLimitsFollowingResolved('1h'),
+      l.settingsRiskLimitsFollowingResolved('4'),
+      l.settingsRiskLimitsFollowingResolved('12'),
+      l.settingsRiskLimitsFollowingResolved('10.5%'),
+    ]) {
+      expect(find.text(expected), findsOneWidget, reason: 'missing "$expected"');
+    }
+    // Every row got a number — the no-number fallback should be gone.
+    expect(find.text(l.settingsRiskLimitsProfileFollowing), findsNothing);
+    // No override anywhere — no provenance caption either.
+    expect(find.text(l.settingsRiskLimitsSetByYou), findsNothing);
+  });
+
+  testWidgets(
+      'CR129 acceptance 1: partial resolved (live-Alpha 2-field shape) shows '
+      'numbers where the server gave them and the quiet fallback elsewhere',
+      (tester) async {
+    const resolved = ResolvedCaps(sectorCapPct: 40.0, singleNameCapPct: 3.0);
+    await _pumpSection(tester, mandate: _mandate(resolved: resolved));
+    final ctx = tester.element(find.byType(RiskLimitsSection));
+    final l = AppLocalizations.of(ctx);
+
+    expect(find.text(l.settingsRiskLimitsFollowingResolved('40%')), findsOneWidget);
+    expect(find.text(l.settingsRiskLimitsFollowingResolved('3%')), findsOneWidget);
+    expect(find.text(l.settingsRiskLimitsProfileFollowing), findsNWidgets(5));
+  });
+
+  testWidgets(
+      'CR129: an explicit override shows the "Set by you" provenance caption '
+      'and the override in the text field', (tester) async {
+    // Override is 22 — while set, the server's resolved echoes it.
+    final mandate = _mandate(
+      maxOpenPositions: 22,
+      resolved: const ResolvedCaps(
+        sectorCapPct: 40.0,
+        singleNameCapPct: 3.0,
+        maxOpenPositions: 22,
+        postLossCooldownHours: 1.0,
+        maxTradesPerDay: 4,
+        maxTradesPerWeek: 12,
+        maxOpenRiskPct: 10.5,
+      ),
+    );
+    await _pumpSection(tester, mandate: mandate);
+    final ctx = tester.element(find.byType(RiskLimitsSection));
+    final l = AppLocalizations.of(ctx);
+
+    expect(
+      find.byKey(const Key('riskLimitSetByYou_max_open_positions')),
+      findsOneWidget,
+    );
+    expect(find.text(l.settingsRiskLimitsSetByYou), findsOneWidget);
+    final rendered = tester
+        .widget<TextField>(find.byKey(const Key('riskLimitField_max_open_positions')))
+        .controller!
+        .text;
+    expect(rendered, '22');
+    // The overridden row's clear-chip must NOT present the resolved echo of
+    // the override as a profile default — the true preset is unknowable
+    // client-side while an override is set, so it claims no number.
+    expect(find.text(l.settingsRiskLimitsFollowingResolved('22')), findsNothing);
+    expect(find.text(l.settingsRiskLimitsProfileFollowing), findsOneWidget);
   });
 
   testWidgets(
@@ -172,13 +265,26 @@ void main() {
     expect(find.text(l.settingsRiskLimitsDisclosureLooser), findsOneWidget);
   });
 
-  testWidgets('acceptance 4: clearing an explicit limit back to OFF discloses removal',
-      (tester) async {
-    final mandate = _mandate(maxOpenPositions: 5);
+  testWidgets(
+      'acceptance 4 / CR129: clearing an explicit limit discloses back-to-profile '
+      '(mechanism only, no number — the preset is unknowable while an override '
+      'is set), never "removes the limit"', (tester) async {
+    final mandate = _mandate(
+      maxOpenPositions: 5,
+      // Server resolved echoes the still-persisted override.
+      resolved: const ResolvedCaps(maxOpenPositions: 5),
+    );
     await _pumpSection(tester, mandate: mandate, pending: {'max_open_positions': null});
     final ctx = tester.element(find.byType(RiskLimitsSection));
     final l = AppLocalizations.of(ctx);
-    expect(find.text(l.settingsRiskLimitsDisclosureOff), findsOneWidget);
+    expect(find.text(l.settingsRiskLimitsDisclosureBackToProfile), findsOneWidget);
+    expect(find.text(l.settingsRiskLimitsDisclosureOff), findsNothing);
+    // The disclosure names the mechanism only — a number here would be a
+    // client-side guess at a preset the API does not expose in this state.
+    expect(l.settingsRiskLimitsDisclosureBackToProfile.contains(RegExp(r'\d')), isFalse);
+    // And the chip must not present the stale resolved echo (5) as the
+    // profile default the field is returning to.
+    expect(find.text(l.settingsRiskLimitsFollowingResolved('5')), findsNothing);
   });
 
   testWidgets('acceptance 4 / CR040: setting a percent field to exactly 100 discloses '
@@ -239,6 +345,8 @@ void main() {
     const sector = LimitFieldConfig(
       key: 'sector_cap_pct', kind: LimitKind.percent, presetLinked: true, higherIsLooser: true,
     );
+    // Deliberately declared presetLinked:false (a shape no shipped field has
+    // post-CR129) to keep the pure function's non-preset branch covered.
     const cooldown = LimitFieldConfig(
       key: 'post_loss_cooldown_hours', kind: LimitKind.hours, presetLinked: false, higherIsLooser: false,
     );
@@ -288,11 +396,27 @@ void main() {
       );
     });
 
-    test('clearing an explicit value to unset is a removal', () {
+    test('clearing an explicit value on a non-preset field is a removal', () {
       expect(
         classifyLimitEdit(positions, oldValue: 5, newValue: null),
         LimitDisclosure.off,
       );
+    });
+
+    test('CR129: clearing an explicit value on a preset-linked field is '
+        'back-to-profile, not removal — and every shipped field is preset-linked', () {
+      expect(
+        classifyLimitEdit(sector, oldValue: 40, newValue: null),
+        LimitDisclosure.backToProfile,
+      );
+      for (final cfg in kRiskLimitFields) {
+        expect(cfg.presetLinked, isTrue,
+            reason: '${cfg.key} must be preset-linked post-CR129');
+        expect(
+          classifyLimitEdit(cfg, oldValue: 5, newValue: null),
+          LimitDisclosure.backToProfile,
+        );
+      }
     });
 
     test('percent field set to exactly 100 always discloses, any prior value', () {
@@ -310,17 +434,77 @@ void main() {
     });
   });
 
+  group('CR129 Custom detection — hasExplicitRiskLimitOverride covers all seven', () {
+    test('no override anywhere is not Custom', () {
+      expect(hasExplicitRiskLimitOverride(_mandate(), const {}), isFalse);
+    });
+
+    test('a server-persisted override on ANY of the seven reads Custom', () {
+      final fixtures = <UserMandate>[
+        _mandate(sectorCapPct: 25.0),
+        _mandate(singleNameCapPct: 10.0),
+        _mandate(postLossCooldownHours: 8.0),
+        _mandate(maxOpenPositions: 5),
+        _mandate(maxTradesPerDay: 3),
+        _mandate(maxTradesPerWeek: 11),
+        _mandate(maxOpenRiskPct: 6.5),
+      ];
+      for (final m in fixtures) {
+        expect(hasExplicitRiskLimitOverride(m, const {}), isTrue);
+      }
+    });
+
+    test('a pending (unsaved) override on ANY of the seven reads Custom', () {
+      for (final cfg in kRiskLimitFields) {
+        expect(
+          hasExplicitRiskLimitOverride(_mandate(), {cfg.key: 5}),
+          isTrue,
+          reason: 'pending ${cfg.key} must flip Custom',
+        );
+      }
+    });
+
+    test('pending nulls over server overrides (the L1 dial-clear) is NOT Custom', () {
+      final m = _mandate(
+        sectorCapPct: 25.0,
+        singleNameCapPct: 10.0,
+        postLossCooldownHours: 8.0,
+        maxOpenPositions: 5,
+        maxTradesPerDay: 3,
+        maxTradesPerWeek: 11,
+        maxOpenRiskPct: 6.5,
+      );
+      final pending = {for (final cfg in kRiskLimitFields) cfg.key: null};
+      expect(hasExplicitRiskLimitOverride(m, pending), isFalse);
+    });
+  });
+
   test('acceptance 6: no known backend risk-cap preset literal appears in the '
       'risk-limits editing surface (source-level guard, belt to the behavioural '
       'guard above)', () {
     // The exact preset numbers CR101-BE1/BE2's bridges measured
     // (`risk_tier_cap`, `SINGLE_NAME_ABSOLUTE_CAP_PCT`, `_DEFAULT_SECTOR_CAP`)
     // — see backend/app/trading_math/sizing.py and
-    // backend/app/services/sector_allocation.py. None of them may appear as
-    // a bare literal anywhere this screen computes a DISPLAYED risk-limit
-    // value; every number must come from `mandate.<field>` or a value the
-    // user is actively typing.
-    final knownCapLiterals = RegExp(r'\b(0\.40|40\.0|50\.0|4\.5|1\.5|3\.0)\b');
+    // backend/app/services/sector_allocation.py — EXTENDED with CR129's
+    // preset tables (backend/app/trading_math/risk_limits.py: positions
+    // 65/65/35/30/30, cooldown 4/2/1/1/0.5h, trades 2-6/day 6-20/week,
+    // open-risk 0.25-0.50 x max_drawdown, e.g. 7.5/9.0/10.5/13.5/15.0 at
+    // DD 30). None of them may appear as a bare literal anywhere this screen
+    // computes a DISPLAYED risk-limit value; every number must come from
+    // `mandate.<field>`, `mandate.resolved.<field>`, or a value the user is
+    // actively typing. Bare integers that collide with legitimate UI
+    // constants in these files (20, 30, 15 — icon sizes, drawdown picker
+    // options) are guarded via their float spellings instead, and `1.0` is
+    // omitted because it substring-matches version strings in comments
+    // ("0.1.0+94") — the cooldown table stays covered by 4.0/2.0/0.5. A
+    // client-side copy of the preset TABLES (maps/lists of these values)
+    // cannot avoid the covered tokens.
+    final knownCapLiterals = RegExp(
+        r'\b(0\.40|40\.0|50\.0|4\.5|1\.5|3\.0'
+        r'|65|35|12'
+        r'|65\.0|35\.0|30\.0|20\.0|15\.0'
+        r'|4\.0|2\.0|0\.5|0\.25|0\.50'
+        r'|7\.5|9\.0|10\.5|13\.5)\b');
     final files = [
       File('lib/screens/settings/risk_limits_section.dart'),
       File('lib/screens/settings/settings_screen.dart'),
