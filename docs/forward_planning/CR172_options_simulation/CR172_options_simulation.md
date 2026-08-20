@@ -609,3 +609,18 @@ When this is built (not now):
   untouched.
 - Historical options backtesting — no data store exists (§4).
 - Exotic/adjusted-contract *generation*. We honour `multiplier` if a chain serves one; we never mint one.
+
+## §14 resolution — build-gate decisions ratified (2026-08-20, AT:R73)
+
+Saiful cleared the build gate at the wave-2 decision review:
+
+- **D3 (naked calls): FORBIDDEN.** No Reg-T margin path — the D-log "no leverage, ever" lock
+  stands unamended. A naked sell-to-open call gets a refusal that explains the containment
+  reasoning (assignment risk is unbounded; the sim teaches defined-risk structures first).
+  Covered calls, cash-secured puts and defined-risk spreads carry the curriculum.
+- **D1–D2, D4–D11: ratified at their stated leans** — build to the leans as written in the
+  register above; none needs re-litigating at lane time.
+- **Halal handling:** the CR171 inform-not-block ruling **extends to options sell-to-open** —
+  disclose, never hard-block, consistent with the equity floor's shape.
+
+CR172 is buildable; queued behind the wave-2 batch.
