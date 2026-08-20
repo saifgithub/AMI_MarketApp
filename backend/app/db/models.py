@@ -721,6 +721,26 @@ class NotificationRow(Base):
     )
 
 
+class NotificationPreferenceRow(Base):
+    """CR135 -- per-(user, type) push opt-out. Absence of a row means
+    enabled: only a toggle away from the default writes one, so the table
+    stays tiny and a new notification type needs no backfill. Read by
+    notification_service.notify()'s push path -- a disabled type suppresses
+    the OneSignal attempt server-side but never the durable notifications
+    row (the in-app centre still shows it; only delivery is opted out).
+    The valid `type` vocabulary is app.schemas.notifications.NOTIFICATION_TYPES.
+    """
+
+    __tablename__ = "notification_preferences"
+
+    user_id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True)
+    type: Mapped[str] = mapped_column(String, primary_key=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
 class PriceAlertRow(Base):
     """CR027 §4 -- a user's stop/target/manual price-threshold watch.
     ACTIVE -> FIRED (breach) or ACTIVE -> CANCELLED (user/system cancel);

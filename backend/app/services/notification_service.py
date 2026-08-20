@@ -16,19 +16,24 @@ calls OneSignal directly.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, Literal
+from datetime import datetime, timezone
+from typing import Any, Literal, Mapping
 from uuid import UUID, uuid4
 
 import httpx
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
 from app.core.logging import logger
 from app.db import get_session, init_schema
-from app.db.models import NotificationRow
+from app.db.models import NotificationPreferenceRow, NotificationRow
+from app.schemas.notifications import (
+    NOTIFICATION_TYPES,
+    NotificationOut,
+    NotificationPreferenceOut,
+)
 from app.services.rate_limit import RateLimiter
 
 _ONESIGNAL_API_BASE = "https://onesignal.com/api/v1"
@@ -36,6 +41,9 @@ _TIMEOUT = httpx.Timeout(10.0)
 
 PushStatus = Literal[
     "sent", "rate_limited", "not_configured", "failed", "skipped", "duplicate",
+    # CR135 — the user disabled this type in notification preferences; the
+    # durable row is still written, only push delivery is suppressed.
+    "pref_disabled",
 ]
 
 # Service-layer limits, not per-consumer (CR027 acceptance) — every caller
@@ -136,6 +144,20 @@ def notify(
             notification_id=notification_id, push_status="skipped", push_detail=None,
         )
 
+    if not _push_enabled_by_preference(user_id, type):
+        # CR135 — server-enforced preference: the row above IS in the user's
+        # in-app centre; only the OneSignal attempt is suppressed. Checked
+        # before the rate limiter so an opted-out type never consumes the
+        # user's push budget.
+        logger.info(
+            "notification_push_pref_disabled",
+            user_id=str(user_id), notification_id=str(notification_id), type=type,
+        )
+        return NotifyResult(
+            notification_id=notification_id, push_status="pref_disabled",
+            push_detail=None,
+        )
+
     push_status, push_detail = _attempt_push(
         user_id=user_id, notification_id=notification_id, type=type, title=title,
         body=body, deep_link=deep_link,
@@ -229,3 +251,148 @@ def _attempt_push(
         user_id=str(user_id), notification_id=str(notification_id), type=type,
     )
     return "sent", None
+
+
+def _push_enabled_by_preference(user_id: UUID, type: str) -> bool:
+    """False only when a stored row says enabled=False. No row — including a
+    type outside today's vocabulary — means enabled (CR027's behaviour). A
+    lookup failure keeps that default but logs loudly (CR040): a broken
+    preferences read must not silently kill delivery."""
+    try:
+        with get_session() as s:
+            enabled = s.execute(
+                select(NotificationPreferenceRow.enabled).where(
+                    NotificationPreferenceRow.user_id == user_id,
+                    NotificationPreferenceRow.type == type,
+                )
+            ).scalars().first()
+    except Exception:
+        logger.exception(
+            "notification_pref_lookup_failed",
+        )
+        return True
+    return enabled is not False
+
+
+def _out(row: NotificationRow) -> NotificationOut:
+    return NotificationOut(
+        id=row.id, type=row.type, title=row.title, body=row.body,
+        deep_link=row.deep_link, source_ref=row.source_ref,
+        read_at=row.read_at, created_at=row.created_at,
+    )
+
+
+def list_notifications(
+    user_id: UUID, *, limit: int = 50, offset: int = 0,
+) -> tuple[list[NotificationOut], int]:
+    """One page of the user's notifications, newest-first, plus the total
+    row count for paging. `id` desc as tiebreak keeps equal-timestamp pages
+    deterministic across requests."""
+    init_schema()
+    with get_session() as s:
+        total = s.execute(
+            select(func.count()).select_from(NotificationRow).where(
+                NotificationRow.user_id == user_id,
+            )
+        ).scalar_one()
+        rows = s.execute(
+            select(NotificationRow)
+            .where(NotificationRow.user_id == user_id)
+            .order_by(NotificationRow.created_at.desc(), NotificationRow.id.desc())
+            .limit(limit)
+            .offset(offset)
+        ).scalars().all()
+        return [_out(r) for r in rows], total
+
+
+def mark_read(user_id: UUID, notification_id: UUID) -> bool:
+    """Idempotent: an already-read row is success with its original stamp
+    untouched. False = no such row FOR THIS USER — the user_id predicate is
+    the authorization (CR102 pattern), so the caller 404s identically for a
+    foreign row and a nonexistent id."""
+    init_schema()
+    with get_session() as s:
+        row = s.execute(
+            select(NotificationRow).where(
+                NotificationRow.id == notification_id,
+                NotificationRow.user_id == user_id,
+            )
+        ).scalar_one_or_none()
+        if row is None:
+            return False
+        if row.read_at is None:
+            row.read_at = datetime.now(timezone.utc)
+        return True
+
+
+def mark_all_read(user_id: UUID) -> int:
+    """Stamp every unread row; returns how many were stamped."""
+    init_schema()
+    with get_session() as s:
+        result = s.execute(
+            update(NotificationRow)
+            .where(
+                NotificationRow.user_id == user_id,
+                NotificationRow.read_at.is_(None),
+            )
+            .values(read_at=datetime.now(timezone.utc))
+        )
+        return int(result.rowcount or 0)
+
+
+def unread_count(user_id: UUID) -> int:
+    init_schema()
+    with get_session() as s:
+        return s.execute(
+            select(func.count()).select_from(NotificationRow).where(
+                NotificationRow.user_id == user_id,
+                NotificationRow.read_at.is_(None),
+            )
+        ).scalar_one()
+
+
+def get_preferences(user_id: UUID) -> list[NotificationPreferenceOut]:
+    """Every type in the vocabulary, defaults filled in: no stored row means
+    enabled=True with updated_at=None (never toggled)."""
+    init_schema()
+    with get_session() as s:
+        stored = {
+            r.type: r
+            for r in s.execute(
+                select(NotificationPreferenceRow).where(
+                    NotificationPreferenceRow.user_id == user_id,
+                )
+            ).scalars()
+        }
+        return [
+            NotificationPreferenceOut(
+                type=t,
+                enabled=stored[t].enabled if t in stored else True,
+                updated_at=stored[t].updated_at if t in stored else None,
+            )
+            for t in NOTIFICATION_TYPES
+        ]
+
+
+def set_preferences(
+    user_id: UUID, updates: Mapping[str, bool],
+) -> list[NotificationPreferenceOut]:
+    """Upsert one row per named type, then return the full refreshed set.
+    Unknown types raise ValueError — the API layer's schema already 422s
+    them; this keeps a future non-API caller equally loud (CR040)."""
+    unknown = sorted(set(updates) - set(NOTIFICATION_TYPES))
+    if unknown:
+        raise ValueError(f"unknown notification type(s): {', '.join(unknown)}")
+    init_schema()
+    now = datetime.now(timezone.utc)
+    with get_session() as s:
+        for t, enabled in updates.items():
+            row = s.get(NotificationPreferenceRow, (user_id, t))
+            if row is None:
+                s.add(NotificationPreferenceRow(
+                    user_id=user_id, type=t, enabled=enabled, updated_at=now,
+                ))
+            else:
+                row.enabled = enabled
+                row.updated_at = now
+    return get_preferences(user_id)

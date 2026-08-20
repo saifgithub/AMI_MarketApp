@@ -80,3 +80,44 @@ needs to add:
   (server-enforced, not just a client-side hide).
 - The "notifications off" banner appears when OS permission is denied and
   disappears once the user re-enables it from the OS Settings deep link.
+
+---
+
+## Build note — backend half SHIPPED (2026-08-20, AT:R73)
+
+The backend surface of §3 is built; the mobile half (bell/badge, list screen,
+preferences UI, notifications-off banner) is deferred to after the current
+AT:R73 batch merges, per the lane brief (shared YOU-tab real estate with the
+in-flight CR102 mobile inbox).
+
+What landed:
+
+- **Routes** (`backend/app/api/notifications.py`, plain-`def` per DEF200,
+  NOT yet wired into `main.py` — the orchestrator wires routers):
+  `GET /v1/notifications/{user_id}` (paginated `limit`/`offset`, newest-first,
+  returns `{items, total}`), `POST .../{notification_id}/read` (idempotent,
+  cross-user 404 indistinguishable from nonexistent), `POST .../read_all`
+  (returns `{updated}`), `GET .../unread_count`, `GET`/`PATCH
+  .../preferences`. Path-user mismatch is 403 (price_alerts pattern).
+- **Table** `notification_preferences` (composite PK `user_id`+`type`,
+  `enabled`, `updated_at`) — migration `a135a000001f` off head
+  `c102a000001e`. No row = enabled; only toggles write rows.
+- **Service** (`notification_service.py`): `list_notifications` /
+  `mark_read` / `mark_all_read` / `unread_count` / `get_preferences` /
+  `set_preferences`, and **server-side enforcement**: `notify()` skips the
+  OneSignal attempt (`push_status="pref_disabled"`) for a disabled type —
+  the durable row is still written, so the in-app centre still shows it.
+- **Vocabulary correction** — §2's type list (`price_alert`,
+  `daily_challenge`, `game_event`, `trial_end`, `room_verdict`) was CR027-era
+  speculation. The types the service ACTUALLY emits, now canonical in
+  `app/schemas/notifications.py::NOTIFICATION_TYPES` (the anchor for the
+  mobile lane's Dart-enum parity test, DEF210 class): `price_alert`,
+  `daily_reminder`, `game_entries_closing`, `game_final_stretch`,
+  `game_settled`, `game_rank_move`, `resting_order_filled`,
+  `resting_order_triggered`, `resting_order_rejected`.
+  `tests/unit/test_cr135_notifications_api.py` asserts emitter⇄vocabulary
+  parity, so a new emitter type that skips the vocabulary fails the suite.
+- **Retention sanity (§2 last bullet):** `trim_audit_tables()` trims
+  `notifications` at 90 days — at alpha cadence (a handful of pushes/user/week,
+  games policy-capped) a page of 50 never truncates visibly; revisit only if
+  the list screen ships infinite scroll past ~500 rows.
