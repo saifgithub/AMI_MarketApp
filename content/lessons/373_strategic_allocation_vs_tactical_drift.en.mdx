@@ -1,0 +1,95 @@
+---
+id: "373_strategic_allocation_vs_tactical_drift"
+title: "Strategic allocation vs tactical drift"
+duration_min: 5
+level: 11
+module: 18
+difficulty: 3
+track: "risk_portfolio"
+code: "RISK 19"
+topic: "strategic_tactical_allocation"
+prerequisites: ["372_the_floor_diversification_cannot_cross", "291_the_pm_and_your_mandate"]
+tags: ["allocation", "policy-weights", "tactical", "mandate", "level-11"]
+sources: ["Bodie, Kane & Marcus — Investments, the strategic/tactical asset-allocation distinction"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "no market figures claimed; the Mandate mechanics stated here were read from backend/app/schemas/mandate.py and backend/app/agents/safety_floor.py rather than recalled; allocation arithmetic is trivial and shown in full"}
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# Strategic allocation vs tactical drift
+
+Most portfolios have no allocation policy; they have an accumulated history of individual decisions that nobody ever added up. After this lesson you will be able to separate the two decisions hiding inside every trade — the long-run shape you have chosen, and the short-run deviation you are taking from it — and to state which one you are making before you make it.
+
+## Example
+
+The **strategic allocation** is the shape you would hold if you had no view at all: the weights you would defend to someone who asked why your money sits where it sits. An openly hypothetical policy, chosen for illustration and not as a recommendation: **60% broad equities · 30% defensive · 10% cash**.
+
+The **tactical deviation** is any deliberate departure from it, with a size, a reason and an end condition. Suppose you decide the equity sleeve is worth overweighting by five points for the next quarter. That is a legitimate decision, and it is a *complete* one only when it reads like this:
+
+> Policy 60/30/10. Tactical: equities **+5 pp to 65%**, funded from cash. Reason: [the specific claim]. Reverts on: the claim resolving either way, or the end of the quarter, whichever comes first.
+
+Three things make it a tactical deviation rather than drift. It has a **size** (five points, not "more"). It has a **funding source** — every overweight is an underweight somewhere, and naming which sleeve pays for it is what stops five separate five-point overweights adding to a portfolio that is 125% invested in conviction. And it has an **end condition**, so the deviation is a position rather than a permanent quiet change to the policy.
+
+Drift is what you get when none of these are written down. The equity sleeve rises because equities rose, nobody decided anything, and six months later the book is at 74/20/6 — a materially more aggressive portfolio that no one chose. AMI enforces a per-trade size cap derived from your risk score and an account drawdown ceiling, and the Portfolio Manager checks each simulated trade against your Mandate — but a Mandate is a set of constraints, not an allocation policy. Nothing in the app will tell you that your book quietly became a different portfolio, because "the shape I intended" is a number only you hold.
+
+## The trap
+
+The trap is making tactical decisions one at a time and never seeing them as a portfolio. Each individual trade passes the test you apply to it — the thesis is decent, the size is within the cap, the Room's Verdict is worth evaluating. But those tests are per-trade, and the allocation question is per-portfolio, so a sequence of individually defensible trades assembles into a book you would never have chosen in one sitting.
+
+The correct mental model is to write the policy *first*, on a day when you hold no view and nothing is moving, and treat every subsequent decision as a signed deviation from it. That ordering is the entire discipline: a policy written after the fact is not a policy, it is a description of what already happened, and it can never tell you that you have drifted because it moves whenever you do.
+
+## The steelman
+
+The strongest case against a written policy is that it is arbitrary — 60/30/10 rests on no theory that survives contact with a specific person's horizon, income and obligations, so a rigid commitment to an invented number can be worse than reacting sensibly as conditions change. That is fair: the *level* of a policy weight is much softer than it looks, and defending it as if it were derived is false precision. But the case for writing it down does not depend on the number being right. It depends on there being a fixed reference at all, because "have I drifted?" is unanswerable without one, and drift is the failure that actually shows up. The falsifier is easy to run on yourself: write your intended weights, then compute your current ones. If the gap is inside a couple of points, you were tracking your intent without needing the document and the sceptic wins for your case. If it is ten points and you cannot name the decisions that got you there, the drift was real, and it was invisible precisely because no reference existed.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="A portfolio's written policy is 60% equities / 30% defensive / 10% cash. Six months later, with no trades placed in the equity sleeve, it stands at 71/23/6. What has happened?"
+  options={[
+    "Drift: nobody decided anything — equities simply outperformed, and the book is now materially more aggressive than the shape that was chosen",
+    "A tactical overweight to equities, which should be held until the thesis behind it resolves",
+    "Nothing meaningful, since no trades were placed and only trades can change a portfolio's risk",
+    "A rebalancing error, meaning the policy weights were entered incorrectly at the outset"
+  ]}
+  answer={0}
+  explanation="Weights move whenever prices move, so a portfolio changes shape without anyone trading. The answer calling it a tactical overweight requires a decision, a size and an end condition, none of which exist here — and treating drift as a tactical position is the specific mislabel that lets an unchosen book survive review. The answer that nothing meaningful happened is the trap in its purest form: the book carries eleven more points of equity risk than intended, which is a real change regardless of its cause. The answer blaming a data-entry error invents a mechanism the scenario does not contain."
+/>
+
+<Quiz
+  question="Which of these is a complete tactical decision rather than an unbounded one?"
+  options={[
+    "\"Equities look strong, so I'm putting more into the equity sleeve.\"",
+    "\"I'm going to 65% equities because I like the setup, and I'll see how it goes.\"",
+    "\"Equities +5 pp to 65%, funded by cutting cash from 10% to 5%, because [specific claim]; reverting when the claim resolves or at quarter-end, whichever is first.\"",
+    "\"I'm overweight equities by whatever the Room's Verdicts justify this quarter.\""
+  ]}
+  answer={2}
+  explanation="A tactical deviation needs a size, a funding source and an end condition; only one answer here carries all three. The answer that names no size cannot be checked against the policy afterwards, because there is nothing to check. The answer that gives a target of 65% but no exit turns a position into a permanent silent change to the policy. And the answer that delegates the size to the Room's Verdicts hands the allocation decision to a training artifact — which is a mandate the Room was never given, and which lets any number of separate Verdicts sum into an overweight nobody chose."
+/>
+
+<Quiz
+  question="Someone argues they need no written policy because the Portfolio Manager already checks every trade against their Mandate. Bringing together what a Mandate is and what an allocation policy is, what is the flaw?"
+  options={[
+    "There is no flaw — the Mandate constrains every trade, so the portfolio cannot drift outside it",
+    "The Mandate is a set of per-trade constraints — size caps, drawdown ceiling, compliance flags — and every individual trade can satisfy them while the portfolio as a whole drifts to a shape the holder never chose, because no constraint encodes an intended shape",
+    "The flaw is that the Portfolio Manager can be coached into relaxing its checks, so the Mandate is not a reliable constraint",
+    "The flaw is that the Mandate applies only to simulated trades, and drift comes from price movement rather than trades"
+  ]}
+  answer={1}
+  explanation="This is the module's synthesis: constraints and policy answer different questions. Constraints bound each decision, the policy states the intended whole, and drift lives exactly in the gap — every trade compliant, the aggregate unchosen. The answer denying any flaw treats a floor as a target, which is the confusion the question is testing. The answer about coaching the Portfolio Manager is factually wrong — the safety floor is deliberately uncoachable — and it also concedes the wrong point, since even a perfectly enforced constraint would not encode a shape. The answer noting that drift comes from price movement is true and is precisely why constraints miss it, but the conclusion drawn — that the Mandate's simulated scope is the problem — misreads it."
+/>
+
+## Try it
+
+Before you open anything else, write your intended long-run weights on paper: how much in equities, how much defensive, how much in cash. Then open your Portfolio and compute what you actually hold. The gap between the two numbers is your accumulated drift, and it is almost always larger than people expect. If the gap is more than a few points, ask the Portfolio Manager in a 1-on-1 to walk you through what would have to be true for the current shape to be the right one — then judge that answer for yourself.
+
+## Takeaway
+
+Write the shape you would hold with no view at all, then make every departure from it a decision with a size, a funding source and an end date — anything else is drift wearing the costume of a strategy.
+
+*Where this comes from: the strategic-versus-tactical asset-allocation distinction as it is set out in Bodie, Kane & Marcus, Investments.*

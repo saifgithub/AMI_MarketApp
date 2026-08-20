@@ -1,0 +1,100 @@
+---
+id: "375_home_country_bias"
+title: "Home-country bias"
+duration_min: 5
+level: 11
+module: 18
+difficulty: 3
+track: "risk_portfolio"
+code: "RISK 21"
+topic: "home_bias"
+prerequisites: ["371_diversification_is_correlation_not_count", "372_the_floor_diversification_cannot_cross"]
+tags: ["home-bias", "diversification", "international", "allocation", "level-11"]
+sources: ["French & Poterba — Investor Diversification and International Equity Markets, American Economic Review 81(2) (1991), 222–226"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "portfolio volatilities recomputed via portfolio_variance() (scripts/verify_cr054_wave2_numbers.py); the 98/94/82% domestic-share figures and the AER 81(2) 222–226 citation verified against the paper's record and are explicitly dated to its late-1980s sample rather than presented as current"}
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# Home-country bias
+
+Almost every investor holds far more of their own country's market than its share of the world would justify, and almost none of them decided to. After this lesson you will be able to measure your own home weight, quantify what it costs in volatility, and separate the reasons for it that survive scrutiny from the ones that are just familiarity wearing an argument's clothes.
+
+## Example
+
+The tendency is old and documented. French and Poterba (1991), working with data from the late 1980s, measured domestic shares of investors' equity holdings at **over 98% in Japan, 94% in the United States and 82% in Britain** — at a time when none of those markets was anywhere near that share of world equity value. Their point was not that investors were wrong about any particular country; it was that portfolios this concentrated imply the holders expected their own market to beat every other by several percentage points a year, which is a belief almost none of them would have stated out loud if asked.
+
+What does the concentration cost? Take two openly hypothetical sleeves — a domestic one at **22% annualised volatility**, a foreign one at **18%**, correlated at **0.60** — and vary only the split:
+
+| domestic / foreign | portfolio volatility |
+|---|---|
+| 100 / 0 | **22.00%** |
+| 85 / 15 | **20.43%** |
+| 70 / 30 | **19.13%** |
+| 50 / 50 | **17.91%** |
+
+The first fifteen points of foreign exposure buy **1.57 percentage points** of volatility — a large payment for a small change, and the reason the early moves away from a 100% home book are the ones worth making. Note also that this holds at a correlation of 0.60, which is high: these are not independent markets, and the benefit is real anyway. That is <Lesson id="371_diversification_is_correlation_not_count"/> restated at country level.
+
+The concentration bites hardest where the home market is itself narrow. An investor holding only Bursa Malaysia holds a market whose index is heavily weighted toward banks, utilities and plantations; an investor holding only a GCC market holds one where a large share of listed earnings tracks the oil complex, and where the currency peg links monetary conditions to a foreign central bank's decisions. In both cases "100% domestic" is also a concentrated sector and macro bet that the holder never wrote down as one — the drift problem from <Lesson id="373_strategic_allocation_vs_tactical_drift"/>, at the level of a whole market.
+
+## The trap
+
+The trap is that home bias comes with a ready-made justification: *I understand these companies.* And it is often true — you use their products, you read the local press, you know which regulator matters. The problem is that familiarity is an argument about your **information**, and the position is an argument about your **risk**, and the two do not connect. Knowing a company well does not decorrelate it from the other companies in the same economy, under the same central bank, in the same currency.
+
+The correct mental model: your home weight is a position with a size, and like any position it needs a reason that is not "this is where I live". Some reasons survive — you spend in this currency, so matching some assets to it genuinely reduces the risk that matters to you; local tax treatment or access costs may be real. Those are arguments for a home weight *above* the country's world share, and they are worth stating. What they are not is an argument for 100%, and the gap between "some tilt is justified" and "everything I own is here" is where the unexamined part lives.
+
+## The steelman
+
+The strongest case for a large home weight: your liabilities are domestic. You will spend in your home currency, so a foreign sleeve introduces exchange-rate risk against the only thing your portfolio is ultimately for, and the volatility table above measures the wrong quantity — it prices asset volatility in a common currency rather than in the currency you eat in. That is a genuinely strong argument and it is why the sensible target is a tilt rather than the world's market weights. Two things bound it, though. First, it is an argument about *currency*, and currency exposure can be managed separately from where the companies are listed. Second, it does not scale to the whole book: a currency-matching argument justifies a substantial home allocation, not the elimination of every foreign holding. The falsifier is concrete — write down the home weight your currency argument justifies *before* you look at your account. If it lands near what you already hold, the tilt is deliberate and the argument is doing real work. If your actual weight is far above it, the currency case is a rationalisation you found after the fact.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="A holder moves from 100% domestic to 85% domestic / 15% foreign. Domestic volatility is 22%, foreign 18%, and the two correlate at 0.60. What happens to portfolio volatility, and what does that show?"
+  options={[
+    "It falls from 22.00% to 20.43% — 1.57 percentage points from a 15-point shift, and it works even though the two markets correlate at 0.60",
+    "It rises, because foreign holdings add currency risk on top of equity risk",
+    "It is essentially unchanged, because a 0.60 correlation is too high for diversification to do anything",
+    "It falls to 18.00%, because the portfolio takes on the volatility of the lower-volatility sleeve"
+  ]}
+  answer={0}
+  explanation="Substituting the two volatilities, the 0.60 correlation and the 85/15 weights into the portfolio-variance formula gives 20.43%. The answer predicting a rise imports currency risk, which is a real consideration and a genuinely strong argument — but it is not in this calculation, which is stated in a common currency, and it does not reverse the equity-diversification effect. The answer calling 0.60 too high to matter is the misconception the number was chosen to break: benefits shrink as correlation rises but do not vanish until it reaches 1. The answer landing on 18.00% assigns the portfolio the volatility of one sleeve, which would require holding only that sleeve."
+/>
+
+<Quiz
+  question="An investor holds only their domestic market and explains it by saying they understand local companies far better than foreign ones. What is wrong with the reasoning?"
+  options={[
+    "Nothing — an information advantage is exactly the right basis for a concentrated position",
+    "The claim is probably false: retail investors rarely have genuine information advantages in any market",
+    "It answers a question about information with a position about risk: knowing a company well does not make it less correlated with the other companies in the same economy, currency and policy regime",
+    "It ignores that foreign markets have historically returned more, so the concentration costs expected return"
+  ]}
+  answer={2}
+  explanation="Familiarity may be entirely real and still be irrelevant to the correlation structure that sets portfolio risk — that mismatch is the trap. The answer endorsing information advantage as a basis for concentration accepts the substitution without noticing it. The answer attacking the premise argues about whether the advantage exists, which is a separate debate and one you lose nothing by conceding: even a real advantage would not decorrelate the holdings. And the answer about foreign markets returning more asserts a return forecast that nothing here establishes, and it would be an argument about expected returns rather than about the diversification cost the question is asking after."
+/>
+
+<Quiz
+  question="An investor in a market dominated by banks, utilities and commodity-linked names holds 100% domestic equities and no written allocation policy. Bringing the module together, what is the most accurate description of their position?"
+  options={[
+    "A diversified equity portfolio, since it holds many names across several sectors of a real economy",
+    "A concentrated position on one economy, one currency and a handful of sectors — three bets stacked, none of them written down, and the count of holdings hides all three",
+    "An undiversified portfolio, but one that is fixed by adding more names from the same market until it passes thirty holdings",
+    "A tactical overweight to the domestic market, which is fine provided it is reviewed each quarter"
+  ]}
+  answer={1}
+  explanation="This is the module's synthesis: the count says diversified, the correlation structure says otherwise, and because no policy exists there is no reference against which the concentration could ever be noticed. The answer calling it diversified relies on the holding count, which the module has shown to be the least informative input. The answer proposing thirty domestic names fixes only company-specific risk and leaves the country, currency and sector bets exactly as they were — the shared risk from the floor lesson. And the answer calling it a tactical overweight requires a decision with a size and an end condition; a position nobody chose and nobody wrote down is drift, and a quarterly review of an unstated policy has nothing to compare against."
+/>
+
+## Try it
+
+Work out your own home weight: what fraction of your simulated holdings is listed in the country you live in? Then write, in one sentence, the reason that weight is what it is — and check whether the reason mentions risk or only familiarity. If you would like to pressure-test it, ask the Portfolio Manager in a 1-on-1 what would have to be true for a 100% domestic book to be the right shape, and evaluate the argument it gives you rather than accepting it. AMI's output is a training artifact for you to judge, not investment advice.
+
+## Takeaway
+
+You are allowed a home tilt, and you should be able to say in one sentence what it is for — if the sentence is only "this is where I live", you have a concentration rather than a decision.
+
+*Where this comes from: French and Poterba's measurement of domestic concentration in equity portfolios — Investor Diversification and International Equity Markets (1991).*

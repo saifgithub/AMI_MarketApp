@@ -54,9 +54,14 @@ CATEGORY_ORDER = [
     "regime",
     "macro",
     "options_derivatives",
+    "portfolio_theory",
     "scam",
     "platform",
     "advanced",
+    # CR054 Wave 2 / CR058: the specialty strands sort last, after the general
+    # vocabulary, rather than falling off the end of the list alphabetically.
+    "islamic_finance",
+    "esg",
 ]
 
 

@@ -1,0 +1,106 @@
+---
+id: "371_diversification_is_correlation_not_count"
+title: "Diversification is about correlation, not count"
+duration_min: 5
+level: 11
+module: 18
+difficulty: 3
+track: "risk_portfolio"
+code: "RISK 17"
+topic: "diversification_correlation"
+prerequisites: ["017_portfolio_exposure_and_correlation", "108_regime_dependent_correlation"]
+tags: ["diversification", "correlation", "portfolio-variance", "allocation", "level-11"]
+sources: ["Markowitz — Portfolio Selection, Journal of Finance 7(1) (1952), 77–91"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "every figure recomputed via backend/app/trading_math/portfolio_stats.py (scripts/verify_cr054_wave2_numbers.py); instrument is openly hypothetical, no real ticker carries a price; Markowitz citation checked against the Journal of Finance record"}
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# Diversification is about correlation, not count
+
+Counting positions tells you almost nothing about how diversified you are. Two holdings that move together are one position wearing two names; two that move independently are genuinely two. After this lesson you will be able to compute what a second holding actually does to your portfolio's volatility, and you will see that the answer depends almost entirely on one number — the correlation between them — and barely at all on how many tickers are on the screen.
+
+## Example
+
+Two openly hypothetical names. Call them a large-cap chipmaker and a large-cap software house, both with an annualised volatility of **30%**, held at **50/50**. Nothing here is a real company and no figure is a market price — the arithmetic is the lesson.
+
+Portfolio volatility comes out of one formula, and every figure below is computed from it rather than asserted:
+
+σₚ = √( w₁²σ₁² + w₂²σ₂² + 2·w₁·w₂·ρ·σ₁·σ₂ )
+
+Hold the two holdings and the two volatilities fixed. Vary only ρ, the correlation:
+
+| correlation ρ | portfolio volatility | vs. holding one name |
+|---|---|---|
+| 1.00 | **30.00%** | no change at all |
+| 0.90 | **29.24%** | −0.76 pp |
+| 0.70 | **27.66%** | −2.34 pp |
+| 0.50 | **25.98%** | −4.02 pp |
+| 0.00 | **21.21%** | −8.79 pp |
+| −0.50 | **15.00%** | −15.00 pp |
+
+Read the top row first. At ρ = 1.00 you own two tickers and exactly one position: the second name reduced your volatility by nothing. At ρ = 0.90 — an ordinary figure for two mega-cap technology names in the same cycle — you bought 0.76 percentage points of volatility reduction for the effort of researching a whole second company. At ρ = 0.00 the same 50/50 split cuts volatility by nearly nine points, and the mathematics has not changed; only ρ has.
+
+The 21.21% row is worth pausing on: two 30%-volatility assets, held equally, with zero correlation, produce 30% ÷ √2. That is the entire diversification benefit in one expression, and it is a statement about independence, not about count.
+
+## The trap
+
+The trap is treating "how many positions do I hold" as the diversification question and stopping there. It feels rigorous — the number is countable, it goes up when you do work, and a screen with eight tickers looks obviously safer than a screen with two. But the count is the one input the formula above barely uses. Eight names drawn from one sector in one cycle sit at correlations near 0.85 and behave like one bet with extra commission; three names from genuinely different demand drivers can do more for your volatility than the eight.
+
+The correct mental model: you are not accumulating tickers, you are accumulating **independent sources of return**. Ask of every addition, *what would have to happen for this to fall while the rest of my book rises?* If you cannot name a mechanism, the addition is a duplicate. And the correlation you should price in is not the calm-market one — <Lesson id="108_regime_dependent_correlation"/> shows those figures migrating toward 1 exactly when the diversification is supposed to pay.
+
+## The steelman
+
+The strongest case against this lesson: correlation is estimated from past returns, and a number that migrates in a crisis is a number you cannot plan with — so the practitioner who ignores ρ and simply spreads across many names and sectors ends up with a similar book and a fraction of the modelling error. That case has real force, and the honest reply is not that ρ is stable. It is that the count-only heuristic has no way to *notice* the failure it is most exposed to: an eight-name book that is secretly one bet reads as "diversified" under counting and reads correctly under any correlation estimate, however rough. The falsifier is specific and checkable on your own book: take your holdings, compute pairwise correlations over the last year, and see whether the count-based view and the correlation-based view rank your positions differently. If they agree, the extra work bought nothing and the sceptic is right about your book. If the correlation view flags a cluster the count could not see, it has already paid for itself.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="Two hypothetical holdings each carry 30% annualised volatility and are held 50/50. Their correlation is 0.90. What is the portfolio's volatility, and what did the second holding buy you?"
+  options={[
+    "15.00% — splitting the money across two names halves the volatility",
+    "29.24% — the second name reduced volatility by 0.76 percentage points, because at ρ = 0.90 the two are very nearly the same bet",
+    "30.00% — correlation below 1.00 never changes portfolio volatility",
+    "21.21% — two equally-weighted holdings always give you 30% ÷ √2"
+  ]}
+  answer={1}
+  explanation="Substituting into σₚ = √(w₁²σ₁² + w₂²σ₂² + 2w₁w₂ρσ₁σ₂) with w = 0.5, σ = 0.30 and ρ = 0.90 gives a variance of 0.0855 and a volatility of 29.24%. The answer claiming 15.00% halves the volatility along with the money, which would require ρ = −0.50 here, not 0.90. The answer claiming 30.00% is the ρ = 1.00 case — correlation strictly below 1 always reduces volatility, just often by very little. The answer claiming 21.21% applies the ÷√2 shortcut, which is the special case of zero correlation and not a general rule."
+/>
+
+<Quiz
+  question="You hold eight names and a colleague holds three. Which portfolio is more diversified?"
+  options={[
+    "The eight-name portfolio — more independent positions is the definition of diversification",
+    "The three-name portfolio — concentration in fewer, better-understood names is always lower risk",
+    "Unanswerable from the counts alone: diversification is set by the correlations between the holdings, and eight names from one sector can behave as one position while three from unrelated demand drivers behave as three",
+    "The eight-name portfolio, provided none of the eight exceeds the single-name cap"
+  ]}
+  answer={2}
+  explanation="The formula uses weights, volatilities and correlations; the number of tickers enters only through the weights. Eight names at ρ ≈ 0.85 sit close to the ρ = 1.00 row of the table, where the extra holdings change portfolio volatility by almost nothing. The answer equating more names with more independent positions is the exact substitution this lesson exists to break — names are not positions. The answer preferring concentration confuses conviction with risk, which is a separate argument and not a diversification claim. And the answer invoking the single-name cap is checking a different control: the cap limits how much one mistake costs you, not whether your holdings move together."
+/>
+
+<Quiz
+  question="A book of five holdings has an average pairwise correlation of 0.30 measured over the past year. In a sharp market decline those correlations run at 0.85. Pulling both facts together, what is the honest way to describe this book's diversification?"
+  options={[
+    "It is diversified, since 0.30 is the correlation observed over the full year and a crash week is a small sample that should not drive an allocation",
+    "It is not diversified, because the only correlation that matters is the crash figure and the calm-market number is noise",
+    "The question cannot be answered without the five volatilities, since correlation alone does not determine portfolio risk"
+    "It is diversified in ordinary conditions and much less so in the conditions where the protection was supposed to matter — so the crash correlation, not the average, is the figure to size against",
+  ]}
+  answer={3}
+  explanation="Both figures are real measurements of different regimes, and the loss you are protecting against arrives in the crash regime, so the crash correlation is the number to size against. The answer that dismisses the crash week as a small sample gets the risk exactly backwards — that week is the whole reason the diversification was bought. The answer that dismisses the calm-market figure as noise overcorrects: 0.30 is a genuine description of most of the year and is what the book will feel like day to day. The answer demanding the volatilities is technically true of the formula but evades the question, which asks about diversification — the ratio of portfolio risk to the risk of its parts, which correlation alone does move."
+/>
+
+## Try it
+
+Open your Portfolio and list your open holdings. For each pair, write down a one-line mechanism that would make one of them fall while the other rises — a different customer, a different input cost, a different currency, a different rate sensitivity. Pairs where you cannot name a mechanism are your real position count. Then Convene the Room on a name you were considering adding, and read the Verdict with one question in mind: does this add an independent source of return, or a second unit of one I already own? The Verdict is a training artifact for you to evaluate, not investment advice.
+
+## Takeaway
+
+Before adding a holding, ask what would make it fall on a day the rest of your book rises — if you cannot answer, you are buying the same position twice, whatever the ticker says.
+
+*Where this comes from: Markowitz's insight that a portfolio's risk is a function of covariances, not of the individual assets' risks — Portfolio Selection (1952).*

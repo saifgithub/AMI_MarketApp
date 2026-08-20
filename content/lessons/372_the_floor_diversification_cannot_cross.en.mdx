@@ -1,0 +1,106 @@
+---
+id: "372_the_floor_diversification_cannot_cross"
+title: "The floor diversification cannot go below"
+duration_min: 5
+level: 11
+module: 18
+difficulty: 3
+track: "risk_portfolio"
+code: "RISK 18"
+topic: "systematic_vs_idiosyncratic"
+prerequisites: ["371_diversification_is_correlation_not_count"]
+tags: ["diversification", "systematic-risk", "idiosyncratic-risk", "portfolio-variance", "level-11"]
+sources: ["Markowitz — Portfolio Selection, Journal of Finance 7(1) (1952), 77–91", "Statman — How Many Stocks Make a Diversified Portfolio?, JFQA 22(3) (1987), 353–363", "Evans & Archer — Diversification and the Reduction of Dispersion of Returns, Journal of Finance (1968)"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "N-asset volatilities recomputed via portfolio_variance() over an explicit equicorrelated covariance matrix (scripts/verify_cr054_wave2_numbers.py); Statman's 30/40 conclusion and the JFQA 22(3) 353–363 citation verified against the publisher record; instrument openly hypothetical"}
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# The floor diversification cannot go below
+
+Diversification removes one kind of risk completely and the other kind not at all. After this lesson you will be able to say where your own book sits relative to the floor that no amount of further diversification can cross, and — more usefully — you will know when adding names has stopped buying you anything and the work should move somewhere else.
+
+## Example
+
+Take an openly hypothetical book of identical holdings: each name carries **30% annualised volatility**, every pair correlates at **0.35** — an ordinary figure for large-cap equities inside one market — and the money is spread equally. Nothing is a real company; the pattern is the lesson. Adding names one at a time and recomputing:
+
+| names held | portfolio volatility | gained over the previous row |
+|---|---|---|
+| 1 | **30.00%** | — |
+| 2 | **24.65%** | −5.35 pp |
+| 5 | **20.78%** | −3.87 pp |
+| 10 | **19.33%** | −1.45 pp |
+| 20 | **18.55%** | −0.78 pp |
+| 30 | **18.29%** | −0.26 pp |
+| 50 | **18.07%** | −0.22 pp |
+| 100 | **17.91%** | −0.16 pp |
+
+The column on the right is the whole lesson. The second name is worth 5.35 percentage points. Names 51 through 100 are worth 0.16 between them.
+
+And there is a hard floor underneath. As the number of names grows, portfolio volatility converges on √ρ × σ = √0.35 × 30% = **17.75%**, and it never goes below. At 30 names you are already within 0.54 percentage points of a floor you could not cross with ten thousand names.
+
+That floor has a name: **systematic risk** — the part every holding shares, which is why it survives averaging. Everything above it is **idiosyncratic** — the part specific to one company, which averages away because one firm's bad quarter is uncorrelated with another's. Diversification is a machine that removes the second and is completely powerless against the first.
+
+The academic estimates of "enough" land in this region rather than at the old rule of thumb. Evans and Archer (1968) put the number near ten; Statman (1987) reworked the cost–benefit and concluded a well-diversified portfolio of randomly chosen stocks needs **at least 30 names for a borrowing investor and 40 for a lending one** — which is a statement about where the right-hand column stops being worth the trouble, not about a point where risk disappears. <Lesson id="365_your_risk_limits_in_ami"/> covers how this maps onto the position-count limit AMI derived for you.
+
+## The trap
+
+The trap is reading "diversification reduces risk" as "enough diversification removes risk", and then sizing a book as though it did. It feels right because the early rows reward you so heavily — going from one name to five genuinely cuts volatility by nine points, which is a large, visible win, and the natural inference is that the trend continues. It does not: the curve flattens hard, and it flattens onto a floor that is a property of the market, not of your effort.
+
+The correct mental model is two separate quantities. Idiosyncratic risk is a problem you can solve, cheaply, and you are mostly done by twenty or thirty names. Systematic risk is not a problem diversification addresses at all — it is addressed, if at all, by *how much* you hold rather than *how many*, which is the exposure decision in <Lesson id="373_strategic_allocation_vs_tactical_drift"/>. A book of 200 names is fully exposed to a market-wide decline, and a beginner who diversified their way to 200 names in the belief that they had de-risked is holding the same market risk they started with, plus 200 sets of costs.
+
+## The steelman
+
+The strongest case against the "stop at thirty" reading: ρ is not a constant, and a *deliberately* chosen set of 60 names spanning different economies, currencies and rate sensitivities has a lower average pairwise correlation than a randomly chosen 30 from one index — so the extra names lower the floor itself rather than chasing the flattening curve, which is a different and much better argument for breadth. That is correct, and it is why the table's assumption is stated explicitly as "every pair correlates at 0.35": the floor moves when ρ moves. The falsifier is measurable rather than rhetorical. Compute the average pairwise correlation of the book you actually hold. If adding names has been lowering it, breadth is buying you a lower floor and is worth continuing. If it has been flat or rising — the usual outcome when names are added from whatever is currently working — the extra names are chasing the flat part of the curve, and the table's verdict stands.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="In the worked book above — every name at 30% volatility, every pair correlated at 0.35 — a holder moves from 30 names to 100. What happens to portfolio volatility?"
+  options={[
+    "It falls from 18.29% to 17.91%, a gain of 0.38 percentage points, because the curve has almost reached its 17.75% floor",
+    "It falls to roughly 5.5%, since volatility scales with 1 ÷ √N and √100 is over three times √30",
+    "It is unchanged, because diversification benefits stop entirely once a portfolio exceeds 30 names",
+    "It rises, because a larger number of holdings is harder to monitor and monitoring risk is part of portfolio risk"
+  ]}
+  answer={0}
+  explanation="Recomputing the equicorrelated formula at N = 30 and N = 100 gives 18.29% and 17.91%; the floor at √0.35 × 30% = 17.75% is what both are converging on. The answer applying 1 ÷ √N straight to 30% is the classic error — that scaling holds only when the pairwise correlation is zero, and here it is 0.35, so most of the risk is shared and cannot be averaged away. The answer claiming the benefit stops entirely at 30 overstates a real flattening into a hard stop; 0.38 points is small but not zero. The answer about monitoring difficulty describes a genuine practical cost, but it is not portfolio volatility and does not appear anywhere in the formula."
+/>
+
+<Quiz
+  question="A holder wants to reduce the risk of their equity book below the systematic floor. Which move actually addresses that, and why?"
+  options={[
+    "Add another forty names to the same market, since the floor falls as the count rises",
+    "Concentrate into the ten highest-conviction names, since conviction reduces the risk of being wrong",
+    "Rebalance more frequently, since more frequent rebalancing keeps weights near target and lower drift means lower volatility"
+    "Hold less of the book in equities, or add exposure whose driver differs from the existing one — because the floor is shared risk, and only changing how much shared risk you hold, or what drives it, moves it",
+  ]}
+  answer={3}
+  explanation="The floor is √ρ × σ: it responds to how much you hold and to the correlation structure, not to the count. Reducing the exposure or introducing a genuinely different driver are the two levers that touch those terms. The answer adding forty more names has the relationship backwards — the count is precisely what the floor is invariant to. The answer concentrating into ten names raises idiosyncratic risk back up and leaves the systematic part untouched, so it moves the portfolio in the wrong direction on the one axis diversification does control. The answer about rebalancing frequency controls drift away from policy weights, which is a real discipline covered in <Lesson id="374_rebalancing_the_rule_that_sells_winners"/>, but it does not lower the floor."
+/>
+
+<Quiz
+  question="Two books both hold 40 names. Book A's names average a pairwise correlation of 0.35; Book B's average 0.15. Both hold names of 30% volatility, equally weighted. Bringing together everything in this module so far, what can you say about their risk?"
+  options={[
+    "They carry the same risk, because both hold 40 names and both are past the point where extra names matter",
+    "Book B is riskier, because a lower correlation means its holdings are less predictable relative to each other",
+    "Book A is riskier, and the gap is permanent: A is converging on a floor of about 17.75% while B converges on about 11.62%, and no amount of further diversification closes that difference",
+    "Book A is riskier today, but the difference disappears as both books add more names, since all portfolios converge on the same market floor"
+  ]}
+  answer={2}
+  explanation="The floor is √ρ × σ, so Book A converges on √0.35 × 30% ≈ 17.75% and Book B on √0.15 × 30% ≈ 11.62%. That is the module's core synthesis: the count sets how close you get to your floor, and the correlation sets where the floor is. The answer equating the two books uses count as the only input, which the table disproves. The answer calling low correlation riskier confuses correlation with volatility — ρ describes co-movement, and every name here has identical 30% volatility. The answer expecting convergence to a shared floor assumes every book faces the same ρ, which is exactly the assumption that differs between them."
+/>
+
+## Try it
+
+Open your Portfolio and count your open holdings, then place yourself on the table above. If you hold fewer than five names, the next addition is worth several percentage points of volatility and is the highest-value work available to you. If you hold more than twenty-five, further additions are worth fractions of a point — so ask the Portfolio Manager in a 1-on-1 what would reduce the *shared* risk in your book instead, and evaluate the answer rather than acting on it. Remember: AMI is a training simulator, and everything it produces is a practice artifact.
+
+## Takeaway
+
+Diversification solves company-specific risk and is roughly finished by thirty names; the market risk underneath is untouched by counting, and only changing your exposure or its drivers moves it.
+
+*Where this comes from: Markowitz's decomposition of portfolio variance into shared and specific components — Portfolio Selection (1952) — with the "how many names" question as Statman (1987) reworked it.*

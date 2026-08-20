@@ -1,0 +1,105 @@
+---
+id: "378_beta_and_capm_what_beta_is_not"
+title: "Beta and CAPM — what beta is, and what it is not"
+duration_min: 6
+level: 11
+module: 19
+difficulty: 4
+track: "risk_portfolio"
+code: "RISK 24"
+topic: "beta_capm"
+prerequisites: ["377_the_efficient_frontier_in_plain_arithmetic", "372_the_floor_diversification_cannot_cross"]
+tags: ["beta", "capm", "systematic-risk", "r-squared", "level-11"]
+sources: ["Sharpe — Capital Asset Prices: A Theory of Market Equilibrium under Conditions of Risk, Journal of Finance 19(3) (1964), 425–442", "Markowitz — Portfolio Selection, Journal of Finance 7(1) (1952), 77–91"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "betas, correlations, R² and volatilities recomputed from the printed return series via portfolio_stats.beta()/correlation()/variance() in scripts/verify_cr054_wave2_numbers.py; the series are openly hypothetical and printed in full so a reader can reproduce every figure; Sharpe citation verified against the Journal of Finance record"}
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# Beta and CAPM — what beta is, and what it is not
+
+Beta is the most quoted risk number in investing and one of the most misread: it does not measure how risky a holding is, it measures the part of its movement that the market explains. After this lesson you will be able to compute a beta from a return series, read it alongside the number that tells you whether it means anything, and say precisely which risks CAPM claims you are paid for — and which it says you are not.
+
+## Example
+
+Twelve months of openly hypothetical returns, printed in full so every figure below can be reproduced. No real instrument appears.
+
+- **Market:** +2%, −1%, +3%, 0%, −2%, +4%, +1%, −3%, +2%, +1%, −1%, +2%
+- **Steady:** +3%, −2%, +3%, +1%, −3%, +4%, 0%, −4%, +3%, +2%, −2%, +1%
+- **Story:** +10%, −8%, −2%, +7%, −12%, 0%, +8%, +1%, +8%, −7%, +4%, −1%
+
+Beta is a ratio of two quantities already computed in <Lesson id="371_diversification_is_correlation_not_count"/>: β = cov(asset, market) ÷ var(market). Running it:
+
+| | beta | R² | monthly volatility |
+|---|---|---|---|
+| Market | 1.00 by definition | 1.00 | **2.10%** |
+| Steady | **1.21** | **0.90** | **2.68%** |
+| Story | **1.00** | **0.09** | **7.08%** |
+
+Now put the two rows side by side. **Story has a beta of exactly 1.00** — by the textbook gloss, "moves with the market one-for-one" — and it is **3.4 times as volatile as the market**, with only **9%** of its variation explained by the market at all. Steady, with the higher beta of 1.21, is the far quieter holding.
+
+Beta did not lie; it was asked one question and answered it. It measures the *slope* of an asset against the market — how much of the market's move typically passes through — and says nothing about how much else is going on. **R²** is the number that tells you how much else: at 0.90, Steady's movement is largely the market's movement, and its beta describes most of what it does. At 0.09, Story's beta describes about a tenth of what it does, and the other 91% is company-specific noise that a beta figure was never designed to see. **A beta quoted without an R² is a slope with no indication of whether anything lies near the line.**
+
+CAPM (Sharpe, 1964) takes the next step and says which risk gets paid. Expected return = risk-free + β × (market premium). With a 4% risk-free rate and a 5% assumed market premium — both assumptions of this example, not forecasts — Steady's expected return is 4 + 1.21 × 5 = **10.05%**, and Story's is 4 + 1.00 × 5 = **9.00%**. Story carries 3.4 times the market's volatility and is offered *less* expected return than the quieter Steady, because CAPM pays only for the risk you cannot diversify away. Story's extra 91% is idiosyncratic — the kind <Lesson id="372_the_floor_diversification_cannot_cross"/> shows averaging out across a book — and a model built on diversified holders will not compensate anyone for carrying it.
+
+## The trap
+
+The trap is using beta as a single-stock risk gauge: "beta 0.7, so it's a defensive name; beta 1.8, so it's aggressive." It sounds like a risk ranking, and for holdings with high R² it very nearly is. But applied to a Story-type name it inverts: beta 1.00 reads as ordinary, and the holding swings three times as hard as the market on news that has nothing to do with the market.
+
+The correct mental model: beta answers "if the market moves 1%, how much of that typically arrives here?" and nothing else. Total risk is volatility. The market-linked share of it is R². Beta is the exchange rate between the two, and quoting an exchange rate tells you nothing about the size of the transaction. There is also a second, quieter trap: CAPM's claim that idiosyncratic risk goes unpaid is conditional on being diversified. A holder with three positions has not diversified that risk away — they are carrying it and, under the model, being paid nothing for it, which is a considerably worse position than the beta figure suggests.
+
+## The steelman
+
+The strongest case against all of this: CAPM's central empirical prediction — higher beta, higher average return — has held up badly. The relationship measured in the data is far flatter than the model requires and has at times run the wrong way, which is a large part of what motivated the factor work in <Lesson id="379_factors_value_size_momentum_quality_low_vol"/>. A model whose main testable claim fails is a poor guide to what returns to expect. That is a fair reading of the evidence and it should change how the model is used, not whether. Two of its components survive the criticism intact because they are decompositions rather than predictions: splitting risk into a market-linked part and a specific part is arithmetic, and it holds whatever the reward for beta turns out to be. The falsifier is specific: if realised returns lined up neatly with beta across a broad sample, the model's pricing claim would be vindicated and the flat-line criticism would be the thing to abandon. They do not — so use beta to understand *what a holding is exposed to*, and treat any expected-return figure it produces as an assumption you have chosen, which is exactly how the 10.05% above was labelled.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Story has a beta of 1.00, an R² of 0.09, and monthly volatility of 7.08% against the market's 2.10%. How should its beta be read?"
+  options={[
+    "As an ordinary-risk holding, since a beta of 1.00 means it carries the same risk as the market",
+    "As a defensive holding, since a beta no greater than 1.00 cannot amplify market moves",
+    "As a slope that describes very little of what this holding does: 9% of its variation is market-linked, and its total volatility is 3.4 times the market's, almost all of it company-specific",
+    "As unreliable, since a beta of exactly 1.00 indicates the calculation failed to find a relationship"
+  ]}
+  answer={2}
+  explanation="Beta measures the market-linked slope and R² measures how much of the movement lies near that line; at 0.09 the slope describes about a tenth of this holding's behaviour, and volatility shows the rest is large. The answer equating beta 1.00 with market-level risk is the exact substitution the example was built to break — same beta, 3.4 times the volatility. The answer calling it defensive compounds that error by reading a slope as a risk level. And the answer treating 1.00 as a calculation failure misreads what a low R² means: the beta is computed correctly, it simply explains little, which is why the two figures must be read together."
+/>
+
+<Quiz
+  question="Under CAPM with a 4% risk-free rate and a 5% market premium, Steady (beta 1.21) has an expected return of 10.05% and Story (beta 1.00) 9.00% — even though Story is far more volatile. What is the model asserting?"
+  options={[
+    "That volatility is irrelevant to returns, so a portfolio's total risk can be ignored",
+    "That only non-diversifiable risk is compensated: Story's extra volatility is company-specific and averages out across a diversified book, so no diversified holder need be paid to bear it",
+    "That Story is mispriced, and its expected return should be raised to reflect its true volatility",
+    "That expected returns are determined by past volatility, and Story's history is too short to price"
+  ]}
+  answer={1}
+  explanation="CAPM prices systematic exposure only, on the reasoning that diversifiable risk can be removed at no cost so nobody has to be paid to carry it. The answer that volatility is irrelevant overstates it — total volatility matters enormously to a holder who is not diversified, which is the model's key conditional. The answer calling Story mispriced treats the CAPM figure as an observation to be reconciled with volatility rather than as the model's own definition of fair compensation. And the answer about return histories describes neither the formula, which contains no past returns, nor the reasoning."
+/>
+
+<Quiz
+  question="A holder with three positions, all Story-type names with low R², points out that each has a beta near 1.00 and concludes their portfolio carries roughly market-level risk. Pulling this module together, what is the flaw?"
+  options={[
+    "There is no flaw: betas near 1.00 aggregate to a portfolio beta near 1.00, and portfolio beta is portfolio risk",
+    "The flaw is that betas cannot be averaged across holdings, so no portfolio-level statement can be made from them",
+    "The flaw is that CAPM does not apply to portfolios of fewer than thirty holdings, so beta is undefined here"
+    "Their betas describe only the ~9% of each holding's movement that is market-linked; the specific risk making up the rest is only removed by diversification, and with three positions it has not been removed — so they hold market-level systematic risk plus a large uncompensated specific risk",
+  ]}
+  answer={3}
+  explanation="This is the synthesis: beta aggregates correctly, but it only ever described the market-linked slice, and CAPM's promise that the remainder goes unpaid assumes a holder who has actually diversified it away. Three low-R² names have not. The answer accepting the conclusion equates portfolio beta with portfolio risk, which is the error the whole lesson dismantles. The answer that betas cannot be averaged is wrong on the arithmetic — a portfolio's beta is the weighted average of its holdings' betas — and it also concedes ground that is not in dispute. And the answer about a minimum holding count invents a rule: beta is perfectly well defined for one holding, and the issue is what it leaves out."
+/>
+
+## Try it
+
+Open a holding in your simulated Portfolio and ask the Market Analyst in a 1-on-1 for its beta, then ask a second question the answer will not volunteer: how much of this holding's movement is actually explained by the market? Judge whether the reply engages with that or restates the slope. Then look at how many positions you hold. If it is a handful of low-R² names, the risk you are carrying is mostly the kind CAPM says nobody pays you for — worth knowing before you size the next one. AMI's answers are training artifacts for you to evaluate, not investment advice.
+
+## Takeaway
+
+Beta is the market's share of a holding's movement, not the size of it — read it with R², and never let a beta near 1.00 convince you a holding is ordinary.
+
+*Where this comes from: Sharpe's Capital Asset Pricing Model, which prices only non-diversifiable risk — Capital Asset Prices (1964), building on Markowitz (1952).*

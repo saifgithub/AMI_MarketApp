@@ -1,0 +1,103 @@
+[
+  {
+    "id": "qa_esg_what_is_an_esg_score",
+    "category": "esg",
+    "question": "What does an ESG score actually measure?",
+    "short_answer": "One agency's opinion under one methodology. Six major agencies rating the same companies produce ratings correlating between 0.38 and 0.71 — so an ESG claim that does not name its agency cannot be checked.",
+    "long_answer": "An ESG rating requires three judgements the data cannot make for you: which indicators count, how each is measured, and how they are combined. Different agencies choose differently, and the resulting disagreement has been measured. Berg, Kölbel and Rigobon (2022) compared KLD, Sustainalytics, Moody's ESG, S&P Global, Refinitiv and MSCI and found correlations between their ESG ratings ranging from 0.38 to 0.71. Their decomposition of why is the part worth keeping: 56% of the divergence comes from measurement — agencies recording the same attribute differently — 38% from scope, meaning they look at different attributes in the first place, and only 6% from weighting. The intuitive culprit is the smallest cause. The practical consequence is that 'this company scores well on ESG' is an incomplete sentence, and that the divergence is usable rather than only alarming: if you know which of the three headings you care about, an agency whose methodology weighs it heavily is more informative than a composite that averages your priority into two things you have no view on.",
+    "related_lessons": [
+      "384",
+      "387"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "esg",
+      "ratings",
+      "divergence"
+    ]
+  },
+  {
+    "id": "qa_esg_is_this_fund_greenwashing",
+    "category": "esg",
+    "question": "How do I tell if a fund is greenwashing?",
+    "short_answer": "Ask what holding would make the claim false. 'At least 80% of assets meet the prospectus criteria' is checkable; 'our process integrates ESG factors' constrains nothing about what the fund holds.",
+    "long_answer": "Greenwashing is rarely a lie — it is usually a true sentence engineered to be unfalsifiable. Sort any sustainability claim into three buckets. A commitment names a threshold and points at a definition you can read, so a portfolio can be measured against it. A process description ('our analysts consider material environmental factors') is almost certainly true and is satisfied by considering the company and buying it anyway. An impression ('committed to a sustainable future') has no portfolio consequence at all. Emphatic language is a poor guide: the strongest-sounding claims are usually the unfalsifiable ones, because they cost nothing to make. Regulators have attacked the first gap directly. The U.S. Names Rule requires a fund whose name suggests a type of investment to invest at least 80% of assets accordingly, and its September-2023 amendments extended that to names suggesting particular characteristics, explicitly including ESG terms. The EU's SFDR classifies products instead — Article 8 promotes environmental or social characteristics, Article 9 has sustainable investment as its objective — but these are disclosure categories, not quality grades, and Article 8 spans a very wide range. Where the claim is about process rather than portfolio, the useful move is to ask for instances: which positions were declined or exited on those grounds, and what did the analysis show?",
+    "related_lessons": [
+      "385",
+      "384",
+      "387"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "esg",
+      "greenwashing",
+      "disclosure",
+      "regulation"
+    ]
+  },
+  {
+    "id": "qa_esg_does_divesting_change_anything",
+    "category": "esg",
+    "question": "If I refuse to hold an industry, does that actually change anything?",
+    "short_answer": "It guarantees you do not own it, which for many people is the whole objective. It does not change the company — only stewardship, which requires owning the shares, has a mechanism for that.",
+    "long_answer": "Three practices share the ESG vocabulary and do different jobs. Exclusion removes a category from the universe before analysis: it is a rule, so it is auditable, and it delivers exactly one thing — you do not own the category. Shares trade on a secondary market, so a decision not to buy means someone else did, and operations are unaffected. Integration brings environmental and governance information into the valuation of a company you may still buy; it changes prices and weights, not the universe, and can conclude a heavy emitter is attractive at a low enough price. Stewardship uses the rights of ownership — voting, engaging, supporting or opposing resolutions — and is the only one with a channel to company behaviour, which puts it in direct tension with divesting. There is a real large-scale argument for divestment: at sufficient coordinated scale it raises a company's cost of capital. That works through the price of new financing, so it bites on firms that need to raise money and barely at all on cash-generative incumbents — often the very firms being divested. Decide the objective in one sentence first, then pick the mechanism that matches it.",
+    "related_lessons": [
+      "386",
+      "387"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "esg",
+      "exclusion",
+      "stewardship",
+      "integration"
+    ]
+  },
+  {
+    "id": "qa_esg_what_does_amis_flag_do",
+    "category": "esg",
+    "question": "What does AMI's ESG-lite flag actually exclude?",
+    "short_answer": "Three named buckets — fossil-fuel industries within the Energy sector, tobacco/alcohol/gambling, and aerospace and defence — across the S&P 500 only. It is an exclusion rule, never a rated score, and it carries no governance dimension at all.",
+    "long_answer": "With `esg_lite` set, the Portfolio Manager's safety floor refuses a simulated trade in a curated exclusion set. The set is three reviewable buckets joined: fossil fuels (oil and gas across integrated, exploration, midstream, refining, equipment and drilling, plus thermal and coking coal, each gated on the company sitting in the Energy sector), tobacco with brewers, wineries, distillers, gambling and casinos, and one industry bucket for aerospace and defence. Classification is by industry label from a market-data feed, which has two consequences you should know before relying on it: a diversified conglomerate earning a slice of revenue from an excluded activity is not caught, because this is a category rule rather than a revenue-share screen; and the aerospace-and-defence bucket is a single industry string, so a largely commercial-aircraft business is excluded alongside the weapons primes. Coverage is the S&P 500 parent set — a ticker outside it returns UNKNOWN, which permits the trade while telling you it is unclassified, because blocking on UNKNOWN would silently reject every name AMI has not classified. Every verdict carries the phrase 'AMI's curated best-effort ESG proxy … NOT a rated ESG score', with a source and an as-of date. The honest summary: it labels itself accurately and it is narrower than the letters in its name suggest — it is an E-and-a-bit-of-S exclusion rule with no G.",
+    "related_lessons": [
+      "387",
+      "386"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "esg",
+      "ami_internal",
+      "mandate",
+      "compliance"
+    ]
+  },
+  {
+    "id": "qa_esg_does_esg_cost_returns",
+    "category": "esg",
+    "question": "Does investing with an ESG screen cost me returns?",
+    "short_answer": "A screen narrows the universe, which is a real constraint — but the honest answer depends on which practice you mean, and the question usually hides an unstated objective worth naming first.",
+    "long_answer": "Start by separating the three practices, because they have different effects. An exclusion removes candidates from the universe, and any constraint on an optimisation can only equal or worsen its result within the model — how much depends on how much of the market is excluded and how correlated the excluded names are with what remains. Excluding a handful of industries from a broad market leaves a book that still holds nearly all of the systematic risk, so the effect on portfolio volatility is usually small; the effect on return is not something anyone can state as a fact in advance, and any figure you are quoted comes from a specific backtest whose universe, period and costs are worth checking with the six questions in the factor-claim lesson. Integration makes no such claim — it argues that pricing environmental and governance risk properly improves valuation, which if true costs nothing and is why the practice exists. Stewardship is about influence rather than return. And note the question's shape: 'does it cost returns' presumes return is the only objective. If your objective is not to own a category, the constraint is the point, and the right comparison is whether the cost is acceptable to you, not whether it is zero.",
+    "related_lessons": [
+      "386",
+      "382",
+      "372"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "esg",
+      "returns",
+      "exclusion",
+      "evaluation"
+    ]
+  }
+]

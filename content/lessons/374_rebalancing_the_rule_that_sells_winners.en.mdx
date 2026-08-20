@@ -1,0 +1,108 @@
+---
+id: "374_rebalancing_the_rule_that_sells_winners"
+title: "Rebalancing: the rule that makes you sell winners"
+duration_min: 5
+level: 11
+module: 18
+difficulty: 3
+track: "risk_portfolio"
+code: "RISK 20"
+topic: "rebalancing"
+prerequisites: ["373_strategic_allocation_vs_tactical_drift"]
+tags: ["rebalancing", "allocation", "bands", "discipline", "level-11"]
+sources: ["Bodie, Kane & Marcus — Investments, portfolio rebalancing and policy weights"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "every currency figure recomputed in scripts/verify_cr054_wave2_numbers.py from the stated starting weights and returns; portfolio is openly hypothetical with no real instrument named"}
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# Rebalancing: the rule that makes you sell winners
+
+Rebalancing is the only portfolio discipline that systematically requires you to sell what has been working and buy what has not. After this lesson you will be able to compute when your book has drifted far enough to act, decide the trade in advance rather than in the moment, and — the part that trips almost everyone — explain why a rule you will hate obeying is worth writing down before you need it.
+
+## Example
+
+An openly hypothetical simulated account of **$100,000** with a policy of **60% growth / 40% defensive** — no real instruments, chosen so the arithmetic is visible.
+
+Starting book: **$60,000 growth · $40,000 defensive.**
+
+Over the following year the growth sleeve returns **+40%** and the defensive sleeve **+2%**:
+
+- growth: 60,000 × 1.40 = **$84,000**
+- defensive: 40,000 × 1.02 = **$40,800**
+- total: **$124,800**
+
+New weights: 84,000 ÷ 124,800 = **67.3% growth**, 40,800 ÷ 124,800 = **32.7% defensive**. Nobody traded. The book simply became more aggressive, exactly as <Lesson id="373_strategic_allocation_vs_tactical_drift"/> describes.
+
+Now the rule. A **band** says: act when a sleeve is more than 5 percentage points from its policy weight — so the trigger for growth sits at 65% or 55%. At 67.3% the band is breached, and the trade is fully determined before you look at any chart:
+
+- target growth = 0.60 × 124,800 = **$74,880**
+- sell = 84,000 − 74,880 = **$9,120** of growth, into defensive
+
+Two things about that $9,120. First, it is a computation, not a judgement: the band decided *whether*, the policy decided *how much*, and no view about next year enters anywhere. Second, it is an order to sell the thing that just returned 40% and buy the thing that returned 2%, which is why the rule has to exist on paper before the moment arrives.
+
+The alternative rule is **calendar** rebalancing — check on a fixed date, act on whatever the gap is. It is simpler to run and it trades on schedule whether or not anything moved, which means more trades in quiet years and slower response in violent ones. Bands trade only when something happened. Neither is obviously better; both beat "when I get round to it", which is not a rule at all.
+
+Rebalancing is not free. Every rebalance is real trades with spreads and, outside a simulator, tax consequences — the costs in <Lesson id="105_hidden_costs_in_risk_reward"/> apply here in full. A five-point band trades rarely; a one-point band tracks the policy beautifully and pays for the privilege in costs. That trade-off is the reason to pick a band deliberately rather than take the tightest one that sounds rigorous.
+
+## The trap
+
+The trap is discovering, at the moment the band triggers, that you have a view. The growth sleeve is up 40% and the reasons are legible — the story is good, the momentum is visible, and selling into it feels like vandalism. So the rule is suspended, "just this once", and the suspension is retroactively justified by the very outperformance that caused the trigger.
+
+The correct mental model: rebalancing is not a forecast and never was. It does not claim the winner will fall. It claims that your policy weights described the risk you were willing to hold, and 67.3% is not the number you chose. If you genuinely believe the growth sleeve deserves a permanent 67%, that is a legitimate decision — but it is a decision to change the *policy*, which you make deliberately, in writing, with a reason that is not "it went up". The one thing you may not do is leave the policy at 60 and quietly hold 67, because then you have neither a rule nor a view, only a drift you have agreed not to look at.
+
+## The steelman
+
+The strongest case against banded rebalancing: it is a systematic bet against momentum, and momentum is one of the better-documented return patterns in equities — <Lesson id="379_factors_value_size_momentum_quality_low_vol"/> covers the evidence. Selling winners and buying laggards on a fixed schedule trades against that pattern by construction, and pays costs to do it. That argument is real and is not disposed of by calling rebalancing "disciplined". The reply is that the two claims are about different objects: momentum is an argument about expected *returns*, and rebalancing is a control on *risk* — it exists to stop the book drifting into a shape you did not choose, and it would be worth running even if it cost a little return. The falsifier is measurable on your own record: log the weights at each trigger and what you did. If your suspensions were followed by continued outperformance often enough to cover their costs, you have a momentum overlay and should write it into the policy as one, with its own size and exit. If they were mostly followed by giving the gains back at a higher risk level, the rule was right and you were the failure mode it guards against.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="A $100,000 book starts at 60% growth / 40% defensive. Over a year the growth sleeve returns +40% and the defensive sleeve +2%. Under a 5-percentage-point band, what does the rule require?"
+  options={[
+    "Nothing — the growth weight is 64%, inside the band",
+    "Sell $24,000 of growth, because the growth sleeve gained $24,000 and rebalancing returns the book to its starting dollar amounts",
+    "Nothing — bands measure the return gap between sleeves, and 38 points of gap is not a weight",
+    "Sell $9,120 of growth into defensive: the sleeves are worth $84,000 and $40,800 on a $124,800 total, so growth is at 67.3%, past the 65% trigger, and the 60% target is $74,880"
+  ]}
+  answer={3}
+  explanation="Weights are computed on the current total, not on the starting one: 84,000 ÷ 124,800 = 67.3%, which breaches the 65% trigger, and the 60% target of the new total is $74,880, leaving $9,120 to sell. The answer stating 64% miscomputes the weight and would leave a breached band unactioned. The answer selling the full $24,000 gain restores the starting dollar amounts rather than the policy weights, which would leave growth at $60,000 out of $124,800 — a 48% weight, well below policy in the other direction. The answer about the return gap measures the wrong quantity: bands are defined on weights, and two sleeves can diverge sharply in return while weights stay inside the band if the drifting sleeve is small."
+/>
+
+<Quiz
+  question="A holder's growth sleeve triggers the band after a strong run. They skip the rebalance because the sleeve's momentum looks intact. What have they actually done?"
+  options={[
+    "Made a tactical decision to overweight growth, which is legitimate as long as they are comfortable with it",
+    "Replaced a written risk control with an unwritten return forecast — and left the policy at 60% while holding 67.3%, so the book now has neither a rule nor a stated view",
+    "Correctly applied the rule, since bands are guidelines and the point of judgement is to override them when the evidence is clear",
+    "Reduced their costs, which is the main purpose of using a band rather than a calendar"
+  ]}
+  answer={1}
+  explanation="Skipping a trigger is a forecast — it asserts the winner keeps winning — swapped in for a control that was about risk, and because the policy document still says 60% there is no record that any view was taken. The answer calling it a legitimate tactical decision would be right if it had a size, a funding source and an end condition, which is exactly what an unwritten skip lacks. The answer that bands are guidelines to override on clear evidence describes what everyone believes at the moment of the trigger, which is why the rule is written down beforehand. And the answer about cost savings confuses a side effect with a purpose — skipping one rebalance does save its costs, but that is not the reason given, and cost control is the argument for choosing a wider band, not for ignoring the band you chose."
+/>
+
+<Quiz
+  question="Someone proposes tightening from a 5-point band to a 1-point band, arguing that closer tracking of the policy is strictly better. Pulling together what a band does and what it costs, how should this be assessed?"
+  options={[
+    "Strictly better, since the policy weights represent the intended risk and any deviation from them is undesirable",
+    "Strictly worse, since more frequent trading always reduces returns and the policy weights are approximate anyway",
+    "A real trade-off: a 1-point band tracks the intended risk more closely but triggers far more often, and each trigger costs spread and, outside a simulator, tax — so the right width depends on how much drift matters against how much the trading costs",
+    "Unassessable without knowing the expected returns of the two sleeves, since the optimal band depends on which sleeve is expected to outperform"
+  ]}
+  answer={2}
+  explanation="This is the module's synthesis: the band width is a deliberate trade between tracking error against the policy and transaction costs, and neither end of the range dominates. The answer calling tight bands strictly better prices the drift and ignores the costs entirely. The answer calling them strictly worse ignores the drift and also overreaches — more trading reduces returns net of costs, which is not the same as always. And the answer demanding expected returns imports a forecast into a control that deliberately contains none: the band exists precisely so the decision does not depend on a view about which sleeve wins."
+/>
+
+## Try it
+
+Pick your band before you need it. Write one line — "I rebalance when any sleeve is more than N points from policy" — and pick N deliberately, knowing that a smaller N means more trades. Then open your Portfolio, compute your current weights against the policy you wrote in <Lesson id="373_strategic_allocation_vs_tactical_drift"/>, and see whether you are already outside your own band. If you are, write down the exact trade the rule requires before you decide anything about whether you like it.
+
+## Takeaway
+
+Set the band while you have no view, because the moment it triggers you will have one — and the whole value of the rule is that it was written by someone who did not.
+
+*Where this comes from: the policy-weights-and-rebalancing framework as set out in Bodie, Kane & Marcus, Investments.*

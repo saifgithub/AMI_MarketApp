@@ -36,6 +36,8 @@ release/rule/report, not the institution alone.
 | Saudi Central Bank (SAMA) — USD peg | GCC FX |
 | Freddie Mac — Primary Mortgage Market Survey | rate transmission to mortgages |
 | IMF · World Bank | cross-country macro |
+| U.S. SEC — Rule 35d-1 (the fund "Names Rule"), Sept-2023 amendments | fund naming, the 80% investment policy, ESG-suggestive names |
+| EU — Regulation (EU) 2019/2088 (SFDR), Articles 8 / 9 | sustainability-related product disclosure |
 
 ## Tier 2 — Standard-setters & professional bodies
 
@@ -72,8 +74,26 @@ release/rule/report, not the institution alone.
 | Gary Klein — "Performing a Project Premortem", *HBR* (Sept 2007) | the pre-mortem / prospective hindsight |
 | Mauboussin — *The Success Equation* (2012) | luck vs skill, sample size, reversion to the mean |
 | Parasuraman & Riley (1997), "Humans and Automation: Use, Misuse, Disuse, Abuse", *Human Factors* 39(2) | automation bias, cognitive offloading |
+| Markowitz — "Portfolio Selection", *Journal of Finance* 7(1) (1952), 77–91 | portfolio variance, covariance, the efficient set |
+| Sharpe — "Capital Asset Prices", *Journal of Finance* 19(3) (1964), 425–442 | CAPM, beta, systematic vs specific risk |
+| Fama & French — "The Cross-Section of Expected Stock Returns", *Journal of Finance* 47(2) (1992), 427–465 | size and book-to-market in the cross-section |
+| Fama & French — "Common Risk Factors in the Returns on Stocks and Bonds", *JFE* 33(1) (1993), 3–56 | the constructed three-factor model |
+| Jegadeesh & Titman — "Returns to Buying Winners and Selling Losers", *Journal of Finance* 48(1) (1993), 65–91 | momentum over 3–12 month holding periods |
+| Statman — "How Many Stocks Make a Diversified Portfolio?", *JFQA* 22(3) (1987), 353–363 | how many names — **note: the paper's conclusion is at least 30 for a borrowing investor and 40 for a lending one; do not quote a single number** |
+| Evans & Archer — "Diversification and the Reduction of Dispersion", *Journal of Finance* (1968) | the earlier ~10-name estimate |
+| French & Poterba — "Investor Diversification and International Equity Markets", *AER* 81(2) (1991), 222–226 | home-country bias — **its 98/94/82% domestic shares are late-1980s data and must be dated when cited** |
+| Berg, Kölbel & Rigobon — "Aggregate Confusion: The Divergence of ESG Ratings", *Review of Finance* 26(6) (2022), 1315–1344 | ESG rater divergence — **the abstract states a 0.38–0.71 correlation range and a 56/38/6 measurement-scope-weight split; it does NOT state an average of 0.54 and makes NO credit-rating comparison, both of which circulate widely** |
 
-The five entries above were added by **CR062** (EVAL track) — the decision-science canon behind
+The nine Tier-3 entries and two Tier-1 entries added last were admitted by **CR054 Wave 2**
+(M18/M19 portfolio theory + M26 ESG), each verified against the publisher's own record at
+authoring time rather than from memory. Two carry caveats for the same reason the Tetlock entry
+does: the Statman "30 or 40" conclusion is routinely flattened to a single number, and the
+*Aggregate Confusion* result is routinely quoted with an average correlation and a credit-rating
+comparison that appear nowhere in the paper. Wave 2's lessons ship the range and stop there.
+Evans & Archer, Statman and French & Poterba were already cited in the corpus (lesson 365) without
+ever having been admitted here — that gap is closed by the same commit.
+
+The five entries above them were added by **CR062** (EVAL track) — the decision-science canon behind
 module M24. The Tetlock caveat is not decoration: the first CR062 verification pass caught a lesson
 computing Brier on the 0–1 scale while citing a source that reports on 0–2, which is a
 citation-integrity defect even though every number was arithmetically correct.

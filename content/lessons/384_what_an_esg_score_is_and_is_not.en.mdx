@@ -1,0 +1,95 @@
+---
+id: "384_what_an_esg_score_is_and_is_not"
+title: "What an ESG score is, and what it is not"
+duration_min: 6
+level: 13
+module: 26
+difficulty: 3
+track: "ethics_integrity"
+code: "ETHIC 11"
+topic: "esg_ratings"
+prerequisites: ["299_conflicts_of_interest"]
+tags: ["esg", "ratings", "rater-divergence", "mandate", "module-26"]
+sources: ["Berg, Kölbel & Rigobon — Aggregate Confusion: The Divergence of ESG Ratings, Review of Finance 26(6) (2022), 1315–1344"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "the 0.38–0.71 correlation range, the six named raters and the 56/38/6 measurement-scope-weight decomposition were read from the paper's own abstract this session; the widely-repeated 'average 0.54' and 'credit ratings agree at 0.99' figures are deliberately NOT used because neither appears there"}
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# What an ESG score is, and what it is not
+
+An ESG score looks like a measurement and behaves like an opinion. After this lesson you will be able to say what a rating agency is actually claiming when it publishes one, why two agencies scoring the same company routinely disagree, and — the practical part — what question to ask before letting any such score influence a decision.
+
+## Example
+
+ESG stands for environmental, social and governance. A rating agency gathers data on a company across dozens of indicators inside those three headings, scores each one, weights them, and publishes a number or a letter grade.
+
+Three separate judgements are buried in that sentence, and it is worth naming them before looking at any score. **Which indicators count** — is water use in scope, is board independence, is tax conduct? **How each is measured** — is "employee turnover" self-reported, estimated, or peer-adjusted? **How they are combined** — does governance outweigh environment, and by how much? None of those three has a right answer that follows from the data. They are choices made by the agency, and different agencies make them differently.
+
+The scale of the resulting disagreement has been measured. Berg, Kölbel and Rigobon (2022) compared ratings from six agencies — KLD, Sustainalytics, Moody's ESG (Vigeo-Eiris), S&P Global (RobecoSAM), Refinitiv (Asset4) and MSCI — and found **correlations between ESG ratings ranging from 0.38 to 0.71**. For comparison of kind rather than of number: these are ratings of the same companies, in the same years, using largely public information.
+
+Their decomposition of *why* is the part worth carrying around. Of the divergence, they attribute **56% to measurement** — agencies measuring the same attribute differently — **38% to scope**, meaning they measure different attributes in the first place, and only **6% to weight**, how the pieces are combined. The intuitive culprit, "they must weight things differently", is the smallest cause by a wide margin. The disagreement is mostly about what the underlying facts *are*.
+
+That has a direct consequence for anyone reading a score. "This company scores well on ESG" is an incomplete sentence. The complete one names the agency, because a company in the upper band at one agency can sit in the middle at another, and neither is making an error — they are answering differently-specified questions.
+
+## The trap
+
+The trap is that a score arrives as a number, and numbers carry an implicit claim of measurement. A credit rating and an ESG rating look alike on the page, so the natural inference is that both are assessments of a fact with a knowable answer, and that a disagreement between raters means one of them is wrong.
+
+The correct mental model is that an ESG rating is an **opinion produced by a stated methodology**, and its usefulness depends entirely on whether that methodology matches what you care about. This cuts in an underappreciated direction: the divergence is not only a warning, it is a *usable* signal. If you know which of the three headings matters to you — say governance, because you think it predicts management behaviour — then an agency whose methodology weighs governance heavily is more informative to you than a composite that averages your priority into two other things you have no view on. The single number is the least useful form of the information.
+
+## The steelman
+
+The strongest case for using composite scores anyway: perfect measurement is not the standard any input has to meet. Analyst earnings estimates disagree, credit assessments disagree, and nobody discards them for it — a noisy signal that correlates with something real still beats no signal, and ESG scores do correlate with observable outcomes like regulatory penalties and disclosure quality. Demanding methodological unanimity before using a score is a standard that would eliminate most of the inputs to most decisions. That is a fair point, and it is why the conclusion here is "name the agency and know its methodology" rather than "ignore ESG scores". But the analogy has a limit worth being precise about: the disagreement measured above is mostly *scope and measurement* — agencies looking at different things and recording them differently — rather than the same facts read with different optimism. The falsifier is checkable rather than rhetorical: take a company you know and pull two agencies' scores plus their methodology summaries. If the gap is explained by things you can see and judge, the score is a usable input and you now know which agency to read. If the gap comes from indicators you did not know were in scope, the composite was never measuring what you assumed.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="Berg, Kölbel and Rigobon (2022) found correlations between six agencies' ESG ratings ranging from 0.38 to 0.71. What does that establish?"
+  options={[
+    "That most ESG agencies are unreliable and at least some of them are producing inaccurate ratings",
+    "That the agencies are rating different things and measuring them differently, so a rating is an opinion produced by a stated methodology rather than a measurement of a single underlying fact",
+    "That ESG ratings have no relationship to each other and cannot carry information",
+    "That the ratings would converge if the agencies agreed on how to weight environmental, social and governance components"
+  ]}
+  answer={1}
+  explanation="The correlations are positive and substantial — the agencies are picking up something related — but far from unity, which is what you expect when different methodologies answer differently-specified questions. The answer inferring unreliability assumes a single true score that someone must be missing, which is the framing the finding undermines. The answer that ratings carry no information contradicts correlations as high as 0.71. And the answer pointing at weighting is refuted by the paper's own decomposition: weight explains 6% of the divergence, against 56% for measurement and 38% for scope."
+/>
+
+<Quiz
+  question="Of the divergence between ESG raters, the largest single source is measurement — agencies recording the same attribute differently. Why does that matter more to a reader than divergence in weighting would?"
+  options={[
+    "It does not matter more; all three sources produce the same amount of disagreement in the final score",
+    "Because weighting differences are illegal under most disclosure regimes, while measurement differences are not",
+    "Because a weighting difference is transparent and adjustable — you can see the weights and reweight to your own priorities — whereas a measurement difference means the underlying data points themselves differ, so two scores are not comparable even after adjusting for stated weights",
+    "Because measurement differences arise only in the environmental pillar, which is the one most investors care about"
+  ]}
+  answer={2}
+  explanation="Weights are published and can be reapplied, so a weighting difference is a disagreement you can correct for; a measurement difference means the inputs are not the same numbers, which no reweighting fixes. The answer that all three contribute equally contradicts the 56/38/6 decomposition. The answer about legality invents a regulatory fact that does not exist. And the answer confining measurement differences to the environmental pillar is unsupported — the finding is about the ratings overall, and self-reported and estimated data appear throughout."
+/>
+
+<Quiz
+  question="A fund's marketing states that its holdings 'score in the top quartile on ESG.' Pulling this lesson together, what is the single most useful follow-up question?"
+  options={[
+    "What was the fund's return relative to its benchmark over the same period?",
+    "Which agency's rating, and what does that agency's methodology put in scope — since the claim is unverifiable without naming the opinion it rests on, and the same holdings can rank very differently elsewhere",
+    "How many of the holdings are in the top quartile, as opposed to merely above the median?",
+    "Does the fund exclude fossil fuels, tobacco and weapons?"
+  ]}
+  answer={1}
+  explanation="Given that ratings correlate as low as 0.38 across agencies, an unnamed rating is an unfalsifiable claim: the fund could be top-quartile at one agency and mid-pack at another, with neither in error. The answer about returns changes the subject to performance, which the ESG claim did not make. The answer probing the quartile threshold accepts the score as a measurement and haggles over the cut-off, leaving the substantive gap untouched. And the answer about specific exclusions is a good question about a different thing — an exclusion policy is a stated rule you can check, which is precisely why the following lesson treats it separately from a score."
+/>
+
+## Try it
+
+Open Settings → Mandate and look at the compliance flags. AMI's ESG-lite flag is deliberately *not* a rated score, and the app says so where you can see it — read the explanation text and note exactly what it claims to be. Then ask the Portfolio Manager in a 1-on-1 what "good ESG" would mean for a company you follow, and grade the answer against this lesson: does it name a methodology and a scope, or does it produce a general impression? AMI's answers are training artifacts for you to evaluate, not investment advice.
+
+## Takeaway
+
+An ESG score is one agency's opinion under one methodology, and the agencies disagree mostly about what the facts are — so an unnamed score is not a claim you can check.
+
+*Where this comes from: the measurement of ESG rating divergence and its decomposition in Berg, Kölbel & Rigobon, Aggregate Confusion (2022).*

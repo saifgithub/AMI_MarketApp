@@ -1,0 +1,102 @@
+---
+id: "381_hedging_a_book_and_what_it_costs"
+title: "Hedging a book, and what a hedge actually costs"
+duration_min: 6
+level: 11
+module: 19
+difficulty: 4
+track: "risk_portfolio"
+code: "RISK 27"
+topic: "hedging"
+prerequisites: ["378_beta_and_capm_what_beta_is_not", "380_risk_parity_and_risk_budgeting"]
+tags: ["hedging", "beta-hedge", "basis-risk", "r-squared", "level-11"]
+sources: ["Sharpe — Capital Asset Prices: A Theory of Market Equilibrium under Conditions of Risk, Journal of Finance 19(3) (1964), 425–442"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "hedge notionals and the post-hedge residual volatilities (σ√(1−R²)) recomputed in scripts/verify_cr054_wave2_numbers.py from the same hypothetical series used in lesson 378; the long_only behaviour described here was read from backend/app/agents/safety_floor.py, which blocks a sell-to-open against a flat position, not recalled"}
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# Hedging a book, and what a hedge actually costs
+
+A hedge is not protection you buy; it is a second position whose risks are different from the first one's rather than absent. After this lesson you will be able to size a market hedge from your portfolio's beta, and — more usefully — compute in advance how much of your risk such a hedge can possibly remove, which for many books is far less than the word "hedged" implies.
+
+## Example
+
+An openly hypothetical simulated book of **$100,000** with a portfolio beta of **1.20**. Portfolio beta is the weighted average of the holdings' betas, so this is a book that has typically moved 1.2% for each 1% of the market.
+
+**Size the hedge.** Beta 1.20 on $100,000 is an index-equivalent exposure of **$120,000**. A 10% index decline therefore implies roughly **−12%**, or **−$12,000**, on the book. To neutralise the market exposure entirely you would need a short index position of **$120,000**; to bring the book's beta down to 0.85 you would remove 0.35 of beta, which is **$35,000** of index-equivalent short. That is the whole sizing calculation, and it is the part people find hard and shouldn't.
+
+**Now the part people find easy and shouldn't.** A market hedge removes only the market-linked portion of your risk, which is exactly the quantity R² measures in <Lesson id="378_beta_and_capm_what_beta_is_not"/>. Perfectly hedging the market leaves residual volatility of σ × √(1 − R²). Using the two holdings from that lesson:
+
+| holding | R² | volatility | after a perfect market hedge | risk removed |
+|---|---|---|---|---|
+| Steady | 0.90 | 2.68% | **0.84%** | **68.8%** |
+| Story | 0.09 | 7.08% | **6.75%** | **4.6%** |
+
+Read the Story row twice. A textbook-perfect beta hedge, executed with no slippage, on the more volatile of the two holdings, removes **4.6%** of its risk. The other 95% was never market risk, so nothing done to the market position could touch it. Hedging the wrong risk perfectly is still hedging the wrong risk.
+
+**And the cost.** A market hedge is symmetric: the same short that removes 12% of downside removes 12% of upside. There is no version in which you keep the gains. On top of that comes **basis risk** — the index you can short is not your book, so the hedge and the holdings diverge — plus financing and borrow costs, plus the possibility of being right about direction and losing on the difference between the two.
+
+**In AMI specifically.** If your Mandate has `long_only` on — which is the default — the Portfolio Manager's safety floor blocks a sell against a position you do not hold, because that opens a short. So the hedge described above cannot be placed in the simulator with that flag set, and AMI has no options or futures to place it with instead. That is deliberate: this is a training simulator, and hedging is taught here as literacy so you can read and evaluate a hedged book, not because there is a hedge to execute.
+
+## The trap
+
+The trap is treating "hedged" as a state rather than as a second position with its own profit and loss. The word does most of the damage: a hedged book sounds like a book with the risk taken out, so the natural next move is to size the underlying position more aggressively — which is how a hedge that removes 4.6% of the risk ends up funding a doubling of the exposure.
+
+The correct mental model: you now hold two positions and your risk is whatever the pair does together. Some of the original risk is gone, some is untouched, and a new risk — the difference between your holdings and the instrument you hedged with — has been added. Whether that trade is worthwhile is a question with a numerical answer, and the number to compute before placing it is R². If your book's R² against the hedging instrument is low, the honest description of the hedge is that it is a market bet sitting alongside your holdings, not protection for them.
+
+## The steelman
+
+The strongest case for hedging anyway, even at low R²: risk is not the only thing being managed. A holder who would sell everything in a 20% drawdown, at the bottom, does better with an imperfect hedge that keeps them in their positions than with an unhedged book they abandon — the hedge is bought against a behavioural failure, not a statistical one, and 4.6% of variance is not the metric that decides it. That is a real argument and it is the honest reason many hedges exist. What it does not do is license the mislabelling: the position should be described as what it is, so the cost is priced against the right benefit. The falsifier is available from your own Decision Journal rather than from theory. Look at what you actually did in previous drawdowns. If you held your positions through them, the behavioural case does not apply to you and the R² arithmetic is the whole story. If you sold at the lows, the case applies, and the hedge's job is to change that behaviour — in which case the thing to track afterwards is whether it did, not whether it made money.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="A $100,000 book has a portfolio beta of 1.20. What short index position brings the book's beta to 0.85, and what does a 10% index decline imply for the unhedged book?"
+  options={[
+    "$35,000 short — removing 0.35 of beta from a $100,000 book — and the unhedged book implies roughly −$12,000, since beta 1.20 on $100,000 is $120,000 of index-equivalent exposure",
+    "$85,000 short; a 10% decline implies −$8,500",
+    "$15,000 short; a 10% decline implies −$10,000, since the index falls 10% regardless of beta",
+    "$120,000 short; anything less leaves the book fully exposed to market moves"
+  ]}
+  answer={0}
+  explanation="Beta scales exposure: 1.20 × $100,000 = $120,000 index-equivalent, so a 10% decline implies about −$12,000, and shaving 0.35 of beta needs 0.35 × $100,000 = $35,000 of short. The answer shorting $85,000 uses the target beta as the notional rather than the beta being removed. The answer implying −$10,000 ignores beta in the loss calculation, which is the quantity it was introduced to capture. And the answer requiring $120,000 describes a full hedge to beta zero, and treats partial hedging as equivalent to none."
+/>
+
+<Quiz
+  question="A holding has an R² of 0.09 against the market and 7.08% monthly volatility. Its market exposure is hedged perfectly. What is left?"
+  options={[
+    "Almost nothing — a perfect hedge removes the risk of the position by definition",
+    "6.75% monthly volatility: only about 4.6% of the risk is removed, because just 9% of this holding's variation was market-linked and a market hedge cannot touch the rest",
+    "2.24%, from σ√(1 − R²) with an R² of 0.90",
+    "7.08% — a hedge changes expected return but never volatility"
+  ]}
+  answer={1}
+  explanation="Residual volatility after a perfect market hedge is σ√(1 − R²) = 7.08% × √0.91 = 6.75%, a reduction of 4.6%. The answer that a perfect hedge removes the position's risk conflates hedging the market with hedging the holding — only the shared part is reachable. The answer giving 2.24% applies the right formula with the wrong row's R² — 0.90 belongs to Steady, and reading a table across the wrong line turns a 4.6% reduction into a 68% one. And the answer that hedging never changes volatility is contradicted by the Steady row of the same table, where the identical operation removes 68.8%."
+/>
+
+<Quiz
+  question="After hedging, a holder reasons that their book is protected and doubles the size of their underlying positions. Bringing together beta, R² and what a hedge actually is, what is the flaw?"
+  options={[
+    "No flaw, provided the hedge is maintained at the correct notional as the positions grow",
+    "The flaw is that the hedge should have been sized on volatility rather than beta, so the original notional was wrong",
+    "The flaw is that hedges expire, so the protection is temporary and the larger positions will eventually be unhedged"
+    "The hedge removed only the market-linked share of the risk and added basis risk against the hedging instrument; doubling the positions doubles the untouched specific risk — and on a low-R² book that untouched part was almost all of it",
+  ]}
+  answer={3}
+  explanation="This is the synthesis: a hedge reaches only the R² share, adds a new exposure of its own, and therefore cannot justify scaling the part it never reached. The answer about maintaining the notional fixes a bookkeeping issue while leaving the substantive error — the doubled specific risk — completely untouched. The answer about sizing on volatility is wrong on the mechanics: a market hedge is sized on beta, which is what converts the book into index-equivalent exposure. And the answer about expiry describes a real feature of some hedging instruments but not of the short index position here, and it misses that the flaw is present from the first day, not at expiry."
+/>
+
+## Try it
+
+Estimate your simulated book's beta by taking a weighted average of your holdings' betas — ask the Market Analyst in a 1-on-1 for each one. Then ask the harder question about the same holdings: how much of their movement is market-linked at all? Multiply your book's value by its beta to see the index-equivalent exposure a hedge would have to cover, then use the R² figures to estimate how much of your risk such a hedge could reach. If the answer is a small fraction, you have learned something about your book that no hedge would have taught you. Note that with `long_only` set in your Mandate the trade itself is blocked by the safety floor — the exercise is the arithmetic, not the order.
+
+## Takeaway
+
+Size a hedge with beta, but decide whether to place it with R² — a perfect hedge of a risk your book does not mostly carry is an expensive way to hold a market view.
+
+*Where this comes from: the systematic-versus-specific risk split at the centre of Sharpe's CAPM — Capital Asset Prices (1964).*

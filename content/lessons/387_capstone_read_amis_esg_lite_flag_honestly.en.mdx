@@ -1,0 +1,101 @@
+---
+id: "387_capstone_read_amis_esg_lite_flag_honestly"
+title: "Capstone: read AMI's ESG-lite flag honestly"
+duration_min: 6
+level: 13
+module: 26
+difficulty: 4
+track: "ethics_integrity"
+code: "ETHIC 14"
+topic: "capstone"
+prerequisites: ["384_what_an_esg_score_is_and_is_not", "385_greenwashing_how_to_test_the_claim", "386_exclusion_integration_stewardship", "291_the_pm_and_your_mandate"]
+tags: ["capstone", "synthesis", "esg", "mandate", "compliance", "module-26"]
+sources: ["Berg, Kölbel & Rigobon — Aggregate Confusion: The Divergence of ESG Ratings, Review of Finance 26(6) (2022), 1315–1344", "EU — Regulation (EU) 2019/2088 (SFDR), Articles 8 and 9"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "every statement about what the ESG-lite flag does was read from the code this session — the exclusion set and its three buckets from backend/app/services/classification_universe.py, the four verdict states and the UNKNOWN-permits rule from backend/app/schemas/classification.py, the enforcement point from backend/app/agents/safety_floor.py — and none was recalled or inferred from app copy"}
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# Capstone: read AMI's ESG-lite flag honestly
+
+You now hold the M26 toolkit: a score is one agency's opinion under one methodology, a claim is worth what its falsifier is worth, and exclusion, integration and stewardship do three different jobs. This capstone turns all of it on the product you are holding. AMI ships an ESG-lite Mandate flag; the exercise is to describe exactly what it does, decide which of the three approaches it is, and judge whether its own description of itself passes the test you have been applying to everyone else's.
+
+## Example
+
+Here is what the flag mechanically does, read off the code rather than the marketing.
+
+**It is an exclusion, and only an exclusion.** With `esg_lite` set, the Portfolio Manager's safety floor refuses a simulated trade in a ticker that lands in a curated exclusion set. It does not score anything, rank anything, or price anything.
+
+**The set is three reviewable buckets, joined.** Fossil fuels (oil and gas across integrated, exploration, midstream, refining, equipment and drilling, plus thermal and coking coal, each additionally gated on the company sitting in the Energy sector), *plus* tobacco, brewers, wineries and distillers, gambling and casinos, *plus* one industry bucket for aerospace and defence. That is the whole rule, and it is stated as a rule rather than derived from a score.
+
+**The classification is by industry label, from a market-data feed.** Which produces two consequences you should be able to state before you rely on it. A diversified conglomerate earning a slice of its revenue from an excluded activity is **not** caught, because its industry label is something else — this is a category rule, not a revenue-share screen. And the aerospace-and-defence bucket is a single industry string, so a company whose business is largely commercial aircraft is excluded alongside the weapons primes. That breadth is deliberate and disclosed as curation, not presented as precision.
+
+**Coverage is the S&P 500 parent set.** A ticker outside it has not been classified, and AMI returns **UNKNOWN** — which **permits** the trade while telling you it is unclassified. That choice is load-bearing: if UNKNOWN blocked, the filter would silently reject every name AMI has not classified, which is a much worse failure than letting an unscreened name through with a notice. There is a fourth state, **UNAVAILABLE**, for when the classification data is stale; that one blocks, because a stale ruling presented as current is exactly the confident-but-false output this app is built to avoid.
+
+**And it says so.** Every ESG-lite verdict carries the phrase *"AMI's curated best-effort ESG proxy (fossil fuels + tobacco/alcohol/gambling + weapons/defense), NOT a rated ESG score"*, with the source and the as-of date attached.
+
+Now apply the module. Against <Lesson id="384_what_an_esg_score_is_and_is_not"/>: this is not a score at all, so the rater-divergence problem does not apply to it — but the three judgements that produce divergence are still being made here, by us, and they are published as a list rather than compressed into a number. Against <Lesson id="385_greenwashing_how_to_test_the_claim"/>: the claim is falsifiable, and you can construct the contradicting holding — a permitted trade in a pure-play tobacco company inside the S&P 500 would prove the flag broken. Against <Lesson id="386_exclusion_integration_stewardship"/>: it is exclusion, so it achieves "I do not own this" within its coverage, and it does nothing about pricing and nothing about company behaviour.
+
+**The honest summary is unflattering in a specific way.** The flag is called ESG and contains no governance dimension whatever, and its social dimension is one list of sin industries. It is an E-and-a-bit-of-S exclusion rule with an ESG name — which is, in miniature, exactly the naming problem the SEC's Names Rule went after. Knowing that is the difference between using the flag for what it does and believing it does something else.
+
+## The trap
+
+The trap in a capstone about your own product is grading it kindly because it is yours, and the specific form it takes here is accepting "it says it is best-effort" as though the disclaimer settled the question. A disclaimer is a claim like any other, and the test from <Lesson id="385_greenwashing_how_to_test_the_claim"/> applies to it unchanged: what would make it false? The disclaimer is accurate — the set really is curated, it really is not a rated score — and that is a finding, not a courtesy.
+
+The correct mental model: honest labelling and adequate coverage are two separate audits, and passing the first does not pass the second. This flag passes the labelling audit comfortably: it says what it is, it names its source and date, and it refuses to imply a rating. On coverage it is narrow, industry-level rather than revenue-level, and silent on governance. Both sentences are true at once, and the useful reader is the one who can hold them together rather than choosing whichever one matches how they already felt about the feature.
+
+## The steelman
+
+The strongest case against shipping a flag this narrow at all: calling something "ESG-lite" when it carries no governance dimension may mislead more than it helps, and a user who ticks it and assumes their book is screened has been handed a false sense of completeness that no disclaimer fully undoes — CR038's finding that prompt-level warnings do not travel with a screenshot applies to interface copy just as well. On that reading the honest options are a rated feed or nothing, and a curated proxy is the worst of both. That is a serious argument and it is why the flag's messaging is structural rather than advisory: the disclaimer is attached to every verdict, not stated once at sign-up, and UNKNOWN reports itself rather than passing silently. The falsifier is about users rather than about intentions, and it is worth stating so it can actually be run: ask someone who has the flag switched on what it excludes. If they can name the three buckets and know that names outside the S&P 500 are unscreened, the labelling is doing its job. If they believe their portfolio has been checked for governance quality, the critique is correct and the name is the thing to change — a finding this lesson would rather surface than settle.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="A user with the ESG-lite flag set proposes a trade in a company outside the S&P 500. What does AMI do, and why is that the right behaviour?"
+  options={[
+    "Blocks the trade, since an unclassified company cannot be confirmed as meeting the exclusion criteria",
+    "Permits the trade silently, since only tickers in the exclusion set are relevant to the flag",
+    "Permits the trade and reports the ticker as UNKNOWN — unclassified is no ruling rather than a soft refusal, and blocking on UNKNOWN would silently reject every name AMI has not classified",
+    "Blocks the trade and asks the user to confirm they have checked the company themselves"
+  ]}
+  answer={2}
+  explanation="Coverage is the S&P parent set, so anything outside it returns UNKNOWN, and UNKNOWN permits while saying so — the alternative would invert the filter into rejecting the entire unclassified world. The answer that blocks on unclassified is that inversion, and it is the failure the design explicitly guards against. The answer permitting silently gets the outcome right and the disclosure wrong: a permitted-but-unscreened trade that says nothing is a silent pass on a values decision. And the answer blocking pending user confirmation invents a flow the app does not have, and still blocks on an absence of information."
+/>
+
+<Quiz
+  question="Applying the module's own tests to the ESG-lite flag, which statement is accurate?"
+  options={[
+    "It is a rated ESG score with limited coverage, so the rater-divergence problem applies to it directly",
+    "It is an exclusion rule whose claim is falsifiable — a permitted trade in a pure-play tobacco name inside its coverage would disprove it — and it does nothing about pricing or company behaviour",
+    "It is an integration approach, since the Portfolio Manager takes the flag into account when assessing a trade",
+    "It is a stewardship mechanism, since refusing to trade excluded names expresses a position to those companies"
+  ]}
+  answer={1}
+  explanation="The flag removes categories from what the safety floor will permit, which is exclusion by definition, and its rule-shaped claim is checkable against a specific contradicting holding. The answer calling it a rated score is what the code goes out of its way not to be, and the divergence problem is a property of scores. The answer calling it integration misreads a hard refusal as an analytical input — integration prices a company you may still buy. And the answer calling it stewardship reverses the mechanism, which requires owning the shares and voting them."
+/>
+
+<Quiz
+  question="A user says: 'I turned on ESG-lite, so my portfolio is ESG-screened.' Bringing the whole module together, what is the most complete correction?"
+  options={[
+    "They are broadly right — the flag applies a recognised set of ESG exclusions, and the details are a technicality",
+    "They are wrong because ESG-lite is best-effort, and a best-effort screen should not be relied on for anything",
+    "Their portfolio is screened against three named exclusion buckets, within the S&P 500 only, at industry-label level rather than by revenue share, with no governance dimension at all — so 'ESG-screened' claims considerably more than the flag delivers, even though the flag describes itself accurately",
+    "They are wrong because no exclusion approach can be called ESG investing without integration and stewardship alongside it"
+  ]}
+  answer={2}
+  explanation="This is the module's synthesis: name the mechanism, its coverage, its resolution and its silences — and note that accurate self-labelling and adequate coverage are separate audits, which is why the flag can be honest and still deliver less than 'ESG-screened' implies. The answer calling the differences technicalities is exactly the compression the module exists to prevent. The answer dismissing best-effort screening entirely discards a rule that does what it says within its stated scope. And the answer requiring integration and stewardship imposes a definitional test rather than describing what this user's portfolio actually is."
+/>
+
+## Try it
+
+Open Settings → Mandate and read the ESG-lite explanation, then write down, from memory, what you believe it excludes. Compare your answer with the three buckets in this lesson — fossil fuels within the Energy sector, tobacco and alcohol and gambling, and aerospace and defence. Then propose a simulated trade in a name outside the S&P 500 and read the verdict AMI returns: it should permit the trade and tell you the ticker is unclassified. That message is the feature working. If anything you read in the app contradicts what you just learned, that is worth reporting through Feedback — the app's description of a control is supposed to match the control.
+
+## Takeaway
+
+A control is only usable once you can state what it excludes, over what coverage, at what resolution, and what it says nothing about — and "it labels itself honestly" is a separate finding from "it covers enough."
+
+*Where this comes from: the rating-divergence result in Berg, Kölbel & Rigobon (2022) and the SFDR distinction between promoting characteristics and pursuing a sustainable objective, applied to a product rather than to a fund.*

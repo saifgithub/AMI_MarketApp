@@ -1,0 +1,99 @@
+---
+id: "376_capstone_build_an_allocation_and_stress_it"
+title: "Capstone: build an allocation and stress it"
+duration_min: 6
+level: 11
+module: 18
+difficulty: 4
+track: "risk_portfolio"
+code: "RISK 22"
+topic: "capstone"
+prerequisites: ["371_diversification_is_correlation_not_count", "372_the_floor_diversification_cannot_cross", "373_strategic_allocation_vs_tactical_drift", "374_rebalancing_the_rule_that_sells_winners", "375_home_country_bias"]
+tags: ["capstone", "synthesis", "allocation", "diversification", "rebalancing", "home-bias", "level-11"]
+sources: ["Markowitz — Portfolio Selection, Journal of Finance 7(1) (1952), 77–91"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "both book volatilities recomputed via portfolio_variance() over explicitly-stated covariance matrices, and the rebalance arithmetic recomputed, in scripts/verify_cr054_wave2_numbers.py; all instruments openly hypothetical"}
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# Capstone: build an allocation and stress it
+
+You now hold the whole M18 toolkit: diversification is set by correlation rather than count, the shared risk underneath has a floor no count can cross, a portfolio without a written policy drifts into a shape nobody chose, a band turns "should I act" into arithmetic, and a home weight is a position that needs a reason. This capstone runs one book through all five in sequence — measure, decompose, compare to policy, compute the trade, name the concentration — and asks you to grade it. Nothing new is introduced; the skill is making the pieces interact on a single account under one sitting.
+
+## Example
+
+An openly hypothetical simulated account of **$100,000**. The policy, written a year ago: **60% equities / 30% defensive / 10% cash**. Today the account holds **$71,000 equities · $23,000 defensive · $6,000 cash** across **eight equity names**, all listed in the holder's home market. Nobody traded the equity sleeve; it simply outran everything else. No real company appears here — the numbers are the lesson.
+
+**Measure the drift.** Equities stand at 71%, eleven points above policy. Under a 5-point band the trigger sits at 65%, so the band is breached, and the trade is determined without any view: sell to 0.60 × 100,000 = **$60,000**, meaning **$11,000** of equities into the underweight sleeves. That number exists before you have an opinion about it — the point of <Lesson id="374_rebalancing_the_rule_that_sells_winners"/>.
+
+**Decompose the eight names.** Suppose each carries **30% volatility**, six of them sit in one sector and correlate at **0.80** with each other, and the two outsiders correlate at **0.25** with everything. Equal-weighted, the equity sleeve's volatility computes to **23.27%**.
+
+Now compare it with a *three*-name book — same 30% volatility each, all pairs at **0.25** — which computes to **21.21%**.
+
+The three-name book is less volatile than the eight-name one. That is the module's central claim reduced to two numbers on one page: the eight-name book has more tickers and fewer bets, because six of its eight are one position wearing six names. Had all eight genuinely correlated at 0.35, the sleeve would sit at **19.70%** — so the cluster, not the count, is costing 3.57 percentage points.
+
+**Name the concentration.** All eight are domestic, so the sleeve carries a country bet, a currency bet, and — through the six-name cluster — a sector bet. Three positions, none of them written down, and the holding count conceals all three.
+
+**Grade it.** The book fails on three separate axes and each has a different remedy. The drift is fixed by the band, mechanically, today. The cluster is fixed by what the *next* addition is, not by adding more of the same. The home concentration is fixed by deciding a deliberate tilt and writing it into the policy — or by deciding the current weight is right and writing *that* down, which is an acceptable answer and an unacceptable silence.
+
+## The trap
+
+The trap in a capstone like this is fixing the visible number and calling the book repaired. The $11,000 rebalance is the satisfying move: it is arithmetic, it is completable in one session, and afterwards the weights match the policy exactly. But the sleeve that gets rebalanced back to 60% is still six-names-in-a-trench-coat at 23.27% volatility, still entirely domestic, and the policy it now matches never said anything about either. A book can be perfectly on-policy and badly built, because a policy that specifies only sleeve weights cannot express what the sleeve is made of.
+
+The correct mental model: weights and structure are two different audits, and passing one tells you nothing about the other. The rebalance answers "am I holding the amount of risk I chose?" The correlation decomposition answers "is the risk I hold the shape I think it is?" Run both, or the second one goes unasked for years — it has no trigger, no band, and nothing in the app will raise it for you.
+
+## The steelman
+
+The strongest case for this book as it stands: the holder may have deliberately chosen concentration. A six-name position in a sector they follow closely, in the market whose regulator and currency they live under, is a coherent strategy — many good investors run books far more concentrated than this — and the module's machinery would grade a legitimate high-conviction portfolio as a failure simply because it is not diversified. That is fair, and the grading above is wrong if the concentration was chosen. But notice what the defence requires: it requires the concentration to have been *decided*, with a size and a reason, which means it should appear in the policy — and this policy says 60/30/10 and nothing else. That is the tell, and it is checkable rather than rhetorical. Ask the holder what the intended cluster weight was. A number given without hesitation, that matches what they hold, means the book is a conviction portfolio and the drift is the only genuine finding. A number invented on the spot, or one that turns out to be well below what they hold, means the concentration accumulated rather than being chosen — and an accumulated concentration is indistinguishable, a year later, from a decided one, which is the whole reason the policy has to be written first.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="The eight-name equity sleeve computes to 23.27% volatility; a three-name book of the same 30%-volatility assets, all correlated at 0.25, computes to 21.21%. What does the comparison establish?"
+  options={[
+    "That the calculation is wrong somewhere, since a portfolio of eight assets cannot be riskier than one of three",
+    "That three-name portfolios are generally safer, because concentration in fewer names allows deeper research on each",
+    "That count and diversification are different quantities: six of the eight correlate at 0.80 and function as one position, so the eight-name book holds roughly three bets with worse correlation structure than the book that holds three",
+    "That the eight-name book will underperform, since higher volatility implies lower returns"
+  ]}
+  answer={2}
+  explanation="Portfolio variance uses weights, volatilities and correlations; the count enters only through the weights, so a tightly-clustered eight can and does exceed a loosely-correlated three. The answer calling the arithmetic impossible states the intuition the module exists to overturn — and the figures are recomputed from the stated covariance matrices, not asserted. The answer generalising that three names are safer draws the wrong lesson in the other direction: the three-name book wins here because of its 0.25 correlations, and three names at 0.80 would be worse than either. The answer inferring underperformance converts a volatility figure into a return forecast, which nothing here supports."
+/>
+
+<Quiz
+  question="The holder executes the $11,000 rebalance, returning the book to exactly 60/30/10. Which of the three findings has that fixed?"
+  options={[
+    "The drift only — the equity sleeve is still six correlated names plus two, still entirely domestic, and the policy it now matches specifies no structure at all",
+    "All three, since the policy weights encode the intended risk and the book now matches them exactly",
+    "The drift and the concentration, since selling $11,000 of equities proportionally reduces every holding including the cluster",
+    "None — rebalancing to a policy that was itself never stress-tested cannot improve a portfolio"
+  ]}
+  answer={0}
+  explanation="Weights and structure are separate audits: the band restores the amount of risk, and says nothing about its shape. The answer claiming all three assumes sleeve weights encode structure, which is exactly what a 60/30/10 policy does not do. The answer that the sale also fixes the concentration confuses absolute exposure with composition — a proportional sale leaves the cluster's share of the sleeve, and therefore the sleeve's correlation structure and its 23.27% volatility, unchanged. And the answer that nothing is fixed overcorrects: the drift was a genuine finding and the rebalance genuinely closes it."
+/>
+
+<Quiz
+  question="The holder now wants to reduce the equity sleeve's risk. They can add one name. Drawing on the whole module, which candidate does most, and how would you know before buying it?"
+  options={[
+    "A ninth domestic name from the same six-name sector, since the holder understands that sector best and information advantage lowers risk",
+    "A name whose returns are driven by something the existing eight do not share — a different economy, currency or demand driver — checked in advance by computing its correlation against the existing holdings rather than assuming it from the label",
+    "Any ninth name at all, since moving from eight holdings to nine reduces idiosyncratic risk regardless of what is added",
+    "A lower-volatility domestic name, since portfolio volatility is the weighted average of its holdings' volatilities"
+  ]}
+  answer={1}
+  explanation="This is the module's synthesis: the value of an addition is set by its correlation with what you already hold, and that is measurable before you act rather than inferable from a description. The answer adding to the existing sector confuses familiarity with risk reduction — it raises the cluster's weight and moves the sleeve's volatility up. The answer that any ninth name helps applies the count heuristic the module dismantled; a ninth name at 0.80 to the cluster is close to buying more of what you own. And the answer about lower volatility rests on a false formula: portfolio volatility is not the weighted average of the parts, which is precisely why a 0.25-correlated addition can beat a lower-volatility 0.80-correlated one."
+/>
+
+## Try it
+
+Run the full sequence on your own simulated book, in order, in one sitting. Compute your sleeve weights and compare them to the policy you wrote in <Lesson id="373_strategic_allocation_vs_tactical_drift"/>. Compute the exact trade your band requires — the number, before the opinion. Then list your equity holdings and group them by what actually drives their revenue, not by ticker: the number of groups is your real position count. Finally, write your home weight and the one-sentence reason for it. Anything you cannot write down in this pass is a decision you have not made yet.
+
+## Takeaway
+
+Audit the weights and the structure separately: the band tells you whether you hold the amount of risk you chose, and only the correlations tell you whether it is the risk you think it is.
+
+*Where this comes from: Markowitz's central result that portfolio risk is a property of covariances rather than of the holdings taken one at a time — Portfolio Selection (1952).*

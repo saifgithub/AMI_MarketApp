@@ -1,0 +1,93 @@
+---
+id: "386_exclusion_integration_stewardship"
+title: "Exclusion, integration, stewardship — three different things"
+duration_min: 6
+level: 13
+module: 26
+difficulty: 3
+track: "ethics_integrity"
+code: "ETHIC 13"
+topic: "esg_approaches"
+prerequisites: ["384_what_an_esg_score_is_and_is_not", "385_greenwashing_how_to_test_the_claim"]
+tags: ["esg", "exclusion", "integration", "stewardship", "mandate", "module-26"]
+sources: ["EU — Regulation (EU) 2019/2088 (SFDR), Articles 8 and 9", "CFA Institute — Code of Ethics & Standards of Professional Conduct, on client objectives and suitability"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "no empirical magnitude is asserted; the three approaches are defined by what each mechanically does to a portfolio, and the AMI mandate behaviour described is read from backend/app/agents/safety_floor.py and backend/app/services/classification_universe.py rather than recalled; every company reference is a hypothetical category, never a named firm"}
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# Exclusion, integration, stewardship — three different things
+
+"Sustainable investing" names three practices that share a vocabulary and almost nothing else: they act at different points, they aim at different results, and one of them is unavailable to most individual investors. After this lesson you will be able to identify which of the three anyone is describing, and — the part that matters for your own Mandate — say what each one can and cannot achieve.
+
+## Example
+
+**Exclusion** removes a category from the investable universe before analysis begins. *No tobacco. No thermal coal. No weapons manufacturers.* It is a rule, so it is checkable — you can audit a portfolio against it in an afternoon — and it is the approach almost every "ethical fund" is built on. What it does: it guarantees you do not own the thing. What it does not do: change the thing. Shares that trade on a secondary market change hands; a decision not to buy them means someone else did, and the company's operations are unaffected. Exclusion is a statement about *what you hold*, and it succeeds or fails entirely on that axis.
+
+**Integration** brings environmental, social and governance information into the analysis of a company you may still buy. A firm facing an expensive regulatory transition has a cost the model should carry; a firm with governance the analyst distrusts gets a wider discount rate. Integration changes *prices and weights*, not the universe — and, crucially, it can conclude that a heavily-polluting company is attractive at a low enough price. That is not a failure of integration; it is what integration is. Conflating it with exclusion is the single most common category error in this field, and it is why a fund can honestly say it "integrates ESG" while holding names an exclusion-based investor would never own — the point <Lesson id="385_greenwashing_how_to_test_the_claim"/> makes about process claims.
+
+**Stewardship** uses the rights that come with ownership: voting shares, engaging management, supporting or opposing resolutions. It is the only one of the three with a mechanism for changing company behaviour, and it requires you to *own* the company — so it sits in direct tension with exclusion. A large holder who sells out of a poorly-governed firm has cleaned their portfolio and given up their vote. For individual investors stewardship is mostly out of reach at the single-name level; it operates through the funds you hold, whose voting records are published and almost never read.
+
+Notice what follows. If your aim is *not to profit from* an activity, exclusion achieves it exactly and completely. If your aim is *for the activity to stop*, exclusion is close to inert and stewardship is the mechanism, at the cost of holding the thing you object to. These are different objectives, and the language of "sustainable investing" covers both without distinguishing them — which is how people end up with a portfolio that satisfies neither aim they actually held.
+
+## The trap
+
+The trap is picking an approach by how it sounds and then judging it by a standard it never claimed to meet. Exclusion sounds like the strongest position — it is the one that refuses — so it attracts people whose real objective is impact, who then discover their divestment changed nothing and conclude the whole field is theatre. The reverse also happens: someone whose objective is simply not to own a category is sold an integration strategy, which considers their concern and buys the company anyway, entirely as designed.
+
+The correct mental model: decide the objective first, in one sentence, then choose the mechanism that matches it. *I do not want to own this* → exclusion, and audit the holdings. *I want the analysis to price this properly* → integration, and check that the analysis exists by asking for instances. *I want the behaviour to change* → stewardship, which means owning the shares and reading the voting record. An approach chosen without a stated objective cannot be assessed at all, because there is nothing it is supposed to achieve.
+
+## The steelman
+
+The strongest case against the "exclusion is inert" claim: at sufficient scale, divestment raises a company's cost of capital, because a smaller pool of willing buyers means a lower price and a higher required return on new financing — which does eventually change what projects get built. The mechanism is real and it is the argument behind large institutional divestment campaigns. Two things bound it. It requires scale and coordination that an individual portfolio does not have, so it is an argument for a movement rather than for your holdings. And it works through the price of *new* capital, so it bites hardest on firms that need to raise money and barely at all on cash-generative incumbents — often exactly the firms being divested. The falsifier is a question to ask of any divestment case before adopting it: does this company need external financing in the next few years? If yes, the cost-of-capital channel is live and the argument holds. If it funds itself from its own cash flows, divestment is a statement about your portfolio, which may be reason enough — but it should be made for that reason, and not for one that does not apply.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="A fund states that it integrates ESG analysis and also holds a large position in a heavy-emitting energy producer. Is that a contradiction?"
+  options={[
+    "Yes — integrating ESG analysis means the fund should have screened the company out",
+    "No: integration brings environmental and governance information into the valuation and can conclude the company is attractive at a low enough price; it changes prices and weights, not the universe, and only exclusion removes a category outright",
+    "Yes — a fund cannot claim any ESG approach while holding a heavy emitter",
+    "No, but only if the fund also engages with the company's management"
+  ]}
+  answer={1}
+  explanation="Integration and exclusion act at different points: one prices a risk, the other removes a category before analysis begins, so holding the name is consistent with integration by design. The two answers calling it a contradiction both assume integration implies exclusion, which is the category error the lesson exists to correct. And the answer making it conditional on engagement imports stewardship as a requirement for integration — three separate practices, and a fund can do one without the others."
+/>
+
+<Quiz
+  question="An investor's objective is that a particular industry's activity should reduce. Which approach has a mechanism for that, and at what cost?"
+  options={[
+    "Exclusion, since refusing to fund an industry starves it of capital at no cost to the investor",
+    "Integration, since correctly pricing environmental risk raises the industry's cost of capital",
+    "None of the three — investor behaviour cannot influence company operations",
+    "Stewardship — voting shares and engaging management is the only one of the three that acts on company behaviour, and it requires owning the shares, which is in direct tension with excluding them"
+  ]}
+  answer={3}
+  explanation="Only stewardship operates through the rights of ownership, which is also why it conflicts with the instinct to divest: selling the position removes the vote. The answer choosing exclusion overstates the effect on secondary-market share sales and understates the cost — the investor gives up their vote. The answer choosing integration describes an analytical practice inside one manager's process, not a channel to the company. And the answer denying any mechanism is too strong: voting and engagement are real, and at scale the cost-of-capital channel for new financing is real too."
+/>
+
+<Quiz
+  question="Someone sets their Mandate to exclude a category, then complains a year later that the industry is unchanged. Pulling this module together, what went wrong?"
+  options={[
+    "The exclusion did not go far enough — a broader set of categories would have produced an effect",
+    "Nothing went wrong with the exclusion; the objective was mismatched to the mechanism. Exclusion delivers exactly one thing — you do not own the category — and it was chosen for an aim only stewardship, or divestment at a scale an individual cannot reach, could address",
+    "The exclusion failed, since a rule that does not change outcomes has no value",
+    "The complaint is unanswerable: no approach to sustainable investing has a measurable effect on company behaviour"
+  ]}
+  answer={1}
+  explanation="This is the module's synthesis: the mechanism performed exactly as specified, and the failure was in choosing it for an objective it never addressed — which is why naming the objective in one sentence comes before picking the approach. The answer proposing broader exclusions applies more of the mechanism that does not act on the outcome in question. The answer that the rule has no value discards a genuine achievement — the investor does not own the category, which for many people is the whole point. And the answer denying that any approach has an effect writes off stewardship, whose voting and engagement channel is the mechanism the question is pointing at."
+/>
+
+## Try it
+
+Write your objective in one sentence, before opening anything: is it that you do not want to own something, that you want the risk priced properly, or that you want a behaviour to change? Then open Settings → Mandate and look at the compliance flags with that sentence in hand. The flags AMI offers are exclusions — rules about what the safety floor will refuse — so they serve the first objective directly and the second and third not at all. Knowing which of the three you are actually buying is the point of the exercise.
+
+## Takeaway
+
+Name the objective before the approach: exclusion controls what you own, integration controls how it is priced, and only stewardship acts on the company — and no amount of the first two substitutes for the third.
+
+*Where this comes from: the SFDR distinction between promoting characteristics and pursuing sustainable objectives, and the CFA Institute standards' insistence that a strategy be matched to the client's stated objective.*

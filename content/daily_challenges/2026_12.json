@@ -236,5 +236,294 @@
       "standards_disagreement",
       "module_25"
     ]
+  },
+  {
+    "id": "dc_2026_12_11_eight_names_one_bet",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "A user's equity sleeve holds eight names, each with roughly 30% annualised volatility. Six of them are in the same sector and move closely together; the other two are unrelated to those six and to each other. The user reports the sleeve as well diversified on the grounds that it holds eight separate companies, none of them more than 15% of the sleeve.",
+    "question": "What is missing from this assessment of the sleeve?",
+    "options": [
+      "The correlations between the holdings — with six names correlated at 0.80 and two outsiders at 0.25, the sleeve computes to 23.27% volatility, higher than a three-name book of 0.25-correlated holdings at 21.21%",
+      "The sector weights, which should be capped before the holding count is reported",
+      "The sleeve's contribution to total portfolio risk, which cannot be assessed without the defensive sleeve",
+      "The individual holdings' betas, since diversification is measured against the market rather than within the book"
+    ],
+    "answer": 0,
+    "explanation": "Portfolio variance takes weights, volatilities and correlations; the number of tickers enters only through the weights. Six tightly-correlated names function as roughly one position, which is why this eight-name sleeve computes higher than a genuinely three-bet book. Sector caps and risk contributions are real controls but neither answers whether these eight holdings are independent, and beta measures co-movement with the market rather than with each other.",
+    "related_lesson": "371_diversification_is_correlation_not_count",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "portfolio_theory",
+      "diversification",
+      "correlation",
+      "module_18"
+    ]
+  },
+  {
+    "id": "dc_2026_12_12_sixty_forty_risk_share",
+    "type": "predict_the_call",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "A simulated book holds two sleeves: equities at 18% annualised volatility and bonds at 6%, correlated at 0.10, split 60/40 by value. The user describes it as a balanced portfolio and asks the Portfolio Manager to confirm the split is moderate.",
+    "question": "What will the Portfolio Manager point out about where this book's risk actually sits?",
+    "options": [
+      "That the split is moderate as described, since 60/40 is the conventional balanced allocation",
+      "That the bond sleeve is too large, since bonds contribute nothing to portfolio return",
+      "That the equity sleeve carries about 93.5% of the portfolio's 11.30% volatility while holding 60% of the money — dollar weights describe what you own, not what you are exposed to",
+      "That the 0.10 correlation is too low to be plausible and the figures should be re-estimated"
+    ],
+    "answer": 2,
+    "explanation": "A sleeve's share of risk is wᵢ(Σw)ᵢ divided by portfolio variance, and running it here gives 93.5% to equities against 6.5% to bonds. The sleeve holding 40 cents of every dollar answers for roughly a fifteenth of the risk. Calling the split conventional describes the money rather than the exposure; dismissing bonds as returnless is a separate claim the question does not make; and a 0.10 equity-bond correlation is unremarkable.",
+    "related_lesson": "380_risk_parity_and_risk_budgeting",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "portfolio_theory",
+      "risk_budgeting",
+      "allocation",
+      "module_19"
+    ]
+  },
+  {
+    "id": "dc_2026_12_13_skipped_rebalance",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "A user wrote a 60/40 policy with a 5-percentage-point rebalancing band. After a strong year the growth sleeve stands at 67.3%, past the 65% trigger. They skip the rebalance because the sleeve's momentum looks intact, and leave the written policy at 60%.",
+    "question": "What rule has been broken, and what is the consequence?",
+    "options": [
+      "None — bands are guidelines, and overriding one on clear evidence is what judgement is for",
+      "The band was set too wide; a 1-point band would have triggered earlier and avoided the situation",
+      "The policy should have been rewritten to 67.3% first, after which no rule is broken",
+      "A written risk control was replaced by an unwritten return forecast — and because the policy still says 60% while the book holds 67.3%, there is now neither a rule being followed nor a stated view on record"
+    ],
+    "answer": 3,
+    "explanation": "Skipping a trigger asserts the winner keeps winning, which is a forecast substituted for a control that was about risk — and with the policy document unchanged, nothing records that any view was taken. Treating bands as overridable on clear evidence describes exactly how everyone feels at the moment of a trigger, which is why the rule is written beforehand. A narrower band would have triggered sooner and been skipped for the same reason. Rewriting the policy to match the drift is a legitimate move only if done deliberately and for a reason that is not 'it went up'.",
+    "related_lesson": "374_rebalancing_the_rule_that_sells_winners",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "portfolio_theory",
+      "rebalancing",
+      "discipline",
+      "module_18"
+    ]
+  },
+  {
+    "id": "dc_2026_12_14_beta_without_r_squared",
+    "type": "whats_missing",
+    "difficulty": 4,
+    "locale": "en",
+    "scenario": "A user screens for holdings with a beta near 1.00, reasoning that such names carry roughly market-level risk. One candidate has a beta of exactly 1.00. Over the same twelve months, the market's monthly volatility was 2.10% and the candidate's was 7.08%.",
+    "question": "What did the screen fail to capture?",
+    "options": [
+      "R² — this holding's beta explains only about 9% of its movement, so the slope describes a tenth of what it does while the holding runs at more than three times the market's volatility",
+      "The holding's dividend yield, which affects total return and therefore its risk profile",
+      "The measurement window, since twelve months of monthly data is too short to estimate a beta at all",
+      "The holding's correlation with the user's other positions, which is what beta is meant to measure"
+    ],
+    "answer": 0,
+    "explanation": "Beta is the slope of a holding against the market and says nothing about how much other variation exists; R² is the number that says whether anything lies near that line. At R² 0.09 the beta is computed correctly and describes almost nothing. Dividend yield is not a risk measure here, a twelve-month window is short but produces a perfectly well-defined beta, and beta measures co-movement with the market rather than with the rest of a portfolio.",
+    "related_lesson": "378_beta_and_capm_what_beta_is_not",
+    "related_agent": "market_analyst",
+    "tags": [
+      "portfolio_theory",
+      "beta",
+      "r_squared",
+      "module_19"
+    ]
+  },
+  {
+    "id": "dc_2026_12_15_who_reviews_a_factor_claim",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "A user is handed a pitch for a systematic strategy claiming to target the quality factor, backtested over twenty years on the current constituents of a major index, reporting a return well above its benchmark. They want the claim assessed before deciding anything.",
+    "question": "Which agent is the right one to put this to, and what should they be asked?",
+    "options": [
+      "The Trader, for an assessment of whether the strategy's entries and exits are executable",
+      "The Research Manager, asked whether the backtest's universe includes delisted names — a test on today's survivors excludes every company that failed, which flatters the result",
+      "The Market Analyst, for a technical read on whether the strategy's holdings are in favourable setups",
+      "The Portfolio Manager, to check whether the strategy would breach the user's Mandate"
+    ],
+    "answer": 1,
+    "explanation": "The Research Manager arbitrates evidence, and survivorship bias is the specific defect this backtest advertises: a twenty-year test on current constituents has quietly removed everything that failed, biasing returns up and drawdowns down. The Trader's execution question, the Market Analyst's setup read and the Portfolio Manager's compliance check are all legitimate questions about other things — none of them tests whether the reported result is real.",
+    "related_lesson": "382_reading_a_factor_claim_someone_hands_you",
+    "related_agent": "research_manager",
+    "tags": [
+      "portfolio_theory",
+      "factors",
+      "backtest",
+      "module_19"
+    ]
+  },
+  {
+    "id": "dc_2026_12_16_dominated_portfolio",
+    "type": "predict_the_call",
+    "difficulty": 4,
+    "locale": "en",
+    "scenario": "Two hypothetical sleeves: A carries 20% volatility with an assumed 8% expected return, B carries 12% with an assumed 5%, and they correlate at 0.20. A user holds only B, describing it as the conservative choice because B is the lower-volatility asset.",
+    "question": "What does the arithmetic say about holding B alone?",
+    "options": [
+      "It is the minimum-risk holding available, since no mix containing A can have lower volatility than A's own 20%",
+      "It is dominated: putting 21.43% into the more volatile A gives 11.11% volatility and 5.64% expected return — less risk and more return than B's 12.00% and 5.00%",
+      "It is correct if the user's priority is capital preservation, since expected returns are estimates and volatility is not",
+      "It cannot be assessed without knowing the risk-free rate, which sets where the efficient frontier begins"
+    ],
+    "answer": 1,
+    "explanation": "Because A's returns are only weakly related to B's, a slice of A cancels some of B's variation, and the cancellation outweighs A's own volatility until the weight grows. The minimum-variance weight of 21.43% comes from a closed form using only volatilities and the correlation. The claim that no mix can beat the lower-volatility asset is the intuition the calculation overturns. Preferring B on preservation grounds does not help, since the alternative has both lower volatility and higher expected return. And the risk-free rate is not needed to show one portfolio dominates another.",
+    "related_lesson": "377_the_efficient_frontier_in_plain_arithmetic",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "portfolio_theory",
+      "efficient_frontier",
+      "minimum_variance",
+      "module_19"
+    ]
+  },
+  {
+    "id": "dc_2026_12_17_no_written_policy",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "A user's book has moved from 60% equities / 30% defensive / 10% cash to 71/23/6 over six months. No trades were placed in the equity sleeve; the sleeve simply outperformed. The user is comfortable, noting that every individual trade they placed passed the Portfolio Manager's Mandate check.",
+    "question": "What is missing from this reasoning?",
+    "options": [
+      "A record of the individual trades, without which the drift cannot be attributed",
+      "A stop-loss on the equity sleeve, which would have capped the drift automatically",
+      "Nothing — if every trade passed the Mandate, the portfolio is by definition compliant",
+      "The distinction between constraints and a policy: a Mandate bounds each trade — size caps, drawdown ceiling, compliance flags — while an allocation policy states the intended shape, and drift lives in the gap where every trade is compliant and the aggregate is unchosen"
+    ],
+    "answer": 3,
+    "explanation": "Constraints and policy answer different questions, and neither substitutes for the other: the Mandate is per-trade and encodes no intended shape, so a book can pass every check and still arrive at a portfolio nobody chose. Attribution of the drift is not needed to see it — the weights moved on price. A stop-loss addresses loss on a position rather than the book's shape. And treating compliance as sufficiency is the exact confusion the scenario is built on.",
+    "related_lesson": "373_strategic_allocation_vs_tactical_drift",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "portfolio_theory",
+      "allocation",
+      "drift",
+      "mandate",
+      "module_18"
+    ]
+  },
+  {
+    "id": "dc_2026_12_18_hedge_then_double_up",
+    "type": "spot_the_violation",
+    "difficulty": 4,
+    "locale": "en",
+    "scenario": "A user's holdings have an average R² of 0.09 against the market. They place a market hedge, describe the book as protected, and double the size of the underlying positions on the strength of it.",
+    "question": "What is wrong with this sequence?",
+    "options": [
+      "The hedge should be resized as the positions grow, but otherwise the reasoning holds",
+      "The hedge reached only about 4.6% of the risk — a perfect market hedge on low-R² holdings leaves σ√(1 − R²) standing — and it added basis risk, so doubling the positions doubles a specific risk the hedge never touched",
+      "Hedging is prohibited under a long-only Mandate, so nothing after the hedge matters",
+      "The error is using beta to size the hedge; volatility is the correct sizing input"
+    ],
+    "answer": 1,
+    "explanation": "A market hedge reaches only the market-linked share of risk, which R² measures, and it introduces a new exposure against the hedging instrument — neither of which licenses scaling the part it never reached. Resizing the hedge is bookkeeping that leaves the substantive error untouched. It is true that a long-only Mandate blocks the trade in AMI, but that is a fact about the simulator rather than the flaw in the reasoning. And beta is the correct sizing input: it converts the book into index-equivalent exposure.",
+    "related_lesson": "381_hedging_a_book_and_what_it_costs",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "portfolio_theory",
+      "hedging",
+      "r_squared",
+      "module_19"
+    ]
+  },
+  {
+    "id": "dc_2026_12_19_unfalsifiable_esg_claim",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "A fund's literature states: 'Sustainability is embedded at every level of our investment process, and our analysts consider material environmental and social factors alongside financial ones.' A user reads this as a strong commitment and treats the fund as screened.",
+    "question": "What is missing from the claim?",
+    "options": [
+      "Anything that could make it false — no holding would contradict either sentence, whereas a commitment such as 'at least 80% of assets meet the prospectus criteria' names a threshold and points at a definition you can audit",
+      "The fund's ESG rating from a major agency, without which the claim cannot be verified",
+      "The fund's performance record, since a sustainability claim is only meaningful alongside returns",
+      "A list of the specific companies excluded, which every sustainability claim is required to publish"
+    ],
+    "answer": 0,
+    "explanation": "Both sentences are almost certainly true and neither constrains the portfolio — considering a factor is satisfied by considering it and buying the company anyway. The test is whether you can name a holding that would falsify the claim. An agency rating would introduce a different problem, since ratings are methodology-dependent opinions; performance is a separate claim the literature did not make; and no rule requires funds to publish an exclusion list.",
+    "related_lesson": "385_greenwashing_how_to_test_the_claim",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "esg",
+      "greenwashing",
+      "falsifiability",
+      "module_26"
+    ]
+  },
+  {
+    "id": "dc_2026_12_20_esg_lite_overclaimed",
+    "type": "spot_the_violation",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "A user switches on AMI's ESG-lite Mandate flag and tells a friend their portfolio is now fully ESG-screened, including for governance quality, across every ticker they might trade.",
+    "question": "Which parts of that description overclaim what the flag does?",
+    "options": [
+      "Only the governance part; coverage and screening depth are as described",
+      "None — ESG-lite is a full environmental, social and governance screen within its stated coverage",
+      "Both the coverage and the depth: it screens three named exclusion buckets within the S&P 500 only, at industry-label level rather than by revenue share, and carries no governance dimension at all — a ticker outside that coverage returns UNKNOWN and is permitted",
+      "Only the coverage part; the flag does assess governance through its weapons and defence exclusion"
+    ],
+    "answer": 2,
+    "explanation": "The flag is an exclusion rule over fossil fuels within the Energy sector, tobacco/alcohol/gambling, and aerospace and defence — no scoring, no governance dimension, and coverage limited to the S&P 500 parent set, outside which a ticker is reported as unclassified and permitted. It also matches on industry label, so a conglomerate earning part of its revenue from an excluded activity is not caught. The flag describes itself accurately in-app; the overclaim is the user's, and it spans both coverage and depth.",
+    "related_lesson": "387_capstone_read_amis_esg_lite_flag_honestly",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "esg",
+      "mandate",
+      "compliance",
+      "module_26"
+    ]
+  },
+  {
+    "id": "dc_2026_12_21_all_domestic_book",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "A user holds only companies listed in their own country and wants to know whether that is a problem. They mention that they understand local businesses far better than foreign ones.",
+    "question": "Which agent should they take this to, and what is the substantive point?",
+    "options": [
+      "The News Analyst, since the question is really about which country's news flow they can follow",
+      "The Fundamentals Analyst, to compare the local market's valuation with foreign markets before deciding",
+      "The Bull Researcher, to make the case for the domestic market so the user can weigh it",
+      "The Portfolio Manager, because familiarity is an argument about information while the position is an argument about risk — knowing a firm well does not decorrelate it from other firms under the same currency and central bank"
+    ],
+    "answer": 3,
+    "explanation": "This is an allocation question and belongs with the Portfolio Manager. The substantive point is the mismatch: a genuine information advantage does not change the correlation structure that sets portfolio risk, which is why a 100% domestic book is simultaneously a country, currency and often sector bet. News coverage and relative valuation are real considerations but neither addresses the concentration, and asking the Bull Researcher for the case in favour invites an argument rather than a measurement.",
+    "related_lesson": "375_home_country_bias",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "portfolio_theory",
+      "home_bias",
+      "diversification",
+      "module_18"
+    ]
+  },
+  {
+    "id": "dc_2026_12_22_thirty_names_still_exposed",
+    "type": "predict_the_call",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "A user holding five names asks how much further diversification would reduce their risk. Assume every holding carries 30% volatility and every pair correlates at 0.35.",
+    "question": "What will the arithmetic show as they add names?",
+    "options": [
+      "Volatility keeps falling toward zero as names are added, which is why institutional portfolios hold hundreds of positions",
+      "Volatility falls from 20.78% at five names to 18.29% at thirty and 17.91% at a hundred, converging on a floor of 17.75% that no number of names crosses",
+      "Volatility falls in proportion to 1 ÷ √N, reaching about 5.5% at a hundred names",
+      "Volatility is unchanged, since diversification benefits are exhausted by the fifth holding"
+    ],
+    "answer": 1,
+    "explanation": "Recomputing the equicorrelated formula gives 20.78%, 18.29% and 17.91% at five, thirty and a hundred names, all converging on √0.35 × 30% = 17.75%. That floor is systematic risk — the part every holding shares, which survives averaging. The 1 ÷ √N scaling holds only at zero correlation. Volatility approaching zero would require the same thing. And the benefit is not exhausted at five: names five to thirty are still worth about 2.5 percentage points.",
+    "related_lesson": "372_the_floor_diversification_cannot_cross",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "portfolio_theory",
+      "diversification",
+      "systematic_risk",
+      "module_18"
+    ]
   }
 ]

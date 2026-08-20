@@ -1,0 +1,166 @@
+[
+  {
+    "id": "qa_pt_how_many_stocks",
+    "category": "portfolio_theory",
+    "question": "How many stocks do I need to be diversified?",
+    "short_answer": "Fewer than most people think, and the count is the wrong question — the correlations between your holdings matter far more. Company-specific risk is largely dealt with by twenty to thirty names; the shared market risk underneath is untouched by any number of names.",
+    "long_answer": "Take a book where every name carries 30% volatility and every pair correlates at 0.35 — ordinary figures for large-cap equities in one market. Portfolio volatility runs 30.00% at one name, 20.78% at five, 19.33% at ten, 18.55% at twenty and 18.29% at thirty, converging on a floor of √0.35 × 30% = 17.75% that no number of names crosses. The second holding is worth 5.35 percentage points; names 51 to 100 are worth 0.16 between them. The academic estimates land in that same region: Evans and Archer (1968) put it near ten, and Statman (1987) concluded at least 30 names for a borrowing investor and 40 for a lending one. But the far more important number is the correlation. Two holdings at 0.90 behave almost as one position — the second reduces volatility by 0.76 percentage points — while at zero correlation the same pair cuts it by nearly nine points. So an eight-name book with six names in one sector can carry more risk than a three-name book of genuinely unrelated holdings, which is exactly what the arithmetic gives: 23.27% against 21.21%. Ask of every addition what would make it fall on a day the rest of your book rises. If you cannot name a mechanism, you are buying the same position twice.",
+    "related_lessons": [
+      "371",
+      "372",
+      "376"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "portfolio_theory",
+      "diversification",
+      "correlation"
+    ]
+  },
+  {
+    "id": "qa_pt_what_does_beta_mean",
+    "category": "portfolio_theory",
+    "question": "What does beta actually mean?",
+    "short_answer": "Beta is the slope of a holding against the market — how much of a market move typically arrives in it. It is not a risk level. A holding can have a beta of exactly 1.00 and still be three times as volatile as the market.",
+    "long_answer": "Beta is cov(asset, market) ÷ var(market), so it answers one question: if the market moves 1%, how much of that typically shows up here? It says nothing about how much else is going on. The number that tells you that is R², the share of the holding's variation the market explains. Take two hypothetical holdings against the same market: one has beta 1.21, R² 0.90 and monthly volatility 2.68%; the other has beta 1.00 — 'moves with the market one-for-one' — R² of just 0.09, and monthly volatility of 7.08%, more than three times the market's own 2.10%. The second holding's beta describes about a tenth of what it does, and the rest is company-specific. So a beta quoted without an R² is a slope with no indication of whether anything lies near the line. This also decides what a hedge can achieve: a perfect market hedge leaves σ√(1 − R²) standing, which removes 68.8% of the first holding's risk and 4.6% of the second's. Ask the Market Analyst for a beta and then ask the follow-up it will not volunteer — how much of this holding's movement is market-linked at all?",
+    "related_lessons": [
+      "378",
+      "381",
+      "383"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "portfolio_theory",
+      "beta",
+      "r_squared",
+      "capm"
+    ]
+  },
+  {
+    "id": "qa_pt_is_6040_balanced",
+    "category": "portfolio_theory",
+    "question": "Is a 60/40 portfolio actually balanced?",
+    "short_answer": "In money, yes. In risk, no — a 60/40 split of an 18%-volatility sleeve and a 6%-volatility sleeve correlated at 0.10 carries about 93% of its risk in the first sleeve.",
+    "long_answer": "Dollar weights and risk contributions are different quantities, and they come apart hardest exactly where portfolios get described as balanced. A sleeve's share of portfolio risk is wᵢ(Σw)ᵢ divided by portfolio variance. Run it on equities at 18% volatility and bonds at 6%, correlated at 0.10, held 60/40: portfolio volatility is 11.30%, and the risk shares are 93.5% equities against 6.5% bonds. The bond sleeve holds 40 cents of every dollar and answers for about a fifteenth of the risk. Nothing is wrong with owning such a book — but whoever called it balanced was describing the money. If you want the risk shares equal, weighting by inverse volatility gives 25% equities and 75% bonds, which computes to exactly 50/50 in risk and 6.67% portfolio volatility. Notice that is also a much quieter portfolio, not a rebalanced version of the same one: balancing the risk shares and choosing the risk level are two separate decisions, and conflating them is how risk-parity strategies end up levered.",
+    "related_lessons": [
+      "380",
+      "383"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "portfolio_theory",
+      "risk_budgeting",
+      "risk_parity",
+      "allocation"
+    ]
+  },
+  {
+    "id": "qa_pt_when_to_rebalance",
+    "category": "portfolio_theory",
+    "question": "When should I rebalance my portfolio?",
+    "short_answer": "When a sleeve is more than a set number of percentage points from your policy weight — and you pick that number before you have a view, because at the moment it triggers you will have one.",
+    "long_answer": "Two rules are in common use. A band acts when a sleeve drifts past a threshold; a calendar acts on a fixed date whatever has happened. Bands trade only when something moved, calendars trade on schedule; both beat 'when I get round to it', which is not a rule. Worked through: a $100,000 book at a 60/40 policy, where the growth sleeve returns +40% and the defensive sleeve +2%, ends the year at $84,000 and $40,800 on a $124,800 total — weights of 67.3% and 32.7%, with nobody having traded. Under a 5-point band the trigger sits at 65%, so it is breached, and the trade is fully determined: the 60% target of the new total is $74,880, so you sell $9,120 of growth into defensive. That is an order to sell the thing that returned 40% and buy the thing that returned 2%, which is why the rule has to exist on paper beforehand. Rebalancing is not a forecast — it does not claim the winner will fall. It claims your policy described the risk you were willing to hold, and 67.3% is not the number you chose. Narrower bands track the policy better and cost more in spread and, outside a simulator, tax.",
+    "related_lessons": [
+      "374",
+      "373",
+      "376"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "portfolio_theory",
+      "rebalancing",
+      "discipline",
+      "allocation"
+    ]
+  },
+  {
+    "id": "qa_pt_all_my_stocks_are_local",
+    "category": "portfolio_theory",
+    "question": "All my holdings are in my own country — is that a problem?",
+    "short_answer": "It is a position, and it needs a reason that is not 'this is where I live'. The first fifteen points of foreign exposure typically buy more volatility reduction than anything else available to you.",
+    "long_answer": "Home bias is old and measured: French and Poterba (1991), on late-1980s data, found domestic shares of over 98% in Japan, 94% in the United States and 82% in Britain, none of them close to those markets' shares of world equity value. What it costs is computable. Take a domestic sleeve at 22% volatility and a foreign one at 18%, correlated at 0.60 — a high correlation, so this is not a favourable case. At 100% domestic, portfolio volatility is 22.00%; at 85/15 it is 20.43%, at 70/30 it is 19.13%, and at 50/50 it is 17.91%. The first fifteen points buy 1.57 percentage points. The usual justification — I understand these companies — is an argument about your information, and the position is an argument about your risk; knowing a firm well does not decorrelate it from other firms under the same central bank and currency. Some home tilt is genuinely justified, most solidly because you will spend in that currency. Write down the tilt that argument justifies before you look at your account, and compare.",
+    "related_lessons": [
+      "375",
+      "371",
+      "376"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "portfolio_theory",
+      "home_bias",
+      "diversification",
+      "international"
+    ]
+  },
+  {
+    "id": "qa_pt_is_factor_investing_worth_it",
+    "category": "portfolio_theory",
+    "question": "Is factor investing worth doing?",
+    "short_answer": "A factor is an exposure before it is a premium. Decide what it does to your book in the bad years first, and name the stretch of underperformance that would make you abandon it — before you take the tilt.",
+    "long_answer": "Fama and French (1992) found that size and book-to-market captured cross-sectional variation in average returns that market beta did not, and their 1993 paper turned those characteristics into constructed factors; Jegadeesh and Titman (1993) documented momentum over 3-to-12-month holding periods, noting that part of the first-year abnormal return dissipates over the following two. Quality and low volatility came later and are not claims those papers make. The construction matters: a factor is long the high-scoring portfolio and short the low-scoring one, so the market cancels and what remains is the characteristic's return. A long-only 'factor fund' therefore holds the market plus a tilt, and much of its return may be the market. Two practical consequences. First, factors are the reason two funds holding no tickers in common can be one bet — shared exposure travels through characteristics, not names. Second, many published anomalies weaken after publication, so what makes a factor claim credible is out-of-sample survival plus a mechanism, not the size of the in-sample result. If a strategy's whole case is the payment rather than the exposure, it is resting on the weakest half of the evidence.",
+    "related_lessons": [
+      "379",
+      "382"
+    ],
+    "related_agents": [
+      "research_manager"
+    ],
+    "tags": [
+      "portfolio_theory",
+      "factors",
+      "evaluation",
+      "fama_french"
+    ]
+  },
+  {
+    "id": "qa_pt_should_i_hedge",
+    "category": "portfolio_theory",
+    "question": "Should I hedge my portfolio?",
+    "short_answer": "Compute R² first. Beta tells you how big a hedge must be; R² tells you how much of your risk it can reach — and on a book of low-R² holdings a perfect hedge removes very little.",
+    "long_answer": "Sizing is the easy part: a $100,000 book with beta 1.20 carries $120,000 of index-equivalent exposure, so a 10% index decline implies about −$12,000, and neutralising the market entirely needs a $120,000 short — or $35,000 to bring the beta from 1.20 down to 0.85. The harder part is what that buys. A market hedge reaches only the market-linked share of your risk, which is R², and a perfect hedge leaves σ√(1 − R²) standing. On a holding with R² 0.90 that removes 68.8% of the volatility; on one with R² 0.09 it removes 4.6%. The cost is symmetric — the short that removes 12% of downside removes 12% of upside — and it adds basis risk, because the index you can short is not your book. So 'hedged' names a pair of positions with a combined profit and loss, not a state in which risk was removed, and it is never a licence to size the underlying position up. One AMI-specific note: with `long_only` set in your Mandate — the default — the safety floor blocks a sell against a position you do not hold, because that opens a short. Hedging is taught here as literacy so you can read a hedged book, not as a trade to place.",
+    "related_lessons": [
+      "381",
+      "378",
+      "383"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "portfolio_theory",
+      "hedging",
+      "beta",
+      "r_squared"
+    ]
+  },
+  {
+    "id": "qa_pt_low_volatility_means_safe",
+    "category": "portfolio_theory",
+    "question": "Isn't the lower-volatility asset always the safer thing to hold?",
+    "short_answer": "No — risk is a property of the combination, not the asset. Adding a slice of a more volatile holding can lower a portfolio's volatility and raise its expected return at the same time.",
+    "long_answer": "Take two sleeves: A at 20% volatility with an assumed 8% expected return, B at 12% with 5%, correlated at 0.20. Holding B alone gives 12.00% volatility and 5.00% expected return. Putting 21.43% into the more volatile A gives 11.11% volatility and 5.64% expected return — less risk and more return than the safe sleeve on its own. Nothing is conjured: A's returns are only weakly related to B's, so a slice of A cancels some of B's variation. That 21.43% is the minimum-variance weight, and it comes from a closed form using only volatilities and the correlation — no expected return appears in it, which is why it is far more robust than an optimiser's 'best' portfolio. Every mix below it, including B alone, is dominated: for each there is a portfolio with the same volatility and a higher expected return. So a cautious-looking single-asset book is frequently taking risk it is not being paid for, and the question 'is this a risky holding?' has no answer outside the context of a portfolio.",
+    "related_lessons": [
+      "377",
+      "371"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "portfolio_theory",
+      "efficient_frontier",
+      "volatility",
+      "minimum_variance"
+    ]
+  }
+]

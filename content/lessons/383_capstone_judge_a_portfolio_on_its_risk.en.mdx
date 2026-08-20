@@ -1,0 +1,104 @@
+---
+id: "383_capstone_judge_a_portfolio_on_its_risk"
+title: "Capstone: judge a portfolio on its risk, not its returns"
+duration_min: 7
+level: 11
+module: 19
+difficulty: 5
+track: "risk_portfolio"
+code: "RISK 29"
+topic: "capstone"
+prerequisites: ["377_the_efficient_frontier_in_plain_arithmetic", "378_beta_and_capm_what_beta_is_not", "379_factors_value_size_momentum_quality_low_vol", "380_risk_parity_and_risk_budgeting", "381_hedging_a_book_and_what_it_costs", "382_reading_a_factor_claim_someone_hands_you"]
+tags: ["capstone", "synthesis", "risk", "beta", "risk-contribution", "hedging", "level-11"]
+sources: ["Markowitz — Portfolio Selection, Journal of Finance 7(1) (1952), 77–91", "Sharpe — Capital Asset Prices: A Theory of Market Equilibrium under Conditions of Risk, Journal of Finance 19(3) (1964), 425–442"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "portfolio volatility, risk shares at three weightings, index-equivalent exposure and post-hedge residual all recomputed in scripts/verify_cr054_wave2_numbers.py; the book is openly hypothetical and every input is stated in the lesson so a reader can reproduce each figure"}
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# Capstone: judge a portfolio on its risk, not its returns
+
+You now hold the whole M19 toolkit: the frontier and the portfolios that sit below it, beta and the R² that says whether beta means anything, factors as exposures before premiums, risk shares against dollar weights, what a hedge can and cannot reach, and the six questions for a claim someone hands you. This capstone runs one book through all of it in a single pass and produces a verdict that never mentions its return. Nothing new is introduced; the skill is doing the whole sequence before forming an opinion.
+
+## Example
+
+An openly hypothetical simulated book of **$200,000**, up 19% over the past year. Two sleeves: **growth equities at 70%** ($140,000, 24% volatility) and **defensive at 30%** ($60,000, 7% volatility), correlated at **0.15**. The growth sleeve is six names; the holder describes them as "different companies in different industries." Book beta against the market: **1.35**. Average R² of the growth holdings against the market: **0.30**. No real company appears anywhere; the arithmetic is the lesson.
+
+**Volatility and risk shares.** Portfolio volatility computes to **17.24%**. The risk shares:
+
+| sleeve | dollar weight | share of portfolio risk |
+|---|---|---|
+| Growth | 70% | **96.7%** |
+| Defensive | 30% | **3.3%** |
+
+The defensive sleeve holds 30 cents of every dollar and answers for a thirtieth of the risk. As a risk decision it is almost not there. Moving to 55/45 gives 14.02% volatility and shares of 91.8/8.2; moving to 40/60 gives 11.04% and 80.6/19.4. Even at 40/60 the growth sleeve dominates — which is what a 24%-against-7% volatility gap does, and is worth knowing before anyone calls a 40/60 book conservative.
+
+**Market exposure.** Beta 1.35 on $200,000 is **$270,000** of index-equivalent exposure; a 10% market decline implies about **−$27,000**.
+
+**What a hedge could reach.** At an average R² of 0.30, a perfect market hedge leaves σ√(1 − 0.30) = 83.7% of the volatility standing: **17.24% would become 14.42%**. Seventy percent of this book's risk is not market risk and no index hedge touches it.
+
+**Where that other risk lives.** Six names described as "different industries" with an average R² of 0.30 means most of their movement is not the market's — which is not the same as it being independent of each other. If they share a characteristic, they share a driver, and <Lesson id="379_factors_value_size_momentum_quality_low_vol"/> is the reason ticker-level diversity says nothing about it. The test is one line of arithmetic: compute their pairwise correlations. Until that is done, "different industries" is a description of the labels.
+
+**The verdict.** This book has one meaningful sleeve, a large market exposure, a majority of risk that no market hedge reaches, and an unmeasured concentration inside its growth names. It is up 19%, and none of the four findings depends on that in any way — nor would any of them have changed had it been down 19%.
+
+## The trap
+
+The trap is the 19%. It arrives first, it is the number the holder cares about, and it silently reframes every subsequent finding as an objection to be answered rather than a fact to be recorded. A book up 19% with 96.7% of its risk in one sleeve is described as "concentrated in what's working"; the identical book down 19% is described as "dangerously concentrated." The risk figures are the same in both cases because they were never a function of the outcome.
+
+The correct mental model: the return is one draw from a distribution the risk figures describe. Judging the construction by the draw is <Lesson id="357_process_vs_outcome"/> at portfolio level, and it fails in the more dangerous direction here — a good year removes the pressure to look, so the audit that would have found the concentration is the one nobody runs. Do the risk pass first, write the findings down, and only then look at the return. If the order feels artificial, that is the discipline working.
+
+## The steelman
+
+The strongest case for this book: every finding above is a description, and none of them says the holder is wrong. A 96.7% risk share in growth is exactly what someone who wants growth exposure should hold; a 1.35 beta is what conviction looks like in a rising market; the untouchable 70% of risk is the specific risk you take deliberately when you pick companies rather than buy an index. On this reading the audit produces four accurate sentences and zero problems, and treating description as criticism is how risk analysis turns into an argument for owning nothing. That case is largely right, and it is why the verdict above lists findings rather than errors. But it has a precise limit, and it is the same one M18 found: a deliberate position has a number attached to it that was chosen in advance. The falsifier is a question, not a computation — ask the holder what risk share they intended the defensive sleeve to carry. If they say "a few percent, it is there for optionality rather than balance", the book is built and the audit merely confirms it. If they say "about thirty percent, that's why it's 30% of the money", then the sleeve was bought under a misunderstanding of what dollar weights buy, and the finding is real.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="The book is 70% growth (24% volatility) and 30% defensive (7% volatility), correlated at 0.15. Risk shares compute to 96.7% and 3.3%. The holder shifts to 40% growth / 60% defensive. What happens?"
+  options={[
+    "Risk shares become roughly 40/60, since risk contribution converges on dollar weight as the weights are equalised",
+    "Volatility falls to 11.04% and the growth sleeve still carries 80.6% of the risk — a large move in money buys a much smaller move in risk balance, because the volatility gap between the sleeves is what drives the shares",
+    "Volatility falls to about 6.9%, approaching the defensive sleeve's own volatility as it becomes the majority holding",
+    "Nothing meaningful, since risk shares depend on correlation and the 0.15 correlation is unchanged"
+  ]}
+  answer={1}
+  explanation="Recomputing at 40/60 gives 11.04% volatility with shares of 80.6/19.4: a thirty-point shift in capital moves the risk share by about sixteen points, because a 24%-versus-7% volatility gap dominates the arithmetic. The answer expecting shares to track dollar weights assumes the very equivalence the module disproves. The answer landing near 6.9% treats the portfolio's volatility as converging on its largest holding's, which would require the sleeves to be perfectly correlated with the defensive one carrying everything. And the answer that nothing changes is wrong on the mechanics: correlation is one input, and weights are another that plainly moved."
+/>
+
+<Quiz
+  question="Book beta is 1.35 and the growth holdings' average R² against the market is 0.30. The holder wants to reduce risk and proposes a full market hedge. What should they be told?"
+  options={[
+    "It removes the book's market exposure — about $270,000 of index-equivalent exposure — but leaves 14.42% of the 17.24% volatility standing, because roughly 70% of this book's risk is not market risk",
+    "It removes essentially all the risk, since a beta of 1.35 means the market drives more than all of the book's movement",
+    "It is unnecessary: at an R² of 0.30 the book is already largely insulated from the market",
+    "It would reduce volatility to about 12.77%, by dividing the book's volatility by the beta being removed"
+  ]}
+  answer={0}
+  explanation="Beta sizes the hedge at 1.35 × $200,000 = $270,000 of index-equivalent exposure, and R² bounds what it can reach: σ√(1 − 0.30) leaves 14.42%. The answer expecting near-total removal reads beta as a share of explained movement, which is exactly the beta-versus-R² confusion this module exists to break. The answer calling the hedge unnecessary reverses the meaning of a low R² — it means the hedge would achieve little, not that there is little to hedge, and the $270,000 exposure is entirely real. And the answer dividing 17.24% by 1.35 uses beta where R² belongs: beta sets how large the hedge must be, and R² sets how much of the risk that hedge can reach."
+/>
+
+<Quiz
+  question="The book is up 19% over the year. Pulling the whole module together, how should that fact enter the risk audit?"
+  options={[
+    "As the primary evidence: a 19% return demonstrates the construction worked, and the risk figures are only estimates",
+    "As a warning sign: outsized returns generally indicate excessive risk-taking, so 19% is itself a finding",
+    "As a scaling factor: since risk and return are linked, the risk figures should be interpreted relative to the 19% achieved"
+    "It should not enter it at all — volatility, risk shares, beta and R² are computed from the book's composition and would read identically had the year gone the other way; the return is one draw from the distribution those figures describe, and reading it first turns each finding into an objection to be argued with",
+  ]}
+  answer={3}
+  explanation="This is the module's synthesis: every figure in the audit is a function of composition, not of outcome, so the return carries no information about any of them — and letting it in first is what converts an audit into a defence. The answer treating 19% as primary evidence is outcome-based reasoning in its clearest form: the same construction produces a wide range of one-year results. The answer treating a high return as itself a warning sign makes the same error with the sign flipped — it still infers construction from outcome. And the answer proposing a scaling factor invents a relationship the arithmetic does not contain: risk-adjusting a return is a different exercise, and it does not change the volatility, the risk shares, the beta or the R²."
+/>
+
+## Try it
+
+Run the sequence on your own simulated book, in this order, and write each answer down before moving on. What is each sleeve's dollar weight? What is its share of the risk? What is the book's beta, and how much index-equivalent exposure does that imply? How much of the risk would a market hedge actually reach? Group your equity names by driver rather than by ticker — how many bets do you really hold? Only when all five are written down, look at your return. If any finding feels different after you look, that is the trap, and you have just caught it happening.
+
+## Takeaway
+
+Compute the risk before you look at the return, because the return cannot change any of the risk figures but it will change how you read them.
+
+*Where this comes from: Markowitz's covariance view of portfolio risk (1952) and Sharpe's split of it into market-linked and specific components (1964).*

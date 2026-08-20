@@ -1,0 +1,105 @@
+---
+id: "382_reading_a_factor_claim_someone_hands_you"
+title: "Reading a factor claim someone hands you"
+duration_min: 6
+level: 11
+module: 19
+difficulty: 4
+track: "risk_portfolio"
+code: "RISK 28"
+topic: "evaluating_factor_claims"
+prerequisites: ["379_factors_value_size_momentum_quality_low_vol", "342_overfitting_and_curve_fitting", "345_data_mining_and_survivorship_bias"]
+tags: ["factors", "evaluation", "backtest", "survivorship", "discerning-ceo", "level-11"]
+sources: ["Fama & French — The Cross-Section of Expected Stock Returns, Journal of Finance 47(2) (1992), 427–465", "Jegadeesh & Titman — Returns to Buying Winners and Selling Losers, Journal of Finance 48(1) (1993), 65–91"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "no empirical magnitude is asserted; the two citations are restated from their own abstracts, verified this session; the pitch in the example is openly hypothetical and its numbers are internally consistent by construction"}
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# Reading a factor claim someone hands you
+
+Factor language is the most credible-sounding vocabulary in retail investing, which is exactly why it is the most useful to be able to take apart. After this lesson you will have a fixed sequence of questions to put to any factor or backtest claim — from a fund brochure, a research note, or an AMI agent — and you will know which of them the claim's own numbers can answer and which it can only assert.
+
+## Example
+
+A hypothetical pitch, of a shape you will recognise:
+
+> *"Our systematic strategy targets the quality factor. Backtested from 2005 to today, it returned 14.2% annualised against the benchmark's 9.1%, with a maximum drawdown of 22%. The quality premium is one of the best-documented effects in the academic literature."*
+
+Every number in it may be arithmetically correct and the pitch can still tell you almost nothing. Six questions, in order:
+
+**1. Is the claim about a spread or a portfolio?** A factor is a long-short construction — long the high-scoring names, short the low-scoring ones. If the strategy is long-only, it holds the market plus a tilt, and most of that 14.2% may be the market. *Ask: what is the return net of the market exposure?*
+
+**2. Was the rule fixed before the test, or chosen after?** "Quality" has no single definition; profitability, leverage, earnings stability and accruals all get used, in combinations. A definition selected because it produced the best backtest is the overfitting problem of <Lesson id="342_overfitting_and_curve_fitting"/> under an academic name. *Ask: how many definitions were tried?*
+
+**3. What is in the universe, and what fell out of it?** A test run on today's surviving companies has quietly excluded every firm that failed — <Lesson id="345_data_mining_and_survivorship_bias"/>. *Ask: does the universe include delisted names, and is it point-in-time?*
+
+**4. Are costs in the number?** Factor strategies rebalance, and quality strategies with a momentum-like turnover rebalance often. Spread, commission, borrow on the short leg, and market impact are all real, and a gross figure is not a return anyone received. *Ask: is 14.2% gross or net, and what turnover produces it?*
+
+**5. Does the start date do work?** 2005 is a choice. A window starting one year earlier or later can change a headline materially, and there is no honest reason a strategy tested "from 2005" could not also be shown from 1995 unless the data or the answer stops cooperating. *Ask: what does the full available history look like?*
+
+**6. What is the mechanism, and what would falsify it?** Why should profitable firms out-earn unprofitable ones on a risk-adjusted basis — is it compensation for a risk, or a persistent behavioural error, and why has it not been arbitraged? A claim with no mechanism has nothing to say about the future. *Ask: what stretch of underperformance would make you conclude this was never there?*
+
+Notice that questions 1 through 5 are answerable from the claim's own workings, and the claimant either has the answers or does not. Question 6 is the one that separates a finding from a pattern. And notice what none of the six is: an argument about whether quality is real. Fama and French (1992) and Jegadeesh and Titman (1993) documented real cross-sectional patterns in real data; the questions above are about whether *this* product has any relationship to that work.
+
+## The trap
+
+The trap is that a factor claim arrives pre-armoured with academic credibility, and the credibility transfers to a product that may share only a word with the research. The pitch says "one of the best-documented effects in the literature," and that sentence is doing something specific: it is borrowing the standing of a body of work to answer a question about a strategy that the work never examined.
+
+The correct mental model: the literature's finding and the product's backtest are two separate claims with two separate evidence bases, and the pitch depends on you merging them. Separate them out loud. *The literature documents a cross-sectional pattern in long-short spreads.* *This product is a long-only fund with a proprietary definition and undisclosed turnover.* Both sentences can be true at once, and once they are apart, every question above is asking about the second one — which is the only one you would be buying.
+
+## The steelman
+
+The strongest case for the pitch: demanding all six answers is a standard almost no real product meets, so a strict application of the checklist rejects everything, including strategies that genuinely work. Point-in-time universes are expensive, net-of-cost figures depend on assumptions the manager cannot know for your account, and no honest person can specify in advance the exact underperformance that would falsify a premium measured over decades. Applied literally, the checklist is a way to feel rigorous while doing nothing. That is a fair criticism of the checklist used as a pass/fail gate — and it is the wrong way to use it. The questions are for *ranking* claims, not for admitting them: a manager who answers four of six with specifics is in a different category from one who answers none and repeats that the effect is well documented. The falsifier is about the questioner rather than the claim, and it is worth being honest with yourself about: if you have applied this list and never once changed your mind about a product, you are performing diligence rather than doing it, and the sceptic is right about your use of it.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="A long-only fund reports 14.2% annualised against a benchmark's 9.1% and attributes the gap to the quality factor. Which question most directly tests that attribution?"
+  options={[
+    "What was the maximum drawdown over the same window?",
+    "What is the return net of the fund's market exposure — since a factor is a long-short spread, and a long-only fund holds the market plus a tilt, so much of the 14.2% may be market return rather than the factor",
+    "How many holdings does the fund maintain?",
+    "Has the fund beaten its benchmark in each individual calendar year?"
+  ]}
+  answer={1}
+  explanation="The attribution claims a factor is producing the excess return, and the only way to test that is to strip out the exposure the fund shares with the benchmark — because the factor is defined as a spread, not as a portfolio. The answer about drawdown measures a different property; a strategy can have a shallow drawdown and no factor exposure at all. The answer about holding count says nothing about which characteristics those holdings load on. And the answer about year-by-year consistency tests persistence rather than attribution — a fund can beat its benchmark every year for reasons entirely unrelated to quality."
+/>
+
+<Quiz
+  question="A backtest is run on the current constituents of a major index, going back twenty years. What is the specific defect, and which way does it bias the result?"
+  options={[
+    "No defect — using current constituents ensures the data is clean and consistently defined",
+    "The index composition changes, so returns will be understated relative to a fixed-universe test",
+    "Survivorship bias: every company that failed or was delisted over the twenty years is absent from the universe, so the test measures a basket selected for having survived — which flatters the result",
+    "The window is too short for a twenty-year strategy claim, so the result is unreliable in an unknown direction"
+  ]}
+  answer={2}
+  explanation="Testing on today's survivors excludes precisely the names that would have hurt, and the direction of the bias is knowable in advance: it inflates returns and understates drawdowns. The answer praising the data as clean mistakes a consistent universe for a correct one. The answer predicting understated returns has the direction backwards. And the answer about window length raises a real concern but the wrong one, and claiming the bias is of unknown direction gives up information the mechanism plainly provides."
+/>
+
+<Quiz
+  question="A manager answers the first five questions with specifics but, on the sixth, says only that the premium is well documented and declines to name a stretch of underperformance that would change their mind. Bringing the module together, how should that be weighed?"
+  options={[
+    "It disqualifies the product: without a stated falsifier the claim is unfalsifiable and therefore worthless",
+    "It is irrelevant: the first five questions are the empirical ones, and if those are answered well the sixth is philosophy",
+    "It should be discounted, since no manager can reasonably specify a falsification threshold for a premium measured over decades"
+    "It is the most informative answer of the six: the specifics establish the backtest was run honestly, while the refusal to name a falsifier means the manager has no view on why the effect should persist — so the product is being sold on the past, and there is no condition under which they would tell you it had stopped working",
+  ]}
+  answer={3}
+  explanation="This is the synthesis: questions one through five audit whether the past was measured correctly, and only the sixth bears on whether it should recur — so a strong five and an empty sixth is a precise, informative combination, not a mixed report. The answer disqualifying the product outright ignores that the five specifics are genuine evidence of care and that ranking, not gating, is what the list is for. The answer calling the sixth philosophy inverts the value of the questions, since the first five are entirely about a period that has already happened. And the answer excusing the refusal accepts the manager's own framing — the question asks for a condition, not a precise threshold, and a manager with a mechanism in mind can always name one."
+/>
+
+## Try it
+
+Convene the Room on a ticker and read the Research Manager's synthesis with the six questions in hand. Where the argument rests on a pattern — "this setup has historically resolved upward", "this sector tends to lead" — ask which of the six the Room's own reasoning could answer, and put the missing one to the Research Manager in a 1-on-1. The point is not to catch AMI out; it is that the Verdict is a training artifact produced for you to evaluate, and these are the questions that evaluate it.
+
+## Takeaway
+
+Separate the literature's finding from the product's backtest before anything else — then ask the six, and treat "it is well documented" as the answer to a question nobody asked.
+
+*Where this comes from: the cross-sectional results of Fama & French (1992) and Jegadeesh & Titman (1993), and the evidentiary standards for testing a claim in Module 21.*

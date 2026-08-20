@@ -156,9 +156,17 @@ waves. Each new module belongs to a track (which fixes its code prefix):
 | 12 — The Evaluator's Math | M21 | Testing a claim | quant_methods |
 | 13 — Ethics & Market Integrity | M22 | Playing it straight | ethics_integrity |
 | 13 — Ethics & Market Integrity | M23 | Duty & conflicts | ethics_integrity |
-| 14 — The Discerning CEO | M24 | Evaluating analyst & AI output | edge_process |
-| Specialty strand | M25 | Islamic finance & Sharia investing | fundamentals_analysis |
-| Specialty strand | M26 | Sustainable / ESG investing | fundamentals_analysis |
+| 14 — The Discerning CEO | M24 | Evaluating analyst & AI output | decision_evaluation |
+| Specialty strand | M25 | Islamic finance & Sharia investing | islamic_finance |
+| Specialty strand | M26 | Sustainable / ESG investing | ethics_integrity |
+
+**CR059 corrected the last three rows (2026-08-20, CR054 Wave 2).** They were
+written before Saiful locked the group count at 13 hex facets, and mapped M24
+to `edge_process` and M25/M26 to `fundamentals_analysis`. The shipped corpus
+does not look like that: M24 is `decision_evaluation` (EVAL 1-8, CR062), M25 is
+`islamic_finance` (SHARIA 1-10, CR058), and CR059 folded ESG into
+`ethics_integrity` rather than minting a `mandate_compliance` track. The table
+now describes the corpus that exists.
 
 Agent-callout guide for the new domains: asset_classes lessons usually
 tag fundamentals_analyst or market_analyst; economics_macro tags
@@ -185,7 +193,7 @@ duration_min: <integer, typically 3-6>
 level: <1-14>                   # Saiful's pedagogical Level (9-14 are CR054)
 module: <1-26>                  # the module within the level (13-26 are CR054)
 difficulty: <1-5>               # how hard the content itself is
-track: "<one of: foundations | fundamentals_analysis | technical_analysis | news_macro | sentiment_behaviour | risk_portfolio | edge_process | asset_classes | economics_macro | quant_methods | ethics_integrity>"
+track: "<one of: foundations | fundamentals_analysis | technical_analysis | news_macro | sentiment_behaviour | risk_portfolio | edge_process | asset_classes | economics_macro | quant_methods | ethics_integrity | islamic_finance | decision_evaluation>"
 code: "<TRACK PREFIX> <next free number in that track>"
 topic: "<short slug>"
 prerequisites: ["<lesson_id>", ...]
@@ -438,8 +446,9 @@ bibliographies.
 - `level` = Saiful's pedagogical Level (1-14; 9-14 are CR054).
 - `module` = the cohesive group within the level (1-26; 13-26 are CR054).
 - `difficulty` = how hard the content is (1-5), independent of level.
-- `track` MUST be one of the 11 enum values (7 original + 4 CR054 BOK
-  tracks). Determined by the curriculum map / the module table above.
+- `track` MUST be one of the 13 enum values (7 original + 6 CR059 hex facets:
+  the 4 CR054 BOK tracks plus `islamic_finance` and `decision_evaluation`).
+  Determined by the curriculum map / the module table above.
 - `code` (CR044) is what the user reads off the lesson badge and says back
   to AMI — "go read N&M 22". Format is `<PREFIX> <n>`:
 
@@ -450,10 +459,11 @@ bibliographies.
   | `technical_analysis` | `TECH` | | `edge_process` | `EDGE` |
   | `news_macro` | `N&M` | | `asset_classes` | `ASST` |
   | `economics_macro` | `MACRO` | | `quant_methods` | `QUANT` |
-  | `ethics_integrity` | `ETHIC` | | | |
+  | `ethics_integrity` | `ETHIC` | | `islamic_finance` | `SHARIA` |
+  | `decision_evaluation` | `EVAL` | | | |
 
-  The 4 BOK tracks (v2) start empty — the first lesson in each takes
-  `<PREFIX> 1`, contiguous from there. Don't confuse the two macro-ish
+  All six CR059 tracks now hold lessons — none starts empty any more. Take the
+  next free number in the track, contiguous from there. Don't confuse the two macro-ish
   tracks: `news_macro` (N&M) is the news/catalyst-reading skill track;
   `economics_macro` (MACRO) is the economics discipline (M16-M17).
 

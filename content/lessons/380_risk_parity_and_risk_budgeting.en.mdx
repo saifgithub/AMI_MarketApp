@@ -1,0 +1,104 @@
+---
+id: "380_risk_parity_and_risk_budgeting"
+title: "Risk parity and risk budgeting"
+duration_min: 6
+level: 11
+module: 19
+difficulty: 4
+track: "risk_portfolio"
+code: "RISK 26"
+topic: "risk_parity"
+prerequisites: ["377_the_efficient_frontier_in_plain_arithmetic", "109_risk_budgeting_across_positions"]
+tags: ["risk-parity", "risk-budgeting", "risk-contribution", "allocation", "level-11"]
+sources: ["Markowitz — Portfolio Selection, Journal of Finance 7(1) (1952), 77–91"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "portfolio volatilities, marginal contributions (Σw) and risk shares recomputed via portfolio_variance() plus the explicit Σw product in scripts/verify_cr054_wave2_numbers.py; the equal-risk split is verified to land at exactly 50/50, not asserted; both sleeves openly hypothetical"}
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# Risk parity and risk budgeting
+
+The weights you see on a portfolio screen are dollar weights, and they are a poor guide to where your risk actually sits. After this lesson you will be able to compute how much of a portfolio's risk each sleeve is responsible for, and you will find that the familiar balanced portfolio is far less balanced than its label claims.
+
+## Example
+
+Two openly hypothetical sleeves. **Equities:** 18% annualised volatility. **Bonds:** 6%. Correlation between them: **0.10**. Held at the classic **60/40** in dollars.
+
+Portfolio volatility computes to **11.30%**. So far, unremarkable. Now ask a different question: *of that 11.30%, how much is each sleeve responsible for?*
+
+The quantity that answers it is the **marginal contribution to risk** — how much portfolio risk changes for a small increase in one sleeve. It is the row of the covariance matrix multiplied by the weights, (Σw)ᵢ, and a sleeve's share of total risk is wᵢ(Σw)ᵢ divided by the portfolio's variance. Running it on the 60/40 book:
+
+| sleeve | dollar weight | share of portfolio risk |
+|---|---|---|
+| Equities | 60% | **93.5%** |
+| Bonds | 40% | **6.5%** |
+
+**A 60/40 portfolio is a 93/7 portfolio.** The bond sleeve holds 40 cents of every dollar and answers for about seven percent of the risk. Nothing is wrong with the calculation and nothing is wrong with owning such a book — but anyone who described it as "balanced" was describing the money, and the money is not what moves.
+
+**Risk parity** asks the obvious follow-up: what weights make the risk shares equal? Here, weighting each sleeve by the inverse of its volatility gives equities 1/18 ÷ (1/18 + 1/6) = **25%**, and at **25/75** the risk shares come out at exactly **50.0% / 50.0%**, with portfolio volatility of **6.67%**.
+
+Two things follow immediately, and the second is the one people skip. First, equal *risk* requires wildly unequal *money* — three quarters of the capital in the quiet sleeve. Second, the resulting portfolio is much quieter overall, at 6.67% against 11.30%, which is a different portfolio rather than a better version of the same one. This is why risk-parity strategies in practice are so often levered: the balance is achieved at a risk level below what the holder wanted, and leverage is what brings it back — importing a completely separate set of risks in the process. Balancing risk shares and choosing a risk level are two decisions, and conflating them is the most common way the idea gets misapplied.
+
+This is a different budget from the one in <Lesson id="109_risk_budgeting_across_positions"/>. That budgets the loss allowed if a stop is hit — a cash amount you decide. This budgets the *variance* each sleeve contributes — a quantity you compute, and which changes when volatilities and correlations change, whether or not you touch the book.
+
+## The trap
+
+The trap is reading dollar weights as risk weights, which almost every portfolio screen invites you to do. Two sleeves at 60 and 40 look like a deliberate, moderate split, and the arithmetic says one of them is doing nearly all the work. The error is not that dollar weights are useless — they determine what you own — but that they answer a question about capital when the question you meant was about risk.
+
+The correct mental model: dollar weight scales with price, and risk contribution scales with volatility *and* with how a sleeve co-moves with everything else. Those come apart hardest exactly where portfolios are usually described as balanced, because the low-volatility sleeve is precisely the one that needs a large dollar weight to matter at all. Whenever someone hands you a portfolio described by its weights, one line of arithmetic tells you what it is actually made of.
+
+## The steelman
+
+The strongest case against risk parity: it is an allocation rule with no expected returns in it at all, so it happily concentrates capital in whatever asset has recently been quietest, and it does so with no view on whether that asset is worth owning. Applied to bonds after a long calm period it puts three quarters of the money into an asset yielding very little, and the leverage typically used to restore the risk level turns a modest adverse move into a serious one. Those are real failure modes, not caricatures. What survives the criticism is the *measurement*: computing risk shares is diagnostic, and it is right whether or not you accept the prescription that they should be equal. The falsifier separates the two cleanly — if you compute your risk shares and find they match what you intended, the diagnostic cost you one line of arithmetic and the prescription is irrelevant to you. If they are 93/7 and you believed you held something balanced, the measurement has already earned its place, and whether you respond by changing weights is a separate decision the number does not make for you.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="Equities carry 18% volatility, bonds 6%, correlated at 0.10, held 60/40 in dollars. What share of the portfolio's risk does the bond sleeve account for?"
+  options={[
+    "40%, matching its dollar weight",
+    "About 6.5% — a sleeve holding 40 cents of every dollar accounts for roughly one-fifteenth of the risk, because its volatility is a third of the equity sleeve's and the two barely co-move",
+    "About 25%, since risk scales with the square root of the dollar weight",
+    "About 33%, since bond volatility is one third of equity volatility"
+  ]}
+  answer={1}
+  explanation="Computing wᵢ(Σw)ᵢ ÷ portfolio variance gives 93.5% to equities and 6.5% to bonds. The answer equating risk share with dollar weight is the error the whole lesson addresses — it is the reading every portfolio screen encourages. The answer using a square root invents a scaling rule; risk contribution depends on the covariance row, not on a transformation of the weight. And the answer taking the ratio of volatilities ignores the weights entirely, which is why it lands three times too high."
+/>
+
+<Quiz
+  question="What weights equalise the two sleeves' risk contributions, and what happens to the portfolio when you use them?"
+  options={[
+    "50/50 — equal risk requires equal money, which is what makes the rule intuitive",
+    "60/40 already equalises them once the 0.10 correlation is taken into account",
+    "25% equities / 75% bonds — equal risk needs sharply unequal money — and the resulting portfolio is much quieter overall, at 6.67% volatility against 11.30%, which is a different portfolio rather than a better version of the same one",
+    "75% equities / 25% bonds, since the higher-risk sleeve must be larger to balance the contributions"
+  ]}
+  answer={2}
+  explanation="Weighting by inverse volatility gives 25/75 here, and recomputing confirms the risk shares land at exactly 50/50 with portfolio volatility of 6.67%. The answer expecting 50/50 assumes equal money buys equal risk, which is only true when the sleeves have identical volatility. The answer that 60/40 already balances contradicts the computed 93.5/6.5 split. And the answer putting 75% in equities inverts the logic — the sleeve that contributes more risk per dollar needs a smaller dollar weight, not a larger one."
+/>
+
+<Quiz
+  question="A holder computes their risk shares, finds 93/7 against an intended balance, and moves to 25/75 — then notices the portfolio's volatility fell from 11.30% to 6.67% and adds leverage to bring it back. Bringing the module together, how should that last step be assessed?"
+  options={[
+    "It is the natural completion of the change, since the point of rebalancing risk shares is to keep total risk unchanged",
+    "It is unnecessary, since equalising risk contributions leaves total portfolio risk unchanged by construction",
+    "It is wrong because leverage is never appropriate in a portfolio containing bonds"
+    "It conflates two separate decisions — how risk is distributed and how much risk is held — and the fix imports funding, margin and forced-sale risks that the original calculation never priced",
+  ]}
+  answer={3}
+  explanation="This is the module's synthesis: the risk-share calculation says how risk is distributed and is silent on the level, so restoring the level is a second decision with its own risks — none of which appear in the covariance arithmetic that motivated the first. The answer calling leverage the natural completion accepts exactly that conflation. The answer claiming the total is unchanged by construction is factually wrong: recomputing at 25/75 gives 6.67%, well below 11.30%. And the answer banning leverage outright is a blanket rule rather than an assessment, and it would also rule out the many portfolios where the trade-off is deliberately taken."
+/>
+
+## Try it
+
+Take the two largest sleeves of your simulated Portfolio, write down your rough estimate of each one's annual volatility and their correlation, and compute the risk shares from wᵢ(Σw)ᵢ ÷ portfolio variance. Compare the answer to the dollar weights on your screen. Then ask the Portfolio Manager in a 1-on-1 which sleeve it thinks carries most of your risk, and check its reasoning against your own arithmetic rather than the other way round — AMI's answers are training artifacts for you to grade.
+
+## Takeaway
+
+Dollar weights tell you what you own and risk shares tell you what you are exposed to; a 60/40 book is routinely a 93/7 book, and one line of arithmetic is the difference between knowing that and assuming otherwise.
+
+*Where this comes from: the marginal-contribution decomposition of portfolio variance that follows from Markowitz's covariance framework — Portfolio Selection (1952).*

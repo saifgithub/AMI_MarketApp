@@ -1,0 +1,95 @@
+---
+id: "379_factors_value_size_momentum_quality_low_vol"
+title: "Factors: value, size, momentum, quality, low-vol"
+duration_min: 6
+level: 11
+module: 19
+difficulty: 4
+track: "risk_portfolio"
+code: "RISK 25"
+topic: "factor_investing"
+prerequisites: ["378_beta_and_capm_what_beta_is_not"]
+tags: ["factors", "value", "size", "momentum", "fama-french", "level-11"]
+sources: ["Fama & French — The Cross-Section of Expected Stock Returns, Journal of Finance 47(2) (1992), 427–465", "Fama & French — Common Risk Factors in the Returns on Stocks and Bonds, Journal of Financial Economics 33(1) (1993), 3–56", "Jegadeesh & Titman — Returns to Buying Winners and Selling Losers, Journal of Finance 48(1) (1993), 65–91"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "all three citations verified against the publishers' records this session, and each paper's claim restated from its own abstract; no factor premium figure is asserted anywhere because none was verified — the lesson deliberately teaches the structure of a factor claim rather than its magnitude"}
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# Factors: value, size, momentum, quality, low-vol
+
+A factor is a shared characteristic that a large number of stocks load on, so that holdings which look unrelated turn out to move together whenever it moves. After this lesson you will be able to say what a factor claim actually asserts, why the market factor of <Lesson id="378_beta_and_capm_what_beta_is_not"/> was never going to be the only one, and — the part that matters when someone sells you a strategy — what evidence would show a named factor was never there.
+
+## Example
+
+The market factor comes first: some of every stock's movement is the market's movement. The factor literature begins with the observation that a great deal of the variation *left over* is also shared rather than company-specific.
+
+**Fama and French (1992)** looked at the cross-section of average returns and found that two easily measured variables — **size** (market capitalisation) and **book-to-market equity** — captured cross-sectional variation in average returns associated with market β, size, leverage, book-to-market and earnings-to-price. **Fama and French (1993)** turned those characteristics into constructed factors alongside the market, giving a three-factor description of stock returns rather than the one-factor description CAPM supplies. **Jegadeesh and Titman (1993)** documented a separate pattern: buying past winners and selling past losers produced significant positive returns over 3-to-12-month holding periods — and, importantly for anyone tempted to hold the position longer, part of the abnormal return earned in the first year after formation dissipated over the following two.
+
+Two later additions are widely traded and worth naming, with a caveat: **quality** (profitable, stable, low-leverage firms) and **low volatility** (the observation that low-volatility stocks have not underperformed by anything like the amount their beta would imply). These arrived after the papers above and are not claims those papers make.
+
+Notice how a factor is *built*, because this is where most misunderstandings start. A factor is not "buy cheap stocks." It is a long-short construction: long the portfolio scoring high on the characteristic, short the portfolio scoring low, so that the market's own movement mostly cancels and what remains is the return to the characteristic itself. When someone reports "the value factor returned X", they are describing that spread — not the return of a portfolio of cheap stocks, which also carries the market, the size tilt, and whatever else its holdings happen to share.
+
+The practical use is diagnostic before it is anything else. Two funds can hold entirely different tickers and be the same bet, because both load heavily on the same factor. That is <Lesson id="371_diversification_is_correlation_not_count"/> again, one level up: the correlation you are exposed to travels through shared characteristics, not shared names.
+
+## The trap
+
+The trap is treating a factor as a machine that pays. The evidence is real, the papers are serious, and the natural reading — *tilt toward these characteristics and collect the premium* — quietly upgrades a documented historical pattern into an expected income stream. Two things break that reading. Factors have long stretches of underperformance, long enough that a holder who converted the finding into an expectation abandons the tilt at exactly the wrong time. And a factor is a description of a spread, so the tilt only earns it to the extent the holding actually resembles the construction.
+
+The correct mental model: a factor is a **risk exposure** first and a possible premium second. Loading on value means your book falls when value falls, which is a fact about your risk regardless of what the long-run average turns out to be. Ask what the exposure does to your book before asking what it pays — and if a strategy's whole case is the payment, the case is resting on the weakest half of the evidence.
+
+## The steelman
+
+The strongest case against building anything on factors: many published anomalies weaken sharply after publication, and factor research is exactly the field where the concern bites hardest, because thousands of characteristics have been tested against the same handful of return histories. Some of what has been documented is the residue of that search, and the honest prior on any newly-named factor is that it is smaller than advertised. That is a serious argument, and the discipline it implies is the one from <Lesson id="343_out_of_sample_and_walk_forward_validation"/>: what makes a factor claim credible is not the strength of its in-sample result but its survival out of sample, in other markets and other decades, together with a mechanism — a risk story or a behavioural one — that says why the pattern should persist rather than merely why it was there. The falsifier is stated in advance or the claim is not a claim: name the period of underperformance that would make you abandon the tilt, and name it before you take it. A factor with no such condition is not being held as evidence; it is being held as faith.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="Someone says 'the value factor returned 4% last year.' What has actually been described?"
+  options={[
+    "The return of a portfolio of cheap stocks",
+    "The extra return a value-tilted fund earned over its benchmark",
+    "The return of a long-short spread — long the high-scoring portfolio, short the low-scoring one — so the market's own movement is largely cancelled out and what remains is attributed to the characteristic",
+    "The average return of every stock classified as value by the index provider"
+  ]}
+  answer={2}
+  explanation="Factors are constructed as spreads precisely so the market's movement cancels and the characteristic's contribution is isolated; that construction is what the reported number measures. The answer describing a portfolio of cheap stocks is the most common misreading — such a portfolio also carries the market and whatever else its holdings share, so its return is not the factor's. The answer about a fund's excess return over a benchmark describes an active return, which mixes the factor with the manager's other decisions. And the answer averaging every value-classified stock omits the short leg entirely, which is the half that removes the market."
+/>
+
+<Quiz
+  question="A strategy is pitched on the strength of a documented factor's long-run average return. Which question does most to establish whether the claim is worth acting on?"
+  options={[
+    "How large was the average premium in the original study?",
+    "What does the exposure do to my book when the factor performs badly, and what stretch of underperformance would make me conclude the tilt was a mistake?",
+    "Which index provider's definition of the characteristic does the strategy use?",
+    "How many peer-reviewed papers have documented the factor?"
+  ]}
+  answer={1}
+  explanation="A factor is an exposure first: it tells you what your book does in the bad stretches, which is knowable in advance, and naming the abandonment condition before taking the position is what stops the decision being remade under pressure. The answer asking about the original premium chases the number most vulnerable to the very search-driven overstatement that makes factor claims fragile. The answer about the provider's definition is a real implementation question but a second-order one — it refines the exposure rather than establishing whether to take it. And the answer counting papers substitutes volume of publication for out-of-sample survival, when the two are close to independent."
+/>
+
+<Quiz
+  question="Two funds hold no tickers in common. Both load heavily on the same factor. Combining this lesson with what you know about diversification and beta, what follows?"
+  options={[
+    "They are diversified with respect to each other, since diversification is about avoiding shared holdings and they share none",
+    "Nothing follows without their betas, since shared systematic risk is fully captured by beta against the market",
+    "One of them must be mislabelled, since two funds loading on the same factor would hold substantially overlapping portfolios"
+    "They will behave as close to one position whenever that factor moves — shared exposure travels through characteristics, not tickers, so holding both adds names without adding an independent bet",
+  ]}
+  answer={3}
+  explanation="This is the synthesis of the module so far: risk is shared through common drivers, and a factor is exactly such a driver — so ticker overlap is neither necessary nor sufficient for two books to be the same bet. The answer defining diversification by shared holdings is the count heuristic in a new costume, and it is the reason multi-fund portfolios are so often one position. The answer that beta captures all shared risk is precisely what the factor literature refuted: size and book-to-market picked up cross-sectional variation the market factor did not. And the answer inferring overlapping portfolios gets the mechanism backwards — a characteristic can be shared by thousands of stocks, so two funds can select disjoint subsets and load identically."
+/>
+
+## Try it
+
+List your simulated holdings and, instead of grouping them by sector, group them by characteristic: which are cheap on earnings or book value, which are small, which have run up hardest over the past year, which are the steadiest. If most of your book lands in one group, you hold a factor tilt — whether or not you meant to. Then ask the Research Manager in a 1-on-1 what would have to happen for that tilt to hurt you, and evaluate the answer for whether it names a specific condition or only a general caution.
+
+## Takeaway
+
+A factor is an exposure before it is a premium: know what it does to your book in the bad years, and name the stretch of underperformance that would change your mind, before you take the tilt.
+
+*Where this comes from: the size and book-to-market results in Fama & French (1992, 1993), and the momentum result in Jegadeesh & Titman (1993).*

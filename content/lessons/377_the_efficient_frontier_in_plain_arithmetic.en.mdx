@@ -1,0 +1,108 @@
+---
+id: "377_the_efficient_frontier_in_plain_arithmetic"
+title: "The efficient frontier, in plain arithmetic"
+duration_min: 6
+level: 11
+module: 19
+difficulty: 4
+track: "risk_portfolio"
+code: "RISK 23"
+topic: "efficient_frontier"
+prerequisites: ["371_diversification_is_correlation_not_count", "372_the_floor_diversification_cannot_cross"]
+tags: ["efficient-frontier", "modern-portfolio-theory", "minimum-variance", "markowitz", "level-11"]
+sources: ["Markowitz — Portfolio Selection, Journal of Finance 7(1) (1952), 77–91"]
+verified: {by: "cr054-wave2-authoring", date: "2026-08-20", method: "every volatility recomputed via portfolio_variance() and the minimum-variance weight from the closed form, in scripts/verify_cr054_wave2_numbers.py; both assets openly hypothetical; the expected returns are stated as assumptions of the example, not as forecasts"}
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-08-20"
+updated_at: "2026-08-20"
+---
+
+# The efficient frontier, in plain arithmetic
+
+The efficient frontier is usually drawn as a curve and explained as a concept, which hides the one result worth having: mixing a riskier asset into a safer one can lower the portfolio's volatility *and* raise its expected return at the same time. After this lesson you will be able to compute that crossover point for two assets by hand, and to recognise the portfolios that sit below it — the ones that take risk and are paid nothing for it.
+
+## Example
+
+Two openly hypothetical sleeves, with assumed inputs stated up front so nothing is smuggled in. Sleeve **A**: 20% volatility, 8% expected return. Sleeve **B**: 12% volatility, 5% expected return. Correlation between them: **0.20**. The expected returns are assumptions of this example — they are what a frontier calculation takes as input, not something anyone can observe.
+
+Vary the weight in A and compute both coordinates:
+
+| weight in A | portfolio volatility | expected return |
+|---|---|---|
+| 0% | **12.00%** | 5.00% |
+| 10% | **11.37%** | 5.30% |
+| **21.43%** | **11.11%** | **5.64%** |
+| 30% | **11.26%** | 5.90% |
+| 50% | **12.65%** | 6.50% |
+| 100% | **20.00%** | 8.00% |
+
+Read the 21.43% row against the 0% row. Holding B alone gives 12.00% volatility and 5.00% expected return. Adding 21.43% of the *more volatile* asset gives **11.11% volatility and 5.64% expected return** — less risk and more return than the safe sleeve on its own. Nothing is being conjured: A's returns are only weakly related to B's, so a slice of A cancels some of B's variation, and the cancellation outweighs A's own volatility until the weight gets large enough.
+
+That 21.43% is the **minimum-variance portfolio**, and it comes from a closed form rather than from trial and error:
+
+w_A = ( σ_B² − ρσ_Aσ_B ) ÷ ( σ_A² + σ_B² − 2ρσ_Aσ_B )
+
+Substituting: (0.0144 − 0.0048) ÷ (0.0400 + 0.0144 − 0.0096) = 0.0096 ÷ 0.0448 = **21.43%**.
+
+Now the part that gives the frontier its name. Every mix **below** 21.43% in A — including holding B alone — is **dominated**: for each one there is a portfolio further along the curve with the same volatility and a higher expected return. Those mixes are not merely conservative; they take risk and are paid less than the same risk earns elsewhere on the curve. The **efficient frontier** is the portion from the minimum-variance point upward, and everything below it is a mistake under this model's own assumptions, however cautious it looks.
+
+## The trap
+
+The trap is treating the safest-looking sleeve as the safest portfolio. Holding B alone feels like the conservative choice — it is the lower-volatility asset, and no one who bought it took a risk they cannot explain. But the table shows a mix holding 21.43% of the *riskier* asset with lower total volatility, so "B only" is both riskier and lower-returning than an available alternative. The intuition fails because it reasons about assets one at a time, and risk is a property of the combination.
+
+The correct mental model is that assets have no risk ranking outside a portfolio. A 20%-volatility asset is a risk-*reducer* in a book that does not already own its drivers, and a risk-*adder* in one that does. That is why the question "is this a risky stock?" has no answer, and the question "what does this do to my book's variance?" always does.
+
+## The steelman
+
+The strongest case against acting on any of this: the frontier's shape is driven by inputs nobody knows. Expected returns in particular are estimated with enormous error — a mean return measured over a few years has a standard error wide enough to contain almost any plausible value — and small changes in those estimates move the optimal weights violently. Optimisers built on such inputs are notorious for producing confident, unstable, concentrated portfolios. That criticism is correct and is why practitioners lean on the parts of the calculation that estimate best. Volatilities and correlations are second moments, and they are estimable from far less data than means; the minimum-variance point uses **only** those — no expected return appears anywhere in its closed form. So the falsifier is worth stating precisely: if you find yourself trusting an exact optimal weight that depends on a return forecast, the criticism applies in full and you should distrust it. If you are using the frontier to notice that a portfolio is *dominated* — a structural fact that survives wide error bars on the means — it is doing work the criticism does not touch.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="Sleeve A has 20% volatility, sleeve B has 12%, and they correlate at 0.20. A holder puts 21.43% into A and the rest into B. What is the portfolio's volatility?"
+  options={[
+    "11.11% — below the 12% of the safer sleeve held alone, because A's weak correlation with B cancels more variation than A's own volatility adds",
+    "13.71% — the weighted average of 20% and 12%",
+    "12.00% — adding a more volatile asset cannot reduce a portfolio below the volatility of its least volatile holding",
+    "16.00% — the midpoint of the two volatilities, adjusted for the 0.20 correlation"
+  ]}
+  answer={0}
+  explanation="Substituting the weights, volatilities and 0.20 correlation into the portfolio-variance formula gives 0.012343, and its square root is 11.11%. The answer taking a weighted average uses a formula that would only be right at a correlation of exactly 1.00 — and treating volatility as averageable is the single most common error in portfolio arithmetic. The answer asserting a floor at the least volatile holding states a rule that is simply false whenever correlation is below 1, which is the whole result being demonstrated. The answer offering a midpoint invents an adjustment rather than applying the formula."
+/>
+
+<Quiz
+  question="What does it mean to say a portfolio is 'dominated' in this framework?"
+  options={[
+    "That it holds too much of the riskier asset, so its volatility exceeds the minimum-variance point",
+    "That another available portfolio offers the same volatility with a higher expected return — so the risk is being taken and underpaid",
+    "That it lost money over the measurement period while another portfolio gained",
+    "That it sits above the efficient frontier, in the region the model treats as unreachable"
+  ]}
+  answer={1}
+  explanation="Domination is a statement about the risk-return pair: for the same risk there is a better-paid option, which is why every mix below the minimum-variance point is dominated even though those mixes look conservative. The answer about holding too much of the riskier asset describes portfolios past the minimum-variance point, which are on the efficient part of the curve rather than below it. The answer about realised losses confuses an outcome with the ex-ante structure the model describes — a dominated portfolio can easily have the better year. The answer about sitting above the frontier inverts it: the region above the curve is the unattainable one, not the dominated one."
+/>
+
+<Quiz
+  question="A holder is convinced by the frontier and asks an optimiser for the single best two-asset mix, using historical averages as the expected returns. Bringing the lesson's result and its limits together, what is the sound assessment?"
+  options={[
+    "Sound: the optimiser applies the same arithmetic used above, so its answer is as reliable as the 21.43% figure",
+    "Unsound and unfixable: the frontier is a theoretical construct with no practical use, so no portfolio question should be answered with it",
+    "The structural findings survive but the precise weight does not: the minimum-variance point and the fact that some mixes are dominated depend only on volatilities and correlations, whereas the 'best' mix depends on expected-return estimates carrying error wide enough to move it substantially",
+    "Sound provided the historical window is long enough, since estimation error in the mean shrinks quickly with more data"
+  ]}
+  answer={2}
+  explanation="This is the synthesis: the calculation has two kinds of output, and they do not share a reliability. Volatilities and correlations are estimable from moderate samples, so the minimum-variance point and the domination test are robust; expected returns are not, so the point on the frontier that an optimiser calls best moves with the estimate. The answer trusting the optimiser fully ignores that the 21.43% figure never used an expected return at all. The answer dismissing the frontier entirely throws away the robust half along with the fragile one. And the answer that a longer window fixes it understates the problem badly — the standard error of an estimated mean return shrinks slowly enough that the required histories run to decades, over which the underlying market has not stayed the same thing."
+/>
+
+## Try it
+
+Take two holdings from your simulated Portfolio whose drivers you believe differ — different customers, different input costs, different rate sensitivity. Write down your rough estimate of each one's annual volatility and of their correlation, then compute the minimum-variance weight from the closed form above. You will get a number, and the useful part is comparing it with what you actually hold. Then ask the Portfolio Manager in a 1-on-1 what would have to be true for your current split to be the better one, and judge the argument rather than adopting it.
+
+## Takeaway
+
+Risk is a property of the combination, not the asset — which is why a slice of the more volatile holding can lower your portfolio's volatility, and why the cautious-looking single-asset book is often the one taking risk it is not being paid for.
+
+*Where this comes from: Markowitz's mean-variance framework and the efficient set it defines — Portfolio Selection (1952).*

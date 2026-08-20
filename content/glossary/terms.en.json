@@ -1941,5 +1941,345 @@
     "related_lessons": ["354", "310"],
     "related_agents": ["fundamentals_analyst"],
     "tags": ["islamic_finance", "etf", "funds"]
+  },
+  {
+    "id": "diversification",
+    "term": "Diversification",
+    "definition": "Holding assets whose returns do not move together, so that company-specific surprises partly cancel instead of compounding. Its strength is set by the correlations between holdings, not by how many holdings there are: two names correlated at 0.90 behave almost as one position, while three uncorrelated names behave as three.",
+    "category": "portfolio_theory",
+    "see_also": ["correlation", "systematic_risk", "idiosyncratic_risk", "portfolio_variance"],
+    "related_lessons": ["371", "372", "376"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "diversification", "correlation"]
+  },
+  {
+    "id": "correlation",
+    "term": "Correlation",
+    "definition": "A number between −1 and +1 describing how two return series move relative to each other: +1 is lockstep, 0 is unrelated, −1 is exactly opposite. It is the input that decides how much diversification a second holding buys, and it is not stable — pairwise correlations across a stock portfolio typically rise sharply in a market decline, which is when the diversification was supposed to pay.",
+    "category": "portfolio_theory",
+    "see_also": ["diversification", "portfolio_variance", "beta", "systematic_risk"],
+    "related_lessons": ["371", "108", "376"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "correlation", "risk"]
+  },
+  {
+    "id": "systematic_risk",
+    "term": "Systematic risk",
+    "definition": "The part of a holding's risk that every holding in the market shares, so it survives averaging and cannot be diversified away. It sets a floor on portfolio volatility — for an equally-weighted book of names with volatility σ and average pairwise correlation ρ, that floor is √ρ × σ, which no number of additional names crosses. Only changing how much you hold, or holding something with a different driver, moves it.",
+    "category": "portfolio_theory",
+    "see_also": ["idiosyncratic_risk", "beta", "capm", "diversification"],
+    "related_lessons": ["372", "378", "383"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "systematic_risk", "market_risk"]
+  },
+  {
+    "id": "idiosyncratic_risk",
+    "term": "Idiosyncratic risk",
+    "definition": "The company-specific part of a holding's risk — a failed product, a fraud, a lost contract — which is uncorrelated across firms and therefore averages away as a portfolio grows. It is the part diversification actually solves, and it is largely solved by twenty to thirty names. Under CAPM a diversified holder is paid nothing for carrying it, which makes it the most expensive risk a concentrated book runs.",
+    "category": "portfolio_theory",
+    "see_also": ["systematic_risk", "diversification", "capm", "r_squared"],
+    "related_lessons": ["372", "378", "381"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "idiosyncratic_risk", "specific_risk"]
+  },
+  {
+    "id": "portfolio_variance",
+    "term": "Portfolio variance",
+    "definition": "The variance of a portfolio's return, computed as wᵀΣw over the holdings' weights and their covariance matrix — never as a weighted average of the holdings' individual variances. Its square root is portfolio volatility. Because covariances enter it directly, adding a more volatile but weakly-correlated holding can lower it, which is the result behind the efficient frontier.",
+    "category": "portfolio_theory",
+    "see_also": ["correlation", "efficient_frontier", "risk_contribution", "diversification"],
+    "related_lessons": ["371", "377", "380"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "variance", "volatility", "math"]
+  },
+  {
+    "id": "efficient_frontier",
+    "term": "Efficient frontier",
+    "definition": "The set of portfolios offering the highest expected return for each level of risk, running from the minimum-variance portfolio upward. Everything below it is dominated: for each such portfolio there is another with the same volatility and a higher expected return, which is why a cautious-looking single-asset holding is often taking risk it is not being paid for.",
+    "category": "portfolio_theory",
+    "see_also": ["minimum_variance_portfolio", "portfolio_variance", "capm", "modern_portfolio_theory"],
+    "related_lessons": ["377", "383"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "efficient_frontier", "markowitz"]
+  },
+  {
+    "id": "minimum_variance_portfolio",
+    "term": "Minimum-variance portfolio",
+    "definition": "The mix of a given set of assets with the lowest achievable volatility. For two assets it has a closed form using only volatilities and their correlation — no expected returns appear in it, which is why it is far more robust than an optimiser's chosen 'best' portfolio: second moments are estimable from moderate samples, and mean returns are not.",
+    "category": "portfolio_theory",
+    "see_also": ["efficient_frontier", "portfolio_variance", "correlation"],
+    "related_lessons": ["377"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "minimum_variance", "estimation_error"]
+  },
+  {
+    "id": "modern_portfolio_theory",
+    "term": "Modern portfolio theory (MPT)",
+    "definition": "The framework, originating with Markowitz in 1952, that treats a portfolio's risk as a property of the covariances between its holdings rather than of the holdings taken one at a time. Its practical consequences are that no asset has a risk ranking outside a portfolio, and that risk and expected return must be optimised jointly rather than in sequence.",
+    "category": "portfolio_theory",
+    "see_also": ["efficient_frontier", "portfolio_variance", "capm", "diversification"],
+    "related_lessons": ["377", "371"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "mpt", "markowitz"]
+  },
+  {
+    "id": "capm",
+    "term": "CAPM (capital asset pricing model)",
+    "definition": "A model in which a holding's expected return is the risk-free rate plus its beta times the market risk premium. Its central claim is that only non-diversifiable risk is compensated, because company-specific risk can be removed at no cost. That claim is conditional on the holder actually being diversified — a three-position book carries specific risk the model says nobody is paid to bear.",
+    "category": "portfolio_theory",
+    "see_also": ["beta", "systematic_risk", "idiosyncratic_risk", "r_squared"],
+    "related_lessons": ["378", "383"],
+    "related_agents": ["market_analyst"],
+    "tags": ["portfolio_theory", "capm", "sharpe", "expected_return"]
+  },
+  {
+    "id": "beta",
+    "term": "Beta",
+    "definition": "The slope of a holding's returns against the market's, computed as cov(asset, market) ÷ var(market). It measures how much of a market move typically arrives in this holding, and nothing else — it is not a risk level. A holding can have a beta of exactly 1.00 and be several times as volatile as the market, with almost none of that volatility market-driven. Always read it alongside R².",
+    "category": "portfolio_theory",
+    "see_also": ["r_squared", "capm", "systematic_risk", "beta_hedge"],
+    "related_lessons": ["378", "381", "383"],
+    "related_agents": ["market_analyst"],
+    "tags": ["portfolio_theory", "beta", "market_risk"]
+  },
+  {
+    "id": "r_squared",
+    "term": "R² (in a beta regression)",
+    "definition": "The share of a holding's return variation that the market explains — the number that says whether its beta means anything. At an R² of 0.90 the beta describes most of what the holding does; at 0.09 it describes about a tenth, and the remaining variation is company-specific. It also bounds what a market hedge can achieve: a perfect hedge leaves σ√(1 − R²) of the volatility standing.",
+    "category": "portfolio_theory",
+    "see_also": ["beta", "idiosyncratic_risk", "beta_hedge", "capm"],
+    "related_lessons": ["378", "381", "383"],
+    "related_agents": ["market_analyst"],
+    "tags": ["portfolio_theory", "r_squared", "explained_variance"]
+  },
+  {
+    "id": "factor_investing",
+    "term": "Factor investing",
+    "definition": "Building portfolios around shared characteristics — value, size, momentum, quality, low volatility — that many stocks load on, so holdings which look unrelated move together when the characteristic moves. A factor is defined as a long-short spread, long the high-scoring names and short the low-scoring ones, so the market's own return is mostly cancelled; a long-only 'factor fund' holds the market plus a tilt, which is a different thing.",
+    "category": "portfolio_theory",
+    "see_also": ["value_factor", "momentum_factor", "correlation", "capm"],
+    "related_lessons": ["379", "382"],
+    "related_agents": ["research_manager"],
+    "tags": ["portfolio_theory", "factors", "fama_french"]
+  },
+  {
+    "id": "value_factor",
+    "term": "Value factor",
+    "definition": "The characteristic-based return spread between stocks that are cheap on a fundamental measure such as book-to-market and those that are expensive. Fama and French (1992) found book-to-market, together with size, captured cross-sectional variation in average returns that market beta did not, and their 1993 paper turned both into constructed factors.",
+    "category": "portfolio_theory",
+    "see_also": ["factor_investing", "momentum_factor", "book_value"],
+    "related_lessons": ["379", "382"],
+    "related_agents": ["research_manager"],
+    "tags": ["portfolio_theory", "factors", "value"]
+  },
+  {
+    "id": "momentum_factor",
+    "term": "Momentum factor",
+    "definition": "The tendency, documented by Jegadeesh and Titman (1993), for stocks that have performed well over the past 3 to 12 months to continue outperforming over similar horizons. Their paper also found that part of the abnormal return earned in the first year after formation dissipates over the following two — a detail that matters to anyone holding the position longer than the study did.",
+    "category": "portfolio_theory",
+    "see_also": ["factor_investing", "value_factor", "rebalancing_band"],
+    "related_lessons": ["379", "374"],
+    "related_agents": ["research_manager"],
+    "tags": ["portfolio_theory", "factors", "momentum"]
+  },
+  {
+    "id": "risk_contribution",
+    "term": "Risk contribution",
+    "definition": "The share of total portfolio risk attributable to one holding or sleeve, computed as wᵢ(Σw)ᵢ divided by portfolio variance. It routinely differs sharply from the dollar weight: a 60/40 portfolio of an 18%-volatility sleeve and a 6%-volatility sleeve correlated at 0.10 carries roughly 93% of its risk in the first sleeve. Dollar weights say what you own; risk contributions say what you are exposed to.",
+    "category": "portfolio_theory",
+    "see_also": ["risk_parity", "portfolio_variance", "marginal_contribution_to_risk"],
+    "related_lessons": ["380", "383"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "risk_budgeting", "risk_contribution"]
+  },
+  {
+    "id": "marginal_contribution_to_risk",
+    "term": "Marginal contribution to risk (MCR)",
+    "definition": "How much portfolio risk changes for a small increase in one holding — the covariance-matrix row multiplied by the weights, (Σw)ᵢ. It is the per-dollar quantity: the holding with the largest MCR is the one where trimming a fixed amount of money reduces portfolio risk most, which is not always the largest holding.",
+    "category": "portfolio_theory",
+    "see_also": ["risk_contribution", "risk_parity", "portfolio_variance"],
+    "related_lessons": ["380"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "mcr", "risk_budgeting"]
+  },
+  {
+    "id": "strategic_asset_allocation",
+    "term": "Strategic asset allocation",
+    "definition": "The long-run portfolio shape you would hold with no view at all — the weights you would defend to someone asking why your money sits where it sits. Written before any position is taken, it is the fixed reference that makes drift detectable; a policy written after the fact moves whenever you do and can never tell you that you have drifted.",
+    "category": "portfolio_theory",
+    "see_also": ["tactical_asset_allocation", "rebalancing_band", "portfolio_drift", "ami_mandate"],
+    "related_lessons": ["373", "376"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "allocation", "policy_weights"]
+  },
+  {
+    "id": "tactical_asset_allocation",
+    "term": "Tactical asset allocation",
+    "definition": "A deliberate, temporary departure from the strategic weights. A complete one carries three things: a size in percentage points, a funding source naming which sleeve pays for it, and an end condition. A departure missing any of the three is drift wearing the costume of a strategy, and it is indistinguishable a year later from a decision nobody made.",
+    "category": "portfolio_theory",
+    "see_also": ["strategic_asset_allocation", "portfolio_drift", "rebalancing_band"],
+    "related_lessons": ["373", "376"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "allocation", "tactical"]
+  },
+  {
+    "id": "portfolio_drift",
+    "term": "Portfolio drift",
+    "definition": "The change in a portfolio's weights caused by price movement rather than by any decision. A 60/30/10 book whose growth sleeve outperforms arrives at 71/23/6 with no trades placed — a materially more aggressive portfolio nobody chose. Drift is only visible against a written policy, which is why the policy has to exist first.",
+    "category": "portfolio_theory",
+    "see_also": ["strategic_asset_allocation", "rebalancing_band", "tactical_asset_allocation"],
+    "related_lessons": ["373", "374", "376"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "drift", "allocation"]
+  },
+  {
+    "id": "rebalancing_band",
+    "term": "Rebalancing band",
+    "definition": "A rule that triggers a rebalance when a sleeve moves more than a set number of percentage points from its policy weight, turning 'should I act' into arithmetic decided in advance. A narrow band tracks the policy closely and pays more in trading costs; a wide one trades rarely and tolerates more drift. Either beats acting when it occurs to you, because the band is written by someone who did not yet have a view.",
+    "category": "portfolio_theory",
+    "see_also": ["portfolio_drift", "strategic_asset_allocation", "tracking_error"],
+    "related_lessons": ["374", "376"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "rebalancing", "discipline"]
+  },
+  {
+    "id": "home_country_bias",
+    "term": "Home-country bias",
+    "definition": "The tendency to hold far more of one's own country's market than its share of world equity value would justify. French and Poterba (1991) measured domestic shares of over 98% in Japan, 94% in the United States and 82% in Britain on late-1980s data. A home tilt can be justified — you spend in that currency — but familiarity with local companies is an argument about information, not about how correlated they are with each other.",
+    "category": "portfolio_theory",
+    "see_also": ["diversification", "correlation", "strategic_asset_allocation"],
+    "related_lessons": ["375", "376"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "home_bias", "international"]
+  },
+  {
+    "id": "tracking_error",
+    "term": "Tracking error",
+    "definition": "The volatility of the difference between a portfolio's returns and its benchmark's — how far, and how erratically, a book departs from what it is measured against. A tactical deviation from policy weights spends tracking error; a tighter rebalancing band buys it back at the cost of more trading.",
+    "category": "portfolio_theory",
+    "see_also": ["rebalancing_band", "tactical_asset_allocation", "beta"],
+    "related_lessons": ["373", "374"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "tracking_error", "benchmark"]
+  },
+  {
+    "id": "beta_hedge",
+    "term": "Beta hedge",
+    "definition": "A short position in a market index sized to offset a portfolio's market exposure: a book with beta 1.20 carries index-equivalent exposure of 1.20 times its value, and neutralising it requires a short of that size. Beta sets how large the hedge must be; R² sets how much of the risk it can reach. On a book whose holdings are only weakly explained by the market, a perfect hedge removes very little.",
+    "category": "portfolio_theory",
+    "see_also": ["beta", "r_squared", "systematic_risk", "basis_risk"],
+    "related_lessons": ["381", "383"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "hedging", "beta"]
+  },
+  {
+    "id": "basis_risk",
+    "term": "Basis risk",
+    "definition": "The risk that a hedge and the thing it hedges diverge, because the instrument available to hedge with is not the position being hedged. It is the new exposure a hedge adds, and it is why 'hedged' describes a pair of positions with a combined profit and loss rather than a state in which risk has been removed.",
+    "category": "portfolio_theory",
+    "see_also": ["beta_hedge", "r_squared", "systematic_risk"],
+    "related_lessons": ["381"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["portfolio_theory", "hedging", "basis_risk"]
+  },
+  {
+    "id": "esg",
+    "term": "ESG",
+    "definition": "Environmental, social and governance — three headings under which non-financial information about a company is gathered and assessed. The term covers at least three distinct practices that share a vocabulary and little else: exclusion (removing categories from the universe), integration (pricing the information into valuation), and stewardship (voting and engaging as an owner).",
+    "category": "esg",
+    "see_also": ["esg_rating", "negative_screening", "esg_integration", "stewardship"],
+    "related_lessons": ["384", "386", "387"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["esg", "sustainability", "definition"]
+  },
+  {
+    "id": "esg_rating",
+    "term": "ESG rating",
+    "definition": "A score or grade published by an agency after choosing which indicators count, how each is measured, and how they are combined. None of those three choices follows from the data, so ratings are opinions produced by stated methodologies rather than measurements of one underlying fact — which is why two agencies routinely rank the same company very differently, and why an ESG claim that does not name its agency cannot be checked.",
+    "category": "esg",
+    "see_also": ["esg", "rater_divergence", "greenwashing"],
+    "related_lessons": ["384", "387"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["esg", "ratings", "methodology"]
+  },
+  {
+    "id": "rater_divergence",
+    "term": "ESG rater divergence",
+    "definition": "The measured disagreement between ESG rating agencies. Berg, Kölbel and Rigobon (2022) compared six agencies and found correlations between their ESG ratings ranging from 0.38 to 0.71, attributing 56% of the divergence to measurement (recording the same attribute differently), 38% to scope (measuring different attributes) and only 6% to weighting. The intuitive culprit is the smallest cause.",
+    "category": "esg",
+    "see_also": ["esg_rating", "esg", "greenwashing"],
+    "related_lessons": ["384", "387"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["esg", "ratings", "divergence", "research"]
+  },
+  {
+    "id": "greenwashing",
+    "term": "Greenwashing",
+    "definition": "Presenting a sustainability claim so that it cannot be shown false. It is rarely a lie: 'our process integrates ESG factors' is almost certainly true and constrains nothing about the holdings, while 'at least 80% of assets meet the prospectus criteria' is a commitment you can audit. The test is not the intensity of the language but whether you can name a holding that would contradict the claim.",
+    "category": "esg",
+    "see_also": ["esg_rating", "names_rule", "sfdr", "negative_screening"],
+    "related_lessons": ["385", "387"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["esg", "greenwashing", "disclosure", "falsifiability"]
+  },
+  {
+    "id": "negative_screening",
+    "term": "Negative screening (exclusion)",
+    "definition": "Removing a category of companies from the investable universe before any analysis begins — no tobacco, no thermal coal, no weapons. Because it is a rule rather than a score, a portfolio can be audited against it directly. It delivers exactly one thing: you do not own the category. It does not change how anything is priced and, at an individual's scale, does not change company behaviour.",
+    "category": "esg",
+    "see_also": ["esg_integration", "stewardship", "esg", "ami_esg_lite"],
+    "related_lessons": ["386", "387"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["esg", "exclusion", "screening"]
+  },
+  {
+    "id": "esg_integration",
+    "term": "ESG integration",
+    "definition": "Bringing environmental, social and governance information into the valuation of a company you may still buy — a costly regulatory transition priced as a cost, weak governance priced as a wider discount rate. It changes prices and weights, not the universe, and can conclude that a heavy emitter is attractive at a low enough price. Reading it as a promise to exclude anything is the most common category error in the field.",
+    "category": "esg",
+    "see_also": ["negative_screening", "stewardship", "esg"],
+    "related_lessons": ["386", "385"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["esg", "integration", "valuation"]
+  },
+  {
+    "id": "stewardship",
+    "term": "Stewardship",
+    "definition": "Using the rights that come with ownership — voting shares, engaging management, supporting or opposing resolutions. It is the only one of the three ESG practices with a mechanism for changing company behaviour, and it requires holding the shares, which puts it in direct tension with exclusion: an investor who divests has cleaned their portfolio and given up their vote.",
+    "category": "esg",
+    "see_also": ["negative_screening", "esg_integration", "esg"],
+    "related_lessons": ["386", "387"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["esg", "stewardship", "engagement", "voting"]
+  },
+  {
+    "id": "sfdr",
+    "term": "SFDR (Regulation (EU) 2019/2088)",
+    "definition": "The EU's sustainability-related disclosure regime, which classifies products rather than names: an Article 8 product promotes environmental or social characteristics, an Article 9 product has sustainable investment as its objective. The labels are disclosure categories, not quality grades — Article 8 spans everything from a single exclusion to a fully thematic strategy.",
+    "category": "esg",
+    "see_also": ["names_rule", "greenwashing", "esg"],
+    "related_lessons": ["385", "386"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["esg", "regulation", "disclosure", "eu"]
+  },
+  {
+    "id": "names_rule",
+    "term": "Names Rule (SEC Rule 35d-1)",
+    "definition": "The U.S. rule requiring a fund whose name suggests a type of investment to adopt a policy of investing at least 80% of assets accordingly. Amendments adopted in September 2023 extended it to names suggesting particular characteristics, explicitly including terms indicating that investment decisions incorporate ESG factors — so a fund calling itself sustainable must now have an 80% policy behind the word.",
+    "category": "esg",
+    "see_also": ["sfdr", "greenwashing", "esg_rating"],
+    "related_lessons": ["385"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["esg", "regulation", "sec", "fund_names"]
+  },
+  {
+    "id": "ami_esg_lite",
+    "term": "AMI ESG-lite flag",
+    "definition": "A Mandate compliance flag that has the Portfolio Manager's safety floor refuse a simulated trade in a curated exclusion set: fossil-fuel industries within the Energy sector, plus tobacco, brewers, wineries and distillers, gambling and casinos, plus aerospace and defence. It is an exclusion rule, never a rated score, and every verdict says so. Coverage is the S&P 500 parent set; a ticker outside it returns UNKNOWN, which permits the trade while reporting that it is unclassified.",
+    "category": "esg",
+    "see_also": ["negative_screening", "ami_mandate", "ami_pm_safety_floor", "esg_rating"],
+    "related_lessons": ["387", "386"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["esg", "ami_internal", "mandate", "compliance"]
   }
 ]
