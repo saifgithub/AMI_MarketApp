@@ -1807,6 +1807,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingHintAnswer => 'اكتب إجابتك...';
 
   @override
+  String get onboardingSendAnswerTooltip => 'Send answer';
+
+  @override
   String get onboardingReadbackContinue => 'صحيح — متابعة';
 
   @override

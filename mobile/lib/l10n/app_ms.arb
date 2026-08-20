@@ -2585,6 +2585,7 @@
         "notifTypeRestingOrderRejected": "003ae77440cc",
         "notifTypeRestingOrderTriggered": "60875354480e",
         "onboardingHeader": "6adef0352d24",
+        "onboardingSendAnswerTooltip": "18737070e41c",
         "portfolioCashAvailable": "adfe61c2ce29",
         "portfolioCashCommitted": "7734ba6bf003",
         "portfolioClosed": "f6deab2b121b",
@@ -2936,5 +2937,6 @@
     "notifTypeRestingOrderRejected": "Order rejected",
     "tradeTicketNoticeRaisesStop": "This raises your stop on all {qty} {ticker} from ${fromStop} to ${toStop}.",
     "tourYouJournalTitle": "THE JOURNAL IS HOW YOU LEARN",
-    "tourYouJournalBody": "Your decisions land here with the reasoning attached. Review the why against the outcome — that is the learning. Your agents brief you; they never hand you signals."
+    "tourYouJournalBody": "Your decisions land here with the reasoning attached. Review the why against the outcome — that is the learning. Your agents brief you; they never hand you signals.",
+    "onboardingSendAnswerTooltip": "Send answer"
 }

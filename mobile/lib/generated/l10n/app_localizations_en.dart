@@ -1805,6 +1805,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingHintAnswer => 'Type your answer…';
 
   @override
+  String get onboardingSendAnswerTooltip => 'Send answer';
+
+  @override
   String get onboardingReadbackContinue => 'LOOKS RIGHT — CONTINUE';
 
   @override

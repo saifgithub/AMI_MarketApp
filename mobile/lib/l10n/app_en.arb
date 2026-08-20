@@ -2075,6 +2075,10 @@
   "onboardingHeaderSetup": "SETUP",
   "onboardingHintSending": "Sending...",
   "onboardingHintAnswer": "Type your answer…",
+  "onboardingSendAnswerTooltip": "Send answer",
+  "@onboardingSendAnswerTooltip": {
+    "description": "DEF346 — tooltip + accessibility label on the Concierge composer's send arrow (onboarding chat). Announced by screen readers; keep it a short verb phrase. NEW key, needs ar/ms translation."
+  },
   "onboardingReadbackContinue": "LOOKS RIGHT — CONTINUE",
   "onboardingClaimPrompt": "Let's save this so your team remembers you.",
   "onboardingSaveTeam": "SAVE MY TEAM",
@@ -3661,7 +3665,7 @@
   },
   "roomPhaseRisk": "RISK",
   "@roomPhaseRisk": {
-    "description": "Transcript group header — the three risk debators arguing sizing."
+    "description": "Transcript group header — the three risk perspectives on sizing."
   },
   "roomPhaseVerdict": "VERDICT",
   "@roomPhaseVerdict": {

@@ -1808,6 +1808,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get onboardingHintAnswer => 'Taip jawapan anda…';
 
   @override
+  String get onboardingSendAnswerTooltip => 'Send answer';
+
+  @override
   String get onboardingReadbackContinue => 'BETUL — TERUSKAN';
 
   @override

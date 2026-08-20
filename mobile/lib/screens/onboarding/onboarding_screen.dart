@@ -186,13 +186,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   ),
                 ),
                 const SizedBox(width: AmiSpacing.s),
-                IconButton(
-                  onPressed: state.submitting ? null : () => _handleSubmit(_textCtrl.text),
-                  icon: const Icon(Icons.arrow_upward, color: AmiColors.hexBlue),
-                  style: IconButton.styleFrom(
-                    backgroundColor: AmiColors.slate800,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(AmiRadii.card)),
+                // DEF346: without an explicit label VoiceOver announces a bare
+                // "button" and the CR163 crawler skips the control as
+                // unprovable-safe. The tooltip alone is not enough — Flutter
+                // surfaces it as the semantics *tooltip* attribute, not the
+                // label — so the same l10n key feeds both.
+                Semantics(
+                  label: AppLocalizations.of(context).onboardingSendAnswerTooltip,
+                  child: IconButton(
+                    tooltip:
+                        AppLocalizations.of(context).onboardingSendAnswerTooltip,
+                    onPressed:
+                        state.submitting ? null : () => _handleSubmit(_textCtrl.text),
+                    icon: const Icon(Icons.arrow_upward, color: AmiColors.hexBlue),
+                    style: IconButton.styleFrom(
+                      backgroundColor: AmiColors.slate800,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(AmiRadii.card)),
+                      ),
                     ),
                   ),
                 ),

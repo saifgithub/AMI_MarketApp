@@ -3114,6 +3114,12 @@ abstract class AppLocalizations {
   /// **'Type your answer…'**
   String get onboardingHintAnswer;
 
+  /// DEF346 — tooltip + accessibility label on the Concierge composer's send arrow (onboarding chat). Announced by screen readers; keep it a short verb phrase. NEW key, needs ar/ms translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Send answer'**
+  String get onboardingSendAnswerTooltip;
+
   /// No description provided for @onboardingReadbackContinue.
   ///
   /// In en, this message translates to:
@@ -5308,7 +5314,7 @@ abstract class AppLocalizations {
   /// **'EXECUTION'**
   String get roomPhaseExecution;
 
-  /// Transcript group header — the three risk debators arguing sizing.
+  /// Transcript group header — the three risk perspectives on sizing.
   ///
   /// In en, this message translates to:
   /// **'RISK'**
