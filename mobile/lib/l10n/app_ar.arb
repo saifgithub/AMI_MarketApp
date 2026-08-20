@@ -2843,6 +2843,7 @@
         "tradeTicketLabelTrigger": "9f3c17094ab3",
         "tradeTicketNoticeHolding": "f5053aa53846",
         "tradeTicketNoticeOpensShort": "73c0162125a4",
+        "tradeTicketNoticeRaisesStop": "e092945bc0b6",
         "tradeTicketOpenMandate": "fb2444515ddd",
         "tradeTicketOrderLimit": "18ba5c477fc5",
         "tradeTicketOrderMarket": "d9e39716ec0a",
@@ -2915,5 +2916,6 @@
     "notifTypeGameRankMove": "Game — rank moves",
     "notifTypeRestingOrderFilled": "Order filled",
     "notifTypeRestingOrderTriggered": "Order triggered",
-    "notifTypeRestingOrderRejected": "Order rejected"
+    "notifTypeRestingOrderRejected": "Order rejected",
+    "tradeTicketNoticeRaisesStop": "This raises your stop on all {qty} {ticker} from ${fromStop} to ${toStop}."
 }

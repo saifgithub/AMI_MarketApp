@@ -2479,6 +2479,12 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
+  String tradeTicketNoticeRaisesStop(
+      String qty, String ticker, String fromStop, String toStop) {
+    return 'This raises your stop on all $qty $ticker from \$$fromStop to \$$toStop.';
+  }
+
+  @override
   String get tradeTicketSubmitShort => 'OPEN SHORT';
 
   @override

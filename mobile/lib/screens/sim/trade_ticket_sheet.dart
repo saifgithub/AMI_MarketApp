@@ -469,6 +469,55 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     };
   }
 
+  /// CR189 acceptance 5 — a BUY that raises the stop on shares already held
+  /// says so before submit, naming both numbers.
+  ///
+  /// The "from" level is the position's blended stop exactly as the server
+  /// reported it on the portfolio payload ([SimHolding.stop] — the one
+  /// derivation the sweep fires on and the tile draws; the client never
+  /// assembles lots itself, DEF098). The "to" level treats that reported
+  /// position as the single aggregate lot the server presents it as and folds
+  /// this ticket's lot in at the same open-quantity weighting the server's
+  /// `blended_bracket` uses. Like everything in `order_pricing.dart`: this
+  /// sentence predicts, the server decides — the authoritative post-fill
+  /// level lands on the next portfolio payload, and when the position holds
+  /// open shares with no stop of their own the true blend lands a step above
+  /// the number named here (the server excludes those shares from the
+  /// average; the payload does not say how many there are).
+  ///
+  /// Null when there is nothing to disclose: not a buy, a cover (a cover
+  /// carries no bracket), no held long, no server-reported stop, no stop
+  /// typed, or a blend that does not RAISE the stop. A lowered stop is not
+  /// this sentence — the string says "raises", and a sentence rendered when
+  /// it is false teaches the user to read past the slot.
+  String? _blendRaiseNotice(AppLocalizations l, SimState state) {
+    if (_side != 'buy' || _isCover) return null;
+    final typed = _ticker.text.trim().toUpperCase();
+    final qty = double.tryParse(_qty.text.trim());
+    final newStop = double.tryParse(_stop.text.trim());
+    if (typed.isEmpty || qty == null || qty <= 0) return null;
+    if (newStop == null || newStop <= 0) return null;
+    final held = _heldQty(state, typed);
+    if (held <= 0) return null;
+    final currentStop = state.portfolio?.holdings
+        .where((h) => h.ticker.toUpperCase() == typed && h.stop != null)
+        .firstOrNull
+        ?.stop;
+    if (currentStop == null) return null;
+    // Rounded to cents before the comparison, so a raise too small to render
+    // ("from $95.00 to $95.00") does not fire the sentence.
+    final resulting = double.parse(
+        ((currentStop * held + newStop * qty) / (held + qty))
+            .toStringAsFixed(2));
+    if (resulting <= currentStop) return null;
+    return l.tradeTicketNoticeRaisesStop(
+      (held + qty).toStringAsFixed(0),
+      typed,
+      currentStop.toStringAsFixed(2),
+      resulting.toStringAsFixed(2),
+    );
+  }
+
   Future<void> _submit() async {
     final typed = _ticker.text.trim().toUpperCase();
     final qty = double.tryParse(_qty.text.trim());
@@ -631,6 +680,11 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     // Both are read once here so the notice, the CTA's label and the CTA's
     // colour cannot disagree about the same order (DEF098).
     final sellNotice = localRefusal == null ? _sellNotice(l, state) : null;
+    // CR189 acceptance 5 — the buy-side counterpart, under the same refusal
+    // suppression. `_sellNotice` is sell-side and `_blendRaiseNotice` buy-side,
+    // so `notice` can only ever hold ONE sentence.
+    final blendNotice = localRefusal == null ? _blendRaiseNotice(l, state) : null;
+    final notice = sellNotice ?? blendNotice;
     final opensShort = _opensShort(state);
     // CR069 G3: the Sharia disclosure rides on BOTH outcomes. A screened-out
     // ticker is refused and its verdict sits inside the refusal panel below; a
@@ -1064,8 +1118,11 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
             // CR188 — informational, and deliberately in the refusal's slot
             // rather than beside it: the two are mutually exclusive, and the
             // last thing read before the button should be one sentence about
-            // this order, never two competing ones.
-            if (sellNotice != null) ...[
+            // this order, never two competing ones. CR189's stop-raise
+            // disclosure rides the same slot on the same terms — amber, like
+            // the short notice, because a risk control the user set by hand
+            // is about to move.
+            if (notice != null) ...[
               const SizedBox(height: AmiSpacing.m),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1073,15 +1130,18 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                   Icon(
                     opensShort ? Icons.trending_down : Icons.info_outline,
                     size: 16,
-                    color: opensShort ? AmiColors.hexAmber : AmiColors.textMed,
+                    color: opensShort || blendNotice != null
+                        ? AmiColors.hexAmber
+                        : AmiColors.textMed,
                   ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      sellNotice,
+                      notice,
                       style: AmiTypography.caption.copyWith(
-                        color:
-                            opensShort ? AmiColors.hexAmber : AmiColors.textMed,
+                        color: opensShort || blendNotice != null
+                            ? AmiColors.hexAmber
+                            : AmiColors.textMed,
                       ),
                     ),
                   ),

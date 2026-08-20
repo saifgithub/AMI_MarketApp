@@ -2686,6 +2686,24 @@
       }
     }
   },
+  "tradeTicketNoticeRaisesStop": "This raises your stop on all {qty} {ticker} from ${fromStop} to ${toStop}.",
+  "@tradeTicketNoticeRaisesStop": {
+    "description": "CR189 acceptance 5 — pre-submit disclosure on the BUY ticket when adding shares to a held position moves its blended stop UP. Adding a lot with a higher stop raises the risk floor on shares the user already owns, and a control must not change quietly (CR040), so both numbers are named before the tap. Informational, never a refusal — a wrong-side blend is the server's submit-time refusal (acceptance 6). {qty} is the resulting total shares after the buy, {fromStop}/{toStop} arrive preformatted to two decimals. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      },
+      "ticker": {
+        "type": "String"
+      },
+      "fromStop": {
+        "type": "String"
+      },
+      "toStop": {
+        "type": "String"
+      }
+    }
+  },
   "tradeTicketSubmitShort": "OPEN SHORT",
   "@tradeTicketSubmitShort": {
     "description": "CR188 replaces the SUBMIT TRADE button label when the sell would open a short. A word on the control being pressed is structural; a sentence above it is an instruction, and this project's rule is that instructions are not controls. Uppercase, mono."
