@@ -2338,3 +2338,44 @@ class InboxMessageRow(Base):
     toasted_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True,
     )
+
+
+class PersonaEventRow(Base):
+    """CR181 — one client telemetry event, the raw material for the four
+    persona segments (bounce / convene / depth / locale).
+
+    Written only by the /v1/telemetry/events ingest; `user_id` always comes
+    from the caller's token, never from the payload. `event_id` is the
+    client's idempotency key — `uq_persona_events_user_event` makes a
+    replayed batch (retry after a lost response) a no-op, and scoping it per
+    user means one client can never burn another user's ids. `count` is 1
+    for real events; a `client_drop` marker row carries the number of events
+    the emitter had to discard, so a drop is countable instead of silent
+    (CR040). Segment predicates over these rows live in
+    `services/persona_telemetry.py` and are deterministic — no LLM (CR038).
+    Retention: rows older than `persona_telemetry.RETENTION_DAYS` are swept
+    on that user's next ingest.
+    """
+
+    __tablename__ = "persona_events"
+    __table_args__ = (
+        UniqueConstraint("user_id", "event_id", name="uq_persona_events_user_event"),
+        Index("ix_persona_events_user_occurred", "user_id", "occurred_at"),
+        Index("ix_persona_events_occurred_at", "occurred_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), nullable=False)
+    event_id: Mapped[UUID] = mapped_column(Uuid(), nullable=False)
+    event_type: Mapped[str] = mapped_column(String, nullable=False)
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False,
+    )
+    received_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, server_default=func.now(),
+        nullable=False,
+    )
+    locale: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=1, server_default=text("1"),
+    )
