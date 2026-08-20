@@ -4125,4 +4125,61 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get portfolioRetry => 'TRY AGAIN';
+
+  @override
+  String get inboxTitle => 'MESSAGES';
+
+  @override
+  String inboxBellSemantics(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count unread messages',
+      one: '1 unread message',
+      zero: 'Messages',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get inboxEmpty => 'No messages yet.';
+
+  @override
+  String get inboxError => 'Couldn\'t load your messages.';
+
+  @override
+  String get inboxRetry => 'TRY AGAIN';
+
+  @override
+  String get inboxHighPriorityChip => 'PRIORITY';
+
+  @override
+  String get inboxYou => 'You';
+
+  @override
+  String get inboxReplyHint => 'Write a reply…';
+
+  @override
+  String get inboxReplySend => 'SEND';
+
+  @override
+  String get inboxReplySent => 'Reply sent.';
+
+  @override
+  String get inboxJustNow => 'just now';
+
+  @override
+  String inboxMinutesAgo(String minutes) {
+    return '${minutes}m ago';
+  }
+
+  @override
+  String inboxHoursAgo(String hours) {
+    return '${hours}h ago';
+  }
+
+  @override
+  String inboxDaysAgo(String days) {
+    return '${days}d ago';
+  }
 }

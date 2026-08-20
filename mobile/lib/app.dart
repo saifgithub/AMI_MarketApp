@@ -19,11 +19,13 @@ import 'package:ami_trade/screens/dev_preview_screen.dart';
 import 'package:ami_trade/screens/feedback/bug_resolution_toasts.dart';
 import 'package:ami_trade/screens/games/games_home_screen.dart';
 import 'package:ami_trade/screens/home_shell.dart';
+import 'package:ami_trade/screens/inbox/inbox_screen.dart';
 import 'package:ami_trade/screens/notifications/push_notification_listener.dart';
 import 'package:ami_trade/screens/onboarding/onboarding_screen.dart';
 import 'package:ami_trade/screens/version_gate/version_gate_screen.dart';
 import 'package:ami_trade/services/notifications/app_navigator_key.dart';
 import 'package:ami_trade/state/auth_providers.dart';
+import 'package:ami_trade/state/inbox_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
@@ -60,6 +62,8 @@ class AmiTradeApp extends ConsumerWidget {
         '/onboarding': (_) => const OnboardingScreen(),
         '/floor': (_) => const HomeShell(),
         '/dev-preview': (_) => const DevPreviewScreen(),
+        // CR102 — the tester inbox, pushed from the Floor header's bell.
+        '/inbox': (_) => const InboxScreen(),
         // CR109 Amendment F — the dark-launch gate. `kGamesEnabled` is a
         // const bool.fromEnvironment, so with the AMI_GAMES dart-define off
         // the compiler const-folds this whole entry out of the map — no
@@ -157,6 +161,7 @@ class _AuthGate extends ConsumerWidget {
       ref.invalidate(mandateNotifierProvider);
       ref.invalidate(watchlistNotifierProvider);
       ref.invalidate(lessonsNotifierProvider);
+      ref.invalidate(inboxProvider);
     });
     final auth = ref.watch(authNotifierProvider);
     if (auth.token == null) {

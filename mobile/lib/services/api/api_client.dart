@@ -22,6 +22,7 @@ import 'package:ami_trade/models/brief.dart';
 import 'package:ami_trade/models/daily_challenge.dart';
 import 'package:ami_trade/models/feedback.dart';
 import 'package:ami_trade/models/games.dart';
+import 'package:ami_trade/models/inbox_message.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/models/league.dart';
 import 'package:ami_trade/models/lessons.dart';
@@ -1597,6 +1598,41 @@ class ApiClient {
   /// Mark a resolution message delivered so it fires exactly once.
   Future<void> ackFeedback(String reportId) async {
     await _dio.post<void>('/v1/feedback/$reportId/ack');
+  }
+
+  // ── CR102 in-app tester messaging ──────────────────────────────────────
+
+  /// The whole inbox, newest-first, both directions. The bearer token
+  /// identifies the caller — no user_id on the wire. The client derives the
+  /// unread count from `read_at`; there is no count endpoint by design.
+  Future<List<InboxMessage>> inboxMessages() async {
+    final r = await _dio.get<List<dynamic>>('/v1/messages');
+    return (r.data ?? [])
+        .map((e) => InboxMessage.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Idempotent server-side `read_at` stamp. 404 on another user's row.
+  Future<void> markMessageRead(String messageId) async {
+    await _dio.post<void>('/v1/messages/$messageId/read');
+  }
+
+  /// Reply to a broadcast (≤ 2000 chars). Threads via `reply_to_id`.
+  Future<InboxReply> replyToMessage({
+    required String messageId,
+    required String body,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/messages/$messageId/reply',
+      data: {'body': body},
+    );
+    return InboxReply.fromJson(r.data!);
+  }
+
+  /// Server-side once-only `toasted_at` stamp for the priority=high
+  /// cold-start toast — survives a reinstall, unlike a local flag.
+  Future<void> markMessageToasted(String messageId) async {
+    await _dio.post<void>('/v1/messages/$messageId/toasted');
   }
 
   // ── Alpaca paper trading (AT:R45) ──────────────────────────────────────

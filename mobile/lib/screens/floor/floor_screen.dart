@@ -40,6 +40,7 @@ import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/services/share/share_service.dart';
 import 'package:ami_trade/state/daily_challenge_providers.dart';
+import 'package:ami_trade/state/inbox_providers.dart';
 import 'package:ami_trade/state/league_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
@@ -218,6 +219,10 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                       SvgPicture.asset('assets/logo_hex.svg',
                           height: 26, semanticsLabel: 'AMI'),
                       const Spacer(),
+                      // CR102 — the inbox bell. Badge only when unread > 0;
+                      // absent on load error (the badge may be absent, the
+                      // inbox screen may not lie).
+                      const _InboxBell(),
                       // Stays until CR109 re-homes it (§3). Its "keep your
                       // streak" copy is re-cut there too, not here.
                       if (me != null && me.streak.current > 0)
@@ -396,6 +401,63 @@ class _FirmRow extends StatelessWidget {
                 color: AmiColors.textLow, size: 20),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// CR102 — the inbox bell in the Floor header.
+///
+/// The unread count is derived client-side from the inbox payload
+/// (`unreadInboxCountProvider`), which yields 0 while loading and on
+/// error — so a failed fetch renders a bare bell, never a stale claim.
+/// The badge copies the 14px amber attention-badge visual from
+/// `hex_avatar.dart` so "needs your eyes" reads the same everywhere.
+class _InboxBell extends ConsumerWidget {
+  const _InboxBell();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final count = ref.watch(unreadInboxCountProvider);
+    return Semantics(
+      label: l.inboxBellSemantics(count),
+      button: true,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined,
+                color: AmiColors.textLow),
+            onPressed: () => Navigator.of(context).pushNamed('/inbox'),
+          ),
+          if (count > 0)
+            Positioned(
+              top: 6,
+              right: 6,
+              child: IgnorePointer(
+                child: Container(
+                  width: 14,
+                  height: 14,
+                  decoration: const BoxDecoration(
+                    color: AmiColors.hexAmber,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    count > 9 ? '9+' : '$count',
+                    style: const TextStyle(
+                      fontFamily: AmiTypography.jetBrains,
+                      fontSize: 9,
+                      height: 1.0,
+                      fontWeight: FontWeight.w700,
+                      color: AmiColors.slate900,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

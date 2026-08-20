@@ -6765,6 +6765,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'TRY AGAIN'**
   String get portfolioRetry;
+
+  /// CR102 — screen title of the tester inbox and the bell's route. Mono header, rendered as-is, already upper-case like portfolioTabOrders. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'MESSAGES'**
+  String get inboxTitle;
+
+  /// CR102 — accessibility label on the Floor header's inbox bell. Announces the unread count; =0 is the bare bell. Arabic needs all six plural branches. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Messages} =1{1 unread message} other{{count} unread messages}}'**
+  String inboxBellSemantics(int count);
+
+  /// CR102 — the inbox with nothing in it. MUST stay visually distinct from inboxError (CR040): this state never shows a retry button. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet.'**
+  String get inboxEmpty;
+
+  /// CR102 — the inbox failed to load (network/backend). Shown with a retry button; must never read like the empty state (CR040 acceptance #8). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your messages.'**
+  String get inboxError;
+
+  /// CR102 — retry CTA under inboxError. Rendered as-is, already upper-case, same per-screen convention as portfolioRetry and roomRetry. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'TRY AGAIN'**
+  String get inboxRetry;
+
+  /// CR102 — small amber chip on a priority=high broadcast card. Rendered as-is, already upper-case. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'PRIORITY'**
+  String get inboxHighPriorityChip;
+
+  /// CR102 — label over the user's own replies in the message thread. The sender of broadcasts is AMI by name; this marks the other side. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get inboxYou;
+
+  /// CR102 — placeholder in the reply composer at the bottom of the message detail screen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Write a reply…'**
+  String get inboxReplyHint;
+
+  /// CR102 — the reply composer's send button. Rendered as-is, already upper-case. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SEND'**
+  String get inboxReplySend;
+
+  /// CR102 — success toast after a reply reaches the backend. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Reply sent.'**
+  String get inboxReplySent;
+
+  /// CR102 — message age under a minute, on inbox cards and the detail header. Same shape as restingOrderRetiredJustNow. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get inboxJustNow;
+
+  /// CR102 — message age in minutes, e.g. '14m ago'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m ago'**
+  String inboxMinutesAgo(String minutes);
+
+  /// CR102 — message age in hours. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h ago'**
+  String inboxHoursAgo(String hours);
+
+  /// CR102 — message age in days. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d ago'**
+  String inboxDaysAgo(String days);
 }
 
 class _AppLocalizationsDelegate

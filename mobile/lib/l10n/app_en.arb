@@ -5275,5 +5275,81 @@
   "portfolioRetry": "TRY AGAIN",
   "@portfolioRetry": {
     "description": "DEF254 — retry CTA under the Portfolio's load-error message, shown ONLY when the failure is retryable (a timeout, a 5xx, an unreachable network). A rejected request renders the message alone and no button, because re-sending it would fail identically. Rendered as-is, already upper-case, same as onboardingTryAgain and roomRetry. NEW key. retranslate:[ar,ms]"
+  },
+  "inboxTitle": "MESSAGES",
+  "@inboxTitle": {
+    "description": "CR102 — screen title of the tester inbox and the bell's route. Mono header, rendered as-is, already upper-case like portfolioTabOrders. NEW key. retranslate:[ar,ms]"
+  },
+  "inboxBellSemantics": "{count, plural, =0{Messages} =1{1 unread message} other{{count} unread messages}}",
+  "@inboxBellSemantics": {
+    "description": "CR102 — accessibility label on the Floor header's inbox bell. Announces the unread count; =0 is the bare bell. Arabic needs all six plural branches. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inboxEmpty": "No messages yet.",
+  "@inboxEmpty": {
+    "description": "CR102 — the inbox with nothing in it. MUST stay visually distinct from inboxError (CR040): this state never shows a retry button. NEW key. retranslate:[ar,ms]"
+  },
+  "inboxError": "Couldn't load your messages.",
+  "@inboxError": {
+    "description": "CR102 — the inbox failed to load (network/backend). Shown with a retry button; must never read like the empty state (CR040 acceptance #8). NEW key. retranslate:[ar,ms]"
+  },
+  "inboxRetry": "TRY AGAIN",
+  "@inboxRetry": {
+    "description": "CR102 — retry CTA under inboxError. Rendered as-is, already upper-case, same per-screen convention as portfolioRetry and roomRetry. NEW key. retranslate:[ar,ms]"
+  },
+  "inboxHighPriorityChip": "PRIORITY",
+  "@inboxHighPriorityChip": {
+    "description": "CR102 — small amber chip on a priority=high broadcast card. Rendered as-is, already upper-case. NEW key. retranslate:[ar,ms]"
+  },
+  "inboxYou": "You",
+  "@inboxYou": {
+    "description": "CR102 — label over the user's own replies in the message thread. The sender of broadcasts is AMI by name; this marks the other side. NEW key. retranslate:[ar,ms]"
+  },
+  "inboxReplyHint": "Write a reply\u2026",
+  "@inboxReplyHint": {
+    "description": "CR102 — placeholder in the reply composer at the bottom of the message detail screen. NEW key. retranslate:[ar,ms]"
+  },
+  "inboxReplySend": "SEND",
+  "@inboxReplySend": {
+    "description": "CR102 — the reply composer's send button. Rendered as-is, already upper-case. NEW key. retranslate:[ar,ms]"
+  },
+  "inboxReplySent": "Reply sent.",
+  "@inboxReplySent": {
+    "description": "CR102 — success toast after a reply reaches the backend. NEW key. retranslate:[ar,ms]"
+  },
+  "inboxJustNow": "just now",
+  "@inboxJustNow": {
+    "description": "CR102 — message age under a minute, on inbox cards and the detail header. Same shape as restingOrderRetiredJustNow. NEW key. retranslate:[ar,ms]"
+  },
+  "inboxMinutesAgo": "{minutes}m ago",
+  "@inboxMinutesAgo": {
+    "description": "CR102 — message age in minutes, e.g. '14m ago'. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "inboxHoursAgo": "{hours}h ago",
+  "@inboxHoursAgo": {
+    "description": "CR102 — message age in hours. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "inboxDaysAgo": "{days}d ago",
+  "@inboxDaysAgo": {
+    "description": "CR102 — message age in days. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
   }
 }
