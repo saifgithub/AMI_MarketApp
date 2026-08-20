@@ -33,6 +33,7 @@ import 'package:ami_trade/models/portfolio_health.dart';
 import 'package:ami_trade/models/price_alert.dart';
 import 'package:ami_trade/models/release_floor.dart';
 import 'package:ami_trade/models/room.dart';
+import 'package:ami_trade/models/sector_watch.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/sim_resting_order.dart';
 import 'package:ami_trade/models/tickers.dart';
@@ -1158,6 +1159,16 @@ class ApiClient {
   Future<SimNews> simNews(String ticker) async {
     final r = await _dio.get<Map<String, dynamic>>('/v1/sim/news/$ticker');
     return SimNews.fromJson(r.data!);
+  }
+
+  /// SECTOR WATCH card feed (CR183): the top-moving GICS sector among the
+  /// user's touched tickers (watchlist + holdings), its leader, and the
+  /// leader's top headline. Always HTTP 200 — degrade states ride the body's
+  /// `state` field rather than an error code (CR040).
+  Future<SectorWatch> sectorWatch(String userId) async {
+    final r =
+        await _dio.get<Map<String, dynamic>>('/v1/sector-watch/$userId');
+    return SectorWatch.fromJson(r.data!);
   }
 
   /// Upcoming earnings info within 90 days (CR030 adds the dividend fields
