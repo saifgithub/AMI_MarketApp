@@ -184,3 +184,46 @@ class AdminConfigCheckResponse(BaseModel):
     # suppressed control that nobody can see the state of is how a temporary
     # stop-gap becomes permanent.
     sim_bracket_sweep_enabled: bool = True
+
+
+# ── Bug triage (CR200) ────────────────────────────────────────────────────────
+
+class AdminBugSummary(BaseModel):
+    id: UUID
+    user_id: Optional[UUID]
+    category: str
+    title: str
+    status: str
+    assigned_branch: Optional[str]
+    app_version: str
+    platform: str
+    has_attachment: bool
+    created_at: datetime
+    resolved_at: Optional[datetime]
+
+
+class AdminBugDetail(AdminBugSummary):
+    steps: Optional[str]
+    route: Optional[str]
+    attachment_mime: Optional[str]
+    resolution_note: Optional[str]
+    acknowledged_at: Optional[datetime]
+
+
+class AdminBugListResponse(BaseModel):
+    bugs: list[AdminBugSummary]
+    total: int
+    # Per-status counts across ALL reports (not just the current filter),
+    # so the console's filter chips stay populated.
+    counts: dict[str, int]
+    limit: int
+    offset: int
+
+
+class AdminBugClaimRequest(BaseModel):
+    branch: str = Field(min_length=1, max_length=200)
+
+
+class AdminBugResolveRequest(BaseModel):
+    # Shown to the reporter verbatim (CR043 toast) — required, never blank.
+    note: str = Field(min_length=1, max_length=2000)

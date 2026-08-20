@@ -36,6 +36,12 @@ def test_every_referenced_static_asset_resolves() -> None:
 
 def test_each_view_module_registers_itself() -> None:
     client = TestClient(app, raise_server_exceptions=False)
-    for name in ("users.js", "messages.js"):
+    shell = client.get("/admin").text
+    views = [
+        n for n in re.findall(r"/admin/static/([\w.]+\.js)\?v=", shell)
+        if n != "core.js"
+    ]
+    assert views, "shell references no view modules"
+    for name in views:
         body = client.get(f"/admin/static/{name}").text
         assert "registerView(" in body, f"{name} never registers its tab"
