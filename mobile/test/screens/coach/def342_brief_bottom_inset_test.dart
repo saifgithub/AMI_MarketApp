@@ -24,7 +24,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// point is a no-op so the provider's own `openSession()` microtask cannot
 /// touch the API from a test.
 class _FixedBriefNotifier extends BriefNotifier {
-  _FixedBriefNotifier(Ref ref, String agentId) : super(ref, agentId) {
+  _FixedBriefNotifier(super.ref, super.agentId) {
     state = BriefState(
       session: const BriefSession(
         id: 's1',
