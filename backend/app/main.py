@@ -27,6 +27,8 @@ from app.api.lessons import router as lessons_router
 from app.api.llm import router as llm_router
 from app.api.mandate import router as mandate_router
 from app.api.messages import router as messages_router
+from app.api.notifications import router as notifications_router
+from app.api.telemetry import router as telemetry_router
 from app.api.onboarding import router as onboarding_router
 from app.api.one_on_one import router as one_on_one_router
 from app.api.portfolio import router as portfolio_router  # CR026 sector allocation
@@ -560,6 +562,8 @@ app.include_router(lessons_router)
 app.include_router(llm_router)
 app.include_router(mandate_router)
 app.include_router(messages_router)
+app.include_router(notifications_router)
+app.include_router(telemetry_router)
 app.include_router(portfolio_router)
 app.include_router(price_alerts_router)
 app.include_router(room_router)
