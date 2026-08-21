@@ -1,0 +1,11 @@
+{
+  "served_model": "ami-llm, qwen3.6-35b-a3b-nvfp4",
+  "model_requested": "ami-llm",
+  "base_url": "http://192.168.20.74:8000",
+  "variants": ["v1a", "v1b", "v8", "v9", "v9t"],
+  "concurrency": 16,
+  "epochs": ["2026-08-07", "2026-08-13", "2026-08-14", "2026-08-14b"],
+  "pm_max_tokens": 1700,
+  "risk_officer_max_tokens": 1800,
+  "started_utc": "2026-08-21T07:41:00+00:00"
+}

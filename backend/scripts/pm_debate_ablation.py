@@ -18,6 +18,23 @@ against the LAN vLLM with different parts of the debate removed:
     V3   the two extremes removed, Neutral kept   (ends at the Neutral)
     V4   the Neutral removed, extremes kept       (ends at the Conservative)
     V5   Conservative + Neutral removed           (ends at the Aggressive)
+    V8   the debate replaced by ONE structured Risk Officer, its assessment injected
+         as a single block ahead of the transcript (CR197's shape)
+    V9   the same officer call, rendered the way PRODUCTION renders it — three turns
+         under the three risk AgentIds, appended where the debate was removed
+    V9t  V9 with the officer's reply read with trailing text after the closing brace
+         dropped — the design apart from today's parser (see `_VARIANT_STRIP["v9t"]`)
+
+CR201 re-pointed V8's PROMPT at production. It used to be assembled here — the CIO's
+convene block sliced out of the recorded prompt, the ladder appended after the
+transcript, no holdings block, the phase header still reading VERDICT, a 1200-token
+ceiling. It now comes from `room_prompts.build_risk_officer_messages` at
+`_AGENT_MAX_TOKENS[RISK_OFFICER]`, the same call `_run_risk_officer` makes. V9 closes
+the other half of the same gap: the officer's payload does not reach the Chief
+Investment Officer as itself, it reaches it as three rendered turns. Rows recorded
+before 2026-08-21 under `CR197_risk_debate_effectiveness/ablation/` measure the old
+reconstruction and are the baseline this arm is compared AGAINST, not a continuation
+of it.
 
 V1b is the whole point. A verdict flip between V1a and V2 means nothing until you know
 how often this model flips against *itself* on a byte-identical prompt — sampling
@@ -75,6 +92,7 @@ import asyncio
 import hashlib
 import json
 import math
+import re
 import sys
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
@@ -96,7 +114,7 @@ EXTREMES = ("aggressive_debator", "conservative_debator")
 # silently desynchronise a replay from the recording it is being compared against.
 PM_MAX_TOKENS = 1700
 
-VARIANTS = ("v1a", "v1b", "v1c", "v2", "v3", "v4", "v5", "v6", "v7", "v8")
+VARIANTS = ("v1a", "v1b", "v1c", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v9t")
 _VARIANT_STRIP: dict[str, tuple[str, ...]] = {
     "v1a": (),
     "v1b": (),
@@ -157,9 +175,33 @@ _VARIANT_STRIP: dict[str, tuple[str, ...]] = {
     # ladder has no way to supply. If those reasons are what the CIO was using, this
     # arm should return to baseline or better on one serial step instead of three.
     "v8": DEBATORS,
+    # v9 — CR201 rollout step 2. v8 asks whether the OFFICER'S PROMPT reproduces the
+    # debate; v9 asks whether the SHIPPED ASSEMBLY does, which is a different
+    # question because the officer's reply does not reach the Chief Investment
+    # Officer as itself. In production `_run_risk_officer` renders the payload into
+    # the THREE existing risk AgentIds via `render_officer_turns` and appends them to
+    # the transcript, where the debators used to speak; v8 injects one
+    # `render_risk_assessment` block ahead of the transcript instead. Same officer
+    # call, same payload contract, different thing put in front of the CIO — so the
+    # pair separates "the prompt is right" from "the assembly is right".
+    "v9": DEBATORS,
+    # v9t — v9 with ONE thing changed, and it is not the design: the officer's reply
+    # is read with the trailing text after the closing brace dropped. Measured on this
+    # corpus, the shipped assembly makes the model append a simulation disclaimer
+    # after otherwise-valid JSON, and `extract_json_object` rejects a reply that
+    # STARTS with '{' and ends with prose (it trims surrounding prose only when the
+    # reply does not open with the object). v9 therefore measures the design AND that
+    # rejection together; v9t measures the design alone, so the two say separately
+    # whether the officer reproduces the debate and whether today's parser lets it.
+    "v9t": DEBATORS,
 }
 # Arms whose stripped prompt gets a generated structured risk turn (2 LLM calls each).
-_VARIANT_RISK_OFFICER: frozenset[str] = frozenset({"v8"})
+_VARIANT_RISK_OFFICER: frozenset[str] = frozenset({"v8", "v9", "v9t"})
+# Arms that render the officer's payload the way PRODUCTION does — three transcript
+# turns — rather than as one pre-transcript block.
+_VARIANT_OFFICER_TURNS: frozenset[str] = frozenset({"v9", "v9t"})
+# Arms that read the officer's reply with trailing text dropped — see "v9t".
+_VARIANT_TOLERANT_READ: frozenset[str] = frozenset({"v9t"})
 # Arms that additionally receive the computed ladder (after any strip).
 _VARIANT_LADDER: frozenset[str] = frozenset({"v6", "v7"})
 
@@ -348,47 +390,296 @@ def inject_ladder(convene: Convene, prompt: str) -> str:
 
 _CONVENE_ANCHOR = "─── CONVENE THE ROOM"
 _TURN_ANCHOR = "Your turn. Speak as"
+_TRANSCRIPT_ANCHOR = "Transcript so far:"
+_TURN_ANCHOR_FULL = "\n\nYour turn. Speak as"
+_MANDATE_ANCHOR = "User mandate snapshot:"
+_LADDER_ANCHOR = "## Sized options"
+# `_SIM_PORTFOLIO_HEADER` from room_runner — imported at use, not retyped, so the one
+# line a reader recognises the holdings block by cannot drift from production.
+
+_RISK_SCORE_RE = re.compile(r"^- risk_score: (\d)", re.M)
+_LOCALE_RE = re.compile(r"^- locale: (\S+)$", re.M)
+_OPEN_RISK_RE = re.compile(r"- Open risk already committed: ([\d.]+)%")
+_LONG_ONLY_MARK = "- long_only: long-only = no short/negative positions."
+_TRADES_MARK = "- Trades opened today:"
+_OPEN_RISK_UNCOMPUTED = "- Open risk: COULD NOT BE COMPUTED this run."
+_LAST_LOSS_RE = re.compile(r"- Last losing trade closed: (.+)\.\n")
+_LAST_LOSS_UNCOMPUTED = "- Last stop-out: COULD NOT BE COMPUTED this run"
 
 
-def ladder_rows_for(convene: Convene):
-    """The ladder rows for a recorded convene, from figures the run actually used."""
-    from app.trading_math.option_ladder import build_option_ladder
+def _recorded_fact_sheet(convene: Convene) -> str:
+    """The run's OWN fact sheet, lifted verbatim out of the recorded prompt.
 
-    m = _REF_POS_RE.search(convene.system_prompt)
-    cap_m = _CAP_RE.search(convene.system_prompt)
-    if not m or not cap_m:
-        raise StripError(f"{convene.run_id}: cannot rebuild the ladder inputs")
-    size, entry, stop = (float(g) for g in m.groups())
-    used_m = _USED_RE.search(convene.system_prompt)
-    return build_option_ladder(
-        reference_size_pct=size, entry=entry, stop=stop,
-        cap_pts=float(cap_m.group(1)),
-        current_drawdown_pct=float(used_m.group(1)) if used_m else None,
-    ), float(cap_m.group(1))
-
-
-def risk_officer_prompt(convene: Convene, stripped: str) -> tuple[str, list]:
-    """Build the Risk Officer's own prompt from the SAME evidence the debate saw.
-
-    Takes the CONVENE block out of the (already debator-stripped) CIO prompt — fact
-    sheet, mandate snapshot, risk state, transcript through the Execution Desk — and
-    fronts it with the officer's persona instead of the CIO's, dropping the CIO's
-    verdict contract entirely. Same evidence, different agent: that is what makes the
-    comparison against v1a a comparison of DESIGNS rather than of context.
+    `_format_profile` is a lossy renderer over a `profile` dict that the corpus does
+    not store, so the sheet is the one production input that cannot be rebuilt from
+    structured data. It is transplanted instead of reconstructed — and the transplant
+    is exact, because `_lane_for` puts the Risk Officer and the Portfolio Manager in
+    the same `_ALL_DOMAINS` lane, so the sheet production would render for the
+    officer is byte-for-byte the sheet recorded in the CIO's prompt.
     """
-    from app.services.risk_officer import RISK_OFFICER_PERSONA, build_risk_officer_instruction
+    head = f"Ticker: {convene.ticker}\n"
+    tail = f"\n\n{_MANDATE_ANCHOR}\n"
+    i, j = convene.system_prompt.find(head), convene.system_prompt.find(tail)
+    if i < 0 or j <= i:
+        raise StripError(f"{convene.run_id}: cannot locate the recorded fact sheet")
+    return convene.system_prompt[i + len(head) : j]
 
-    i, j = stripped.find(_CONVENE_ANCHOR), stripped.find(_TURN_ANCHOR)
-    if i < 0 or j < 0 or j <= i:
-        raise StripError(f"{convene.run_id}: cannot locate the shared-context block")
-    rows, _cap = ladder_rows_for(convene)
-    from app.services.room_prompts import _render_option_ladder
-    context = stripped[i:j]
-    return (
-        RISK_OFFICER_PERSONA + "\n\n" + context + "\n\n"
-        + _render_option_ladder(rows, _cap)
-        + build_risk_officer_instruction(rows)
-    ), rows
+
+def _recorded_portfolio_block(convene: Convene) -> str:
+    """The CR055 holdings block, verbatim. Sits in `base` on the CIO's prompt (before
+    the convene header) and INSIDE the convene block on the officer's — same text,
+    different position, so it is extracted here and handed back to the shipped
+    builder as `portfolio_snapshot`."""
+    from app.services.room_runner import _SIM_PORTFOLIO_HEADER
+
+    i = convene.system_prompt.find(_SIM_PORTFOLIO_HEADER)
+    j = convene.system_prompt.find(_CONVENE_ANCHOR)
+    if i < 0 or j <= i:
+        raise StripError(f"{convene.run_id}: no recorded portfolio block")
+    return convene.system_prompt[i:j].rstrip("\n")
+
+
+def _mandate_for(convene: Convene):
+    """A real `Mandate` carrying the four fields the officer's prompt reads.
+
+    risk_score, max_drawdown_pct, locale and compliance.long_only are the ONLY
+    mandate fields `build_risk_officer_messages` touches (via `_drawdown_snapshot_line`
+    and `_risk_state_block`), and all four are stated verbatim in every recorded PM
+    prompt. Everything else is filled with a fixed placeholder that renders nowhere —
+    it exists to satisfy the schema, not to stand in for a datum.
+    """
+    from datetime import datetime
+    from uuid import UUID
+
+    from app.schemas.mandate import (
+        Compliance,
+        Horizon,
+        LearningStyle,
+        Mandate,
+        Path as MandatePath,
+        PrimaryGoal,
+        RiskComponents,
+    )
+    from app.schemas.user import Plan
+
+    p = convene.system_prompt
+    rs, cap, loc = _RISK_SCORE_RE.search(p), _CAP_RE.search(p), _LOCALE_RE.search(p)
+    if not (rs and cap and loc):
+        raise StripError(f"{convene.run_id}: mandate snapshot is not readable")
+    return Mandate(
+        user_id=UUID(int=0),
+        version=1,
+        display_name="Ablation Subject",
+        locale=loc.group(1),
+        timezone="UTC",
+        primary_goal=PrimaryGoal.LONG_TERM_WEALTH,
+        horizon=Horizon.LONG,
+        target_outcome=None,
+        path=MandatePath.LONG_HORIZON,
+        risk_score=int(rs.group(1)),
+        risk_components=RiskComponents(
+            drawdown_response=3, regret_asymmetry=0, concentration_tolerance=3
+        ),
+        risk_quotes=[],
+        max_drawdown_pct=int(float(cap.group(1))),
+        compliance=Compliance(long_only=_LONG_ONLY_MARK in p, liquid_only=True),
+        learning_style=LearningStyle.QUICK,
+        plan=Plan.TRADER,
+        trial_expires_at=None,
+        credit_balance=150,
+        created_at=datetime(2026, 5, 11),
+        updated_at=datetime(2026, 5, 11),
+    )
+
+
+def _officer_transcript(convene: Convene):
+    """The transcript AS THE OFFICER SEES IT — the room up to the RISK phase.
+
+    Production calls `_run_risk_officer` where the debate used to run, so `run.transcript`
+    holds the four analysts, both researchers, the Research Manager and the Execution
+    Desk, and nothing after. Taken from the committed run rather than re-parsed out of
+    the CIO's prompt so the officer reads the turns themselves, not a rendering of them.
+    """
+    from datetime import datetime, timezone
+
+    from app.schemas.agents import AgentId, AgentMessage
+
+    out = []
+    for t in convene.transcript:
+        aid = t.get("agent_id")
+        if aid in DEBATORS or aid == "portfolio_manager":
+            break
+        out.append(
+            AgentMessage(
+                agent_id=AgentId(aid),
+                content=t.get("content") or "",
+                timestamp=datetime(2026, 8, 14, tzinfo=timezone.utc),
+            )
+        )
+    if not out:
+        raise StripError(f"{convene.run_id}: no pre-risk turns for the officer to read")
+    return out
+
+
+def shipped_officer_messages(convene: Convene):
+    """CR201 — the officer's prompt built by the SHIPPED `build_risk_officer_messages`.
+
+    CR197 measured v8 against a prompt this script assembled itself: the CIO's convene
+    block sliced out of the recorded prompt, the ladder appended AFTER the transcript,
+    no holdings block, the phase header still reading VERDICT, and a 1200-token
+    ceiling. CR201 then shipped a different assembly, and a measurement of the
+    reconstruction says nothing about the thing that runs. This calls production's own
+    builder, so the persona, the phase framing, the ladder's POSITION (before the
+    transcript, deliberately — see its call site), the JSON contract and the message
+    shape are production's by construction rather than by resemblance.
+
+    What is reconstructed, and how faithfully:
+
+      * mandate risk_score / max_drawdown_pct / locale / long_only — read verbatim off
+        the recorded prompt; the four fields the builder actually reads.
+      * the reference triple (size/entry/stop) — the `Reference position` line, i.e.
+        the figures the run itself used.
+      * drawdown consumed, open risk, trade counts — the recorded live-risk block, or
+        NOT SUPPLIED where the recording has no such block (the 08-07 epoch predates
+        it). Absence is passed through as absence; nothing is defaulted to zero.
+      * the holdings block — transplanted verbatim.
+      * the fact sheet — transplanted verbatim (see `_recorded_fact_sheet`).
+
+    What CANNOT be reconstructed, and is therefore absent rather than invented:
+
+      * the Execution Desk's TARGET. It is nowhere in the recorded prompt, so
+        `build_option_ladder` gets `target=None` and the ladder carries no
+        reward:risk column. Production supplies one whenever the desk set a target,
+        so this arm measures the officer with LESS evidence than it will have —
+        the same understatement CR197's `inject_ladder` recorded for v6/v7.
+
+    Returns `(system_prompt, messages, rows, facts)`. `facts["evidence_exact"]` is
+    True when the regenerated evidence block is byte-identical to the recorded one;
+    where it is False the difference is the prompt renderer moving on AFTER that
+    epoch was recorded (DEF302's stop-distance clause, DEF292's share-of-cap decimal,
+    CR179 Leg 4's headroom clause, the CR153-156 live-risk block) — today's rendering
+    of the run's own numbers, which is what "the production assembly" means.
+    """
+    from app.services.llm_gateway import prepend_grounding_directive
+    from app.services.room_prompts import _format_profile, build_risk_officer_messages
+    from app.schemas.agents import AgentId
+
+    p = convene.system_prompt
+    ref = _REF_POS_RE.search(p)
+    if not ref:
+        raise StripError(f"{convene.run_id}: no reference position for the officer's ladder")
+    used = _USED_RE.search(p)
+    open_risk = _OPEN_RISK_RE.search(p)
+    last_loss = _LAST_LOSS_RE.search(p)
+
+    existing_open_risk: Any = None
+    if open_risk:
+        existing_open_risk = float(open_risk.group(1))
+    elif _OPEN_RISK_UNCOMPUTED in p:
+        from app.agents.safety_floor import CONTEXT_NOT_SUPPLIED
+
+        existing_open_risk = CONTEXT_NOT_SUPPLIED
+
+    last_loss_at: Any = last_loss.group(1) if last_loss else None
+    if last_loss_at is None and _LAST_LOSS_UNCOMPUTED in p:
+        from app.agents.safety_floor import CONTEXT_NOT_SUPPLIED
+
+        last_loss_at = CONTEXT_NOT_SUPPLIED
+
+    try:
+        system_prompt, messages, rows = build_risk_officer_messages(
+            mandate=_mandate_for(convene),
+            ticker=convene.ticker,
+            profile={},
+            transcript=_officer_transcript(convene),
+            trade_proposal={
+                "size_pct": float(ref.group(1)),
+                "entry": float(ref.group(2)),
+                "stop": float(ref.group(3)),
+                "target": None,
+            },
+            portfolio_snapshot=_recorded_portfolio_block(convene),
+            sector_weights=None,
+            current_drawdown_pct=float(used.group(1)) if used else None,
+            existing_open_risk_pct=existing_open_risk,
+            last_loss_closed_at=last_loss_at,
+            # A list renders the two over-trading counts; None renders nothing. The
+            # 08-07 epoch has no such line, and inventing a "0 today" for it would be
+            # a fabricated fact, not a neutral default.
+            trade_open_timestamps=[] if _TRADES_MARK in p else None,
+        )
+    except ValueError as exc:  # the builder's own CR040 refusal
+        raise StripError(f"{convene.run_id}: shipped builder refused — {exc}") from exc
+
+    # The fact sheet: the one input with no structured source. `profile={}` renders a
+    # refuse-everything sheet, which is located exactly once and replaced with the
+    # recorded one. A count other than 1 means the renderer changed shape — raise
+    # rather than splice into the wrong place.
+    placeholder = _format_profile({}, AgentId.RISK_OFFICER)
+    if system_prompt.count(placeholder) != 1:
+        raise StripError(
+            f"{convene.run_id}: empty-profile placeholder occurs "
+            f"{system_prompt.count(placeholder)}x (need 1)"
+        )
+    system_prompt = system_prompt.replace(placeholder, _recorded_fact_sheet(convene), 1)
+
+    # Verification, not decoration: the mandate/risk-state region the builder
+    # regenerated, against the same region as recorded.
+    try:
+        rec = p[p.index(_MANDATE_ANCHOR) : p.index(_TRANSCRIPT_ANCHOR)]
+        gen = system_prompt[
+            system_prompt.index(_MANDATE_ANCHOR) : system_prompt.index(_LADDER_ANCHOR)
+        ]
+    except ValueError as exc:
+        raise StripError(f"{convene.run_id}: cannot locate the evidence region — {exc}") from exc
+    # The gateway prepends this to EVERY call it routes, the officer's included
+    # (`_run_risk_officer` goes through `gateway.stream_chat`). Fidelity rule 1 says
+    # never to route the PM replay through the gateway — the directive is already
+    # baked into the recorded prompt and would be doubled. The officer's prompt is
+    # built fresh here, so it has to be added, or the arm would run the one agent
+    # this measurement is about WITHOUT the framing production gives it.
+    system_prompt = prepend_grounding_directive(system_prompt)
+
+    facts = {
+        "evidence_exact": rec == gen,
+        "reference_triple": ref.groups(),
+        "has_reward_risk": any(r.reward_risk is not None for r in rows),
+    }
+    # The figures must round-trip whether or not the WORDING does: a reconstruction
+    # that changed the run's own numbers would be measuring another convene.
+    for g in ref.groups():
+        if g not in gen:
+            raise StripError(
+                f"{convene.run_id}: reference figure {g} did not survive the rebuild"
+            )
+    return system_prompt, messages, rows, facts
+
+
+def render_officer_into_transcript(prompt: str, payload: dict, rows) -> str:
+    """v9 — put the officer's payload in front of the CIO the way PRODUCTION does.
+
+    `_run_risk_officer` renders three display turns from the one payload and streams
+    them under the three existing risk AgentIds, so they land in the transcript
+    exactly where the three debators' turns were removed from. Reproduced here as
+    `\n[agent_id] text` per turn, appended to the stripped transcript — the same block
+    shape `strip_debators` removed, so the arm puts back what it took out and nothing
+    else changes about the prompt.
+
+    Wire ids, not display names: every other turn in the RECORDED transcript is
+    labelled with its wire id, and labelling only these three differently would be a
+    formatting artefact this arm introduced rather than a property of the design.
+    """
+    from app.services.risk_officer import render_officer_turns
+    from app.services.room_prompts import STANCE_HEADLINE_MAX_CHARS
+
+    turns = render_officer_turns(
+        payload, rows, headline_max_chars=STANCE_HEADLINE_MAX_CHARS
+    )
+    block = "".join(f"\n[{t.agent_id.value}] {t.text}" for t in turns)
+    i = prompt.find(_TURN_ANCHOR_FULL)
+    if i < 0:
+        raise StripError("no turn anchor to append the officer's turns before")
+    return prompt[:i] + block + prompt[i:]
 
 
 def build_variant(convene: Convene, variant: str) -> str:
@@ -524,27 +815,85 @@ async def _one_call(provider, system_prompt: str, user: str, max_tokens: int,
     return "".join(chunks), meta
 
 
-async def generate_risk_turn(provider, convene: Convene, stripped: str,
-                             sem: asyncio.Semaphore) -> tuple[str, str | None]:
-    """Stage 1 of v8: the structured Risk Officer turn, rendered for the CIO.
+def _read_dropping_trailing_prose(raw: str) -> dict | None:
+    """The object between the first '{' and the last '}', or None.
 
-    Returns (block, error). A failed or unparseable reply yields an EMPTY block rather
-    than a fallback, so the arm degrades to v6 (ladder only) instead of quietly
-    measuring something in between — a silent substitute is how an ablation ends up
-    reporting a design it never actually ran.
+    Used ONLY by the v9t arm, which exists to say what the design does once the
+    reply is read the way `extract_json_object`'s own docstring says it reads —
+    "tolerating ```json fences and surrounding prose". No other arm calls this;
+    v8 and v9 parse exactly as `_run_risk_officer` does.
     """
-    from app.services.risk_officer import render_risk_assessment
+    first, last = raw.find("{"), raw.rfind("}")
+    if first < 0 or last <= first:
+        return None
+    try:
+        out = json.loads(raw[first : last + 1], strict=False)
+    except json.JSONDecodeError:
+        return None
+    return out if isinstance(out, dict) else None
 
-    sys_prompt, rows = risk_officer_prompt(convene, stripped)
+
+def _reads_with_trailing_prose(raw: str) -> bool:
+    """Would this reply parse if the text after the object were dropped?
+
+    Diagnostic ONLY — the arm never uses the value it would recover. Production
+    parses with `extract_json_object`, so a reply this returns True for is a reply
+    production DISCARDS, and the arm discards it too; counting them separately is
+    what turns "1.5% unparseable" into a statement about which fix would move it.
+    """
+    return _read_dropping_trailing_prose(raw) is not None
+
+
+async def run_risk_officer(provider, convene: Convene, sem: asyncio.Semaphore,
+                           *, tolerant: bool = False) -> tuple[dict | None, list, str | None]:
+    """Stage 1 of v8/v9: ONE structured Risk Officer call, on the shipped assembly.
+
+    CR201 — the prompt now comes from production's `build_risk_officer_messages` and
+    the budget from production's `_AGENT_MAX_TOKENS[RISK_OFFICER]` (1800), not from
+    this script's own builder and a hardcoded 1200. The 1200 mattered: CR201 derived
+    the 1800 BY CR179's method FROM the v8 arm's censored 1200 ceiling, so a re-run at
+    1200 would re-measure the constraint the shipped budget exists to remove.
+
+    Returns `(payload, rows, error)`. A failed or unparseable reply yields
+    `payload=None` and an error string; the caller then injects NOTHING rather than a
+    fallback, so the arm degrades to "the debate was simply deleted" instead of
+    quietly measuring something in between — a silent substitute is how an ablation
+    ends up reporting a design it never ran. (Production degrades differently, and
+    deliberately: it renders the ladder alone with an `[AMI …]` mark. That path has
+    its own measured floor, 11.8%, and is not what these arms are asking about.)
+    """
+    from app.schemas.agents import AgentId
+    from app.services.room_prompts import max_tokens_for
+
+    sys_prompt, messages, rows, _facts = shipped_officer_messages(convene)
     raw, meta = await _one_call(
-        provider, sys_prompt, f"Assess risk on {convene.ticker}.", 1200, sem
+        provider,
+        sys_prompt,
+        messages[0].content,
+        max_tokens_for(AgentId.RISK_OFFICER),
+        sem,
     )
     if meta.get("error"):
-        return "", meta["error"]
+        return None, rows, meta["error"]
     payload = extract_json_object(raw) or extract_json_object(raw, repair_truncated=True)
     if not payload:
-        return "", "risk_officer_unparseable"
-    return render_risk_assessment(payload, rows), None
+        if meta.get("finish_reason") == "length":
+            return None, rows, "risk_officer_truncated"
+        # Name the failure MODE rather than filing every rejection under one label.
+        # `extract_json_object` trims surrounding prose only when the reply does NOT
+        # begin with '{' — a reply that opens with the object and closes with a
+        # sentence after it is handed whole to `json.loads` and rejected as extra
+        # data. That is a distinct, fixable failure from a genuinely malformed
+        # object, and the two must not be counted together.
+        recovered = _read_dropping_trailing_prose(raw) if tolerant else None
+        if recovered is not None:
+            return recovered, rows, None
+        return None, rows, (
+            "risk_officer_trailing_prose"
+            if _reads_with_trailing_prose(raw)
+            else "risk_officer_unparseable"
+        )
+    return payload, rows, None
 
 
 async def replay_one(provider, convene: Convene, variant: str, sem: asyncio.Semaphore) -> ReplayResult:
@@ -553,10 +902,21 @@ async def replay_one(provider, convene: Convene, variant: str, sem: asyncio.Sema
     prompt = build_variant(convene, variant)
     ro_error: str | None = None
     if variant in _VARIANT_RISK_OFFICER:
-        block, ro_error = await generate_risk_turn(provider, convene, prompt, sem)
-        if block:
-            anchor = "Transcript so far:"
-            prompt = prompt.replace(anchor, f"{block}\n\n{anchor}", 1)
+        from app.services.risk_officer import render_risk_assessment
+
+        payload, rows, ro_error = await run_risk_officer(
+            provider, convene, sem, tolerant=variant in _VARIANT_TOLERANT_READ
+        )
+        if payload is not None:
+            if variant in _VARIANT_OFFICER_TURNS:
+                # PRODUCTION shape: three rendered turns, back where the debate was.
+                prompt = render_officer_into_transcript(prompt, payload, rows)
+            else:
+                # CR197 shape: one assessment block ahead of the transcript.
+                block = render_risk_assessment(payload, rows)
+                prompt = prompt.replace(
+                    _TRANSCRIPT_ANCHOR, f"{block}\n\n{_TRANSCRIPT_ANCHOR}", 1
+                )
     sha = hashlib.sha256(prompt.encode()).hexdigest()
     meta: dict[str, Any] = {}
     chunks: list[str] = []
@@ -671,6 +1031,12 @@ def build_report(
     )
     if served_model:
         add(f"**Served model at replay time:** `{served_model}`\n")
+    else:
+        add(
+            "**Served model at replay time: NOT RECORDED** — this report was rebuilt "
+            "without a `run_meta.json` beside the results, so the model that produced "
+            "them cannot be named from the artifacts.\n"
+        )
     corpus_models = Counter(c.corpus_model for c in convenes if c.corpus_model)
     if corpus_models:
         add(
@@ -730,6 +1096,11 @@ def build_report(
         ("V1a vs V2 — debate removed", abl_k, abl_n, "all three debators stripped"),
         ("V1a vs V3 — extremes removed", ext_k, ext_n, "Neutral kept"),
     ):
+        # An arm that was not run in this pass has n=0, and "0/0 — 0.0%" reads as a
+        # measured zero. Omit the row instead: a report that states results for arms
+        # it never replayed is the failure this whole script exists to avoid.
+        if n == 0:
+            continue
         p, lo, hi = wilson(k, n)
         add(f"| {label} | {k}/{n} | {p:.1%} | {lo:.1%} – {hi:.1%} | {meaning} |")
     add("")
@@ -770,11 +1141,13 @@ def build_report(
         "v6": ("all three, + LADDER", "Trader", "no (ladder)"),
         "v7": ("nothing, + LADDER", "Neutral", "yes (ladder)"),
         "v8": ("all three → 1 structured officer", "Risk Officer", "replaced"),
+        "v9": ("all three → 1 officer, PRODUCTION render", "Risk Officer ×3", "replaced"),
+        "v9t": ("v9, trailing prose dropped on read", "Risk Officer ×3", "replaced"),
     }
     add("## Approval rate by arm\n")
     add("| arm | removed | last voice before PM | Neutral present | APPROVE | rate |")
     add("|---|---|---|---|---|---|")
-    for vb in ("v7", "v8", "v1a", "v1b", "v3", "v5", "v4", "v6", "v2"):
+    for vb in ("v7", "v9t", "v9", "v8", "v1a", "v1b", "v3", "v5", "v4", "v6", "v2"):
         rs = [have(c, vb) for c in convenes]
         rs = [r for r in rs if r and not r.get("error")]
         if not rs:
@@ -786,12 +1159,24 @@ def build_report(
         add(f"| {vb} | {removed} | {lastv} | {neu} | {ap} | {rate:.1%} |")
     add("")
     add(
-        "Read down the 'Neutral present' column. Every arm that keeps the Neutral sits "
-        "at the baseline rate; every arm without it falls, and falls further as more of "
-        "the rest is also removed. The count of surviving debators does NOT order the "
-        "table — v3 keeps one and scores highest, v4 keeps two and scores low.\n"
+        "**v8 vs v9 (CR201).** Both make the same single officer call on the same "
+        "shipped prompt; they differ only in what reaches the CIO. v8 injects one "
+        "`render_risk_assessment` block ahead of the transcript (CR197's shape); v9 "
+        "renders the payload into the three risk AgentIds via `render_officer_turns` "
+        "and appends them where the debate was removed, which is what "
+        "`_run_risk_officer` actually does. v9 is the shipped assembly; v8 is kept "
+        "beside it so a move can be attributed to the prompt or to the rendering.\n"
     )
-    add(
+    _subtractive = [v for v in ("v2", "v3", "v4", "v5") if any(have(c, v) for c in convenes)]
+    if len(_subtractive) == 4:
+        add(
+            "Read down the 'Neutral present' column. Every arm that keeps the Neutral sits "
+            "at the baseline rate; every arm without it falls, and falls further as more of "
+            "the rest is also removed. The count of surviving debators does NOT order the "
+            "table — v3 keeps one and scores highest, v4 keeps two and scores low.\n"
+        )
+    if "v5" in _subtractive:
+        add(
         "**The recency explanation is refuted by v5.** Approval rate first appeared to "
         "track whoever spoke last, ordered by how negative that voice is (Neutral "
         "15.7-17.2%, Conservative 11.9%, Trader 7.4%) — anchoring would explain that "
@@ -799,8 +1184,39 @@ def build_report(
         "speaking last, a voice that argued 'for' in 117 of 118 convenes, and anchoring "
         "therefore predicts approvals at or above baseline. Observed: **10.3%, the "
         "second-lowest arm.** The PM is not echoing its final input.\n"
-    )
+        )
 
+    # ── the officer's own reply: how often production would even USE it ──
+    #
+    # CR201. The decision numbers below are computed over the convenes where the
+    # officer's reply PARSED, so the rate at which it does not is not a footnote to
+    # them — it is the other half of the result. Every discarded reply is a convene
+    # where production renders the ladder alone (measured floor 11.8%) instead of the
+    # design being measured.
+    officer_arms = [v for v in ("v8", "v9", "v9t") if any(have(c, v) for c in convenes)]
+    if officer_arms:
+        add("## Risk Officer replies the shipped parser accepted\n")
+        add("| arm | convenes | trailing prose after the JSON | otherwise unparseable | discarded |")
+        add("|---|---|---|---|---|")
+        for vb in officer_arms:
+            rs = [have(c, vb) for c in convenes]
+            rs = [r for r in rs if r]
+            tp = sum(1 for r in rs if r.get("error") == "stage1:risk_officer_trailing_prose")
+            up = sum(1 for r in rs if r.get("error") == "stage1:risk_officer_unparseable")
+            n = len(rs)
+            add(
+                f"| {vb} | {n} | {tp} ({tp / n:.1%}) | {up} ({up / n:.1%}) | "
+                f"{(tp + up) / n:.1%} |"
+            )
+        add("")
+        add(
+            "`trailing prose after the JSON` is a reply that IS a complete JSON object "
+            "followed by a sentence. `extract_json_object` trims surrounding prose only "
+            "when the reply does not START with '{' — one that opens with the object and "
+            "closes with a sentence is handed whole to `json.loads` and rejected as extra "
+            "data. Production parses with that function, so these are replies production "
+            "discards, and the arms discard them too.\n"
+        )
     add("## Decision rule — directional (marginal homogeneity)\n")
     add(
         "The question is not whether the verdict *changes* but whether it changes "
@@ -818,7 +1234,9 @@ def build_report(
         ("v5", "Conservative + Neutral removed"),
         ("v6", "all three removed, ladder injected"),
         ("v7", "**ladder added to the full prompt**"),
-        ("v8", "**3 officers → 1 structured Risk Officer**"),
+        ("v8", "**3 officers → 1 structured Risk Officer** (officer block)"),
+        ("v9", "**3 officers → 1 structured Risk Officer** (PRODUCTION assembly)"),
+        ("v9t", "**PRODUCTION assembly, trailing prose dropped on read**"),
     ):
         if not any(have(c, vb) for c in convenes):
             continue
@@ -847,7 +1265,9 @@ def build_report(
         if r1a.get("action") == "APPROVE" and r2.get("action") == "APPROVE":
             if r1a.get("size_pct") is not None and r2.get("size_pct") is not None:
                 deltas.append(r2["size_pct"] - r1a["size_pct"])
-    add("## Position size, where both arms approved\n")
+    if not any(have(c, "v2") for c in convenes):
+        deltas = []
+    add("## Position size, where both arms approved (v1a vs v2)\n")
     if deltas:
         deltas_sorted = sorted(deltas)
         med = deltas_sorted[len(deltas_sorted) // 2]
@@ -857,7 +1277,7 @@ def build_report(
             f"{len(nonzero)}/{len(deltas)} differ at all.\n"
         )
     else:
-        add("No convene approved under both arms — nothing to compare.\n")
+        add("v2 was not replayed in this pass — nothing to compare.\n")
 
     # ── narration divergence ──
     #
@@ -887,12 +1307,12 @@ def build_report(
         ("V1a vs V1b — same prompt (floor)", noise_div),
         ("V1a vs V2 — debate removed", abl_div),
         ("V1a vs V3 — extremes removed", ext_div),
+        ("V1a vs V9t — production officer assembly", divergences("v1a", "v9t")),
     ):
-        if vals:
-            s = sorted(vals)
-            add(f"| {label} | {len(vals)} | {sum(vals)/len(vals):.3f} | {s[len(s)//2]:.3f} |")
-        else:
-            add(f"| {label} | 0 | — | — |")
+        if not vals:
+            continue
+        srt = sorted(vals)
+        add(f"| {label} | {len(vals)} | {sum(vals)/len(vals):.3f} | {srt[len(srt)//2]:.3f} |")
     add("")
     if noise_div and abl_div:
         lift = (sum(abl_div) / len(abl_div)) - (sum(noise_div) / len(noise_div))
@@ -904,20 +1324,36 @@ def build_report(
 
     # ── per-epoch ──
     add("## Per-epoch (primary — pooling across prompt epochs is not defensible)\n")
-    add("| epoch | convenes | noise flips | ablation flips |")
-    add("|---|---|---|---|")
+    # The second column follows whichever ablation arm this pass actually ran.
+    abl_arm = next(
+        (v for v in ("v2", "v9t", "v9", "v8") if any(have(c, v) for c in convenes)), None
+    )
+    add(f"| epoch | convenes | noise flips | {abl_arm or 'ablation'} flips | v1a APPROVE | {abl_arm or '—'} APPROVE |")
+    add("|---|---|---|---|---|---|")
     for ep in sorted({c.epoch for c in convenes}):
         sub = [c for c in convenes if c.epoch == ep]
         nk = nn = ak = an = 0
+        base_ap = arm_ap = base_n = arm_n = 0
         for c in sub:
-            r1a, r1b, r2 = have(c, "v1a"), have(c, "v1b"), have(c, "v2")
-            if r1a and r1b and r1a.get("parse_ok") and r1b.get("parse_ok"):
+            r1a, r1b = have(c, "v1a"), have(c, "v1b")
+            r2 = have(c, abl_arm) if abl_arm else None
+            usable = lambda r: bool(r and not r.get("error") and r.get("parse_ok"))  # noqa: E731
+            if usable(r1a) and usable(r1b):
                 nn += 1
                 nk += r1a["action"] != r1b["action"]
-            if r1a and r2 and r1a.get("parse_ok") and r2.get("parse_ok"):
+            if usable(r1a):
+                base_n += 1
+                base_ap += r1a["action"] == "APPROVE"
+            if usable(r1a) and usable(r2):
                 an += 1
                 ak += r1a["action"] != r2["action"]
-        add(f"| {ep} | {len(sub)} | {nk}/{nn} | {ak}/{an} |")
+            if usable(r2):
+                arm_n += 1
+                arm_ap += r2["action"] == "APPROVE"
+        add(
+            f"| {ep} | {len(sub)} | {nk}/{nn} | {ak}/{an} | {base_ap}/{base_n} | "
+            f"{arm_ap}/{arm_n} |"
+        )
     add("")
 
     # ── samples, per P16: a count nobody read is not a measurement ──
@@ -926,7 +1362,10 @@ def build_report(
         ("Noise flips (same prompt, different answer)", noise_list),
         ("Ablation flips (debate removed)", abl_list),
         ("Extremes-removed flips", ext_list),
+        ("Production-officer flips (v1a vs v9t)", flips("v1a", "v9t")[2]),
     ):
+        if not lst:
+            continue
         add(f"**{label}** — {len(lst)} total")
         for s in lst[:12]:
             add(f"- {s}")
@@ -1016,6 +1455,38 @@ def main() -> int:
         f"{strip_fail} strip failures"
     )
 
+    # CR201 — the officer's prompt is now production's, so it is validated like the
+    # strips are: built for every convene before any network call, and the fidelity of
+    # the rebuild REPORTED rather than assumed. `evidence_exact` False is not a
+    # failure — it is the prompt renderer having moved on after that epoch was
+    # recorded — but a count of it belongs in front of anyone reading the result.
+    officer_fail = 0
+    exact_by_epoch: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+    rr_missing = 0
+    if any(v in _VARIANT_RISK_OFFICER for v in args.variants) or args.dry_run:
+        for c in convenes:
+            try:
+                sysp, msgs, rows, facts = shipped_officer_messages(c)
+            except StripError as exc:
+                officer_fail += 1
+                if officer_fail <= 10:
+                    print(f"[officer] !! {exc}")
+                continue
+            slot = exact_by_epoch[c.epoch]
+            slot[1] += 1
+            slot[0] += bool(facts["evidence_exact"])
+            rr_missing += not facts["has_reward_risk"]
+        for ep in sorted(exact_by_epoch):
+            ok, n = exact_by_epoch[ep]
+            print(f"[officer] {ep}: evidence byte-exact vs recorded {ok}/{n}")
+        print(
+            f"[officer] {officer_fail} assembly failures · reward:risk column absent "
+            f"in {rr_missing} ladders (no TARGET in the corpus — production has one "
+            f"whenever the Execution Desk set one)"
+        )
+        if officer_fail:
+            strip_fail += officer_fail
+
     args.out.mkdir(parents=True, exist_ok=True)
     jsonl = args.out / "ablation_calls.jsonl"
 
@@ -1028,6 +1499,28 @@ def main() -> int:
             f"({len(sample.system_prompt) - len(stripped)} removed)"
         )
         print(f"[dry-run] corpus models: {Counter(c.corpus_model for c in convenes).most_common()}")
+        from app.schemas.agents import AgentId as _Aid
+        from app.services.room_prompts import max_tokens_for as _mt
+
+        osys, omsgs, orows, ofacts = shipped_officer_messages(sample)
+        turns = render_officer_into_transcript(
+            build_variant(sample, "v9"),
+            {"options": [{"size_pct": r.size_pct, "case_for": "x", "case_against": "y",
+                          "key_number": "z"} for r in orows],
+             "recommended": orows[1].size_pct, "confidence": "medium",
+             "decisive_number": "z"},
+            orows,
+        )
+        print(
+            f"[dry-run] shipped officer prompt: {len(osys)} chars · "
+            f"max_tokens={_mt(_Aid.RISK_OFFICER)} · rungs="
+            f"{[round(r.size_pct, 1) for r in orows]} · evidence_exact="
+            f"{ofacts['evidence_exact']}"
+        )
+        print(
+            f"[dry-run] v9 CIO prompt with rendered turns: "
+            f"{len(build_variant(sample, 'v9'))} → {len(turns)} chars"
+        )
         print("[dry-run] OK — no network calls made")
         return 0 if strip_fail == 0 else 1
 
@@ -1037,6 +1530,9 @@ def main() -> int:
 
     results = load_results(jsonl)
     served: str | None = None
+    meta_path = args.out / "run_meta.json"
+    if meta_path.exists():
+        served = (_load_json(meta_path) or {}).get("served_model")
 
     if not args.report_only:
         import httpx
@@ -1052,6 +1548,33 @@ def main() -> int:
         if args.model not in (served or ""):
             print(f"[preflight] !! model '{args.model}' not in served list — refusing to guess")
             return 2
+
+        # Persist what was actually replayed, so `--report-only` can restate it. A
+        # report that has forgotten which model produced its numbers is the failure
+        # this file's fidelity rules exist to prevent, and the preflight only runs on
+        # a replay pass.
+        from app.schemas.agents import AgentId as _AgentId
+        from app.services.room_prompts import max_tokens_for as _max_tokens_for
+
+        (args.out / "run_meta.json").write_text(
+            json.dumps(
+                {
+                    "served_model": served,
+                    "model_requested": args.model,
+                    "base_url": args.base_url,
+                    "variants": list(args.variants),
+                    "concurrency": args.concurrency,
+                    "epochs": list(args.epochs),
+                    "pm_max_tokens": PM_MAX_TOKENS,
+                    "risk_officer_max_tokens": _max_tokens_for(_AgentId.RISK_OFFICER),
+                    "started_utc": __import__("datetime").datetime.now(
+                        __import__("datetime").timezone.utc
+                    ).isoformat(timespec="seconds"),
+                },
+                indent=2,
+            )
+            + "\n"
+        )
 
         asyncio.run(
             run_replays(
