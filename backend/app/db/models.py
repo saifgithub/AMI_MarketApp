@@ -2236,6 +2236,138 @@ class SimShortPositionRow(Base):
     realised_pnl: Mapped[Optional[float]] = mapped_column(Numeric(12, 2), nullable=True)
 
 
+class SimOptionLegRow(Base):
+    """One option leg in the TRAINING lane — CR172 §3, slice 1.
+
+    **A separate table, for the third time** (CR170's book, CR171's shorts,
+    now this), and for the identical reason: a negative
+    `SimHoldingRow.quantity` would break `def110_backfill`'s phantom-share
+    accumulator, `compute_lots_fifo`, and the sector cap. Quantity here is
+    SIGNED — positive long, negative short — which is safe precisely
+    because nothing outside the options surface reads this table.
+
+    **`strategy_id` is how multi-leg works.** A vertical is two rows
+    sharing an id; an iron condor is four. No nested schema, no JSON blob —
+    each leg still marks, expires and assigns independently, which is what
+    actually happens. The structure-level record (what the user said yes
+    to) is `sim_option_trades`.
+
+    **`multiplier` is a column, not the constant 100.** Splits and special
+    dividends produce adjusted contracts whose deliverable is not 100
+    shares. We never *generate* them, but a chain can serve them, and a
+    hard-coded 100 misprices the position silently. Cheap now, invisible
+    later.
+
+    `avg_premium` is per SHARE, not per contract — the same unit the chain
+    quotes in, so `avg_premium × multiplier × |quantity|` is the dollar
+    figure and no second convention exists to drift.
+
+    `collateral_posted` is CR171's model: posted and persisted at open,
+    never recomputed at read time — re-deriving it from a rounded price is
+    how a portfolio drifts by cents. 0 for longs.
+    """
+
+    __tablename__ = "sim_option_legs"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    portfolio_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("sim_portfolios.id", ondelete="CASCADE"),
+        index=True, nullable=False,
+    )
+    # OCC 21-char key (CR172 §1). NEVER routed through
+    # `require_ticker_exists` — the UNDERLYING is what passes that gate,
+    # and it is a real column, not a prefix to be parsed.
+    occ_symbol: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    underlying: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    # call | put
+    right: Mapped[str] = mapped_column(String, nullable=False)
+    strike: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+    expiry: Mapped[date] = mapped_column(Date, nullable=False)
+    # SIGNED contracts: positive long, negative short (see class docstring).
+    quantity: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+    # Per share, not per contract.
+    avg_premium: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+    multiplier: Mapped[float] = mapped_column(
+        Numeric(8, 2), default=100, nullable=False,
+    )
+    collateral_posted: Mapped[float] = mapped_column(
+        Numeric(12, 2), default=0, nullable=False,
+    )
+    # Groups the legs of one structure; FK-less by design (the group is an
+    # identity, not a join dependency — legs outlive a structure's close).
+    strategy_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    # 'bull_call_spread', 'covered_call', ... — the M17 vocabulary.
+    strategy_name: Mapped[str] = mapped_column(String, nullable=False)
+
+    opened_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    # open | closed
+    state: Mapped[str] = mapped_column(
+        String, default="open", nullable=False, index=True,
+    )
+    closed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    close_price: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    # user | expired | exercised | assigned | margin  (lifecycle = slice 2)
+    close_reason: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    realised_pnl: Mapped[Optional[float]] = mapped_column(Numeric(12, 2), nullable=True)
+
+    # The last mark, with its provenance — the NAV tick must refuse to
+    # write a `mock_walk` mark under USE_REAL_MARKET_DATA (CR172 §11), and
+    # it can only refuse what it can see.
+    last_mark: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    last_mark_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    last_mark_source: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+
+class SimOptionTradeRow(Base):
+    """One accepted option STRUCTURE in the training lane — CR172 §3.
+
+    The record of the user's single yes: strategy-level figures frozen at
+    open (net cost, collateral posted), the verdict that proposed it, and
+    the close-out roll-up when every leg is done. Per-leg truth lives in
+    `sim_option_legs`, joined by `strategy_id` — this row never duplicates
+    a leg figure, it aggregates them, so there is no second copy to drift.
+    """
+
+    __tablename__ = "sim_option_trades"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    portfolio_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("sim_portfolios.id", ondelete="CASCADE"),
+        index=True, nullable=False,
+    )
+    strategy_id: Mapped[UUID] = mapped_column(
+        Uuid(), unique=True, index=True, nullable=False,
+    )
+    underlying: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    strategy_name: Mapped[str] = mapped_column(String, nullable=False)
+    # Total dollars at open: positive = debit paid, negative = credit
+    # received (M17's `net_cost` convention, verbatim).
+    net_cost_at_open: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    collateral_posted: Mapped[float] = mapped_column(
+        Numeric(12, 2), default=0, nullable=False,
+    )
+    verdict_ref: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
+    opened_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    # open | closed
+    status: Mapped[str] = mapped_column(
+        String, default="open", nullable=False, index=True,
+    )
+    closed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    realised_pnl: Mapped[Optional[float]] = mapped_column(Numeric(12, 2), nullable=True)
+
+
 class VllmCacheSampleRow(Base):
     """One reading of the vLLM host's lifetime prefix-cache counters (CR192).
 

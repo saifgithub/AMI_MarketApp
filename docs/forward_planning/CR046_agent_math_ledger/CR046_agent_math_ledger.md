@@ -74,6 +74,11 @@ files with no registry**, which had two costs:
 | [M10](M10_option_payoff.md) | Option payoff, intrinsic value & break-even (long side, per share) | CR054 §4.5 | `trading_math/option.py` | `test_trading_math_bok.py` | done (Wave-1 lessons consume) |
 | [M11](M11_portfolio_statistics.md) | Portfolio statistics — variance/covariance/correlation/beta + wᵀΣw | CR054 §4.5 | `trading_math/portfolio_stats.py` | `test_trading_math_bok.py` | done (Wave-1 lessons consume) |
 | [M12](M12_return_metrics.md) | Return metrics — CAGR, max drawdown, Sharpe (hand-rolled, no new dep) | CR054 §4.5 / D1 backlog | `trading_math/returns.py` | `test_trading_math_bok.py` | done (Wave-1 lessons consume) |
+| M13 | Sharia screening — debt/liquidity/impermissible-income ratios + purification | CR058 | `trading_math/screening.py` | `test_cr058_sharia_screening.py` | done (row backfilled 2026-08-20 — the module claimed M13 at CR058 build time but the ledger row was never added) |
+| [M14](M14_black_scholes.md) | Black-Scholes-Merton price — continuous dividend yield, d1/d2, put-call-parity self-guard | CR172 §5 | `trading_math/black_scholes.py` (via `services/option_chain.py`) | `test_cr172_trading_math_options.py` | done (slice-1 enrichment consumes) |
+| [M15](M15_greeks.md) | BSM greeks — delta/gamma/theta/vega/rho, theta per CALENDAR day, per-contract scaling | CR172 §5 | `trading_math/greeks.py` (via `services/option_chain.py`) | `test_cr172_trading_math_options.py` | done (slice-1 enrichment consumes) |
+| [M16](M16_implied_vol.md) | Implied vol — Newton + bracket bisection, explicit non-convergence, no-arb refusals | CR172 §5 | `trading_math/implied_vol.py` (via `services/option_chain.py`) | `test_cr172_trading_math_options.py` | done (slice-1 enrichment consumes) |
+| [M17](M17_option_strategy.md) | Option strategy metrics — max loss/gain, break-evens, §6 collateral, net greeks; unbounded is a FLAG | CR172 §5/§6/§10 | `trading_math/option_strategy.py` | `test_cr172_trading_math_options.py` | done (slice-2 strategist builds on it) |
 
 **Ledger convention:** an `ID` is a *calculation concern*. Fixing or reconciling an existing calc
 updates that entry's changelog — it does not mint a new ID. A genuinely **new** calculation gets the

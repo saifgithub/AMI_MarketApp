@@ -31,15 +31,39 @@ sign-off), `screening` (opened for CR058 — Sharia debt/liquidity/income
 ratios + purification, M13), `cost_basis` (opened for CR029-MATH — FIFO
 lot matching for the per-lot cost-basis / realised-P&L display), and `twr`
 (opened for CR109 slice 1 — GIPS time-weighted return, chain-linked across
-capital events, behind the equity curve). The indicator family stays
-hand-rolled because our RSI is Cutler's, not Wilder's (Decision D1,
-library_survey.md).
+capital events, behind the equity curve), and the CR172 options pricing
+family — `black_scholes` (BSM with dividend yield + parity self-guard, M14),
+`greeks` (delta/gamma/theta/vega/rho, per calendar-day theta, M15),
+`implied_vol` (Newton + bisection, explicit non-convergence, M16), and
+`option_strategy` (per-structure max loss/gain, break-evens, collateral,
+net greeks, M17). The indicator family stays hand-rolled because our RSI is
+Cutler's, not Wilder's (Decision D1, library_survey.md).
 """
 
 from .bond import bond_price, bond_ytm, macaulay_duration, modified_duration
 from .cost_basis import FifoSellResult, LotClose, OpenLot, fifo_sell
 from .indicators import DEFAULT_RSI_PERIOD, rsi, rsi_tone, sma
 from .option import option_break_even, option_intrinsic_value, option_payoff
+
+# CR172 options pricing family (M14–M17). `greeks.CALENDAR_DAYS_PER_YEAR` is
+# deliberately NOT re-exported — `portfolio_risk` already owns that name here.
+from .black_scholes import (
+    bs_d1_d2,
+    bs_price,
+    norm_cdf,
+    norm_pdf,
+    put_call_parity_gap,
+)
+from .greeks import Greeks, bs_greeks, per_contract
+from .implied_vol import implied_vol
+from .option_strategy import (
+    StrategyLeg,
+    StrategyMetrics,
+    combine_greeks,
+    net_cost,
+    payoff_at_expiry,
+    strategy_metrics,
+)
 from .portfolio import drawdown_pct, position_pct, shares_for_size, total_value
 from .portfolio_stats import (
     beta,
@@ -180,6 +204,22 @@ __all__ = [
     "sharia_impermissible_income_ratio",
     "sharia_liquidity_ratio",
     "sharia_screen",
+    # options pricing family (M14–M17, CR172)
+    "Greeks",
+    "StrategyLeg",
+    "StrategyMetrics",
+    "bs_d1_d2",
+    "bs_greeks",
+    "bs_price",
+    "combine_greeks",
+    "implied_vol",
+    "net_cost",
+    "norm_cdf",
+    "norm_pdf",
+    "payoff_at_expiry",
+    "per_contract",
+    "put_call_parity_gap",
+    "strategy_metrics",
     # FIFO cost-basis lot matching (CR029-MATH)
     "FifoSellResult",
     "LotClose",
