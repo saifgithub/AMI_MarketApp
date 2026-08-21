@@ -53,7 +53,7 @@ def load_model(cfg):
             lora_alpha=cfg["lora_alpha"],
             lora_dropout=cfg["lora_dropout"],
             target_modules=cfg["target_modules"],
-            use_gradient_checkpointing="unsloth",
+            use_gradient_checkpointing=False,  # NemotronH does not implement it
             random_state=cfg["seed"],
         )
         return model, tok, "unsloth"
@@ -67,7 +67,15 @@ def load_model(cfg):
     model = AutoModelForCausalLM.from_pretrained(
         model_path, dtype=torch.bfloat16, trust_remote_code=trc,
     )
-    model.gradient_checkpointing_enable()
+    # NemotronHForCausalLM raises "does not support gradient checkpointing" (measured
+    # 2026-08-21). Weights are frozen under LoRA and only ~99 small adapters train, so
+    # activation memory is affordable without it on a 121GB box — but try, and carry on
+    # loudly if the model refuses.
+    try:
+        model.gradient_checkpointing_enable()
+        log("gradient checkpointing: ON")
+    except ValueError as e:
+        log(f"gradient checkpointing: OFF ({e})")
     peft_cfg = LoraConfig(
         r=cfg["lora_rank"], lora_alpha=cfg["lora_alpha"], lora_dropout=cfg["lora_dropout"],
         target_modules=cfg["target_modules"], task_type="CAUSAL_LM",
