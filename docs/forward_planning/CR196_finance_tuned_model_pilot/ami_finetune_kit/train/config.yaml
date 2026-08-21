@@ -38,7 +38,7 @@ learning_rate: 1.0e-4
 epochs: 2
 lr_scheduler: cosine
 warmup_ratio: 0.03
-cutoff_len: 8192
+cutoff_len: 4096   # data median ~1.5k tok (manifest); 8192 OOM-killed with naive Mamba
 
 logging_steps: 10
 save_steps: 200        # ~every 30 min at expected step-times; adjust after smoke
