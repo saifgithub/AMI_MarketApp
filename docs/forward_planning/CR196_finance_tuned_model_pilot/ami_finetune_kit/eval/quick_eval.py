@@ -43,9 +43,9 @@ def main():
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from peft import PeftModel
 
-    tok = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
-    base = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=torch.bfloat16,
-                                                trust_remote_code=True)
+    tok = AutoTokenizer.from_pretrained(args.model, trust_remote_code=False)
+    base = AutoModelForCausalLM.from_pretrained(args.model, dtype=torch.bfloat16,
+                                                trust_remote_code=False)
     base.eval()
     base_loss, n = val_loss(base, tok, args.val)
 

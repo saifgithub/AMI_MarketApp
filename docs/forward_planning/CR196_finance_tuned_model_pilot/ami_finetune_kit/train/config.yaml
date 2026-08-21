@@ -1,6 +1,9 @@
 # CR196 LoRA SFT config — mirrors Fastino's published recipe where known
 # (rank 32, lr 1e-4, 2 epochs, packing disabled), our choices elsewhere.
 model_path: /models/fastino-finance-bf16
+# OFF: the repo's custom modeling code needs mamba-ssm (no aarch64 wheel); transformers>=5
+# implements nemotron_h natively. See train_lora.load_model's docstring.
+trust_remote_code: false
 train_jsonl: /kit/data/train.jsonl
 val_jsonl: /kit/data/val.jsonl
 

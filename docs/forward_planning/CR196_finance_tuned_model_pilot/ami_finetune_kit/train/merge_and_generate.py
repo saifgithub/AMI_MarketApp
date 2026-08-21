@@ -27,9 +27,9 @@ def main():
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from peft import PeftModel
 
-    tok = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
+    tok = AutoTokenizer.from_pretrained(args.model, trust_remote_code=False)
     model = AutoModelForCausalLM.from_pretrained(
-        args.model, torch_dtype=torch.bfloat16, trust_remote_code=True)
+        args.model, dtype=torch.bfloat16, trust_remote_code=False)
     model = PeftModel.from_pretrained(model, args.adapter)
     model = model.merge_and_unload()
     model.eval()

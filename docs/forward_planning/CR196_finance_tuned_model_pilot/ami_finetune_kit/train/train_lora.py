@@ -26,8 +26,18 @@ def log(msg):
 
 
 def load_model(cfg):
-    """Try Unsloth first, fall back to plain transformers+PEFT. Returns (model, tok, harness)."""
+    """Try Unsloth first, fall back to plain transformers+PEFT. Returns (model, tok, harness).
+
+    trust_remote_code is OFF by default (cfg["trust_remote_code"]): the Fastino repo ships a
+    custom modeling_nemotron_h.py that hard-requires the `mamba-ssm` package, which has no
+    aarch64 wheel and would need a source build. transformers >= 5 implements nemotron_h
+    natively, so the stock implementation loads the same weights with no extra dependency.
+    Measured on alpha-spark 2026-08-21: remote code -> ImportError on BOTH harness paths;
+    native -> loads. Set trust_remote_code: true in config.yaml only if a future checkpoint
+    genuinely needs the repo's own code, and install mamba-ssm first if so.
+    """
     model_path, maxlen = cfg["model_path"], cfg["cutoff_len"]
+    trc = bool(cfg.get("trust_remote_code", False))
     try:
         from unsloth import FastLanguageModel
         model, tok = FastLanguageModel.from_pretrained(
@@ -35,7 +45,7 @@ def load_model(cfg):
             max_seq_length=maxlen,
             dtype=None,          # auto → bf16 on Blackwell
             load_in_4bit=False,  # BF16 LoRA per CR196 (quantize-first rejected)
-            trust_remote_code=True,
+            trust_remote_code=trc,
         )
         model = FastLanguageModel.get_peft_model(
             model,
@@ -53,9 +63,9 @@ def load_model(cfg):
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from peft import LoraConfig, get_peft_model
-    tok = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    tok = AutoTokenizer.from_pretrained(model_path, trust_remote_code=trc)
     model = AutoModelForCausalLM.from_pretrained(
-        model_path, torch_dtype=torch.bfloat16, trust_remote_code=True,
+        model_path, dtype=torch.bfloat16, trust_remote_code=trc,
     )
     model.gradient_checkpointing_enable()
     peft_cfg = LoraConfig(
