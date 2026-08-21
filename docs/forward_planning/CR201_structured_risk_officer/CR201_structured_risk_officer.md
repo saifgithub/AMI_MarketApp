@@ -330,3 +330,46 @@ the same force to a base-model swap. Two consequences, both sequencing only:
 
 Neither point blocks CR201: it is ahead of CR196, whose run-1 model does not exist yet and
 must clear its own eval and adoption gate first.
+
+---
+
+## §10 — Enabled on Alpha (2026-08-21, AT:R73)
+
+**Saiful's ruling: enable and promote.** The rollout gate this CR set for itself —
+*fix the read, re-measure with the discard at ~1%, then decide* — is satisfied, and
+the deciding numbers are in `results_round2/FINDINGS.md`.
+
+| | round 1 (2026-08-21 am) | round 2 (same day, DEF352 fixed) |
+|---|---|---|
+| officer replies production discards | **42.6% / 44.1%** | **0.7% / 0.7%** |
+| shipped assembly (v9) approval | 12.0% vs 18.5% baseline | **15.8% vs 16.2%** |
+| flips vs baseline | +8 one-directional, p=0.077 | **9/9, net +0, p=1.000** |
+
+The only change between the two runs is `extract_json_object`. Round 1's 6.5pp gap
+was the parser eating nearly half the officer's payloads, which left those convenes
+running on the deterministic ladder alone — and CR197 measured the ladder-only floor
+at 11.8%, almost exactly where round 1 landed. Fix the read and the gap goes with it.
+
+**The rendering question round 1 opened is closed without a third arm.** Head to head
+on 134 shared convenes, v8→v9 is 4 APPROVE→PASS against 9 PASS→APPROVE — the opposite
+lean to round 1, at a 2.5pp difference the script's own bound (~8–10pp at n≈136)
+cannot resolve. Two runs disagreeing in direction is what "not resolvable" looks like.
+The shipped rendering does not need to beat v8; it needs to match the baseline, and it
+does exactly.
+
+**How it was enabled.** `ROOM_RISK_OFFICER_ENABLED=true` in `infra/alpha.env`
+(gitignored; the canonical env ships Mac → melehost by `scp` during promotion).
+`docker-compose.yml:391` already forwarded the key, so no compose change was needed
+and `test_config_compose_parity` had nothing to catch. Rollback is the flag; no
+migration was involved either way.
+
+**§8's co-enable rule held:** `PM_OPTION_LADDER_ENABLED` is unset on melehost and
+absent from `infra/alpha.env`, so it is at its `False` default and this flag moved
+alone. §9.3's model-swap rule is unaffected — CR196 has not reached its adoption gate.
+
+**What to watch, and it is the point.** The live rate of
+`fallback_reason="the reply could not be parsed"` on `_run_risk_officer`. That number
+was 43% in round 1 in a place nobody was looking, which is the whole reason this CR
+needed two measurement rounds. It should now sit under 1%. Still open and unchanged:
+`_AGENT_MAX_TOKENS[RISK_OFFICER] = 1800` wants a clean post-enable re-measure by
+CR179's method, and the CR035 150-ticker benchmark is the wider confirmation.
