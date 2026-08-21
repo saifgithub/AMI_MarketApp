@@ -7174,6 +7174,247 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The consent form could not be opened. Try again later.'**
   String get settingsAdsConsentFailed;
+
+  /// CR172 §10. Mono label at the top of the option proposal ticket. The Room did the structuring — this is not a chain the user browsed — and the heading says so, because a card that looks self-serve invites the user to look for controls that deliberately do not exist. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI STRUCTURED THIS TRADE'**
+  String get optionTicketHeading;
+
+  /// CR172 §10 step 4. The one-line frame under the heading. States the split of authority the whole feature rests on: AMI calculates, the user consents. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI computed every number below. Your decision is yes or no.'**
+  String get optionTicketSubheading;
+
+  /// CR172 §3. Mono section label above the option legs. A vertical is two rows, an iron condor four — the plural is always correct. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'LEGS'**
+  String get optionTicketLegsLabel;
+
+  /// CR172. The action word on a LONG option leg (positive signed quantity). Uppercase, sits at the head of the leg line. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'BUY'**
+  String get optionTicketLegBuyWord;
+
+  /// CR172. The action word on a SHORT option leg (negative signed quantity) — a sell-to-open. Uppercase. Must be visibly different from the BUY word: it is the half of the structure that carries assignment risk. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'SELL'**
+  String get optionTicketLegSellWord;
+
+  /// CR172 §3. One option leg. {action} is the BUY/SELL word, {contracts} the contract count, {right} CALL or PUT, {strike} the strike with currency, {expiry} the ISO expiry date rendered verbatim. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{action} {contracts} × {right} {strike} · exp {expiry}'**
+  String optionTicketLegLine(String action, String contracts, String right,
+      String strike, String expiry);
+
+  /// CR172 §3. Second line of an option leg. The backend quotes premium PER SHARE, not per contract, and saying which one avoids a 100× misreading. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'premium {premium} per share'**
+  String optionTicketLegPremium(String premium);
+
+  /// CR172 §10 step 4. Mono row label. The single most important figure on the card. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'MAX LOSS'**
+  String get optionTicketMaxLoss;
+
+  /// CR172 §10 step 4. Mono row label. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'MAX GAIN'**
+  String get optionTicketMaxGain;
+
+  /// CR172 §10 step 4. Mono row label used when the structure COSTS cash to open (net_cost > 0). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NET DEBIT'**
+  String get optionTicketNetDebit;
+
+  /// CR172 §10 step 4. Mono row label used when the structure PAYS cash at open (net_cost < 0). Distinct from NET DEBIT because a credit received and a debit paid are opposite cash flows and one label for both would misstate half of them. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NET CREDIT'**
+  String get optionTicketNetCredit;
+
+  /// CR172 §10 step 4. Mono row label. A structure can have more than one break-even; they are listed together on this row. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'BREAK-EVEN'**
+  String get optionTicketBreakEven;
+
+  /// CR172 §6. Mono row label — cash or shares locked while the structure is open, not cash spent. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'COLLATERAL'**
+  String get optionTicketCollateral;
+
+  /// CR172 §7. Mono row label. Server-computed; the client never counts days itself. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'DAYS TO EXPIRY'**
+  String get optionTicketDaysToExpiry;
+
+  /// CR172 §6. Rendered in place of a max-loss or max-gain FIGURE when the server flagged the tail as unbounded. Never a number and never a dash: there is no ceiling, and a blank would read as zero. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'UNBOUNDED'**
+  String get optionTicketUnbounded;
+
+  /// CR172 §6. Rendered in place of a max-loss figure on a covered call. The loss IS bounded — by the stock, which the legs alone cannot price — so this is neither 'unbounded' nor 'not computed'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Bounded by shares you already hold'**
+  String get optionTicketCoveredByShares;
+
+  /// CR172 / CR040. Rendered wherever the server sent no figure. Says the number is ABSENT rather than showing a zero or an em-dash that reads as one — a missing max loss presented as a neutral value is exactly the DEF059 shape. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'not computed'**
+  String get optionTicketNotComputed;
+
+  /// CR172 §5. Mono section label above the per-share net greeks of the whole structure. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NET GREEKS'**
+  String get optionTicketGreeksLabel;
+
+  /// CR172 §5 / CR040. Shown when the greeks block is absent and the server gave no reason. Says plainly that no substitute figure was invented. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI did not compute the greeks for this structure. Nothing is estimated in their place.'**
+  String get optionTicketGreeksNotComputed;
+
+  /// CR172 §5. Shown when the server named why the greeks are missing (the greeks_reason field, e.g. no risk-free rate). {reason} is the server's own sentence, rendered verbatim. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Greeks not computed — {reason}'**
+  String optionTicketGreeksNotComputedReason(String reason);
+
+  /// CR172 §5. Mono label for net delta, per share. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'DELTA'**
+  String get optionTicketDeltaLabel;
+
+  /// CR172 §5. Mono label for net gamma, per share. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'GAMMA'**
+  String get optionTicketGammaLabel;
+
+  /// CR172 §5. Mono label for net theta. The unit is in the label because theta per CALENDAR day and per TRADING day differ by about 30%, and a bare 'THETA' would not say which arrived. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'THETA / DAY'**
+  String get optionTicketThetaLabel;
+
+  /// CR172 §5. Mono label for net vega, per one volatility POINT. Unit in the label for the same reason as theta. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'VEGA / PT'**
+  String get optionTicketVegaLabel;
+
+  /// CR172 §5. Mono label for net rho, per one rate POINT. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RHO / PT'**
+  String get optionTicketRhoLabel;
+
+  /// CR172 §10 step 2. Mono label above the PM's prose explaining the pick. The PM narrates the reasoning; it never states a strike, premium or greek AMI did not compute. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'WHY THIS STRUCTURE'**
+  String get optionTicketNarrationLabel;
+
+  /// CR172 §10 step 4. The consent button. One of exactly two, and the word 'YES' is deliberate: the user's whole input to this feature is yes or no. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'YES — OPEN IT'**
+  String get optionTicketAccept;
+
+  /// CR172 §10 step 4. The decline button. Declining is a complete, unpenalised answer, so it is a peer of the accept button and not a quiet dismiss link. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NO'**
+  String get optionTicketDecline;
+
+  /// CR172 §8 / CR040. Mono label heading the refusal panel — an uncovered short call (D3) or a mandate block. Refusals render loudly and there is no accept button beneath them; an error state is never an empty state. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI WILL NOT OPEN THIS'**
+  String get optionTicketRefusedHeading;
+
+  /// CR172 / CR040. The floor answered 'no' but the explanation list arrived empty. Renders instead of a blank refusal panel: a refusal with nothing in it teaches the user that refusals are noise. Names what did NOT happen (nothing opened) so the state is unambiguous. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI refused this structure and the reason did not reach your device. Nothing was opened. If this repeats, report it.'**
+  String get optionTicketRefusedNoReason;
+
+  /// CR172 §8. Names which mandate rule refused — the raw server slug, uppercased, same treatment as the journal compliance-block card. {rule} is not translated: the enum grows server-side and a client-side mapping would mislabel a value this build has never seen. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Refused by: {rule}'**
+  String optionTicketBlockedByLabel(String rule);
+
+  /// CR172 §8 / DEF169. Mono label over the checks that could not RUN — distinct from both a violation (which refuses) and a clean pass. 'Checked and clear' and 'could not check' must never look the same. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'COULD NOT BE CHECKED'**
+  String get optionTicketNotEvaluatedHeading;
+
+  /// CR172 §10. Shown when the proposal arrived with no metrics block at all. The accept button is withheld in this state regardless of what the compliance answer said — consenting to a structure with no max loss is consenting to an unknown. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI could not price this structure, so there is nothing here to say yes to.'**
+  String get optionTicketUnpriceable;
+
+  /// CR172 §8 / CR171 §6. Mono label over the server's advisories on the proposal card. An advisory INFORMS and does not block, so this must not read like the refusal heading. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'BEFORE YOU DECIDE'**
+  String get optionTicketAdvisoryHeading;
+
+  /// CR172 §8. Title of the dialog shown BEFORE a sell-to-open is confirmed. Chrome only — the BODY is the server's advisory text rendered verbatim (DEF158: no client-authored paraphrase of a Sharia ruling). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Selling an option to open'**
+  String get optionTicketDisclosureTitle;
+
+  /// CR172 §8. The confirm button in the sell-to-open disclosure dialog. Inform, never block: this path stays open. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'I UNDERSTAND — CONTINUE'**
+  String get optionTicketDisclosureAcknowledge;
+
+  /// CR172 §8. The cancel button in the sell-to-open disclosure dialog. Returns to the proposal with nothing opened. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'GO BACK'**
+  String get optionTicketDisclosureCancel;
+
+  /// CR172 §10 step 4. Mono row label used ONLY when the server sent no net_cost, so neither NET DEBIT nor NET CREDIT can be claimed. A sign-neutral label rather than guessing the direction of a cash flow that did not arrive. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NET COST'**
+  String get optionTicketNetCost;
+
+  /// CR172 §10 step 4. Rendered on the break-even row when the server computed the structure and it HAS no break-even price. Distinct from 'not computed': one is an answer, the other is a gap. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'none'**
+  String get optionTicketBreakEvenNone;
+
+  /// CR172 §6. Sub-line under COLLATERAL on a covered structure: the collateral is stock, not cash, and the shares are unavailable to sell while the short call is open. {shares} is the server-computed share count. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{shares} shares locked'**
+  String optionTicketSharesLocked(String shares);
 }
 
 class _AppLocalizationsDelegate

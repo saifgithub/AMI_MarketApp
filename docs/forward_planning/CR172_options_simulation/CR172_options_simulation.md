@@ -704,3 +704,104 @@ pattern. `SimHoldingRow.quantity` is never negative on any path.
   the delta-adjusted portfolio-health treatment — is untouched. The leg's NAV
   contribution is stated in `option_lifecycle`'s module docstring so the
   slice that wires it has one definition to read, not two.
+
+## Build log — the mobile ticket (2026-08-21, AT:R73)
+
+§12's primary surface, built against the backend halves that exist at `ac34170e`
+rather than against this document's prose.
+
+### What it ships
+
+| Surface | File |
+|---|---|
+| The wire model — legs, metrics, net greeks, compliance | `mobile/lib/models/option_proposal.dart` (new) |
+| The ticket — one structure, two buttons, three refusal-shaped states | `mobile/lib/widgets/sim/option_proposal_ticket.dart` (new) |
+| The sell-to-open disclosure, server text verbatim | `mobile/lib/widgets/sim/option_disclosure_dialog.dart` (new) |
+| 40 ARB keys in EN + AR + MS | `mobile/lib/l10n/app_{en,ar,ms}.arb`, `retranslate:[ar,ms]` |
+
+**No chain browser.** "Not in scope" is honoured as an absence, not as an
+unbuilt to-do: there is no strike picker, no expiry picker and no chain view.
+The user's entire input is yes or no.
+
+### The wire contract, and why it is stated here
+
+There is no options route at `HEAD` — slice 3 owns it. So the client model
+mirrors the four backend structures that DO exist, key for key:
+`StrategyLeg`, `StrategyMetrics`, `Greeks`, and `ComplianceResult` as
+`check_option_open` returns it. The model's library docstring names all four,
+so the serialiser slice 3 writes has one definition to match rather than a
+second to invent (DEF098). A key that drifts lands in a loud *not computed*,
+never in a fabricated number.
+
+### Decisions taken while building
+
+- **Nothing on the card is computed client-side.** Not a premium × multiplier,
+  not days-to-expiry from an expiry date, not a break-even from strikes, not a
+  payoff curve. The file formats numbers and never produces one. This is the
+  CR129-MOBILE fence on a surface where the figures decide whether someone
+  accepts an obligation.
+- **`null` is rendered, and the three kinds of `null` are kept apart.** A max
+  loss that is absent reads *not computed*; one the server flagged unbounded
+  reads **UNBOUNDED**; one bounded by shares the user already holds says so.
+  Collapsing them is DEF059's shape — a missing figure rendered as a
+  reassuring one. Mutation-proved three ways (M5, M7, M8 below).
+- **The disclosure gate is keyed on the server's `advisories`, never on a
+  client-side sign test over the leg quantities.** Whether a sell-to-open
+  warrants the halal notice depends on the user's mandate, which the widget
+  does not hold. Re-deriving the trigger would show the notice on mandates
+  that warrant none and — the failure that matters — none on a mandate that
+  does, the day the rule moves.
+- **The disclosure structurally precedes the confirm.** `onAccept` is reached
+  from exactly one place: the branch after the dialog resolved `true`. The
+  equity ticket shows its advisory *after* the fill because on that path the
+  server only decides at submit; options are costed and checked before the
+  user is asked, so the notice comes first.
+- **A refusal has no YES button at all, not a disabled one.** A greyed-out
+  accept invites a hunt for the setting that re-enables it; there isn't one.
+- **A refusal with an empty `violations` list still says something** — an
+  error state is never an empty state (CR040). A blank red panel teaches the
+  user that refusals are noise.
+- **`canAccept` needs both halves**: the floor passed AND the structure has
+  metrics. A proposal the server could not cost has no max loss to consent to.
+- **Compliance fails closed on arrival.** A missing `compliance` block, and a
+  block that arrives without `passed`, both resolve to *refused*. The second
+  case is what a serialiser that omits falsy fields produces, and it survived
+  the first mutation pass — the test was added because of it.
+- **No payoff diagram yet.** §12 wants one; drawing it means evaluating the
+  payoff at a few hundred prices, which is client-side arithmetic on exactly
+  the figures this fence keeps server-side. It ships when the server serves
+  the curve.
+- **Strategy names render as the humanised server slug**, not through a
+  localized lookup table: a structure a newer backend ships must name itself
+  rather than fall into whichever bucket this build happened to know — the
+  `RoomVerdict.action` rule.
+
+### Mutation results
+
+Eight guards, each broken in turn against the two new test files:
+
+| # | Mutation | Killed by |
+|---|---|---|
+| M1 | disclosure gate removed | 4 tests in *the sell-to-open disclosure precedes the confirm* |
+| M2 | `canAccept` ignores absent metrics | *no metrics block ⇒ no accept* + *an unpriceable structure offers nothing to accept* |
+| M3 | empty-`violations` fallback removed | *a refusal whose reasons did not arrive is never blank* |
+| M4 | `passed` defaults to `true` | *a compliance block carrying no verdict also fails closed* (test added — M4 survived the first pass) |
+| M5 | unbounded loss collapses to *not computed* | *an unbounded loss says UNBOUNDED, never a number* |
+| M6 | disclosure keyed on a client-side sign test | 3 tests, incl. *no advisory ⇒ no dialog stands between YES and the caller* |
+| M7 | an absent figure becomes a zero | *a figure the server did not send reads "not computed"* |
+| M8 | covered-by-shares collapses to *not computed* | *a covered call says the shares bound it* |
+
+### Still open after this slice
+
+- **The ticket has no caller.** Slice 3 owns the route that serves a proposal
+  and the Room verdict card that opens the ticket on it (§12's
+  `room_screen.dart` edit). The surface ships first so that wiring is built
+  against a renderer that already exists — the same ordering slice 2 used for
+  the floor.
+- **§9's mandate controls** (`derivatives_allowed` and the limits) are not
+  built; the DEF191 four-leg invariant makes them their own slice.
+- **The option holding card** on the Portfolio screen (§12's `_HoldingCard`
+  note) is untouched — there are no option positions to render until the open
+  path exists.
+- **AR/MS are English seeds**, marked as such by `translate_arb.py
+  --seed-missing` and flagged `retranslate:[ar,ms]` per key.

@@ -4376,4 +4376,140 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settingsAdsConsentFailed =>
       'The consent form could not be opened. Try again later.';
+
+  @override
+  String get optionTicketHeading => 'AMI STRUCTURED THIS TRADE';
+
+  @override
+  String get optionTicketSubheading =>
+      'AMI computed every number below. Your decision is yes or no.';
+
+  @override
+  String get optionTicketLegsLabel => 'LEGS';
+
+  @override
+  String get optionTicketLegBuyWord => 'BUY';
+
+  @override
+  String get optionTicketLegSellWord => 'SELL';
+
+  @override
+  String optionTicketLegLine(String action, String contracts, String right,
+      String strike, String expiry) {
+    return '$action $contracts × $right $strike · exp $expiry';
+  }
+
+  @override
+  String optionTicketLegPremium(String premium) {
+    return 'premium $premium per share';
+  }
+
+  @override
+  String get optionTicketMaxLoss => 'MAX LOSS';
+
+  @override
+  String get optionTicketMaxGain => 'MAX GAIN';
+
+  @override
+  String get optionTicketNetDebit => 'NET DEBIT';
+
+  @override
+  String get optionTicketNetCredit => 'NET CREDIT';
+
+  @override
+  String get optionTicketBreakEven => 'BREAK-EVEN';
+
+  @override
+  String get optionTicketCollateral => 'COLLATERAL';
+
+  @override
+  String get optionTicketDaysToExpiry => 'DAYS TO EXPIRY';
+
+  @override
+  String get optionTicketUnbounded => 'UNBOUNDED';
+
+  @override
+  String get optionTicketCoveredByShares =>
+      'Bounded by shares you already hold';
+
+  @override
+  String get optionTicketNotComputed => 'not computed';
+
+  @override
+  String get optionTicketGreeksLabel => 'NET GREEKS';
+
+  @override
+  String get optionTicketGreeksNotComputed =>
+      'AMI did not compute the greeks for this structure. Nothing is estimated in their place.';
+
+  @override
+  String optionTicketGreeksNotComputedReason(String reason) {
+    return 'Greeks not computed — $reason';
+  }
+
+  @override
+  String get optionTicketDeltaLabel => 'DELTA';
+
+  @override
+  String get optionTicketGammaLabel => 'GAMMA';
+
+  @override
+  String get optionTicketThetaLabel => 'THETA / DAY';
+
+  @override
+  String get optionTicketVegaLabel => 'VEGA / PT';
+
+  @override
+  String get optionTicketRhoLabel => 'RHO / PT';
+
+  @override
+  String get optionTicketNarrationLabel => 'WHY THIS STRUCTURE';
+
+  @override
+  String get optionTicketAccept => 'YES — OPEN IT';
+
+  @override
+  String get optionTicketDecline => 'NO';
+
+  @override
+  String get optionTicketRefusedHeading => 'AMI WILL NOT OPEN THIS';
+
+  @override
+  String get optionTicketRefusedNoReason =>
+      'AMI refused this structure and the reason did not reach your device. Nothing was opened. If this repeats, report it.';
+
+  @override
+  String optionTicketBlockedByLabel(String rule) {
+    return 'Refused by: $rule';
+  }
+
+  @override
+  String get optionTicketNotEvaluatedHeading => 'COULD NOT BE CHECKED';
+
+  @override
+  String get optionTicketUnpriceable =>
+      'AMI could not price this structure, so there is nothing here to say yes to.';
+
+  @override
+  String get optionTicketAdvisoryHeading => 'BEFORE YOU DECIDE';
+
+  @override
+  String get optionTicketDisclosureTitle => 'Selling an option to open';
+
+  @override
+  String get optionTicketDisclosureAcknowledge => 'I UNDERSTAND — CONTINUE';
+
+  @override
+  String get optionTicketDisclosureCancel => 'GO BACK';
+
+  @override
+  String get optionTicketNetCost => 'NET COST';
+
+  @override
+  String get optionTicketBreakEvenNone => 'none';
+
+  @override
+  String optionTicketSharesLocked(String shares) {
+    return '$shares shares locked';
+  }
 }

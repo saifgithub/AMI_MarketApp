@@ -5591,5 +5591,202 @@
   "settingsAdsConsentFailed": "The consent form could not be opened. Try again later.",
   "@settingsAdsConsentFailed": {
     "description": "CR122-COMPLIANCE — snackbar when the UMP privacy-options form fails to open. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketHeading": "AMI STRUCTURED THIS TRADE",
+  "@optionTicketHeading": {
+    "description": "CR172 §10. Mono label at the top of the option proposal ticket. The Room did the structuring — this is not a chain the user browsed — and the heading says so, because a card that looks self-serve invites the user to look for controls that deliberately do not exist. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketSubheading": "AMI computed every number below. Your decision is yes or no.",
+  "@optionTicketSubheading": {
+    "description": "CR172 §10 step 4. The one-line frame under the heading. States the split of authority the whole feature rests on: AMI calculates, the user consents. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketLegsLabel": "LEGS",
+  "@optionTicketLegsLabel": {
+    "description": "CR172 §3. Mono section label above the option legs. A vertical is two rows, an iron condor four — the plural is always correct. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketLegBuyWord": "BUY",
+  "@optionTicketLegBuyWord": {
+    "description": "CR172. The action word on a LONG option leg (positive signed quantity). Uppercase, sits at the head of the leg line. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketLegSellWord": "SELL",
+  "@optionTicketLegSellWord": {
+    "description": "CR172. The action word on a SHORT option leg (negative signed quantity) — a sell-to-open. Uppercase. Must be visibly different from the BUY word: it is the half of the structure that carries assignment risk. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketLegLine": "{action} {contracts} × {right} {strike} · exp {expiry}",
+  "@optionTicketLegLine": {
+    "description": "CR172 §3. One option leg. {action} is the BUY/SELL word, {contracts} the contract count, {right} CALL or PUT, {strike} the strike with currency, {expiry} the ISO expiry date rendered verbatim. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "contracts": {
+        "type": "String"
+      },
+      "right": {
+        "type": "String"
+      },
+      "strike": {
+        "type": "String"
+      },
+      "expiry": {
+        "type": "String"
+      }
+    }
+  },
+  "optionTicketLegPremium": "premium {premium} per share",
+  "@optionTicketLegPremium": {
+    "description": "CR172 §3. Second line of an option leg. The backend quotes premium PER SHARE, not per contract, and saying which one avoids a 100× misreading. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "premium": {
+        "type": "String"
+      }
+    }
+  },
+  "optionTicketMaxLoss": "MAX LOSS",
+  "@optionTicketMaxLoss": {
+    "description": "CR172 §10 step 4. Mono row label. The single most important figure on the card. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketMaxGain": "MAX GAIN",
+  "@optionTicketMaxGain": {
+    "description": "CR172 §10 step 4. Mono row label. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketNetDebit": "NET DEBIT",
+  "@optionTicketNetDebit": {
+    "description": "CR172 §10 step 4. Mono row label used when the structure COSTS cash to open (net_cost > 0). NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketNetCredit": "NET CREDIT",
+  "@optionTicketNetCredit": {
+    "description": "CR172 §10 step 4. Mono row label used when the structure PAYS cash at open (net_cost < 0). Distinct from NET DEBIT because a credit received and a debit paid are opposite cash flows and one label for both would misstate half of them. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketBreakEven": "BREAK-EVEN",
+  "@optionTicketBreakEven": {
+    "description": "CR172 §10 step 4. Mono row label. A structure can have more than one break-even; they are listed together on this row. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketCollateral": "COLLATERAL",
+  "@optionTicketCollateral": {
+    "description": "CR172 §6. Mono row label — cash or shares locked while the structure is open, not cash spent. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketDaysToExpiry": "DAYS TO EXPIRY",
+  "@optionTicketDaysToExpiry": {
+    "description": "CR172 §7. Mono row label. Server-computed; the client never counts days itself. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketUnbounded": "UNBOUNDED",
+  "@optionTicketUnbounded": {
+    "description": "CR172 §6. Rendered in place of a max-loss or max-gain FIGURE when the server flagged the tail as unbounded. Never a number and never a dash: there is no ceiling, and a blank would read as zero. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketCoveredByShares": "Bounded by shares you already hold",
+  "@optionTicketCoveredByShares": {
+    "description": "CR172 §6. Rendered in place of a max-loss figure on a covered call. The loss IS bounded — by the stock, which the legs alone cannot price — so this is neither 'unbounded' nor 'not computed'. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketNotComputed": "not computed",
+  "@optionTicketNotComputed": {
+    "description": "CR172 / CR040. Rendered wherever the server sent no figure. Says the number is ABSENT rather than showing a zero or an em-dash that reads as one — a missing max loss presented as a neutral value is exactly the DEF059 shape. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketGreeksLabel": "NET GREEKS",
+  "@optionTicketGreeksLabel": {
+    "description": "CR172 §5. Mono section label above the per-share net greeks of the whole structure. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketGreeksNotComputed": "AMI did not compute the greeks for this structure. Nothing is estimated in their place.",
+  "@optionTicketGreeksNotComputed": {
+    "description": "CR172 §5 / CR040. Shown when the greeks block is absent and the server gave no reason. Says plainly that no substitute figure was invented. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketGreeksNotComputedReason": "Greeks not computed — {reason}",
+  "@optionTicketGreeksNotComputedReason": {
+    "description": "CR172 §5. Shown when the server named why the greeks are missing (the greeks_reason field, e.g. no risk-free rate). {reason} is the server's own sentence, rendered verbatim. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "optionTicketDeltaLabel": "DELTA",
+  "@optionTicketDeltaLabel": {
+    "description": "CR172 §5. Mono label for net delta, per share. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketGammaLabel": "GAMMA",
+  "@optionTicketGammaLabel": {
+    "description": "CR172 §5. Mono label for net gamma, per share. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketThetaLabel": "THETA / DAY",
+  "@optionTicketThetaLabel": {
+    "description": "CR172 §5. Mono label for net theta. The unit is in the label because theta per CALENDAR day and per TRADING day differ by about 30%, and a bare 'THETA' would not say which arrived. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketVegaLabel": "VEGA / PT",
+  "@optionTicketVegaLabel": {
+    "description": "CR172 §5. Mono label for net vega, per one volatility POINT. Unit in the label for the same reason as theta. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketRhoLabel": "RHO / PT",
+  "@optionTicketRhoLabel": {
+    "description": "CR172 §5. Mono label for net rho, per one rate POINT. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketNarrationLabel": "WHY THIS STRUCTURE",
+  "@optionTicketNarrationLabel": {
+    "description": "CR172 §10 step 2. Mono label above the PM's prose explaining the pick. The PM narrates the reasoning; it never states a strike, premium or greek AMI did not compute. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketAccept": "YES — OPEN IT",
+  "@optionTicketAccept": {
+    "description": "CR172 §10 step 4. The consent button. One of exactly two, and the word 'YES' is deliberate: the user's whole input to this feature is yes or no. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketDecline": "NO",
+  "@optionTicketDecline": {
+    "description": "CR172 §10 step 4. The decline button. Declining is a complete, unpenalised answer, so it is a peer of the accept button and not a quiet dismiss link. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketRefusedHeading": "AMI WILL NOT OPEN THIS",
+  "@optionTicketRefusedHeading": {
+    "description": "CR172 §8 / CR040. Mono label heading the refusal panel — an uncovered short call (D3) or a mandate block. Refusals render loudly and there is no accept button beneath them; an error state is never an empty state. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketRefusedNoReason": "AMI refused this structure and the reason did not reach your device. Nothing was opened. If this repeats, report it.",
+  "@optionTicketRefusedNoReason": {
+    "description": "CR172 / CR040. The floor answered 'no' but the explanation list arrived empty. Renders instead of a blank refusal panel: a refusal with nothing in it teaches the user that refusals are noise. Names what did NOT happen (nothing opened) so the state is unambiguous. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketBlockedByLabel": "Refused by: {rule}",
+  "@optionTicketBlockedByLabel": {
+    "description": "CR172 §8. Names which mandate rule refused — the raw server slug, uppercased, same treatment as the journal compliance-block card. {rule} is not translated: the enum grows server-side and a client-side mapping would mislabel a value this build has never seen. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "rule": {
+        "type": "String"
+      }
+    }
+  },
+  "optionTicketNotEvaluatedHeading": "COULD NOT BE CHECKED",
+  "@optionTicketNotEvaluatedHeading": {
+    "description": "CR172 §8 / DEF169. Mono label over the checks that could not RUN — distinct from both a violation (which refuses) and a clean pass. 'Checked and clear' and 'could not check' must never look the same. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketUnpriceable": "AMI could not price this structure, so there is nothing here to say yes to.",
+  "@optionTicketUnpriceable": {
+    "description": "CR172 §10. Shown when the proposal arrived with no metrics block at all. The accept button is withheld in this state regardless of what the compliance answer said — consenting to a structure with no max loss is consenting to an unknown. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketAdvisoryHeading": "BEFORE YOU DECIDE",
+  "@optionTicketAdvisoryHeading": {
+    "description": "CR172 §8 / CR171 §6. Mono label over the server's advisories on the proposal card. An advisory INFORMS and does not block, so this must not read like the refusal heading. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketDisclosureTitle": "Selling an option to open",
+  "@optionTicketDisclosureTitle": {
+    "description": "CR172 §8. Title of the dialog shown BEFORE a sell-to-open is confirmed. Chrome only — the BODY is the server's advisory text rendered verbatim (DEF158: no client-authored paraphrase of a Sharia ruling). NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketDisclosureAcknowledge": "I UNDERSTAND — CONTINUE",
+  "@optionTicketDisclosureAcknowledge": {
+    "description": "CR172 §8. The confirm button in the sell-to-open disclosure dialog. Inform, never block: this path stays open. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketDisclosureCancel": "GO BACK",
+  "@optionTicketDisclosureCancel": {
+    "description": "CR172 §8. The cancel button in the sell-to-open disclosure dialog. Returns to the proposal with nothing opened. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketNetCost": "NET COST",
+  "@optionTicketNetCost": {
+    "description": "CR172 §10 step 4. Mono row label used ONLY when the server sent no net_cost, so neither NET DEBIT nor NET CREDIT can be claimed. A sign-neutral label rather than guessing the direction of a cash flow that did not arrive. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketBreakEvenNone": "none",
+  "@optionTicketBreakEvenNone": {
+    "description": "CR172 §10 step 4. Rendered on the break-even row when the server computed the structure and it HAS no break-even price. Distinct from 'not computed': one is an answer, the other is a gap. NEW key. retranslate:[ar,ms]"
+  },
+  "optionTicketSharesLocked": "{shares} shares locked",
+  "@optionTicketSharesLocked": {
+    "description": "CR172 §6. Sub-line under COLLATERAL on a covered structure: the collateral is stock, not cash, and the shares are unavailable to sell while the short call is open. {shares} is the server-computed share count. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "shares": {
+        "type": "String"
+      }
+    }
   }
 }
