@@ -81,6 +81,12 @@ _BLOCKING_LEAF_METHOD_NAMES = {
     # `_SIM_ENGINE_SYNC_SAFE_METHODS` — undeclared defaults to unsafe (red).
     "portfolio_marks_snapshot",
     "valuation_snapshot",
+    # CR172 slice 2: run_option_lifecycle prices every settling leg through the
+    # quote path, so it blocks for as long as the expiring book is deep. It has
+    # no production caller yet (slice 3 owns the open path and the sweep
+    # sub-passes) — declaring it a leaf NOW means the first caller must arrive
+    # already wrapped, instead of the guard turning red on someone else's lane.
+    "run_option_lifecycle",
 }
 _BLOCKING_LEAF_FUNC_NAMES = {
     "build_live_data_block",
