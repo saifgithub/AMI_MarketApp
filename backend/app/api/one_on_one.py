@@ -16,6 +16,7 @@ from app.schemas.one_on_one import (
     OneOnOneStartRequest,
 )
 from app.services.agent_runner import AgentRunner, get_agent_runner
+from app.services.alpaca_service import render_snapshot
 from app.services.credit_service import InsufficientCredits, one_on_one_cost, refund, spend
 from app.services.entitlements import effective_plan_for_user
 from app.services.journal_store import get_journal_store
@@ -180,6 +181,7 @@ async def send_message(
                 session=session,
                 history=req.history,
                 user_message=req.user_message,
+                alpaca_snapshot=render_snapshot(req.alpaca),
             ):
                 total_chars += len(chunk)
                 buffer.append(chunk)

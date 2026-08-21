@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.time import now_utc
 from app.schemas.agents import AgentId
+from app.schemas.alpaca import AlpacaSnapshotIn
 
 
 class ChatMsg(BaseModel):
@@ -46,6 +47,10 @@ class OneOnOneMessageRequest(BaseModel):
     # attacker-supplied wall of scripted turns).
     user_message: str = Field(max_length=8_000)
     history: list[ChatMsg] = Field(default_factory=list, max_length=100)
+    # CR202: the user's Alpaca credentials live on their device, so the device
+    # fetches its own paper account and sends the result. Same bounded-input
+    # reasoning as the DEF186 caps above — see schemas/alpaca.py.
+    alpaca: AlpacaSnapshotIn | None = None
 
 
 class OneOnOneSession(BaseModel):

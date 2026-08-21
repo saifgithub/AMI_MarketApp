@@ -54,11 +54,20 @@ def _utcnow() -> datetime:
 class EncryptedString(TypeDecorator):
     """String column encrypted at rest (DEF044).
 
-    Encrypts on write, decrypts on read, transparently — so every existing
-    call site reads/writes plaintext while Postgres stores ciphertext. Legacy
-    cleartext rows pass through unchanged (see `secret_crypto`). Not usable in
-    SQL filters (values are opaque ciphertext), which is fine here: these
-    columns are only ever read whole or checked for None.
+    Encrypts on write, decrypts on read, transparently — so a call site
+    reads/writes plaintext while Postgres stores ciphertext. Legacy cleartext
+    rows pass through unchanged (see `secret_crypto`). Not usable in SQL
+    filters (values are opaque ciphertext).
+
+    **DORMANT since CR202 — no column uses this today.** Its only consumers
+    were `users.alpaca_access_token` / `alpaca_refresh_token`, dropped when
+    Alpaca credentials moved to the device. Retained rather than deleted
+    because the machinery behind it is the expensive part: DEF182's dedicated
+    key, fail-closed decrypt, `enc::v2::` marker and dual-key rotation
+    procedure all live in `secret_crypto`, and the next column that needs
+    encryption at rest should inherit that, not re-derive it. Do NOT relax
+    `ALPACA_ENCRYPTION_KEY`'s required-outside-local status to tidy up — that
+    is the exact direction DEF182 came from.
     """
 
     impl = String
@@ -72,17 +81,16 @@ class EncryptedString(TypeDecorator):
         itself.
 
         `decrypt_secret` raises rather than handing back ciphertext dressed as
-        plaintext (which is how `gAAAAA…` ends up being sent to Alpaca as an
-        API key). It is caught *here* rather than allowed to propagate because
-        these columns hang off `User`, which `get_current_user` loads on every
-        authenticated request — so an unopenable credential would otherwise
-        500 the entire app for that user, turning a broken integration into a
-        total account lockout.
+        plaintext (which is how `gAAAAA…` once ended up being sent to Alpaca as
+        an API key). It is caught *here* rather than allowed to propagate: a
+        secret column typically hangs off a row loaded on every authenticated
+        request, so an unopenable value would 500 the whole app for that user —
+        turning a broken integration into a total account lockout.
 
-        `None` is the honest degradation: it is exactly "not linked", and every
-        call site already handles it — `_require_linked` answers 409
-        `alpaca_not_linked`, and the agent/room prompt builders omit the Alpaca
-        overlay. The ERROR log carries the diagnosis; the product stays up.
+        `None` is the honest degradation: it reads as "absent", which a call
+        site must already handle. The ERROR log carries the diagnosis; the
+        product stays up. Kept intact under CR202 even though no column
+        currently uses it — see the class docstring.
         """
         try:
             return decrypt_secret(value)
@@ -179,17 +187,12 @@ class User(Base):
         Integer, default=1, server_default="1", nullable=False,
     )
 
-    # Alpaca paper trading link (AT:R45/R47). Null = unlinked.
-    # auth_mode: 'oauth' (access_token = Bearer token) or 'apikey'
-    # (access_token = key ID, refresh_token = key secret).
-    # DEF044: both are encrypted at rest via EncryptedString (transparent to
-    # every read/write site); legacy cleartext rows migrate lazily on next write.
-    alpaca_access_token: Mapped[Optional[str]] = mapped_column(EncryptedString, nullable=True)
-    alpaca_refresh_token: Mapped[Optional[str]] = mapped_column(EncryptedString, nullable=True)
-    alpaca_linked_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True,
-    )
-    alpaca_auth_mode: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # CR202: the four alpaca_* columns are GONE. A user's Alpaca key ID and
+    # secret live on their device (Keychain / Keystore) and never reach this
+    # host, so there is nothing to store and nothing to encrypt. Link state is
+    # device-local. Dropping them removed the custody that produced DEF044,
+    # DEF181, DEF182 and DEF185 — measured 0 linked rows at the time, so
+    # nothing was migrated.
 
     # Reputation + league identity (CR004, D-060). handle is the anonymous
     # leaderboard name (adjective+noun, minted on first league contact);

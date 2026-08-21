@@ -24,6 +24,7 @@ import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/state/backend_mode_provider.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/screens/settings/alpaca_connect_screen.dart';
+import 'package:ami_trade/services/alpaca/alpaca_credential_store.dart';
 import 'package:ami_trade/screens/settings/day_trader_disclosure_dialog.dart';
 import 'package:ami_trade/screens/settings/risk_limits_section.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
@@ -1453,18 +1454,18 @@ class _AlpacaSection extends ConsumerWidget {
     final claimed = user != null && !user.isAnonymous;
     if (!claimed) return const SizedBox.shrink();
 
-    final statusAsync = ref.watch(alpacaStatusProvider);
+    final linkedAsync = ref.watch(alpacaLinkedProvider);
 
     return _Section(
       title: 'CONNECTED ACCOUNTS',
       children: [
-        statusAsync.when(
+        linkedAsync.when(
           loading: () => const SizedBox(
             height: 48,
             child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
           ),
           error: (_, __) => _AlpacaRow(linked: false, ref: ref),
-          data: (status) => _AlpacaRow(linked: status.linked, ref: ref),
+          data: (linked) => _AlpacaRow(linked: linked, ref: ref),
         ),
       ],
     );
@@ -1525,18 +1526,19 @@ class _AlpacaRow extends StatelessWidget {
       MaterialPageRoute(builder: (_) => const AlpacaConnectScreen()),
     );
     if (result == true) {
-      ref.invalidate(alpacaStatusProvider);
+      ref.read(alpacaSnapshotCacheProvider).invalidate();
+      ref.invalidate(alpacaLinkedProvider);
       ref.invalidate(alpacaPortfolioProvider);
       ref.invalidate(alpacaPositionsProvider);
     }
   }
 
+  /// CR202: disconnecting is purely local — the key only ever lived on this
+  /// device, so there is no server call to make and nothing to fail.
   Future<void> _disconnect(BuildContext context) async {
-    final api = ref.read(apiClientProvider);
-    try {
-      await api.alpacaUnlink();
-    } catch (_) {}
-    ref.invalidate(alpacaStatusProvider);
+    await AlpacaCredentialStore.clear();
+    ref.read(alpacaSnapshotCacheProvider).invalidate();
+    ref.invalidate(alpacaLinkedProvider);
     ref.invalidate(alpacaPortfolioProvider);
     ref.invalidate(alpacaPositionsProvider);
   }

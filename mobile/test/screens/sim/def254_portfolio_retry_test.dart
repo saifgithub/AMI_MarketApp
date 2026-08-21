@@ -28,7 +28,6 @@ library;
 import 'dart:io';
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
-import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/screens/sim/portfolio_screen.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
@@ -92,8 +91,8 @@ Future<_FixedSimNotifier> _pump(WidgetTester tester, SimState sim) async {
             .overrideWith((ref) => _FixedWatchlistNotifier(ref)),
         journalNotifierProvider
             .overrideWith((ref) => _FixedJournalNotifier(ref)),
-        alpacaStatusProvider
-            .overrideWith((ref) async => const AlpacaStatus(linked: false)),
+        alpacaLinkedProvider
+            .overrideWith((ref) async => false),
       ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,

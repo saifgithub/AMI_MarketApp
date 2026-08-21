@@ -228,7 +228,7 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
           ref.read(simNotifierProvider.notifier).refresh(),
           ref.read(watchlistNotifierProvider.notifier).refresh(),
         ]);
-        ref.invalidate(alpacaStatusProvider);
+        ref.invalidate(alpacaLinkedProvider);
         ref.invalidate(alpacaPortfolioProvider);
         ref.invalidate(alpacaPositionsProvider);
       },
@@ -1898,12 +1898,12 @@ class _AlpacaPortfolioSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statusAsync = ref.watch(alpacaStatusProvider);
-    return statusAsync.when(
+    final linkedAsync = ref.watch(alpacaLinkedProvider);
+    return linkedAsync.when(
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
-      data: (status) {
-        if (!status.linked) return const SizedBox.shrink();
+      data: (linked) {
+        if (!linked) return const SizedBox.shrink();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

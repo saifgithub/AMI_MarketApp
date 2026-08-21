@@ -84,33 +84,55 @@ def test_ciphertext_is_not_the_plaintext(dedicated):
 
 
 def test_encrypted_string_column_end_to_end():
-    """Through the ORM: stored row is ciphertext, ORM read is plaintext."""
-    from sqlalchemy import select
+    """Through the ORM: stored row is ciphertext, ORM read is plaintext.
+
+    CR202 dropped `users.alpaca_access_token` / `alpaca_refresh_token`, which
+    were `EncryptedString`'s only production consumers — the user's Alpaca key
+    lives on their device now. The TypeDecorator is deliberately kept (DEF182's
+    dedicated key, fail-closed decrypt, `enc::v2::` marker and dual-key
+    rotation all hang off it, and the next column needing encryption at rest
+    should inherit that rather than re-derive it), so its end-to-end behaviour
+    is still worth pinning.
+
+    It is exercised here against a throwaway table rather than a real column,
+    which is the honest shape for a dormant utility: pinning it to whichever
+    column happens to use it next is how this test came to be coupled to Alpaca
+    in the first place.
+    """
+    from sqlalchemy import Column, Integer, MetaData, String, Table, select
 
     from app.db import get_session
-    from app.db.models import User
+    from app.db.models import EncryptedString
 
-    key_id = "PKVRVPNHHXCIQJGVCRG3ZYHIGM"
     secret = "E3WtwSGv4db9yrnqseA9pmcZHyrorYDMR3kf7VykgYGw"
 
+    metadata = MetaData()
+    tbl = Table(
+        "cr202_encrypted_column_probe",
+        metadata,
+        Column("id", Integer, primary_key=True),
+        Column("plain", String),
+        Column("secret", EncryptedString),
+    )
+
     with get_session() as s:
-        u = User(display_name="Crypto Test", is_anonymous=False)
-        u.alpaca_access_token = key_id
-        u.alpaca_refresh_token = secret
-        u.alpaca_auth_mode = "apikey"
-        s.add(u)
+        metadata.create_all(s.connection())
+        s.execute(tbl.insert().values(id=1, plain=secret, secret=secret))
         s.commit()
-        uid = u.id
 
+    # The ORM layer hands back plaintext...
     with get_session() as s:
-        row = s.execute(select(User).where(User.id == uid)).scalar_one()
-        assert row.alpaca_access_token == key_id
-        assert row.alpaca_refresh_token == secret
+        row = s.execute(select(tbl.c.secret).where(tbl.c.id == 1)).scalar_one()
+        assert row == secret
 
+    # ...while what is actually on disk is ciphertext. The `plain` column is
+    # the control: same value, no TypeDecorator, stored as-is — so this asserts
+    # the encryption did something rather than that the driver mangled it.
     with get_session() as s:
-        raw = s.connection().exec_driver_sql(
-            "select alpaca_refresh_token from users where display_name = 'Crypto Test'"
-        ).scalar_one()
+        raw, control = s.connection().exec_driver_sql(
+            "select secret, plain from cr202_encrypted_column_probe where id = 1"
+        ).one()
+        assert control == secret
         assert raw != secret
         assert is_encrypted(raw)
 

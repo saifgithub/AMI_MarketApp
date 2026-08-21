@@ -1,14 +1,26 @@
 /// AlpacaConnectScreen — link an Alpaca paper trading account.
 ///
+/// CR202: linking is now entirely local. The key ID and secret are validated
+/// against Alpaca directly from this device and stored in the Keychain /
+/// Keystore; they are never sent to the AMI backend, which no longer has
+/// anywhere to put them. Only the resulting positions are ever uploaded.
+///
 /// Two modes:
-///   1. API Key — paste key ID + secret directly. Available immediately,
-///      no OAuth app registration needed. Used for testing.
-///   2. OAuth — embedded WebView. Requires ALPACA_CLIENT_ID build define
-///      (greyed-out until the client is registered). Kept for production use.
+///   1. API Key — paste key ID + secret. Validated against
+///      `GET /v2/account` before being stored, so a bad pair fails here rather
+///      than silently at the next Room convene.
+///   2. OAuth — embedded WebView. Still requires the ALPACA_CLIENT_ID build
+///      define and Alpaca app approval, so it stays greyed-out. Alpaca's token
+///      endpoint requires client_secret and documents no PKCE, so that one
+///      exchange cannot run on-device; the backend performs it and hands the
+///      token straight back without storing it.
 ///
 /// Returns `true` to the caller if linking succeeded, `false` otherwise.
 library;
 
+import 'package:ami_trade/services/alpaca/alpaca_client.dart';
+import 'package:ami_trade/services/alpaca/alpaca_credential_store.dart';
+import 'package:ami_trade/state/alpaca_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
@@ -121,12 +133,27 @@ class _ApiKeyTabState extends ConsumerState<_ApiKeyTab> {
       _loading = true;
       _error = null;
     });
+    final keyId = _keyCtrl.text.trim();
+    final secret = _secretCtrl.text.trim();
     try {
-      final api = ref.read(apiClientProvider);
-      await api.alpacaLinkApiKey(_keyCtrl.text.trim(), _secretCtrl.text.trim());
+      // Prove the pair works BEFORE storing it. Storing an unverified
+      // credential just defers the failure to the next Room convene, where
+      // it is far less obvious what went wrong.
+      await ref.read(alpacaClientProvider).validate(keyId, secret);
+      await AlpacaCredentialStore.save(keyId, secret);
+      ref.read(alpacaSnapshotCacheProvider).invalidate();
       if (!mounted) return;
       Navigator.of(context).pop(true);
-    } catch (e) {
+    } on AlpacaException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = e.isAuthFailure
+            ? 'Alpaca rejected that key — check the ID and secret, and that '
+                'they are Paper Trading keys.'
+            : 'Could not reach Alpaca. Check your connection and try again.';
+      });
+    } catch (_) {
       if (!mounted) return;
       setState(() {
         _loading = false;
@@ -148,6 +175,16 @@ class _ApiKeyTabState extends ConsumerState<_ApiKeyTab> {
             const Text(
               'Get your Paper Trading API key from app.alpaca.markets → Paper Trading → API Keys.',
               style: TextStyle(color: AmiColors.textMed, fontSize: 13, height: 1.5),
+            ),
+            const SizedBox(height: AmiSpacing.m),
+            // CR202: say both of these plainly. The first is the reason the
+            // second is true, and the second otherwise reads as a bug the
+            // first time they change phones.
+            const Text(
+              'Your key is stored only on this device and is never sent to AMI. '
+              'That also means it will not follow you to a new phone or survive '
+              'reinstalling the app — you will paste it again.',
+              style: TextStyle(color: AmiColors.slate500, fontSize: 12, height: 1.5),
             ),
             const SizedBox(height: AmiSpacing.xl),
             _label('API KEY ID'),
@@ -323,8 +360,17 @@ class _OAuthTabState extends ConsumerState<_OAuthTab> {
   Future<void> _exchangeCode(String code) async {
     setState(() => _linking = true);
     try {
+      // CR202: the backend performs the exchange (Alpaca requires
+      // client_secret) and returns the tokens without storing them; the
+      // credential is persisted here, on the device, like the API key pair.
       final api = ref.read(apiClientProvider);
-      await api.alpacaLink(code);
+      final tokens = await api.alpacaExchangeOAuthCode(code);
+      await AlpacaCredentialStore.save(
+        tokens.accessToken,
+        tokens.refreshToken,
+        mode: AlpacaAuthMode.oauth,
+      );
+      ref.read(alpacaSnapshotCacheProvider).invalidate();
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (e) {

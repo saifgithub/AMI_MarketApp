@@ -15,12 +15,14 @@ Three layers, in the `FallbackProvider` shape `market_data.py` already uses:
   and binary in exactly the dimension that drives cost. **Blocked on
   credentials** — `grep -iE '^ALPACA'` returns nothing in either the repo's
   `.env` or melehost's, measured 2026-08-11, and `/v2/assets` is 401 without a
-  key. It must be a HOUSE key, not the per-user OAuth token we store: pricing a
-  global model off one user's session couples it to that session and breaks
-  when they disconnect. `alpaca_service._paper_get` already supports
-  `auth_mode="apikey"`, so this is a config item, not a code change. Left as a
-  named, unreachable branch rather than omitted, so the gap is visible in the
-  code that would use it. (Reading an asset attribute is not brokerage
+  key. It must be a HOUSE key. That was already true when this was written
+  (pricing a global model off one user's session couples it to that session and
+  breaks when they disconnect), and CR202 made it the *only* option: user
+  credentials now live on their device and never reach this host, so there is
+  no per-user token here to borrow even in principle. CR202 also removed
+  `alpaca_service._paper_get`, so this is no longer only a config item — it
+  needs a small house-key client as well. Left as a named, unreachable branch
+  rather than omitted, so the gap is visible in the code that would use it. (Reading an asset attribute is not brokerage
   integration — we route no order and connect to no execution venue, matching
   D-069. Stated so it is not re-litigated.)
 

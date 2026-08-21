@@ -12,7 +12,6 @@
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
-import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/watchlist.dart';
@@ -181,8 +180,8 @@ Future<void> _pump(
         else
           journalNotifierProvider.overrideWith(
               (ref) => _FixedJournalNotifier(ref, journal ?? const JournalState())),
-        alpacaStatusProvider
-            .overrideWith((ref) async => const AlpacaStatus(linked: false)),
+        alpacaLinkedProvider
+            .overrideWith((ref) async => false),
         // CR136 M09: the Health card is a real, permanent occupant of this
         // tab, so the scroll budget below has to measure it in its POPULATED
         // state — the state a user with holdings actually sees. Leaving it to
@@ -476,8 +475,8 @@ void main() {
                   (ref) => _FixedWatchlistNotifier(ref, _heavyWatchlistState())),
               journalNotifierProvider.overrideWith(
                   (ref) => _FixedJournalNotifier(ref, const JournalState())),
-              alpacaStatusProvider
-                  .overrideWith((ref) async => const AlpacaStatus(linked: false)),
+              alpacaLinkedProvider
+                  .overrideWith((ref) async => false),
               sectorAllocationProvider.overrideWith((ref) async => const SectorAllocation(
                     allocation: {},
                     totalValue: 0,
@@ -540,8 +539,8 @@ void main() {
                 (ref) => _FixedWatchlistNotifier(ref, _heavyWatchlistState())),
             journalNotifierProvider.overrideWith(
                 (ref) => _FixedJournalNotifier(ref, const JournalState())),
-            alpacaStatusProvider
-                .overrideWith((ref) async => const AlpacaStatus(linked: false)),
+            alpacaLinkedProvider
+                .overrideWith((ref) async => false),
             sectorAllocationProvider.overrideWith((ref) async => const SectorAllocation(
                   allocation: {},
                   totalValue: 0,

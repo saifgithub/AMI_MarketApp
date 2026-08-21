@@ -53,7 +53,6 @@ from app.services.technicals import build_technicals_context_block
 from app.services.llm_gateway import ChatMessage, LLMGateway
 from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
-from app.services.alpaca_service import snapshot_text as alpaca_snapshot_text
 
 
 # ── 1-on-1 runner ────────────────────────────────────────────────────────
@@ -92,6 +91,7 @@ class AgentRunner:
         session: OneOnOneSession,
         history: list[ChatMsg],
         user_message: str,
+        alpaca_snapshot: str | None = None,
     ) -> AsyncIterator[str]:
         """Build the prompt, stream the LLM response.
 
@@ -132,21 +132,10 @@ class AgentRunner:
                 buf.append(chunk)
                 yield chunk
         else:
-            # Alpaca paper portfolio snapshot — injected if the user has linked
-            # their Alpaca account. Best-effort: silently None on any error.
-            alpaca_snapshot: str | None = None
-            if session.user_id is not None:
-                from app.db import get_session as db_session
-                from app.db.models import User
-                from sqlalchemy import select
-                with db_session() as s:
-                    row = s.execute(select(User).where(User.id == session.user_id)).scalar_one_or_none()
-                    if row and row.alpaca_access_token:
-                        alpaca_snapshot = alpaca_snapshot_text(
-                            row.alpaca_access_token,
-                            auth_mode=row.alpaca_auth_mode or "oauth",
-                            api_secret=row.alpaca_refresh_token if row.alpaca_auth_mode == "apikey" else None,
-                        )
+            # CR202 — the Alpaca overlay arrives with the request (parameter
+            # above), already rendered from a validated payload. This host holds
+            # no Alpaca credential: the key lives on the user's device. None
+            # means no linked account, which is the common case.
 
             # CR069: a halal mandate's 1-on-1 turns get the same sourced Sharia
             # universe the Room path narrates. No ticker is known at this point —

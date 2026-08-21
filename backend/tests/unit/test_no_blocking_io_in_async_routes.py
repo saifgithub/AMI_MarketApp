@@ -24,12 +24,12 @@ farms its N-ticker fan-out out via `loop.run_in_executor`, a different
 (and already-correct) pattern for a different problem (parallel fetch,
 not the single-fetch blocking bug this guards against).
 
-Does NOT cover the Alpaca snapshot pattern (`alpaca_service.py:77,113`
-via `alpaca_snapshot_text`, called from `room_runner.py` /
-`agent_runner.py`) — identical bug shape (sync `httpx.get`/`.post`),
-found incidentally by DEF116 but out of scope pending its own decision
-(DEF116 hand-off D4). See the note below `_YFINANCE_BLOCKING_ATTRS` for
-why httpx detection isn't included here.
+The Alpaca snapshot pattern DEF116 D4 flagged here (a sync `httpx.get` on
+the event loop via `alpaca_snapshot_text`, from `room_runner.py` /
+`agent_runner.py`) no longer exists: CR202 moved the credential to the
+device, so the backend fetches nothing and the blocking call went with it.
+See the note below `_YFINANCE_BLOCKING_ATTRS` for why httpx detection isn't
+included here.
 """
 
 from __future__ import annotations
@@ -102,10 +102,10 @@ _YFINANCE_BLOCKING_ATTRS = {"Ticker", "download"}
 # produced 10+ false "offenders" rooted in `_resolve_url`/`get_engine`/
 # `*_store.get`, none of which are actually an httpx call). A safe httpx
 # detector for a call graph this size needs real type resolution, which is
-# out of scope for this lane. This means the Alpaca `httpx.get/post` chain
-# (`alpaca_service.py:77,113` via `alpaca_snapshot_text` — DEF116 D4) is
-# NOT caught by this guard; it is flagged by name in the DEF116 hand-off
-# instead, not enforced structurally here.
+# out of scope for this lane. The Alpaca `httpx.get` chain DEF116 D4 named
+# here was never caught by this guard — it was flagged by name in the DEF116
+# hand-off instead. CR202 removed it outright; only the OAuth `httpx.post`
+# remains, pinned by count below.
 
 # DEF120 (closed): the 9 chains below this comment used to be waived here —
 # SimEngine's trade-execution / portfolio-valuation methods called
@@ -485,9 +485,15 @@ def test_waived_chains_still_pin_the_known_offender_set():
 # which is worse than no guard. File+count still turns red on a genuinely new
 # call (count rises, or an unlisted file appears) and stays quiet on movement.
 _KNOWN_SYNC_HTTPX_COUNTS = {
-    # DEF116 D4: identical class, out of scope, gated on urow.alpaca_access_token
-    # so it fires only for linked users. Needs its own decision.
-    "app/services/alpaca_service.py": 2,
+    # CR202 dropped this from 2 to 1. DEF116 D4 flagged two sync httpx calls
+    # here — the account read (`_paper_get`) and the OAuth exchange — as the
+    # same event-loop-parking class, pending their own decision. The decision
+    # landed sideways: the read is gone entirely, because the credential it
+    # needed is gone. The user's Alpaca key lives on their device now, so the
+    # only call left is the OAuth token exchange, which is reached from a sync
+    # `def` route (FastAPI threadpools it, the CR049 distinction) and is
+    # unreachable today regardless.
+    "app/services/alpaca_service.py": 1,
     # RevenueCat: reached only from a sync `def` route, which FastAPI runs in a
     # threadpool, so it never parks the event loop — the CR049 distinction.
     "app/services/revenuecat_client.py": 1,

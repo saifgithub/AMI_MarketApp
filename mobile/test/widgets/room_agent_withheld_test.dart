@@ -43,6 +43,7 @@ class _ScriptedApiClient extends ApiClient {
     required String ticker,
     String locale = 'en',
     Map<String, dynamic>? mandateOverride,
+    Map<String, dynamic>? alpaca,
   }) {
     return Stream.fromIterable(events);
   }
@@ -103,6 +104,7 @@ class _BreakThenRecoverApiClient extends ApiClient {
     required String ticker,
     String locale = 'en',
     Map<String, dynamic>? mandateOverride,
+    Map<String, dynamic>? alpaca,
   }) async* {
     for (final e in events) {
       yield e;
@@ -172,10 +174,23 @@ void main() {
         overrides: [apiClientProvider.overrideWithValue(fake)],
       );
       addTearDown(container.dispose);
+      // CR202: same hold the recovery test below already uses, and for the
+      // reason documented there — the provider is autoDispose and
+      // self-starting, so reading `.notifier` and re-reading the provider
+      // after real async work observes a fresh element and an empty state.
+      // These two tests were the only ones in this file without it; they
+      // passed on timing luck until `start()` gained a device-side Alpaca read
+      // before the stream.
+      final sub = container.listen(
+        roomNotifierProvider(ticker),
+        (_, __) {},
+        fireImmediately: true,
+      );
+      addTearDown(sub.close);
 
       await container.read(roomNotifierProvider(ticker).notifier).start();
 
-      final state = container.read(roomNotifierProvider(ticker));
+      final state = sub.read();
       expect(state.withheldAgents['market_analyst'], isNotNull);
       expect(state.withheldAgents['market_analyst']!.nextStepAgentId,
           'social_media_analyst');
@@ -200,12 +215,23 @@ void main() {
         overrides: [apiClientProvider.overrideWithValue(fake)],
       );
       addTearDown(container.dispose);
+      // CR202: same hold the recovery test below already uses, and for the
+      // reason documented there — the provider is autoDispose and
+      // self-starting, so reading `.notifier` and re-reading the provider
+      // after real async work observes a fresh element and an empty state.
+      // These two tests were the only ones in this file without it; they
+      // passed on timing luck until `start()` gained a device-side Alpaca read
+      // before the stream.
+      final sub = container.listen(
+        roomNotifierProvider(ticker),
+        (_, __) {},
+        fireImmediately: true,
+      );
+      addTearDown(sub.close);
 
       await container.read(roomNotifierProvider(ticker).notifier).start();
 
-      final info = container
-          .read(roomNotifierProvider(ticker))
-          .withheldAgents['social_media_analyst']!;
+      final info = sub.read().withheldAgents['social_media_analyst']!;
       expect(info.nextStepAgentId, isNull);
       expect(info.nextStepDays, isNull);
     });

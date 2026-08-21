@@ -22,9 +22,22 @@ the build until someone has read this docstring and formed a view — including
 the honest case where Saiful decides to revisit the locked decision, which
 should be a deliberate edit here and not a quiet new function.
 
-The single POST is the OAuth token exchange, which sends an authorization code
-to Alpaca's *auth* host to obtain a token. It reads nothing and writes nothing
-on the account.
+**CR202 strengthened what this pins, and this is that deliberate edit.** The
+read path (`_paper_get`, and the four public getters over it) is gone, because
+the credential it needed is gone: a user's Alpaca key now lives on their device
+and never reaches this host. The property is therefore no longer "the backend
+only ever READS a user's brokerage account" but the strictly stronger "the
+backend makes **no authenticated call to a user's brokerage account at all**,
+and holds no credential with which it could." Removing `_paper_get` from the
+pin turned this test red first, exactly as designed — the pin is exact in both
+directions, so a shrinking surface is as loud as a growing one.
+
+The single POST that remains is the OAuth token exchange, which sends an
+authorization code to Alpaca's *auth* host to obtain a token. It reads nothing
+and writes nothing on the account, and its caller hands the token straight back
+to the device rather than storing it. It is kept because Alpaca's token
+endpoint requires `client_secret` and documents no PKCE, so that one exchange
+is the only part of OAuth that cannot run on the device.
 """
 
 from __future__ import annotations
@@ -37,7 +50,6 @@ _MODULE = Path(__file__).resolve().parents[2] / "app" / "services" / "alpaca_ser
 # (enclosing function, httpx verb). Exact — not a floor.
 _ALLOWED_CALLS = {
     ("exchange_code", "post"),  # OAuth token exchange, against the auth host
-    ("_paper_get", "get"),      # the ONE read path, used by every public getter
 }
 
 _WRITE_WORDS = (

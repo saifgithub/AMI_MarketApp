@@ -9,7 +9,6 @@
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
-import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/watchlist.dart';
 import 'package:ami_trade/screens/sim/portfolio_screen.dart';
@@ -99,8 +98,8 @@ Future<void> _pumpPortfolio(WidgetTester tester) async {
             .overrideWith((ref) => _FixedWatchlistNotifier(ref, _watchlist())),
         journalNotifierProvider.overrideWith(
             (ref) => _FixedJournalNotifier(ref, const JournalState())),
-        alpacaStatusProvider
-            .overrideWith((ref) async => const AlpacaStatus(linked: false)),
+        alpacaLinkedProvider
+            .overrideWith((ref) async => false),
         portfolioHealthProvider.overrideWith((ref) async => healthFixture()),
         sectorAllocationProvider
             .overrideWith((ref) async => const SectorAllocation(

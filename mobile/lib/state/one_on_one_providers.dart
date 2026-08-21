@@ -6,6 +6,7 @@ import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/state/alpaca_providers.dart';
 
 @immutable
 class OneOnOneState {
@@ -78,10 +79,15 @@ class OneOnOneNotifier extends StateNotifier<OneOnOneState> {
     final buffer = StringBuffer();
 
     try {
+      // CR202: see room_providers — device-fetched, best-effort, never fatal.
+      // The 60s cache in AlpacaSnapshotCache is what stops a back-and-forth
+      // conversation from hitting Alpaca twice per typed sentence.
+      final alpaca = (await _ref.read(alpacaSnapshotCacheProvider).current())?.toWireJson();
       final stream = api.streamOneOnOneMessage(
         sessionId: session.id,
         userMessage: trimmed,
         history: history,
+        alpaca: alpaca,
       );
       await for (final chunk in stream) {
         buffer.write(chunk);

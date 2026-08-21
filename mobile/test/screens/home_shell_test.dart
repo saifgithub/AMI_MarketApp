@@ -17,7 +17,6 @@
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
-import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/screens/home_shell.dart';
 import 'package:ami_trade/screens/journal/journal_screen.dart';
@@ -95,8 +94,8 @@ Future<void> _pumpHome(WidgetTester tester) async {
             (ref) => _FixedWatchlistNotifier(ref, const WatchlistState())),
         journalNotifierProvider.overrideWith(
             (ref) => _FixedJournalNotifier(ref, const JournalState())),
-        alpacaStatusProvider
-            .overrideWith((ref) async => const AlpacaStatus(linked: false)),
+        alpacaLinkedProvider
+            .overrideWith((ref) async => false),
         sectorAllocationProvider.overrideWith((ref) async => SectorAllocation(
               allocation: const {'Cash': 1.0},
               totalValue: 100000,

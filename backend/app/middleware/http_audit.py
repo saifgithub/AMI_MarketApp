@@ -66,6 +66,10 @@ SCRUB_PATHS = {
     # http_audit.request_body for 90 days — bypassing the DEF044
     # encryption-at-rest control on Alpaca broker credentials.
     "/v1/alpaca/link",
+    # CR202 removed the /link_apikey route entirely — the device now holds the
+    # key and never sends it here. The entry stays: a stale scrub entry costs
+    # nothing, and re-adding a route is far easier to remember than re-adding
+    # its scrub entry, which is how DEF181 happened in the first place.
     "/v1/alpaca/link_apikey",
 }
 
@@ -80,11 +84,20 @@ _SECRET_FIELD_RE = re.compile(
     re.IGNORECASE,
 )
 
+# CR202: not a secret — personal financial data. The device now sends its own
+# Alpaca paper positions with each Room convene / 1-on-1 turn, and without this
+# the whole holdings list would persist to http_audit.request_body for 90 days.
+# Moving the *key* off this host while quietly logging the *positions* would be
+# a partial defeat of the very change that moved it, so it is redacted here.
+# Kept separate from _SECRET_FIELD_RE because the two are different claims:
+# one says "this would be a credential leak", this says "we do not need this".
+_PRIVATE_FIELD_RE = re.compile(r"^alpaca$", re.IGNORECASE)
+
 
 def _scrub_secret_fields(body: bytes) -> bytes:
-    """Redact values of secret-shaped JSON keys, recursively. Returns the
-    input unchanged if it isn't parseable JSON (e.g. already scrubbed,
-    binary, or malformed) — never raises."""
+    """Redact values of secret-shaped and privacy-sensitive JSON keys,
+    recursively. Returns the input unchanged if it isn't parseable JSON (e.g.
+    already scrubbed, binary, or malformed) — never raises."""
     try:
         parsed = json.loads(body)
     except Exception:
@@ -94,7 +107,9 @@ def _scrub_secret_fields(body: bytes) -> bytes:
         if isinstance(node, dict):
             out = {}
             for k, v in node.items():
-                if isinstance(k, str) and _SECRET_FIELD_RE.search(k):
+                if isinstance(k, str) and (
+                    _SECRET_FIELD_RE.search(k) or _PRIVATE_FIELD_RE.search(k)
+                ):
                     out[k] = "[REDACTED]"
                 else:
                     out[k] = _walk(v)

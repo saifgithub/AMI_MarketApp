@@ -1,26 +1,37 @@
 """Alpaca paper trading service.
 
-Handles OAuth token exchange and proxies calls to the Alpaca Paper API.
-All functions are synchronous — same as market_data.py — suitable for
-FastAPI endpoints with `Depends()`.
+**CR202 — this host holds no Alpaca credential.** The user's key ID and secret
+live on their device (Keychain / Keystore) and the device calls
+`paper-api.alpaca.markets` itself. What arrives here is a validated snapshot of
+the *result* (`schemas/alpaca.AlpacaSnapshotIn`), supplied per request and never
+stored. So this module makes **zero authenticated calls to a user's account** —
+a strictly stronger property than the read-only one DEF145 originally locked,
+and `tests/unit/test_def145_alpaca_stays_read_only.py` pins it.
 
-Token exchange: POST to Alpaca's OAuth token endpoint with the auth code
-returned by the embedded WebView. The client_secret stays server-side.
+What remains:
 
-Portfolio proxy: GET calls to paper-api.alpaca.markets on behalf of the
-user using their stored access_token. All calls are best-effort; callers
-should catch AlpacaError and surface an appropriate HTTP error.
+* `exchange_code` — the parked OAuth token exchange. Alpaca's token endpoint
+  requires `client_secret` and documents no PKCE, so this exchange is the one
+  Alpaca call that cannot move to the device. It is not reachable today
+  (`ALPACA_CLIENT_ID` is unset and the client's OAuth tab is disabled) and it
+  reads and writes nothing on the account — it trades an auth code for a token
+  against Alpaca's *auth* host. Its caller returns the token to the device
+  rather than storing it.
+* `snapshot_text` / `render_snapshot` — pure formatting. No HTTP, no
+  credentials. One renderer of the block, so the device can never control the
+  layout of what lands in an agent prompt (the DEF098 class: two renderers of
+  one rule, neither a superset).
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
 
 import httpx
 
 from app.core.config import settings
 from app.core.logging import logger
+from app.schemas.alpaca import AlpacaSnapshotIn
 
 
 class AlpacaError(Exception):
@@ -61,7 +72,10 @@ def exchange_code(code: str) -> AlpacaTokens:
     """Exchange an OAuth auth code for access + refresh tokens.
 
     The code is single-use and expires quickly; this must be called
-    immediately after the WebView intercepts the callback URL.
+    immediately after the client intercepts the callback URL.
+
+    CR202: the caller returns these tokens to the device. Nothing is persisted
+    here — the device is the only place an Alpaca credential lives.
     """
     if not settings.alpaca_client_id or not settings.alpaca_client_secret:
         raise AlpacaError(503, "Alpaca OAuth not configured — set ALPACA_CLIENT_ID + ALPACA_CLIENT_SECRET")
@@ -89,103 +103,16 @@ def exchange_code(code: str) -> AlpacaTokens:
     )
 
 
-def _paper_get(
-    access_token: str,
-    path: str,
-    params: dict | None = None,
-    auth_mode: str = "oauth",
-    api_secret: str | None = None,
-) -> dict | list:
-    """Authenticated GET against the Alpaca paper API.
-
-    auth_mode='oauth'  → Authorization: Bearer <access_token>
-    auth_mode='apikey' → APCA-API-KEY-ID + APCA-API-SECRET-KEY headers
-    """
-    url = f"{settings.alpaca_paper_base_url}{path}"
-    if auth_mode == "apikey" and api_secret:
-        headers = {
-            "APCA-API-KEY-ID": access_token,
-            "APCA-API-SECRET-KEY": api_secret,
-        }
-    else:
-        headers = {"Authorization": f"Bearer {access_token}"}
-    try:
-        resp = httpx.get(url, headers=headers, params=params, timeout=_TIMEOUT)
-    except httpx.RequestError as exc:
-        raise AlpacaError(503, f"Alpaca network error: {exc}") from exc
-
-    if resp.status_code == 401:
-        raise AlpacaError(401, "Alpaca token expired or revoked — relink required")
-    if resp.status_code != 200:
-        raise AlpacaError(resp.status_code, resp.text[:200])
-
-    return resp.json()
-
-
-def validate_api_key(key: str, secret: str) -> None:
-    """Validate an Alpaca API key pair by fetching /v2/account.
-
-    Raises AlpacaError if the credentials are rejected or unreachable.
-    """
-    _paper_get(key, "/v2/account", auth_mode="apikey", api_secret=secret)
-
-
-def get_account(
-    access_token: str,
-    auth_mode: str = "oauth",
-    api_secret: str | None = None,
-) -> AlpacaAccount:
-    """Fetch the paper account summary (cash, equity, etc.)."""
-    data = _paper_get(access_token, "/v2/account", auth_mode=auth_mode, api_secret=api_secret)
-    return AlpacaAccount(
-        cash=float(data.get("cash", 0)),
-        portfolio_value=float(data.get("portfolio_value", 0)),
-        equity=float(data.get("equity", 0)),
-        buying_power=float(data.get("buying_power", 0)),
-    )
-
-
-def get_positions(
-    access_token: str,
-    auth_mode: str = "oauth",
-    api_secret: str | None = None,
-) -> list[AlpacaPosition]:
-    """Fetch all open paper positions."""
-    data = _paper_get(access_token, "/v2/positions", auth_mode=auth_mode, api_secret=api_secret)
-    positions = []
-    for item in data:  # type: ignore[union-attr]
-        positions.append(
-            AlpacaPosition(
-                symbol=item.get("symbol", ""),
-                qty=float(item.get("qty", 0)),
-                market_value=float(item.get("market_value", 0)),
-                unrealized_pl=float(item.get("unrealized_pl", 0)),
-            )
-        )
-    return positions
-
-
-def snapshot_text(
-    access_token: str,
-    auth_mode: str = "oauth",
-    api_secret: str | None = None,
-) -> str | None:
+def snapshot_text(account: AlpacaAccount, positions: list[AlpacaPosition]) -> str:
     """Build a compact text block for agent prompt injection.
 
-    Returns None on any error so callers can safely skip the block.
-    Format matches the HANDOVER spec:
+    Pure formatting — the caller has already obtained and validated the data.
+    Format is unchanged from the pre-CR202 host-fetched version:
       --- LIVE ALPACA PAPER PORTFOLIO ---
-      Cash: $12,450.00 | Portfolio value: $48,320.00
+      Cash: $12,450.00 | Portfolio value: $48,320.00 | Buying power: $...
       Positions: AAPL ×10 ($2,150 unrealised +$85), ...
       ---
     """
-    try:
-        account = get_account(access_token, auth_mode=auth_mode, api_secret=api_secret)
-        positions = get_positions(access_token, auth_mode=auth_mode, api_secret=api_secret)
-    except AlpacaError as exc:
-        logger.warning("alpaca_snapshot_failed", detail=exc.detail)
-        return None
-
     pos_parts = []
     for p in positions:
         sign = "+" if p.unrealized_pl >= 0 else ""
@@ -200,4 +127,34 @@ def snapshot_text(
         f" | Buying power: ${account.buying_power:,.2f}\n"
         f"Positions: {pos_text}\n"
         f"---"
+    )
+
+
+def render_snapshot(payload: AlpacaSnapshotIn | None) -> str | None:
+    """Render a device-supplied snapshot into the prompt block, or None.
+
+    None in ⇒ None out ⇒ no overlay, which is the path every user without a
+    linked account already takes. This is the ONLY bridge from the wire model
+    to the prompt: the device supplies validated values, this supplies the
+    layout.
+    """
+    if payload is None:
+        return None
+    return snapshot_text(
+        AlpacaAccount(
+            cash=payload.cash,
+            portfolio_value=payload.portfolio_value,
+            # The device does not report `equity` — the block never showed it.
+            equity=payload.portfolio_value,
+            buying_power=payload.buying_power,
+        ),
+        [
+            AlpacaPosition(
+                symbol=p.symbol,
+                qty=p.qty,
+                market_value=p.market_value,
+                unrealized_pl=p.unrealized_pl,
+            )
+            for p in payload.positions
+        ],
     )

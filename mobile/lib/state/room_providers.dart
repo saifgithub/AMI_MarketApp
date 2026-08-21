@@ -23,6 +23,7 @@ import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/telemetry_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ami_trade/state/alpaca_providers.dart';
 
 /// CR090: the structural live-data disclosure for one Room run. One-shot,
 /// like [paywall] — set once from the `live_data_notice` SSE event and never
@@ -191,8 +192,26 @@ class RoomNotifier extends StateNotifier<RoomState> {
       // CR181 — captured before the stream; `_ref` is unusable if this
       // notifier is disposed while the run streams on.
       final telemetry = _ref.read(telemetryProvider);
+      // CR202: the linked Alpaca paper account, fetched by this device with a
+      // credential the backend never sees. Best-effort — null when unlinked or
+      // unreachable, which simply means the agents get no overlay. A
+      // non-authoritative overlay must never block a convene the user paid for.
+      //
+      // Captured HERE, before any await, for the same reason as `telemetry`
+      // above: `_ref` is unusable once this notifier is disposed, and reading
+      // it after the `getOrCreate()` gap threw "Tried to use RoomNotifier
+      // after dispose" whenever the user left the screen mid-start.
+      // Started before the `getOrCreate()` await rather than after it, so this
+      // adds no NEW sequential gap to `start()`. It is not a micro-optimisation:
+      // every extra await widens the window in which the user can leave the
+      // screen, and a notifier disposed mid-start then throws out of the
+      // `catch` below when it touches `state` (caught by
+      // room_agent_withheld_test.dart, which disposes while start() is in
+      // flight). Two independent reads, one gap.
+      final alpacaFuture = _ref.read(alpacaSnapshotCacheProvider).current();
       final userId = await DeviceUser.getOrCreate();
-      final stream = api.streamRoom(userId: userId, ticker: _ticker);
+      final alpaca = (await alpacaFuture)?.toWireJson();
+      final stream = api.streamRoom(userId: userId, ticker: _ticker, alpaca: alpaca);
       await for (final ev in stream) {
         switch (ev['kind']) {
           case 'started':
@@ -323,16 +342,29 @@ class RoomNotifier extends StateNotifier<RoomState> {
       // CR047: the credit wall. This lands before any `started` event (no
       // run_id yet), so surface it as a paywall — for Winzip, a live cooldown
       // countdown — never a generic "Stream failed".
+      if (!mounted) return;
       state = state.copyWith(streaming: false, paywall: e);
     } on ServerUnavailableException {
       // DEF073: a 5xx at the convene POST (no run started). Show a friendly
       // "AMI's briefly offline — try again" card with Retry, not a raw code.
+      if (!mounted) return;
       state = state.copyWith(streaming: false, serverError: true);
     } catch (e) {
       // Stream broke (phone sleep, network loss, etc.). The backend
       // keeps the run going in a detached task and persists the final
       // state to /v1/room/{run_id} — so as long as we captured the
       // run_id from the `started` event, we can recover.
+      //
+      // CR202: `mounted` is checked on all three handlers because
+      // `roomNotifierProvider` is autoDispose — the user leaving the screen
+      // reaps the notifier while `start()` is still in flight, and touching
+      // `state` afterwards throws "Tried to use RoomNotifier after dispose"
+      // OUT of the very handler meant to absorb failures. Nothing is lost by
+      // returning: nobody is listening to a disposed notifier, and the backend
+      // run continues detached regardless (the run_id is recoverable from
+      // /v1/room/{run_id}). This was always reachable; CR202's extra await
+      // before the stream is what made it reproducible.
+      if (!mounted) return;
       if (state.runId != null) {
         await _recoverViaPolling(state.runId!);
       } else {

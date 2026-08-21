@@ -14,7 +14,6 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show debugPrint, visibleForTesting;
 
-import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/models/app_notification.dart';
 import 'package:ami_trade/models/auth.dart';
 import 'package:ami_trade/models/ai_coach.dart';
@@ -684,12 +683,14 @@ class ApiClient {
     required String sessionId,
     required String userMessage,
     required List<ChatMessage> history,
+    Map<String, dynamic>? alpaca,
   }) async* {
     final uri = Uri.parse('$baseUrl/v1/agents/one_on_one/message');
     final body = jsonEncode({
       'session_id': sessionId,
       'user_message': userMessage,
       'history': history.map((m) => m.toJson()).toList(),
+      if (alpaca != null) 'alpaca': alpaca,
     });
 
     final response = await _httpClient.send(_sseRequest(uri, body));
@@ -931,13 +932,19 @@ class ApiClient {
     required String ticker,
     String locale = 'en',
     Map<String, dynamic>? mandateOverride,
+    Map<String, dynamic>? alpaca,
   }) async* {
     final uri = Uri.parse('$baseUrl/v1/room/stream');
+    // CR202: `alpaca` must ride the START request. The run is a detached
+    // background task that composes its prompts after this call returns, so
+    // there is no later point at which the backend could ask this device for
+    // the account. Null = no linked account = no overlay.
     final body = jsonEncode({
       'user_id': userId,
       'ticker': ticker,
       'locale': locale,
       if (mandateOverride != null) 'mandate_override': mandateOverride,
+      if (alpaca != null) 'alpaca': alpaca,
     });
     final response = await _httpClient.send(_sseRequest(uri, body));
     if (response.statusCode == 402) {
@@ -1723,39 +1730,32 @@ class ApiClient {
     );
   }
 
-  // ── Alpaca paper trading (AT:R45) ──────────────────────────────────────
+  // ── Alpaca paper trading (AT:R45; gutted CR202) ────────────────────────
+  //
+  // The status / portfolio / positions proxies and both link-and-store calls
+  // are gone: the credential lives on this device now and the app talks to
+  // paper-api.alpaca.markets directly (services/alpaca/alpaca_client.dart).
+  // What the backend still receives is the *result* — positions, uploaded with
+  // a Room convene or a 1-on-1 turn so the agents can see the linked account.
+  // See the `alpaca` argument on streamRoom / streamOneOnOneMessage.
+  //
+  // The one exception is the OAuth code exchange: Alpaca's token endpoint
+  // requires client_secret and documents no PKCE, so it cannot run on-device.
+  // The backend performs it and hands the tokens straight back — it stores
+  // nothing. Parked: unreachable until ALPACA_CLIENT_ID is set and Alpaca
+  // approves the app.
 
-  Future<AlpacaStatus> alpacaStatus() async {
-    final r = await _dio.get<Map<String, dynamic>>('/v1/alpaca/status');
-    return AlpacaStatus.fromJson(r.data!);
-  }
-
-  Future<void> alpacaLink(String code) async {
-    await _dio.post<Map<String, dynamic>>('/v1/alpaca/link', data: {'code': code});
-  }
-
-  Future<void> alpacaLinkApiKey(String apiKey, String apiSecret) async {
-    await _dio.post<Map<String, dynamic>>(
-      '/v1/alpaca/link_apikey',
-      data: {'api_key': apiKey, 'api_secret': apiSecret},
+  Future<({String accessToken, String refreshToken})> alpacaExchangeOAuthCode(
+    String code,
+  ) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/alpaca/link',
+      data: {'code': code},
     );
-  }
-
-  Future<void> alpacaUnlink() async {
-    await _dio.delete<void>('/v1/alpaca/unlink');
-  }
-
-  Future<AlpacaPortfolio> alpacaPortfolio() async {
-    final r = await _dio.get<Map<String, dynamic>>('/v1/alpaca/portfolio');
-    return AlpacaPortfolio.fromJson(r.data!);
-  }
-
-  Future<List<AlpacaPosition>> alpacaPositions() async {
-    final r = await _dio.get<List<dynamic>>('/v1/alpaca/positions');
-    return (r.data ?? [])
-        .cast<Map<String, dynamic>>()
-        .map(AlpacaPosition.fromJson)
-        .toList();
+    return (
+      accessToken: r.data!['access_token'] as String,
+      refreshToken: (r.data!['refresh_token'] ?? '') as String,
+    );
   }
 
   // ── Games (CR109 slice 2 — dark-launched behind AMI_GAMES) ─────────────

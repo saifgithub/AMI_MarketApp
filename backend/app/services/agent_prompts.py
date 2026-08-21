@@ -69,7 +69,9 @@ def build_agent_prompt(
     portfolio_snapshot is the user's real holdings block — for the Room this is the
     always-present, sim-sourced portfolio of record (CR055); it comes first because it
     is authoritative for reasoning. alpaca_snapshot is the pre-formatted block from
-    alpaca_service.snapshot_text() used by the 1-on-1 agent path; when both are set the
+    alpaca_service.render_snapshot() — since CR202 it is rendered from a snapshot the
+    user's DEVICE fetched and uploaded, because the Alpaca credential lives there and
+    not on this host; used by the 1-on-1 agent path. When both are set the
     Room folds Alpaca into portfolio_snapshot instead, so exactly one portfolio block is
     emitted. Either being None omits only that block (never the whole portfolio — the
     Room always passes a non-empty portfolio_snapshot, degrading loudly on failure).

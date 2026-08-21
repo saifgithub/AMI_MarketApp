@@ -113,7 +113,6 @@ from app.services.entitlements import (
     resolve_roster_for_user,
 )
 from app.services.tier_policy import pick_tier
-from app.services.alpaca_service import snapshot_text as alpaca_snapshot_text
 from app.services.sim_engine import get_sim_engine
 from app.trading_math.portfolio import shares_for_size
 from app.trading_math.risk import drawdown_contribution
@@ -3527,6 +3526,7 @@ class RoomRunner:
         agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
         on_complete: Callable[[UUID], Awaitable[None]] | None = None,
         backtest: AsOfContext | None = None,
+        alpaca_snapshot: str | None = None,
     ) -> UUID:
         """Start a room run as a detached background task. Returns run_id immediately.
 
@@ -3726,6 +3726,7 @@ class RoomRunner:
                     social_feed=social_feed,
                     credit_cost=charged_total,
                     roster=roster,
+                    alpaca_snapshot=alpaca_snapshot,
                 ):
                     await q.put(ev)
             except Exception as exc:
@@ -3791,6 +3792,7 @@ class RoomRunner:
         credit_cost: int | None = None,
         roster: AnalystRoster | None = None,
         backtest: AsOfContext | None = None,
+        alpaca_snapshot: str | None = None,
     ) -> AsyncIterator[RoomEvent]:
         """Run a Room session, yielding events as agents speak.
 
@@ -3911,21 +3913,13 @@ class RoomRunner:
         # None = no locale restriction (default for alpha). Explicit set ⇒ enforced.
         locale_allowed = locale_allowed_universe
 
-        # AT:R45 — fetch Alpaca paper portfolio once per run; folded into the
-        # portfolio block as a clearly-labelled overlay. Best-effort: None if
-        # unlinked or error.
-        alpaca_snap: str | None = None
-        if user_id is not None:
-            from app.db.models import User
-            from sqlalchemy import select as sa_select
-            with get_session() as s:
-                urow = s.execute(sa_select(User).where(User.id == user_id)).scalar_one_or_none()
-                if urow and urow.alpaca_access_token:
-                    alpaca_snap = alpaca_snapshot_text(
-                        urow.alpaca_access_token,
-                        auth_mode=urow.alpaca_auth_mode or "oauth",
-                        api_secret=urow.alpaca_refresh_token if urow.alpaca_auth_mode == "apikey" else None,
-                    )
+        # CR202 — the Alpaca overlay arrives with the request, already rendered
+        # from a validated payload by `alpaca_service.render_snapshot`. This host
+        # holds no Alpaca credential and cannot fetch it: the key lives on the
+        # user's device. `None` means no linked account (the common case) OR a
+        # path with no device attached to ask — the resume-after-restart and
+        # backtest pumps both land here, and correctly render no overlay.
+        alpaca_snap: str | None = alpaca_snapshot
 
         # CR055 — the real simulated holdings, injected UNCONDITIONALLY into every
         # agent's prompt (never gated on an Alpaca link). Degrades loudly on failure;

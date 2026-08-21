@@ -1,33 +1,29 @@
 """Alpaca paper trading routes.
 
-All routes require a claimed (non-anonymous) user via get_current_user.
-Anonymous users receive 403 — they have no account to link.
+**CR202 — almost nothing is left here, and that is the point.** The user's
+Alpaca credentials live on their device and the device talks to
+`paper-api.alpaca.markets` directly, so the status / portfolio / positions
+proxies and both link-and-store routes are gone along with the columns they
+wrote to. Link state is device-local; there is nothing on this host to ask.
 
-POST /v1/alpaca/link          — exchange OAuth code, store tokens
-DELETE /v1/alpaca/unlink      — clear stored tokens
-GET  /v1/alpaca/status        — is this user linked?
-GET  /v1/alpaca/portfolio     — proxied paper account summary
-GET  /v1/alpaca/positions     — proxied paper positions list
+The one surviving route is the parked OAuth token exchange. Alpaca's token
+endpoint requires `client_secret` and documents no PKCE, so that single call
+cannot move to the device — but its result can: this returns the tokens to the
+caller and stores nothing. It is unreachable today (`ALPACA_CLIENT_ID` unset,
+client OAuth tab disabled) and exists so the OAuth path stays open without
+re-introducing host custody.
+
+POST /v1/alpaca/link — exchange an OAuth code, RETURN the tokens (no storage)
 """
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy import select
 
 from app.api.dependencies import get_current_user
-from app.db import get_session
 from app.db.models import User
-from app.services.alpaca_service import (
-    AlpacaError,
-    exchange_code,
-    get_account,
-    get_positions,
-    validate_api_key,
-)
+from app.services.alpaca_service import AlpacaError, exchange_code
 
 router = APIRouter(prefix="/v1/alpaca", tags=["alpaca"])
 
@@ -38,49 +34,17 @@ def _require_claimed(user: User) -> User:
     return user
 
 
-def _require_linked(user: User) -> str:
-    if not user.alpaca_access_token:
-        raise HTTPException(status.HTTP_409_CONFLICT, "alpaca_not_linked")
-    return user.alpaca_access_token
-
-
-# ── Schemas ──────────────────────────────────────────────────────────────
-
-
 class LinkRequest(BaseModel):
     code: str
 
 
-class LinkApiKeyRequest(BaseModel):
-    api_key: str
-    api_secret: str
-
-
 class LinkResponse(BaseModel):
-    linked: bool
-    linked_at: datetime
+    """The tokens go straight back to the device, which is the only place they
+    are ever stored. Both field names match `http_audit`'s structural
+    secret-field scrubber (DEF181), so neither is written to the audit log."""
 
-
-class StatusResponse(BaseModel):
-    linked: bool
-    linked_at: datetime | None = None
-
-
-class PortfolioResponse(BaseModel):
-    cash: float
-    portfolio_value: float
-    equity: float
-    buying_power: float
-
-
-class PositionResponse(BaseModel):
-    symbol: str
-    qty: float
-    market_value: float
-    unrealized_pl: float
-
-
-# ── Routes ───────────────────────────────────────────────────────────────
+    access_token: str
+    refresh_token: str
 
 
 @router.post("/link", response_model=LinkResponse, status_code=status.HTTP_200_OK)
@@ -94,106 +58,7 @@ def link_alpaca(
     except AlpacaError as exc:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, exc.detail) from exc
 
-    linked_at = datetime.now(timezone.utc)
-    with get_session() as s:
-        row = s.execute(select(User).where(User.id == current_user.id)).scalar_one()
-        row.alpaca_access_token = tokens.access_token
-        row.alpaca_refresh_token = tokens.refresh_token
-        row.alpaca_linked_at = linked_at
-        s.commit()
-
-    return LinkResponse(linked=True, linked_at=linked_at)
-
-
-@router.post("/link_apikey", response_model=LinkResponse, status_code=status.HTTP_200_OK)
-def link_alpaca_apikey(
-    body: LinkApiKeyRequest,
-    current_user: User = Depends(get_current_user),
-) -> LinkResponse:
-    _require_claimed(current_user)
-    try:
-        validate_api_key(body.api_key, body.api_secret)
-    except AlpacaError as exc:
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, exc.detail) from exc
-
-    linked_at = datetime.now(timezone.utc)
-    with get_session() as s:
-        row = s.execute(select(User).where(User.id == current_user.id)).scalar_one()
-        row.alpaca_access_token = body.api_key
-        row.alpaca_refresh_token = body.api_secret
-        row.alpaca_linked_at = linked_at
-        row.alpaca_auth_mode = "apikey"
-        s.commit()
-
-    return LinkResponse(linked=True, linked_at=linked_at)
-
-
-@router.delete("/unlink", status_code=status.HTTP_200_OK)
-def unlink_alpaca(
-    current_user: User = Depends(get_current_user),
-) -> dict:
-    _require_claimed(current_user)
-    with get_session() as s:
-        row = s.execute(select(User).where(User.id == current_user.id)).scalar_one()
-        row.alpaca_access_token = None
-        row.alpaca_refresh_token = None
-        row.alpaca_linked_at = None
-        row.alpaca_auth_mode = None
-        s.commit()
-    return {"unlinked": True}
-
-
-@router.get("/status", response_model=StatusResponse)
-def alpaca_status(
-    current_user: User = Depends(get_current_user),
-) -> StatusResponse:
-    _require_claimed(current_user)
-    return StatusResponse(
-        linked=bool(current_user.alpaca_access_token),
-        linked_at=current_user.alpaca_linked_at,
+    return LinkResponse(
+        access_token=tokens.access_token,
+        refresh_token=tokens.refresh_token,
     )
-
-
-@router.get("/portfolio", response_model=PortfolioResponse)
-def alpaca_portfolio(
-    current_user: User = Depends(get_current_user),
-) -> PortfolioResponse:
-    _require_claimed(current_user)
-    token = _require_linked(current_user)
-    auth_mode = current_user.alpaca_auth_mode or "oauth"
-    api_secret = current_user.alpaca_refresh_token if auth_mode == "apikey" else None
-    try:
-        account = get_account(token, auth_mode=auth_mode, api_secret=api_secret)
-    except AlpacaError as exc:
-        code = status.HTTP_401_UNAUTHORIZED if exc.status_code == 401 else status.HTTP_502_BAD_GATEWAY
-        raise HTTPException(code, exc.detail) from exc
-    return PortfolioResponse(
-        cash=account.cash,
-        portfolio_value=account.portfolio_value,
-        equity=account.equity,
-        buying_power=account.buying_power,
-    )
-
-
-@router.get("/positions", response_model=list[PositionResponse])
-def alpaca_positions(
-    current_user: User = Depends(get_current_user),
-) -> list[PositionResponse]:
-    _require_claimed(current_user)
-    token = _require_linked(current_user)
-    auth_mode = current_user.alpaca_auth_mode or "oauth"
-    api_secret = current_user.alpaca_refresh_token if auth_mode == "apikey" else None
-    try:
-        positions = get_positions(token, auth_mode=auth_mode, api_secret=api_secret)
-    except AlpacaError as exc:
-        code = status.HTTP_401_UNAUTHORIZED if exc.status_code == 401 else status.HTTP_502_BAD_GATEWAY
-        raise HTTPException(code, exc.detail) from exc
-    return [
-        PositionResponse(
-            symbol=p.symbol,
-            qty=p.qty,
-            market_value=p.market_value,
-            unrealized_pl=p.unrealized_pl,
-        )
-        for p in positions
-    ]

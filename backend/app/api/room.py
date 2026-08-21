@@ -57,6 +57,8 @@ from app.api.dependencies import get_current_user
 from app.api.sse import escape_sse_text, sse_json, sse_text
 from app.db import get_session
 from app.db.models import RoomRunRow, User
+from app.schemas.alpaca import AlpacaSnapshotIn
+from app.services.alpaca_service import render_snapshot
 from app.services.credit_service import InsufficientCredits
 from app.services.rate_limit import room_stream_rate_limit
 from app.services.reputation_service import get_reputation_service
@@ -89,6 +91,12 @@ class RoomStartRequest(BaseModel):
     ticker: str
     mandate_override: dict | None = None
     locale: str = "en"
+    # CR202: the user's Alpaca credentials live on their device, so the device
+    # fetches its own paper account and sends the result here. It must ride the
+    # START request — the run is a detached background task that composes its
+    # prompts after this handler has returned, so there is no later moment at
+    # which the device can be asked. Absent = no linked account = no overlay.
+    alpaca: AlpacaSnapshotIn | None = None
 
 
 @router.post("/stream", dependencies=[Depends(room_stream_rate_limit)])
@@ -202,6 +210,7 @@ async def stream_room(
             portfolio_value=portfolio_value,
             current_drawdown_pct=current_drawdown_pct,
             on_complete=_finalise_to_journal,
+            alpaca_snapshot=render_snapshot(req.alpaca),
         )
     except InsufficientCredits as e:
         detail = {
