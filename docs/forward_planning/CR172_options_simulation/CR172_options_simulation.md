@@ -805,3 +805,110 @@ Eight guards, each broken in turn against the two new test files:
   path exists.
 - **AR/MS are English seeds**, marked as such by `translate_arb.py
   --seed-missing` and flagged `retranslate:[ar,ms]` per key.
+
+---
+
+## Build log — slice 3 part 2: the Room proposes a structure (2026-08-22, AT:R73)
+
+§10 steps 2 and 3, which is acceptance criterion 4. `option_strategist` existed
+after part 1 and nothing called it from a Room run; now the Chief Investment
+Officer reads a numbered menu and answers with an index.
+
+### What it ships
+
+| Piece | Where |
+|---|---|
+| The menu, built once per run | `room_runner._build_room_option_candidates` |
+| The prompt block + the one new JSON key | `room_prompts._render_option_candidates`, `_PM_STRUCTURE_FORMAT` |
+| The index, re-validated against the issued set | `room_runner._resolve_pm_structure`, called from `_parse_pm_verdict` |
+| The structure on the wire | `schemas/room.py` — `VerdictLeg`, `Verdict.strategy`, `Verdict.legs` |
+
+### Decisions taken while building, that §10 did not settle
+
+**The gate lives in the builder, not in the renderer.** A mandate without
+`derivatives_allowed` reads no market-data provider at all — asserted by
+counting reads, not by catching an exception. Gating only the rendered block
+would have left `_parse_pm_verdict` willing to honour an index into a list the
+CIO was never shown, which is the same shape as trusting a client-supplied
+premium: the check has to sit where the data enters, not where it is displayed.
+
+**The risk budget is the equity trade's own dollar risk, not its position
+value.** `drawdown_contribution` — the function the safety floor enforces the
+drawdown cap with — turns (size, entry, stop) into points of portfolio, and the
+budget is that many points of `portfolio_value`. 3% of $1m at a 6% stop is
+$1,800. Sized off the position value instead it would be $30,000, and at ~$920
+a contract the menu would offer 32 contracts of an option against a share trade
+that risked 1,800. One function, one meaning of "risk".
+
+**Direction comes from the level triple, not from the debate.** The Trader's
+`BUY|HOLD|WAIT` is unparsed prose (DEF235), so there is no parsed direction in
+this codebase to read, and inferring one from prose is the surface that defect
+closed. A target above entry is a bullish trade and that is what an APPROVE
+means here. Recorded as a real limit: the seeded triple is bullish by
+construction, so today the menu is always bullish structures. That is coherent
+while `structure_id` only matters on an APPROVE, and it stops being coherent the
+day a Trader's parsed levels reach `ctx`.
+
+**A refused index is an explicit PASS carrying the real reason, not a `None`
+return.** Returning `None` routes into the generic *"did not return a
+machine-readable verdict"* — a false statement about a reply that parsed
+perfectly well (DEF261, one field along) — and it would also spend DEF058's
+reformat retry trying to recover a verdict that must not be recovered.
+
+**A stated absence is an equity verdict, not a refusal.** `null`, `"none"`,
+`"n/a"` and friends read as "no structure". A model handed an optional key
+sometimes fills it with a word rather than omitting it, and that must not cost
+the user an approval. The control is against an APPROVE that *names* a
+structure the run never issued; none of those names one.
+
+**`pick_expiry` moved out of `api/options.py` into `services/option_chain.py`.**
+The Room and `/propose` must structure against the same board for the same
+horizon, or the menu the CIO chose from is priced on a different expiry than the
+one the ticket opens against. One rule, one copy.
+
+### Mutation results
+
+| # | Mutation | Result |
+|---|---|---|
+| M1 | the `derivatives_allowed` gate removed | **SURVIVED first pass** — the test was strengthened, not the code |
+| M2 | the index bounds check dropped | killed |
+| M3 | a FORBIDDEN candidate honoured | killed |
+| M4 | `strategy` read off the reply instead of the candidate | killed |
+| M5 | budget = position value instead of risk | killed |
+| M6 | the structure key appended unconditionally | killed |
+| M7 | FORBIDDEN candidates filtered out of the menu | killed |
+| M8 | an unreadable `structure_id` silently ignored | killed |
+| M9 | a fractional `structure_id` truncated onto a neighbour | killed |
+
+M1 is the one worth writing down. `_build_room_option_candidates` catches
+everything — a dead Room is worse than a missing menu — so the first version of
+the test used a provider that *raised* on any read, and the exception was
+swallowed: the test passed whether the gate held or not. It now counts reads and
+asserts zero, with a companion test that the same provider **is** read once the
+gate opens, because a gate test that would also pass on a builder that reads
+nothing under any mandate asserts nothing.
+
+### Found while building
+
+**DEF353** — `check_option_open`'s `long_only` refusal closed with *"long calls,
+long puts and debit spreads are not"*, and D4's ratified rule is sell-to-open
+full stop, so a bull call spread was refused and named as permitted in the same
+sentence. Visible because the §10 menu renders that string under each FORBIDDEN
+structure, two lines under the spread's own net-debit figure. Copy fixed; the
+rule is unchanged. Its guard asserts the property rather than the string: every
+structure the sentence names as remaining available is run back through
+`check_option_open` and must pass.
+
+### Still open after this slice
+
+- **The mobile wiring.** The ticket is built and the verdict now carries
+  `strategy`/`legs`; nothing on `room_screen.dart` opens one yet.
+- **Realised vol does not reach the strategist.** The Room holds no daily close
+  series — the profile carries fundamentals and a 52-week range — and a second
+  network round-trip per convene was not worth it. `build_candidates` records the
+  absence and orders structurally, which is the loud degrade, not a silent one.
+- Criterion 1's byte-identical-NAV proof, criterion 5's `_check_option_margin`
+  sub-pass in CR170's sweep, criterion 10's lesson 316–322 amendments, §11's
+  NAV/FIFO tail and the dividend/option-marks feeds — all unchanged.
+
+**Acceptance scorecard: 6 of 10.** Criterion 4 is met by this slice.

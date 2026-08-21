@@ -59,7 +59,13 @@ from app.services.asof_context import AsOfContext, asof_scope
 from app.schemas import AgentId, AgentMessage, Mandate
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.mandate import Plan
-from app.schemas.room import RoomRun, RoomStatus, Verdict, VerdictAction
+from app.schemas.room import (
+    RoomRun,
+    RoomStatus,
+    Verdict,
+    VerdictAction,
+    VerdictLeg,
+)
 from app.schemas.trade import OrderType, ProposedTrade, Side
 from app.services.fundamentals import fetch_fundamentals, fetch_live_fundamentals
 from app.services.journal_store import get_journal_store
@@ -338,6 +344,14 @@ class _RoomContext:
     # Empty for every plan except FLOOR_PASS past a threshold.
     withheld: tuple[AgentId, ...] = field(default_factory=tuple)
     roster_next_step: tuple[AgentId, int] | None = None
+    # CR172 §10 — the costed option structures this run issued to the CIO, in
+    # the order they were issued. `structure_id` in the PM's reply is an INDEX
+    # into this tuple and is validated against it by `_parse_pm_verdict`, so the
+    # two must be the same object: a menu rebuilt at parse time could price a
+    # different board than the one the CIO read. Empty for every run whose
+    # mandate does not permit derivatives, which is the default.
+    option_candidates: tuple = field(default_factory=tuple)
+    option_spot: float | None = None
 
 
 # CR104 — the numeric fundamentals fields tracked per-field in
@@ -1117,6 +1131,118 @@ def _build_room_sector_context(
         return [], {}, None, {}
 
 
+def _build_room_option_candidates(
+    *,
+    ticker: str,
+    mandate: Mandate,
+    portfolio_value: float,
+    size_pct: float,
+    entry: float,
+    stop: float,
+    target: float,
+    horizon_days: int,
+    shares_held: float,
+) -> tuple[tuple, float | None]:
+    """CR172 §10 step 1, on the Room's inputs — the menu the CIO chooses from.
+
+    Blocking (it reads the option board), so the caller runs it in a thread —
+    DEF136's finding, one module along: a yfinance fetch on the loop thread
+    stalls every other Room stream this worker is serving.
+
+    **The gate is here and only here.** `mandate.compliance.derivatives_allowed`
+    is False for every mandate that predates CR172 §9, and a run that fails it
+    builds no menu at all — so its PM prompt is byte-identical to what it was
+    before this CR and no `structure_id` can be honoured, because there is
+    nothing for one to index. A gate that only hid the block would still leave
+    the parser accepting an index into a list the CIO never saw.
+
+    The risk budget is the equity trade's own dollar risk, not the position
+    size: `drawdown_contribution` is the function the safety floor enforces the
+    drawdown cap with, so the options are sized against the same loss the shares
+    would have risked rather than against a second, larger number that happens
+    to be lying nearby. An incoherent level triple yields no contribution and
+    therefore no menu — the same refusal `build_option_ladder` already makes,
+    for the same reason.
+
+    Direction comes from that triple too, and deliberately not from the debate:
+    the Trader's BUY|HOLD|WAIT is unparsed prose (DEF235), so there is no parsed
+    direction in this codebase to read. A target above entry is a bullish trade
+    and that is what an APPROVE means here; nothing infers a view from prose.
+    """
+    if not getattr(mandate.compliance, "derivatives_allowed", False):
+        return (), None
+    try:
+        from app.services.option_chain import get_enriched_chain, pick_expiry
+        from app.services.option_strategist import build_candidates
+
+        contribution = drawdown_contribution(size_pct, entry, stop)
+        if contribution is None:
+            logger.info(
+                "room_option_menu_skipped",
+                ticker=ticker,
+                reason="the level triple carries no computable risk to size against",
+            )
+            return (), None
+        budget = round(portfolio_value * contribution.contribution_pts / 100.0, 2)
+        if target > entry:
+            direction = "bullish"
+        elif target < entry:
+            direction = "bearish"
+        else:
+            logger.info(
+                "room_option_menu_skipped", ticker=ticker,
+                reason="the target does not sit either side of the entry",
+            )
+            return (), None
+
+        expiry = pick_expiry(ticker, horizon_days, None)
+        if expiry is None:
+            logger.info(
+                "room_option_menu_skipped", ticker=ticker,
+                reason="no listed expiry could be read for this underlying",
+            )
+            return (), None
+        chain = get_enriched_chain(ticker, expiry)
+        if chain is None:
+            logger.info(
+                "room_option_menu_skipped", ticker=ticker,
+                reason="the chain could not be priced against an honest spot",
+            )
+            return (), None
+
+        result = build_candidates(
+            chain,
+            underlying=ticker,
+            direction=direction,
+            mandate=mandate,
+            risk_budget_usd=budget,
+            shares_held=shares_held,
+            target=target,
+            stop=stop,
+            # No realised vol reaches this path yet: the Room holds no daily
+            # close series (the profile carries fundamentals and a 52-week
+            # range, not a series), and fetching one here would be a second
+            # network round-trip per convene. `build_candidates` records the
+            # absence itself and orders structurally — which is the honest
+            # degrade, not a silent one. Named in the CR as remaining work.
+            realised_vol=None,
+        )
+        logger.info(
+            "room_option_menu_built",
+            ticker=ticker,
+            direction=direction,
+            candidates=len(result.candidates),
+            budget_usd=budget,
+            expiry=result.expiry,
+        )
+        return tuple(result.candidates), result.spot
+    except Exception as exc:  # noqa: BLE001 — no menu is a fine outcome; a dead run is not
+        logger.warning(
+            "room_option_menu_failed", ticker=ticker, error=str(exc)[:200],
+        )
+        return (), None
+
+
 def _build_room_risk_limit_context(
     user_id: UUID | None, *, portfolio_value: float, quotes: dict[str, float],
 ) -> tuple[object, list | None, float | None]:
@@ -1448,6 +1574,95 @@ def _pm_narration(parsed: dict[str, Any]) -> str:
     return best
 
 
+# Values a model writes when it means "no structure". `structure_id` is optional
+# and omitting it is the documented answer, but a model asked for an optional key
+# sometimes fills it in with a word instead of leaving it out. Reading those as
+# "no structure" is not a weakening of the control below: the control is against
+# an APPROVE that NAMES a structure the run never issued, and none of these names
+# one.
+_PM_NO_STRUCTURE_VALUES = frozenset({"", "none", "null", "n/a", "na", "nil", "-"})
+
+
+def _resolve_pm_structure(
+    parsed: dict, ctx: _RoomContext
+) -> tuple[object | None, str | None]:
+    """CR172 §10 step 3 — the CIO's `structure_id`, validated against the set
+    this run actually issued. Returns (candidate, refusal); at most one is set.
+
+    A refusal is not an error to swallow — the caller turns it into an explicit
+    PASS carrying this text, so the user is told the trade was declined and why.
+    Returning None and letting the generic "did not return a machine-readable
+    verdict" path claim it would be a false statement about a reply that parsed
+    perfectly well; DEF261 is the same mistake one field along.
+
+    Every rejection here is deliberate rather than defensive:
+
+    * **An id outside the issued set** — including any id at all on a run that
+      issued no menu — is a structure the CIO invented. Honouring it would mean
+      opening legs nobody costed, which is the P5 defect with a cash consequence.
+    * **A candidate the menu marked FORBIDDEN** is refused even though the safety
+      floor would refuse it again at open. Letting it reach the user as an
+      approved card that then cannot be opened is worse than a PASS: it teaches
+      that the mandate is advisory.
+    * **A candidate with no legs** cannot happen — `option_strategist` never
+      emits one — and is refused anyway, because "malformed legs → PASS" is the
+      acceptance criterion and a check that only holds while an upstream
+      invariant holds is not a check.
+    """
+    raw = parsed.get("structure_id")
+    if raw is None:
+        return None, None
+    if isinstance(raw, str) and raw.strip().lower() in _PM_NO_STRUCTURE_VALUES:
+        return None, None
+    # A bool is an int in Python and `structure_id: true` names nothing; a
+    # fractional number names nothing either, and `int()` would quietly truncate
+    # it onto a neighbouring structure — picking a trade the CIO did not choose
+    # is worse than refusing one it chose badly.
+    if isinstance(raw, bool):
+        index = None
+    elif isinstance(raw, float) and not raw.is_integer():
+        index = None
+    else:
+        try:
+            index = int(raw)
+        except (TypeError, ValueError):
+            index = None
+    if index is None:
+        return None, (
+            f"Chief Investment Officer named an option structure as {raw!r}, "
+            f"which is not one of the numbered structures AMI costed for this "
+            f"run. No trade was opened."
+        )
+
+    candidates = ctx.option_candidates
+    if not 0 <= index < len(candidates):
+        return None, (
+            f"Chief Investment Officer chose option structure #{index}, which "
+            f"AMI did not cost for this run"
+            + (
+                f" (there were {len(candidates)}, numbered 0–{len(candidates) - 1})"
+                if candidates
+                else " (no option structures were offered on this run)"
+            )
+            + ". No trade was opened — AMI does not open legs it did not price."
+        )
+
+    candidate = candidates[index]
+    violations = tuple(getattr(candidate, "mandate_violations", ()) or ())
+    if violations:
+        return None, (
+            f"Chief Investment Officer chose a "
+            f"{candidate.strategy_name.replace('_', ' ')}, which your mandate "
+            f"does not permit: {' '.join(violations)} No trade was opened."
+        )
+    if not getattr(candidate, "legs", ()):
+        return None, (
+            "Chief Investment Officer chose an option structure that carries no "
+            "priced legs. No trade was opened."
+        )
+    return candidate, None
+
+
 def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None]:
     """Extract the PM's display narration + intended decision from its raw
     LLM response (DEF056). Returns (display_text, llm_verdict); llm_verdict
@@ -1498,6 +1713,24 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
                 action=VerdictAction.PASS, reason=absent_rationale
             )
         return narration, Verdict(action=VerdictAction.PASS, reason=narration)
+
+    # CR172 §10 step 3 — before anything else on the APPROVE path, because a
+    # refused structure ends the verdict and there is no point pricing levels
+    # for a trade that is not happening.
+    structure, structure_refusal = _resolve_pm_structure(parsed, ctx)
+    if structure_refusal is not None:
+        logger.warning(
+            "room_pm_structure_refused",
+            ticker=ctx.ticker,
+            structure_id=parsed.get("structure_id"),
+            issued=len(ctx.option_candidates),
+        )
+        reason = f"{narration} {structure_refusal}".strip() if narration else structure_refusal
+        return narration or structure_refusal, Verdict(
+            action=VerdictAction.PASS,
+            reason=reason,
+            overridden_from_llm=True,
+        )
 
     size_pct = _safe_float(parsed.get("size_pct"))
     if size_pct is None:
@@ -1585,6 +1818,32 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     if target is not None:
         _prov["target"] = "pm" if target_raw is not None else "ami_default"
 
+    # CR172 §10 step 2 — every figure read off the candidate, none off the
+    # reply. The sentence stays beside the card for CR106's reason: the card is
+    # behind a tap, `reason` is the decision the user reads.
+    strategy = None
+    legs = None
+    if structure is not None:
+        strategy = structure.strategy_name
+        legs = [
+            VerdictLeg(
+                right=leg.right,
+                strike=leg.strike,
+                quantity=leg.quantity,
+                premium=leg.premium,
+                multiplier=leg.multiplier,
+                expiry=leg.expiry,
+            )
+            for leg in structure.legs
+        ]
+        reason += (
+            f" (Expressed as a {structure.strategy_name.replace('_', ' ')} — "
+            f"{structure.contracts} contract"
+            f"{'s' if structure.contracts != 1 else ''}, expiry "
+            f"{structure.expiry}. Every figure of it was computed by AMI, not "
+            f"stated by the Chief Investment Officer.)"
+        )
+
     return display, Verdict(
         action=VerdictAction.APPROVE,
         size_pct=size_pct,
@@ -1594,6 +1853,8 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
         time_horizon_days=horizon_days,
         reason=reason,
         level_provenance=_prov or None,
+        strategy=strategy,
+        legs=legs,
     )
 
 
@@ -4001,6 +4262,28 @@ class RoomRunner:
         ctx.conservative_size_pct = _debator.conservative
         ctx.neutral_size_pct = _debator.neutral
 
+        # CR172 §10 — built here, once, on the same seeded level triple the
+        # Execution Desk's proposal is rendered from, so the menu the CIO reads
+        # and the trade the rest of the Room argued about are the same trade.
+        # `to_thread` for DEF136's reason (this reads the option board). Costs
+        # nothing on a run whose mandate does not permit derivatives: the gate
+        # inside returns before any provider is touched.
+        ctx.option_candidates, ctx.option_spot = await asyncio.to_thread(
+            _build_room_option_candidates,
+            ticker=ctx.ticker,
+            mandate=mandate,
+            portfolio_value=portfolio_value,
+            size_pct=ctx.trader_size_pct,
+            entry=ctx.trader_entry,
+            stop=ctx.trader_stop,
+            target=ctx.trader_target,
+            horizon_days=ctx.trader_horizon_weeks * 7,
+            shares_held=sum(
+                float(h.quantity) for h in ctx.sector_holdings
+                if getattr(h, "ticker", None) == ctx.ticker
+            ),
+        )
+
         # Derived figures — computed in trading_math, never left to the scripted
         # f-strings to (mis-)do: R:R (M06), upside/downside asymmetry (M08).
         _rr = risk_reward(ctx.trader_entry, ctx.trader_stop, ctx.trader_target)
@@ -4997,6 +5280,10 @@ async def _stream_pm_response(
         existing_open_risk_pct=_prompt_open_risk(ctx.risk_existing_open_risk_pct),
         last_loss_closed_at=ctx.risk_last_loss_closed_at,
         trade_open_timestamps=ctx.risk_trade_open_timestamps,
+        # CR172 §10 step 2 — the only call site that builds a live PM prompt,
+        # which is the same reason DEF238 records for `sector_weights` above.
+        option_candidates=ctx.option_candidates,
+        option_spot=ctx.option_spot,
     )
     # DEF125 item 4: the PM's own budget was a separate hard-coded 600, one
     # line from the flat 400 — and DEF058 (verdict fails to parse in ~22% of

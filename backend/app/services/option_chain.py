@@ -253,3 +253,30 @@ def get_enriched_chain(
         dividend_yield=dividend_yield,
         spot_source=spot_quote.source,
     )
+
+
+def pick_expiry(
+    ticker: str, horizon_days: int, requested: datetime.date | None
+) -> datetime.date | None:
+    """The listed expiry to structure against.
+
+    Lives here rather than beside either caller: the Room (`room_runner`) and
+    the `/propose` route must structure against the SAME expiry for the same
+    horizon, or the menu the CIO chose from is priced on a different board than
+    the one the ticket opens against.
+
+    Requested wins when it is genuinely listed — a requested expiry that is
+    not listed is refused rather than snapped to a neighbour, because a
+    structure priced on a different expiry than the one asked for is a
+    different trade. Otherwise: the first expiry at or beyond the horizon, and
+    if the board ends before the horizon, the last one it lists.
+    """
+    provider = get_market_data_provider()
+    listed = provider.expiries(ticker)
+    if not listed:
+        return None
+    if requested is not None:
+        return requested if requested in listed else None
+    horizon = datetime.date.today() + datetime.timedelta(days=horizon_days)
+    beyond = [d for d in sorted(listed) if d >= horizon]
+    return beyond[0] if beyond else sorted(listed)[-1]

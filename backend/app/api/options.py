@@ -36,8 +36,7 @@ from app.db.session import get_session
 from app.schemas.trade import Portfolio
 from app.schemas.user import User
 from app.services.mandate_store import resolve_mandate
-from app.services.market_data import get_market_data_provider
-from app.services.option_chain import get_enriched_chain
+from app.services.option_chain import get_enriched_chain, pick_expiry
 from app.services.option_strategist import OptionCandidate, build_candidates
 from app.services.sim_engine import SimEngine, get_sim_engine
 from app.services.ticker_reference import (
@@ -199,28 +198,6 @@ class OpenResponse(BaseModel):
     portfolio: Portfolio | None = None
 
 
-def _pick_expiry(
-    ticker: str, horizon_days: int, requested: datetime.date | None
-) -> datetime.date | None:
-    """The listed expiry to structure against.
-
-    Requested wins when it is genuinely listed — a requested expiry that is
-    not listed is refused rather than snapped to a neighbour, because a
-    structure priced on a different expiry than the one asked for is a
-    different trade. Otherwise: the first expiry at or beyond the horizon, and
-    if the board ends before the horizon, the last one it lists.
-    """
-    provider = get_market_data_provider()
-    listed = provider.expiries(ticker)
-    if not listed:
-        return None
-    if requested is not None:
-        return requested if requested in listed else None
-    horizon = datetime.date.today() + datetime.timedelta(days=horizon_days)
-    beyond = [d for d in sorted(listed) if d >= horizon]
-    return beyond[0] if beyond else sorted(listed)[-1]
-
-
 def _leg_out(leg: StrategyLeg, occ: str | None = None) -> LegOut:
     return LegOut(
         right=leg.right, strike=leg.strike, quantity=leg.quantity,
@@ -285,7 +262,7 @@ def propose_options(
     ticker = req.ticker.upper().strip()
     _require_ticker(ticker)
 
-    expiry = _pick_expiry(ticker, req.horizon_days, req.expiry)
+    expiry = pick_expiry(ticker, req.horizon_days, req.expiry)
     if expiry is None:
         return ProposeResponse(
             underlying=ticker, expiry=None, spot=None, candidates=[],

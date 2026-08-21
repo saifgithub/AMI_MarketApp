@@ -18,6 +18,7 @@ demo working when the LAN vLLM box is unreachable.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import date, datetime, timezone
 from typing import Any
 
@@ -455,6 +456,40 @@ _PM_VERDICT_FORMAT = (
     "if it detects a violation, output PASS and name the rule in narration."
 )
 
+# CR172 §10 step 2 — appended to `_PM_VERDICT_FORMAT` ONLY when the run issued a
+# candidate menu. A mandate that does not permit derivatives issues none, so its
+# PM prompt is byte-identical to what it was before this CR — which is also what
+# keeps the CR201 ablation corpus comparable.
+#
+# The key is an INDEX and nothing else. §10's rule is that AMI computes and the
+# PM picks; a model that states a strike, a premium or a greek has computed a
+# number it presents as fact, which is P5's definition of the defect. So the
+# format never asks for one, and `_parse_pm_verdict` reads every figure back off
+# the candidate rather than out of the reply.
+_PM_STRUCTURE_FORMAT = (
+    "\nOne more optional key, because this run carries costed option "
+    "structures (listed above):\n"
+    ' "structure_id": <the bracketed number of ONE structure from that list, '
+    "or omit the key entirely for a plain share position>\n"
+    "Rules for it, all four of which are enforced after you reply:\n"
+    "- It is an INDEX into that list. Never write a strike, a premium, a "
+    "greek, a contract count or an expiry of your own — every figure of the "
+    "structure comes from the list, and one you state instead is discarded.\n"
+    "- Only on an APPROVE. A PASS opens nothing, so a structure on it is "
+    "meaningless.\n"
+    "- A number that is not in the list, or a structure the list marks "
+    "FORBIDDEN, turns your whole verdict into a PASS. If the structure you "
+    "want is forbidden, say so in your narration and approve the shares "
+    "instead, or PASS — do not name it.\n"
+    "- size_pct/entry/stop/target stay REQUIRED and keep describing the "
+    "underlying view. The structure is how the view is expressed, not a "
+    "replacement for it.\n"
+    "Omitting the key is a perfectly good answer: shares are the right "
+    "instrument for most theses, and an option is only better when its "
+    "specific shape — a floor, a cap, a paid premium — is what the debate "
+    "argued for. Say in your narration why the structure you picked fits.\n"
+)
+
 # DEF236 — STYLE only. The shape (a thesis sentence, then how many bullets) is
 # stated once, in `_LENGTH_GUIDE`, and no longer restated here in a different
 # unit. See that dict for what the contradiction cost.
@@ -764,6 +799,109 @@ def _render_option_ladder(rows: list[LadderOption], cap: float) -> str:
     return "\n".join(lines)
 
 
+def _money(value: float) -> str:
+    """A dollar total, as the card renders it. Negative reads as a credit."""
+    if value < 0:
+        return f"${abs(value):,.0f} credit"
+    return f"${value:,.0f}"
+
+
+def _render_option_candidates(candidates: Sequence[Any], spot: float | None) -> str:
+    """CR172 §10 step 2 — the costed structure menu, as a prompt block.
+
+    Rendered here for the same reason `_render_option_ladder` is: this is where
+    the wording of a figure lives, so the two menus the CIO reads in one prompt
+    cannot describe the same mandate in two vocabularies.
+
+    Two things this block must get right, both of which are about what the
+    reader ends up believing rather than about the arithmetic:
+
+    * **A forbidden structure is listed, marked, with its rule named.** §10 is
+      explicit that hiding it deletes the teaching moment — the PM should be
+      able to say "the natural structure here is a naked call, which your
+      mandate forbids". The mark is loud enough that picking one anyway reads
+      as a mistake, and `_parse_pm_verdict` makes it one.
+    * **An absent figure says why.** `max_loss` is None for an unbounded
+      structure AND for one whose loss is bounded by shares already held —
+      opposite facts that a blank would render identically, which is the CR040
+      question asked of a card instead of a fallback.
+    """
+    if not candidates:
+        return ""
+    lines = [
+        "## Option structures — AMI costed every figure below",
+        (
+            "You may express an APPROVE through one of these instead of buying "
+            "shares. Pick it by the number in brackets; every strike, premium "
+            "and greek below is AMI's arithmetic off the live chain, so quote "
+            "these figures and never state one of your own."
+        ),
+    ]
+    if spot:
+        lines.append(f"Underlying last: {spot:,.2f}.")
+    lines.append("")
+    for index, c in enumerate(candidates):
+        m = c.metrics
+        head = (
+            f"- **[{index}] {c.strategy_name.replace('_', ' ')}** — "
+            f"{c.contracts} contract{'s' if c.contracts != 1 else ''}, "
+            f"expiry {c.expiry} ({c.days_to_expiry}d)"
+        )
+        parts = [f"net {_money(m.net_cost)}"]
+        if m.unbounded_loss:
+            parts.append("max loss UNBOUNDED")
+        elif m.covered_by_shares:
+            parts.append("loss bounded by the shares held, not by the legs")
+        elif m.max_loss is not None:
+            parts.append(f"max loss {_money(m.max_loss)}")
+        if m.unbounded_gain:
+            parts.append("max gain uncapped")
+        elif m.max_gain is not None:
+            parts.append(f"max gain {_money(m.max_gain)}")
+        if m.break_evens:
+            parts.append(
+                "break-even "
+                + " / ".join(f"{b:,.2f}" for b in m.break_evens)
+            )
+        if m.collateral_required:
+            parts.append(f"collateral {_money(m.collateral_required)}")
+        lines.append(head)
+        lines.append(f"  {' · '.join(parts)}")
+        if c.legs:
+            lines.append(
+                "  legs: "
+                + ", ".join(
+                    f"{'long' if leg.quantity > 0 else 'short'} "
+                    f"{abs(leg.quantity):g} {leg.strike:g} {leg.right} "
+                    f"@ {leg.premium:.2f}"
+                    for leg in c.legs
+                )
+            )
+        if c.net_greeks is not None:
+            g = c.net_greeks
+            lines.append(
+                f"  net delta {g.delta:+.2f} · theta {g.theta_per_day:+.2f}/day "
+                f"· vega {g.vega_per_point:+.2f}/pt"
+            )
+        if c.rationale:
+            lines.append(f"  {c.rationale}")
+        if c.mandate_violations:
+            lines.append(
+                "  **FORBIDDEN — this structure cannot be opened under the "
+                "mandate: " + " ".join(c.mandate_violations) + "** Naming it "
+                "turns your verdict into a PASS; explain it if it teaches "
+                "something, but do not pick it."
+            )
+        for note in c.advisories:
+            lines.append(f"  Note: {note}")
+    lines.append("")
+    lines.append(
+        "Shares remain available and are the default — omit structure_id "
+        "entirely to approve the underlying, exactly as you always have."
+    )
+    return "\n".join(lines)
+
+
 def _headroom_after_clause(
     contribution_pts: float, cap: float, current_drawdown_pct: float | None
 ) -> str:
@@ -941,6 +1079,14 @@ def build_room_messages(
     existing_open_risk_pct: Any = None,
     last_loss_closed_at: Any = None,
     trade_open_timestamps: Any = None,
+    # CR172 §10 step 2 — the costed structure menu this run issued, or None.
+    # Rendered for the PM's VERDICT turn only, for the same reason CR197 scopes
+    # the size ladder there: the agent that must CHOOSE gets the menu, and the
+    # eleven that argue keep the judgement their turn exists to exercise. The
+    # runner builds it only when the mandate permits derivatives, so None is the
+    # ordinary case and the prompt is then byte-identical to pre-CR172.
+    option_candidates: Sequence[Any] | None = None,
+    option_spot: float | None = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [user_message]) for one agent's Room turn.
 
@@ -999,8 +1145,16 @@ def build_room_messages(
     # deliberately excluded — it is not one of the eleven voices in the comb
     # (its position IS the hero tile), and its output is a JSON verdict that a
     # trailing line would corrupt.
+    option_candidate_block = ""
     if agent_id == AgentId.PORTFOLIO_MANAGER:
         format_instruction = _PM_VERDICT_FORMAT
+        if option_candidates:
+            option_candidate_block = _render_option_candidates(
+                option_candidates, option_spot
+            )
+            # Appended, not interpolated: the structure key is meaningless
+            # without the list, so the two arrive together or neither does.
+            format_instruction += _PM_STRUCTURE_FORMAT
     else:
         prose_format = _PROSE_FORMAT
         if agent_id != AgentId.TRADER:
@@ -1191,6 +1345,12 @@ def build_room_messages(
         # to read them as one more voice's claim rather than as AMI's arithmetic.
         f"{option_ladder_block}"
         f"{chr(10) if option_ladder_block else ''}"
+        # CR172 §10 step 2 — beside the size ladder and before the transcript,
+        # for CR197's reason: both are AMI's arithmetic about the mandate, and
+        # computed figures placed after eleven turns of prose read as one more
+        # voice's claim rather than as the figures of record.
+        f"{option_candidate_block}"
+        f"{chr(10) if option_candidate_block else ''}"
         f"Transcript so far:\n{transcript_text}\n"
         f"{journal_note}"
         f"\nYour turn. Speak as the {agent_display_name(agent_id)}. "

@@ -30,6 +30,24 @@ class RoomStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
+class VerdictLeg(BaseModel):
+    """One leg of the structure the Portfolio Manager chose (CR172 §10 step 2).
+
+    Every figure here was computed by `option_strategist` and re-read off the
+    candidate the PM indexed — the model states an index and nothing else. A
+    premium or a strike that arrived from the model would be the P5 defect on
+    the surface that moves cash: `net_cost` is what `open_option_structure`
+    charges, so an invented premium on a short leg mints money.
+    """
+
+    right: Literal["call", "put"]
+    strike: float
+    quantity: float  # SIGNED contracts: positive long, negative short
+    premium: float   # per share, as quoted by the chain
+    multiplier: float = 100.0
+    expiry: str      # ISO date; every leg of a structure shares it
+
+
 class Verdict(BaseModel):
     """The Portfolio Manager's final verdict on a Room run."""
 
@@ -68,6 +86,19 @@ class Verdict(BaseModel):
     # PM" — an absent value is never backfilled or inferred (T-BACKFILL). Only
     # an APPROVE carries prices at all, so only an APPROVE carries this.
     level_provenance: dict[str, Literal["pm", "trader", "ami_default"]] | None = None
+
+    # CR172 §10 step 2 — the option structure attached to this verdict, if the
+    # PM chose one. `strategy` is the candidate's own `strategy_name`; `legs`
+    # are that candidate's legs verbatim.
+    #
+    # `None` means "this run carried no structure" — an equity verdict, a run
+    # whose mandate does not permit derivatives, or a run that predates the
+    # field. It never means "a structure with no legs": a candidate that could
+    # not be costed is not emitted at all (`option_strategist`), so there is no
+    # empty-legged structure to represent. Read it the way `level_provenance`
+    # above is read — absence is absence, never backfilled or inferred.
+    strategy: str | None = None
+    legs: list[VerdictLeg] | None = None
 
 
 class RoomRun(BaseModel):
