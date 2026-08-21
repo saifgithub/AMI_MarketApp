@@ -49,6 +49,15 @@ from app.trading_math.option_strategy import StrategyLeg
 
 router = APIRouter(prefix="/v1/sim/options", tags=["sim-options"])
 
+# The handlers are `propose_options` / `open_options`, not `propose` / `open`,
+# and that is load-bearing rather than style. `test_no_blocking_io_in_async_
+# routes` resolves call chains BY NAME across modules, so a handler called
+# `propose` here is indistinguishable from `BriefEngine.propose` — which an
+# async route does await — and the guard reports a blocking chain that does not
+# exist. A false positive on that guard is expensive: it is the one that stops
+# a real event-loop block, and a guard that cries wolf gets reasoned past
+# (DEF277's exact shape). Unique names keep its graph honest.
+
 # The proposal's own risk budget when the caller supplies none: the same
 # single-name cap the equity floor enforces, applied to the portfolio's value.
 # Not a new policy — the cap is read, never re-derived here.
@@ -266,7 +275,7 @@ def _shares_held(portfolio: Portfolio, ticker: str) -> float:
 
 
 @router.post("/propose", response_model=ProposeResponse)
-def propose(
+def propose_options(
     req: ProposeRequest,
     current_user: User = Depends(get_current_user),
     sim: SimEngine = Depends(get_sim_engine),
@@ -325,7 +334,7 @@ def propose(
 
 
 @router.post("/open", response_model=OpenResponse)
-def open_structure(
+def open_options(
     req: OpenRequest,
     current_user: User = Depends(get_current_user),
     sim: SimEngine = Depends(get_sim_engine),
