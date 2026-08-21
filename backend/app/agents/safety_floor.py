@@ -979,9 +979,18 @@ def check_option_open(
 
     c = mandate.compliance
     if c.long_only and sell_to_open:
+        # DEF353 — this sentence used to close *"long calls, long puts and
+        # debit spreads are not"*, which named as permitted the exact structure
+        # the line above had just refused: a bull call spread is a debit spread
+        # AND a sell-to-open, so a long_only user was refused one and told in
+        # the same breath that debit spreads were fine. D4's ratified rule is
+        # sell-to-open, full stop — the net debit is not what is being judged.
+        # DEF236's class, one surface along: a rule stated twice in two units.
         violations.append(
             "your mandate is long-only, and selling an option to open is a "
-            "short position — long calls, long puts and debit spreads are not"
+            "short position — including the short leg of a debit spread, where "
+            "the premium received is still a sale. Long calls and long puts "
+            "are not short positions and remain available."
         )
         blocked_by = blocked_by or "long_only"
 

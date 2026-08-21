@@ -27,6 +27,7 @@ from app.agents.safety_floor import (
     check_exercise_outcome,
     check_option_open,
 )
+from app.schemas import Mandate
 from app.schemas.trade import Holding
 from app.services.coach_engine import hydrate_coach_mandate
 from app.trading_math.option_strategy import StrategyLeg
@@ -333,3 +334,70 @@ def test_the_overlay_states_the_gate_in_both_directions():
     assert "shares only" in off
     assert "Derivatives permitted" in on
     assert "NO DERIVATIVES" not in on
+
+
+# ── DEF353 — the refusal must not name what it refuses ──────────────────────
+
+def _long_only_mandate() -> Mandate:
+    return hydrate_coach_mandate({
+        "plan": "trader",
+        "compliance": {"derivatives_allowed": True, "long_only": True},
+    })
+
+
+def _spread_legs() -> list[StrategyLeg]:
+    """A bull call spread: a DEBIT structure that still sells a call to open."""
+    return [
+        StrategyLeg(right="call", strike=100.0, quantity=1.0, premium=9.2,
+                    expiry="2026-10-16"),
+        StrategyLeg(right="call", strike=115.0, quantity=-1.0, premium=4.7,
+                    expiry="2026-10-16"),
+    ]
+
+
+def test_a_debit_spread_is_refused_under_long_only():
+    """D4's ratified rule is sell-to-open, full stop. The net debit is not what
+    is being judged — the short leg is."""
+    result = check_option_open(
+        legs=_spread_legs(), mandate=_long_only_mandate(), shares_held=0.0,
+    )
+    assert result.passed is False
+    assert result.blocked_by == "long_only"
+
+
+def test_the_long_only_refusal_does_not_name_a_debit_spread_as_permitted():
+    """DEF353. The sentence used to close *"long calls, long puts and debit
+    spreads are not"* while refusing a debit spread in the same call — a user
+    told, in one message, that the structure they were denied was allowed.
+
+    Asserted as a property rather than a string match on the fix: whatever the
+    copy says, it may not describe as permitted a structure this same function
+    refuses. The two structures it DOES name are checked against the floor
+    below, so the sentence cannot drift back into claiming something untrue.
+    """
+    mandate = _long_only_mandate()
+    refusal = " ".join(
+        check_option_open(
+            legs=_spread_legs(), mandate=mandate, shares_held=0.0,
+        ).violations
+    ).lower()
+    assert "debit spread" in refusal, (
+        "the refusal should still explain the debit spread — the point is that "
+        "it must not call it permitted"
+    )
+    assert "debit spreads are not" not in refusal
+
+    for name, legs in (
+        ("long call", [StrategyLeg(right="call", strike=100.0, quantity=1.0,
+                                   premium=9.2, expiry="2026-10-16")]),
+        ("long put", [StrategyLeg(right="put", strike=95.0, quantity=1.0,
+                                  premium=4.7, expiry="2026-10-16")]),
+    ):
+        assert name in refusal, f"the sentence names {name} — keep naming it"
+        permitted = check_option_open(
+            legs=legs, mandate=mandate, shares_held=0.0,
+        )
+        assert permitted.passed is True, (
+            f"the refusal names {name} as remaining available, so the floor "
+            f"must actually permit it"
+        )

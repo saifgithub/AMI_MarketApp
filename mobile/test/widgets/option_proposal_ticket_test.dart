@@ -320,9 +320,13 @@ void main() {
     });
 
     testWidgets('the long-only floor block', (tester) async {
+      // DEF353 — the server's own sentence, kept verbatim so this fixture
+      // cannot drift into asserting copy the floor no longer sends.
       const longOnly =
           'your mandate is long-only, and selling an option to open is a '
-          'short position — long calls, long puts and debit spreads are not';
+          'short position — including the short leg of a debit spread, where '
+          'the premium received is still a sale. Long calls and long puts '
+          'are not short positions and remain available.';
       await _pump(
         tester,
         OptionProposal.fromJson(_withCompliance(<String, dynamic>{
