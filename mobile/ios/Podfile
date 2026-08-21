@@ -52,6 +52,14 @@ post_install do |installer|
       if config.name == 'Release' || config.name == 'Profile'
         config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
       end
+      # DEF351. google_mobile_ads 9.1.0 (CR122) ships FLTAd_Internal.h /
+      # FLTAdPreloader.h, which #import GoogleMobileAds_Beta.h out of the
+      # framework's PrivateHeaders. Clang refuses a non-modular include inside a
+      # framework module, so EVERY ios-release build fails to compile — the
+      # `flutter test` suite never sees it because it compiles no native iOS.
+      # This is the vendor's own header layout, not ours to fix upstream, and
+      # the setting is scoped to the Pods project rather than the app target.
+      config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
     end
   end
 end
