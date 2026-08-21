@@ -137,6 +137,10 @@ def main():
         lr_scheduler_type=cfg["lr_scheduler"],
         warmup_ratio=cfg["warmup_ratio"],
         bf16=True,
+        # NemotronH raises on gradient_checkpointing_enable(); TRL's SFTConfig turns it on
+        # by default, so guarding our own call was not enough (measured smoke6, 2026-08-21).
+        # Affordable: only ~22.7M LoRA params train, the 31.6B base is frozen.
+        gradient_checkpointing=False,
         logging_steps=cfg["logging_steps"],
         save_steps=cfg["save_steps"],
         save_total_limit=cfg["save_total_limit"],
