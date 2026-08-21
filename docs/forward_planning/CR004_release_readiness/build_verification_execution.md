@@ -16,6 +16,8 @@ Part of [CR004](CR004_release_readiness.md). This doc carries live A0 results, t
 
 ## A2 — Device pass checklist (per device, off-LAN/cellular)
 
+**Run it from [`e5_device_matrix_runbook.md`](e5_device_matrix_runbook.md)** (added 2026-08-21) — cable-install commands, the delta of everything that shipped after this list was written, and the five known-open defects not to re-file.
+
 Devices: iPhone 13 · iPhone 17 · Galaxy Note FE (Android 9 floor) · Galaxy A17. Mark ✅/❌ + bug-report short-id for every ❌ (file via long-press on the app-version chip — it lands in `bug_reports` → `/fix-bugs`).
 
 ```
