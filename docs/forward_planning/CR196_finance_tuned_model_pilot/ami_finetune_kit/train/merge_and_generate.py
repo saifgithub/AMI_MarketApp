@@ -45,10 +45,15 @@ def main():
         f.write("# Smoke merge generations\n\n")
         for i, p in enumerate(PROMPTS, 1):
             msgs = [{"role": "user", "content": p}]
-            ids = tok.apply_chat_template(msgs, add_generation_prompt=True, return_tensors="pt")
+            # transformers 5 returns a BatchEncoding here, not a bare tensor
+            # (AttributeError on .shape otherwise — measured smoke10, 2026-08-21).
+            enc = tok.apply_chat_template(msgs, add_generation_prompt=True,
+                                          return_tensors="pt", return_dict=True)
+            enc = {k: v.to(model.device) for k, v in enc.items()}
+            n_in = enc["input_ids"].shape[1]
             with torch.no_grad():
-                out = model.generate(ids.to(model.device), max_new_tokens=200, do_sample=False)
-            text = tok.decode(out[0][ids.shape[1]:], skip_special_tokens=True).strip()
+                out = model.generate(**enc, max_new_tokens=200, do_sample=False)
+            text = tok.decode(out[0][n_in:], skip_special_tokens=True).strip()
             f.write(f"## Prompt {i}\n{p}\n\n### Output\n{text}\n\n")
             if not text:
                 ok = False

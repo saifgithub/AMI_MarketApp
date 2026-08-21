@@ -21,10 +21,11 @@ def val_loss(model, tok, path, limit=64, maxlen=4096):
             if i >= limit:
                 break
             msgs = json.loads(line)["messages"]
-            ids = tok.apply_chat_template(msgs, return_tensors="pt", truncation=True,
-                                          max_length=maxlen)
+            enc = tok.apply_chat_template(msgs, return_tensors="pt", truncation=True,
+                                          max_length=maxlen, return_dict=True)
+            ids = enc["input_ids"].to(model.device)
             with torch.no_grad():
-                out = model(ids.to(model.device), labels=ids.to(model.device))
+                out = model(ids, labels=ids)
             total += float(out.loss)
             n += 1
     return total / max(n, 1), n
@@ -70,11 +71,14 @@ def main():
         gf.write("# quick_eval generations (adapter)\n\n")
         for i, line in enumerate(pf, 1):
             p = json.loads(line)["prompt"]
-            ids = tok.apply_chat_template([{"role": "user", "content": p}],
-                                          add_generation_prompt=True, return_tensors="pt")
+            enc = tok.apply_chat_template([{"role": "user", "content": p}],
+                                          add_generation_prompt=True,
+                                          return_tensors="pt", return_dict=True)
+            enc = {k: v.to(model.device) for k, v in enc.items()}
+            n_in = enc["input_ids"].shape[1]
             with torch.no_grad():
-                out = model.generate(ids.to(model.device), max_new_tokens=400, do_sample=False)
-            text = tok.decode(out[0][ids.shape[1]:], skip_special_tokens=True).strip()
+                out = model.generate(**enc, max_new_tokens=400, do_sample=False)
+            text = tok.decode(out[0][n_in:], skip_special_tokens=True).strip()
             gf.write(f"## {i}\n{p}\n\n### Output\n{text}\n\n")
     print(f"generations → {gen_path}")
 
