@@ -117,6 +117,84 @@ class EarningsInfo(NamedTuple):
     dividend_rate: float | None = None   # CR030 — annual per-share USD; None when 0.0 / absent
 
 
+class OptionQuote(NamedTuple):
+    """One strike row of an option chain, as served (CR172 §4).
+
+    Any field the provider did not serve is None, never a zero — on an
+    illiquid strike Yahoo legitimately serves `bid=0/ask=0.05` (a real quote
+    meaning "worthless") and NaN for volume, and collapsing the two cases
+    would erase exactly the distinction `classify_option_quote` exists to
+    make. `implied_vol` is the provider's OWN figure, provenance unknown and
+    occasionally absurd; sanity-gating it is the enrichment layer's job
+    (`services/option_chain.py`), not this transport shape's.
+    """
+
+    strike: float
+    bid: float | None
+    ask: float | None
+    last: float | None
+    volume: int | None
+    open_interest: int | None
+    implied_vol: float | None
+    in_the_money: bool | None = None
+
+
+class OptionChain(NamedTuple):
+    """One (underlying, expiry) chain. `source` names the LEAF provider —
+    the same contract `Quote.source` carries, for the same LIVE/MOCK-pill
+    honesty reason: wrappers forward it, never substitute a stack name."""
+
+    underlying: str
+    expiry: datetime.date
+    calls: tuple[OptionQuote, ...]
+    puts: tuple[OptionQuote, ...]
+    source: str
+
+
+# CR172 D2 (ratified 2026-08-20): a strike whose relative spread exceeds this
+# is blocked from filling, with the width surfaced as the reason — a wide
+# spread is a LIQUIDITY failure and one of the real lessons options teach.
+OPTION_MAX_SPREAD_PCT = 0.25
+
+# CR172 §4 — chain-specific cache TTLs (the 60s quote TTL is wrong here: a
+# chain is a bigger, slower-moving payload; the expiry list changes daily).
+OPTION_CHAIN_TTL_SECONDS = 300.0
+OPTION_EXPIRIES_TTL_SECONDS = 3600.0
+
+
+class OptionQuoteState(NamedTuple):
+    """`classify_option_quote`'s verdict plus the reason to surface."""
+
+    state: str   # "tradeable" | "worthless" | "unusable"
+    reason: str  # "ok" | "zero_bid" | "no_quote" | "crossed" | "wide_spread"
+
+
+def classify_option_quote(
+    bid: float | None, ask: float | None
+) -> OptionQuoteState:
+    """CR172 §4's three-state fillability guard, extended from CR170's two.
+
+    tradeable — both sides live and the spread within OPTION_MAX_SPREAD_PCT.
+    worthless — bid=0 with a live ask: a REAL quote meaning the position is
+                closeable at 0 but never openable. Not a data failure.
+    unusable  — missing/degenerate/crossed/wide: no fill, no mark, and the
+                caller degrades loudly (CR040), because CR170 §5 measured
+                what a silent fallback does to a resting book.
+    """
+    if bid is None or ask is None:
+        return OptionQuoteState("unusable", "no_quote")
+    if not (math.isfinite(bid) and math.isfinite(ask)) or bid < 0 or ask <= 0:
+        return OptionQuoteState("unusable", "no_quote")
+    if bid == 0:
+        return OptionQuoteState("worthless", "zero_bid")
+    if ask < bid:
+        return OptionQuoteState("unusable", "crossed")
+    mid = (bid + ask) / 2.0
+    if (ask - bid) / mid > OPTION_MAX_SPREAD_PCT:
+        return OptionQuoteState("unusable", "wide_spread")
+    return OptionQuoteState("tradeable", "ok")
+
+
 def _dividend_fields_from_info(info: dict | None) -> tuple[str | None, float | None]:
     """Extract (ex_dividend_date ISO, dividend_rate) from a yfinance `.info` dict.
 
@@ -203,6 +281,25 @@ class MarketDataProvider(Protocol):
 
     def earnings(self, ticker: str) -> EarningsInfo | None:
         """Return upcoming earnings info within 90 days, or None if unavailable."""
+        ...
+
+    def expiries(self, underlying: str) -> list[datetime.date] | None:
+        """Listed option expiries for `underlying`, or None if unavailable.
+
+        None means "no chain data here" and the caller must render options
+        as unavailable — visibly, never as an empty-but-fine list (CR172 §4).
+        """
+        ...
+
+    def option_chain(
+        self, underlying: str, expiry: datetime.date
+    ) -> OptionChain | None:
+        """The chain for one (underlying, expiry), or None on any failure.
+
+        `OptionChain.source` MUST identify the leaf provider that served
+        it — wrappers forward the inner's chain untouched, exactly as
+        `quote()` forwards `Quote.source`.
+        """
         ...
 
 
@@ -337,6 +434,22 @@ class MockWalkProvider:
     def earnings(self, ticker: str) -> EarningsInfo | None:
         return None
 
+    def expiries(self, underlying: str) -> list[datetime.date] | None:
+        # CR172 D10 (ratified): no synthesised chain. Options are DARK when
+        # the mock provider is active, and that has to be visible in the
+        # logs rather than discovered — the honest behaviour, said loudly.
+        logger.warn("mock_walk_options_unavailable", underlying=underlying)
+        return None
+
+    def option_chain(
+        self, underlying: str, expiry: datetime.date
+    ) -> OptionChain | None:
+        logger.warn(
+            "mock_walk_options_unavailable",
+            underlying=underlying, expiry=expiry.isoformat(),
+        )
+        return None
+
 
 # ── Yahoo Finance ────────────────────────────────────────────────────────
 
@@ -416,6 +529,22 @@ class YahooQuoteProvider:
     def earnings(self, ticker: str) -> EarningsInfo | None:
         return None
 
+    def expiries(self, underlying: str) -> list[datetime.date] | None:
+        # The keyless chart endpoint serves no chains; this provider only
+        # runs when yfinance failed to import. Loud, so a chain-dark Alpha
+        # names its cause in the logs (CR040).
+        logger.warn("yahoo_keyless_options_not_wired", underlying=underlying)
+        return None
+
+    def option_chain(
+        self, underlying: str, expiry: datetime.date
+    ) -> OptionChain | None:
+        logger.warn(
+            "yahoo_keyless_options_not_wired",
+            underlying=underlying, expiry=expiry.isoformat(),
+        )
+        return None
+
     def close(self) -> None:
         self._client.close()
 
@@ -438,6 +567,11 @@ class CachingProvider:
         self._history_cache: dict[str, tuple[list[Candle], float, str]] = {}  # f"{ticker}:{period}" → (candles, expires_at, source)
         self._news_cache: dict[str, tuple[list[NewsItem], float]] = {}  # f"{ticker}:{limit}" → (items, expires_at)
         self._earnings_cache: dict[str, tuple[EarningsInfo, float]] = {}  # ticker → (info, expires_at)
+        # CR172 §4 — chains get their OWN TTLs, not the 60s quote TTL: a
+        # chain is a far bigger payload that moves far slower, and the
+        # expiry LIST changes at most daily.
+        self._expiries_cache: dict[str, tuple[list[datetime.date], float]] = {}  # underlying → (dates, expires_at)
+        self._chain_cache: dict[str, tuple[OptionChain, float]] = {}  # f"{underlying}:{expiry}" → (chain, expires_at)
         self._lock = RLock()
         self.name = f"cache({inner.name})"
 
@@ -510,6 +644,34 @@ class CachingProvider:
                 self._earnings_cache[t] = (info, now + 21600.0)  # 6-hour TTL
         return info
 
+    def expiries(self, underlying: str) -> list[datetime.date] | None:
+        t = underlying.upper().strip()
+        now = time.time()
+        with self._lock:
+            hit = self._expiries_cache.get(t)
+            if hit is not None and hit[1] > now:
+                return hit[0]
+        dates = self._inner.expiries(t)
+        if dates:
+            with self._lock:
+                self._expiries_cache[t] = (dates, now + OPTION_EXPIRIES_TTL_SECONDS)
+        return dates
+
+    def option_chain(
+        self, underlying: str, expiry: datetime.date
+    ) -> OptionChain | None:
+        key = f"{underlying.upper().strip()}:{expiry.isoformat()}"
+        now = time.time()
+        with self._lock:
+            hit = self._chain_cache.get(key)
+            if hit is not None and hit[1] > now:
+                return hit[0]
+        chain = self._inner.option_chain(underlying, expiry)
+        if chain is not None:
+            with self._lock:
+                self._chain_cache[key] = (chain, now + OPTION_CHAIN_TTL_SECONDS)
+        return chain
+
     def invalidate(self, ticker: str | None = None) -> None:
         with self._lock:
             if ticker is None:
@@ -517,16 +679,22 @@ class CachingProvider:
                 self._history_cache.clear()
                 self._news_cache.clear()
                 self._earnings_cache.clear()
+                self._expiries_cache.clear()
+                self._chain_cache.clear()
             else:
                 t = ticker.upper().strip()
                 self._cache.pop(t, None)
                 self._earnings_cache.pop(t, None)
+                self._expiries_cache.pop(t, None)
                 # Drop every keyed entry for this ticker.
                 self._history_cache = {
                     k: v for k, v in self._history_cache.items() if not k.startswith(f"{t}:")
                 }
                 self._news_cache = {
                     k: v for k, v in self._news_cache.items() if not k.startswith(f"{t}:")
+                }
+                self._chain_cache = {
+                    k: v for k, v in self._chain_cache.items() if not k.startswith(f"{t}:")
                 }
 
 
@@ -554,6 +722,48 @@ def _previous_close(fast_info: Any) -> float | None:
         if value:
             return float(value)
     return None
+
+
+def _chain_float(value: Any) -> float | None:
+    """A finite float from a chain cell, else None — pandas NaN included.
+
+    NaN is how yfinance spells "not served" on illiquid strikes; letting it
+    through as a float would make every downstream comparison silently
+    false (the DEF052 NaN-sentinel lesson, again).
+    """
+    if value is None:
+        return None
+    try:
+        f = float(value)
+    except (TypeError, ValueError):
+        return None
+    return f if math.isfinite(f) else None
+
+
+def _option_rows_from_df(df: Any) -> tuple[OptionQuote, ...]:
+    """OptionQuote rows from one half (calls/puts) of a yfinance chain."""
+    if df is None or getattr(df, "empty", True):
+        return ()
+    rows: list[OptionQuote] = []
+    for _, row in df.iterrows():
+        strike = _chain_float(row.get("strike"))
+        if strike is None or strike <= 0:
+            continue
+        volume = _chain_float(row.get("volume"))
+        open_interest = _chain_float(row.get("openInterest"))
+        itm = row.get("inTheMoney")
+        rows.append(OptionQuote(
+            strike=strike,
+            bid=_chain_float(row.get("bid")),
+            ask=_chain_float(row.get("ask")),
+            last=_chain_float(row.get("lastPrice")),
+            volume=int(volume) if volume is not None else None,
+            open_interest=int(open_interest) if open_interest is not None else None,
+            implied_vol=_chain_float(row.get("impliedVolatility")),
+            in_the_money=bool(itm) if isinstance(itm, (bool,)) or itm in (0, 1) else None,
+        ))
+    rows.sort(key=lambda r: r.strike)
+    return tuple(rows)
 
 
 class YfinanceProvider:
@@ -751,6 +961,42 @@ class YfinanceProvider:
             logger.warn("yfinance_earnings_error", ticker=t, error=str(exc))
             return None
 
+    def expiries(self, underlying: str) -> list[datetime.date] | None:
+        t = underlying.upper().strip()
+        try:
+            raw = self._yf.Ticker(t).options or ()
+        except Exception as exc:
+            logger.warn("yfinance_expiries_error", underlying=t, error=str(exc))
+            return None
+        dates: list[datetime.date] = []
+        for value in raw:
+            try:
+                dates.append(datetime.date.fromisoformat(str(value)))
+            except ValueError:
+                continue
+        return dates or None
+
+    def option_chain(
+        self, underlying: str, expiry: datetime.date
+    ) -> OptionChain | None:
+        t = underlying.upper().strip()
+        try:
+            raw = self._yf.Ticker(t).option_chain(expiry.isoformat())
+        except Exception as exc:
+            logger.warn(
+                "yfinance_chain_error",
+                underlying=t, expiry=expiry.isoformat(), error=str(exc),
+            )
+            return None
+        calls = _option_rows_from_df(getattr(raw, "calls", None))
+        puts = _option_rows_from_df(getattr(raw, "puts", None))
+        if not calls and not puts:
+            return None
+        return OptionChain(
+            underlying=t, expiry=expiry, calls=calls, puts=puts,
+            source=self.name,
+        )
+
 
 # ── Fallback chain ───────────────────────────────────────────────────────
 
@@ -803,6 +1049,22 @@ class FallbackProvider:
         if info is not None:
             return info
         return self._secondary.earnings(ticker)
+
+    def expiries(self, underlying: str) -> list[datetime.date] | None:
+        dates = self._primary.expiries(underlying)
+        if dates:
+            return dates
+        return self._secondary.expiries(underlying)
+
+    def option_chain(
+        self, underlying: str, expiry: datetime.date
+    ) -> OptionChain | None:
+        # The chain object is forwarded untouched, so `OptionChain.source`
+        # keeps naming the leaf that served it — never this wrapper.
+        chain = self._primary.option_chain(underlying, expiry)
+        if chain is not None:
+            return chain
+        return self._secondary.option_chain(underlying, expiry)
 
 
 # ── History provenance ───────────────────────────────────────────────────
@@ -924,6 +1186,27 @@ class AsOfStoreProvider:
 
     def earnings(self, ticker: str) -> EarningsInfo | None:
         return None  # a forward calendar is not PIT-reconstructable from free sources
+
+    def expiries(self, underlying: str) -> list[datetime.date] | None:
+        # CR172 §4: there is NO historical options store, so a backtest must
+        # say "options not evaluated" — never value them at zero. Loud, so
+        # the refusal is attributable (the DEF169 silent-pass shape is the
+        # single most likely bug here, per the CR).
+        logger.warn(
+            "asof_store_no_options_history",
+            underlying=underlying, as_of=self._as_of.isoformat(),
+        )
+        return None
+
+    def option_chain(
+        self, underlying: str, expiry: datetime.date
+    ) -> OptionChain | None:
+        logger.warn(
+            "asof_store_no_options_history",
+            underlying=underlying, expiry=expiry.isoformat(),
+            as_of=self._as_of.isoformat(),
+        )
+        return None
 
 
 # ── Singleton factory ────────────────────────────────────────────────────

@@ -167,6 +167,14 @@ class Settings(BaseSettings):
     # When false (default), the legacy deterministic random walk runs.
     use_real_market_data: bool = False
 
+    # CR172 §2 / D8. The ticker quoted for the option pricer's risk-free
+    # rate — `^IRX` is the 13-week T-bill yield, already served by the
+    # yfinance stack, quoted in PERCENT (5.23 → 0.0523). A synthetic or
+    # implausible quote is refused, never defaulted: greeks then read
+    # `not_evaluated` rather than being priced off an invented rate
+    # (services/option_chain.py::get_risk_free_rate).
+    risk_free_rate_ticker: str = "^IRX"
+
     # CR136 M06. Whether the Portfolio Health Finding may be narrated by the
     # LLM at all. False = the deterministic rendering ships, which is a
     # complete, correct report on its own — the LLM only ever rewrites prose
