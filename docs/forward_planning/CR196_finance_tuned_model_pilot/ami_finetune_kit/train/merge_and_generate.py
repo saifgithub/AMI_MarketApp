@@ -29,9 +29,14 @@ def main():
 
     tok = AutoTokenizer.from_pretrained(args.model, trust_remote_code=False)
     model = AutoModelForCausalLM.from_pretrained(
-        args.model, dtype=torch.bfloat16, trust_remote_code=False)
+        args.model, dtype=torch.bfloat16, trust_remote_code=False,
+        device_map="auto")
     model = PeftModel.from_pretrained(model, args.adapter)
-    model = model.merge_and_unload()
+    # Generate through the ADAPTER rather than a merged copy. merge_and_unload()
+    # materialises a second full-size set of weights and OOM'd on a 121GB GB10 with
+    # the 31.6B base already resident (measured smoke9, 2026-08-21) - and this step's
+    # job is only to prove the adapter round-trips (load -> apply -> generate).
+    # The real merge for quantization runs separately, offline, with CPU offload.
     model.eval()
 
     path = os.path.join(args.out, "merge_generations.md")
