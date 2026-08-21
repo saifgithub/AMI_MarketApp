@@ -125,6 +125,28 @@ def extract_json_object(text: str, *, repair_truncated: bool = False) -> dict | 
         return json.loads(candidate, strict=False)
     except json.JSONDecodeError:
         pass
+    # DEF352 — trailing prose AFTER a complete object.
+    #
+    # The trim above only runs when the reply does NOT start with `{`, so a
+    # reply that opens with the object and then adds a sentence — measured
+    # shape: `{...}\n\nWorked example — classroom simulation, not financial
+    # advice.` — reached json.loads whole and was rejected outright, discarding
+    # a decision the model had already made correctly. Measured at 42.6% of
+    # Risk Officer replies on the CR201 production assembly (2026-08-21), vs
+    # 1.5% on CR197's, and isolated to the simulated-portfolio block being
+    # present. The JSON contract already says "No prose outside it"; P2 is
+    # explicit that a prompt instruction is not a control, so this is the
+    # control. Deliberately NOT gated on `repair_truncated`: nothing is being
+    # repaired or guessed here — the object is complete, only the tail is cut.
+    if candidate.startswith("{"):
+        last = candidate.rfind("}")
+        if last > 0 and last + 1 < len(candidate):
+            try:
+                trimmed = json.loads(candidate[: last + 1], strict=False)
+            except json.JSONDecodeError:
+                trimmed = None
+            if isinstance(trimmed, dict):
+                return trimmed
     if not repair_truncated:
         return None
     closed = _close_truncated_object(candidate)
