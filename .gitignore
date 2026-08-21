@@ -121,3 +121,9 @@ docs/forward_planning/*/prototype/.fonts/
 # audit watcher liveness stamps (runtime state, never committed)
 orchestration/audit/cr/.watch-*.hb
 qa/appium/_runs/
+
+# CR196 training kit ships its own env/ (container setup script), not a virtualenv —
+# the blanket **/env/ rule above silently excluded it, so the kit in git was incomplete
+# while the shipped tarball was fine. A clean checkout must rebuild a WORKING kit.
+!docs/forward_planning/CR196_finance_tuned_model_pilot/ami_finetune_kit/env/
+!docs/forward_planning/CR196_finance_tuned_model_pilot/ami_finetune_kit/env/**
