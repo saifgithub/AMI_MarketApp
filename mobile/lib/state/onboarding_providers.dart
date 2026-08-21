@@ -249,6 +249,12 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
         confirm: true,
         restart: state.isRestart,
       );
+      // DEF347: the server is complete the instant this returns, and the LLM
+      // turns are already spent. Stamping the flag only on the later claim-screen
+      // tap left a window where a kill or crash sent the user back into the
+      // interview forever — re-greeting on every cold start and overwriting the
+      // pending claim binding with a fresh, incomplete session id.
+      await markComplete();
       state = state.copyWith(
         phase: OnboardingPhase.completed,
         mandatePreview: resp.mandatePreview,
