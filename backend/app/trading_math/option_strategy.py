@@ -40,7 +40,7 @@ break-evens are underlying prices, 2 dp.
 from __future__ import annotations
 
 import math
-from typing import NamedTuple, Sequence
+from typing import Iterable, NamedTuple, Sequence
 
 from .greeks import Greeks
 
@@ -319,3 +319,37 @@ def strategy_metrics(
         shares_locked=shares_locked,
         covered_by_shares=covered,
     )
+
+
+def option_leg_value(
+    collateral_posted: float, quantity: float, multiplier: float, mark: float
+) -> float:
+    """What one OPEN option leg is worth to the portfolio that holds it.
+
+    `collateral + signed_contracts × multiplier × mark`, the exact shape
+    `shorts.short_leg` uses and for the identical reason: the cash that left
+    at open has to come back somewhere, or opening a position changes
+    `total_value` by itself.
+
+    The identity this has to hold, and the whole reason the collateral term
+    is here rather than netted somewhere else — at open, cash falls by
+    `net_cost + collateral` and this term rises by exactly the same amount,
+    because `Σ q × multiplier × premium` IS `net_cost`. So a structure opened
+    at its own mid leaves the portfolio's total unchanged, and a NAV series
+    does not show a loss for having traded. At settlement the same identity
+    runs backwards: `option_lifecycle.settlement_effect` credits
+    `collateral_posted + sign × value_total` and closes the leg, which
+    removes precisely this term.
+
+    Signed quantity carries the short side, so no branch is needed: a short
+    leg's term is negative and grows more negative as the mark rises, which
+    is what being short costs.
+    """
+    return collateral_posted + quantity * multiplier * mark
+
+
+def option_legs_value(
+    legs: Iterable[tuple[float, float, float, float]]
+) -> float:
+    """Σ `option_leg_value` over (collateral, quantity, multiplier, mark)."""
+    return sum(option_leg_value(c, q, m, k) for c, q, m, k in legs)

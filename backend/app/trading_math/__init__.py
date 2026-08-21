@@ -61,6 +61,8 @@ from .option_strategy import (
     StrategyMetrics,
     combine_greeks,
     net_cost,
+    option_leg_value,
+    option_legs_value,
     payoff_at_expiry,
     strategy_metrics,
 )
@@ -219,6 +221,8 @@ __all__ = [
     "payoff_at_expiry",
     "per_contract",
     "put_call_parity_gap",
+    "option_leg_value",
+    "option_legs_value",
     "strategy_metrics",
     # FIFO cost-basis lot matching (CR029-MATH)
     "FifoSellResult",

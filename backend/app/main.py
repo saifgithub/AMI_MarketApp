@@ -36,6 +36,7 @@ from app.api.notifications import router as notifications_router
 from app.api.telemetry import router as telemetry_router
 from app.api.onboarding import router as onboarding_router
 from app.api.one_on_one import router as one_on_one_router
+from app.api.options import router as sim_options_router  # CR172 §10
 from app.api.portfolio import router as portfolio_router  # CR026 sector allocation
 from app.api.price_alerts import router as price_alerts_router
 from app.api.room import router as room_router
@@ -577,6 +578,7 @@ app.include_router(portfolio_router)
 app.include_router(price_alerts_router)
 app.include_router(room_router)
 app.include_router(sim_router)
+app.include_router(sim_options_router)  # CR172 §10 — propose / open
 app.include_router(tickers_router)
 app.include_router(feedback_router)
 app.include_router(watchlist_router)

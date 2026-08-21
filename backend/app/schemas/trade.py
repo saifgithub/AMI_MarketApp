@@ -1,6 +1,6 @@
 """Sim portfolio + trade + compliance check result."""
 
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 from typing import Literal
 from uuid import UUID
@@ -11,6 +11,7 @@ from app.schemas.classification import ClassificationVerdict
 from app.schemas.sharia import ShariaVerdict
 from app.trading_math.portfolio import drawdown_pct as _drawdown_pct
 from app.trading_math.portfolio import total_value as _total_value
+from app.trading_math.option_strategy import option_legs_value as _option_legs_value
 from app.trading_math.shorts import short_legs_value as _short_legs_value
 
 
@@ -63,6 +64,38 @@ class ShortLeg(BaseModel):
     opened_at: datetime
 
 
+class OptionLeg(BaseModel):
+    """One OPEN option leg on a portfolio — CR172 §3, the training lane.
+
+    Carried on `Portfolio` for the same reason `ShortLeg` is: value,
+    drawdown, the daily NAV snapshot and every risk read derive from this one
+    object, so a leg the portfolio does not know about is a leg the score does
+    not know about.
+
+    `quantity` is SIGNED contracts and `avg_premium` is per SHARE — both the
+    conventions `sim_option_legs` stores, carried through unchanged so no
+    second unit exists to drift (DEF098).
+
+    `collateral_posted` travels because the value term needs it: the cash that
+    left at open has to come back somewhere or opening a position moves
+    `total_value` by itself. See `option_leg_value`.
+    """
+
+    id: UUID
+    occ_symbol: str
+    underlying: str
+    right: str            # "call" | "put"
+    strike: float
+    expiry: date
+    quantity: float       # SIGNED contracts: positive long, negative short
+    avg_premium: float    # per share
+    multiplier: float = 100.0
+    collateral_posted: float = 0.0
+    strategy_id: UUID
+    strategy_name: str
+    opened_at: datetime
+
+
 class Portfolio(BaseModel):
     """Sim portfolio snapshot."""
 
@@ -75,9 +108,14 @@ class Portfolio(BaseModel):
     current_cash: float
     holdings: list[Holding] = Field(default_factory=list)
     shorts: list[ShortLeg] = Field(default_factory=list)
+    options: list[OptionLeg] = Field(default_factory=list)
     created_at: datetime
 
-    def total_value(self, marks: dict[str, float] | None = None) -> float:
+    def total_value(
+        self,
+        marks: dict[str, float] | None = None,
+        option_marks: dict[str, float] | None = None,
+    ) -> float:
         """Sum cash + (quantity * price) for each holding, plus the short leg.
 
         marks: ticker→price. Arithmetic lives in app.trading_math.portfolio
@@ -87,18 +125,41 @@ class Portfolio(BaseModel):
         exactly what it always returned there — the second term is 0.0 and
         not merely negligible."""
         marks = marks or {}
+        option_marks = option_marks or {}
         long_side = _total_value(
             self.current_cash,
             ((h.quantity, marks.get(h.ticker, h.avg_cost)) for h in self.holdings),
         )
-        return long_side + _short_legs_value(
+        short_side = _short_legs_value(
             (s.cash_posted, s.quantity, s.entry_price, marks.get(s.ticker, s.entry_price))
             for s in self.shorts
         )
+        # CR172 §11 — an option leg with no mark is held at the premium it was
+        # opened at, exactly as a holding with no mark is held at `avg_cost`.
+        # That keeps the total continuous across the open (the cash that left
+        # equals the term that arrived) at the price of showing no P&L until
+        # option marks are wired. A zero would be worse in the one way that
+        # matters: it reports the position as a total loss the moment it opens.
+        option_side = _option_legs_value(
+            (
+                o.collateral_posted,
+                o.quantity,
+                o.multiplier,
+                option_marks.get(o.occ_symbol, o.avg_premium),
+            )
+            for o in self.options
+        )
+        return long_side + short_side + option_side
 
-    def total_drawdown_pct(self, marks: dict[str, float] | None = None) -> float:
+    def total_drawdown_pct(
+        self,
+        marks: dict[str, float] | None = None,
+        option_marks: dict[str, float] | None = None,
+    ) -> float:
         """Drawdown vs starting capital, as a positive percentage (CR046 M05)."""
-        return _drawdown_pct(self.starting_capital, self.total_value(marks))
+        return _drawdown_pct(
+            self.starting_capital, self.total_value(marks, option_marks),
+        )
 
 
 class ProposedTrade(BaseModel):

@@ -384,6 +384,24 @@ class ComplianceContext:
 
 
 @dataclass
+class OptionOpenResult:
+    """What `open_option_structure` returns — CR172 §10 step 4.
+
+    Its own shape rather than a `SubmitResult` with option fields bolted on:
+    nothing here is a `sim_trades` row, and a result type that carries a
+    `trade` field permanently set to None invites a reader to check it.
+    """
+
+    accepted: bool
+    compliance: ComplianceResult
+    portfolio_snapshot: Portfolio | None = None
+    strategy_id: UUID | None = None
+    strategy_name: str | None = None
+    net_cost: float | None = None
+    collateral_posted: float | None = None
+
+
+@dataclass
 class SubmitResult:
     accepted: bool
     trade: SimTrade | None
@@ -502,6 +520,14 @@ def _portfolio_from_row(row: SimPortfolioRow) -> Portfolio:
             )
 
             shorts = _training_shorts(session, row.id)
+    # CR172 §3 — the option book is TRAINING-lane only, by design: §11 requires
+    # `games_scoring_pass` to be *provably* untouched by options, and the
+    # cheapest proof is that a game portfolio never carries a leg to score.
+    options = []
+    if session is not None and row.kind != "game":
+        from app.services.sim_options import open_legs_for_portfolio
+
+        options = open_legs_for_portfolio(session, row.id)
     return Portfolio(
         id=row.id,
         user_id=row.user_id,
@@ -518,6 +544,7 @@ def _portfolio_from_row(row: SimPortfolioRow) -> Portfolio:
             for h in row.holdings
         ],
         shorts=shorts,
+        options=options,
         created_at=row.created_at,
     )
 
@@ -2674,6 +2701,110 @@ class SimEngine:
             short_ticker=ticker,
             short_quantity=quantity,
             short_realised_pnl=realised,
+        )
+
+    def open_option_structure(
+        self,
+        user_id: UUID,
+        *,
+        underlying: str,
+        strategy_name: str,
+        legs,
+        expiry,
+        mandate: Mandate,
+        verdict_ref: UUID | None = None,
+    ) -> "OptionOpenResult":
+        """CR172 §10 step 4 — the user said yes, so the structure opens.
+
+        A FOURTH public entry point beside `submit`, `submit_game_trade` and
+        `run_option_lifecycle`, and deliberately not a mode of `submit()`. §7.1
+        forbids a `skip_compliance` flag, and this path needs a *different*
+        floor rather than none: `check_option_open` asks whether the loss has a
+        floor, which `check_mandate_compliance` has no concept of. One entry
+        point with two floors selected by a boolean is the switch that is True
+        on the wrong path one day.
+
+        The floor runs FIRST and its refusal is returned verbatim — the card
+        the user pressed yes on was built from the same check, so a structure
+        that passed there and fails here means the world moved between the
+        proposal and the consent, and the user is told which rule caught it.
+        """
+        from app.agents.safety_floor import check_option_open
+        from app.services import sim_options
+
+        leg_list = list(legs)
+        portfolio = self.ensure_portfolio(user_id)
+
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id)
+            assert p_row is not None
+            shares_held = self._held_quantity(s, p_row, underlying.upper().strip())
+            compliance = check_option_open(
+                leg_list, mandate, shares_held=shares_held,
+            )
+            if not compliance.passed:
+                logger.info(
+                    "sim_option_open_refused",
+                    user_id=str(user_id),
+                    underlying=underlying,
+                    strategy=strategy_name,
+                    blocked_by=compliance.blocked_by,
+                )
+                return OptionOpenResult(
+                    accepted=False,
+                    compliance=compliance,
+                    portfolio_snapshot=portfolio,
+                )
+            try:
+                trade_row, leg_rows = sim_options.open_structure(
+                    s,
+                    portfolio_row=p_row,
+                    user_id=user_id,
+                    underlying=underlying,
+                    strategy_name=strategy_name,
+                    legs=leg_list,
+                    expiry=expiry,
+                    shares_held=shares_held,
+                    verdict_ref=verdict_ref,
+                )
+            except (sim_options.InsufficientCashError, ValueError) as exc:
+                logger.info(
+                    "sim_option_open_rejected",
+                    user_id=str(user_id),
+                    underlying=underlying,
+                    strategy=strategy_name,
+                    reason=str(exc),
+                )
+                return OptionOpenResult(
+                    accepted=False,
+                    compliance=ComplianceResult(
+                        passed=False, violations=[str(exc)], blocked_by=None,
+                    ),
+                    portfolio_snapshot=portfolio,
+                )
+            strategy_id = trade_row.strategy_id
+            net_cost = float(trade_row.net_cost_at_open)
+            collateral = float(trade_row.collateral_posted)
+            leg_count = len(leg_rows)
+
+        logger.info(
+            "sim_option_opened",
+            user_id=str(user_id),
+            underlying=underlying.upper().strip(),
+            strategy=strategy_name,
+            strategy_id=str(strategy_id),
+            legs=leg_count,
+            net_cost=net_cost,
+            collateral_posted=collateral,
+        )
+        return OptionOpenResult(
+            accepted=True,
+            compliance=compliance,
+            portfolio_snapshot=self.ensure_portfolio(user_id),
+            strategy_id=strategy_id,
+            strategy_name=strategy_name,
+            net_cost=net_cost,
+            collateral_posted=collateral,
         )
 
     def run_option_lifecycle(
