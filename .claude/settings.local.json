@@ -50,7 +50,14 @@
       "Bash(python3 -c ' *)",
       "Bash(curl -sL --compressed -A \"Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/126.0 Safari/537.36\" -H \"Accept-Language: en-US,en;q=0.9\" \"https://www.youtube.com/@GrahamStephan?hl=en&gl=US\" -o gs2.html)",
       "Bash(chmod +x subs.sh)",
-      "Bash(./subs.sh GrahamStephan AndreiJikh NateOBrien humphreytalks MarkoWhiteBoardFinance MinorityMindset thefinancialdiet RyanScribner CharlieChang erikakullberg yourrichbff FinancialTortoise BaldGuyMoney RoseHan MoneyGuyShow TheRamseyShow GeorgeKamel CalebHammer ramitsethi TwoCentsPBS)"
+      "Bash(./subs.sh GrahamStephan AndreiJikh NateOBrien humphreytalks MarkoWhiteBoardFinance MinorityMindset thefinancialdiet RyanScribner CharlieChang erikakullberg yourrichbff FinancialTortoise BaldGuyMoney RoseHan MoneyGuyShow TheRamseyShow GeorgeKamel CalebHammer ramitsethi TwoCentsPBS)",
+      "Bash(ssh -o ConnectTimeout=10 melehost \"docker exec ami_postgres psql -U postgres -d ami_trade -P pager=off -c \\\\\"SELECT id, category, title, app_version, created_at FROM bug_reports WHERE status='open' ORDER BY created_at ASC;\\\\\"\")",
+      "Bash(ssh -o ConnectTimeout=10 melehost \"docker exec ami_postgres psql -U postgres -d ami_trade -c \\\\\"SELECT status, COUNT\\(*\\) FROM bug_reports GROUP BY status ORDER BY status;\\\\\"\")",
+      "Bash(ssh -o ConnectTimeout=10 melehost \"docker exec ami_postgres psql -U postgres -d ami_trade -c \\\"UPDATE bug_reports SET status='investigating' WHERE id IN (*) AND status='open';\\\"\")",
+      "Bash(ssh -o ConnectTimeout=10 melehost \"docker exec ami_postgres psql -U postgres -d ami_trade -P pager=off -c \\\"SELECT * FROM bug_reports WHERE *\\\"\")",
+      "Bash(python scripts/registers/gen_registers.py gen:*)",
+      "Bash(python3 scripts/registers/gen_registers.py gen:*)",
+      "Bash(git commit -m docs(bug-monitor):*)"
     ]
   }
 }

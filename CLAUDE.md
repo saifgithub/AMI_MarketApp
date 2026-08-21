@@ -175,6 +175,14 @@ Rules:
    Defect one by one via `AskUserQuestion`, inline, live. This runs in whichever session
    Saiful opens first that day (not a separate cloud routine — he pushed back on being
    redirected to one, 2026-07-24). Skip silently if today's section already exists.
+2b. **Bug-monitor fallback check (CR185).** Run
+   `git log -1 --format=%ct --grep='docs(bug-monitor)'` — if the newest cycle commit is more
+   than 6h old (or none exists), run [`/bug-monitor`](.claude/commands/bug-monitor.md) once
+   before other work. Silent by design: it files DEFs and flips the report to `investigating`,
+   never asks a question, never touches code. The scheduled `/loop 6h /bug-monitor` is the
+   primary path (Saiful, 2026-08-21: *"Both — scheduled job, session-start fallback"*); this
+   step is the backstop for when no loop is armed. The DB `status` column is the shared
+   watermark, so the two paths cannot double-file.
 3. **For the freshest state**, select the newest checkpoint memo in [`.deliveryos/checkpoint_history/`](.deliveryos/checkpoint_history/) **that carries your own role/instance marker** (the CR097 cold-start anchor that replaced `HANDOVER_<track>.md`): `grep -l "ROLE: <your-role>" .deliveryos/checkpoint_history/*.md | sort | tail -1` (filenames are timestamp-prefixed, so lexical sort = chronological; use `INSTANCE: <your-id>` for a fleet instance). **Do NOT read the newest file blindly** — the folder interleaves every track's sessions (15+ session-ids keyed by opaque session-id), so `ls -t | head -1` returns some *other* role's memo. Selection is read-time by design — there is **no shared `LATEST` pointer** (that would be a write race; see "Autonomy + continuity rules"). If nothing carries your marker yet, fall back to `git log --oneline` + the registers (`docs/forward_planning/cr_list.md` / `docs/defect/def_list.md`) — authoritative and unambiguous. Always cross-check against `git log`: a stamped memo can predate later commits.
 4. Skim [`docs/initial_specs/10_delivery/project_plan.md`](docs/initial_specs/10_delivery/project_plan.md) — the Alpha → Beta → MVP roadmap. Your task is almost always in there.
 5. `git log --oneline` to verify the commit chain.
