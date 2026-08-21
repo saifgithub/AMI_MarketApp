@@ -7,6 +7,13 @@ trust_remote_code: false
 train_jsonl: /kit/data/train.jsonl
 val_jsonl: /kit/data/val.jsonl
 
+# auto | unsloth | trl. Pinned to trl 2026-08-21: on this hybrid Mamba-MoE checkpoint the
+# Unsloth path built the adapter but then died with "Cannot copy out of meta tensor; no data!"
+# at train start (smoke4), after earlier rejecting all-linear targets and lora_dropout>0.
+# TRL+PEFT is NVIDIA's own documented LoRA path for Nemotron-H. Revisit for run 2 if speed
+# matters more than the day of debugging it would cost.
+harness: trl
+
 lora_rank: 32
 lora_alpha: 64
 lora_dropout: 0.0   # Unsloth: "lora.ParamWrapper does not work with lora_dropout != 0"

@@ -38,7 +38,12 @@ def load_model(cfg):
     """
     model_path, maxlen = cfg["model_path"], cfg["cutoff_len"]
     trc = bool(cfg.get("trust_remote_code", False))
+    want = str(cfg.get("harness", "auto")).lower()   # auto | unsloth | trl
+    if want == "trl":
+        log("harness pinned to trl by config (harness: trl)")
     try:
+        if want == "trl":
+            raise ImportError("pinned to trl by config")
         from unsloth import FastLanguageModel
         model, tok = FastLanguageModel.from_pretrained(
             model_name=model_path,
