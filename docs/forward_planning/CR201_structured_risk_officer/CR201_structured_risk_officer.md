@@ -392,3 +392,36 @@ own logs and the SSE stream:
   which is the DEF352 fix confirmed on a live reply rather than on a corpus;
 - the run reached a verdict (PASS, with a reason quoting the 20-day SMA) and the
   stream closed on `done`.
+
+### 9.4 Amendment after §10 — the officer is live, and that changes two things (2026-08-21)
+
+§9 was written before §10 landed. With `ROOM_RISK_OFFICER_ENABLED=true` on Alpha and the
+contract live-verified (one `risk_officer` call, three rendered voices, no fallback), two
+items in §9 need correcting rather than leaving to read as current.
+
+**(a) The recipe-17 hold is lifted.** §9.2 recommended CR196 hold its `risk_officer` JSON
+recipe until the flag enabled, on the grounds that a contract still in motion makes a stale
+dataset. The flag has enabled and round 2 measured the discard at **0.7%**, so the contract is
+now the most empirically settled surface in the Room. CR196 may build recipe 17 against it.
+
+**(b) A new adoption-gate item for CR196, which §9.3 did not anticipate.** §10's own history is
+the argument. DEF352 — a parser eating **42.6%/44.1%** of officer payloads — did not present as
+an error. It presented as the Room quietly running on the ladder-only floor, at 12.0% approval
+against an 18.5% baseline, *"in a place nobody was looking."* The failure was silent, costly, and
+found only because a second measurement round was run.
+
+That failure mode is **model-specific**. `_options_by_size` keys on whatever the model emits and
+`extract_json_object` has to find the object; a differently-tuned model that fences its JSON,
+prefixes it with reasoning, or drifts on `size_pct` formatting re-opens DEF352 without raising
+anything. CR196's model is trained on a different mix by a different LoRA — it has **no** training
+on this contract in run 1, because recipe 17 did not exist when run 1's data was built.
+
+**Therefore, before any `:8000` swap, CR196 must measure `fallback_reason="the reply could not be
+parsed"` on `_run_risk_officer` for its own model, and require it under 1% — the same bar §10
+sets for the live watch.** This is additive to CR196 §4's gate, and is not satisfied by the basis
+rubric or the 3-lens batch, neither of which exercises the officer contract at all. Recorded in
+CR196 §5a.
+
+§9.3's co-window rule is unchanged and still binds in the direction that now matters: the officer
+moved first and alone, so a later model swap is the second change and re-opens the v9 equivalence
+(15.8% vs 16.2%), which was measured on Qwen3.6-35B-A3B-NVFP4.
