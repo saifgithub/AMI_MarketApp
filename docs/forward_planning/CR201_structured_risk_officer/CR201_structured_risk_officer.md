@@ -373,3 +373,22 @@ was 43% in round 1 in a place nobody was looking, which is the whole reason this
 needed two measurement rounds. It should now sit under 1%. Still open and unchanged:
 `_AGENT_MAX_TOKENS[RISK_OFFICER] = 1800` wants a clean post-enable re-measure by
 CR179's method, and the CR035 150-ticker benchmark is the wider confirmation.
+
+### Live verification on `alpha-2026-08-22-1`
+
+Not inferred from the flag being set — a real convene was run against Alpha
+(AAPL, anonymous user, 2026-08-21 17:38 UTC) and read back from the container's
+own logs and the SSE stream:
+
+- **one** `agent_id=risk_officer` call under `flow=room_risk_officer`, where three
+  debator calls used to be;
+- the transcript still carries **three voices** — `aggressive_debator`,
+  `conservative_debator`, `neutral_debator` — each opening *"From the Risk
+  Officer's structured assessment"* and quoting its own computed rung (5.0% /
+  3.0% / 1.5%, with the drawdown points and cap headroom that go with them). So
+  `render_officer_turns` is doing what it was built to do: the user's Room did
+  not visibly change shape, only the number of calls behind it;
+- **no** `fallback_reason="the reply could not be parsed"` anywhere in the run —
+  which is the DEF352 fix confirmed on a live reply rather than on a corpus;
+- the run reached a verdict (PASS, with a reason quoting the 20-day SMA) and the
+  stream closed on `done`.
