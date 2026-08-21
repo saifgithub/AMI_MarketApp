@@ -259,3 +259,74 @@ Whichever is chosen, `test_cr197_size_envelope.py` needs its scope assertion rev
   measured to shift approvals ~5pp on its own; do not enable it in the same window as this
   change or neither effect is attributable.
 - Any change to the safety floor, sizing caps, credits, or the 12-agent roster.
+
+---
+
+## 9. Interaction with CR196 (the finance-tuned model) — training impact only
+
+Added 2026-08-21 by the CR196 lane at Saiful's direction. Scope is deliberately narrow:
+what CR201 changes about what we should TRAIN, and what CR196 changes about how CR201
+must be validated. No CR201 design decision is reopened here.
+
+### 9.1 The run-1 training job is unaffected — no change needed
+
+CR196's run-1 mix (25,695 examples, recipes 1–9, in training since 2026-08-21 10:02 +03)
+contains **no debator data at all**. Recipe 8 trains the Fundamentals prose contract and
+the PM verdict JSON (`_PM_VERDICT_FORMAT`); CR201 changes neither. Verified by reading the
+recipe, not assumed. The run continues as-is.
+
+### 9.2 A planned run-2 recipe is cancelled by this CR, correctly
+
+CR196 §2c.4 had scoped **recipe 15** as "one brief, three debator prompts, check the three
+outputs differ and each holds its assigned posture." CR201 makes that untrainable *and
+pointless*: the three risk turns are rendered by `render_officer_turns()` from one parsed
+JSON payload with **no further LLM calls**, so posture distinctness is no longer a model
+behaviour at all on the Room path. Training it would target a code path that does not execute.
+
+The justification recipe 15 leaned on also disappears — and this is the more important half.
+DEF251's "20% of debator turns emitted no envelope" was cited as the reason to train envelope
+compliance. CR201 retires DEF247/DEF251/DEF257 **by construction** (stance/conviction/size
+become derived, not parsed). Per CLAUDE.md's standing rule — *prompt instructions are not
+controls; if it must hold, make it structural* — a structural fix beats a training fix, and
+training the same property afterwards would be redundant work against an already-closed class.
+
+**What survives:** the three `content/agents/*_debator.md` files remain live as 1-on-1
+unlockable personas (`agent_gateways.py:108-130`, five lesson gates each), so they are still
+LLM-generated — just outside the Room, without a transcript or the stance envelope. Low
+training value; not scheduled.
+
+**What replaces recipe 15:** a `risk_officer` **JSON-contract** recipe, the same shape as
+recipe 8's PM verdict work, against `build_risk_officer_instruction()`. That contract is
+unusually verifiable, which makes it a better recipe than the one it replaces — every property
+below is machine-checkable without an LLM judge:
+
+- exactly one entry per handed size, and **no invented size** (sizes come from
+  `risk_debator_sizes` and are fixed in the prompt)
+- `recommended` ∈ the handed sizes
+- `key_number` **quoted** from the evidence, never computed
+- no self-authored drawdown or cap figure (those are computed upstream)
+- `confidence` genuinely separating — "a confident call and an uncertain one … must not read
+  the same"
+
+### 9.3 The dependency that runs the other way — sequencing, not a blocker
+
+CR201's equivalence result (arm v8: 22 vs 22 approvals, net 0, p=1.0) was measured **against
+`ami-llm` = Qwen3.6-35B-A3B-NVFP4**, stated in CR197's row as the model that produced the
+corpora. That result is a property of *that* model reading *that* contract. If CR196 later wins
+its adoption gate and the `:8000` slot changes model, **the v8 equivalence does not
+automatically carry** — a differently-tuned model can parse-fail or size-select differently on
+the same JSON contract.
+
+This is the identical argument §8 already makes for `PM_OPTION_LADDER_ENABLED` ("do not enable
+it in the same window as this change or neither effect is attributable"), and it applies with
+the same force to a base-model swap. Two consequences, both sequencing only:
+
+1. **Do not enable `ROOM_RISK_OFFICER_ENABLED` and swap the `:8000` model in the same window.**
+   Whichever lands second re-measures against the other's baseline.
+2. `_AGENT_MAX_TOKENS[RISK_OFFICER]` = 1800 was derived by CR179's method from the v8 arm's
+   censored 1200 ceiling and is already flagged for clean re-measure post-enable. A model swap
+   is a second reason that re-measure cannot be skipped — CR196's own adoption gate sets
+   `max_tokens_floor` from measurement for exactly this reason (`llm_gateway.py:440-484`).
+
+Neither point blocks CR201: it is ahead of CR196, whose run-1 model does not exist yet and
+must clear its own eval and adoption gate first.
