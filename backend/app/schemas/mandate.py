@@ -154,6 +154,24 @@ class Compliance(BaseModel):
     no_fossil_fuels: bool = False
     long_only: bool = True
     liquid_only: bool = True
+    # CR172 §9 — the options gate. **False by default, which is the whole point:**
+    # every mandate stored before this field existed has no such key, which
+    # Pydantic reads as False, so no existing user acquires the ability to open
+    # a derivative by a schema change. It is a Compliance bool rather than an
+    # enforced numeric limit, so it carries no ENFORCED_LIMIT_MARKER (that
+    # marker is for the numeric caps) — but it satisfies the same four-leg
+    # invariant `long_only` does: enforced in `safety_floor.check_option_open`,
+    # disclosed in the agent overlay, settable through the compliance merge on
+    # PATCH, and disclosed to the user in its own terms.
+    #
+    # The remaining §9 fields (`allowed_option_strategies`,
+    # `naked_shorts_allowed`, `options_require_underlying_position` and the six
+    # numeric option limits) are NOT here yet, and this field does not imply
+    # them: with it off, none of them can be reached; with it on, the floor
+    # still refuses an uncovered short call under D3 and still applies every
+    # equity limit. Adding them without their four legs each is what DEF191
+    # forbids, so they arrive with their own enforcement, not as schema.
+    derivatives_allowed: bool = False
     ticker_blocklist: list[str] = Field(default_factory=list)
     ticker_allowlist: list[str] | None = None
     custom_constraints: list[str] = Field(default_factory=list)

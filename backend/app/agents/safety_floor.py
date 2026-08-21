@@ -877,6 +877,17 @@ NAKED_CALL_REFUSAL = (
     "teach assignment without that tail."
 )
 
+# CR172 §9. A sentence a user reads, so it says AMI and it says what to do
+# next — a refusal that only states a flag name teaches nothing and reads as a
+# malfunction to the one person who could change it.
+DERIVATIVES_NOT_PERMITTED = (
+    "Your mandate does not permit derivatives, so AMI will not open an option "
+    "position. Options can lose their whole value on a date fixed in advance, "
+    "which is a different kind of risk from the shares this account trades — "
+    "turn on derivatives in your mandate if you want AMI to structure them."
+)
+
+
 _HALAL_OPTION_ADVISORY = (
     "Selling an option to open is widely held impermissible under Sharia: "
     "conventional options carry gharar (contractual uncertainty) and the "
@@ -928,6 +939,19 @@ def check_option_open(
     not_evaluated: list[str] = []
     advisories: list[str] = []
     blocked_by: str | None = None
+
+    # CR172 §9 — the gate, and it runs BEFORE the structure is even costed.
+    # `derivatives_allowed` defaults False, so every mandate that predates the
+    # field refuses here and no user acquires options by a deploy. Ordering
+    # matters for what the user reads: a mandate that does not permit
+    # derivatives at all should be told that, not handed a lecture about
+    # uncovered calls it was never going to be allowed to open.
+    if not getattr(mandate.compliance, "derivatives_allowed", False):
+        return ComplianceResult(
+            passed=False,
+            violations=[DERIVATIVES_NOT_PERMITTED],
+            blocked_by="compliance",
+        )
 
     leg_list = list(legs or [])  # type: ignore[arg-type]
     metrics = strategy_metrics(leg_list, shares_held=max(0.0, float(shares_held or 0.0)))

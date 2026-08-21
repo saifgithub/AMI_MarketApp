@@ -164,6 +164,23 @@ def _compliance_block(
         ))
     if c.long_only:
         flags.append("- LONG-ONLY. No short recommendations. Frame negative views as 'avoid' / 'wait'.")
+    # CR172 §9 — stated in BOTH directions, never by omission. The permitted
+    # case is obvious; the forbidden case is the one that matters, because an
+    # agent that is simply never told about options will propose one the floor
+    # then refuses, and the user reads a refusal for advice AMI itself gave
+    # (the CR150 Tier C shape, one instrument along). Absence rendered as
+    # silence is the CR040 failure pointed at the user instead of the operator.
+    if c.derivatives_allowed:
+        flags.append(
+            "- Derivatives permitted. AMI may structure options on this "
+            "account; every strike, premium and greek is computed by AMI, "
+            "never stated by you."
+        )
+    else:
+        flags.append(
+            "- NO DERIVATIVES. Do not propose options, spreads or any "
+            "structure — this account trades shares only."
+        )
     if c.liquid_only:
         flags.append(f"- Liquid only. Avoid microcaps (< ${_MICROCAP_FLOOR_USD_M}M market cap) and illiquid names.")
     if c.ticker_blocklist:

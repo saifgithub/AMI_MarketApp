@@ -37,11 +37,20 @@ from app.trading_math.option_strategy import StrategyLeg, strategy_metrics
 EXPIRY = datetime.date(2027, 3, 19)
 
 
-def _mandate(*, long_only: bool = False, halal: bool = False):
+def _mandate(
+    *, long_only: bool = False, halal: bool = False, derivatives_allowed: bool = True,
+):
+    """Derivatives ON by default — §9's gate has its own tests; these ask about
+    what happens once it is open. A shut gate would make them pass for the
+    wrong reason."""
     return hydrate_coach_mandate({
         "plan": "trader",
         "single_name_cap_pct": 100.0,
-        "compliance": {"long_only": long_only, "halal": halal},
+        "compliance": {
+            "long_only": long_only,
+            "halal": halal,
+            "derivatives_allowed": derivatives_allowed,
+        },
     })
 
 

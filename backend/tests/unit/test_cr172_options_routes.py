@@ -100,10 +100,17 @@ def _user():
     return user.id, {"Authorization": f"Bearer {token}"}
 
 
+# §9's gate defaults OFF, so every request that expects to see or open a
+# structure must carry a mandate that permits derivatives. The two
+# `test_the_gate_*` cases below are the ones that omit it.
+_PERMITS = {"plan": "trader", "compliance": {"derivatives_allowed": True}}
+
+
 def _propose(client, headers, user_id, **over):
     body = {
         "user_id": str(user_id), "ticker": "AAPL", "direction": "bullish",
         "target": 110.0, "stop": 90.0, "horizon_days": 30,
+        "mandate": _PERMITS,
     }
     body.update(over)
     return client.post("/v1/sim/options/propose", json=body, headers=headers)
@@ -113,7 +120,7 @@ def _open(client, headers, user_id, legs, **over):
     body = {
         "user_id": str(user_id), "ticker": "AAPL",
         "strategy_name": "long_call", "expiry": EXPIRY.isoformat(),
-        "legs": legs,
+        "legs": legs, "mandate": _PERMITS,
     }
     body.update(over)
     return client.post("/v1/sim/options/open", json=body, headers=headers)
@@ -158,7 +165,9 @@ def test_a_forbidden_structure_is_returned_marked_not_missing(client):
     user_id, headers = _user()
     body = _propose(
         client, headers, user_id,
-        mandate={"plan": "trader", "compliance": {"long_only": True}},
+        mandate={"plan": "trader", "compliance": {
+            "long_only": True, "derivatives_allowed": True,
+        }},
     ).json()
     csp = next(
         (c for c in body["candidates"] if c["strategy_name"] == "cash_secured_put"),
@@ -279,3 +288,46 @@ def test_the_response_carries_every_key_the_ticket_reads(client):
         assert set(candidate["net_greeks"]) == {
             "delta", "gamma", "theta_per_day", "vega_per_point", "rho_per_point",
         }
+
+
+# ── §9 — the gate, at the edge ──────────────────────────────────────────────
+
+def test_the_gate_shuts_the_open_route_by_default(client):
+    """A mandate that does not permit derivatives cannot open one over HTTP."""
+    from app.agents.safety_floor import DERIVATIVES_NOT_PERMITTED
+
+    user_id, headers = _user()
+    r = client.post(
+        "/v1/sim/options/open",
+        json={
+            "user_id": str(user_id), "ticker": "AAPL",
+            "strategy_name": "long_call", "expiry": EXPIRY.isoformat(),
+            "legs": [{"right": "call", "strike": 100.0, "quantity": 1.0}],
+        },
+        headers=headers,
+    )
+    body = r.json()
+    assert body["accepted"] is False
+    assert DERIVATIVES_NOT_PERMITTED in body["compliance"]["violations"]
+    assert body["portfolio"]["current_cash"] == 10_000.0
+
+
+def test_the_gate_marks_every_candidate_on_propose(client):
+    """Proposing still shows the menu — marked, not hidden.
+
+    §10's rule holds even for the gate: the PM should be able to say "the
+    natural structure here is a spread, which your mandate does not permit",
+    and a user who cannot see what they are missing cannot decide to turn it
+    on.
+    """
+    user_id, headers = _user()
+    body = client.post(
+        "/v1/sim/options/propose",
+        json={
+            "user_id": str(user_id), "ticker": "AAPL", "direction": "bullish",
+            "target": 110.0, "stop": 90.0,
+        },
+        headers=headers,
+    ).json()
+    assert body["candidates"], "the menu is still shown"
+    assert all(c["compliance"]["passed"] is False for c in body["candidates"])

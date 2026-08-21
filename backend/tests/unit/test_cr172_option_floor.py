@@ -22,6 +22,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from app.agents.safety_floor import (
+    DERIVATIVES_NOT_PERMITTED,
     NAKED_CALL_REFUSAL,
     check_exercise_outcome,
     check_option_open,
@@ -34,11 +35,30 @@ EXPIRY = "2026-01-16"
 FAR_EXPIRY = "2026-03-20"
 
 
-def _mandate(*, long_only: bool = False, halal: bool = False, **over):
+def _mandate(
+    *,
+    long_only: bool = False,
+    halal: bool = False,
+    derivatives_allowed: bool = True,
+    **over,
+):
+    """Derivatives ON by default here, and that is deliberate.
+
+    Every test in this file asks about the STRUCTURE rules — D3's uncovered
+    call, D4's long-only reading, the halal advisory — and each of those
+    questions only exists downstream of the §9 gate. A fixture that left the
+    gate shut would make all of them pass for the wrong reason: refused, but
+    never by the rule under test. The gate has its own tests below, which are
+    the ones that assert the default is OFF.
+    """
     base = {
         "plan": "trader",
         "single_name_cap_pct": 100.0,
-        "compliance": {"long_only": long_only, "halal": halal},
+        "compliance": {
+            "long_only": long_only,
+            "halal": halal,
+            "derivatives_allowed": derivatives_allowed,
+        },
     }
     base.update(over)
     return hydrate_coach_mandate(base)
@@ -244,3 +264,72 @@ def test_exercise_outcome_records_not_evaluated_rather_than_a_clean_bill():
     assert result.not_evaluated != [], (
         "a cap measured against a zero denominator is not a cap that passed"
     )
+
+
+# ── §9 — the gate itself (CR172, AT:R73) ────────────────────────────────────
+
+
+def test_derivatives_are_refused_unless_the_mandate_permits_them():
+    """The default is OFF, so a mandate written before the field refuses."""
+    result = check_option_open(
+        [_leg("call", 100.0, 1.0)], _mandate(derivatives_allowed=False),
+    )
+    assert result.passed is False
+    assert DERIVATIVES_NOT_PERMITTED in result.violations
+    assert result.blocked_by == "compliance"
+
+
+def test_a_mandate_that_never_heard_of_the_field_refuses():
+    """A stored snapshot predating CR172 has no such key — it must not open."""
+    stored = hydrate_coach_mandate({
+        "plan": "trader",
+        "single_name_cap_pct": 100.0,
+        "compliance": {"long_only": False, "halal": False},
+    })
+    assert stored.compliance.derivatives_allowed is False
+    assert check_option_open([_leg("call", 100.0, 1.0)], stored).passed is False
+
+
+def test_the_gate_speaks_before_the_structure_rules_do():
+    """A naked call under a no-derivatives mandate is refused for the mandate.
+
+    Ordering is what the user reads. Leading with the uncovered-call lecture
+    would tell someone who cannot open ANY option to go find a covered
+    structure instead — advice that cannot be acted on.
+    """
+    result = check_option_open(
+        [_leg("call", 100.0, -1.0)], _mandate(derivatives_allowed=False),
+    )
+    assert result.violations == [DERIVATIVES_NOT_PERMITTED]
+    assert NAKED_CALL_REFUSAL not in result.violations
+
+
+def test_permitting_derivatives_does_not_permit_a_naked_call():
+    """The gate opens the door; D3 still stands behind it."""
+    result = check_option_open(
+        [_leg("call", 100.0, -1.0)], _mandate(derivatives_allowed=True),
+    )
+    assert result.passed is False
+    assert NAKED_CALL_REFUSAL in result.violations
+
+
+def test_the_refusal_tells_the_user_what_to_change():
+    assert "mandate" in DERIVATIVES_NOT_PERMITTED
+    assert "AMI" in DERIVATIVES_NOT_PERMITTED
+
+
+def test_the_overlay_states_the_gate_in_both_directions():
+    """An agent never told about options proposes one the floor then refuses.
+
+    That is CR150 Tier C's failure a different instrument along: advice AMI
+    gave, refused by AMI, read by the user as a malfunction. So the overlay
+    says it either way and never by omission.
+    """
+    from app.agents.overlay_generator import _compliance_block
+
+    off = _compliance_block(_mandate(derivatives_allowed=False).compliance)
+    on = _compliance_block(_mandate(derivatives_allowed=True).compliance)
+    assert "NO DERIVATIVES" in off
+    assert "shares only" in off
+    assert "Derivatives permitted" in on
+    assert "NO DERIVATIVES" not in on
