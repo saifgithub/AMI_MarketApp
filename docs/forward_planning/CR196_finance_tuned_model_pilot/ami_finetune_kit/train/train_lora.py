@@ -76,6 +76,18 @@ def load_model(cfg):
         log("gradient checkpointing: ON")
     except ValueError as e:
         log(f"gradient checkpointing: OFF ({e})")
+    # Degrade loudly: a regex that matches nothing must not look like a configuration
+    # choice. PEFT errors on zero matches, but the COUNT is the number worth seeing -
+    # a regex silently matching 3 modules would train and produce nothing.
+    import re as _re
+    _pat = _re.compile(cfg["target_modules"])
+    _hits = [n for n, mod in model.named_modules()
+             if isinstance(mod, torch.nn.Linear) and _pat.fullmatch(n)]
+    log(f"LoRA target modules matched: {len(_hits)}")
+    if len(_hits) < 10:
+        raise SystemExit(f"target_modules matched only {len(_hits)} modules - "
+                         f"check the regex against the loaded model's names")
+
     peft_cfg = LoraConfig(
         r=cfg["lora_rank"], lora_alpha=cfg["lora_alpha"], lora_dropout=cfg["lora_dropout"],
         target_modules=cfg["target_modules"], task_type="CAUSAL_LM",

@@ -9,18 +9,21 @@ val_jsonl: /kit/data/val.jsonl
 
 lora_rank: 32
 lora_alpha: 64
-lora_dropout: 0.05
+lora_dropout: 0.0   # Unsloth: "lora.ParamWrapper does not work with lora_dropout != 0"
 # Regex (PEFT treats a string as a regex). Chosen from the checkpoint's own weight index,
 # measured on alpha-spark 2026-08-21:
 #   * "all-linear" FAILS — PEFT rejects Mamba `out_proj` and `conv1d` for LoRA, and the
 #     bare names up_proj/down_proj would match all 3072 ROUTED expert matrices
 #     (128 experts x 24 MoE layers), which is not a LoRA any more.
-#   * This targets the 7 attention layers (q/k/v/o = 28), the Mamba input projections
-#     (in_proj = 23) and the always-active shared experts (up/down = 48) => 99 modules,
-#     next to the 101 Fastino's own merge touched (merge-provenance.json).
+#   * Names come from the LOADED model (meta-device enumeration, 2026-08-21), NOT the
+#     checkpoint's weight index: transformers' native impl renames `backbone.` -> `model.`,
+#     and only 117 nn.Linear modules exist at all (the routed experts are fused params,
+#     not Linear - which is what Unsloth's "lora.ParamWrapper" complaint was about).
+#     This targets attention q/k/v/o (24), Mamba in_proj (23) and the always-active
+#     shared experts up/down (46) => 93 modules, near the 101 Fastino's merge touched.
 # The routed experts stay frozen by design: they are sparsely activated, so LoRA on them
 # trains unevenly on any single-domain corpus.
-target_modules: 'backbone\.layers\.\d+\.mixer\.(q_proj|k_proj|v_proj|o_proj|in_proj)|backbone\.layers\.\d+\.mixer\.shared_experts\.(up_proj|down_proj)'
+target_modules: 'model\.layers\.\d+\.mixer\.(q_proj|k_proj|v_proj|o_proj|in_proj)|model\.layers\.\d+\.mixer\.shared_experts\.(up_proj|down_proj)'
 
 batch_size: 1
 grad_accum: 16
