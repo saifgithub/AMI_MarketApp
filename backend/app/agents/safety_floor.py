@@ -842,3 +842,206 @@ def enforce_safety_floor(
         violations=result.violations,
         overridden_from_llm=True,
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CR172 §8 — the options half of the floor.
+#
+# Two NEW public entry points, deliberately not a branch inside
+# `check_mandate_compliance`. That function decides an equity order; these
+# decide a multi-leg structure and a settlement that already happened, and
+# the three questions have different inputs, different outcomes, and — for
+# the exercise case — a different *shape* of answer. Folding them into one
+# function would put a mode flag on the uncoachable floor, which is the
+# CR109 §7.1 argument against a `skip_compliance` switch on `submit()`: a
+# boolean that changes what the floor does is a boolean that ends up wrong
+# on the path that mattered.
+#
+# What they share is mechanics, not policy — `single_name_cap_pct`,
+# `_held_quantity`, `check_holdings_against_mandate` — and they share it by
+# calling it, so there is one renderer of each rule (DEF098).
+# ─────────────────────────────────────────────────────────────────────────────
+
+# §14 D3, ruled 2026-08-20: naked calls are FORBIDDEN, with a refusal that
+# explains the reasoning rather than a flat "not permitted". The alternative
+# on the table was Reg-T margin at roughly 5:1, and it lost to the D-log's
+# "no leverage, ever" lock, which stands unamended.
+#
+# This is a sentence a user reads, so it says AMI, never "the AI".
+NAKED_CALL_REFUSAL = (
+    "AMI will not open an uncovered short call. It is the one structure in "
+    "this simulator whose loss has no ceiling — there is no strike, no width "
+    "and no collateral figure that bounds it, because the stock above it has "
+    "no bound. Containing it would need margin, and AMI runs no leverage of "
+    "any kind. Covered calls, cash-secured puts and defined-risk spreads "
+    "teach assignment without that tail."
+)
+
+_HALAL_OPTION_ADVISORY = (
+    "Selling an option to open is widely held impermissible under Sharia: "
+    "conventional options carry gharar (contractual uncertainty) and the "
+    "premium is received for an obligation rather than an asset. AMI has no "
+    "ruling of its own here and is not blocking the trade — this is for you "
+    "to decide."
+)
+
+
+def check_option_open(
+    legs: object,
+    mandate: Mandate,
+    *,
+    shares_held: float = 0.0,
+) -> ComplianceResult:
+    """The floor on OPENING an option structure — CR172 §8, §14 D3/D4.
+
+    `legs` is any sequence of leg-shaped objects carrying `.right`,
+    `.strike`, `.quantity` (SIGNED contracts), `.premium`, `.multiplier` and
+    `.expiry` — `trading_math.option_strategy.StrategyLeg` is the intended
+    one, and passing it keeps the coverage question answered by the same
+    function that prices the structure for the card the user says yes to.
+
+    Three rulings, in the order they were made:
+
+    * **D3 — an uncovered short call is refused.** Not sized down, not
+      collateralised: refused, with `NAKED_CALL_REFUSAL` explaining why.
+      "Uncovered" is `strategy_metrics`' own verdict on the whole structure,
+      so a short call covered by a long call (a vertical) or by 100 shares
+      per contract is permitted and only a genuinely bare one is stopped.
+    * **D4 — `long_only` permits every long structure, including puts, and
+      forbids every sell-to-open.** A long put is not a short sale: it is
+      bounded-loss bearish exposure with no borrow and no assignment risk,
+      and refusing it while permitting an unbounded short would be backwards.
+    * **Halal — inform, never block.** Saiful's CR171 ruling, extended to
+      options sell-to-open on 2026-08-20. An advisory, so the trade proceeds
+      and the user decides; it travels on the wire because an advisory that
+      only reaches a log informs nobody (CR040).
+
+    A structure that cannot be costed is REFUSED, and the reason is recorded
+    in `not_evaluated` as well as in `violations`. That asymmetry is
+    deliberate: everywhere else on this floor an unevaluable check must not
+    block (DEF169), but here the thing we failed to evaluate is *whether the
+    loss has a floor*, and permitting on that unknown is DEF059's shape.
+    """
+    from app.trading_math.option_strategy import strategy_metrics
+
+    violations: list[str] = []
+    not_evaluated: list[str] = []
+    advisories: list[str] = []
+    blocked_by: str | None = None
+
+    leg_list = list(legs or [])  # type: ignore[arg-type]
+    metrics = strategy_metrics(leg_list, shares_held=max(0.0, float(shares_held or 0.0)))
+    if metrics is None:
+        not_evaluated.append(
+            "option structure could not be costed (no legs, mixed expiries, or "
+            "a malformed leg) — the uncovered-call check could not run"
+        )
+        violations.append(
+            "AMI could not cost this structure, so it cannot tell whether its "
+            "loss is bounded. It will not open a position it cannot price."
+        )
+        return ComplianceResult(
+            passed=False,
+            violations=violations,
+            blocked_by="compliance",
+            not_evaluated=not_evaluated,
+        )
+
+    if metrics.has_uncovered_short_call:
+        violations.append(NAKED_CALL_REFUSAL)
+        blocked_by = "compliance"
+
+    sell_to_open = any(float(getattr(leg, "quantity", 0.0)) < 0 for leg in leg_list)
+
+    c = mandate.compliance
+    if c.long_only and sell_to_open:
+        violations.append(
+            "your mandate is long-only, and selling an option to open is a "
+            "short position — long calls, long puts and debit spreads are not"
+        )
+        blocked_by = blocked_by or "long_only"
+
+    if c.halal and sell_to_open:
+        advisories.append(_HALAL_OPTION_ADVISORY)
+
+    return ComplianceResult(
+        passed=len(violations) == 0,
+        violations=violations,
+        blocked_by=blocked_by,
+        not_evaluated=not_evaluated,
+        advisories=advisories,
+    )
+
+
+def check_exercise_outcome(
+    ticker: str,
+    holdings: list[Holding],
+    marks: dict[str, float],
+    portfolio_value: float,
+    current_drawdown_pct: float,
+    mandate: Mandate,
+    *,
+    halal_universe: set[str] | None = None,
+    locale_allowed_universe: set[str] | None = None,
+) -> ComplianceResult:
+    """Re-enter the EQUITY floor after an exercise or assignment — §7, §8.
+
+    **Allow and flag.** This is the outcome shape the floor did not have, and
+    it needs to exist: exercising a long call or being assigned on a short put
+    creates a `sim_holdings` row that may breach the single-name cap, the
+    blocklist or the halal screen — and *the rule created it, not the user*.
+    Blocking is not available (the option was already exercised; there is
+    nothing left to refuse) and passing silently would let a mandate be
+    breached by a mechanism the user was never told about. So the result
+    always has `passed=True` and `blocked_by=None`, and every issue the audit
+    found on this ticker rides out as an advisory.
+
+    The audit itself is `check_holdings_against_mandate` — the same function
+    the post-PATCH mandate audit uses, on the same inputs, asking the same
+    question of a position that exists. Re-deriving those checks here would
+    make two renderers of one rule, and they would answer differently the
+    first time either moved (DEF098).
+
+    Unpriceable portfolio (`portfolio_value <= 0`) → `not_evaluated`, never a
+    clean bill of health: a cap measured against a zero denominator is not a
+    cap that passed.
+    """
+    t = str(ticker or "").upper().strip()
+    if portfolio_value <= 0:
+        return ComplianceResult(
+            passed=True,
+            not_evaluated=[
+                f"{t}: the position created by settlement could not be checked "
+                "against the mandate — the portfolio has no valuation to "
+                "measure it against"
+            ],
+        )
+
+    audit = check_holdings_against_mandate(
+        holdings,
+        marks,
+        portfolio_value,
+        current_drawdown_pct,
+        mandate,
+        halal_universe=halal_universe,
+        locale_allowed_universe=locale_allowed_universe,
+    )
+
+    advisories: list[str] = []
+    for violation in audit.violations:
+        if violation.ticker.upper().strip() != t:
+            continue
+        for issue in violation.issues:
+            advisories.append(
+                f"Settlement left you holding {violation.quantity:g} {t}, and "
+                f"that position breaches your mandate: {issue}. AMI did not "
+                "block it — the contract was exercised under an exchange rule, "
+                "not by an order you placed — so this is yours to resolve."
+            )
+    if audit.max_open_positions_breach:
+        advisories.append(
+            f"Settlement in {t} took you over your open-positions limit. AMI "
+            "did not block it; the position count is yours to bring back down."
+        )
+
+    return ComplianceResult(passed=True, advisories=advisories)

@@ -624,3 +624,83 @@ Saiful cleared the build gate at the wave-2 decision review:
   disclose, never hard-block, consistent with the equity floor's shape.
 
 CR172 is buildable; queued behind the wave-2 batch.
+
+## Build log — slice 2: lifecycle + compliance floor (2026-08-21, AT:R73)
+
+Slice 1 (instruments, chains, BSM/greeks/IV/strategy math, the two tables) is
+`8eaab9a0`. It was rescued from a lane that died mid-flight and shipped
+**incomplete**: the `MarketDataProvider` options surface (`OptionChain`,
+`OptionQuote`, `classify_option_quote`, the chain TTLs, the six per-class
+implementations), `settings.risk_free_rate_ticker`, its `docker-compose.yml`
+forward and the `reset_portfolio` / `clear()` deletes for the two new tables
+were all still uncommitted in the working tree — so `HEAD` alone could not
+import `services/option_chain.py` and the slice's own committed tests could
+not have run on it. That remainder lands with this slice, unchanged.
+
+### What slice 2 ships
+
+| Surface | File |
+|---|---|
+| Settlement rules — the $0.01 exercise-by-exception boundary, pin risk, the D9 early-assignment rule, the per-leg cash/shares/P&L effect | `services/option_lifecycle.py` (new) |
+| Applying them — expiry, exercise, assignment, early assignment, the structure roll-up, floor re-entry | `SimEngine.run_option_lifecycle` + `_apply_option_settlement` |
+| The options floor — D3's naked-call refusal, D4's `long_only` semantics, the halal advisory | `agents/safety_floor.py::check_option_open` |
+| Allow-and-flag — the outcome shape the floor did not have | `agents/safety_floor.py::check_exercise_outcome` |
+
+### Decisions taken while building, that the doc did not settle
+
+- **The boundary is measured on the RAW distance to the strike**, not on a
+  rounded intrinsic, and the comparison carries a 1e-9 epsilon. `$2.01 −
+  $2.00` is `0.009999999999999787` in IEEE-754: without the epsilon a
+  contract exactly a penny in the money is abandoned because of how the
+  subtraction lands in binary. Both halves are pinned by parametrised cases
+  and both were mutation-proved.
+- **Premium folds into the basis when stock arrives and is realised on the leg
+  when stock leaves.** An exercised long call's lot is `strike + premium`; an
+  assigned short call realises `+premium` on the leg because the equity lot
+  books only `(strike − avg_cost)`. Either way the premium is counted once,
+  which is what §11's lot-accounting slice has to build on.
+- **Physical settlement degrades to cash at parity** when the cash to take
+  delivery or the stock to deliver is missing, and the event carries the
+  reason. A cash-secured put never degrades — its collateral is exactly
+  `strike × shares`, which is CR171 §7's "never refused for insufficient
+  cash" holding here by construction rather than by a special case.
+- **Long legs settle before short legs** (`settlement_sort_key`), so a
+  vertical closes physically instead of becoming two cash settlements that
+  happen to reach the same total.
+- **Prices go through `sim_resting_orders._quote_is_fillable`.** Reused, not
+  re-derived: `current_quote` never returns `None`, it returns a $0.01
+  sentinel, and settling against that exercises every put a user owns. A leg
+  whose price fails the guard stays OPEN and is reported `not_evaluated`.
+- **An out-of-the-money short call is not reported as unevaluated** when the
+  dividend calendar is missing. Early exercise is not rational there at any
+  quality of data, so there is no gap — and a `not_evaluated` on every open
+  covered call every day is how a real one stops being read.
+- **A structure that cannot be costed is REFUSED at open**, and the failed
+  check is named in `not_evaluated` as well. Everywhere else on this floor an
+  unevaluable check must not block (DEF169); here the thing we failed to
+  evaluate is *whether the loss has a floor*, and permitting on that unknown
+  is DEF059's shape.
+
+### Fences held
+
+`sim_engine.submit()` gained no flag; `check_mandate_compliance` and the
+training submit path are untouched. `check_option_open` and
+`check_exercise_outcome` are new public entry points sharing the existing
+private mechanics (`single_name_cap_pct`, `check_holdings_against_mandate`,
+`_apply_buy_row` / `_apply_sell_row` / `_held_quantity`) — the CR109 §7.1
+pattern. `SimHoldingRow.quantity` is never negative on any path.
+
+### Still open after this slice
+
+- **`check_option_open` has no caller yet.** The open path is slice 3; the
+  floor ships first so that path is built against a control that already
+  exists.
+- **`run_option_lifecycle` has no caller yet** — §7's sub-passes hang off
+  CR170's `sweep_resting_orders`, which is slice 3's wiring, along with the
+  `dividends` / `option_marks` feeds the D9 rule needs.
+- **§9's mandate fields** (`derivatives_allowed` and the six limits) are not
+  built; the DEF191 four-leg invariant makes them their own slice.
+- **§11's tail** — option marks in the NAV series, per-`occ_symbol` FIFO lots,
+  the delta-adjusted portfolio-health treatment — is untouched. The leg's NAV
+  contribution is stated in `option_lifecycle`'s module docstring so the
+  slice that wires it has one definition to read, not two.

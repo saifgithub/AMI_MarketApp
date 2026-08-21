@@ -55,6 +55,8 @@ from app.db.models import (
     GameShortPositionRow,
     PortfolioValueSnapshotRow,
     SimHoldingRow,
+    SimOptionLegRow,
+    SimOptionTradeRow,
     SimPortfolioRow,
     SimRestingOrderRow,
     SimShortPositionRow,
@@ -852,6 +854,21 @@ class SimEngine:
                 s.execute(
                     delete(SimShortPositionRow).where(
                         SimShortPositionRow.portfolio_id == existing.id
+                    )
+                )
+                # CR172 §3 — the FIFTH and SIXTH explicit deletes, same
+                # CR136-M03 reason (sqlite does not enforce the FK CASCADE
+                # the unit suite runs on). An option leg surviving a reset
+                # would keep marking, expiring and assigning against a
+                # portfolio UUID that no longer exists.
+                s.execute(
+                    delete(SimOptionLegRow).where(
+                        SimOptionLegRow.portfolio_id == existing.id
+                    )
+                )
+                s.execute(
+                    delete(SimOptionTradeRow).where(
+                        SimOptionTradeRow.portfolio_id == existing.id
                     )
                 )
                 s.delete(existing)
@@ -2659,6 +2676,367 @@ class SimEngine:
             short_realised_pnl=realised,
         )
 
+    def run_option_lifecycle(
+        self,
+        user_id: UUID,
+        *,
+        mandate: Mandate | None = None,
+        on_date=None,
+        settlement_prices: dict[str, float] | None = None,
+        dividends: dict[str, object] | None = None,
+        option_marks: dict[str, float] | None = None,
+        halal_universe: set[str] | None = None,
+    ) -> list:
+        """CR172 §7 — expiry, exercise, assignment and early assignment, applied.
+
+        A THIRD public entry point beside `submit` and `submit_game_trade`, and
+        deliberately not a mode of either. Nothing here is an order: the user
+        placed no ticket, and the events this returns happened *to* them under
+        an exchange rule. Routing that through the order path would have needed
+        a flag on `submit()` saying "do not run the floor" — the exact switch
+        CR109 §7.1 refuses, because a boolean that disables the uncoachable
+        floor is a boolean that is `True` on the wrong path one day. The floor
+        is re-entered here instead, in the only shape that fits a position that
+        already exists: allow and flag (`check_exercise_outcome`).
+
+        The mechanics are still the engine's own — `_apply_buy_row` /
+        `_apply_sell_row` / `_held_quantity` — because taking delivery of 100
+        shares IS an ordinary fill and a second copy of the lot-blend
+        arithmetic is how two ledgers drift (DEF098).
+
+        `settlement_prices` pins the underlying's close per ticker (the sweep
+        supplies it; tests pin it). Anything unpinned is quoted live and put
+        through `_quote_is_fillable` — the same guard the resting book uses,
+        for the same reason: `current_quote` never returns None, it returns a
+        $0.01 sentinel, and settling a strike against that would exercise every
+        put a user owns. A leg whose price fails the guard is LEFT OPEN and
+        reported as `not_evaluated`, never settled on a number we do not trust.
+
+        `dividends` / `option_marks` drive the D9 early-assignment rule. Absent,
+        the pass cannot run, and every short call it would have judged says so
+        on its own event rather than being reported as safe.
+
+        Returns one `LifecycleEvent` per leg it acted on or could not act on —
+        §7's *every automatic close is reported, never silent*, delivered to the
+        caller rather than to a log line.
+        """
+        # `sim_resting_orders` imports this module, so `_quote_is_fillable`
+        # has to come in here — a module-scope import would close the cycle.
+        from app.agents.safety_floor import check_exercise_outcome
+        from app.services import option_lifecycle as lifecycle
+        from app.services.sim_resting_orders import _quote_is_fillable
+
+        today = on_date or datetime.now(timezone.utc).date()
+        pinned = {str(k).upper(): float(v) for k, v in (settlement_prices or {}).items()}
+        marks_by_symbol = {str(k): float(v) for k, v in (option_marks or {}).items()}
+        price_cache: dict[str, float | None] = {}
+
+        def price_for(ticker: str) -> float | None:
+            key = ticker.upper()
+            if key not in price_cache:
+                if key in pinned:
+                    price_cache[key] = pinned[key]
+                else:
+                    quote = self.current_quote(key)
+                    price_cache[key] = (
+                        float(quote.price) if _quote_is_fillable(quote) else None
+                    )
+            return price_cache[key]
+
+        events: list = []
+        tickers_gaining_shares: set[str] = set()
+
+        def unevaluated(leg, reason: str) -> None:
+            events.append(lifecycle.LifecycleEvent(
+                leg_id=leg.id,
+                occ_symbol=leg.occ_symbol,
+                underlying=leg.underlying,
+                action="not_evaluated",
+                settlement="none",
+                contracts=float(leg.quantity),
+                shares_delta=0.0,
+                cash_delta=0.0,
+                realised_pnl=0.0,
+                pin_risk=False,
+                message=f"{leg.occ_symbol} was not settled: {reason}",
+            ))
+
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id)
+            if p_row is None:
+                return []
+
+            open_legs = s.execute(
+                select(SimOptionLegRow)
+                .where(
+                    SimOptionLegRow.portfolio_id == p_row.id,
+                    SimOptionLegRow.state == "open",
+                )
+                .order_by(SimOptionLegRow.opened_at.asc())
+            ).scalars().all()
+            if not open_legs:
+                return []
+
+            now = datetime.now(timezone.utc)
+            touched_strategies: set[UUID] = set()
+
+            def settle(leg, price: float, *, early: bool) -> None:
+                decision = lifecycle.settlement_decision(
+                    right=leg.right,
+                    strike=float(leg.strike),
+                    quantity=float(leg.quantity),
+                    settlement_price=price,
+                )
+                if decision is None:
+                    unevaluated(leg, "its terms or its settlement price are unusable")
+                    return
+                if early and decision.action != lifecycle.ASSIGN:
+                    return
+                effect = lifecycle.settlement_effect(
+                    decision,
+                    right=leg.right,
+                    strike=float(leg.strike),
+                    quantity=float(leg.quantity),
+                    multiplier=float(leg.multiplier),
+                    avg_premium=float(leg.avg_premium),
+                    collateral_posted=float(leg.collateral_posted),
+                    shares_available=self._held_quantity(s, p_row, leg.underlying),
+                    cash_available=float(p_row.current_cash),
+                )
+                if effect is None:
+                    unevaluated(leg, "its settlement could not be costed")
+                    return
+
+                action = {
+                    lifecycle.EXPIRE_WORTHLESS: "expired",
+                    lifecycle.EXERCISE: "exercised",
+                    lifecycle.ASSIGN: "early_assigned" if early else "assigned",
+                }[decision.action]
+                self._apply_option_settlement(s, p_row, leg, decision, effect, now=now)
+                touched_strategies.add(leg.strategy_id)
+                if effect.shares_delta > 0:
+                    tickers_gaining_shares.add(leg.underlying.upper())
+                events.append(lifecycle.LifecycleEvent(
+                    leg_id=leg.id,
+                    occ_symbol=leg.occ_symbol,
+                    underlying=leg.underlying,
+                    action=action,
+                    settlement=effect.mode,
+                    contracts=float(leg.quantity),
+                    shares_delta=effect.shares_delta,
+                    cash_delta=effect.cash_delta,
+                    realised_pnl=effect.realised_pnl,
+                    pin_risk=decision.pin_risk,
+                    downgrade=effect.downgrade,
+                    message=lifecycle.describe(
+                        occ_symbol=leg.occ_symbol,
+                        action=action,
+                        settlement=effect.mode,
+                        decision=decision,
+                        effect=effect,
+                        contracts=float(leg.quantity),
+                    ),
+                ))
+
+            # ── Early assignment (D9) — before expiry, because it happens
+            #    before expiry. A short call whose extrinsic value is worth
+            #    less than tomorrow's dividend is called away today.
+            for leg in open_legs:
+                if leg.expiry <= today or float(leg.quantity) >= 0 or leg.right != "call":
+                    continue
+                spot = price_for(leg.underlying)
+                if spot is not None:
+                    # An out-of-the-money short call cannot be called away for
+                    # a dividend at any price of data, so there is no gap to
+                    # report — and a `not_evaluated` on every open covered call
+                    # every day is how a real one stops being read. Moneyness
+                    # is asked of the same function that decides it at expiry.
+                    probe = lifecycle.settlement_decision(
+                        right=leg.right,
+                        strike=float(leg.strike),
+                        quantity=float(leg.quantity),
+                        settlement_price=spot,
+                    )
+                    if probe is not None and probe.action != lifecycle.ASSIGN:
+                        continue
+                mark = marks_by_symbol.get(leg.occ_symbol)
+                dividend = (dividends or {}).get(leg.underlying.upper())
+                if spot is None or mark is None or dividends is None:
+                    unevaluated(
+                        leg,
+                        "early assignment could not be judged — AMI has no "
+                        "dividend calendar or no mark for this contract, so it "
+                        "cannot tell whether the extrinsic value left is worth "
+                        "less than the next dividend",
+                    )
+                    continue
+                if lifecycle.early_assignment_due(
+                    right=leg.right,
+                    quantity=float(leg.quantity),
+                    strike=float(leg.strike),
+                    spot=spot,
+                    option_mark=mark,
+                    dividend=dividend,
+                    on_date=today,
+                    expiry=leg.expiry,
+                ):
+                    settle(leg, spot, early=True)
+
+            # ── Expiry. Long legs settle before short ones so a spread closes
+            #    physically instead of degrading (see `settlement_sort_key`).
+            expiring = [leg for leg in open_legs if leg.expiry <= today and leg.state == "open"]
+            for leg in sorted(
+                expiring,
+                key=lambda leg: lifecycle.settlement_sort_key(
+                    float(leg.quantity), leg.right,
+                ),
+            ):
+                price = price_for(leg.underlying)
+                if price is None:
+                    unevaluated(
+                        leg,
+                        f"no usable settlement price for {leg.underlying} — the "
+                        "contract stays open rather than settle against a "
+                        "sentinel quote",
+                    )
+                    continue
+                settle(leg, price, early=False)
+
+            # ── Structure roll-up: a `sim_option_trades` row closes when its
+            #    last leg does. It aggregates the legs, never duplicates them.
+            for strategy_id in touched_strategies:
+                still_open = s.execute(
+                    select(func.count())
+                    .select_from(SimOptionLegRow)
+                    .where(
+                        SimOptionLegRow.strategy_id == strategy_id,
+                        SimOptionLegRow.state == "open",
+                    )
+                ).scalar_one()
+                if still_open:
+                    continue
+                trade_row = s.execute(
+                    select(SimOptionTradeRow).where(
+                        SimOptionTradeRow.strategy_id == strategy_id,
+                    )
+                ).scalars().first()
+                if trade_row is None or trade_row.status == "closed":
+                    continue
+                realised = s.execute(
+                    select(func.coalesce(func.sum(SimOptionLegRow.realised_pnl), 0))
+                    .where(SimOptionLegRow.strategy_id == strategy_id)
+                ).scalar_one()
+                trade_row.status = "closed"
+                trade_row.closed_at = now
+                trade_row.realised_pnl = round(float(realised), 2)
+
+            # ── §8 floor re-entry: allow and flag. The stock these events
+            #    created was created by a RULE, so there is nothing left to
+            #    refuse — but a mandate breached by a mechanism the user was
+            #    never told about is the worse outcome, so every issue rides
+            #    out on the event.
+            if tickers_gaining_shares:
+                if mandate is None:
+                    logger.warning(
+                        "option_lifecycle_floor_not_reentered",
+                        user_id=str(user_id),
+                        tickers=sorted(tickers_gaining_shares),
+                    )
+                    for event in events:
+                        if event.shares_delta > 0:
+                            event.compliance_not_evaluated.append(
+                                "no mandate was supplied to the lifecycle pass, so "
+                                "the position this settlement created was never "
+                                "re-checked against it"
+                            )
+                else:
+                    portfolio = _portfolio_from_row(p_row)
+                    marks = {
+                        t: p for t, p in price_cache.items() if p is not None
+                    }
+                    unmarked = [
+                        t for t in _marked_tickers(portfolio) if t not in marks
+                    ]
+                    if unmarked:
+                        marks.update(self.current_marks(unmarked))
+                    portfolio_value = portfolio.total_value(marks)
+                    drawdown_pct = portfolio.total_drawdown_pct(marks)
+                    per_ticker = {
+                        ticker: check_exercise_outcome(
+                            ticker,
+                            portfolio.holdings,
+                            marks,
+                            portfolio_value,
+                            drawdown_pct,
+                            mandate,
+                            halal_universe=halal_universe,
+                        )
+                        for ticker in tickers_gaining_shares
+                    }
+                    for event in events:
+                        result = per_ticker.get(event.underlying.upper())
+                        if event.shares_delta > 0 and result is not None:
+                            event.compliance_flags.extend(result.advisories)
+                            event.compliance_not_evaluated.extend(result.not_evaluated)
+
+        for event in events:
+            logger.info(
+                "option_lifecycle_event",
+                user_id=str(user_id),
+                occ_symbol=event.occ_symbol,
+                action=event.action,
+                settlement=event.settlement,
+                shares_delta=event.shares_delta,
+                cash_delta=event.cash_delta,
+                realised_pnl=event.realised_pnl,
+                pin_risk=event.pin_risk,
+                compliance_flags=len(event.compliance_flags),
+            )
+        return events
+
+    def _apply_option_settlement(
+        self, s, p_row: SimPortfolioRow, leg, decision, effect, *, now: datetime,
+    ) -> None:
+        """Move the shares and the cash one settled leg produces, then close it.
+
+        The share movement goes through the ordinary fill helpers; the cash is
+        then RESTATED, once, from `effect.cash_delta`. Those helpers price cash
+        off the lot (`fill × qty`), which is the right number for a fill and the
+        wrong one here: a settlement moves cash by the STRIKE and releases the
+        collateral posted at open, and an exercised call's lot basis carries the
+        premium that left cash weeks ago. Letting the helper's figure stand
+        would charge that premium a second time.
+        """
+        cash_before = float(p_row.current_cash)
+        if effect.mode == "shares":
+            if effect.shares_delta > 0:
+                self._apply_buy_row(
+                    s, p_row, leg.underlying, effect.shares_delta,
+                    effect.basis_price, now,
+                )
+            else:
+                self._apply_sell_row(
+                    s, p_row, leg.underlying, abs(effect.shares_delta),
+                    effect.strike_price,
+                )
+        p_row.current_cash = round(cash_before + effect.cash_delta, 2)
+
+        leg.state = "closed"
+        leg.closed_at = now
+        leg.close_price = decision.settlement_value
+        leg.close_reason = (
+            "expired" if decision.action == "expire_worthless"
+            else "exercised" if decision.action == "exercise"
+            else "assigned"
+        )
+        leg.realised_pnl = effect.realised_pnl
+        s.add(leg)
+        s.flush()
+        # The next leg on the same underlying must see the lot this one just
+        # created or removed — `_apply_buy_row` adds a row the relationship
+        # does not know about until it is reloaded.
+        s.expire(p_row, ["holdings"])
+
     def _apply_buy_row(
         self, s, p_row: SimPortfolioRow, ticker: str,
         qty: float, fill: float, opened_at: datetime,
@@ -2985,13 +3363,18 @@ class SimEngine:
     def clear(self) -> None:
         with get_session() as s:
             s.execute(delete(PortfolioValueSnapshotRow))
+            s.execute(delete(SimOptionLegRow))
+            s.execute(delete(SimOptionTradeRow))
             s.execute(delete(SimShortPositionRow))
             s.execute(delete(SimRestingOrderRow))
             s.execute(delete(SimTradeRow))
             s.execute(delete(SimHoldingRow))
             s.execute(delete(SimPortfolioRow))
-        with self._lock:
-            self._walks.clear()
+        # `self._walks.clear()` stood here since the mock walk moved to
+        # `market_data` — a latent AttributeError on a method that had zero
+        # callers until CR172's tests called it. The walk cache lives on the
+        # MockWalkProvider singleton now; clearing it is not this method's
+        # job, and the broken line hid behind never being executed.
 
 
 _engine: SimEngine | None = None
