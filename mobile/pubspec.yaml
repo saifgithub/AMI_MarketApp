@@ -80,7 +80,8 @@ dependencies:
   # Share cards (CR012 / C4) — offscreen-rendered PNG → OS share sheet
   share_plus: ^10.1.4
   path_provider: ^2.1.5
-  google_mobile_ads: ^9.1.0
+  # google_mobile_ads: UNLINKED — see DEF351. The plugin breaks every iOS
+  # release compile; re-add with the adapter file when that is resolved.
 
 dev_dependencies:
   flutter_test:

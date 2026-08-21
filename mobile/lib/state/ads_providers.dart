@@ -21,9 +21,6 @@ library;
 
 import 'package:ami_trade/services/ads/ad_frequency_caps.dart';
 import 'package:ami_trade/services/ads/ad_privacy_prefs.dart';
-import 'package:ami_trade/services/ads/admob_ads_service.dart';
-import 'package:ami_trade/services/ads/admob_config.dart';
-import 'package:ami_trade/services/ads/admob_real_sdk.dart';
 import 'package:ami_trade/services/ads/admob_sdk.dart';
 import 'package:ami_trade/services/ads/ads_models.dart';
 import 'package:ami_trade/services/ads/ads_service.dart';
@@ -41,17 +38,16 @@ const plansWithAds = {'floor_pass'};
 /// `ADMOB_MODE` dart-define → `setup` is null → the MOBILE-A house service,
 /// no SDK object ever constructed, no platform channel ever touched — the
 /// store pipelines behave exactly as before this lane landed.
-final adsServiceProvider = Provider<AdsService>((ref) {
-  final setup = AdMobConfig.setup;
-  if (setup == null) return HouseAdsService();
-  return AdMobAdsService(
-    setup: setup,
-    sdk: RealAdMobSdk(),
-    consent: RealAdMobUmpConsent(),
-    house: HouseAdsService.asFallback(),
-    privacyPrefs: ref.watch(adPrivacyPrefsProvider),
-  );
-});
+// DEF351: the `google_mobile_ads` plugin cannot be linked into an iOS release
+// build (its headers import a private header out of the vendored framework,
+// which Clang refuses inside a framework module), so the SDK is UNLINKED and
+// `admob_real_sdk.dart` is deleted rather than left as an orphan import. Every
+// build therefore serves house inventory. `AdMobAdsService` and its config,
+// policy and consent seams are kept and still tested — they are what a working
+// plugin plugs back into, and re-linking is a pubspec line plus restoring one
+// adapter file. Nothing here degrades silently: with no SDK there is no fill to
+// mistake for one.
+final adsServiceProvider = Provider<AdsService>((ref) => HouseAdsService());
 
 final adPrivacyPrefsProvider = Provider<AdPrivacyPrefs>(
     (ref) => AdPrivacyPrefs(SharedPreferencesAdCapStore()));
@@ -60,8 +56,11 @@ final adPrivacyPrefsProvider = Provider<AdPrivacyPrefs>(
 /// AdMob is off, which is also what hides the Settings section (a consent
 /// control for an SDK that isn't in play would be a false claim, the DEF085
 /// class).
-final adMobUmpConsentProvider = Provider<AdMobUmpConsent?>((ref) =>
-    AdMobConfig.isConfigured ? RealAdMobUmpConsent() : null);
+// DEF351: null always, because no SDK is linked — which correctly hides the
+// Settings re-consent row. A consent control for an SDK that isn't in play
+// would be a false claim (the DEF085 class), and that reasoning is exactly why
+// this seam was nullable in the first place.
+final adMobUmpConsentProvider = Provider<AdMobUmpConsent?>((ref) => null);
 
 final adCapStoreProvider =
     Provider<AdCapStore>((ref) => SharedPreferencesAdCapStore());

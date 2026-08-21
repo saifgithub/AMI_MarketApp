@@ -28,7 +28,16 @@ const _adSdkImports = ['google_mobile_ads', 'huawei_ads'];
 
 /// The single file allowed to import an ad SDK. If the adapter moves, move
 /// this pin with it — the positive assertion below fails on a silent orphan.
+///
+/// DEF351: the adapter is currently DELETED and no file imports an ad SDK —
+/// `google_mobile_ads` cannot be linked into an iOS release build. The
+/// no-file-imports-an-SDK half below still holds and is the half that matters
+/// (an SDK import anywhere else is still a defect); the positive
+/// "the adapter does import one" assertion is suspended until the plugin is
+/// re-linkable, guarded by [_adSdkAdapterExpected] so re-linking flips one
+/// boolean rather than rewriting the test.
 const _adSdkAdapterFile = 'lib/services/ads/admob_real_sdk.dart';
+const _adSdkAdapterExpected = false;
 
 /// The only files allowed to contain an `AdSlot(` instantiation: the widget's
 /// own definition plus the wired approved placements (`ads.md:39-44`).
@@ -98,10 +107,14 @@ void main() {
         reason: 'Ad SDKs live behind the AdsService facade, imported by the '
             'single adapter file only (CR122, mirroring the CR084 purchase '
             'seam):\n${offenders.join('\n')}');
-    expect(adapterImportsSdk, isTrue,
-        reason: '$_adSdkAdapterFile no longer imports the ad SDK — if the '
-            'adapter moved, move this pin with it so the seam stays '
-            'enforced.');
+    expect(adapterImportsSdk, _adSdkAdapterExpected,
+        reason: _adSdkAdapterExpected
+            ? '$_adSdkAdapterFile no longer imports the ad SDK — if the '
+                'adapter moved, move this pin with it so the seam stays '
+                'enforced.'
+            : 'An ad SDK is linked again (DEF351 said none is). If the plugin '
+                'is fixed and the adapter is back, flip _adSdkAdapterExpected '
+                'to true — do not delete this assertion.');
   });
 
   test('AdSlot is instantiated ONLY at the approved placements', () {
