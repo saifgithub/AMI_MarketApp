@@ -694,3 +694,36 @@ CR194 (DEF305 lane), CR161 (Tier-1 prospect trigger), CR122+CR172 (queued wave 3
 
 Open defects: DEF340–344 filed today (routing recorded in their rows); DEF339 and the rest are
 other tracks' or ride the blockers above. No status changed through this log (rows are the truth).
+
+## 2026-08-21
+
+Automated 0900 check-in (read-only sweep + `AskUserQuestion`). Yesterday's 26-CR classification
+had already dispositioned the backlog, so only three items were genuinely undecided. All three
+were put to Saiful inline; all three were answered and acted on in the same session.
+
+- **CR185** (6-hourly bug monitor — the unattended schedule was blocked by the permission
+  classifier) — asked: grant the rule / session-start check / both / stay manual?
+  → Saiful: **"Both — scheduled job, session-start fallback"**. Shipped: `/bug-monitor`
+  (`.claude/commands/bug-monitor.md`) as the cycle, `CLAUDE.md` step 2b as the >6h backstop, and
+  five pre-approved commands in `.claude/settings.local.json` so a headless `/loop 6h /bug-monitor`
+  no longer trips a prompt. The DB `status` column stays the shared watermark and the
+  `AND status='open'` guard makes the flip idempotent, so the two paths cannot double-file.
+  Remaining: arming the loop (one command); the fallback is live now.
+- **DEF100 / CR084 / CR198 / DEF344** (RevenueCat — re-cut 2026-08-20 to the real-store-keys route
+  after the Test Store proved dead) — asked: provision now / crash-fix only / both / defer the
+  track? → Saiful: **"Defer the whole payments track"** until after the Beta cutover. All four rows
+  carry a `[PAYMENTS TRACK PARKED — 2026-08-21]` marker; statuses unchanged (the register's status
+  vocabulary has no `deferred`, and CR022 set the precedent of marking the description). **MVP M1
+  is now blocked by decision, not oversight.** Flagged and not overridden: DEF344 is a live crash
+  on the upgrade tap for anyone in the current cohort who taps it, and parking the track leaves it
+  reproducible.
+- **E5** (device-matrix verification — the sole open item on the Engagement close-out gate, open
+  since 2026-07-25) — asked: book a session / narrow the matrix / hand to the melehost rig / waive?
+  → Saiful: **"I can connect the phones to the Mac."** Shipped
+  `CR004_release_readiness/e5_device_matrix_runbook.md`: cable-install commands per device, the
+  off-LAN requirement, a delta checklist covering everything that shipped after the §A2 list was
+  written (Floor v0.2 carousel, CR102 inbox, CR136 health, CR129 limits, CR187 resting orders,
+  CR120 SHOW ALL, winzip 402, push, games), the five known-open defects not to re-file, and the
+  gate-closure criterion. Linked from §A2.
+
+No status flipped through this log — rows are the truth.
