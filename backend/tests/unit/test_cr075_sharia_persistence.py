@@ -95,8 +95,23 @@ def _no_socket(monkeypatch):
 
 
 def test_a1_read_resolves_from_row_without_a_socket(monkeypatch):
+    """DEF355 — the seed is RELATIVE to today, not an absolute date.
+
+    Every other test in this file pins `now` explicitly; this one deliberately
+    does not, because its whole point is resolving through the real production
+    accessor. That made it the one test whose fixture aged: seeded at
+    2026-07-22 against a 30-day staleness window, it passed on 2026-08-21 (day
+    30) and failed on 2026-08-22 (day 31), blocking the promotion suite gate
+    for a change in a different module. A fixture that expires on wall-clock
+    time is a scheduled false alarm, and a gate that cries wolf is the habit
+    DEF326 and DEF277 were both filed about.
+    """
     _no_socket(monkeypatch)
-    _seed(as_of=date(2026, 7, 22), fetched_at=datetime(2026, 7, 22, tzinfo=timezone.utc))
+    fresh_as_of = date.today() - timedelta(days=7)
+    _seed(
+        as_of=fresh_as_of,
+        fetched_at=datetime.combine(fresh_as_of, datetime.min.time(), tzinfo=timezone.utc),
+    )
 
     # Wire the real production accessor (built from settings) and resolve through
     # it — proving the whole read path is socket-free, not just a hand-built one.
@@ -109,7 +124,7 @@ def test_a1_read_resolves_from_row_without_a_socket(monkeypatch):
     assert u.resolve("AAA").status is ShariaStatus.PASS
     assert u.resolve("ZZZ").status is ShariaStatus.SCREENED_OUT
     assert u.resolve("NEVR").status is ShariaStatus.UNKNOWN
-    assert u.as_of == date(2026, 7, 22)
+    assert u.as_of == fresh_as_of
 
 
 def test_a1_refresh_is_idempotent_a_fresh_row_skips_the_fetch(monkeypatch):
