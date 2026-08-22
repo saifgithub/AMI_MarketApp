@@ -12,6 +12,10 @@ Nothing reaches the kit except through this script. Steps, in order:
   4. per-source mix caps from MIX_WEIGHTS (deterministic hash-ranked downsample — a
      re-run with the same inputs picks the same rows)
   5. deterministic ~2% val split (hash-bucketed, never random)
+  5b. OUTPUT-SHAPE GATE: enough targets must reach the size of the deliverable
+     production actually asks for, or the build fails. The val split is drawn from
+     the same generators as train, so loss cannot see this — run 1 passed every
+     number and could not write the report (CR196 §9, guards-register P27).
   6. outputs: kit train.jsonl + val.jsonl with _meta STRIPPED, data_manifest.md with
      per-source counts/licenses/QC numbers, review_sample.jsonl (200 examples,
      _meta kept) for human eyeballing
@@ -41,6 +45,44 @@ MIX_WEIGHTS = {
 }
 VAL_PCT = 2  # hash buckets of 100
 
+# --- output-shape gate (CR196 §9, guards-register P27) ----------------------
+# Run 1 passed every number it was measured on — eval loss 0.2384, merged held-out
+# loss 0.2506 from a base of 2.2744 — and then could not produce the deliverable.
+# Asked for the production nine-section brief it returned 45-244 tokens of
+# recipe-shaped fragments where the untrained base returned ~1,200.
+#
+# The manifest is why it was invisible. It reported WHOLE-EXAMPLE length (system +
+# user + assistant, chars/4), which ran a healthy 1,300-2,300 est. tokens per row
+# because the briefs are long. What governs how much a model WRITES is the
+# assistant target, and that was never reported. Measured after the fact:
+#
+#     median target 331 chars · 87% under 1,000 · >=2,000: 8.20% · >=5,000: 3.53%
+#
+# So the mix taught short answers almost exclusively, and the Tier-B "replay" meant
+# to protect the base's long-form behaviour is itself short-answer numeric QA.
+#
+# DELIVERABLE_CHARS is the size of the thing production actually asks for (the base
+# model writes ~5,000 chars for it). MIN_DELIVERABLE_PCT is a FLOOR chosen for
+# margin, not a derived optimum: 3.53% demonstrably failed, so the floor sits well
+# above it. Raise it when a run gives a better-grounded number.
+DELIVERABLE_CHARS = 5000
+MIN_DELIVERABLE_PCT = 15.0
+
+
+def target_chars(ex):
+    return sum(len(m["content"]) for m in ex["messages"]
+               if m.get("role") == "assistant")
+
+
+def shape_stats(rows):
+    lens = sorted(target_chars(ex) for ex in rows)
+    if not lens:
+        return {"n": 0, "median": 0, "p90": 0, "pct_deliverable": 0.0}
+    n = len(lens)
+    return {"n": n, "median": lens[n // 2], "p90": lens[int(0.9 * n)],
+            "pct_deliverable": 100.0 * sum(l >= DELIVERABLE_CHARS
+                                           for l in lens) / n}
+
 
 def norm_text(s):
     return re.sub(r"[^a-z0-9]+", " ", s.lower()).strip()
@@ -62,6 +104,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out-dir", default=os.path.join(HERE, "..", "ami_finetune_kit", "data"))
     ap.add_argument("--include-nc", action="store_true")
+    ap.add_argument("--allow-shape-gap", action="store_true",
+                    help="ship a mix whose targets cannot reach the deliverable")
     args = ap.parse_args()
 
     paths = sorted(glob.glob(os.path.join(HERE, "out", "*.jsonl")))
@@ -132,9 +176,13 @@ def main():
             n_val += bucket < VAL_PCT
         lens = sorted(len("".join(m["content"] for m in ex["messages"])) // 4
                       for ex in capped)
+        sh = shape_stats(capped)
         manifest_rows.append((src, len(rows), len(capped), n_val,
                               lens[len(lens) // 2] if lens else 0,
-                              lens[-1] if lens else 0))
+                              lens[-1] if lens else 0,
+                              sh["median"], sh["p90"], sh["pct_deliverable"]))
+
+    mix_shape = shape_stats(train)
 
     os.makedirs(args.out_dir, exist_ok=True)
     review = []
@@ -159,17 +207,41 @@ def main():
         if skipped_nc:
             f.write(f"- NC-licensed sources EXCLUDED (Saiful's call pending): "
                     f"{[os.path.basename(p) for p in skipped_nc]}\n")
-        f.write("- token lengths are chars/4 ESTIMATES (no tokenizer on build box)\n\n")
-        f.write("| source | generated | kept | in val | med tok (est) | max tok (est) |\n")
-        f.write("|---|---|---|---|---|---|\n")
+        f.write("- token lengths are chars/4 ESTIMATES (no tokenizer on build box)\n")
+        f.write(f"- **output shape**: {mix_shape['pct_deliverable']:.2f}% of targets "
+                f"reach the {DELIVERABLE_CHARS}-char deliverable "
+                f"(floor {MIN_DELIVERABLE_PCT:.1f}%), median target "
+                f"{mix_shape['median']} chars, p90 {mix_shape['p90']}\n")
+        f.write("  — target length is what governs how much the model WRITES; "
+                "whole-example length does not (CR196 §9, P27)\n\n")
+        f.write("| source | generated | kept | in val | med tok (est) | max tok (est) "
+                "| med target ch | p90 target ch | % deliverable |\n")
+        f.write("|---|---|---|---|---|---|---|---|---|\n")
         for r in manifest_rows:
-            f.write(f"| {r[0]} | {r[1]} | {r[2]} | {r[3]} | {r[4]} | {r[5]} |\n")
+            f.write(f"| {r[0]} | {r[1]} | {r[2]} | {r[3]} | {r[4]} | {r[5]} "
+                    f"| {r[6]} | {r[7]} | {r[8]:.1f}% |\n")
         f.write("\nLicenses: see datagen/tierb_licenses.md (Tier B) — Tier A is "
                 "generated from feeds, never redistributed (CR196 §2).\n")
 
     print(f"train={len(train)} val={len(val)} sources={len(by_source)} "
           f"dup_exact={stats['dup_exact']} dup_near={stats['dup_near']}")
     print(f"manifest → {os.path.join(args.out_dir, 'data_manifest.md')}")
+    print(f"output shape: median target {mix_shape['median']} ch, "
+          f"p90 {mix_shape['p90']} ch, "
+          f"{mix_shape['pct_deliverable']:.2f}% >= {DELIVERABLE_CHARS} ch")
+
+    # Written first, then enforced: a mix that fails the gate is exactly the one
+    # whose manifest you need in order to see WHICH source is starving it.
+    if mix_shape["pct_deliverable"] < MIN_DELIVERABLE_PCT and not args.allow_shape_gap:
+        raise SystemExit(
+            f"FAIL: only {mix_shape['pct_deliverable']:.2f}% of targets reach the "
+            f"{DELIVERABLE_CHARS}-char deliverable (floor {MIN_DELIVERABLE_PCT:.1f}%). "
+            f"Median target is {mix_shape['median']} chars.\n"
+            f"Run 1 shipped at 3.53% and could not produce the deliverable at all "
+            f"(CR196 §9) while its held-out loss looked excellent, because val "
+            f"carries the same short shape as train.\n"
+            f"Add long-form examples or re-cap the short sources. "
+            f"--allow-shape-gap overrides deliberately.")
 
 
 if __name__ == "__main__":
