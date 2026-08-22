@@ -20,6 +20,18 @@ The output is append-only JSONL keyed by (ticker, candidate index). On restart t
 script reads what is already there and asks only for what is missing. A run killed
 at hour 6 of 9 resumes at hour 6 — which matters because the GPU is borrowed.
 
+## Thinking must be OFF, and it is not off by default
+
+The checkpoint's `chat_template.jinja` defaults `enable_thinking` to TRUE and emits an
+OPEN `<think>` block; appending "/no_think" to the user turn does NOT override it
+(measured in Phase 4 — `eval/basis/run_local_arm.py` carries the same finding and
+asserts on it). The chat-completions endpoint applies the template SERVER-side, so
+without an explicit override every target would arrive with reasoning text baked in,
+and we would train on it. `chat_template_kwargs.enable_thinking=false` is sent on
+every request and the response is checked for a leaked `<think>` block. This is a
+P27-shaped trap: it runs green, returns fluent text, and quietly trains the wrong
+thing.
+
 ## Decoding
 
 Best-of-n needs variation, so this samples (temperature 0.7 by default) — unlike
@@ -123,7 +135,8 @@ def main():
                    "messages": [{"role": "system", "content": b["system"]},
                                 {"role": "user", "content": b["user"]}],
                    "temperature": args.temperature, "top_p": args.top_p,
-                   "max_tokens": args.max_tokens, "seed": 1000 + idx}
+                   "max_tokens": args.max_tokens, "seed": 1000 + idx,
+                   "chat_template_kwargs": {"enable_thinking": False}}
         t1 = time.time()
         try:
             resp = post(args.base_url, args.api_key, payload, args.timeout)
@@ -132,7 +145,16 @@ def main():
                 stats[f"error:{type(e).__name__}"] += 1
             return
         ch = (resp.get("choices") or [{}])[0]
-        text = (ch.get("message") or {}).get("content") or ""
+        msg = ch.get("message") or {}
+        text = msg.get("content") or ""
+        # Reasoning must not reach the target. If the server ignored the override,
+        # stop the run rather than write thousands of contaminated targets.
+        if "<think>" in text or msg.get("reasoning_content"):
+            raise SystemExit(
+                f"{b['ticker']}: response carries a <think> block or "
+                "reasoning_content despite enable_thinking=false. The server "
+                "ignored the override; fix that before generating targets, or "
+                "every one of them trains reasoning text as report prose.")
         usage = resp.get("usage") or {}
         rec = {"ticker": b["ticker"], "candidate": idx, "text": text,
                "finish_reason": ch.get("finish_reason"),
