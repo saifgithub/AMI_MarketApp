@@ -293,7 +293,14 @@ def build_brief(tk):
                      ("Enterprise value", "enterpriseValue")]:
         L.append(_pad(lab, fmt_b(info.get(key)), W_SUMMARY))
     L.append(_pad("Beta", _fmt_num(info.get("beta")), W_SUMMARY))
-    L.append(_pad("Dividend yield", _pct(info.get("dividendYield", 0) or 0), W_SUMMARY))
+    # dividendYield is ALREADY a percentage in current yfinance (ACN: 3.52, which is
+    # dividendRate 6.52 / price 185.28). The margin and growth fields on either side
+    # of it are fractions, so passing this one through _pct too renders 352% -- caught
+    # when the teacher's very first report said "the dividend yield of 352% is a data
+    # error". Nothing in the brief flagged it; the number just sat there looking like
+    # data. Hence the guard below.
+    div = info.get("dividendYield") or 0
+    L.append(_pad("Dividend yield", _fmt_num(div, "%"), W_SUMMARY))
     L.append("")
 
     L.append(f"INCOME STATEMENT (OpenBB, {len(cols)} periods)")
@@ -367,6 +374,12 @@ def build_brief(tk):
         if len(px) >= 200:
             ma = float(px.iloc[-200:].mean())
             L.append(_pad("Price vs 200d MA", f"{(last / ma - 1) * 100:.2f}%", W_SUMMARY))
+
+    # Units guard. A units bug is off by 100x, so it fails a plausibility band that
+    # no real S&P 1500 constituent does. Degrade loudly (CR040): drop the ticker
+    # rather than emit a brief whose figures quietly teach nonsense.
+    if div and float(div) > 25:
+        return {"ticker": tk, "status": f"implausible_dividend_yield:{div}"}
 
     brief = "\n".join(L)
     return {"ticker": tk, "status": "ok", "brief": brief,
