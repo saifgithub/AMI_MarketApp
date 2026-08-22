@@ -184,7 +184,7 @@ def load_pairs(path: str) -> tuple[list[tuple[str, date]], dict[date, int]]:
 
 def write_completion_sentinel(
     out_dir: Path, batch_id: str, *, planned: int, completed: int,
-    failed: int, outages: int,
+    ran_this_process: int, failed: int, outages: int,
 ) -> Path:
     """Record that this sweep reached its own end (DEF345).
 
@@ -197,12 +197,22 @@ def write_completion_sentinel(
     This file is written only on the line after the loop ends. A killed
     process cannot write it, which is the whole point: absence is the signal,
     and it cannot be faked by a process that died before getting here.
+
+    DEF358 — `completed` is the BATCH's total, not this process's tally. A
+    resumed sweep skips every pair already on disk, so counting only what it
+    personally ran made a whole batch look truncated: `r70-outcome-2` finished
+    all 450 pairs across supervisor relaunches and stamped `completed: 50`,
+    which the report then printed verbatim beside `Index rows: 450`. The field
+    that exists to tell complete from truncated was reporting the one state it
+    was built to rule out. `ran_this_process` keeps the resume story visible
+    without overloading the field anyone reads.
     """
     path = out_dir / f"complete_{batch_id}.json"
     path.write_text(json.dumps({
         "batch_id": batch_id,
         "planned_pairs": planned,
         "completed": completed,
+        "ran_this_process": ran_this_process,
         "failed": failed,
         "outage_failsafes": outages,
         "finished_at": _now_iso(),
@@ -355,6 +365,7 @@ def main() -> int:
     ]
     failures: list[str] = []
     done = 0
+    skipped = 0
     outage_streak = 0
     outage_total = 0
     try:
@@ -364,6 +375,7 @@ def main() -> int:
             if prior and prior.get("status") in SKIP_STATUSES:
                 print(f"[{i}/{len(work)}] {ticker}@{as_of_iso} ({batch_id}): "
                       f"{prior['status']}, skip")
+                skipped += 1
                 continue
             print(f"[{i}/{len(work)}] {ticker}@{as_of_iso} ({batch_id}): starting…",
                   flush=True)
@@ -460,11 +472,12 @@ def main() -> int:
               "server 409s anything the file missed.")
         return 130
 
-    print(f"\ndone: {done} completed, {len(failures)} failed "
-          f"→ {runs_paths[args.batch_id]}")
+    print(f"\ndone: {done} completed this process, {skipped} already on disk, "
+          f"{len(failures)} failed → {runs_paths[args.batch_id]}")
     write_completion_sentinel(
         args.out_dir, args.batch_id,
-        planned=len(pairs) + len(repeats), completed=done,
+        planned=len(pairs) + len(repeats), completed=done + skipped,
+        ran_this_process=done,
         failed=len(failures),
         outages=outage_total,
     )

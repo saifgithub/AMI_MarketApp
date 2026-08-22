@@ -219,6 +219,61 @@ def fnum(v: float | None) -> str:
     return "—" if v is None else f"{v * 100:+.2f}%"
 
 
+def _sentinel_line(sentinel: dict) -> str:
+    """Render the sweep's completion sentinel (DEF345), honestly (DEF358).
+
+    The presence of the sentinel proves the sweep reached its own end; it does
+    NOT prove every planned pair completed, and this line used to print an
+    unqualified **COMPLETE** either way. On `r70-outcome-2` that rendered as
+    "COMPLETE — planned 450, completed 50" directly above "Index rows: 450" —
+    two contradictory claims, one of them wrong, in adjacent lines of a report
+    whose whole job is to be trusted about its own population.
+
+    So the label is derived from the numbers rather than from the file
+    existing. `ran_this_process` is the marker that those numbers carry
+    DEF358 semantics at all: before the fix, `completed` was the FINAL
+    PROCESS's tally, so a resumed batch understated itself by however much an
+    earlier attempt had already done. Deriving a verdict from a legacy count
+    would turn this fix into a false alarm on exactly the batch that exposed
+    it, so a sentinel without the field is reported as-is, labelled, and the
+    reader is sent to `Index rows` for the real population.
+    """
+    planned = sentinel["planned_pairs"]
+    completed = sentinel["completed"]
+    ran = sentinel.get("ran_this_process")
+    tail = (
+        f"failed {sentinel['failed']}, finished {sentinel['finished_at']}."
+    )
+
+    if ran is None:
+        return (
+            f"- Sweep completion: **REACHED ITS END** — planned {planned}, "
+            f"completed {completed}, {tail} This sentinel predates DEF358, so "
+            f"`completed` counts only what the final process ran and "
+            f"understates any batch that resumed after an interruption. Read "
+            f"`Index rows` below for the population actually scored."
+        )
+
+    resumed = "" if ran == completed else (
+        f" ({ran} run by the final process, {completed - ran} already on disk "
+        f"from an earlier attempt)"
+    )
+    if completed < planned:
+        label = (
+            f"**INCOMPLETE — {planned - completed} of {planned} pairs never "
+            f"reached a completed status.** The sweep was not killed (the "
+            f"sentinel exists), but the population below is short of the "
+            f"intended batch. Read every rate here as conditional on the "
+            f"pairs that did complete."
+        )
+    else:
+        label = "**COMPLETE**"
+    return (
+        f"- Sweep completion: {label} — planned {planned}, completed "
+        f"{completed}{resumed}, {tail}"
+    )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--batch-id", required=True)
@@ -567,9 +622,7 @@ def main() -> int:
         "## Run accounting",
         "",
         (
-            f"- Sweep completion: **COMPLETE** — planned "
-            f"{sentinel['planned_pairs']}, completed {sentinel['completed']}, "
-            f"failed {sentinel['failed']}, finished {sentinel['finished_at']}."
+            _sentinel_line(sentinel)
             if sentinel else
             "- Sweep completion: **PARTIAL — no completion sentinel (DEF345).** "
             "The sweep never reached its own end, so the population below is a "
