@@ -1683,7 +1683,9 @@ def settle_run_positions(
             return {"positions_closed": 0, "shorts_covered": 0}
 
         for ticker, qty in longs:
-            mark = float(sim.current_price(ticker))
+            # CR194 — the forced liquidation records which provider priced it.
+            liq_quote = sim.current_quote(ticker)
+            mark = float(liq_quote.price)
             sold = sim._apply_sell_row(s, p_row, ticker, qty, mark)
             if sold <= 0:
                 continue
@@ -1695,6 +1697,7 @@ def settle_run_positions(
                 side="sell",
                 quantity=sold,
                 entry_price=mark,
+                price_source=liq_quote.source,
                 opened_at=now,
                 # 'open' like every other sell row — DEF166/DEF110 make that
                 # permanent-open state load-bearing for the backfill formula

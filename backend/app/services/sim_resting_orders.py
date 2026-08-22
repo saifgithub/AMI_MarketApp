@@ -619,6 +619,9 @@ def _fill_triggered(
             mandate = resolve_mandate(order.user_id, None)
             result = engine.fill_resting_order(
                 order=order, mark=mark, mandate=mandate,
+                # CR194 — the sweep already holds the Quote (line ~555); the
+                # provider that priced this fill travels into the trade row.
+                mark_source=quote.source,  # type: ignore[union-attr]
             )
         except Exception as exc:  # pragma: no cover
             logger.exception(

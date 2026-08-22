@@ -1212,7 +1212,10 @@ class SimEngine:
                     compliance=fail, portfolio_snapshot=portfolio,
                 )
 
-        mark = self.current_price(ticker)
+        # CR194 — the quote, not just its number: the leaf provider that
+        # served this fill travels with it into the trade row.
+        open_quote = self.current_quote(ticker)
+        mark = open_quote.price
         # CR170 §3 — the P10/DEF153 ternary is GONE. It read
         # `mark if order_type == MARKET else (limit_price or mark)`, which made
         # `order_type` decide a price: a "limit order" filled instantly at
@@ -1316,6 +1319,7 @@ class SimEngine:
             target=target,
             horizon_days=horizon_days,
             verdict_ref=verdict_ref,
+            price_source=open_quote.source,
         )
 
     def _execute_fill(
@@ -1336,6 +1340,7 @@ class SimEngine:
         run_id: UUID | None = None,
         fee: float = 0.0,
         now: datetime | None = None,
+        price_source: str | None = None,
     ) -> SubmitResult:
         """The mechanics shared by every fill path: cash/holdings check, the
         fill, the holding update and the trade row.
@@ -1553,6 +1558,7 @@ class SimEngine:
                 status="open",
                 verdict_ref=verdict_ref,
                 realised_pnl=0,
+                price_source=price_source,
             ))
             s.flush()
             portfolio = _portfolio_from_row(p_row)
@@ -1672,6 +1678,7 @@ class SimEngine:
         order: SimRestingOrder,
         mark: float,
         mandate: Mandate,
+        mark_source: str | None = None,
         halal_universe: set[str] | None = None,
         classification_universe: object | None = None,
         locale_allowed_universe: set[str] | None = None,
@@ -1753,6 +1760,7 @@ class SimEngine:
             target=order.target,
             horizon_days=order.horizon_days,
             verdict_ref=order.verdict_ref,
+            price_source=mark_source,
         )
 
     def list_resting_orders(
@@ -1881,7 +1889,8 @@ class SimEngine:
 
         ticker = ticker.upper().strip()
         portfolio = self.ensure_portfolio(user_id, kind="game", run_id=run_id)
-        mark = self.current_price(ticker)
+        game_quote = self.current_quote(ticker)
+        mark = game_quote.price
         # CR170 §3 — the same P10 ternary, hoisted here too, with **no routing**.
         # The games lane has no resting book and this call site is inert in
         # practice (nothing has ever sent a non-market order_type here). It moves
@@ -1917,6 +1926,7 @@ class SimEngine:
             run_id=run_id,
             fee=fee,
             now=now,
+            price_source=game_quote.source,
         )
         if not result.accepted:
             return GameSubmitResult(
@@ -3603,7 +3613,8 @@ class SimEngine:
                     continue
                 # After the gates, so an unprotected or fully-exited position
                 # never costs a quote.
-                price = self.current_price(ticker)
+                close_quote = self.current_quote(ticker)
+                price = close_quote.price
                 new_status: TradeStatus | None = bracket_hit(  # type: ignore[assignment]
                     is_short=False, mark=price, stop=stop, target=target,
                 )
@@ -3615,19 +3626,26 @@ class SimEngine:
                 # while both carry the position's status — the POSITION was
                 # stopped out, which is the fact `won`/`lost` is describing.
                 for t, lot_left in entries:
-                    self._close_lot(s, p_row, t, price, new_status, lot_left, updates)
+                    self._close_lot(
+                        s, p_row, t, price, new_status, lot_left, updates,
+                        price_source=close_quote.source,
+                    )
             s.flush()
         return updates
 
     def _close_lot(
         self, s, p_row, t: SimTradeRow, price: float, new_status: str,
-        lot_left: float, updates: list[OutcomeUpdate],
+        lot_left: float, updates: list[OutcomeUpdate], *,
+        price_source: str | None = None,
     ) -> None:
         """Liquidate one live lot at `price` and record it. CR189 split this out
         of `evaluate_outcomes` when a single bracket hit began closing N lots."""
         t.status = new_status
         t.closed_at = datetime.now(timezone.utc)
         t.closed_price = price
+        # CR194 — this is the exact write DEF305 turned into $6,882.22 of
+        # invented proceeds. The source travels with the price.
+        t.close_price_source = price_source
         # DEF166: a clamped close (the holding has fewer shares than
         # `t.quantity` requests — see `_apply_sell_row`) must stamp
         # `realised_pnl` on the shares actually sold, or the P&L and the cash
@@ -3674,10 +3692,12 @@ class SimEngine:
             # position IS already closed, this row just never recorded it.
             if p_row is not None and self._held_quantity(s, p_row, row.ticker) <= 1e-6:
                 return None
-            price = self.current_price(row.ticker)
+            manual_quote = self.current_quote(row.ticker)
+            price = manual_quote.price
             row.status = "closed"
             row.closed_at = datetime.now(timezone.utc)
             row.closed_price = price
+            row.close_price_source = manual_quote.source
             # DEF166: a clamped close (the holding has fewer shares than
             # `row.quantity` requests — see `_apply_sell_row`) must stamp
             # `realised_pnl` on the shares actually sold, or the P&L and

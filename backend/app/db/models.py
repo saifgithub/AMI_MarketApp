@@ -591,6 +591,22 @@ class SimTradeRow(Base):
     )
     closed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     closed_price: Mapped[Optional[float]] = mapped_column(Numeric(12, 4), nullable=True)
+    # CR194 -- the leaf provider that actually served each price. DEF305
+    # liquidated every bracketed position on Alpha at mock-walk prices and
+    # credited $6,882.22 of invented proceeds into real cash, and the only
+    # thing that distinguished the fabricated closes from the one legitimate
+    # stop was an accident: `round(v, 2)` against a Numeric(12,4) column left
+    # every fake ending `.XX00`. Nothing designed that and it dies the day the
+    # rounding changes. These columns are not a label on bad data -- they are
+    # the audit trail that proves the DEF305 kill switch held.
+    #
+    # NULLABLE, no server_default, no backfill, deliberately: "we do not know"
+    # and "it was a real quote" are different facts and only one is a
+    # measurement (CR040). A row written by a site that forgot to set this
+    # must read NULL. Defaulting to 'yfinance' would manufacture exactly the
+    # reassurance this column exists to stop manufacturing.
+    price_source: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    close_price_source: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     status: Mapped[str] = mapped_column(String, default="open", nullable=False)
     verdict_ref: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
     realised_pnl: Mapped[float] = mapped_column(Numeric(12, 2), default=0, nullable=False)
