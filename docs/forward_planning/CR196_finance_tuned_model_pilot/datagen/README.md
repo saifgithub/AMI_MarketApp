@@ -28,6 +28,7 @@ step strips it.
 | 7 | Mandate-overlay compliance | `recipe7_mandate_compliance.py` | **working** — renders via the REAL `overlay_generator`, PM `Verdict: APPROVE|PASS` contract |
 | 8 | Room JSON format | `recipe8_room_format.py` | **working** — reads `_PM_VERDICT_FORMAT`/stance constants off the live `room_prompts.py`; parsed by `room_runner._parse_pm_verdict` (:1423) |
 | 9 | Refusal/abstention | `recipe9_refusal.py` | **working** — 25% answerable controls |
+| 10 | **Long-form analyst report** (the deliverable) | `recipe10_longform_report.py` + `distill_teacher.py` | **briefs working** — 3/3 proof-run 2026-08-22, user turns 9.3k chars vs the frozen set's 9.0–9.7k; verifier calibrated on the 44 real reports in `eval/basis/responses/` (37/44 pass). **Targets need a GPU go** — self-distilled from vanilla Fastino, never Claude |
 | — | Tier B fetch + normalize | `tierb_fetch.py` | **done** — 48,502 rows / 5 sources; ConvFinQA skipped (no license tag), Fin-R1 401 (see `tierb_licenses.md`) |
 | — | SA-FDR feature/mixture optimization | `sa_fdr.py` | module ready (trace(Sw⁻¹Sb) criterion, synthetic-tested); mix probes run on the training box |
 | — | Mix + QC gate | `mix_and_qc.py` | ready — runs once all recipe outputs land |

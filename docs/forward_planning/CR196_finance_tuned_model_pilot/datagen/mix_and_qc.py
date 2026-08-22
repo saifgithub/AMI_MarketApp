@@ -33,15 +33,34 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # Per-source example caps (None = keep all). Starting mix per CR196 §2 —
 # revised by the SA-FDR probe step once it has run on the training box.
 MIX_WEIGHTS = {
+    # Tier A substrate — uncapped. These teach reading the statements correctly and
+    # are what made the basis rubric go 43/44; they are short by nature and that is
+    # fine, as long as they are not the ONLY thing in the mix (which is what run 1
+    # did).
     "recipe1_basis": None, "recipe2_ratios": None, "recipe3_trends": None,
     "recipe4_earnings_quality": None, "recipe5_basis_traps": None,
     "recipe6_asof_discipline": None, "recipe7_mandate_compliance": None,
     "recipe8_room_format": None, "recipe9_refusal": None,
-    # Run-1 caps: Tier B raw (48.5k) would swamp Tier A (~8.7k) at 85/15; these
-    # bring the mix to roughly A 33% / B 58% / replay 9%. SA-FDR probes revise them.
-    "tierb_finqa": 3000, "tierb_tatqa": 4000,
-    "tierb_finance_instruct_500k": 4000, "tierb_financial_rlvr": 4000,
-    "tierb_ultrachat": 2500,
+    # The deliverable itself (recipe 10). Uncapped: it is the only source in the mix
+    # that teaches the nine-section report production actually asks for, and the
+    # shape gate below is unreachable without it — see the run-2 re-cap note.
+    "recipe10_longform": None,
+    # Run-2 caps. Run 1 used finqa 3000 / tatqa 4000 / finance_instruct 4000 /
+    # rlvr 4000 / ultrachat 2500 and shipped at 3.53% deliverable.
+    #
+    # Measured over the real files, the re-cap ALONE reaches only 7.45% — cutting
+    # the short sources cannot fix the shape, because nothing that remains is long.
+    # It is still worth doing: finqa and tatqa have MEDIAN targets of 64 and 45
+    # characters. They were carried as "finance skills replay", but a 45-character
+    # median teaches terseness, which is the failure being repaired. So they drop to
+    # a token presence that keeps the skill without setting the length prior.
+    #
+    # UltraChat goes the other way, to its full 4,000. It is the only long-form
+    # replay in the mix and it protects general instruction-following; run 1 capped
+    # away 1,500 rows of exactly the behaviour it then lost.
+    "tierb_finqa": 1200, "tierb_tatqa": 1200,
+    "tierb_finance_instruct_500k": 3000, "tierb_financial_rlvr": 2000,
+    "tierb_ultrachat": 4000,
 }
 VAL_PCT = 2  # hash buckets of 100
 
