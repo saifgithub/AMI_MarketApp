@@ -1475,6 +1475,15 @@ production-shaped prompt, and the failure lives exactly in the gap:
   fragments where vanilla Fastino returned ~1,200, and under greedy decoding one prompt ran away to
   the full 8,000-token budget. The loss was right about what it measured and silent about the job.
 
+- **A shape gate whose numerator counts the wrong rows certifies a mix that teaches nothing.**
+  CR196 §10a: the gate added to close the second bullet above measured "what fraction of training
+  targets reach the deliverable's size" — counting long targets from **any** source. Run 1's 3.53%
+  was essentially all UltraChat replay (2,500 rows × 37.2% ≈ 930, against 907 such rows in the entire
+  mix); not one Tier-A example reached the threshold at all. So the guard built to catch "the model
+  never sees the deliverable" **could have been satisfied by adding more generic chat**. Its
+  threshold was independently unreachable: 5,000 chars, set from a single observation, against a
+  teacher whose reports measure 3,003–5,009 with only 5% over 5,000.
+
 **Why the obvious guards fail.** Loss is teacher-forced: it scores the next token given the *correct*
 prefix, so it cannot observe termination, drift, repetition, or format collapse — the model is never
 asked to stand on its own output. Drawing the val split from the training generator makes it worse:
@@ -1501,9 +1510,16 @@ shape.** Cheap, and it caught both instances within minutes once it existed:
   generator cannot be the only held-out arm when production prompts have a different shape.
 
 **Instances.** CR196 §7 (NVFP4 pre-flight perfect, model near-random, 2026-08-22). CR196 §9 (run 1
-loss-verified, generation regressed to recipe-shaped fragments, 2026-08-22). Both inside one CR, one
-day apart, by two different metrics — which is the argument that the class is the *gate design*, not
-either metric.
+loss-verified, generation regressed to recipe-shaped fragments, 2026-08-22). CR196 §10a (the shape
+gate added *for* §9 could be satisfied by replay data, and its threshold was unreachable by the
+teacher, 2026-08-22). Three inside one CR, by three different metrics — and the third is the sharpest
+argument that the class is the *gate design*: a guard written specifically to close this pattern was
+itself built with a hole of the same shape. Assume the same of the next one.
+
+Corollary worth stating on its own: **a guard is not done when it fires on the known failure. It is
+done when you have checked what else could satisfy it.** For a ratio, ask what else lands in the
+numerator; for a threshold, check it against the real distribution of the thing being measured rather
+than one observation of it.
 
 **Enforcing check.**
 
@@ -1512,6 +1528,12 @@ either metric.
   manifest so a budget-capped run cannot be read as a completed one. It also asserts the rendered
   prompt carries a **closed** `<think></think>` when thinking is disabled — the §8 bug, where an open
   block turned the arm into reasoning-mode text that would have scored as ordinary level-0 analysis.
+- `datagen/mix_and_qc.py`'s shape gate counts **task** long-form only — replay sources are excluded
+  from the numerator by name — and enforces an absolute row floor beside the ratio, because the two
+  fail differently: a ratio can be met by shrinking the mix, a count by drowning it. Regression-tested
+  both ways: 8,000 short task rows plus 6,000 long replay rows read 42.86% and PASS on the old metric,
+  0% and FAIL on the new one. Its threshold is the measured floor of a complete report (3,000 chars),
+  which clears the largest non-report source's p90 (1,370) by 2.2×.
 - CR196 §5's acceptance gains a shape gate: **no run is accepted on loss alone.** A run must free-run
   the production brief and be compared against the untrained base through the same harness, with the
   base arm run first when a result is surprising.
