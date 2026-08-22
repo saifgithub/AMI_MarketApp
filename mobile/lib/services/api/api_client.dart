@@ -1745,6 +1745,17 @@ class ApiClient {
   // nothing. Parked: unreachable until ALPACA_CLIENT_ID is set and Alpaca
   // approves the app.
 
+  /// CR203 — tell the backend WHETHER this device holds a credential, never
+  /// what it is. Best-effort at every call site: failing to report must not
+  /// fail the link itself, because the link is device-local and already
+  /// succeeded by the time this runs.
+  Future<void> alpacaReportLinkState(bool linked) async {
+    await _dio.post<Map<String, dynamic>>(
+      '/v1/alpaca/link_state',
+      data: {'linked': linked},
+    );
+  }
+
   Future<({String accessToken, String refreshToken})> alpacaExchangeOAuthCode(
     String code,
   ) async {

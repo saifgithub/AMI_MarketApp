@@ -337,13 +337,21 @@ class TestLinkRoute:
 
         with get_session() as s:
             row = s.execute(select(User).where(User.id == user.id)).scalar_one()
+        # CR203 restored `alpaca_linked_at` — a timestamp saying the device
+        # reported a link, which is not a credential and cannot authenticate to
+        # anything. The three below are the ones this test is actually about:
+        # each could open a user's brokerage account, and each stays gone.
         for attr in (
             "alpaca_access_token",
             "alpaca_refresh_token",
-            "alpaca_linked_at",
             "alpaca_auth_mode",
         ):
             assert not hasattr(row, attr), f"User still carries {attr} (CR202 dropped it)"
+        # And the link-state column, if present, must never hold key material.
+        assert row.alpaca_linked_at is None, (
+            "the OAuth link route stored something on the link-state column; "
+            "it reports nothing to this host (CR202/CR203)"
+        )
 
     def test_anonymous_user_rejected(self, client):
         _, token = _make_anon_user()

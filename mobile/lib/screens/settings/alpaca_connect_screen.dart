@@ -18,6 +18,8 @@
 /// Returns `true` to the caller if linking succeeded, `false` otherwise.
 library;
 
+import 'dart:async';
+
 import 'package:ami_trade/services/alpaca/alpaca_client.dart';
 import 'package:ami_trade/services/alpaca/alpaca_credential_store.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
@@ -142,6 +144,10 @@ class _ApiKeyTabState extends ConsumerState<_ApiKeyTab> {
       await ref.read(alpacaClientProvider).validate(keyId, secret);
       await AlpacaCredentialStore.save(keyId, secret);
       ref.read(alpacaSnapshotCacheProvider).invalidate();
+      // CR203: report the fact of the link, not the key. Deliberately not
+      // awaited into the failure path — the credential is already stored and
+      // working; a reporting hiccup must not tell the user linking failed.
+      unawaited(_reportLinked(ref));
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } on AlpacaException catch (e) {
@@ -371,6 +377,7 @@ class _OAuthTabState extends ConsumerState<_OAuthTab> {
         mode: AlpacaAuthMode.oauth,
       );
       ref.read(alpacaSnapshotCacheProvider).invalidate();
+      unawaited(_reportLinked(ref));
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (e) {
@@ -420,4 +427,15 @@ class _OAuthTabState extends ConsumerState<_OAuthTab> {
       ],
     );
   }
+}
+
+
+/// CR203 — best-effort link-state report. Swallows failure by design: the
+/// credential lives on this device and the link is already complete, so a
+/// failed report costs an analytics row, not the feature. The next successful
+/// report (or unlink) corrects it.
+Future<void> _reportLinked(WidgetRef ref) async {
+  try {
+    await ref.read(apiClientProvider).alpacaReportLinkState(true);
+  } catch (_) {}
 }

@@ -13,15 +13,20 @@ caller and stores nothing. It is unreachable today (`ALPACA_CLIENT_ID` unset,
 client OAuth tab disabled) and exists so the OAuth path stays open without
 re-introducing host custody.
 
-POST /v1/alpaca/link — exchange an OAuth code, RETURN the tokens (no storage)
+POST /v1/alpaca/link       — exchange an OAuth code, RETURN the tokens (no storage)
+POST /v1/alpaca/link_state — the device reports WHETHER it holds a credential
 """
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
+from sqlalchemy import select
 
 from app.api.dependencies import get_current_user
+from app.db import get_session
 from app.db.models import User
 from app.services.alpaca_service import AlpacaError, exchange_code
 
@@ -62,3 +67,45 @@ def link_alpaca(
         access_token=tokens.access_token,
         refresh_token=tokens.refresh_token,
     )
+
+
+class LinkStateRequest(BaseModel):
+    linked: bool
+
+
+class LinkStateResponse(BaseModel):
+    linked: bool
+    linked_at: datetime | None = None
+
+
+@router.post("/link_state", response_model=LinkStateResponse)
+def report_link_state(
+    body: LinkStateRequest,
+    current_user: User = Depends(get_current_user),
+) -> LinkStateResponse:
+    """CR203 — the device tells us it has (or no longer has) a linked account.
+
+    This is the ONLY thing the host learns about a user's Alpaca account, and
+    it is deliberately the least it can learn: a boolean, stamped with when it
+    was said. No key, no token, nothing that could authenticate to Alpaca.
+
+    **It is a report, not an observation.** The device is the only party that
+    can see the credential, so this is necessarily self-declared and can go
+    stale in ways this host cannot detect — a revoked key, a wiped app, a new
+    phone. That is why the column stores a timestamp and every reader surfaces
+    it: an unqualified "linked: true" would assert something we cannot check
+    (the DEF059 class). Under-reporting is the safe direction and the one this
+    design takes — a device that never calls simply reads as not linked.
+
+    Idempotent: reporting `linked: true` repeatedly refreshes the timestamp,
+    which is what makes the value's age meaningful.
+    """
+    _require_claimed(current_user)
+
+    stamped = datetime.now(timezone.utc) if body.linked else None
+    with get_session() as s:
+        row = s.execute(select(User).where(User.id == current_user.id)).scalar_one()
+        row.alpaca_linked_at = stamped
+        s.commit()
+
+    return LinkStateResponse(linked=body.linked, linked_at=stamped)

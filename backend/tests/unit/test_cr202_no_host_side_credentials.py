@@ -134,10 +134,21 @@ def test_the_alpaca_credential_columns_are_actually_gone():
             if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
                 declared.add(node.target.id)
 
+    # CR203 REMOVED `alpaca_linked_at` from this list, deliberately.
+    #
+    # It was never a credential — it is a timestamp recording that the device
+    # said it holds one. It appeared here only because CR202 dropped it in the
+    # same block as the two secrets beside it, and pinning it by name
+    # over-stated what this test defends. The three below are the ones that
+    # matter: each could authenticate to a user's brokerage account, and each
+    # stays forbidden.
+    #
+    # If a future change wants to put a credential back under a NEW name, the
+    # generic guard above catches it; this list is the belt for the specific
+    # names whose history is written in DEF044, DEF181, DEF182 and DEF185.
     for column in (
         "alpaca_access_token",
         "alpaca_refresh_token",
-        "alpaca_linked_at",
         "alpaca_auth_mode",
     ):
         assert column not in declared, (

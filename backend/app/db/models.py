@@ -187,12 +187,23 @@ class User(Base):
         Integer, default=1, server_default="1", nullable=False,
     )
 
-    # CR202: the four alpaca_* columns are GONE. A user's Alpaca key ID and
+    # CR202: the alpaca CREDENTIAL columns are gone. A user's Alpaca key ID and
     # secret live on their device (Keychain / Keystore) and never reach this
-    # host, so there is nothing to store and nothing to encrypt. Link state is
-    # device-local. Dropping them removed the custody that produced DEF044,
-    # DEF181, DEF182 and DEF185 — measured 0 linked rows at the time, so
-    # nothing was migrated.
+    # host, so there is nothing to store and nothing to encrypt. Dropping them
+    # removed the custody that produced DEF044, DEF181, DEF182 and DEF185 —
+    # measured 0 linked rows at the time, so nothing was migrated.
+    #
+    # CR203: what came back is the *fact* of a link, never the means to use it.
+    # NULL = not linked. A timestamp rather than a boolean on purpose: this is
+    # the last state the DEVICE reported, so every reader can see how old that
+    # claim is. A bare `alpaca_linked = true` would read as present-tense fact
+    # about something this host cannot verify — the user can revoke the key at
+    # Alpaca, wipe the app, or switch phones and we would never hear about it.
+    # Reporting a stale claim as current is the DEF059 class; the timestamp is
+    # what keeps it honest.
+    alpaca_linked_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
 
     # Reputation + league identity (CR004, D-060). handle is the anonymous
     # leaderboard name (adjective+noun, minted on first league contact);

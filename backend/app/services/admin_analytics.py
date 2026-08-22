@@ -125,6 +125,12 @@ def summary() -> dict[str, Any]:
         credit_sum = s.execute(
             select(func.coalesce(func.sum(User.credit_balance), 0)).where(real)
         ).scalar_one()
+        # CR203: how many users report a linked Alpaca paper account. Device-
+        # reported and therefore a floor, not a census — see `User.alpaca_linked_at`.
+        alpaca_linked = s.execute(
+            select(func.count()).select_from(User)
+            .where(real, User.alpaca_linked_at.isnot(None))
+        ).scalar_one()
 
         events = _activity_events(s, now - timedelta(days=30))
         def _active(days: int) -> int:
@@ -140,6 +146,7 @@ def summary() -> dict[str, Any]:
                 "in_trial": in_trial,
                 "by_plan": by_plan,
                 "credit_balance_sum": int(credit_sum),
+                "alpaca_linked": alpaca_linked,
             },
             "active": {
                 "dau": _active(1),

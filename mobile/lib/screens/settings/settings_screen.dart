@@ -1534,9 +1534,17 @@ class _AlpacaRow extends StatelessWidget {
   }
 
   /// CR202: disconnecting is purely local — the key only ever lived on this
-  /// device, so there is no server call to make and nothing to fail.
+  /// device, so the credential is gone the moment the store is cleared.
+  ///
+  /// CR203 adds one server call, and the ORDER matters: the local wipe happens
+  /// FIRST and unconditionally, so a failed report can only ever leave the
+  /// backend over-reporting a link that no longer exists — never leave a
+  /// credential on the device after the user asked for it gone.
   Future<void> _disconnect(BuildContext context) async {
     await AlpacaCredentialStore.clear();
+    try {
+      await ref.read(apiClientProvider).alpacaReportLinkState(false);
+    } catch (_) {}
     ref.read(alpacaSnapshotCacheProvider).invalidate();
     ref.invalidate(alpacaLinkedProvider);
     ref.invalidate(alpacaPortfolioProvider);
