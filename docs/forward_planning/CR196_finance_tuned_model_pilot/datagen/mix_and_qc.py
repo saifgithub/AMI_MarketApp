@@ -110,10 +110,24 @@ DELIVERABLE_CHARS = 3000
 # conversation, and it does that whether or not it is long.
 REPLAY_SOURCES = {"tierb_ultrachat"}
 
-# MIN_DELIVERABLE_PCT is a floor chosen for margin, NOT a derived optimum -- there
-# is no measurement saying where the collapse boundary sits, only that run 1 had
-# ZERO task long-form and collapsed. Run 2's result is what will calibrate it.
-MIN_DELIVERABLE_PCT = 15.0
+# MIN_DELIVERABLE_PCT is an ANCHOR, not a derived optimum. There is no measurement
+# of where the collapse boundary sits -- only that run 1 had ZERO task long-form and
+# collapsed. So it is set from the one external reference point available: Fastino's
+# own successful run on this exact base was 13,698 examples, and recipe 10's
+# numerator is capped near 1,400 by the size of the train universe (one report per
+# ticker; the teacher cannot make more without teaching two different verdicts for
+# the same brief). 1,400 / 13,698 = 10.2%.
+#
+# The first value here was 15%, which was not chosen against anything -- and holding
+# it would have forced the mix down to 1,400/0.15 = 9,300, cutting ~16,000 short
+# examples including most of the Tier-A substrate that produced the 43/44
+# basis-rubric result. Trading away measured substrate to satisfy an invented number
+# is the wrong way round (Saiful's call, 2026-08-22).
+#
+# 10% is still infinitely more than run 1's 0%, and MIN_DELIVERABLE_ROWS below is
+# the harder safety net -- an absolute count cannot be gamed by shrinking the mix.
+# Run 2's result is what calibrates both.
+MIN_DELIVERABLE_PCT = 10.0
 
 # An absolute floor as well as a ratio, because the two fail differently: a ratio
 # can be met by shrinking the mix, and a count can be met by drowning it. Run 1 had
