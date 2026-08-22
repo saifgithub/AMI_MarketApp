@@ -134,6 +134,54 @@ MIN_DELIVERABLE_PCT = 10.0
 # zero; Fastino's own successful run was 13,698 examples total.
 MIN_DELIVERABLE_ROWS = 800
 
+# --- per-surface coverage (RUN2_PLAN §2/§4) ---------------------------------
+# One model serves 13 agents in content/agents/, and they emit EIGHT distinct output
+# contracts. A single global ratio cannot see one starved surface among eight -- it
+# is exactly how the Room's PARSED verdict contract (`_parse_pm_verdict`) ended up
+# with 22 examples in a 25,695-example mix while nobody noticed.
+#
+# The run-1 planning error, generalised: the mix was organised around SKILLS we
+# wanted the model to have, never around the OUTPUTS production asks it to produce.
+# SFT trains outputs. So the unit of gating is the production surface.
+#
+# Floors are reasoned, not derived -- there is no measurement of how many examples a
+# surface needs. What is measured is that run 1 had zero or near-zero on six of the
+# eight and could not produce any of them.
+SURFACES = {
+    "S1_brief":        {"sources": {"recipe10_longform"},                    "min": 800},
+    "S2_prose_stance": {"sources": {"recipe12_bear_critique",
+                                    "recipe13_bull_thesis",
+                                    "recipe8_room_format:fundamentals_prose"}, "min": 900},
+    "S3_research_mgr": {"sources": {"recipe14_research_manager"},            "min": 350},
+    "S4_pm_json":      {"sources": {"recipe8_room_format:pm_json_verdict"},  "min": 500},
+    "S5_trader":       {"sources": {"recipe16_trader"},                      "min": 500},
+    "S6_risk_officer": {"sources": {"recipe17_risk_officer"},                "min": 500},
+    "S7_refusal":      {"sources": {"recipe9_refusal"},                      "min": 90},
+    "S8_concierge":    {"sources": {"recipe18_concierge"},                   "min": 350},
+}
+
+# Dominance cap. Run 1 collapsed because one shape dominated; a mix with 1,220
+# nine-section essays against 22 JSON verdicts would fail the same way inverted,
+# with the model writing prose where the parser expects an object. No surface may
+# exceed this multiple of the SMALLEST surface actually present.
+MAX_SURFACE_RATIO = 4.0
+
+
+def surface_of(ex):
+    """Which production surface an example teaches, or None for substrate/replay.
+
+    Recipe 8 renders two different contracts, so its rows are keyed by `_meta.contract`
+    -- lumping them would hide a starved S4 behind a healthy S2.
+    """
+    m = ex.get("_meta") or {}
+    rec = m.get("recipe") or ""
+    contract = m.get("contract")
+    key = f"{rec}:{contract}" if contract else rec
+    for name, spec in SURFACES.items():
+        if key in spec["sources"] or rec in spec["sources"]:
+            return name
+    return None
+
 
 def target_chars(ex):
     return sum(len(m["content"]) for m in ex["messages"]
@@ -183,7 +231,13 @@ def main():
                     help="ship a mix whose targets cannot reach the deliverable")
     args = ap.parse_args()
 
-    paths = sorted(glob.glob(os.path.join(HERE, "out", "*.jsonl")))
+    # Intermediates live in out/ too and are NOT chat-format: recipe 10's briefs and
+    # raw teacher completions, the probe files, and the review sample this script
+    # itself writes (which would otherwise be re-ingested on every rerun and
+    # double-count 200 rows).
+    INTERMEDIATE = ("recipe10_briefs", "recipe10_completions", "review_sample")
+    paths = [p for p in sorted(glob.glob(os.path.join(HERE, "out", "*.jsonl")))
+             if not os.path.basename(p).startswith(("_probe",) + INTERMEDIATE)]
     if not args.include_nc:
         skipped_nc = [p for p in paths if p.endswith("_NC.jsonl")]
         paths = [p for p in paths if not p.endswith("_NC.jsonl")]
@@ -215,7 +269,20 @@ def main():
             if tk and tk.upper() in eval_tk:
                 contaminated.append((src, tk, "meta"))
                 continue
-            if src.startswith("recipe") and eval_pat and eval_pat.search(text):
+            # The prose scan is a BACKSTOP for generators that do not stamp
+            # `_meta.ticker`. Where the stamp exists it is authoritative -- the brief
+            # was built from that one ticker's filings, and the universe loader
+            # already asserts train ∩ eval = ∅.
+            #
+            # Applying it anyway produces false positives, because three-letter
+            # tickers collide with ordinary acronyms in the BUSINESS summary. All
+            # five hits on recipe 10 were of that kind: "health savings accounts
+            # (HAS)", "Advanced Electronics Solutions (AES)", "MGM Grand" as a
+            # property in VICI's portfolio, and — decisively — CHD as coronary heart
+            # disease in a biotech's licence agreement. None involves an eval
+            # ticker's data or label. (The existing 1-2 letter exclusion anticipated
+            # this class and stopped one character short.)
+            if (not tk) and src.startswith("recipe") and eval_pat and eval_pat.search(text):
                 contaminated.append((src, eval_pat.search(text).group(0), "text"))
                 continue
 
@@ -260,6 +327,19 @@ def main():
 
     mix_shape = shape_stats(train)
 
+    surf = collections.Counter()
+    for ex in train:
+        name = surface_of(ex)
+        if name:
+            surf[name] += 1
+    present = {k: surf.get(k, 0) for k in SURFACES}
+    starved = {k: (v, SURFACES[k]["min"]) for k, v in present.items()
+               if v < SURFACES[k]["min"]}
+    nonzero = [v for v in present.values() if v > 0]
+    smallest = min(nonzero) if nonzero else 0
+    dominant = {k: v for k, v in present.items()
+                if smallest and v > smallest * MAX_SURFACE_RATIO}
+
     os.makedirs(args.out_dir, exist_ok=True)
     review = []
     for name, rows in (("train.jsonl", train), ("val.jsonl", val)):
@@ -296,6 +376,17 @@ def main():
                 f"a finance report (CR196 §10)\n")
         f.write("  — target length is what governs how much the model WRITES; "
                 "whole-example length does not (CR196 §9, P27)\n\n")
+        f.write("\n## Production-surface coverage (RUN2_PLAN §2)\n\n")
+        f.write("One model serves 13 agents emitting 8 output contracts. A global "
+                "ratio cannot see one starved surface — that is how the parsed PM "
+                "verdict reached 22 examples in run 1.\n\n")
+        f.write("| surface | rows | floor | status |\n|---|---|---|---|\n")
+        for k in SURFACES:
+            v, lo = present[k], SURFACES[k]["min"]
+            mark = "**STARVED**" if v < lo else ("**DOMINANT**" if k in dominant else "ok")
+            f.write(f"| {k} | {v} | {lo} | {mark} |\n")
+        f.write(f"\nDominance cap: no surface above {MAX_SURFACE_RATIO}x the "
+                f"smallest present ({smallest}).\n\n")
         f.write("| source | generated | kept | in val | med tok (est) | max tok (est) "
                 "| med target ch | p90 target ch | % deliverable |\n")
         f.write("|---|---|---|---|---|---|---|---|---|\n")
@@ -308,6 +399,7 @@ def main():
     print(f"train={len(train)} val={len(val)} sources={len(by_source)} "
           f"dup_exact={stats['dup_exact']} dup_near={stats['dup_near']}")
     print(f"manifest → {os.path.join(args.out_dir, 'data_manifest.md')}")
+    print("surfaces: " + "  ".join(f"{k.split('_')[0]}={present[k]}" for k in SURFACES))
     print(f"output shape: median target {mix_shape['median']} ch, "
           f"p90 {mix_shape['p90']} ch, {mix_shape['task_rows']} task targets "
           f">= {DELIVERABLE_CHARS} ch ({mix_shape['pct_task_deliverable']:.2f}%; "
@@ -315,6 +407,27 @@ def main():
 
     # Written first, then enforced: a mix that fails the gate is exactly the one
     # whose manifest you need in order to see WHICH source is starving it.
+    if starved and not args.allow_shape_gap:
+        lines = "\n".join(f"  {k}: {v} rows, floor {lo}" for k, (v, lo) in starved.items())
+        raise SystemExit(
+            f"FAIL: {len(starved)} production surface(s) starved —\n{lines}\n"
+            "One model serves 13 agents across 8 output contracts. Run 1 organised "
+            "the mix around SKILLS and not around the OUTPUTS production asks for, "
+            "and shipped with the Room's PARSED verdict contract on 22 examples "
+            "(RUN2_PLAN §2). A surface with no examples is a surface the model "
+            "cannot produce.\n"
+            "Build the missing recipe, or lower its floor deliberately and say why.")
+
+    if dominant and not args.allow_shape_gap:
+        lines = "\n".join(f"  {k}: {v} rows vs smallest surface {smallest}"
+                           for k, v in dominant.items())
+        raise SystemExit(
+            f"FAIL: surface dominance —\n{lines}\n"
+            f"No surface may exceed {MAX_SURFACE_RATIO}x the smallest present. Run 1 "
+            "collapsed because one shape dominated; the same mix inverted gives prose "
+            "where `_parse_pm_verdict` expects an object. Cap the dominant source or "
+            "raise the starved one.")
+
     if not args.allow_shape_gap and (
             mix_shape["task_rows"] < MIN_DELIVERABLE_ROWS
             or mix_shape["pct_task_deliverable"] < MIN_DELIVERABLE_PCT):
