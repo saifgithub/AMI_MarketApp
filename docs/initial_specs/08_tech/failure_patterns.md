@@ -1450,3 +1450,68 @@ now been answered three times by point fix.
   of one without the other cannot silently un-detect it, and asserted **not** to fire on a
   safety-floor override. `backtest_sweep.py` aborts after `--max-consecutive-outages` (exit 3);
   `backtest_report.py` refuses any batch >5% outage fail-safes (exit 4).
+
+---
+
+## P27 — a model gate that never runs the model the way production will
+
+**Symptom.** A fine-tuned or quantised checkpoint passes every acceptance number — structural counts
+exact, logits finite, held-out loss excellent — and is declared good. Then it meets a real prompt and
+cannot do the job at all. Nothing in the gate was wrong; the gate simply never exercised the mode
+production uses.
+
+**Mechanism.** Every cheap model metric is evaluated in a mode that is *not* free generation on a
+production-shaped prompt, and the failure lives exactly in the gap:
+
+- **Structural + single-forward checks certify a broken quantisation.** CR196 §7: the NVFP4 recipe
+  under `--trust-remote-code` pre-flighted at a perfect **5,981/5,981** modules with a forward pass
+  returning finite logits of the right shape. Held-out loss was **10.2321** against the native path's
+  **0.2506** — ln(131072) = 11.78, i.e. near-random. No missing-weight warning fired.
+- **Teacher-forced loss on a same-distribution val set certifies a model that cannot generate.**
+  CR196 §9: run 1's LoRA reached eval loss **0.2384** and merged-checkpoint held-out loss **0.2506**
+  from a base of 2.2744 — a genuine 2.02 improvement, correctly measured. But `val.jsonl` shares
+  `train.jsonl`'s shape: median assistant target **331 characters**, 87% under 1,000. Asked for the
+  production nine-section analyst brief, the model returned **45–244 tokens** of recipe-shaped
+  fragments where vanilla Fastino returned ~1,200, and under greedy decoding one prompt ran away to
+  the full 8,000-token budget. The loss was right about what it measured and silent about the job.
+
+**Why the obvious guards fail.** Loss is teacher-forced: it scores the next token given the *correct*
+prefix, so it cannot observe termination, drift, repetition, or format collapse — the model is never
+asked to stand on its own output. Drawing the val split from the training generator makes it worse:
+the split is decorrelated in *examples* but identical in *shape*, so it certifies distribution-fit and
+is blind to distribution-shift by construction. Module counts and a one-token forward pass are further
+still from generation. And each metric moved in the right direction, so there was nothing anomalous to
+notice — this is P26's shape one layer up: the failing run produces numbers shaped exactly like a
+succeeding one.
+
+**What actually works — make the gate run the production mode, on a production prompt, and assert
+shape.** Cheap, and it caught both instances within minutes once it existed:
+
+- **Generate, don't just score.** A model is not accepted until it has free-run on prompts drawn from
+  the real task, not the training generator. One or two prompts is enough — both failures above were
+  visible on the first ticker.
+- **Assert on termination and length, not just on content.** A response that hits the whole token
+  budget did not finish; a response far shorter than the task requires did not answer. Both are
+  hard-fails, not warnings — `run_local_arm.py` aborts on a sub-floor response rather than writing a
+  scoreable stub, because a stub scores as an ordinary bad answer and reads as a model verdict.
+- **Hold a behaviour control, not only a metric baseline.** The question "is this the model or the
+  harness?" is answerable in one run by putting the *untrained base* through the identical harness.
+  That single control is what separated CR196 §9's real regression from §8's harness bug.
+- **Keep an out-of-distribution slice in the acceptance set.** A val split from the training
+  generator cannot be the only held-out arm when production prompts have a different shape.
+
+**Instances.** CR196 §7 (NVFP4 pre-flight perfect, model near-random, 2026-08-22). CR196 §9 (run 1
+loss-verified, generation regressed to recipe-shaped fragments, 2026-08-22). Both inside one CR, one
+day apart, by two different metrics — which is the argument that the class is the *gate design*, not
+either metric.
+
+**Enforcing check.**
+
+- `ami_finetune_kit/eval/basis/run_local_arm.py` hard-fails a response under `--min-new` (default 200)
+  naming the token count and the first 200 characters, and records `hit_budget` per response in the
+  manifest so a budget-capped run cannot be read as a completed one. It also asserts the rendered
+  prompt carries a **closed** `<think></think>` when thinking is disabled — the §8 bug, where an open
+  block turned the arm into reasoning-mode text that would have scored as ordinary level-0 analysis.
+- CR196 §5's acceptance gains a shape gate: **no run is accepted on loss alone.** A run must free-run
+  the production brief and be compared against the untrained base through the same harness, with the
+  base arm run first when a result is surprising.
