@@ -24,9 +24,17 @@ from scripts.backtest_sweep import write_completion_sentinel
 
 def test_sentinel_records_the_planned_count_not_just_the_completed(tmp_path):
     """The planned total is the whole point — completed alone cannot prove
-    completeness, since 17-of-450 and 17-of-17 have identical record sets."""
+    completeness, since 17-of-450 and 17-of-17 have identical record sets.
+
+    `ran_this_process` arrived with DEF358, which found the other half of the
+    same problem: `completed` had been the calling process's own tally, so a
+    sweep resumed after an interruption reported a finished batch as truncated.
+    The argument is required rather than defaulted on purpose — a default is
+    exactly how a call site forgets to pass it, which is the defect itself.
+    """
     path = write_completion_sentinel(
-        tmp_path, "b1", planned=450, completed=448, failed=2, outages=0,
+        tmp_path, "b1", planned=450, completed=448, ran_this_process=448,
+        failed=2, outages=0,
     )
 
     body = json.loads(path.read_text())
