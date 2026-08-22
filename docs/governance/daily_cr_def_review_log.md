@@ -727,3 +727,37 @@ were put to Saiful inline; all three were answered and acted on in the same sess
   gate-closure criterion. Linked from §A2.
 
 No status flipped through this log — rows are the truth.
+
+## 2026-08-22
+
+Automated 0900 check-in (read-only sweep + `AskUserQuestion`). Two items were genuinely
+undecided; both were answered inline.
+
+- **`/bug-monitor` scheduling** — yesterday's ruling was "Both — scheduled job, session-start
+  fallback", but the 6h loop was never armed and `git log --grep='docs(bug-monitor)'` returned
+  nothing: **zero cycles had ever run**. Asked: run a cycle now / arm the loop / both / leave
+  manual → Saiful: **"Run one cycle now, then arm the loop"**. The cycle ran: **0 open reports**
+  in `bug_reports`, nothing filed, nothing flipped — the queue is genuinely clear, DEF340–344
+  (2026-08-20) remain the last batch. On the arming half, `/loop` requires an explicit
+  cloud-vs-session choice for any interval ≥60m; asked → Saiful: **"Just stop"**. **No loop is
+  armed and no cloud schedule exists.** The operative path is the `CLAUDE.md` step-2b
+  session-start backstop alone. CR185's "both" ruling is therefore half-implemented **by
+  decision**, not oversight — and today's empty queue means the cost of that is currently zero.
+- **CR134** (CR109 game screens vs the design system — 27 findings, conformance pass only, no
+  redesign; `proposed` since 2026-07-30, never dispositioned in the 08-20 26-CR sweep, no named
+  blocker) — asked: lane it with DEF343 / defer past dark launch / standalone / drop?
+  → Saiful: **"Drop it"** → status **`dropped`** (`17e9be02`). The review and prototype stay on
+  disk as the record of what was measured. DEF343 is unaffected — it is a presentation fix in
+  the games lane.
+
+Not asked, blockers unchanged and named: DEF305 (acute bleed already stopped in
+`sim_resting_orders.py:128`; row stays open for the provenance column, CR194 sequenced behind
+it), DEF321 (earliest defensible close 2026-08-24 — the bar is a week of greens, not a count),
+the parked payments track (DEF100/CR084/CR198/DEF344), and E5 (Saiful's device time, ruled
+2026-08-21).
+
+**GTM pulse (CR036 §1):** active phase **Stealth Alpha distribution**; **Engagement close-out**
+in progress with **E5 the sole open item** and no device pass logged since yesterday's runbook.
+Beta (B1–B14) and MVP (M1–M12) unchanged at 0% started. No movement in the phase itself.
+
+No status flipped through this log — rows are the truth.
