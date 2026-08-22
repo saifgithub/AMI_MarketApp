@@ -890,6 +890,19 @@ nothing under any mandate asserts nothing.
 
 ### Found while building
 
+**DEF354** — the first live convene of this path logged `budget_usd=18.0`, and
+that number is the whole finding. `_size_to_budget` floors at one contract when
+the budget cannot buy one — correct, since hiding the structure teaches nothing —
+but it returned that floor with **no reason recorded**, so a $10,000 paper
+portfolio was offered every candidate at ~51x the risk its equivalent share
+trade would have taken, described as sized to the mandate. $10,000 is the
+starting portfolio for every alpha user. The second half was mine from this
+slice: `_render_option_candidates` rendered `advisories` and dropped
+`not_evaluated`, so even the sizing reasons that already existed never reached
+the CIO — the mobile ticket could read a caveat the agent deciding the trade
+could not. Both fixed; 4/4 mutations killed, one after strengthening a test that
+checked the data instead of the rendered prompt.
+
 **DEF353** — `check_option_open`'s `long_only` refusal closed with *"long calls,
 long puts and debit spreads are not"*, and D4's ratified rule is sell-to-open
 full stop, so a bull call spread was refused and named as permitted in the same

@@ -168,11 +168,22 @@ def _size_to_budget(
 ) -> tuple[int, str | None]:
     """How many contracts of this structure the risk budget buys.
 
-    Returns `(contracts, reason_not_sized)`. The reason is set exactly when
-    the count fell back to one because the structure's risk is not a number —
-    an unbounded loss, or a loss bounded by shares rather than by the legs.
-    Sizing off a budget when the loss has no ceiling would be inventing the
-    ceiling.
+    Returns `(contracts, reason_not_sized)`. The reason is set whenever the
+    count fell back to one rather than being divided out of the budget — an
+    unbounded loss, a loss bounded by shares rather than by the legs, or a
+    budget too small to buy a single contract. Sizing off a budget when the
+    loss has no ceiling would be inventing the ceiling.
+
+    DEF354 — that last case used to return `(1, None)`: silent. One contract
+    is the right answer (a menu that hides the structure teaches nothing), but
+    it is not the *sized* answer, and the gap is not small. Measured on the
+    first live convene of this path: a $10,000 paper portfolio risking 3% at a
+    6% stop has an $18 budget against a ~$920 at-the-money contract, so every
+    candidate was offered at **51x** the risk the equivalent share trade would
+    have taken, described as sized to the mandate. $10,000 is the starting
+    portfolio for every alpha user, so this was not an edge case — it was the
+    ordinary case. CR040's question answers itself: a user told AMI sized this
+    to their budget, when it did the opposite.
     """
     unit = strategy_metrics(legs, shares_held=shares_held)
     if unit is None:
@@ -186,7 +197,22 @@ def _size_to_budget(
         return 1, "structure carries no computable loss to size against"
     if not _finite_positive(budget_usd):
         return 1, "no risk budget was supplied"
-    return max(1, int(budget_usd // risk)), None
+    count = int(budget_usd // risk)
+    if count < 1:
+        # One decimal under 10x, none above: a $9,030 loss against a $9,000
+        # budget is a 0.3% overrun, and printing it as a flat "1x" reads as
+        # "exactly the budget" — the opposite of the disclosure's job. The two
+        # dollar figures carry the fact; the multiple is there so nobody has to
+        # divide (CR179 Leg 4's reasoning), and it has to survive both ends of
+        # its own range to be worth printing.
+        over = risk / budget_usd
+        gap = f"{over:.1f}x" if over < 10 else f"{over:.0f}x"
+        return 1, (
+            f"the risk budget of ${budget_usd:,.0f} does not cover one "
+            f"contract, whose loss is ${risk:,.0f} — offered at the minimum "
+            f"size of one, which risks {gap} the budget"
+        )
+    return count, None
 
 
 def _greeks_for(

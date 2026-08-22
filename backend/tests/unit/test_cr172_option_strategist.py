@@ -31,7 +31,7 @@ from app.services import option_strategist as st
 from app.services.coach_engine import hydrate_coach_mandate
 from app.services.market_data import OptionChain, OptionQuote
 from app.services.option_chain import enrich_chain
-from app.trading_math.option_strategy import strategy_metrics
+from app.trading_math.option_strategy import StrategyLeg, strategy_metrics
 
 _EXPIRY = datetime.date(2027, 3, 19)
 _NOW = datetime.datetime(2027, 1, 15, 15, 0, tzinfo=datetime.UTC)
@@ -316,3 +316,50 @@ def test_cheap_implied_vol_puts_the_debit_structures_first():
     result = _build(realised_vol=0.90)
     assert result.volatility_aware is True
     assert result.candidates[0].strategy_name != "cash_secured_put"
+
+
+# ── DEF354 — a size floor the user is not told about is not a size ──────────
+
+def test_a_budget_too_small_for_one_contract_says_so_with_both_figures():
+    """The ordinary case, not an edge one: $10,000 × 3% at a 6% stop is an $18
+    budget, and an at-the-money contract costs hundreds. One contract is still
+    the right answer — hiding the structure teaches nothing — but it is not the
+    *sized* answer, and the difference has to be stated."""
+    legs = (
+        StrategyLeg(right="call", strike=100.0, quantity=1.0, premium=9.2,
+                    expiry="2026-10-16"),
+    )
+    contracts, reason = st._size_to_budget(legs, budget_usd=18.0, shares_held=0.0)
+    assert contracts == 1
+    assert reason is not None
+    assert "18" in reason, "the budget must be named"
+    assert "920" in reason, "the contract's own loss must be named beside it"
+    assert "51x" in reason, "and the gap between them, so nobody has to divide"
+
+
+def test_a_budget_that_covers_contracts_is_divided_and_says_nothing():
+    """The disclosure fires on the floor, not on every candidate — a sized
+    structure has nothing to disclose."""
+    legs = (
+        StrategyLeg(right="call", strike=100.0, quantity=1.0, premium=9.2,
+                    expiry="2026-10-16"),
+    )
+    contracts, reason = st._size_to_budget(legs, budget_usd=5_000.0, shares_held=0.0)
+    assert contracts == 5
+    assert reason is None
+
+
+def test_a_near_miss_on_the_budget_does_not_print_as_exactly_the_budget():
+    """A $9,030 loss against a $9,000 budget is a 0.3% overrun. Rounded to a
+    whole multiple it prints as "1x the budget", which reads as *exactly* the
+    budget — the opposite of what the disclosure exists to say. Both ends of
+    the range have to survive the same formatter."""
+    legs = (
+        StrategyLeg(right="put", strike=95.0, quantity=-1.0, premium=4.7,
+                    expiry="2026-10-16"),
+    )
+    _c, near = st._size_to_budget(legs, budget_usd=9_000.0, shares_held=0.0)
+    assert near is not None and "1.0x" in near
+
+    _c2, far = st._size_to_budget(legs, budget_usd=18.0, shares_held=0.0)
+    assert far is not None and "502x" in far

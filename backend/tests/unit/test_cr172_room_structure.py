@@ -432,3 +432,45 @@ def test_a_number_that_is_not_an_index_is_refused_not_truncated(value, chain_pro
     assert verdict is not None
     assert verdict.action == VerdictAction.PASS
     assert verdict.legs is None
+
+
+# ── DEF354 — the caveat has to reach the agent doing the sizing ─────────────
+
+def test_the_size_floor_is_disclosed_in_the_pm_prompt(chain_provider):
+    """The default alpha portfolio is $10,000, so this is what the CIO actually
+    sees: an $18 budget against a ~$920 contract. The structure is still
+    offered — the menu never hides one — but the prompt must say the size is a
+    floor, not a sizing, or the agent deciding the trade reads 51x the risk it
+    asked for as "sized to the mandate".
+    """
+    candidates, _ = _menu(_mandate(derivatives=True), portfolio_value=10_000.0)
+    assert candidates
+    assert all(
+        any("does not cover one contract" in n for n in c.not_evaluated)
+        for c in candidates
+    ), "every candidate on an $18 budget is at the floor"
+    prompt = _pm_prompt(candidates)
+    assert "Caveat:" in prompt
+    assert "does not cover one contract" in prompt
+    assert "x the budget" in prompt
+
+
+def test_a_sized_candidate_carries_no_floor_caveat(chain_provider):
+    """The companion — otherwise the test above passes on a renderer that
+    prints the caveat unconditionally.
+
+    Asserted on the RENDERED PROMPT, not only on the candidate's own fields:
+    the first version checked the data and a renderer that emitted the caveat
+    for every candidate survived it. What the CIO reads is the prompt.
+    """
+    # $20m, so the budget clears even the cash-secured put's ~$9,030 —
+    # at $5m it does not, and the caveat that fires there is correct.
+    candidates, _ = _menu(_mandate(derivatives=True), portfolio_value=20_000_000.0)
+    long_call = next(c for c in candidates if c.strategy_name == "long_call")
+    assert long_call.contracts > 1
+    assert not any(
+        "does not cover one contract" in n for n in long_call.not_evaluated
+    )
+    prompt = _pm_prompt(candidates)
+    assert "does not cover one contract" not in prompt
+    assert "x the budget" not in prompt

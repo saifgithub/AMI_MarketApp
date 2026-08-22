@@ -892,6 +892,13 @@ def _render_option_candidates(candidates: Sequence[Any], spot: float | None) -> 
                 "turns your verdict into a PASS; explain it if it teaches "
                 "something, but do not pick it."
             )
+        # DEF354 second half — `not_evaluated` is where the per-candidate
+        # sizing reason and the floor's own unevaluable checks live, and this
+        # renderer dropped it while rendering `advisories`. The route already
+        # sends it to the ticket, so the user could read a caveat the agent
+        # deciding the trade could not. Both audiences get it now.
+        for note in c.not_evaluated:
+            lines.append(f"  Caveat: {note}")
         for note in c.advisories:
             lines.append(f"  Note: {note}")
     lines.append("")
