@@ -123,7 +123,22 @@ FUNDAMENTALS_FORMAT_INSTRUCTION = PROSE_FORMAT + NO_FENCE_CLAUSE + STANCE_FORMAT
 FUNDAMENTALS_SYSTEM_PROMPT = load_agent_prompt()  # common.py's default IS fundamentals_analyst.md
 PM_SYSTEM_PROMPT = load_agent_prompt(os.path.join(REPO, "content", "agents", "portfolio_manager.md"))
 
-TICKERS = load_train_universe()[::173][:8]  # a spread sample, decontamination-checked by the loader
+# Sample size is a CLI argument, not a constant. This was `[::173][:8]` -- eight
+# tickers, ~22 examples -- because the recipe was written to DEMONSTRATE the two
+# contracts, not to train them. CR196 §10/RUN2_PLAN §2 is what that cost: the Room's
+# buy/sell verdict is parsed JSON (`_parse_pm_verdict`), and run 2 would have trained
+# 22 examples of it against ~1,220 nine-section essays. Dominance is the failure mode
+# in both directions -- run 1 collapsed to short, and that mix would invite prose
+# where the parser expects an object.
+DEFAULT_TICKERS = 800
+TICKERS = load_train_universe()[:DEFAULT_TICKERS]
+
+
+def set_tickers(n: int) -> None:
+    """Rebind the sample the build functions iterate over."""
+    global TICKERS
+    uni = load_train_universe()
+    TICKERS = uni if n <= 0 or n >= len(uni) else uni[:n]
 
 
 # ── Fundamentals prose-contract examples ────────────────────────────────
@@ -375,8 +390,11 @@ def _validate(rows: list[dict]) -> None:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=os.path.join(HERE, "out", "recipe8.jsonl"))
+    ap.add_argument("--tickers", type=int, default=DEFAULT_TICKERS,
+                    help="0 = the whole train universe")
     args = ap.parse_args()
 
+    set_tickers(args.tickers)
     rows = build_fundamentals_examples() + build_pm_examples()
     _validate(rows)
 

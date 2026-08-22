@@ -43,7 +43,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from common import load_train_universe, pick, write_jsonl, yf_backoff  # noqa: E402
-from factsheet import all_tokens, build_factsheet  # noqa: E402
+from factsheet import all_tokens, build_factsheet_cached, cached_tickers  # noqa: E402
 from recipe12_bear_critique import SEVERITY  # noqa: E402
 from recipe13_bull_thesis import STRENGTH_RANK  # noqa: E402
 from role_common import assert_grounded, load_role_prompt  # noqa: E402
@@ -149,17 +149,24 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=os.path.join(HERE, "out", "recipe14.jsonl"))
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--cached-only", action="store_true",
+                    help="restrict to tickers already in the fact-sheet cache — "
+                         "renders fully offline, no Yahoo call at all")
     ap.add_argument("--workers", type=int, default=6)
     args = ap.parse_args()
 
     tickers = load_train_universe()
+    if args.cached_only:
+        have = cached_tickers()
+        tickers = [t for t in tickers if t in have]
+        print(f"[cached-only] {len(tickers)} tickers with a fact sheet on disk")
     if args.limit:
         tickers = tickers[: args.limit]
 
     system_prompt = load_role_prompt("research_manager")
     rows, skipped = [], {"no_two_sided_case": 0, "unusable_sheet": 0, "error": 0}
     with cf.ThreadPoolExecutor(max_workers=args.workers) as ex:
-        futs = {ex.submit(yf_backoff, build_factsheet, t): t for t in tickers}
+        futs = {ex.submit(build_factsheet_cached, t): t for t in tickers}
         for fut in cf.as_completed(futs):
             try:
                 fs = fut.result()

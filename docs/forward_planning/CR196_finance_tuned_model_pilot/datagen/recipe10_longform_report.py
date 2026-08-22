@@ -464,6 +464,17 @@ def verify(target, rec):
 
     ev = score_basis.score_text(target, rec["debt_class"], rec["cash_class"])
     meta["basis_level"] = ev["level"]
+    # A level-0 answer says nothing about basis at all. That is correct when the
+    # brief carries no mismatch, and wrong when it does -- the cross-verification
+    # block is right there and the report walked past it. Measured on the first full
+    # assembly: 54 of 57 level-0 keepers sat on briefs that DID carry a trap, so
+    # without this they would have trained the model to ignore the one thing §1
+    # measures and §5a grades.
+    has_trap = not (rec["debt_class"] in ("no_conflict", "missing")
+                    and rec["cash_class"] in ("no_conflict", "missing"))
+    meta["has_trap"] = has_trap
+    if has_trap and ev["level"] == 0:
+        reasons.append("silent_on_trap")
     if ev["false_conflict"] and ev["level"] < 2:
         reasons.append("false_conflict")
     if ev["overclaim"]:

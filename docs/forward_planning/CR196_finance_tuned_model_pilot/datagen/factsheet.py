@@ -30,6 +30,7 @@ unsupported case so the Research Manager has something wrong to reject.
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 
@@ -247,8 +248,115 @@ def build_factsheet(tk: str) -> dict:
     }
 
 
+# ── disk cache ───────────────────────────────────────────────────────────────
+# Recipes 12-18 each need the same fact sheets. Uncached that is six independent
+# yfinance sweeps of identical data (~10 min each, and Yahoo rate-limits bursts).
+# One sweep, six consumers -- and it also makes the build REPRODUCIBLE: a re-render
+# produces byte-identical training data without touching the network, which is what
+# makes the §F role eval an honest held-out test rather than a re-pull.
+#
+# `tokens`, `sheet_tokens` and `price_tokens` are sets (assert_grounded needs O(1)
+# membership); JSON has no set, so they round-trip through sorted lists.
+CACHE_DIR = os.path.join(HERE, "out", "factsheets")
+_SET_KEYS = ("sheet_tokens", "price_tokens")
+
+
+def _encode(fs: dict) -> dict:
+    out = dict(fs)
+    for k in _SET_KEYS:
+        if k in out:
+            out[k] = sorted(out[k])
+    for group in ("weaknesses", "strengths"):
+        if group in out:
+            out[group] = [{**e, "tokens": sorted(e["tokens"])} for e in out[group]]
+    return out
+
+
+def _decode(fs: dict) -> dict:
+    for k in _SET_KEYS:
+        if k in fs:
+            fs[k] = set(fs[k])
+    for group in ("weaknesses", "strengths"):
+        if group in fs:
+            for e in fs[group]:
+                e["tokens"] = set(e["tokens"])
+    return fs
+
+
+def build_factsheet_cached(tk: str, cache_dir: str = CACHE_DIR,
+                           refresh: bool = False) -> dict:
+    """build_factsheet() through a disk cache keyed by ticker."""
+    path = os.path.join(cache_dir, f"{tk}.json")
+    if not refresh and os.path.exists(path):
+        with open(path) as f:
+            return _decode(json.load(f))
+    fs = build_factsheet(tk)
+    # NEVER cache a failure. Yahoo rate-limits and then returns EMPTY frames rather
+    # than raising, so a blocked pull looks exactly like a company with no filings.
+    # Measured 2026-08-23: a 1,437-ticker sweep cached 613 `too_few_years`, and
+    # re-pulling tickers that had cached OK minutes earlier ALSO returned 0 columns --
+    # the block, not the data. Caching those would have silently removed 43% of the
+    # train universe from every role recipe, permanently, with nothing to show why.
+    # Failures are simply not written, so the next sweep retries them.
+    if fs.get("status") != "ok":
+        return fs
+    os.makedirs(cache_dir, exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(_encode(fs), f)
+    os.replace(tmp, path)          # atomic: a killed sweep leaves no half file
+    return fs
+
+
+def cached_tickers(cache_dir: str = CACHE_DIR) -> set:
+    """Tickers with a real fact sheet on disk. Only successes are ever cached, so
+    membership here means usable data, not merely 'we tried'."""
+    if not os.path.isdir(cache_dir):
+        return set()
+    return {f[:-5] for f in os.listdir(cache_dir) if f.endswith(".json")}
+
+
+def sweep_cache(tickers, workers: int = 6, cache_dir: str = CACHE_DIR,
+                refresh: bool = False) -> dict:
+    """Populate the cache once. Returns a status Counter."""
+    import collections
+    import concurrent.futures as cf
+    stats = collections.Counter()
+    sys.path.insert(0, HERE)
+    from common import yf_backoff
+    def one(tk):
+        try:
+            return yf_backoff(build_factsheet_cached, tk, cache_dir, refresh)["status"]
+        except Exception as e:
+            return f"error:{type(e).__name__}"
+    with cf.ThreadPoolExecutor(max_workers=workers) as ex:
+        for i, st in enumerate(ex.map(one, tickers), 1):
+            stats[st] += 1
+            if i % 100 == 0:
+                print(f"  {i}/{len(tickers)} ok={stats['ok']}", flush=True)
+    return stats
+
+
 def all_tokens(fs: dict, entries: list) -> set:
     out = set(fs["sheet_tokens"]) | set(fs["price_tokens"])
     for e in entries:
         out |= e["tokens"]
     return out
+
+
+if __name__ == "__main__":
+    import argparse
+    sys.path.insert(0, HERE)
+    from common import load_train_universe
+
+    ap = argparse.ArgumentParser(description="populate the fact-sheet cache once")
+    ap.add_argument("--workers", type=int, default=6)
+    ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--refresh", action="store_true")
+    a = ap.parse_args()
+    tks = load_train_universe()
+    if a.limit:
+        tks = tks[:a.limit]
+    print(f"[cache] {len(tks)} train tickers -> {CACHE_DIR}")
+    st = sweep_cache(tks, a.workers, refresh=a.refresh)
+    print(f"[cache] {dict(st)}")
