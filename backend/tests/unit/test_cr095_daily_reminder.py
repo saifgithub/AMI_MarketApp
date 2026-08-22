@@ -125,7 +125,7 @@ def _push_succeeds(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "onesignal_rest_key", "rest-key")
     monkeypatch.setattr(
         notification_service.httpx, "post",
-        lambda *a, **k: SimpleNamespace(status_code=200, text=""),
+        lambda *a, **k: SimpleNamespace(status_code=200, text="", json=lambda: {"id": "onesignal-id", "recipients": 1}),
     )
 
 

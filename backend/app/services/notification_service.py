@@ -44,6 +44,12 @@ PushStatus = Literal[
     # CR135 — the user disabled this type in notification preferences; the
     # durable row is still written, only push delivery is suppressed.
     "pref_disabled",
+    # DEF359 — OneSignal accepted the request and delivered it to nobody.
+    # A 200 whose body reads {"id":"","errors":["All included players are not
+    # subscribed"]} is the normal answer for a user with no registered device,
+    # and it is NOT a send. Distinct from "failed", which means the API
+    # rejected us.
+    "no_recipients",
 ]
 
 # Service-layer limits, not per-consumer (CR027 acceptance) — every caller
@@ -246,9 +252,34 @@ def _attempt_push(
         )
         return "failed", f"onesignal {resp.status_code}"
 
+    # DEF359 — a 200 is not a delivery. OneSignal answers a request naming an
+    # external id with no subscribed device with HTTP 200 and a body of
+    # {"id":"","errors":["All included players are not subscribed"]}. Reading
+    # only the status code logged `notification_push_sent` for that, so "have
+    # we ever actually pushed to anyone?" was unanswerable from our own logs:
+    # the success line said sent whether one device got it or none did. This is
+    # the CR040 shape — the failing state was invisible in the output a human
+    # reads — and it is why CR176 could sit for days as "never proven to send"
+    # with nothing able to settle it either way.
+    try:
+        detail = resp.json()
+    except ValueError:
+        detail = {}
+    recipients = detail.get("recipients")
+    errors = detail.get("errors")
+    if recipients == 0 or (not detail.get("id") and errors):
+        reason = errors[0] if isinstance(errors, list) and errors else "0 recipients"
+        logger.warning(
+            "notification_push_no_recipients",
+            user_id=str(user_id), notification_id=str(notification_id),
+            type=type, reason=str(reason)[:200],
+        )
+        return "no_recipients", str(reason)[:200]
+
     logger.info(
         "notification_push_sent",
         user_id=str(user_id), notification_id=str(notification_id), type=type,
+        recipients=recipients,
     )
     return "sent", None
 

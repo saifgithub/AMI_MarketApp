@@ -232,7 +232,7 @@ def test_disabled_pref_suppresses_push_but_writes_row(
 
     def _record(*a, **k):
         calls.append(a)
-        return SimpleNamespace(status_code=200, text="ok")
+        return SimpleNamespace(status_code=200, text="ok", json=lambda: {"id": "onesignal-id", "recipients": 1})
 
     monkeypatch.setattr(notification_service.httpx, "post", _record)
 

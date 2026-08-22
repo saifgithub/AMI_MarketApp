@@ -301,7 +301,7 @@ def test_transfer_alias_posts_to_revenuecat(monkeypatch):
         captured["url"] = url
         captured["json"] = json
         captured["headers"] = headers
-        return SimpleNamespace(status_code=200, text="")
+        return SimpleNamespace(status_code=200, text="", json=lambda: {"id": "onesignal-id", "recipients": 1})
 
     monkeypatch.setattr(revenuecat_client.httpx, "post", _fake_post)
     res = revenuecat_client.transfer_alias("orphan-id", "adopter-id")

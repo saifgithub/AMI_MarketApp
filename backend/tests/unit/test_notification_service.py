@@ -88,7 +88,7 @@ def test_notify_posts_expected_payload(monkeypatch):
         captured["url"] = url
         captured["json"] = json
         captured["headers"] = headers
-        return SimpleNamespace(status_code=200, text="")
+        return SimpleNamespace(status_code=200, text="", json=lambda: {"id": "onesignal-id", "recipients": 1})
 
     monkeypatch.setattr(notification_service.httpx, "post", _fake_post)
     result = notification_service.notify(
@@ -109,7 +109,7 @@ def test_notify_per_minute_rate_limit_still_writes_row(monkeypatch):
     monkeypatch.setattr(settings, "onesignal_rest_key", "rest-key")
     monkeypatch.setattr(
         notification_service.httpx, "post",
-        lambda *a, **k: SimpleNamespace(status_code=200, text=""),
+        lambda *a, **k: SimpleNamespace(status_code=200, text="", json=lambda: {"id": "onesignal-id", "recipients": 1}),
     )
     user_id = uuid4()
     first = notification_service.notify(user_id, "price_alert", "t", "b", {"route": "x"})
@@ -125,7 +125,7 @@ def test_notify_per_hour_rate_limit_after_three_pushes(monkeypatch):
     monkeypatch.setattr(settings, "onesignal_rest_key", "rest-key")
     monkeypatch.setattr(
         notification_service.httpx, "post",
-        lambda *a, **k: SimpleNamespace(status_code=200, text=""),
+        lambda *a, **k: SimpleNamespace(status_code=200, text="", json=lambda: {"id": "onesignal-id", "recipients": 1}),
     )
     user_id = uuid4()
     statuses = []
@@ -143,7 +143,7 @@ def test_different_users_do_not_share_a_rate_limit_bucket(monkeypatch):
     monkeypatch.setattr(settings, "onesignal_rest_key", "rest-key")
     monkeypatch.setattr(
         notification_service.httpx, "post",
-        lambda *a, **k: SimpleNamespace(status_code=200, text=""),
+        lambda *a, **k: SimpleNamespace(status_code=200, text="", json=lambda: {"id": "onesignal-id", "recipients": 1}),
     )
     a = notification_service.notify(uuid4(), "price_alert", "t", "b", {"route": "x"})
     b = notification_service.notify(uuid4(), "price_alert", "t", "b", {"route": "x"})
