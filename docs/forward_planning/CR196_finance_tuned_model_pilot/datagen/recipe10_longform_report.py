@@ -144,7 +144,13 @@ W_DERIVED = 62
 W_LABEL = 40        # statement tables: label field, then 4 columns of 16
 W_COL = 16
 
-MIN_TARGET_CHARS = 3500     # below this it is not a report, whatever else it passes
+# Below this it is not a report, whatever else it passes. Measured on 20 briefs
+# through vanilla Fastino (2026-08-22, all clean stops): complete nine-section
+# reports run 3,003-5,009 chars, median 3,733. The first value here was 3,500,
+# which was rejecting genuinely complete reports -- 20% of the teacher's output
+# sits between 3,003 and 3,500. Matches mix_and_qc.DELIVERABLE_CHARS by
+# construction: a row this recipe keeps is a row the gate counts.
+MIN_TARGET_CHARS = 3000
 GROUNDING_FLOOR = 1e6       # only audit figures >= $1M; per-share targets are not claims
 GROUNDING_TOL = 0.03        # re-rounding: "$94B" for $91.45B is not a fabrication
 GROUNDING_BUDGET = 2        # unexplained figures tolerated before the report is cut

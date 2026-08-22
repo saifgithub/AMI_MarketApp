@@ -80,12 +80,45 @@ VAL_PCT = 2  # hash buckets of 100
 # So the mix taught short answers almost exclusively, and the Tier-B "replay" meant
 # to protect the base's long-form behaviour is itself short-answer numeric QA.
 #
-# DELIVERABLE_CHARS is the size of the thing production actually asks for (the base
-# model writes ~5,000 chars for it). MIN_DELIVERABLE_PCT is a FLOOR chosen for
-# margin, not a derived optimum: 3.53% demonstrably failed, so the floor sits well
-# above it. Raise it when a run gives a better-grounded number.
-DELIVERABLE_CHARS = 5000
+# DELIVERABLE_CHARS is the size of the thing production actually asks for. The first
+# value here was 5,000, from a SINGLE observation of the base answering the AAPL
+# brief. Measured properly on 2026-08-22 -- 20 briefs through vanilla Fastino on
+# alpha-spark, every one a clean stop:
+#
+#     complete nine-section reports: min 3,003 · median 3,733 · max 5,009 chars
+#     (871 / 1,053 / 1,382 tokens).  Only 5% reach 5,000.
+#
+# So 5,000 was measuring the tail of the teacher's own distribution, not the
+# deliverable, and no achievable mix could ever have cleared it. 3,000 is the
+# MEASURED FLOOR of a complete report, and it separates cleanly from everything
+# that is not one: the highest p90 among all non-report sources is 1,370
+# (recipe5), and run 1's collapse outputs were 180-970 chars. 2.2x margin.
+DELIVERABLE_CHARS = 3000
+
+# --- and the numerator matters as much as the threshold ------------------------
+# Run 1 scored 3.53% deliverable. Essentially ALL of it was UltraChat: 2,500 rows x
+# 37.2% over 5,000 chars = ~930, against a total of 907 such rows in the whole mix.
+# Not one Tier-A example reached 5,000 at all.
+#
+# So the gate as first written could have been satisfied entirely by REPLAY. Adding
+# UltraChat rows would have raised the number while the model still never saw a
+# single finance report -- which is exactly the hole run 1 fell through. A gate that
+# a replay slice can satisfy is not measuring what it claims to measure.
+#
+# The numerator therefore counts TASK long-form only. Replay is by definition not
+# teaching our job; it is there to stop the base forgetting how to hold a
+# conversation, and it does that whether or not it is long.
+REPLAY_SOURCES = {"tierb_ultrachat"}
+
+# MIN_DELIVERABLE_PCT is a floor chosen for margin, NOT a derived optimum -- there
+# is no measurement saying where the collapse boundary sits, only that run 1 had
+# ZERO task long-form and collapsed. Run 2's result is what will calibrate it.
 MIN_DELIVERABLE_PCT = 15.0
+
+# An absolute floor as well as a ratio, because the two fail differently: a ratio
+# can be met by shrinking the mix, and a count can be met by drowning it. Run 1 had
+# zero; Fastino's own successful run was 13,698 examples total.
+MIN_DELIVERABLE_ROWS = 800
 
 
 def target_chars(ex):
@@ -94,13 +127,22 @@ def target_chars(ex):
 
 
 def shape_stats(rows):
+    """Length shape of a row set. `pct_deliverable` counts every long target;
+    `task_rows` counts only the ones that teach OUR job -- see REPLAY_SOURCES.
+    The gate reads task_rows; pct_deliverable is kept for the per-source manifest,
+    where 'how long is this source' is the useful question."""
     lens = sorted(target_chars(ex) for ex in rows)
     if not lens:
-        return {"n": 0, "median": 0, "p90": 0, "pct_deliverable": 0.0}
+        return {"n": 0, "median": 0, "p90": 0, "pct_deliverable": 0.0,
+                "task_rows": 0, "pct_task_deliverable": 0.0}
     n = len(lens)
+    task = sum(1 for ex in rows
+               if target_chars(ex) >= DELIVERABLE_CHARS
+               and ex.get("_src") not in REPLAY_SOURCES)
     return {"n": n, "median": lens[n // 2], "p90": lens[int(0.9 * n)],
             "pct_deliverable": 100.0 * sum(l >= DELIVERABLE_CHARS
-                                           for l in lens) / n}
+                                           for l in lens) / n,
+            "task_rows": task, "pct_task_deliverable": 100.0 * task / n}
 
 
 def norm_text(s):
@@ -174,6 +216,7 @@ def main():
                 continue
             seen_near.add(hn)
             ex["_hash"] = he
+            ex["_src"] = src        # the gate partitions task vs replay on this
             by_source[src].append(ex)
 
     if contaminated:
@@ -227,10 +270,16 @@ def main():
             f.write(f"- NC-licensed sources EXCLUDED (Saiful's call pending): "
                     f"{[os.path.basename(p) for p in skipped_nc]}\n")
         f.write("- token lengths are chars/4 ESTIMATES (no tokenizer on build box)\n")
-        f.write(f"- **output shape**: {mix_shape['pct_deliverable']:.2f}% of targets "
-                f"reach the {DELIVERABLE_CHARS}-char deliverable "
-                f"(floor {MIN_DELIVERABLE_PCT:.1f}%), median target "
-                f"{mix_shape['median']} chars, p90 {mix_shape['p90']}\n")
+        f.write(f"- **output shape**: **{mix_shape['task_rows']}** TASK targets reach "
+                f"the {DELIVERABLE_CHARS}-char deliverable "
+                f"(**{mix_shape['pct_task_deliverable']:.2f}%** of the mix; floors: "
+                f"{MIN_DELIVERABLE_ROWS} rows and {MIN_DELIVERABLE_PCT:.1f}%), "
+                f"median target {mix_shape['median']} chars, p90 "
+                f"{mix_shape['p90']}\n")
+        f.write(f"- counting ALL sources including replay it would be "
+                f"{mix_shape['pct_deliverable']:.2f}% — replay is excluded because "
+                f"run 1's entire 3.53% was UltraChat and the model still never saw "
+                f"a finance report (CR196 §10)\n")
         f.write("  — target length is what governs how much the model WRITES; "
                 "whole-example length does not (CR196 §9, P27)\n\n")
         f.write("| source | generated | kept | in val | med tok (est) | max tok (est) "
@@ -246,21 +295,27 @@ def main():
           f"dup_exact={stats['dup_exact']} dup_near={stats['dup_near']}")
     print(f"manifest → {os.path.join(args.out_dir, 'data_manifest.md')}")
     print(f"output shape: median target {mix_shape['median']} ch, "
-          f"p90 {mix_shape['p90']} ch, "
-          f"{mix_shape['pct_deliverable']:.2f}% >= {DELIVERABLE_CHARS} ch")
+          f"p90 {mix_shape['p90']} ch, {mix_shape['task_rows']} task targets "
+          f">= {DELIVERABLE_CHARS} ch ({mix_shape['pct_task_deliverable']:.2f}%; "
+          f"{mix_shape['pct_deliverable']:.2f}% counting replay)")
 
     # Written first, then enforced: a mix that fails the gate is exactly the one
     # whose manifest you need in order to see WHICH source is starving it.
-    if mix_shape["pct_deliverable"] < MIN_DELIVERABLE_PCT and not args.allow_shape_gap:
+    if not args.allow_shape_gap and (
+            mix_shape["task_rows"] < MIN_DELIVERABLE_ROWS
+            or mix_shape["pct_task_deliverable"] < MIN_DELIVERABLE_PCT):
         raise SystemExit(
-            f"FAIL: only {mix_shape['pct_deliverable']:.2f}% of targets reach the "
-            f"{DELIVERABLE_CHARS}-char deliverable (floor {MIN_DELIVERABLE_PCT:.1f}%). "
+            f"FAIL: only {mix_shape['task_rows']} task targets reach the "
+            f"{DELIVERABLE_CHARS}-char deliverable "
+            f"({mix_shape['pct_task_deliverable']:.2f}% of the mix). Floors are "
+            f"{MIN_DELIVERABLE_ROWS} rows AND {MIN_DELIVERABLE_PCT:.1f}%.\n"
             f"Median target is {mix_shape['median']} chars.\n"
-            f"Run 1 shipped at 3.53% and could not produce the deliverable at all "
-            f"(CR196 §9) while its held-out loss looked excellent, because val "
-            f"carries the same short shape as train.\n"
-            f"Add long-form examples or re-cap the short sources. "
-            f"--allow-shape-gap overrides deliberately.")
+            f"Counting replay it would be {mix_shape['pct_deliverable']:.2f}% — "
+            f"which is why replay does not count: run 1 shipped at 3.53%, almost "
+            f"all of it UltraChat, and could not produce the deliverable at all "
+            f"(CR196 §9/§10, guards-register P27).\n"
+            f"Add long-form TASK data (recipe10_longform) or cut the short "
+            f"sources; --allow-shape-gap overrides, deliberately loudly.")
 
 
 if __name__ == "__main__":
