@@ -650,6 +650,14 @@ _SIM_ENGINE_SYNC_SAFE_METHODS = {
     # CR171 §1: the user-initiated buy-to-cover. No route calls it directly
     # today; when one does, it must be wrapped like `submit` is.
     "cover_short",
+    # CR172 §7 / criterion 5: the uncovered short-call close, reached ONLY from
+    # `sim_resting_orders.sweep_resting_orders` (`_check_option_margin`), which
+    # is `to_thread`-wrapped at both of its call sites — the same shape as its
+    # CR171 sibling `force_close_breached_shorts` two entries up. It reaches
+    # the network through `option_chain.get_enriched_chain` rather than through
+    # `current_price`, which is a heavier read: one chain fetch per (underlying,
+    # expiry) carrying an uncovered short call, memoised within the pass.
+    "force_close_uncovered_calls",
 }
 
 

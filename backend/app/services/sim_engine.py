@@ -2599,6 +2599,193 @@ class SimEngine:
             s.flush()
         return charged
 
+    def force_close_uncovered_calls(self, user_id: UUID) -> list:
+        """CR172 §7's `_check_option_margin` — acceptance criterion 5, DEF356.
+
+        **What "a naked short breaching maintenance margin" means in D3's
+        world.** §14 forbade naked calls outright and left no Reg-T path, and
+        every short put is fully cash-secured at open, so no position in this
+        product can breach a margin ratio — there is no margin. The one thing
+        that CAN happen is a short call losing the shares that covered it, and
+        it happens by three routes: the user sells them through the ticket, a
+        resting sell or stop fires, or an assignment takes them. The first two
+        pass through `check_mandate_compliance`; **the third and the bracket
+        close (`evaluate_outcomes`) enter no floor at all, correctly** — a
+        forced exit is not a user action to refuse. So the state is reachable
+        no matter how good the pre-trade checks are, and this is the backstop
+        that must exist for the floor's promise to hold.
+
+        Criterion 5's three clauses, each deliberate:
+
+          * **market hours only** — gated by the caller, for CR171's stated
+            reason: a forced close against a stale overnight print is CR109
+            §5.1's time machine pointed in the direction that costs the user
+            money.
+          * **reported visibly** — a `LifecycleEvent` per leg, carried to the
+            caller, not a log line. §7: *every automatic close is reported,
+            never silent.*
+          * **never refused for insufficient `current_cash`** — the buy-back
+            is charged whether or not the cash is there, and cash may go
+            negative. That is what collateral is for, and refusing would
+            leave the unbounded position open, which is the one outcome the
+            whole D3 ruling exists to prevent.
+
+        **A leg that cannot be priced is LEFT OPEN and reported**, never closed
+        on a guessed number: forcing a close the user did not ask for, at a
+        price nobody checked, is exactly DEF305's shape. The event says so.
+
+        Closes the LOWEST strike first — the most liable and the most likely to
+        be assigned. Containment is the whole purpose, so the harm is removed
+        before the convenience.
+        """
+        from app.services import sim_options
+        from app.services.option_chain import get_enriched_chain
+
+        events: list = []
+        now = datetime.now(timezone.utc)
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id)
+            if p_row is None:
+                return events
+            open_calls = s.execute(
+                select(SimOptionLegRow).where(
+                    SimOptionLegRow.portfolio_id == p_row.id,
+                    SimOptionLegRow.state == "open",
+                    SimOptionLegRow.right == "call",
+                )
+            ).scalars().all()
+            underlyings = sorted({row.underlying for row in open_calls})
+
+            for symbol in underlyings:
+                short_by = (
+                    sim_options.locked_call_cover_shares(s, p_row.id, symbol)
+                    - self._held_quantity(s, p_row, symbol)
+                )
+                if short_by <= 1e-9:
+                    continue
+                shorts = sorted(
+                    (r for r in open_calls
+                     if r.underlying == symbol and float(r.quantity) < 0),
+                    key=lambda r: float(r.strike),
+                )
+                chains: dict = {}
+                for leg in shorts:
+                    if short_by <= 1e-9:
+                        break
+                    if leg.expiry not in chains:
+                        chains[leg.expiry] = get_enriched_chain(symbol, leg.expiry)
+                    chain = chains[leg.expiry]
+                    quote = None
+                    if chain is not None:
+                        quote = next(
+                            (q for q in chain.calls
+                             if abs(q.quote.strike - float(leg.strike)) < 1e-9),
+                            None,
+                        )
+                    if quote is None or quote.state != "tradeable" or not quote.mid:
+                        reason = (
+                            "the option chain could not be read"
+                            if chain is None else
+                            f"{symbol} {leg.strike:g} call is not listed on "
+                            f"{leg.expiry.isoformat()}"
+                            if quote is None else
+                            f"{symbol} {leg.strike:g} call cannot be transacted "
+                            f"right now ({quote.state_reason})"
+                        )
+                        events.append(self._uncovered_call_event(
+                            leg, action="not_evaluated", short_by=short_by,
+                            message=(
+                                f"This short {symbol} call is no longer covered by "
+                                f"shares, and AMI could not price the buy-back to "
+                                f"close it — {reason}. The position is still open. "
+                                f"AMI will try again on the next pass."
+                            ),
+                        ))
+                        logger.warning(
+                            "sim_option_margin_unpriceable",
+                            user_id=str(user_id), occ_symbol=leg.occ_symbol,
+                            underlying=symbol, reason=reason,
+                        )
+                        continue
+
+                    contracts = -float(leg.quantity)
+                    multiplier = float(leg.multiplier)
+                    mark = float(quote.mid)
+                    cost = round(mark * multiplier * contracts, 2)
+                    released = float(leg.collateral_posted)
+                    realised = round(
+                        (float(leg.avg_premium) - mark) * multiplier * contracts, 2
+                    )
+                    # Cash moves by exactly the option term this leg carried
+                    # (`option_leg_value` = collateral + q x mult x mark, with q
+                    # negative), so `total_value` is continuous across the close
+                    # — the same identity the open path holds to.
+                    p_row.current_cash = round(
+                        float(p_row.current_cash) - cost + released, 2
+                    )
+                    leg.state = "closed"
+                    leg.closed_at = now
+                    leg.close_price = mark
+                    leg.close_reason = "margin"
+                    leg.realised_pnl = realised
+                    s.add(leg)
+                    short_by -= contracts * multiplier
+                    events.append(self._uncovered_call_event(
+                        leg, action="margin_closed", short_by=max(0.0, short_by),
+                        cash_delta=round(released - cost, 2), realised=realised,
+                        message=(
+                            f"AMI bought back {contracts:g} short {symbol} "
+                            f"{leg.strike:g} call{'s' if contracts != 1 else ''} at "
+                            f"${mark:,.2f} for ${cost:,.2f}. The shares covering "
+                            f"it were gone, and an uncovered short call is the one "
+                            f"position with no ceiling on its loss — your mandate "
+                            f"does not permit it and AMI will not leave one open. "
+                            f"This was not refused for want of cash; the close "
+                            f"happens either way."
+                        ),
+                    ))
+                    logger.warning(
+                        "sim_option_margin_closed",
+                        user_id=str(user_id), occ_symbol=leg.occ_symbol,
+                        underlying=symbol, contracts=contracts, mark=mark,
+                        cost=cost, released=released, realised_pnl=realised,
+                        still_short_shares=max(0.0, short_by),
+                    )
+            s.flush()
+
+        for event in events:
+            logger.info(
+                "option_margin_event",
+                user_id=str(user_id), occ_symbol=event.occ_symbol,
+                action=event.action, cash_delta=event.cash_delta,
+            )
+        return events
+
+    @staticmethod
+    def _uncovered_call_event(
+        leg, *, action: str, short_by: float, message: str,
+        cash_delta: float = 0.0, realised: float = 0.0,
+    ):
+        from app.services.option_lifecycle import LifecycleEvent
+
+        return LifecycleEvent(
+            leg_id=leg.id,
+            occ_symbol=leg.occ_symbol,
+            underlying=leg.underlying,
+            action=action,
+            settlement="cash" if action == "margin_closed" else "none",
+            contracts=float(leg.quantity),
+            shares_delta=0.0,
+            cash_delta=cash_delta,
+            realised_pnl=realised,
+            pin_risk=False,
+            message=message,
+            compliance_not_evaluated=(
+                [] if action == "margin_closed"
+                else [f"still short {short_by:g} shares of cover"]
+            ),
+        )
+
     def force_close_breached_shorts(self, user_id: UUID) -> list[str]:
         """§7 — the margin call. Returns the tickers force-closed.
 
@@ -2738,7 +2925,19 @@ class SimEngine:
         with get_session() as s:
             p_row = self._load_portfolio_row(s, user_id)
             assert p_row is not None
-            shares_held = self._held_quantity(s, p_row, underlying.upper().strip())
+            symbol = underlying.upper().strip()
+            # DEF356 instance 2 — the shares available to cover this structure
+            # are the holding MINUS the ones already covering open short calls.
+            # Passing the raw holding let a second covered call be written
+            # against the same 100 shares: each structure individually covered,
+            # the book short 100, no refusal anywhere. `check_option_open`
+            # reasons about one structure and cannot see the other; the netting
+            # has to happen here, where the book is visible.
+            shares_held = max(
+                0.0,
+                self._held_quantity(s, p_row, symbol)
+                - sim_options.locked_call_cover_shares(s, p_row.id, symbol),
+            )
             compliance = check_option_open(
                 leg_list, mandate, shares_held=shares_held,
             )

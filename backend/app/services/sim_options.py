@@ -44,7 +44,11 @@ from sqlalchemy import select
 from app.db.models import SimOptionLegRow, SimOptionTradeRow, SimPortfolioRow
 from app.schemas.trade import OptionLeg
 from app.services.option_instruments import format_occ_symbol
-from app.trading_math.option_strategy import StrategyLeg, strategy_metrics
+from app.trading_math.option_strategy import (
+    StrategyLeg,
+    shares_needed_to_cover_calls,
+    strategy_metrics,
+)
 
 
 class InsufficientCashError(Exception):
@@ -233,3 +237,61 @@ def open_legs_for_portfolio(session, portfolio_id: UUID) -> list[OptionLeg]:
         )
         for r in rows
     ]
+
+
+def open_call_legs_on(session, portfolio_id: UUID, underlying: str) -> list[StrategyLeg]:
+    """Every still-open CALL leg on one underlying, across every structure.
+
+    The portfolio-level view `strategy_metrics` deliberately does not have:
+    it costs one structure at a time, which is right for a card and wrong for
+    asking whether the book is covered. See `uncovered_call_shares`.
+    """
+    symbol = underlying.upper().strip()
+    rows = session.execute(
+        select(SimOptionLegRow).where(
+            SimOptionLegRow.portfolio_id == portfolio_id,
+            SimOptionLegRow.state == "open",
+            SimOptionLegRow.right == "call",
+            SimOptionLegRow.underlying == symbol,
+        )
+    ).scalars().all()
+    return [
+        StrategyLeg(
+            right="call",
+            strike=float(r.strike),
+            quantity=float(r.quantity),
+            premium=float(r.avg_premium),
+            multiplier=float(r.multiplier),
+            expiry=r.expiry.isoformat(),
+        )
+        for r in rows
+    ]
+
+
+def locked_call_cover_shares(session, portfolio_id: UUID, underlying: str) -> float:
+    """Shares on this underlying already spoken for by open short calls.
+
+    DEF356 — the portfolio-level figure, and the reason it has to exist:
+    `strategy_metrics` costs ONE structure at a time, which is right for a
+    card and wrong for asking whether the book is covered. Two "covered" calls
+    written against one lot of 100 shares are each individually covered while
+    the book is short 100, and no structure-level check can see it.
+
+    Two callers, one rule:
+
+      * **at open** — `shares_held` passed to `check_option_open` must be the
+        holding MINUS this, or the second covered call is measured against
+        shares the first already claimed;
+      * **in the sweep** — this MINUS the holding is what the book is short by
+        after a sale, a stop-out or an assignment took the cover away.
+
+    The cover rule itself is `shares_needed_to_cover_calls`, the same function
+    `_collateral` uses for the per-structure figure, so the two cannot
+    disagree about what "covered" means (DEF098). Held shares are deliberately
+    NOT summed here — `SimEngine._held_quantity` owns that, because it alone
+    handles the mid-transaction case where a holding is deleted but still on
+    `p_row.holdings` until the session expires it.
+    """
+    return shares_needed_to_cover_calls(
+        open_call_legs_on(session, portfolio_id, underlying)
+    )

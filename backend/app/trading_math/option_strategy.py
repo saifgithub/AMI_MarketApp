@@ -146,6 +146,41 @@ def _terminal_call_slope(legs: Sequence[StrategyLeg]) -> float:
     )
 
 
+def shares_needed_to_cover_calls(legs: Iterable[StrategyLeg]) -> float:
+    """Shares of stock a set of call legs needs in order not to be naked.
+
+    Long calls cover short calls first, one for one; whatever is still short
+    after that needs `contracts × multiplier` shares. `0.0` when nothing is
+    net short.
+
+    **Extracted so there is exactly one renderer of this rule (DEF098).** It
+    was `_collateral`'s opening paragraph, computed once per STRUCTURE — which
+    is the right scope for costing a card and the wrong one for asking whether
+    a book is covered, because two structures each measured against the same
+    100 shares are each individually covered while the portfolio is short 100
+    (DEF356, instance 2). `_collateral` still calls it for the per-structure
+    figure; `sim_options.uncovered_call_shares` calls it across every open call
+    leg on an underlying. Neither re-derives it.
+
+    `legs` need not share an expiry: a short January call is not covered by a
+    long March one for *margin* purposes, but this function answers the
+    narrower share-cover question the §6 table asks, and both callers pass a
+    set that is either one expiry (the structure) or deliberately all of them
+    (the book). Multiplier is the max across the call legs — the conservative
+    read when a chain has served an adjusted contract.
+    """
+    call_legs = [leg for leg in legs if leg.right == "call"]
+    if not call_legs:
+        return 0.0
+    short_contracts = -sum(leg.quantity for leg in call_legs if leg.quantity < 0)
+    long_contracts = sum(leg.quantity for leg in call_legs if leg.quantity > 0)
+    net_short = max(0.0, short_contracts - long_contracts)
+    if net_short <= 0:
+        return 0.0
+    multiplier = max(leg.multiplier for leg in call_legs)
+    return net_short * multiplier
+
+
 def _collateral(
     legs: Sequence[StrategyLeg],
     shares_held: float,
@@ -155,6 +190,11 @@ def _collateral(
 
     Implements the §6 table via one joint worst-case-settlement analysis —
     see the module docstring for how each row falls out of it.
+
+    `shares_held` is what the CALLER says is available to cover, not what the
+    portfolio holds. DEF356: a book with two covered calls against one lot has
+    100 shares and 0 available to the second of them, and this function cannot
+    tell the difference — it sees one structure at a time by design.
     """
     # ── Call cover: long calls first, then held shares, else forbidden ──
     short_call_contracts = -sum(
@@ -163,14 +203,11 @@ def _collateral(
     long_call_contracts = sum(
         leg.quantity for leg in legs if leg.right == "call" and leg.quantity > 0
     )
-    call_multiplier = max(
-        (leg.multiplier for leg in legs if leg.right == "call"), default=100.0
-    )
     net_short_calls = max(0.0, short_call_contracts - long_call_contracts)
     shares_locked = 0.0
     covered = False
     if net_short_calls > 0:
-        shares_needed = net_short_calls * call_multiplier
+        shares_needed = shares_needed_to_cover_calls(legs)
         if shares_held + 1e-9 >= shares_needed:
             shares_locked = shares_needed
             covered = True

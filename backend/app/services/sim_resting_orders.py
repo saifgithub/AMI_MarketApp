@@ -72,6 +72,7 @@ from app.core.config import settings
 from app.core.logging import logger
 from app.db import get_session, init_schema
 from app.db.models import (
+    SimOptionLegRow,
     SimPortfolioRow,
     SimRestingOrderRow,
     SimShortPositionRow,
@@ -431,6 +432,84 @@ def _accrue_borrow(engine: SimEngine, user_id: UUID | None, now: datetime) -> fl
     return charged
 
 
+def _users_with_open_option_legs() -> list[UUID]:
+    with get_session() as s:
+        rows = s.execute(
+            select(SimOptionLegRow.user_id)
+            .join(
+                SimPortfolioRow,
+                SimPortfolioRow.id == SimOptionLegRow.portfolio_id,
+            )
+            .where(
+                SimOptionLegRow.state == "open",
+                SimPortfolioRow.kind == "training",
+            )
+            .distinct()
+        ).scalars().all()
+    return list(rows)
+
+
+def _sweep_option_lifecycle(engine: SimEngine, user_id: UUID | None) -> int:
+    """CR172 §7's expiry / auto-exercise / assignment passes. **Not** gated.
+
+    DEF357 — this call site is the entire defect. `run_option_lifecycle` was
+    built complete in slice 2, tested twenty-one times, and called from
+    production zero times, so on live Alpha an option reached its expiry date
+    and nothing happened to it: the leg stayed `open` forever, its collateral
+    stayed posted, the shares it should have delivered never moved, and the
+    `LifecycleEvent` that exists so that *every automatic close is reported,
+    never silent* was produced by a function nobody ran. Its own docstring
+    says "`settlement_prices` pins the underlying's close per ticker (**the
+    sweep supplies it**; tests pin it)" — the sweep was designed to be here
+    and never was.
+
+    **Not hours-gated, matching §7's table**, and the reason is the same one
+    the expiry pass above it carries: expiry happens at 16:00 ET on the date
+    whether or not we are polling, and an option that expired on Friday did
+    not stop having expired because we noticed on Saturday. `settlement_prices`
+    is left unpinned so the engine quotes live and runs each price through
+    `_quote_is_fillable` — a leg it cannot trust is left open and reported
+    `not_evaluated`, never settled on a number nobody checked.
+
+    `dividends` / `option_marks` are not supplied: the feeds do not exist yet
+    (§11's tail), so the D9 early-assignment pass cannot run and says so on
+    every short call it would have judged, rather than reporting them safe.
+    """
+    users = [user_id] if user_id is not None else _users_with_open_option_legs()
+    events = 0
+    for uid in users:
+        try:
+            events += len(
+                engine.run_option_lifecycle(uid, mandate=resolve_mandate(uid, None))
+            )
+        except Exception:  # pragma: no cover — one user must not stop the sweep
+            logger.exception("sim_option_lifecycle_sweep_failed", user_id=str(uid))
+    return events
+
+
+def _check_option_margin(engine: SimEngine, user_id: UUID | None) -> int:
+    """CR172 §7's last sub-pass — acceptance criterion 5. Hours-gated by the
+    caller, for the reason §7's table gives: a margin close on a stale price
+    is the hindsight rule pointed at the user.
+
+    Runs AFTER the lifecycle pass above, deliberately. An assignment is one of
+    the three ways a short call loses its cover, so judging coverage before
+    settling the day's assignments would measure a book that no longer exists
+    and force-close a call whose cover had in fact just been delivered.
+    """
+    users = [user_id] if user_id is not None else _users_with_open_option_legs()
+    closed = 0
+    for uid in users:
+        try:
+            closed += sum(
+                1 for e in engine.force_close_uncovered_calls(uid)
+                if e.action == "margin_closed"
+            )
+        except Exception:  # pragma: no cover
+            logger.exception("sim_option_margin_sweep_failed", user_id=str(uid))
+    return closed
+
+
 def _sweep_short_positions(engine: SimEngine, user_id: UUID | None) -> tuple[int, int]:
     """§8's second new pass — brackets, then margin. Hours-gated by the caller.
 
@@ -646,12 +725,17 @@ def sweep_resting_orders(
         "aborted": 0,
         "shorts_bracketed": 0,
         "shorts_margined": 0,
+        "option_events": 0,
+        "options_margined": 0,
     }
     # CR171 §8 — borrow accrues on CALENDAR days, so it sits above the
     # market-hours gate alongside the expiry pass, for the same reason: the
     # charge is a property of holding the position overnight, not of the tape
     # being open when we notice.
     stats["borrow_charged_cents"] = int(round(_accrue_borrow(engine, user_id, now) * 100))
+    # CR172 §7 — above the gate for the same reason the expiry pass is: an
+    # option expires at 16:00 ET on its date whether or not we are polling.
+    stats["option_events"] = _sweep_option_lifecycle(engine, user_id)
 
     if not market_open:
         # CR109 §5.1's time machine: outside the session a "trigger" is a
@@ -670,6 +754,13 @@ def sweep_resting_orders(
         stats["shorts_bracketed"], stats["shorts_margined"] = _sweep_short_positions(
             engine, user_id,
         )
+        # CR172 §7 / criterion 5. Inside DEF305's kill switch with the others
+        # because it is the same class of act: a forced close off a price
+        # nobody checked. It runs last so the day's assignments have already
+        # settled — an assignment is one of the three ways a short call loses
+        # its cover, and judging coverage first would close a call whose cover
+        # had just been delivered.
+        stats["options_margined"] = _check_option_margin(engine, user_id)
     else:
         # DEF305 — both legs, because both force-close a position off a price
         # whose source nobody checked, and the margin leg is the worse of the
@@ -679,8 +770,9 @@ def sweep_resting_orders(
             "sim_bracket_sweep_suppressed",
             reason="DEF305",
             detail=(
-                "stops, targets and margin calls are NOT firing — "
-                "SIM_BRACKET_SWEEP_ENABLED is false"
+                "stops, targets, short margin calls and the CR172 uncovered "
+                "short-call close are NOT firing — SIM_BRACKET_SWEEP_ENABLED "
+                "is false"
             ),
         )
 

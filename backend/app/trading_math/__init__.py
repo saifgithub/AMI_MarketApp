@@ -64,6 +64,7 @@ from .option_strategy import (
     option_leg_value,
     option_legs_value,
     payoff_at_expiry,
+    shares_needed_to_cover_calls,
     strategy_metrics,
 )
 from .portfolio import drawdown_pct, position_pct, shares_for_size, total_value
@@ -223,6 +224,7 @@ __all__ = [
     "put_call_parity_gap",
     "option_leg_value",
     "option_legs_value",
+    "shares_needed_to_cover_calls",
     "strategy_metrics",
     # FIFO cost-basis lot matching (CR029-MATH)
     "FifoSellResult",
