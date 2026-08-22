@@ -42,16 +42,19 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--limit", type=int, default=64)
     ap.add_argument("--maxlen", type=int, default=4096)
+    ap.add_argument("--trust-remote-code", action="store_true",
+                    help="load the checkpoint's own modelling code (the per-expert-Linear\n                         form quantization needs) instead of the native fused one")
     args = ap.parse_args()
 
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    tok = AutoTokenizer.from_pretrained(args.model, trust_remote_code=False)
+    trc = args.trust_remote_code
+    tok = AutoTokenizer.from_pretrained(args.model, trust_remote_code=trc)
     # Pinned to one device on purpose: device_map="auto" offloaded part of this model to
     # CPU and left meta tensors NemotronH's mixer cannot run (measured 2026-08-22).
     model = AutoModelForCausalLM.from_pretrained(
-        args.model, dtype=torch.bfloat16, trust_remote_code=False,
+        args.model, dtype=torch.bfloat16, trust_remote_code=trc,
         device_map={"": 0} if torch.cuda.is_available() else None)
     model.eval()
 
