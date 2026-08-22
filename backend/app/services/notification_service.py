@@ -146,6 +146,7 @@ def notify(
         )
 
     if not attempt_push:
+        _record_push_outcome(notification_id, "skipped", None)
         return NotifyResult(
             notification_id=notification_id, push_status="skipped", push_detail=None,
         )
@@ -159,6 +160,7 @@ def notify(
             "notification_push_pref_disabled",
             user_id=str(user_id), notification_id=str(notification_id), type=type,
         )
+        _record_push_outcome(notification_id, "pref_disabled", None)
         return NotifyResult(
             notification_id=notification_id, push_status="pref_disabled",
             push_detail=None,
@@ -168,9 +170,36 @@ def notify(
         user_id=user_id, notification_id=notification_id, type=type, title=title,
         body=body, deep_link=deep_link,
     )
+    _record_push_outcome(notification_id, push_status, push_detail)
     return NotifyResult(
         notification_id=notification_id, push_status=push_status, push_detail=push_detail,
     )
+
+
+def _record_push_outcome(
+    notification_id: UUID, status: PushStatus, detail: str | None,
+) -> None:
+    """Persist what happened to the push (DEF360).
+
+    Best-effort by the same reasoning the push itself is best-effort: the
+    durable notification row is the product, and failing to annotate it must
+    never turn a delivered push into a 500 for the caller. But it is written,
+    because the alternative — logging it — is what made CR176 unanswerable.
+    Container logs die at every `docker compose up --build`, i.e. every
+    promotion, so a host that had genuinely delivered pushes could not show
+    that it had.
+    """
+    try:
+        with get_session() as s:
+            row = s.get(NotificationRow, notification_id)
+            if row is not None:
+                row.push_status = status
+                row.push_detail = detail
+    except Exception as exc:  # noqa: BLE001 - annotation must not break delivery
+        logger.warning(
+            "notification_push_outcome_not_recorded",
+            notification_id=str(notification_id), error=str(exc)[:200],
+        )
 
 
 def _existing_notification_id(

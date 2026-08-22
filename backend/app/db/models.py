@@ -730,6 +730,17 @@ class NotificationRow(Base):
     deep_link: Mapped[dict] = mapped_column(JsonB(), default=dict, nullable=False)
     source_ref: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     read_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    # DEF360 -- what happened to the PUSH half, stored rather than logged.
+    # The outcome used to exist only as a log line, and container logs do not
+    # survive a `docker compose up --build`, which is every promotion. So on
+    # 2026-08-22 the question CR176 had been open on for days -- "has a push
+    # ever actually been delivered to a device?" -- was unanswerable from a
+    # host that had delivered 17 of them: the notifications rows were all
+    # there, and every record of their fate had been destroyed hours earlier
+    # by a routine deploy. Nullable because rows written before this column
+    # existed genuinely have no answer, and a default would invent one.
+    push_status: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    push_detail: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
