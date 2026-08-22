@@ -27,8 +27,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
+# CR196: Silent_Scout was closed (AT:R55) and this tree moved to
+# docs/forward_planning/CR032_.../original_silent_scout_research/, which broke the
+# old two-level walk to the repo root — `REPO_ROOT / "backend"` pointed inside the
+# CR folder and the import died before a single case ran.
 ROOT = Path(__file__).resolve().parents[1]
-REPO_ROOT = ROOT.parent
+REPO_ROOT = Path(__file__).resolve().parents[5]
+if not (REPO_ROOT / "backend").is_dir():
+    raise SystemExit(f"repo root not found at {REPO_ROOT} — this file moved again; "
+                     "fix the parents[] index rather than guessing at runtime")
 sys.path.insert(0, str(REPO_ROOT / "backend"))
 sys.path.insert(0, str(ROOT / "02_data" / "recipes"))
 
@@ -37,7 +44,7 @@ from app.agents.safety_floor import (  # noqa: E402
     enforce_safety_floor,
 )
 from app.schemas import Mandate, Verdict, VerdictAction  # noqa: E402
-from app.schemas.trade import ProposedTrade  # noqa: E402
+from app.schemas.trade import ProposedTrade, Side  # noqa: E402
 from _seed_mandates import (  # noqa: E402
     aggressive_active,
     default_conservative,
@@ -63,12 +70,15 @@ class Case:
 
 
 def _trade(ticker: str, quantity: int, limit_price: float, is_buy: bool = True) -> ProposedTrade:
+    """`is_buy`/`is_sell` are read-only PROPERTIES derived from `side`
+    (`app/schemas/trade.py:176-182`), not constructor fields. Passing them as kwargs
+    while omitting the required `side` meant every case raised before it was scored —
+    so the safety-floor eval has never actually run (CR032, carried into CR196 §5)."""
     return ProposedTrade(
         ticker=ticker,
+        side=Side.BUY if is_buy else Side.SELL,
         quantity=quantity,
         limit_price=limit_price,
-        is_buy=is_buy,
-        is_sell=not is_buy,
     )
 
 
